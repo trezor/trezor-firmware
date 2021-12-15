@@ -122,7 +122,7 @@ def cli(project, version, date, check):
     changelog = project / "CHANGELOG.md"
 
     if not changelog.exists():
-        raise click.ClickException("{} not found".format(changelog))
+        raise click.ClickException(f"{changelog} not found")
 
     if version is None:
         if not check:

@@ -9,6 +9,7 @@ from ...constants import (
     TEXT_LINE_HEIGHT_HALF,
     TEXT_MARGIN_LEFT,
     TEXT_MAX_LINES,
+    TEXT_MAX_LINES_NO_HEADER,
 )
 
 LINE_WIDTH = ui.WIDTH - TEXT_MARGIN_LEFT
@@ -232,7 +233,7 @@ def render_text(
     """
     # initial rendering state
     INITIAL_OFFSET_X = offset_x
-    offset_y_max = TEXT_HEADER_HEIGHT + (TEXT_LINE_HEIGHT * max_lines)
+    offset_y_max = offset_y + (TEXT_LINE_HEIGHT * (max_lines - 1))
     span = _WORKING_SPAN
 
     # scan through up to item_offset so that the current font & color is up to date
@@ -273,7 +274,7 @@ def render_text(
         # render it after a linebreak
         item_width = ui.display.text_width(item, font)
         if (
-            item_width <= line_width
+            item_width <= line_width  # pylint: disable=chained-comparison
             and item_width + offset_x - INITIAL_OFFSET_X > line_width
             and "\n" not in item
         ):
@@ -364,10 +365,10 @@ if __debug__:
 class TextBase(ui.Component):
     def __init__(
         self,
-        header_text: str,
+        header_text: str | None,
         header_icon: str = ui.ICON_DEFAULT,
         icon_color: int = ui.ORANGE_ICON,
-        max_lines: int = TEXT_MAX_LINES,
+        max_lines: int | None = None,
         new_lines: bool = True,
         break_words: bool = False,
         render_page_overflow: bool = True,
@@ -379,7 +380,14 @@ class TextBase(ui.Component):
         self.header_text = header_text
         self.header_icon = header_icon
         self.icon_color = icon_color
-        self.max_lines = max_lines
+
+        if max_lines is None:
+            self.max_lines = (
+                TEXT_MAX_LINES_NO_HEADER if self.header_text is None else TEXT_MAX_LINES
+            )
+        else:
+            self.max_lines = max_lines
+
         self.new_lines = new_lines
         self.break_words = break_words
         self.render_page_overflow = render_page_overflow
@@ -414,7 +422,7 @@ class TextBase(ui.Component):
         param_font: int = ui.BOLD,
     ) -> None:
         parts = format_string.split("{}", len(params))
-        for i in range(len(parts)):
+        for i in range(len(parts)):  # pylint: disable=consider-using-enumerate
             self.content.append(font)
             self.content.append(parts[i])
             if i < len(parts) - 1 and i < len(params):
@@ -436,7 +444,7 @@ class TextBase(ui.Component):
                     self.on_render()
             finally:
                 self.repaint = should_repaint
-            return [self.header_text] + display_mock.screen_contents
+            return [self.header_text or ""] + display_mock.screen_contents
 
 
 LABEL_LEFT = const(0)

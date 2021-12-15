@@ -4,6 +4,8 @@ use core::{
     ptr::{self, NonNull},
 };
 
+use crate::error::Error;
+
 use super::ffi;
 
 /// A pointer type for values on the garbage-collected heap.
@@ -15,7 +17,7 @@ pub struct Gc<T: ?Sized>(NonNull<T>);
 impl<T> Gc<T> {
     /// Allocate memory on the heap managed by the MicroPython garbage collector
     /// and then place `v` into it. `v` will _not_ get its destructor called.
-    pub fn new(v: T) -> Self {
+    pub fn new(v: T) -> Result<Self, Error> {
         let layout = Layout::for_value(&v);
         // TODO: Assert that `layout.align()` is the same as the GC alignment.
         // SAFETY:
@@ -23,25 +25,16 @@ impl<T> Gc<T> {
         //    not support custom alignment.
         //  - `ptr` is guaranteed to stay valid as long as it's reachable from the stack
         //    or the MicroPython heap.
+        // EXCEPTION: Returns null instead of raising.
         unsafe {
-            let raw = ffi::gc_alloc(layout.size(), 0).cast();
-            ptr::write(raw, v);
-            Self::from_raw(raw)
+            let raw = ffi::gc_alloc(layout.size(), 0);
+            if raw.is_null() {
+                return Err(Error::AllocationFailed);
+            }
+            let typed = raw.cast();
+            ptr::write(typed, v);
+            Ok(Self::from_raw(typed))
         }
-    }
-
-    /// Return a mutable reference to the value.
-    ///
-    /// # Safety
-    ///
-    /// `Gc` values can originate in the MicroPython interpreter, and these can
-    /// be both shared and mutable. Before calling this function, you have to
-    /// ensure that `this` is unique for the whole lifetime of the
-    /// returned mutable reference.
-    pub unsafe fn as_mut(this: &mut Self) -> &mut T {
-        // SAFETY: The caller must guarantee that `this` meets all the requirements for
-        // a mutable reference.
-        unsafe { this.0.as_mut() }
     }
 }
 
@@ -65,6 +58,20 @@ impl<T: ?Sized> Gc<T> {
     /// value.
     pub fn into_raw(this: Self) -> *mut T {
         this.0.as_ptr()
+    }
+
+    /// Return a mutable reference to the value.
+    ///
+    /// # Safety
+    ///
+    /// `Gc` values can originate in the MicroPython interpreter, and these can
+    /// be both shared and mutable. Before calling this function, you have to
+    /// ensure that `this` is unique for the whole lifetime of the
+    /// returned mutable reference.
+    pub unsafe fn as_mut(this: &mut Self) -> &mut T {
+        // SAFETY: The caller must guarantee that `this` meets all the requirements for
+        // a mutable reference.
+        unsafe { this.0.as_mut() }
     }
 }
 

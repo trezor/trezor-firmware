@@ -304,9 +304,7 @@ def check_sig_v1(
 
     if len(distinct_key_indexes) < len(key_indexes):
         raise InvalidSignatureError(
-            "Not enough distinct signatures (found {}, need {})".format(
-                len(distinct_key_indexes), len(key_indexes)
-            )
+            f"Not enough distinct signatures (found {len(distinct_key_indexes)}, need {len(key_indexes)})"
         )
 
     for i in range(len(key_indexes)):
@@ -315,14 +313,14 @@ def check_sig_v1(
 
         if key_idx >= len(V1_BOOTLOADER_KEYS):
             # unknown pubkey
-            raise InvalidSignatureError("Unknown key in slot {}".format(i))
+            raise InvalidSignatureError(f"Unknown key in slot {i}")
 
         pubkey = V1_BOOTLOADER_KEYS[key_idx][1:]
         verify = ecdsa.VerifyingKey.from_string(pubkey, curve=ecdsa.curves.SECP256k1)
         try:
             verify.verify_digest(signature, digest)
         except ecdsa.BadSignatureError as e:
-            raise InvalidSignatureError("Invalid signature in slot {}".format(i)) from e
+            raise InvalidSignatureError(f"Invalid signature in slot {i}") from e
 
 
 def header_digest(header: c.Container, hash_function: Callable = blake2s) -> bytes:
@@ -498,7 +496,7 @@ def update(client, data):
         if isinstance(resp, messages.Success):
             return
         else:
-            raise RuntimeError("Unexpected result %s" % resp)
+            raise RuntimeError(f"Unexpected result {resp}")
 
     # TREZORv2 method
     while isinstance(resp, messages.FirmwareRequest):
@@ -509,4 +507,4 @@ def update(client, data):
     if isinstance(resp, messages.Success):
         return
     else:
-        raise RuntimeError("Unexpected message %s" % resp)
+        raise RuntimeError(f"Unexpected message {resp}")

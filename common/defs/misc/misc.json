@@ -83,7 +83,8 @@
         },
         "wallet": {
             "AdaLite": "https://adalite.io/app",
-            "Yoroi": "https://yoroi-wallet.com"
+            "Yoroi": "https://yoroi-wallet.com",
+            "Daedalus": "https://daedaluswallet.io"
         }
     },
     {

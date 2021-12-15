@@ -81,7 +81,9 @@
             "amount": "1"
           }
         ],
-        "signing_mode": "POOL_REGISTRATION_AS_OWNER"
+        "mint": [],
+        "signing_mode": "POOL_REGISTRATION_AS_OWNER",
+        "additional_witness_requests": []
       },
       "result": {
         "tx_hash": "e3b9a5657bf62609465a930c8359d774c73944973cfc5a104a0f0ed1e1e8db21",
@@ -172,7 +174,9 @@
             "amount": "1"
           }
         ],
-        "signing_mode": "POOL_REGISTRATION_AS_OWNER"
+        "mint": [],
+        "signing_mode": "POOL_REGISTRATION_AS_OWNER",
+        "additional_witness_requests": []
       },
       "result": {
         "tx_hash": "c0d944db15446cf05e8db014685414c928d4d9a3e96aea229234be56eeae34c5",
@@ -264,7 +268,9 @@
             "amount": "1"
           }
         ],
-        "signing_mode": "POOL_REGISTRATION_AS_OWNER"
+        "mint": [],
+        "signing_mode": "POOL_REGISTRATION_AS_OWNER",
+        "additional_witness_requests": []
       },
       "result": {
         "tx_hash": "f3d62758ff2f520e7256e65be9d8165da60c7979a97202c19d625709412411fd",
@@ -322,7 +328,9 @@
             "amount": "1"
           }
         ],
-        "signing_mode": "POOL_REGISTRATION_AS_OWNER"
+        "mint": [],
+        "signing_mode": "POOL_REGISTRATION_AS_OWNER",
+        "additional_witness_requests": []
       },
       "result": {
         "tx_hash": "504f9214142996e0b7e315103b25d88a4afa3d01dd5be22376921b52b01483c3",
@@ -380,7 +388,9 @@
             "amount": "1"
           }
         ],
-        "signing_mode": "POOL_REGISTRATION_AS_OWNER"
+        "mint": [],
+        "signing_mode": "POOL_REGISTRATION_AS_OWNER",
+        "additional_witness_requests": []
       },
       "result": {
         "tx_hash": "12921b4f8e77f815e0c8ed97c541fbd5ba38a6d3323f4ff1af0cb934b8ac6b39",
@@ -473,7 +483,9 @@
             "amount": "1"
           }
         ],
-        "signing_mode": "POOL_REGISTRATION_AS_OWNER"
+        "mint": [],
+        "signing_mode": "POOL_REGISTRATION_AS_OWNER",
+        "additional_witness_requests": []
       },
       "result": {
         "tx_hash": "880fafab19a36407e9af300c2905e2f6bc8a8debd8b625005f56994d242ba460",

@@ -19,7 +19,8 @@ async def button_request(
     br_type: str,
     code: ButtonRequestType = ButtonRequestType.Other,
 ) -> None:
-    log.debug(__name__, "ButtonRequest.type={}".format(br_type))
+    if __debug__:
+        log.debug(__name__, "ButtonRequest.type=%s", br_type)
     workflow.close_others()
     await ctx.call(ButtonRequest(code=code), ButtonAck)
 

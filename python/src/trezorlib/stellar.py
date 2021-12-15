@@ -32,8 +32,10 @@ try:
         IdMemo,
         ManageData,
         ManageSellOffer,
+        NoneMemo,
         Operation,
         PathPaymentStrictReceive,
+        PathPaymentStrictSend,
         Payment,
         ReturnHashMemo,
         SetOptions,
@@ -42,6 +44,8 @@ try:
         TrustLineEntryFlag,
         Price,
         Network,
+        ManageBuyOffer,
+        MuxedAccount,
     )
     from stellar_sdk.xdr.signer_key_type import SignerKeyType
 
@@ -52,20 +56,7 @@ except ImportError:
     HAVE_STELLAR_SDK = False
     DEFAULT_NETWORK_PASSPHRASE = "Public Global Stellar Network ; September 2015"
 
-# Memo types
-MEMO_TYPE_NONE = 0
-MEMO_TYPE_TEXT = 1
-MEMO_TYPE_ID = 2
-MEMO_TYPE_HASH = 3
-MEMO_TYPE_RETURN = 4
-
-# Asset types
-ASSET_TYPE_NATIVE = 0
-ASSET_TYPE_ALPHA4 = 1
-ASSET_TYPE_ALPHA12 = 2
-
 DEFAULT_BIP32_PATH = "m/44h/148h/0h"
-# Stellar's BIP32 differs to Bitcoin's see https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0005.md
 
 
 def from_envelope(envelope: "TransactionEnvelope"):
@@ -75,35 +66,48 @@ def from_envelope(envelope: "TransactionEnvelope"):
     """
     if not HAVE_STELLAR_SDK:
         raise RuntimeError("Stellar SDK not available")
-    tx = messages.StellarSignTx()
+
     parsed_tx = envelope.transaction
-    tx.source_account = parsed_tx.source.account_id
-    tx.fee = parsed_tx.fee
-    tx.sequence_number = parsed_tx.sequence
+    if parsed_tx.time_bounds is None:
+        raise ValueError("Timebounds are mandatory")
 
-    # Timebounds is an optional field
-    if parsed_tx.time_bounds:
-        tx.timebounds_start = parsed_tx.time_bounds.min_time
-        tx.timebounds_end = parsed_tx.time_bounds.max_time
-
-    memo = parsed_tx.memo
-    if isinstance(memo, TextMemo):
+    memo_type = messages.StellarMemoType.NONE
+    memo_text = None
+    memo_id = None
+    memo_hash = None
+    if isinstance(parsed_tx.memo, NoneMemo):
+        pass
+    elif isinstance(parsed_tx.memo, TextMemo):
         # memo_text is specified as UTF-8 string, but returned as bytes from the XDR parser
-        tx.memo_type = MEMO_TYPE_TEXT
-        tx.memo_text = memo.memo_text.decode("utf-8")
-    elif isinstance(memo, IdMemo):
-        tx.memo_type = MEMO_TYPE_ID
-        tx.memo_id = memo.memo_id
-    elif isinstance(memo, HashMemo):
-        tx.memo_type = MEMO_TYPE_HASH
-        tx.memo_hash = memo.memo_hash
-    elif isinstance(memo, ReturnHashMemo):
-        tx.memo_type = MEMO_TYPE_RETURN
-        tx.memo_hash = memo.memo_return
+        memo_type = messages.StellarMemoType.TEXT
+        memo_text = parsed_tx.memo.memo_text.decode("utf-8")
+    elif isinstance(parsed_tx.memo, IdMemo):
+        memo_type = messages.StellarMemoType.ID
+        memo_id = parsed_tx.memo.memo_id
+    elif isinstance(parsed_tx.memo, HashMemo):
+        memo_type = messages.StellarMemoType.HASH
+        memo_hash = parsed_tx.memo.memo_hash
+    elif isinstance(parsed_tx.memo, ReturnHashMemo):
+        memo_type = messages.StellarMemoType.RETURN
+        memo_hash = parsed_tx.memo.memo_return
     else:
-        tx.memo_type = MEMO_TYPE_NONE
+        raise ValueError("Unsupported memo type")
 
-    tx.num_operations = len(parsed_tx.operations)
+    _raise_if_account_muxed_id_exists(parsed_tx.source)
+    tx = messages.StellarSignTx(
+        source_account=parsed_tx.source.account_id,
+        fee=parsed_tx.fee,
+        sequence_number=parsed_tx.sequence,
+        timebounds_start=parsed_tx.time_bounds.min_time,
+        timebounds_end=parsed_tx.time_bounds.max_time,
+        memo_type=memo_type,
+        memo_text=memo_text,
+        memo_id=memo_id,
+        memo_hash=memo_hash,
+        num_operations=len(parsed_tx.operations),
+        network_passphrase=envelope.network_passphrase,
+    )
+
     operations = [_read_operation(op) for op in parsed_tx.operations]
     return tx, operations
 
@@ -111,6 +115,7 @@ def from_envelope(envelope: "TransactionEnvelope"):
 def _read_operation(op: "Operation"):
     # TODO: Let's add muxed account support later.
     if op.source:
+        _raise_if_account_muxed_id_exists(op.source)
         source_account = op.source.account_id
     else:
         source_account = None
@@ -121,6 +126,7 @@ def _read_operation(op: "Operation"):
             starting_balance=_read_amount(op.starting_balance),
         )
     if isinstance(op, Payment):
+        _raise_if_account_muxed_id_exists(op.destination)
         return messages.StellarPaymentOp(
             source_account=source_account,
             destination_account=op.destination.account_id,
@@ -128,7 +134,8 @@ def _read_operation(op: "Operation"):
             amount=_read_amount(op.amount),
         )
     if isinstance(op, PathPaymentStrictReceive):
-        operation = messages.StellarPathPaymentOp(
+        _raise_if_account_muxed_id_exists(op.destination)
+        operation = messages.StellarPathPaymentStrictReceiveOp(
             source_account=source_account,
             send_asset=_read_asset(op.send_asset),
             send_max=_read_amount(op.send_max),
@@ -140,7 +147,7 @@ def _read_operation(op: "Operation"):
         return operation
     if isinstance(op, ManageSellOffer):
         price = _read_price(op.price)
-        return messages.StellarManageOfferOp(
+        return messages.StellarManageSellOfferOp(
             source_account=source_account,
             selling_asset=_read_asset(op.selling),
             buying_asset=_read_asset(op.buying),
@@ -151,7 +158,7 @@ def _read_operation(op: "Operation"):
         )
     if isinstance(op, CreatePassiveSellOffer):
         price = _read_price(op.price)
-        return messages.StellarCreatePassiveOfferOp(
+        return messages.StellarCreatePassiveSellOfferOp(
             source_account=source_account,
             selling_asset=_read_asset(op.selling),
             buying_asset=_read_asset(op.buying),
@@ -181,7 +188,7 @@ def _read_operation(op: "Operation"):
                 signer_key = op.signer.signer_key.signer_key.pre_auth_tx.uint256
             else:
                 raise ValueError("Unsupported signer key type")
-            operation.signer_type = signer_type.value
+            operation.signer_type = messages.StellarSignerType(signer_type.value)
             operation.signer_key = signer_key
             operation.signer_weight = op.signer.weight
         return operation
@@ -198,16 +205,19 @@ def _read_operation(op: "Operation"):
         ):
             raise ValueError("Unsupported trust line flag")
         asset_type = (
-            ASSET_TYPE_ALPHA4 if len(op.asset_code) <= 4 else ASSET_TYPE_ALPHA12
+            messages.StellarAssetType.ALPHANUM4
+            if len(op.asset_code) <= 4
+            else messages.StellarAssetType.ALPHANUM12
         )
         return messages.StellarAllowTrustOp(
             source_account=source_account,
             trusted_account=op.trustor,
             asset_type=asset_type,
             asset_code=op.asset_code,
-            is_authorized=op.authorize.value,
+            is_authorized=bool(op.authorize.value),
         )
     if isinstance(op, AccountMerge):
+        _raise_if_account_muxed_id_exists(op.destination)
         return messages.StellarAccountMergeOp(
             source_account=source_account,
             destination_account=op.destination.account_id,
@@ -223,7 +233,37 @@ def _read_operation(op: "Operation"):
         return messages.StellarBumpSequenceOp(
             source_account=source_account, bump_to=op.bump_to
         )
+    if isinstance(op, ManageBuyOffer):
+        price = _read_price(op.price)
+        return messages.StellarManageBuyOfferOp(
+            source_account=source_account,
+            selling_asset=_read_asset(op.selling),
+            buying_asset=_read_asset(op.buying),
+            amount=_read_amount(op.amount),
+            price_n=price.n,
+            price_d=price.d,
+            offer_id=op.offer_id,
+        )
+    if isinstance(op, PathPaymentStrictSend):
+        _raise_if_account_muxed_id_exists(op.destination)
+        operation = messages.StellarPathPaymentStrictSendOp(
+            source_account=source_account,
+            send_asset=_read_asset(op.send_asset),
+            send_amount=_read_amount(op.send_amount),
+            destination_account=op.destination.account_id,
+            destination_asset=_read_asset(op.dest_asset),
+            destination_min=_read_amount(op.dest_min),
+            paths=[_read_asset(asset) for asset in op.path],
+        )
+        return operation
     raise ValueError(f"Unknown operation type: {op.__class__.__name__}")
+
+
+def _raise_if_account_muxed_id_exists(account: "MuxedAccount"):
+    # Currently Trezor firmware does not support MuxedAccount,
+    # so we throw an exception here.
+    if account.account_muxed_id is not None:
+        raise ValueError("MuxedAccount is not supported")
 
 
 def _read_amount(amount: str) -> int:
@@ -231,24 +271,28 @@ def _read_amount(amount: str) -> int:
 
 
 def _read_price(price: Union["Price", str, Decimal]) -> "Price":
-    # In the coming stellar-sdk 5.x, the type of price must be Price,
+    # In the coming stellar-sdk 6.x, the type of price must be Price,
     # at that time we can remove this function
     if isinstance(price, Price):
         return price
     return Price.from_raw_price(price)
 
 
-def _read_asset(asset: "Asset") -> messages.StellarAssetType:
+def _read_asset(asset: "Asset") -> messages.StellarAsset:
     """Reads a stellar Asset from unpacker"""
     if asset.is_native():
-        return messages.StellarAssetType(type=ASSET_TYPE_NATIVE)
+        return messages.StellarAsset(type=messages.StellarAssetType.NATIVE)
     if asset.guess_asset_type() == "credit_alphanum4":
-        return messages.StellarAssetType(
-            type=ASSET_TYPE_ALPHA4, code=asset.code, issuer=asset.issuer
+        return messages.StellarAsset(
+            type=messages.StellarAssetType.ALPHANUM4,
+            code=asset.code,
+            issuer=asset.issuer,
         )
     if asset.guess_asset_type() == "credit_alphanum12":
-        return messages.StellarAssetType(
-            type=ASSET_TYPE_ALPHA12, code=asset.code, issuer=asset.issuer
+        return messages.StellarAsset(
+            type=messages.StellarAssetType.ALPHANUM12,
+            code=asset.code,
+            issuer=asset.issuer,
         )
     raise ValueError("Unsupported asset type")
 
@@ -288,7 +332,7 @@ def sign_tx(
 
     if not isinstance(resp, messages.StellarSignedTx):
         raise exceptions.TrezorException(
-            "Unexpected message: {}".format(resp.__class__.__name__)
+            f"Unexpected message: {resp.__class__.__name__}"
         )
 
     if operations:

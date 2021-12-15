@@ -59,10 +59,14 @@ bool stellar_confirmSourceAccount(bool has_source_account,
                                   const char *str_account);
 bool stellar_confirmCreateAccountOp(const StellarCreateAccountOp *msg);
 bool stellar_confirmPaymentOp(const StellarPaymentOp *msg);
-bool stellar_confirmPathPaymentOp(const StellarPathPaymentOp *msg);
-bool stellar_confirmManageOfferOp(const StellarManageOfferOp *msg);
-bool stellar_confirmCreatePassiveOfferOp(
-    const StellarCreatePassiveOfferOp *msg);
+bool stellar_confirmPathPaymentStrictReceiveOp(
+    const StellarPathPaymentStrictReceiveOp *msg);
+bool stellar_confirmPathPaymentStrictSendOp(
+    const StellarPathPaymentStrictSendOp *msg);
+bool stellar_confirmManageBuyOfferOp(const StellarManageBuyOfferOp *msg);
+bool stellar_confirmManageSellOfferOp(const StellarManageSellOfferOp *msg);
+bool stellar_confirmCreatePassiveSellOfferOp(
+    const StellarCreatePassiveSellOfferOp *msg);
 bool stellar_confirmSetOptionsOp(const StellarSetOptionsOp *msg);
 bool stellar_confirmChangeTrustOp(const StellarChangeTrustOp *msg);
 bool stellar_confirmAllowTrustOp(const StellarAllowTrustOp *msg);
@@ -94,7 +98,7 @@ void stellar_hashupdate_uint64(uint64_t value);
 void stellar_hashupdate_bool(bool value);
 void stellar_hashupdate_string(const uint8_t *data, size_t len);
 void stellar_hashupdate_address(const uint8_t *address_bytes);
-void stellar_hashupdate_asset(const StellarAssetType *asset);
+void stellar_hashupdate_asset(const StellarAsset *asset);
 void stellar_hashupdate_bytes(const uint8_t *data, size_t len);
 
 void stellar_fillSignedTx(StellarSignedTx *resp);
@@ -104,7 +108,7 @@ void stellar_getSignatureForActiveTx(uint8_t *out_signature);
 void stellar_format_uint32(uint32_t number, char *out, size_t outlen);
 void stellar_format_uint64(uint64_t number, char *out, size_t outlen);
 void stellar_format_stroops(uint64_t number, char *out, size_t outlen);
-void stellar_format_asset(const StellarAssetType *asset, char *str_formatted,
+void stellar_format_asset(const StellarAsset *asset, char *str_formatted,
                           size_t len);
 void stellar_format_price(uint32_t numerator, uint32_t denominator, char *out,
                           size_t outlen);

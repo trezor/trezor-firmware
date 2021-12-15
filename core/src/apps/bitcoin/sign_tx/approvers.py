@@ -5,8 +5,8 @@ from trezor.enums import OutputScriptType
 
 from apps.common import safety_checks
 
-from .. import keychain
 from ..authorization import FEE_PER_ANONYMITY_DECIMALS
+from ..keychain import validate_path_against_script_type
 from . import helpers, tx_weight
 from .tx_info import OriginalTxInfo, TxInfo
 
@@ -27,7 +27,7 @@ if False:
 class Approver:
     def __init__(self, tx: SignTx, coin: CoinInfo) -> None:
         self.coin = coin
-        self.weight = tx_weight.TxWeightCalculator(tx.inputs_count, tx.outputs_count)
+        self.weight = tx_weight.TxWeightCalculator()
 
         # amounts in the current transaction
         self.total_in = 0  # sum of input amounts
@@ -54,6 +54,9 @@ class Approver:
         self.total_in += txi.amount
         if txi.orig_hash:
             self.orig_total_in += txi.amount
+
+    async def check_internal_input(self, txi: TxInput) -> None:
+        pass
 
     def add_external_input(self, txi: TxInput) -> None:
         self.weight.add_input(txi)
@@ -102,10 +105,21 @@ class BasicApprover(Approver):
         self.change_count = 0  # the number of change-outputs
 
     async def add_internal_input(self, txi: TxInput) -> None:
-        if not keychain.validate_path_against_script_type(self.coin, txi):
+        if not validate_path_against_script_type(self.coin, txi):
             await helpers.confirm_foreign_address(txi.address_n)
 
         await super().add_internal_input(txi)
+
+    async def check_internal_input(self, txi: TxInput) -> None:
+        if not validate_path_against_script_type(self.coin, txi):
+            # The following can be removed once we start validating script_pubkey in step3_verify_inputs().
+            if self.orig_total_in:
+                # Replacement transaction.
+                # This mitigates a cross-coin spending attack when safety checks are disabled.
+                raise wire.ProcessError(
+                    "Non-standard paths not allowed in replacement transactions."
+                )
+            await helpers.confirm_foreign_address(txi.address_n)
 
     def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         super().add_change_output(txo, script_pubkey)
@@ -257,6 +271,8 @@ class BasicApprover(Approver):
 
 
 class CoinJoinApprover(Approver):
+    MAX_OUTPUT_WEIGHT = const(4 * 43)
+
     def __init__(
         self, tx: SignTx, coin: CoinInfo, authorization: CoinJoinAuthorization
     ) -> None:
@@ -267,9 +283,7 @@ class CoinJoinApprover(Approver):
             raise wire.DataError("Coin name does not match authorization.")
 
         # Upper bound on the user's contribution to the weight of the transaction.
-        self.our_weight = tx_weight.TxWeightCalculator(
-            tx.inputs_count, tx.outputs_count
-        )
+        self.our_weight = tx_weight.TxWeightCalculator()
 
         # base for coordinator fee to be multiplied by fee_per_anonymity
         self.coordinator_fee_base = 0
@@ -292,6 +306,11 @@ class CoinJoinApprover(Approver):
             raise wire.ProcessError("Unauthorized path")
 
         await super().add_internal_input(txi)
+
+    async def check_internal_input(self, txi: TxInput) -> None:
+        # The following can be removed once we start validating script_pubkey in step3_verify_inputs().
+        if not self.authorization.check_sign_tx_input(txi, self.coin):
+            raise wire.ProcessError("Unauthorized path")
 
     def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         super().add_change_output(txo, script_pubkey)
@@ -321,9 +340,12 @@ class CoinJoinApprover(Approver):
         if mining_fee > (self.coin.maxfee_kb / 1000) * (self.weight.get_total() / 4):
             raise wire.ProcessError("Mining fee over threshold")
 
-        # The maximum mining fee that the user should be paying.
+        # The maximum mining fee that the user should be paying assuming that participants share
+        # the fees for the coordinator's output.
         our_max_mining_fee = (
-            mining_fee * self.our_weight.get_total() / self.weight.get_total()
+            mining_fee
+            * self.our_weight.get_total()
+            / (self.weight.get_total() - self.MAX_OUTPUT_WEIGHT)
         )
 
         # The coordinator fee for the user's outputs.

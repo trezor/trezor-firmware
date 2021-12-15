@@ -8,7 +8,7 @@ error = False
 
 MYDIR = os.path.dirname(__file__)
 
-EXPECTED_PREFIX_RE = re.compile(r"messages-(\w+)\.proto")
+EXPECTED_PREFIX_RE = re.compile(r"messages-(\w+)(?:-.*)?\.proto")
 
 for fn in sorted(glob(os.path.join(MYDIR, "messages-*.proto"))):
     with open(fn, "rt") as f:

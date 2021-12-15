@@ -23,7 +23,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "lib/utils/pyexec.h"
 #include "py/compile.h"
 #include "py/gc.h"
 #include "py/mperrno.h"
@@ -31,12 +30,15 @@
 #include "py/repl.h"
 #include "py/runtime.h"
 #include "py/stackctrl.h"
+#include "shared/runtime/pyexec.h"
 
 #include "ports/stm32/gccollect.h"
 #include "ports/stm32/pendsv.h"
 
 #include "bl_check.h"
+#include "button.h"
 #include "common.h"
+#include "compiler_traits.h"
 #include "display.h"
 #include "flash.h"
 #include "mpu.h"
@@ -48,6 +50,9 @@
 #include "sdcard.h"
 #include "supervise.h"
 #include "touch.h"
+#ifdef USE_SECP256K1_ZKP
+#include "zkp_context.h"
+#endif
 
 // from util.s
 extern void shutdown_privileged(void);
@@ -83,7 +88,7 @@ int main(void) {
 
 #if TREZOR_MODEL == 1
   display_init();
-  touch_init();
+  button_init();
 #endif
 
 #if TREZOR_MODEL == T
@@ -98,6 +103,10 @@ int main(void) {
   __asm__ volatile("isb");
 
   display_clear();
+#endif
+
+#ifdef USE_SECP256K1_ZKP
+  ensure(sectrue * (zkp_context_init() == 0), NULL);
 #endif
 
   printf("CORE: Preparing stack\n");

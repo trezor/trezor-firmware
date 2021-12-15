@@ -60,7 +60,7 @@ class TestProtobuf(unittest.TestCase):
             self.assertEqual(dump_uvarint(1), b"\x01")
             self.assertEqual(dump_uvarint(0xFF), b"\xff\x01")
             self.assertEqual(dump_uvarint(123456), b"\xc0\xc4\x07")
-            with self.assertRaises(ValueError):
+            with self.assertRaises(OverflowError):
                 dump_uvarint(-1)
 
     def test_load_uvarint(self):

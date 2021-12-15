@@ -27,12 +27,16 @@ if TYPE_CHECKING:
     from trezor.enums import Capability  # noqa: F401
     from trezor.enums import CardanoAddressType  # noqa: F401
     from trezor.enums import CardanoCertificateType  # noqa: F401
+    from trezor.enums import CardanoDerivationType  # noqa: F401
+    from trezor.enums import CardanoNativeScriptHashDisplayFormat  # noqa: F401
+    from trezor.enums import CardanoNativeScriptType  # noqa: F401
     from trezor.enums import CardanoPoolRelayType  # noqa: F401
     from trezor.enums import CardanoTxAuxiliaryDataSupplementType  # noqa: F401
     from trezor.enums import CardanoTxSigningMode  # noqa: F401
     from trezor.enums import CardanoTxWitnessType  # noqa: F401
     from trezor.enums import DebugSwipeDirection  # noqa: F401
     from trezor.enums import DecredStakingSpendType  # noqa: F401
+    from trezor.enums import EthereumDataType  # noqa: F401
     from trezor.enums import FailureType  # noqa: F401
     from trezor.enums import InputScriptType  # noqa: F401
     from trezor.enums import MessageType  # noqa: F401
@@ -46,6 +50,9 @@ if TYPE_CHECKING:
     from trezor.enums import RequestType  # noqa: F401
     from trezor.enums import SafetyCheckLevel  # noqa: F401
     from trezor.enums import SdProtectOperationType  # noqa: F401
+    from trezor.enums import StellarAssetType  # noqa: F401
+    from trezor.enums import StellarMemoType  # noqa: F401
+    from trezor.enums import StellarSignerType  # noqa: F401
     from trezor.enums import TezosBallotType  # noqa: F401
     from trezor.enums import TezosContractType  # noqa: F401
     from trezor.enums import WordRequestType  # noqa: F401
@@ -519,6 +526,7 @@ if TYPE_CHECKING:
         message: "bytes"
         coin_name: "str"
         script_type: "InputScriptType"
+        no_script_type: "bool | None"
 
         def __init__(
             self,
@@ -527,6 +535,7 @@ if TYPE_CHECKING:
             address_n: "list[int] | None" = None,
             coin_name: "str | None" = None,
             script_type: "InputScriptType | None" = None,
+            no_script_type: "bool | None" = None,
         ) -> None:
             pass
 
@@ -638,6 +647,7 @@ if TYPE_CHECKING:
         orig_hash: "bytes | None"
         orig_index: "int | None"
         decred_staking_spend: "DecredStakingSpendType | None"
+        script_pubkey: "bytes | None"
 
         def __init__(
             self,
@@ -657,6 +667,7 @@ if TYPE_CHECKING:
             orig_hash: "bytes | None" = None,
             orig_index: "int | None" = None,
             decred_staking_spend: "DecredStakingSpendType | None" = None,
+            script_pubkey: "bytes | None" = None,
         ) -> None:
             pass
 
@@ -1056,12 +1067,72 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoBlockchainPointerType"]:
             return isinstance(msg, cls)
 
+    class CardanoNativeScript(protobuf.MessageType):
+        type: "CardanoNativeScriptType"
+        scripts: "list[CardanoNativeScript]"
+        key_hash: "bytes | None"
+        key_path: "list[int]"
+        required_signatures_count: "int | None"
+        invalid_before: "int | None"
+        invalid_hereafter: "int | None"
+
+        def __init__(
+            self,
+            *,
+            type: "CardanoNativeScriptType",
+            scripts: "list[CardanoNativeScript] | None" = None,
+            key_path: "list[int] | None" = None,
+            key_hash: "bytes | None" = None,
+            required_signatures_count: "int | None" = None,
+            invalid_before: "int | None" = None,
+            invalid_hereafter: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoNativeScript"]:
+            return isinstance(msg, cls)
+
+    class CardanoGetNativeScriptHash(protobuf.MessageType):
+        script: "CardanoNativeScript"
+        display_format: "CardanoNativeScriptHashDisplayFormat"
+        derivation_type: "CardanoDerivationType"
+
+        def __init__(
+            self,
+            *,
+            script: "CardanoNativeScript",
+            display_format: "CardanoNativeScriptHashDisplayFormat",
+            derivation_type: "CardanoDerivationType",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoGetNativeScriptHash"]:
+            return isinstance(msg, cls)
+
+    class CardanoNativeScriptHash(protobuf.MessageType):
+        script_hash: "bytes"
+
+        def __init__(
+            self,
+            *,
+            script_hash: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoNativeScriptHash"]:
+            return isinstance(msg, cls)
+
     class CardanoAddressParametersType(protobuf.MessageType):
         address_type: "CardanoAddressType"
         address_n: "list[int]"
         address_n_staking: "list[int]"
         staking_key_hash: "bytes | None"
         certificate_pointer: "CardanoBlockchainPointerType | None"
+        script_payment_hash: "bytes | None"
+        script_staking_hash: "bytes | None"
 
         def __init__(
             self,
@@ -1071,6 +1142,8 @@ if TYPE_CHECKING:
             address_n_staking: "list[int] | None" = None,
             staking_key_hash: "bytes | None" = None,
             certificate_pointer: "CardanoBlockchainPointerType | None" = None,
+            script_payment_hash: "bytes | None" = None,
+            script_staking_hash: "bytes | None" = None,
         ) -> None:
             pass
 
@@ -1083,6 +1156,7 @@ if TYPE_CHECKING:
         protocol_magic: "int"
         network_id: "int"
         address_parameters: "CardanoAddressParametersType"
+        derivation_type: "CardanoDerivationType"
 
         def __init__(
             self,
@@ -1090,6 +1164,7 @@ if TYPE_CHECKING:
             protocol_magic: "int",
             network_id: "int",
             address_parameters: "CardanoAddressParametersType",
+            derivation_type: "CardanoDerivationType",
             show_display: "bool | None" = None,
         ) -> None:
             pass
@@ -1115,10 +1190,12 @@ if TYPE_CHECKING:
     class CardanoGetPublicKey(protobuf.MessageType):
         address_n: "list[int]"
         show_display: "bool | None"
+        derivation_type: "CardanoDerivationType"
 
         def __init__(
             self,
             *,
+            derivation_type: "CardanoDerivationType",
             address_n: "list[int] | None" = None,
             show_display: "bool | None" = None,
         ) -> None:
@@ -1157,6 +1234,8 @@ if TYPE_CHECKING:
         has_auxiliary_data: "bool"
         validity_interval_start: "int | None"
         witness_requests_count: "int"
+        minting_asset_groups_count: "int"
+        derivation_type: "CardanoDerivationType"
 
         def __init__(
             self,
@@ -1171,6 +1250,8 @@ if TYPE_CHECKING:
             withdrawals_count: "int",
             has_auxiliary_data: "bool",
             witness_requests_count: "int",
+            minting_asset_groups_count: "int",
+            derivation_type: "CardanoDerivationType",
             ttl: "int | None" = None,
             validity_interval_start: "int | None" = None,
         ) -> None:
@@ -1234,13 +1315,15 @@ if TYPE_CHECKING:
 
     class CardanoToken(protobuf.MessageType):
         asset_name_bytes: "bytes"
-        amount: "int"
+        amount: "int | None"
+        mint_amount: "int | None"
 
         def __init__(
             self,
             *,
             asset_name_bytes: "bytes",
-            amount: "int",
+            amount: "int | None" = None,
+            mint_amount: "int | None" = None,
         ) -> None:
             pass
 
@@ -1339,6 +1422,7 @@ if TYPE_CHECKING:
         path: "list[int]"
         pool: "bytes | None"
         pool_parameters: "CardanoPoolParametersType | None"
+        script_hash: "bytes | None"
 
         def __init__(
             self,
@@ -1347,6 +1431,7 @@ if TYPE_CHECKING:
             path: "list[int] | None" = None,
             pool: "bytes | None" = None,
             pool_parameters: "CardanoPoolParametersType | None" = None,
+            script_hash: "bytes | None" = None,
         ) -> None:
             pass
 
@@ -1357,12 +1442,14 @@ if TYPE_CHECKING:
     class CardanoTxWithdrawal(protobuf.MessageType):
         path: "list[int]"
         amount: "int"
+        script_hash: "bytes | None"
 
         def __init__(
             self,
             *,
             amount: "int",
             path: "list[int] | None" = None,
+            script_hash: "bytes | None" = None,
         ) -> None:
             pass
 
@@ -1404,6 +1491,20 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxAuxiliaryData"]:
+            return isinstance(msg, cls)
+
+    class CardanoTxMint(protobuf.MessageType):
+        asset_groups_count: "int"
+
+        def __init__(
+            self,
+            *,
+            asset_groups_count: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxMint"]:
             return isinstance(msg, cls)
 
     class CardanoTxItemAck(protobuf.MessageType):
@@ -1694,11 +1795,13 @@ if TYPE_CHECKING:
 
     class Initialize(protobuf.MessageType):
         session_id: "bytes | None"
+        derive_cardano: "bool | None"
 
         def __init__(
             self,
             *,
             session_id: "bytes | None" = None,
+            derive_cardano: "bool | None" = None,
         ) -> None:
             pass
 
@@ -2984,28 +3087,28 @@ if TYPE_CHECKING:
 
     class EthereumSignTx(protobuf.MessageType):
         address_n: "list[int]"
-        nonce: "bytes | None"
-        gas_price: "bytes | None"
-        gas_limit: "bytes | None"
-        to: "str | None"
-        value: "bytes | None"
-        data_initial_chunk: "bytes | None"
-        data_length: "int | None"
-        chain_id: "int | None"
+        nonce: "bytes"
+        gas_price: "bytes"
+        gas_limit: "bytes"
+        to: "str"
+        value: "bytes"
+        data_initial_chunk: "bytes"
+        data_length: "int"
+        chain_id: "int"
         tx_type: "int | None"
 
         def __init__(
             self,
             *,
+            gas_price: "bytes",
+            gas_limit: "bytes",
+            chain_id: "int",
             address_n: "list[int] | None" = None,
             nonce: "bytes | None" = None,
-            gas_price: "bytes | None" = None,
-            gas_limit: "bytes | None" = None,
             to: "str | None" = None,
             value: "bytes | None" = None,
             data_initial_chunk: "bytes | None" = None,
             data_length: "int | None" = None,
-            chain_id: "int | None" = None,
             tx_type: "int | None" = None,
         ) -> None:
             pass
@@ -3069,12 +3172,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EthereumTxAck(protobuf.MessageType):
-        data_chunk: "bytes | None"
+        data_chunk: "bytes"
 
         def __init__(
             self,
             *,
-            data_chunk: "bytes | None" = None,
+            data_chunk: "bytes",
         ) -> None:
             pass
 
@@ -3084,13 +3187,13 @@ if TYPE_CHECKING:
 
     class EthereumSignMessage(protobuf.MessageType):
         address_n: "list[int]"
-        message: "bytes | None"
+        message: "bytes"
 
         def __init__(
             self,
             *,
+            message: "bytes",
             address_n: "list[int] | None" = None,
-            message: "bytes | None" = None,
         ) -> None:
             pass
 
@@ -3115,16 +3218,16 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EthereumVerifyMessage(protobuf.MessageType):
-        signature: "bytes | None"
-        message: "bytes | None"
-        address: "str | None"
+        signature: "bytes"
+        message: "bytes"
+        address: "str"
 
         def __init__(
             self,
             *,
-            signature: "bytes | None" = None,
-            message: "bytes | None" = None,
-            address: "str | None" = None,
+            signature: "bytes",
+            message: "bytes",
+            address: "str",
         ) -> None:
             pass
 
@@ -3146,6 +3249,132 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumAccessList"]:
+            return isinstance(msg, cls)
+
+    class EthereumSignTypedData(protobuf.MessageType):
+        address_n: "list[int]"
+        primary_type: "str"
+        metamask_v4_compat: "bool"
+
+        def __init__(
+            self,
+            *,
+            primary_type: "str",
+            address_n: "list[int] | None" = None,
+            metamask_v4_compat: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumSignTypedData"]:
+            return isinstance(msg, cls)
+
+    class EthereumTypedDataStructRequest(protobuf.MessageType):
+        name: "str"
+
+        def __init__(
+            self,
+            *,
+            name: "str",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumTypedDataStructRequest"]:
+            return isinstance(msg, cls)
+
+    class EthereumTypedDataStructAck(protobuf.MessageType):
+        members: "list[EthereumStructMember]"
+
+        def __init__(
+            self,
+            *,
+            members: "list[EthereumStructMember] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumTypedDataStructAck"]:
+            return isinstance(msg, cls)
+
+    class EthereumTypedDataValueRequest(protobuf.MessageType):
+        member_path: "list[int]"
+
+        def __init__(
+            self,
+            *,
+            member_path: "list[int] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumTypedDataValueRequest"]:
+            return isinstance(msg, cls)
+
+    class EthereumTypedDataValueAck(protobuf.MessageType):
+        value: "bytes"
+
+        def __init__(
+            self,
+            *,
+            value: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumTypedDataValueAck"]:
+            return isinstance(msg, cls)
+
+    class EthereumTypedDataSignature(protobuf.MessageType):
+        signature: "bytes"
+        address: "str"
+
+        def __init__(
+            self,
+            *,
+            signature: "bytes",
+            address: "str",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumTypedDataSignature"]:
+            return isinstance(msg, cls)
+
+    class EthereumStructMember(protobuf.MessageType):
+        type: "EthereumFieldType"
+        name: "str"
+
+        def __init__(
+            self,
+            *,
+            type: "EthereumFieldType",
+            name: "str",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumStructMember"]:
+            return isinstance(msg, cls)
+
+    class EthereumFieldType(protobuf.MessageType):
+        data_type: "EthereumDataType"
+        size: "int | None"
+        entry_type: "EthereumFieldType | None"
+        struct_name: "str | None"
+
+        def __init__(
+            self,
+            *,
+            data_type: "EthereumDataType",
+            size: "int | None" = None,
+            entry_type: "EthereumFieldType | None" = None,
+            struct_name: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumFieldType"]:
             return isinstance(msg, cls)
 
     class MoneroTransactionSourceEntry(protobuf.MessageType):
@@ -4428,22 +4657,22 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["RipplePayment"]:
             return isinstance(msg, cls)
 
-    class StellarAssetType(protobuf.MessageType):
-        type: "int"
+    class StellarAsset(protobuf.MessageType):
+        type: "StellarAssetType"
         code: "str | None"
         issuer: "str | None"
 
         def __init__(
             self,
             *,
-            type: "int",
+            type: "StellarAssetType",
             code: "str | None" = None,
             issuer: "str | None" = None,
         ) -> None:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarAssetType"]:
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarAsset"]:
             return isinstance(msg, cls)
 
     class StellarGetAddress(protobuf.MessageType):
@@ -4478,33 +4707,33 @@ if TYPE_CHECKING:
 
     class StellarSignTx(protobuf.MessageType):
         address_n: "list[int]"
-        network_passphrase: "str | None"
-        source_account: "str | None"
-        fee: "int | None"
-        sequence_number: "int | None"
-        timebounds_start: "int | None"
-        timebounds_end: "int | None"
-        memo_type: "int | None"
+        network_passphrase: "str"
+        source_account: "str"
+        fee: "int"
+        sequence_number: "int"
+        timebounds_start: "int"
+        timebounds_end: "int"
+        memo_type: "StellarMemoType"
         memo_text: "str | None"
         memo_id: "int | None"
         memo_hash: "bytes | None"
-        num_operations: "int | None"
+        num_operations: "int"
 
         def __init__(
             self,
             *,
+            network_passphrase: "str",
+            source_account: "str",
+            fee: "int",
+            sequence_number: "int",
+            timebounds_start: "int",
+            timebounds_end: "int",
+            memo_type: "StellarMemoType",
+            num_operations: "int",
             address_n: "list[int] | None" = None,
-            network_passphrase: "str | None" = None,
-            source_account: "str | None" = None,
-            fee: "int | None" = None,
-            sequence_number: "int | None" = None,
-            timebounds_start: "int | None" = None,
-            timebounds_end: "int | None" = None,
-            memo_type: "int | None" = None,
             memo_text: "str | None" = None,
             memo_id: "int | None" = None,
             memo_hash: "bytes | None" = None,
-            num_operations: "int | None" = None,
         ) -> None:
             pass
 
@@ -4520,17 +4749,17 @@ if TYPE_CHECKING:
 
     class StellarPaymentOp(protobuf.MessageType):
         source_account: "str | None"
-        destination_account: "str | None"
-        asset: "StellarAssetType | None"
-        amount: "int | None"
+        destination_account: "str"
+        asset: "StellarAsset"
+        amount: "int"
 
         def __init__(
             self,
             *,
+            destination_account: "str",
+            asset: "StellarAsset",
+            amount: "int",
             source_account: "str | None" = None,
-            destination_account: "str | None" = None,
-            asset: "StellarAssetType | None" = None,
-            amount: "int | None" = None,
         ) -> None:
             pass
 
@@ -4540,15 +4769,15 @@ if TYPE_CHECKING:
 
     class StellarCreateAccountOp(protobuf.MessageType):
         source_account: "str | None"
-        new_account: "str | None"
-        starting_balance: "int | None"
+        new_account: "str"
+        starting_balance: "int"
 
         def __init__(
             self,
             *,
+            new_account: "str",
+            starting_balance: "int",
             source_account: "str | None" = None,
-            new_account: "str | None" = None,
-            starting_balance: "int | None" = None,
         ) -> None:
             pass
 
@@ -4556,80 +4785,132 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarCreateAccountOp"]:
             return isinstance(msg, cls)
 
-    class StellarPathPaymentOp(protobuf.MessageType):
+    class StellarPathPaymentStrictReceiveOp(protobuf.MessageType):
         source_account: "str | None"
-        send_asset: "StellarAssetType | None"
-        send_max: "int | None"
-        destination_account: "str | None"
-        destination_asset: "StellarAssetType | None"
-        destination_amount: "int | None"
-        paths: "list[StellarAssetType]"
+        send_asset: "StellarAsset"
+        send_max: "int"
+        destination_account: "str"
+        destination_asset: "StellarAsset"
+        destination_amount: "int"
+        paths: "list[StellarAsset]"
 
         def __init__(
             self,
             *,
-            paths: "list[StellarAssetType] | None" = None,
+            send_asset: "StellarAsset",
+            send_max: "int",
+            destination_account: "str",
+            destination_asset: "StellarAsset",
+            destination_amount: "int",
+            paths: "list[StellarAsset] | None" = None,
             source_account: "str | None" = None,
-            send_asset: "StellarAssetType | None" = None,
-            send_max: "int | None" = None,
-            destination_account: "str | None" = None,
-            destination_asset: "StellarAssetType | None" = None,
-            destination_amount: "int | None" = None,
         ) -> None:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarPathPaymentOp"]:
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarPathPaymentStrictReceiveOp"]:
             return isinstance(msg, cls)
 
-    class StellarManageOfferOp(protobuf.MessageType):
+    class StellarPathPaymentStrictSendOp(protobuf.MessageType):
         source_account: "str | None"
-        selling_asset: "StellarAssetType | None"
-        buying_asset: "StellarAssetType | None"
-        amount: "int | None"
-        price_n: "int | None"
-        price_d: "int | None"
-        offer_id: "int | None"
+        send_asset: "StellarAsset"
+        send_amount: "int"
+        destination_account: "str"
+        destination_asset: "StellarAsset"
+        destination_min: "int"
+        paths: "list[StellarAsset]"
 
         def __init__(
             self,
             *,
+            send_asset: "StellarAsset",
+            send_amount: "int",
+            destination_account: "str",
+            destination_asset: "StellarAsset",
+            destination_min: "int",
+            paths: "list[StellarAsset] | None" = None,
             source_account: "str | None" = None,
-            selling_asset: "StellarAssetType | None" = None,
-            buying_asset: "StellarAssetType | None" = None,
-            amount: "int | None" = None,
-            price_n: "int | None" = None,
-            price_d: "int | None" = None,
-            offer_id: "int | None" = None,
         ) -> None:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarManageOfferOp"]:
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarPathPaymentStrictSendOp"]:
             return isinstance(msg, cls)
 
-    class StellarCreatePassiveOfferOp(protobuf.MessageType):
+    class StellarManageSellOfferOp(protobuf.MessageType):
         source_account: "str | None"
-        selling_asset: "StellarAssetType | None"
-        buying_asset: "StellarAssetType | None"
-        amount: "int | None"
-        price_n: "int | None"
-        price_d: "int | None"
+        selling_asset: "StellarAsset"
+        buying_asset: "StellarAsset"
+        amount: "int"
+        price_n: "int"
+        price_d: "int"
+        offer_id: "int"
 
         def __init__(
             self,
             *,
+            selling_asset: "StellarAsset",
+            buying_asset: "StellarAsset",
+            amount: "int",
+            price_n: "int",
+            price_d: "int",
+            offer_id: "int",
             source_account: "str | None" = None,
-            selling_asset: "StellarAssetType | None" = None,
-            buying_asset: "StellarAssetType | None" = None,
-            amount: "int | None" = None,
-            price_n: "int | None" = None,
-            price_d: "int | None" = None,
         ) -> None:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarCreatePassiveOfferOp"]:
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarManageSellOfferOp"]:
+            return isinstance(msg, cls)
+
+    class StellarManageBuyOfferOp(protobuf.MessageType):
+        source_account: "str | None"
+        selling_asset: "StellarAsset"
+        buying_asset: "StellarAsset"
+        amount: "int"
+        price_n: "int"
+        price_d: "int"
+        offer_id: "int"
+
+        def __init__(
+            self,
+            *,
+            selling_asset: "StellarAsset",
+            buying_asset: "StellarAsset",
+            amount: "int",
+            price_n: "int",
+            price_d: "int",
+            offer_id: "int",
+            source_account: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarManageBuyOfferOp"]:
+            return isinstance(msg, cls)
+
+    class StellarCreatePassiveSellOfferOp(protobuf.MessageType):
+        source_account: "str | None"
+        selling_asset: "StellarAsset"
+        buying_asset: "StellarAsset"
+        amount: "int"
+        price_n: "int"
+        price_d: "int"
+
+        def __init__(
+            self,
+            *,
+            selling_asset: "StellarAsset",
+            buying_asset: "StellarAsset",
+            amount: "int",
+            price_n: "int",
+            price_d: "int",
+            source_account: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarCreatePassiveSellOfferOp"]:
             return isinstance(msg, cls)
 
     class StellarSetOptionsOp(protobuf.MessageType):
@@ -4642,7 +4923,7 @@ if TYPE_CHECKING:
         medium_threshold: "int | None"
         high_threshold: "int | None"
         home_domain: "str | None"
-        signer_type: "int | None"
+        signer_type: "StellarSignerType | None"
         signer_key: "bytes | None"
         signer_weight: "int | None"
 
@@ -4658,7 +4939,7 @@ if TYPE_CHECKING:
             medium_threshold: "int | None" = None,
             high_threshold: "int | None" = None,
             home_domain: "str | None" = None,
-            signer_type: "int | None" = None,
+            signer_type: "StellarSignerType | None" = None,
             signer_key: "bytes | None" = None,
             signer_weight: "int | None" = None,
         ) -> None:
@@ -4670,15 +4951,15 @@ if TYPE_CHECKING:
 
     class StellarChangeTrustOp(protobuf.MessageType):
         source_account: "str | None"
-        asset: "StellarAssetType | None"
-        limit: "int | None"
+        asset: "StellarAsset"
+        limit: "int"
 
         def __init__(
             self,
             *,
+            asset: "StellarAsset",
+            limit: "int",
             source_account: "str | None" = None,
-            asset: "StellarAssetType | None" = None,
-            limit: "int | None" = None,
         ) -> None:
             pass
 
@@ -4688,19 +4969,19 @@ if TYPE_CHECKING:
 
     class StellarAllowTrustOp(protobuf.MessageType):
         source_account: "str | None"
-        trusted_account: "str | None"
-        asset_type: "int | None"
+        trusted_account: "str"
+        asset_type: "StellarAssetType"
         asset_code: "str | None"
-        is_authorized: "int | None"
+        is_authorized: "bool"
 
         def __init__(
             self,
             *,
+            trusted_account: "str",
+            asset_type: "StellarAssetType",
+            is_authorized: "bool",
             source_account: "str | None" = None,
-            trusted_account: "str | None" = None,
-            asset_type: "int | None" = None,
             asset_code: "str | None" = None,
-            is_authorized: "int | None" = None,
         ) -> None:
             pass
 
@@ -4710,13 +4991,13 @@ if TYPE_CHECKING:
 
     class StellarAccountMergeOp(protobuf.MessageType):
         source_account: "str | None"
-        destination_account: "str | None"
+        destination_account: "str"
 
         def __init__(
             self,
             *,
+            destination_account: "str",
             source_account: "str | None" = None,
-            destination_account: "str | None" = None,
         ) -> None:
             pass
 
@@ -4726,14 +5007,14 @@ if TYPE_CHECKING:
 
     class StellarManageDataOp(protobuf.MessageType):
         source_account: "str | None"
-        key: "str | None"
+        key: "str"
         value: "bytes | None"
 
         def __init__(
             self,
             *,
+            key: "str",
             source_account: "str | None" = None,
-            key: "str | None" = None,
             value: "bytes | None" = None,
         ) -> None:
             pass
@@ -4744,13 +5025,13 @@ if TYPE_CHECKING:
 
     class StellarBumpSequenceOp(protobuf.MessageType):
         source_account: "str | None"
-        bump_to: "int | None"
+        bump_to: "int"
 
         def __init__(
             self,
             *,
+            bump_to: "int",
             source_account: "str | None" = None,
-            bump_to: "int | None" = None,
         ) -> None:
             pass
 

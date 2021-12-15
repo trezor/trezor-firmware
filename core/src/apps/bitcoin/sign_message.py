@@ -7,8 +7,8 @@ from trezor.ui.layouts import confirm_signverify
 from apps.common.paths import validate_path
 from apps.common.signverify import decode_message, message_digest
 
-from .addresses import get_address
-from .keychain import with_keychain
+from .addresses import address_short, get_address
+from .keychain import validate_path_against_script_type, with_keychain
 
 if False:
     from trezor.messages import SignMessage
@@ -25,23 +25,36 @@ async def sign_message(
     address_n = msg.address_n
     script_type = msg.script_type or InputScriptType.SPENDADDRESS
 
-    await validate_path(ctx, keychain, address_n)
-    await confirm_signverify(ctx, coin.coin_shortcut, decode_message(message))
+    await validate_path(
+        ctx, keychain, address_n, validate_path_against_script_type(coin, msg)
+    )
 
     node = keychain.derive(address_n)
+    address = get_address(script_type, coin, node)
+    await confirm_signverify(
+        ctx,
+        coin.coin_shortcut,
+        decode_message(message),
+        address_short(coin, address),
+        verify=False,
+    )
+
     seckey = node.private_key()
 
-    address = get_address(script_type, coin, node)
     digest = message_digest(coin, message)
     signature = secp256k1.sign(seckey, digest)
 
     if script_type == InputScriptType.SPENDADDRESS:
-        pass
+        script_type_info = 0
     elif script_type == InputScriptType.SPENDP2SHWITNESS:
-        signature = bytes([signature[0] + 4]) + signature[1:]
+        script_type_info = 4
     elif script_type == InputScriptType.SPENDWITNESS:
-        signature = bytes([signature[0] + 8]) + signature[1:]
+        script_type_info = 8
     else:
         raise wire.ProcessError("Unsupported script type")
+
+    # Add script type information to the recovery byte.
+    if script_type_info != 0 and not msg.no_script_type:
+        signature = bytes([signature[0] + script_type_info]) + signature[1:]
 
     return MessageSignature(address=address, signature=signature)

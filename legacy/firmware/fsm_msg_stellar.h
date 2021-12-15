@@ -109,8 +109,9 @@ void fsm_msgStellarPaymentOp(const StellarPaymentOp *msg) {
   }
 }
 
-void fsm_msgStellarPathPaymentOp(const StellarPathPaymentOp *msg) {
-  if (!stellar_confirmPathPaymentOp(msg)) return;
+void fsm_msgStellarPathPaymentStrictReceiveOp(
+    const StellarPathPaymentStrictReceiveOp *msg) {
+  if (!stellar_confirmPathPaymentStrictReceiveOp(msg)) return;
 
   if (stellar_allOperationsConfirmed()) {
     RESP_INIT(StellarSignedTx);
@@ -127,8 +128,9 @@ void fsm_msgStellarPathPaymentOp(const StellarPathPaymentOp *msg) {
   }
 }
 
-void fsm_msgStellarManageOfferOp(const StellarManageOfferOp *msg) {
-  if (!stellar_confirmManageOfferOp(msg)) return;
+void fsm_msgStellarPathPaymentStrictSendOp(
+    const StellarPathPaymentStrictSendOp *msg) {
+  if (!stellar_confirmPathPaymentStrictSendOp(msg)) return;
 
   if (stellar_allOperationsConfirmed()) {
     RESP_INIT(StellarSignedTx);
@@ -145,9 +147,45 @@ void fsm_msgStellarManageOfferOp(const StellarManageOfferOp *msg) {
   }
 }
 
-void fsm_msgStellarCreatePassiveOfferOp(
-    const StellarCreatePassiveOfferOp *msg) {
-  if (!stellar_confirmCreatePassiveOfferOp(msg)) return;
+void fsm_msgStellarManageBuyOfferOp(const StellarManageBuyOfferOp *msg) {
+  if (!stellar_confirmManageBuyOfferOp(msg)) return;
+
+  if (stellar_allOperationsConfirmed()) {
+    RESP_INIT(StellarSignedTx);
+
+    stellar_fillSignedTx(resp);
+    msg_write(MessageType_MessageType_StellarSignedTx, resp);
+    layoutHome();
+  }
+  // Request the next operation to sign
+  else {
+    RESP_INIT(StellarTxOpRequest);
+
+    msg_write(MessageType_MessageType_StellarTxOpRequest, resp);
+  }
+}
+
+void fsm_msgStellarManageSellOfferOp(const StellarManageSellOfferOp *msg) {
+  if (!stellar_confirmManageSellOfferOp(msg)) return;
+
+  if (stellar_allOperationsConfirmed()) {
+    RESP_INIT(StellarSignedTx);
+
+    stellar_fillSignedTx(resp);
+    msg_write(MessageType_MessageType_StellarSignedTx, resp);
+    layoutHome();
+  }
+  // Request the next operation to sign
+  else {
+    RESP_INIT(StellarTxOpRequest);
+
+    msg_write(MessageType_MessageType_StellarTxOpRequest, resp);
+  }
+}
+
+void fsm_msgStellarCreatePassiveSellOfferOp(
+    const StellarCreatePassiveSellOfferOp *msg) {
+  if (!stellar_confirmCreatePassiveSellOfferOp(msg)) return;
 
   if (stellar_allOperationsConfirmed()) {
     RESP_INIT(StellarSignedTx);

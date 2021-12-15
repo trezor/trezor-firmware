@@ -123,6 +123,7 @@
 #define MICROPY_PY_SYS_PLATFORM     "trezor"
 #define MICROPY_PY_UERRNO           (0)
 #define MICROPY_PY_THREAD           (0)
+#define MICROPY_PY_FSTRINGS         (1)
 
 // extended modules
 #define MICROPY_PY_UCTYPES          (1)
@@ -140,6 +141,7 @@
 #define MICROPY_PY_URANDOM          (0)
 #define MICROPY_PY_URANDOM_EXTRA_FUNCS (0)
 #define MICROPY_PY_USELECT          (0)
+#define MICROPY_PY_UTIME            (1)
 #define MICROPY_PY_UTIMEQ           (1)
 #define MICROPY_PY_UTIME_MP_HAL     (1)
 #define MICROPY_PY_OS_DUPTERM       (0)
@@ -157,6 +159,7 @@
 #define MICROPY_PY_TREZORUI         (1)
 #define MICROPY_PY_TREZORUTILS      (1)
 #define MICROPY_PY_TREZORPROTO      (1)
+#define MICROPY_PY_TREZORUI2        (1)
 
 #ifdef SYSTEM_VIEW
 #define MP_PLAT_PRINT_STRN(str, len) segger_print(str, len)
@@ -188,7 +191,12 @@ typedef long mp_off_t;
 
 #define MICROPY_BEGIN_ATOMIC_SECTION()     disable_irq()
 #define MICROPY_END_ATOMIC_SECTION(state)  enable_irq(state)
-#define MICROPY_EVENT_POLL_HOOK            __WFI();
+#define MICROPY_EVENT_POLL_HOOK \
+    do { \
+        extern void mp_handle_pending(bool); \
+        mp_handle_pending(true); \
+        __WFI(); \
+    } while (0);
 
 #define MICROPY_HW_BOARD_NAME "TREZORv2"
 #define MICROPY_HW_MCU_NAME "STM32F427xx"

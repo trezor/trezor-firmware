@@ -256,11 +256,8 @@ class PathSchema:
             for component in self.schema:
                 if isinstance(component, Interval):
                     a, b = component.min, component.max
-                    components.append(
-                        "[{}-{}]{}".format(
-                            unharden(a), unharden(b), "'" if a & HARDENED else ""
-                        )
-                    )
+                    prime = "'" if a & HARDENED else ""
+                    components.append(f"[{unharden(a)}-{unharden(b)}]{prime}")
                 else:
                     # mypy thinks component is a Contanier but we're using it as a Collection.
                     # Which in practice it is, the only non-Collection is Interval.

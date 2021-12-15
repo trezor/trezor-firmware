@@ -53,7 +53,7 @@ class UdpTransport(ProtocolBasedTransport):
 
     def find_debug(self) -> "UdpTransport":
         host, port = self.device
-        return UdpTransport("{}:{}".format(host, port + 1))
+        return UdpTransport(f"{host}:{port + 1}")
 
     @classmethod
     def _try_path(cls, path: str) -> "UdpTransport":
@@ -64,14 +64,14 @@ class UdpTransport(ProtocolBasedTransport):
                 return d
             else:
                 raise TransportException(
-                    "No Trezor device found at address {}".format(d.get_path())
+                    f"No Trezor device found at address {d.get_path()}"
                 )
         finally:
             d.close()
 
     @classmethod
     def enumerate(cls) -> Iterable["UdpTransport"]:
-        default_path = "{}:{}".format(cls.DEFAULT_HOST, cls.DEFAULT_PORT)
+        default_path = f"{cls.DEFAULT_HOST}:{cls.DEFAULT_PORT}"
         try:
             return [cls._try_path(default_path)]
         except TransportException:
@@ -85,7 +85,7 @@ class UdpTransport(ProtocolBasedTransport):
             # the same type from which `cls` comes from.
             # Mypy can't handle that though, so here we are.
         else:
-            path = path.replace("{}:".format(cls.PATH_PREFIX), "")
+            path = path.replace(f"{cls.PATH_PREFIX}:", "")
             return cls._try_path(path)
 
     def wait_until_ready(self, timeout: float = 10) -> None:
@@ -128,7 +128,7 @@ class UdpTransport(ProtocolBasedTransport):
         assert self.socket is not None
         if len(chunk) != 64:
             raise TransportException("Unexpected data length")
-        LOG.log(DUMP_PACKETS, "sending packet: {}".format(chunk.hex()))
+        LOG.log(DUMP_PACKETS, f"sending packet: {chunk.hex()}")
         self.socket.sendall(chunk)
 
     def read_chunk(self) -> bytes:
@@ -139,7 +139,7 @@ class UdpTransport(ProtocolBasedTransport):
                 break
             except socket.timeout:
                 continue
-        LOG.log(DUMP_PACKETS, "received packet: {}".format(chunk.hex()))
+        LOG.log(DUMP_PACKETS, f"received packet: {chunk.hex()}")
         if len(chunk) != 64:
-            raise TransportException("Unexpected chunk size: %d" % len(chunk))
+            raise TransportException(f"Unexpected chunk size: {len(chunk)}")
         return bytearray(chunk)

@@ -202,14 +202,16 @@ class TestMsgSigntxBitcoinGold:
             for i in range(1, 4)
         ]
 
-        def getmultisig(chain, nr, signatures=[b"", b"", b""], nodes=nodes):
+        EMPTY_SIGS = [b"", b"", b""]
+
+        def getmultisig(chain, nr, signatures):
             return proto.MultisigRedeemScriptType(
                 nodes=nodes, address_n=[chain, nr], signatures=signatures, m=2
             )
 
         inp1 = proto.TxInputType(
             address_n=parse_path("48'/156'/3'/0'/0/0"),
-            multisig=getmultisig(0, 0),
+            multisig=getmultisig(0, 0, EMPTY_SIGS),
             # 33Ju286QvonBz5N1V754ZekQv4GLJqcc5R
             amount=1252382934,
             prev_hash=TXHASH_25526b,
@@ -223,7 +225,7 @@ class TestMsgSigntxBitcoinGold:
         )
         out2 = proto.TxOutputType(
             address_n=parse_path("48'/156'/3'/0'/1/0"),
-            multisig=getmultisig(1, 0),
+            multisig=getmultisig(1, 0, EMPTY_SIGS),
             script_type=proto.OutputScriptType.PAYTOMULTISIG,
             amount=1252382934 - 24000 - 1000,
         )
@@ -519,6 +521,9 @@ class TestMsgSigntxBitcoinGold:
             prev_hash=TXHASH_f55c5b,
             prev_index=0,
             script_type=proto.InputScriptType.EXTERNAL,
+            script_pubkey=bytes.fromhex(
+                "a914aee37ad448e17438cabfee1756f2a08e33ed3ce887"
+            ),
             script_sig=bytes.fromhex("1600147c5edda9b293db2c8894b9d81efd77764910c445"),
             witness=bytes.fromhex(
                 "024730440220091eece828409b3a9aa92dd2f9b032f9fb3a12b21b323a3fdea3cb18d08249af022065412107afcf76b0d28b90188c802f8f17b41790ed81c868d0ee23f1dd2ec53441210386789a34fe1a49bfc3e174adc6706c6222b0d80de76b884a0e3d32f8e9c4dc3e"

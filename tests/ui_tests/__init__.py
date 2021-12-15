@@ -7,10 +7,12 @@ from pathlib import Path
 
 import pytest
 from _pytest.outcomes import Failed
+from PIL import Image
 
 from .reporting import testreport
 
 UI_TESTS_DIR = Path(__file__).parent.resolve()
+SCREENS_DIR = UI_TESTS_DIR / "screens"
 HASH_FILE = UI_TESTS_DIR / "fixtures.json"
 SUGGESTION_FILE = UI_TESTS_DIR / "fixtures.suggestion.json"
 FILE_HASHES = {}
@@ -45,13 +47,22 @@ def _rename_records(screen_path):
         record.replace(screen_path / f"{index:08}.png")
 
 
-def _hash_files(path):
+def _hash_files(path: Path) -> str:
     files = path.iterdir()
     hasher = hashlib.sha256()
     for file in sorted(files):
-        hasher.update(file.read_bytes())
+        hasher.update(_get_bytes_from_png(str(file)))
 
     return hasher.digest().hex()
+
+
+def _get_bytes_from_png(png_file: str) -> bytes:
+    """Decode a PNG file into bytes representing all the pixels.
+
+    Is necessary because Linux and Mac are using different PNG encoding libraries,
+    and we need the file hashes to be the same on both platforms.
+    """
+    return Image.open(png_file).tobytes()
 
 
 def _process_tested(fixture_test_path, test_name):
@@ -73,9 +84,10 @@ def _process_tested(fixture_test_path, test_name):
         )
 
         pytest.fail(
-            "Hash of {} differs.\nExpected:  {}\nActual:    {}\nDiff file: {}".format(
-                test_name, expected_hash, actual_hash, file_path
-            )
+            f"Hash of {test_name} differs.\n"
+            f"Expected:  {expected_hash}\n"
+            f"Actual:    {actual_hash}\n"
+            f"Diff file: {file_path}"
         )
     else:
         testreport.passed(fixture_test_path, test_name, actual_hash)
@@ -85,7 +97,7 @@ def _process_tested(fixture_test_path, test_name):
 def screen_recording(client, request):
     test_ui = request.config.getoption("ui")
     test_name = get_test_name(request.node.nodeid)
-    screens_test_path = UI_TESTS_DIR / "screens" / test_name
+    screens_test_path = SCREENS_DIR / test_name
 
     if test_ui == "record":
         screen_path = screens_test_path / "recorded"
@@ -144,7 +156,7 @@ def _get_fixtures_content(fixtures: dict, remove_missing: bool):
 
 def main():
     read_fixtures()
-    for record in (UI_TESTS_DIR / "screens").iterdir():
+    for record in SCREENS_DIR.iterdir():
         if not (record / "actual").exists():
             continue
 

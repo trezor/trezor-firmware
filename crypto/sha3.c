@@ -22,11 +22,12 @@
 
 #include "sha3.h"
 #include "memzero.h"
+#include "byte_order.h"
 
 #define I64(x) x##LL
 #define ROTL64(qword, n) ((qword) << (n) ^ ((qword) >> (64 - (n))))
 #define le2me_64(x) (x)
-#define IS_ALIGNED_64(p) (0 == (7 & ((const char*)(p) - (const char*)0)))
+#define IS_ALIGNED_64(p) (0 == (((uintptr_t)(const void *)(p) & 0x7)))
 # define me64_to_le_str(to, from, length) memcpy((to), (from), (length))
 
 /* constants */
@@ -165,6 +166,13 @@ static void keccak_chi(uint64_t *A)
 
 static void sha3_permutation(uint64_t *state)
 {
+#if BYTE_ORDER == BIG_ENDIAN
+	int i;
+	for (i = 0; i < 25; i++)
+	{
+		REVERSE64(state[i], state[i]);
+	}
+#endif
 	int round = 0;
 	for (round = 0; round < NumberOfRounds; round++)
 	{
@@ -202,6 +210,12 @@ static void sha3_permutation(uint64_t *state)
 		/* apply iota(state, round) */
 		*state ^= keccak_round_constants[round];
 	}
+#if BYTE_ORDER == BIG_ENDIAN
+	for (i = 0; i < 25; i++)
+	{
+		REVERSE64(state[i], state[i]);
+	}
+#endif
 }
 
 /**

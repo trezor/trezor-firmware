@@ -20,10 +20,13 @@ _SESSION_ID_LENGTH = 32
 
 # Traditional cache keys
 APP_COMMON_SEED = 0
-APP_CARDANO_PASSPHRASE = 1
-APP_MONERO_LIVE_REFRESH = 2
-APP_COMMON_AUTHORIZATION_TYPE = 3
-APP_COMMON_AUTHORIZATION_DATA = 4
+APP_COMMON_AUTHORIZATION_TYPE = 1
+APP_COMMON_AUTHORIZATION_DATA = 2
+if not utils.BITCOIN_ONLY:
+    APP_COMMON_DERIVE_CARDANO = 3
+    APP_CARDANO_ICARUS_SECRET = 4
+    APP_CARDANO_ICARUS_TREZOR_SECRET = 5
+    APP_MONERO_LIVE_REFRESH = 6
 
 # Keys that are valid across sessions
 APP_COMMON_SEED_WITHOUT_PASSPHRASE = 0 | _SESSIONLESS_FLAG
@@ -68,10 +71,14 @@ class DataCache:
         ...
 
     def get(self, key: int, default: T | None = None) -> bytes | T | None:  # noqa: F811
-        utils.ensure(key < len(self.fields), "failed to load key %d" % key)
+        utils.ensure(key < len(self.fields))
         if self.data[key][0] != 1:
             return default
         return bytes(self.data[key][1:])
+
+    def is_set(self, key: int) -> bool:
+        utils.ensure(key < len(self.fields))
+        return self.data[key][0] == 1
 
     def delete(self, key: int) -> None:
         utils.ensure(key < len(self.fields))
@@ -85,13 +92,22 @@ class DataCache:
 class SessionCache(DataCache):
     def __init__(self) -> None:
         self.session_id = bytearray(_SESSION_ID_LENGTH)
-        self.fields = (
-            64,  # APP_COMMON_SEED
-            50,  # APP_CARDANO_PASSPHRASE
-            1,  # APP_MONERO_LIVE_REFRESH
-            2,  # APP_COMMON_AUTHORIZATION_TYPE
-            128,  # APP_COMMON_AUTHORIZATION_DATA
-        )
+        if utils.BITCOIN_ONLY:
+            self.fields = (
+                64,  # APP_COMMON_SEED
+                2,  # APP_COMMON_AUTHORIZATION_TYPE
+                128,  # APP_COMMON_AUTHORIZATION_DATA
+            )
+        else:
+            self.fields = (
+                64,  # APP_COMMON_SEED
+                2,  # APP_COMMON_AUTHORIZATION_TYPE
+                128,  # APP_COMMON_AUTHORIZATION_DATA
+                1,  # APP_COMMON_DERIVE_CARDANO
+                96,  # APP_CARDANO_ICARUS_SECRET
+                96,  # APP_CARDANO_ICARUS_TREZOR_SECRET
+                1,  # APP_MONERO_LIVE_REFRESH
+            )
         self.last_usage = 0
         super().__init__()
 
@@ -223,6 +239,14 @@ def get(key: int, default: T | None = None) -> bytes | T | None:  # noqa: F811
     if _active_session_idx is None:
         raise InvalidSessionError
     return _SESSIONS[_active_session_idx].get(key, default)
+
+
+def is_set(key: int) -> bool:
+    if key & _SESSIONLESS_FLAG:
+        return _SESSIONLESS_CACHE.is_set(key ^ _SESSIONLESS_FLAG)
+    if _active_session_idx is None:
+        raise InvalidSessionError
+    return _SESSIONS[_active_session_idx].is_set(key)
 
 
 def delete(key: int) -> None:

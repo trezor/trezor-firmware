@@ -99,9 +99,7 @@ void fsm_msgDebugLinkFlashErase(const DebugLinkFlashErase *msg);
 // ethereum
 void fsm_msgEthereumGetAddress(const EthereumGetAddress *msg);
 void fsm_msgEthereumGetPublicKey(const EthereumGetPublicKey *msg);
-void fsm_msgEthereumSignTx(
-    EthereumSignTx
-        *msg);  // not const because we mutate transaction during validation
+void fsm_msgEthereumSignTx(const EthereumSignTx *msg);
 void fsm_msgEthereumSignTxEIP1559(const EthereumSignTxEIP1559 *msg);
 void fsm_msgEthereumTxAck(const EthereumTxAck *msg);
 void fsm_msgEthereumSignMessage(const EthereumSignMessage *msg);
@@ -120,9 +118,14 @@ void fsm_msgStellarGetAddress(const StellarGetAddress *msg);
 void fsm_msgStellarSignTx(const StellarSignTx *msg);
 void fsm_msgStellarPaymentOp(const StellarPaymentOp *msg);
 void fsm_msgStellarCreateAccountOp(const StellarCreateAccountOp *msg);
-void fsm_msgStellarPathPaymentOp(const StellarPathPaymentOp *msg);
-void fsm_msgStellarManageOfferOp(const StellarManageOfferOp *msg);
-void fsm_msgStellarCreatePassiveOfferOp(const StellarCreatePassiveOfferOp *msg);
+void fsm_msgStellarPathPaymentStrictReceiveOp(
+    const StellarPathPaymentStrictReceiveOp *msg);
+void fsm_msgStellarPathPaymentStrictSendOp(
+    const StellarPathPaymentStrictSendOp *msg);
+void fsm_msgStellarManageBuyOfferOp(const StellarManageBuyOfferOp *msg);
+void fsm_msgStellarManageSellOfferOp(const StellarManageSellOfferOp *msg);
+void fsm_msgStellarCreatePassiveSellOfferOp(
+    const StellarCreatePassiveSellOfferOp *msg);
 void fsm_msgStellarSetOptionsOp(const StellarSetOptionsOp *msg);
 void fsm_msgStellarChangeTrustOp(const StellarChangeTrustOp *msg);
 void fsm_msgStellarAllowTrustOp(const StellarAllowTrustOp *msg);
@@ -131,5 +134,8 @@ void fsm_msgStellarManageDataOp(const StellarManageDataOp *msg);
 void fsm_msgStellarBumpSequenceOp(const StellarBumpSequenceOp *msg);
 
 void fsm_msgRebootToBootloader(void);
+
+bool fsm_layoutSignMessage(const uint8_t *msg, uint32_t len);
+bool fsm_layoutVerifyMessage(const uint8_t *msg, uint32_t len);
 
 #endif

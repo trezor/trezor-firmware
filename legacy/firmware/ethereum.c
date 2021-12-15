@@ -36,17 +36,47 @@
 #include "sha3.h"
 #include "transaction.h"
 #include "util.h"
+#ifdef USE_SECP256K1_ZKP_ECDSA
+#include "zkp_ecdsa.h"
+#endif
 
-/* maximum supported chain id.  v must fit in an uint32_t. */
-#define MAX_CHAIN_ID 2147483629
+/* Maximum chain_id which returns the full signature_v (which must fit into an
+uint32). chain_ids larger than this will only return one bit and the caller must
+recalculate the full value: v = 2 * chain_id + 35 + v_bit */
+#define MAX_CHAIN_ID ((0xFFFFFFFF - 36) >> 1)
+#define EIP1559_TX_TYPE 2
 
 static bool ethereum_signing = false;
 static uint32_t data_total, data_left;
 static EthereumTxRequest msg_tx_request;
 static CONFIDENTIAL uint8_t privkey[32];
-static uint32_t chain_id;
-static uint32_t tx_type;
+static uint64_t chain_id;
+static bool eip1559;
 struct SHA3_CTX keccak_ctx = {0};
+
+static uint32_t signing_access_list_count;
+static EthereumAccessList signing_access_list[8];
+_Static_assert(sizeof(signing_access_list) ==
+                   sizeof(((EthereumSignTxEIP1559 *)NULL)->access_list),
+               "access_list buffer size mismatch");
+
+struct signing_params {
+  bool pubkeyhash_set;
+  uint8_t pubkeyhash[20];
+  uint64_t chain_id;
+
+  uint32_t data_length;
+  uint32_t data_initial_chunk_size;
+  const uint8_t *data_initial_chunk_bytes;
+
+  bool has_to;
+  const char *to;
+
+  const TokenType *token;
+
+  uint32_t value_size;
+  const uint8_t *value_bytes;
+};
 
 static inline void hash_data(const uint8_t *buf, size_t size) {
   sha3_Update(&keccak_ctx, buf, size);
@@ -118,20 +148,24 @@ static void hash_rlp_field(const uint8_t *buf, size_t size) {
  * Push an RLP encoded number to the hash buffer.
  * Ethereum yellow paper says to convert to big endian and strip leading zeros.
  */
-static void hash_rlp_number(uint32_t number) {
+static void hash_rlp_number(uint64_t number) {
   if (!number) {
     return;
   }
-  uint8_t data[4] = {0};
-  data[0] = (number >> 24) & 0xff;
-  data[1] = (number >> 16) & 0xff;
-  data[2] = (number >> 8) & 0xff;
-  data[3] = (number)&0xff;
+  uint8_t data[8] = {0};
+  data[0] = (number >> 56) & 0xff;
+  data[1] = (number >> 48) & 0xff;
+  data[2] = (number >> 40) & 0xff;
+  data[3] = (number >> 32) & 0xff;
+  data[4] = (number >> 24) & 0xff;
+  data[5] = (number >> 16) & 0xff;
+  data[6] = (number >> 8) & 0xff;
+  data[7] = (number)&0xff;
   int offset = 0;
   while (!data[offset]) {
     offset++;
   }
-  hash_rlp_field(data + offset, 4 - offset);
+  hash_rlp_field(data + offset, 8 - offset);
 }
 
 /*
@@ -153,18 +187,41 @@ static int rlp_calculate_length(int length, uint8_t firstbyte) {
   }
 }
 
-static int rlp_calculate_number_length(uint32_t number) {
-  if (number <= 0x7f) {
-    return 1;
-  } else if (number <= 0xff) {
-    return 2;
-  } else if (number <= 0xffff) {
-    return 3;
-  } else if (number <= 0xffffff) {
-    return 4;
-  } else {
-    return 5;
+/* If number is less than 0x80 the RLP encoding is iteself (1 byte).
+ * If it is 0x80 or larger, RLP encoding is 1 + length in bytes.
+ */
+static int rlp_calculate_number_length(uint64_t number) {
+  int length = 1;
+  if (number >= 0x80) {
+    while (number) {
+      length++;
+      number = number >> 8;
+    }
   }
+  return length;
+}
+
+static uint32_t rlp_calculate_access_list_keys_length(
+    const EthereumAccessList_storage_keys_t *keys, uint32_t keys_count) {
+  uint32_t keys_length = 0;
+  for (size_t i = 0; i < keys_count; i++) {
+    keys_length += rlp_calculate_length(keys[i].size, keys[i].bytes[0]);
+  }
+  return keys_length;
+}
+
+static uint32_t rlp_calculate_access_list_length(
+    const EthereumAccessList access_list[8], uint32_t access_list_count) {
+  uint32_t length = 0;
+  for (size_t i = 0; i < access_list_count; i++) {
+    uint32_t address_length = rlp_calculate_length(20, 0xff);
+    uint32_t keys_length = rlp_calculate_access_list_keys_length(
+        access_list[i].storage_keys, access_list[i].storage_keys_count);
+    length += rlp_calculate_length(
+        address_length + rlp_calculate_length(keys_length, 0xff), 0xff);
+  }
+
+  return length;
 }
 
 static void send_request_chunk(void) {
@@ -186,8 +243,34 @@ static void send_signature(void) {
   uint8_t v = 0;
   layoutProgress(_("Signing"), 1000);
 
-  /* eip-155 replay protection */
-  if (chain_id) {
+  if (eip1559) {
+    hash_rlp_list_length(rlp_calculate_access_list_length(
+        signing_access_list, signing_access_list_count));
+    for (size_t i = 0; i < signing_access_list_count; i++) {
+      uint8_t address[20] = {0};
+      if (!ethereum_parse(signing_access_list[i].address, address)) {
+        fsm_sendFailure(FailureType_Failure_DataError, _("Malformed address"));
+        ethereum_signing_abort();
+        return;
+      }
+
+      uint32_t address_length =
+          rlp_calculate_length(sizeof(address), address[0]);
+      uint32_t keys_length = rlp_calculate_access_list_keys_length(
+          signing_access_list[i].storage_keys,
+          signing_access_list[i].storage_keys_count);
+
+      hash_rlp_list_length(address_length +
+                           rlp_calculate_length(keys_length, 0xff));
+      hash_rlp_field(address, sizeof(address));
+      hash_rlp_list_length(keys_length);
+      for (size_t j = 0; j < signing_access_list[i].storage_keys_count; j++) {
+        hash_rlp_field(signing_access_list[i].storage_keys[j].bytes,
+                       signing_access_list[i].storage_keys[j].size);
+      }
+    }
+  } else {
+    /* eip-155 replay protection */
     /* hash v=chain_id, r=0, s=0 */
     hash_rlp_number(chain_id);
     hash_rlp_length(0, 0);
@@ -208,12 +291,10 @@ static void send_signature(void) {
   msg_tx_request.has_data_length = false;
 
   msg_tx_request.has_signature_v = true;
-  if (chain_id > MAX_CHAIN_ID) {
+  if (eip1559 || chain_id > MAX_CHAIN_ID) {
     msg_tx_request.signature_v = v;
-  } else if (chain_id) {
-    msg_tx_request.signature_v = v + 2 * chain_id + 35;
   } else {
-    msg_tx_request.signature_v = v + 27;
+    msg_tx_request.signature_v = v + 2 * chain_id + 35;
   }
 
   msg_tx_request.has_signature_r = true;
@@ -248,11 +329,7 @@ static void ethereumFormatAmount(const bignum256 *amnt, const TokenType *token,
     suffix = " Wei";
     decimals = 0;
   } else {
-    if (tx_type == 1 || tx_type == 6) {
-      suffix = " WAN";
-    } else {
-      ASSIGN_ETHEREUM_SUFFIX(suffix, chain_id);
-    }
+    ASSIGN_ETHEREUM_SUFFIX(suffix, chain_id);
   }
   bn_format(amnt, NULL, suffix, decimals, 0, false, buf, buflen);
 }
@@ -377,6 +454,34 @@ static void layoutEthereumFee(const uint8_t *value, uint32_t value_len,
                     _("for gas?"), NULL);
 }
 
+static void layoutEthereumFeeEIP1559(const char *description,
+                                     const uint8_t *amount_bytes,
+                                     uint32_t amount_len,
+                                     const uint8_t *multiplier_bytes,
+                                     uint32_t multiplier_len) {
+  bignum256 amount_val = {0};
+  uint8_t padded[32] = {0};
+  char amount_str[32] = {0};
+
+  memcpy(padded + (32 - amount_len), amount_bytes, amount_len);
+  bn_read_be(padded, &amount_val);
+
+  if (multiplier_len > 0) {
+    bignum256 multiplier_val = {0};
+
+    memzero(padded, sizeof(padded));
+    memcpy(padded + (32 - multiplier_len), multiplier_bytes, multiplier_len);
+    bn_read_be(padded, &multiplier_val);
+    bn_multiply(&multiplier_val, &amount_val, &secp256k1.prime);
+  }
+
+  ethereumFormatAmount(&amount_val, NULL, amount_str, sizeof(amount_str));
+
+  layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                    _("Confirm fee"), description, amount_str, NULL, NULL,
+                    NULL);
+}
+
 /*
  * RLP fields:
  * - nonce (0 .. 32)
@@ -387,63 +492,138 @@ static void layoutEthereumFee(const uint8_t *value, uint32_t value_len,
  * - data (0 ..)
  */
 
-static bool ethereum_signing_check(const EthereumSignTx *msg) {
-  if (!msg->has_gas_price || !msg->has_gas_limit) {
+static bool ethereum_signing_init_common(struct signing_params *params) {
+  ethereum_signing = true;
+  sha3_256_Init(&keccak_ctx);
+
+  data_total = data_left = 0;
+  chain_id = 0;
+
+  memzero(&msg_tx_request, sizeof(EthereumTxRequest));
+  memzero(signing_access_list, sizeof(signing_access_list));
+  signing_access_list_count = 0;
+
+  /* eip-155 chain id */
+  if (params->chain_id < 1) {
+    fsm_sendFailure(FailureType_Failure_DataError, _("Chain ID out of bounds"));
+    return false;
+  }
+  chain_id = params->chain_id;
+
+  if (params->data_length > 0) {
+    if (params->data_initial_chunk_size == 0) {
+      fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Data length provided, but no initial chunk"));
+      return false;
+    }
+    /* Our encoding only supports transactions up to 2^24 bytes.  To
+     * prevent exceeding the limit we use a stricter limit on data length.
+     */
+    if (params->data_length > 16000000) {
+      fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Data length exceeds limit"));
+      return false;
+    }
+    data_total = params->data_length;
+  } else {
+    data_total = 0;
+  }
+  if (params->data_initial_chunk_size > data_total) {
+    fsm_sendFailure(FailureType_Failure_DataError,
+                    _("Invalid size of initial chunk"));
     return false;
   }
 
-  size_t tolen = msg->has_to ? strlen(msg->to) : 0;
+  // safety checks
 
-  if (tolen != 42 && tolen != 40 && tolen != 0) {
-    /* Address has wrong length */
-    return false;
-  }
+  size_t tolen = params->has_to ? strlen(params->to) : 0;
+  /* Address has wrong length */
+  bool wrong_length = (tolen != 42 && tolen != 40 && tolen != 0);
 
   // sending transaction to address 0 (contract creation) without a data field
-  if (tolen == 0 && (!msg->has_data_length || msg->data_length == 0)) {
-    return false;
-  }
+  bool contract_without_data = (tolen == 0 && params->data_length == 0);
 
-  if (msg->gas_price.size + msg->gas_limit.size > 30) {
-    // sanity check that fee doesn't overflow
+  if (wrong_length || contract_without_data) {
+    fsm_sendFailure(FailureType_Failure_DataError, _("Safety check failed"));
     return false;
   }
 
   return true;
 }
 
-void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node) {
-  ethereum_signing = true;
-  sha3_256_Init(&keccak_ctx);
-
-  memzero(&msg_tx_request, sizeof(EthereumTxRequest));
-  /* set fields to 0, to avoid conditions later */
-  if (!msg->has_value) msg->value.size = 0;
-  if (!msg->has_data_initial_chunk) msg->data_initial_chunk.size = 0;
-  bool toset;
-  uint8_t pubkeyhash[20] = {0};
-  if (msg->has_to && ethereum_parse(msg->to, pubkeyhash)) {
-    toset = true;
+static void ethereum_signing_handle_erc20(struct signing_params *params) {
+  if (params->has_to && ethereum_parse(params->to, params->pubkeyhash)) {
+    params->pubkeyhash_set = true;
   } else {
-    msg->to[0] = 0;
-    toset = false;
-    memzero(pubkeyhash, sizeof(pubkeyhash));
+    params->pubkeyhash_set = false;
+    memzero(params->pubkeyhash, sizeof(params->pubkeyhash));
   }
-  if (!msg->has_nonce) msg->nonce.size = 0;
 
-  /* eip-155 chain id */
-  if (msg->has_chain_id) {
-    if (msg->chain_id < 1) {
-      fsm_sendFailure(FailureType_Failure_DataError,
-                      _("Chain Id out of bounds"));
-      ethereum_signing_abort();
-      return;
+  // detect ERC-20 token
+  if (params->pubkeyhash_set && params->value_size == 0 && data_total == 68 &&
+      params->data_initial_chunk_size == 68 &&
+      memcmp(params->data_initial_chunk_bytes,
+             "\xa9\x05\x9c\xbb\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00",
+             16) == 0) {
+    params->token = tokenByChainAddress(chain_id, params->pubkeyhash);
+  }
+}
+
+static bool ethereum_signing_confirm_common(
+    const struct signing_params *params) {
+  if (params->token != NULL) {
+    layoutEthereumConfirmTx(params->data_initial_chunk_bytes + 16, 20,
+                            params->data_initial_chunk_bytes + 36, 32,
+                            params->token);
+  } else {
+    layoutEthereumConfirmTx(params->pubkeyhash, 20, params->value_bytes,
+                            params->value_size, NULL);
+  }
+
+  if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
+    return false;
+  }
+
+  if (params->token == NULL && data_total > 0) {
+    layoutEthereumData(params->data_initial_chunk_bytes,
+                       params->data_initial_chunk_size, data_total);
+    if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
+      return false;
     }
-    chain_id = msg->chain_id;
-  } else {
-    chain_id = 0;
   }
 
+  return true;
+}
+
+void ethereum_signing_init(const EthereumSignTx *msg, const HDNode *node) {
+  struct signing_params params = {
+      .chain_id = msg->chain_id,
+
+      .data_length = msg->data_length,
+      .data_initial_chunk_size = msg->data_initial_chunk.size,
+      .data_initial_chunk_bytes = msg->data_initial_chunk.bytes,
+
+      .has_to = msg->has_to,
+      .to = msg->to,
+
+      .value_size = msg->value.size,
+      .value_bytes = msg->value.bytes,
+  };
+
+  eip1559 = false;
+  if (!ethereum_signing_init_common(&params)) {
+    ethereum_signing_abort();
+    return;
+  }
+
+  // sanity check that fee doesn't overflow
+  if (msg->gas_price.size + msg->gas_limit.size > 30) {
+    fsm_sendFailure(FailureType_Failure_DataError, _("Safety check failed"));
+    ethereum_signing_abort();
+    return;
+  }
+
+  uint32_t tx_type = 0;
   /* Wanchain txtype */
   if (msg->has_tx_type) {
     if (msg->tx_type == 1 || msg->tx_type == 6) {
@@ -453,82 +633,19 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node) {
       ethereum_signing_abort();
       return;
     }
-  } else {
-    tx_type = 0;
   }
 
-  if (msg->has_data_length && msg->data_length > 0) {
-    if (!msg->has_data_initial_chunk || msg->data_initial_chunk.size == 0) {
-      fsm_sendFailure(FailureType_Failure_DataError,
-                      _("Data length provided, but no initial chunk"));
-      ethereum_signing_abort();
-      return;
-    }
-    /* Our encoding only supports transactions up to 2^24 bytes.  To
-     * prevent exceeding the limit we use a stricter limit on data length.
-     */
-    if (msg->data_length > 16000000) {
-      fsm_sendFailure(FailureType_Failure_DataError,
-                      _("Data length exceeds limit"));
-      ethereum_signing_abort();
-      return;
-    }
-    data_total = msg->data_length;
-  } else {
-    data_total = 0;
-  }
-  if (msg->data_initial_chunk.size > data_total) {
-    fsm_sendFailure(FailureType_Failure_DataError,
-                    _("Invalid size of initial chunk"));
-    ethereum_signing_abort();
-    return;
-  }
+  ethereum_signing_handle_erc20(&params);
 
-  // safety checks
-  if (!ethereum_signing_check(msg)) {
-    fsm_sendFailure(FailureType_Failure_DataError, _("Safety check failed"));
-    ethereum_signing_abort();
-    return;
-  }
-
-  const TokenType *token = NULL;
-
-  // detect ERC-20 token
-  if (toset && msg->value.size == 0 && data_total == 68 &&
-      msg->data_initial_chunk.size == 68 &&
-      memcmp(msg->data_initial_chunk.bytes,
-             "\xa9\x05\x9c\xbb\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00",
-             16) == 0) {
-    token = tokenByChainAddress(chain_id, pubkeyhash);
-  }
-
-  if (token != NULL) {
-    layoutEthereumConfirmTx(msg->data_initial_chunk.bytes + 16, 20,
-                            msg->data_initial_chunk.bytes + 36, 32, token);
-  } else {
-    layoutEthereumConfirmTx(pubkeyhash, 20, msg->value.bytes, msg->value.size,
-                            NULL);
-  }
-
-  if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
+  if (!ethereum_signing_confirm_common(&params)) {
     fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
     ethereum_signing_abort();
     return;
   }
 
-  if (token == NULL && data_total > 0) {
-    layoutEthereumData(msg->data_initial_chunk.bytes,
-                       msg->data_initial_chunk.size, data_total);
-    if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
-      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
-      ethereum_signing_abort();
-      return;
-    }
-  }
-
   layoutEthereumFee(msg->value.bytes, msg->value.size, msg->gas_price.bytes,
                     msg->gas_price.size, msg->gas_limit.bytes,
-                    msg->gas_limit.size, token != NULL);
+                    msg->gas_limit.size, params.token != NULL);
   if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
     fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
     ethereum_signing_abort();
@@ -545,18 +662,17 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node) {
       rlp_calculate_length(msg->gas_price.size, msg->gas_price.bytes[0]);
   rlp_length +=
       rlp_calculate_length(msg->gas_limit.size, msg->gas_limit.bytes[0]);
-  rlp_length += rlp_calculate_length(toset ? 20 : 0, pubkeyhash[0]);
-  rlp_length += rlp_calculate_length(msg->value.size, msg->value.bytes[0]);
+  rlp_length += rlp_calculate_length(params.pubkeyhash_set ? 20 : 0,
+                                     params.pubkeyhash[0]);
+  rlp_length += rlp_calculate_length(params.value_size, params.value_bytes[0]);
   rlp_length +=
-      rlp_calculate_length(data_total, msg->data_initial_chunk.bytes[0]);
+      rlp_calculate_length(data_total, params.data_initial_chunk_bytes[0]);
   if (tx_type) {
     rlp_length += rlp_calculate_number_length(tx_type);
   }
-  if (chain_id) {
-    rlp_length += rlp_calculate_number_length(chain_id);
-    rlp_length += rlp_calculate_length(0, 0);
-    rlp_length += rlp_calculate_length(0, 0);
-  }
+  rlp_length += rlp_calculate_number_length(chain_id);
+  rlp_length += rlp_calculate_length(0, 0);
+  rlp_length += rlp_calculate_length(0, 0);
 
   /* Stage 2: Store header fields */
   hash_rlp_list_length(rlp_length);
@@ -569,11 +685,129 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node) {
   hash_rlp_field(msg->nonce.bytes, msg->nonce.size);
   hash_rlp_field(msg->gas_price.bytes, msg->gas_price.size);
   hash_rlp_field(msg->gas_limit.bytes, msg->gas_limit.size);
-  hash_rlp_field(pubkeyhash, toset ? 20 : 0);
-  hash_rlp_field(msg->value.bytes, msg->value.size);
-  hash_rlp_length(data_total, msg->data_initial_chunk.bytes[0]);
-  hash_data(msg->data_initial_chunk.bytes, msg->data_initial_chunk.size);
-  data_left = data_total - msg->data_initial_chunk.size;
+  hash_rlp_field(params.pubkeyhash, params.pubkeyhash_set ? 20 : 0);
+  hash_rlp_field(params.value_bytes, params.value_size);
+  hash_rlp_length(data_total, params.data_initial_chunk_bytes[0]);
+  hash_data(params.data_initial_chunk_bytes, params.data_initial_chunk_size);
+  data_left = data_total - params.data_initial_chunk_size;
+
+  memcpy(privkey, node->private_key, 32);
+
+  if (data_left > 0) {
+    send_request_chunk();
+  } else {
+    send_signature();
+  }
+}
+
+void ethereum_signing_init_eip1559(const EthereumSignTxEIP1559 *msg,
+                                   const HDNode *node) {
+  struct signing_params params = {
+      .chain_id = msg->chain_id,
+
+      .data_length = msg->data_length,
+      .data_initial_chunk_size = msg->data_initial_chunk.size,
+      .data_initial_chunk_bytes = msg->data_initial_chunk.bytes,
+
+      .has_to = msg->has_to,
+      .to = msg->to,
+
+      .value_size = msg->value.size,
+      .value_bytes = msg->value.bytes,
+  };
+
+  eip1559 = true;
+  if (!ethereum_signing_init_common(&params)) {
+    ethereum_signing_abort();
+    return;
+  }
+
+  // sanity check that fee doesn't overflow
+  if (msg->max_gas_fee.size + msg->gas_limit.size > 30 ||
+      msg->max_priority_fee.size + msg->gas_limit.size > 30) {
+    fsm_sendFailure(FailureType_Failure_DataError, _("Safety check failed"));
+    ethereum_signing_abort();
+    return;
+  }
+
+  ethereum_signing_handle_erc20(&params);
+
+  if (!ethereum_signing_confirm_common(&params)) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+    ethereum_signing_abort();
+    return;
+  }
+
+  layoutEthereumFeeEIP1559(_("Maximum fee per gas"), msg->max_gas_fee.bytes,
+                           msg->max_gas_fee.size, NULL, 0);
+  if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+    ethereum_signing_abort();
+    return;
+  }
+
+  layoutEthereumFeeEIP1559(_("Priority fee per gas"),
+                           msg->max_priority_fee.bytes,
+                           msg->max_priority_fee.size, NULL, 0);
+  if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+    ethereum_signing_abort();
+    return;
+  }
+
+  layoutEthereumFeeEIP1559(_("Maximum fee"), msg->gas_limit.bytes,
+                           msg->gas_limit.size, msg->max_gas_fee.bytes,
+                           msg->max_gas_fee.size);
+  if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+    ethereum_signing_abort();
+    return;
+  }
+
+  /* Stage 1: Calculate total RLP length */
+  uint32_t rlp_length = 0;
+
+  layoutProgress(_("Signing"), 0);
+
+  rlp_length += rlp_calculate_number_length(chain_id);
+  rlp_length += rlp_calculate_length(msg->nonce.size, msg->nonce.bytes[0]);
+  rlp_length += rlp_calculate_length(msg->max_priority_fee.size,
+                                     msg->max_priority_fee.bytes[0]);
+  rlp_length +=
+      rlp_calculate_length(msg->max_gas_fee.size, msg->max_gas_fee.bytes[0]);
+  rlp_length +=
+      rlp_calculate_length(msg->gas_limit.size, msg->gas_limit.bytes[0]);
+  rlp_length += rlp_calculate_length(params.pubkeyhash_set ? 20 : 0,
+                                     params.pubkeyhash[0]);
+  rlp_length += rlp_calculate_length(params.value_size, params.value_bytes[0]);
+  rlp_length +=
+      rlp_calculate_length(data_total, params.data_initial_chunk_bytes[0]);
+
+  rlp_length +=
+      rlp_calculate_length(rlp_calculate_access_list_length(
+                               msg->access_list, msg->access_list_count),
+                           0xff);
+
+  /* Stage 2: Store header fields */
+  hash_rlp_number(EIP1559_TX_TYPE);
+  hash_rlp_list_length(rlp_length);
+
+  layoutProgress(_("Signing"), 100);
+
+  hash_rlp_number(chain_id);
+  hash_rlp_field(msg->nonce.bytes, msg->nonce.size);
+  hash_rlp_field(msg->max_priority_fee.bytes, msg->max_priority_fee.size);
+  hash_rlp_field(msg->max_gas_fee.bytes, msg->max_gas_fee.size);
+  hash_rlp_field(msg->gas_limit.bytes, msg->gas_limit.size);
+  hash_rlp_field(params.pubkeyhash, params.pubkeyhash_set ? 20 : 0);
+  hash_rlp_field(params.value_bytes, params.value_size);
+  hash_rlp_length(data_total, params.data_initial_chunk_bytes[0]);
+  hash_data(params.data_initial_chunk_bytes, params.data_initial_chunk_size);
+  data_left = data_total - params.data_initial_chunk_size;
+
+  /* make a copy of access_list, hash it after data is processed */
+  memcpy(signing_access_list, msg->access_list, sizeof(signing_access_list));
+  signing_access_list_count = msg->access_list_count;
 
   memcpy(privkey, node->private_key, 32);
 
@@ -598,7 +832,7 @@ void ethereum_signing_txack(const EthereumTxAck *tx) {
     return;
   }
 
-  if (data_left > 0 && (!tx->has_data_chunk || tx->data_chunk.size == 0)) {
+  if (data_left > 0 && tx->data_chunk.size == 0) {
     fsm_sendFailure(FailureType_Failure_DataError,
                     _("Empty data chunk received"));
     ethereum_signing_abort();
@@ -674,16 +908,6 @@ static void ethereum_message_hash(const uint8_t *message, size_t message_len,
 
 void ethereum_message_sign(const EthereumSignMessage *msg, const HDNode *node,
                            EthereumMessageSignature *resp) {
-  uint8_t pubkeyhash[20] = {0};
-  if (!hdnode_get_ethereum_pubkeyhash(node, pubkeyhash)) {
-    return;
-  }
-
-  resp->address[0] = '0';
-  resp->address[1] = 'x';
-  ethereum_address_checksum(pubkeyhash, resp->address + 2, false, 0);
-  // ethereum_address_checksum adds trailing zero
-
   uint8_t hash[32] = {0};
   ethereum_message_hash(msg->message.bytes, msg->message.size, hash);
 
@@ -723,8 +947,20 @@ int ethereum_message_verify(const EthereumVerifyMessage *msg) {
   if (v >= 27) {
     v -= 27;
   }
-  if (v >= 2 || ecdsa_recover_pub_from_sig(
-                    &secp256k1, pubkey, msg->signature.bytes, hash, v) != 0) {
+
+  if (v >= 2) {
+    return 2;
+  }
+
+  int ret = 0;
+#ifdef USE_SECP256K1_ZKP_ECDSA
+  ret = zkp_ecdsa_recover_pub_from_sig(&secp256k1, pubkey, msg->signature.bytes,
+                                       hash, v);
+#else
+  ret = ecdsa_recover_pub_from_sig(&secp256k1, pubkey, msg->signature.bytes,
+                                   hash, v);
+#endif
+  if (ret != 0) {
     return 2;
   }
 

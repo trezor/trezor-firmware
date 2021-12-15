@@ -53,15 +53,13 @@ class DebugLink:
 
     def _call(self, msg, nowait=False):
         LOG.debug(
-            "sending message: {}".format(msg.__class__.__name__),
+            f"sending message: {msg.__class__.__name__}",
             extra={"protobuf": msg},
         )
         msg_type, msg_bytes = mapping.encode(msg)
         LOG.log(
             DUMP_BYTES,
-            "encoded as type {} ({} bytes): {}".format(
-                msg_type, len(msg_bytes), msg_bytes.hex()
-            ),
+            f"encoded as type {msg_type} ({len(msg_bytes)} bytes): {msg_bytes.hex()}",
         )
         self.transport.write(msg_type, msg_bytes)
         if nowait:
@@ -70,13 +68,11 @@ class DebugLink:
         ret_type, ret_bytes = self.transport.read()
         LOG.log(
             DUMP_BYTES,
-            "received type {} ({} bytes): {}".format(
-                msg_type, len(msg_bytes), msg_bytes.hex()
-            ),
+            f"received type {msg_type} ({len(msg_bytes)} bytes): {msg_bytes.hex()}",
         )
         msg = mapping.decode(ret_type, ret_bytes)
         LOG.debug(
-            "received message: {}".format(msg.__class__.__name__),
+            f"received message: {msg.__class__.__name__}",
             extra={"protobuf": msg},
         )
         return msg
@@ -311,7 +307,7 @@ class MessageFilter:
 
         return True
 
-    def format(self, maxwidth=80):
+    def to_string(self, maxwidth=80):
         fields = []
         for field in self.message_type.FIELDS.values():
             if field.name not in self.fields:
@@ -320,7 +316,7 @@ class MessageFilter:
             if isinstance(value, IntEnum):
                 field_str = value.name
             elif isinstance(value, MessageFilter):
-                field_str = value.format(maxwidth - 4)
+                field_str = value.to_string(maxwidth - 4)
             elif isinstance(value, protobuf.MessageType):
                 field_str = protobuf.format_message(value)
             else:
@@ -328,15 +324,15 @@ class MessageFilter:
             field_str = textwrap.indent(field_str, "    ").lstrip()
             fields.append((field.name, field_str))
 
-        pairs = ["{}={}".format(k, v) for k, v in fields]
+        pairs = [f"{k}={v}" for k, v in fields]
         oneline_str = ", ".join(pairs)
         if len(oneline_str) < maxwidth:
-            return "{}({})".format(self.message_type.__name__, oneline_str)
+            return f"{self.message_type.__name__}({oneline_str})"
         else:
             item = []
-            item.append("{}(".format(self.message_type.__name__))
+            item.append(f"{self.message_type.__name__}(")
             for pair in pairs:
-                item.append("    {}".format(pair))
+                item.append(f"    {pair}")
             item.append(")")
             return "\n".join(item)
 
@@ -567,7 +563,7 @@ class TrezorClientDebugLink(TrezorClient):
         for i in range(start_at, stop_at):
             exp = expected[i]
             prefix = "    " if i != current else ">>> "
-            output.append(textwrap.indent(exp.format(), prefix))
+            output.append(textwrap.indent(exp.to_string(), prefix))
         if stop_at < len(expected):
             omitted = len(expected) - stop_at
             output.append(f"    (...{omitted} following responses omitted)")

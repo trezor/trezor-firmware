@@ -21,6 +21,7 @@
 #include <sys/types.h>
 
 #include "common.h"
+#include "compiler_traits.h"
 #include "display.h"
 #include "flash.h"
 #include "image.h"

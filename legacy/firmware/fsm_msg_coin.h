@@ -45,7 +45,13 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
   node = fsm_getDerivedNode(curve, msg->address_n, msg->address_n_count,
                             &fingerprint);
   if (!node) return;
-  hdnode_fill_public_key(node);
+
+  if (hdnode_fill_public_key(node) != 0) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Failed to derive public key"));
+    layoutHome();
+    return;
+  }
 
   resp->node.depth = node->depth;
   resp->node.fingerprint = fingerprint;
@@ -80,6 +86,10 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
                             resp->xpub, sizeof(resp->xpub));
   } else if (coin->has_segwit && script_type == InputScriptType_SPENDWITNESS &&
              msg->ignore_xpub_magic && coin->xpub_magic) {
+    hdnode_serialize_public(node, fingerprint, coin->xpub_magic, resp->xpub,
+                            sizeof(resp->xpub));
+  } else if (coin->has_taproot && script_type == InputScriptType_SPENDTAPROOT &&
+             coin->xpub_magic) {
     hdnode_serialize_public(node, fingerprint, coin->xpub_magic, resp->xpub,
                             sizeof(resp->xpub));
   } else {
@@ -141,6 +151,32 @@ void fsm_msgTxAck(TxAck *msg) {
   signing_txack(&(msg->tx));
 }
 
+static bool fsm_checkCoinPath(const CoinInfo *coin, InputScriptType script_type,
+                              uint32_t address_n_count,
+                              const uint32_t *address_n, bool has_multisig) {
+  if (!coin_path_check(coin, script_type, address_n_count, address_n,
+                       has_multisig, CoinPathCheckLevel_SCRIPT_TYPE)) {
+    if (config_getSafetyCheckLevel() == SafetyCheckLevel_Strict &&
+        !coin_path_check(coin, script_type, address_n_count, address_n,
+                         has_multisig, CoinPathCheckLevel_KNOWN)) {
+      fsm_sendFailure(FailureType_Failure_DataError, _("Forbidden key path"));
+      layoutHome();
+      return false;
+    }
+
+    layoutDialogSwipe(&bmp_icon_warning, _("Abort"), _("Continue"), NULL,
+                      _("Wrong address path"), _("for selected coin."), NULL,
+                      _("Continue at your"), _("own risk!"), NULL);
+    if (!protectButton(ButtonRequestType_ButtonRequest_UnknownDerivationPath,
+                       false)) {
+      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+      layoutHome();
+      return false;
+    }
+  }
+  return true;
+}
+
 void fsm_msgGetAddress(const GetAddress *msg) {
   RESP_INIT(Address);
 
@@ -153,7 +189,13 @@ void fsm_msgGetAddress(const GetAddress *msg) {
   HDNode *node = fsm_getDerivedNode(coin->curve_name, msg->address_n,
                                     msg->address_n_count, NULL);
   if (!node) return;
-  hdnode_fill_public_key(node);
+
+  if (hdnode_fill_public_key(node) != 0) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Failed to derive public key"));
+    layoutHome();
+    return;
+  }
 
   char address[MAX_ADDR_SIZE];
   if (msg->has_multisig) {  // use progress bar only for multisig
@@ -183,27 +225,9 @@ void fsm_msgGetAddress(const GetAddress *msg) {
       strlcpy(desc, _("Address:"), sizeof(desc));
     }
 
-    if (!coin_path_check(coin, msg->script_type, msg->address_n_count,
-                         msg->address_n, msg->has_multisig,
-                         CoinPathCheckLevel_SCRIPT_TYPE)) {
-      if (config_getSafetyCheckLevel() == SafetyCheckLevel_Strict &&
-          !coin_path_check(coin, msg->script_type, msg->address_n_count,
-                           msg->address_n, msg->has_multisig,
-                           CoinPathCheckLevel_KNOWN)) {
-        fsm_sendFailure(FailureType_Failure_DataError, _("Forbidden key path"));
-        layoutHome();
-        return;
-      }
-
-      layoutDialogSwipe(&bmp_icon_warning, _("Abort"), _("Continue"), NULL,
-                        _("Wrong address path"), _("for selected coin."), NULL,
-                        _("Continue at your"), _("own risk!"), NULL);
-      if (!protectButton(ButtonRequestType_ButtonRequest_UnknownDerivationPath,
-                         false)) {
-        fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
-        layoutHome();
-        return;
-      }
+    if (!fsm_checkCoinPath(coin, msg->script_type, msg->address_n_count,
+                           msg->address_n, msg->has_multisig)) {
+      return;
     }
 
     uint32_t multisig_xpub_magic = coin->xpub_magic;
@@ -220,7 +244,8 @@ void fsm_msgGetAddress(const GetAddress *msg) {
     }
 
     bool is_cashaddr = coin->cashaddr_prefix != NULL;
-    bool is_bech32 = msg->script_type == InputScriptType_SPENDWITNESS;
+    bool is_bech32 = msg->script_type == InputScriptType_SPENDWITNESS ||
+                     msg->script_type == InputScriptType_SPENDTAPROOT;
     if (!fsm_layoutAddress(address, desc, is_cashaddr || is_bech32,
                            is_cashaddr ? strlen(coin->cashaddr_prefix) + 1 : 0,
                            msg->address_n, msg->address_n_count, false,
@@ -243,32 +268,52 @@ void fsm_msgSignMessage(const SignMessage *msg) {
 
   CHECK_INITIALIZED
 
-  layoutSignMessage(msg->message.bytes, msg->message.size);
-  if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+  CHECK_PIN
+
+  const CoinInfo *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
+  if (!coin) return;
+
+  if (!fsm_checkCoinPath(coin, msg->script_type, msg->address_n_count,
+                         msg->address_n, false)) {
+    return;
+  }
+
+  HDNode *node = fsm_getDerivedNode(coin->curve_name, msg->address_n,
+                                    msg->address_n_count, NULL);
+  if (!node) return;
+
+  if (hdnode_fill_public_key(node) != 0) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Failed to derive public key"));
+    layoutHome();
+    return;
+  }
+
+  if (!compute_address(coin, msg->script_type, node, false, NULL,
+                       resp->address)) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Error computing address"));
+    layoutHome();
+    return;
+  }
+
+  layoutVerifyAddress(coin, resp->address);
+  if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
     fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
     layoutHome();
     return;
   }
 
-  CHECK_PIN
-
-  const CoinInfo *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
-  if (!coin) return;
-  HDNode *node = fsm_getDerivedNode(coin->curve_name, msg->address_n,
-                                    msg->address_n_count, NULL);
-  if (!node) return;
+  if (!fsm_layoutSignMessage(msg->message.bytes, msg->message.size)) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+    layoutHome();
+    return;
+  }
 
   layoutProgressSwipe(_("Signing"), 0);
-  if (cryptoMessageSign(coin, node, msg->script_type, msg->message.bytes,
-                        msg->message.size, resp->signature.bytes) == 0) {
-    hdnode_fill_public_key(node);
-    if (!compute_address(coin, msg->script_type, node, false, NULL,
-                         resp->address)) {
-      fsm_sendFailure(FailureType_Failure_ProcessError,
-                      _("Error computing address"));
-      layoutHome();
-      return;
-    }
+  if (cryptoMessageSign(coin, node, msg->script_type, msg->no_script_type,
+                        msg->message.bytes, msg->message.size,
+                        resp->signature.bytes) == 0) {
     resp->signature.size = 65;
     msg_write(MessageType_MessageType_MessageSignature, resp);
   } else {
@@ -291,12 +336,13 @@ void fsm_msgVerifyMessage(const VerifyMessage *msg) {
       layoutHome();
       return;
     }
-    layoutVerifyMessage(msg->message.bytes, msg->message.size);
-    if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
+
+    if (!fsm_layoutVerifyMessage(msg->message.bytes, msg->message.size)) {
       fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
       layoutHome();
       return;
     }
+
     fsm_sendSuccess(_("Message verified"));
   } else {
     fsm_sendFailure(FailureType_Failure_DataError, _("Invalid signature"));

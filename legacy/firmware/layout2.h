@@ -43,6 +43,11 @@ void layoutDialogSwipe(const BITMAP *icon, const char *btnNo,
                        const char *btnYes, const char *desc, const char *line1,
                        const char *line2, const char *line3, const char *line4,
                        const char *line5, const char *line6);
+void layoutDialogSwipeEx(const BITMAP *icon, const char *btnNo,
+                         const char *btnYes, const char *desc,
+                         const char *line1, const char *line2,
+                         const char *line3, const char *line4,
+                         const char *line5, const char *line6, uint8_t font);
 void layoutProgressSwipe(const char *desc, int permil);
 
 void layoutScreensaver(void);
@@ -65,9 +70,7 @@ void layoutFeeOverThreshold(const CoinInfo *coin, AmountUnit amount_unit,
 void layoutChangeCountOverThreshold(uint32_t change_count);
 void layoutConfirmNondefaultLockTime(uint32_t lock_time,
                                      bool lock_time_disabled);
-void layoutSignMessage(const uint8_t *msg, uint32_t len);
 void layoutVerifyAddress(const CoinInfo *coin, const char *address);
-void layoutVerifyMessage(const uint8_t *msg, uint32_t len);
 void layoutCipherKeyValue(bool encrypt, const char *key);
 void layoutEncryptMessage(const uint8_t *msg, uint32_t len, bool signing);
 void layoutDecryptMessage(const uint8_t *msg, uint32_t len,
@@ -109,5 +112,7 @@ void layoutConfirmSafetyChecks(SafetyCheckLevel safety_checks_level);
 
 const char **split_message(const uint8_t *msg, uint32_t len, uint32_t rowlen);
 const char **split_message_hex(const uint8_t *msg, uint32_t len);
+
+bool is_valid_ascii(const uint8_t *data, uint32_t size);
 
 #endif

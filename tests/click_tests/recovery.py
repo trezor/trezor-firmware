@@ -51,7 +51,7 @@ def enter_shares(debug, shares: list):
         assert expected_text in layout.text
         layout = enter_share(debug, share)
         remaining -= 1
-        expected_text = "RecoveryHomescreen {} more".format(remaining)
+        expected_text = f"RecoveryHomescreen {remaining} more"
 
     assert "You have successfully recovered your wallet" in layout.text
 

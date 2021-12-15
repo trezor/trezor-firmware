@@ -79,19 +79,25 @@ static const char *address_n_str(const uint32_t *address_n,
     return _("Path: m");
   }
 
-  // known BIP44/49 path
+  // known BIP44/49/84/86 path
   static char path[100];
   if (address_n_count == 5 &&
       (address_n[0] == (0x80000000 + 44) || address_n[0] == (0x80000000 + 49) ||
-       address_n[0] == (0x80000000 + 84)) &&
+       address_n[0] == (0x80000000 + 84) ||
+       address_n[0] == (0x80000000 + 86)) &&
       (address_n[1] & 0x80000000) && (address_n[2] & 0x80000000) &&
       (address_n[3] <= 1) && (address_n[4] <= BIP32_MAX_LAST_ELEMENT)) {
+    bool taproot = (address_n[0] == (0x80000000 + 86));
     bool native_segwit = (address_n[0] == (0x80000000 + 84));
     bool p2sh_segwit = (address_n[0] == (0x80000000 + 49));
     bool legacy = false;
     const CoinInfo *coin = coinBySlip44(address_n[1]);
     const char *abbr = 0;
-    if (native_segwit) {
+    if (taproot) {
+      if (coin && coin->has_taproot && coin->bech32_prefix) {
+        abbr = coin->coin_shortcut;
+      }
+    } else if (native_segwit) {
       if (coin && coin->has_segwit && coin->bech32_prefix) {
         abbr = coin->coin_shortcut;
       }
@@ -117,14 +123,19 @@ static const char *address_n_str(const uint32_t *address_n,
     if (abbr && accnum < 100) {
       memzero(path, sizeof(path));
       strlcpy(path, abbr, sizeof(path));
-      // TODO: how to name accounts?
-      // currently we have "legacy account", "account" and "segwit account"
-      // for BIP44/P2PKH, BIP49/P2SH-P2WPKH and BIP84/P2WPKH respectivelly
+      // account naming:
+      // "Legacy", "Legacy SegWit", "SegWit" and "Taproot"
+      // for BIP44/P2PKH, BIP49/P2SH-P2WPKH, BIP84/P2WPKH and BIP86/P2TR
+      // respectively.
+      // For non-segwit coins we use only BIP44 with no special naming.
       if (legacy) {
-        strlcat(path, " legacy", sizeof(path));
-      }
-      if (native_segwit) {
-        strlcat(path, " segwit", sizeof(path));
+        strlcat(path, " Legacy", sizeof(path));
+      } else if (p2sh_segwit) {
+        strlcat(path, " L.SegWit", sizeof(path));
+      } else if (native_segwit) {
+        strlcat(path, " SegWit", sizeof(path));
+      } else if (taproot) {
+        strlcat(path, " Taproot", sizeof(path));
       }
       if (address_is_account) {
         strlcat(path, " address #", sizeof(path));
@@ -189,18 +200,17 @@ const char **split_message(const uint8_t *msg, uint32_t len, uint32_t rowlen) {
   if (rowlen > 32) {
     rowlen = 32;
   }
+
   memzero(str, sizeof(str));
-  strlcpy(str[0], (char *)msg, rowlen + 1);
-  if (len > rowlen) {
-    strlcpy(str[1], (char *)msg + rowlen, rowlen + 1);
+  for (int i = 0; i < 4; ++i) {
+    size_t show_len = strnlen((char *)msg, MIN(rowlen, len));
+    memcpy(str[i], (char *)msg, show_len);
+    str[i][show_len] = '\0';
+    msg += show_len;
+    len -= show_len;
   }
-  if (len > rowlen * 2) {
-    strlcpy(str[2], (char *)msg + rowlen * 2, rowlen + 1);
-  }
-  if (len > rowlen * 3) {
-    strlcpy(str[3], (char *)msg + rowlen * 3, rowlen + 1);
-  }
-  if (len > rowlen * 4) {
+
+  if (len > 0) {
     str[3][rowlen - 1] = '.';
     str[3][rowlen - 2] = '.';
     str[3][rowlen - 3] = '.';
@@ -230,10 +240,19 @@ void layoutDialogSwipe(const BITMAP *icon, const char *btnNo,
                        const char *btnYes, const char *desc, const char *line1,
                        const char *line2, const char *line3, const char *line4,
                        const char *line5, const char *line6) {
+  layoutDialogSwipeEx(icon, btnNo, btnYes, desc, line1, line2, line3, line4,
+                      line5, line6, FONT_STANDARD);
+}
+
+void layoutDialogSwipeEx(const BITMAP *icon, const char *btnNo,
+                         const char *btnYes, const char *desc,
+                         const char *line1, const char *line2,
+                         const char *line3, const char *line4,
+                         const char *line5, const char *line6, uint8_t font) {
   layoutLast = layoutDialogSwipe;
   layoutSwipe();
-  layoutDialog(icon, btnNo, btnYes, desc, line1, line2, line3, line4, line5,
-               line6);
+  layoutDialogEx(icon, btnNo, btnYes, desc, line1, line2, line3, line4, line5,
+                 line6, font);
 }
 
 void layoutProgressSwipe(const char *desc, int permil) {
@@ -445,7 +464,7 @@ void layoutConfirmOmni(const uint8_t *data, uint32_t size) {
                     NULL);
 }
 
-static bool is_valid_ascii(const uint8_t *data, uint32_t size) {
+bool is_valid_ascii(const uint8_t *data, uint32_t size) {
   for (uint32_t i = 0; i < size; i++) {
     if (data[i] < ' ' || data[i] > '~') {
       return false;
@@ -600,36 +619,6 @@ void layoutConfirmNondefaultLockTime(uint32_t lock_time,
     layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
                       _("Locktime for this"), _("transaction is set to"),
                       str_type, str_locktime, _("Continue?"), NULL);
-  }
-}
-
-void layoutSignMessage(const uint8_t *msg, uint32_t len) {
-  const char **str = NULL;
-  if (!is_valid_ascii(msg, len)) {
-    str = split_message_hex(msg, len);
-    layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"),
-                      _("Sign binary message?"), str[0], str[1], str[2], str[3],
-                      NULL, NULL);
-  } else {
-    str = split_message(msg, len, 20);
-    layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"),
-                      _("Sign message?"), str[0], str[1], str[2], str[3], NULL,
-                      NULL);
-  }
-}
-
-void layoutVerifyMessage(const uint8_t *msg, uint32_t len) {
-  const char **str = NULL;
-  if (!is_valid_ascii(msg, len)) {
-    str = split_message_hex(msg, len);
-    layoutDialogSwipe(&bmp_icon_info, _("Cancel"), _("Confirm"),
-                      _("Verified binary message"), str[0], str[1], str[2],
-                      str[3], NULL, NULL);
-  } else {
-    str = split_message(msg, len, 20);
-    layoutDialogSwipe(&bmp_icon_info, _("Cancel"), _("Confirm"),
-                      _("Verified message"), str[0], str[1], str[2], str[3],
-                      NULL, NULL);
   }
 }
 

@@ -6,9 +6,15 @@ from apps.common.keychain import auto_keychain
 
 from . import helpers
 
+if False:
+    from trezor.wire import Context
+    from apps.common.keychain import Keychain
+
 
 @auto_keychain(__name__)
-async def get_address(ctx, msg: StellarGetAddress, keychain):
+async def get_address(
+    ctx: Context, msg: StellarGetAddress, keychain: Keychain
+) -> StellarAddress:
     await paths.validate_path(ctx, keychain, msg.address_n)
 
     node = keychain.derive(msg.address_n)

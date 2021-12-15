@@ -52,6 +52,12 @@ TXHASH_65b768 = bytes.fromhex(
 TXHASH_a345b8 = bytes.fromhex(
     "a345b85759b385c6446055e4c3baa77e8161a65009dc009489b48aa6587ce348"
 )
+TXHASH_3ac32e = bytes.fromhex(
+    "3ac32e90831d79385eee49d6030a2123cd9d009fe8ffc3d470af9a6a777a119b"
+)
+TXHASH_df862e = bytes.fromhex(
+    "df862e31da31ff84addd392f6aa89af18978a398ea258e4901ae72894b66679f"
+)
 
 
 @pytest.mark.skip_t1
@@ -71,6 +77,9 @@ def test_p2pkh_presigned(client):
         prev_index=0,
         amount=31000000,
         script_type=proto.InputScriptType.EXTERNAL,
+        script_pubkey=bytes.fromhex(
+            "76a914a579388225827d9f2fe9014add644487808c695d88ac"
+        ),
         script_sig=bytes.fromhex(
             "473044022054fa66bfe1de1c850d59840f165143a66075bae78be3a6bc2809d1ac09431d380220019ecb086e16384f18cbae09b02bd2dce18763cd06454d33d93630561250965e0121030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0"
         ),
@@ -91,6 +100,9 @@ def test_p2pkh_presigned(client):
         prev_index=1,
         amount=600000000,
         script_type=proto.InputScriptType.EXTERNAL,
+        script_pubkey=bytes.fromhex(
+            "76a9145b157a678a10021243307e4bb58f36375aa80e1088ac"
+        ),
         script_sig=bytearray.fromhex(
             "463043021f3a0a7fdf27b340358ddf8b4e6e3e6cc0be728d6f1d9d3413ae59741f57599002204809d59a9432a2c7fcb10639c5efa82935d8c3cc21b185ff5e44f0e1a80e635401210294e3e5e77e22eea0e4c0d30d89beb4db7f69b4bf1ae709e411d6a06618b8f852"
         ),
@@ -153,6 +165,7 @@ def test_p2wpkh_in_p2sh_presigned(client):
         prev_hash=TXHASH_091446,
         prev_index=1,
         script_type=proto.InputScriptType.EXTERNAL,
+        script_pubkey=bytes.fromhex("a91458b53ea7f832e8f096e896b8713a8c6df0e892ca87"),
         script_sig=bytearray.fromhex("160014d16b8c0680c61fc6ed2e407455715055e41052f5"),
         witness=bytes.fromhex(
             "02483045022100ead79ee134f25bb585b48aee6284a4bb14e07f03cc130253e83450d095515e5202201e161e9402c8b26b666f2b67e5b668a404ef7e57858ae9a6a68c3837e65fdc69012103e7bfe10708f715e8538c92d46ca50db6f657bbc455b7494e6a0303ccdb868b79"
@@ -278,6 +291,7 @@ def test_p2wpkh_presigned(client):
         prev_index=0,
         amount=10000,
         script_type=proto.InputScriptType.EXTERNAL,
+        script_pubkey=bytes.fromhex("0014fb7e49f4017dc951615dea221b66626189aa43b9"),
         script_sig=bytes.fromhex(""),
         witness=bytearray.fromhex(
             "024730440220432ac60461de52713ad543cbb1484f7eca1a72c615d539b3f42f5668da4501d2022063786a6d6940a5c1ed9c2d2fd02cef90b6c01ddd84829c946561e15be6c0aae1012103dcf3bc936ecb2ec57b8f468050abce8c8756e75fd74273c9977744b1a0be7d03"
@@ -341,6 +355,9 @@ def test_p2wsh_external_presigned(client):
         prev_hash=TXHASH_a345b8,
         prev_index=0,
         script_type=proto.InputScriptType.EXTERNAL,
+        script_pubkey=bytes.fromhex(
+            "002008b681071cd896cd879102bce735080758ad48ad45a05505939e55f115391991"
+        ),
         amount=100,
         witness=bytearray.fromhex(
             "030047304402206b570b99c22c841548a35a9b9c673fa3b87a9563ed64ad7d979aa3e01b2e303802201d0bebf58b7243e09798e734fc32892936c4d0c4984bec755dc951ef646e4a9a0147512103505f0d82bbdd251511591b34f36ad5eea37d3220c2b81a1189084431ddb3aa3d2103adc58245cf28406af0ef5cc24b8afba7f1be6c72f279b642d85c48798685f86252ae"
@@ -418,6 +435,96 @@ def test_p2wsh_external_presigned(client):
 
 
 @pytest.mark.skip_t1
+def test_p2tr_external_presigned(client):
+    inp1 = proto.TxInputType(
+        # tb1pswrqtykue8r89t9u4rprjs0gt4qzkdfuursfnvqaa3f2yql07zmq8s8a5u
+        address_n=parse_path("86'/1'/0'/0/0"),
+        amount=6800,
+        prev_hash=TXHASH_df862e,
+        prev_index=0,
+        script_type=proto.InputScriptType.SPENDTAPROOT,
+    )
+    inp2 = proto.TxInputType(
+        # tb1p8tvmvsvhsee73rhym86wt435qrqm92psfsyhy6a3n5gw455znnpqm8wald
+        # m/86'/1'/0'/0/1 for "all all ... all" seed.
+        amount=13000,
+        prev_hash=TXHASH_3ac32e,
+        prev_index=1,
+        script_pubkey=bytes.fromhex(
+            "51203ad9b641978673e88ee4d9f4e5d63400c1b2a8304c09726bb19d10ead2829cc2"
+        ),
+        script_type=proto.InputScriptType.EXTERNAL,
+        witness=bytearray.fromhex(
+            "01409956e47403278bf76eecbbbc3af0c2731d8347763825248a2e0f39aca5a684a7d5054e7222a1033fb5864a886180f1a8c64adab12433c78298d1f83e4c8f46e1"
+        ),
+    )
+    out1 = proto.TxOutputType(
+        # 84'/1'/1'/0/0
+        address="tb1q7r9yvcdgcl6wmtta58yxf29a8kc96jkyxl7y88",
+        amount=15000,
+        script_type=proto.OutputScriptType.PAYTOADDRESS,
+    )
+    out2 = proto.TxOutputType(
+        # tb1pn2d0yjeedavnkd8z8lhm566p0f2utm3lgvxrsdehnl94y34txmts5s7t4c
+        address_n=parse_path("86'/1'/0'/1/0"),
+        script_type=proto.OutputScriptType.PAYTOTAPROOT,
+        amount=6800 + 13000 - 200 - 15000,
+    )
+    with client:
+        client.set_expected_responses(
+            [
+                request_input(0),
+                request_input(1),
+                request_output(0),
+                proto.ButtonRequest(code=B.ConfirmOutput),
+                request_output(1),
+                proto.ButtonRequest(code=B.SignTx),
+                request_input(1),
+                request_input(0),
+                request_input(1),
+                request_output(0),
+                request_output(1),
+                request_input(0),
+                request_input(1),
+                request_finished(),
+            ]
+        )
+        _, serialized_tx = btc.sign_tx(
+            client, "Testnet", [inp1, inp2], [out1, out2], prev_txes=TX_CACHE_TESTNET
+        )
+
+    assert (
+        serialized_tx.hex()
+        == "010000000001029f67664b8972ae01498e25ea98a37889f19aa86a2f39ddad84ff31da312e86df0000000000ffffffff9b117a776a9aaf70d4c3ffe89f009dcd23210a03d649ee5e38791d83902ec33a0100000000ffffffff02983a000000000000160014f0ca4661a8c7f4edad7da1c864a8bd3db05d4ac4f8110000000000002251209a9af24b396f593b34e23fefba6b417a55c5ee3f430c3837379fcb5246ab36d70140b51992353d2f99b7b620c0882cb06694996f1b6c7e62a3c1d3036e0f896fbf0b92f3d9aeab94f2454809a501715667345f702c8214693f469225de5f6636b86b01409956e47403278bf76eecbbbc3af0c2731d8347763825248a2e0f39aca5a684a7d5054e7222a1033fb5864a886180f1a8c64adab12433c78298d1f83e4c8f46e100000000"
+    )
+
+    # Test corrupted signature in witness.
+    inp2.witness[10] ^= 1
+    with client:
+        client.set_expected_responses(
+            [
+                request_input(0),
+                request_input(1),
+                request_output(0),
+                proto.ButtonRequest(code=B.ConfirmOutput),
+                request_output(1),
+                proto.ButtonRequest(code=B.SignTx),
+                request_input(1),
+                proto.Failure(code=proto.FailureType.DataError),
+            ]
+        )
+
+        with pytest.raises(TrezorFailure, match="Invalid signature"):
+            btc.sign_tx(
+                client,
+                "Testnet",
+                [inp1, inp2],
+                [out1, out2],
+                prev_txes=TX_CACHE_TESTNET,
+            )
+
+
+@pytest.mark.skip_t1
 def test_p2pkh_with_proof(client):
     # TODO
     pass
@@ -439,6 +546,7 @@ def test_p2wpkh_with_proof(client):
         prev_hash=TXHASH_e5b7e2,
         prev_index=0,
         script_type=proto.InputScriptType.EXTERNAL,
+        script_pubkey=bytes.fromhex("00149c02608d469160a92f40fdf8c6ccced029493088"),
         ownership_proof=bytearray.fromhex(
             "534c001900016b2055d8190244b2ed2d46513c40658a574d3bc2deb6969c0535bb818b44d2c40002483045022100d4ad0374c922848c71d913fba59c81b9075e0d33e884d953f0c4b4806b8ffd0c022024740e6717a2b6a5aa03148c3a28b02c713b4e30fc8aeae67fa69eb20e8ddcd9012103505f0d82bbdd251511591b34f36ad5eea37d3220c2b81a1189084431ddb3aa3d"
         ),
@@ -532,6 +640,7 @@ def test_p2wpkh_with_false_proof(client):
         prev_index=0,
         amount=10000,
         script_type=proto.InputScriptType.EXTERNAL,
+        script_pubkey=bytes.fromhex("0014fb7e49f4017dc951615dea221b66626189aa43b9"),
         ownership_proof=bytes.fromhex(
             "534c00190001b0b66657a824e41c063299fb4435dc70a6fd2e9db4c87e3c26a7ab7c0283547b0002473044022060bf60380142ed54fa907c82cb5ab438bfec22ebf8b5a92971fe104b7e3dd41002206f3fc4ac2f9c1a4a12255b5f678b6e57a088816051faea5a65a66951b394c150012103dcf3bc936ecb2ec57b8f468050abce8c8756e75fd74273c9977744b1a0be7d03"
         ),

@@ -77,4 +77,8 @@ static inline uint8_t trezor_obj_get_uint8(mp_obj_t obj) {
 
 bool trezor_obj_get_ll_checked(mp_obj_t obj, long long *value);
 
+mp_obj_t trezor_obj_call_protected(void (*func)(void *), void *arg);
+
+mp_obj_t trezor_obj_str_from_rom_text(const char *str);
+
 #endif

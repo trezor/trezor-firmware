@@ -77,9 +77,7 @@ class Toif:
         uncompressed = _decompress(self.data)
         if len(uncompressed) != expected_size:
             raise ValueError(
-                "Uncompressed data is {} bytes, expected {}".format(
-                    len(uncompressed), expected_size
-                )
+                f"Uncompressed data is {len(uncompressed)} bytes, expected {expected_size}"
             )
 
     def to_image(self) -> "Image":
@@ -138,7 +136,7 @@ def from_image(image: "Image", background=(0, 0, 0, 255)) -> Toif:
         toif_mode = firmware.ToifMode.full_color
         toif_data = _from_pil_rgb(image.getdata())
     else:
-        raise ValueError("Unsupported image mode: {}".format(image.mode))
+        raise ValueError(f"Unsupported image mode: {image.mode}")
 
     data = _compress(toif_data)
     return Toif(toif_mode, image.size, data)

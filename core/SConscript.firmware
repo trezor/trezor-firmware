@@ -6,10 +6,11 @@ import os
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
 EVERYTHING = BITCOIN_ONLY != '1'
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
+NEW_UI = TREZOR_MODEL == '1' or os.environ.get('NEW_UI', '0') == '1'
 
 FEATURE_FLAGS = {
     "RDI": True,
-    "SECP256K1_ZKP": False,
+    "SECP256K1_ZKP": True,
     "SYSTEM_VIEW": False,
 }
 
@@ -103,6 +104,7 @@ SOURCE_MOD += [
 ]
 if EVERYTHING:
     SOURCE_MOD += [
+        'vendor/trezor-crypto/cardano.c',
         'vendor/trezor-crypto/monero/base58.c',
         'vendor/trezor-crypto/monero/serialize.c',
         'vendor/trezor-crypto/monero/xmr.c',
@@ -116,7 +118,9 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
         'vendor/secp256k1-zkp/include',
     ]
     CPPDEFINES_MOD += [
-        'SECP256K1_BUILD',
+        'USE_SECP256K1_ZKP',
+        'USE_SECP256K1_ZKP_ECDSA',
+        ('SECP256K1_CONTEXT_SIZE', '184'),
         'USE_ASM_ARM',
         'USE_NUM_NONE',
         'USE_FIELD_INV_BUILTIN',
@@ -126,15 +130,21 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
         'USE_SCALAR_8X32',
         'USE_ECMULT_STATIC_PRECOMPUTATION',
         'USE_EXTERNAL_DEFAULT_CALLBACKS',
+        ('ECMULT_GEN_PREC_BITS', '4'),
         ('ECMULT_WINDOW_SIZE', '8'),
         'ENABLE_MODULE_GENERATOR',
-        'ENABLE_MODULE_RANGEPROOF',
         'ENABLE_MODULE_RECOVERY',
-        'ENABLE_MODULE_ECDH',
+        'ENABLE_MODULE_SCHNORRSIG',
+        'ENABLE_MODULE_EXTRAKEYS',
     ]
     SOURCE_MOD_SECP256K1_ZKP = [
         'vendor/secp256k1-zkp/src/secp256k1.c',
         'vendor/secp256k1-zkp/src/asm/field_10x26_arm.s'
+    ]
+    SOURCE_MOD += [
+        'vendor/trezor-crypto/zkp_context.c',
+        'vendor/trezor-crypto/zkp_ecdsa.c',
+        'vendor/trezor-crypto/zkp_bip340.c',
     ]
 
 # modtrezorio
@@ -149,7 +159,7 @@ if TREZOR_MODEL == "T":
 
 # modtrezorui
 CPPPATH_MOD += [
-        'vendor/micropython/extmod/uzlib',
+        'vendor/micropython/lib/uzlib',
 ]
 CPPDEFINES_MOD += [
     'TREZOR_FONT_BOLD_ENABLE',
@@ -167,9 +177,9 @@ SOURCE_MOD += [
     'embed/extmod/modtrezorui/font_pixeloperatormono_regular_8.c',
     'embed/extmod/modtrezorui/modtrezorui.c',
     'embed/extmod/modtrezorui/qr-code-generator/qrcodegen.c',
-    'vendor/micropython/extmod/uzlib/adler32.c',
-    'vendor/micropython/extmod/uzlib/crc32.c',
-    'vendor/micropython/extmod/uzlib/tinflate.c',
+    'vendor/micropython/lib/uzlib/adler32.c',
+    'vendor/micropython/lib/uzlib/crc32.c',
+    'vendor/micropython/lib/uzlib/tinflate.c',
 ]
 
 # modtrezorutils
@@ -181,10 +191,14 @@ SOURCE_MOD += [
 SOURCE_MOD += [
     'embed/extmod/rustmods/modtrezorproto.c',
 ]
+if NEW_UI:
+    SOURCE_MOD += [
+        'embed/extmod/rustmods/modtrezorui2.c',
+    ]
 
 # modutime
 SOURCE_MOD += [
-    'embed/firmware/modutime.c',
+    'embed/extmod/modutime.c',
 ]
 
 SOURCE_MICROPYTHON = [
@@ -193,16 +207,17 @@ SOURCE_MICROPYTHON = [
     'vendor/micropython/extmod/moduheapq.c',
     'vendor/micropython/extmod/modutimeq.c',
     'vendor/micropython/extmod/utime_mphal.c',
-    'vendor/micropython/lib/embed/abort_.c',
-    #'vendor/micropython/lib/mp-readline/readline.c',
-    'vendor/micropython/lib/utils/gchelper_m3.s',
-    'vendor/micropython/lib/utils/gchelper_native.c',
-    'vendor/micropython/lib/utils/interrupt_char.c',
-    'vendor/micropython/lib/utils/printf.c',
-    'vendor/micropython/lib/utils/pyexec.c',
-    'vendor/micropython/lib/utils/stdout_helpers.c',
+    'vendor/micropython/shared/libc/abort_.c',
+    'vendor/micropython/shared/libc/printf.c',
+    'vendor/micropython/shared/runtime/gchelper_m3.s',
+    'vendor/micropython/shared/runtime/gchelper_native.c',
+    'vendor/micropython/shared/runtime/interrupt_char.c',
+    'vendor/micropython/shared/runtime/pyexec.c',
+    'vendor/micropython/shared/runtime/stdout_helpers.c',
+    'vendor/micropython/shared/timeutils/timeutils.c',
     'vendor/micropython/ports/stm32/gccollect.c',
     'vendor/micropython/ports/stm32/pendsv.c',
+    'vendor/micropython/ports/stm32/softtimer.c',
     'vendor/micropython/py/argcheck.c',
     'vendor/micropython/py/asmarm.c',
     'vendor/micropython/py/asmbase.c',
@@ -276,6 +291,7 @@ SOURCE_MICROPYTHON = [
     'vendor/micropython/py/objtype.c',
     'vendor/micropython/py/objzip.c',
     'vendor/micropython/py/opmethods.c',
+    'vendor/micropython/py/pairheap.c',
     'vendor/micropython/py/parse.c',
     'vendor/micropython/py/parsenum.c',
     'vendor/micropython/py/parsenumbase.c',
@@ -345,7 +361,6 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/rng.c',
     'embed/trezorhal/stm32.c',
     'embed/trezorhal/systick.c',
-    'embed/trezorhal/touch.c',
     'embed/trezorhal/usb.c',
     'embed/trezorhal/usbd_conf.c',
     'embed/trezorhal/usbd_core.c',
@@ -358,6 +373,11 @@ if TREZOR_MODEL == 'T':
     SOURCE_TREZORHAL += [
         'embed/trezorhal/sbu.c',
         'embed/trezorhal/sdcard.c',
+        'embed/trezorhal/touch.c',
+    ]
+elif TREZOR_MODEL == '1':
+    SOURCE_TREZORHAL += [
+        'embed/trezorhal/button.c',
     ]
 
 CPPDEFINES_MOD += ['USE_SVC_SHUTDOWN']
@@ -406,7 +426,7 @@ if TREZOR_MODEL == 'T':
     CPU_ASFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16'
     CPU_CCFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mtune=cortex-m4 '
     CPU_MODEL   = 'STM32F427xx'
-    LD_VARIANT  = '_zkp' if FEATURE_FLAGS["SECP256K1_ZKP"] else ''
+    LD_VARIANT  = ''
     RUST_TARGET = 'thumbv7em-none-eabihf'
 elif TREZOR_MODEL == '1':
     CPU_ASFLAGS = '-mthumb -mcpu=cortex-m3 -mfloat-abi=soft'
@@ -640,6 +660,9 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
         CC=os.getenv('CC_FOR_BUILD') or 'gcc',
         COPT='-O2',
         CPPPATH='vendor/secp256k1-zkp',
+        CPPDEFINES=[
+            ('ECMULT_GEN_PREC_BITS', '4'),
+        ]
     )
     gen_context = host_env.Program(
         target='vendor/secp256k1-zkp/gen_context',
@@ -657,10 +680,10 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
 
 protobuf_blobs = env.Command(
     target=[
-        f'rust/{RUST_TARGET}/proto_enums.data',
-        f'rust/{RUST_TARGET}/proto_msgs.data',
-        f'rust/{RUST_TARGET}/proto_names.data',
-        f'rust/{RUST_TARGET}/proto_wire.data',
+        f'rust/proto_enums.data',
+        f'rust/proto_msgs.data',
+        f'rust/proto_names.data',
+        f'rust/proto_wire.data',
     ],
     source=PROTO_SOURCES,
     action='$PB2PY --bitcoin-only=%s --blob-outdir ${TARGET.dir} $SOURCES --qstr-defs build/firmware/genhdr/qstrdefs.generated.h' % BITCOIN_ONLY,
@@ -681,6 +704,10 @@ def cargo_build():
     features = []
     if BITCOIN_ONLY == "1":
         features.append("bitcoin_only")
+    if NEW_UI:
+        features.append("ui")
+        if PYOPT == "0":
+            features.append("ui_debug")
 
     return f'cd embed/rust; cargo build {profile} --target={RUST_TARGET} --target-dir=../../build/firmware/rust --features "{" ".join(features)}"'
 

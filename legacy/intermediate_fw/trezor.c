@@ -46,7 +46,7 @@ static const uint8_t norcow_sectors[NORCOW_SECTOR_COUNT] = NORCOW_SECTORS;
 /** Flash program word operation extracted from libopencm3,
  * so it can run from RAM
  */
-static void __attribute__((noinline, section(".data")))
+static void __attribute__((noinline, section(".data#")))
 _flash_program_word(uint32_t address, uint32_t data) {
   // Wait for flash controller to be ready
   while ((FLASH_SR & FLASH_SR_BSY) == FLASH_SR_BSY)
@@ -70,7 +70,7 @@ _flash_program_word(uint32_t address, uint32_t data) {
   FLASH_CR &= ~FLASH_CR_PG;
 }
 
-static void __attribute__((noinline, section(".data")))
+static void __attribute__((noinline, section(".data#")))
 invalidate_firmware(void) {
   // Flash unlock
   FLASH_KEYR = FLASH_KEYR_KEY1;
@@ -84,7 +84,8 @@ invalidate_firmware(void) {
   FLASH_CR |= FLASH_CR_LOCK;
 }
 
-void __attribute__((noinline, noreturn, section(".data"))) reboot_device(void) {
+void __attribute__((noinline, noreturn, section(".data#")))
+reboot_device(void) {
   __disable_irq();
   *STAY_IN_BOOTLOADER_FLAG_ADDR = STAY_IN_BOOTLOADER_FLAG;
   SCB_AIRCR = SCB_AIRCR_VECTKEY | SCB_AIRCR_SYSRESETREQ;
@@ -93,7 +94,7 @@ void __attribute__((noinline, noreturn, section(".data"))) reboot_device(void) {
 }
 
 /** Entry point of RAM shim that deletes old FW, storage and reboot */
-void __attribute__((noinline, noreturn, section(".data")))
+void __attribute__((noinline, noreturn, section(".data#")))
 invalidate_firmware_and_reboot(void) {
   invalidate_firmware();
   reboot_device();

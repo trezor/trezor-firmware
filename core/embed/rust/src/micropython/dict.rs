@@ -2,7 +2,7 @@ use core::convert::TryFrom;
 
 use crate::error::Error;
 
-use super::{ffi, gc::Gc, map::Map, obj::Obj};
+use super::{ffi, gc::Gc, map::Map, obj::Obj, runtime::catch_exception};
 
 /// Insides of the MicroPython `dict` object.
 pub type Dict = ffi::mp_obj_dict_t;
@@ -10,13 +10,14 @@ pub type Dict = ffi::mp_obj_dict_t;
 impl Dict {
     /// Allocate a new dictionary on the GC heap, empty, but with a capacity of
     /// `capacity` items.
-    pub fn alloc_with_capacity(capacity: usize) -> Gc<Self> {
-        unsafe {
+    pub fn alloc_with_capacity(capacity: usize) -> Result<Gc<Self>, Error> {
+        catch_exception(|| unsafe {
             // SAFETY: We expect that `ffi::mp_obj_new_dict` either returns a GC-allocated
-            // pointer to `ffi::mp_obj_dict_t` or raises (i.e. on allocation failure).
+            // pointer to `ffi::mp_obj_dict_t` or raises.
+            // EXCEPTION: Will raise if allocation fails.
             let ptr = ffi::mp_obj_new_dict(capacity);
             Gc::from_raw(ptr.as_ptr().cast())
-        }
+        })
     }
 
     /// Constructs a dictionary definition by taking ownership of given [`Map`].
@@ -61,7 +62,7 @@ impl TryFrom<Obj> for Gc<Dict> {
             let this = unsafe { Gc::from_raw(value.as_ptr().cast()) };
             Ok(this)
         } else {
-            Err(Error::InvalidType)
+            Err(Error::TypeError)
         }
     }
 }

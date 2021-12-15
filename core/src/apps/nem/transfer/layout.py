@@ -45,7 +45,7 @@ async def ask_transfer_mosaic(
         return
 
     definition = get_mosaic_definition(mosaic.namespace, mosaic.mosaic, common.network)
-    mosaic_quantity = mosaic.quantity * transfer.amount / NEM_MOSAIC_AMOUNT_DIVISOR
+    mosaic_quantity = mosaic.quantity * transfer.amount // NEM_MOSAIC_AMOUNT_DIVISOR
 
     if definition:
         await confirm_properties(
@@ -90,8 +90,8 @@ async def ask_transfer_mosaic(
             "confirm_mosaic_transfer",
             title="Confirm mosaic",
             props=[
-                ("Confirm transfer of", "%s raw units" % mosaic_quantity),
-                ("of", "%s.%s" % (mosaic.namespace, mosaic.mosaic)),
+                ("Confirm transfer of", f"{mosaic_quantity} raw units"),
+                ("of", f"{mosaic.namespace}.{mosaic.mosaic}"),
             ],
         )
 
@@ -103,7 +103,7 @@ def _get_xem_amount(transfer: NEMTransfer):
     # otherwise xem amount is taken from the nem xem mosaic if present
     for mosaic in transfer.mosaics:
         if is_nem_xem_mosaic(mosaic.namespace, mosaic.mosaic):
-            return mosaic.quantity * transfer.amount / NEM_MOSAIC_AMOUNT_DIVISOR
+            return mosaic.quantity * transfer.amount // NEM_MOSAIC_AMOUNT_DIVISOR
     # if there are mosaics but do not include xem, 0 xem is sent
     return 0
 
@@ -116,7 +116,7 @@ def _get_levy_msg(mosaic_definition, quantity: int, network: int) -> str:
         levy_fee = mosaic_definition["fee"]
     else:
         levy_fee = (
-            quantity * mosaic_definition["fee"] / NEM_LEVY_PERCENTILE_DIVISOR_ABSOLUTE
+            quantity * mosaic_definition["fee"] // NEM_LEVY_PERCENTILE_DIVISOR_ABSOLUTE
         )
     return (
         format_amount(levy_fee, levy_definition["divisibility"])
@@ -139,7 +139,7 @@ async def _require_confirm_transfer(ctx, recipient, value):
     await confirm_output(
         ctx,
         recipient,
-        amount="Send {} XEM".format(format_amount(value, NEM_MAX_DIVISIBILITY)),
+        amount=f"Send {format_amount(value, NEM_MAX_DIVISIBILITY)} XEM",
         font_amount=ui.BOLD,
         title="Confirm transfer",
         to_str="\nto\n",

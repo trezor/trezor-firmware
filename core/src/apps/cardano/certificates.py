@@ -13,8 +13,11 @@ from .address import (
 )
 from .helpers import ADDRESS_KEY_HASH_SIZE, INVALID_CERTIFICATE, LOVELACE_MAX_SUPPLY
 from .helpers.paths import SCHEMA_STAKING_ANY_ACCOUNT
+from .helpers.utils import validate_stake_credential
 
 if False:
+    from typing import Any
+
     from trezor.messages import (
         CardanoPoolMetadataType,
         CardanoPoolOwner,
@@ -46,7 +49,7 @@ def validate_certificate(
     account_path_checker: AccountPathChecker,
 ) -> None:
     if (
-        signing_mode == CardanoTxSigningMode.ORDINARY_TRANSACTION
+        signing_mode != CardanoTxSigningMode.POOL_REGISTRATION_AS_OWNER
         and certificate.type == CardanoCertificateType.STAKE_POOL_REGISTRATION
     ):
         raise INVALID_CERTIFICATE
@@ -56,13 +59,16 @@ def validate_certificate(
     ):
         raise INVALID_CERTIFICATE
 
+    _validate_certificate_structure(certificate)
+
     if certificate.type in (
         CardanoCertificateType.STAKE_DELEGATION,
         CardanoCertificateType.STAKE_REGISTRATION,
         CardanoCertificateType.STAKE_DEREGISTRATION,
     ):
-        if not SCHEMA_STAKING_ANY_ACCOUNT.match(certificate.path):
-            raise INVALID_CERTIFICATE
+        validate_stake_credential(
+            certificate.path, certificate.script_hash, signing_mode, INVALID_CERTIFICATE
+        )
 
     if certificate.type == CardanoCertificateType.STAKE_DELEGATION:
         if not certificate.pool or len(certificate.pool) != POOL_HASH_SIZE:
@@ -78,6 +84,25 @@ def validate_certificate(
     account_path_checker.add_certificate(certificate)
 
 
+def _validate_certificate_structure(certificate: CardanoTxCertificate) -> None:
+    path = certificate.path
+    script_hash = certificate.script_hash
+    pool = certificate.pool
+    pool_parameters = certificate.pool_parameters
+
+    fields_to_be_empty: dict[CardanoCertificateType, tuple[Any, ...]] = {
+        CardanoCertificateType.STAKE_REGISTRATION: (pool, pool_parameters),
+        CardanoCertificateType.STAKE_DELEGATION: (pool_parameters,),
+        CardanoCertificateType.STAKE_DEREGISTRATION: (pool, pool_parameters),
+        CardanoCertificateType.STAKE_POOL_REGISTRATION: (path, script_hash, pool),
+    }
+
+    if certificate.type not in fields_to_be_empty or any(
+        fields_to_be_empty[certificate.type]
+    ):
+        raise INVALID_CERTIFICATE
+
+
 def cborize_certificate(
     keychain: seed.Keychain, certificate: CardanoTxCertificate
 ) -> CborSequence:
@@ -87,16 +112,33 @@ def cborize_certificate(
     ):
         return (
             certificate.type,
-            (0, get_public_key_hash(keychain, certificate.path)),
+            cborize_certificate_stake_credential(
+                keychain, certificate.path, certificate.script_hash
+            ),
         )
     elif certificate.type == CardanoCertificateType.STAKE_DELEGATION:
         return (
             certificate.type,
-            (0, get_public_key_hash(keychain, certificate.path)),
+            cborize_certificate_stake_credential(
+                keychain, certificate.path, certificate.script_hash
+            ),
             certificate.pool,
         )
     else:
         raise INVALID_CERTIFICATE
+
+
+def cborize_certificate_stake_credential(
+    keychain: seed.Keychain, path: list[int], script_hash: bytes | None
+) -> tuple[int, bytes]:
+    if path:
+        return 0, get_public_key_hash(keychain, path)
+
+    if script_hash:
+        return 1, script_hash
+
+    # should be unreachable unless there's a bug in validation
+    raise INVALID_CERTIFICATE
 
 
 def cborize_initial_pool_registration_certificate_fields(

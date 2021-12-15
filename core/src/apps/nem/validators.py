@@ -96,9 +96,9 @@ def _validate_common(common: NEMTransactionCommon, inner: bool = False):
 
     if err:
         if inner:
-            raise ProcessError("No %s provided in inner transaction" % err)
+            raise ProcessError(f"No {err} provided in inner transaction")
         else:
-            raise ProcessError("No %s provided" % err)
+            raise ProcessError(f"No {err} provided")
 
     if common.signer is not None:
         _validate_public_key(
@@ -108,9 +108,9 @@ def _validate_common(common: NEMTransactionCommon, inner: bool = False):
 
 def _validate_public_key(public_key: bytes, err_msg: str):
     if not public_key:
-        raise ProcessError("%s (none provided)" % err_msg)
+        raise ProcessError(f"{err_msg} (none provided)")
     if len(public_key) != NEM_PUBLIC_KEY_SIZE:
-        raise ProcessError("%s (invalid length)" % err_msg)
+        raise ProcessError(f"{err_msg} (invalid length)")
 
 
 def _validate_importance_transfer(importance_transfer: NEMImportanceTransfer):

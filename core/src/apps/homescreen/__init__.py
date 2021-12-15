@@ -40,4 +40,4 @@ class HomescreenBase(ui.Layout):
 
     def _before_render(self) -> None:
         if storage.cache.homescreen_shown is not self.RENDER_INDICATOR:
-            return super()._before_render()
+            super()._before_render()

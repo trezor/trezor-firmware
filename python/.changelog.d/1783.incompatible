@@ -1,0 +1,1 @@
+Cardano derivation now defaults to Icarus method. This will result in different keys for users with 24-word seed.

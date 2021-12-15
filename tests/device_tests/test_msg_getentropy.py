@@ -45,4 +45,4 @@ def test_entropy(client, entropy_length):
         )
         ent = misc.get_entropy(client, entropy_length)
         assert len(ent) == entropy_length
-        print("{} bytes: entropy = {}".format(entropy_length, entropy(ent)))
+        print(f"{entropy_length} bytes: entropy = {entropy(ent)}")

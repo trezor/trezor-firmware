@@ -106,7 +106,7 @@ class VariantType(XmrType):
             if isinstance(elem, ftype):
                 break
         else:
-            raise ValueError("Unrecognized variant: %s" % elem)
+            raise ValueError(f"Unrecognized variant: {elem}")
 
         dump_uint(writer, ftype.VARIANT_CODE, 1)
         ftype.dump(writer, elem)
@@ -120,7 +120,7 @@ class VariantType(XmrType):
                 fvalue = ftype.load(reader)
                 break
         else:
-            raise ValueError("Unknown tag: %s" % tag)
+            raise ValueError(f"Unknown tag: {tag}")
         return fvalue
 
     @classmethod
@@ -134,7 +134,7 @@ class MessageType(XmrType):
     """
 
     def __init__(self, **kwargs):
-        for kw in kwargs:
+        for kw in kwargs:  # pylint: disable=consider-using-dict-items
             setattr(self, kw, kwargs[kw])
 
     __eq__ = obj_eq

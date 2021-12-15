@@ -123,9 +123,10 @@ Cardano commands.
     --help  Show this message and exit.
 
   Commands:
-    get-address     Get Cardano address.
-    get-public-key  Get Cardano public key.
-    sign-tx         Sign Cardano transaction.
+    get-address             Get Cardano address.
+    get-native-script-hash  Get Cardano native script hash.
+    get-public-key          Get Cardano public key.
+    sign-tx                 Sign Cardano transaction.
 
 CoSi (Cothority / collective signing) commands.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -253,6 +254,7 @@ Ethereum commands.
     get-address      Get Ethereum address in hex encoding.
     get-public-node  Get Ethereum public node of given path.
     sign-message     Sign message with Ethereum address.
+    sign-typed-data  Sign typed data (EIP-712) with Ethereum address.
     sign-tx          Sign (and optionally publish) Ethereum transaction.
     verify-message   Verify message signed with Ethereum address.
 

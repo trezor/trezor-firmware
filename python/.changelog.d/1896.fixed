@@ -1,0 +1,1 @@
+Updated `tools/build_tx.py` to work with Blockbook's API protections.

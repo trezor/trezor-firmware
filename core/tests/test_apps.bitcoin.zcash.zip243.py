@@ -5,11 +5,11 @@ from trezor.messages import TxInput
 from trezor.messages import PrevOutput
 
 from apps.common import coins
-from apps.bitcoin.common import SIGHASH_ALL
+from apps.bitcoin.common import SigHashType
 from apps.bitcoin.writers import get_tx_hash
 
 if not utils.BITCOIN_ONLY:
-    from apps.bitcoin.sign_tx.zcash import Zip243Hash
+    from apps.bitcoin.sign_tx.zcash import ZcashSigHasher
 
 
 # test vectors inspired from https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/zip_0243.py
@@ -191,7 +191,7 @@ class TestZcashZip243(unittest.TestCase):
                 branch_id=v["branch_id"],
             )
 
-            zip243 = Zip243Hash()
+            zip243 = ZcashSigHasher()
 
             for i in v["inputs"]:
                 txi = TxInput(
@@ -201,7 +201,7 @@ class TestZcashZip243(unittest.TestCase):
                     script_type = i["script_type"],
                     sequence = i["sequence"],
                 )
-                zip243.add_input(txi)
+                zip243.add_input(txi, b"")
 
             for o in v["outputs"]:
                 txo = PrevOutput(
@@ -213,7 +213,7 @@ class TestZcashZip243(unittest.TestCase):
             self.assertEqual(hexlify(get_tx_hash(zip243.h_prevouts)), v["prevouts_hash"])
             self.assertEqual(hexlify(get_tx_hash(zip243.h_sequence)), v["sequence_hash"])
             self.assertEqual(hexlify(get_tx_hash(zip243.h_outputs)), v["outputs_hash"])
-            self.assertEqual(hexlify(zip243.preimage_hash(txi, [unhexlify(i["pubkey"])], 1, tx, coin, SIGHASH_ALL)), v["preimage_hash"])
+            self.assertEqual(hexlify(zip243.hash143(txi, [unhexlify(i["pubkey"])], 1, tx, coin, SigHashType.SIGHASH_ALL)), v["preimage_hash"])
 
 
 if __name__ == "__main__":

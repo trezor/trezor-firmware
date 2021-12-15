@@ -9,6 +9,8 @@ package hw.trezor.messages;
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessage";
 
+option (include_in_bitcoin_only) = true;
+
 import "google/protobuf/descriptor.proto";
 
 /************************* WARNING ***********************
@@ -18,7 +20,7 @@ EnumValueOptions and FieldOptions, MUST NOT have the same ID.
 
 Using the same ID indicates the same purpose (protobuf does not allow multiple
 extensions with the same name), such as EnumValueOptions.bitcoin_only and
-MessageOptions.include_in_bitcoin_only. pb2py can then find the extension under
+FileOptions.include_in_bitcoin_only. pb2py can then find the extension under
 either name.
 
 The convention to achieve this is as follows:
@@ -54,14 +56,17 @@ extend google.protobuf.EnumOptions {
 extend google.protobuf.MessageOptions {
     optional bool unstable = 52001;   // indicate that a message definition might change at any time
     optional uint32 wire_type = 52002;   // override wire type specified in the MessageType enum
-
-    optional bool include_in_bitcoin_only = 60000;  // message is available on BITCOIN_ONLY build
-                                                    // intentionally identical to `bitcoin_only` from enum
 }
 
 /** Options for tagging field types */
 extend google.protobuf.FieldOptions {
     optional bool experimental = 53001;   // indicate that a field is intended for development and beta testing only
+}
+
+/** Options for tagging files with protobuf definitions */
+extend google.protobuf.FileOptions {
+    optional bool include_in_bitcoin_only = 60000;  // definitions are available on BITCOIN_ONLY build
+                                                    // intentionally identical to `bitcoin_only` from enum
 }
 
 
@@ -180,6 +185,12 @@ enum MessageType {
     MessageType_EthereumSignMessage = 64 [(wire_in) = true];
     MessageType_EthereumVerifyMessage = 65 [(wire_in) = true];
     MessageType_EthereumMessageSignature = 66 [(wire_out) = true];
+    MessageType_EthereumSignTypedData = 464 [(wire_in) = true];
+    MessageType_EthereumTypedDataStructRequest = 465 [(wire_out) = true];
+    MessageType_EthereumTypedDataStructAck = 466 [(wire_in) = true];
+    MessageType_EthereumTypedDataValueRequest = 467 [(wire_out) = true];
+    MessageType_EthereumTypedDataValueAck = 468 [(wire_in) = true];
+    MessageType_EthereumTypedDataSignature = 469 [(wire_out) = true];
 
     // NEM
     MessageType_NEMGetAddress = 67 [(wire_in) = true];
@@ -218,9 +229,9 @@ enum MessageType {
     MessageType_StellarAddress = 208 [(wire_out) = true];
     MessageType_StellarCreateAccountOp = 210 [(wire_in) = true];
     MessageType_StellarPaymentOp = 211 [(wire_in) = true];
-    MessageType_StellarPathPaymentOp = 212 [(wire_in) = true];
-    MessageType_StellarManageOfferOp = 213 [(wire_in) = true];
-    MessageType_StellarCreatePassiveOfferOp = 214 [(wire_in) = true];
+    MessageType_StellarPathPaymentStrictReceiveOp = 212 [(wire_in) = true];
+    MessageType_StellarManageSellOfferOp = 213 [(wire_in) = true];
+    MessageType_StellarCreatePassiveSellOfferOp = 214 [(wire_in) = true];
     MessageType_StellarSetOptionsOp = 215 [(wire_in) = true];
     MessageType_StellarChangeTrustOp = 216 [(wire_in) = true];
     MessageType_StellarAllowTrustOp = 217 [(wire_in) = true];
@@ -228,6 +239,8 @@ enum MessageType {
     // omitted: StellarInflationOp is not a supported operation, would be 219
     MessageType_StellarManageDataOp = 220 [(wire_in) = true];
     MessageType_StellarBumpSequenceOp = 221 [(wire_in) = true];
+    MessageType_StellarManageBuyOfferOp = 222 [(wire_in) = true];
+    MessageType_StellarPathPaymentStrictSendOp = 223 [(wire_in) = true];
     MessageType_StellarSignedTx = 230 [(wire_out) = true];
 
     // Cardano
@@ -258,7 +271,9 @@ enum MessageType {
     MessageType_CardanoTxAuxiliaryData = 327 [(wire_in) = true];
     MessageType_CardanoPoolOwner = 328 [(wire_in) = true];
     MessageType_CardanoPoolRelayParameters = 329 [(wire_in) = true];
-
+    MessageType_CardanoGetNativeScriptHash = 330 [(wire_in) = true];
+    MessageType_CardanoNativeScriptHash = 331 [(wire_out) = true];
+    MessageType_CardanoTxMint = 332 [(wire_in) = true];
 
     // Ripple
     MessageType_RippleGetAddress = 400 [(wire_in) = true];

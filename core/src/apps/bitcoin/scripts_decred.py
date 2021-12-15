@@ -6,6 +6,7 @@ from trezor.enums import InputScriptType
 from apps.common.writers import write_bytes_fixed, write_uint64_le
 
 from . import scripts
+from .common import SigHashType
 from .multisig import multisig_get_pubkeys, multisig_pubkey_index
 from .scripts import (  # noqa: F401
     output_script_paytoopreturn,
@@ -27,21 +28,21 @@ def write_input_script_prefixed(
     script_type: InputScriptType,
     multisig: MultisigRedeemScriptType | None,
     coin: CoinInfo,
-    hash_type: int,
+    sighash_type: SigHashType,
     pubkey: bytes,
     signature: bytes,
 ) -> None:
     if script_type == InputScriptType.SPENDADDRESS:
         # p2pkh or p2sh
         scripts.write_input_script_p2pkh_or_p2sh_prefixed(
-            w, pubkey, signature, hash_type
+            w, pubkey, signature, sighash_type
         )
     elif script_type == InputScriptType.SPENDMULTISIG:
         # p2sh multisig
         assert multisig is not None  # checked in sanitize_tx_input
         signature_index = multisig_pubkey_index(multisig, pubkey)
-        return write_input_script_multisig_prefixed(
-            w, multisig, signature, signature_index, hash_type, coin
+        write_input_script_multisig_prefixed(
+            w, multisig, signature, signature_index, sighash_type, coin
         )
     else:
         raise wire.ProcessError("Invalid script type")
@@ -52,7 +53,7 @@ def write_input_script_multisig_prefixed(
     multisig: MultisigRedeemScriptType,
     signature: bytes,
     signature_index: int,
-    hash_type: int,
+    sighash_type: SigHashType,
     coin: CoinInfo,
 ) -> None:
     signatures = multisig.signatures  # other signatures
@@ -74,7 +75,7 @@ def write_input_script_multisig_prefixed(
 
     for s in signatures:
         if s:
-            scripts.append_signature(w, s, hash_type)
+            scripts.append_signature(w, s, sighash_type)
 
     # redeem script
     write_op_push(w, redeem_script_length)

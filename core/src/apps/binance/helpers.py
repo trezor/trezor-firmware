@@ -90,4 +90,4 @@ def address_from_public_key(pubkey: bytes, hrp: str) -> str:
 
     convertedbits = bech32.convertbits(h, 8, 5, False)
 
-    return bech32.bech32_encode(hrp, convertedbits)
+    return bech32.bech32_encode(hrp, convertedbits, bech32.Encoding.BECH32)

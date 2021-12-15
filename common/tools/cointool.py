@@ -78,7 +78,7 @@ def c_str_filter(b):
         return "NULL"
 
     def hexescape(c):
-        return r"\x{:02x}".format(c)
+        return rf"\x{c:02x}"
 
     if isinstance(b, bytes):
         return '"' + "".join(map(hexescape, b)) + '"'
@@ -104,12 +104,7 @@ def ascii_filter(s):
 
 def make_support_filter(support_info):
     def supported_on(device, coins):
-        for coin in coins:
-            supp = support_info[coin.key].get(device)
-            if not supp:
-                continue
-            if coin_info.is_token(coin) or supp != "soon":
-                yield coin
+        return (c for c in coins if support_info[c.key].get(device))
 
     return supported_on
 
@@ -154,8 +149,8 @@ def highlight_key(coin, color):
     else:
         keylist[-1] = crayon(color, keylist[-1], bold=True)
     key = crayon(color, ":".join(keylist))
-    name = crayon(None, "({})".format(coin["name"]), dim=True)
-    return "{} {}".format(key, name)
+    name = crayon(None, f"({coin['name']})", dim=True)
+    return f"{key} {name}"
 
 
 def find_collisions(coins, field):
@@ -174,9 +169,7 @@ def check_eth(coins):
     check_passed = True
     chains = find_collisions(coins, "chain")
     for key, bucket in chains.items():
-        bucket_str = ", ".join(
-            "{} ({})".format(coin["key"], coin["name"]) for coin in bucket
-        )
+        bucket_str = ", ".join(f"{coin['key']} ({coin['name']})" for coin in bucket)
         chain_name_str = "colliding chain name " + crayon(None, key, bold=True) + ":"
         print_log(logging.ERROR, chain_name_str, bucket_str)
         check_passed = False
@@ -245,7 +238,7 @@ def check_btc(coins):
                 else:
                     # collision between some unsupported networks is OK
                     level = logging.INFO
-                print_log(level, "{} {}:".format(prefix, key), collision_str(bucket))
+                print_log(level, f"{prefix} {key}:", collision_str(bucket))
 
         return failed
 
@@ -303,7 +296,7 @@ def check_dups(buckets, print_at_level=logging.WARNING):
             prefix = crayon("green", "*", bold=True) + prefix
 
         highlighted = highlight_key(coin, color)
-        return "{}{}".format(prefix, highlighted)
+        return f"{prefix}{highlighted}"
 
     check_passed = True
 
@@ -349,7 +342,7 @@ def check_dups(buckets, print_at_level=logging.WARNING):
         if symbol == "_override":
             print_log(level, "force-set duplicates:", dup_str)
         else:
-            print_log(level, "duplicate symbol {}:".format(symbol.upper()), dup_str)
+            print_log(level, f"duplicate symbol {symbol.upper()}:", dup_str)
 
     return check_passed
 
@@ -422,14 +415,12 @@ def check_key_uniformity(coins):
         keyset = set(coin.keys()) | IGNORE_NONUNIFORM_KEYS
         missing = ", ".join(reference_keyset - keyset)
         if missing:
-            print_log(
-                logging.ERROR, "coin {} has missing keys: {}".format(key, missing)
-            )
+            print_log(logging.ERROR, f"coin {key} has missing keys: {missing}")
         additional = ", ".join(keyset - reference_keyset)
         if additional:
             print_log(
                 logging.ERROR,
-                "coin {} has superfluous keys: {}".format(key, additional),
+                f"coin {key} has superfluous keys: {additional}",
             )
 
     return False
@@ -451,7 +442,7 @@ def check_segwit(coins):
                     print_log(
                         logging.ERROR,
                         coin["name"],
-                        "segwit is True => %s should be set" % field,
+                        f"segwit is True => {field} should be set",
                     )
                     return False
         else:
@@ -460,7 +451,7 @@ def check_segwit(coins):
                     print_log(
                         logging.ERROR,
                         coin["name"],
-                        "segwit is False => %s should NOT be set" % field,
+                        f"segwit is False => {field} should NOT be set",
                     )
                     return False
     return True
@@ -868,7 +859,7 @@ def render(paths, outfile, verbose, bitcoin_only):
 
     def do_render(src, dst):
         if verbose:
-            click.echo("Rendering {} => {}".format(src, dst))
+            click.echo(f"Rendering {src} => {dst}")
         render_file(src, dst, defs, support_info)
 
     # single in-out case
@@ -883,7 +874,7 @@ def render(paths, outfile, verbose, bitcoin_only):
     files = []
     for path in paths:
         if not os.path.exists(path):
-            click.echo("Path {} does not exist".format(path))
+            click.echo(f"Path {path} does not exist")
         elif os.path.isdir(path):
             files += glob.glob(os.path.join(path, "*.mako"))
         else:
@@ -892,7 +883,7 @@ def render(paths, outfile, verbose, bitcoin_only):
     # render each file
     for file in files:
         if not file.endswith(".mako"):
-            click.echo("File {} does not end with .mako".format(file))
+            click.echo(f"File {file} does not end with .mako")
         else:
             target = file[: -len(".mako")]
             with open(target, "w") as dst:

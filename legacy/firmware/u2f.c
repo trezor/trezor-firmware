@@ -604,8 +604,11 @@ void u2f_register(const APDU *a) {
       return;
     }
 
-    ecdsa_get_public_key65(node->curve->params, node->private_key,
-                           (uint8_t *)&resp->pubKey);
+    if (ecdsa_get_public_key65(node->curve->params, node->private_key,
+                               (uint8_t *)&resp->pubKey) != 0) {
+      send_u2f_error(U2F_SW_WRONG_DATA);
+      return;
+    }
 
     memcpy(resp->keyHandleCertSig + resp->keyHandleLen, U2F_ATT_CERT,
            sizeof(U2F_ATT_CERT));

@@ -35,6 +35,7 @@ XPUB_PASSPHRASES = {
     "J": "xpub6CVeYPTG57D4tm9BvwCcakppwGJstbXyK8Yd611agusZuHmx7og3dNvr6pjMN6e4BoaNc5MZA4TjMLjMT2h2vJRU8rYLvHFUwrEL9zDbuqe",
 }
 XPUB_PASSPHRASE_NONE = "xpub6BiVtCpG9fQPxnPmHXG8PhtzQdWC2Su4qWu6XW9tpWFYhxydCLJGrWBJZ5H6qTAHdPQ7pQhtpjiYZVZARo14qHiay2fvrX996oEP42u8wZy"
+XPUB_CARDANO_PASSPHRASE_A = "d37eba66d6183547b11b4d0c3e08e761da9f07c3ef32183f8b79360b2b66850e47e8eb3865251784c3c471a854ee40dfc067f7f3afe47d093388ea45239606fd"
 XPUB_CARDANO_PASSPHRASE_B = "d80e770f6dfc3edb58eaab68aa091b2c27b08a47583471e93437ac5f8baa61880c7af4938a941c084c19731e6e57a5710e6ad1196263291aea297ce0eec0f177"
 
 ADDRESS_N = parse_path("44h/0h/0h")
@@ -43,9 +44,11 @@ XPUB_REQUEST = messages.GetPublicKey(address_n=ADDRESS_N, coin_name="Bitcoin")
 SESSIONS_STORED = 10
 
 
-def _init_session(client, session_id=None):
+def _init_session(client, session_id=None, derive_cardano=False):
     """Call Initialize, check and return the session ID."""
-    response = client.call(messages.Initialize(session_id=session_id))
+    response = client.call(
+        messages.Initialize(session_id=session_id, derive_cardano=derive_cardano)
+    )
     assert isinstance(response, messages.Features)
     assert len(response.session_id) == 32
     return response.session_id
@@ -308,7 +311,7 @@ def test_passphrase_always_on_device(client):
 
 
 @pytest.mark.skip_t2
-@pytest.mark.setup_client(passphrase=True)
+@pytest.mark.setup_client(passphrase="")
 def test_passphrase_on_device_not_possible_on_t1(client):
     # This setting makes no sense on T1.
     response = client.call_raw(messages.ApplySettings(passphrase_always_on_device=True))
@@ -332,7 +335,7 @@ def test_passphrase_ack_mismatch(client):
     assert response.code == FailureType.DataError
 
 
-@pytest.mark.setup_client(passphrase=True)
+@pytest.mark.setup_client(passphrase="")
 def test_passphrase_missing(client):
     response = client.call_raw(XPUB_REQUEST)
     assert isinstance(response, messages.PassphraseRequest)
@@ -372,7 +375,10 @@ def test_passphrase_length(client):
 
 
 def _get_xpub_cardano(client, passphrase):
-    msg = messages.CardanoGetPublicKey(address_n=parse_path("44'/1815'/0'/0/0"))
+    msg = messages.CardanoGetPublicKey(
+        address_n=parse_path("44'/1815'/0'/0/0"),
+        derivation_type=messages.CardanoDerivationType.ICARUS,
+    )
     response = client.call_raw(msg)
     if passphrase is not None:
         assert isinstance(response, messages.PassphraseRequest)
@@ -385,36 +391,35 @@ def _get_xpub_cardano(client, passphrase):
 @pytest.mark.altcoin
 @pytest.mark.setup_client(passphrase=True)
 def test_cardano_passphrase(client):
-    # Cardano uses a variation of BIP-39 so we need to ask for the passphrase again.
+    # Cardano has a separate derivation method that needs to access the plaintext
+    # of the passphrase.
+    # Historically, Cardano calls would ask for passphrase again. Now, they should not.
 
-    session_id = _init_session(client)
+    session_id = _init_session(client, derive_cardano=True)
 
     # GetPublicKey requires passphrase and since it is not cached,
     # Trezor will prompt for it.
-    assert _get_xpub(client, passphrase="A") == XPUB_PASSPHRASES["A"]
+    assert _get_xpub(client, passphrase="B") == XPUB_PASSPHRASES["B"]
 
     # The passphrase is now cached for non-Cardano coins.
-    assert _get_xpub(client, passphrase=None) == XPUB_PASSPHRASES["A"]
+    assert _get_xpub(client, passphrase=None) == XPUB_PASSPHRASES["B"]
 
-    # Cardano will prompt for it again.
-    assert _get_xpub_cardano(client, passphrase="B") == XPUB_CARDANO_PASSPHRASE_B
-
-    # But now also Cardano has it cached.
+    # The passphrase should be cached for Cardano as well
     assert _get_xpub_cardano(client, passphrase=None) == XPUB_CARDANO_PASSPHRASE_B
 
-    # And others behaviour did not change.
-    assert _get_xpub(client, passphrase=None) == XPUB_PASSPHRASES["A"]
-
     # Initialize with the session id does not destroy the state
-    _init_session(client, session_id=session_id)
-    assert _get_xpub(client, passphrase=None) == XPUB_PASSPHRASES["A"]
+    _init_session(client, session_id=session_id, derive_cardano=True)
+    assert _get_xpub(client, passphrase=None) == XPUB_PASSPHRASES["B"]
     assert _get_xpub_cardano(client, passphrase=None) == XPUB_CARDANO_PASSPHRASE_B
 
     # New session will destroy the state
-    _init_session(client)
+    _init_session(client, derive_cardano=True)
 
-    # GetPublicKey must ask for passphrase again
-    assert _get_xpub(client, passphrase="A") == XPUB_PASSPHRASES["A"]
+    # Cardano must ask for passphrase again
+    assert _get_xpub_cardano(client, passphrase="A") == XPUB_CARDANO_PASSPHRASE_A
 
-    # Cardano must also ask for passphrase again
-    assert _get_xpub_cardano(client, passphrase="B") == XPUB_CARDANO_PASSPHRASE_B
+    # Passphrase is now cached for Cardano
+    assert _get_xpub_cardano(client, passphrase=None) == XPUB_CARDANO_PASSPHRASE_A
+
+    # Passphrase is cached for non-Cardano coins too
+    assert _get_xpub(client, passphrase=None) == XPUB_PASSPHRASES["A"]

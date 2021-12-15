@@ -20,6 +20,7 @@
 #include "py/objstr.h"
 
 #include "embed/extmod/trezorobj.h"
+#include "hdnode.h"
 
 #include "bip32.h"
 #include "bip39.h"
@@ -35,13 +36,6 @@
 ///     """
 ///     BIP0032 HD node structure.
 ///     """
-typedef struct _mp_obj_HDNode_t {
-  mp_obj_base_t base;
-  uint32_t fingerprint;
-  HDNode hdnode;
-} mp_obj_HDNode_t;
-
-STATIC const mp_obj_type_t mod_trezorcrypto_HDNode_type;
 
 /// def __init__(
 ///     self,
@@ -183,43 +177,6 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_HDNode_derive_obj,
                                            2, 3,
                                            mod_trezorcrypto_HDNode_derive);
 
-#if !BITCOIN_ONLY
-
-/// def derive_cardano(self, index: int) -> None:
-///     """
-///     Derive a BIP0032 child node in place using Cardano algorithm.
-///     """
-STATIC mp_obj_t mod_trezorcrypto_HDNode_derive_cardano(mp_obj_t self,
-                                                       mp_obj_t index) {
-  mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
-  uint32_t i = mp_obj_get_int_truncated(index);
-  uint32_t fp = hdnode_fingerprint(&o->hdnode);
-
-  int res = 0;
-  // same as in derive
-  if (0 ==
-      memcmp(o->hdnode.private_key,
-             "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-             "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00",
-             32)) {
-    memzero(&o->hdnode, sizeof(o->hdnode));
-    mp_raise_ValueError("Failed to derive, private key not set");
-  }
-  // special for cardano
-  res = hdnode_private_ckd_cardano(&o->hdnode, i);
-  if (!res) {
-    memzero(&o->hdnode, sizeof(o->hdnode));
-    mp_raise_ValueError("Failed to derive");
-  }
-  o->fingerprint = fp;
-
-  return mp_const_none;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_derive_cardano_obj,
-                                 mod_trezorcrypto_HDNode_derive_cardano);
-
-#endif
-
 /// def derive_path(self, path: Sequence[int]) -> None:
 ///     """
 ///     Go through a list of indexes and iteratively derive a child node in
@@ -263,9 +220,12 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_serialize_public(mp_obj_t self,
                                                          mp_obj_t version) {
   uint32_t ver = trezor_obj_get_uint(version);
   mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
+  if (hdnode_fill_public_key(&o->hdnode) != 0) {
+    mp_raise_ValueError("Failed to serialize");
+  }
+
   vstr_t xpub = {0};
   vstr_init_len(&xpub, XPUB_MAXLEN);
-  hdnode_fill_public_key(&o->hdnode);
   int written = hdnode_serialize_public(&o->hdnode, o->fingerprint, ver,
                                         xpub.buf, xpub.alloc);
   if (written <= 0) {
@@ -367,7 +327,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_HDNode_private_key_ext_obj,
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_HDNode_public_key(mp_obj_t self) {
   mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
-  hdnode_fill_public_key(&o->hdnode);
+  if (hdnode_fill_public_key(&o->hdnode) != 0) {
+    mp_raise_ValueError("Invalid private key");
+  }
   return mp_obj_new_bytes(o->hdnode.public_key, sizeof(o->hdnode.public_key));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_HDNode_public_key_obj,
@@ -385,7 +347,9 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_address(mp_obj_t self,
 
   vstr_t address = {0};
   vstr_init_len(&address, ADDRESS_MAXLEN);
-  hdnode_get_address(&o->hdnode, v, address.buf, address.alloc);
+  if (hdnode_get_address(&o->hdnode, v, address.buf, address.alloc) != 0) {
+    mp_raise_ValueError("Failed to get address");
+  }
   address.len = strlen(address.buf);
   return mp_obj_new_str_from_vstr(&mp_type_str, &address);
 }
@@ -497,10 +461,6 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_HDNode_locals_dict_table[] = {
      MP_ROM_PTR(&mod_trezorcrypto_HDNode___del___obj)},
     {MP_ROM_QSTR(MP_QSTR_derive),
      MP_ROM_PTR(&mod_trezorcrypto_HDNode_derive_obj)},
-#if !BITCOIN_ONLY
-    {MP_ROM_QSTR(MP_QSTR_derive_cardano),
-     MP_ROM_PTR(&mod_trezorcrypto_HDNode_derive_cardano_obj)},
-#endif
     {MP_ROM_QSTR(MP_QSTR_derive_path),
      MP_ROM_PTR(&mod_trezorcrypto_HDNode_derive_path_obj)},
     {MP_ROM_QSTR(MP_QSTR_serialize_public),
@@ -535,7 +495,7 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_HDNode_locals_dict_table[] = {
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_HDNode_locals_dict,
                             mod_trezorcrypto_HDNode_locals_dict_table);
 
-STATIC const mp_obj_type_t mod_trezorcrypto_HDNode_type = {
+const mp_obj_type_t mod_trezorcrypto_HDNode_type = {
     {&mp_type_type},
     .name = MP_QSTR_HDNode,
     .make_new = mod_trezorcrypto_HDNode_make_new,
@@ -562,14 +522,7 @@ STATIC mp_obj_t mod_trezorcrypto_bip32_from_seed(mp_obj_t seed,
   }
 
   HDNode hdnode = {0};
-  int res = 0;
-  if (strcmp(curveb.buf, ED25519_CARDANO_NAME) != 0) {
-    res = hdnode_from_seed(seedb.buf, seedb.len, curveb.buf, &hdnode);
-#if !BITCOIN_ONLY
-  } else {
-    res = hdnode_from_seed_cardano(seedb.buf, seedb.len, &hdnode);
-#endif
-  }
+  int res = hdnode_from_seed(seedb.buf, seedb.len, curveb.buf, &hdnode);
 
   if (!res) {
     mp_raise_ValueError("Failed to derive the root node");
@@ -584,67 +537,11 @@ STATIC mp_obj_t mod_trezorcrypto_bip32_from_seed(mp_obj_t seed,
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_bip32_from_seed_obj,
                                  mod_trezorcrypto_bip32_from_seed);
 
-#if !BITCOIN_ONLY
-
-/// def from_mnemonic_cardano(mnemonic: str, passphrase: str) -> HDNode:
-///     """
-///     Construct a HD node from a BIP-0039 mnemonic using the Icarus derivation
-///     scheme, aka v2 derivation scheme.
-///     """
-STATIC mp_obj_t mod_trezorcrypto_bip32_from_mnemonic_cardano(
-    mp_obj_t mnemonic, mp_obj_t passphrase) {
-  mp_buffer_info_t mnemo = {0}, phrase = {0};
-  mp_get_buffer_raise(mnemonic, &mnemo, MP_BUFFER_READ);
-  mp_get_buffer_raise(passphrase, &phrase, MP_BUFFER_READ);
-  HDNode hdnode = {0};
-  const char *pmnemonic = mnemo.len > 0 ? mnemo.buf : "";
-  const char *ppassphrase = phrase.len > 0 ? phrase.buf : "";
-
-  uint8_t mnemonic_bits[64] = {0};
-  int mnemonic_bits_len = mnemonic_to_bits(pmnemonic, mnemonic_bits);
-
-  if (mnemonic_bits_len == 0) {
-    mp_raise_ValueError("Invalid mnemonic");
-  }
-
-  // BEWARE: passing of mnemonic_bits (i.e. entropy + checksum bits) into
-  // hdnode_from_entropy_cardano_icarus() is actually not correct and we should
-  // be passing the entropy alone. However, the bug is there since Cardano
-  // support has been launched for Trezor and its reversal would result in
-  // people with a 24-word mnemonic on Trezor losing access to their Cardano
-  // funds. More info at https://github.com/trezor/trezor-firmware/issues/1387
-  const int res = hdnode_from_entropy_cardano_icarus(
-      (const uint8_t *)ppassphrase, phrase.len, mnemonic_bits,
-      mnemonic_bits_len / 8, &hdnode);
-
-  if (!res) {
-    mp_raise_ValueError(
-        "Secret key generation from mnemonic is looping forever");
-  } else if (res == -1) {
-    mp_raise_ValueError("Invalid mnemonic");
-  }
-
-  mp_obj_HDNode_t *o = m_new_obj_with_finaliser(mp_obj_HDNode_t);
-  o->base.type = &mod_trezorcrypto_HDNode_type;
-  o->hdnode = hdnode;
-  o->fingerprint = 0;
-  return MP_OBJ_FROM_PTR(o);
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(
-    mod_trezorcrypto_bip32_from_mnemonic_cardano_obj,
-    mod_trezorcrypto_bip32_from_mnemonic_cardano);
-
-#endif
-
 STATIC const mp_rom_map_elem_t mod_trezorcrypto_bip32_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_bip32)},
     {MP_ROM_QSTR(MP_QSTR_HDNode), MP_ROM_PTR(&mod_trezorcrypto_HDNode_type)},
     {MP_ROM_QSTR(MP_QSTR_from_seed),
      MP_ROM_PTR(&mod_trezorcrypto_bip32_from_seed_obj)},
-#if !BITCOIN_ONLY
-    {MP_ROM_QSTR(MP_QSTR_from_mnemonic_cardano),
-     MP_ROM_PTR(&mod_trezorcrypto_bip32_from_mnemonic_cardano_obj)},
-#endif
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_bip32_globals,
                             mod_trezorcrypto_bip32_globals_table);

@@ -26,17 +26,13 @@ class TestPathSchemas(unittest.TestCase):
     def assertMatch(self, schema, path):
         self.assertTrue(
             schema.match(path),
-            "Expected schema {!r} to match path {}".format(
-                schema, address_n_to_str(path)
-            ),
+            f"Expected schema {repr(schema)} to match path {address_n_to_str(path)}",
         )
 
     def assertMismatch(self, schema, path):
         self.assertFalse(
             schema.match(path),
-            "Expected schema {!r} to not match path {}".format(
-                schema, address_n_to_str(path)
-            ),
+            f"Expected schema {repr(schema)} to not match path {address_n_to_str(path)}",
         )
 
     def assertEqualSchema(self, schema_a, schema_b):
@@ -48,7 +44,7 @@ class TestPathSchemas(unittest.TestCase):
         ensure(
             all(is_equal(a, b) for a, b in zip(schema_a.schema, schema_b.schema))
             and is_equal(schema_a.trailing_components, schema_b.trailing_components),
-            "Schemas differ:\nA = {!r}\nB = {!r}".format(schema_a, schema_b),
+            f"Schemas differ:\nA = {repr(schema_a)}\nB = {repr(schema_b)}"
         )
 
     def test_always_never_matching(self):

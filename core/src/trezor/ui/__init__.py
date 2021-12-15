@@ -1,3 +1,4 @@
+# pylint: disable=wrong-import-position
 import math
 import utime
 from micropython import const
@@ -156,7 +157,7 @@ def header_error(message: str, clear: bool = True) -> None:
         display.bar(0, 30, WIDTH, HEIGHT - 30, style.BG)
 
 
-def draw_simple(t: Component) -> None:  # noqa: F405
+def draw_simple(t: "Component") -> None:
     """Render a component synchronously.
 
     Useful when you need to put something on screen and go on to do other things.
@@ -209,7 +210,7 @@ def grid(
 
 def in_area(area: Area, x: int, y: int) -> bool:
     ax, ay, aw, ah = area
-    return ax <= x <= ax + aw and ay <= y <= ay + ah
+    return ax <= x < ax + aw and ay <= y < ay + ah
 
 
 # Component events.  Should be different from `io.TOUCH_*` events.
@@ -239,28 +240,48 @@ class Component:
     def __init__(self) -> None:
         self.repaint = True
 
-    def dispatch(self, event: int, x: int, y: int) -> None:
-        if event is RENDER:
-            self.on_render()
-        elif event is io.TOUCH_START:
-            self.on_touch_start(x, y)
-        elif event is io.TOUCH_MOVE:
-            self.on_touch_move(x, y)
-        elif event is io.TOUCH_END:
-            self.on_touch_end(x, y)
-        elif event is REPAINT:
-            self.repaint = True
+    if utils.MODEL == "T":
+
+        def dispatch(self, event: int, x: int, y: int) -> None:
+            if event is RENDER:
+                self.on_render()
+            elif event is io.TOUCH_START:
+                self.on_touch_start(x, y)
+            elif event is io.TOUCH_MOVE:
+                self.on_touch_move(x, y)
+            elif event is io.TOUCH_END:
+                self.on_touch_end(x, y)
+            elif event is REPAINT:
+                self.repaint = True
+
+        def on_touch_start(self, x: int, y: int) -> None:
+            pass
+
+        def on_touch_move(self, x: int, y: int) -> None:
+            pass
+
+        def on_touch_end(self, x: int, y: int) -> None:
+            pass
+
+    elif utils.MODEL == "1":
+
+        def dispatch(self, event: int, x: int, y: int) -> None:
+            if event is RENDER:
+                self.on_render()
+            elif event is io.BUTTON_PRESSED:
+                self.on_button_pressed(x)
+            elif event is io.BUTTON_RELEASED:
+                self.on_button_released(x)
+            elif event is REPAINT:
+                self.repaint = True
+
+        def on_button_pressed(self, button_number: int) -> None:
+            pass
+
+        def on_button_released(self, button_number: int) -> None:
+            pass
 
     def on_render(self) -> None:
-        pass
-
-    def on_touch_start(self, x: int, y: int) -> None:
-        pass
-
-    def on_touch_move(self, x: int, y: int) -> None:
-        pass
-
-    def on_touch_end(self, x: int, y: int) -> None:
         pass
 
     if __debug__:
@@ -291,8 +312,6 @@ class Cancelled(Exception):
 
     See `Layout.__iter__` for details.
     """
-
-    pass
 
 
 class Layout(Component):
@@ -350,17 +369,33 @@ class Layout(Component):
         Usually overridden to add another tasks to the list."""
         return self.handle_input(), self.handle_rendering()
 
-    def handle_input(self) -> loop.Task:  # type: ignore
-        """Task that is waiting for the user input."""
-        touch = loop.wait(io.TOUCH)
-        while True:
-            # Using `yield` instead of `await` to avoid allocations.
-            event, x, y = yield touch
-            workflow.idle_timer.touch()
-            self.dispatch(event, x, y)
-            # We dispatch a render event right after the touch.  Quick and dirty
-            # way to get the lowest input-to-render latency.
-            self.dispatch(RENDER, 0, 0)
+    if utils.MODEL == "T":
+
+        def handle_input(self) -> loop.Task:  # type: ignore
+            """Task that is waiting for the user input."""
+            touch = loop.wait(io.TOUCH)
+            while True:
+                # Using `yield` instead of `await` to avoid allocations.
+                event, x, y = yield touch
+                workflow.idle_timer.touch()
+                self.dispatch(event, x, y)
+                # We dispatch a render event right after the touch.  Quick and dirty
+                # way to get the lowest input-to-render latency.
+                self.dispatch(RENDER, 0, 0)
+
+    elif utils.MODEL == "1":
+
+        def handle_input(self) -> loop.Task:  # type: ignore
+            """Task that is waiting for the user input."""
+            button = loop.wait(io.BUTTON)
+            while True:
+                event, button_num = yield button
+                workflow.idle_timer.touch()
+                self.dispatch(event, button_num, 0)
+                self.dispatch(RENDER, 0, 0)
+
+    else:
+        raise ValueError("Unknown Trezor model")
 
     def _before_render(self) -> None:
         # Before the first render, we dim the display.
@@ -403,3 +438,29 @@ class Layout(Component):
 def wait_until_layout_is_running() -> Awaitable[None]:  # type: ignore
     while not layout_chan.takers:
         yield
+
+
+if utils.MODEL == "1":
+
+    class RustLayout(Layout):
+        def __init__(self, layout: Any):
+            super().__init__()
+            self.layout = layout
+            self.layout.set_timer_fn(self.set_timer)
+
+        def set_timer(self, token: int, deadline: int) -> None:
+            # TODO: schedule a timer tick with `token` in `deadline` ms
+            print("timer", token, deadline)
+
+        def dispatch(self, event: int, x: int, y: int) -> None:
+            msg = None
+            if event is RENDER:
+                self.layout.paint()
+            elif event is io.TOUCH_START:
+                msg = self.layout.touch_start(x, y)
+            elif event is io.TOUCH_MOVE:
+                msg = self.layout.touch_move(x, y)
+            elif event is io.TOUCH_END:
+                msg = self.layout.touch_end(x, y)
+            if msg is not None:
+                raise Result(msg)

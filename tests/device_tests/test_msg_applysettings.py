@@ -71,8 +71,6 @@ class TestMsgApplysettings:
 
     @pytest.mark.setup_client(pin=PIN4, passphrase=False)
     def test_apply_settings_passphrase(self, client):
-        assert client.features.passphrase_protection is False
-
         with client:
             _set_expected_responses(client)
             device.apply_settings(client, use_passphrase=True)

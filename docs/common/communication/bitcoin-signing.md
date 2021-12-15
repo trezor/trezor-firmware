@@ -154,7 +154,7 @@ signing party hasn't signed their input yet (i.e., with two Trezors, one must si
 so that the other can include a pre-signed input), they can instead provide a
 [SLIP-19](https://github.com/satoshilabs/slips/blob/master/slip-0019.md)
 ownership proof in the `ownership_proof` field, with optional commitment data in
-`commitment_data`.
+`commitment_data`. The `script_pubkey` field is required for all external inputs.
 
 ### Transaction output
 

@@ -5,6 +5,8 @@ package hw.trezor.messages.bitcoin;
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageBitcoin";
 
+option (include_in_bitcoin_only) = true;
+
 import "messages.proto";
 import "messages-common.proto";
 
@@ -17,6 +19,7 @@ enum InputScriptType {
     EXTERNAL = 2;           // reserved for external inputs (coinjoin)
     SPENDWITNESS = 3;       // native SegWit
     SPENDP2SHWITNESS = 4;   // SegWit over P2SH (backward compatible)
+    SPENDTAPROOT = 5;       // Taproot
 }
 
 /**
@@ -29,6 +32,7 @@ enum OutputScriptType {
     PAYTOOPRETURN = 3;      // op_return
     PAYTOWITNESS = 4;       // only for change output
     PAYTOP2SHWITNESS = 5;   // only for change output
+    PAYTOTAPROOT = 6;       // only for change output
 }
 
 /**
@@ -42,7 +46,7 @@ enum DecredStakingSpendType {
 /**
  * Unit to be used when showing amounts on the display
  */
- enum AmountUnit {
+enum AmountUnit {
     BITCOIN = 0;        // BTC
     MILLIBITCOIN = 1;   // mBTC
     MICROBITCOIN = 2;   // uBTC
@@ -148,6 +152,7 @@ message SignMessage {
     required bytes message = 2;                                         // message to be signed
     optional string coin_name = 3 [default='Bitcoin'];                  // coin to use for signing
     optional InputScriptType script_type = 4 [default=SPENDADDRESS];    // used to distinguish between various address formats (non-segwit, segwit, etc.)
+    optional bool no_script_type = 5;                                   // don't include script type information in the recovery byte of the signature, same as in Bitcoin Core
 }
 
 /**
@@ -296,6 +301,7 @@ message TxAck {
             optional bytes orig_hash = 16;                                      // tx_hash of the original transaction where this input was spent (used when creating a replacement transaction)
             optional uint32 orig_index = 17;                                    // index of the input in the original transaction (used when creating a replacement transaction)
             optional DecredStakingSpendType decred_staking_spend = 18;          // if not None this holds the type of stake spend: revocation or stake generation
+            optional bytes script_pubkey = 19;                                  // scriptPubKey of the previous output spent by this input, only set of EXTERNAL inputs
         }
         /**
         * Structure representing compiled transaction output
@@ -347,6 +353,7 @@ message TxInput {
     optional bytes orig_hash = 16;                                      // tx_hash of the original transaction where this input was spent (used when creating a replacement transaction)
     optional uint32 orig_index = 17;                                    // index of the input in the original transaction (used when creating a replacement transaction)
     optional DecredStakingSpendType decred_staking_spend = 18; 	        // if not None this holds the type of stake spend: revocation or stake generation
+    optional bytes script_pubkey = 19;                                  // scriptPubKey of the previous output spent by this input, only set of EXTERNAL inputs
 }
 
 /** Data type for transaction output to be signed.
@@ -395,7 +402,7 @@ message PrevInput {
     optional uint32 decred_tree = 9;                                    // only for Decred
 
     // fields that are in use, or have been in the past, in TxInputType
-    reserved 1, 6, 7, 8, 10, 11, 12, 13, 14, 15;
+    reserved 1, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19;
 }
 
 /** Data type for outputs of previous transactions.
@@ -418,7 +425,6 @@ message PrevOutput {
  */
 message TxAckInput {
     option (wire_type) = 22;
-    option (include_in_bitcoin_only) = true;
 
     required TxAckInputWrapper tx = 1;
 
@@ -438,7 +444,6 @@ message TxAckInput {
  */
 message TxAckOutput {
     option (wire_type) = 22;
-    option (include_in_bitcoin_only) = true;
 
     required TxAckOutputWrapper tx = 1;
 
@@ -458,7 +463,6 @@ message TxAckOutput {
  */
 message TxAckPrevMeta {
     option (wire_type) = 22;
-    option (include_in_bitcoin_only) = true;
 
     required PrevTx tx = 1;
 }
@@ -474,7 +478,6 @@ message TxAckPrevMeta {
  */
 message TxAckPrevInput {
     option (wire_type) = 22;
-    option (include_in_bitcoin_only) = true;
 
     required TxAckPrevInputWrapper tx = 1;
 
@@ -495,7 +498,6 @@ message TxAckPrevInput {
  */
 message TxAckPrevOutput {
     option (wire_type) = 22;
-    option (include_in_bitcoin_only) = true;
 
     required TxAckPrevOutputWrapper tx = 1;
 
@@ -514,7 +516,6 @@ message TxAckPrevOutput {
  */
 message TxAckPrevExtraData {
     option (wire_type) = 22;
-    option (include_in_bitcoin_only) = true;
 
     required TxAckPrevExtraDataWrapper tx = 1;
 

@@ -135,7 +135,9 @@ int schnorr_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key,
   curve_point R = {0};
   bignum256 e = {0}, s = {0}, k = {0};
 
-  ecdsa_get_public_key33(curve, priv_key, pub_key);
+  if (ecdsa_get_public_key33(curve, priv_key, pub_key) != 0) {
+    return 1;
+  }
 
   // Compute k
   if (generate_k_schnorr(curve, priv_key, digest, &k) != 0) {

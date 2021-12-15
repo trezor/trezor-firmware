@@ -1,6 +1,7 @@
 *.o
 *.a
 *.d
+!.changelog.d
 *.bin
 *.elf
 *.hex

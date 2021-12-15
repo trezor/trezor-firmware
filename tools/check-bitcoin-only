@@ -1,12 +1,20 @@
 #!/bin/sh
 RETURN=0
 
+EXCEPTIONS="decred|omni|ripple|dash|TEXT_MARGIN_LEFT|dash_width|dashlane|flo|mnemonic|meter|refuse|fused|enemy|cinema|syntaxerror|mix|palm|UdesRsK|kcc|derive_cardano"
+
 # dump all coins except the first 3 (Bitcoin, Testnet, Regtest)
-./common/tools/cointool.py dump -l -p -t | grep '"name"' | cut -d '"' -f 4 | tail -n +4 | while read altcoin; do
+ALTCOINS=$(./common/tools/cointool.py dump -l -p -t | grep '"name"' | cut -d '"' -f 4 | tail -n +4)
+# split on newlines only
+OLDIFS=$IFS
+IFS="
+"
+for altcoin in $ALTCOINS; do
     # echo :"$altcoin":
-    if strings $1 | grep "$altcoin" | grep -v TEXT_MARGIN_LEFT | grep -v _MIN_MNEMONIC_LENGTH_WORD ; then
+    if strings "$1" | grep -i "$altcoin" | grep -Evi "$EXCEPTIONS" ; then
         RETURN=1
     fi
 done
+IFS=$OLDIFS
 
 exit $RETURN

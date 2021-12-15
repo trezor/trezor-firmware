@@ -3,16 +3,21 @@
  }:
 
 let
-  # the last commit from master as of 2021-07-09
+  # the last commit from master as of 2021-09-13
   rustOverlay = import (builtins.fetchTarball {
-    url = "https://github.com/oxalica/rust-overlay/archive/76732f3ddba766b1fe772fca80aafbc9cccd78dd.tar.gz";
-    sha256 = "0lqwxn28malsjxw8hxp4iwax5v0mlwi4l5q0cxfacq153gi6j0f8";
+    url = "https://github.com/oxalica/rust-overlay/archive/9fd1c36484a844683153896f37d6fd28b365b931.tar.gz";
+    sha256 = "1nylnc16y9jwjajvq2zj314lla2g16p77jhaj3vapfgq17n78i12";
   });
-  # the last successful build of nixpkgs-unstable as of 2021-07-09
+  # the last successful build of nixpkgs-unstable as of 2021-11-18
   nixpkgs = import (builtins.fetchTarball {
-    url = "https://github.com/NixOS/nixpkgs/archive/7b4ff2184e4cab274ecb2b2eb49d20ef2142ddf1.tar.gz";
-    sha256 = "1gdjm0qv5x9jx3zps7vz6yh10rkhmrbk7vf0b2hx5x6wi8yngfnb";
+    url = "https://github.com/NixOS/nixpkgs/archive/7fad01d9d5a3f82081c00fb57918d64145dc904c.tar.gz";
+    sha256 = "0g0jn8cp1f3zgs7xk2xb2vwa44gb98qlp7k0dvigs0zh163c2kim";
   }) { overlays = [ rustOverlay ]; };
+  # commit before python36 was removed
+  python36nixpkgs = import (builtins.fetchTarball {
+    url = "https://github.com/NixOS/nixpkgs/archive/b9126f77f553974c90ab65520eff6655415fc5f4.tar.gz";
+    sha256 = "02s3qkb6kz3ndyx7rfndjbvp4vlwiqc42fxypn3g6jnc0v5jyz95";
+  }) { };
   moneroTests = nixpkgs.fetchurl {
     url = "https://github.com/ph4r05/monero/releases/download/v0.17.1.9-tests/trezor_tests";
     sha256 = "410bc4ff2ff1edc65e17f15b549bd1bf8a3776cf67abdea86aed52cf4bce8d9d";
@@ -23,11 +28,14 @@ let
     ${nixpkgs.patchelf}/bin/patchelf --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" "$out"
     chmod -w $out
   '';
-  rustStable = nixpkgs.rust-bin.stable."1.53.0".default.override {
+  rustStable = nixpkgs.rust-bin.stable."1.55.0".minimal.override {
     targets = [
       "thumbv7em-none-eabihf" # TT
       "thumbv7m-none-eabi"    # T1
     ];
+    # we use rustfmt from nixpkgs because it's built with the nighly flag needed for wrap_comments
+    # to use official binary, remove rustfmt from buildInputs and add it to extensions:
+    extensions = [ "clippy" ];
   };
 in
 with nixpkgs;
@@ -40,7 +48,7 @@ stdenv.mkDerivation ({
     python38
     python39
     python37
-    python36
+    python36nixpkgs.python36
   ] ++ [
     SDL2
     SDL2_image
@@ -51,7 +59,6 @@ stdenv.mkDerivation ({
     clang
     editorconfig-checker
     gcc
-    gcc-arm-embedded
     git
     gitAndTools.git-subrepo
     gnumake
@@ -63,6 +70,7 @@ stdenv.mkDerivation ({
     pkgconfig
     poetry
     protobuf3_6
+    pyright
     rustfmt
     rustStable
     wget
@@ -71,6 +79,8 @@ stdenv.mkDerivation ({
   ] ++ lib.optionals (!stdenv.isDarwin) [
     procps
     valgrind
+  ] ++ lib.optionals (!stdenv.isDarwin || !stdenv.isAarch64) [
+    gcc-arm-embedded  # not yet available for aarch64-darwin
   ] ++ lib.optionals (stdenv.isDarwin) [
     darwin.apple_sdk.frameworks.CoreAudio
     darwin.apple_sdk.frameworks.AudioToolbox
@@ -96,6 +106,11 @@ stdenv.mkDerivation ({
 
   # Used by rust bindgen
   LIBCLANG_PATH = "${llvmPackages.libclang.lib}/lib";
+
+  # don't try to use stack protector for Apple Silicon (emulator) binaries
+  # it's broken at the moment
+  hardeningDisable = lib.optionals (stdenv.isDarwin && stdenv.isAarch64) [ "stackprotector" ];
+
 } // (lib.optionalAttrs fullDeps) {
   TREZOR_MONERO_TESTS_PATH = moneroTestsPatched;
 })

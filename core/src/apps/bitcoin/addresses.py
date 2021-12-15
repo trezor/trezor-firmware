@@ -1,5 +1,6 @@
 from trezor import wire
 from trezor.crypto import base58, cashaddr
+from trezor.crypto.curve import bip340
 from trezor.crypto.hashlib import sha256
 from trezor.enums import InputScriptType
 from trezor.messages import MultisigRedeemScriptType
@@ -10,7 +11,7 @@ from apps.common.coininfo import CoinInfo
 
 from .common import ecdsa_hash_pubkey, encode_bech32_address
 from .multisig import multisig_get_pubkeys, multisig_pubkey_index
-from .scripts import output_script_native_p2wpkh_or_p2wsh, write_output_script_multisig
+from .scripts import output_script_native_segwit, write_output_script_multisig
 
 if False:
     from trezor.crypto import bip32
@@ -55,6 +56,15 @@ def get_address(
 
         # native p2wpkh
         return address_p2wpkh(node.public_key(), coin)
+
+    elif script_type == InputScriptType.SPENDTAPROOT:  # taproot
+        if not coin.taproot or not coin.bech32_prefix:
+            raise wire.ProcessError("Taproot not enabled on this coin")
+
+        if multisig is not None:
+            raise wire.ProcessError("Multisig not supported for taproot")
+
+        return address_p2tr(node.public_key(), coin)
 
     elif (
         script_type == InputScriptType.SPENDP2SHWITNESS
@@ -109,13 +119,13 @@ def address_p2sh(redeem_script_hash: bytes, coin: CoinInfo) -> str:
 
 def address_p2wpkh_in_p2sh(pubkey: bytes, coin: CoinInfo) -> str:
     pubkey_hash = ecdsa_hash_pubkey(pubkey, coin)
-    redeem_script = output_script_native_p2wpkh_or_p2wsh(pubkey_hash)
+    redeem_script = output_script_native_segwit(0, pubkey_hash)
     redeem_script_hash = coin.script_hash(redeem_script).digest()
     return address_p2sh(redeem_script_hash, coin)
 
 
 def address_p2wsh_in_p2sh(witness_script_hash: bytes, coin: CoinInfo) -> str:
-    redeem_script = output_script_native_p2wpkh_or_p2wsh(witness_script_hash)
+    redeem_script = output_script_native_segwit(0, witness_script_hash)
     redeem_script_hash = coin.script_hash(redeem_script).digest()
     return address_p2sh(redeem_script_hash, coin)
 
@@ -123,11 +133,17 @@ def address_p2wsh_in_p2sh(witness_script_hash: bytes, coin: CoinInfo) -> str:
 def address_p2wpkh(pubkey: bytes, coin: CoinInfo) -> str:
     assert coin.bech32_prefix is not None
     pubkeyhash = ecdsa_hash_pubkey(pubkey, coin)
-    return encode_bech32_address(coin.bech32_prefix, pubkeyhash)
+    return encode_bech32_address(coin.bech32_prefix, 0, pubkeyhash)
 
 
 def address_p2wsh(witness_script_hash: bytes, hrp: str) -> str:
-    return encode_bech32_address(hrp, witness_script_hash)
+    return encode_bech32_address(hrp, 0, witness_script_hash)
+
+
+def address_p2tr(pubkey: bytes, coin: CoinInfo) -> str:
+    assert coin.bech32_prefix is not None
+    output_pubkey = bip340.tweak_public_key(pubkey[1:])
+    return encode_bech32_address(coin.bech32_prefix, 1, output_pubkey)
 
 
 def address_to_cashaddr(address: str, coin: CoinInfo) -> str:

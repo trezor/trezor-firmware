@@ -22,7 +22,7 @@ extras_require = {
     "ethereum": ["rlp>=1.1.0", "web3>=4.8"],
     "qt-widgets": ["PyQt5"],
     "extra": ["Pillow"],
-    "stellar": ["stellar-sdk>=4.0.0,<5.0.0"],
+    "stellar": ["stellar-sdk>=4.0.0,<6.0.0"],
 }
 
 extras_require["full"] = sum(extras_require.values(), [])
@@ -52,7 +52,7 @@ setup(
     author_email="info@trezor.io",
     license="LGPLv3",
     description="Python library for communicating with Trezor Hardware Wallet",
-    long_description="{}\n\n{}".format(read("README.md"), read("CHANGELOG.md")),
+    long_description=read("README.md") + "\n\n" + read("CHANGELOG.md"),
     long_description_content_type="text/markdown",
     url="https://github.com/trezor/trezor-firmware/tree/master/python",
     packages=find_packages("src"),

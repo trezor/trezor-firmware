@@ -5,6 +5,8 @@ package hw.trezor.messages.management;
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageManagement";
 
+option (include_in_bitcoin_only) = true;
+
 import "messages.proto";
 
 /**
@@ -31,7 +33,9 @@ enum SafetyCheckLevel {
  * @next Features
  */
 message Initialize {
-    optional bytes session_id = 1;           // assumed device session id; Trezor clears caches if it is different or empty
+    optional bytes session_id = 1;     // assumed device session id; Trezor clears caches if it is different or empty
+    optional bool _skip_passphrase = 2 [deprecated=true]; // removed as part of passphrase redesign
+    optional bool derive_cardano = 3;  // whether to derive Cardano Icarus root keys in this session
 }
 
 /**
@@ -62,7 +66,7 @@ message Features {
     optional bytes bootloader_hash = 14;        // hash of the bootloader
     optional bool imported = 15;                // was storage imported from an external source?
     optional bool unlocked = 16;                // is the device unlocked? called "pin_cached" previously
-//    optional bool passphrase_cached = 17;       // is passphrase already cached in session?  DEPRECATED
+    optional bool _passphrase_cached = 17 [deprecated=true]; // is passphrase already cached in session?
     optional bool firmware_present = 18;        // is valid firmware loaded?
     optional bool needs_backup = 19;            // does storage need backup? (equals to Storage.needs_backup)
     optional uint32 flags = 20;                 // device flags (equals to Storage.flags)
@@ -138,7 +142,7 @@ message ApplySettings {
     optional string label = 2;
     optional bool use_passphrase = 3;
     optional bytes homescreen = 4;
-//    optional PassphraseSourceType passphrase_source = 5;  DEPRECATED
+    optional uint32 _passphrase_source = 5 [deprecated=true];   // ASK = 0; DEVICE = 1; HOST = 2;
     optional uint32 auto_lock_delay_ms = 6;
     optional uint32 display_rotation = 7;  // in degrees from North
     optional bool passphrase_always_on_device = 8;  // do not prompt for passphrase, enforce device entry

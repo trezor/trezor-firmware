@@ -37,12 +37,13 @@ class TestWriters(unittest.TestCase):
             prev_index=0,
             script_type=InputScriptType.SPENDWITNESS,
             sequence=0xffffffff,
+            script_pubkey=unhexlify("76a91424a56db43cf6f2b02e838ea493f95d8d6047423188ac"),
             script_sig=b"0123456789",
         )
 
         b = bytearray()
         writers.write_tx_input_check(b, inp)
-        self.assertEqual(len(b), 32 + 4 + 4 + 4 + 4 + 4 + 8)
+        self.assertEqual(len(b), 32 + 4 + 4 + 4 + 4 + 4 + 8 + 26)
 
         for bad_prevhash in (b"", b"x", b"hello", b"x" * 33):
             inp.prev_hash = bad_prevhash

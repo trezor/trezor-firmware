@@ -344,7 +344,7 @@ def sign_tx(client, address, transaction, chain_id):
 
     if not isinstance(response, messages.EosSignedTx):
         raise exceptions.TrezorException(
-            "Unexpected message: {}".format(response.__class__.__name__)
+            f"Unexpected message: {response.__class__.__name__}"
         )
 
     return response

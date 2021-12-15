@@ -35,7 +35,7 @@ INVALID_SHARES_20_2of3 = [
 ]
 
 
-@pytest.mark.setup_client(mnemonic=SHARES_20_2of3[0:2], passphrase=True)
+@pytest.mark.setup_client(mnemonic=SHARES_20_2of3[0:2])
 def test_2of3_dryrun(client):
     debug = client.debug
 
@@ -62,7 +62,7 @@ def test_2of3_dryrun(client):
     )
 
 
-@pytest.mark.setup_client(mnemonic=SHARES_20_2of3[0:2], passphrase=True)
+@pytest.mark.setup_client(mnemonic=SHARES_20_2of3[0:2])
 def test_2of3_invalid_seed_dryrun(client):
     debug = client.debug
 

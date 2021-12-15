@@ -1,0 +1,69 @@
+{
+  "setup": {
+    "mnemonic": "illness spike retreat truth genius clock brain pass fit cave bargain toe",
+    "passphrase": "",
+    "data_source_url": "https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0005.md"
+  },
+  "tests": [
+    {
+      "parameters": { "path": "m/44'/148'/0'" },
+      "result": {
+        "address": "GDRXE2BQUC3AZNPVFSCEZ76NJ3WWL25FYFK6RGZGIEKWE4SOOHSUJUJ6"
+      }
+    },
+    {
+      "parameters": { "path": "m/44'/148'/1'" },
+      "result": {
+        "address": "GBAW5XGWORWVFE2XTJYDTLDHXTY2Q2MO73HYCGB3XMFMQ562Q2W2GJQX"
+      }
+    },
+    {
+      "parameters": { "path": "m/44'/148'/2'" },
+      "result": {
+        "address": "GAY5PRAHJ2HIYBYCLZXTHID6SPVELOOYH2LBPH3LD4RUMXUW3DOYTLXW"
+      }
+    },
+    {
+      "parameters": { "path": "m/44'/148'/3'" },
+      "result": {
+        "address": "GAOD5NRAEORFE34G5D4EOSKIJB6V4Z2FGPBCJNQI6MNICVITE6CSYIAE"
+      }
+    },
+    {
+      "parameters": { "path": "m/44'/148'/4'" },
+      "result": {
+        "address": "GBCUXLFLSL2JE3NWLHAWXQZN6SQC6577YMAU3M3BEMWKYPFWXBSRCWV4"
+      }
+    },
+    {
+      "parameters": { "path": "m/44'/148'/5'" },
+      "result": {
+        "address": "GBRQY5JFN5UBG5PGOSUOL4M6D7VRMAYU6WW2ZWXBMCKB7GPT3YCBU2XZ"
+      }
+    },
+    {
+      "parameters": { "path": "m/44'/148'/6'" },
+      "result": {
+        "address": "GBY27SJVFEWR3DUACNBSMJB6T4ZPR4C7ZXSTHT6GMZUDL23LAM5S2PQX"
+      }
+    },
+    {
+      "parameters": { "path": "m/44'/148'/7'" },
+      "result": {
+        "address": "GAY7T23Z34DWLSTEAUKVBPHHBUE4E3EMZBAQSLV6ZHS764U3TKUSNJOF"
+      }
+    },
+    {
+      "parameters": { "path": "m/44'/148'/8'" },
+      "result": {
+        "address": "GDJTCF62UUYSAFAVIXHPRBR4AUZV6NYJR75INVDXLLRZLZQ62S44443R"
+      }
+    },
+    {
+      "parameters": { "path": "m/44'/148'/9'" },
+      "result": {
+        "address": "GBTVYYDIYWGUQUTKX6ZMLGSZGMTESJYJKJWAATGZGITA25ZB6T5REF44"
+      }
+    }
+  ]
+}

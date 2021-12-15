@@ -165,7 +165,7 @@ def cli(ctx, path, verbose, is_json, passphrase_on_host, session_id):
         try:
             session_id = bytes.fromhex(session_id)
         except ValueError:
-            raise click.ClickException("Not a valid session id: {}".format(session_id))
+            raise click.ClickException(f"Not a valid session id: {session_id}")
 
     ctx.obj = TrezorConnection(path, session_id, passphrase_on_host)
 
@@ -185,9 +185,9 @@ def print_result(res, is_json, **kwargs):
             for k, v in res.items():
                 if isinstance(v, dict):
                     for kk, vv in v.items():
-                        click.echo("%s.%s: %s" % (k, kk, vv))
+                        click.echo(f"{k}.{kk}: {vv}")
                 else:
-                    click.echo("%s: %s" % (k, v))
+                    click.echo(f"{k}: {v}")
         elif isinstance(res, protobuf.MessageType):
             click.echo(protobuf.format_message(res))
         elif res is not None:
@@ -197,10 +197,10 @@ def print_result(res, is_json, **kwargs):
 def format_device_name(features):
     model = features.model or "1"
     if features.bootloader_mode:
-        return "Trezor {} bootloader".format(model)
+        return f"Trezor {model} bootloader"
 
     label = features.label or "(unnamed)"
-    return "{} [Trezor {}, {}]".format(label, model, features.device_id)
+    return f"{label} [Trezor {model}, {features.device_id}]"
 
 
 #
@@ -217,7 +217,7 @@ def list_devices(no_resolve):
 
     for transport in enumerate_devices():
         client = TrezorClient(transport, ui=ui.ClickUI())
-        click.echo("{} - {}".format(transport, format_device_name(client.features)))
+        click.echo(f"{transport} - {format_device_name(client.features)}")
         client.end_session()
 
 
@@ -308,14 +308,14 @@ def wait_for_emulator(obj, timeout):
     path = obj.path
     if path:
         if not path.startswith("udp:"):
-            raise click.ClickException("You must use UDP path, not {}".format(path))
+            raise click.ClickException(f"You must use UDP path, not {path}")
         path = path.replace("udp:", "")
 
     start = time.monotonic()
     UdpTransport(path).wait_until_ready(timeout)
     end = time.monotonic()
 
-    LOG.info("Waited for {:.3f} seconds".format(end - start))
+    LOG.info(f"Waited for {end - start:.3f} seconds")
 
 
 #

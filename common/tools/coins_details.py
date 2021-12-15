@@ -14,7 +14,7 @@ import marketcap
 LOG = logging.getLogger(__name__)
 
 OPTIONAL_KEYS = ("links", "notes", "wallet")
-ALLOWED_SUPPORT_STATUS = ("yes", "no", "planned", "soon")
+ALLOWED_SUPPORT_STATUS = ("yes", "no")
 
 WALLETS = coin_info.load_json("wallets.json")
 OVERRIDES = coin_info.load_json("coins_details.override.json")
@@ -64,6 +64,7 @@ def summary(coins, api_key):
     except Exception:
         pass
 
+    marketcap_percent = 100 * supported_marketcap / total_marketcap
     return dict(
         updated_at=int(time.time()),
         updated_at_readable=time.asctime(),
@@ -71,25 +72,14 @@ def summary(coins, api_key):
         t2_coins=t2_coins,
         marketcap_usd=supported_marketcap,
         total_marketcap_usd=total_marketcap,
-        marketcap_supported="{:.02f} %".format(
-            100 * supported_marketcap / total_marketcap
-        ),
+        marketcap_supported=f"{marketcap_percent:.02f} %",
     )
 
 
 def _is_supported(support, trezor_version):
-    version = VERSIONS[trezor_version]
-    nominal = support.get(trezor_version)
-    if nominal is None:
-        return "no"
-    elif isinstance(nominal, bool):
-        return "yes" if nominal else "no"
-
-    try:
-        nominal_version = tuple(map(int, nominal.split(".")))
-        return "yes" if nominal_version <= version else "soon"
-    except ValueError:
-        return nominal
+    # True or version string means YES
+    # False or None means NO
+    return "yes" if support.get(trezor_version) else "no"
 
 
 def _suite_support(coin, support):
@@ -227,10 +217,10 @@ def check_missing_data(coins):
             LOG.log(level, f"{k}: Missing homepage")
             hide = True
         if coin["t1_enabled"] not in ALLOWED_SUPPORT_STATUS:
-            LOG.warning(f"{k}: Unknown t1_enabled")
+            LOG.error(f"{k}: Unknown t1_enabled: {coin['t1_enabled']}")
             hide = True
         if coin["t2_enabled"] not in ALLOWED_SUPPORT_STATUS:
-            LOG.warning(f"{k}: Unknown t2_enabled")
+            LOG.error(f"{k}: Unknown t2_enabled: {coin['t2_enabled']}")
             hide = True
 
         # check wallets
@@ -259,13 +249,15 @@ def check_missing_data(coins):
             LOG.info(f"{k}: Details are OK, but coin is still hidden")
 
         if hide:
+            data = marketcap.get_coin(coin)
+            if data and data["cmc_rank"] < 150 and not coin.get("ignore_cmc_rank"):
+                LOG.warning(f"{k}: Hiding coin ranked {data['cmc_rank']} on CMC")
             coin["hidden"] = 1
 
     # summary of hidden coins
     hidden_coins = [k for k, coin in coins.items() if coin.get("hidden")]
     for key in hidden_coins:
         del coins[key]
-        LOG.debug(f"{key}: Coin is hidden")
 
 
 def apply_overrides(coins):
@@ -310,7 +302,7 @@ def main(refresh, api_key, verbose):
 
     marketcap.init(api_key, refresh=refresh)
 
-    defs = coin_info.coin_info()
+    defs, _ = coin_info.coin_info_with_duplicates()
     support_info = coin_info.support_info(defs)
 
     coins = {}

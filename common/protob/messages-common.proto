@@ -5,6 +5,10 @@ package hw.trezor.messages.common;
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageCommon";
 
+option (include_in_bitcoin_only) = true;
+
+import "messages.proto";
+
 /**
  * Response: Success of the previous request
  * @end

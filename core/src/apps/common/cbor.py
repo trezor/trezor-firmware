@@ -58,7 +58,7 @@ def _header(typ: int, l: int) -> bytes:
     elif l < 2 ** 64:
         return struct.pack(">BQ", typ + 27, l)
     else:
-        raise NotImplementedError("Length %d not supported" % l)
+        raise NotImplementedError  # Length not supported
 
 
 def _cbor_encode(value: Value) -> Iterator[bytes]:
@@ -77,7 +77,7 @@ def _cbor_encode(value: Value) -> Iterator[bytes]:
         encoded_value = value.encode()
         yield _header(_CBOR_TEXT_STRING, len(encoded_value))
         yield encoded_value
-    elif isinstance(value, list) or isinstance(value, tuple):
+    elif isinstance(value, (list, tuple)):
         # definite-length valued list
         yield _header(_CBOR_ARRAY, len(value))
         for x in value:
@@ -128,7 +128,7 @@ def _read_length(r: utils.BufferReader, aux: int) -> int:
     elif aux == _CBOR_UINT64_FOLLOWS:
         return readers.read_uint64_be(r)
     else:
-        raise NotImplementedError("Length %d not supported" % aux)
+        raise NotImplementedError  # Length not supported
 
 
 def _cbor_decode(r: utils.BufferReader) -> Value:

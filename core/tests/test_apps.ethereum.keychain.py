@@ -118,6 +118,8 @@ class TestEthereumKeychain(unittest.TestCase):
                 EthereumSignTx(
                     address_n=[44 | HARDENED, 60 | HARDENED, 0 | HARDENED],
                     chain_id=1,
+                    gas_price=b"",
+                    gas_limit=b"",
                 ),
             )
         )
@@ -128,6 +130,8 @@ class TestEthereumKeychain(unittest.TestCase):
                 EthereumSignTx(
                     address_n=[44 | HARDENED, 61 | HARDENED, 0 | HARDENED],
                     chain_id=61,
+                    gas_price=b"",
+                    gas_limit=b"",
                 ),
             )
         )
@@ -140,6 +144,8 @@ class TestEthereumKeychain(unittest.TestCase):
                 EthereumSignTx(
                     address_n=[44 | HARDENED, 60 | HARDENED, 0 | HARDENED],
                     chain_id=61,
+                    gas_price=b"",
+                    gas_limit=b"",
                 ),
             )
         )
@@ -151,65 +157,11 @@ class TestEthereumKeychain(unittest.TestCase):
                     EthereumSignTx(
                         address_n=[44 | HARDENED, 61 | HARDENED, 0 | HARDENED],
                         chain_id=2,
+                        gas_price=b"",
+                        gas_limit=b"",
                     ),
                 )
             )
-
-    def test_missing_chain_id(self):
-        @with_keychain_from_chain_id
-        async def handler_chain_id(ctx, msg, keychain):
-            slip44_id = msg.address_n[1] & ~HARDENED
-            # standard tests
-            self._check_keychain(keychain, slip44_id)
-            # provided address should succeed too
-            keychain.derive(msg.address_n)
-
-        await_result(  # Ethereum
-            handler_chain_id(
-                wire.DUMMY_CONTEXT,
-                EthereumSignTx(
-                    address_n=[44 | HARDENED, 60 | HARDENED, 0 | HARDENED],
-                    chain_id=None,
-                ),
-            )
-        )
-
-        await_result(  # Ethereum Classic
-            handler_chain_id(
-                wire.DUMMY_CONTEXT,
-                EthereumSignTx(
-                    address_n=[44 | HARDENED, 61 | HARDENED, 0 | HARDENED],
-                ),
-            )
-        )
-
-        with self.assertRaises(wire.DataError):
-            await_result(  # unknown slip44 id
-                handler_chain_id(
-                    wire.DUMMY_CONTEXT,
-                    EthereumSignTx(
-                        address_n=[44 | HARDENED, 0 | HARDENED, 0 | HARDENED],
-                    ),
-                )
-            )
-
-    def test_wanchain(self):
-        @with_keychain_from_chain_id
-        async def handler_wanchain(ctx, msg, keychain):
-            self._check_keychain(keychain, 5718350)
-            # provided address should succeed too
-            keychain.derive(msg.address_n)
-
-        await_result(
-            handler_wanchain(
-                wire.DUMMY_CONTEXT,
-                EthereumSignTx(
-                    address_n=[44 | HARDENED, 5718350 | HARDENED, 0 | HARDENED],
-                    chain_id=3,
-                    tx_type=6,
-                ),
-            )
-        )
 
 
 if __name__ == "__main__":

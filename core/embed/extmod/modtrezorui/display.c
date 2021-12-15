@@ -288,15 +288,14 @@ void display_avatar(int x, int y, const void *data, uint32_t datalen,
     if (px >= x0 && px <= x1 && py >= y0 && py <= y1) {
       int d = (px - AVATAR_IMAGE_SIZE / 2) * (px - AVATAR_IMAGE_SIZE / 2) +
               (py - AVATAR_IMAGE_SIZE / 2) * (py - AVATAR_IMAGE_SIZE / 2);
-      // inside border area
       if (d < AVATAR_BORDER_LOW) {
+        // inside border area
         PIXELDATA((decomp_out[0] << 8) | decomp_out[1]);
-      } else
-          // outside border area
-          if (d > AVATAR_BORDER_HIGH) {
+      } else if (d > AVATAR_BORDER_HIGH) {
+        // outside border area
         PIXELDATA(bgcolor);
-        // border area
       } else {
+        // border area
 #if AVATAR_ANTIALIAS
         d = 31 * (d - AVATAR_BORDER_LOW) /
             (AVATAR_BORDER_HIGH - AVATAR_BORDER_LOW);

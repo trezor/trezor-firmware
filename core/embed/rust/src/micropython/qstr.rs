@@ -45,7 +45,7 @@ impl TryFrom<Obj> for Qstr {
         if value.is_qstr() {
             Ok(Self::from_obj_bits(value.as_bits()))
         } else {
-            Err(Error::InvalidType)
+            Err(Error::TypeError)
         }
     }
 }

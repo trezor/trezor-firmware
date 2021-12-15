@@ -14,6 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import json
 import re
 import sys
 from decimal import Decimal
@@ -87,7 +88,7 @@ def _parse_access_list_item(value):
     try:
         arr = value.split(":")
         address, storage_keys = arr[0], arr[1:]
-        storage_keys_bytes = [_decode_hex(key) for key in storage_keys]
+        storage_keys_bytes = [ethereum.decode_hex(key) for key in storage_keys]
         return ethereum.messages.EthereumAccessList(address, storage_keys_bytes)
 
     except Exception:
@@ -101,13 +102,6 @@ def _list_units(ctx, param, value):
     for unit, scale in ETHER_UNITS.items():
         click.echo("{:{maxlen}}:  {}".format(unit, scale, maxlen=maxlen))
     ctx.exit()
-
-
-def _decode_hex(value):
-    if value.startswith("0x") or value.startswith("0X"):
-        return bytes.fromhex(value[2:])
-    else:
-        return bytes.fromhex(value)
 
 
 def _erc20_contract(w3, token_address, to_address, amount):
@@ -129,7 +123,7 @@ def _erc20_contract(w3, token_address, to_address, amount):
 
 def _format_access_list(access_list: List[ethereum.messages.EthereumAccessList]):
     mapped = map(
-        lambda item: [_decode_hex(item.address), item.storage_keys],
+        lambda item: [ethereum.decode_hex(item.address), item.storage_keys],
         access_list,
     )
     return list(mapped)
@@ -268,8 +262,7 @@ def sign_tx(
         (not is_eip1559 and gas_price is None)
         or any(x is None for x in (gas_limit, nonce))
         or publish
-        and not w3.isConnected()
-    ):
+    ) and not w3.isConnected():
         click.echo("Failed to connect to Ethereum node.")
         click.echo(
             "If you want to sign offline, make sure you provide --gas-price, "
@@ -290,7 +283,7 @@ def sign_tx(
         amount = 0
 
     if data:
-        data = _decode_hex(data)
+        data = ethereum.decode_hex(data)
     else:
         data = b""
 
@@ -303,7 +296,7 @@ def sign_tx(
                 "to": to_address,
                 "from": from_address,
                 "value": amount,
-                "data": "0x%s" % data.hex(),
+                "data": f"0x{data.hex()}",
             }
         )
 
@@ -339,7 +332,7 @@ def sign_tx(
         )
     )
 
-    to = _decode_hex(to_address)
+    to = ethereum.decode_hex(to_address)
     if is_eip1559:
         transaction = rlp.encode(
             (
@@ -361,16 +354,17 @@ def sign_tx(
         transaction = rlp.encode(
             (tx_type, nonce, gas_price, gas_limit, to, amount, data) + sig
         )
-    tx_hex = "0x%s%s" % (
-        str(eip2718_type).zfill(2) if eip2718_type is not None else "",
-        transaction.hex(),
-    )
+    if eip2718_type is not None:
+        eip2718_prefix = f"{eip2718_type:02x}"
+    else:
+        eip2718_prefix = ""
+    tx_hex = f"0x{eip2718_prefix}{transaction.hex()}"
 
     if publish:
         tx_hash = w3.eth.sendRawTransaction(tx_hex).hex()
-        return "Transaction published with ID: %s" % tx_hash
+        return f"Transaction published with ID: {tx_hash}"
     else:
-        return "Signed raw transaction:\n%s" % tx_hex
+        return f"Signed raw transaction:\n{tx_hex}"
 
 
 @cli.command()
@@ -384,7 +378,35 @@ def sign_message(client, address, message):
     output = {
         "message": message,
         "address": ret.address,
-        "signature": "0x%s" % ret.signature.hex(),
+        "signature": f"0x{ret.signature.hex()}",
+    }
+    return output
+
+
+@cli.command()
+@click.option("-n", "--address", required=True, help=PATH_HELP)
+@click.option(
+    "--metamask-v4-compat/--no-metamask-v4-compat",
+    default=True,
+    help="Be compatible with Metamask's signTypedData_v4 implementation",
+)
+@click.argument("file", type=click.File("r"))
+@with_client
+def sign_typed_data(client, address, metamask_v4_compat, file):
+    """Sign typed data (EIP-712) with Ethereum address.
+
+    Currently NOT supported:
+    - arrays of arrays
+    - recursive structs
+    """
+    address_n = tools.parse_path(address)
+    data = json.loads(file.read())
+    ret = ethereum.sign_typed_data(
+        client, address_n, data, metamask_v4_compat=metamask_v4_compat
+    )
+    output = {
+        "address": ret.address,
+        "signature": f"0x{ret.signature.hex()}",
     }
     return output
 
@@ -396,5 +418,5 @@ def sign_message(client, address, message):
 @with_client
 def verify_message(client, address, signature, message):
     """Verify message signed with Ethereum address."""
-    signature = _decode_hex(signature)
+    signature = ethereum.decode_hex(signature)
     return ethereum.verify_message(client, address, signature, message)

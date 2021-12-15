@@ -222,5 +222,5 @@ class IdleTimer:
             loop.close(task)
 
 
-"""Global idle timer."""
 idle_timer = IdleTimer()
+"""Global idle timer."""

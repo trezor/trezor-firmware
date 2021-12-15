@@ -27,18 +27,22 @@ INPUT_SCRIPTS = {
     "address": messages.InputScriptType.SPENDADDRESS,
     "segwit": messages.InputScriptType.SPENDWITNESS,
     "p2shsegwit": messages.InputScriptType.SPENDP2SHWITNESS,
+    "taproot": messages.InputScriptType.SPENDTAPROOT,
     "pkh": messages.InputScriptType.SPENDADDRESS,
     "wpkh": messages.InputScriptType.SPENDWITNESS,
     "sh-wpkh": messages.InputScriptType.SPENDP2SHWITNESS,
+    "tr": messages.InputScriptType.SPENDTAPROOT,
 }
 
 OUTPUT_SCRIPTS = {
     "address": messages.OutputScriptType.PAYTOADDRESS,
     "segwit": messages.OutputScriptType.PAYTOWITNESS,
     "p2shsegwit": messages.OutputScriptType.PAYTOP2SHWITNESS,
+    "taproot": messages.OutputScriptType.PAYTOTAPROOT,
     "pkh": messages.OutputScriptType.PAYTOADDRESS,
     "wpkh": messages.OutputScriptType.PAYTOWITNESS,
     "sh-wpkh": messages.OutputScriptType.PAYTOP2SHWITNESS,
+    "tr": messages.OutputScriptType.PAYTOTAPROOT,
 }
 
 DEFAULT_COIN = "Bitcoin"
@@ -206,6 +210,9 @@ def _get_descriptor(client, coin, account, script_type, show_display):
     elif script_type == messages.InputScriptType.SPENDWITNESS:
         acc_type = 84
         fmt = "wpkh({})"
+    elif script_type == messages.InputScriptType.SPENDTAPROOT:
+        acc_type = 86
+        fmt = "tr({})"
     else:
         raise ValueError("Unsupported account type")
 
@@ -228,11 +235,8 @@ def _get_descriptor(client, coin, account, script_type, show_display):
     )
 
     fingerprint = pub.root_fingerprint if pub.root_fingerprint is not None else 0
-    external = f"[{fingerprint:08x}{path[1:]}]{pub.xpub}/0/*"
-    internal = f"[{fingerprint:08x}{path[1:]}]{pub.xpub}/1/*"
-    external = _append_descriptor_checksum(fmt.format(external))
-    internal = _append_descriptor_checksum(fmt.format(internal))
-    return external, internal
+    descriptor = f"[{fingerprint:08x}{path[1:]}]{pub.xpub}/<0;1>/*"
+    return _append_descriptor_checksum(fmt.format(descriptor))
 
 
 @cli.command()
@@ -246,9 +250,7 @@ def _get_descriptor(client, coin, account, script_type, show_display):
 def get_descriptor(client, coin, account, script_type, show_display):
     """Get descriptor of given account."""
     try:
-        ds = _get_descriptor(client, coin, account, script_type, show_display)
-        for d in ds:
-            click.echo(d)
+        return _get_descriptor(client, coin, account, script_type, show_display)
     except ValueError as e:
         raise click.ClickException(e.msg)
 

@@ -36,6 +36,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - dropped Python 3.5 support  [#810]
 - dropped debug-only `trezorctl debug show-text` functionality
+## [0.12.4] - 2021-09-07
+[0.12.4]: https://github.com/trezor/trezor-firmware/compare/python/v0.12.3...python/v0.12.4
+
+### Fixed
+
+- trezorctl: fixed "Invalid value for <param>" when using Click 8 and param is not specified [#1798]
+
 ## [0.12.3] - 2021-07-29
 [0.12.3]: https://github.com/trezor/trezor-firmware/compare/python/v0.12.2...python/v0.12.3
 
@@ -544,3 +551,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#1296]: https://github.com/trezor/trezor-firmware/issues/1296
 [#1363]: https://github.com/trezor/trezor-firmware/issues/1363
 [#1738]: https://github.com/trezor/trezor-firmware/issues/1738
+[#1798]: https://github.com/trezor/trezor-firmware/issues/1798

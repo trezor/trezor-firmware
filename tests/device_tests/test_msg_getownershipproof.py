@@ -41,7 +41,7 @@ def test_attack_ownership_id(client):
     # Use account numbers 1, 2 and 3 to create a valid multisig,
     # but not containing the keys from account 0 used below.
     nodes = [
-        btc.get_public_node(client, parse_path("84'/0'/%d'" % i)).node
+        btc.get_public_node(client, parse_path(f"84'/0'/{i}'")).node
         for i in range(1, 4)
     ]
     multisig1 = messages.MultisigRedeemScriptType(

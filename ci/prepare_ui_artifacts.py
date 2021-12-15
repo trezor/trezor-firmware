@@ -1,27 +1,19 @@
-import hashlib
-import json
 import shutil
+import sys
 from pathlib import Path
 
+ROOT = Path(__file__).parent / ".."
+sys.path.insert(0, str(ROOT))
+# Needed for setup purposes, filling the FILE_HASHES dict
+from tests.ui_tests import read_fixtures  # isort:skip
 
-def _hash_files(path):
-    files = path.iterdir()
-    hasher = hashlib.sha256()
-    for file in sorted(files):
-        hasher.update(file.read_bytes())
-
-    return hasher.digest().hex()
+read_fixtures()
+from tests.ui_tests import _hash_files, FILE_HASHES, SCREENS_DIR  # isort:skip
 
 
-root = Path(__file__).parent / ".."
-screens = root / "tests/ui_tests/screens"
-fixtures = root / "tests/ui_tests/fixtures.json"
-
-hashes = json.loads(fixtures.read_text())
-
-for test_case in hashes.keys():
-    recorded_dir = screens / test_case / "recorded"
-    expected_hash = hashes[test_case]
+for test_case in FILE_HASHES.keys():
+    recorded_dir = SCREENS_DIR / test_case / "recorded"
+    expected_hash = FILE_HASHES[test_case]
     actual_hash = _hash_files(recorded_dir)
     assert expected_hash == actual_hash
-    shutil.make_archive(root / "ci/ui_test_records" / actual_hash, "zip", recorded_dir)
+    shutil.make_archive(ROOT / "ci/ui_test_records" / actual_hash, "zip", recorded_dir)

@@ -32,9 +32,9 @@ async def show_share_words(
     if share_index is None:
         header_title = "Recovery seed"
     elif group_index is None:
-        header_title = "Recovery share #%s" % (share_index + 1)
+        header_title = f"Recovery share #{share_index + 1}"
     else:
-        header_title = "Group %s - Share %s" % ((group_index + 1), (share_index + 1))
+        header_title = f"Group {group_index + 1} - Share {share_index + 1}"
     header_icon = ui.ICON_RESET
     pages: list[ui.Component] = []  # ui page components
     shares_words_check = []  # check we display correct data
@@ -42,10 +42,10 @@ async def show_share_words(
     # first page
     text = Text(header_title, header_icon)
     text.bold("Write down these")
-    text.bold("%s words:" % len(share_words))
+    text.bold(f"{len(share_words)} words:")
     text.br_half()
     for index, word in first:
-        text.mono("%s. %s" % (index + 1, word))
+        text.mono(f"{index + 1}. {word}")
         shares_words_check.append(word)
     pages.append(text)
 
@@ -53,17 +53,17 @@ async def show_share_words(
     for chunk in chunks:
         text = Text(header_title, header_icon)
         for index, word in chunk:
-            text.mono("%s. %s" % (index + 1, word))
+            text.mono(f"{index + 1}. {word}")
             shares_words_check.append(word)
         pages.append(text)
 
     # last page
     text = Text(header_title, header_icon)
     for index, word in last:
-        text.mono("%s. %s" % (index + 1, word))
+        text.mono(f"{index + 1}. {word}")
         shares_words_check.append(word)
     text.br_half()
-    text.bold("I wrote down all %s" % len(share_words))
+    text.bold(f"I wrote down all {len(share_words)}")
     text.bold("words in order.")
     pages.append(text)
 
@@ -135,10 +135,10 @@ def _split_share_into_pages(
     share = list(enumerate(share_words))  # we need to keep track of the word indices
     first = share[:2]  # two words on the first page
     length = len(share_words)
-    if length == 12 or length == 20 or length == 24:
+    if length in (12, 20, 24):
         middle = share[2:-2]
         last = share[-2:]  # two words on the last page
-    elif length == 33 or length == 18:
+    elif length in (18, 33):
         middle = share[2:]
         last = []  # no words at the last page, because it does not add up
     else:
@@ -208,23 +208,23 @@ async def slip39_prompt_threshold(
         text = "The threshold sets the number of shares "
         if group_id is None:
             text += "needed to recover your wallet. "
-            text += "Set it to %s and you will need " % count
+            text += f"Set it to {count} and you will need "
             if num_of_shares == 1:
                 text += "1 share."
             elif num_of_shares == count:
-                text += "all %s of your %s shares." % (count, num_of_shares)
+                text += f"all {count} of your {num_of_shares} shares."
             else:
-                text += "any %s of your %s shares." % (count, num_of_shares)
+                text += f"any {count} of your {num_of_shares} shares."
         else:
             text += "needed to form a group. "
-            text += "Set it to %s and you will " % count
+            text += f"Set it to {count} and you will "
             if num_of_shares == 1:
                 text += "need 1 share "
             elif num_of_shares == count:
-                text += "need all %s of %s shares " % (count, num_of_shares)
+                text += f"need all {count} of {num_of_shares} shares "
             else:
-                text += "need any %s of %s shares " % (count, num_of_shares)
-            text += "to form Group %s." % (group_id + 1)
+                text += f"need any {count} of {num_of_shares} shares "
+            text += f"to form Group {group_id + 1}."
         info = InfoConfirm(text)
         await info
 
@@ -276,7 +276,7 @@ async def slip39_prompt_number_of_shares(
                 "Next you will choose "
                 "the threshold number of "
                 "shares needed to form "
-                "Group %s." % (group_id + 1)
+                f"Group {group_id + 1}."
             )
         await info
 

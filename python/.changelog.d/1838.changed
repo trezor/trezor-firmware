@@ -1,0 +1,1 @@
+`trezorlib.stellar` will refuse to process transactions containing MuxedAccount

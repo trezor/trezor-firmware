@@ -28,16 +28,16 @@ def eos_asset_to_string(asset: EosAsset) -> str:
     precision = symbol_bytes[7]
     symbol = bytes(reversed(symbol_bytes[:7])).rstrip(b"\x00").decode("ascii")
 
-    amount_digits = "{:0{precision}d}".format(asset.amount, precision=precision)
+    amount_digits = f"{asset.amount:0{precision}d}"
     if precision > 0:
         integer = amount_digits[:-precision]
         if integer == "":
             integer = "0"
         fraction = amount_digits[-precision:]
 
-        return "{}.{} {}".format(integer, fraction, symbol)
+        return f"{integer}.{fraction} {symbol}"
     else:
-        return "{} {}".format(amount_digits, symbol)
+        return f"{amount_digits} {symbol}"
 
 
 def public_key_to_wif(pub_key: bytes) -> str:

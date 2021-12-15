@@ -26,6 +26,17 @@ from trezorlib.cli import ChoiceType
 from trezorlib.cli.btc import INPUT_SCRIPTS, OUTPUT_SCRIPTS
 from trezorlib.protobuf import to_dict
 
+SESSION = requests.Session()
+SESSION.headers.update({"User-Agent": "trezorlib"})
+
+# the following script type mapping is only valid for single-sig Trezor-generated utxos
+BITCOIN_CORE_INPUT_TYPES = {
+    "pubkeyhash": messages.InputScriptType.SPENDADDRESS,
+    "scripthash": messages.InputScriptType.SPENDP2SHWITNESS,
+    "witness_v0_keyhash": messages.InputScriptType.SPENDWITNESS,
+    "witness_v1_taproot": messages.InputScriptType.SPENDTAPROOT,
+}
+
 
 def echo(*args, **kwargs):
     return click.echo(*args, err=True, **kwargs)
@@ -65,11 +76,10 @@ def _get_inputs_interactive(blockbook_url):
         if not prev:
             break
         prev_hash, prev_index = prev
-        address_n = prompt("BIP-32 path to derive the key", type=tools.parse_path)
 
         txhash = prev_hash.hex()
         tx_url = blockbook_url + txhash
-        r = requests.get(tx_url)
+        r = SESSION.get(tx_url)
         if not r.ok:
             raise click.ClickException(f"Failed to fetch URL: {tx_url}")
 
@@ -79,21 +89,34 @@ def _get_inputs_interactive(blockbook_url):
 
         tx = btc.from_json(tx_json)
         txes[txhash] = tx
+        try:
+            from_address = tx_json["vout"][prev_index]["scriptPubKey"]["address"]
+            echo(f"From address: {from_address}")
+        except Exception:
+            pass
         amount = tx.bin_outputs[prev_index].amount
-        echo("Input amount: {}".format(amount))
+        echo(f"Input amount: {amount}")
+
+        address_n = prompt("BIP-32 path to derive the key", type=tools.parse_path)
+
+        reported_type = tx_json["vout"][prev_index]["scriptPubKey"].get("type")
+        if reported_type in BITCOIN_CORE_INPUT_TYPES:
+            script_type = BITCOIN_CORE_INPUT_TYPES[reported_type]
+            click.echo(f"Script type: {script_type.name}")
+        else:
+            script_type = prompt(
+                "Input type",
+                type=ChoiceType(INPUT_SCRIPTS),
+                default=_default_script_type(address_n, INPUT_SCRIPTS),
+            )
+        if isinstance(script_type, str):
+            script_type = INPUT_SCRIPTS[script_type]
 
         sequence = prompt(
             "Sequence Number to use (RBF opt-in enabled by default)",
             type=int,
             default=0xFFFFFFFD,
         )
-        script_type = prompt(
-            "Input type",
-            type=ChoiceType(INPUT_SCRIPTS),
-            default=_default_script_type(address_n, INPUT_SCRIPTS),
-        )
-        if isinstance(script_type, str):
-            script_type = INPUT_SCRIPTS[script_type]
 
         new_input = messages.TxInputType(
             address_n=address_n,
@@ -151,7 +174,7 @@ def sign_interactive():
     coin = prompt("Coin name", default="Bitcoin")
     blockbook_host = prompt("Blockbook server", default="btc1.trezor.io")
 
-    if not requests.get(f"https://{blockbook_host}/api").ok:
+    if not SESSION.get(f"https://{blockbook_host}/api/block/1").ok:
         raise click.ClickException("Could not connect to blockbook")
 
     blockbook_url = f"https://{blockbook_host}/api/tx-specific/"

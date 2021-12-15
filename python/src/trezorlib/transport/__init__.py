@@ -93,9 +93,7 @@ class Transport:
             ):
                 return device
 
-        raise TransportException(
-            "{} device not found: {}".format(cls.PATH_PREFIX, path)
-        )
+        raise TransportException(f"{cls.PATH_PREFIX} device not found: {path}")
 
 
 def all_transports() -> Iterable[Type[Transport]]:
@@ -117,13 +115,13 @@ def enumerate_devices() -> Iterable[Transport]:
         name = transport.__name__
         try:
             found = list(transport.enumerate())
-            LOG.info("Enumerating {}: found {} devices".format(name, len(found)))
+            LOG.info(f"Enumerating {name}: found {len(found)} devices")
             devices.extend(found)
         except NotImplementedError:
-            LOG.error("{} does not implement device enumeration".format(name))
+            LOG.error(f"{name} does not implement device enumeration")
         except Exception as e:
             excname = e.__class__.__name__
-            LOG.error("Failed to enumerate {}. {}: {}".format(name, excname, e))
+            LOG.error(f"Failed to enumerate {name}. {excname}: {e}")
     return devices
 
 
@@ -149,4 +147,4 @@ def get_transport(path: str = None, prefix_search: bool = False) -> Transport:
     if transports:
         return transports[0].find_by_path(path, prefix_search=prefix_search)
 
-    raise TransportException("Could not find device by path: {}".format(path))
+    raise TransportException(f"Could not find device by path: {path}")

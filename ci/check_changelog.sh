@@ -4,6 +4,14 @@ base_branch=master
 fail=0
 subdirs="core core/embed/boardloader core/embed/bootloader core/embed/bootloader_ci legacy/bootloader legacy/firmware legacy/intermediate_fw python"
 
+# $ignored_files is a newline-separated list of patterns for grep
+# therefore there must not be empty lines at start or end
+ignored_files="core/src/apps/ethereum/networks.py
+core/src/apps/ethereum/tokens.py
+core/src/trezor/enums/*
+core/src/trezor/messages.py
+python/src/trezorlib/messages.py"
+
 changed_files=$(mktemp)
 trap 'rm -- $changed_files' EXIT
 
@@ -18,7 +26,7 @@ check_feature_branch () {
             continue
         fi
 
-        git show --pretty=format: --name-only "$commit" >> "$changed_files"
+        git show --pretty=format: --name-only "$commit" | grep -vF "$ignored_files" >> "$changed_files"
     done
 
     for subdir in $subdirs

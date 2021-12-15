@@ -266,15 +266,15 @@ def _range_proof(
 
     state.mem_trace("pre-rproof" if __debug__ else None, collect=True)
     if not state.rsig_offload:
-        """Bulletproof calculation in Trezor"""
+        # Bulletproof calculation in Trezor
         rsig = _rsig_bp(state)
 
     elif not state.is_processing_offloaded:
-        """Bulletproof offloaded to the host, deterministic masks. Nothing here, waiting for offloaded BP."""
+        # Bulletproof offloaded to the host, deterministic masks. Nothing here, waiting for offloaded BP.
         pass
 
     else:
-        """Bulletproof offloaded to the host, check BP, hash it."""
+        # Bulletproof offloaded to the host, check BP, hash it.
         _rsig_process_bp(state, rsig_data)
 
     state.mem_trace("rproof" if __debug__ else None, collect=True)
@@ -312,7 +312,7 @@ def _rsig_bp(state: State) -> bytes:
 
     rsig = _dump_rsig_bp(rsig)
     state.mem_trace(
-        "post-bp-ser, size: %s" % len(rsig) if __debug__ else None, collect=True
+        f"post-bp-ser, size: {len(rsig)}" if __debug__ else None, collect=True
     )
 
     # state cleanup

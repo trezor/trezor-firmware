@@ -44,7 +44,6 @@ def get_features() -> Features:
         label=storage.device.get_label(),
         pin_protection=config.has_pin(),
         unlocked=config.is_unlocked(),
-        passphrase_protection=storage.device.is_passphrase_enabled(),
     )
 
     if utils.BITCOIN_ONLY:
@@ -79,7 +78,8 @@ def get_features() -> Features:
 
     # private fields:
     if config.is_unlocked():
-
+        # passphrase_protection is private, see #1807
+        f.passphrase_protection = storage.device.is_passphrase_enabled()
         f.needs_backup = storage.device.needs_backup()
         f.unfinished_backup = storage.device.unfinished_backup()
         f.no_backup = storage.device.no_backup()
@@ -98,10 +98,31 @@ def get_features() -> Features:
 
 
 async def handle_Initialize(ctx: wire.Context, msg: Initialize) -> Features:
+    session_id = storage.cache.start_session(msg.session_id)
+
+    if not utils.BITCOIN_ONLY:
+        derive_cardano = storage.cache.get(storage.cache.APP_COMMON_DERIVE_CARDANO)
+        have_seed = storage.cache.is_set(storage.cache.APP_COMMON_SEED)
+
+        if (
+            have_seed
+            and msg.derive_cardano is not None
+            and msg.derive_cardano != bool(derive_cardano)
+        ):
+            # seed is already derived, and host wants to change derive_cardano setting
+            # => create a new session
+            storage.cache.end_current_session()
+            session_id = storage.cache.start_session()
+            have_seed = False
+
+        if not have_seed:
+            storage.cache.set(
+                storage.cache.APP_COMMON_DERIVE_CARDANO,
+                b"\x01" if msg.derive_cardano else b"",
+            )
+
     features = get_features()
-    if msg.session_id:
-        msg.session_id = bytes(msg.session_id)
-    features.session_id = storage.cache.start_session(msg.session_id)
+    features.session_id = session_id
     return features
 
 

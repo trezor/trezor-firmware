@@ -77,6 +77,15 @@ TXHASH_408397 = bytes.fromhex(
 TXHASH_ba917a = bytes.fromhex(
     "ba917a2b563966e324ab37ed7de5f5cd7503b970b0f0bb9a5208f5835557e99c"
 )
+TXHASH_a4e274 = bytes.fromhex(
+    "a4e2745235250cc223b42004769338f5837e9290caf546da33ab117e4d011c92"
+)
+TXHASH_ccd7ea = bytes.fromhex(
+    "ccd7eaacc9f6902b89c00a6c221391bd41c8b78e7935ff3e1130d13644393ff2"
+)
+TXHASH_8e4af7 = bytes.fromhex(
+    "8e4af74cee65dac2615f7befea76bab4955707cd216011d918b526f5e86d85ba"
+)
 
 
 def test_p2pkh_fee_bump(client):
@@ -191,6 +200,76 @@ def test_p2wpkh_op_return_fee_bump(client):
     assert (
         serialized_tx.hex()
         == "010000000001010978ca90092d490a773ca00de50bc5c4d9930fab03b656f5525cf099379783400100000000fdffffff020000000000000000066a046465616414410f00000000001600141c02e2397a8a02ff71d3f26937d14a656469dd1f02483045022100f534412752c14064470d4a1f738fa01bc83598b07caaba4cd207b43b1b9702a4022071a4f0873006c07ccfeb1f82e86f3047eab208f38cfa41d7b566d6ca50dbca0f012102a269d4b8faf008074b974b6d64fa1776e17fdf65381a76d1338e9bba88983a8700000000"
+    )
+
+
+# txid 48bc29fc42a64b43d043b0b7b99b21aa39654234754608f791c60bcbd91a8e92
+def test_p2tr_fee_bump(client):
+    inp1 = messages.TxInputType(
+        # tb1p8tvmvsvhsee73rhym86wt435qrqm92psfsyhy6a3n5gw455znnpqm8wald
+        address_n=parse_path("86'/1'/0'/0/1"),
+        amount=13000,
+        orig_hash=TXHASH_8e4af7,
+        orig_index=0,
+        prev_hash=TXHASH_a4e274,
+        prev_index=1,
+        script_type=messages.InputScriptType.SPENDTAPROOT,
+    )
+    inp2 = messages.TxInputType(
+        # tb1pswrqtykue8r89t9u4rprjs0gt4qzkdfuursfnvqaa3f2yql07zmq8s8a5u
+        address_n=parse_path("86'/1'/0'/0/0"),
+        amount=6800,
+        orig_hash=TXHASH_8e4af7,
+        orig_index=1,
+        prev_hash=TXHASH_ccd7ea,
+        prev_index=0,
+        script_type=messages.InputScriptType.SPENDTAPROOT,
+    )
+    out1 = messages.TxOutputType(
+        address="tb1qq0rurzt04d76hk7pjxhqggk7ad4zj7c9u369kt",
+        amount=15000,
+        orig_hash=TXHASH_8e4af7,
+        orig_index=0,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+    out2 = messages.TxOutputType(
+        # tb1pn2d0yjeedavnkd8z8lhm566p0f2utm3lgvxrsdehnl94y34txmts5s7t4c
+        address_n=parse_path("86'/1'/0'/1/0"),
+        amount=4600 - 250,  # bump the fee by 250
+        orig_hash=TXHASH_8e4af7,
+        orig_index=1,
+        script_type=messages.OutputScriptType.PAYTOTAPROOT,
+    )
+    with client:
+        client.set_expected_responses(
+            [
+                request_input(0),
+                request_meta(TXHASH_8e4af7),
+                request_orig_input(0, TXHASH_8e4af7),
+                request_input(1),
+                request_orig_input(1, TXHASH_8e4af7),
+                messages.ButtonRequest(code=B.SignTx),
+                request_output(0),
+                request_orig_output(0, TXHASH_8e4af7),
+                request_output(1),
+                request_orig_output(1, TXHASH_8e4af7),
+                messages.ButtonRequest(code=B.SignTx),
+                request_input(0),
+                request_input(1),
+                request_output(0),
+                request_output(1),
+                request_input(0),
+                request_input(1),
+                request_finished(),
+            ]
+        )
+        _, serialized_tx = btc.sign_tx(
+            client, "Testnet", [inp1, inp2], [out1, out2], prev_txes=TX_CACHE_TESTNET
+        )
+
+    assert (
+        serialized_tx.hex()
+        == "01000000000102921c014d7e11ab33da46f5ca90927e83f53893760420b423c20c25355274e2a40100000000fffffffff23f394436d130113eff35798eb7c841bd9113226c0ac0892b90f6c9acead7cc0000000000ffffffff02983a00000000000016001403c7c1896fab7dabdbc191ae0422deeb6a297b05fe100000000000002251209a9af24b396f593b34e23fefba6b417a55c5ee3f430c3837379fcb5246ab36d70140b0eef4af1291a31e3416e9daaf05457e5b14447663ef8137a250fe3eca24e2fc85e0d0a001a8035fa272d78b104761b05040ffa0b7d6f9a902c23aa8b521687e0140775b82068243545e9327725c56681c78bd7da0934bfdac2cc9cc06a1511379ff28e539c2538fe26f7e2c7385e51d650c4af8dc2c35baa7161c36d6919c83ff5c00000000"
     )
 
 
@@ -332,6 +411,7 @@ def test_p2wpkh_payjoin(
         script_type=messages.InputScriptType.EXTERNAL,
         prev_hash=TXHASH_70f987,
         prev_index=1,
+        script_pubkey=bytes.fromhex("0014167dae080bca35c9ea49c0c8335dcc4b252a1d70"),
         witness=bytes.fromhex(copayer_witness),
     )
 
@@ -788,6 +868,7 @@ def test_attack_false_internal(client):
         prev_index=0,
         orig_hash=TXHASH_334cd7,
         orig_index=1,
+        script_pubkey=bytes.fromhex("a914b9170a062fafcf4379729d104dd04859b1ce955887"),
         script_sig=bytes.fromhex("160014209297fb46272a0b7e05139440dbd39daea3e25a"),
         witness=bytes.fromhex(
             "024730440220709798e66e44ee76d8b0858407b2098f2f0046703761e2617b2b870a346cb56c022010242f602cd41485934834ecf12c1647d003df8c9d4c0d8637514e1dc8a657a2012103c2c2e65556ca4b7371549324b99390725493c8a6792e093a0bdcbb3e2d7df4ab"
@@ -894,6 +975,7 @@ def test_attack_fake_ext_input_amount(client):
         prev_index=0,
         orig_hash=TXHASH_ed89ac,
         orig_index=1,
+        script_pubkey=bytes.fromhex("a914eb227e547838e56792d92ef597244d8b33767c8f87"),
         script_sig=bytes.fromhex("160014681ea49259abb892460bf3373e8a0b43d877fa18"),
         witness=bytes.fromhex(
             "02483045022100d9c2d4364e104bf0d27886b4d7cd05f9a256bda8acbe84b7b2753f5c054b1a8602206a512575a89da5b5123e2769a5f73675b27b9f43d1a7b54bddeae039f6b83efa0121028cbc37e1816a23086fa738c8415def477e813e20f484dbbd6f5a33a37c322251"
@@ -921,6 +1003,10 @@ def test_attack_fake_ext_input_amount(client):
     prev_tx_attack.inputs[1].amount -= 30000
     prev_tx_attack.inputs[1].address_n = None
     prev_tx_attack.inputs[1].script_type = messages.InputScriptType.EXTERNAL
+    prev_tx_attack.inputs[1].script_pubkey = bytes.fromhex(
+        "a914eb227e547838e56792d92ef597244d8b33767c8f87"
+    )
+
     prev_txes = {
         TXHASH_ed89ac: prev_tx_attack,
         TXHASH_6673b7: TX_CACHE_TESTNET[TXHASH_6673b7],
@@ -982,7 +1068,7 @@ def test_p2wpkh_invalid_signature(client):
     }
 
     with pytest.raises(TrezorFailure, match="Invalid signature"):
-        _, serialized_tx = btc.sign_tx(
+        btc.sign_tx(
             client,
             "Testnet",
             [inp1],
@@ -990,3 +1076,52 @@ def test_p2wpkh_invalid_signature(client):
             lock_time=1348713,
             prev_txes=prev_txes,
         )
+
+
+def test_p2tr_invalid_signature(client):
+    # Ensure that transaction replacement fails when the original signature is invalid.
+
+    inp1 = messages.TxInputType(
+        # tb1p8tvmvsvhsee73rhym86wt435qrqm92psfsyhy6a3n5gw455znnpqm8wald
+        address_n=parse_path("86'/1'/0'/0/1"),
+        amount=13000,
+        orig_hash=TXHASH_8e4af7,
+        orig_index=0,
+        prev_hash=TXHASH_a4e274,
+        prev_index=1,
+        script_type=messages.InputScriptType.SPENDTAPROOT,
+    )
+    inp2 = messages.TxInputType(
+        # tb1pswrqtykue8r89t9u4rprjs0gt4qzkdfuursfnvqaa3f2yql07zmq8s8a5u
+        address_n=parse_path("86'/1'/0'/0/0"),
+        amount=6800,
+        orig_hash=TXHASH_8e4af7,
+        orig_index=1,
+        prev_hash=TXHASH_ccd7ea,
+        prev_index=0,
+        script_type=messages.InputScriptType.SPENDTAPROOT,
+    )
+    out1 = messages.TxOutputType(
+        address="tb1qq0rurzt04d76hk7pjxhqggk7ad4zj7c9u369kt",
+        amount=15000,
+        orig_hash=TXHASH_8e4af7,
+        orig_index=0,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+    out2 = messages.TxOutputType(
+        # tb1pn2d0yjeedavnkd8z8lhm566p0f2utm3lgvxrsdehnl94y34txmts5s7t4c
+        address_n=parse_path("86'/1'/0'/1/0"),
+        amount=4600 - 250,  # bump the fee by 250
+        orig_hash=TXHASH_8e4af7,
+        orig_index=1,
+        script_type=messages.OutputScriptType.PAYTOTAPROOT,
+    )
+
+    # Invalidate the signature in the original witness.
+    prev_tx_invalid = TX_CACHE_TESTNET[TXHASH_8e4af7]
+    prev_tx_invalid.inputs[0].witness = bytearray(prev_tx_invalid.inputs[0].witness)
+    prev_tx_invalid.inputs[0].witness[10] ^= 1
+    prev_txes = {TXHASH_8e4af7: prev_tx_invalid}
+
+    with pytest.raises(TrezorFailure, match="Invalid signature"):
+        btc.sign_tx(client, "Testnet", [inp1, inp2], [out1, out2], prev_txes=prev_txes)

@@ -72,7 +72,7 @@ def test_touch(v):
                 touch = True
         else:
             if io.poll([io.TOUCH], r, 10000) and r[0] == io.TOUCH and r[1][0] == io.TOUCH_END:
-                print('OK %d %d' % (r[1][1], r[1][2]))
+                print(f'OK {r[1][1]} {r[1][2]}')
                 break
         if utime.ticks_us() > deadline:
             print('ERROR TIMEOUT')

@@ -1,4 +1,4 @@
-use core::convert::TryFrom;
+use core::convert::{TryFrom, TryInto};
 
 use crate::{
     error::Error,
@@ -15,39 +15,37 @@ use crate::{
 
 use super::{
     defs::{FieldDef, FieldType, MsgDef},
-    obj::{MsgObj},
+    error,
+    obj::MsgObj,
     zigzag,
 };
 
 #[no_mangle]
 pub extern "C" fn protobuf_len(obj: Obj) -> Obj {
-    util::try_or_raise(|| {
+    let block = || {
         let obj = Gc::<MsgObj>::try_from(obj)?;
-
         let stream = &mut CounterStream { len: 0 };
-
         Encoder.encode_message(stream, &obj.def(), &obj)?;
-
-        Ok(stream.len.into())
-    })
+        stream.len.try_into()
+    };
+    unsafe { util::try_or_raise(block) }
 }
 
 #[no_mangle]
 pub extern "C" fn protobuf_encode(buf: Obj, obj: Obj) -> Obj {
-    util::try_or_raise(|| {
+    let block = || {
         let obj = Gc::<MsgObj>::try_from(obj)?;
 
+        // We assume there are no other refs into `buf` at this point. This specifically
+        // means that no fields of `obj` should reference `buf` memory.
         let buf = &mut BufferMut::try_from(buf)?;
-        let stream = &mut BufferStream::new(unsafe {
-            // SAFETY: We assume there are no other refs into `buf` at this point. This
-            // specifically means that no fields of `obj` should reference `buf` memory.
-            buf.as_mut()
-        });
+        let stream = &mut BufferStream::new(buf.as_mut());
 
         Encoder.encode_message(stream, &obj.def(), &obj)?;
 
-        Ok(stream.len().into())
-    })
+        stream.len().try_into()
+    };
+    unsafe { util::try_or_raise(block) }
 }
 
 pub struct Encoder;
@@ -220,7 +218,7 @@ impl<'a> OutputStream for BufferStream<'a> {
                 *pos += len;
                 buf.copy_from_slice(val);
             })
-            .ok_or(Error::Missing)
+            .ok_or_else(error::end_of_buffer)
     }
 
     fn write_byte(&mut self, val: u8) -> Result<(), Error> {
@@ -231,6 +229,6 @@ impl<'a> OutputStream for BufferStream<'a> {
                 *pos += 1;
                 *buf = val;
             })
-            .ok_or(Error::Missing)
+            .ok_or_else(error::end_of_buffer)
     }
 }

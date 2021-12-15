@@ -3,7 +3,7 @@ from ubinascii import hexlify
 
 from trezor import utils
 from trezor.enums import AmountUnit, ButtonRequestType, OutputScriptType
-from trezor.strings import format_amount
+from trezor.strings import format_amount, format_timestamp
 from trezor.ui import layouts
 
 from .. import addresses
@@ -35,7 +35,7 @@ def format_coin_amount(amount: int, coin: CoinInfo, amount_unit: AmountUnit) -> 
         decimals -= 3
         shortcut = "m" + shortcut
     # we don't need to do anything for AmountUnit.BITCOIN
-    return "%s %s" % (format_amount(amount, decimals), shortcut)
+    return f"{format_amount(amount, decimals)} {shortcut}"
 
 
 async def confirm_output(
@@ -193,8 +193,8 @@ async def confirm_nondefault_locktime(
         param = str(lock_time)
     else:
         title = "Confirm locktime"
-        text = "Locktime for this\ntransaction is set to\ntimestamp:\n{}"
-        param = str(lock_time)
+        text = "Locktime for this\ntransaction is set to:\n{}"
+        param = format_timestamp(lock_time)
 
     await layouts.confirm_metadata(
         ctx,

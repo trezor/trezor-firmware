@@ -209,9 +209,7 @@ class expect:
             __tracebackhide__ = True  # for pytest # pylint: disable=W0612
             ret = f(*args, **kwargs)
             if not isinstance(ret, self.expected):
-                raise RuntimeError(
-                    "Got %s, expected %s" % (ret.__class__, self.expected)
-                )
+                raise RuntimeError(f"Got {ret.__class__}, expected {self.expected}")
             if self.field is not None:
                 return getattr(ret, self.field)
             else:

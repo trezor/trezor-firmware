@@ -111,7 +111,7 @@ def _wrap_protobuf_load(
         if __debug__:
             log.exception(__name__, e)
         if e.args:
-            raise DataError("Failed to decode message: {}".format(e.args[0]))
+            raise DataError("Failed to decode message: " + " ".join(e.args))
         else:
             raise DataError("Failed to decode message")
 
@@ -297,7 +297,7 @@ async def _handle_single_message(
         try:
             msg_type = protobuf.type_for_wire(msg.type).MESSAGE_NAME
         except Exception:
-            msg_type = "%d - unknown message type" % msg.type
+            msg_type = f"{msg.type} - unknown message type"
         log.debug(
             __name__,
             "%s:%x receive: <%s>",
@@ -309,7 +309,7 @@ async def _handle_single_message(
     res_msg: protobuf.MessageType | None = None
 
     # We need to find a handler for this message type.  Should not raise.
-    handler = find_handler(ctx.iface, msg.type)
+    handler = find_handler(ctx.iface, msg.type)  # pylint: disable=assignment-from-none
 
     if handler is None:
         # If no handler is found, we can skip decoding and directly
@@ -364,7 +364,7 @@ async def _handle_single_message(
         # - something canceled the workflow from the outside
         if __debug__:
             if isinstance(exc, ActionCancelled):
-                log.debug(__name__, "cancelled: {}".format(exc.message))
+                log.debug(__name__, "cancelled: %s", exc.message)
             elif isinstance(exc, loop.TaskClosed):
                 log.debug(__name__, "cancelled: loop task was closed")
             else:
@@ -431,7 +431,7 @@ async def handle_session(
                         # Shut down the loop if there is no next message waiting.
                         # Let the session be restarted from `main`.
                         loop.clear()
-                        return
+                        return  # pylint: disable=lost-exception
 
         except Exception as exc:
             # Log and try again. The session handler can only exit explicitly via

@@ -24,7 +24,7 @@ INVALID_TYPE = const(-1)
 # use it at the same time, thus we check this at runtime in debug builds.
 if __debug__:
 
-    class BufferLock(object):
+    class BufferLock:
         def __init__(self) -> None:
             self.in_use = False
 
@@ -32,17 +32,17 @@ if __debug__:
             assert not self.in_use, "global buffer already used by another context"
             self.in_use = True
 
-        def __exit__(self, type: Any, value: Any, traceback: Any) -> None:
+        def __exit__(self, exc_type: Any, value: Any, traceback: Any) -> None:
             self.in_use = False
 
 
 else:
 
-    class BufferLock(object):  # type: ignore
+    class BufferLock:  # type: ignore
         def __enter__(self) -> None:
             pass
 
-        def __exit__(self, type: Any, value: Any, traceback: Any) -> None:
+        def __exit__(self, exc_type: Any, value: Any, traceback: Any) -> None:
             pass
 
 

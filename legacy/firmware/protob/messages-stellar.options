@@ -1,5 +1,5 @@
-StellarAssetType.code                                   max_size:13
-StellarAssetType.issuer                                 max_size:57
+StellarAsset.code                                       max_size:13
+StellarAsset.issuer                                     max_size:57
 StellarGetAddress.address_n                             max_count:10
 
 StellarAddress.address                                  max_size:57
@@ -17,14 +17,19 @@ StellarPaymentOp.destination_account                    max_size:57
 StellarCreateAccountOp.source_account                   max_size:57
 StellarCreateAccountOp.new_account                      max_size:57
 
-StellarPathPaymentOp.source_account                     max_size:57
-StellarPathPaymentOp.destination_account                max_size:57
-StellarPathPaymentOp.paths                              max_count:5
+StellarPathPaymentStrictReceiveOp.source_account                     max_size:57
+StellarPathPaymentStrictReceiveOp.destination_account                max_size:57
+StellarPathPaymentStrictReceiveOp.paths                              max_count:5
 
+StellarPathPaymentStrictSendOp.source_account                     max_size:57
+StellarPathPaymentStrictSendOp.destination_account                max_size:57
+StellarPathPaymentStrictSendOp.paths                              max_count:5
 
-StellarManageOfferOp.source_account                     max_size:57
+StellarManageBuyOfferOp.source_account                     max_size:57
 
-StellarCreatePassiveOfferOp.source_account              max_size:57
+StellarManageSellOfferOp.source_account                     max_size:57
+
+StellarCreatePassiveSellOfferOp.source_account              max_size:57
 
 StellarSetOptionsOp.source_account                      max_size:57
 StellarSetOptionsOp.inflation_destination_account       max_size:57

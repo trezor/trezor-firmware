@@ -599,6 +599,8 @@ def generate_eddsa(filename):
 
 dir = os.path.abspath(os.path.dirname(__file__))
 lib = ctypes.cdll.LoadLibrary(os.path.join(dir, "libtrezor-crypto.so"))
+if not lib.zkp_context_is_initialized():
+    assert lib.zkp_context_init() == 0
 testvectors_directory = os.path.join(dir, "wycheproof/testvectors")
 context_structure_length = 1024
 
@@ -645,6 +647,28 @@ def test_ecdsa(curve_name, public_key, hasher, message, signature, result):
 
     computed_result = (
         lib.ecdsa_verify(curve, hasher, public_key, signature, message, len(message))
+        == 0
+    )
+    assert result == computed_result
+
+
+@pytest.mark.parametrize(
+    "curve_name, public_key, hasher, message, signature, result",
+    filter(lambda v: v[0] == "secp256k1", ecdsa_vectors),
+)
+def test_ecdsa_zkp(curve_name, public_key, hasher, message, signature, result):
+    curve = get_curve_by_name(curve_name)
+    if curve is None:
+        raise NotSupported("Curve not supported: {}".format(curve_name))
+
+    public_key = unhexlify(public_key)
+    signature = unhexlify(signature)
+    message = unhexlify(message)
+
+    computed_result = (
+        lib.zkp_ecdsa_verify(
+            curve, hasher, public_key, signature, message, len(message)
+        )
         == 0
     )
     assert result == computed_result

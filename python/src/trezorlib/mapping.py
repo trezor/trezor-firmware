@@ -42,8 +42,7 @@ def build_map():
 def register_message(msg_class):
     if msg_class.MESSAGE_WIRE_TYPE in map_type_to_class:
         raise Exception(
-            "Message for wire type %s is already registered by %s"
-            % (msg_class.MESSAGE_WIRE_TYPE, get_class(msg_class.MESSAGE_WIRE_TYPE))
+            f"Message for wire type {msg_class.MESSAGE_WIRE_TYPE} is already registered by {get_class(msg_class.MESSAGE_WIRE_TYPE)}"
         )
 
     map_class_to_type[msg_class] = msg_class.MESSAGE_WIRE_TYPE

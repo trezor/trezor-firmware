@@ -21,8 +21,8 @@ class TrezorT(Device):
         self.power_on()
 
         self.wait(5)
-        self.log("[software] Updating the firmware to {}".format(file))
-        self.run_trezorctl("firmware-update -s -f {}".format(file))
+        self.log(f"[software] Updating the firmware to {file}")
+        self.run_trezorctl(f"firmware-update -s -f {file}")
 
         # after firmware-update finishes wait for reboot
         self.wait(15)

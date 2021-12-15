@@ -131,6 +131,7 @@
 #define MICROPY_PY_SYS_PLATFORM     "trezor-emulator"
 #define MICROPY_PY_UERRNO           (0)
 #define MICROPY_PY_THREAD           (0)
+#define MICROPY_PY_FSTRINGS         (1)
 
 // extended modules
 #define MICROPY_PY_UCTYPES          (1)
@@ -179,6 +180,11 @@
 
 extern const struct _mp_print_t mp_stderr_print;
 
+#if !(defined(MICROPY_GCREGS_SETJMP) || defined(__x86_64__) || defined(__i386__) || defined(__thumb2__) || defined(__thumb__) || defined(__arm__))
+// Fall back to setjmp() implementation for discovery of GC pointers in registers.
+#define MICROPY_GCREGS_SETJMP (1)
+#endif
+
 // coverage support
 #define MICROPY_PY_SYS_ATEXIT       (1)
 #define MICROPY_PY_SYS_SETTRACE     (1)
@@ -196,6 +202,7 @@ extern const struct _mp_print_t mp_stderr_print;
 #define MICROPY_PY_TREZORUI         (1)
 #define MICROPY_PY_TREZORUTILS      (1)
 #define MICROPY_PY_TREZORPROTO      (1)
+#define MICROPY_PY_TREZORUI2        (1)
 
 #define MP_STATE_PORT MP_STATE_VM
 
@@ -203,13 +210,9 @@ extern const struct _mp_print_t mp_stderr_print;
 
 // extra built in modules to add to the list of known ones
 extern const struct _mp_obj_module_t mp_module_os;
-// on unix, we use time, not utime
-extern const struct _mp_obj_module_t mp_module_time;
 
 #define MICROPY_PORT_BUILTIN_MODULES \
-    { MP_ROM_QSTR(MP_QSTR_uos), MP_ROM_PTR(&mp_module_os) }, \
-    { MP_ROM_QSTR(MP_QSTR_utime), MP_ROM_PTR(&mp_module_time) },
-
+    { MP_ROM_QSTR(MP_QSTR_uos), MP_ROM_PTR(&mp_module_os) },
 
 
 // For size_t and ssize_t
@@ -228,7 +231,12 @@ typedef unsigned int mp_uint_t; // must be pointer size
 #endif
 #endif
 
-#define MICROPY_EVENT_POLL_HOOK mp_hal_delay_ms(1);
+#define MICROPY_EVENT_POLL_HOOK \
+    do { \
+        extern void mp_handle_pending(bool); \
+        mp_handle_pending(true); \
+        mp_hal_delay_us(500); \
+    } while (0);
 
 // Cannot include <sys/types.h>, as it may lead to symbol name clashes
 #if _FILE_OFFSET_BITS == 64 && !defined(__LP64__)

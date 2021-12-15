@@ -32,6 +32,8 @@ class ChoiceType(click.Choice):
         self.typemap = typemap
 
     def convert(self, value, param, ctx):
+        if value in self.typemap.values():
+            return value
         value = super().convert(value, param, ctx)
         return self.typemap[value]
 
@@ -76,7 +78,7 @@ class TrezorConnection:
         except Exception:
             click.echo("Failed to find a Trezor device.")
             if self.path is not None:
-                click.echo("Using path: {}".format(self.path))
+                click.echo(f"Using path: {self.path}")
             sys.exit(1)
 
         try:

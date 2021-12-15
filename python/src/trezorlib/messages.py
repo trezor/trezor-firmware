@@ -123,6 +123,12 @@ class MessageType(IntEnum):
     EthereumSignMessage = 64
     EthereumVerifyMessage = 65
     EthereumMessageSignature = 66
+    EthereumSignTypedData = 464
+    EthereumTypedDataStructRequest = 465
+    EthereumTypedDataStructAck = 466
+    EthereumTypedDataValueRequest = 467
+    EthereumTypedDataValueAck = 468
+    EthereumTypedDataSignature = 469
     NEMGetAddress = 67
     NEMAddress = 68
     NEMSignTx = 69
@@ -141,15 +147,17 @@ class MessageType(IntEnum):
     StellarAddress = 208
     StellarCreateAccountOp = 210
     StellarPaymentOp = 211
-    StellarPathPaymentOp = 212
-    StellarManageOfferOp = 213
-    StellarCreatePassiveOfferOp = 214
+    StellarPathPaymentStrictReceiveOp = 212
+    StellarManageSellOfferOp = 213
+    StellarCreatePassiveSellOfferOp = 214
     StellarSetOptionsOp = 215
     StellarChangeTrustOp = 216
     StellarAllowTrustOp = 217
     StellarAccountMergeOp = 218
     StellarManageDataOp = 220
     StellarBumpSequenceOp = 221
+    StellarManageBuyOfferOp = 222
+    StellarPathPaymentStrictSendOp = 223
     StellarSignedTx = 230
     CardanoSignTx = 303
     CardanoGetPublicKey = 305
@@ -176,6 +184,9 @@ class MessageType(IntEnum):
     CardanoTxAuxiliaryData = 327
     CardanoPoolOwner = 328
     CardanoPoolRelayParameters = 329
+    CardanoGetNativeScriptHash = 330
+    CardanoNativeScriptHash = 331
+    CardanoTxMint = 332
     RippleGetAddress = 400
     RippleAddress = 401
     RippleSignTx = 402
@@ -295,6 +306,7 @@ class InputScriptType(IntEnum):
     EXTERNAL = 2
     SPENDWITNESS = 3
     SPENDP2SHWITNESS = 4
+    SPENDTAPROOT = 5
 
 
 class OutputScriptType(IntEnum):
@@ -304,6 +316,7 @@ class OutputScriptType(IntEnum):
     PAYTOOPRETURN = 3
     PAYTOWITNESS = 4
     PAYTOP2SHWITNESS = 5
+    PAYTOTAPROOT = 6
 
 
 class DecredStakingSpendType(IntEnum):
@@ -328,6 +341,12 @@ class RequestType(IntEnum):
     TXORIGOUTPUT = 6
 
 
+class CardanoDerivationType(IntEnum):
+    LEDGER = 0
+    ICARUS = 1
+    ICARUS_TREZOR = 2
+
+
 class CardanoAddressType(IntEnum):
     BASE = 0
     BASE_SCRIPT_KEY = 1
@@ -340,6 +359,21 @@ class CardanoAddressType(IntEnum):
     BYRON = 8
     REWARD = 14
     REWARD_SCRIPT = 15
+
+
+class CardanoNativeScriptType(IntEnum):
+    PUB_KEY = 0
+    ALL = 1
+    ANY = 2
+    N_OF_K = 3
+    INVALID_BEFORE = 4
+    INVALID_HEREAFTER = 5
+
+
+class CardanoNativeScriptHashDisplayFormat(IntEnum):
+    HIDE = 0
+    BECH32 = 1
+    POLICY_ID = 2
 
 
 class CardanoCertificateType(IntEnum):
@@ -363,6 +397,7 @@ class CardanoTxAuxiliaryDataSupplementType(IntEnum):
 class CardanoTxSigningMode(IntEnum):
     ORDINARY_TRANSACTION = 0
     POOL_REGISTRATION_AS_OWNER = 1
+    MULTISIG_TRANSACTION = 2
 
 
 class CardanoTxWitnessType(IntEnum):
@@ -426,6 +461,17 @@ class DebugSwipeDirection(IntEnum):
     RIGHT = 3
 
 
+class EthereumDataType(IntEnum):
+    UINT = 1
+    INT = 2
+    BYTES = 3
+    STRING = 4
+    BOOL = 5
+    ADDRESS = 6
+    ARRAY = 7
+    STRUCT = 8
+
+
 class NEMMosaicLevy(IntEnum):
     MosaicLevy_Absolute = 1
     MosaicLevy_Percentile = 2
@@ -444,6 +490,26 @@ class NEMModificationType(IntEnum):
 class NEMImportanceTransferMode(IntEnum):
     ImportanceTransfer_Activate = 1
     ImportanceTransfer_Deactivate = 2
+
+
+class StellarAssetType(IntEnum):
+    NATIVE = 0
+    ALPHANUM4 = 1
+    ALPHANUM12 = 2
+
+
+class StellarMemoType(IntEnum):
+    NONE = 0
+    TEXT = 1
+    ID = 2
+    HASH = 3
+    RETURN = 4
+
+
+class StellarSignerType(IntEnum):
+    ACCOUNT = 0
+    PRE_AUTH = 1
+    HASH = 2
 
 
 class TezosContractType(IntEnum):
@@ -1001,6 +1067,7 @@ class SignMessage(protobuf.MessageType):
         2: protobuf.Field("message", "bytes", repeated=False, required=True),
         3: protobuf.Field("coin_name", "string", repeated=False, required=False),
         4: protobuf.Field("script_type", "InputScriptType", repeated=False, required=False),
+        5: protobuf.Field("no_script_type", "bool", repeated=False, required=False),
     }
 
     def __init__(
@@ -1010,11 +1077,13 @@ class SignMessage(protobuf.MessageType):
         address_n: Optional[List["int"]] = None,
         coin_name: Optional["str"] = 'Bitcoin',
         script_type: Optional["InputScriptType"] = InputScriptType.SPENDADDRESS,
+        no_script_type: Optional["bool"] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.message = message
         self.coin_name = coin_name
         self.script_type = script_type
+        self.no_script_type = no_script_type
 
 
 class MessageSignature(protobuf.MessageType):
@@ -1156,6 +1225,7 @@ class TxInput(protobuf.MessageType):
         16: protobuf.Field("orig_hash", "bytes", repeated=False, required=False),
         17: protobuf.Field("orig_index", "uint32", repeated=False, required=False),
         18: protobuf.Field("decred_staking_spend", "DecredStakingSpendType", repeated=False, required=False),
+        19: protobuf.Field("script_pubkey", "bytes", repeated=False, required=False),
     }
 
     def __init__(
@@ -1176,6 +1246,7 @@ class TxInput(protobuf.MessageType):
         orig_hash: Optional["bytes"] = None,
         orig_index: Optional["int"] = None,
         decred_staking_spend: Optional["DecredStakingSpendType"] = None,
+        script_pubkey: Optional["bytes"] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.prev_hash = prev_hash
@@ -1192,6 +1263,7 @@ class TxInput(protobuf.MessageType):
         self.orig_hash = orig_hash
         self.orig_index = orig_index
         self.decred_staking_spend = decred_staking_spend
+        self.script_pubkey = script_pubkey
 
 
 class TxOutput(protobuf.MessageType):
@@ -1609,6 +1681,7 @@ class TxInputType(protobuf.MessageType):
         16: protobuf.Field("orig_hash", "bytes", repeated=False, required=False),
         17: protobuf.Field("orig_index", "uint32", repeated=False, required=False),
         18: protobuf.Field("decred_staking_spend", "DecredStakingSpendType", repeated=False, required=False),
+        19: protobuf.Field("script_pubkey", "bytes", repeated=False, required=False),
     }
 
     def __init__(
@@ -1629,6 +1702,7 @@ class TxInputType(protobuf.MessageType):
         orig_hash: Optional["bytes"] = None,
         orig_index: Optional["int"] = None,
         decred_staking_spend: Optional["DecredStakingSpendType"] = None,
+        script_pubkey: Optional["bytes"] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.prev_hash = prev_hash
@@ -1645,6 +1719,7 @@ class TxInputType(protobuf.MessageType):
         self.orig_hash = orig_hash
         self.orig_index = orig_index
         self.decred_staking_spend = decred_staking_spend
+        self.script_pubkey = script_pubkey
 
 
 class TxOutputBinType(protobuf.MessageType):
@@ -1854,6 +1929,72 @@ class CardanoBlockchainPointerType(protobuf.MessageType):
         self.certificate_index = certificate_index
 
 
+class CardanoNativeScript(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("type", "CardanoNativeScriptType", repeated=False, required=True),
+        2: protobuf.Field("scripts", "CardanoNativeScript", repeated=True, required=False),
+        3: protobuf.Field("key_hash", "bytes", repeated=False, required=False),
+        4: protobuf.Field("key_path", "uint32", repeated=True, required=False),
+        5: protobuf.Field("required_signatures_count", "uint32", repeated=False, required=False),
+        6: protobuf.Field("invalid_before", "uint64", repeated=False, required=False),
+        7: protobuf.Field("invalid_hereafter", "uint64", repeated=False, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        type: "CardanoNativeScriptType",
+        scripts: Optional[List["CardanoNativeScript"]] = None,
+        key_path: Optional[List["int"]] = None,
+        key_hash: Optional["bytes"] = None,
+        required_signatures_count: Optional["int"] = None,
+        invalid_before: Optional["int"] = None,
+        invalid_hereafter: Optional["int"] = None,
+    ) -> None:
+        self.scripts = scripts if scripts is not None else []
+        self.key_path = key_path if key_path is not None else []
+        self.type = type
+        self.key_hash = key_hash
+        self.required_signatures_count = required_signatures_count
+        self.invalid_before = invalid_before
+        self.invalid_hereafter = invalid_hereafter
+
+
+class CardanoGetNativeScriptHash(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 330
+    FIELDS = {
+        1: protobuf.Field("script", "CardanoNativeScript", repeated=False, required=True),
+        2: protobuf.Field("display_format", "CardanoNativeScriptHashDisplayFormat", repeated=False, required=True),
+        3: protobuf.Field("derivation_type", "CardanoDerivationType", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        script: "CardanoNativeScript",
+        display_format: "CardanoNativeScriptHashDisplayFormat",
+        derivation_type: "CardanoDerivationType",
+    ) -> None:
+        self.script = script
+        self.display_format = display_format
+        self.derivation_type = derivation_type
+
+
+class CardanoNativeScriptHash(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 331
+    FIELDS = {
+        1: protobuf.Field("script_hash", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        script_hash: "bytes",
+    ) -> None:
+        self.script_hash = script_hash
+
+
 class CardanoAddressParametersType(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
@@ -1862,6 +2003,8 @@ class CardanoAddressParametersType(protobuf.MessageType):
         3: protobuf.Field("address_n_staking", "uint32", repeated=True, required=False),
         4: protobuf.Field("staking_key_hash", "bytes", repeated=False, required=False),
         5: protobuf.Field("certificate_pointer", "CardanoBlockchainPointerType", repeated=False, required=False),
+        6: protobuf.Field("script_payment_hash", "bytes", repeated=False, required=False),
+        7: protobuf.Field("script_staking_hash", "bytes", repeated=False, required=False),
     }
 
     def __init__(
@@ -1872,12 +2015,16 @@ class CardanoAddressParametersType(protobuf.MessageType):
         address_n_staking: Optional[List["int"]] = None,
         staking_key_hash: Optional["bytes"] = None,
         certificate_pointer: Optional["CardanoBlockchainPointerType"] = None,
+        script_payment_hash: Optional["bytes"] = None,
+        script_staking_hash: Optional["bytes"] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.address_n_staking = address_n_staking if address_n_staking is not None else []
         self.address_type = address_type
         self.staking_key_hash = staking_key_hash
         self.certificate_pointer = certificate_pointer
+        self.script_payment_hash = script_payment_hash
+        self.script_staking_hash = script_staking_hash
 
 
 class CardanoGetAddress(protobuf.MessageType):
@@ -1887,6 +2034,7 @@ class CardanoGetAddress(protobuf.MessageType):
         3: protobuf.Field("protocol_magic", "uint32", repeated=False, required=True),
         4: protobuf.Field("network_id", "uint32", repeated=False, required=True),
         5: protobuf.Field("address_parameters", "CardanoAddressParametersType", repeated=False, required=True),
+        6: protobuf.Field("derivation_type", "CardanoDerivationType", repeated=False, required=True),
     }
 
     def __init__(
@@ -1895,11 +2043,13 @@ class CardanoGetAddress(protobuf.MessageType):
         protocol_magic: "int",
         network_id: "int",
         address_parameters: "CardanoAddressParametersType",
+        derivation_type: "CardanoDerivationType",
         show_display: Optional["bool"] = False,
     ) -> None:
         self.protocol_magic = protocol_magic
         self.network_id = network_id
         self.address_parameters = address_parameters
+        self.derivation_type = derivation_type
         self.show_display = show_display
 
 
@@ -1922,15 +2072,18 @@ class CardanoGetPublicKey(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
         2: protobuf.Field("show_display", "bool", repeated=False, required=False),
+        3: protobuf.Field("derivation_type", "CardanoDerivationType", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
+        derivation_type: "CardanoDerivationType",
         address_n: Optional[List["int"]] = None,
         show_display: Optional["bool"] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
+        self.derivation_type = derivation_type
         self.show_display = show_display
 
 
@@ -1966,6 +2119,8 @@ class CardanoSignTxInit(protobuf.MessageType):
         10: protobuf.Field("has_auxiliary_data", "bool", repeated=False, required=True),
         11: protobuf.Field("validity_interval_start", "uint64", repeated=False, required=False),
         12: protobuf.Field("witness_requests_count", "uint32", repeated=False, required=True),
+        13: protobuf.Field("minting_asset_groups_count", "uint32", repeated=False, required=True),
+        14: protobuf.Field("derivation_type", "CardanoDerivationType", repeated=False, required=True),
     }
 
     def __init__(
@@ -1981,6 +2136,8 @@ class CardanoSignTxInit(protobuf.MessageType):
         withdrawals_count: "int",
         has_auxiliary_data: "bool",
         witness_requests_count: "int",
+        minting_asset_groups_count: "int",
+        derivation_type: "CardanoDerivationType",
         ttl: Optional["int"] = None,
         validity_interval_start: Optional["int"] = None,
     ) -> None:
@@ -1994,6 +2151,8 @@ class CardanoSignTxInit(protobuf.MessageType):
         self.withdrawals_count = withdrawals_count
         self.has_auxiliary_data = has_auxiliary_data
         self.witness_requests_count = witness_requests_count
+        self.minting_asset_groups_count = minting_asset_groups_count
+        self.derivation_type = derivation_type
         self.ttl = ttl
         self.validity_interval_start = validity_interval_start
 
@@ -2059,17 +2218,20 @@ class CardanoToken(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 324
     FIELDS = {
         1: protobuf.Field("asset_name_bytes", "bytes", repeated=False, required=True),
-        2: protobuf.Field("amount", "uint64", repeated=False, required=True),
+        2: protobuf.Field("amount", "uint64", repeated=False, required=False),
+        3: protobuf.Field("mint_amount", "sint64", repeated=False, required=False),
     }
 
     def __init__(
         self,
         *,
         asset_name_bytes: "bytes",
-        amount: "int",
+        amount: Optional["int"] = None,
+        mint_amount: Optional["int"] = None,
     ) -> None:
         self.asset_name_bytes = asset_name_bytes
         self.amount = amount
+        self.mint_amount = mint_amount
 
 
 class CardanoPoolOwner(protobuf.MessageType):
@@ -2186,6 +2348,7 @@ class CardanoTxCertificate(protobuf.MessageType):
         2: protobuf.Field("path", "uint32", repeated=True, required=False),
         3: protobuf.Field("pool", "bytes", repeated=False, required=False),
         4: protobuf.Field("pool_parameters", "CardanoPoolParametersType", repeated=False, required=False),
+        5: protobuf.Field("script_hash", "bytes", repeated=False, required=False),
     }
 
     def __init__(
@@ -2195,11 +2358,13 @@ class CardanoTxCertificate(protobuf.MessageType):
         path: Optional[List["int"]] = None,
         pool: Optional["bytes"] = None,
         pool_parameters: Optional["CardanoPoolParametersType"] = None,
+        script_hash: Optional["bytes"] = None,
     ) -> None:
         self.path = path if path is not None else []
         self.type = type
         self.pool = pool
         self.pool_parameters = pool_parameters
+        self.script_hash = script_hash
 
 
 class CardanoTxWithdrawal(protobuf.MessageType):
@@ -2207,6 +2372,7 @@ class CardanoTxWithdrawal(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("path", "uint32", repeated=True, required=False),
         2: protobuf.Field("amount", "uint64", repeated=False, required=True),
+        3: protobuf.Field("script_hash", "bytes", repeated=False, required=False),
     }
 
     def __init__(
@@ -2214,9 +2380,11 @@ class CardanoTxWithdrawal(protobuf.MessageType):
         *,
         amount: "int",
         path: Optional[List["int"]] = None,
+        script_hash: Optional["bytes"] = None,
     ) -> None:
         self.path = path if path is not None else []
         self.amount = amount
+        self.script_hash = script_hash
 
 
 class CardanoCatalystRegistrationParametersType(protobuf.MessageType):
@@ -2257,6 +2425,20 @@ class CardanoTxAuxiliaryData(protobuf.MessageType):
     ) -> None:
         self.catalyst_registration_parameters = catalyst_registration_parameters
         self.hash = hash
+
+
+class CardanoTxMint(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 332
+    FIELDS = {
+        1: protobuf.Field("asset_groups_count", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        asset_groups_count: "int",
+    ) -> None:
+        self.asset_groups_count = asset_groups_count
 
 
 class CardanoTxItemAck(protobuf.MessageType):
@@ -2825,14 +3007,20 @@ class Initialize(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 0
     FIELDS = {
         1: protobuf.Field("session_id", "bytes", repeated=False, required=False),
+        2: protobuf.Field("_skip_passphrase", "bool", repeated=False, required=False),
+        3: protobuf.Field("derive_cardano", "bool", repeated=False, required=False),
     }
 
     def __init__(
         self,
         *,
         session_id: Optional["bytes"] = None,
+        _skip_passphrase: Optional["bool"] = None,
+        derive_cardano: Optional["bool"] = None,
     ) -> None:
         self.session_id = session_id
+        self._skip_passphrase = _skip_passphrase
+        self.derive_cardano = derive_cardano
 
 
 class GetFeatures(protobuf.MessageType):
@@ -2857,6 +3045,7 @@ class Features(protobuf.MessageType):
         14: protobuf.Field("bootloader_hash", "bytes", repeated=False, required=False),
         15: protobuf.Field("imported", "bool", repeated=False, required=False),
         16: protobuf.Field("unlocked", "bool", repeated=False, required=False),
+        17: protobuf.Field("_passphrase_cached", "bool", repeated=False, required=False),
         18: protobuf.Field("firmware_present", "bool", repeated=False, required=False),
         19: protobuf.Field("needs_backup", "bool", repeated=False, required=False),
         20: protobuf.Field("flags", "uint32", repeated=False, required=False),
@@ -2901,6 +3090,7 @@ class Features(protobuf.MessageType):
         bootloader_hash: Optional["bytes"] = None,
         imported: Optional["bool"] = None,
         unlocked: Optional["bool"] = None,
+        _passphrase_cached: Optional["bool"] = None,
         firmware_present: Optional["bool"] = None,
         needs_backup: Optional["bool"] = None,
         flags: Optional["int"] = None,
@@ -2940,6 +3130,7 @@ class Features(protobuf.MessageType):
         self.bootloader_hash = bootloader_hash
         self.imported = imported
         self.unlocked = unlocked
+        self._passphrase_cached = _passphrase_cached
         self.firmware_present = firmware_present
         self.needs_backup = needs_backup
         self.flags = flags
@@ -2979,6 +3170,7 @@ class ApplySettings(protobuf.MessageType):
         2: protobuf.Field("label", "string", repeated=False, required=False),
         3: protobuf.Field("use_passphrase", "bool", repeated=False, required=False),
         4: protobuf.Field("homescreen", "bytes", repeated=False, required=False),
+        5: protobuf.Field("_passphrase_source", "uint32", repeated=False, required=False),
         6: protobuf.Field("auto_lock_delay_ms", "uint32", repeated=False, required=False),
         7: protobuf.Field("display_rotation", "uint32", repeated=False, required=False),
         8: protobuf.Field("passphrase_always_on_device", "bool", repeated=False, required=False),
@@ -2993,6 +3185,7 @@ class ApplySettings(protobuf.MessageType):
         label: Optional["str"] = None,
         use_passphrase: Optional["bool"] = None,
         homescreen: Optional["bytes"] = None,
+        _passphrase_source: Optional["int"] = None,
         auto_lock_delay_ms: Optional["int"] = None,
         display_rotation: Optional["int"] = None,
         passphrase_always_on_device: Optional["bool"] = None,
@@ -3003,6 +3196,7 @@ class ApplySettings(protobuf.MessageType):
         self.label = label
         self.use_passphrase = use_passphrase
         self.homescreen = homescreen
+        self._passphrase_source = _passphrase_source
         self.auto_lock_delay_ms = auto_lock_delay_ms
         self.display_rotation = display_rotation
         self.passphrase_always_on_device = passphrase_always_on_device
@@ -4185,6 +4379,139 @@ class EosActionUnknown(protobuf.MessageType):
         self.data_chunk = data_chunk
 
 
+class EthereumSignTypedData(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 464
+    FIELDS = {
+        1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
+        2: protobuf.Field("primary_type", "string", repeated=False, required=True),
+        3: protobuf.Field("metamask_v4_compat", "bool", repeated=False, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        primary_type: "str",
+        address_n: Optional[List["int"]] = None,
+        metamask_v4_compat: Optional["bool"] = True,
+    ) -> None:
+        self.address_n = address_n if address_n is not None else []
+        self.primary_type = primary_type
+        self.metamask_v4_compat = metamask_v4_compat
+
+
+class EthereumTypedDataStructRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 465
+    FIELDS = {
+        1: protobuf.Field("name", "string", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        name: "str",
+    ) -> None:
+        self.name = name
+
+
+class EthereumTypedDataStructAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 466
+    FIELDS = {
+        1: protobuf.Field("members", "EthereumStructMember", repeated=True, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        members: Optional[List["EthereumStructMember"]] = None,
+    ) -> None:
+        self.members = members if members is not None else []
+
+
+class EthereumTypedDataValueRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 467
+    FIELDS = {
+        1: protobuf.Field("member_path", "uint32", repeated=True, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        member_path: Optional[List["int"]] = None,
+    ) -> None:
+        self.member_path = member_path if member_path is not None else []
+
+
+class EthereumTypedDataValueAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 468
+    FIELDS = {
+        1: protobuf.Field("value", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        value: "bytes",
+    ) -> None:
+        self.value = value
+
+
+class EthereumTypedDataSignature(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 469
+    FIELDS = {
+        1: protobuf.Field("signature", "bytes", repeated=False, required=True),
+        2: protobuf.Field("address", "string", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        signature: "bytes",
+        address: "str",
+    ) -> None:
+        self.signature = signature
+        self.address = address
+
+
+class EthereumStructMember(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("type", "EthereumFieldType", repeated=False, required=True),
+        2: protobuf.Field("name", "string", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        type: "EthereumFieldType",
+        name: "str",
+    ) -> None:
+        self.type = type
+        self.name = name
+
+
+class EthereumFieldType(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("data_type", "EthereumDataType", repeated=False, required=True),
+        2: protobuf.Field("size", "uint32", repeated=False, required=False),
+        3: protobuf.Field("entry_type", "EthereumFieldType", repeated=False, required=False),
+        4: protobuf.Field("struct_name", "string", repeated=False, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        data_type: "EthereumDataType",
+        size: Optional["int"] = None,
+        entry_type: Optional["EthereumFieldType"] = None,
+        struct_name: Optional["str"] = None,
+    ) -> None:
+        self.data_type = data_type
+        self.size = size
+        self.entry_type = entry_type
+        self.struct_name = struct_name
+
+
 class EthereumGetPublicKey(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 450
     FIELDS = {
@@ -4258,39 +4585,39 @@ class EthereumSignTx(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
         2: protobuf.Field("nonce", "bytes", repeated=False, required=False),
-        3: protobuf.Field("gas_price", "bytes", repeated=False, required=False),
-        4: protobuf.Field("gas_limit", "bytes", repeated=False, required=False),
+        3: protobuf.Field("gas_price", "bytes", repeated=False, required=True),
+        4: protobuf.Field("gas_limit", "bytes", repeated=False, required=True),
         11: protobuf.Field("to", "string", repeated=False, required=False),
         6: protobuf.Field("value", "bytes", repeated=False, required=False),
         7: protobuf.Field("data_initial_chunk", "bytes", repeated=False, required=False),
         8: protobuf.Field("data_length", "uint32", repeated=False, required=False),
-        9: protobuf.Field("chain_id", "uint32", repeated=False, required=False),
+        9: protobuf.Field("chain_id", "uint64", repeated=False, required=True),
         10: protobuf.Field("tx_type", "uint32", repeated=False, required=False),
     }
 
     def __init__(
         self,
         *,
+        gas_price: "bytes",
+        gas_limit: "bytes",
+        chain_id: "int",
         address_n: Optional[List["int"]] = None,
-        nonce: Optional["bytes"] = None,
-        gas_price: Optional["bytes"] = None,
-        gas_limit: Optional["bytes"] = None,
-        to: Optional["str"] = None,
-        value: Optional["bytes"] = None,
-        data_initial_chunk: Optional["bytes"] = None,
-        data_length: Optional["int"] = None,
-        chain_id: Optional["int"] = None,
+        nonce: Optional["bytes"] = b'',
+        to: Optional["str"] = '',
+        value: Optional["bytes"] = b'',
+        data_initial_chunk: Optional["bytes"] = b'',
+        data_length: Optional["int"] = 0,
         tx_type: Optional["int"] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
-        self.nonce = nonce
         self.gas_price = gas_price
         self.gas_limit = gas_limit
+        self.chain_id = chain_id
+        self.nonce = nonce
         self.to = to
         self.value = value
         self.data_initial_chunk = data_initial_chunk
         self.data_length = data_length
-        self.chain_id = chain_id
         self.tx_type = tx_type
 
 
@@ -4306,7 +4633,7 @@ class EthereumSignTxEIP1559(protobuf.MessageType):
         7: protobuf.Field("value", "bytes", repeated=False, required=True),
         8: protobuf.Field("data_initial_chunk", "bytes", repeated=False, required=False),
         9: protobuf.Field("data_length", "uint32", repeated=False, required=True),
-        10: protobuf.Field("chain_id", "uint32", repeated=False, required=True),
+        10: protobuf.Field("chain_id", "uint64", repeated=False, required=True),
         11: protobuf.Field("access_list", "EthereumAccessList", repeated=True, required=False),
     }
 
@@ -4364,13 +4691,13 @@ class EthereumTxRequest(protobuf.MessageType):
 class EthereumTxAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 60
     FIELDS = {
-        1: protobuf.Field("data_chunk", "bytes", repeated=False, required=False),
+        1: protobuf.Field("data_chunk", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        data_chunk: Optional["bytes"] = None,
+        data_chunk: "bytes",
     ) -> None:
         self.data_chunk = data_chunk
 
@@ -4379,14 +4706,14 @@ class EthereumSignMessage(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 64
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
-        2: protobuf.Field("message", "bytes", repeated=False, required=False),
+        2: protobuf.Field("message", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
+        message: "bytes",
         address_n: Optional[List["int"]] = None,
-        message: Optional["bytes"] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.message = message
@@ -4412,17 +4739,17 @@ class EthereumMessageSignature(protobuf.MessageType):
 class EthereumVerifyMessage(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 65
     FIELDS = {
-        2: protobuf.Field("signature", "bytes", repeated=False, required=False),
-        3: protobuf.Field("message", "bytes", repeated=False, required=False),
-        4: protobuf.Field("address", "string", repeated=False, required=False),
+        2: protobuf.Field("signature", "bytes", repeated=False, required=True),
+        3: protobuf.Field("message", "bytes", repeated=False, required=True),
+        4: protobuf.Field("address", "string", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        signature: Optional["bytes"] = None,
-        message: Optional["bytes"] = None,
-        address: Optional["str"] = None,
+        signature: "bytes",
+        message: "bytes",
+        address: "str",
     ) -> None:
         self.signature = signature
         self.message = message
@@ -5887,10 +6214,10 @@ class RipplePayment(protobuf.MessageType):
         self.destination_tag = destination_tag
 
 
-class StellarAssetType(protobuf.MessageType):
+class StellarAsset(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("type", "uint32", repeated=False, required=True),
+        1: protobuf.Field("type", "StellarAssetType", repeated=False, required=True),
         2: protobuf.Field("code", "string", repeated=False, required=False),
         3: protobuf.Field("issuer", "string", repeated=False, required=False),
     }
@@ -5898,7 +6225,7 @@ class StellarAssetType(protobuf.MessageType):
     def __init__(
         self,
         *,
-        type: "int",
+        type: "StellarAssetType",
         code: Optional["str"] = None,
         issuer: Optional["str"] = None,
     ) -> None:
@@ -5942,34 +6269,34 @@ class StellarSignTx(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 202
     FIELDS = {
         2: protobuf.Field("address_n", "uint32", repeated=True, required=False),
-        3: protobuf.Field("network_passphrase", "string", repeated=False, required=False),
-        4: protobuf.Field("source_account", "string", repeated=False, required=False),
-        5: protobuf.Field("fee", "uint32", repeated=False, required=False),
-        6: protobuf.Field("sequence_number", "uint64", repeated=False, required=False),
-        8: protobuf.Field("timebounds_start", "uint32", repeated=False, required=False),
-        9: protobuf.Field("timebounds_end", "uint32", repeated=False, required=False),
-        10: protobuf.Field("memo_type", "uint32", repeated=False, required=False),
+        3: protobuf.Field("network_passphrase", "string", repeated=False, required=True),
+        4: protobuf.Field("source_account", "string", repeated=False, required=True),
+        5: protobuf.Field("fee", "uint32", repeated=False, required=True),
+        6: protobuf.Field("sequence_number", "uint64", repeated=False, required=True),
+        8: protobuf.Field("timebounds_start", "uint32", repeated=False, required=True),
+        9: protobuf.Field("timebounds_end", "uint32", repeated=False, required=True),
+        10: protobuf.Field("memo_type", "StellarMemoType", repeated=False, required=True),
         11: protobuf.Field("memo_text", "string", repeated=False, required=False),
         12: protobuf.Field("memo_id", "uint64", repeated=False, required=False),
         13: protobuf.Field("memo_hash", "bytes", repeated=False, required=False),
-        14: protobuf.Field("num_operations", "uint32", repeated=False, required=False),
+        14: protobuf.Field("num_operations", "uint32", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
+        network_passphrase: "str",
+        source_account: "str",
+        fee: "int",
+        sequence_number: "int",
+        timebounds_start: "int",
+        timebounds_end: "int",
+        memo_type: "StellarMemoType",
+        num_operations: "int",
         address_n: Optional[List["int"]] = None,
-        network_passphrase: Optional["str"] = None,
-        source_account: Optional["str"] = None,
-        fee: Optional["int"] = None,
-        sequence_number: Optional["int"] = None,
-        timebounds_start: Optional["int"] = None,
-        timebounds_end: Optional["int"] = None,
-        memo_type: Optional["int"] = None,
         memo_text: Optional["str"] = None,
         memo_id: Optional["int"] = None,
         memo_hash: Optional["bytes"] = None,
-        num_operations: Optional["int"] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.network_passphrase = network_passphrase
@@ -5979,10 +6306,10 @@ class StellarSignTx(protobuf.MessageType):
         self.timebounds_start = timebounds_start
         self.timebounds_end = timebounds_end
         self.memo_type = memo_type
+        self.num_operations = num_operations
         self.memo_text = memo_text
         self.memo_id = memo_id
         self.memo_hash = memo_hash
-        self.num_operations = num_operations
 
 
 class StellarTxOpRequest(protobuf.MessageType):
@@ -5993,136 +6320,200 @@ class StellarPaymentOp(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 211
     FIELDS = {
         1: protobuf.Field("source_account", "string", repeated=False, required=False),
-        2: protobuf.Field("destination_account", "string", repeated=False, required=False),
-        3: protobuf.Field("asset", "StellarAssetType", repeated=False, required=False),
-        4: protobuf.Field("amount", "sint64", repeated=False, required=False),
+        2: protobuf.Field("destination_account", "string", repeated=False, required=True),
+        3: protobuf.Field("asset", "StellarAsset", repeated=False, required=True),
+        4: protobuf.Field("amount", "sint64", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
+        destination_account: "str",
+        asset: "StellarAsset",
+        amount: "int",
         source_account: Optional["str"] = None,
-        destination_account: Optional["str"] = None,
-        asset: Optional["StellarAssetType"] = None,
-        amount: Optional["int"] = None,
     ) -> None:
-        self.source_account = source_account
         self.destination_account = destination_account
         self.asset = asset
         self.amount = amount
+        self.source_account = source_account
 
 
 class StellarCreateAccountOp(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 210
     FIELDS = {
         1: protobuf.Field("source_account", "string", repeated=False, required=False),
-        2: protobuf.Field("new_account", "string", repeated=False, required=False),
-        3: protobuf.Field("starting_balance", "sint64", repeated=False, required=False),
+        2: protobuf.Field("new_account", "string", repeated=False, required=True),
+        3: protobuf.Field("starting_balance", "sint64", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
+        new_account: "str",
+        starting_balance: "int",
         source_account: Optional["str"] = None,
-        new_account: Optional["str"] = None,
-        starting_balance: Optional["int"] = None,
     ) -> None:
-        self.source_account = source_account
         self.new_account = new_account
         self.starting_balance = starting_balance
+        self.source_account = source_account
 
 
-class StellarPathPaymentOp(protobuf.MessageType):
+class StellarPathPaymentStrictReceiveOp(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 212
     FIELDS = {
         1: protobuf.Field("source_account", "string", repeated=False, required=False),
-        2: protobuf.Field("send_asset", "StellarAssetType", repeated=False, required=False),
-        3: protobuf.Field("send_max", "sint64", repeated=False, required=False),
-        4: protobuf.Field("destination_account", "string", repeated=False, required=False),
-        5: protobuf.Field("destination_asset", "StellarAssetType", repeated=False, required=False),
-        6: protobuf.Field("destination_amount", "sint64", repeated=False, required=False),
-        7: protobuf.Field("paths", "StellarAssetType", repeated=True, required=False),
+        2: protobuf.Field("send_asset", "StellarAsset", repeated=False, required=True),
+        3: protobuf.Field("send_max", "sint64", repeated=False, required=True),
+        4: protobuf.Field("destination_account", "string", repeated=False, required=True),
+        5: protobuf.Field("destination_asset", "StellarAsset", repeated=False, required=True),
+        6: protobuf.Field("destination_amount", "sint64", repeated=False, required=True),
+        7: protobuf.Field("paths", "StellarAsset", repeated=True, required=False),
     }
 
     def __init__(
         self,
         *,
-        paths: Optional[List["StellarAssetType"]] = None,
+        send_asset: "StellarAsset",
+        send_max: "int",
+        destination_account: "str",
+        destination_asset: "StellarAsset",
+        destination_amount: "int",
+        paths: Optional[List["StellarAsset"]] = None,
         source_account: Optional["str"] = None,
-        send_asset: Optional["StellarAssetType"] = None,
-        send_max: Optional["int"] = None,
-        destination_account: Optional["str"] = None,
-        destination_asset: Optional["StellarAssetType"] = None,
-        destination_amount: Optional["int"] = None,
     ) -> None:
         self.paths = paths if paths is not None else []
-        self.source_account = source_account
         self.send_asset = send_asset
         self.send_max = send_max
         self.destination_account = destination_account
         self.destination_asset = destination_asset
         self.destination_amount = destination_amount
+        self.source_account = source_account
 
 
-class StellarManageOfferOp(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 213
+class StellarPathPaymentStrictSendOp(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 223
     FIELDS = {
         1: protobuf.Field("source_account", "string", repeated=False, required=False),
-        2: protobuf.Field("selling_asset", "StellarAssetType", repeated=False, required=False),
-        3: protobuf.Field("buying_asset", "StellarAssetType", repeated=False, required=False),
-        4: protobuf.Field("amount", "sint64", repeated=False, required=False),
-        5: protobuf.Field("price_n", "uint32", repeated=False, required=False),
-        6: protobuf.Field("price_d", "uint32", repeated=False, required=False),
-        7: protobuf.Field("offer_id", "uint64", repeated=False, required=False),
+        2: protobuf.Field("send_asset", "StellarAsset", repeated=False, required=True),
+        3: protobuf.Field("send_amount", "sint64", repeated=False, required=True),
+        4: protobuf.Field("destination_account", "string", repeated=False, required=True),
+        5: protobuf.Field("destination_asset", "StellarAsset", repeated=False, required=True),
+        6: protobuf.Field("destination_min", "sint64", repeated=False, required=True),
+        7: protobuf.Field("paths", "StellarAsset", repeated=True, required=False),
     }
 
     def __init__(
         self,
         *,
+        send_asset: "StellarAsset",
+        send_amount: "int",
+        destination_account: "str",
+        destination_asset: "StellarAsset",
+        destination_min: "int",
+        paths: Optional[List["StellarAsset"]] = None,
         source_account: Optional["str"] = None,
-        selling_asset: Optional["StellarAssetType"] = None,
-        buying_asset: Optional["StellarAssetType"] = None,
-        amount: Optional["int"] = None,
-        price_n: Optional["int"] = None,
-        price_d: Optional["int"] = None,
-        offer_id: Optional["int"] = None,
     ) -> None:
+        self.paths = paths if paths is not None else []
+        self.send_asset = send_asset
+        self.send_amount = send_amount
+        self.destination_account = destination_account
+        self.destination_asset = destination_asset
+        self.destination_min = destination_min
         self.source_account = source_account
+
+
+class StellarManageSellOfferOp(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 213
+    FIELDS = {
+        1: protobuf.Field("source_account", "string", repeated=False, required=False),
+        2: protobuf.Field("selling_asset", "StellarAsset", repeated=False, required=True),
+        3: protobuf.Field("buying_asset", "StellarAsset", repeated=False, required=True),
+        4: protobuf.Field("amount", "sint64", repeated=False, required=True),
+        5: protobuf.Field("price_n", "uint32", repeated=False, required=True),
+        6: protobuf.Field("price_d", "uint32", repeated=False, required=True),
+        7: protobuf.Field("offer_id", "uint64", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        selling_asset: "StellarAsset",
+        buying_asset: "StellarAsset",
+        amount: "int",
+        price_n: "int",
+        price_d: "int",
+        offer_id: "int",
+        source_account: Optional["str"] = None,
+    ) -> None:
         self.selling_asset = selling_asset
         self.buying_asset = buying_asset
         self.amount = amount
         self.price_n = price_n
         self.price_d = price_d
         self.offer_id = offer_id
+        self.source_account = source_account
 
 
-class StellarCreatePassiveOfferOp(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 214
+class StellarManageBuyOfferOp(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 222
     FIELDS = {
         1: protobuf.Field("source_account", "string", repeated=False, required=False),
-        2: protobuf.Field("selling_asset", "StellarAssetType", repeated=False, required=False),
-        3: protobuf.Field("buying_asset", "StellarAssetType", repeated=False, required=False),
-        4: protobuf.Field("amount", "sint64", repeated=False, required=False),
-        5: protobuf.Field("price_n", "uint32", repeated=False, required=False),
-        6: protobuf.Field("price_d", "uint32", repeated=False, required=False),
+        2: protobuf.Field("selling_asset", "StellarAsset", repeated=False, required=True),
+        3: protobuf.Field("buying_asset", "StellarAsset", repeated=False, required=True),
+        4: protobuf.Field("amount", "sint64", repeated=False, required=True),
+        5: protobuf.Field("price_n", "uint32", repeated=False, required=True),
+        6: protobuf.Field("price_d", "uint32", repeated=False, required=True),
+        7: protobuf.Field("offer_id", "uint64", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
+        selling_asset: "StellarAsset",
+        buying_asset: "StellarAsset",
+        amount: "int",
+        price_n: "int",
+        price_d: "int",
+        offer_id: "int",
         source_account: Optional["str"] = None,
-        selling_asset: Optional["StellarAssetType"] = None,
-        buying_asset: Optional["StellarAssetType"] = None,
-        amount: Optional["int"] = None,
-        price_n: Optional["int"] = None,
-        price_d: Optional["int"] = None,
     ) -> None:
-        self.source_account = source_account
         self.selling_asset = selling_asset
         self.buying_asset = buying_asset
         self.amount = amount
         self.price_n = price_n
         self.price_d = price_d
+        self.offer_id = offer_id
+        self.source_account = source_account
+
+
+class StellarCreatePassiveSellOfferOp(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 214
+    FIELDS = {
+        1: protobuf.Field("source_account", "string", repeated=False, required=False),
+        2: protobuf.Field("selling_asset", "StellarAsset", repeated=False, required=True),
+        3: protobuf.Field("buying_asset", "StellarAsset", repeated=False, required=True),
+        4: protobuf.Field("amount", "sint64", repeated=False, required=True),
+        5: protobuf.Field("price_n", "uint32", repeated=False, required=True),
+        6: protobuf.Field("price_d", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        selling_asset: "StellarAsset",
+        buying_asset: "StellarAsset",
+        amount: "int",
+        price_n: "int",
+        price_d: "int",
+        source_account: Optional["str"] = None,
+    ) -> None:
+        self.selling_asset = selling_asset
+        self.buying_asset = buying_asset
+        self.amount = amount
+        self.price_n = price_n
+        self.price_d = price_d
+        self.source_account = source_account
 
 
 class StellarSetOptionsOp(protobuf.MessageType):
@@ -6137,7 +6528,7 @@ class StellarSetOptionsOp(protobuf.MessageType):
         7: protobuf.Field("medium_threshold", "uint32", repeated=False, required=False),
         8: protobuf.Field("high_threshold", "uint32", repeated=False, required=False),
         9: protobuf.Field("home_domain", "string", repeated=False, required=False),
-        10: protobuf.Field("signer_type", "uint32", repeated=False, required=False),
+        10: protobuf.Field("signer_type", "StellarSignerType", repeated=False, required=False),
         11: protobuf.Field("signer_key", "bytes", repeated=False, required=False),
         12: protobuf.Field("signer_weight", "uint32", repeated=False, required=False),
     }
@@ -6154,7 +6545,7 @@ class StellarSetOptionsOp(protobuf.MessageType):
         medium_threshold: Optional["int"] = None,
         high_threshold: Optional["int"] = None,
         home_domain: Optional["str"] = None,
-        signer_type: Optional["int"] = None,
+        signer_type: Optional["StellarSignerType"] = None,
         signer_key: Optional["bytes"] = None,
         signer_weight: Optional["int"] = None,
     ) -> None:
@@ -6176,82 +6567,82 @@ class StellarChangeTrustOp(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 216
     FIELDS = {
         1: protobuf.Field("source_account", "string", repeated=False, required=False),
-        2: protobuf.Field("asset", "StellarAssetType", repeated=False, required=False),
-        3: protobuf.Field("limit", "uint64", repeated=False, required=False),
+        2: protobuf.Field("asset", "StellarAsset", repeated=False, required=True),
+        3: protobuf.Field("limit", "uint64", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
+        asset: "StellarAsset",
+        limit: "int",
         source_account: Optional["str"] = None,
-        asset: Optional["StellarAssetType"] = None,
-        limit: Optional["int"] = None,
     ) -> None:
-        self.source_account = source_account
         self.asset = asset
         self.limit = limit
+        self.source_account = source_account
 
 
 class StellarAllowTrustOp(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 217
     FIELDS = {
         1: protobuf.Field("source_account", "string", repeated=False, required=False),
-        2: protobuf.Field("trusted_account", "string", repeated=False, required=False),
-        3: protobuf.Field("asset_type", "uint32", repeated=False, required=False),
+        2: protobuf.Field("trusted_account", "string", repeated=False, required=True),
+        3: protobuf.Field("asset_type", "StellarAssetType", repeated=False, required=True),
         4: protobuf.Field("asset_code", "string", repeated=False, required=False),
-        5: protobuf.Field("is_authorized", "uint32", repeated=False, required=False),
+        5: protobuf.Field("is_authorized", "bool", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
+        trusted_account: "str",
+        asset_type: "StellarAssetType",
+        is_authorized: "bool",
         source_account: Optional["str"] = None,
-        trusted_account: Optional["str"] = None,
-        asset_type: Optional["int"] = None,
         asset_code: Optional["str"] = None,
-        is_authorized: Optional["int"] = None,
     ) -> None:
-        self.source_account = source_account
         self.trusted_account = trusted_account
         self.asset_type = asset_type
-        self.asset_code = asset_code
         self.is_authorized = is_authorized
+        self.source_account = source_account
+        self.asset_code = asset_code
 
 
 class StellarAccountMergeOp(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 218
     FIELDS = {
         1: protobuf.Field("source_account", "string", repeated=False, required=False),
-        2: protobuf.Field("destination_account", "string", repeated=False, required=False),
+        2: protobuf.Field("destination_account", "string", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
+        destination_account: "str",
         source_account: Optional["str"] = None,
-        destination_account: Optional["str"] = None,
     ) -> None:
-        self.source_account = source_account
         self.destination_account = destination_account
+        self.source_account = source_account
 
 
 class StellarManageDataOp(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 220
     FIELDS = {
         1: protobuf.Field("source_account", "string", repeated=False, required=False),
-        2: protobuf.Field("key", "string", repeated=False, required=False),
+        2: protobuf.Field("key", "string", repeated=False, required=True),
         3: protobuf.Field("value", "bytes", repeated=False, required=False),
     }
 
     def __init__(
         self,
         *,
+        key: "str",
         source_account: Optional["str"] = None,
-        key: Optional["str"] = None,
         value: Optional["bytes"] = None,
     ) -> None:
-        self.source_account = source_account
         self.key = key
+        self.source_account = source_account
         self.value = value
 
 
@@ -6259,17 +6650,17 @@ class StellarBumpSequenceOp(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 221
     FIELDS = {
         1: protobuf.Field("source_account", "string", repeated=False, required=False),
-        2: protobuf.Field("bump_to", "uint64", repeated=False, required=False),
+        2: protobuf.Field("bump_to", "uint64", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
+        bump_to: "int",
         source_account: Optional["str"] = None,
-        bump_to: Optional["int"] = None,
     ) -> None:
-        self.source_account = source_account
         self.bump_to = bump_to
+        self.source_account = source_account
 
 
 class StellarSignedTx(protobuf.MessageType):

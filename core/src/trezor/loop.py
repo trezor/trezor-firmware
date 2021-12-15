@@ -99,7 +99,7 @@ def close(task: Task) -> None:
     Unschedule and unblock a task, close it so it can release all resources, and
     call its finalizer.
     """
-    for iface in _paused:
+    for iface in _paused:  # pylint: disable=consider-using-dict-items
         _paused[iface].discard(task)
     _queue.discard(task)
     task.close()
@@ -231,7 +231,7 @@ class sleep(Syscall):
     Example:
 
     >>> planned = await loop.sleep(1000)  # sleep for 1s
-    >>> print('missed by %d ms', utime.ticks_diff(utime.ticks_ms(), planned))
+    >>> print(f"missed by {utime.ticks_diff(utime.ticks_ms(), planned)} ms")
     """
 
     def __init__(self, delay_ms: int) -> None:

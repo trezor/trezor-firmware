@@ -1,0 +1,1 @@
+`client.init_device(derive_cardano=True)` must be used before calling Cardano functions.

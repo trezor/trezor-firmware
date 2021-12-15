@@ -7,6 +7,12 @@ option java_outer_classname = "TrezorMessageCardano";
 
 import "messages-common.proto";
 
+enum CardanoDerivationType {
+    LEDGER = 0;
+    ICARUS = 1;
+    ICARUS_TREZOR = 2;
+}
+
 /**
  * Values correspond to address header values given by the spec.
  * Script addresses are only supported in transaction outputs.
@@ -23,6 +29,21 @@ enum CardanoAddressType {
     BYRON = 8;
     REWARD = 14;
     REWARD_SCRIPT = 15;
+}
+
+enum CardanoNativeScriptType {
+    PUB_KEY = 0;
+    ALL = 1;
+    ANY = 2;
+    N_OF_K = 3;
+    INVALID_BEFORE = 4;
+    INVALID_HEREAFTER = 5;
+}
+
+enum CardanoNativeScriptHashDisplayFormat {
+    HIDE = 0;
+    BECH32 = 1;
+    POLICY_ID = 2;
 }
 
 enum CardanoCertificateType {
@@ -46,6 +67,7 @@ enum CardanoTxAuxiliaryDataSupplementType {
 enum CardanoTxSigningMode {
     ORDINARY_TRANSACTION = 0;
     POOL_REGISTRATION_AS_OWNER = 1;
+    MULTISIG_TRANSACTION = 2;
 }
 
 enum CardanoTxWitnessType {
@@ -64,6 +86,40 @@ message CardanoBlockchainPointerType {
     required uint32 certificate_index = 3;
 }
 
+/*
+ * @embed
+ */
+message CardanoNativeScript {
+    required CardanoNativeScriptType type = 1;
+    repeated CardanoNativeScript scripts = 2;
+
+    optional bytes key_hash = 3;
+    repeated uint32 key_path = 4;
+    optional uint32 required_signatures_count = 5;
+    optional uint64 invalid_before = 6;
+    optional uint64 invalid_hereafter = 7;
+}
+
+/**
+ * Request: Ask device for Cardano native script hash
+ * @start
+ * @next CardanoNativeScriptHash
+ * @next Failure
+ */
+message CardanoGetNativeScriptHash {
+    required CardanoNativeScript script = 1;
+    required CardanoNativeScriptHashDisplayFormat display_format = 2;   // display hash as bech32 or policy id
+    required CardanoDerivationType derivation_type = 3;
+}
+
+/**
+ * Request: Ask device for Cardano native script hash
+ * @end
+ */
+message CardanoNativeScriptHash {
+    required bytes script_hash = 1;
+}
+
 /**
  * Structure to represent address parameters so they can be
  * reused in CardanoGetAddress and CardanoTxOutputType.
@@ -80,6 +136,8 @@ message CardanoAddressParametersType {
                                                                     // can be sent directly e.g. if it doesn't belong to
                                                                     // the same account as address_n
     optional CardanoBlockchainPointerType certificate_pointer = 5;  // a pointer to the staking key registration certificate
+    optional bytes script_payment_hash = 6;
+    optional bytes script_staking_hash = 7;
 }
 
 /**
@@ -94,6 +152,7 @@ message CardanoGetAddress {
     required uint32 protocol_magic = 3;                             // network's protocol magic - needed for Byron addresses on testnets
     required uint32 network_id = 4;                                 // network id - mainnet or testnet
     required CardanoAddressParametersType address_parameters = 5;   // parameters used to derive the address
+    required CardanoDerivationType derivation_type = 6;
 }
 
 /**
@@ -113,6 +172,7 @@ message CardanoAddress {
 message CardanoGetPublicKey {
     repeated uint32 address_n = 1;  // BIP-32 path to derive the key from master node
     optional bool show_display = 2; // optionally show on display before sending the result
+    required CardanoDerivationType derivation_type = 3;
 }
 
 /**
@@ -143,6 +203,8 @@ message CardanoSignTxInit {
     required bool has_auxiliary_data = 10;
     optional uint64 validity_interval_start = 11;
     required uint32 witness_requests_count = 12;
+    required uint32 minting_asset_groups_count = 13;
+    required CardanoDerivationType derivation_type = 14;
 }
 
 /**
@@ -180,7 +242,8 @@ message CardanoAssetGroup {
  */
 message CardanoToken {
     required bytes asset_name_bytes = 1;     // asset name as bytestring (may be either ascii string or hash)
-    required uint64 amount = 2;              // asset amount
+    optional uint64 amount = 2;              // asset amount
+    optional sint64 mint_amount = 3;         // mint amount (can also be negative in which case the tokens are burnt)
 }
 
 /**
@@ -238,9 +301,10 @@ message CardanoPoolParametersType {
  */
  message CardanoTxCertificate {
     required CardanoCertificateType type = 1;                 // certificate type
-    repeated uint32 path = 2;                                 // BIP-32 path to derive (staking) key
+    repeated uint32 path = 2;                                 // stake credential key path
     optional bytes pool = 3;                                  // pool hash
     optional CardanoPoolParametersType pool_parameters = 4;   // used for stake pool registration certificate
+    optional bytes script_hash = 5;                           // stake credential script hash
 }
 
 /**
@@ -248,8 +312,9 @@ message CardanoPoolParametersType {
  * @next CardanoTxItemAck
  */
 message CardanoTxWithdrawal {
-    repeated uint32 path = 1;
+    repeated uint32 path = 1;           // stake credential key path
     required uint64 amount = 2;
+    optional bytes script_hash = 3;     // stake credential script hash
 }
 
 /**
@@ -273,6 +338,14 @@ message CardanoTxAuxiliaryData {
 }
 
 /**
+ * Request: Transaction mint
+ * @next CardanoTxItemAck
+ */
+message CardanoTxMint {
+    required uint32 asset_groups_count = 1;
+}
+
+/**
  * Response: Acknowledgement of the last transaction item received
  * @next CardanoTxInput
  * @next CardanoTxOutput
@@ -284,6 +357,7 @@ message CardanoTxAuxiliaryData {
  * @next CardanoTxWithdrawal
  * @next CardanoTxAuxiliaryData
  * @next CardanoTxWitnessRequest
+ * @next CardanoTxMint
  */
 message CardanoTxItemAck {
 }
@@ -392,7 +466,7 @@ message CardanoSignTx {
 
     message CardanoTokenType {
         required bytes asset_name_bytes = 1;     // asset name as bytestring (may be either ascii string or hash)
-        required uint64 amount = 2;        // asset amount
+        required uint64 amount = 2;              // asset amount
     }
 
     /**

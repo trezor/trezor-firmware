@@ -11,10 +11,10 @@ EVENT_TYPE_INTPUT2 = 12
 DATA_MAX = 4096
 EVENT_LENGTH = 4380
 
-INPUT2_REQ_FMT = "< H {}s".format(DATA_MAX)
-CREATE2_REQ_FMT = "< 128s 64s 64s H H L L L L {}s".format(DATA_MAX)
+INPUT2_REQ_FMT = f"< H {DATA_MAX}s"
+CREATE2_REQ_FMT = f"< 128s 64s 64s H H L L L L {DATA_MAX}s"
 START_REQ_FMT = "< Q"
-OUTPUT_REQ_FMT = "< {}s H B".format(DATA_MAX)
+OUTPUT_REQ_FMT = f"< {DATA_MAX}s H B"
 
 
 def pack_event(ev_type, request):

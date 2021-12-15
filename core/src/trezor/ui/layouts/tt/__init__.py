@@ -10,15 +10,21 @@ from trezor.ui.qr import Qr
 from trezor.utils import chunks, chunks_intersperse
 
 from ...components.common import break_path_to_lines
-from ...components.common.confirm import is_confirmed, raise_if_cancelled
+from ...components.common.confirm import (
+    CONFIRMED,
+    GO_BACK,
+    SHOW_PAGINATED,
+    is_confirmed,
+    raise_if_cancelled,
+)
 from ...components.tt import passphrase, pin
 from ...components.tt.button import ButtonCancel, ButtonDefault
 from ...components.tt.confirm import Confirm, HoldToConfirm
 from ...components.tt.scroll import (
     PAGEBREAK,
+    AskPaginated,
     Paginated,
     paginate_paragraphs,
-    paginate_text,
 )
 from ...components.tt.text import LINE_WIDTH_PAGINATED, Span, Text
 from ...constants.tt import (
@@ -32,7 +38,7 @@ from ...constants.tt import (
 from ..common import button_request, interact
 
 if False:
-    from typing import Awaitable, Iterator, NoReturn, Sequence
+    from typing import Awaitable, Iterable, Iterator, NoReturn, Sequence
 
     from ..common import PropertyType, ExceptionType
 
@@ -67,6 +73,7 @@ __all__ = (
     "draw_simple_text",
     "request_passphrase_on_device",
     "request_pin_on_device",
+    "should_show_more",
 )
 
 
@@ -248,7 +255,7 @@ def _show_address(
     network: str | None = None,
     extra: str | None = None,
 ) -> ui.Layout:
-    para = [(ui.NORMAL, "%s network" % network)] if network is not None else []
+    para = [(ui.NORMAL, f"{network} network")] if network is not None else []
     if extra is not None:
         para.append((ui.BOLD, extra))
     para.extend(
@@ -303,7 +310,7 @@ async def show_address(
     title: str = "Confirm address",
     network: str | None = None,
     multisig_index: int | None = None,
-    xpubs: Sequence[str] = [],
+    xpubs: Sequence[str] = (),
     address_extra: str | None = None,
     title_qr: str | None = None,
 ) -> None:
@@ -340,7 +347,7 @@ async def show_address(
         if is_multisig:
             for i, xpub in enumerate(xpubs):
                 cancel = "Next" if i < len(xpubs) - 1 else "Address"
-                title_xpub = "XPUB #%d" % (i + 1)
+                title_xpub = f"XPUB #{i + 1}"
                 title_xpub += " (yours)" if i == multisig_index else " (cosigner)"
                 if is_confirmed(
                     await interact(
@@ -503,15 +510,87 @@ async def confirm_output(
     await raise_if_cancelled(interact(ctx, content, "confirm_output", br_code))
 
 
+async def should_show_more(
+    ctx: wire.GenericContext,
+    title: str,
+    para: Iterable[tuple[int, str]],
+    button_text: str = "Show all",
+    br_type: str = "should_show_more",
+    br_code: ButtonRequestType = ButtonRequestType.Other,
+    icon: str = ui.ICON_DEFAULT,
+    icon_color: int = ui.ORANGE_ICON,
+) -> bool:
+    """Return True if the user wants to show more (they click a special button)
+    and False when the user wants to continue without showing details.
+
+    Raises ActionCancelled if the user cancels.
+    """
+    page = Text(
+        title,
+        header_icon=icon,
+        icon_color=icon_color,
+        new_lines=False,
+        max_lines=TEXT_MAX_LINES - 2,
+    )
+    for font, text in para:
+        page.content.extend((font, text, "\n"))
+    ask_dialog = Confirm(AskPaginated(page, button_text))
+
+    result = await raise_if_cancelled(interact(ctx, ask_dialog, br_type, br_code))
+    assert result in (SHOW_PAGINATED, CONFIRMED)
+
+    return result is SHOW_PAGINATED
+
+
+async def _confirm_ask_pagination(
+    ctx: wire.GenericContext,
+    br_type: str,
+    title: str,
+    para: Iterable[tuple[int, str]],
+    para_truncated: Iterable[tuple[int, str]],
+    br_code: ButtonRequestType,
+    icon: str,
+    icon_color: int,
+) -> None:
+    paginated: ui.Layout | None = None
+    while True:
+        if not await should_show_more(
+            ctx,
+            title,
+            para=para_truncated,
+            br_type=br_type,
+            br_code=br_code,
+            icon=icon,
+            icon_color=icon_color,
+        ):
+            return
+
+        if paginated is None:
+            paginated = paginate_paragraphs(
+                para,
+                header=None,
+                back_button=True,
+                confirm=lambda content: Confirm(
+                    content, cancel=None, confirm="Close", confirm_style=ButtonDefault
+                ),
+            )
+        result = await interact(ctx, paginated, br_type, br_code)
+        assert result in (CONFIRMED, GO_BACK)
+
+    assert False
+
+
 async def confirm_blob(
     ctx: wire.GenericContext,
     br_type: str,
     title: str,
     data: bytes | str,
     description: str | None = None,
+    hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.Other,
     icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
     icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
+    ask_pagination: bool = False,
 ) -> None:
     """Confirm data blob.
 
@@ -555,15 +634,31 @@ async def confirm_blob(
         else:
             per_line = MONO_HEX_PER_LINE
         text.mono(ui.FG, *chunks_intersperse(data_str, per_line))
-        content: ui.Layout = Confirm(text)
+        content: ui.Layout = HoldToConfirm(text) if hold else Confirm(text)
+        return await raise_if_cancelled(interact(ctx, content, br_type, br_code))
+
+    elif ask_pagination:
+        para = [(ui.MONO, line) for line in chunks(data_str, MONO_HEX_PER_LINE - 2)]
+
+        para_truncated = []
+        if description is not None:
+            para_truncated.append((ui.NORMAL, description))
+        para_truncated.extend(para[:TEXT_MAX_LINES])
+
+        return await _confirm_ask_pagination(
+            ctx, br_type, title, para, para_truncated, br_code, icon, icon_color
+        )
 
     else:
         para = []
         if description is not None:
             para.append((ui.NORMAL, description))
         para.extend((ui.MONO, line) for line in chunks(data_str, MONO_HEX_PER_LINE - 2))
-        content = paginate_paragraphs(para, title, icon, icon_color)
-    await raise_if_cancelled(interact(ctx, content, br_type, br_code))
+
+        paginated = paginate_paragraphs(
+            para, title, icon, icon_color, confirm=HoldToConfirm if hold else Confirm
+        )
+        return await raise_if_cancelled(interact(ctx, paginated, br_type, br_code))
 
 
 def confirm_address(
@@ -864,7 +959,7 @@ async def confirm_coinjoin(
     text = Text("Authorize CoinJoin", ui.ICON_RECOVERY, new_lines=False)
     if fee_per_anonymity is not None:
         text.normal("Fee per anonymity set:\n")
-        text.bold("{} %\n".format(fee_per_anonymity))
+        text.bold(f"{fee_per_anonymity} %\n")
     text.normal("Maximum total fees:\n")
     text.bold(total_fee)
     await raise_if_cancelled(
@@ -876,7 +971,7 @@ async def confirm_coinjoin(
 async def confirm_sign_identity(
     ctx: wire.GenericContext, proto: str, identity: str, challenge_visual: str | None
 ) -> None:
-    text = Text("Sign %s" % proto, new_lines=False)
+    text = Text(f"Sign {proto}", new_lines=False)
     if challenge_visual:
         text.normal(challenge_visual)
         text.br()
@@ -887,32 +982,25 @@ async def confirm_sign_identity(
 
 
 async def confirm_signverify(
-    ctx: wire.GenericContext, coin: str, message: str, address: str | None = None
+    ctx: wire.GenericContext, coin: str, message: str, address: str, verify: bool
 ) -> None:
-    if address:
-        header = "Verify {} message".format(coin)
-        font = ui.MONO
+    if verify:
+        header = f"Verify {coin} message"
         br_type = "verify_message"
-
-        text = Text(header, new_lines=False)
-        text.bold("Confirm address:\n")
-        text.mono(*chunks_intersperse(address, MONO_ADDR_PER_LINE))
-        await raise_if_cancelled(
-            interact(ctx, Confirm(text), br_type, ButtonRequestType.Other)
-        )
     else:
-        header = "Sign {} message".format(coin)
-        font = ui.NORMAL
+        header = f"Sign {coin} message"
         br_type = "sign_message"
 
+    text = Text(header, new_lines=False)
+    text.bold("Confirm address:\n")
+    text.mono(*chunks_intersperse(address, MONO_ADDR_PER_LINE))
     await raise_if_cancelled(
-        interact(
-            ctx,
-            paginate_text(message, header, font=font),
-            br_type,
-            ButtonRequestType.Other,
-        )
+        interact(ctx, Confirm(text), br_type, ButtonRequestType.Other)
     )
+
+    para = [(ui.BOLD, "Confirm message:"), (ui.MONO, message)]
+    content = paginate_paragraphs(para, header)
+    await raise_if_cancelled(interact(ctx, content, br_type, ButtonRequestType.Other))
 
 
 async def show_popup(
@@ -963,7 +1051,7 @@ async def request_pin_on_device(
     elif attempts_remaining == 1:
         subprompt = "This is your last attempt"
     else:
-        subprompt = "%s attempts remaining" % attempts_remaining
+        subprompt = f"{attempts_remaining} attempts remaining"
 
     dialog = pin.PinDialog(prompt, subprompt, allow_cancel)
     while True:

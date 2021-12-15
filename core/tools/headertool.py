@@ -50,7 +50,7 @@ def parse_privkey_args(privkey_data: List[str]) -> Tuple[int, List[bytes]]:
             privkeys.append(bytes.fromhex(key_hex))
             sigmask |= 1 << (int(idx) - 1)
         except ValueError:
-            click.echo("Could not parse key: {}".format(key))
+            click.echo(f"Could not parse key: {key}")
             click.echo("Keys must be in the format: <key index>:<hex-encoded key>")
             raise click.ClickException("Unrecognized key format.")
     return sigmask, privkeys
@@ -59,30 +59,28 @@ def parse_privkey_args(privkey_data: List[str]) -> Tuple[int, List[bytes]]:
 def process_remote_signers(fw, addrs: List[str]) -> Tuple[int, List[bytes]]:
     if len(addrs) < fw.sigs_required:
         raise click.ClickException(
-            "Not enough signers (need at least {})".format(fw.sigs_required)
+            f"Not enough signers (need at least {fw.sigs_required})"
         )
 
     digest = fw.digest()
     name = fw.NAME
 
     def mkproxy(addr):
-        return Pyro4.Proxy("PYRO:keyctl@{}:{}".format(addr, PORT))
+        return Pyro4.Proxy(f"PYRO:keyctl@{addr}:{PORT}")
 
     sigmask = 0
     pks, Rs = [], []
     for addr in addrs:
-        click.echo("Connecting to {}...".format(addr))
+        click.echo(f"Connecting to {addr}...")
         with mkproxy(addr) as proxy:
             pk, R = proxy.get_commit(name, digest)
         if pk not in fw.public_keys:
             raise click.ClickException(
-                "Signer at {} commits with unknown public key {}".format(addr, pk.hex())
+                f"Signer at {addr} commits with unknown public key {pk.hex()}"
             )
         idx = fw.public_keys.index(pk)
         click.echo(
-            "Signer at {} commits with public key #{}: {}".format(
-                addr, idx + 1, pk.hex()
-            )
+            f"Signer at {addr} commits with public key #{idx + 1}: {pk.hex()}"
         )
         sigmask |= 1 << idx
         pks.append(pk)
@@ -95,7 +93,7 @@ def process_remote_signers(fw, addrs: List[str]) -> Tuple[int, List[bytes]]:
     # collect signatures
     sigs = []
     for addr in addrs:
-        click.echo("Waiting for {} to sign... ".format(addr), nl=False)
+        click.echo(f"Waiting for {addr} to sign... ", nl=False)
         with mkproxy(addr) as proxy:
             sig = proxy.get_signature(name, digest, global_R, global_pk)
         sigs.append(sig)
@@ -259,8 +257,8 @@ def cli(
     if remote:
         if Pyro4 is None:
             raise click.ClickException("Please install Pyro4 for remote signing.")
-        click.echo(fw.format())
-        click.echo("Signing with {} remote participants.".format(len(remote)))
+        click.echo(fw)
+        click.echo(f"Signing with {len(remote)} remote participants.")
         sigmask, signature = process_remote_signers(fw, remote)
 
     if signature:

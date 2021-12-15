@@ -18,9 +18,7 @@ def validate_homescreen(homescreen: bytes) -> None:
 
     if len(homescreen) > storage.device.HOMESCREEN_MAXSIZE:
         raise wire.DataError(
-            "Homescreen is too large, maximum size is {} bytes".format(
-                storage.device.HOMESCREEN_MAXSIZE
-            )
+            f"Homescreen is too large, maximum size is {storage.device.HOMESCREEN_MAXSIZE} bytes"
         )
 
     try:

@@ -126,7 +126,7 @@ def check_signatures(data):
         signature = data[SIGNATURES_START + 64 * x : SIGNATURES_START + 64 * x + 64]
 
         if indexes[x] == 0:
-            print("Slot #%d" % (x + 1), "is empty")
+            print(f"Slot #{x + 1}", "is empty")
         else:
             pk = pubkeys[indexes[x]]
             verify = ecdsa.VerifyingKey.from_string(
@@ -139,13 +139,13 @@ def check_signatures(data):
                 verify.verify(signature, to_sign, hashfunc=hashlib.sha256)
 
                 if indexes[x] in used:
-                    print("Slot #%d signature: DUPLICATE" % (x + 1), signature.hex())
+                    print(f"Slot #{x + 1} signature: DUPLICATE", signature.hex())
                 else:
                     used.append(indexes[x])
-                    print("Slot #%d signature: VALID" % (x + 1), signature.hex())
+                    print(f"Slot #{x + 1} signature: VALID", signature.hex())
 
             except Exception:
-                print("Slot #%d signature: INVALID" % (x + 1), signature.hex())
+                print(f"Slot #{x + 1} signature: INVALID", signature.hex())
 
 
 def modify(data, slot, index, signature):
@@ -160,7 +160,7 @@ def modify(data, slot, index, signature):
 def sign(data, is_pem):
     # Ask for index and private key and signs the firmware
 
-    slot = int(input("Enter signature slot (1-%d): " % SLOTS))
+    slot = int(input(f"Enter signature slot (1-{SLOTS}): "))
     if slot < 1 or slot > SLOTS:
         raise Exception("Invalid slot")
 
@@ -236,7 +236,7 @@ def main(args):
 
     data = update_hashes_in_header(data)
 
-    print("Firmware size %d bytes" % len(data))
+    print(f"Firmware size {len(data)} bytes")
 
     check_size(data)
     check_signatures(data)

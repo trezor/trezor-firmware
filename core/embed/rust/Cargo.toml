@@ -8,6 +8,9 @@ build = "build.rs"
 
 [features]
 bitcoin_only = []
+ui = []
+ui_debug = []
+test = ["cc", "glob"]
 
 [lib]
 crate-type = ["staticlib"]
@@ -22,12 +25,35 @@ opt-level = "z"
 lto = true
 codegen-units = 1
 
-[dependencies]
-cty = "0.2.1"
+[profile.test]
+split-debuginfo = "unpacked"
 
-[dependencies.cstr_core]
-version = "0.2.2"
+# Runtime dependencies
+
+[dependencies.cty]
+version = "0.2.1"
+
+[dependencies.heapless]
+version = "0.7.3"
 default_features = false
 
-[build-dependencies]
-bindgen = "0.58.0"
+[dependencies.cstr_core]
+version = "0.2.4"
+default_features = false
+
+# Build dependencies
+
+[build-dependencies.bindgen]
+version = "0.59.1"
+default_features = false
+features = ["runtime"]
+
+# Build dependencies used for linking the test binary
+
+[build-dependencies.cc]
+optional = true
+version = "1.0.69"
+
+[build-dependencies.glob]
+optional = true
+version = "0.3.0"
