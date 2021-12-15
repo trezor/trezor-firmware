@@ -392,8 +392,10 @@ connect test core:
     - nix-shell --run "tests/connect_tests/connect_tests.sh 2.99.99"
   after_script:
     - cp /trezor-user-env/logs/debugging.log trezor-user-env-debugging.log
+    - cp /trezor-user-env/logs/emulator_bridge.log tenv-emulator-bridge-debugging.log
   artifacts:
     paths:
       - trezor-user-env-debugging.log
+      - tenv-emulator-bridge-debugging.log
     expire_in: 1 week
     when: always
