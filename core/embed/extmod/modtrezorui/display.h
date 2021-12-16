@@ -54,6 +54,9 @@
 #ifdef TREZOR_FONT_NORMAL_ENABLE
 #define FONT_NORMAL (-1)
 #endif
+#ifdef TREZOR_FONT_MEDIUM_ENABLE
+#define FONT_MEDIUM (-5)
+#endif
 #ifdef TREZOR_FONT_BOLD_ENABLE
 #define FONT_BOLD (-2)
 #endif
