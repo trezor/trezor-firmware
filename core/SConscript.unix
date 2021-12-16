@@ -176,6 +176,15 @@ SOURCE_MOD += [
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
 ]
+if NEW_UI:
+    CPPDEFINES_MOD += [
+        'TREZOR_FONT_MEDIUM_ENABLE',
+    ]
+    SOURCE_MOD += [
+        'embed/extmod/modtrezorui/font_tthoves_bold_16.c',
+        'embed/extmod/modtrezorui/font_tthoves_medium_20.c',
+        'embed/extmod/modtrezorui/font_tthoves_regular_18.c',
+    ]
 if FROZEN:
     CPPDEFINES_MOD += ['TREZOR_EMULATOR_FROZEN']
 

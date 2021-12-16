@@ -94,6 +94,7 @@ where
                 Token::Argument(b"mono") => Some(Op::Font(self.layout.mono_font)),
                 Token::Argument(b"bold") => Some(Op::Font(self.layout.bold_font)),
                 Token::Argument(b"normal") => Some(Op::Font(self.layout.normal_font)),
+                Token::Argument(b"medium") => Some(Op::Font(self.layout.medium_font)),
                 Token::Argument(argument) => self
                     .args
                     .get(argument)
