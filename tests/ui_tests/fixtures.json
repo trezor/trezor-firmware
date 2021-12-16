@@ -593,6 +593,7 @@
 "ethereum-test_sign_typed_data.py::test_ethereum_sign_typed_data[complex_data]": "275a8630a795c966419f6fc6de834bb576bfc3dbc16a1fd7605aa2b8ceae666e",
 "ethereum-test_sign_typed_data.py::test_ethereum_sign_typed_data[struct_list_non_v4]": "7dd23b14bd273b937836a24cf056c745e7b3461139f895caefd4624e0d5545f5",
 "ethereum-test_sign_typed_data.py::test_ethereum_sign_typed_data[struct_list_v4]": "b7e3475d4906942bc0e8d62203ae91a13ea0d702c3a7a53b9777bea670c4a7f7",
+"ethereum-test_sign_typed_data.py::test_ethereum_sign_typed_data[structs_arrays_v4]": "31cc5b5c1d9d94f0761208f5dc6423d283b9118b12b87cf878d20fa144f4f252",
 "ethereum-test_sign_typed_data.py::test_ethereum_sign_typed_data_cancel": "08712efae2d007610289bbfb3a8fe6800547e884636c83c5bf0e25f33728789e",
 "ethereum-test_sign_typed_data.py::test_ethereum_sign_typed_data_show_more_button": "1adbea797586685ce09aae58b0a2b89e1617e4eaad23a8c1ac6fc10b041e57a5",
 "ethereum-test_sign_verify_message.py::test_signmessage[parameters0-result0]": "7aa14b29e5005d8fdc0a8b497ed5d3ebea15c7017f9c457d09214f2d05fbc532",

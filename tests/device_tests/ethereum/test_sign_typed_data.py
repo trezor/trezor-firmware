@@ -23,9 +23,10 @@ from ...common import parametrize_using_common_fixtures
 
 SHOW_MORE = (143, 167)
 
-pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum, pytest.mark.skip_t1]
+pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
 
 
+@pytest.mark.skip_t1
 @parametrize_using_common_fixtures("ethereum/sign_typed_data.json")
 def test_ethereum_sign_typed_data(client, parameters, result):
     with client:
@@ -35,6 +36,21 @@ def test_ethereum_sign_typed_data(client, parameters, result):
             address_n,
             parameters["data"],
             metamask_v4_compat=parameters["metamask_v4_compat"],
+        )
+        assert ret.address == result["address"]
+        assert f"0x{ret.signature.hex()}" == result["sig"]
+
+
+@pytest.mark.skip_t2
+@parametrize_using_common_fixtures("ethereum/sign_typed_data.json")
+def test_ethereum_sign_typed_data_blind(client, parameters, result):
+    with client:
+        address_n = parse_path(parameters["path"])
+        ret = ethereum.sign_typed_data_hash(
+            client,
+            address_n,
+            ethereum.decode_hex(parameters["domain_separator_hash"]),
+            ethereum.decode_hex(parameters["message_hash"]),
         )
         assert ret.address == result["address"]
         assert f"0x{ret.signature.hex()}" == result["sig"]
@@ -120,6 +136,7 @@ def input_flow_cancel(client):
     client.debug.press_no()
 
 
+@pytest.mark.skip_t1
 def test_ethereum_sign_typed_data_show_more_button(client):
     with client:
         client.watch_layout()
@@ -132,6 +149,7 @@ def test_ethereum_sign_typed_data_show_more_button(client):
         )
 
 
+@pytest.mark.skip_t1
 def test_ethereum_sign_typed_data_cancel(client):
     with client, pytest.raises(exceptions.Cancelled):
         client.watch_layout()
