@@ -156,6 +156,12 @@ def configure_logging(verbose: int) -> None:
     help="Enter passphrase on host.",
 )
 @click.option(
+    "-S",
+    "--script",
+    is_flag=True,
+    help="Use UI for usage in scripts.",
+)
+@click.option(
     "-s",
     "--session-id",
     metavar="HEX",
@@ -170,6 +176,7 @@ def cli_main(
     verbose: int,
     is_json: bool,
     passphrase_on_host: bool,
+    script: bool,
     session_id: Optional[str],
 ) -> None:
     configure_logging(verbose)
@@ -181,7 +188,7 @@ def cli_main(
         except ValueError:
             raise click.ClickException(f"Not a valid session id: {session_id}")
 
-    ctx.obj = TrezorConnection(path, bytes_session_id, passphrase_on_host)
+    ctx.obj = TrezorConnection(path, bytes_session_id, passphrase_on_host, script)
 
 
 # Creating a cli function that has the right types for future usage
@@ -189,10 +196,14 @@ cli = cast(TrezorctlGroup, cli_main)
 
 
 @cli.resultcallback()
-def print_result(res: Any, is_json: bool, **kwargs: Any) -> None:
+def print_result(res: Any, is_json: bool, script: bool, **kwargs: Any) -> None:
     if is_json:
         if isinstance(res, protobuf.MessageType):
-            click.echo(json.dumps({res.__class__.__name__: res.__dict__}))
+            res = protobuf.to_dict(res, hexlify_bytes=True)
+
+        # No newlines for scripts, pretty-print for users
+        if script:
+            click.echo(json.dumps(res))
         else:
             click.echo(json.dumps(res, sort_keys=True, indent=4))
     else:
