@@ -17,6 +17,7 @@ extern "C" {
         textlen: cty::c_int,
         font: cty::c_int,
     ) -> cty::c_int;
+    fn display_text_height(font: cty::c_int) -> cty::c_int;
     fn display_bar(x: cty::c_int, y: cty::c_int, w: cty::c_int, h: cty::c_int, c: cty::uint16_t);
     fn display_bar_radius(
         x: cty::c_int,
@@ -95,6 +96,10 @@ pub fn text(baseline_x: i32, baseline_y: i32, text: &[u8], font: i32, fgcolor: u
 
 pub fn text_width(text: &[u8], font: i32) -> i32 {
     unsafe { display_text_width(text.as_ptr() as _, text.len() as _, font) }
+}
+
+pub fn text_height(font: i32) -> i32 {
+    unsafe { display_text_height(font) }
 }
 
 pub fn bar(x: i32, y: i32, w: i32, h: i32, fgcolor: u16) {

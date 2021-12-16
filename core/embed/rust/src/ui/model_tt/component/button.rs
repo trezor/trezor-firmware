@@ -176,7 +176,7 @@ impl Component for Button {
         match &self.content {
             ButtonContent::Text(text) => {
                 let width = display::text_width(text, style.font);
-                let height = display::text_height();
+                let height = style.font.text_height();
                 let start_of_baseline = self.area.center() + Offset::new(-width / 2, height / 2);
                 display::text(
                     start_of_baseline,

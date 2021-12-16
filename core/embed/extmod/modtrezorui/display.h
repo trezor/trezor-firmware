@@ -54,6 +54,9 @@
 #ifdef TREZOR_FONT_NORMAL_ENABLE
 #define FONT_NORMAL (-1)
 #endif
+#ifdef TREZOR_FONT_MEDIUM_ENABLE
+#define FONT_MEDIUM (-5)
+#endif
 #ifdef TREZOR_FONT_BOLD_ENABLE
 #define FONT_BOLD (-2)
 #endif
@@ -105,6 +108,7 @@ void display_text_right(int x, int y, const char *text, int textlen, int font,
 int display_text_width(const char *text, int textlen, int font);
 int display_text_split(const char *text, int textlen, int font,
                        int requested_width);
+int display_text_height(int font);
 
 void display_qrcode(int x, int y, const char *data, uint32_t datalen,
                     uint8_t scale);

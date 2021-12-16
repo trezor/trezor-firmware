@@ -159,14 +159,6 @@ pub fn text_width(text: &[u8], font: Font) -> i32 {
     display::text_width(text, font.0)
 }
 
-pub fn text_height() -> i32 {
-    constant::TEXT_HEIGHT
-}
-
-pub fn line_height() -> i32 {
-    constant::LINE_HEIGHT
-}
-
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub struct Font(i32);
 
@@ -179,8 +171,12 @@ impl Font {
         text_width(text, self)
     }
 
+    pub fn text_height(self) -> i32 {
+        display::text_height(self.0)
+    }
+
     pub fn line_height(self) -> i32 {
-        line_height()
+        constant::LINE_SPACE + self.text_height()
     }
 }
 
