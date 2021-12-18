@@ -62,6 +62,11 @@ impl Obj {
         // obj == NULL
         self.as_bits() == 0
     }
+
+    // TODO: check whether this is working ???
+    pub fn is_none(self) -> bool {
+        self.as_bits() & 31 == 6
+    }
 }
 
 impl Obj {

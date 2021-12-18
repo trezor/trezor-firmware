@@ -83,10 +83,10 @@ pub extern "C" fn zcash_diag(ins: Obj, data: Obj) -> Obj {
                 let _ = vec![0u8; size];
                 Obj::try_from(&b"allocation successed"[..])?
             }
-            b"encrypt" => {
+            /*b"encrypt" => {
                 orchard::note_encryption::tests::test_vectors();
                 Obj::try_from(&b"encryption successed"[..])?
-            }
+            }*/
             _ => Obj::try_from(&b"unknown instruction"[..])?,
         };
         Ok(obj)

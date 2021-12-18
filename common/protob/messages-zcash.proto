@@ -87,19 +87,20 @@ message ZcashSpendInfo {
     required bytes rseed = 4;
 }
 
-message ZcashRecipientInfo {
+message ZcashOutputInfo {
     optional bool ovk_flag = 1;
-    required string address = 2;
-    required uint64 amount = 3;
-    optional bytes memo = 4;
+    optional string address = 2; // for outgoing transfers
+    repeated uint32 z_address_n = 3; // for internal transfers
+    required uint64 amount = 4;
+    optional bytes memo = 5;
 }
 
 message ZcashPushAction {
     optional ZcashSpendInfo spend_info = 1;
-    optional ZcashRecipientInfo recipient_info = 2;    
+    optional ZcashOutputInfo output_info = 2;    
 }
 
-message ZcashShieldedAction {
+/*message ZcashShieldedAction {
     required bytes cv = 1;
     required bytes nullifier = 2;
     required bytes rk = 3;
@@ -109,7 +110,9 @@ message ZcashShieldedAction {
     required bytes out_ciphertext = 7;
     required bytes ak = 8;
     required bytes alpha = 9;
-}
+}*/
+
+message ZcashAck {}
 
 /*
 message ZcashGetBindingSignature {

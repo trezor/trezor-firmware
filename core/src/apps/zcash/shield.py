@@ -26,11 +26,11 @@ async def shield(ctx: Context, msg: ZcashPushAction) -> ZcashShieldedAction:
 		zip32.verify_path(msg.z_address_n)
 		master = await zip32.get_master(ctx)
 		sk = master.derive(msg.z_address_n).spending_key()
+		fvk = zcash.get_orchard_fvk(sk)
+		amount_in_bytes = msg.note[43:51]
 		action_info["spend_info"] = {
-			"sk": sk,
-			"value": msg.value,
-			"nullifier": msg.nullifier,
-			"rseed": msg.rseed
+			"fvk": fvk,
+			"note": msg.note,
 		}
 
 	if msg.recipient_info != None:
@@ -38,21 +38,31 @@ async def shield(ctx: Context, msg: ZcashPushAction) -> ZcashShieldedAction:
 		if raw_address == None:
 			raise ProcessError("Orchard receiver not found.")
 
+		# TODO: internal spends
 		await confirm_output(
 	        ctx,
-	        address=msg.address[..26],
+	        address=msg.address[..26]+"...",
 	        amount=_format_amount(msg.amount),
 	        font_amount=ui.BOLD,
 	        br_code=ButtonRequestType.SignTx,
     	)
 
-		action_info["recipient_info"] = {
+    	action_info["output_info"] = {
 			"ovk_flag": msg.ovk_flag,
 			"address": raw_address
 			"value": msg.amount,
 			"memo": msg.memo,
 		}
 
-	shielded = zcash.shield(action_info)
+		if ovk_flag:
+			zip32.verify_path(msg.z_address_n)
+			master = await zip32.get_master(ctx)
+			sk = master.derive(msg.z_address_n).spending_key()
+			fvk = zcash.get_orchard_fvk(sk)
+			action_info["fvk"] = fvk		
 
-	return ZcashShieldedAction(**shielded)
+	action = zcash.shield(action_info)
+
+	
+
+	return ZcashAck()
