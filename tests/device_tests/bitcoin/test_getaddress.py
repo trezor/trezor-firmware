@@ -112,6 +112,22 @@ def test_grs(client):
 
 
 @pytest.mark.altcoin
+def test_tgrs(client):
+    assert (
+        btc.get_address(client, "Groestlcoin Testnet", parse_path("44'/1'/0'/0/0"))
+        == "mvbu1Gdy8SUjTenqerxUaZyYjmvedc787y"
+    )
+    assert (
+        btc.get_address(client, "Groestlcoin Testnet", parse_path("44'/1'/0'/1/0"))
+        == "mm6kLYbGEL1tGe4ZA8xacfgRPdW1LMq8cN"
+    )
+    assert (
+        btc.get_address(client, "Groestlcoin Testnet", parse_path("44'/1'/0'/1/1"))
+        == "mjXZwmEi1z1MzveZrKUAo4DBgbdq6ZhGD6"
+    )
+
+
+@pytest.mark.altcoin
 def test_elements(client):
     assert (
         btc.get_address(client, "Elements", parse_path("m/44'/1'/0'/0/0"))
