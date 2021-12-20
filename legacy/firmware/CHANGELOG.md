@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 1.10.5 [18th January 2021]
+
+### Added
+- Support for blindly signing EIP-712 data.  [#131]
+
+### Fixed
+- Prevent recursing in handling RebootToBootloader by USB flush.  [#1985]
+
+
 ## 1.10.4 [8th December 2021]
 
 ### Added
@@ -448,6 +457,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Removed all current limits on size of signed transaction.
 
+[#131]: https://github.com/trezor/trezor-firmware/pull/131
 [#965]: https://github.com/trezor/trezor-firmware/pull/965
 [#1030]: https://github.com/trezor/trezor-firmware/pull/1030
 [#1098]: https://github.com/trezor/trezor-firmware/pull/1098
@@ -488,3 +498,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1857]: https://github.com/trezor/trezor-firmware/pull/1857
 [#1872]: https://github.com/trezor/trezor-firmware/pull/1872
 [#1897]: https://github.com/trezor/trezor-firmware/pull/1897
+[#1985]: https://github.com/trezor/trezor-firmware/pull/1985
