@@ -34,8 +34,8 @@ TXHASH_09a48b = bytes.fromhex(
 TXHASH_4f2f85 = bytes.fromhex(
     "4f2f857f39ed1afe05542d058fb0be865a387446e32fc876d086203f483f61d1"
 )
-TXHASH_f79cf5 = bytes.fromhex(
-    "f79cf536f6516fb2808b4728c403be98aebef49fec5ba206a0a397527214e929"
+TXHASH_45aeb9 = bytes.fromhex(
+    "45aeb9af884b4082104b0212c5f40ffca8f0127e627a05810b69f0bad777678c"
 )
 
 pytestmark = pytest.mark.altcoin
@@ -221,23 +221,24 @@ def test_send_segwit_native_change(client):
 
 def test_send_p2tr(client):
     inp1 = messages.TxInputType(
-        # tgrs1pswrqtykue8r89t9u4rprjs0gt4qzkdfuursfnvqaa3f2yql07zmq5v2q7z
-        address_n=parse_path("86'/1'/0'/0/0"),
-        amount=4600,
-        prev_hash=TXHASH_f79cf5,
-        prev_index=1,
+        # tgrs1paxhjl357yzctuf3fe58fcdx6nul026hhh6kyldpfsf3tckj9a3wsvuqrgn
+        address_n=parse_path("86'/1'/1'/0/0"),
+        amount=4450,
+        prev_hash=TXHASH_45aeb9,
+        prev_index=0,
         script_type=messages.InputScriptType.SPENDTAPROOT,
     )
     out1 = messages.TxOutputType(
-        # 86'/1'/1'/0/0
-        address="tgrs1paxhjl357yzctuf3fe58fcdx6nul026hhh6kyldpfsf3tckj9a3wsvuqrgn",
-        amount=4450,
+        # 86'/1'/0'/0/0
+        address="tgrs1pswrqtykue8r89t9u4rprjs0gt4qzkdfuursfnvqaa3f2yql07zmq5v2q7z",
+        amount=4300,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     _, serialized_tx = btc.sign_tx(
         client, "Groestlcoin Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
     )
+    # https://blockbook-test.groestlcoin.org/tx/c66a79075044aaab3dba17daffb23f48addee87d7c87c7bc88e2997ce38a74ee
     assert (
         serialized_tx.hex()
-        == "0100000000010129e914725297a3a006a25bec9ff4beae98be03c428478b80b26f51f636f59cf70100000000ffffffff016211000000000000225120e9af2fc69e20b0be2629cd0e9c34da9f3ef56af7beac4fb4298262bc5a45ec5d01400925acfe20ef34929aab585d0fe0a9c1b11219c1fc512f56572a0201e38f3bc38721a6afc9e19801a5c5bc6e806e07a6fc7412b2fc863057f528e3003855491600000000"
+        == "010000000001018c6777d7baf0690b81057a627e12f0a8fc0ff4c512024b1082404b88afb9ae450000000000ffffffff01cc1000000000000022512083860592dcc9c672acbca8c23941e85d402b353ce0e099b01dec52a203eff0b6014067e8ab9695b22bbe6487d350826357bd920869c4b5077c324fc51a9b42bd7ef17ac7525301437a5b208276c66334766dbdac542fd29d3b949ef78e518bbd383700000000"
     )
