@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2021 SatoshiLabs and contributors
+# Copyright (C) 2012-2019 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -33,9 +33,6 @@ TXHASH_09a48b = bytes.fromhex(
 )
 TXHASH_4f2f85 = bytes.fromhex(
     "4f2f857f39ed1afe05542d058fb0be865a387446e32fc876d086203f483f61d1"
-)
-TXHASH_f79cf5 = bytes.fromhex(
-    "f79cf536f6516fb2808b4728c403be98aebef49fec5ba206a0a397527214e929"
 )
 
 pytestmark = pytest.mark.altcoin
@@ -216,28 +213,4 @@ def test_send_segwit_native_change(client):
     assert (
         serialized_tx.hex()
         == "01000000000101d1613f483f2086d076c82fe34674385a86beb08f052d5405fe1aed397f852f4f0000000000feffffff02404b4c000000000017a9147a55d61848e77ca266e79a39bfc85c580a6426c987a8386f0000000000160014cc8067093f6f843d6d3e22004a4290cd0c0f336b02483045022100ea8780bc1e60e14e945a80654a41748bbf1aa7d6f2e40a88d91dfc2de1f34bd10220181a474a3420444bd188501d8d270736e1e9fe379da9970de992ff445b0972e3012103adc58245cf28406af0ef5cc24b8afba7f1be6c72f279b642d85c48798685f862d9ed0900"
-    )
-
-
-def test_send_p2tr(client):
-    inp1 = messages.TxInputType(
-        # tgrs1pswrqtykue8r89t9u4rprjs0gt4qzkdfuursfnvqaa3f2yql07zmq5v2q7z
-        address_n=parse_path("86'/1'/0'/0/0"),
-        amount=4600,
-        prev_hash=TXHASH_f79cf5,
-        prev_index=1,
-        script_type=messages.InputScriptType.SPENDTAPROOT,
-    )
-    out1 = messages.TxOutputType(
-        # 86'/1'/1'/0/0
-        address="tgrs1paxhjl357yzctuf3fe58fcdx6nul026hhh6kyldpfsf3tckj9a3wsvuqrgn",
-        amount=4450,
-        script_type=messages.OutputScriptType.PAYTOADDRESS,
-    )
-    _, serialized_tx = btc.sign_tx(
-        client, "Groestlcoin Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
-    )
-    assert (
-        serialized_tx.hex()
-        == "0100000000010129e914725297a3a006a25bec9ff4beae98be03c428478b80b26f51f636f59cf70100000000ffffffff016211000000000000225120e9af2fc69e20b0be2629cd0e9c34da9f3ef56af7beac4fb4298262bc5a45ec5d01400925acfe20ef34929aab585d0fe0a9c1b11219c1fc512f56572a0201e38f3bc38721a6afc9e19801a5c5bc6e806e07a6fc7412b2fc863057f528e3003855491600000000"
     )
