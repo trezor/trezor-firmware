@@ -38,7 +38,7 @@ where
     }
 
     pub fn add<D: DefaultTextTheme>(mut self, text_font: Font, content: T) -> Self {
-        if content.as_ref().len() == 0 {
+        if content.as_ref().is_empty() {
             return self;
         }
         let paragraph = Paragraph::new(
