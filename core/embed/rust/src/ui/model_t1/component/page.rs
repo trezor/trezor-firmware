@@ -1,39 +1,34 @@
 use crate::ui::{
-    component::{
-        paginated::{Page, PageMsg},
-        Component, Event, EventCtx, Never,
-    },
-    display,
+    component::{Component, Event, EventCtx, Never, Pad, PageMsg, Paginate},
+    display::{self, Color},
     geometry::{Offset, Point, Rect},
 };
 
 use super::{theme, Button, ButtonMsg, ButtonPos};
 
 pub struct ButtonPage<T> {
+    content: T,
     scrollbar: ScrollBar,
+    pad: Pad,
     prev: Button<&'static str>,
     next: Button<&'static str>,
     cancel: Button<&'static str>,
     confirm: Button<&'static str>,
-    page: T,
 }
 
-impl<T> ButtonPage<T> {
-    fn areas(area: Rect) -> (Rect, Rect, Rect) {
-        let button_height = theme::FONT_BOLD.line_height() + 2;
-        let (content_area, button_area) = area.hsplit(-button_height);
-        let (content_area, scrollbar_area) = content_area.vsplit(-ScrollBar::WIDTH);
-        let (content_area, _) = content_area.hsplit(-1);
-        (content_area, scrollbar_area, button_area)
-    }
-}
+impl<T> ButtonPage<T>
+where
+    T: Paginate,
+{
+    fn new(area: Rect, content: impl FnOnce(Rect) -> T, background: Color) -> Self {
+        let (content_area, scrollbar_area, button_area) = Self::areas(area);
+        let mut content = content(content_area);
+        let pad = Pad::with_background(content_area, background);
 
-impl<T> Page for ButtonPage<T> {
-    type Content = T;
+        // Always start at the first page.
+        let scrollbar = ScrollBar::vertical_right(scrollbar_area, content.page_count(), 0);
 
-    fn new(area: Rect, page: T, page_count: usize, active_page: usize) -> Self {
-        let (_content_area, scrollbar_area, button_area) = Self::areas(area);
-        let scrollbar = ScrollBar::vertical_right(scrollbar_area, page_count, active_page);
+        // Create the button controls.
         let prev = Button::with_text(button_area, ButtonPos::Left, "BACK", theme::button_cancel());
         let next = Button::with_text(
             button_area,
@@ -53,36 +48,40 @@ impl<T> Page for ButtonPage<T> {
             "CONFIRM",
             theme::button_default(),
         );
+
         Self {
+            content,
             scrollbar,
+            pad,
             prev,
             next,
             cancel,
             confirm,
-            page,
         }
     }
 
-    fn inner_mut(&mut self) -> &mut T {
-        &mut self.page
+    fn areas(area: Rect) -> (Rect, Rect, Rect) {
+        let button_height = theme::FONT_BOLD.line_height() + 2;
+        let (content_area, button_area) = area.hsplit(-button_height);
+        let (content_area, scrollbar_area) = content_area.vsplit(-ScrollBar::WIDTH);
+        let (content_area, _) = content_area.hsplit(-1);
+        (content_area, scrollbar_area, button_area)
     }
 
-    fn page_count(&self) -> usize {
-        self.scrollbar.page_count
-    }
-
-    fn active_page(&self) -> usize {
-        self.scrollbar.active_page
-    }
-
-    fn fade_after_next_paint(&mut self) {}
-
-    fn content_area(area: Rect) -> Rect {
-        Self::areas(area).0
+    fn change_page(&mut self, ctx: &mut EventCtx, page: usize) {
+        // Change the page in the content, clear the background under it and make sure
+        // it gets completely repainted.
+        self.content.change_page(page);
+        self.content.request_complete_repaint(ctx);
+        self.pad.clear();
     }
 }
 
-impl<T: Component> Component for ButtonPage<T> {
+impl<T> Component for ButtonPage<T>
+where
+    T: Component,
+    T: Paginate,
+{
     type Msg = PageMsg<T::Msg, bool>;
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
@@ -90,34 +89,32 @@ impl<T: Component> Component for ButtonPage<T> {
             if let Some(ButtonMsg::Clicked) = self.prev.event(ctx, event) {
                 // Scroll up.
                 self.scrollbar.go_to_previous_page();
-                return Some(PageMsg::ChangePage(self.active_page()));
+                self.change_page(self.scrollbar.active_page);
+                return None;
             }
-        } else {
-            if let Some(ButtonMsg::Clicked) = self.cancel.event(ctx, event) {
-                return Some(PageMsg::Controls(false));
-            }
+        } else if let Some(ButtonMsg::Clicked) = self.cancel.event(ctx, event) {
+            return Some(PageMsg::Controls(false));
         }
 
         if self.scrollbar.has_next_page() {
             if let Some(ButtonMsg::Clicked) = self.next.event(ctx, event) {
                 // Scroll down.
                 self.scrollbar.go_to_next_page();
-                return Some(PageMsg::ChangePage(self.active_page()));
+                self.change_page(self.scrollbar.active_page);
+                return None;
             }
-        } else {
-            if let Some(ButtonMsg::Clicked) = self.confirm.event(ctx, event) {
-                return Some(PageMsg::Controls(true));
-            }
+        } else if let Some(ButtonMsg::Clicked) = self.confirm.event(ctx, event) {
+            return Some(PageMsg::Controls(true));
         }
 
-        if let Some(msg) = self.page.event(ctx, event) {
+        if let Some(msg) = self.content.event(ctx, event) {
             return Some(PageMsg::Content(msg));
         }
         None
     }
 
     fn paint(&mut self) {
-        self.page.paint();
+        self.content.paint();
         self.scrollbar.paint();
         if self.scrollbar.has_previous_page() {
             self.prev.paint();
@@ -141,7 +138,7 @@ where
         t.open("ButtonPage");
         t.field("active_page", &self.active_page());
         t.field("page_count", &self.page_count());
-        t.field("content", &self.page);
+        t.field("content", &self.content);
         t.close();
     }
 }
