@@ -14,7 +14,7 @@ pub enum SwipeDirection {
 }
 
 pub struct Swipe {
-    area: Rect,
+    pub area: Rect,
     pub allow_up: bool,
     pub allow_down: bool,
     pub allow_left: bool,
