@@ -86,7 +86,7 @@ def test_show_segwit_altcoin(client):
             client,
             "Groestlcoin Testnet",
             parse_path("49'/1'/0'/0/0"),
-            False,
+            True,
             None,
             script_type=messages.InputScriptType.SPENDP2SHWITNESS,
         )
@@ -97,7 +97,7 @@ def test_show_segwit_altcoin(client):
             client,
             "Groestlcoin Testnet",
             parse_path("44'/1'/0'/0/0"),
-            False,
+            True,
             None,
             script_type=messages.InputScriptType.SPENDP2SHWITNESS,
         )
@@ -108,7 +108,7 @@ def test_show_segwit_altcoin(client):
             client,
             "Groestlcoin Testnet",
             parse_path("44'/1'/0'/0/0"),
-            False,
+            True,
             None,
             script_type=messages.InputScriptType.SPENDADDRESS,
         )
@@ -119,7 +119,7 @@ def test_show_segwit_altcoin(client):
             client,
             "Elements",
             parse_path("m/49'/1'/0'/0/0"),
-            False,
+            True,
             None,
             script_type=messages.InputScriptType.SPENDP2SHWITNESS,
         )
