@@ -455,10 +455,12 @@ def sign_typed_data_hash(
     Sign hash of typed data (EIP-712) with Ethereum address.
 
     For T1 backward compatibility.
+
+    MESSAGE_HASH_HEX can be set to an empty string '' for domain-only hashes.
     """
     address_n = tools.parse_path(address)
     domain_hash = ethereum.decode_hex(domain_hash_hex)
-    message_hash = ethereum.decode_hex(message_hash_hex)
+    message_hash = ethereum.decode_hex(message_hash_hex) if message_hash_hex else None
     ret = ethereum.sign_typed_data_hash(client, address_n, domain_hash, message_hash)
     output = {
         "domain_hash": domain_hash_hex,

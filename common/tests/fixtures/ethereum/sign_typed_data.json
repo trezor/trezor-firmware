@@ -5,6 +5,77 @@
     },
     "tests": [
         {
+            "name": "bare_minimum",
+            "comment": "Bare minimum EIP-712 message (domain only)",
+            "parameters": {
+                "path": "m/44'/60'/0'/0/0",
+                "metamask_v4_compat": true,
+                "data": {
+                    "types": {
+                        "EIP712Domain": []
+                    },
+                    "primaryType": "EIP712Domain",
+                    "message": {},
+                    "domain": {}
+                },
+                "message_hash": null,
+                "domain_separator_hash": "0x6192106f129ce05c9075d319c1fa6ea9b3ae37cbd0c1ef92e2be7137bb07baa1"
+            },
+            "result": {
+                "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
+                "sig": "0x18aaea9abed7cd88d3763a9a420e2e7b71a9f991685fbc62d74da86326cffa680644862d459d1973e422777a3933bc74190b1cae9a5418ddaea645a7d7630dd91c"
+            }
+        },
+        {
+            "name": "full_domain_empty_message",
+            "comment": "Domain only EIP-712 message",
+            "parameters": {
+                "path": "m/44'/60'/0'/0/0",
+                "metamask_v4_compat": true,
+                "data": {
+                    "types": {
+                        "EIP712Domain": [
+                            {
+                                "name": "name",
+                                "type": "string"
+                            },
+                            {
+                                "name": "version",
+                                "type": "string"
+                            },
+                            {
+                                "name": "chainId",
+                                "type": "uint256"
+                            },
+                            {
+                                "name": "verifyingContract",
+                                "type": "address"
+                            },
+                            {
+                                "name": "salt",
+                                "type": "bytes32"
+                            }
+                        ]
+                    },
+                    "primaryType": "EIP712Domain",
+                    "message": {},
+                    "domain": {
+                        "name": "Trezor",
+                        "version": "Test v0.0.0",
+                        "chainId": 1,
+                        "verifyingContract": "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC",
+                        "salt": "0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                    }
+                },
+                "message_hash": null,
+                "domain_separator_hash": "0xf85aaf157e9a36dc6e12643fff450fdf8d98fd0d0e41c5b42bb1f7aae6c83388"
+            },
+            "result": {
+                "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
+                "sig": "0x98a3e66f738002da98c70b976ef131c11ed8b94aad872140574ed2a2d4a2bac53a9350e284994274f0a7ce1191cf79bf13f2f0d0a862dcf0dd86ad8141eb90dc1c"
+            }
+        },
+        {
             "name": "basic_data",
             "parameters": {
                 "path": "m/44'/60'/0'/0/0",

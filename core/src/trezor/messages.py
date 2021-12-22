@@ -3234,14 +3234,14 @@ if TYPE_CHECKING:
     class EthereumSignTypedHash(protobuf.MessageType):
         address_n: "list[int]"
         domain_separator_hash: "bytes"
-        message_hash: "bytes"
+        message_hash: "bytes | None"
 
         def __init__(
             self,
             *,
             domain_separator_hash: "bytes",
-            message_hash: "bytes",
             address_n: "list[int] | None" = None,
+            message_hash: "bytes | None" = None,
         ) -> None:
             pass
 

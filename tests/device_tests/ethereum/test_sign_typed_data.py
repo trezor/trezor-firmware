@@ -50,7 +50,10 @@ def test_ethereum_sign_typed_data_blind(client, parameters, result):
             client,
             address_n,
             ethereum.decode_hex(parameters["domain_separator_hash"]),
-            ethereum.decode_hex(parameters["message_hash"]),
+            # message hash is empty for domain-only hashes
+            ethereum.decode_hex(parameters["message_hash"])
+            if parameters["message_hash"]
+            else None,
         )
         assert ret.address == result["address"]
         assert f"0x{ret.signature.hex()}" == result["sig"]
