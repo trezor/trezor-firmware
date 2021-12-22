@@ -1,12 +1,19 @@
 from typing import TYPE_CHECKING
 
 from trezor import utils, wire
-from trezor.crypto import bip32, hashlib, hmac
+from trezor.crypto import bip32, hmac
+from trezor.crypto.hashlib import sha256
 from trezor.enums import InputScriptType
+from trezor.utils import HashWriter
 
+from apps.bitcoin.writers import (
+    write_bitcoin_varint,
+    write_bytes_fixed,
+    write_bytes_prefixed,
+    write_uint8,
+)
 from apps.common.keychain import Keychain
 from apps.common.readers import read_bitcoin_varint
-from apps.common.writers import write_bitcoin_varint, write_bytes_fixed, write_uint8
 
 from . import common
 from .scripts import read_bip322_signature_proof, write_bip322_signature_proof
@@ -48,18 +55,18 @@ def generate_proof(
     for ownership_id in ownership_ids:
         write_bytes_fixed(proof, ownership_id, _OWNERSHIP_ID_LEN)
 
-    sighash = hashlib.sha256(proof)
-    sighash.update(script_pubkey)
-    sighash.update(commitment_data)
+    sighash = HashWriter(sha256(proof))
+    write_bytes_prefixed(sighash, script_pubkey)
+    write_bytes_prefixed(sighash, commitment_data)
     if script_type in (
         InputScriptType.SPENDADDRESS,
         InputScriptType.SPENDMULTISIG,
         InputScriptType.SPENDWITNESS,
         InputScriptType.SPENDP2SHWITNESS,
     ):
-        signature = common.ecdsa_sign(node, sighash.digest())
+        signature = common.ecdsa_sign(node, sighash.get_digest())
     elif script_type == InputScriptType.SPENDTAPROOT:
-        signature = common.bip340_sign(node, sighash.digest())
+        signature = common.bip340_sign(node, sighash.get_digest())
     else:
         raise wire.DataError("Unsupported script type.")
     public_key = node.public_key()
@@ -97,17 +104,19 @@ def verify_nonownership(
         # Verify the BIP-322 SignatureProof.
 
         proof_body = memoryview(proof)[: r.offset]
-        sighash = hashlib.sha256(proof_body)
-        sighash.update(script_pubkey)
-        if commitment_data:
-            sighash.update(commitment_data)
+        if commitment_data is None:
+            commitment_data = bytes()
+
+        sighash = HashWriter(sha256(proof_body))
+        write_bytes_prefixed(sighash, script_pubkey)
+        write_bytes_prefixed(sighash, commitment_data)
         script_sig, witness = read_bip322_signature_proof(r)
 
         # We don't call verifier.ensure_hash_type() to avoid possible compatibility
         # issues between implementations, because the hash type doesn't influence
         # the digest and the value to use is not defined in BIP-322.
         verifier = SignatureVerifier(script_pubkey, script_sig, witness, coin)
-        verifier.verify(sighash.digest())
+        verifier.verify(sighash.get_digest())
     except (ValueError, EOFError):
         raise wire.DataError("Invalid proof of ownership")
 
