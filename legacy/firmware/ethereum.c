@@ -976,14 +976,20 @@ int ethereum_message_verify(const EthereumVerifyMessage *msg) {
   return 0;
 }
 
+/*
+ * EIP-712 hashes might have no message_hash if primaryType="EIP712Domain".
+ * In this case, set has_message_hash=false.
+ */
 static void ethereum_typed_hash(const uint8_t domain_separator_hash[32],
                                 const uint8_t message_hash[32],
-                                uint8_t hash[32]) {
+                                bool has_message_hash, uint8_t hash[32]) {
   struct SHA3_CTX ctx = {0};
   sha3_256_Init(&ctx);
   sha3_Update(&ctx, (const uint8_t *)"\x19\x01", 2);
   sha3_Update(&ctx, domain_separator_hash, 32);
-  sha3_Update(&ctx, message_hash, 32);
+  if (has_message_hash) {
+    sha3_Update(&ctx, message_hash, 32);
+  }
   keccak_Final(&ctx, hash);
 }
 
@@ -991,8 +997,9 @@ void ethereum_typed_hash_sign(const EthereumSignTypedHash *msg,
                               const HDNode *node,
                               EthereumTypedDataSignature *resp) {
   uint8_t hash[32] = {0};
+
   ethereum_typed_hash(msg->domain_separator_hash.bytes, msg->message_hash.bytes,
-                      hash);
+                      msg->has_message_hash, hash);
 
   uint8_t v = 0;
   if (ecdsa_sign_digest(&secp256k1, node->private_key, hash,

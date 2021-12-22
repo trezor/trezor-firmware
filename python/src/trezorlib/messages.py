@@ -4742,15 +4742,15 @@ class EthereumSignTypedHash(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
         2: protobuf.Field("domain_separator_hash", "bytes", repeated=False, required=True),
-        3: protobuf.Field("message_hash", "bytes", repeated=False, required=True),
+        3: protobuf.Field("message_hash", "bytes", repeated=False, required=False),
     }
 
     def __init__(
         self,
         *,
         domain_separator_hash: "bytes",
-        message_hash: "bytes",
         address_n: Optional[Sequence["int"]] = None,
+        message_hash: Optional["bytes"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.domain_separator_hash = domain_separator_hash

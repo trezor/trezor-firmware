@@ -361,7 +361,10 @@ def verify_message(
 
 @expect(messages.EthereumTypedDataSignature)
 def sign_typed_data_hash(
-    client: "TrezorClient", n: "Address", domain_hash: bytes, message_hash: bytes
+    client: "TrezorClient",
+    n: "Address",
+    domain_hash: bytes,
+    message_hash: Optional[bytes],
 ) -> "MessageType":
     return client.call(
         messages.EthereumSignTypedHash(

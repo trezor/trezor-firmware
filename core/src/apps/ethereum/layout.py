@@ -6,6 +6,7 @@ from trezor.enums import ButtonRequestType, EthereumDataType
 from trezor.messages import EthereumFieldType, EthereumStructMember
 from trezor.strings import format_amount, format_plural
 from trezor.ui.layouts import (
+    confirm_action,
     confirm_address,
     confirm_amount,
     confirm_blob,
@@ -111,13 +112,24 @@ def require_confirm_data(ctx: Context, data: bytes, data_total: int) -> Awaitabl
     )
 
 
-async def confirm_hash(ctx: Context, message_hash: bytes) -> None:
-    await confirm_blob(
+async def confirm_typed_data_final(ctx: Context) -> None:
+    await confirm_action(
         ctx,
-        "confirm_hash",
-        title="Confirm hash",
-        data="0x" + hexlify(message_hash).decode(),
+        "confirm_typed_data_final",
+        title="Confirm typed data",
+        action="Really sign EIP-712 typed data?",
+        verb="Hold to confirm",
         hold=True,
+    )
+
+
+def confirm_empty_typed_message(ctx: Context) -> Awaitable[None]:
+    return confirm_text(
+        ctx,
+        "confirm_empty_typed_message",
+        title="Confirm message",
+        data="",
+        description="No message field",
     )
 
 

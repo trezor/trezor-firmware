@@ -20,7 +20,8 @@ from apps.common import paths
 from .helpers import address_from_bytes, get_type_name
 from .keychain import PATTERNS_ADDRESS, with_keychain_from_path
 from .layout import (
-    confirm_hash,
+    confirm_empty_typed_message,
+    confirm_typed_data_final,
     confirm_typed_value,
     should_show_array,
     should_show_domain,
@@ -82,23 +83,30 @@ async def generate_typed_data_hash(
         parent_objects=["EIP712Domain"],
     )
 
-    show_message = await should_show_struct(
-        ctx,
-        description=primary_type,
-        data_members=typed_data_envelope.types[primary_type].members,
-        title="Confirm message",
-        button_text="Show full message",
-    )
-    message_hash = await typed_data_envelope.hash_struct(
-        primary_type=primary_type,
-        member_path=[1],
-        show_data=show_message,
-        parent_objects=[primary_type],
-    )
+    # Setting the primary_type to "EIP712Domain" is technically in spec
+    # In this case, we ignore the "message" part and only use the "domain" part
+    # https://ethereum-magicians.org/t/eip-712-standards-clarification-primarytype-as-domaintype/3286
+    if primary_type == "EIP712Domain":
+        await confirm_empty_typed_message(ctx)
+        message_hash = b""
+    else:
+        show_message = await should_show_struct(
+            ctx,
+            description=primary_type,
+            data_members=typed_data_envelope.types[primary_type].members,
+            title="Confirm message",
+            button_text="Show full message",
+        )
+        message_hash = await typed_data_envelope.hash_struct(
+            primary_type=primary_type,
+            member_path=[1],
+            show_data=show_message,
+            parent_objects=[primary_type],
+        )
 
-    await confirm_hash(ctx, message_hash)
+    await confirm_typed_data_final(ctx)
 
-    return keccak256(b"\x19" + b"\x01" + domain_separator + message_hash)
+    return keccak256(b"\x19\x01" + domain_separator + message_hash)
 
 
 def get_hash_writer() -> HashWriter:
