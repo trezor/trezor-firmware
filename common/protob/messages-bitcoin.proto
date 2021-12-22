@@ -558,7 +558,7 @@ message OwnershipProof {
 message AuthorizeCoinJoin {
     option (unstable) = true;
 
-    required string coordinator = 1;                                    // coordinator identifier to approve as a prefix in commitment data (max. 18 ASCII characters)
+    required string coordinator = 1;                                    // coordinator identifier to approve as a prefix in commitment data (max. 36 ASCII characters)
     required uint64 max_total_fee = 2;                                  // maximum total fees
     optional uint32 fee_per_anonymity = 3 [default=0];                  // fee per anonymity set in units of 10^-9 percent
     repeated uint32 address_n = 4;                                      // prefix of the BIP-32 path leading to the account (m / purpose' / coin_type' / account')
