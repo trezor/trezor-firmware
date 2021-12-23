@@ -619,13 +619,6 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
         rskip60=False,
     )
     yield NetworkInfo(
-        chain_id=361,
-        slip44=60,
-        shortcut="TFUEL",
-        name="Theta",
-        rskip60=False,
-    )
-    yield NetworkInfo(
         chain_id=369,
         slip44=60,
         shortcut="PLS",
