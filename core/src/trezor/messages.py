@@ -1839,7 +1839,6 @@ if TYPE_CHECKING:
         fw_minor: "int | None"
         fw_patch: "int | None"
         fw_vendor: "str | None"
-        fw_vendor_keys: "bytes | None"
         unfinished_backup: "bool | None"
         no_backup: "bool | None"
         recovery_mode: "bool | None"
@@ -1882,7 +1881,6 @@ if TYPE_CHECKING:
             fw_minor: "int | None" = None,
             fw_patch: "int | None" = None,
             fw_vendor: "str | None" = None,
-            fw_vendor_keys: "bytes | None" = None,
             unfinished_backup: "bool | None" = None,
             no_backup: "bool | None" = None,
             recovery_mode: "bool | None" = None,

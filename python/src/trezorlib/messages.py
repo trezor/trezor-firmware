@@ -3055,7 +3055,6 @@ class Features(protobuf.MessageType):
         23: protobuf.Field("fw_minor", "uint32", repeated=False, required=False),
         24: protobuf.Field("fw_patch", "uint32", repeated=False, required=False),
         25: protobuf.Field("fw_vendor", "string", repeated=False, required=False),
-        26: protobuf.Field("fw_vendor_keys", "bytes", repeated=False, required=False),
         27: protobuf.Field("unfinished_backup", "bool", repeated=False, required=False),
         28: protobuf.Field("no_backup", "bool", repeated=False, required=False),
         29: protobuf.Field("recovery_mode", "bool", repeated=False, required=False),
@@ -3100,7 +3099,6 @@ class Features(protobuf.MessageType):
         fw_minor: Optional["int"] = None,
         fw_patch: Optional["int"] = None,
         fw_vendor: Optional["str"] = None,
-        fw_vendor_keys: Optional["bytes"] = None,
         unfinished_backup: Optional["bool"] = None,
         no_backup: Optional["bool"] = None,
         recovery_mode: Optional["bool"] = None,
@@ -3140,7 +3138,6 @@ class Features(protobuf.MessageType):
         self.fw_minor = fw_minor
         self.fw_patch = fw_patch
         self.fw_vendor = fw_vendor
-        self.fw_vendor_keys = fw_vendor_keys
         self.unfinished_backup = unfinished_backup
         self.no_backup = no_backup
         self.recovery_mode = recovery_mode
