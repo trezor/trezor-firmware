@@ -294,9 +294,6 @@ static void send_msg_features(uint8_t iface_num,
     MSG_SEND_ASSIGN_VALUE(fw_minor, ((hdr->version >> 8) & 0xFF));
     MSG_SEND_ASSIGN_VALUE(fw_patch, ((hdr->version >> 16) & 0xFF));
     MSG_SEND_ASSIGN_STRING_LEN(fw_vendor, vhdr->vstr, vhdr->vstr_len);
-    uint8_t hash[32];
-    vendor_header_hash(vhdr, hash);
-    MSG_SEND_ASSIGN_BYTES(fw_vendor_keys, hash, 32);
   } else {
     MSG_SEND_ASSIGN_VALUE(firmware_present, false);
   }

@@ -75,7 +75,7 @@ message Features {
     optional uint32 fw_minor = 23;              // reported firmware version if in bootloader mode
     optional uint32 fw_patch = 24;              // reported firmware version if in bootloader mode
     optional string fw_vendor = 25;             // reported firmware vendor if in bootloader mode
-    optional bytes fw_vendor_keys = 26;         // reported firmware vendor keys (their hash)
+    // optional bytes fw_vendor_keys = 26;      // obsoleted, use fw_vendor
     optional bool unfinished_backup = 27;       // report unfinished backup (equals to Storage.unfinished_backup)
     optional bool no_backup = 28;               // report no backup (equals to Storage.no_backup)
     optional bool recovery_mode = 29;           // is recovery mode in progress
