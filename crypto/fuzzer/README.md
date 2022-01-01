@@ -47,6 +47,9 @@ To be determined:
 * `-fstack-protector-strong` or `-fstack-protector-all`
 * `-m32` to closer evaluate the 32 bit behavior
     * this requires 32bit build support for gcc-multilib, libc and others
+    * adjust Makefile to `CFLAGS += -DSECP256K1_CONTEXT_SIZE=192`
+* `-DSHA2_UNROLL_TRANSFORM` SHA2 optimization flags
+* `-fsanitize-coverage=edge,trace-cmp,trace-div,indirect-calls,trace-gep,no-prune` to add program counter granularity
 
 ## Operation
 
