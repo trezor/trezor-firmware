@@ -30,6 +30,7 @@ TXHASH_e95b91 = bytes.fromhex(
 
 pytestmark = pytest.mark.altcoin
 
+
 def test_send_p2tr(client):
     inp1 = messages.TxInputType(
         # fc1pzfqhhmyve3gjxkm4ga5p5f0ueclspn2x2y3cpafra5hp0kna0f5s8na3n9
@@ -46,7 +47,7 @@ def test_send_p2tr(client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     _, serialized_tx = btc.sign_tx(
-        client, "Fujicoin", [inp1], [out1], prev_txes=TX_API_TESTNET
+        client, "Fujicoin", [inp1], [out1], prev_txes=TX_API
     )
     # https://explorer.fujicoin.org/tx/46b799bfa25d5771b3f894745934240ee9f4a17d139c4182e6287252c4cca15b
     assert (
