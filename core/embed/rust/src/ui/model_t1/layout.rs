@@ -4,7 +4,7 @@ use crate::{
     error::Error,
     micropython::{buffer::Buffer, map::Map, obj::Obj, qstr::Qstr},
     ui::{
-        component::{text::paragraphs::Paragraphs, Child, FormattedText, Paginated, PaginatedMsg},
+        component::{text::paragraphs::Paragraphs, Child, FormattedText, PageMsg},
         display,
         layout::obj::LayoutObj,
     },
@@ -16,13 +16,13 @@ use super::{
     theme,
 };
 
-impl<T> TryFrom<PaginatedMsg<T, bool>> for Obj {
+impl<T> TryFrom<PageMsg<T, bool>> for Obj {
     type Error = Error;
 
-    fn try_from(val: PaginatedMsg<T, bool>) -> Result<Self, Self::Error> {
+    fn try_from(val: PageMsg<T, bool>) -> Result<Self, Self::Error> {
         match val {
-            PaginatedMsg::Content(_) => 2.try_into(),
-            PaginatedMsg::Controls(c) => Ok(c.into()),
+            PageMsg::Content(_) => 2.try_into(),
+            PageMsg::Controls(c) => Ok(c.into()),
         }
     }
 }
@@ -57,7 +57,7 @@ extern "C" fn ui_layout_new_confirm_action(
             .map(|label| |area, pos| Button::with_text(area, pos, label, theme::button_default()));
 
         let obj = LayoutObj::new(Child::new(Title::new(display::screen(), title, |area| {
-            Paginated::<ButtonPage<_>>::new(
+            ButtonPage::new(
                 area,
                 |area| {
                     FormattedText::new::<theme::T1DefaultText>(area, format)
@@ -85,7 +85,7 @@ extern "C" fn ui_layout_new_confirm_text(
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
 
         let obj = LayoutObj::new(Child::new(Title::new(display::screen(), title, |area| {
-            Paginated::<ButtonPage<_>>::new(
+            ButtonPage::new(
                 area,
                 |area| {
                     Paragraphs::new(area)

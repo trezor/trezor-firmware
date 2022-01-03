@@ -1,5 +1,5 @@
 use crate::ui::{
-    component::{Component, Event, EventCtx, Never, Pad, PageMsg, Paginate},
+    component::{Component, ComponentExt, Event, EventCtx, Never, Pad, PageMsg, Paginate},
     display::{self, Color},
     geometry::{Offset, Point, Rect},
 };
@@ -19,11 +19,12 @@ pub struct ButtonPage<T> {
 impl<T> ButtonPage<T>
 where
     T: Paginate,
+    T: Component,
 {
-    fn new(area: Rect, content: impl FnOnce(Rect) -> T, background: Color) -> Self {
+    pub fn new(area: Rect, content: impl FnOnce(Rect) -> T, background: Color) -> Self {
         let (content_area, scrollbar_area, button_area) = Self::areas(area);
         let mut content = content(content_area);
-        let pad = Pad::with_background(content_area, background);
+        let pad = Pad::with_background(area, background);
 
         // Always start at the first page.
         let scrollbar = ScrollBar::vertical_right(scrollbar_area, content.page_count(), 0);
@@ -89,7 +90,7 @@ where
             if let Some(ButtonMsg::Clicked) = self.prev.event(ctx, event) {
                 // Scroll up.
                 self.scrollbar.go_to_previous_page();
-                self.change_page(self.scrollbar.active_page);
+                self.change_page(ctx, self.scrollbar.active_page);
                 return None;
             }
         } else if let Some(ButtonMsg::Clicked) = self.cancel.event(ctx, event) {
@@ -100,7 +101,7 @@ where
             if let Some(ButtonMsg::Clicked) = self.next.event(ctx, event) {
                 // Scroll down.
                 self.scrollbar.go_to_next_page();
-                self.change_page(self.scrollbar.active_page);
+                self.change_page(ctx, self.scrollbar.active_page);
                 return None;
             }
         } else if let Some(ButtonMsg::Clicked) = self.confirm.event(ctx, event) {
@@ -114,6 +115,7 @@ where
     }
 
     fn paint(&mut self) {
+        self.pad.paint();
         self.content.paint();
         self.scrollbar.paint();
         if self.scrollbar.has_previous_page() {

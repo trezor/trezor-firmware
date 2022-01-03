@@ -94,6 +94,7 @@ where
     }
 
     fn paint(&mut self) {
+        self.pad.paint();
         self.content.paint();
         self.scrollbar.paint();
         if let Some(val) = self.fade.take() {
