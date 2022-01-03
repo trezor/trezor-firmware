@@ -116,8 +116,7 @@ impl TextLayout {
                 }
                 Op::Text(text) => match self.layout_text(text, cursor, sink) {
                     LayoutFit::Fitting {
-                        processed_chars,
-                        size: _,
+                        processed_chars, ..
                     } => {
                         total_processed_chars += processed_chars;
                     }
@@ -226,20 +225,14 @@ impl TextLayout {
 
     pub fn measure_ops_height(self, ops: &mut dyn Iterator<Item = Op>) -> i32 {
         match self.layout_ops(ops, &mut self.initial_cursor(), &mut TextNoOp) {
-            LayoutFit::Fitting {
-                processed_chars: _,
-                size,
-            } => size.y,
+            LayoutFit::Fitting { size, .. } => size.y,
             LayoutFit::OutOfBounds { .. } => self.bounds.height(),
         }
     }
 
     pub fn measure_text_height(self, text: &[u8]) -> i32 {
         match self.layout_text(text, &mut self.initial_cursor(), &mut TextNoOp) {
-            LayoutFit::Fitting {
-                processed_chars: _,
-                size,
-            } => size.y,
+            LayoutFit::Fitting { size, .. } => size.y,
             LayoutFit::OutOfBounds { .. } => self.bounds.height(),
         }
     }
