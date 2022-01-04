@@ -9305,7 +9305,7 @@ START_TEST(test_zkp_bip340_sign) {
   uint8_t digest[32] = {0};
   uint8_t expected_sig[32] = {0};
   uint8_t pub_key[32] = {0};
-  uint8_t sig[32] = {0};
+  uint8_t sig[64] = {0};
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(*tests); i++) {
     memcpy(priv_key, fromhex(tests[i].priv_key), 32);
