@@ -24,8 +24,8 @@ from ...tx_cache import TxCache
 B = messages.ButtonRequestType
 TX_API = TxCache("Fujicoin")
 
-TXHASH_e95b91 = bytes.fromhex(
-    "e95b91410a42cce8c4c3348c05835a4e01b1a83c4259b630096bcde6c9bb3198"
+TXHASH_33043a = bytes.fromhex(
+    "33043a28cfa924ca701983e628615559ed2b68c0c14eb706b3970fa8dd4b5209"
 )
 
 pytestmark = pytest.mark.altcoin
@@ -33,24 +33,24 @@ pytestmark = pytest.mark.altcoin
 
 def test_send_p2tr(client):
     inp1 = messages.TxInputType(
-        # fc1pzfqhhmyve3gjxkm4ga5p5f0ueclspn2x2y3cpafra5hp0kna0f5s8na3n9
+        # fc1prr07akly3xjtmggue0p04vghr8pdcgxrye2s00sahptwjeawxrkq2rxzr7
         address_n=parse_path("86'/75'/0'/0/1"),
-        amount=100000000000,
-        prev_hash=TXHASH_e95b91,
-        prev_index=1,
+        amount=99997780000,
+        prev_hash=TXHASH_33043a,
+        prev_index=0,
         script_type=messages.InputScriptType.SPENDTAPROOT,
     )
     out1 = messages.TxOutputType(
         # 86'/75'/0'/0/0
-        address="fc1plf6fmfsrx086qpzjcvn6w29ms2d08rjknphye8phdtqcn0vk9mzswzaz59",
-        amount=99998890000,
+        address="fc1pxax0eaemn9fg2vfwvnz8wr2fjtr5e8junp50vx3yvx8aauv0hcvql824ml",
+        amount=99996670000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     _, serialized_tx = btc.sign_tx(
         client, "Fujicoin", [inp1], [out1], prev_txes=TX_API
     )
-    # https://explorer.fujicoin.org/tx/46b799bfa25d5771b3f894745934240ee9f4a17d139c4182e6287252c4cca15b
+    # https://explorer.fujicoin.org/tx/a1c6a81f5e8023b17e6e3e51e2596d5b5e1d4914ea13c0c31cef90b3c3edee86
     assert (
         serialized_tx.hex()
-        == "010000000001019831bbc9e6cd6b0930b659423ca8b1014e5a83058c34c3c4e8cc420a41915be90100000000ffffffff0110f8654817000000225120fa749da60333cfa00452c327a728bb829af38e56986e4c9c376ac189bd962ec50140f3846661a78423ba5bdbc874b8d75594fa5a15aab07627a95faae4cabdacc82cc271a90c7ab215e61f30dca1245f601f4a9e1184725e72223cca43a8c66f6db800000000"
+        == "0100000000010109524bdda80f97b306b74ec1c0682bed59556128e6831970ca24a9cf283a04330000000000ffffffff013018444817000000225120374cfcf73b995285312e64c4770d4992c74c9e5c9868f61a24618fdef18fbe180140310d04b3f7ec9c6bbc334254b5cb160d071368b3718a1e69a9f9c8c32634046cafc156115c223520eb061e5004e3f682973ed1c441b4cb9581a3ac08540227ee00000000"
     )
