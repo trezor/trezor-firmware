@@ -283,6 +283,8 @@ def find_best_firmware_version(
                 if closest_version > want_version:
                     # stop at first that is higher than the requested
                     break
+            else:
+                raise click.ClickException("No versions were found!")
             # if there was no break, the newest is used
             click.echo(f"Closest available version: {version_str(closest_version)}")
             if not beta and want_version > highest_version:
