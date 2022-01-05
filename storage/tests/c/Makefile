@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wshadow -Wextra -Wpedantic -Werror -Wno-missing-braces -fPIC
+CFLAGS = -Wall -Wshadow -Wextra -Wpedantic -Werror -Wno-missing-braces -fPIC -fsanitize=address
 LIBS =
 INC = -I ../../../crypto -I ../.. -I .
 BASE = ../../../

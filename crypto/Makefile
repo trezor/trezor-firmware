@@ -1,11 +1,9 @@
 ifeq ($(FUZZER),1)
 CC       ?= clang
 LD       ?= $(CC)
-
 SANFLAGS += -fsanitize=fuzzer
-
-CFLAGS   += $(SANFLAGS)
-LDFLAGS  += $(SANFLAGS)
+else ifeq ($(ADDRESS_SANITIZER),1)
+SANFLAGS += -fsanitize=address
 endif
 
 CC       ?= gcc
@@ -13,6 +11,7 @@ CC       ?= gcc
 OPTFLAGS ?= -O3 -g
 
 CFLAGS   += $(OPTFLAGS) \
+            $(SANFLAGS) \
             -std=gnu99 \
             -W \
             -Wall \
@@ -118,18 +117,18 @@ all: tools tests
 tests: tests/test_check tests/test_openssl tests/test_speed tests/libtrezor-crypto.so tests/aestst
 
 tests/aestst: aes/aestst.o aes/aescrypt.o aes/aeskey.o aes/aestab.o
-	$(CC) $^ -o $@
+	$(CC) $(CFLAGS) $^ -o $@
 
 tests/test_check.o: tests/test_check_cardano.h tests/test_check_monero.h tests/test_check_cashaddr.h tests/test_check_segwit.h
 
 tests/test_check: tests/test_check.o $(OBJS)
-	$(CC) tests/test_check.o $(OBJS) $(TESTLIBS) -o tests/test_check
+	$(CC) $(CFLAGS) tests/test_check.o $(OBJS) $(TESTLIBS) -o tests/test_check
 
 tests/test_speed: tests/test_speed.o $(OBJS)
-	$(CC) tests/test_speed.o $(OBJS) -o tests/test_speed
+	$(CC) $(CFLAGS) tests/test_speed.o $(OBJS) -o tests/test_speed
 
 tests/test_openssl: tests/test_openssl.o $(OBJS)
-	$(CC) tests/test_openssl.o $(OBJS) $(TESTSSLLIBS) -o tests/test_openssl
+	$(CC) $(CFLAGS) tests/test_openssl.o $(OBJS) $(TESTSSLLIBS) -o tests/test_openssl
 
 tests/libtrezor-crypto.so: $(SRCS) secp256k1-zkp.o
 	$(CC) $(CFLAGS) -DAES_128 -DAES_192 -fPIC -shared $(SRCS) secp256k1-zkp.o -o tests/libtrezor-crypto.so
@@ -137,13 +136,13 @@ tests/libtrezor-crypto.so: $(SRCS) secp256k1-zkp.o
 tools: tools/xpubaddrgen tools/mktable tools/bip39bruteforce
 
 tools/xpubaddrgen: tools/xpubaddrgen.o $(OBJS)
-	$(CC) tools/xpubaddrgen.o $(OBJS) -o tools/xpubaddrgen
+	$(CC) $(CFLAGS) tools/xpubaddrgen.o $(OBJS) -o tools/xpubaddrgen
 
 tools/mktable: tools/mktable.o $(OBJS)
-	$(CC) tools/mktable.o $(OBJS) -o tools/mktable
+	$(CC) $(CFLAGS) tools/mktable.o $(OBJS) -o tools/mktable
 
 tools/bip39bruteforce: tools/bip39bruteforce.o $(OBJS)
-	$(CC) tools/bip39bruteforce.o $(OBJS) -o tools/bip39bruteforce
+	$(CC) $(CFLAGS) tools/bip39bruteforce.o $(OBJS) -o tools/bip39bruteforce
 
 fuzzer: fuzzer/fuzzer.o $(OBJS)
 	$(CC) $(CFLAGS) fuzzer/fuzzer.o $(OBJS) -o fuzzer/fuzzer

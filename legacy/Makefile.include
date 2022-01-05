@@ -21,6 +21,9 @@ OPTFLAGS ?= -O3
 DBGFLAGS ?= -g3 -ggdb3
 CPUFLAGS ?=
 FPUFLAGS ?=
+ifeq ($(ADDRESS_SANITIZER),1)
+SANFLAGS += -fsanitize=address
+endif
 else
 PREFIX   ?= arm-none-eabi-
 CC       := $(PREFIX)gcc
@@ -42,6 +45,7 @@ endif
 
 CFLAGS   += $(OPTFLAGS) \
             $(DBGFLAGS) \
+            $(SANFLAGS) \
             -std=gnu11 \
             -W \
             -Wall \
@@ -81,6 +85,7 @@ CFLAGS   += $(OPTFLAGS) \
 
 LDFLAGS  += -L$(TOP_DIR) \
             $(DBGFLAGS) \
+            $(SANFLAGS) \
             $(CPUFLAGS) \
             $(FPUFLAGS)
 
