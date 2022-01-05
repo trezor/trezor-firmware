@@ -133,4 +133,6 @@ def with_client(func: "Callable[Concatenate[TrezorClient, P], R]") -> "Callable[
                     except Exception:
                         pass
 
-    return trezorctl_command_with_client
+    # the return type of @click.pass_obj is improperly specified and pyright doesn't
+    # understand that it converts f(obj, *args, **kwargs) to f(*args, **kwargs)
+    return trezorctl_command_with_client  # type: ignore

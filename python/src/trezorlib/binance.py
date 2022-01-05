@@ -49,9 +49,10 @@ def sign_tx(
     client: "TrezorClient", address_n: "Address", tx_json: dict
 ) -> messages.BinanceSignedTx:
     msg = tx_json["msgs"][0]
-    envelope = dict_to_proto(messages.BinanceSignTx, tx_json)
-    envelope.msg_count = 1
-    envelope.address_n = address_n
+    tx_msg = tx_json.copy()
+    tx_msg["msg_count"] = 1
+    tx_msg["address_n"] = address_n
+    envelope = dict_to_proto(messages.BinanceSignTx, tx_msg)
 
     response = client.call(envelope)
 
