@@ -1,12 +1,14 @@
 use crate::ui::{
     component::{label::LabelStyle, text::layout::DefaultTextTheme},
-    display::{Color, Font},
+    display::{self, Color, Font},
+    geometry::Rect,
 };
 
 use super::component::{ButtonStyle, ButtonStyleSheet, LoaderStyle, LoaderStyleSheet};
 
 // Font constants.
 pub const FONT_NORMAL: Font = Font::new(-1);
+pub const FONT_MEDIUM: Font = Font::new(-5);
 pub const FONT_BOLD: Font = Font::new(-2);
 pub const FONT_MONO: Font = Font::new(-3);
 
@@ -119,6 +121,7 @@ impl DefaultTextTheme for TTDefaultText {
     const ELLIPSIS_COLOR: Color = GREY_LIGHT;
 
     const NORMAL_FONT: Font = FONT_NORMAL;
+    const MEDIUM_FONT: Font = FONT_MEDIUM;
     const BOLD_FONT: Font = FONT_BOLD;
     const MONO_FONT: Font = FONT_MONO;
 }

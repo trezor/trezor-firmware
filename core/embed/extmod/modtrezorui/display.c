@@ -35,12 +35,16 @@
 
 #include "font_tthoves_regular_18.h"
 #define FONT_NORMAL_DATA Font_TTHoves_Regular_18
+#define FONT_NORMAL_HEIGHT 18
 #include "font_tthoves_medium_20.h"
 #define FONT_MEDIUM_DATA Font_TTHoves_Medium_20
+#define FONT_MEDIUM_HEIGHT 20
 #include "font_tthoves_bold_16.h"
 #define FONT_BOLD_DATA Font_TTHoves_Bold_16
+#define FONT_BOLD_HEIGHT 16
 #include "font_robotomono_regular_20.h"
 #define FONT_MONO_DATA Font_RobotoMono_Regular_20
+#define FONT_MONO_HEIGHT 20
 
 // TT old python UI
 #else
@@ -48,14 +52,17 @@
 #ifdef TREZOR_FONT_NORMAL_ENABLE
 #include "font_roboto_regular_20.h"
 #define FONT_NORMAL_DATA Font_Roboto_Regular_20
+#define FONT_NORMAL_HEIGHT 20
 #endif
 #ifdef TREZOR_FONT_BOLD_ENABLE
 #include "font_roboto_bold_20.h"
 #define FONT_BOLD_DATA Font_Roboto_Bold_20
+#define FONT_BOLD_HEIGHT 20
 #endif
 #ifdef TREZOR_FONT_MONO_ENABLE
 #include "font_robotomono_regular_20.h"
 #define FONT_MONO_DATA Font_RobotoMono_Regular_20
+#define FONT_MONO_HEIGHT 20
 #endif
 
 #endif
@@ -65,18 +72,22 @@
 #ifdef TREZOR_FONT_NORMAL_ENABLE
 #include "font_pixeloperator_regular_8.h"
 #define FONT_NORMAL_DATA Font_PixelOperator_Regular_8
+#define FONT_NORMAL_HEIGHT 8
 #endif
 #ifdef TREZOR_FONT_MEDIUM_ENABLE
 #include "font_pixeloperator_regular_8.h"
 #define FONT_MEDIUM_DATA Font_PixelOperator_Regular_8
+#define FONT_MEDIUM_HEIGHT 8
 #endif
 #ifdef TREZOR_FONT_BOLD_ENABLE
 #include "font_pixeloperator_bold_8.h"
 #define FONT_BOLD_DATA Font_PixelOperator_Bold_8
+#define FONT_BOLD_HEIGHT 8
 #endif
 #ifdef TREZOR_FONT_MONO_ENABLE
 #include "font_pixeloperatormono_regular_8.h"
 #define FONT_MONO_DATA Font_PixelOperatorMono_Regular_8
+#define FONT_MONO_HEIGHT 8
 #endif
 
 #else
@@ -820,6 +831,28 @@ int display_text_split(const char *text, int textlen, int font,
     }
   }
   return textlen;
+}
+
+int display_text_height(int font) {
+  switch (font) {
+#ifdef TREZOR_FONT_NORMAL_ENABLE
+    case FONT_NORMAL:
+      return FONT_NORMAL_HEIGHT;
+#endif
+#ifdef TREZOR_FONT_MEDIUM_ENABLE
+    case FONT_MEDIUM:
+      return FONT_MEDIUM_HEIGHT;
+#endif
+#ifdef TREZOR_FONT_BOLD_ENABLE
+    case FONT_BOLD:
+      return FONT_BOLD_HEIGHT;
+#endif
+#ifdef TREZOR_FONT_MONO_ENABLE
+    case FONT_MONO:
+      return FONT_MONO_HEIGHT;
+#endif
+  }
+  return 0;
 }
 
 #define QR_MAX_VERSION 9

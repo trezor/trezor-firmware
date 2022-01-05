@@ -52,6 +52,8 @@ pub struct TextLayout {
 
     /// Font used to format `{normal}`.
     pub normal_font: Font,
+    /// Font used to format `{medium}`.
+    pub medium_font: Font,
     /// Font used to format `{bold}`.
     pub bold_font: Font,
     /// Font used to format `{mono}`.
@@ -67,6 +69,7 @@ pub trait DefaultTextTheme {
     const ELLIPSIS_FONT: Font;
     const ELLIPSIS_COLOR: Color;
     const NORMAL_FONT: Font;
+    const MEDIUM_FONT: Font;
     const BOLD_FONT: Font;
     const MONO_FONT: Font;
 }
@@ -85,6 +88,7 @@ impl TextLayout {
             ellipsis_font: T::ELLIPSIS_FONT,
             ellipsis_color: T::ELLIPSIS_COLOR,
             normal_font: T::NORMAL_FONT,
+            medium_font: T::MEDIUM_FONT,
             bold_font: T::BOLD_FONT,
             mono_font: T::MONO_FONT,
         }
