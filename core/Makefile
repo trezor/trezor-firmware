@@ -107,22 +107,12 @@ test_emu_ui_record: ## record and hash screens for ui integration tests
 pylint: ## run pylint on application sources and tests
 	pylint -E $(shell find src tests -name *.py)
 
-mypy:
-	mypy --config-file ../setup.cfg \
-		src/main.py \
-		src/apps \
-		src/trezor \
-		src/storage \
-		--exclude src/apps/monero
+mypy: ## deprecated; use "make typecheck"
+	@echo "mypy is deprecated; use 'make typecheck'"
+	make typecheck
 
-mypy_report:
-	mypy --config-file ../setup.cfg \
-		src/main.py \
-		src/apps \
-		src/trezor \
-		src/storage \
-		--exclude src/apps/monero \
-		--html-report mypy_report
+typecheck:
+	pyright
 
 clippy:
 	cd embed/rust ; cargo clippy
