@@ -3574,6 +3574,14 @@ static void test_ecdsa_recover_pub_from_sig_helper(int (
           "0490d2bd2e9a564d6e1d8324fc6ad00aa4ae597684ecf4abea58bdfe7287ea4fa729"
           "68c2e5b0b40999ede3d7898d94e82c3f8dc4536a567a4bd45998c826a4c4b2"),
       65);
+  // The point at infinity is not considered to be a valid public key.
+  res = ecdsa_recover_pub_from_sig_fn(
+      curve, pubkey,
+      fromhex(
+          "220cf4c7b6d568f2256a8c30cc1784a625a28c3627dac404aa9a9ecd08314ec81a88"
+          "828f20d69d102bab5de5f6ee7ef040cb0ff7b8e1ba3f29d79efb5250f47d"),
+      digest, 0);
+  ck_assert_int_eq(res, 1);
 
   memcpy(
       digest,

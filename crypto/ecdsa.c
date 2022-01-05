@@ -1065,6 +1065,10 @@ int ecdsa_recover_pub_from_sig(const ecdsa_curve *curve, uint8_t *pub_key,
   scalar_multiply(curve, &e, &cp2);
   // cp = (s * r^-1 * k - digest * r^-1) * G = Pub
   point_add(curve, &cp2, &cp);
+  // The point at infinity is not considered to be a valid public key.
+  if (point_is_infinity(&cp)) {
+    return 1;
+  }
   pub_key[0] = 0x04;
   bn_write_be(&cp.x, pub_key + 1);
   bn_write_be(&cp.y, pub_key + 33);
