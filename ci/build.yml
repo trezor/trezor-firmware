@@ -217,6 +217,8 @@ crypto build:
   stage: build
   <<: *gitlab_caching
   needs: []
+  variables:
+    ADDRESS_SANITIZER: "1"
   only:
     changes:
       - .gitlab-ci.yml
