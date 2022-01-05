@@ -62,11 +62,5 @@ style_check:
 test:
 	pytest tests
 
-mypy:
-	mypy --config-file ./setup.cfg ./src/trezorlib/
-
-mypy_report:
-	mypy --config-file ./setup.cfg ./src/trezorlib/ --html-report mypy_report
-
 pyright:
 	pyright -p pyrightconfig.json
