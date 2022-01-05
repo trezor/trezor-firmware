@@ -9303,7 +9303,7 @@ START_TEST(test_zkp_bip340_sign) {
   uint8_t expected_pub_key[32] = {0};
   uint8_t aux_input[32] = {0};
   uint8_t digest[32] = {0};
-  uint8_t expected_sig[32] = {0};
+  uint8_t expected_sig[64] = {0};
   uint8_t pub_key[32] = {0};
   uint8_t sig[64] = {0};
 
@@ -9312,13 +9312,13 @@ START_TEST(test_zkp_bip340_sign) {
     memcpy(expected_pub_key, fromhex(tests[i].pub_key), 32);
     memcpy(aux_input, fromhex(tests[i].aux_input), 32);
     memcpy(digest, fromhex(tests[i].digest), 32);
-    memcpy(expected_sig, fromhex(tests[i].sig), 32);
+    memcpy(expected_sig, fromhex(tests[i].sig), 64);
 
     zkp_bip340_get_public_key(priv_key, pub_key);
     ck_assert_mem_eq(expected_pub_key, pub_key, 32);
 
     res = zkp_bip340_sign_digest(priv_key, digest, sig, aux_input);
-    ck_assert_mem_eq(expected_sig, sig, 32);
+    ck_assert_mem_eq(expected_sig, sig, 64);
     ck_assert_int_eq(res, 0);
   }
 }
