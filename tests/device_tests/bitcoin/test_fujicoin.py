@@ -19,11 +19,6 @@ import pytest
 from trezorlib import btc, messages
 from trezorlib.tools import parse_path
 
-from ...tx_cache import TxCache
-
-B = messages.ButtonRequestType
-TX_API = TxCache("Fujicoin")
-
 TXHASH_33043a = bytes.fromhex(
     "33043a28cfa924ca701983e628615559ed2b68c0c14eb706b3970fa8dd4b5209"
 )
@@ -46,9 +41,7 @@ def test_send_p2tr(client):
         amount=99996670000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    _, serialized_tx = btc.sign_tx(
-        client, "Fujicoin", [inp1], [out1], prev_txes=TX_API
-    )
+    _, serialized_tx = btc.sign_tx(client, "Fujicoin", [inp1], [out1])
     # https://explorer.fujicoin.org/tx/a1c6a81f5e8023b17e6e3e51e2596d5b5e1d4914ea13c0c31cef90b3c3edee86
     assert (
         serialized_tx.hex()
