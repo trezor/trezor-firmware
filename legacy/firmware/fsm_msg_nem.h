@@ -59,8 +59,6 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
 #define NEM_CHECK_PARAM_WHEN(b, s) \
   CHECK_PARAM(!(b) || (reason = (s)) == NULL, reason)
 
-  CHECK_PARAM(msg->has_transaction, _("No common provided"));
-
   // Ensure exactly one transaction is provided
   unsigned int provided = msg->has_transfer + msg->has_provision_namespace +
                           msg->has_mosaic_creation + msg->has_supply_change +
