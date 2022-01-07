@@ -298,31 +298,31 @@ class BufferReader:
         return byte
 
 
-def obj_eq(l: object, r: object) -> bool:
+def obj_eq(self: object, __o: object) -> bool:
     """
     Compares object contents, supports __slots__.
     """
-    if l.__class__ is not r.__class__:
+    if self.__class__ is not __o.__class__:
         return False
-    if not hasattr(l, "__slots__"):
-        return l.__dict__ == r.__dict__
-    if l.__slots__ is not r.__slots__:
+    if not hasattr(self, "__slots__"):
+        return self.__dict__ == __o.__dict__
+    if self.__slots__ is not __o.__slots__:
         return False
-    for slot in l.__slots__:
-        if getattr(l, slot, None) != getattr(r, slot, None):
+    for slot in self.__slots__:
+        if getattr(self, slot, None) != getattr(__o, slot, None):
             return False
     return True
 
 
-def obj_repr(o: object) -> str:
+def obj_repr(self: object) -> str:
     """
     Returns a string representation of object, supports __slots__.
     """
-    if hasattr(o, "__slots__"):
-        d = {attr: getattr(o, attr, None) for attr in o.__slots__}
+    if hasattr(self, "__slots__"):
+        d = {attr: getattr(self, attr, None) for attr in self.__slots__}
     else:
-        d = o.__dict__
-    return f"<{o.__class__.__name__}: {d}>"
+        d = self.__dict__
+    return f"<{self.__class__.__name__}: {d}>"
 
 
 def truncate_utf8(string: str, max_bytes: int) -> str:
