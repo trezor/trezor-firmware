@@ -106,10 +106,10 @@ class Bip39Keyboard(ui.Layout):
 
         icon_back = res.load(ui.ICON_BACK)
         self.back = Button(ui.grid(0, n_x=3, n_y=4), icon_back, ButtonClear)
-        self.back.on_click = self.on_back_click  # type: ignore
+        self.back.on_click = self.on_back_click
 
         self.input = InputButton(ui.grid(1, n_x=3, n_y=4, cells_x=2), "", "")
-        self.input.on_click = self.on_input_click  # type: ignore
+        self.input.on_click = self.on_input_click
 
         self.keys = [
             KeyButton(ui.grid(i + 3, n_y=4), k, self)

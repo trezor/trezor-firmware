@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from apps.common.coininfo import CoinInfo
     from trezor.messages import TxInput
 else:
-    IntEnum = object  # type: ignore
+    IntEnum = object
 
 
 BITCOIN_NAMES = ("Bitcoin", "Regtest", "Testnet")

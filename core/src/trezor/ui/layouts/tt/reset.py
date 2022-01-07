@@ -83,7 +83,7 @@ async def show_share_words(
             words = [w for _, w in word_pages[paginated.page]]
             debug.reset_current_words.publish(words)
 
-        paginated.on_change = export_displayed_words  # type: ignore
+        paginated.on_change = export_displayed_words
         export_displayed_words()
 
     # make sure we display correct data

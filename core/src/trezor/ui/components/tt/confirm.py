@@ -141,13 +141,13 @@ class InfoConfirm(ui.Layout):
         self.content = content
 
         self.confirm = Button(ui.grid(14), confirm, confirm_style)
-        self.confirm.on_click = self.on_confirm  # type: ignore
+        self.confirm.on_click = self.on_confirm
 
         self.info = Button(ui.grid(13), info, info_style)
-        self.info.on_click = self.on_info  # type: ignore
+        self.info.on_click = self.on_info
 
         self.cancel = Button(ui.grid(12), cancel, cancel_style)
-        self.cancel.on_click = self.on_cancel  # type: ignore
+        self.cancel.on_click = self.on_cancel
 
     def dispatch(self, event: int, x: int, y: int) -> None:
         self.content.dispatch(event, x, y)
@@ -195,22 +195,22 @@ class HoldToConfirm(ui.Layout):
         self.content = content
 
         self.loader = Loader(loader_style)
-        self.loader.on_start = self._on_loader_start  # type: ignore
+        self.loader.on_start = self._on_loader_start
 
         if cancel:
             self.confirm = Button(ui.grid(17, n_x=4, cells_x=3), confirm, confirm_style)
         else:
             self.confirm = Button(ui.grid(4, n_x=1), confirm, confirm_style)
-        self.confirm.on_press_start = self._on_press_start  # type: ignore
-        self.confirm.on_press_end = self._on_press_end  # type: ignore
-        self.confirm.on_click = self._on_click  # type: ignore
+        self.confirm.on_press_start = self._on_press_start
+        self.confirm.on_press_end = self._on_press_end
+        self.confirm.on_click = self._on_click
 
         self.cancel = None
         if cancel:
             self.cancel = Button(
                 ui.grid(16, n_x=4), res.load(ui.ICON_CANCEL), ButtonAbort
             )
-            self.cancel.on_click = self.on_cancel  # type: ignore
+            self.cancel.on_click = self.on_cancel
 
     def _on_press_start(self) -> None:
         self.loader.start()

@@ -187,6 +187,6 @@ def find_registered_handler(iface: WireInterface, msg_type: int) -> Handler | No
         modname = find_message_handler_module(msg_type)
         handler_name = modname[modname.rfind(".") + 1 :]
         module = __import__(modname, None, None, (handler_name,), 0)
-        return getattr(module, handler_name)  # type: ignore
+        return getattr(module, handler_name)
     except ValueError:
         return None

@@ -31,7 +31,7 @@ class Slip39NumInput(ui.Component):
         super().__init__()
         self.step = step
         self.input = NumInput(count, min_count=min_count, max_count=max_count)
-        self.input.on_change = self.on_change  # type: ignore
+        self.input.on_change = self.on_change
         self.group_id = group_id
 
     def dispatch(self, event: int, x: int, y: int) -> None:
@@ -126,7 +126,7 @@ class MnemonicWordSelect(ui.Layout):
         for i, word in enumerate(words):
             area = ui.grid(i + 2, n_x=1)
             btn = Button(area, word)
-            btn.on_click = self.select(word)  # type: ignore
+            btn.on_click = self.select(word)
             self.buttons.append(btn)
         if share_index is None:
             self.text: ui.Component = Text("Check seed")
