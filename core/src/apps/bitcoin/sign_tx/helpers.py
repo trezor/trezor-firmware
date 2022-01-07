@@ -38,7 +38,7 @@ class UiConfirm:
     def confirm_dialog(self, ctx: wire.Context) -> Awaitable[Any]:
         raise NotImplementedError
 
-    __eq__ = utils.obj_eq  # type: ignore
+    __eq__ = utils.obj_eq
 
 
 class UiConfirmOutput(UiConfirm):
