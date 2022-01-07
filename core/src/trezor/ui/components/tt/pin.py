@@ -115,19 +115,19 @@ class PinDialog(ui.Layout):
 
         icon_confirm = res.load(ui.ICON_CONFIRM)
         self.confirm_button = Button(ui.grid(14), icon_confirm, ButtonConfirm)
-        self.confirm_button.on_click = self.on_confirm  # type: ignore
+        self.confirm_button.on_click = self.on_confirm
         self.confirm_button.disable()
 
         icon_back = res.load(ui.ICON_BACK)
         self.reset_button = Button(ui.grid(12), icon_back, ButtonClear)
-        self.reset_button.on_click = self.on_reset  # type: ignore
+        self.reset_button.on_click = self.on_reset
 
         if allow_cancel:
             icon_lock = res.load(
                 ui.ICON_CANCEL if config.is_unlocked() else ui.ICON_LOCK
             )
             self.cancel_button = Button(ui.grid(12), icon_lock, ButtonCancel)
-            self.cancel_button.on_click = self.on_cancel  # type: ignore
+            self.cancel_button.on_click = self.on_cancel
         else:
             self.cancel_button = Button(ui.grid(12), "")
             self.cancel_button.disable()

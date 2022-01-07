@@ -43,7 +43,7 @@ class InfoConfirm(ui.Layout):
         self.panel_area = panel_area
         confirm_area = ui.grid(4, n_x=1)
         self.confirm = Button(confirm_area, confirm, style.button)
-        self.confirm.on_click = self.on_confirm  # type: ignore
+        self.confirm.on_click = self.on_confirm
 
     def dispatch(self, event: int, x: int, y: int) -> None:
         if event == ui.RENDER:

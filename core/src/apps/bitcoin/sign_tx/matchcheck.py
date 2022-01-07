@@ -14,8 +14,8 @@ if TYPE_CHECKING:
     T = TypeVar("T")
 else:
     # typechecker cheat: Generic[T] will be `object` which is a valid parent type
-    Generic = [object]  # type: ignore
-    T = 0  # type: ignore
+    Generic = [object]
+    T = 0
 
 
 class MatchChecker(Generic[T]):

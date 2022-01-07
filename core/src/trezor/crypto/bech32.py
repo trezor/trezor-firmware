@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     OptionalTuple2 = Union[tuple[None, None], tuple[A, B]]
     OptionalTuple3 = Union[tuple[None, None, None], tuple[A, B, C]]
 else:
-    IntEnum = object  # type: ignore
+    IntEnum = object
 
 
 class Encoding(IntEnum):

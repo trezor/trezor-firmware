@@ -19,8 +19,8 @@ if TYPE_CHECKING:
     CborSequence = Union[list[Value], Tuple[Value, ...]]
 else:
     # typechecker cheat: Generic[K, V] will be `object` which is a valid parent type
-    Generic = {(0, 0): object}  # type: ignore
-    K = V = 0  # type: ignore
+    Generic = {(0, 0): object}
+    K = V = 0
 
 _CBOR_TYPE_MASK = const(0xE0)
 _CBOR_INFO_BITS = const(0x1F)

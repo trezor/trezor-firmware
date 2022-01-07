@@ -342,7 +342,7 @@ if __debug__:
             return getattr(self.orig_display, key)
 
         def __enter__(self) -> None:
-            ui.display = self  # type: ignore
+            ui.display = self
 
         def __exit__(self, exc: Any, exc_type: Any, tb: Any) -> None:
             ui.display = self.orig_display

@@ -10,10 +10,10 @@ if TYPE_CHECKING:
     K = TypeVar("K")
     V = TypeVar("V")
 else:
-    T = 0  # type: ignore
-    K = 0  # type: ignore
-    V = 0  # type: ignore
-    Generic = {T: object, (K, V): object}  # type: ignore
+    T = 0
+    K = 0
+    V = 0
+    Generic = {T: object, (K, V): object}
 
 
 class HashBuilderCollection:

@@ -73,7 +73,7 @@ class Paginated(ui.Layout):
             area = ui.grid(16, n_x=4)
             icon = res.load(ui.ICON_BACK)
             self.back_button = Button(area, icon, ButtonDefault)
-            self.back_button.on_click = self.on_back_click  # type: ignore
+            self.back_button.on_click = self.on_back_click
 
     def dispatch(self, event: int, x: int, y: int) -> None:
         pages = self.pages
@@ -169,7 +169,7 @@ class AskPaginated(ui.Component):
         super().__init__()
         self.content = content
         self.button = Button(ui.grid(3, n_x=1), button_text, ButtonDefault)
-        self.button.on_click = self.on_show_paginated_click  # type: ignore
+        self.button.on_click = self.on_show_paginated_click
 
     def dispatch(self, event: int, x: int, y: int) -> None:
         self.content.dispatch(event, x, y)
@@ -218,10 +218,10 @@ class PageWithButtons(ui.Component):
             right_style = ButtonConfirm
 
         self.left = Button(ui.grid(8, n_x=2), left, left_style)
-        self.left.on_click = self.on_left  # type: ignore
+        self.left.on_click = self.on_left
 
         self.right = Button(ui.grid(9, n_x=2), right, right_style)
-        self.right.on_click = self.on_right  # type: ignore
+        self.right.on_click = self.on_right
 
     def dispatch(self, event: int, x: int, y: int) -> None:
         self.content.dispatch(event, x, y)
