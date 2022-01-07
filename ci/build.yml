@@ -140,12 +140,47 @@ core unix frozen btconly debug build:
       - core/build/unix/trezor-emu-core-bitcoinonly
     expire_in: 1 week
 
+core unix frozen btconly debug asan build:
+  stage: build
+  <<: *gitlab_caching
+  needs: []
+  only:
+    - schedules  # nightly build
+  variables:
+    PYOPT: "0"
+    BITCOIN_ONLY: "1"
+    ADDRESS_SANITIZER: "1"
+  script:
+    - nix-shell --run "poetry run make -C core build_unix_frozen"
+    - mv core/build/unix/trezor-emu-core core/build/unix/trezor-emu-core-bitcoinonly
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - core/build/unix/trezor-emu-core-bitcoinonly
+    expire_in: 1 week
+
 core unix frozen debug build:
   stage: build
   <<: *gitlab_caching
   needs: []
   variables:
     PYOPT: "0"
+  script:
+    - nix-shell --run "poetry run make -C core build_unix_frozen"
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    untracked: true
+    expire_in: 1 week
+
+core unix frozen debug asan build:
+  stage: build
+  <<: *gitlab_caching
+  needs: []
+  only:
+    - schedules  # nightly build
+  variables:
+    PYOPT: "0"
+    ADDRESS_SANITIZER: "1"
   script:
     - nix-shell --run "poetry run make -C core build_unix_frozen"
   artifacts:

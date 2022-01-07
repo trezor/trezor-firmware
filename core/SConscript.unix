@@ -368,20 +368,29 @@ env.Replace(
     OBJCOPY='objcopy',
     COPT=os.getenv('OPTIMIZE', '-Os'), )
 
-if ARGUMENTS.get('TREZOR_EMULATOR_ASAN', 0):
-    asan_flags=(
-            ' -fsanitize=address'+
-            ' -fsanitize-blacklist=asan_blacklist.txt'+
-            ' -fno-omit-frame-pointer'+
-            ' -fno-optimize-sibling-calls'
-    )
+if ARGUMENTS.get('TREZOR_EMULATOR_CLANG', '0') == '1':
     env.Replace(
-        CC=os.getenv('CC') or 'clang',
-        LINK=os.getenv('LINK') or 'clang',
-        CFLAGS=asan_flags,
-        LINKFLAGS=' -Wl,-no_pie' + asan_flags, )
+        CC='clang',
+        LINK='clang', )
 
-if ARGUMENTS.get('TREZOR_EMULATOR_DEBUGGABLE', 0):
+if ARGUMENTS.get('TREZOR_EMULATOR_ASAN', '0') == '1':
+    asan_flags=(
+        ' -fsanitize=address,undefined'+
+        ' -fno-omit-frame-pointer'+
+        ' -fno-optimize-sibling-calls'
+    )
+    env.Append(
+        CFLAGS=asan_flags,
+        LINKFLAGS=asan_flags,
+        LDFLAGS=asan_flags,
+        ENV={
+            # workaround for sanitizers being nightly-only
+            # remove after stabilized https://github.com/rust-lang/rust/issues/39699
+            'RUSTC_BOOTSTRAP': '1',
+            'RUSTFLAGS': '-Z sanitizer=address',
+        }, )
+
+if ARGUMENTS.get('TREZOR_EMULATOR_DEBUGGABLE', '0') == '1':
     env.Replace(
         COPT=' -Og -ggdb',
         STRIP='true', )
@@ -642,17 +651,12 @@ protobuf_blobs = env.Command(
 )
 env.Depends(protobuf_blobs, qstr_generated)
 
-RUST_PROFILE = 'release'
+RUST_PROFILE = 'dev' if ARGUMENTS.get('TREZOR_EMULATOR_DEBUGGABLE', 0) == '1' else 'release'
 RUST_LIB = 'trezor_lib'
 RUST_LIBDIR = f'build/unix/rust/{RUST_PROFILE}'
 RUST_LIBPATH = f'{RUST_LIBDIR}/lib{RUST_LIB}.a'
 
 def cargo_build():
-    # Determine the profile build flags.
-    if RUST_PROFILE == 'release':
-        profile = '--release'
-    else:
-        profile = ''
     if TREZOR_MODEL == "1":
         features = ["model_t1"]
     else:
@@ -665,7 +669,7 @@ def cargo_build():
     elif NEW_UI:
         features.append("ui")
 
-    return f'cd embed/rust; cargo build {profile} --target-dir=../../build/unix/rust --no-default-features --features "{" ".join(features)}"'
+    return f'cd embed/rust; cargo build --profile {RUST_PROFILE} --target-dir=../../build/unix/rust --no-default-features --features "{" ".join(features)}"'
 
 rust = env.Command(
     target=RUST_LIBPATH,

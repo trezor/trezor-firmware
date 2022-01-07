@@ -75,6 +75,22 @@ core device test:
     reports:
       junit: tests/junit.xml
 
+core device asan test:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen debug asan build
+  only:
+    - schedules  # nightly build
+  script:
+    - nix-shell --run "poetry run make -C core test_emu | ts -s"
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - tests/trezor.log
+    expire_in: 1 week
+    when: always
+
 core btconly device test:
   stage: test
   <<: *gitlab_caching
@@ -94,6 +110,25 @@ core btconly device test:
     when: always
     reports:
       junit: tests/junit.xml
+
+core btconly device asan test:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen btconly debug asan build
+  only:
+    - schedules  # nightly build
+  variables:
+    MICROPYTHON: "build/unix/trezor-emu-core-bitcoinonly"
+    TREZOR_PYTEST_SKIP_ALTCOINS: 1
+  script:
+    - nix-shell --run "poetry run make -C core test_emu | ts -s"
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - tests/trezor.log
+    expire_in: 1 week
+    when: always
 
 core monero test:
   stage: test
@@ -133,6 +168,23 @@ core u2f test:
     expire_in: 1 week
     when: always
 
+core u2f asan test:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen debug asan build
+  only:
+    - schedules  # nightly build
+  script:
+    - nix-shell --run "poetry run make -C tests/fido_tests/u2f-tests-hid | ts -s"
+    - nix-shell --run "poetry run make -C core test_emu_u2f | ts -s"
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - tests/trezor.log
+    expire_in: 1 week
+    when: always
+
 core fido2 test:
   stage: test
   <<: *gitlab_caching
@@ -154,6 +206,24 @@ core fido2 test:
     expire_in: 1 week
     reports:
       junit: tests/junit.xml
+    when: always
+
+core fido2 asan test:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen debug asan build
+  only:
+    - schedules  # nightly build
+  script:
+    - pgrep trezor-emu-core || true
+    - nix-shell --run "poetry run make -C core test_emu_fido2 | ts -s"
+    - pgrep trezor-emu-core || true
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - tests/trezor.log
+    expire_in: 1 week
     when: always
 
 core click test:
