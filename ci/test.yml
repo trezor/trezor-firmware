@@ -327,6 +327,18 @@ legacy test:
     expire_in: 1 week
     when: always
 
+legacy asan test:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - legacy emu regular debug asan build
+  only:
+    - schedules  # nightly build
+  variables:
+    EMULATOR: "1"
+  script:
+    - nix-shell --run "poetry run legacy/script/test | ts -s"
+
 legacy btconly test:
   stage: test
   <<: *gitlab_caching
@@ -346,6 +358,20 @@ legacy btconly test:
       junit: tests/junit.xml
     expire_in: 1 week
     when: always
+
+legacy btconly asan test:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - legacy emu btconly debug asan build
+  only:
+    - schedules  # nightly build
+  variables:
+    EMULATOR: "1"
+    EMULATOR_BINARY: "firmware/trezor-bitcoinonly.elf"
+    TREZOR_PYTEST_SKIP_ALTCOINS: 1
+  script:
+    - nix-shell --run "poetry run legacy/script/test | ts -s"
 
 
 legacy upgrade test:

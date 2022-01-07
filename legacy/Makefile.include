@@ -22,7 +22,7 @@ DBGFLAGS ?= -g3 -ggdb3
 CPUFLAGS ?=
 FPUFLAGS ?=
 ifeq ($(ADDRESS_SANITIZER),1)
-SANFLAGS += -fsanitize=address
+SANFLAGS += -fsanitize=address,undefined
 endif
 else
 PREFIX   ?= arm-none-eabi-
