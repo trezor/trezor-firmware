@@ -8,9 +8,9 @@ from trezorui2 import layout_new_confirm_action
 from .common import interact
 
 if TYPE_CHECKING:
-    from typing import NoReturn, Type, Union
+    from typing import NoReturn, Type
 
-    ExceptionType = Union[BaseException, Type[BaseException]]
+    ExceptionType = BaseException | Type[BaseException]
 
 
 async def confirm_action(

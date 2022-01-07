@@ -13,7 +13,7 @@ from . import authorization
 from .common import BITCOIN_NAMES
 
 if TYPE_CHECKING:
-    from typing import Awaitable, Callable, Iterable, TypeVar, Union
+    from typing import Awaitable, Callable, Iterable, TypeVar
     from typing_extensions import Protocol
 
     from trezor.protobuf import MessageType
@@ -32,16 +32,16 @@ if TYPE_CHECKING:
     from apps.common.keychain import Keychain, MsgOut, Handler
     from apps.common.paths import Bip32Path
 
-    BitcoinMessage = Union[
-        AuthorizeCoinJoin,
-        GetAddress,
-        GetOwnershipId,
-        GetOwnershipProof,
-        GetPublicKey,
-        SignMessage,
-        SignTx,
-        VerifyMessage,
-    ]
+    BitcoinMessage = (
+        AuthorizeCoinJoin
+        | GetAddress
+        | GetOwnershipId
+        | GetOwnershipProof
+        | GetPublicKey
+        | SignMessage
+        | SignTx
+        | VerifyMessage
+    )
 
     class MsgWithAddressScriptType(Protocol):
         address_n: Bip32Path

@@ -5,9 +5,7 @@ from trezor import ui
 from trezor.ui import display, in_area
 
 if TYPE_CHECKING:
-    from typing import Union
-
-    ButtonContent = Union[str, bytes]
+    ButtonContent = str | bytes
     ButtonStyleType = type["ButtonDefault"]
     ButtonStyleStateType = type["ButtonDefault.normal"]
 

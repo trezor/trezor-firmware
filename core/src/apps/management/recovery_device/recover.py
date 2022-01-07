@@ -9,7 +9,6 @@ from .. import backup_types
 
 if TYPE_CHECKING:
     from trezor.enums import BackupType
-    from typing import Union
 
 
 class RecoveryAborted(Exception):
@@ -94,7 +93,7 @@ def process_slip39(words: str) -> tuple[bytes | None, slip39.Share]:
 
 
 if TYPE_CHECKING:
-    Slip39State = Union[tuple[int, BackupType], tuple[None, None]]
+    Slip39State = tuple[int, BackupType] | tuple[None, None]
 
 
 def load_slip39_state() -> Slip39State:

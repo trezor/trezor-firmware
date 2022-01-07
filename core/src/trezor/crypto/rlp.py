@@ -2,7 +2,6 @@ from micropython import const
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Union
     from trezor.utils import Writer
 
     # The intention below is basically:
@@ -13,8 +12,8 @@ if TYPE_CHECKING:
     # a generic `Sequence` (because we do isinstance checks for a list). We are however
     # only reading from the list and passing into things that consume a RLPItem. Hence
     # we have to enumerate single-type lists as well as the universal list[RLPItem].
-    RLPList = Union[list[int], list[bytes], list["RLPItem"]]
-    RLPItem = Union[RLPList, bytes, int]
+    RLPList = list[int] | list[bytes] | list["RLPItem"]
+    RLPItem = RLPList | bytes | int
 
 
 STRING_HEADER_BYTE = const(0x80)

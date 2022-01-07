@@ -11,12 +11,12 @@ from trezor import log, utils
 from . import readers
 
 if TYPE_CHECKING:
-    from typing import Any, Generic, Iterator, Tuple, TypeVar, Union
+    from typing import Any, Generic, Iterator, TypeVar
 
     K = TypeVar("K")
     V = TypeVar("V")
     Value = Any
-    CborSequence = Union[list[Value], Tuple[Value, ...]]
+    CborSequence = list[Value] | tuple[Value, ...]
 else:
     # typechecker cheat: Generic[K, V] will be `object` which is a valid parent type
     Generic = {(0, 0): object}

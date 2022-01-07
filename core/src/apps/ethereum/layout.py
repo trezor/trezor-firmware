@@ -19,7 +19,7 @@ from . import networks, tokens
 from .helpers import address_from_bytes, decode_typed_data, get_type_name
 
 if TYPE_CHECKING:
-    from typing import Awaitable, Iterable, Optional
+    from typing import Awaitable, Iterable
 
     from trezor.wire import Context
 
@@ -185,7 +185,7 @@ async def confirm_typed_value(
     value: bytes,
     parent_objects: list[str],
     field: EthereumFieldType,
-    array_index: Optional[int] = None,
+    array_index: int | None = None,
 ) -> None:
     type_name = get_type_name(field)
 

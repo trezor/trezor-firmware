@@ -5,11 +5,11 @@ from trezor.enums import ButtonRequestType
 from trezor.messages import ButtonAck, ButtonRequest
 
 if TYPE_CHECKING:
-    from typing import Any, Awaitable, Optional, Tuple, Union
+    from typing import Any, Awaitable
 
     LayoutType = Awaitable[Any]
-    PropertyType = Tuple[Optional[str], Union[str, bytes, None]]
-    ExceptionType = Union[BaseException, type[BaseException]]
+    PropertyType = tuple[str | None, str | bytes | None]
+    ExceptionType = BaseException | type[BaseException]
 
 
 if __debug__:

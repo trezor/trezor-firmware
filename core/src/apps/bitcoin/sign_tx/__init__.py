@@ -12,7 +12,7 @@ if not utils.BITCOIN_ONLY:
     from . import bitcoinlike, decred, zcash
 
 if TYPE_CHECKING:
-    from typing import Protocol, Union
+    from typing import Protocol
 
     from trezor.messages import (
         SignTx,
@@ -29,14 +29,14 @@ if TYPE_CHECKING:
 
     from ..authorization import CoinJoinAuthorization
 
-    TxAckType = Union[
-        TxAckInput,
-        TxAckOutput,
-        TxAckPrevMeta,
-        TxAckPrevInput,
-        TxAckPrevOutput,
-        TxAckPrevExtraData,
-    ]
+    TxAckType = (
+        TxAckInput
+        | TxAckOutput
+        | TxAckPrevMeta
+        | TxAckPrevInput
+        | TxAckPrevOutput
+        | TxAckPrevExtraData
+    )
 
     class SignerClass(Protocol):
         def __init__(  # pylint: disable=super-init-not-called

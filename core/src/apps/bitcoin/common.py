@@ -9,7 +9,6 @@ from trezor.enums import InputScriptType, OutputScriptType
 from trezor.utils import HashWriter, ensure
 
 if TYPE_CHECKING:
-    from typing import Tuple
     from enum import IntEnum
     from apps.common.coininfo import CoinInfo
     from trezor.messages import TxInput
@@ -128,7 +127,7 @@ def encode_bech32_address(prefix: str, witver: int, script: bytes) -> str:
     return address
 
 
-def decode_bech32_address(prefix: str, address: str) -> Tuple[int, bytes]:
+def decode_bech32_address(prefix: str, address: str) -> tuple[int, bytes]:
     witver, raw = bech32.decode(prefix, address)
     if witver not in _BECH32_WITVERS:
         raise wire.ProcessError("Invalid address witness program")

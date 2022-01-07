@@ -11,7 +11,7 @@ from apps.common.seed import derive_and_store_roots, get_seed
 from .helpers import paths
 
 if TYPE_CHECKING:
-    from typing import Callable, Awaitable, TypeVar, Union
+    from typing import Callable, Awaitable, TypeVar
 
     from apps.common.paths import Bip32Path
     from apps.common.keychain import MsgOut, Handler
@@ -23,12 +23,12 @@ if TYPE_CHECKING:
         CardanoSignTxInit,
     )
 
-    CardanoMessages = Union[
-        CardanoGetAddress,
-        CardanoGetPublicKey,
-        CardanoGetNativeScriptHash,
-        CardanoSignTxInit,
-    ]
+    CardanoMessages = (
+        CardanoGetAddress
+        | CardanoGetPublicKey
+        | CardanoGetNativeScriptHash
+        | CardanoSignTxInit
+    )
     MsgIn = TypeVar("MsgIn", bound=CardanoMessages)
 
     HandlerWithKeychain = Callable[[wire.Context, MsgIn, "Keychain"], Awaitable[MsgOut]]
