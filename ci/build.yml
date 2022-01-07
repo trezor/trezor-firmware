@@ -359,6 +359,24 @@ legacy emu regular debug build:
       - legacy/firmware/trezor.elf
     expire_in: 1 week
 
+legacy emu regular debug asan build:
+  stage: build
+  <<: *gitlab_caching
+  needs: []
+  only:
+    - schedules  # nightly build
+  variables:
+    DEBUG_LINK: "1"
+    EMULATOR: "1"
+    ADDRESS_SANITIZER: "1"
+  script:
+    - nix-shell --run "poetry run legacy/script/cibuild"
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - legacy/firmware/trezor.elf
+    expire_in: 1 week
+
 legacy emu regular debug build arm:
   image: vdovhanych/nixos
   stage: build
@@ -390,6 +408,26 @@ legacy emu btconly debug build:
     BITCOIN_ONLY: "1"
     DEBUG_LINK: "1"
     EMULATOR: "1"
+  script:
+    - nix-shell --run "poetry run legacy/script/cibuild"
+    - mv legacy/firmware/trezor.elf legacy/firmware/trezor-bitcoinonly.elf
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - legacy/firmware/trezor-bitcoinonly.elf
+    expire_in: 1 week
+
+legacy emu btconly debug asan build:
+  stage: build
+  <<: *gitlab_caching
+  needs: []
+  only:
+    - schedules  # nightly build
+  variables:
+    BITCOIN_ONLY: "1"
+    DEBUG_LINK: "1"
+    EMULATOR: "1"
+    ADDRESS_SANITIZER: "1"
   script:
     - nix-shell --run "poetry run legacy/script/cibuild"
     - mv legacy/firmware/trezor.elf legacy/firmware/trezor-bitcoinonly.elf
