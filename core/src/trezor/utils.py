@@ -30,20 +30,18 @@ if TYPE_CHECKING:
         Any,
         Iterator,
         Protocol,
-        Union,
         TypeVar,
         Sequence,
-        Set,
     )
 
     from trezor.protobuf import MessageType
 
 
-def unimport_begin() -> Set[str]:
+def unimport_begin() -> set[str]:
     return set(sys.modules)
 
 
-def unimport_end(mods: Set[str], collect: bool = True) -> None:
+def unimport_end(mods: set[str], collect: bool = True) -> None:
     # static check that the size of sys.modules never grows above value of
     # MICROPY_LOADED_MODULES_DICT_SIZE, so that the sys.modules dict is never
     # reallocated at run-time
@@ -72,7 +70,7 @@ def unimport_end(mods: Set[str], collect: bool = True) -> None:
 
 class unimport:
     def __init__(self) -> None:
-        self.mods: Set[str] | None = None
+        self.mods: set[str] | None = None
 
     def __enter__(self) -> None:
         self.mods = unimport_begin()
@@ -186,7 +184,7 @@ class HashWriter:
 
 
 if TYPE_CHECKING:
-    BufferType = Union[bytearray, memoryview]
+    BufferType = bytearray | memoryview
 
 
 class BufferWriter:
@@ -222,7 +220,7 @@ class BufferWriter:
 class BufferReader:
     """Seekable and readable view into a buffer."""
 
-    def __init__(self, buffer: Union[bytes, memoryview]) -> None:
+    def __init__(self, buffer: bytes | memoryview) -> None:
         if isinstance(buffer, memoryview):
             self.buffer = buffer
         else:

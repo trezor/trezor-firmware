@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 from trezor.enums import MessageType
 
 if TYPE_CHECKING:
-    from typing import Union
     from trezor import protobuf
 
     from trezor.messages import (
@@ -23,21 +22,21 @@ if TYPE_CHECKING:
         StellarSetOptionsOp,
     )
 
-    StellarMessageType = Union[
-        StellarAccountMergeOp,
-        StellarAllowTrustOp,
-        StellarBumpSequenceOp,
-        StellarChangeTrustOp,
-        StellarCreateAccountOp,
-        StellarCreatePassiveSellOfferOp,
-        StellarManageDataOp,
-        StellarManageBuyOfferOp,
-        StellarManageSellOfferOp,
-        StellarPathPaymentStrictReceiveOp,
-        StellarPathPaymentStrictSendOp,
-        StellarPaymentOp,
-        StellarSetOptionsOp,
-    ]
+    StellarMessageType = (
+        StellarAccountMergeOp
+        | StellarAllowTrustOp
+        | StellarBumpSequenceOp
+        | StellarChangeTrustOp
+        | StellarCreateAccountOp
+        | StellarCreatePassiveSellOfferOp
+        | StellarManageDataOp
+        | StellarManageBuyOfferOp
+        | StellarManageSellOfferOp
+        | StellarPathPaymentStrictReceiveOp
+        | StellarPathPaymentStrictSendOp
+        | StellarPaymentOp
+        | StellarSetOptionsOp
+    )
 
 
 TX_TYPE = b"\x00\x00\x00\x02"

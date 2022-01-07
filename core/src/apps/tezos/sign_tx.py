@@ -18,7 +18,6 @@ from apps.common.writers import (
 from . import CURVE, PATTERNS, SLIP44_ID, helpers, layout
 
 if TYPE_CHECKING:
-    from typing import Union
     from apps.common.keychain import Keychain
     from trezor.wire import Context
     from trezor.messages import (
@@ -249,9 +248,10 @@ def _get_operation_bytes(w: Writer, msg: TezosSignTx) -> None:
 
 def _encode_common(
     w: Writer,
-    operation: Union[
-        TezosDelegationOp, TezosOriginationOp, TezosTransactionOp, TezosRevealOp
-    ],
+    operation: TezosDelegationOp
+    | TezosOriginationOp
+    | TezosTransactionOp
+    | TezosRevealOp,
     str_operation: str,
 ) -> None:
     operation_tags = {

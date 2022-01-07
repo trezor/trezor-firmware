@@ -19,8 +19,6 @@ from .layout import (
 from .sign_tx import check_common_fields, handle_erc20, send_request_chunk
 
 if TYPE_CHECKING:
-    from typing import Tuple
-
     from trezor.messages import EthereumSignTxEIP1559
 
     from apps.common.keychain import Keychain
@@ -90,7 +88,7 @@ async def sign_tx_eip1559(
 
     rlp.write_header(sha, total_length, rlp.LIST_HEADER_BYTE)
 
-    fields: Tuple[rlp.RLPItem, ...] = (
+    fields: tuple[rlp.RLPItem, ...] = (
         msg.chain_id,
         msg.nonce,
         msg.max_priority_fee,
@@ -124,7 +122,7 @@ async def sign_tx_eip1559(
 def get_total_length(msg: EthereumSignTxEIP1559, data_total: int) -> int:
     length = 0
 
-    fields: Tuple[rlp.RLPItem, ...] = (
+    fields: tuple[rlp.RLPItem, ...] = (
         msg.nonce,
         msg.gas_limit,
         bytes_from_address(msg.to),

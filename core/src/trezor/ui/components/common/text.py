@@ -17,9 +17,9 @@ LINE_WIDTH = ui.WIDTH - TEXT_MARGIN_LEFT
 LINE_WIDTH_PAGINATED = LINE_WIDTH - PAGINATION_MARGIN_RIGHT
 
 if TYPE_CHECKING:
-    from typing import Any, Sequence, Union
+    from typing import Any, Sequence
 
-    TextContent = Union[str, int]
+    TextContent = str | int
 
 # needs to be different from all colors and font ids
 BR = const(-256)

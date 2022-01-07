@@ -8,7 +8,7 @@ from apps.common.keychain import get_keychain
 from . import CURVE, networks
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable, TypeVar, Union
+    from typing import Callable, Iterable, TypeVar
 
     from trezor.messages import (
         EthereumGetAddress,
@@ -21,19 +21,16 @@ if TYPE_CHECKING:
 
     from apps.common.keychain import MsgOut, Handler, HandlerWithKeychain
 
-    EthereumMessages = Union[
-        EthereumGetAddress,
-        EthereumGetPublicKey,
-        EthereumSignTx,
-        EthereumSignMessage,
-        EthereumSignTypedData,
-    ]
+    EthereumMessages = (
+        EthereumGetAddress
+        | EthereumGetPublicKey
+        | EthereumSignTx
+        | EthereumSignMessage
+        | EthereumSignTypedData
+    )
     MsgIn = TypeVar("MsgIn", bound=EthereumMessages)
 
-    EthereumSignTxAny = Union[
-        EthereumSignTx,
-        EthereumSignTxEIP1559,
-    ]
+    EthereumSignTxAny = EthereumSignTx | EthereumSignTxEIP1559
     MsgInChainId = TypeVar("MsgInChainId", bound=EthereumSignTxAny)
 
 

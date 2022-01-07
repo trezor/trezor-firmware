@@ -6,9 +6,9 @@ from trezor import res, ui
 from ...constants import TEXT_HEADER_HEIGHT, TEXT_LINE_HEIGHT
 
 if TYPE_CHECKING:
-    from typing import Iterable, Union
+    from typing import Iterable
 
-    ChecklistItem = Union[str, Iterable[str]]
+    ChecklistItem = str | Iterable[str]
 
 _CHECKLIST_MAX_LINES = const(5)
 _CHECKLIST_OFFSET_X = const(24)

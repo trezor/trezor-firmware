@@ -24,15 +24,15 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from enum import IntEnum
-    from typing import Sequence, Union, TypeVar
+    from typing import Sequence, TypeVar
 
     A = TypeVar("A")
     B = TypeVar("B")
     C = TypeVar("C")
     # usage: OptionalTuple[int, list[int]] is either (None, None) or (someint, somelist)
     # but not (None, somelist)
-    OptionalTuple2 = Union[tuple[None, None], tuple[A, B]]
-    OptionalTuple3 = Union[tuple[None, None, None], tuple[A, B, C]]
+    OptionalTuple2 = tuple[None, None] | tuple[A, B]
+    OptionalTuple3 = tuple[None, None, None] | tuple[A, B, C]
 else:
     IntEnum = object
 
