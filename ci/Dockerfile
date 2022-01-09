@@ -37,6 +37,7 @@ ENV \
 # Trezor specific stuff starts here
 
 COPY shell.nix shell.nix
+COPY pyright/ pyright/
 
 # to make multiple python versions and monero test suite available, run docker build
 # with the following argument: "--build-arg FULLDEPS_TESTING=1"
