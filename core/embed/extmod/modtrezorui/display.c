@@ -407,11 +407,11 @@ void display_loader(uint16_t progress, bool indeterminate, int yoffset,
                      DISPLAY_RESY / 2 - img_loader_size + yoffset,
                      DISPLAY_RESX / 2 + img_loader_size - 1,
                      DISPLAY_RESY / 2 + img_loader_size - 1 + yoffset);
+  uint8_t icondata[(LOADER_ICON_SIZE * LOADER_ICON_SIZE) / 2] = {0};
   if (icon && memcmp(icon, "TOIg", 4) == 0 &&
       LOADER_ICON_SIZE == *(uint16_t *)(icon + 4) &&
       LOADER_ICON_SIZE == *(uint16_t *)(icon + 6) &&
       iconlen == 12 + *(uint32_t *)(icon + 8)) {
-    uint8_t icondata[(LOADER_ICON_SIZE * LOADER_ICON_SIZE) / 2] = {0};
     memzero(&icondata, sizeof(icondata));
     struct uzlib_uncomp decomp = {0};
     uzlib_prepare(&decomp, NULL, icon + 12, iconlen - 12, icondata,
