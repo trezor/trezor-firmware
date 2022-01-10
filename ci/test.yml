@@ -393,6 +393,7 @@ connect test core:
   after_script:
     - cp /trezor-user-env/logs/debugging.log trezor-user-env-debugging.log
     - cp /trezor-user-env/logs/emulator_bridge.log tenv-emulator-bridge-debugging.log
+  allow_failure: true
   artifacts:
     paths:
       - trezor-user-env-debugging.log
