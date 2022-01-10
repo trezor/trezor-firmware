@@ -19,8 +19,24 @@ core unit test:
     - nix-shell --run "poetry run make -C core test_rust | ts -s"
     - nix-shell --run "poetry run make -C core clippy | ts -s"
 
+core unit test asan:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix regular asan build
+  only:
+    - schedules  # nightly build
+  variables:
+    RUSTC_BOOTSTRAP: "1"
+    RUSTFLAGS: "-Z sanitizer=address"
+  script:
+    - nix-shell --run "poetry run make -C core test | ts -s"
+    - nix-shell --run "poetry run make -C core test_rust | ts -s"
+    - nix-shell --run "poetry run make -C core clippy | ts -s"
+
 core unit test t1:
   stage: test
+  <<: *gitlab_caching
   needs:
     - core unix frozen btconly debug t1 build
   variables:
@@ -149,6 +165,27 @@ core monero test:
     expire_in: 1 week
     when: always
 
+core monero asan test:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen debug asan build
+  only:
+    - schedules  # nightly build
+  variables:
+    TREZOR_PROFILING: 1
+  script:
+    - nix-shell --arg fullDeps true --run "poetry run make -C core test_emu_monero | ts -s"
+    - mv core/src/.coverage core/.coverage.test_emu_monero
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - tests/trezor.log
+      - core/tests/trezor_monero_tests.log
+      - core/.coverage.*
+    expire_in: 1 week
+    when: always
+
 core u2f test:
   stage: test
   <<: *gitlab_caching
@@ -243,6 +280,25 @@ core click test:
     expire_in: 1 week
     when: always
 
+core click asan test:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen debug asan build
+  only:
+    - schedules  # nightly build
+  script:
+    - nix-shell --run "poetry run make -C core test_emu_click | ts -s"
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - tests/trezor.log
+      - tests/junit.xml
+    reports:
+      junit: tests/junit.xml
+    expire_in: 1 week
+    when: always
+
 core upgrade test:
   stage: test
   <<: *gitlab_caching
@@ -262,11 +318,50 @@ core upgrade test:
     expire_in: 1 week
     when: always
 
+core upgrade asan test:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen debug asan build
+  only:
+    - schedules  # nightly build
+  variables:
+    TREZOR_UPGRADE_TEST: "core"
+  script:
+    - nix-shell --run "tests/download_emulators.sh"
+    - nix-shell --run "poetry run pytest --junitxml=tests/junit.xml tests/upgrade_tests | ts -s"
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - tests/junit.xml
+    reports:
+      junit: tests/junit.xml
+    expire_in: 1 week
+    when: always
+
 core persistence test:
   stage: test
   <<: *gitlab_caching
   needs:
     - core unix frozen debug build
+  script:
+    - nix-shell --run "poetry run pytest --junitxml=tests/junit.xml tests/persistence_tests | ts -s"
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - tests/junit.xml
+    reports:
+      junit: tests/junit.xml
+    expire_in: 1 week
+    when: always
+
+core persistence asan test:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen debug asan build
+  only:
+    - schedules  # nightly build
   script:
     - nix-shell --run "poetry run pytest --junitxml=tests/junit.xml tests/persistence_tests | ts -s"
   artifacts:
@@ -379,6 +474,27 @@ legacy upgrade test:
   <<: *gitlab_caching
   needs:
     - legacy emu regular debug build
+  variables:
+    TREZOR_UPGRADE_TEST: "legacy"
+  script:
+    - nix-shell --run "tests/download_emulators.sh"
+    - nix-shell --run "poetry run pytest --junitxml=tests/junit.xml tests/upgrade_tests | ts -s"
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - tests/junit.xml
+    reports:
+      junit: tests/junit.xml
+    expire_in: 1 week
+    when: always
+
+legacy upgrade asan test:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - legacy emu regular debug asan build
+  only:
+    - schedules  # nightly build
   variables:
     TREZOR_UPGRADE_TEST: "legacy"
   script:
