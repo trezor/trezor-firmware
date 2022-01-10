@@ -612,6 +612,7 @@ MP_NOINLINE int main_(int argc, char **argv) {
                   argv[0], argv[a], errno, strerror(errno));
         // CPython exits with 2 in such case
         ret = 2;
+        free(pathbuf);
         break;
       }
 
