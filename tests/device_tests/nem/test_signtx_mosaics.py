@@ -21,10 +21,11 @@ from trezorlib.tools import parse_path
 
 from ...common import MNEMONIC12
 
+ADDRESS_N = parse_path("m/44'/1'/0'/0'/0'")
+
 pytestmark = [
     pytest.mark.altcoin,
     pytest.mark.nem,
-    pytest.mark.skip_t2,
     pytest.mark.setup_client(mnemonic=MNEMONIC12),
 ]
 
@@ -32,7 +33,7 @@ pytestmark = [
 def test_nem_signtx_mosaic_supply_change(client):
     tx = nem.sign_tx(
         client,
-        parse_path("m/44'/1'/0'/0'/0'"),
+        ADDRESS_N,
         {
             "timeStamp": 74649215,
             "fee": 2000000,
@@ -61,7 +62,7 @@ def test_nem_signtx_mosaic_supply_change(client):
 def test_nem_signtx_mosaic_creation(client):
     tx = nem.sign_tx(
         client,
-        parse_path("m/44'/1'/0'/0'/0'"),
+        ADDRESS_N,
         {
             "timeStamp": 74649215,
             "fee": 2000000,
@@ -93,7 +94,7 @@ def test_nem_signtx_mosaic_creation(client):
 def test_nem_signtx_mosaic_creation_properties(client):
     tx = nem.sign_tx(
         client,
-        parse_path("m/44'/1'/0'/0'/0'"),
+        ADDRESS_N,
         {
             "timeStamp": 74649215,
             "fee": 2000000,
@@ -130,7 +131,7 @@ def test_nem_signtx_mosaic_creation_properties(client):
 def test_nem_signtx_mosaic_creation_levy(client):
     tx = nem.sign_tx(
         client,
-        parse_path("m/44'/1'/0'/0'/0'"),
+        ADDRESS_N,
         {
             "timeStamp": 74649215,
             "fee": 2000000,
