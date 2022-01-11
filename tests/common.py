@@ -22,6 +22,8 @@ import pytest
 from trezorlib import btc, tools
 from trezorlib.messages import ButtonRequestType as B
 
+from .buttons import INFO
+
 # fmt: off
 #                1      2     3    4      5      6      7     8      9    10    11    12
 MNEMONIC12 = "alcohol woman abuse must during monitor noble actual mixed trade anger aisle"
@@ -155,9 +157,8 @@ def recovery_enter_shares(debug, shares, groups=False, click_info=False):
 
         if click_info:
             # Moving through the INFO button
-            info_button = (120, 220)
             debug.wait_layout()
-            debug.click(info_button)
+            debug.click(INFO)
             yield
             debug.wait_layout()
             debug.swipe_up()
