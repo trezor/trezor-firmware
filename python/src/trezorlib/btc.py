@@ -17,10 +17,10 @@
 import warnings
 from copy import copy
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, AnyStr, Dict, List, Optional, Sequence, Tuple
+from typing import TYPE_CHECKING, Any, AnyStr, List, Optional, Sequence, Tuple
 
 # TypedDict is not available in typing for python < 3.8
-from typing_extensions import TypedDict
+from typing_extensions import Protocol, TypedDict
 
 from . import exceptions, messages
 from .tools import expect, normalize_nfc, session
@@ -64,6 +64,13 @@ if TYPE_CHECKING:
         locktime: int
         vin: List[Vin]
         vout: List[Vout]
+
+    class TxCacheType(Protocol):
+        def __getitem__(self, __key: bytes) -> messages.TransactionType:
+            ...
+
+        def __contains__(self, __key: bytes) -> bool:
+            ...
 
 
 def from_json(json_dict: "Transaction") -> messages.TransactionType:
@@ -242,7 +249,7 @@ def sign_tx(
     inputs: Sequence[messages.TxInputType],
     outputs: Sequence[messages.TxOutputType],
     details: Optional[messages.SignTx] = None,
-    prev_txes: Optional[Dict[bytes, messages.TransactionType]] = None,
+    prev_txes: Optional["TxCacheType"] = None,
     preauthorized: bool = False,
     **kwargs: Any,
 ) -> Tuple[Sequence[Optional[bytes]], bytes]:
