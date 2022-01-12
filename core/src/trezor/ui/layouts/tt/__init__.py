@@ -694,6 +694,7 @@ async def confirm_text(
     br_code: ButtonRequestType = ButtonRequestType.Other,
     icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
     icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
+    hold: bool = False,  # TODO Only supported if NOT paginating
 ) -> None:
     """Confirm textual data.
 
@@ -717,7 +718,7 @@ async def confirm_text(
             text.normal(description)
             text.br()
         text.bold(data)
-        content: ui.Layout = Confirm(text)
+        content: ui.Layout = HoldToConfirm(text) if hold else Confirm(text)
 
     else:
         para = []
@@ -737,6 +738,7 @@ def confirm_amount(
     br_code: ButtonRequestType = ButtonRequestType.Other,
     icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
     icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
+    hold: bool = False,
 ) -> Awaitable[None]:
     """Confirm amount."""
     # TODO clarify API - this should be pretty limited to support mainly confirming
@@ -750,6 +752,7 @@ def confirm_amount(
         br_code=br_code,
         icon=icon,
         icon_color=icon_color,
+        hold=hold,
     )
 
 

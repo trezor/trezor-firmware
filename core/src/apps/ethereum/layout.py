@@ -79,6 +79,7 @@ async def require_confirm_eip1559_fee(
         title="Confirm fee",
         description="Maximum fee",
         amount=format_ethereum_amount(max_gas_fee * gas_limit, None, chain_id),
+        hold=True,
     )
 
 
