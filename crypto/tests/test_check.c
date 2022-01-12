@@ -7322,25 +7322,25 @@ START_TEST(test_ethereum_pubkeyhash) {
 END_TEST
 
 START_TEST(test_ethereum_address) {
-  static const char *vectors[] = {"52908400098527886E0F7030069857D2E4169EE7",
-                                  "8617E340B3D01FA5F11F306F4090FD50E238070D",
-                                  "de709f2102306220921060314715629080e2fb77",
-                                  "27b1fdb04752bbc536007a920d24acb045561c26",
-                                  "5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed",
-                                  "fB6916095ca1df60bB79Ce92cE3Ea74c37c5d359",
-                                  "dbF03B407c01E7cD3CBea99509d93f8DDDC8C6FB",
-                                  "D1220A0cf47c7B9Be7A2E6BA89F429762e7b9aDb",
-                                  "5A4EAB120fB44eb6684E5e32785702FF45ea344D",
-                                  "5be4BDC48CeF65dbCbCaD5218B1A7D37F58A0741",
-                                  "a7dD84573f5ffF821baf2205745f768F8edCDD58",
-                                  "027a49d11d118c0060746F1990273FcB8c2fC196",
-                                  "CD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826",
+  static const char *vectors[] = {"0x52908400098527886E0F7030069857D2E4169EE7",
+                                  "0x8617E340B3D01FA5F11F306F4090FD50E238070D",
+                                  "0xde709f2102306220921060314715629080e2fb77",
+                                  "0x27b1fdb04752bbc536007a920d24acb045561c26",
+                                  "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed",
+                                  "0xfB6916095ca1df60bB79Ce92cE3Ea74c37c5d359",
+                                  "0xdbF03B407c01E7cD3CBea99509d93f8DDDC8C6FB",
+                                  "0xD1220A0cf47c7B9Be7A2E6BA89F429762e7b9aDb",
+                                  "0x5A4EAB120fB44eb6684E5e32785702FF45ea344D",
+                                  "0x5be4BDC48CeF65dbCbCaD5218B1A7D37F58A0741",
+                                  "0xa7dD84573f5ffF821baf2205745f768F8edCDD58",
+                                  "0x027a49d11d118c0060746F1990273FcB8c2fC196",
+                                  "0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826",
                                   0};
   uint8_t addr[20];
-  char address[41];
+  char address[43];
   const char **vec = vectors;
   while (*vec) {
-    memcpy(addr, fromhex(*vec), 20);
+    memcpy(addr, fromhex(*vec + 2), 20);
     ethereum_address_checksum(addr, address, false, 0);
     ck_assert_str_eq(address, *vec);
     vec++;
@@ -7352,29 +7352,29 @@ END_TEST
 // https://github.com/rsksmart/RSKIPs/blob/master/IPs/RSKIP60.md
 START_TEST(test_rsk_address) {
   uint8_t addr[20];
-  char address[41];
+  char address[43];
 
   static const char *rskip60_chain30[] = {
-      "5aaEB6053f3e94c9b9a09f33669435E7ef1bEAeD",
-      "Fb6916095cA1Df60bb79ce92cE3EA74c37c5d359",
-      "DBF03B407c01E7CD3cBea99509D93F8Dddc8C6FB",
-      "D1220A0Cf47c7B9BE7a2e6ba89F429762E7B9adB", 0};
+      "0x5aaEB6053f3e94c9b9a09f33669435E7ef1bEAeD",
+      "0xFb6916095cA1Df60bb79ce92cE3EA74c37c5d359",
+      "0xDBF03B407c01E7CD3cBea99509D93F8Dddc8C6FB",
+      "0xD1220A0Cf47c7B9BE7a2e6ba89F429762E7B9adB", 0};
   const char **vec = rskip60_chain30;
   while (*vec) {
-    memcpy(addr, fromhex(*vec), 20);
+    memcpy(addr, fromhex(*vec + 2), 20);
     ethereum_address_checksum(addr, address, true, 30);
     ck_assert_str_eq(address, *vec);
     vec++;
   }
 
   static const char *rskip60_chain31[] = {
-      "5aAeb6053F3e94c9b9A09F33669435E7EF1BEaEd",
-      "Fb6916095CA1dF60bb79CE92ce3Ea74C37c5D359",
-      "dbF03B407C01E7cd3cbEa99509D93f8dDDc8C6fB",
-      "d1220a0CF47c7B9Be7A2E6Ba89f429762E7b9adB", 0};
+      "0x5aAeb6053F3e94c9b9A09F33669435E7EF1BEaEd",
+      "0xFb6916095CA1dF60bb79CE92ce3Ea74C37c5D359",
+      "0xdbF03B407C01E7cd3cbEa99509D93f8dDDc8C6fB",
+      "0xd1220a0CF47c7B9Be7A2E6Ba89f429762E7b9adB", 0};
   vec = rskip60_chain31;
   while (*vec) {
-    memcpy(addr, fromhex(*vec), 20);
+    memcpy(addr, fromhex(*vec + 2), 20);
     ethereum_address_checksum(addr, address, true, 31);
     ck_assert_str_eq(address, *vec);
     vec++;

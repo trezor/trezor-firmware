@@ -354,12 +354,12 @@ static void layoutEthereumConfirmTx(const uint8_t *to, uint32_t to_len,
     ethereumFormatAmount(&val, token, amount, sizeof(amount));
   }
 
-  char _to1[] = "to 0x__________";
+  char _to1[] = "to ____________";
   char _to2[] = "_______________";
   char _to3[] = "_______________?";
 
   if (to_len) {
-    char to_str[41] = {0};
+    char to_str[43] = {0};
 
     bool rskip60 = false;
     // constants from trezor-common/defs/ethereum/networks.json
@@ -373,9 +373,9 @@ static void layoutEthereumConfirmTx(const uint8_t *to, uint32_t to_len,
     }
 
     ethereum_address_checksum(to, to_str, rskip60, chain_id);
-    memcpy(_to1 + 5, to_str, 10);
-    memcpy(_to2, to_str + 10, 15);
-    memcpy(_to3, to_str + 25, 15);
+    memcpy(_to1 + 3, to_str, 12);
+    memcpy(_to2, to_str + 12, 15);
+    memcpy(_to3, to_str + 27, 15);
   } else {
     strlcpy(_to1, _("to new contract?"), sizeof(_to1));
     strlcpy(_to2, "", sizeof(_to2));
