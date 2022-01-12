@@ -387,6 +387,8 @@ crypto test:
   <<: *gitlab_caching
   needs:
     - crypto build
+  variables:
+    ASAN_OPTIONS: "verify_asan_link_order=0"
   script:
     - ./crypto/tests/aestst
     - ./crypto/tests/test_check
@@ -396,9 +398,9 @@ crypto test:
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
-      - tests/junit.xml
+      - crypto/tests/junit.xml
     reports:
-      junit: tests/junit.xml
+      junit: crypto/tests/junit.xml
     expire_in: 1 week
     when: always
 
