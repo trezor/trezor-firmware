@@ -2527,6 +2527,13 @@ void signing_txack(TransactionType *tx) {
 
       memcpy(&input, tx->inputs, sizeof(TxInputType));
 
+      if (!fill_input_script_pubkey(coin, &root, &input)) {
+        fsm_sendFailure(FailureType_Failure_ProcessError,
+                        _("Failed to derive scriptPubKey"));
+        signing_abort();
+        return;
+      }
+
       send_req_3_prev_meta();
       return;
     case STAGE_REQUEST_3_PREV_META:
@@ -2648,6 +2655,15 @@ void signing_txack(TransactionType *tx) {
         if (input.amount != tx->bin_outputs[0].amount) {
           fsm_sendFailure(FailureType_Failure_DataError,
                           _("Invalid amount specified"));
+          signing_abort();
+          return;
+        }
+        if (input.script_pubkey.size != tx->bin_outputs[0].script_pubkey.size ||
+            memcmp(input.script_pubkey.bytes,
+                   tx->bin_outputs[0].script_pubkey.bytes,
+                   input.script_pubkey.size) != 0) {
+          fsm_sendFailure(FailureType_Failure_DataError,
+                          _("Input does not match scriptPubKey"));
           signing_abort();
           return;
         }
