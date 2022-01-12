@@ -87,7 +87,8 @@
           {
             "path": "m/1855'/1815'/0'"
           }
-        ]
+        ],
+        "include_network_id": false
       },
       "result": {
         "tx_hash": "042c1d3a6eab693d2ea6b186a88aed038159e7eb581da80464bca7339fb9afe0",
@@ -140,7 +141,8 @@
           {
             "path": "m/1854'/1815'/0'/0/0"
           }
-        ]
+        ],
+        "include_network_id": false
       },
       "result": {
         "tx_hash": "ed9fc2755091fa72b58e9dd06db05cce87c0c6f3962f587d5fc348fe478f0752",
@@ -195,7 +197,8 @@
           {
             "path": "m/1854'/1815'/0'/2/0"
           }
-        ]
+        ],
+        "include_network_id": false
       },
       "result": {
         "tx_hash": "26fb07b23368898665829283985ffe6c4cb2ec13758e83f467b78e5061f9619b",
@@ -251,7 +254,8 @@
           {
             "path": "m/1854'/1815'/0'/2/0"
           }
-        ]
+        ],
+        "include_network_id": false
       },
       "result": {
         "tx_hash": "c4e70484c964eca910219047542632ac9a9ac81f11f5d5afd8bb1b0ef4366d69",
@@ -312,7 +316,8 @@
           {
             "path": "m/1854'/1815'/0'/2/0"
           }
-        ]
+        ],
+        "include_network_id": false
       },
       "result": {
         "tx_hash": "e02d252c5cad2a4d8f163069cd7f0822c7876d16af9ad8ac2d461655812b2d1b",
@@ -413,7 +418,8 @@
           {
             "path": "m/1855'/1815'/0'"
           }
-        ]
+        ],
+        "include_network_id": false
       },
       "result": {
         "tx_hash": "2be64c04ea3f5bac3c224ec47a4157ade91fc6ab4fd6b83ce3d57b2e9186720b",

@@ -37,7 +37,8 @@
           {
             "path": "m/1854'/1815'/0'/0/0"
           }
-        ]
+        ],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -79,7 +80,8 @@
           {
             "path": "m/1854'/1815'/2'/0/0"
           }
-        ]
+        ],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -119,7 +121,8 @@
           {
             "path": "m/1854'/1815'/0'/0/0"
           }
-        ]
+        ],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -153,7 +156,8 @@
           {
             "path": "m/1852'/1815'/0'/0/0"
           }
-        ]
+        ],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -189,7 +193,8 @@
           {
             "path": "m/1854'/1815'/0'/0/0"
           }
-        ]
+        ],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid output"
@@ -223,7 +228,8 @@
           {
             "path": "m/1855'/1815'/0'"
           }
-        ]
+        ],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -309,7 +315,8 @@
           {
             "path": "m/1855'/1815'/0'/0/0"
           }
-        ]
+        ],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid witness request"
