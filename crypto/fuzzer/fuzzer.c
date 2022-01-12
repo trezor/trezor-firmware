@@ -716,7 +716,7 @@ int fuzz_mnemonic_to_seed(void) {
 
 int fuzz_ethereum_address_checksum(void) {
   uint8_t addr[20] = {0};
-  char address[41] = {0};
+  char address[43] = {0};
   uint64_t chain_id = 0;
   bool rskip60 = false;
 

@@ -1,15 +1,33 @@
+# CLANG_VERSION is empty if the compiler is not clang-based
+CLANG_VERSION = $(shell $(CC) --version | grep -Po "clang version \K[\d\.]+")
+CLANG_VERSION_MAJOR = $(shell echo $(CLANG_VERSION) | cut -f1 -d.)
+
+# determine specific version ranges
+ifneq ($(CLANG_VERSION),)
+$(if $(shell [ $(CLANG_VERSION_MAJOR) -ge 13 ] && echo "OK"), \
+    $(eval CLANG_AT_LEAST_13 := true), \
+    $(eval CLANG_AT_LEAST_13 := false))
+$(if $(shell [ $(CLANG_VERSION_MAJOR) -ge 14 ] && echo "OK"), \
+    $(eval CLANG_AT_LEAST_14 := true), \
+    $(eval CLANG_AT_LEAST_14 := false))
+endif
+
 ifeq ($(FUZZER),1)
 CC       ?= clang
 LD       ?= $(CC)
 SANFLAGS += -fsanitize=fuzzer
 
-# TODO gcc as well as older clang versions <= 12 do not support this feature
+# only clang versions >= 13 support this feature
+ifeq ($(CLANG_AT_LEAST_13),true)
 $(info "info: using -fsanitize-ignorelist")
-SANFLAGS   += -fsanitize-ignorelist=fuzzer/sanitizer_ignorelist.txt
+SANFLAGS += -fsanitize-ignorelist=fuzzer/sanitizer_ignorelist.txt
+else
+$(info "info: not using -fsanitize-ignorelist")
+endif
 
 # TODO is there a better solution, for example by disabling a specific optimization technique?
 # there is a clang optimization issue in relation with the blake2 code at -fsanitize=undefined
-$(warning "warning: disable optimization on blake2 code as workaround")
+$(warning "warning: disabling optimization on blake2 code as workaround")
 blake2b.o: OPTFLAGS += -O0
 blake2s.o: OPTFLAGS += -O0
 
@@ -61,8 +79,8 @@ ZKP_PATH = ../vendor/secp256k1-zkp
 CFLAGS += -DSECP256K1_CONTEXT_SIZE=208
 
 # TODO remove this workaround once possible
-ifeq ($(CC),clang-14)
-$(warning "warning: suppress clang-14 compiler warning for secp256k1-zkp code")
+ifeq ($(CLANG_AT_LEAST_14),true)
+$(warning "warning: suppressing clang-14 compiler warning for secp256k1-zkp code")
 ZKP_CFLAGS += -Wno-bitwise-instead-of-logical
 endif
 
