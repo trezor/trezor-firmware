@@ -473,6 +473,13 @@ class EthereumDataType(IntEnum):
     STRUCT = 8
 
 
+class MoneroNetworkType(IntEnum):
+    MAINNET = 0
+    TESTNET = 1
+    STAGENET = 2
+    FAKECHAIN = 3
+
+
 class NEMMosaicLevy(IntEnum):
     MosaicLevy_Absolute = 1
     MosaicLevy_Percentile = 2
@@ -4895,7 +4902,7 @@ class MoneroGetAddress(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
         2: protobuf.Field("show_display", "bool", repeated=False, required=False),
-        3: protobuf.Field("network_type", "uint32", repeated=False, required=False),
+        3: protobuf.Field("network_type", "MoneroNetworkType", repeated=False, required=False),
         4: protobuf.Field("account", "uint32", repeated=False, required=False),
         5: protobuf.Field("minor", "uint32", repeated=False, required=False),
         6: protobuf.Field("payment_id", "bytes", repeated=False, required=False),
@@ -4906,7 +4913,7 @@ class MoneroGetAddress(protobuf.MessageType):
         *,
         address_n: Optional[Sequence["int"]] = None,
         show_display: Optional["bool"] = None,
-        network_type: Optional["int"] = None,
+        network_type: Optional["MoneroNetworkType"] = MoneroNetworkType.MAINNET,
         account: Optional["int"] = None,
         minor: Optional["int"] = None,
         payment_id: Optional["bytes"] = None,
@@ -4937,14 +4944,14 @@ class MoneroGetWatchKey(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 542
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
-        2: protobuf.Field("network_type", "uint32", repeated=False, required=False),
+        2: protobuf.Field("network_type", "MoneroNetworkType", repeated=False, required=False),
     }
 
     def __init__(
         self,
         *,
         address_n: Optional[Sequence["int"]] = None,
-        network_type: Optional["int"] = None,
+        network_type: Optional["MoneroNetworkType"] = MoneroNetworkType.MAINNET,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.network_type = network_type
@@ -4972,7 +4979,7 @@ class MoneroTransactionInitRequest(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("version", "uint32", repeated=False, required=False),
         2: protobuf.Field("address_n", "uint32", repeated=True, required=False),
-        3: protobuf.Field("network_type", "uint32", repeated=False, required=False),
+        3: protobuf.Field("network_type", "MoneroNetworkType", repeated=False, required=False),
         4: protobuf.Field("tsx_data", "MoneroTransactionData", repeated=False, required=False),
     }
 
@@ -4981,7 +4988,7 @@ class MoneroTransactionInitRequest(protobuf.MessageType):
         *,
         address_n: Optional[Sequence["int"]] = None,
         version: Optional["int"] = None,
-        network_type: Optional["int"] = None,
+        network_type: Optional["MoneroNetworkType"] = MoneroNetworkType.MAINNET,
         tsx_data: Optional["MoneroTransactionData"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
@@ -5290,21 +5297,21 @@ class MoneroTransactionFinalAck(protobuf.MessageType):
 class MoneroKeyImageExportInitRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 530
     FIELDS = {
-        1: protobuf.Field("num", "uint64", repeated=False, required=False),
-        2: protobuf.Field("hash", "bytes", repeated=False, required=False),
+        1: protobuf.Field("num", "uint64", repeated=False, required=True),
+        2: protobuf.Field("hash", "bytes", repeated=False, required=True),
         3: protobuf.Field("address_n", "uint32", repeated=True, required=False),
-        4: protobuf.Field("network_type", "uint32", repeated=False, required=False),
+        4: protobuf.Field("network_type", "MoneroNetworkType", repeated=False, required=False),
         5: protobuf.Field("subs", "MoneroSubAddressIndicesList", repeated=True, required=False),
     }
 
     def __init__(
         self,
         *,
+        num: "int",
+        hash: "bytes",
         address_n: Optional[Sequence["int"]] = None,
         subs: Optional[Sequence["MoneroSubAddressIndicesList"]] = None,
-        num: Optional["int"] = None,
-        hash: Optional["bytes"] = None,
-        network_type: Optional["int"] = None,
+        network_type: Optional["MoneroNetworkType"] = MoneroNetworkType.MAINNET,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.subs: Sequence["MoneroSubAddressIndicesList"] = subs if subs is not None else []
@@ -5367,11 +5374,11 @@ class MoneroGetTxKeyRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 550
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
-        2: protobuf.Field("network_type", "uint32", repeated=False, required=False),
-        3: protobuf.Field("salt1", "bytes", repeated=False, required=False),
-        4: protobuf.Field("salt2", "bytes", repeated=False, required=False),
-        5: protobuf.Field("tx_enc_keys", "bytes", repeated=False, required=False),
-        6: protobuf.Field("tx_prefix_hash", "bytes", repeated=False, required=False),
+        2: protobuf.Field("network_type", "MoneroNetworkType", repeated=False, required=False),
+        3: protobuf.Field("salt1", "bytes", repeated=False, required=True),
+        4: protobuf.Field("salt2", "bytes", repeated=False, required=True),
+        5: protobuf.Field("tx_enc_keys", "bytes", repeated=False, required=True),
+        6: protobuf.Field("tx_prefix_hash", "bytes", repeated=False, required=True),
         7: protobuf.Field("reason", "uint32", repeated=False, required=False),
         8: protobuf.Field("view_public_key", "bytes", repeated=False, required=False),
     }
@@ -5379,21 +5386,21 @@ class MoneroGetTxKeyRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
+        salt1: "bytes",
+        salt2: "bytes",
+        tx_enc_keys: "bytes",
+        tx_prefix_hash: "bytes",
         address_n: Optional[Sequence["int"]] = None,
-        network_type: Optional["int"] = None,
-        salt1: Optional["bytes"] = None,
-        salt2: Optional["bytes"] = None,
-        tx_enc_keys: Optional["bytes"] = None,
-        tx_prefix_hash: Optional["bytes"] = None,
+        network_type: Optional["MoneroNetworkType"] = MoneroNetworkType.MAINNET,
         reason: Optional["int"] = None,
         view_public_key: Optional["bytes"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
-        self.network_type = network_type
         self.salt1 = salt1
         self.salt2 = salt2
         self.tx_enc_keys = tx_enc_keys
         self.tx_prefix_hash = tx_prefix_hash
+        self.network_type = network_type
         self.reason = reason
         self.view_public_key = view_public_key
 
@@ -5422,14 +5429,14 @@ class MoneroLiveRefreshStartRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 552
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
-        2: protobuf.Field("network_type", "uint32", repeated=False, required=False),
+        2: protobuf.Field("network_type", "MoneroNetworkType", repeated=False, required=False),
     }
 
     def __init__(
         self,
         *,
         address_n: Optional[Sequence["int"]] = None,
-        network_type: Optional["int"] = None,
+        network_type: Optional["MoneroNetworkType"] = MoneroNetworkType.MAINNET,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.network_type = network_type
@@ -5442,21 +5449,21 @@ class MoneroLiveRefreshStartAck(protobuf.MessageType):
 class MoneroLiveRefreshStepRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 554
     FIELDS = {
-        1: protobuf.Field("out_key", "bytes", repeated=False, required=False),
-        2: protobuf.Field("recv_deriv", "bytes", repeated=False, required=False),
-        3: protobuf.Field("real_out_idx", "uint64", repeated=False, required=False),
-        4: protobuf.Field("sub_addr_major", "uint32", repeated=False, required=False),
-        5: protobuf.Field("sub_addr_minor", "uint32", repeated=False, required=False),
+        1: protobuf.Field("out_key", "bytes", repeated=False, required=True),
+        2: protobuf.Field("recv_deriv", "bytes", repeated=False, required=True),
+        3: protobuf.Field("real_out_idx", "uint64", repeated=False, required=True),
+        4: protobuf.Field("sub_addr_major", "uint32", repeated=False, required=True),
+        5: protobuf.Field("sub_addr_minor", "uint32", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        out_key: Optional["bytes"] = None,
-        recv_deriv: Optional["bytes"] = None,
-        real_out_idx: Optional["int"] = None,
-        sub_addr_major: Optional["int"] = None,
-        sub_addr_minor: Optional["int"] = None,
+        out_key: "bytes",
+        recv_deriv: "bytes",
+        real_out_idx: "int",
+        sub_addr_major: "int",
+        sub_addr_minor: "int",
     ) -> None:
         self.out_key = out_key
         self.recv_deriv = recv_deriv
@@ -5551,15 +5558,15 @@ class DebugMoneroDiagAck(protobuf.MessageType):
 class MoneroOutputEntry(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("idx", "uint64", repeated=False, required=False),
-        2: protobuf.Field("key", "MoneroRctKeyPublic", repeated=False, required=False),
+        1: protobuf.Field("idx", "uint64", repeated=False, required=True),
+        2: protobuf.Field("key", "MoneroRctKeyPublic", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        idx: Optional["int"] = None,
-        key: Optional["MoneroRctKeyPublic"] = None,
+        idx: "int",
+        key: "MoneroRctKeyPublic",
     ) -> None:
         self.idx = idx
         self.key = key
@@ -5591,15 +5598,15 @@ class MoneroMultisigKLRki(protobuf.MessageType):
 class MoneroRctKeyPublic(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("dest", "bytes", repeated=False, required=False),
-        2: protobuf.Field("commitment", "bytes", repeated=False, required=False),
+        1: protobuf.Field("dest", "bytes", repeated=False, required=True),
+        2: protobuf.Field("commitment", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        dest: Optional["bytes"] = None,
-        commitment: Optional["bytes"] = None,
+        dest: "bytes",
+        commitment: "bytes",
     ) -> None:
         self.dest = dest
         self.commitment = commitment
@@ -5701,15 +5708,15 @@ class MoneroRingCtSig(protobuf.MessageType):
 class MoneroSubAddressIndicesList(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("account", "uint32", repeated=False, required=False),
+        1: protobuf.Field("account", "uint32", repeated=False, required=True),
         2: protobuf.Field("minor_indices", "uint32", repeated=True, required=False),
     }
 
     def __init__(
         self,
         *,
+        account: "int",
         minor_indices: Optional[Sequence["int"]] = None,
-        account: Optional["int"] = None,
     ) -> None:
         self.minor_indices: Sequence["int"] = minor_indices if minor_indices is not None else []
         self.account = account
@@ -5718,10 +5725,10 @@ class MoneroSubAddressIndicesList(protobuf.MessageType):
 class MoneroTransferDetails(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("out_key", "bytes", repeated=False, required=False),
-        2: protobuf.Field("tx_pub_key", "bytes", repeated=False, required=False),
+        1: protobuf.Field("out_key", "bytes", repeated=False, required=True),
+        2: protobuf.Field("tx_pub_key", "bytes", repeated=False, required=True),
         3: protobuf.Field("additional_tx_pub_keys", "bytes", repeated=True, required=False),
-        4: protobuf.Field("internal_output_index", "uint64", repeated=False, required=False),
+        4: protobuf.Field("internal_output_index", "uint64", repeated=False, required=True),
         5: protobuf.Field("sub_addr_major", "uint32", repeated=False, required=False),
         6: protobuf.Field("sub_addr_minor", "uint32", repeated=False, required=False),
     }
@@ -5729,10 +5736,10 @@ class MoneroTransferDetails(protobuf.MessageType):
     def __init__(
         self,
         *,
+        out_key: "bytes",
+        tx_pub_key: "bytes",
+        internal_output_index: "int",
         additional_tx_pub_keys: Optional[Sequence["bytes"]] = None,
-        out_key: Optional["bytes"] = None,
-        tx_pub_key: Optional["bytes"] = None,
-        internal_output_index: Optional["int"] = None,
         sub_addr_major: Optional["int"] = None,
         sub_addr_minor: Optional["int"] = None,
     ) -> None:

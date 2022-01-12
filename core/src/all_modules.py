@@ -618,8 +618,6 @@ if not utils.BITCOIN_ONLY:
     import apps.monero.xmr.serialize_messages.tx_prefix
     apps.monero.xmr.serialize_messages.tx_rsig_bulletproof
     import apps.monero.xmr.serialize_messages.tx_rsig_bulletproof
-    apps.monero.xmr.types
-    import apps.monero.xmr.types
     apps.nem
     import apps.nem
     apps.nem.get_address

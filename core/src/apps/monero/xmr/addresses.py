@@ -2,10 +2,11 @@ from typing import TYPE_CHECKING
 
 from trezor.crypto import monero as tcry
 
-from apps.monero.xmr.networks import NetworkTypes, net_version
+from apps.monero.xmr.networks import net_version
 
 if TYPE_CHECKING:
-    from apps.monero.xmr.types import Ge25519
+    from .crypto import Ge25519
+    from trezor.enums import MoneroNetworkType
     from trezor.messages import MoneroAccountPublicAddress
     from trezor.messages import MoneroTransactionDestinationEntry
 
@@ -18,7 +19,7 @@ def addr_to_hash(addr: MoneroAccountPublicAddress) -> bytes:
 
 
 def encode_addr(
-    version, spend_pub: Ge25519, view_pub: Ge25519, payment_id: bytes | None = None
+    version, spend_pub: bytes, view_pub: bytes, payment_id: bytes | None = None
 ) -> str:
     """
     Builds Monero address from public keys
@@ -26,7 +27,7 @@ def encode_addr(
     buf = spend_pub + view_pub
     if payment_id:
         buf += bytes(payment_id)
-    return tcry.xmr_base58_addr_encode_check(ord(version), bytes(buf))
+    return tcry.xmr_base58_addr_encode_check(ord(version), bytes(buf)).decode()
 
 
 def decode_addr(addr: bytes) -> tuple[int, bytes, bytes]:
@@ -40,7 +41,7 @@ def decode_addr(addr: bytes) -> tuple[int, bytes, bytes]:
 
 
 def public_addr_encode(
-    pub_addr: MoneroAccountPublicAddress, is_sub=False, net=NetworkTypes.MAINNET
+    pub_addr: MoneroAccountPublicAddress, is_sub=False, net=MoneroNetworkType.MAINNET
 ):
     """
     Encodes public address to Monero address
@@ -85,7 +86,7 @@ def addr_eq(a: MoneroAccountPublicAddress, b: MoneroAccountPublicAddress):
 def get_change_addr_idx(
     outputs: list[MoneroTransactionDestinationEntry],
     change_dts: MoneroTransactionDestinationEntry,
-) -> int:
+) -> int | None:
     """
     Returns ID of the change output from the change_dts and outputs
     """

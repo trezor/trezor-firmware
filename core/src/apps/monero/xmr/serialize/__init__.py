@@ -1,14 +1,24 @@
 import gc
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import TypeVar
+
+    from .message_types import MessageType
+
+    T = TypeVar("T", bound=MessageType)
 
 
-def parse_msg(buf: bytes, msg_type):
+def parse_msg(buf: bytes, msg_type: type[T]) -> T:
     from apps.monero.xmr.serialize.readwriter import MemoryReaderWriter
 
     reader = MemoryReaderWriter(memoryview(buf))
     return msg_type.load(reader)
 
 
-def dump_msg(msg, preallocate: int = None, prefix: bytes = None) -> bytes:
+def dump_msg(
+    msg: MessageType, preallocate: int | None = None, prefix: bytes | None = None
+) -> bytes:
     from apps.monero.xmr.serialize.readwriter import MemoryReaderWriter
 
     writer = MemoryReaderWriter(preallocate=preallocate)
@@ -20,7 +30,9 @@ def dump_msg(msg, preallocate: int = None, prefix: bytes = None) -> bytes:
     return writer.get_buffer()
 
 
-def dump_msg_gc(msg, preallocate: int = None, prefix: bytes = None) -> bytes:
+def dump_msg_gc(
+    msg: MessageType, preallocate: int | None = None, prefix: bytes | None = None
+) -> bytes:
     buf = dump_msg(msg, preallocate, prefix)
     del msg
     gc.collect()

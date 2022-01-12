@@ -49,11 +49,18 @@ from apps.monero.xmr import crypto
 from apps.monero.xmr.serialize import int_serialize
 
 if TYPE_CHECKING:
-    from apps.monero.xmr.types import Ge25519, Sc25519
-    from apps.monero.xmr.serialize_messages.tx_ct_key import CtKey
+    from typing import Any, TypeGuard, TypeVar
+
+    from .crypto import Ge25519, Sc25519
+    from .serialize_messages.tx_ct_key import CtKey
     from trezor.messages import MoneroRctKeyPublic
 
     KeyM = list[list[bytes]]
+
+    T = TypeVar('T')
+
+    def list_of_type(lst: list[Any], typ: type[T]) -> TypeGuard[list[T]]:
+        ...
 
 
 _HASH_KEY_CLSAG_ROUND = b"CLSAG_round\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -68,7 +75,7 @@ def generate_mlsag_simple(
     a: Sc25519,
     cout: Ge25519,
     index: int,
-    mg_buff: list[bytes],
+    mg_buff: list[bytearray],
 ) -> list[bytes]:
     """
     MLSAG for RctType.Simple
@@ -88,8 +95,12 @@ def generate_mlsag_simple(
     if cols == 0:
         raise ValueError("Empty pubs")
 
-    sk = _key_vector(rows)
+    sk: Any = _key_vector(rows)
     M = _key_matrix(rows, cols)
+
+    if TYPE_CHECKING:
+        assert list_of_type(sk, Sc25519)
+        assert list_of_type(M, list[bytes])
 
     sk[0] = in_sk.dest
     sk[1] = crypto.sc_sub(in_sk.mask, a)
@@ -102,7 +113,7 @@ def generate_mlsag_simple(
 
         M[i][0] = pubs[i].dest
         M[i][1] = crypto.encodepoint(tmp_pt)
-        pubs[i] = None
+        pubs[i] = None  # type: ignore
 
     del pubs
     gc.collect()
@@ -142,7 +153,7 @@ def generate_first_c_and_key_images(
     dsRows: int,
     rows: int,
     cols: int,
-) -> tuple[Sc25519, list[Ge25519], list[Ge25519]]:
+) -> tuple[Sc25519, list[Ge25519], list[Sc25519]]:
     """
     MLSAG computation - the part with secret keys
     :param message: the full message to be signed (actually its hash)
@@ -155,6 +166,10 @@ def generate_first_c_and_key_images(
     """
     II = _key_vector(dsRows)
     alpha = _key_vector(rows)
+
+    if TYPE_CHECKING:
+        assert list_of_type(II, Ge25519)
+        assert list_of_type(alpha, Sc25519)
 
     tmp_buff = bytearray(32)
     Hi = crypto.new_point()
@@ -200,7 +215,7 @@ def generate_mlsag(
     xx: list[Sc25519],
     index: int,
     dsRows: int,
-    mg_buff: list[bytes],
+    mg_buff: list[bytearray],
 ) -> list[bytes]:
     """
     Multilayered Spontaneous Anonymous Group Signatures (MLSAG signatures)
@@ -217,7 +232,7 @@ def generate_mlsag(
 
     # Preallocation of the chunked buffer, len + cols + cc
     for _ in range(1 + cols + 1):
-        mg_buff.append(None)
+        mg_buff.append(None)  # type: ignore
 
     mg_buff[0] = int_serialize.dump_uvarint_b(cols)
     cc = crypto.new_scalar()  # rv.cc
@@ -275,7 +290,7 @@ def generate_mlsag(
 
         crypto.decodeint_into(c, hasher.digest())
         crypto.sc_copy(c_old, c)
-        pk[i] = None
+        pk[i] = None  # type: ignore
         i = (i + 1) % cols
 
         if i == 0:
@@ -291,6 +306,9 @@ def generate_mlsag(
         crypto.sc_mulsub_into(ss[j], c, xx[j], alpha[j])
         crypto.encodeint_into(mg_buff[index + 1], ss[j], rows_b_size + 32 * j)
 
+    if TYPE_CHECKING:
+        assert list_of_type(mg_buff, bytes)
+
     # rv.cc
     mg_buff[-1] = crypto.encodeint(cc)
     return mg_buff
@@ -303,7 +321,7 @@ def generate_clsag_simple(
     a: Sc25519,
     cout: Ge25519,
     index: int,
-    mg_buff: list[bytes],
+    mg_buff: list[bytearray],
 ) -> list[bytes]:
     """
     CLSAG for RctType.Simple
@@ -331,7 +349,7 @@ def generate_clsag_simple(
     for i in range(cols):
         P[i] = pubs[i].dest
         C_nonzero[i] = pubs[i].commitment
-        pubs[i] = None
+        pubs[i] = None  # type: ignore
 
     del pubs
     gc.collect()
@@ -347,7 +365,7 @@ def _generate_clsag(
     z: Sc25519,
     Cout: Ge25519,
     index: int,
-    mg_buff: list[bytes],
+    mg_buff: list[bytearray],
 ) -> list[bytes]:
     sI = crypto.new_point()  # sig.I
     sD = crypto.new_point()  # sig.D
@@ -444,8 +462,8 @@ def _generate_clsag(
         chasher.update(crypto.encodepoint_into(tmp_bf, R))
         crypto.decodeint_into(c, chasher.digest())
 
-        P[i] = None
-        C_nonzero[i] = None
+        P[i] = None  # type: ignore
+        C_nonzero[i] = None  # type: ignore
 
         i = (i + 1) % len(P)
         if i == 0:
@@ -460,20 +478,23 @@ def _generate_clsag(
     crypto.sc_mulsub_into(tmp_sc, c, tmp_sc, a)
     crypto.encodeint_into(mg_buff[index + 1], tmp_sc)
 
+    if TYPE_CHECKING:
+        assert list_of_type(mg_buff, bytes)
+
     mg_buff.append(crypto.encodeint(sc1))
     mg_buff.append(sD)
     return mg_buff
 
 
-def _key_vector(rows):
+def _key_vector(rows: int) -> list[Any]:
     return [None] * rows
 
 
-def _key_matrix(rows, cols):
+def _key_matrix(rows: int, cols: int) -> list[list[Any]]:
     """
     first index is columns (so slightly backward from math)
     """
-    rv = [None] * cols
+    rv: list[Any] = [None] * cols
     for i in range(0, cols):
         rv[i] = _key_vector(rows)
     return rv

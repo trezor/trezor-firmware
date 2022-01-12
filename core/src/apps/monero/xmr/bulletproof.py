@@ -1,11 +1,24 @@
 import gc
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor import utils
 from trezor.utils import memcpy as tmemcpy
 
 from apps.monero.xmr import crypto
 from apps.monero.xmr.serialize.int_serialize import dump_uvarint_b_into, uvarint_size
+
+if TYPE_CHECKING:
+    from typing import Iterator, TypeVar, Generic
+
+    from .crypto import Sc25519, Ge25519
+    from .serialize_messages.tx_rsig_bulletproof import Bulletproof
+
+    T = TypeVar("T")
+
+else:
+    Generic = [object]  # type: ignore
+    T = 0  # type: ignore
 
 # Constants
 
@@ -51,39 +64,41 @@ _tmp_sc_3 = crypto.new_scalar()
 _tmp_sc_4 = crypto.new_scalar()
 
 
-def _ensure_dst_key(dst=None):
+def _ensure_dst_key(dst: bytearray | None = None) -> bytearray:
     if dst is None:
         dst = bytearray(32)
     return dst
 
 
-def memcpy(dst, dst_off, src, src_off, len):
+def memcpy(
+    dst: bytearray, dst_off: int, src: bytes, src_off: int, len: int
+) -> bytearray:
     if dst is not None:
         tmemcpy(dst, dst_off, src, src_off, len)
     return dst
 
 
-def _alloc_scalars(num=1):
+def _alloc_scalars(num: int = 1) -> Iterator[Sc25519]:
     return (crypto.new_scalar() for _ in range(num))
 
 
-def _copy_key(dst, src):
+def _copy_key(dst: bytearray, src: bytes) -> bytearray:
     for i in range(32):
         dst[i] = src[i]
     return dst
 
 
-def _init_key(val, dst=None):
+def _init_key(val: bytes, dst: bytearray | None = None) -> bytearray:
     dst = _ensure_dst_key(dst)
     return _copy_key(dst, val)
 
 
-def _gc_iter(i):
+def _gc_iter(i: int) -> None:
     if i & 127 == 0:
         gc.collect()
 
 
-def _invert(dst, x):
+def _invert(dst: bytearray, x: bytes) -> bytearray:
     dst = _ensure_dst_key(dst)
     crypto.decodeint_into_noreduce(_tmp_sc_1, x)
     crypto.sc_inv_into(_tmp_sc_2, _tmp_sc_1)
@@ -91,17 +106,23 @@ def _invert(dst, x):
     return dst
 
 
-def _scalarmult_key(dst, P, s, s_raw=None, tmp_pt=_tmp_pt_1):
+def _scalarmult_key(
+    dst: bytearray, P, s: bytes, s_raw: int | None = None, tmp_pt: Ge25519 = _tmp_pt_1
+):
+    # TODO: two functions based on s/s_raw ?
     dst = _ensure_dst_key(dst)
     crypto.decodepoint_into(tmp_pt, P)
     if s:
         crypto.decodeint_into_noreduce(_tmp_sc_1, s)
-    crypto.scalarmult_into(tmp_pt, tmp_pt, _tmp_sc_1 if s else s_raw)
+        crypto.scalarmult_into(tmp_pt, tmp_pt, _tmp_sc_1)
+    else:
+        assert s_raw is not None
+        crypto.scalarmult_into(tmp_pt, tmp_pt, s_raw)
     crypto.encodepoint_into(dst, tmp_pt)
     return dst
 
 
-def _scalarmultH(dst, x):
+def _scalarmultH(dst: bytearray, x: bytes) -> bytearray:
     dst = _ensure_dst_key(dst)
     crypto.decodeint_into(_tmp_sc_1, x)
     crypto.scalarmult_into(_tmp_pt_1, _XMR_HP, _tmp_sc_1)
@@ -109,7 +130,7 @@ def _scalarmultH(dst, x):
     return dst
 
 
-def _scalarmult_base(dst, x):
+def _scalarmult_base(dst: bytearray, x: bytes) -> bytearray:
     dst = _ensure_dst_key(dst)
     crypto.decodeint_into_noreduce(_tmp_sc_1, x)
     crypto.scalarmult_base_into(_tmp_pt_1, _tmp_sc_1)
@@ -117,14 +138,14 @@ def _scalarmult_base(dst, x):
     return dst
 
 
-def _sc_gen(dst=None):
+def _sc_gen(dst: bytearray | None = None) -> bytearray:
     dst = _ensure_dst_key(dst)
     crypto.random_scalar(_tmp_sc_1)
     crypto.encodeint_into(dst, _tmp_sc_1)
     return dst
 
 
-def _sc_add(dst, a, b):
+def _sc_add(dst: bytearray, a: bytes, b: bytes) -> bytearray:
     dst = _ensure_dst_key(dst)
     crypto.decodeint_into_noreduce(_tmp_sc_1, a)
     crypto.decodeint_into_noreduce(_tmp_sc_2, b)
@@ -133,18 +154,26 @@ def _sc_add(dst, a, b):
     return dst
 
 
-def _sc_sub(dst, a, b, a_raw=None, b_raw=None):
+def _sc_sub(
+    dst: bytearray | None,
+    a: bytes | Sc25519,
+    b: bytes | Sc25519,
+):
     dst = _ensure_dst_key(dst)
-    if a:
+    if not isinstance(a, Sc25519):
         crypto.decodeint_into_noreduce(_tmp_sc_1, a)
-    if b:
+        a = _tmp_sc_1
+    if not isinstance(b, Sc25519):
         crypto.decodeint_into_noreduce(_tmp_sc_2, b)
-    crypto.sc_sub_into(_tmp_sc_3, _tmp_sc_1 if a else a_raw, _tmp_sc_2 if b else b_raw)
+        b = _tmp_sc_2
+    crypto.sc_sub_into(_tmp_sc_3, a, b)
     crypto.encodeint_into(dst, _tmp_sc_3)
     return dst
 
 
-def _sc_mul(dst, a, b=None, b_raw=None):
+def _sc_mul(
+    dst: bytearray | None, a: bytes, b: bytes | None = None, b_raw: bytes | None = None
+) -> bytearray:
     dst = _ensure_dst_key(dst)
     crypto.decodeint_into_noreduce(_tmp_sc_1, a)
     if b:
@@ -154,7 +183,9 @@ def _sc_mul(dst, a, b=None, b_raw=None):
     return dst
 
 
-def _sc_muladd(dst, a, b, c, a_raw=None, b_raw=None, c_raw=None, raw=False):
+def _sc_muladd(
+    dst: bytearray, a, b, c, a_raw=None, b_raw=None, c_raw=None, raw: bool = False
+):
     dst = _ensure_dst_key(dst) if not raw else (dst if dst else crypto.new_scalar())
     if a:
         crypto.decodeint_into_noreduce(_tmp_sc_1, a)
@@ -260,49 +291,49 @@ def _get_exponent(dst, base, idx):
 #
 
 
-class KeyVBase:
+class KeyVBase(Generic[T]):
     """
     Base KeyVector object
     """
 
     __slots__ = ("current_idx", "size")
 
-    def __init__(self, elems=64):
+    def __init__(self, elems: int = 64) -> None:
         self.current_idx = 0
         self.size = elems
 
-    def idxize(self, idx):
+    def idxize(self, idx: int) -> int:
         if idx < 0:
             idx = self.size + idx
         if idx >= self.size:
             raise IndexError("Index out of bounds")
         return idx
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: int) -> T:
         raise ValueError("Not supported")
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: int, value: T) -> None:
         raise ValueError("Not supported")
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[T]:
         self.current_idx = 0
         return self
 
-    def __next__(self):
+    def __next__(self) -> T:
         if self.current_idx >= self.size:
             raise StopIteration
         else:
             self.current_idx += 1
             return self[self.current_idx - 1]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.size
 
-    def to(self, idx, buff=None, offset=0):
+    def to(self, idx: int, buff: bytearray | None = None, offset: int = 0) -> bytearray:
         buff = _ensure_dst_key(buff)
         return memcpy(buff, offset, self.to(self.idxize(idx)), 0, 32)
 
-    def read(self, idx, buff, offset=0):
+    def read(self, idx: int, buff: bytes, offset: int = 0) -> bytes:
         raise ValueError
 
     def slice(self, res, start, stop):
@@ -310,7 +341,7 @@ class KeyVBase:
             res[i - start] = self[i]
         return res
 
-    def slice_view(self, start, stop):
+    def slice_view(self, start: int, stop: int) -> KeyVSliced[T]:
         return KeyVSliced(self, start, stop)
 
 
@@ -334,10 +365,16 @@ class KeyV(KeyVBase):
 
     __slots__ = ("current_idx", "size", "d", "mv", "const", "cur", "chunked")
 
-    def __init__(self, elems=64, buffer=None, const=False, no_init=False):
+    def __init__(
+        self,
+        elems: int = 64,
+        buffer: bytes | None = None,
+        const: bool = False,
+        no_init: bool = False,
+    ) -> None:
         super().__init__(elems)
-        self.d = None
-        self.mv = None
+        self.d: bytes | bytearray | list[bytearray] | None = None
+        self.mv: memoryview | None = None
         self.const = const
         self.cur = _ensure_dst_key()
         self.chunked = False
@@ -352,7 +389,7 @@ class KeyV(KeyVBase):
         if not no_init:
             self._set_mv()
 
-    def _set_d(self, elems):
+    def _set_d(self, elems: int) -> None:
         if elems > _CHSIZE and elems % _CHSIZE == 0:
             self.chunked = True
             gc.collect()
@@ -363,8 +400,9 @@ class KeyV(KeyVBase):
             gc.collect()
             self.d = bytearray(32 * elems)
 
-    def _set_mv(self):
+    def _set_mv(self) -> None:
         if not self.chunked:
+            assert isinstance(self.d, bytes)
             self.mv = memoryview(self.d)
 
     def __getitem__(self, item):
@@ -375,6 +413,7 @@ class KeyV(KeyVBase):
         if self.chunked:
             return self.to(item)
         item = self.idxize(item)
+        assert self.mv is not None
         return self.mv[item * 32 : (item + 1) * 32]
 
     def __setitem__(self, key, value):
@@ -389,6 +428,7 @@ class KeyV(KeyVBase):
     def to(self, idx, buff=None, offset=0):
         idx = self.idxize(idx)
         if self.chunked:
+            assert isinstance(self.d, list)
             memcpy(
                 buff if buff else self.cur,
                 offset,
@@ -397,14 +437,17 @@ class KeyV(KeyVBase):
                 32,
             )
         else:
+            assert isinstance(self.d, (bytes, bytearray))
             memcpy(buff if buff else self.cur, offset, self.d, idx << 5, 32)
         return buff if buff else self.cur
 
     def read(self, idx, buff, offset=0):
         idx = self.idxize(idx)
         if self.chunked:
+            assert isinstance(self.d, list)
             memcpy(self.d[idx >> _CHBITS], (idx & (_CHSIZE - 1)) << 5, buff, offset, 32)
         else:
+            assert isinstance(self.d, bytearray)
             memcpy(self.d, idx << 5, buff, offset, 32)
 
     def resize(self, nsize, chop=False, realloc=False):
@@ -412,6 +455,7 @@ class KeyV(KeyVBase):
             return
 
         if self.chunked and nsize <= _CHSIZE:
+            assert isinstance(self.d, list)
             self.chunked = False  # de-chunk
             if self.size > nsize and realloc:
                 gc.collect()
@@ -424,12 +468,14 @@ class KeyV(KeyVBase):
                 self.d = bytearray(nsize << 5)
 
         elif self.chunked and self.size < nsize:
+            assert isinstance(self.d, list)
             if nsize % _CHSIZE != 0 or realloc or chop:
                 raise ValueError("Unsupported")  # not needed
             for i in range((nsize - self.size) // _CHSIZE):
                 self.d.append(bytearray(32 * _CHSIZE))
 
         elif self.chunked:
+            assert isinstance(self.d, list)
             if nsize % _CHSIZE != 0:
                 raise ValueError("Unsupported")  # not needed
             for i in range((self.size - nsize) // _CHSIZE):
@@ -439,6 +485,7 @@ class KeyV(KeyVBase):
                     self.d[i] = bytearray(self.d[i])
 
         else:
+            assert isinstance(self.d, (bytes, bytearray))
             if self.size > nsize and realloc:
                 gc.collect()
                 self.d = bytearray(self.d[: nsize << 5])
@@ -468,6 +515,8 @@ class KeyV(KeyVBase):
         self.realloc(nsize, collect)
 
         if not self.chunked and not src.chunked:
+            assert isinstance(self.d, bytearray)
+            assert isinstance(src.d, (bytes, bytearray))
             memcpy(self.d, 0, src.d, offset << 5, nsize << 5)
 
         elif self.chunked and not src.chunked or self.chunked and src.chunked:
@@ -475,6 +524,8 @@ class KeyV(KeyVBase):
                 self.read(i, src.to(i + offset))
 
         elif not self.chunked and src.chunked:
+            assert isinstance(self.d, bytearray)
+            assert isinstance(src.d, list)
             for i in range(nsize >> _CHBITS):
                 memcpy(
                     self.d,
@@ -694,9 +745,9 @@ class KeyR0(KeyVBase):
         self.N = N
         self.aR = aR
         self.raw = raw
-        self.y = crypto.decodeint_into_noreduce(None, y)
+        self.y = crypto.decodeint_into_noreduce(y)
         self.yp = crypto.new_scalar()  # y^{i}
-        self.z = crypto.decodeint_into_noreduce(None, z)
+        self.z = crypto.decodeint_into_noreduce(z)
         self.zt = crypto.new_scalar()  # z^{2 + \floor{i/N}}
         self.p2 = crypto.new_scalar()  # 2^{i \% N}
         self.res = crypto.new_scalar()  # tmp_sc_1
@@ -1506,7 +1557,7 @@ class BulletProofBuilder:
     def verify(self, proof):
         return self.verify_batch([proof])
 
-    def verify_batch(self, proofs, single_optim=True):
+    def verify_batch(self, proofs: list[Bulletproof], single_optim: bool = True):
         """
         BP batch verification
         :param proofs:
@@ -1665,6 +1716,7 @@ class BulletProofBuilder:
                 _sc_mulsub(h_scalar, tmp, yinvpow, h_scalar)
 
                 if not is_single:  # ph4
+                    assert m_z4 is not None and m_z5 is not None
                     m_z4.read(i, _sc_mulsub(_tmp_bf_0, g_scalar, weight_z, m_z4[i]))
                     m_z5.read(i, _sc_mulsub(_tmp_bf_0, h_scalar, weight_z, m_z5[i]))
                 else:
@@ -1719,6 +1771,7 @@ class BulletProofBuilder:
         _add_keys(muex_acc, muex_acc, check2)
 
         if not is_single:  # ph4
+            assert m_z4 is not None and m_z5 is not None
             muex = MultiExpSequential(
                 point_fnc=lambda i, d: Gprec.to(i // 2)
                 if i & 1 == 0

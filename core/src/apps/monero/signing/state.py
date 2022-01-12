@@ -7,8 +7,8 @@ from trezor import log
 from apps.monero.xmr import crypto
 
 if TYPE_CHECKING:
-    from apps.monero.xmr.types import Ge25519, Sc25519
-    from apps.monero.xmr.credentials import AccountCreds
+    from ..xmr.crypto import Ge25519, Sc25519
+    from ..xmr.credentials import AccountCreds
 
     Subaddresses = dict[bytes, tuple[int, int]]
 

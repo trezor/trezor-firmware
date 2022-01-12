@@ -14,8 +14,9 @@ encrypted using the private spend key. Here the host sends it back
 in `MoneroGetTxKeyRequest.tx_enc_keys` to be decrypted and yet again encrypted
 using the view key, which the host possess.
 """
+from typing import TYPE_CHECKING
 
-from trezor import utils
+from trezor import utils, wire
 from trezor.messages import MoneroGetTxKeyAck, MoneroGetTxKeyRequest
 
 from apps.common import paths
@@ -27,9 +28,14 @@ from apps.monero.xmr.crypto import chacha_poly
 _GET_TX_KEY_REASON_TX_KEY = 0
 _GET_TX_KEY_REASON_TX_DERIVATION = 1
 
+if TYPE_CHECKING:
+    from apps.common.keychain import Keychain
+
 
 @auto_keychain(__name__)
-async def get_tx_keys(ctx, msg: MoneroGetTxKeyRequest, keychain):
+async def get_tx_keys(
+    ctx: wire.Context, msg: MoneroGetTxKeyRequest, keychain: Keychain
+) -> MoneroGetTxKeyAck:
     await paths.validate_path(ctx, keychain, msg.address_n)
 
     do_deriv = msg.reason == _GET_TX_KEY_REASON_TX_DERIVATION
@@ -52,6 +58,9 @@ async def get_tx_keys(ctx, msg: MoneroGetTxKeyRequest, keychain):
 
     # If return only derivations do tx_priv * view_pub
     if do_deriv:
+        if msg.view_public_key is None:
+            raise wire.DataError("Missing view public key")
+
         plain_buff = bytearray(plain_buff)
         view_pub = crypto.decodepoint(msg.view_public_key)
         tx_priv = crypto.new_scalar()

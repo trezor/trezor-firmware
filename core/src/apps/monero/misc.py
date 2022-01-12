@@ -1,10 +1,18 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from apps.monero.xmr.types import Sc25519
+    from apps.common.keychain import Keychain
+    from apps.common.paths import Bip32Path
+
+    from trezor.enums import MoneroNetworkType
+
+    from .xmr.crypto import Sc25519
+    from .xmr.credentials import AccountCreds
 
 
-def get_creds(keychain, address_n=None, network_type=None):
+def get_creds(
+    keychain: Keychain, address_n: Bip32Path, network_type: MoneroNetworkType
+) -> AccountCreds:
     from apps.monero.xmr import monero
     from apps.monero.xmr.credentials import AccountCreds
 

@@ -4,7 +4,9 @@ from apps.monero.xmr import crypto
 from apps.monero.xmr.keccak_hasher import KeccakXmrArchive
 
 if TYPE_CHECKING:
-    from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import Bulletproof
+    from trezor.utils import HashContext
+
+    from .serialize_messages.tx_rsig_bulletproof import Bulletproof
 
 
 class PreMlsagHasher:
@@ -12,22 +14,22 @@ class PreMlsagHasher:
     Iterative construction of the pre_mlsag_hash
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.state = 0
-        self.kc_master = crypto.get_keccak()
-        self.rsig_hasher = crypto.get_keccak()
-        self.rtcsig_hasher = KeccakXmrArchive()
+        self.kc_master: HashContext = crypto.get_keccak()
+        self.rsig_hasher: HashContext = crypto.get_keccak()
+        self.rtcsig_hasher: KeccakXmrArchive = KeccakXmrArchive()
 
-    def init(self):
+    def init(self) -> None:
         if self.state != 0:
             raise ValueError("State error")
 
         self.state = 1
 
-    def set_message(self, message: bytes):
+    def set_message(self, message: bytes) -> None:
         self.kc_master.update(message)
 
-    def set_type_fee(self, rv_type: int, fee: int):
+    def set_type_fee(self, rv_type: int, fee: int) -> None:
         if self.state != 1:
             raise ValueError("State error")
         self.state = 2
@@ -53,7 +55,7 @@ class PreMlsagHasher:
 
         c_hash = self.rtcsig_hasher.get_digest()
         self.kc_master.update(c_hash)
-        self.rtcsig_hasher = None
+        self.rtcsig_hasher = None  # type: ignore
 
     def rsig_val(self, p: bytes | list[bytes] | Bulletproof, raw: bool = False):
         if self.state == 8:
@@ -68,8 +70,11 @@ class PreMlsagHasher:
                 for x in p:
                     self.rsig_hasher.update(x)
             else:
+                assert isinstance(p, bytes)
                 self.rsig_hasher.update(p)
             return
+
+        assert isinstance(p, Bulletproof)
 
         # Hash Bulletproof
         self.rsig_hasher.update(p.A)
@@ -92,7 +97,7 @@ class PreMlsagHasher:
         self.state = 8
 
         c_hash = self.rsig_hasher.digest()
-        self.rsig_hasher = None
+        self.rsig_hasher = None  # type: ignore
 
         self.kc_master.update(c_hash)
         return self.kc_master.digest()

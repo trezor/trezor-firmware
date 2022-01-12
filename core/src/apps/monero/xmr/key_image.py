@@ -4,8 +4,8 @@ from apps.monero.xmr import crypto, monero
 from apps.monero.xmr.serialize.int_serialize import dump_uvarint_b
 
 if TYPE_CHECKING:
-    from apps.monero.xmr.types import Ge25519, Sc25519
-    from apps.monero.xmr.credentials import AccountCreds
+    from .crypto import Ge25519, Sc25519
+    from .credentials import AccountCreds
     from trezor.messages import MoneroTransferDetails
 
     Subaddresses = dict[bytes, tuple[int, int]]
@@ -61,8 +61,8 @@ def _export_key_image(
     additional_tx_pub_key: Ge25519 | None,
     out_idx: int,
     test: bool = True,
-    sub_addr_major: int = None,
-    sub_addr_minor: int = None,
+    sub_addr_major: int | None = None,
+    sub_addr_minor: int | None = None,
 ) -> tuple[Ge25519, Sig]:
     """
     Generates key image for the TXO + signature for the key image

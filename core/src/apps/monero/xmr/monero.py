@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from apps.monero.xmr import crypto
 
 if TYPE_CHECKING:
-    from apps.monero.xmr.types import Ge25519, Sc25519
+    from .crypto import Ge25519, Sc25519
     from apps.monero.xmr.credentials import AccountCreds
 
     Subaddresses = dict[bytes, tuple[int, int]]
@@ -69,12 +69,12 @@ def is_out_to_account(
     subaddresses: Subaddresses,
     out_key: Ge25519,
     derivation: Ge25519,
-    additional_derivation: Ge25519,
+    additional_derivation: Ge25519 | None,
     output_index: int,
-    creds: AccountCreds | None = None,
-    sub_addr_major: int = None,
-    sub_addr_minor: int = None,
-):
+    creds: AccountCreds | None,
+    sub_addr_major: int | None,
+    sub_addr_minor: int | None,
+) -> tuple[tuple[int, int], Ge25519] | None:
     """
     Checks whether the given transaction is sent to the account.
     Searches subaddresses for the computed subaddress_spendkey.
@@ -111,6 +111,8 @@ def is_out_to_account(
         )
 
         if sub_pub_key and crypto.point_eq(subaddress_spendkey_obj, sub_pub_key):
+            # sub_pub_key is only set if sub_addr_{major, minor} are set
+            assert sub_addr_major is not None and sub_addr_minor is not None
             return (sub_addr_major, sub_addr_minor), additional_derivation
 
         if subaddresses:
@@ -127,7 +129,7 @@ def generate_tx_spend_and_key_image(
     recv_derivation: Ge25519,
     real_output_index: int,
     received_index: tuple[int, int],
-) -> tuple[Sc25519, Ge25519] | None:
+) -> tuple[Sc25519, Ge25519]:
     """
     Generates UTXO spending key and key image.
     Corresponds to generate_key_image_helper_precomp() in the Monero codebase.
@@ -188,10 +190,10 @@ def generate_tx_spend_and_key_image_and_derivation(
     subaddresses: Subaddresses,
     out_key: Ge25519,
     tx_public_key: Ge25519,
-    additional_tx_public_key: Ge25519,
+    additional_tx_public_key: Ge25519 | None,
     real_output_index: int,
-    sub_addr_major: int = None,
-    sub_addr_minor: int = None,
+    sub_addr_major: int | None,
+    sub_addr_minor: int | None,
 ) -> tuple[Sc25519, Ge25519, Ge25519]:
     """
     Generates UTXO spending key and key image and corresponding derivation.

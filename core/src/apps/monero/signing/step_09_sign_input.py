@@ -108,7 +108,7 @@ async def sign_input(
     else:
         if input_position + 1 == state.input_count:
             utils.ensure(
-                crypto.sc_eq(state.sumpouts_alphas, state.sumout), "Sum eq error"
+                crypto.sc_eq(state.sumpouts_alphas, state.sumout) != 0, "Sum eq error"
             )
 
         # both pseudo_out and its mask were offloaded so we need to
@@ -177,6 +177,7 @@ async def sign_input(
 
     state.mem_trace(5, True)
 
+    assert state.full_message is not None
     if state.tx_type == signing.RctType.CLSAG:
         state.mem_trace("CLSAG")
         mlsag.generate_clsag_simple(

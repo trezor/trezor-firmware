@@ -1,16 +1,20 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from apps.monero.xmr.serialize.message_types import ContainerType, MessageType
 from apps.monero.xmr.serialize_messages.base import ECKey
 
+if TYPE_CHECKING:
+    from ..serialize.base_types import XmrType
+
 
 class _KeyV(ContainerType):
     FIX_SIZE = const(0)
-    ELEM_TYPE = ECKey
+    ELEM_TYPE: XmrType[bytes] = ECKey
 
 
 class Bulletproof(MessageType):
-    __slots__ = ("A", "S", "T1", "T2", "taux", "mu", "L", "R", "a", "b", "t")
+    __slots__ = ("A", "S", "T1", "T2", "taux", "mu", "L", "R", "a", "b", "t", "V")
 
     @classmethod
     def f_specs(cls):

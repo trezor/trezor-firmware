@@ -13,7 +13,8 @@ from trezor.crypto import monero as tcry, random
 from trezor.crypto.hashlib import sha3_256
 
 if TYPE_CHECKING:
-    from apps.monero.xmr.types import Sc25519, Ge25519
+    Sc25519 = tcry.Sc25519
+    Ge25519 = tcry.Ge25519
 
 
 NULL_KEY_ENC = b"\x00" * 32
@@ -22,7 +23,7 @@ random_bytes = random.bytes
 ct_equals = tcry.ct_equals
 
 
-def keccak_factory(data=None):
+def keccak_factory(data: bytes=None) -> sha3_256:
     return sha3_256(data=data, keccak=True)
 
 
@@ -38,7 +39,7 @@ def keccak_2hash(inp, buff=None):
     return buff
 
 
-def compute_hmac(key, msg):
+def compute_hmac(key: bytes, msg: bytes) -> bytes:
     digestmod = keccak_factory
     inner = digestmod()
     block_size = inner.block_size
@@ -137,7 +138,6 @@ def sc_init_into(r: Sc25519, x: int) -> Sc25519:
 sc_copy = tcry.init256_modm
 sc_get64 = tcry.get256_modm
 sc_check = tcry.check256_modm
-check_sc = tcry.check256_modm
 
 sc_add = tcry.add256_modm
 sc_add_into = tcry.add256_modm
@@ -319,7 +319,7 @@ def check_signature(data: bytes, c: Sc25519, r: Sc25519, pub: Ge25519) -> bool:
     return not sc_isnonzero(res)
 
 
-def xor8(buff: bytes, key: bytes) -> bytes:
+def xor8(buff: bytearray, key: bytes) -> bytes:
     for i in range(8):
         buff[i] ^= key[i]
     return buff
