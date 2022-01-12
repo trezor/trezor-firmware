@@ -1331,6 +1331,7 @@ if TYPE_CHECKING:
         witness_requests_count: "int"
         minting_asset_groups_count: "int"
         derivation_type: "CardanoDerivationType"
+        include_network_id: "bool"
 
         def __init__(
             self,
@@ -1349,6 +1350,7 @@ if TYPE_CHECKING:
             derivation_type: "CardanoDerivationType",
             ttl: "int | None" = None,
             validity_interval_start: "int | None" = None,
+            include_network_id: "bool | None" = None,
         ) -> None:
             pass
 

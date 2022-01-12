@@ -690,6 +690,7 @@ def sign_tx(
     mint: Sequence[AssetGroupWithTokens] = (),
     additional_witness_requests: Sequence[Path] = (),
     derivation_type: messages.CardanoDerivationType = messages.CardanoDerivationType.ICARUS,
+    include_network_id: bool = False,
 ) -> Dict[str, Any]:
     UNEXPECTED_RESPONSE_ERROR = exceptions.TrezorException("Unexpected response")
 
@@ -713,6 +714,7 @@ def sign_tx(
             minting_asset_groups_count=len(mint),
             witness_requests_count=len(witness_requests),
             derivation_type=derivation_type,
+            include_network_id=include_network_id,
         )
     )
     if not isinstance(response, messages.CardanoTxItemAck):

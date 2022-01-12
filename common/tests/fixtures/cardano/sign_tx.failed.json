@@ -29,7 +29,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid address"
@@ -60,7 +61,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid address"
@@ -91,7 +93,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid address"
@@ -122,7 +125,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid address"
@@ -153,7 +157,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid address"
@@ -184,7 +189,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Fee is out of range"
@@ -220,7 +226,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Total transaction amount is out of range!"
@@ -251,7 +258,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Output address network mismatch"
@@ -282,7 +290,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Output address network mismatch"
@@ -313,7 +322,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid address"
@@ -344,7 +354,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid address"
@@ -375,7 +386,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid network id/protocol magic combination!"
@@ -406,7 +418,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid network id/protocol magic combination!"
@@ -437,7 +450,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid address"
@@ -471,7 +485,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid output"
@@ -507,7 +522,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -543,7 +559,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -579,7 +596,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -616,7 +634,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -653,7 +672,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -689,7 +709,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid withdrawal"
@@ -725,7 +746,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid withdrawal"
@@ -761,7 +783,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid withdrawal"
@@ -797,7 +820,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid withdrawal"
@@ -834,7 +858,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid withdrawal"
@@ -874,7 +899,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Duplicate withdrawals"
@@ -907,7 +933,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid auxiliary data"
@@ -948,7 +975,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid auxiliary data"
@@ -991,7 +1019,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid auxiliary data"
@@ -1028,7 +1057,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid change output path"
@@ -1065,7 +1095,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid change output staking path"
@@ -1102,7 +1133,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid address parameters"
@@ -1133,7 +1165,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid address"
@@ -1169,7 +1202,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid certificate path"
@@ -1215,7 +1249,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid token bundle in output"
@@ -1266,7 +1301,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid token bundle in output"
@@ -1301,7 +1337,8 @@
           {
             "path": "m/1854'/1815'/0'/0/0"
           }
-        ]
+        ],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -1336,7 +1373,8 @@
           {
             "path": "m/1854'/1815'/0'/0/0"
           }
-        ]
+        ],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -1369,7 +1407,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid address parameters"
@@ -1452,7 +1491,8 @@
           {
             "path": "m/1854'/1815'/0'/0/0"
           }
-        ]
+        ],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -1488,7 +1528,8 @@
           {
             "path": "m/1855'/1815'/0'"
           }
-        ]
+        ],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -1575,7 +1616,8 @@
           {
             "path": "m/1855'/1815'/0'/0/0"
           }
-        ]
+        ],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -1612,7 +1654,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -1648,7 +1691,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -1684,7 +1728,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -1726,7 +1771,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -1768,7 +1814,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid withdrawal"
@@ -1809,7 +1856,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid withdrawal"
@@ -1844,7 +1892,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -1876,7 +1925,8 @@
         ],
         "mint": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid witness request"

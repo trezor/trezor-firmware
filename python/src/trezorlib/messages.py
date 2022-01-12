@@ -2244,6 +2244,7 @@ class CardanoSignTxInit(protobuf.MessageType):
         12: protobuf.Field("witness_requests_count", "uint32", repeated=False, required=True),
         13: protobuf.Field("minting_asset_groups_count", "uint32", repeated=False, required=True),
         14: protobuf.Field("derivation_type", "CardanoDerivationType", repeated=False, required=True),
+        15: protobuf.Field("include_network_id", "bool", repeated=False, required=False),
     }
 
     def __init__(
@@ -2263,6 +2264,7 @@ class CardanoSignTxInit(protobuf.MessageType):
         derivation_type: "CardanoDerivationType",
         ttl: Optional["int"] = None,
         validity_interval_start: Optional["int"] = None,
+        include_network_id: Optional["bool"] = False,
     ) -> None:
         self.signing_mode = signing_mode
         self.protocol_magic = protocol_magic
@@ -2278,6 +2280,7 @@ class CardanoSignTxInit(protobuf.MessageType):
         self.derivation_type = derivation_type
         self.ttl = ttl
         self.validity_interval_start = validity_interval_start
+        self.include_network_id = include_network_id
 
 
 class CardanoTxInput(protobuf.MessageType):

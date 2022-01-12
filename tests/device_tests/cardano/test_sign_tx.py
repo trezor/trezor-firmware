@@ -73,6 +73,7 @@ def test_cardano_sign_tx(client: Client, parameters, result):
             auxiliary_data=auxiliary_data,
             mint=mint,
             additional_witness_requests=additional_witness_requests,
+            include_network_id=parameters["include_network_id"],
         )
         assert response == _transform_expected_result(result)
 
@@ -121,6 +122,7 @@ def test_cardano_sign_tx_failed(client: Client, parameters, result):
                 auxiliary_data=auxiliary_data,
                 mint=mint,
                 additional_witness_requests=additional_witness_requests,
+                include_network_id=parameters["include_network_id"],
             )
 
 

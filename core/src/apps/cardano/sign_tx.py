@@ -124,6 +124,7 @@ TX_BODY_KEY_WITHDRAWALS = const(5)
 TX_BODY_KEY_AUXILIARY_DATA = const(7)
 TX_BODY_KEY_VALIDITY_INTERVAL_START = const(8)
 TX_BODY_KEY_MINT = const(9)
+TX_BODY_KEY_NETWORK_ID = const(15)
 
 POOL_REGISTRATION_CERTIFICATE_ITEMS_COUNT = 10
 
@@ -145,6 +146,7 @@ async def sign_tx(
             msg.has_auxiliary_data,
             msg.validity_interval_start is not None,
             msg.minting_asset_groups_count > 0,
+            msg.include_network_id,
         )
     )
 
@@ -281,6 +283,9 @@ async def _process_transaction(
         )
         with tx_dict.add(TX_BODY_KEY_MINT, minting_dict):
             await _process_minting(ctx, minting_dict)
+
+    if msg.include_network_id:
+        tx_dict.add(TX_BODY_KEY_NETWORK_ID, msg.network_id)
 
 
 async def _confirm_transaction(
@@ -1012,12 +1017,18 @@ async def _show_witness_request(
 
 def _is_network_id_verifiable(msg: CardanoSignTxInit) -> bool:
     """
-    checks whether there is at least one element that contains
+    Checks whether there is at least one element that contains
     information about network ID, otherwise Trezor cannot
-    guarantee that the tx is actually meant for the given network
+    guarantee that the tx is actually meant for the given network.
+
+    Note: Shelley addresses contain network id. The intended network
+    of Byron addresses can be determined based on whether they
+    contain the protocol magic. These checks are performed during
+    address validation.
     """
     return (
-        msg.outputs_count != 0
+        msg.include_network_id
+        or msg.outputs_count != 0
         or msg.withdrawals_count != 0
         or msg.signing_mode == CardanoTxSigningMode.POOL_REGISTRATION_AS_OWNER
     )
