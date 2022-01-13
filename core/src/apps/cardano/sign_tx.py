@@ -421,15 +421,13 @@ async def _process_asset_groups(
     should_show_tokens: bool,
 ) -> None:
     """Read, validate and serialize the asset groups of an output."""
-    # until the CIP with canonical CBOR is finalized storing the seen_policy_ids is the only way we can check for
-    # duplicate policy_ids
-    seen_policy_ids: set[bytes] = set()
+    previous_policy_id: bytes = b""
     for _ in range(asset_groups_count):
         asset_group: CardanoAssetGroup = await ctx.call(
             CardanoTxItemAck(), CardanoAssetGroup
         )
-        _validate_asset_group(asset_group, seen_policy_ids)
-        seen_policy_ids.add(asset_group.policy_id)
+        _validate_asset_group(asset_group, previous_policy_id)
+        previous_policy_id = asset_group.policy_id
 
         tokens: HashBuilderDict[bytes, int] = HashBuilderDict(asset_group.tokens_count)
         with asset_groups_dict.add(asset_group.policy_id, tokens):
@@ -450,13 +448,11 @@ async def _process_tokens(
     should_show_tokens: bool,
 ) -> None:
     """Read, validate, confirm and serialize the tokens of an asset group."""
-    # until the CIP with canonical CBOR is finalized storing the seen_asset_name_bytes is the only way we can check for
-    # duplicate tokens
-    seen_asset_name_bytes: set[bytes] = set()
+    previous_asset_name_bytes: bytes = b""
     for _ in range(tokens_count):
         token: CardanoToken = await ctx.call(CardanoTxItemAck(), CardanoToken)
-        _validate_token(token, seen_asset_name_bytes)
-        seen_asset_name_bytes.add(token.asset_name_bytes)
+        _validate_token(token, previous_asset_name_bytes)
+        previous_asset_name_bytes = token.asset_name_bytes
         if should_show_tokens:
             await confirm_sending_token(ctx, policy_id, token)
 
@@ -577,32 +573,26 @@ async def _process_withdrawals(
     if withdrawals_count == 0:
         return
 
-    # until the CIP with canonical CBOR is finalized storing the seen_withdrawals is the only way we can check for
-    # duplicate withdrawals
-    seen_withdrawals: set[tuple[int, ...] | bytes] = set()
+    previous_reward_address: bytes = b""
     for _ in range(withdrawals_count):
         withdrawal: CardanoTxWithdrawal = await ctx.call(
             CardanoTxItemAck(), CardanoTxWithdrawal
         )
         _validate_withdrawal(
-            withdrawal, seen_withdrawals, signing_mode, account_path_checker
-        )
-        await confirm_withdrawal(ctx, withdrawal)
-        reward_address_type = (
-            CardanoAddressType.REWARD
-            if withdrawal.path
-            else CardanoAddressType.REWARD_SCRIPT
-        )
-        reward_address = derive_address_bytes(
             keychain,
-            CardanoAddressParametersType(
-                address_type=reward_address_type,
-                address_n_staking=withdrawal.path,
-                script_staking_hash=withdrawal.script_hash,
-            ),
+            withdrawal,
+            signing_mode,
             protocol_magic,
             network_id,
+            account_path_checker,
+            previous_reward_address,
         )
+        reward_address = _derive_withdrawal_reward_address_bytes(
+            keychain, withdrawal, protocol_magic, network_id
+        )
+        previous_reward_address = reward_address
+
+        await confirm_withdrawal(ctx, withdrawal)
 
         withdrawals_dict.add(reward_address, withdrawal.amount)
 
@@ -649,15 +639,13 @@ async def _process_minting(
 
     await show_warning_tx_contains_mint(ctx)
 
-    # until the CIP with canonical CBOR is finalized storing the seen_policy_ids is the only way we can check for
-    # duplicate policy_ids
-    seen_policy_ids: set[bytes] = set()
+    previous_policy_id: bytes = b""
     for _ in range(token_minting.asset_groups_count):
         asset_group: CardanoAssetGroup = await ctx.call(
             CardanoTxItemAck(), CardanoAssetGroup
         )
-        _validate_asset_group(asset_group, seen_policy_ids, is_mint=True)
-        seen_policy_ids.add(asset_group.policy_id)
+        _validate_asset_group(asset_group, previous_policy_id, is_mint=True)
+        previous_policy_id = asset_group.policy_id
 
         tokens: HashBuilderDict[bytes, int] = HashBuilderDict(asset_group.tokens_count)
         with minting_dict.add(asset_group.policy_id, tokens):
@@ -676,13 +664,11 @@ async def _process_minting_tokens(
     tokens_count: int,
 ) -> None:
     """Read, validate, confirm and serialize the tokens of an asset group."""
-    # until the CIP with canonical CBOR is finalized storing the seen_asset_name_bytes is the only way we can check for
-    # duplicate tokens
-    seen_asset_name_bytes: set[bytes] = set()
+    previous_asset_name_bytes: bytes = b""
     for _ in range(tokens_count):
         token: CardanoToken = await ctx.call(CardanoTxItemAck(), CardanoToken)
-        _validate_token(token, seen_asset_name_bytes, is_mint=True)
-        seen_asset_name_bytes.add(token.asset_name_bytes)
+        _validate_token(token, previous_asset_name_bytes, is_mint=True)
+        previous_asset_name_bytes = token.asset_name_bytes
         await confirm_token_minting(ctx, policy_id, token)
 
         assert token.mint_amount is not None  # _validate_token
@@ -890,7 +876,7 @@ async def _show_output(
 
 
 def _validate_asset_group(
-    asset_group: CardanoAssetGroup, seen_policy_ids: set[bytes], is_mint: bool = False
+    asset_group: CardanoAssetGroup, previous_policy_id: bytes, is_mint: bool = False
 ) -> None:
     INVALID_TOKEN_BUNDLE = (
         INVALID_TOKEN_BUNDLE_MINT if is_mint else INVALID_TOKEN_BUNDLE_OUTPUT
@@ -900,12 +886,12 @@ def _validate_asset_group(
         raise INVALID_TOKEN_BUNDLE
     if asset_group.tokens_count == 0:
         raise INVALID_TOKEN_BUNDLE
-    if asset_group.policy_id in seen_policy_ids:
+    if not cbor.are_canonically_ordered(previous_policy_id, asset_group.policy_id):
         raise INVALID_TOKEN_BUNDLE
 
 
 def _validate_token(
-    token: CardanoToken, seen_asset_name_bytes: set[bytes], is_mint: bool = False
+    token: CardanoToken, previous_asset_name_bytes: bytes, is_mint: bool = False
 ) -> None:
     INVALID_TOKEN_BUNDLE = (
         INVALID_TOKEN_BUNDLE_MINT if is_mint else INVALID_TOKEN_BUNDLE_OUTPUT
@@ -920,7 +906,9 @@ def _validate_token(
 
     if len(token.asset_name_bytes) > MAX_ASSET_NAME_LENGTH:
         raise INVALID_TOKEN_BUNDLE
-    if token.asset_name_bytes in seen_asset_name_bytes:
+    if not cbor.are_canonically_ordered(
+        previous_asset_name_bytes, token.asset_name_bytes
+    ):
         raise INVALID_TOKEN_BUNDLE
 
 
@@ -943,10 +931,13 @@ async def _show_certificate(
 
 
 def _validate_withdrawal(
+    keychain: seed.Keychain,
     withdrawal: CardanoTxWithdrawal,
-    seen_withdrawals: set[tuple[int, ...] | bytes],
     signing_mode: CardanoTxSigningMode,
+    protocol_magic: int,
+    network_id: int,
     account_path_checker: AccountPathChecker,
+    previous_reward_address: bytes,
 ) -> None:
     validate_stake_credential(
         withdrawal.path, withdrawal.script_hash, signing_mode, INVALID_WITHDRAWAL
@@ -958,10 +949,11 @@ def _validate_withdrawal(
     credential = tuple(withdrawal.path) if withdrawal.path else withdrawal.script_hash
     assert credential  # validate_stake_credential
 
-    if credential in seen_withdrawals:
-        raise wire.ProcessError("Duplicate withdrawals")
-    else:
-        seen_withdrawals.add(credential)
+    reward_address = _derive_withdrawal_reward_address_bytes(
+        keychain, withdrawal, protocol_magic, network_id
+    )
+    if not cbor.are_canonically_ordered(previous_reward_address, reward_address):
+        raise INVALID_WITHDRAWAL
 
     account_path_checker.add_withdrawal(withdrawal)
 
@@ -969,6 +961,29 @@ def _validate_withdrawal(
 def _validate_script_data_hash(script_data_hash: bytes) -> None:
     if len(script_data_hash) != SCRIPT_DATA_HASH_SIZE:
         raise INVALID_SCRIPT_DATA_HASH
+
+
+def _derive_withdrawal_reward_address_bytes(
+    keychain: seed.Keychain,
+    withdrawal: CardanoTxWithdrawal,
+    protocol_magic: int,
+    network_id: int,
+) -> bytes:
+    reward_address_type = (
+        CardanoAddressType.REWARD
+        if withdrawal.path
+        else CardanoAddressType.REWARD_SCRIPT
+    )
+    return derive_address_bytes(
+        keychain,
+        CardanoAddressParametersType(
+            address_type=reward_address_type,
+            address_n_staking=withdrawal.path,
+            script_staking_hash=withdrawal.script_hash,
+        ),
+        protocol_magic,
+        network_id,
+    )
 
 
 def _get_output_address(

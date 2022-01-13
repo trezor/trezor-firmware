@@ -132,6 +132,92 @@
       }
     },
     {
+      "description": "Multisig transaction with repeated withdrawal",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [
+          {
+            "script_hash": "19fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd",
+            "amount": "1000"
+          },
+          {
+            "script_hash": "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd",
+            "amount": "3000"
+          },
+          {
+            "script_hash": "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd",
+            "amount": "1000"
+          }
+        ],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1w9rhu54nz94k9l5v6d9rzfs47h7dv7xffcwkekuxcx3evnqpvuxu0",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "signing_mode": "MULTISIG_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "error_message": "Invalid withdrawal"
+      }
+    },
+    {
+      "description": "Multisig transaction with wthdrawal addresses in wrong order",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [
+          {
+            "script_hash": "39fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd",
+            "amount": "3000"
+          },
+          {
+            "script_hash": "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd",
+            "amount": "1000"
+          }
+        ],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1w9rhu54nz94k9l5v6d9rzfs47h7dv7xffcwkekuxcx3evnqpvuxu0",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "signing_mode": "MULTISIG_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "error_message": "Invalid withdrawal"
+      }
+    },
+    {
       "description": "Multisig transaction with 1852 multisig witness request",
       "parameters": {
         "protocol_magic": 764824073,
