@@ -3,7 +3,7 @@ CC       ?= clang
 LD       ?= $(CC)
 SANFLAGS += -fsanitize=fuzzer
 else ifeq ($(ADDRESS_SANITIZER),1)
-SANFLAGS += -fsanitize=address
+SANFLAGS += -fsanitize=address,undefined
 endif
 
 CC       ?= gcc
