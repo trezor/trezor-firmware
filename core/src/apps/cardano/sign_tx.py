@@ -60,6 +60,8 @@ from .certificates import (
     validate_pool_relay,
 )
 from .helpers import (
+    INPUT_PREV_HASH_SIZE,
+    INVALID_INPUT,
     INVALID_OUTPUT,
     INVALID_OUTPUT_DATUM_HASH,
     INVALID_SCRIPT_DATA_HASH,
@@ -341,6 +343,7 @@ async def _process_inputs(
     """Read, validate and serialize the inputs."""
     for _ in range(inputs_count):
         input: CardanoTxInput = await ctx.call(CardanoTxItemAck(), CardanoTxInput)
+        _validate_input(input)
         inputs_list.append((input.prev_hash, input.prev_index))
 
 
@@ -776,6 +779,11 @@ def _validate_stake_pool_registration_tx_structure(msg: CardanoSignTxInit) -> No
         or msg.minting_asset_groups_count != 0
     ):
         raise INVALID_STAKE_POOL_REGISTRATION_TX_STRUCTURE
+
+
+def _validate_input(input: CardanoTxInput) -> None:
+    if len(input.prev_hash) != INPUT_PREV_HASH_SIZE:
+        raise INVALID_INPUT
 
 
 def _validate_output(
