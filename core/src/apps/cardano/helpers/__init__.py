@@ -4,6 +4,7 @@ INVALID_ADDRESS = wire.ProcessError("Invalid address")
 INVALID_ADDRESS_PARAMETERS = wire.ProcessError("Invalid address parameters")
 NETWORK_MISMATCH = wire.ProcessError("Output address network mismatch")
 INVALID_TX_SIGNING_REQUEST = wire.ProcessError("Invalid tx signing request")
+INVALID_INPUT = wire.ProcessError("Invalid input")
 INVALID_OUTPUT = wire.ProcessError("Invalid output")
 INVALID_CERTIFICATE = wire.ProcessError("Invalid certificate")
 INVALID_WITHDRAWAL = wire.ProcessError("Invalid withdrawal")
@@ -22,6 +23,7 @@ INVALID_OUTPUT_DATUM_HASH = wire.ProcessError("Invalid output datum hash")
 INVALID_SCRIPT_DATA_HASH = wire.ProcessError("Invalid script data hash")
 
 LOVELACE_MAX_SUPPLY = 45_000_000_000 * 1_000_000
+INPUT_PREV_HASH_SIZE = 32
 ADDRESS_KEY_HASH_SIZE = 28
 SCRIPT_HASH_SIZE = 28
 OUTPUT_DATUM_HASH_SIZE = 32
