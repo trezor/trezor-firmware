@@ -318,3 +318,13 @@ def create_array_header(size: int) -> bytes:
 
 def create_map_header(size: int) -> bytes:
     return _header(_CBOR_MAP, size)
+
+
+def are_canonically_ordered(previous: Value, current: Value) -> bool:
+    """
+    Returns True if `previous` is smaller than `current` with regards to
+    the cbor map key ordering as defined in
+    https://datatracker.ietf.org/doc/html/rfc7049#section-3.9
+    """
+    u, v = encode(previous), encode(current)
+    return len(u) < len(v) or (len(u) == len(v) and u < v)
