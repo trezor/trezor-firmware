@@ -155,9 +155,10 @@ struct PageBreakIterator<'a, T> {
 }
 
 /// Yields indices to beginnings of successive pages. As a side effect it
-/// updates the bounding box of each paragraph on the page. Because a paragraph
-/// can be rendered on multiple pages, such bounding boxes are only valid for
-/// paragraphs processed in the last call to `next`.
+/// updates the bounding box of each paragraph on the page
+/// (via `Dimensions::set_area`). Because a paragraph can be rendered on
+/// multiple pages, such bounding boxes are only valid for paragraphs processed
+/// in the last call to `next`.
 ///
 /// The boxes are simply stacked below each other and may be further arranged
 /// before drawing.
@@ -204,6 +205,11 @@ where
                         } else {
                             self.para_offset - old_para_offset
                         };
+                        if processed_chars == 0 && visible == 0 {
+                            // Nothing fits yet page is empty: terminate iterator to avoid looping
+                            // forever.
+                            return None;
+                        }
                         // Return pointer to start of page.
                         return Some((old_para_offset, old_char_offset, visible));
                     }
