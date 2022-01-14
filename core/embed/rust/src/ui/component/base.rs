@@ -105,6 +105,10 @@ where
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         self.component.trace(t)
     }
+
+    fn bounds(&self, sink: &dyn Fn(crate::ui::geometry::Rect)) {
+        self.component.bounds(sink)
+    }
 }
 
 pub trait ComponentExt: Sized {

@@ -53,6 +53,13 @@ pub fn rect(r: Rect, fg_color: Color) {
     display::bar(r.x0, r.y0, r.width(), r.height(), fg_color.into());
 }
 
+pub fn hollow_rect(r: Rect, fg_color: Color) {
+    display::bar(r.x0, r.y0, r.width(), 1, fg_color.into());
+    display::bar(r.x0, r.y0 + r.height() - 1, r.width(), 1, fg_color.into());
+    display::bar(r.x0, r.y0, 1, r.height(), fg_color.into());
+    display::bar(r.x0 + r.width() - 1, r.y0, 1, r.height(), fg_color.into());
+}
+
 pub fn rounded_rect(r: Rect, fg_color: Color, bg_color: Color, radius: u8) {
     display::bar_radius(
         r.x0,

@@ -208,6 +208,10 @@ impl crate::trace::Trace for Button {
         }
         t.close();
     }
+
+    fn bounds(&self, sink: &dyn Fn(Rect)) {
+        sink(self.area)
+    }
 }
 
 #[derive(PartialEq, Eq)]

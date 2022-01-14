@@ -152,6 +152,10 @@ where
         t.field("content", &trace::TraceText(self));
         t.close();
     }
+
+    fn bounds(&self, sink: &dyn Fn(Rect)) {
+        sink(self.layout.bounds)
+    }
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]

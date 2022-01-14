@@ -102,6 +102,23 @@ where
         }
         t.close();
     }
+
+    fn bounds(&self, sink: &dyn Fn(Rect)) {
+        sink(self.area);
+        let mut char_offset = self.char_offset;
+        for paragraph in self.list.iter().skip(self.para_offset) {
+            paragraph.bounds(sink);
+            let fit = paragraph.layout.layout_text(
+                &paragraph.content.as_ref()[char_offset..],
+                &mut paragraph.layout.initial_cursor(),
+                &mut TextNoOp,
+            );
+            if matches!(fit, LayoutFit::OutOfBounds { .. }) {
+                break;
+            }
+            char_offset = 0;
+        }
+    }
 }
 
 pub struct Paragraph<T> {
@@ -267,5 +284,9 @@ where
         t.open("Paragraph");
         t.field("content", &trace::TraceText(self));
         t.close();
+    }
+
+    fn bounds(&self, sink: &dyn Fn(Rect)) {
+        sink(self.layout.bounds);
     }
 }

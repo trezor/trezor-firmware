@@ -108,4 +108,15 @@ where
         self.content.trace(d);
         d.close();
     }
+
+    fn bounds(&self, sink: &dyn Fn(Rect)) {
+        sink(self.pad.area);
+        if self.loader.is_animating() {
+            self.loader.bounds(sink)
+        } else {
+            self.content.bounds(sink)
+        }
+        self.cancel.bounds(sink);
+        self.confirm.bounds(sink);
+    }
 }

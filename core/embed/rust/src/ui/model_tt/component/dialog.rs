@@ -93,4 +93,10 @@ where
         t.field("right", &self.right);
         t.close();
     }
+
+    fn bounds(&self, sink: &dyn Fn(Rect)) {
+        self.content.bounds(sink);
+        self.left.bounds(sink);
+        self.right.bounds(sink);
+    }
 }

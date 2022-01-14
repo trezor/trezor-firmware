@@ -209,6 +209,14 @@ impl LayoutObj {
             .trace(&mut CallbackTracer(callback));
     }
 
+    #[cfg(feature = "ui_debug")]
+    fn obj_bounds(&self) {
+        use crate::{trace::wireframe, ui::display};
+
+        wireframe(display::screen());
+        self.inner.borrow().root.bounds(&wireframe);
+    }
+
     fn obj_type() -> &'static Type {
         static TYPE: Type = obj_type! {
             name: Qstr::MP_QSTR_Layout,
@@ -219,6 +227,7 @@ impl LayoutObj {
                 Qstr::MP_QSTR_timer => obj_fn_2!(ui_layout_timer).as_obj(),
                 Qstr::MP_QSTR_paint => obj_fn_1!(ui_layout_paint).as_obj(),
                 Qstr::MP_QSTR_trace => obj_fn_2!(ui_layout_trace).as_obj(),
+                Qstr::MP_QSTR_bounds => obj_fn_1!(ui_layout_bounds).as_obj(),
             }),
         };
         &TYPE
@@ -371,5 +380,20 @@ extern "C" fn ui_layout_trace(this: Obj, callback: Obj) -> Obj {
 
 #[cfg(not(feature = "ui_debug"))]
 extern "C" fn ui_layout_trace(_this: Obj, _callback: Obj) -> Obj {
+    Obj::const_none()
+}
+
+#[cfg(feature = "ui_debug")]
+extern "C" fn ui_layout_bounds(this: Obj) -> Obj {
+    let block = || {
+        let this: Gc<LayoutObj> = this.try_into()?;
+        this.obj_bounds();
+        Ok(Obj::const_none())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+#[cfg(not(feature = "ui_debug"))]
+extern "C" fn ui_layout_bounds(_this: Obj) -> Obj {
     Obj::const_none()
 }
