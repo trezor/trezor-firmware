@@ -202,6 +202,7 @@ impl Rect {
         } else {
             height
         };
+        let height = height.clamp(0, self.height());
 
         let top = Self {
             x0: self.x0,
@@ -226,6 +227,7 @@ impl Rect {
         } else {
             width
         };
+        let width = width.clamp(0, self.width());
 
         let left = Self {
             x0: self.x0,
@@ -295,17 +297,50 @@ impl Grid {
         }
     }
 
+    pub fn with_spacing(mut self, spacing: i32) -> Self {
+        self.spacing = spacing;
+        self
+    }
+
     pub fn row_col(&self, row: usize, col: usize) -> Rect {
-        let cell_width = self.area.width() / self.cols as i32;
-        let cell_height = self.area.height() / self.rows as i32;
-        let x = col as i32 * cell_width;
-        let y = row as i32 * cell_height;
-        Rect {
-            x0: self.area.x0 + x,
-            y0: self.area.y0 + y,
-            x1: self.area.x0 + x + (cell_width - self.spacing),
-            y1: self.area.y0 + y + (cell_height - self.spacing),
+        let ncols = self.cols as i32;
+        let nrows = self.rows as i32;
+        let col = (col as i32).min(ncols - 1);
+        let row = (row as i32).min(nrows - 1);
+
+        // Total number of horizontal pixels used for spacing.
+        let spacing_width = self.spacing * (ncols - 1);
+        let spacing_height = self.spacing * (nrows - 1);
+
+        // Divide what is left by number of cells to obtain width of each cell.
+        let cell_width = (self.area.width() - spacing_width) / ncols;
+        let cell_height = (self.area.height() - spacing_height) / nrows;
+
+        // Not every area can be fully covered by equal-sized cells and spaces, there
+        // might be serveral pixels left unused. We'll distribute them by 1px to
+        // the leftmost cells.
+        let leftover_width = (self.area.width() - spacing_width) % ncols;
+        let leftover_height = (self.area.height() - spacing_height) % nrows;
+
+        let mut top_left = self.area.top_left()
+            + Offset::new(
+                col * (cell_width + self.spacing),
+                row * (cell_height + self.spacing),
+            );
+        // Some previous cells were 1px wider.
+        top_left.x += leftover_width.min(col);
+        top_left.y += leftover_height.min(row);
+
+        let mut size = Offset::new(cell_width, cell_height);
+        // This cell might be 1px wider.
+        if col < leftover_width {
+            size.x += 1
         }
+        if row < leftover_height {
+            size.y += 1
+        }
+
+        Rect::from_top_left_and_size(top_left, size)
     }
 
     pub fn cell(&self, index: usize) -> Rect {
