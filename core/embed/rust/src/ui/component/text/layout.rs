@@ -230,14 +230,16 @@ impl TextLayout {
     pub fn measure_ops_height(self, ops: &mut dyn Iterator<Item = Op>) -> i32 {
         match self.layout_ops(ops, &mut self.initial_cursor(), &mut TextNoOp) {
             LayoutFit::Fitting { size, .. } => size.y,
-            LayoutFit::OutOfBounds { .. } => self.bounds.height(),
+            LayoutFit::OutOfBounds { processed_chars: 0 } => 0,
+            _ => self.bounds.height(),
         }
     }
 
     pub fn measure_text_height(self, text: &[u8]) -> i32 {
         match self.layout_text(text, &mut self.initial_cursor(), &mut TextNoOp) {
             LayoutFit::Fitting { size, .. } => size.y,
-            LayoutFit::OutOfBounds { .. } => self.bounds.height(),
+            LayoutFit::OutOfBounds { processed_chars: 0 } => 0,
+            _ => self.bounds.height(),
         }
     }
 }
