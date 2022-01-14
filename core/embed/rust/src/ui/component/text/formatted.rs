@@ -120,6 +120,10 @@ where
     fn paint(&mut self) {
         self.layout_content(&mut TextRenderer);
     }
+
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
+        sink(self.layout.bounds)
+    }
 }
 
 #[cfg(feature = "ui_debug")]

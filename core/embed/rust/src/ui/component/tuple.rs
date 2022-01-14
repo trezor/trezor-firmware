@@ -18,6 +18,11 @@ where
         self.0.paint();
         self.1.paint();
     }
+
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
+        self.0.bounds(sink);
+        self.1.bounds(sink);
+    }
 }
 
 impl<T, A, B, C> Component for (A, B, C)
@@ -40,6 +45,12 @@ where
         self.1.paint();
         self.2.paint();
     }
+
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
+        self.0.bounds(sink);
+        self.1.bounds(sink);
+        self.2.bounds(sink);
+    }
 }
 
 #[cfg(feature = "ui_debug")]
@@ -53,11 +64,6 @@ where
         t.field("0", &self.0);
         t.field("1", &self.1);
         t.close();
-    }
-
-    fn bounds(&self, sink: &dyn Fn(Rect)) {
-        self.0.bounds(sink);
-        self.1.bounds(sink);
     }
 }
 
@@ -74,11 +80,5 @@ where
         t.field("1", &self.1);
         t.field("2", &self.2);
         t.close();
-    }
-
-    fn bounds(&self, sink: &dyn Fn(Rect)) {
-        self.0.bounds(sink);
-        self.1.bounds(sink);
-        self.2.bounds(sink);
     }
 }

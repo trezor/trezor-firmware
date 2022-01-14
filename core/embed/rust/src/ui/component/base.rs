@@ -2,11 +2,11 @@ use core::mem;
 
 use heapless::Vec;
 
-use crate::time::Duration;
 #[cfg(feature = "model_t1")]
 use crate::ui::model_t1::event::ButtonEvent;
 #[cfg(feature = "model_tt")]
 use crate::ui::model_tt::event::TouchEvent;
+use crate::{time::Duration, ui::geometry::Rect};
 
 /// Type used by components that do not return any messages.
 ///
@@ -20,6 +20,7 @@ pub trait Component {
     type Msg;
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg>;
     fn paint(&mut self);
+    fn bounds(&self, _sink: &mut dyn FnMut(Rect)) {}
 }
 
 /// Components should always avoid unnecessary overpaint to prevent obvious
@@ -94,6 +95,10 @@ where
             self.marked_for_paint = false;
             self.component.paint();
         }
+    }
+
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
+        self.component.bounds(sink)
     }
 }
 

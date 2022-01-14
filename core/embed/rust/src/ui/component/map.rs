@@ -1,4 +1,5 @@
 use super::{Component, Event, EventCtx};
+use crate::ui::geometry::Rect;
 
 pub struct Map<T, F> {
     inner: T,
@@ -24,6 +25,10 @@ where
 
     fn paint(&mut self) {
         self.inner.paint()
+    }
+
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
+        self.inner.bounds(sink);
     }
 }
 
