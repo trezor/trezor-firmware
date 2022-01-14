@@ -209,6 +209,10 @@ where
             }
         }
     }
+
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
+        sink(self.area)
+    }
 }
 
 #[cfg(feature = "ui_debug")]

@@ -58,6 +58,11 @@ where
         );
         self.content.paint();
     }
+
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
+        sink(self.area);
+        self.content.bounds(sink);
+    }
 }
 
 #[cfg(feature = "ui_debug")]
@@ -71,10 +76,5 @@ where
         t.field("title", &self.title);
         t.field("content", &self.content);
         t.close();
-    }
-
-    fn bounds(&self, sink: &dyn Fn(Rect)) {
-        sink(self.area);
-        self.content.bounds(sink);
     }
 }

@@ -13,7 +13,10 @@ use crate::{
         typ::Type,
     },
     time::Duration,
-    ui::component::{Child, Component, Event, EventCtx, Never, PageMsg, TimerToken},
+    ui::{
+        component::{Child, Component, Event, EventCtx, Never, PageMsg, TimerToken},
+        geometry::Rect,
+    },
     util,
 };
 
@@ -48,6 +51,7 @@ where
 pub trait ObjComponent {
     fn obj_event(&mut self, ctx: &mut EventCtx, event: Event) -> Result<Obj, Error>;
     fn obj_paint(&mut self);
+    fn obj_bounds(&self, sink: &mut dyn FnMut(Rect));
 }
 
 impl<T> ObjComponent for Child<T>
@@ -64,6 +68,10 @@ where
 
     fn obj_paint(&mut self) {
         self.paint();
+    }
+
+    fn obj_bounds(&self, sink: &mut dyn FnMut(Rect)) {
+        self.bounds(sink)
     }
 }
 
@@ -209,6 +217,22 @@ impl LayoutObj {
             .trace(&mut CallbackTracer(callback));
     }
 
+    #[cfg(feature = "ui_debug")]
+    fn obj_bounds(&self) {
+        use crate::ui::display;
+
+        // Sink for `Trace::bounds` that draws the boundaries using pseudorandom color.
+        fn wireframe(r: Rect) {
+            let w = r.width() as u16;
+            let h = r.height() as u16;
+            let color = display::Color::from_u16(w.rotate_right(w.into()).wrapping_add(h * 8));
+            display::rect_stroke(r, color)
+        }
+
+        wireframe(display::screen());
+        self.inner.borrow().root.obj_bounds(&mut wireframe);
+    }
+
     fn obj_type() -> &'static Type {
         static TYPE: Type = obj_type! {
             name: Qstr::MP_QSTR_Layout,
@@ -219,6 +243,7 @@ impl LayoutObj {
                 Qstr::MP_QSTR_timer => obj_fn_2!(ui_layout_timer).as_obj(),
                 Qstr::MP_QSTR_paint => obj_fn_1!(ui_layout_paint).as_obj(),
                 Qstr::MP_QSTR_trace => obj_fn_2!(ui_layout_trace).as_obj(),
+                Qstr::MP_QSTR_bounds => obj_fn_1!(ui_layout_bounds).as_obj(),
             }),
         };
         &TYPE
@@ -382,5 +407,20 @@ extern "C" fn ui_layout_trace(this: Obj, callback: Obj) -> Obj {
 
 #[cfg(not(feature = "ui_debug"))]
 extern "C" fn ui_layout_trace(_this: Obj, _callback: Obj) -> Obj {
+    Obj::const_none()
+}
+
+#[cfg(feature = "ui_debug")]
+extern "C" fn ui_layout_bounds(this: Obj) -> Obj {
+    let block = || {
+        let this: Gc<LayoutObj> = this.try_into()?;
+        this.obj_bounds();
+        Ok(Obj::const_none())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+#[cfg(not(feature = "ui_debug"))]
+extern "C" fn ui_layout_bounds(_this: Obj) -> Obj {
     Obj::const_none()
 }

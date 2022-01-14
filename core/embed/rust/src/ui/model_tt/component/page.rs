@@ -148,6 +148,15 @@ where
             display::fade_backlight(val);
         }
     }
+
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
+        sink(self.scrollbar.area);
+        sink(self.pad.area);
+        self.content.bounds(sink);
+        if !self.scrollbar.has_next_page() {
+            self.buttons.bounds(sink);
+        }
+    }
 }
 
 #[cfg(feature = "ui_debug")]
@@ -162,15 +171,6 @@ where
         t.field("page_count", &self.scrollbar.page_count);
         t.field("content", &self.content);
         t.close();
-    }
-
-    fn bounds(&self, sink: &dyn Fn(Rect)) {
-        sink(self.scrollbar.area);
-        sink(self.pad.area);
-        self.content.bounds(sink);
-        if !self.scrollbar.has_next_page() {
-            self.buttons.bounds(sink);
-        }
     }
 }
 

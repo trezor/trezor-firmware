@@ -96,6 +96,17 @@ where
         self.cancel.paint();
         self.confirm.paint();
     }
+
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
+        sink(self.pad.area);
+        if self.loader.is_animating() {
+            self.loader.bounds(sink)
+        } else {
+            self.content.bounds(sink)
+        }
+        self.cancel.bounds(sink);
+        self.confirm.bounds(sink);
+    }
 }
 
 #[cfg(feature = "ui_debug")]
