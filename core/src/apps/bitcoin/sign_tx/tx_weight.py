@@ -58,9 +58,9 @@ class TxWeightCalculator:
             n = len(i.multisig.nodes) if i.multisig.nodes else len(i.multisig.pubkeys)
             multisig_script_size = _TXSIZE_MULTISIGSCRIPT + n * (1 + _TXSIZE_PUBKEY)
             if i.script_type in common.SEGWIT_INPUT_SCRIPT_TYPES:
-                multisig_script_size += self.varint_size(multisig_script_size)
+                multisig_script_size += self.compact_size_len(multisig_script_size)
             else:
-                multisig_script_size += self.op_push_size(multisig_script_size)
+                multisig_script_size += self.op_push_len(multisig_script_size)
 
             input_script_size = (
                 1  # the OP_FALSE bug in multisig
@@ -75,7 +75,7 @@ class TxWeightCalculator:
         self.counter += 4 * _TXSIZE_INPUT
 
         if i.script_type in common.NONSEGWIT_INPUT_SCRIPT_TYPES:
-            input_script_size += self.varint_size(input_script_size)
+            input_script_size += self.compact_size_len(input_script_size)
             self.counter += 4 * input_script_size
         elif i.script_type in common.SEGWIT_INPUT_SCRIPT_TYPES:
             self.segwit_inputs_count += 1
@@ -102,20 +102,22 @@ class TxWeightCalculator:
             if witness_size > 1:
                 self.segwit_inputs_count += 1
 
-            self.counter += 4 * (self.varint_size(script_sig_size) + script_sig_size)
+            self.counter += 4 * (
+                self.compact_size_len(script_sig_size) + script_sig_size
+            )
             self.counter += witness_size
         else:
             raise wire.DataError("Invalid script type")
 
     def add_output(self, script: bytes) -> None:
         self.outputs_count += 1
-        script_size = self.varint_size(len(script)) + len(script)
+        script_size = self.compact_size_len(len(script)) + len(script)
         self.counter += 4 * (_TXSIZE_OUTPUT + script_size)
 
     def get_total(self) -> int:
         total = self.counter
-        total += 4 * self.varint_size(self.inputs_count)
-        total += 4 * self.varint_size(self.outputs_count)
+        total += 4 * self.compact_size_len(self.inputs_count)
+        total += 4 * self.compact_size_len(self.outputs_count)
         if self.segwit_inputs_count:
             total += _TXSIZE_SEGWIT_OVERHEAD
             # add one byte of witness stack item count per non-segwit input
@@ -124,7 +126,7 @@ class TxWeightCalculator:
         return total
 
     @staticmethod
-    def varint_size(length: int) -> int:
+    def compact_size_len(length: int) -> int:
         if length < 253:
             return 1
         if length < 0x1_0000:
@@ -132,7 +134,7 @@ class TxWeightCalculator:
         return 5
 
     @staticmethod
-    def op_push_size(length: int) -> int:
+    def op_push_len(length: int) -> int:
         if length < 0x4C:
             return 1
         if length < 0x100:

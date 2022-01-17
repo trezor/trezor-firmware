@@ -5,10 +5,10 @@ from trezor.crypto.hashlib import sha256
 from trezor.utils import ensure
 
 from apps.common.writers import (  # noqa: F401
-    write_bitcoin_varint,
     write_bytes_fixed,
     write_bytes_reversed,
     write_bytes_unchecked,
+    write_compact_size,
     write_uint8,
     write_uint16_le,
     write_uint32_le,
@@ -34,7 +34,7 @@ TX_HASH_SIZE = const(32)
 
 
 def write_bytes_prefixed(w: Writer, b: bytes) -> None:
-    write_bitcoin_varint(w, len(b))
+    write_compact_size(w, len(b))
     write_bytes_unchecked(w, b)
 
 

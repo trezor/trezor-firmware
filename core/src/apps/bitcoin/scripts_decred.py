@@ -15,7 +15,7 @@ from .scripts import (  # noqa: F401
     write_output_script_multisig,
     write_output_script_p2pkh,
 )
-from .writers import op_push_length, write_bitcoin_varint, write_op_push
+from .writers import op_push_length, write_compact_size, write_op_push
 
 if TYPE_CHECKING:
     from trezor.messages import MultisigRedeemScriptType
@@ -73,7 +73,7 @@ def write_input_script_multisig_prefixed(
         if s:
             total_length += 1 + len(s) + 1  # length, signature, hash_type
     total_length += op_push_length(redeem_script_length) + redeem_script_length
-    write_bitcoin_varint(w, total_length)
+    write_compact_size(w, total_length)
 
     for s in signatures:
         if s:
@@ -113,7 +113,7 @@ def output_script_sstxchange(addr: str) -> bytearray:
 # Spend from a stake revocation.
 def write_output_script_ssrtx_prefixed(w: Writer, pkh: bytes) -> None:
     utils.ensure(len(pkh) == 20)
-    write_bitcoin_varint(w, 26)
+    write_compact_size(w, 26)
     w.append(0xBC)  # OP_SSRTX
     scripts.write_output_script_p2pkh(w, pkh)
 
@@ -121,7 +121,7 @@ def write_output_script_ssrtx_prefixed(w: Writer, pkh: bytes) -> None:
 # Spend from a stake generation.
 def write_output_script_ssgen_prefixed(w: Writer, pkh: bytes) -> None:
     utils.ensure(len(pkh) == 20)
-    write_bitcoin_varint(w, 26)
+    write_compact_size(w, 26)
     w.append(0xBB)  # OP_SSGEN
     scripts.write_output_script_p2pkh(w, pkh)
 

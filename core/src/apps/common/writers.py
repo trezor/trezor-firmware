@@ -87,20 +87,19 @@ def write_bytes_reversed(w: Writer, b: bytes, length: int) -> int:
     return length
 
 
-def write_bitcoin_varint(w: Writer, n: int) -> None:
+def write_compact_size(w: Writer, n: int) -> None:
     ensure(0 <= n <= 0xFFFF_FFFF)
     if n < 253:
         w.append(n & 0xFF)
     elif n < 0x1_0000:
         w.append(253)
-        w.append(n & 0xFF)
-        w.append((n >> 8) & 0xFF)
-    else:
+        write_uint16_le(w, n)
+    elif n < 0x1_0000_0000:
         w.append(254)
-        w.append(n & 0xFF)
-        w.append((n >> 8) & 0xFF)
-        w.append((n >> 16) & 0xFF)
-        w.append((n >> 24) & 0xFF)
+        write_uint32_le(w, n)
+    else:
+        w.append(255)
+        write_uint64_le(w, n)
 
 
 def write_uvarint(w: Writer, n: int) -> None:

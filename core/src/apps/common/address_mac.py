@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from trezor import utils, wire
 from trezor.crypto import hashlib, hmac
 
-from .writers import write_bitcoin_varint, write_bytes_unchecked, write_uint32_le
+from .writers import write_bytes_unchecked, write_compact_size, write_uint32_le
 
 if TYPE_CHECKING:
     from apps.common.keychain import Keychain
@@ -27,6 +27,6 @@ def get_address_mac(address: str, slip44: int, keychain: Keychain) -> bytes:
     mac = utils.HashWriter(hmac(hmac.SHA256, node.key()))
     address_bytes = address.encode()
     write_uint32_le(mac, slip44)
-    write_bitcoin_varint(mac, len(address_bytes))
+    write_compact_size(mac, len(address_bytes))
     write_bytes_unchecked(mac, address_bytes)
     return mac.get_digest()

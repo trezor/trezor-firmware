@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from trezor import wire
 from trezor.messages import PrevTx, SignTx, TxInput
 
-from apps.common.writers import write_bitcoin_varint
+from apps.common.writers import write_compact_size
 
 from .. import multisig, writers
 from ..common import NONSEGWIT_INPUT_SCRIPT_TYPES, SigHashType
@@ -79,8 +79,8 @@ class Bitcoinlike(Bitcoin):
             assert tx.timestamp is not None  # checked in sanitize_*
             writers.write_uint32(w, tx.timestamp)
         if witness_marker:
-            write_bitcoin_varint(w, 0x00)  # segwit witness marker
-            write_bitcoin_varint(w, 0x01)  # segwit witness flag
+            write_compact_size(w, 0x00)  # segwit witness marker
+            write_compact_size(w, 0x01)  # segwit witness flag
 
     async def write_prev_tx_footer(
         self, w: writers.Writer, tx: PrevTx, prev_hash: bytes

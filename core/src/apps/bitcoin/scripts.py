@@ -6,8 +6,8 @@ from trezor.crypto.hashlib import sha256
 from trezor.enums import InputScriptType
 
 from apps.common import address_type
-from apps.common.readers import read_bitcoin_varint
-from apps.common.writers import write_bitcoin_varint
+from apps.common.readers import read_compact_size
+from apps.common.writers import write_compact_size
 
 from . import common
 from .common import SigHashType
@@ -155,7 +155,7 @@ def write_bip143_script_code_prefixed(
 def write_input_script_p2pkh_or_p2sh_prefixed(
     w: Writer, pubkey: bytes, signature: bytes, sighash_type: SigHashType
 ) -> None:
-    write_bitcoin_varint(w, 1 + len(signature) + 1 + 1 + len(pubkey))
+    write_compact_size(w, 1 + len(signature) + 1 + 1 + len(pubkey))
     append_signature(w, signature, sighash_type)
     append_pubkey(w, pubkey)
 
@@ -183,7 +183,7 @@ def write_output_script_p2pkh(
     w: Writer, pubkeyhash: bytes, prefixed: bool = False
 ) -> None:
     if prefixed:
-        write_bitcoin_varint(w, 25)
+        write_compact_size(w, 25)
     w.append(0x76)  # OP_DUP
     w.append(0xA9)  # OP_HASH160
     w.append(0x14)  # OP_DATA_20
@@ -281,7 +281,7 @@ def write_input_script_p2wpkh_in_p2sh(
     # 16 00 14 <pubkeyhash>
     # Signature is moved to the witness.
     if prefixed:
-        write_bitcoin_varint(w, 23)
+        write_compact_size(w, 23)
 
     w.append(0x16)  # length of the data
     w.append(0x00)  # witness version byte
@@ -303,7 +303,7 @@ def write_input_script_p2wsh_in_p2sh(
     # 22 00 20 <redeem script hash>
     # Signature is moved to the witness.
     if prefixed:
-        write_bitcoin_varint(w, 35)
+        write_compact_size(w, 35)
 
     w.append(0x22)  # length of the data
     w.append(0x00)  # witness version byte
@@ -318,7 +318,7 @@ def write_input_script_p2wsh_in_p2sh(
 def write_witness_p2wpkh(
     w: Writer, signature: bytes, pubkey: bytes, sighash_type: SigHashType
 ) -> None:
-    write_bitcoin_varint(w, 0x02)  # num of segwit items, in P2WPKH it's always 2
+    write_compact_size(w, 0x02)  # num of segwit items, in P2WPKH it's always 2
     write_signature_prefixed(w, signature, sighash_type)
     write_bytes_prefixed(w, pubkey)
 
@@ -331,7 +331,7 @@ def parse_witness_p2wpkh(witness: bytes) -> tuple[memoryview, memoryview, SigHas
             # num of stack items, in P2WPKH it's always 2
             raise ValueError
 
-        n = read_bitcoin_varint(r)
+        n = read_compact_size(r)
         signature = r.read_memoryview(n - 1)
         sighash_type = SigHashType.from_int(r.get())
 
@@ -363,12 +363,12 @@ def write_witness_multisig(
 
     # witness program + signatures + redeem script
     num_of_witness_items = 1 + sum(1 for s in signatures if s) + 1
-    write_bitcoin_varint(w, num_of_witness_items)
+    write_compact_size(w, num_of_witness_items)
 
     # Starts with OP_FALSE because of an old OP_CHECKMULTISIG bug, which
     # consumes one additional item on the stack:
     # https://bitcoin.org/en/developer-guide#standard-transactions
-    write_bitcoin_varint(w, 0)
+    write_compact_size(w, 0)
 
     for s in signatures:
         if s:
@@ -386,7 +386,7 @@ def parse_witness_multisig(
         r = utils.BufferReader(witness)
 
         # Get number of witness stack items.
-        item_count = read_bitcoin_varint(r)
+        item_count = read_compact_size(r)
 
         # Skip over OP_FALSE, which is due to the old OP_CHECKMULTISIG bug.
         if r.get() != 0:
@@ -394,7 +394,7 @@ def parse_witness_multisig(
 
         signatures = []
         for _ in range(item_count - 2):
-            n = read_bitcoin_varint(r)
+            n = read_compact_size(r)
             signature = r.read_memoryview(n - 1)
             sighash_type = SigHashType.from_int(r.get())
             signatures.append((signature, sighash_type))
@@ -414,7 +414,7 @@ def parse_witness_multisig(
 
 def write_witness_p2tr(w: Writer, signature: bytes, sighash_type: SigHashType) -> None:
     # Taproot key path spending without annex.
-    write_bitcoin_varint(w, 0x01)  # num of segwit items
+    write_compact_size(w, 0x01)  # num of segwit items
     write_signature_prefixed(w, signature, sighash_type)
 
 
@@ -426,7 +426,7 @@ def parse_witness_p2tr(witness: bytes) -> tuple[memoryview, SigHashType]:
             # Only Taproot key path spending without annex is supported.
             raise ValueError
 
-        n = read_bitcoin_varint(r)
+        n = read_compact_size(r)
         if n not in (64, 65):
             raise ValueError
 
@@ -473,7 +473,7 @@ def write_input_script_multisig_prefixed(
         if s:
             total_length += 1 + len(s) + 1  # length, signature, sighash_type
     total_length += op_push_length(redeem_script_length) + redeem_script_length
-    write_bitcoin_varint(w, total_length)
+    write_compact_size(w, total_length)
 
     # Starts with OP_FALSE because of an old OP_CHECKMULTISIG bug, which
     # consumes one additional item on the stack:
@@ -536,7 +536,7 @@ def write_output_script_multisig(
             raise wire.DataError("Invalid multisig parameters")
 
     if prefixed:
-        write_bitcoin_varint(w, output_script_multisig_length(pubkeys, m))
+        write_compact_size(w, output_script_multisig_length(pubkeys, m))
 
     w.append(0x50 + m)  # numbers 1 to 16 are pushed as 0x50 + value
     for p in pubkeys:
@@ -644,7 +644,7 @@ def write_signature_prefixed(
     if sighash_type != SigHashType.SIGHASH_ALL_TAPROOT:
         length += 1
 
-    write_bitcoin_varint(w, length)
+    write_compact_size(w, length)
     write_bytes_unchecked(w, signature)
     if sighash_type != SigHashType.SIGHASH_ALL_TAPROOT:
         w.append(sighash_type)
