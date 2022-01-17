@@ -143,7 +143,7 @@ class OriginalTxInfo(TxInfoBase):
         # Transaction hasher to compute the TXID.
         self.h_tx = signer.create_hash_writer()
         signer.write_tx_header(self.h_tx, tx, witness_marker=False)
-        writers.write_bitcoin_varint(self.h_tx, tx.inputs_count)
+        writers.write_compact_size(self.h_tx, tx.inputs_count)
 
         # The input which will be used for verification and its index in the original transaction.
         self.verification_input: TxInput | None = None
@@ -162,7 +162,7 @@ class OriginalTxInfo(TxInfoBase):
         super().add_output(txo, script_pubkey)
 
         if self.index == 0:
-            writers.write_bitcoin_varint(self.h_tx, self.tx.outputs_count)
+            writers.write_compact_size(self.h_tx, self.tx.outputs_count)
 
         writers.write_tx_output(self.h_tx, txo, script_pubkey)
 

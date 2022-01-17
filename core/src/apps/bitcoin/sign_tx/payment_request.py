@@ -50,7 +50,7 @@ class PaymentRequestVerifier:
         writers.write_bytes_fixed(self.h_pr, b"SL\x00\x24", 4)
         writers.write_bytes_prefixed(self.h_pr, nonce)
         writers.write_bytes_prefixed(self.h_pr, msg.recipient_name.encode())
-        writers.write_bitcoin_varint(self.h_pr, len(msg.memos))
+        writers.write_compact_size(self.h_pr, len(msg.memos))
         for m in msg.memos:
             if m.text_memo is not None:
                 memo = m.text_memo

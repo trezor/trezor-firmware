@@ -7,13 +7,13 @@ from trezor.enums import InputScriptType
 from trezor.utils import HashWriter
 
 from apps.bitcoin.writers import (
-    write_bitcoin_varint,
     write_bytes_fixed,
     write_bytes_prefixed,
+    write_compact_size,
     write_uint8,
 )
 from apps.common.keychain import Keychain
-from apps.common.readers import read_bitcoin_varint
+from apps.common.readers import read_compact_size
 
 from . import common
 from .scripts import read_bip322_signature_proof, write_bip322_signature_proof
@@ -51,7 +51,7 @@ def generate_proof(
 
     write_bytes_fixed(proof, _VERSION_MAGIC, 4)
     write_uint8(proof, flags)
-    write_bitcoin_varint(proof, len(ownership_ids))
+    write_compact_size(proof, len(ownership_ids))
     for ownership_id in ownership_ids:
         write_bytes_fixed(proof, ownership_id, _OWNERSHIP_ID_LEN)
 
@@ -94,7 +94,7 @@ def verify_nonownership(
             raise wire.DataError("Unknown flags in proof of ownership")
 
         # Determine whether our ownership ID appears in the proof.
-        id_count = read_bitcoin_varint(r)
+        id_count = read_compact_size(r)
         ownership_id = get_identifier(script_pubkey, keychain)
         not_owned = True
         for _ in range(id_count):
@@ -134,7 +134,7 @@ def read_scriptsig_witness(ownership_proof: bytes) -> tuple[memoryview, memoryvi
             raise wire.DataError("Unknown flags in proof of ownership")
 
         # Skip ownership IDs.
-        id_count = read_bitcoin_varint(r)
+        id_count = read_compact_size(r)
         r.read_memoryview(_OWNERSHIP_ID_LEN * id_count)
 
         return read_bip322_signature_proof(r)

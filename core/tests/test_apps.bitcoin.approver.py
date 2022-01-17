@@ -134,7 +134,7 @@ class TestApprover(unittest.TestCase):
         writers.write_bytes_fixed(h_pr, b"SL\x00\x24", 4)
         writers.write_bytes_prefixed(h_pr, b"")  # Empty nonce.
         writers.write_bytes_prefixed(h_pr, self.coordinator_name.encode())
-        writers.write_bitcoin_varint(h_pr, 0)  # No memos.
+        writers.write_compact_size(h_pr, 0)  # No memos.
         writers.write_uint32(h_pr, self.coin.slip44)
         h_outputs = HashWriter(sha256())
         for txo in outputs:

@@ -9,7 +9,7 @@ from trezor.utils import HashWriter, ensure
 
 from apps.common.coininfo import CoinInfo
 from apps.common.keychain import Keychain
-from apps.common.writers import write_bitcoin_varint
+from apps.common.writers import write_compact_size
 
 from ..scripts import write_bip143_script_code_prefixed
 from ..writers import (
@@ -135,9 +135,9 @@ class Zcashlike(Bitcoinlike):
         self.write_tx_footer(self.serialized_tx, self.tx_info.tx)
 
         write_uint64(self.serialized_tx, 0)  # valueBalance
-        write_bitcoin_varint(self.serialized_tx, 0)  # nShieldedSpend
-        write_bitcoin_varint(self.serialized_tx, 0)  # nShieldedOutput
-        write_bitcoin_varint(self.serialized_tx, 0)  # nJoinSplit
+        write_compact_size(self.serialized_tx, 0)  # nShieldedSpend
+        write_compact_size(self.serialized_tx, 0)  # nShieldedOutput
+        write_compact_size(self.serialized_tx, 0)  # nJoinSplit
 
         await helpers.request_tx_finish(self.tx_req)
 
