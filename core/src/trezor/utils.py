@@ -145,15 +145,16 @@ def chunks_intersperse(items: str, size: int, sep: str = "\n") -> Iterator[str]:
 if TYPE_CHECKING:
 
     class HashContext(Protocol):
-        def __init__(  # pylint: disable=super-init-not-called
-            self, __data: bytes = None
-        ) -> None:
-            ...
-
         def update(self, __buf: bytes) -> None:
             ...
 
         def digest(self) -> bytes:
+            ...
+
+    class HashContextInitable(HashContext, Protocol):
+        def __init__(  # pylint: disable=super-init-not-called
+            self, __data: bytes = None
+        ) -> None:
             ...
 
     class Writer(Protocol):
