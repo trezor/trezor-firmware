@@ -68,7 +68,7 @@ class CoinInfo:
         if curve_name == "secp256k1-groestl":
             self.b58_hash = groestl512d_32
             self.sign_hash_double = False
-            self.script_hash: type[utils.HashContext] = sha256_ripemd160
+            self.script_hash: type[utils.HashContextInitable] = sha256_ripemd160
         elif curve_name == "secp256k1-decred":
             self.b58_hash = blake256d_32
             self.sign_hash_double = False
