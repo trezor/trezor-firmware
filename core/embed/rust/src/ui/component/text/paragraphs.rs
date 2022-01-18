@@ -9,6 +9,7 @@ use crate::ui::{
 use super::layout::{DefaultTextTheme, LayoutFit, TextLayout, TextNoOp, TextRenderer};
 
 pub const MAX_PARAGRAPHS: usize = 6;
+pub const DEFAULT_SPACING: i32 = 3;
 
 pub struct Paragraphs<T> {
     area: Rect,
@@ -26,7 +27,9 @@ where
         Self {
             area,
             list: Vec::new(),
-            layout: LinearLayout::vertical().align_at_center().with_spacing(10),
+            layout: LinearLayout::vertical()
+                .align_at_center()
+                .with_spacing(DEFAULT_SPACING),
             para_offset: 0,
             char_offset: 0,
         }
@@ -34,6 +37,11 @@ where
 
     pub fn with_layout(mut self, layout: LinearLayout) -> Self {
         self.layout = layout;
+        self
+    }
+
+    pub fn with_spacing(mut self, spacing: i32) -> Self {
+        self.layout = self.layout.with_spacing(spacing);
         self
     }
 

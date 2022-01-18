@@ -53,37 +53,65 @@ pub fn label_default() -> LabelStyle {
 pub fn button_default() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: FONT_NORMAL,
+            font: FONT_BOLD,
             text_color: FG,
             button_color: GREY_DARK,
             background_color: BG,
             border_color: BG,
             border_radius: RADIUS,
-            border_width: 2,
+            border_width: 1,
         },
         active: &ButtonStyle {
-            font: FONT_NORMAL,
+            font: FONT_BOLD,
             text_color: BG,
             button_color: FG,
             background_color: BG,
             border_color: FG,
             border_radius: RADIUS,
-            border_width: 2,
+            border_width: 1,
         },
         disabled: &ButtonStyle {
-            font: FONT_NORMAL,
+            font: FONT_BOLD,
             text_color: GREY_LIGHT,
             button_color: GREY_DARK,
             background_color: BG,
             border_color: BG,
             border_radius: RADIUS,
-            border_width: 2,
+            border_width: 1,
         },
     }
 }
 
 pub fn button_confirm() -> ButtonStyleSheet {
-    button_default()
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: FONT_BOLD,
+            text_color: FG,
+            button_color: GREEN,
+            background_color: BG,
+            border_color: BG,
+            border_radius: RADIUS,
+            border_width: 1,
+        },
+        active: &ButtonStyle {
+            font: FONT_BOLD,
+            text_color: BG,
+            button_color: FG,
+            background_color: BG,
+            border_color: FG,
+            border_radius: RADIUS,
+            border_width: 1,
+        },
+        disabled: &ButtonStyle {
+            font: FONT_BOLD,
+            text_color: GREY_LIGHT,
+            button_color: GREEN,
+            background_color: BG,
+            border_color: BG,
+            border_radius: RADIUS,
+            border_width: 1,
+        },
+    }
 }
 
 pub fn button_cancel() -> ButtonStyleSheet {
@@ -124,4 +152,21 @@ impl DefaultTextTheme for TTDefaultText {
     const MEDIUM_FONT: Font = FONT_MEDIUM;
     const BOLD_FONT: Font = FONT_BOLD;
     const MONO_FONT: Font = FONT_MONO;
+}
+
+pub const CONTENT_BORDER: i32 = 5;
+
+/// +----------+
+/// |    13    |
+/// |  +----+  |
+/// |10|    | 5|
+/// |  +----+  |
+/// |    14    |
+/// +----------+
+pub fn borders() -> Rect {
+    let (_left_border, area) = display::screen().vsplit(10);
+    let (area, _right_area) = area.vsplit(-5);
+    let (_top_border, area) = area.hsplit(13);
+    let (area, _bottom_border) = area.hsplit(-14);
+    area
 }

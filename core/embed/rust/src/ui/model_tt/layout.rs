@@ -2,9 +2,11 @@ use core::convert::{TryFrom, TryInto};
 
 use crate::{
     error::Error,
-    micropython::obj::Obj,
+    micropython::{buffer::Buffer, map::Map, obj::Obj, qstr::Qstr},
     ui::{
-        component::{Child, FormattedText},
+        component::{
+            base::ComponentExt, text::paragraphs::Paragraphs, Child, FormattedText, PageMsg,
+        },
         display,
         layout::obj::LayoutObj,
     },
@@ -12,9 +14,24 @@ use crate::{
 };
 
 use super::{
-    component::{ButtonMsg, DialogMsg, HoldToConfirm, HoldToConfirmMsg},
+    component::{
+        Button, ButtonArray, ButtonMsg, DialogMsg, HoldToConfirm, HoldToConfirmMsg, SwipePage,
+        Title,
+    },
     theme,
 };
+
+impl<T> TryFrom<PageMsg<T, bool>> for Obj {
+    type Error = Error;
+
+    fn try_from(val: PageMsg<T, bool>) -> Result<Self, Self::Error> {
+        match val {
+            PageMsg::Content(_) => Ok(Obj::const_none()),
+            PageMsg::Controls(c) if c => Ok(Obj::const_true()),
+            PageMsg::Controls(_) => Ok(Obj::const_false()),
+        }
+    }
+}
 
 impl<T> TryFrom<DialogMsg<T, ButtonMsg, ButtonMsg>> for Obj
 where
@@ -62,6 +79,59 @@ extern "C" fn ui_layout_new_example(_param: Obj) -> Obj {
         Ok(layout.into())
     };
     unsafe { util::try_or_raise(block) }
+}
+
+#[no_mangle]
+extern "C" fn ui_layout_new_confirm_action(
+    n_args: usize,
+    args: *const Obj,
+    kwargs: *const Map,
+) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: Buffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let action: Option<Buffer> = kwargs.get(Qstr::MP_QSTR_action)?.try_into_option()?;
+        let description: Option<Buffer> =
+            kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
+        let verb: Option<Buffer> = kwargs.get(Qstr::MP_QSTR_verb)?.try_into_option()?;
+        let reverse: bool = kwargs.get(Qstr::MP_QSTR_reverse)?.try_into()?;
+
+        let obj = LayoutObj::new(
+            Title::new(theme::borders(), title, |area| {
+                SwipePage::new(
+                    area,
+                    theme::BG,
+                    |area| {
+                        let action = action.unwrap_or("".into());
+                        let description = description.unwrap_or("".into());
+                        let mut para = Paragraphs::new(area);
+                        if !reverse {
+                            para = para
+                                .add::<theme::TTDefaultText>(theme::FONT_BOLD, action)
+                                .add::<theme::TTDefaultText>(theme::FONT_NORMAL, description);
+                        } else {
+                            para = para
+                                .add::<theme::TTDefaultText>(theme::FONT_NORMAL, description)
+                                .add::<theme::TTDefaultText>(theme::FONT_BOLD, action);
+                        }
+                        para
+                    },
+                    |area| {
+                        ButtonArray::new(
+                            area,
+                            |area| Button::with_icon(area, theme::ICON_CANCEL),
+                            |area| {
+                                Button::with_text(area, verb.unwrap_or("CONFIRM".into()))
+                                    .styled(theme::button_confirm())
+                            },
+                        )
+                    },
+                )
+            })
+            .into_child(),
+        )?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
 #[cfg(test)]
@@ -130,9 +200,7 @@ mod tests {
         ));
         assert_eq!(
             trace(&layout),
-            r#"<Dialog content:<Text content:Testing text layout, with
-some text, and some more
-text. And parameters! > left:<Button text:Left > right:<Button text:Right > >"#
+            "<Dialog content:<Text content:Testing text layout, with\nsome text, and some more\ntext. And parameters! > left:<Button text:Left > right:<Button text:Right > >",
         )
     }
 }
