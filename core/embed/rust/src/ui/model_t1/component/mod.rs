@@ -1,11 +1,11 @@
 mod button;
 mod dialog;
+mod frame;
 mod page;
-mod title;
 
 use super::{event, theme};
 
 pub use button::{Button, ButtonContent, ButtonMsg, ButtonPos, ButtonStyle, ButtonStyleSheet};
 pub use dialog::{Dialog, DialogMsg};
+pub use frame::Frame;
 pub use page::ButtonPage;
-pub use title::Title;
