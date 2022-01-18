@@ -14,15 +14,25 @@ impl<T, F> Map<T, F> {
 impl<T, F, U> Component for Map<T, F>
 where
     T: Component,
-    F: Fn(T::Msg) -> U,
+    F: Fn(T::Msg) -> Option<U>,
 {
     type Msg = U;
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        self.inner.event(ctx, event).map(&self.func)
+        self.inner.event(ctx, event).and_then(&self.func)
     }
 
     fn paint(&mut self) {
         self.inner.paint()
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl<T, F> crate::trace::Trace for Map<T, F>
+where
+    T: Component + crate::trace::Trace,
+{
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        self.inner.trace(t)
     }
 }

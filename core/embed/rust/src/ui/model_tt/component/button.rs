@@ -1,8 +1,8 @@
 use super::{event::TouchEvent, theme};
 use crate::ui::{
-    component::{Component, Event, EventCtx},
+    component::{Component, Event, EventCtx, Map},
     display::{self, Color, Font},
-    geometry::{Offset, Rect},
+    geometry::{Grid, Offset, Rect},
 };
 
 pub enum ButtonMsg {
@@ -19,6 +19,13 @@ pub struct Button<T> {
 }
 
 impl<T> Button<T> {
+    /// Standard height in pixels.
+    pub const HEIGHT: i32 = 38;
+
+    /// Offsets the baseline of the button text either up (negative) or down
+    /// (positive).
+    pub const BASELINE_OFFSET: i32 = -3;
+
     pub fn new(area: Rect, content: ButtonContent<T>) -> Self {
         Self {
             area,
@@ -179,9 +186,11 @@ where
         match &self.content {
             ButtonContent::Text(text) => {
                 let text = text.as_ref();
-                let width = display::text_width(text, style.font);
+                let width = style.font.text_width(text);
                 let height = style.font.text_height();
-                let start_of_baseline = self.area.center() + Offset::new(-width / 2, height / 2);
+                let start_of_baseline = self.area.center()
+                    + Offset::new(-width / 2, height / 2)
+                    + Offset::y(Self::BASELINE_OFFSET);
                 display::text(
                     start_of_baseline,
                     text,
@@ -244,4 +253,29 @@ pub struct ButtonStyle {
     pub border_color: Color,
     pub border_radius: u8,
     pub border_width: i32,
+}
+
+impl<T> Button<T> {
+    pub fn array2<F0, F1, R>(
+        area: Rect,
+        left: impl FnOnce(Rect) -> Button<T>,
+        left_map: F0,
+        right: impl FnOnce(Rect) -> Button<T>,
+        right_map: F1,
+    ) -> (Map<Self, F0>, Map<Self, F1>)
+    where
+        F0: Fn(ButtonMsg) -> Option<R>,
+        F1: Fn(ButtonMsg) -> Option<R>,
+        T: AsRef<[u8]>,
+    {
+        const BUTTON_SPACING: i32 = 6;
+        let grid = Grid::new(area, 1, 3).with_spacing(BUTTON_SPACING);
+        let left = left(grid.row_col(0, 0));
+        let right = right(Rect::new(
+            grid.row_col(0, 1).top_left(),
+            grid.row_col(0, 2).bottom_right(),
+        ));
+
+        (Map::new(left, left_map), Map::new(right, right_map))
+    }
 }
