@@ -23,12 +23,6 @@
 
 #include "librust.h"
 
-#if TREZOR_MODEL == T
-/// def layout_new_example(text: str) -> None:
-///     """Example layout."""
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorui2_layout_new_example_obj,
-                                 ui_layout_new_example);
-#elif TREZOR_MODEL == 1
 /// def layout_new_confirm_action(
 ///     *,
 ///     title: str,
@@ -38,30 +32,37 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorui2_layout_new_example_obj,
 ///     verb_cancel: str | None,
 ///     hold: bool | None,
 ///     reverse: bool,
-/// ) -> int:
+/// ) -> object:
 ///     """Example layout."""
 STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_trezorui2_layout_new_confirm_action_obj,
                                   0, ui_layout_new_confirm_action);
+
+#if TREZOR_MODEL == T
+/// def layout_new_example(text: str) -> object:
+///     """Example layout."""
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorui2_layout_new_example_obj,
+                                 ui_layout_new_example);
+#elif TREZOR_MODEL == 1
 /// def layout_new_confirm_text(
 ///     *,
 ///     title: str,
 ///     data: str,
 ///     description: str | None,
-/// ) -> int:
+/// ) -> object:
 ///     """Example layout."""
 STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_trezorui2_layout_new_confirm_text_obj, 0,
                                   ui_layout_new_confirm_text);
 #endif
 
 STATIC const mp_rom_map_elem_t mp_module_trezorui2_globals_table[] = {
-#if TREZOR_MODEL == T
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorui2)},
 
+    {MP_ROM_QSTR(MP_QSTR_layout_new_confirm_action),
+     MP_ROM_PTR(&mod_trezorui2_layout_new_confirm_action_obj)},
+#if TREZOR_MODEL == T
     {MP_ROM_QSTR(MP_QSTR_layout_new_example),
      MP_ROM_PTR(&mod_trezorui2_layout_new_example_obj)},
 #elif TREZOR_MODEL == 1
-    {MP_ROM_QSTR(MP_QSTR_layout_new_confirm_action),
-     MP_ROM_PTR(&mod_trezorui2_layout_new_confirm_action_obj)},
     {MP_ROM_QSTR(MP_QSTR_layout_new_confirm_text),
      MP_ROM_PTR(&mod_trezorui2_layout_new_confirm_text_obj)},
 #endif

@@ -2,9 +2,9 @@ use core::convert::{TryFrom, TryInto};
 
 use crate::{
     error::Error,
-    micropython::obj::Obj,
+    micropython::{buffer::Buffer, map::Map, obj::Obj, qstr::Qstr},
     ui::{
-        component::{Child, FormattedText},
+        component::{base::ComponentExt, text::paragraphs::Paragraphs, Child, FormattedText},
         display,
         layout::obj::LayoutObj,
     },
@@ -12,7 +12,7 @@ use crate::{
 };
 
 use super::{
-    component::{ButtonMsg, DialogMsg, HoldToConfirm, HoldToConfirmMsg},
+    component::{Button, ButtonMsg, DialogMsg, Frame, HoldToConfirm, HoldToConfirmMsg, SwipePage},
     theme,
 };
 
@@ -62,6 +62,61 @@ extern "C" fn ui_layout_new_example(_param: Obj) -> Obj {
         Ok(layout.into())
     };
     unsafe { util::try_or_raise(block) }
+}
+
+#[no_mangle]
+extern "C" fn ui_layout_new_confirm_action(
+    n_args: usize,
+    args: *const Obj,
+    kwargs: *const Map,
+) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: Buffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let action: Option<Buffer> = kwargs.get(Qstr::MP_QSTR_action)?.try_into_option()?;
+        let description: Option<Buffer> =
+            kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
+        let verb: Option<Buffer> = kwargs.get(Qstr::MP_QSTR_verb)?.try_into_option()?;
+        let reverse: bool = kwargs.get(Qstr::MP_QSTR_reverse)?.try_into()?;
+
+        let obj = LayoutObj::new(
+            Frame::new(theme::borders(), title, |area| {
+                SwipePage::new(
+                    area,
+                    theme::BG,
+                    |area| {
+                        let action = action.unwrap_or("".into());
+                        let description = description.unwrap_or("".into());
+                        let mut para = Paragraphs::new(area);
+                        if !reverse {
+                            para = para
+                                .add::<theme::TTDefaultText>(theme::FONT_BOLD, action)
+                                .add::<theme::TTDefaultText>(theme::FONT_NORMAL, description);
+                        } else {
+                            para = para
+                                .add::<theme::TTDefaultText>(theme::FONT_NORMAL, description)
+                                .add::<theme::TTDefaultText>(theme::FONT_BOLD, action);
+                        }
+                        para
+                    },
+                    |area| {
+                        Button::array2(
+                            area,
+                            |area| Button::with_icon(area, theme::ICON_CANCEL),
+                            |msg| (matches!(msg, ButtonMsg::Clicked)).then(|| false),
+                            |area| {
+                                Button::with_text(area, verb.unwrap_or("CONFIRM".into()))
+                                    .styled(theme::button_confirm())
+                            },
+                            |msg| (matches!(msg, ButtonMsg::Clicked)).then(|| true),
+                        )
+                    },
+                )
+            })
+            .into_child(),
+        )?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
 #[cfg(test)]
@@ -130,9 +185,7 @@ mod tests {
         ));
         assert_eq!(
             trace(&layout),
-            r#"<Dialog content:<Text content:Testing text layout, with
-some text, and some more
-text. And parameters! > left:<Button text:Left > right:<Button text:Right > >"#
+            "<Dialog content:<Text content:Testing text layout, with\nsome text, and some more\ntext. And parameters! > left:<Button text:Left > right:<Button text:Right > >",
         )
     }
 }
