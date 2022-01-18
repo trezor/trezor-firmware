@@ -1,4 +1,4 @@
-from trezor import log, ui, wire
+from trezor import io, log, loop, ui, wire, workflow
 from trezor.enums import ButtonRequestType
 
 from trezorui2 import layout_new_confirm_action, layout_new_confirm_text
@@ -6,9 +6,47 @@ from trezorui2 import layout_new_confirm_action, layout_new_confirm_text
 from .common import interact
 
 if False:
-    from typing import NoReturn, Type, Union
+    from typing import Any, NoReturn, Type, Union
 
     ExceptionType = Union[BaseException, Type[BaseException]]
+
+
+class _RustLayout(ui.Layout):
+    # pylint: disable=super-init-not-called
+    def __init__(self, layout: Any):
+        self.layout = layout
+        self.timer = loop.Timer()
+        self.layout.set_timer_fn(self.set_timer)
+
+    def set_timer(self, token: int, deadline: int) -> None:
+        self.timer.schedule(deadline, token)
+
+    def create_tasks(self) -> tuple[loop.Task, ...]:
+        return self.handle_input_and_rendering(), self.handle_timers()
+
+    def handle_input_and_rendering(self) -> loop.Task:  # type: ignore
+        button = loop.wait(io.BUTTON)
+        ui.display.clear()
+        self.layout.paint()
+        while True:
+            # Using `yield` instead of `await` to avoid allocations.
+            event, button_num = yield button
+            workflow.idle_timer.touch()
+            msg = None
+            if event in (io.BUTTON_PRESSED, io.BUTTON_RELEASED):
+                msg = self.layout.button_event(event, button_num)
+            self.layout.paint()
+            if msg is not None:
+                raise ui.Result(msg)
+
+    def handle_timers(self) -> loop.Task:  # type: ignore
+        while True:
+            # Using `yield` instead of `await` to avoid allocations.
+            token = yield self.timer
+            msg = self.layout.timer(token)
+            self.layout.paint()
+            if msg is not None:
+                raise ui.Result(msg)
 
 
 async def confirm_action(
@@ -43,7 +81,7 @@ async def confirm_action(
 
     result = await interact(
         ctx,
-        ui.RustLayout(
+        _RustLayout(
             layout_new_confirm_action(
                 title=title.upper(),
                 action=action,
@@ -73,7 +111,7 @@ async def confirm_text(
 ) -> None:
     result = await interact(
         ctx,
-        ui.RustLayout(
+        _RustLayout(
             layout_new_confirm_text(
                 title=title.upper(),
                 data=data,

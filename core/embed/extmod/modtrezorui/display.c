@@ -31,20 +31,28 @@
 #if TREZOR_MODEL == T
 
 // TT new rust UI
-#if TREZOR_FONT_MEDIUM_ENABLE
+#if TREZOR_UI2
 
+#ifdef TREZOR_FONT_NORMAL_ENABLE
 #include "font_tthoves_regular_18.h"
 #define FONT_NORMAL_DATA Font_TTHoves_Regular_18
 #define FONT_NORMAL_HEIGHT 18
+#endif
+#ifdef TREZOR_FONT_MEDIUM_ENABLE
 #include "font_tthoves_medium_20.h"
 #define FONT_MEDIUM_DATA Font_TTHoves_Medium_20
 #define FONT_MEDIUM_HEIGHT 20
+#endif
+#ifdef TREZOR_FONT_BOLD_ENABLE
 #include "font_tthoves_bold_16.h"
 #define FONT_BOLD_DATA Font_TTHoves_Bold_16
 #define FONT_BOLD_HEIGHT 16
+#endif
+#ifdef TREZOR_FONT_MONO_ENABLE
 #include "font_robotomono_regular_20.h"
 #define FONT_MONO_DATA Font_RobotoMono_Regular_20
 #define FONT_MONO_HEIGHT 20
+#endif
 
 // TT old python UI
 #else
