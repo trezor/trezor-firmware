@@ -90,6 +90,16 @@ where
     }
 }
 
+impl<T> Dimensions for Paragraphs<T> {
+    fn get_size(&mut self) -> Offset {
+        self.area.size()
+    }
+
+    fn set_area(&mut self, area: Rect) {
+        self.area = area
+    }
+}
+
 #[cfg(feature = "ui_debug")]
 impl<T> crate::trace::Trace for Paragraphs<T>
 where

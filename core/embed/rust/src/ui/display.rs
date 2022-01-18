@@ -155,6 +155,18 @@ pub fn text(baseline: Point, text: &[u8], font: Font, fg_color: Color, bg_color:
     );
 }
 
+pub fn text_center(baseline: Point, text: &[u8], font: Font, fg_color: Color, bg_color: Color) {
+    let w = text_width(text, font);
+    display::text(
+        baseline.x - w / 2,
+        baseline.y,
+        text,
+        font.0,
+        fg_color.into(),
+        bg_color.into(),
+    );
+}
+
 pub fn text_width(text: &[u8], font: Font) -> i32 {
     display::text_width(text, font.0)
 }

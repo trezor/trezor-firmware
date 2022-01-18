@@ -69,6 +69,10 @@ impl Swipe {
         self
     }
 
+    fn is_active(&self) -> bool {
+        self.allow_up || self.allow_down || self.allow_left || self.allow_right
+    }
+
     fn ratio(&self, dist: i32) -> f32 {
         (dist as f32 / Self::DISTANCE as f32).min(1.0)
     }
@@ -85,6 +89,9 @@ impl Component for Swipe {
     type Msg = SwipeDirection;
 
     fn event(&mut self, _ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        if !self.is_active() {
+            return None;
+        }
         match (event, self.origin) {
             (Event::Touch(TouchEvent::TouchStart(pos)), _) if self.area.contains(pos) => {
                 // Mark the starting position of this touch.
