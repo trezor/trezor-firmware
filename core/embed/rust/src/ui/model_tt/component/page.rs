@@ -1,7 +1,9 @@
 use crate::ui::{
-    component::{Component, ComponentExt, Event, EventCtx, Never, Pad, PageMsg, Paginate},
+    component::{
+        base::ComponentExt, paginated::PageMsg, Component, Event, EventCtx, Never, Pad, Paginate,
+    },
     display::{self, Color},
-    geometry::{Offset, Point, Rect},
+    geometry::{Dimensions, Offset, Point, Rect},
 };
 
 use super::{theme, Button, Swipe, SwipeDirection};
@@ -19,6 +21,7 @@ impl<T, U> SwipePage<T, U>
 where
     T: Paginate,
     T: Component,
+    T: Dimensions,
     U: Component,
 {
     pub fn new(
@@ -28,7 +31,7 @@ where
         controls: impl FnOnce(Rect) -> U,
     ) -> Self {
         let layout = PageLayout::new(area);
-        let mut content = content(layout.content);
+        let mut content = Self::make_content(&layout, content);
 
         // Always start at the first page.
         let scrollbar = ScrollBar::vertical_right(layout.scrollbar, content.page_count(), 0);
@@ -50,6 +53,18 @@ where
         swipe.allow_up = scrollbar.has_next_page();
         swipe.allow_down = scrollbar.has_previous_page();
         swipe
+    }
+
+    fn make_content(layout: &PageLayout, content: impl FnOnce(Rect) -> T) -> T {
+        // Check if content fits on single page.
+        let mut content = content(layout.content_single_page);
+        if content.page_count() <= 1 {
+            return content;
+        }
+
+        // Reduce area to make space for scrollbar if it doesn't fit.
+        content.set_area(layout.content);
+        content
     }
 
     fn change_page(&mut self, ctx: &mut EventCtx, page: usize) {
@@ -82,6 +97,7 @@ impl<T, U> Component for SwipePage<T, U>
 where
     T: Paginate,
     T: Component,
+    T: Dimensions,
     U: Component,
 {
     type Msg = PageMsg<T::Msg, U::Msg>;
@@ -120,7 +136,9 @@ where
     fn paint(&mut self) {
         self.pad.paint();
         self.content.paint();
-        self.scrollbar.paint();
+        if self.scrollbar.has_pages() {
+            self.scrollbar.paint();
+        }
         if self.scrollbar.has_next_page() {
             self.paint_hint();
         } else {
@@ -178,6 +196,10 @@ impl ScrollBar {
             page_count,
             active_page,
         }
+    }
+
+    pub fn has_pages(&self) -> bool {
+        self.page_count > 1
     }
 
     pub fn has_next_page(&self) -> bool {
@@ -252,6 +274,7 @@ impl Component for ScrollBar {
 }
 
 pub struct PageLayout {
+    pub content_single_page: Rect,
     pub content: Rect,
     pub scrollbar: Rect,
     pub buttons: Rect,
@@ -267,10 +290,12 @@ impl PageLayout {
         let (content, _space) = content.hsplit(-Self::BUTTON_SPACE);
         let (buttons, _space) = buttons.vsplit(-theme::CONTENT_BORDER);
         let (_space, content) = content.vsplit(theme::CONTENT_BORDER);
+        let (content_single_page, _space) = content.vsplit(-theme::CONTENT_BORDER);
         let (content, scrollbar) = content.vsplit(-(Self::SCROLLBAR_SPACE + Self::SCROLLBAR_WIDTH));
         let (_space, scrollbar) = scrollbar.vsplit(Self::SCROLLBAR_SPACE);
 
         Self {
+            content_single_page,
             content,
             scrollbar,
             buttons,
