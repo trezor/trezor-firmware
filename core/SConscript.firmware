@@ -6,7 +6,7 @@ import os
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
 EVERYTHING = BITCOIN_ONLY != '1'
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
-NEW_UI = TREZOR_MODEL == '1' or os.environ.get('NEW_UI', '0') == '1'
+UI2 = ARGUMENTS.get('UI2', '0') == '1' or TREZOR_MODEL == '1'
 
 FEATURE_FLAGS = {
     "RDI": True,
@@ -181,9 +181,10 @@ SOURCE_MOD += [
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
 ]
-if NEW_UI:
+if UI2:
     CPPDEFINES_MOD += [
         'TREZOR_FONT_MEDIUM_ENABLE',
+        'TREZOR_UI2',
     ]
     SOURCE_MOD += [
         'embed/extmod/modtrezorui/font_tthoves_bold_16.c',
@@ -200,7 +201,7 @@ SOURCE_MOD += [
 SOURCE_MOD += [
     'embed/extmod/rustmods/modtrezorproto.c',
 ]
-if NEW_UI:
+if UI2:
     SOURCE_MOD += [
         'embed/extmod/rustmods/modtrezorui2.c',
     ]
@@ -555,7 +556,14 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/constants/__init__.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/__init__.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/common.py'))
-    if TREZOR_MODEL == 'T':
+    if TREZOR_MODEL == 'T' and UI2:
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/components/tt/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/constants/tt.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/__init__.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt/__init__.py'))
+        if EVERYTHING:
+            SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt/webauthn.py'))
+    elif TREZOR_MODEL == 'T':
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/components/tt/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/constants/tt.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt/__init__.py'))
@@ -716,7 +724,7 @@ def cargo_build():
         features = ["model_tt"]
     if BITCOIN_ONLY == "1":
         features.append("bitcoin_only")
-    if NEW_UI:
+    if UI2:
         features.append("ui")
         if PYOPT == "0":
             features.append("ui_debug")

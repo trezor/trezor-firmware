@@ -2,21 +2,21 @@ from typing import *
 
 
 # extmod/rustmods/modtrezorui2.c
-def layout_new_example(text: str) -> None:
+def layout_new_confirm_action(
+    *,
+    title: str,
+    action: str | None = None,
+    description: str | None = None,
+    verb: str | None = None,
+    verb_cancel: str | None = None,
+    hold: bool | None = None,
+    reverse: bool = False,
+) -> object:
     """Example layout."""
 
 
 # extmod/rustmods/modtrezorui2.c
-def layout_new_confirm_action(
-    *,
-    title: str,
-    action: str | None,
-    description: str | None,
-    verb: str | None,
-    verb_cancel: str | None,
-    hold: bool | None,
-    reverse: bool,
-) -> int:
+def layout_new_example(text: str) -> object:
     """Example layout."""
 
 
@@ -26,5 +26,5 @@ def layout_new_confirm_text(
     title: str,
     data: str,
     description: str | None,
-) -> int:
+) -> object:
     """Example layout."""

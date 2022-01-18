@@ -26,12 +26,12 @@
 /// def layout_new_confirm_action(
 ///     *,
 ///     title: str,
-///     action: str | None,
-///     description: str | None,
-///     verb: str | None,
-///     verb_cancel: str | None,
-///     hold: bool | None,
-///     reverse: bool,
+///     action: str | None = None,
+///     description: str | None = None,
+///     verb: str | None = None,
+///     verb_cancel: str | None = None,
+///     hold: bool | None = None,
+///     reverse: bool = False,
 /// ) -> object:
 ///     """Example layout."""
 STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_trezorui2_layout_new_confirm_action_obj,
