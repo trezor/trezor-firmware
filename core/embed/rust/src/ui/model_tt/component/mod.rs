@@ -8,7 +8,7 @@ mod pin;
 mod swipe;
 mod title;
 
-pub use button::{Button, ButtonContent, ButtonMsg, ButtonStyle, ButtonStyleSheet};
+pub use button::{Button, ButtonArray, ButtonContent, ButtonMsg, ButtonStyle, ButtonStyleSheet};
 pub use confirm::{HoldToConfirm, HoldToConfirmMsg};
 pub use dialog::{Dialog, DialogLayout, DialogMsg};
 pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};

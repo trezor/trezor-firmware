@@ -8,8 +8,8 @@ pub enum PageMsg<T, U> {
     /// Pass-through from paged component.
     Content(T),
 
-    /// Messages from page controls outside the paged component. Currently only
-    /// used on T1 for "OK" and "Cancel" buttons.
+    /// Messages from page controls outside the paged component, like
+    /// "OK" and "Cancel" buttons.
     Controls(U),
 }
 

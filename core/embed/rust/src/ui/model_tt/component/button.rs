@@ -2,7 +2,7 @@ use super::{event::TouchEvent, theme};
 use crate::ui::{
     component::{Component, Event, EventCtx},
     display::{self, Color, Font},
-    geometry::{Offset, Rect},
+    geometry::{Grid, Offset, Rect},
 };
 
 pub enum ButtonMsg {
@@ -19,6 +19,9 @@ pub struct Button {
 }
 
 impl Button {
+    pub const HEIGHT: i32 = 38;
+    pub const BASELINE_OFFSET: i32 = -4;
+
     pub fn new(area: Rect, content: ButtonContent) -> Self {
         Self {
             area,
@@ -176,7 +179,7 @@ impl Component for Button {
         match &self.content {
             ButtonContent::Text(text) => {
                 let width = display::text_width(text, style.font);
-                let height = style.font.text_height();
+                let height = style.font.text_height() + Self::BASELINE_OFFSET;
                 let start_of_baseline = self.area.center() + Offset::new(-width / 2, height / 2);
                 display::text(
                     start_of_baseline,
@@ -241,4 +244,60 @@ pub struct ButtonStyle {
     pub border_color: Color,
     pub border_radius: u8,
     pub border_width: i32,
+}
+
+pub struct ButtonArray {
+    pub left: Button,
+    pub right: Button,
+}
+
+impl ButtonArray {
+    const BUTTON_SPACING: i32 = 6;
+
+    pub fn new(
+        area: Rect,
+        left: impl FnOnce(Rect) -> Button,
+        right: impl FnOnce(Rect) -> Button,
+    ) -> Self {
+        let grid = Grid::new(area, 1, 4).with_spacing(Self::BUTTON_SPACING);
+        let left = left(grid.row_col(0, 0));
+        let right = right(Rect::new(
+            grid.row_col(0, 1).top_left(),
+            grid.row_col(0, 3).bottom_right(),
+        ));
+
+        Self { left, right }
+    }
+}
+
+impl Component for ButtonArray {
+    type Msg = bool;
+
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        if let Some(ButtonMsg::Clicked) = self.left.event(ctx, event) {
+            return Some(false);
+        }
+        if let Some(ButtonMsg::Clicked) = self.right.event(ctx, event) {
+            return Some(true);
+        }
+        None
+    }
+
+    fn paint(&mut self) {
+        self.left.paint();
+        self.right.paint();
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for ButtonArray {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        self.left.trace(t);
+        self.right.trace(t);
+    }
+
+    fn bounds(&self, sink: &dyn Fn(Rect)) {
+        self.left.bounds(sink);
+        self.right.bounds(sink);
+    }
 }

@@ -4,32 +4,40 @@ use crate::ui::{
     geometry::{Offset, Point, Rect},
 };
 
-use super::{theme, Swipe, SwipeDirection};
+use super::{theme, Button, Swipe, SwipeDirection};
 
-pub struct SwipePage<T> {
+pub struct SwipePage<T, U> {
     content: T,
+    buttons: U,
     pad: Pad,
     swipe: Swipe,
     scrollbar: ScrollBar,
     fade: Option<i32>,
 }
 
-impl<T> SwipePage<T>
+impl<T, U> SwipePage<T, U>
 where
     T: Paginate,
     T: Component,
+    U: Component,
 {
-    pub fn new(area: Rect, content: impl FnOnce(Rect) -> T, background: Color) -> Self {
-        // Content occupies the whole area.
-        let mut content = content(area);
+    pub fn new(
+        area: Rect,
+        background: Color,
+        content: impl FnOnce(Rect) -> T,
+        controls: impl FnOnce(Rect) -> U,
+    ) -> Self {
+        let layout = PageLayout::new(area);
+        let mut content = content(layout.content);
 
         // Always start at the first page.
-        let scrollbar = ScrollBar::vertical_right(area, content.page_count(), 0);
+        let scrollbar = ScrollBar::vertical_right(layout.scrollbar, content.page_count(), 0);
 
         let swipe = Self::make_swipe(area, &scrollbar);
         let pad = Pad::with_background(area, background);
         Self {
             content,
+            buttons: controls(layout.buttons),
             scrollbar,
             swipe,
             pad,
@@ -58,14 +66,25 @@ where
         // paint.
         self.fade = Some(theme::BACKLIGHT_NORMAL);
     }
+
+    fn paint_hint(&mut self) {
+        display::text_center(
+            Point::new(self.pad.area.center().x, self.pad.area.bottom_right().y - 3),
+            b"SWIPE TO CONTINUE",
+            theme::FONT_BOLD, // FIXME: Figma has this as 14px but bold is 16px
+            theme::GREY_LIGHT,
+            theme::BG,
+        );
+    }
 }
 
-impl<T> Component for SwipePage<T>
+impl<T, U> Component for SwipePage<T, U>
 where
     T: Paginate,
     T: Component,
+    U: Component,
 {
-    type Msg = PageMsg<T::Msg, Never>;
+    type Msg = PageMsg<T::Msg, U::Msg>;
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if let Some(swipe) = self.swipe.event(ctx, event) {
@@ -90,6 +109,11 @@ where
         if let Some(msg) = self.content.event(ctx, event) {
             return Some(PageMsg::Content(msg));
         }
+        if !self.scrollbar.has_next_page() {
+            if let Some(msg) = self.buttons.event(ctx, event) {
+                return Some(PageMsg::Controls(msg));
+            }
+        }
         None
     }
 
@@ -97,6 +121,11 @@ where
         self.pad.paint();
         self.content.paint();
         self.scrollbar.paint();
+        if self.scrollbar.has_next_page() {
+            self.paint_hint();
+        } else {
+            self.buttons.paint();
+        }
         if let Some(val) = self.fade.take() {
             // Note that this is blocking and takes some time.
             display::fade_backlight(val);
@@ -105,9 +134,10 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for SwipePage<T>
+impl<T, U> crate::trace::Trace for SwipePage<T, U>
 where
     T: crate::trace::Trace,
+    U: crate::trace::Trace,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("SwipePage");
@@ -115,6 +145,15 @@ where
         t.field("page_count", &self.scrollbar.page_count);
         t.field("content", &self.content);
         t.close();
+    }
+
+    fn bounds(&self, sink: &dyn Fn(Rect)) {
+        sink(self.scrollbar.area);
+        sink(self.pad.area);
+        self.content.bounds(sink);
+        if !self.scrollbar.has_next_page() {
+            self.buttons.bounds(sink);
+        }
     }
 }
 
@@ -135,7 +174,7 @@ impl ScrollBar {
 
     pub fn vertical_right(area: Rect, page_count: usize, active_page: usize) -> Self {
         Self {
-            area: area.cut_from_right(Self::DOT_SIZE.x),
+            area,
             page_count,
             active_page,
         }
@@ -208,6 +247,33 @@ impl Component for ScrollBar {
                 theme::FG,
                 theme::BG,
             );
+        }
+    }
+}
+
+pub struct PageLayout {
+    pub content: Rect,
+    pub scrollbar: Rect,
+    pub buttons: Rect,
+}
+
+impl PageLayout {
+    const BUTTON_SPACE: i32 = 6;
+    const SCROLLBAR_WIDTH: i32 = 10;
+    const SCROLLBAR_SPACE: i32 = 10;
+
+    pub fn new(area: Rect) -> Self {
+        let (content, buttons) = area.hsplit(-Button::HEIGHT);
+        let (content, _space) = content.hsplit(-Self::BUTTON_SPACE);
+        let (buttons, _space) = buttons.vsplit(-theme::CONTENT_BORDER);
+        let (_space, content) = content.vsplit(theme::CONTENT_BORDER);
+        let (content, scrollbar) = content.vsplit(-(Self::SCROLLBAR_SPACE + Self::SCROLLBAR_WIDTH));
+        let (_space, scrollbar) = scrollbar.vsplit(Self::SCROLLBAR_SPACE);
+
+        Self {
+            content,
+            scrollbar,
+            buttons,
         }
     }
 }
