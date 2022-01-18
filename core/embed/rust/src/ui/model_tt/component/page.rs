@@ -286,7 +286,7 @@ impl PageLayout {
     const SCROLLBAR_SPACE: i32 = 10;
 
     pub fn new(area: Rect) -> Self {
-        let (content, buttons) = area.hsplit(-Button::HEIGHT);
+        let (content, buttons) = area.hsplit(-Button::<&str>::HEIGHT);
         let (content, _space) = content.hsplit(-Self::BUTTON_SPACE);
         let (buttons, _space) = buttons.vsplit(-theme::CONTENT_BORDER);
         let (_space, content) = content.vsplit(theme::CONTENT_BORDER);

@@ -11,18 +11,18 @@ pub enum ButtonMsg {
     Clicked,
 }
 
-pub struct Button {
+pub struct Button<T> {
     area: Rect,
-    content: ButtonContent,
+    content: ButtonContent<T>,
     styles: ButtonStyleSheet,
     state: State,
 }
 
-impl Button {
+impl<T> Button<T> {
     pub const HEIGHT: i32 = 38;
     pub const BASELINE_OFFSET: i32 = -4;
 
-    pub fn new(area: Rect, content: ButtonContent) -> Self {
+    pub fn new(area: Rect, content: ButtonContent<T>) -> Self {
         Self {
             area,
             content,
@@ -31,7 +31,7 @@ impl Button {
         }
     }
 
-    pub fn with_text(area: Rect, text: &'static [u8]) -> Self {
+    pub fn with_text(area: Rect, text: T) -> Self {
         Self::new(area, ButtonContent::Text(text))
     }
 
@@ -71,7 +71,7 @@ impl Button {
         matches!(self.state, State::Disabled)
     }
 
-    pub fn content(&self) -> &ButtonContent {
+    pub fn content(&self) -> &ButtonContent<T> {
         &self.content
     }
 
@@ -91,7 +91,10 @@ impl Button {
     }
 }
 
-impl Component for Button {
+impl<T> Component for Button<T>
+where
+    T: AsRef<[u8]>,
+{
     type Msg = ButtonMsg;
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
@@ -178,6 +181,7 @@ impl Component for Button {
 
         match &self.content {
             ButtonContent::Text(text) => {
+                let text = text.as_ref();
                 let width = display::text_width(text, style.font);
                 let height = style.font.text_height() + Self::BASELINE_OFFSET;
                 let start_of_baseline = self.area.center() + Offset::new(-width / 2, height / 2);
@@ -202,11 +206,14 @@ impl Component for Button {
 }
 
 #[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for Button {
+impl<T> crate::trace::Trace for Button<T>
+where
+    T: AsRef<[u8]> + crate::trace::Trace,
+{
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("Button");
-        match self.content {
-            ButtonContent::Text(text) => t.field("text", &text),
+        match &self.content {
+            ButtonContent::Text(text) => t.field("text", text),
             ButtonContent::Icon(_) => t.symbol("icon"),
         }
         t.close();
@@ -225,8 +232,8 @@ enum State {
     Disabled,
 }
 
-pub enum ButtonContent {
-    Text(&'static [u8]),
+pub enum ButtonContent<T> {
+    Text(T),
     Icon(&'static [u8]),
 }
 
@@ -246,18 +253,18 @@ pub struct ButtonStyle {
     pub border_width: i32,
 }
 
-pub struct ButtonArray {
-    pub left: Button,
-    pub right: Button,
+pub struct ButtonArray<T> {
+    pub left: Button<T>,
+    pub right: Button<T>,
 }
 
-impl ButtonArray {
+impl<T> ButtonArray<T> {
     const BUTTON_SPACING: i32 = 6;
 
     pub fn new(
         area: Rect,
-        left: impl FnOnce(Rect) -> Button,
-        right: impl FnOnce(Rect) -> Button,
+        left: impl FnOnce(Rect) -> Button<T>,
+        right: impl FnOnce(Rect) -> Button<T>,
     ) -> Self {
         let grid = Grid::new(area, 1, 4).with_spacing(Self::BUTTON_SPACING);
         let left = left(grid.row_col(0, 0));
@@ -270,7 +277,10 @@ impl ButtonArray {
     }
 }
 
-impl Component for ButtonArray {
+impl<T> Component for ButtonArray<T>
+where
+    T: AsRef<[u8]>,
+{
     type Msg = bool;
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
@@ -290,7 +300,10 @@ impl Component for ButtonArray {
 }
 
 #[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for ButtonArray {
+impl<T> crate::trace::Trace for ButtonArray<T>
+where
+    T: AsRef<[u8]> + crate::trace::Trace,
+{
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         self.left.trace(t);
         self.right.trace(t);

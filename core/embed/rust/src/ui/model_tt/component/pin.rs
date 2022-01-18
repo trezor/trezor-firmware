@@ -31,10 +31,10 @@ pub struct PinDialog {
     major_prompt: Label<&'static [u8]>,
     minor_prompt: Label<&'static [u8]>,
     dots: Child<PinDots>,
-    reset_btn: Child<Button>,
-    cancel_btn: Child<Button>,
-    confirm_btn: Child<Button>,
-    digit_btns: [Child<Button>; DIGIT_COUNT],
+    reset_btn: Child<Button<&'static str>>,
+    cancel_btn: Child<Button<&'static str>>,
+    confirm_btn: Child<Button<&'static str>>,
+    digit_btns: [Child<Button<&'static str>>; DIGIT_COUNT],
 }
 
 impl PinDialog {
@@ -63,7 +63,7 @@ impl PinDialog {
 
         // Control buttons.
         let grid = Grid::new(area, 5, 3);
-        let reset_btn = Button::with_text(grid.row_col(4, 0), b"Reset")
+        let reset_btn = Button::with_text(grid.row_col(4, 0), "Reset")
             .styled(theme::button_clear())
             .into_child();
         let cancel_btn = Button::with_icon(grid.row_col(4, 0), theme::ICON_CANCEL)
@@ -88,9 +88,9 @@ impl PinDialog {
         }
     }
 
-    fn generate_digit_buttons(grid: &Grid) -> [Child<Button>; DIGIT_COUNT] {
+    fn generate_digit_buttons(grid: &Grid) -> [Child<Button<&'static str>>; DIGIT_COUNT] {
         // Generate a random sequence of digits from 0 to 9.
-        let mut digits = [b"0", b"1", b"2", b"3", b"4", b"5", b"6", b"7", b"8", b"9"];
+        let mut digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
         random::shuffle(&mut digits);
 
         // Assign the digits to buttons on a 5x3 grid, starting from the second row.
@@ -102,7 +102,7 @@ impl PinDialog {
                 // For the last key (the "0" position) we skip one cell.
                 i + 1 + 3
             });
-            let text: &[u8; 1] = digits[i];
+            let text = digits[i];
             Child::new(Button::with_text(area, text))
         };
         [
@@ -159,7 +159,7 @@ impl Component for PinDialog {
         for btn in &mut self.digit_btns {
             if let Some(Clicked) = btn.event(ctx, event) {
                 if let ButtonContent::Text(text) = btn.inner().content() {
-                    if self.digits.extend_from_slice(text).is_err() {
+                    if self.digits.extend_from_slice(text.as_ref()).is_err() {
                         // `self.pin` is full and wasn't able to accept all of
                         // `text`. Should not happen.
                     }
