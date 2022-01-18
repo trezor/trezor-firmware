@@ -204,6 +204,8 @@ trezor.ui.layouts.tt.recovery
 import trezor.ui.layouts.tt.recovery
 trezor.ui.layouts.tt.reset
 import trezor.ui.layouts.tt.reset
+trezor.ui.layouts.tt_v2
+import trezor.ui.layouts.tt_v2
 trezor.ui.loader
 import trezor.ui.loader
 trezor.ui.popup
