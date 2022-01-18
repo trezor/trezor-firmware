@@ -125,8 +125,13 @@ pub struct ScrollBar {
 }
 
 impl ScrollBar {
-    pub const DOT_SIZE: Offset = Offset::new(8, 8);
-    pub const DOT_INTERVAL: i32 = 14;
+    const DOT_INTERVAL: i32 = 12;
+    const ARROW_SPACE: i32 = 23;
+
+    const ICON_ACTIVE: &'static [u8] = include_res!("model_tt/res/scroll-active.toif");
+    const ICON_INACTIVE: &'static [u8] = include_res!("model_tt/res/scroll-inactive.toif");
+    const ICON_UP: &'static [u8] = include_res!("model_tt/res/scroll-up.toif");
+    const ICON_DOWN: &'static [u8] = include_res!("model_tt/res/scroll-down.toif");
 
     pub fn vertical_right(area: Rect, page_count: usize, active_page: usize) -> Self {
         Self {
@@ -179,18 +184,30 @@ impl Component for ScrollBar {
             self.area.center().x,
             self.area.center().y - (count / 2) * interval,
         );
-        for i in 0..self.page_count {
-            display::rounded_rect(
-                Rect::from_center_and_size(dot, Self::DOT_SIZE),
-                if i == self.active_page {
-                    theme::FG
-                } else {
-                    theme::GREY_LIGHT
-                },
+        if self.has_previous_page() {
+            display::icon(
+                dot - Offset::new(0, Self::ARROW_SPACE),
+                Self::ICON_UP,
+                theme::FG,
                 theme::BG,
-                theme::RADIUS,
             );
+        }
+        for i in 0..self.page_count {
+            let icon = if i == self.active_page {
+                Self::ICON_ACTIVE
+            } else {
+                Self::ICON_INACTIVE
+            };
+            display::icon(dot, icon, theme::FG, theme::BG);
             dot.y += interval;
+        }
+        if self.has_next_page() {
+            display::icon(
+                dot + Offset::new(0, Self::ARROW_SPACE - interval),
+                Self::ICON_DOWN,
+                theme::FG,
+                theme::BG,
+            );
         }
     }
 }
