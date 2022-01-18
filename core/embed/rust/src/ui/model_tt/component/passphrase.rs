@@ -23,9 +23,9 @@ pub enum PassphraseKeyboardMsg {
 pub struct PassphraseKeyboard {
     page_swipe: Swipe,
     textbox: Child<TextBox>,
-    back_btn: Child<Button>,
-    confirm_btn: Child<Button>,
-    key_btns: [[Child<Button>; KEYS]; PAGES],
+    back_btn: Child<Button<&'static str>>,
+    confirm_btn: Child<Button<&'static str>>,
+    key_btns: [[Child<Button<&'static [u8]>>; KEYS]; PAGES],
     key_page: usize,
     pending: Option<Pending>,
 }
@@ -60,10 +60,10 @@ impl PassphraseKeyboard {
         let text = Vec::new();
         let page_swipe = Swipe::horizontal(area);
         let textbox = TextBox::new(textbox_area, text).into_child();
-        let confirm_btn = Button::with_text(confirm_btn_area, b"Confirm")
+        let confirm_btn = Button::with_text(confirm_btn_area, "Confirm")
             .styled(theme::button_confirm())
             .into_child();
-        let back_btn = Button::with_text(back_btn_area, b"Back")
+        let back_btn = Button::with_text(back_btn_area, "Back")
             .styled(theme::button_clear())
             .into_child();
         let key_btns = Self::generate_keyboard(&key_grid);
@@ -79,17 +79,17 @@ impl PassphraseKeyboard {
         }
     }
 
-    fn generate_keyboard(grid: &Grid) -> [[Child<Button>; KEYS]; PAGES] {
+    fn generate_keyboard(grid: &Grid) -> [[Child<Button<&'static [u8]>>; KEYS]; PAGES] {
         // can't use a range because the result is a fixed-size array
         [0, 1, 2, 3].map(|i| Self::generate_key_page(grid, i))
     }
 
-    fn generate_key_page(grid: &Grid, page: usize) -> [Child<Button>; KEYS] {
+    fn generate_key_page(grid: &Grid, page: usize) -> [Child<Button<&'static [u8]>>; KEYS] {
         // can't use a range because the result is a fixed-size array
         [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(|i| Self::generate_key(grid, page, i))
     }
 
-    fn generate_key(grid: &Grid, page: usize, key: usize) -> Child<Button> {
+    fn generate_key(grid: &Grid, page: usize, key: usize) -> Child<Button<&'static [u8]>> {
         // Assign the keys in each page to buttons on a 5x3 grid, starting from the
         // second row.
         let area = grid.cell(if key < 9 {
