@@ -24,7 +24,7 @@ from trezor.ui.layouts import (
 from apps.common.paths import address_n_to_str
 
 from . import seed
-from .address import derive_human_readable_address
+from .address import derive_human_readable_address, encode_human_readable_address
 from .helpers import bech32, protocol_magics
 from .helpers.utils import (
     format_account_number,
@@ -619,15 +619,22 @@ async def confirm_stake_pool_registration_final(
 
 
 async def confirm_withdrawal(
-    ctx: wire.Context, withdrawal: CardanoTxWithdrawal
+    ctx: wire.Context, withdrawal: CardanoTxWithdrawal, reward_address_bytes: bytes
 ) -> None:
+    address_type_name = "script reward" if withdrawal.script_hash else "reward"
+    reward_address = encode_human_readable_address(reward_address_bytes)
     props: list[PropertyType] = [
-        ("Confirm withdrawal", None),
-        _format_stake_credential(
-            withdrawal.path, withdrawal.script_hash, withdrawal.key_hash
-        ),
-        ("Amount:", format_coin_amount(withdrawal.amount)),
+        (f"Confirm withdrawal for {address_type_name} address:", reward_address),
     ]
+
+    if withdrawal.path:
+        props.append(
+            _format_stake_credential(
+                withdrawal.path, withdrawal.script_hash, withdrawal.key_hash
+            )
+        )
+
+    props.append(("Amount:", format_coin_amount(withdrawal.amount)))
 
     await confirm_properties(
         ctx,
