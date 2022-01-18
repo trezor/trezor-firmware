@@ -623,7 +623,7 @@ async def _process_withdrawals(
     if withdrawals_count == 0:
         return
 
-    previous_reward_address: bytes = b""
+    previous_reward_address_bytes: bytes = b""
     for _ in range(withdrawals_count):
         withdrawal: CardanoTxWithdrawal = await ctx.call(
             CardanoTxItemAck(), CardanoTxWithdrawal
@@ -635,16 +635,16 @@ async def _process_withdrawals(
             protocol_magic,
             network_id,
             account_path_checker,
-            previous_reward_address,
+            previous_reward_address_bytes,
         )
-        reward_address = _derive_withdrawal_reward_address_bytes(
+        reward_address_bytes = _derive_withdrawal_reward_address_bytes(
             keychain, withdrawal, protocol_magic, network_id
         )
-        previous_reward_address = reward_address
+        previous_reward_address_bytes = reward_address_bytes
 
-        await confirm_withdrawal(ctx, withdrawal)
+        await confirm_withdrawal(ctx, withdrawal, reward_address_bytes)
 
-        withdrawals_dict.add(reward_address, withdrawal.amount)
+        withdrawals_dict.add(reward_address_bytes, withdrawal.amount)
 
 
 async def _process_auxiliary_data(
@@ -1032,7 +1032,7 @@ def _validate_withdrawal(
     protocol_magic: int,
     network_id: int,
     account_path_checker: AccountPathChecker,
-    previous_reward_address: bytes,
+    previous_reward_address_bytes: bytes,
 ) -> None:
     validate_stake_credential(
         withdrawal.path,
@@ -1045,10 +1045,12 @@ def _validate_withdrawal(
     if not 0 <= withdrawal.amount < LOVELACE_MAX_SUPPLY:
         raise INVALID_WITHDRAWAL
 
-    reward_address = _derive_withdrawal_reward_address_bytes(
+    reward_address_bytes = _derive_withdrawal_reward_address_bytes(
         keychain, withdrawal, protocol_magic, network_id
     )
-    if not cbor.are_canonically_ordered(previous_reward_address, reward_address):
+    if not cbor.are_canonically_ordered(
+        previous_reward_address_bytes, reward_address_bytes
+    ):
         raise INVALID_WITHDRAWAL
 
     account_path_checker.add_withdrawal(withdrawal)
