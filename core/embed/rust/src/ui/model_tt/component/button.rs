@@ -11,15 +11,15 @@ pub enum ButtonMsg {
     Clicked,
 }
 
-pub struct Button {
+pub struct Button<T> {
     area: Rect,
-    content: ButtonContent,
+    content: ButtonContent<T>,
     styles: ButtonStyleSheet,
     state: State,
 }
 
-impl Button {
-    pub fn new(area: Rect, content: ButtonContent) -> Self {
+impl<T> Button<T> {
+    pub fn new(area: Rect, content: ButtonContent<T>) -> Self {
         Self {
             area,
             content,
@@ -28,7 +28,7 @@ impl Button {
         }
     }
 
-    pub fn with_text(area: Rect, text: &'static [u8]) -> Self {
+    pub fn with_text(area: Rect, text: T) -> Self {
         Self::new(area, ButtonContent::Text(text))
     }
 
@@ -68,7 +68,7 @@ impl Button {
         matches!(self.state, State::Disabled)
     }
 
-    pub fn content(&self) -> &ButtonContent {
+    pub fn content(&self) -> &ButtonContent<T> {
         &self.content
     }
 
@@ -88,7 +88,10 @@ impl Button {
     }
 }
 
-impl Component for Button {
+impl<T> Component for Button<T>
+where
+    T: AsRef<[u8]>,
+{
     type Msg = ButtonMsg;
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
@@ -175,6 +178,7 @@ impl Component for Button {
 
         match &self.content {
             ButtonContent::Text(text) => {
+                let text = text.as_ref();
                 let width = display::text_width(text, style.font);
                 let height = style.font.text_height();
                 let start_of_baseline = self.area.center() + Offset::new(-width / 2, height / 2);
@@ -199,11 +203,14 @@ impl Component for Button {
 }
 
 #[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for Button {
+impl<T> crate::trace::Trace for Button<T>
+where
+    T: AsRef<[u8]> + crate::trace::Trace,
+{
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("Button");
-        match self.content {
-            ButtonContent::Text(text) => t.field("text", &text),
+        match &self.content {
+            ButtonContent::Text(text) => t.field("text", text),
             ButtonContent::Icon(_) => t.symbol("icon"),
         }
         t.close();
@@ -218,8 +225,8 @@ enum State {
     Disabled,
 }
 
-pub enum ButtonContent {
-    Text(&'static [u8]),
+pub enum ButtonContent<T> {
+    Text(T),
     Icon(&'static [u8]),
 }
 

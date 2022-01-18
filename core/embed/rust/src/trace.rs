@@ -20,6 +20,12 @@ impl Trace for &[u8] {
     }
 }
 
+impl<const N: usize> Trace for &[u8; N] {
+    fn trace(&self, t: &mut dyn Tracer) {
+        t.bytes(&self[..])
+    }
+}
+
 impl Trace for &str {
     fn trace(&self, t: &mut dyn Tracer) {
         t.string(self);

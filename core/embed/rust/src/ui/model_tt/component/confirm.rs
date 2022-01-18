@@ -17,8 +17,8 @@ pub enum HoldToConfirmMsg<T> {
 pub struct HoldToConfirm<T> {
     loader: Loader,
     content: Child<T>,
-    cancel: Child<Button>,
-    confirm: Child<Button>,
+    cancel: Child<Button<&'static str>>,
+    confirm: Child<Button<&'static str>>,
     pad: Pad,
 }
 
@@ -31,8 +31,8 @@ where
         Self {
             loader: Loader::new(0),
             content: content(layout.content).into_child(),
-            cancel: Button::with_text(layout.left, b"Cancel").into_child(),
-            confirm: Button::with_text(layout.right, b"Hold").into_child(),
+            cancel: Button::with_text(layout.left, "Cancel").into_child(),
+            confirm: Button::with_text(layout.right, "Hold").into_child(),
             pad: Pad::with_background(layout.content, theme::BG),
         }
     }
