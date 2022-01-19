@@ -138,8 +138,8 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("ButtonPage");
-        t.field("active_page", &self.active_page());
-        t.field("page_count", &self.page_count());
+        t.field("active_page", &self.scrollbar.active_page);
+        t.field("page_count", &self.scrollbar.page_count);
         t.field("content", &self.content);
         t.close();
     }
