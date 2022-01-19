@@ -52,6 +52,9 @@ static inline mp_int_t trezor_obj_get_int(mp_obj_t obj) {
 static inline mp_uint_t trezor_obj_get_uint(mp_obj_t obj) {
   if (MP_OBJ_IS_SMALL_INT(obj)) {
     mp_int_t i = MP_OBJ_SMALL_INT_VALUE(obj);
+    if (i < 0) {
+      mp_raise_TypeError("value is negative");
+    }
     mp_uint_t u = i;
     return u;
   } else if (MP_OBJ_IS_TYPE(obj, &mp_type_int)) {
@@ -78,6 +81,9 @@ static inline uint8_t trezor_obj_get_uint8(mp_obj_t obj) {
 static inline uint64_t trezor_obj_get_uint64(mp_const_obj_t obj) {
   if (MP_OBJ_IS_SMALL_INT(obj)) {
     mp_int_t i = MP_OBJ_SMALL_INT_VALUE(obj);
+    if (i < 0) {
+      mp_raise_TypeError("value is negative");
+    }
     mp_uint_t u = i;
     return u;
   } else if (MP_OBJ_IS_TYPE(obj, &mp_type_int)) {
