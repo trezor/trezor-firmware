@@ -62,6 +62,7 @@ where
             // Reduce area to make space for scrollbar if it doesn't fit.
             content.set_area(layout.content);
         }
+        content.change_page(0);
         content
     }
 
