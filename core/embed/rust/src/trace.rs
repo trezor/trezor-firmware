@@ -64,5 +64,5 @@ pub fn wireframe(r: Rect) {
     let w = r.width() as u16;
     let h = r.height() as u16;
     let color = display::Color::from_u16(w.rotate_right(w.into()).wrapping_add(h * 8));
-    display::hollow_rect(r, color)
+    display::rect_stroke(r, color)
 }

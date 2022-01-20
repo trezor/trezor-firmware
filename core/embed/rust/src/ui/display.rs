@@ -49,18 +49,18 @@ pub fn fade_backlight(target: i32) {
     }
 }
 
-pub fn rect(r: Rect, fg_color: Color) {
+pub fn rect_fill(r: Rect, fg_color: Color) {
     display::bar(r.x0, r.y0, r.width(), r.height(), fg_color.into());
 }
 
-pub fn hollow_rect(r: Rect, fg_color: Color) {
+pub fn rect_stroke(r: Rect, fg_color: Color) {
     display::bar(r.x0, r.y0, r.width(), 1, fg_color.into());
     display::bar(r.x0, r.y0 + r.height() - 1, r.width(), 1, fg_color.into());
     display::bar(r.x0, r.y0, 1, r.height(), fg_color.into());
     display::bar(r.x0 + r.width() - 1, r.y0, 1, r.height(), fg_color.into());
 }
 
-pub fn rounded_rect(r: Rect, fg_color: Color, bg_color: Color, radius: u8) {
+pub fn rect_fill_rounded(r: Rect, fg_color: Color, bg_color: Color, radius: u8) {
     display::bar_radius(
         r.x0,
         r.y0,
@@ -92,13 +92,13 @@ pub fn icon(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
 }
 
 // Used on T1 only.
-pub fn rounded_rect1(r: Rect, fg_color: Color, bg_color: Color) {
+pub fn rect_fill_rounded1(r: Rect, fg_color: Color, bg_color: Color) {
     display::bar(r.x0, r.y0, r.width(), r.height(), fg_color.into());
     let corners = [
         r.top_left(),
-        r.top_right() + Offset::new(-1, 0),
-        r.bottom_right() + Offset::new(-1, -1),
-        r.bottom_left() + Offset::new(0, -1),
+        r.top_right() - Offset::x(1),
+        r.bottom_right() - Offset::uniform(1),
+        r.bottom_left() - Offset::y(1),
     ];
     for p in corners.iter() {
         display::bar(p.x, p.y, 1, 1, bg_color.into());
@@ -163,7 +163,7 @@ pub fn text(baseline: Point, text: &[u8], font: Font, fg_color: Color, bg_color:
 }
 
 pub fn text_center(baseline: Point, text: &[u8], font: Font, fg_color: Color, bg_color: Color) {
-    let w = text_width(text, font);
+    let w = font.text_width(text);
     display::text(
         baseline.x - w / 2,
         baseline.y,
@@ -172,10 +172,6 @@ pub fn text_center(baseline: Point, text: &[u8], font: Font, fg_color: Color, bg
         fg_color.into(),
         bg_color.into(),
     );
-}
-
-pub fn text_width(text: &[u8], font: Font) -> i32 {
-    display::text_width(text, font.0)
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -187,7 +183,7 @@ impl Font {
     }
 
     pub fn text_width(self, text: &[u8]) -> i32 {
-        text_width(text, self)
+        display::text_width(text, self.0)
     }
 
     pub fn text_height(self) -> i32 {

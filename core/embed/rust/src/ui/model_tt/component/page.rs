@@ -84,7 +84,7 @@ where
 
     fn paint_hint(&mut self) {
         display::text_center(
-            Point::new(self.pad.area.center().x, self.pad.area.bottom_right().y - 3),
+            self.pad.area.bottom_center() - Offset::y(3),
             b"SWIPE TO CONTINUE",
             theme::FONT_BOLD, // FIXME: Figma has this as 14px but bold is 16px
             theme::GREY_LIGHT,
@@ -247,7 +247,7 @@ impl Component for ScrollBar {
         );
         if self.has_previous_page() {
             display::icon(
-                dot - Offset::new(0, Self::ARROW_SPACE),
+                dot - Offset::y(Self::ARROW_SPACE),
                 Self::ICON_UP,
                 theme::FG,
                 theme::BG,
@@ -264,7 +264,7 @@ impl Component for ScrollBar {
         }
         if self.has_next_page() {
             display::icon(
-                dot + Offset::new(0, Self::ARROW_SPACE - interval),
+                dot + Offset::y(Self::ARROW_SPACE - interval),
                 Self::ICON_DOWN,
                 theme::FG,
                 theme::BG,
@@ -286,13 +286,14 @@ impl PageLayout {
     const SCROLLBAR_SPACE: i32 = 10;
 
     pub fn new(area: Rect) -> Self {
-        let (content, buttons) = area.hsplit(-Button::<&str>::HEIGHT);
-        let (content, _space) = content.hsplit(-Self::BUTTON_SPACE);
-        let (buttons, _space) = buttons.vsplit(-theme::CONTENT_BORDER);
-        let (_space, content) = content.vsplit(theme::CONTENT_BORDER);
-        let (content_single_page, _space) = content.vsplit(-theme::CONTENT_BORDER);
-        let (content, scrollbar) = content.vsplit(-(Self::SCROLLBAR_SPACE + Self::SCROLLBAR_WIDTH));
-        let (_space, scrollbar) = scrollbar.vsplit(Self::SCROLLBAR_SPACE);
+        let (content, buttons) = area.split_bottom(Button::<&str>::HEIGHT);
+        let (content, _space) = content.split_bottom(Self::BUTTON_SPACE);
+        let (buttons, _space) = buttons.split_right(theme::CONTENT_BORDER);
+        let (_space, content) = content.split_left(theme::CONTENT_BORDER);
+        let (content_single_page, _space) = content.split_right(theme::CONTENT_BORDER);
+        let (content, scrollbar) =
+            content.split_right(Self::SCROLLBAR_SPACE + Self::SCROLLBAR_WIDTH);
+        let (_space, scrollbar) = scrollbar.split_left(Self::SCROLLBAR_SPACE);
 
         Self {
             content_single_page,

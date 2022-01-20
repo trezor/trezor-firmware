@@ -22,6 +22,14 @@ impl Offset {
         Self::new(0, 0)
     }
 
+    pub const fn x(x: i32) -> Self {
+        Self::new(x, 0)
+    }
+
+    pub const fn y(y: i32) -> Self {
+        Self::new(0, y)
+    }
+
     pub fn on_axis(axis: Axis, a: i32) -> Self {
         match axis {
             Axis::Horizontal => Self::new(a, 0),
@@ -165,16 +173,20 @@ impl Rect {
         self.top_left().center(self.bottom_right())
     }
 
+    pub fn bottom_center(&self) -> Point {
+        self.bottom_left().center(self.bottom_right())
+    }
+
     pub fn contains(&self, point: Point) -> bool {
         point.x >= self.x0 && point.x < self.x1 && point.y >= self.y0 && point.y < self.y1
     }
 
-    pub fn inset(&self, uniform: i32) -> Self {
+    pub fn inset(&self, insets: Insets) -> Self {
         Self {
-            x0: self.x0 + uniform,
-            y0: self.y0 + uniform,
-            x1: self.x1 - uniform,
-            y1: self.y1 - uniform,
+            x0: self.x0 + insets.left,
+            y0: self.y0 + insets.top,
+            x1: self.x1 - insets.right,
+            y1: self.y1 - insets.bottom,
         }
     }
 
@@ -196,54 +208,79 @@ impl Rect {
         }
     }
 
-    pub fn hsplit(self, height: i32) -> (Self, Self) {
-        let height = if height.is_negative() {
-            self.height() + height
-        } else {
-            height
-        };
+    pub fn split_top(self, height: i32) -> (Self, Self) {
         let height = height.clamp(0, self.height());
 
         let top = Self {
-            x0: self.x0,
-            y0: self.y0,
-            x1: self.x1,
             y1: self.y0 + height,
+            ..self
         };
-
         let bottom = Self {
-            x0: self.x0,
             y0: self.y0 + height,
-            x1: self.x1,
-            y1: self.y1,
+            ..self
         };
-
         (top, bottom)
     }
 
-    pub fn vsplit(self, width: i32) -> (Self, Self) {
-        let width = if width.is_negative() {
-            self.width() + width
-        } else {
-            width
-        };
+    pub fn split_bottom(self, height: i32) -> (Self, Self) {
+        self.split_top(self.height() - height)
+    }
+
+    pub fn split_left(self, width: i32) -> (Self, Self) {
         let width = width.clamp(0, self.width());
 
         let left = Self {
-            x0: self.x0,
-            y0: self.y0,
             x1: self.x0 + width,
-            y1: self.y1,
+            ..self
         };
-
         let right = Self {
             x0: self.x0 + width,
-            y0: self.y0,
-            x1: self.x1,
-            y1: self.y1,
+            ..self
         };
-
         (left, right)
+    }
+
+    pub fn split_right(self, width: i32) -> (Self, Self) {
+        self.split_left(self.width() - width)
+    }
+}
+
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub struct Insets {
+    pub top: i32,
+    pub right: i32,
+    pub bottom: i32,
+    pub left: i32,
+}
+
+impl Insets {
+    pub const fn new(top: i32, right: i32, bottom: i32, left: i32) -> Self {
+        Self {
+            top,
+            right,
+            bottom,
+            left,
+        }
+    }
+
+    pub const fn uniform(d: i32) -> Self {
+        Self::new(d, d, d, d)
+    }
+
+    pub const fn top(d: i32) -> Self {
+        Self::new(d, 0, 0, 0)
+    }
+
+    pub const fn right(d: i32) -> Self {
+        Self::new(0, d, 0, 0)
+    }
+
+    pub const fn bottom(d: i32) -> Self {
+        Self::new(0, 0, d, 0)
+    }
+
+    pub const fn left(d: i32) -> Self {
+        Self::new(0, 0, 0, d)
     }
 }
 

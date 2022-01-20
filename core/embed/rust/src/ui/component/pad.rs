@@ -26,7 +26,7 @@ impl Pad {
         if self.clear {
             self.clear = false;
 
-            display::rect(self.area, self.color);
+            display::rect_fill(self.area, self.color);
         }
     }
 }

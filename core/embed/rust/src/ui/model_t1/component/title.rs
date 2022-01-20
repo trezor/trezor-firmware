@@ -25,8 +25,8 @@ impl<T: Component, U: AsRef<[u8]>> Title<T, U> {
         const HEADER_SPACE: i32 = 4;
         let header_height = theme::FONT_BOLD.line_height();
 
-        let (header_area, content_area) = area.hsplit(header_height);
-        let (_space, content_area) = content_area.hsplit(HEADER_SPACE);
+        let (header_area, content_area) = area.split_top(header_height);
+        let (_space, content_area) = content_area.split_top(HEADER_SPACE);
 
         (header_area, content_area)
     }
@@ -41,7 +41,7 @@ impl<T: Component, U: AsRef<[u8]>> Component for Title<T, U> {
 
     fn paint(&mut self) {
         display::text(
-            self.area.bottom_left() + Offset::new(0, -2),
+            self.area.bottom_left() - Offset::y(2),
             self.title.as_ref(),
             theme::FONT_BOLD,
             theme::FG,

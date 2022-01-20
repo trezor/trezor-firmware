@@ -1,7 +1,7 @@
 use crate::ui::{
     component::{Component, ComponentExt, Event, EventCtx, Never, Pad, PageMsg, Paginate},
     display::{self, Color},
-    geometry::{Offset, Point, Rect},
+    geometry::{Insets, Offset, Point, Rect},
 };
 
 use super::{theme, Button, ButtonMsg, ButtonPos};
@@ -63,9 +63,9 @@ where
 
     fn areas(area: Rect) -> (Rect, Rect, Rect) {
         let button_height = theme::FONT_BOLD.line_height() + 2;
-        let (content_area, button_area) = area.hsplit(-button_height);
-        let (content_area, scrollbar_area) = content_area.vsplit(-ScrollBar::WIDTH);
-        let (content_area, _) = content_area.hsplit(-1);
+        let (content_area, button_area) = area.split_bottom(button_height);
+        let (content_area, scrollbar_area) = content_area.split_right(ScrollBar::WIDTH);
+        let (content_area, _) = content_area.split_bottom(1);
         (content_area, scrollbar_area, button_area)
     }
 
@@ -182,8 +182,8 @@ impl ScrollBar {
 
     fn paint_dot(&self, active: bool, top_left: Point) {
         let sides = [
-            Rect::from_top_left_and_size(top_left + Offset::new(1, 0), Offset::new(2, 1)),
-            Rect::from_top_left_and_size(top_left + Offset::new(0, 1), Offset::new(1, 2)),
+            Rect::from_top_left_and_size(top_left + Offset::x(1), Offset::new(2, 1)),
+            Rect::from_top_left_and_size(top_left + Offset::y(1), Offset::new(1, 2)),
             Rect::from_top_left_and_size(
                 top_left + Offset::new(1, Self::DOT_SIZE.y - 1),
                 Offset::new(2, 1),
@@ -194,11 +194,11 @@ impl ScrollBar {
             ),
         ];
         for side in sides {
-            display::rect(side, theme::FG)
+            display::rect_fill(side, theme::FG)
         }
         if active {
-            display::rect(
-                Rect::from_top_left_and_size(top_left, Self::DOT_SIZE).inset(1),
+            display::rect_fill(
+                Rect::from_top_left_and_size(top_left, Self::DOT_SIZE).inset(Insets::uniform(1)),
                 theme::FG,
             )
         }

@@ -2,7 +2,7 @@ use super::{event::TouchEvent, theme};
 use crate::ui::{
     component::{Component, Event, EventCtx},
     display::{self, Color, Font},
-    geometry::{Grid, Offset, Rect},
+    geometry::{Grid, Insets, Offset, Rect},
 };
 
 pub enum ButtonMsg {
@@ -156,14 +156,14 @@ where
 
         if style.border_width > 0 {
             // Paint the border and a smaller background on top of it.
-            display::rounded_rect(
+            display::rect_fill_rounded(
                 self.area,
                 style.border_color,
                 style.background_color,
                 style.border_radius,
             );
-            display::rounded_rect(
-                self.area.inset(style.border_width),
+            display::rect_fill_rounded(
+                self.area.inset(Insets::uniform(style.border_width)),
                 style.button_color,
                 style.border_color,
                 style.border_radius,
@@ -171,7 +171,7 @@ where
         } else {
             // We do not need to draw an explicit border in this case, just a
             // bigger background.
-            display::rounded_rect(
+            display::rect_fill_rounded(
                 self.area,
                 style.button_color,
                 style.background_color,
@@ -182,7 +182,7 @@ where
         match &self.content {
             ButtonContent::Text(text) => {
                 let text = text.as_ref();
-                let width = display::text_width(text, style.font);
+                let width = style.font.text_width(text);
                 let height = style.font.text_height() + Self::BASELINE_OFFSET;
                 let start_of_baseline = self.area.center() + Offset::new(-width / 2, height / 2);
                 display::text(

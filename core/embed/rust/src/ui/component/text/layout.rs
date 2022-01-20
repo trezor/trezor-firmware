@@ -397,7 +397,7 @@ impl Span {
         // break.
         let mut line = Self {
             length: 0,
-            advance: Offset::new(0, text_font.line_height()),
+            advance: Offset::y(text_font.line_height()),
             insert_hyphen_before_line_break: false,
             skip_next_chars: 0,
         };
@@ -447,7 +447,7 @@ impl Span {
         // The whole text is fitting.
         Self {
             length: text.len(),
-            advance: Offset::new(span_width, 0),
+            advance: Offset::x(span_width),
             insert_hyphen_before_line_break: false,
             skip_next_chars: 0,
         }

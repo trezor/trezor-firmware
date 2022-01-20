@@ -29,9 +29,9 @@ where
         const HEADER_SPACE: i32 = 14;
         let header_height = theme::FONT_BOLD.line_height() - theme::CONTENT_BORDER;
 
-        let (header_area, content_area) = area.hsplit(header_height);
-        let (_space, header_area) = header_area.vsplit(theme::CONTENT_BORDER);
-        let (_space, content_area) = content_area.hsplit(HEADER_SPACE);
+        let (header_area, content_area) = area.split_top(header_height);
+        let (_space, header_area) = header_area.split_left(theme::CONTENT_BORDER);
+        let (_space, content_area) = content_area.split_top(HEADER_SPACE);
 
         (header_area, content_area)
     }
