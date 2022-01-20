@@ -1,7 +1,7 @@
 use crate::ui::{
     component::{label::LabelStyle, text::layout::DefaultTextTheme},
     display::{self, Color, Font},
-    geometry::Rect,
+    geometry::{Insets, Rect},
 };
 
 use super::component::{ButtonStyle, ButtonStyleSheet, LoaderStyle, LoaderStyleSheet};
@@ -164,9 +164,5 @@ pub const CONTENT_BORDER: i32 = 5;
 /// |    14    |
 /// +----------+
 pub fn borders() -> Rect {
-    let (_left_border, area) = display::screen().vsplit(10);
-    let (area, _right_area) = area.vsplit(-5);
-    let (_top_border, area) = area.hsplit(13);
-    let (area, _bottom_border) = area.hsplit(-14);
-    area
+    display::screen().inset(Insets::new(13, 5, 14, 10))
 }

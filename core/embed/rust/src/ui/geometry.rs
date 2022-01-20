@@ -22,10 +22,25 @@ impl Offset {
         Self::new(0, 0)
     }
 
+    pub const fn x(x: i32) -> Self {
+        Self::new(x, 0)
+    }
+
+    pub const fn y(y: i32) -> Self {
+        Self::new(0, y)
+    }
+
     pub fn on_axis(axis: Axis, a: i32) -> Self {
         match axis {
             Axis::Horizontal => Self::new(a, 0),
             Axis::Vertical => Self::new(0, a),
+        }
+    }
+
+    pub fn axis(&self, axis: Axis) -> i32 {
+        match axis {
+            Axis::Horizontal => self.x,
+            Axis::Vertical => self.y,
         }
     }
 
@@ -165,16 +180,20 @@ impl Rect {
         self.top_left().center(self.bottom_right())
     }
 
+    pub fn bottom_center(&self) -> Point {
+        self.bottom_left().center(self.bottom_right())
+    }
+
     pub fn contains(&self, point: Point) -> bool {
         point.x >= self.x0 && point.x < self.x1 && point.y >= self.y0 && point.y < self.y1
     }
 
-    pub fn inset(&self, uniform: i32) -> Self {
+    pub fn inset(&self, insets: Insets) -> Self {
         Self {
-            x0: self.x0 + uniform,
-            y0: self.y0 + uniform,
-            x1: self.x1 - uniform,
-            y1: self.y1 - uniform,
+            x0: self.x0 + insets.left,
+            y0: self.y0 + insets.top,
+            x1: self.x1 - insets.right,
+            y1: self.y1 - insets.bottom,
         }
     }
 
@@ -196,52 +215,79 @@ impl Rect {
         }
     }
 
-    pub fn hsplit(self, height: i32) -> (Self, Self) {
-        let height = if height.is_negative() {
-            self.height() + height
-        } else {
-            height
-        };
+    pub fn split_top(self, height: i32) -> (Self, Self) {
+        let height = height.clamp(0, self.height());
 
         let top = Self {
-            x0: self.x0,
-            y0: self.y0,
-            x1: self.x1,
             y1: self.y0 + height,
+            ..self
         };
-
         let bottom = Self {
-            x0: self.x0,
             y0: self.y0 + height,
-            x1: self.x1,
-            y1: self.y1,
+            ..self
         };
-
         (top, bottom)
     }
 
-    pub fn vsplit(self, width: i32) -> (Self, Self) {
-        let width = if width.is_negative() {
-            self.width() + width
-        } else {
-            width
-        };
+    pub fn split_bottom(self, height: i32) -> (Self, Self) {
+        self.split_top(self.height() - height)
+    }
+
+    pub fn split_left(self, width: i32) -> (Self, Self) {
+        let width = width.clamp(0, self.width());
 
         let left = Self {
-            x0: self.x0,
-            y0: self.y0,
             x1: self.x0 + width,
-            y1: self.y1,
+            ..self
         };
-
         let right = Self {
             x0: self.x0 + width,
-            y0: self.y0,
-            x1: self.x1,
-            y1: self.y1,
+            ..self
         };
-
         (left, right)
+    }
+
+    pub fn split_right(self, width: i32) -> (Self, Self) {
+        self.split_left(self.width() - width)
+    }
+}
+
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub struct Insets {
+    pub top: i32,
+    pub right: i32,
+    pub bottom: i32,
+    pub left: i32,
+}
+
+impl Insets {
+    pub const fn new(top: i32, right: i32, bottom: i32, left: i32) -> Self {
+        Self {
+            top,
+            right,
+            bottom,
+            left,
+        }
+    }
+
+    pub const fn uniform(d: i32) -> Self {
+        Self::new(d, d, d, d)
+    }
+
+    pub const fn top(d: i32) -> Self {
+        Self::new(d, 0, 0, 0)
+    }
+
+    pub const fn right(d: i32) -> Self {
+        Self::new(0, d, 0, 0)
+    }
+
+    pub const fn bottom(d: i32) -> Self {
+        Self::new(0, 0, d, 0)
+    }
+
+    pub const fn left(d: i32) -> Self {
+        Self::new(0, 0, 0, d)
     }
 }
 
@@ -295,17 +341,50 @@ impl Grid {
         }
     }
 
+    pub fn with_spacing(mut self, spacing: i32) -> Self {
+        self.spacing = spacing;
+        self
+    }
+
     pub fn row_col(&self, row: usize, col: usize) -> Rect {
-        let cell_width = self.area.width() / self.cols as i32;
-        let cell_height = self.area.height() / self.rows as i32;
-        let x = col as i32 * cell_width;
-        let y = row as i32 * cell_height;
-        Rect {
-            x0: self.area.x0 + x,
-            y0: self.area.y0 + y,
-            x1: self.area.x0 + x + (cell_width - self.spacing),
-            y1: self.area.y0 + y + (cell_height - self.spacing),
+        let ncols = self.cols as i32;
+        let nrows = self.rows as i32;
+        let col = (col as i32).min(ncols - 1);
+        let row = (row as i32).min(nrows - 1);
+
+        // Total number of horizontal pixels used for spacing.
+        let spacing_width = self.spacing * (ncols - 1);
+        let spacing_height = self.spacing * (nrows - 1);
+
+        // Divide what is left by number of cells to obtain width of each cell.
+        let cell_width = (self.area.width() - spacing_width) / ncols;
+        let cell_height = (self.area.height() - spacing_height) / nrows;
+
+        // Not every area can be fully covered by equal-sized cells and spaces, there
+        // might be serveral pixels left unused. We'll distribute them by 1px to
+        // the leftmost cells.
+        let leftover_width = (self.area.width() - spacing_width) % ncols;
+        let leftover_height = (self.area.height() - spacing_height) % nrows;
+
+        let mut top_left = self.area.top_left()
+            + Offset::new(
+                col * (cell_width + self.spacing),
+                row * (cell_height + self.spacing),
+            );
+        // Some previous cells were 1px wider.
+        top_left.x += leftover_width.min(col);
+        top_left.y += leftover_height.min(row);
+
+        let mut size = Offset::new(cell_width, cell_height);
+        // This cell might be 1px wider.
+        if col < leftover_width {
+            size.x += 1
         }
+        if row < leftover_height {
+            size.y += 1
+        }
+
+        Rect::from_top_left_and_size(top_left, size)
     }
 
     pub fn cell(&self, index: usize) -> Rect {
@@ -357,45 +436,67 @@ impl LinearLayout {
         self
     }
 
-    /// Arranges all `items` by parameters configured in `self` into `area`.
-    /// Does not change the size of the items (only the position), but it needs
-    /// to iterate (and ask for the size) twice.
-    pub fn arrange(&self, area: Rect, items: &mut [impl Dimensions]) {
-        let item_sum: i32 = items
-            .iter_mut()
-            .map(|i| {
-                let size = i.get_size();
-                self.axis.main(size.x, size.y)
-            })
-            .sum();
-        let spacing_count = items.len().saturating_sub(1);
+    fn compute_spacing(&self, area: Rect, count: usize, size_sum: i32) -> (i32, i32) {
+        let spacing_count = count.saturating_sub(1);
         let spacing_sum = spacing_count as i32 * self.spacing;
-        let naive_size = item_sum + spacing_sum;
-        let available_space = match self.axis {
-            Axis::Horizontal => area.width(),
-            Axis::Vertical => area.height(),
-        };
+        let naive_size = size_sum + spacing_sum;
+        let available_space = area.size().axis(self.axis);
 
         // scale down spacing to fit everything into area
         let (total_size, spacing) = if naive_size > available_space {
-            let scaled_space = (available_space - item_sum) / spacing_count as i32;
+            let scaled_space = (available_space - size_sum) / spacing_count as i32;
             // forbid negative spacing
             (available_space, scaled_space.max(0))
         } else {
             (naive_size, self.spacing)
         };
 
-        let mut cursor = match self.align {
+        let init_cursor = match self.align {
             Alignment::Start => 0,
             Alignment::Center => available_space / 2 - total_size / 2,
             Alignment::End => available_space - total_size,
         };
 
+        (init_cursor, spacing)
+    }
+
+    /// Arranges all `items` by parameters configured in `self` into `area`.
+    /// Does not change the size of the items (only the position), but it needs
+    /// to iterate (and ask for the size) twice.
+    pub fn arrange(&self, area: Rect, items: &mut [impl Dimensions]) {
+        let item_sum: i32 = items.iter_mut().map(|i| i.get_size().axis(self.axis)).sum();
+        let (mut cursor, spacing) = self.compute_spacing(area, items.len(), item_sum);
+
         for item in items {
             let top_left = area.top_left() + Offset::on_axis(self.axis, cursor);
             let size = item.get_size();
             item.set_area(Rect::from_top_left_and_size(top_left, size));
-            cursor += self.axis.main(size.x, size.y);
+            cursor += size.axis(self.axis);
+            cursor += spacing;
+        }
+    }
+
+    /// Arranges number of items of the same size into `area`. The `sink`
+    /// closure is called `count` times with top left point of each item as
+    /// argument. Items are centered along the cross axis.
+    pub fn arrange_uniform(
+        &self,
+        area: Rect,
+        count: usize,
+        size: Offset,
+        sink: &mut dyn FnMut(Point),
+    ) {
+        let item_size = size.axis(self.axis);
+        let (mut cursor, spacing) = self.compute_spacing(area, count, (count as i32) * item_size);
+        let cross_coord =
+            area.size().axis(self.axis.cross()) / 2 - size.axis(self.axis.cross()) / 2;
+
+        for _ in 0..count {
+            let top_left = area.top_left()
+                + Offset::on_axis(self.axis, cursor)
+                + Offset::on_axis(self.axis.cross(), cross_coord);
+            sink(top_left);
+            cursor += item_size;
             cursor += spacing;
         }
     }

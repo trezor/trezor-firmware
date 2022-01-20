@@ -23,7 +23,7 @@ where
     T: Deref<Target = [u8]>,
 {
     pub fn new(origin: Point, align: Alignment, text: T, style: LabelStyle) -> Self {
-        let width = display::text_width(&text, style.font);
+        let width = style.font.text_width(&text);
         let height = style.font.line_height();
         let area = match align {
             // `origin` is the top-left point.

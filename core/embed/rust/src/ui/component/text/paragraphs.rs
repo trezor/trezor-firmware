@@ -189,7 +189,7 @@ where
                 match fit {
                     LayoutFit::Fitting { size, .. } => {
                         // Text fits, update the bounding box.
-                        let (used, free) = area.hsplit(size.y);
+                        let (used, free) = area.split_top(size.y);
                         paragraph.set_area(used);
                         // Continue with next paragraph in remaining space.
                         area = free;
