@@ -222,7 +222,7 @@ impl Component for PinDots {
 
     fn paint(&mut self) {
         // Clear the area with the background color.
-        display::rect(self.area, self.style.background_color);
+        display::rect_fill(self.area, self.style.background_color);
 
         // Draw a dot for each PIN digit.
         for i in 0..self.digit_count {
@@ -231,7 +231,7 @@ impl Component for PinDots {
                 y: self.area.center().y,
             };
             let size = Offset::new(Self::DOT, Self::DOT);
-            display::rounded_rect(
+            display::rect_fill_rounded(
                 Rect::from_top_left_and_size(pos, size),
                 self.style.text_color,
                 self.style.background_color,

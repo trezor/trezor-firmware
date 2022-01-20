@@ -39,7 +39,7 @@ impl<T: Component, U: AsRef<[u8]>> Dialog<T, U> {
 
     fn areas(area: Rect) -> (Rect, Rect) {
         let button_height = theme::FONT_BOLD.line_height() + 2;
-        let (content_area, button_area) = area.hsplit(-button_height);
+        let (content_area, button_area) = area.split_bottom(button_height);
         (content_area, button_area)
     }
 }
