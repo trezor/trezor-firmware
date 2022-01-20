@@ -41,11 +41,23 @@ let
   llvmPackages = nixpkgs.llvmPackages_12;
   # see pyright/README.md for update procedure
   pyright = nixpkgs.callPackage ./pyright {};
+  # HWI tests need https://github.com/bitcoin/bitcoin/pull/22558
+  # remove this once nixpkgs version contains this patch
+  bitcoind = (nixpkgs.bitcoind.overrideAttrs (attrs: {
+    version = attrs.version + "-taproot-psbt";
+    src = nixpkgs.fetchFromGitHub {
+      owner = "achow101";
+      repo = "bitcoin";
+      rev = "taproot-psbt";
+      sha256 = "sha256-Am7SVxOTlTUjESk8O7kziwyV2GaBX6pGB1oksYPc1EE=";
+    };
+  }));
 in
 with nixpkgs;
 stdenvNoCC.mkDerivation ({
   name = "trezor-firmware-env";
   buildInputs = lib.optionals fullDeps [
+    bitcoind
     # install other python versions for tox testing
     # NOTE: running e.g. "python3" in the shell runs the first version in the following list,
     #       and poetry uses the default version (currently 3.8)
