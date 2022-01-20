@@ -58,12 +58,10 @@ where
     fn make_content(layout: &PageLayout, content: impl FnOnce(Rect) -> T) -> T {
         // Check if content fits on single page.
         let mut content = content(layout.content_single_page);
-        if content.page_count() <= 1 {
-            return content;
+        if content.page_count() > 1 {
+            // Reduce area to make space for scrollbar if it doesn't fit.
+            content.set_area(layout.content);
         }
-
-        // Reduce area to make space for scrollbar if it doesn't fit.
-        content.set_area(layout.content);
         content
     }
 
