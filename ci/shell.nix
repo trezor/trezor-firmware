@@ -58,6 +58,7 @@ stdenvNoCC.mkDerivation ({
     SDL2_image
     autoflake
     bash
+    bitcoin
     check
     curl  # for connect tests
     editorconfig-checker

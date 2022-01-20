@@ -374,6 +374,15 @@ core persistence asan test:
     expire_in: 1 week
     when: always
 
+core hwi test:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen debug build
+  script:
+    - nix-shell --run "git clone https://github.com/bitcoin-core/HWI.git"
+    - nix-shell --run "cd HWI && poetry install && poetry run ./test/test_trezor.py --model_t ../core/build/unix/trezor-emu-core bitcoind"
+
 
 # Crypto
 
@@ -511,6 +520,17 @@ legacy upgrade asan test:
       junit: tests/junit.xml
     expire_in: 1 week
     when: always
+
+legacy hwi test:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - legacy emu regular debug build
+  variables:
+    EMULATOR: "1"
+  script:
+    - nix-shell --run "git clone https://github.com/bitcoin-core/HWI.git"
+    - nix-shell --run "cd HWI && poetry install && poetry run ./test/test_trezor.py --model_1 ../legacy/firmware/trezor.elf bitcoind"
 
 
 # Python
