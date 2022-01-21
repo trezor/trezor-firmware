@@ -295,6 +295,16 @@ static int address_to_script_pubkey(const CoinInfo *coin, const char *address,
                             coin->bech32_prefix, address)) {
       return 0;
     }
+    // check that the witness version is recognized
+    if (witver != 0 && witver != 1) {
+      return 0;
+    }
+    // check that P2TR address encodes a valid BIP340 public key
+    if (witver == 1) {
+      if (addr_raw_len != 32 || zkp_bip340_verify_publickey(addr_raw) != 0) {
+        return 0;
+      }
+    }
     // push 1 byte version id (opcode OP_0 = 0, OP_i = 80+i)
     // push addr_raw (segwit_addr_decode makes sure addr_raw_len is at most 40)
     script_pubkey[0] = witver == 0 ? 0 : 80 + witver;
