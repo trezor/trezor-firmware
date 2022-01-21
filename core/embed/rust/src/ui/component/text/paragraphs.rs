@@ -63,19 +63,16 @@ where
         self
     }
 
-    /// Update bounding boxes of paragraphs on the current page. First determine the number of
-    /// visible paragraphs and their sizes. These are then arranged according to the layout.
+    /// Update bounding boxes of paragraphs on the current page. First determine
+    /// the number of visible paragraphs and their sizes. These are then
+    /// arranged according to the layout.
     fn change_offset(&mut self, offset: PageOffset) {
         self.offset = offset;
         self.visible = 0;
         let mut char_offset = offset.chr;
         let mut remaining_area = self.area;
 
-        for paragraph in self
-            .list
-            .iter_mut()
-            .skip(offset.par)
-        {
+        for paragraph in self.list.iter_mut().skip(offset.par) {
             paragraph.set_area(remaining_area);
             let height = paragraph
                 .layout
@@ -200,8 +197,8 @@ struct PageBreakIterator<'a, T> {
     current: Option<PageOffset>,
 }
 
-/// Yields indices to beginnings of successive pages. First value is always `PageOffset { 0, 0 }`
-/// even if the paragraph vector is empty.
+/// Yields indices to beginnings of successive pages. First value is always
+/// `PageOffset { 0, 0 }` even if the paragraph vector is empty.
 impl<'a, T> Iterator for PageBreakIterator<'a, T>
 where
     T: AsRef<[u8]>,
@@ -215,7 +212,7 @@ where
             None => {
                 self.current = Some(PageOffset::default());
                 return self.current;
-            },
+            }
             Some(c) => c,
         };
         let mut remaining_area = self.paragraphs.area;
