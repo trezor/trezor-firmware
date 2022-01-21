@@ -3,7 +3,7 @@ use heapless::Vec;
 use crate::ui::{
     component::{Component, Event, EventCtx, Never, Paginate},
     display::Font,
-    geometry::{Dimensions, LinearLayout, Offset, Rect},
+    geometry::{Dimensions, Insets, LinearLayout, Offset, Rect},
 };
 
 use super::layout::{DefaultTextTheme, LayoutFit, TextLayout, TextNoOp, TextRenderer};
@@ -63,35 +63,41 @@ where
         self
     }
 
-    /// Update bounding boxes of paragraphs on the current page.
-    fn arrange_visible(&mut self) {
-        let mut char_offset = self.offset.chr;
+    /// Update bounding boxes of paragraphs on the current page. First determine the number of
+    /// visible paragraphs and their sizes. These are then arranged according to the layout.
+    fn change_offset(&mut self, offset: PageOffset) {
+        self.offset = offset;
+        self.visible = 0;
+        let mut char_offset = offset.chr;
         let mut remaining_area = self.area;
 
         for paragraph in self
             .list
             .iter_mut()
-            .skip(self.offset.par)
-            .take(self.visible)
+            .skip(offset.par)
         {
             paragraph.set_area(remaining_area);
             let height = paragraph
                 .layout
                 .measure_text_height(&paragraph.content.as_ref()[char_offset..]);
+            if height == 0 {
+                break;
+            }
             let (used, free) = remaining_area.split_top(height);
             paragraph.set_area(used);
             remaining_area = free;
+            self.visible += 1;
             char_offset = 0;
         }
 
-        let visible = &mut self.list[self.offset.par..self.offset.par + self.visible];
-        self.layout.arrange(self.area, visible);
+        let visible_paragraphs = &mut self.list[offset.par..offset.par + self.visible];
+        self.layout.arrange(self.area, visible_paragraphs);
     }
 
     fn break_pages<'a>(&'a self) -> PageBreakIterator<'a, T> {
         PageBreakIterator {
             paragraphs: self,
-            upcoming: PageOffset::default(),
+            current: None,
         }
     }
 }
@@ -190,73 +196,70 @@ struct PageBreakIterator<'a, T> {
     /// Reference to paragraph vector.
     paragraphs: &'a Paragraphs<T>,
 
-    /// Next offset returned by the iterator. Internally the iterator is one
-    /// page ahead because it needs to find the end of the page to determine
-    /// number of visible paragraphs.
-    upcoming: PageOffset,
+    /// Current offset, or `None` before first `next()` call.
+    current: Option<PageOffset>,
 }
 
-/// Yields indices to beginnings of successive pages, plus number of visible
-/// paragraphs on each page. First value is always `PageOffset { 0, 0 }` for
-/// non-empty iterator.
+/// Yields indices to beginnings of successive pages. First value is always `PageOffset { 0, 0 }`
+/// even if the paragraph vector is empty.
 impl<'a, T> Iterator for PageBreakIterator<'a, T>
 where
     T: AsRef<[u8]>,
 {
     /// `PageOffset` denotes the first paragraph that is rendered and a
-    /// character offset in that paragraph. The second value of the tuple is
-    /// the number of paragraphs displayed on a page.
-    type Item = (PageOffset, usize);
+    /// character offset in that paragraph.
+    type Item = PageOffset;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.upcoming.par >= self.paragraphs.list.len() {
-            return None;
-        }
-
-        let result = self.upcoming;
+        let mut current = match self.current {
+            None => {
+                self.current = Some(PageOffset::default());
+                return self.current;
+            },
+            Some(c) => c,
+        };
         let mut remaining_area = self.paragraphs.area;
-        let mut visible = 0;
+        let mut progress = false;
 
-        for paragraph in self.paragraphs.list.iter().skip(self.upcoming.par) {
+        for paragraph in self.paragraphs.list.iter().skip(current.par) {
             loop {
                 let mut temp_layout = paragraph.layout;
                 temp_layout.bounds = remaining_area;
 
                 let fit = temp_layout.layout_text(
-                    &paragraph.content.as_ref()[self.upcoming.chr..],
+                    &paragraph.content.as_ref()[current.chr..],
                     &mut temp_layout.initial_cursor(),
                     &mut TextNoOp,
                 );
                 match fit {
                     LayoutFit::Fitting { size, .. } => {
                         // Text fits, update remaining area.
-                        remaining_area = remaining_area.split_top(size.y).1;
+                        remaining_area = remaining_area.inset(Insets::top(size.y));
 
                         // Continue with start of next paragraph.
-                        self.upcoming.par += 1;
-                        self.upcoming.chr = 0;
-                        visible += 1;
+                        current.par += 1;
+                        current.chr = 0;
+                        progress = true;
                         break;
                     }
                     LayoutFit::OutOfBounds { processed_chars } => {
                         // Text does not fit, assume whatever fits takes the entire remaining area.
-                        self.upcoming.chr += processed_chars;
-                        if processed_chars > 0 {
-                            visible += 1
-                        } else if self.upcoming == result {
+                        current.chr += processed_chars;
+                        if processed_chars == 0 && !progress {
                             // Nothing fits yet page is empty: terminate iterator to avoid looping
                             // forever.
                             return None;
                         }
-                        // Return pointer to start of page.
-                        return Some((result, visible));
+                        // Return current offset.
+                        self.current = Some(current);
+                        return self.current;
                     }
                 }
             }
         }
 
         // Last page.
-        Some((result, visible))
+        None
     }
 }
 
@@ -270,13 +273,8 @@ where
     }
 
     fn change_page(&mut self, to_page: usize) {
-        if let Some((offset, visible)) = self.break_pages().skip(to_page).next() {
-            // Set span of currently visible paragraphs.
-            self.offset = offset;
-            self.visible = visible;
-
-            // Arrange visible paragraphs.
-            self.arrange_visible()
+        if let Some(offset) = self.break_pages().skip(to_page).next() {
+            self.change_offset(offset)
         } else {
             // Should not happen, set index past last paragraph to render empty page.
             self.offset = PageOffset {
