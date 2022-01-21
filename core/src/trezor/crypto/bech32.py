@@ -154,7 +154,7 @@ def convertbits(
     return ret
 
 
-def decode(hrp: str, addr: str) -> OptionalTuple2[int, list[int]]:
+def decode(hrp: str, addr: str) -> OptionalTuple2[int, bytes]:
     """Decode a segwit address."""
     hrpgot, data, spec = bech32_decode(addr)
     # the following two lines are strictly not required
@@ -164,7 +164,7 @@ def decode(hrp: str, addr: str) -> OptionalTuple2[int, list[int]]:
     if hrpgot != hrp:
         return (None, None)
     try:
-        decoded = convertbits(data[1:], 5, 8, False)
+        decoded = bytes(convertbits(data[1:], 5, 8, False))
     except ValueError:
         return (None, None)
     if not 2 <= len(decoded) <= 40:
