@@ -27,7 +27,7 @@ from trezor.crypto import bech32
 
 def segwit_scriptpubkey(witver, witprog):
     """Construct a Segwit scriptPubKey for a given witness program."""
-    return bytes([witver + 0x50 if witver else 0, len(witprog)] + witprog)
+    return bytes([witver + 0x50 if witver else 0, len(witprog)]) + witprog
 
 
 VALID_CHECKSUM = [
