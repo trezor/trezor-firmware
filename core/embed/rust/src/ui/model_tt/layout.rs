@@ -14,10 +14,7 @@ use crate::{
 };
 
 use super::{
-    component::{
-        Button, ButtonArray, ButtonMsg, DialogMsg, HoldToConfirm, HoldToConfirmMsg, SwipePage,
-        Title,
-    },
+    component::{Button, ButtonMsg, DialogMsg, HoldToConfirm, HoldToConfirmMsg, SwipePage, Title},
     theme,
 };
 
@@ -116,13 +113,15 @@ extern "C" fn ui_layout_new_confirm_action(
                         para
                     },
                     |area| {
-                        ButtonArray::new(
+                        Button::array2(
                             area,
                             |area| Button::with_icon(area, theme::ICON_CANCEL),
+                            |msg| (matches!(msg, ButtonMsg::Clicked)).then(|| false),
                             |area| {
                                 Button::with_text(area, verb.unwrap_or("CONFIRM".into()))
                                     .styled(theme::button_confirm())
                             },
+                            |msg| (matches!(msg, ButtonMsg::Clicked)).then(|| true),
                         )
                     },
                 )

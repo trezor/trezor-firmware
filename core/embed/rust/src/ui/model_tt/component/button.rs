@@ -1,6 +1,6 @@
 use super::{event::TouchEvent, theme};
 use crate::ui::{
-    component::{Component, Event, EventCtx},
+    component::{Component, Event, EventCtx, Map},
     display::{self, Color, Font},
     geometry::{Grid, Insets, Offset, Rect},
 };
@@ -253,64 +253,27 @@ pub struct ButtonStyle {
     pub border_width: i32,
 }
 
-pub struct ButtonArray<T> {
-    pub left: Button<T>,
-    pub right: Button<T>,
-}
-
-impl<T> ButtonArray<T> {
-    const BUTTON_SPACING: i32 = 6;
-
-    pub fn new(
+impl<T> Button<T> {
+    pub fn array2<F0, F1, R>(
         area: Rect,
         left: impl FnOnce(Rect) -> Button<T>,
+        left_map: F0,
         right: impl FnOnce(Rect) -> Button<T>,
-    ) -> Self {
-        let grid = Grid::new(area, 1, 4).with_spacing(Self::BUTTON_SPACING);
+        right_map: F1,
+    ) -> (Map<Self, F0>, Map<Self, F1>)
+    where
+        F0: Fn(ButtonMsg) -> Option<R>,
+        F1: Fn(ButtonMsg) -> Option<R>,
+        T: AsRef<[u8]>,
+    {
+        const BUTTON_SPACING: i32 = 6;
+        let grid = Grid::new(area, 1, 4).with_spacing(BUTTON_SPACING);
         let left = left(grid.row_col(0, 0));
         let right = right(Rect::new(
             grid.row_col(0, 1).top_left(),
             grid.row_col(0, 3).bottom_right(),
         ));
 
-        Self { left, right }
-    }
-}
-
-impl<T> Component for ButtonArray<T>
-where
-    T: AsRef<[u8]>,
-{
-    type Msg = bool;
-
-    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if let Some(ButtonMsg::Clicked) = self.left.event(ctx, event) {
-            return Some(false);
-        }
-        if let Some(ButtonMsg::Clicked) = self.right.event(ctx, event) {
-            return Some(true);
-        }
-        None
-    }
-
-    fn paint(&mut self) {
-        self.left.paint();
-        self.right.paint();
-    }
-}
-
-#[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for ButtonArray<T>
-where
-    T: AsRef<[u8]> + crate::trace::Trace,
-{
-    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        self.left.trace(t);
-        self.right.trace(t);
-    }
-
-    fn bounds(&self, sink: &dyn Fn(Rect)) {
-        self.left.bounds(sink);
-        self.right.bounds(sink);
+        (Map::new(left, left_map), Map::new(right, right_map))
     }
 }

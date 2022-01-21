@@ -12,6 +12,7 @@ pub mod tuple;
 pub use base::{Child, Component, ComponentExt, Event, EventCtx, Never, TimerToken};
 pub use empty::Empty;
 pub use label::{Label, LabelStyle};
+pub use map::Map;
 pub use pad::Pad;
 pub use paginated::{PageMsg, Paginate};
 pub use text::{
