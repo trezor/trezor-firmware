@@ -184,6 +184,27 @@ int zkp_bip340_verify_digest(const uint8_t *public_key_bytes,
   return result;
 }
 
+// BIP340 Schnorr public key verification
+// public_key_bytes has 32 bytes
+// returns 0 if verification succeeded
+int zkp_bip340_verify_publickey(const uint8_t *public_key_bytes) {
+  int result = 0;
+
+  secp256k1_xonly_pubkey xonly_pubkey = {0};
+  const secp256k1_context *context_read_only = zkp_context_get_read_only();
+
+  if (result == 0) {
+    if (secp256k1_xonly_pubkey_parse(context_read_only, &xonly_pubkey,
+                                     public_key_bytes) != 1) {
+      result = 1;
+    }
+  }
+
+  memzero(&xonly_pubkey, sizeof(xonly_pubkey));
+
+  return result;
+}
+
 // BIP340 Schnorr public key tweak
 // internal_public_key has 32 bytes
 // root_hash has 32 bytes or is empty (NULL)
