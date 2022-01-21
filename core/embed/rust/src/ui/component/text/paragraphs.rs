@@ -208,13 +208,12 @@ where
     type Item = PageOffset;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let mut current = match self.current {
-            None => {
-                self.current = Some(PageOffset::default());
-                return self.current;
-            }
-            Some(c) => c,
-        };
+        let first = self.current.is_none();
+        let current = self.current.get_or_insert_with(PageOffset::default);
+        if first {
+            return self.current;
+        }
+
         let mut remaining_area = self.paragraphs.area;
         let mut progress = false;
 
@@ -248,7 +247,6 @@ where
                             return None;
                         }
                         // Return current offset.
-                        self.current = Some(current);
                         return self.current;
                     }
                 }
