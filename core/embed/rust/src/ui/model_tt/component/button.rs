@@ -19,8 +19,12 @@ pub struct Button<T> {
 }
 
 impl<T> Button<T> {
+    /// Standard height in pixels.
     pub const HEIGHT: i32 = 38;
-    pub const BASELINE_OFFSET: i32 = -4;
+
+    /// Offsets the baseline of the button text either up (negative) or down
+    /// (positive).
+    pub const BASELINE_OFFSET: i32 = -3;
 
     pub fn new(area: Rect, content: ButtonContent<T>) -> Self {
         Self {
@@ -183,8 +187,10 @@ where
             ButtonContent::Text(text) => {
                 let text = text.as_ref();
                 let width = style.font.text_width(text);
-                let height = style.font.text_height() + Self::BASELINE_OFFSET;
-                let start_of_baseline = self.area.center() + Offset::new(-width / 2, height / 2);
+                let height = style.font.text_height();
+                let start_of_baseline = self.area.center()
+                    + Offset::new(-width / 2, height / 2)
+                    + Offset::y(Self::BASELINE_OFFSET);
                 display::text(
                     start_of_baseline,
                     text,
