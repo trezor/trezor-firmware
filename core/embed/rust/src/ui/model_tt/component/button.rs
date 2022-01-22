@@ -209,6 +209,10 @@ where
             }
         }
     }
+
+    fn bounds(&self, sink: &dyn Fn(Rect)) {
+        sink(self.area)
+    }
 }
 
 #[cfg(feature = "ui_debug")]
@@ -223,10 +227,6 @@ where
             ButtonContent::Icon(_) => t.symbol("icon"),
         }
         t.close();
-    }
-
-    fn bounds(&self, sink: &dyn Fn(Rect)) {
-        sink(self.area)
     }
 }
 

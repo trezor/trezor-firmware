@@ -13,7 +13,10 @@ use crate::{
         typ::Type,
     },
     time::Duration,
-    ui::component::{Child, Component, Event, EventCtx, Never, TimerToken},
+    ui::{
+        component::{Child, Component, Event, EventCtx, Never, TimerToken},
+        geometry::Rect,
+    },
     util,
 };
 
@@ -48,6 +51,7 @@ where
 pub trait ObjComponent {
     fn obj_event(&mut self, ctx: &mut EventCtx, event: Event) -> Result<Obj, Error>;
     fn obj_paint(&mut self);
+    fn obj_bounds(&self, sink: &dyn Fn(Rect));
 }
 
 impl<T> ObjComponent for Child<T>
@@ -64,6 +68,10 @@ where
 
     fn obj_paint(&mut self) {
         self.paint();
+    }
+
+    fn obj_bounds(&self, sink: &dyn Fn(Rect)) {
+        self.bounds(sink)
     }
 }
 
@@ -211,10 +219,18 @@ impl LayoutObj {
 
     #[cfg(feature = "ui_debug")]
     fn obj_bounds(&self) {
-        use crate::{trace::wireframe, ui::display};
+        use crate::ui::display;
+
+        // Sink for `Trace::bounds` that draws the boundaries using pseudorandom color.
+        fn wireframe(r: Rect) {
+            let w = r.width() as u16;
+            let h = r.height() as u16;
+            let color = display::Color::from_u16(w.rotate_right(w.into()).wrapping_add(h * 8));
+            display::rect_stroke(r, color)
+        }
 
         wireframe(display::screen());
-        self.inner.borrow().root.bounds(&wireframe);
+        self.inner.borrow().root.obj_bounds(&wireframe);
     }
 
     fn obj_type() -> &'static Type {

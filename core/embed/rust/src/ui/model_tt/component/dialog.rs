@@ -57,6 +57,12 @@ where
         self.left.paint();
         self.right.paint();
     }
+
+    fn bounds(&self, sink: &dyn Fn(Rect)) {
+        self.content.bounds(sink);
+        self.left.bounds(sink);
+        self.right.bounds(sink);
+    }
 }
 
 pub struct DialogLayout {
@@ -92,11 +98,5 @@ where
         t.field("left", &self.left);
         t.field("right", &self.right);
         t.close();
-    }
-
-    fn bounds(&self, sink: &dyn Fn(Rect)) {
-        self.content.bounds(sink);
-        self.left.bounds(sink);
-        self.right.bounds(sink);
     }
 }

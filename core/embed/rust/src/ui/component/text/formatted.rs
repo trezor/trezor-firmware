@@ -120,6 +120,10 @@ where
     fn paint(&mut self) {
         self.layout_content(&mut TextRenderer);
     }
+
+    fn bounds(&self, sink: &dyn Fn(Rect)) {
+        sink(self.layout.bounds)
+    }
 }
 
 #[cfg(feature = "ui_debug")]
@@ -151,10 +155,6 @@ where
         t.open("Text");
         t.field("content", &trace::TraceText(self));
         t.close();
-    }
-
-    fn bounds(&self, sink: &dyn Fn(Rect)) {
-        sink(self.layout.bounds)
     }
 }
 

@@ -120,6 +120,13 @@ where
             char_offset = 0;
         }
     }
+
+    fn bounds(&self, sink: &dyn Fn(Rect)) {
+        sink(self.area);
+        for paragraph in self.list.iter().skip(self.offset.par).take(self.visible) {
+            sink(paragraph.layout.bounds)
+        }
+    }
 }
 
 impl<T> Dimensions for Paragraphs<T> {
@@ -143,13 +150,6 @@ where
             paragraph.trace(t);
         }
         t.close();
-    }
-
-    fn bounds(&self, sink: &dyn Fn(Rect)) {
-        sink(self.area);
-        for paragraph in self.list.iter().skip(self.offset.par).take(self.visible) {
-            paragraph.bounds(sink);
-        }
     }
 }
 
@@ -312,9 +312,5 @@ where
         t.open("Paragraph");
         t.field("content", &trace::TraceText(self));
         t.close();
-    }
-
-    fn bounds(&self, sink: &dyn Fn(Rect)) {
-        sink(self.layout.bounds);
     }
 }

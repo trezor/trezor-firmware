@@ -1,5 +1,3 @@
-use super::ui::{display, geometry::Rect};
-
 /// Visitor passed into `Trace` types.
 pub trait Tracer {
     fn int(&mut self, i: i64);
@@ -14,7 +12,6 @@ pub trait Tracer {
 /// Value that can describe own structure and data using the `Tracer` interface.
 pub trait Trace {
     fn trace(&self, d: &mut dyn Tracer);
-    fn bounds(&self, _sink: &dyn Fn(Rect)) {}
 }
 
 impl Trace for &[u8] {
@@ -51,18 +48,4 @@ where
             None => d.symbol("None"),
         }
     }
-
-    fn bounds(&self, sink: &dyn Fn(Rect)) {
-        if let Some(v) = self {
-            v.bounds(sink)
-        }
-    }
-}
-
-/// Sink for `Trace::bounds` that draws the boundaries using pseudorandom color.
-pub fn wireframe(r: Rect) {
-    let w = r.width() as u16;
-    let h = r.height() as u16;
-    let color = display::Color::from_u16(w.rotate_right(w.into()).wrapping_add(h * 8));
-    display::rect_stroke(r, color)
 }
