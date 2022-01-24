@@ -9322,6 +9322,28 @@ START_TEST(test_zkp_bip340_tweak) {
 }
 END_TEST
 
+START_TEST(test_zkp_bip340_verify_publickey) {
+  static struct {
+    const char *public_key;
+    const int result;
+  } tests[] = {
+      // Test vectors 0, 5 and 14 from
+      // https://github.com/bitcoin/bips/blob/afa13249ed45826c2d7086714026c9bc1ccbf963/bip-0340/test-vectors.csv
+      {"F9308A019258C31049344F85F89D5229B531C845836F99B08601F113BCE036F9", 0},
+      {"EEFDEA4CDB677750A420FEE807EACF21EB9898AE79B9768766E4FAA04A2D4A34", 1},
+      {"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC30", 1}};
+
+  int result = 0;
+  uint8_t public_key[32] = {0};
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(*tests); i++) {
+    memcpy(public_key, fromhex(tests[i].public_key), 32);
+    result = zkp_bip340_verify_publickey(public_key);
+    ck_assert_int_eq(result, tests[i].result);
+  }
+}
+END_TEST
+
 static int my_strncasecmp(const char *s1, const char *s2, size_t n) {
   size_t i = 0;
   while (i < n) {
@@ -9634,6 +9656,7 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_zkp_bip340_sign);
   tcase_add_test(tc, test_zkp_bip340_verify);
   tcase_add_test(tc, test_zkp_bip340_tweak);
+  tcase_add_test(tc, test_zkp_bip340_verify_publickey);
   suite_add_tcase(s, tc);
 
 #if USE_CARDANO
