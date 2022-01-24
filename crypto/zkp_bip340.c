@@ -101,7 +101,7 @@ int zkp_bip340_get_public_key(const uint8_t *private_key_bytes,
 // private_key_bytes has 32 bytes
 // digest has 32 bytes
 // signature_bytes has 64 bytes
-// auxiliary_data has 32 bytes or is NULL
+// auxiliary_data has 32 bytes or is NULL (32 zero bytes are used)
 // returns 0 on success
 int zkp_bip340_sign_digest(const uint8_t *private_key_bytes,
                            const uint8_t *digest, uint8_t *signature_bytes,
@@ -136,6 +136,10 @@ int zkp_bip340_sign_digest(const uint8_t *private_key_bytes,
   }
 
   if (result == 0) {
+    uint8_t zero[32] = {0};
+    if (!auxiliary_data) {
+      auxiliary_data = zero;
+    }
     if (secp256k1_schnorrsig_sign(context_writable, signature_bytes, digest,
                                   &keypair, auxiliary_data) != 1) {
       result = -1;
