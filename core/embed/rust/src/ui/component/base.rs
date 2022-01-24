@@ -20,7 +20,7 @@ pub trait Component {
     type Msg;
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg>;
     fn paint(&mut self);
-    fn bounds(&self, _sink: &dyn Fn(Rect)) {}
+    fn bounds(&self, _sink: &mut dyn FnMut(Rect)) {}
 }
 
 /// Components should always avoid unnecessary overpaint to prevent obvious
@@ -97,7 +97,7 @@ where
         }
     }
 
-    fn bounds(&self, sink: &dyn Fn(Rect)) {
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.component.bounds(sink)
     }
 }

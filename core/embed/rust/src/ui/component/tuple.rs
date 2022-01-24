@@ -19,7 +19,7 @@ where
         self.1.paint();
     }
 
-    fn bounds(&self, sink: &dyn Fn(Rect)) {
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.0.bounds(sink);
         self.1.bounds(sink);
     }
@@ -46,7 +46,7 @@ where
         self.2.paint();
     }
 
-    fn bounds(&self, sink: &dyn Fn(Rect)) {
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.0.bounds(sink);
         self.1.bounds(sink);
         self.2.bounds(sink);

@@ -97,7 +97,7 @@ where
         self.confirm.paint();
     }
 
-    fn bounds(&self, sink: &dyn Fn(Rect)) {
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         sink(self.pad.area);
         if self.loader.is_animating() {
             self.loader.bounds(sink)

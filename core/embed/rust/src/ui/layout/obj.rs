@@ -51,7 +51,7 @@ where
 pub trait ObjComponent {
     fn obj_event(&mut self, ctx: &mut EventCtx, event: Event) -> Result<Obj, Error>;
     fn obj_paint(&mut self);
-    fn obj_bounds(&self, sink: &dyn Fn(Rect));
+    fn obj_bounds(&self, sink: &mut dyn FnMut(Rect));
 }
 
 impl<T> ObjComponent for Child<T>
@@ -70,7 +70,7 @@ where
         self.paint();
     }
 
-    fn obj_bounds(&self, sink: &dyn Fn(Rect)) {
+    fn obj_bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.bounds(sink)
     }
 }
@@ -230,7 +230,7 @@ impl LayoutObj {
         }
 
         wireframe(display::screen());
-        self.inner.borrow().root.obj_bounds(&wireframe);
+        self.inner.borrow().root.obj_bounds(&mut wireframe);
     }
 
     fn obj_type() -> &'static Type {

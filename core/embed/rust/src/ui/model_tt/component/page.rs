@@ -149,7 +149,7 @@ where
         }
     }
 
-    fn bounds(&self, sink: &dyn Fn(Rect)) {
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         sink(self.scrollbar.area);
         sink(self.pad.area);
         self.content.bounds(sink);

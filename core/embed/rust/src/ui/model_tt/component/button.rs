@@ -210,7 +210,7 @@ where
         }
     }
 
-    fn bounds(&self, sink: &dyn Fn(Rect)) {
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         sink(self.area)
     }
 }

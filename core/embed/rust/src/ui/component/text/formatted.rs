@@ -121,7 +121,7 @@ where
         self.layout_content(&mut TextRenderer);
     }
 
-    fn bounds(&self, sink: &dyn Fn(Rect)) {
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         sink(self.layout.bounds)
     }
 }

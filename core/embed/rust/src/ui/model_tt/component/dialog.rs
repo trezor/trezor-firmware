@@ -58,7 +58,7 @@ where
         self.right.paint();
     }
 
-    fn bounds(&self, sink: &dyn Fn(Rect)) {
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.content.bounds(sink);
         self.left.bounds(sink);
         self.right.bounds(sink);

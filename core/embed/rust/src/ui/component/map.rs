@@ -27,7 +27,7 @@ where
         self.inner.paint()
     }
 
-    fn bounds(&self, sink: &dyn Fn(Rect)) {
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.inner.bounds(sink);
     }
 }

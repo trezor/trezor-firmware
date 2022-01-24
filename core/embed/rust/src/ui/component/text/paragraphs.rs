@@ -121,7 +121,7 @@ where
         }
     }
 
-    fn bounds(&self, sink: &dyn Fn(Rect)) {
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         sink(self.area);
         for paragraph in self.list.iter().skip(self.offset.par).take(self.visible) {
             sink(paragraph.layout.bounds)
