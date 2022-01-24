@@ -21,11 +21,12 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
 from ...tx_cache import TxCache
+from .signtx import assert_tx_matches
 
 TX_API = TxCache("Testnet")
 
-TXHASH_091446 = bytes.fromhex(
-    "09144602765ce3dd8f4329445b20e3684e948709c5cdcaf12da3bb079c99448a"
+TXHASH_b36780 = bytes.fromhex(
+    "b36780ceb86807ca6e7535a6fd418b1b788cb9b227d2c8a26a0de295e523219e"
 )
 
 VECTORS = (  # amount_unit
@@ -40,21 +41,22 @@ VECTORS = (  # amount_unit
 @pytest.mark.parametrize("amount_unit", VECTORS)
 def test_signtx(client: Client, amount_unit):
     inp1 = messages.TxInputType(
-        address_n=parse_path("m/84h/1h/0h/0/0"),
-        amount=12_300_000,
-        prev_hash=TXHASH_091446,
+        # tb1qajr3a3y5uz27lkxrmn7ck8lp22dgytvagr5nqy
+        address_n=parse_path("m/84h/1h/0h/0/87"),
+        amount=100_000,
+        prev_hash=TXHASH_b36780,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
     out1 = messages.TxOutputType(
         address="2N4Q5FhU2497BryFfUgbqkAJE87aKHUhXMp",
-        amount=5_000_000,
+        amount=40_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     out2 = messages.TxOutputType(
-        address="tb1q694ccp5qcc0udmfwgp692u2s2hjpq5h407urtu",
+        address="tb1qe48wz5ysk9mlzhkswcxct9tdjw6ejr2l9e6j8q",
         script_type=messages.OutputScriptType.PAYTOADDRESS,
-        amount=12_300_000 - 11_000 - 5_000_000,
+        amount=100_000 - 40_000 - 10_000,
     )
     with client:
         _, serialized_tx = btc.sign_tx(
@@ -66,7 +68,8 @@ def test_signtx(client: Client, amount_unit):
             amount_unit=amount_unit,
         )
 
-    assert (
-        serialized_tx.hex()
-        == "010000000001018a44999c07bba32df1cacdc50987944e68e3205b4429438fdde35c76024614090000000000ffffffff02404b4c000000000017a9147a55d61848e77ca266e79a39bfc85c580a6426c987a8386f0000000000160014d16b8c0680c61fc6ed2e407455715055e41052f502473044022073ce72dcf2f6e42eeb44adbe7d5038cf3763f168d1c04bd8b873a19b53331f51022016b051725731e7f53a567021bcd9c370727f551c81e857ebae7c128472119652012103adc58245cf28406af0ef5cc24b8afba7f1be6c72f279b642d85c48798685f86200000000"
+    assert_tx_matches(
+        serialized_tx,
+        hash_link="https://tbtc1.trezor.io/api/tx/65047a2b107d6301d72d4a1e49e7aea9cf06903fdc4ae74a4a9bba9bc1a414d2",
+        tx_hex="010000000001019e2123e595e20d6aa2c8d227b2b98c781b8b41fda635756eca0768b8ce8067b30000000000ffffffff02409c00000000000017a9147a55d61848e77ca266e79a39bfc85c580a6426c98750c3000000000000160014cd4ee15090b177f15ed0760d85956d93b5990d5f0247304402200c734ed16a9226162a29133c14fad3565332c60346050ceb9246e73a2fc8485002203463d40cf78eb5cc9718d6617d9f251b987e96cb58525795a507acb9b91696c7012103f60fc56bf7b5326537c7e86e0a63b6cd008eeb87d39af324cee5bcc3424bf4d000000000",
     )

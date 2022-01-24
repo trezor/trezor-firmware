@@ -22,14 +22,14 @@ from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
 from ...tx_cache import TxCache
-from ..signtx import (
+from .payment_req import make_payment_request
+from .signtx import (
     request_finished,
     request_input,
     request_meta,
     request_output,
     request_payment_req,
 )
-from .payment_req import make_payment_request
 
 B = messages.ButtonRequestType
 
@@ -39,8 +39,8 @@ TX_CACHE_MAINNET = TxCache("Bitcoin")
 TXHASH_e5b7e2 = bytes.fromhex(
     "e5b7e21b5ba720e81efd6bfa9f854ababdcddc75a43bfa60bf0fe069cfd1bb8a"
 )
-TXHASH_65b811 = bytes.fromhex(
-    "65b811d3eca0fe6915d9f2d77c86c5a7f19bf66b1b1253c2c51cb4ae5f0c017b"
+FAKE_TXHASH_f982c0 = bytes.fromhex(
+    "f982c0a283bd65a59aa89eded9e48f2a3319cb80361dfab4cf6192a03badb60a"
 )
 
 PIN = "1234"
@@ -51,6 +51,8 @@ pytestmark = pytest.mark.skip_t1
 
 @pytest.mark.setup_client(pin=PIN)
 def test_sign_tx(client: Client):
+    # NOTE: FAKE input tx
+
     commitment_data = b"\x0fwww.example.com" + (1).to_bytes(ROUND_ID_LEN, "big")
 
     with client:
@@ -113,7 +115,7 @@ def test_sign_tx(client: Client):
         messages.TxInputType(
             address_n=parse_path("m/84h/1h/0h/1/0"),
             amount=7_289_000,
-            prev_hash=TXHASH_65b811,
+            prev_hash=FAKE_TXHASH_f982c0,
             prev_index=1,
             script_type=messages.InputScriptType.SPENDWITNESS,
         ),
@@ -188,10 +190,10 @@ def test_sign_tx(client: Client):
                 request_output(0, TXHASH_e5b7e2),
                 request_output(1, TXHASH_e5b7e2),
                 request_input(1),
-                request_meta(TXHASH_65b811),
-                request_input(0, TXHASH_65b811),
-                request_output(0, TXHASH_65b811),
-                request_output(1, TXHASH_65b811),
+                request_meta(FAKE_TXHASH_f982c0),
+                request_input(0, FAKE_TXHASH_f982c0),
+                request_output(0, FAKE_TXHASH_f982c0),
+                request_output(1, FAKE_TXHASH_f982c0),
                 request_input(0),
                 request_input(1),
                 request_output(0),
@@ -215,7 +217,7 @@ def test_sign_tx(client: Client):
 
     assert (
         serialized_tx.hex()
-        == "010000000001028abbd1cf69e00fbf60fa3ba475dccdbdba4a859ffa6bfd1ee820a75b1be2b7e50000000000ffffffff7b010c5faeb41cc5c253121b6bf69bf1a7c5867cd7f2d91569fea0ecd311b8650100000000ffffffff0550c3000000000000160014b7a51ede0a66ae36558a3ab097ad86bbd800786150c3000000000000160014167dae080bca35c9ea49c0c8335dcc4b252a1d70cb616e00000000001600141d03a4d2167961b853d6cadfeab08e4937c5dfe8c3af0000000000001600142e01768ca46e57210f0bd2c99e630e8168fa5fe50a000000000000001976a914a579388225827d9f2fe9014add644487808c695d88ac00024730440220694105071db8c6c8ba3d385d01694b6f7c17546327ab26d4c53a6503fee301e202202dd310c23a195a6cebc904b91ebd15d782e6dacd08670a72ade2795e7d3ff4ec012103505647c017ff2156eb6da20fae72173d3b681a1d0a629f95f49e884db300689f00000000"
+        == "010000000001028abbd1cf69e00fbf60fa3ba475dccdbdba4a859ffa6bfd1ee820a75b1be2b7e50000000000ffffffff0ab6ad3ba09261cfb4fa1d3680cb19332a8fe4d9de9ea89aa565bd83a2c082f90100000000ffffffff0550c3000000000000160014b7a51ede0a66ae36558a3ab097ad86bbd800786150c3000000000000160014167dae080bca35c9ea49c0c8335dcc4b252a1d70cb616e00000000001600141d03a4d2167961b853d6cadfeab08e4937c5dfe8c3af0000000000001600142e01768ca46e57210f0bd2c99e630e8168fa5fe50a000000000000001976a914a579388225827d9f2fe9014add644487808c695d88ac0002473044022010bcbb2ae63db4bfdfdce298bcf3e302e2b1923d02ff57a2155eaae65fdb2949022026289b6d04d7615bf53b7aa0030b25619c465d639b233297b10d0da9ce1a6ca4012103505647c017ff2156eb6da20fae72173d3b681a1d0a629f95f49e884db300689f00000000"
     )
 
     # Test for a second time.
@@ -274,7 +276,7 @@ def test_unfair_fee(client: Client):
         messages.TxInputType(
             address_n=parse_path("m/84h/1h/0h/1/0"),
             amount=7_289_000,
-            prev_hash=TXHASH_65b811,
+            prev_hash=FAKE_TXHASH_f982c0,
             prev_index=1,
             script_type=messages.InputScriptType.SPENDWITNESS,
         ),
@@ -375,7 +377,7 @@ def test_no_anonymity(client: Client):
         messages.TxInputType(
             address_n=parse_path("m/84h/1h/0h/1/0"),
             amount=7_289_000,
-            prev_hash=TXHASH_65b811,
+            prev_hash=FAKE_TXHASH_f982c0,
             prev_index=1,
             script_type=messages.InputScriptType.SPENDWITNESS,
         ),

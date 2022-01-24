@@ -22,7 +22,7 @@ from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
 from ...tx_cache import TxCache
-from ..signtx import (
+from .signtx import (
     request_extra_data,
     request_finished,
     request_input,
@@ -40,17 +40,17 @@ TXHASH_e38206 = bytes.fromhex(
     "e3820602226974b1dd87b7113cc8aea8c63e5ae29293991e7bfa80c126930368"
 )
 
-TXHASH_v1 = bytes.fromhex(
-    "fb91ae741b120125b6d5c33a62f50a201b6ffd1cdc470c378c1ac8c654808246"
+FAKE_TXHASH_v1 = bytes.fromhex(
+    "8d800c64061967e480efbf3b19139d9136e586e9e3aaca65b9791e13cde4051b"
 )
-TXHASH_v2 = bytes.fromhex(
-    "03d30e19959d46d62ac796b8b23497b8c5700c59c4c75e1dbce7b8de49e242ef"
+FAKE_TXHASH_v2 = bytes.fromhex(
+    "6a9e8a6c36d6e33962b204d5942ddf62ed42f969cbf77f3075e298af926b056e"
 )
-TXHASH_v3 = bytes.fromhex(
-    "f9418829d18140815f961c3f968b08700c283b616f3cb0f43413ae89e68ab76c"
+FAKE_TXHASH_v3 = bytes.fromhex(
+    "158640a6a19d771c34596cd1272b00f3ce95efe16dc1cedc496d40260fef0025"
 )
-TXHASH_v4 = bytes.fromhex(
-    "5d8de67264b08eecc8e3bee19a11a7f54a2bce1dc4f2a699538e372ae92e9c0f"
+FAKE_TXHASH_v4 = bytes.fromhex(
+    "cb3c1190798dc7909f182ae9ae23e7c473d849ba5b933eb34538b9957fa87975"
 )
 
 pytestmark = [pytest.mark.altcoin, pytest.mark.zcash]
@@ -169,29 +169,30 @@ def test_version_group_id_missing(client: Client):
 
 
 def test_spend_old_versions(client: Client):
-    # inputs are NOT OWNED by this seed
+    # NOTE: fake input tx used
+
     input_v1 = messages.TxInputType(
         address_n=parse_path("m/44h/1h/0h/0/0"),
         amount=123_000_000,
-        prev_hash=TXHASH_v1,
+        prev_hash=FAKE_TXHASH_v1,
         prev_index=0,
     )
     input_v2 = messages.TxInputType(
         address_n=parse_path("m/44h/1h/0h/0/1"),
         amount=49_990_000,
-        prev_hash=TXHASH_v2,
+        prev_hash=FAKE_TXHASH_v2,
         prev_index=0,
     )
     input_v3 = messages.TxInputType(
         address_n=parse_path("m/44h/1h/0h/0/2"),
         amount=300_000_000,
-        prev_hash=TXHASH_v3,
+        prev_hash=FAKE_TXHASH_v3,
         prev_index=1,
     )
     input_v4 = messages.TxInputType(
         address_n=parse_path("m/44h/1h/0h/0/3"),
         amount=100_000,
-        prev_hash=TXHASH_v4,
+        prev_hash=FAKE_TXHASH_v4,
         prev_index=0,
     )
 
@@ -221,7 +222,7 @@ def test_spend_old_versions(client: Client):
 
     assert (
         serialized_tx.hex()
-        == "0400008085202f890446828054c6c81a8c370c47dc1cfd6f1b200af5623ac3d5b62501121b74ae91fb000000006b483045022100d40e85efbadd378fc603dc8b11c70774086de631fe5b1418ac2b95a478f86507022072e999d8ddd75a0b33bd2adcc88e7234e6251b9e73c9223e7c59e0d1f8d1ff220121030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0ffffffffef42e249deb8e7bc1d5ec7c4590c70c5b89734b2b896c72ad6469d95190ed303000000006b483045022100917d96445d64c80f9569cb9ca45c04c9b6d7b0fda6b9fd0b1d311837366c699202202cd6140489cf38b5d97ed271ba28603f4693c2a36113cc6ec423301f077c5a8e01210294e3e5e77e22eea0e4c0d30d89beb4db7f69b4bf1ae709e411d6a06618b8f852ffffffff6cb78ae689ae1334f4b03c6f613b280c70088b963f1c965f814081d1298841f9010000006a473044022058768c74c9b1698070636388d7d2ae8223748f13b0a5f402716e4d49fc5bc5f30220658d1e6095dcfbe66669b4141d23af28c9ed5bae73480889429b41742be85f32012103f5008445568548bd745a3dedccc6048969436bf1a49411f60938ff1938941f14ffffffff0f9c2ee92a378e5399a6f2c41dce2b4af5a7119ae1bee3c8ec8eb06472e68d5d000000006b483045022100e64853d86bed039c4edce4abaf80d41486cd21c63bec79c0308ea05a351663e302206732aa22a5dee7bd7f3cc8268faebe31a08abadb4b7e3a4257509bc7baa052b60121029ad0b9519779c540b34fa8d11d24d14a5475546bfa28c7de50573d22a503ce21ffffffff01d0c7321c000000001976a91490ede9de4bed6e39008375eace793949de9a533288ac00000000000000000000000000000000000000"
+        == "0400008085202f89041b05e4cd131e79b965caaae3e986e536919d13193bbfef80e4671906640c808d000000006b483045022100cdfe9b6d122fafafd379b6475db67d4db3f79d77a648961a647a73f4a9561a3702201f4838467ac2a9bbbbb1067d24101fc46cbfa403f8c1258ec46d3d3ef00a72fb0121030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0ffffffff6e056b92af98e275307ff7cb69f942ed62df2d94d504b26239e3d6366c8a9e6a000000006b4830450221009e6523a7c0e2ad691f45f8529ae609117b4441cdbc17b0b3800901cb89118cdd0220746c051a8cd213efcf8da34aea538ec6c31a5e3362733a724f88d7029a07954e01210294e3e5e77e22eea0e4c0d30d89beb4db7f69b4bf1ae709e411d6a06618b8f852ffffffff2500ef0f26406d49dccec16de1ef95cef3002b27d16c59341c779da1a6408615010000006a47304402205bf0e3316d2bcf8e97cb7f1fd8556858bc212c28621b2f6741faee83191abf73022015d56d65f7a5860c464f7540f279b28d7dedbbdbb13f4bc562dff42083d0ed40012103f5008445568548bd745a3dedccc6048969436bf1a49411f60938ff1938941f14ffffffff7579a87f95b93845b33e935bba49d873c4e723aee92a189f90c78d7990113ccb000000006a47304402200740dff2e8dc0ed6d44d0a0104e79bd668387508c93cfde75f1aa1094e63816b02207ecb432fdbf6e05d6b97a489575d62a7ff6e1a885205d33eeac08d9656597e640121029ad0b9519779c540b34fa8d11d24d14a5475546bfa28c7de50573d22a503ce21ffffffff01d0c7321c000000001976a91490ede9de4bed6e39008375eace793949de9a533288ac00000000000000000000000000000000000000"
     )
 
 

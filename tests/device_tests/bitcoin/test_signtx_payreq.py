@@ -23,14 +23,13 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
-from ...tx_cache import TxCache
 from .payment_req import CoinPurchaseMemo, RefundMemo, TextMemo, make_payment_request
+from .signtx import forge_prevtx
 
-TX_API = TxCache("Testnet")
-
-TXHASH_091446 = bytes.fromhex(
-    "09144602765ce3dd8f4329445b20e3684e948709c5cdcaf12da3bb079c99448a"
-)
+# address at seed "all all all..." path m/84h/1h/0h/0/0
+INPUT_ADDRESS = "tb1qkvwu9g3k2pdxewfqr7syz89r3gj557l3uuf9r9"
+PREV_HASH, PREV_TX = forge_prevtx([(INPUT_ADDRESS, 12_300_000)], network="testnet")
+PREV_TXES = {PREV_HASH: PREV_TX}
 
 
 pytestmark = pytest.mark.skip_t1
@@ -48,7 +47,7 @@ inputs = [
     messages.TxInputType(
         address_n=parse_path("m/84h/1h/0h/0/0"),
         amount=12_300_000,
-        prev_hash=TXHASH_091446,
+        prev_hash=PREV_HASH,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
@@ -103,7 +102,7 @@ PaymentRequestParams = namedtuple(
     "PaymentRequestParams", ["txo_indices", "memos", "get_nonce"]
 )
 
-SERIALIZED_TX = "010000000001018a44999c07bba32df1cacdc50987944e68e3205b4429438fdde35c76024614090000000000ffffffff03404b4c000000000017a9147a55d61848e77ca266e79a39bfc85c580a6426c98780841e0000000000160014d16b8c0680c61fc6ed2e407455715055e41052f528b4500000000000160014b31dc2a236505a6cb9201fa0411ca38a254a7bf10247304402204adea8ae600878c5912310f546d600359f6cde8087ebd23f20f8acc7ecb2ede70220603334476c8fb478d8c539f027f9bff5f126e4438df757f9b4ba528adcb56c48012103adc58245cf28406af0ef5cc24b8afba7f1be6c72f279b642d85c48798685f86200000000"
+SERIALIZED_TX = "01000000000101e29305e85821ea86f2bca1fcfe45e7cb0c8de87b612479ee641e0d3d12a723b20000000000ffffffff03404b4c000000000017a9147a55d61848e77ca266e79a39bfc85c580a6426c98780841e0000000000160014d16b8c0680c61fc6ed2e407455715055e41052f528b4500000000000160014b31dc2a236505a6cb9201fa0411ca38a254a7bf10247304402203ca28fc86a8947ccd11af2d80febfb592d3a29abcb0a8e0fc4924615a1307d89022051c1b41e0db900d90883c030da14f26a34b2bef6d2b289c5aac3097f3501005f012103adc58245cf28406af0ef5cc24b8afba7f1be6c72f279b642d85c48798685f86200000000"
 
 
 @pytest.mark.parametrize(
@@ -158,7 +157,7 @@ def test_payment_request(client: Client, payment_request_params):
         "Testnet",
         inputs,
         outputs,
-        prev_txes=TX_API,
+        prev_txes=PREV_TXES,
         payment_reqs=payment_reqs,
     )
 
@@ -171,7 +170,7 @@ def test_payment_request(client: Client, payment_request_params):
             "Testnet",
             inputs,
             outputs,
-            prev_txes=TX_API,
+            prev_txes=PREV_TXES,
             payment_reqs=payment_reqs,
         )
 
@@ -219,7 +218,7 @@ def test_payment_request_details(client: Client):
             "Testnet",
             inputs,
             outputs,
-            prev_txes=TX_API,
+            prev_txes=PREV_TXES,
             payment_reqs=payment_reqs,
         )
 
@@ -247,7 +246,7 @@ def test_payment_req_wrong_amount(client: Client):
             "Testnet",
             inputs,
             outputs,
-            prev_txes=TX_API,
+            prev_txes=PREV_TXES,
             payment_reqs=[payment_req],
         )
 
@@ -277,7 +276,7 @@ def test_payment_req_wrong_mac_refund(client: Client):
             "Testnet",
             inputs,
             outputs,
-            prev_txes=TX_API,
+            prev_txes=PREV_TXES,
             payment_reqs=[payment_req],
         )
 
@@ -313,7 +312,7 @@ def test_payment_req_wrong_mac_purchase(client: Client):
             "Testnet",
             inputs,
             outputs,
-            prev_txes=TX_API,
+            prev_txes=PREV_TXES,
             payment_reqs=[payment_req],
         )
 
@@ -348,6 +347,6 @@ def test_payment_req_wrong_output(client: Client):
             "Testnet",
             inputs,
             fake_outputs,
-            prev_txes=TX_API,
+            prev_txes=PREV_TXES,
             payment_reqs=[payment_req],
         )

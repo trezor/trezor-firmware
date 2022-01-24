@@ -22,7 +22,7 @@ from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import H_, parse_path
 
 from ...tx_cache import TxCache
-from ..signtx import request_finished, request_input, request_meta, request_output
+from .signtx import request_finished, request_input, request_meta, request_output
 
 B = messages.ButtonRequestType
 TX_API = TxCache("Testnet")
@@ -366,20 +366,27 @@ def test_attack_script_type(client: Client):
         "tb1pllllllllllllllllllllllllllllllllllllllllllllallllscqgl4zhn",
     ),
 )
-def test_send_invalid_address(client, address):
+def test_send_invalid_address(client: Client, address):
     inp1 = messages.TxInputType(
         # tb1pn2d0yjeedavnkd8z8lhm566p0f2utm3lgvxrsdehnl94y34txmts5s7t4c
-        address_n=parse_path("86'/1'/0'/1/0"),
-        amount=4600,
+        address_n=parse_path("m/86h/1h/0h/1/0"),
+        amount=4_600,
         prev_hash=TXHASH_7956f1,
         prev_index=1,
         script_type=messages.InputScriptType.SPENDTAPROOT,
     )
     out1 = messages.TxOutputType(
         address=address,
-        amount=4450,
+        amount=4_450,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with pytest.raises(TrezorFailure):
+    with client, pytest.raises(TrezorFailure):
+        client.set_expected_responses(
+            [
+                request_input(0),
+                request_output(0),
+                messages.Failure,
+            ]
+        )
         btc.sign_tx(client, "Testnet", [inp1], [out1], prev_txes=TX_API)

@@ -18,9 +18,10 @@ import pytest
 
 from trezorlib import btc, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
-from trezorlib.tools import btc_hash, parse_path
+from trezorlib.tools import parse_path
 
 from ...tx_cache import TxCache
+from .signtx import assert_tx_matches
 
 TX_API = TxCache("Firo Testnet")
 TXHASH_8a34cc = bytes.fromhex(
@@ -46,12 +47,8 @@ def test_spend_lelantus(client: Client):
     _, serialized_tx = btc.sign_tx(
         client, "Firo Testnet", [inp1], [out1], prev_txes=TX_API
     )
-    assert (
-        serialized_tx.hex()
-        == "010000000125d6f69fdb2e1715a3eb9c71a60ecb7178b3af4033309843d18f13afcecc348a000000006a47304402207b490135583a2ac6650806c706dfd15954f9ac85b64a75d7264653e4b1cd4e29022052946b28f97a415bd0b2b02c3a71ac8cb26f9a9387ac82856b4c7116848d090c01210313a443e806f25052ac7363adc689fcfa72893f2a51a35ab5e096ed5e6cd8517effffffff0118c69a3b000000001976a91499af2ecbf5892079e0297c59b91981b067da36a988ac00000000"
-    )
-    # accepted by network: https://testblockbook.firo.org/tx/866bc7041989ad038e5b38b7577325d015b67238ea9387cde6ba837fff4a61be
-    assert (
-        btc_hash(serialized_tx)[::-1].hex()
-        == "866bc7041989ad038e5b38b7577325d015b67238ea9387cde6ba837fff4a61be"
+    assert_tx_matches(
+        serialized_tx,
+        hash_link="https://testblockbook.firo.org/api/tx/866bc7041989ad038e5b38b7577325d015b67238ea9387cde6ba837fff4a61be",
+        tx_hex="010000000125d6f69fdb2e1715a3eb9c71a60ecb7178b3af4033309843d18f13afcecc348a000000006a47304402207b490135583a2ac6650806c706dfd15954f9ac85b64a75d7264653e4b1cd4e29022052946b28f97a415bd0b2b02c3a71ac8cb26f9a9387ac82856b4c7116848d090c01210313a443e806f25052ac7363adc689fcfa72893f2a51a35ab5e096ed5e6cd8517effffffff0118c69a3b000000001976a91499af2ecbf5892079e0297c59b91981b067da36a988ac00000000",
     )

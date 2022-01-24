@@ -21,44 +21,30 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import H_, parse_path
 
-from ...tx_cache import TxCache
-from ..signtx import request_finished, request_input, request_meta, request_output
+from .signtx import (
+    forge_prevtx,
+    request_finished,
+    request_input,
+    request_meta,
+    request_output,
+)
 
 B = messages.ButtonRequestType
-TX_CACHE_MAINNET = TxCache("Bitcoin")
-TX_CACHE_TESTNET = TxCache("Testnet")
-TX_CACHE_BCASH = TxCache("Bcash")
 
-TXHASH_8cc1f4 = bytes.fromhex(
-    "8cc1f4adf7224ce855cf535a5104594a0004cb3b640d6714fdb00b9128832dd5"
-)
-TXHASH_a5cd2a = bytes.fromhex(
-    "a5cd2a706d680587e572df16a8ce5233139a094ebbd148cc66a8004dcc88819c"
-)
-TXHASH_d5f65e = bytes.fromhex(
-    "d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882"
-)
-TXHASH_fa80a9 = bytes.fromhex(
-    "fa80a9949f1094119195064462f54d0e0eabd3139becd4514ae635b8c7fe3a46"
-)
-TXHASH_5dfd1b = bytes.fromhex(
-    "5dfd1b037633adc7f84a17b2df31c9994fe50b3ab3e246c44c4ceff3d326f62e"
-)
+# address at seed "all all all..." path m/44h/0h/0h/0/0
+INPUT_ADDRESS = "1JAd7XCBzGudGpJQSDSfpmJhiygtLQWaGL"
+PREV_HASH, PREV_TX = forge_prevtx([(INPUT_ADDRESS, 390_000)])
+PREV_TXES = {PREV_HASH: PREV_TX}
 
 
-# Adapted from TestMsgSigntx.test_one_one_fee,
-# only changed the coin from Bitcoin to Litecoin.
 # Litecoin does not have strong replay protection using SIGHASH_FORKID,
 # spending from Bitcoin path should fail.
 @pytest.mark.altcoin
 def test_invalid_path_fail(client: Client):
-    # tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
-    # input 0: 0.0039 BTC
-
     inp1 = messages.TxInputType(
         address_n=parse_path("m/44h/0h/0h/0/0"),
         amount=390_000,
-        prev_hash=TXHASH_d5f65e,
+        prev_hash=PREV_HASH,
         prev_index=0,
     )
 
@@ -70,25 +56,20 @@ def test_invalid_path_fail(client: Client):
     )
 
     with pytest.raises(TrezorFailure) as exc:
-        btc.sign_tx(client, "Litecoin", [inp1], [out1], prev_txes=TX_CACHE_MAINNET)
+        btc.sign_tx(client, "Litecoin", [inp1], [out1], prev_txes=PREV_TXES)
 
     assert exc.value.code == messages.FailureType.DataError
     assert exc.value.message.endswith("Forbidden key path")
 
 
-# Adapted from TestMsgSigntx.test_one_one_fee,
-# only changed the coin from Bitcoin to Litecoin and set safety checks to prompt.
 # Litecoin does not have strong replay protection using SIGHASH_FORKID, but
 # spending from Bitcoin path should pass with safety checks set to prompt.
 @pytest.mark.altcoin
 def test_invalid_path_prompt(client: Client):
-    # tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
-    # input 0: 0.0039 BTC
-
     inp1 = messages.TxInputType(
         address_n=parse_path("m/44h/0h/0h/0/0"),
         amount=390_000,
-        prev_hash=TXHASH_d5f65e,
+        prev_hash=PREV_HASH,
         prev_index=0,
     )
 
@@ -103,22 +84,17 @@ def test_invalid_path_prompt(client: Client):
         client, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
     )
 
-    btc.sign_tx(client, "Litecoin", [inp1], [out1], prev_txes=TX_CACHE_MAINNET)
+    btc.sign_tx(client, "Litecoin", [inp1], [out1], prev_txes=PREV_TXES)
 
 
-# Adapted from TestMsgSigntx.test_one_one_fee,
-# only changed the coin from Bitcoin to Bcash.
 # Bcash does have strong replay protection using SIGHASH_FORKID,
 # spending from Bitcoin path should work.
 @pytest.mark.altcoin
 def test_invalid_path_pass_forkid(client: Client):
-    # tx: 8cc1f4adf7224ce855cf535a5104594a0004cb3b640d6714fdb00b9128832dd5
-    # input 0: 0.0039 BTC
-
     inp1 = messages.TxInputType(
         address_n=parse_path("m/44h/0h/0h/0/0"),
         amount=390_000,
-        prev_hash=TXHASH_8cc1f4,
+        prev_hash=PREV_HASH,
         prev_index=0,
     )
 
@@ -129,7 +105,7 @@ def test_invalid_path_pass_forkid(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    btc.sign_tx(client, "Bcash", [inp1], [out1], prev_txes=TX_CACHE_BCASH)
+    btc.sign_tx(client, "Bcash", [inp1], [out1], prev_txes=PREV_TXES)
 
 
 def test_attack_path_segwit(client: Client):
@@ -137,26 +113,43 @@ def test_attack_path_segwit(client: Client):
     # avoid the path warning dialog, but in step6_sign_segwit_inputs() uses Bitcoin paths
     # to get a valid signature.
 
+    # Generate keys
+    address_a = btc.get_address(
+        client,
+        "Testnet",
+        parse_path("m/84h/1h/0h/0/0"),
+        script_type=messages.InputScriptType.SPENDWITNESS,
+    )
+    address_b = btc.get_address(
+        client,
+        "Testnet",
+        parse_path("m/84h/1h/1h/0/1"),
+        script_type=messages.InputScriptType.SPENDWITNESS,
+    )
+    prev_hash, prev_tx = forge_prevtx(
+        [(address_a, 9_426), (address_b, 7_086)], network="testnet"
+    )
+
     device.apply_settings(
         client, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
     )
 
     inp1 = messages.TxInputType(
-        # The actual input that the attcker wants to get signed.
+        # The actual input that the attacker wants to get signed.
         address_n=parse_path("m/84h/0h/0h/0/0"),
         amount=9_426,
-        prev_hash=TXHASH_fa80a9,
+        prev_hash=prev_hash,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
     inp2 = messages.TxInputType(
-        # The actual input that the attcker wants to get signed.
+        # The actual input that the attacker wants to get signed.
         # We need this one to be from a different account, so that the match checker
         # allows the transaction to pass.
         address_n=parse_path("m/84h/0h/1h/0/1"),
         amount=7_086,
-        prev_hash=TXHASH_5dfd1b,
-        prev_index=0,
+        prev_hash=prev_hash,
+        prev_index=1,
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
 
@@ -194,15 +187,15 @@ def test_attack_path_segwit(client: Client):
                 messages.ButtonRequest(code=B.SignTx),
                 # Step: verify inputs
                 request_input(0),
-                request_meta(TXHASH_fa80a9),
-                request_input(0, TXHASH_fa80a9),
-                request_output(0, TXHASH_fa80a9),
-                request_output(1, TXHASH_fa80a9),
+                request_meta(prev_hash),
+                request_input(0, prev_hash),
+                request_output(0, prev_hash),
+                request_output(1, prev_hash),
                 request_input(1),
-                request_meta(TXHASH_5dfd1b),
-                request_input(0, TXHASH_5dfd1b),
-                request_output(0, TXHASH_5dfd1b),
-                request_output(1, TXHASH_5dfd1b),
+                request_meta(prev_hash),
+                request_input(0, prev_hash),
+                request_output(0, prev_hash),
+                request_output(1, prev_hash),
                 # Step: serialize inputs
                 request_input(0),
                 request_input(1),
@@ -219,15 +212,17 @@ def test_attack_path_segwit(client: Client):
             ]
         )
 
-        btc.sign_tx(client, "Testnet", [inp1, inp2], [out1], prev_txes=TX_CACHE_MAINNET)
+        btc.sign_tx(
+            client, "Testnet", [inp1, inp2], [out1], prev_txes={prev_hash: prev_tx}
+        )
 
 
 @pytest.mark.skip_t1(reason="T1 only prevents using paths known to be altcoins")
 def test_invalid_path_fail_asap(client: Client):
     inp1 = messages.TxInputType(
         address_n=parse_path("m/0"),
-        amount=4_977_040,
-        prev_hash=TXHASH_a5cd2a,
+        amount=1_000_000,
+        prev_hash=b"\x42" * 32,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDWITNESS,
         sequence=4_294_967_293,
@@ -235,15 +230,18 @@ def test_invalid_path_fail_asap(client: Client):
 
     out1 = messages.TxOutputType(
         address_n=parse_path("m/84h/0h/0h/1/0"),
-        amount=4_977_040,
+        amount=1_000_000,
         script_type=messages.OutputScriptType.PAYTOWITNESS,
     )
 
     with client:
         client.set_expected_responses(
-            [request_input(0), messages.Failure(code=messages.FailureType.DataError)]
+            [
+                request_input(0),
+                messages.Failure(code=messages.FailureType.DataError),
+            ]
         )
         try:
-            btc.sign_tx(client, "Testnet", [inp1], [out1], prev_txes=TX_CACHE_TESTNET)
+            btc.sign_tx(client, "Testnet", [inp1], [out1])
         except TrezorFailure:
             pass

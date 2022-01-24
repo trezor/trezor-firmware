@@ -22,19 +22,23 @@ from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import H_, parse_path
 
 from ...tx_cache import TxCache
-from ..signtx import request_finished, request_input, request_meta, request_output
+from .signtx import (
+    assert_tx_matches,
+    forge_prevtx,
+    request_finished,
+    request_input,
+    request_meta,
+    request_output,
+)
 
 B = messages.ButtonRequestType
-TX_API = TxCache("Testnet")
+TX_API_TESTNET = TxCache("Testnet")
 
 TXHASH_20912f = bytes.fromhex(
     "20912f98ea3ed849042efed0fdac8cb4fc301961c5988cba56902d8ffb61c337"
 )
-TXHASH_9c3192 = bytes.fromhex(
-    "9c31922be756c06d02167656465c8dc83bb553bf386a3f478ae65b5c021002be"
-)
-TXHASH_dee13c = bytes.fromhex(
-    "dee13c469e7ab28108a1ce470d74cb40896d9bb459951bdf590ca6a495293a02"
+TXHASH_338e2d = bytes.fromhex(
+    "338e2d02e0eaf8848e38925904e51546cf22e58db5b1860c4a0e72b69c56afe5"
 )
 TXHASH_e5040e = bytes.fromhex(
     "e5040e1bc1ae7667ffb9e5248e90b2fb93cd9150234151ce90e14ab2f5933bcd"
@@ -82,9 +86,10 @@ def test_send_p2sh(client: Client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API
+            client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API_TESTNET
         )
 
+    # Transaction does not exist on the blockchain, not using assert_tx_matches()
     assert (
         serialized_tx.hex()
         == "0100000000010137c361fb8f2d9056ba8c98c5611930fcb48cacfdd0fe2e0449d83eea982f91200000000017160014d16b8c0680c61fc6ed2e407455715055e41052f5ffffffff02e0aebb00000000001976a91414fdede0ddc3be652a0ce1afbc1b509a55b6b94888ac3df39f060000000017a91458b53ea7f832e8f096e896b8713a8c6df0e892ca8702483045022100ccd253bfdf8a5593cd7b6701370c531199f0f05a418cd547dfc7da3f21515f0f02203fa08a0753688871c220648f9edadbdb98af42e5d8269364a326572cf703895b012103e7bfe10708f715e8538c92d46ca50db6f657bbc455b7494e6a0303ccdb868b7900000000"
@@ -131,9 +136,10 @@ def test_send_p2sh_change(client: Client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API
+            client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API_TESTNET
         )
 
+    # Transaction does not exist on the blockchain, not using assert_tx_matches()
     assert (
         serialized_tx.hex()
         == "0100000000010137c361fb8f2d9056ba8c98c5611930fcb48cacfdd0fe2e0449d83eea982f91200000000017160014d16b8c0680c61fc6ed2e407455715055e41052f5ffffffff02e0aebb00000000001976a91414fdede0ddc3be652a0ce1afbc1b509a55b6b94888ac3df39f060000000017a91458b53ea7f832e8f096e896b8713a8c6df0e892ca8702483045022100ccd253bfdf8a5593cd7b6701370c531199f0f05a418cd547dfc7da3f21515f0f02203fa08a0753688871c220648f9edadbdb98af42e5d8269364a326572cf703895b012103e7bfe10708f715e8538c92d46ca50db6f657bbc455b7494e6a0303ccdb868b7900000000"
@@ -142,11 +148,19 @@ def test_send_p2sh_change(client: Client):
 
 def test_testnet_segwit_big_amount(client: Client):
     # This test is testing transaction with amount bigger than fits to uint32
+    address_n = parse_path("m/49h/1h/0h/0/0")
+    address = btc.get_address(
+        client,
+        "Testnet",
+        address_n,
+        script_type=messages.InputScriptType.SPENDP2SHWITNESS,
+    )
+    prev_hash, prev_tx = forge_prevtx([(address, 2 ** 32 + 1)], network="testnet")
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("m/49h/1h/0h/0/0"),
+        address_n=address_n,
         amount=2 ** 32 + 1,
-        prev_hash=TXHASH_dee13c,
+        prev_hash=prev_hash,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
     )
@@ -163,8 +177,9 @@ def test_testnet_segwit_big_amount(client: Client):
                 messages.ButtonRequest(code=B.ConfirmOutput),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
-                request_meta(TXHASH_dee13c),
-                request_output(0, TXHASH_dee13c),
+                request_meta(prev_hash),
+                request_input(0, prev_hash),
+                request_output(0, prev_hash),
                 request_input(0),
                 request_output(0),
                 request_input(0),
@@ -172,89 +187,81 @@ def test_testnet_segwit_big_amount(client: Client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client, "Testnet", [inp1], [out1], prev_txes=TX_API
+            client, "Testnet", [inp1], [out1], prev_txes={prev_hash: prev_tx}
         )
     assert (
         serialized_tx.hex()
-        == "01000000000101023a2995a4a60c59df1b9559b49b6d8940cb740d47cea10881b27a9e463ce1de00000000171600140099a7ecbd938ed1839f5f6bf6d50933c6db9d5cffffffff01010000000100000017a914097c569095163e84475d07aa95a1f736df895b7b8702483045022100965aa8897c7cd5f0bff830481ed5259bf662ed0415ab497a6a152a3c335eb0a1022060acbbbada909b6575ac6f19382a6bdf4cab2fa1c5421aa66677806f380ddb870121033add1f0e8e3c3136f7428dd4a4de1057380bd311f5b0856e2269170b4ffa65bf00000000"
+        == "010000000001019e64f9a7d1af8c06e9d04362e6bd6ac1970f8be5321982ad1ce25a65eec3ae5500000000171600140099a7ecbd938ed1839f5f6bf6d50933c6db9d5cffffffff01010000000100000017a914097c569095163e84475d07aa95a1f736df895b7b87024830450221009d87f574f4b73d1f1114b6a053cb4e1e4f223e495bf5ba2c2f9e47eaf3aabb8c022033eaeb7fa07ab9948ed0180ca166e9d3209cc6f598dff7bfc61ea32ad3d995840121033add1f0e8e3c3136f7428dd4a4de1057380bd311f5b0856e2269170b4ffa65bf00000000"
     )
 
 
 @pytest.mark.multisig
 def test_send_multisig_1(client: Client):
+    # input: 338e2d02e0eaf8848e38925904e51546cf22e58db5b1860c4a0e72b69c56afe5
+
     nodes = [
         btc.get_public_node(
             client, parse_path(f"m/49h/1h/{i}h"), coin_name="Testnet"
         ).node
         for i in range(1, 4)
     ]
-
+    # address: 2MuqUo9axjz6FfHjSqNMu8kbF1tCjisMrbt
     multisig = messages.MultisigRedeemScriptType(
         nodes=nodes, address_n=[1, 0], signatures=[b"", b"", b""], m=2
     )
 
     inp1 = messages.TxInputType(
         address_n=parse_path("m/49h/1h/1h/1/0"),
-        prev_hash=TXHASH_9c3192,
-        prev_index=1,
+        prev_hash=TXHASH_338e2d,
+        prev_index=0,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
         multisig=multisig,
-        amount=1_610_436,
+        amount=100_000,
     )
 
     out1 = messages.TxOutputType(
-        address="mhRx1CeVfaayqRwq5zgRQmD7W5aWBfD5mC",
-        amount=1_605_000,
+        address="mu85iAHLpF16VyijB2wn5fcZrjT2bvrhnL",
+        amount=100_000 - 10_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
+    expected_responses = [
+        request_input(0),
+        request_output(0),
+        messages.ButtonRequest(code=B.ConfirmOutput),
+        messages.ButtonRequest(code=B.SignTx),
+        request_input(0),
+        request_meta(TXHASH_338e2d),
+        request_input(0, TXHASH_338e2d),
+        request_output(0, TXHASH_338e2d),
+        request_output(1, TXHASH_338e2d),
+        request_input(0),
+        request_output(0),
+        request_input(0),
+        request_finished(),
+    ]
+
     with client:
-        client.set_expected_responses(
-            [
-                request_input(0),
-                request_output(0),
-                messages.ButtonRequest(code=B.ConfirmOutput),
-                messages.ButtonRequest(code=B.SignTx),
-                request_input(0),
-                request_meta(TXHASH_9c3192),
-                request_input(0, TXHASH_9c3192),
-                request_output(0, TXHASH_9c3192),
-                request_output(1, TXHASH_9c3192),
-                request_input(0),
-                request_output(0),
-                request_input(0),
-                request_finished(),
-            ]
-        )
-        signatures, _ = btc.sign_tx(client, "Testnet", [inp1], [out1], prev_txes=TX_API)
-        # store signature
-        inp1.multisig.signatures[0] = signatures[0]
-        # sign with third key
-        inp1.address_n[2] = H_(3)
-        client.set_expected_responses(
-            [
-                request_input(0),
-                request_output(0),
-                messages.ButtonRequest(code=B.ConfirmOutput),
-                messages.ButtonRequest(code=B.SignTx),
-                request_input(0),
-                request_meta(TXHASH_9c3192),
-                request_input(0, TXHASH_9c3192),
-                request_output(0, TXHASH_9c3192),
-                request_output(1, TXHASH_9c3192),
-                request_input(0),
-                request_output(0),
-                request_input(0),
-                request_finished(),
-            ]
-        )
-        _, serialized_tx = btc.sign_tx(
-            client, "Testnet", [inp1], [out1], prev_txes=TX_API
+        client.set_expected_responses(expected_responses)
+        signatures, _ = btc.sign_tx(
+            client, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
         )
 
-    assert (
-        serialized_tx.hex()
-        == "01000000000101be0210025c5be68a473f6a38bf53b53bc88d5c46567616026dc056e72b92319c0100000023220020cf28684ff8a6dda1a7a9704dde113ddfcf236558da5ce35ad3f8477474dbdaf7ffffffff01887d1800000000001976a91414fdede0ddc3be652a0ce1afbc1b509a55b6b94888ac040047304402203fc3fbe6cd6250d82ace4a585debc07587c07d2efc8bb56558c91e1f810fe65402206025bd9a4e80960f617b6e5bfdd568e34aa085d093471b7976e6b14c2a2402a7014730440220327abf491a57964d75c67fad204eb782fa74aa4abde40e5ad30fb0b7696102b7022049e31f2302417be0a87e2f818b93a862a7e67d4178b7cbeee680264f0882113f0169522103d54ab3c8b81cb7f8f8088df4c62c105e8acaa2fb53b180f6bc6f922faecf3fdc21036aa47994f3f18f0976d6073ca79997003c3fa29c4f93907998fefc1151b4529b2102a092580f2828272517c402da9461425c5032860ab40180e041fbbb88ea2a520453ae00000000"
+    # store signature
+    inp1.multisig.signatures[0] = signatures[0]
+    # sign with third key
+    inp1.address_n[2] = H_(3)
+
+    with client:
+        client.set_expected_responses(expected_responses)
+        _, serialized_tx = btc.sign_tx(
+            client, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
+        )
+
+    assert_tx_matches(
+        serialized_tx,
+        hash_link="https://tbtc1.trezor.io/api/tx/0d5d04bffd49287d122f509bebd196b1ecba7cbc5f945c28bf8a26dea66e65de",
+        tx_hex="01000000000101e5af569cb6720e4a0c86b1b58de522cf4615e5045992388e84f8eae0022d8e330000000023220020cf28684ff8a6dda1a7a9704dde113ddfcf236558da5ce35ad3f8477474dbdaf7ffffffff01905f0100000000001976a914953e62552a88c235c0691ec74b362a6803a7d93e88ac040047304402203aba48b0a98194a505420633eeca5acd8244061899e0a414f1b0d2de1d721b0f022001b32486e7c443e25cdfdfb14dc183ba31f5329d0078a25f7eb74f7209f347bb014830450221009cbdf84db2585abddf79165340cc0b54037f13bbe5318ec3619d0de680ebbf5d02206a2ef69e154700202ac72330e936c073f8a86cec9443273f4d8739db1019d55a0169522103d54ab3c8b81cb7f8f8088df4c62c105e8acaa2fb53b180f6bc6f922faecf3fdc21036aa47994f3f18f0976d6073ca79997003c3fa29c4f93907998fefc1151b4529b2102a092580f2828272517c402da9461425c5032860ab40180e041fbbb88ea2a520453ae00000000",
     )
 
 
@@ -301,7 +308,7 @@ def test_attack_change_input_address(client: Client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API
+            client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API_TESTNET
         )
 
     assert (
@@ -340,14 +347,16 @@ def test_attack_change_input_address(client: Client):
             ]
         )
         with pytest.raises(TrezorFailure) as exc:
-            btc.sign_tx(client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API)
+            btc.sign_tx(
+                client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API_TESTNET
+            )
         assert exc.value.code == messages.FailureType.ProcessError
         assert exc.value.message.endswith("Transaction has changed during signing")
 
 
 def test_attack_mixed_inputs(client: Client):
-    TRUE_AMOUNT = 123456789
-    FAKE_AMOUNT = 120000000
+    TRUE_AMOUNT = 123_456_789
+    FAKE_AMOUNT = 120_000_000
 
     inp1 = messages.TxInputType(
         address_n=parse_path("m/44h/1h/0h/0/0"),
@@ -410,7 +419,7 @@ def test_attack_mixed_inputs(client: Client):
             "Testnet",
             [inp1, inp2],
             [out1],
-            prev_txes=TX_API,
+            prev_txes=TX_API_TESTNET,
         )
 
     # In Phase 1 make the user confirm a lower value of the segwit input.
@@ -433,7 +442,7 @@ def test_attack_mixed_inputs(client: Client):
             "Testnet",
             [inp1, inp2],
             [out1],
-            prev_txes=TX_API,
+            prev_txes=TX_API_TESTNET,
         )
 
     assert e.value.failure.message.endswith("Invalid amount specified")
