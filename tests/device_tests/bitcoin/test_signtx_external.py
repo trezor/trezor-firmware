@@ -22,7 +22,7 @@ from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
 from ...tx_cache import TxCache
-from ..signtx import request_finished, request_input, request_meta, request_output
+from .signtx import request_finished, request_input, request_meta, request_output
 
 B = messages.ButtonRequestType
 
@@ -34,12 +34,6 @@ TXHASH_e5040e = bytes.fromhex(
 )
 TXHASH_d830b8 = bytes.fromhex(
     "d830b877c3d9237a0a68be88825a296da01ac282a2efd2f671d8f17f15117b74"
-)
-TXHASH_091446 = bytes.fromhex(
-    "09144602765ce3dd8f4329445b20e3684e948709c5cdcaf12da3bb079c99448a"
-)
-TXHASH_65b811 = bytes.fromhex(
-    "65b811d3eca0fe6915d9f2d77c86c5a7f19bf66b1b1253c2c51cb4ae5f0c017b"
 )
 TXHASH_e5b7e2 = bytes.fromhex(
     "e5b7e21b5ba720e81efd6bfa9f854ababdcddc75a43bfa60bf0fe069cfd1bb8a"
@@ -64,6 +58,15 @@ TXHASH_afde2d = bytes.fromhex(
 )
 TXHASH_4012d9 = bytes.fromhex(
     "4012d9abb675243758b8f2cfd0042ce9a6c1459aaf5327dcac16c80f9eff1cbf"
+)
+TXHASH_1c022d = bytes.fromhex(
+    "1c022d9da3aa8bc8cf2a617c42c8f2c343e810af76b3ab9770c5ab6ca54ddab5"
+)
+TXHASH_ec16dc = bytes.fromhex(
+    "ec16dc5a539c5d60001a7471c37dbb0b5294c289c77df8bd07870b30d73e2231"
+)
+TXHASH_20912f = bytes.fromhex(
+    "20912f98ea3ed849042efed0fdac8cb4fc301961c5988cba56902d8ffb61c337"
 )
 
 
@@ -168,21 +171,21 @@ def test_p2pkh_presigned(client: Client):
 def test_p2wpkh_in_p2sh_presigned(client: Client):
     inp1 = messages.TxInputType(
         # 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
-        amount=111_145_789,
-        prev_hash=TXHASH_091446,
-        prev_index=1,
+        amount=123_456_789,
+        prev_hash=TXHASH_20912f,
+        prev_index=0,
         script_type=messages.InputScriptType.EXTERNAL,
         script_pubkey=bytes.fromhex("a91458b53ea7f832e8f096e896b8713a8c6df0e892ca87"),
         script_sig=bytearray.fromhex("160014d16b8c0680c61fc6ed2e407455715055e41052f5"),
         witness=bytes.fromhex(
-            "02483045022100ead79ee134f25bb585b48aee6284a4bb14e07f03cc130253e83450d095515e5202201e161e9402c8b26b666f2b67e5b668a404ef7e57858ae9a6a68c3837e65fdc69012103e7bfe10708f715e8538c92d46ca50db6f657bbc455b7494e6a0303ccdb868b79"
+            "024830450221009962940c7524c8dee6807d76e0ce1ba4a943604db0bce61357dabe5a4ce2d93a022014fa33769e33eb7e6051d9db28f06cff7ead6c7013839cc26c43f887736a9af1012103e7bfe10708f715e8538c92d46ca50db6f657bbc455b7494e6a0303ccdb868b79"
         ),
     )
     inp2 = messages.TxInputType(
-        address_n=parse_path("m/84h/1h/0h/1/0"),
-        amount=7_289_000,
-        prev_hash=TXHASH_65b811,
-        prev_index=1,
+        address_n=parse_path("m/84h/1h/0h/0/0"),
+        amount=10_000,
+        prev_hash=TXHASH_ec16dc,
+        prev_index=0,
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
     out1 = messages.TxOutputType(
@@ -198,7 +201,7 @@ def test_p2wpkh_in_p2sh_presigned(client: Client):
     )
     out3 = messages.TxOutputType(
         address="mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q",
-        amount=111_145_789 + 7_289_000 - 11_000 - 12_300_000 - 45_600_000,
+        amount=123_456_789 + 10_000 - 11000 - 12_300_000 - 45_600_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -215,15 +218,15 @@ def test_p2wpkh_in_p2sh_presigned(client: Client):
                 messages.ButtonRequest(code=B.ConfirmOutput),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
-                request_meta(TXHASH_091446),
-                request_input(0, TXHASH_091446),
-                request_output(0, TXHASH_091446),
-                request_output(1, TXHASH_091446),
+                request_meta(TXHASH_20912f),
+                request_input(0, TXHASH_20912f),
+                request_output(0, TXHASH_20912f),
+                request_output(1, TXHASH_20912f),
                 request_input(1),
-                request_meta(TXHASH_65b811),
-                request_input(0, TXHASH_65b811),
-                request_output(0, TXHASH_65b811),
-                request_output(1, TXHASH_65b811),
+                request_meta(TXHASH_ec16dc),
+                request_input(0, TXHASH_ec16dc),
+                request_output(0, TXHASH_ec16dc),
+                request_output(1, TXHASH_ec16dc),
                 request_input(0),
                 request_input(1),
                 request_output(0),
@@ -244,7 +247,7 @@ def test_p2wpkh_in_p2sh_presigned(client: Client):
 
     assert (
         serialized_tx.hex()
-        == "010000000001028a44999c07bba32df1cacdc50987944e68e3205b4429438fdde35c76024614090100000017160014d16b8c0680c61fc6ed2e407455715055e41052f5ffffffff7b010c5faeb41cc5c253121b6bf69bf1a7c5867cd7f2d91569fea0ecd311b8650100000000ffffffff03e0aebb0000000000160014a579388225827d9f2fe9014add644487808c695d00cdb7020000000017a91491233e24a9bf8dbb19c1187ad876a9380c12e787870d859b03000000001976a914a579388225827d9f2fe9014add644487808c695d88ac02483045022100ead79ee134f25bb585b48aee6284a4bb14e07f03cc130253e83450d095515e5202201e161e9402c8b26b666f2b67e5b668a404ef7e57858ae9a6a68c3837e65fdc69012103e7bfe10708f715e8538c92d46ca50db6f657bbc455b7494e6a0303ccdb868b7902463043021f585c54a84dc7326fa60e22729accd41153c7dd4725bd4c8f751aa3a8cd8d6a0220631bfd83fc312cc6d5d129572a25178696d81eaf50c8c3f16c6121be4f4c029d012103505647c017ff2156eb6da20fae72173d3b681a1d0a629f95f49e884db300689f00000000"
+        == "0100000000010237c361fb8f2d9056ba8c98c5611930fcb48cacfdd0fe2e0449d83eea982f91200000000017160014d16b8c0680c61fc6ed2e407455715055e41052f5ffffffff31223ed7300b8707bdf87dc789c294520bbb7dc371741a00605d9c535adc16ec0000000000ffffffff03e0aebb0000000000160014a579388225827d9f2fe9014add644487808c695d00cdb7020000000017a91491233e24a9bf8dbb19c1187ad876a9380c12e787874d4de803000000001976a914a579388225827d9f2fe9014add644487808c695d88ac024830450221009962940c7524c8dee6807d76e0ce1ba4a943604db0bce61357dabe5a4ce2d93a022014fa33769e33eb7e6051d9db28f06cff7ead6c7013839cc26c43f887736a9af1012103e7bfe10708f715e8538c92d46ca50db6f657bbc455b7494e6a0303ccdb868b7902473044022009b2654cd576227c781b14b775df4749d0bcc5661cc39a08b5c42b8ffbc33c5d02203893cc57c46811ec2fb2d27764f3a3b3406040a24d1373cc7f38f79d80dfef1f012103adc58245cf28406af0ef5cc24b8afba7f1be6c72f279b642d85c48798685f86200000000"
     )
 
     # Test corrupted script hash in scriptsig.
@@ -262,10 +265,10 @@ def test_p2wpkh_in_p2sh_presigned(client: Client):
                 messages.ButtonRequest(code=B.ConfirmOutput),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
-                request_meta(TXHASH_091446),
-                request_input(0, TXHASH_091446),
-                request_output(0, TXHASH_091446),
-                request_output(1, TXHASH_091446),
+                request_meta(TXHASH_20912f),
+                request_input(0, TXHASH_20912f),
+                request_output(0, TXHASH_20912f),
+                request_output(1, TXHASH_20912f),
                 messages.Failure(code=messages.FailureType.DataError),
             ]
         )
@@ -348,32 +351,32 @@ def test_p2wpkh_presigned(client: Client):
 def test_p2wsh_external_presigned(client: Client):
     inp1 = messages.TxInputType(
         address_n=parse_path("m/84h/1h/0h/0/0"),
-        amount=12_300_000,
-        prev_hash=TXHASH_091446,
+        amount=10_000,
+        prev_hash=TXHASH_ec16dc,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
 
     inp2 = messages.TxInputType(
-        # 1-of-2 multisig
-        # m/84'/1'/0/0/0' for "alcohol woman abuse ..." seed.
-        # m/84'/1'/0/0/0' for "all all ... all" seed.
+        # 1 of 2 multisig
+        # m/84'/1'/0' for "alcohol woman abuse ..." seed.
+        # m/84'/1'/0' for "all all ... all" seed.
         # tb1qpzmgzpcumztvmpu3q27wwdggqav26j9dgks92pvnne2lz9ferxgssmhzlq
-        prev_hash=TXHASH_a345b8,
-        prev_index=0,
+        prev_hash=TXHASH_1c022d,
+        prev_index=2,
+        amount=100_000,
         script_type=messages.InputScriptType.EXTERNAL,
         script_pubkey=bytes.fromhex(
             "002008b681071cd896cd879102bce735080758ad48ad45a05505939e55f115391991"
         ),
-        amount=100,
         witness=bytearray.fromhex(
-            "030047304402206b570b99c22c841548a35a9b9c673fa3b87a9563ed64ad7d979aa3e01b2e303802201d0bebf58b7243e09798e734fc32892936c4d0c4984bec755dc951ef646e4a9a0147512103505f0d82bbdd251511591b34f36ad5eea37d3220c2b81a1189084431ddb3aa3d2103adc58245cf28406af0ef5cc24b8afba7f1be6c72f279b642d85c48798685f86252ae"
+            "03004830450221009c74f5b89440665857f2c775f7c63eb208456aeda12ef9f4ba2c739474f3436202205a069c3bcb31a9fe751818920ae94db4087d432ebd2762741922281d205ac3620147512103505f0d82bbdd251511591b34f36ad5eea37d3220c2b81a1189084431ddb3aa3d2103adc58245cf28406af0ef5cc24b8afba7f1be6c72f279b642d85c48798685f86252ae"
         ),
     )
 
     out1 = messages.TxOutputType(
         address="2N4Q5FhU2497BryFfUgbqkAJE87aKHUhXMp",
-        amount=12_300_000 + 100 - 10_000,
+        amount=10_000 + 100_000 - 1_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -386,14 +389,16 @@ def test_p2wsh_external_presigned(client: Client):
                 messages.ButtonRequest(code=B.ConfirmOutput),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
-                request_meta(TXHASH_091446),
-                request_input(0, TXHASH_091446),
-                request_output(0, TXHASH_091446),
-                request_output(1, TXHASH_091446),
+                request_meta(TXHASH_ec16dc),
+                request_input(0, TXHASH_ec16dc),
+                request_output(0, TXHASH_ec16dc),
+                request_output(1, TXHASH_ec16dc),
                 request_input(1),
-                request_meta(TXHASH_a345b8),
-                request_input(0, TXHASH_a345b8),
-                request_output(0, TXHASH_a345b8),
+                request_meta(TXHASH_1c022d),
+                request_input(0, TXHASH_1c022d),
+                request_output(0, TXHASH_1c022d),
+                request_output(1, TXHASH_1c022d),
+                request_output(2, TXHASH_1c022d),
                 request_input(0),
                 request_input(1),
                 request_output(0),
@@ -404,12 +409,16 @@ def test_p2wsh_external_presigned(client: Client):
         )
 
         _, serialized_tx = btc.sign_tx(
-            client, "Testnet", [inp1, inp2], [out1], prev_txes=TX_CACHE_TESTNET
+            client,
+            "Testnet",
+            [inp1, inp2],
+            [out1],
+            prev_txes=TX_CACHE_TESTNET,
         )
 
     assert (
         serialized_tx.hex()
-        == "010000000001028a44999c07bba32df1cacdc50987944e68e3205b4429438fdde35c76024614090000000000ffffffff48e37c58a68ab4899400dc0950a661817ea7bac3e4556044c685b35957b845a30000000000ffffffff013488bb000000000017a9147a55d61848e77ca266e79a39bfc85c580a6426c9870247304402204270cf602ec151e72b99c5048755379c368c6c7cd722e4234ad4bb7b1b87d09d02207fa59b1c2926ea6b4f0094ab77c08e50b089a199a5bc8419e1ee6674809c4fb4012103adc58245cf28406af0ef5cc24b8afba7f1be6c72f279b642d85c48798685f862030047304402206b570b99c22c841548a35a9b9c673fa3b87a9563ed64ad7d979aa3e01b2e303802201d0bebf58b7243e09798e734fc32892936c4d0c4984bec755dc951ef646e4a9a0147512103505f0d82bbdd251511591b34f36ad5eea37d3220c2b81a1189084431ddb3aa3d2103adc58245cf28406af0ef5cc24b8afba7f1be6c72f279b642d85c48798685f86252ae00000000"
+        == "0100000000010231223ed7300b8707bdf87dc789c294520bbb7dc371741a00605d9c535adc16ec0000000000ffffffffb5da4da56cabc57097abb376af10e843c3f2c8427c612acfc88baaa39d2d021c0200000000ffffffff01c8a901000000000017a9147a55d61848e77ca266e79a39bfc85c580a6426c9870247304402207ec2960e148af81ac1bf570e59a9e17566c9db539826fe6edec622e4378da203022051e4c877ef6ef67700cc9038b9969355f104b608f7b4ed4ee573f3608cc40b69012103adc58245cf28406af0ef5cc24b8afba7f1be6c72f279b642d85c48798685f86203004830450221009c74f5b89440665857f2c775f7c63eb208456aeda12ef9f4ba2c739474f3436202205a069c3bcb31a9fe751818920ae94db4087d432ebd2762741922281d205ac3620147512103505f0d82bbdd251511591b34f36ad5eea37d3220c2b81a1189084431ddb3aa3d2103adc58245cf28406af0ef5cc24b8afba7f1be6c72f279b642d85c48798685f86252ae00000000"
     )
 
     # Test corrupted signature in witness.
@@ -423,14 +432,16 @@ def test_p2wsh_external_presigned(client: Client):
                 messages.ButtonRequest(code=B.ConfirmOutput),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
-                request_meta(TXHASH_091446),
-                request_input(0, TXHASH_091446),
-                request_output(0, TXHASH_091446),
-                request_output(1, TXHASH_091446),
+                request_meta(TXHASH_ec16dc),
+                request_input(0, TXHASH_ec16dc),
+                request_output(0, TXHASH_ec16dc),
+                request_output(1, TXHASH_ec16dc),
                 request_input(1),
-                request_meta(TXHASH_a345b8),
-                request_input(0, TXHASH_a345b8),
-                request_output(0, TXHASH_a345b8),
+                request_meta(TXHASH_1c022d),
+                request_input(0, TXHASH_1c022d),
+                request_output(0, TXHASH_1c022d),
+                request_output(1, TXHASH_1c022d),
+                request_output(2, TXHASH_1c022d),
                 messages.Failure(code=messages.FailureType.DataError),
             ]
         )
@@ -559,20 +570,20 @@ def test_p2wpkh_with_proof(client: Client):
         ),
     )
     inp2 = messages.TxInputType(
-        address_n=parse_path("m/84h/1h/0h/1/0"),
-        amount=7_289_000,
-        prev_hash=TXHASH_65b811,
-        prev_index=1,
+        address_n=parse_path("m/84h/1h/0h/0/0"),
+        amount=10_000,
+        prev_hash=TXHASH_ec16dc,
+        prev_index=0,
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
     out1 = messages.TxOutputType(
         address="tb1q54un3q39sf7e7tlfq99d6ezys7qgc62a6rxllc",
-        amount=1_230_000,
+        amount=55_555,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     out2 = messages.TxOutputType(
         address="mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q",
-        amount=100_000 + 7_289_000 - 11_000 - 1_230_000,
+        amount=100_000 + 10_000 - 11000 - 55_555,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -592,10 +603,10 @@ def test_p2wpkh_with_proof(client: Client):
                 request_output(0, TXHASH_e5b7e2),
                 request_output(1, TXHASH_e5b7e2),
                 request_input(1),
-                request_meta(TXHASH_65b811),
-                request_input(0, TXHASH_65b811),
-                request_output(0, TXHASH_65b811),
-                request_output(1, TXHASH_65b811),
+                request_meta(TXHASH_ec16dc),
+                request_input(0, TXHASH_ec16dc),
+                request_output(0, TXHASH_ec16dc),
+                request_output(1, TXHASH_ec16dc),
                 request_input(0),
                 request_input(1),
                 request_output(0),
@@ -614,7 +625,7 @@ def test_p2wpkh_with_proof(client: Client):
 
     assert (
         serialized_tx.hex()
-        == "010000000001028abbd1cf69e00fbf60fa3ba475dccdbdba4a859ffa6bfd1ee820a75b1be2b7e50000000000ffffffff7b010c5faeb41cc5c253121b6bf69bf1a7c5867cd7f2d91569fea0ecd311b8650100000000ffffffff02b0c4120000000000160014a579388225827d9f2fe9014add644487808c695da0cf5d00000000001976a914a579388225827d9f2fe9014add644487808c695d88ac0002483045022100b17fe0eb21da96bdf9640bbe94f6198ff2ced183765753ee3d5119e661977cb20220121dfdc7a121afdcc08fae1389c7147a10bc58b2daea46799c6e6547c648ba1d012103505647c017ff2156eb6da20fae72173d3b681a1d0a629f95f49e884db300689f00000000"
+        == "010000000001028abbd1cf69e00fbf60fa3ba475dccdbdba4a859ffa6bfd1ee820a75b1be2b7e50000000000ffffffff31223ed7300b8707bdf87dc789c294520bbb7dc371741a00605d9c535adc16ec0000000000ffffffff0203d9000000000000160014a579388225827d9f2fe9014add644487808c695db5a90000000000001976a914a579388225827d9f2fe9014add644487808c695d88ac000247304402204ab2dfe9eb1268c1cea7d997ae10070c67a26d1c52eb8af06d2e8a4f8befeee30220445294f1568782879c84bf216c80c0f01dc332569c2afd1be5381b0d5a8d6d69012103adc58245cf28406af0ef5cc24b8afba7f1be6c72f279b642d85c48798685f86200000000"
     )
 
     # Test corrupted ownership proof.

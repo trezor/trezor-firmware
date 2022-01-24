@@ -22,27 +22,37 @@ from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
 from ...tx_cache import TxCache
-from ..signtx import request_finished, request_input, request_meta, request_output
+from .signtx import (
+    assert_tx_matches,
+    request_finished,
+    request_input,
+    request_meta,
+    request_output,
+)
 
 B = messages.ButtonRequestType
 TX_API = TxCache("Bitcoin")
+TX_API_TESTNET = TxCache("Testnet")
 
 TXHASH_d5f65e = bytes.fromhex(
     "d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882"
+)
+TXHASH_4075a1 = bytes.fromhex(
+    "4075a1ae38ce607a20a9157840430354608201b3bfa2c7dba851473199f9d08f"
 )
 
 
 def test_opreturn(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("m/44h/0h/0h/0/2"),
-        amount=390_000,
-        prev_hash=TXHASH_d5f65e,
+        address_n=parse_path("m/44h/1h/1h/0/21"),  # myGMXcCxmuDooMdzZFPMmvHviijzqYKhza
+        amount=89_581,
+        prev_hash=TXHASH_4075a1,
         prev_index=0,
     )
 
     out1 = messages.TxOutputType(
-        address="1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1",
-        amount=390_000 - 10_000,
+        address="2MyAH3SSRbmkABYPj8WCfizMiyUpmBB2j62",  # 49h/1h/0h/0/66
+        amount=89_581 - 10_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -62,10 +72,9 @@ def test_opreturn(client: Client):
                 messages.ButtonRequest(code=B.ConfirmOutput),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
-                request_meta(TXHASH_d5f65e),
-                request_input(0, TXHASH_d5f65e),
-                request_input(1, TXHASH_d5f65e),
-                request_output(0, TXHASH_d5f65e),
+                request_meta(TXHASH_4075a1),
+                request_input(0, TXHASH_4075a1),
+                request_output(0, TXHASH_4075a1),
                 request_input(0),
                 request_output(0),
                 request_output(1),
@@ -75,12 +84,13 @@ def test_opreturn(client: Client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client, "Bitcoin", [inp1], [out1, out2], prev_txes=TX_API
+            client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API_TESTNET
         )
 
-    assert (
-        serialized_tx.hex()
-        == "010000000182488650ef25a58fef6788bd71b8212038d7f2bbe4750bc7bcb44701e85ef6d5000000006b483045022100bc36e1227b334e856c532bbef86d30a96823a5f2461738f4dbf969dfbcf1b40b022078c5353ec9a4bce2bb05bd1ec466f2ab379c1aad926e208738407bba4e09784b012103330236b68aa6fdcaca0ea72e11b360c84ed19a338509aa527b678a7ec9076882ffffffff0260cc0500000000001976a914de9b2a8da088824e8fe51debea566617d851537888ac00000000000000001c6a1a74657374206f6620746865206f705f72657475726e206461746100000000"
+    assert_tx_matches(
+        serialized_tx,
+        hash_link="https://tbtc1.trezor.io/api/tx/c3185a82c0328304adfb52bfd07d4bca2c34f13153b32d9d034390365c46bbd2",
+        tx_hex="01000000018fd0f999314751a8dbc7a2bfb3018260540343407815a9207a60ce38aea17540000000006b483045022100f6b228f0a1b8eb5037f13f28619aacc4c21a4c338318d631be2fda4cc653b6cf022015fc2975792f5d22d61601ca0523cad2d015b14fdf0ebe2af0790e3fac3ebbdb012102eee6b3ec6435f42ca071707eb1b14647d2121e0f8a53fa7fa9f92a691227a3d9ffffffff02dd3601000000000017a91440e1397e36e9bb6b731ac4ea186ba53111284e868700000000000000001c6a1a74657374206f6620746865206f705f72657475726e206461746100000000",
     )
 
 

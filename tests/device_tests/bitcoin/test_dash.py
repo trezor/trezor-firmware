@@ -21,7 +21,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
 from ...tx_cache import TxCache
-from ..signtx import (
+from .signtx import (
     request_extra_data,
     request_finished,
     request_input,
