@@ -92,8 +92,8 @@ class TestOwnershipProof(unittest.TestCase):
             script_pubkey=script_pubkey,
             commitment_data=commitment_data,
         )
-        self.assertEqual(signature, unhexlify("1b553e5b9cc787b531bbc78417aea901272b4ea905136a2babc4d6ca471549743b5e0e39ddc14e620b254e42faa7f6d5bd953e97aa231d764d21bc5a58e8b7d9"))
-        self.assertEqual(proof, unhexlify("534c00190001dc18066224b9e30e306303436dc18ab881c7266c13790350a3fe415e438135ec0001401b553e5b9cc787b531bbc78417aea901272b4ea905136a2babc4d6ca471549743b5e0e39ddc14e620b254e42faa7f6d5bd953e97aa231d764d21bc5a58e8b7d9"))
+        self.assertEqual(signature, unhexlify("647d6af883107a870417e808abe424882bd28ee04a28ba85a7e99400e1b9485075733695964c2a0fa02d4439ab80830e9566ccbd10f2597f5513eff9f03a0497"))
+        self.assertEqual(proof, unhexlify("534c00190001dc18066224b9e30e306303436dc18ab881c7266c13790350a3fe415e438135ec000140647d6af883107a870417e808abe424882bd28ee04a28ba85a7e99400e1b9485075733695964c2a0fa02d4439ab80830e9566ccbd10f2597f5513eff9f03a0497"))
         self.assertFalse(ownership.verify_nonownership(proof, script_pubkey, commitment_data, keychain, coin))
 
     def test_p2pkh_gen_proof(self):
