@@ -1040,3 +1040,52 @@ bool ethereum_parse(const char *address, uint8_t pubkeyhash[20]) {
   }
   return true;
 }
+
+bool ethereum_path_check(uint32_t address_n_count, const uint32_t *address_n,
+                         bool pubkey_export, uint64_t chain) {
+  bool valid = (address_n_count >= 3);
+  valid = valid && (address_n[0] == (PATH_HARDENED | 44));
+  valid = valid && (address_n[1] & PATH_HARDENED);
+  valid = valid && (address_n[2] & PATH_HARDENED);
+  valid = valid && ((address_n[2] & PATH_UNHARDEN_MASK) <= PATH_MAX_ACCOUNT);
+
+  uint32_t path_slip44 = address_n[1] & PATH_UNHARDEN_MASK;
+  if (chain == CHAIN_ID_UNKNOWN) {
+    valid = valid && (is_ethereum_slip44(path_slip44));
+  } else {
+    uint32_t chain_slip44 = ethereum_slip44_by_chain_id(chain);
+    if (chain_slip44 == SLIP44_UNKNOWN) {
+      // Allow Ethereum or testnet paths for unknown networks.
+      valid = valid && (path_slip44 == 60 || path_slip44 == 1);
+    } else if (chain_slip44 != 60 && chain_slip44 != 1) {
+      // Allow cross-signing with Ethereum unless it's testnet.
+      valid = valid && (path_slip44 == chain_slip44 || path_slip44 == 60);
+    } else {
+      valid = valid && (path_slip44 == chain_slip44);
+    }
+  }
+
+  if (pubkey_export) {
+    // m/44'/coin_type'/account'/*
+    return valid;
+  }
+
+  if (address_n_count == 3) {
+    // SEP-0005 for non-UTXO-based currencies, defined by Stellar:
+    // https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0005.md
+    // m/44'/coin_type'/account'
+    return valid;
+  }
+
+  // We believe Ethereum should use the SEP-0005 scheme for everything, because
+  // it is account-based, rather than UTXO-based. Unfortunately, a lot of
+  // Ethereum tools (MEW, Metamask) do not use such scheme and set account = 0
+  // and then iterate the address index. For compatibility, we allow this scheme
+  // as well.
+  // m/44'/coin_type'/account'/change/address_index
+  valid = valid && (address_n_count == 5);
+  valid = valid && (address_n[3] <= PATH_MAX_CHANGE);
+  valid = valid && (address_n[4] <= PATH_MAX_ADDRESS_INDEX);
+
+  return valid;
+}
