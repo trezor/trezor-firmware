@@ -52,10 +52,10 @@ BLOCKBOOKS = _get_blockbooks()
 
 
 class TxCache:
-    def __init__(self, coin_name):
+    def __init__(self, coin_name: str) -> None:
         self.slug = coin_name.lower().replace(" ", "_")
 
-    def get_tx(self, txhash):
+    def get_tx(self, txhash: str) -> messages.TransactionType:
         try:
             (CACHE_PATH / self.slug).mkdir()
         except Exception:
@@ -71,10 +71,10 @@ class TxCache:
         txdict = json.loads(cache_file.read_text())
         return protobuf.dict_to_proto(messages.TransactionType, txdict)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: bytes) -> messages.TransactionType:
         return self.get_tx(key.hex())
 
-    def __contains__(self, key):
+    def __contains__(self, key: bytes) -> bool:
         try:
             self.get_tx(key.hex())
             return True
