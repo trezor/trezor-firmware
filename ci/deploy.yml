@@ -239,3 +239,19 @@ ui tests core fixtures deploy:
     - rsync --delete -va ci/ui_test_records/* "$DEPLOY_PATH"
   tags:
     - deploy
+
+# common sync to trezor-common
+
+common sync:
+  stage: deploy
+  variables:
+    GIT_SUBMODULE_STRATEGY: "none"
+    GIT_STRATEGY: clone  # clone entire repo instead of reusing workspace
+    GIT_DEPTH: 0  # avoid shallow clone
+  only:
+    - schedules
+  needs: []
+  before_script: []  # no poetry
+  script:
+    - echo "Synchronizing common with the trezor-common repository"
+    - ./ci/common_sync/common_repo_sync.sh
