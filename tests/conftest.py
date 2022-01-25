@@ -27,6 +27,9 @@ from . import ui_tests
 from .device_handler import BackgroundDeviceHandler
 from .ui_tests.reporting import testreport
 
+# So that we see details of failed asserts from this module
+pytest.register_assert_rewrite("tests.common")
+
 
 @pytest.fixture(scope="session")
 def _raw_client(request):
