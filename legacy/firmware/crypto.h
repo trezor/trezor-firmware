@@ -38,6 +38,12 @@ typedef enum _CoinPathCheckLevel {
   CoinPathCheckLevel_SCRIPT_TYPE = 2,
 } CoinPathCheckLevel;
 
+#define PATH_HARDENED 0x80000000
+#define PATH_UNHARDEN_MASK 0x7fffffff
+#define PATH_MAX_ACCOUNT 100
+#define PATH_MAX_CHANGE 1
+#define PATH_MAX_ADDRESS_INDEX 1000000
+
 #define ser_length_size(len) ((len) < 253 ? 1 : (len) < 0x10000 ? 3 : 5)
 
 uint32_t ser_length(uint32_t len, uint8_t *out);
