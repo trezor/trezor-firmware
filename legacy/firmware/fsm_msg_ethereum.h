@@ -110,7 +110,7 @@ void fsm_msgEthereumGetAddress(const EthereumGetAddress *msg) {
   if (!hdnode_get_ethereum_pubkeyhash(node, pubkeyhash)) return;
 
   uint32_t slip44 =
-      (msg->address_n_count > 1) ? (msg->address_n[1] & 0x7fffffff) : 0;
+      (msg->address_n_count > 1) ? (msg->address_n[1] & PATH_UNHARDEN_MASK) : 0;
   bool rskip60 = false;
   uint64_t chain_id = 0;
   // constants from trezor-common/defs/ethereum/networks.json

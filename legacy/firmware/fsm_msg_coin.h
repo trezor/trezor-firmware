@@ -37,7 +37,7 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
 
   // derive m/0' to obtain root_fingerprint
   uint32_t root_fingerprint;
-  uint32_t path[1] = {0x80000000 | 0};
+  uint32_t path[1] = {PATH_HARDENED | 0};
   HDNode *node = fsm_getDerivedNode(curve, path, 1, &root_fingerprint);
   if (!node) return;
 
