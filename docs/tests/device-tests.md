@@ -43,15 +43,48 @@ If you only want to run a particular test, pick it with `-k <keyword>` or `-m <m
 
 ```sh
 pytest -k nem      # only runs tests that have "nem" in the name
+pytest -k "nem or stellar"  # only runs tests that have "nem" or "stellar" in the name
 pytest -m stellar  # only runs tests marked with @pytest.mark.stellar
 ```
 
 If you want to see debugging information and protocol dumps, run with `-v`.
 
+Print statements from testing files are not shown by default. To enable them, use `-s` flag.
+
 If you would like to interact with the device (i.e. press the buttons yourself), just prefix pytest with `INTERACT=1`:
 
 ```sh
 INTERACT=1 pytest tests/device_tests
+```
+
+To run the tests quicker, spawn the emulator with disabled animations using `-a` flag.
+
+```sh
+./core/emu.py -a
+```
+
+To run the tests even quicker, the emulator should come from a frozen build. (However, then changes to python code files are not reflected in emulator, one needs to build it again each time.)
+
+```sh
+PYOPT=0 make build_unix_frozen
+```
+
+It is possible to specify the timeout for each test in seconds, using `PYTEST_TIMEOUT` env variable.
+```sh
+PYTEST_TIMEOUT=15 pytest tests/device_tests
+```
+
+When running tests from Makefile target, it is possible to specify `TESTOPTS` env variable with testing options, as if pytest would be called normally.
+
+```sh
+TESTOPTS="-x -v -k test_msg_backup_device.py" make test_emu
+```
+
+When troubleshooting an unstable test that is failing occasionally, following runs it until it fails (so failure is visible on screen):
+
+```sh
+export TESTOPTS="-x -v -k test_msg_backup_device.py"
+while make test_emu; do sleep 1; done
 ```
 
 ## 3. Using markers
