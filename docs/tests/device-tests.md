@@ -57,6 +57,12 @@ If you would like to interact with the device (i.e. press the buttons yourself),
 INTERACT=1 pytest tests/device_tests
 ```
 
+When testing transaction signing, there is an option to check transaction hashes on-chain using Blockbook. It is chosen by setting `CHECK_ON_CHAIN=1` environment variable before running the tests.
+
+```sh
+CHECK_ON_CHAIN=1 pytest tests/device_tests
+```
+
 To run the tests quicker, spawn the emulator with disabled animations using `-a` flag.
 
 ```sh
