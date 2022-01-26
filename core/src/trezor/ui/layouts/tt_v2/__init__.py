@@ -10,6 +10,7 @@ from trezorui2 import (
     layout_new_pin,
     layout_new_slip39,
 )
+import trezorui2
 
 from ...components.tt import passphrase, pin
 from ...constants.tt import MONO_ADDR_PER_LINE
@@ -99,7 +100,7 @@ async def confirm_action(
     result = await interact(
         ctx,
         _RustLayout(
-            layout_new_confirm_action(
+            trezorui2.confirm_action(
                 title=title.upper(),
                 action=action,
                 description=description,
@@ -111,7 +112,7 @@ async def confirm_action(
         br_type,
         br_code,
     )
-    if result is not True:
+    if result is not trezorui2.CONFIRMED:
         raise exc
 
 

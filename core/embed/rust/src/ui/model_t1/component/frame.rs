@@ -23,6 +23,20 @@ where
             content: Child::new(content),
         }
     }
+
+    fn areas(area: Rect) -> (Rect, Rect) {
+        const HEADER_SPACE: i32 = 4;
+        let header_height = theme::FONT_BOLD.line_height();
+
+        let (header_area, content_area) = area.split_top(header_height);
+        let (_space, content_area) = content_area.split_top(HEADER_SPACE);
+
+        (header_area, content_area)
+    }
+
+    pub fn inner(&self) -> &T {
+        self.content.inner()
+    }
 }
 
 impl<T, U> Component for Frame<T, U>

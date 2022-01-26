@@ -6,8 +6,26 @@ use crate::{
         map::{Map, MapElem},
         obj::Obj,
         runtime::raise_exception,
+        time,
     },
+    time::Duration,
 };
+
+/// Wait an unspecified short amount of time. To be used in busy loops.
+pub fn wait_in_busy_loop() {
+    match () {
+        #[cfg(cortex_m)]
+        () => {
+            // In device context, run the WFI instruction.
+            unsafe { asm!("wfi" :::: "volatile") }
+        }
+        #[cfg(not(cortex_m))]
+        () => {
+            // In desktop context, we sleep for 1ms.
+            time::sleep(Duration::from_millis(1))
+        }
+    }
+}
 
 /// Perform a call and convert errors into a raised MicroPython exception.
 /// Should only called when returning from Rust to C. See `raise_exception` for

@@ -31,6 +31,16 @@ where
             right_btn: right.map(Child::new),
         }
     }
+
+    fn areas(area: Rect) -> (Rect, Rect) {
+        let button_height = theme::FONT_BOLD.line_height() + 2;
+        let (content_area, button_area) = area.split_bottom(button_height);
+        (content_area, button_area)
+    }
+
+    pub fn inner(&self) -> &T {
+        self.content.inner()
+    }
 }
 
 impl<T, U> Component for Dialog<T, U>

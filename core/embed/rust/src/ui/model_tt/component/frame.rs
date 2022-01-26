@@ -23,6 +23,21 @@ where
             content: Child::new(content),
         }
     }
+
+    fn areas(area: Rect) -> (Rect, Rect) {
+        // Same as PageLayout::BUTTON_SPACE.
+        const TITLE_SPACE: i32 = 6;
+
+        let (title_area, content_area) = area.split_top(theme::FONT_BOLD.text_height());
+        let title_area = title_area.inset(Insets::left(theme::CONTENT_BORDER));
+        let content_area = content_area.inset(Insets::top(TITLE_SPACE));
+
+        (title_area, content_area)
+    }
+
+    pub fn inner(&self) -> &T {
+        &self.content.inner()
+    }
 }
 
 impl<T, U> Component for Frame<T, U>
