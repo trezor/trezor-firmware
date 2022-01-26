@@ -174,7 +174,6 @@ def test_attack_path_segwit(client: Client):
             )
 
 
-@pytest.mark.skip_t1(reason="T1 only prevents using paths known to be altcoins")
 def test_invalid_path_fail_asap(client: Client):
     inp1 = messages.TxInputType(
         address_n=parse_path("m/0"),
