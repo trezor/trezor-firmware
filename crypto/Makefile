@@ -34,12 +34,6 @@ CFLAGS   += $(OPTFLAGS) \
             -Werror
 
 ZKP_CFLAGS = \
-	-DUSE_NUM_NONE \
-	-DUSE_FIELD_INV_BUILTIN \
-	-DUSE_SCALAR_INV_BUILTIN \
-	-DUSE_FIELD_10X26 \
-	-DUSE_SCALAR_8X32 \
-	-DUSE_ECMULT_STATIC_PRECOMPUTATION \
 	-DECMULT_GEN_PREC_BITS=4 \
 	-DECMULT_WINDOW_SIZE=8 \
 	-DENABLE_MODULE_GENERATOR \
@@ -105,6 +99,8 @@ SRCS  += cardano.c
 
 OBJS   = $(SRCS:.c=.o)
 OBJS  += secp256k1-zkp.o
+OBJS  += precomputed_ecmult.o
+OBJS  += precomputed_ecmult_gen.o
 
 TESTLIBS = $(shell pkg-config --libs check) -lpthread -lm
 TESTSSLLIBS = $(shell pkg-config --libs openssl)
@@ -147,11 +143,13 @@ tools/bip39bruteforce: tools/bip39bruteforce.o $(OBJS)
 fuzzer: fuzzer/fuzzer.o $(OBJS)
 	$(CC) $(CFLAGS) fuzzer/fuzzer.o $(OBJS) -o fuzzer/fuzzer
 
-$(ZKP_PATH)/src/ecmult_static_context.h: $(ZKP_PATH)/src/gen_context.c
-	$(CC) $(ZKP_CFLAGS) $(ZKP_PATH)/src/gen_context.c -o $(ZKP_PATH)/gen_context
-	cd $(ZKP_PATH) && ./gen_context
+precomputed_ecmult.o:
+	$(CC) $(CFLAGS) -Wno-unused-function $(ZKP_CFLAGS) -fPIC -c $(ZKP_PATH)/src/precomputed_ecmult.c -o precomputed_ecmult.o
 
-secp256k1-zkp.o: $(ZKP_PATH)/src/ecmult_static_context.h
+precomputed_ecmult_gen.o:
+	$(CC) $(CFLAGS) -Wno-unused-function $(ZKP_CFLAGS) -fPIC -c $(ZKP_PATH)/src/precomputed_ecmult_gen.c -o precomputed_ecmult_gen.o
+
+secp256k1-zkp.o:
 	$(CC) $(CFLAGS) -Wno-unused-function $(ZKP_CFLAGS) -fPIC -I$(ZKP_PATH) -I$(ZKP_PATH)/src -c $(ZKP_PATH)/src/secp256k1.c -o secp256k1-zkp.o
 
 clean:
@@ -159,9 +157,7 @@ clean:
 	rm -f tests/*.o tests/test_check tests/test_speed tests/test_openssl tests/libtrezor-crypto.so tests/aestst
 	rm -f tools/*.o tools/xpubaddrgen tools/mktable tools/bip39bruteforce
 	rm -f fuzzer/*.o fuzzer/fuzzer
-	rm -f secp256k1-zkp.o
-	rm -f $(ZKP_PATH)/gen_context
-	rm -f $(ZKP_PATH)/src/ecmult_static_context.h
+	rm -f secp256k1-zkp.o precomputed_ecmult.o precompute_ecmult_gen.o
 
 clean-fuzzer: clean
 	rm -f crash-* fuzz-*.log slow-unit-* timeout-*

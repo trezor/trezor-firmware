@@ -119,11 +119,6 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
         'USE_SECP256K1_ZKP',
         'USE_SECP256K1_ZKP_ECDSA',
         ('SECP256K1_CONTEXT_SIZE', '208'),
-        'USE_NUM_NONE',
-        'USE_FIELD_INV_BUILTIN',
-        'USE_SCALAR_INV_BUILTIN',
-        'USE_FIELD_10X26',
-        'USE_SCALAR_8X32',
         'USE_ECMULT_STATIC_PRECOMPUTATION',
         'USE_EXTERNAL_DEFAULT_CALLBACKS',
         ('ECMULT_GEN_PREC_BITS', '4'),
@@ -135,6 +130,8 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
     ]
     SOURCE_MOD_SECP256K1_ZKP = [
         'vendor/secp256k1-zkp/src/secp256k1.c',
+        'vendor/secp256k1-zkp/src/precomputed_ecmult.c',
+        'vendor/secp256k1-zkp/src/precomputed_ecmult_gen.c',
     ]
     SOURCE_MOD += [
         'vendor/trezor-crypto/zkp_context.c',
@@ -613,29 +610,6 @@ if FROZEN:
     env.Depends(source_mpyc, qstr_generated)
 
 #
-# static secp256-zkp ecmult context
-#
-if FEATURE_FLAGS["SECP256K1_ZKP"]:
-    host_env = Environment(ENV=os.environ)
-    host_env.Replace(
-        CC=os.getenv('CC_FOR_BUILD') or 'gcc',
-        COPT='-O2',
-        CPPPATH='vendor/secp256k1-zkp',
-        CPPDEFINES=[
-            ('ECMULT_GEN_PREC_BITS', '4'),
-        ]
-    )
-    gen_context = host_env.Program(
-        target='vendor/secp256k1-zkp/gen_context',
-        source='vendor/secp256k1-zkp/src/gen_context.c',
-    )
-    secp256k1_zkp_ecmult_static_context = host_env.Command(
-        target='vendor/secp256k1-zkp/src/ecmult_static_context.h',
-        source='vendor/secp256k1-zkp/gen_context',
-        action='cd ${SOURCE.dir}; ./gen_context',
-    )
-
-#
 # Rust library
 #
 
@@ -695,8 +669,6 @@ if FROZEN:
     obj_program.extend(env.Object(source=source_mpyc))
 
 env.Depends(obj_program, qstr_generated)
-if FEATURE_FLAGS["SECP256K1_ZKP"]:
-    env.Depends(obj_program, secp256k1_zkp_ecmult_static_context)
 
 program = env.Command(
     target='trezor-emu-core',
