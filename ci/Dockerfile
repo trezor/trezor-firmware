@@ -10,6 +10,8 @@ ADD alpine-minirootfs-${ALPINE_VERSION}-${ALPINE_ARCH}.tar.gz /
 # Enable HTTPS support in wget and set nsswitch.conf to make resolution work within containers
 RUN apk add --no-cache --update openssl \
   && echo hosts: files dns > /etc/nsswitch.conf
+# Add basic packages
+RUN apk update && apk add bash git python3
 
 # Download Nix and install it into the system.
 ARG NIX_VERSION=2.4
@@ -38,6 +40,9 @@ ENV \
 
 COPY shell.nix shell.nix
 COPY pyright/ pyright/
+# add and install git-filter-repo for common sync job
+COPY common_sync/git-filter-repo git-filter-repo
+RUN mv git-filter-repo $(git --exec-path)
 
 # to make multiple python versions and monero test suite available, run docker build
 # with the following argument: "--build-arg FULLDEPS_TESTING=1"
