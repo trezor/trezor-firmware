@@ -368,6 +368,18 @@ void fsm_msgRebootToBootloader(void) {
 #endif
 }
 
+bool fsm_layoutPathWarning(void) {
+  layoutDialogSwipe(&bmp_icon_warning, _("Abort"), _("Continue"), NULL,
+                    _("Wrong address path"), _("for selected coin."), NULL,
+                    _("Continue at your"), _("own risk!"), NULL);
+  if (!protectButton(ButtonRequestType_ButtonRequest_UnknownDerivationPath,
+                     false)) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+    return false;
+  }
+  return true;
+}
+
 #include "fsm_msg_coin.h"
 #include "fsm_msg_common.h"
 #include "fsm_msg_crypto.h"
