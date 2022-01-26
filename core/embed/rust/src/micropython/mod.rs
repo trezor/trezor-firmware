@@ -10,6 +10,7 @@ pub mod gc;
 pub mod iter;
 pub mod list;
 pub mod map;
+pub mod module;
 pub mod obj;
 pub mod qstr;
 pub mod runtime;

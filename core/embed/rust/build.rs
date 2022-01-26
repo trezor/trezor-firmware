@@ -115,7 +115,10 @@ fn generate_micropython_bindings() {
         .allowlist_function("mp_hal_ticks_ms")
         .allowlist_function("mp_hal_delay_ms")
         // typ
-        .allowlist_var("mp_type_type");
+        .allowlist_var("mp_type_type")
+        // module
+        .allowlist_type("mp_obj_module_t")
+        .allowlist_var("mp_type_module");
 
     // `ffi::mp_map_t` type is not allowed to be `Clone` or `Copy` because we tie it
     // to the data lifetimes with the `MapRef` type, see `src/micropython/map.rs`.
