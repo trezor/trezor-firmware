@@ -259,7 +259,7 @@ void fsm_msgCosiCommit(const CosiCommit *msg) {
   uint8_t nonce[32];
   sha256_Raw(msg->data.bytes, msg->data.size, nonce);
   rfc6979_state rng;
-  init_rfc6979(node->private_key, nonce, &rng);
+  init_rfc6979(node->private_key, nonce, NULL, &rng);
   generate_rfc6979(nonce, &rng);
 
   resp->has_commitment = true;
@@ -302,7 +302,7 @@ void fsm_msgCosiSign(const CosiSign *msg) {
   uint8_t nonce[32];
   sha256_Raw(msg->data.bytes, msg->data.size, nonce);
   rfc6979_state rng;
-  init_rfc6979(node->private_key, nonce, &rng);
+  init_rfc6979(node->private_key, nonce, NULL, &rng);
   generate_rfc6979(nonce, &rng);
 
   resp->signature.size = 32;

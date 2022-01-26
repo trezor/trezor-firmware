@@ -27,7 +27,7 @@
 #include "memzero.h"
 
 void init_rfc6979(const uint8_t *priv_key, const uint8_t *hash,
-                  rfc6979_state *state) {
+                  const ecdsa_curve *curve, rfc6979_state *state) {
   hmac_drbg_init(state, priv_key, 32, hash, 32);
 }
 
