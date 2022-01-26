@@ -5,7 +5,6 @@ use crate::{
     micropython::{buffer::Buffer, map::Map, obj::Obj, qstr::Qstr},
     ui::{
         component::{base::ComponentExt, text::paragraphs::Paragraphs, Child, FormattedText},
-        display,
         layout::obj::LayoutObj,
     },
     util,
@@ -13,7 +12,7 @@ use crate::{
 
 use super::{
     component::{Button, ButtonMsg, DialogMsg, Frame, HoldToConfirm, HoldToConfirmMsg, SwipePage},
-    theme,
+    constant, theme,
 };
 
 impl<T> TryFrom<DialogMsg<T, ButtonMsg, ButtonMsg>> for Obj
@@ -52,7 +51,7 @@ where
 #[no_mangle]
 extern "C" fn ui_layout_new_example(_param: Obj) -> Obj {
     let block = move || {
-        let layout = LayoutObj::new(Child::new(HoldToConfirm::new(display::screen(), |area| {
+        let layout = LayoutObj::new(Child::new(HoldToConfirm::new(constant::screen(), |area| {
             FormattedText::new::<theme::TTDefaultText>(
                 area,
                 "Testing text layout, with some text, and some more text. And {param}",
@@ -137,7 +136,7 @@ mod tests {
     #[test]
     fn trace_example_layout() {
         let layout = Child::new(Dialog::new(
-            display::screen(),
+            constant::screen(),
             |area| {
                 FormattedText::new::<theme::TTDefaultText>(
                     area,

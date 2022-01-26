@@ -229,7 +229,7 @@ impl LayoutObj {
             display::rect_stroke(r, color)
         }
 
-        wireframe(display::screen());
+        // wireframe(display::screen());
         self.inner.borrow().root.obj_bounds(&mut wireframe);
     }
 

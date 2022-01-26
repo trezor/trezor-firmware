@@ -57,23 +57,10 @@ extern "C" {
     );
 }
 
-#[cfg(not(feature = "model_tt"))]
-use crate::ui::model_t1::constant;
-#[cfg(feature = "model_tt")]
-use crate::ui::model_tt::constant;
-
 pub struct ToifInfo {
     pub width: u16,
     pub height: u16,
     pub grayscale: bool,
-}
-
-pub fn width() -> i32 {
-    constant::WIDTH
-}
-
-pub fn height() -> i32 {
-    constant::HEIGHT
 }
 
 pub fn backlight(val: i32) -> i32 {

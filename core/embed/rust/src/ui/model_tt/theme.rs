@@ -1,10 +1,13 @@
 use crate::ui::{
     component::{label::LabelStyle, text::layout::DefaultTextTheme},
-    display::{self, Color, Font},
+    display::{Color, Font},
     geometry::{Insets, Rect},
 };
 
-use super::component::{ButtonStyle, ButtonStyleSheet, LoaderStyle, LoaderStyleSheet};
+use super::{
+    component::{ButtonStyle, ButtonStyleSheet, LoaderStyle, LoaderStyleSheet},
+    constant,
+};
 
 // Font constants.
 pub const FONT_NORMAL: Font = Font::new(-1);
@@ -164,5 +167,5 @@ pub const CONTENT_BORDER: i32 = 5;
 /// |    14    |
 /// +----------+
 pub fn borders() -> Rect {
-    display::screen().inset(Insets::new(13, 5, 14, 10))
+    constant::screen().inset(Insets::new(13, 5, 14, 10))
 }
