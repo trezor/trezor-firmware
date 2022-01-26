@@ -327,11 +327,13 @@ mod tests {
         ui::{
             component::{text::paragraphs::Paragraphs, Empty},
             geometry::Point,
-            model_tt::{event::TouchEvent, theme},
+            model_tt::{constant, event::TouchEvent, theme},
         },
     };
 
     use super::*;
+
+    const SCREEN: Rect = constant::screen().inset(theme::borders());
 
     fn trace(val: &impl Trace) -> String {
         let mut t = Vec::new();
@@ -368,7 +370,7 @@ mod tests {
     #[test]
     fn paragraphs_empty() {
         let mut page = SwipePage::new(Paragraphs::<&str>::new(), Empty, theme::BG);
-        page.place(display::screen());
+        page.place(SCREEN);
 
         let expected =
             "<SwipePage active_page:0 page_count:1 content:<Paragraphs > buttons:<Empty > >";
@@ -395,7 +397,7 @@ mod tests {
             Empty,
             theme::BG,
         );
-        page.place(display::screen());
+        page.place(SCREEN);
 
         let expected = "<SwipePage active_page:0 page_count:1 content:<Paragraphs This is the first paragraph\nand it should fit on the\nscreen entirely.\nSecond, bold, paragraph\nshould also fit on the\nscreen whole I think.\n> buttons:<Empty > >";
 
@@ -417,10 +419,10 @@ mod tests {
             Empty,
             theme::BG,
         );
-        page.place(display::screen());
+        page.place(SCREEN);
 
-        let expected1 = "<SwipePage active_page:0 page_count:2 content:<Paragraphs This is somewhat long\nparagraph that goes\non and on and on and\non and on and will\ndefinitely not fit on\njust a single screen.\nYou have to swipe a bit\nto see all the text it...\n> buttons:<Empty > >";
-        let expected2 = "<SwipePage active_page:1 page_count:2 content:<Paragraphs contains I guess.\nThere's just so much\nletters in it.\n> buttons:<Empty > >";
+        let expected1 = "<SwipePage active_page:0 page_count:2 content:<Paragraphs This is somewhat long\nparagraph that goes on\nand on and on and on\nand on and will definitely\nnot fit on just a single\nscreen. You have to\nswipe a bit to see all the\ntext it contains I guess....\n> buttons:<Empty > >";
+        let expected2 = "<SwipePage active_page:1 page_count:2 content:<Paragraphs There's just so much\nletters in it.\n> buttons:<Empty > >";
 
         assert_eq!(trace(&page), expected1);
         swipe_down(&mut page);
@@ -452,11 +454,11 @@ mod tests {
             Empty,
             theme::BG,
         );
-        page.place(display::screen());
+        page.place(SCREEN);
 
-        let expected1 = "<SwipePage active_page:0 page_count:3 content:<Paragraphs This paragraph is\nusing a bold font. It\ndoesn't need to be all\nthat long.\nAnd this one is\nusing MONO.\nMonospace is nice\nfor numbers, they...\n> buttons:<Empty > >";
-        let expected2 = "<SwipePage active_page:1 page_count:3 content:<Paragraphs have the same\nwidth and can be\nscanned quickly.\nEven if they span\nseveral pages or\nsomething.\nLet's add another one\nfor a good measure....\n> buttons:<Empty > >";
-        let expected3 = "<SwipePage active_page:2 page_count:3 content:<Paragraphs This one should\noverflow all the way to\nthe third page with a\nbit of luck.\n> buttons:<Empty > >";
+        let expected1 = "<SwipePage active_page:0 page_count:3 content:<Paragraphs This paragraph is using a\nbold font. It doesn't\nneed to be all that long.\nAnd this one is\nusing MONO.\nMonospace is\nnice for...\n> buttons:<Empty > >";
+        let expected2 = "<SwipePage active_page:1 page_count:3 content:<Paragraphs numbers, they\nhave the same\nwidth and can be\nscanned quickly.\nEven if they\nspan several\npages or...\n> buttons:<Empty > >";
+        let expected3 = "<SwipePage active_page:2 page_count:3 content:<Paragraphs something.\nLet's add another one\nfor a good measure. This\none should overflow all\nthe way to the third\npage with a bit of luck.\n> buttons:<Empty > >";
 
         assert_eq!(trace(&page), expected1);
         swipe_down(&mut page);

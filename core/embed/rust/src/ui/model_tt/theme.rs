@@ -4,7 +4,9 @@ use crate::ui::{
     geometry::Insets,
 };
 
-use super::component::{ButtonStyle, ButtonStyleSheet, LoaderStyle, LoaderStyleSheet};
+use super::{
+    component::{ButtonStyle, ButtonStyleSheet, LoaderStyle, LoaderStyleSheet},
+};
 
 // Font constants.
 pub const FONT_NORMAL: Font = Font::new(-1);
@@ -165,6 +167,10 @@ pub const CONTENT_BORDER: i32 = 5;
 /// |  +----+  |
 /// |    14    |
 /// +----------+
-pub fn borders_scroll() -> Insets {
+pub const fn borders() -> Insets {
+    Insets::new(13, 10, 14, 10)
+}
+
+pub const fn borders_scroll() -> Insets {
     Insets::new(13, 5, 14, 10)
 }

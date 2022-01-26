@@ -11,8 +11,8 @@ use crate::{
 };
 
 use super::{
-    component::{Button, ButtonPage, Frame},
-    theme,
+    component::{Button, ButtonPage, Dialog, DialogMsg, Frame},
+    constant, theme,
 };
 
 #[no_mangle]
@@ -141,7 +141,7 @@ mod tests {
                 theme::button_default(),
             )),
         );
-        layout.place(display::screen());
+        layout.place(constant::screen());
         assert_eq!(
             trace(&layout),
             r#"<Dialog content:<Text content:Testing text layout,
@@ -172,7 +172,7 @@ arameters! > left:<Button text:Left > right:<Button text:Right > >"#
                 )),
             ),
         );
-        layout.place(display::screen());
+        layout.place(constant::screen());
         assert_eq!(
             trace(&layout),
             r#"<Frame title:Please confirm content:<Dialog content:<Text content:Testing text layout,

@@ -26,6 +26,11 @@ use crate::ui::model_tt::event::TouchEvent;
 #[cfg(feature = "model_t1")]
 use crate::ui::model_t1::event::ButtonEvent;
 
+#[cfg(not(feature = "model_tt"))]
+use crate::ui::model_t1::constant;
+#[cfg(feature = "model_tt")]
+use crate::ui::model_tt::constant;
+
 /// Conversion trait implemented by components that know how to convert their
 /// message values into MicroPython `Obj`s. We can automatically implement
 /// `ComponentMsgObj` for components whose message types implement `TryInto`.
@@ -55,7 +60,6 @@ mod maybe_trace {
     impl<T> MaybeTrace for T {}
 }
 
-use crate::ui::display;
 /// Stand-in for the optionally-compiled trait `Trace`.
 /// If UI debugging is enabled, `MaybeTrace` implies `Trace` and is implemented
 /// for everything that implements Trace. If disabled, `MaybeTrace` is
@@ -152,7 +156,7 @@ impl LayoutObj {
         // Place the root component on the screen in case it was previously requested.
         if inner.event_ctx.needs_place_before_next_event_or_paint() {
             // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
-            unsafe { Gc::as_mut(&mut inner.root) }.obj_place(display::screen());
+            unsafe { Gc::as_mut(&mut inner.root) }.obj_place(constant::screen());
         }
 
         // Clear the leftover flags from the previous event pass.
@@ -186,7 +190,7 @@ impl LayoutObj {
         // Place the root component on the screen in case it was previously requested.
         if inner.event_ctx.needs_place_before_next_event_or_paint() {
             // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
-            unsafe { Gc::as_mut(&mut inner.root) }.obj_place(display::screen());
+            unsafe { Gc::as_mut(&mut inner.root) }.obj_place(constant::screen());
         }
 
         // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
@@ -255,7 +259,7 @@ impl LayoutObj {
             display::rect_stroke(r, color)
         }
 
-        wireframe(display::screen());
+        // wireframe(display::screen());
         self.inner.borrow().root.obj_bounds(&mut wireframe);
     }
 
