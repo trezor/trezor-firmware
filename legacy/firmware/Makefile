@@ -16,13 +16,7 @@ OBJS += field_10x26_arm.o
 endif
 ZKP_CFLAGS = \
 	-DUSE_ASM_ARM \
-	-DUSE_NUM_NONE \
-	-DUSE_FIELD_INV_BUILTIN \
-	-DUSE_SCALAR_INV_BUILTIN \
 	-DUSE_EXTERNAL_ASM \
-	-DUSE_FIELD_10X26 \
-	-DUSE_SCALAR_8X32 \
-	-DUSE_ECMULT_STATIC_PRECOMPUTATION \
 	-DUSE_EXTERNAL_DEFAULT_CALLBACKS \
 	-DECMULT_GEN_PREC_BITS=4 \
 	-DECMULT_WINDOW_SIZE=8 \
@@ -32,6 +26,8 @@ ZKP_CFLAGS = \
 	-DENABLE_MODULE_EXTRAKEYS
 
 OBJS += secp256k1-zkp.o
+OBJS += precomputed_ecmult.o
+OBJS += precomputed_ecmult_gen.o
 OBJS += ../vendor/trezor-crypto/zkp_bip340.o
 OBJS += ../vendor/trezor-crypto/zkp_context.o
 OBJS += ../vendor/trezor-crypto/zkp_ecdsa.o

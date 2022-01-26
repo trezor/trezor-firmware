@@ -140,8 +140,8 @@ int zkp_bip340_sign_digest(const uint8_t *private_key_bytes,
     if (!auxiliary_data) {
       auxiliary_data = zero;
     }
-    if (secp256k1_schnorrsig_sign(context_writable, signature_bytes, digest,
-                                  &keypair, auxiliary_data) != 1) {
+    if (secp256k1_schnorrsig_sign32(context_writable, signature_bytes, digest,
+                                    &keypair, auxiliary_data) != 1) {
       result = -1;
     }
   }
