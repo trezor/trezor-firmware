@@ -3757,7 +3757,7 @@ END_TEST
 #define test_deterministic(KEY, MSG, K)           \
   do {                                            \
     sha256_Raw((uint8_t *)MSG, strlen(MSG), buf); \
-    init_rfc6979(fromhex(KEY), buf, &rng);        \
+    init_rfc6979(fromhex(KEY), buf, NULL, &rng);  \
     generate_k_rfc6979(&k, &rng);                 \
     bn_write_be(&k, buf);                         \
     ck_assert_mem_eq(buf, fromhex(K), 32);        \
@@ -6790,7 +6790,7 @@ START_TEST(test_ed25519_cosi) {
           "26c76712d89d906e6672dafa614c42e5cb1caac8c6568e4d2493087db51f0d36"),
       fromhex(
           "26659c1cf7321c178c07437150639ff0c5b7679c7ea195253ed9abda2e081a37"),
-      &rng);
+      NULL, &rng);
 
   for (int N = 1; N < 11; N++) {
     ed25519_public_key pk;
