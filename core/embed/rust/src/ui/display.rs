@@ -7,22 +7,6 @@ use crate::ui::model_tt::constant;
 
 use super::geometry::{Offset, Point, Rect};
 
-pub fn width() -> i32 {
-    display::width()
-}
-
-pub fn height() -> i32 {
-    display::height()
-}
-
-pub fn size() -> Offset {
-    Offset::new(width(), height())
-}
-
-pub fn screen() -> Rect {
-    Rect::from_top_left_and_size(Point::zero(), size())
-}
-
 pub fn backlight() -> i32 {
     display::backlight(-1)
 }

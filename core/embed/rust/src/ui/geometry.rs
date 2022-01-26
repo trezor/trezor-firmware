@@ -135,8 +135,13 @@ impl Rect {
         Self::new(Point::zero(), Point::zero())
     }
 
-    pub fn from_top_left_and_size(p0: Point, size: Offset) -> Self {
-        Self::new(p0, p0 + size)
+    pub const fn from_top_left_and_size(p0: Point, size: Offset) -> Self {
+        Self {
+            x0: p0.x,
+            y0: p0.y,
+            x1: p0.x + size.x,
+            y1: p0.y + size.y,
+        }
     }
 
     pub fn from_center_and_size(p: Point, size: Offset) -> Self {
@@ -213,7 +218,7 @@ impl Rect {
         }
     }
 
-    pub fn inset(&self, insets: Insets) -> Self {
+    pub const fn inset(&self, insets: Insets) -> Self {
         Self {
             x0: self.x0 + insets.left,
             y0: self.y0 + insets.top,

@@ -11,7 +11,11 @@ use crate::{
 };
 
 use super::{
-    component::{Button, ButtonMsg, DialogMsg, Frame, HoldToConfirm, HoldToConfirmMsg, SwipePage},
+    component::{
+        Bip39Input, Button, ButtonMsg, DialogMsg, Frame, HoldToConfirm, HoldToConfirmMsg,
+        MnemonicKeyboard, MnemonicKeyboardMsg, PassphraseKeyboard, PassphraseKeyboardMsg,
+        PinKeyboard, PinKeyboardMsg, Slip39Input, SwipePage,
+    },
     theme,
 };
 
@@ -114,12 +118,17 @@ mod tests {
         trace::Trace,
         ui::{
             component::Component,
-            display,
-            model_tt::component::{Button, Dialog},
+            geometry::Rect,
+            model_tt::{
+                component::{Button, Dialog},
+                constant,
+            },
         },
     };
 
     use super::*;
+
+    const SCREEN: Rect = constant::screen().inset(theme::borders());
 
     fn trace(val: &impl Trace) -> String {
         let mut t = Vec::new();
@@ -137,7 +146,7 @@ mod tests {
             Button::with_text(b"Left"),
             Button::with_text(b"Right"),
         );
-        layout.place(display::screen());
+        layout.place(SCREEN);
         assert_eq!(
             trace(&layout),
             "<Dialog content:<Text content:Testing text layout, with\nsome text, and some more\ntext. And parameters! > left:<Button text:Left > right:<Button text:Right > >",
