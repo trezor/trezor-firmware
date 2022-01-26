@@ -3802,6 +3802,54 @@ START_TEST(test_rfc6979) {
 }
 END_TEST
 
+static void test_ecdsa_sign_digest_deterministic_helper(
+    int (*ecdsa_sign_digest_fn)(const ecdsa_curve *, const uint8_t *,
+                                const uint8_t *, uint8_t *, uint8_t *,
+                                int (*)(uint8_t by, uint8_t sig[64]))) {
+  static struct {
+    const char *priv_key;
+    const char *digest;
+    const char *sig;
+  } tests[] = {
+      {"312155017c70a204106e034520e0cdf17b3e54516e2ece38e38e38e38e38e38e",
+       "ffffffffffffffffffffffffffffffff20202020202020202020202020202020",
+       "e3d70248ea2fc771fc8d5e62d76b9cfd5402c96990333549eaadce1ae9f737eb"
+       "5cfbdc7d1e0ec18cc9b57bbb18f0a57dc929ec3c4dfac9073c581705015f6a8a"},
+      {"312155017c70a204106e034520e0cdf17b3e54516e2ece38e38e38e38e38e38e",
+       "2020202020202020202020202020202020202020202020202020202020202020",
+       "40666188895430715552a7e4c6b53851f37a93030fb94e043850921242db78e8"
+       "75aa2ac9fd7e5a19402973e60e64382cdc29a09ebf6cb37e92f23be5b9251aee"},
+  };
+
+  const ecdsa_curve *curve = &secp256k1;
+  uint8_t priv_key[32] = {0};
+  uint8_t digest[32] = {0};
+  uint8_t expected_sig[64] = {0};
+  uint8_t computed_sig[64] = {0};
+  int res = 0;
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(*tests); i++) {
+    memcpy(priv_key, fromhex(tests[i].priv_key), 32);
+    memcpy(digest, fromhex(tests[i].digest), 32);
+    memcpy(expected_sig, fromhex(tests[i].sig), 64);
+
+    res =
+        ecdsa_sign_digest_fn(curve, priv_key, digest, computed_sig, NULL, NULL);
+    ck_assert_int_eq(res, 0);
+    ck_assert_mem_eq(expected_sig, computed_sig, 64);
+  }
+}
+
+START_TEST(test_ecdsa_sign_digest_deterministic) {
+  test_ecdsa_sign_digest_deterministic_helper(ecdsa_sign_digest);
+}
+END_TEST
+
+START_TEST(test_zkp_ecdsa_sign_digest_deterministic) {
+  test_ecdsa_sign_digest_deterministic_helper(zkp_ecdsa_sign_digest);
+}
+END_TEST
+
 // test vectors from
 // http://www.inconteam.com/software-development/41-encryption/55-aes-test-vectors
 START_TEST(test_aes) {
@@ -9461,6 +9509,10 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_zkp_ecdsa_get_public_key65);
   tcase_add_test(tc, test_zkp_ecdsa_recover_pub_from_sig);
   tcase_add_test(tc, test_zkp_ecdsa_verify_digest);
+#if USE_RFC6979
+  tcase_add_test(tc, test_ecdsa_sign_digest_deterministic);
+  tcase_add_test(tc, test_zkp_ecdsa_sign_digest_deterministic);
+#endif
   suite_add_tcase(s, tc);
 
   tc = tcase_create("rfc6979");
