@@ -746,13 +746,12 @@ static bool fill_input_script_sig(TxInputType *tinput) {
 
 static bool derive_node(TxInputType *tinput) {
   if (!coin_path_check(coin, tinput->script_type, tinput->address_n_count,
-                       tinput->address_n, tinput->has_multisig,
-                       CoinPathCheckLevel_BASIC)) {
+                       tinput->address_n, tinput->has_multisig, false)) {
     if (is_replacement) {
       fsm_sendFailure(
           FailureType_Failure_ProcessError,
           _("Non-standard paths not allowed in replacement transactions."));
-      layoutHome();
+      signing_abort();
       return false;
     }
 
@@ -1323,6 +1322,12 @@ static void tx_info_finish(TxInfo *tx_info) {
 static bool signing_add_input(TxInputType *txinput) {
   // hash all input data to check it later (relevant for fee computation)
   tx_input_check_hash(&hasher_check, txinput);
+
+  if (!fsm_checkCoinPath(coin, txinput->script_type, txinput->address_n_count,
+                         txinput->address_n, txinput->has_multisig, true)) {
+    signing_abort();
+    return false;
+  }
 
   if (!fill_input_script_pubkey(coin, &root, txinput)) {
     fsm_sendFailure(FailureType_Failure_ProcessError,
