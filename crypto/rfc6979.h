@@ -27,6 +27,7 @@
 
 #include <stdint.h>
 #include "bignum.h"
+#include "ecdsa.h"
 #include "hmac_drbg.h"
 
 // rfc6979 pseudo random number generator state
