@@ -17,6 +17,20 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+static bool fsm_stellarCheckPath(uint32_t address_n_count,
+                                 const uint32_t *address_n) {
+  if (stellar_path_check(address_n_count, address_n)) {
+    return true;
+  }
+
+  if (config_getSafetyCheckLevel() == SafetyCheckLevel_Strict) {
+    fsm_sendFailure(FailureType_Failure_DataError, _("Forbidden key path"));
+    return false;
+  }
+
+  return fsm_layoutPathWarning();
+}
+
 void fsm_msgStellarGetAddress(const StellarGetAddress *msg) {
   RESP_INIT(StellarAddress);
 
@@ -24,10 +38,16 @@ void fsm_msgStellarGetAddress(const StellarGetAddress *msg) {
 
   CHECK_PIN
 
+  if (!fsm_stellarCheckPath(msg->address_n_count, msg->address_n)) {
+    layoutHome();
+    return;
+  }
+
   const HDNode *node = stellar_deriveNode(msg->address_n, msg->address_n_count);
   if (!node) {
     fsm_sendFailure(FailureType_Failure_ProcessError,
                     _("Failed to derive private key"));
+    layoutHome();
     return;
   }
 
@@ -54,6 +74,11 @@ void fsm_msgStellarGetAddress(const StellarGetAddress *msg) {
 void fsm_msgStellarSignTx(const StellarSignTx *msg) {
   CHECK_INITIALIZED
   CHECK_PIN
+
+  if (!fsm_stellarCheckPath(msg->address_n_count, msg->address_n)) {
+    layoutHome();
+    return;
+  }
 
   if (!stellar_signingInit(msg)) {
     fsm_sendFailure(FailureType_Failure_ProcessError,

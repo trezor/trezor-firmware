@@ -2013,3 +2013,16 @@ void stellar_layoutTransactionDialog(const char *line1, const char *line2,
       line1, line2, line3, line4, line5, stellar_activeTx.address_n,
       stellar_activeTx.address_n_count, str_warning, false);
 }
+
+bool stellar_path_check(uint32_t address_n_count, const uint32_t *address_n) {
+  // SEP-0005 for non-UTXO-based currencies, defined by Stellar:
+  // https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0005.md
+  // m/44'/coin_type'/account'
+  bool valid = (address_n_count == 3);
+  valid = valid && (address_n[0] == (PATH_HARDENED | 44));
+  valid = valid && (address_n[1] == (PATH_HARDENED | 148) ||
+                    address_n[1] == (PATH_HARDENED | 1));
+  valid = valid && (address_n[2] & PATH_HARDENED);
+  valid = valid && ((address_n[2] & PATH_UNHARDEN_MASK) <= PATH_MAX_ACCOUNT);
+  return valid;
+}

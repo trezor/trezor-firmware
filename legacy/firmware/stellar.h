@@ -117,4 +117,6 @@ bool stellar_validateAddress(const char *str_address);
 bool stellar_getAddressBytes(const char *str_address, uint8_t *out_bytes);
 uint16_t stellar_crc16(uint8_t *bytes, uint32_t length);
 
+bool stellar_path_check(uint32_t address_n_count, const uint32_t *address_n);
+
 #endif
