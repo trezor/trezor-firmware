@@ -687,7 +687,7 @@ int ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key,
 
 #if USE_RFC6979
   rfc6979_state rng = {0};
-  init_rfc6979(priv_key, digest, &rng);
+  init_rfc6979(priv_key, digest, curve, &rng);
 #endif
 
   bn_read_be(digest, &z);
