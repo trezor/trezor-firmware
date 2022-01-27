@@ -22,7 +22,6 @@ from trezorlib import device, messages
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import ButtonRequestType as B
 
-from ..buttons import INFO_SHAMIR_RECOVERY
 from ..common import (
     MNEMONIC12,
     MNEMONIC_SLIP39_ADVANCED_20,
@@ -33,12 +32,9 @@ from ..common import (
 
 def click_info_button(debug):
     """Click Shamir backup info button and return back."""
-    debug.wait_layout()
-    debug.click(INFO_SHAMIR_RECOVERY)
+    debug.press_info()
     yield  # Info screen with text
-    # Confirming the info message, press_yes() did not work
-    debug.wait_layout()
-    debug.click(INFO_SHAMIR_RECOVERY)
+    debug.press_yes()
 
 
 @pytest.mark.skip_t1  # TODO we want this for t1 too
@@ -120,8 +116,6 @@ def test_backup_slip39_basic(client, click_info: bool):
         client.debug.press_yes()
 
     with client:
-        if click_info:
-            client.watch_layout()
         client.set_input_flow(input_flow)
         client.set_expected_responses(
             [messages.ButtonRequest(code=B.ResetDevice)]
@@ -200,8 +194,6 @@ def test_backup_slip39_advanced(client, click_info: bool):
         client.debug.press_yes()
 
     with client:
-        if click_info:
-            client.watch_layout()
         client.set_input_flow(input_flow)
         client.set_expected_responses(
             [messages.ButtonRequest(code=B.ResetDevice)]
