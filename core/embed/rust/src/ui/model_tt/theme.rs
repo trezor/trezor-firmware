@@ -32,7 +32,7 @@ pub const GREY_LIGHT: Color = Color::rgb(168, 168, 168); // greyish
 pub const GREY_DARK: Color = Color::rgb(51, 51, 51); // black
 
 // Commonly used corner radius (i.e. for buttons).
-pub const RADIUS: u8 = 4;
+pub const RADIUS: u8 = 2;
 
 // Size of icons in the UI (i.e. inside buttons).
 pub const ICON_SIZE: i32 = 16;
@@ -59,7 +59,7 @@ pub fn button_default() -> ButtonStyleSheet {
             background_color: BG,
             border_color: BG,
             border_radius: RADIUS,
-            border_width: 1,
+            border_width: 0,
         },
         active: &ButtonStyle {
             font: FONT_BOLD,
@@ -68,7 +68,7 @@ pub fn button_default() -> ButtonStyleSheet {
             background_color: BG,
             border_color: FG,
             border_radius: RADIUS,
-            border_width: 1,
+            border_width: 0,
         },
         disabled: &ButtonStyle {
             font: FONT_BOLD,
@@ -77,7 +77,7 @@ pub fn button_default() -> ButtonStyleSheet {
             background_color: BG,
             border_color: BG,
             border_radius: RADIUS,
-            border_width: 1,
+            border_width: 0,
         },
     }
 }
@@ -91,7 +91,7 @@ pub fn button_confirm() -> ButtonStyleSheet {
             background_color: BG,
             border_color: BG,
             border_radius: RADIUS,
-            border_width: 1,
+            border_width: 0,
         },
         active: &ButtonStyle {
             font: FONT_BOLD,
@@ -100,7 +100,7 @@ pub fn button_confirm() -> ButtonStyleSheet {
             background_color: BG,
             border_color: FG,
             border_radius: RADIUS,
-            border_width: 1,
+            border_width: 0,
         },
         disabled: &ButtonStyle {
             font: FONT_BOLD,
@@ -109,7 +109,7 @@ pub fn button_confirm() -> ButtonStyleSheet {
             background_color: BG,
             border_color: BG,
             border_radius: RADIUS,
-            border_width: 1,
+            border_width: 0,
         },
     }
 }
