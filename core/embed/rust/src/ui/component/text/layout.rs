@@ -107,7 +107,7 @@ impl TextLayout {
         cursor: &mut Point,
         sink: &mut dyn LayoutSink,
     ) -> LayoutFit {
-        let init_cursor: Point = *cursor;
+        let init_cursor: Point = *cursor - Offset::y(self.text_font.line_height());
         let mut total_processed_chars = 0;
 
         for op in ops {
@@ -124,11 +124,14 @@ impl TextLayout {
                     } => {
                         total_processed_chars += processed_chars;
                     }
-                    LayoutFit::OutOfBounds { processed_chars } => {
+                    LayoutFit::OutOfBounds {
+                        processed_chars, ..
+                    } => {
                         total_processed_chars += processed_chars;
 
                         return LayoutFit::OutOfBounds {
                             processed_chars: total_processed_chars,
+                            height: cursor.y - init_cursor.y,
                         };
                     }
                 },
@@ -137,10 +140,7 @@ impl TextLayout {
 
         LayoutFit::Fitting {
             processed_chars: total_processed_chars,
-            size: Offset::new(
-                self.bounds.width(),
-                cursor.y - init_cursor.y + self.text_font.line_height(),
-            ),
+            height: cursor.y - init_cursor.y,
         }
     }
 
@@ -150,13 +150,16 @@ impl TextLayout {
         cursor: &mut Point,
         sink: &mut dyn LayoutSink,
     ) -> LayoutFit {
-        let init_cursor: Point = *cursor;
+        let init_cursor: Point = *cursor - Offset::y(self.text_font.line_height());
         let mut remaining_text = text;
 
         // Check if bounding box is high enough for at least one line.
         if cursor.y > self.bounds.y1 {
             sink.out_of_bounds();
-            return LayoutFit::OutOfBounds { processed_chars: 0 };
+            return LayoutFit::OutOfBounds {
+                processed_chars: 0,
+                height: 0,
+            };
         }
 
         while !remaining_text.is_empty() {
@@ -205,6 +208,7 @@ impl TextLayout {
 
                     return LayoutFit::OutOfBounds {
                         processed_chars: text.len() - remaining_text.len(),
+                        height: cursor.y - init_cursor.y,
                     };
                 } else {
                     // Advance the cursor to the beginning of the next line.
@@ -220,38 +224,35 @@ impl TextLayout {
 
         LayoutFit::Fitting {
             processed_chars: text.len(),
-            size: Offset::new(
-                self.bounds.width(),
-                cursor.y - init_cursor.y + self.text_font.line_height(),
-            ),
+            height: cursor.y - init_cursor.y,
         }
     }
 
     pub fn measure_ops_height(self, ops: &mut dyn Iterator<Item = Op>) -> i32 {
-        match self.layout_ops(ops, &mut self.initial_cursor(), &mut TextNoOp) {
-            LayoutFit::Fitting { size, .. } => size.y,
-            LayoutFit::OutOfBounds { processed_chars: 0 } => 0,
-            _ => self.bounds.height(),
-        }
+        self.layout_ops(ops, &mut self.initial_cursor(), &mut TextNoOp)
+            .height()
     }
 
     pub fn measure_text_height(self, text: &[u8]) -> i32 {
-        match self.layout_text(text, &mut self.initial_cursor(), &mut TextNoOp) {
-            LayoutFit::Fitting { size, .. } => size.y,
-            LayoutFit::OutOfBounds { processed_chars: 0 } => 0,
-            _ => self.bounds.height(),
-        }
+        self.layout_text(text, &mut self.initial_cursor(), &mut TextNoOp)
+            .height()
     }
 }
 
 pub enum LayoutFit {
-    /// Entire content fits. Bounding box is returned in `size`.
-    Fitting {
-        processed_chars: usize,
-        size: Offset,
-    },
+    /// Entire content fits. Vertical size is returned in `height`.
+    Fitting { processed_chars: usize, height: i32 },
     /// Content fits partially or not at all.
-    OutOfBounds { processed_chars: usize },
+    OutOfBounds { processed_chars: usize, height: i32 },
+}
+
+impl LayoutFit {
+    pub fn height(&self) -> i32 {
+        match self {
+            LayoutFit::Fitting { height, .. } => *height,
+            LayoutFit::OutOfBounds { height, .. } => *height,
+        }
+    }
 }
 
 /// Visitor for text segment operations.

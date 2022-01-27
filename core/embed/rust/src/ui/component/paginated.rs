@@ -34,7 +34,9 @@ where
                     break; // TODO: We should consider if there's more content
                            // to render.
                 }
-                LayoutFit::OutOfBounds { processed_chars } => {
+                LayoutFit::OutOfBounds {
+                    processed_chars, ..
+                } => {
                     page_count += 1;
                     char_offset += processed_chars;
                     self.set_char_offset(char_offset);
@@ -62,7 +64,9 @@ where
                     break; // TODO: We should consider if there's more content
                            // to render.
                 }
-                LayoutFit::OutOfBounds { processed_chars } => {
+                LayoutFit::OutOfBounds {
+                    processed_chars, ..
+                } => {
                     active_page += 1;
                     char_offset += processed_chars;
                     self.set_char_offset(char_offset);

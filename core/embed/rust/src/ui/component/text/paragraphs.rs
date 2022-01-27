@@ -228,9 +228,9 @@ where
                     &mut TextNoOp,
                 );
                 match fit {
-                    LayoutFit::Fitting { size, .. } => {
+                    LayoutFit::Fitting { height, .. } => {
                         // Text fits, update remaining area.
-                        remaining_area = remaining_area.inset(Insets::top(size.y));
+                        remaining_area = remaining_area.inset(Insets::top(height));
 
                         // Continue with start of next paragraph.
                         current.par += 1;
@@ -238,7 +238,9 @@ where
                         progress = true;
                         break;
                     }
-                    LayoutFit::OutOfBounds { processed_chars } => {
+                    LayoutFit::OutOfBounds {
+                        processed_chars, ..
+                    } => {
                         // Text does not fit, assume whatever fits takes the entire remaining area.
                         current.chr += processed_chars;
                         if processed_chars == 0 && !progress {
