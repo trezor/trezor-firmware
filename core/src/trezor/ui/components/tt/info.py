@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from trezor import res, ui
+from trezor import loop, res, ui
 
 from ...constants import TEXT_LINE_HEIGHT, TEXT_MARGIN_LEFT
 from .button import Button, ButtonConfirm
@@ -75,3 +75,13 @@ class InfoConfirm(ui.Layout):
 
     def on_confirm(self) -> None:
         raise ui.Result(CONFIRMED)
+
+    if __debug__:
+
+        def read_content(self) -> list[str]:
+            return self.text
+
+        def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
+            from apps.debug import confirm_signal
+
+            return super().create_tasks() + (confirm_signal(),)
