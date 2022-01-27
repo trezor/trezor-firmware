@@ -53,8 +53,6 @@ def _test_secret(client, shares, secret, click_info=False):
         )
 
     with client:
-        if click_info:
-            client.watch_layout()
         client.set_input_flow(input_flow)
         ret = device.recover(
             client, pin_protection=False, passphrase_protection=False, label="label"
