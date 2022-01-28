@@ -1,8 +1,10 @@
+from typing import Iterator, Tuple
+
 DISPLAY_WIDTH = 240
 DISPLAY_HEIGHT = 240
 
 
-def grid(dim, grid_cells, cell):
+def grid(dim: int, grid_cells: int, cell: int) -> int:
     step = dim // grid_cells
     ofs = step // 2
     return cell * step + ofs
@@ -34,15 +36,15 @@ RESET_WORD_CHECK = [
 BUTTON_LETTERS = ("ab", "cd", "ef", "ghij", "klm", "nopq", "rs", "tuv", "wxyz")
 
 
-def grid35(x, y):
+def grid35(x: int, y: int) -> Tuple[int, int]:
     return grid(DISPLAY_WIDTH, 3, x), grid(DISPLAY_HEIGHT, 5, y)
 
 
-def grid34(x, y):
+def grid34(x: int, y: int) -> Tuple[int, int]:
     return grid(DISPLAY_WIDTH, 3, x), grid(DISPLAY_HEIGHT, 4, y)
 
 
-def type_word(word):
+def type_word(word: str) -> Iterator[Tuple[int, int]]:
     for l in word:
         idx = next(i for i, letters in enumerate(BUTTON_LETTERS) if l in letters)
         grid_x = idx % 3

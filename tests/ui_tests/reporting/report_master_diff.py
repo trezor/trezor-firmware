@@ -2,6 +2,7 @@ import shutil
 import tempfile
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Dict, Tuple
 
 import dominate
 from dominate.tags import br, h1, h2, hr, i, p, table, td, th, tr
@@ -14,7 +15,7 @@ REPORTS_PATH = Path(__file__).resolve().parent / "reports" / "master_diff"
 RECORDED_SCREENS_PATH = Path(__file__).resolve().parent.parent / "screens"
 
 
-def get_diff():
+def get_diff() -> Tuple[Dict[str, str], Dict[str, str], Dict[str, str]]:
     master = download.fetch_fixtures_master()
     current = download.fetch_fixtures_current()
 
@@ -34,7 +35,7 @@ def get_diff():
     return removed, added, diff
 
 
-def removed(screens_path, test_name):
+def removed(screens_path: Path, test_name: str) -> Path:
     doc = dominate.document(title=test_name)
     screens = sorted(screens_path.iterdir())
 
@@ -57,7 +58,7 @@ def removed(screens_path, test_name):
     return html.write(REPORTS_PATH / "removed", doc, test_name + ".html")
 
 
-def added(screens_path, test_name):
+def added(screens_path: Path, test_name: str) -> Path:
     doc = dominate.document(title=test_name)
     screens = sorted(screens_path.iterdir())
 
@@ -81,8 +82,12 @@ def added(screens_path, test_name):
 
 
 def diff(
-    master_screens_path, current_screens_path, test_name, master_hash, current_hash
-):
+    master_screens_path: Path,
+    current_screens_path: Path,
+    test_name: str,
+    master_hash: str,
+    current_hash: str,
+) -> Path:
     doc = dominate.document(title=test_name)
     master_screens = sorted(master_screens_path.iterdir())
     current_screens = sorted(current_screens_path.iterdir())
@@ -109,7 +114,7 @@ def diff(
     return html.write(REPORTS_PATH / "diff", doc, test_name + ".html")
 
 
-def index():
+def index() -> Path:
     removed = list((REPORTS_PATH / "removed").iterdir())
     added = list((REPORTS_PATH / "added").iterdir())
     diff = list((REPORTS_PATH / "diff").iterdir())
@@ -140,7 +145,7 @@ def index():
     return html.write(REPORTS_PATH, doc, "index.html")
 
 
-def create_dirs():
+def create_dirs() -> None:
     # delete the reports dir to clear previous entries and create folders
     shutil.rmtree(REPORTS_PATH, ignore_errors=True)
     REPORTS_PATH.mkdir()
@@ -149,7 +154,7 @@ def create_dirs():
     (REPORTS_PATH / "diff").mkdir()
 
 
-def create_reports():
+def create_reports() -> None:
     removed_tests, added_tests, diff_tests = get_diff()
 
     @contextmanager

@@ -1,11 +1,15 @@
 import base64
 import filecmp
 from itertools import zip_longest
+from pathlib import Path
+from typing import Dict, List
 
 from dominate.tags import a, i, img, table, td, th, tr
 
 
-def report_links(tests, reports_path, actual_hashes=None):
+def report_links(
+    tests: List[Path], reports_path: Path, actual_hashes: Dict[str, str] = None
+) -> None:
     if actual_hashes is None:
         actual_hashes = {}
 
@@ -21,12 +25,12 @@ def report_links(tests, reports_path, actual_hashes=None):
                 td(a(test.name, href=path))
 
 
-def write(fixture_test_path, doc, filename):
+def write(fixture_test_path: Path, doc, filename: str) -> Path:
     (fixture_test_path / filename).write_text(doc.render())
     return fixture_test_path / filename
 
 
-def image(src):
+def image(src: Path) -> None:
     with td():
         if src:
             # open image file
@@ -41,7 +45,7 @@ def image(src):
             i("missing")
 
 
-def diff_table(left_screens, right_screens):
+def diff_table(left_screens: List[Path], right_screens: List[Path]) -> None:
     for left, right in zip_longest(left_screens, right_screens):
         if left and right and filecmp.cmp(right, left):
             background = "white"

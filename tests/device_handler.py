@@ -1,7 +1,14 @@
 from concurrent.futures import ThreadPoolExecutor
+from typing import TYPE_CHECKING
 
 from trezorlib.client import PASSPHRASE_ON_DEVICE
 from trezorlib.transport import udp
+
+if TYPE_CHECKING:
+    from trezorlib.messages import Features
+    from trezorlib.debuglink import TrezorClientDebugLink, DebugLink
+    from trezorlib._internal.emulator import Emulator
+
 
 udp.SOCKET_TIMEOUT = 0.1
 
@@ -26,13 +33,13 @@ class NullUI:
 class BackgroundDeviceHandler:
     _pool = ThreadPoolExecutor()
 
-    def __init__(self, client):
+    def __init__(self, client: "TrezorClientDebugLink") -> None:
         self._configure_client(client)
         self.task = None
 
-    def _configure_client(self, client):
+    def _configure_client(self, client: "TrezorClientDebugLink") -> None:
         self.client = client
-        self.client.ui = NullUI
+        self.client.ui = NullUI  # type: ignore [NullUI is OK UI]
         self.client.watch_layout(True)
 
     def run(self, function, *args, **kwargs):
@@ -40,7 +47,7 @@ class BackgroundDeviceHandler:
             raise RuntimeError("Wait for previous task first")
         self.task = self._pool.submit(function, self.client, *args, **kwargs)
 
-    def kill_task(self):
+    def kill_task(self) -> None:
         if self.task is not None:
             # Force close the client, which should raise an exception in a client
             # waiting on IO. Does not work over Bridge, because bridge doesn't have
@@ -53,11 +60,11 @@ class BackgroundDeviceHandler:
                 pass
         self.task = None
 
-    def restart(self, emulator):
+    def restart(self, emulator: "Emulator"):
         # TODO handle actual restart as well
         self.kill_task()
         emulator.restart()
-        self._configure_client(emulator.client)
+        self._configure_client(emulator.client)  # type: ignore [client cannot be None]
 
     def result(self):
         if self.task is None:
@@ -67,25 +74,25 @@ class BackgroundDeviceHandler:
         finally:
             self.task = None
 
-    def features(self):
+    def features(self) -> "Features":
         if self.task is not None:
             raise RuntimeError("Cannot query features while task is running")
         self.client.init_device()
         return self.client.features
 
-    def debuglink(self):
+    def debuglink(self) -> "DebugLink":
         return self.client.debug
 
-    def check_finalize(self):
+    def check_finalize(self) -> bool:
         if self.task is not None:
             self.kill_task()
             return False
         return True
 
-    def __enter__(self):
+    def __enter__(self) -> "BackgroundDeviceHandler":
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
         finalized_ok = self.check_finalize()
         if exc_type is None and not finalized_ok:
             raise RuntimeError("Exit while task is unfinished")

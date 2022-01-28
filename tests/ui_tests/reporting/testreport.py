@@ -2,6 +2,7 @@ import shutil
 from datetime import datetime
 from distutils.dir_util import copy_tree
 from pathlib import Path
+from typing import Dict
 
 import dominate
 import dominate.tags as t
@@ -16,10 +17,12 @@ REPORTS_PATH = HERE / "reports" / "test"
 STYLE = (HERE / "testreport.css").read_text()
 SCRIPT = (HERE / "testreport.js").read_text()
 
-ACTUAL_HASHES = {}
+ACTUAL_HASHES: Dict[str, str] = {}
 
 
-def document(title, actual_hash=None, index=False):
+def document(
+    title: str, actual_hash: str = None, index: bool = False
+) -> dominate.document:
     doc = dominate.document(title=title)
     style = t.style()
     style.add_raw_string(STYLE)
@@ -36,7 +39,7 @@ def document(title, actual_hash=None, index=False):
     return doc
 
 
-def _header(test_name, expected_hash, actual_hash):
+def _header(test_name: str, expected_hash: str, actual_hash: str) -> None:
     h1(test_name)
     with div():
         if actual_hash == expected_hash:
@@ -54,7 +57,7 @@ def _header(test_name, expected_hash, actual_hash):
     hr()
 
 
-def clear_dir():
+def clear_dir() -> None:
     # delete and create the reports dir to clear previous entries
     shutil.rmtree(REPORTS_PATH, ignore_errors=True)
     REPORTS_PATH.mkdir()
@@ -62,7 +65,7 @@ def clear_dir():
     (REPORTS_PATH / "passed").mkdir()
 
 
-def index():
+def index() -> Path:
     passed_tests = list((REPORTS_PATH / "passed").iterdir())
     failed_tests = list((REPORTS_PATH / "failed").iterdir())
 
@@ -104,7 +107,9 @@ def index():
     return html.write(REPORTS_PATH, doc, "index.html")
 
 
-def failed(fixture_test_path, test_name, actual_hash, expected_hash):
+def failed(
+    fixture_test_path: Path, test_name: str, actual_hash: str, expected_hash: str
+) -> Path:
     ACTUAL_HASHES[test_name] = actual_hash
 
     doc = document(title=test_name, actual_hash=actual_hash)
@@ -147,7 +152,7 @@ def failed(fixture_test_path, test_name, actual_hash, expected_hash):
     return html.write(REPORTS_PATH / "failed", doc, test_name + ".html")
 
 
-def passed(fixture_test_path, test_name, actual_hash):
+def passed(fixture_test_path: Path, test_name: str, actual_hash: str) -> Path:
     copy_tree(str(fixture_test_path / "actual"), str(fixture_test_path / "recorded"))
 
     doc = document(title=test_name)

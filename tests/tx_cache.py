@@ -122,7 +122,7 @@ def cli(tx, coin_name):
         tx_dict = protobuf.to_dict(tx_proto)
         tx_json = json.dumps(tx_dict, sort_keys=True, indent=2) + "\n"
     except Exception as e:
-        raise click.ClickException(e) from e
+        raise click.ClickException(str(e)) from e
 
     cache_dir = CACHE_PATH / coin_name
     if not cache_dir.exists():
