@@ -1,15 +1,15 @@
 import json
-import pathlib
 import urllib.error
 import urllib.request
 import zipfile
+from pathlib import Path
 from typing import Dict
 
 import requests
 
 RECORDS_WEBSITE = "https://firmware.corp.sldev.cz/ui_tests/"
 FIXTURES_MASTER = "https://raw.githubusercontent.com/trezor/trezor-firmware/master/tests/ui_tests/fixtures.json"
-FIXTURES_CURRENT = pathlib.Path(__file__).parent / "../fixtures.json"
+FIXTURES_CURRENT = Path(__file__).resolve().parent.parent / "fixtures.json"
 
 _dns_failed = False
 

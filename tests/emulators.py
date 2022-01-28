@@ -20,7 +20,7 @@ from pathlib import Path
 
 from trezorlib._internal.emulator import CoreEmulator, LegacyEmulator
 
-ROOT = Path(__file__).parent.parent.resolve()
+ROOT = Path(__file__).resolve().parent.parent
 BINDIR = ROOT / "tests" / "emulators"
 
 LOCAL_BUILD_PATHS = {

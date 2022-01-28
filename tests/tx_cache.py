@@ -25,9 +25,9 @@ import requests
 
 from trezorlib import btc, messages, protobuf
 
-REPOSITORY_ROOT = Path(__file__).parent.parent
+REPOSITORY_ROOT = Path(__file__).resolve().parent.parent
 TOOLS_PATH = REPOSITORY_ROOT / "common" / "tools"
-CACHE_PATH = Path(__file__).parent / "txcache"
+CACHE_PATH = Path(__file__).resolve().parent / "txcache"
 
 sys.path.insert(0, str(TOOLS_PATH))
 from coin_info import coin_info  # isort:skip

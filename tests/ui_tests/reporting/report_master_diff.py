@@ -10,8 +10,8 @@ from dominate.tags import br, h1, h2, hr, i, p, table, td, th, tr
 import download  # isort:skip
 import html  # isort:skip
 
-REPORTS_PATH = Path(__file__).parent.resolve() / "reports" / "master_diff"
-RECORDED_SCREENS_PATH = Path(__file__).parent.parent.resolve() / "screens"
+REPORTS_PATH = Path(__file__).resolve().parent / "reports" / "master_diff"
+RECORDED_SCREENS_PATH = Path(__file__).resolve().parent.parent / "screens"
 
 
 def get_diff():

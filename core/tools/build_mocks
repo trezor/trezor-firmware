@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
-import glob
 import os
-import re
 import shutil
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
 
-CORE_DIR = Path(__file__).parent.parent.resolve()
+CORE_DIR = Path(__file__).resolve().parent.parent
 EXTMOD_PATH = CORE_DIR / "embed" / "extmod"
 MOCKS_PATH = CORE_DIR / "mocks" / "generated"
 
@@ -132,6 +130,7 @@ def do_check():
 def do_generate():
     shutil.rmtree(MOCKS_PATH)
     build_directory(MOCKS_PATH)
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "--check":

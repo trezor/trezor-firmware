@@ -8,7 +8,7 @@ from PIL import Image
 
 from trezorlib import toif
 
-HERE = Path(__file__).parent.resolve()
+HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 
 ICON_SIZE = (64, 64)
