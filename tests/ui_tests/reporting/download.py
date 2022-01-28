@@ -14,7 +14,7 @@ FIXTURES_CURRENT = Path(__file__).resolve().parent.parent / "fixtures.json"
 _dns_failed = False
 
 
-def fetch_recorded(hash, path):
+def fetch_recorded(hash: str, path: Path) -> None:
     global _dns_failed
 
     if _dns_failed:

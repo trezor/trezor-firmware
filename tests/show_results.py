@@ -5,9 +5,9 @@ import multiprocessing
 import os
 import posixpath
 import time
-import urllib
 import webbrowser
 from pathlib import Path
+from urllib.parse import unquote
 
 import click
 
@@ -16,16 +16,16 @@ TEST_RESULT_PATH = ROOT / "tests" / "ui_tests" / "reporting" / "reports" / "test
 
 
 class NoCacheRequestHandler(http.server.SimpleHTTPRequestHandler):
-    def end_headers(self):
+    def end_headers(self) -> None:
         self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
         self.send_header("Pragma", "no-cache")
         self.send_header("Expires", "0")
         return super().end_headers()
 
-    def log_message(self, format, *args):
+    def log_message(self, format, *args) -> None:
         pass
 
-    def translate_path(self, path):
+    def translate_path(self, path: str) -> str:
         # XXX
         # Copy-pasted from Python 3.8 BaseHTTPRequestHandler so that we can inject
         # the `directory` parameter.
@@ -36,9 +36,9 @@ class NoCacheRequestHandler(http.server.SimpleHTTPRequestHandler):
         # Don't forget explicit trailing slash when normalizing. Issue17324
         trailing_slash = path.rstrip().endswith("/")
         try:
-            path = urllib.parse.unquote(path, errors="surrogatepass")
+            path = unquote(path, errors="surrogatepass")
         except UnicodeDecodeError:
-            path = urllib.parse.unquote(path)
+            path = unquote(path)
         path = posixpath.normpath(path)
         words = path.split("/")
         words = filter(None, words)
@@ -53,13 +53,13 @@ class NoCacheRequestHandler(http.server.SimpleHTTPRequestHandler):
         return path
 
 
-def launch_http_server(port):
-    http.server.test(HandlerClass=NoCacheRequestHandler, bind="localhost", port=port)
+def launch_http_server(port: int) -> None:
+    http.server.test(HandlerClass=NoCacheRequestHandler, bind="localhost", port=port)  # type: ignore [test is defined]
 
 
 @click.command()
 @click.option("-p", "--port", type=int, default=8000)
-def main(port):
+def main(port: int):
     httpd = multiprocessing.Process(target=launch_http_server, args=(port,))
     httpd.start()
     time.sleep(0.5)

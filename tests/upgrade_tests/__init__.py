@@ -15,8 +15,10 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import os
+from typing import List, Tuple
 
 import pytest
+from _pytest.mark.structures import MarkDecorator
 
 from ..emulators import ALL_TAGS, LOCAL_BUILD_PATHS
 
@@ -44,7 +46,11 @@ core_only = pytest.mark.skipif(
 )
 
 
-def for_all(*args, legacy_minimum_version=(1, 0, 0), core_minimum_version=(2, 0, 0)):
+def for_all(
+    *args,
+    legacy_minimum_version: Tuple[int, int, int] = (1, 0, 0),
+    core_minimum_version: Tuple[int, int, int] = (2, 0, 0)
+) -> "MarkDecorator":
     """Parametrizing decorator for test cases.
 
     Usage example:
@@ -98,7 +104,7 @@ def for_all(*args, legacy_minimum_version=(1, 0, 0), core_minimum_version=(2, 0,
     return pytest.mark.parametrize("gen, tag", all_params)
 
 
-def for_tags(*args):
+def for_tags(*args: Tuple[str, List[str]]) -> "MarkDecorator":
     enabled_gens = SELECTED_GENS or ("core", "legacy")
     return pytest.mark.parametrize(
         "gen, tags", [(gen, tags) for gen, tags in args if gen in enabled_gens]

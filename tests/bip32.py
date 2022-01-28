@@ -18,6 +18,7 @@ import hashlib
 import hmac
 import struct
 from copy import copy
+from typing import Any, List, Tuple
 
 import ecdsa
 from ecdsa.curves import SECP256k1
@@ -27,7 +28,7 @@ from ecdsa.util import number_to_string, string_to_number
 from trezorlib import messages, tools
 
 
-def point_to_pubkey(point):
+def point_to_pubkey(point: Point) -> bytes:
     order = SECP256k1.order
     x_str = number_to_string(point.x(), order)
     y_str = number_to_string(point.y(), order)
@@ -35,14 +36,14 @@ def point_to_pubkey(point):
     return struct.pack("B", (vk[63] & 1) + 2) + vk[0:32]  # To compressed key
 
 
-def sec_to_public_pair(pubkey):
+def sec_to_public_pair(pubkey: bytes) -> Tuple[int, Any]:
     """Convert a public key in sec binary format to a public pair."""
     x = string_to_number(pubkey[1:33])
     sec0 = pubkey[:1]
     if sec0 not in (b"\2", b"\3"):
         raise ValueError("Compressed pubkey expected")
 
-    def public_pair_for_x(generator, x, is_even):
+    def public_pair_for_x(generator, x: int, is_even: bool) -> Tuple[int, Any]:
         curve = generator.curve()
         p = curve.p()
         alpha = (pow(x, 3, p) + curve.a() * x + curve.b()) % p
@@ -56,15 +57,15 @@ def sec_to_public_pair(pubkey):
     )
 
 
-def fingerprint(pubkey):
+def fingerprint(pubkey: bytes) -> int:
     return string_to_number(tools.hash_160(pubkey)[:4])
 
 
-def get_address(public_node, address_type):
+def get_address(public_node: messages.HDNodeType, address_type: int) -> str:
     return tools.public_key_to_bc_address(public_node.public_key, address_type)
 
 
-def public_ckd(public_node, n):
+def public_ckd(public_node: messages.HDNodeType, n: List[int]):
     if not isinstance(n, list):
         raise ValueError("Parameter must be a list")
 
@@ -76,7 +77,7 @@ def public_ckd(public_node, n):
     return node
 
 
-def get_subnode(node, i):
+def get_subnode(node: messages.HDNodeType, i: int) -> messages.HDNodeType:
     # Public Child key derivation (CKD) algorithm of BIP32
     i_as_bytes = struct.pack(">L", i)
 
@@ -108,7 +109,7 @@ def get_subnode(node, i):
     )
 
 
-def serialize(node, version=0x0488B21E):
+def serialize(node: messages.HDNodeType, version: int = 0x0488B21E) -> str:
     s = b""
     s += struct.pack(">I", version)
     s += struct.pack(">B", node.depth)
@@ -123,7 +124,7 @@ def serialize(node, version=0x0488B21E):
     return tools.b58encode(s)
 
 
-def deserialize(xpub):
+def deserialize(xpub: str) -> messages.HDNodeType:
     data = tools.b58decode(xpub, None)
 
     if tools.btc_hash(data[:-4])[:4] != data[-4:]:

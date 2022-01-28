@@ -17,8 +17,9 @@
 import tempfile
 from collections import defaultdict
 from pathlib import Path
+from typing import Dict, List, Tuple
 
-from trezorlib._internal.emulator import CoreEmulator, LegacyEmulator
+from trezorlib._internal.emulator import CoreEmulator, Emulator, LegacyEmulator
 
 ROOT = Path(__file__).resolve().parent.parent
 BINDIR = ROOT / "tests" / "emulators"
@@ -33,18 +34,18 @@ CORE_SRC_DIR = ROOT / "core" / "src"
 ENV = {"SDL_VIDEODRIVER": "dummy"}
 
 
-def check_version(tag, version_tuple):
+def check_version(tag: str, version_tuple: Tuple[int, int, int]) -> None:
     if tag is not None and tag.startswith("v") and len(tag.split(".")) == 3:
         version = ".".join(str(i) for i in version_tuple)
         if tag[1:] != version:
             raise RuntimeError(f"Version mismatch: tag {tag} reports version {version}")
 
 
-def filename_from_tag(gen, tag):
+def filename_from_tag(gen: str, tag: str) -> Path:
     return BINDIR / f"trezor-emu-{gen}-{tag}"
 
 
-def get_tags():
+def get_tags() -> Dict[str, List[str]]:
     files = list(BINDIR.iterdir())
     if not files:
         raise ValueError(
@@ -66,7 +67,7 @@ ALL_TAGS = get_tags()
 
 
 class EmulatorWrapper:
-    def __init__(self, gen, tag=None, storage=None):
+    def __init__(self, gen: str, tag: str = None, storage: bytes = None) -> None:
         if tag is not None:
             executable = filename_from_tag(gen, tag)
         else:
@@ -96,11 +97,15 @@ class EmulatorWrapper:
                 workdir=workdir,
                 headless=True,
             )
+        else:
+            raise ValueError(
+                f"Unrecognized gen - {gen} - only 'core' and 'legacy' supported"
+            )
 
-    def __enter__(self):
+    def __enter__(self) -> Emulator:
         self.emulator.start()
         return self.emulator
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
         self.emulator.stop()
         self.profile_dir.cleanup()
