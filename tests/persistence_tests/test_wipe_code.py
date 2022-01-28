@@ -8,7 +8,9 @@ PIN = "1234"
 WIPE_CODE = "9876"
 
 
-def setup_device_legacy(client, pin, wipe_code):
+def setup_device_legacy(
+    client: debuglink.TrezorClientDebugLink, pin: str, wipe_code: str
+) -> None:
     device.wipe(client)
     debuglink.load_device(
         client, MNEMONIC12, pin, passphrase_protection=False, label="WIPECODE"
@@ -19,7 +21,9 @@ def setup_device_legacy(client, pin, wipe_code):
         device.change_wipe_code(client)
 
 
-def setup_device_core(client, pin, wipe_code):
+def setup_device_core(
+    client: debuglink.TrezorClientDebugLink, pin: str, wipe_code: str
+) -> None:
     device.wipe(client)
     debuglink.load_device(
         client, MNEMONIC12, pin, passphrase_protection=False, label="WIPECODE"
@@ -49,6 +53,7 @@ def setup_device_core(client, pin, wipe_code):
 @core_only
 def test_wipe_code_activate_core():
     with EmulatorWrapper("core") as emu:
+        assert emu.client is not None
         # set up device
         setup_device_core(emu.client, PIN, WIPE_CODE)
 
@@ -80,6 +85,7 @@ def test_wipe_code_activate_core():
 @legacy_only
 def test_wipe_code_activate_legacy():
     with EmulatorWrapper("legacy") as emu:
+        assert emu.client is not None
         # set up device
         setup_device_legacy(emu.client, PIN, WIPE_CODE)
 
