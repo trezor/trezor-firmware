@@ -2,7 +2,7 @@ import shutil
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).parent / ".."
+ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 # Needed for setup purposes, filling the FILE_HASHES dict
 from tests.ui_tests import read_fixtures  # isort:skip
@@ -16,4 +16,6 @@ for test_case in FILE_HASHES.keys():
     expected_hash = FILE_HASHES[test_case]
     actual_hash = _hash_files(recorded_dir)
     assert expected_hash == actual_hash
-    shutil.make_archive(ROOT / "ci/ui_test_records" / actual_hash, "zip", recorded_dir)
+    shutil.make_archive(
+        str(ROOT / "ci/ui_test_records" / actual_hash), "zip", recorded_dir
+    )

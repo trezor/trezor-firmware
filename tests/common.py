@@ -52,7 +52,7 @@ EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
 
 TEST_ADDRESS_N = tools.parse_path("m/44h/1h/0h/0/0")
 COMMON_FIXTURES_DIR = (
-    Path(__file__).parent.resolve().parent / "common" / "tests" / "fixtures"
+    Path(__file__).resolve().parent.parent / "common" / "tests" / "fixtures"
 )
 
 

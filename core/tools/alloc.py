@@ -4,7 +4,7 @@ from pathlib import Path
 from types import SimpleNamespace
 import click
 
-HERE = Path(__file__).parent.resolve()
+HERE = Path(__file__).resolve().parent
 
 
 def parse_alloc_data(alloc_data):

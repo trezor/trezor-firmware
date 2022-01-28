@@ -21,7 +21,7 @@ except Exception:
     inotify = None
 
 
-HERE = Path(__file__).parent.resolve()
+HERE = Path(__file__).resolve().parent
 MICROPYTHON = HERE / "build" / "unix" / "trezor-emu-core"
 SRC_DIR = HERE / "src"
 

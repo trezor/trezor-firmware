@@ -11,7 +11,7 @@ from pathlib import Path
 
 import click
 
-ROOT = Path(__file__).parent.parent.resolve()
+ROOT = Path(__file__).resolve().parent.parent
 TEST_RESULT_PATH = ROOT / "tests" / "ui_tests" / "reporting" / "reports" / "test"
 
 

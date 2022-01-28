@@ -10,7 +10,7 @@ from dominate.util import text
 
 from . import download, html
 
-HERE = Path(__file__).parent.resolve()
+HERE = Path(__file__).resolve().parent
 REPORTS_PATH = HERE / "reports" / "test"
 
 STYLE = (HERE / "testreport.css").read_text()

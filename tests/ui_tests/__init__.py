@@ -11,7 +11,7 @@ from PIL import Image
 
 from .reporting import testreport
 
-UI_TESTS_DIR = Path(__file__).parent.resolve()
+UI_TESTS_DIR = Path(__file__).resolve().parent
 SCREENS_DIR = UI_TESTS_DIR / "screens"
 HASH_FILE = UI_TESTS_DIR / "fixtures.json"
 SUGGESTION_FILE = UI_TESTS_DIR / "fixtures.suggestion.json"

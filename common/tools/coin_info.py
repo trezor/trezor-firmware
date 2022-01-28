@@ -13,7 +13,7 @@ except ImportError:
 
 log = logging.getLogger(__name__)
 
-ROOT = (Path(__file__).parent / "..").resolve()
+ROOT = Path(__file__).resolve().parent.parent
 
 if os.environ.get("DEFS_DIR"):
     DEFS_DIR = Path(os.environ.get("DEFS_DIR")).resolve()
