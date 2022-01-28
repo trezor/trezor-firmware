@@ -52,13 +52,13 @@ where
 #[no_mangle]
 extern "C" fn ui_layout_new_example(_param: Obj) -> Obj {
     let block = move || {
-        let layout = LayoutObj::new(Child::new(HoldToConfirm::new(display::screen(), |area| {
+        let layout = LayoutObj::new(HoldToConfirm::new(display::screen(), |area| {
             FormattedText::new::<theme::TTDefaultText>(
                 area,
                 "Testing text layout, with some text, and some more text. And {param}",
             )
             .with(b"param", b"parameters!")
-        })))?;
+        }))?;
         Ok(layout.into())
     };
     unsafe { util::try_or_raise(block) }

@@ -3,7 +3,7 @@ use core::convert::TryInto;
 use crate::{
     micropython::{buffer::Buffer, map::Map, obj::Obj, qstr::Qstr},
     ui::{
-        component::{text::paragraphs::Paragraphs, Child, FormattedText},
+        component::{text::paragraphs::Paragraphs, FormattedText},
         display,
         layout::obj::LayoutObj,
     },
@@ -44,7 +44,7 @@ extern "C" fn ui_layout_new_confirm_action(
         let right = verb
             .map(|label| |area, pos| Button::with_text(area, pos, label, theme::button_default()));
 
-        let obj = LayoutObj::new(Child::new(Frame::new(display::screen(), title, |area| {
+        let obj = LayoutObj::new(Frame::new(display::screen(), title, |area| {
             ButtonPage::new(
                 area,
                 |area| {
@@ -54,7 +54,7 @@ extern "C" fn ui_layout_new_confirm_action(
                 },
                 theme::BG,
             )
-        })))?;
+        }))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -72,7 +72,7 @@ extern "C" fn ui_layout_new_confirm_text(
         let description: Option<Buffer> =
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
 
-        let obj = LayoutObj::new(Child::new(Frame::new(display::screen(), title, |area| {
+        let obj = LayoutObj::new(Frame::new(display::screen(), title, |area| {
             ButtonPage::new(
                 area,
                 |area| {
@@ -85,7 +85,7 @@ extern "C" fn ui_layout_new_confirm_text(
                 },
                 theme::BG,
             )
-        })))?;
+        }))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -125,7 +125,7 @@ mod tests {
 
     #[test]
     fn trace_example_layout() {
-        let layout = Child::new(Dialog::new(
+        let layout = Dialog::new(
             display::screen(),
             |area| {
                 FormattedText::new::<theme::T1DefaultText>(
@@ -136,7 +136,7 @@ mod tests {
             },
             Some(|area, pos| Button::with_text(area, pos, "Left", theme::button_cancel())),
             Some(|area, pos| Button::with_text(area, pos, "Right", theme::button_default())),
-        ));
+        );
         assert_eq!(
             trace(&layout),
             r#"<Dialog content:<Text content:Testing text layout,
@@ -148,7 +148,7 @@ arameters! > left:<Button text:Left > right:<Button text:Right > >"#
 
     #[test]
     fn trace_layout_title() {
-        let layout = Child::new(Frame::new(display::screen(), "Please confirm", |area| {
+        let layout = Frame::new(display::screen(), "Please confirm", |area| {
             Dialog::new(
                 area,
                 |area| {
@@ -161,7 +161,7 @@ arameters! > left:<Button text:Left > right:<Button text:Right > >"#
                 Some(|area, pos| Button::with_text(area, pos, "Left", theme::button_cancel())),
                 Some(|area, pos| Button::with_text(area, pos, "Right", theme::button_default())),
             )
-        }));
+        });
         assert_eq!(
             trace(&layout),
             r#"<Frame title:Please confirm content:<Dialog content:<Text content:Testing text layout,
