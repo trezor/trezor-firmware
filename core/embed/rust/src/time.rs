@@ -1,4 +1,7 @@
-use core::{cmp::Ordering, ops::Div};
+use core::{
+    cmp::Ordering,
+    ops::{Div, Mul},
+};
 
 use crate::micropython::time;
 
@@ -35,7 +38,19 @@ impl Duration {
     }
 }
 
+impl Mul<f32> for Duration {
+    // Multiplication by float is saturating -- in particular, casting from a float to
+    // an int is saturating, value larger than INT_MAX casts to INT_MAX. So this
+    // operation does not need to be checked.
+    type Output = Self;
+
+    fn mul(self, rhs: f32) -> Self::Output {
+        Self::from_millis((self.millis as f32 * rhs) as u32)
+    }
+}
+
 impl Div<u32> for Duration {
+    // Division by integer cannot overflow so it does not need to be checked.
     type Output = Self;
 
     fn div(self, rhs: u32) -> Self::Output {
@@ -44,6 +59,7 @@ impl Div<u32> for Duration {
 }
 
 impl Div<Duration> for Duration {
+    // Division by float results in float so it does not need to be checked.
     type Output = f32;
 
     fn div(self, rhs: Self) -> Self::Output {
