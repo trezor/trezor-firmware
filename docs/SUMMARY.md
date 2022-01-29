@@ -9,6 +9,7 @@
   - [Event Loop](core/src/event-loop.md)
   - [Apps](core/src/apps.md)
   - [Tests](core/tests/index.md)
+  - [SystemView instrumentation](core/systemview/index.md)
   - [Miscellaneous](core/misc/index.md)
     - [SLIP-39](core/misc/slip0039.md)
     - [Exceptions usage](core/misc/exceptions.md)

@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2019 SatoshiLabs and contributors
+# Copyright (C) 2012-2022 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -17,17 +17,57 @@
 import warnings
 from copy import copy
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Dict, Sequence, Tuple
+from typing import TYPE_CHECKING, Any, AnyStr, Dict, List, Optional, Sequence, Tuple
+
+# TypedDict is not available in typing for python < 3.8
+from typing_extensions import TypedDict
 
 from . import exceptions, messages
 from .tools import expect, normalize_nfc, session
 
 if TYPE_CHECKING:
     from .client import TrezorClient
+    from .tools import Address
+    from .protobuf import MessageType
+
+    class ScriptSig(TypedDict):
+        asm: str
+        hex: str
+
+    class ScriptPubKey(TypedDict):
+        asm: str
+        hex: str
+        type: str
+        reqSigs: int
+        addresses: List[str]
+
+    class Vin(TypedDict):
+        txid: str
+        vout: int
+        sequence: int
+        coinbase: str
+        scriptSig: "ScriptSig"
+        txinwitness: List[str]
+
+    class Vout(TypedDict):
+        value: float
+        int: int
+        scriptPubKey: "ScriptPubKey"
+
+    class Transaction(TypedDict):
+        txid: str
+        hash: str
+        version: int
+        size: int
+        vsize: int
+        weight: int
+        locktime: int
+        vin: List[Vin]
+        vout: List[Vout]
 
 
-def from_json(json_dict):
-    def make_input(vin):
+def from_json(json_dict: "Transaction") -> messages.TransactionType:
+    def make_input(vin: "Vin") -> messages.TxInputType:
         if "coinbase" in vin:
             return messages.TxInputType(
                 prev_hash=b"\0" * 32,
@@ -44,7 +84,7 @@ def from_json(json_dict):
                 sequence=vin["sequence"],
             )
 
-    def make_bin_output(vout):
+    def make_bin_output(vout: "Vout") -> messages.TxOutputBinType:
         return messages.TxOutputBinType(
             amount=int(Decimal(vout["value"]) * (10 ** 8)),
             script_pubkey=bytes.fromhex(vout["scriptPubKey"]["hex"]),
@@ -60,14 +100,14 @@ def from_json(json_dict):
 
 @expect(messages.PublicKey)
 def get_public_node(
-    client,
-    n,
-    ecdsa_curve_name=None,
-    show_display=False,
-    coin_name=None,
-    script_type=messages.InputScriptType.SPENDADDRESS,
-    ignore_xpub_magic=False,
-):
+    client: "TrezorClient",
+    n: "Address",
+    ecdsa_curve_name: Optional[str] = None,
+    show_display: bool = False,
+    coin_name: Optional[str] = None,
+    script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
+    ignore_xpub_magic: bool = False,
+) -> "MessageType":
     return client.call(
         messages.GetPublicKey(
             address_n=n,
@@ -80,16 +120,16 @@ def get_public_node(
     )
 
 
-@expect(messages.Address, field="address")
+@expect(messages.Address, field="address", ret_type=str)
 def get_address(
-    client,
-    coin_name,
-    n,
-    show_display=False,
-    multisig=None,
-    script_type=messages.InputScriptType.SPENDADDRESS,
-    ignore_xpub_magic=False,
-):
+    client: "TrezorClient",
+    coin_name: str,
+    n: "Address",
+    show_display: bool = False,
+    multisig: Optional[messages.MultisigRedeemScriptType] = None,
+    script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
+    ignore_xpub_magic: bool = False,
+) -> "MessageType":
     return client.call(
         messages.GetAddress(
             address_n=n,
@@ -102,14 +142,14 @@ def get_address(
     )
 
 
-@expect(messages.OwnershipId, field="ownership_id")
+@expect(messages.OwnershipId, field="ownership_id", ret_type=bytes)
 def get_ownership_id(
-    client,
-    coin_name,
-    n,
-    multisig=None,
-    script_type=messages.InputScriptType.SPENDADDRESS,
-):
+    client: "TrezorClient",
+    coin_name: str,
+    n: "Address",
+    multisig: Optional[messages.MultisigRedeemScriptType] = None,
+    script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
+) -> "MessageType":
     return client.call(
         messages.GetOwnershipId(
             address_n=n,
@@ -121,16 +161,16 @@ def get_ownership_id(
 
 
 def get_ownership_proof(
-    client,
-    coin_name,
-    n,
-    multisig=None,
-    script_type=messages.InputScriptType.SPENDADDRESS,
-    user_confirmation=False,
-    ownership_ids=None,
-    commitment_data=None,
-    preauthorized=False,
-):
+    client: "TrezorClient",
+    coin_name: str,
+    n: "Address",
+    multisig: Optional[messages.MultisigRedeemScriptType] = None,
+    script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
+    user_confirmation: bool = False,
+    ownership_ids: Optional[List[bytes]] = None,
+    commitment_data: Optional[bytes] = None,
+    preauthorized: bool = False,
+) -> Tuple[bytes, bytes]:
     if preauthorized:
         res = client.call(messages.DoPreauthorized())
         if not isinstance(res, messages.PreauthorizedRequest):
@@ -156,33 +196,37 @@ def get_ownership_proof(
 
 @expect(messages.MessageSignature)
 def sign_message(
-    client,
-    coin_name,
-    n,
-    message,
-    script_type=messages.InputScriptType.SPENDADDRESS,
-    no_script_type=False,
-):
-    message = normalize_nfc(message)
+    client: "TrezorClient",
+    coin_name: str,
+    n: "Address",
+    message: AnyStr,
+    script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
+    no_script_type: bool = False,
+) -> "MessageType":
     return client.call(
         messages.SignMessage(
             coin_name=coin_name,
             address_n=n,
-            message=message,
+            message=normalize_nfc(message),
             script_type=script_type,
             no_script_type=no_script_type,
         )
     )
 
 
-def verify_message(client, coin_name, address, signature, message):
-    message = normalize_nfc(message)
+def verify_message(
+    client: "TrezorClient",
+    coin_name: str,
+    address: str,
+    signature: bytes,
+    message: AnyStr,
+) -> bool:
     try:
         resp = client.call(
             messages.VerifyMessage(
                 address=address,
                 signature=signature,
-                message=message,
+                message=normalize_nfc(message),
                 coin_name=coin_name,
             )
         )
@@ -197,11 +241,11 @@ def sign_tx(
     coin_name: str,
     inputs: Sequence[messages.TxInputType],
     outputs: Sequence[messages.TxOutputType],
-    details: messages.SignTx = None,
-    prev_txes: Dict[bytes, messages.TransactionType] = None,
+    details: Optional[messages.SignTx] = None,
+    prev_txes: Optional[Dict[bytes, messages.TransactionType]] = None,
     preauthorized: bool = False,
     **kwargs: Any,
-) -> Tuple[Sequence[bytes], bytes]:
+) -> Tuple[Sequence[Optional[bytes]], bytes]:
     """Sign a Bitcoin-like transaction.
 
     Returns a list of signatures (one for each provided input) and the
@@ -245,7 +289,7 @@ def sign_tx(
     res = client.call(signtx)
 
     # Prepare structure for signatures
-    signatures = [None] * len(inputs)
+    signatures: List[Optional[bytes]] = [None] * len(inputs)
     serialized_tx = b""
 
     def copy_tx_meta(tx: messages.TransactionType) -> messages.TransactionType:
@@ -286,40 +330,46 @@ def sign_tx(
         if res.request_type == R.TXFINISHED:
             break
 
+        assert res.details is not None, "device did not provide details"
+
         # Device asked for one more information, let's process it.
         if res.details.tx_hash is not None:
+            if res.details.tx_hash not in prev_txes:
+                raise ValueError(
+                    f"Previous transaction {res.details.tx_hash.hex()} not available"
+                )
             current_tx = prev_txes[res.details.tx_hash]
         else:
             current_tx = this_tx
 
+        msg = messages.TransactionType()
+
         if res.request_type == R.TXMETA:
             msg = copy_tx_meta(current_tx)
-            res = client.call(messages.TxAck(tx=msg))
-
         elif res.request_type in (R.TXINPUT, R.TXORIGINPUT):
-            msg = messages.TransactionType()
+            assert res.details.request_index is not None
             msg.inputs = [current_tx.inputs[res.details.request_index]]
-            res = client.call(messages.TxAck(tx=msg))
-
         elif res.request_type == R.TXOUTPUT:
-            msg = messages.TransactionType()
+            assert res.details.request_index is not None
             if res.details.tx_hash:
                 msg.bin_outputs = [current_tx.bin_outputs[res.details.request_index]]
             else:
                 msg.outputs = [current_tx.outputs[res.details.request_index]]
-
-            res = client.call(messages.TxAck(tx=msg))
-
         elif res.request_type == R.TXORIGOUTPUT:
-            msg = messages.TransactionType()
+            assert res.details.request_index is not None
             msg.outputs = [current_tx.outputs[res.details.request_index]]
-            res = client.call(messages.TxAck(tx=msg))
-
         elif res.request_type == R.TXEXTRADATA:
+            assert res.details.extra_data_offset is not None
+            assert res.details.extra_data_len is not None
+            assert current_tx.extra_data is not None
             o, l = res.details.extra_data_offset, res.details.extra_data_len
-            msg = messages.TransactionType()
             msg.extra_data = current_tx.extra_data[o : o + l]
-            res = client.call(messages.TxAck(tx=msg))
+        else:
+            raise exceptions.TrezorException(
+                f"Unknown request type - {res.request_type}."
+            )
+
+        res = client.call(messages.TxAck(tx=msg))
 
     if not isinstance(res, messages.TxRequest):
         raise exceptions.TrezorException("Unexpected message")
@@ -331,16 +381,16 @@ def sign_tx(
     return signatures, serialized_tx
 
 
-@expect(messages.Success, field="message")
+@expect(messages.Success, field="message", ret_type=str)
 def authorize_coinjoin(
-    client,
-    coordinator,
-    max_total_fee,
-    n,
-    coin_name,
-    fee_per_anonymity=None,
-    script_type=messages.InputScriptType.SPENDADDRESS,
-):
+    client: "TrezorClient",
+    coordinator: str,
+    max_total_fee: int,
+    n: "Address",
+    coin_name: str,
+    fee_per_anonymity: Optional[int] = None,
+    script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
+) -> "MessageType":
     return client.call(
         messages.AuthorizeCoinJoin(
             coordinator=coordinator,

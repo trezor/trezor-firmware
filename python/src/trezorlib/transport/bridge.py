@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2019 SatoshiLabs and contributors
+# Copyright (C) 2012-2022 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -16,12 +16,15 @@
 
 import logging
 import struct
-from typing import Any, Dict, Iterable, Optional
+from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional
 
 import requests
 
 from ..log import DUMP_PACKETS
 from . import MessagePayload, Transport, TransportException
+
+if TYPE_CHECKING:
+    from ..models import TrezorModel
 
 LOG = logging.getLogger(__name__)
 
@@ -34,7 +37,7 @@ CONNECTION = requests.Session()
 CONNECTION.headers.update(TREZORD_ORIGIN_HEADER)
 
 
-def call_bridge(uri: str, data=None) -> requests.Response:
+def call_bridge(uri: str, data: Optional[str] = None) -> requests.Response:
     url = TREZORD_HOST + "/" + uri
     r = CONNECTION.post(url, data=data)
     if r.status_code != 200:
@@ -127,7 +130,7 @@ class BridgeTransport(Transport):
             raise TransportException("Debug device not available")
         return BridgeTransport(self.device, self.legacy, debug=True)
 
-    def _call(self, action: str, data: str = None) -> requests.Response:
+    def _call(self, action: str, data: Optional[str] = None) -> requests.Response:
         session = self.session or "null"
         uri = action + "/" + str(session)
         if self.debug:
@@ -135,7 +138,9 @@ class BridgeTransport(Transport):
         return call_bridge(uri, data=data)
 
     @classmethod
-    def enumerate(cls) -> Iterable["BridgeTransport"]:
+    def enumerate(
+        cls, _models: Optional[Iterable["TrezorModel"]] = None
+    ) -> Iterable["BridgeTransport"]:
         try:
             legacy = is_legacy_bridge()
             return [

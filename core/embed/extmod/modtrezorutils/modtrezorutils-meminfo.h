@@ -36,6 +36,7 @@
 #include "embed/rust/librust.h"
 #include "embed/trezorhal/usb.h"
 
+#include <stdio.h>
 #include <string.h>
 
 #define WORDS_PER_BLOCK ((MICROPY_BYTES_PER_GC_BLOCK) / MP_BYTES_PER_OBJ_WORD)

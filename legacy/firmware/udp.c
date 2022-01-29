@@ -70,3 +70,5 @@ char usbTiny(char set) {
   tiny = set;
   return old;
 }
+
+void usbFlush(uint32_t millis) { usbSleep(millis); }

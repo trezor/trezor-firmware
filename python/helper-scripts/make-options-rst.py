@@ -1,6 +1,23 @@
 #!/usr/bin/env python3
 
+# This file is part of the Trezor project.
+#
+# Copyright (C) 2012-2022 SatoshiLabs and contributors
+#
+# This library is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License version 3
+# as published by the Free Software Foundation.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the License along with this library.
+# If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
+
 import os
+from typing import List
 
 import click
 
@@ -10,7 +27,7 @@ DELIMITER_STR = "### ALL CONTENT BELOW IS GENERATED"
 
 options_rst = open(os.path.dirname(__file__) + "/../docs/OPTIONS.rst", "r+")
 
-lead_in = []
+lead_in: List[str] = []
 
 for line in options_rst:
     lead_in.append(line)
@@ -24,11 +41,11 @@ for line in lead_in:
     options_rst.write(line)
 
 
-def _print(s=""):
+def _print(s: str = "") -> None:
     options_rst.write(s + "\n")
 
 
-def rst_code_block(help_str):
+def rst_code_block(help_str: str) -> None:
     _print(".. code::")
     _print()
     for line in help_str.split("\n"):

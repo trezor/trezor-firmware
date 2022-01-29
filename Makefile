@@ -29,6 +29,7 @@ pystyle_check: ## run code style check on application sources and tests
 	@black --check $(PY_FILES)
 	@echo [PYLINT]
 	@pylint $(PY_FILES)
+	@echo [PYTHON]
 	make -C python style_check
 
 pystyle: ## apply code style on application sources and tests
@@ -42,6 +43,7 @@ pystyle: ## apply code style on application sources and tests
 	@flake8 $(PY_FILES)
 	@echo [PYLINT]
 	@pylint $(PY_FILES)
+	@echo [PYTHON]
 	make -C python style
 
 changelog_check: ## check changelog format

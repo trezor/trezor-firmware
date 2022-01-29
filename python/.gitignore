@@ -7,3 +7,4 @@ MANIFEST
 *.bin
 *.py.cache
 /.tox
+mypy_report

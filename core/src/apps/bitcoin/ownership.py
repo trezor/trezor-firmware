@@ -56,6 +56,8 @@ def generate_proof(
         InputScriptType.SPENDP2SHWITNESS,
     ):
         signature = common.ecdsa_sign(node, sighash.digest())
+    elif script_type == InputScriptType.SPENDTAPROOT:
+        signature = common.bip340_sign(node, sighash.digest())
     else:
         raise wire.DataError("Unsupported script type.")
     public_key = node.public_key()

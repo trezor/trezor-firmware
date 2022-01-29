@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2019 SatoshiLabs and contributors
+# Copyright (C) 2012-2022 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -17,19 +17,22 @@
 import logging
 import sys
 import time
-from typing import Any, Dict, Iterable
+from typing import Any, Dict, Iterable, List, Optional
 
 from ..log import DUMP_PACKETS
-from . import DEV_TREZOR1, UDEV_RULES_STR, TransportException
+from ..models import TREZOR_ONE, TrezorModel
+from . import UDEV_RULES_STR, TransportException
 from .protocol import ProtocolBasedTransport, ProtocolV1
 
 LOG = logging.getLogger(__name__)
 
 try:
     import hid
+
+    HID_IMPORTED = True
 except Exception as e:
     LOG.info(f"HID transport is disabled: {e}")
-    hid = None
+    HID_IMPORTED = False
 
 
 HidDevice = Dict[str, Any]
@@ -118,7 +121,7 @@ class HidTransport(ProtocolBasedTransport):
     """
 
     PATH_PREFIX = "hid"
-    ENABLED = hid is not None
+    ENABLED = HID_IMPORTED
 
     def __init__(self, device: HidDevice) -> None:
         self.device = device
@@ -130,11 +133,17 @@ class HidTransport(ProtocolBasedTransport):
         return f"{self.PATH_PREFIX}:{self.device['path'].decode()}"
 
     @classmethod
-    def enumerate(cls, debug: bool = False) -> Iterable["HidTransport"]:
-        devices = []
+    def enumerate(
+        cls, models: Optional[Iterable["TrezorModel"]] = None, debug: bool = False
+    ) -> Iterable["HidTransport"]:
+        if models is None:
+            models = {TREZOR_ONE}
+        usb_ids = [id for model in models for id in model.usb_ids]
+
+        devices: List["HidTransport"] = []
         for dev in hid.enumerate(0, 0):
             usb_id = (dev["vendor_id"], dev["product_id"])
-            if usb_id != DEV_TREZOR1:
+            if usb_id not in usb_ids:
                 continue
             if debug:
                 if not is_debuglink(dev):

@@ -1,7 +1,25 @@
 #!/usr/bin/env python3
+
+# This file is part of the Trezor project.
+#
+# Copyright (C) 2012-2022 SatoshiLabs and contributors
+#
+# This library is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License version 3
+# as published by the Free Software Foundation.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the License along with this library.
+# If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
+
+import sys
+
 from trezorlib.debuglink import DebugLink
 from trezorlib.transport import enumerate_devices
-import sys
 
 # fmt: off
 sectoraddrs = [0x8000000, 0x8004000, 0x8008000, 0x800c000,
@@ -13,7 +31,7 @@ sectorlens = [0x4000, 0x4000, 0x4000, 0x4000,
 # fmt: on
 
 
-def find_debug():
+def find_debug() -> DebugLink:
     for device in enumerate_devices():
         try:
             debug_transport = device.find_debug()
@@ -27,7 +45,7 @@ def find_debug():
         sys.exit(1)
 
 
-def main():
+def main() -> None:
     debug = find_debug()
 
     sector = int(sys.argv[1])

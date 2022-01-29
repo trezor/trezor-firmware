@@ -1,17 +1,28 @@
+# This file is part of the Trezor project.
+#
+# Copyright (C) 2012-2022 SatoshiLabs and contributors
+#
+# This library is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License version 3
+# as published by the Free Software Foundation.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the License along with this library.
+# If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
+
 import struct
 from enum import Enum
+from hashlib import blake2s
 from typing import Any, List, Optional
 
 import click
 import construct as c
 
 from .. import cosi, firmware
-
-try:
-    from hashlib import blake2s
-except ImportError:
-    from pyblake2 import blake2s
-
 
 SYM_OK = click.style("\u2714", fg="green")
 SYM_FAIL = click.style("\u274c", fg="red")
@@ -23,7 +34,7 @@ class Status(Enum):
     MISSING = click.style("MISSING", fg="blue", bold=True)
     DEVEL = click.style("DEVEL", fg="red", bold=True)
 
-    def is_ok(self):
+    def is_ok(self) -> bool:
         return self is Status.VALID or self is Status.DEVEL
 
 
@@ -48,7 +59,7 @@ def _make_dev_keys(*key_bytes: bytes) -> List[bytes]:
     return [k * 32 for k in key_bytes]
 
 
-def compute_vhash(vendor_header):
+def compute_vhash(vendor_header: c.Container) -> bytes:
     m = vendor_header.sig_m
     n = vendor_header.sig_n
     pubkeys = vendor_header.pubkeys
@@ -68,7 +79,7 @@ def all_zero(data: bytes) -> bool:
 
 def _check_signature_any(
     header: c.Container, m: int, pubkeys: List[bytes], is_devel: bool
-) -> Optional[bool]:
+) -> Status:
     if all_zero(header.signature) and header.sigmask == 0:
         return Status.MISSING
     try:
@@ -108,7 +119,7 @@ def _format_container(
 
         if isinstance(value, list):
             # short list of simple values
-            if not value or isinstance(value, (int, bool, Enum)):
+            if not value or isinstance(value[0], (int, bool, Enum)):
                 return repr(value)
 
             # long list, one line per entry
@@ -161,14 +172,14 @@ def _format_version(version: c.Container) -> str:
 
 class SignableImage:
     NAME = "Unrecognized image"
-    BIP32_INDEX = None
-    DEV_KEYS = []
+    BIP32_INDEX: Optional[int] = None
+    DEV_KEYS: List[bytes] = []
     DEV_KEY_SIGMASK = 0b11
 
     def __init__(self, fw: c.Container) -> None:
         self.fw = fw
-        self.header = None
-        self.public_keys = None
+        self.header: Any
+        self.public_keys: List[bytes]
         self.sigs_required = firmware.V2_SIGS_REQUIRED
 
     def digest(self) -> bytes:
@@ -196,7 +207,7 @@ class VendorHeader(SignableImage):
     BIP32_INDEX = 1
     DEV_KEYS = _make_dev_keys(b"\x44", b"\x45")
 
-    def __init__(self, fw):
+    def __init__(self, fw: c.Container) -> None:
         super().__init__(fw)
         self.header = fw.vendor_header
         self.public_keys = firmware.V2_BOOTLOADER_KEYS
@@ -239,7 +250,7 @@ class VendorHeader(SignableImage):
 
 
 class BinImage(SignableImage):
-    def __init__(self, fw):
+    def __init__(self, fw: c.Container) -> None:
         super().__init__(fw)
         self.header = self.fw.image.header
         self.code_hashes = firmware.calculate_code_hashes(
@@ -256,7 +267,7 @@ class BinImage(SignableImage):
     def digest(self) -> bytes:
         return firmware.header_digest(self.digest_header)
 
-    def rehash(self):
+    def rehash(self) -> None:
         self.header.hashes = self.code_hashes
 
     def format(self, verbose: bool = False) -> str:
@@ -331,7 +342,7 @@ class BootloaderImage(BinImage):
     BIP32_INDEX = 0
     DEV_KEYS = _make_dev_keys(b"\x41", b"\x42")
 
-    def __init__(self, fw):
+    def __init__(self, fw: c.Container) -> None:
         super().__init__(fw)
         self._identify_dev_keys()
 
@@ -339,7 +350,7 @@ class BootloaderImage(BinImage):
         super().insert_signature(signature, sigmask)
         self._identify_dev_keys()
 
-    def _identify_dev_keys(self):
+    def _identify_dev_keys(self) -> None:
         # try checking signature with dev keys first
         self.public_keys = firmware.V2_BOARDLOADER_DEV_KEYS
         if not self.check_signature().is_ok():
@@ -355,7 +366,7 @@ class BootloaderImage(BinImage):
         )
 
 
-def parse_image(image: bytes):
+def parse_image(image: bytes) -> SignableImage:
     fw = AnyFirmware.parse(image)
     if fw.vendor_header and not fw.image:
         return VendorHeader(fw)

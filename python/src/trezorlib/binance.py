@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2019 SatoshiLabs and contributors
+# Copyright (C) 2012-2022 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -14,27 +14,40 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from typing import TYPE_CHECKING
+
 from . import messages
 from .protobuf import dict_to_proto
 from .tools import expect, session
 
+if TYPE_CHECKING:
+    from .client import TrezorClient
+    from .tools import Address
+    from .protobuf import MessageType
 
-@expect(messages.BinanceAddress, field="address")
-def get_address(client, address_n, show_display=False):
+
+@expect(messages.BinanceAddress, field="address", ret_type=str)
+def get_address(
+    client: "TrezorClient", address_n: "Address", show_display: bool = False
+) -> "MessageType":
     return client.call(
         messages.BinanceGetAddress(address_n=address_n, show_display=show_display)
     )
 
 
-@expect(messages.BinancePublicKey, field="public_key")
-def get_public_key(client, address_n, show_display=False):
+@expect(messages.BinancePublicKey, field="public_key", ret_type=bytes)
+def get_public_key(
+    client: "TrezorClient", address_n: "Address", show_display: bool = False
+) -> "MessageType":
     return client.call(
         messages.BinanceGetPublicKey(address_n=address_n, show_display=show_display)
     )
 
 
 @session
-def sign_tx(client, address_n, tx_json):
+def sign_tx(
+    client: "TrezorClient", address_n: "Address", tx_json: dict
+) -> messages.BinanceSignedTx:
     msg = tx_json["msgs"][0]
     envelope = dict_to_proto(messages.BinanceSignTx, tx_json)
     envelope.msg_count = 1

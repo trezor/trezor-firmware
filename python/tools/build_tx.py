@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
+
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2019 SatoshiLabs and contributors
+# Copyright (C) 2012-2022 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -15,10 +16,11 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import decimal
 import json
+from typing import Any, Dict, List, Optional, Tuple
 
 import click
-import decimal
 import requests
 
 from trezorlib import btc, messages, tools
@@ -38,15 +40,15 @@ BITCOIN_CORE_INPUT_TYPES = {
 }
 
 
-def echo(*args, **kwargs):
+def echo(*args: Any, **kwargs: Any):
     return click.echo(*args, err=True, **kwargs)
 
 
-def prompt(*args, **kwargs):
+def prompt(*args: Any, **kwargs: Any):
     return click.prompt(*args, err=True, **kwargs)
 
 
-def _default_script_type(address_n, script_types):
+def _default_script_type(address_n: Optional[List[int]], script_types: Any) -> str:
     script_type = "address"
 
     if address_n is None:
@@ -60,14 +62,16 @@ def _default_script_type(address_n, script_types):
     # return script_types[script_type]
 
 
-def parse_vin(s):
+def parse_vin(s: str) -> Tuple[bytes, int]:
     txid, vout = s.split(":")
     return bytes.fromhex(txid), int(vout)
 
 
-def _get_inputs_interactive(blockbook_url):
-    inputs = []
-    txes = {}
+def _get_inputs_interactive(
+    blockbook_url: str,
+) -> Tuple[List[messages.TxInputType], Dict[str, messages.TransactionType]]:
+    inputs: List[messages.TxInputType] = []
+    txes: Dict[str, messages.TransactionType] = {}
     while True:
         echo()
         prev = prompt(
@@ -132,8 +136,8 @@ def _get_inputs_interactive(blockbook_url):
     return inputs, txes
 
 
-def _get_outputs_interactive():
-    outputs = []
+def _get_outputs_interactive() -> List[messages.TxOutputType]:
+    outputs: List[messages.TxOutputType] = []
     while True:
         echo()
         address = prompt("Output address (for non-change output)", default="")
@@ -170,7 +174,7 @@ def _get_outputs_interactive():
 
 
 @click.command()
-def sign_interactive():
+def sign_interactive() -> None:
     coin = prompt("Coin name", default="Bitcoin")
     blockbook_host = prompt("Blockbook server", default="btc1.trezor.io")
 

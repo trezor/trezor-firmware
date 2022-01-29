@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2019 SatoshiLabs and contributors
+# Copyright (C) 2012-2022 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -16,18 +16,17 @@
 
 import hashlib
 from enum import Enum
-from typing import Callable, List, Tuple
+from hashlib import blake2s
+from typing import TYPE_CHECKING, Any, Callable, List, Optional, Tuple
 
 import construct as c
 import ecdsa
 
-from . import cosi, messages, tools
+from . import cosi, messages
+from .tools import session
 
-try:
-    from hashlib import blake2s
-except ImportError:
-    from pyblake2 import blake2s
-
+if TYPE_CHECKING:
+    from .client import TrezorClient
 
 V1_SIGNATURE_SLOTS = 3
 V1_BOOTLOADER_KEYS = [
@@ -110,14 +109,14 @@ class HeaderType(Enum):
 
 
 class EnumAdapter(c.Adapter):
-    def __init__(self, subcon, enum):
+    def __init__(self, subcon: Any, enum: Any) -> None:
         self.enum = enum
         super().__init__(subcon)
 
-    def _encode(self, obj, ctx, path):
+    def _encode(self, obj: Any, ctx: Any, path: Any):
         return obj.value
 
-    def _decode(self, obj, ctx, path):
+    def _decode(self, obj: Any, ctx: Any, path: Any):
         try:
             return self.enum(obj)
         except ValueError:
@@ -350,8 +349,8 @@ def calculate_code_hashes(
     code_offset: int,
     hash_function: Callable = blake2s,
     chunk_size: int = V2_CHUNK_SIZE,
-    padding_byte: bytes = None,
-) -> None:
+    padding_byte: Optional[bytes] = None,
+) -> List[bytes]:
     hashes = []
     # End offset for each chunk. Normally this would be (i+1)*chunk_size for i-th chunk,
     # but the first chunk is shorter by code_offset, so all end offsets are shifted.
@@ -374,6 +373,8 @@ def calculate_code_hashes(
 
 
 def validate_code_hashes(fw: c.Container, version: FirmwareFormat) -> None:
+    hash_function: Callable
+    padding_byte: Optional[bytes]
     if version == FirmwareFormat.TREZOR_ONE_V2:
         image = fw
         hash_function = hashlib.sha256
@@ -483,8 +484,12 @@ def validate(
 # ====== Client functions ====== #
 
 
-@tools.session
-def update(client, data):
+@session
+def update(
+    client: "TrezorClient",
+    data: bytes,
+    progress_update: Callable[[int], Any] = lambda _: None,
+):
     if client.features.bootloader_mode is False:
         raise RuntimeError("Device must be in bootloader mode")
 
@@ -493,6 +498,7 @@ def update(client, data):
     # TREZORv1 method
     if isinstance(resp, messages.Success):
         resp = client.call(messages.FirmwareUpload(payload=data))
+        progress_update(len(data))
         if isinstance(resp, messages.Success):
             return
         else:
@@ -500,9 +506,13 @@ def update(client, data):
 
     # TREZORv2 method
     while isinstance(resp, messages.FirmwareRequest):
-        payload = data[resp.offset : resp.offset + resp.length]
+        assert resp.offset is not None
+        assert resp.length is not None
+        length = resp.length
+        payload = data[resp.offset : resp.offset + length]
         digest = blake2s(payload).digest()
         resp = client.call(messages.FirmwareUpload(payload=payload, hash=digest))
+        progress_update(length)
 
     if isinstance(resp, messages.Success):
         return

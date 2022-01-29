@@ -398,7 +398,7 @@ env.Replace(
     CCFLAGS='$COPT '
     '-g3 '
     '-std=gnu99 -Wall -Werror -Wuninitialized -Wno-missing-braces '
-    '-fdata-sections -ffunction-sections ' + CCFLAGS_MOD,
+    '-fdata-sections -ffunction-sections -fPIE ' + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
     LIBS=['m'],
     CPPPATH=[
@@ -653,7 +653,10 @@ def cargo_build():
         profile = '--release'
     else:
         profile = ''
-    features = []
+    if TREZOR_MODEL == "1":
+        features = ["model_t1"]
+    else:
+        features = ["model_tt"]
     if BITCOIN_ONLY == "1":
         features.append("bitcoin_only")
     if PYOPT == "0":
@@ -662,7 +665,7 @@ def cargo_build():
     elif NEW_UI:
         features.append("ui")
 
-    return f'cd embed/rust; cargo build {profile} --target-dir=../../build/unix/rust --features "{" ".join(features)}"'
+    return f'cd embed/rust; cargo build {profile} --target-dir=../../build/unix/rust --no-default-features --features "{" ".join(features)}"'
 
 rust = env.Command(
     target=RUST_LIBPATH,
@@ -696,4 +699,4 @@ program = env.Command(
     source=obj_program,
     action='$CC -o $TARGET $SOURCES $_LIBDIRFLAGS $_LIBFLAGS $LINKFLAGS', )
 
-#env.Depends(program, rust)
+env.Depends(program, rust)

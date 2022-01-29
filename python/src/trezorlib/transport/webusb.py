@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2019 SatoshiLabs and contributors
+# Copyright (C) 2012-2022 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -18,19 +18,22 @@ import atexit
 import logging
 import sys
 import time
-from typing import Iterable, Optional
+from typing import Iterable, List, Optional
 
 from ..log import DUMP_PACKETS
-from . import TREZORS, UDEV_RULES_STR, TransportException
+from ..models import TREZORS, TrezorModel
+from . import UDEV_RULES_STR, TransportException
 from .protocol import ProtocolBasedTransport, ProtocolV1
 
 LOG = logging.getLogger(__name__)
 
 try:
     import usb1
+
+    USB_IMPORTED = True
 except Exception as e:
     LOG.warning(f"WebUSB transport is disabled: {e}")
-    usb1 = None
+    USB_IMPORTED = False
 
 INTERFACE = 0
 ENDPOINT = 1
@@ -44,7 +47,7 @@ class WebUsbHandle:
         self.interface = DEBUG_INTERFACE if debug else INTERFACE
         self.endpoint = DEBUG_ENDPOINT if debug else ENDPOINT
         self.count = 0
-        self.handle: Optional[usb1.USBDeviceHandle] = None
+        self.handle: Optional["usb1.USBDeviceHandle"] = None
 
     def open(self) -> None:
         self.handle = self.device.open()
@@ -90,11 +93,14 @@ class WebUsbTransport(ProtocolBasedTransport):
     """
 
     PATH_PREFIX = "webusb"
-    ENABLED = usb1 is not None
+    ENABLED = USB_IMPORTED
     context = None
 
     def __init__(
-        self, device: str, handle: WebUsbHandle = None, debug: bool = False
+        self,
+        device: "usb1.USBDevice",
+        handle: Optional[WebUsbHandle] = None,
+        debug: bool = False,
     ) -> None:
         if handle is None:
             handle = WebUsbHandle(device, debug)
@@ -109,15 +115,21 @@ class WebUsbTransport(ProtocolBasedTransport):
         return f"{self.PATH_PREFIX}:{dev_to_str(self.device)}"
 
     @classmethod
-    def enumerate(cls, usb_reset=False) -> Iterable["WebUsbTransport"]:
+    def enumerate(
+        cls, models: Optional[Iterable["TrezorModel"]] = None, usb_reset: bool = False
+    ) -> Iterable["WebUsbTransport"]:
         if cls.context is None:
             cls.context = usb1.USBContext()
             cls.context.open()
-            atexit.register(cls.context.close)
-        devices = []
+            atexit.register(cls.context.close)  # type: ignore [Param spec "_P@register" has no bound value]
+
+        if models is None:
+            models = TREZORS
+        usb_ids = [id for model in models for id in model.usb_ids]
+        devices: List["WebUsbTransport"] = []
         for dev in cls.context.getDeviceIterator(skip_on_error=True):
             usb_id = (dev.getVendorID(), dev.getProductID())
-            if usb_id not in TREZORS:
+            if usb_id not in usb_ids:
                 continue
             if not is_vendor_class(dev):
                 continue

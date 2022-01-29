@@ -88,6 +88,22 @@
         }
     },
     {
+        "name": "Cardano Testnet",
+        "shortcut": "tADA",
+        "slip44": 1,
+        "curve": "ed25519",
+        "decimals": 6,
+        "links": {
+            "Homepage": "https://www.cardano.org",
+            "Github": "https://github.com/input-output-hk/cardano-sl"
+        },
+        "wallet": {
+            "AdaLite": "https://adalite.io/app",
+            "Yoroi": "https://yoroi-wallet.com",
+            "Daedalus": "https://daedaluswallet.io"
+        }
+    },
+    {
         "name": "Tezos",
         "shortcut": "XTZ",
         "slip44": 1729,

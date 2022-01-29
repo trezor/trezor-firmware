@@ -32,7 +32,7 @@
 
 #include "check_mem.h"
 
-#if VALGRIND
+#ifdef VALGRIND
 #include <valgrind/memcheck.h>
 #include <valgrind/valgrind.h>
 #endif
@@ -77,7 +77,7 @@
 #include "zkp_context.h"
 #include "zkp_ecdsa.h"
 
-#if VALGRIND
+#ifdef VALGRIND
 /*
  * This is a clever trick to make Valgrind's Memcheck verify code
  * is constant-time with respect to secret data.

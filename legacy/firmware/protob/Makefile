@@ -6,7 +6,9 @@ SKIPPED_MESSAGES := Binance Cardano DebugMonero Eos Monero Ontology Ripple SdPro
 	DebugLinkRecordScreen DebugLinkReseedRandom DebugLinkShowText DebugLinkEraseSdCard DebugLinkWatchLayout \
 	GetOwnershipProof OwnershipProof GetOwnershipId OwnershipId AuthorizeCoinJoin DoPreauthorized \
 	CancelAuthorization DebugLinkLayout \
-	TxAckInput TxAckOutput TxAckPrev EthereumSignTypedData EthereumTypedData
+	TxAckInput TxAckOutput TxAckPrev \
+	EthereumSignTypedData EthereumTypedDataStructRequest EthereumTypedDataStructAck \
+	EthereumTypedDataValueRequest EthereumTypedDataValueAck
 
 ifeq ($(BITCOIN_ONLY), 1)
 SKIPPED_MESSAGES += Ethereum NEM Stellar

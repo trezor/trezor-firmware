@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2019 SatoshiLabs and contributors
+# Copyright (C) 2012-2022 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -15,7 +15,8 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import os
-from typing import Union
+import sys
+from typing import Any, Callable, Optional, Union
 
 import click
 from mnemonic import Mnemonic
@@ -54,40 +55,52 @@ PIN_CONFIRM = PinMatrixRequestType.NewSecond
 WIPE_CODE_NEW = PinMatrixRequestType.WipeCodeFirst
 WIPE_CODE_CONFIRM = PinMatrixRequestType.WipeCodeSecond
 
+# Workaround for limitation of Git Bash
+# getpass function does not work correctly on Windows when not using a real terminal
+# (the hidden input is not allowed and it also freezes the script completely)
+# Details: https://bugs.python.org/issue44762
+CAN_HANDLE_HIDDEN_INPUT = sys.stdin and sys.stdin.isatty()
+
 
 class TrezorClientUI(Protocol):
     def button_request(self, br: messages.ButtonRequest) -> None:
         ...
 
-    def get_pin(self, code: PinMatrixRequestType) -> str:
+    def get_pin(self, code: Optional[PinMatrixRequestType]) -> str:
         ...
 
     def get_passphrase(self, available_on_device: bool) -> Union[str, object]:
         ...
 
 
-def echo(*args, **kwargs):
+def echo(*args: Any, **kwargs: Any) -> None:
     return click.echo(*args, err=True, **kwargs)
 
 
-def prompt(*args, **kwargs):
-    return click.prompt(*args, err=True, **kwargs)
+def prompt(text: str, *, hide_input: bool = False, **kwargs: Any) -> Any:
+    # Disallowing hidden input and warning user when it would cause issues
+    if not CAN_HANDLE_HIDDEN_INPUT and hide_input:
+        hide_input = False
+        text += " (WARNING: will be displayed!)"
+    return click.prompt(text, hide_input=hide_input, err=True, **kwargs)
 
 
 class ClickUI:
-    def __init__(self, always_prompt=False, passphrase_on_host=False):
+    def __init__(
+        self, always_prompt: bool = False, passphrase_on_host: bool = False
+    ) -> None:
         self.pinmatrix_shown = False
         self.prompt_shown = False
         self.always_prompt = always_prompt
         self.passphrase_on_host = passphrase_on_host
 
-    def button_request(self, _br):
+    def button_request(self, _br: messages.ButtonRequest) -> None:
         if not self.prompt_shown:
             echo("Please confirm action on your Trezor device.")
         if not self.always_prompt:
             self.prompt_shown = True
 
-    def get_pin(self, code=None):
+    def get_pin(self, code: Optional[PinMatrixRequestType] = None) -> str:
         if code == PIN_CURRENT:
             desc = "current PIN"
         elif code == PIN_NEW:
@@ -125,13 +138,14 @@ class ClickUI:
             else:
                 return pin
 
-    def get_passphrase(self, available_on_device):
+    def get_passphrase(self, available_on_device: bool) -> Union[str, object]:
         if available_on_device and not self.passphrase_on_host:
             return PASSPHRASE_ON_DEVICE
 
-        if os.getenv("PASSPHRASE") is not None:
+        env_passphrase = os.getenv("PASSPHRASE")
+        if env_passphrase is not None:
             echo("Passphrase required. Using PASSPHRASE environment variable.")
-            return os.getenv("PASSPHRASE")
+            return env_passphrase
 
         while True:
             try:
@@ -141,6 +155,9 @@ class ClickUI:
                     default="",
                     show_default=False,
                 )
+                # In case user sees the input on the screen, we do not need confirmation
+                if not CAN_HANDLE_HIDDEN_INPUT:
+                    return passphrase
                 second = prompt(
                     "Confirm your passphrase",
                     hide_input=True,
@@ -155,13 +172,15 @@ class ClickUI:
                 raise Cancelled from None
 
 
-def mnemonic_words(expand=False, language="english"):
+def mnemonic_words(
+    expand: bool = False, language: str = "english"
+) -> Callable[[WordRequestType], str]:
     if expand:
         wordlist = Mnemonic(language).wordlist
     else:
-        wordlist = set()
+        wordlist = []
 
-    def expand_word(word):
+    def expand_word(word: str) -> str:
         if not expand:
             return word
         if word in wordlist:
@@ -172,7 +191,7 @@ def mnemonic_words(expand=False, language="english"):
         echo("Choose one of: " + ", ".join(matches))
         raise KeyError(word)
 
-    def get_word(type):
+    def get_word(type: WordRequestType) -> str:
         assert type == WordRequestType.Plain
         while True:
             try:
@@ -186,7 +205,7 @@ def mnemonic_words(expand=False, language="english"):
     return get_word
 
 
-def matrix_words(type):
+def matrix_words(type: WordRequestType) -> str:
     while True:
         try:
             ch = click.getchar()

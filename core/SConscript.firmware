@@ -701,7 +701,10 @@ def cargo_build():
         profile = '--release'
     else:
         profile = ''
-    features = []
+    if TREZOR_MODEL == "1":
+        features = ["model_t1"]
+    else:
+        features = ["model_tt"]
     if BITCOIN_ONLY == "1":
         features.append("bitcoin_only")
     if NEW_UI:
@@ -709,7 +712,7 @@ def cargo_build():
         if PYOPT == "0":
             features.append("ui_debug")
 
-    return f'cd embed/rust; cargo build {profile} --target={RUST_TARGET} --target-dir=../../build/firmware/rust --features "{" ".join(features)}"'
+    return f'cd embed/rust; cargo build {profile} --target={RUST_TARGET} --target-dir=../../build/firmware/rust --no-default-features --features "{" ".join(features)}"'
 
 rust = env.Command(
     target=RUST_LIBPATH,
@@ -765,7 +768,7 @@ program_elf = env.Command(
     '$LINK -o $TARGET $CCFLAGS $CFLAGS $SOURCES $LINKFLAGS -lc_nano -lm -lgcc',
 )
 
-#env.Depends(program_elf, rust)
+env.Depends(program_elf, rust)
 
 if TREZOR_MODEL == 'T':
     action_bin=[

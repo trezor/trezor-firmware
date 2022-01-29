@@ -8,7 +8,7 @@ import subprocess
 import click
 
 LINK_RE = re.compile(r"\[#(\d+)\]")
-ISSUE_URL = "https://github.com/trezor/trezor-firmware/issues/{issue}"
+ISSUE_URL = "https://github.com/trezor/trezor-firmware/pull/{issue}"
 
 VERSION_HEADER_RE = re.compile(r"## \[([.0-9]+)\]")
 DIFF_LINK = "[{new}]: https://github.com/trezor/trezor-firmware/compare/{tag_prefix}{old}...{tag_prefix}{new}\n"

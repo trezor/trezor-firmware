@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2019 SatoshiLabs and contributors
+# Copyright (C) 2012-2022 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -15,10 +15,15 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 from functools import reduce
-from typing import Iterable, List, Tuple
+from typing import TYPE_CHECKING, Iterable, List, Tuple
 
 from . import _ed25519, messages
 from .tools import expect
+
+if TYPE_CHECKING:
+    from .client import TrezorClient
+    from .tools import Address
+    from .protobuf import MessageType
 
 # XXX, these could be NewType's, but that would infect users of the cosi module with these types as well.
 # Unsure if we want that.
@@ -136,12 +141,18 @@ def sign_with_privkey(
 
 
 @expect(messages.CosiCommitment)
-def commit(client, n, data):
+def commit(client: "TrezorClient", n: "Address", data: bytes) -> "MessageType":
     return client.call(messages.CosiCommit(address_n=n, data=data))
 
 
 @expect(messages.CosiSignature)
-def sign(client, n, data, global_commitment, global_pubkey):
+def sign(
+    client: "TrezorClient",
+    n: "Address",
+    data: bytes,
+    global_commitment: bytes,
+    global_pubkey: bytes,
+) -> "MessageType":
     return client.call(
         messages.CosiSign(
             address_n=n,

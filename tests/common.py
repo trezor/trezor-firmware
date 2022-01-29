@@ -113,7 +113,7 @@ def generate_entropy(strength, internal_entropy, external_entropy):
     return entropy_stripped
 
 
-def recovery_enter_shares(debug, shares, groups=False):
+def recovery_enter_shares(debug, shares, groups=False, click_info=False):
     """Perform the recovery flow for a set of Shamir shares.
 
     For use in an input flow function.
@@ -152,6 +152,18 @@ def recovery_enter_shares(debug, shares, groups=False):
         # Homescreen - continue
         # or Homescreen - confirm success
         yield
+
+        if click_info:
+            # Moving through the INFO button
+            info_button = (120, 220)
+            debug.wait_layout()
+            debug.click(info_button)
+            yield
+            debug.wait_layout()
+            debug.swipe_up()
+            debug.press_yes()
+
+        # Finishing with current share
         debug.press_yes()
 
 

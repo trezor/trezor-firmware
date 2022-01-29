@@ -1,1 +1,0 @@
-`trezorlib.stellar` was reworked to use stellar-sdk instead of providing local implementations

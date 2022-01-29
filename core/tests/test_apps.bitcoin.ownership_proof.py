@@ -8,7 +8,7 @@ from apps.common import coins
 from apps.common.keychain import Keychain
 from apps.common.paths import HARDENED, AlwaysMatchingSchema
 from apps.bitcoin import ownership, scripts
-from apps.bitcoin.addresses import address_p2wpkh, address_p2wpkh_in_p2sh, address_multisig_p2wsh, address_multisig_p2wsh_in_p2sh, address_multisig_p2sh
+from apps.bitcoin.addresses import address_p2tr, address_p2wpkh, address_p2wpkh_in_p2sh, address_multisig_p2wsh, address_multisig_p2wsh_in_p2sh, address_multisig_p2sh
 from apps.bitcoin.multisig import multisig_get_pubkeys
 
 
@@ -67,6 +67,32 @@ class TestOwnershipProof(unittest.TestCase):
         self.assertEqual(proof, unhexlify("534c0019000192caf0b8daf78f1d388dbbceaec34bd2dabc31b217e32343663667f6694a3f4617160014e0cffbee1925a411844f44c3b8d81365ab51d03602483045022100a37330dca699725db613dd1b30059843d1248340642162a0adef114509c9849402201126c9044b998065d40b44fd2399b52c409794bbc3bfdd358cd5fb450c94316d012103a961687895a78da9aef98eed8e1f2a3e91cfb69d2f3cf11cbd0bb1773d951928"))
         self.assertFalse(ownership.verify_nonownership(proof, script_pubkey, commitment_data, keychain, coin))
 
+    def test_p2tr_gen_proof(self):
+        coin = coins.by_name('Bitcoin')
+        seed = bip39.seed(' '.join(['all'] * 12), '')
+        keychain = Keychain(seed, coin.curve_name, [AlwaysMatchingSchema], slip21_namespaces=[[b"SLIP-0019"]])
+        commitment_data = b""
+
+        node = keychain.derive([86 | HARDENED, 0 | HARDENED, 0 | HARDENED, 1, 0])
+        address = address_p2tr(node.public_key(), coin)
+        script_pubkey = scripts.output_derive_script(address, coin)
+        ownership_id = ownership.get_identifier(script_pubkey, keychain)
+        self.assertEqual(ownership_id, unhexlify("dc18066224b9e30e306303436dc18ab881c7266c13790350a3fe415e438135ec"))
+
+        proof, signature = ownership.generate_proof(
+            node=node,
+            script_type=InputScriptType.SPENDTAPROOT,
+            multisig=None,
+            coin=coin,
+            user_confirmed=False,
+            ownership_ids=[ownership_id],
+            script_pubkey=script_pubkey,
+            commitment_data=commitment_data,
+        )
+        self.assertEqual(signature, unhexlify("6cd08474ea019c9ab4b9b7b76ec03c4dd4db76abc3a460434a91cfc1b190174949eb7111c8e762407730a215421a0da0b5e01f48de62d7ccea0abea046e2a496"))
+        self.assertEqual(proof, unhexlify("534c00190001dc18066224b9e30e306303436dc18ab881c7266c13790350a3fe415e438135ec0001406cd08474ea019c9ab4b9b7b76ec03c4dd4db76abc3a460434a91cfc1b190174949eb7111c8e762407730a215421a0da0b5e01f48de62d7ccea0abea046e2a496"))
+        self.assertFalse(ownership.verify_nonownership(proof, script_pubkey, commitment_data, keychain, coin))
+
     def test_p2pkh_gen_proof(self):
         coin = coins.by_name('Bitcoin')
         seed = bip39.seed(' '.join(['all'] * 12), 'TREZOR')
@@ -102,6 +128,17 @@ class TestOwnershipProof(unittest.TestCase):
         # Proof for "all all ... all" seed without passphrase.
         script_pubkey = unhexlify("0014b2f771c370ccf219cd3059cda92bdf7f00cf2103")
         proof = unhexlify("534c00190001a122407efc198211c81af4450f40b235d54775efd934d16b9e31c6ce9bad57070002483045022100e5eaf2cb0a473b4545115c7b85323809e75cb106175ace38129fd62323d73df30220363dbc7acb7afcda022b1f8d97acb8f47c42043cfe0595583aa26e30bc8b3bb50121032ef68318c8f6aaa0adec0199c69901f0db7d3485eb38d9ad235221dc3d61154b")
+        self.assertTrue(ownership.verify_nonownership(proof, script_pubkey, commitment_data, keychain, coin))
+
+    def test_p2tr_verify_proof(self):
+        coin = coins.by_name('Bitcoin')
+        seed = bip39.seed(' '.join(['all'] * 12), 'TREZOR')
+        keychain = Keychain(seed, coin.curve_name, [AlwaysMatchingSchema], slip21_namespaces=[[b"SLIP-0019"]])
+        commitment_data = b""
+
+        # Proof for "all all ... all" seed without passphrase.
+        script_pubkey = unhexlify("51204102897557de0cafea0a8401ea5b59668eccb753e4b100aebe6a19609f3cc79f")
+        proof = unhexlify("534c00190001dc18066224b9e30e306303436dc18ab881c7266c13790350a3fe415e438135ec0001406cd08474ea019c9ab4b9b7b76ec03c4dd4db76abc3a460434a91cfc1b190174949eb7111c8e762407730a215421a0da0b5e01f48de62d7ccea0abea046e2a496")
         self.assertTrue(ownership.verify_nonownership(proof, script_pubkey, commitment_data, keychain, coin))
 
     def test_p2wsh_gen_proof(self):

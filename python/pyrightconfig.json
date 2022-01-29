@@ -1,0 +1,13 @@
+{
+    "include": [
+        "src/trezorlib",
+        "tools",
+        "helper-scripts"
+    ],
+    "pythonVersion": "3.6",
+    "typeCheckingMode": "basic",
+    "reportMissingImports": false,
+    "reportUntypedFunctionDecorator": true,
+    "reportUntypedClassDecorator": true,
+    "reportMissingParameterType": true
+}

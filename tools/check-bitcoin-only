@@ -1,7 +1,7 @@
 #!/bin/sh
 RETURN=0
 
-EXCEPTIONS="decred|omni|ripple|dash|TEXT_MARGIN_LEFT|dash_width|dashlane|flo|mnemonic|meter|refuse|fused|enemy|cinema|syntaxerror|mix|palm|UdesRsK|kcc|derive_cardano"
+EXCEPTIONS="decred|omni|ripple|dash|TEXT_MARGIN_LEFT|dash_width|dashlane|flo|mnemonic|meter|refuse|fused|enemy|cinema|syntaxerror|mix|palm|UdesRsK|kcc|derive_cardano|ntity|gather|bmc"
 
 # dump all coins except the first 3 (Bitcoin, Testnet, Regtest)
 ALTCOINS=$(./common/tools/cointool.py dump -l -p -t | grep '"name"' | cut -d '"' -f 4 | tail -n +4)

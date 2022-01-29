@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2019 SatoshiLabs and contributors
+# Copyright (C) 2012-2022 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -14,16 +14,22 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from typing import TYPE_CHECKING
+
 import click
 
 from .. import cosi, tools
 from . import with_client
 
+if TYPE_CHECKING:
+    from ..client import TrezorClient
+    from .. import messages
+
 PATH_HELP = "BIP-32 path, e.g. m/44'/0'/0'/0/0"
 
 
 @click.group(name="cosi")
-def cli():
+def cli() -> None:
     """CoSi (Cothority / collective signing) commands."""
 
 
@@ -31,7 +37,9 @@ def cli():
 @click.option("-n", "--address", required=True, help=PATH_HELP)
 @click.argument("data")
 @with_client
-def commit(client, address, data):
+def commit(
+    client: "TrezorClient", address: str, data: str
+) -> "messages.CosiCommitment":
     """Ask device to commit to CoSi signing."""
     address_n = tools.parse_path(address)
     return cosi.commit(client, address_n, bytes.fromhex(data))
@@ -43,7 +51,13 @@ def commit(client, address, data):
 @click.argument("global_commitment")
 @click.argument("global_pubkey")
 @with_client
-def sign(client, address, data, global_commitment, global_pubkey):
+def sign(
+    client: "TrezorClient",
+    address: str,
+    data: str,
+    global_commitment: str,
+    global_pubkey: str,
+) -> "messages.CosiSignature":
     """Ask device to sign using CoSi."""
     address_n = tools.parse_path(address)
     return cosi.sign(

@@ -1,0 +1,20 @@
+name: Add to GitHub Project
+on: [issues, pull_request]
+jobs:
+  github-actions-automate-projects:
+    runs-on: ubuntu-latest
+    steps:
+      - name: add-new-issues-to-repository-based-project-column
+        uses: docker://takanabe/github-actions-automate-projects:v0.0.1
+        if: github.event_name == 'issues' && github.event.action == 'opened'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_PROJECT_URL: https://github.com/trezor/trezor-firmware/projects/1
+          GITHUB_PROJECT_COLUMN_NAME: 📥 Inbox
+      - name: add-new-prs-to-repository-based-project-column
+        uses: docker://takanabe/github-actions-automate-projects:v0.0.1
+        if: github.event_name == 'pull_request' && github.event.action == 'opened'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_PROJECT_URL: https://github.com/trezor/trezor-firmware/projects/2
+          GITHUB_PROJECT_COLUMN_NAME: To be reviewed

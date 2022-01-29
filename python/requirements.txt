@@ -1,9 +1,8 @@
 ecdsa>=0.9
-mnemonic>=0.17
+mnemonic>=0.20
 requests>=2.4.0
 click>=7,<9
 libusb1>=1.6.4
 construct>=2.9,!=2.10.55
-typing_extensions>=3.7.4
-pyblake2>=0.9.3 ; python_version<'3.6'
-attrs
+typing_extensions>=3.10
+dataclasses ; python_version<'3.7'

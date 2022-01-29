@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import MINIMUM_FIRMWARE_VERSION, btc, device, mapping, messages, protobuf
+from trezorlib import btc, device, mapping, messages, models, protobuf
 from trezorlib.tools import parse_path
 
 from ..emulators import EmulatorWrapper
@@ -36,7 +36,7 @@ class ApplySettingsCompat(protobuf.MessageType):
     }
 
 
-mapping.map_class_to_type[ApplySettingsCompat] = ApplySettingsCompat.MESSAGE_WIRE_TYPE
+mapping.DEFAULT_MAPPING.register(ApplySettingsCompat)
 
 
 @pytest.fixture
@@ -57,8 +57,8 @@ def emulator(gen, tag):
 
 
 @for_all(
-    core_minimum_version=MINIMUM_FIRMWARE_VERSION["T"],
-    legacy_minimum_version=MINIMUM_FIRMWARE_VERSION["1"],
+    core_minimum_version=models.TREZOR_T.minimum_version,
+    legacy_minimum_version=models.TREZOR_ONE.minimum_version,
 )
 def test_passphrase_works(emulator):
     """Check that passphrase handling in trezorlib works correctly in all versions."""
@@ -92,7 +92,7 @@ def test_passphrase_works(emulator):
 
 
 @for_all(
-    core_minimum_version=MINIMUM_FIRMWARE_VERSION["T"],
+    core_minimum_version=models.TREZOR_T.minimum_version,
     legacy_minimum_version=(1, 9, 0),
 )
 def test_init_device(emulator):

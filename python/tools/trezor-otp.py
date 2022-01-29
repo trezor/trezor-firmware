@@ -1,4 +1,21 @@
 #!/usr/bin/env python3
+
+# This file is part of the Trezor project.
+#
+# Copyright (C) 2012-2022 SatoshiLabs and contributors
+#
+# This library is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License version 3
+# as published by the Free Software Foundation.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the License along with this library.
+# If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
+
 import configparser
 import os
 import re
@@ -14,7 +31,7 @@ from trezorlib.ui import ClickUI
 BIP32_PATH = parse_path("10016h/0")
 
 
-def encrypt(type, domain, secret):
+def encrypt(type: str, domain: str, secret: str) -> str:
     transport = get_transport()
     client = TrezorClient(transport, ClickUI())
     dom = type.upper() + ": " + domain
@@ -23,7 +40,7 @@ def encrypt(type, domain, secret):
     return enc.hex()
 
 
-def decrypt(type, domain, secret):
+def decrypt(type: str, domain: str, secret: bytes) -> bytes:
     transport = get_transport()
     client = TrezorClient(transport, ClickUI())
     dom = type.upper() + ": " + domain
@@ -33,14 +50,14 @@ def decrypt(type, domain, secret):
 
 
 class Config:
-    def __init__(self):
+    def __init__(self) -> None:
         XDG_CONFIG_HOME = os.getenv("XDG_CONFIG_HOME", os.path.expanduser("~/.config"))
         os.makedirs(XDG_CONFIG_HOME, exist_ok=True)
         self.filename = XDG_CONFIG_HOME + "/trezor-otp.ini"
         self.config = configparser.ConfigParser()
         self.config.read(self.filename)
 
-    def add(self, domain, secret, type="totp"):
+    def add(self, domain: str, secret: str, type: str = "totp") -> None:
         self.config[domain] = {}
         self.config[domain]["secret"] = encrypt(type, domain, secret)
         self.config[domain]["type"] = type
@@ -49,7 +66,7 @@ class Config:
         with open(self.filename, "w") as f:
             self.config.write(f)
 
-    def get(self, domain):
+    def get(self, domain: str):
         s = self.config[domain]
         if s["type"] == "hotp":
             s["counter"] = str(int(s["counter"]) + 1)
@@ -64,7 +81,7 @@ class Config:
         return ValueError("unknown domain or type")
 
 
-def add():
+def add() -> None:
     c = Config()
     domain = input("domain: ")
     while True:
@@ -81,13 +98,13 @@ def add():
     print("Entry added")
 
 
-def get(domain):
+def get(domain: str) -> None:
     c = Config()
     s = c.get(domain)
     print(s)
 
 
-def main():
+def main() -> None:
     if len(sys.argv) < 2:
         print("Usage: trezor-otp.py [add|domain]")
         sys.exit(1)
