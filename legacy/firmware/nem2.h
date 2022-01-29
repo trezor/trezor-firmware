@@ -100,6 +100,9 @@ bool nem_mosaicFormatLevy(const NEMMosaicDefinition *definition,
                           uint64_t quantity, const bignum256 *multiplier,
                           uint8_t network, char *str_out, size_t size);
 
+bool nem_path_check(uint32_t address_n_count, const uint32_t *address_n,
+                    uint8_t network, bool check_coin_type);
+
 static inline void nem_mosaicFormatName(const char *namespace,
                                         const char *mosaic, char *str_out,
                                         size_t size) {
