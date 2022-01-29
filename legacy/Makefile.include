@@ -103,6 +103,11 @@ CFLAGS   += -DPIZERO=1
 LDFLAGS  += -L$(TOP_DIR)emulator/pizero
 LIBDEPS  += $(TOP_DIR)emulator/pizero/libpizero.a
 LDLIBS   += -lpizero -lbcm2835 -pthread
+ifeq ($(ARCH_BITS),32)
+CFLAGS += -DSECP256K1_CONTEXT_SIZE=184
+else
+CFLAGS += -DSECP256K1_CONTEXT_SIZE=208
+endif
 endif
 
 CFLAGS   += $(shell pkg-config --cflags sdl2 SDL2_image)
