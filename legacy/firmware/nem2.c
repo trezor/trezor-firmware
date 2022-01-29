@@ -20,6 +20,7 @@
 #include "nem2.h"
 
 #include "aes/aes.h"
+#include "crypto.h"
 #include "fsm.h"
 #include "gettext.h"
 #include "layout2.h"
@@ -740,4 +741,45 @@ bool nem_mosaicFormatLevy(const NEMMosaicDefinition *definition,
     default:
       return false;
   }
+}
+
+bool nem_path_check(uint32_t address_n_count, const uint32_t *address_n,
+                    uint8_t network, bool check_coin_type) {
+  bool valid = (address_n_count >= 3);
+  valid = valid && (address_n[0] == (PATH_HARDENED | 44));
+  valid = valid && (address_n[1] == (PATH_HARDENED | 43) ||
+                    address_n[1] == (PATH_HARDENED | 1));
+  valid = valid && (address_n[2] & PATH_HARDENED);
+  valid = valid && ((address_n[2] & PATH_UNHARDEN_MASK) <= PATH_MAX_ACCOUNT);
+
+  if (address_n_count == 3) {
+    // SEP-0005 for non-UTXO-based currencies, defined by Stellar:
+    // https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0005.md
+    // m/44'/coin_type'/account'
+    // No further checks required.
+  } else if (address_n_count == 5) {
+    // NanoWallet compatibility path
+    // "m/44'/coin_type'/account'/0'/0'"
+    valid = valid && (address_n[3] == (PATH_HARDENED | 0));
+    valid = valid && (address_n[4] == (PATH_HARDENED | 0));
+  } else {
+    return false;
+  }
+
+  if (check_coin_type) {
+    // Check that the appropriate coin_type is set for the given network.
+    switch (network) {
+      case NEM_NETWORK_MAINNET:
+      case NEM_NETWORK_MIJIN:
+        valid = valid && (address_n[1] == (PATH_HARDENED | 43));
+        break;
+      case NEM_NETWORK_TESTNET:
+        valid = valid && (address_n[1] == (PATH_HARDENED | 1));
+        break;
+      default:
+        return false;
+    }
+  }
+
+  return valid;
 }
