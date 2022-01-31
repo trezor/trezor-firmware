@@ -53,7 +53,6 @@
 #include "rand.h"
 #include "rc4.h"
 #include "rfc6979.h"
-#include "schnorr.h"
 #include "script.h"
 #include "secp256k1.h"
 #include "sha2.h"
@@ -862,83 +861,6 @@ int fuzz_b58gph_encode_decode(void) {
   return 0;
 }
 
-#define SCHNORR_VERIFY_PUBKEY_DATA_LENGTH 33
-#define SCHNORR_VERIFY_PRIVKEY_DATA_LENGTH 32
-
-int fuzz_schnorr_verify_digest(void) {
-  if (fuzzer_length < SHA256_DIGEST_LENGTH + SCHNORR_VERIFY_PUBKEY_DATA_LENGTH +
-                          SCHNORR_SIG_LENGTH) {
-    return 0;
-  }
-
-  // TODO idea: optionally try nist256p1 ?
-  const ecdsa_curve *curve = &secp256k1;
-  uint8_t digest[SHA256_DIGEST_LENGTH] = {0};
-  uint8_t pub_key[SCHNORR_VERIFY_PUBKEY_DATA_LENGTH] = {0};
-  uint8_t signature[SCHNORR_SIG_LENGTH] = {0};
-
-  memcpy(&digest, fuzzer_input(SHA256_DIGEST_LENGTH), SHA256_DIGEST_LENGTH);
-  memcpy(&pub_key, fuzzer_input(SCHNORR_VERIFY_PUBKEY_DATA_LENGTH),
-         SCHNORR_VERIFY_PUBKEY_DATA_LENGTH);
-  memcpy(&signature, fuzzer_input(SCHNORR_SIG_LENGTH), SCHNORR_SIG_LENGTH);
-
-  // TODO this limitation is a bug workaround
-  if (pub_key[0] != 0x04) {
-    int ret = schnorr_verify_digest(curve, pub_key, digest, signature);
-    if (ret == 0) {
-      // exit with a forced crash if a successful verification is observed
-      // TODO this assumes that the fuzzer can't puzzle together validly signed
-      // inputs and needs to be revisited
-      crash();
-    }
-  }
-
-  return 0;
-}
-
-int fuzz_schnorr_sign_digest(void) {
-  if (fuzzer_length <
-      1 + SHA256_DIGEST_LENGTH + SCHNORR_VERIFY_PRIVKEY_DATA_LENGTH) {
-    return 0;
-  }
-
-  const ecdsa_curve *curve;
-  uint8_t digest[SHA256_DIGEST_LENGTH] = {0};
-  uint8_t priv_key[SCHNORR_VERIFY_PRIVKEY_DATA_LENGTH] = {0};
-  uint8_t signature[SCHNORR_SIG_LENGTH] = {0};
-  int ret = 0;
-
-  uint8_t curve_decider = 0;
-  memcpy(&curve_decider, fuzzer_input(1), 1);
-
-  if ((curve_decider & 0x1) == 1) {
-    curve = &secp256k1;
-  } else {
-    curve = &nist256p1;
-  }
-
-  memcpy(&digest, fuzzer_input(SHA256_DIGEST_LENGTH), SHA256_DIGEST_LENGTH);
-  memcpy(&priv_key, fuzzer_input(SCHNORR_VERIFY_PRIVKEY_DATA_LENGTH),
-         SCHNORR_VERIFY_PRIVKEY_DATA_LENGTH);
-
-  ret = schnorr_sign_digest(curve, priv_key, digest, signature);
-
-  if (ret == 0) {
-    // signing was successful, now check if the verification works
-
-    // compute matching pubkey
-    uint8_t pub_key[33] = {0};
-    ret = ecdsa_get_public_key33(curve, priv_key, pub_key);
-    if (ret != 0) {
-      crash();
-    }
-    if (schnorr_verify_digest(curve, pub_key, digest, signature) != 0) {
-      crash();
-    }
-  }
-  return 0;
-}
-
 int fuzz_chacha_drbg(void) {
 #define CHACHA_DRBG_ENTROPY_LENGTH 32
 #define CHACHA_DRBG_RESEED_LENGTH 32
@@ -1304,12 +1226,6 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
       break;
     case 19:
       fuzz_b58gph_encode_decode();
-      break;
-    case 20:
-      fuzz_schnorr_verify_digest();
-      break;
-    case 21:
-      fuzz_schnorr_sign_digest();
       break;
     case 22:
       fuzz_chacha_drbg();
