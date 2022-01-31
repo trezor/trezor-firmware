@@ -56,9 +56,8 @@ def member_type(field):
 % endfor
         ) -> None:
             pass
+% else:
+        pass
 % endif  # if fields
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["${message.name}"]:
-            return isinstance(msg, cls)
 % endfor

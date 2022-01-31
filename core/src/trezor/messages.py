@@ -68,9 +68,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["BinanceGetAddress"]:
-            return isinstance(msg, cls)
 
     class BinanceAddress(protobuf.MessageType):
         address: "str"
@@ -82,9 +79,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["BinanceAddress"]:
-            return isinstance(msg, cls)
 
     class BinanceGetPublicKey(protobuf.MessageType):
         address_n: "list[int]"
@@ -98,9 +92,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["BinanceGetPublicKey"]:
-            return isinstance(msg, cls)
 
     class BinancePublicKey(protobuf.MessageType):
         public_key: "bytes"
@@ -112,9 +103,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["BinancePublicKey"]:
-            return isinstance(msg, cls)
 
     class BinanceSignTx(protobuf.MessageType):
         address_n: "list[int]"
@@ -138,15 +126,10 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["BinanceSignTx"]:
-            return isinstance(msg, cls)
 
     class BinanceTxRequest(protobuf.MessageType):
+        pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["BinanceTxRequest"]:
-            return isinstance(msg, cls)
 
     class BinanceTransferMsg(protobuf.MessageType):
         inputs: "list[BinanceInputOutput]"
@@ -160,9 +143,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["BinanceTransferMsg"]:
-            return isinstance(msg, cls)
 
     class BinanceOrderMsg(protobuf.MessageType):
         id: "str | None"
@@ -188,9 +168,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["BinanceOrderMsg"]:
-            return isinstance(msg, cls)
 
     class BinanceCancelMsg(protobuf.MessageType):
         refid: "str | None"
@@ -206,9 +183,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["BinanceCancelMsg"]:
-            return isinstance(msg, cls)
 
     class BinanceSignedTx(protobuf.MessageType):
         signature: "bytes"
@@ -222,9 +196,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["BinanceSignedTx"]:
-            return isinstance(msg, cls)
 
     class BinanceInputOutput(protobuf.MessageType):
         address: "str"
@@ -238,9 +209,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["BinanceInputOutput"]:
-            return isinstance(msg, cls)
 
     class BinanceCoin(protobuf.MessageType):
         amount: "int"
@@ -254,9 +222,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["BinanceCoin"]:
-            return isinstance(msg, cls)
 
     class Success(protobuf.MessageType):
         message: "str"
@@ -268,9 +233,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["Success"]:
-            return isinstance(msg, cls)
 
     class Failure(protobuf.MessageType):
         code: "FailureType | None"
@@ -284,9 +246,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["Failure"]:
-            return isinstance(msg, cls)
 
     class ButtonRequest(protobuf.MessageType):
         code: "ButtonRequestType | None"
@@ -300,15 +259,10 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["ButtonRequest"]:
-            return isinstance(msg, cls)
 
     class ButtonAck(protobuf.MessageType):
+        pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["ButtonAck"]:
-            return isinstance(msg, cls)
 
     class PinMatrixRequest(protobuf.MessageType):
         type: "PinMatrixRequestType | None"
@@ -320,9 +274,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["PinMatrixRequest"]:
-            return isinstance(msg, cls)
 
     class PinMatrixAck(protobuf.MessageType):
         pin: "str"
@@ -334,15 +285,10 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["PinMatrixAck"]:
-            return isinstance(msg, cls)
 
     class PassphraseRequest(protobuf.MessageType):
+        pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["PassphraseRequest"]:
-            return isinstance(msg, cls)
 
     class PassphraseAck(protobuf.MessageType):
         passphrase: "str | None"
@@ -356,9 +302,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["PassphraseAck"]:
-            return isinstance(msg, cls)
 
     class HDNodeType(protobuf.MessageType):
         depth: "int"
@@ -380,9 +323,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["HDNodeType"]:
-            return isinstance(msg, cls)
 
     class MultisigRedeemScriptType(protobuf.MessageType):
         pubkeys: "list[HDNodePathType]"
@@ -402,9 +342,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MultisigRedeemScriptType"]:
-            return isinstance(msg, cls)
 
     class GetPublicKey(protobuf.MessageType):
         address_n: "list[int]"
@@ -426,9 +363,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["GetPublicKey"]:
-            return isinstance(msg, cls)
 
     class PublicKey(protobuf.MessageType):
         node: "HDNodeType"
@@ -444,9 +378,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["PublicKey"]:
-            return isinstance(msg, cls)
 
     class GetAddress(protobuf.MessageType):
         address_n: "list[int]"
@@ -468,9 +399,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["GetAddress"]:
-            return isinstance(msg, cls)
 
     class Address(protobuf.MessageType):
         address: "str"
@@ -484,9 +412,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["Address"]:
-            return isinstance(msg, cls)
 
     class GetOwnershipId(protobuf.MessageType):
         address_n: "list[int]"
@@ -504,9 +429,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["GetOwnershipId"]:
-            return isinstance(msg, cls)
 
     class OwnershipId(protobuf.MessageType):
         ownership_id: "bytes"
@@ -518,9 +440,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["OwnershipId"]:
-            return isinstance(msg, cls)
 
     class SignMessage(protobuf.MessageType):
         address_n: "list[int]"
@@ -540,9 +459,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["SignMessage"]:
-            return isinstance(msg, cls)
 
     class MessageSignature(protobuf.MessageType):
         address: "str"
@@ -556,9 +472,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MessageSignature"]:
-            return isinstance(msg, cls)
 
     class VerifyMessage(protobuf.MessageType):
         address: "str"
@@ -576,9 +489,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["VerifyMessage"]:
-            return isinstance(msg, cls)
 
     class SignTx(protobuf.MessageType):
         outputs_count: "int"
@@ -610,9 +520,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["SignTx"]:
-            return isinstance(msg, cls)
 
     class TxRequest(protobuf.MessageType):
         request_type: "RequestType | None"
@@ -628,9 +535,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TxRequest"]:
-            return isinstance(msg, cls)
 
     class TxInput(protobuf.MessageType):
         address_n: "list[int]"
@@ -672,9 +576,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TxInput"]:
-            return isinstance(msg, cls)
 
     class TxOutput(protobuf.MessageType):
         address: "str | None"
@@ -702,9 +603,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TxOutput"]:
-            return isinstance(msg, cls)
 
     class PrevTx(protobuf.MessageType):
         version: "int"
@@ -732,9 +630,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["PrevTx"]:
-            return isinstance(msg, cls)
 
     class PrevInput(protobuf.MessageType):
         prev_hash: "bytes"
@@ -754,9 +649,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["PrevInput"]:
-            return isinstance(msg, cls)
 
     class PrevOutput(protobuf.MessageType):
         amount: "int"
@@ -772,9 +664,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["PrevOutput"]:
-            return isinstance(msg, cls)
 
     class TxAckPaymentRequest(protobuf.MessageType):
         nonce: "bytes | None"
@@ -794,9 +683,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TxAckPaymentRequest"]:
-            return isinstance(msg, cls)
 
     class TxAckInput(protobuf.MessageType):
         tx: "TxAckInputWrapper"
@@ -808,9 +694,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TxAckInput"]:
-            return isinstance(msg, cls)
 
     class TxAckOutput(protobuf.MessageType):
         tx: "TxAckOutputWrapper"
@@ -822,9 +705,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TxAckOutput"]:
-            return isinstance(msg, cls)
 
     class TxAckPrevMeta(protobuf.MessageType):
         tx: "PrevTx"
@@ -836,9 +716,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TxAckPrevMeta"]:
-            return isinstance(msg, cls)
 
     class TxAckPrevInput(protobuf.MessageType):
         tx: "TxAckPrevInputWrapper"
@@ -850,9 +727,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TxAckPrevInput"]:
-            return isinstance(msg, cls)
 
     class TxAckPrevOutput(protobuf.MessageType):
         tx: "TxAckPrevOutputWrapper"
@@ -864,9 +738,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TxAckPrevOutput"]:
-            return isinstance(msg, cls)
 
     class TxAckPrevExtraData(protobuf.MessageType):
         tx: "TxAckPrevExtraDataWrapper"
@@ -878,9 +749,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TxAckPrevExtraData"]:
-            return isinstance(msg, cls)
 
     class GetOwnershipProof(protobuf.MessageType):
         address_n: "list[int]"
@@ -904,9 +772,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["GetOwnershipProof"]:
-            return isinstance(msg, cls)
 
     class OwnershipProof(protobuf.MessageType):
         ownership_proof: "bytes"
@@ -920,9 +785,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["OwnershipProof"]:
-            return isinstance(msg, cls)
 
     class AuthorizeCoinJoin(protobuf.MessageType):
         coordinator: "str"
@@ -946,9 +808,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["AuthorizeCoinJoin"]:
-            return isinstance(msg, cls)
 
     class HDNodePathType(protobuf.MessageType):
         node: "HDNodeType"
@@ -962,9 +821,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["HDNodePathType"]:
-            return isinstance(msg, cls)
 
     class TxRequestDetailsType(protobuf.MessageType):
         request_index: "int | None"
@@ -982,9 +838,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TxRequestDetailsType"]:
-            return isinstance(msg, cls)
 
     class TxRequestSerializedType(protobuf.MessageType):
         signature_index: "int | None"
@@ -1000,9 +853,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TxRequestSerializedType"]:
-            return isinstance(msg, cls)
 
     class PaymentRequestMemo(protobuf.MessageType):
         text_memo: "TextMemo | None"
@@ -1018,9 +868,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["PaymentRequestMemo"]:
-            return isinstance(msg, cls)
 
     class TextMemo(protobuf.MessageType):
         text: "str"
@@ -1032,9 +879,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TextMemo"]:
-            return isinstance(msg, cls)
 
     class RefundMemo(protobuf.MessageType):
         address: "str"
@@ -1048,9 +892,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["RefundMemo"]:
-            return isinstance(msg, cls)
 
     class CoinPurchaseMemo(protobuf.MessageType):
         coin_type: "int"
@@ -1068,9 +909,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CoinPurchaseMemo"]:
-            return isinstance(msg, cls)
 
     class TxAckInputWrapper(protobuf.MessageType):
         input: "TxInput"
@@ -1082,9 +920,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TxAckInputWrapper"]:
-            return isinstance(msg, cls)
 
     class TxAckOutputWrapper(protobuf.MessageType):
         output: "TxOutput"
@@ -1096,9 +931,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TxAckOutputWrapper"]:
-            return isinstance(msg, cls)
 
     class TxAckPrevInputWrapper(protobuf.MessageType):
         input: "PrevInput"
@@ -1110,9 +942,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TxAckPrevInputWrapper"]:
-            return isinstance(msg, cls)
 
     class TxAckPrevOutputWrapper(protobuf.MessageType):
         output: "PrevOutput"
@@ -1124,9 +953,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TxAckPrevOutputWrapper"]:
-            return isinstance(msg, cls)
 
     class TxAckPrevExtraDataWrapper(protobuf.MessageType):
         extra_data_chunk: "bytes"
@@ -1138,9 +964,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TxAckPrevExtraDataWrapper"]:
-            return isinstance(msg, cls)
 
     class CardanoBlockchainPointerType(protobuf.MessageType):
         block_index: "int"
@@ -1156,9 +979,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoBlockchainPointerType"]:
-            return isinstance(msg, cls)
 
     class CardanoNativeScript(protobuf.MessageType):
         type: "CardanoNativeScriptType"
@@ -1182,9 +1002,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoNativeScript"]:
-            return isinstance(msg, cls)
 
     class CardanoGetNativeScriptHash(protobuf.MessageType):
         script: "CardanoNativeScript"
@@ -1200,9 +1017,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoGetNativeScriptHash"]:
-            return isinstance(msg, cls)
 
     class CardanoNativeScriptHash(protobuf.MessageType):
         script_hash: "bytes"
@@ -1214,9 +1028,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoNativeScriptHash"]:
-            return isinstance(msg, cls)
 
     class CardanoAddressParametersType(protobuf.MessageType):
         address_type: "CardanoAddressType"
@@ -1240,9 +1051,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoAddressParametersType"]:
-            return isinstance(msg, cls)
 
     class CardanoGetAddress(protobuf.MessageType):
         show_display: "bool"
@@ -1262,9 +1070,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoGetAddress"]:
-            return isinstance(msg, cls)
 
     class CardanoAddress(protobuf.MessageType):
         address: "str"
@@ -1276,9 +1081,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoAddress"]:
-            return isinstance(msg, cls)
 
     class CardanoGetPublicKey(protobuf.MessageType):
         address_n: "list[int]"
@@ -1294,9 +1096,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoGetPublicKey"]:
-            return isinstance(msg, cls)
 
     class CardanoPublicKey(protobuf.MessageType):
         xpub: "str"
@@ -1310,9 +1109,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoPublicKey"]:
-            return isinstance(msg, cls)
 
     class CardanoSignTxInit(protobuf.MessageType):
         signing_mode: "CardanoTxSigningMode"
@@ -1350,9 +1146,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoSignTxInit"]:
-            return isinstance(msg, cls)
 
     class CardanoTxInput(protobuf.MessageType):
         prev_hash: "bytes"
@@ -1366,9 +1159,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxInput"]:
-            return isinstance(msg, cls)
 
     class CardanoTxOutput(protobuf.MessageType):
         address: "str | None"
@@ -1386,9 +1176,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxOutput"]:
-            return isinstance(msg, cls)
 
     class CardanoAssetGroup(protobuf.MessageType):
         policy_id: "bytes"
@@ -1402,9 +1189,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoAssetGroup"]:
-            return isinstance(msg, cls)
 
     class CardanoToken(protobuf.MessageType):
         asset_name_bytes: "bytes"
@@ -1420,9 +1204,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoToken"]:
-            return isinstance(msg, cls)
 
     class CardanoPoolOwner(protobuf.MessageType):
         staking_key_path: "list[int]"
@@ -1436,9 +1217,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoPoolOwner"]:
-            return isinstance(msg, cls)
 
     class CardanoPoolRelayParameters(protobuf.MessageType):
         type: "CardanoPoolRelayType"
@@ -1458,9 +1236,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoPoolRelayParameters"]:
-            return isinstance(msg, cls)
 
     class CardanoPoolMetadataType(protobuf.MessageType):
         url: "str"
@@ -1474,9 +1249,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoPoolMetadataType"]:
-            return isinstance(msg, cls)
 
     class CardanoPoolParametersType(protobuf.MessageType):
         pool_id: "bytes"
@@ -1506,9 +1278,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoPoolParametersType"]:
-            return isinstance(msg, cls)
 
     class CardanoTxCertificate(protobuf.MessageType):
         type: "CardanoCertificateType"
@@ -1528,9 +1297,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxCertificate"]:
-            return isinstance(msg, cls)
 
     class CardanoTxWithdrawal(protobuf.MessageType):
         path: "list[int]"
@@ -1546,9 +1312,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxWithdrawal"]:
-            return isinstance(msg, cls)
 
     class CardanoCatalystRegistrationParametersType(protobuf.MessageType):
         voting_public_key: "bytes"
@@ -1566,9 +1329,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoCatalystRegistrationParametersType"]:
-            return isinstance(msg, cls)
 
     class CardanoTxAuxiliaryData(protobuf.MessageType):
         catalyst_registration_parameters: "CardanoCatalystRegistrationParametersType | None"
@@ -1582,9 +1342,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxAuxiliaryData"]:
-            return isinstance(msg, cls)
 
     class CardanoTxMint(protobuf.MessageType):
         asset_groups_count: "int"
@@ -1596,15 +1353,10 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxMint"]:
-            return isinstance(msg, cls)
 
     class CardanoTxItemAck(protobuf.MessageType):
+        pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxItemAck"]:
-            return isinstance(msg, cls)
 
     class CardanoTxAuxiliaryDataSupplement(protobuf.MessageType):
         type: "CardanoTxAuxiliaryDataSupplementType"
@@ -1620,9 +1372,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxAuxiliaryDataSupplement"]:
-            return isinstance(msg, cls)
 
     class CardanoTxWitnessRequest(protobuf.MessageType):
         path: "list[int]"
@@ -1634,9 +1383,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxWitnessRequest"]:
-            return isinstance(msg, cls)
 
     class CardanoTxWitnessResponse(protobuf.MessageType):
         type: "CardanoTxWitnessType"
@@ -1654,15 +1400,10 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxWitnessResponse"]:
-            return isinstance(msg, cls)
 
     class CardanoTxHostAck(protobuf.MessageType):
+        pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxHostAck"]:
-            return isinstance(msg, cls)
 
     class CardanoTxBodyHash(protobuf.MessageType):
         tx_hash: "bytes"
@@ -1674,15 +1415,10 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxBodyHash"]:
-            return isinstance(msg, cls)
 
     class CardanoSignTxFinished(protobuf.MessageType):
+        pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoSignTxFinished"]:
-            return isinstance(msg, cls)
 
     class CipherKeyValue(protobuf.MessageType):
         address_n: "list[int]"
@@ -1706,9 +1442,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CipherKeyValue"]:
-            return isinstance(msg, cls)
 
     class CipheredKeyValue(protobuf.MessageType):
         value: "bytes"
@@ -1720,9 +1453,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CipheredKeyValue"]:
-            return isinstance(msg, cls)
 
     class IdentityType(protobuf.MessageType):
         proto: "str | None"
@@ -1744,9 +1474,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["IdentityType"]:
-            return isinstance(msg, cls)
 
     class SignIdentity(protobuf.MessageType):
         identity: "IdentityType"
@@ -1764,9 +1491,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["SignIdentity"]:
-            return isinstance(msg, cls)
 
     class SignedIdentity(protobuf.MessageType):
         address: "str | None"
@@ -1782,9 +1506,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["SignedIdentity"]:
-            return isinstance(msg, cls)
 
     class GetECDHSessionKey(protobuf.MessageType):
         identity: "IdentityType"
@@ -1800,9 +1521,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["GetECDHSessionKey"]:
-            return isinstance(msg, cls)
 
     class ECDHSessionKey(protobuf.MessageType):
         session_key: "bytes"
@@ -1816,9 +1534,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["ECDHSessionKey"]:
-            return isinstance(msg, cls)
 
     class CosiCommit(protobuf.MessageType):
         address_n: "list[int]"
@@ -1832,9 +1547,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CosiCommit"]:
-            return isinstance(msg, cls)
 
     class CosiCommitment(protobuf.MessageType):
         commitment: "bytes | None"
@@ -1848,9 +1560,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CosiCommitment"]:
-            return isinstance(msg, cls)
 
     class CosiSign(protobuf.MessageType):
         address_n: "list[int]"
@@ -1868,9 +1577,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CosiSign"]:
-            return isinstance(msg, cls)
 
     class CosiSignature(protobuf.MessageType):
         signature: "bytes"
@@ -1882,9 +1588,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CosiSignature"]:
-            return isinstance(msg, cls)
 
     class Initialize(protobuf.MessageType):
         session_id: "bytes | None"
@@ -1898,15 +1601,10 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["Initialize"]:
-            return isinstance(msg, cls)
 
     class GetFeatures(protobuf.MessageType):
+        pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["GetFeatures"]:
-            return isinstance(msg, cls)
 
     class Features(protobuf.MessageType):
         vendor: "str | None"
@@ -1990,21 +1688,14 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["Features"]:
-            return isinstance(msg, cls)
 
     class LockDevice(protobuf.MessageType):
+        pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["LockDevice"]:
-            return isinstance(msg, cls)
 
     class EndSession(protobuf.MessageType):
+        pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EndSession"]:
-            return isinstance(msg, cls)
 
     class ApplySettings(protobuf.MessageType):
         language: "str | None"
@@ -2032,9 +1723,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["ApplySettings"]:
-            return isinstance(msg, cls)
 
     class ApplyFlags(protobuf.MessageType):
         flags: "int"
@@ -2046,9 +1734,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["ApplyFlags"]:
-            return isinstance(msg, cls)
 
     class ChangePin(protobuf.MessageType):
         remove: "bool | None"
@@ -2060,9 +1745,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["ChangePin"]:
-            return isinstance(msg, cls)
 
     class ChangeWipeCode(protobuf.MessageType):
         remove: "bool | None"
@@ -2074,9 +1756,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["ChangeWipeCode"]:
-            return isinstance(msg, cls)
 
     class SdProtect(protobuf.MessageType):
         operation: "SdProtectOperationType"
@@ -2088,9 +1767,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["SdProtect"]:
-            return isinstance(msg, cls)
 
     class Ping(protobuf.MessageType):
         message: "str"
@@ -2104,15 +1780,10 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["Ping"]:
-            return isinstance(msg, cls)
 
     class Cancel(protobuf.MessageType):
+        pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["Cancel"]:
-            return isinstance(msg, cls)
 
     class GetEntropy(protobuf.MessageType):
         size: "int"
@@ -2124,9 +1795,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["GetEntropy"]:
-            return isinstance(msg, cls)
 
     class Entropy(protobuf.MessageType):
         entropy: "bytes"
@@ -2138,15 +1806,10 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["Entropy"]:
-            return isinstance(msg, cls)
 
     class WipeDevice(protobuf.MessageType):
+        pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["WipeDevice"]:
-            return isinstance(msg, cls)
 
     class LoadDevice(protobuf.MessageType):
         mnemonics: "list[str]"
@@ -2174,9 +1837,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["LoadDevice"]:
-            return isinstance(msg, cls)
 
     class ResetDevice(protobuf.MessageType):
         display_random: "bool | None"
@@ -2206,21 +1866,14 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["ResetDevice"]:
-            return isinstance(msg, cls)
 
     class BackupDevice(protobuf.MessageType):
+        pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["BackupDevice"]:
-            return isinstance(msg, cls)
 
     class EntropyRequest(protobuf.MessageType):
+        pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EntropyRequest"]:
-            return isinstance(msg, cls)
 
     class EntropyAck(protobuf.MessageType):
         entropy: "bytes"
@@ -2232,9 +1885,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EntropyAck"]:
-            return isinstance(msg, cls)
 
     class RecoveryDevice(protobuf.MessageType):
         word_count: "int | None"
@@ -2262,9 +1912,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["RecoveryDevice"]:
-            return isinstance(msg, cls)
 
     class WordRequest(protobuf.MessageType):
         type: "WordRequestType"
@@ -2276,9 +1923,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["WordRequest"]:
-            return isinstance(msg, cls)
 
     class WordAck(protobuf.MessageType):
         word: "str"
@@ -2290,9 +1934,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["WordAck"]:
-            return isinstance(msg, cls)
 
     class SetU2FCounter(protobuf.MessageType):
         u2f_counter: "int"
@@ -2304,15 +1945,10 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["SetU2FCounter"]:
-            return isinstance(msg, cls)
 
     class GetNextU2FCounter(protobuf.MessageType):
+        pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["GetNextU2FCounter"]:
-            return isinstance(msg, cls)
 
     class NextU2FCounter(protobuf.MessageType):
         u2f_counter: "int"
@@ -2324,39 +1960,26 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["NextU2FCounter"]:
-            return isinstance(msg, cls)
 
     class DoPreauthorized(protobuf.MessageType):
+        pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["DoPreauthorized"]:
-            return isinstance(msg, cls)
 
     class PreauthorizedRequest(protobuf.MessageType):
+        pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["PreauthorizedRequest"]:
-            return isinstance(msg, cls)
 
     class CancelAuthorization(protobuf.MessageType):
+        pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CancelAuthorization"]:
-            return isinstance(msg, cls)
 
     class RebootToBootloader(protobuf.MessageType):
+        pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["RebootToBootloader"]:
-            return isinstance(msg, cls)
 
     class GetNonce(protobuf.MessageType):
+        pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["GetNonce"]:
-            return isinstance(msg, cls)
 
     class Nonce(protobuf.MessageType):
         nonce: "bytes"
@@ -2368,9 +1991,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["Nonce"]:
-            return isinstance(msg, cls)
 
     class DebugLinkDecision(protobuf.MessageType):
         button: "DebugButton | None"
@@ -2394,9 +2014,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["DebugLinkDecision"]:
-            return isinstance(msg, cls)
 
     class DebugLinkLayout(protobuf.MessageType):
         lines: "list[str]"
@@ -2408,9 +2025,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["DebugLinkLayout"]:
-            return isinstance(msg, cls)
 
     class DebugLinkReseedRandom(protobuf.MessageType):
         value: "int | None"
@@ -2422,9 +2036,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["DebugLinkReseedRandom"]:
-            return isinstance(msg, cls)
 
     class DebugLinkRecordScreen(protobuf.MessageType):
         target_directory: "str | None"
@@ -2436,9 +2047,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["DebugLinkRecordScreen"]:
-            return isinstance(msg, cls)
 
     class DebugLinkGetState(protobuf.MessageType):
         wait_word_list: "bool | None"
@@ -2454,9 +2062,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["DebugLinkGetState"]:
-            return isinstance(msg, cls)
 
     class DebugLinkState(protobuf.MessageType):
         layout: "bytes | None"
@@ -2492,15 +2097,10 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["DebugLinkState"]:
-            return isinstance(msg, cls)
 
     class DebugLinkStop(protobuf.MessageType):
+        pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["DebugLinkStop"]:
-            return isinstance(msg, cls)
 
     class DebugLinkLog(protobuf.MessageType):
         level: "int | None"
@@ -2516,9 +2116,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["DebugLinkLog"]:
-            return isinstance(msg, cls)
 
     class DebugLinkMemoryRead(protobuf.MessageType):
         address: "int | None"
@@ -2532,9 +2129,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["DebugLinkMemoryRead"]:
-            return isinstance(msg, cls)
 
     class DebugLinkMemory(protobuf.MessageType):
         memory: "bytes | None"
@@ -2546,9 +2140,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["DebugLinkMemory"]:
-            return isinstance(msg, cls)
 
     class DebugLinkMemoryWrite(protobuf.MessageType):
         address: "int | None"
@@ -2564,9 +2155,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["DebugLinkMemoryWrite"]:
-            return isinstance(msg, cls)
 
     class DebugLinkFlashErase(protobuf.MessageType):
         sector: "int | None"
@@ -2578,9 +2166,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["DebugLinkFlashErase"]:
-            return isinstance(msg, cls)
 
     class DebugLinkEraseSdCard(protobuf.MessageType):
         format: "bool | None"
@@ -2592,9 +2177,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["DebugLinkEraseSdCard"]:
-            return isinstance(msg, cls)
 
     class DebugLinkWatchLayout(protobuf.MessageType):
         watch: "bool | None"
@@ -2606,9 +2188,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["DebugLinkWatchLayout"]:
-            return isinstance(msg, cls)
 
     class EosGetPublicKey(protobuf.MessageType):
         address_n: "list[int]"
@@ -2622,9 +2201,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EosGetPublicKey"]:
-            return isinstance(msg, cls)
 
     class EosPublicKey(protobuf.MessageType):
         wif_public_key: "str"
@@ -2638,9 +2214,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EosPublicKey"]:
-            return isinstance(msg, cls)
 
     class EosSignTx(protobuf.MessageType):
         address_n: "list[int]"
@@ -2658,9 +2231,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EosSignTx"]:
-            return isinstance(msg, cls)
 
     class EosTxActionRequest(protobuf.MessageType):
         data_size: "int | None"
@@ -2672,9 +2242,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EosTxActionRequest"]:
-            return isinstance(msg, cls)
 
     class EosTxActionAck(protobuf.MessageType):
         common: "EosActionCommon"
@@ -2714,9 +2281,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EosTxActionAck"]:
-            return isinstance(msg, cls)
 
     class EosSignedTx(protobuf.MessageType):
         signature: "str"
@@ -2728,9 +2292,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EosSignedTx"]:
-            return isinstance(msg, cls)
 
     class EosTxHeader(protobuf.MessageType):
         expiration: "int"
@@ -2752,9 +2313,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EosTxHeader"]:
-            return isinstance(msg, cls)
 
     class EosAsset(protobuf.MessageType):
         amount: "int"
@@ -2768,9 +2326,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EosAsset"]:
-            return isinstance(msg, cls)
 
     class EosPermissionLevel(protobuf.MessageType):
         actor: "int"
@@ -2784,9 +2339,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EosPermissionLevel"]:
-            return isinstance(msg, cls)
 
     class EosAuthorizationKey(protobuf.MessageType):
         type: "int"
@@ -2804,9 +2356,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EosAuthorizationKey"]:
-            return isinstance(msg, cls)
 
     class EosAuthorizationAccount(protobuf.MessageType):
         account: "EosPermissionLevel"
@@ -2820,9 +2369,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EosAuthorizationAccount"]:
-            return isinstance(msg, cls)
 
     class EosAuthorizationWait(protobuf.MessageType):
         wait_sec: "int"
@@ -2836,9 +2382,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EosAuthorizationWait"]:
-            return isinstance(msg, cls)
 
     class EosAuthorization(protobuf.MessageType):
         threshold: "int"
@@ -2856,9 +2399,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EosAuthorization"]:
-            return isinstance(msg, cls)
 
     class EosActionCommon(protobuf.MessageType):
         account: "int"
@@ -2874,9 +2414,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EosActionCommon"]:
-            return isinstance(msg, cls)
 
     class EosActionTransfer(protobuf.MessageType):
         sender: "int"
@@ -2894,9 +2431,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EosActionTransfer"]:
-            return isinstance(msg, cls)
 
     class EosActionDelegate(protobuf.MessageType):
         sender: "int"
@@ -2916,9 +2450,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EosActionDelegate"]:
-            return isinstance(msg, cls)
 
     class EosActionUndelegate(protobuf.MessageType):
         sender: "int"
@@ -2936,9 +2467,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EosActionUndelegate"]:
-            return isinstance(msg, cls)
 
     class EosActionRefund(protobuf.MessageType):
         owner: "int"
@@ -2950,9 +2478,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EosActionRefund"]:
-            return isinstance(msg, cls)
 
     class EosActionBuyRam(protobuf.MessageType):
         payer: "int"
@@ -2968,9 +2493,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EosActionBuyRam"]:
-            return isinstance(msg, cls)
 
     class EosActionBuyRamBytes(protobuf.MessageType):
         payer: "int"
@@ -2986,9 +2508,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EosActionBuyRamBytes"]:
-            return isinstance(msg, cls)
 
     class EosActionSellRam(protobuf.MessageType):
         account: "int"
@@ -3002,9 +2521,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EosActionSellRam"]:
-            return isinstance(msg, cls)
 
     class EosActionVoteProducer(protobuf.MessageType):
         voter: "int"
@@ -3020,9 +2536,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EosActionVoteProducer"]:
-            return isinstance(msg, cls)
 
     class EosActionUpdateAuth(protobuf.MessageType):
         account: "int"
@@ -3040,9 +2553,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EosActionUpdateAuth"]:
-            return isinstance(msg, cls)
 
     class EosActionDeleteAuth(protobuf.MessageType):
         account: "int"
@@ -3056,9 +2566,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EosActionDeleteAuth"]:
-            return isinstance(msg, cls)
 
     class EosActionLinkAuth(protobuf.MessageType):
         account: "int"
@@ -3076,9 +2583,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EosActionLinkAuth"]:
-            return isinstance(msg, cls)
 
     class EosActionUnlinkAuth(protobuf.MessageType):
         account: "int"
@@ -3094,9 +2598,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EosActionUnlinkAuth"]:
-            return isinstance(msg, cls)
 
     class EosActionNewAccount(protobuf.MessageType):
         creator: "int"
@@ -3114,9 +2615,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EosActionNewAccount"]:
-            return isinstance(msg, cls)
 
     class EosActionUnknown(protobuf.MessageType):
         data_size: "int"
@@ -3130,9 +2628,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EosActionUnknown"]:
-            return isinstance(msg, cls)
 
     class EthereumGetPublicKey(protobuf.MessageType):
         address_n: "list[int]"
@@ -3146,9 +2641,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumGetPublicKey"]:
-            return isinstance(msg, cls)
 
     class EthereumPublicKey(protobuf.MessageType):
         node: "HDNodeType"
@@ -3162,9 +2654,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumPublicKey"]:
-            return isinstance(msg, cls)
 
     class EthereumGetAddress(protobuf.MessageType):
         address_n: "list[int]"
@@ -3178,9 +2667,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumGetAddress"]:
-            return isinstance(msg, cls)
 
     class EthereumAddress(protobuf.MessageType):
         address: "str | None"
@@ -3192,9 +2678,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumAddress"]:
-            return isinstance(msg, cls)
 
     class EthereumSignTx(protobuf.MessageType):
         address_n: "list[int]"
@@ -3224,9 +2707,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumSignTx"]:
-            return isinstance(msg, cls)
 
     class EthereumSignTxEIP1559(protobuf.MessageType):
         address_n: "list[int]"
@@ -3258,9 +2738,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumSignTxEIP1559"]:
-            return isinstance(msg, cls)
 
     class EthereumTxRequest(protobuf.MessageType):
         data_length: "int | None"
@@ -3278,9 +2755,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumTxRequest"]:
-            return isinstance(msg, cls)
 
     class EthereumTxAck(protobuf.MessageType):
         data_chunk: "bytes"
@@ -3292,9 +2766,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumTxAck"]:
-            return isinstance(msg, cls)
 
     class EthereumSignMessage(protobuf.MessageType):
         address_n: "list[int]"
@@ -3308,9 +2779,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumSignMessage"]:
-            return isinstance(msg, cls)
 
     class EthereumMessageSignature(protobuf.MessageType):
         signature: "bytes"
@@ -3324,9 +2792,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumMessageSignature"]:
-            return isinstance(msg, cls)
 
     class EthereumVerifyMessage(protobuf.MessageType):
         signature: "bytes"
@@ -3342,9 +2807,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumVerifyMessage"]:
-            return isinstance(msg, cls)
 
     class EthereumSignTypedHash(protobuf.MessageType):
         address_n: "list[int]"
@@ -3360,9 +2822,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumSignTypedHash"]:
-            return isinstance(msg, cls)
 
     class EthereumTypedDataSignature(protobuf.MessageType):
         signature: "bytes"
@@ -3376,9 +2835,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumTypedDataSignature"]:
-            return isinstance(msg, cls)
 
     class EthereumAccessList(protobuf.MessageType):
         address: "str"
@@ -3392,9 +2848,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumAccessList"]:
-            return isinstance(msg, cls)
 
     class EthereumSignTypedData(protobuf.MessageType):
         address_n: "list[int]"
@@ -3410,9 +2863,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumSignTypedData"]:
-            return isinstance(msg, cls)
 
     class EthereumTypedDataStructRequest(protobuf.MessageType):
         name: "str"
@@ -3424,9 +2874,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumTypedDataStructRequest"]:
-            return isinstance(msg, cls)
 
     class EthereumTypedDataStructAck(protobuf.MessageType):
         members: "list[EthereumStructMember]"
@@ -3438,9 +2885,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumTypedDataStructAck"]:
-            return isinstance(msg, cls)
 
     class EthereumTypedDataValueRequest(protobuf.MessageType):
         member_path: "list[int]"
@@ -3452,9 +2896,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumTypedDataValueRequest"]:
-            return isinstance(msg, cls)
 
     class EthereumTypedDataValueAck(protobuf.MessageType):
         value: "bytes"
@@ -3466,9 +2907,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumTypedDataValueAck"]:
-            return isinstance(msg, cls)
 
     class EthereumStructMember(protobuf.MessageType):
         type: "EthereumFieldType"
@@ -3482,9 +2920,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumStructMember"]:
-            return isinstance(msg, cls)
 
     class EthereumFieldType(protobuf.MessageType):
         data_type: "EthereumDataType"
@@ -3502,9 +2937,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumFieldType"]:
-            return isinstance(msg, cls)
 
     class MoneroTransactionSourceEntry(protobuf.MessageType):
         outputs: "list[MoneroOutputEntry]"
@@ -3534,9 +2966,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroTransactionSourceEntry"]:
-            return isinstance(msg, cls)
 
     class MoneroTransactionDestinationEntry(protobuf.MessageType):
         amount: "int | None"
@@ -3556,9 +2985,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroTransactionDestinationEntry"]:
-            return isinstance(msg, cls)
 
     class MoneroTransactionRsigData(protobuf.MessageType):
         rsig_type: "int | None"
@@ -3582,9 +3008,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroTransactionRsigData"]:
-            return isinstance(msg, cls)
 
     class MoneroGetAddress(protobuf.MessageType):
         address_n: "list[int]"
@@ -3606,9 +3029,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroGetAddress"]:
-            return isinstance(msg, cls)
 
     class MoneroAddress(protobuf.MessageType):
         address: "bytes | None"
@@ -3620,9 +3040,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroAddress"]:
-            return isinstance(msg, cls)
 
     class MoneroGetWatchKey(protobuf.MessageType):
         address_n: "list[int]"
@@ -3636,9 +3053,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroGetWatchKey"]:
-            return isinstance(msg, cls)
 
     class MoneroWatchKey(protobuf.MessageType):
         watch_key: "bytes | None"
@@ -3652,9 +3066,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroWatchKey"]:
-            return isinstance(msg, cls)
 
     class MoneroTransactionInitRequest(protobuf.MessageType):
         version: "int | None"
@@ -3672,9 +3083,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroTransactionInitRequest"]:
-            return isinstance(msg, cls)
 
     class MoneroTransactionInitAck(protobuf.MessageType):
         hmacs: "list[bytes]"
@@ -3688,9 +3096,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroTransactionInitAck"]:
-            return isinstance(msg, cls)
 
     class MoneroTransactionSetInputRequest(protobuf.MessageType):
         src_entr: "MoneroTransactionSourceEntry | None"
@@ -3702,9 +3107,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroTransactionSetInputRequest"]:
-            return isinstance(msg, cls)
 
     class MoneroTransactionSetInputAck(protobuf.MessageType):
         vini: "bytes | None"
@@ -3726,9 +3128,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroTransactionSetInputAck"]:
-            return isinstance(msg, cls)
 
     class MoneroTransactionInputsPermutationRequest(protobuf.MessageType):
         perm: "list[int]"
@@ -3740,15 +3139,10 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroTransactionInputsPermutationRequest"]:
-            return isinstance(msg, cls)
 
     class MoneroTransactionInputsPermutationAck(protobuf.MessageType):
+        pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroTransactionInputsPermutationAck"]:
-            return isinstance(msg, cls)
 
     class MoneroTransactionInputViniRequest(protobuf.MessageType):
         src_entr: "MoneroTransactionSourceEntry | None"
@@ -3770,21 +3164,14 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroTransactionInputViniRequest"]:
-            return isinstance(msg, cls)
 
     class MoneroTransactionInputViniAck(protobuf.MessageType):
+        pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroTransactionInputViniAck"]:
-            return isinstance(msg, cls)
 
     class MoneroTransactionAllInputsSetRequest(protobuf.MessageType):
+        pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroTransactionAllInputsSetRequest"]:
-            return isinstance(msg, cls)
 
     class MoneroTransactionAllInputsSetAck(protobuf.MessageType):
         rsig_data: "MoneroTransactionRsigData | None"
@@ -3796,9 +3183,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroTransactionAllInputsSetAck"]:
-            return isinstance(msg, cls)
 
     class MoneroTransactionSetOutputRequest(protobuf.MessageType):
         dst_entr: "MoneroTransactionDestinationEntry | None"
@@ -3816,9 +3200,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroTransactionSetOutputRequest"]:
-            return isinstance(msg, cls)
 
     class MoneroTransactionSetOutputAck(protobuf.MessageType):
         tx_out: "bytes | None"
@@ -3838,9 +3219,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroTransactionSetOutputAck"]:
-            return isinstance(msg, cls)
 
     class MoneroTransactionAllOutSetRequest(protobuf.MessageType):
         rsig_data: "MoneroTransactionRsigData | None"
@@ -3852,9 +3230,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroTransactionAllOutSetRequest"]:
-            return isinstance(msg, cls)
 
     class MoneroTransactionAllOutSetAck(protobuf.MessageType):
         extra: "bytes | None"
@@ -3872,9 +3247,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroTransactionAllOutSetAck"]:
-            return isinstance(msg, cls)
 
     class MoneroTransactionSignInputRequest(protobuf.MessageType):
         src_entr: "MoneroTransactionSourceEntry | None"
@@ -3900,9 +3272,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroTransactionSignInputRequest"]:
-            return isinstance(msg, cls)
 
     class MoneroTransactionSignInputAck(protobuf.MessageType):
         signature: "bytes | None"
@@ -3916,15 +3285,10 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroTransactionSignInputAck"]:
-            return isinstance(msg, cls)
 
     class MoneroTransactionFinalRequest(protobuf.MessageType):
+        pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroTransactionFinalRequest"]:
-            return isinstance(msg, cls)
 
     class MoneroTransactionFinalAck(protobuf.MessageType):
         cout_key: "bytes | None"
@@ -3944,9 +3308,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroTransactionFinalAck"]:
-            return isinstance(msg, cls)
 
     class MoneroKeyImageExportInitRequest(protobuf.MessageType):
         num: "int | None"
@@ -3966,15 +3327,10 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroKeyImageExportInitRequest"]:
-            return isinstance(msg, cls)
 
     class MoneroKeyImageExportInitAck(protobuf.MessageType):
+        pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroKeyImageExportInitAck"]:
-            return isinstance(msg, cls)
 
     class MoneroKeyImageSyncStepRequest(protobuf.MessageType):
         tdis: "list[MoneroTransferDetails]"
@@ -3986,9 +3342,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroKeyImageSyncStepRequest"]:
-            return isinstance(msg, cls)
 
     class MoneroKeyImageSyncStepAck(protobuf.MessageType):
         kis: "list[MoneroExportedKeyImage]"
@@ -4000,15 +3353,10 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroKeyImageSyncStepAck"]:
-            return isinstance(msg, cls)
 
     class MoneroKeyImageSyncFinalRequest(protobuf.MessageType):
+        pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroKeyImageSyncFinalRequest"]:
-            return isinstance(msg, cls)
 
     class MoneroKeyImageSyncFinalAck(protobuf.MessageType):
         enc_key: "bytes | None"
@@ -4020,9 +3368,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroKeyImageSyncFinalAck"]:
-            return isinstance(msg, cls)
 
     class MoneroGetTxKeyRequest(protobuf.MessageType):
         address_n: "list[int]"
@@ -4048,9 +3393,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroGetTxKeyRequest"]:
-            return isinstance(msg, cls)
 
     class MoneroGetTxKeyAck(protobuf.MessageType):
         salt: "bytes | None"
@@ -4066,9 +3408,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroGetTxKeyAck"]:
-            return isinstance(msg, cls)
 
     class MoneroLiveRefreshStartRequest(protobuf.MessageType):
         address_n: "list[int]"
@@ -4082,15 +3421,10 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroLiveRefreshStartRequest"]:
-            return isinstance(msg, cls)
 
     class MoneroLiveRefreshStartAck(protobuf.MessageType):
+        pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroLiveRefreshStartAck"]:
-            return isinstance(msg, cls)
 
     class MoneroLiveRefreshStepRequest(protobuf.MessageType):
         out_key: "bytes | None"
@@ -4110,9 +3444,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroLiveRefreshStepRequest"]:
-            return isinstance(msg, cls)
 
     class MoneroLiveRefreshStepAck(protobuf.MessageType):
         salt: "bytes | None"
@@ -4126,21 +3457,14 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroLiveRefreshStepAck"]:
-            return isinstance(msg, cls)
 
     class MoneroLiveRefreshFinalRequest(protobuf.MessageType):
+        pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroLiveRefreshFinalRequest"]:
-            return isinstance(msg, cls)
 
     class MoneroLiveRefreshFinalAck(protobuf.MessageType):
+        pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroLiveRefreshFinalAck"]:
-            return isinstance(msg, cls)
 
     class DebugMoneroDiagRequest(protobuf.MessageType):
         ins: "int | None"
@@ -4162,9 +3486,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["DebugMoneroDiagRequest"]:
-            return isinstance(msg, cls)
 
     class DebugMoneroDiagAck(protobuf.MessageType):
         ins: "int | None"
@@ -4186,9 +3507,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["DebugMoneroDiagAck"]:
-            return isinstance(msg, cls)
 
     class MoneroOutputEntry(protobuf.MessageType):
         idx: "int | None"
@@ -4202,9 +3520,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroOutputEntry"]:
-            return isinstance(msg, cls)
 
     class MoneroMultisigKLRki(protobuf.MessageType):
         K: "bytes | None"
@@ -4222,9 +3537,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroMultisigKLRki"]:
-            return isinstance(msg, cls)
 
     class MoneroRctKeyPublic(protobuf.MessageType):
         dest: "bytes | None"
@@ -4238,9 +3550,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroRctKeyPublic"]:
-            return isinstance(msg, cls)
 
     class MoneroAccountPublicAddress(protobuf.MessageType):
         spend_public_key: "bytes | None"
@@ -4254,9 +3563,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroAccountPublicAddress"]:
-            return isinstance(msg, cls)
 
     class MoneroTransactionData(protobuf.MessageType):
         version: "int | None"
@@ -4296,9 +3602,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroTransactionData"]:
-            return isinstance(msg, cls)
 
     class MoneroRingCtSig(protobuf.MessageType):
         txn_fee: "int | None"
@@ -4314,9 +3617,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroRingCtSig"]:
-            return isinstance(msg, cls)
 
     class MoneroSubAddressIndicesList(protobuf.MessageType):
         account: "int | None"
@@ -4330,9 +3630,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroSubAddressIndicesList"]:
-            return isinstance(msg, cls)
 
     class MoneroTransferDetails(protobuf.MessageType):
         out_key: "bytes | None"
@@ -4354,9 +3651,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroTransferDetails"]:
-            return isinstance(msg, cls)
 
     class MoneroExportedKeyImage(protobuf.MessageType):
         iv: "bytes | None"
@@ -4370,9 +3664,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroExportedKeyImage"]:
-            return isinstance(msg, cls)
 
     class NEMGetAddress(protobuf.MessageType):
         address_n: "list[int]"
@@ -4388,9 +3679,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["NEMGetAddress"]:
-            return isinstance(msg, cls)
 
     class NEMAddress(protobuf.MessageType):
         address: "str"
@@ -4402,9 +3690,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["NEMAddress"]:
-            return isinstance(msg, cls)
 
     class NEMSignTx(protobuf.MessageType):
         transaction: "NEMTransactionCommon"
@@ -4432,9 +3717,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["NEMSignTx"]:
-            return isinstance(msg, cls)
 
     class NEMSignedTx(protobuf.MessageType):
         data: "bytes"
@@ -4448,9 +3730,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["NEMSignedTx"]:
-            return isinstance(msg, cls)
 
     class NEMDecryptMessage(protobuf.MessageType):
         address_n: "list[int]"
@@ -4468,9 +3747,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["NEMDecryptMessage"]:
-            return isinstance(msg, cls)
 
     class NEMDecryptedMessage(protobuf.MessageType):
         payload: "bytes"
@@ -4482,9 +3758,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["NEMDecryptedMessage"]:
-            return isinstance(msg, cls)
 
     class NEMTransactionCommon(protobuf.MessageType):
         address_n: "list[int]"
@@ -4506,9 +3779,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["NEMTransactionCommon"]:
-            return isinstance(msg, cls)
 
     class NEMTransfer(protobuf.MessageType):
         recipient: "str"
@@ -4528,9 +3798,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["NEMTransfer"]:
-            return isinstance(msg, cls)
 
     class NEMProvisionNamespace(protobuf.MessageType):
         namespace: "str"
@@ -4548,9 +3815,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["NEMProvisionNamespace"]:
-            return isinstance(msg, cls)
 
     class NEMMosaicCreation(protobuf.MessageType):
         definition: "NEMMosaicDefinition"
@@ -4566,9 +3830,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["NEMMosaicCreation"]:
-            return isinstance(msg, cls)
 
     class NEMMosaicSupplyChange(protobuf.MessageType):
         namespace: "str"
@@ -4586,9 +3847,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["NEMMosaicSupplyChange"]:
-            return isinstance(msg, cls)
 
     class NEMAggregateModification(protobuf.MessageType):
         modifications: "list[NEMCosignatoryModification]"
@@ -4602,9 +3860,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["NEMAggregateModification"]:
-            return isinstance(msg, cls)
 
     class NEMImportanceTransfer(protobuf.MessageType):
         mode: "NEMImportanceTransferMode"
@@ -4618,9 +3873,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["NEMImportanceTransfer"]:
-            return isinstance(msg, cls)
 
     class NEMMosaic(protobuf.MessageType):
         namespace: "str"
@@ -4636,9 +3888,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["NEMMosaic"]:
-            return isinstance(msg, cls)
 
     class NEMMosaicDefinition(protobuf.MessageType):
         name: "str | None"
@@ -4678,9 +3927,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["NEMMosaicDefinition"]:
-            return isinstance(msg, cls)
 
     class NEMCosignatoryModification(protobuf.MessageType):
         type: "NEMModificationType"
@@ -4694,9 +3940,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["NEMCosignatoryModification"]:
-            return isinstance(msg, cls)
 
     class RippleGetAddress(protobuf.MessageType):
         address_n: "list[int]"
@@ -4710,9 +3953,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["RippleGetAddress"]:
-            return isinstance(msg, cls)
 
     class RippleAddress(protobuf.MessageType):
         address: "str"
@@ -4724,9 +3964,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["RippleAddress"]:
-            return isinstance(msg, cls)
 
     class RippleSignTx(protobuf.MessageType):
         address_n: "list[int]"
@@ -4748,9 +3985,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["RippleSignTx"]:
-            return isinstance(msg, cls)
 
     class RippleSignedTx(protobuf.MessageType):
         signature: "bytes"
@@ -4764,9 +3998,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["RippleSignedTx"]:
-            return isinstance(msg, cls)
 
     class RipplePayment(protobuf.MessageType):
         amount: "int"
@@ -4782,9 +4013,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["RipplePayment"]:
-            return isinstance(msg, cls)
 
     class StellarAsset(protobuf.MessageType):
         type: "StellarAssetType"
@@ -4800,9 +4028,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarAsset"]:
-            return isinstance(msg, cls)
 
     class StellarGetAddress(protobuf.MessageType):
         address_n: "list[int]"
@@ -4816,9 +4041,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarGetAddress"]:
-            return isinstance(msg, cls)
 
     class StellarAddress(protobuf.MessageType):
         address: "str"
@@ -4830,9 +4052,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarAddress"]:
-            return isinstance(msg, cls)
 
     class StellarSignTx(protobuf.MessageType):
         address_n: "list[int]"
@@ -4866,15 +4085,10 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarSignTx"]:
-            return isinstance(msg, cls)
 
     class StellarTxOpRequest(protobuf.MessageType):
+        pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarTxOpRequest"]:
-            return isinstance(msg, cls)
 
     class StellarPaymentOp(protobuf.MessageType):
         source_account: "str | None"
@@ -4892,9 +4106,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarPaymentOp"]:
-            return isinstance(msg, cls)
 
     class StellarCreateAccountOp(protobuf.MessageType):
         source_account: "str | None"
@@ -4910,9 +4121,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarCreateAccountOp"]:
-            return isinstance(msg, cls)
 
     class StellarPathPaymentStrictReceiveOp(protobuf.MessageType):
         source_account: "str | None"
@@ -4936,9 +4144,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarPathPaymentStrictReceiveOp"]:
-            return isinstance(msg, cls)
 
     class StellarPathPaymentStrictSendOp(protobuf.MessageType):
         source_account: "str | None"
@@ -4962,9 +4167,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarPathPaymentStrictSendOp"]:
-            return isinstance(msg, cls)
 
     class StellarManageSellOfferOp(protobuf.MessageType):
         source_account: "str | None"
@@ -4988,9 +4190,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarManageSellOfferOp"]:
-            return isinstance(msg, cls)
 
     class StellarManageBuyOfferOp(protobuf.MessageType):
         source_account: "str | None"
@@ -5014,9 +4213,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarManageBuyOfferOp"]:
-            return isinstance(msg, cls)
 
     class StellarCreatePassiveSellOfferOp(protobuf.MessageType):
         source_account: "str | None"
@@ -5038,9 +4234,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarCreatePassiveSellOfferOp"]:
-            return isinstance(msg, cls)
 
     class StellarSetOptionsOp(protobuf.MessageType):
         source_account: "str | None"
@@ -5074,9 +4267,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarSetOptionsOp"]:
-            return isinstance(msg, cls)
 
     class StellarChangeTrustOp(protobuf.MessageType):
         source_account: "str | None"
@@ -5092,9 +4282,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarChangeTrustOp"]:
-            return isinstance(msg, cls)
 
     class StellarAllowTrustOp(protobuf.MessageType):
         source_account: "str | None"
@@ -5114,9 +4301,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarAllowTrustOp"]:
-            return isinstance(msg, cls)
 
     class StellarAccountMergeOp(protobuf.MessageType):
         source_account: "str | None"
@@ -5130,9 +4314,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarAccountMergeOp"]:
-            return isinstance(msg, cls)
 
     class StellarManageDataOp(protobuf.MessageType):
         source_account: "str | None"
@@ -5148,9 +4329,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarManageDataOp"]:
-            return isinstance(msg, cls)
 
     class StellarBumpSequenceOp(protobuf.MessageType):
         source_account: "str | None"
@@ -5164,9 +4342,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarBumpSequenceOp"]:
-            return isinstance(msg, cls)
 
     class StellarSignedTx(protobuf.MessageType):
         public_key: "bytes"
@@ -5180,9 +4355,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarSignedTx"]:
-            return isinstance(msg, cls)
 
     class TezosGetAddress(protobuf.MessageType):
         address_n: "list[int]"
@@ -5196,9 +4368,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TezosGetAddress"]:
-            return isinstance(msg, cls)
 
     class TezosAddress(protobuf.MessageType):
         address: "str"
@@ -5210,9 +4379,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TezosAddress"]:
-            return isinstance(msg, cls)
 
     class TezosGetPublicKey(protobuf.MessageType):
         address_n: "list[int]"
@@ -5226,9 +4392,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TezosGetPublicKey"]:
-            return isinstance(msg, cls)
 
     class TezosPublicKey(protobuf.MessageType):
         public_key: "str"
@@ -5240,9 +4403,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TezosPublicKey"]:
-            return isinstance(msg, cls)
 
     class TezosSignTx(protobuf.MessageType):
         address_n: "list[int]"
@@ -5268,9 +4428,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TezosSignTx"]:
-            return isinstance(msg, cls)
 
     class TezosSignedTx(protobuf.MessageType):
         signature: "str"
@@ -5286,9 +4443,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TezosSignedTx"]:
-            return isinstance(msg, cls)
 
     class TezosContractID(protobuf.MessageType):
         tag: "TezosContractType"
@@ -5302,9 +4456,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TezosContractID"]:
-            return isinstance(msg, cls)
 
     class TezosRevealOp(protobuf.MessageType):
         source: "bytes"
@@ -5326,9 +4477,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TezosRevealOp"]:
-            return isinstance(msg, cls)
 
     class TezosTransactionOp(protobuf.MessageType):
         source: "bytes"
@@ -5356,9 +4504,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TezosTransactionOp"]:
-            return isinstance(msg, cls)
 
     class TezosOriginationOp(protobuf.MessageType):
         source: "bytes"
@@ -5390,9 +4535,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TezosOriginationOp"]:
-            return isinstance(msg, cls)
 
     class TezosDelegationOp(protobuf.MessageType):
         source: "bytes"
@@ -5414,9 +4556,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TezosDelegationOp"]:
-            return isinstance(msg, cls)
 
     class TezosProposalOp(protobuf.MessageType):
         source: "bytes"
@@ -5432,9 +4571,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TezosProposalOp"]:
-            return isinstance(msg, cls)
 
     class TezosBallotOp(protobuf.MessageType):
         source: "bytes"
@@ -5452,9 +4588,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TezosBallotOp"]:
-            return isinstance(msg, cls)
 
     class TezosParametersManager(protobuf.MessageType):
         set_delegate: "bytes | None"
@@ -5470,9 +4603,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TezosParametersManager"]:
-            return isinstance(msg, cls)
 
     class TezosManagerTransfer(protobuf.MessageType):
         destination: "TezosContractID"
@@ -5486,15 +4616,10 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TezosManagerTransfer"]:
-            return isinstance(msg, cls)
 
     class WebAuthnListResidentCredentials(protobuf.MessageType):
+        pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["WebAuthnListResidentCredentials"]:
-            return isinstance(msg, cls)
 
     class WebAuthnAddResidentCredential(protobuf.MessageType):
         credential_id: "bytes | None"
@@ -5506,9 +4631,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["WebAuthnAddResidentCredential"]:
-            return isinstance(msg, cls)
 
     class WebAuthnRemoveResidentCredential(protobuf.MessageType):
         index: "int | None"
@@ -5520,9 +4642,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["WebAuthnRemoveResidentCredential"]:
-            return isinstance(msg, cls)
 
     class WebAuthnCredentials(protobuf.MessageType):
         credentials: "list[WebAuthnCredential]"
@@ -5534,9 +4653,6 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["WebAuthnCredentials"]:
-            return isinstance(msg, cls)
 
     class WebAuthnCredential(protobuf.MessageType):
         index: "int | None"
@@ -5570,6 +4686,3 @@ if TYPE_CHECKING:
         ) -> None:
             pass
 
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["WebAuthnCredential"]:
-            return isinstance(msg, cls)
