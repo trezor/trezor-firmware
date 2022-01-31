@@ -1,4 +1,5 @@
 from trezorlib import debuglink, device, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 from ..common import MNEMONIC12
 from ..emulators import EmulatorWrapper
@@ -8,9 +9,7 @@ PIN = "1234"
 WIPE_CODE = "9876"
 
 
-def setup_device_legacy(
-    client: debuglink.TrezorClientDebugLink, pin: str, wipe_code: str
-) -> None:
+def setup_device_legacy(client: Client, pin: str, wipe_code: str) -> None:
     device.wipe(client)
     debuglink.load_device(
         client, MNEMONIC12, pin, passphrase_protection=False, label="WIPECODE"
@@ -21,9 +20,7 @@ def setup_device_legacy(
         device.change_wipe_code(client)
 
 
-def setup_device_core(
-    client: debuglink.TrezorClientDebugLink, pin: str, wipe_code: str
-) -> None:
+def setup_device_core(client: Client, pin: str, wipe_code: str) -> None:
     device.wipe(client)
     debuglink.load_device(
         client, MNEMONIC12, pin, passphrase_protection=False, label="WIPECODE"

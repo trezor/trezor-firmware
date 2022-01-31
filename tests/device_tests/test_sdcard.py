@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import device, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import SdProtectOperationType as Op
 
@@ -24,13 +25,13 @@ pytestmark = pytest.mark.skip_t1
 
 
 @pytest.mark.sd_card(formatted=False)
-def test_sd_format(client):
+def test_sd_format(client: Client):
     device.sd_protect(client, Op.ENABLE)
     assert client.features.sd_protection is True
 
 
 @pytest.mark.sd_card(formatted=False)
-def test_sd_no_format(client):
+def test_sd_no_format(client: Client):
     def input_flow():
         yield  # enable SD protection?
         client.debug.press_yes()
@@ -47,7 +48,7 @@ def test_sd_no_format(client):
 
 @pytest.mark.sd_card
 @pytest.mark.setup_client(pin="1234")
-def test_sd_protect_unlock(client):
+def test_sd_protect_unlock(client: Client):
     def input_flow_enable_sd_protect():
         yield  # Enter PIN to unlock device
         assert "PinDialog" == client.debug.wait_layout().text

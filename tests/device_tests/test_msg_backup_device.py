@@ -19,6 +19,7 @@ import pytest
 import shamir_mnemonic as shamir
 
 from trezorlib import device, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import ButtonRequestType as B
 
@@ -39,7 +40,7 @@ def click_info_button(debug):
 
 @pytest.mark.skip_t1  # TODO we want this for t1 too
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC12)
-def test_backup_bip39(client):
+def test_backup_bip39(client: Client):
     assert client.features.needs_backup is True
     mnemonic = None
 
@@ -82,7 +83,7 @@ def test_backup_bip39(client):
 @pytest.mark.parametrize(
     "click_info", [True, False], ids=["click_info", "no_click_info"]
 )
-def test_backup_slip39_basic(client, click_info: bool):
+def test_backup_slip39_basic(client: Client, click_info: bool):
     assert client.features.needs_backup is True
     mnemonics = []
 
@@ -150,7 +151,7 @@ def test_backup_slip39_basic(client, click_info: bool):
 @pytest.mark.parametrize(
     "click_info", [True, False], ids=["click_info", "no_click_info"]
 )
-def test_backup_slip39_advanced(client, click_info: bool):
+def test_backup_slip39_advanced(client: Client, click_info: bool):
     assert client.features.needs_backup is True
     mnemonics = []
 
@@ -234,7 +235,7 @@ def test_backup_slip39_advanced(client, click_info: bool):
 
 # we only test this with bip39 because the code path is always the same
 @pytest.mark.setup_client(no_backup=True)
-def test_no_backup_fails(client):
+def test_no_backup_fails(client: Client):
     client.ensure_unlocked()
     assert client.features.initialized is True
     assert client.features.no_backup is True
@@ -247,7 +248,7 @@ def test_no_backup_fails(client):
 
 # we only test this with bip39 because the code path is always the same
 @pytest.mark.setup_client(needs_backup=True)
-def test_interrupt_backup_fails(client):
+def test_interrupt_backup_fails(client: Client):
     client.ensure_unlocked()
     assert client.features.initialized is True
     assert client.features.needs_backup is True
@@ -273,7 +274,7 @@ def test_interrupt_backup_fails(client):
 
 # we only test this with bip39 because the code path is always the same
 @pytest.mark.setup_client(uninitialized=True)
-def test_no_backup_show_entropy_fails(client):
+def test_no_backup_show_entropy_fails(client: Client):
     with pytest.raises(
         TrezorFailure, match=r".*Can't show internal entropy when backup is skipped"
     ):

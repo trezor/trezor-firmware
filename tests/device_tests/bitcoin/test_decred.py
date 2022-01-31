@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
 from ...tx_cache import TxCache
@@ -54,20 +55,20 @@ TXHASH_1f00fc = bytes.fromhex(
 pytestmark = [pytest.mark.altcoin, pytest.mark.decred]
 
 
-def test_send_decred(client):
+def test_send_decred(client: Client):
     inp1 = messages.TxInputType(
         # TscqTv1he8MZrV321SfRghw7LFBCJDKB3oz
-        address_n=parse_path("m/44'/1'/0'/0/0"),
+        address_n=parse_path("m/44h/1h/0h/0/0"),
         prev_hash=TXHASH_e16248,
         prev_index=1,
-        amount=200000000,
+        amount=200_000_000,
         script_type=messages.InputScriptType.SPENDADDRESS,
         decred_tree=0,
     )
 
     out1 = messages.TxOutputType(
         address="TscqTv1he8MZrV321SfRghw7LFBCJDKB3oz",
-        amount=190000000,
+        amount=190_000_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -99,12 +100,12 @@ def test_send_decred(client):
 
 
 @pytest.mark.skip_t1
-def test_purchase_ticket_decred(client):
+def test_purchase_ticket_decred(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("m/44'/1'/0'/0/0"),
+        address_n=parse_path("m/44h/1h/0h/0/0"),
         prev_hash=TXHASH_e16248,
         prev_index=1,
-        amount=200000000,
+        amount=200_000_000,
         decred_tree=0,
         script_type=messages.InputScriptType.SPENDADDRESS,
     )
@@ -112,11 +113,11 @@ def test_purchase_ticket_decred(client):
     out1 = messages.TxOutputType(
         address="TscqTv1he8MZrV321SfRghw7LFBCJDKB3oz",
         script_type=messages.OutputScriptType.PAYTOADDRESS,
-        amount=199900000,
+        amount=199_900_000,
     )
     out2 = messages.TxOutputType(
-        address_n=parse_path("m/44'/1'/0'/0/0"),
-        amount=200000000,
+        address_n=parse_path("m/44h/1h/0h/0/0"),
+        amount=200_000_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     out3 = messages.TxOutputType(
@@ -159,22 +160,22 @@ def test_purchase_ticket_decred(client):
 
 
 @pytest.mark.skip_t1
-def test_spend_from_stake_generation_and_revocation_decred(client):
+def test_spend_from_stake_generation_and_revocation_decred(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("m/44'/1'/0'/0/0"),
+        address_n=parse_path("m/44h/1h/0h/0/0"),
         prev_hash=TXHASH_8b6890,
         prev_index=2,
-        amount=200000000,
+        amount=200_000_000,
         script_type=messages.InputScriptType.SPENDADDRESS,
         decred_staking_spend=messages.DecredStakingSpendType.SSGen,
         decred_tree=1,
     )
 
     inp2 = messages.TxInputType(
-        address_n=parse_path("m/44'/1'/0'/0/0"),
+        address_n=parse_path("m/44h/1h/0h/0/0"),
         prev_hash=TXHASH_1f00fc,
         prev_index=0,
-        amount=200000000,
+        amount=200_000_000,
         script_type=messages.InputScriptType.SPENDADDRESS,
         decred_staking_spend=messages.DecredStakingSpendType.SSRTX,
         decred_tree=1,
@@ -182,7 +183,7 @@ def test_spend_from_stake_generation_and_revocation_decred(client):
 
     out1 = messages.TxOutputType(
         address="TscqTv1he8MZrV321SfRghw7LFBCJDKB3oz",
-        amount=399900000,
+        amount=399_900_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -220,11 +221,11 @@ def test_spend_from_stake_generation_and_revocation_decred(client):
     )
 
 
-def test_send_decred_change(client):
+def test_send_decred_change(client: Client):
     inp1 = messages.TxInputType(
         # TscqTv1he8MZrV321SfRghw7LFBCJDKB3oz
-        address_n=parse_path("m/44'/1'/0'/0/0"),
-        amount=190000000,
+        address_n=parse_path("m/44h/1h/0h/0/0"),
+        amount=190_000_000,
         prev_hash=TXHASH_5e6e35,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDADDRESS,
@@ -233,8 +234,8 @@ def test_send_decred_change(client):
 
     inp2 = messages.TxInputType(
         # TscqTv1he8MZrV321SfRghw7LFBCJDKB3oz
-        address_n=parse_path("m/44'/1'/0'/0/0"),
-        amount=200000000,
+        address_n=parse_path("m/44h/1h/0h/0/0"),
+        amount=200_000_000,
         prev_hash=TXHASH_ccf95b,
         prev_index=1,
         script_type=messages.InputScriptType.SPENDADDRESS,
@@ -243,8 +244,8 @@ def test_send_decred_change(client):
 
     inp3 = messages.TxInputType(
         # Tskt39YEvzoJ5KBDH4f1auNzG3jViVjZ2RV
-        address_n=parse_path("m/44'/1'/0'/0/1"),
-        amount=200000000,
+        address_n=parse_path("m/44h/1h/0h/0/1"),
+        amount=200_000_000,
         prev_hash=TXHASH_f395ef,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDADDRESS,
@@ -253,14 +254,14 @@ def test_send_decred_change(client):
 
     out1 = messages.TxOutputType(
         address="TsWjioPrP8E1TuTMmTrVMM2BA4iPrjQXBpR",
-        amount=489975000,
+        amount=489_975_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     out2 = messages.TxOutputType(
         # TsaSFRwfN9muW5F6ZX36iSksc9hruiC5F97
-        address_n=parse_path("m/44'/1'/0'/1/0"),
-        amount=100000000,
+        address_n=parse_path("m/44h/1h/0h/1/0"),
+        amount=100_000_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -309,8 +310,8 @@ def test_send_decred_change(client):
 
 
 @pytest.mark.multisig
-def test_decred_multisig_change(client):
-    paths = [parse_path(f"m/48'/1'/{index}'/0'") for index in range(3)]
+def test_decred_multisig_change(client: Client):
+    paths = [parse_path(f"m/48h/1h/{index}h/0h") for index in range(3)]
     nodes = [
         btc.get_public_node(client, address_n, coin_name="Decred Testnet").node
         for address_n in paths
@@ -332,7 +333,7 @@ def test_decred_multisig_change(client):
             address_n=address_n,
             # TchpthUkRys1VQWgnQyLJNaA4MLBjVmRL2c
             multisig=multisig,
-            amount=200000000,
+            amount=200_000_000,
             prev_hash=TXHASH_3f7c39,
             prev_index=1,
             script_type=messages.InputScriptType.SPENDMULTISIG,
@@ -344,7 +345,7 @@ def test_decred_multisig_change(client):
             address_n=address_n,
             # TcnfDEfMhkM3oLWqiq9v9GmYgLK7qfjitKG
             multisig=multisig,
-            amount=200000000,
+            amount=200_000_000,
             prev_hash=TXHASH_16da18,
             prev_index=0,
             script_type=messages.InputScriptType.SPENDMULTISIG,
@@ -356,13 +357,13 @@ def test_decred_multisig_change(client):
             address_n=address_n,
             # TcrrURA3Bzj4isGU48PdSP9SDoU5oCpjEcb
             multisig=multisig,
-            amount=99900000,
+            amount=99_900_000,
             script_type=messages.OutputScriptType.PAYTOMULTISIG,
         )
 
         out2 = messages.TxOutputType(
             address="TsWjioPrP8E1TuTMmTrVMM2BA4iPrjQXBpR",
-            amount=300000000,
+            amount=300_000_000,
             script_type=messages.OutputScriptType.PAYTOADDRESS,
         )
 

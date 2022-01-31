@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import ethereum, exceptions
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
 from ...common import parametrize_using_common_fixtures
@@ -28,7 +29,7 @@ pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
 
 @pytest.mark.skip_t1
 @parametrize_using_common_fixtures("ethereum/sign_typed_data.json")
-def test_ethereum_sign_typed_data(client, parameters, result):
+def test_ethereum_sign_typed_data(client: Client, parameters, result):
     with client:
         address_n = parse_path(parameters["path"])
         ret = ethereum.sign_typed_data(
@@ -43,7 +44,7 @@ def test_ethereum_sign_typed_data(client, parameters, result):
 
 @pytest.mark.skip_t2
 @parametrize_using_common_fixtures("ethereum/sign_typed_data.json")
-def test_ethereum_sign_typed_data_blind(client, parameters, result):
+def test_ethereum_sign_typed_data_blind(client: Client, parameters, result):
     with client:
         address_n = parse_path(parameters["path"])
         ret = ethereum.sign_typed_data_hash(
@@ -93,7 +94,7 @@ DATA = {
 }
 
 
-def input_flow_show_more(client):
+def input_flow_show_more(client: Client):
     """Clicks show_more button wherever possible"""
     yield  # confirm domain
     client.debug.wait_layout()
@@ -133,33 +134,33 @@ def input_flow_show_more(client):
     client.debug.press_yes()
 
 
-def input_flow_cancel(client):
+def input_flow_cancel(client: Client):
     """Clicks cancelling button"""
     yield  # confirm domain
     client.debug.press_no()
 
 
 @pytest.mark.skip_t1
-def test_ethereum_sign_typed_data_show_more_button(client):
+def test_ethereum_sign_typed_data_show_more_button(client: Client):
     with client:
         client.watch_layout()
         client.set_input_flow(input_flow_show_more(client))
         ethereum.sign_typed_data(
             client,
-            parse_path("m/44'/60'/0'/0/0"),
+            parse_path("m/44h/60h/0h/0/0"),
             DATA,
             metamask_v4_compat=True,
         )
 
 
 @pytest.mark.skip_t1
-def test_ethereum_sign_typed_data_cancel(client):
+def test_ethereum_sign_typed_data_cancel(client: Client):
     with client, pytest.raises(exceptions.Cancelled):
         client.watch_layout()
         client.set_input_flow(input_flow_cancel(client))
         ethereum.sign_typed_data(
             client,
-            parse_path("m/44'/60'/0'/0/0"),
+            parse_path("m/44h/60h/0h/0/0"),
             DATA,
             metamask_v4_compat=True,
         )

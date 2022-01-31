@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -55,21 +56,21 @@ TXHASH_v4 = bytes.fromhex(
 pytestmark = [pytest.mark.altcoin, pytest.mark.zcash]
 
 
-def test_v3_not_supported(client):
+def test_v3_not_supported(client: Client):
     # prevout: aaf51e4606c264e47e5c42c958fe4cf1539c5172684721e38e69f4ef634d75dc:1
     # input 1: 3.0 TAZ
 
     inp1 = messages.TxInputType(
         # tmQoJ3PTXgQLaRRZZYT6xk8XtjRbr2kCqwu
         address_n=parse_path("m/44h/1h/0h/0/0"),
-        amount=300000000,
+        amount=300_000_000,
         prev_hash=TXHASH_aaf51e,
         prev_index=1,
     )
 
     out1 = messages.TxOutputType(
         address="tmJ1xYxP8XNTtCoDgvdmQPSrxh5qZJgy65Z",
-        amount=300000000 - 1940,
+        amount=300_000_000 - 1_940,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -86,21 +87,21 @@ def test_v3_not_supported(client):
         )
 
 
-def test_one_one_fee_sapling(client):
+def test_one_one_fee_sapling(client: Client):
     # prevout: e3820602226974b1dd87b7113cc8aea8c63e5ae29293991e7bfa80c126930368:0
     # input 1: 3.0 TAZ
 
     inp1 = messages.TxInputType(
         # tmQoJ3PTXgQLaRRZZYT6xk8XtjRbr2kCqwu
         address_n=parse_path("m/44h/1h/0h/0/0"),
-        amount=300000000,
+        amount=300_000_000,
         prev_hash=TXHASH_e38206,
         prev_index=0,
     )
 
     out1 = messages.TxOutputType(
         address="tmJ1xYxP8XNTtCoDgvdmQPSrxh5qZJgy65Z",
-        amount=300000000 - 1940,
+        amount=300_000_000 - 1_940,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -142,17 +143,17 @@ def test_one_one_fee_sapling(client):
     )
 
 
-def test_version_group_id_missing(client):
+def test_version_group_id_missing(client: Client):
     inp1 = messages.TxInputType(
         # tmQoJ3PTXgQLaRRZZYT6xk8XtjRbr2kCqwu
         address_n=parse_path("m/44h/1h/0h/0/0"),
-        amount=300000000,
+        amount=300_000_000,
         prev_hash=TXHASH_e38206,
         prev_index=0,
     )
     out1 = messages.TxOutputType(
         address="tmJ1xYxP8XNTtCoDgvdmQPSrxh5qZJgy65Z",
-        amount=300000000 - 1940,
+        amount=300_000_000 - 1_940,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -167,29 +168,29 @@ def test_version_group_id_missing(client):
         )
 
 
-def test_spend_old_versions(client):
+def test_spend_old_versions(client: Client):
     # inputs are NOT OWNED by this seed
     input_v1 = messages.TxInputType(
         address_n=parse_path("m/44h/1h/0h/0/0"),
-        amount=123000000,
+        amount=123_000_000,
         prev_hash=TXHASH_v1,
         prev_index=0,
     )
     input_v2 = messages.TxInputType(
         address_n=parse_path("m/44h/1h/0h/0/1"),
-        amount=49990000,
+        amount=49_990_000,
         prev_hash=TXHASH_v2,
         prev_index=0,
     )
     input_v3 = messages.TxInputType(
         address_n=parse_path("m/44h/1h/0h/0/2"),
-        amount=300000000,
+        amount=300_000_000,
         prev_hash=TXHASH_v3,
         prev_index=1,
     )
     input_v4 = messages.TxInputType(
         address_n=parse_path("m/44h/1h/0h/0/3"),
-        amount=100000,
+        amount=100_000,
         prev_hash=TXHASH_v4,
         prev_index=0,
     )
@@ -225,11 +226,11 @@ def test_spend_old_versions(client):
 
 
 @pytest.mark.skip_t1
-def test_external_presigned(client):
+def test_external_presigned(client: Client):
     inp1 = messages.TxInputType(
         # tmQoJ3PTXgQLaRRZZYT6xk8XtjRbr2kCqwu
         address_n=parse_path("m/44h/1h/0h/0/0"),
-        amount=300000000,
+        amount=300_000_000,
         prev_hash=TXHASH_e38206,
         prev_index=0,
     )
@@ -237,7 +238,7 @@ def test_external_presigned(client):
     inp2 = messages.TxInputType(
         # tmQoJ3PTXgQLaRRZZYT6xk8XtjRbr2kCqwu
         # address_n=parse_path("m/44h/1h/0h/0/0"),
-        amount=300000000,
+        amount=300_000_000,
         prev_hash=TXHASH_aaf51e,
         prev_index=1,
         script_type=messages.InputScriptType.EXTERNAL,
@@ -251,7 +252,7 @@ def test_external_presigned(client):
 
     out1 = messages.TxOutputType(
         address="tmJ1xYxP8XNTtCoDgvdmQPSrxh5qZJgy65Z",
-        amount=300000000 + 300000000 - 1940,
+        amount=300_000_000 + 300_000_000 - 1_940,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 

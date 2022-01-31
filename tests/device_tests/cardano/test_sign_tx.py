@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import cardano, device, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 
 from ...common import parametrize_using_common_fixtures
@@ -34,7 +35,7 @@ pytestmark = [
     "cardano/sign_tx.multisig.json",
     "cardano/sign_tx.slip39.json",
 )
-def test_cardano_sign_tx(client, parameters, result):
+def test_cardano_sign_tx(client: Client, parameters, result):
     client.init_device(new_session=True, derive_cardano=True)
 
     signing_mode = messages.CardanoTxSigningMode.__members__[parameters["signing_mode"]]
@@ -81,7 +82,7 @@ def test_cardano_sign_tx(client, parameters, result):
     "cardano/sign_tx.multisig.failed.json",
     "cardano/sign_tx_stake_pool_registration.failed.json",
 )
-def test_cardano_sign_tx_failed(client, parameters, result):
+def test_cardano_sign_tx_failed(client: Client, parameters, result):
     client.init_device(new_session=True, derive_cardano=True)
 
     signing_mode = messages.CardanoTxSigningMode.__members__[parameters["signing_mode"]]

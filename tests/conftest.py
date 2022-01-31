@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from trezorlib import debuglink, log
-from trezorlib.debuglink import TrezorClientDebugLink
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.device import apply_settings, wipe as wipe_device
 from trezorlib.transport import enumerate_devices, get_transport
 
@@ -38,13 +38,13 @@ pytest.register_assert_rewrite("tests.common")
 
 
 @pytest.fixture(scope="session")
-def _raw_client(request: pytest.FixtureRequest) -> TrezorClientDebugLink:
+def _raw_client(request: pytest.FixtureRequest) -> Client:
     path = os.environ.get("TREZOR_PATH")
     interact = int(os.environ.get("INTERACT", 0))
     if path:
         try:
             transport = get_transport(path)
-            return TrezorClientDebugLink(transport, auto_interact=not interact)
+            return Client(transport, auto_interact=not interact)
         except Exception as e:
             request.session.shouldstop = "Failed to communicate with Trezor"
             raise RuntimeError(f"Failed to open debuglink for {path}") from e
@@ -53,7 +53,7 @@ def _raw_client(request: pytest.FixtureRequest) -> TrezorClientDebugLink:
         devices = enumerate_devices()
         for device in devices:
             try:
-                return TrezorClientDebugLink(device, auto_interact=not interact)
+                return Client(device, auto_interact=not interact)
             except Exception:
                 pass
 
@@ -62,9 +62,7 @@ def _raw_client(request: pytest.FixtureRequest) -> TrezorClientDebugLink:
 
 
 @pytest.fixture(scope="function")
-def client(
-    request: pytest.FixtureRequest, _raw_client: TrezorClientDebugLink
-) -> TrezorClientDebugLink:
+def client(request: pytest.FixtureRequest, _raw_client: Client) -> Client:
     """Client fixture.
 
     Every test function that requires a client instance will get it from here.
@@ -298,9 +296,7 @@ def pytest_runtest_makereport(item: pytest.Item, call) -> None:
 
 
 @pytest.fixture
-def device_handler(
-    client: TrezorClientDebugLink, request: pytest.FixtureRequest
-) -> None:
+def device_handler(client: Client, request: pytest.FixtureRequest) -> None:
     device_handler = BackgroundDeviceHandler(client)
     yield device_handler
 

@@ -17,103 +17,104 @@
 import pytest
 
 from trezorlib import btc, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
 VECTORS = (  # coin, path, script_type, address
     (
         "Testnet",
-        "84'/1'/0'/0/0",
+        "m/84h/1h/0h/0/0",
         messages.InputScriptType.SPENDWITNESS,
         "tb1qkvwu9g3k2pdxewfqr7syz89r3gj557l3uuf9r9",
     ),
     (
         "Testnet",
-        "84'/1'/0'/1/0",
+        "m/84h/1h/0h/1/0",
         messages.InputScriptType.SPENDWITNESS,
         "tb1qejqxwzfld7zr6mf7ygqy5s5se5xq7vmt96jk9x",
     ),
     (
         "Bitcoin",
-        "84'/0'/0'/0/0",
+        "m/84h/0h/0h/0/0",
         messages.InputScriptType.SPENDWITNESS,
         "bc1qannfxke2tfd4l7vhepehpvt05y83v3qsf6nfkk",
     ),
     (
         "Bitcoin",
-        "84'/0'/0'/1/0",
+        "m/84h/0h/0h/1/0",
         messages.InputScriptType.SPENDWITNESS,
         "bc1qktmhrsmsenepnnfst8x6j27l0uqv7ggrg8x38q",
     ),
     (
         "Testnet",
-        "86'/1'/0'/0/0",
+        "m/86h/1h/0h/0/0",
         messages.InputScriptType.SPENDTAPROOT,
         "tb1pswrqtykue8r89t9u4rprjs0gt4qzkdfuursfnvqaa3f2yql07zmq8s8a5u",
     ),
     (
         "Testnet",
-        "86'/1'/0'/1/0",
+        "m/86h/1h/0h/1/0",
         messages.InputScriptType.SPENDTAPROOT,
         "tb1pn2d0yjeedavnkd8z8lhm566p0f2utm3lgvxrsdehnl94y34txmts5s7t4c",
     ),
     (
         "Bitcoin",
-        "86'/0'/0'/0/0",
+        "m/86h/0h/0h/0/0",
         messages.InputScriptType.SPENDTAPROOT,
         "bc1ptxs597p3fnpd8gwut5p467ulsydae3rp9z75hd99w8k3ljr9g9rqx6ynaw",
     ),
     (
         "Bitcoin",
-        "86'/0'/0'/1/0",
+        "m/86h/0h/0h/1/0",
         messages.InputScriptType.SPENDTAPROOT,
         "bc1pgypgja2hmcx2l6s2ssq75k6ev68ved6nujcspt47dgvkp8euc70s6uegk6",
     ),
     pytest.param(
         "Groestlcoin Testnet",
-        "84'/1'/0'/0/0",
+        "m/84h/1h/0h/0/0",
         messages.InputScriptType.SPENDWITNESS,
         "tgrs1qkvwu9g3k2pdxewfqr7syz89r3gj557l3ued7ja",
         marks=pytest.mark.altcoin,
     ),
     pytest.param(
         "Groestlcoin Testnet",
-        "84'/1'/0'/1/0",
+        "m/84h/1h/0h/1/0",
         messages.InputScriptType.SPENDWITNESS,
         "tgrs1qejqxwzfld7zr6mf7ygqy5s5se5xq7vmt9lkd57",
         marks=pytest.mark.altcoin,
     ),
     pytest.param(
         "Groestlcoin",
-        "84'/17'/0'/0/0",
+        "m/84h/17h/0h/0/0",
         messages.InputScriptType.SPENDWITNESS,
         "grs1qw4teyraux2s77nhjdwh9ar8rl9dt7zww8r6lne",
         marks=pytest.mark.altcoin,
     ),
     pytest.param(
         "Groestlcoin",
-        "84'/17'/0'/1/0",
+        "m/84h/17h/0h/1/0",
         messages.InputScriptType.SPENDWITNESS,
         "grs1qzfpwn55tvkxcw0xwfa0g8k2gtlzlgkcq3z000e",
         marks=pytest.mark.altcoin,
     ),
     pytest.param(
         "Groestlcoin Testnet",
-        "86'/1'/0'/0/0",
+        "m/86h/1h/0h/0/0",
         messages.InputScriptType.SPENDTAPROOT,
         "tgrs1pswrqtykue8r89t9u4rprjs0gt4qzkdfuursfnvqaa3f2yql07zmq5v2q7z",
         marks=pytest.mark.altcoin,
     ),
     pytest.param(
         "Groestlcoin",
-        "86'/17'/0'/0/0",
+        "m/86h/17h/0h/0/0",
         messages.InputScriptType.SPENDTAPROOT,
         "grs1pnacleslusvh6gdjd3j2y5kv3drq09038sww2zx4za68jssndmu6qkm698g",
         marks=pytest.mark.altcoin,
     ),
     pytest.param(
         "Elements",
-        "84'/1'/0'/0/0",
+        "m/84h/1h/0h/0/0",
         messages.InputScriptType.SPENDWITNESS,
         "ert1qkvwu9g3k2pdxewfqr7syz89r3gj557l3xp9k2v",
         marks=pytest.mark.altcoin,
@@ -122,15 +123,24 @@ VECTORS = (  # coin, path, script_type, address
 
 
 BIP86_VECTORS = (  # path, address for "abandon ... abandon about" seed
-    ("86'/0'/0'/0/0", "bc1p5cyxnuxmeuwuvkwfem96lqzszd02n6xdcjrs20cac6yqjjwudpxqkedrcr"),
-    ("86'/0'/0'/0/1", "bc1p4qhjn9zdvkux4e44uhx8tc55attvtyu358kutcqkudyccelu0was9fqzwh"),
-    ("86'/0'/0'/1/0", "bc1p3qkhfews2uk44qtvauqyr2ttdsw7svhkl9nkm9s9c3x4ax5h60wqwruhk7"),
+    (
+        "m/86h/0h/0h/0/0",
+        "bc1p5cyxnuxmeuwuvkwfem96lqzszd02n6xdcjrs20cac6yqjjwudpxqkedrcr",
+    ),
+    (
+        "m/86h/0h/0h/0/1",
+        "bc1p4qhjn9zdvkux4e44uhx8tc55attvtyu358kutcqkudyccelu0was9fqzwh",
+    ),
+    (
+        "m/86h/0h/0h/1/0",
+        "bc1p3qkhfews2uk44qtvauqyr2ttdsw7svhkl9nkm9s9c3x4ax5h60wqwruhk7",
+    ),
 )
 
 
 @pytest.mark.parametrize("show_display", (True, False))
 @pytest.mark.parametrize("coin, path, script_type, address", VECTORS)
-def test_show_segwit(client, show_display, coin, path, script_type, address):
+def test_show_segwit(client: Client, show_display, coin, path, script_type, address):
     assert (
         btc.get_address(
             client,
@@ -149,7 +159,7 @@ def test_show_segwit(client, show_display, coin, path, script_type, address):
     mnemonic="abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
 )
 @pytest.mark.parametrize("path, address", BIP86_VECTORS)
-def test_bip86(client, path, address):
+def test_bip86(client: Client, path, address):
     assert (
         btc.get_address(
             client,
@@ -164,10 +174,10 @@ def test_bip86(client, path, address):
 
 
 @pytest.mark.multisig
-def test_show_multisig_3(client):
+def test_show_multisig_3(client: Client):
     nodes = [
         btc.get_public_node(
-            client, parse_path(f"84'/1'/{index}'"), coin_name="Testnet"
+            client, parse_path(f"m/84h/1h/{index}h"), coin_name="Testnet"
         ).node
         for index in range(1, 4)
     ]
@@ -182,7 +192,7 @@ def test_show_multisig_3(client):
             btc.get_address(
                 client,
                 "Testnet",
-                parse_path(f"84'/1'/{i}'/0/1"),
+                parse_path(f"m/84h/1h/{i}h/0/1"),
                 False,
                 multisig2,
                 script_type=messages.InputScriptType.SPENDWITNESS,
@@ -193,7 +203,7 @@ def test_show_multisig_3(client):
             btc.get_address(
                 client,
                 "Testnet",
-                parse_path(f"84'/1'/{i}'/0/0"),
+                parse_path(f"m/84h/1h/{i}h/0/0"),
                 False,
                 multisig1,
                 script_type=messages.InputScriptType.SPENDWITNESS,
@@ -204,12 +214,12 @@ def test_show_multisig_3(client):
 
 @pytest.mark.multisig
 @pytest.mark.parametrize("show_display", (True, False))
-def test_multisig_missing(client, show_display):
+def test_multisig_missing(client: Client, show_display):
     # Multisig with global suffix specification.
     # Use account numbers 1, 2 and 3 to create a valid multisig,
     # but not containing the keys from account 0 used below.
     nodes = [
-        btc.get_public_node(client, parse_path(f"84'/0'/{i}'")).node
+        btc.get_public_node(client, parse_path(f"m/84h/0h/{i}h")).node
         for i in range(1, 4)
     ]
     multisig1 = messages.MultisigRedeemScriptType(
@@ -218,7 +228,7 @@ def test_multisig_missing(client, show_display):
 
     # Multisig with per-node suffix specification.
     node = btc.get_public_node(
-        client, parse_path("84h/0h/0h/0"), coin_name="Bitcoin"
+        client, parse_path("m/84h/0h/0h/0"), coin_name="Bitcoin"
     ).node
     multisig2 = messages.MultisigRedeemScriptType(
         pubkeys=[
@@ -235,7 +245,7 @@ def test_multisig_missing(client, show_display):
             btc.get_address(
                 client,
                 "Bitcoin",
-                parse_path("84'/0'/0'/0/0"),
+                parse_path("m/84h/0h/0h/0/0"),
                 show_display=show_display,
                 multisig=multisig,
                 script_type=messages.InputScriptType.SPENDWITNESS,

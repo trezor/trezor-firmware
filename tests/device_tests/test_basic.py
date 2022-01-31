@@ -15,9 +15,10 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 from trezorlib import device, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 
-def test_features(client):
+def test_features(client: Client):
     f0 = client.features
     # client erases session_id from its features
     f0.session_id = client.session_id
@@ -25,12 +26,12 @@ def test_features(client):
     assert f0 == f1
 
 
-def test_ping(client):
+def test_ping(client: Client):
     ping = client.call(messages.Ping(message="ahoj!"))
     assert ping == messages.Success(message="ahoj!")
 
 
-def test_device_id_same(client):
+def test_device_id_same(client: Client):
     id1 = client.get_device_id()
     client.init_device()
     id2 = client.get_device_id()
@@ -42,7 +43,7 @@ def test_device_id_same(client):
     assert id1 == id2
 
 
-def test_device_id_different(client):
+def test_device_id_different(client: Client):
     id1 = client.get_device_id()
     device.wipe(client)
     id2 = client.get_device_id()

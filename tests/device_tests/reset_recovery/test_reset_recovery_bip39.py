@@ -20,6 +20,7 @@ from unittest import mock
 import pytest
 
 from trezorlib import btc, device, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.messages import BackupType, ButtonRequestType as B
 from trezorlib.tools import parse_path
 
@@ -28,17 +29,17 @@ from ...common import EXTERNAL_ENTROPY, click_through, read_and_confirm_mnemonic
 
 @pytest.mark.skip_t1
 @pytest.mark.setup_client(uninitialized=True)
-def test_reset_recovery(client):
+def test_reset_recovery(client: Client):
     mnemonic = reset(client)
-    address_before = btc.get_address(client, "Bitcoin", parse_path("44'/0'/0'/0/0"))
+    address_before = btc.get_address(client, "Bitcoin", parse_path("m/44h/0h/0h/0/0"))
 
     device.wipe(client)
     recover(client, mnemonic)
-    address_after = btc.get_address(client, "Bitcoin", parse_path("44'/0'/0'/0/0"))
+    address_after = btc.get_address(client, "Bitcoin", parse_path("m/44h/0h/0h/0/0"))
     assert address_before == address_after
 
 
-def reset(client, strength=128, skip_backup=False):
+def reset(client: Client, strength=128, skip_backup=False):
     mnemonic = None
 
     def input_flow():
@@ -100,7 +101,7 @@ def reset(client, strength=128, skip_backup=False):
     return mnemonic
 
 
-def recover(client, mnemonic):
+def recover(client: Client, mnemonic):
     debug = client.debug
     words = mnemonic.split(" ")
 

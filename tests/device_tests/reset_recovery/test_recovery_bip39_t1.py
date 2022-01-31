@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import device, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 from ...common import MNEMONIC12
 
@@ -27,7 +28,7 @@ pytestmark = pytest.mark.skip_t2
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_pin_passphrase(client):
+def test_pin_passphrase(client: Client):
     mnemonic = MNEMONIC12.split(" ")
     ret = client.call_raw(
         messages.RecoveryDevice(
@@ -89,7 +90,7 @@ def test_pin_passphrase(client):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_nopin_nopassphrase(client):
+def test_nopin_nopassphrase(client: Client):
     mnemonic = MNEMONIC12.split(" ")
     ret = client.call_raw(
         messages.RecoveryDevice(
@@ -139,7 +140,7 @@ def test_nopin_nopassphrase(client):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_word_fail(client):
+def test_word_fail(client: Client):
     ret = client.call_raw(
         messages.RecoveryDevice(
             word_count=12,
@@ -168,7 +169,7 @@ def test_word_fail(client):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_pin_fail(client):
+def test_pin_fail(client: Client):
     ret = client.call_raw(
         messages.RecoveryDevice(
             word_count=12,
@@ -200,7 +201,7 @@ def test_pin_fail(client):
     assert isinstance(ret, messages.Failure)
 
 
-def test_already_initialized(client):
+def test_already_initialized(client: Client):
     with pytest.raises(RuntimeError):
         device.recover(
             client, 12, False, False, "label", "en-US", client.mnemonic_callback

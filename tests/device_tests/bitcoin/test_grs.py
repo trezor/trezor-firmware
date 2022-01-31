@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
 from ...tx_cache import TxCache
@@ -41,17 +42,17 @@ TXHASH_45aeb9 = bytes.fromhex(
 pytestmark = pytest.mark.altcoin
 
 
-def test_legacy(client):
+def test_legacy(client: Client):
     inp1 = messages.TxInputType(
         # FXHDsC5ZqWQHkDmShzgRVZ1MatpWhwxTAA
-        address_n=parse_path("44'/17'/0'/0/2"),
-        amount=210016,
+        address_n=parse_path("m/44h/17h/0h/0/2"),
+        amount=210_016,
         prev_hash=TXHASH_cb74c8,
         prev_index=0,
     )
     out1 = messages.TxOutputType(
         address="FtM4zAn9aVYgHgxmamWBgWPyZsb6RhvkA9",
-        amount=210016 - 192,
+        amount=210_016 - 192,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     _, serialized_tx = btc.sign_tx(
@@ -63,17 +64,17 @@ def test_legacy(client):
     )
 
 
-def test_legacy_change(client):
+def test_legacy_change(client: Client):
     inp1 = messages.TxInputType(
         # FXHDsC5ZqWQHkDmShzgRVZ1MatpWhwxTAA
-        address_n=parse_path("44'/17'/0'/0/2"),
-        amount=210016,
+        address_n=parse_path("m/44h/17h/0h/0/2"),
+        amount=210_016,
         prev_hash=TXHASH_cb74c8,
         prev_index=0,
     )
     out1 = messages.TxOutputType(
-        address_n=parse_path("44'/17'/0'/0/3"),  # FtM4zAn9aVYgHgxmamWBgWPyZsb6RhvkA9
-        amount=210016 - 192,
+        address_n=parse_path("m/44h/17h/0h/0/3"),  # FtM4zAn9aVYgHgxmamWBgWPyZsb6RhvkA9
+        amount=210_016 - 192,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     _, serialized_tx = btc.sign_tx(
@@ -85,11 +86,11 @@ def test_legacy_change(client):
     )
 
 
-def test_send_segwit_p2sh(client):
+def test_send_segwit_p2sh(client: Client):
     inp1 = messages.TxInputType(
         # 2N1LGaGg836mqSQqiuUBLfcyGBhyZYBtBZ7
-        address_n=parse_path("49'/1'/0'/1/0"),
-        amount=123456789,
+        address_n=parse_path("m/49h/1h/0h/1/0"),
+        amount=123_456_789,
         prev_hash=TXHASH_09a48b,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
@@ -97,12 +98,12 @@ def test_send_segwit_p2sh(client):
     )
     out1 = messages.TxOutputType(
         address="mvbu1Gdy8SUjTenqerxUaZyYjmvedc787y",
-        amount=12300000,
+        amount=12_300_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     out2 = messages.TxOutputType(
         address="2N1LGaGg836mqSQqiuUBLfcyGBhyZYBtBZ7",
-        amount=123456789 - 11000 - 12300000,
+        amount=123_456_789 - 11_000 - 12_300_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     _, serialized_tx = btc.sign_tx(
@@ -110,7 +111,7 @@ def test_send_segwit_p2sh(client):
         "Groestlcoin Testnet",
         [inp1],
         [out1, out2],
-        lock_time=650756,
+        lock_time=650_756,
         prev_txes=TX_API_TESTNET,
     )
     assert (
@@ -119,11 +120,11 @@ def test_send_segwit_p2sh(client):
     )
 
 
-def test_send_segwit_p2sh_change(client):
+def test_send_segwit_p2sh_change(client: Client):
     inp1 = messages.TxInputType(
         # 2N1LGaGg836mqSQqiuUBLfcyGBhyZYBtBZ7
-        address_n=parse_path("49'/1'/0'/1/0"),
-        amount=123456789,
+        address_n=parse_path("m/49h/1h/0h/1/0"),
+        amount=123_456_789,
         prev_hash=TXHASH_09a48b,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
@@ -131,20 +132,20 @@ def test_send_segwit_p2sh_change(client):
     )
     out1 = messages.TxOutputType(
         address="mvbu1Gdy8SUjTenqerxUaZyYjmvedc787y",
-        amount=12300000,
+        amount=12_300_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     out2 = messages.TxOutputType(
-        address_n=parse_path("49'/1'/0'/1/0"),
+        address_n=parse_path("m/49h/1h/0h/1/0"),
         script_type=messages.OutputScriptType.PAYTOP2SHWITNESS,
-        amount=123456789 - 11000 - 12300000,
+        amount=123_456_789 - 11_000 - 12_300_000,
     )
     _, serialized_tx = btc.sign_tx(
         client,
         "Groestlcoin Testnet",
         [inp1],
         [out1, out2],
-        lock_time=650756,
+        lock_time=650_756,
         prev_txes=TX_API_TESTNET,
     )
     assert (
@@ -153,10 +154,10 @@ def test_send_segwit_p2sh_change(client):
     )
 
 
-def test_send_segwit_native(client):
+def test_send_segwit_native(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("84'/1'/0'/0/0"),
-        amount=12300000,
+        address_n=parse_path("m/84h/1h/0h/0/0"),
+        amount=12_300_000,
         prev_hash=TXHASH_4f2f85,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDWITNESS,
@@ -164,20 +165,20 @@ def test_send_segwit_native(client):
     )
     out1 = messages.TxOutputType(
         address="2N4Q5FhU2497BryFfUgbqkAJE87aKDv3V3e",
-        amount=5000000,
+        amount=5_000_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     out2 = messages.TxOutputType(
         address="tgrs1qejqxwzfld7zr6mf7ygqy5s5se5xq7vmt9lkd57",
         script_type=messages.OutputScriptType.PAYTOADDRESS,
-        amount=12300000 - 11000 - 5000000,
+        amount=12_300_000 - 11_000 - 5_000_000,
     )
     _, serialized_tx = btc.sign_tx(
         client,
         "Groestlcoin Testnet",
         [inp1],
         [out1, out2],
-        lock_time=650713,
+        lock_time=650_713,
         prev_txes=TX_API_TESTNET,
     )
     assert (
@@ -186,10 +187,10 @@ def test_send_segwit_native(client):
     )
 
 
-def test_send_segwit_native_change(client):
+def test_send_segwit_native_change(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("84'/1'/0'/0/0"),
-        amount=12300000,
+        address_n=parse_path("m/84h/1h/0h/0/0"),
+        amount=12_300_000,
         prev_hash=TXHASH_4f2f85,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDWITNESS,
@@ -197,20 +198,20 @@ def test_send_segwit_native_change(client):
     )
     out1 = messages.TxOutputType(
         address="2N4Q5FhU2497BryFfUgbqkAJE87aKDv3V3e",
-        amount=5000000,
+        amount=5_000_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     out2 = messages.TxOutputType(
-        address_n=parse_path("84'/1'/0'/1/0"),
+        address_n=parse_path("m/84h/1h/0h/1/0"),
         script_type=messages.OutputScriptType.PAYTOWITNESS,
-        amount=12300000 - 11000 - 5000000,
+        amount=12_300_000 - 11_000 - 5_000_000,
     )
     _, serialized_tx = btc.sign_tx(
         client,
         "Groestlcoin Testnet",
         [inp1],
         [out1, out2],
-        lock_time=650713,
+        lock_time=650_713,
         prev_txes=TX_API_TESTNET,
     )
     assert (
@@ -219,11 +220,11 @@ def test_send_segwit_native_change(client):
     )
 
 
-def test_send_p2tr(client):
+def test_send_p2tr(client: Client):
     inp1 = messages.TxInputType(
         # tgrs1paxhjl357yzctuf3fe58fcdx6nul026hhh6kyldpfsf3tckj9a3wsvuqrgn
-        address_n=parse_path("86'/1'/1'/0/0"),
-        amount=4450,
+        address_n=parse_path("m/86h/1h/1h/0/0"),
+        amount=4_450,
         prev_hash=TXHASH_45aeb9,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDTAPROOT,
@@ -231,7 +232,7 @@ def test_send_p2tr(client):
     out1 = messages.TxOutputType(
         # 86'/1'/0'/0/0
         address="tgrs1pswrqtykue8r89t9u4rprjs0gt4qzkdfuursfnvqaa3f2yql07zmq5v2q7z",
-        amount=4300,
+        amount=4_300,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     _, serialized_tx = btc.sign_tx(

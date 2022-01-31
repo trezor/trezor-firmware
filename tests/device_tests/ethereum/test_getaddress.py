@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import ethereum
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
 from ...common import parametrize_using_common_fixtures
@@ -25,6 +26,6 @@ pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
 
 
 @parametrize_using_common_fixtures("ethereum/getaddress.json")
-def test_getaddress(client, parameters, result):
+def test_getaddress(client: Client, parameters, result):
     address_n = parse_path(parameters["path"])
     assert ethereum.get_address(client, address_n) == result["address"]

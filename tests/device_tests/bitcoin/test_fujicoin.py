@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
 TXHASH_33043a = bytes.fromhex(
@@ -26,11 +27,11 @@ TXHASH_33043a = bytes.fromhex(
 pytestmark = pytest.mark.altcoin
 
 
-def test_send_p2tr(client):
+def test_send_p2tr(client: Client):
     inp1 = messages.TxInputType(
         # fc1prr07akly3xjtmggue0p04vghr8pdcgxrye2s00sahptwjeawxrkq2rxzr7
-        address_n=parse_path("86'/75'/0'/0/1"),
-        amount=99997780000,
+        address_n=parse_path("m/86h/75h/0h/0/1"),
+        amount=99_997_780_000,
         prev_hash=TXHASH_33043a,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDTAPROOT,
@@ -38,7 +39,7 @@ def test_send_p2tr(client):
     out1 = messages.TxOutputType(
         # 86'/75'/0'/0/0
         address="fc1pxax0eaemn9fg2vfwvnz8wr2fjtr5e8junp50vx3yvx8aauv0hcvql824ml",
-        amount=99996670000,
+        amount=99_996_670_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     _, serialized_tx = btc.sign_tx(client, "Fujicoin", [inp1], [out1])

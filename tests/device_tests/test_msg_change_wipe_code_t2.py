@@ -18,6 +18,7 @@ import pytest
 
 from trezorlib import btc, device, messages
 from trezorlib.client import MAX_PIN_LENGTH, PASSPHRASE_TEST_PATH
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import Cancelled, TrezorFailure
 
 PIN4 = "1234"
@@ -28,7 +29,7 @@ WIPE_CODE_MAX = "".join(chr((i % 10) + ord("0")) for i in range(MAX_PIN_LENGTH))
 pytestmark = pytest.mark.skip_t1
 
 
-def _check_wipe_code(client, pin, wipe_code):
+def _check_wipe_code(client: Client, pin, wipe_code):
     client.init_device()
     assert client.features.wipe_code_protection is True
 
@@ -42,7 +43,7 @@ def _check_wipe_code(client, pin, wipe_code):
         device.change_pin(client)
 
 
-def _ensure_unlocked(client, pin):
+def _ensure_unlocked(client: Client, pin):
     with client:
         client.use_pin_sequence([pin])
         btc.get_address(client, "Testnet", PASSPHRASE_TEST_PATH)
@@ -51,7 +52,7 @@ def _ensure_unlocked(client, pin):
 
 
 @pytest.mark.setup_client(pin=PIN4)
-def test_set_remove_wipe_code(client):
+def test_set_remove_wipe_code(client: Client):
     # Test set wipe code.
     assert client.features.wipe_code_protection is None
 
@@ -93,7 +94,7 @@ def test_set_remove_wipe_code(client):
     assert client.features.wipe_code_protection is False
 
 
-def test_set_wipe_code_mismatch(client):
+def test_set_wipe_code_mismatch(client: Client):
     # Let's set a wipe code.
     def input_flow():
         yield  # do you want to set the wipe code?
@@ -121,7 +122,7 @@ def test_set_wipe_code_mismatch(client):
 
 
 @pytest.mark.setup_client(pin=PIN4)
-def test_set_wipe_code_to_pin(client):
+def test_set_wipe_code_to_pin(client: Client):
     _ensure_unlocked(client, PIN4)
 
     with client:
@@ -136,7 +137,7 @@ def test_set_wipe_code_to_pin(client):
     _check_wipe_code(client, PIN4, WIPE_CODE4)
 
 
-def test_set_pin_to_wipe_code(client):
+def test_set_pin_to_wipe_code(client: Client):
     # Set wipe code.
     with client:
         client.set_expected_responses(

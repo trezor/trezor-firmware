@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import device, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 
 from ...common import MNEMONIC_SLIP39_ADVANCED_20, recovery_enter_shares
@@ -37,7 +38,7 @@ EXTRA_GROUP_SHARE = [
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_ADVANCED_20, passphrase=False)
-def test_2of3_dryrun(client):
+def test_2of3_dryrun(client: Client):
     debug = client.debug
 
     def input_flow():
@@ -66,7 +67,7 @@ def test_2of3_dryrun(client):
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_ADVANCED_20)
-def test_2of3_invalid_seed_dryrun(client):
+def test_2of3_invalid_seed_dryrun(client: Client):
     debug = client.debug
 
     def input_flow():

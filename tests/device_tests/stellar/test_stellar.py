@@ -55,6 +55,7 @@ from base64 import b64encode
 import pytest
 
 from trezorlib import messages, protobuf, stellar
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
 from ...common import parametrize_using_common_fixtures
@@ -82,7 +83,7 @@ def parameters_to_proto(parameters):
 @pytest.mark.altcoin
 @pytest.mark.stellar
 @parametrize_using_common_fixtures("stellar/sign_tx.json")
-def test_sign_tx(client, parameters, result):
+def test_sign_tx(client: Client, parameters, result):
     tx, operations = parameters_to_proto(parameters)
     response = stellar.sign_tx(
         client, tx, operations, tx.address_n, tx.network_passphrase
@@ -112,7 +113,7 @@ def test_xdr(parameters, result):
 @pytest.mark.altcoin
 @pytest.mark.stellar
 @parametrize_using_common_fixtures("stellar/get_address.json")
-def test_get_address(client, parameters, result):
+def test_get_address(client: Client, parameters, result):
     address_n = parse_path(parameters["path"])
     address = stellar.get_address(client, address_n, show_display=True)
     assert address == result["address"]

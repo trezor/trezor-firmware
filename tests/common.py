@@ -245,9 +245,7 @@ def get_test_address(client: "Client") -> str:
     return btc.get_address(client, "Testnet", TEST_ADDRESS_N)
 
 
-def assert_tx_matches(
-    serialized_tx: bytes, hash_link: str, tx_hex: str = None
-) -> None:
+def assert_tx_matches(serialized_tx: bytes, hash_link: str, tx_hex: str = None) -> None:
     """Verifies if a transaction is correctly formed."""
     hash_str = hash_link.split("/")[-1]
     assert tools.tx_hash(serialized_tx).hex() == hash_str

@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
 from ...tx_cache import TxCache
@@ -37,23 +38,23 @@ VECTORS = (  # amount_unit
 
 
 @pytest.mark.parametrize("amount_unit", VECTORS)
-def test_signtx(client, amount_unit):
+def test_signtx(client: Client, amount_unit):
     inp1 = messages.TxInputType(
-        address_n=parse_path("84'/1'/0'/0/0"),
-        amount=12300000,
+        address_n=parse_path("m/84h/1h/0h/0/0"),
+        amount=12_300_000,
         prev_hash=TXHASH_091446,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
     out1 = messages.TxOutputType(
         address="2N4Q5FhU2497BryFfUgbqkAJE87aKHUhXMp",
-        amount=5000000,
+        amount=5_000_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     out2 = messages.TxOutputType(
         address="tb1q694ccp5qcc0udmfwgp692u2s2hjpq5h407urtu",
         script_type=messages.OutputScriptType.PAYTOADDRESS,
-        amount=12300000 - 11000 - 5000000,
+        amount=12_300_000 - 11_000 - 5_000_000,
     )
     with client:
         _, serialized_tx = btc.sign_tx(

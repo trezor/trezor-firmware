@@ -19,17 +19,18 @@ from hashlib import sha256
 import pytest
 
 from trezorlib import cosi
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
 pytestmark = pytest.mark.skip_t2
 
 
-def test_cosi_commit(client):
+def test_cosi_commit(client: Client):
     digest = sha256(b"this is a message").digest()
 
-    c0 = cosi.commit(client, parse_path("10018'/0'"), digest)
-    c1 = cosi.commit(client, parse_path("10018'/1'"), digest)
-    c2 = cosi.commit(client, parse_path("10018'/2'"), digest)
+    c0 = cosi.commit(client, parse_path("m/10018h/0h"), digest)
+    c1 = cosi.commit(client, parse_path("m/10018h/1h"), digest)
+    c2 = cosi.commit(client, parse_path("m/10018h/2h"), digest)
 
     assert c0.pubkey != c1.pubkey
     assert c0.pubkey != c2.pubkey
@@ -41,9 +42,9 @@ def test_cosi_commit(client):
 
     digestb = sha256(b"this is a different message").digest()
 
-    c0b = cosi.commit(client, parse_path("10018'/0'"), digestb)
-    c1b = cosi.commit(client, parse_path("10018'/1'"), digestb)
-    c2b = cosi.commit(client, parse_path("10018'/2'"), digestb)
+    c0b = cosi.commit(client, parse_path("m/10018h/0h"), digestb)
+    c1b = cosi.commit(client, parse_path("m/10018h/1h"), digestb)
+    c2b = cosi.commit(client, parse_path("m/10018h/2h"), digestb)
 
     assert c0.pubkey == c0b.pubkey
     assert c1.pubkey == c1b.pubkey
@@ -54,20 +55,20 @@ def test_cosi_commit(client):
     assert c2.commitment != c2b.commitment
 
 
-def test_cosi_sign(client):
+def test_cosi_sign(client: Client):
     digest = sha256(b"this is a message").digest()
 
-    c0 = cosi.commit(client, parse_path("10018'/0'"), digest)
-    c1 = cosi.commit(client, parse_path("10018'/1'"), digest)
-    c2 = cosi.commit(client, parse_path("10018'/2'"), digest)
+    c0 = cosi.commit(client, parse_path("m/10018h/0h"), digest)
+    c1 = cosi.commit(client, parse_path("m/10018h/1h"), digest)
+    c2 = cosi.commit(client, parse_path("m/10018h/2h"), digest)
 
     global_pk = cosi.combine_keys([c0.pubkey, c1.pubkey, c2.pubkey])
     global_R = cosi.combine_keys([c0.commitment, c1.commitment, c2.commitment])
 
     # fmt: off
-    sig0 = cosi.sign(client, parse_path("10018'/0'"), digest, global_R, global_pk)
-    sig1 = cosi.sign(client, parse_path("10018'/1'"), digest, global_R, global_pk)
-    sig2 = cosi.sign(client, parse_path("10018'/2'"), digest, global_R, global_pk)
+    sig0 = cosi.sign(client, parse_path("m/10018h/0h"), digest, global_R, global_pk)
+    sig1 = cosi.sign(client, parse_path("m/10018h/1h"), digest, global_R, global_pk)
+    sig2 = cosi.sign(client, parse_path("m/10018h/2h"), digest, global_R, global_pk)
     # fmt: on
 
     sig = cosi.combine_sig(global_R, [sig0.signature, sig1.signature, sig2.signature])
@@ -75,9 +76,9 @@ def test_cosi_sign(client):
     cosi.verify_combined(sig, digest, global_pk)
 
 
-def test_cosi_compat(client):
+def test_cosi_compat(client: Client):
     digest = sha256(b"this is not a pipe").digest()
-    remote_commit = cosi.commit(client, parse_path("10018'/0'"), digest)
+    remote_commit = cosi.commit(client, parse_path("m/10018h/0h"), digest)
 
     local_privkey = sha256(b"private key").digest()[:32]
     local_pubkey = cosi.pubkey_from_privkey(local_privkey)
@@ -86,7 +87,9 @@ def test_cosi_compat(client):
     global_pk = cosi.combine_keys([remote_commit.pubkey, local_pubkey])
     global_R = cosi.combine_keys([remote_commit.commitment, local_commitment])
 
-    remote_sig = cosi.sign(client, parse_path("10018'/0'"), digest, global_R, global_pk)
+    remote_sig = cosi.sign(
+        client, parse_path("m/10018h/0h"), digest, global_R, global_pk
+    )
     local_sig = cosi.sign_with_privkey(
         digest, local_privkey, global_pk, local_nonce, global_R
     )

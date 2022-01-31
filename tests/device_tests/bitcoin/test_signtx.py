@@ -19,6 +19,7 @@ from datetime import datetime, timezone
 import pytest
 
 from trezorlib import btc, device, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import H_, parse_path, tx_hash
 
@@ -81,11 +82,11 @@ TXHASH_1f326f = bytes.fromhex(
 )
 
 
-def test_one_one_fee(client):
+def test_one_one_fee(client: Client):
     # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("44h/0h/5h/0/9"),  # 1H2CRJBrDMhkvCGZMW7T4oQwYbL8eVuh7p
+        address_n=parse_path("m/44h/0h/5h/0/9"),  # 1H2CRJBrDMhkvCGZMW7T4oQwYbL8eVuh7p
         amount=63_988,
         prev_hash=TXHASH_0dac36,
         prev_index=0,
@@ -127,11 +128,11 @@ def test_one_one_fee(client):
     )
 
 
-def test_testnet_one_two_fee(client):
+def test_testnet_one_two_fee(client: Client):
     # input tx: e5040e1bc1ae7667ffb9e5248e90b2fb93cd9150234151ce90e14ab2f5933bcd
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("44h/1h/0h/0/0"),  # mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q
+        address_n=parse_path("m/44h/1h/0h/0/0"),  # mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q
         amount=31_000_000,
         prev_hash=TXHASH_e5040e,
         prev_index=0,
@@ -144,7 +145,7 @@ def test_testnet_one_two_fee(client):
     )
 
     out2 = messages.TxOutputType(
-        address_n=parse_path("44h/1h/0h/1/0"),  # mm6kLYbGEL1tGe4ZA8xacfgRPdW1NLjCbZ
+        address_n=parse_path("m/44h/1h/0h/1/0"),  # mm6kLYbGEL1tGe4ZA8xacfgRPdW1NLjCbZ
         amount=900_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
@@ -181,19 +182,19 @@ def test_testnet_one_two_fee(client):
     )
 
 
-def test_testnet_fee_high_warning(client):
+def test_testnet_fee_high_warning(client: Client):
     # input tx: 25fee583181847cbe9d9fd9a483a8b8626c99854a72d01de848ef40508d0f3bc
     # (The "25fee" tx hash is very suitable for testing high fees)
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("44h/1h/0h/0/7"),  # mgV9Z3YuSbxGb2b2Y1T6VCqtU2osui7vhG
+        address_n=parse_path("m/44h/1h/0h/0/7"),  # mgV9Z3YuSbxGb2b2Y1T6VCqtU2osui7vhG
         amount=129_999_808,
         prev_hash=TXHASH_25fee5,
         prev_index=0,
     )
 
     out1 = messages.TxOutputType(
-        address="mnY26FLTzfC94mDoUcyDJh1GVE3LuAUMbs",  # "44h/1h/0h/0/6"
+        address="mnY26FLTzfC94mDoUcyDJh1GVE3LuAUMbs",  # "m/44h/1h/0h/0/6"
         amount=129_999_808 - 2_500_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
@@ -227,18 +228,18 @@ def test_testnet_fee_high_warning(client):
     )
 
 
-def test_one_two_fee(client):
+def test_one_two_fee(client: Client):
     # input tx: 50f6f1209ca92d7359564be803cb2c932cde7d370f7cee50fd1fad6790f6206d
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("44h/0h/0h/0/5"),  # 1GA9u9TfCG7SWmKCveBumdA1TZpfom6ZdJ
+        address_n=parse_path("m/44h/0h/0h/0/5"),  # 1GA9u9TfCG7SWmKCveBumdA1TZpfom6ZdJ
         amount=50_000,
         prev_hash=TXHASH_50f6f1,
         prev_index=1,
     )
 
     out1 = messages.TxOutputType(
-        address_n=parse_path("44h/0h/0h/1/3"),  # 1EcL6AyfQTyWKGvXwNSfsWoYnD3whzVFdu
+        address_n=parse_path("m/44h/0h/0h/1/3"),  # 1EcL6AyfQTyWKGvXwNSfsWoYnD3whzVFdu
         amount=30_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
@@ -281,30 +282,30 @@ def test_one_two_fee(client):
     )
 
 
-def test_one_three_fee(client):
+def test_one_three_fee(client: Client):
     # input tx: bb5169091f09e833e155b291b662019df56870effe388c626221c5ea84274bc4
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("44h/1h/1h/0/21"),  # mvukVu96xM1QJ971w4Z5cdX4tsJwDyQy2L
+        address_n=parse_path("m/44h/1h/1h/0/21"),  # mvukVu96xM1QJ971w4Z5cdX4tsJwDyQy2L
         amount=1_183_825,
         prev_hash=TXHASH_bb5169,
         prev_index=0,
     )
 
     out1 = messages.TxOutputType(
-        address="mgCyjvJaTgVwKoxEaFaDLeFQpZc7qdKXpZ",  # 44h/1h/1h/0/20
+        address="mgCyjvJaTgVwKoxEaFaDLeFQpZc7qdKXpZ",  # m/44h/1h/1h/0/20
         amount=100_100,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     out2 = messages.TxOutputType(
-        address="n4qJziM7S8ydGbXKKRJADHuSeAjbx5c1Dp",  # 44h/1h/1h/0/22
+        address="n4qJziM7S8ydGbXKKRJADHuSeAjbx5c1Dp",  # m/44h/1h/1h/0/22
         amount=100_100,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     out3 = messages.TxOutputType(
-        address_n=parse_path("44h/1h/1h/1/21"),  # n1CFre3Ai975UiWJrjZnFxTVrPkxCVkm8U
+        address_n=parse_path("m/44h/1h/1h/1/21"),  # n1CFre3Ai975UiWJrjZnFxTVrPkxCVkm8U
         amount=1_183_825 - 100_100 - 100_100 - 10_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
@@ -348,31 +349,31 @@ def test_one_three_fee(client):
     )
 
 
-def test_two_two(client):
+def test_two_two(client: Client):
     # input tx: ac4ca0e7827a1228f44449cb57b4b9a809a667ca044dc43bb124627fed4bc10a
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("44h/0h/0h/0/55"),  # 14nw9rFTWGUncHZjSqpPSJQaptWW7iRRB8
+        address_n=parse_path("m/44h/0h/0h/0/55"),  # 14nw9rFTWGUncHZjSqpPSJQaptWW7iRRB8
         amount=10_000,
         prev_hash=TXHASH_ac4ca0,
         prev_index=1,
     )
 
     inp2 = messages.TxInputType(
-        address_n=parse_path("44h/0h/0h/1/7"),  # 16hgR6bjr99X6NhrsWuDR6NLpCLEacUNk
+        address_n=parse_path("m/44h/0h/0h/1/7"),  # 16hgR6bjr99X6NhrsWuDR6NLpCLEacUNk
         amount=83_130,
         prev_hash=TXHASH_ac4ca0,
         prev_index=0,
     )
 
     out1 = messages.TxOutputType(
-        address_n=parse_path("44h/0h/0h/1/8"),  # 1CJzc38F82zBUnMKWxeUqMepkPRmo2BGHt
+        address_n=parse_path("m/44h/0h/0h/1/8"),  # 1CJzc38F82zBUnMKWxeUqMepkPRmo2BGHt
         amount=71_790,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     out2 = messages.TxOutputType(
-        address="1ByqmhXkC6U5GuUNnAhJsuEVjHt5GhEuJL",  # 44h/0h/1h/0/17
+        address="1ByqmhXkC6U5GuUNnAhJsuEVjHt5GhEuJL",  # m/44h/0h/1h/0/17
         amount=10_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
@@ -425,7 +426,7 @@ def test_two_two(client):
 
 
 @pytest.mark.slow
-def test_lots_of_inputs(client):
+def test_lots_of_inputs(client: Client):
     # Tests if device implements serialization of len(inputs) correctly
 
     # input tx: 3019487f064329247daad245aed7a75349d09c14b1d24f170947690e030f5b20
@@ -434,14 +435,14 @@ def test_lots_of_inputs(client):
     for i in range(100):
         inputs.append(
             messages.TxInputType(
-                address_n=parse_path(f"44h/1h/1h/0/{i}"),
+                address_n=parse_path(f"m/44h/1h/1h/0/{i}"),
                 amount=14_598,
                 prev_hash=TXHASH_301948,
                 prev_index=i,
             )
         )
     out = messages.TxOutputType(
-        address="mnY26FLTzfC94mDoUcyDJh1GVE3LuAUMbs",  # "44h/1h/0h/0/6"
+        address="mnY26FLTzfC94mDoUcyDJh1GVE3LuAUMbs",  # "m/44h/1h/0h/0/6"
         amount=100 * 14_598 - 60_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
@@ -456,13 +457,13 @@ def test_lots_of_inputs(client):
 
 
 @pytest.mark.slow
-def test_lots_of_outputs(client):
+def test_lots_of_outputs(client: Client):
     # Tests if device implements serialization of len(outputs) correctly
 
     # input tx: 58d56a5d1325cf83543ee4c87fd73a784e4ba1499ced574be359fa2bdcb9ac8e
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("44h/1h/0h/0/0"),  # mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q
+        address_n=parse_path("m/44h/1h/0h/0/0"),  # mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q
         amount=1_827_955,
         prev_hash=TXHASH_58d56a,
         prev_index=1,
@@ -472,7 +473,7 @@ def test_lots_of_outputs(client):
     cnt = 255
     for _ in range(cnt):
         out = messages.TxOutputType(
-            address="momtnzR3XqXgDSsFmd8gkGxUiHZLde3RmA",  # "44h/1h/0h/0/3"
+            address="momtnzR3XqXgDSsFmd8gkGxUiHZLde3RmA",  # "m/44h/1h/0h/0/3"
             amount=(1_827_955 - 10_000) // cnt,
             script_type=messages.OutputScriptType.PAYTOADDRESS,
         )
@@ -489,13 +490,13 @@ def test_lots_of_outputs(client):
 
 
 @pytest.mark.slow
-def test_lots_of_change(client):
+def test_lots_of_change(client: Client):
     # Tests if device implements prompting for multiple change addresses correctly
 
     # input tx: 892d06cb3394b8e6006eec9a2aa90692b718a29be6844b6c6a9e89ec3aa6aac4
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("44h/1h/0h/0/6"),  # mnY26FLTzfC94mDoUcyDJh1GVE3LuAUMbs
+        address_n=parse_path("m/44h/1h/0h/0/6"),  # mnY26FLTzfC94mDoUcyDJh1GVE3LuAUMbs
         amount=1_553_800,
         prev_hash=TXHASH_892d06,
         prev_index=0,
@@ -503,7 +504,7 @@ def test_lots_of_change(client):
 
     outputs = [
         messages.TxOutputType(
-            address="mgV9Z3YuSbxGb2b2Y1T6VCqtU2osui7vhG",  # "44h/1h/0h/0/7"
+            address="mgV9Z3YuSbxGb2b2Y1T6VCqtU2osui7vhG",  # "m/44h/1h/0h/0/7"
             amount=500_000,
             script_type=messages.OutputScriptType.PAYTOADDRESS,
         )
@@ -512,7 +513,7 @@ def test_lots_of_change(client):
     cnt = 20
     for i in range(cnt):
         out = messages.TxOutputType(
-            address_n=parse_path(f"44h/1h/0h/1/{i}"),
+            address_n=parse_path(f"m/44h/1h/0h/1/{i}"),
             amount=(1_553_800 - 500_000 - 29_000) // cnt,
             script_type=messages.OutputScriptType.PAYTOADDRESS,
         )
@@ -554,18 +555,18 @@ def test_lots_of_change(client):
     )
 
 
-def test_fee_high_warning(client):
+def test_fee_high_warning(client: Client):
     # input tx: 1f326f65768d55ef146efbb345bd87abe84ac7185726d0457a026fc347a26ef3
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("44h/0h/0h/0/10"),  # 1JL3nCw76rhwK6EguU6uhe7GCa7Mq88kXg
+        address_n=parse_path("m/44h/0h/0h/0/10"),  # 1JL3nCw76rhwK6EguU6uhe7GCa7Mq88kXg
         amount=3_801_747,
         prev_hash=TXHASH_1f326f,
         prev_index=0,
     )
 
     out1 = messages.TxOutputType(
-        address="1DXKPgQU6ACQiww48chz7iPJhoV5L5bjRC",  # 44h/0h/0h/0/11
+        address="1DXKPgQU6ACQiww48chz7iPJhoV5L5bjRC",  # m/44h/0h/0h/0/11
         amount=3_801_747 - 510_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
@@ -601,19 +602,19 @@ def test_fee_high_warning(client):
 
 
 @pytest.mark.skip_t1
-def test_fee_high_hardfail(client):
+def test_fee_high_hardfail(client: Client):
     # input tx: 25fee583181847cbe9d9fd9a483a8b8626c99854a72d01de848ef40508d0f3bc
     # (The "25fee" tx hash is very suitable for testing high fees)
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("44h/1h/0h/0/7"),  # mgV9Z3YuSbxGb2b2Y1T6VCqtU2osui7vhG
+        address_n=parse_path("m/44h/1h/0h/0/7"),  # mgV9Z3YuSbxGb2b2Y1T6VCqtU2osui7vhG
         amount=129_999_808,
         prev_hash=TXHASH_25fee5,
         prev_index=0,
     )
 
     out1 = messages.TxOutputType(
-        address="mnY26FLTzfC94mDoUcyDJh1GVE3LuAUMbs",  # "44h/1h/0h/0/6"
+        address="mnY26FLTzfC94mDoUcyDJh1GVE3LuAUMbs",  # "m/44h/1h/0h/0/6"
         amount=129_999_808 - 25_000_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
@@ -650,11 +651,11 @@ def test_fee_high_hardfail(client):
     )
 
 
-def test_not_enough_funds(client):
+def test_not_enough_funds(client: Client):
     # input tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("44h/0h/0h/0/0"),  # 1JAd7XCBzGudGpJQSDSfpmJhiygtLQWaGL
+        address_n=parse_path("m/44h/0h/0h/0/0"),  # 1JAd7XCBzGudGpJQSDSfpmJhiygtLQWaGL
         amount=390_000,
         prev_hash=TXHASH_d5f65e,
         prev_index=0,
@@ -679,11 +680,11 @@ def test_not_enough_funds(client):
             btc.sign_tx(client, "Bitcoin", [inp1], [out1], prev_txes=TX_CACHE_MAINNET)
 
 
-def test_p2sh(client):
+def test_p2sh(client: Client):
     # input tx: 58d56a5d1325cf83543ee4c87fd73a784e4ba1499ced574be359fa2bdcb9ac8e
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("44h/1h/0h/0/2"),  # mgswWyysmViMqYmn5XEj1pVz7rVUftVEBP
+        address_n=parse_path("m/44h/1h/0h/0/2"),  # mgswWyysmViMqYmn5XEj1pVz7rVUftVEBP
         amount=50_000,
         prev_hash=TXHASH_58d56a,
         prev_index=0,
@@ -724,13 +725,13 @@ def test_p2sh(client):
     )
 
 
-def test_testnet_big_amount(client):
+def test_testnet_big_amount(client: Client):
     # This test is testing transaction with amount bigger than fits to uint32
 
     # input tx: 074b0070939db4c2635c1bef0c8e68412ccc8d3c8782137547c7a2bbde073fc0
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("44h/1h/0h/0/6"),  # mnY26FLTzfC94mDoUcyDJh1GVE3LuAUMbs
+        address_n=parse_path("m/44h/1h/0h/0/6"),  # mnY26FLTzfC94mDoUcyDJh1GVE3LuAUMbs
         amount=4_500_000_000,
         prev_hash=TXHASH_074b00,
         prev_index=1,
@@ -751,31 +752,31 @@ def test_testnet_big_amount(client):
     )
 
 
-def test_attack_change_outputs(client):
+def test_attack_change_outputs(client: Client):
     # input tx: ac4ca0e7827a1228f44449cb57b4b9a809a667ca044dc43bb124627fed4bc10a
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("44h/0h/0h/0/55"),  # 14nw9rFTWGUncHZjSqpPSJQaptWW7iRRB8
+        address_n=parse_path("m/44h/0h/0h/0/55"),  # 14nw9rFTWGUncHZjSqpPSJQaptWW7iRRB8
         amount=10_000,
         prev_hash=TXHASH_ac4ca0,
         prev_index=1,
     )
 
     inp2 = messages.TxInputType(
-        address_n=parse_path("44h/0h/0h/1/7"),  # 16hgR6bjr99X6NhrsWuDR6NLpCLEacUNk
+        address_n=parse_path("m/44h/0h/0h/1/7"),  # 16hgR6bjr99X6NhrsWuDR6NLpCLEacUNk
         amount=83_130,
         prev_hash=TXHASH_ac4ca0,
         prev_index=0,
     )
 
     out1 = messages.TxOutputType(
-        address_n=parse_path("44h/0h/0h/1/8"),  # 1CJzc38F82zBUnMKWxeUqMepkPRmo2BGHt
+        address_n=parse_path("m/44h/0h/0h/1/8"),  # 1CJzc38F82zBUnMKWxeUqMepkPRmo2BGHt
         amount=71_790,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     out2 = messages.TxOutputType(
-        address="1ByqmhXkC6U5GuUNnAhJsuEVjHt5GhEuJL",  # 44h/0h/1h/0/17
+        address="1ByqmhXkC6U5GuUNnAhJsuEVjHt5GhEuJL",  # m/44h/0h/1h/0/17
         amount=10_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
@@ -851,7 +852,7 @@ def test_attack_change_outputs(client):
         )
 
 
-def test_attack_modify_change_address(client):
+def test_attack_modify_change_address(client: Client):
     # Ensure that if the change output is modified after the user confirms the
     # transaction, then signing fails.
 
@@ -859,7 +860,7 @@ def test_attack_modify_change_address(client):
     # output tx 87be0736f202f7c2bff0781b42bad3e0cdcb54761939da69ea793a3735552c56
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("44h/1h/0h/0/0"),  # mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q
+        address_n=parse_path("m/44h/1h/0h/0/0"),  # mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q
         amount=31_000_000,
         prev_hash=TXHASH_e5040e,
         prev_index=0,
@@ -872,7 +873,7 @@ def test_attack_modify_change_address(client):
     )
 
     out2 = messages.TxOutputType(
-        address_n=parse_path("44h/1h/0h/1/0"),  # mm6kLYbGEL1tGe4ZA8xacfgRPdW1NLjCbZ
+        address_n=parse_path("m/44h/1h/0h/1/0"),  # mm6kLYbGEL1tGe4ZA8xacfgRPdW1NLjCbZ
         amount=900_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
@@ -900,11 +901,11 @@ def test_attack_modify_change_address(client):
         btc.sign_tx(client, "Testnet", [inp1], [out1, out2], prev_txes=TX_CACHE_TESTNET)
 
 
-def test_attack_change_input_address(client):
+def test_attack_change_input_address(client: Client):
     # input tx: d2dcdaf547ea7f57a713c607f15e883ddc4a98167ee2c43ed953c53cb5153e24
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("44h/1h/4h/0/0"),  # moUJnmge8SRXuediK7bW6t4YfrPqbE6hD7
+        address_n=parse_path("m/44h/1h/4h/0/0"),  # moUJnmge8SRXuediK7bW6t4YfrPqbE6hD7
         prev_hash=TXHASH_d2dcda,
         amount=123_400_000,
         prev_index=1,
@@ -912,13 +913,13 @@ def test_attack_change_input_address(client):
     )
 
     out1 = messages.TxOutputType(
-        address="mwue7mokpBRAsJtHqEMcRPanYBmsSmYKvY",  # 44h/1h/4h/0/2
+        address="mwue7mokpBRAsJtHqEMcRPanYBmsSmYKvY",  # m/44h/1h/4h/0/2
         amount=100_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     out2 = messages.TxOutputType(
-        address_n=parse_path("44h/1h/4h/1/0"),  # n48agDCKBPbMLu1FYSKEpFJLradG3wgdY9
+        address_n=parse_path("m/44h/1h/4h/1/0"),  # n48agDCKBPbMLu1FYSKEpFJLradG3wgdY9
         amount=123_400_000 - 5_000 - 100_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
@@ -979,9 +980,9 @@ def test_attack_change_input_address(client):
         assert exc.value.message.endswith("Transaction has changed during signing")
 
 
-def test_spend_coinbase(client):
+def test_spend_coinbase(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("44h/1h/0h/0/0"),  # mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q
+        address_n=parse_path("m/44h/1h/0h/0/0"),  # mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q
         amount=2_500_278_230,
         prev_hash=TXHASH_d6da21,
         prev_index=0,
@@ -1021,12 +1022,12 @@ def test_spend_coinbase(client):
     )
 
 
-def test_two_changes(client):
+def test_two_changes(client: Client):
     # input tx: e5040e1bc1ae7667ffb9e5248e90b2fb93cd9150234151ce90e14ab2f5933bcd
     # see 87be0736f202f7c2bff0781b42bad3e0cdcb54761939da69ea793a3735552c56
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("44h/1h/0h/0/0"),  # mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q
+        address_n=parse_path("m/44h/1h/0h/0/0"),  # mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q
         amount=31_000_000,
         prev_hash=TXHASH_e5040e,
         prev_index=0,
@@ -1039,13 +1040,13 @@ def test_two_changes(client):
     )
 
     out_change1 = messages.TxOutputType(
-        address_n=parse_path("44h/1h/0h/1/0"),  # mm6kLYbGEL1tGe4ZA8xacfgRPdW1NLjCbZ
+        address_n=parse_path("m/44h/1h/0h/1/0"),  # mm6kLYbGEL1tGe4ZA8xacfgRPdW1NLjCbZ
         amount=900_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     out_change2 = messages.TxOutputType(
-        address_n=parse_path("44h/1h/0h/1/1"),  # mjXZwmEi1z1MzveZrKUAo4DBgbdq4sBYT6
+        address_n=parse_path("m/44h/1h/0h/1/1"),  # mjXZwmEi1z1MzveZrKUAo4DBgbdq4sBYT6
         amount=10_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
@@ -1084,12 +1085,12 @@ def test_two_changes(client):
         )
 
 
-def test_change_on_main_chain_allowed(client):
+def test_change_on_main_chain_allowed(client: Client):
     # input tx: e5040e1bc1ae7667ffb9e5248e90b2fb93cd9150234151ce90e14ab2f5933bcd
     # see 87be0736f202f7c2bff0781b42bad3e0cdcb54761939da69ea793a3735552c56
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("44h/1h/0h/0/0"),  # mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q
+        address_n=parse_path("m/44h/1h/0h/0/0"),  # mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q
         amount=31_000_000,
         prev_hash=TXHASH_e5040e,
         prev_index=0,
@@ -1103,7 +1104,7 @@ def test_change_on_main_chain_allowed(client):
 
     # change on main chain is allowed => treated as a change
     out_change = messages.TxOutputType(
-        address_n=parse_path("44h/1h/0h/0/0"),  # mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q
+        address_n=parse_path("m/44h/1h/0h/0/0"),  # mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q
         amount=900_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
@@ -1139,7 +1140,7 @@ def test_change_on_main_chain_allowed(client):
         )
 
 
-def test_not_enough_vouts(client):
+def test_not_enough_vouts(client: Client):
     # input tx: ac4ca0e7827a1228f44449cb57b4b9a809a667ca044dc43bb124627fed4bc10a
 
     prev_tx = TX_CACHE_MAINNET[TXHASH_ac4ca0]
@@ -1149,20 +1150,20 @@ def test_not_enough_vouts(client):
 
     # vout[0] and vout[1] exist
     inp0 = messages.TxInputType(
-        address_n=parse_path("44h/0h/0h/0/55"),  # 14nw9rFTWGUncHZjSqpPSJQaptWW7iRRB8
+        address_n=parse_path("m/44h/0h/0h/0/55"),  # 14nw9rFTWGUncHZjSqpPSJQaptWW7iRRB8
         amount=10_000,
         prev_hash=TXHASH_ac4ca0,
         prev_index=1,
     )
     inp1 = messages.TxInputType(
-        address_n=parse_path("44h/0h/0h/1/7"),  # 16hgR6bjr99X6NhrsWuDR6NLpCLEacUNk
+        address_n=parse_path("m/44h/0h/0h/1/7"),  # 16hgR6bjr99X6NhrsWuDR6NLpCLEacUNk
         amount=83_130,
         prev_hash=TXHASH_ac4ca0,
         prev_index=0,
     )
     # vout[2] does not exist
     inp2 = messages.TxInputType(
-        address_n=parse_path("44h/0h/0h/1/0"),  # 1DyHzbQUoQEsLxJn6M7fMD8Xdt1XvNiwNE
+        address_n=parse_path("m/44h/0h/0h/1/0"),  # 1DyHzbQUoQEsLxJn6M7fMD8Xdt1XvNiwNE
         prev_hash=TXHASH_ac4ca0,
         amount=100_000_000,
         prev_index=2,
@@ -1197,9 +1198,9 @@ def test_not_enough_vouts(client):
         ("branch_id", 13),
     ),
 )
-def test_prevtx_forbidden_fields(client, field, value):
+def test_prevtx_forbidden_fields(client: Client, field, value):
     inp0 = messages.TxInputType(
-        address_n=parse_path("44h/0h/0h/0/0"),  # 1JAd7XCBzGudGpJQSDSfpmJhiygtLQWaGL
+        address_n=parse_path("m/44h/0h/0h/0/0"),  # 1JAd7XCBzGudGpJQSDSfpmJhiygtLQWaGL
         prev_hash=TXHASH_157041,
         amount=100_000_000,
         prev_index=0,
@@ -1223,9 +1224,9 @@ def test_prevtx_forbidden_fields(client, field, value):
     "field, value",
     (("expiry", 9), ("timestamp", 42), ("version_group_id", 69), ("branch_id", 13)),
 )
-def test_signtx_forbidden_fields(client, field, value):
+def test_signtx_forbidden_fields(client: Client, field, value):
     inp0 = messages.TxInputType(
-        address_n=parse_path("44h/0h/0h/0/0"),  # 1JAd7XCBzGudGpJQSDSfpmJhiygtLQWaGL
+        address_n=parse_path("m/44h/0h/0h/0/0"),  # 1JAd7XCBzGudGpJQSDSfpmJhiygtLQWaGL
         prev_hash=TXHASH_157041,
         amount=100_000_000,
         prev_index=0,
@@ -1248,8 +1249,8 @@ def test_signtx_forbidden_fields(client, field, value):
     "script_type",
     (messages.InputScriptType.SPENDADDRESS, messages.InputScriptType.EXTERNAL),
 )
-def test_incorrect_input_script_type(client, script_type):
-    address_n = parse_path("44h/1h/0h/0/0")  # mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q
+def test_incorrect_input_script_type(client: Client, script_type):
+    address_n = parse_path("m/44h/1h/0h/0/0")  # mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q
     attacker_multisig_public_key = bytes.fromhex(
         "030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0"
     )
@@ -1302,8 +1303,8 @@ def test_incorrect_input_script_type(client, script_type):
         messages.OutputScriptType.PAYTOSCRIPTHASH,
     ),
 )
-def test_incorrect_output_script_type(client, script_type):
-    address_n = parse_path("44h/1h/0h/0/0")  # mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q
+def test_incorrect_output_script_type(client: Client, script_type):
+    address_n = parse_path("m/44h/1h/0h/0/0")  # mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q
     attacker_multisig_public_key = bytes.fromhex(
         "030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0"
     )
@@ -1352,11 +1353,11 @@ def test_incorrect_output_script_type(client, script_type):
     "lock_time, sequence",
     ((499_999_999, 0xFFFFFFFE), (500_000_000, 0xFFFFFFFE), (1, 0xFFFFFFFF)),
 )
-def test_lock_time(client, lock_time, sequence):
+def test_lock_time(client: Client, lock_time, sequence):
     # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("44h/0h/5h/0/9"),  # 1H2CRJBrDMhkvCGZMW7T4oQwYbL8eVuh7p
+        address_n=parse_path("m/44h/0h/5h/0/9"),  # 1H2CRJBrDMhkvCGZMW7T4oQwYbL8eVuh7p
         amount=63_988,
         prev_hash=TXHASH_0dac36,
         prev_index=0,
@@ -1400,11 +1401,11 @@ def test_lock_time(client, lock_time, sequence):
 
 
 @pytest.mark.skip_t1(reason="Cannot test layouts on T1")
-def test_lock_time_blockheight(client):
+def test_lock_time_blockheight(client: Client):
     # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("44h/0h/5h/0/9"),  # 1H2CRJBrDMhkvCGZMW7T4oQwYbL8eVuh7p
+        address_n=parse_path("m/44h/0h/5h/0/9"),  # 1H2CRJBrDMhkvCGZMW7T4oQwYbL8eVuh7p
         amount=63_988,
         prev_hash=TXHASH_0dac36,
         prev_index=0,
@@ -1449,11 +1450,11 @@ def test_lock_time_blockheight(client):
 @pytest.mark.parametrize(
     "lock_time_str", ("1985-11-05 00:53:20", "2048-08-16 22:14:00")
 )
-def test_lock_time_datetime(client, lock_time_str):
+def test_lock_time_datetime(client: Client, lock_time_str):
     # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("44h/0h/5h/0/9"),  # 1H2CRJBrDMhkvCGZMW7T4oQwYbL8eVuh7p
+        address_n=parse_path("m/44h/0h/5h/0/9"),  # 1H2CRJBrDMhkvCGZMW7T4oQwYbL8eVuh7p
         amount=63_988,
         prev_hash=TXHASH_0dac36,
         prev_index=0,

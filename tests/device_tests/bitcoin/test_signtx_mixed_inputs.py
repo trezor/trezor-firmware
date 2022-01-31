@@ -15,6 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 from trezorlib import btc, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
 from ...tx_cache import TxCache
@@ -35,25 +36,25 @@ TXHASH_31bc1c = bytes.fromhex(
 )
 
 
-def test_non_segwit_segwit_inputs(client):
+def test_non_segwit_segwit_inputs(client: Client):
     # First is non-segwit, second is segwit.
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("44'/1'/0'/0/0"),
-        amount=31000000,
+        address_n=parse_path("m/44h/1h/0h/0/0"),
+        amount=31_000_000,
         prev_hash=TXHASH_e5040e,
         prev_index=0,
     )
     inp2 = messages.TxInputType(
-        address_n=parse_path("84'/1'/0'/1/0"),
-        amount=7289000,
+        address_n=parse_path("m/84h/1h/0h/1/0"),
+        amount=7_289_000,
         prev_hash=TXHASH_65b811,
         prev_index=1,
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
     out1 = messages.TxOutputType(
         address="tb1q54un3q39sf7e7tlfq99d6ezys7qgc62a6rxllc",
-        amount=31000000 + 7289000 - 1000,
+        amount=31_000_000 + 7_289_000 - 1_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -77,25 +78,25 @@ def test_non_segwit_segwit_inputs(client):
     )
 
 
-def test_segwit_non_segwit_inputs(client):
+def test_segwit_non_segwit_inputs(client: Client):
     # First is segwit, second is non-segwit.
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("84'/1'/0'/1/0"),
-        amount=7289000,
+        address_n=parse_path("m/84h/1h/0h/1/0"),
+        amount=7_289_000,
         prev_hash=TXHASH_65b811,
         prev_index=1,
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
     inp2 = messages.TxInputType(
-        address_n=parse_path("44'/1'/0'/0/0"),
-        amount=31000000,
+        address_n=parse_path("m/44h/1h/0h/0/0"),
+        amount=31_000_000,
         prev_hash=TXHASH_e5040e,
         prev_index=0,
     )
     out1 = messages.TxOutputType(
         address="tb1q54un3q39sf7e7tlfq99d6ezys7qgc62a6rxllc",
-        amount=31000000 + 7289000 - 1000,
+        amount=31_000_000 + 7_289_000 - 1_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -119,32 +120,32 @@ def test_segwit_non_segwit_inputs(client):
     )
 
 
-def test_segwit_non_segwit_segwit_inputs(client):
+def test_segwit_non_segwit_segwit_inputs(client: Client):
     # First is segwit, second is non-segwit and third is segwit again.
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("84'/1'/0'/1/0"),
-        amount=7289000,
+        address_n=parse_path("m/84h/1h/0h/1/0"),
+        amount=7_289_000,
         prev_hash=TXHASH_65b811,
         prev_index=1,
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
     inp2 = messages.TxInputType(
-        address_n=parse_path("44'/1'/0'/0/0"),
-        amount=31000000,
+        address_n=parse_path("m/44h/1h/0h/0/0"),
+        amount=31_000_000,
         prev_hash=TXHASH_e5040e,
         prev_index=0,
     )
     inp3 = messages.TxInputType(
-        address_n=parse_path("84'/1'/0'/0/0"),
-        amount=1603000,
+        address_n=parse_path("m/84h/1h/0h/0/0"),
+        amount=1_603_000,
         prev_hash=TXHASH_31bc1c,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
     out1 = messages.TxOutputType(
         address="tb1q54un3q39sf7e7tlfq99d6ezys7qgc62a6rxllc",
-        amount=31000000 + 7289000 - 1000,
+        amount=31_000_000 + 7_289_000 - 1_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -172,31 +173,31 @@ def test_segwit_non_segwit_segwit_inputs(client):
     )
 
 
-def test_non_segwit_segwit_non_segwit_inputs(client):
+def test_non_segwit_segwit_non_segwit_inputs(client: Client):
     # First is non-segwit, second is segwit and third is non-segwit again.
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("44'/1'/0'/0/0"),
-        amount=31000000,
+        address_n=parse_path("m/44h/1h/0h/0/0"),
+        amount=31_000_000,
         prev_hash=TXHASH_e5040e,
         prev_index=0,
     )
     inp2 = messages.TxInputType(
-        address_n=parse_path("84'/1'/0'/1/0"),
-        amount=7289000,
+        address_n=parse_path("m/84h/1h/0h/1/0"),
+        amount=7_289_000,
         prev_hash=TXHASH_65b811,
         prev_index=1,
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
     inp3 = messages.TxInputType(
-        address_n=parse_path("44'/1'/1'/0/0"),
-        amount=9226912,
+        address_n=parse_path("m/44h/1h/1h/0/0"),
+        amount=9_226_912,
         prev_hash=TXHASH_2bac7a,
         prev_index=0,
     )
     out1 = messages.TxOutputType(
         address="tb1q54un3q39sf7e7tlfq99d6ezys7qgc62a6rxllc",
-        amount=31000000 + 7289000 - 1000,
+        amount=31_000_000 + 7_289_000 - 1_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 

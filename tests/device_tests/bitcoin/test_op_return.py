@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -31,17 +32,17 @@ TXHASH_d5f65e = bytes.fromhex(
 )
 
 
-def test_opreturn(client):
+def test_opreturn(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("44'/0'/0'/0/2"),
-        amount=390000,
+        address_n=parse_path("m/44h/0h/0h/0/2"),
+        amount=390_000,
         prev_hash=TXHASH_d5f65e,
         prev_index=0,
     )
 
     out1 = messages.TxOutputType(
         address="1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1",
-        amount=390000 - 10000,
+        amount=390_000 - 10_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -83,17 +84,17 @@ def test_opreturn(client):
     )
 
 
-def test_nonzero_opreturn(client):
+def test_nonzero_opreturn(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("44'/0'/10'/0/5"),
-        amount=390000,
+        address_n=parse_path("m/44h/0h/10h/0/5"),
+        amount=390_000,
         prev_hash=TXHASH_d5f65e,
         prev_index=0,
     )
 
     out1 = messages.TxOutputType(
         op_return_data=b"test of the op_return data",
-        amount=10000,
+        amount=10_000,
         script_type=messages.OutputScriptType.PAYTOOPRETURN,
     )
 
@@ -108,16 +109,16 @@ def test_nonzero_opreturn(client):
             btc.sign_tx(client, "Bitcoin", [inp1], [out1], prev_txes=TX_API)
 
 
-def test_opreturn_address(client):
+def test_opreturn_address(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("44'/0'/0'/0/2"),
-        amount=390000,
+        address_n=parse_path("m/44h/0h/0h/0/2"),
+        amount=390_000,
         prev_hash=TXHASH_d5f65e,
         prev_index=0,
     )
 
     out1 = messages.TxOutputType(
-        address_n=parse_path("44'/0'/0'/1/2"),
+        address_n=parse_path("m/44h/0h/0h/1/2"),
         amount=0,
         op_return_data=b"OMNI TRANSACTION GOES HERE",
         script_type=messages.OutputScriptType.PAYTOOPRETURN,

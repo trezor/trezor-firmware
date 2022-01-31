@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import btc, device, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -49,7 +50,7 @@ pytestmark = pytest.mark.skip_t1
 
 
 @pytest.mark.setup_client(pin=PIN)
-def test_sign_tx(client):
+def test_sign_tx(client: Client):
     commitment_data = b"www.example.com" + (1).to_bytes(ROUND_ID_LEN, "big")
 
     with client:
@@ -57,9 +58,9 @@ def test_sign_tx(client):
         btc.authorize_coinjoin(
             client,
             coordinator="www.example.com",
-            max_total_fee=10010,
-            fee_per_anonymity=5000000,  # 0.005 %
-            n=parse_path("m/84'/1'/0'"),
+            max_total_fee=10_010,
+            fee_per_anonymity=5_000_000,  # 0.005 %
+            n=parse_path("m/84h/1h/0h"),
             coin_name="Testnet",
             script_type=messages.InputScriptType.SPENDWITNESS,
         )
@@ -73,7 +74,7 @@ def test_sign_tx(client):
         btc.get_ownership_proof(
             client,
             "Testnet",
-            parse_path("84'/1'/0'/1/0"),
+            parse_path("m/84h/1h/0h/1/0"),
             script_type=messages.InputScriptType.SPENDWITNESS,
             user_confirmation=True,
             commitment_data=commitment_data,
@@ -87,7 +88,7 @@ def test_sign_tx(client):
         btc.get_ownership_proof(
             client,
             "Testnet",
-            parse_path("84'/1'/0'/1/5"),
+            parse_path("m/84h/1h/0h/1/5"),
             script_type=messages.InputScriptType.SPENDWITNESS,
             user_confirmation=True,
             commitment_data=commitment_data,
@@ -99,7 +100,7 @@ def test_sign_tx(client):
             # seed "alcohol woman abuse must during monitor noble actual mixed trade anger aisle"
             # 84'/1'/0'/0/0
             # tb1qnspxpr2xj9s2jt6qlhuvdnxw6q55jvygcf89r2
-            amount=100000,
+            amount=100_000,
             prev_hash=TXHASH_e5b7e2,
             prev_index=0,
             script_type=messages.InputScriptType.EXTERNAL,
@@ -110,8 +111,8 @@ def test_sign_tx(client):
             commitment_data=commitment_data,
         ),
         messages.TxInputType(
-            address_n=parse_path("84'/1'/0'/1/0"),
-            amount=7289000,
+            address_n=parse_path("m/84h/1h/0h/1/0"),
+            amount=7_289_000,
             prev_hash=TXHASH_65b811,
             prev_index=1,
             script_type=messages.InputScriptType.SPENDWITNESS,
@@ -122,30 +123,30 @@ def test_sign_tx(client):
         # Other's coinjoined output.
         messages.TxOutputType(
             address="tb1qk7j3ahs2v6hrv4v282cf0tvxh0vqq7rpt3zcml",
-            amount=50000,
+            amount=50_000,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
             payment_req_index=0,
         ),
         # Our coinjoined output.
         messages.TxOutputType(
             # tb1qze76uzqteg6un6jfcryrxhwvfvjj58ts0swg3d
-            address_n=parse_path("84'/1'/0'/1/1"),
-            amount=50000,
+            address_n=parse_path("m/84h/1h/0h/1/1"),
+            amount=50_000,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
             payment_req_index=0,
         ),
         # Our change output.
         messages.TxOutputType(
             # tb1qr5p6f5sk09sms57ket074vywfymuthlgud7xyx
-            address_n=parse_path("84'/1'/0'/1/2"),
-            amount=7289000 - 50000 - 5 - 5000,
+            address_n=parse_path("m/84h/1h/0h/1/2"),
+            amount=7_289_000 - 50_000 - 5 - 5_000,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
             payment_req_index=0,
         ),
         # Other's change output.
         messages.TxOutputType(
             address="tb1q9cqhdr9ydetjzrct6tyeuccws9505hl96azwxk",
-            amount=100000 - 50000 - 5 - 5000,
+            amount=100_000 - 50_000 - 5 - 5_000,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
             payment_req_index=0,
         ),
@@ -241,16 +242,16 @@ def test_sign_tx(client):
         )
 
 
-def test_unfair_fee(client):
+def test_unfair_fee(client: Client):
     # Test unfair mining fee distribution amongst participants.
 
     with client:
         btc.authorize_coinjoin(
             client,
             coordinator="www.example.com",
-            max_total_fee=10000,
-            fee_per_anonymity=5000000,  # 0.005 %
-            n=parse_path("m/84'/1'/0'"),
+            max_total_fee=10_000,
+            fee_per_anonymity=5_000_000,  # 0.005 %
+            n=parse_path("m/84h/1h/0h"),
             coin_name="Testnet",
             script_type=messages.InputScriptType.SPENDWITNESS,
         )
@@ -260,7 +261,7 @@ def test_unfair_fee(client):
             # seed "alcohol woman abuse must during monitor noble actual mixed trade anger aisle"
             # 84'/1'/0'/0/0
             # tb1qnspxpr2xj9s2jt6qlhuvdnxw6q55jvygcf89r2
-            amount=100000,
+            amount=100_000,
             prev_hash=TXHASH_e5b7e2,
             prev_index=0,
             script_type=messages.InputScriptType.EXTERNAL,
@@ -271,8 +272,8 @@ def test_unfair_fee(client):
             commitment_data=b"www.example.org" + (1).to_bytes(ROUND_ID_LEN, "big"),
         ),
         messages.TxInputType(
-            address_n=parse_path("84'/1'/0'/1/0"),
-            amount=7289000,
+            address_n=parse_path("m/84h/1h/0h/1/0"),
+            amount=7_289_000,
             prev_hash=TXHASH_65b811,
             prev_index=1,
             script_type=messages.InputScriptType.SPENDWITNESS,
@@ -283,30 +284,30 @@ def test_unfair_fee(client):
         # Other's coinjoined output.
         messages.TxOutputType(
             address="tb1qk7j3ahs2v6hrv4v282cf0tvxh0vqq7rpt3zcml",
-            amount=50000,
+            amount=50_000,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
             payment_req_index=0,
         ),
         # Our coinjoined output.
         messages.TxOutputType(
             # tb1qze76uzqteg6un6jfcryrxhwvfvjj58ts0swg3d
-            address_n=parse_path("84'/1'/0'/1/1"),
-            amount=50000,
+            address_n=parse_path("m/84h/1h/0h/1/1"),
+            amount=50_000,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
             payment_req_index=0,
         ),
         # Our change output.
         messages.TxOutputType(
             # tb1qr5p6f5sk09sms57ket074vywfymuthlgud7xyx
-            address_n=parse_path("84'/1'/0'/1/2"),
-            amount=7289000 - 50000 - 5 - 6000,  # unfair mining fee
+            address_n=parse_path("m/84h/1h/0h/1/2"),
+            amount=7_289_000 - 50_000 - 5 - 6_000,  # unfair mining fee
             script_type=messages.OutputScriptType.PAYTOWITNESS,
             payment_req_index=0,
         ),
         # Other's change output.
         messages.TxOutputType(
             address="tb1q9cqhdr9ydetjzrct6tyeuccws9505hl96azwxk",
-            amount=100000 - 50000 - 5 - 4000,
+            amount=100_000 - 50_000 - 5 - 4_000,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
             payment_req_index=0,
         ),
@@ -342,16 +343,16 @@ def test_unfair_fee(client):
         )
 
 
-def test_no_anonymity(client):
+def test_no_anonymity(client: Client):
     # Test CoinJoin transaction giving the user's outputs no gain in anonymity.
 
     with client:
         btc.authorize_coinjoin(
             client,
             coordinator="www.example.com",
-            max_total_fee=5005,
-            fee_per_anonymity=5000000,  # 0.005 %
-            n=parse_path("m/84'/1'/0'"),
+            max_total_fee=5_005,
+            fee_per_anonymity=5_000_000,  # 0.005 %
+            n=parse_path("m/84h/1h/0h"),
             coin_name="Testnet",
             script_type=messages.InputScriptType.SPENDWITNESS,
         )
@@ -361,7 +362,7 @@ def test_no_anonymity(client):
             # seed "alcohol woman abuse must during monitor noble actual mixed trade anger aisle"
             # 84'/1'/0'/0/0
             # tb1qnspxpr2xj9s2jt6qlhuvdnxw6q55jvygcf89r2
-            amount=100000,
+            amount=100_000,
             prev_hash=TXHASH_e5b7e2,
             prev_index=0,
             script_type=messages.InputScriptType.EXTERNAL,
@@ -372,8 +373,8 @@ def test_no_anonymity(client):
             commitment_data=b"www.example.org" + (1).to_bytes(ROUND_ID_LEN, "big"),
         ),
         messages.TxInputType(
-            address_n=parse_path("84'/1'/0'/1/0"),
-            amount=7289000,
+            address_n=parse_path("m/84h/1h/0h/1/0"),
+            amount=7_289_000,
             prev_hash=TXHASH_65b811,
             prev_index=1,
             script_type=messages.InputScriptType.SPENDWITNESS,
@@ -384,45 +385,45 @@ def test_no_anonymity(client):
         # Other's coinjoined output.
         messages.TxOutputType(
             address="tb1qk7j3ahs2v6hrv4v282cf0tvxh0vqq7rpt3zcml",
-            amount=30000,
+            amount=30_000,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
             payment_req_index=0,
         ),
         # Other's coinjoined output.
         messages.TxOutputType(
             address="tb1q9cqhdr9ydetjzrct6tyeuccws9505hl96azwxk",
-            amount=30000,
+            amount=30_000,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
             payment_req_index=0,
         ),
         # Our coinjoined output.
         messages.TxOutputType(
             # tb1qze76uzqteg6un6jfcryrxhwvfvjj58ts0swg3d
-            address_n=parse_path("84'/1'/0'/1/1"),
-            amount=50000,
+            address_n=parse_path("m/84h/1h/0h/1/1"),
+            amount=50_000,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
             payment_req_index=0,
         ),
         # Our coinjoined output.
         messages.TxOutputType(
             # tb1qr5p6f5sk09sms57ket074vywfymuthlgud7xyx
-            address_n=parse_path("84'/1'/0'/1/2"),
-            amount=50000,
+            address_n=parse_path("m/84h/1h/0h/1/2"),
+            amount=50_000,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
             payment_req_index=0,
         ),
         # Our change output.
         messages.TxOutputType(
             # tb1qwn0s88t9r39g72m78mcaxj72sy3ct4m404xsmq
-            address_n=parse_path("84'/1'/0'/1/3"),
-            amount=7289000 - 50000 - 50000 - 10 - 5000,
+            address_n=parse_path("m/84h/1h/0h/1/3"),
+            amount=7_289_000 - 50_000 - 50_000 - 10 - 5_000,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
             payment_req_index=0,
         ),
         # Other's change output.
         messages.TxOutputType(
             address="tb1q9cqhdr9ydetjzrct6tyeuccws9505hl96azwxk",
-            amount=100000 - 30000 - 30000 - 6 - 5000,
+            amount=100_000 - 30_000 - 30_000 - 6 - 5_000,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
             payment_req_index=0,
         ),
@@ -459,14 +460,14 @@ def test_no_anonymity(client):
         )
 
 
-def test_wrong_coordinator(client):
+def test_wrong_coordinator(client: Client):
     # Ensure that a preauthorized GetOwnershipProof fails if the commitment_data doesn't match the coordinator.
 
     btc.authorize_coinjoin(
         client,
-        max_total_fee=50000,
+        max_total_fee=50_000,
         coordinator="www.example.com",
-        n=parse_path("m/84'/1'/0'"),
+        n=parse_path("m/84h/1h/0h"),
         coin_name="Testnet",
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
@@ -475,7 +476,7 @@ def test_wrong_coordinator(client):
         btc.get_ownership_proof(
             client,
             "Testnet",
-            parse_path("84'/1'/0'/1/0"),
+            parse_path("m/84h/1h/0h/1/0"),
             script_type=messages.InputScriptType.SPENDWITNESS,
             user_confirmation=True,
             commitment_data=b"www.example.org" + (1).to_bytes(ROUND_ID_LEN, "big"),
@@ -483,14 +484,14 @@ def test_wrong_coordinator(client):
         )
 
 
-def test_cancel_authorization(client):
+def test_cancel_authorization(client: Client):
     # Ensure that a preauthorized GetOwnershipProof fails if the commitment_data doesn't match the coordinator.
 
     btc.authorize_coinjoin(
         client,
-        max_total_fee=50000,
+        max_total_fee=50_000,
         coordinator="www.example.com",
-        n=parse_path("m/84'/1'/0'"),
+        n=parse_path("m/84h/1h/0h"),
         coin_name="Testnet",
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
@@ -501,7 +502,7 @@ def test_cancel_authorization(client):
         btc.get_ownership_proof(
             client,
             "Testnet",
-            parse_path("84'/1'/0'/1/0"),
+            parse_path("m/84h/1h/0h/1/0"),
             script_type=messages.InputScriptType.SPENDWITNESS,
             user_confirmation=True,
             commitment_data=b"www.example.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
@@ -509,13 +510,13 @@ def test_cancel_authorization(client):
         )
 
 
-def test_multisession_authorization(client):
+def test_multisession_authorization(client: Client):
     # Authorize CoinJoin with www.example1.com in session 1.
     btc.authorize_coinjoin(
         client,
-        max_total_fee=50000,
+        max_total_fee=50_000,
         coordinator="www.example1.com",
-        n=parse_path("m/84'/1'/0'"),
+        n=parse_path("m/84h/1h/0h"),
         coin_name="Testnet",
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
@@ -527,9 +528,9 @@ def test_multisession_authorization(client):
     # Authorize CoinJoin with www.example2.com in session 2.
     btc.authorize_coinjoin(
         client,
-        max_total_fee=50000,
+        max_total_fee=50_000,
         coordinator="www.example2.com",
-        n=parse_path("m/84'/1'/0'"),
+        n=parse_path("m/84h/1h/0h"),
         coin_name="Testnet",
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
@@ -539,7 +540,7 @@ def test_multisession_authorization(client):
         ownership_proof, _ = btc.get_ownership_proof(
             client,
             "Testnet",
-            parse_path("84'/1'/0'/1/0"),
+            parse_path("m/84h/1h/0h/1/0"),
             script_type=messages.InputScriptType.SPENDWITNESS,
             user_confirmation=True,
             commitment_data=b"www.example1.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
@@ -550,7 +551,7 @@ def test_multisession_authorization(client):
     ownership_proof, _ = btc.get_ownership_proof(
         client,
         "Testnet",
-        parse_path("84'/1'/0'/1/0"),
+        parse_path("m/84h/1h/0h/1/0"),
         script_type=messages.InputScriptType.SPENDWITNESS,
         user_confirmation=True,
         commitment_data=b"www.example2.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
@@ -570,7 +571,7 @@ def test_multisession_authorization(client):
     ownership_proof, _ = btc.get_ownership_proof(
         client,
         "Testnet",
-        parse_path("84'/1'/0'/1/0"),
+        parse_path("m/84h/1h/0h/1/0"),
         script_type=messages.InputScriptType.SPENDWITNESS,
         user_confirmation=True,
         commitment_data=b"www.example1.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
@@ -587,7 +588,7 @@ def test_multisession_authorization(client):
         ownership_proof, _ = btc.get_ownership_proof(
             client,
             "Testnet",
-            parse_path("84'/1'/0'/1/0"),
+            parse_path("m/84h/1h/0h/1/0"),
             script_type=messages.InputScriptType.SPENDWITNESS,
             user_confirmation=True,
             commitment_data=b"www.example2.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
@@ -602,7 +603,7 @@ def test_multisession_authorization(client):
         ownership_proof, _ = btc.get_ownership_proof(
             client,
             "Testnet",
-            parse_path("84'/1'/0'/1/0"),
+            parse_path("m/84h/1h/0h/1/0"),
             script_type=messages.InputScriptType.SPENDWITNESS,
             user_confirmation=True,
             commitment_data=b"www.example1.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
@@ -616,7 +617,7 @@ def test_multisession_authorization(client):
     ownership_proof, _ = btc.get_ownership_proof(
         client,
         "Testnet",
-        parse_path("84'/1'/0'/1/0"),
+        parse_path("m/84h/1h/0h/1/0"),
         script_type=messages.InputScriptType.SPENDWITNESS,
         user_confirmation=True,
         commitment_data=b"www.example2.com" + (1).to_bytes(ROUND_ID_LEN, "big"),

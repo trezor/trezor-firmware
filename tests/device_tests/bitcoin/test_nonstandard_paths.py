@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
 from ...tx_cache import TxCache
@@ -43,7 +44,7 @@ VECTORS = (
     ),
     # GreenAddress B m/3'/[1-100]'/[1,4]/address_index
     (
-        "m/3'/100'/4/255",
+        "m/3h/100h/4/255",
         (
             messages.InputScriptType.SPENDADDRESS,
             messages.InputScriptType.SPENDWITNESS,
@@ -80,27 +81,27 @@ VECTORS_MULTISIG = (
     # GreenAddress A m/[1,4]/address_index
     (("m/1", "m/1", "m/4"), [255]),
     # GreenAddress B m/3'/[1-100]'/[1,4]/address_index
-    (("m/3'/100'/1", "m/3'/99'/1", "m/3'/98'/1"), [255]),
+    (("m/3h/100h/1", "m/3h/99h/1", "m/3h/98h/1"), [255]),
     # GreenAdress Sign A m/1195487518
     (("m/1195487518", "m/1195487518", "m/1195487518"), []),
     # GreenAdress Sign B m/1195487518/6/address_index
     (("m/1195487518/6", "m/1195487518/6", "m/1195487518/6"), [255]),
     # Unchained hardened m/45'/coin_type'/account'/[0-1000000]/change/address_index
     (
-        ("m/45'/0'/63'/1000000", "m/45'/0'/62'/1000000", "m/45'/0'/61'/1000000"),
+        ("m/45h/0h/63h/1000000", "m/45h/0h/62h/1000000", "m/45h/0h/61h/1000000"),
         [0, 255],
     ),
     # Unchained unhardened m/45'/coin_type/account/[0-1000000]/change/address_index
-    (("m/45'/0/63/1000000", "m/45'/0/62/1000000", "m/45'/0/61/1000000"), [0, 255]),
+    (("m/45h/0/63/1000000", "m/45h/0/62/1000000", "m/45h/0/61/1000000"), [0, 255]),
     # Unchained deprecated m/45'/coin_type'/account'/[0-1000000]/address_index
-    (("m/45'/0'/63'/1000000", "m/45'/0'/62'/1000000", "m/45'/0/61/1000000"), [255]),
+    (("m/45h/0h/63h/1000000", "m/45h/0h/62h/1000000", "m/45h/0/61/1000000"), [255]),
 )
 
 
 # Has AlwaysMatchingSchema but let's make sure the nonstandard paths are
 # accepted in case we make this more restrictive in the future.
 @pytest.mark.parametrize("path, script_types", VECTORS)
-def test_getpublicnode(client, path, script_types):
+def test_getpublicnode(client: Client, path, script_types):
     for script_type in script_types:
         res = btc.get_public_node(
             client, parse_path(path), coin_name="Bitcoin", script_type=script_type
@@ -110,7 +111,7 @@ def test_getpublicnode(client, path, script_types):
 
 
 @pytest.mark.parametrize("path, script_types", VECTORS)
-def test_getaddress(client, path, script_types):
+def test_getaddress(client: Client, path, script_types):
     for script_type in script_types:
         res = btc.get_address(
             client,
@@ -124,7 +125,7 @@ def test_getaddress(client, path, script_types):
 
 
 @pytest.mark.parametrize("path, script_types", VECTORS)
-def test_signmessage(client, path, script_types):
+def test_signmessage(client: Client, path, script_types):
     for script_type in script_types:
         sig = btc.sign_message(
             client,
@@ -138,14 +139,14 @@ def test_signmessage(client, path, script_types):
 
 
 @pytest.mark.parametrize("path, script_types", VECTORS)
-def test_signtx(client, path, script_types):
+def test_signtx(client: Client, path, script_types):
     # tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
     # input 0: 0.0039 BTC
 
     for script_type in script_types:
         inp1 = messages.TxInputType(
             address_n=parse_path(path),
-            amount=390000,
+            amount=390_000,
             prev_hash=TXHASH_d5f65e,
             prev_index=0,
             script_type=script_type,
@@ -153,7 +154,7 @@ def test_signtx(client, path, script_types):
 
         out1 = messages.TxOutputType(
             address="1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1",
-            amount=390000 - 10000,
+            amount=390_000 - 10_000,
             script_type=messages.OutputScriptType.PAYTOADDRESS,
         )
 
@@ -166,7 +167,7 @@ def test_signtx(client, path, script_types):
 
 @pytest.mark.multisig
 @pytest.mark.parametrize("paths, address_index", VECTORS_MULTISIG)
-def test_getaddress_multisig(client, paths, address_index):
+def test_getaddress_multisig(client: Client, paths, address_index):
     pubs = [
         messages.HDNodePathType(
             node=btc.get_public_node(
@@ -194,7 +195,7 @@ def test_getaddress_multisig(client, paths, address_index):
 #       the test is going to fail if we make firmware stricter about this
 @pytest.mark.multisig
 @pytest.mark.parametrize("paths, address_index", VECTORS_MULTISIG)
-def test_signtx_multisig(client, paths, address_index):
+def test_signtx_multisig(client: Client, paths, address_index):
     pubs = [
         messages.HDNodePathType(
             node=btc.get_public_node(
@@ -211,13 +212,13 @@ def test_signtx_multisig(client, paths, address_index):
 
     out1 = messages.TxOutputType(
         address="17kTB7qSk3MupQxWdiv5ZU3zcrZc2Azes1",
-        amount=10000,
+        amount=10_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     inp1 = messages.TxInputType(
         address_n=parse_path(paths[0]) + address_index,
-        amount=20000,
+        amount=20_000,
         prev_hash=TXHASH_6189e3,
         prev_index=1,
         script_type=messages.InputScriptType.SPENDMULTISIG,
