@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
 from ...tx_cache import TxCache
@@ -41,18 +42,18 @@ TXHASH_15575a = bytes.fromhex(
 pytestmark = pytest.mark.altcoin
 
 
-def test_send_dash(client):
+def test_send_dash(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("44'/5'/0'/0/0"),
+        address_n=parse_path("m/44h/5h/0h/0/0"),
         # dash:XdTw4G5AWW4cogGd7ayybyBNDbuB45UpgH
-        amount=1000000000,
+        amount=1_000_000_000,
         prev_hash=TXHASH_5579ea,
         prev_index=1,
         script_type=messages.InputScriptType.SPENDADDRESS,
     )
     out1 = messages.TxOutputType(
         address="XpTc36DPAeWmaueNBA9JqCg2GC8XDLKSYe",
-        amount=999999000,
+        amount=999_999_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:
@@ -82,23 +83,23 @@ def test_send_dash(client):
     )
 
 
-def test_send_dash_dip2_input(client):
+def test_send_dash_dip2_input(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("44'/5'/0'/0/0"),
+        address_n=parse_path("m/44h/5h/0h/0/0"),
         # dash:XdTw4G5AWW4cogGd7ayybyBNDbuB45UpgH
-        amount=4095000260,
+        amount=4_095_000_260,
         prev_hash=TXHASH_15575a,
         prev_index=1,
         script_type=messages.InputScriptType.SPENDADDRESS,
     )
     out1 = messages.TxOutputType(
-        address_n=parse_path("44'/5'/0'/1/0"),
-        amount=4000000000,
+        address_n=parse_path("m/44h/5h/0h/1/0"),
+        amount=4_000_000_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     out2 = messages.TxOutputType(
         address="XrEFMNkxeipYHgEQKiJuqch8XzwrtfH5fm",
-        amount=95000000,
+        amount=95_000_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:

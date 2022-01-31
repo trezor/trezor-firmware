@@ -18,7 +18,7 @@
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import message_filters
+from trezorlib.debuglink import TrezorClientDebugLink as Client, message_filters
 from trezorlib.tools import parse_path
 
 S = messages.InputScriptType
@@ -41,7 +41,7 @@ VECTORS = (  # case name, coin_name, path, script_type, address, message, signat
     case(
         "p2pkh",
         "Bitcoin",
-        "44h/0h/0h/0/0",
+        "m/44h/0h/0h/0/0",
         S.SPENDADDRESS,
         False,
         "1JAd7XCBzGudGpJQSDSfpmJhiygtLQWaGL",
@@ -51,7 +51,7 @@ VECTORS = (  # case name, coin_name, path, script_type, address, message, signat
     case(
         "segwit-p2sh",
         "Bitcoin",
-        "49h/0h/0h/0/0",
+        "m/49h/0h/0h/0/0",
         S.SPENDP2SHWITNESS,
         False,
         "3L6TyTisPBmrDAj6RoKmDzNnj4eQi54gD2",
@@ -61,7 +61,7 @@ VECTORS = (  # case name, coin_name, path, script_type, address, message, signat
     case(
         "segwit-native",
         "Bitcoin",
-        "84h/0h/0h/0/0",
+        "m/84h/0h/0h/0/0",
         S.SPENDWITNESS,
         False,
         "bc1qannfxke2tfd4l7vhepehpvt05y83v3qsf6nfkk",
@@ -71,7 +71,7 @@ VECTORS = (  # case name, coin_name, path, script_type, address, message, signat
     case(
         "p2pkh",
         "Bitcoin",
-        "44h/0h/0h/0/0",
+        "m/44h/0h/0h/0/0",
         S.SPENDADDRESS,
         True,
         "1JAd7XCBzGudGpJQSDSfpmJhiygtLQWaGL",
@@ -81,7 +81,7 @@ VECTORS = (  # case name, coin_name, path, script_type, address, message, signat
     case(
         "segwit-p2sh",
         "Bitcoin",
-        "49h/0h/0h/0/0",
+        "m/49h/0h/0h/0/0",
         S.SPENDP2SHWITNESS,
         True,
         "3L6TyTisPBmrDAj6RoKmDzNnj4eQi54gD2",
@@ -91,7 +91,7 @@ VECTORS = (  # case name, coin_name, path, script_type, address, message, signat
     case(
         "segwit-native",
         "Bitcoin",
-        "84h/0h/0h/0/0",
+        "m/84h/0h/0h/0/0",
         S.SPENDWITNESS,
         True,
         "bc1qannfxke2tfd4l7vhepehpvt05y83v3qsf6nfkk",
@@ -102,7 +102,7 @@ VECTORS = (  # case name, coin_name, path, script_type, address, message, signat
     case(
         "p2pkh long message",
         "Bitcoin",
-        "44h/0h/0h/0/0",
+        "m/44h/0h/0h/0/0",
         S.SPENDADDRESS,
         False,
         "1JAd7XCBzGudGpJQSDSfpmJhiygtLQWaGL",
@@ -112,7 +112,7 @@ VECTORS = (  # case name, coin_name, path, script_type, address, message, signat
     case(
         "segwit-p2sh long message",
         "Bitcoin",
-        "49h/0h/0h/0/0",
+        "m/49h/0h/0h/0/0",
         S.SPENDP2SHWITNESS,
         False,
         "3L6TyTisPBmrDAj6RoKmDzNnj4eQi54gD2",
@@ -122,7 +122,7 @@ VECTORS = (  # case name, coin_name, path, script_type, address, message, signat
     case(
         "segwit-native long message",
         "Bitcoin",
-        "84h/0h/0h/0/0",
+        "m/84h/0h/0h/0/0",
         S.SPENDWITNESS,
         False,
         "bc1qannfxke2tfd4l7vhepehpvt05y83v3qsf6nfkk",
@@ -133,7 +133,7 @@ VECTORS = (  # case name, coin_name, path, script_type, address, message, signat
     case(
         "NFKD message",
         "Bitcoin",
-        "44h/0h/0h/0/1",
+        "m/44h/0h/0h/0/1",
         S.SPENDADDRESS,
         False,
         "1GWFxtwWmNVqotUPXLcKVL2mUKpshuJYo",
@@ -143,7 +143,7 @@ VECTORS = (  # case name, coin_name, path, script_type, address, message, signat
     case(
         "NFC message",
         "Bitcoin",
-        "44h/0h/0h/0/1",
+        "m/44h/0h/0h/0/1",
         S.SPENDADDRESS,
         False,
         "1GWFxtwWmNVqotUPXLcKVL2mUKpshuJYo",
@@ -154,7 +154,7 @@ VECTORS = (  # case name, coin_name, path, script_type, address, message, signat
     case(
         "p2pkh",
         "Testnet",
-        "44h/1h/0h/0/0",
+        "m/44h/1h/0h/0/0",
         S.SPENDADDRESS,
         False,
         "mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q",
@@ -164,7 +164,7 @@ VECTORS = (  # case name, coin_name, path, script_type, address, message, signat
     case(
         "segwit-p2sh",
         "Testnet",
-        "49h/1h/0h/0/0",
+        "m/49h/1h/0h/0/0",
         S.SPENDP2SHWITNESS,
         False,
         "2N4Q5FhU2497BryFfUgbqkAJE87aKHUhXMp",
@@ -174,7 +174,7 @@ VECTORS = (  # case name, coin_name, path, script_type, address, message, signat
     case(
         "segwit-native",
         "Testnet",
-        "84h/1h/0h/0/0",
+        "m/84h/1h/0h/0/0",
         S.SPENDWITNESS,
         False,
         "tb1qkvwu9g3k2pdxewfqr7syz89r3gj557l3uuf9r9",
@@ -185,7 +185,7 @@ VECTORS = (  # case name, coin_name, path, script_type, address, message, signat
     case(
         "bcash",
         "Bcash",
-        "44h/145h/0h/0/0",
+        "m/44h/145h/0h/0/0",
         S.SPENDADDRESS,
         False,
         "bitcoincash:qr08q88p9etk89wgv05nwlrkm4l0urz4cyl36hh9sv",
@@ -196,7 +196,7 @@ VECTORS = (  # case name, coin_name, path, script_type, address, message, signat
     case(
         "grs-p2pkh",
         "Groestlcoin",
-        "44h/17h/0h/0/0",
+        "m/44h/17h/0h/0/0",
         S.SPENDADDRESS,
         False,
         "Fj62rBJi8LvbmWu2jzkaUX1NFXLEqDLoZM",
@@ -207,7 +207,7 @@ VECTORS = (  # case name, coin_name, path, script_type, address, message, signat
     case(
         "grs-segwit-p2sh",
         "Groestlcoin",
-        "49h/17h/0h/0/0",
+        "m/49h/17h/0h/0/0",
         S.SPENDP2SHWITNESS,
         False,
         "31inaRqambLsd9D7Ke4USZmGEVd3PHkh7P",
@@ -218,7 +218,7 @@ VECTORS = (  # case name, coin_name, path, script_type, address, message, signat
     case(
         "grs-segwit-native",
         "Groestlcoin",
-        "84h/17h/0h/0/0",
+        "m/84h/17h/0h/0/0",
         S.SPENDWITNESS,
         False,
         "grs1qw4teyraux2s77nhjdwh9ar8rl9dt7zww8r6lne",
@@ -229,7 +229,7 @@ VECTORS = (  # case name, coin_name, path, script_type, address, message, signat
     case(
         "decred",
         "Decred",
-        "44h/42h/0h/0/0",
+        "m/44h/42h/0h/0/0",
         S.SPENDADDRESS,
         False,
         "DsZtHtXHwvNR3nWf1PqfxrEdnRJisKEyzp1",
@@ -240,7 +240,7 @@ VECTORS = (  # case name, coin_name, path, script_type, address, message, signat
     case(
         "decred-empty",
         "Decred",
-        "44h/42h/0h/0/0",
+        "m/44h/42h/0h/0/0",
         S.SPENDADDRESS,
         False,
         "DsZtHtXHwvNR3nWf1PqfxrEdnRJisKEyzp1",
@@ -282,7 +282,7 @@ MESSAGE_LENGTHS = (
 
 @pytest.mark.skip_t1
 @pytest.mark.parametrize("message", MESSAGE_LENGTHS)
-def test_signmessage_pagination(client, message):
+def test_signmessage_pagination(client: Client, message):
     message_read = ""
 
     def input_flow():
@@ -330,7 +330,7 @@ def test_signmessage_pagination(client, message):
 
 
 @pytest.mark.skip_t1
-def test_signmessage_pagination_trailing_newline(client):
+def test_signmessage_pagination_trailing_newline(client: Client):
     message = "THIS\nMUST NOT\nBE\nPAGINATED\n"
     # The trailing newline must not cause a new paginated screen to appear.
     # The UI must be a single dialog without pagination.
@@ -352,7 +352,7 @@ def test_signmessage_pagination_trailing_newline(client):
         )
 
 
-def test_signmessage_path_warning(client):
+def test_signmessage_path_warning(client: Client):
     message = "This is an example of a signed message."
 
     with client:

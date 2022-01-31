@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import H_, parse_path
 
@@ -49,11 +50,11 @@ TXHASH_65b811 = bytes.fromhex(
 )
 
 
-def test_send_p2tr(client):
+def test_send_p2tr(client: Client):
     inp1 = messages.TxInputType(
         # tb1pn2d0yjeedavnkd8z8lhm566p0f2utm3lgvxrsdehnl94y34txmts5s7t4c
-        address_n=parse_path("86'/1'/0'/1/0"),
-        amount=4600,
+        address_n=parse_path("m/86h/1h/0h/1/0"),
+        amount=4_600,
         prev_hash=TXHASH_7956f1,
         prev_index=1,
         script_type=messages.InputScriptType.SPENDTAPROOT,
@@ -61,7 +62,7 @@ def test_send_p2tr(client):
     out1 = messages.TxOutputType(
         # 86'/1'/1'/0/0
         address="tb1paxhjl357yzctuf3fe58fcdx6nul026hhh6kyldpfsf3tckj9a3wslqd7zd",
-        amount=4450,
+        amount=4_450,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:
@@ -87,19 +88,19 @@ def test_send_p2tr(client):
     )
 
 
-def test_send_two_with_change(client):
+def test_send_two_with_change(client: Client):
     inp1 = messages.TxInputType(
         # tb1pswrqtykue8r89t9u4rprjs0gt4qzkdfuursfnvqaa3f2yql07zmq8s8a5u
-        address_n=parse_path("86'/1'/0'/0/0"),
-        amount=6800,
+        address_n=parse_path("m/86h/1h/0h/0/0"),
+        amount=6_800,
         prev_hash=TXHASH_df862e,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDTAPROOT,
     )
     inp2 = messages.TxInputType(
         # tb1p8tvmvsvhsee73rhym86wt435qrqm92psfsyhy6a3n5gw455znnpqm8wald
-        address_n=parse_path("86'/1'/0'/0/1"),
-        amount=13000,
+        address_n=parse_path("m/86h/1h/0h/0/1"),
+        amount=13_000,
         prev_hash=TXHASH_3ac32e,
         prev_index=1,
         script_type=messages.InputScriptType.SPENDTAPROOT,
@@ -107,14 +108,14 @@ def test_send_two_with_change(client):
     out1 = messages.TxOutputType(
         # 84'/1'/1'/0/0
         address="tb1q7r9yvcdgcl6wmtta58yxf29a8kc96jkyxl7y88",
-        amount=15000,
+        amount=15_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     out2 = messages.TxOutputType(
         # tb1pn2d0yjeedavnkd8z8lhm566p0f2utm3lgvxrsdehnl94y34txmts5s7t4c
-        address_n=parse_path("86'/1'/0'/1/0"),
+        address_n=parse_path("m/86h/1h/0h/1/0"),
         script_type=messages.OutputScriptType.PAYTOTAPROOT,
-        amount=6800 + 13000 - 200 - 15000,
+        amount=6_800 + 13_000 - 200 - 15_000,
     )
     with client:
         client.set_expected_responses(
@@ -144,52 +145,52 @@ def test_send_two_with_change(client):
     )
 
 
-def test_send_mixed(client):
+def test_send_mixed(client: Client):
     inp1 = messages.TxInputType(
         # 2MutHjgAXkqo3jxX2DZWorLAckAnwTxSM9V
-        address_n=parse_path("49'/1'/1'/0/0"),
-        amount=20000,
+        address_n=parse_path("m/49h/1h/1h/0/0"),
+        amount=20_000,
         prev_hash=TXHASH_8c3ea7,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
     )
     inp2 = messages.TxInputType(
         # tb1q7r9yvcdgcl6wmtta58yxf29a8kc96jkyxl7y88
-        address_n=parse_path("84'/1'/1'/0/0"),
-        amount=15000,
+        address_n=parse_path("m/84h/1h/1h/0/0"),
+        amount=15_000,
         prev_hash=TXHASH_7956f1,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
     inp3 = messages.TxInputType(
         # tb1paxhjl357yzctuf3fe58fcdx6nul026hhh6kyldpfsf3tckj9a3wslqd7zd
-        address_n=parse_path("86'/1'/1'/0/0"),
-        amount=4450,
+        address_n=parse_path("m/86h/1h/1h/0/0"),
+        amount=4_450,
         prev_hash=TXHASH_901593,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDTAPROOT,
     )
     inp4 = messages.TxInputType(
         # msUqRgCWS7ryuFcF34EaKTrsTe3xHra128
-        address_n=parse_path("44'/1'/1'/0/0"),
-        amount=10000,
+        address_n=parse_path("m/44h/1h/1h/0/0"),
+        amount=10_000,
         prev_hash=TXHASH_3ac32e,
         prev_index=2,
         script_type=messages.InputScriptType.SPENDADDRESS,
     )
     out1 = messages.TxOutputType(
         address="tb1q6xnnna3g7lk22h5tn8nlx2ezmndlvuk556w4w3",
-        amount=25000,
+        amount=25_000,
         script_type=messages.OutputScriptType.PAYTOWITNESS,
     )
     out2 = messages.TxOutputType(
         address="mfnMbVFC1rH4p9GNbjkMfrAjyKRLycFAzA",
         script_type=messages.OutputScriptType.PAYTOADDRESS,
-        amount=7000,
+        amount=7_000,
     )
     out3 = messages.TxOutputType(
         address="2MvAG8m2xSf83FgeR4ZpUtaubpLNjAMMoka",
-        amount=6900,
+        amount=6_900,
         script_type=messages.OutputScriptType.PAYTOP2SHWITNESS,
     )
     out4 = messages.TxOutputType(
@@ -199,7 +200,7 @@ def test_send_mixed(client):
     )
     out5 = messages.TxOutputType(
         address="tb1ptgp9w0mm89ms43flw0gkrhyx75gyc6qjhtpf0jmt5sv0dufpnsrsyv9nsz",
-        amount=10000,
+        amount=10_000,
         script_type=messages.OutputScriptType.PAYTOTAPROOT,
     )
 
@@ -287,7 +288,7 @@ def test_send_mixed(client):
     )
 
 
-def test_attack_script_type(client):
+def test_attack_script_type(client: Client):
     # Scenario: The attacker falsely claims that the transaction is Taproot-only to
     # avoid prev tx streaming and gives a lower amount for one of the inputs. The
     # correct input types and amounts are revelaled only in step6_sign_segwit_inputs()
@@ -295,15 +296,15 @@ def test_attack_script_type(client):
     # larger than what the user confirmed.
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("84'/1'/0'/1/0"),
-        amount=7289000,
+        address_n=parse_path("m/84h/1h/0h/1/0"),
+        amount=7_289_000,
         prev_hash=TXHASH_65b811,
         prev_index=1,
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
     inp2 = messages.TxInputType(
-        address_n=parse_path("84'/1'/1'/0/0"),
-        amount=12300000,
+        address_n=parse_path("m/84h/1h/1h/0/0"),
+        amount=12_300_000,
         prev_hash=TXHASH_091446,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDWITNESS,
@@ -312,7 +313,7 @@ def test_attack_script_type(client):
     out1 = messages.TxOutputType(
         address="tb1q694ccp5qcc0udmfwgp692u2s2hjpq5h407urtu",
         script_type=messages.OutputScriptType.PAYTOADDRESS,
-        amount=7289000 + 10000 - 1000,
+        amount=7_289_000 + 10_000 - 1_000,
     )
 
     attack_count = 5

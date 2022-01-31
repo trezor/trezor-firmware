@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import monero
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
 from ...common import MNEMONIC12
@@ -26,7 +27,7 @@ from ...common import MNEMONIC12
 @pytest.mark.monero
 @pytest.mark.skip_t1
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_monero_getaddress(client):
+def test_monero_getaddress(client: Client):
     assert (
         monero.get_address(client, parse_path("m/44h/128h/0h"), show_display=True)
         == b"4Ahp23WfMrMFK3wYL2hLWQFGt87ZTeRkufS6JoQZu6MEFDokAQeGWmu9MA3GFq1yVLSJQbKJqVAn9F9DLYGpRzRAEXqAXKM"

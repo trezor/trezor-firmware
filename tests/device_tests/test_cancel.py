@@ -17,6 +17,7 @@
 import pytest
 
 import trezorlib.messages as m
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import Cancelled
 
 from ..common import TEST_ADDRESS_N
@@ -34,7 +35,7 @@ from ..common import TEST_ADDRESS_N
         ),
     ],
 )
-def test_cancel_message_via_cancel(client, message):
+def test_cancel_message_via_cancel(client: Client, message):
     def input_flow():
         yield
         client.cancel()
@@ -57,7 +58,7 @@ def test_cancel_message_via_cancel(client, message):
         ),
     ],
 )
-def test_cancel_message_via_initialize(client, message):
+def test_cancel_message_via_initialize(client: Client, message):
     resp = client.call_raw(message)
     assert isinstance(resp, m.ButtonRequest)
 
@@ -70,7 +71,7 @@ def test_cancel_message_via_initialize(client, message):
 
 
 @pytest.mark.skip_t1
-def test_cancel_on_paginated(client):
+def test_cancel_on_paginated(client: Client):
     """Check that device is responsive on paginated screen. See #1708."""
     # In #1708, the device would ignore USB (or UDP) events while waiting for the user
     # to page through the screen. This means that this testcase, instead of failing,

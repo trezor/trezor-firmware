@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import H_, parse_path
 
@@ -42,23 +43,23 @@ TXHASH_8b6db9 = bytes.fromhex(
 pytestmark = pytest.mark.altcoin
 
 
-def test_send_bch_change(client):
+def test_send_bch_change(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("44'/145'/0'/0/0"),
+        address_n=parse_path("m/44h/145h/0h/0/0"),
         # bitcoincash:qr08q88p9etk89wgv05nwlrkm4l0urz4cyl36hh9sv
-        amount=1995344,
+        amount=1_995_344,
         prev_hash=TXHASH_bc37c2,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDADDRESS,
     )
     out1 = messages.TxOutputType(
-        address_n=parse_path("44'/145'/0'/1/0"),
-        amount=1896050,
+        address_n=parse_path("m/44h/145h/0h/1/0"),
+        amount=1_896_050,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     out2 = messages.TxOutputType(
         address="bitcoincash:qr23ajjfd9wd73l87j642puf8cad20lfmqdgwvpat4",
-        amount=73452,
+        amount=73_452,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:
@@ -89,26 +90,26 @@ def test_send_bch_change(client):
     )
 
 
-def test_send_bch_nochange(client):
+def test_send_bch_nochange(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("44'/145'/0'/1/0"),
+        address_n=parse_path("m/44h/145h/0h/1/0"),
         # bitcoincash:qzc5q87w069lzg7g3gzx0c8dz83mn7l02scej5aluw
-        amount=1896050,
+        amount=1_896_050,
         prev_hash=TXHASH_502e85,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDADDRESS,
     )
     inp2 = messages.TxInputType(
-        address_n=parse_path("44'/145'/0'/0/1"),
+        address_n=parse_path("m/44h/145h/0h/0/1"),
         # bitcoincash:qr23ajjfd9wd73l87j642puf8cad20lfmqdgwvpat4
-        amount=73452,
+        amount=73_452,
         prev_hash=TXHASH_502e85,
         prev_index=1,
         script_type=messages.InputScriptType.SPENDADDRESS,
     )
     out1 = messages.TxOutputType(
         address="bitcoincash:qq6wnnkrz7ykaqvxrx4hmjvayvzjzml54uyk76arx4",
-        amount=1934960,
+        amount=1_934_960,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:
@@ -145,26 +146,26 @@ def test_send_bch_nochange(client):
     )
 
 
-def test_send_bch_oldaddr(client):
+def test_send_bch_oldaddr(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("44'/145'/0'/1/0"),
+        address_n=parse_path("m/44h/145h/0h/1/0"),
         # bitcoincash:qzc5q87w069lzg7g3gzx0c8dz83mn7l02scej5aluw
-        amount=1896050,
+        amount=1_896_050,
         prev_hash=TXHASH_502e85,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDADDRESS,
     )
     inp2 = messages.TxInputType(
-        address_n=parse_path("44'/145'/0'/0/1"),
+        address_n=parse_path("m/44h/145h/0h/0/1"),
         # bitcoincash:qr23ajjfd9wd73l87j642puf8cad20lfmqdgwvpat4
-        amount=73452,
+        amount=73_452,
         prev_hash=TXHASH_502e85,
         prev_index=1,
         script_type=messages.InputScriptType.SPENDADDRESS,
     )
     out1 = messages.TxOutputType(
         address="15pnEDZJo3ycPUamqP3tEDnEju1oW5fBCz",
-        amount=1934960,
+        amount=1_934_960,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:
@@ -201,22 +202,22 @@ def test_send_bch_oldaddr(client):
     )
 
 
-def test_attack_change_input(client):
+def test_attack_change_input(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("44'/145'/10'/0/0"),
-        amount=1995344,
+        address_n=parse_path("m/44h/145h/10h/0/0"),
+        amount=1_995_344,
         prev_hash=TXHASH_bc37c2,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDADDRESS,
     )
     out1 = messages.TxOutputType(
-        address_n=parse_path("44'/145'/10'/1/0"),
-        amount=1896050,
+        address_n=parse_path("m/44h/145h/10h/1/0"),
+        amount=1_896_050,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     out2 = messages.TxOutputType(
         address="bitcoincash:qr23ajjfd9wd73l87j642puf8cad20lfmqdgwvpat4",
-        amount=73452,
+        amount=73_452,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -255,10 +256,10 @@ def test_attack_change_input(client):
 
 
 @pytest.mark.multisig
-def test_send_bch_multisig_wrongchange(client):
+def test_send_bch_multisig_wrongchange(client: Client):
     nodes = [
         btc.get_public_node(
-            client, parse_path(f"48'/145'/{i}'/0'"), coin_name="Bcash"
+            client, parse_path(f"m/48h/145h/{i}h/0h"), coin_name="Bcash"
         ).node
         for i in range(1, 4)
     ]
@@ -283,16 +284,16 @@ def test_send_bch_multisig_wrongchange(client):
         "304402207274b5a4d15e75f3df7319a375557b0efba9b27bc63f9f183a17da95a6125c94022000efac57629f1522e2d3958430e2ef073b0706cfac06cce492651b79858f09ae"
     )
     inp1 = messages.TxInputType(
-        address_n=parse_path("48'/145'/1'/0'/1/0"),
+        address_n=parse_path("m/48h/145h/1h/0h/1/0"),
         multisig=getmultisig(1, 0, [b"", sig, b""]),
         # bitcoincash:pp6kcpkhua7789g2vyj0qfkcux3yvje7euhyhltn0a
-        amount=24000,
+        amount=24_000,
         prev_hash=TXHASH_f68caf,
         prev_index=1,
         script_type=messages.InputScriptType.SPENDMULTISIG,
     )
     out1 = messages.TxOutputType(
-        address_n=parse_path("48'/145'/1'/0'/1/1"),
+        address_n=parse_path("m/48h/145h/1h/0h/1/1"),
         multisig=messages.MultisigRedeemScriptType(
             pubkeys=[
                 messages.HDNodePathType(node=nodes[0], address_n=[1, 1]),
@@ -303,7 +304,7 @@ def test_send_bch_multisig_wrongchange(client):
             m=2,
         ),
         script_type=messages.OutputScriptType.PAYTOMULTISIG,
-        amount=23000,
+        amount=23_000,
     )
     with client:
         client.set_expected_responses(
@@ -336,10 +337,10 @@ def test_send_bch_multisig_wrongchange(client):
 
 
 @pytest.mark.multisig
-def test_send_bch_multisig_change(client):
+def test_send_bch_multisig_change(client: Client):
     nodes = [
         btc.get_public_node(
-            client, parse_path(f"48'/145'/{i}'/0'"), coin_name="Bcash"
+            client, parse_path(f"m/48h/145h/{i}h/0h"), coin_name="Bcash"
         ).node
         for i in range(1, 4)
     ]
@@ -352,23 +353,23 @@ def test_send_bch_multisig_change(client):
         )
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("48'/145'/3'/0'/0/0"),
+        address_n=parse_path("m/48h/145h/3h/0h/0/0"),
         multisig=getmultisig(0, 0, EMPTY_SIGNATURES),
-        amount=48490,
+        amount=48_490,
         prev_hash=TXHASH_8b6db9,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDMULTISIG,
     )
     out1 = messages.TxOutputType(
         address="bitcoincash:qqq8gx2j76nw4dfefumxmdwvtf2tpsjznusgsmzex9",
-        amount=24000,
+        amount=24_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     out2 = messages.TxOutputType(
-        address_n=parse_path("48'/145'/3'/0'/1/0"),
+        address_n=parse_path("m/48h/145h/3h/0h/1/0"),
         multisig=getmultisig(1, 0, EMPTY_SIGNATURES),
         script_type=messages.OutputScriptType.PAYTOMULTISIG,
-        amount=24000,
+        amount=24_000,
     )
     with client:
         client.set_expected_responses(
@@ -398,10 +399,10 @@ def test_send_bch_multisig_change(client):
     )
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("48'/145'/1'/0'/0/0"),
+        address_n=parse_path("m/48h/145h/1h/0h/0/0"),
         multisig=getmultisig(0, 0, [b"", b"", signatures1[0]]),
         # bitcoincash:pqguz4nqq64jhr5v3kvpq4dsjrkda75hwy86gq0qzw
-        amount=48490,
+        amount=48_490,
         prev_hash=TXHASH_8b6db9,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDMULTISIG,
@@ -441,11 +442,11 @@ def test_send_bch_multisig_change(client):
 
 
 @pytest.mark.skip_t1
-def test_send_bch_external_presigned(client):
+def test_send_bch_external_presigned(client: Client):
     inp1 = messages.TxInputType(
         # address_n=parse_path("44'/145'/0'/1/0"),
         # bitcoincash:qzc5q87w069lzg7g3gzx0c8dz83mn7l02scej5aluw
-        amount=1896050,
+        amount=1_896_050,
         prev_hash=TXHASH_502e85,
         prev_index=0,
         script_type=messages.InputScriptType.EXTERNAL,
@@ -457,16 +458,16 @@ def test_send_bch_external_presigned(client):
         ),
     )
     inp2 = messages.TxInputType(
-        address_n=parse_path("44'/145'/0'/0/1"),
+        address_n=parse_path("m/44h/145h/0h/0/1"),
         # bitcoincash:qr23ajjfd9wd73l87j642puf8cad20lfmqdgwvpat4
-        amount=73452,
+        amount=73_452,
         prev_hash=TXHASH_502e85,
         prev_index=1,
         script_type=messages.InputScriptType.SPENDADDRESS,
     )
     out1 = messages.TxOutputType(
         address="bitcoincash:qq6wnnkrz7ykaqvxrx4hmjvayvzjzml54uyk76arx4",
-        amount=1934960,
+        amount=1_934_960,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:

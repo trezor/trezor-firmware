@@ -19,6 +19,7 @@ from collections import namedtuple
 import pytest
 
 from trezorlib import btc, messages, misc
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -45,8 +46,8 @@ def case(id, *args, altcoin=False):
 
 inputs = [
     messages.TxInputType(
-        address_n=parse_path("84'/1'/0'/0/0"),
-        amount=12300000,
+        address_n=parse_path("m/84h/1h/0h/0/0"),
+        amount=12_300_000,
         prev_hash=TXHASH_091446,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDWITNESS,
@@ -56,18 +57,18 @@ inputs = [
 outputs = [
     messages.TxOutputType(
         address="2N4Q5FhU2497BryFfUgbqkAJE87aKHUhXMp",
-        amount=5000000,
+        amount=5_000_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     ),
     messages.TxOutputType(
         address="tb1q694ccp5qcc0udmfwgp692u2s2hjpq5h407urtu",
         script_type=messages.OutputScriptType.PAYTOADDRESS,
-        amount=2000000,
+        amount=2_000_000,
     ),
     messages.TxOutputType(
         # tb1qkvwu9g3k2pdxewfqr7syz89r3gj557l3uuf9r9
-        address_n=parse_path("84h/1h/0h/0/0"),
-        amount=12300000 - 5000000 - 2000000 - 11000,
+        address_n=parse_path("m/84h/1h/0h/0/0"),
+        amount=12_300_000 - 5_000_000 - 2_000_000 - 11_000,
         script_type=messages.OutputScriptType.PAYTOWITNESS,
     ),
 ]
@@ -77,7 +78,7 @@ memos1 = [
         amount="15.9636 DASH",
         coin_name="Dash",
         slip44=5,
-        address_n=parse_path("44'/5'/0'/1/0"),
+        address_n=parse_path("m/44h/5h/0h/1/0"),
     ),
 ]
 
@@ -86,17 +87,17 @@ memos2 = [
         amount="3.1896 DASH",
         coin_name="Dash",
         slip44=5,
-        address_n=parse_path("44'/5'/0'/1/0"),
+        address_n=parse_path("m/44h/5h/0h/1/0"),
     ),
     CoinPurchaseMemo(
         amount="831.570802 GRS",
         coin_name="Groestlcoin",
         slip44=17,
-        address_n=parse_path("44'/17'/0'/0/3"),
+        address_n=parse_path("m/44h/17h/0h/0/3"),
     ),
 ]
 
-memos3 = [TextMemo("Invoice #87654321."), RefundMemo(parse_path("44'/1'/0'/0/1"))]
+memos3 = [TextMemo("Invoice #87654321."), RefundMemo(parse_path("m/44h/1h/0h/0/1"))]
 
 PaymentRequestParams = namedtuple(
     "PaymentRequestParams", ["txo_indices", "memos", "get_nonce"]
@@ -130,7 +131,7 @@ SERIALIZED_TX = "010000000001018a44999c07bba32df1cacdc50987944e68e3205b4429438fd
         case("out12", (PaymentRequestParams([1, 2], [], get_nonce=True),)),
     ),
 )
-def test_payment_request(client, payment_request_params):
+def test_payment_request(client: Client, payment_request_params):
     for txo in outputs:
         txo.payment_req_index = None
 
@@ -175,7 +176,7 @@ def test_payment_request(client, payment_request_params):
         )
 
 
-def test_payment_request_details(client):
+def test_payment_request_details(client: Client):
     # Test that payment request details are shown when requested.
     outputs[0].payment_req_index = 0
     outputs[1].payment_req_index = 0
@@ -225,7 +226,7 @@ def test_payment_request_details(client):
     assert serialized_tx.hex() == SERIALIZED_TX
 
 
-def test_payment_req_wrong_amount(client):
+def test_payment_req_wrong_amount(client: Client):
     # Test wrong total amount in payment request.
     outputs[0].payment_req_index = 0
     outputs[1].payment_req_index = 0
@@ -251,9 +252,9 @@ def test_payment_req_wrong_amount(client):
         )
 
 
-def test_payment_req_wrong_mac_refund(client):
+def test_payment_req_wrong_mac_refund(client: Client):
     # Test wrong MAC in payment request memo.
-    memo = RefundMemo(parse_path("44'/1'/0'/1/0"))
+    memo = RefundMemo(parse_path("m/44h/1h/0h/1/0"))
     outputs[0].payment_req_index = 0
     outputs[1].payment_req_index = 0
     outputs[2].payment_req_index = None
@@ -282,13 +283,13 @@ def test_payment_req_wrong_mac_refund(client):
 
 
 @pytest.mark.altcoin
-def test_payment_req_wrong_mac_purchase(client):
+def test_payment_req_wrong_mac_purchase(client: Client):
     # Test wrong MAC in payment request memo.
     memo = CoinPurchaseMemo(
         amount="22.34904 DASH",
         coin_name="Dash",
         slip44=5,
-        address_n=parse_path("44'/5'/0'/1/0"),
+        address_n=parse_path("m/44h/5h/0h/1/0"),
     )
     outputs[0].payment_req_index = 0
     outputs[1].payment_req_index = 0
@@ -317,7 +318,7 @@ def test_payment_req_wrong_mac_purchase(client):
         )
 
 
-def test_payment_req_wrong_output(client):
+def test_payment_req_wrong_output(client: Client):
     # Test wrong output in payment request.
     outputs[0].payment_req_index = 0
     outputs[1].payment_req_index = 0

@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import H_, parse_path
 
 from ... import bip32
@@ -109,7 +110,7 @@ multisig_in3 = messages.MultisigRedeemScriptType(
 # 2N9W4z9AhAPaHghtqVQPbaTAGHdbrhKeBQw
 INP1 = messages.TxInputType(
     address_n=[H_(45), 0, 0, 0],
-    amount=50000000,
+    amount=50_000_000,
     prev_hash=TXHASH_16c6c8,
     prev_index=1,
     script_type=messages.InputScriptType.SPENDMULTISIG,
@@ -119,7 +120,7 @@ INP1 = messages.TxInputType(
 # 2NDBG6QXQLtnQ3jRGkrqo53BiCeXfQXLdj4
 INP2 = messages.TxInputType(
     address_n=[H_(45), 0, 0, 1],
-    amount=34500000,
+    amount=34_500_000,
     prev_hash=TXHASH_d80c34,
     prev_index=0,
     script_type=messages.InputScriptType.SPENDMULTISIG,
@@ -129,7 +130,7 @@ INP2 = messages.TxInputType(
 # 2MvwPWfp2XPU3S1cMwgEMKBPUw38VP5SBE4
 INP3 = messages.TxInputType(
     address_n=[H_(45), 0, 0, 1],
-    amount=55500000,
+    amount=55_500_000,
     prev_hash=TXHASH_b0946d,
     prev_index=0,
     script_type=messages.InputScriptType.SPENDMULTISIG,
@@ -176,16 +177,16 @@ def _responses(INP1, INP2, change=0):
 
 
 # both outputs are external
-def test_external_external(client):
+def test_external_external(client: Client):
     out1 = messages.TxOutputType(
         address="1F8yBZB2NZhPZvJekhjTwjhQRRvQeTjjXr",
-        amount=40000000,
+        amount=40_000_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     out2 = messages.TxOutputType(
         address="1H7uXJQTVwXca2BXF2opTrvuZapk8Cm8zY",
-        amount=44000000,
+        amount=44_000_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -206,16 +207,16 @@ def test_external_external(client):
 
 
 # first external, second internal
-def test_external_internal(client):
+def test_external_internal(client: Client):
     out1 = messages.TxOutputType(
         address="1F8yBZB2NZhPZvJekhjTwjhQRRvQeTjjXr",
-        amount=40000000,
+        amount=40_000_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     out2 = messages.TxOutputType(
-        address_n=parse_path("45'/0/1/1"),
-        amount=44000000,
+        address_n=parse_path("m/45h/0/1/1"),
+        amount=44_000_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -236,16 +237,16 @@ def test_external_internal(client):
 
 
 # first internal, second external
-def test_internal_external(client):
+def test_internal_external(client: Client):
     out1 = messages.TxOutputType(
-        address_n=parse_path("45'/0/1/0"),
-        amount=40000000,
+        address_n=parse_path("m/45h/0/1/0"),
+        amount=40_000_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     out2 = messages.TxOutputType(
         address="1H7uXJQTVwXca2BXF2opTrvuZapk8Cm8zY",
-        amount=44000000,
+        amount=44_000_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -266,16 +267,16 @@ def test_internal_external(client):
 
 
 # both outputs are external
-def test_multisig_external_external(client):
+def test_multisig_external_external(client: Client):
     out1 = messages.TxOutputType(
         address="3B23k4kFBRtu49zvpG3Z9xuFzfpHvxBcwt",
-        amount=40000000,
+        amount=40_000_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     out2 = messages.TxOutputType(
         address="3PkXLsY7AUZCrCKGvX8FfP2EawowUBMbcg",
-        amount=44000000,
+        amount=44_000_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -296,7 +297,7 @@ def test_multisig_external_external(client):
 
 
 # inputs match, change matches (first is change)
-def test_multisig_change_match_first(client):
+def test_multisig_change_match_first(client: Client):
     multisig_out1 = messages.MultisigRedeemScriptType(
         nodes=[NODE_EXT2, NODE_EXT1, NODE_INT],
         address_n=[1, 0],
@@ -307,13 +308,13 @@ def test_multisig_change_match_first(client):
     out1 = messages.TxOutputType(
         address_n=[H_(45), 0, 1, 0],
         multisig=multisig_out1,
-        amount=40000000,
+        amount=40_000_000,
         script_type=messages.OutputScriptType.PAYTOMULTISIG,
     )
 
     out2 = messages.TxOutputType(
         address="3PkXLsY7AUZCrCKGvX8FfP2EawowUBMbcg",
-        amount=44000000,
+        amount=44_000_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -334,7 +335,7 @@ def test_multisig_change_match_first(client):
 
 
 # inputs match, change matches (second is change)
-def test_multisig_change_match_second(client):
+def test_multisig_change_match_second(client: Client):
     multisig_out2 = messages.MultisigRedeemScriptType(
         nodes=[NODE_EXT1, NODE_EXT2, NODE_INT],
         address_n=[1, 1],
@@ -344,14 +345,14 @@ def test_multisig_change_match_second(client):
 
     out1 = messages.TxOutputType(
         address="3B23k4kFBRtu49zvpG3Z9xuFzfpHvxBcwt",
-        amount=40000000,
+        amount=40_000_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     out2 = messages.TxOutputType(
         address_n=[H_(45), 0, 1, 1],
         multisig=multisig_out2,
-        amount=44000000,
+        amount=44_000_000,
         script_type=messages.OutputScriptType.PAYTOMULTISIG,
     )
 
@@ -372,7 +373,7 @@ def test_multisig_change_match_second(client):
 
 
 # inputs match, change mismatches (second tries to be change but isn't)
-def test_multisig_mismatch_change(client):
+def test_multisig_mismatch_change(client: Client):
     multisig_out2 = messages.MultisigRedeemScriptType(
         nodes=[NODE_EXT1, NODE_INT, NODE_EXT3],
         address_n=[1, 0],
@@ -382,14 +383,14 @@ def test_multisig_mismatch_change(client):
 
     out1 = messages.TxOutputType(
         address="3B23k4kFBRtu49zvpG3Z9xuFzfpHvxBcwt",
-        amount=40000000,
+        amount=40_000_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     out2 = messages.TxOutputType(
         address_n=[H_(45), 0, 1, 0],
         multisig=multisig_out2,
-        amount=44000000,
+        amount=44_000_000,
         script_type=messages.OutputScriptType.PAYTOMULTISIG,
     )
 
@@ -410,7 +411,7 @@ def test_multisig_mismatch_change(client):
 
 
 # inputs mismatch, change matches with first input
-def test_multisig_mismatch_inputs(client):
+def test_multisig_mismatch_inputs(client: Client):
     multisig_out1 = messages.MultisigRedeemScriptType(
         nodes=[NODE_EXT2, NODE_EXT1, NODE_INT],
         address_n=[1, 0],
@@ -421,13 +422,13 @@ def test_multisig_mismatch_inputs(client):
     out1 = messages.TxOutputType(
         address_n=[H_(45), 0, 1, 0],
         multisig=multisig_out1,
-        amount=40000000,
+        amount=40_000_000,
         script_type=messages.OutputScriptType.PAYTOMULTISIG,
     )
 
     out2 = messages.TxOutputType(
         address="3PkXLsY7AUZCrCKGvX8FfP2EawowUBMbcg",
-        amount=65000000,
+        amount=65_000_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 

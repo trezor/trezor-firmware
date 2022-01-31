@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import H_, parse_path
 
@@ -40,24 +41,24 @@ TXHASH_e5040e = bytes.fromhex(
 )
 
 
-def test_send_p2sh(client):
+def test_send_p2sh(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("49'/1'/0'/1/0"),
+        address_n=parse_path("m/49h/1h/0h/1/0"),
         # 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
-        amount=123456789,
+        amount=123_456_789,
         prev_hash=TXHASH_20912f,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
     )
     out1 = messages.TxOutputType(
         address="mhRx1CeVfaayqRwq5zgRQmD7W5aWBfD5mC",
-        amount=12300000,
+        amount=12_300_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     out2 = messages.TxOutputType(
         address="2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX",
         script_type=messages.OutputScriptType.PAYTOADDRESS,
-        amount=123456789 - 11000 - 12300000,
+        amount=123_456_789 - 11_000 - 12_300_000,
     )
     with client:
         client.set_expected_responses(
@@ -90,24 +91,24 @@ def test_send_p2sh(client):
     )
 
 
-def test_send_p2sh_change(client):
+def test_send_p2sh_change(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("49'/1'/0'/1/0"),
+        address_n=parse_path("m/49h/1h/0h/1/0"),
         # 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
-        amount=123456789,
+        amount=123_456_789,
         prev_hash=TXHASH_20912f,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
     )
     out1 = messages.TxOutputType(
         address="mhRx1CeVfaayqRwq5zgRQmD7W5aWBfD5mC",
-        amount=12300000,
+        amount=12_300_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     out2 = messages.TxOutputType(
-        address_n=parse_path("49'/1'/0'/1/0"),
+        address_n=parse_path("m/49h/1h/0h/1/0"),
         script_type=messages.OutputScriptType.PAYTOP2SHWITNESS,
-        amount=123456789 - 11000 - 12300000,
+        amount=123_456_789 - 11_000 - 12_300_000,
     )
     with client:
         client.set_expected_responses(
@@ -139,18 +140,18 @@ def test_send_p2sh_change(client):
     )
 
 
-def test_testnet_segwit_big_amount(client):
+def test_testnet_segwit_big_amount(client: Client):
     # This test is testing transaction with amount bigger than fits to uint32
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("m/49'/1'/0'/0/0"),
+        address_n=parse_path("m/49h/1h/0h/0/0"),
         amount=2 ** 32 + 1,
         prev_hash=TXHASH_dee13c,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
     )
     out1 = messages.TxOutputType(
-        address="2Mt7P2BAfE922zmfXrdcYTLyR7GUvbwSEns",  # seed allallall, bip32: m/49'/1'/0'/0/1, script type:p2shsegwit
+        address="2Mt7P2BAfE922zmfXrdcYTLyR7GUvbwSEns",  # seed allallall, bip32: m/49h/1h/0h/0/1, script type:p2shsegwit
         amount=2 ** 32 + 1,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
@@ -180,10 +181,10 @@ def test_testnet_segwit_big_amount(client):
 
 
 @pytest.mark.multisig
-def test_send_multisig_1(client):
+def test_send_multisig_1(client: Client):
     nodes = [
         btc.get_public_node(
-            client, parse_path(f"49'/1'/{i}'"), coin_name="Testnet"
+            client, parse_path(f"m/49h/1h/{i}h"), coin_name="Testnet"
         ).node
         for i in range(1, 4)
     ]
@@ -193,17 +194,17 @@ def test_send_multisig_1(client):
     )
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("49'/1'/1'/1/0"),
+        address_n=parse_path("m/49h/1h/1h/1/0"),
         prev_hash=TXHASH_9c3192,
         prev_index=1,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
         multisig=multisig,
-        amount=1610436,
+        amount=1_610_436,
     )
 
     out1 = messages.TxOutputType(
         address="mhRx1CeVfaayqRwq5zgRQmD7W5aWBfD5mC",
-        amount=1605000,
+        amount=1_605_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -257,24 +258,24 @@ def test_send_multisig_1(client):
     )
 
 
-def test_attack_change_input_address(client):
+def test_attack_change_input_address(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("49'/1'/0'/1/0"),
+        address_n=parse_path("m/49h/1h/0h/1/0"),
         # 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
-        amount=123456789,
+        amount=123_456_789,
         prev_hash=TXHASH_20912f,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
     )
     out1 = messages.TxOutputType(
         address="mhRx1CeVfaayqRwq5zgRQmD7W5aWBfD5mC",
-        amount=12300000,
+        amount=12_300_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     out2 = messages.TxOutputType(
-        address_n=parse_path("49'/1'/12'/1/0"),
+        address_n=parse_path("m/49h/1h/12h/1/0"),
         script_type=messages.OutputScriptType.PAYTOP2SHWITNESS,
-        amount=123456789 - 11000 - 12300000,
+        amount=123_456_789 - 11_000 - 12_300_000,
     )
 
     # Test if the transaction can be signed normally
@@ -344,20 +345,20 @@ def test_attack_change_input_address(client):
         assert exc.value.message.endswith("Transaction has changed during signing")
 
 
-def test_attack_mixed_inputs(client):
+def test_attack_mixed_inputs(client: Client):
     TRUE_AMOUNT = 123456789
     FAKE_AMOUNT = 120000000
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("44'/1'/0'/0/0"),
-        amount=31000000,
+        address_n=parse_path("m/44h/1h/0h/0/0"),
+        amount=31_000_000,
         prev_hash=TXHASH_e5040e,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDADDRESS,
         sequence=0xFFFFFFFD,
     )
     inp2 = messages.TxInputType(
-        address_n=parse_path("49'/1'/0'/1/0"),
+        address_n=parse_path("m/49h/1h/0h/1/0"),
         amount=TRUE_AMOUNT,
         prev_hash=TXHASH_20912f,
         prev_index=0,
@@ -366,7 +367,7 @@ def test_attack_mixed_inputs(client):
     )
     out1 = messages.TxOutputType(
         address="mhRx1CeVfaayqRwq5zgRQmD7W5aWBfD5mC",
-        amount=31000000 + TRUE_AMOUNT - 3456789,
+        amount=31_000_000 + TRUE_AMOUNT - 3_456_789,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 

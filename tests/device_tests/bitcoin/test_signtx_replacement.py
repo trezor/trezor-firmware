@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -88,10 +89,10 @@ TXHASH_8e4af7 = bytes.fromhex(
 )
 
 
-def test_p2pkh_fee_bump(client):
+def test_p2pkh_fee_bump(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("44h/0h/0h/0/4"),
-        amount=174998,
+        address_n=parse_path("m/44h/0h/0h/0/4"),
+        amount=174_998,
         prev_hash=TXHASH_beafc7,
         prev_index=0,
         orig_hash=TXHASH_50f6f1,
@@ -99,8 +100,8 @@ def test_p2pkh_fee_bump(client):
     )
 
     out1 = messages.TxOutputType(
-        address_n=parse_path("44h/0h/0h/1/2"),
-        amount=174998 - 50000 - 15000,  # Originally fee was 11300, now 15000.
+        address_n=parse_path("m/44h/0h/0h/1/2"),
+        amount=174_998 - 50_000 - 15_000,  # Originally fee was 11_300, now 15_000.
         script_type=messages.OutputScriptType.PAYTOADDRESS,
         orig_hash=TXHASH_50f6f1,
         orig_index=0,
@@ -108,7 +109,7 @@ def test_p2pkh_fee_bump(client):
 
     out2 = messages.TxOutputType(
         address="1GA9u9TfCG7SWmKCveBumdA1TZpfom6ZdJ",
-        amount=50000,
+        amount=50_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
         orig_hash=TXHASH_50f6f1,
         orig_index=1,
@@ -157,17 +158,17 @@ def test_p2pkh_fee_bump(client):
     )
 
 
-def test_p2wpkh_op_return_fee_bump(client):
+def test_p2wpkh_op_return_fee_bump(client: Client):
     # Original input.
     inp1 = messages.TxInputType(
         address_n=parse_path("m/84h/1h/1h/0/14"),
-        amount=1000000,
+        amount=1_000_000,
         script_type=messages.InputScriptType.SPENDWITNESS,
         prev_hash=TXHASH_408397,
         prev_index=1,
         orig_hash=TXHASH_ba917a,
         orig_index=0,
-        sequence=4294967293,
+        sequence=4_294_967_293,
     )
 
     # Original OP_RETURN output.
@@ -182,7 +183,7 @@ def test_p2wpkh_op_return_fee_bump(client):
     # Change-output. We bump the fee from 150 to 300.
     out2 = messages.TxOutputType(
         address_n=parse_path("m/84h/1h/1h/1/10"),
-        amount=999850 - 150,
+        amount=999_850 - 150,
         script_type=messages.OutputScriptType.PAYTOWITNESS,
         orig_hash=TXHASH_ba917a,
         orig_index=1,
@@ -204,11 +205,11 @@ def test_p2wpkh_op_return_fee_bump(client):
 
 
 # txid 48bc29fc42a64b43d043b0b7b99b21aa39654234754608f791c60bcbd91a8e92
-def test_p2tr_fee_bump(client):
+def test_p2tr_fee_bump(client: Client):
     inp1 = messages.TxInputType(
         # tb1p8tvmvsvhsee73rhym86wt435qrqm92psfsyhy6a3n5gw455znnpqm8wald
-        address_n=parse_path("86'/1'/0'/0/1"),
-        amount=13000,
+        address_n=parse_path("m/86h/1h/0h/0/1"),
+        amount=13_000,
         orig_hash=TXHASH_8e4af7,
         orig_index=0,
         prev_hash=TXHASH_a4e274,
@@ -217,8 +218,8 @@ def test_p2tr_fee_bump(client):
     )
     inp2 = messages.TxInputType(
         # tb1pswrqtykue8r89t9u4rprjs0gt4qzkdfuursfnvqaa3f2yql07zmq8s8a5u
-        address_n=parse_path("86'/1'/0'/0/0"),
-        amount=6800,
+        address_n=parse_path("m/86h/1h/0h/0/0"),
+        amount=6_800,
         orig_hash=TXHASH_8e4af7,
         orig_index=1,
         prev_hash=TXHASH_ccd7ea,
@@ -227,15 +228,15 @@ def test_p2tr_fee_bump(client):
     )
     out1 = messages.TxOutputType(
         address="tb1qq0rurzt04d76hk7pjxhqggk7ad4zj7c9u369kt",
-        amount=15000,
+        amount=15_000,
         orig_hash=TXHASH_8e4af7,
         orig_index=0,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     out2 = messages.TxOutputType(
         # tb1pn2d0yjeedavnkd8z8lhm566p0f2utm3lgvxrsdehnl94y34txmts5s7t4c
-        address_n=parse_path("86'/1'/0'/1/0"),
-        amount=4600 - 250,  # bump the fee by 250
+        address_n=parse_path("m/86h/1h/0h/1/0"),
+        amount=4_600 - 250,  # bump the fee by 250
         orig_hash=TXHASH_8e4af7,
         orig_index=1,
         script_type=messages.OutputScriptType.PAYTOTAPROOT,
@@ -273,23 +274,23 @@ def test_p2tr_fee_bump(client):
     )
 
 
-def test_p2wpkh_finalize(client):
+def test_p2wpkh_finalize(client: Client):
     # Original input with disabled RBF opt-in, i.e. we finalize the transaction.
     inp1 = messages.TxInputType(
-        address_n=parse_path("84h/1h/0h/0/2"),
-        amount=20000000,
+        address_n=parse_path("m/84h/1h/0h/0/2"),
+        amount=20_000_000,
         script_type=messages.InputScriptType.SPENDWITNESS,
         prev_hash=TXHASH_43d273,
         prev_index=1,
         orig_hash=TXHASH_70f987,
         orig_index=0,
-        sequence=4294967294,
+        sequence=4_294_967_294,
     )
 
     # Original external output (actually 84h/1h/0h/0/0).
     out1 = messages.TxOutputType(
         address="tb1qkvwu9g3k2pdxewfqr7syz89r3gj557l3uuf9r9",
-        amount=100000,
+        amount=100_000,
         script_type=messages.OutputScriptType.PAYTOWITNESS,
         orig_hash=TXHASH_70f987,
         orig_index=0,
@@ -297,8 +298,8 @@ def test_p2wpkh_finalize(client):
 
     # Change output. We bump the fee from 141 to 200.
     out2 = messages.TxOutputType(
-        address_n=parse_path("84h/1h/0h/1/1"),
-        amount=20000000 - 100000 - 200,
+        address_n=parse_path("m/84h/1h/0h/1/1"),
+        amount=20_000_000 - 100_000 - 200,
         script_type=messages.OutputScriptType.PAYTOWITNESS,
         orig_hash=TXHASH_70f987,
         orig_index=1,
@@ -334,7 +335,7 @@ def test_p2wpkh_finalize(client):
             "Testnet",
             [inp1],
             [out1, out2],
-            lock_time=1348713,
+            lock_time=1_348_713,
             prev_txes=TX_CACHE_TESTNET,
         )
 
@@ -395,19 +396,19 @@ def test_p2wpkh_payjoin(
 ):
     # Original input.
     inp1 = messages.TxInputType(
-        address_n=parse_path("84h/1h/0h/0/0"),
-        amount=100000,
+        address_n=parse_path("m/84h/1h/0h/0/0"),
+        amount=100_000,
         script_type=messages.InputScriptType.SPENDWITNESS,
         prev_hash=TXHASH_e4b5b2,
         prev_index=0,
         orig_hash=TXHASH_65b768,
         orig_index=0,
-        sequence=1516634,
+        sequence=1_516_634,
     )
 
     # New presigned external input. (Actually 84h/1h/0h/1/1, making it easier to generate witnesses.)
     inp2 = messages.TxInputType(
-        amount=19899859,
+        amount=19_899_859,
         script_type=messages.InputScriptType.EXTERNAL,
         prev_hash=TXHASH_70f987,
         prev_index=1,
@@ -427,7 +428,7 @@ def test_p2wpkh_payjoin(
 
     # Original change.
     out2 = messages.TxOutputType(
-        address_n=parse_path("84h/1h/0h/1/2"),
+        address_n=parse_path("m/84h/1h/0h/1/2"),
         amount=out2_amount,
         script_type=messages.OutputScriptType.PAYTOWITNESS,
         orig_hash=TXHASH_65b768,
@@ -471,19 +472,19 @@ def test_p2wpkh_payjoin(
             "Testnet",
             [inp1, inp2],
             [out1, out2],
-            lock_time=1516634,
+            lock_time=1_516_634,
             prev_txes=TX_CACHE_TESTNET,
         )
 
     assert serialized_tx.hex() == expected_tx
 
 
-def test_p2wpkh_in_p2sh_remove_change(client):
+def test_p2wpkh_in_p2sh_remove_change(client: Client):
     # Test fee bump with change-output removal. Originally fee was 3780, now 98060.
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("49h/1h/0h/0/4"),
-        amount=100000,
+        address_n=parse_path("m/49h/1h/0h/0/4"),
+        amount=100_000,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
         prev_hash=TXHASH_5e7667,
         prev_index=1,
@@ -492,8 +493,8 @@ def test_p2wpkh_in_p2sh_remove_change(client):
     )
 
     inp2 = messages.TxInputType(
-        address_n=parse_path("49h/1h/0h/0/3"),
-        amount=998060,
+        address_n=parse_path("m/49h/1h/0h/0/3"),
+        amount=998_060,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
         prev_hash=TXHASH_efaa41,
         prev_index=0,
@@ -504,7 +505,7 @@ def test_p2wpkh_in_p2sh_remove_change(client):
     out1 = messages.TxOutputType(
         # Actually m/49'/1'/0'/0/5.
         address="2MvUUSiQZDSqyeSdofKX9KrSCio1nANPDTe",
-        amount=1000000,
+        amount=1_000_000,
         orig_hash=TXHASH_334cd7,
         orig_index=0,
     )
@@ -553,13 +554,13 @@ def test_p2wpkh_in_p2sh_remove_change(client):
     )
 
 
-def test_p2wpkh_in_p2sh_fee_bump_from_external(client):
+def test_p2wpkh_in_p2sh_fee_bump_from_external(client: Client):
     # Use the change output and an external output to bump the fee.
     # Originally fee was 3780, now 108060 (94280 from change and 10000 from external).
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("49h/1h/0h/0/4"),
-        amount=100000,
+        address_n=parse_path("m/49h/1h/0h/0/4"),
+        amount=100_000,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
         prev_hash=TXHASH_5e7667,
         prev_index=1,
@@ -568,8 +569,8 @@ def test_p2wpkh_in_p2sh_fee_bump_from_external(client):
     )
 
     inp2 = messages.TxInputType(
-        address_n=parse_path("49h/1h/0h/0/3"),
-        amount=998060,
+        address_n=parse_path("m/49h/1h/0h/0/3"),
+        amount=998_060,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
         prev_hash=TXHASH_efaa41,
         prev_index=0,
@@ -580,7 +581,7 @@ def test_p2wpkh_in_p2sh_fee_bump_from_external(client):
     out1 = messages.TxOutputType(
         # Actually m/49'/1'/0'/0/5.
         address="2MvUUSiQZDSqyeSdofKX9KrSCio1nANPDTe",
-        amount=990000,
+        amount=990_000,
         orig_hash=TXHASH_334cd7,
         orig_index=0,
     )
@@ -633,12 +634,12 @@ def test_p2wpkh_in_p2sh_fee_bump_from_external(client):
 
 
 @pytest.mark.skip_t1
-def test_tx_meld(client):
+def test_tx_meld(client: Client):
     # Meld two original transactions into one, joining the change-outputs into a different one.
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("49h/1h/0h/0/4"),
-        amount=100000,
+        address_n=parse_path("m/49h/1h/0h/0/4"),
+        amount=100_000,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
         prev_hash=TXHASH_5e7667,
         prev_index=1,
@@ -647,8 +648,8 @@ def test_tx_meld(client):
     )
 
     inp2 = messages.TxInputType(
-        address_n=parse_path("49h/1h/0h/0/8"),
-        amount=4973340,
+        address_n=parse_path("m/49h/1h/0h/0/8"),
+        amount=4_973_340,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
         prev_hash=TXHASH_6673b7,
         prev_index=0,
@@ -657,8 +658,8 @@ def test_tx_meld(client):
     )
 
     inp3 = messages.TxInputType(
-        address_n=parse_path("49h/1h/0h/0/3"),
-        amount=998060,
+        address_n=parse_path("m/49h/1h/0h/0/3"),
+        amount=998_060,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
         prev_hash=TXHASH_efaa41,
         prev_index=0,
@@ -667,8 +668,8 @@ def test_tx_meld(client):
     )
 
     inp4 = messages.TxInputType(
-        address_n=parse_path("49h/1h/0h/0/9"),
-        amount=839318869,
+        address_n=parse_path("m/49h/1h/0h/0/9"),
+        amount=839_318_869,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
         prev_hash=TXHASH_927784,
         prev_index=0,
@@ -678,7 +679,7 @@ def test_tx_meld(client):
 
     out1 = messages.TxOutputType(
         address="moE1dVYvebvtaMuNdXQKvu4UxUftLmS1Gt",
-        amount=100000000,
+        amount=100_000_000,
         orig_hash=TXHASH_ed89ac,
         orig_index=1,
     )
@@ -686,15 +687,21 @@ def test_tx_meld(client):
     out2 = messages.TxOutputType(
         # Actually m/49'/1'/0'/0/5.
         address="2MvUUSiQZDSqyeSdofKX9KrSCio1nANPDTe",
-        amount=1000000,
+        amount=1_000_000,
         orig_hash=TXHASH_334cd7,
         orig_index=0,
     )
 
     # Change-output. Original fees were 3780 + 90720 = 94500.
     out3 = messages.TxOutputType(
-        address_n=parse_path("49h/1h/0h/1/0"),
-        amount=100000 + 4973340 + 998060 + 839318869 - 100000000 - 1000000 - 94500,
+        address_n=parse_path("m/49h/1h/0h/1/0"),
+        amount=100_000
+        + 4_973_340
+        + 998_060
+        + 839_318_869
+        - 100_000_000
+        - 1_000_000
+        - 94_500,
         script_type=messages.OutputScriptType.PAYTOP2SHWITNESS,
     )
 
@@ -772,26 +779,26 @@ def test_tx_meld(client):
     )
 
 
-def test_attack_steal_change(client):
+def test_attack_steal_change(client: Client):
     # Attempt to steal amount equivalent to the change in the original transaction by
     # hiding the fact that an output in the original transaction is a change-output.
 
     # Original input.
     inp1 = messages.TxInputType(
-        address_n=parse_path("84h/1h/0h/0/0"),
-        amount=100000,
+        address_n=parse_path("m/84h/1h/0h/0/0"),
+        amount=100_000,
         script_type=messages.InputScriptType.SPENDWITNESS,
         prev_hash=TXHASH_e4b5b2,
         prev_index=0,
         orig_hash=TXHASH_65b768,
         orig_index=0,
-        sequence=1516634,
+        sequence=1_516_634,
     )
 
     # New input for the attacker to steal from.
     inp2 = messages.TxInputType(
-        address_n=parse_path("84h/1h/0h/1/1"),
-        amount=19899859,
+        address_n=parse_path("m/84h/1h/0h/1/1"),
+        amount=19_899_859,
         script_type=messages.InputScriptType.SPENDWITNESS,
         prev_hash=TXHASH_70f987,
         prev_index=1,
@@ -800,7 +807,7 @@ def test_attack_steal_change(client):
     # Original output.
     out1 = messages.TxOutputType(
         address="tb1qldlynaqp0hy4zc2aag3pkenzvxy65saesxw3wd",
-        amount=10000,
+        amount=10_000,
         script_type=messages.OutputScriptType.PAYTOWITNESS,
         orig_hash=TXHASH_65b768,
         orig_index=0,
@@ -809,8 +816,8 @@ def test_attack_steal_change(client):
     # Original change was 89859. We bump the fee from 141 to 200 and
     # attacker gives back what he can't steal.
     out2 = messages.TxOutputType(
-        address_n=parse_path("84h/1h/0h/1/2"),
-        amount=100000 - 10000 - 200 + (19899859 - 89859),
+        address_n=parse_path("m/84h/1h/0h/1/2"),
+        amount=100_000 - 10_000 - 200 + (19_899_859 - 89_859),
         script_type=messages.OutputScriptType.PAYTOWITNESS,
         orig_hash=TXHASH_65b768,
         orig_index=1,
@@ -819,7 +826,7 @@ def test_attack_steal_change(client):
     # Attacker's new output.
     out3 = messages.TxOutputType(
         address="tb1q694ccp5qcc0udmfwgp692u2s2hjpq5h407urtu",
-        amount=89859,
+        amount=89_859,
     )
 
     # Attacker hides the fact that second output of 65b768 is a change-output.
@@ -837,21 +844,21 @@ def test_attack_steal_change(client):
             "Testnet",
             [inp1, inp2],
             [out1, out2, out3],
-            lock_time=1516634,
+            lock_time=1_516_634,
             prev_txes=prev_txes,
         )
 
 
 @pytest.mark.skip_t1
-def test_attack_false_internal(client):
+def test_attack_false_internal(client: Client):
     # Falsely claim that an external input is internal in the original transaction.
     # If this were possible, it would allow an attacker to make it look like the
     # user was spending more in the original than they actually were, making it
     # possible for the attacker to steal the difference.
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("49h/1h/0h/0/4"),
-        amount=100000,
+        address_n=parse_path("m/49h/1h/0h/0/4"),
+        amount=100_000,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
         prev_hash=TXHASH_5e7667,
         prev_index=1,
@@ -862,7 +869,7 @@ def test_attack_false_internal(client):
     inp2 = messages.TxInputType(
         # Actually 49h/1h/0h/0/3, but we will make it look like it's external,
         # while in the original it will show up as intenal.
-        amount=998060,
+        amount=998_060,
         script_type=messages.InputScriptType.EXTERNAL,
         prev_hash=TXHASH_efaa41,
         prev_index=0,
@@ -878,7 +885,7 @@ def test_attack_false_internal(client):
     out1 = messages.TxOutputType(
         # Actually m/49'/1'/0'/0/5.
         address="2MvUUSiQZDSqyeSdofKX9KrSCio1nANPDTe",
-        amount=1000000 + 94280,
+        amount=1_000_000 + 94_280,
         orig_hash=TXHASH_334cd7,
         orig_index=0,
     )
@@ -895,15 +902,15 @@ def test_attack_false_internal(client):
         )
 
 
-def test_attack_fake_int_input_amount(client):
+def test_attack_fake_int_input_amount(client: Client):
     # Give a fake input amount for an original internal input while giving the correct
     # amount for the replacement input. If an attacker could increase the amount of an
     # internal input in the original transaction, then they could bump the fee of the
     # transaction without the user noticing.
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("44h/0h/0h/0/4"),
-        amount=174998,
+        address_n=parse_path("m/44h/0h/0h/0/4"),
+        amount=174_998,
         prev_hash=TXHASH_beafc7,
         prev_index=0,
         orig_hash=TXHASH_50f6f1,
@@ -911,8 +918,8 @@ def test_attack_fake_int_input_amount(client):
     )
 
     out1 = messages.TxOutputType(
-        address_n=parse_path("44h/0h/0h/1/2"),
-        amount=174998
+        address_n=parse_path("m/44h/0h/0h/1/2"),
+        amount=174_998
         - 50000
         - 111300,  # Original fee was 11300, attacker increases it by 100000.
         script_type=messages.OutputScriptType.PAYTOADDRESS,
@@ -922,7 +929,7 @@ def test_attack_fake_int_input_amount(client):
 
     out2 = messages.TxOutputType(
         address="1GA9u9TfCG7SWmKCveBumdA1TZpfom6ZdJ",
-        amount=50000,
+        amount=50_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
         orig_hash=TXHASH_50f6f1,
         orig_index=1,
@@ -950,15 +957,15 @@ def test_attack_fake_int_input_amount(client):
 
 
 @pytest.mark.skip_t1
-def test_attack_fake_ext_input_amount(client):
+def test_attack_fake_ext_input_amount(client: Client):
     # Give a fake input amount for an original external input while giving the correct
     # amount for the replacement input. If an attacker could decrease the amount of an
     # external input in the original transaction, then they could steal the fee from
     # the transaction without the user noticing.
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("49h/1h/0h/0/8"),
-        amount=4973340,
+        address_n=parse_path("m/49h/1h/0h/0/8"),
+        amount=4_973_340,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
         prev_hash=TXHASH_6673b7,
         prev_index=0,
@@ -969,7 +976,7 @@ def test_attack_fake_ext_input_amount(client):
     inp2 = messages.TxInputType(
         # Actually 49h/1h/0h/0/9, but we will make it look like it's external,
         # so that we can try out this scenario, i.e. not a part of the attack.
-        amount=839318869,
+        amount=839_318_869,
         script_type=messages.InputScriptType.EXTERNAL,
         prev_hash=TXHASH_927784,
         prev_index=0,
@@ -985,15 +992,15 @@ def test_attack_fake_ext_input_amount(client):
     # Attacker adds 30000, but it could even go to a new output.
     out1 = messages.TxOutputType(
         address="moE1dVYvebvtaMuNdXQKvu4UxUftLmS1Gt",
-        amount=100000000 + 30000,
+        amount=100_000_000 + 30_000,
         orig_hash=TXHASH_ed89ac,
         orig_index=1,
     )
 
     # Change-output. Original fee was 90720, attacker steals 30000.
     out2 = messages.TxOutputType(
-        address_n=parse_path("49h/1h/0h/1/6"),
-        amount=4973340 + 839318869 - (100000000 + 30000) - 60720,
+        address_n=parse_path("m/49h/1h/0h/1/6"),
+        amount=4_973_340 + 839_318_869 - (100_000_000 + 30_000) - 60_720,
         script_type=messages.OutputScriptType.PAYTOP2SHWITNESS,
     )
 
@@ -1025,25 +1032,25 @@ def test_attack_fake_ext_input_amount(client):
         )
 
 
-def test_p2wpkh_invalid_signature(client):
+def test_p2wpkh_invalid_signature(client: Client):
     # Ensure that transaction replacement fails when the original signature is invalid.
 
     # Original input with disabled RBF opt-in, i.e. we finalize the transaction.
     inp1 = messages.TxInputType(
-        address_n=parse_path("84h/1h/0h/0/2"),
-        amount=20000000,
+        address_n=parse_path("m/84h/1h/0h/0/2"),
+        amount=20_000_000,
         script_type=messages.InputScriptType.SPENDWITNESS,
         prev_hash=TXHASH_43d273,
         prev_index=1,
         orig_hash=TXHASH_70f987,
         orig_index=0,
-        sequence=4294967294,
+        sequence=4_294_967_294,
     )
 
     # Original external output (actually 84h/1h/0h/0/0).
     out1 = messages.TxOutputType(
         address="tb1qkvwu9g3k2pdxewfqr7syz89r3gj557l3uuf9r9",
-        amount=100000,
+        amount=100_000,
         script_type=messages.OutputScriptType.PAYTOWITNESS,
         orig_hash=TXHASH_70f987,
         orig_index=0,
@@ -1051,8 +1058,8 @@ def test_p2wpkh_invalid_signature(client):
 
     # Change output. We bump the fee from 141 to 200.
     out2 = messages.TxOutputType(
-        address_n=parse_path("84h/1h/0h/1/1"),
-        amount=20000000 - 100000 - 200,
+        address_n=parse_path("m/84h/1h/0h/1/1"),
+        amount=20_000_000 - 100_000 - 200,
         script_type=messages.OutputScriptType.PAYTOWITNESS,
         orig_hash=TXHASH_70f987,
         orig_index=1,
@@ -1073,18 +1080,18 @@ def test_p2wpkh_invalid_signature(client):
             "Testnet",
             [inp1],
             [out1, out2],
-            lock_time=1348713,
+            lock_time=1_348_713,
             prev_txes=prev_txes,
         )
 
 
-def test_p2tr_invalid_signature(client):
+def test_p2tr_invalid_signature(client: Client):
     # Ensure that transaction replacement fails when the original signature is invalid.
 
     inp1 = messages.TxInputType(
         # tb1p8tvmvsvhsee73rhym86wt435qrqm92psfsyhy6a3n5gw455znnpqm8wald
-        address_n=parse_path("86'/1'/0'/0/1"),
-        amount=13000,
+        address_n=parse_path("m/86h/1h/0h/0/1"),
+        amount=13_000,
         orig_hash=TXHASH_8e4af7,
         orig_index=0,
         prev_hash=TXHASH_a4e274,
@@ -1093,8 +1100,8 @@ def test_p2tr_invalid_signature(client):
     )
     inp2 = messages.TxInputType(
         # tb1pswrqtykue8r89t9u4rprjs0gt4qzkdfuursfnvqaa3f2yql07zmq8s8a5u
-        address_n=parse_path("86'/1'/0'/0/0"),
-        amount=6800,
+        address_n=parse_path("m/86h/1h/0h/0/0"),
+        amount=6_800,
         orig_hash=TXHASH_8e4af7,
         orig_index=1,
         prev_hash=TXHASH_ccd7ea,
@@ -1103,15 +1110,15 @@ def test_p2tr_invalid_signature(client):
     )
     out1 = messages.TxOutputType(
         address="tb1qq0rurzt04d76hk7pjxhqggk7ad4zj7c9u369kt",
-        amount=15000,
+        amount=15_000,
         orig_hash=TXHASH_8e4af7,
         orig_index=0,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     out2 = messages.TxOutputType(
         # tb1pn2d0yjeedavnkd8z8lhm566p0f2utm3lgvxrsdehnl94y34txmts5s7t4c
-        address_n=parse_path("86'/1'/0'/1/0"),
-        amount=4600 - 250,  # bump the fee by 250
+        address_n=parse_path("m/86h/1h/0h/1/0"),
+        amount=4_600 - 250,  # bump the fee by 250
         orig_hash=TXHASH_8e4af7,
         orig_index=1,
         script_type=messages.OutputScriptType.PAYTOTAPROOT,

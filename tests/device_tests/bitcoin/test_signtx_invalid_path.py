@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import btc, device, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import H_, parse_path
 
@@ -50,13 +51,13 @@ TXHASH_5dfd1b = bytes.fromhex(
 # Litecoin does not have strong replay protection using SIGHASH_FORKID,
 # spending from Bitcoin path should fail.
 @pytest.mark.altcoin
-def test_invalid_path_fail(client):
+def test_invalid_path_fail(client: Client):
     # tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
     # input 0: 0.0039 BTC
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("44h/0h/0h/0/0"),
-        amount=390000,
+        address_n=parse_path("m/44h/0h/0h/0/0"),
+        amount=390_000,
         prev_hash=TXHASH_d5f65e,
         prev_index=0,
     )
@@ -64,7 +65,7 @@ def test_invalid_path_fail(client):
     # address is converted from 1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1 by changing the version
     out1 = messages.TxOutputType(
         address="LfWz9wLHmqU9HoDkMg9NqbRosrHvEixeVZ",
-        amount=390000 - 10000,
+        amount=390_000 - 10_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -80,13 +81,13 @@ def test_invalid_path_fail(client):
 # Litecoin does not have strong replay protection using SIGHASH_FORKID, but
 # spending from Bitcoin path should pass with safety checks set to prompt.
 @pytest.mark.altcoin
-def test_invalid_path_prompt(client):
+def test_invalid_path_prompt(client: Client):
     # tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
     # input 0: 0.0039 BTC
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("44h/0h/0h/0/0"),
-        amount=390000,
+        address_n=parse_path("m/44h/0h/0h/0/0"),
+        amount=390_000,
         prev_hash=TXHASH_d5f65e,
         prev_index=0,
     )
@@ -94,7 +95,7 @@ def test_invalid_path_prompt(client):
     # address is converted from 1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1 by changing the version
     out1 = messages.TxOutputType(
         address="LfWz9wLHmqU9HoDkMg9NqbRosrHvEixeVZ",
-        amount=390000 - 10000,
+        amount=390_000 - 10_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -110,13 +111,13 @@ def test_invalid_path_prompt(client):
 # Bcash does have strong replay protection using SIGHASH_FORKID,
 # spending from Bitcoin path should work.
 @pytest.mark.altcoin
-def test_invalid_path_pass_forkid(client):
+def test_invalid_path_pass_forkid(client: Client):
     # tx: 8cc1f4adf7224ce855cf535a5104594a0004cb3b640d6714fdb00b9128832dd5
     # input 0: 0.0039 BTC
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("44h/0h/0h/0/0"),
-        amount=390000,
+        address_n=parse_path("m/44h/0h/0h/0/0"),
+        amount=390_000,
         prev_hash=TXHASH_8cc1f4,
         prev_index=0,
     )
@@ -124,14 +125,14 @@ def test_invalid_path_pass_forkid(client):
     # address is converted from 1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1 to cashaddr format
     out1 = messages.TxOutputType(
         address="bitcoincash:qr0fk25d5zygyn50u5w7h6jkvctas52n0qxff9ja6r",
-        amount=390000 - 10000,
+        amount=390_000 - 10_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     btc.sign_tx(client, "Bcash", [inp1], [out1], prev_txes=TX_CACHE_BCASH)
 
 
-def test_attack_path_segwit(client):
+def test_attack_path_segwit(client: Client):
     # Scenario: The attacker falsely claims that the transaction uses Testnet paths to
     # avoid the path warning dialog, but in step6_sign_segwit_inputs() uses Bitcoin paths
     # to get a valid signature.
@@ -142,8 +143,8 @@ def test_attack_path_segwit(client):
 
     inp1 = messages.TxInputType(
         # The actual input that the attcker wants to get signed.
-        address_n=parse_path("84'/0'/0'/0/0"),
-        amount=9426,
+        address_n=parse_path("m/84h/0h/0h/0/0"),
+        amount=9_426,
         prev_hash=TXHASH_fa80a9,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDWITNESS,
@@ -152,8 +153,8 @@ def test_attack_path_segwit(client):
         # The actual input that the attcker wants to get signed.
         # We need this one to be from a different account, so that the match checker
         # allows the transaction to pass.
-        address_n=parse_path("84'/0'/1'/0/1"),
-        amount=7086,
+        address_n=parse_path("m/84h/0h/1h/0/1"),
+        amount=7_086,
         prev_hash=TXHASH_5dfd1b,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDWITNESS,
@@ -163,7 +164,7 @@ def test_attack_path_segwit(client):
         # Attacker's Mainnet address encoded as Testnet.
         address="tb1q694ccp5qcc0udmfwgp692u2s2hjpq5h407urtu",
         script_type=messages.OutputScriptType.PAYTOADDRESS,
-        amount=9426 + 7086 - 500,
+        amount=9_426 + 7_086 - 500,
     )
 
     attack_count = 6
@@ -222,19 +223,19 @@ def test_attack_path_segwit(client):
 
 
 @pytest.mark.skip_t1(reason="T1 only prevents using paths known to be altcoins")
-def test_invalid_path_fail_asap(client):
+def test_invalid_path_fail_asap(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("0"),
-        amount=4977040,
+        address_n=parse_path("m/0"),
+        amount=4_977_040,
         prev_hash=TXHASH_a5cd2a,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDWITNESS,
-        sequence=4294967293,
+        sequence=4_294_967_293,
     )
 
     out1 = messages.TxOutputType(
-        address_n=parse_path("84h/0h/0h/1/0"),
-        amount=4977040,
+        address_n=parse_path("m/84h/0h/0h/1/0"),
+        amount=4_977_040,
         script_type=messages.OutputScriptType.PAYTOWITNESS,
     )
 

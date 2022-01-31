@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import H_, btc_hash, parse_path
 
@@ -40,22 +41,22 @@ pytestmark = pytest.mark.altcoin
 
 
 # All data taken from T1
-def test_send_bitcoin_gold_change(client):
+def test_send_bitcoin_gold_change(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("44'/156'/0'/0/0"),
-        amount=1252382934,
+        address_n=parse_path("m/44h/156h/0h/0/0"),
+        amount=1_252_382_934,
         prev_hash=TXHASH_25526b,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDADDRESS,
     )
     out1 = messages.TxOutputType(
-        address_n=parse_path("44'/156'/0'/1/0"),
-        amount=1896050,
+        address_n=parse_path("m/44h/156h/0h/1/0"),
+        amount=1_896_050,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     out2 = messages.TxOutputType(
         address="GfDB1tvjfm3bukeoBTtfNqrJVFohS2kCTe",
-        amount=1252382934 - 1896050 - 1000,
+        amount=1_252_382_934 - 1_896_050 - 1_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:
@@ -87,25 +88,25 @@ def test_send_bitcoin_gold_change(client):
     )
 
 
-def test_send_bitcoin_gold_nochange(client):
+def test_send_bitcoin_gold_nochange(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("44'/156'/0'/1/0"),
-        amount=1252382934,
+        address_n=parse_path("m/44h/156h/0h/1/0"),
+        amount=1_252_382_934,
         prev_hash=TXHASH_25526b,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDADDRESS,
     )
     inp2 = messages.TxInputType(
-        address_n=parse_path("44'/156'/0'/0/1"),
+        address_n=parse_path("m/44h/156h/0h/0/1"),
         # 1LRspCZNFJcbuNKQkXgHMDucctFRQya5a3
-        amount=38448607,
+        amount=38_448_607,
         prev_hash=TXHASH_db77c2,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDADDRESS,
     )
     out1 = messages.TxOutputType(
         address="GfDB1tvjfm3bukeoBTtfNqrJVFohS2kCTe",
-        amount=1252382934 + 38448607 - 1000,
+        amount=1_252_382_934 + 38_448_607 - 1_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:
@@ -142,22 +143,22 @@ def test_send_bitcoin_gold_nochange(client):
     )
 
 
-def test_attack_change_input(client):
+def test_attack_change_input(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("44'/156'/11'/0/0"),
-        amount=1252382934,
+        address_n=parse_path("m/44h/156h/11h/0/0"),
+        amount=1_252_382_934,
         prev_hash=TXHASH_25526b,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDADDRESS,
     )
     out1 = messages.TxOutputType(
-        address_n=parse_path("44'/156'/11'/1/0"),
-        amount=1896050,
+        address_n=parse_path("m/44h/156h/11h/1/0"),
+        amount=1_896_050,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     out2 = messages.TxOutputType(
         address="GfDB1tvjfm3bukeoBTtfNqrJVFohS2kCTe",
-        amount=1252382934 - 1896050 - 1000,
+        amount=1_252_382_934 - 1_896_050 - 1_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -197,10 +198,10 @@ def test_attack_change_input(client):
 
 
 @pytest.mark.multisig
-def test_send_btg_multisig_change(client):
+def test_send_btg_multisig_change(client: Client):
     nodes = [
         btc.get_public_node(
-            client, parse_path(f"48'/156'/{i}'/0'"), coin_name="Bgold"
+            client, parse_path(f"m/48h/156h/{i}h/0h"), coin_name="Bgold"
         ).node
         for i in range(1, 4)
     ]
@@ -213,24 +214,24 @@ def test_send_btg_multisig_change(client):
         )
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("48'/156'/3'/0'/0/0"),
+        address_n=parse_path("m/48h/156h/3h/0h/0/0"),
         multisig=getmultisig(0, 0, EMPTY_SIGS),
         # 33Ju286QvonBz5N1V754ZekQv4GLJqcc5R
-        amount=1252382934,
+        amount=1_252_382_934,
         prev_hash=TXHASH_25526b,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDMULTISIG,
     )
     out1 = messages.TxOutputType(
         address="GfDB1tvjfm3bukeoBTtfNqrJVFohS2kCTe",
-        amount=24000,
+        amount=24_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     out2 = messages.TxOutputType(
-        address_n=parse_path("48'/156'/3'/0'/1/0"),
+        address_n=parse_path("m/48h/156h/3h/0h/1/0"),
         multisig=getmultisig(1, 0, EMPTY_SIGS),
         script_type=messages.OutputScriptType.PAYTOMULTISIG,
-        amount=1252382934 - 24000 - 1000,
+        amount=1_252_382_934 - 24_000 - 1_000,
     )
     with client:
         client.set_expected_responses(
@@ -261,9 +262,9 @@ def test_send_btg_multisig_change(client):
     )
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("48'/156'/1'/0'/0/0"),
+        address_n=parse_path("m/48h/156h/1h/0h/0/0"),
         multisig=getmultisig(0, 0, [b"", b"", signatures[0]]),
-        amount=1252382934,
+        amount=1_252_382_934,
         prev_hash=TXHASH_25526b,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDMULTISIG,
@@ -303,23 +304,23 @@ def test_send_btg_multisig_change(client):
     )
 
 
-def test_send_p2sh(client):
+def test_send_p2sh(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("49'/156'/0'/1/0"),
-        amount=1252382934,
+        address_n=parse_path("m/49h/156h/0h/1/0"),
+        amount=1_252_382_934,
         prev_hash=TXHASH_25526b,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
     )
     out1 = messages.TxOutputType(
         address="GfDB1tvjfm3bukeoBTtfNqrJVFohS2kCTe",
-        amount=12300000,
+        amount=12_300_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     out2 = messages.TxOutputType(
         address="GZFLExxrvWFuFT1xRzhfwQWSE2bPDedBfn",
         script_type=messages.OutputScriptType.PAYTOADDRESS,
-        amount=1252382934 - 11000 - 12300000,
+        amount=1_252_382_934 - 11_000 - 12_300_000,
     )
     with client:
         client.set_expected_responses(
@@ -352,23 +353,23 @@ def test_send_p2sh(client):
     )
 
 
-def test_send_p2sh_witness_change(client):
+def test_send_p2sh_witness_change(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("49'/156'/0'/1/0"),
-        amount=1252382934,
+        address_n=parse_path("m/49h/156h/0h/1/0"),
+        amount=1_252_382_934,
         prev_hash=TXHASH_25526b,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
     )
     out1 = messages.TxOutputType(
         address="GfDB1tvjfm3bukeoBTtfNqrJVFohS2kCTe",
-        amount=12300000,
+        amount=12_300_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     out2 = messages.TxOutputType(
-        address_n=parse_path("49'/156'/0'/1/0"),
+        address_n=parse_path("m/49h/156h/0h/1/0"),
         script_type=messages.OutputScriptType.PAYTOP2SHWITNESS,
-        amount=1252382934 - 11000 - 12300000,
+        amount=1_252_382_934 - 11_000 - 12_300_000,
     )
     with client:
         client.set_expected_responses(
@@ -401,10 +402,10 @@ def test_send_p2sh_witness_change(client):
 
 
 @pytest.mark.multisig
-def test_send_multisig_1(client):
+def test_send_multisig_1(client: Client):
     nodes = [
         btc.get_public_node(
-            client, parse_path(f"49'/156'/{i}'"), coin_name="Bgold"
+            client, parse_path(f"m/49h/156h/{i}h"), coin_name="Bgold"
         ).node
         for i in range(1, 4)
     ]
@@ -413,17 +414,17 @@ def test_send_multisig_1(client):
     )
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("49'/156'/1'/1/0"),
+        address_n=parse_path("m/49h/156h/1h/1/0"),
         prev_hash=TXHASH_25526b,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
         multisig=multisig,
-        amount=1252382934,
+        amount=1_252_382_934,
     )
 
     out1 = messages.TxOutputType(
         address="GfDB1tvjfm3bukeoBTtfNqrJVFohS2kCTe",
-        amount=1252382934 - 1000,
+        amount=1_252_382_934 - 1_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -477,26 +478,26 @@ def test_send_multisig_1(client):
     )
 
 
-def test_send_mixed_inputs(client):
+def test_send_mixed_inputs(client: Client):
     # First is non-segwit, second is segwit.
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("44'/156'/11'/0/0"),
-        amount=38448607,
+        address_n=parse_path("m/44h/156h/11h/0/0"),
+        amount=38_448_607,
         prev_hash=TXHASH_db77c2,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDADDRESS,
     )
     inp2 = messages.TxInputType(
-        address_n=parse_path("49'/156'/0'/1/0"),
-        amount=1252382934,
+        address_n=parse_path("m/49h/156h/0h/1/0"),
+        amount=1_252_382_934,
         prev_hash=TXHASH_25526b,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
     )
     out1 = messages.TxOutputType(
         address="GfDB1tvjfm3bukeoBTtfNqrJVFohS2kCTe",
-        amount=38448607 + 1252382934 - 1000,
+        amount=38_448_607 + 1_252_382_934 - 1_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -512,10 +513,10 @@ def test_send_mixed_inputs(client):
 
 
 @pytest.mark.skip_t1
-def test_send_btg_external_presigned(client):
+def test_send_btg_external_presigned(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("44'/156'/0'/1/0"),
-        amount=1252382934,
+        address_n=parse_path("m/44h/156h/0h/1/0"),
+        amount=1_252_382_934,
         prev_hash=TXHASH_25526b,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDADDRESS,
@@ -523,7 +524,7 @@ def test_send_btg_external_presigned(client):
     inp2 = messages.TxInputType(
         # address_n=parse_path("49'/156'/0'/0/0"),
         # AXibjT5r96ZaVA8Lu4BQZocdTx7p5Ud8ZP
-        amount=58456,
+        amount=58_456,
         prev_hash=TXHASH_f55c5b,
         prev_index=0,
         script_type=messages.InputScriptType.EXTERNAL,
@@ -535,7 +536,7 @@ def test_send_btg_external_presigned(client):
     )
     out1 = messages.TxOutputType(
         address="GfDB1tvjfm3bukeoBTtfNqrJVFohS2kCTe",
-        amount=1252382934 + 58456 - 1000,
+        amount=1_252_382_934 + 58_456 - 1_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:

@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import ethereum
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
 from ...common import parametrize_using_common_fixtures
@@ -25,7 +26,7 @@ pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
 
 
 @parametrize_using_common_fixtures("ethereum/signmessage.json")
-def test_signmessage(client, parameters, result):
+def test_signmessage(client: Client, parameters, result):
     res = ethereum.sign_message(
         client, parse_path(parameters["path"]), parameters["msg"]
     )
@@ -34,7 +35,7 @@ def test_signmessage(client, parameters, result):
 
 
 @parametrize_using_common_fixtures("ethereum/verifymessage.json")
-def test_verify(client, parameters, result):
+def test_verify(client: Client, parameters, result):
     res = ethereum.verify_message(
         client,
         parameters["address"],
@@ -44,7 +45,7 @@ def test_verify(client, parameters, result):
     assert res is True
 
 
-def test_verify_invalid(client):
+def test_verify_invalid(client: Client):
     # First vector from the verifymessage JSON fixture
     msg = "This is an example of a signed message."
     address = "0xEa53AF85525B1779eE99ece1a5560C0b78537C3b"

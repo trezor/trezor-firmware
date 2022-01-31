@@ -18,13 +18,14 @@ import pytest
 from mnemonic import Mnemonic
 
 from trezorlib import device, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 from ...common import generate_entropy
 
 pytestmark = pytest.mark.skip_t2
 
 
-def reset_device(client, strength):
+def reset_device(client: Client, strength):
     # No PIN, no passphrase
     external_entropy = b"zlutoucky kun upel divoke ody" * 2
 
@@ -91,17 +92,17 @@ def reset_device(client, strength):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_reset_device_128(client):
+def test_reset_device_128(client: Client):
     reset_device(client, 128)
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_reset_device_192(client):
+def test_reset_device_192(client: Client):
     reset_device(client, 192)
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_reset_device_256_pin(client):
+def test_reset_device_256_pin(client: Client):
     external_entropy = b"zlutoucky kun upel divoke ody" * 2
     strength = 256
 
@@ -191,7 +192,7 @@ def test_reset_device_256_pin(client):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_failed_pin(client):
+def test_failed_pin(client: Client):
     # external_entropy = b'zlutoucky kun upel divoke ody' * 2
     strength = 128
 
@@ -235,6 +236,6 @@ def test_failed_pin(client):
     assert isinstance(ret, messages.Failure)
 
 
-def test_already_initialized(client):
+def test_already_initialized(client: Client):
     with pytest.raises(Exception):
         device.reset(client, False, 128, True, True, "label", "en-US")

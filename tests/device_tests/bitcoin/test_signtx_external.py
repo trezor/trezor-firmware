@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -67,13 +68,13 @@ TXHASH_4012d9 = bytes.fromhex(
 
 
 @pytest.mark.skip_t1
-def test_p2pkh_presigned(client):
+def test_p2pkh_presigned(client: Client):
     inp1 = messages.TxInputType(
         # mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q
         address_n=parse_path("m/44h/1h/0h/0/0"),
         prev_hash=TXHASH_e5040e,
         prev_index=0,
-        amount=31000000,
+        amount=31_000_000,
     )
 
     inp1ext = messages.TxInputType(
@@ -81,7 +82,7 @@ def test_p2pkh_presigned(client):
         # address_n=parse_path("m/44h/1h/0h/0/0"),
         prev_hash=TXHASH_e5040e,
         prev_index=0,
-        amount=31000000,
+        amount=31_000_000,
         script_type=messages.InputScriptType.EXTERNAL,
         script_pubkey=bytes.fromhex(
             "76a914a579388225827d9f2fe9014add644487808c695d88ac"
@@ -96,7 +97,7 @@ def test_p2pkh_presigned(client):
         address_n=parse_path("m/44h/1h/0h/0/1"),
         prev_hash=TXHASH_d830b8,
         prev_index=1,
-        amount=600000000,
+        amount=600_000_000,
     )
 
     inp2ext = messages.TxInputType(
@@ -104,7 +105,7 @@ def test_p2pkh_presigned(client):
         # address_n=parse_path("m/44h/1h/0h/0/1"),
         prev_hash=TXHASH_d830b8,
         prev_index=1,
-        amount=600000000,
+        amount=600_000_000,
         script_type=messages.InputScriptType.EXTERNAL,
         script_pubkey=bytes.fromhex(
             "76a9145b157a678a10021243307e4bb58f36375aa80e1088ac"
@@ -116,13 +117,13 @@ def test_p2pkh_presigned(client):
 
     out1 = messages.TxOutputType(
         address="tb1qnspxpr2xj9s2jt6qlhuvdnxw6q55jvygcf89r2",
-        amount=620000000,
+        amount=620_000_000,
         script_type=messages.OutputScriptType.PAYTOWITNESS,
     )
 
     out2 = messages.TxOutputType(
-        address_n=parse_path("44h/1h/0h/1/0"),
-        amount=31000000 + 600000000 - 620000000 - 10000,
+        address_n=parse_path("m/44h/1h/0h/1/0"),
+        amount=31_000_000 + 600_000_000 - 620_000_000 - 10_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -164,10 +165,10 @@ def test_p2pkh_presigned(client):
 
 
 @pytest.mark.skip_t1
-def test_p2wpkh_in_p2sh_presigned(client):
+def test_p2wpkh_in_p2sh_presigned(client: Client):
     inp1 = messages.TxInputType(
         # 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
-        amount=111145789,
+        amount=111_145_789,
         prev_hash=TXHASH_091446,
         prev_index=1,
         script_type=messages.InputScriptType.EXTERNAL,
@@ -178,26 +179,26 @@ def test_p2wpkh_in_p2sh_presigned(client):
         ),
     )
     inp2 = messages.TxInputType(
-        address_n=parse_path("84'/1'/0'/1/0"),
-        amount=7289000,
+        address_n=parse_path("m/84h/1h/0h/1/0"),
+        amount=7_289_000,
         prev_hash=TXHASH_65b811,
         prev_index=1,
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
     out1 = messages.TxOutputType(
         address="tb1q54un3q39sf7e7tlfq99d6ezys7qgc62a6rxllc",
-        amount=12300000,
+        amount=12_300_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     out2 = messages.TxOutputType(
         # address_n=parse_path("44'/1'/0'/0/0"),
         address="2N6UeBoqYEEnybg4cReFYDammpsyDw8R2Mc",
         script_type=messages.OutputScriptType.PAYTOADDRESS,
-        amount=45600000,
+        amount=45_600_000,
     )
     out3 = messages.TxOutputType(
         address="mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q",
-        amount=111145789 + 7289000 - 11000 - 12300000 - 45600000,
+        amount=111_145_789 + 7_289_000 - 11_000 - 12_300_000 - 45_600_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -280,13 +281,13 @@ def test_p2wpkh_in_p2sh_presigned(client):
 
 
 @pytest.mark.skip_t1
-def test_p2wpkh_presigned(client):
+def test_p2wpkh_presigned(client: Client):
     inp1 = messages.TxInputType(
         # tb1qkvwu9g3k2pdxewfqr7syz89r3gj557l3uuf9r9
         address_n=parse_path("m/84h/1h/0h/0/0"),
         prev_hash=TXHASH_70f987,
         prev_index=0,
-        amount=100000,
+        amount=100_000,
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
 
@@ -295,7 +296,7 @@ def test_p2wpkh_presigned(client):
         # address_n=parse_path("m/84h/1h/0h/0/1"),
         prev_hash=TXHASH_65b768,
         prev_index=0,
-        amount=10000,
+        amount=10_000,
         script_type=messages.InputScriptType.EXTERNAL,
         script_pubkey=bytes.fromhex("0014fb7e49f4017dc951615dea221b66626189aa43b9"),
         script_sig=bytes.fromhex(""),
@@ -306,13 +307,13 @@ def test_p2wpkh_presigned(client):
 
     out1 = messages.TxOutputType(
         address="tb1qnspxpr2xj9s2jt6qlhuvdnxw6q55jvygcf89r2",
-        amount=50000,
+        amount=50_000,
         script_type=messages.OutputScriptType.PAYTOWITNESS,
     )
 
     out2 = messages.TxOutputType(
-        address_n=parse_path("84h/1h/0h/1/0"),
-        amount=100000 + 10000 - 50000 - 1000,
+        address_n=parse_path("m/84h/1h/0h/1/0"),
+        amount=100_000 + 10_000 - 50_000 - 1_000,
         script_type=messages.OutputScriptType.PAYTOWITNESS,
     )
 
@@ -344,10 +345,10 @@ def test_p2wpkh_presigned(client):
 
 
 @pytest.mark.skip_t1
-def test_p2wsh_external_presigned(client):
+def test_p2wsh_external_presigned(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("84'/1'/0'/0/0"),
-        amount=12300000,
+        address_n=parse_path("m/84h/1h/0h/0/0"),
+        amount=12_300_000,
         prev_hash=TXHASH_091446,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDWITNESS,
@@ -372,7 +373,7 @@ def test_p2wsh_external_presigned(client):
 
     out1 = messages.TxOutputType(
         address="2N4Q5FhU2497BryFfUgbqkAJE87aKHUhXMp",
-        amount=12300000 + 100 - 10000,
+        amount=12_300_000 + 100 - 10_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -441,11 +442,11 @@ def test_p2wsh_external_presigned(client):
 
 
 @pytest.mark.skip_t1
-def test_p2tr_external_presigned(client):
+def test_p2tr_external_presigned(client: Client):
     inp1 = messages.TxInputType(
         # tb1pswrqtykue8r89t9u4rprjs0gt4qzkdfuursfnvqaa3f2yql07zmq8s8a5u
-        address_n=parse_path("86'/1'/0'/0/0"),
-        amount=6800,
+        address_n=parse_path("m/86h/1h/0h/0/0"),
+        amount=6_800,
         prev_hash=TXHASH_df862e,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDTAPROOT,
@@ -453,7 +454,7 @@ def test_p2tr_external_presigned(client):
     inp2 = messages.TxInputType(
         # tb1p8tvmvsvhsee73rhym86wt435qrqm92psfsyhy6a3n5gw455znnpqm8wald
         # m/86'/1'/0'/0/1 for "all all ... all" seed.
-        amount=13000,
+        amount=13_000,
         prev_hash=TXHASH_3ac32e,
         prev_index=1,
         script_pubkey=bytes.fromhex(
@@ -467,14 +468,14 @@ def test_p2tr_external_presigned(client):
     out1 = messages.TxOutputType(
         # 84'/1'/1'/0/0
         address="tb1q7r9yvcdgcl6wmtta58yxf29a8kc96jkyxl7y88",
-        amount=15000,
+        amount=15_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     out2 = messages.TxOutputType(
         # tb1pn2d0yjeedavnkd8z8lhm566p0f2utm3lgvxrsdehnl94y34txmts5s7t4c
-        address_n=parse_path("86'/1'/0'/1/0"),
+        address_n=parse_path("m/86h/1h/0h/1/0"),
         script_type=messages.OutputScriptType.PAYTOTAPROOT,
-        amount=6800 + 13000 - 200 - 15000,
+        amount=6_800 + 13_000 - 200 - 15_000,
     )
     with client:
         client.set_expected_responses(
@@ -531,24 +532,24 @@ def test_p2tr_external_presigned(client):
 
 
 @pytest.mark.skip_t1
-def test_p2pkh_with_proof(client):
+def test_p2pkh_with_proof(client: Client):
     # TODO
     pass
 
 
 @pytest.mark.skip_t1
-def test_p2wpkh_in_p2sh_with_proof(client):
+def test_p2wpkh_in_p2sh_with_proof(client: Client):
     # TODO
     pass
 
 
 @pytest.mark.skip_t1
-def test_p2wpkh_with_proof(client):
+def test_p2wpkh_with_proof(client: Client):
     inp1 = messages.TxInputType(
         # seed "alcohol woman abuse must during monitor noble actual mixed trade anger aisle"
         # 84'/1'/0'/0/0
         # tb1qnspxpr2xj9s2jt6qlhuvdnxw6q55jvygcf89r2
-        amount=100000,
+        amount=100_000,
         prev_hash=TXHASH_e5b7e2,
         prev_index=0,
         script_type=messages.InputScriptType.EXTERNAL,
@@ -558,20 +559,20 @@ def test_p2wpkh_with_proof(client):
         ),
     )
     inp2 = messages.TxInputType(
-        address_n=parse_path("84'/1'/0'/1/0"),
-        amount=7289000,
+        address_n=parse_path("m/84h/1h/0h/1/0"),
+        amount=7_289_000,
         prev_hash=TXHASH_65b811,
         prev_index=1,
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
     out1 = messages.TxOutputType(
         address="tb1q54un3q39sf7e7tlfq99d6ezys7qgc62a6rxllc",
-        amount=1230000,
+        amount=1_230_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     out2 = messages.TxOutputType(
         address="mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q",
-        amount=100000 + 7289000 - 11000 - 1230000,
+        amount=100_000 + 7_289_000 - 11_000 - 1_230_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -632,7 +633,7 @@ def test_p2wpkh_with_proof(client):
 @pytest.mark.setup_client(
     mnemonic="abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
 )
-def test_p2tr_with_proof(client):
+def test_p2tr_with_proof(client: Client):
     # Resulting TXID 48ec6dc7bb772ff18cbce0135fedda7c0e85212c7b2f85a5d0cc7a917d77c48a
 
     inp1 = messages.TxInputType(
@@ -640,7 +641,7 @@ def test_p2tr_with_proof(client):
         # 86'/1'/2'/0/0
         # tb1pyu3e8expmey3n5mhra64c9lhz8865rftmaedwa7dddxrlktuv6us6snqxg
         # afde2d41702948e922150825742cda3294d80d43b8e508865c1e2d648f6d4dae
-        amount=100892,
+        amount=100_892,
         prev_hash=TXHASH_afde2d,
         prev_index=2,
         script_type=messages.InputScriptType.EXTERNAL,
@@ -652,15 +653,15 @@ def test_p2tr_with_proof(client):
         ),
     )
     inp2 = messages.TxInputType(
-        address_n=parse_path("86'/1'/0'/0/0"),
-        amount=6456,
+        address_n=parse_path("m/86h/1h/0h/0/0"),
+        amount=6_456,
         prev_hash=TXHASH_4012d9,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDTAPROOT,
     )
     out1 = messages.TxOutputType(
         address="tb1puyst6yj0x3w5z253k5xt0crk2zjy36g0fzhascd4wknxfwv9h9lszyhefk",
-        amount=100892 + 6456 - 300,
+        amount=100_892 + 6_456 - 300,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -696,13 +697,13 @@ def test_p2tr_with_proof(client):
 
 
 @pytest.mark.skip_t1
-def test_p2wpkh_with_false_proof(client):
+def test_p2wpkh_with_false_proof(client: Client):
     inp1 = messages.TxInputType(
         # tb1qkvwu9g3k2pdxewfqr7syz89r3gj557l3uuf9r9
         address_n=parse_path("m/84h/1h/0h/0/0"),
         prev_hash=TXHASH_70f987,
         prev_index=0,
-        amount=100000,
+        amount=100_000,
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
 
@@ -711,7 +712,7 @@ def test_p2wpkh_with_false_proof(client):
         # address_n=parse_path("m/84h/1h/0h/0/1"),
         prev_hash=TXHASH_65b768,
         prev_index=0,
-        amount=10000,
+        amount=10_000,
         script_type=messages.InputScriptType.EXTERNAL,
         script_pubkey=bytes.fromhex("0014fb7e49f4017dc951615dea221b66626189aa43b9"),
         ownership_proof=bytes.fromhex(
@@ -721,7 +722,7 @@ def test_p2wpkh_with_false_proof(client):
 
     out1 = messages.TxOutputType(
         address="tb1qnspxpr2xj9s2jt6qlhuvdnxw6q55jvygcf89r2",
-        amount=50000,
+        amount=50_000,
         script_type=messages.OutputScriptType.PAYTOWITNESS,
     )
 

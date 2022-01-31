@@ -17,12 +17,13 @@
 import pytest
 
 from trezorlib import messages, tezos
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.protobuf import dict_to_proto
 from trezorlib.tools import parse_path
 
-TEZOS_PATH = parse_path("m/44'/1729'/0'")
-TEZOS_PATH_10 = parse_path("m/44'/1729'/10'")
-TEZOS_PATH_15 = parse_path("m/44'/1729'/15'")
+TEZOS_PATH = parse_path("m/44h/1729h/0h")
+TEZOS_PATH_10 = parse_path("m/44h/1729h/10h")
+TEZOS_PATH_15 = parse_path("m/44h/1729h/15h")
 
 pytestmark = [
     pytest.mark.altcoin,
@@ -31,7 +32,7 @@ pytestmark = [
 ]
 
 
-def test_tezos_sign_tx_proposal(client):
+def test_tezos_sign_tx_proposal(client: Client):
     with client:
         resp = tezos.sign_tx(
             client,
@@ -62,7 +63,7 @@ def test_tezos_sign_tx_proposal(client):
     assert resp.operation_hash == "opLqntFUu984M7LnGsFvfGW6kWe9QjAz4AfPDqQvwJ1wPM4Si4c"
 
 
-def test_tezos_sign_tx_multiple_proposals(client):
+def test_tezos_sign_tx_multiple_proposals(client: Client):
     with client:
         resp = tezos.sign_tx(
             client,
@@ -94,7 +95,7 @@ def test_tezos_sign_tx_multiple_proposals(client):
     assert resp.operation_hash == "onobSyNgiitGXxSVFJN6949MhUomkkxvH4ZJ2owgWwNeDdntF9Y"
 
 
-def test_tezos_sing_tx_ballot_yay(client):
+def test_tezos_sing_tx_ballot_yay(client: Client):
     resp = tezos.sign_tx(
         client,
         TEZOS_PATH_10,
@@ -118,7 +119,7 @@ def test_tezos_sing_tx_ballot_yay(client):
     )
 
 
-def test_tezos_sing_tx_ballot_nay(client):
+def test_tezos_sing_tx_ballot_nay(client: Client):
     resp = tezos.sign_tx(
         client,
         TEZOS_PATH_10,
@@ -141,7 +142,7 @@ def test_tezos_sing_tx_ballot_nay(client):
     )
 
 
-def test_tezos_sing_tx_ballot_pass(client):
+def test_tezos_sing_tx_ballot_pass(client: Client):
     resp = tezos.sign_tx(
         client,
         TEZOS_PATH_10,
@@ -165,7 +166,7 @@ def test_tezos_sing_tx_ballot_pass(client):
     )
 
 
-def test_tezos_sign_tx_tranasaction(client):
+def test_tezos_sign_tx_tranasaction(client: Client):
     resp = tezos.sign_tx(
         client,
         TEZOS_PATH_10,
@@ -199,7 +200,7 @@ def test_tezos_sign_tx_tranasaction(client):
     assert resp.operation_hash == "oon8PNUsPETGKzfESv1Epv4535rviGS7RdCfAEKcPvzojrcuufb"
 
 
-def test_tezos_sign_tx_delegation(client):
+def test_tezos_sign_tx_delegation(client: Client):
     resp = tezos.sign_tx(
         client,
         TEZOS_PATH_15,
@@ -229,7 +230,7 @@ def test_tezos_sign_tx_delegation(client):
     assert resp.operation_hash == "op79C1tR7wkUgYNid2zC1WNXmGorS38mTXZwtAjmCQm2kG7XG59"
 
 
-def test_tezos_sign_tx_origination(client):
+def test_tezos_sign_tx_origination(client: Client):
     resp = tezos.sign_tx(
         client,
         TEZOS_PATH_10,
@@ -260,7 +261,7 @@ def test_tezos_sign_tx_origination(client):
     assert resp.operation_hash == "onmq9FFZzvG2zghNdr1bgv9jzdbzNycXjSSNmCVhXCGSnV3WA9g"
 
 
-def test_tezos_sign_tx_reveal(client):
+def test_tezos_sign_tx_reveal(client: Client):
     resp = tezos.sign_tx(
         client,
         TEZOS_PATH,
@@ -302,7 +303,7 @@ def test_tezos_sign_tx_reveal(client):
     assert resp.operation_hash == "oo9JFiWTnTSvUZfajMNwQe1VyFN2pqwiJzZPkpSAGfGD57Z6mZJ"
 
 
-def test_tezos_smart_contract_delegation(client):
+def test_tezos_smart_contract_delegation(client: Client):
     resp = tezos.sign_tx(
         client,
         TEZOS_PATH_10,
@@ -339,7 +340,7 @@ def test_tezos_smart_contract_delegation(client):
     assert resp.operation_hash == "oo75gfQGGPEPChXZzcPPAGtYqCpsg2BS5q9gmhrU3NQP7CEffpU"
 
 
-def test_tezos_kt_remove_delegation(client):
+def test_tezos_kt_remove_delegation(client: Client):
     resp = tezos.sign_tx(
         client,
         TEZOS_PATH_10,
@@ -374,7 +375,7 @@ def test_tezos_kt_remove_delegation(client):
     assert resp.operation_hash == "ootMi1tXbfoVgFyzJa8iXyR4mnHd5TxLm9hmxVzMVRkbyVjKaHt"
 
 
-def test_tezos_smart_contract_transfer(client):
+def test_tezos_smart_contract_transfer(client: Client):
     resp = tezos.sign_tx(
         client,
         TEZOS_PATH_10,
@@ -417,7 +418,7 @@ def test_tezos_smart_contract_transfer(client):
     assert resp.operation_hash == "ooRGGtCmoQDgB36XvQqmM7govc3yb77YDUoa7p2QS7on27wGRns"
 
 
-def test_tezos_smart_contract_transfer_to_contract(client):
+def test_tezos_smart_contract_transfer_to_contract(client: Client):
     resp = tezos.sign_tx(
         client,
         TEZOS_PATH_10,

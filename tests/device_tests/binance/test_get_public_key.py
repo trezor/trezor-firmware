@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import binance
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
 BINANCE_PATH = parse_path("m/44h/714h/0h/0/0")
@@ -28,7 +29,7 @@ BINANCE_PATH = parse_path("m/44h/714h/0h/0/0")
 @pytest.mark.setup_client(
     mnemonic="offer caution gift cross surge pretty orange during eye soldier popular holiday mention east eight office fashion ill parrot vault rent devote earth cousin"
 )
-def test_binance_get_public_key(client):
+def test_binance_get_public_key(client: Client):
     sig = binance.get_public_key(client, BINANCE_PATH, show_display=True)
     assert (
         sig.hex()

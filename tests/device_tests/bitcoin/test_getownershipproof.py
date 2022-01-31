@@ -17,17 +17,18 @@
 import pytest
 
 from trezorlib import btc, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
 pytestmark = pytest.mark.skip_t1
 
 
-def test_p2wpkh_ownership_id(client):
+def test_p2wpkh_ownership_id(client: Client):
     ownership_id = btc.get_ownership_id(
         client,
         "Bitcoin",
-        parse_path("m/84'/0'/0'/1/0"),
+        parse_path("m/84h/0h/0h/1/0"),
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
     assert (
@@ -36,11 +37,11 @@ def test_p2wpkh_ownership_id(client):
     )
 
 
-def test_p2tr_ownership_id(client):
+def test_p2tr_ownership_id(client: Client):
     ownership_id = btc.get_ownership_id(
         client,
         "Bitcoin",
-        parse_path("m/86'/0'/0'/1/0"),
+        parse_path("m/86h/0h/0h/1/0"),
         script_type=messages.InputScriptType.SPENDTAPROOT,
     )
     assert (
@@ -49,12 +50,12 @@ def test_p2tr_ownership_id(client):
     )
 
 
-def test_attack_ownership_id(client):
+def test_attack_ownership_id(client: Client):
     # Multisig with global suffix specification.
     # Use account numbers 1, 2 and 3 to create a valid multisig,
     # but not containing the keys from account 0 used below.
     nodes = [
-        btc.get_public_node(client, parse_path(f"84'/0'/{i}'")).node
+        btc.get_public_node(client, parse_path(f"m/84h/0h/{i}h")).node
         for i in range(1, 4)
     ]
     multisig1 = messages.MultisigRedeemScriptType(
@@ -63,7 +64,7 @@ def test_attack_ownership_id(client):
 
     # Multisig with per-node suffix specification.
     node = btc.get_public_node(
-        client, parse_path("84h/0h/0h/0"), coin_name="Bitcoin"
+        client, parse_path("m/84h/0h/0h/0"), coin_name="Bitcoin"
     ).node
     multisig2 = messages.MultisigRedeemScriptType(
         pubkeys=[
@@ -80,17 +81,17 @@ def test_attack_ownership_id(client):
             btc.get_ownership_id(
                 client,
                 "Bitcoin",
-                parse_path("84'/0'/0'/0/0"),
+                parse_path("m/84h/0h/0h/0/0"),
                 multisig=multisig,
                 script_type=messages.InputScriptType.SPENDWITNESS,
             )
 
 
-def test_p2wpkh_ownership_proof(client):
+def test_p2wpkh_ownership_proof(client: Client):
     ownership_proof, _ = btc.get_ownership_proof(
         client,
         "Bitcoin",
-        parse_path("m/84'/0'/0'/1/0"),
+        parse_path("m/84h/0h/0h/1/0"),
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
     assert (
@@ -99,11 +100,11 @@ def test_p2wpkh_ownership_proof(client):
     )
 
 
-def test_p2tr_ownership_proof(client):
+def test_p2tr_ownership_proof(client: Client):
     ownership_proof, _ = btc.get_ownership_proof(
         client,
         "Bitcoin",
-        parse_path("m/86'/0'/0'/1/0"),
+        parse_path("m/86h/0h/0h/1/0"),
         script_type=messages.InputScriptType.SPENDTAPROOT,
     )
     assert (
@@ -112,12 +113,12 @@ def test_p2tr_ownership_proof(client):
     )
 
 
-def test_fake_ownership_id(client):
+def test_fake_ownership_id(client: Client):
     with pytest.raises(TrezorFailure, match="Invalid ownership identifier"):
         btc.get_ownership_proof(
             client,
             "Bitcoin",
-            parse_path("m/84'/0'/0'/1/0"),
+            parse_path("m/84h/0h/0h/1/0"),
             script_type=messages.InputScriptType.SPENDWITNESS,
             ownership_ids=[
                 b"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f"
@@ -125,11 +126,11 @@ def test_fake_ownership_id(client):
         )
 
 
-def test_confirm_ownership_proof(client):
+def test_confirm_ownership_proof(client: Client):
     ownership_proof, _ = btc.get_ownership_proof(
         client,
         "Bitcoin",
-        parse_path("m/84'/0'/0'/1/0"),
+        parse_path("m/84h/0h/0h/1/0"),
         script_type=messages.InputScriptType.SPENDWITNESS,
         user_confirmation=True,
     )
@@ -140,11 +141,11 @@ def test_confirm_ownership_proof(client):
     )
 
 
-def test_confirm_ownership_proof_with_data(client):
+def test_confirm_ownership_proof_with_data(client: Client):
     ownership_proof, _ = btc.get_ownership_proof(
         client,
         "Bitcoin",
-        parse_path("m/84'/0'/0'/1/0"),
+        parse_path("m/84h/0h/0h/1/0"),
         script_type=messages.InputScriptType.SPENDWITNESS,
         user_confirmation=True,
         commitment_data=b"\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f",

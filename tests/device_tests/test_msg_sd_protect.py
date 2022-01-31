@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import debuglink, device
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import SdProtectOperationType as Op
 
@@ -25,7 +26,7 @@ from ..common import MNEMONIC12
 pytestmark = [pytest.mark.skip_t1, pytest.mark.sd_card]
 
 
-def test_enable_disable(client):
+def test_enable_disable(client: Client):
     assert client.features.sd_protection is False
     # Disabling SD protection should fail
     with pytest.raises(TrezorFailure):
@@ -45,7 +46,7 @@ def test_enable_disable(client):
     assert client.features.sd_protection is False
 
 
-def test_refresh(client):
+def test_refresh(client: Client):
     assert client.features.sd_protection is False
     # Enable SD protection
     device.sd_protect(client, Op.ENABLE)
@@ -65,7 +66,7 @@ def test_refresh(client):
     assert client.features.sd_protection is False
 
 
-def test_wipe(client):
+def test_wipe(client: Client):
     # Enable SD protection
     device.sd_protect(client, Op.ENABLE)
     assert client.features.sd_protection is True

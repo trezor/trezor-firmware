@@ -18,6 +18,7 @@ import pytest
 
 from trezorlib import messages
 from trezorlib.cardano import get_native_script_hash, parse_native_script
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 from ...common import parametrize_using_common_fixtures
 
@@ -31,7 +32,7 @@ pytestmark = [
 @parametrize_using_common_fixtures(
     "cardano/get_native_script_hash.json",
 )
-def test_cardano_get_native_script_hash(client, parameters, result):
+def test_cardano_get_native_script_hash(client: Client, parameters, result):
     client.init_device(new_session=True, derive_cardano=True)
 
     native_script_hash = get_native_script_hash(

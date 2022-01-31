@@ -16,6 +16,8 @@
 
 import pytest
 
+from trezorlib.debuglink import TrezorClientDebugLink as Client
+
 from ..common import (
     MNEMONIC_SLIP39_ADVANCED_20,
     MNEMONIC_SLIP39_ADVANCED_33,
@@ -25,7 +27,7 @@ from ..common import (
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_ADVANCED_20, passphrase=True)
 @pytest.mark.skip_t1
-def test_128bit_passphrase(client):
+def test_128bit_passphrase(client: Client):
     """
     BIP32 Root Key for passphrase TREZOR:
     provided by Andrew, address calculated via https://iancoleman.io/bip39/
@@ -44,7 +46,7 @@ def test_128bit_passphrase(client):
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_ADVANCED_33, passphrase=True)
 @pytest.mark.skip_t1
-def test_256bit_passphrase(client):
+def test_256bit_passphrase(client: Client):
     """
     BIP32 Root Key for passphrase TREZOR:
     provided by Andrew, address calculated via https://iancoleman.io/bip39/

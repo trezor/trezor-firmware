@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -108,7 +109,7 @@ VECTORS_INVALID = (  # coin_name, path
 
 
 @pytest.mark.parametrize("coin_name, xpub_magic, path, xpub", VECTORS_BITCOIN)
-def test_get_public_node(client, coin_name, xpub_magic, path, xpub):
+def test_get_public_node(client: Client, coin_name, xpub_magic, path, xpub):
     res = btc.get_public_node(client, path, coin_name=coin_name)
     assert res.xpub == xpub
     assert bip32.serialize(res.node, xpub_magic) == xpub
@@ -116,7 +117,7 @@ def test_get_public_node(client, coin_name, xpub_magic, path, xpub):
 
 @pytest.mark.xfail(reason="Currently path validation on get_public_node is disabled.")
 @pytest.mark.parametrize("coin_name, path", VECTORS_INVALID)
-def test_invalid_path(client, coin_name, path):
+def test_invalid_path(client: Client, coin_name, path):
     with pytest.raises(TrezorFailure, match="Forbidden key path"):
         btc.get_public_node(client, path, coin_name=coin_name)
 
@@ -146,7 +147,7 @@ VECTORS_SCRIPT_TYPES = (  # script_type, xpub, xpub_ignored_magic
 
 
 @pytest.mark.parametrize("script_type, xpub, xpub_ignored_magic", VECTORS_SCRIPT_TYPES)
-def test_script_type(client, script_type, xpub, xpub_ignored_magic):
+def test_script_type(client: Client, script_type, xpub, xpub_ignored_magic):
     path = parse_path("m/44h/0h/0")
     res = btc.get_public_node(
         client, path, coin_name="Bitcoin", script_type=script_type

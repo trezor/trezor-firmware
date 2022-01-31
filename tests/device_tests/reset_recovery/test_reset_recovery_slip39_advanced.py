@@ -19,6 +19,7 @@ from unittest import mock
 import pytest
 
 from trezorlib import btc, device, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.messages import BackupType, ButtonRequestType as B
 from trezorlib.tools import parse_path
 
@@ -32,9 +33,9 @@ from ...common import (
 
 @pytest.mark.skip_t1
 @pytest.mark.setup_client(uninitialized=True)
-def test_reset_recovery(client):
+def test_reset_recovery(client: Client):
     mnemonics = reset(client)
-    address_before = btc.get_address(client, "Bitcoin", parse_path("44'/0'/0'/0/0"))
+    address_before = btc.get_address(client, "Bitcoin", parse_path("m/44h/0h/0h/0/0"))
     # we're generating 3of5 groups 3of5 shares each
     test_combinations = [
         mnemonics[0:3]  # shares 1-3 from groups 1-3
@@ -53,11 +54,13 @@ def test_reset_recovery(client):
     for combination in test_combinations:
         device.wipe(client)
         recover(client, combination)
-        address_after = btc.get_address(client, "Bitcoin", parse_path("44'/0'/0'/0/0"))
+        address_after = btc.get_address(
+            client, "Bitcoin", parse_path("m/44h/0h/0h/0/0")
+        )
         assert address_before == address_after
 
 
-def reset(client, strength=128):
+def reset(client: Client, strength=128):
     all_mnemonics = []
 
     def input_flow():
@@ -150,7 +153,7 @@ def reset(client, strength=128):
     return all_mnemonics
 
 
-def recover(client, shares):
+def recover(client: Client, shares):
     debug = client.debug
 
     def input_flow():

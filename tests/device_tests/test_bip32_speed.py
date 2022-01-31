@@ -19,6 +19,7 @@ import time
 import pytest
 
 from trezorlib import btc
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import H_
 
 pytestmark = [
@@ -27,7 +28,7 @@ pytestmark = [
 ]
 
 
-def test_public_ckd(client):
+def test_public_ckd(client: Client):
     btc.get_address(client, "Bitcoin", [])  # to compute root node via BIP39
 
     for depth in range(8):
@@ -39,7 +40,7 @@ def test_public_ckd(client):
         assert delay <= expected
 
 
-def test_private_ckd(client):
+def test_private_ckd(client: Client):
     btc.get_address(client, "Bitcoin", [])  # to compute root node via BIP39
 
     for depth in range(8):
@@ -52,7 +53,7 @@ def test_private_ckd(client):
         assert delay <= expected
 
 
-def test_cache(client):
+def test_cache(client: Client):
     start = time.time()
     for x in range(10):
         btc.get_address(client, "Bitcoin", [x, 2, 3, 4, 5, 6, 7, 8])

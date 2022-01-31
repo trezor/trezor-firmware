@@ -18,6 +18,7 @@ import pytest
 from mnemonic import Mnemonic
 
 from trezorlib import messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 from ...common import generate_entropy
 
@@ -28,7 +29,7 @@ STRENGTH = 128
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_reset_device_skip_backup(client):
+def test_reset_device_skip_backup(client: Client):
     ret = client.call_raw(
         messages.ResetDevice(
             display_random=False,
@@ -97,7 +98,7 @@ def test_reset_device_skip_backup(client):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_reset_device_skip_backup_break(client):
+def test_reset_device_skip_backup_break(client: Client):
     ret = client.call_raw(
         messages.ResetDevice(
             display_random=False,
@@ -150,13 +151,13 @@ def test_reset_device_skip_backup_break(client):
     assert ret.no_backup is False
 
 
-def test_initialized_device_backup_fail(client):
+def test_initialized_device_backup_fail(client: Client):
     ret = client.call_raw(messages.BackupDevice())
     assert isinstance(ret, messages.Failure)
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_reset_device_skip_backup_show_entropy_fail(client):
+def test_reset_device_skip_backup_show_entropy_fail(client: Client):
     ret = client.call_raw(
         messages.ResetDevice(
             display_random=True,

@@ -18,19 +18,20 @@ import pytest
 
 from trezorlib import cardano, messages
 from trezorlib.btc import get_public_node
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
 from ..common import get_test_address
 
-ADDRESS_N = parse_path("44'/0'/0'")
+ADDRESS_N = parse_path("m/44h/0h/0h")
 XPUB = "xpub6BiVtCpG9fQPxnPmHXG8PhtzQdWC2Su4qWu6XW9tpWFYhxydCLJGrWBJZ5H6qTAHdPQ7pQhtpjiYZVZARo14qHiay2fvrX996oEP42u8wZy"
 
 PIN4 = "1234"
 
 
 @pytest.mark.setup_client(pin=PIN4, passphrase="")
-def test_clear_session(client):
+def test_clear_session(client: Client):
     is_trezor1 = client.features.model == "1"
     init_responses = [
         messages.PinMatrixRequest if is_trezor1 else messages.ButtonRequest,
@@ -63,7 +64,7 @@ def test_clear_session(client):
         assert get_public_node(client, ADDRESS_N).xpub == XPUB
 
 
-def test_end_session(client):
+def test_end_session(client: Client):
     # client instance starts out not initialized
     # XXX do we want to change this?
     assert client.session_id is not None
@@ -93,7 +94,7 @@ def test_end_session(client):
         client.end_session()
 
 
-def test_cannot_resume_ended_session(client):
+def test_cannot_resume_ended_session(client: Client):
     session_id = client.session_id
     with client:
         client.set_expected_responses([messages.Features])
@@ -109,7 +110,7 @@ def test_cannot_resume_ended_session(client):
     assert session_id != client.session_id
 
 
-def test_end_session_only_current(client):
+def test_end_session_only_current(client: Client):
     """test that EndSession only destroys the current session"""
     session_id_a = client.session_id
     client.init_device(new_session=True)
@@ -128,7 +129,7 @@ def test_end_session_only_current(client):
 
 
 @pytest.mark.setup_client(passphrase=True)
-def test_session_recycling(client):
+def test_session_recycling(client: Client):
     session_id_orig = client.session_id
     with client:
         client.set_expected_responses(
@@ -159,7 +160,7 @@ def test_session_recycling(client):
 @pytest.mark.altcoin
 @pytest.mark.cardano
 @pytest.mark.skip_t1
-def test_derive_cardano_empty_session(client):
+def test_derive_cardano_empty_session(client: Client):
     # start new session
     client.init_device(new_session=True)
     session_id = client.session_id
@@ -178,7 +179,7 @@ def test_derive_cardano_empty_session(client):
 @pytest.mark.altcoin
 @pytest.mark.cardano
 @pytest.mark.skip_t1
-def test_derive_cardano_running_session(client):
+def test_derive_cardano_running_session(client: Client):
     # start new session
     client.init_device(new_session=True)
     session_id = client.session_id

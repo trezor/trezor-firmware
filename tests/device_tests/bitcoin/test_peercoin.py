@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -31,20 +32,20 @@ TXHASH_41b29a = bytes.fromhex(
 
 @pytest.mark.altcoin
 @pytest.mark.peercoin
-def test_timestamp_included(client):
+def test_timestamp_included(client: Client):
     # tx: 41b29ad615d8eea40a4654a052d18bb10cd08f203c351f4d241f88b031357d3d
     # input 0: 0.1 PPC
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("m/44'/6'/0'/0/0"),
-        amount=100000,
+        address_n=parse_path("m/44h/6h/0h/0/0"),
+        amount=100_000,
         prev_hash=TXHASH_41b29a,
         prev_index=0,
     )
 
     out1 = messages.TxOutputType(
         address="PXtfyTjzgXSgTwK5AbszdHQSSxyQN3BLM5",
-        amount=100000 - 10000,
+        amount=100_000 - 10_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -65,16 +66,16 @@ def test_timestamp_included(client):
 
 @pytest.mark.altcoin
 @pytest.mark.peercoin
-def test_timestamp_missing(client):
+def test_timestamp_missing(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("m/44'/6'/0'/0/0"),
-        amount=100000,
+        address_n=parse_path("m/44h/6h/0h/0/0"),
+        amount=100_000,
         prev_hash=TXHASH_41b29a,
         prev_index=0,
     )
     out1 = messages.TxOutputType(
         address="PXtfyTjzgXSgTwK5AbszdHQSSxyQN3BLM5",
-        amount=100000 - 10000,
+        amount=100_000 - 10_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -103,16 +104,16 @@ def test_timestamp_missing(client):
 
 @pytest.mark.altcoin
 @pytest.mark.peercoin
-def test_timestamp_missing_prevtx(client):
+def test_timestamp_missing_prevtx(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("m/44'/6'/0'/0/0"),
-        amount=100000,
+        address_n=parse_path("m/44h/6h/0h/0/0"),
+        amount=100_000,
         prev_hash=TXHASH_41b29a,
         prev_index=0,
     )
     out1 = messages.TxOutputType(
         address="PXtfyTjzgXSgTwK5AbszdHQSSxyQN3BLM5",
-        amount=100000 - 10000,
+        amount=100_000 - 10_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 

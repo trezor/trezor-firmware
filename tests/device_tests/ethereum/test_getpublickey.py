@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import ethereum
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
 from ...common import parametrize_using_common_fixtures
@@ -25,7 +26,7 @@ pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
 
 
 @parametrize_using_common_fixtures("ethereum/getpublickey.json")
-def test_ethereum_getpublickey(client, parameters, result):
+def test_ethereum_getpublickey(client: Client, parameters, result):
     path = parse_path(parameters["path"])
     res = ethereum.get_public_node(client, path)
     assert res.node.depth == len(path)

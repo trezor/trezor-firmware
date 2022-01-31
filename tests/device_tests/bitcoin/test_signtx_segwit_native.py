@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import H_, parse_path
 
 from ...bip32 import deserialize
@@ -58,24 +59,24 @@ TXHASH_ec16dc = bytes.fromhex(
 )
 
 
-def test_send_p2sh(client):
+def test_send_p2sh(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("49'/1'/0'/1/0"),
+        address_n=parse_path("m/49h/1h/0h/1/0"),
         # 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
-        amount=123456789,
+        amount=123_456_789,
         prev_hash=TXHASH_20912f,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
     )
     out1 = messages.TxOutputType(
         address="tb1qqzv60m9ajw8drqulta4ld4gfx0rdh82un5s65s",
-        amount=12300000,
+        amount=12_300_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     out2 = messages.TxOutputType(
         address="2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX",
         script_type=messages.OutputScriptType.PAYTOADDRESS,
-        amount=123456789 - 11000 - 12300000,
+        amount=123_456_789 - 11_000 - 12_300_000,
     )
     with client:
         client.set_expected_responses(
@@ -108,24 +109,24 @@ def test_send_p2sh(client):
     )
 
 
-def test_send_p2sh_change(client):
+def test_send_p2sh_change(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("49'/1'/0'/1/0"),
+        address_n=parse_path("m/49h/1h/0h/1/0"),
         # 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
-        amount=123456789,
+        amount=123_456_789,
         prev_hash=TXHASH_20912f,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
     )
     out1 = messages.TxOutputType(
         address="tb1qqzv60m9ajw8drqulta4ld4gfx0rdh82un5s65s",
-        amount=12300000,
+        amount=12_300_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     out2 = messages.TxOutputType(
-        address_n=parse_path("49'/1'/0'/1/0"),
+        address_n=parse_path("m/49h/1h/0h/1/0"),
         script_type=messages.OutputScriptType.PAYTOP2SHWITNESS,
-        amount=123456789 - 11000 - 12300000,
+        amount=123_456_789 - 11_000 - 12_300_000,
     )
     with client:
         client.set_expected_responses(
@@ -157,23 +158,23 @@ def test_send_p2sh_change(client):
     )
 
 
-def test_send_native(client):
+def test_send_native(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("84'/1'/0'/0/0"),
-        amount=12300000,
+        address_n=parse_path("m/84h/1h/0h/0/0"),
+        amount=12_300_000,
         prev_hash=TXHASH_091446,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
     out1 = messages.TxOutputType(
         address="2N4Q5FhU2497BryFfUgbqkAJE87aKHUhXMp",
-        amount=5000000,
+        amount=5_000_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     out2 = messages.TxOutputType(
         address="tb1q694ccp5qcc0udmfwgp692u2s2hjpq5h407urtu",
         script_type=messages.OutputScriptType.PAYTOADDRESS,
-        amount=12300000 - 11000 - 5000000,
+        amount=12_300_000 - 11_000 - 5_000_000,
     )
     with client:
         client.set_expected_responses(
@@ -206,23 +207,23 @@ def test_send_native(client):
     )
 
 
-def test_send_to_taproot(client):
+def test_send_to_taproot(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("84'/1'/0'/0/0"),
-        amount=10000,
+        address_n=parse_path("m/84h/1h/0h/0/0"),
+        amount=10_000,
         prev_hash=TXHASH_ec16dc,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
     out1 = messages.TxOutputType(
         address="tb1pdvdljpj774356dpk32c2ks0yqv7q7c4f98px2d9e76s73vpudpxs7tl6vp",
-        amount=7000,
+        amount=7_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     out2 = messages.TxOutputType(
         address="tb1qcc4ext5rsa8pzqa2m030jk670wmn5f649pu7sr",
         script_type=messages.OutputScriptType.PAYTOADDRESS,
-        amount=10000 - 7000 - 200,
+        amount=10_000 - 7_000 - 200,
     )
     with client:
         _, serialized_tx = btc.sign_tx(
@@ -235,23 +236,23 @@ def test_send_to_taproot(client):
     )
 
 
-def test_send_native_change(client):
+def test_send_native_change(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("84'/1'/0'/0/0"),
-        amount=12300000,
+        address_n=parse_path("m/84h/1h/0h/0/0"),
+        amount=12_300_000,
         prev_hash=TXHASH_091446,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
     out1 = messages.TxOutputType(
         address="2N4Q5FhU2497BryFfUgbqkAJE87aKHUhXMp",
-        amount=5000000,
+        amount=5_000_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     out2 = messages.TxOutputType(
-        address_n=parse_path("84'/1'/0'/1/0"),
+        address_n=parse_path("m/84h/1h/0h/1/0"),
         script_type=messages.OutputScriptType.PAYTOWITNESS,
-        amount=12300000 - 11000 - 5000000,
+        amount=12_300_000 - 11_000 - 5_000_000,
     )
     with client:
         client.set_expected_responses(
@@ -283,25 +284,25 @@ def test_send_native_change(client):
     )
 
 
-def test_send_both(client):
+def test_send_both(client: Client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("49'/1'/0'/1/0"),
+        address_n=parse_path("m/49h/1h/0h/1/0"),
         # 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
-        amount=111145789,
+        amount=111_145_789,
         prev_hash=TXHASH_091446,
         prev_index=1,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
     )
     inp2 = messages.TxInputType(
-        address_n=parse_path("84'/1'/0'/1/0"),
-        amount=7289000,
+        address_n=parse_path("m/84h/1h/0h/1/0"),
+        amount=7_289_000,
         prev_hash=TXHASH_65b811,
         prev_index=1,
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
     out1 = messages.TxOutputType(
         address="tb1q54un3q39sf7e7tlfq99d6ezys7qgc62a6rxllc",
-        amount=12300000,
+        amount=12_300_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     out2 = messages.TxOutputType(
@@ -309,11 +310,11 @@ def test_send_both(client):
         # script_type=messages.OutputScriptType.PAYTOP2SHWITNESS,
         address="2N6UeBoqYEEnybg4cReFYDammpsyDw8R2Mc",
         script_type=messages.OutputScriptType.PAYTOADDRESS,
-        amount=45600000,
+        amount=45_600_000,
     )
     out3 = messages.TxOutputType(
         address="mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q",
-        amount=111145789 + 7289000 - 11000 - 12300000 - 45600000,
+        amount=111_145_789 + 7_289_000 - 11_000 - 12_300_000 - 45_600_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -360,9 +361,11 @@ def test_send_both(client):
 
 
 @pytest.mark.multisig
-def test_send_multisig_1(client):
+def test_send_multisig_1(client: Client):
     nodes = [
-        btc.get_public_node(client, parse_path(f"49'/1'/{index}'"), coin_name="Testnet")
+        btc.get_public_node(
+            client, parse_path(f"m/49h/1h/{index}h"), coin_name="Testnet"
+        )
         for index in range(1, 4)
     ]
     multisig = messages.MultisigRedeemScriptType(
@@ -373,17 +376,17 @@ def test_send_multisig_1(client):
     )
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("49'/1'/1'/0/0"),
+        address_n=parse_path("m/49h/1h/1h/0/0"),
         prev_hash=TXHASH_9c3192,
         prev_index=1,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
         multisig=multisig,
-        amount=1610436,
+        amount=1_610_436,
     )
 
     out1 = messages.TxOutputType(
         address="tb1qch62pf820spe9mlq49ns5uexfnl6jzcezp7d328fw58lj0rhlhasge9hzy",
-        amount=1605000,
+        amount=1_605_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -438,9 +441,11 @@ def test_send_multisig_1(client):
 
 
 @pytest.mark.multisig
-def test_send_multisig_2(client):
+def test_send_multisig_2(client: Client):
     nodes = [
-        btc.get_public_node(client, parse_path(f"84'/1'/{index}'"), coin_name="Testnet")
+        btc.get_public_node(
+            client, parse_path(f"m/84h/1h/{index}h"), coin_name="Testnet"
+        )
         for index in range(1, 4)
     ]
     multisig = messages.MultisigRedeemScriptType(
@@ -451,17 +456,17 @@ def test_send_multisig_2(client):
     )
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("84'/1'/2'/0/1"),
+        address_n=parse_path("m/84h/1h/2h/0/1"),
         prev_hash=TXHASH_f41cbe,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDWITNESS,
         multisig=multisig,
-        amount=1605000,
+        amount=1_605_000,
     )
 
     out1 = messages.TxOutputType(
         address="tb1qr6xa5v60zyt3ry9nmfew2fk5g9y3gerkjeu6xxdz7qga5kknz2ssld9z2z",
-        amount=1604000,
+        amount=1_604_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -514,9 +519,11 @@ def test_send_multisig_2(client):
 
 
 @pytest.mark.multisig
-def test_send_multisig_3_change(client):
+def test_send_multisig_3_change(client: Client):
     nodes = [
-        btc.get_public_node(client, parse_path(f"84'/1'/{index}'"), coin_name="Testnet")
+        btc.get_public_node(
+            client, parse_path(f"m/84h/1h/{index}h"), coin_name="Testnet"
+        )
         for index in range(1, 4)
     ]
     multisig = messages.MultisigRedeemScriptType(
@@ -533,17 +540,17 @@ def test_send_multisig_3_change(client):
     )
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("84'/1'/1'/1/0"),
+        address_n=parse_path("m/84h/1h/1h/1/0"),
         prev_hash=TXHASH_c93480,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDWITNESS,
         multisig=multisig,
-        amount=1604000,
+        amount=1_604_000,
     )
 
     out1 = messages.TxOutputType(
-        address_n=parse_path("84'/1'/1'/1/1"),
-        amount=1603000,
+        address_n=parse_path("m/84h/1h/1h/1/1"),
+        amount=1_603_000,
         multisig=multisig2,
         script_type=messages.OutputScriptType.PAYTOP2SHWITNESS,
     )
@@ -596,9 +603,11 @@ def test_send_multisig_3_change(client):
 
 
 @pytest.mark.multisig
-def test_send_multisig_4_change(client):
+def test_send_multisig_4_change(client: Client):
     nodes = [
-        btc.get_public_node(client, parse_path(f"49'/1'/{index}'"), coin_name="Testnet")
+        btc.get_public_node(
+            client, parse_path(f"m/49h/1h/{index}h"), coin_name="Testnet"
+        )
         for index in range(1, 4)
     ]
     multisig = messages.MultisigRedeemScriptType(
@@ -615,17 +624,17 @@ def test_send_multisig_4_change(client):
     )
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("49'/1'/1'/1/1"),
+        address_n=parse_path("m/49h/1h/1h/1/1"),
         prev_hash=TXHASH_31bc1c,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
         multisig=multisig,
-        amount=1603000,
+        amount=1_603_000,
     )
 
     out1 = messages.TxOutputType(
-        address_n=parse_path("49'/1'/1'/1/2"),
-        amount=1602000,
+        address_n=parse_path("m/49h/1h/1h/1/2"),
+        amount=1_602_000,
         multisig=multisig2,
         script_type=messages.OutputScriptType.PAYTOWITNESS,
     )
@@ -679,7 +688,7 @@ def test_send_multisig_4_change(client):
 
 # Ensure that if there is a non-multisig input, then a multisig output
 # will not be identified as a change output.
-def test_multisig_mismatch_inputs_single(client):
+def test_multisig_mismatch_inputs_single(client: Client):
     # m/84'/1'/0' for "alcohol woman abuse ..." seed.
     node_int = deserialize(
         "Vpub5kFDCYhiYuAzjk7TBQPNFffbexHF7iAd8AVVgHQKUany7e6NQvthgk86d7DfH57DY2dwBK4PyVTDDaS1r2gjkdyJyUYGoV9qNujGSrW9Dpe"
@@ -700,15 +709,15 @@ def test_multisig_mismatch_inputs_single(client):
     )
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("84'/1'/0'/0/0"),
-        amount=12300000,
+        address_n=parse_path("m/84h/1h/0h/0/0"),
+        amount=12_300_000,
         prev_hash=TXHASH_091446,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
 
     inp2 = messages.TxInputType(
-        address_n=parse_path("84'/1'/0'/0/0"),
+        address_n=parse_path("m/84h/1h/0h/0/0"),
         prev_hash=TXHASH_a345b8,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDWITNESS,
@@ -718,15 +727,15 @@ def test_multisig_mismatch_inputs_single(client):
 
     out1 = messages.TxOutputType(
         address="2N4Q5FhU2497BryFfUgbqkAJE87aKHUhXMp",
-        amount=5000000,
+        amount=5_000_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     out2 = messages.TxOutputType(
-        address_n=parse_path("84'/1'/0'/1/0"),
+        address_n=parse_path("m/84h/1h/0h/1/0"),
         script_type=messages.OutputScriptType.PAYTOWITNESS,
         multisig=multisig_out,
-        amount=12300000 + 100 - 5000000 - 10000,
+        amount=12_300_000 + 100 - 5_000_000 - 10_000,
     )
 
     with client:

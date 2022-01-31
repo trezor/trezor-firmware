@@ -17,16 +17,17 @@
 import pytest
 
 from trezorlib import btc, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
 
-def test_show_segwit(client):
+def test_show_segwit(client: Client):
     assert (
         btc.get_address(
             client,
             "Testnet",
-            parse_path("49'/1'/0'/1/0"),
+            parse_path("m/49h/1h/0h/1/0"),
             True,
             None,
             script_type=messages.InputScriptType.SPENDP2SHWITNESS,
@@ -37,7 +38,7 @@ def test_show_segwit(client):
         btc.get_address(
             client,
             "Testnet",
-            parse_path("49'/1'/0'/0/0"),
+            parse_path("m/49h/1h/0h/0/0"),
             False,
             None,
             script_type=messages.InputScriptType.SPENDP2SHWITNESS,
@@ -48,7 +49,7 @@ def test_show_segwit(client):
         btc.get_address(
             client,
             "Testnet",
-            parse_path("44'/1'/0'/0/0"),
+            parse_path("m/44h/1h/0h/0/0"),
             False,
             None,
             script_type=messages.InputScriptType.SPENDP2SHWITNESS,
@@ -59,7 +60,7 @@ def test_show_segwit(client):
         btc.get_address(
             client,
             "Testnet",
-            parse_path("44'/1'/0'/0/0"),
+            parse_path("m/44h/1h/0h/0/0"),
             False,
             None,
             script_type=messages.InputScriptType.SPENDADDRESS,
@@ -69,12 +70,12 @@ def test_show_segwit(client):
 
 
 @pytest.mark.altcoin
-def test_show_segwit_altcoin(client):
+def test_show_segwit_altcoin(client: Client):
     assert (
         btc.get_address(
             client,
             "Groestlcoin Testnet",
-            parse_path("49'/1'/0'/1/0"),
+            parse_path("m/49h/1h/0h/1/0"),
             True,
             None,
             script_type=messages.InputScriptType.SPENDP2SHWITNESS,
@@ -85,7 +86,7 @@ def test_show_segwit_altcoin(client):
         btc.get_address(
             client,
             "Groestlcoin Testnet",
-            parse_path("49'/1'/0'/0/0"),
+            parse_path("m/49h/1h/0h/0/0"),
             True,
             None,
             script_type=messages.InputScriptType.SPENDP2SHWITNESS,
@@ -96,7 +97,7 @@ def test_show_segwit_altcoin(client):
         btc.get_address(
             client,
             "Groestlcoin Testnet",
-            parse_path("44'/1'/0'/0/0"),
+            parse_path("m/44h/1h/0h/0/0"),
             True,
             None,
             script_type=messages.InputScriptType.SPENDP2SHWITNESS,
@@ -107,7 +108,7 @@ def test_show_segwit_altcoin(client):
         btc.get_address(
             client,
             "Groestlcoin Testnet",
-            parse_path("44'/1'/0'/0/0"),
+            parse_path("m/44h/1h/0h/0/0"),
             True,
             None,
             script_type=messages.InputScriptType.SPENDADDRESS,
@@ -118,7 +119,7 @@ def test_show_segwit_altcoin(client):
         btc.get_address(
             client,
             "Elements",
-            parse_path("m/49'/1'/0'/0/0"),
+            parse_path("m/49h/1h/0h/0/0"),
             True,
             None,
             script_type=messages.InputScriptType.SPENDP2SHWITNESS,
@@ -128,10 +129,10 @@ def test_show_segwit_altcoin(client):
 
 
 @pytest.mark.multisig
-def test_show_multisig_3(client):
+def test_show_multisig_3(client: Client):
     nodes = [
         btc.get_public_node(
-            client, parse_path(f"49'/1'/{i}'"), coin_name="Testnet"
+            client, parse_path(f"m/49h/1h/{i}h"), coin_name="Testnet"
         ).node
         for i in range(1, 4)
     ]
@@ -149,7 +150,7 @@ def test_show_multisig_3(client):
             btc.get_address(
                 client,
                 "Testnet",
-                parse_path(f"49'/1'/{i}'/0/7"),
+                parse_path(f"m/49h/1h/{i}h/0/7"),
                 False,
                 multisig1,
                 script_type=messages.InputScriptType.SPENDP2SHWITNESS,
@@ -160,12 +161,12 @@ def test_show_multisig_3(client):
 
 @pytest.mark.multisig
 @pytest.mark.parametrize("show_display", (True, False))
-def test_multisig_missing(client, show_display):
+def test_multisig_missing(client: Client, show_display):
     # Multisig with global suffix specification.
     # Use account numbers 1, 2 and 3 to create a valid multisig,
     # but not containing the keys from account 0 used below.
     nodes = [
-        btc.get_public_node(client, parse_path(f"49'/0'/{i}'")).node
+        btc.get_public_node(client, parse_path(f"m/49h/0h/{i}h")).node
         for i in range(1, 4)
     ]
     multisig1 = messages.MultisigRedeemScriptType(
@@ -174,7 +175,7 @@ def test_multisig_missing(client, show_display):
 
     # Multisig with per-node suffix specification.
     node = btc.get_public_node(
-        client, parse_path("49h/0h/0h/0"), coin_name="Bitcoin"
+        client, parse_path("m/49h/0h/0h/0"), coin_name="Bitcoin"
     ).node
     multisig2 = messages.MultisigRedeemScriptType(
         pubkeys=[
@@ -191,7 +192,7 @@ def test_multisig_missing(client, show_display):
             btc.get_address(
                 client,
                 "Bitcoin",
-                parse_path("49'/0'/0'/0/0"),
+                parse_path("m/49h/0h/0h/0/0"),
                 show_display=show_display,
                 multisig=multisig,
                 script_type=messages.InputScriptType.SPENDP2SHWITNESS,

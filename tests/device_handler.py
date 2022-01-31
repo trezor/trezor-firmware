@@ -6,7 +6,7 @@ from trezorlib.transport import udp
 
 if TYPE_CHECKING:
     from trezorlib.messages import Features
-    from trezorlib.debuglink import TrezorClientDebugLink, DebugLink
+    from trezorlib.debuglink import DebugLink, TrezorClientDebugLink as Client
     from trezorlib._internal.emulator import Emulator
 
 
@@ -33,11 +33,11 @@ class NullUI:
 class BackgroundDeviceHandler:
     _pool = ThreadPoolExecutor()
 
-    def __init__(self, client: "TrezorClientDebugLink") -> None:
+    def __init__(self, client: "Client") -> None:
         self._configure_client(client)
         self.task = None
 
-    def _configure_client(self, client: "TrezorClientDebugLink") -> None:
+    def _configure_client(self, client: "Client") -> None:
         self.client = client
         self.client.ui = NullUI  # type: ignore [NullUI is OK UI]
         self.client.watch_layout(True)

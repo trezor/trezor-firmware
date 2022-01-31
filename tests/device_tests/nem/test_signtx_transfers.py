@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import messages, nem
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
 from ...common import MNEMONIC12
@@ -29,7 +30,7 @@ pytestmark = [
 
 
 # assertion data from T1
-def test_nem_signtx_simple(client):
+def test_nem_signtx_simple(client: Client):
     with client:
         client.set_expected_responses(
             [
@@ -45,7 +46,7 @@ def test_nem_signtx_simple(client):
 
         tx = nem.sign_tx(
             client,
-            parse_path("m/44'/1'/0'/0'/0'"),
+            parse_path("m/44h/1h/0h/0h/0h"),
             {
                 "timeStamp": 74649215,
                 "amount": 2000000,
@@ -72,7 +73,7 @@ def test_nem_signtx_simple(client):
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_nem_signtx_encrypted_payload(client):
+def test_nem_signtx_encrypted_payload(client: Client):
     with client:
         client.set_expected_responses(
             [
@@ -88,7 +89,7 @@ def test_nem_signtx_encrypted_payload(client):
 
         tx = nem.sign_tx(
             client,
-            parse_path("m/44'/1'/0'/0'/0'"),
+            parse_path("m/44h/1h/0h/0h/0h"),
             {
                 "timeStamp": 74649215,
                 "amount": 2000000,
@@ -118,10 +119,10 @@ def test_nem_signtx_encrypted_payload(client):
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_nem_signtx_xem_as_mosaic(client):
+def test_nem_signtx_xem_as_mosaic(client: Client):
     tx = nem.sign_tx(
         client,
-        parse_path("m/44'/1'/0'/0'/0'"),
+        parse_path("m/44h/1h/0h/0h/0h"),
         {
             "timeStamp": 76809215,
             "amount": 5000000,
@@ -152,10 +153,10 @@ def test_nem_signtx_xem_as_mosaic(client):
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_nem_signtx_unknown_mosaic(client):
+def test_nem_signtx_unknown_mosaic(client: Client):
     tx = nem.sign_tx(
         client,
-        parse_path("m/44'/1'/0'/0'/0'"),
+        parse_path("m/44h/1h/0h/0h/0h"),
         {
             "timeStamp": 76809215,
             "amount": 2000000,
@@ -186,10 +187,10 @@ def test_nem_signtx_unknown_mosaic(client):
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_nem_signtx_known_mosaic(client):
+def test_nem_signtx_known_mosaic(client: Client):
     tx = nem.sign_tx(
         client,
-        parse_path("m/44'/1'/0'/0'/0'"),
+        parse_path("m/44h/1h/0h/0h/0h"),
         {
             "timeStamp": 76809215,
             "amount": 3000000,
@@ -220,10 +221,10 @@ def test_nem_signtx_known_mosaic(client):
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_nem_signtx_known_mosaic_with_levy(client):
+def test_nem_signtx_known_mosaic_with_levy(client: Client):
     tx = nem.sign_tx(
         client,
-        parse_path("m/44'/1'/0'/0'/0'"),
+        parse_path("m/44h/1h/0h/0h/0h"),
         {
             "timeStamp": 76809215,
             "amount": 2000000,
@@ -254,10 +255,10 @@ def test_nem_signtx_known_mosaic_with_levy(client):
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_nem_signtx_multiple_mosaics(client):
+def test_nem_signtx_multiple_mosaics(client: Client):
     tx = nem.sign_tx(
         client,
-        parse_path("m/44'/1'/0'/0'/0'"),
+        parse_path("m/44h/1h/0h/0h/0h"),
         {
             "timeStamp": 76809215,
             "amount": 2000000,

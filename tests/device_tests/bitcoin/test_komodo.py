@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
 from ...tx_cache import TxCache
@@ -41,21 +42,21 @@ TXHASH_7b28bd = bytes.fromhex(
 pytestmark = [pytest.mark.altcoin, pytest.mark.komodo]
 
 
-def test_one_one_fee_sapling(client):
+def test_one_one_fee_sapling(client: Client):
     # prevout: 2807c5b126ec8e2b078cab0f12e4c8b4ce1d7724905f8ebef8dca26b0c8e0f1d:0
     # input 1: 10.9998 KMD
 
     inp1 = messages.TxInputType(
         # R9HgJZo6JBKmPvhm7whLSR8wiHyZrEDVRi
-        address_n=parse_path("44'/141'/0'/0/0"),
-        amount=1099980000,
+        address_n=parse_path("m/44h/141h/0h/0/0"),
+        amount=1_099_980_000,
         prev_hash=TXHASH_2807c,
         prev_index=0,
     )
 
     out1 = messages.TxOutputType(
         address="R9HgJZo6JBKmPvhm7whLSR8wiHyZrEDVRi",
-        amount=1099980000 - 10000,
+        amount=1_099_980_000 - 10_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -97,28 +98,28 @@ def test_one_one_fee_sapling(client):
     )
 
 
-def test_one_one_rewards_claim(client):
+def test_one_one_rewards_claim(client: Client):
     # prevout: 7b28bd91119e9776f0d4ebd80e570165818a829bbf4477cd1afe5149dbcd34b1:0
     # input 1: 10.9997 KMD
 
     inp1 = messages.TxInputType(
         # R9HgJZo6JBKmPvhm7whLSR8wiHyZrEDVRi
-        address_n=parse_path("44'/141'/0'/0/0"),
-        amount=1099970000,
+        address_n=parse_path("m/44h/141h/0h/0/0"),
+        amount=1_099_970_000,
         prev_hash=TXHASH_7b28bd,
         prev_index=0,
     )
 
     out1 = messages.TxOutputType(
         address="R9HgJZo6JBKmPvhm7whLSR8wiHyZrEDVRi",
-        amount=1099970000 - 10000,
+        amount=1_099_970_000 - 10_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     # kmd interest, vout sum > vin sum
     out2 = messages.TxOutputType(
         address="R9HgJZo6JBKmPvhm7whLSR8wiHyZrEDVRi",
-        amount=79605,
+        amount=79_605,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 

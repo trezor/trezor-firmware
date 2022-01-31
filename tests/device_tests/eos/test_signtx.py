@@ -17,13 +17,14 @@
 import pytest
 
 from trezorlib import eos
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.messages import EosSignedTx
 from trezorlib.tools import parse_path
 
 from ...common import MNEMONIC12
 
 CHAIN_ID = "cf057bbfb72640471fd910bcb67639c22df9f92470936cddc1ade0e2f2e7dc4f"
-ADDRESS_N = parse_path("m/44'/194'/0'/0/0")
+ADDRESS_N = parse_path("m/44h/194h/0h/0/0")
 
 pytestmark = [
     pytest.mark.altcoin,
@@ -33,7 +34,7 @@ pytestmark = [
 ]
 
 
-def test_eos_signtx_transfer_token(client):
+def test_eos_signtx_transfer_token(client: Client):
     transaction = {
         "expiration": "2018-07-14T10:43:28",
         "ref_block_num": 6439,
@@ -67,7 +68,7 @@ def test_eos_signtx_transfer_token(client):
         )
 
 
-def test_eos_signtx_buyram(client):
+def test_eos_signtx_buyram(client: Client):
     transaction = {
         "expiration": "2018-07-14T10:43:28",
         "ref_block_num": 6439,
@@ -100,7 +101,7 @@ def test_eos_signtx_buyram(client):
         )
 
 
-def test_eos_signtx_buyrambytes(client):
+def test_eos_signtx_buyrambytes(client: Client):
     transaction = {
         "expiration": "2018-07-14T10:43:28",
         "ref_block_num": 6439,
@@ -133,7 +134,7 @@ def test_eos_signtx_buyrambytes(client):
         )
 
 
-def test_eos_signtx_sellram(client):
+def test_eos_signtx_sellram(client: Client):
     transaction = {
         "expiration": "2018-07-14T10:43:28",
         "ref_block_num": 6439,
@@ -162,7 +163,7 @@ def test_eos_signtx_sellram(client):
         )
 
 
-def test_eos_signtx_delegate(client):
+def test_eos_signtx_delegate(client: Client):
     transaction = {
         "expiration": "2018-07-14T10:43:28",
         "ref_block_num": 6439,
@@ -197,7 +198,7 @@ def test_eos_signtx_delegate(client):
         )
 
 
-def test_eos_signtx_undelegate(client):
+def test_eos_signtx_undelegate(client: Client):
     transaction = {
         "expiration": "2018-07-14T10:43:28",
         "ref_block_num": 6439,
@@ -231,7 +232,7 @@ def test_eos_signtx_undelegate(client):
         )
 
 
-def test_eos_signtx_refund(client):
+def test_eos_signtx_refund(client: Client):
     transaction = {
         "expiration": "2018-07-14T10:43:28",
         "ref_block_num": 6439,
@@ -260,7 +261,7 @@ def test_eos_signtx_refund(client):
         )
 
 
-def test_eos_signtx_linkauth(client):
+def test_eos_signtx_linkauth(client: Client):
     transaction = {
         "expiration": "2018-07-14T10:43:28",
         "ref_block_num": 6439,
@@ -294,7 +295,7 @@ def test_eos_signtx_linkauth(client):
         )
 
 
-def test_eos_signtx_unlinkauth(client):
+def test_eos_signtx_unlinkauth(client: Client):
     transaction = {
         "expiration": "2018-07-14T10:43:28",
         "ref_block_num": 6439,
@@ -327,7 +328,7 @@ def test_eos_signtx_unlinkauth(client):
         )
 
 
-def test_eos_signtx_updateauth(client):
+def test_eos_signtx_updateauth(client: Client):
     transaction = {
         "expiration": "2018-07-14T10:43:28",
         "ref_block_num": 6439,
@@ -383,7 +384,7 @@ def test_eos_signtx_updateauth(client):
         )
 
 
-def test_eos_signtx_deleteauth(client):
+def test_eos_signtx_deleteauth(client: Client):
     transaction = {
         "expiration": "2018-07-14T10:43:28",
         "ref_block_num": 6439,
@@ -412,7 +413,7 @@ def test_eos_signtx_deleteauth(client):
         )
 
 
-def test_eos_signtx_vote(client):
+def test_eos_signtx_vote(client: Client):
     transaction = {
         "expiration": "2018-07-14T10:43:28",
         "ref_block_num": 6439,
@@ -475,7 +476,7 @@ def test_eos_signtx_vote(client):
         )
 
 
-def test_eos_signtx_vote_proxy(client):
+def test_eos_signtx_vote_proxy(client: Client):
     transaction = {
         "expiration": "2018-07-14T10:43:28",
         "ref_block_num": 6439,
@@ -504,7 +505,7 @@ def test_eos_signtx_vote_proxy(client):
         )
 
 
-def test_eos_signtx_unknown(client):
+def test_eos_signtx_unknown(client: Client):
     transaction = {
         "expiration": "2018-07-14T10:43:28",
         "ref_block_num": 6439,
@@ -533,7 +534,7 @@ def test_eos_signtx_unknown(client):
         )
 
 
-def test_eos_signtx_newaccount(client):
+def test_eos_signtx_newaccount(client: Client):
     transaction = {
         "expiration": "2018-07-14T10:43:28",
         "ref_block_num": 6439,
@@ -609,7 +610,7 @@ def test_eos_signtx_newaccount(client):
         )
 
 
-def test_eos_signtx_setcontract(client):
+def test_eos_signtx_setcontract(client: Client):
     transaction = {
         "expiration": "2018-06-19T13:29:53",
         "ref_block_num": 30587,

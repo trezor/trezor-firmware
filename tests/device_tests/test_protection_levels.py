@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import btc, device, messages, misc
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -36,7 +37,7 @@ PIN4 = "1234"
 pytestmark = pytest.mark.setup_client(pin=PIN4, passphrase=True)
 
 
-def _pin_request(client):
+def _pin_request(client: Client):
     """Get appropriate PIN request for each model"""
     if client.features.model == "1":
         return messages.PinMatrixRequest
@@ -44,7 +45,9 @@ def _pin_request(client):
         return messages.ButtonRequest(code=B.PinEntry)
 
 
-def _assert_protection(client, pin: bool = True, passphrase: bool = True) -> None:
+def _assert_protection(
+    client: Client, pin: bool = True, passphrase: bool = True
+) -> None:
     """Make sure PIN and passphrase protection have expected values"""
     with client:
         client.use_pin_sequence([PIN4])
@@ -54,7 +57,7 @@ def _assert_protection(client, pin: bool = True, passphrase: bool = True) -> Non
     client.clear_session()
 
 
-def test_initialize(client):
+def test_initialize(client: Client):
     _assert_protection(client)
     with client:
         client.set_expected_responses([messages.Features])
@@ -64,7 +67,7 @@ def test_initialize(client):
 @pytest.mark.skip_t1
 @pytest.mark.setup_client(pin=PIN4)
 @pytest.mark.parametrize("passphrase", (True, False))
-def test_passphrase_reporting(client, passphrase):
+def test_passphrase_reporting(client: Client, passphrase):
     """On TT, passphrase_protection is a private setting, so a locked device should
     report passphrase_protection=None.
     """
@@ -87,7 +90,7 @@ def test_passphrase_reporting(client, passphrase):
     assert client.features.passphrase_protection is None
 
 
-def test_apply_settings(client):
+def test_apply_settings(client: Client):
     _assert_protection(client)
     with client:
         client.use_pin_sequence([PIN4])
@@ -103,7 +106,7 @@ def test_apply_settings(client):
 
 
 @pytest.mark.skip_t2
-def test_change_pin_t1(client):
+def test_change_pin_t1(client: Client):
     _assert_protection(client)
     with client:
         client.use_pin_sequence([PIN4, PIN4, PIN4])
@@ -121,7 +124,7 @@ def test_change_pin_t1(client):
 
 
 @pytest.mark.skip_t1
-def test_change_pin_t2(client):
+def test_change_pin_t2(client: Client):
     _assert_protection(client)
     with client:
         client.use_pin_sequence([PIN4, PIN4, PIN4, PIN4])
@@ -141,7 +144,7 @@ def test_change_pin_t2(client):
 
 
 @pytest.mark.setup_client(pin=None, passphrase=False)
-def test_ping(client):
+def test_ping(client: Client):
     _assert_protection(client, pin=False, passphrase=False)
     with client:
         client.set_expected_responses([messages.ButtonRequest, messages.Success])
@@ -149,7 +152,7 @@ def test_ping(client):
 
 
 @pytest.mark.skip_t2
-def test_get_entropy_t1(client):
+def test_get_entropy_t1(client: Client):
     _assert_protection(client)
     with client:
         client.set_expected_responses(
@@ -162,7 +165,7 @@ def test_get_entropy_t1(client):
 
 
 @pytest.mark.skip_t1
-def test_get_entropy_t2(client):
+def test_get_entropy_t2(client: Client):
     _assert_protection(client)
     with client:
         client.use_pin_sequence([PIN4])
@@ -176,7 +179,7 @@ def test_get_entropy_t2(client):
         misc.get_entropy(client, 10)
 
 
-def test_get_public_key(client):
+def test_get_public_key(client: Client):
     _assert_protection(client)
     with client:
         client.use_pin_sequence([PIN4])
@@ -190,7 +193,7 @@ def test_get_public_key(client):
         btc.get_public_node(client, [])
 
 
-def test_get_address(client):
+def test_get_address(client: Client):
     _assert_protection(client)
     with client:
         client.use_pin_sequence([PIN4])
@@ -204,7 +207,7 @@ def test_get_address(client):
         get_test_address(client)
 
 
-def test_wipe_device(client):
+def test_wipe_device(client: Client):
     _assert_protection(client)
     with client:
         client.set_expected_responses(
@@ -215,7 +218,7 @@ def test_wipe_device(client):
 
 @pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.skip_t2
-def test_reset_device(client):
+def test_reset_device(client: Client):
     assert client.features.pin_protection is False
     assert client.features.passphrase_protection is False
     with client:
@@ -244,7 +247,7 @@ def test_reset_device(client):
 
 @pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.skip_t2
-def test_recovery_device(client):
+def test_recovery_device(client: Client):
     assert client.features.pin_protection is False
     assert client.features.passphrase_protection is False
     client.use_mnemonic(MNEMONIC12)
@@ -273,7 +276,7 @@ def test_recovery_device(client):
         )
 
 
-def test_sign_message(client):
+def test_sign_message(client: Client):
     _assert_protection(client)
     with client:
         client.use_pin_sequence([PIN4])
@@ -287,12 +290,12 @@ def test_sign_message(client):
             ]
         )
         btc.sign_message(
-            client, "Bitcoin", parse_path("44h/0h/0h/0/0"), "testing message"
+            client, "Bitcoin", parse_path("m/44h/0h/0h/0/0"), "testing message"
         )
 
 
 @pytest.mark.skip_t2
-def test_verify_message_t1(client):
+def test_verify_message_t1(client: Client):
     _assert_protection(client)
     with client:
         client.set_expected_responses(
@@ -314,7 +317,7 @@ def test_verify_message_t1(client):
 
 
 @pytest.mark.skip_t1
-def test_verify_message_t2(client):
+def test_verify_message_t2(client: Client):
     _assert_protection(client)
     with client:
         client.use_pin_sequence([PIN4])
@@ -337,20 +340,20 @@ def test_verify_message_t2(client):
         )
 
 
-def test_signtx(client):
+def test_signtx(client: Client):
     # tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
     # input 0: 0.0039 BTC
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("44h/0h/0h/0/0"),
-        amount=390000,
+        address_n=parse_path("m/44h/0h/0h/0/0"),
+        amount=390_000,
         prev_hash=TXHASH_d5f65e,
         prev_index=0,
     )
 
     out1 = messages.TxOutputType(
         address="1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1",
-        amount=390000 - 10000,
+        amount=390_000 - 10_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -387,7 +390,7 @@ def test_signtx(client):
 
 
 @pytest.mark.setup_client(pin=PIN4, passphrase=False)
-def test_unlocked(client):
+def test_unlocked(client: Client):
     assert client.features.unlocked is False
 
     _assert_protection(client, passphrase=False)
@@ -404,7 +407,7 @@ def test_unlocked(client):
 
 
 @pytest.mark.setup_client(pin=None, passphrase=True)
-def test_passphrase_cached(client):
+def test_passphrase_cached(client: Client):
     _assert_protection(client, pin=False)
     with client:
         client.set_expected_responses([messages.PassphraseRequest, messages.Address])

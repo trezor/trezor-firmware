@@ -17,12 +17,13 @@
 import pytest
 
 from trezorlib import misc
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 from ...common import MNEMONIC12
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_encrypt(client):
+def test_encrypt(client: Client):
     res = misc.encrypt_keyvalue(
         client,
         [0, 1, 2],
@@ -100,7 +101,7 @@ def test_encrypt(client):
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_decrypt(client):
+def test_decrypt(client: Client):
     res = misc.decrypt_keyvalue(
         client,
         [0, 1, 2],
@@ -177,11 +178,11 @@ def test_decrypt(client):
     assert res == b"testing message!"
 
 
-def test_encrypt_badlen(client):
+def test_encrypt_badlen(client: Client):
     with pytest.raises(Exception):
         misc.encrypt_keyvalue(client, [0, 1, 2], "test", b"testing")
 
 
-def test_decrypt_badlen(client):
+def test_decrypt_badlen(client: Client):
     with pytest.raises(Exception):
         misc.decrypt_keyvalue(client, [0, 1, 2], "test", b"testing")

@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path, tx_hash
 
@@ -40,9 +41,9 @@ TXHASH_fbbff7 = bytes.fromhex(
 pytestmark = pytest.mark.multisig
 
 
-def test_2_of_3(client):
+def test_2_of_3(client: Client):
     nodes = [
-        btc.get_public_node(client, parse_path(f"48'/0'/{index}'/0'")).node
+        btc.get_public_node(client, parse_path(f"m/48h/0h/{index}h/0h")).node
         for index in range(1, 4)
     ]
 
@@ -51,8 +52,8 @@ def test_2_of_3(client):
     )
     # Let's go to sign with key 1
     inp1 = messages.TxInputType(
-        address_n=parse_path("48'/0'/1'/0'/0/0"),
-        amount=100000,
+        address_n=parse_path("m/48h/0h/1h/0h/0/0"),
+        amount=100_000,
         prev_hash=TXHASH_c6091a,
         prev_index=1,
         script_type=messages.InputScriptType.SPENDMULTISIG,
@@ -61,7 +62,7 @@ def test_2_of_3(client):
 
     out1 = messages.TxOutputType(
         address="12iyMbUb4R2K3gre4dHSrbu5azG5KaqVss",
-        amount=100000,
+        amount=100_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -110,8 +111,8 @@ def test_2_of_3(client):
 
     # Let's do a second signature with key 3
     inp3 = messages.TxInputType(
-        address_n=parse_path("48'/0'/3'/0'/0/0"),
-        amount=100000,
+        address_n=parse_path("m/48h/0h/3h/0h/0/0"),
+        amount=100_000,
         prev_hash=TXHASH_c6091a,
         prev_index=1,
         script_type=messages.InputScriptType.SPENDMULTISIG,
@@ -152,9 +153,9 @@ def test_2_of_3(client):
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_15_of_15(client):
+def test_15_of_15(client: Client):
     node = btc.get_public_node(
-        client, parse_path("48h/0h/1h/0h"), coin_name="Bitcoin"
+        client, parse_path("m/48h/0h/1h/0h"), coin_name="Bitcoin"
     ).node
     pubs = [messages.HDNodePathType(node=node, address_n=[0, x]) for x in range(15)]
 
@@ -162,7 +163,7 @@ def test_15_of_15(client):
 
     out1 = messages.TxOutputType(
         address="17kTB7qSk3MupQxWdiv5ZU3zcrZc2Azes1",
-        amount=10000,
+        amount=10_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -172,8 +173,8 @@ def test_15_of_15(client):
         )
 
         inp1 = messages.TxInputType(
-            address_n=parse_path(f"48h/0h/1h/0h/0/{x}"),
-            amount=20000,
+            address_n=parse_path(f"m/48h/0h/1h/0h/0/{x}"),
+            amount=20_000,
             prev_hash=TXHASH_6189e3,
             prev_index=1,
             script_type=messages.InputScriptType.SPENDMULTISIG,
@@ -193,9 +194,9 @@ def test_15_of_15(client):
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_missing_pubkey(client):
+def test_missing_pubkey(client: Client):
     node = btc.get_public_node(
-        client, parse_path("48h/0h/1h/0h/0"), coin_name="Bitcoin"
+        client, parse_path("m/48h/0h/1h/0h/0"), coin_name="Bitcoin"
     ).node
 
     multisig = messages.MultisigRedeemScriptType(
@@ -210,8 +211,8 @@ def test_missing_pubkey(client):
 
     # Let's go to sign with key 10, which is NOT in pubkeys
     inp1 = messages.TxInputType(
-        address_n=parse_path("48h/0h/1h/0h/0/10"),
-        amount=100000,
+        address_n=parse_path("m/48h/0h/1h/0h/0/10"),
+        amount=100_000,
         prev_hash=TXHASH_c6091a,
         prev_index=1,
         script_type=messages.InputScriptType.SPENDMULTISIG,
@@ -220,7 +221,7 @@ def test_missing_pubkey(client):
 
     out1 = messages.TxOutputType(
         address="12iyMbUb4R2K3gre4dHSrbu5azG5KaqVss",
-        amount=100000,
+        amount=100_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -233,14 +234,14 @@ def test_missing_pubkey(client):
         assert exc.value.message.endswith("Pubkey not found in multisig script")
 
 
-def test_attack_change_input(client):
+def test_attack_change_input(client: Client):
     """
     In Phases 1 and 2 the attacker replaces a non-multisig input
     `input_real` with a multisig input `input_fake`, which allows the
     attacker to provide a 1-of-2 multisig change address. When `input_real`
     is provided in the signing phase, an error must occur.
     """
-    address_n = parse_path("48'/1'/0'/1'/0/0")
+    address_n = parse_path("m/48h/1h/0h/1h/0/0")
     attacker_multisig_public_key = bytes.fromhex(
         "03653a148b68584acb97947344a7d4fd6a6f8b8485cad12987ff8edac874268088"
     )
@@ -250,7 +251,7 @@ def test_attack_change_input(client):
         prev_hash=TXHASH_fbbff7,
         prev_index=1,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
-        amount=1000000,
+        amount=1_000_000,
     )
 
     multisig_fake = messages.MultisigRedeemScriptType(
@@ -279,13 +280,13 @@ def test_attack_change_input(client):
 
     output_payee = messages.TxOutputType(
         address="n2eMqTT929pb1RDNuqEnxdaLau1rxy3efi",
-        amount=1000,
+        amount=1_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     output_change = messages.TxOutputType(
         address_n=address_n,
-        amount=input_real.amount - output_payee.amount - 1000,
+        amount=input_real.amount - output_payee.amount - 1_000,
         script_type=messages.OutputScriptType.PAYTOP2SHWITNESS,
         multisig=multisig_fake,
     )
