@@ -9,12 +9,15 @@ type_for_name = trezorproto.type_for_name
 type_for_wire = trezorproto.type_for_wire
 
 if TYPE_CHECKING:
+    from __future__ import annotations
+
     # XXX
     # Note that MessageType "subclasses" are not true subclasses, but instead instances
     # of the built-in metaclass MsgDef. MessageType instances are in fact instances of
     # the built-in type Msg. That is why isinstance checks do not work, and instead the
     # MessageTypeSubclass.is_type_of() method must be used.
-    from typing import TypeGuard, TypeVar
+    from typing import TypeVar
+    from typing_extensions import TypeGuard
 
     T = TypeVar("T", bound="MessageType")
 
