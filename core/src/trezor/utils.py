@@ -297,7 +297,7 @@ class BufferReader:
         return byte
 
 
-def obj_eq(self: object, __o: object) -> bool:
+def obj_eq(self: Any, __o: Any) -> bool:
     """
     Compares object contents, supports __slots__.
     """
@@ -313,7 +313,7 @@ def obj_eq(self: object, __o: object) -> bool:
     return True
 
 
-def obj_repr(self: object) -> str:
+def obj_repr(self: Any) -> str:
     """
     Returns a string representation of object, supports __slots__.
     """
