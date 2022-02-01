@@ -9,7 +9,15 @@ use crate::ui::{
 use super::layout::{DefaultTextTheme, LayoutFit, TextLayout, TextNoOp, TextRenderer};
 
 pub const MAX_PARAGRAPHS: usize = 6;
-pub const DEFAULT_SPACING: i32 = 3;
+/// Maximum space between paragraphs. Actual result may be smaller (even 0) if
+/// it would make paragraphs overflow the bounding box.
+pub const DEFAULT_SPACING: i32 = 0;
+/// Offset of paragraph text from the top of the paragraph bounding box. Tweak
+/// these values to get nice alignment of baselines relative to the surrounding
+/// components.
+pub const PARAGRAPH_TOP_SPACE: i32 = -1;
+/// Offset of paragraph bounding box bottom relative to bottom of its text.
+pub const PARAGRAPH_BOTTOM_SPACE: i32 = 5;
 
 pub struct Paragraphs<T> {
     area: Rect,
@@ -53,6 +61,8 @@ where
             content,
             TextLayout {
                 text_font,
+                top_space: PARAGRAPH_TOP_SPACE,
+                bottom_space: PARAGRAPH_BOTTOM_SPACE,
                 ..TextLayout::new::<D>(self.area)
             },
         );

@@ -273,11 +273,11 @@ impl<T> Button<T> {
         T: AsRef<[u8]>,
     {
         const BUTTON_SPACING: i32 = 6;
-        let grid = Grid::new(area, 1, 4).with_spacing(BUTTON_SPACING);
+        let grid = Grid::new(area, 1, 3).with_spacing(BUTTON_SPACING);
         let left = left(grid.row_col(0, 0));
         let right = right(Rect::new(
             grid.row_col(0, 1).top_left(),
-            grid.row_col(0, 3).bottom_right(),
+            grid.row_col(0, 2).bottom_right(),
         ));
 
         (Map::new(left, left_map), Map::new(right, right_map))

@@ -2,7 +2,7 @@ use super::theme;
 use crate::ui::{
     component::{Child, Component, ComponentExt, Event, EventCtx},
     display,
-    geometry::Rect,
+    geometry::{Insets, Rect},
 };
 
 pub struct Title<T, U> {
@@ -26,14 +26,14 @@ where
     }
 
     fn areas(area: Rect) -> (Rect, Rect) {
-        const HEADER_SPACE: i32 = 14;
-        let header_height = theme::FONT_BOLD.line_height() - theme::CONTENT_BORDER;
+        // Same as PageLayout::BUTTON_SPACE.
+        const TITLE_SPACE: i32 = 6;
 
-        let (header_area, content_area) = area.split_top(header_height);
-        let (_space, header_area) = header_area.split_left(theme::CONTENT_BORDER);
-        let (_space, content_area) = content_area.split_top(HEADER_SPACE);
+        let (title_area, content_area) = area.split_top(theme::FONT_BOLD.text_height());
+        let title_area = title_area.inset(Insets::left(theme::CONTENT_BORDER));
+        let content_area = content_area.inset(Insets::top(TITLE_SPACE));
 
-        (header_area, content_area)
+        (title_area, content_area)
     }
 }
 
