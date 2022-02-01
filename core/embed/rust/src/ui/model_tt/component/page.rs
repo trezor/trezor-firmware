@@ -3,7 +3,7 @@ use crate::ui::{
         base::ComponentExt, paginated::PageMsg, Component, Event, EventCtx, Never, Pad, Paginate,
     },
     display::{self, Color},
-    geometry::{Dimensions, Offset, Point, Rect},
+    geometry::{Dimensions, LinearLayout, Offset, Rect},
 };
 
 use super::{theme, Button, Swipe, SwipeDirection};
@@ -181,8 +181,11 @@ pub struct ScrollBar {
 }
 
 impl ScrollBar {
-    const DOT_INTERVAL: i32 = 12;
-    const ARROW_SPACE: i32 = 23;
+    const DOT_SIZE: i32 = 6;
+    /// Edge to edge.
+    const DOT_INTERVAL: i32 = 6;
+    /// Edge of last dot to center of arrow icon.
+    const ARROW_SPACE: i32 = 26;
 
     const ICON_ACTIVE: &'static [u8] = include_res!("model_tt/res/scroll-active.toif");
     const ICON_INACTIVE: &'static [u8] = include_res!("model_tt/res/scroll-inactive.toif");
@@ -230,40 +233,42 @@ impl Component for ScrollBar {
     }
 
     fn paint(&mut self) {
-        let count = self.page_count as i32;
-        let interval = {
-            let available_height = self.area.height();
-            let naive_height = count * Self::DOT_INTERVAL;
-            if naive_height > available_height {
-                available_height / count
-            } else {
-                Self::DOT_INTERVAL
-            }
-        };
-        let mut dot = Point::new(
-            self.area.center().x,
-            self.area.center().y - (count / 2) * interval,
-        );
-        if self.has_previous_page() {
-            display::icon(
-                dot - Offset::y(Self::ARROW_SPACE),
-                Self::ICON_UP,
-                theme::FG,
-                theme::BG,
-            );
-        }
-        for i in 0..self.page_count {
+        let layout = LinearLayout::vertical()
+            .align_at_center()
+            .with_spacing(Self::DOT_INTERVAL);
+
+        let mut i = 0;
+        let mut top = None;
+        let mut display_icon = |top_left| {
             let icon = if i == self.active_page {
                 Self::ICON_ACTIVE
             } else {
                 Self::ICON_INACTIVE
             };
-            display::icon(dot, icon, theme::FG, theme::BG);
-            dot.y += interval;
+            display::icon_top_left(top_left, icon, theme::FG, theme::BG);
+            i += 1;
+            top.get_or_insert(top_left.x);
+        };
+
+        layout.arrange_uniform(
+            self.area,
+            self.page_count,
+            Offset::new(Self::DOT_SIZE, Self::DOT_SIZE),
+            &mut display_icon,
+        );
+
+        let arrow_distance = self.area.center().x - top.unwrap_or(0) + Self::ARROW_SPACE;
+        if self.has_previous_page() {
+            display::icon(
+                self.area.center() - Offset::y(arrow_distance),
+                Self::ICON_UP,
+                theme::FG,
+                theme::BG,
+            );
         }
         if self.has_next_page() {
             display::icon(
-                dot + Offset::y(Self::ARROW_SPACE - interval),
+                self.area.center() + Offset::y(arrow_distance),
                 Self::ICON_DOWN,
                 theme::FG,
                 theme::BG,

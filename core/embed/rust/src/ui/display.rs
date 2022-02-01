@@ -72,6 +72,22 @@ pub fn rect_fill_rounded(r: Rect, fg_color: Color, bg_color: Color, radius: u8) 
     );
 }
 
+/// NOTE: Cannot start at odd x-coordinate. In this case icon is shifted 1px
+/// left.
+pub fn icon_top_left(top_left: Point, data: &[u8], fg_color: Color, bg_color: Color) {
+    let toif_info = display::toif_info(data).unwrap();
+    assert!(toif_info.grayscale);
+    display::icon(
+        top_left.x,
+        top_left.y,
+        toif_info.width.into(),
+        toif_info.height.into(),
+        &data[12..], // Skip TOIF header.
+        fg_color.into(),
+        bg_color.into(),
+    );
+}
+
 pub fn icon(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
     let toif_info = display::toif_info(data).unwrap();
     assert!(toif_info.grayscale);
