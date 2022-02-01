@@ -81,5 +81,5 @@ if __name__ == "__main__":
         client.set_input_flow(None)
         last_pin = new_pin
 
-        print("iteration %d" % i)
+        print(f"iteration {i}")
         i = i + 1

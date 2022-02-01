@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2021 SatoshiLabs and contributors
+# Copyright (C) 2012-2022 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -13,8 +13,16 @@
 #
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
+
 import pytest
-from stellar_sdk import Account, Asset, Network, TransactionBuilder, TrustLineEntryFlag
+from stellar_sdk import (
+    Account,
+    Asset,
+    Network,
+    TransactionBuilder,
+    TrustLineEntryFlag,
+    MuxedAccount,
+)
 from stellar_sdk.strkey import StrKey
 
 from trezorlib import messages, stellar
@@ -325,11 +333,12 @@ def test_path_payment_strict_receive():
     tx, operations = stellar.from_envelope(envelope)
     assert len(operations) == 1
 
-    assert isinstance(operations[0], messages.StellarPathPaymentOp)
+    assert isinstance(operations[0], messages.StellarPathPaymentStrictReceiveOp)
     assert operations[0].source_account == operation_source
     assert operations[0].destination_account == destination
     assert operations[0].send_asset.type == messages.StellarAssetType.NATIVE
     assert operations[0].send_max == 500111000
+    assert operations[0].destination_amount == 1000000000
     assert operations[0].destination_asset.type == messages.StellarAssetType.ALPHANUM4
     assert operations[0].destination_asset.code == dest_code
     assert operations[0].destination_asset.issuer == dest_issuer
@@ -368,7 +377,7 @@ def test_manage_sell_offer_new_offer():
 
     tx, operations = stellar.from_envelope(envelope)
     assert len(operations) == 1
-    assert isinstance(operations[0], messages.StellarManageOfferOp)
+    assert isinstance(operations[0], messages.StellarManageSellOfferOp)
     assert operations[0].source_account == operation_source
     assert operations[0].selling_asset.type == messages.StellarAssetType.NATIVE
     assert operations[0].buying_asset.type == messages.StellarAssetType.ALPHANUM4
@@ -408,7 +417,7 @@ def test_manage_sell_offer_update_offer():
 
     tx, operations = stellar.from_envelope(envelope)
     assert len(operations) == 1
-    assert isinstance(operations[0], messages.StellarManageOfferOp)
+    assert isinstance(operations[0], messages.StellarManageSellOfferOp)
     assert operations[0].source_account == operation_source
     assert operations[0].selling_asset.type == messages.StellarAssetType.NATIVE
     assert operations[0].buying_asset.type == messages.StellarAssetType.ALPHANUM4
@@ -446,7 +455,7 @@ def test_create_passive_sell_offer():
 
     tx, operations = stellar.from_envelope(envelope)
     assert len(operations) == 1
-    assert isinstance(operations[0], messages.StellarCreatePassiveOfferOp)
+    assert isinstance(operations[0], messages.StellarCreatePassiveSellOfferOp)
     assert operations[0].source_account == operation_source
     assert operations[0].selling_asset.type == messages.StellarAssetType.NATIVE
     assert operations[0].buying_asset.type == messages.StellarAssetType.ALPHANUM4
@@ -712,3 +721,287 @@ def test_bump_sequence():
     assert isinstance(operations[0], messages.StellarBumpSequenceOp)
     assert operations[0].source_account == operation_source
     assert operations[0].bump_to == bump_to
+
+
+def test_manage_buy_offer_new_offer():
+    tx = make_default_tx()
+    price = "0.5"
+    amount = "50.0111"
+    selling_code = "XLM"
+    selling_issuer = None
+    buying_code = "USD"
+    buying_issuer = "GCSJ7MFIIGIRMAS4R3VT5FIFIAOXNMGDI5HPYTWS5X7HH74FSJ6STSGF"
+    operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
+
+    envelope = tx.append_manage_buy_offer_op(
+        selling_code=selling_code,
+        selling_issuer=selling_issuer,
+        buying_code=buying_code,
+        buying_issuer=buying_issuer,
+        amount=amount,
+        price=price,
+        source=operation_source,
+    ).build()
+
+    tx, operations = stellar.from_envelope(envelope)
+    assert len(operations) == 1
+    assert isinstance(operations[0], messages.StellarManageBuyOfferOp)
+    assert operations[0].source_account == operation_source
+    assert operations[0].selling_asset.type == messages.StellarAssetType.NATIVE
+    assert operations[0].buying_asset.type == messages.StellarAssetType.ALPHANUM4
+    assert operations[0].buying_asset.code == buying_code
+    assert operations[0].buying_asset.issuer == buying_issuer
+    assert operations[0].amount == 500111000
+    assert operations[0].price_n == 1
+    assert operations[0].price_d == 2
+    assert operations[0].offer_id == 0  # indicates a new offer
+
+
+def test_manage_buy_offer_update_offer():
+    tx = make_default_tx()
+    price = "0.5"
+    amount = "50.0111"
+    selling_code = "XLM"
+    selling_issuer = None
+    buying_code = "USD"
+    buying_issuer = "GCSJ7MFIIGIRMAS4R3VT5FIFIAOXNMGDI5HPYTWS5X7HH74FSJ6STSGF"
+    offer_id = 12345
+    operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
+
+    envelope = tx.append_manage_buy_offer_op(
+        selling_code=selling_code,
+        selling_issuer=selling_issuer,
+        buying_code=buying_code,
+        buying_issuer=buying_issuer,
+        amount=amount,
+        price=price,
+        offer_id=offer_id,
+        source=operation_source,
+    ).build()
+
+    tx, operations = stellar.from_envelope(envelope)
+    assert len(operations) == 1
+    assert isinstance(operations[0], messages.StellarManageBuyOfferOp)
+    assert operations[0].source_account == operation_source
+    assert operations[0].selling_asset.type == messages.StellarAssetType.NATIVE
+    assert operations[0].buying_asset.type == messages.StellarAssetType.ALPHANUM4
+    assert operations[0].buying_asset.code == buying_code
+    assert operations[0].buying_asset.issuer == buying_issuer
+    assert operations[0].amount == 500111000
+    assert operations[0].price_n == 1
+    assert operations[0].price_d == 2
+    assert operations[0].offer_id == offer_id
+
+
+def test_path_payment_strict_send():
+    tx = make_default_tx()
+    destination = "GDNSSYSCSSJ76FER5WEEXME5G4MTCUBKDRQSKOYP36KUKVDB2VCMERS6"
+    send_amount = "50.0112"
+    dest_min = "120"
+    send_code = "XLM"
+    send_issuer = None
+    dest_code = "USD"
+    dest_issuer = "GCSJ7MFIIGIRMAS4R3VT5FIFIAOXNMGDI5HPYTWS5X7HH74FSJ6STSGF"
+    operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
+    path_asset1 = Asset(
+        "JPY", "GD6PV7DXQJX7AGVXFQ2MTCLTCH6LR3E6IO2EO2YDZD7F7IOZZCCB5DSQ"
+    )
+    path_asset2 = Asset(
+        "BANANA", "GC7EKO37HNSKQ3V6RZ274EO7SFOWASQRHLX3OR5FIZK6UMV6LIEDXHGZ"
+    )
+
+    envelope = (
+        tx
+        .append_path_payment_strict_send_op(
+            destination=destination,
+            send_code=send_code,
+            send_issuer=send_issuer,
+            send_amount=send_amount,
+            dest_code=dest_code,
+            dest_issuer=dest_issuer,
+            dest_min=dest_min,
+            path=[path_asset1, path_asset2],
+            source=operation_source,
+        )
+        .build()
+    )
+
+    tx, operations = stellar.from_envelope(envelope)
+    assert len(operations) == 1
+
+    assert isinstance(operations[0], messages.StellarPathPaymentStrictSendOp)
+    assert operations[0].source_account == operation_source
+    assert operations[0].destination_account == destination
+    assert operations[0].send_asset.type == messages.StellarAssetType.NATIVE
+    assert operations[0].send_amount == 500112000
+    assert operations[0].destination_min == 1200000000
+    assert operations[0].destination_asset.type == messages.StellarAssetType.ALPHANUM4
+    assert operations[0].destination_asset.code == dest_code
+    assert operations[0].destination_asset.issuer == dest_issuer
+    assert len(operations[0].paths) == 2
+    assert operations[0].paths[0].type == messages.StellarAssetType.ALPHANUM4
+    assert operations[0].paths[0].code == path_asset1.code
+    assert operations[0].paths[0].issuer == path_asset1.issuer
+    assert operations[0].paths[1].type == messages.StellarAssetType.ALPHANUM12
+    assert operations[0].paths[1].code == path_asset2.code
+    assert operations[0].paths[1].issuer == path_asset2.issuer
+
+
+def test_payment_muxed_account_not_support_raise():
+    tx = make_default_tx()
+    destination = MuxedAccount(
+        "GDNSSYSCSSJ76FER5WEEXME5G4MTCUBKDRQSKOYP36KUKVDB2VCMERS6", 1
+    )
+    amount = "50.0111"
+    asset_code = "XLM"
+    asset_issuer = None
+    operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
+
+    envelope = tx.append_payment_op(
+        destination=destination,
+        amount=amount,
+        asset_code=asset_code,
+        asset_issuer=asset_issuer,
+        source=operation_source,
+    ).build()
+
+    with pytest.raises(ValueError, match="MuxedAccount is not supported"):
+        stellar.from_envelope(envelope)
+
+
+def test_path_payment_strict_send_muxed_account_not_support_raise():
+    tx = make_default_tx()
+    destination = MuxedAccount(
+        "GDNSSYSCSSJ76FER5WEEXME5G4MTCUBKDRQSKOYP36KUKVDB2VCMERS6", 1
+    )
+    send_amount = "50.0112"
+    dest_min = "120"
+    send_code = "XLM"
+    send_issuer = None
+    dest_code = "USD"
+    dest_issuer = "GCSJ7MFIIGIRMAS4R3VT5FIFIAOXNMGDI5HPYTWS5X7HH74FSJ6STSGF"
+    operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
+    path_asset1 = Asset(
+        "JPY", "GD6PV7DXQJX7AGVXFQ2MTCLTCH6LR3E6IO2EO2YDZD7F7IOZZCCB5DSQ"
+    )
+    path_asset2 = Asset(
+        "BANANA", "GC7EKO37HNSKQ3V6RZ274EO7SFOWASQRHLX3OR5FIZK6UMV6LIEDXHGZ"
+    )
+
+    envelope = tx.append_path_payment_strict_send_op(
+        destination=destination,
+        send_code=send_code,
+        send_issuer=send_issuer,
+        send_amount=send_amount,
+        dest_code=dest_code,
+        dest_issuer=dest_issuer,
+        dest_min=dest_min,
+        path=[path_asset1, path_asset2],
+        source=operation_source,
+    ).build()
+
+    with pytest.raises(ValueError, match="MuxedAccount is not supported"):
+        stellar.from_envelope(envelope)
+
+
+def test_path_payment_strict_receive_muxed_account_not_support_raise():
+    tx = make_default_tx()
+    destination = MuxedAccount(
+        "GDNSSYSCSSJ76FER5WEEXME5G4MTCUBKDRQSKOYP36KUKVDB2VCMERS6", 1
+    )
+    send_max = "50.0111"
+    dest_amount = "100"
+    send_code = "XLM"
+    send_issuer = None
+    dest_code = "USD"
+    dest_issuer = "GCSJ7MFIIGIRMAS4R3VT5FIFIAOXNMGDI5HPYTWS5X7HH74FSJ6STSGF"
+    operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
+    path_asset1 = Asset(
+        "JPY", "GD6PV7DXQJX7AGVXFQ2MTCLTCH6LR3E6IO2EO2YDZD7F7IOZZCCB5DSQ"
+    )
+    path_asset2 = Asset(
+        "BANANA", "GC7EKO37HNSKQ3V6RZ274EO7SFOWASQRHLX3OR5FIZK6UMV6LIEDXHGZ"
+    )
+
+    envelope = tx.append_path_payment_strict_receive_op(
+        destination=destination,
+        send_code=send_code,
+        send_issuer=send_issuer,
+        send_max=send_max,
+        dest_code=dest_code,
+        dest_issuer=dest_issuer,
+        dest_amount=dest_amount,
+        path=[path_asset1, path_asset2],
+        source=operation_source,
+    ).build()
+
+    with pytest.raises(ValueError, match="MuxedAccount is not supported"):
+        stellar.from_envelope(envelope)
+
+
+def test_account_merge_muxed_account_not_support_raise():
+    tx = make_default_tx()
+    destination = MuxedAccount(
+        "GDNSSYSCSSJ76FER5WEEXME5G4MTCUBKDRQSKOYP36KUKVDB2VCMERS6", 1
+    )
+    operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
+
+    envelope = tx.append_account_merge_op(
+        destination=destination, source=operation_source
+    ).build()
+
+    with pytest.raises(ValueError, match="MuxedAccount is not supported"):
+        stellar.from_envelope(envelope)
+
+
+def test_op_source_muxed_account_not_support_raise():
+    tx = make_default_tx()
+    destination = "GDNSSYSCSSJ76FER5WEEXME5G4MTCUBKDRQSKOYP36KUKVDB2VCMERS6"
+    amount = "50.0111"
+    asset_code = "XLM"
+    asset_issuer = None
+    operation_source = MuxedAccount(
+        "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V", 2
+    )
+
+    envelope = tx.append_payment_op(
+        destination=destination,
+        amount=amount,
+        asset_code=asset_code,
+        asset_issuer=asset_issuer,
+        source=operation_source,
+    ).build()
+
+    with pytest.raises(ValueError, match="MuxedAccount is not supported"):
+        stellar.from_envelope(envelope)
+
+
+def test_tx_source_muxed_account_not_support_raise():
+    source_account = Account(
+        account_id=MuxedAccount(TX_SOURCE, 123456), sequence=SEQUENCE
+    )
+    destination = "GDNSSYSCSSJ76FER5WEEXME5G4MTCUBKDRQSKOYP36KUKVDB2VCMERS6"
+    amount = "50.0111"
+    asset_code = "XLM"
+    asset_issuer = None
+    operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
+
+    envelope = (
+        TransactionBuilder(
+            source_account=source_account,
+            network_passphrase=Network.TESTNET_NETWORK_PASSPHRASE,
+            base_fee=BASE_FEE,
+        )
+        .add_time_bounds(TIMEBOUNDS_START, TIMEBOUNDS_END)
+        .append_payment_op(
+            destination=destination,
+            amount=amount,
+            asset_code=asset_code,
+            asset_issuer=asset_issuer,
+            source=operation_source,
+        )
+        .build()
+    )
+
+    with pytest.raises(ValueError, match="MuxedAccount is not supported"):
+        stellar.from_envelope(envelope)

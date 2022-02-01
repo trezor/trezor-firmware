@@ -51,16 +51,25 @@ void layoutDialog(const BITMAP *icon, const char *btnNo, const char *btnYes,
                   const char *desc, const char *line1, const char *line2,
                   const char *line3, const char *line4, const char *line5,
                   const char *line6) {
+  layoutDialogEx(icon, btnNo, btnYes, desc, line1, line2, line3, line4, line5,
+                 line6, FONT_STANDARD);
+}
+
+inline void layoutDialogEx(const BITMAP *icon, const char *btnNo,
+                           const char *btnYes, const char *desc,
+                           const char *line1, const char *line2,
+                           const char *line3, const char *line4,
+                           const char *line5, const char *line6, uint8_t font) {
   int left = 0;
   oledClear();
   if (icon) {
     oledDrawBitmap(0, 0, icon);
     left = icon->width + 4;
   }
-  if (line1) oledDrawString(left, 0 * 9, line1, FONT_STANDARD);
-  if (line2) oledDrawString(left, 1 * 9, line2, FONT_STANDARD);
-  if (line3) oledDrawString(left, 2 * 9, line3, FONT_STANDARD);
-  if (line4) oledDrawString(left, 3 * 9, line4, FONT_STANDARD);
+  if (line1) oledDrawString(left, 0 * 9, line1, font);
+  if (line2) oledDrawString(left, 1 * 9, line2, font);
+  if (line3) oledDrawString(left, 2 * 9, line3, font);
+  if (line4) oledDrawString(left, 3 * 9, line4, font);
   if (desc) {
     oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 2 * 9 - 1, desc,
                          FONT_STANDARD);
@@ -68,8 +77,8 @@ void layoutDialog(const BITMAP *icon, const char *btnNo, const char *btnYes,
       oledHLine(OLED_HEIGHT - 21);
     }
   } else {
-    if (line5) oledDrawString(left, 4 * 9, line5, FONT_STANDARD);
-    if (line6) oledDrawString(left, 5 * 9, line6, FONT_STANDARD);
+    if (line5) oledDrawString(left, 4 * 9, line5, font);
+    if (line6) oledDrawString(left, 5 * 9, line6, font);
     if (btnYes || btnNo) {
       oledHLine(OLED_HEIGHT - 13);
     }

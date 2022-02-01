@@ -37,12 +37,6 @@
 #define PATH_MAX_CHANGE 1
 #define PATH_MAX_ADDRESS_INDEX 1000000
 
-// SLIP-44 hardened coin type for Bitcoin
-#define SLIP44_BITCOIN 0x80000000
-
-// SLIP-44 hardened coin type for all Testnet coins
-#define SLIP44_TESTNET 0x80000001
-
 uint32_t ser_length(uint32_t len, uint8_t *out) {
   if (len < 253) {
     out[0] = len & 0xFF;
@@ -146,28 +140,39 @@ static void cryptoMessageHash(const CoinInfo *coin, const uint8_t *message,
 }
 
 int cryptoMessageSign(const CoinInfo *coin, HDNode *node,
-                      InputScriptType script_type, const uint8_t *message,
-                      size_t message_len, uint8_t *signature) {
+                      InputScriptType script_type, bool no_script_type,
+                      const uint8_t *message, size_t message_len,
+                      uint8_t *signature) {
+  uint8_t script_type_info = 0;
+  switch (script_type) {
+    case InputScriptType_SPENDADDRESS:
+      // p2pkh
+      script_type_info = 0;
+      break;
+    case InputScriptType_SPENDP2SHWITNESS:
+      // segwit-in-p2sh
+      script_type_info = 4;
+      break;
+    case InputScriptType_SPENDWITNESS:
+      // segwit
+      script_type_info = 8;
+      break;
+    default:
+      // unsupported script type
+      return 1;
+  }
+
+  if (no_script_type) {
+    script_type_info = 0;
+  }
+
   uint8_t hash[HASHER_DIGEST_LENGTH] = {0};
   cryptoMessageHash(coin, message, message_len, hash);
 
   uint8_t pby = 0;
   int result = hdnode_sign_digest(node, hash, signature + 1, &pby, NULL);
   if (result == 0) {
-    switch (script_type) {
-      case InputScriptType_SPENDP2SHWITNESS:
-        // segwit-in-p2sh
-        signature[0] = 35 + pby;
-        break;
-      case InputScriptType_SPENDWITNESS:
-        // segwit
-        signature[0] = 39 + pby;
-        break;
-      default:
-        // p2pkh
-        signature[0] = 31 + pby;
-        break;
-    }
+    signature[0] = 31 + pby + script_type_info;
   }
   return result;
 }
@@ -218,9 +223,8 @@ int cryptoMessageVerify(const CoinInfo *coin, const uint8_t *message,
         len != address_prefix_bytes_len(coin->address_type) + 20) {
       return 2;
     }
-  } else
-      // segwit-in-p2sh
-      if (signature[0] >= 35 && signature[0] <= 38) {
+  } else if (signature[0] >= 35 && signature[0] <= 38) {
+    // segwit-in-p2sh
     size_t len = base58_decode_check(address, coin->curve->hasher_base58,
                                      addr_raw, MAX_ADDR_RAW_SIZE);
     ecdsa_get_address_segwit_p2sh_raw(pubkey, coin->address_type_p2sh,
@@ -230,9 +234,8 @@ int cryptoMessageVerify(const CoinInfo *coin, const uint8_t *message,
         len != address_prefix_bytes_len(coin->address_type_p2sh) + 20) {
       return 2;
     }
-  } else
-      // segwit
-      if (signature[0] >= 39 && signature[0] <= 42) {
+  } else if (signature[0] >= 39 && signature[0] <= 42) {
+    // segwit
     int witver = 0;
     size_t len = 0;
     if (!coin->bech32_prefix ||
@@ -250,129 +253,6 @@ int cryptoMessageVerify(const CoinInfo *coin, const uint8_t *message,
 
   return 0;
 }
-
-/* ECIES disabled
-int cryptoMessageEncrypt(curve_point *pubkey, const uint8_t *msg, size_t
-msg_size, bool display_only, uint8_t *nonce, size_t *nonce_len, uint8_t
-*payload, size_t *payload_len, uint8_t *hmac, size_t *hmac_len, const uint8_t
-*privkey, const uint8_t *address_raw)
-{
-        if (privkey && address_raw) { // signing == true
-                HDNode node = {0};
-                payload[0] = display_only ? 0x81 : 0x01;
-                uint32_t l = ser_length(msg_size, payload + 1);
-                memcpy(payload + 1 + l, msg, msg_size);
-                memcpy(payload + 1 + l + msg_size, address_raw, 21);
-                hdnode_from_xprv(0, 0, 0, privkey, privkey, SECP256K1_NAME,
-&node); if (cryptoMessageSign(&node, msg, msg_size, payload + 1 + l + msg_size +
-21) != 0) { return 1;
-                }
-                *payload_len = 1 + l + msg_size + 21 + 65;
-        } else {
-                payload[0] = display_only ? 0x80 : 0x00;
-                uint32_t l = ser_length(msg_size, payload + 1);
-                memcpy(payload + 1 + l, msg, msg_size);
-                *payload_len = 1 + l + msg_size;
-        }
-        // generate random nonce
-        curve_point R = {0};
-        bignum256 k = {0};
-        if (generate_k_random(&secp256k1, &k) != 0) {
-                return 2;
-        }
-        // compute k*G
-        scalar_multiply(&secp256k1, &k, &R);
-        nonce[0] = 0x02 | (R.y.val[0] & 0x01);
-        bn_write_be(&R.x, nonce + 1);
-        *nonce_len = 33;
-        // compute shared secret
-        point_multiply(&secp256k1, &k, pubkey, &R);
-        uint8_t shared_secret[33] = {0};
-        shared_secret[0] = 0x02 | (R.y.val[0] & 0x01);
-        bn_write_be(&R.x, shared_secret + 1);
-        // generate keying bytes
-        uint8_t keying_bytes[80] = {0};
-        uint8_t salt[22 + 33] = {0};
-        memcpy(salt, "Bitcoin Secure Message", 22);
-        memcpy(salt + 22, nonce, 33);
-        pbkdf2_hmac_sha256(shared_secret, 33, salt, 22 + 33, 2048, keying_bytes,
-80);
-        // encrypt payload
-        aes_encrypt_ctx ctx = {0};
-        aes_encrypt_key256(keying_bytes, &ctx);
-        aes_cfb_encrypt(payload, payload, *payload_len, keying_bytes + 64,
-&ctx);
-        // compute hmac
-        uint8_t out[32] = {0};
-        hmac_sha256(keying_bytes + 32, 32, payload, *payload_len, out);
-        memcpy(hmac, out, 8);
-        *hmac_len = 8;
-
-        return 0;
-}
-
-int cryptoMessageDecrypt(curve_point *nonce, uint8_t *payload, size_t
-payload_len, const uint8_t *hmac, size_t hmac_len, const uint8_t *privkey,
-uint8_t *msg, size_t *msg_len, bool *display_only, bool *signing, uint8_t
-*address_raw)
-{
-        if (hmac_len != 8) {
-                return 1;
-        }
-        // compute shared secret
-        curve_point R = {0};
-        bignum256 k = {0};
-        bn_read_be(privkey, &k);
-        point_multiply(&secp256k1, &k, nonce, &R);
-        uint8_t shared_secret[33] = {0};
-        shared_secret[0] = 0x02 | (R.y.val[0] & 0x01);
-        bn_write_be(&R.x, shared_secret + 1);
-        // generate keying bytes
-        uint8_t keying_bytes[80] = {0};
-        uint8_t salt[22 + 33] = {0};
-        memcpy(salt, "Bitcoin Secure Message", 22);
-        salt[22] = 0x02 | (nonce->y.val[0] & 0x01);
-        bn_write_be(&(nonce->x), salt + 23);
-        pbkdf2_hmac_sha256(shared_secret, 33, salt, 22 + 33, 2048, keying_bytes,
-80);
-        // compute hmac
-        uint8_t out[32] = {0};
-        hmac_sha256(keying_bytes + 32, 32, payload, payload_len, out);
-        if (memcmp(hmac, out, 8) != 0) {
-                return 2;
-        }
-        // decrypt payload
-        aes_encrypt_ctx ctx = {0};
-        aes_encrypt_key256(keying_bytes, &ctx);
-        aes_cfb_decrypt(payload, payload, payload_len, keying_bytes + 64, &ctx);
-        // check first byte
-        if (payload[0] != 0x00 && payload[0] != 0x01 && payload[0] != 0x80 &&
-payload[0] != 0x81) { return 3;
-        }
-        *signing = payload[0] & 0x01;
-        *display_only = payload[0] & 0x80;
-        uint32_t l = 0; uint32_t o = 0;
-        l = deser_length(payload + 1, &o);
-        if (*signing) {
-                // FIXME: assumes a raw address is 21 bytes (also below).
-                if (1 + l + o + 21 + 65 != payload_len) {
-                        return 4;
-                }
-                // FIXME: cryptoMessageVerify changed to take the address_type
-as a parameter. if (cryptoMessageVerify(payload + 1 + l, o, payload + 1 + l + o,
-payload + 1 + l + o + 21) != 0) { return 5;
-                }
-                memcpy(address_raw, payload + 1 + l + o, 21);
-        } else {
-                if (1 + l + o != payload_len) {
-                        return 4;
-                }
-        }
-        memcpy(msg, payload + 1 + l, o);
-        *msg_len = o;
-        return 0;
-}
-*/
 
 const HDNode *cryptoMultisigPubkey(const CoinInfo *coin,
                                    const MultisigRedeemScriptType *multisig,
@@ -650,6 +530,7 @@ bool coin_path_check(const CoinInfo *coin, InputScriptType script_type,
     valid = valid && check_cointype(coin, address_n[1], check_known);
     if (check_script_type) {
       valid = valid && has_multisig;
+      // we do not support Multisig with Taproot yet
       valid = valid && (script_type == InputScriptType_SPENDMULTISIG ||
                         script_type == InputScriptType_SPENDP2SHWITNESS ||
                         script_type == InputScriptType_SPENDWITNESS);
@@ -707,6 +588,31 @@ bool coin_path_check(const CoinInfo *coin, InputScriptType script_type,
     valid = valid && check_cointype(coin, address_n[1], check_known);
     if (check_script_type) {
       valid = valid && (script_type == InputScriptType_SPENDWITNESS);
+    }
+    if (check_known) {
+      valid = valid && ((address_n[2] & 0x80000000) == 0x80000000);
+      valid = valid && ((address_n[2] & 0x7fffffff) <= PATH_MAX_ACCOUNT);
+      valid = valid && (address_n[3] <= PATH_MAX_CHANGE);
+      valid = valid && (address_n[4] <= PATH_MAX_ADDRESS_INDEX);
+    }
+    return valid;
+  }
+
+  // m/86' : BIP86 Taproot
+  // m / purpose' / coin_type' / account' / change / address_index
+  if (address_n_count > 0 && address_n[0] == (0x80000000 + 86)) {
+    valid = valid && coin->has_taproot;
+    valid = valid && (coin->bech32_prefix != NULL);
+    if (check_known) {
+      valid = valid && (address_n_count == 5);
+    } else {
+      valid = valid && (address_n_count >= 2);
+    }
+    valid = valid && check_cointype(coin, address_n[1], check_known);
+    if (check_script_type) {
+      // we do not support Multisig with Taproot yet
+      valid = valid && !has_multisig;
+      valid = valid && (script_type == InputScriptType_SPENDTAPROOT);
     }
     if (check_known) {
       valid = valid && ((address_n[2] & 0x80000000) == 0x80000000);

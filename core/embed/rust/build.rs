@@ -81,6 +81,8 @@ fn generate_micropython_bindings() {
         .allowlist_var("mp_type_fun_builtin_1")
         .allowlist_var("mp_type_fun_builtin_2")
         .allowlist_var("mp_type_fun_builtin_3")
+        .allowlist_type("mp_obj_fun_builtin_var_t")
+        .allowlist_var("mp_type_fun_builtin_var")
         // gc
         .allowlist_function("gc_alloc")
         // iter
@@ -109,6 +111,9 @@ fn generate_micropython_bindings() {
         .allowlist_var("mp_type_OverflowError")
         .allowlist_var("mp_type_ValueError")
         .allowlist_var("mp_type_TypeError")
+        // time
+        .allowlist_function("mp_hal_ticks_ms")
+        .allowlist_function("mp_hal_delay_ms")
         // typ
         .allowlist_var("mp_type_type");
 
@@ -159,6 +164,7 @@ fn generate_micropython_bindings() {
             "-I../unix",
             "-I../../build/unix",
             "-I../../vendor/micropython",
+            "-I../../vendor/micropython/ports/unix",
         ]);
     }
 
@@ -190,8 +196,13 @@ fn link_core_objects() {
     let crate_path = env::var("CARGO_MANIFEST_DIR").unwrap();
     let build_path = format!("{}/../../build/unix", crate_path);
 
+    // List of object filenames to ignore in the `embed` and `vendor` directory
     let embed_blocklist = [OsStr::new("main_main.o")];
+    let vendor_blocklist = [OsStr::new("gen_context.o")];
 
+    // Collect all objects that the `core` library uses, and link it in. We have to
+    // make sure to avoid the object with the `_main` symbol, so we don't get any
+    // duplicates.
     let mut cc = cc::Build::new();
     for obj in glob::glob(&format!("{}/embed/**/*.o", build_path)).unwrap() {
         let obj = obj.unwrap();
@@ -201,9 +212,17 @@ fn link_core_objects() {
             cc.object(obj);
         }
     }
+
     for obj in glob::glob(&format!("{}/vendor/**/*.o", build_path)).unwrap() {
-        cc.object(obj.unwrap());
+        let obj = obj.unwrap();
+        if vendor_blocklist.contains(&obj.file_name().unwrap()) {
+            // Ignore.
+        } else {
+            cc.object(obj);
+        }
     }
+
+    // Compile all the objects into a static library and link it in automatically.
     cc.compile("core_lib");
 
     println!("cargo:rustc-link-lib=SDL2");

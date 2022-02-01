@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor.enums import StellarAssetType, StellarSignerType
 from trezor.messages import (
     StellarAccountMergeOp,
@@ -6,10 +8,12 @@ from trezor.messages import (
     StellarBumpSequenceOp,
     StellarChangeTrustOp,
     StellarCreateAccountOp,
-    StellarCreatePassiveOfferOp,
+    StellarCreatePassiveSellOfferOp,
+    StellarManageBuyOfferOp,
     StellarManageDataOp,
-    StellarManageOfferOp,
-    StellarPathPaymentOp,
+    StellarManageSellOfferOp,
+    StellarPathPaymentStrictReceiveOp,
+    StellarPathPaymentStrictSendOp,
     StellarPaymentOp,
     StellarSetOptionsOp,
 )
@@ -27,7 +31,7 @@ from trezor.wire import DataError, ProcessError
 from .. import consts, helpers
 from ..layout import format_amount, format_asset
 
-if False:
+if TYPE_CHECKING:
     from trezor.wire import Context
 
 
@@ -96,8 +100,8 @@ async def confirm_create_account_op(ctx: Context, op: StellarCreateAccountOp) ->
     )
 
 
-async def confirm_create_passive_offer_op(
-    ctx: Context, op: StellarCreatePassiveOfferOp
+async def confirm_create_passive_sell_offer_op(
+    ctx: Context, op: StellarCreatePassiveSellOfferOp
 ) -> None:
     if op.amount == 0:
         text = "Delete Passive Offer"
@@ -106,7 +110,21 @@ async def confirm_create_passive_offer_op(
     await _confirm_offer(ctx, text, op)
 
 
-async def confirm_manage_offer_op(ctx: Context, op: StellarManageOfferOp) -> None:
+async def confirm_manage_buy_offer_op(
+    ctx: Context, op: StellarManageBuyOfferOp
+) -> None:
+    await _confirm_manage_offer_op_common(ctx, op)
+
+
+async def confirm_manage_sell_offer_op(
+    ctx: Context, op: StellarManageSellOfferOp
+) -> None:
+    await _confirm_manage_offer_op_common(ctx, op)
+
+
+async def _confirm_manage_offer_op_common(
+    ctx: Context, op: StellarManageBuyOfferOp | StellarManageSellOfferOp
+) -> None:
     if op.offer_id == 0:
         text = "New Offer"
     else:
@@ -114,28 +132,44 @@ async def confirm_manage_offer_op(ctx: Context, op: StellarManageOfferOp) -> Non
             text = "Delete"
         else:
             text = "Update"
-        text += " #%d" % op.offer_id
+        text += f" #{op.offer_id}"
     await _confirm_offer(ctx, text, op)
 
 
 async def _confirm_offer(
     ctx: Context,
     title: str,
-    op: StellarCreatePassiveOfferOp | StellarManageOfferOp,
+    op: StellarCreatePassiveSellOfferOp
+    | StellarManageSellOfferOp
+    | StellarManageBuyOfferOp,
 ) -> None:
-    await confirm_properties(
-        ctx,
-        "op_offer",
-        title=title,
-        props=(
-            ("Selling:", format_amount(op.amount, op.selling_asset)),
-            ("Buying:", format_asset(op.buying_asset)),
-            (
-                "Price per {}:".format(format_asset(op.buying_asset)),
-                str(op.price_n / op.price_d),
-            ),
-        ),
-    )
+    if StellarManageBuyOfferOp.is_type_of(op):
+        buying = ("Buying:", format_amount(op.amount, op.buying_asset))
+        selling = ("Selling:", format_asset(op.selling_asset))
+        price = (
+            f"Price per {format_asset(op.selling_asset)}:",
+            str(op.price_n / op.price_d),
+        )
+        await confirm_properties(
+            ctx,
+            "op_offer",
+            title=title,
+            props=(buying, selling, price),
+        )
+    else:
+        selling = ("Selling:", format_amount(op.amount, op.selling_asset))
+        buying = ("Buying:", format_asset(op.buying_asset))
+        price = (
+            f"Price per {format_asset(op.buying_asset)}:",
+            str(op.price_n / op.price_d),
+        )
+        await confirm_properties(
+            ctx,
+            "op_offer",
+            title=title,
+            props=(selling, buying, price),
+        )
+
     await confirm_asset_issuer(ctx, op.selling_asset)
     await confirm_asset_issuer(ctx, op.buying_asset)
 
@@ -161,7 +195,9 @@ async def confirm_manage_data_op(ctx: Context, op: StellarManageDataOp) -> None:
         )
 
 
-async def confirm_path_payment_op(ctx: Context, op: StellarPathPaymentOp) -> None:
+async def confirm_path_payment_strict_receive_op(
+    ctx: Context, op: StellarPathPaymentStrictReceiveOp
+) -> None:
     await confirm_output(
         ctx,
         address=op.destination_account,
@@ -175,7 +211,28 @@ async def confirm_path_payment_op(ctx: Context, op: StellarPathPaymentOp) -> Non
         title="Debited amount",
         amount=format_amount(op.send_max, op.send_asset),
         description="Pay at most:",
-        br_type="op_path_payment",
+        br_type="op_path_payment_strict_receive",
+    )
+    await confirm_asset_issuer(ctx, op.send_asset)
+
+
+async def confirm_path_payment_strict_send_op(
+    ctx: Context, op: StellarPathPaymentStrictSendOp
+) -> None:
+    await confirm_output(
+        ctx,
+        address=op.destination_account,
+        amount=format_amount(op.destination_min, op.destination_asset),
+        title="Path Pay at least",
+    )
+    await confirm_asset_issuer(ctx, op.destination_asset)
+    # confirm what the sender is using to pay
+    await confirm_amount(
+        ctx,
+        title="Debited amount",
+        amount=format_amount(op.send_amount, op.send_asset),
+        description="Pay:",
+        br_type="op_path_payment_strict_send",
     )
     await confirm_asset_issuer(ctx, op.send_asset)
 
@@ -262,12 +319,14 @@ def _format_thresholds(op: StellarSetOptionsOp) -> list[tuple[str, str]]:
 def _format_flags(flags: int) -> str:
     if flags > consts.FLAGS_MAX_SIZE:
         raise ProcessError("Stellar: invalid flags")
-    text = "{}{}{}".format(
-        "AUTH_REQUIRED\n" if flags & consts.FLAG_AUTH_REQUIRED else "",
-        "AUTH_REVOCABLE\n" if flags & consts.FLAG_AUTH_REVOCABLE else "",
-        "AUTH_IMMUTABLE\n" if flags & consts.FLAG_AUTH_IMMUTABLE else "",
-    )
-    return text
+    flags_set = []
+    if flags & consts.FLAG_AUTH_REQUIRED:
+        flags_set.append("AUTH_REQUIRED\n")
+    if flags & consts.FLAG_AUTH_REVOCABLE:
+        flags_set.append("AUTH_REVOCABLE\n")
+    if flags & consts.FLAG_AUTH_IMMUTABLE:
+        flags_set.append("AUTH_IMMUTABLE\n")
+    return "".join(flags_set)
 
 
 async def confirm_asset_issuer(ctx: Context, asset: StellarAsset) -> None:
@@ -279,6 +338,6 @@ async def confirm_asset_issuer(ctx: Context, asset: StellarAsset) -> None:
         ctx,
         "Confirm Issuer",
         asset.issuer,
-        description="{} issuer:".format(asset.code),
+        description=f"{asset.code} issuer:",
         br_type="confirm_asset_issuer",
     )

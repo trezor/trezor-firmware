@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING
 from ubinascii import hexlify
 
 from trezor import log, wire
@@ -7,10 +8,10 @@ from trezor.ui.layouts import show_pubkey
 from apps.common import paths
 
 from . import seed
-from .helpers.paths import SCHEMA_PUBKEY
+from .helpers.paths import SCHEMA_MINT, SCHEMA_PUBKEY
 from .helpers.utils import derive_public_key
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import CardanoGetPublicKey
 
 
@@ -23,7 +24,7 @@ async def get_public_key(
         keychain,
         msg.address_n,
         # path must match the PUBKEY schema
-        SCHEMA_PUBKEY.match(msg.address_n),
+        SCHEMA_PUBKEY.match(msg.address_n) or SCHEMA_MINT.match(msg.address_n),
     )
 
     try:

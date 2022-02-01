@@ -5,12 +5,12 @@ from os.path import basename
 from graphviz import Digraph
 
 
-class Message(object):
+class Message:
     def __init__(self, fname, name, attrs):
         self.fname = basename(fname)
         self.name = name
         if len(attrs) == 0:
-            raise ValueError("message '%s' has no attributes" % name)
+            raise ValueError(f"message {name} has no attributes")
         t = attrs[0][0]
         if t in ["start", "end", "auxstart", "auxend", "embed", "ignore"]:
             self.typ = t
@@ -19,19 +19,14 @@ class Message(object):
             self.typ = "normal"
             attrs = attrs
         else:
-            raise ValueError("wrong message type in message '%s'" % name)
+            raise ValueError(f"wrong message type in message {name}")
         self.next = []
         for a in attrs:
             if a[0] == "next":
                 self.next.append(a[1])
 
     def __repr__(self):
-        return '%s(type=%s, fname="%s", next=%s)' % (
-            self.name,
-            self.typ,
-            self.fname,
-            self.next,
-        )
+        return f'{self.name}(type={self.typ}, fname="{self.fname}", next={self.next})'
 
 
 def generate_messages(files):

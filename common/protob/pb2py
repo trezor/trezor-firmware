@@ -10,16 +10,14 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from dataclasses import dataclass
 from pathlib import Path
-
 from typing import List, Optional
 
-import attr
 import click
 import construct as c
 import mako
 import mako.template
-
 from google.protobuf import descriptor_pb2
 
 FieldDescriptor = descriptor_pb2.FieldDescriptorProto
@@ -65,10 +63,15 @@ INT_TYPES = (
 
 MESSAGE_TYPE_ENUM = "MessageType"
 
+LengthDelimited = c.Struct(
+    "len" / c.VarInt,
+    "bytes" / c.Bytes(c.this.len),
+)
+
 ListOfSimpleValues = c.GreedyRange(
     c.Struct(
         "key" / c.VarInt,
-        "value" / c.VarInt,
+        "value" / c.Switch(c.this.key & 0b111, {0: c.VarInt, 2: LengthDelimited}),
     )
 )
 
@@ -76,7 +79,8 @@ ListOfSimpleValues = c.GreedyRange(
 def parse_protobuf_simple(data):
     """Micro-parse protobuf-encoded data.
 
-    Assume every field is of type 0 (varint), and parse to a dict of fieldnum: value.
+    Assume every value is of type 0 (varint) or 2 (length-delimited),
+    and parse to a dict of fieldnum: value.
     """
     return {v.key >> 3: v.value for v in ListOfSimpleValues.parse(data)}
 
@@ -134,7 +138,7 @@ QDEF_RE = re.compile(
 )
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class ProtoField:
     name: str
     number: int
@@ -223,7 +227,7 @@ class ProtoField:
         )
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class ProtoMessage:
     name: str
     wire_type: Optional[int]
@@ -339,33 +343,28 @@ class Descriptor:
             ext.name: ext.number for file in self.files for ext in file.extension
         }
 
+        if self.bitcoin_only:
+            self.files = [
+                f
+                for f in self.files
+                if self.get_extensions(f).get("include_in_bitcoin_only")
+            ]
+            logging.debug(f"found {len(self.files)} bitcoin-only files")
+
         # find message_type enum
         top_level_enums = itertools.chain.from_iterable(f.enum_type for f in self.files)
         self.message_type_enum = find_by_name(top_level_enums, MESSAGE_TYPE_ENUM, ())
         self.convert_enum_value_names(self.message_type_enum)
-
-        # top-level message inclusion filter that takes bitcoin_only into account
-        def should_include_message(message: ProtoMessage):
-            return (
-                # include all messages when not in bitcoin_only mode
-                not self.bitcoin_only
-                # include all non-wire messages
-                or message.wire_type is None
-                # include messages that are marked bitcoin_only
-                or message.extensions.get("bitcoin_only")
-            )
 
         # find messages and enums
         self.messages = []
         self.enums = []
 
         for file in self.files:
-            messages = (
+            messages = [
                 ProtoMessage.from_message(self, m)
                 for m in self._filter_items(file.message_type)
-            )
-            # use exclusion list on top-level messages
-            messages = [m for m in messages if should_include_message(m)]
+            ]
             self.messages += messages
             self.enums += self._filter_items(file.enum_type)
 
@@ -378,7 +377,6 @@ class Descriptor:
 
         for enum in self.enums:
             self.convert_enum_value_names(enum)
-
 
     def _filter_items(self, iter):
         return [
@@ -402,7 +400,7 @@ class Descriptor:
         # the API provides access to unknown fields, it hides the extensions.
         # What we do is re-encode the options descriptor...
         options_bytes = something.options.SerializeToString()
-        # ...and re-parse it as a dict of uvarints...
+        # ...and re-parse it as a dict of uvarints/strings...
         simple_values = parse_protobuf_simple(options_bytes)
         # ...and extract the value corresponding to the extension we care about.
         return simple_values.get(extension_num, default)

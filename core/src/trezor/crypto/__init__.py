@@ -12,5 +12,5 @@ from trezorcrypto import (  # noqa: F401
 from trezor import utils
 
 if not utils.BITCOIN_ONLY:
-    from trezorcrypto import monero, nem  # noqa: F401
+    from trezorcrypto import cardano, monero, nem  # noqa: F401
     import trezorzcash as zcash

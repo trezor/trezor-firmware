@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 cd $(dirname $0)/..
 
 PROTOB=common/protob
@@ -13,6 +14,7 @@ CORE_PROTOBUF_SOURCES="\
     $PROTOB/messages-debug.proto \
     $PROTOB/messages-eos.proto \
     $PROTOB/messages-ethereum.proto \
+    $PROTOB/messages-ethereum-eip712.proto \
     $PROTOB/messages-management.proto \
     $PROTOB/messages-monero.proto \
     $PROTOB/messages-nem.proto \
@@ -71,6 +73,7 @@ do_rebuild() {
 do_check() {
     # rebuild protobuf in tmpdir and check result against specified directory
     local TMPDIR=$(mktemp -d proto-check.XXXXXX)
+    trap "rm -r $TMPDIR" RETURN
 
     local FILE_OR_DIR="$1"
     shift
@@ -85,10 +88,7 @@ do_check() {
     fi
 
     do_rebuild "$FILE_OR_DIR" "$TMPDEST" "$@"
-    DIFF=$(diff -ur --exclude __pycache__ "$OUTPUT" "$TMPDEST")
-    rm -r "$TMPDIR"
-    if [ -n "$DIFF" ]; then
-        echo "$DIFF"
+    if ! diff -ur --exclude __pycache__ "$OUTPUT" "$TMPDEST"; then
         RETURN=1
     fi
 }

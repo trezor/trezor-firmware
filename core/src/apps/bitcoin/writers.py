@@ -1,20 +1,21 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor.crypto.hashlib import sha256
 from trezor.utils import ensure
 
 from apps.common.writers import (  # noqa: F401
-    write_bitcoin_varint,
     write_bytes_fixed,
     write_bytes_reversed,
     write_bytes_unchecked,
+    write_compact_size,
     write_uint8,
     write_uint16_le,
     write_uint32_le,
     write_uint64_le,
 )
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import (
         PrevInput,
         PrevOutput,
@@ -33,7 +34,7 @@ TX_HASH_SIZE = const(32)
 
 
 def write_bytes_prefixed(w: Writer, b: bytes) -> None:
-    write_bitcoin_varint(w, len(b))
+    write_compact_size(w, len(b))
     write_bytes_unchecked(w, b)
 
 
@@ -53,6 +54,7 @@ def write_tx_input_check(w: Writer, i: TxInput) -> None:
         write_uint32(w, n)
     write_uint32(w, i.sequence)
     write_uint64(w, i.amount or 0)
+    write_bytes_prefixed(w, i.script_pubkey or b"")
 
 
 def write_tx_output(w: Writer, o: TxOutput | PrevOutput, script_pubkey: bytes) -> None:
@@ -61,13 +63,13 @@ def write_tx_output(w: Writer, o: TxOutput | PrevOutput, script_pubkey: bytes) -
 
 
 def write_op_push(w: Writer, n: int) -> None:
-    ensure(n >= 0 and n <= 0xFFFF_FFFF)
+    ensure(0 <= n <= 0xFFFF_FFFF)
     if n < 0x4C:
         w.append(n & 0xFF)
-    elif n < 0xFF:
+    elif n < 0x100:
         w.append(0x4C)
         w.append(n & 0xFF)
-    elif n < 0xFFFF:
+    elif n < 0x1_0000:
         w.append(0x4D)
         w.append(n & 0xFF)
         w.append((n >> 8) & 0xFF)
@@ -80,12 +82,12 @@ def write_op_push(w: Writer, n: int) -> None:
 
 
 def op_push_length(n: int) -> int:
-    ensure(n >= 0 and n <= 0xFFFF_FFFF)
+    ensure(0 <= n <= 0xFFFF_FFFF)
     if n < 0x4C:
         return 1
-    elif n < 0xFF:
+    elif n < 0x100:
         return 2
-    elif n < 0xFFFF:
+    elif n < 0x1_0000:
         return 3
     else:
         return 4

@@ -1,5 +1,6 @@
 import ustruct as struct
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor import wire
 from trezor.crypto.hashlib import blake2b
@@ -8,7 +9,7 @@ from trezor.utils import HashWriter, ensure
 
 from apps.common.coininfo import CoinInfo
 from apps.common.keychain import Keychain
-from apps.common.writers import write_bitcoin_varint
+from apps.common.writers import write_compact_size
 
 from ..scripts import write_bip143_script_code_prefixed
 from ..writers import (
@@ -23,23 +24,24 @@ from ..writers import (
 from . import approvers, helpers
 from .bitcoinlike import Bitcoinlike
 
-if False:
+if TYPE_CHECKING:
     from typing import Sequence
     from apps.common import coininfo
-    from .hash143 import Hash143
+    from .sig_hasher import SigHasher
     from .tx_info import OriginalTxInfo, TxInfo
+    from ..common import SigHashType
     from ..writers import Writer
 
 OVERWINTERED = const(0x8000_0000)
 
 
-class Zip243Hash:
+class ZcashSigHasher:
     def __init__(self) -> None:
         self.h_prevouts = HashWriter(blake2b(outlen=32, personal=b"ZcashPrevoutHash"))
         self.h_sequence = HashWriter(blake2b(outlen=32, personal=b"ZcashSequencHash"))
         self.h_outputs = HashWriter(blake2b(outlen=32, personal=b"ZcashOutputsHash"))
 
-    def add_input(self, txi: TxInput) -> None:
+    def add_input(self, txi: TxInput, script_pubkey: bytes) -> None:
         write_bytes_reversed(self.h_prevouts, txi.prev_hash, TX_HASH_SIZE)
         write_uint32(self.h_prevouts, txi.prev_index)
         write_uint32(self.h_sequence, txi.sequence)
@@ -47,14 +49,14 @@ class Zip243Hash:
     def add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         write_tx_output(self.h_outputs, txo, script_pubkey)
 
-    def preimage_hash(
+    def hash143(
         self,
         txi: TxInput,
         public_keys: Sequence[bytes | memoryview],
         threshold: int,
         tx: SignTx | PrevTx,
         coin: coininfo.CoinInfo,
-        sighash_type: int,
+        hash_type: int,
     ) -> bytes:
         h_preimage = HashWriter(
             blake2b(
@@ -90,7 +92,7 @@ class Zip243Hash:
         # 11. valueBalance
         write_uint64(h_preimage, 0)
         # 12. nHashType
-        write_uint32(h_preimage, sighash_type)
+        write_uint32(h_preimage, hash_type)
         # 13a. outpoint
         write_bytes_reversed(h_preimage, txi.prev_hash, TX_HASH_SIZE)
         write_uint32(h_preimage, txi.prev_index)
@@ -103,6 +105,14 @@ class Zip243Hash:
 
         return get_tx_hash(h_preimage)
 
+    def hash341(
+        self,
+        i: int,
+        tx: SignTx | PrevTx,
+        sighash_type: SigHashType,
+    ) -> bytes:
+        raise NotImplementedError
+
 
 class Zcashlike(Bitcoinlike):
     def __init__(
@@ -110,7 +120,7 @@ class Zcashlike(Bitcoinlike):
         tx: SignTx,
         keychain: Keychain,
         coin: CoinInfo,
-        approver: approvers.Approver,
+        approver: approvers.Approver | None,
     ) -> None:
         ensure(coin.overwintered)
         super().__init__(tx, keychain, coin, approver)
@@ -118,16 +128,16 @@ class Zcashlike(Bitcoinlike):
         if tx.version != 4:
             raise wire.DataError("Unsupported transaction version.")
 
-    def create_hash143(self) -> Hash143:
-        return Zip243Hash()
+    def create_sig_hasher(self) -> SigHasher:
+        return ZcashSigHasher()
 
     async def step7_finish(self) -> None:
         self.write_tx_footer(self.serialized_tx, self.tx_info.tx)
 
         write_uint64(self.serialized_tx, 0)  # valueBalance
-        write_bitcoin_varint(self.serialized_tx, 0)  # nShieldedSpend
-        write_bitcoin_varint(self.serialized_tx, 0)  # nShieldedOutput
-        write_bitcoin_varint(self.serialized_tx, 0)  # nJoinSplit
+        write_compact_size(self.serialized_tx, 0)  # nShieldedSpend
+        write_compact_size(self.serialized_tx, 0)  # nShieldedOutput
+        write_compact_size(self.serialized_tx, 0)  # nJoinSplit
 
         await helpers.request_tx_finish(self.tx_req)
 
@@ -144,7 +154,7 @@ class Zcashlike(Bitcoinlike):
         script_pubkey: bytes,
         tx_hash: bytes | None = None,
     ) -> bytes:
-        return tx_info.hash143.preimage_hash(
+        return tx_info.sig_hasher.hash143(
             txi,
             public_keys,
             threshold,

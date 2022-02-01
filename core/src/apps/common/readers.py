@@ -1,7 +1,7 @@
 from trezor.utils import BufferReader
 
 
-def read_bitcoin_varint(r: BufferReader) -> int:
+def read_compact_size(r: BufferReader) -> int:
     prefix = r.get()
     if prefix < 253:
         n = prefix
@@ -13,6 +13,15 @@ def read_bitcoin_varint(r: BufferReader) -> int:
         n += r.get() << 8
         n += r.get() << 16
         n += r.get() << 24
+    elif prefix == 255:
+        n = r.get()
+        n += r.get() << 8
+        n += r.get() << 16
+        n += r.get() << 24
+        n += r.get() << 32
+        n += r.get() << 40
+        n += r.get() << 48
+        n += r.get() << 56
     else:
         raise ValueError
     return n

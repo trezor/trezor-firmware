@@ -33,8 +33,9 @@ def address_from_public_key(pubkey: bytes) -> str:
     - checksum is first 4 bytes of double sha256(data)
 
     see https://developers.ripple.com/accounts.html#address-encoding
+
+    Returns the Ripple address created using base58
     """
-    """Returns the Ripple address created using base58"""
     h = sha256(pubkey).digest()
     h = ripemd160(h).digest()
 
@@ -44,7 +45,7 @@ def address_from_public_key(pubkey: bytes) -> str:
     return base58_ripple.encode_check(bytes(address))
 
 
-def decode_address(address: str):
+def decode_address(address: str) -> bytes:
     """Returns so called Account ID"""
     adr = base58_ripple.decode_check(address)
     return adr[1:]

@@ -59,8 +59,6 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
 #define NEM_CHECK_PARAM_WHEN(b, s) \
   CHECK_PARAM(!(b) || (reason = (s)) == NULL, reason)
 
-  CHECK_PARAM(msg->has_transaction, _("No common provided"));
-
   // Ensure exactly one transaction is provided
   unsigned int provided = msg->has_transfer + msg->has_provision_namespace +
                           msg->has_mosaic_creation + msg->has_supply_change +
@@ -123,7 +121,12 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
                          msg->transaction.address_n_count, NULL);
   if (!node) return;
 
-  hdnode_fill_public_key(node);
+  if (hdnode_fill_public_key(node) != 0) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Failed to derive public key"));
+    layoutHome();
+    return;
+  }
 
   const NEMTransactionCommon *common =
       msg->has_multisig ? &msg->multisig : &msg->transaction;

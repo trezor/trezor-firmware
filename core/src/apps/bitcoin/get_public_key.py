@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import wire
 from trezor.enums import InputScriptType
 from trezor.messages import HDNodeType, PublicKey
@@ -5,7 +7,7 @@ from trezor.messages import HDNodeType, PublicKey
 from apps.common import coininfo, paths
 from apps.common.keychain import get_keychain
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import GetPublicKey
 
 
@@ -20,7 +22,12 @@ async def get_public_key(ctx: wire.Context, msg: GetPublicKey) -> PublicKey:
     node = keychain.derive(msg.address_n)
 
     if (
-        script_type in (InputScriptType.SPENDADDRESS, InputScriptType.SPENDMULTISIG)
+        script_type
+        in (
+            InputScriptType.SPENDADDRESS,
+            InputScriptType.SPENDMULTISIG,
+            InputScriptType.SPENDTAPROOT,
+        )
         and coin.xpub_magic is not None
     ):
         node_xpub = node.serialize_public(coin.xpub_magic)
@@ -29,18 +36,18 @@ async def get_public_key(ctx: wire.Context, msg: GetPublicKey) -> PublicKey:
         and script_type == InputScriptType.SPENDP2SHWITNESS
         and (msg.ignore_xpub_magic or coin.xpub_magic_segwit_p2sh is not None)
     ):
-        # TODO: resolve type: ignore below
+        assert coin.xpub_magic_segwit_p2sh is not None
         node_xpub = node.serialize_public(
-            coin.xpub_magic if msg.ignore_xpub_magic else coin.xpub_magic_segwit_p2sh  # type: ignore
+            coin.xpub_magic if msg.ignore_xpub_magic else coin.xpub_magic_segwit_p2sh
         )
     elif (
         coin.segwit
         and script_type == InputScriptType.SPENDWITNESS
         and (msg.ignore_xpub_magic or coin.xpub_magic_segwit_native is not None)
     ):
-        # TODO: resolve type: ignore below
+        assert coin.xpub_magic_segwit_native is not None
         node_xpub = node.serialize_public(
-            coin.xpub_magic if msg.ignore_xpub_magic else coin.xpub_magic_segwit_native  # type: ignore
+            coin.xpub_magic if msg.ignore_xpub_magic else coin.xpub_magic_segwit_native
         )
     else:
         raise wire.DataError("Invalid combination of coin and script_type")

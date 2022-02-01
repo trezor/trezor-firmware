@@ -1,16 +1,17 @@
+# pylint: disable=wrong-import-position
 import math
 import utime
 from micropython import const
 from trezorui import Display
+from typing import TYPE_CHECKING
 
 from trezor import io, loop, res, utils, workflow
 
-if False:
-    from typing import Any, Awaitable, Generator, TypeVar
+if TYPE_CHECKING:
+    from typing import Any, Awaitable, Generator
 
     Pos = tuple[int, int]
     Area = tuple[int, int, int, int]
-    ResultValue = TypeVar("ResultValue")
 
 # all rendering is done through a singleton of `Display`
 display = Display()
@@ -44,7 +45,7 @@ if __debug__:
 
 
 else:
-    refresh = display.refresh
+    refresh = display.refresh  # type: ignore
 
 
 # in both debug and production, emulator needs to draw the screen explicitly
@@ -156,7 +157,7 @@ def header_error(message: str, clear: bool = True) -> None:
         display.bar(0, 30, WIDTH, HEIGHT - 30, style.BG)
 
 
-def draw_simple(t: Component) -> None:  # noqa: F405
+def draw_simple(t: "Component") -> None:
     """Render a component synchronously.
 
     Useful when you need to put something on screen and go on to do other things.
@@ -209,7 +210,7 @@ def grid(
 
 def in_area(area: Area, x: int, y: int) -> bool:
     ax, ay, aw, ah = area
-    return ax <= x <= ax + aw and ay <= y <= ay + ah
+    return ax <= x < ax + aw and ay <= y < ay + ah
 
 
 # Component events.  Should be different from `io.TOUCH_*` events.
@@ -297,7 +298,7 @@ class Result(Exception):
     See `Layout.__iter__` for details.
     """
 
-    def __init__(self, value: ResultValue) -> None:
+    def __init__(self, value: Any) -> None:
         super().__init__()
         self.value = value
 
@@ -311,8 +312,6 @@ class Cancelled(Exception):
 
     See `Layout.__iter__` for details.
     """
-
-    pass
 
 
 class Layout(Component):
@@ -328,7 +327,7 @@ class Layout(Component):
     BACKLIGHT_LEVEL = style.BACKLIGHT_NORMAL
     RENDER_SLEEP: loop.Syscall = loop.sleep(_RENDER_DELAY_MS)
 
-    async def __iter__(self) -> ResultValue:
+    async def __iter__(self) -> Any:
         """
         Run the layout and wait until it completes.  Returns the result value.
         Usually not overridden.
@@ -358,10 +357,15 @@ class Layout(Component):
             value = result.value
         return value
 
-    def __await__(self) -> Generator[Any, Any, ResultValue]:
-        return self.__iter__()  # type: ignore
+    if TYPE_CHECKING:
 
-    def create_tasks(self) -> tuple[loop.Task, ...]:
+        def __await__(self) -> Generator:
+            return self.__iter__()  # type: ignore
+
+    else:
+        __await__ = __iter__
+
+    def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
         """
         Called from `__iter__`.  Creates and returns a sequence of tasks that
         run this layout.  Tasks are executed in parallel.  When one of them
@@ -372,7 +376,7 @@ class Layout(Component):
 
     if utils.MODEL == "T":
 
-        def handle_input(self) -> loop.Task:  # type: ignore
+        def handle_input(self) -> Generator:
             """Task that is waiting for the user input."""
             touch = loop.wait(io.TOUCH)
             while True:
@@ -386,7 +390,7 @@ class Layout(Component):
 
     elif utils.MODEL == "1":
 
-        def handle_input(self) -> loop.Task:  # type: ignore
+        def handle_input(self) -> Generator:
             """Task that is waiting for the user input."""
             button = loop.wait(io.BUTTON)
             while True:
@@ -439,3 +443,60 @@ class Layout(Component):
 def wait_until_layout_is_running() -> Awaitable[None]:  # type: ignore
     while not layout_chan.takers:
         yield
+
+
+class RustLayout(Layout):
+    # pylint: disable=super-init-not-called
+    def __init__(self, layout: Any):
+        self.layout = layout
+        self.timer = loop.Timer()
+        self.layout.set_timer_fn(self.set_timer)
+
+    def set_timer(self, token: int, deadline: int) -> None:
+        self.timer.schedule(deadline, token)
+
+    def create_tasks(self) -> tuple[loop.Task, ...]:
+        return self.handle_input_and_rendering(), self.handle_timers()
+
+    if utils.MODEL == "T":
+
+        def handle_input_and_rendering(self) -> loop.Task:  # type: ignore
+            touch = loop.wait(io.TOUCH)
+            display.clear()
+            self.layout.paint()
+            while True:
+                # Using `yield` instead of `await` to avoid allocations.
+                event, x, y = yield touch
+                workflow.idle_timer.touch()
+                msg = None
+                if event in (io.TOUCH_START, io.TOUCH_MOVE, io.TOUCH_END):
+                    msg = self.layout.touch_event(event, x, y)
+                self.layout.paint()
+                if msg is not None:
+                    raise Result(msg)
+
+    elif utils.MODEL == "1":
+
+        def handle_input_and_rendering(self) -> loop.Task:  # type: ignore
+            button = loop.wait(io.BUTTON)
+            display.clear()
+            self.layout.paint()
+            while True:
+                # Using `yield` instead of `await` to avoid allocations.
+                event, button_num = yield button
+                workflow.idle_timer.touch()
+                msg = None
+                if event in (io.BUTTON_PRESSED, io.BUTTON_RELEASED):
+                    msg = self.layout.button_event(event, button_num)
+                self.layout.paint()
+                if msg is not None:
+                    raise Result(msg)
+
+    def handle_timers(self) -> loop.Task:  # type: ignore
+        while True:
+            # Using `yield` instead of `await` to avoid allocations.
+            token = yield self.timer
+            msg = self.layout.timer(token)
+            self.layout.paint()
+            if msg is not None:
+                raise Result(msg)

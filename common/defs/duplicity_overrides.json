@@ -7,6 +7,8 @@
     "erc20:eth:TUSD": false,
     "erc20:eth:Hdp": true,
     "erc20:eth:Hdp.ф": true,
+    "erc20:eth:HEX:2b59": false,
+    "erc20:eth:JOB:dfbc": false,
     "misc:BNB": false,
     "eth:BNB": false,
     "eth:ONE:1666600000": false,
@@ -25,5 +27,7 @@
     "eth:QKC:100005": false,
     "eth:QKC:100006": false,
     "eth:QKC:100007": false,
-    "eth:QKC:100008": false
+    "eth:QKC:100008": false,
+    "eth:xDAI:100": false,
+    "eth:xDAI:200": false
 }

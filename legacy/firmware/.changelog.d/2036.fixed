@@ -1,0 +1,1 @@
+Fix domain-only EIP-712 hashes (i.e. when `primaryType`=`EIP712Domain`)

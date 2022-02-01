@@ -15,9 +15,12 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import json
+import os
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
+import requests
 
 from trezorlib import btc, tools
 from trezorlib.messages import ButtonRequestType as B
@@ -113,7 +116,7 @@ def generate_entropy(strength, internal_entropy, external_entropy):
     return entropy_stripped
 
 
-def recovery_enter_shares(debug, shares, groups=False):
+def recovery_enter_shares(debug, shares, groups=False, click_info=False):
     """Perform the recovery flow for a set of Shamir shares.
 
     For use in an input flow function.
@@ -137,7 +140,7 @@ def recovery_enter_shares(debug, shares, groups=False):
     yield
     debug.press_yes()
     # Enter shares
-    for index, share in enumerate(shares):
+    for share in shares:
         br = yield
         assert br.code == B.MnemonicInput
         # Enter mnemonic words
@@ -152,6 +155,15 @@ def recovery_enter_shares(debug, shares, groups=False):
         # Homescreen - continue
         # or Homescreen - confirm success
         yield
+
+        if click_info:
+            # Moving through the INFO button
+            debug.press_info()
+            yield
+            debug.swipe_up()
+            debug.press_yes()
+
+        # Finishing with current share
         debug.press_yes()
 
 
@@ -213,3 +225,26 @@ def get_test_address(client):
     """Fetch a testnet address on a fixed path. Useful to make a pin/passphrase
     protected call, or to identify the root secret (seed+passphrase)"""
     return btc.get_address(client, "Testnet", TEST_ADDRESS_N)
+
+
+def assert_tx_matches(serialized_tx: bytes, hash_link: str, tx_hex: str = None) -> None:
+    """Verifies if a transaction is correctly formed."""
+    hash_str = hash_link.split("/")[-1]
+    assert tools.tx_hash(serialized_tx).hex() == hash_str
+
+    if tx_hex:
+        assert serialized_tx.hex() == tx_hex
+
+    # TODO: we could probably do better than os.environ, this was the easiest solution
+    # (we could create a pytest option (and use config.getoption("use-blockbook")),
+    # but then each test would need to have access to config via function argument)
+    if int(os.environ.get("CHECK_ON_CHAIN", 0)):
+
+        def get_tx_hex(hash_link: str) -> str:
+            tx_data = requests.get(
+                hash_link, headers={"User-Agent": "BTC transactions test"}
+            ).json(parse_float=Decimal)
+
+            return tx_data["hex"]
+
+        assert serialized_tx.hex() == get_tx_hex(hash_link)

@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2019 SatoshiLabs and contributors
+# Copyright (C) 2012-2022 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -15,11 +15,14 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import os
+import sys
+from typing import Any, Callable, Optional, Union
 
 import click
 from mnemonic import Mnemonic
+from typing_extensions import Protocol
 
-from . import device
+from . import device, messages
 from .client import MAX_PIN_LENGTH, PASSPHRASE_ON_DEVICE
 from .exceptions import Cancelled
 from .messages import PinMatrixRequestType, WordRequestType
@@ -52,29 +55,52 @@ PIN_CONFIRM = PinMatrixRequestType.NewSecond
 WIPE_CODE_NEW = PinMatrixRequestType.WipeCodeFirst
 WIPE_CODE_CONFIRM = PinMatrixRequestType.WipeCodeSecond
 
+# Workaround for limitation of Git Bash
+# getpass function does not work correctly on Windows when not using a real terminal
+# (the hidden input is not allowed and it also freezes the script completely)
+# Details: https://bugs.python.org/issue44762
+CAN_HANDLE_HIDDEN_INPUT = sys.stdin and sys.stdin.isatty()
 
-def echo(*args, **kwargs):
+
+class TrezorClientUI(Protocol):
+    def button_request(self, br: messages.ButtonRequest) -> None:
+        ...
+
+    def get_pin(self, code: Optional[PinMatrixRequestType]) -> str:
+        ...
+
+    def get_passphrase(self, available_on_device: bool) -> Union[str, object]:
+        ...
+
+
+def echo(*args: Any, **kwargs: Any) -> None:
     return click.echo(*args, err=True, **kwargs)
 
 
-def prompt(*args, **kwargs):
-    return click.prompt(*args, err=True, **kwargs)
+def prompt(text: str, *, hide_input: bool = False, **kwargs: Any) -> Any:
+    # Disallowing hidden input and warning user when it would cause issues
+    if not CAN_HANDLE_HIDDEN_INPUT and hide_input:
+        hide_input = False
+        text += " (WARNING: will be displayed!)"
+    return click.prompt(text, hide_input=hide_input, err=True, **kwargs)
 
 
 class ClickUI:
-    def __init__(self, always_prompt=False, passphrase_on_host=False):
+    def __init__(
+        self, always_prompt: bool = False, passphrase_on_host: bool = False
+    ) -> None:
         self.pinmatrix_shown = False
         self.prompt_shown = False
         self.always_prompt = always_prompt
         self.passphrase_on_host = passphrase_on_host
 
-    def button_request(self, _br):
+    def button_request(self, _br: messages.ButtonRequest) -> None:
         if not self.prompt_shown:
             echo("Please confirm action on your Trezor device.")
         if not self.always_prompt:
             self.prompt_shown = True
 
-    def get_pin(self, code=None):
+    def get_pin(self, code: Optional[PinMatrixRequestType] = None) -> str:
         if code == PIN_CURRENT:
             desc = "current PIN"
         elif code == PIN_NEW:
@@ -95,7 +121,7 @@ class ClickUI:
 
         while True:
             try:
-                pin = prompt("Please enter {}".format(desc), hide_input=True)
+                pin = prompt(f"Please enter {desc}", hide_input=True)
             except click.Abort:
                 raise Cancelled from None
 
@@ -108,21 +134,18 @@ class ClickUI:
                     "The value may only consist of digits 1 to 9 or letters cvbdfgert."
                 )
             elif len(pin) > MAX_PIN_LENGTH:
-                echo(
-                    "The value must be at most {} digits in length.".format(
-                        MAX_PIN_LENGTH
-                    )
-                )
+                echo(f"The value must be at most {MAX_PIN_LENGTH} digits in length.")
             else:
                 return pin
 
-    def get_passphrase(self, available_on_device):
+    def get_passphrase(self, available_on_device: bool) -> Union[str, object]:
         if available_on_device and not self.passphrase_on_host:
             return PASSPHRASE_ON_DEVICE
 
-        if os.getenv("PASSPHRASE") is not None:
+        env_passphrase = os.getenv("PASSPHRASE")
+        if env_passphrase is not None:
             echo("Passphrase required. Using PASSPHRASE environment variable.")
-            return os.getenv("PASSPHRASE")
+            return env_passphrase
 
         while True:
             try:
@@ -132,6 +155,9 @@ class ClickUI:
                     default="",
                     show_default=False,
                 )
+                # In case user sees the input on the screen, we do not need confirmation
+                if not CAN_HANDLE_HIDDEN_INPUT:
+                    return passphrase
                 second = prompt(
                     "Confirm your passphrase",
                     hide_input=True,
@@ -146,13 +172,65 @@ class ClickUI:
                 raise Cancelled from None
 
 
-def mnemonic_words(expand=False, language="english"):
+class ScriptUI:
+    """Interface to be used by scripts, not directly by user.
+
+    Communicates with a client application using print() and input().
+
+    Lot of `ClickUI` logic is outsourced to the client application, which
+    is responsible for supplying the PIN and passphrase.
+
+    Reference client implementation can be found under `tools/trezorctl_script_client.py`.
+    """
+
+    @staticmethod
+    def button_request(br: messages.ButtonRequest) -> None:
+        # TODO: send name={br.name} when it will be supported
+        code = br.code.name if br.code else None
+        print(f"?BUTTON code={code} pages={br.pages}")
+
+    @staticmethod
+    def get_pin(code: Optional[PinMatrixRequestType] = None) -> str:
+        if code is None:
+            print("?PIN")
+        else:
+            print(f"?PIN code={code.name}")
+
+        pin = input()
+        if pin == "CANCEL":
+            raise Cancelled from None
+        elif not pin.startswith(":"):
+            raise RuntimeError("Sent PIN must start with ':'")
+        else:
+            return pin[1:]
+
+    @staticmethod
+    def get_passphrase(available_on_device: bool) -> Union[str, object]:
+        if available_on_device:
+            print("?PASSPHRASE available_on_device")
+        else:
+            print("?PASSPHRASE")
+
+        passphrase = input()
+        if passphrase == "CANCEL":
+            raise Cancelled from None
+        elif passphrase == "ON_DEVICE":
+            return PASSPHRASE_ON_DEVICE
+        elif not passphrase.startswith(":"):
+            raise RuntimeError("Sent passphrase must start with ':'")
+        else:
+            return passphrase[1:]
+
+
+def mnemonic_words(
+    expand: bool = False, language: str = "english"
+) -> Callable[[WordRequestType], str]:
     if expand:
         wordlist = Mnemonic(language).wordlist
     else:
-        wordlist = set()
+        wordlist = []
 
-    def expand_word(word):
+    def expand_word(word: str) -> str:
         if not expand:
             return word
         if word in wordlist:
@@ -163,7 +241,7 @@ def mnemonic_words(expand=False, language="english"):
         echo("Choose one of: " + ", ".join(matches))
         raise KeyError(word)
 
-    def get_word(type):
+    def get_word(type: WordRequestType) -> str:
         assert type == WordRequestType.Plain
         while True:
             try:
@@ -177,7 +255,7 @@ def mnemonic_words(expand=False, language="english"):
     return get_word
 
 
-def matrix_words(type):
+def matrix_words(type: WordRequestType) -> str:
     while True:
         try:
             ch = click.getchar()

@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2019 SatoshiLabs and contributors
+# Copyright (C) 2012-2022 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -15,18 +15,25 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import logging
-from typing import Iterable, List, Tuple, Type
+from typing import (
+    TYPE_CHECKING,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+)
 
 from ..exceptions import TrezorException
 
+if TYPE_CHECKING:
+    from ..models import TrezorModel
+
+    T = TypeVar("T", bound="Transport")
+
 LOG = logging.getLogger(__name__)
-
-# USB vendor/product IDs for Trezors
-DEV_TREZOR1 = (0x534C, 0x0001)
-DEV_TREZOR2 = (0x1209, 0x53C1)
-DEV_TREZOR2_BL = (0x1209, 0x53C0)
-
-TREZORS = {DEV_TREZOR1, DEV_TREZOR2, DEV_TREZOR2_BL}
 
 UDEV_RULES_STR = """
 Do you have udev rules installed?
@@ -58,7 +65,7 @@ class Transport:
     a Trezor device to a computer.
     """
 
-    PATH_PREFIX: str = None
+    PATH_PREFIX: str
     ENABLED = False
 
     def __str__(self) -> str:
@@ -79,12 +86,17 @@ class Transport:
     def write(self, message_type: int, message_data: bytes) -> None:
         raise NotImplementedError
 
-    @classmethod
-    def enumerate(cls) -> Iterable["Transport"]:
+    def find_debug(self: "T") -> "T":
         raise NotImplementedError
 
     @classmethod
-    def find_by_path(cls, path: str, prefix_search: bool = False) -> "Transport":
+    def enumerate(
+        cls: Type["T"], models: Optional[Iterable["TrezorModel"]] = None
+    ) -> Iterable["T"]:
+        raise NotImplementedError
+
+    @classmethod
+    def find_by_path(cls: Type["T"], path: str, prefix_search: bool = False) -> "T":
         for device in cls.enumerate():
             if (
                 path is None
@@ -93,41 +105,45 @@ class Transport:
             ):
                 return device
 
-        raise TransportException(
-            "{} device not found: {}".format(cls.PATH_PREFIX, path)
-        )
+        raise TransportException(f"{cls.PATH_PREFIX} device not found: {path}")
 
 
-def all_transports() -> Iterable[Type[Transport]]:
+def all_transports() -> Iterable[Type["Transport"]]:
     from .bridge import BridgeTransport
     from .hid import HidTransport
     from .udp import UdpTransport
     from .webusb import WebUsbTransport
 
-    return set(
-        cls
-        for cls in (BridgeTransport, HidTransport, UdpTransport, WebUsbTransport)
-        if cls.ENABLED
+    transports: Tuple[Type["Transport"], ...] = (
+        BridgeTransport,
+        HidTransport,
+        UdpTransport,
+        WebUsbTransport,
     )
+    return set(t for t in transports if t.ENABLED)
 
 
-def enumerate_devices() -> Iterable[Transport]:
-    devices: List[Transport] = []
+def enumerate_devices(
+    models: Optional[Iterable["TrezorModel"]] = None,
+) -> Sequence["Transport"]:
+    devices: List["Transport"] = []
     for transport in all_transports():
         name = transport.__name__
         try:
-            found = list(transport.enumerate())
-            LOG.info("Enumerating {}: found {} devices".format(name, len(found)))
+            found = list(transport.enumerate(models))
+            LOG.info(f"Enumerating {name}: found {len(found)} devices")
             devices.extend(found)
         except NotImplementedError:
-            LOG.error("{} does not implement device enumeration".format(name))
+            LOG.error(f"{name} does not implement device enumeration")
         except Exception as e:
             excname = e.__class__.__name__
-            LOG.error("Failed to enumerate {}. {}: {}".format(name, excname, e))
+            LOG.error(f"Failed to enumerate {name}. {excname}: {e}")
     return devices
 
 
-def get_transport(path: str = None, prefix_search: bool = False) -> Transport:
+def get_transport(
+    path: Optional[str] = None, prefix_search: bool = False
+) -> "Transport":
     if path is None:
         try:
             return next(iter(enumerate_devices()))
@@ -149,4 +165,4 @@ def get_transport(path: str = None, prefix_search: bool = False) -> Transport:
     if transports:
         return transports[0].find_by_path(path, prefix_search=prefix_search)
 
-    raise TransportException("Could not find device by path: {}".format(path))
+    raise TransportException(f"Could not find device by path: {path}")

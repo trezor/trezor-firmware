@@ -387,22 +387,24 @@ def generate_curve25519_dh(filename):
     if not keys_in_dict(data, {"algorithm", "testGroups"}):
         raise DataError()
 
-    if data["algorithm"] != "X25519":
+    if data["algorithm"] != "XDH":
         raise DataError()
 
     for test_group in data["testGroups"]:
-        if not keys_in_dict(test_group, {"tests"}):
+        if not keys_in_dict(test_group, {"tests", "curve"}):
+            raise DataError()
+
+        try:
+            curve_name = parse_curve_name(test_group["curve"])
+        except Exception:
             raise DataError()
 
         for test in test_group["tests"]:
-            if not keys_in_dict(
-                test, {"public", "private", "shared", "result", "curve"}
-            ):
+            if not keys_in_dict(test, {"public", "private", "shared", "result"}):
                 raise DataError()
 
             try:
                 public_key = unhexlify(test["public"])
-                curve_name = parse_curve_name(test["curve"])
                 private_key = unhexlify(test["private"])
                 shared = unhexlify(test["shared"])
                 result = parse_result(test["result"])
@@ -433,18 +435,20 @@ def generate_ecdh(filename):
         raise DataError()
 
     for test_group in data["testGroups"]:
-        if not keys_in_dict(test_group, {"tests"}):
+        if not keys_in_dict(test_group, {"tests", "curve"}):
+            raise DataError()
+
+        try:
+            curve_name = parse_curve_name(test_group["curve"])
+        except Exception:
             raise DataError()
 
         for test in test_group["tests"]:
-            if not keys_in_dict(
-                test, {"public", "private", "shared", "result", "curve"}
-            ):
+            if not keys_in_dict(test, {"public", "private", "shared", "result"}):
                 raise DataError()
 
             try:
                 public_key = unhexlify(test["public"])
-                curve_name = parse_curve_name(test["curve"])
                 private_key = parse_signed_hex(test["private"])
                 shared = unhexlify(test["shared"])
                 result = parse_result(test["result"])
@@ -599,10 +603,11 @@ def generate_eddsa(filename):
 
 dir = os.path.abspath(os.path.dirname(__file__))
 lib = ctypes.cdll.LoadLibrary(os.path.join(dir, "libtrezor-crypto.so"))
+if not lib.zkp_context_is_initialized():
+    assert lib.zkp_context_init() == 0
 testvectors_directory = os.path.join(dir, "wycheproof/testvectors")
 context_structure_length = 1024
 
-ecdh_vectors = generate_ecdh("ecdh_test.json")
 curve25519_dh_vectors = generate_curve25519_dh("x25519_test.json")
 eddsa_vectors = generate_eddsa("eddsa_test.json")
 ecdsa_vectors = (
@@ -645,6 +650,28 @@ def test_ecdsa(curve_name, public_key, hasher, message, signature, result):
 
     computed_result = (
         lib.ecdsa_verify(curve, hasher, public_key, signature, message, len(message))
+        == 0
+    )
+    assert result == computed_result
+
+
+@pytest.mark.parametrize(
+    "curve_name, public_key, hasher, message, signature, result",
+    filter(lambda v: v[0] == "secp256k1", ecdsa_vectors),
+)
+def test_ecdsa_zkp(curve_name, public_key, hasher, message, signature, result):
+    curve = get_curve_by_name(curve_name)
+    if curve is None:
+        raise NotSupported("Curve not supported: {}".format(curve_name))
+
+    public_key = unhexlify(public_key)
+    signature = unhexlify(signature)
+    message = unhexlify(message)
+
+    computed_result = (
+        lib.zkp_ecdsa_verify(
+            curve, hasher, public_key, signature, message, len(message)
+        )
         == 0
     )
     assert result == computed_result

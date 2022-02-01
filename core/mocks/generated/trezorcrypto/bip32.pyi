@@ -25,11 +25,6 @@ class HDNode:
         Derive a BIP0032 child node in place.
         """
 
-    def derive_cardano(self, index: int) -> None:
-        """
-        Derive a BIP0032 child node in place using Cardano algorithm.
-        """
-
     def derive_path(self, path: Sequence[int]) -> None:
         """
         Go through a list of indexes and iteratively derive a child node in
@@ -113,12 +108,4 @@ class HDNode:
 def from_seed(seed: bytes, curve_name: str) -> HDNode:
     """
     Construct a BIP0032 HD node from a BIP0039 seed value.
-    """
-
-
-# extmod/modtrezorcrypto/modtrezorcrypto-bip32.h
-def from_mnemonic_cardano(mnemonic: str, passphrase: str) -> HDNode:
-    """
-    Construct a HD node from a BIP-0039 mnemonic using the Icarus derivation
-    scheme, aka v2 derivation scheme.
     """

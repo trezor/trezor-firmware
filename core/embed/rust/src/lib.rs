@@ -1,6 +1,7 @@
 #![feature(default_alloc_error_handler)]
 #![cfg_attr(not(test), no_std)]
 #![deny(clippy::all)]
+#![allow(clippy::new_without_default)]
 #![deny(unsafe_op_in_unsafe_fn)]
 #![allow(dead_code)]
 
@@ -8,7 +9,14 @@ mod error;
 #[macro_use]
 mod micropython;
 mod protobuf;
+mod time;
+#[cfg(feature = "ui_debug")]
+mod trace;
 mod trezorhal;
+
+#[cfg(feature = "ui")]
+#[macro_use]
+mod ui;
 mod util;
 mod zcash;
 

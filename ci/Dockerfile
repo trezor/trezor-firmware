@@ -1,7 +1,7 @@
 # install the latest Alpine linux from scratch
 
 FROM scratch
-ARG ALPINE_VERSION=3.14.2
+ARG ALPINE_VERSION=3.15.0
 ARG ALPINE_ARCH=x86_64
 ADD alpine-minirootfs-${ALPINE_VERSION}-${ALPINE_ARCH}.tar.gz /
 
@@ -10,9 +10,11 @@ ADD alpine-minirootfs-${ALPINE_VERSION}-${ALPINE_ARCH}.tar.gz /
 # Enable HTTPS support in wget and set nsswitch.conf to make resolution work within containers
 RUN apk add --no-cache --update openssl \
   && echo hosts: files dns > /etc/nsswitch.conf
+# Add basic packages
+RUN apk update && apk add bash git python3
 
 # Download Nix and install it into the system.
-ARG NIX_VERSION=2.3.15
+ARG NIX_VERSION=2.4
 RUN wget https://nixos.org/releases/nix/nix-${NIX_VERSION}/nix-${NIX_VERSION}-${ALPINE_ARCH}-linux.tar.xz \
   && tar xf nix-${NIX_VERSION}-${ALPINE_ARCH}-linux.tar.xz \
   && addgroup -g 30000 -S nixbld \
@@ -37,6 +39,10 @@ ENV \
 # Trezor specific stuff starts here
 
 COPY shell.nix shell.nix
+COPY pyright/ pyright/
+# add and install git-filter-repo for common sync job
+COPY common_sync/git-filter-repo git-filter-repo
+RUN mv git-filter-repo $(git --exec-path)
 
 # to make multiple python versions and monero test suite available, run docker build
 # with the following argument: "--build-arg FULLDEPS_TESTING=1"

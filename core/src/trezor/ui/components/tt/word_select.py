@@ -1,8 +1,10 @@
+from typing import TYPE_CHECKING
+
 from trezor import ui
 
 from .button import Button
 
-if False:
+if TYPE_CHECKING:
     from trezor import loop
 
 # todo improve?
@@ -13,15 +15,15 @@ class WordSelector(ui.Layout):
         super().__init__()
         self.content = content
         self.w12 = Button(ui.grid(6, n_y=4), "12")
-        self.w12.on_click = self.on_w12  # type: ignore
+        self.w12.on_click = self.on_w12
         self.w18 = Button(ui.grid(7, n_y=4), "18")
-        self.w18.on_click = self.on_w18  # type: ignore
+        self.w18.on_click = self.on_w18
         self.w20 = Button(ui.grid(8, n_y=4), "20")
-        self.w20.on_click = self.on_w20  # type: ignore
+        self.w20.on_click = self.on_w20
         self.w24 = Button(ui.grid(9, n_y=4), "24")
-        self.w24.on_click = self.on_w24  # type: ignore
+        self.w24.on_click = self.on_w24
         self.w33 = Button(ui.grid(10, n_y=4), "33")
-        self.w33.on_click = self.on_w33  # type: ignore
+        self.w33.on_click = self.on_w33
 
     def dispatch(self, event: int, x: int, y: int) -> None:
         self.content.dispatch(event, x, y)
@@ -48,7 +50,7 @@ class WordSelector(ui.Layout):
 
     if __debug__:
 
-        def create_tasks(self) -> tuple[loop.Task, ...]:
+        def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
             from apps.debug import input_signal
 
             return super().create_tasks() + (input_signal(),)

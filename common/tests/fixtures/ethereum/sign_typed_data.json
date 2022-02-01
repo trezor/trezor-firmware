@@ -1,0 +1,558 @@
+{
+    "setup": {
+        "mnemonic": "all all all all all all all all all all all all",
+        "passphrase": ""
+    },
+    "tests": [
+        {
+            "name": "bare_minimum",
+            "comment": "Bare minimum EIP-712 message (domain only)",
+            "parameters": {
+                "path": "m/44'/60'/0'/0/0",
+                "metamask_v4_compat": true,
+                "data": {
+                    "types": {
+                        "EIP712Domain": []
+                    },
+                    "primaryType": "EIP712Domain",
+                    "message": {},
+                    "domain": {}
+                },
+                "message_hash": null,
+                "domain_separator_hash": "0x6192106f129ce05c9075d319c1fa6ea9b3ae37cbd0c1ef92e2be7137bb07baa1"
+            },
+            "result": {
+                "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
+                "sig": "0x18aaea9abed7cd88d3763a9a420e2e7b71a9f991685fbc62d74da86326cffa680644862d459d1973e422777a3933bc74190b1cae9a5418ddaea645a7d7630dd91c"
+            }
+        },
+        {
+            "name": "full_domain_empty_message",
+            "comment": "Domain only EIP-712 message",
+            "parameters": {
+                "path": "m/44'/60'/0'/0/0",
+                "metamask_v4_compat": true,
+                "data": {
+                    "types": {
+                        "EIP712Domain": [
+                            {
+                                "name": "name",
+                                "type": "string"
+                            },
+                            {
+                                "name": "version",
+                                "type": "string"
+                            },
+                            {
+                                "name": "chainId",
+                                "type": "uint256"
+                            },
+                            {
+                                "name": "verifyingContract",
+                                "type": "address"
+                            },
+                            {
+                                "name": "salt",
+                                "type": "bytes32"
+                            }
+                        ]
+                    },
+                    "primaryType": "EIP712Domain",
+                    "message": {},
+                    "domain": {
+                        "name": "Trezor",
+                        "version": "Test v0.0.0",
+                        "chainId": 1,
+                        "verifyingContract": "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC",
+                        "salt": "0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                    }
+                },
+                "message_hash": null,
+                "domain_separator_hash": "0xf85aaf157e9a36dc6e12643fff450fdf8d98fd0d0e41c5b42bb1f7aae6c83388"
+            },
+            "result": {
+                "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
+                "sig": "0x98a3e66f738002da98c70b976ef131c11ed8b94aad872140574ed2a2d4a2bac53a9350e284994274f0a7ce1191cf79bf13f2f0d0a862dcf0dd86ad8141eb90dc1c"
+            }
+        },
+        {
+            "name": "basic_data",
+            "parameters": {
+                "path": "m/44'/60'/0'/0/0",
+                "metamask_v4_compat": true,
+                "data": {
+                    "types": {
+                        "EIP712Domain": [
+                            {
+                                "name": "name",
+                                "type": "string"
+                            },
+                            {
+                                "name": "version",
+                                "type": "string"
+                            },
+                            {
+                                "name": "chainId",
+                                "type": "uint256"
+                            },
+                            {
+                                "name": "verifyingContract",
+                                "type": "address"
+                            }
+                        ],
+                        "Person": [
+                            {
+                                "name": "name",
+                                "type": "string"
+                            },
+                            {
+                                "name": "wallet",
+                                "type": "address"
+                            }
+                        ],
+                        "Mail": [
+                            {
+                                "name": "from",
+                                "type": "Person"
+                            },
+                            {
+                                "name": "to",
+                                "type": "Person"
+                            },
+                            {
+                                "name": "contents",
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "primaryType": "Mail",
+                    "domain": {
+                        "name": "Ether Mail",
+                        "version": "1",
+                        "chainId": 1,
+                        "verifyingContract": "0x1e0Ae8205e9726E6F296ab8869160A6423E2337E"
+                    },
+                    "message": {
+                        "from": {
+                            "name": "Cow",
+                            "wallet": "0xc0004B62C5A39a728e4Af5bee0c6B4a4E54b15ad"
+                        },
+                        "to": {
+                            "name": "Bob",
+                            "wallet": "0x54B0Fa66A065748C40dCA2C7Fe125A2028CF9982"
+                        },
+                        "contents": "Hello, Bob!"
+                    }
+                },
+                "message_hash": "0xea6529f0ee9eb0b207b5a8b0ebfa673d398d6a78262818da1d270bd138f81f03",
+                "domain_separator_hash": "0x97d6f53774b810fbda27e091c03c6a6d6815dd1270c2e62e82c6917c1eff774b"
+            },
+            "result": {
+                "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
+                "sig": "0x2c2d8c7c1facf5bdcd997b5435bb42f3f4170a111ce079c94b5d1e34414f76560c4600d2167568e052ab846555bd590de93bb230987766c636613262eaeb8bdc1c"
+            }
+        },
+        {
+            "name": "complex_data",
+            "parameters": {
+                "path": "m/44'/60'/0'/0/0",
+                "metamask_v4_compat": true,
+                "data": {
+                    "types": {
+                        "EIP712Domain": [
+                            {
+                                "name": "name",
+                                "type": "string"
+                            },
+                            {
+                                "name": "version",
+                                "type": "string"
+                            },
+                            {
+                                "name": "chainId",
+                                "type": "uint256"
+                            },
+                            {
+                                "name": "verifyingContract",
+                                "type": "address"
+                            },
+                            {
+                                "name": "salt",
+                                "type": "bytes32"
+                            }
+                        ],
+                        "Person": [
+                            {
+                                "name": "name",
+                                "type": "string"
+                            },
+                            {
+                                "name": "wallet",
+                                "type": "address"
+                            },
+                            {
+                                "name": "married",
+                                "type": "bool"
+                            },
+                            {
+                                "name": "kids",
+                                "type": "uint8"
+                            },
+                            {
+                                "name": "karma",
+                                "type": "int16"
+                            },
+                            {
+                                "name": "secret",
+                                "type": "bytes"
+                            },
+                            {
+                                "name": "small_secret",
+                                "type": "bytes16"
+                            },
+                            {
+                                "name": "pets",
+                                "type": "string[]"
+                            },
+                            {
+                                "name": "two_best_friends",
+                                "type": "string[2]"
+                            }
+                        ],
+                        "Mail": [
+                            {
+                                "name": "from",
+                                "type": "Person"
+                            },
+                            {
+                                "name": "to",
+                                "type": "Person"
+                            },
+                            {
+                                "name": "messages",
+                                "type": "string[]"
+                            }
+                        ]
+                    },
+                    "primaryType": "Mail",
+                    "domain": {
+                        "name": "Ether Mail",
+                        "version": "1",
+                        "chainId": 1,
+                        "verifyingContract": "0x1e0Ae8205e9726E6F296ab8869160A6423E2337E",
+                        "salt": "0xca92da1a6e91d9358328d2f2155af143a7cb74b81a3a4e3e57e2191823dbb56c"
+                    },
+                    "message": {
+                        "from": {
+                            "name": "Amy",
+                            "wallet": "0xc0004B62C5A39a728e4Af5bee0c6B4a4E54b15ad",
+                            "married": true,
+                            "kids": 2,
+                            "karma": 4,
+                            "secret": "0x62c5a39a728e4af5bee0c6b462c5a39a728e4af5bee0c6b462c5a39a728e4af5bee0c6b462c5a39a728e4af5bee0c6b4",
+                            "small_secret": "0x5ccf0e54367104795a47bc0481645d9e",
+                            "pets": [
+                                "parrot"
+                            ],
+                            "two_best_friends": [
+                                "Carl",
+                                "Denis"
+                            ]
+                        },
+                        "to": {
+                            "name": "Bob",
+                            "wallet": "0x54B0Fa66A065748C40dCA2C7Fe125A2028CF9982",
+                            "married": false,
+                            "kids": 0,
+                            "karma": -4,
+                            "secret": "0x7fe125a2028cf97fe125a2028cf97fe125a2028cf97fe125a2028cf97fe125a2028cf97fe125a2028cf97fe125a2028cf9",
+                            "small_secret": "0xa5e5c47b64775abc476d2962403258de",
+                            "pets": [
+                                "dog",
+                                "cat"
+                            ],
+                            "two_best_friends": [
+                                "Emil",
+                                "Franz"
+                            ]
+                        },
+                        "messages": [
+                            "Hello, Bob!",
+                            "How are you?",
+                            "Hope you're fine"
+                        ]
+                    }
+                },
+                "message_hash": "0xdbafe746b1c47e4870f6f77205660d3c49a94db9a80939809bfca7bf43919df5",
+                "domain_separator_hash": "0xc4f4e0cd1376e27837fe933e3f77b7bd6213211b377f0e19815a0dbd194731cc"
+            },
+            "result": {
+                "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
+                "sig": "0xf0a187388b33f17885c915173f38bd613d2ce4346acadfc390b2bae4c6def03667ceac155b5398bd8be326386e841e8820c5254f389a09d6d95ac72e2f6e19e61c"
+            }
+        },
+        {
+            "name": "struct_list_v4",
+            "parameters": {
+                "path": "m/44'/60'/0'/0/0",
+                "metamask_v4_compat": true,
+                "data": {
+                    "types": {
+                        "EIP712Domain": [
+                            {
+                                "name": "name",
+                                "type": "string"
+                            },
+                            {
+                                "name": "version",
+                                "type": "string"
+                            },
+                            {
+                                "name": "chainId",
+                                "type": "uint256"
+                            },
+                            {
+                                "name": "verifyingContract",
+                                "type": "address"
+                            }
+                        ],
+                        "Person": [
+                            {
+                                "name": "name",
+                                "type": "string"
+                            },
+                            {
+                                "name": "wallet",
+                                "type": "address"
+                            }
+                        ],
+                        "Mail": [
+                            {
+                                "name": "from",
+                                "type": "Person"
+                            },
+                            {
+                                "name": "to",
+                                "type": "Person[]"
+                            },
+                            {
+                                "name": "contents",
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "primaryType": "Mail",
+                    "domain": {
+                        "name": "Ether Mail",
+                        "version": "1",
+                        "chainId": 1,
+                        "verifyingContract": "0x1e0Ae8205e9726E6F296ab8869160A6423E2337E"
+                    },
+                    "message": {
+                        "from": {
+                            "name": "Cow",
+                            "wallet": "0xc0004B62C5A39a728e4Af5bee0c6B4a4E54b15ad"
+                        },
+                        "to": [
+                            {
+                                "name": "Bob",
+                                "wallet": "0x54B0Fa66A065748C40dCA2C7Fe125A2028CF9982"
+                            },
+                            {
+                                "name": "Dave",
+                                "wallet": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8"
+                            }
+                        ],
+                        "contents": "Hello, guys!"
+                    }
+                },
+                "message_hash": "0xc16c4b0b9a45a8e9c34c4074d8deb589686f7de3b83e80596ec79f815a17276e",
+                "domain_separator_hash": "0x97d6f53774b810fbda27e091c03c6a6d6815dd1270c2e62e82c6917c1eff774b"
+            },
+            "result": {
+                "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
+                "sig": "0x61d4a929f8513b6327c5eae227d65c394c3857904de483a2191095e2ec35a9ea2ecaf1a461332a6f4847679018848612b35c94150d9be8870ffad01fcbe72cf71c"
+            }
+        },
+        {
+            "name": "struct_list_non_v4",
+            "parameters": {
+                "path": "m/44'/60'/0'/0/0",
+                "metamask_v4_compat": false,
+                "data": {
+                    "types": {
+                        "EIP712Domain": [
+                            {
+                                "name": "name",
+                                "type": "string"
+                            },
+                            {
+                                "name": "version",
+                                "type": "string"
+                            },
+                            {
+                                "name": "chainId",
+                                "type": "uint256"
+                            },
+                            {
+                                "name": "verifyingContract",
+                                "type": "address"
+                            }
+                        ],
+                        "Person": [
+                            {
+                                "name": "name",
+                                "type": "string"
+                            },
+                            {
+                                "name": "wallet",
+                                "type": "address"
+                            }
+                        ],
+                        "Mail": [
+                            {
+                                "name": "from",
+                                "type": "Person"
+                            },
+                            {
+                                "name": "to",
+                                "type": "Person[]"
+                            },
+                            {
+                                "name": "contents",
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "primaryType": "Mail",
+                    "domain": {
+                        "name": "Ether Mail",
+                        "version": "1",
+                        "chainId": 1,
+                        "verifyingContract": "0x1e0Ae8205e9726E6F296ab8869160A6423E2337E"
+                    },
+                    "message": {
+                        "from": {
+                            "name": "Cow",
+                            "wallet": "0xc0004B62C5A39a728e4Af5bee0c6B4a4E54b15ad"
+                        },
+                        "to": [
+                            {
+                                "name": "Bob",
+                                "wallet": "0x54B0Fa66A065748C40dCA2C7Fe125A2028CF9982"
+                            },
+                            {
+                                "name": "Dave",
+                                "wallet": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8"
+                            }
+                        ],
+                        "contents": "Hello, guys!"
+                    }
+                },
+                "message_hash": "0x6ba2528513daa98abdbec7363a77751fc79ca38fe6d37bdbb983e310e5c1444e",
+                "domain_separator_hash": "0x97d6f53774b810fbda27e091c03c6a6d6815dd1270c2e62e82c6917c1eff774b"
+            },
+            "result": {
+                "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
+                "sig": "0xba6658fd95d8f6048150c8ac64a596d974184522d1069237a57d0e170835fff661ff6f10c5049906a8a508c18d58145dcff91508e70e7e3c186193e3e3bb7dd61b"
+            }
+        },
+        {
+            "name": "structs_arrays_v4",
+            "parameters": {
+                "path": "m/44'/60'/0'/0/0",
+                "metamask_v4_compat": true,
+                "data": {
+                    "domain": {
+                        "chainId": 1,
+                        "name": "Ether Mail",
+                        "verifyingContract": "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC",
+                        "version": "1"
+                    },
+                    "message": {
+                        "contents": "Hello, Bob!",
+                        "attachedMoneyInEth": 4.2,
+                        "from": {
+                            "name": "Cow",
+                            "wallets": [
+                                "0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826",
+                                "0xDeaDbeefdEAdbeefdEadbEEFdeadbeEFdEaDbeeF"
+                            ]
+                        },
+                        "to": [
+                            {
+                                "name": "Bob",
+                                "wallets": [
+                                    "0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB",
+                                    "0xB0BdaBea57B0BDABeA57b0bdABEA57b0BDabEa57",
+                                    "0xB0B0b0b0b0b0B000000000000000000000000000"
+                                ]
+                            }
+                        ]
+                    },
+                    "primaryType": "Mail",
+                    "types": {
+                        "EIP712Domain": [
+                            {
+                                "name": "name",
+                                "type": "string"
+                            },
+                            {
+                                "name": "version",
+                                "type": "string"
+                            },
+                            {
+                                "name": "chainId",
+                                "type": "uint256"
+                            },
+                            {
+                                "name": "verifyingContract",
+                                "type": "address"
+                            }
+                        ],
+                        "Group": [
+                            {
+                                "name": "name",
+                                "type": "string"
+                            },
+                            {
+                                "name": "members",
+                                "type": "Person[]"
+                            }
+                        ],
+                        "Mail": [
+                            {
+                                "name": "from",
+                                "type": "Person"
+                            },
+                            {
+                                "name": "to",
+                                "type": "Person[]"
+                            },
+                            {
+                                "name": "contents",
+                                "type": "string"
+                            }
+                        ],
+                        "Person": [
+                            {
+                                "name": "name",
+                                "type": "string"
+                            },
+                            {
+                                "name": "wallets",
+                                "type": "address[]"
+                            }
+                        ]
+                    }
+                },
+                "domain_separator_hash": "0xf2cee375fa42b42143804025fc449deafd50cc031ca257e0b194a650a912090f",
+                "message_hash": "eb4221181ff3f1a83ea7313993ca9218496e424604ba9492bb4052c03d5c3df8"
+            },
+            "result": {
+                "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
+                "sig": "0x1d778d9ae559161f4ea57aad9135035eb7e26e5e4cf5b571c58736ee265b649b17c38730ede957efbcf7de4f30906b133a4262b9e4bb8e4ba3927a48512e3a561c"
+            }
+        }
+    ]
+}

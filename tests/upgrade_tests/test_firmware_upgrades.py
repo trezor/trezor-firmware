@@ -14,9 +14,11 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import dataclasses
+
 import pytest
 
-from trezorlib import MINIMUM_FIRMWARE_VERSION, btc, debuglink, device, exceptions, fido
+from trezorlib import btc, debuglink, device, exceptions, fido, models
 from trezorlib.messages import BackupType
 from trezorlib.tools import H_
 
@@ -26,9 +28,9 @@ from ..device_handler import BackgroundDeviceHandler
 from ..emulators import ALL_TAGS, EmulatorWrapper
 from . import for_all, for_tags
 
-MINIMUM_FIRMWARE_VERSION["1"] = (1, 0, 0)
-MINIMUM_FIRMWARE_VERSION["T"] = (2, 0, 0)
-
+models.TREZOR_ONE = dataclasses.replace(models.TREZOR_ONE, minimum_version=(1, 0, 0))
+models.TREZOR_T = dataclasses.replace(models.TREZOR_T, minimum_version=(2, 0, 0))
+models.TREZORS = {models.TREZOR_ONE, models.TREZOR_T}
 
 # **** COMMON DEFINITIONS ****
 
@@ -360,6 +362,6 @@ if __name__ == "__main__":
     if not ALL_TAGS:
         print("No versions found. Remember to run download_emulators.sh")
     for k, v in ALL_TAGS.items():
-        print("Found versions for {}:".format(k), v)
+        print(f"Found versions for {k}: {v}")
     print()
-    print("Use `pytest {}` to run tests".format(__file__))
+    print(f"Use `pytest {__file__}` to run tests")

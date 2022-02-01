@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2019 SatoshiLabs and contributors
+# Copyright (C) 2012-2022 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -14,16 +14,22 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from typing import TYPE_CHECKING, Optional
+
 import click
 
 from .. import device, firmware, messages, toif
 from . import ChoiceType, with_client
 
+if TYPE_CHECKING:
+    from ..client import TrezorClient
+
 try:
     from PIL import Image
-except ImportError:
-    Image = None
 
+    PIL_AVAILABLE = True
+except ImportError:
+    PIL_AVAILABLE = False
 
 ROTATION = {"north": 0, "east": 90, "south": 180, "west": 270}
 SAFETY_LEVELS = {
@@ -33,7 +39,7 @@ SAFETY_LEVELS = {
 
 
 def image_to_t1(filename: str) -> bytes:
-    if Image is None:
+    if not PIL_AVAILABLE:
         raise click.ClickException(
             "Image library is missing. Please install via 'pip install Pillow'."
         )
@@ -60,7 +66,7 @@ def image_to_tt(filename: str) -> bytes:
         except Exception as e:
             raise click.ClickException("TOIF file is corrupted") from e
 
-    elif Image is None:
+    elif not PIL_AVAILABLE:
         raise click.ClickException(
             "Image library is missing. Please install via 'pip install Pillow'."
         )
@@ -84,14 +90,14 @@ def image_to_tt(filename: str) -> bytes:
 
 
 @click.group(name="set")
-def cli():
+def cli() -> None:
     """Device settings."""
 
 
 @cli.command()
 @click.option("-r", "--remove", is_flag=True)
 @with_client
-def pin(client, remove):
+def pin(client: "TrezorClient", remove: bool) -> str:
     """Set, change or remove PIN."""
     return device.change_pin(client, remove)
 
@@ -99,7 +105,7 @@ def pin(client, remove):
 @cli.command()
 @click.option("-r", "--remove", is_flag=True)
 @with_client
-def wipe_code(client, remove):
+def wipe_code(client: "TrezorClient", remove: bool) -> str:
     """Set or remove the wipe code.
 
     The wipe code functions as a "self-destruct PIN". If the wipe code is ever
@@ -114,7 +120,7 @@ def wipe_code(client, remove):
 @click.option("-l", "--label", "_ignore", is_flag=True, hidden=True, expose_value=False)
 @click.argument("label")
 @with_client
-def label(client, label):
+def label(client: "TrezorClient", label: str) -> str:
     """Set new device label."""
     return device.apply_settings(client, label=label)
 
@@ -122,7 +128,7 @@ def label(client, label):
 @cli.command()
 @click.argument("rotation", type=ChoiceType(ROTATION))
 @with_client
-def display_rotation(client, rotation):
+def display_rotation(client: "TrezorClient", rotation: int) -> str:
     """Set display rotation.
 
     Configure display rotation for Trezor Model T. The options are
@@ -134,7 +140,7 @@ def display_rotation(client, rotation):
 @cli.command()
 @click.argument("delay", type=str)
 @with_client
-def auto_lock_delay(client, delay):
+def auto_lock_delay(client: "TrezorClient", delay: str) -> str:
     """Set auto-lock delay (in seconds)."""
 
     if not client.features.pin_protection:
@@ -152,16 +158,15 @@ def auto_lock_delay(client, delay):
 @cli.command()
 @click.argument("flags")
 @with_client
-def flags(client, flags):
+def flags(client: "TrezorClient", flags: str) -> str:
     """Set device flags."""
-    flags = flags.lower()
-    if flags.startswith("0b"):
-        flags = int(flags, 2)
-    elif flags.startswith("0x"):
-        flags = int(flags, 16)
+    if flags.lower().startswith("0b"):
+        flags_int = int(flags, 2)
+    elif flags.lower().startswith("0x"):
+        flags_int = int(flags, 16)
     else:
-        flags = int(flags)
-    return device.apply_flags(client, flags=flags)
+        flags_int = int(flags)
+    return device.apply_flags(client, flags=flags_int)
 
 
 @cli.command()
@@ -170,7 +175,7 @@ def flags(client, flags):
     "-f", "--filename", "_ignore", is_flag=True, hidden=True, expose_value=False
 )
 @with_client
-def homescreen(client, filename):
+def homescreen(client: "TrezorClient", filename: str) -> str:
     """Set new homescreen.
 
     To revert to default homescreen, use 'trezorctl set homescreen default'
@@ -195,7 +200,9 @@ def homescreen(client, filename):
 )
 @click.argument("level", type=ChoiceType(SAFETY_LEVELS))
 @with_client
-def safety_checks(client, always, level):
+def safety_checks(
+    client: "TrezorClient", always: bool, level: messages.SafetyCheckLevel
+) -> str:
     """Set safety check level.
 
     Set to "strict" to get the full Trezor security (default setting).
@@ -213,7 +220,7 @@ def safety_checks(client, always, level):
 @cli.command()
 @click.argument("enable", type=ChoiceType({"on": True, "off": False}))
 @with_client
-def experimental_features(client, enable):
+def experimental_features(client: "TrezorClient", enable: bool) -> str:
     """Enable or disable experimental message types.
 
     This is a developer feature. Use with caution.
@@ -227,7 +234,7 @@ def experimental_features(client, enable):
 
 
 @cli.group()
-def passphrase():
+def passphrase() -> None:
     """Enable, disable or configure passphrase protection."""
     # this exists in order to support command aliases for "enable-passphrase"
     # and "disable-passphrase". Otherwise `passphrase` would just take an argument.
@@ -236,7 +243,7 @@ def passphrase():
 @passphrase.command(name="enabled")
 @click.option("-f/-F", "--force-on-device/--no-force-on-device", default=None)
 @with_client
-def passphrase_enable(client, force_on_device: bool):
+def passphrase_enable(client: "TrezorClient", force_on_device: Optional[bool]) -> str:
     """Enable passphrase."""
     return device.apply_settings(
         client, use_passphrase=True, passphrase_always_on_device=force_on_device
@@ -245,6 +252,6 @@ def passphrase_enable(client, force_on_device: bool):
 
 @passphrase.command(name="disabled")
 @with_client
-def passphrase_disable(client):
+def passphrase_disable(client: "TrezorClient") -> str:
     """Disable passphrase."""
     return device.apply_settings(client, use_passphrase=False)

@@ -33,7 +33,13 @@ void fsm_msgEthereumGetPublicKey(const EthereumGetPublicKey *msg) {
   HDNode *node = fsm_getDerivedNode(curve, msg->address_n, msg->address_n_count,
                                     &fingerprint);
   if (!node) return;
-  hdnode_fill_public_key(node);
+
+  if (hdnode_fill_public_key(node) != 0) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Failed to derive public key"));
+    layoutHome();
+    return;
+  }
 
   if (msg->has_show_display && msg->show_display) {
     layoutPublicKey(node->public_key);
@@ -60,7 +66,7 @@ void fsm_msgEthereumGetPublicKey(const EthereumGetPublicKey *msg) {
   layoutHome();
 }
 
-void fsm_msgEthereumSignTx(EthereumSignTx *msg) {
+void fsm_msgEthereumSignTx(const EthereumSignTx *msg) {
   CHECK_INITIALIZED
 
   CHECK_PIN
@@ -72,13 +78,20 @@ void fsm_msgEthereumSignTx(EthereumSignTx *msg) {
   ethereum_signing_init(msg, node);
 }
 
-void fsm_msgEthereumTxAck(const EthereumTxAck *msg) {
-  ethereum_signing_txack(msg);
+void fsm_msgEthereumSignTxEIP1559(const EthereumSignTxEIP1559 *msg) {
+  CHECK_INITIALIZED
+
+  CHECK_PIN
+
+  const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n,
+                                          msg->address_n_count, NULL);
+  if (!node) return;
+
+  ethereum_signing_init_eip1559(msg, node);
 }
 
-void fsm_msgEthereumSignTxEIP1559(const EthereumSignTxEIP1559 *msg) {
-  (void)msg;
-  fsm_sendFailure(FailureType_Failure_UnexpectedMessage, _("Not implemented"));
+void fsm_msgEthereumTxAck(const EthereumTxAck *msg) {
+  ethereum_signing_txack(msg);
 }
 
 void fsm_msgEthereumGetAddress(const EthereumGetAddress *msg) {
@@ -113,9 +126,7 @@ void fsm_msgEthereumGetAddress(const EthereumGetAddress *msg) {
   }
 
   resp->has_address = true;
-  resp->address[0] = '0';
-  resp->address[1] = 'x';
-  ethereum_address_checksum(pubkeyhash, resp->address + 2, rskip60, chain_id);
+  ethereum_address_checksum(pubkeyhash, resp->address, rskip60, chain_id);
   // ethereum_address_checksum adds trailing zero
 
   if (msg->has_show_display && msg->show_display) {
@@ -137,18 +148,32 @@ void fsm_msgEthereumSignMessage(const EthereumSignMessage *msg) {
 
   CHECK_INITIALIZED
 
-  layoutSignMessage(msg->message.bytes, msg->message.size);
-  if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
-    layoutHome();
-    return;
-  }
-
   CHECK_PIN
 
   const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n,
                                           msg->address_n_count, NULL);
   if (!node) return;
+
+  uint8_t pubkeyhash[20] = {0};
+  if (!hdnode_get_ethereum_pubkeyhash(node, pubkeyhash)) {
+    return;
+  }
+
+  ethereum_address_checksum(pubkeyhash, resp->address, false, 0);
+  // ethereum_address_checksum adds trailing zero
+
+  layoutVerifyAddress(NULL, resp->address);
+  if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+    layoutHome();
+    return;
+  }
+
+  if (!fsm_layoutSignMessage(msg->message.bytes, msg->message.size)) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+    layoutHome();
+    return;
+  }
 
   ethereum_message_sign(msg, node, resp);
   layoutHome();
@@ -172,13 +197,79 @@ void fsm_msgEthereumVerifyMessage(const EthereumVerifyMessage *msg) {
     layoutHome();
     return;
   }
-  layoutVerifyMessage(msg->message.bytes, msg->message.size);
+
+  if (!fsm_layoutVerifyMessage(msg->message.bytes, msg->message.size)) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+    layoutHome();
+    return;
+  }
+
+  fsm_sendSuccess(_("Message verified"));
+
+  layoutHome();
+}
+
+void fsm_msgEthereumSignTypedHash(const EthereumSignTypedHash *msg) {
+  RESP_INIT(EthereumTypedDataSignature);
+
+  CHECK_INITIALIZED
+
+  CHECK_PIN
+
+  if (msg->domain_separator_hash.size != 32 ||
+      (msg->has_message_hash && msg->message_hash.size != 32)) {
+    fsm_sendFailure(FailureType_Failure_DataError, _("Invalid hash length"));
+    return;
+  }
+
+  layoutDialogSwipe(&bmp_icon_warning, _("Abort"), _("Continue"), NULL,
+                    _("Unable to show"), _("EIP-712 data."), NULL,
+                    _("Sign at your own risk."), NULL, NULL);
+  if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+    layoutHome();
+    return;
+  }
+
+  const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n,
+                                          msg->address_n_count, NULL);
+  if (!node) return;
+
+  uint8_t pubkeyhash[20] = {0};
+  if (!hdnode_get_ethereum_pubkeyhash(node, pubkeyhash)) {
+    return;
+  }
+
+  ethereum_address_checksum(pubkeyhash, resp->address, false, 0);
+  // ethereum_address_checksum adds trailing zero
+
+  layoutVerifyAddress(NULL, resp->address);
   if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
     fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
     layoutHome();
     return;
   }
-  fsm_sendSuccess(_("Message verified"));
 
+  layoutConfirmHash(&bmp_icon_warning, _("EIP-712 domain hash"),
+                    msg->domain_separator_hash.bytes, 32);
+  if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+    layoutHome();
+    return;
+  }
+
+  // No message hash when setting primaryType="EIP712Domain"
+  // https://ethereum-magicians.org/t/eip-712-standards-clarification-primarytype-as-domaintype/3286
+  if (msg->has_message_hash) {
+    layoutConfirmHash(&bmp_icon_warning, _("EIP-712 message hash"),
+                      msg->message_hash.bytes, 32);
+    if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
+      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+      layoutHome();
+      return;
+    }
+  }
+
+  ethereum_typed_hash_sign(msg, node, resp);
   layoutHome();
 }

@@ -1,9 +1,17 @@
 image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/trezor-firmware-env.nix
 
+# Caching
+.gitlab_caching: &gitlab_caching
+  cache:
+    key: "$CI_COMMIT_REF_SLUG"
+    paths:
+      - .venv/
+
 core unix coverage posttest:
   stage: posttest
   variables:
     COVERAGE_THRESHOLD: "78"
+  <<: *gitlab_caching
   needs:
     - core device test
     - core monero test
@@ -24,6 +32,7 @@ core unix ui changes:
   stage: posttest
   except:
     - master
+  <<: *gitlab_caching
   needs:
     - core device ui test
   script:

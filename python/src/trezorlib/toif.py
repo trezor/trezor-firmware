@@ -1,15 +1,36 @@
+# This file is part of the Trezor project.
+#
+# Copyright (C) 2012-2022 SatoshiLabs and contributors
+#
+# This library is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License version 3
+# as published by the Free Software Foundation.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the License along with this library.
+# If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
+
 import struct
 import zlib
+from dataclasses import dataclass
 from typing import Sequence, Tuple
 
-import attr
+from typing_extensions import Literal
 
 from . import firmware
 
 try:
+    # Explanation of having to use "Image.Image" in typing:
+    # https://stackoverflow.com/questions/58236138/pil-and-python-static-typing/58236618#58236618
     from PIL import Image
+
+    PIL_AVAILABLE = True
 except ImportError:
-    Image = None
+    PIL_AVAILABLE = False
 
 
 RGBPixel = Tuple[int, int, int]
@@ -61,14 +82,14 @@ def _to_grayscale(data: bytes) -> bytes:
     return bytes(res)
 
 
-@attr.s
+@dataclass
 class Toif:
-    mode: firmware.ToifMode = attr.ib()
-    size: Tuple[int, int] = attr.ib()
-    data: bytes = attr.ib()
+    mode: firmware.ToifMode
+    size: Tuple[int, int]
+    data: bytes
 
-    @data.validator
-    def check_data_size(self, _, value):
+    def __post_init__(self) -> None:
+        # checking the data size
         width, height = self.size
         if self.mode is firmware.ToifMode.grayscale:
             expected_size = width * height // 2
@@ -77,19 +98,18 @@ class Toif:
         uncompressed = _decompress(self.data)
         if len(uncompressed) != expected_size:
             raise ValueError(
-                "Uncompressed data is {} bytes, expected {}".format(
-                    len(uncompressed), expected_size
-                )
+                f"Uncompressed data is {len(uncompressed)} bytes, expected {expected_size}"
             )
 
-    def to_image(self) -> "Image":
-        if Image is None:
+    def to_image(self) -> "Image.Image":
+        if not PIL_AVAILABLE:
             raise RuntimeError(
                 "PIL is not available. Please install via 'pip install Pillow'"
             )
 
         uncompressed = _decompress(self.data)
 
+        pil_mode: Literal["L", "RGB"]
         if self.mode is firmware.ToifMode.grayscale:
             pil_mode = "L"
             raw_data = _to_grayscale(uncompressed)
@@ -120,15 +140,17 @@ def load(filename: str) -> Toif:
         return from_bytes(f.read())
 
 
-def from_image(image: "Image", background=(0, 0, 0, 255)) -> Toif:
-    if Image is None:
+def from_image(
+    image: "Image.Image", background: Tuple[int, int, int, int] = (0, 0, 0, 255)
+) -> Toif:
+    if not PIL_AVAILABLE:
         raise RuntimeError(
             "PIL is not available. Please install via 'pip install Pillow'"
         )
 
     if image.mode == "RGBA":
-        background = Image.new("RGBA", image.size, background)
-        blend = Image.alpha_composite(background, image)
+        img_background = Image.new("RGBA", image.size, background)
+        blend = Image.alpha_composite(img_background, image)
         image = blend.convert("RGB")
 
     if image.mode == "L":
@@ -138,7 +160,7 @@ def from_image(image: "Image", background=(0, 0, 0, 255)) -> Toif:
         toif_mode = firmware.ToifMode.full_color
         toif_data = _from_pil_rgb(image.getdata())
     else:
-        raise ValueError("Unsupported image mode: {}".format(image.mode))
+        raise ValueError(f"Unsupported image mode: {image.mode}")
 
     data = _compress(toif_data)
     return Toif(toif_mode, image.size, data)

@@ -2,12 +2,16 @@
 name = "trezor_lib"
 version = "0.1.0"
 authors = ["SatoshiLabs <info@satoshilabs.com>"]
-edition = "2018"
-resolver = "2"
+edition = "2021"
 build = "build.rs"
 
 [features]
+default = ["model_tt"]
 bitcoin_only = []
+model_tt = []
+model_t1 = []
+ui = []
+ui_debug = []
 test = ["cc", "glob"]
 
 [lib]
@@ -24,7 +28,6 @@ lto = true
 codegen-units = 1
 
 [dependencies]
-cty = "0.2.1"
 bech32 = { version = "0.8.1", default_features = false }
 group = { version = "0.11", default-features = false }
 rand = { version = "0.8", default-features = false }
@@ -50,18 +53,34 @@ git = "https://github.com/zcash/librustzcash"
 rev = "6e39480c589bcb1b548c507aa96575368e72952a"
 default-features = false
 
-[dependencies.cstr_core]
-version = "0.2.2"
+[profile.test]
+split-debuginfo = "unpacked"
+
+# Runtime dependencies
+
+[dependencies.cty]
+version = "0.2.1"
+
+[dependencies.heapless]
+version = "0.7.3"
 default_features = false
 
+[dependencies.cstr_core]
+version = "0.2.4"
+default_features = false
+
+# Build dependencies
+
 [build-dependencies.bindgen]
-version = "0.58.0"
+version = "0.59.1"
 default_features = false
 features = ["runtime"]
 
+# Build dependencies used for linking the test binary
+
 [build-dependencies.cc]
 optional = true
-version = "1.0.68"
+version = "1.0.69"
 
 [build-dependencies.glob]
 optional = true

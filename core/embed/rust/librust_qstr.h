@@ -9,6 +9,22 @@ static void _librust_qstrs(void) {
   MP_QSTR_MESSAGE_WIRE_TYPE;
   MP_QSTR_MESSAGE_NAME;
 
+  // layout
+  MP_QSTR_Layout;
+  MP_QSTR_set_timer_fn;
+  MP_QSTR_touch_event;
+  MP_QSTR_button_event;
+  MP_QSTR_timer;
+  MP_QSTR_paint;
+  MP_QSTR_trace;
+
+  MP_QSTR_title;
+  MP_QSTR_action;
+  MP_QSTR_description;
+  MP_QSTR_verb;
+  MP_QSTR_verb_cancel;
+  MP_QSTR_reverse;
+  
   // Zcash keys
   MP_QSTR_seed;
   MP_QSTR_coin_type;

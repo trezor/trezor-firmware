@@ -1,4 +1,21 @@
 #!/usr/bin/env python3
+
+# This file is part of the Trezor project.
+#
+# Copyright (C) 2012-2022 SatoshiLabs and contributors
+#
+# This library is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License version 3
+# as published by the Free Software Foundation.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the License along with this library.
+# If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
+
 """
 Use Trezor as a hardware key for opening EncFS filesystem!
 
@@ -7,25 +24,29 @@ Usage:
 encfs --standard --extpass=./encfs_aes_getpass.py ~/.crypt ~/crypt
 """
 
+import hashlib
+import json
 import os
 import sys
-import json
-import hashlib
+from typing import TYPE_CHECKING, Sequence
 
 import trezorlib
-
-version_tuple = tuple(map(int, trezorlib.__version__.split(".")))
-if not (0, 11) <= version_tuple < (0, 12):
-    raise RuntimeError("trezorlib version mismatch (0.11.x is required)")
-
+import trezorlib.misc
 from trezorlib.client import TrezorClient
+from trezorlib.tools import Address
 from trezorlib.transport import enumerate_devices
 from trezorlib.ui import ClickUI
 
-import trezorlib.misc
+version_tuple = tuple(map(int, trezorlib.__version__.split(".")))
+if not (0, 11) <= version_tuple < (0, 14):
+    raise RuntimeError("trezorlib version mismatch (required: 0.13, 0.12, or 0.11)")
 
 
-def wait_for_devices():
+if TYPE_CHECKING:
+    from trezorlib.transport import Transport
+
+
+def wait_for_devices() -> Sequence["Transport"]:
     devices = enumerate_devices()
     while not len(devices):
         sys.stderr.write("Please connect Trezor to computer and press Enter...")
@@ -35,7 +56,7 @@ def wait_for_devices():
     return devices
 
 
-def choose_device(devices):
+def choose_device(devices: Sequence["Transport"]) -> "Transport":
     if not len(devices):
         raise RuntimeError("No Trezor connected!")
 
@@ -56,9 +77,9 @@ def choose_device(devices):
             continue
 
         if client.features.label:
-            sys.stderr.write("[%d] %s\n" % (i, client.features.label))
+            sys.stderr.write(f"[{i}] {client.features.label}\n")
         else:
-            sys.stderr.write("[%d] <no label>\n" % i)
+            sys.stderr.write(f"[{i}] <no label>\n")
         client.close()
         i += 1
 
@@ -72,7 +93,7 @@ def choose_device(devices):
         raise ValueError("Invalid choice, exiting...")
 
 
-def main():
+def main() -> None:
 
     if "encfs_root" not in os.environ:
         sys.stderr.write(
@@ -106,7 +127,7 @@ def main():
         if len(passw) != 32:
             raise ValueError("32 bytes password expected")
 
-        bip32_path = [10, 0]
+        bip32_path = Address([10, 0])
         passw_encrypted = trezorlib.misc.encrypt_keyvalue(
             client, bip32_path, label, passw, False, True
         )

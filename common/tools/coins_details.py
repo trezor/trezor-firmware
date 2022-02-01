@@ -64,6 +64,7 @@ def summary(coins, api_key):
     except Exception:
         pass
 
+    marketcap_percent = 100 * supported_marketcap / total_marketcap
     return dict(
         updated_at=int(time.time()),
         updated_at_readable=time.asctime(),
@@ -71,9 +72,7 @@ def summary(coins, api_key):
         t2_coins=t2_coins,
         marketcap_usd=supported_marketcap,
         total_marketcap_usd=total_marketcap,
-        marketcap_supported="{:.02f} %".format(
-            100 * supported_marketcap / total_marketcap
-        ),
+        marketcap_supported=f"{marketcap_percent:.02f} %",
     )
 
 

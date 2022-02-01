@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2019 SatoshiLabs and contributors
+# Copyright (C) 2012-2022 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -16,11 +16,15 @@
 
 import base64
 import sys
+from typing import TYPE_CHECKING
 
 import click
 
 from .. import stellar, tools
 from . import with_client
+
+if TYPE_CHECKING:
+    from ..client import TrezorClient
 
 try:
     from stellar_sdk import (
@@ -34,7 +38,7 @@ PATH_HELP = "BIP32 path. Always use hardened paths and the m/44'/148'/ prefix"
 
 
 @click.group(name="stellar")
-def cli():
+def cli() -> None:
     """Stellar commands."""
 
 
@@ -48,7 +52,7 @@ def cli():
 )
 @click.option("-d", "--show-display", is_flag=True)
 @with_client
-def get_address(client, address, show_display):
+def get_address(client: "TrezorClient", address: str, show_display: bool) -> str:
     """Get Stellar public address."""
     address_n = tools.parse_path(address)
     return stellar.get_address(client, address_n, show_display)
@@ -71,7 +75,9 @@ def get_address(client, address, show_display):
 )
 @click.argument("b64envelope")
 @with_client
-def sign_transaction(client, b64envelope, address, network_passphrase):
+def sign_transaction(
+    client: "TrezorClient", b64envelope: str, address: str, network_passphrase: str
+) -> bytes:
     """Sign a base64-encoded transaction envelope.
 
     For testnet transactions, use the following network passphrase:

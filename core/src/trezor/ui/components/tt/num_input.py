@@ -12,9 +12,9 @@ class NumInput(ui.Component):
         self.min_count = min_count
 
         self.minus = Button(ui.grid(3), "-")
-        self.minus.on_click = self.on_minus  # type: ignore
+        self.minus.on_click = self.on_minus
         self.plus = Button(ui.grid(5), "+")
-        self.plus.on_click = self.on_plus  # type: ignore
+        self.plus.on_click = self.on_plus
         self.text = Label(ui.grid(4), "", LABEL_CENTER, ui.BOLD)
 
         self.edit(count)

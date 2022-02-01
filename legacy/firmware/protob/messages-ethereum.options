@@ -16,7 +16,7 @@ EthereumSignTxEIP1559.value              max_size:32
 EthereumSignTxEIP1559.data_initial_chunk max_size:1024
 EthereumSignTxEIP1559.access_list        max_count:8
 
-EthereumAccessList.address              max_size:32
+EthereumAccessList.address              max_size:43
 EthereumAccessList.storage_keys         max_count:8 max_size:32
 
 EthereumTxRequest.signature_r           max_size:32
@@ -33,6 +33,13 @@ EthereumVerifyMessage.message           max_size:1024
 
 EthereumMessageSignature.address        max_size:43
 EthereumMessageSignature.signature      max_size:65
+
+EthereumSignTypedHash.address_n             max_count:8
+EthereumSignTypedHash.domain_separator_hash max_size:32
+EthereumSignTypedHash.message_hash          max_size:32
+
+EthereumTypedDataSignature.address      max_size:43
+EthereumTypedDataSignature.signature    max_size:65
 
 EthereumGetAddress.address_n            max_count:8
 EthereumGetPublicKey.address_n          max_count:8

@@ -84,6 +84,11 @@ def test_cancel_on_paginated(client):
     )
     resp = client.call_raw(message)
     assert isinstance(resp, m.ButtonRequest)
+    client._raw_write(m.ButtonAck())
+    client.debug.press_yes()
+
+    resp = client._raw_read()
+    assert isinstance(resp, m.ButtonRequest)
     assert resp.pages is not None
     client._raw_write(m.ButtonAck())
 

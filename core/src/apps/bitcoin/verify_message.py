@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import wire
 from trezor.crypto.curve import secp256k1
 from trezor.enums import InputScriptType
@@ -15,7 +17,7 @@ from .addresses import (
     address_to_cashaddr,
 )
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import VerifyMessage
 
 
@@ -29,14 +31,14 @@ async def verify_message(ctx: wire.Context, msg: VerifyMessage) -> Success:
     digest = message_digest(coin, message)
 
     recid = signature[0]
-    if recid >= 27 and recid <= 34:
+    if 27 <= recid <= 34:
         # p2pkh
         script_type = InputScriptType.SPENDADDRESS
-    elif recid >= 35 and recid <= 38:
+    elif 35 <= recid <= 38:
         # segwit-in-p2sh
         script_type = InputScriptType.SPENDP2SHWITNESS
         signature = bytes([signature[0] - 4]) + signature[1:]
-    elif recid >= 39 and recid <= 42:
+    elif 39 <= recid <= 42:
         # native segwit
         script_type = InputScriptType.SPENDWITNESS
         signature = bytes([signature[0] - 8]) + signature[1:]
@@ -67,6 +69,7 @@ async def verify_message(ctx: wire.Context, msg: VerifyMessage) -> Success:
         coin.coin_shortcut,
         decode_message(message),
         address=address_short(coin, address),
+        verify=True,
     )
 
     return Success(message="Message verified")

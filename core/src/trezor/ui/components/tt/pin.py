@@ -1,4 +1,5 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor import config, res, ui
 from trezor.crypto import random
@@ -6,7 +7,7 @@ from trezor.ui import display
 
 from .button import Button, ButtonCancel, ButtonClear, ButtonConfirm, ButtonMono
 
-if False:
+if TYPE_CHECKING:
     from trezor import loop
     from typing import Iterable
 
@@ -108,24 +109,25 @@ class PinDialog(ui.Layout):
         allow_cancel: bool = True,
         maxlength: int = 50,
     ) -> None:
+        super().__init__()
         self.maxlength = maxlength
         self.input = PinInput(prompt, subprompt, "")
 
         icon_confirm = res.load(ui.ICON_CONFIRM)
         self.confirm_button = Button(ui.grid(14), icon_confirm, ButtonConfirm)
-        self.confirm_button.on_click = self.on_confirm  # type: ignore
+        self.confirm_button.on_click = self.on_confirm
         self.confirm_button.disable()
 
         icon_back = res.load(ui.ICON_BACK)
         self.reset_button = Button(ui.grid(12), icon_back, ButtonClear)
-        self.reset_button.on_click = self.on_reset  # type: ignore
+        self.reset_button.on_click = self.on_reset
 
         if allow_cancel:
             icon_lock = res.load(
                 ui.ICON_CANCEL if config.is_unlocked() else ui.ICON_LOCK
             )
             self.cancel_button = Button(ui.grid(12), icon_lock, ButtonCancel)
-            self.cancel_button.on_click = self.on_cancel  # type: ignore
+            self.cancel_button.on_click = self.on_cancel
         else:
             self.cancel_button = Button(ui.grid(12), "")
             self.cancel_button.disable()
@@ -175,7 +177,7 @@ class PinDialog(ui.Layout):
 
     if __debug__:
 
-        def create_tasks(self) -> tuple[loop.Task, ...]:
+        def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
             from apps.debug import input_signal
 
             return super().create_tasks() + (input_signal(),)

@@ -1,5 +1,12 @@
 image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/trezor-firmware-env.nix
 
+# Caching
+.gitlab_caching: &gitlab_caching
+  cache:
+    key: "$CI_COMMIT_REF_SLUG"
+    paths:
+      - .venv/
+
 # Hardware
 
 # Currently it's not possible to run all regular TT tests without getting into
@@ -21,7 +28,6 @@ hardware core regular device test:
     - core fw regular debug build
   variables:
     PYTEST_TIMEOUT: "1200"
-    TESTS_SKIP: "-k 'not 15_of_15'"
   script:
     - cd ci/hardware_tests
     - set -a
@@ -29,7 +35,7 @@ hardware core regular device test:
     - set +a
     - nix-shell --run "cd ../.. && poetry install"
     - nix-shell --run "poetry run python bootstrap.py tt ../../trezor-*.bin | ts -s"
-    - nix-shell --run "poetry run pytest $TESTS_SKIP ../../tests/device_tests | ts -s"
+    - nix-shell --run "poetry run pytest ../../tests/device_tests | ts -s"
   timeout: 6h
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
@@ -51,7 +57,6 @@ hardware core btconly device test:
   variables:
     TREZOR_PYTEST_SKIP_ALTCOINS: 1
     PYTEST_TIMEOUT: "1200"
-    TESTS_SKIP: "-k 'not 15_of_15'"
   script:
     - cd ci/hardware_tests
     - set -a
@@ -59,7 +64,7 @@ hardware core btconly device test:
     - set +a
     - nix-shell --run "cd ../.. && poetry install"
     - nix-shell --run "poetry run python bootstrap.py tt ../../trezor-*.bin | ts -s"
-    - nix-shell --run "poetry run pytest $TESTS_SKIP ../../tests/device_tests | ts -s"
+    - nix-shell --run "poetry run pytest ../../tests/device_tests | ts -s"
   timeout: 4h
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"

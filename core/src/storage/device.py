@@ -1,10 +1,11 @@
 from micropython import const
+from typing import TYPE_CHECKING
 from ubinascii import hexlify
 
 import storage.cache
 from storage import common
 
-if False:
+if TYPE_CHECKING:
     from trezor.enums import BackupType
     from typing_extensions import Literal
 
@@ -39,7 +40,7 @@ _EXPERIMENTAL_FEATURES     = const(0x15)  # bool (0x01 or empty)
 SAFETY_CHECK_LEVEL_STRICT  : Literal[0] = const(0)
 SAFETY_CHECK_LEVEL_PROMPT  : Literal[1] = const(1)
 _DEFAULT_SAFETY_CHECK_LEVEL = SAFETY_CHECK_LEVEL_STRICT
-if False:
+if TYPE_CHECKING:
     StorageSafetyCheckLevel = Literal[0, 1]
 # fmt: on
 

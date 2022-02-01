@@ -1,3 +1,5 @@
+from typing import Sequence
+
 from trezor import ui, wire
 from trezor.enums import ButtonRequestType
 from trezor.utils import chunks_intersperse
@@ -8,9 +10,6 @@ from ...components.tt.scroll import Paginated
 from ...components.tt.text import Text
 from ...constants.tt import MONO_ADDR_PER_LINE
 from ..common import interact
-
-if False:
-    from typing import Sequence
 
 
 async def confirm_total_ethereum(
@@ -34,7 +33,7 @@ async def confirm_total_ripple(
 ) -> None:
     title = "Confirm sending"
     text = Text(title, ui.ICON_SEND, ui.GREEN, new_lines=False)
-    text.bold("{} XRP\n".format(amount))
+    text.bold(f"{amount} XRP\n")
     text.normal("to\n")
     text.mono(*chunks_intersperse(address, MONO_ADDR_PER_LINE))
 

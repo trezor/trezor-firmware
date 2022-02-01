@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import wire
 from trezor.crypto import rlp
 from trezor.crypto.curve import secp256k1
@@ -7,7 +9,7 @@ from trezor.utils import HashWriter
 
 from apps.common import paths
 
-from . import address
+from .helpers import bytes_from_address
 from .keychain import with_keychain_from_chain_id
 from .layout import (
     require_confirm_data,
@@ -16,9 +18,7 @@ from .layout import (
 )
 from .sign_tx import check_common_fields, handle_erc20, send_request_chunk
 
-if False:
-    from typing import Tuple
-
+if TYPE_CHECKING:
     from trezor.messages import EthereumSignTxEIP1559
 
     from apps.common.keychain import Keychain
@@ -27,7 +27,7 @@ TX_TYPE = 2
 
 
 def access_list_item_length(item: EthereumAccessList) -> int:
-    address_length = rlp.length(address.bytes_from_address(item.address))
+    address_length = rlp.length(bytes_from_address(item.address))
     keys_length = rlp.length(item.storage_keys)
     return (
         rlp.header_length(address_length + keys_length) + address_length + keys_length
@@ -43,7 +43,7 @@ def write_access_list(w: HashWriter, access_list: list[EthereumAccessList]) -> N
     payload_length = sum(access_list_item_length(i) for i in access_list)
     rlp.write_header(w, payload_length, rlp.LIST_HEADER_BYTE)
     for item in access_list:
-        address_bytes = address.bytes_from_address(item.address)
+        address_bytes = bytes_from_address(item.address)
         address_length = rlp.length(address_bytes)
         keys_length = rlp.length(item.storage_keys)
         rlp.write_header(w, address_length + keys_length, rlp.LIST_HEADER_BYTE)
@@ -88,7 +88,7 @@ async def sign_tx_eip1559(
 
     rlp.write_header(sha, total_length, rlp.LIST_HEADER_BYTE)
 
-    fields: Tuple[rlp.RLPItem, ...] = (
+    fields: tuple[rlp.RLPItem, ...] = (
         msg.chain_id,
         msg.nonce,
         msg.max_priority_fee,
@@ -122,10 +122,10 @@ async def sign_tx_eip1559(
 def get_total_length(msg: EthereumSignTxEIP1559, data_total: int) -> int:
     length = 0
 
-    fields: Tuple[rlp.RLPItem, ...] = (
+    fields: tuple[rlp.RLPItem, ...] = (
         msg.nonce,
         msg.gas_limit,
-        address.bytes_from_address(msg.to),
+        bytes_from_address(msg.to),
         msg.value,
         msg.chain_id,
         msg.max_gas_fee,

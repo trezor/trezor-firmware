@@ -52,10 +52,10 @@ BLOCKBOOKS = _get_blockbooks()
 
 
 class TxCache:
-    def __init__(self, coin_name):
+    def __init__(self, coin_name: str) -> None:
         self.slug = coin_name.lower().replace(" ", "_")
 
-    def get_tx(self, txhash):
+    def get_tx(self, txhash: str) -> messages.TransactionType:
         try:
             (CACHE_PATH / self.slug).mkdir()
         except Exception:
@@ -71,8 +71,15 @@ class TxCache:
         txdict = json.loads(cache_file.read_text())
         return protobuf.dict_to_proto(messages.TransactionType, txdict)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: bytes) -> messages.TransactionType:
         return self.get_tx(key.hex())
+
+    def __contains__(self, key: bytes) -> bool:
+        try:
+            self.get_tx(key.hex())
+            return True
+        except Exception:
+            return False
 
 
 @click.command()
@@ -107,7 +114,10 @@ def cli(tx, coin_name):
 
     click.echo(f"Fetching from {tx_url}...")
     try:
-        tx_src = requests.get(tx_url).json(parse_float=Decimal)
+        # Get transaction from Blockbook server. The servers refuse requests with an empty user agent.
+        tx_src = requests.get(tx_url, headers={"user-agent": "tx_cache"}).json(
+            parse_float=Decimal
+        )
         tx_proto = btc.from_json(tx_src)
         tx_dict = protobuf.to_dict(tx_proto)
         tx_json = json.dumps(tx_dict, sort_keys=True, indent=2) + "\n"

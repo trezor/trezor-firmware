@@ -304,6 +304,49 @@ static bool fsm_layoutAddress(const char *address, const char *desc,
   }
 }
 
+static bool fsm_layoutPaginated(const char *description, const uint8_t *msg,
+                                uint32_t len, bool is_ascii) {
+  const char **str = NULL;
+  const uint32_t row_len = is_ascii ? 18 : 8;
+  do {
+    const uint32_t show_len = MIN(len, row_len * 4);
+    if (is_ascii) {
+      str = split_message(msg, show_len, row_len);
+    } else {
+      str = split_message_hex(msg, show_len);
+    }
+
+    msg += show_len;
+    len -= show_len;
+
+    const char *label = len > 0 ? _("Next") : _("Confirm");
+    layoutDialogSwipeEx(&bmp_icon_question, _("Cancel"), label, description,
+                        str[0], str[1], str[2], str[3], NULL, NULL, FONT_FIXED);
+
+    if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
+      return false;
+    }
+  } while (len > 0);
+
+  return true;
+}
+
+bool fsm_layoutSignMessage(const uint8_t *msg, uint32_t len) {
+  if (is_valid_ascii(msg, len)) {
+    return fsm_layoutPaginated(_("Sign message?"), msg, len, true);
+  } else {
+    return fsm_layoutPaginated(_("Sign binary message?"), msg, len, false);
+  }
+}
+
+bool fsm_layoutVerifyMessage(const uint8_t *msg, uint32_t len) {
+  if (is_valid_ascii(msg, len)) {
+    return fsm_layoutPaginated(_("Verified message?"), msg, len, true);
+  } else {
+    return fsm_layoutPaginated(_("Verified binary message?"), msg, len, false);
+  }
+}
+
 void fsm_msgRebootToBootloader(void) {
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
                     _("Do you want to"), _("restart device in"),
@@ -317,8 +360,7 @@ void fsm_msgRebootToBootloader(void) {
   oledRefresh();
   fsm_sendSuccess(_("Rebooting"));
   // make sure the outgoing message is sent
-  usbPoll();
-  usbSleep(500);
+  usbFlush(500);
 #if !EMULATOR
   svc_reboot_to_bootloader();
 #else

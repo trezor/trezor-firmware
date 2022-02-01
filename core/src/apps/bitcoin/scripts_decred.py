@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import utils, wire
 from trezor.crypto import base58
 from trezor.crypto.base58 import blake256d_32
@@ -6,15 +8,16 @@ from trezor.enums import InputScriptType
 from apps.common.writers import write_bytes_fixed, write_uint64_le
 
 from . import scripts
+from .common import SigHashType
 from .multisig import multisig_get_pubkeys, multisig_pubkey_index
 from .scripts import (  # noqa: F401
     output_script_paytoopreturn,
     write_output_script_multisig,
     write_output_script_p2pkh,
 )
-from .writers import op_push_length, write_bitcoin_varint, write_op_push
+from .writers import op_push_length, write_compact_size, write_op_push
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import MultisigRedeemScriptType
 
     from apps.common.coininfo import CoinInfo
@@ -27,21 +30,21 @@ def write_input_script_prefixed(
     script_type: InputScriptType,
     multisig: MultisigRedeemScriptType | None,
     coin: CoinInfo,
-    hash_type: int,
+    sighash_type: SigHashType,
     pubkey: bytes,
     signature: bytes,
 ) -> None:
     if script_type == InputScriptType.SPENDADDRESS:
         # p2pkh or p2sh
         scripts.write_input_script_p2pkh_or_p2sh_prefixed(
-            w, pubkey, signature, hash_type
+            w, pubkey, signature, sighash_type
         )
     elif script_type == InputScriptType.SPENDMULTISIG:
         # p2sh multisig
         assert multisig is not None  # checked in sanitize_tx_input
         signature_index = multisig_pubkey_index(multisig, pubkey)
-        return write_input_script_multisig_prefixed(
-            w, multisig, signature, signature_index, hash_type, coin
+        write_input_script_multisig_prefixed(
+            w, multisig, signature, signature_index, sighash_type, coin
         )
     else:
         raise wire.ProcessError("Invalid script type")
@@ -52,7 +55,7 @@ def write_input_script_multisig_prefixed(
     multisig: MultisigRedeemScriptType,
     signature: bytes,
     signature_index: int,
-    hash_type: int,
+    sighash_type: SigHashType,
     coin: CoinInfo,
 ) -> None:
     signatures = multisig.signatures  # other signatures
@@ -70,11 +73,11 @@ def write_input_script_multisig_prefixed(
         if s:
             total_length += 1 + len(s) + 1  # length, signature, hash_type
     total_length += op_push_length(redeem_script_length) + redeem_script_length
-    write_bitcoin_varint(w, total_length)
+    write_compact_size(w, total_length)
 
     for s in signatures:
         if s:
-            scripts.append_signature(w, s, hash_type)
+            scripts.append_signature(w, s, sighash_type)
 
     # redeem script
     write_op_push(w, redeem_script_length)
@@ -110,7 +113,7 @@ def output_script_sstxchange(addr: str) -> bytearray:
 # Spend from a stake revocation.
 def write_output_script_ssrtx_prefixed(w: Writer, pkh: bytes) -> None:
     utils.ensure(len(pkh) == 20)
-    write_bitcoin_varint(w, 26)
+    write_compact_size(w, 26)
     w.append(0xBC)  # OP_SSRTX
     scripts.write_output_script_p2pkh(w, pkh)
 
@@ -118,7 +121,7 @@ def write_output_script_ssrtx_prefixed(w: Writer, pkh: bytes) -> None:
 # Spend from a stake generation.
 def write_output_script_ssgen_prefixed(w: Writer, pkh: bytes) -> None:
     utils.ensure(len(pkh) == 20)
-    write_bitcoin_varint(w, 26)
+    write_compact_size(w, 26)
     w.append(0xBB)  # OP_SSGEN
     scripts.write_output_script_p2pkh(w, pkh)
 

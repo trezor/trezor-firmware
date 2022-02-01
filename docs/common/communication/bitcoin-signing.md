@@ -47,7 +47,7 @@ data structures that allow it to verify that the same data is sent in the follow
 phases.
 
 In this phase, Trezor will also ask the user to confirm destination addresses,
-transaction fee, metadata, and the total being sent. If the user confirms, we continue
+the transaction fee, metadata, and the total being sent. If the user confirms, we continue
 to the next phase.
 
 ### Validation of input data
@@ -61,21 +61,26 @@ possible trailing data. This allows Trezor to reconstruct the previous transacti
 calculate its hash. If this hash matches the provided one, and the amount on selected
 UTXO matches the input amount, the given input is considered valid.
 
-Trezor also supports pre-signed inputs for multi-party signing. If an input has an
-`EXTERNAL` type, and provides a signature, Trezor will validate the signature against
-the previous transaction in this step.
+If all internal inputs are taproot, then the verification of the previous transactions
+is skipped. This is possible because if the host provides invalid information about the
+UTXOs being spent, then the resulting taproot signatures will also be invalid.
 
-### Signing
+Trezor T also supports pre-signed inputs for multi-party signing. If an input has script
+type `EXTERNAL` and provides a signature, Trezor will validate the signature against the
+previous transaction in this step.
 
-Satisfied that all provided data is valid, Trezor will ask once again about every input
-and generate a signature for it.
+### Serialization and signing
 
-For every legacy (non-segwit) inputs, it is necessary to stream the full set of inputs
-and outputs again, so that Trezor can build the serialization which is being signed.
-For segwit inputs, this is not necessary
+Trezor will ask once again about every input and begin outputting a serialization of the
+transaction. For every legacy (non-segwit) input, it is necessary to stream the full set
+of inputs and outputs again, so that Trezor can compute the transaction digest which it
+then signs. For segwit inputs this is not necessary.
 
-Finally, when all inputs are streamed, Trezor will ask for every output, so that it can
+When all inputs are serialized, Trezor will ask for every output, so that it can
 serialize it, fill out change addresses, and return the full transaction.
+
+Finally Trezor asks again about segwit inputs to sign them and to serialize the
+witnesses.
 
 ## Old versus new data structures
 
@@ -132,7 +137,7 @@ set on `tx.input`.
 
 Usually, the user owns, and wants to sign, all inputs of the transaction. For that, the
 host must specify a derivation path for the key, and script type `SPENDADDRESS` (legacy),
-`SPENDP2SHWITNESS` (P2SH segwit) or `SPENDWITNESS` (native segwit).
+`SPENDP2SHWITNESS` (P2SH segwit), `SPENDWITNESS` (native segwit) or `SPENDTAPROOT`.
 
 #### Multisig inputs
 
@@ -145,7 +150,7 @@ Full documentation for multisig is TBD.
 
 #### External inputs
 
-Trezor can include inputs that it will not sign, typically because they are owned by
+Trezor T can include inputs that it will not sign, typically because they are owned by
 another party. Such inputs are of type `EXTERNAL` and the host does not specify a
 derivation path for the key. Instead, these inputs must either already have a valid
 signature or they must come with an ownership proof. If the input already has a valid
@@ -154,7 +159,7 @@ signing party hasn't signed their input yet (i.e., with two Trezors, one must si
 so that the other can include a pre-signed input), they can instead provide a
 [SLIP-19](https://github.com/satoshilabs/slips/blob/master/slip-0019.md)
 ownership proof in the `ownership_proof` field, with optional commitment data in
-`commitment_data`.
+`commitment_data`. The `script_pubkey` field is required for all external inputs.
 
 ### Transaction output
 
@@ -283,6 +288,14 @@ Host must respond with a `TxAckOutput` message. All relevant data must be set in
 `tx.output`. The derivation path and script type are mandatory for all original
 change-outputs.
 
+### Payment request
+
+Trezor sets `request_type` to `TXPAYMENTREQ`, and `request_details.tx_hash` is unset.
+`request_details.request_index` is the index of the payment request in the transaction:
+0 is the first payment request, 1 is second, etc.
+
+The host must respond with a `TxAckPaymentRequest` message.
+
 ## Replacement transactions
 
 A replacement transaction is a transaction that uses the same inputs as one or more
@@ -328,6 +341,22 @@ So the replacement transaction is, for example, allowed to:
 * Add external inputs (PayJoin) and use them to introduce new outputs, increase the
   original external outputs or even to increase the user's change outputs so as to
   decrease the amount that the user is spending.
+
+## Payment requests
+
+In Trezor T a set of transaction outputs can be accompanied by a payment request.
+Multiple payment requests per transaction are also possible. A payment request is a
+message signed by a trusted party requesting payment of certain amounts to a set of
+outputs as specified in [SLIP-24](https://github.com/satoshilabs/slips/blob/master/slip-0024.md).
+The user then does not have to verify the output addresses, but only confirms the
+payment of the requested amount to the recipient.
+
+The host signals that an output belongs to a payment request by setting the
+`payment_req_index` field in the `TxOutput` message. When Trezor encounters the first
+output that has this field set to a particular index, it will ask for the payment request
+that has the given index.
+
+All outputs belonging to one payment request must be consecutive in the transaction.
 
 ## Implementation notes
 

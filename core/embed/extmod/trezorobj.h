@@ -52,6 +52,9 @@ static inline mp_int_t trezor_obj_get_int(mp_obj_t obj) {
 static inline mp_uint_t trezor_obj_get_uint(mp_obj_t obj) {
   if (MP_OBJ_IS_SMALL_INT(obj)) {
     mp_int_t i = MP_OBJ_SMALL_INT_VALUE(obj);
+    if (i < 0) {
+      mp_raise_TypeError("value is negative");
+    }
     mp_uint_t u = i;
     return u;
   } else if (MP_OBJ_IS_TYPE(obj, &mp_type_int)) {
@@ -73,6 +76,27 @@ static inline uint8_t trezor_obj_get_uint8(mp_obj_t obj) {
     mp_raise_msg(&mp_type_OverflowError, "value does not fit into byte type");
   }
   return u;
+}
+
+static inline uint64_t trezor_obj_get_uint64(mp_const_obj_t obj) {
+  if (MP_OBJ_IS_SMALL_INT(obj)) {
+    mp_int_t i = MP_OBJ_SMALL_INT_VALUE(obj);
+    if (i < 0) {
+      mp_raise_TypeError("value is negative");
+    }
+    mp_uint_t u = i;
+    return u;
+  } else if (MP_OBJ_IS_TYPE(obj, &mp_type_int)) {
+    uint64_t u = 0;
+    mp_obj_int_t *self = MP_OBJ_TO_PTR(obj);
+    if (self->mpz.neg != 0) {
+      mp_raise_TypeError("value is negative");
+    }
+    mpz_as_bytes(&self->mpz, MP_ENDIANNESS_BIG, sizeof(uint64_t), (byte *)&u);
+    return u;
+  } else {
+    mp_raise_TypeError("value is not int");
+  }
 }
 
 bool trezor_obj_get_ll_checked(mp_obj_t obj, long long *value);

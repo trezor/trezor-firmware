@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor.enums import StellarAssetType
 from trezor.messages import (
     StellarAccountMergeOp,
@@ -6,10 +8,12 @@ from trezor.messages import (
     StellarBumpSequenceOp,
     StellarChangeTrustOp,
     StellarCreateAccountOp,
-    StellarCreatePassiveOfferOp,
+    StellarCreatePassiveSellOfferOp,
+    StellarManageBuyOfferOp,
     StellarManageDataOp,
-    StellarManageOfferOp,
-    StellarPathPaymentOp,
+    StellarManageSellOfferOp,
+    StellarPathPaymentStrictReceiveOp,
+    StellarPathPaymentStrictSendOp,
     StellarPaymentOp,
     StellarSetOptionsOp,
 )
@@ -17,7 +21,7 @@ from trezor.wire import DataError, ProcessError
 
 from .. import writers
 
-if False:
+if TYPE_CHECKING:
     from trezor.utils import Writer
 
 
@@ -48,7 +52,9 @@ def write_create_account_op(w: Writer, msg: StellarCreateAccountOp) -> None:
     writers.write_uint64(w, msg.starting_balance)
 
 
-def write_create_passive_offer_op(w: Writer, msg: StellarCreatePassiveOfferOp) -> None:
+def write_create_passive_sell_offer_op(
+    w: Writer, msg: StellarCreatePassiveSellOfferOp
+) -> None:
     _write_asset(w, msg.selling_asset)
     _write_asset(w, msg.buying_asset)
     writers.write_uint64(w, msg.amount)
@@ -65,22 +71,48 @@ def write_manage_data_op(w: Writer, msg: StellarManageDataOp) -> None:
         writers.write_string(w, msg.value)
 
 
-def write_manage_offer_op(w: Writer, msg: StellarManageOfferOp) -> None:
+def write_manage_buy_offer_op(w: Writer, msg: StellarManageBuyOfferOp) -> None:
+    _write_manage_offer_op_common(w, msg)
+
+
+def write_manage_sell_offer_op(w: Writer, msg: StellarManageSellOfferOp) -> None:
+    _write_manage_offer_op_common(w, msg)
+
+
+def _write_manage_offer_op_common(
+    w: Writer, msg: StellarManageSellOfferOp | StellarManageBuyOfferOp
+) -> None:
     _write_asset(w, msg.selling_asset)
     _write_asset(w, msg.buying_asset)
-    writers.write_uint64(w, msg.amount)  # amount to sell
+    writers.write_uint64(w, msg.amount)  # amount to sell / buy
     writers.write_uint32(w, msg.price_n)  # numerator
     writers.write_uint32(w, msg.price_d)  # denominator
     writers.write_uint64(w, msg.offer_id)
 
 
-def write_path_payment_op(w: Writer, msg: StellarPathPaymentOp) -> None:
+def write_path_payment_strict_receive_op(
+    w: Writer, msg: StellarPathPaymentStrictReceiveOp
+) -> None:
     _write_asset(w, msg.send_asset)
     writers.write_uint64(w, msg.send_max)
     writers.write_pubkey(w, msg.destination_account)
 
     _write_asset(w, msg.destination_asset)
     writers.write_uint64(w, msg.destination_amount)
+    writers.write_uint32(w, len(msg.paths))
+    for p in msg.paths:
+        _write_asset(w, p)
+
+
+def write_path_payment_strict_send_op(
+    w: Writer, msg: StellarPathPaymentStrictSendOp
+) -> None:
+    _write_asset(w, msg.send_asset)
+    writers.write_uint64(w, msg.send_amount)
+    writers.write_pubkey(w, msg.destination_account)
+
+    _write_asset(w, msg.destination_asset)
+    writers.write_uint64(w, msg.destination_min)
     writers.write_uint32(w, len(msg.paths))
     for p in msg.paths:
         _write_asset(w, p)

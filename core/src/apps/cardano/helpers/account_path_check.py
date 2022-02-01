@@ -1,5 +1,7 @@
+from typing import TYPE_CHECKING
+
 from ...common.paths import HARDENED
-from ..seed import is_byron_path, is_shelley_path
+from ..seed import is_byron_path, is_minting_path, is_multisig_path, is_shelley_path
 from . import (
     INVALID_CERTIFICATE,
     INVALID_OUTPUT,
@@ -9,7 +11,7 @@ from . import (
 from .paths import ACCOUNT_PATH_INDEX, ACCOUNT_PATH_LENGTH
 from .utils import to_account_path
 
-if False:
+if TYPE_CHECKING:
     from trezor import wire
     from trezor.messages import (
         CardanoPoolOwner,
@@ -33,6 +35,10 @@ class AccountPathChecker:
         self.account_path: object | list[int] = self.UNDEFINED
 
     def _add(self, path: list[int], error: wire.ProcessError) -> None:
+        # multi-sig and minting paths are always shown and thus don't need to be checked
+        if is_multisig_path(path) or is_minting_path(path):
+            return
+
         account_path = to_account_path(path)
         if self.account_path is self.UNDEFINED:
             self.account_path = account_path

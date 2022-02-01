@@ -6,6 +6,6 @@ combined = bl + 32768 * b"\xff" + fw
 
 open("combined.bin", "wb").write(combined)
 
-print("bootloader : %d bytes" % len(bl))
-print("firmware   : %d bytes" % len(fw))
-print("combined   : %d bytes" % len(combined))
+print(f"bootloader : {len(bl)} bytes")
+print(f"firmware   : {len(fw)} bytes")
+print(f"combined   : {len(combined)} bytes")

@@ -1,5 +1,6 @@
 import gc
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor import wire
 from trezor.enums import InputScriptType
@@ -11,26 +12,43 @@ from apps.common.paths import PATTERN_BIP44, PathSchema
 from . import authorization
 from .common import BITCOIN_NAMES
 
-if False:
+if TYPE_CHECKING:
     from typing import Awaitable, Callable, Iterable, TypeVar
     from typing_extensions import Protocol
 
     from trezor.protobuf import MessageType
 
+    from trezor.messages import (
+        AuthorizeCoinJoin,
+        GetAddress,
+        GetOwnershipId,
+        GetOwnershipProof,
+        GetPublicKey,
+        SignMessage,
+        SignTx,
+        VerifyMessage,
+    )
+
     from apps.common.keychain import Keychain, MsgOut, Handler
     from apps.common.paths import Bip32Path
 
-    class MsgWithCoinName(Protocol):
-        coin_name: str
+    BitcoinMessage = (
+        AuthorizeCoinJoin
+        | GetAddress
+        | GetOwnershipId
+        | GetOwnershipProof
+        | GetPublicKey
+        | SignMessage
+        | SignTx
+        | VerifyMessage
+    )
 
     class MsgWithAddressScriptType(Protocol):
-        # XXX should be Bip32Path but that fails
-        address_n: list[int] = ...
-        script_type: InputScriptType = ...
+        address_n: Bip32Path
+        script_type: InputScriptType
 
-    MsgIn = TypeVar("MsgIn", bound=MsgWithCoinName)
+    MsgIn = TypeVar("MsgIn", bound=BitcoinMessage)
     HandlerWithCoinInfo = Callable[..., Awaitable[MsgOut]]
-
 
 # BIP-45 for multisig: https://github.com/bitcoin/bips/blob/master/bip-0045.mediawiki
 PATTERN_BIP45 = "m/45'/[0-100]/change/address_index"
@@ -46,6 +64,8 @@ PATTERN_BIP48_SEGWIT = "m/48'/coin_type'/account'/2'/change/address_index"
 PATTERN_BIP49 = "m/49'/coin_type'/account'/change/address_index"
 # BIP-84 for segwit: https://github.com/bitcoin/bips/blob/master/bip-0084.mediawiki
 PATTERN_BIP84 = "m/84'/coin_type'/account'/change/address_index"
+# BIP-86 for taproot: https://github.com/bitcoin/bips/blob/master/bip-0086.mediawiki
+PATTERN_BIP86 = "m/86'/coin_type'/account'/change/address_index"
 
 # compatibility patterns, will be removed in the future
 PATTERN_GREENADDRESS_A = "m/[1,4]/address_index"
@@ -129,6 +149,9 @@ def validate_path_against_script_type(
             patterns.append(PATTERN_GREENADDRESS_A)
             patterns.append(PATTERN_GREENADDRESS_B)
 
+    elif coin.taproot and script_type == InputScriptType.SPENDTAPROOT:
+        patterns.append(PATTERN_BIP86)
+
     return any(
         PathSchema.parse(pattern, coin.slip44).match(address_n) for pattern in patterns
     )
@@ -179,6 +202,10 @@ def get_schemas_for_coin(coin: coininfo.CoinInfo) -> Iterable[PathSchema]:
             )
         )
 
+    # taproot patterns
+    if coin.taproot:
+        patterns.append(PATTERN_BIP86)
+
     schemas = [PathSchema.parse(pattern, coin.slip44) for pattern in patterns]
 
     # Some wallets such as Electron-Cash (BCH) store coins on Bitcoin paths.
@@ -211,7 +238,7 @@ async def get_keychain_for_coin(
 ) -> tuple[Keychain, coininfo.CoinInfo]:
     coin = get_coin_by_name(coin_name)
     schemas = get_schemas_for_coin(coin)
-    slip21_namespaces = [[b"SLIP-0019"]]
+    slip21_namespaces = [[b"SLIP-0019"], [b"SLIP-0024"]]
     keychain = await get_keychain(ctx, coin.curve_name, schemas, slip21_namespaces)
     return keychain, coin
 

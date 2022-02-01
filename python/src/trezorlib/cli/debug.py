@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2019 SatoshiLabs and contributors
+# Copyright (C) 2012-2022 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -14,13 +14,18 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from typing import TYPE_CHECKING
+
 import click
 
 from .. import mapping, messages, protobuf
 
+if TYPE_CHECKING:
+    from . import TrezorConnection
+
 
 @click.group(name="debug")
-def cli():
+def cli() -> None:
     """Miscellaneous debug features."""
 
 
@@ -28,7 +33,9 @@ def cli():
 @click.argument("message_name_or_type")
 @click.argument("hex_data")
 @click.pass_obj
-def send_bytes(obj, message_name_or_type, hex_data):
+def send_bytes(
+    obj: "TrezorConnection", message_name_or_type: str, hex_data: str
+) -> None:
     """Send raw bytes to Trezor.
 
     Message type and message data must be specified separately, due to how message
@@ -58,12 +65,12 @@ def send_bytes(obj, message_name_or_type, hex_data):
     response_type, response_data = transport.read()
     transport.end_session()
 
-    click.echo("Response type: {}".format(response_type))
-    click.echo("Response data: {}".format(response_data.hex()))
+    click.echo(f"Response type: {response_type}")
+    click.echo(f"Response data: {response_data.hex()}")
 
     try:
-        msg = mapping.decode(response_type, response_data)
+        msg = mapping.DEFAULT_MAPPING.decode(response_type, response_data)
         click.echo("Parsed message:")
         click.echo(protobuf.format_message(msg))
     except Exception as e:
-        click.echo("Could not parse response: {}".format(e))
+        click.echo(f"Could not parse response: {e}")

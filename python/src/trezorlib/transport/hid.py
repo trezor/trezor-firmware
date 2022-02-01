@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2019 SatoshiLabs and contributors
+# Copyright (C) 2012-2022 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -17,19 +17,22 @@
 import logging
 import sys
 import time
-from typing import Any, Dict, Iterable
+from typing import Any, Dict, Iterable, List, Optional
 
 from ..log import DUMP_PACKETS
-from . import DEV_TREZOR1, UDEV_RULES_STR, TransportException
+from ..models import TREZOR_ONE, TrezorModel
+from . import UDEV_RULES_STR, TransportException
 from .protocol import ProtocolBasedTransport, ProtocolV1
 
 LOG = logging.getLogger(__name__)
 
 try:
     import hid
+
+    HID_IMPORTED = True
 except Exception as e:
-    LOG.info("HID transport is disabled: {}".format(e))
-    hid = None
+    LOG.info(f"HID transport is disabled: {e}")
+    HID_IMPORTED = False
 
 
 HidDevice = Dict[str, Any]
@@ -63,7 +66,7 @@ class HidHandle:
             self.handle.close()
             self.handle = None
             raise TransportException(
-                "Unexpected device {} on path {}".format(serial, self.path.decode())
+                f"Unexpected device {serial} on path {self.path.decode()}"
             )
 
         self.handle.set_nonblocking(True)
@@ -80,12 +83,12 @@ class HidHandle:
 
     def write_chunk(self, chunk: bytes) -> None:
         if len(chunk) != 64:
-            raise TransportException("Unexpected chunk size: %d" % len(chunk))
+            raise TransportException(f"Unexpected chunk size: {len(chunk)}")
 
         if self.hid_version == 2:
             chunk = b"\x00" + chunk
 
-        LOG.log(DUMP_PACKETS, "writing packet: {}".format(chunk.hex()))
+        LOG.log(DUMP_PACKETS, f"writing packet: {chunk.hex()}")
         self.handle.write(chunk)
 
     def read_chunk(self) -> bytes:
@@ -97,9 +100,9 @@ class HidHandle:
             else:
                 time.sleep(0.001)
 
-        LOG.log(DUMP_PACKETS, "read packet: {}".format(chunk.hex()))
+        LOG.log(DUMP_PACKETS, f"read packet: {chunk.hex()}")
         if len(chunk) != 64:
-            raise TransportException("Unexpected chunk size: %d" % len(chunk))
+            raise TransportException(f"Unexpected chunk size: {len(chunk)}")
         return bytes(chunk)
 
     def probe_hid_version(self) -> int:
@@ -118,7 +121,7 @@ class HidTransport(ProtocolBasedTransport):
     """
 
     PATH_PREFIX = "hid"
-    ENABLED = hid is not None
+    ENABLED = HID_IMPORTED
 
     def __init__(self, device: HidDevice) -> None:
         self.device = device
@@ -127,14 +130,20 @@ class HidTransport(ProtocolBasedTransport):
         super().__init__(protocol=ProtocolV1(self.handle))
 
     def get_path(self) -> str:
-        return "%s:%s" % (self.PATH_PREFIX, self.device["path"].decode())
+        return f"{self.PATH_PREFIX}:{self.device['path'].decode()}"
 
     @classmethod
-    def enumerate(cls, debug: bool = False) -> Iterable["HidTransport"]:
-        devices = []
+    def enumerate(
+        cls, models: Optional[Iterable["TrezorModel"]] = None, debug: bool = False
+    ) -> Iterable["HidTransport"]:
+        if models is None:
+            models = {TREZOR_ONE}
+        usb_ids = [id for model in models for id in model.usb_ids]
+
+        devices: List["HidTransport"] = []
         for dev in hid.enumerate(0, 0):
             usb_id = (dev["vendor_id"], dev["product_id"])
-            if usb_id != DEV_TREZOR1:
+            if usb_id not in usb_ids:
                 continue
             if debug:
                 if not is_debuglink(dev):

@@ -1,9 +1,10 @@
 import utime
+from typing import TYPE_CHECKING
 
 import storage.cache
 from trezor import log, loop
 
-if False:
+if TYPE_CHECKING:
     from typing import Callable
 
     IdleCallback = Callable[[], None]
@@ -222,5 +223,5 @@ class IdleTimer:
             loop.close(task)
 
 
-"""Global idle timer."""
 idle_timer = IdleTimer()
+"""Global idle timer."""

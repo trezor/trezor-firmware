@@ -91,7 +91,7 @@ bool protectButton(ButtonRequestType type, bool confirm_only) {
     if (msg_tiny_id == MessageType_MessageType_DebugLinkDecision) {
       msg_tiny_id = 0xFFFF;
       DebugLinkDecision *dld = (DebugLinkDecision *)msg_tiny;
-      result = dld->yes_no;
+      result = dld->button;
       debug_decided = true;
     }
 

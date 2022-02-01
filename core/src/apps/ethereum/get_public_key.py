@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING
 from ubinascii import hexlify
 
 from trezor.messages import EthereumPublicKey, HDNodeType
@@ -7,7 +8,7 @@ from apps.common import coins, paths
 
 from .keychain import with_keychain_from_path
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import EthereumGetPublicKey
     from trezor.wire import Context
 

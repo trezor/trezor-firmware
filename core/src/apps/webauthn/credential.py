@@ -1,5 +1,6 @@
 import ustruct
 from micropython import const
+from typing import Iterable
 from ubinascii import hexlify
 
 import storage.device
@@ -11,9 +12,6 @@ from apps.common import cbor, seed
 from apps.common.paths import HARDENED
 
 from . import common
-
-if False:
-    from typing import Iterable
 
 # Credential ID values
 _CRED_ID_VERSION = b"\xf1\xd0\x02\x00"
@@ -412,10 +410,9 @@ class U2fCredential(Credential):
         if app is not None:
             return app.label
 
-        return "%s...%s" % (
-            hexlify(self.rp_id_hash[:4]).decode(),
-            hexlify(self.rp_id_hash[-4:]).decode(),
-        )
+        start = hexlify(self.rp_id_hash[:4]).decode()
+        end = hexlify(self.rp_id_hash[-4:]).decode()
+        return f"{start}...{end}"
 
     @staticmethod
     def from_key_handle(key_handle: bytes, rp_id_hash: bytes) -> "U2fCredential":

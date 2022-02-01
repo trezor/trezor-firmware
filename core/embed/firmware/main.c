@@ -50,6 +50,9 @@
 #include "sdcard.h"
 #include "supervise.h"
 #include "touch.h"
+#ifdef USE_SECP256K1_ZKP
+#include "zkp_context.h"
+#endif
 
 // from util.s
 extern void shutdown_privileged(void);
@@ -100,6 +103,10 @@ int main(void) {
   __asm__ volatile("isb");
 
   display_clear();
+#endif
+
+#ifdef USE_SECP256K1_ZKP
+  ensure(sectrue * (zkp_context_init() == 0), NULL);
 #endif
 
   printf("CORE: Preparing stack\n");

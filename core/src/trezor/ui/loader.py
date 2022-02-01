@@ -1,5 +1,6 @@
 import utime
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor import res, ui, utils
 from trezor.ui import display
@@ -35,7 +36,7 @@ class LoaderNeutral(LoaderDefault):
         fg_color = ui.FG
 
 
-if False:
+if TYPE_CHECKING:
     LoaderStyleType = type[LoaderDefault]
 
 
@@ -124,7 +125,7 @@ class LoadingAnimation(ui.Layout):
     def __init__(self, style: LoaderStyleType = LoaderDefault) -> None:
         super().__init__()
         self.loader = Loader(style)
-        self.loader.on_finish = self.on_finish  # type: ignore
+        self.loader.on_finish = self.on_finish
         self.loader.start()
 
     def dispatch(self, event: int, x: int, y: int) -> None:

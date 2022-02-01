@@ -3,13 +3,15 @@ This step serves for an incremental hashing of tx.vin[i] to the tx_prefix_hasher
 after the sorting on tx.vin[i].ki. The sorting order was received in the previous step.
 """
 
+from typing import TYPE_CHECKING
+
 from apps.monero import layout
 from apps.monero.signing import offloading_keys
 from apps.monero.xmr import crypto
 
 from .state import State
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import (
         MoneroTransactionInputViniAck,
         MoneroTransactionSourceEntry,
@@ -54,9 +56,7 @@ async def input_vini(
     if state.current_input_index > 0 and state.last_ki <= cur_ki:
         raise ValueError("Key image order invalid")
 
-    """
-    Incremental hasing of tx.vin[i]
-    """
+    # Incremental hasing of tx.vin[i]
     state.tx_prefix_hasher.buffer(vini_bin)
     state.last_step = state.STEP_VINI
     state.last_ki = cur_ki if state.current_input_index < state.input_count else None

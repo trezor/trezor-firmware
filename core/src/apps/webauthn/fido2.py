@@ -2,6 +2,7 @@ import uctypes
 import ustruct
 import utime
 from micropython import const
+from typing import Any, Callable, Coroutine, Iterable, Iterator
 
 import storage
 import storage.resident_credentials
@@ -20,15 +21,6 @@ from apps.common import cbor
 from . import common
 from .credential import CRED_ID_MAX_LENGTH, Credential, Fido2Credential, U2fCredential
 from .resident_credentials import find_by_rp_id_hash, store_resident_credential
-
-if False:
-    from typing import (
-        Any,
-        Callable,
-        Coroutine,
-        Iterable,
-        Iterator,
-    )
 
 _CID_BROADCAST = const(0xFFFF_FFFF)  # broadcast channel id
 
@@ -234,7 +226,7 @@ class CborError(Exception):
         self.code = code
 
 
-def frame_init() -> dict:
+def frame_init() -> uctypes.StructDict:
     # uint32_t cid;     // Channel identifier
     # uint8_t cmd;      // Command - b7 set
     # uint8_t bcnth;    // Message byte count - high part
@@ -248,7 +240,7 @@ def frame_init() -> dict:
     }
 
 
-def frame_cont() -> dict:
+def frame_cont() -> uctypes.StructDict:
     # uint32_t cid;                     // Channel identifier
     # uint8_t seq;                      // Sequence number - b7 cleared
     # uint8_t data[HID_RPT_SIZE - 5];   // Data payload
@@ -259,7 +251,7 @@ def frame_cont() -> dict:
     }
 
 
-def resp_cmd_init() -> dict:
+def resp_cmd_init() -> uctypes.StructDict:
     # uint8_t nonce[8];         // Client application nonce
     # uint32_t cid;             // Channel identifier
     # uint8_t versionInterface; // Interface version
@@ -304,7 +296,7 @@ def resp_cmd_register(khlen: int, certlen: int, siglen: int) -> dict:
 _REQ_CMD_AUTHENTICATE_KHLEN = const(64)
 
 
-def req_cmd_authenticate(khlen: int) -> dict:
+def req_cmd_authenticate(khlen: int) -> uctypes.StructDict:
     # uint8_t chal[32];         // Challenge
     # uint8_t appId[32];        // Application id
     # uint8_t keyHandleLen;     // Length of key handle
@@ -317,7 +309,7 @@ def req_cmd_authenticate(khlen: int) -> dict:
     }
 
 
-def resp_cmd_authenticate(siglen: int) -> dict:
+def resp_cmd_authenticate(siglen: int) -> uctypes.StructDict:
     status_ofs = 5 + siglen
     # uint8_t flags;        // U2F_AUTH_FLAG_ values
     # uint32_t ctr;         // Counter field (big-endian)
@@ -331,15 +323,15 @@ def resp_cmd_authenticate(siglen: int) -> dict:
     }
 
 
-def overlay_struct(buf: bytearray, desc: dict) -> Any:
-    desc_size = uctypes.sizeof(desc, uctypes.BIG_ENDIAN)  # type: ignore
+def overlay_struct(buf: bytearray, desc: uctypes.StructDict) -> Any:
+    desc_size = uctypes.sizeof(desc, uctypes.BIG_ENDIAN)
     if desc_size > len(buf):
-        raise ValueError("desc is too big (%d > %d)" % (desc_size, len(buf)))
+        raise ValueError(f"desc is too big ({desc_size} > {len(buf)})")
     return uctypes.struct(uctypes.addressof(buf), desc, uctypes.BIG_ENDIAN)
 
 
-def make_struct(desc: dict) -> tuple[bytearray, Any]:
-    desc_size = uctypes.sizeof(desc, uctypes.BIG_ENDIAN)  # type: ignore
+def make_struct(desc: uctypes.StructDict) -> tuple[bytearray, Any]:
+    desc_size = uctypes.sizeof(desc, uctypes.BIG_ENDIAN)
     buf = bytearray(desc_size)
     return buf, uctypes.struct(uctypes.addressof(buf), desc, uctypes.BIG_ENDIAN)
 
@@ -605,7 +597,7 @@ class State:
         raise NotImplementedError
 
     async def confirm_dialog(self) -> bool | "State":
-        pass
+        raise NotImplementedError
 
     async def on_confirm(self) -> None:
         pass
@@ -1647,6 +1639,7 @@ def cbor_get_assertion_process(req: Cmd, dialog_mgr: DialogManager) -> State | C
         rp_id_hash = hashlib.sha256(rp_id).digest()
 
         allow_list = param.get(_GETASSERT_CMD_ALLOW_LIST, [])
+        cred_list: list[Credential]
         if allow_list:
             # Get all credentials from the allow list that belong to this authenticator.
             allowed_creds = credentials_from_descriptor_list(allow_list, rp_id_hash)

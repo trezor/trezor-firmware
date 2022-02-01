@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import utils, wire
 from trezor.enums import RequestType
 from trezor.messages import TxRequest
@@ -10,8 +12,8 @@ if not utils.BITCOIN_ONLY:
     from . import bitcoinlike, decred, zcash
     from apps import zcash as zcash_v5
 
-if False:
-    from typing import Protocol, Union
+if TYPE_CHECKING:
+    from typing import Protocol
 
     from trezor.messages import (
         SignTx,
@@ -28,17 +30,17 @@ if False:
 
     from ..authorization import CoinJoinAuthorization
 
-    TxAckType = Union[
-        TxAckInput,
-        TxAckOutput,
-        TxAckPrevMeta,
-        TxAckPrevInput,
-        TxAckPrevOutput,
-        TxAckPrevExtraData,
-    ]
+    TxAckType = (
+        TxAckInput
+        | TxAckOutput
+        | TxAckPrevMeta
+        | TxAckPrevInput
+        | TxAckPrevOutput
+        | TxAckPrevExtraData
+    )
 
     class SignerClass(Protocol):
-        def __init__(
+        def __init__(  # pylint: disable=super-init-not-called
             self,
             tx: SignTx,
             keychain: Keychain,

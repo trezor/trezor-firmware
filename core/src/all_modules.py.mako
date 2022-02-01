@@ -28,6 +28,7 @@ ALTCOINS = (
     "stellar",
     "tezos",
     "webauthn",
+    "zcash",
 )
 
 pyfiles = chain.from_iterable(sorted(SRCDIR.glob(p)) for p in PATTERNS)
@@ -78,7 +79,7 @@ ${import_name}
 import ${import_name}
 % endfor
 
-if utils.BITCOIN_ONLY:
+if not utils.BITCOIN_ONLY:
 % for import_name in imports_altcoin:
     ${import_name}
     import ${import_name}

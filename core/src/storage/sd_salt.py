@@ -1,11 +1,12 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 import storage.device
 from trezor import io
 from trezor.sdcard import with_filesystem
 from trezor.utils import consteq
 
-if False:
+if TYPE_CHECKING:
     from typing import TypeVar, Callable
 
     T = TypeVar("T", bound=Callable)
@@ -31,11 +32,12 @@ def compute_auth_tag(salt: bytes, auth_key: bytes) -> bytes:
 
 
 def _get_device_dir() -> str:
-    return "/trezor/device_{}".format(storage.device.get_device_id().lower())
+    return f"/trezor/device_{storage.device.get_device_id().lower()}"
 
 
 def _get_salt_path(new: bool = False) -> str:
-    return "{}/salt{}".format(_get_device_dir(), ".new" if new else "")
+    ext = ".new" if new else ""
+    return f"{_get_device_dir()}/salt{ext}"
 
 
 @with_filesystem

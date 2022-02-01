@@ -50,6 +50,7 @@
 #error Unknown Trezor model
 #endif
 
+static SDL_Window *WINDOW;
 static SDL_Renderer *RENDERER;
 static SDL_Surface *BUFFER;
 static SDL_Texture *TEXTURE, *BACKGROUND;
@@ -99,19 +100,41 @@ void PIXELDATA(uint16_t c) {
 
 void display_init_seq(void) {}
 
+void display_deinit(void) {
+  SDL_FreeSurface(PREV_SAVED);
+  SDL_FreeSurface(BUFFER);
+  if (BACKGROUND != NULL) {
+    SDL_DestroyTexture(BACKGROUND);
+  }
+  if (TEXTURE != NULL) {
+    SDL_DestroyTexture(TEXTURE);
+  }
+  if (RENDERER != NULL) {
+    SDL_DestroyRenderer(RENDERER);
+  }
+  if (WINDOW != NULL) {
+    SDL_DestroyWindow(WINDOW);
+  }
+  SDL_Quit();
+}
+
 void display_init(void) {
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     printf("%s\n", SDL_GetError());
     ensure(secfalse, "SDL_Init error");
   }
-  atexit(SDL_Quit);
+  atexit(display_deinit);
 
   char *window_title = NULL;
-  if (!asprintf(&window_title, "Trezor^emu: %s", profile_name())) {
+  char *window_title_alloc = NULL;
+  if (asprintf(&window_title_alloc, "Trezor^emu: %s", profile_name()) > 0) {
+    window_title = window_title_alloc;
+  } else {
     window_title = "Trezor^emu";
+    window_title_alloc = NULL;
   }
 
-  SDL_Window *win =
+  WINDOW =
       SDL_CreateWindow(window_title, SDL_WINDOWPOS_UNDEFINED,
                        SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT,
 #ifdef TREZOR_EMULATOR_RASPI
@@ -120,14 +143,15 @@ void display_init(void) {
                        SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI
 #endif
       );
-  if (!win) {
+  free(window_title_alloc);
+  if (!WINDOW) {
     printf("%s\n", SDL_GetError());
     ensure(secfalse, "SDL_CreateWindow error");
   }
-  RENDERER = SDL_CreateRenderer(win, -1, SDL_RENDERER_SOFTWARE);
+  RENDERER = SDL_CreateRenderer(WINDOW, -1, SDL_RENDERER_SOFTWARE);
   if (!RENDERER) {
     printf("%s\n", SDL_GetError());
-    SDL_DestroyWindow(win);
+    SDL_DestroyWindow(WINDOW);
     ensure(secfalse, "SDL_CreateRenderer error");
   }
   SDL_SetRenderDrawColor(RENDERER, 0, 0, 0, 255);
@@ -141,7 +165,7 @@ void display_init(void) {
 #ifdef __APPLE__
   // macOS Mojave SDL black screen workaround
   SDL_PumpEvents();
-  SDL_SetWindowSize(win, WINDOW_WIDTH, WINDOW_HEIGHT);
+  SDL_SetWindowSize(WINDOW, WINDOW_WIDTH, WINDOW_HEIGHT);
 #endif
 #ifdef TREZOR_EMULATOR_RASPI
 #include "background_raspi.h"
@@ -164,7 +188,7 @@ void display_init(void) {
     sdl_touch_offset_x = TOUCH_OFFSET_X;
     sdl_touch_offset_y = TOUCH_OFFSET_Y;
   } else {
-    SDL_SetWindowSize(win, DISPLAY_RESX + 2 * EMULATOR_BORDER,
+    SDL_SetWindowSize(WINDOW, DISPLAY_RESX + 2 * EMULATOR_BORDER,
                       DISPLAY_RESY + 2 * EMULATOR_BORDER);
     sdl_touch_offset_x = EMULATOR_BORDER;
     sdl_touch_offset_y = EMULATOR_BORDER;

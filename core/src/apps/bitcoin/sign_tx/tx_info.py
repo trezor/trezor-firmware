@@ -1,4 +1,5 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor import wire
 from trezor.crypto.hashlib import sha256
@@ -8,7 +9,7 @@ from .. import common, writers
 from ..common import BIP32_WALLET_DEPTH, input_is_external
 from .matchcheck import MultisigFingerprintChecker, WalletPathChecker
 
-if False:
+if TYPE_CHECKING:
     from typing import Protocol
     from trezor.messages import (
         PrevTx,
@@ -16,17 +17,17 @@ if False:
         TxInput,
         TxOutput,
     )
-    from .hash143 import Hash143
+    from .sig_hasher import SigHasher
 
     from apps.common.coininfo import CoinInfo
 
     class Signer(Protocol):
-        coin = ...  # type: CoinInfo
+        coin: CoinInfo
 
         def create_hash_writer(self) -> HashWriter:
             ...
 
-        def create_hash143(self) -> Hash143:
+        def create_sig_hasher(self) -> SigHasher:
             ...
 
         def write_tx_header(
@@ -72,13 +73,14 @@ class TxInfoBase:
         self.h_tx_check = HashWriter(sha256())  # not a real tx hash
 
         # BIP-0143 transaction hashing.
-        self.hash143 = signer.create_hash143()
+        self.sig_hasher = signer.create_sig_hasher()
 
         # The minimum nSequence of all inputs.
         self.min_sequence = _SEQUENCE_FINAL
 
-    def add_input(self, txi: TxInput) -> None:
-        self.hash143.add_input(txi)  # all inputs are included (non-segwit as well)
+    def add_input(self, txi: TxInput, script_pubkey: bytes) -> None:
+        # all inputs are included (non-segwit as well)
+        self.sig_hasher.add_input(txi, script_pubkey)
         writers.write_tx_input_check(self.h_tx_check, txi)
         self.min_sequence = min(self.min_sequence, txi.sequence)
 
@@ -87,7 +89,7 @@ class TxInfoBase:
             self.multisig_fingerprint.add_input(txi)
 
     def add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
-        self.hash143.add_output(txo, script_pubkey)
+        self.sig_hasher.add_output(txo, script_pubkey)
         writers.write_tx_output(self.h_tx_check, txo, script_pubkey)
 
     def check_input(self, txi: TxInput) -> None:
@@ -141,14 +143,14 @@ class OriginalTxInfo(TxInfoBase):
         # Transaction hasher to compute the TXID.
         self.h_tx = signer.create_hash_writer()
         signer.write_tx_header(self.h_tx, tx, witness_marker=False)
-        writers.write_bitcoin_varint(self.h_tx, tx.inputs_count)
+        writers.write_compact_size(self.h_tx, tx.inputs_count)
 
         # The input which will be used for verification and its index in the original transaction.
         self.verification_input: TxInput | None = None
         self.verification_index: int | None = None
 
-    def add_input(self, txi: TxInput) -> None:
-        super().add_input(txi)
+    def add_input(self, txi: TxInput, script_pubkey: bytes) -> None:
+        super().add_input(txi, script_pubkey)
         writers.write_tx_input(self.h_tx, txi, txi.script_sig or bytes())
 
         # For verification use the first original input that specifies address_n.
@@ -160,7 +162,7 @@ class OriginalTxInfo(TxInfoBase):
         super().add_output(txo, script_pubkey)
 
         if self.index == 0:
-            writers.write_bitcoin_varint(self.h_tx, self.tx.outputs_count)
+            writers.write_compact_size(self.h_tx, self.tx.outputs_count)
 
         writers.write_tx_output(self.h_tx, txo, script_pubkey)
 

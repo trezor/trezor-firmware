@@ -27,6 +27,9 @@ from . import ui_tests
 from .device_handler import BackgroundDeviceHandler
 from .ui_tests.reporting import testreport
 
+# So that we see details of failed asserts from this module
+pytest.register_assert_rewrite("tests.common")
+
 
 @pytest.fixture(scope="session")
 def _raw_client(request):
@@ -38,7 +41,7 @@ def _raw_client(request):
             return TrezorClientDebugLink(transport, auto_interact=not interact)
         except Exception as e:
             request.session.shouldstop = "Failed to communicate with Trezor"
-            raise RuntimeError("Failed to open debuglink for {}".format(path)) from e
+            raise RuntimeError(f"Failed to open debuglink for {path}") from e
 
     else:
         devices = enumerate_devices()
@@ -47,9 +50,9 @@ def _raw_client(request):
                 return TrezorClientDebugLink(device, auto_interact=not interact)
             except Exception:
                 pass
-        else:
-            request.session.shouldstop = "Failed to communicate with Trezor"
-            raise RuntimeError("No debuggable device found")
+
+        request.session.shouldstop = "Failed to communicate with Trezor"
+        raise RuntimeError("No debuggable device found")
 
 
 @pytest.fixture(scope="function")

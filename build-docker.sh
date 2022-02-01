@@ -21,10 +21,10 @@ fi
 if [ -z "$ALPINE_CHECKSUM" ]; then
   case "$ALPINE_ARCH" in
     aarch64)
-      ALPINE_CHECKSUM="a5de8f89f3851d929704feafda9ff0d7402ae138176bba8b3f6a25ecbb0b8f46"
+      ALPINE_CHECKSUM="1be50ae27c8463d005c4de16558d239e11a88ac6b2f8721c47e660fbeead69bf"
       ;;
     x86_64)
-      ALPINE_CHECKSUM="4591f811a5515b13d60ab76f78bb8fd1cb9d9857a98cf7e2e5b200e89701e62c"
+      ALPINE_CHECKSUM="ec7ec80a96500f13c189a6125f2dbe8600ef593b87fc4670fe959dc02db727a2"
       ;;
     *)
       exit
@@ -34,10 +34,10 @@ if [ -z "$ALPINE_CHECKSUM" ]; then
 
 CONTAINER_NAME=${CONTAINER_NAME:-trezor-firmware-env.nix}
 ALPINE_CDN=${ALPINE_CDN:-https://dl-cdn.alpinelinux.org/alpine}
-ALPINE_RELEASE=${ALPINE_RELEASE:-3.14}
-ALPINE_VERSION=${ALPINE_VERSION:-3.14.2}
+ALPINE_RELEASE=${ALPINE_RELEASE:-3.15}
+ALPINE_VERSION=${ALPINE_VERSION:-3.15.0}
 ALPINE_TARBALL=${ALPINE_FILE:-alpine-minirootfs-$ALPINE_VERSION-$ALPINE_ARCH.tar.gz}
-NIX_VERSION=${NIX_VERSION:-2.3.15}
+NIX_VERSION=${NIX_VERSION:-2.4}
 CONTAINER_FS_URL=${CONTAINER_FS_URL:-"$ALPINE_CDN/v$ALPINE_RELEASE/releases/$ALPINE_ARCH/$ALPINE_TARBALL"}
 
 VARIANTS_core=(0 1)
@@ -62,7 +62,6 @@ fi
 TAG=${1:-master}
 REPOSITORY=${2:-/local}
 PRODUCTION=${PRODUCTION:-1}
-MEMORY_PROTECT=${MEMORY_PROTECT:-1}
 
 
 if which wget > /dev/null ; then
@@ -79,6 +78,10 @@ if command -v sha256sum &> /dev/null ; then
 else
     echo "${ALPINE_CHECKSUM}  ci/${ALPINE_TARBALL}" | shasum -a 256 -c
 fi
+
+echo
+echo ">>> DOCKER BUILD ALPINE_VERSION=$ALPINE_VERSION ALPINE_ARCH=$ALPINE_ARCH NIX_VERSION=$NIX_VERSION -t $CONTAINER_NAME"
+echo
 
 docker build --build-arg ALPINE_VERSION="$ALPINE_VERSION" --build-arg ALPINE_ARCH="$ALPINE_ARCH" --build-arg NIX_VERSION="$NIX_VERSION" -t "$CONTAINER_NAME" ci/
 
@@ -117,6 +120,10 @@ for BITCOIN_ONLY in ${VARIANTS_core[@]}; do
                build/firmware/firmware.bin
     chown -R $USER:$GROUP /build
 EOF
+
+  echo
+  echo ">>> DOCKER RUN core BITCOIN_ONLY=$BITCOIN_ONLY PRODUCTION=$PRODUCTION"
+  echo
 
   docker run -it --rm \
     -v "$DIR:/local" \
@@ -160,11 +167,15 @@ for BITCOIN_ONLY in ${VARIANTS_legacy[@]}; do
     chown -R $USER:$GROUP /build
 EOF
 
+  echo
+  echo ">>> DOCKER RUN legacy BITCOIN_ONLY=$BITCOIN_ONLY PRODUCTION=$PRODUCTION"
+  echo
+
   docker run -it --rm \
     -v "$DIR:/local" \
     -v "$DIR/build/legacy$DIRSUFFIX":/build:z \
     --env BITCOIN_ONLY="$BITCOIN_ONLY" \
-    --env MEMORY_PROTECT="$MEMORY_PROTECT" \
+    --env PRODUCTION="$PRODUCTION" \
     --init \
     "$CONTAINER_NAME" \
     /nix/var/nix/profiles/default/bin/nix-shell --run "bash /local/build/$SCRIPT_NAME"

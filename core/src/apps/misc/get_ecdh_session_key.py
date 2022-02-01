@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING
 from ustruct import pack, unpack
 
 from trezor import ui, wire
@@ -10,7 +11,7 @@ from apps.common.paths import HARDENED, AlwaysMatchingSchema
 
 from .sign_identity import serialize_identity, serialize_identity_without_proto
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import GetECDHSessionKey, IdentityType
 
     from apps.common.paths import Bip32Path
@@ -47,7 +48,7 @@ async def require_confirm_ecdh_session_key(
     proto = identity.proto.upper() if identity.proto else "identity"
     await confirm_address(
         ctx,
-        "Decrypt %s" % proto,
+        f"Decrypt {proto}",
         serialize_identity_without_proto(identity),
         description=None,
         icon=ui.ICON_DEFAULT,

@@ -1,10 +1,13 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor import ui
 from trezor.ui import display, in_area
 
-if False:
-    from typing import Union
+if TYPE_CHECKING:
+    ButtonContent = str | bytes
+    ButtonStyleType = type["ButtonDefault"]
+    ButtonStyleStateType = type["ButtonDefault.normal"]
 
 
 class ButtonDefault:
@@ -109,12 +112,6 @@ class ButtonMonoConfirm(ButtonDefault):
         text_style = ui.MONO
 
 
-if False:
-    ButtonContent = Union[str, bytes, None]
-    ButtonStyleType = type[ButtonDefault]
-    ButtonStyleStateType = type[ButtonDefault.normal]
-
-
 # button states
 _INITIAL = const(0)
 _PRESSED = const(1)
@@ -166,6 +163,8 @@ class Button(ui.Component):
                 s = self.disabled_style
             elif self.state is _PRESSED:
                 s = self.active_style
+            else:
+                raise RuntimeError  # invalid state
             ax, ay, aw, ah = self.area
             self.render_background(s, ax, ay, aw, ah)
             self.render_content(s, ax, ay, aw, ah)
@@ -251,4 +250,4 @@ class Button(ui.Component):
     if __debug__:
 
         def read_content(self) -> list[str]:
-            return ["<Button: {}>".format(self.text)]
+            return [f"<Button: {self.text}>"]

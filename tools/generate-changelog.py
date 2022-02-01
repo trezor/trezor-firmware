@@ -8,7 +8,7 @@ import subprocess
 import click
 
 LINK_RE = re.compile(r"\[#(\d+)\]")
-ISSUE_URL = "https://github.com/trezor/trezor-firmware/issues/{issue}"
+ISSUE_URL = "https://github.com/trezor/trezor-firmware/pull/{issue}"
 
 VERSION_HEADER_RE = re.compile(r"## \[([.0-9]+)\]")
 DIFF_LINK = "[{new}]: https://github.com/trezor/trezor-firmware/compare/{tag_prefix}{old}...{tag_prefix}{new}\n"
@@ -122,7 +122,7 @@ def cli(project, version, date, check):
     changelog = project / "CHANGELOG.md"
 
     if not changelog.exists():
-        raise click.ClickException("{} not found".format(changelog))
+        raise click.ClickException(f"{changelog} not found")
 
     if version is None:
         if not check:

@@ -288,15 +288,14 @@ void display_avatar(int x, int y, const void *data, uint32_t datalen,
     if (px >= x0 && px <= x1 && py >= y0 && py <= y1) {
       int d = (px - AVATAR_IMAGE_SIZE / 2) * (px - AVATAR_IMAGE_SIZE / 2) +
               (py - AVATAR_IMAGE_SIZE / 2) * (py - AVATAR_IMAGE_SIZE / 2);
-      // inside border area
       if (d < AVATAR_BORDER_LOW) {
+        // inside border area
         PIXELDATA((decomp_out[0] << 8) | decomp_out[1]);
-      } else
-          // outside border area
-          if (d > AVATAR_BORDER_HIGH) {
+      } else if (d > AVATAR_BORDER_HIGH) {
+        // outside border area
         PIXELDATA(bgcolor);
-        // border area
       } else {
+        // border area
 #if AVATAR_ANTIALIAS
         d = 31 * (d - AVATAR_BORDER_LOW) /
             (AVATAR_BORDER_HIGH - AVATAR_BORDER_LOW);
@@ -408,11 +407,11 @@ void display_loader(uint16_t progress, bool indeterminate, int yoffset,
                      DISPLAY_RESY / 2 - img_loader_size + yoffset,
                      DISPLAY_RESX / 2 + img_loader_size - 1,
                      DISPLAY_RESY / 2 + img_loader_size - 1 + yoffset);
+  uint8_t icondata[(LOADER_ICON_SIZE * LOADER_ICON_SIZE) / 2] = {0};
   if (icon && memcmp(icon, "TOIg", 4) == 0 &&
       LOADER_ICON_SIZE == *(uint16_t *)(icon + 4) &&
       LOADER_ICON_SIZE == *(uint16_t *)(icon + 6) &&
       iconlen == 12 + *(uint32_t *)(icon + 8)) {
-    uint8_t icondata[(LOADER_ICON_SIZE * LOADER_ICON_SIZE) / 2] = {0};
     memzero(&icondata, sizeof(icondata));
     struct uzlib_uncomp decomp = {0};
     uzlib_prepare(&decomp, NULL, icon + 12, iconlen - 12, icondata,

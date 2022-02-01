@@ -26,7 +26,7 @@ def is_bip39() -> bool:
 def get_seed(passphrase: str = "", progress_bar: bool = True) -> bytes:
     mnemonic_secret = get_secret()
     if mnemonic_secret is None:
-        raise ValueError("Mnemonic not set")
+        raise ValueError  # Mnemonic not set
 
     render_func = None
     if progress_bar and not utils.DISABLE_ANIMATION:
@@ -47,10 +47,40 @@ def get_seed(passphrase: str = "", progress_bar: bool = True) -> bytes:
             # Identifier or exponent expected but not found
             raise RuntimeError
         seed = slip39.decrypt(
-            mnemonic_secret, passphrase.encode(), iteration_exponent, identifier
+            mnemonic_secret,
+            passphrase.encode(),
+            iteration_exponent,
+            identifier,
+            render_func,
         )
 
     return seed
+
+
+if not utils.BITCOIN_ONLY:
+
+    def derive_cardano_icarus(
+        passphrase: str = "",
+        trezor_derivation: bool = True,
+        progress_bar: bool = True,
+    ) -> bytes:
+        if not is_bip39():
+            raise ValueError  # should not be called for SLIP-39
+
+        mnemonic_secret = get_secret()
+        if mnemonic_secret is None:
+            raise ValueError("Mnemonic not set")
+
+        render_func = None
+        if progress_bar and not utils.DISABLE_ANIMATION:
+            _start_progress()
+            render_func = _render_progress
+
+        from trezor.crypto import cardano
+
+        return cardano.derive_icarus(
+            mnemonic_secret.decode(), passphrase, trezor_derivation, render_func
+        )
 
 
 def _start_progress() -> None:

@@ -26,10 +26,13 @@ def generate(env):
         # replace "utils.BITCOIN_ONLY" with literal constant (True/False)
         # so the compiler can optimize out the things we don't want
         btc_only = env['bitcoin_only'] == '1'
-        interim = "%s.i" % target[:-4]  # replace .mpy with .i
+        interim = f"{target[:-4]}.i"  # replace .mpy with .i
         sed_scripts = " ".join([
-            f"-e 's/utils\.BITCOIN_ONLY/{btc_only}/g'",
-            "-e 's/if TYPE_CHECKING/if False/'",
+            rf"-e 's/utils\.BITCOIN_ONLY/{btc_only}/g'",
+            r"-e 's/if TYPE_CHECKING/if False/'",
+            r"-e 's/import typing/# \0/'",
+            r"-e '/from typing import (/,/^\s*)/ {s/^/# /}'",
+            r"-e 's/from typing import/# \0/'"
         ])
         return f'$SED {sed_scripts} {source} > {interim} && $MPY_CROSS -o {target} -s {source_name} {interim}'
 

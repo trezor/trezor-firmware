@@ -74,9 +74,11 @@ message StellarSignTx {
  * Response: device is ready for client to send the next operation
  * @next StellarPaymentOp
  * @next StellarCreateAccountOp
- * @next StellarPathPaymentOp
- * @next StellarManageOfferOp
- * @next StellarCreatePassiveOfferOp
+ * @next StellarPathPaymentStrictReceiveOp
+ * @next StellarPathPaymentStrictSendOp
+ * @next StellarManageSellOfferOp
+ * @next StellarManageBuyOfferOp
+ * @next StellarCreatePassiveSellOfferOp
  * @next StellarSetOptionsOp
  * @next StellarChangeTrustOp
  * @next StellarAllowTrustOp
@@ -115,14 +117,14 @@ message StellarCreateAccountOp {
  * @next StellarTxOpRequest
  * @next StellarSignedTx
  */
-message StellarPathPaymentOp {
-    optional string source_account = 1;         // (optional) source address
-    required StellarAsset send_asset = 2;
-    required sint64 send_max = 3;
-    required string destination_account = 4;
-    required StellarAsset destination_asset = 5;
-    required sint64 destination_amount = 6;
-    repeated StellarAsset paths = 7;
+message StellarPathPaymentStrictReceiveOp {
+    optional string source_account = 1;           // (optional) source address
+    required StellarAsset send_asset = 2;         // asset we pay with
+    required sint64 send_max = 3;                 // the maximum amount of sendAsset to send (excluding fees)
+    required string destination_account = 4;      // recipient of the payment
+    required StellarAsset destination_asset = 5;  // what they end up with
+    required sint64 destination_amount = 6;       // amount they end up with
+    repeated StellarAsset paths = 7;              // additional hops it must go through to get there
 }
 
 /**
@@ -130,7 +132,22 @@ message StellarPathPaymentOp {
  * @next StellarTxOpRequest
  * @next StellarSignedTx
  */
-message StellarManageOfferOp {
+message StellarPathPaymentStrictSendOp {
+    optional string source_account = 1;           // (optional) source address
+    required StellarAsset send_asset = 2;         // asset we pay with
+    required sint64 send_amount = 3;              // amount of sendAsset to send (excluding fees)
+    required string destination_account = 4;      // recipient of the payment
+    required StellarAsset destination_asset = 5;  // what they end up with
+    required sint64 destination_min = 6;          // the minimum amount of dest asset to be received
+    repeated StellarAsset paths = 7;              //additional hops it must go through to get there
+}
+
+/**
+ * Request: ask device to confirm this operation type
+ * @next StellarTxOpRequest
+ * @next StellarSignedTx
+ */
+message StellarManageSellOfferOp {
     optional string source_account = 1;             // (optional) source account address
     required StellarAsset selling_asset = 2;
     required StellarAsset buying_asset = 3;
@@ -145,7 +162,22 @@ message StellarManageOfferOp {
  * @next StellarTxOpRequest
  * @next StellarSignedTx
  */
-message StellarCreatePassiveOfferOp {
+message StellarManageBuyOfferOp {
+    optional string source_account = 1;             // (optional) source account address
+    required StellarAsset selling_asset = 2;
+    required StellarAsset buying_asset = 3;
+    required sint64 amount = 4;
+    required uint32 price_n = 5;                    // Price numerator
+    required uint32 price_d = 6;                    // Price denominator
+    required uint64 offer_id = 7;                   // Offer ID for updating an existing offer
+}
+
+/**
+ * Request: ask device to confirm this operation type
+ * @next StellarTxOpRequest
+ * @next StellarSignedTx
+ */
+message StellarCreatePassiveSellOfferOp {
     optional string source_account = 1;             // (optional) source account address
     required StellarAsset selling_asset = 2;
     required StellarAsset buying_asset = 3;

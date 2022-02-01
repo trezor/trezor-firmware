@@ -1,15 +1,14 @@
-environment:
+.environment:
   stage: environment
   image: docker
-  when: manual
   variables:
     GIT_SUBMODULE_STRATEGY: none  # no need to fetch submodules
     CONTAINER_NAME: "$CI_REGISTRY/satoshilabs/trezor/trezor-firmware/trezor-firmware-env.nix"
-    ALPINE_RELEASE: "3.14"
+    ALPINE_RELEASE: "3.15"
     ALPINE_ARCH: "x86_64"
-    ALPINE_VERSION: "3.14.2"
-    ALPINE_CHECKSUM: "4591f811a5515b13d60ab76f78bb8fd1cb9d9857a98cf7e2e5b200e89701e62c"
-    NIX_VERSION: "2.3.15"
+    ALPINE_VERSION: "3.15.0"
+    ALPINE_CHECKSUM: "ec7ec80a96500f13c189a6125f2dbe8600ef593b87fc4670fe959dc02db727a2"
+    NIX_VERSION: "2.4"
   services:
     - docker:dind
   before_script:
@@ -20,3 +19,13 @@ environment:
     - docker build --tag $CONTAINER_NAME:$CI_COMMIT_SHA --tag $CONTAINER_NAME:latest --build-arg ALPINE_VERSION="$ALPINE_VERSION" --build-arg ALPINE_ARCH="$ALPINE_ARCH" --build-arg NIX_VERSION="$NIX_VERSION" --build-arg FULLDEPS_TESTING=1 ci/
     - docker push $CONTAINER_NAME:$CI_COMMIT_SHA
     - docker push $CONTAINER_NAME:latest
+
+environment manual:
+  extends: .environment
+  when: manual
+
+environment scheduled:
+  extends: .environment
+  only:
+    variables:
+      - $SCHEDULED_ENVIRONMENR_BUILD == "true"

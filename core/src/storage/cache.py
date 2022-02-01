@@ -1,17 +1,13 @@
 import gc
 from trezorcrypto import random  # avoid pulling in trezor.crypto
+from typing import TYPE_CHECKING
 
 from trezor import utils
 
-if False:
+if TYPE_CHECKING:
     from typing import Sequence, TypeVar, overload
 
     T = TypeVar("T")
-
-else:
-
-    def overload(f) -> None:  # type: ignore
-        pass
 
 
 _MAX_SESSIONS_COUNT = 10
@@ -20,10 +16,14 @@ _SESSION_ID_LENGTH = 32
 
 # Traditional cache keys
 APP_COMMON_SEED = 0
-APP_CARDANO_PASSPHRASE = 1
-APP_MONERO_LIVE_REFRESH = 2
-APP_COMMON_AUTHORIZATION_TYPE = 3
-APP_COMMON_AUTHORIZATION_DATA = 4
+APP_COMMON_AUTHORIZATION_TYPE = 1
+APP_COMMON_AUTHORIZATION_DATA = 2
+APP_COMMON_NONCE = 3
+if not utils.BITCOIN_ONLY:
+    APP_COMMON_DERIVE_CARDANO = 4
+    APP_CARDANO_ICARUS_SECRET = 5
+    APP_CARDANO_ICARUS_TREZOR_SECRET = 6
+    APP_MONERO_LIVE_REFRESH = 7
 
 # Keys that are valid across sessions
 APP_COMMON_SEED_WITHOUT_PASSPHRASE = 0 | _SESSIONLESS_FLAG
@@ -59,19 +59,25 @@ class DataCache:
         self.data[key][0] = 1
         self.data[key][1:] = value
 
-    @overload
-    def get(self, key: int) -> bytes | None:
-        ...
+    if TYPE_CHECKING:
 
-    @overload
-    def get(self, key: int, default: T) -> bytes | T:  # noqa: F811
-        ...
+        @overload
+        def get(self, key: int) -> bytes | None:
+            ...
+
+        @overload
+        def get(self, key: int, default: T) -> bytes | T:  # noqa: F811
+            ...
 
     def get(self, key: int, default: T | None = None) -> bytes | T | None:  # noqa: F811
-        utils.ensure(key < len(self.fields), "failed to load key %d" % key)
+        utils.ensure(key < len(self.fields))
         if self.data[key][0] != 1:
             return default
         return bytes(self.data[key][1:])
+
+    def is_set(self, key: int) -> bool:
+        utils.ensure(key < len(self.fields))
+        return self.data[key][0] == 1
 
     def delete(self, key: int) -> None:
         utils.ensure(key < len(self.fields))
@@ -85,13 +91,24 @@ class DataCache:
 class SessionCache(DataCache):
     def __init__(self) -> None:
         self.session_id = bytearray(_SESSION_ID_LENGTH)
-        self.fields = (
-            64,  # APP_COMMON_SEED
-            50,  # APP_CARDANO_PASSPHRASE
-            1,  # APP_MONERO_LIVE_REFRESH
-            2,  # APP_COMMON_AUTHORIZATION_TYPE
-            128,  # APP_COMMON_AUTHORIZATION_DATA
-        )
+        if utils.BITCOIN_ONLY:
+            self.fields = (
+                64,  # APP_COMMON_SEED
+                2,  # APP_COMMON_AUTHORIZATION_TYPE
+                128,  # APP_COMMON_AUTHORIZATION_DATA
+                32,  # APP_COMMON_NONCE
+            )
+        else:
+            self.fields = (
+                64,  # APP_COMMON_SEED
+                2,  # APP_COMMON_AUTHORIZATION_TYPE
+                128,  # APP_COMMON_AUTHORIZATION_DATA
+                32,  # APP_COMMON_NONCE
+                1,  # APP_COMMON_DERIVE_CARDANO
+                96,  # APP_CARDANO_ICARUS_SECRET
+                96,  # APP_CARDANO_ICARUS_TREZOR_SECRET
+                1,  # APP_MONERO_LIVE_REFRESH
+            )
         self.last_usage = 0
         super().__init__()
 
@@ -207,14 +224,15 @@ def set(key: int, value: bytes) -> None:
     _SESSIONS[_active_session_idx].set(key, value)
 
 
-@overload
-def get(key: int) -> bytes | None:
-    ...
+if TYPE_CHECKING:
 
+    @overload
+    def get(key: int) -> bytes | None:
+        ...
 
-@overload
-def get(key: int, default: T) -> bytes | T:  # noqa: F811
-    ...
+    @overload
+    def get(key: int, default: T) -> bytes | T:  # noqa: F811
+        ...
 
 
 def get(key: int, default: T | None = None) -> bytes | T | None:  # noqa: F811
@@ -225,6 +243,14 @@ def get(key: int, default: T | None = None) -> bytes | T | None:  # noqa: F811
     return _SESSIONS[_active_session_idx].get(key, default)
 
 
+def is_set(key: int) -> bool:
+    if key & _SESSIONLESS_FLAG:
+        return _SESSIONLESS_CACHE.is_set(key ^ _SESSIONLESS_FLAG)
+    if _active_session_idx is None:
+        raise InvalidSessionError
+    return _SESSIONS[_active_session_idx].is_set(key)
+
+
 def delete(key: int) -> None:
     if key & _SESSIONLESS_FLAG:
         return _SESSIONLESS_CACHE.delete(key ^ _SESSIONLESS_FLAG)
@@ -233,47 +259,38 @@ def delete(key: int) -> None:
     return _SESSIONS[_active_session_idx].delete(key)
 
 
-if False:
-    from typing import Awaitable, Callable, TypeVar
+if TYPE_CHECKING:
+    from typing import Awaitable, Callable, TypeVar, ParamSpec
 
-    ByteFunc = TypeVar("ByteFunc", bound=Callable[..., bytes])
-    AsyncByteFunc = TypeVar("AsyncByteFunc", bound=Callable[..., Awaitable[bytes]])
+    P = ParamSpec("P")
+    ByteFunc = Callable[P, bytes]
+    AsyncByteFunc = Callable[P, Awaitable[bytes]]
 
 
-def stored(key: int) -> Callable[[ByteFunc], ByteFunc]:
-    def decorator(func: ByteFunc) -> ByteFunc:
-        # if we didn't check this, it would be easy to store an Awaitable[something]
-        # in cache, which might prove hard to debug
-        # XXX mypy should be checking this now, but we don't have full coverage yet
-        assert not isinstance(func, type(lambda: (yield))), "use stored_async instead"
-
-        def wrapper(*args, **kwargs):  # type: ignore
+def stored(key: int) -> Callable[[ByteFunc[P]], ByteFunc[P]]:
+    def decorator(func: ByteFunc[P]) -> ByteFunc[P]:
+        def wrapper(*args: P.args, **kwargs: P.kwargs):
             value = get(key)
             if value is None:
                 value = func(*args, **kwargs)
                 set(key, value)
             return value
 
-        return wrapper  # type: ignore
+        return wrapper
 
     return decorator
 
 
-def stored_async(key: int) -> Callable[[AsyncByteFunc], AsyncByteFunc]:
-    def decorator(func: AsyncByteFunc) -> AsyncByteFunc:
-        # assert isinstance(func, type(lambda: (yield))), "do not use stored_async"
-        # XXX the test above fails for closures
-        # We shouldn't need this test here anyway: the 'await func()' should fail
-        # with functions that do not return an awaitable so the problem is more visible.
-
-        async def wrapper(*args, **kwargs):  # type: ignore
+def stored_async(key: int) -> Callable[[AsyncByteFunc[P]], AsyncByteFunc[P]]:
+    def decorator(func: AsyncByteFunc[P]) -> AsyncByteFunc[P]:
+        async def wrapper(*args: P.args, **kwargs: P.kwargs):
             value = get(key)
             if value is None:
                 value = await func(*args, **kwargs)
                 set(key, value)
             return value
 
-        return wrapper  # type: ignore
+        return wrapper
 
     return decorator
 

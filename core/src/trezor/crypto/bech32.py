@@ -20,19 +20,21 @@
 
 """Reference implementation for Bech32/Bech32m and segwit addresses."""
 
-if False:
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
     from enum import IntEnum
-    from typing import Iterable, Union, TypeVar
+    from typing import Sequence, TypeVar
 
     A = TypeVar("A")
     B = TypeVar("B")
     C = TypeVar("C")
     # usage: OptionalTuple[int, list[int]] is either (None, None) or (someint, somelist)
     # but not (None, somelist)
-    OptionalTuple2 = Union[tuple[None, None], tuple[A, B]]
-    OptionalTuple3 = Union[tuple[None, None, None], tuple[A, B, C]]
+    OptionalTuple2 = tuple[None, None] | tuple[A, B]
+    OptionalTuple3 = tuple[None, None, None] | tuple[A, B, C]
 else:
-    IntEnum = object  # type: ignore
+    IntEnum = object
 
 
 class Encoding(IntEnum):
@@ -110,9 +112,22 @@ def bech32_decode(
 
 
 def convertbits(
-    data: Iterable[int], frombits: int, tobits: int, pad: bool = True
-) -> list[int] | None:
-    """General power-of-2 base conversion."""
+    data: Sequence[int], frombits: int, tobits: int, arbitrary_input: bool = True
+) -> list[int]:
+    """General power-of-2 base conversion.
+
+    The `arbitrary_input` parameter specifies what happens when the total length
+    of input bits is not a multiple of `tobits`.
+    If True (default), the overflowing bits are zero-padded to the right.
+    If False, the input must must be a valid output of `convertbits()` in the opposite
+    direction.
+    Namely:
+    (a) the overflow must only be the zero padding
+    (b) length of the overflow is less than `frombits`, meaning that there is no
+        additional all-zero `frombits`-sized group at the end.
+    If both conditions hold, the all-zero overflow is discarded.
+    Otherwise a ValueError is raised.
+    """
     acc = 0
     bits = 0
     ret = []
@@ -120,17 +135,22 @@ def convertbits(
     max_acc = (1 << (frombits + tobits - 1)) - 1
     for value in data:
         if value < 0 or (value >> frombits):
-            return None
+            raise ValueError  # input value does not match `frombits` size
         acc = ((acc << frombits) | value) & max_acc
         bits += frombits
         while bits >= tobits:
             bits -= tobits
             ret.append((acc >> bits) & maxv)
-    if pad:
+
+    if arbitrary_input:
         if bits:
+            # append remaining bits, zero-padded from right
             ret.append((acc << (tobits - bits)) & maxv)
     elif bits >= frombits or ((acc << (tobits - bits)) & maxv):
-        return None
+        # (1) either there is a superfluous group at end of input, and/or
+        # (2) the remainder is nonzero
+        raise ValueError
+
     return ret
 
 
@@ -138,17 +158,27 @@ def decode(hrp: str, addr: str) -> OptionalTuple2[int, list[int]]:
     """Decode a segwit address."""
     hrpgot, data, spec = bech32_decode(addr)
     # the following two lines are strictly not required
-    # but they make mypy happy
+    # but they make typecheckers happy
     if data is None:
         return (None, None)
     if hrpgot != hrp:
         return (None, None)
-    decoded = convertbits(data[1:], 5, 8, False)
-    if decoded is None or len(decoded) < 2 or len(decoded) > 40:
+    try:
+        decoded = convertbits(data[1:], 5, 8, False)
+    except ValueError:
+        return (None, None)
+    if not 2 <= len(decoded) <= 40:
         return (None, None)
     if data[0] > 16:
         return (None, None)
-    if data[0] == 0 and len(decoded) != 20 and len(decoded) != 32:
+    if data[0] == 0 and len(decoded) not in (20, 32):
+        return (None, None)
+    if (
+        data[0] == 0
+        and spec != Encoding.BECH32
+        or data[0] != 0
+        and spec != Encoding.BECH32M
+    ):
         return (None, None)
     if (
         data[0] == 0
@@ -160,11 +190,9 @@ def decode(hrp: str, addr: str) -> OptionalTuple2[int, list[int]]:
     return (data[0], decoded)
 
 
-def encode(hrp: str, witver: int, witprog: Iterable[int]) -> str | None:
+def encode(hrp: str, witver: int, witprog: bytes) -> str | None:
     """Encode a segwit address."""
     data = convertbits(witprog, 8, 5)
-    if data is None:
-        return None
     spec = Encoding.BECH32 if witver == 0 else Encoding.BECH32M
     ret = bech32_encode(hrp, [witver] + data, spec)
     if decode(hrp, ret) == (None, None):

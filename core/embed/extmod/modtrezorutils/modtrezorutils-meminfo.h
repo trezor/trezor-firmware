@@ -36,6 +36,7 @@
 #include "embed/rust/librust.h"
 #include "embed/trezorhal/usb.h"
 
+#include <stdio.h>
 #include <string.h>
 
 #define WORDS_PER_BLOCK ((MICROPY_BYTES_PER_GC_BLOCK) / MP_BYTES_PER_OBJ_WORD)
@@ -307,6 +308,12 @@ typedef struct _mp_obj_protomsg_t {
   mp_map_t map;
 } mp_obj_protomsg_t;
 
+typedef struct _mp_obj_uilayout_t {
+  mp_obj_base_t base;
+  ssize_t _refcell_borrow_flag;
+  void *inner;
+} mp_obj_uilayout_t;
+
 void dump_bound_method(FILE *out, const mp_obj_bound_meth_t *meth) {
   print_type(out, "method", NULL, meth, false);
 
@@ -516,6 +523,13 @@ void dump_protodef(FILE *out, const mp_obj_t *value) {
   fprintf(out, "},\n");
 }
 
+void dump_uilayout(FILE *out, const mp_obj_uilayout_t *value) {
+  print_type(out, "uilayout", NULL, value, false);
+  fprintf(out, ",\n\"inner\": \"%p\"},\n", value->inner);
+  print_type(out, "uilayoutinner", NULL, value->inner, true);
+  fprintf(out, ",\n");
+}
+
 void dump_value_opt(FILE *out, mp_const_obj_t value, bool eval_short) {
   if (!eval_short && is_short(value)) return;
 
@@ -638,6 +652,10 @@ void dump_value_opt(FILE *out, mp_const_obj_t value, bool eval_short) {
 
   else if (mp_obj_is_type(value, protobuf_debug_msg_def_type())) {
     dump_protodef(out, value);
+  }
+
+  else if (mp_obj_is_type(value, ui_debug_layout_type())) {
+    dump_uilayout(out, value);
   }
 
   else {

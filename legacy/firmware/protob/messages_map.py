@@ -58,26 +58,26 @@ def handle_message(fh, fl, skipped, message):
     no_fsm = options.Extensions[wire_no_fsm]
 
     if getattr(options, "deprecated", None):
-        fh.write("\t// Message %s is deprecated\n" % short_name)
+        fh.write(f"\t// Message {short_name} is deprecated\n")
         return
     if bootloader:
-        fh.write("\t// Message %s is used in bootloader mode only\n" % short_name)
+        fh.write(f"\t// Message {short_name} is used in bootloader mode only\n")
         return
     if no_fsm:
-        fh.write("\t// Message %s is not used in FSM\n" % short_name)
+        fh.write(f"\t// Message {short_name} is not used in FSM\n")
         return
 
     if direction == "i":
-        process_func = "(void (*)(const void *))fsm_msg%s" % short_name
+        process_func = f"(void (*)(const void *))fsm_msg{short_name}"
     else:
         process_func = "0"
 
     fh.write(
         TEMPLATE.format(
-            type="'%c'," % interface,
-            dir="'%c'," % direction,
-            msg_id="MessageType_%s," % name,
-            fields="%s_fields," % short_name,
+            type=f"'{interface}',",
+            dir=f"'{direction}',",
+            msg_id=f"MessageType_{name},",
+            fields=f"{short_name}_fields,",
             process_func=process_func,
         )
     )
@@ -97,14 +97,12 @@ def handle_message(fh, fl, skipped, message):
 
     if encoded_size:
         fl.write(
-            '_Static_assert(%s >= sizeof(%s_size), "msg buffer too small");\n'
-            % (encoded_size, short_name)
+            f'_Static_assert({encoded_size} >= {short_name}_size, "msg buffer too small");\n'
         )
 
     if decoded_size:
         fl.write(
-            '_Static_assert(%s >= sizeof(%s), "msg buffer too small");\n'
-            % (decoded_size, short_name)
+            f'_Static_assert({decoded_size} >= sizeof({short_name}), "msg buffer too small");\n'
         )
 
 
@@ -130,7 +128,7 @@ for extension in (wire_in, wire_out, wire_debug_in, wire_debug_out):
         fh.write("\n#if DEBUG_LINK\n")
         fl.write("\n#if DEBUG_LINK\n")
 
-    fh.write("\n\t// {label}\n\n".format(label=LABELS[extension]))
+    fh.write(f"\n\t// {LABELS[extension]}\n\n")
 
     for message in messages[extension]:
         if message.name in SPECIAL_DEBUG_MESSAGES:

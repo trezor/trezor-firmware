@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2019 SatoshiLabs and contributors
+# Copyright (C) 2012-2022 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -20,6 +20,21 @@ from collections import namedtuple
 from copy import deepcopy
 from enum import IntEnum
 from itertools import zip_longest
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Generator,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    Union,
+)
 
 from mnemonic import Mnemonic
 
@@ -29,6 +44,14 @@ from .exceptions import TrezorFailure
 from .log import DUMP_BYTES
 from .tools import expect
 
+if TYPE_CHECKING:
+    from .transport import Transport
+    from .messages import PinMatrixRequestType
+
+    ExpectedMessage = Union[
+        protobuf.MessageType, Type[protobuf.MessageType], "MessageFilter"
+    ]
+
 EXPECTED_RESPONSES_CONTEXT_LINES = 3
 
 LayoutLines = namedtuple("LayoutLines", "lines text")
@@ -36,32 +59,31 @@ LayoutLines = namedtuple("LayoutLines", "lines text")
 LOG = logging.getLogger(__name__)
 
 
-def layout_lines(lines):
+def layout_lines(lines: Sequence[str]) -> LayoutLines:
     return LayoutLines(lines, " ".join(lines))
 
 
 class DebugLink:
-    def __init__(self, transport, auto_interact=True):
+    def __init__(self, transport: "Transport", auto_interact: bool = True) -> None:
         self.transport = transport
         self.allow_interactions = auto_interact
+        self.mapping = mapping.DEFAULT_MAPPING
 
-    def open(self):
+    def open(self) -> None:
         self.transport.begin_session()
 
-    def close(self):
+    def close(self) -> None:
         self.transport.end_session()
 
-    def _call(self, msg, nowait=False):
+    def _call(self, msg: protobuf.MessageType, nowait: bool = False) -> Any:
         LOG.debug(
-            "sending message: {}".format(msg.__class__.__name__),
+            f"sending message: {msg.__class__.__name__}",
             extra={"protobuf": msg},
         )
-        msg_type, msg_bytes = mapping.encode(msg)
+        msg_type, msg_bytes = self.mapping.encode(msg)
         LOG.log(
             DUMP_BYTES,
-            "encoded as type {} ({} bytes): {}".format(
-                msg_type, len(msg_bytes), msg_bytes.hex()
-            ),
+            f"encoded as type {msg_type} ({len(msg_bytes)} bytes): {msg_bytes.hex()}",
         )
         self.transport.write(msg_type, msg_bytes)
         if nowait:
@@ -70,24 +92,22 @@ class DebugLink:
         ret_type, ret_bytes = self.transport.read()
         LOG.log(
             DUMP_BYTES,
-            "received type {} ({} bytes): {}".format(
-                msg_type, len(msg_bytes), msg_bytes.hex()
-            ),
+            f"received type {msg_type} ({len(msg_bytes)} bytes): {msg_bytes.hex()}",
         )
-        msg = mapping.decode(ret_type, ret_bytes)
+        msg = self.mapping.decode(ret_type, ret_bytes)
         LOG.debug(
-            "received message: {}".format(msg.__class__.__name__),
+            f"received message: {msg.__class__.__name__}",
             extra={"protobuf": msg},
         )
         return msg
 
-    def state(self):
+    def state(self) -> messages.DebugLinkState:
         return self._call(messages.DebugLinkGetState())
 
-    def read_layout(self):
+    def read_layout(self) -> LayoutLines:
         return layout_lines(self.state().layout_lines)
 
-    def wait_layout(self):
+    def wait_layout(self) -> LayoutLines:
         obj = self._call(messages.DebugLinkGetState(wait_layout=True))
         if isinstance(obj, messages.Failure):
             raise TrezorFailure(obj)
@@ -102,7 +122,7 @@ class DebugLink:
         """
         self._call(messages.DebugLinkWatchLayout(watch=watch))
 
-    def encode_pin(self, pin, matrix=None):
+    def encode_pin(self, pin: str, matrix: Optional[str] = None) -> str:
         """Transform correct PIN according to the displayed matrix."""
         if matrix is None:
             matrix = self.state().matrix
@@ -112,125 +132,139 @@ class DebugLink:
 
         return "".join([str(matrix.index(p) + 1) for p in pin])
 
-    def read_recovery_word(self):
+    def read_recovery_word(self) -> Tuple[Optional[str], Optional[int]]:
         state = self.state()
         return (state.recovery_fake_word, state.recovery_word_pos)
 
-    def read_reset_word(self):
+    def read_reset_word(self) -> str:
         state = self._call(messages.DebugLinkGetState(wait_word_list=True))
         return state.reset_word
 
-    def read_reset_word_pos(self):
+    def read_reset_word_pos(self) -> int:
         state = self._call(messages.DebugLinkGetState(wait_word_pos=True))
         return state.reset_word_pos
 
     def input(
         self,
-        word=None,
-        button=None,
-        swipe=None,
-        x=None,
-        y=None,
-        wait=False,
-        hold_ms=None,
-    ):
+        word: Optional[str] = None,
+        button: Optional[messages.DebugButton] = None,
+        swipe: Optional[messages.DebugSwipeDirection] = None,
+        x: Optional[int] = None,
+        y: Optional[int] = None,
+        wait: Optional[bool] = None,
+        hold_ms: Optional[int] = None,
+    ) -> Optional[LayoutLines]:
         if not self.allow_interactions:
-            return
+            return None
 
         args = sum(a is not None for a in (word, button, swipe, x))
         if args != 1:
             raise ValueError("Invalid input - must use one of word, button, swipe")
 
         decision = messages.DebugLinkDecision(
-            yes_no=button, swipe=swipe, input=word, x=x, y=y, wait=wait, hold_ms=hold_ms
+            button=button, swipe=swipe, input=word, x=x, y=y, wait=wait, hold_ms=hold_ms
         )
         ret = self._call(decision, nowait=not wait)
         if ret is not None:
             return layout_lines(ret.lines)
 
-    def click(self, click, wait=False):
+        return None
+
+    def click(
+        self, click: Tuple[int, int], wait: bool = False
+    ) -> Optional[LayoutLines]:
         x, y = click
         return self.input(x=x, y=y, wait=wait)
 
-    def press_yes(self):
-        self.input(button=True)
+    def press_yes(self) -> None:
+        self.input(button=messages.DebugButton.YES)
 
-    def press_no(self):
-        self.input(button=False)
+    def press_no(self) -> None:
+        self.input(button=messages.DebugButton.NO)
 
-    def swipe_up(self, wait=False):
+    def press_info(self) -> None:
+        self.input(button=messages.DebugButton.INFO)
+
+    def swipe_up(self, wait: bool = False) -> None:
         self.input(swipe=messages.DebugSwipeDirection.UP, wait=wait)
 
-    def swipe_down(self):
+    def swipe_down(self) -> None:
         self.input(swipe=messages.DebugSwipeDirection.DOWN)
 
-    def swipe_right(self):
+    def swipe_right(self) -> None:
         self.input(swipe=messages.DebugSwipeDirection.RIGHT)
 
-    def swipe_left(self):
+    def swipe_left(self) -> None:
         self.input(swipe=messages.DebugSwipeDirection.LEFT)
 
-    def stop(self):
+    def stop(self) -> None:
         self._call(messages.DebugLinkStop(), nowait=True)
 
-    def reseed(self, value):
+    def reseed(self, value: int) -> protobuf.MessageType:
         return self._call(messages.DebugLinkReseedRandom(value=value))
 
-    def start_recording(self, directory):
+    def start_recording(self, directory: str) -> None:
         self._call(messages.DebugLinkRecordScreen(target_directory=directory))
 
-    def stop_recording(self):
+    def stop_recording(self) -> None:
         self._call(messages.DebugLinkRecordScreen(target_directory=None))
 
-    @expect(messages.DebugLinkMemory, field="memory")
-    def memory_read(self, address, length):
+    @expect(messages.DebugLinkMemory, field="memory", ret_type=bytes)
+    def memory_read(self, address: int, length: int) -> protobuf.MessageType:
         return self._call(messages.DebugLinkMemoryRead(address=address, length=length))
 
-    def memory_write(self, address, memory, flash=False):
+    def memory_write(self, address: int, memory: bytes, flash: bool = False) -> None:
         self._call(
             messages.DebugLinkMemoryWrite(address=address, memory=memory, flash=flash),
             nowait=True,
         )
 
-    def flash_erase(self, sector):
+    def flash_erase(self, sector: int) -> None:
         self._call(messages.DebugLinkFlashErase(sector=sector), nowait=True)
 
     @expect(messages.Success)
-    def erase_sd_card(self, format=True):
+    def erase_sd_card(self, format: bool = True) -> messages.Success:
         return self._call(messages.DebugLinkEraseSdCard(format=format))
 
 
 class NullDebugLink(DebugLink):
-    def __init__(self):
-        super().__init__(None)
+    def __init__(self) -> None:
+        # Ignoring type error as self.transport will not be touched while using NullDebugLink
+        super().__init__(None)  # type: ignore ["None" cannot be assigned to parameter of type "Transport"]
 
-    def open(self):
+    def open(self) -> None:
         pass
 
-    def close(self):
+    def close(self) -> None:
         pass
 
-    def _call(self, msg, nowait=False):
+    def _call(
+        self, msg: protobuf.MessageType, nowait: bool = False
+    ) -> Optional[messages.DebugLinkState]:
         if not nowait:
             if isinstance(msg, messages.DebugLinkGetState):
                 return messages.DebugLinkState()
             else:
                 raise RuntimeError("unexpected call to a fake debuglink")
 
+        return None
+
 
 class DebugUI:
     INPUT_FLOW_DONE = object()
 
-    def __init__(self, debuglink: DebugLink):
+    def __init__(self, debuglink: DebugLink) -> None:
         self.debuglink = debuglink
         self.clear()
 
-    def clear(self):
-        self.pins = None
+    def clear(self) -> None:
+        self.pins: Optional[Iterator[str]] = None
         self.passphrase = ""
-        self.input_flow = None
+        self.input_flow: Union[
+            Generator[None, messages.ButtonRequest, None], object, None
+        ] = None
 
-    def button_request(self, br):
+    def button_request(self, br: messages.ButtonRequest) -> None:
         if self.input_flow is None:
             if br.code == messages.ButtonRequestType.PinEntry:
                 self.debuglink.input(self.get_pin())
@@ -243,11 +277,12 @@ class DebugUI:
             raise AssertionError("input flow ended prematurely")
         else:
             try:
+                assert isinstance(self.input_flow, Generator)
                 self.input_flow.send(br)
             except StopIteration:
                 self.input_flow = self.INPUT_FLOW_DONE
 
-    def get_pin(self, code=None):
+    def get_pin(self, code: Optional["PinMatrixRequestType"] = None) -> str:
         if self.pins is None:
             raise RuntimeError("PIN requested but no sequence was configured")
 
@@ -256,17 +291,17 @@ class DebugUI:
         except StopIteration:
             raise AssertionError("PIN sequence ended prematurely")
 
-    def get_passphrase(self, available_on_device):
+    def get_passphrase(self, available_on_device: bool) -> str:
         return self.passphrase
 
 
 class MessageFilter:
-    def __init__(self, message_type, **fields):
+    def __init__(self, message_type: Type[protobuf.MessageType], **fields: Any) -> None:
         self.message_type = message_type
-        self.fields = {}
+        self.fields: Dict[str, Any] = {}
         self.update_fields(**fields)
 
-    def update_fields(self, **fields):
+    def update_fields(self, **fields: Any) -> "MessageFilter":
         for name, value in fields.items():
             try:
                 self.fields[name] = self.from_message_or_type(value)
@@ -276,7 +311,9 @@ class MessageFilter:
         return self
 
     @classmethod
-    def from_message_or_type(cls, message_or_type):
+    def from_message_or_type(
+        cls, message_or_type: "ExpectedMessage"
+    ) -> "MessageFilter":
         if isinstance(message_or_type, cls):
             return message_or_type
         if isinstance(message_or_type, protobuf.MessageType):
@@ -288,7 +325,7 @@ class MessageFilter:
         raise TypeError("Invalid kind of expected response")
 
     @classmethod
-    def from_message(cls, message):
+    def from_message(cls, message: protobuf.MessageType) -> "MessageFilter":
         fields = {}
         for field in message.FIELDS.values():
             value = getattr(message, field.name)
@@ -297,22 +334,22 @@ class MessageFilter:
             fields[field.name] = value
         return cls(type(message), **fields)
 
-    def match(self, message):
+    def match(self, message: protobuf.MessageType) -> bool:
         if type(message) != self.message_type:
             return False
 
         for field, expected_value in self.fields.items():
             actual_value = getattr(message, field, None)
             if isinstance(expected_value, MessageFilter):
-                if not expected_value.match(actual_value):
+                if actual_value is None or not expected_value.match(actual_value):
                     return False
             elif expected_value != actual_value:
                 return False
 
         return True
 
-    def format(self, maxwidth=80):
-        fields = []
+    def to_string(self, maxwidth: int = 80) -> str:
+        fields: List[Tuple[str, str]] = []
         for field in self.message_type.FIELDS.values():
             if field.name not in self.fields:
                 continue
@@ -320,7 +357,7 @@ class MessageFilter:
             if isinstance(value, IntEnum):
                 field_str = value.name
             elif isinstance(value, MessageFilter):
-                field_str = value.format(maxwidth - 4)
+                field_str = value.to_string(maxwidth - 4)
             elif isinstance(value, protobuf.MessageType):
                 field_str = protobuf.format_message(value)
             else:
@@ -328,21 +365,21 @@ class MessageFilter:
             field_str = textwrap.indent(field_str, "    ").lstrip()
             fields.append((field.name, field_str))
 
-        pairs = ["{}={}".format(k, v) for k, v in fields]
+        pairs = [f"{k}={v}" for k, v in fields]
         oneline_str = ", ".join(pairs)
         if len(oneline_str) < maxwidth:
-            return "{}({})".format(self.message_type.__name__, oneline_str)
+            return f"{self.message_type.__name__}({oneline_str})"
         else:
-            item = []
-            item.append("{}(".format(self.message_type.__name__))
+            item: List[str] = []
+            item.append(f"{self.message_type.__name__}(")
             for pair in pairs:
-                item.append("    {}".format(pair))
+                item.append(f"    {pair}")
             item.append(")")
             return "\n".join(item)
 
 
 class MessageFilterGenerator:
-    def __getattr__(self, key):
+    def __getattr__(self, key: str) -> Callable[..., "MessageFilter"]:
         message_type = getattr(messages, key)
         return MessageFilter(message_type).update_fields
 
@@ -361,7 +398,7 @@ class TrezorClientDebugLink(TrezorClient):
     # without special DebugLink interface provided
     # by the device.
 
-    def __init__(self, transport, auto_interact=True):
+    def __init__(self, transport: "Transport", auto_interact: bool = True) -> None:
         try:
             debug_transport = transport.find_debug()
             self.debug = DebugLink(debug_transport, auto_interact)
@@ -378,28 +415,35 @@ class TrezorClientDebugLink(TrezorClient):
 
         super().__init__(transport, ui=self.ui)
 
-    def reset_debug_features(self):
+    def reset_debug_features(self) -> None:
         """Prepare the debugging client for a new testcase.
 
         Clears all debugging state that might have been modified by a testcase.
         """
-        self.ui = DebugUI(self.debug)
+        self.ui: DebugUI = DebugUI(self.debug)
         self.in_with_statement = False
-        self.expected_responses = None
-        self.actual_responses = None
-        self.filters = {}
+        self.expected_responses: Optional[List[MessageFilter]] = None
+        self.actual_responses: Optional[List[protobuf.MessageType]] = None
+        self.filters: Dict[
+            Type[protobuf.MessageType],
+            Callable[[protobuf.MessageType], protobuf.MessageType],
+        ] = {}
 
-    def open(self):
+    def open(self) -> None:
         super().open()
         if self.session_counter == 1:
             self.debug.open()
 
-    def close(self):
+    def close(self) -> None:
         if self.session_counter == 1:
             self.debug.close()
         super().close()
 
-    def set_filter(self, message_type, callback):
+    def set_filter(
+        self,
+        message_type: Type[protobuf.MessageType],
+        callback: Callable[[protobuf.MessageType], protobuf.MessageType],
+    ) -> None:
         """Configure a filter function for a specified message type.
 
         The `callback` must be a function that accepts a protobuf message, and returns
@@ -414,7 +458,7 @@ class TrezorClientDebugLink(TrezorClient):
 
         self.filters[message_type] = callback
 
-    def _filter_message(self, msg):
+    def _filter_message(self, msg: protobuf.MessageType) -> protobuf.MessageType:
         message_type = msg.__class__
         callback = self.filters.get(message_type)
         if callable(callback):
@@ -422,7 +466,9 @@ class TrezorClientDebugLink(TrezorClient):
         else:
             return msg
 
-    def set_input_flow(self, input_flow):
+    def set_input_flow(
+        self, input_flow: Generator[None, Optional[messages.ButtonRequest], None]
+    ) -> None:
         """Configure a sequence of input events for the current with-block.
 
         The `input_flow` must be a generator function. A `yield` statement in the
@@ -470,14 +516,14 @@ class TrezorClientDebugLink(TrezorClient):
             # - TT < 2.3.0 does not reply to unknown debuglink messages due to a bug
             self.debug.watch_layout(watch)
 
-    def __enter__(self):
+    def __enter__(self) -> "TrezorClientDebugLink":
         # For usage in with/expected_responses
         if self.in_with_statement:
             raise RuntimeError("Do not nest!")
         self.in_with_statement = True
         return self
 
-    def __exit__(self, exc_type, value, traceback):
+    def __exit__(self, exc_type: Any, value: Any, traceback: Any) -> None:
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
 
         self.watch_layout(False)
@@ -491,7 +537,9 @@ class TrezorClientDebugLink(TrezorClient):
             # (raises AssertionError on mismatch)
             self._verify_responses(expected_responses, actual_responses)
 
-    def set_expected_responses(self, expected):
+    def set_expected_responses(
+        self, expected: List[Union["ExpectedMessage", Tuple[bool, "ExpectedMessage"]]]
+    ) -> None:
         """Set a sequence of expected responses to client calls.
 
         Within a given with-block, the list of received responses from device must
@@ -529,22 +577,22 @@ class TrezorClientDebugLink(TrezorClient):
         ]
         self.actual_responses = []
 
-    def use_pin_sequence(self, pins):
+    def use_pin_sequence(self, pins: Iterable[str]) -> None:
         """Respond to PIN prompts from device with the provided PINs.
         The sequence must be at least as long as the expected number of PIN prompts.
         """
         self.ui.pins = iter(pins)
 
-    def use_passphrase(self, passphrase):
+    def use_passphrase(self, passphrase: str) -> None:
         """Respond to passphrase prompts from device with the provided passphrase."""
         self.ui.passphrase = Mnemonic.normalize_string(passphrase)
 
-    def use_mnemonic(self, mnemonic):
+    def use_mnemonic(self, mnemonic: str) -> None:
         """Use the provided mnemonic to respond to device.
         Only applies to T1, where device prompts the host for mnemonic words."""
         self.mnemonic = Mnemonic.normalize_string(mnemonic).split(" ")
 
-    def _raw_read(self):
+    def _raw_read(self) -> protobuf.MessageType:
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
 
         resp = super()._raw_read()
@@ -553,21 +601,21 @@ class TrezorClientDebugLink(TrezorClient):
             self.actual_responses.append(resp)
         return resp
 
-    def _raw_write(self, msg):
+    def _raw_write(self, msg: protobuf.MessageType) -> None:
         return super()._raw_write(self._filter_message(msg))
 
     @staticmethod
-    def _expectation_lines(expected, current):
+    def _expectation_lines(expected: List[MessageFilter], current: int) -> List[str]:
         start_at = max(current - EXPECTED_RESPONSES_CONTEXT_LINES, 0)
         stop_at = min(current + EXPECTED_RESPONSES_CONTEXT_LINES + 1, len(expected))
-        output = []
+        output: List[str] = []
         output.append("Expected responses:")
         if start_at > 0:
             output.append(f"    (...{start_at} previous responses omitted)")
         for i in range(start_at, stop_at):
             exp = expected[i]
             prefix = "    " if i != current else ">>> "
-            output.append(textwrap.indent(exp.format(), prefix))
+            output.append(textwrap.indent(exp.to_string(), prefix))
         if stop_at < len(expected):
             omitted = len(expected) - stop_at
             output.append(f"    (...{omitted} following responses omitted)")
@@ -576,11 +624,18 @@ class TrezorClientDebugLink(TrezorClient):
         return output
 
     @classmethod
-    def _verify_responses(cls, expected, actual):
+    def _verify_responses(
+        cls,
+        expected: Optional[List[MessageFilter]],
+        actual: Optional[List[protobuf.MessageType]],
+    ) -> None:
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
 
         if expected is None and actual is None:
             return
+
+        assert expected is not None
+        assert actual is not None
 
         for i, (exp, act) in enumerate(zip_longest(expected, actual)):
             if exp is None:
@@ -603,29 +658,29 @@ class TrezorClientDebugLink(TrezorClient):
                 output.append(textwrap.indent(protobuf.format_message(act), "    "))
                 raise AssertionError("\n".join(output))
 
-    def mnemonic_callback(self, _):
+    def mnemonic_callback(self, _) -> str:
         word, pos = self.debug.read_recovery_word()
-        if word != "":
+        if word:
             return word
-        if pos != 0:
+        if pos:
             return self.mnemonic[pos - 1]
 
         raise RuntimeError("Unexpected call")
 
 
-@expect(messages.Success, field="message")
+@expect(messages.Success, field="message", ret_type=str)
 def load_device(
-    client,
-    mnemonic,
-    pin,
-    passphrase_protection,
-    label,
-    language="en-US",
-    skip_checksum=False,
-    needs_backup=False,
-    no_backup=False,
-):
-    if not isinstance(mnemonic, (list, tuple)):
+    client: "TrezorClient",
+    mnemonic: Union[str, Iterable[str]],
+    pin: Optional[str],
+    passphrase_protection: bool,
+    label: Optional[str],
+    language: str = "en-US",
+    skip_checksum: bool = False,
+    needs_backup: bool = False,
+    no_backup: bool = False,
+) -> protobuf.MessageType:
+    if isinstance(mnemonic, str):
         mnemonic = [mnemonic]
 
     mnemonics = [Mnemonic.normalize_string(m) for m in mnemonic]
@@ -655,8 +710,8 @@ def load_device(
 load_device_by_mnemonic = load_device
 
 
-@expect(messages.Success, field="message")
-def self_test(client):
+@expect(messages.Success, field="message", ret_type=str)
+def self_test(client: "TrezorClient") -> protobuf.MessageType:
     if client.features.bootloader_mode is not True:
         raise RuntimeError("Device must be in bootloader mode")
 

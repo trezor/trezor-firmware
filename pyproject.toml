@@ -32,8 +32,8 @@ shamir-mnemonic = "^0.2.1"
 fido2 = "^0.8.0"
 
 ## typing
-mypy = "^0.910"
 typing-extensions = ">=3.7.4"
+types-click = "*"
 
 ## style
 isort = "<5"  # 5 changes lots of stuff that need to be addressed first: https://timothycrosley.github.io/isort/docs/upgrade_guides/5.0.0/
@@ -43,6 +43,7 @@ mako = "^1.0.7"
 munch = "^2.3.2"
 autoflake = "*"
 flake8-requirements = ">=1.3.2"
+pylint = "^2.11"
 
 # common
 demjson3 = "*"
@@ -66,7 +67,6 @@ setuptools = ">=24.2.0"
 # storage
 cryptography = "*"
 hypothesis = "*"
-attrs = "*"
 inotify = "*"
 yamllint = "^1.25.0"
 

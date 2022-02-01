@@ -7,7 +7,7 @@ def process(source, target):
     for line in source:
         for match in re_qstr.findall(line):
             name = match.replace("MP_QSTR_", "")
-            target.write("Q(%s)\n" % name)
+            target.write(f"Q({name})\n")
 
 
 if __name__ == "__main__":

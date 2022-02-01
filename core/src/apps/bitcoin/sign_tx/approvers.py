@@ -1,21 +1,26 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor import wire
 from trezor.enums import OutputScriptType
+from trezor.ui.components.common.confirm import INFO
 
 from apps.common import safety_checks
 
-from .. import keychain
 from ..authorization import FEE_PER_ANONYMITY_DECIMALS
+from ..keychain import validate_path_against_script_type
 from . import helpers, tx_weight
+from .payment_request import PaymentRequestVerifier
 from .tx_info import OriginalTxInfo, TxInfo
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import SignTx
     from trezor.messages import TxInput
     from trezor.messages import TxOutput
+    from trezor.messages import TxAckPaymentRequest
 
     from apps.common.coininfo import CoinInfo
+    from apps.common.keychain import Keychain
 
     from ..authorization import CoinJoinAuthorization
 
@@ -27,7 +32,9 @@ if False:
 class Approver:
     def __init__(self, tx: SignTx, coin: CoinInfo) -> None:
         self.coin = coin
-        self.weight = tx_weight.TxWeightCalculator(tx.inputs_count, tx.outputs_count)
+        self.weight = tx_weight.TxWeightCalculator()
+        self.payment_req_verifier: PaymentRequestVerifier | None = None
+        self.show_payment_req_details = False
 
         # amounts in the current transaction
         self.total_in = 0  # sum of input amounts
@@ -55,6 +62,9 @@ class Approver:
         if txi.orig_hash:
             self.orig_total_in += txi.amount
 
+    async def check_internal_input(self, txi: TxInput) -> None:
+        pass
+
     def add_external_input(self, txi: TxInput) -> None:
         self.weight.add_input(txi)
         self.total_in += txi.amount
@@ -63,10 +73,27 @@ class Approver:
             self.orig_total_in += txi.amount
             self.orig_external_in += txi.amount
 
-    def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
+    def _add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         self.weight.add_output(script_pubkey)
         self.total_out += txo.amount
+
+    async def add_payment_request(
+        self, msg: TxAckPaymentRequest, keychain: Keychain
+    ) -> None:
+        self.finish_payment_request()
+        self.payment_req_verifier = PaymentRequestVerifier(msg, self.coin, keychain)
+
+    def finish_payment_request(self) -> None:
+        if self.payment_req_verifier:
+            self.payment_req_verifier.verify()
+        self.payment_req_verifier = None
+        self.show_payment_req_details = False
+
+    def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
+        self._add_output(txo, script_pubkey)
         self.change_out += txo.amount
+        if self.payment_req_verifier:
+            self.payment_req_verifier.add_change_output(txo)
 
     def add_orig_change_output(self, txo: TxOutput) -> None:
         self.orig_total_out += txo.amount
@@ -78,8 +105,9 @@ class Approver:
         script_pubkey: bytes,
         orig_txo: TxOutput | None = None,
     ) -> None:
-        self.weight.add_output(script_pubkey)
-        self.total_out += txo.amount
+        self._add_output(txo, script_pubkey)
+        if self.payment_req_verifier:
+            self.payment_req_verifier.add_external_output(txo)
 
     def add_orig_external_output(self, txo: TxOutput) -> None:
         self.orig_total_out += txo.amount
@@ -90,7 +118,7 @@ class Approver:
         raise NotImplementedError
 
     async def approve_tx(self, tx_info: TxInfo, orig_txs: list[OriginalTxInfo]) -> None:
-        raise NotImplementedError
+        self.finish_payment_request()
 
 
 class BasicApprover(Approver):
@@ -102,10 +130,21 @@ class BasicApprover(Approver):
         self.change_count = 0  # the number of change-outputs
 
     async def add_internal_input(self, txi: TxInput) -> None:
-        if not keychain.validate_path_against_script_type(self.coin, txi):
+        if not validate_path_against_script_type(self.coin, txi):
             await helpers.confirm_foreign_address(txi.address_n)
 
         await super().add_internal_input(txi)
+
+    async def check_internal_input(self, txi: TxInput) -> None:
+        if not validate_path_against_script_type(self.coin, txi):
+            # The following can be removed once we start validating script_pubkey in step3_verify_inputs().
+            if self.orig_total_in:
+                # Replacement transaction.
+                # This mitigates a cross-coin spending attack when safety checks are disabled.
+                raise wire.ProcessError(
+                    "Non-standard paths not allowed in replacement transactions."
+                )
+            await helpers.confirm_foreign_address(txi.address_n)
 
     def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         super().add_change_output(txo, script_pubkey)
@@ -149,8 +188,20 @@ class BasicApprover(Approver):
                 raise wire.ProcessError(
                     "Adding new OP_RETURN outputs in replacement transactions is not supported."
                 )
-        else:
+        elif txo.payment_req_index is None or self.show_payment_req_details:
+            # Ask user to confirm output, unless it is part of a payment
+            # request, which gets confirmed separately.
             await helpers.confirm_output(txo, self.coin, self.amount_unit)
+
+    async def add_payment_request(
+        self, msg: TxAckPaymentRequest, keychain: Keychain
+    ) -> None:
+        await super().add_payment_request(msg, keychain)
+        if msg.amount is None:
+            raise wire.DataError("Missing payment request amount.")
+
+        result = await helpers.confirm_payment_request(msg, self.coin, self.amount_unit)
+        self.show_payment_req_details = result is INFO
 
     async def approve_orig_txids(
         self, tx_info: TxInfo, orig_txs: list[OriginalTxInfo]
@@ -173,6 +224,8 @@ class BasicApprover(Approver):
             await helpers.confirm_replacement(description, orig.orig_hash)
 
     async def approve_tx(self, tx_info: TxInfo, orig_txs: list[OriginalTxInfo]) -> None:
+        await super().approve_tx(tx_info, orig_txs)
+
         fee = self.total_in - self.total_out
 
         # some coins require negative fees for reward TX
@@ -257,6 +310,8 @@ class BasicApprover(Approver):
 
 
 class CoinJoinApprover(Approver):
+    MAX_OUTPUT_WEIGHT = const(4 * 43)
+
     def __init__(
         self, tx: SignTx, coin: CoinInfo, authorization: CoinJoinAuthorization
     ) -> None:
@@ -267,9 +322,7 @@ class CoinJoinApprover(Approver):
             raise wire.DataError("Coin name does not match authorization.")
 
         # Upper bound on the user's contribution to the weight of the transaction.
-        self.our_weight = tx_weight.TxWeightCalculator(
-            tx.inputs_count, tx.outputs_count
-        )
+        self.our_weight = tx_weight.TxWeightCalculator()
 
         # base for coordinator fee to be multiplied by fee_per_anonymity
         self.coordinator_fee_base = 0
@@ -293,20 +346,26 @@ class CoinJoinApprover(Approver):
 
         await super().add_internal_input(txi)
 
+    async def check_internal_input(self, txi: TxInput) -> None:
+        # The following can be removed once we start validating script_pubkey in step3_verify_inputs().
+        if not self.authorization.check_sign_tx_input(txi, self.coin):
+            raise wire.ProcessError("Unauthorized path")
+
     def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         super().add_change_output(txo, script_pubkey)
-        self._add_output(txo, script_pubkey)
         self.our_weight.add_output(script_pubkey)
         self.group_our_count += 1
 
-    async def add_external_output(
-        self,
-        txo: TxOutput,
-        script_pubkey: bytes,
-        orig_txo: TxOutput | None = None,
+    async def add_payment_request(
+        self, msg: TxAckPaymentRequest, keychain: Keychain
     ) -> None:
-        await super().add_external_output(txo, script_pubkey, orig_txo)
-        self._add_output(txo, script_pubkey)
+        await super().add_payment_request(msg, keychain)
+
+        if msg.recipient_name != self.authorization.params.coordinator:
+            raise wire.DataError("CoinJoin coordinator mismatch in payment request.")
+
+        if msg.memos:
+            raise wire.DataError("Memos not allowed in CoinJoin payment request.")
 
     async def approve_orig_txids(
         self, tx_info: TxInfo, orig_txs: list[OriginalTxInfo]
@@ -314,6 +373,8 @@ class CoinJoinApprover(Approver):
         pass
 
     async def approve_tx(self, tx_info: TxInfo, orig_txs: list[OriginalTxInfo]) -> None:
+        await super().approve_tx(tx_info, orig_txs)
+
         # The mining fee of the transaction as a whole.
         mining_fee = self.total_in - self.total_out
 
@@ -321,9 +382,12 @@ class CoinJoinApprover(Approver):
         if mining_fee > (self.coin.maxfee_kb / 1000) * (self.weight.get_total() / 4):
             raise wire.ProcessError("Mining fee over threshold")
 
-        # The maximum mining fee that the user should be paying.
+        # The maximum mining fee that the user should be paying assuming that participants share
+        # the fees for the coordinator's output.
         our_max_mining_fee = (
-            mining_fee * self.our_weight.get_total() / self.weight.get_total()
+            mining_fee
+            * self.our_weight.get_total()
+            / (self.weight.get_total() - self.MAX_OUTPUT_WEIGHT)
         )
 
         # The coordinator fee for the user's outputs.
@@ -360,6 +424,12 @@ class CoinJoinApprover(Approver):
         )
 
     def _add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
+        super()._add_output(txo, script_pubkey)
+
+        # All CoinJoin outputs must be accompanied by a signed payment request.
+        if txo.payment_req_index is None:
+            raise wire.DataError("Missing payment request.")
+
         # Assumption: CoinJoin outputs are grouped by amount. (If this assumption is
         # not satisfied, then we will compute a lower coordinator fee, which may lead
         # us to wrongfully decline the transaction.)

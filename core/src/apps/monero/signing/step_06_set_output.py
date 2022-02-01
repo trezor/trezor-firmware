@@ -3,6 +3,7 @@ Output destinations are streamed one by one.
 Computes destination one-time address, amount key, range proof + HMAC, out_pk, ecdh_info.
 """
 import gc
+from typing import TYPE_CHECKING
 
 from trezor import utils
 
@@ -12,7 +13,7 @@ from apps.monero.xmr import crypto, serialize
 
 from .state import State
 
-if False:
+if TYPE_CHECKING:
     from apps.monero.xmr.types import Sc25519, Ge25519
     from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhTuple
     from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import Bulletproof
@@ -266,15 +267,15 @@ def _range_proof(
 
     state.mem_trace("pre-rproof" if __debug__ else None, collect=True)
     if not state.rsig_offload:
-        """Bulletproof calculation in Trezor"""
+        # Bulletproof calculation in Trezor
         rsig = _rsig_bp(state)
 
     elif not state.is_processing_offloaded:
-        """Bulletproof offloaded to the host, deterministic masks. Nothing here, waiting for offloaded BP."""
+        # Bulletproof offloaded to the host, deterministic masks. Nothing here, waiting for offloaded BP.
         pass
 
     else:
-        """Bulletproof offloaded to the host, check BP, hash it."""
+        # Bulletproof offloaded to the host, check BP, hash it.
         _rsig_process_bp(state, rsig_data)
 
     state.mem_trace("rproof" if __debug__ else None, collect=True)
@@ -312,7 +313,7 @@ def _rsig_bp(state: State) -> bytes:
 
     rsig = _dump_rsig_bp(rsig)
     state.mem_trace(
-        "post-bp-ser, size: %s" % len(rsig) if __debug__ else None, collect=True
+        f"post-bp-ser, size: {len(rsig)}" if __debug__ else None, collect=True
     )
 
     # state cleanup

@@ -71,5 +71,5 @@ if __name__ == "__main__":
         device.apply_settings(client, label=label)
         assert client.features.label == label
 
-        print("iteration %d" % i)
+        print(f"iteration {i}")
         i = i + 1

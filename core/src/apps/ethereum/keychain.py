@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import wire
 
 from apps.common import paths
@@ -5,8 +7,8 @@ from apps.common.keychain import get_keychain
 
 from . import CURVE, networks
 
-if False:
-    from typing import Callable, Iterable, TypeVar, Union
+if TYPE_CHECKING:
+    from typing import Callable, Iterable, TypeVar
 
     from trezor.messages import (
         EthereumGetAddress,
@@ -14,22 +16,21 @@ if False:
         EthereumSignMessage,
         EthereumSignTx,
         EthereumSignTxEIP1559,
+        EthereumSignTypedData,
     )
 
     from apps.common.keychain import MsgOut, Handler, HandlerWithKeychain
 
-    EthereumMessages = Union[
-        EthereumGetAddress,
-        EthereumGetPublicKey,
-        EthereumSignTx,
-        EthereumSignMessage,
-    ]
+    EthereumMessages = (
+        EthereumGetAddress
+        | EthereumGetPublicKey
+        | EthereumSignTx
+        | EthereumSignMessage
+        | EthereumSignTypedData
+    )
     MsgIn = TypeVar("MsgIn", bound=EthereumMessages)
 
-    EthereumSignTxAny = Union[
-        EthereumSignTx,
-        EthereumSignTxEIP1559,
-    ]
+    EthereumSignTxAny = EthereumSignTx | EthereumSignTxEIP1559
     MsgInChainId = TypeVar("MsgInChainId", bound=EthereumSignTxAny)
 
 
@@ -80,7 +81,7 @@ def _schemas_from_chain_id(msg: EthereumSignTxAny) -> Iterable[paths.PathSchema]
     if info is None:
         # allow Ethereum or testnet paths for unknown networks
         slip44_id = (60, 1)
-    elif info.slip44 != 60 and info.slip44 != 1:
+    elif info.slip44 not in (60, 1):
         # allow cross-signing with Ethereum unless it's testnet
         slip44_id = (info.slip44, 60)
     else:

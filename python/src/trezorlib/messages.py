@@ -3,7 +3,7 @@
 # isort:skip_file
 
 from enum import IntEnum
-from typing import List, Optional
+from typing import Sequence, Optional
 
 from . import protobuf
 
@@ -48,6 +48,8 @@ class MessageType(IntEnum):
     ButtonRequest = 26
     ButtonAck = 27
     ApplyFlags = 28
+    GetNonce = 31
+    Nonce = 33
     BackupDevice = 34
     EntropyRequest = 35
     EntropyAck = 36
@@ -80,6 +82,7 @@ class MessageType(IntEnum):
     TxAck = 22
     GetAddress = 29
     Address = 30
+    TxAckPaymentRequest = 37
     SignMessage = 38
     VerifyMessage = 39
     MessageSignature = 40
@@ -123,6 +126,13 @@ class MessageType(IntEnum):
     EthereumSignMessage = 64
     EthereumVerifyMessage = 65
     EthereumMessageSignature = 66
+    EthereumSignTypedData = 464
+    EthereumTypedDataStructRequest = 465
+    EthereumTypedDataStructAck = 466
+    EthereumTypedDataValueRequest = 467
+    EthereumTypedDataValueAck = 468
+    EthereumTypedDataSignature = 469
+    EthereumSignTypedHash = 470
     NEMGetAddress = 67
     NEMAddress = 68
     NEMSignTx = 69
@@ -141,15 +151,17 @@ class MessageType(IntEnum):
     StellarAddress = 208
     StellarCreateAccountOp = 210
     StellarPaymentOp = 211
-    StellarPathPaymentOp = 212
-    StellarManageOfferOp = 213
-    StellarCreatePassiveOfferOp = 214
+    StellarPathPaymentStrictReceiveOp = 212
+    StellarManageSellOfferOp = 213
+    StellarCreatePassiveSellOfferOp = 214
     StellarSetOptionsOp = 215
     StellarChangeTrustOp = 216
     StellarAllowTrustOp = 217
     StellarAccountMergeOp = 218
     StellarManageDataOp = 220
     StellarBumpSequenceOp = 221
+    StellarManageBuyOfferOp = 222
+    StellarPathPaymentStrictSendOp = 223
     StellarSignedTx = 230
     CardanoSignTx = 303
     CardanoGetPublicKey = 305
@@ -176,6 +188,9 @@ class MessageType(IntEnum):
     CardanoTxAuxiliaryData = 327
     CardanoPoolOwner = 328
     CardanoPoolRelayParameters = 329
+    CardanoGetNativeScriptHash = 330
+    CardanoNativeScriptHash = 331
+    CardanoTxMint = 332
     RippleGetAddress = 400
     RippleAddress = 401
     RippleSignTx = 402
@@ -303,6 +318,7 @@ class InputScriptType(IntEnum):
     EXTERNAL = 2
     SPENDWITNESS = 3
     SPENDP2SHWITNESS = 4
+    SPENDTAPROOT = 5
 
 
 class OutputScriptType(IntEnum):
@@ -312,6 +328,7 @@ class OutputScriptType(IntEnum):
     PAYTOOPRETURN = 3
     PAYTOWITNESS = 4
     PAYTOP2SHWITNESS = 5
+    PAYTOTAPROOT = 6
 
 
 class DecredStakingSpendType(IntEnum):
@@ -334,8 +351,15 @@ class RequestType(IntEnum):
     TXEXTRADATA = 4
     TXORIGINPUT = 5
     TXORIGOUTPUT = 6
-    TXORCHARDINPUT = 7
-    TXORCHARDOUTPUT = 8
+    TXPAYMENTREQ = 7
+    TXORCHARDINPUT = 8
+    TXORCHARDOUTPUT = 9
+
+
+class CardanoDerivationType(IntEnum):
+    LEDGER = 0
+    ICARUS = 1
+    ICARUS_TREZOR = 2
 
 
 class CardanoAddressType(IntEnum):
@@ -350,6 +374,21 @@ class CardanoAddressType(IntEnum):
     BYRON = 8
     REWARD = 14
     REWARD_SCRIPT = 15
+
+
+class CardanoNativeScriptType(IntEnum):
+    PUB_KEY = 0
+    ALL = 1
+    ANY = 2
+    N_OF_K = 3
+    INVALID_BEFORE = 4
+    INVALID_HEREAFTER = 5
+
+
+class CardanoNativeScriptHashDisplayFormat(IntEnum):
+    HIDE = 0
+    BECH32 = 1
+    POLICY_ID = 2
 
 
 class CardanoCertificateType(IntEnum):
@@ -373,6 +412,7 @@ class CardanoTxAuxiliaryDataSupplementType(IntEnum):
 class CardanoTxSigningMode(IntEnum):
     ORDINARY_TRANSACTION = 0
     POOL_REGISTRATION_AS_OWNER = 1
+    MULTISIG_TRANSACTION = 2
 
 
 class CardanoTxWitnessType(IntEnum):
@@ -436,6 +476,23 @@ class DebugSwipeDirection(IntEnum):
     RIGHT = 3
 
 
+class DebugButton(IntEnum):
+    NO = 0
+    YES = 1
+    INFO = 2
+
+
+class EthereumDataType(IntEnum):
+    UINT = 1
+    INT = 2
+    BYTES = 3
+    STRING = 4
+    BOOL = 5
+    ADDRESS = 6
+    ARRAY = 7
+    STRUCT = 8
+
+
 class NEMMosaicLevy(IntEnum):
     MosaicLevy_Absolute = 1
     MosaicLevy_Percentile = 2
@@ -497,10 +554,10 @@ class BinanceGetAddress(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
         show_display: Optional["bool"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.show_display = show_display
 
 
@@ -528,10 +585,10 @@ class BinanceGetPublicKey(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
         show_display: Optional["bool"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.show_display = show_display
 
 
@@ -553,32 +610,32 @@ class BinanceSignTx(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 704
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
-        2: protobuf.Field("msg_count", "uint32", repeated=False, required=False),
-        3: protobuf.Field("account_number", "sint64", repeated=False, required=False),
+        2: protobuf.Field("msg_count", "uint32", repeated=False, required=True),
+        3: protobuf.Field("account_number", "sint64", repeated=False, required=True),
         4: protobuf.Field("chain_id", "string", repeated=False, required=False),
         5: protobuf.Field("memo", "string", repeated=False, required=False),
-        6: protobuf.Field("sequence", "sint64", repeated=False, required=False),
-        7: protobuf.Field("source", "sint64", repeated=False, required=False),
+        6: protobuf.Field("sequence", "sint64", repeated=False, required=True),
+        7: protobuf.Field("source", "sint64", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        address_n: Optional[List["int"]] = None,
-        msg_count: Optional["int"] = None,
-        account_number: Optional["int"] = None,
+        msg_count: "int",
+        account_number: "int",
+        sequence: "int",
+        source: "int",
+        address_n: Optional[Sequence["int"]] = None,
         chain_id: Optional["str"] = None,
         memo: Optional["str"] = None,
-        sequence: Optional["int"] = None,
-        source: Optional["int"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.msg_count = msg_count
         self.account_number = account_number
-        self.chain_id = chain_id
-        self.memo = memo
         self.sequence = sequence
         self.source = source
+        self.chain_id = chain_id
+        self.memo = memo
 
 
 class BinanceTxRequest(protobuf.MessageType):
@@ -595,46 +652,46 @@ class BinanceTransferMsg(protobuf.MessageType):
     def __init__(
         self,
         *,
-        inputs: Optional[List["BinanceInputOutput"]] = None,
-        outputs: Optional[List["BinanceInputOutput"]] = None,
+        inputs: Optional[Sequence["BinanceInputOutput"]] = None,
+        outputs: Optional[Sequence["BinanceInputOutput"]] = None,
     ) -> None:
-        self.inputs = inputs if inputs is not None else []
-        self.outputs = outputs if outputs is not None else []
+        self.inputs: Sequence["BinanceInputOutput"] = inputs if inputs is not None else []
+        self.outputs: Sequence["BinanceInputOutput"] = outputs if outputs is not None else []
 
 
 class BinanceOrderMsg(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 707
     FIELDS = {
         1: protobuf.Field("id", "string", repeated=False, required=False),
-        2: protobuf.Field("ordertype", "BinanceOrderType", repeated=False, required=False),
-        3: protobuf.Field("price", "sint64", repeated=False, required=False),
-        4: protobuf.Field("quantity", "sint64", repeated=False, required=False),
+        2: protobuf.Field("ordertype", "BinanceOrderType", repeated=False, required=True),
+        3: protobuf.Field("price", "sint64", repeated=False, required=True),
+        4: protobuf.Field("quantity", "sint64", repeated=False, required=True),
         5: protobuf.Field("sender", "string", repeated=False, required=False),
-        6: protobuf.Field("side", "BinanceOrderSide", repeated=False, required=False),
+        6: protobuf.Field("side", "BinanceOrderSide", repeated=False, required=True),
         7: protobuf.Field("symbol", "string", repeated=False, required=False),
-        8: protobuf.Field("timeinforce", "BinanceTimeInForce", repeated=False, required=False),
+        8: protobuf.Field("timeinforce", "BinanceTimeInForce", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
+        ordertype: "BinanceOrderType",
+        price: "int",
+        quantity: "int",
+        side: "BinanceOrderSide",
+        timeinforce: "BinanceTimeInForce",
         id: Optional["str"] = None,
-        ordertype: Optional["BinanceOrderType"] = None,
-        price: Optional["int"] = None,
-        quantity: Optional["int"] = None,
         sender: Optional["str"] = None,
-        side: Optional["BinanceOrderSide"] = None,
         symbol: Optional["str"] = None,
-        timeinforce: Optional["BinanceTimeInForce"] = None,
     ) -> None:
-        self.id = id
         self.ordertype = ordertype
         self.price = price
         self.quantity = quantity
-        self.sender = sender
         self.side = side
-        self.symbol = symbol
         self.timeinforce = timeinforce
+        self.id = id
+        self.sender = sender
+        self.symbol = symbol
 
 
 class BinanceCancelMsg(protobuf.MessageType):
@@ -677,32 +734,32 @@ class BinanceSignedTx(protobuf.MessageType):
 class BinanceInputOutput(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("address", "string", repeated=False, required=False),
+        1: protobuf.Field("address", "string", repeated=False, required=True),
         2: protobuf.Field("coins", "BinanceCoin", repeated=True, required=False),
     }
 
     def __init__(
         self,
         *,
-        coins: Optional[List["BinanceCoin"]] = None,
-        address: Optional["str"] = None,
+        address: "str",
+        coins: Optional[Sequence["BinanceCoin"]] = None,
     ) -> None:
-        self.coins = coins if coins is not None else []
+        self.coins: Sequence["BinanceCoin"] = coins if coins is not None else []
         self.address = address
 
 
 class BinanceCoin(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("amount", "sint64", repeated=False, required=False),
-        2: protobuf.Field("denom", "string", repeated=False, required=False),
+        1: protobuf.Field("amount", "sint64", repeated=False, required=True),
+        2: protobuf.Field("denom", "string", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        amount: Optional["int"] = None,
-        denom: Optional["str"] = None,
+        amount: "int",
+        denom: "str",
     ) -> None:
         self.amount = amount
         self.denom = denom
@@ -883,15 +940,15 @@ class MultisigRedeemScriptType(protobuf.MessageType):
         self,
         *,
         m: "int",
-        pubkeys: Optional[List["HDNodePathType"]] = None,
-        signatures: Optional[List["bytes"]] = None,
-        nodes: Optional[List["HDNodeType"]] = None,
-        address_n: Optional[List["int"]] = None,
+        pubkeys: Optional[Sequence["HDNodePathType"]] = None,
+        signatures: Optional[Sequence["bytes"]] = None,
+        nodes: Optional[Sequence["HDNodeType"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
     ) -> None:
-        self.pubkeys = pubkeys if pubkeys is not None else []
-        self.signatures = signatures if signatures is not None else []
-        self.nodes = nodes if nodes is not None else []
-        self.address_n = address_n if address_n is not None else []
+        self.pubkeys: Sequence["HDNodePathType"] = pubkeys if pubkeys is not None else []
+        self.signatures: Sequence["bytes"] = signatures if signatures is not None else []
+        self.nodes: Sequence["HDNodeType"] = nodes if nodes is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.m = m
 
 
@@ -909,14 +966,14 @@ class GetPublicKey(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
         ecdsa_curve_name: Optional["str"] = None,
         show_display: Optional["bool"] = None,
         coin_name: Optional["str"] = 'Bitcoin',
         script_type: Optional["InputScriptType"] = InputScriptType.SPENDADDRESS,
         ignore_xpub_magic: Optional["bool"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.ecdsa_curve_name = ecdsa_curve_name
         self.show_display = show_display
         self.coin_name = coin_name
@@ -958,14 +1015,14 @@ class GetAddress(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
         coin_name: Optional["str"] = 'Bitcoin',
         show_display: Optional["bool"] = None,
         multisig: Optional["MultisigRedeemScriptType"] = None,
         script_type: Optional["InputScriptType"] = InputScriptType.SPENDADDRESS,
         ignore_xpub_magic: Optional["bool"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.coin_name = coin_name
         self.show_display = show_display
         self.multisig = multisig
@@ -977,14 +1034,17 @@ class Address(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 30
     FIELDS = {
         1: protobuf.Field("address", "string", repeated=False, required=True),
+        2: protobuf.Field("mac", "bytes", repeated=False, required=False),
     }
 
     def __init__(
         self,
         *,
         address: "str",
+        mac: Optional["bytes"] = None,
     ) -> None:
         self.address = address
+        self.mac = mac
 
 
 class GetOwnershipId(protobuf.MessageType):
@@ -999,12 +1059,12 @@ class GetOwnershipId(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
         coin_name: Optional["str"] = 'Bitcoin',
         multisig: Optional["MultisigRedeemScriptType"] = None,
         script_type: Optional["InputScriptType"] = InputScriptType.SPENDADDRESS,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.coin_name = coin_name
         self.multisig = multisig
         self.script_type = script_type
@@ -1031,20 +1091,23 @@ class SignMessage(protobuf.MessageType):
         2: protobuf.Field("message", "bytes", repeated=False, required=True),
         3: protobuf.Field("coin_name", "string", repeated=False, required=False),
         4: protobuf.Field("script_type", "InputScriptType", repeated=False, required=False),
+        5: protobuf.Field("no_script_type", "bool", repeated=False, required=False),
     }
 
     def __init__(
         self,
         *,
         message: "bytes",
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
         coin_name: Optional["str"] = 'Bitcoin',
         script_type: Optional["InputScriptType"] = InputScriptType.SPENDADDRESS,
+        no_script_type: Optional["bool"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.message = message
         self.coin_name = coin_name
         self.script_type = script_type
+        self.no_script_type = no_script_type
 
 
 class MessageSignature(protobuf.MessageType):
@@ -1225,11 +1288,11 @@ class ZcashOrchardOutput(protobuf.MessageType):
     def __init__(
         self,
         *,
-        ovk_address_n: Optional[List["int"]] = None,
+        ovk_address_n: Optional[Sequence["int"]] = None,
         decryptable: Optional["bool"] = None,
         memo: Optional["bytes"] = None,
     ) -> None:
-        self.ovk_address_n = ovk_address_n if ovk_address_n is not None else []
+        self.ovk_address_n: Sequence["int"] = ovk_address_n if ovk_address_n is not None else []
         self.decryptable = decryptable
         self.memo = memo
 
@@ -1252,7 +1315,8 @@ class TxInput(protobuf.MessageType):
         16: protobuf.Field("orig_hash", "bytes", repeated=False, required=False),
         17: protobuf.Field("orig_index", "uint32", repeated=False, required=False),
         18: protobuf.Field("decred_staking_spend", "DecredStakingSpendType", repeated=False, required=False),
-        19: protobuf.Field("orchard", "ZcashOrchardSpend", repeated=False, required=False),
+        19: protobuf.Field("script_pubkey", "bytes", repeated=False, required=False),
+        20: protobuf.Field("orchard", "ZcashOrchardSpend", repeated=False, required=False),
     }
 
     def __init__(
@@ -1261,7 +1325,7 @@ class TxInput(protobuf.MessageType):
         prev_hash: "bytes",
         prev_index: "int",
         amount: "int",
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
         script_sig: Optional["bytes"] = None,
         sequence: Optional["int"] = 4294967295,
         script_type: Optional["InputScriptType"] = InputScriptType.SPENDADDRESS,
@@ -1273,9 +1337,10 @@ class TxInput(protobuf.MessageType):
         orig_hash: Optional["bytes"] = None,
         orig_index: Optional["int"] = None,
         decred_staking_spend: Optional["DecredStakingSpendType"] = None,
+        script_pubkey: Optional["bytes"] = None,
         orchard: Optional["ZcashOrchardSpend"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.prev_hash = prev_hash
         self.prev_index = prev_index
         self.amount = amount
@@ -1290,6 +1355,7 @@ class TxInput(protobuf.MessageType):
         self.orig_hash = orig_hash
         self.orig_index = orig_index
         self.decred_staking_spend = decred_staking_spend
+        self.script_pubkey = script_pubkey
         self.orchard = orchard
 
 
@@ -1304,23 +1370,25 @@ class TxOutput(protobuf.MessageType):
         6: protobuf.Field("op_return_data", "bytes", repeated=False, required=False),
         10: protobuf.Field("orig_hash", "bytes", repeated=False, required=False),
         11: protobuf.Field("orig_index", "uint32", repeated=False, required=False),
-        12: protobuf.Field("orchard", "ZcashOrchardOutput", repeated=False, required=False),
+        12: protobuf.Field("payment_req_index", "uint32", repeated=False, required=False),
+        13: protobuf.Field("orchard", "ZcashOrchardOutput", repeated=False, required=False),
     }
 
     def __init__(
         self,
         *,
         amount: "int",
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
         address: Optional["str"] = None,
         script_type: Optional["OutputScriptType"] = OutputScriptType.PAYTOADDRESS,
         multisig: Optional["MultisigRedeemScriptType"] = None,
         op_return_data: Optional["bytes"] = None,
         orig_hash: Optional["bytes"] = None,
         orig_index: Optional["int"] = None,
+        payment_req_index: Optional["int"] = None,
         orchard: Optional["ZcashOrchardOutput"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.amount = amount
         self.address = address
         self.script_type = script_type
@@ -1328,6 +1396,7 @@ class TxOutput(protobuf.MessageType):
         self.op_return_data = op_return_data
         self.orig_hash = orig_hash
         self.orig_index = orig_index
+        self.payment_req_index = payment_req_index
         self.orchard = orchard
 
 
@@ -1413,6 +1482,32 @@ class PrevOutput(protobuf.MessageType):
         self.amount = amount
         self.script_pubkey = script_pubkey
         self.decred_script_version = decred_script_version
+
+
+class TxAckPaymentRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 37
+    FIELDS = {
+        1: protobuf.Field("nonce", "bytes", repeated=False, required=False),
+        2: protobuf.Field("recipient_name", "string", repeated=False, required=True),
+        3: protobuf.Field("memos", "PaymentRequestMemo", repeated=True, required=False),
+        4: protobuf.Field("amount", "uint64", repeated=False, required=False),
+        5: protobuf.Field("signature", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        recipient_name: "str",
+        signature: "bytes",
+        memos: Optional[Sequence["PaymentRequestMemo"]] = None,
+        nonce: Optional["bytes"] = None,
+        amount: Optional["int"] = None,
+    ) -> None:
+        self.memos: Sequence["PaymentRequestMemo"] = memos if memos is not None else []
+        self.recipient_name = recipient_name
+        self.signature = signature
+        self.nonce = nonce
+        self.amount = amount
 
 
 class TxAckInput(protobuf.MessageType):
@@ -1514,16 +1609,16 @@ class GetOwnershipProof(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[List["int"]] = None,
-        ownership_ids: Optional[List["bytes"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
+        ownership_ids: Optional[Sequence["bytes"]] = None,
         coin_name: Optional["str"] = 'Bitcoin',
         script_type: Optional["InputScriptType"] = InputScriptType.SPENDWITNESS,
         multisig: Optional["MultisigRedeemScriptType"] = None,
         user_confirmation: Optional["bool"] = False,
         commitment_data: Optional["bytes"] = b'',
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
-        self.ownership_ids = ownership_ids if ownership_ids is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.ownership_ids: Sequence["bytes"] = ownership_ids if ownership_ids is not None else []
         self.coin_name = coin_name
         self.script_type = script_type
         self.multisig = multisig
@@ -1565,13 +1660,13 @@ class AuthorizeCoinJoin(protobuf.MessageType):
         *,
         coordinator: "str",
         max_total_fee: "int",
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
         fee_per_anonymity: Optional["int"] = 0,
         coin_name: Optional["str"] = 'Bitcoin',
         script_type: Optional["InputScriptType"] = InputScriptType.SPENDADDRESS,
         amount_unit: Optional["AmountUnit"] = AmountUnit.BITCOIN,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.coordinator = coordinator
         self.max_total_fee = max_total_fee
         self.fee_per_anonymity = fee_per_anonymity
@@ -1591,9 +1686,9 @@ class HDNodePathType(protobuf.MessageType):
         self,
         *,
         node: "HDNodeType",
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.node = node
 
 
@@ -1688,9 +1783,9 @@ class TransactionType(protobuf.MessageType):
     def __init__(
         self,
         *,
-        inputs: Optional[List["TxInputType"]] = None,
-        bin_outputs: Optional[List["TxOutputBinType"]] = None,
-        outputs: Optional[List["TxOutputType"]] = None,
+        inputs: Optional[Sequence["TxInputType"]] = None,
+        bin_outputs: Optional[Sequence["TxOutputBinType"]] = None,
+        outputs: Optional[Sequence["TxOutputType"]] = None,
         version: Optional["int"] = None,
         lock_time: Optional["int"] = None,
         inputs_cnt: Optional["int"] = None,
@@ -1703,9 +1798,9 @@ class TransactionType(protobuf.MessageType):
         timestamp: Optional["int"] = None,
         branch_id: Optional["int"] = None,
     ) -> None:
-        self.inputs = inputs if inputs is not None else []
-        self.bin_outputs = bin_outputs if bin_outputs is not None else []
-        self.outputs = outputs if outputs is not None else []
+        self.inputs: Sequence["TxInputType"] = inputs if inputs is not None else []
+        self.bin_outputs: Sequence["TxOutputBinType"] = bin_outputs if bin_outputs is not None else []
+        self.outputs: Sequence["TxOutputType"] = outputs if outputs is not None else []
         self.version = version
         self.lock_time = lock_time
         self.inputs_cnt = inputs_cnt
@@ -1737,7 +1832,8 @@ class TxInputType(protobuf.MessageType):
         16: protobuf.Field("orig_hash", "bytes", repeated=False, required=False),
         17: protobuf.Field("orig_index", "uint32", repeated=False, required=False),
         18: protobuf.Field("decred_staking_spend", "DecredStakingSpendType", repeated=False, required=False),
-        19: protobuf.Field("orchard", "ZcashOrchardSpend", repeated=False, required=False),
+        19: protobuf.Field("script_pubkey", "bytes", repeated=False, required=False),
+        20: protobuf.Field("orchard", "ZcashOrchardSpend", repeated=False, required=False),
     }
 
     def __init__(
@@ -1745,7 +1841,7 @@ class TxInputType(protobuf.MessageType):
         *,
         prev_hash: "bytes",
         prev_index: "int",
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
         script_sig: Optional["bytes"] = None,
         sequence: Optional["int"] = 4294967295,
         script_type: Optional["InputScriptType"] = InputScriptType.SPENDADDRESS,
@@ -1758,9 +1854,10 @@ class TxInputType(protobuf.MessageType):
         orig_hash: Optional["bytes"] = None,
         orig_index: Optional["int"] = None,
         decred_staking_spend: Optional["DecredStakingSpendType"] = None,
+        script_pubkey: Optional["bytes"] = None,
         orchard: Optional["ZcashOrchardSpend"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.prev_hash = prev_hash
         self.prev_index = prev_index
         self.script_sig = script_sig
@@ -1775,6 +1872,7 @@ class TxInputType(protobuf.MessageType):
         self.orig_hash = orig_hash
         self.orig_index = orig_index
         self.decred_staking_spend = decred_staking_spend
+        self.script_pubkey = script_pubkey
         self.orchard = orchard
 
 
@@ -1809,23 +1907,25 @@ class TxOutputType(protobuf.MessageType):
         6: protobuf.Field("op_return_data", "bytes", repeated=False, required=False),
         10: protobuf.Field("orig_hash", "bytes", repeated=False, required=False),
         11: protobuf.Field("orig_index", "uint32", repeated=False, required=False),
-        12: protobuf.Field("orchard", "ZcashOrchardOutput", repeated=False, required=False),
+        12: protobuf.Field("payment_req_index", "uint32", repeated=False, required=False),
+        13: protobuf.Field("orchard", "ZcashOrchardOutput", repeated=False, required=False),
     }
 
     def __init__(
         self,
         *,
         amount: "int",
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
         address: Optional["str"] = None,
         script_type: Optional["OutputScriptType"] = OutputScriptType.PAYTOADDRESS,
         multisig: Optional["MultisigRedeemScriptType"] = None,
         op_return_data: Optional["bytes"] = None,
         orig_hash: Optional["bytes"] = None,
         orig_index: Optional["int"] = None,
+        payment_req_index: Optional["int"] = None,
         orchard: Optional["ZcashOrchardOutput"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.amount = amount
         self.address = address
         self.script_type = script_type
@@ -1833,7 +1933,82 @@ class TxOutputType(protobuf.MessageType):
         self.op_return_data = op_return_data
         self.orig_hash = orig_hash
         self.orig_index = orig_index
+        self.payment_req_index = payment_req_index
         self.orchard = orchard
+
+
+class PaymentRequestMemo(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("text_memo", "TextMemo", repeated=False, required=False),
+        2: protobuf.Field("refund_memo", "RefundMemo", repeated=False, required=False),
+        3: protobuf.Field("coin_purchase_memo", "CoinPurchaseMemo", repeated=False, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        text_memo: Optional["TextMemo"] = None,
+        refund_memo: Optional["RefundMemo"] = None,
+        coin_purchase_memo: Optional["CoinPurchaseMemo"] = None,
+    ) -> None:
+        self.text_memo = text_memo
+        self.refund_memo = refund_memo
+        self.coin_purchase_memo = coin_purchase_memo
+
+
+class TextMemo(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("text", "string", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        text: "str",
+    ) -> None:
+        self.text = text
+
+
+class RefundMemo(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("address", "string", repeated=False, required=True),
+        2: protobuf.Field("mac", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        address: "str",
+        mac: "bytes",
+    ) -> None:
+        self.address = address
+        self.mac = mac
+
+
+class CoinPurchaseMemo(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("coin_type", "uint32", repeated=False, required=True),
+        2: protobuf.Field("amount", "string", repeated=False, required=True),
+        3: protobuf.Field("address", "string", repeated=False, required=True),
+        4: protobuf.Field("mac", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        coin_type: "int",
+        amount: "str",
+        address: "str",
+        mac: "bytes",
+    ) -> None:
+        self.coin_type = coin_type
+        self.amount = amount
+        self.address = address
+        self.mac = mac
 
 
 class TxAckInputWrapper(protobuf.MessageType):
@@ -1988,6 +2163,72 @@ class CardanoBlockchainPointerType(protobuf.MessageType):
         self.certificate_index = certificate_index
 
 
+class CardanoNativeScript(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("type", "CardanoNativeScriptType", repeated=False, required=True),
+        2: protobuf.Field("scripts", "CardanoNativeScript", repeated=True, required=False),
+        3: protobuf.Field("key_hash", "bytes", repeated=False, required=False),
+        4: protobuf.Field("key_path", "uint32", repeated=True, required=False),
+        5: protobuf.Field("required_signatures_count", "uint32", repeated=False, required=False),
+        6: protobuf.Field("invalid_before", "uint64", repeated=False, required=False),
+        7: protobuf.Field("invalid_hereafter", "uint64", repeated=False, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        type: "CardanoNativeScriptType",
+        scripts: Optional[Sequence["CardanoNativeScript"]] = None,
+        key_path: Optional[Sequence["int"]] = None,
+        key_hash: Optional["bytes"] = None,
+        required_signatures_count: Optional["int"] = None,
+        invalid_before: Optional["int"] = None,
+        invalid_hereafter: Optional["int"] = None,
+    ) -> None:
+        self.scripts: Sequence["CardanoNativeScript"] = scripts if scripts is not None else []
+        self.key_path: Sequence["int"] = key_path if key_path is not None else []
+        self.type = type
+        self.key_hash = key_hash
+        self.required_signatures_count = required_signatures_count
+        self.invalid_before = invalid_before
+        self.invalid_hereafter = invalid_hereafter
+
+
+class CardanoGetNativeScriptHash(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 330
+    FIELDS = {
+        1: protobuf.Field("script", "CardanoNativeScript", repeated=False, required=True),
+        2: protobuf.Field("display_format", "CardanoNativeScriptHashDisplayFormat", repeated=False, required=True),
+        3: protobuf.Field("derivation_type", "CardanoDerivationType", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        script: "CardanoNativeScript",
+        display_format: "CardanoNativeScriptHashDisplayFormat",
+        derivation_type: "CardanoDerivationType",
+    ) -> None:
+        self.script = script
+        self.display_format = display_format
+        self.derivation_type = derivation_type
+
+
+class CardanoNativeScriptHash(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 331
+    FIELDS = {
+        1: protobuf.Field("script_hash", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        script_hash: "bytes",
+    ) -> None:
+        self.script_hash = script_hash
+
+
 class CardanoAddressParametersType(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
@@ -1996,22 +2237,28 @@ class CardanoAddressParametersType(protobuf.MessageType):
         3: protobuf.Field("address_n_staking", "uint32", repeated=True, required=False),
         4: protobuf.Field("staking_key_hash", "bytes", repeated=False, required=False),
         5: protobuf.Field("certificate_pointer", "CardanoBlockchainPointerType", repeated=False, required=False),
+        6: protobuf.Field("script_payment_hash", "bytes", repeated=False, required=False),
+        7: protobuf.Field("script_staking_hash", "bytes", repeated=False, required=False),
     }
 
     def __init__(
         self,
         *,
         address_type: "CardanoAddressType",
-        address_n: Optional[List["int"]] = None,
-        address_n_staking: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
+        address_n_staking: Optional[Sequence["int"]] = None,
         staking_key_hash: Optional["bytes"] = None,
         certificate_pointer: Optional["CardanoBlockchainPointerType"] = None,
+        script_payment_hash: Optional["bytes"] = None,
+        script_staking_hash: Optional["bytes"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
-        self.address_n_staking = address_n_staking if address_n_staking is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.address_n_staking: Sequence["int"] = address_n_staking if address_n_staking is not None else []
         self.address_type = address_type
         self.staking_key_hash = staking_key_hash
         self.certificate_pointer = certificate_pointer
+        self.script_payment_hash = script_payment_hash
+        self.script_staking_hash = script_staking_hash
 
 
 class CardanoGetAddress(protobuf.MessageType):
@@ -2021,6 +2268,7 @@ class CardanoGetAddress(protobuf.MessageType):
         3: protobuf.Field("protocol_magic", "uint32", repeated=False, required=True),
         4: protobuf.Field("network_id", "uint32", repeated=False, required=True),
         5: protobuf.Field("address_parameters", "CardanoAddressParametersType", repeated=False, required=True),
+        6: protobuf.Field("derivation_type", "CardanoDerivationType", repeated=False, required=True),
     }
 
     def __init__(
@@ -2029,11 +2277,13 @@ class CardanoGetAddress(protobuf.MessageType):
         protocol_magic: "int",
         network_id: "int",
         address_parameters: "CardanoAddressParametersType",
+        derivation_type: "CardanoDerivationType",
         show_display: Optional["bool"] = False,
     ) -> None:
         self.protocol_magic = protocol_magic
         self.network_id = network_id
         self.address_parameters = address_parameters
+        self.derivation_type = derivation_type
         self.show_display = show_display
 
 
@@ -2056,15 +2306,18 @@ class CardanoGetPublicKey(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
         2: protobuf.Field("show_display", "bool", repeated=False, required=False),
+        3: protobuf.Field("derivation_type", "CardanoDerivationType", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        address_n: Optional[List["int"]] = None,
+        derivation_type: "CardanoDerivationType",
+        address_n: Optional[Sequence["int"]] = None,
         show_display: Optional["bool"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.derivation_type = derivation_type
         self.show_display = show_display
 
 
@@ -2100,6 +2353,8 @@ class CardanoSignTxInit(protobuf.MessageType):
         10: protobuf.Field("has_auxiliary_data", "bool", repeated=False, required=True),
         11: protobuf.Field("validity_interval_start", "uint64", repeated=False, required=False),
         12: protobuf.Field("witness_requests_count", "uint32", repeated=False, required=True),
+        13: protobuf.Field("minting_asset_groups_count", "uint32", repeated=False, required=True),
+        14: protobuf.Field("derivation_type", "CardanoDerivationType", repeated=False, required=True),
     }
 
     def __init__(
@@ -2115,6 +2370,8 @@ class CardanoSignTxInit(protobuf.MessageType):
         withdrawals_count: "int",
         has_auxiliary_data: "bool",
         witness_requests_count: "int",
+        minting_asset_groups_count: "int",
+        derivation_type: "CardanoDerivationType",
         ttl: Optional["int"] = None,
         validity_interval_start: Optional["int"] = None,
     ) -> None:
@@ -2128,6 +2385,8 @@ class CardanoSignTxInit(protobuf.MessageType):
         self.withdrawals_count = withdrawals_count
         self.has_auxiliary_data = has_auxiliary_data
         self.witness_requests_count = witness_requests_count
+        self.minting_asset_groups_count = minting_asset_groups_count
+        self.derivation_type = derivation_type
         self.ttl = ttl
         self.validity_interval_start = validity_interval_start
 
@@ -2193,17 +2452,20 @@ class CardanoToken(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 324
     FIELDS = {
         1: protobuf.Field("asset_name_bytes", "bytes", repeated=False, required=True),
-        2: protobuf.Field("amount", "uint64", repeated=False, required=True),
+        2: protobuf.Field("amount", "uint64", repeated=False, required=False),
+        3: protobuf.Field("mint_amount", "sint64", repeated=False, required=False),
     }
 
     def __init__(
         self,
         *,
         asset_name_bytes: "bytes",
-        amount: "int",
+        amount: Optional["int"] = None,
+        mint_amount: Optional["int"] = None,
     ) -> None:
         self.asset_name_bytes = asset_name_bytes
         self.amount = amount
+        self.mint_amount = mint_amount
 
 
 class CardanoPoolOwner(protobuf.MessageType):
@@ -2216,10 +2478,10 @@ class CardanoPoolOwner(protobuf.MessageType):
     def __init__(
         self,
         *,
-        staking_key_path: Optional[List["int"]] = None,
+        staking_key_path: Optional[Sequence["int"]] = None,
         staking_key_hash: Optional["bytes"] = None,
     ) -> None:
-        self.staking_key_path = staking_key_path if staking_key_path is not None else []
+        self.staking_key_path: Sequence["int"] = staking_key_path if staking_key_path is not None else []
         self.staking_key_hash = staking_key_hash
 
 
@@ -2295,12 +2557,12 @@ class CardanoPoolParametersType(protobuf.MessageType):
         reward_account: "str",
         owners_count: "int",
         relays_count: "int",
-        owners: Optional[List["CardanoPoolOwner"]] = None,
-        relays: Optional[List["CardanoPoolRelayParameters"]] = None,
+        owners: Optional[Sequence["CardanoPoolOwner"]] = None,
+        relays: Optional[Sequence["CardanoPoolRelayParameters"]] = None,
         metadata: Optional["CardanoPoolMetadataType"] = None,
     ) -> None:
-        self.owners = owners if owners is not None else []
-        self.relays = relays if relays is not None else []
+        self.owners: Sequence["CardanoPoolOwner"] = owners if owners is not None else []
+        self.relays: Sequence["CardanoPoolRelayParameters"] = relays if relays is not None else []
         self.pool_id = pool_id
         self.vrf_key_hash = vrf_key_hash
         self.pledge = pledge
@@ -2320,20 +2582,23 @@ class CardanoTxCertificate(protobuf.MessageType):
         2: protobuf.Field("path", "uint32", repeated=True, required=False),
         3: protobuf.Field("pool", "bytes", repeated=False, required=False),
         4: protobuf.Field("pool_parameters", "CardanoPoolParametersType", repeated=False, required=False),
+        5: protobuf.Field("script_hash", "bytes", repeated=False, required=False),
     }
 
     def __init__(
         self,
         *,
         type: "CardanoCertificateType",
-        path: Optional[List["int"]] = None,
+        path: Optional[Sequence["int"]] = None,
         pool: Optional["bytes"] = None,
         pool_parameters: Optional["CardanoPoolParametersType"] = None,
+        script_hash: Optional["bytes"] = None,
     ) -> None:
-        self.path = path if path is not None else []
+        self.path: Sequence["int"] = path if path is not None else []
         self.type = type
         self.pool = pool
         self.pool_parameters = pool_parameters
+        self.script_hash = script_hash
 
 
 class CardanoTxWithdrawal(protobuf.MessageType):
@@ -2341,16 +2606,19 @@ class CardanoTxWithdrawal(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("path", "uint32", repeated=True, required=False),
         2: protobuf.Field("amount", "uint64", repeated=False, required=True),
+        3: protobuf.Field("script_hash", "bytes", repeated=False, required=False),
     }
 
     def __init__(
         self,
         *,
         amount: "int",
-        path: Optional[List["int"]] = None,
+        path: Optional[Sequence["int"]] = None,
+        script_hash: Optional["bytes"] = None,
     ) -> None:
-        self.path = path if path is not None else []
+        self.path: Sequence["int"] = path if path is not None else []
         self.amount = amount
+        self.script_hash = script_hash
 
 
 class CardanoCatalystRegistrationParametersType(protobuf.MessageType):
@@ -2368,9 +2636,9 @@ class CardanoCatalystRegistrationParametersType(protobuf.MessageType):
         voting_public_key: "bytes",
         reward_address_parameters: "CardanoAddressParametersType",
         nonce: "int",
-        staking_path: Optional[List["int"]] = None,
+        staking_path: Optional[Sequence["int"]] = None,
     ) -> None:
-        self.staking_path = staking_path if staking_path is not None else []
+        self.staking_path: Sequence["int"] = staking_path if staking_path is not None else []
         self.voting_public_key = voting_public_key
         self.reward_address_parameters = reward_address_parameters
         self.nonce = nonce
@@ -2391,6 +2659,20 @@ class CardanoTxAuxiliaryData(protobuf.MessageType):
     ) -> None:
         self.catalyst_registration_parameters = catalyst_registration_parameters
         self.hash = hash
+
+
+class CardanoTxMint(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 332
+    FIELDS = {
+        1: protobuf.Field("asset_groups_count", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        asset_groups_count: "int",
+    ) -> None:
+        self.asset_groups_count = asset_groups_count
 
 
 class CardanoTxItemAck(protobuf.MessageType):
@@ -2426,9 +2708,9 @@ class CardanoTxWitnessRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        path: Optional[List["int"]] = None,
+        path: Optional[Sequence["int"]] = None,
     ) -> None:
-        self.path = path if path is not None else []
+        self.path: Sequence["int"] = path if path is not None else []
 
 
 class CardanoTxWitnessResponse(protobuf.MessageType):
@@ -2497,18 +2779,18 @@ class CardanoSignTx(protobuf.MessageType):
         protocol_magic: "int",
         fee: "int",
         network_id: "int",
-        inputs: Optional[List["CardanoTxInputType"]] = None,
-        outputs: Optional[List["CardanoTxOutputType"]] = None,
-        certificates: Optional[List["CardanoTxCertificateType"]] = None,
-        withdrawals: Optional[List["CardanoTxWithdrawalType"]] = None,
+        inputs: Optional[Sequence["CardanoTxInputType"]] = None,
+        outputs: Optional[Sequence["CardanoTxOutputType"]] = None,
+        certificates: Optional[Sequence["CardanoTxCertificateType"]] = None,
+        withdrawals: Optional[Sequence["CardanoTxWithdrawalType"]] = None,
         ttl: Optional["int"] = None,
         validity_interval_start: Optional["int"] = None,
         auxiliary_data: Optional["CardanoTxAuxiliaryDataType"] = None,
     ) -> None:
-        self.inputs = inputs if inputs is not None else []
-        self.outputs = outputs if outputs is not None else []
-        self.certificates = certificates if certificates is not None else []
-        self.withdrawals = withdrawals if withdrawals is not None else []
+        self.inputs: Sequence["CardanoTxInputType"] = inputs if inputs is not None else []
+        self.outputs: Sequence["CardanoTxOutputType"] = outputs if outputs is not None else []
+        self.certificates: Sequence["CardanoTxCertificateType"] = certificates if certificates is not None else []
+        self.withdrawals: Sequence["CardanoTxWithdrawalType"] = withdrawals if withdrawals is not None else []
         self.protocol_magic = protocol_magic
         self.fee = fee
         self.network_id = network_id
@@ -2565,9 +2847,9 @@ class CardanoTxInputType(protobuf.MessageType):
         *,
         prev_hash: "bytes",
         prev_index: "int",
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.prev_hash = prev_hash
         self.prev_index = prev_index
 
@@ -2585,11 +2867,11 @@ class CardanoTxOutputType(protobuf.MessageType):
         self,
         *,
         amount: "int",
-        token_bundle: Optional[List["CardanoAssetGroupType"]] = None,
+        token_bundle: Optional[Sequence["CardanoAssetGroupType"]] = None,
         address: Optional["str"] = None,
         address_parameters: Optional["CardanoAddressParametersType"] = None,
     ) -> None:
-        self.token_bundle = token_bundle if token_bundle is not None else []
+        self.token_bundle: Sequence["CardanoAssetGroupType"] = token_bundle if token_bundle is not None else []
         self.amount = amount
         self.address = address
         self.address_parameters = address_parameters
@@ -2606,9 +2888,9 @@ class CardanoAssetGroupType(protobuf.MessageType):
         self,
         *,
         policy_id: "bytes",
-        tokens: Optional[List["CardanoTokenType"]] = None,
+        tokens: Optional[Sequence["CardanoTokenType"]] = None,
     ) -> None:
-        self.tokens = tokens if tokens is not None else []
+        self.tokens: Sequence["CardanoTokenType"] = tokens if tokens is not None else []
         self.policy_id = policy_id
 
 
@@ -2639,10 +2921,10 @@ class CardanoPoolOwnerType(protobuf.MessageType):
     def __init__(
         self,
         *,
-        staking_key_path: Optional[List["int"]] = None,
+        staking_key_path: Optional[Sequence["int"]] = None,
         staking_key_hash: Optional["bytes"] = None,
     ) -> None:
-        self.staking_key_path = staking_key_path if staking_key_path is not None else []
+        self.staking_key_path: Sequence["int"] = staking_key_path if staking_key_path is not None else []
         self.staking_key_hash = staking_key_hash
 
 
@@ -2685,11 +2967,11 @@ class CardanoTxCertificateType(protobuf.MessageType):
         self,
         *,
         type: "CardanoCertificateType",
-        path: Optional[List["int"]] = None,
+        path: Optional[Sequence["int"]] = None,
         pool: Optional["bytes"] = None,
         pool_parameters: Optional["CardanoPoolParametersType"] = None,
     ) -> None:
-        self.path = path if path is not None else []
+        self.path: Sequence["int"] = path if path is not None else []
         self.type = type
         self.pool = pool
         self.pool_parameters = pool_parameters
@@ -2706,9 +2988,9 @@ class CardanoTxWithdrawalType(protobuf.MessageType):
         self,
         *,
         amount: "int",
-        path: Optional[List["int"]] = None,
+        path: Optional[Sequence["int"]] = None,
     ) -> None:
-        self.path = path if path is not None else []
+        self.path: Sequence["int"] = path if path is not None else []
         self.amount = amount
 
 
@@ -2746,13 +3028,13 @@ class CipherKeyValue(protobuf.MessageType):
         *,
         key: "str",
         value: "bytes",
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
         encrypt: Optional["bool"] = None,
         ask_on_encrypt: Optional["bool"] = None,
         ask_on_decrypt: Optional["bool"] = None,
         iv: Optional["bytes"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.key = key
         self.value = value
         self.encrypt = encrypt
@@ -2894,10 +3176,10 @@ class CosiCommit(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
         data: Optional["bytes"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.data = data
 
 
@@ -2930,12 +3212,12 @@ class CosiSign(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
         data: Optional["bytes"] = None,
         global_commitment: Optional["bytes"] = None,
         global_pubkey: Optional["bytes"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.data = data
         self.global_commitment = global_commitment
         self.global_pubkey = global_pubkey
@@ -2959,14 +3241,20 @@ class Initialize(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 0
     FIELDS = {
         1: protobuf.Field("session_id", "bytes", repeated=False, required=False),
+        2: protobuf.Field("_skip_passphrase", "bool", repeated=False, required=False),
+        3: protobuf.Field("derive_cardano", "bool", repeated=False, required=False),
     }
 
     def __init__(
         self,
         *,
         session_id: Optional["bytes"] = None,
+        _skip_passphrase: Optional["bool"] = None,
+        derive_cardano: Optional["bool"] = None,
     ) -> None:
         self.session_id = session_id
+        self._skip_passphrase = _skip_passphrase
+        self.derive_cardano = derive_cardano
 
 
 class GetFeatures(protobuf.MessageType):
@@ -2991,6 +3279,7 @@ class Features(protobuf.MessageType):
         14: protobuf.Field("bootloader_hash", "bytes", repeated=False, required=False),
         15: protobuf.Field("imported", "bool", repeated=False, required=False),
         16: protobuf.Field("unlocked", "bool", repeated=False, required=False),
+        17: protobuf.Field("_passphrase_cached", "bool", repeated=False, required=False),
         18: protobuf.Field("firmware_present", "bool", repeated=False, required=False),
         19: protobuf.Field("needs_backup", "bool", repeated=False, required=False),
         20: protobuf.Field("flags", "uint32", repeated=False, required=False),
@@ -2999,7 +3288,6 @@ class Features(protobuf.MessageType):
         23: protobuf.Field("fw_minor", "uint32", repeated=False, required=False),
         24: protobuf.Field("fw_patch", "uint32", repeated=False, required=False),
         25: protobuf.Field("fw_vendor", "string", repeated=False, required=False),
-        26: protobuf.Field("fw_vendor_keys", "bytes", repeated=False, required=False),
         27: protobuf.Field("unfinished_backup", "bool", repeated=False, required=False),
         28: protobuf.Field("no_backup", "bool", repeated=False, required=False),
         29: protobuf.Field("recovery_mode", "bool", repeated=False, required=False),
@@ -3022,7 +3310,7 @@ class Features(protobuf.MessageType):
         major_version: "int",
         minor_version: "int",
         patch_version: "int",
-        capabilities: Optional[List["Capability"]] = None,
+        capabilities: Optional[Sequence["Capability"]] = None,
         vendor: Optional["str"] = None,
         bootloader_mode: Optional["bool"] = None,
         device_id: Optional["str"] = None,
@@ -3035,6 +3323,7 @@ class Features(protobuf.MessageType):
         bootloader_hash: Optional["bytes"] = None,
         imported: Optional["bool"] = None,
         unlocked: Optional["bool"] = None,
+        _passphrase_cached: Optional["bool"] = None,
         firmware_present: Optional["bool"] = None,
         needs_backup: Optional["bool"] = None,
         flags: Optional["int"] = None,
@@ -3043,7 +3332,6 @@ class Features(protobuf.MessageType):
         fw_minor: Optional["int"] = None,
         fw_patch: Optional["int"] = None,
         fw_vendor: Optional["str"] = None,
-        fw_vendor_keys: Optional["bytes"] = None,
         unfinished_backup: Optional["bool"] = None,
         no_backup: Optional["bool"] = None,
         recovery_mode: Optional["bool"] = None,
@@ -3058,7 +3346,7 @@ class Features(protobuf.MessageType):
         display_rotation: Optional["int"] = None,
         experimental_features: Optional["bool"] = None,
     ) -> None:
-        self.capabilities = capabilities if capabilities is not None else []
+        self.capabilities: Sequence["Capability"] = capabilities if capabilities is not None else []
         self.major_version = major_version
         self.minor_version = minor_version
         self.patch_version = patch_version
@@ -3074,6 +3362,7 @@ class Features(protobuf.MessageType):
         self.bootloader_hash = bootloader_hash
         self.imported = imported
         self.unlocked = unlocked
+        self._passphrase_cached = _passphrase_cached
         self.firmware_present = firmware_present
         self.needs_backup = needs_backup
         self.flags = flags
@@ -3082,7 +3371,6 @@ class Features(protobuf.MessageType):
         self.fw_minor = fw_minor
         self.fw_patch = fw_patch
         self.fw_vendor = fw_vendor
-        self.fw_vendor_keys = fw_vendor_keys
         self.unfinished_backup = unfinished_backup
         self.no_backup = no_backup
         self.recovery_mode = recovery_mode
@@ -3113,6 +3401,7 @@ class ApplySettings(protobuf.MessageType):
         2: protobuf.Field("label", "string", repeated=False, required=False),
         3: protobuf.Field("use_passphrase", "bool", repeated=False, required=False),
         4: protobuf.Field("homescreen", "bytes", repeated=False, required=False),
+        5: protobuf.Field("_passphrase_source", "uint32", repeated=False, required=False),
         6: protobuf.Field("auto_lock_delay_ms", "uint32", repeated=False, required=False),
         7: protobuf.Field("display_rotation", "uint32", repeated=False, required=False),
         8: protobuf.Field("passphrase_always_on_device", "bool", repeated=False, required=False),
@@ -3127,6 +3416,7 @@ class ApplySettings(protobuf.MessageType):
         label: Optional["str"] = None,
         use_passphrase: Optional["bool"] = None,
         homescreen: Optional["bytes"] = None,
+        _passphrase_source: Optional["int"] = None,
         auto_lock_delay_ms: Optional["int"] = None,
         display_rotation: Optional["int"] = None,
         passphrase_always_on_device: Optional["bool"] = None,
@@ -3137,6 +3427,7 @@ class ApplySettings(protobuf.MessageType):
         self.label = label
         self.use_passphrase = use_passphrase
         self.homescreen = homescreen
+        self._passphrase_source = _passphrase_source
         self.auto_lock_delay_ms = auto_lock_delay_ms
         self.display_rotation = display_rotation
         self.passphrase_always_on_device = passphrase_always_on_device
@@ -3270,7 +3561,7 @@ class LoadDevice(protobuf.MessageType):
     def __init__(
         self,
         *,
-        mnemonics: Optional[List["str"]] = None,
+        mnemonics: Optional[Sequence["str"]] = None,
         pin: Optional["str"] = None,
         passphrase_protection: Optional["bool"] = None,
         language: Optional["str"] = 'en-US',
@@ -3280,7 +3571,7 @@ class LoadDevice(protobuf.MessageType):
         needs_backup: Optional["bool"] = None,
         no_backup: Optional["bool"] = None,
     ) -> None:
-        self.mnemonics = mnemonics if mnemonics is not None else []
+        self.mnemonics: Sequence["str"] = mnemonics if mnemonics is not None else []
         self.pin = pin
         self.passphrase_protection = passphrase_protection
         self.language = language
@@ -3468,10 +3759,28 @@ class RebootToBootloader(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 87
 
 
+class GetNonce(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 31
+
+
+class Nonce(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 33
+    FIELDS = {
+        1: protobuf.Field("nonce", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        nonce: "bytes",
+    ) -> None:
+        self.nonce = nonce
+
+
 class DebugLinkDecision(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 100
     FIELDS = {
-        1: protobuf.Field("yes_no", "bool", repeated=False, required=False),
+        1: protobuf.Field("button", "DebugButton", repeated=False, required=False),
         2: protobuf.Field("swipe", "DebugSwipeDirection", repeated=False, required=False),
         3: protobuf.Field("input", "string", repeated=False, required=False),
         4: protobuf.Field("x", "uint32", repeated=False, required=False),
@@ -3483,7 +3792,7 @@ class DebugLinkDecision(protobuf.MessageType):
     def __init__(
         self,
         *,
-        yes_no: Optional["bool"] = None,
+        button: Optional["DebugButton"] = None,
         swipe: Optional["DebugSwipeDirection"] = None,
         input: Optional["str"] = None,
         x: Optional["int"] = None,
@@ -3491,7 +3800,7 @@ class DebugLinkDecision(protobuf.MessageType):
         wait: Optional["bool"] = None,
         hold_ms: Optional["int"] = None,
     ) -> None:
-        self.yes_no = yes_no
+        self.button = button
         self.swipe = swipe
         self.input = input
         self.x = x
@@ -3509,9 +3818,9 @@ class DebugLinkLayout(protobuf.MessageType):
     def __init__(
         self,
         *,
-        lines: Optional[List["str"]] = None,
+        lines: Optional[Sequence["str"]] = None,
     ) -> None:
-        self.lines = lines if lines is not None else []
+        self.lines: Sequence["str"] = lines if lines is not None else []
 
 
 class DebugLinkReseedRandom(protobuf.MessageType):
@@ -3583,7 +3892,7 @@ class DebugLinkState(protobuf.MessageType):
     def __init__(
         self,
         *,
-        layout_lines: Optional[List["str"]] = None,
+        layout_lines: Optional[Sequence["str"]] = None,
         layout: Optional["bytes"] = None,
         pin: Optional["str"] = None,
         matrix: Optional["str"] = None,
@@ -3597,7 +3906,7 @@ class DebugLinkState(protobuf.MessageType):
         reset_word_pos: Optional["int"] = None,
         mnemonic_type: Optional["BackupType"] = None,
     ) -> None:
-        self.layout_lines = layout_lines if layout_lines is not None else []
+        self.layout_lines: Sequence["str"] = layout_lines if layout_lines is not None else []
         self.layout = layout
         self.pin = pin
         self.matrix = matrix
@@ -3739,10 +4048,10 @@ class EosGetPublicKey(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
         show_display: Optional["bool"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.show_display = show_display
 
 
@@ -3767,20 +4076,20 @@ class EosSignTx(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 602
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
-        2: protobuf.Field("chain_id", "bytes", repeated=False, required=False),
-        3: protobuf.Field("header", "EosTxHeader", repeated=False, required=False),
-        4: protobuf.Field("num_actions", "uint32", repeated=False, required=False),
+        2: protobuf.Field("chain_id", "bytes", repeated=False, required=True),
+        3: protobuf.Field("header", "EosTxHeader", repeated=False, required=True),
+        4: protobuf.Field("num_actions", "uint32", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        address_n: Optional[List["int"]] = None,
-        chain_id: Optional["bytes"] = None,
-        header: Optional["EosTxHeader"] = None,
-        num_actions: Optional["int"] = None,
+        chain_id: "bytes",
+        header: "EosTxHeader",
+        num_actions: "int",
+        address_n: Optional[Sequence["int"]] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.chain_id = chain_id
         self.header = header
         self.num_actions = num_actions
@@ -3803,7 +4112,7 @@ class EosTxActionRequest(protobuf.MessageType):
 class EosTxActionAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 604
     FIELDS = {
-        1: protobuf.Field("common", "EosActionCommon", repeated=False, required=False),
+        1: protobuf.Field("common", "EosActionCommon", repeated=False, required=True),
         2: protobuf.Field("transfer", "EosActionTransfer", repeated=False, required=False),
         3: protobuf.Field("delegate", "EosActionDelegate", repeated=False, required=False),
         4: protobuf.Field("undelegate", "EosActionUndelegate", repeated=False, required=False),
@@ -3823,7 +4132,7 @@ class EosTxActionAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        common: Optional["EosActionCommon"] = None,
+        common: "EosActionCommon",
         transfer: Optional["EosActionTransfer"] = None,
         delegate: Optional["EosActionDelegate"] = None,
         undelegate: Optional["EosActionUndelegate"] = None,
@@ -3902,15 +4211,15 @@ class EosTxHeader(protobuf.MessageType):
 class EosAsset(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("amount", "sint64", repeated=False, required=False),
-        2: protobuf.Field("symbol", "uint64", repeated=False, required=False),
+        1: protobuf.Field("amount", "sint64", repeated=False, required=True),
+        2: protobuf.Field("symbol", "uint64", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        amount: Optional["int"] = None,
-        symbol: Optional["int"] = None,
+        amount: "int",
+        symbol: "int",
     ) -> None:
         self.amount = amount
         self.symbol = symbol
@@ -3919,15 +4228,15 @@ class EosAsset(protobuf.MessageType):
 class EosPermissionLevel(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("actor", "uint64", repeated=False, required=False),
-        2: protobuf.Field("permission", "uint64", repeated=False, required=False),
+        1: protobuf.Field("actor", "uint64", repeated=False, required=True),
+        2: protobuf.Field("permission", "uint64", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        actor: Optional["int"] = None,
-        permission: Optional["int"] = None,
+        actor: "int",
+        permission: "int",
     ) -> None:
         self.actor = actor
         self.permission = permission
@@ -3947,10 +4256,10 @@ class EosAuthorizationKey(protobuf.MessageType):
         *,
         type: "int",
         weight: "int",
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
         key: Optional["bytes"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.type = type
         self.weight = weight
         self.key = key
@@ -3959,15 +4268,15 @@ class EosAuthorizationKey(protobuf.MessageType):
 class EosAuthorizationAccount(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("account", "EosPermissionLevel", repeated=False, required=False),
-        2: protobuf.Field("weight", "uint32", repeated=False, required=False),
+        1: protobuf.Field("account", "EosPermissionLevel", repeated=False, required=True),
+        2: protobuf.Field("weight", "uint32", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        account: Optional["EosPermissionLevel"] = None,
-        weight: Optional["int"] = None,
+        account: "EosPermissionLevel",
+        weight: "int",
     ) -> None:
         self.account = account
         self.weight = weight
@@ -3976,15 +4285,15 @@ class EosAuthorizationAccount(protobuf.MessageType):
 class EosAuthorizationWait(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("wait_sec", "uint32", repeated=False, required=False),
-        2: protobuf.Field("weight", "uint32", repeated=False, required=False),
+        1: protobuf.Field("wait_sec", "uint32", repeated=False, required=True),
+        2: protobuf.Field("weight", "uint32", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        wait_sec: Optional["int"] = None,
-        weight: Optional["int"] = None,
+        wait_sec: "int",
+        weight: "int",
     ) -> None:
         self.wait_sec = wait_sec
         self.weight = weight
@@ -3993,7 +4302,7 @@ class EosAuthorizationWait(protobuf.MessageType):
 class EosAuthorization(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("threshold", "uint32", repeated=False, required=False),
+        1: protobuf.Field("threshold", "uint32", repeated=False, required=True),
         2: protobuf.Field("keys", "EosAuthorizationKey", repeated=True, required=False),
         3: protobuf.Field("accounts", "EosAuthorizationAccount", repeated=True, required=False),
         4: protobuf.Field("waits", "EosAuthorizationWait", repeated=True, required=False),
@@ -4002,33 +4311,33 @@ class EosAuthorization(protobuf.MessageType):
     def __init__(
         self,
         *,
-        keys: Optional[List["EosAuthorizationKey"]] = None,
-        accounts: Optional[List["EosAuthorizationAccount"]] = None,
-        waits: Optional[List["EosAuthorizationWait"]] = None,
-        threshold: Optional["int"] = None,
+        threshold: "int",
+        keys: Optional[Sequence["EosAuthorizationKey"]] = None,
+        accounts: Optional[Sequence["EosAuthorizationAccount"]] = None,
+        waits: Optional[Sequence["EosAuthorizationWait"]] = None,
     ) -> None:
-        self.keys = keys if keys is not None else []
-        self.accounts = accounts if accounts is not None else []
-        self.waits = waits if waits is not None else []
+        self.keys: Sequence["EosAuthorizationKey"] = keys if keys is not None else []
+        self.accounts: Sequence["EosAuthorizationAccount"] = accounts if accounts is not None else []
+        self.waits: Sequence["EosAuthorizationWait"] = waits if waits is not None else []
         self.threshold = threshold
 
 
 class EosActionCommon(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("account", "uint64", repeated=False, required=False),
-        2: protobuf.Field("name", "uint64", repeated=False, required=False),
+        1: protobuf.Field("account", "uint64", repeated=False, required=True),
+        2: protobuf.Field("name", "uint64", repeated=False, required=True),
         3: protobuf.Field("authorization", "EosPermissionLevel", repeated=True, required=False),
     }
 
     def __init__(
         self,
         *,
-        authorization: Optional[List["EosPermissionLevel"]] = None,
-        account: Optional["int"] = None,
-        name: Optional["int"] = None,
+        account: "int",
+        name: "int",
+        authorization: Optional[Sequence["EosPermissionLevel"]] = None,
     ) -> None:
-        self.authorization = authorization if authorization is not None else []
+        self.authorization: Sequence["EosPermissionLevel"] = authorization if authorization is not None else []
         self.account = account
         self.name = name
 
@@ -4036,19 +4345,19 @@ class EosActionCommon(protobuf.MessageType):
 class EosActionTransfer(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("sender", "uint64", repeated=False, required=False),
-        2: protobuf.Field("receiver", "uint64", repeated=False, required=False),
-        3: protobuf.Field("quantity", "EosAsset", repeated=False, required=False),
-        4: protobuf.Field("memo", "string", repeated=False, required=False),
+        1: protobuf.Field("sender", "uint64", repeated=False, required=True),
+        2: protobuf.Field("receiver", "uint64", repeated=False, required=True),
+        3: protobuf.Field("quantity", "EosAsset", repeated=False, required=True),
+        4: protobuf.Field("memo", "string", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        sender: Optional["int"] = None,
-        receiver: Optional["int"] = None,
-        quantity: Optional["EosAsset"] = None,
-        memo: Optional["str"] = None,
+        sender: "int",
+        receiver: "int",
+        quantity: "EosAsset",
+        memo: "str",
     ) -> None:
         self.sender = sender
         self.receiver = receiver
@@ -4059,21 +4368,21 @@ class EosActionTransfer(protobuf.MessageType):
 class EosActionDelegate(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("sender", "uint64", repeated=False, required=False),
-        2: protobuf.Field("receiver", "uint64", repeated=False, required=False),
-        3: protobuf.Field("net_quantity", "EosAsset", repeated=False, required=False),
-        4: protobuf.Field("cpu_quantity", "EosAsset", repeated=False, required=False),
-        5: protobuf.Field("transfer", "bool", repeated=False, required=False),
+        1: protobuf.Field("sender", "uint64", repeated=False, required=True),
+        2: protobuf.Field("receiver", "uint64", repeated=False, required=True),
+        3: protobuf.Field("net_quantity", "EosAsset", repeated=False, required=True),
+        4: protobuf.Field("cpu_quantity", "EosAsset", repeated=False, required=True),
+        5: protobuf.Field("transfer", "bool", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        sender: Optional["int"] = None,
-        receiver: Optional["int"] = None,
-        net_quantity: Optional["EosAsset"] = None,
-        cpu_quantity: Optional["EosAsset"] = None,
-        transfer: Optional["bool"] = None,
+        sender: "int",
+        receiver: "int",
+        net_quantity: "EosAsset",
+        cpu_quantity: "EosAsset",
+        transfer: "bool",
     ) -> None:
         self.sender = sender
         self.receiver = receiver
@@ -4085,19 +4394,19 @@ class EosActionDelegate(protobuf.MessageType):
 class EosActionUndelegate(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("sender", "uint64", repeated=False, required=False),
-        2: protobuf.Field("receiver", "uint64", repeated=False, required=False),
-        3: protobuf.Field("net_quantity", "EosAsset", repeated=False, required=False),
-        4: protobuf.Field("cpu_quantity", "EosAsset", repeated=False, required=False),
+        1: protobuf.Field("sender", "uint64", repeated=False, required=True),
+        2: protobuf.Field("receiver", "uint64", repeated=False, required=True),
+        3: protobuf.Field("net_quantity", "EosAsset", repeated=False, required=True),
+        4: protobuf.Field("cpu_quantity", "EosAsset", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        sender: Optional["int"] = None,
-        receiver: Optional["int"] = None,
-        net_quantity: Optional["EosAsset"] = None,
-        cpu_quantity: Optional["EosAsset"] = None,
+        sender: "int",
+        receiver: "int",
+        net_quantity: "EosAsset",
+        cpu_quantity: "EosAsset",
     ) -> None:
         self.sender = sender
         self.receiver = receiver
@@ -4108,13 +4417,13 @@ class EosActionUndelegate(protobuf.MessageType):
 class EosActionRefund(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("owner", "uint64", repeated=False, required=False),
+        1: protobuf.Field("owner", "uint64", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        owner: Optional["int"] = None,
+        owner: "int",
     ) -> None:
         self.owner = owner
 
@@ -4122,17 +4431,17 @@ class EosActionRefund(protobuf.MessageType):
 class EosActionBuyRam(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("payer", "uint64", repeated=False, required=False),
-        2: protobuf.Field("receiver", "uint64", repeated=False, required=False),
-        3: protobuf.Field("quantity", "EosAsset", repeated=False, required=False),
+        1: protobuf.Field("payer", "uint64", repeated=False, required=True),
+        2: protobuf.Field("receiver", "uint64", repeated=False, required=True),
+        3: protobuf.Field("quantity", "EosAsset", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        payer: Optional["int"] = None,
-        receiver: Optional["int"] = None,
-        quantity: Optional["EosAsset"] = None,
+        payer: "int",
+        receiver: "int",
+        quantity: "EosAsset",
     ) -> None:
         self.payer = payer
         self.receiver = receiver
@@ -4142,17 +4451,17 @@ class EosActionBuyRam(protobuf.MessageType):
 class EosActionBuyRamBytes(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("payer", "uint64", repeated=False, required=False),
-        2: protobuf.Field("receiver", "uint64", repeated=False, required=False),
-        3: protobuf.Field("bytes", "uint32", repeated=False, required=False),
+        1: protobuf.Field("payer", "uint64", repeated=False, required=True),
+        2: protobuf.Field("receiver", "uint64", repeated=False, required=True),
+        3: protobuf.Field("bytes", "uint32", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        payer: Optional["int"] = None,
-        receiver: Optional["int"] = None,
-        bytes: Optional["int"] = None,
+        payer: "int",
+        receiver: "int",
+        bytes: "int",
     ) -> None:
         self.payer = payer
         self.receiver = receiver
@@ -4162,15 +4471,15 @@ class EosActionBuyRamBytes(protobuf.MessageType):
 class EosActionSellRam(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("account", "uint64", repeated=False, required=False),
-        2: protobuf.Field("bytes", "uint64", repeated=False, required=False),
+        1: protobuf.Field("account", "uint64", repeated=False, required=True),
+        2: protobuf.Field("bytes", "uint64", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        account: Optional["int"] = None,
-        bytes: Optional["int"] = None,
+        account: "int",
+        bytes: "int",
     ) -> None:
         self.account = account
         self.bytes = bytes
@@ -4179,19 +4488,19 @@ class EosActionSellRam(protobuf.MessageType):
 class EosActionVoteProducer(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("voter", "uint64", repeated=False, required=False),
-        2: protobuf.Field("proxy", "uint64", repeated=False, required=False),
+        1: protobuf.Field("voter", "uint64", repeated=False, required=True),
+        2: protobuf.Field("proxy", "uint64", repeated=False, required=True),
         3: protobuf.Field("producers", "uint64", repeated=True, required=False),
     }
 
     def __init__(
         self,
         *,
-        producers: Optional[List["int"]] = None,
-        voter: Optional["int"] = None,
-        proxy: Optional["int"] = None,
+        voter: "int",
+        proxy: "int",
+        producers: Optional[Sequence["int"]] = None,
     ) -> None:
-        self.producers = producers if producers is not None else []
+        self.producers: Sequence["int"] = producers if producers is not None else []
         self.voter = voter
         self.proxy = proxy
 
@@ -4199,19 +4508,19 @@ class EosActionVoteProducer(protobuf.MessageType):
 class EosActionUpdateAuth(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("account", "uint64", repeated=False, required=False),
-        2: protobuf.Field("permission", "uint64", repeated=False, required=False),
-        3: protobuf.Field("parent", "uint64", repeated=False, required=False),
-        4: protobuf.Field("auth", "EosAuthorization", repeated=False, required=False),
+        1: protobuf.Field("account", "uint64", repeated=False, required=True),
+        2: protobuf.Field("permission", "uint64", repeated=False, required=True),
+        3: protobuf.Field("parent", "uint64", repeated=False, required=True),
+        4: protobuf.Field("auth", "EosAuthorization", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        account: Optional["int"] = None,
-        permission: Optional["int"] = None,
-        parent: Optional["int"] = None,
-        auth: Optional["EosAuthorization"] = None,
+        account: "int",
+        permission: "int",
+        parent: "int",
+        auth: "EosAuthorization",
     ) -> None:
         self.account = account
         self.permission = permission
@@ -4222,15 +4531,15 @@ class EosActionUpdateAuth(protobuf.MessageType):
 class EosActionDeleteAuth(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("account", "uint64", repeated=False, required=False),
-        2: protobuf.Field("permission", "uint64", repeated=False, required=False),
+        1: protobuf.Field("account", "uint64", repeated=False, required=True),
+        2: protobuf.Field("permission", "uint64", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        account: Optional["int"] = None,
-        permission: Optional["int"] = None,
+        account: "int",
+        permission: "int",
     ) -> None:
         self.account = account
         self.permission = permission
@@ -4239,19 +4548,19 @@ class EosActionDeleteAuth(protobuf.MessageType):
 class EosActionLinkAuth(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("account", "uint64", repeated=False, required=False),
-        2: protobuf.Field("code", "uint64", repeated=False, required=False),
-        3: protobuf.Field("type", "uint64", repeated=False, required=False),
-        4: protobuf.Field("requirement", "uint64", repeated=False, required=False),
+        1: protobuf.Field("account", "uint64", repeated=False, required=True),
+        2: protobuf.Field("code", "uint64", repeated=False, required=True),
+        3: protobuf.Field("type", "uint64", repeated=False, required=True),
+        4: protobuf.Field("requirement", "uint64", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        account: Optional["int"] = None,
-        code: Optional["int"] = None,
-        type: Optional["int"] = None,
-        requirement: Optional["int"] = None,
+        account: "int",
+        code: "int",
+        type: "int",
+        requirement: "int",
     ) -> None:
         self.account = account
         self.code = code
@@ -4262,17 +4571,17 @@ class EosActionLinkAuth(protobuf.MessageType):
 class EosActionUnlinkAuth(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("account", "uint64", repeated=False, required=False),
-        2: protobuf.Field("code", "uint64", repeated=False, required=False),
-        3: protobuf.Field("type", "uint64", repeated=False, required=False),
+        1: protobuf.Field("account", "uint64", repeated=False, required=True),
+        2: protobuf.Field("code", "uint64", repeated=False, required=True),
+        3: protobuf.Field("type", "uint64", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        account: Optional["int"] = None,
-        code: Optional["int"] = None,
-        type: Optional["int"] = None,
+        account: "int",
+        code: "int",
+        type: "int",
     ) -> None:
         self.account = account
         self.code = code
@@ -4282,19 +4591,19 @@ class EosActionUnlinkAuth(protobuf.MessageType):
 class EosActionNewAccount(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("creator", "uint64", repeated=False, required=False),
-        2: protobuf.Field("name", "uint64", repeated=False, required=False),
-        3: protobuf.Field("owner", "EosAuthorization", repeated=False, required=False),
-        4: protobuf.Field("active", "EosAuthorization", repeated=False, required=False),
+        1: protobuf.Field("creator", "uint64", repeated=False, required=True),
+        2: protobuf.Field("name", "uint64", repeated=False, required=True),
+        3: protobuf.Field("owner", "EosAuthorization", repeated=False, required=True),
+        4: protobuf.Field("active", "EosAuthorization", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        creator: Optional["int"] = None,
-        name: Optional["int"] = None,
-        owner: Optional["EosAuthorization"] = None,
-        active: Optional["EosAuthorization"] = None,
+        creator: "int",
+        name: "int",
+        owner: "EosAuthorization",
+        active: "EosAuthorization",
     ) -> None:
         self.creator = creator
         self.name = name
@@ -4306,17 +4615,133 @@ class EosActionUnknown(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
         1: protobuf.Field("data_size", "uint32", repeated=False, required=True),
-        2: protobuf.Field("data_chunk", "bytes", repeated=False, required=False),
+        2: protobuf.Field("data_chunk", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
         data_size: "int",
-        data_chunk: Optional["bytes"] = None,
+        data_chunk: "bytes",
     ) -> None:
         self.data_size = data_size
         self.data_chunk = data_chunk
+
+
+class EthereumSignTypedData(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 464
+    FIELDS = {
+        1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
+        2: protobuf.Field("primary_type", "string", repeated=False, required=True),
+        3: protobuf.Field("metamask_v4_compat", "bool", repeated=False, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        primary_type: "str",
+        address_n: Optional[Sequence["int"]] = None,
+        metamask_v4_compat: Optional["bool"] = True,
+    ) -> None:
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.primary_type = primary_type
+        self.metamask_v4_compat = metamask_v4_compat
+
+
+class EthereumTypedDataStructRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 465
+    FIELDS = {
+        1: protobuf.Field("name", "string", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        name: "str",
+    ) -> None:
+        self.name = name
+
+
+class EthereumTypedDataStructAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 466
+    FIELDS = {
+        1: protobuf.Field("members", "EthereumStructMember", repeated=True, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        members: Optional[Sequence["EthereumStructMember"]] = None,
+    ) -> None:
+        self.members: Sequence["EthereumStructMember"] = members if members is not None else []
+
+
+class EthereumTypedDataValueRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 467
+    FIELDS = {
+        1: protobuf.Field("member_path", "uint32", repeated=True, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        member_path: Optional[Sequence["int"]] = None,
+    ) -> None:
+        self.member_path: Sequence["int"] = member_path if member_path is not None else []
+
+
+class EthereumTypedDataValueAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 468
+    FIELDS = {
+        1: protobuf.Field("value", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        value: "bytes",
+    ) -> None:
+        self.value = value
+
+
+class EthereumStructMember(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("type", "EthereumFieldType", repeated=False, required=True),
+        2: protobuf.Field("name", "string", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        type: "EthereumFieldType",
+        name: "str",
+    ) -> None:
+        self.type = type
+        self.name = name
+
+
+class EthereumFieldType(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("data_type", "EthereumDataType", repeated=False, required=True),
+        2: protobuf.Field("size", "uint32", repeated=False, required=False),
+        3: protobuf.Field("entry_type", "EthereumFieldType", repeated=False, required=False),
+        4: protobuf.Field("struct_name", "string", repeated=False, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        data_type: "EthereumDataType",
+        size: Optional["int"] = None,
+        entry_type: Optional["EthereumFieldType"] = None,
+        struct_name: Optional["str"] = None,
+    ) -> None:
+        self.data_type = data_type
+        self.size = size
+        self.entry_type = entry_type
+        self.struct_name = struct_name
 
 
 class EthereumGetPublicKey(protobuf.MessageType):
@@ -4329,10 +4754,10 @@ class EthereumGetPublicKey(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
         show_display: Optional["bool"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.show_display = show_display
 
 
@@ -4363,10 +4788,10 @@ class EthereumGetAddress(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
         show_display: Optional["bool"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.show_display = show_display
 
 
@@ -4408,7 +4833,7 @@ class EthereumSignTx(protobuf.MessageType):
         gas_price: "bytes",
         gas_limit: "bytes",
         chain_id: "int",
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
         nonce: Optional["bytes"] = b'',
         to: Optional["str"] = '',
         value: Optional["bytes"] = b'',
@@ -4416,7 +4841,7 @@ class EthereumSignTx(protobuf.MessageType):
         data_length: Optional["int"] = 0,
         tx_type: Optional["int"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.gas_price = gas_price
         self.gas_limit = gas_limit
         self.chain_id = chain_id
@@ -4454,13 +4879,13 @@ class EthereumSignTxEIP1559(protobuf.MessageType):
         value: "bytes",
         data_length: "int",
         chain_id: "int",
-        address_n: Optional[List["int"]] = None,
-        access_list: Optional[List["EthereumAccessList"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
+        access_list: Optional[Sequence["EthereumAccessList"]] = None,
         to: Optional["str"] = '',
         data_initial_chunk: Optional["bytes"] = b'',
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
-        self.access_list = access_list if access_list is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.access_list: Sequence["EthereumAccessList"] = access_list if access_list is not None else []
         self.nonce = nonce
         self.max_gas_fee = max_gas_fee
         self.max_priority_fee = max_priority_fee
@@ -4520,9 +4945,9 @@ class EthereumSignMessage(protobuf.MessageType):
         self,
         *,
         message: "bytes",
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.message = message
 
 
@@ -4563,6 +4988,43 @@ class EthereumVerifyMessage(protobuf.MessageType):
         self.address = address
 
 
+class EthereumSignTypedHash(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 470
+    FIELDS = {
+        1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
+        2: protobuf.Field("domain_separator_hash", "bytes", repeated=False, required=True),
+        3: protobuf.Field("message_hash", "bytes", repeated=False, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        domain_separator_hash: "bytes",
+        address_n: Optional[Sequence["int"]] = None,
+        message_hash: Optional["bytes"] = None,
+    ) -> None:
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.domain_separator_hash = domain_separator_hash
+        self.message_hash = message_hash
+
+
+class EthereumTypedDataSignature(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 469
+    FIELDS = {
+        1: protobuf.Field("signature", "bytes", repeated=False, required=True),
+        2: protobuf.Field("address", "string", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        signature: "bytes",
+        address: "str",
+    ) -> None:
+        self.signature = signature
+        self.address = address
+
+
 class EthereumAccessList(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
@@ -4574,9 +5036,9 @@ class EthereumAccessList(protobuf.MessageType):
         self,
         *,
         address: "str",
-        storage_keys: Optional[List["bytes"]] = None,
+        storage_keys: Optional[Sequence["bytes"]] = None,
     ) -> None:
-        self.storage_keys = storage_keys if storage_keys is not None else []
+        self.storage_keys: Sequence["bytes"] = storage_keys if storage_keys is not None else []
         self.address = address
 
 
@@ -4598,8 +5060,8 @@ class MoneroTransactionSourceEntry(protobuf.MessageType):
     def __init__(
         self,
         *,
-        outputs: Optional[List["MoneroOutputEntry"]] = None,
-        real_out_additional_tx_keys: Optional[List["bytes"]] = None,
+        outputs: Optional[Sequence["MoneroOutputEntry"]] = None,
+        real_out_additional_tx_keys: Optional[Sequence["bytes"]] = None,
         real_output: Optional["int"] = None,
         real_out_tx_key: Optional["bytes"] = None,
         real_output_in_tx_index: Optional["int"] = None,
@@ -4609,8 +5071,8 @@ class MoneroTransactionSourceEntry(protobuf.MessageType):
         multisig_kLRki: Optional["MoneroMultisigKLRki"] = None,
         subaddr_minor: Optional["int"] = None,
     ) -> None:
-        self.outputs = outputs if outputs is not None else []
-        self.real_out_additional_tx_keys = real_out_additional_tx_keys if real_out_additional_tx_keys is not None else []
+        self.outputs: Sequence["MoneroOutputEntry"] = outputs if outputs is not None else []
+        self.real_out_additional_tx_keys: Sequence["bytes"] = real_out_additional_tx_keys if real_out_additional_tx_keys is not None else []
         self.real_output = real_output
         self.real_out_tx_key = real_out_tx_key
         self.real_output_in_tx_index = real_output_in_tx_index
@@ -4662,16 +5124,16 @@ class MoneroTransactionRsigData(protobuf.MessageType):
     def __init__(
         self,
         *,
-        grouping: Optional[List["int"]] = None,
-        rsig_parts: Optional[List["bytes"]] = None,
+        grouping: Optional[Sequence["int"]] = None,
+        rsig_parts: Optional[Sequence["bytes"]] = None,
         rsig_type: Optional["int"] = None,
         offload_type: Optional["int"] = None,
         mask: Optional["bytes"] = None,
         rsig: Optional["bytes"] = None,
         bp_version: Optional["int"] = None,
     ) -> None:
-        self.grouping = grouping if grouping is not None else []
-        self.rsig_parts = rsig_parts if rsig_parts is not None else []
+        self.grouping: Sequence["int"] = grouping if grouping is not None else []
+        self.rsig_parts: Sequence["bytes"] = rsig_parts if rsig_parts is not None else []
         self.rsig_type = rsig_type
         self.offload_type = offload_type
         self.mask = mask
@@ -4693,14 +5155,14 @@ class MoneroGetAddress(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
         show_display: Optional["bool"] = None,
         network_type: Optional["int"] = None,
         account: Optional["int"] = None,
         minor: Optional["int"] = None,
         payment_id: Optional["bytes"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.show_display = show_display
         self.network_type = network_type
         self.account = account
@@ -4732,10 +5194,10 @@ class MoneroGetWatchKey(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
         network_type: Optional["int"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.network_type = network_type
 
 
@@ -4768,12 +5230,12 @@ class MoneroTransactionInitRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
         version: Optional["int"] = None,
         network_type: Optional["int"] = None,
         tsx_data: Optional["MoneroTransactionData"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.version = version
         self.network_type = network_type
         self.tsx_data = tsx_data
@@ -4789,10 +5251,10 @@ class MoneroTransactionInitAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        hmacs: Optional[List["bytes"]] = None,
+        hmacs: Optional[Sequence["bytes"]] = None,
         rsig_data: Optional["MoneroTransactionRsigData"] = None,
     ) -> None:
-        self.hmacs = hmacs if hmacs is not None else []
+        self.hmacs: Sequence["bytes"] = hmacs if hmacs is not None else []
         self.rsig_data = rsig_data
 
 
@@ -4848,9 +5310,9 @@ class MoneroTransactionInputsPermutationRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        perm: Optional[List["int"]] = None,
+        perm: Optional[Sequence["int"]] = None,
     ) -> None:
-        self.perm = perm if perm is not None else []
+        self.perm: Sequence["int"] = perm if perm is not None else []
 
 
 class MoneroTransactionInputsPermutationAck(protobuf.MessageType):
@@ -5089,14 +5551,14 @@ class MoneroKeyImageExportInitRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[List["int"]] = None,
-        subs: Optional[List["MoneroSubAddressIndicesList"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
+        subs: Optional[Sequence["MoneroSubAddressIndicesList"]] = None,
         num: Optional["int"] = None,
         hash: Optional["bytes"] = None,
         network_type: Optional["int"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
-        self.subs = subs if subs is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.subs: Sequence["MoneroSubAddressIndicesList"] = subs if subs is not None else []
         self.num = num
         self.hash = hash
         self.network_type = network_type
@@ -5115,9 +5577,9 @@ class MoneroKeyImageSyncStepRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        tdis: Optional[List["MoneroTransferDetails"]] = None,
+        tdis: Optional[Sequence["MoneroTransferDetails"]] = None,
     ) -> None:
-        self.tdis = tdis if tdis is not None else []
+        self.tdis: Sequence["MoneroTransferDetails"] = tdis if tdis is not None else []
 
 
 class MoneroKeyImageSyncStepAck(protobuf.MessageType):
@@ -5129,9 +5591,9 @@ class MoneroKeyImageSyncStepAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        kis: Optional[List["MoneroExportedKeyImage"]] = None,
+        kis: Optional[Sequence["MoneroExportedKeyImage"]] = None,
     ) -> None:
-        self.kis = kis if kis is not None else []
+        self.kis: Sequence["MoneroExportedKeyImage"] = kis if kis is not None else []
 
 
 class MoneroKeyImageSyncFinalRequest(protobuf.MessageType):
@@ -5168,7 +5630,7 @@ class MoneroGetTxKeyRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
         network_type: Optional["int"] = None,
         salt1: Optional["bytes"] = None,
         salt2: Optional["bytes"] = None,
@@ -5177,7 +5639,7 @@ class MoneroGetTxKeyRequest(protobuf.MessageType):
         reason: Optional["int"] = None,
         view_public_key: Optional["bytes"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.network_type = network_type
         self.salt1 = salt1
         self.salt2 = salt2
@@ -5217,10 +5679,10 @@ class MoneroLiveRefreshStartRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
         network_type: Optional["int"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.network_type = network_type
 
 
@@ -5293,14 +5755,14 @@ class DebugMoneroDiagRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
-        pd: Optional[List["int"]] = None,
+        pd: Optional[Sequence["int"]] = None,
         ins: Optional["int"] = None,
         p1: Optional["int"] = None,
         p2: Optional["int"] = None,
         data1: Optional["bytes"] = None,
         data2: Optional["bytes"] = None,
     ) -> None:
-        self.pd = pd if pd is not None else []
+        self.pd: Sequence["int"] = pd if pd is not None else []
         self.ins = ins
         self.p1 = p1
         self.p2 = p2
@@ -5322,14 +5784,14 @@ class DebugMoneroDiagAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        pd: Optional[List["int"]] = None,
+        pd: Optional[Sequence["int"]] = None,
         ins: Optional["int"] = None,
         p1: Optional["int"] = None,
         p2: Optional["int"] = None,
         data1: Optional["bytes"] = None,
         data2: Optional["bytes"] = None,
     ) -> None:
-        self.pd = pd if pd is not None else []
+        self.pd: Sequence["int"] = pd if pd is not None else []
         self.ins = ins
         self.p1 = p1
         self.p2 = p2
@@ -5434,9 +5896,9 @@ class MoneroTransactionData(protobuf.MessageType):
     def __init__(
         self,
         *,
-        outputs: Optional[List["MoneroTransactionDestinationEntry"]] = None,
-        minor_indices: Optional[List["int"]] = None,
-        integrated_indices: Optional[List["int"]] = None,
+        outputs: Optional[Sequence["MoneroTransactionDestinationEntry"]] = None,
+        minor_indices: Optional[Sequence["int"]] = None,
+        integrated_indices: Optional[Sequence["int"]] = None,
         version: Optional["int"] = None,
         payment_id: Optional["bytes"] = None,
         unlock_time: Optional["int"] = None,
@@ -5450,9 +5912,9 @@ class MoneroTransactionData(protobuf.MessageType):
         hard_fork: Optional["int"] = None,
         monero_version: Optional["bytes"] = None,
     ) -> None:
-        self.outputs = outputs if outputs is not None else []
-        self.minor_indices = minor_indices if minor_indices is not None else []
-        self.integrated_indices = integrated_indices if integrated_indices is not None else []
+        self.outputs: Sequence["MoneroTransactionDestinationEntry"] = outputs if outputs is not None else []
+        self.minor_indices: Sequence["int"] = minor_indices if minor_indices is not None else []
+        self.integrated_indices: Sequence["int"] = integrated_indices if integrated_indices is not None else []
         self.version = version
         self.payment_id = payment_id
         self.unlock_time = unlock_time
@@ -5497,10 +5959,10 @@ class MoneroSubAddressIndicesList(protobuf.MessageType):
     def __init__(
         self,
         *,
-        minor_indices: Optional[List["int"]] = None,
+        minor_indices: Optional[Sequence["int"]] = None,
         account: Optional["int"] = None,
     ) -> None:
-        self.minor_indices = minor_indices if minor_indices is not None else []
+        self.minor_indices: Sequence["int"] = minor_indices if minor_indices is not None else []
         self.account = account
 
 
@@ -5518,14 +5980,14 @@ class MoneroTransferDetails(protobuf.MessageType):
     def __init__(
         self,
         *,
-        additional_tx_pub_keys: Optional[List["bytes"]] = None,
+        additional_tx_pub_keys: Optional[Sequence["bytes"]] = None,
         out_key: Optional["bytes"] = None,
         tx_pub_key: Optional["bytes"] = None,
         internal_output_index: Optional["int"] = None,
         sub_addr_major: Optional["int"] = None,
         sub_addr_minor: Optional["int"] = None,
     ) -> None:
-        self.additional_tx_pub_keys = additional_tx_pub_keys if additional_tx_pub_keys is not None else []
+        self.additional_tx_pub_keys: Sequence["bytes"] = additional_tx_pub_keys if additional_tx_pub_keys is not None else []
         self.out_key = out_key
         self.tx_pub_key = tx_pub_key
         self.internal_output_index = internal_output_index
@@ -5561,11 +6023,11 @@ class NEMGetAddress(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[List["int"]] = None,
-        network: Optional["int"] = None,
+        address_n: Optional[Sequence["int"]] = None,
+        network: Optional["int"] = 104,
         show_display: Optional["bool"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.network = network
         self.show_display = show_display
 
@@ -5587,7 +6049,7 @@ class NEMAddress(protobuf.MessageType):
 class NEMSignTx(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 69
     FIELDS = {
-        1: protobuf.Field("transaction", "NEMTransactionCommon", repeated=False, required=False),
+        1: protobuf.Field("transaction", "NEMTransactionCommon", repeated=False, required=True),
         2: protobuf.Field("multisig", "NEMTransactionCommon", repeated=False, required=False),
         3: protobuf.Field("transfer", "NEMTransfer", repeated=False, required=False),
         4: protobuf.Field("cosigning", "bool", repeated=False, required=False),
@@ -5601,7 +6063,7 @@ class NEMSignTx(protobuf.MessageType):
     def __init__(
         self,
         *,
-        transaction: Optional["NEMTransactionCommon"] = None,
+        transaction: "NEMTransactionCommon",
         multisig: Optional["NEMTransactionCommon"] = None,
         transfer: Optional["NEMTransfer"] = None,
         cosigning: Optional["bool"] = None,
@@ -5651,12 +6113,12 @@ class NEMDecryptMessage(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
         network: Optional["int"] = None,
         public_key: Optional["bytes"] = None,
         payload: Optional["bytes"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.network = network
         self.public_key = public_key
         self.payload = payload
@@ -5681,35 +6143,35 @@ class NEMTransactionCommon(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
         2: protobuf.Field("network", "uint32", repeated=False, required=False),
-        3: protobuf.Field("timestamp", "uint32", repeated=False, required=False),
-        4: protobuf.Field("fee", "uint64", repeated=False, required=False),
-        5: protobuf.Field("deadline", "uint32", repeated=False, required=False),
+        3: protobuf.Field("timestamp", "uint32", repeated=False, required=True),
+        4: protobuf.Field("fee", "uint64", repeated=False, required=True),
+        5: protobuf.Field("deadline", "uint32", repeated=False, required=True),
         6: protobuf.Field("signer", "bytes", repeated=False, required=False),
     }
 
     def __init__(
         self,
         *,
-        address_n: Optional[List["int"]] = None,
-        network: Optional["int"] = None,
-        timestamp: Optional["int"] = None,
-        fee: Optional["int"] = None,
-        deadline: Optional["int"] = None,
+        timestamp: "int",
+        fee: "int",
+        deadline: "int",
+        address_n: Optional[Sequence["int"]] = None,
+        network: Optional["int"] = 104,
         signer: Optional["bytes"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
-        self.network = network
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.timestamp = timestamp
         self.fee = fee
         self.deadline = deadline
+        self.network = network
         self.signer = signer
 
 
 class NEMTransfer(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("recipient", "string", repeated=False, required=False),
-        2: protobuf.Field("amount", "uint64", repeated=False, required=False),
+        1: protobuf.Field("recipient", "string", repeated=False, required=True),
+        2: protobuf.Field("amount", "uint64", repeated=False, required=True),
         3: protobuf.Field("payload", "bytes", repeated=False, required=False),
         4: protobuf.Field("public_key", "bytes", repeated=False, required=False),
         5: protobuf.Field("mosaics", "NEMMosaic", repeated=True, required=False),
@@ -5718,13 +6180,13 @@ class NEMTransfer(protobuf.MessageType):
     def __init__(
         self,
         *,
-        mosaics: Optional[List["NEMMosaic"]] = None,
-        recipient: Optional["str"] = None,
-        amount: Optional["int"] = None,
-        payload: Optional["bytes"] = None,
+        recipient: "str",
+        amount: "int",
+        mosaics: Optional[Sequence["NEMMosaic"]] = None,
+        payload: Optional["bytes"] = b'',
         public_key: Optional["bytes"] = None,
     ) -> None:
-        self.mosaics = mosaics if mosaics is not None else []
+        self.mosaics: Sequence["NEMMosaic"] = mosaics if mosaics is not None else []
         self.recipient = recipient
         self.amount = amount
         self.payload = payload
@@ -5734,40 +6196,40 @@ class NEMTransfer(protobuf.MessageType):
 class NEMProvisionNamespace(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("namespace", "string", repeated=False, required=False),
+        1: protobuf.Field("namespace", "string", repeated=False, required=True),
         2: protobuf.Field("parent", "string", repeated=False, required=False),
-        3: protobuf.Field("sink", "string", repeated=False, required=False),
-        4: protobuf.Field("fee", "uint64", repeated=False, required=False),
+        3: protobuf.Field("sink", "string", repeated=False, required=True),
+        4: protobuf.Field("fee", "uint64", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        namespace: Optional["str"] = None,
+        namespace: "str",
+        sink: "str",
+        fee: "int",
         parent: Optional["str"] = None,
-        sink: Optional["str"] = None,
-        fee: Optional["int"] = None,
     ) -> None:
         self.namespace = namespace
-        self.parent = parent
         self.sink = sink
         self.fee = fee
+        self.parent = parent
 
 
 class NEMMosaicCreation(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("definition", "NEMMosaicDefinition", repeated=False, required=False),
-        2: protobuf.Field("sink", "string", repeated=False, required=False),
-        3: protobuf.Field("fee", "uint64", repeated=False, required=False),
+        1: protobuf.Field("definition", "NEMMosaicDefinition", repeated=False, required=True),
+        2: protobuf.Field("sink", "string", repeated=False, required=True),
+        3: protobuf.Field("fee", "uint64", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        definition: Optional["NEMMosaicDefinition"] = None,
-        sink: Optional["str"] = None,
-        fee: Optional["int"] = None,
+        definition: "NEMMosaicDefinition",
+        sink: "str",
+        fee: "int",
     ) -> None:
         self.definition = definition
         self.sink = sink
@@ -5777,19 +6239,19 @@ class NEMMosaicCreation(protobuf.MessageType):
 class NEMMosaicSupplyChange(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("namespace", "string", repeated=False, required=False),
-        2: protobuf.Field("mosaic", "string", repeated=False, required=False),
-        3: protobuf.Field("type", "NEMSupplyChangeType", repeated=False, required=False),
-        4: protobuf.Field("delta", "uint64", repeated=False, required=False),
+        1: protobuf.Field("namespace", "string", repeated=False, required=True),
+        2: protobuf.Field("mosaic", "string", repeated=False, required=True),
+        3: protobuf.Field("type", "NEMSupplyChangeType", repeated=False, required=True),
+        4: protobuf.Field("delta", "uint64", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        namespace: Optional["str"] = None,
-        mosaic: Optional["str"] = None,
-        type: Optional["NEMSupplyChangeType"] = None,
-        delta: Optional["int"] = None,
+        namespace: "str",
+        mosaic: "str",
+        type: "NEMSupplyChangeType",
+        delta: "int",
     ) -> None:
         self.namespace = namespace
         self.mosaic = mosaic
@@ -5807,25 +6269,25 @@ class NEMAggregateModification(protobuf.MessageType):
     def __init__(
         self,
         *,
-        modifications: Optional[List["NEMCosignatoryModification"]] = None,
+        modifications: Optional[Sequence["NEMCosignatoryModification"]] = None,
         relative_change: Optional["int"] = None,
     ) -> None:
-        self.modifications = modifications if modifications is not None else []
+        self.modifications: Sequence["NEMCosignatoryModification"] = modifications if modifications is not None else []
         self.relative_change = relative_change
 
 
 class NEMImportanceTransfer(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("mode", "NEMImportanceTransferMode", repeated=False, required=False),
-        2: protobuf.Field("public_key", "bytes", repeated=False, required=False),
+        1: protobuf.Field("mode", "NEMImportanceTransferMode", repeated=False, required=True),
+        2: protobuf.Field("public_key", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        mode: Optional["NEMImportanceTransferMode"] = None,
-        public_key: Optional["bytes"] = None,
+        mode: "NEMImportanceTransferMode",
+        public_key: "bytes",
     ) -> None:
         self.mode = mode
         self.public_key = public_key
@@ -5834,17 +6296,17 @@ class NEMImportanceTransfer(protobuf.MessageType):
 class NEMMosaic(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("namespace", "string", repeated=False, required=False),
-        2: protobuf.Field("mosaic", "string", repeated=False, required=False),
-        3: protobuf.Field("quantity", "uint64", repeated=False, required=False),
+        1: protobuf.Field("namespace", "string", repeated=False, required=True),
+        2: protobuf.Field("mosaic", "string", repeated=False, required=True),
+        3: protobuf.Field("quantity", "uint64", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        namespace: Optional["str"] = None,
-        mosaic: Optional["str"] = None,
-        quantity: Optional["int"] = None,
+        namespace: "str",
+        mosaic: "str",
+        quantity: "int",
     ) -> None:
         self.namespace = namespace
         self.mosaic = mosaic
@@ -5856,8 +6318,8 @@ class NEMMosaicDefinition(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("name", "string", repeated=False, required=False),
         2: protobuf.Field("ticker", "string", repeated=False, required=False),
-        3: protobuf.Field("namespace", "string", repeated=False, required=False),
-        4: protobuf.Field("mosaic", "string", repeated=False, required=False),
+        3: protobuf.Field("namespace", "string", repeated=False, required=True),
+        4: protobuf.Field("mosaic", "string", repeated=False, required=True),
         5: protobuf.Field("divisibility", "uint32", repeated=False, required=False),
         6: protobuf.Field("levy", "NEMMosaicLevy", repeated=False, required=False),
         7: protobuf.Field("fee", "uint64", repeated=False, required=False),
@@ -5867,18 +6329,19 @@ class NEMMosaicDefinition(protobuf.MessageType):
         11: protobuf.Field("supply", "uint64", repeated=False, required=False),
         12: protobuf.Field("mutable_supply", "bool", repeated=False, required=False),
         13: protobuf.Field("transferable", "bool", repeated=False, required=False),
-        14: protobuf.Field("description", "string", repeated=False, required=False),
+        14: protobuf.Field("description", "string", repeated=False, required=True),
         15: protobuf.Field("networks", "uint32", repeated=True, required=False),
     }
 
     def __init__(
         self,
         *,
-        networks: Optional[List["int"]] = None,
+        namespace: "str",
+        mosaic: "str",
+        description: "str",
+        networks: Optional[Sequence["int"]] = None,
         name: Optional["str"] = None,
         ticker: Optional["str"] = None,
-        namespace: Optional["str"] = None,
-        mosaic: Optional["str"] = None,
         divisibility: Optional["int"] = None,
         levy: Optional["NEMMosaicLevy"] = None,
         fee: Optional["int"] = None,
@@ -5888,13 +6351,13 @@ class NEMMosaicDefinition(protobuf.MessageType):
         supply: Optional["int"] = None,
         mutable_supply: Optional["bool"] = None,
         transferable: Optional["bool"] = None,
-        description: Optional["str"] = None,
     ) -> None:
-        self.networks = networks if networks is not None else []
-        self.name = name
-        self.ticker = ticker
+        self.networks: Sequence["int"] = networks if networks is not None else []
         self.namespace = namespace
         self.mosaic = mosaic
+        self.description = description
+        self.name = name
+        self.ticker = ticker
         self.divisibility = divisibility
         self.levy = levy
         self.fee = fee
@@ -5904,21 +6367,20 @@ class NEMMosaicDefinition(protobuf.MessageType):
         self.supply = supply
         self.mutable_supply = mutable_supply
         self.transferable = transferable
-        self.description = description
 
 
 class NEMCosignatoryModification(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("type", "NEMModificationType", repeated=False, required=False),
-        2: protobuf.Field("public_key", "bytes", repeated=False, required=False),
+        1: protobuf.Field("type", "NEMModificationType", repeated=False, required=True),
+        2: protobuf.Field("public_key", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        type: Optional["NEMModificationType"] = None,
-        public_key: Optional["bytes"] = None,
+        type: "NEMModificationType",
+        public_key: "bytes",
     ) -> None:
         self.type = type
         self.public_key = public_key
@@ -5934,10 +6396,10 @@ class RippleGetAddress(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
         show_display: Optional["bool"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.show_display = show_display
 
 
@@ -5959,29 +6421,29 @@ class RippleSignTx(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 402
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
-        2: protobuf.Field("fee", "uint64", repeated=False, required=False),
+        2: protobuf.Field("fee", "uint64", repeated=False, required=True),
         3: protobuf.Field("flags", "uint32", repeated=False, required=False),
-        4: protobuf.Field("sequence", "uint32", repeated=False, required=False),
+        4: protobuf.Field("sequence", "uint32", repeated=False, required=True),
         5: protobuf.Field("last_ledger_sequence", "uint32", repeated=False, required=False),
-        6: protobuf.Field("payment", "RipplePayment", repeated=False, required=False),
+        6: protobuf.Field("payment", "RipplePayment", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        address_n: Optional[List["int"]] = None,
-        fee: Optional["int"] = None,
-        flags: Optional["int"] = None,
-        sequence: Optional["int"] = None,
+        fee: "int",
+        sequence: "int",
+        payment: "RipplePayment",
+        address_n: Optional[Sequence["int"]] = None,
+        flags: Optional["int"] = 0,
         last_ledger_sequence: Optional["int"] = None,
-        payment: Optional["RipplePayment"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.fee = fee
-        self.flags = flags
         self.sequence = sequence
-        self.last_ledger_sequence = last_ledger_sequence
         self.payment = payment
+        self.flags = flags
+        self.last_ledger_sequence = last_ledger_sequence
 
 
 class RippleSignedTx(protobuf.MessageType):
@@ -6051,10 +6513,10 @@ class StellarGetAddress(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
         show_display: Optional["bool"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.show_display = show_display
 
 
@@ -6100,12 +6562,12 @@ class StellarSignTx(protobuf.MessageType):
         timebounds_end: "int",
         memo_type: "StellarMemoType",
         num_operations: "int",
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
         memo_text: Optional["str"] = None,
         memo_id: Optional["int"] = None,
         memo_hash: Optional["bytes"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.network_passphrase = network_passphrase
         self.source_account = source_account
         self.fee = fee
@@ -6166,7 +6628,7 @@ class StellarCreateAccountOp(protobuf.MessageType):
         self.source_account = source_account
 
 
-class StellarPathPaymentOp(protobuf.MessageType):
+class StellarPathPaymentStrictReceiveOp(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 212
     FIELDS = {
         1: protobuf.Field("source_account", "string", repeated=False, required=False),
@@ -6186,10 +6648,10 @@ class StellarPathPaymentOp(protobuf.MessageType):
         destination_account: "str",
         destination_asset: "StellarAsset",
         destination_amount: "int",
-        paths: Optional[List["StellarAsset"]] = None,
+        paths: Optional[Sequence["StellarAsset"]] = None,
         source_account: Optional["str"] = None,
     ) -> None:
-        self.paths = paths if paths is not None else []
+        self.paths: Sequence["StellarAsset"] = paths if paths is not None else []
         self.send_asset = send_asset
         self.send_max = send_max
         self.destination_account = destination_account
@@ -6198,7 +6660,39 @@ class StellarPathPaymentOp(protobuf.MessageType):
         self.source_account = source_account
 
 
-class StellarManageOfferOp(protobuf.MessageType):
+class StellarPathPaymentStrictSendOp(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 223
+    FIELDS = {
+        1: protobuf.Field("source_account", "string", repeated=False, required=False),
+        2: protobuf.Field("send_asset", "StellarAsset", repeated=False, required=True),
+        3: protobuf.Field("send_amount", "sint64", repeated=False, required=True),
+        4: protobuf.Field("destination_account", "string", repeated=False, required=True),
+        5: protobuf.Field("destination_asset", "StellarAsset", repeated=False, required=True),
+        6: protobuf.Field("destination_min", "sint64", repeated=False, required=True),
+        7: protobuf.Field("paths", "StellarAsset", repeated=True, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        send_asset: "StellarAsset",
+        send_amount: "int",
+        destination_account: "str",
+        destination_asset: "StellarAsset",
+        destination_min: "int",
+        paths: Optional[Sequence["StellarAsset"]] = None,
+        source_account: Optional["str"] = None,
+    ) -> None:
+        self.paths: Sequence["StellarAsset"] = paths if paths is not None else []
+        self.send_asset = send_asset
+        self.send_amount = send_amount
+        self.destination_account = destination_account
+        self.destination_asset = destination_asset
+        self.destination_min = destination_min
+        self.source_account = source_account
+
+
+class StellarManageSellOfferOp(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 213
     FIELDS = {
         1: protobuf.Field("source_account", "string", repeated=False, required=False),
@@ -6230,7 +6724,39 @@ class StellarManageOfferOp(protobuf.MessageType):
         self.source_account = source_account
 
 
-class StellarCreatePassiveOfferOp(protobuf.MessageType):
+class StellarManageBuyOfferOp(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 222
+    FIELDS = {
+        1: protobuf.Field("source_account", "string", repeated=False, required=False),
+        2: protobuf.Field("selling_asset", "StellarAsset", repeated=False, required=True),
+        3: protobuf.Field("buying_asset", "StellarAsset", repeated=False, required=True),
+        4: protobuf.Field("amount", "sint64", repeated=False, required=True),
+        5: protobuf.Field("price_n", "uint32", repeated=False, required=True),
+        6: protobuf.Field("price_d", "uint32", repeated=False, required=True),
+        7: protobuf.Field("offer_id", "uint64", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        selling_asset: "StellarAsset",
+        buying_asset: "StellarAsset",
+        amount: "int",
+        price_n: "int",
+        price_d: "int",
+        offer_id: "int",
+        source_account: Optional["str"] = None,
+    ) -> None:
+        self.selling_asset = selling_asset
+        self.buying_asset = buying_asset
+        self.amount = amount
+        self.price_n = price_n
+        self.price_d = price_d
+        self.offer_id = offer_id
+        self.source_account = source_account
+
+
+class StellarCreatePassiveSellOfferOp(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 214
     FIELDS = {
         1: protobuf.Field("source_account", "string", repeated=False, required=False),
@@ -6433,10 +6959,10 @@ class TezosGetAddress(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
         show_display: Optional["bool"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.show_display = show_display
 
 
@@ -6464,10 +6990,10 @@ class TezosGetPublicKey(protobuf.MessageType):
     def __init__(
         self,
         *,
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
         show_display: Optional["bool"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.show_display = show_display
 
 
@@ -6502,7 +7028,7 @@ class TezosSignTx(protobuf.MessageType):
         self,
         *,
         branch: "bytes",
-        address_n: Optional[List["int"]] = None,
+        address_n: Optional[Sequence["int"]] = None,
         reveal: Optional["TezosRevealOp"] = None,
         transaction: Optional["TezosTransactionOp"] = None,
         origination: Optional["TezosOriginationOp"] = None,
@@ -6510,7 +7036,7 @@ class TezosSignTx(protobuf.MessageType):
         proposal: Optional["TezosProposalOp"] = None,
         ballot: Optional["TezosBallotOp"] = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.branch = branch
         self.reveal = reveal
         self.transaction = transaction
@@ -6700,19 +7226,19 @@ class TezosDelegationOp(protobuf.MessageType):
 class TezosProposalOp(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("source", "bytes", repeated=False, required=False),
-        2: protobuf.Field("period", "uint64", repeated=False, required=False),
+        1: protobuf.Field("source", "bytes", repeated=False, required=True),
+        2: protobuf.Field("period", "uint64", repeated=False, required=True),
         4: protobuf.Field("proposals", "bytes", repeated=True, required=False),
     }
 
     def __init__(
         self,
         *,
-        proposals: Optional[List["bytes"]] = None,
-        source: Optional["bytes"] = None,
-        period: Optional["int"] = None,
+        source: "bytes",
+        period: "int",
+        proposals: Optional[Sequence["bytes"]] = None,
     ) -> None:
-        self.proposals = proposals if proposals is not None else []
+        self.proposals: Sequence["bytes"] = proposals if proposals is not None else []
         self.source = source
         self.period = period
 
@@ -6720,19 +7246,19 @@ class TezosProposalOp(protobuf.MessageType):
 class TezosBallotOp(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("source", "bytes", repeated=False, required=False),
-        2: protobuf.Field("period", "uint64", repeated=False, required=False),
-        3: protobuf.Field("proposal", "bytes", repeated=False, required=False),
-        4: protobuf.Field("ballot", "TezosBallotType", repeated=False, required=False),
+        1: protobuf.Field("source", "bytes", repeated=False, required=True),
+        2: protobuf.Field("period", "uint64", repeated=False, required=True),
+        3: protobuf.Field("proposal", "bytes", repeated=False, required=True),
+        4: protobuf.Field("ballot", "TezosBallotType", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        source: Optional["bytes"] = None,
-        period: Optional["int"] = None,
-        proposal: Optional["bytes"] = None,
-        ballot: Optional["TezosBallotType"] = None,
+        source: "bytes",
+        period: "int",
+        proposal: "bytes",
+        ballot: "TezosBallotType",
     ) -> None:
         self.source = source
         self.period = period
@@ -6763,15 +7289,15 @@ class TezosParametersManager(protobuf.MessageType):
 class TezosManagerTransfer(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("destination", "TezosContractID", repeated=False, required=False),
-        2: protobuf.Field("amount", "uint64", repeated=False, required=False),
+        1: protobuf.Field("destination", "TezosContractID", repeated=False, required=True),
+        2: protobuf.Field("amount", "uint64", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        destination: Optional["TezosContractID"] = None,
-        amount: Optional["int"] = None,
+        destination: "TezosContractID",
+        amount: "int",
     ) -> None:
         self.destination = destination
         self.amount = amount
@@ -6818,9 +7344,9 @@ class WebAuthnCredentials(protobuf.MessageType):
     def __init__(
         self,
         *,
-        credentials: Optional[List["WebAuthnCredential"]] = None,
+        credentials: Optional[Sequence["WebAuthnCredential"]] = None,
     ) -> None:
-        self.credentials = credentials if credentials is not None else []
+        self.credentials: Sequence["WebAuthnCredential"] = credentials if credentials is not None else []
 
 
 class WebAuthnCredential(protobuf.MessageType):
@@ -6910,9 +7436,9 @@ class ZcashGetFullViewingKey(protobuf.MessageType):
     def __init__(
         self,
         *,
-        z_address_n: Optional[List["int"]] = None,
+        z_address_n: Optional[Sequence["int"]] = None,
     ) -> None:
-        self.z_address_n = z_address_n if z_address_n is not None else []
+        self.z_address_n: Sequence["int"] = z_address_n if z_address_n is not None else []
 
 
 class ZcashFullViewingKey(protobuf.MessageType):
@@ -6938,9 +7464,9 @@ class ZcashGetIncomingViewingKey(protobuf.MessageType):
     def __init__(
         self,
         *,
-        z_address_n: Optional[List["int"]] = None,
+        z_address_n: Optional[Sequence["int"]] = None,
     ) -> None:
-        self.z_address_n = z_address_n if z_address_n is not None else []
+        self.z_address_n: Sequence["int"] = z_address_n if z_address_n is not None else []
 
 
 class ZcashIncomingViewingKey(protobuf.MessageType):
@@ -6969,13 +7495,13 @@ class ZcashGetAddress(protobuf.MessageType):
     def __init__(
         self,
         *,
-        t_address_n: Optional[List["int"]] = None,
-        z_address_n: Optional[List["int"]] = None,
+        t_address_n: Optional[Sequence["int"]] = None,
+        z_address_n: Optional[Sequence["int"]] = None,
         diversifier_index: Optional["int"] = 0,
         show_display: Optional["bool"] = False,
     ) -> None:
-        self.t_address_n = t_address_n if t_address_n is not None else []
-        self.z_address_n = z_address_n if z_address_n is not None else []
+        self.t_address_n: Sequence["int"] = t_address_n if t_address_n is not None else []
+        self.z_address_n: Sequence["int"] = z_address_n if z_address_n is not None else []
         self.diversifier_index = diversifier_index
         self.show_display = show_display
 

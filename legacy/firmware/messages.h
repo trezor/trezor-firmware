@@ -29,10 +29,10 @@
 #define MSG_HEADER_SIZE 9
 
 // Maximum size of an incoming protobuf-encoded message without headers.
-#define MSG_IN_ENCODED_SIZE (15 * 1024)
+#define MSG_IN_ENCODED_SIZE (16 * 1024)
 
 // Maximum size of a C struct containing a decoded incoming message.
-#define MSG_IN_DECODED_SIZE (15 * 1024)
+#define MSG_IN_DECODED_SIZE (16 * 1024)
 
 // Buffer size for outgoing USB packets with headers.
 #define MSG_OUT_BUFFER_SIZE (3 * 1024)

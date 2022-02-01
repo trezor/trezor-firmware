@@ -1,0 +1,50 @@
+{
+  "setup": {
+    "mnemonic": "very improve such purity recipe deer giggle shuffle bamboo sorry galaxy damp confirm note easy pause coast purse often hint west angle spare north",
+    "passphrase": ""
+  },
+  "tests": [
+    {
+      "name": "ledger-derivation",
+      "parameters": {
+        "derivation_type": "LEDGER",
+        "path": "m/1852'/1815'/0'/0/0",
+        "address_type": "base",
+        "staking_path": "m/1852'/1815'/0'/2/0",
+        "network_id": 1,
+        "protocol_magic": 764824073
+      },
+      "result": {
+        "expected_address": "addr1q8afdsv8q9hr4z8qljl3qz3rvm048g8j506j6umrpg63nytg4txp8fd25x5lnmkdh5p9wudkh4llu4dxyc3jyjef0gwqa5dzfd"
+      }
+    },
+    {
+      "name": "icarus-derivation",
+      "parameters": {
+        "derivation_type": "ICARUS",
+        "path": "m/1852'/1815'/0'/0/0",
+        "address_type": "base",
+        "staking_path": "m/1852'/1815'/0'/2/0",
+        "network_id": 1,
+        "protocol_magic": 764824073
+      },
+      "result": {
+        "expected_address": "addr1q996av5n0379tp8yllaxtgj3ffntmlrsl9sah237h65x6yt76a24dxtkgy59n8tvk00jf5dwfp8cz50g0uheuzfddcnqxp4njq"
+      }
+    },
+    {
+      "name": "icarus-trezor-derivation",
+      "parameters": {
+        "derivation_type": "ICARUS_TREZOR",
+        "path": "m/1852'/1815'/0'/0/0",
+        "address_type": "base",
+        "staking_path": "m/1852'/1815'/0'/2/0",
+        "network_id": 1,
+        "protocol_magic": 764824073
+      },
+      "result": {
+        "expected_address": "addr1q8g9th06vccxzl96nr905al0vgg2t0fqfxrxmv7ecye3x2e66sl9kvzd905ad5natzd5wghy2w3a9lm0y7u7c5sv0c2snql3c4"
+      }
+    }
+  ]
+}

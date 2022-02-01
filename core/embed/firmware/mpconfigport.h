@@ -123,6 +123,7 @@
 #define MICROPY_PY_SYS_PLATFORM     "trezor"
 #define MICROPY_PY_UERRNO           (0)
 #define MICROPY_PY_THREAD           (0)
+#define MICROPY_PY_FSTRINGS         (1)
 
 // extended modules
 #define MICROPY_PY_UCTYPES          (1)
@@ -140,6 +141,7 @@
 #define MICROPY_PY_URANDOM          (0)
 #define MICROPY_PY_URANDOM_EXTRA_FUNCS (0)
 #define MICROPY_PY_USELECT          (0)
+#define MICROPY_PY_UTIME            (1)
 #define MICROPY_PY_UTIMEQ           (1)
 #define MICROPY_PY_UTIME_MP_HAL     (1)
 #define MICROPY_PY_OS_DUPTERM       (0)
@@ -157,6 +159,7 @@
 #define MICROPY_PY_TREZORUI         (1)
 #define MICROPY_PY_TREZORUTILS      (1)
 #define MICROPY_PY_TREZORPROTO      (1)
+#define MICROPY_PY_TREZORUI2        (1)
 
 #ifdef SYSTEM_VIEW
 #define MP_PLAT_PRINT_STRN(str, len) segger_print(str, len)

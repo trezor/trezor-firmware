@@ -1,10 +1,10 @@
 from trezor.utils import BufferReader
 
-from apps.common.readers import read_bitcoin_varint
+from apps.common.readers import read_compact_size
 
 
 def read_memoryview_prefixed(r: BufferReader) -> memoryview:
-    n = read_bitcoin_varint(r)
+    n = read_compact_size(r)
     return r.read_memoryview(n)
 
 

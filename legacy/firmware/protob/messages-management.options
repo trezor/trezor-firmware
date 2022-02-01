@@ -8,7 +8,6 @@ Features.revision                       max_size:20
 Features.bootloader_hash                max_size:32
 Features.model                          max_size:17
 Features.fw_vendor                      max_size:256
-Features.fw_vendor_keys                 max_size:32
 Features.capabilities                   max_count:32
 Features.session_id                     max_size:32
 
@@ -34,3 +33,5 @@ RecoveryDevice.language                 max_size:17
 RecoveryDevice.label                    max_size:33
 
 WordAck.word                            max_size:12
+
+Nonce.nonce                             max_size:32

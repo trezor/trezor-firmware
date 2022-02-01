@@ -12,6 +12,14 @@ mp_obj_t protobuf_debug_msg_type();
 mp_obj_t protobuf_debug_msg_def_type();
 #endif
 
+mp_obj_t ui_layout_new_example(mp_obj_t);
+mp_obj_t ui_layout_new_confirm_action(size_t n_args, const mp_obj_t *args,
+                                      mp_map_t *kwargs);
+
+#ifdef TREZOR_EMULATOR
+mp_obj_t ui_debug_layout_type();
+#endif
+
 // TODO: BITCOIN_ONLY conditional
 mp_obj_t zcash_diag(mp_obj_t ins, mp_obj_t data);
 

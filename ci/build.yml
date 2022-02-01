@@ -1,5 +1,12 @@
 image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/trezor-firmware-env.nix
 
+# Caching
+.gitlab_caching: &gitlab_caching
+  cache:
+    key: "$CI_COMMIT_REF_SLUG"
+    paths:
+      - .venv/
+
 variables:
   SDL_VIDEODRIVER: "dummy"
   XDG_RUNTIME_DIR: "/var/tmp"
@@ -8,6 +15,7 @@ variables:
 
 core fw regular build:
   stage: build
+  <<: *gitlab_caching
   needs: []
   script:
     - nix-shell --run "poetry run make -C core build_boardloader"
@@ -25,6 +33,7 @@ core fw regular build:
 
 core fw regular debug build:
   stage: build
+  <<: *gitlab_caching
   needs: []
   script:
     - nix-shell --run "PYOPT=0 poetry run make -C core build_firmware"
@@ -35,8 +44,31 @@ core fw regular debug build:
       - trezor-fw-regular-debug-*.*.*-$CI_COMMIT_SHORT_SHA.bin
     expire_in: 1 week
 
+core fw regular production build:
+  stage: build
+  <<: *gitlab_caching
+  needs: []
+  only:
+    - schedules  # nightly build
+  variables:
+    PRODUCTION: "1"
+  script:
+    - nix-shell --run "poetry run make -C core build_boardloader"
+    - nix-shell --run "poetry run make -C core build_bootloader"
+    - nix-shell --run "poetry run make -C core build_bootloader_ci"
+    - nix-shell --run "poetry run make -C core build_prodtest"
+    - nix-shell --run "poetry run make -C core build_firmware"
+    - nix-shell --run "poetry run make -C core sizecheck"
+    - cp core/build/firmware/firmware.bin trezor-fw-regular-production-$CORE_VERSION-$CI_COMMIT_SHORT_SHA.bin
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - trezor-fw-regular-production-*.*.*-$CI_COMMIT_SHORT_SHA.bin
+    expire_in: 1 week
+
 core fw btconly build:
   stage: build
+  <<: *gitlab_caching
   needs: []
   variables:
     BITCOIN_ONLY: "1"
@@ -53,6 +85,7 @@ core fw btconly build:
 
 core fw btconly debug build:
   stage: build
+  <<: *gitlab_caching
   needs: []
   variables:
     BITCOIN_ONLY: "1"
@@ -73,8 +106,28 @@ core fw btconly debug build:
       - trezor-fw-btconly-*.*.*-$CI_COMMIT_SHORT_SHA.bin
     expire_in: 1 week
 
+core fw btconly production build:
+  stage: build
+  <<: *gitlab_caching
+  needs: []
+  only:
+    - schedules  # nightly build
+  variables:
+    PRODUCTION: "1"
+    BITCOIN_ONLY: "1"
+  script:
+    - nix-shell --run "poetry run make -C core build_firmware"
+    - nix-shell --run "poetry run ./tools/check-bitcoin-only core/build/firmware/firmware.bin"
+    - cp core/build/firmware/firmware.bin trezor-fw-btconly-production-$CORE_VERSION-$CI_COMMIT_SHORT_SHA.bin
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - trezor-fw-btconly-production-*.*.*-$CI_COMMIT_SHORT_SHA.bin
+    expire_in: 1 week
+
 core fw btconly t1 build:
   stage: build
+  <<: *gitlab_caching
   needs: []
   variables:
     BITCOIN_ONLY: "1"
@@ -90,7 +143,24 @@ core fw btconly t1 build:
 
 core unix regular build:
   stage: build
+  <<: *gitlab_caching
   needs: []
+  script:
+    - nix-shell --run "poetry run make -C core build_unix"
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - core/build/unix  # most of it needed by test_rust
+    expire_in: 1 week
+
+core unix regular asan build:
+  stage: build
+  <<: *gitlab_caching
+  needs: []
+  only:
+    - schedules  # nightly build
+  variables:
+    ADDRESS_SANITIZER: "1"
   script:
     - nix-shell --run "poetry run make -C core build_unix"
   artifacts:
@@ -101,6 +171,7 @@ core unix regular build:
 
 core unix frozen regular build:
   stage: build
+  <<: *gitlab_caching
   needs: []
   script:
     - nix-shell --run "poetry run make -C core build_unix_frozen"
@@ -112,6 +183,7 @@ core unix frozen regular build:
 
 core unix frozen btconly debug build:
   stage: build
+  <<: *gitlab_caching
   needs: []
   variables:
     PYOPT: "0"
@@ -125,8 +197,28 @@ core unix frozen btconly debug build:
       - core/build/unix/trezor-emu-core-bitcoinonly
     expire_in: 1 week
 
+core unix frozen btconly debug asan build:
+  stage: build
+  <<: *gitlab_caching
+  needs: []
+  only:
+    - schedules  # nightly build
+  variables:
+    PYOPT: "0"
+    BITCOIN_ONLY: "1"
+    ADDRESS_SANITIZER: "1"
+  script:
+    - nix-shell --run "poetry run make -C core build_unix_frozen"
+    - mv core/build/unix/trezor-emu-core core/build/unix/trezor-emu-core-bitcoinonly
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - core/build/unix/trezor-emu-core-bitcoinonly
+    expire_in: 1 week
+
 core unix frozen debug build:
   stage: build
+  <<: *gitlab_caching
   needs: []
   variables:
     PYOPT: "0"
@@ -137,14 +229,67 @@ core unix frozen debug build:
     untracked: true
     expire_in: 1 week
 
+core unix frozen debug asan build:
+  stage: build
+  <<: *gitlab_caching
+  needs: []
+  only:
+    - schedules  # nightly build
+  variables:
+    PYOPT: "0"
+    ADDRESS_SANITIZER: "1"
+  script:
+    - nix-shell --run "poetry run make -C core build_unix_frozen"
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    untracked: true
+    expire_in: 1 week
+
+core unix frozen debug build arm:
+  image: vdovhanych/nixos
+  stage: build
+  <<: *gitlab_caching
+  needs: []
+  only:
+    - master
+    - /^release\//
+    - /^secfix\//
+  variables:
+    PYOPT: "0"
+  script:
+    - nix-shell --run "poetry run make -C core build_unix_frozen"
+    - mv core/build/unix/trezor-emu-core core/build/unix/trezor-emu-core-arm
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    untracked: true
+    expire_in: 1 week
+  tags:
+    - docker_darwin_arm
+
+core unix frozen btconly debug t1 build:
+  stage: build
+  needs: []
+  variables:
+    BITCOIN_ONLY: "1"
+    TREZOR_MODEL: "1"
+  script:
+    - nix-shell --run "poetry run make -C core build_unix_frozen"
+    - mv core/build/unix/trezor-emu-core core/build/unix/trezor-emu-core-bitcoinonly
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - core/build/unix  # most of it needed by test_rust
+    expire_in: 1 week
+
 core macos frozen regular build:
   stage: build
+  <<: *gitlab_caching
   needs: []
   when: manual
   tags:
-    - darwin
+    - darwin_arm
   script:
-    - nix-shell --run "poetry run make -C core build_unix_frozen"
+    - nix-shell --option system x86_64-darwin --run "poetry run make -C core build_unix_frozen"
     - export NAME="trezor-emu-core.darwin"
     - cp -v core/build/unix/trezor-emu-core ./$NAME
     - chmod +x $NAME
@@ -162,20 +307,27 @@ core macos frozen regular build:
 
 crypto build:
   stage: build
+  <<: *gitlab_caching
   needs: []
+  variables:
+    ADDRESS_SANITIZER: "1"
   only:
     changes:
       - .gitlab-ci.yml
       - ci/**/*
       - crypto/**/*
   script:
+    - cp -r crypto crypto_noasan
     - nix-shell --run "poetry run make -C crypto"
+    - nix-shell --run "export ADDRESS_SANITIZER=0; poetry run make -C crypto_noasan"
+    - mv crypto_noasan/tests/test_check crypto/tests/test_check_noasan
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
       - crypto/tests/aestst
       - crypto/tests/libtrezor-crypto.so
       - crypto/tests/test_check
+      - crypto/tests/test_check_noasan
       - crypto/tests/test_openssl
     expire_in: 1 week
 
@@ -184,11 +336,12 @@ crypto build:
 
 legacy fw regular build:
   stage: build
+  <<: *gitlab_caching
   needs: []
-  variables:
-    MEMORY_PROTECT: "0"
   script:
-    - nix-shell --run "poetry run legacy/script/cibuild"
+    - nix-shell --run "export PRODUCTION=1 && poetry run legacy/script/cibuild"
+    - nix-shell --run "poetry run legacy/script/setup"
+    - nix-shell --run "export PRODUCTION=0 && poetry run legacy/script/cibuild"
     - nix-shell --run "poetry run make -C legacy/demo"
     - mv legacy/firmware/trezor.bin trezor-fw-regular-$LEGACY_VERSION-$CI_COMMIT_SHORT_SHA.bin
   artifacts:
@@ -199,12 +352,14 @@ legacy fw regular build:
 
 legacy fw regular debug build:
   stage: build
+  <<: *gitlab_caching
   needs: []
   variables:
     DEBUG_LINK: "1"
-    MEMORY_PROTECT: "0"
   script:
-    - nix-shell --run "poetry run legacy/script/cibuild"
+    - nix-shell --run "export PRODUCTION=1 && poetry run legacy/script/cibuild"
+    - nix-shell --run "poetry run legacy/script/setup"
+    - nix-shell --run "export PRODUCTION=0 && poetry run legacy/script/cibuild"
     - mv legacy/firmware/trezor.bin trezor-fw-regular-debug-$LEGACY_VERSION-$CI_COMMIT_SHORT_SHA.bin
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
@@ -214,12 +369,14 @@ legacy fw regular debug build:
 
 legacy fw btconly build:
   stage: build
+  <<: *gitlab_caching
   needs: []
   variables:
     BITCOIN_ONLY: "1"
-    MEMORY_PROTECT: "0"
   script:
-    - nix-shell --run "poetry run legacy/script/cibuild"
+    - nix-shell --run "export PRODUCTION=1 && poetry run legacy/script/cibuild"
+    - nix-shell --run "poetry run legacy/script/setup"
+    - nix-shell --run "export PRODUCTION=0 && poetry run legacy/script/cibuild"
     - mv legacy/firmware/trezor.bin legacy/firmware/trezor-bitcoinonly.bin
     - nix-shell --run "poetry run ./tools/check-bitcoin-only legacy/firmware/trezor-bitcoinonly.bin"
     - mv legacy/firmware/trezor-bitcoinonly.bin trezor-fw-btconly-$LEGACY_VERSION-$CI_COMMIT_SHORT_SHA.bin
@@ -231,13 +388,15 @@ legacy fw btconly build:
 
 legacy fw btconly debug build:
   stage: build
+  <<: *gitlab_caching
   needs: []
   variables:
     BITCOIN_ONLY: "1"
-    MEMORY_PROTECT: "0"
     DEBUG_LINK: "1"
   script:
-    - nix-shell --run "poetry run legacy/script/cibuild"
+    - nix-shell --run "export PRODUCTION=1 && poetry run legacy/script/cibuild"
+    - nix-shell --run "poetry run legacy/script/setup"
+    - nix-shell --run "export PRODUCTION=0 && poetry run legacy/script/cibuild"
     - nix-shell --run "poetry run ./tools/check-bitcoin-only legacy/firmware/trezor.bin"
     - mv legacy/firmware/trezor.bin trezor-fw-btconly-debug-$LEGACY_VERSION-$CI_COMMIT_SHORT_SHA.bin
   artifacts:
@@ -248,6 +407,7 @@ legacy fw btconly debug build:
 
 legacy emu regular debug build:
   stage: build
+  <<: *gitlab_caching
   needs: []
   variables:
     DEBUG_LINK: "1"
@@ -260,13 +420,75 @@ legacy emu regular debug build:
       - legacy/firmware/trezor.elf
     expire_in: 1 week
 
+legacy emu regular debug asan build:
+  stage: build
+  <<: *gitlab_caching
+  needs: []
+  only:
+    - schedules  # nightly build
+  variables:
+    DEBUG_LINK: "1"
+    EMULATOR: "1"
+    ADDRESS_SANITIZER: "1"
+  script:
+    - nix-shell --run "poetry run legacy/script/cibuild"
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - legacy/firmware/trezor.elf
+    expire_in: 1 week
+
+legacy emu regular debug build arm:
+  image: vdovhanych/nixos
+  stage: build
+  <<: *gitlab_caching
+  needs: []
+  only:
+    - master
+    - /^release\//
+    - /^secfix\//
+  variables:
+    DEBUG_LINK: "1"
+    EMULATOR: "1"
+  script:
+    - nix-shell --run "poetry run legacy/script/cibuild"
+    - mv legacy/firmware/trezor.elf  legacy/firmware/trezor-arm.elf
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - legacy/firmware/trezor-arm.elf
+    expire_in: 1 week
+  tags:
+    - docker_darwin_arm
+
 legacy emu btconly debug build:
   stage: build
+  <<: *gitlab_caching
   needs: []
   variables:
     BITCOIN_ONLY: "1"
     DEBUG_LINK: "1"
     EMULATOR: "1"
+  script:
+    - nix-shell --run "poetry run legacy/script/cibuild"
+    - mv legacy/firmware/trezor.elf legacy/firmware/trezor-bitcoinonly.elf
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - legacy/firmware/trezor-bitcoinonly.elf
+    expire_in: 1 week
+
+legacy emu btconly debug asan build:
+  stage: build
+  <<: *gitlab_caching
+  needs: []
+  only:
+    - schedules  # nightly build
+  variables:
+    BITCOIN_ONLY: "1"
+    DEBUG_LINK: "1"
+    EMULATOR: "1"
+    ADDRESS_SANITIZER: "1"
   script:
     - nix-shell --run "poetry run legacy/script/cibuild"
     - mv legacy/firmware/trezor.elf legacy/firmware/trezor-bitcoinonly.elf

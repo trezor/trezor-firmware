@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 import storage.recovery
 from trezor import ui, wire
 from trezor.enums import ButtonRequestType
@@ -15,7 +17,7 @@ from .. import backup_types
 from . import word_validity
 from .recover import RecoveryAborted
 
-if False:
+if TYPE_CHECKING:
     from typing import Callable
     from trezor.enums import BackupType
 

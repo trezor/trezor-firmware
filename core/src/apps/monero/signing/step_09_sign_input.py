@@ -11,6 +11,7 @@ on output masks as pseudo outputs have to remain same.
 """
 
 import gc
+from typing import TYPE_CHECKING
 
 from trezor import utils
 
@@ -19,7 +20,7 @@ from apps.monero.xmr import crypto
 
 from .state import State
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import MoneroTransactionSourceEntry
     from trezor.messages import MoneroTransactionSignInputAck
 
@@ -239,11 +240,9 @@ def _protect_signature(state: State, mg_buffer: list[bytes]) -> list[bytes]:
 
     cipher = chacha20poly1305(key, nonce)
 
-    """
-    cipher.update() input has to be 512 bit long (besides the last block).
-    Thus we go over mg_buffer and buffer 512 bit input blocks before
-    calling cipher.update().
-    """
+    # cipher.update() input has to be 512 bit long (besides the last block).
+    # Thus we go over mg_buffer and buffer 512 bit input blocks before
+    # calling cipher.update().
     CHACHA_BLOCK = 64  # 512 bit chacha key-stream block size
     buff = bytearray(CHACHA_BLOCK)
     buff_len = 0  # valid bytes in the block buffer

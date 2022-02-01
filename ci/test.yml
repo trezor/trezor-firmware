@@ -1,9 +1,17 @@
 image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/trezor-firmware-env.nix
 
+# Caching
+.gitlab_caching: &gitlab_caching
+  cache:
+    key: "$CI_COMMIT_REF_SLUG"
+    paths:
+      - .venv/
+
 # Core
 
 core unit test:
   stage: test
+  <<: *gitlab_caching
   needs:
     - core unix regular build
   script:
@@ -11,8 +19,36 @@ core unit test:
     - nix-shell --run "poetry run make -C core test_rust | ts -s"
     - nix-shell --run "poetry run make -C core clippy | ts -s"
 
+core unit test asan:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix regular asan build
+  only:
+    - schedules  # nightly build
+  variables:
+    RUSTC_BOOTSTRAP: "1"
+    RUSTFLAGS: "-Z sanitizer=address"
+    LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
+  script:
+    - nix-shell --run "poetry run make -C core test | ts -s"
+    - nix-shell --run "poetry run make -C core test_rust | ts -s"
+    - nix-shell --run "poetry run make -C core clippy | ts -s"
+
+core unit test t1:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen btconly debug t1 build
+  variables:
+    BITCOIN_ONLY: "1"
+    TREZOR_MODEL: "1"
+  script:
+    - nix-shell --run "poetry run make -C core test_rust | ts -s"
+
 core device ui test:
   stage: test
+  <<: *gitlab_caching
   needs:
     - core unix frozen debug build
   script:
@@ -37,6 +73,7 @@ core device ui test:
 
 core device test:
   stage: test
+  <<: *gitlab_caching
   needs:
     - core unix frozen debug build
   variables:
@@ -55,8 +92,25 @@ core device test:
     reports:
       junit: tests/junit.xml
 
+core device asan test:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen debug asan build
+  only:
+    - schedules  # nightly build
+  script:
+    - nix-shell --run "poetry run make -C core test_emu | ts -s"
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - tests/trezor.log
+    expire_in: 1 week
+    when: always
+
 core btconly device test:
   stage: test
+  <<: *gitlab_caching
   needs:
     - core unix frozen btconly debug build
   variables:
@@ -74,8 +128,28 @@ core btconly device test:
     reports:
       junit: tests/junit.xml
 
+core btconly device asan test:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen btconly debug asan build
+  only:
+    - schedules  # nightly build
+  variables:
+    MICROPYTHON: "build/unix/trezor-emu-core-bitcoinonly"
+    TREZOR_PYTEST_SKIP_ALTCOINS: 1
+  script:
+    - nix-shell --run "poetry run make -C core test_emu | ts -s"
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - tests/trezor.log
+    expire_in: 1 week
+    when: always
+
 core monero test:
   stage: test
+  <<: *gitlab_caching
   needs:
     - core unix frozen debug build
   variables:
@@ -92,8 +166,30 @@ core monero test:
     expire_in: 1 week
     when: always
 
+core monero asan test:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen debug asan build
+  only:
+    - schedules  # nightly build
+  variables:
+    TREZOR_PROFILING: 1
+  script:
+    - nix-shell --arg fullDeps true --run "poetry run make -C core test_emu_monero | ts -s"
+    - mv core/src/.coverage core/.coverage.test_emu_monero
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - tests/trezor.log
+      - core/tests/trezor_monero_tests.log
+      - core/.coverage.*
+    expire_in: 1 week
+    when: always
+
 core u2f test:
   stage: test
+  <<: *gitlab_caching
   needs:
     - core unix frozen debug build
   variables:
@@ -110,8 +206,26 @@ core u2f test:
     expire_in: 1 week
     when: always
 
+core u2f asan test:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen debug asan build
+  only:
+    - schedules  # nightly build
+  script:
+    - nix-shell --run "poetry run make -C tests/fido_tests/u2f-tests-hid | ts -s"
+    - nix-shell --run "poetry run make -C core test_emu_u2f | ts -s"
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - tests/trezor.log
+    expire_in: 1 week
+    when: always
+
 core fido2 test:
   stage: test
+  <<: *gitlab_caching
   needs:
     - core unix frozen debug build
   variables:
@@ -132,8 +246,27 @@ core fido2 test:
       junit: tests/junit.xml
     when: always
 
+core fido2 asan test:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen debug asan build
+  only:
+    - schedules  # nightly build
+  script:
+    - pgrep trezor-emu-core || true
+    - nix-shell --run "poetry run make -C core test_emu_fido2 | ts -s"
+    - pgrep trezor-emu-core || true
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - tests/trezor.log
+    expire_in: 1 week
+    when: always
+
 core click test:
   stage: test
+  <<: *gitlab_caching
   needs:
     - core unix frozen debug build
   script:
@@ -148,8 +281,28 @@ core click test:
     expire_in: 1 week
     when: always
 
+core click asan test:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen debug asan build
+  only:
+    - schedules  # nightly build
+  script:
+    - nix-shell --run "poetry run make -C core test_emu_click | ts -s"
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - tests/trezor.log
+      - tests/junit.xml
+    reports:
+      junit: tests/junit.xml
+    expire_in: 1 week
+    when: always
+
 core upgrade test:
   stage: test
+  <<: *gitlab_caching
   needs:
     - core unix frozen debug build
   variables:
@@ -166,10 +319,50 @@ core upgrade test:
     expire_in: 1 week
     when: always
 
+core upgrade asan test:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen debug asan build
+  only:
+    - schedules  # nightly build
+  variables:
+    TREZOR_UPGRADE_TEST: "core"
+  script:
+    - nix-shell --run "tests/download_emulators.sh"
+    - nix-shell --run "poetry run pytest --junitxml=tests/junit.xml tests/upgrade_tests | ts -s"
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - tests/junit.xml
+    reports:
+      junit: tests/junit.xml
+    expire_in: 1 week
+    when: always
+
 core persistence test:
   stage: test
+  <<: *gitlab_caching
   needs:
     - core unix frozen debug build
+  script:
+    - nix-shell --run "poetry run pytest --junitxml=tests/junit.xml tests/persistence_tests | ts -s"
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - tests/junit.xml
+    reports:
+      junit: tests/junit.xml
+    expire_in: 1 week
+    when: always
+
+core persistence asan test:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core unix frozen debug asan build
+  only:
+    - schedules  # nightly build
   script:
     - nix-shell --run "poetry run pytest --junitxml=tests/junit.xml tests/persistence_tests | ts -s"
   artifacts:
@@ -191,20 +384,23 @@ crypto test:
       - .gitlab-ci.yml
       - ci/**/*
       - crypto/**/*
+  <<: *gitlab_caching
   needs:
     - crypto build
+  variables:
+    ASAN_OPTIONS: "verify_asan_link_order=0"
   script:
     - ./crypto/tests/aestst
     - ./crypto/tests/test_check
     - ./crypto/tests/test_openssl 1000
     - nix-shell --run "cd crypto && ITERS=10 poetry run pytest --junitxml=tests/junit.xml tests | ts -s"
-    - nix-shell --run "CK_TIMEOUT_MULTIPLIER=20 valgrind -q --error-exitcode=1 ./crypto/tests/test_check | ts -s"
+    - nix-shell --run "CK_TIMEOUT_MULTIPLIER=20 valgrind -q --error-exitcode=1 ./crypto/tests/test_check_noasan | ts -s"
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
-      - tests/junit.xml
+      - crypto/tests/junit.xml
     reports:
-      junit: tests/junit.xml
+      junit: crypto/tests/junit.xml
     expire_in: 1 week
     when: always
 
@@ -213,6 +409,7 @@ crypto test:
 
 legacy test:
   stage: test
+  <<: *gitlab_caching
   needs:
     - legacy emu regular debug build
   variables:
@@ -228,8 +425,21 @@ legacy test:
     expire_in: 1 week
     when: always
 
+legacy asan test:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - legacy emu regular debug asan build
+  only:
+    - schedules  # nightly build
+  variables:
+    EMULATOR: "1"
+  script:
+    - nix-shell --run "poetry run legacy/script/test | ts -s"
+
 legacy btconly test:
   stage: test
+  <<: *gitlab_caching
   needs:
     - legacy emu btconly debug build
   variables:
@@ -247,11 +457,47 @@ legacy btconly test:
     expire_in: 1 week
     when: always
 
+legacy btconly asan test:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - legacy emu btconly debug asan build
+  only:
+    - schedules  # nightly build
+  variables:
+    EMULATOR: "1"
+    EMULATOR_BINARY: "firmware/trezor-bitcoinonly.elf"
+    TREZOR_PYTEST_SKIP_ALTCOINS: 1
+  script:
+    - nix-shell --run "poetry run legacy/script/test | ts -s"
+
 
 legacy upgrade test:
   stage: test
+  <<: *gitlab_caching
   needs:
     - legacy emu regular debug build
+  variables:
+    TREZOR_UPGRADE_TEST: "legacy"
+  script:
+    - nix-shell --run "tests/download_emulators.sh"
+    - nix-shell --run "poetry run pytest --junitxml=tests/junit.xml tests/upgrade_tests | ts -s"
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - tests/junit.xml
+    reports:
+      junit: tests/junit.xml
+    expire_in: 1 week
+    when: always
+
+legacy upgrade asan test:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - legacy emu regular debug asan build
+  only:
+    - schedules  # nightly build
   variables:
     TREZOR_UPGRADE_TEST: "legacy"
   script:
@@ -271,6 +517,7 @@ legacy upgrade test:
 
 python test:
   stage: test
+  <<: *gitlab_caching
   needs: []
   variables:
     LC_ALL: "C.UTF-8"
@@ -304,6 +551,7 @@ storage test:
       - .gitlab-ci.yml
       - ci/**/*
       - storage/**/*
+  <<: *gitlab_caching
   needs: []
   script:
     - nix-shell --run "poetry run make -C storage/tests build | ts -s"
@@ -322,6 +570,7 @@ storage test:
 core unix memory profiler:
   stage: test
   when: manual
+  <<: *gitlab_caching
   needs: []
   variables:
     PYOPT: "0"
@@ -337,5 +586,32 @@ core unix memory profiler:
     paths:
       - tests/trezor.log
       - core/prof/memperf-html
+    expire_in: 1 week
+    when: always
+
+# Connect
+
+connect test core:
+  image: registry.gitlab.com/satoshilabs/trezor/trezor-user-env/trezor-user-env:latest
+  stage: test
+  needs:
+    - core unix frozen debug build
+  variables:
+    SDL_VIDEODRIVER: "dummy"
+  before_script:
+    - cp /builds/satoshilabs/trezor/trezor-firmware/core/build/unix/trezor-emu-core /trezor-user-env/src/binaries/firmware/bin/trezor-emu-core-v2.99.99
+    - chmod u+x /trezor-user-env/src/binaries/firmware/bin/trezor-emu-core-v2.99.99
+    - nix-shell -p autoPatchelfHook SDL2 SDL2_image --run "autoPatchelf /trezor-user-env/src/binaries/firmware/bin/trezor-emu-core-v2.99.99"
+  script:
+    - /trezor-user-env/run.sh &
+    - nix-shell --run "tests/connect_tests/connect_tests.sh 2.99.99"
+  after_script:
+    - cp /trezor-user-env/logs/debugging.log trezor-user-env-debugging.log
+    - cp /trezor-user-env/logs/emulator_bridge.log tenv-emulator-bridge-debugging.log
+  allow_failure: true
+  artifacts:
+    paths:
+      - trezor-user-env-debugging.log
+      - tenv-emulator-bridge-debugging.log
     expire_in: 1 week
     when: always

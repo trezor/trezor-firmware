@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor.enums import BinanceOrderSide, ButtonRequestType
 from trezor.messages import (
     BinanceCancelMsg,
@@ -11,11 +13,14 @@ from trezor.ui.layouts.tt.altcoin import confirm_transfer_binance
 
 from . import helpers
 
+if TYPE_CHECKING:
+    from trezor.wire import Context
 
-async def require_confirm_transfer(ctx, msg: BinanceTransferMsg):
+
+async def require_confirm_transfer(ctx: Context, msg: BinanceTransferMsg) -> None:
     items = []
 
-    def make_input_output_pages(msg: BinanceInputOutput, direction):
+    def make_input_output_pages(msg: BinanceInputOutput, direction: str) -> None:
         for coin in msg.coins:
             items.append(
                 (
@@ -34,36 +39,36 @@ async def require_confirm_transfer(ctx, msg: BinanceTransferMsg):
     await confirm_transfer_binance(ctx, items)
 
 
-async def require_confirm_cancel(ctx, msg: BinanceCancelMsg):
+async def require_confirm_cancel(ctx: Context, msg: BinanceCancelMsg) -> None:
     await confirm_properties(
         ctx,
         "confirm_cancel",
         title="Confirm cancel",
         props=[
-            ("Sender address:", msg.sender),
-            ("Pair:", msg.symbol),
-            ("Order ID:", msg.refid),
+            ("Sender address:", str(msg.sender)),
+            ("Pair:", str(msg.symbol)),
+            ("Order ID:", str(msg.refid)),
         ],
         hold=True,
         br_code=ButtonRequestType.SignTx,
     )
 
 
-async def require_confirm_order(ctx, msg: BinanceOrderMsg):
+async def require_confirm_order(ctx: Context, msg: BinanceOrderMsg) -> None:
     if msg.side == BinanceOrderSide.BUY:
         side = "Buy"
     elif msg.side == BinanceOrderSide.SELL:
         side = "Sell"
     else:
-        side = "?"
+        side = "Unknown"
 
     await confirm_properties(
         ctx,
         "confirm_order",
         title="Confirm order",
         props=[
-            ("Sender address:", msg.sender),
-            ("Pair:", msg.symbol),
+            ("Sender address:", str(msg.sender)),
+            ("Pair:", str(msg.symbol)),
             ("Side:", side),
             ("Quantity:", format_amount(msg.quantity, helpers.DECIMALS)),
             ("Price:", format_amount(msg.price, helpers.DECIMALS)),

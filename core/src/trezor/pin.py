@@ -1,8 +1,6 @@
+from typing import Any
+
 from trezor import utils
-
-if False:
-    from typing import Any
-
 
 _previous_progress: int | None = None
 _previous_seconds: int | None = None
@@ -34,7 +32,7 @@ def show_pin_timeout(seconds: int, progress: int, message: str) -> bool:
         elif seconds == 1:
             remaining = "1 second left"
         else:
-            remaining = "%d seconds left" % seconds
+            remaining = f"{seconds} seconds left"
         ui.display.bar(0, ui.HEIGHT - 42, ui.WIDTH, 25, ui.BG)
         ui.display.text_center(
             ui.WIDTH // 2, ui.HEIGHT - 22, remaining, ui.BOLD, ui.FG, ui.BG

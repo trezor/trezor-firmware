@@ -24,11 +24,8 @@ use super::{
 pub extern "C" fn protobuf_len(obj: Obj) -> Obj {
     let block = || {
         let obj = Gc::<MsgObj>::try_from(obj)?;
-
         let stream = &mut CounterStream { len: 0 };
-
         Encoder.encode_message(stream, &obj.def(), &obj)?;
-
         stream.len.try_into()
     };
     unsafe { util::try_or_raise(block) }

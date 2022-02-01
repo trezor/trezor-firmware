@@ -1,7 +1,9 @@
+from typing import TYPE_CHECKING
+
 from .. import consts, writers
 from . import layout, serialize
 
-if False:
+if TYPE_CHECKING:
     from trezor.utils import Writer
     from trezor.wire import Context
 
@@ -28,18 +30,24 @@ async def process_operation(
     elif serialize.StellarCreateAccountOp.is_type_of(op):
         await layout.confirm_create_account_op(ctx, op)
         serialize.write_create_account_op(w, op)
-    elif serialize.StellarCreatePassiveOfferOp.is_type_of(op):
-        await layout.confirm_create_passive_offer_op(ctx, op)
-        serialize.write_create_passive_offer_op(w, op)
+    elif serialize.StellarCreatePassiveSellOfferOp.is_type_of(op):
+        await layout.confirm_create_passive_sell_offer_op(ctx, op)
+        serialize.write_create_passive_sell_offer_op(w, op)
     elif serialize.StellarManageDataOp.is_type_of(op):
         await layout.confirm_manage_data_op(ctx, op)
         serialize.write_manage_data_op(w, op)
-    elif serialize.StellarManageOfferOp.is_type_of(op):
-        await layout.confirm_manage_offer_op(ctx, op)
-        serialize.write_manage_offer_op(w, op)
-    elif serialize.StellarPathPaymentOp.is_type_of(op):
-        await layout.confirm_path_payment_op(ctx, op)
-        serialize.write_path_payment_op(w, op)
+    elif serialize.StellarManageBuyOfferOp.is_type_of(op):
+        await layout.confirm_manage_buy_offer_op(ctx, op)
+        serialize.write_manage_buy_offer_op(w, op)
+    elif serialize.StellarManageSellOfferOp.is_type_of(op):
+        await layout.confirm_manage_sell_offer_op(ctx, op)
+        serialize.write_manage_sell_offer_op(w, op)
+    elif serialize.StellarPathPaymentStrictReceiveOp.is_type_of(op):
+        await layout.confirm_path_payment_strict_receive_op(ctx, op)
+        serialize.write_path_payment_strict_receive_op(w, op)
+    elif serialize.StellarPathPaymentStrictSendOp.is_type_of(op):
+        await layout.confirm_path_payment_strict_send_op(ctx, op)
+        serialize.write_path_payment_strict_send_op(w, op)
     elif serialize.StellarPaymentOp.is_type_of(op):
         await layout.confirm_payment_op(ctx, op)
         serialize.write_payment_op(w, op)

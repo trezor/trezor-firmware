@@ -35,6 +35,8 @@ reads the message's header. When the message type is known the first handler is 
 
 """
 
+from typing import TYPE_CHECKING
+
 from storage.cache import InvalidSessionError
 from trezor import log, loop, protobuf, utils, workflow
 from trezor.enums import FailureType
@@ -46,7 +48,8 @@ from trezor.wire.errors import ActionCancelled, DataError, Error
 # other packages.
 from trezor.wire.errors import *  # isort:skip # noqa: F401,F403
 
-if False:
+
+if TYPE_CHECKING:
     from typing import (
         Any,
         Awaitable,
@@ -54,6 +57,7 @@ if False:
         Container,
         Coroutine,
         Iterable,
+        Protocol,
         TypeVar,
     )
     from trezorio import WireInterface
@@ -61,19 +65,6 @@ if False:
     Msg = TypeVar("Msg", bound=protobuf.MessageType)
     HandlerTask = Coroutine[Any, Any, protobuf.MessageType]
     Handler = Callable[["Context", Msg], HandlerTask]
-
-
-# If set to False protobuf messages marked with "unstable" option are rejected.
-experimental_enabled: bool = False
-
-
-def setup(iface: WireInterface, is_debug_session: bool = False) -> None:
-    """Initialize the wire stack on passed USB interface."""
-    loop.schedule(handle_session(iface, codec_v1.SESSION_ID, is_debug_session))
-
-
-if False:
-    from typing import Protocol, TypeVar
 
     LoadedMessageType = TypeVar("LoadedMessageType", bound=protobuf.MessageType)
 
@@ -94,6 +85,15 @@ if False:
         # XXX modify type signature so that the return value must be of the same type?
         async def wait(self, *tasks: Awaitable) -> Any:
             ...
+
+
+# If set to False protobuf messages marked with "unstable" option are rejected.
+experimental_enabled = False
+
+
+def setup(iface: WireInterface, is_debug_session: bool = False) -> None:
+    """Initialize the wire stack on passed USB interface."""
+    loop.schedule(handle_session(iface, codec_v1.SESSION_ID, is_debug_session))
 
 
 def _wrap_protobuf_load(
@@ -297,7 +297,7 @@ async def _handle_single_message(
         try:
             msg_type = protobuf.type_for_wire(msg.type).MESSAGE_NAME
         except Exception:
-            msg_type = "%d - unknown message type" % msg.type
+            msg_type = f"{msg.type} - unknown message type"
         log.debug(
             __name__,
             "%s:%x receive: <%s>",
@@ -309,7 +309,7 @@ async def _handle_single_message(
     res_msg: protobuf.MessageType | None = None
 
     # We need to find a handler for this message type.  Should not raise.
-    handler = find_handler(ctx.iface, msg.type)
+    handler = find_handler(ctx.iface, msg.type)  # pylint: disable=assignment-from-none
 
     if handler is None:
         # If no handler is found, we can skip decoding and directly
@@ -364,7 +364,7 @@ async def _handle_single_message(
         # - something canceled the workflow from the outside
         if __debug__:
             if isinstance(exc, ActionCancelled):
-                log.debug(__name__, "cancelled: {}".format(exc.message))
+                log.debug(__name__, "cancelled: %s", exc.message)
             elif isinstance(exc, loop.TaskClosed):
                 log.debug(__name__, "cancelled: loop task was closed")
             else:
@@ -431,7 +431,7 @@ async def handle_session(
                         # Shut down the loop if there is no next message waiting.
                         # Let the session be restarted from `main`.
                         loop.clear()
-                        return
+                        return  # pylint: disable=lost-exception
 
         except Exception as exc:
             # Log and try again. The session handler can only exit explicitly via

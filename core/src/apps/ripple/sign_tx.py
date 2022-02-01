@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor.crypto import der
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha512
@@ -10,9 +12,15 @@ from apps.common.keychain import auto_keychain
 from . import helpers, layout
 from .serialize import serialize
 
+if TYPE_CHECKING:
+    from apps.common.keychain import Keychain
+    from trezor.wire import Context
+
 
 @auto_keychain(__name__)
-async def sign_tx(ctx, msg: RippleSignTx, keychain):
+async def sign_tx(
+    ctx: Context, msg: RippleSignTx, keychain: Keychain
+) -> RippleSignedTx:
     validate(msg)
     await paths.validate_path(ctx, keychain, msg.address_n)
 
@@ -34,17 +42,17 @@ async def sign_tx(ctx, msg: RippleSignTx, keychain):
     return RippleSignedTx(signature=signature, serialized_tx=tx)
 
 
-def check_fee(fee: int):
+def check_fee(fee: int) -> None:
     if fee < helpers.MIN_FEE or fee > helpers.MAX_FEE:
         raise ProcessError("Fee must be in the range of 10 to 10,000 drops")
 
 
-def get_network_prefix():
+def get_network_prefix() -> bytes:
     """Network prefix is prepended before the transaction and public key is included"""
     return helpers.HASH_TX_SIGN.to_bytes(4, "big")
 
 
-def first_half_of_sha512(b):
+def first_half_of_sha512(b: bytes) -> bytes:
     """First half of SHA512, which Ripple uses"""
     hash = sha512(b)
     return hash.digest()[:32]
@@ -57,26 +65,16 @@ def ecdsa_sign(private_key: bytes, digest: bytes) -> bytes:
     return sig_der
 
 
-def set_canonical_flag(msg: RippleSignTx):
+def set_canonical_flag(msg: RippleSignTx) -> None:
     """
     Our ECDSA implementation already returns fully-canonical signatures,
     so we're enforcing it in the transaction using the designated flag
     - see https://wiki.ripple.com/Transaction_Malleability#Using_Fully-Canonical_Signatures
     - see https://github.com/trezor/trezor-crypto/blob/3e8974ff8871263a70b7fbb9a27a1da5b0d810f7/ecdsa.c#L791
     """
-    if msg.flags is None:
-        msg.flags = 0
     msg.flags |= helpers.FLAG_FULLY_CANONICAL
 
 
-def validate(msg: RippleSignTx):
-    if None in (msg.fee, msg.sequence, msg.payment) or (
-        msg.payment and None in (msg.payment.amount, msg.payment.destination)
-    ):
-        raise ProcessError(
-            "Some of the required fields are missing (fee, sequence, payment.amount, payment.destination)"
-        )
-    if msg.payment.amount < 0:
-        raise ProcessError("Only non-negative amounts are allowed.")
+def validate(msg: RippleSignTx) -> None:
     if msg.payment.amount > helpers.MAX_ALLOWED_AMOUNT:
         raise ProcessError("Amount exceeds maximum allowed amount.")

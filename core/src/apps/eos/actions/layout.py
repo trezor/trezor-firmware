@@ -1,11 +1,12 @@
-from trezor import ui
+from typing import TYPE_CHECKING
+
+from trezor import ui, wire
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import confirm_properties
 
 from .. import helpers
 
-if False:
-    from trezor import wire
+if TYPE_CHECKING:
     from trezor.messages import (
         EosActionBuyRam,
         EosActionBuyRamBytes,
@@ -23,6 +24,7 @@ if False:
         EosActionVoteProducer,
         EosAuthorization,
     )
+    from trezor.ui.layouts import PropertyType
 
 
 async def confirm_action_buyram(ctx: wire.Context, msg: EosActionBuyRam) -> None:
@@ -149,8 +151,8 @@ async def confirm_action_voteproducer(
             "confirm_voteproducer",
             title="Vote for producers",
             props=(
-                ("{:2d}. {}".format(wi + 1, helpers.eos_name_to_string(producer)), None)
-                for wi, producer in enumerate(msg.producers)
+                (f"{wi:2d}. {helpers.eos_name_to_string(producer)}", None)
+                for wi, producer in enumerate(msg.producers, 1)
             ),
             icon=ui.ICON_CONFIRM,
             br_code=ButtonRequestType.ConfirmOutput,
@@ -194,7 +196,7 @@ async def confirm_action_transfer(
 async def confirm_action_updateauth(
     ctx: wire.Context, msg: EosActionUpdateAuth
 ) -> None:
-    props = [
+    props: list[PropertyType] = [
         ("Account:", helpers.eos_name_to_string(msg.account)),
         ("Permission:", helpers.eos_name_to_string(msg.permission)),
         ("Parent:", helpers.eos_name_to_string(msg.parent)),
@@ -262,7 +264,7 @@ async def confirm_action_unlinkauth(
 async def confirm_action_newaccount(
     ctx: wire.Context, msg: EosActionNewAccount
 ) -> None:
-    props = [
+    props: list[PropertyType] = [
         ("Creator:", helpers.eos_name_to_string(msg.creator)),
         ("Name:", helpers.eos_name_to_string(msg.name)),
     ]
@@ -296,39 +298,42 @@ async def confirm_action_unknown(
     )
 
 
-def authorization_fields(auth: EosAuthorization) -> list[tuple[str, str | None]]:
-    fields = []
+def authorization_fields(auth: EosAuthorization) -> list[PropertyType]:
+    fields: list[PropertyType] = []
     fields.append(("Threshold:", str(auth.threshold)))
 
-    for i, key in enumerate(auth.keys):
+    for i, key in enumerate(auth.keys, 1):
+        if key.key is None:
+            raise wire.DataError("Key must be provided explicitly.")
+
         _key = helpers.public_key_to_wif(bytes(key.key))
         _weight = str(key.weight)
 
-        header = "Key #{}:".format(i + 1)
-        w_header = "Key #{} Weight:".format(i + 1)
+        header = f"Key #{i}:"
+        w_header = f"Key #{i} Weight:"
 
         fields.append((header, _key))
         fields.append((w_header, _weight))
 
-    for i, account in enumerate(auth.accounts):
+    for i, account in enumerate(auth.accounts, 1):
         _account = helpers.eos_name_to_string(account.account.actor)
         _permission = helpers.eos_name_to_string(account.account.permission)
 
-        a_header = "Account #{}:".format(i + 1)
-        p_header = "Acc Permission #{}:".format(i + 1)
-        w_header = "Account #{} weight:".format(i + 1)
+        a_header = f"Account #{i}:"
+        p_header = f"Acc Permission #{i}:"
+        w_header = f"Account #{i} weight:"
 
         fields.append((a_header, _account))
         fields.append((p_header, _permission))
         fields.append((w_header, str(account.weight)))
 
-    for i, wait in enumerate(auth.waits):
+    for i, wait in enumerate(auth.waits, 1):
         _wait = str(wait.wait_sec)
         _weight = str(wait.weight)
 
-        header = "Delay #{}".format(i + 1)
-        w_header = "Delay #{} weight:".format(i + 1)
-        fields.append((header, "{} sec".format(_wait)))
+        header = f"Delay #{i}"
+        w_header = f"Delay #{i} weight:"
+        fields.append((header, f"{_wait} sec"))
         fields.append((w_header, _weight))
 
     return fields

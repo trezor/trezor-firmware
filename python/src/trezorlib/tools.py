@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2019 SatoshiLabs and contributors
+# Copyright (C) 2012-2022 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -19,7 +19,32 @@ import hashlib
 import re
 import struct
 import unicodedata
-from typing import List, NewType
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    AnyStr,
+    Callable,
+    Dict,
+    List,
+    NewType,
+    Optional,
+    Type,
+    Union,
+    overload,
+)
+
+if TYPE_CHECKING:
+    from .client import TrezorClient
+    from .protobuf import MessageType
+
+    # Needed to enforce a return value from decorators
+    # More details: https://www.python.org/dev/peps/pep-0612/
+    from typing import TypeVar
+    from typing_extensions import ParamSpec, Concatenate
+
+    MT = TypeVar("MT", bound=MessageType)
+    P = ParamSpec("P")
+    R = TypeVar("R")
 
 HARDENED_FLAG = 1 << 31
 
@@ -33,14 +58,14 @@ def H_(x: int) -> int:
     return x | HARDENED_FLAG
 
 
-def btc_hash(data):
+def btc_hash(data: bytes) -> bytes:
     """
     Double-SHA256 hash as used in BTC
     """
     return hashlib.sha256(hashlib.sha256(data).digest()).digest()
 
 
-def tx_hash(data):
+def tx_hash(data: bytes) -> bytes:
     """Calculate and return double-SHA256 hash in reverse order.
 
     This is what Bitcoin uses as txids.
@@ -48,26 +73,28 @@ def tx_hash(data):
     return btc_hash(data)[::-1]
 
 
-def hash_160(public_key):
+def hash_160(public_key: bytes) -> bytes:
     md = hashlib.new("ripemd160")
     md.update(hashlib.sha256(public_key).digest())
     return md.digest()
 
 
-def hash_160_to_bc_address(h160, address_type):
+def hash_160_to_bc_address(h160: bytes, address_type: int) -> str:
     vh160 = struct.pack("<B", address_type) + h160
     h = btc_hash(vh160)
     addr = vh160 + h[0:4]
     return b58encode(addr)
 
 
-def compress_pubkey(public_key):
+def compress_pubkey(public_key: bytes) -> bytes:
     if public_key[0] == 4:
         return bytes((public_key[64] & 1) + 2) + public_key[1:33]
     raise ValueError("Pubkey is already compressed")
 
 
-def public_key_to_bc_address(public_key, address_type, compress=True):
+def public_key_to_bc_address(
+    public_key: bytes, address_type: int, compress: bool = True
+) -> str:
     if public_key[0] == "\x04" and compress:
         public_key = compress_pubkey(public_key)
 
@@ -79,7 +106,7 @@ __b58chars = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 __b58base = len(__b58chars)
 
 
-def b58encode(v):
+def b58encode(v: bytes) -> str:
     """ encode v, which is a string of bytes, to base58."""
 
     long_value = 0
@@ -105,17 +132,16 @@ def b58encode(v):
     return (__b58chars[0] * nPad) + result
 
 
-def b58decode(v, length=None):
+def b58decode(v: AnyStr, length: Optional[int] = None) -> bytes:
     """ decode v into a string of len bytes."""
-    if isinstance(v, bytes):
-        v = v.decode()
+    str_v = v.decode() if isinstance(v, bytes) else v
 
-    for c in v:
+    for c in str_v:
         if c not in __b58chars:
             raise ValueError("invalid Base58 string")
 
     long_value = 0
-    for (i, c) in enumerate(v[::-1]):
+    for (i, c) in enumerate(str_v[::-1]):
         long_value += __b58chars.find(c) * (__b58base ** i)
 
     result = b""
@@ -126,7 +152,7 @@ def b58decode(v, length=None):
     result = struct.pack("B", long_value) + result
 
     nPad = 0
-    for c in v:
+    for c in str_v:
         if c == __b58chars[0]:
             nPad += 1
         else:
@@ -134,17 +160,17 @@ def b58decode(v, length=None):
 
     result = b"\x00" * nPad + result
     if length is not None and len(result) != length:
-        return None
+        raise ValueError("Result length does not match expected_length")
 
     return result
 
 
-def b58check_encode(v):
+def b58check_encode(v: bytes) -> str:
     checksum = btc_hash(v)[:4]
     return b58encode(v + checksum)
 
 
-def b58check_decode(v, length=None):
+def b58check_decode(v: AnyStr, length: Optional[int] = None) -> bytes:
     dec = b58decode(v, length)
     data, checksum = dec[:-4], dec[-4:]
     if btc_hash(data)[:4] != checksum:
@@ -163,7 +189,7 @@ def parse_path(nstr: str) -> Address:
     :return: list of integers
     """
     if not nstr:
-        return []
+        return Address([])
 
     n = nstr.split("/")
 
@@ -180,51 +206,80 @@ def parse_path(nstr: str) -> Address:
             return int(x)
 
     try:
-        return [str_to_harden(x) for x in n]
+        return Address([str_to_harden(x) for x in n])
     except Exception as e:
         raise ValueError("Invalid BIP32 path", nstr) from e
 
 
-def normalize_nfc(txt):
+def normalize_nfc(txt: AnyStr) -> bytes:
     """
     Normalize message to NFC and return bytes suitable for protobuf.
     This seems to be bitcoin-qt standard of doing things.
     """
-    if isinstance(txt, bytes):
-        txt = txt.decode()
-    return unicodedata.normalize("NFC", txt).encode()
+    str_txt = txt.decode() if isinstance(txt, bytes) else txt
+    return unicodedata.normalize("NFC", str_txt).encode()
 
 
-class expect:
-    # Decorator checks if the method
-    # returned one of expected protobuf messages
-    # or raises an exception
-    def __init__(self, expected, field=None):
-        self.expected = expected
-        self.field = field
+# NOTE for type tests (mypy/pyright):
+# Overloads below have a goal of enforcing the return value
+# that should be returned from the original function being decorated
+# while still preserving the function signature (the inputted arguments
+# are going to be type-checked).
+# Currently (November 2021) mypy does not support "ParamSpec" typing
+# construct, so it will not understand it and will complain about
+# definitions below.
 
-    def __call__(self, f):
+
+@overload
+def expect(
+    expected: "Type[MT]",
+) -> "Callable[[Callable[P, MessageType]], Callable[P, MT]]":
+    ...
+
+
+@overload
+def expect(
+    expected: "Type[MT]", *, field: str, ret_type: "Type[R]"
+) -> "Callable[[Callable[P, MessageType]], Callable[P, R]]":
+    ...
+
+
+def expect(
+    expected: "Type[MT]",
+    *,
+    field: Optional[str] = None,
+    ret_type: "Optional[Type[R]]" = None,
+) -> "Callable[[Callable[P, MessageType]], Callable[P, Union[MT, R]]]":
+    """
+    Decorator checks if the method
+    returned one of expected protobuf messages
+    or raises an exception
+    """
+
+    def decorator(f: "Callable[P, MessageType]") -> "Callable[P, Union[MT, R]]":
         @functools.wraps(f)
-        def wrapped_f(*args, **kwargs):
+        def wrapped_f(*args: "P.args", **kwargs: "P.kwargs") -> "Union[MT, R]":
             __tracebackhide__ = True  # for pytest # pylint: disable=W0612
             ret = f(*args, **kwargs)
-            if not isinstance(ret, self.expected):
-                raise RuntimeError(
-                    "Got %s, expected %s" % (ret.__class__, self.expected)
-                )
-            if self.field is not None:
-                return getattr(ret, self.field)
+            if not isinstance(ret, expected):
+                raise RuntimeError(f"Got {ret.__class__}, expected {expected}")
+            if field is not None:
+                return getattr(ret, field)
             else:
                 return ret
 
         return wrapped_f
 
+    return decorator
 
-def session(f):
+
+def session(
+    f: "Callable[Concatenate[TrezorClient, P], R]",
+) -> "Callable[Concatenate[TrezorClient, P], R]":
     # Decorator wraps a BaseClient method
     # with session activation / deactivation
     @functools.wraps(f)
-    def wrapped_f(client, *args, **kwargs):
+    def wrapped_f(client: "TrezorClient", *args: "P.args", **kwargs: "P.kwargs") -> "R":
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
         client.open()
         try:
@@ -242,19 +297,19 @@ FIRST_CAP_RE = re.compile("(.)([A-Z][a-z]+)")
 ALL_CAP_RE = re.compile("([a-z0-9])([A-Z])")
 
 
-def from_camelcase(s):
+def from_camelcase(s: str) -> str:
     s = FIRST_CAP_RE.sub(r"\1_\2", s)
     return ALL_CAP_RE.sub(r"\1_\2", s).lower()
 
 
-def dict_from_camelcase(d, renames=None):
+def dict_from_camelcase(d: Any, renames: Optional[dict] = None) -> dict:
     if not isinstance(d, dict):
         return d
 
     if renames is None:
         renames = {}
 
-    res = {}
+    res: Dict[str, Any] = {}
     for key, value in d.items():
         newkey = from_camelcase(key)
         renamed_key = renames.get(newkey) or renames.get(key)

@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import strings, ui
 from trezor.enums import ButtonRequestType, StellarAssetType, StellarMemoType
 from trezor.ui.layouts import (
@@ -11,7 +13,7 @@ from trezor.wire import DataError
 
 from . import consts
 
-if False:
+if TYPE_CHECKING:
     from trezor.wire import Context
 
     from trezor.messages import StellarAsset
@@ -56,8 +58,14 @@ async def require_confirm_timebounds(ctx: Context, start: int, end: int) -> None
         "confirm_timebounds",
         title="Confirm timebounds",
         props=(
-            ("Valid from (UTC)", str(start) if start > 0 else "[no restriction]"),
-            ("Valid to (UTC)", str(end) if end > 0 else "[no restriction]"),
+            (
+                "Valid from (UTC)",
+                strings.format_timestamp(start) if start > 0 else "[no restriction]",
+            ),
+            (
+                "Valid to (UTC)",
+                strings.format_timestamp(end) if end > 0 else "[no restriction]",
+            ),
         ),
     )
 

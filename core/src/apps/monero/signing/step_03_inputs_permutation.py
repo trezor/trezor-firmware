@@ -16,24 +16,26 @@ HMAC correctness (host sends original sort idx) and ordering check
 on the key images. This step is skipped.
 """
 
+from typing import TYPE_CHECKING
+
 from apps.monero.layout import transaction_step
 
 from .state import State
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import MoneroTransactionInputsPermutationAck
 
 
 async def tsx_inputs_permutation(
     state: State, permutation: list[int]
 ) -> MoneroTransactionInputsPermutationAck:
+    """
+    Set permutation on the inputs - sorted by key image on host.
+    """
     from trezor.messages import MoneroTransactionInputsPermutationAck
 
     await transaction_step(state, state.STEP_PERM)
 
-    """
-    Set permutation on the inputs - sorted by key image on host.
-    """
     if state.last_step != state.STEP_INP:
         raise ValueError("Invalid state transition")
     if len(permutation) != state.input_count:

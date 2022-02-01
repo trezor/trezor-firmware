@@ -1,6 +1,9 @@
 #include "py/mpthread.h"
 #include "py/runtime.h"
 #include "py/stackctrl.h"
+#ifdef USE_SECP256K1_ZKP
+#include "zkp_context.h"
+#endif
 
 #include "common.h"
 
@@ -8,6 +11,10 @@ MP_NOINLINE int main_(int argc, char **argv);
 
 int main(int argc, char **argv) {
   collect_hw_entropy();
+
+#ifdef USE_SECP256K1_ZKP
+  ensure(sectrue * (zkp_context_init() == 0), NULL);
+#endif
 
 #if MICROPY_PY_THREAD
   mp_thread_init();

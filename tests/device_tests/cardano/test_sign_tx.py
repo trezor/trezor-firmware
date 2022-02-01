@@ -31,15 +31,23 @@ pytestmark = [
 @parametrize_using_common_fixtures(
     "cardano/sign_tx_stake_pool_registration.json",
     "cardano/sign_tx.json",
+    "cardano/sign_tx.multisig.json",
     "cardano/sign_tx.slip39.json",
 )
 def test_cardano_sign_tx(client, parameters, result):
+    client.init_device(new_session=True, derive_cardano=True)
+
     signing_mode = messages.CardanoTxSigningMode.__members__[parameters["signing_mode"]]
     inputs = [cardano.parse_input(i) for i in parameters["inputs"]]
     outputs = [cardano.parse_output(o) for o in parameters["outputs"]]
     certificates = [cardano.parse_certificate(c) for c in parameters["certificates"]]
     withdrawals = [cardano.parse_withdrawal(w) for w in parameters["withdrawals"]]
     auxiliary_data = cardano.parse_auxiliary_data(parameters["auxiliary_data"])
+    mint = cardano.parse_mint(parameters["mint"])
+    additional_witness_requests = [
+        cardano.parse_additional_witness_request(p)
+        for p in parameters["additional_witness_requests"]
+    ]
 
     if parameters.get("security_checks") == "prompt":
         device.apply_settings(
@@ -62,20 +70,38 @@ def test_cardano_sign_tx(client, parameters, result):
             protocol_magic=parameters["protocol_magic"],
             network_id=parameters["network_id"],
             auxiliary_data=auxiliary_data,
+            mint=mint,
+            additional_witness_requests=additional_witness_requests,
         )
         assert response == _transform_expected_result(result)
 
 
 @parametrize_using_common_fixtures(
-    "cardano/sign_tx.failed.json", "cardano/sign_tx_stake_pool_registration.failed.json"
+    "cardano/sign_tx.failed.json",
+    "cardano/sign_tx.multisig.failed.json",
+    "cardano/sign_tx_stake_pool_registration.failed.json",
 )
 def test_cardano_sign_tx_failed(client, parameters, result):
+    client.init_device(new_session=True, derive_cardano=True)
+
     signing_mode = messages.CardanoTxSigningMode.__members__[parameters["signing_mode"]]
     inputs = [cardano.parse_input(i) for i in parameters["inputs"]]
     outputs = [cardano.parse_output(o) for o in parameters["outputs"]]
     certificates = [cardano.parse_certificate(c) for c in parameters["certificates"]]
     withdrawals = [cardano.parse_withdrawal(w) for w in parameters["withdrawals"]]
     auxiliary_data = cardano.parse_auxiliary_data(parameters["auxiliary_data"])
+    mint = cardano.parse_mint(parameters["mint"])
+    additional_witness_requests = [
+        cardano.parse_additional_witness_request(p)
+        for p in parameters["additional_witness_requests"]
+    ]
+
+    if parameters.get("security_checks") == "prompt":
+        device.apply_settings(
+            client, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
+        )
+    else:
+        device.apply_settings(client, safety_checks=messages.SafetyCheckLevel.Strict)
 
     with client:
         with pytest.raises(TrezorFailure, match=result["error_message"]):
@@ -92,6 +118,8 @@ def test_cardano_sign_tx_failed(client, parameters, result):
                 protocol_magic=parameters["protocol_magic"],
                 network_id=parameters["network_id"],
                 auxiliary_data=auxiliary_data,
+                mint=mint,
+                additional_witness_requests=additional_witness_requests,
             )
 
 

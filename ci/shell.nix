@@ -3,16 +3,21 @@
  }:
 
 let
-  # the last commit from master as of 2021-09-13
+  # the last commit from master as of 2021-12-06
   rustOverlay = import (builtins.fetchTarball {
-    url = "https://github.com/oxalica/rust-overlay/archive/9fd1c36484a844683153896f37d6fd28b365b931.tar.gz";
-    sha256 = "1nylnc16y9jwjajvq2zj314lla2g16p77jhaj3vapfgq17n78i12";
+    url = "https://github.com/oxalica/rust-overlay/archive/96f1bd1ec11d9c9e8b41c7560df9efae8d091908.tar.gz";
+    sha256 = "07qfya55d3lw4mblm62ykx8h9zg2ms3891ik30qzzpywwacafi8j";
   });
-  # the last successful build of nixpkgs-unstable as of 2021-07-09
+  # the last successful build of nixpkgs-unstable as of 2021-11-18
   nixpkgs = import (builtins.fetchTarball {
-    url = "https://github.com/NixOS/nixpkgs/archive/7b4ff2184e4cab274ecb2b2eb49d20ef2142ddf1.tar.gz";
-    sha256 = "1gdjm0qv5x9jx3zps7vz6yh10rkhmrbk7vf0b2hx5x6wi8yngfnb";
+    url = "https://github.com/NixOS/nixpkgs/archive/7fad01d9d5a3f82081c00fb57918d64145dc904c.tar.gz";
+    sha256 = "0g0jn8cp1f3zgs7xk2xb2vwa44gb98qlp7k0dvigs0zh163c2kim";
   }) { overlays = [ rustOverlay ]; };
+  # commit before python36 was removed
+  python36nixpkgs = import (builtins.fetchTarball {
+    url = "https://github.com/NixOS/nixpkgs/archive/b9126f77f553974c90ab65520eff6655415fc5f4.tar.gz";
+    sha256 = "02s3qkb6kz3ndyx7rfndjbvp4vlwiqc42fxypn3g6jnc0v5jyz95";
+  }) { };
   moneroTests = nixpkgs.fetchurl {
     url = "https://github.com/ph4r05/monero/releases/download/v0.17.1.9-tests/trezor_tests";
     sha256 = "410bc4ff2ff1edc65e17f15b549bd1bf8a3776cf67abdea86aed52cf4bce8d9d";
@@ -23,7 +28,7 @@ let
     ${nixpkgs.patchelf}/bin/patchelf --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" "$out"
     chmod -w $out
   '';
-  rustStable = nixpkgs.rust-bin.stable."1.55.0".minimal.override {
+  rustStable = nixpkgs.rust-bin.stable."1.57.0".minimal.override {
     targets = [
       "thumbv7em-none-eabihf" # TT
       "thumbv7m-none-eabi"    # T1
@@ -41,9 +46,13 @@ let
     # to use official binary, remove rustfmt from buildInputs and add it to extensions:
     extensions = [ "clippy" ];    
   });
+  gcc = nixpkgs.gcc11;
+  llvmPackages = nixpkgs.llvmPackages_12;
+  # see pyright/README.md for update procedure
+  pyright = nixpkgs.callPackage ./pyright {};
 in
 with nixpkgs;
-stdenv.mkDerivation ({
+stdenvNoCC.mkDerivation ({
   name = "trezor-firmware-env";
   buildInputs = lib.optionals fullDeps [
     # install other python versions for tox testing
@@ -52,15 +61,14 @@ stdenv.mkDerivation ({
     python38
     python39
     python37
-    python36
+    python36nixpkgs.python36
   ] ++ [
     SDL2
     SDL2_image
     autoflake
     bash
     check
-    clang-tools
-    clang
+    curl  # for connect tests
     editorconfig-checker
     gcc
     gcc-arm-embedded
@@ -71,10 +79,12 @@ stdenv.mkDerivation ({
     libffi
     libjpeg
     libusb1
+    llvmPackages.clang
     openssl
     pkgconfig
     poetry
     protobuf3_6
+    pyright
     rustfmt
     #rustStable
     rustNightly
@@ -109,6 +119,11 @@ stdenv.mkDerivation ({
 
   # Used by rust bindgen
   LIBCLANG_PATH = "${llvmPackages.libclang.lib}/lib";
+
+  # don't try to use stack protector for Apple Silicon (emulator) binaries
+  # it's broken at the moment
+  hardeningDisable = lib.optionals (stdenv.isDarwin && stdenv.isAarch64) [ "stackprotector" ];
+
 } // (lib.optionalAttrs fullDeps) {
   TREZOR_MONERO_TESTS_PATH = moneroTestsPatched;
 })

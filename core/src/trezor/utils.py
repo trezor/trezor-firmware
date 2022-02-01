@@ -12,6 +12,7 @@ from trezorutils import (  # noqa: F401
     halt,
     memcpy,
 )
+from typing import TYPE_CHECKING
 
 DISABLE_ANIMATION = 0
 
@@ -24,31 +25,29 @@ if __debug__:
     else:
         LOG_MEMORY = 0
 
-if False:
+if TYPE_CHECKING:
     from typing import (
         Any,
         Iterator,
         Protocol,
-        Union,
         TypeVar,
         Sequence,
-        Set,
     )
 
     from trezor.protobuf import MessageType
 
 
-def unimport_begin() -> Set[str]:
+def unimport_begin() -> set[str]:
     return set(sys.modules)
 
 
-def unimport_end(mods: Set[str], collect: bool = True) -> None:
+def unimport_end(mods: set[str], collect: bool = True) -> None:
     # static check that the size of sys.modules never grows above value of
     # MICROPY_LOADED_MODULES_DICT_SIZE, so that the sys.modules dict is never
     # reallocated at run-time
     assert len(sys.modules) <= 160, "Please bump preallocated size in mpconfigport.h"
 
-    for mod in sys.modules:
+    for mod in sys.modules:  # pylint: disable=consider-using-dict-items
         if mod not in mods:
             # remove reference from sys.modules
             del sys.modules[mod]
@@ -71,7 +70,7 @@ def unimport_end(mods: Set[str], collect: bool = True) -> None:
 
 class unimport:
     def __init__(self) -> None:
-        self.mods: Set[str] | None = None
+        self.mods: set[str] | None = None
 
     def __enter__(self) -> None:
         self.mods = unimport_begin()
@@ -93,9 +92,9 @@ def presize_module(modname: str, size: int) -> None:
     """
     module = sys.modules[modname]
     for i in range(size):
-        setattr(module, "___PRESIZE_MODULE_%d" % i, None)
+        setattr(module, f"___PRESIZE_MODULE_{i}", None)
     for i in range(size):
-        delattr(module, "___PRESIZE_MODULE_%d" % i)
+        delattr(module, f"___PRESIZE_MODULE_{i}")
 
 
 if __debug__:
@@ -103,7 +102,7 @@ if __debug__:
     def mem_dump(filename: str) -> None:
         from micropython import mem_info
 
-        print("### sysmodules (%d):" % len(sys.modules))
+        print(f"### sysmodules ({len(sys.modules)}):")
         for mod in sys.modules:
             print("*", mod)
         if EMULATOR:
@@ -124,7 +123,7 @@ def ensure(cond: bool, msg: str | None = None) -> None:
             raise AssertionError(msg)
 
 
-if False:
+if TYPE_CHECKING:
     Chunkable = TypeVar("Chunkable", str, Sequence[Any])
 
 
@@ -133,9 +132,7 @@ def chunks(items: Chunkable, size: int) -> Iterator[Chunkable]:
         yield items[i : i + size]
 
 
-def chunks_intersperse(
-    items: Chunkable, size: int, sep: str = "\n"
-) -> Iterator[Chunkable]:
+def chunks_intersperse(items: str, size: int, sep: str = "\n") -> Iterator[str]:
     first = True
     for i in range(0, len(items), size):
         if not first:
@@ -145,23 +142,26 @@ def chunks_intersperse(
         yield items[i : i + size]
 
 
-if False:
+if TYPE_CHECKING:
 
     class HashContext(Protocol):
-        def __init__(self, data: bytes = None) -> None:
-            ...
-
-        def update(self, buf: bytes) -> None:
+        def update(self, __buf: bytes) -> None:
             ...
 
         def digest(self) -> bytes:
             ...
 
-    class Writer(Protocol):
-        def append(self, b: int) -> None:
+    class HashContextInitable(HashContext, Protocol):
+        def __init__(  # pylint: disable=super-init-not-called
+            self, __data: bytes = None
+        ) -> None:
             ...
 
-        def extend(self, buf: bytes) -> None:
+    class Writer(Protocol):
+        def append(self, __b: int) -> None:
+            ...
+
+        def extend(self, __buf: bytes) -> None:
             ...
 
 
@@ -184,8 +184,8 @@ class HashWriter:
         return self.ctx.digest()
 
 
-if False:
-    BufferType = Union[bytearray, memoryview]
+if TYPE_CHECKING:
+    BufferType = bytearray | memoryview
 
 
 class BufferWriter:
@@ -221,7 +221,7 @@ class BufferWriter:
 class BufferReader:
     """Seekable and readable view into a buffer."""
 
-    def __init__(self, buffer: Union[bytes, memoryview]) -> None:
+    def __init__(self, buffer: bytes | memoryview) -> None:
         if isinstance(buffer, memoryview):
             self.buffer = buffer
         else:
@@ -297,31 +297,31 @@ class BufferReader:
         return byte
 
 
-def obj_eq(l: object, r: object) -> bool:
+def obj_eq(self: object, __o: object) -> bool:
     """
     Compares object contents, supports __slots__.
     """
-    if l.__class__ is not r.__class__:
+    if self.__class__ is not __o.__class__:
         return False
-    if not hasattr(l, "__slots__"):
-        return l.__dict__ == r.__dict__
-    if l.__slots__ is not r.__slots__:
+    if not hasattr(self, "__slots__"):
+        return self.__dict__ == __o.__dict__
+    if self.__slots__ is not __o.__slots__:
         return False
-    for slot in l.__slots__:
-        if getattr(l, slot, None) != getattr(r, slot, None):
+    for slot in self.__slots__:
+        if getattr(self, slot, None) != getattr(__o, slot, None):
             return False
     return True
 
 
-def obj_repr(o: object) -> str:
+def obj_repr(self: object) -> str:
     """
     Returns a string representation of object, supports __slots__.
     """
-    if hasattr(o, "__slots__"):
-        d = {attr: getattr(o, attr, None) for attr in o.__slots__}
+    if hasattr(self, "__slots__"):
+        d = {attr: getattr(self, attr, None) for attr in self.__slots__}
     else:
-        d = o.__dict__
-    return "<%s: %s>" % (o.__class__.__name__, d)
+        d = self.__dict__
+    return f"<{self.__class__.__name__}: {d}>"
 
 
 def truncate_utf8(string: str, max_bytes: int) -> str:
@@ -373,14 +373,14 @@ if __debug__:
                     yield "    " + subline
             elif val and isinstance(val, list) and type(val[0]) == type(msg):
                 # non-empty list of protobuf messages
-                yield "    {}: [".format(key)
+                yield f"    {key}: ["
                 for subval in val:
                     sublines = dump_protobuf_lines(subval)
                     for subline in sublines:
                         yield "        " + subline
                 yield "    ]"
             else:
-                yield "    {}: {!r}".format(key, val)
+                yield f"    {key}: {repr(val)}"
 
         yield "}"
 

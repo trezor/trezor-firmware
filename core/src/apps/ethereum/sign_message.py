@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha3_256
 from trezor.messages import EthereumMessageSignature
@@ -7,10 +9,10 @@ from trezor.utils import HashWriter
 from apps.common import paths
 from apps.common.signverify import decode_message
 
-from . import address
+from .helpers import address_from_bytes
 from .keychain import PATTERNS_ADDRESS, with_keychain_from_path
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import EthereumSignMessage
     from trezor.wire import Context
 
@@ -31,9 +33,13 @@ async def sign_message(
     ctx: Context, msg: EthereumSignMessage, keychain: Keychain
 ) -> EthereumMessageSignature:
     await paths.validate_path(ctx, keychain, msg.address_n)
-    await confirm_signverify(ctx, "ETH", decode_message(msg.message))
 
     node = keychain.derive(msg.address_n)
+    address = address_from_bytes(node.ethereum_pubkeyhash())
+    await confirm_signverify(
+        ctx, "ETH", decode_message(msg.message), address, verify=False
+    )
+
     signature = secp256k1.sign(
         node.private_key(),
         message_digest(msg.message),
@@ -42,6 +48,6 @@ async def sign_message(
     )
 
     return EthereumMessageSignature(
-        address=address.address_from_bytes(node.ethereum_pubkeyhash()),
+        address=address,
         signature=signature[1:] + bytearray([signature[0]]),
     )

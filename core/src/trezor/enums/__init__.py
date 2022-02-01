@@ -1,8 +1,4 @@
-if False:
-    from typing import TYPE_CHECKING
-else:
-    TYPE_CHECKING = False
-
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from enum import IntEnum
@@ -27,6 +23,8 @@ if TYPE_CHECKING:
         ButtonRequest = 26
         ButtonAck = 27
         ApplyFlags = 28
+        GetNonce = 31
+        Nonce = 33
         BackupDevice = 34
         EntropyRequest = 35
         EntropyAck = 36
@@ -59,6 +57,7 @@ if TYPE_CHECKING:
         TxAck = 22
         GetAddress = 29
         Address = 30
+        TxAckPaymentRequest = 37
         SignMessage = 38
         VerifyMessage = 39
         MessageSignature = 40
@@ -102,6 +101,13 @@ if TYPE_CHECKING:
         EthereumSignMessage = 64
         EthereumVerifyMessage = 65
         EthereumMessageSignature = 66
+        EthereumSignTypedData = 464
+        EthereumTypedDataStructRequest = 465
+        EthereumTypedDataStructAck = 466
+        EthereumTypedDataValueRequest = 467
+        EthereumTypedDataValueAck = 468
+        EthereumTypedDataSignature = 469
+        EthereumSignTypedHash = 470
         NEMGetAddress = 67
         NEMAddress = 68
         NEMSignTx = 69
@@ -120,15 +126,17 @@ if TYPE_CHECKING:
         StellarAddress = 208
         StellarCreateAccountOp = 210
         StellarPaymentOp = 211
-        StellarPathPaymentOp = 212
-        StellarManageOfferOp = 213
-        StellarCreatePassiveOfferOp = 214
+        StellarPathPaymentStrictReceiveOp = 212
+        StellarManageSellOfferOp = 213
+        StellarCreatePassiveSellOfferOp = 214
         StellarSetOptionsOp = 215
         StellarChangeTrustOp = 216
         StellarAllowTrustOp = 217
         StellarAccountMergeOp = 218
         StellarManageDataOp = 220
         StellarBumpSequenceOp = 221
+        StellarManageBuyOfferOp = 222
+        StellarPathPaymentStrictSendOp = 223
         StellarSignedTx = 230
         CardanoSignTx = 303
         CardanoGetPublicKey = 305
@@ -155,6 +163,9 @@ if TYPE_CHECKING:
         CardanoTxAuxiliaryData = 327
         CardanoPoolOwner = 328
         CardanoPoolRelayParameters = 329
+        CardanoGetNativeScriptHash = 330
+        CardanoNativeScriptHash = 331
+        CardanoTxMint = 332
         RippleGetAddress = 400
         RippleAddress = 401
         RippleSignTx = 402
@@ -295,6 +306,7 @@ if TYPE_CHECKING:
         EXTERNAL = 2
         SPENDWITNESS = 3
         SPENDP2SHWITNESS = 4
+        SPENDTAPROOT = 5
 
     class OutputScriptType(IntEnum):
         PAYTOADDRESS = 0
@@ -303,6 +315,7 @@ if TYPE_CHECKING:
         PAYTOOPRETURN = 3
         PAYTOWITNESS = 4
         PAYTOP2SHWITNESS = 5
+        PAYTOTAPROOT = 6
 
     class DecredStakingSpendType(IntEnum):
         SSGen = 0
@@ -322,8 +335,14 @@ if TYPE_CHECKING:
         TXEXTRADATA = 4
         TXORIGINPUT = 5
         TXORIGOUTPUT = 6
-        TXORCHARDINPUT = 7
-        TXORCHARDOUTPUT = 8
+        TXPAYMENTREQ = 7
+        TXORCHARDINPUT = 8
+        TXORCHARDOUTPUT = 9
+
+    class CardanoDerivationType(IntEnum):
+        LEDGER = 0
+        ICARUS = 1
+        ICARUS_TREZOR = 2
 
     class CardanoAddressType(IntEnum):
         BASE = 0
@@ -337,6 +356,19 @@ if TYPE_CHECKING:
         BYRON = 8
         REWARD = 14
         REWARD_SCRIPT = 15
+
+    class CardanoNativeScriptType(IntEnum):
+        PUB_KEY = 0
+        ALL = 1
+        ANY = 2
+        N_OF_K = 3
+        INVALID_BEFORE = 4
+        INVALID_HEREAFTER = 5
+
+    class CardanoNativeScriptHashDisplayFormat(IntEnum):
+        HIDE = 0
+        BECH32 = 1
+        POLICY_ID = 2
 
     class CardanoCertificateType(IntEnum):
         STAKE_REGISTRATION = 0
@@ -356,6 +388,7 @@ if TYPE_CHECKING:
     class CardanoTxSigningMode(IntEnum):
         ORDINARY_TRANSACTION = 0
         POOL_REGISTRATION_AS_OWNER = 1
+        MULTISIG_TRANSACTION = 2
 
     class CardanoTxWitnessType(IntEnum):
         BYRON_WITNESS = 0
@@ -409,6 +442,21 @@ if TYPE_CHECKING:
         DOWN = 1
         LEFT = 2
         RIGHT = 3
+
+    class DebugButton(IntEnum):
+        NO = 0
+        YES = 1
+        INFO = 2
+
+    class EthereumDataType(IntEnum):
+        UINT = 1
+        INT = 2
+        BYTES = 3
+        STRING = 4
+        BOOL = 5
+        ADDRESS = 6
+        ARRAY = 7
+        STRUCT = 8
 
     class NEMMosaicLevy(IntEnum):
         MosaicLevy_Absolute = 1

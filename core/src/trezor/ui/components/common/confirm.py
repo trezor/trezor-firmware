@@ -1,21 +1,28 @@
+from typing import TYPE_CHECKING
+
 from trezor import loop, ui, wire
 
-if False:
-    from typing import Callable, Any, Awaitable
+if TYPE_CHECKING:
+    from typing import Callable, Any, Awaitable, TypeVar
+
+    T = TypeVar("T")
 
 CONFIRMED = object()
 CANCELLED = object()
 INFO = object()
+GO_BACK = object()
+SHOW_PAGINATED = object()
 
 
 def is_confirmed(x: Any) -> bool:
     return x is CONFIRMED
 
 
-async def raise_if_cancelled(a: Awaitable, exc: Any = wire.ActionCancelled) -> None:
+async def raise_if_cancelled(a: Awaitable[T], exc: Any = wire.ActionCancelled) -> T:
     result = await a
     if result is CANCELLED:
         raise exc
+    return result
 
 
 async def is_confirmed_info(
@@ -39,6 +46,7 @@ class ConfirmBase(ui.Layout):
         confirm: ui.Component | None = None,
         cancel: ui.Component | None = None,
     ) -> None:
+        super().__init__()
         self.content = content
         self.confirm = confirm
         self.cancel = cancel
@@ -62,7 +70,7 @@ class ConfirmBase(ui.Layout):
         def read_content(self) -> list[str]:
             return self.content.read_content()
 
-        def create_tasks(self) -> tuple[loop.Task, ...]:
+        def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
             from apps.debug import confirm_signal
 
             return super().create_tasks() + (confirm_signal(),)

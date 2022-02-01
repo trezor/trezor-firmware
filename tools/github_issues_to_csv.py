@@ -71,14 +71,14 @@ def write_issues(r, csvout):
 
 def get_issues(name):
     """Requests issues from GitHub API and writes to CSV file."""
-    url = "https://api.github.com/repos/{}/issues?state=all".format(name)
+    url = f"https://api.github.com/repos/{name}/issues?state=all"
     if token is not None:
         headers = {"Authorization": "token " + token}
     else:
         headers = None
     r = requests.get(url, headers=headers)
 
-    csvfilename = "{}-issues.csv".format(name.replace("/", "-"))
+    csvfilename = f"{name.replace('/', '-')}-issues.csv"
     with open(csvfilename, "w", newline="") as csvfile:
         csvout = csv.writer(csvfile)
         csvout.writerow(

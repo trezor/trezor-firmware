@@ -6,9 +6,10 @@ import os
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
 EVERYTHING = BITCOIN_ONLY != '1'
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
+NEW_UI = TREZOR_MODEL == '1' or ARGUMENTS.get('NEW_UI', '0') == '1'
 
 FEATURE_FLAGS = {
-    "SECP256K1_ZKP": False,
+    "SECP256K1_ZKP": True,
 }
 
 CCFLAGS_MOD = ''
@@ -101,6 +102,7 @@ SOURCE_MOD += [
 ]
 if EVERYTHING:
     SOURCE_MOD += [
+        'vendor/trezor-crypto/cardano.c',
         'vendor/trezor-crypto/monero/base58.c',
         'vendor/trezor-crypto/monero/serialize.c',
         'vendor/trezor-crypto/monero/xmr.c',
@@ -114,7 +116,9 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
         'vendor/secp256k1-zkp/include',
     ]
     CPPDEFINES_MOD += [
-        'SECP256K1_BUILD',
+        'USE_SECP256K1_ZKP',
+        'USE_SECP256K1_ZKP_ECDSA',
+        ('SECP256K1_CONTEXT_SIZE', '208'),
         'USE_NUM_NONE',
         'USE_FIELD_INV_BUILTIN',
         'USE_SCALAR_INV_BUILTIN',
@@ -122,14 +126,20 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
         'USE_SCALAR_8X32',
         'USE_ECMULT_STATIC_PRECOMPUTATION',
         'USE_EXTERNAL_DEFAULT_CALLBACKS',
+        ('ECMULT_GEN_PREC_BITS', '4'),
         ('ECMULT_WINDOW_SIZE', '8'),
         'ENABLE_MODULE_GENERATOR',
-        'ENABLE_MODULE_RANGEPROOF',
         'ENABLE_MODULE_RECOVERY',
-        'ENABLE_MODULE_ECDH',
+        'ENABLE_MODULE_SCHNORRSIG',
+        'ENABLE_MODULE_EXTRAKEYS',
     ]
     SOURCE_MOD_SECP256K1_ZKP = [
         'vendor/secp256k1-zkp/src/secp256k1.c',
+    ]
+    SOURCE_MOD += [
+        'vendor/trezor-crypto/zkp_context.c',
+        'vendor/trezor-crypto/zkp_ecdsa.c',
+        'vendor/trezor-crypto/zkp_bip340.c',
     ]
 
 # modtrezorio
@@ -179,10 +189,14 @@ SOURCE_MOD += [
     'embed/extmod/rustmods/modtrezorproto.c',
     'embed/extmod/rustmods/modtrezorzcash.c',
 ]
+if NEW_UI:
+    SOURCE_MOD += [
+        'embed/extmod/rustmods/modtrezorui2.c',
+    ]
 
 # modutime
 SOURCE_MOD += [
-    'vendor/micropython/ports/unix/modtime.c',
+    'embed/extmod/modutime.c',
 ]
 
 SOURCE_MICROPYTHON = [
@@ -192,6 +206,7 @@ SOURCE_MICROPYTHON = [
     'vendor/micropython/extmod/modutimeq.c',
     'vendor/micropython/extmod/utime_mphal.c',
     'vendor/micropython/shared/readline/readline.c',
+    'vendor/micropython/shared/timeutils/timeutils.c',
     'vendor/micropython/ports/unix/modos.c',
     'vendor/micropython/py/argcheck.c',
     'vendor/micropython/py/asmarm.c',
@@ -240,6 +255,7 @@ SOURCE_MICROPYTHON = [
     'vendor/micropython/py/mpz.c',
     'vendor/micropython/py/nativeglue.c',
     'vendor/micropython/py/nlr.c',
+    'vendor/micropython/py/nlraarch64.c',
     'vendor/micropython/py/nlrsetjmp.c',
     'vendor/micropython/py/nlrthumb.c',
     'vendor/micropython/py/nlrx64.c',
@@ -353,20 +369,29 @@ env.Replace(
     OBJCOPY='objcopy',
     COPT=os.getenv('OPTIMIZE', '-Os'), )
 
-if ARGUMENTS.get('TREZOR_EMULATOR_ASAN', 0):
-    asan_flags=(
-            ' -fsanitize=address'+
-            ' -fsanitize-blacklist=asan_blacklist.txt'+
-            ' -fno-omit-frame-pointer'+
-            ' -fno-optimize-sibling-calls'
-    )
+if ARGUMENTS.get('TREZOR_EMULATOR_CLANG', '0') == '1':
     env.Replace(
-        CC=os.getenv('CC') or 'clang',
-        LINK=os.getenv('LINK') or 'clang',
-        CFLAGS=asan_flags,
-        LINKFLAGS=' -Wl,-no_pie' + asan_flags, )
+        CC='clang',
+        LINK='clang', )
 
-if ARGUMENTS.get('TREZOR_EMULATOR_DEBUGGABLE', 0):
+if ARGUMENTS.get('TREZOR_EMULATOR_ASAN', '0') == '1':
+    asan_flags=(
+        ' -fsanitize=address,undefined'+
+        ' -fno-omit-frame-pointer'+
+        ' -fno-optimize-sibling-calls'
+    )
+    env.Append(
+        CFLAGS=asan_flags,
+        LINKFLAGS=asan_flags,
+        LDFLAGS=asan_flags,
+        ENV={
+            # workaround for sanitizers being nightly-only
+            # remove after stabilized https://github.com/rust-lang/rust/issues/39699
+            'RUSTC_BOOTSTRAP': '1',
+            'RUSTFLAGS': '-Z sanitizer=address',
+        }, )
+
+if ARGUMENTS.get('TREZOR_EMULATOR_DEBUGGABLE', '0') == '1':
     env.Replace(
         COPT=' -Og -ggdb',
         STRIP='true', )
@@ -383,7 +408,7 @@ env.Replace(
     CCFLAGS='$COPT '
     '-g3 '
     '-std=gnu99 -Wall -Werror -Wuninitialized -Wno-missing-braces '
-    '-fdata-sections -ffunction-sections ' + CCFLAGS_MOD,
+    '-fdata-sections -ffunction-sections -fPIE ' + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
     LIBS=['m'],
     CPPPATH=[
@@ -599,6 +624,9 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
         CC=os.getenv('CC_FOR_BUILD') or 'gcc',
         COPT='-O2',
         CPPPATH='vendor/secp256k1-zkp',
+        CPPDEFINES=[
+            ('ECMULT_GEN_PREC_BITS', '4'),
+        ]
     )
     gen_context = host_env.Program(
         target='vendor/secp256k1-zkp/gen_context',
@@ -626,22 +654,25 @@ protobuf_blobs = env.Command(
 )
 env.Depends(protobuf_blobs, qstr_generated)
 
-RUST_PROFILE = 'release'
+RUST_PROFILE = 'dev' if ARGUMENTS.get('TREZOR_EMULATOR_DEBUGGABLE', 0) == '1' else 'release'
 RUST_LIB = 'trezor_lib'
 RUST_LIBDIR = f'build/unix/rust/{RUST_PROFILE}'
 RUST_LIBPATH = f'{RUST_LIBDIR}/lib{RUST_LIB}.a'
 
 def cargo_build():
-    # Determine the profile build flags.
-    if RUST_PROFILE == 'release':
-        profile = '--release'
+    if TREZOR_MODEL == "1":
+        features = ["model_t1"]
     else:
-        profile = ''
-    features = []
+        features = ["model_tt"]
     if BITCOIN_ONLY == "1":
         features.append("bitcoin_only")
+    if PYOPT == "0":
+        features.append("ui")
+        features.append("ui_debug")
+    elif NEW_UI:
+        features.append("ui")
 
-    return f'cd embed/rust; cargo +nightly build {profile} --target-dir=../../build/unix/rust --features "{" ".join(features)}"'
+    return f'cd embed/rust; cargo +nightly build --profile {RUST_PROFILE} --target-dir=../../build/unix/rust --no-default-features --features "{" ".join(features)}"'
 
 rust = env.Command(
     target=RUST_LIBPATH,

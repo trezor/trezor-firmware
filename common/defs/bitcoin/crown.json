@@ -23,6 +23,7 @@
   "cashaddr_prefix": null,
   "slip44": 72,
   "segwit": false,
+  "taproot": false,
   "decred": false,
   "fork_id": null,
   "force_bip143": false,

@@ -1,7 +1,9 @@
+from typing import TYPE_CHECKING
+
 from apps.monero.xmr import crypto, monero
 from apps.monero.xmr.serialize.int_serialize import dump_uvarint_b
 
-if False:
+if TYPE_CHECKING:
     from apps.monero.xmr.types import Ge25519, Sc25519
     from apps.monero.xmr.credentials import AccountCreds
     from trezor.messages import MoneroTransferDetails
@@ -75,7 +77,7 @@ def _export_key_image(
         sub_addr_major,
         sub_addr_minor,
     )
-    xi, ki, recv_derivation = r[:3]
+    xi, ki, _ = r[:3]
 
     phash = crypto.encodepoint(ki)
     sig = generate_ring_signature(phash, ki, [pkey], xi, 0, test)

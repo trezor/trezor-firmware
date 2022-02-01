@@ -43,6 +43,12 @@ const CoinInfo *coinByAddressType(uint32_t address_type) {
 }
 
 const CoinInfo *coinBySlip44(uint32_t coin_type) {
+  if (coin_type == SLIP44_TESTNET) {
+    // The slip44 coin type is the same for all testnets, so we return the
+    // Bitcoin Testnet.
+    return coinByName("Testnet");
+  }
+
   for (int i = 0; i < COINS_COUNT; i++) {
     if (coin_type == coins[i].coin_type) {
       return &(coins[i]);

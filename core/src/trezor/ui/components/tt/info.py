@@ -1,12 +1,16 @@
-from trezor import res, ui
+from typing import TYPE_CHECKING
+
+from trezor import loop, res, ui
 
 from ...constants import TEXT_LINE_HEIGHT, TEXT_MARGIN_LEFT
 from .button import Button, ButtonConfirm
 from .confirm import CONFIRMED
 from .text import render_text
 
-if False:
+if TYPE_CHECKING:
     from .button import ButtonContent
+
+    InfoConfirmStyleType = type["DefaultInfoConfirm"]
 
 
 class DefaultInfoConfirm:
@@ -20,10 +24,6 @@ class DefaultInfoConfirm:
 
         class disabled(ButtonConfirm.disabled):
             border_color = ui.BLACKISH
-
-
-if False:
-    InfoConfirmStyleType = type[DefaultInfoConfirm]
 
 
 class InfoConfirm(ui.Layout):
@@ -43,7 +43,7 @@ class InfoConfirm(ui.Layout):
         self.panel_area = panel_area
         confirm_area = ui.grid(4, n_x=1)
         self.confirm = Button(confirm_area, confirm, style.button)
-        self.confirm.on_click = self.on_confirm  # type: ignore
+        self.confirm.on_click = self.on_confirm
 
     def dispatch(self, event: int, x: int, y: int) -> None:
         if event == ui.RENDER:
@@ -75,3 +75,13 @@ class InfoConfirm(ui.Layout):
 
     def on_confirm(self) -> None:
         raise ui.Result(CONFIRMED)
+
+    if __debug__:
+
+        def read_content(self) -> list[str]:
+            return self.text
+
+        def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
+            from apps.debug import confirm_signal
+
+            return super().create_tasks() + (confirm_signal(),)

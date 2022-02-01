@@ -33,6 +33,7 @@ typedef struct _CoinInfo {
   const char *signed_message_header;
   uint32_t decimals;
   bool has_segwit;
+  bool has_taproot;
   bool has_fork_id;
   bool force_bip143;
   bool decred;
@@ -57,6 +58,12 @@ typedef struct _CoinInfo {
 } CoinInfo;
 
 #include "coin_info.h"
+
+// SLIP-44 hardened coin type for Bitcoin
+#define SLIP44_BITCOIN 0x80000000
+
+// SLIP-44 hardened coin type for all Testnet coins
+#define SLIP44_TESTNET 0x80000001
 
 const CoinInfo *coinByName(const char *name);
 const CoinInfo *coinByAddressType(uint32_t address_type);

@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 import storage.cache
 import storage.device
 from trezor import config, utils, wire, workflow
@@ -6,9 +8,8 @@ from trezor.messages import Success
 
 from . import workflow_handlers
 
-if False:
+if TYPE_CHECKING:
     from trezor import protobuf
-    from typing import NoReturn
     from trezor.messages import (
         Features,
         Initialize,
@@ -25,6 +26,7 @@ if False:
 def get_features() -> Features:
     import storage.recovery
     import storage.sd_salt
+    import storage  # workaround for https://github.com/microsoft/pyright/issues/2685
 
     from trezor import sdcard
     from trezor.enums import Capability
@@ -44,7 +46,6 @@ def get_features() -> Features:
         label=storage.device.get_label(),
         pin_protection=config.has_pin(),
         unlocked=config.is_unlocked(),
-        passphrase_protection=storage.device.is_passphrase_enabled(),
     )
 
     if utils.BITCOIN_ONLY:
@@ -79,7 +80,8 @@ def get_features() -> Features:
 
     # private fields:
     if config.is_unlocked():
-
+        # passphrase_protection is private, see #1807
+        f.passphrase_protection = storage.device.is_passphrase_enabled()
         f.needs_backup = storage.device.needs_backup()
         f.unfinished_backup = storage.device.unfinished_backup()
         f.no_backup = storage.device.no_backup()
@@ -98,10 +100,31 @@ def get_features() -> Features:
 
 
 async def handle_Initialize(ctx: wire.Context, msg: Initialize) -> Features:
+    session_id = storage.cache.start_session(msg.session_id)
+
+    if not utils.BITCOIN_ONLY:
+        derive_cardano = storage.cache.get(storage.cache.APP_COMMON_DERIVE_CARDANO)
+        have_seed = storage.cache.is_set(storage.cache.APP_COMMON_SEED)
+
+        if (
+            have_seed
+            and msg.derive_cardano is not None
+            and msg.derive_cardano != bool(derive_cardano)
+        ):
+            # seed is already derived, and host wants to change derive_cardano setting
+            # => create a new session
+            storage.cache.end_current_session()
+            session_id = storage.cache.start_session()
+            have_seed = False
+
+        if not have_seed:
+            storage.cache.set(
+                storage.cache.APP_COMMON_DERIVE_CARDANO,
+                b"\x01" if msg.derive_cardano else b"",
+            )
+
     features = get_features()
-    if msg.session_id:
-        msg.session_id = bytes(msg.session_id)
-    features.session_id = storage.cache.start_session(msg.session_id)
+    features.session_id = session_id
     return features
 
 
@@ -109,7 +132,7 @@ async def handle_GetFeatures(ctx: wire.Context, msg: GetFeatures) -> Features:
     return get_features()
 
 
-async def handle_Cancel(ctx: wire.Context, msg: Cancel) -> NoReturn:
+async def handle_Cancel(ctx: wire.Context, msg: Cancel) -> Success:
     raise wire.ActionCancelled
 
 
@@ -241,8 +264,6 @@ def get_pinlocked_handler(
         return orig_handler
 
     async def wrapper(ctx: wire.Context, msg: wire.Msg) -> protobuf.MessageType:
-        # mypy limitation: orig_handler is not recognized as non-None
-        assert orig_handler is not None
         await unlock_device(ctx)
         return await orig_handler(ctx, msg)
 

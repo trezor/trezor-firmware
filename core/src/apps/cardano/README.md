@@ -24,11 +24,58 @@ REVIEWER = Jan Matejek <jan.matejek@satoshilabs.com>, Tomas Susanka <tomas.susan
 
 [cbor.me](http://cbor.me/) - very useful tool for CBOR inspection.
 
-## Important notes
 
-Cardano requires a custom `seed.py` file and `Keychain` class. This is because the original Cardano derivation schemes don't separate seed generation from key tree derivation and also because we need to support both Byron (44') and Shelley (1852') purposes. More on this can be found [here](https://github.com/satoshilabs/slips/blob/master/slip-0023.md) and [here](https://github.com/input-output-hk/implementation-decisions/blob/e2d1bed5e617f0907bc5e12cf1c3f3302a4a7c42/text/1852-hd-chimeric.md).
+## Seed derivation schemes
+
+When using a **BIP-39 seed phrase**, multiple seed derivation schemes are [specified](https://github.com/cardano-foundation/CIPs/blob/master/CIP-0003/README.md):
+
+* `ICARUS`, which is the recommended default.
+* `ICARUS_TREZOR`, which differs from Icarus for 24-word seed phrases due to a [historic bug](https://github.com/trezor/trezor-firmware/issues/1387).
+  When a seed shorter than 24 words is used, the result is the same as `ICARUS`.
+* `LEDGER`, designed and used by the Ledger wallet.
+
+Given the same seed phrase, each of the schemes may produce a different master seed,
+and so opens a different wallet.
+
+Icarus (and Icarus-Trezor) scheme processes the seed phrase in a manner incompatible
+with BIP-39. A separate derivation step is required when using the Icarus scheme, which
+prolongs Trezor's first-response time by 2 seconds, plus additional 2 seconds for
+Icarus-Trezor if the seed phrase is 24 words long.
+
+Since firmware version 2.4.3, wallets that require the Cardano-derived seed must specify
+`derive_cardano=true` in the `Initialize` call. Otherwise an error will be returned when
+performing any Cardano call with an Icarus-like derivation.
+
+Ledger derivation scheme is compatible with BIP-39 and does not require the separate
+derivation step. For that reason, it is available even if `derive_cardano=true` was not
+specified.
+
+Since firmware version 2.4.3, Trezor requires the caller to specify derivation type in
+every Cardano call. In older versions, the Icarus-Trezor derivation is always used.
+
+For compatibility with older firmwares, wallet implementations should default to the
+Icarus-Trezor derivation. For compatibility with other wallet vendors, wallets should
+make the derivation scheme configurable by user -- or perform a discovery for all three
+schemes.
+
+When using **SLIP-39 backup**, the only supported derivation is [SLIP-23](https://github.com/satoshilabs/slips/blob/master/slip-0023.md).
+The `derive_cardano=true` parameter is not required, and the value of `derivation_type`
+is ignored.
 
 Cardano uses extended public keys. This also means that the transaction signature is built using the `ed25519.sign_ext` function.
+
+
+## Multiple BIP-32 purposes
+
+Cardano is using the following values for BIP-32 purpose field:
+
+* Byron: 44'
+* Shelley: 1852'
+* Multi-sig: [1854'](https://cips.cardano.org/cips/cip1854/)
+* Minting: [1855'](https://cips.cardano.org/cips/cip1855/)
+
+Details about the purpose identifiers can be found [here](https://github.com/input-output-hk/implementation-decisions/blob/e2d1bed5e617f0907bc5e12cf1c3f3302a4a7c42/text/1852-hd-chimeric.md).
+
 
 ## Protocol magic vs. Network id
 
@@ -41,6 +88,8 @@ _Current mainnet network id:_ 1
 ## Key types
 
 In Shelley two types of keys are used. Payment key and staking key. Payment keys are derived from _m/1852'/1815'/x/[0,1]/y_ paths and are used for holding/transferring funds. Staking keys are derived from _m/1852'/1815'/x/2/0_ paths, thus there is only one staking key per account. They are used for staking operations - certificates, withdrawals. Shelley addresses are built from the combination of hashes of these keys.
+
+[Multi-sig paths (1854')](https://cips.cardano.org/cips/cip1854/) are used to generate keys which should be used in native scripts and also to sign multi-sig transactions. [Minting paths (1855')](https://cips.cardano.org/cips/cip1855/) are used for creating minting policies and for witnessing minting transactions.
 
 ## Addresses
 
@@ -60,11 +109,15 @@ Mainnet: `Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2`
 
 Testnet: `2657WMsDfac7BteXkJq5Jzdog4h47fPbkwUM49isuWbYAr2cFRHa3rURP236h9PBe`
 
+#### Credentials
+
+Shelley addresses are built using credentials - `payment_credential` and `staking_credential`. These credentials can either be key hashes or script IDs (hashes). The type of the address (and thus also its header) changes based on which credentials are used. Addresses with key hashes usually represent accounts owned by single users. Addresses with scripts either represent multi-sig (shared) accounts derived from native scripts or they represent Plutus scripts directly.
+
 #### Base address
 
-Introduced in Shelley: `[header] + [payment_key_hash] + [staking_key_hash]`
+Introduced in Shelley: `[header] + [payment_credential] + [staking_credential]`
 
-Base address can have staking rights (as it contains a staking key hash), but the staking key has to be registered on the blockchain first. Funds can be received even without the staking key being registered though. It is also possible to own the funds (payment key) but to use a different staking key to build the address. This would transfer the staking rights to the owner of the staking key. This can be useful for staking your funds for a charity.
+Base address can have staking rights (as it contains a staking credential), but the staking credential has to be registered on the blockchain first. Funds can be received even without the credential being registered though. It is also possible to own the funds (payment credential) but to use a different staking credential to build the address. This would transfer the staking rights to the owner(s) of the staking credential. This can be useful for staking your funds for a charity.
 
 **Example:**
 
@@ -74,9 +127,9 @@ Testnet: `addr_test1qrv42wjda8r6mpfj40d36znlgfdcqp7jtj03ah8skh6u8wnrqua2vw243tmj
 
 #### Pointer address
 
-Introduced in Shelley: `[header] + [payment_key_hash] + [certificate_pointer]`
+Introduced in Shelley: `[header] + [payment_credential] + [certificate_pointer]`
 
-Certificate pointer is a pointer `(block, transaction, certificate)` to the staking key registration certificate on the blockchain. It replaces `staking_key_hash` from base address, but serves the same purpose. Thus pointer address is pretty much the same as base address in function, but is much shorter (~35B vs 57B) thanks to the certificate pointer.
+Certificate pointer is a pointer `(block, transaction, certificate)` to the staking credential registration certificate on the blockchain. It replaces `staking_credential` from base address, but serves the same purpose. Thus pointer address is pretty much the same as base address in function, but is much shorter (~35B vs 57B) thanks to the certificate pointer.
 
 **Example:**
 
@@ -86,7 +139,7 @@ Testnet: `addr_test1gzq0nckg3ekgzuqg7w5p9mvgnd9ym28qh5grlph8xd2z925ph3wczvf2ag2x
 
 #### Enterprise address
 
-Introduced in Shelley: `[header] + [payment_key_hash]`
+Introduced in Shelley: `[header] + [payment_credential]`
 
 Entreprise address has no staking rights. This is useful for example for exchanges which contain a lot of funds and thus would control too much stake.
 
@@ -98,7 +151,7 @@ Testnet: `addr_test1vzq0nckg3ekgzuqg7w5p9mvgnd9ym28qh5grlph8xd2z92s8k2y47`
 
 #### Reward address
 
-Introduced in Shelley: `[header] + [staking_key_hash]`
+Introduced in Shelley: `[header] + [staking_credential]`
 
 Staking rewards are gathered on this address after stake registration and delegation. They can then be withdrawn by a transaction with `withdrawals` filled in. All of the rewards have to be taken out at once.
 
@@ -127,7 +180,7 @@ For security and in some cases UX purposes we use transaction signing mode so th
 
 #### Ordinary transaction
 
-An ordinary transaction cannot contain a pool registration certificate. Otherwise, no special rules currently apply.
+An ordinary transaction cannot contain a pool registration certificate. Also multi-sig (1854') witnesses can't be requested.
 
 #### Pool registration as owner
 
@@ -135,10 +188,15 @@ When signing a pool registration transaction as an owner, the transaction cannot
 - inputs with path, i.e. payment witness requests
 - other certificates
 - withdrawals
+- token minting
 
 Including inputs with a path would cause the transaction to be signed by such a path without letting the user know. Of course, we could let the user know that the transaction is being signed by the user's payment key, however, a pool owner should never be the one paying for the pool registration anyways so such a witness request doesn't make sense.
 
 Just like a pool registration certificate, other certificates and withdrawals are also signed by the user's staking keys. Allowing other certificates and withdrawals to be included in the transaction might thus cause the user to inadvertently sign a delegation certificate or withdrawal along with the pool registration.
+
+#### Multi-sig transaction
+
+Represents a multi-sig transaction using native scripts. Script credentials must be used in certificates and withdrawals when signing a multi-sig transaction. Ordinary (1852') witness requests are not allowed and all the witness requests are shown. Transaction cannot contain a pool registration certificate.
 
 ### Single account model
 
@@ -178,6 +236,15 @@ Transaction outputs may include custom tokens on top of ADA tokens:
 
 Please see the transaction below for more details.
 
+#### Token minting/burning
+
+_Token minting/burning support has been added to HW wallets along with multi-sig support_
+
+_Quote from [Cardano docs](https://cardano-ledger.readthedocs.io/en/latest/explanations/policies.html#minting-transactions):_
+> To introduce new quantities of new tokens on the ledger (minting) or to remove existing tokens (burning), each transaction features a mint field. The transactions where the mint field is not empty are known as minting transactions. The use of this field needs to be tightly controlled to ensure that the minting and burning of tokens occurs according to the token’s minting policy.
+
+Keys derived from a [minting path (1855')](https://cips.cardano.org/cips/cip1855/) are used to create token minting/burning policies (native scripts). The structure of the mint field can be found in the [CDDL](https://github.com/input-output-hk/cardano-ledger-specs/blob/097890495cbb0e8b62106bcd090a5721c3f4b36f/shelley-ma/shelley-ma-test/cddl-files/shelley-ma.cddl#L255).
+
 ### Certificates
 
 Certificates are posted to the blockchain via transactions and they mark a certain action, thus there are multiple certificate types:
@@ -213,6 +280,12 @@ The only object currently supported is Catalyst voting key registration. To be i
 
 [Catalyst Registration Transaction Metadata Format](https://github.com/cardano-foundation/CIPs/blob/749f22eccd78e05fcdc4552c49639bb3bbd0a458/CIP-0015/CIP-0015.md)
 
+### Native scripts
+
+Native scripts are used to describe the multi-sig scheme belonging to a script address or the minting/burning policy of native tokens. Native scripts define what keys need to be used to witness a transaction and what condition needs to be fulfilled in order for that transaction to be valid. See [CDDL](https://github.com/input-output-hk/cardano-ledger-specs/blob/3ff2b08c7e094a3b9035fafb170e0e1da9b75401/eras/alonzo/test-suite/cddl-files/alonzo.cddl#L334) and [CIP-1854](https://cips.cardano.org/cips/cip1854/) for more details.
+
+In order for the user to be able to verify native scripts a `get_native_script_hash` is available on Trezor. This enables the user to verify the contents and the final hash of the script.
+
 #### Transaction Explorer
 
 [Cardano explorer](https://explorer.cardano.org/en.html).
@@ -224,96 +297,71 @@ You can use a combination of [cardano-node](https://github.com/input-output-hk/c
 ## Serialization format
 Cardano uses [CBOR](https://www.rfc-editor.org/info/rfc7049) as a serialization format. [Here](https://github.com/input-output-hk/cardano-ledger-specs/blob/097890495cbb0e8b62106bcd090a5721c3f4b36f/shelley-ma/shelley-ma-test/cddl-files/shelley-ma.cddl) is the [CDDL](https://tools.ietf.org/html/rfc8610) specification for after Multi Asset support has been added.
 
-#### Raw transaction example
+#### Transaction body example
+Input for trezorctl to sign the transaction can be found [here](https://gist.github.com/gabrielKerekes/ad6c168b12ebb43b082df5b92d67e276).
+
 ```
-83a800818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b700018282583901eb0baa5e570cffbe2934db29df0b6a3d7c0430ee65d4c3a7ab2fefb91bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff821904d2a1581c95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39a14874652474436f696e1910e18258390180f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b427719115c02182a030a048182008200581c122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b427705a1581de1122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b42771903e80758205410cfffe33d9da8b3ab789068f12e0464fad13f586f92d8c8c2fcac68c1a9c00814a100828258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c158406478ca1a1d1bab66688a19e983fbff9e7f9120f0035d9663ae8eb917cf01ce1c4b47834d06f41cf0c7c5218be0224ab1d88de97b20572d6fdc3cb1e40b662300825820bc65be1b0b9d7531778a1317c2aa6de936963c3f9ac7d5ee9e9eda25e0c97c5e584023ddaf5c9f5c9a22fd646f1c1c5a3f1a84c3a43d90d2211e919450c35df53bcded772e0badb33a898c03f3c227765bc21e678d85b716e0055ca9d89274d6660e82a219ef64a4015820cdea4080a301fdfda7a6b9c8b5283273f51af5f34ae587e05c5492f90a2ae54f025820bc65be1b0b9d7531778a1317c2aa6de936963c3f9ac7d5ee9e9eda25e0c97c5e0358390180f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b4277041a015d76c419ef65a101584017ed3f6a8ef2d0f1212e3aa49766fcf22b087c6cfa5cf247ecbc6c27069d7c17f189f2ca0acf6f1d54e1999e12fc37ac695c693982df96430896b54e0bcff10780
+a900818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b700018282583901eb0baa5e570cffbe2934db29df0b6a3d7c0430ee65d4c3a7ab2fefb91bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff821904d2a1581c95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39a14874652474436f696e1910e18258390180f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b427719115c02182a030a048182008200581c122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b427705a1581de1122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b42771903e8075820a943e9166f1bb6d767b175384d3bd7d23645170df36fc1861fbf344135d8e120081409a1581c95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39a24874652474436f696e1a007838624875652474436f696e3a00783861
 ```
 
-#### The same transactions with structure description
+#### The same transaction body with structure description
 ```
-# transaction
-# array(3)
-[
- # transaction body
- # map(6)
- {
-   # inputs [id, index]
-   # uint(0), array(1), array(2), bytes(32), uint(0)
-   0: [[h'3B4...', 0]],
+# transaction body
+# map(6)
+{
+  # inputs [id, index]
+  # uint(0), array(1), array(2), bytes(32), uint(0)
+  0: [[h'3B4...', 0]],
 
-   # outputs [address, [ada_amount, { policy_id => { asset_name => asset_amount }}]]
-   # uint(1), array(2)
-   1: [
+  # outputs [address, [ada_amount, { policy_id => { asset_name => asset_amount }}]]
+  # uint(1), array(2)
+  1: [
     # multi asset output
     # array(2), bytes(57), uint(1234), map(1), bytes(28), map(1), bytes(8), uint(4321)
     [
-     h'01E...', [
-      1234, {
-       h'95A...': {
-        h'74652474436F696E': 4321
-       }
-      }
-     ]
+      h'01E...', [
+        1234, {
+          h'95A...': {
+            h'74652474436F696E': 4321
+          }
+        }
+      ]
     ],
     # output containing only ADA [address, ada_amount]
     # array(2), bytes(57), uint(4444)
     [h'018...', 4444],
-   ]
+  ]
 
-   # fee
-   # uint(2), uint(42)
-   2: 42,
+  # fee
+  # uint(2), uint(42)
+  2: 42,
 
-   # ttl
-   # uint(3), uint(10)
-   3: 10,
+  # ttl
+  # uint(3), uint(10)
+  3: 10,
 
-   # certificates [[type, [keyhash/scripthash, keyhash]]]
-   # uint(4), array(1), array(2), uint(0), array(2), uint(0), bytes(28)
-   4: [[0,[0, h'122...']]],
+  # certificates [[type, [keyhash/scripthash, keyhash]]]
+  # uint(4), array(1), array(2), uint(0), array(2), uint(0), bytes(28)
+  4: [[0,[0, h'122...']]],
 
-   # withdrawal [reward_address: amount]
-   # uint(5), map(1), bytes(29), uint(7204944340)
-   5: {h'E11...': 1000},
+  # withdrawal [reward_address: amount]
+  # uint(5), map(1), bytes(29), uint(7204944340)
+  5: {h'E11...': 1000},
 
-   # auxiliary data hash
-   7: h'541...',
+  # auxiliary data hash
+  7: h'541...',
 
-   # validity_interval_start
-   # uint(8), uint(20)
-   8: 20
- },
-  # witnesses
-  # map(1)
- {
-   # verifying key witnesses [[vkey -> signature]]
-   # uint(0), array(2)
-   0: [
-       # array(2), bytes(32), bytes(64)
-       [h'5D0...', h'647...'],
-       # array(2), bytes(32), bytes(64)
-       [h'BC6...', h'23D...']
-   ]
- },
- # auxiliary data - catalyst voting key registration
- # array(2)
- [
-   # map(2)
-   {
-     # uint(61284), map(4), uint(1), bytes(32), uint(2), bytes(32), uint(3), bytes(57), uint(4), uint(22902468)
-     61284: {
-       1: h'CDE...',
-       2: h'BC6...',
-       3: h'018...',
-       4: 22902468
-     },
-     # uint(61285), map(1), bytes(64)
-     61285: {
-       1:h'17E...'
-     }
-   },
-   # array(0)
-   []
- ]
-]
+  # validity_interval_start
+  # uint(8), uint(20)
+  8: 20,
+
+  # mint
+  # map(2), bytes(8), "te$tCoin", uint(7878754), bytes(8), "ue$tCoin", int(7878753)
+  9: {
+    h'95A2...': {
+      h'7465...': 7878754,
+      h'7565...': -7878754
+    }
+  }
+}
 ```

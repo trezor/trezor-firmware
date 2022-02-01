@@ -149,3 +149,24 @@ message EthereumVerifyMessage {
     required bytes message = 3;     // message to verify
     required string address = 4;     // address to verify
 }
+
+/**
+ * Request: Ask device to sign hash of typed data
+ * @start
+ * @next EthereumTypedDataSignature
+ * @next Failure
+ */
+message EthereumSignTypedHash {
+    repeated uint32 address_n = 1;              // BIP-32 path to derive the key from master node
+    required bytes domain_separator_hash = 2;   // Hash of domainSeparator of typed data to be signed
+    optional bytes message_hash = 3;            // Hash of the data of typed data to be signed (empty if domain-only data)
+}
+
+/**
+ * Response: Signed typed data
+ * @end
+ */
+message EthereumTypedDataSignature {
+    required bytes signature = 1;    // signature of the typed data
+    required string address = 2;     // address used to sign the typed data
+}

@@ -23,10 +23,12 @@ Stellar transaction is composed of one or more operations. We support all [opera
 - Bump Sequence
 - Change Trust
 - Create Account
-- Create Passive Offer
+- Create Passive Sell Offer
 - Manage Data
-- Manage Offer
-- Path Payment
+- Manage Buy Offer
+- Manage Sell Offer
+- Path Payment Strict Receive
+- Path Payment Strict Send
 - Payment
 - Set Options
 

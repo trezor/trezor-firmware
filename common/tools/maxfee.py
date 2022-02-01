@@ -96,12 +96,12 @@ def main(filename, cost, skip, txsize, refresh, api_key, verbose):
         short = coin["coin_shortcut"]
 
         if any(re.search(s, coin["coin_name"]) is not None for s in skip):
-            logging.warning("{}:\tskipping because --skip matches".format(short))
+            logging.warning(f"{short}:\tskipping because --skip matches")
             continue
 
         price = marketcap.fiat_price(short)
         if price is None:
-            logging.error("{}:\tno price data, skipping".format(short))
+            logging.error(f"{short}:\tno price data, skipping")
             continue
 
         old_maxfee_kb = coin["maxfee_kb"]
@@ -111,14 +111,12 @@ def main(filename, cost, skip, txsize, refresh, api_key, verbose):
             with open(filename, "w") as fh:
                 json.dump(coin, fh, indent=2)
                 fh.write("\n")
-            logging.info(
-                "{}:\tupdated {} -> {}".format(short, old_maxfee_kb, new_maxfee_kb)
-            )
+            logging.info(f"{short}:\tupdated {old_maxfee_kb} -> {new_maxfee_kb}")
             delta = delta_percent(old_maxfee_kb, new_maxfee_kb)
             if delta > MAX_DELTA_PERCENT:
-                logging.warning("{}:\tprice has changed by {} %".format(short, delta))
+                logging.warning(f"{short}:\tprice has changed by {delta} %")
         else:
-            logging.info("{}:\tno change".format(short))
+            logging.info(f"{short}:\tno change")
 
 
 if __name__ == "__main__":

@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor.crypto import hashlib
 from trezor.crypto.curve import ed25519
 from trezor.enums import CardanoAddressType, CardanoTxAuxiliaryDataSupplementType
@@ -16,8 +18,7 @@ from .helpers.paths import SCHEMA_STAKING_ANY_ACCOUNT
 from .helpers.utils import derive_public_key
 from .layout import confirm_catalyst_registration, show_auxiliary_data_hash
 
-if False:
-    from typing import Union
+if TYPE_CHECKING:
     from trezor import wire
 
     from trezor.messages import (
@@ -25,11 +26,11 @@ if False:
         CardanoTxAuxiliaryData,
     )
 
-    CatalystRegistrationPayload = dict[int, Union[bytes, int]]
+    CatalystRegistrationPayload = dict[int, bytes | int]
     SignedCatalystRegistrationPayload = tuple[CatalystRegistrationPayload, bytes]
     CatalystRegistrationSignature = dict[int, bytes]
     CatalystRegistration = dict[
-        int, Union[CatalystRegistrationPayload, CatalystRegistrationSignature]
+        int, CatalystRegistrationPayload | CatalystRegistrationSignature
     ]
 
     from . import seed

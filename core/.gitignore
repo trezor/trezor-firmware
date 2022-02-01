@@ -7,3 +7,4 @@ tests/trezor_monero_tests*
 .coverage
 .coverage.*
 htmlcov/
+mypy_report

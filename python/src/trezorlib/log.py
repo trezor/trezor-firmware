@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2019 SatoshiLabs and contributors
+# Copyright (C) 2012-2022 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -17,7 +17,15 @@
 import logging
 from typing import Optional, Set, Type
 
+from typing_extensions import Protocol, runtime_checkable
+
 from . import protobuf
+
+
+@runtime_checkable
+class HasProtobuf(Protocol):
+    protobuf: protobuf.MessageType
+
 
 OMITTED_MESSAGES: Set[Type[protobuf.MessageType]] = set()
 
@@ -37,21 +45,24 @@ class PrettyProtobufFormatter(logging.Formatter):
             source=record.name,
             msg=super().format(record),
         )
-        if hasattr(record, "protobuf"):
+        if isinstance(record, HasProtobuf):
             if type(record.protobuf) in OMITTED_MESSAGES:
-                message += " ({} bytes)".format(record.protobuf.ByteSize())
+                message += f" ({record.protobuf.ByteSize()} bytes)"
             else:
                 message += "\n" + protobuf.format_message(record.protobuf)
         return message
 
 
-def enable_debug_output(verbosity: int = 1, handler: Optional[logging.Handler] = None):
+def enable_debug_output(
+    verbosity: int = 1, handler: Optional[logging.Handler] = None
+) -> None:
     if handler is None:
         handler = logging.StreamHandler()
 
     formatter = PrettyProtobufFormatter()
     handler.setFormatter(formatter)
 
+    level = logging.NOTSET
     if verbosity > 0:
         level = logging.DEBUG
     if verbosity > 1:

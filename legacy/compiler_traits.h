@@ -29,7 +29,7 @@
 #define GCC_VERSION \
   (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
 
-#if GCC_VERSION >= 90201 && GCC_VERSION <= 100200
+#if !EMULATOR && GCC_VERSION >= 90201 && GCC_VERSION <= 100200
 #pragma message \
     "Only remove this GCC check if you are sure your compiler is patched or not used for production."
 #error \

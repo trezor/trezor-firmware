@@ -5,8 +5,10 @@ endif
 SKIPPED_MESSAGES := Binance Cardano DebugMonero Eos Monero Ontology Ripple SdProtect Tezos WebAuthn \
 	DebugLinkRecordScreen DebugLinkReseedRandom DebugLinkShowText DebugLinkEraseSdCard DebugLinkWatchLayout \
 	GetOwnershipProof OwnershipProof GetOwnershipId OwnershipId AuthorizeCoinJoin DoPreauthorized \
-	CancelAuthorization DebugLinkLayout \
-	TxAckInput TxAckOutput TxAckPrev
+	CancelAuthorization DebugLinkLayout GetNonce \
+	TxAckInput TxAckOutput TxAckPrev TxAckPaymentRequest \
+	EthereumSignTypedData EthereumTypedDataStructRequest EthereumTypedDataStructAck \
+	EthereumTypedDataValueRequest EthereumTypedDataValueAck
 
 ifeq ($(BITCOIN_ONLY), 1)
 SKIPPED_MESSAGES += Ethereum NEM Stellar

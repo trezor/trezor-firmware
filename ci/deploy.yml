@@ -182,12 +182,16 @@ release core unix debug deploy:
   before_script: []  # no poetry
   needs:
     - core unix frozen debug build
+    - core unix frozen debug build arm
   script:
     - export VERSION=$(./tools/version.sh core/embed/firmware/version.h)
     - DEST="$DEPLOY_PATH/trezor-emu-core-v$VERSION"
-    - echo "Deploying to $DEST"
+    - DEST_ARM="$DEPLOY_PATH/trezor-emu-core-arm-v$VERSION"
+    - echo "Deploying to $DEST and $DEST_ARM"
     - nix-shell -p patchelf --run "patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 core/build/unix/trezor-emu-core"
+    - nix-shell -p patchelf --run "patchelf --set-interpreter /lib/ld-linux-aarch64.so.1 core/build/unix/trezor-emu-core-arm"
     - rsync --delete -va core/build/unix/trezor-emu-core "$DEST"
+    - rsync --delete -va core/build/unix/trezor-emu-core-arm "$DEST_ARM"
   only:
     - /^core\//
   except:
@@ -203,12 +207,16 @@ release legacy unix debug deploy:
   before_script: []  # no poetry
   needs:
     - legacy emu regular debug build
+    - legacy emu regular debug build arm
   script:
     - export VERSION=$(./tools/version.sh legacy/firmware/version.h)
     - DEST="$DEPLOY_PATH/trezor-emu-legacy-v$VERSION"
-    - echo "Deploying to $DEST"
+    - DEST_ARM="$DEPLOY_PATH/trezor-emu-legacy-arm-v$VERSION"
+    - echo "Deploying to $DEST and $DEST_ARM"
     - nix-shell -p patchelf --run "patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 legacy/firmware/trezor.elf"
+    - nix-shell -p patchelf --run "patchelf --set-interpreter /lib/ld-linux-aarch64.so.1 legacy/firmware/trezor-arm.elf"
     - rsync --delete -va legacy/firmware/trezor.elf "$DEST"
+    - rsync --delete -va legacy/firmware/trezor-arm.elf "$DEST_ARM"
   only:
     - /^legacy\//
   except:
@@ -231,3 +239,19 @@ ui tests core fixtures deploy:
     - rsync --delete -va ci/ui_test_records/* "$DEPLOY_PATH"
   tags:
     - deploy
+
+# common sync to trezor-common
+
+common sync:
+  stage: deploy
+  variables:
+    GIT_SUBMODULE_STRATEGY: "none"
+    GIT_STRATEGY: clone  # clone entire repo instead of reusing workspace
+    GIT_DEPTH: 0  # avoid shallow clone
+  only:
+    - schedules
+  needs: []
+  before_script: []  # no poetry
+  script:
+    - echo "Synchronizing common with the trezor-common repository"
+    - ./ci/common_sync/common_repo_sync.sh

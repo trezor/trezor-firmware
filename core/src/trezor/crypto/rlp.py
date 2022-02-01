@@ -1,13 +1,19 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
-if False:
-    from typing import Union
+if TYPE_CHECKING:
     from trezor.utils import Writer
 
-    # what we want:
-    # RLPItem = Union[list["RLPItem"], bytes, int]
-    # what mypy can process:
-    RLPItem = Union[list, bytes, int]
+    # The intention below is basically:
+    # RLPItem = int | bytes | list[RLPItem]
+    # That will not typecheck though. Type `list` is invariant in its parameter, meaning
+    # that we cannot pass list[bytes] into a list[RLPItem] parameter (what if the
+    # function wanted to append an int?). We do want to enforce that it's a `list`, not
+    # a generic `Sequence` (because we do isinstance checks for a list). We are however
+    # only reading from the list and passing into things that consume a RLPItem. Hence
+    # we have to enumerate single-type lists as well as the universal list[RLPItem].
+    RLPList = list[int] | list[bytes] | list["RLPItem"]
+    RLPItem = RLPList | bytes | int
 
 
 STRING_HEADER_BYTE = const(0x80)
@@ -20,8 +26,8 @@ def _byte_size(x: int) -> int:
     for exp in range(64):
         if x < 0x100 ** exp:
             return exp
-    else:
-        raise ValueError  # int is too large
+
+    raise ValueError  # int is too large
 
 
 def int_to_bytes(x: int) -> bytes:
@@ -79,7 +85,7 @@ def write_string(w: Writer, string: bytes) -> None:
     w.extend(string)
 
 
-def write_list(w: Writer, lst: list[RLPItem]) -> None:
+def write_list(w: Writer, lst: RLPList) -> None:
     payload_length = sum(length(item) for item in lst)
     write_header(w, payload_length, LIST_HEADER_BYTE)
     for item in lst:

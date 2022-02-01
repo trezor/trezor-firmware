@@ -2,16 +2,21 @@ from common import *
 
 from apps.cardano.seed import Keychain
 from apps.cardano.get_public_key import _get_public_key
-from trezor.crypto import bip32, slip39
+from trezor.crypto import cardano, slip39
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestCardanoGetPublicKey(unittest.TestCase):
+    @staticmethod
+    def make_keychain_bip39(mnemonic, passphrase):
+        secret = cardano.derive_icarus(mnemonic, passphrase, True)
+        node = cardano.from_secret(secret)
+        return Keychain(node)
+
     def test_get_public_key_scheme_12_words(self):
         mnemonic = "all all all all all all all all all all all all"
         passphrase = ""
-        node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
-        keychain = Keychain(node)
+        keychain = self.make_keychain_bip39(mnemonic, passphrase)
 
         derivation_paths = [
             [0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, 0x80000000],
@@ -71,8 +76,7 @@ class TestCardanoGetPublicKey(unittest.TestCase):
     def test_get_public_key_scheme_18_words(self):
         mnemonic = "found differ bulb shadow wrist blue bind vessel deposit tip pelican action surprise weapon check fiction muscle this"
         passphrase = ""
-        node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
-        keychain = Keychain(node)
+        keychain = self.make_keychain_bip39(mnemonic, passphrase)
 
         derivation_paths = [
             [0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, 0x80000000],
@@ -105,8 +109,7 @@ class TestCardanoGetPublicKey(unittest.TestCase):
     def test_get_public_key_scheme_24_words(self):
         mnemonic = "balance exotic ranch knife glory slow tape favorite yard gym awake ill exist useless parent aim pig stay effort into square gasp credit butter"
         passphrase = ""
-        node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
-        keychain = Keychain(node)
+        keychain = self.make_keychain_bip39(mnemonic, passphrase)
 
         derivation_paths = [
             [0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, 0x80000000],
@@ -149,7 +152,7 @@ class TestCardanoGetPublicKey(unittest.TestCase):
         identifier, exponent, ems = slip39.recover_ems(mnemonics)
         master_secret = slip39.decrypt(ems, passphrase, exponent, identifier)
 
-        node = bip32.from_seed(master_secret, "ed25519 cardano seed")
+        node = cardano.from_seed_slip23(master_secret)
 
         keychain = Keychain(node)
 
@@ -198,7 +201,7 @@ class TestCardanoGetPublicKey(unittest.TestCase):
         identifier, exponent, ems = slip39.recover_ems(mnemonics)
         master_secret = slip39.decrypt(ems, passphrase, exponent, identifier)
 
-        node = bip32.from_seed(master_secret, "ed25519 cardano seed")
+        node = cardano.from_seed_slip23(master_secret)
 
         keychain = Keychain(node)
 

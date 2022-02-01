@@ -26,9 +26,15 @@ from ..common import (
     MNEMONIC12,
     MNEMONIC_SLIP39_ADVANCED_20,
     MNEMONIC_SLIP39_BASIC_20_3of6,
-    click_through,
     read_and_confirm_mnemonic,
 )
+
+
+def click_info_button(debug):
+    """Click Shamir backup info button and return back."""
+    debug.press_info()
+    yield  # Info screen with text
+    debug.press_yes()
 
 
 @pytest.mark.skip_t1  # TODO we want this for t1 too
@@ -73,18 +79,30 @@ def test_backup_bip39(client):
 
 @pytest.mark.skip_t1
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6)
-def test_backup_slip39_basic(client):
+@pytest.mark.parametrize(
+    "click_info", [True, False], ids=["click_info", "no_click_info"]
+)
+def test_backup_slip39_basic(client, click_info: bool):
     assert client.features.needs_backup is True
     mnemonics = []
 
     def input_flow():
-        # 1. Checklist
-        # 2. Number of shares (5)
-        # 3. Checklist
-        # 4. Threshold (3)
-        # 5. Checklist
-        # 6. Confirm show seeds
-        yield from click_through(client.debug, screens=6, code=B.ResetDevice)
+        yield  # Checklist
+        client.debug.press_yes()
+        if click_info:
+            yield from click_info_button(client.debug)
+        yield  # Number of shares (5)
+        client.debug.press_yes()
+        yield  # Checklist
+        client.debug.press_yes()
+        if click_info:
+            yield from click_info_button(client.debug)
+        yield  # Threshold (3)
+        client.debug.press_yes()
+        yield  # Checklist
+        client.debug.press_yes()
+        yield  # Confirm show seeds
+        client.debug.press_yes()
 
         # Mnemonic phrases
         for _ in range(5):
@@ -94,14 +112,14 @@ def test_backup_slip39_basic(client):
             yield  # Confirm continue to next
             client.debug.press_yes()
 
-        # Confirm backup
-        yield
+        yield  # Confirm backup
         client.debug.press_yes()
 
     with client:
         client.set_input_flow(input_flow)
         client.set_expected_responses(
-            [messages.ButtonRequest(code=B.ResetDevice)] * 6  # intro screens
+            [messages.ButtonRequest(code=B.ResetDevice)]
+            * (8 if click_info else 6)  # intro screens (and optional info)
             + [
                 messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.Success),
@@ -129,21 +147,39 @@ def test_backup_slip39_basic(client):
 
 @pytest.mark.skip_t1
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_ADVANCED_20)
-def test_backup_slip39_advanced(client):
+@pytest.mark.parametrize(
+    "click_info", [True, False], ids=["click_info", "no_click_info"]
+)
+def test_backup_slip39_advanced(client, click_info: bool):
     assert client.features.needs_backup is True
     mnemonics = []
 
     def input_flow():
-        # 1. Checklist
-        # 2. Set and confirm group count
-        # 3. Checklist
-        # 4. Set and confirm group threshold
-        # 5. Checklist
-        # 6-15: for each of 5 groups:
-        #   1. Set & Confirm number of shares
-        #   2. Set & confirm share threshold value
-        # 16. Confirm show seeds
-        yield from click_through(client.debug, screens=16, code=B.ResetDevice)
+        yield  # Checklist
+        client.debug.press_yes()
+        if click_info:
+            yield from click_info_button(client.debug)
+        yield  # Set and confirm group count
+        client.debug.press_yes()
+        yield  # Checklist
+        client.debug.press_yes()
+        if click_info:
+            yield from click_info_button(client.debug)
+        yield  # Set and confirm group threshold
+        client.debug.press_yes()
+        yield  # Checklist
+        client.debug.press_yes()
+        for _ in range(5):  # for each of 5 groups
+            if click_info:
+                yield from click_info_button(client.debug)
+            yield  # Set & Confirm number of shares
+            client.debug.press_yes()
+            if click_info:
+                yield from click_info_button(client.debug)
+            yield  # Set & confirm share threshold value
+            client.debug.press_yes()
+        yield  # Confirm show seeds
+        client.debug.press_yes()
 
         # Mnemonic phrases
         for _ in range(5):
@@ -154,19 +190,21 @@ def test_backup_slip39_advanced(client):
                 yield  # Confirm continue to next
                 client.debug.press_yes()
 
-        # Confirm backup
-        yield
+        yield  # Confirm backup
         client.debug.press_yes()
 
     with client:
         client.set_input_flow(input_flow)
         client.set_expected_responses(
-            [messages.ButtonRequest(code=B.ResetDevice)] * 6  # intro screens
+            [messages.ButtonRequest(code=B.ResetDevice)]
+            * (8 if click_info else 6)  # intro screens (and optional info)
             + [
+                (click_info, messages.ButtonRequest(code=B.ResetDevice)),
                 messages.ButtonRequest(code=B.ResetDevice),
+                (click_info, messages.ButtonRequest(code=B.ResetDevice)),
                 messages.ButtonRequest(code=B.ResetDevice),
             ]
-            * 5  # group thresholds
+            * 5  # group thresholds (and optional info)
             + [
                 messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.Success),

@@ -23,6 +23,11 @@
 #include "hasher.h"
 #include "ripemd160.h"
 
+const uint32_t sha256_initial_tapsighash_state[8] = {
+    0xf504a425UL, 0xd7f8783bUL, 0x1363868aUL, 0xe3e55658UL,
+    0x6eee945dUL, 0xbc7888ddUL, 0x02a6e2c3UL, 0x1873fe9fUL,
+};
+
 void hasher_InitParam(Hasher *hasher, HasherType type, const void *param,
                       uint32_t param_size) {
   hasher->type = type;
@@ -34,6 +39,9 @@ void hasher_InitParam(Hasher *hasher, HasherType type, const void *param,
     case HASHER_SHA2D:
     case HASHER_SHA2_RIPEMD:
       sha256_Init(&hasher->ctx.sha2);
+      break;
+    case HASHER_SHA2_TAPSIGHASH:
+      sha256_Init_ex(&hasher->ctx.sha2, sha256_initial_tapsighash_state, 512);
       break;
     case HASHER_SHA3:
 #if USE_KECCAK
@@ -72,6 +80,7 @@ void hasher_Update(Hasher *hasher, const uint8_t *data, size_t length) {
     case HASHER_SHA2:
     case HASHER_SHA2D:
     case HASHER_SHA2_RIPEMD:
+    case HASHER_SHA2_TAPSIGHASH:
       sha256_Update(&hasher->ctx.sha2, data, length);
       break;
     case HASHER_SHA3:
@@ -98,6 +107,7 @@ void hasher_Update(Hasher *hasher, const uint8_t *data, size_t length) {
 void hasher_Final(Hasher *hasher, uint8_t hash[HASHER_DIGEST_LENGTH]) {
   switch (hasher->type) {
     case HASHER_SHA2:
+    case HASHER_SHA2_TAPSIGHASH:
       sha256_Final(&hasher->ctx.sha2, hash);
       break;
     case HASHER_SHA2D:

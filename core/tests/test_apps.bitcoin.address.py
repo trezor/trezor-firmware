@@ -226,6 +226,27 @@ class TestAddress(unittest.TestCase):
         for path, input_type in incorrect_derivation_paths:
             self.assertFalse(self.validate(path, coin, input_type))
 
+    def test_address_mac(self):
+        from apps.common.address_mac import check_address_mac, get_address_mac
+        from apps.common.keychain import Keychain
+        from apps.common.paths import AlwaysMatchingSchema
+
+        VECTORS = (
+            ('Bitcoin', '1DyHzbQUoQEsLxJn6M7fMD8Xdt1XvNiwNE', '9cf7c230041d6ed95b8273bd32e023d3f227ec8c44257f6463c743a4b4add028'),
+            ('Testnet', 'mm6kLYbGEL1tGe4ZA8xacfgRPdW1NLjCbZ', '4375089e50423505dc3480e6e85b0ba37a52bd1e009db5d260b6329f22c950d9')
+        )
+        seed = bip39.seed(' '.join(['all'] * 12), '')
+
+        for coin_name, address, mac in VECTORS:
+            coin = coins.by_name(coin_name)
+            mac = unhexlify(mac)
+            keychain = Keychain(seed, coin.curve_name, [AlwaysMatchingSchema], slip21_namespaces=[[b"SLIP-0024"]])
+            self.assertEqual(get_address_mac(address, coin.slip44, keychain), mac)
+            check_address_mac(address, mac, coin.slip44, keychain)
+            with self.assertRaises(wire.DataError):
+                mac = bytes([mac[0]^1]) + mac[1:]
+                check_address_mac(address, mac, coin.slip44, keychain)
+
 
 if __name__ == '__main__':
     unittest.main()

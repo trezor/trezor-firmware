@@ -1,4 +1,7 @@
+from typing import TYPE_CHECKING
+
 from trezor import ui, wire
+from trezor.enums import InputScriptType
 from trezor.messages import GetOwnershipProof, OwnershipProof
 from trezor.ui.layouts import confirm_action, confirm_blob
 
@@ -8,7 +11,7 @@ from . import addresses, common, scripts
 from .keychain import validate_path_against_script_type, with_keychain
 from .ownership import generate_proof, get_identifier
 
-if False:
+if TYPE_CHECKING:
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
     from .authorization import CoinJoinAuthorization
@@ -41,6 +44,9 @@ async def get_ownership_proof(
 
     if msg.script_type in common.SEGWIT_INPUT_SCRIPT_TYPES and not coin.segwit:
         raise wire.DataError("Segwit not enabled on this coin")
+
+    if msg.script_type == InputScriptType.SPENDTAPROOT and not coin.taproot:
+        raise wire.DataError("Taproot not enabled on this coin")
 
     node = keychain.derive(msg.address_n)
     address = addresses.get_address(msg.script_type, coin, node, msg.multisig)

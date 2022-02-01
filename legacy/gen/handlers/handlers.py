@@ -93,11 +93,10 @@ with open("handlers.c", "wt") as f:
     f.write('#include "layout.h"\n')
     f.write('#include "oled.h"\n\n')
     for i in handlers:
-        f.write("void __attribute__((noreturn)) %s(void)\n" % i)
+        f.write(f"void __attribute__((noreturn)) {i}(void)\n")
         f.write("{\n")
         f.write(
-            '\tlayoutDialog(DIALOG_ICON_ERROR, NULL, NULL, NULL, "Encountered", NULL, "%s", NULL, "Please restart", "the device.");\n'
-            % i.upper()
+            f'\tlayoutDialog(DIALOG_ICON_ERROR, NULL, NULL, NULL, "Encountered", NULL, "{i.upper()}", NULL, "Please restart", "the device.");\n'
         )
         f.write("\tfor (;;) {} // loop forever\n")
         f.write("}\n\n")

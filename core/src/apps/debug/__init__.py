@@ -16,7 +16,9 @@ if __debug__:
 
     from apps import workflow_handlers
 
-    if False:
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
         from trezor.ui import Layout
         from trezor.messages import (
             DebugLinkDecision,
@@ -60,14 +62,18 @@ if __debug__:
             layout_change_chan.publish(storage.current_content)
 
     async def dispatch_debuglink_decision(msg: DebugLinkDecision) -> None:
+        from trezor.enums import DebugButton
         from trezor.enums import DebugSwipeDirection
         from trezor.ui import Result
         from trezor.ui.components.tt import confirm, swipe
 
-        if msg.yes_no is not None:
-            await confirm_chan.put(
-                Result(confirm.CONFIRMED if msg.yes_no else confirm.CANCELLED)
-            )
+        if msg.button is not None:
+            if msg.button == DebugButton.NO:
+                await confirm_chan.put(Result(confirm.CANCELLED))
+            elif msg.button == DebugButton.YES:
+                await confirm_chan.put(Result(confirm.CONFIRMED))
+            elif msg.button == DebugButton.INFO:
+                await confirm_chan.put(Result(confirm.INFO))
         if msg.swipe is not None:
             if msg.swipe == DebugSwipeDirection.UP:
                 await swipe_chan.put(swipe.SWIPE_UP)
@@ -110,9 +116,7 @@ if __debug__:
         layout_change_chan.putters.clear()
         await ui.wait_until_layout_is_running()
         storage.watch_layout_changes = bool(msg.watch)
-        log.debug(
-            __name__, "Watch layout changes: {}".format(storage.watch_layout_changes)
-        )
+        log.debug(__name__, "Watch layout changes: %s", storage.watch_layout_changes)
         return Success()
 
     async def dispatch_DebugLinkDecision(
