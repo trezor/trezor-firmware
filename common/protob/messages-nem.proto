@@ -34,13 +34,15 @@ message NEMAddress {
 message NEMSignTx {
     required NEMTransactionCommon transaction = 1;                  // Common part of transaction
     optional NEMTransactionCommon multisig = 2;                     // Common part of inner transaction for multisig transactions
-    optional NEMTransfer transfer = 3;                              // Transfer transaction part
     optional bool cosigning = 4;                                    // Whether cosigning or initiating the multisig transaction
-    optional NEMProvisionNamespace provision_namespace = 5;         // Provision namespace part
-    optional NEMMosaicCreation mosaic_creation = 6;                 // Mosaic definition creation part
-    optional NEMMosaicSupplyChange supply_change = 7;               // Mosaic supply change part
-    optional NEMAggregateModification aggregate_modification = 8;   // Aggregate modification part
-    optional NEMImportanceTransfer importance_transfer = 9;         // Importance transfer part
+    oneof operation {
+        NEMTransfer transfer = 3;                              // Transfer transaction part
+        NEMProvisionNamespace provision_namespace = 5;         // Provision namespace part
+        NEMMosaicCreation mosaic_creation = 6;                 // Mosaic definition creation part
+        NEMMosaicSupplyChange supply_change = 7;               // Mosaic supply change part
+        NEMAggregateModification aggregate_modification = 8;   // Aggregate modification part
+        NEMImportanceTransfer importance_transfer = 9;         // Importance transfer part
+    }
     /**
     * Structure representing the common part for NEM transactions
     */

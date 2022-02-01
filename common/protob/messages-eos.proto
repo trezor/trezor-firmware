@@ -66,20 +66,22 @@ message EosTxActionRequest {
  */
 message EosTxActionAck {
     required EosActionCommon common = 1;
-    optional EosActionTransfer transfer = 2;
-    optional EosActionDelegate delegate = 3;
-    optional EosActionUndelegate undelegate = 4;
-    optional EosActionRefund refund = 5;
-    optional EosActionBuyRam buy_ram = 6;
-    optional EosActionBuyRamBytes buy_ram_bytes = 7;
-    optional EosActionSellRam sell_ram = 8;
-    optional EosActionVoteProducer vote_producer = 9;
-    optional EosActionUpdateAuth update_auth = 10;
-    optional EosActionDeleteAuth delete_auth = 11;
-    optional EosActionLinkAuth link_auth = 12;
-    optional EosActionUnlinkAuth unlink_auth = 13;
-    optional EosActionNewAccount new_account = 14;
-    optional EosActionUnknown unknown = 15;
+    oneof action {
+        EosActionTransfer transfer = 2;
+        EosActionDelegate delegate = 3;
+        EosActionUndelegate undelegate = 4;
+        EosActionRefund refund = 5;
+        EosActionBuyRam buy_ram = 6;
+        EosActionBuyRamBytes buy_ram_bytes = 7;
+        EosActionSellRam sell_ram = 8;
+        EosActionVoteProducer vote_producer = 9;
+        EosActionUpdateAuth update_auth = 10;
+        EosActionDeleteAuth delete_auth = 11;
+        EosActionLinkAuth link_auth = 12;
+        EosActionUnlinkAuth unlink_auth = 13;
+        EosActionNewAccount new_account = 14;
+        EosActionUnknown unknown = 15;
+    }
 
     /**
      * Structure representing asset type

@@ -50,13 +50,15 @@ message TezosPublicKey {
 message TezosSignTx {
     repeated uint32 address_n = 1;                  // BIP-32 path to derive the key from master node
     required bytes branch = 2;
-
     optional TezosRevealOp reveal = 3;              // Tezos reveal operation (may be bundled with other op)
-    optional TezosTransactionOp transaction = 4;    // Tezos transaction operation
-    optional TezosOriginationOp origination = 5;    // Tezos origination operation
-    optional TezosDelegationOp delegation = 6;      // Tezos delegation operation
-    optional TezosProposalOp proposal = 7;          // Tezos proposal operation
-    optional TezosBallotOp ballot = 8;              // Tezos ballot operation
+
+    oneof operation {
+        TezosTransactionOp transaction = 4;    // Tezos transaction operation
+        TezosOriginationOp origination = 5;    // Tezos origination operation
+        TezosDelegationOp delegation = 6;      // Tezos delegation operation
+        TezosProposalOp proposal = 7;          // Tezos proposal operation
+        TezosBallotOp ballot = 8;              // Tezos ballot operation
+    }
     /*
      * Tezos contract ID
      */
@@ -97,9 +99,11 @@ message TezosSignTx {
         optional TezosParametersManager parameters_manager = 10;
 
         message TezosParametersManager {
-            optional bytes set_delegate = 1;
-            optional bool cancel_delegate = 2;
-            optional TezosManagerTransfer transfer = 3;
+            oneof parameter {
+                bytes set_delegate = 1;
+                bool cancel_delegate = 2;
+                TezosManagerTransfer transfer = 3;
+            }
 
             message TezosManagerTransfer {
                 required TezosContractID destination = 1;

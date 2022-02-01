@@ -432,9 +432,11 @@ message TxAckPaymentRequest {
     required bytes signature = 5;          // the trusted party's signature of the paymentRequestDigest
 
     message PaymentRequestMemo {
-        optional TextMemo text_memo = 1;
-        optional RefundMemo refund_memo = 2;
-        optional CoinPurchaseMemo coin_purchase_memo = 3;
+        oneof memo {
+            TextMemo text_memo = 1;
+            RefundMemo refund_memo = 2;
+            CoinPurchaseMemo coin_purchase_memo = 3;
+        }
     }
 
     message TextMemo {
