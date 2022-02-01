@@ -274,6 +274,8 @@ apps.bitcoin.sign_tx.matchcheck
 import apps.bitcoin.sign_tx.matchcheck
 apps.bitcoin.sign_tx.omni
 import apps.bitcoin.sign_tx.omni
+apps.bitcoin.sign_tx.orchard_pool
+import apps.bitcoin.sign_tx.orchard_pool
 apps.bitcoin.sign_tx.progress
 import apps.bitcoin.sign_tx.progress
 apps.bitcoin.sign_tx.tx_info
@@ -384,6 +386,8 @@ apps.zcash
 import apps.zcash
 apps.zcash.address
 import apps.zcash.address
+apps.zcash.async_utils
+import apps.zcash.async_utils
 apps.zcash.diag
 import apps.zcash.diag
 apps.zcash.get_address
@@ -394,8 +398,10 @@ apps.zcash.get_ivk
 import apps.zcash.get_ivk
 apps.zcash.layout
 import apps.zcash.layout
-apps.zcash.shield
-import apps.zcash.shield
+apps.zcash.pool
+import apps.zcash.pool
+apps.zcash.zip244
+import apps.zcash.zip244
 apps.zcash.zip32
 import apps.zcash.zip32
 

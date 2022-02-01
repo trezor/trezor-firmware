@@ -5,7 +5,9 @@ use core::ops::{Deref, DerefMut};
 use cstr_core::CStr;
 use f4jumble;
 use orchard::{
-    keys::{FullViewingKey, IncomingViewingKey, OutgoingViewingKey, SpendingKey},
+    keys::{
+        FullViewingKey, IncomingViewingKey, OutgoingViewingKey, SpendAuthorizingKey, SpendingKey,
+    },
     value::NoteValue,
     Address, Note,
 };
@@ -25,13 +27,14 @@ use crate::micropython::{
 };
 use crate::{trezorhal, util};
 
-impl TryFrom<Obj> for Map {
-    type Error = Error;
-    fn try_from(obj: Obj) -> Result<Map, Error> {
-        let dict: Gc<Dict> = obj.try_into()?;
+use pasta_curves::pallas;
+
+macro_rules! try_parse_map {
+    ($obj:ident) => {
+        let dict: Gc<Dict> = $obj.try_into()?;
         let dict: &Dict = dict.deref();
-        Ok(*dict.map())
-    }
+        let $obj: &Map = dict.map();
+    };
 }
 
 // TODO: move to micropython/obj.rs ?
@@ -51,12 +54,30 @@ impl<const N: usize> TryFrom<[u8; N]> for Obj {
     }
 }
 
+#[no_mangle]
+pub extern "C" fn zcash_sign(sk: Obj, alpha: Obj, sighash: Obj) -> Obj {
+    let block = || {
+        let alpha: [u8; 32] = alpha.try_into()?;
+        let alpha = pallas::Scalar::from_repr(alpha);
+        let alpha = Option::from(alpha).ok_or(Error::TypeError)?;
+        let sighash: [u8; 32] = sighash.try_into()?;
+        let sk = get_sk(sk)?;
+        let ask: SpendAuthorizingKey = (&sk).into();
+        let mut rng = trezorhal::random::HardwareRandomness;
+        let signature = ask.randomize(&alpha).sign(rng, &sighash);
+        let signature_bytes: [u8; 64] = (&signature).into();
+        Ok(signature_bytes.try_into()?)
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
 fn parse_spend_info(spend_info: Obj) -> Result<(FullViewingKey, Note), Error> {
-    let spend_info: Map = spend_info.try_into()?;
+    //let spend_info: &Map = try_into_map!(spend_info)?;
+    try_parse_map!(spend_info);
     let fvk_bytes: [u8; 96] = spend_info.get(Qstr::MP_QSTR_fvk)?.try_into()?;
     let fvk = FullViewingKey::from_bytes(&fvk_bytes).ok_or(Error::TypeError)?;
     let note: [u8; 115] = spend_info.get(Qstr::MP_QSTR_note)?.try_into()?;
-    let note = orchard::Note::from_bytes(note).ok_or(Error::TypeError)?; // TODO: Value Error
+    let note = orchard::hww::deserialize_note(note).ok_or(Error::TypeError)?; // TODO: Value Error
     Ok((fvk, note))
 }
 
@@ -71,7 +92,8 @@ fn parse_output_info(
     ),
     Error,
 > {
-    let output_info: Map = output_info.try_into()?;
+    //let output_info: &Map = try_into_map!(output_info)?;
+    try_parse_map!(output_info);
     let ovk_flag: bool = output_info.get(Qstr::MP_QSTR_ovk_flag)?.try_into()?;
     let ovk: Option<OutgoingViewingKey> = if ovk_flag {
         let fvk_bytes: [u8; 96] = output_info.get(Qstr::MP_QSTR_fvk)?.try_into()?;
@@ -97,18 +119,18 @@ fn parse_output_info(
 }
 
 fn load_rng(config: Obj) -> Result<ChaCha12Rng, Error> {
-    let config: Map = config.try_into()?;
+    //let config: &Map = try_into_map!(config)?;
+    try_parse_map!(config);
     let seed: [u8; 32] = config.get(Qstr::MP_QSTR_seed)?.try_into()?;
     let mut rng = ChaCha12Rng::from_seed(seed);
-    let pos: u64 = config.get(Qstr::MP_QSTR_cos)?.try_into()?;
+    let pos: u64 = config.get(Qstr::MP_QSTR_pos)?.try_into()?;
     rng.set_word_pos(pos as u128);
     Ok(rng)
 }
 
 fn save_rng(rng: ChaCha12Rng, config: Obj) -> Result<(), Error> {
-    let dict: Gc<Dict> = config.try_into()?;
-    let dict: &Dict = dict.deref();
-    let mut map = dict.map_mut();
+    let mut dict: Gc<Dict> = config.try_into()?;
+    let mut map = unsafe { Gc::as_mut(&mut dict) }.map_mut();
     map.set_obj(
         Qstr::MP_QSTR_pos.into(),
         (rng.get_word_pos() as u64).try_into()?,
@@ -119,7 +141,8 @@ fn save_rng(rng: ChaCha12Rng, config: Obj) -> Result<(), Error> {
 #[no_mangle]
 pub extern "C" fn zcash_shield(action_info: Obj, rng_config: Obj) -> Obj {
     let block = || {
-        let action_info: Map = action_info.try_into()?;
+        //let action_info: &Map = try_into_map!(action_info)?;
+        try_parse_map!(action_info);
 
         let spend_info = action_info
             .get(Qstr::MP_QSTR_spend_info)
@@ -132,8 +155,9 @@ pub extern "C" fn zcash_shield(action_info: Obj, rng_config: Obj) -> Obj {
             .ok();
 
         //let rng = trezorhal::random::HardwareRandomness;
-        let rng = load_rng(rng_config)?;
-        let action = orchard::shield(spend_info, output_info, rng);
+        let mut rng = load_rng(rng_config)?;
+        let action = orchard::hww::shield(spend_info, output_info, &mut rng);
+        save_rng(rng, rng_config)?;
 
         let items: [(Qstr, Obj); 8] = [
             (Qstr::MP_QSTR_cv, action.cv_net().to_bytes().try_into()?),
@@ -159,12 +183,11 @@ pub extern "C" fn zcash_shield(action_info: Obj, rng_config: Obj) -> Obj {
         ];
 
         let mut result = Dict::alloc_with_capacity(8)?;
-        let mut map = result.map_mut();
+        let mut map = unsafe { Gc::as_mut(&mut result) }.map_mut();
         for (key, value) in items.iter() {
             map.set(*key, *value)?
         }
 
-        save_rng(rng, rng_config);
         Ok(Obj::from(result))
     };
     unsafe { util::try_or_raise(block) }

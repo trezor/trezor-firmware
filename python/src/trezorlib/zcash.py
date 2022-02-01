@@ -14,7 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from . import messages
+from . import exceptions, messages
 from .tools import expect
 
 @expect(messages.DebugZcashDiagResponse, field="data")
@@ -52,11 +52,11 @@ def get_ivk(client, z_address_n):
 
 @expect(messages.ZcashAddress, field="address")
 def get_address(
-        client,
-        t_address_n=[],
-        z_address_n=[],
-        diversifier_index=0,
-        show_display=False
+    client,
+    t_address_n=[],
+    z_address_n=[],
+    diversifier_index=0,
+    show_display=False
 ):
     """Returns Zcash address."""
     return client.call(
@@ -67,3 +67,124 @@ def get_address(
             show_display=show_display,
         )
     )
+
+def sign_tx(
+    client,
+    inputs = [],
+    outputs = [],
+    t_inputs = [],
+    t_outputs = [],
+):
+    msg = messages.SignTx()
+
+    msg.inputs_count = len(t_inputs)
+    msg.outputs_count = len(t_outputs)
+    msg.coin_name = "Zcash"
+    msg.version = 5                              
+    msg.version_group_id = 0x892F2085 # protocol spec §7.1.2           
+    msg.branch_id = 0x37519621 # https://zips.z.cash/zip-0252
+    msg.expiry = 0
+
+    orchard = messages.ZcashOrchardBundleInfo()
+    orchard.outputs_count = len(outputs)
+    orchard.inputs_count = len(inputs)
+    orchard.anchor = 32*b"\x00"
+
+    msg.orchard = orchard
+
+    res = client.call(msg)
+    # Prepare structure for signatures
+    t_signatures = [None] * len(t_inputs)  # transparent
+    o_signatures = [None] * len(inputs)    # Orchard
+
+    serialized_tx = b""
+    seed = None
+
+    R = messages.RequestType
+    while isinstance(res, messages.TxRequest):
+        # If there's some part of signed transaction, let's add it
+        if res.serialized:
+            if res.serialized.serialized_tx:
+                serialized_tx += res.serialized.serialized_tx
+
+            if res.serialized.signature_index is not None:
+                idx = res.serialized.signature_index
+                sig = res.serialized.signature
+                print("set  t signature", idx)
+                if t_signatures[idx] is not None:
+                    raise ValueError("Signature for index %d already filled" % idx)
+                t_signatures[idx] = sig
+
+            if res.serialized.orchard or True:
+                if res.serialized.orchard.signature_index is not None:
+                    idx = res.serialized.orchard.signature_index
+                    sig = res.serialized.orchard.signature
+                    print("set  o signature", idx)
+                    if o_signatures[idx] is not None:
+                        raise ValueError("Signature for index %d already filled" % idx)
+                    o_signatures[idx] = sig
+
+                if res.serialized.orchard.randomness_seed is not None:
+                    print("set  o seed")
+                    seed = res.serialized.orchard.randomness_seed
+
+        if res.request_type == R.TXFINISHED:
+            break
+
+        elif res.request_type == R.TXORCHARDINPUT:
+            txi = inputs[res.details.request_index]
+            msg = messages.TransactionType(
+                inputs = [messages.TxInputType(
+                    address_n = txi["address_n"],
+                    amount = txi.get("amount") or 0,
+                    prev_index = 0,  # dump value to satisfy 'required' protobuf field 
+                    prev_hash = b"",
+                    orchard = messages.ZcashOrchardSpend(
+                        note = txi["note"],
+                    )
+                )]
+            )
+            print("send o input ", res.details.request_index)
+            res = client.call(messages.TxAck(tx=msg))
+
+        elif res.request_type == R.TXORCHARDOUTPUT:
+            output = outputs[res.details.request_index]
+            msg = messages.TransactionType(
+                outputs = [messages.TxOutputType(
+                    address = output.get("address"),
+                    address_n = output.get("address_n") or None,
+                    amount = output["amount"],
+                    orchard = messages.ZcashOrchardOutput(
+                        decryptable = output["decryptable"],
+                        ovk_address_n = output.get("ovk_address_n") or [],
+                        memo = output.get("memo"),
+                    )
+                )]
+            )
+            print("send o output", res.details.request_index)
+            res = client.call(messages.TxAck(tx=msg))
+
+        elif res.request_type == R.TXINPUT:
+            print("send t output", res.details.request_index)
+            msg = messages.TransactionType()
+            msg.inputs = [t_inputs[res.details.request_index]]
+            res = client.call(messages.TxAck(tx=msg))
+
+        elif res.request_type == R.TXOUTPUT:
+            print("send t output", res.details.request_index)
+            msg = messages.TransactionType()
+            msg.outputs = [t_outputs[res.details.request_index]]
+            res = client.call(messages.TxAck(tx=msg))
+
+        else:
+            raise ValueError("unexpected request type: {}".format(res.request_type))
+
+
+    if not isinstance(res, messages.TxRequest):
+        raise exceptions.TrezorException("Unexpected message")
+
+    #for i, sig in zip(inputs, signatures):
+    #    if i.script_type != messages.InputScriptType.EXTERNAL and sig is None:
+    #        raise exceptions.TrezorException("Some signatures are missing!")
+
+    return t_signatures, o_signatures, serialized_tx

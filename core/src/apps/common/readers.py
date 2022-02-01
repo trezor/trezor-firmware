@@ -35,3 +35,10 @@ def read_uint64_be(r: BufferReader) -> int:
     for _ in range(7):
         n = (n << 8) + r.get()
     return n
+
+
+def read_uint64_le(r: BufferReader) -> int:
+    n = 0
+    for i in range(8):
+        n += r.get() << (8*i)
+    return n

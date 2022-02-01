@@ -2,6 +2,7 @@ use crate::micropython::{buffer::Buffer, obj::Obj};
 use crate::util;
 use core::{convert::TryFrom, ops::Deref};
 use group::GroupEncoding;
+/*
 use orchard;
 use orchard::keys::{
     FullViewingKey, NullifierDerivingKey, SpendAuthorizingKey, SpendValidatingKey, SpendingKey,
@@ -9,6 +10,9 @@ use orchard::keys::{
 use orchard::primitives::sinsemilla::{CommitDomain, HashDomain};
 
 pub const COMMIT_IVK_PERSONALIZATION: &str = "z.cash:Orchard-CommitIvk";
+*/
+
+use pasta_curves::{arithmetic::CurveExt, pallas};
 
 fn as_u32_le(array: &[u8]) -> u32 {
     ((array[0] as u32) << 0)
@@ -34,6 +38,12 @@ pub extern "C" fn zcash_diag(ins: Obj, data: Obj) -> Obj {
         let nothing = [0u8; 0];
         let obj = match ins {
             b"hello_rust" => Obj::try_from(&b"hello from the rust"[..])?,
+            b"pallas_hash" => {
+                let p = pallas::Point::hash_to_curve("TrezroHash")(b"test");
+                let p_bytes = p.to_bytes();
+                Obj::try_from(&p_bytes[..])?
+            }
+            /*
             b"fvk" => {
                 let seed = [0u8; 32];
                 let sk = SpendingKey::from_zip32_seed(&seed, 1, 0).unwrap();
@@ -78,6 +88,7 @@ pub extern "C" fn zcash_diag(ins: Obj, data: Obj) -> Obj {
                 let ak: SpendValidatingKey = (&ask).into();
                 Obj::try_from(&ak.to_bytes()[..])?
             }
+            */
             b"alloc" => {
                 let size = as_u32_be(data) as usize;
                 let _ = vec![0u8; size];

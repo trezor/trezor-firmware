@@ -8,6 +8,7 @@ from . import approvers, bitcoin, helpers, progress
 
 if not utils.BITCOIN_ONLY:
     from . import bitcoinlike, decred, zcash
+    from apps import zcash as zcash_v5
 
 if False:
     from typing import Protocol, Union
@@ -68,10 +69,18 @@ async def sign_tx(
         if coin.decred:
             signer_class = decred.Decred
         elif coin.overwintered:
-            signer_class = zcash.Zcashlike
+            if msg.version == 5:
+                signer_class = zcash_v5.ZcashV5
+                zip244_keychain = await zcash_v5.zip32.get_zip32_keychain(ctx)
+                keychain = (keychain, zip244_keychain)
+                approver = zcash_v5.ZcashApprover(msg, coin)
+            else:
+                signer_class = zcash.Zcashlike
+
         else:
             signer_class = bitcoinlike.Bitcoinlike
 
+    # TODO: add Zip32Keychain
     signer = signer_class(msg, keychain, coin, approver).signer()
 
     res: TxAckType | bool | None = None

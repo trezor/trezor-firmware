@@ -246,8 +246,6 @@ class MessageType(IntEnum):
     ZcashIncomingViewingKey = 905
     ZcashGetAddress = 906
     ZcashAddress = 907
-    ZcashPushAction = 908
-    ZcashShieldedAction = 909
 
 
 class FailureType(IntEnum):
@@ -336,6 +334,8 @@ class RequestType(IntEnum):
     TXEXTRADATA = 4
     TXORIGINPUT = 5
     TXORIGOUTPUT = 6
+    TXORCHARDINPUT = 7
+    TXORCHARDOUTPUT = 8
 
 
 class CardanoAddressType(IntEnum):
@@ -1102,6 +1102,7 @@ class SignTx(protobuf.MessageType):
         10: protobuf.Field("branch_id", "uint32", repeated=False, required=False),
         11: protobuf.Field("amount_unit", "AmountUnit", repeated=False, required=False),
         12: protobuf.Field("decred_staking_ticket", "bool", repeated=False, required=False),
+        13: protobuf.Field("orchard", "ZcashOrchardBundleInfo", repeated=False, required=False),
     }
 
     def __init__(
@@ -1119,6 +1120,7 @@ class SignTx(protobuf.MessageType):
         branch_id: Optional["int"] = None,
         amount_unit: Optional["AmountUnit"] = AmountUnit.BITCOIN,
         decred_staking_ticket: Optional["bool"] = False,
+        orchard: Optional["ZcashOrchardBundleInfo"] = None,
     ) -> None:
         self.outputs_count = outputs_count
         self.inputs_count = inputs_count
@@ -1132,6 +1134,36 @@ class SignTx(protobuf.MessageType):
         self.branch_id = branch_id
         self.amount_unit = amount_unit
         self.decred_staking_ticket = decred_staking_ticket
+        self.orchard = orchard
+
+
+class ZcashOrchardBundleInfo(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("outputs_count", "uint32", repeated=False, required=True),
+        2: protobuf.Field("inputs_count", "uint32", repeated=False, required=True),
+        3: protobuf.Field("anchor", "bytes", repeated=False, required=True),
+        4: protobuf.Field("enable_spends", "bool", repeated=False, required=False),
+        5: protobuf.Field("enable_outputs", "bool", repeated=False, required=False),
+        6: protobuf.Field("account", "uint32", repeated=False, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        outputs_count: "int",
+        inputs_count: "int",
+        anchor: "bytes",
+        enable_spends: Optional["bool"] = True,
+        enable_outputs: Optional["bool"] = True,
+        account: Optional["int"] = 0,
+    ) -> None:
+        self.outputs_count = outputs_count
+        self.inputs_count = inputs_count
+        self.anchor = anchor
+        self.enable_spends = enable_spends
+        self.enable_outputs = enable_outputs
+        self.account = account
 
 
 class TxRequest(protobuf.MessageType):
@@ -1168,6 +1200,40 @@ class TxAck(protobuf.MessageType):
         self.tx = tx
 
 
+class ZcashOrchardSpend(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        3: protobuf.Field("note", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        note: "bytes",
+    ) -> None:
+        self.note = note
+
+
+class ZcashOrchardOutput(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("decryptable", "bool", repeated=False, required=False),
+        2: protobuf.Field("ovk_address_n", "uint32", repeated=True, required=False),
+        6: protobuf.Field("memo", "bytes", repeated=False, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        ovk_address_n: Optional[List["int"]] = None,
+        decryptable: Optional["bool"] = None,
+        memo: Optional["bytes"] = None,
+    ) -> None:
+        self.ovk_address_n = ovk_address_n if ovk_address_n is not None else []
+        self.decryptable = decryptable
+        self.memo = memo
+
+
 class TxInput(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
@@ -1186,6 +1252,7 @@ class TxInput(protobuf.MessageType):
         16: protobuf.Field("orig_hash", "bytes", repeated=False, required=False),
         17: protobuf.Field("orig_index", "uint32", repeated=False, required=False),
         18: protobuf.Field("decred_staking_spend", "DecredStakingSpendType", repeated=False, required=False),
+        19: protobuf.Field("orchard", "ZcashOrchardSpend", repeated=False, required=False),
     }
 
     def __init__(
@@ -1206,6 +1273,7 @@ class TxInput(protobuf.MessageType):
         orig_hash: Optional["bytes"] = None,
         orig_index: Optional["int"] = None,
         decred_staking_spend: Optional["DecredStakingSpendType"] = None,
+        orchard: Optional["ZcashOrchardSpend"] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.prev_hash = prev_hash
@@ -1222,6 +1290,7 @@ class TxInput(protobuf.MessageType):
         self.orig_hash = orig_hash
         self.orig_index = orig_index
         self.decred_staking_spend = decred_staking_spend
+        self.orchard = orchard
 
 
 class TxOutput(protobuf.MessageType):
@@ -1235,6 +1304,7 @@ class TxOutput(protobuf.MessageType):
         6: protobuf.Field("op_return_data", "bytes", repeated=False, required=False),
         10: protobuf.Field("orig_hash", "bytes", repeated=False, required=False),
         11: protobuf.Field("orig_index", "uint32", repeated=False, required=False),
+        12: protobuf.Field("orchard", "ZcashOrchardOutput", repeated=False, required=False),
     }
 
     def __init__(
@@ -1248,6 +1318,7 @@ class TxOutput(protobuf.MessageType):
         op_return_data: Optional["bytes"] = None,
         orig_hash: Optional["bytes"] = None,
         orig_index: Optional["int"] = None,
+        orchard: Optional["ZcashOrchardOutput"] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.amount = amount
@@ -1257,6 +1328,7 @@ class TxOutput(protobuf.MessageType):
         self.op_return_data = op_return_data
         self.orig_hash = orig_hash
         self.orig_index = orig_index
+        self.orchard = orchard
 
 
 class PrevTx(protobuf.MessageType):
@@ -1554,6 +1626,7 @@ class TxRequestSerializedType(protobuf.MessageType):
         1: protobuf.Field("signature_index", "uint32", repeated=False, required=False),
         2: protobuf.Field("signature", "bytes", repeated=False, required=False),
         3: protobuf.Field("serialized_tx", "bytes", repeated=False, required=False),
+        4: protobuf.Field("orchard", "ZcashOrchardData", repeated=False, required=False),
     }
 
     def __init__(
@@ -1562,10 +1635,35 @@ class TxRequestSerializedType(protobuf.MessageType):
         signature_index: Optional["int"] = None,
         signature: Optional["bytes"] = None,
         serialized_tx: Optional["bytes"] = None,
+        orchard: Optional["ZcashOrchardData"] = None,
     ) -> None:
         self.signature_index = signature_index
         self.signature = signature
         self.serialized_tx = serialized_tx
+        self.orchard = orchard
+
+
+class ZcashOrchardData(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("signature_index", "uint32", repeated=False, required=False),
+        2: protobuf.Field("signature", "bytes", repeated=False, required=False),
+        3: protobuf.Field("randomness_seed", "bytes", repeated=False, required=False),
+        4: protobuf.Field("debug", "string", repeated=False, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        signature_index: Optional["int"] = None,
+        signature: Optional["bytes"] = None,
+        randomness_seed: Optional["bytes"] = None,
+        debug: Optional["str"] = None,
+    ) -> None:
+        self.signature_index = signature_index
+        self.signature = signature
+        self.randomness_seed = randomness_seed
+        self.debug = debug
 
 
 class TransactionType(protobuf.MessageType):
@@ -1639,6 +1737,7 @@ class TxInputType(protobuf.MessageType):
         16: protobuf.Field("orig_hash", "bytes", repeated=False, required=False),
         17: protobuf.Field("orig_index", "uint32", repeated=False, required=False),
         18: protobuf.Field("decred_staking_spend", "DecredStakingSpendType", repeated=False, required=False),
+        19: protobuf.Field("orchard", "ZcashOrchardSpend", repeated=False, required=False),
     }
 
     def __init__(
@@ -1659,6 +1758,7 @@ class TxInputType(protobuf.MessageType):
         orig_hash: Optional["bytes"] = None,
         orig_index: Optional["int"] = None,
         decred_staking_spend: Optional["DecredStakingSpendType"] = None,
+        orchard: Optional["ZcashOrchardSpend"] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.prev_hash = prev_hash
@@ -1675,6 +1775,7 @@ class TxInputType(protobuf.MessageType):
         self.orig_hash = orig_hash
         self.orig_index = orig_index
         self.decred_staking_spend = decred_staking_spend
+        self.orchard = orchard
 
 
 class TxOutputBinType(protobuf.MessageType):
@@ -1708,6 +1809,7 @@ class TxOutputType(protobuf.MessageType):
         6: protobuf.Field("op_return_data", "bytes", repeated=False, required=False),
         10: protobuf.Field("orig_hash", "bytes", repeated=False, required=False),
         11: protobuf.Field("orig_index", "uint32", repeated=False, required=False),
+        12: protobuf.Field("orchard", "ZcashOrchardOutput", repeated=False, required=False),
     }
 
     def __init__(
@@ -1721,6 +1823,7 @@ class TxOutputType(protobuf.MessageType):
         op_return_data: Optional["bytes"] = None,
         orig_hash: Optional["bytes"] = None,
         orig_index: Optional["int"] = None,
+        orchard: Optional["ZcashOrchardOutput"] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.amount = amount
@@ -1730,6 +1833,7 @@ class TxOutputType(protobuf.MessageType):
         self.op_return_data = op_return_data
         self.orig_hash = orig_hash
         self.orig_index = orig_index
+        self.orchard = orchard
 
 
 class TxAckInputWrapper(protobuf.MessageType):
@@ -6888,104 +6992,3 @@ class ZcashAddress(protobuf.MessageType):
         address: Optional["str"] = None,
     ) -> None:
         self.address = address
-
-
-class ZcashSpendInfo(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
-    FIELDS = {
-        1: protobuf.Field("z_address_n", "uint32", repeated=True, required=False),
-        2: protobuf.Field("value", "uint64", repeated=False, required=True),
-        3: protobuf.Field("nullifier", "bytes", repeated=False, required=True),
-        4: protobuf.Field("rseed", "bytes", repeated=False, required=True),
-    }
-
-    def __init__(
-        self,
-        *,
-        value: "int",
-        nullifier: "bytes",
-        rseed: "bytes",
-        z_address_n: Optional[List["int"]] = None,
-    ) -> None:
-        self.z_address_n = z_address_n if z_address_n is not None else []
-        self.value = value
-        self.nullifier = nullifier
-        self.rseed = rseed
-
-
-class ZcashRecipientInfo(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
-    FIELDS = {
-        1: protobuf.Field("ovk_flag", "bool", repeated=False, required=False),
-        2: protobuf.Field("address", "string", repeated=False, required=True),
-        3: protobuf.Field("amount", "uint64", repeated=False, required=True),
-        4: protobuf.Field("memo", "bytes", repeated=False, required=False),
-    }
-
-    def __init__(
-        self,
-        *,
-        address: "str",
-        amount: "int",
-        ovk_flag: Optional["bool"] = None,
-        memo: Optional["bytes"] = None,
-    ) -> None:
-        self.address = address
-        self.amount = amount
-        self.ovk_flag = ovk_flag
-        self.memo = memo
-
-
-class ZcashPushAction(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 908
-    FIELDS = {
-        1: protobuf.Field("spend_info", "ZcashSpendInfo", repeated=False, required=False),
-        2: protobuf.Field("recipient_info", "ZcashRecipientInfo", repeated=False, required=False),
-    }
-
-    def __init__(
-        self,
-        *,
-        spend_info: Optional["ZcashSpendInfo"] = None,
-        recipient_info: Optional["ZcashRecipientInfo"] = None,
-    ) -> None:
-        self.spend_info = spend_info
-        self.recipient_info = recipient_info
-
-
-class ZcashShieldedAction(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 909
-    FIELDS = {
-        1: protobuf.Field("cv", "bytes", repeated=False, required=True),
-        2: protobuf.Field("nullifier", "bytes", repeated=False, required=True),
-        3: protobuf.Field("rk", "bytes", repeated=False, required=True),
-        4: protobuf.Field("cmx", "bytes", repeated=False, required=True),
-        5: protobuf.Field("ephemeral_key", "bytes", repeated=False, required=True),
-        6: protobuf.Field("enc_ciphertext", "bytes", repeated=False, required=True),
-        7: protobuf.Field("out_ciphertext", "bytes", repeated=False, required=True),
-        8: protobuf.Field("ak", "bytes", repeated=False, required=True),
-        9: protobuf.Field("alpha", "bytes", repeated=False, required=True),
-    }
-
-    def __init__(
-        self,
-        *,
-        cv: "bytes",
-        nullifier: "bytes",
-        rk: "bytes",
-        cmx: "bytes",
-        ephemeral_key: "bytes",
-        enc_ciphertext: "bytes",
-        out_ciphertext: "bytes",
-        ak: "bytes",
-        alpha: "bytes",
-    ) -> None:
-        self.cv = cv
-        self.nullifier = nullifier
-        self.rk = rk
-        self.cmx = cmx
-        self.ephemeral_key = ephemeral_key
-        self.enc_ciphertext = enc_ciphertext
-        self.out_ciphertext = out_ciphertext
-        self.ak = ak
-        self.alpha = alpha

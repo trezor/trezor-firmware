@@ -188,9 +188,19 @@ message SignTx {
     optional bool overwintered = 7 [deprecated=true];          // deprecated in 2.3.2, the field is not needed as it can be derived from `version`
     optional uint32 version_group_id = 8;                      // only for Zcash, nVersionGroupId
     optional uint32 timestamp = 9;                             // only for Peercoin
-    optional uint32 branch_id = 10;                            // only for Zcash, BRANCH_ID
+    optional uint32 branch_id = 10;                            // only for Zcash, nConsensusBranchId
     optional AmountUnit amount_unit = 11 [default=BITCOIN];    // show amounts in
     optional bool decred_staking_ticket = 12 [default=false];  // only for Decred, this is signing a ticket purchase
+    optional ZcashOrchardBundleInfo orchard = 13;              // only for Zcash
+}
+
+message ZcashOrchardBundleInfo {
+    required uint32 outputs_count = 1 [default = 0]; // number of shielded transaction outputs
+    required uint32 inputs_count = 2 [default = 0];  // number of shielded transaction inputs
+    required bytes anchor = 3;
+    optional bool enable_spends = 4 [default = true];
+    optional bool enable_outputs = 5 [default = true];
+    optional uint32 account = 6 [default = 0];
 }
 
 /**
@@ -204,6 +214,7 @@ message SignTx {
  * @next TxAckPrevInput
  * @next TxAckPrevOutput
  * @next TxAckPrevExtraData
+ * @next TxAckZcashAction
  */
 message TxRequest {
     optional RequestType request_type = 1;              // what should be filled in TxAck message?
@@ -220,6 +231,8 @@ message TxRequest {
         TXEXTRADATA = 4;
         TXORIGINPUT = 5;
         TXORIGOUTPUT = 6;
+        TXORCHARDINPUT = 7;
+        TXORCHARDOUTPUT = 8;
     }
     /**
     * Structure representing request details
@@ -237,6 +250,16 @@ message TxRequest {
         optional uint32 signature_index = 1;    // 'signature' field contains signed input of this index
         optional bytes signature = 2;           // signature of the signature_index input
         optional bytes serialized_tx = 3;       // part of serialized and signed transaction
+        optional ZcashOrchardData orchard = 4;  // only for Zcash, Orchard data
+        /**
+         * Structure representing Orchard related data 
+         */
+        message ZcashOrchardData {
+            optional uint32 signature_index = 1;    // 'signature' field contains signed input of this index
+            optional bytes signature = 2;           // signature of the signature_index input
+            optional bytes randomness_seed = 3;     // a seed for ChaCha12Rng pseudo random generator
+            optional string debug = 4;
+        }
     }
 }
 
@@ -296,6 +319,7 @@ message TxAck {
             optional bytes orig_hash = 16;                                      // tx_hash of the original transaction where this input was spent (used when creating a replacement transaction)
             optional uint32 orig_index = 17;                                    // index of the input in the original transaction (used when creating a replacement transaction)
             optional DecredStakingSpendType decred_staking_spend = 18;          // if not None this holds the type of stake spend: revocation or stake generation
+            optional ZcashOrchardSpend orchard = 19;
         }
         /**
         * Structure representing compiled transaction output
@@ -320,9 +344,24 @@ message TxAck {
             // optional uint32 block_height_bip115 = 9;     // BIP-115 support dropped
             optional bytes orig_hash = 10;                  // tx_hash of the original transaction where this output was present (used when creating a replacement transaction)
             optional uint32 orig_index = 11;                // index of the output in the original transaction (used when creating a replacement transaction)
+            optional ZcashOrchardOutput orchard = 12;
         }
     }
 }
+
+message ZcashOrchardSpend {
+    // repeated uint32 z_address_n = 1; // to derive ask (signing) and fvk (shielding)
+    required bytes note = 3;
+}
+
+message ZcashOrchardOutput {
+    optional bool decryptable = 1;
+    repeated uint32 ovk_address_n = 2;
+    //optional string address = 3; // for outgoing transfers
+    //repeated uint32 z_address_n = 4; // for internal transfers
+    //required uint64 amount = 5;
+    optional bytes memo = 6;
+} 
 
 /** Data type for transaction input to be signed.
  *
@@ -347,6 +386,7 @@ message TxInput {
     optional bytes orig_hash = 16;                                      // tx_hash of the original transaction where this input was spent (used when creating a replacement transaction)
     optional uint32 orig_index = 17;                                    // index of the input in the original transaction (used when creating a replacement transaction)
     optional DecredStakingSpendType decred_staking_spend = 18; 	        // if not None this holds the type of stake spend: revocation or stake generation
+    optional ZcashOrchardSpend orchard = 19;
 }
 
 /** Data type for transaction output to be signed.
@@ -362,6 +402,7 @@ message TxOutput {
     reserved 7, 8, 9;                               // fields which are in use, or have been in the past, in TxOutputType
     optional bytes orig_hash = 10;                  // tx_hash of the original transaction where this output was present (used when creating a replacement transaction)
     optional uint32 orig_index = 11;                // index of the output in the original transaction (used when creating a replacement transaction)
+    optional ZcashOrchardOutput orchard = 12;
 }
 
 /** Data type for metadata about previous transaction which contains the UTXO being spent.

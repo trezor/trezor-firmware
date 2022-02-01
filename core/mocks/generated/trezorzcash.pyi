@@ -27,3 +27,27 @@ def f4jumble(message: bytearray) -> None:
 # extmod/rustmods/modtrezorzcash.c
 def f4jumble_inv(message: bytearray) -> None:
     """Mutates a message by F4Jumble inverse permutation."""
+
+
+# extmod/rustmods/modtrezorzcash.c
+def shield(
+    action_info,
+    rng_config,
+):
+"""Returns an action descripription as serialized in the ledger
+   and attached alpha randomizer."""
+
+
+# extmod/rustmods/modtrezorzcash.c
+def sign(
+    sk: bytes,
+    alpha: bytes,
+    sighash: bytes,
+):
+"""reddsa spend signature of over pallas
+ 
+# Args:
+    `sk` - spending key
+    `alpha` - randomizer (pallas scalar)
+    `sighash` - signed data
+"""

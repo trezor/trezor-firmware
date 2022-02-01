@@ -341,6 +341,4 @@ enum MessageType {
     MessageType_ZcashIncomingViewingKey = 905 [(wire_out) = true];
     MessageType_ZcashGetAddress = 906 [(wire_in) = true];
     MessageType_ZcashAddress = 907 [(wire_out) = true];
-    MessageType_ZcashPushAction = 908 [(wire_in) = true];
-    MessageType_ZcashShieldedAction = 909 [(wire_out) = true];
 }

@@ -1,4 +1,4 @@
-use rand::{Error, RngCore};
+use rand_core::{impls, CryptoRng, Error, RngCore};
 
 extern "C" {
     // trezor-crypto/rand.h
@@ -29,12 +29,12 @@ impl RngCore for HardwareRandomness {
     }
 
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        unimplemented!()
-        //impls::fill_bytes_via_next(self, dest)
+        impls::fill_bytes_via_next(self, dest)
     }
 
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
-        unimplemented!()
-        //Ok(self.fill_bytes(dest))
+        Ok(self.fill_bytes(dest))
     }
 }
+
+impl CryptoRng for HardwareRandomness {}

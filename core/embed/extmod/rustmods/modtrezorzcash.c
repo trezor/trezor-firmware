@@ -25,6 +25,7 @@
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_zcash_diag, zcash_diag);
 
+
 /// def get_orchard_fvk(sk: bytes) -> bytes:
 /// """Returns a raw Orchard Full Viewing Key."""
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_zcash_get_orchard_fvk, zcash_get_orchard_fvk);
@@ -48,6 +49,28 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_zcash_f4jumble, zcash_f4jumble);
 ///     """Mutates a message by F4Jumble inverse permutation."""
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_zcash_f4jumble_inv, zcash_f4jumble_inv);
 
+/// def shield(
+///     action_info,
+///     rng_config,
+/// ):
+/// """Returns an action descripription as serialized in the ledger
+///    and attached alpha randomizer."""
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_zcash_shield, zcash_shield);
+
+/// def sign(
+///     sk: bytes,
+///     alpha: bytes,
+///     sighash: bytes,
+/// ):
+/// """reddsa spend signature of over pallas
+///  
+/// # Args:
+///     `sk` - spending key
+///     `alpha` - randomizer (pallas scalar)
+///     `sighash` - signed data
+/// """
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_zcash_sign, zcash_sign);
+
 STATIC const mp_rom_map_elem_t mp_module_trezorzcash_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorzcash)},
     {MP_ROM_QSTR(MP_QSTR_diag),     MP_ROM_PTR(&mod_zcash_diag)},
@@ -56,6 +79,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorzcash_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_get_orchard_address), MP_ROM_PTR(&mod_zcash_get_orchard_address)},
     {MP_ROM_QSTR(MP_QSTR_f4jumble), MP_ROM_PTR(&mod_zcash_f4jumble)},
     {MP_ROM_QSTR(MP_QSTR_f4jumble_inv), MP_ROM_PTR(&mod_zcash_f4jumble_inv)},
+    {MP_ROM_QSTR(MP_QSTR_shield), MP_ROM_PTR(&mod_zcash_shield)},
+    {MP_ROM_QSTR(MP_QSTR_sign), MP_ROM_PTR(&mod_zcash_sign)},
 };
 
 STATIC MP_DEFINE_CONST_DICT(mp_module_trezorzcash_globals,

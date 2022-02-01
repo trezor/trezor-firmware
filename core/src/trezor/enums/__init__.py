@@ -225,8 +225,6 @@ if TYPE_CHECKING:
         ZcashIncomingViewingKey = 905
         ZcashGetAddress = 906
         ZcashAddress = 907
-        ZcashPushAction = 908
-        ZcashShieldedAction = 909
 
     class BinanceOrderType(IntEnum):
         OT_UNKNOWN = 0
@@ -324,6 +322,8 @@ if TYPE_CHECKING:
         TXEXTRADATA = 4
         TXORIGINPUT = 5
         TXORIGOUTPUT = 6
+        TXORCHARDINPUT = 7
+        TXORCHARDOUTPUT = 8
 
     class CardanoAddressType(IntEnum):
         BASE = 0

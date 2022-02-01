@@ -80,25 +80,24 @@ message ZcashAddress {
     optional string address = 1;
 }
 
-message ZcashSpendInfo {
-    repeated uint32 z_address_n = 1; // to derive fvk 
-    required uint64 value = 2;
-    required bytes nullifier = 3;
-    required bytes rseed = 4;
-}
-
-message ZcashOutputInfo {
-    optional bool ovk_flag = 1;
-    optional string address = 2; // for outgoing transfers
-    repeated uint32 z_address_n = 3; // for internal transfers
-    required uint64 amount = 4;
-    optional bytes memo = 5;
-}
-
-message ZcashPushAction {
+/*message TxAckZcashAction {
     optional ZcashSpendInfo spend_info = 1;
-    optional ZcashOutputInfo output_info = 2;    
-}
+    optional ZcashOutputInfo output_info = 2;
+
+    message ZcashSpendInfo {
+        repeated uint32 z_address_n = 1; // to derive ask (signing) and fvk (shielding)
+        required bytes note = 3;
+    }
+
+    message ZcashOutputInfo {
+        optional bool ovk_flag = 1;
+        repeated uint32 ovk_address_n = 2;
+        optional string address = 3; // for outgoing transfers
+        repeated uint32 z_address_n = 4; // for internal transfers
+        required uint64 amount = 5;
+        optional bytes memo = 6;
+    } 
+}*/
 
 /*message ZcashShieldedAction {
     required bytes cv = 1;
@@ -112,7 +111,7 @@ message ZcashPushAction {
     required bytes alpha = 9;
 }*/
 
-message ZcashAck {}
+//message ZcashAck {}
 
 /*
 message ZcashGetBindingSignature {

@@ -184,8 +184,6 @@ def find_message_handler_module(msg_type: int) -> str:
             return "apps.zcash.get_ivk"
         elif msg_type == MessageType.ZcashGetAddress:
             return "apps.zcash.get_address"
-        elif msg_type == MessageType.ZcashPushAction:
-            return "apps.zcash.shield"
             
     raise ValueError
 
