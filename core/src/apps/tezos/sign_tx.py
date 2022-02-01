@@ -6,7 +6,7 @@ from trezor.crypto.curve import ed25519
 from trezor.enums import TezosBallotType, TezosContractType
 from trezor.messages import TezosSignedTx
 
-from apps.common import paths
+from apps.common import paths, ensure_one_of
 from apps.common.keychain import with_slip44_keychain
 from apps.common.writers import (
     write_bytes_fixed,
@@ -40,10 +40,18 @@ async def sign_tx(ctx: Context, msg: TezosSignTx, keychain: Keychain) -> TezosSi
 
     node = keychain.derive(msg.address_n)
 
+    ensure_one_of(
+        msg.transaction, msg.origination, msg.delegation, msg.proposal, msg.ballot
+    )
     if msg.transaction is not None:
         # if the transaction operation is used to execute code on a smart contract
         if msg.transaction.parameters_manager is not None:
             parameters_manager = msg.transaction.parameters_manager
+            ensure_one_of(
+                parameters_manager.set_delegate,
+                parameters_manager.cancel_delegate,
+                parameters_manager.transfer,
+            )
 
             # operation to delegate from a smart contract with manager.tz
             if parameters_manager.set_delegate is not None:

@@ -4,6 +4,8 @@ from trezor.crypto.hashlib import sha256
 from trezor.messages import EosTxActionAck, EosTxActionRequest
 from trezor.utils import HashWriter
 
+from apps.common import ensure_one_of
+
 from .. import helpers, writers
 from . import layout
 
@@ -114,6 +116,23 @@ async def process_unknown_action(
 
 
 def check_action(action: EosTxActionAck, name: str, account: str) -> bool:
+    ensure_one_of(
+        action.buy_ram,
+        action.buy_ram_bytes,
+        action.sell_ram,
+        action.delegate,
+        action.undelegate,
+        action.refund,
+        action.vote_producer,
+        action.update_auth,
+        action.delete_auth,
+        action.link_auth,
+        action.unlink_auth,
+        action.new_account,
+        action.transfer,
+        action.unknown,
+    )
+
     if account == "eosio":
         return (
             (name == "buyram" and action.buy_ram is not None)

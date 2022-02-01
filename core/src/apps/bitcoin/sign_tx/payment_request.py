@@ -5,9 +5,10 @@ from storage import cache
 from trezor import wire
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha256
+from trezor.messages import CoinPurchaseMemo, RefundMemo, TextMemo
 from trezor.utils import HashWriter
 
-from apps.common import coininfo
+from apps.common import coininfo, one_of
 from apps.common.address_mac import check_address_mac
 from apps.common.keychain import Keychain
 
@@ -52,23 +53,23 @@ class PaymentRequestVerifier:
         writers.write_bytes_prefixed(self.h_pr, msg.recipient_name.encode())
         writers.write_compact_size(self.h_pr, len(msg.memos))
         for m in msg.memos:
-            if m.text_memo is not None:
-                memo = m.text_memo
+            memo = one_of(m.text_memo, m.refund_memo, m.coin_purchase_memo)
+            if TextMemo.is_type_of(memo):
                 writers.write_uint32(self.h_pr, _MEMO_TYPE_TEXT)
                 writers.write_bytes_prefixed(self.h_pr, memo.text.encode())
-            elif m.refund_memo is not None:
-                memo = m.refund_memo
+            elif RefundMemo.is_type_of(memo):
                 # Unlike in a coin purchase memo, the coin type is implied by the payment request.
                 check_address_mac(memo.address, memo.mac, coin.slip44, keychain)
                 writers.write_uint32(self.h_pr, _MEMO_TYPE_REFUND)
                 writers.write_bytes_prefixed(self.h_pr, memo.address.encode())
-            elif m.coin_purchase_memo is not None:
-                memo = m.coin_purchase_memo
+            elif CoinPurchaseMemo.is_type_of(memo):
                 check_address_mac(memo.address, memo.mac, memo.coin_type, keychain)
                 writers.write_uint32(self.h_pr, _MEMO_TYPE_COIN_PURCHASE)
                 writers.write_uint32(self.h_pr, memo.coin_type)
                 writers.write_bytes_prefixed(self.h_pr, memo.amount.encode())
                 writers.write_bytes_prefixed(self.h_pr, memo.address.encode())
+            else:
+                raise wire.DataError("Unrecognized memo type")
 
         writers.write_uint32(self.h_pr, coin.slip44)
 

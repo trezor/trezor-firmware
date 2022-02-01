@@ -4,7 +4,7 @@ from trezor import wire
 from trezor.crypto.curve import ed25519
 from trezor.messages import NEMSignedTx, NEMSignTx
 
-from apps.common import seed
+from apps.common import seed, ensure_one_of
 from apps.common.keychain import with_slip44_keychain
 from apps.common.paths import validate_path
 
@@ -39,6 +39,14 @@ async def sign_tx(ctx: wire.Context, msg: NEMSignTx, keychain: Keychain) -> NEMS
         public_key = seed.remove_ed25519_prefix(node.public_key())
         common = msg.transaction
 
+    ensure_one_of(
+        msg.transfer,
+        msg.provision_namespace,
+        msg.mosaic_creation,
+        msg.supply_change,
+        msg.aggregate_modification,
+        msg.importance_transfer,
+    )
     if msg.transfer:
         tx = await transfer.transfer(ctx, public_key, common, msg.transfer, node)
     elif msg.provision_namespace:
