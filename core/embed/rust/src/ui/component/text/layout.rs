@@ -31,10 +31,10 @@ pub struct TextLayout {
 
     /// Additional space before beginning of text, can be negative to shift text
     /// upwards.
-    pub top_space: i32,
+    pub padding_top: i32,
     /// Additional space between end of text and bottom of bounding box, can be
     /// negative.
-    pub bottom_space: i32,
+    pub padding_bottom: i32,
 
     /// Background color.
     pub background_color: Color,
@@ -85,8 +85,8 @@ impl TextLayout {
     pub fn new<T: DefaultTextTheme>(bounds: Rect) -> Self {
         Self {
             bounds,
-            top_space: 0,
-            bottom_space: 0,
+            padding_top: 0,
+            padding_bottom: 0,
             background_color: T::BACKGROUND_COLOR,
             text_color: T::TEXT_COLOR,
             text_font: T::TEXT_FONT,
@@ -104,7 +104,7 @@ impl TextLayout {
     }
 
     pub fn initial_cursor(&self) -> Point {
-        self.bounds.top_left() + Offset::y(self.text_font.text_height() + self.top_space)
+        self.bounds.top_left() + Offset::y(self.text_font.text_height() + self.padding_top)
     }
 
     pub fn layout_ops<'o>(
@@ -114,12 +114,6 @@ impl TextLayout {
         sink: &mut dyn LayoutSink,
     ) -> LayoutFit {
         let init_cursor = *cursor;
-        let height = move |end_cursor: &Point| {
-            self.top_space
-                + self.text_font.text_height()
-                + (end_cursor.y - init_cursor.y)
-                + self.bottom_space
-        };
         let mut total_processed_chars = 0;
 
         for op in ops {
@@ -143,7 +137,7 @@ impl TextLayout {
 
                         return LayoutFit::OutOfBounds {
                             processed_chars: total_processed_chars,
-                            height: height(cursor),
+                            height: self.layout_height(init_cursor, *cursor),
                         };
                     }
                 },
@@ -152,7 +146,7 @@ impl TextLayout {
 
         LayoutFit::Fitting {
             processed_chars: total_processed_chars,
-            height: height(cursor),
+            height: self.layout_height(init_cursor, *cursor),
         }
     }
 
@@ -163,13 +157,7 @@ impl TextLayout {
         sink: &mut dyn LayoutSink,
     ) -> LayoutFit {
         let init_cursor = *cursor;
-        let height = move |end_cursor: &Point| {
-            self.top_space
-                + self.text_font.text_height()
-                + (end_cursor.y - init_cursor.y)
-                + self.bottom_space
-        };
-        let bottom = (self.bounds.y1 - self.bottom_space).max(self.bounds.y0);
+        let bottom = (self.bounds.y1 - self.padding_bottom).max(self.bounds.y0);
         let mut remaining_text = text;
 
         // Check if bounding box is high enough for at least one line.
@@ -227,7 +215,7 @@ impl TextLayout {
 
                     return LayoutFit::OutOfBounds {
                         processed_chars: text.len() - remaining_text.len(),
-                        height: height(cursor),
+                        height: self.layout_height(init_cursor, *cursor),
                     };
                 } else {
                     // Advance the cursor to the beginning of the next line.
@@ -243,7 +231,7 @@ impl TextLayout {
 
         LayoutFit::Fitting {
             processed_chars: text.len(),
-            height: height(cursor),
+            height: self.layout_height(init_cursor, *cursor),
         }
     }
 
@@ -255,6 +243,13 @@ impl TextLayout {
     pub fn measure_text_height(self, text: &[u8]) -> i32 {
         self.layout_text(text, &mut self.initial_cursor(), &mut TextNoOp)
             .height()
+    }
+
+    fn layout_height(&self, init_cursor: Point, end_cursor: Point) -> i32 {
+        self.padding_top
+            + self.text_font.text_height()
+            + (end_cursor.y - init_cursor.y)
+            + self.padding_bottom
     }
 }
 
