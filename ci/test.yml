@@ -381,7 +381,7 @@ core hwi test:
     - core unix frozen debug build
   script:
     - nix-shell --run "git clone https://github.com/bitcoin-core/HWI.git"
-    - nix-shell --run "cd HWI && poetry install && poetry run ./test/test_trezor.py --model_t ../core/build/unix/trezor-emu-core bitcoind"
+    - nix-shell --arg fullDeps true --run "cd HWI && poetry install && poetry run ./test/test_trezor.py --model_t ../core/build/unix/trezor-emu-core bitcoind"
 
 
 # Crypto
@@ -530,7 +530,7 @@ legacy hwi test:
     EMULATOR: "1"
   script:
     - nix-shell --run "git clone https://github.com/bitcoin-core/HWI.git"
-    - nix-shell --run "cd HWI && poetry install && poetry run ./test/test_trezor.py --model_1 ../legacy/firmware/trezor.elf bitcoind"
+    - nix-shell --arg fullDeps true --run "cd HWI && poetry install && poetry run ./test/test_trezor.py --model_1 ../legacy/firmware/trezor.elf bitcoind"
 
 
 # Python
