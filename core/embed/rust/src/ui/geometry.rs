@@ -471,7 +471,7 @@ impl LinearLayout {
             let top_left = area.top_left() + Offset::on_axis(self.axis, cursor);
             let size = item.get_size();
             item.set_area(Rect::from_top_left_and_size(top_left, size));
-            cursor += self.axis.main(size.x, size.y);
+            cursor += size.axis(self.axis);
             cursor += spacing;
         }
     }
@@ -486,7 +486,7 @@ impl LinearLayout {
         size: Offset,
         sink: &mut dyn FnMut(Point),
     ) {
-        let item_size = self.axis.main(size.x, size.y);
+        let item_size = size.axis(self.axis);
         let (mut cursor, spacing) = self.compute_spacing(area, count, (count as i32) * item_size);
         let cross_coord =
             area.size().axis(self.axis.cross()) / 2 - size.axis(self.axis.cross()) / 2;
