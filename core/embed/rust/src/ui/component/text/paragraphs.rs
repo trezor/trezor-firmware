@@ -61,8 +61,8 @@ where
             content,
             TextLayout {
                 text_font,
-                top_space: PARAGRAPH_TOP_SPACE,
-                bottom_space: PARAGRAPH_BOTTOM_SPACE,
+                padding_top: PARAGRAPH_TOP_SPACE,
+                padding_bottom: PARAGRAPH_BOTTOM_SPACE,
                 ..TextLayout::new::<D>(self.area)
             },
         );
