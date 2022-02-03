@@ -41,6 +41,8 @@ pub const ICON_SIZE: i32 = 16;
 pub const ICON_CANCEL: &[u8] = include_res!("model_tt/res/cancel.toif");
 pub const ICON_CONFIRM: &[u8] = include_res!("model_tt/res/confirm.toif");
 pub const ICON_SPACE: &[u8] = include_res!("model_tt/res/space.toif");
+pub const ICON_BACK: &[u8] = include_res!("model_tt/res/left.toif");
+pub const ICON_CLICK: &[u8] = include_res!("model_tt/res/click.toif");
 
 pub fn label_default() -> LabelStyle {
     LabelStyle {

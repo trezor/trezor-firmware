@@ -2,10 +2,9 @@ mod button;
 mod confirm;
 mod dialog;
 mod frame;
+mod keyboard;
 mod loader;
 mod page;
-mod passphrase;
-mod pin;
 mod swipe;
 
 pub use button::{Button, ButtonContent, ButtonMsg, ButtonStyle, ButtonStyleSheet};

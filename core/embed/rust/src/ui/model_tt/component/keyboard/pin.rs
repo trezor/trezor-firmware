@@ -10,15 +10,14 @@ use crate::{
         },
         display,
         geometry::{Grid, Offset, Point, Rect},
+        model_tt::component::{
+            button::{Button, ButtonContent, ButtonMsg::Clicked},
+            theme,
+        },
     },
 };
 
-use super::{
-    button::{Button, ButtonContent, ButtonMsg::Clicked},
-    theme,
-};
-
-pub enum PinDialogMsg {
+pub enum PinKeyboardMsg {
     Confirmed,
     Cancelled,
 }
@@ -26,7 +25,7 @@ pub enum PinDialogMsg {
 const MAX_LENGTH: usize = 9;
 const DIGIT_COUNT: usize = 10; // 0..10
 
-pub struct PinDialog {
+pub struct PinKeyboard {
     digits: Vec<u8, MAX_LENGTH>,
     major_prompt: Label<&'static [u8]>,
     minor_prompt: Label<&'static [u8]>,
@@ -37,7 +36,7 @@ pub struct PinDialog {
     digit_btns: [Child<Button<&'static str>>; DIGIT_COUNT],
 }
 
-impl PinDialog {
+impl PinKeyboard {
     pub fn new(area: Rect, major_prompt: &'static [u8], minor_prompt: &'static [u8]) -> Self {
         let digits = Vec::new();
 
@@ -141,15 +140,15 @@ impl PinDialog {
     }
 }
 
-impl Component for PinDialog {
-    type Msg = PinDialogMsg;
+impl Component for PinKeyboard {
+    type Msg = PinKeyboardMsg;
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if let Some(Clicked) = self.confirm_btn.event(ctx, event) {
-            return Some(PinDialogMsg::Confirmed);
+            return Some(PinKeyboardMsg::Confirmed);
         }
         if let Some(Clicked) = self.cancel_btn.event(ctx, event) {
-            return Some(PinDialogMsg::Cancelled);
+            return Some(PinKeyboardMsg::Cancelled);
         }
         if let Some(Clicked) = self.reset_btn.event(ctx, event) {
             self.digits.clear();
