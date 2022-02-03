@@ -78,7 +78,17 @@ verbose = False
 # TODO "abc" + "def" string concatenation on the same line without newline
 # strings in comments
 
-# TODO briefly describe the desired dictionary export file format and its quirks
+# dictionary text export file format
+# general description:
+# https://github.com/AFLplusplus/AFLplusplus/blob/stable/dictionaries/README.md
+#
+# the exported file is primarly designed for use with a recent libFuzzer version
+# and is known to be partially incompatible with other fuzzers that impose
+# other limitations
+#
+# known incompatibilities:
+# * honggfuzz only reads a limited number of dictionary entries (8192 with version 2.5)
+# * afl++ only reads line content with up to 128 byte
 
 # match everything in quotes that doesn't have an internal quote character and
 # at least one internal character
