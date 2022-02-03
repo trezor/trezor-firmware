@@ -6,13 +6,12 @@ use crate::{
         component::{base::ComponentExt, Child, Component, Event, EventCtx, Never, TimerToken},
         display,
         geometry::{Grid, Rect},
+        model_tt::component::{
+            button::{Button, ButtonContent, ButtonMsg::Clicked},
+            swipe::{Swipe, SwipeDirection},
+            theme,
+        },
     },
-};
-
-use super::{
-    button::{Button, ButtonContent, ButtonMsg::Clicked},
-    swipe::{Swipe, SwipeDirection},
-    theme,
 };
 
 pub enum PassphraseKeyboardMsg {

@@ -1,9 +1,10 @@
-use super::{event::TouchEvent, theme};
 use crate::ui::{
     component::{Component, Event, EventCtx, Map},
     display::{self, Color, Font},
     geometry::{Grid, Insets, Offset, Rect},
 };
+
+use super::{event::TouchEvent, theme};
 
 pub enum ButtonMsg {
     Pressed,
@@ -43,6 +44,10 @@ impl<T> Button<T> {
         Self::new(area, ButtonContent::Icon(image))
     }
 
+    pub fn empty(area: Rect) -> Self {
+        Self::new(area, ButtonContent::Empty)
+    }
+
     pub fn styled(mut self, styles: ButtonStyleSheet) -> Self {
         self.styles = styles;
         self
@@ -75,11 +80,28 @@ impl<T> Button<T> {
         matches!(self.state, State::Disabled)
     }
 
+    pub fn set_content(&mut self, ctx: &mut EventCtx, content: ButtonContent<T>)
+    where
+        T: PartialEq,
+    {
+        if self.content != content {
+            self.content = content;
+            ctx.request_paint();
+        }
+    }
+
     pub fn content(&self) -> &ButtonContent<T> {
         &self.content
     }
 
-    fn style(&self) -> &ButtonStyle {
+    pub fn set_stylesheet(&mut self, ctx: &mut EventCtx, styles: ButtonStyleSheet) {
+        if self.styles != styles {
+            self.styles = styles;
+            ctx.request_paint();
+        }
+    }
+
+    pub fn style(&self) -> &ButtonStyle {
         match self.state {
             State::Initial | State::Released => self.styles.normal,
             State::Pressed => self.styles.active,
@@ -87,10 +109,73 @@ impl<T> Button<T> {
         }
     }
 
+    pub fn area(&self) -> Rect {
+        self.area
+    }
+
     fn set(&mut self, ctx: &mut EventCtx, state: State) {
         if self.state != state {
             self.state = state;
             ctx.request_paint();
+        }
+    }
+
+    pub fn paint_background(&self, style: &ButtonStyle) {
+        if style.border_width > 0 {
+            // Paint the border and a smaller background on top of it.
+            display::rect_fill_rounded(
+                self.area,
+                style.border_color,
+                style.background_color,
+                style.border_radius,
+            );
+            display::rect_fill_rounded(
+                self.area.inset(Insets::uniform(style.border_width)),
+                style.button_color,
+                style.border_color,
+                style.border_radius,
+            );
+        } else {
+            // We do not need to draw an explicit border in this case, just a
+            // bigger background.
+            display::rect_fill_rounded(
+                self.area,
+                style.button_color,
+                style.background_color,
+                style.border_radius,
+            );
+        }
+    }
+
+    pub fn paint_content(&self, style: &ButtonStyle)
+    where
+        T: AsRef<[u8]>,
+    {
+        match &self.content {
+            ButtonContent::Empty => {}
+            ButtonContent::Text(text) => {
+                let text = text.as_ref();
+                let width = style.font.text_width(text);
+                let height = style.font.text_height();
+                let start_of_baseline = self.area.center()
+                    + Offset::new(-width / 2, height / 2)
+                    + Offset::y(Self::BASELINE_OFFSET);
+                display::text(
+                    start_of_baseline,
+                    text,
+                    style.font,
+                    style.text_color,
+                    style.button_color,
+                );
+            }
+            ButtonContent::Icon(icon) => {
+                display::icon(
+                    self.area.center(),
+                    icon,
+                    style.text_color,
+                    style.button_color,
+                );
+            }
         }
     }
 }
@@ -157,61 +242,8 @@ where
 
     fn paint(&mut self) {
         let style = self.style();
-
-        if style.border_width > 0 {
-            // Paint the border and a smaller background on top of it.
-            display::rect_fill_rounded(
-                self.area,
-                style.border_color,
-                style.background_color,
-                style.border_radius,
-            );
-            display::rect_fill_rounded(
-                self.area.inset(Insets::uniform(style.border_width)),
-                style.button_color,
-                style.border_color,
-                style.border_radius,
-            );
-        } else {
-            // We do not need to draw an explicit border in this case, just a
-            // bigger background.
-            display::rect_fill_rounded(
-                self.area,
-                style.button_color,
-                style.background_color,
-                style.border_radius,
-            );
-        }
-
-        match &self.content {
-            ButtonContent::Text(text) => {
-                let text = text.as_ref();
-                let width = style.font.text_width(text);
-                let height = style.font.text_height();
-                let start_of_baseline = self.area.center()
-                    + Offset::new(-width / 2, height / 2)
-                    + Offset::y(Self::BASELINE_OFFSET);
-                display::text(
-                    start_of_baseline,
-                    text,
-                    style.font,
-                    style.text_color,
-                    style.button_color,
-                );
-            }
-            ButtonContent::Icon(icon) => {
-                display::icon(
-                    self.area.center(),
-                    icon,
-                    style.text_color,
-                    style.button_color,
-                );
-            }
-        }
-    }
-
-    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        sink(self.area)
+        self.paint_background(&style);
+        self.paint_content(&style);
     }
 }
 
@@ -223,6 +255,7 @@ where
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("Button");
         match &self.content {
+            ButtonContent::Empty => {}
             ButtonContent::Text(text) => t.field("text", text),
             ButtonContent::Icon(_) => t.symbol("icon"),
         }
@@ -238,17 +271,21 @@ enum State {
     Disabled,
 }
 
+#[derive(PartialEq, Eq)]
 pub enum ButtonContent<T> {
+    Empty,
     Text(T),
     Icon(&'static [u8]),
 }
 
+#[derive(PartialEq, Eq)]
 pub struct ButtonStyleSheet {
     pub normal: &'static ButtonStyle,
     pub active: &'static ButtonStyle,
     pub disabled: &'static ButtonStyle,
 }
 
+#[derive(PartialEq, Eq)]
 pub struct ButtonStyle {
     pub font: Font,
     pub text_color: Color,
