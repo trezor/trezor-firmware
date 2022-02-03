@@ -66,6 +66,11 @@ stdenvNoCC.mkDerivation ({
     python37
     python36nixpkgs.python36
   ] ++ [
+    strace
+    lsof
+    usbutils
+    openssh
+    socat
     SDL2
     SDL2_image
     autoflake

@@ -34,10 +34,5 @@ before_script:
   - export CORE_VERSION=$(nix-shell --run "./tools/version.sh core/embed/firmware/version.h")
 
 include:
-  - ci/environment.yml
-  - ci/prebuild.yml
   - ci/build.yml
   - ci/test.yml
-  - ci/test-hw.yml
-  - ci/posttest.yml
-  - ci/deploy.yml
