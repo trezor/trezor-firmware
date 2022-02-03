@@ -19,6 +19,7 @@ from mnemonic import Mnemonic
 
 from trezorlib import device, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.tools import parse_path
 
 from ...common import generate_entropy
 
@@ -87,7 +88,7 @@ def reset_device(client: Client, strength):
     assert resp.passphrase_protection is False
 
     # Do pin & passphrase-protected action, PassphraseRequest should NOT be raised
-    resp = client.call_raw(messages.GetAddress())
+    resp = client.call_raw(messages.GetAddress(address_n=parse_path("m/44'/0'/0'/0/0")))
     assert isinstance(resp, messages.Address)
 
 
@@ -186,7 +187,7 @@ def test_reset_device_256_pin(client: Client):
     assert resp.passphrase_protection is True
 
     # Do passphrase-protected action, PassphraseRequest should be raised
-    resp = client.call_raw(messages.GetAddress())
+    resp = client.call_raw(messages.GetAddress(address_n=parse_path("m/44'/0'/0'/0/0")))
     assert isinstance(resp, messages.PassphraseRequest)
     client.call_raw(messages.Cancel())
 

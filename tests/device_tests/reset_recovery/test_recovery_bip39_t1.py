@@ -18,6 +18,7 @@ import pytest
 
 from trezorlib import device, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.tools import parse_path
 
 from ...common import MNEMONIC12
 
@@ -84,7 +85,7 @@ def test_pin_passphrase(client: Client):
     assert client.features.passphrase_protection is True
 
     # Do passphrase-protected action, PassphraseRequest should be raised
-    resp = client.call_raw(messages.GetAddress())
+    resp = client.call_raw(messages.GetAddress(address_n=parse_path("m/44'/0'/0'/0/0")))
     assert isinstance(resp, messages.PassphraseRequest)
     client.call_raw(messages.Cancel())
 
@@ -135,7 +136,7 @@ def test_nopin_nopassphrase(client: Client):
     assert client.features.passphrase_protection is False
 
     # Do pin & passphrase-protected action, PassphraseRequest should NOT be raised
-    resp = client.call_raw(messages.GetAddress())
+    resp = client.call_raw(messages.GetAddress(address_n=parse_path("m/44'/0'/0'/0/0")))
     assert isinstance(resp, messages.Address)
 
 
