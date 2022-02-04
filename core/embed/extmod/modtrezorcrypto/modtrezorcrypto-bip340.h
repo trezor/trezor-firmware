@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#if USE_SECP256K1_ZKP
+
 #include "py/objstr.h"
 
 #include "rand.h"
@@ -261,3 +263,5 @@ STATIC const mp_obj_module_t mod_trezorcrypto_bip340_module = {
     .base = {&mp_type_module},
     .globals = (mp_obj_dict_t *)&mod_trezorcrypto_bip340_globals,
 };
+
+#endif

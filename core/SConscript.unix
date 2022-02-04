@@ -9,7 +9,7 @@ TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 UI2 = ARGUMENTS.get('UI2', '0') == '1' or TREZOR_MODEL == '1'
 
 FEATURE_FLAGS = {
-    "SECP256K1_ZKP": True,
+    "SECP256K1_ZKP": True,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot)
 }
 
 CCFLAGS_MOD = ''
