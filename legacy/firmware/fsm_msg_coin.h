@@ -327,9 +327,15 @@ void fsm_msgVerifyMessage(const VerifyMessage *msg) {
   const CoinInfo *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
   if (!coin) return;
   layoutProgressSwipe(_("Verifying"), 0);
-  if (msg->signature.size == 65 &&
-      cryptoMessageVerify(coin, msg->message.bytes, msg->message.size,
-                          msg->address, msg->signature.bytes) == 0) {
+  if (msg->signature.size != 65) {
+    fsm_sendFailure(FailureType_Failure_ProcessError, _("Invalid signature"));
+    layoutHome();
+    return;
+  }
+
+  int result = cryptoMessageVerify(coin, msg->message.bytes, msg->message.size,
+                                   msg->address, msg->signature.bytes);
+  if (result == 0) {
     layoutVerifyAddress(coin, msg->address);
     if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
       fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
@@ -352,8 +358,10 @@ void fsm_msgVerifyMessage(const VerifyMessage *msg) {
     }
 
     fsm_sendSuccess(_("Message verified"));
+  } else if (result == 1) {
+    fsm_sendFailure(FailureType_Failure_DataError, _("Invalid address"));
   } else {
-    fsm_sendFailure(FailureType_Failure_DataError, _("Invalid signature"));
+    fsm_sendFailure(FailureType_Failure_ProcessError, _("Invalid signature"));
   }
   layoutHome();
 }
