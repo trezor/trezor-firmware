@@ -302,6 +302,7 @@ def test_verify_message_t1(client: Client):
             [
                 messages.ButtonRequest,
                 messages.ButtonRequest,
+                messages.ButtonRequest,
                 messages.Success,
             ]
         )

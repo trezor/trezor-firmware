@@ -343,6 +343,14 @@ void fsm_msgVerifyMessage(const VerifyMessage *msg) {
       return;
     }
 
+    layoutDialogSwipe(&bmp_icon_ok, NULL, _("Continue"), NULL, NULL,
+                      _("The signature is valid."), NULL, NULL, NULL, NULL);
+    if (!protectButton(ButtonRequestType_ButtonRequest_Other, true)) {
+      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+      layoutHome();
+      return;
+    }
+
     fsm_sendSuccess(_("Message verified"));
   } else {
     fsm_sendFailure(FailureType_Failure_DataError, _("Invalid signature"));
