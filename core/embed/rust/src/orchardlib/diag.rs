@@ -29,7 +29,7 @@ fn as_u32_be(array: &[u8]) -> u32 {
 }
 
 #[no_mangle]
-pub extern "C" fn zcash_diag(ins: Obj, data: Obj) -> Obj {
+pub extern "C" fn orchardlib_diag(ins: Obj, data: Obj) -> Obj {
     let block = || {
         let ins = Buffer::try_from(ins)?;
         let ins = ins.deref();

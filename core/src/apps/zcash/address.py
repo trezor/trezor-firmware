@@ -4,9 +4,9 @@ from trezor.crypto import base58
 from trezor.utils import BufferReader, empty_bytearray
 from apps.common.readers import read_compact_size
 from apps.common.writers import write_compact_size, write_bytes_fixed
-from apps.common.coininfo import get_coin_by_name
+from apps.bitcoin.keychain import get_coin_by_name
 
-from trezor.crypto import zcash
+from trezor.crypto import orchardlib
 
 if False:
 	# TODO: network_type should be IntEnum
@@ -76,7 +76,7 @@ def encode_unified(receivers: Dict[int,bytes], network_type: int = MAINNET) -> s
 
 	hrp = U_PREFIX[network_type]
 	write_bytes_fixed(w, padding(hrp), 16)
-	zcash.f4jumble(w)
+	orchardlib.f4jumble(w)
 	converted = convertbits(w, 8, 5)
 	return bech32_encode(hrp, converted, Encoding.BECH32M)
 
@@ -89,7 +89,7 @@ def decode_unified(addr_str: str) -> Dict[int,bytes]:
 	assert encoding == Encoding.BECH32M, "Bech32m encoding required"
 
 	decoded = bytearray(convertbits(data, 5, 8, False))
-	zcash.f4jumble_inv(decoded)
+	orchardlib.f4jumble_inv(decoded)
 
 	# check trailing padding bytes
 	assert decoded[-16:] == padding(hrp)

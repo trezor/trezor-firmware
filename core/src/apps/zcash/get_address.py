@@ -5,7 +5,6 @@ from apps import bitcoin
 from apps.common.paths import address_n_to_str, HARDENED
 from apps.common.coininfo import CoinInfo
 
-from trezor.crypto import zcash
 from trezor.crypto.scripts import sha256_ripemd160
 from trezor import log, wire
 

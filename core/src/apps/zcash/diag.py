@@ -7,10 +7,10 @@ from trezor.ui.layouts import confirm_action, draw_simple_text
 
 from trezor import log
 
-from trezor.crypto import zcash
+from trezor.crypto import orchardlib
 
 async def diag(ctx: Context, msg: DebugZcashDiagRequest) -> DebugZcashDiagResponse:
-    log.warning(__name__, "zcash.diag called")
+    log.warning(__name__, "orchardlib.diag called")
     log.warning(__name__, "ins : {}".format(msg.ins))
     log.warning(__name__, "data: {}".format(msg.data))
 
@@ -27,5 +27,5 @@ async def diag(ctx: Context, msg: DebugZcashDiagRequest) -> DebugZcashDiagRespon
         return DebugZcashDiagResponse(data=b"Hello from the Trezor!")
     else:
         return DebugZcashDiagResponse(
-            data=zcash.diag(msg.ins, msg.data)
+            data=orchardlib.diag(msg.ins, msg.data)
         )

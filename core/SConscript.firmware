@@ -190,7 +190,7 @@ SOURCE_MOD += [
 # rust mods
 SOURCE_MOD += [
     'embed/extmod/rustmods/modtrezorproto.c',
-    'embed/extmod/rustmods/modtrezorzcash.c',
+    'embed/extmod/rustmods/modtrezororchardlib.c',
 ]
 if NEW_UI:
     SOURCE_MOD += [

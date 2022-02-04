@@ -9,7 +9,7 @@ from ..address import SLIP44_ZCASH_COIN_TYPES
 from apps.common.paths import PathSchema
 from apps.common.keychain import FORBIDDEN_KEY_PATH
 from trezor import log
-from trezor.crypto import zcash
+from trezor.crypto import orchardlib
 from apps.bitcoin.keychain import get_coin_by_name
 
 # Tested against the zcash/orchard crate.
@@ -64,14 +64,14 @@ class ExtendedSpendingKey:
 
     def full_viewing_key(self):
         """Returns the Full Vieving Key."""
-        return zcash.get_orchard_fvk(self.sk)
+        return orchardlib.get_full_viewing_key(self.sk)
 
     def incoming_viewing_key(self):
         """Returns the Incoming Vieving Key."""
-        return zcash.get_orchard_ivk(self.sk)
+        return orchardlib.get_incoming_viewing_key(self.sk)
 
     def address(self, diversifier=0):
-        return zcash.get_orchard_address(self.sk, diversifier)
+        return orchardlib.get_address(self.sk, diversifier)
 
     def clone(self):
         return ExtendedSpendingKey(self.sk, self.c)
@@ -87,9 +87,9 @@ class ExtendedSpendingKey:
 
 
 class OrchardKeychain(Keychain):
-    def __init__(self, seed: bytes) -> None:
-        assert slip44 in SLIP44_ZCASH_COIN_TYPES
-        schema = PathSchema.parse(PATTERN_ZIP32, (slip44,))
+    def __init__(self, seed: bytes, coin) -> None:
+        assert coin.slip44 in SLIP44_ZCASH_COIN_TYPES
+        schema = PathSchema.parse(PATTERN_ZIP32, (coin.slip44,))
         super().__init__(seed, "pallas", [schema])
 
     def root_fingerprint(self) -> int:
@@ -107,15 +107,15 @@ class OrchardKeychain(Keychain):
         raise NotImplementedError  # TODO ?
 
 
-async def get_orchard_keychain(ctx, slip44):
+async def get_keychain_for_coin(ctx, coin):
     seed = await get_seed(ctx)
-    return OrchardKeychain(seed, slip44)
+    return OrchardKeychain(seed, coin)
 
 
 def with_keychain(func):
     async def wrapper(ctx, msg):
         coin = get_coin_by_name(msg.coin_name)
-        keychain = get_orchard_keychain(ctx, coin.slip44)
+        keychain = get_keychain_for_coin(ctx, coin)
         return await func(ctx, msg, keychain)
 
     return wrapper

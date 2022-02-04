@@ -23,31 +23,31 @@
 
 #include "librust.h"
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_zcash_diag, zcash_diag);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_orchardlib_diag, orchardlib_diag);
 
 
 /// def get_orchard_fvk(sk: bytes) -> bytes:
 /// """Returns a raw Orchard Full Viewing Key."""
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_zcash_get_orchard_fvk, zcash_get_orchard_fvk);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_orchardlib_get_full_viewing_key, orchardlib_get_full_viewing_key);
 
 /// def get_orchard_ivk(sk: bytes) -> bytes:
 /// """Returns a raw Orchard Incoming Viewing Key."""
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_zcash_get_orchard_ivk, zcash_get_orchard_ivk);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_orchardlib_get_incoming_viewing_key, orchardlib_get_incoming_viewing_key);
 
 /// def get_orchard_address(
 ///     sk: bytes
 ///     diversifier_index: int
 /// ) -> bytes:
 /// """Returns a raw Orchard address."""
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_zcash_get_orchard_address, zcash_get_orchard_address);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_orchardlib_get_address, orchardlib_get_address);
 
 /// def f4jumble(message: bytearray) -> None:
 ///     """Mutates a message by F4Jumble permutation."""
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_zcash_f4jumble, zcash_f4jumble);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_orchardlib_f4jumble, orchardlib_f4jumble);
 
 /// def f4jumble_inv(message: bytearray) -> None:
 ///     """Mutates a message by F4Jumble inverse permutation."""
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_zcash_f4jumble_inv, zcash_f4jumble_inv);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_orchardlib_f4jumble_inv, orchardlib_f4jumble_inv);
 
 /// def shield(
 ///     action_info,
@@ -55,7 +55,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_zcash_f4jumble_inv, zcash_f4jumble_inv);
 /// ):
 /// """Returns an action descripription as serialized in the ledger
 ///    and attached alpha randomizer."""
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_zcash_shield, zcash_shield);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_orchardlib_shield, orchardlib_shield);
 
 /// def sign(
 ///     sk: bytes,
@@ -69,29 +69,29 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_zcash_shield, zcash_shield);
 ///     `alpha` - randomizer (pallas scalar)
 ///     `sighash` - signed data
 /// """
-STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_zcash_sign, zcash_sign);
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_orchardlib_sign, orchardlib_sign);
 
-STATIC const mp_rom_map_elem_t mp_module_trezorzcash_globals_table[] = {
-    {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorzcash)},
-    {MP_ROM_QSTR(MP_QSTR_diag),     MP_ROM_PTR(&mod_zcash_diag)},
-    {MP_ROM_QSTR(MP_QSTR_get_orchard_fvk),  MP_ROM_PTR(&mod_zcash_get_orchard_fvk)},
-    {MP_ROM_QSTR(MP_QSTR_get_orchard_ivk),  MP_ROM_PTR(&mod_zcash_get_orchard_ivk)},
-    {MP_ROM_QSTR(MP_QSTR_get_orchard_address), MP_ROM_PTR(&mod_zcash_get_orchard_address)},
-    {MP_ROM_QSTR(MP_QSTR_f4jumble), MP_ROM_PTR(&mod_zcash_f4jumble)},
-    {MP_ROM_QSTR(MP_QSTR_f4jumble_inv), MP_ROM_PTR(&mod_zcash_f4jumble_inv)},
-    {MP_ROM_QSTR(MP_QSTR_shield), MP_ROM_PTR(&mod_zcash_shield)},
-    {MP_ROM_QSTR(MP_QSTR_sign), MP_ROM_PTR(&mod_zcash_sign)},
+STATIC const mp_rom_map_elem_t mp_module_trezororchardlib_globals_table[] = {
+    {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezororchardlib)},
+    {MP_ROM_QSTR(MP_QSTR_diag),     MP_ROM_PTR(&mod_orchardlib_diag)},
+    {MP_ROM_QSTR(MP_QSTR_get_full_viewing_key),  MP_ROM_PTR(&mod_orchardlib_get_full_viewing_key)},
+    {MP_ROM_QSTR(MP_QSTR_get_incoming_viewing_key),  MP_ROM_PTR(&mod_orchardlib_get_incoming_viewing_key)},
+    {MP_ROM_QSTR(MP_QSTR_get_address), MP_ROM_PTR(&mod_orchardlib_get_address)},
+    {MP_ROM_QSTR(MP_QSTR_f4jumble), MP_ROM_PTR(&mod_orchardlib_f4jumble)},
+    {MP_ROM_QSTR(MP_QSTR_f4jumble_inv), MP_ROM_PTR(&mod_orchardlib_f4jumble_inv)},
+    {MP_ROM_QSTR(MP_QSTR_shield), MP_ROM_PTR(&mod_orchardlib_shield)},
+    {MP_ROM_QSTR(MP_QSTR_sign), MP_ROM_PTR(&mod_orchardlib_sign)},
 };
 
-STATIC MP_DEFINE_CONST_DICT(mp_module_trezorzcash_globals,
-                            mp_module_trezorzcash_globals_table);
+STATIC MP_DEFINE_CONST_DICT(mp_module_trezororchardlib_globals,
+                            mp_module_trezororchardlib_globals_table);
 
-const mp_obj_module_t mp_module_trezorzcash = {
+const mp_obj_module_t mp_module_trezororchardlib = {
     .base = {&mp_type_module},
-    .globals = (mp_obj_dict_t *)&mp_module_trezorzcash_globals,
+    .globals = (mp_obj_dict_t *)&mp_module_trezororchardlib_globals,
 };
 
-MP_REGISTER_MODULE(MP_QSTR_trezorzcash, mp_module_trezorzcash,
+MP_REGISTER_MODULE(MP_QSTR_trezororchardlib, mp_module_trezororchardlib,
                    MICROPY_PY_TREZORCRYPTO);
 
 #endif  // MICROPY_PY_TREZOCRYPTO

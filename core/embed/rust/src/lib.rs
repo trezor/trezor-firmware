@@ -17,8 +17,8 @@ mod trezorhal;
 #[cfg(feature = "ui")]
 #[macro_use]
 mod ui;
+mod orchardlib;
 mod util;
-mod zcash;
 
 #[cfg(not(feature = "test"))]
 use core::panic::PanicInfo;

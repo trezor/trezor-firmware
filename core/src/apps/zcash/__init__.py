@@ -1,8 +1,10 @@
 from typing import TYPE_CHECKING
 
+from . import orchard
+
 from trezor import wire, protobuf, ui, messages
 from trezor.crypto import random
-from trezor.crypto import zcash as zcashlib
+from trezor.crypto import orchardlib
 from trezor.crypto.hashlib import blake2b
 from trezor.messages import PrevTx, SignTx, TxInput, TxOutput, TxAckInput, TxAckOutput
 from trezor.messages import TxRequest
@@ -25,7 +27,6 @@ from apps.bitcoin.sign_tx import approvers, helpers
 from apps.bitcoin.sign_tx.tx_info import TxInfo
 
 from apps import zcash
-from . import zip32
 from .layout import UiConfirmOrchardOutput
 from trezor import log
 
@@ -190,7 +191,7 @@ class ZcashV5(Bitcoinlike):
                     fvk = self.orchard_keychain.derive(txo.address_n).full_viewing_key()
                     action_info["output_info"]["fvk"] = fvk
 
-            action = zcashlib.shield(action_info, rand_config)  # on this line the magic happens
+            action = orchardlib.shield(action_info, rand_config)  # on this line the magic happens
             self.zip244_hasher.orchard.add_action(action)
 
             self.alphas.append(action["alpha"])
@@ -222,7 +223,7 @@ class ZcashV5(Bitcoinlike):
             alpha = await self.get_orchard_alpha(i)
             sk = self.orchard_keychain.derive(txi.address_n).spending_key()
             sighash = self.zip244_hasher.signature_digest()
-            signature = zcashlib.sign(sk, alpha, sighash)
+            signature = orchardlib.sign(sk, alpha, sighash)
             self.set_serialized_orchard_signature(i, signature)
 
     async def get_orchard_alpha(self, i):

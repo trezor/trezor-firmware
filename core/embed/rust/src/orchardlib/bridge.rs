@@ -55,7 +55,7 @@ impl<const N: usize> TryFrom<[u8; N]> for Obj {
 }
 
 #[no_mangle]
-pub extern "C" fn zcash_sign(sk: Obj, alpha: Obj, sighash: Obj) -> Obj {
+pub extern "C" fn orchardlib_sign(sk: Obj, alpha: Obj, sighash: Obj) -> Obj {
     let block = || {
         let alpha: [u8; 32] = alpha.try_into()?;
         let alpha = pallas::Scalar::from_repr(alpha);
@@ -139,7 +139,7 @@ fn save_rng(rng: ChaCha12Rng, config: Obj) -> Result<(), Error> {
 }
 
 #[no_mangle]
-pub extern "C" fn zcash_shield(action_info: Obj, rng_config: Obj) -> Obj {
+pub extern "C" fn orchardlib_shield(action_info: Obj, rng_config: Obj) -> Obj {
     let block = || {
         //let action_info: &Map = try_into_map!(action_info)?;
         try_parse_map!(action_info);
@@ -217,7 +217,7 @@ fn get_sk(sk: Obj) -> Result<SpendingKey, Error> {
 }
 
 #[no_mangle]
-pub extern "C" fn zcash_get_orchard_fvk(sk: Obj) -> Obj {
+pub extern "C" fn orchardlib_get_full_viewing_key(sk: Obj) -> Obj {
     let block = || {
         let sk = get_sk(sk)?;
         let fvk: FullViewingKey = (&sk).into();
@@ -229,7 +229,7 @@ pub extern "C" fn zcash_get_orchard_fvk(sk: Obj) -> Obj {
 }
 
 #[no_mangle]
-pub extern "C" fn zcash_get_orchard_ivk(sk: Obj) -> Obj {
+pub extern "C" fn orchardlib_get_incoming_viewing_key(sk: Obj) -> Obj {
     let block = || {
         let sk = get_sk(sk)?;
         let fvk: FullViewingKey = (&sk).into();
@@ -242,7 +242,7 @@ pub extern "C" fn zcash_get_orchard_ivk(sk: Obj) -> Obj {
 }
 
 #[no_mangle]
-pub extern "C" fn zcash_get_orchard_address(sk: Obj, diversifier_index: Obj) -> Obj {
+pub extern "C" fn orchardlib_get_address(sk: Obj, diversifier_index: Obj) -> Obj {
     let block = || {
         let sk = get_sk(sk)?;
         let fvk: FullViewingKey = (&sk).into();
@@ -263,7 +263,7 @@ impl From<f4jumble::Error> for Error {
 }
 
 #[no_mangle]
-pub extern "C" fn zcash_f4jumble(message: Obj) -> Obj {
+pub extern "C" fn orchardlib_f4jumble(message: Obj) -> Obj {
     let block = || {
         let mut message: BufferMut = message.try_into()?;
         let _ = f4jumble::f4jumble_mut(message.deref_mut())?;
@@ -273,7 +273,7 @@ pub extern "C" fn zcash_f4jumble(message: Obj) -> Obj {
 }
 
 #[no_mangle]
-pub extern "C" fn zcash_f4jumble_inv(message: Obj) -> Obj {
+pub extern "C" fn orchardlib_f4jumble_inv(message: Obj) -> Obj {
     let block = || {
         let mut message: BufferMut = message.try_into()?;
         let _ = f4jumble::f4jumble_inv_mut(message.deref_mut())?;
