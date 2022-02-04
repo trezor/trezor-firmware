@@ -326,6 +326,7 @@ def test_verify_message_t2(client: Client):
                 _pin_request(client),
                 messages.ButtonRequest,
                 messages.ButtonRequest,
+                messages.ButtonRequest,
                 messages.Success,
             ]
         )
