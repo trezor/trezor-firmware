@@ -204,6 +204,14 @@ void fsm_msgEthereumVerifyMessage(const EthereumVerifyMessage *msg) {
     return;
   }
 
+  layoutDialogSwipe(&bmp_icon_ok, NULL, _("Continue"), NULL, NULL,
+                    _("The signature is valid."), NULL, NULL, NULL, NULL);
+  if (!protectButton(ButtonRequestType_ButtonRequest_Other, true)) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+    layoutHome();
+    return;
+  }
+
   fsm_sendSuccess(_("Message verified"));
 
   layoutHome();
