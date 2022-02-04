@@ -56,6 +56,18 @@ def test_message_verify(client: Client):
     )
     assert res is True
 
+    # no script type
+    res = btc.verify_message(
+        client,
+        "Bitcoin",
+        "3L6TyTisPBmrDAj6RoKmDzNnj4eQi54gD2",
+        bytes.fromhex(
+            "1f744de4516fac5c140808015664516a32fead94de89775cec7e24dbc24fe133075ac09301c4cc8e197bea4b6481661d5b8e9bf19d8b7b8a382ecdb53c2ee0750d"
+        ),
+        "This is an example of a signed message.",
+    )
+    assert res is True
+
     # trezor pubkey - FAIL - wrong sig
     res = btc.verify_message(
         client,
