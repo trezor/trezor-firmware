@@ -33,7 +33,6 @@ class UiConfirmOrchardOutput(helpers.UiConfirm):
         pages.append(self.get_pay_page())
         pages.append(self.get_properties_page())
         pages.extend(self.get_memo_pages())
-        #pages.extend(self.get_undecryptability_pages())
 
         pages[-1] = Confirm(pages[-1], cancel="Cancel")
 
@@ -52,7 +51,7 @@ class UiConfirmOrchardOutput(helpers.UiConfirm):
         text = Text("Confirm sending", ui.ICON_SEND, ui.GREEN, new_lines=False)
         text.bold(_format_amount(self.txo.amount))
         text.normal(" to\n")
-        # TODO: refuse long addresses
+        # TODO: refuse long addresses ?
         if orchard_output_is_change(self.txo):
             text.mono("acount")
             account = self.txo.address_n[2] ^ (1<<31)
@@ -77,25 +76,22 @@ class UiConfirmOrchardOutput(helpers.UiConfirm):
         else:
             properties["decryptable"] = "no"
 
+        # TODO: `include reply-To` field ?
+
         text = Text("with properties", ui.ICON_SEND, ui.GREEN, new_lines=False)
         for key, value in properties.items():
             text.bold(key, ": ")
             text.normal(value, "\n")
         return text
 
-
     def get_memo_pages(self):
-        # TODO: recipient included tag 
         if self.txo.orchard.memo is None:
             return []
-            #text = Text("without memo", ui.ICON_SEND, ui.GREEN, new_lines=False)
-            #return [text]
 
         try:
             memo = self.txo.orchard.memo.decode()
         except UnicodeDecodeError:
             memo = hexlify(self.txo.orchard.memo).decode()
-
 
         lines = [(ui.MONO, line) for line in chunks(memo, MONO_HEX_PER_LINE - 2)]
 
@@ -112,6 +108,7 @@ class UiConfirmOrchardOutput(helpers.UiConfirm):
         elif isinstance(paginated, Paginated):
             return paginated.pages
 
+    """
     def get_undecryptability_pages(self):
         if self.txo.orchard.decryptable:
             return []
@@ -122,7 +119,6 @@ class UiConfirmOrchardOutput(helpers.UiConfirm):
         text.bold("Key\n")
         return [text]
 
-    """
     def get_ovk_pages(self):
         if not self.multiple_input_accounts:
             return []

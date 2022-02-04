@@ -2,8 +2,9 @@ from trezor.crypto.bech32 import bech32_encode, bech32_decode, convertbits, Enco
 from trezor.crypto import base58
 
 from trezor.utils import BufferReader, empty_bytearray
-from apps.common.readers import read_bitcoin_varint
-from apps.common.writers import write_bitcoin_varint, write_bytes_fixed
+from apps.common.readers import read_compact_size
+from apps.common.writers import write_compact_size, write_bytes_fixed
+from apps.common.coininfo import get_coin_by_name
 
 from trezor.crypto import zcash
 
@@ -22,8 +23,8 @@ SAPLING = 0x02
 ORCHARD = 0x03
 
 # coin_type according to SLIP-44
-MAINNET = 133
-TESTNET = 1
+MAINNET = get_coin_by_name("Zcash").slip44          # = 133
+TESTNET = get_coin_by_name("Zcash Testnet").slip44  # = 1
 # coin types for Zcash and Zcash-Testnet
 SLIP44_ZCASH_COIN_TYPES = (MAINNET, TESTNET)
 
@@ -37,8 +38,8 @@ receiver_length = {
 # transparent P2PKH prefixes
 # source: https://zips.z.cash/protocol/protocol.pdf § 5.6.1.1
 T_PREFIX = {
-    MAINNET: bytes([0x1c, 0xb8]), # t1
-    TESTNET: bytes([0x1d, 0x25])  # tm  
+    MAINNET: bytes([0x1c, 0xb8]),  # t1
+    TESTNET: bytes([0x1d, 0x25])   # tm  
 }
 
 # prefixes for Unified Adresses
@@ -69,8 +70,8 @@ def encode_unified(receivers: Dict[int,bytes], network_type: int = MAINNET) -> s
 	receivers.sort(reverse=True)
 
 	for (typecode, raw_bytes) in receivers:
-		write_bitcoin_varint(w, typecode)
-		write_bitcoin_varint(w, receiver_length[typecode])
+		write_compact_size(w, typecode)
+		write_compact_size(w, receiver_length[typecode])
 		write_bytes_fixed(w, raw_bytes, receiver_length[typecode])		
 
 	hrp = U_PREFIX[network_type]
@@ -96,11 +97,11 @@ def decode_unified(addr_str: str) -> Dict[int,bytes]:
 
 	receivers = {}
 	while r.remaining_count() > 0:
-		typecode = read_bitcoin_varint(r)
+		typecode = read_compact_size(r)
 		assert not typecode in receivers, "duplicated typecode"
 		assert typecode <= 0x02000000, "invalid typecode"
 
-		length = read_bitcoin_varint(r)
+		length = read_compact_size(r)
 		expected_length = receiver_length.get(typecode)
 		if expected_length is not None:
 			assert length == expected_length #, "incorrect receiver length"

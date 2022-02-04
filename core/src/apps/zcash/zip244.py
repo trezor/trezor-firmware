@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor.crypto.hashlib import blake2b
 from trezor.utils import HashWriter, empty_bytearray
 from apps.common import writers
@@ -6,70 +8,81 @@ from apps.bitcoin.writers import (
     write_bytes_reversed,
     write_tx_output,
     write_uint32,
-    #write_uint64,
+    write_uint64,
+    write_bytes_prefixed,
     write_uint8,
+    TX_HASH_SIZE,
 )
 from apps.bitcoin import scripts
+from apps.bitcoin.common import SigHashType
 
 from trezor import log
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import TxInput, TxOutput
 
-SIGHASH_ALL = 1
-SIGHASH_NONE = 2
-SIGHASH_SINGLE = 3
-SIGHASH_ANYONECANPAY = 0x80
-
-ZCASH_ORCHARD_SIGS_HASH_PERSONALIZATION = b"ZTxAuthOrchaHash";
-
 def write_hash(w: Writer, hash: bytes):
-    write_bytes_fixed(w, hash, 32)
+    write_bytes_fixed(w, hash, TX_HASH_SIZE)
 
 def write_prevout(w: Writer, txi: TxInput):
-    write_bytes_reversed(w, txi.prev_hash, 32)
+    write_bytes_reversed(w, txi.prev_hash, TX_HASH_SIZE)
     write_uint32(w, txi.prev_index)
 
 def write_sint64(w: Writer, n: int):
+    """Writes signed 64-bit integer"""
     assert -0x8000000000000000 <= n <= 0x7FFFFFFFFFFFFFFF
     if n >= 0:
-        write_uint32(w, n)
+        write_uint64(w, n)
     else:
-        write_uint32(w, 0x010000000000000000 + n)
+        write_uint64(w, 0x010000000000000000 + n)
 
-class Hasher:
-    def digest(self):
+
+class Zip244Wrapper:
+    def __init__(self, hasher):
+        self.hasher = hasher
+
+    def add_input(self, txi: TxInput, script_pubkey: bytes):
+        self.hasher.transparent.add_input(txi, script_pubkey)
+
+    def add_output(self, txo: TxOutput, script_pubkey: bytes):
+        self.hasher.transparent.add_output(txo, script_pubkey)
+
+    def hash143(
+        self,
+        txi: TxInput,
+        public_keys: Sequence[bytes | memoryview],
+        threshold: int,
+        tx: SignTx | PrevTx,
+        coin: coininfo.CoinInfo,
+        hash_type: int,
+    ) -> bytes:
+        txin_sig_digest = self.hasher.transparent.get_txin_sig_digest(
+            txi, public_keys, threshold, tx, coin, hash_type,
+        )
+        return self.hasher.signature_digest(txin_sig_digest)
+
+    def hash341(
+        self,
+        i: int,
+        tx: SignTx | PrevTx,
+        sighash_type: SigHashType,
+    ) -> bytes:
         raise NotImplementedError
-
-    def sig_digest(self):
-        raise NotImplementedError
-
-class ConstHasher(Hasher):
-    def __init__(self, dig):
-        self._dig = dig
-
-    def digest(self):
-        return self._dig
 
 class Zip244TxHasher:
-    def __init__(self, tx=None, header=None, transparent=None, orchard=None, sapling=None):
-        # self.header = Zip244HeaderHasher(tx)
+    def __init__(self, tx):
+        self.header = Zip244HeaderHasher(tx)
         self.transparent = Zip244TransparentHasher()
         self.sapling = Zip244SaplingHasher()
         self.orchard = Zip244OrchardHasher()
-        #tx_hash_person = empty_bytearray(16)
-        #write_bytes_fixed(person, b'ZcashTxHash_', 12)
-        #write_uint32(tx.nConsensusBranchId)
-        #self.tx_hash_person = bytes(tx_hash_person)
 
-    def initialize(self, tx):
-        self.header = Zip244HeaderHasher(tx)
         tx_hash_person = empty_bytearray(16)
         write_bytes_fixed(tx_hash_person, b'ZcashTxHash_', 12)
         write_uint32(tx_hash_person, tx.branch_id)
         self.tx_hash_person = bytes(tx_hash_person)
 
     def txid_digest(self):
+        """Returns transaction identifier.""" 
         h = HashWriter(blake2b(outlen=32, personal=self.tx_hash_person))
 
         write_hash(h, self.header.digest())       # T.1: header_digest       (32-byte hash output)
@@ -79,39 +92,20 @@ class Zip244TxHasher:
 
         return h.get_digest()
 
-    def signature_digest(self, *args, **kwargs):
+    def signature_digest(self, txin_sig_digest=None):
+        """Returns transaction signature digest."""
+
         h = HashWriter(blake2b(outlen=32, personal=self.tx_hash_person))
 
         write_hash(h, self.header.digest())                          # S.1: header_digest          (32-byte hash output)
-        write_hash(h, self.transparent.sig_digest(*args, **kwargs))  # S.2: transparent_sig_digest (32-byte hash output)
+        write_hash(h, self.transparent.sig_digest(txin_sig_digest))  # S.2: transparent_sig_digest (32-byte hash output)
         write_hash(h, self.sapling.digest())                         # S.3: sapling_digest         (32-byte hash output)
         write_hash(h, self.orchard.digest())                         # S.4: orchard_digest         (32-byte hash output)
 
         return h.get_digest()
 
-    # Hash143 wrappers
 
-    def add_input(self, *args, **kwargs):
-        self.transparent.add_input(*args, **kwargs)
-
-    def add_output(self, *args, **kwargs):
-        self.transparent.add_output(*args, **kwargs)
-    """
-    def preimage_hash(
-        self,
-        txi: TxInput,
-        public_keys: Sequence[bytes | memoryview],
-        threshold: int,
-        tx: SignTx | PrevTx,
-        coin: coininfo.CoinInfo,
-        sighash_type: int,
-    ) -> bytes:
-    """
-    def preimage_hash(self, *args, **kwargs):
-        # self.initialise(args[4]) # args[4] == tx
-        return self.signature_digest(*args, **kwargs)
-
-class Zip244HeaderHasher(Hasher):
+class Zip244HeaderHasher:
     def __init__(self, tx):
         h = HashWriter(blake2b(outlen=32, personal=b'ZTxIdHeadersHash'))
 
@@ -127,7 +121,7 @@ class Zip244HeaderHasher(Hasher):
         return self._digest
 
 
-class Zip244TransparentHasher(Hasher):
+class Zip244TransparentHasher:
     def __init__(self):
         self.prevouts =      HashWriter(blake2b(outlen=32, personal=b'ZTxIdPrevoutHash'))
         self.amounts  =      HashWriter(blake2b(outlen=32, personal=b'ZTxTrAmountsHash'))
@@ -136,19 +130,19 @@ class Zip244TransparentHasher(Hasher):
         self.outputs  =      HashWriter(blake2b(outlen=32, personal=b'ZTxIdOutputsHash'))
         self.empty = True  # inputs_amount + outputs_amount == 0
 
-    def add_input(self, txi: TxInput) -> None:
+    def add_input(self, txi: TxInput, script_pubkey: bytes) -> None:
         self.empty = False
-        write_bytes_reversed(self.prevouts, txi.prev_hash, 32)  # TODO: check this
-        write_uint32(self.prevouts, txi.prev_index) 
-        write_uint32(self.amounts, txi.amount)
-        #write_uint32(self.scriptpubkeys, neco) # TODO
-        write_uint32(self.sequence, txi.sequence)
+        write_prevout(self.prevouts, txi)                        # S.2b: prevouts_sig_digest      (32-byte hash)
+        write_uint32(self.amounts, txi.amount)                   # S.2c: amounts_sig_digest       (32-byte hash)
+        write_bytes_prefixed(self.scriptpubkeys, script_pubkey)  # S.2d: scriptpubkeys_sig_digest (32-byte hash)
+        write_uint32(self.sequence, txi.sequence)                # S.2e: sequence_sig_digest      (32-byte hash)
 
     def add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         self.empty = False
-        write_tx_output(self.outputs, txo, script_pubkey)
+        write_tx_output(self.outputs, txo, script_pubkey)        # S.2f: outputs_sig_digest       (32-byte hash)
 
     def digest(self):
+        """Returns `T.2: transparent_digest` field for txid computation."""
         h = HashWriter(blake2b(outlen=32, personal=b'ZTxIdTranspaHash'))
 
         if not self.empty:
@@ -158,21 +152,25 @@ class Zip244TransparentHasher(Hasher):
 
         return h.get_digest()
 
-    def sig_digest(self, *args, **kwargs):
-        if args == () and kwargs == {}: # Sapling Spend or Orchard Action
+    def sig_digest(self, txin_sig_digest):
+        """Returns `S.2: transparent_sig_digest` field for signature digest computation."""
+        if self.empty:
+            assert txin_sig_digest is None
+            return self.digest()
+
+        if txin_sig_digest is None:
             txin_sig_digest = blake2b(outlen=32, personal=b'Zcash___TxInHash').digest()
-        else: # transparent input
-            txin_sig_digest = self.get_txin_sig_digest(*args, **kwargs)
 
         h = HashWriter(blake2b(outlen=32, personal=b'ZTxIdTranspaHash'))
 
-        write_uint8(h, 0x01)                                 # S.2a: hash_type                (1 byte)
-        write_hash(h, self.prevouts.get_digest())            # S.2b: prevouts_sig_digest      (32-byte hash)
-        write_hash(h, self.amounts.get_digest())             # S.2c: amounts_sig_digest       (32-byte hash)
-        write_hash(h, self.scriptpubkeys.get_digest())       # S.2d: scriptpubkeys_sig_digest (32-byte hash)
-        write_hash(h, self.sequence.get_digest())            # S.2e: sequence_sig_digest      (32-byte hash)
-        write_hash(h, self.outputs.get_digest())             # S.2f: outputs_sig_digest       (32-byte hash)
-        write_hash(h, txin_sig_digest)                       # S.2g: txin_sig_digest          (32-byte hash)
+        # only SIGHASH_ALL is supported in Trezor
+        write_uint8(h, SigHashType.SIGHASH_ALL)         # S.2a: hash_type                (1 byte)
+        write_hash(h, self.prevouts.get_digest())       # S.2b: prevouts_sig_digest      (32-byte hash)
+        write_hash(h, self.amounts.get_digest())        # S.2c: amounts_sig_digest       (32-byte hash)
+        write_hash(h, self.scriptpubkeys.get_digest())  # S.2d: scriptpubkeys_sig_digest (32-byte hash)
+        write_hash(h, self.sequence.get_digest())       # S.2e: sequence_sig_digest      (32-byte hash)
+        write_hash(h, self.outputs.get_digest())        # S.2f: outputs_sig_digest       (32-byte hash)
+        write_hash(h, txin_sig_digest)                  # S.2g: txin_sig_digest          (32-byte hash)
 
         return h.get_digest()
 
@@ -185,41 +183,45 @@ class Zip244TransparentHasher(Hasher):
         coin: coininfo.CoinInfo,
         sighash_type: int,
     ):
+        """Returns `S.2g: txin_sig_digest` field for signature digest computation."""
+        assert sighash_type == SigHashType.SIGHASH_ALL
         h = HashWriter(blake2b(outlen=32, personal=b'Zcash___TxInHash'))
 
-        write_prevout(h, txi)                       # S.2d.i:   prevout     (field encoding)
-        scripts.write_bip143_script_code_prefixed(  # S.2d.ii:  script_code (field encoding)
+        write_prevout(h, txi)                       # S.2g.i:   prevout      (field encoding)
+        write_sint64(h, txi.amount)                 # S.2g.ii:  value        (8-byte signed little-endian)
+        scripts.write_bip143_script_code_prefixed(  # S.2g.iii: scriptPubKey (field encoding)
             h, txi, public_keys, threshold, coin
         )
-        write_sint64(h, txi.amount)                 # S.2d.iii: value       (8-byte signed little-endian)
-        write_uint32(h, txi.sequence)               # S.2d.iv:  nSequence   (4-byte unsigned little-endian)
+        write_uint32(h, txi.sequence)               # S.2g.iv:  nSequence    (4-byte unsigned little-endian)
 
         return h.get_digest()
 
 
-class Zip244SaplingHasher(Hasher):
-    # empty Sapling bundle
-
-    def __init__(self):
-        self.h = HashWriter(blake2b(outlen=32, personal=b"ZTxIdSaplingHash"))
-
+class Zip244SaplingHasher:
+    """Empty Sapling bundle hasher."""
     def digest(self):
-        return self.h.get_digest()
+        """Returns `T.3: sapling_digest` field."""
+        return blake2b(outlen=32, personal=b"ZTxIdSaplingHash").digest()
 
 
-class Zip244OrchardHasher(Hasher):
+EMPTY = object()
+ADDING_ACTIONS = object()
+FINISHED = object()
+
+class Zip244OrchardHasher:
+    """Orchard bundle hasher."""
+    
     def __init__(self):
         self.h  = HashWriter(blake2b(outlen=32, personal=b"ZTxIdOrchardHash"))
         self.ch = HashWriter(blake2b(outlen=32, personal=b"ZTxIdOrcActCHash"))
         self.mh = HashWriter(blake2b(outlen=32, personal=b"ZTxIdOrcActMHash"))
         self.nh = HashWriter(blake2b(outlen=32, personal=b"ZTxIdOrcActNHash"))
-        self.finalized = False
-        self.empty = True # actions_amount == 0
+        self.state = EMPTY
 
     def add_action(self, action):
-        assert not self.finalized
-        self.empty = False
-  
+        assert self.state in (EMPTY, ADDING_ACTIONS)
+        self.state = ADDING_ACTIONS
+
         write_bytes_fixed(self.ch, action["nf"], 32)                       # T.4a.i  : nullifier            (field encoding bytes)
         write_bytes_fixed(self.ch, action["cmx"], 32)                      # T.4a.ii : cmx                  (field encoding bytes)
         write_bytes_fixed(self.ch, action["epk"], 32)                      # T.4a.iii: ephemeralKey         (field encoding bytes)
@@ -233,17 +235,18 @@ class Zip244OrchardHasher(Hasher):
         write_bytes_fixed(self.nh, action["out_ciphertext"], 80)           # T.4c.iv : outCiphertext         (field encoding bytes)
 
     def finalize(self, flags, value_balance, anchor):
-        assert not self.finalized
-        if not self.empty:
-            write_bytes_fixed(self.h, self.ch.get_digest(), 32)  # T.4a: orchard_actions_compact_digest      (32-byte hash output)
-            write_bytes_fixed(self.h, self.mh.get_digest(), 32)  # T.4b: orchard_actions_memos_digest        (32-byte hash output)
-            write_bytes_fixed(self.h, self.nh.get_digest(), 32)  # T.4c: orchard_actions_noncompact_digest   (32-byte hash output)
-            write_bytes_fixed(self.h, flags, 1)                  # T.4d: flagsOrchard                        (1 byte)
-            write_sint64(     self.h, value_balance)             # T.4e: valueBalanceOrchard                 (64-bit signed little-endian)
-            write_bytes_fixed(self.h, anchor, 32)                # T.4f: anchorOrchard                       (32 bytes)
+        assert self.state == ADDING_ACTIONS
 
-        self.finalized = True
+        write_bytes_fixed(self.h, self.ch.get_digest(), 32)  # T.4a: orchard_actions_compact_digest      (32-byte hash output)
+        write_bytes_fixed(self.h, self.mh.get_digest(), 32)  # T.4b: orchard_actions_memos_digest        (32-byte hash output)
+        write_bytes_fixed(self.h, self.nh.get_digest(), 32)  # T.4c: orchard_actions_noncompact_digest   (32-byte hash output)
+        write_bytes_fixed(self.h, flags, 1)                  # T.4d: flagsOrchard                        (1 byte)
+        write_sint64(     self.h, value_balance)             # T.4e: valueBalanceOrchard                 (64-bit signed little-endian)
+        write_bytes_fixed(self.h, anchor, 32)                # T.4f: anchorOrchard                       (32 bytes)
+
+        self.state = FINISHED
 
     def digest(self):
-        assert self.finalized
+        """Returns `T.4: orchard_digest` field."""
+        assert self.state in (EMPTY, FINISHED)
         return self.h.get_digest()

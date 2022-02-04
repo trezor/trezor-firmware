@@ -1,23 +1,19 @@
 from trezor.messages import ZcashGetAddress, ZcashAddress
 from trezor.ui.layouts import show_address
 
-from apps.common.keychain import get_keychain
-from apps.common.paths import address_n_to_str,\
-                              PATTERN_BIP44, PathSchema, HARDENED
+from apps import bitcoin
+from apps.common.paths import address_n_to_str, HARDENED
+from apps.common.coininfo import CoinInfo
 
 from trezor.crypto import zcash
 from trezor.crypto.scripts import sha256_ripemd160
 from trezor import log, wire
 
-from . import zip32
-from .address import encode_unified, encode_transparent, P2PKH,\
-                     ORCHARD, MAINNET, TESTNET, SLIP44_ZCASH_COIN_TYPES
+from . import orchard
+from .address import encode_unified, encode_transparent, P2PKH
 
 if False:
     from trezor.wire import Context
-
-SLIP44_COIN_TYPES = (MAINNET, TESTNET)
-BIP44_SCHEMA = PathSchema.parse(PATTERN_BIP44, SLIP44_ZCASH_COIN_TYPES)
 
 async def get_address(ctx: Context, msg: ZcashGetAddress) -> ZcashAddress:
     has_t_addr = len(msg.t_address_n) != 0
@@ -25,26 +21,26 @@ async def get_address(ctx: Context, msg: ZcashGetAddress) -> ZcashAddress:
 
     if not (has_t_addr or has_z_addr):
         raise wire.DataError("t-address or z-address expected")
-    
+
     if has_z_addr:
         receivers = dict()
-        receivers[ORCHARD] = await get_orchard_raw_address(ctx, msg)
+        receivers[ORCHARD] = await get_raw_orchard_address(ctx, msg)
 
         if has_t_addr: 
             if msg.z_address_n[1] != msg.t_address_n[1]:
                 raise wire.DataError("SLIP-44 coin_type of addresses differs.")
-            receivers[P2PKH] = await get_transparent_raw_address(ctx, msg)
-            title = "Unified Address" # no title for unified address
+            receivers[P2PKH] = await get_raw_transparent_address(ctx, msg)
+            title = "Unified Address"  # no title for unified address
         else:
             title = address_n_to_str(msg.z_address_n)
 
-        coin_type = msg.z_address_n[1]^HARDENED
+        coin_type = msg.z_address_n[1] ^ HARDENED
         address = encode_unified(receivers, coin_type)
 
-    else: # has only t-address
+    else:  # has only t-address
         title = address_n_to_str(msg.t_address_n)
-        raw_address = await get_transparent_raw_address(ctx, msg)
-        coin_type = msg.t_address_n[1]^HARDENED
+        raw_address = await get_raw_transparent_address(ctx, msg)
+        coin_type = msg.t_address_n[1] ^ HARDENED
         address = encode_transparent(raw_address, coin_type)
 
     if msg.show_display:
@@ -54,18 +50,25 @@ async def get_address(ctx: Context, msg: ZcashGetAddress) -> ZcashAddress:
 
     return ZcashAddress(address=address)
 
-async def get_transparent_raw_address(ctx: Context, msg: GetZcashAddress):
+
+@bitcoin.keychain.with_keychain
+async def get_raw_transparent_address(
+    ctx: Context,
+    msg: GetZcashAddress,
+    keychain: bitcoin.keychain.Keychain,
+    coin: CoinInfo,
+    auth_msg: MessageType | None = None
+) -> bytes:
     """Returns Zcash raw P2PKH transparent address."""
-    # I ommit `slip21_namespaces = [[b"SLIP-0019"]]`.
-    keychain = await get_keychain(ctx, "secp256k1", (BIP44_SCHEMA,))    
-    keychain.verify_path(msg.t_address_n)
     node = keychain.derive(msg.t_address_n)
     return sha256_ripemd160(node.public_key()).digest()
 
-async def get_orchard_raw_address(ctx: Context, msg: GetZcashAddress):
-    """Returns raw Zcash Orchard address"""   
-    zip32.verify_path(msg.z_address_n)
-    master = await zip32.get_master(ctx)
-    sk = master.derive(msg.z_address_n).spending_key()
 
-    return zcash.get_orchard_address(sk, msg.diversifier_index)
+@orchard.keychain.with_keychain
+async def get_raw_orchard_address(
+    ctx: Context,
+    msg: GetZcashAddress,
+    keychain: orchard.keychain.OrchardKeychain
+) -> bytes:
+    """Returns raw Zcash Orchard address."""
+    return keychain.derive(msg.z_address_n).address(msg.diversifier_index)

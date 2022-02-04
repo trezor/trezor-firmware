@@ -178,15 +178,15 @@ def find_message_handler_module(msg_type: int) -> str:
             return "apps.binance.sign_tx"
 
         # zcash
-        elif msg_type == MessageType.DebugZcashDiagRequest: # TODO: and __debug__
+        elif __debug__ and msg_type == MessageType.DebugZcashDiagRequest:
             return "apps.zcash.diag"
         elif msg_type == MessageType.ZcashGetFullViewingKey:
-            return "apps.zcash.get_fvk"
+            return "apps.zcash.orchard.get_fvk"
         elif msg_type == MessageType.ZcashGetIncomingViewingKey:
-            return "apps.zcash.get_ivk"
+            return "apps.zcash.orchard.get_ivk"
         elif msg_type == MessageType.ZcashGetAddress:
             return "apps.zcash.get_address"
-            
+
     raise ValueError
 
 

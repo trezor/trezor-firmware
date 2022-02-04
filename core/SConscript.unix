@@ -672,7 +672,7 @@ def cargo_build():
     elif NEW_UI:
         features.append("ui")
 
-    return f'cd embed/rust; cargo +nightly build --profile {RUST_PROFILE} --target-dir=../../build/unix/rust --no-default-features --features "{" ".join(features)}"'
+    return f'cd embed/rust; cargo +nightly build -Z unstable-options --profile {RUST_PROFILE} --target-dir=../../build/unix/rust --no-default-features --features "{" ".join(features)}"'
 
 rust = env.Command(
     target=RUST_LIBPATH,

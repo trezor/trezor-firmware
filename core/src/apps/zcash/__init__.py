@@ -1,42 +1,23 @@
-from micropython import const
+from typing import TYPE_CHECKING
 
-from trezor import wire, protobuf, strings, ui, messages
+from trezor import wire, protobuf, ui, messages
 from trezor.crypto import random
 from trezor.crypto import zcash as zcashlib
 from trezor.crypto.hashlib import blake2b
 from trezor.messages import PrevTx, SignTx, TxInput, TxOutput, TxAckInput, TxAckOutput
-from trezor.messages import TxRequest, TxRequestDetailsType, TxRequestSerializedType
+from trezor.messages import TxRequest
 
 from trezor.utils import HashWriter, ensure, BufferReader
 
 from trezor.enums import RequestType
-from trezor.enums import ButtonRequestType
-from trezor.ui.layouts import (
-    confirm_action,
-    confirm_blob,
-    confirm_metadata,
-    confirm_output,
-    confirm_properties,
-    confirm_text,
-)
 from trezor.wire import ProcessError
 
 
 from apps.common.coininfo import CoinInfo
-from apps.common.keychain import Keychain
-from apps.common.writers import write_bitcoin_varint
+from apps.common.writers import write_compact_size
 from apps.common import readers
 
-from apps.bitcoin.scripts import write_bip143_script_code_prefixed
-from apps.bitcoin.writers import (
-    TX_HASH_SIZE,
-    get_tx_hash,
-    write_bytes_fixed,
-    write_bytes_reversed,
-    write_tx_output,
-    write_uint32,
-    write_uint64,
-)
+from apps.bitcoin.writers import write_uint32
 
 from apps.bitcoin.sign_tx.matchcheck import MatchChecker
 from apps.bitcoin.sign_tx.bitcoinlike import Bitcoinlike
@@ -48,14 +29,14 @@ from . import zip32
 from .layout import UiConfirmOrchardOutput
 from trezor import log
 
-if False:
+if TYPE_CHECKING:
     from typing import Sequence
     from apps.common import coininfo
-    from .hash143 import Hash143
-    from .tx_info import OriginalTxInfo, TxInfo
-    from ..writers import Writer
+    from apps.bitcoin.sign_tx.tx_info import OriginalTxInfo, TxInfo
+    from apps.bitcoin.writers import Writer
+    from apps.bitcoin.sign_tx.sig_hasher import SigHasher
 
-from .zip244 import Zip244TxHasher
+from .zip244 import Zip244TxHasher, Zip244Wrapper
 
 OVERWINTERED = 1 << 31
 
@@ -72,8 +53,7 @@ class ZcashV5(Bitcoinlike):
             raise wire.DataError("Unsupported transaction version.")
 
         self.zip244_hasher = zip244.Zip244TxHasher(tx)
-        self.zip244_hasher.initialize(tx)
-        self.hash143_created = False
+        self.sig_hasher_created = False
 
         super().__init__(tx, keychain[0], coin, approver)
 
@@ -84,11 +64,16 @@ class ZcashV5(Bitcoinlike):
 
         self.alphas = []  # TODO: request alphas from the client
 
-    def create_hash143(self) -> Hash143:
-        # we don't create a new instance
+    def create_sig_hasher(self) -> SigHasher:
+        # we don't create a new instance of Zip244TxHasher
         # so this can be returned only once
-        assert not self.hash143_created
-        return self.zip244_hasher
+        assert not self.sig_hasher_created
+        self.sig_hasher_created = True
+        return Zip244Wrapper(self.zip244_hasher)
+
+    def create_hash_writer(self) -> HashWriter:
+        # TODO: add limited support for transparent replacement transactions
+        raise NotImplementedError
 
     async def step1_process_inputs(self):
         await super().step1_process_inputs()
@@ -156,6 +141,9 @@ class ZcashV5(Bitcoinlike):
         self.orchard_outputs_hash = hasher.get_digest()
 
     async def shield_orchard_actions(self):
+        if not self.has_orchard():
+            return
+
         seed = random.bytes(32)
         self.tx_req.serialized.orchard.randomness_seed = seed
 
@@ -174,8 +162,7 @@ class ZcashV5(Bitcoinlike):
                 txi = await self.get_orchard_input(i)
                 hasher_in.write(protobuf.dump_message_buffer(txi))
 
-                sk = self.orchard_keychain.derive(txi.address_n).spending_key()
-                fvk = zcashlib.get_orchard_fvk(sk)
+                fvk = self.orchard_keychain.derive(txi.address_n).full_viewing_key()
                 action_info["spend_info"] = {
                     "fvk": fvk,
                     "note": txi.orchard.note,
@@ -186,8 +173,7 @@ class ZcashV5(Bitcoinlike):
                 hasher_out.write(protobuf.dump_message_buffer(txo))
 
                 if orchard_output_is_change(txo):
-                    sk = self.orchard_keychain.derive(txo.address_n).spending_key()
-                    address = zcashlib.get_orchard_address(sk, 0)
+                    address = self.orchard_keychain.derive(txo.address_n).address()
                 else:
                     receivers = zcash.address.decode_unified(txo.address)
                     address = receivers.get(zcash.address.ORCHARD)
@@ -201,26 +187,24 @@ class ZcashV5(Bitcoinlike):
                 }
 
                 if txo.orchard.decryptable:
-                    sk = self.orchard_keychain.derive(txo.address_n).spending_key()
-                    fvk = zcashlib.get_orchard_fvk(sk)
+                    fvk = self.orchard_keychain.derive(txo.address_n).full_viewing_key()
                     action_info["output_info"]["fvk"] = fvk
 
-            log.warning(__name__, "processing action info: %s", pretty_str(action_info))
             action = zcashlib.shield(action_info, rand_config)  # on this line the magic happens
-            log.warning(__name__, "action: %s", pretty_str(action))
             self.zip244_hasher.orchard.add_action(action)
-            log.warning(__name__, "rand_config: pos %s", str(rand_config["pos"]))
 
             self.alphas.append(action["alpha"])
 
-        if (hasher_in.get_digest() != self.orchard_inputs_hash or
-            hasher_out.get_digest() != self.orchard_outputs_hash):
+        if (
+            hasher_in.get_digest() != self.orchard_inputs_hash or
+            hasher_out.get_digest() != self.orchard_outputs_hash
+        ):
             raise ProcessError("Transaction data changed during the process.")
 
         # Orchard flags as defined in protocol §7.1 tx v5 format
-        flags = 0x00 \
-              | 0x01 if self.tx_info.tx.orchard.enable_spends else 0x00 \
-              | 0x02 if self.tx_info.tx.orchard.enable_outputs else 0x00
+        spends_flag = 0x01 if self.tx_info.tx.orchard.enable_spends else 0x00
+        outputs_flag = 0x02 if self.tx_info.tx.orchard.enable_outputs else 0x00
+        flags = spends_flag | outputs_flag
 
         self.zip244_hasher.orchard.finalize(
             flags=bytes([flags]),  # one byte
@@ -228,11 +212,9 @@ class ZcashV5(Bitcoinlike):
             anchor=self.tx_info.tx.orchard.anchor,
         )
 
-        log.warning(__name__, "step5 - tx finalized")
-
     async def serialize_empty_sapling_bundle(self):
-        write_bitcoin_varint(self.serialized_tx, 0)  # nSpendsSapling
-        write_bitcoin_varint(self.serialized_tx, 0)  # nOutputsSapling
+        write_compact_size(self.serialized_tx, 0)  # nSpendsSapling
+        write_compact_size(self.serialized_tx, 0)  # nOutputsSapling
 
     async def sign_orchard_inputs(self):
         for i in range(self.tx_info.tx.orchard.inputs_count):
@@ -250,7 +232,6 @@ class ZcashV5(Bitcoinlike):
         assert self.tx_req.serialized.orchard.signature_index is None
         self.tx_req.serialized.orchard.signature_index = i
         self.tx_req.serialized.orchard.signature = signature
-        log.warning(__name__, "sig set")
 
     async def sign_nonsegwit_input(self, i_sign: int) -> None:
         await self.sign_nonsegwit_bip143_input(i_sign)
@@ -350,10 +331,14 @@ class ZcashV5(Bitcoinlike):
     def is_transparent_only(self):
         return self.orchard_actions_count() == 0
 
+    def has_orchard(self):
+        return self.orchard_actions_count() != 0
+
 
 def _clear_tx_request(req):
     helpers._clear_tx_request(req)  # clear transparent fields
     _clear_tx_request_orchard(req)  # clear Orchard fields
+
 
 def _clear_tx_request_orchard(req):
     req.serialized.orchard.signature_index = None
@@ -361,25 +346,12 @@ def _clear_tx_request_orchard(req):
     req.serialized.orchard.randomness_seed = None
 
 
-def pretty_str(obj, ident=""):
-    lines = []
-    if type(obj) == dict:
-        lines.append("{") 
-        for k,v in obj.items():
-            lines.append("   " + str(k)+ ": " + pretty_str(v, ident + 8*" ") + ",")
-        lines.append("}")
-        return "\n".join([ident + l for l in lines])
-    elif type(obj) == bytes:
-        return "bytes(%d)" % len(obj)
-    else:
-        return str(obj)
-
-
 def orchard_output_is_change(txo):
     return len(txo.address_n) != 0
 
 
 ZIP32_WALLET_DEPTH = 3
+
 
 class OrchardWalletPathChecker(MatchChecker):
     def attribute_from_tx(self, txio: TxInput | TxOutput) -> Any:
@@ -406,12 +378,7 @@ class ZcashApprover(approvers.BasicApprover):
     def add_orchard_external_output(self, txo: TxOutput) -> None:
         self.total_out += txo.amount
         self.orchard_balance -= txo.amount
-        # skipped, because confirmation dialog is made by signer
-        # await helpers.confirm_output(txo, self.coin, self.amount_unit)
+        # confirmation dialog is made by Signer
 
-    async def approve_tx(self, _a, _b):
-        pass
-
-
-
-
+    #async def approve_tx(self, _a, _b):
+    #    pass

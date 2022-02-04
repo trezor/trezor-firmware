@@ -7430,6 +7430,7 @@ class DebugZcashDiagResponse(protobuf.MessageType):
 class ZcashGetFullViewingKey(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 902
     FIELDS = {
+        1: protobuf.Field("coin_name", "string", repeated=False, required=False),
         2: protobuf.Field("z_address_n", "uint32", repeated=True, required=False),
     }
 
@@ -7437,8 +7438,10 @@ class ZcashGetFullViewingKey(protobuf.MessageType):
         self,
         *,
         z_address_n: Optional[Sequence["int"]] = None,
+        coin_name: Optional["str"] = 'Zcash',
     ) -> None:
         self.z_address_n: Sequence["int"] = z_address_n if z_address_n is not None else []
+        self.coin_name = coin_name
 
 
 class ZcashFullViewingKey(protobuf.MessageType):
@@ -7458,6 +7461,7 @@ class ZcashFullViewingKey(protobuf.MessageType):
 class ZcashGetIncomingViewingKey(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 904
     FIELDS = {
+        1: protobuf.Field("coin_name", "string", repeated=False, required=False),
         2: protobuf.Field("z_address_n", "uint32", repeated=True, required=False),
     }
 
@@ -7465,8 +7469,10 @@ class ZcashGetIncomingViewingKey(protobuf.MessageType):
         self,
         *,
         z_address_n: Optional[Sequence["int"]] = None,
+        coin_name: Optional["str"] = 'Zcash',
     ) -> None:
         self.z_address_n: Sequence["int"] = z_address_n if z_address_n is not None else []
+        self.coin_name = coin_name
 
 
 class ZcashIncomingViewingKey(protobuf.MessageType):
@@ -7490,6 +7496,7 @@ class ZcashGetAddress(protobuf.MessageType):
         2: protobuf.Field("z_address_n", "uint32", repeated=True, required=False),
         3: protobuf.Field("diversifier_index", "uint64", repeated=False, required=False),
         4: protobuf.Field("show_display", "bool", repeated=False, required=False),
+        5: protobuf.Field("coin_name", "string", repeated=False, required=False),
     }
 
     def __init__(
@@ -7499,11 +7506,13 @@ class ZcashGetAddress(protobuf.MessageType):
         z_address_n: Optional[Sequence["int"]] = None,
         diversifier_index: Optional["int"] = 0,
         show_display: Optional["bool"] = False,
+        coin_name: Optional["str"] = 'Zcash',
     ) -> None:
         self.t_address_n: Sequence["int"] = t_address_n if t_address_n is not None else []
         self.z_address_n: Sequence["int"] = z_address_n if z_address_n is not None else []
         self.diversifier_index = diversifier_index
         self.show_display = show_display
+        self.coin_name = coin_name
 
 
 class ZcashAddress(protobuf.MessageType):

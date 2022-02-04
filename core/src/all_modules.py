@@ -276,8 +276,6 @@ apps.bitcoin.sign_tx.matchcheck
 import apps.bitcoin.sign_tx.matchcheck
 apps.bitcoin.sign_tx.omni
 import apps.bitcoin.sign_tx.omni
-apps.bitcoin.sign_tx.orchard_pool
-import apps.bitcoin.sign_tx.orchard_pool
 apps.bitcoin.sign_tx.payment_request
 import apps.bitcoin.sign_tx.payment_request
 apps.bitcoin.sign_tx.progress
@@ -738,24 +736,22 @@ if not utils.BITCOIN_ONLY:
     import apps.zcash
     apps.zcash.address
     import apps.zcash.address
-    apps.zcash.async_utils
-    import apps.zcash.async_utils
     apps.zcash.diag
     import apps.zcash.diag
     apps.zcash.get_address
     import apps.zcash.get_address
-    apps.zcash.get_fvk
-    import apps.zcash.get_fvk
-    apps.zcash.get_ivk
-    import apps.zcash.get_ivk
     apps.zcash.layout
     import apps.zcash.layout
-    apps.zcash.pool
-    import apps.zcash.pool
+    apps.zcash.orchard
+    import apps.zcash.orchard
+    apps.zcash.orchard.get_fvk
+    import apps.zcash.orchard.get_fvk
+    apps.zcash.orchard.get_ivk
+    import apps.zcash.orchard.get_ivk
+    apps.zcash.orchard.keychain
+    import apps.zcash.orchard.keychain
     apps.zcash.zip244
     import apps.zcash.zip244
-    apps.zcash.zip32
-    import apps.zcash.zip32
 
 # generate full alphabet
 a

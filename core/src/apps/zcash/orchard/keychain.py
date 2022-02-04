@@ -5,20 +5,24 @@ from apps.common.seed import get_seed
 from apps.common.keychain import Keychain
 
 from trezor.crypto.hashlib import blake2b
-from .address import SLIP44_ZCASH_COIN_TYPES
+from ..address import SLIP44_ZCASH_COIN_TYPES
 from apps.common.paths import PathSchema
 from apps.common.keychain import FORBIDDEN_KEY_PATH
 from trezor import log
+from trezor.crypto import zcash
+from apps.bitcoin.keychain import get_coin_by_name
 
 # Tested against the zcash/orchard crate.
 # TODO: Add official unittests (waiting for ZIP-32 testvectors).
 
 PATTERN_ZIP32 = "m/32'/coin_type'/account'"
 
+
 def i2leosp_32(x):
     """Converts uint32 to 4 bytes in little endian."""
     assert 0 <= x <= 0xFFFF_FFFF
     return bytes([(x >> i) & 0xFF for i in [0, 8, 16, 24]])
+
 
 def prf_expand(sk, t):
     """Zcash PRF^{expand} function."""
@@ -26,6 +30,7 @@ def prf_expand(sk, t):
     digest.update(sk)
     digest.update(t)
     return digest.digest()
+
 
 class ExtendedSpendingKey:
     """Orchard Extended Spending Key.
@@ -57,56 +62,61 @@ class ExtendedSpendingKey:
         """Returns the Spending Key."""
         return self.sk
 
+    def full_viewing_key(self):
+        """Returns the Full Vieving Key."""
+        return zcash.get_orchard_fvk(self.sk)
+
+    def incoming_viewing_key(self):
+        """Returns the Incoming Vieving Key."""
+        return zcash.get_orchard_ivk(self.sk)
+
+    def address(self, diversifier=0):
+        return zcash.get_orchard_address(self.sk, diversifier)
+
     def clone(self):
         return ExtendedSpendingKey(self.sk, self.c)
 
-# deprecated
-async def get_master(ctx):
-    """Returns the Orchard master ExtendedSpendingKey."""
-    log.warning(__name__, "Using deprecated method.")
-    secret = await get_seed(ctx)
-    return get_master_2(secret)
+    @staticmethod
+    def get_master(seed):
+        """Returns the Orchard master ExtendedSpendingKey."""
+        I = blake2b(
+            personal=b'ZcashIP32Orchard',
+            data=seed
+        ).digest()
+        return ExtendedSpendingKey(sk=I[:32], c=I[32:])
 
-def get_master_2(seed):
-    """Returns the Orchard master ExtendedSpendingKey."""
-    I = blake2b(
-        personal=b'ZcashIP32Orchard',
-        data=seed
-    ).digest()
-    return ExtendedSpendingKey(sk=I[:32], c=I[32:])
 
-# deprecated
-def get_dummy_master():
-    log.warning(__name__, "Using deprecated method.")
-    return get_master_2(b"")
-
-# deprecated
-def verify_path(path):
-    log.warning(__name__, "Using deprecated method.")
-    schema = PathSchema.parse(PATTERN_ZIP32, SLIP44_ZCASH_COIN_TYPES)
-    if not schema.match(path):
-        raise FORBIDDEN_KEY_PATH
-
-class Zip32Keychain(Keychain):
+class OrchardKeychain(Keychain):
     def __init__(self, seed: bytes) -> None:
-        schema = PathSchema.parse(PATTERN_ZIP32, SLIP44_ZCASH_COIN_TYPES)
+        assert slip44 in SLIP44_ZCASH_COIN_TYPES
+        schema = PathSchema.parse(PATTERN_ZIP32, (slip44,))
         super().__init__(seed, "pallas", [schema])
 
     def root_fingerprint(self) -> int:
-        raise NotImplementedError  # TODO
+        raise NotImplementedError  # TODO ?
 
     def derive(self, path: paths.Bip32Path) -> bip32.HDNode:
         self.verify_path(path)
         return self._derive_with_cache(
             prefix_len=3,
             path=path,
-            new_root=lambda: get_master_2(self.seed),
+            new_root=lambda: ExtendedSpendingKey.get_master(self.seed),
         )
 
     def derive_slip21(self, path: paths.Slip21Path) -> Slip21Node:
-        raise NotImplementedError  # TODO
+        raise NotImplementedError  # TODO ?
 
 
-async def get_zip32_keychain(ctx):
+async def get_orchard_keychain(ctx, slip44):
     seed = await get_seed(ctx)
-    return Zip32Keychain(seed)
+    return OrchardKeychain(seed, slip44)
+
+
+def with_keychain(func):
+    async def wrapper(ctx, msg):
+        coin = get_coin_by_name(msg.coin_name)
+        keychain = get_orchard_keychain(ctx, coin.slip44)
+        return await func(ctx, msg, keychain)
+
+    return wrapper
+

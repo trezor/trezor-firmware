@@ -5689,12 +5689,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ZcashGetFullViewingKey(protobuf.MessageType):
+        coin_name: "str"
         z_address_n: "list[int]"
 
         def __init__(
             self,
             *,
             z_address_n: "list[int] | None" = None,
+            coin_name: "str | None" = None,
         ) -> None:
             pass
 
@@ -5717,12 +5719,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ZcashGetIncomingViewingKey(protobuf.MessageType):
+        coin_name: "str"
         z_address_n: "list[int]"
 
         def __init__(
             self,
             *,
             z_address_n: "list[int] | None" = None,
+            coin_name: "str | None" = None,
         ) -> None:
             pass
 
@@ -5749,6 +5753,7 @@ if TYPE_CHECKING:
         z_address_n: "list[int]"
         diversifier_index: "int"
         show_display: "bool"
+        coin_name: "str"
 
         def __init__(
             self,
@@ -5757,6 +5762,7 @@ if TYPE_CHECKING:
             z_address_n: "list[int] | None" = None,
             diversifier_index: "int | None" = None,
             show_display: "bool | None" = None,
+            coin_name: "str | None" = None,
         ) -> None:
             pass
 

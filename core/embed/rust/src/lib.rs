@@ -20,15 +20,15 @@ mod ui;
 mod util;
 mod zcash;
 
-#[cfg(not(test))]
+#[cfg(not(feature = "test"))]
 use core::panic::PanicInfo;
-#[cfg(not(test))]
+#[cfg(not(feature = "test"))]
 use cstr_core::CStr;
 
 #[macro_use]
 extern crate alloc;
 
-#[cfg(not(test))]
+#[cfg(not(feature = "test"))]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     // Although it would be ideal to use the original error message, ignoring it
