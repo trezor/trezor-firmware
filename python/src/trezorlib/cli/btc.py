@@ -333,6 +333,12 @@ def sign_tx(client: "TrezorClient", json_file: TextIO) -> None:
 @click.option("-c", "--coin", default=DEFAULT_COIN)
 @click.option("-n", "--address", required=True, help="BIP-32 path")
 @click.option("-t", "--script-type", type=ChoiceType(INPUT_SCRIPTS), default="address")
+@click.option(
+    "-e",
+    "--electrum-compat",
+    is_flag=True,
+    help="Generate Electrum-compatible signature",
+)
 @click.argument("message")
 @with_client
 def sign_message(
@@ -341,10 +347,13 @@ def sign_message(
     address: str,
     message: str,
     script_type: messages.InputScriptType,
+    electrum_compat: bool,
 ) -> Dict[str, str]:
     """Sign message using address of given path."""
     address_n = tools.parse_path(address)
-    res = btc.sign_message(client, coin, address_n, message, script_type)
+    res = btc.sign_message(
+        client, coin, address_n, message, script_type, electrum_compat
+    )
     return {
         "message": message,
         "address": res.address,
