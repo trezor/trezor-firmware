@@ -235,12 +235,33 @@ void fsm_msgGetECDHSessionKey(const GetECDHSessionKey *msg) {
   layoutHome();
 }
 
+static bool fsm_checkCosiPath(uint32_t address_n_count,
+                              const uint32_t *address_n) {
+  // The path should typically match "m / 10018' / [0-9]'", but we allow
+  // any path from the SLIP-18 domain "m / 10018' / *".
+  if (address_n_count >= 1 && address_n[0] == PATH_HARDENED + 10018) {
+    return true;
+  }
+
+  if (config_getSafetyCheckLevel() == SafetyCheckLevel_Strict) {
+    fsm_sendFailure(FailureType_Failure_DataError, _("Forbidden key path"));
+    return false;
+  }
+
+  return fsm_layoutPathWarning();
+}
+
 void fsm_msgCosiCommit(const CosiCommit *msg) {
   RESP_INIT(CosiCommitment);
 
   CHECK_INITIALIZED
 
   CHECK_PARAM(msg->has_data, _("No data provided"));
+
+  if (!fsm_checkCosiPath(msg->address_n_count, msg->address_n)) {
+    layoutHome();
+    return;
+  }
 
   layoutCosiCommitSign(msg->address_n, msg->address_n_count, msg->data.bytes,
                        msg->data.size, false);
@@ -284,6 +305,11 @@ void fsm_msgCosiSign(const CosiSign *msg) {
               _("Invalid global commitment"));
   CHECK_PARAM(msg->has_global_pubkey && msg->global_pubkey.size == 32,
               _("Invalid global pubkey"));
+
+  if (!fsm_checkCosiPath(msg->address_n_count, msg->address_n)) {
+    layoutHome();
+    return;
+  }
 
   layoutCosiCommitSign(msg->address_n, msg->address_n_count, msg->data.bytes,
                        msg->data.size, true);
