@@ -1178,6 +1178,7 @@ void layoutNEMLevy(const NEMMosaicDefinition *definition, uint8_t network) {
 
 static inline bool is_slip18(const uint32_t *address_n,
                              size_t address_n_count) {
+  // m / 10018' / [0-9]'
   return address_n_count == 2 && address_n[0] == (PATH_HARDENED + 10018) &&
          (address_n[1] & PATH_HARDENED) &&
          (address_n[1] & PATH_UNHARDEN_MASK) <= 9;
