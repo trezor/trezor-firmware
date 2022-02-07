@@ -150,16 +150,28 @@ impl<T> Dimensions for Paragraphs<T> {
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for Paragraphs<T>
-where
-    T: AsRef<[u8]>,
-{
-    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("Paragraphs");
-        for paragraph in &self.list {
-            paragraph.trace(t);
+pub mod trace {
+    use super::*;
+    use crate::ui::component::text::layout::trace::TraceSink;
+
+    impl<T> crate::trace::Trace for Paragraphs<T>
+    where
+        T: AsRef<[u8]>,
+    {
+        fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+            t.open("Paragraphs");
+            let mut char_offset = self.offset.chr;
+            for paragraph in self.list.iter().skip(self.offset.par).take(self.visible) {
+                paragraph.layout.layout_text(
+                    &paragraph.content.as_ref()[char_offset..],
+                    &mut paragraph.layout.initial_cursor(),
+                    &mut TraceSink(t),
+                );
+                t.string("\n");
+                char_offset = 0;
+            }
+            t.close();
         }
-        t.close();
     }
 }
 
@@ -290,39 +302,5 @@ where
             };
             self.visible = 0;
         }
-    }
-}
-
-#[cfg(feature = "ui_debug")]
-pub mod trace {
-    use crate::ui::component::text::layout::trace::TraceSink;
-
-    use super::*;
-
-    pub struct TraceText<'a, T>(pub &'a Paragraph<T>);
-
-    impl<'a, T> crate::trace::Trace for TraceText<'a, T>
-    where
-        T: AsRef<[u8]>,
-    {
-        fn trace(&self, d: &mut dyn crate::trace::Tracer) {
-            self.0.layout.layout_text(
-                self.0.content.as_ref(),
-                &mut self.0.layout.initial_cursor(),
-                &mut TraceSink(d),
-            );
-        }
-    }
-}
-
-#[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for Paragraph<T>
-where
-    T: AsRef<[u8]>,
-{
-    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("Paragraph");
-        t.field("content", &trace::TraceText(self));
-        t.close();
     }
 }
