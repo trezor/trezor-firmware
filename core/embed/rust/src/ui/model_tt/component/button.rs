@@ -48,6 +48,13 @@ impl<T> Button<T> {
         self
     }
 
+    pub fn initially_enabled(mut self, enabled: bool) -> Self {
+        if !enabled {
+            self.state = State::Disabled;
+        }
+        self
+    }
+
     pub fn enable(&mut self, ctx: &mut EventCtx) {
         self.set(ctx, State::Initial)
     }

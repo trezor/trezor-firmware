@@ -47,6 +47,22 @@ impl Offset {
     pub fn abs(self) -> Self {
         Self::new(self.x.abs(), self.y.abs())
     }
+
+    /// With `self` representing a rectangle size, returns top-left corner of
+    /// the rectangle such that it is aligned relative to the `point`.
+    pub fn snap(self, point: Point, x: Alignment, y: Alignment) -> Point {
+        let x_off = match x {
+            Alignment::Start => 0,
+            Alignment::Center => self.x / 2,
+            Alignment::End => self.x,
+        };
+        let y_off = match y {
+            Alignment::Start => 0,
+            Alignment::Center => self.y / 2,
+            Alignment::End => self.y,
+        };
+        point - Self::new(x_off, y_off)
+    }
 }
 
 impl Add<Offset> for Offset {

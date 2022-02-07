@@ -31,8 +31,9 @@ pub const RED: Color = Color::rgb(205, 73, 73); // dark-coral
 pub const YELLOW: Color = Color::rgb(193, 144, 9); // ochre
 pub const GREEN: Color = Color::rgb(57, 168, 20); // grass-green
 pub const BLUE: Color = Color::rgb(0, 86, 190); // blue
+pub const OFF_WHITE: Color = Color::rgb(222, 222, 222); // very light grey
 pub const GREY_LIGHT: Color = Color::rgb(168, 168, 168); // greyish
-pub const GREY_DARK: Color = Color::rgb(51, 51, 51); // black
+pub const GREY_DARK: Color = Color::rgb(51, 51, 51); // greyer
 
 // Commonly used corner radius (i.e. for buttons).
 pub const RADIUS: u8 = 2;
@@ -44,10 +45,23 @@ pub const ICON_SIZE: i32 = 16;
 pub const ICON_CANCEL: &[u8] = include_res!("model_tt/res/cancel.toif");
 pub const ICON_CONFIRM: &[u8] = include_res!("model_tt/res/confirm.toif");
 pub const ICON_SPACE: &[u8] = include_res!("model_tt/res/space.toif");
+pub const ICON_NEXT: &[u8] = include_res!("model_tt/res/next.toif");
+
+// Scrollbar/PIN dots.
+pub const DOT_ACTIVE: &[u8] = include_res!("model_tt/res/scroll-active.toif");
+pub const DOT_INACTIVE: &[u8] = include_res!("model_tt/res/scroll-inactive.toif");
 
 pub fn label_default() -> LabelStyle {
     LabelStyle {
         font: FONT_NORMAL,
+        text_color: FG,
+        background_color: BG,
+    }
+}
+
+pub fn label_medium() -> LabelStyle {
+    LabelStyle {
+        font: FONT_MEDIUM,
         text_color: FG,
         background_color: BG,
     }
@@ -118,7 +132,67 @@ pub fn button_confirm() -> ButtonStyleSheet {
 }
 
 pub fn button_cancel() -> ButtonStyleSheet {
-    button_default()
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: FONT_BOLD,
+            text_color: FG,
+            button_color: RED,
+            background_color: BG,
+            border_color: BG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+        active: &ButtonStyle {
+            font: FONT_BOLD,
+            text_color: BG,
+            button_color: FG,
+            background_color: BG,
+            border_color: FG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+        disabled: &ButtonStyle {
+            font: FONT_BOLD,
+            text_color: GREY_LIGHT,
+            button_color: RED,
+            background_color: BG,
+            border_color: BG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+    }
+}
+
+pub fn button_pin() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: FONT_MONO,
+            text_color: FG,
+            button_color: GREY_DARK,
+            background_color: BG,
+            border_color: BG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+        active: &ButtonStyle {
+            font: FONT_MONO,
+            text_color: BG,
+            button_color: FG,
+            background_color: BG,
+            border_color: FG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+        disabled: &ButtonStyle {
+            font: FONT_MONO,
+            text_color: GREY_LIGHT,
+            button_color: GREY_DARK,
+            background_color: BG,
+            border_color: BG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+    }
 }
 
 pub fn button_clear() -> ButtonStyleSheet {

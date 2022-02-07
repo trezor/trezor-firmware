@@ -188,8 +188,6 @@ impl ScrollBar {
     /// Edge of last dot to center of arrow icon.
     const ARROW_SPACE: i32 = 26;
 
-    const ICON_ACTIVE: &'static [u8] = include_res!("model_tt/res/scroll-active.toif");
-    const ICON_INACTIVE: &'static [u8] = include_res!("model_tt/res/scroll-inactive.toif");
     const ICON_UP: &'static [u8] = include_res!("model_tt/res/scroll-up.toif");
     const ICON_DOWN: &'static [u8] = include_res!("model_tt/res/scroll-down.toif");
 
@@ -242,9 +240,9 @@ impl Component for ScrollBar {
         let mut top = None;
         let mut display_icon = |top_left| {
             let icon = if i == self.active_page {
-                Self::ICON_ACTIVE
+                theme::DOT_ACTIVE
             } else {
-                Self::ICON_INACTIVE
+                theme::DOT_INACTIVE
             };
             display::icon_top_left(top_left, icon, theme::FG, theme::BG);
             i += 1;

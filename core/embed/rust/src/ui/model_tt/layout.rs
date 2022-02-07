@@ -11,7 +11,10 @@ use crate::{
 };
 
 use super::{
-    component::{Button, ButtonMsg, DialogMsg, Frame, HoldToConfirm, HoldToConfirmMsg, SwipePage},
+    component::{
+        Button, ButtonMsg, DialogMsg, Frame, HoldToConfirm, HoldToConfirmMsg, PinDialog,
+        PinDialogMsg, SwipePage,
+    },
     constant, theme,
 };
 
@@ -44,6 +47,17 @@ where
             HoldToConfirmMsg::Content(c) => Ok(c.try_into()?),
             HoldToConfirmMsg::Confirmed => 1.try_into(),
             HoldToConfirmMsg::Cancelled => 2.try_into(),
+        }
+    }
+}
+
+impl TryFrom<PinDialogMsg> for Obj {
+    type Error = Error;
+
+    fn try_from(val: PinDialogMsg) -> Result<Self, Self::Error> {
+        match val {
+            PinDialogMsg::Confirmed => 1.try_into(),
+            PinDialogMsg::Cancelled => 2.try_into(),
         }
     }
 }
@@ -111,6 +125,34 @@ extern "C" fn ui_layout_new_confirm_action(
                     },
                 )
             })
+            .into_child(),
+        )?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+#[no_mangle]
+extern "C" fn ui_layout_new_pin(n_args: usize, args: *const Obj, kwargs: *const Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let prompt: Buffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+        let subprompt: Buffer = kwargs.get(Qstr::MP_QSTR_subprompt)?.try_into()?;
+        let allow_cancel: Option<bool> =
+            kwargs.get(Qstr::MP_QSTR_allow_cancel)?.try_into_option()?;
+        let danger: Option<bool> = kwargs.get(Qstr::MP_QSTR_danger)?.try_into_option()?;
+        let obj = LayoutObj::new(
+            PinDialog::new(
+                theme::borders(),
+                prompt,
+                subprompt,
+                theme::OFF_WHITE,
+                if danger.unwrap_or(false) {
+                    theme::RED
+                } else {
+                    theme::OFF_WHITE
+                },
+                allow_cancel.unwrap_or(true),
+            )
             .into_child(),
         )?;
         Ok(obj.into())

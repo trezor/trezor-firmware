@@ -21,6 +21,17 @@ def layout_new_example(text: str) -> object:
 
 
 # extmod/rustmods/modtrezorui2.c
+def layout_new_pin(
+    *,
+    prompt: str,
+    subprompt: str,
+    danger: bool,
+    allow_cancel: bool,
+) -> object:
+    """PIN keyboard."""
+
+
+# extmod/rustmods/modtrezorui2.c
 def layout_new_confirm_text(
     *,
     title: str,

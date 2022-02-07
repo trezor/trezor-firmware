@@ -42,6 +42,17 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_trezorui2_layout_new_confirm_action_obj,
 ///     """Example layout."""
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorui2_layout_new_example_obj,
                                  ui_layout_new_example);
+
+/// def layout_new_pin(
+///     *,
+///     prompt: str,
+///     subprompt: str,
+///     danger: bool,
+///     allow_cancel: bool,
+/// ) -> object:
+///     """PIN keyboard."""
+STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_trezorui2_layout_new_pin_obj, 0,
+                                  ui_layout_new_pin);
 #elif TREZOR_MODEL == 1
 /// def layout_new_confirm_text(
 ///     *,
@@ -62,6 +73,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorui2_globals_table[] = {
 #if TREZOR_MODEL == T
     {MP_ROM_QSTR(MP_QSTR_layout_new_example),
      MP_ROM_PTR(&mod_trezorui2_layout_new_example_obj)},
+    {MP_ROM_QSTR(MP_QSTR_layout_new_pin),
+     MP_ROM_PTR(&mod_trezorui2_layout_new_pin_obj)},
 #elif TREZOR_MODEL == 1
     {MP_ROM_QSTR(MP_QSTR_layout_new_confirm_text),
      MP_ROM_PTR(&mod_trezorui2_layout_new_confirm_text_obj)},
