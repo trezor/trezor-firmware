@@ -12,6 +12,7 @@ from trezor.ui.layouts import (
     confirm_blob,
     confirm_output,
     confirm_text,
+    confirm_total,
     should_show_more,
 )
 from trezor.ui.layouts.tt.altcoin import confirm_total_ethereum
@@ -63,7 +64,13 @@ def require_confirm_fee(
 
 
 async def require_confirm_eip1559_fee(
-    ctx: Context, max_priority_fee: int, max_gas_fee: int, gas_limit: int, chain_id: int
+    ctx: Context,
+    spending: int,
+    max_priority_fee: int,
+    max_gas_fee: int,
+    gas_limit: int,
+    chain_id: int,
+    token: tokens.TokenInfo | None = None,
 ) -> None:
     await confirm_amount(
         ctx,
@@ -77,11 +84,12 @@ async def require_confirm_eip1559_fee(
         description="Priority fee per gas",
         amount=format_ethereum_amount(max_priority_fee, None, chain_id),
     )
-    await confirm_amount(
+    await confirm_total(
         ctx,
-        title="Confirm fee",
-        description="Maximum fee",
-        amount=format_ethereum_amount(max_gas_fee * gas_limit, None, chain_id),
+        total_amount=format_ethereum_amount(spending, token, chain_id),
+        fee_amount=format_ethereum_amount(max_gas_fee * gas_limit, None, chain_id),
+        total_label="Amount sent:\n",
+        fee_label="\nMaximum fee:\n",
     )
 
 
