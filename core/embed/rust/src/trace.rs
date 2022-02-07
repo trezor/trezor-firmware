@@ -49,3 +49,43 @@ where
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    impl Tracer for Vec<u8> {
+        fn int(&mut self, i: i64) {
+            self.string(&i.to_string());
+        }
+
+        fn bytes(&mut self, b: &[u8]) {
+            self.extend(b)
+        }
+
+        fn string(&mut self, s: &str) {
+            self.extend(s.as_bytes())
+        }
+
+        fn symbol(&mut self, name: &str) {
+            self.extend(name.as_bytes())
+        }
+
+        fn open(&mut self, name: &str) {
+            self.extend(b"<");
+            self.extend(name.as_bytes());
+            self.extend(b" ");
+        }
+
+        fn field(&mut self, name: &str, value: &dyn Trace) {
+            self.extend(name.as_bytes());
+            self.extend(b":");
+            value.trace(self);
+            self.extend(b" ");
+        }
+
+        fn close(&mut self) {
+            self.extend(b">")
+        }
+    }
+}

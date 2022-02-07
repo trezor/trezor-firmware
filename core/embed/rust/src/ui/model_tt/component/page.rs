@@ -170,6 +170,7 @@ where
         t.field("active_page", &self.scrollbar.active_page);
         t.field("page_count", &self.scrollbar.page_count);
         t.field("content", &self.content);
+        t.field("buttons", &self.buttons);
         t.close();
     }
 }
@@ -305,5 +306,172 @@ impl PageLayout {
             scrollbar,
             buttons,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        trace::Trace,
+        ui::{
+            component::{text::paragraphs::Paragraphs, Empty},
+            display,
+            geometry::Point,
+            model_tt::{event::TouchEvent, theme},
+        },
+    };
+
+    use super::*;
+
+    fn trace(val: &impl Trace) -> String {
+        let mut t = Vec::new();
+        val.trace(&mut t);
+        String::from_utf8(t).unwrap()
+    }
+
+    fn swipe(component: &mut impl Component, points: &[(i32, i32)]) {
+        let last = points.len().saturating_sub(1);
+        let mut first = true;
+        let mut ctx = EventCtx::new();
+        for (i, &(x, y)) in points.iter().enumerate() {
+            let p = Point::new(x, y);
+            let ev = if first {
+                TouchEvent::TouchStart(p)
+            } else if i == last {
+                TouchEvent::TouchEnd(p)
+            } else {
+                TouchEvent::TouchMove(p)
+            };
+            component.event(&mut ctx, Event::Touch(ev));
+            first = false;
+        }
+    }
+
+    fn swipe_up(component: &mut impl Component) {
+        swipe(component, &[(20, 100), (20, 60), (20, 20)])
+    }
+
+    fn swipe_down(component: &mut impl Component) {
+        swipe(component, &[(20, 20), (20, 60), (20, 100)])
+    }
+
+    #[test]
+    fn paragraphs_empty() {
+        let mut page = SwipePage::new(
+            display::screen(),
+            theme::BG,
+            |area| Paragraphs::<&[u8]>::new(area),
+            |_| Empty,
+        );
+
+        let expected =
+            "<SwipePage active_page:0 page_count:1 content:<Paragraphs > buttons:<Empty > >";
+
+        assert_eq!(trace(&page), expected);
+        swipe_up(&mut page);
+        assert_eq!(trace(&page), expected);
+        swipe_down(&mut page);
+        assert_eq!(trace(&page), expected);
+    }
+
+    #[test]
+    fn paragraphs_single() {
+        let mut page = SwipePage::new(
+            display::screen(),
+            theme::BG,
+            |area| {
+                Paragraphs::new(area)
+                    .add::<theme::TTDefaultText>(
+                        theme::FONT_NORMAL,
+                        "This is the first paragraph and it should fit on the screen entirely.",
+                    )
+                    .add::<theme::TTDefaultText>(
+                        theme::FONT_BOLD,
+                        "Second, bold, paragraph should also fit on the screen whole I think.",
+                    )
+            },
+            |_| Empty,
+        );
+
+        let expected = "<SwipePage active_page:0 page_count:1 content:<Paragraphs This is the first paragraph\nand it should fit on the\nscreen entirely.\nSecond, bold, paragraph\nshould also fit on the\nscreen whole I think.\n> buttons:<Empty > >";
+
+        assert_eq!(trace(&page), expected);
+        swipe_up(&mut page);
+        assert_eq!(trace(&page), expected);
+        swipe_down(&mut page);
+        assert_eq!(trace(&page), expected);
+    }
+
+    #[test]
+    fn paragraphs_one_long() {
+        let mut page = SwipePage::new(
+            display::screen(),
+            theme::BG,
+            |area| {
+                Paragraphs::new(area)
+                    .add::<theme::TTDefaultText>(
+                        theme::FONT_BOLD,
+                        "This is somewhat long paragraph that goes on and on and on and on and on and will definitely not fit on just a single screen. You have to swipe a bit to see all the text it contains I guess. There's just so much letters in it.",
+                    )
+            },
+            |_| Empty,
+        );
+
+        let expected1 = "<SwipePage active_page:0 page_count:2 content:<Paragraphs This is somewhat long\nparagraph that goes\non and on and on and\non and on and will\ndefinitely not fit on\njust a single screen.\nYou have to swipe a bit\nto see all the text it...\n> buttons:<Empty > >";
+        let expected2 = "<SwipePage active_page:1 page_count:2 content:<Paragraphs contains I guess.\nThere's just so much\nletters in it.\n> buttons:<Empty > >";
+
+        assert_eq!(trace(&page), expected1);
+        swipe_down(&mut page);
+        assert_eq!(trace(&page), expected1);
+        swipe_up(&mut page);
+        assert_eq!(trace(&page), expected2);
+        swipe_up(&mut page);
+        assert_eq!(trace(&page), expected2);
+        swipe_down(&mut page);
+        assert_eq!(trace(&page), expected1);
+    }
+
+    #[test]
+    fn paragraphs_three_long() {
+        let mut page = SwipePage::new(
+            display::screen(),
+            theme::BG,
+            |area| {
+                Paragraphs::new(area)
+                    .add::<theme::TTDefaultText>(
+                        theme::FONT_BOLD,
+                        "This paragraph is using a bold font. It doesn't need to be all that long.",
+                    )
+                    .add::<theme::TTDefaultText>(
+                        theme::FONT_MONO,
+                        "And this one is using MONO. Monospace is nice for numbers, they have the same width and can be scanned quickly. Even if they span several pages or something.",
+                    )
+                    .add::<theme::TTDefaultText>(
+                        theme::FONT_BOLD,
+                        "Let's add another one for a good measure. This one should overflow all the way to the third page with a bit of luck.",
+                    )
+            },
+            |_| Empty,
+        );
+
+        let expected1 = "<SwipePage active_page:0 page_count:3 content:<Paragraphs This paragraph is\nusing a bold font. It\ndoesn't need to be all\nthat long.\nAnd this one is\nusing MONO.\nMonospace is nice\nfor numbers, they...\n> buttons:<Empty > >";
+        let expected2 = "<SwipePage active_page:1 page_count:3 content:<Paragraphs have the same\nwidth and can be\nscanned quickly.\nEven if they span\nseveral pages or\nsomething.\nLet's add another one\nfor a good measure....\n> buttons:<Empty > >";
+        let expected3 = "<SwipePage active_page:2 page_count:3 content:<Paragraphs This one should\noverflow all the way to\nthe third page with a\nbit of luck.\n> buttons:<Empty > >";
+
+        assert_eq!(trace(&page), expected1);
+        swipe_down(&mut page);
+        assert_eq!(trace(&page), expected1);
+        swipe_up(&mut page);
+        assert_eq!(trace(&page), expected2);
+        swipe_up(&mut page);
+        assert_eq!(trace(&page), expected3);
+        swipe_up(&mut page);
+        assert_eq!(trace(&page), expected3);
+        swipe_down(&mut page);
+        assert_eq!(trace(&page), expected2);
+        swipe_down(&mut page);
+        assert_eq!(trace(&page), expected1);
+        swipe_down(&mut page);
+        assert_eq!(trace(&page), expected1);
     }
 }
