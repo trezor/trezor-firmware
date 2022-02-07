@@ -3,10 +3,11 @@ from typing import TYPE_CHECKING
 from trezor import io, log, loop, ui, wire, workflow
 from trezor.enums import ButtonRequestType
 
-from trezorui2 import layout_new_confirm_action
+from trezorui2 import layout_new_confirm_action, layout_new_pin
 
+from ...components.tt import pin
 from ...constants.tt import MONO_ADDR_PER_LINE
-from ..common import interact
+from ..common import button_request, interact
 
 if TYPE_CHECKING:
     from typing import Any, Awaitable, Iterable, NoReturn, Sequence
@@ -451,4 +452,26 @@ async def request_pin_on_device(
     attempts_remaining: int | None,
     allow_cancel: bool,
 ) -> str:
-    raise NotImplementedError
+    await button_request(ctx, "pin_device", code=ButtonRequestType.PinEntry)
+
+    if attempts_remaining is None:
+        subprompt = ""
+    elif attempts_remaining == 1:
+        subprompt = "Last attempt"
+    else:
+        subprompt = f"{attempts_remaining} tries left"
+
+    dialog = _RustLayout(
+        layout_new_pin(
+            prompt=prompt,
+            subprompt=subprompt,
+            allow_cancel=allow_cancel,
+            warning=None,
+        )
+    )
+    while True:
+        result = await ctx.wait(dialog)
+        if result is pin.CANCELLED:
+            raise wire.PinCancelled
+        assert isinstance(result, str)
+        return result

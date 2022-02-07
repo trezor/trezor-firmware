@@ -1,15 +1,15 @@
+use core::ops::Deref;
 use heapless::Vec;
 
 use crate::{
     trezorhal::random,
     ui::{
         component::{
-            base::ComponentExt,
-            label::{Label, LabelStyle},
-            Child, Component, Event, EventCtx, Never,
+            base::ComponentExt, Child, Component, Event, EventCtx, Label, LabelStyle, Maybe, Never,
+            Pad,
         },
         display,
-        geometry::{Grid, Offset, Point, Rect},
+        geometry::{Alignment, Grid, Insets, Offset, Rect},
         model_tt::component::{
             button::{Button, ButtonContent, ButtonMsg::Clicked},
             theme,
@@ -25,35 +25,66 @@ pub enum PinKeyboardMsg {
 const MAX_LENGTH: usize = 9;
 const DIGIT_COUNT: usize = 10; // 0..10
 
-pub struct PinKeyboard {
+pub struct PinKeyboard<T> {
     digits: Vec<u8, MAX_LENGTH>,
-    major_prompt: Label<&'static [u8]>,
-    minor_prompt: Label<&'static [u8]>,
+    allow_cancel: bool,
+    major_prompt: Label<T>,
+    minor_prompt: Label<T>,
+    major_warning: Option<Label<T>>,
     dots: Child<PinDots>,
-    reset_btn: Child<Button<&'static str>>,
-    cancel_btn: Child<Button<&'static str>>,
+    reset_btn: Child<Maybe<Button<&'static str>>>,
+    cancel_btn: Child<Maybe<Button<&'static str>>>,
     confirm_btn: Child<Button<&'static str>>,
     digit_btns: [Child<Button<&'static str>>; DIGIT_COUNT],
 }
 
-impl PinKeyboard {
-    pub fn new(major_prompt: &'static [u8], minor_prompt: &'static [u8]) -> Self {
+impl<T> PinKeyboard<T>
+where
+    T: Deref<Target = [u8]>,
+{
+    const BUTTON_SPACING: i32 = 8;
+    const HEADER_HEIGHT: i32 = 25;
+    const HEADER_PADDING_SIDE: i32 = 5;
+    const HEADER_PADDING_BOTTOM: i32 = 12;
+
+    // Label position fine-tuning.
+    const MAJOR_OFF: Offset = Offset::y(-2);
+    const MINOR_OFF: Offset = Offset::y(-1);
+
+    pub fn new(
+        major_prompt: T,
+        minor_prompt: T,
+        major_warning: Option<T>,
+        allow_cancel: bool,
+    ) -> Self {
+        let area = area.inset(Insets::right(theme::CONTENT_BORDER));
         let digits = Vec::new();
+
+        // Control buttons.
+        let reset_btn = Button::with_icon(theme::ICON_BACK)
+            .styled(theme::button_reset())
+            .initially_enabled(false);
+        let reset_btn = Maybe::hidden(theme::BG, reset_btn).into_child();
+
+        let cancel_btn = Button::with_icon(theme::ICON_CANCEL).styled(theme::button_cancel());
+        let cancel_btn =
+            Maybe::new(Pad::with_background(theme::BG), cancel_btn, allow_cancel).into_child();
+
         Self {
-            major_prompt: Label::centered(major_prompt, theme::label_default()),
-            minor_prompt: Label::centered(minor_prompt, theme::label_default()),
-            dots: PinDots::new(digits.len(), theme::label_default()).into_child(),
-            reset_btn: Button::with_text("Reset")
-                .styled(theme::button_clear())
-                .into_child(),
-            cancel_btn: Button::with_icon(theme::ICON_CANCEL)
-                .styled(theme::button_cancel())
-                .into_child(),
+            digits,
+            allow_cancel,
+            major_prompt: Label::left_aligned(major_prompt, theme::label_keyboard()),
+            minor_prompt: Label::right_aligned(minor_prompt, theme::label_keyboard_minor()),
+            major_warning: major_warning
+                .map(|text| Label::left_aligned(text, theme::label_keyboard_warning())),
+            dots: PinDots::new(0, theme::label_default()).into_child(),
+            reset_btn,
+            cancel_btn,
             confirm_btn: Button::with_icon(theme::ICON_CONFIRM)
-                .styled(theme::button_clear())
+                .styled(theme::button_confirm())
+                .initially_enabled(false)
                 .into_child(),
             digit_btns: Self::generate_digit_buttons(),
-            digits,
         }
     }
 
@@ -61,7 +92,10 @@ impl PinKeyboard {
         // Generate a random sequence of digits from 0 to 9.
         let mut digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
         random::shuffle(&mut digits);
-        digits.map(Button::with_text).map(Child::new)
+        digits
+            .map(Button::with_text)
+            .map(|b| b.styled(theme::button_pin()))
+            .map(Child::new)
     }
 
     fn pin_modified(&mut self, ctx: &mut EventCtx) {
@@ -70,10 +104,15 @@ impl PinKeyboard {
             btn.mutate(ctx, |ctx, btn| btn.enable_if(ctx, !is_full));
         }
         let is_empty = self.digits.is_empty();
-        self.reset_btn
-            .mutate(ctx, |ctx, btn| btn.enable_if(ctx, !is_empty));
-        self.cancel_btn
-            .mutate(ctx, |ctx, btn| btn.enable_if(ctx, is_empty));
+        let cancel_enabled = is_empty && self.allow_cancel;
+        self.reset_btn.mutate(ctx, |ctx, btn| {
+            btn.show_if(ctx, !is_empty);
+            btn.inner_mut().enable_if(ctx, !is_empty);
+        });
+        self.cancel_btn.mutate(ctx, |ctx, btn| {
+            btn.show_if(ctx, cancel_enabled);
+            btn.inner_mut().enable_if(ctx, is_empty);
+        });
         self.confirm_btn
             .mutate(ctx, |ctx, btn| btn.enable_if(ctx, !is_empty));
         let digit_count = self.digits.len();
@@ -86,36 +125,49 @@ impl PinKeyboard {
     }
 }
 
-impl Component for PinKeyboard {
+impl<T> Component for PinKeyboard<T>
+where
+    T: Deref<Target = [u8]>,
+{
     type Msg = PinKeyboardMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         // Prompts and PIN dots display.
-        let grid = if self.minor_prompt.text().is_empty() {
-            // Make the major prompt bigger if the minor one is empty.
-            Grid::new(bounds, 5, 1)
-        } else {
-            Grid::new(bounds, 6, 1)
-        };
-        self.major_prompt.place(grid.row_col(0, 0));
-        self.minor_prompt.place(grid.row_col(0, 1));
-        self.dots.place(grid.row_col(0, 0));
+        let (header, keypad) = bounds
+            .inset(theme::borders())
+            .split_top(Self::HEADER_HEIGHT + Self::HEADER_PADDING_BOTTOM);
+        let header = header.inset(Insets::new(
+            0,
+            Self::HEADER_PADDING_SIDE,
+            Self::HEADER_PADDING_BOTTOM,
+            Self::HEADER_PADDING_SIDE,
+        ));
+        let major_area = header.translate(Self::MAJOR_OFF);
+        let minor_area = header.translate(Self::MINOR_OFF);
 
         // Control buttons.
-        let grid = Grid::new(bounds, 5, 3);
-        self.reset_btn.place(grid.row_col(4, 0));
-        self.cancel_btn.place(grid.row_col(4, 0));
-        self.confirm_btn.place(grid.row_col(4, 2));
+        let grid = Grid::new(keypad, 4, 3).with_spacing(theme::KEYBOARD_SPACING);
+
+        // Prompts and PIN dots display.
+        self.dots.place(header);
+        self.major_prompt.place(major_area);
+        self.minor_prompt.place(minor_area);
+        self.major_warning.as_mut().map(|c| c.place(major_area));
+
+        // Control buttons.
+        let reset_cancel_area = grid.row_col(3, 0);
+        self.reset_btn.place(reset_cancel_area);
+        self.cancel_btn.place(reset_cancel_area);
+        self.confirm_btn.place(grid.row_col(3, 2));
 
         // Digit buttons.
         for (i, btn) in self.digit_btns.iter_mut().enumerate() {
-            // Assign the digits to buttons on a 5x3 grid, starting from the second row.
+            // Assign the digits to buttons on a 4x3 grid, starting from the first row.
             let area = grid.cell(if i < 9 {
-                // The grid has 3 columns, and we skip the first row.
-                i + 3
+                i
             } else {
                 // For the last key (the "0" position) we skip one cell.
-                i + 1 + 3
+                i + 1
             });
             btn.place(area);
         }
@@ -151,17 +203,34 @@ impl Component for PinKeyboard {
     }
 
     fn paint(&mut self) {
+        self.reset_btn.paint();
         if self.digits.is_empty() {
-            self.cancel_btn.paint();
-            self.major_prompt.paint();
+            self.dots.inner().clear();
+            if let Some(ref mut w) = self.major_warning {
+                w.paint();
+            } else {
+                self.major_prompt.paint();
+            }
             self.minor_prompt.paint();
+            self.cancel_btn.paint();
         } else {
-            self.reset_btn.paint();
             self.dots.paint();
         }
         self.confirm_btn.paint();
         for btn in &mut self.digit_btns {
             btn.paint();
+        }
+    }
+
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
+        self.major_prompt.bounds(sink);
+        self.minor_prompt.bounds(sink);
+        self.reset_btn.bounds(sink);
+        self.cancel_btn.bounds(sink);
+        self.confirm_btn.bounds(sink);
+        self.dots.bounds(sink);
+        for b in &self.digit_btns {
+            b.bounds(sink)
         }
     }
 }
@@ -173,7 +242,7 @@ struct PinDots {
 }
 
 impl PinDots {
-    const DOT: i32 = 10;
+    const DOT: i32 = 6;
     const PADDING: i32 = 4;
 
     fn new(digit_count: usize, style: LabelStyle) -> Self {
@@ -190,6 +259,17 @@ impl PinDots {
             ctx.request_paint();
         }
     }
+
+    /// Clear the area with the background color.
+    fn clear(&self) {
+        display::rect_fill(self.area, self.style.background_color);
+    }
+
+    fn size(&self) -> Offset {
+        let mut width = Self::DOT * (self.digit_count as i32);
+        width += Self::PADDING * (self.digit_count.saturating_sub(1) as i32);
+        Offset::new(width, Self::DOT)
+    }
 }
 
 impl Component for PinDots {
@@ -205,22 +285,36 @@ impl Component for PinDots {
     }
 
     fn paint(&mut self) {
-        // Clear the area with the background color.
-        display::rect_fill(self.area, self.style.background_color);
+        self.clear();
+
+        let mut cursor = self
+            .size()
+            .snap(self.area.center(), Alignment::Center, Alignment::Center);
 
         // Draw a dot for each PIN digit.
-        for i in 0..self.digit_count {
-            let pos = Point {
-                x: self.area.x0 + i as i32 * (Self::DOT + Self::PADDING),
-                y: self.area.center().y,
-            };
-            let size = Offset::new(Self::DOT, Self::DOT);
-            display::rect_fill_rounded(
-                Rect::from_top_left_and_size(pos, size),
+        for _ in 0..self.digit_count {
+            display::icon_top_left(
+                cursor,
+                theme::DOT_ACTIVE,
                 self.style.text_color,
                 self.style.background_color,
-                4,
             );
+            cursor.x += Self::DOT + Self::PADDING;
         }
+    }
+
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
+        sink(self.area);
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl<T> crate::trace::Trace for PinKeyboard<T>
+where
+    T: Deref<Target = [u8]>,
+{
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.open("PinKeyboard");
+        t.close();
     }
 }

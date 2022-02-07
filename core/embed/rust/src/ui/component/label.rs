@@ -47,6 +47,13 @@ where
     pub fn text(&self) -> &T {
         &self.text
     }
+
+    pub fn size(&self) -> Offset {
+        Offset::new(
+            self.style.font.text_width(&self.text),
+            self.style.font.text_height(),
+        )
+    }
 }
 
 impl<T> Component for Label<T>
@@ -56,31 +63,14 @@ where
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let size = Offset::new(
-            self.style.font.text_width(&self.text),
-            self.style.font.line_height(),
-        );
-        self.area = match self.align {
-            Alignment::Start => Rect::from_top_left_and_size(bounds.top_left(), size),
-            Alignment::Center => {
-                let origin = bounds.top_left().center(bounds.top_right());
-                Rect {
-                    x0: origin.x - size.x / 2,
-                    y0: origin.y,
-                    x1: origin.x + size.x / 2,
-                    y1: origin.y + size.y,
-                }
-            }
-            Alignment::End => {
-                let origin = bounds.top_right();
-                Rect {
-                    x0: origin.x - size.x,
-                    y0: origin.y,
-                    x1: origin.x,
-                    y1: origin.y + size.y,
-                }
-            }
+        let origin = match self.align {
+            Alignment::Start => bounds.top_left(),
+            Alignment::Center => bounds.top_left().center(bounds.top_right()),
+            Alignment::End => bounds.top_right(),
         };
+        let size = self.size();
+        let top_left = size.snap(origin, self.align, Alignment::Start);
+        self.area = Rect::from_top_left_and_size(top_left, size);
         self.area
     }
 
@@ -96,5 +86,9 @@ where
             self.style.text_color,
             self.style.background_color,
         );
+    }
+
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
+        sink(self.area)
     }
 }

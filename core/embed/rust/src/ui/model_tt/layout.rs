@@ -12,11 +12,10 @@ use crate::{
 
 use super::{
     component::{
-        Bip39Input, Button, ButtonMsg, DialogMsg, Frame, HoldToConfirm, HoldToConfirmMsg,
-        MnemonicKeyboard, MnemonicKeyboardMsg, PassphraseKeyboard, PassphraseKeyboardMsg,
-        PinKeyboard, PinKeyboardMsg, Slip39Input, SwipePage,
+        Button, ButtonMsg, DialogMsg, Frame, HoldToConfirm, HoldToConfirmMsg, PinKeyboard,
+        PinKeyboardMsg, SwipePage,
     },
-    theme,
+    constant, theme,
 };
 
 impl<T> TryFrom<DialogMsg<T, ButtonMsg, ButtonMsg>> for Obj
@@ -48,6 +47,17 @@ where
             HoldToConfirmMsg::Content(c) => Ok(c.try_into()?),
             HoldToConfirmMsg::Confirmed => 1.try_into(),
             HoldToConfirmMsg::Cancelled => 2.try_into(),
+        }
+    }
+}
+
+impl TryFrom<PinKeyboardMsg> for Obj {
+    type Error = Error;
+
+    fn try_from(val: PinKeyboardMsg) -> Result<Self, Self::Error> {
+        match val {
+            PinKeyboardMsg::Confirmed => 1.try_into(),
+            PinKeyboardMsg::Cancelled => 2.try_into(),
         }
     }
 }
@@ -106,6 +116,22 @@ extern "C" fn ui_layout_new_confirm_action(
 
         let obj = LayoutObj::new(
             Frame::new(title, SwipePage::new(paragraphs, buttons, theme::BG)).into_child(),
+        )?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+#[no_mangle]
+extern "C" fn ui_layout_new_pin(n_args: usize, args: *const Obj, kwargs: *const Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let prompt: Buffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+        let subprompt: Buffer = kwargs.get(Qstr::MP_QSTR_subprompt)?.try_into()?;
+        let allow_cancel: Option<bool> =
+            kwargs.get(Qstr::MP_QSTR_allow_cancel)?.try_into_option()?;
+        let warning: Option<Buffer> = kwargs.get(Qstr::MP_QSTR_warning)?.try_into_option()?;
+        let obj = LayoutObj::new(
+            PinKeyboard::new(prompt, subprompt, warning, allow_cancel.unwrap_or(true)).into_child(),
         )?;
         Ok(obj.into())
     };
