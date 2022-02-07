@@ -70,10 +70,12 @@ async def sign_tx_eip1559(
 
     await require_confirm_eip1559_fee(
         ctx,
+        value,
         int.from_bytes(msg.max_priority_fee, "big"),
         int.from_bytes(msg.max_gas_fee, "big"),
         int.from_bytes(msg.gas_limit, "big"),
         msg.chain_id,
+        token,
     )
 
     data = bytearray()
