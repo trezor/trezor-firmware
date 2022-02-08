@@ -46,13 +46,16 @@ core unit test t1:
   script:
     - nix-shell --run "poetry run make -C core test_rust | ts -s"
 
-core device ui test:
+core device test:
   stage: test
   <<: *gitlab_caching
   needs:
     - core unix frozen debug build
+  variables:
+    TREZOR_PROFILING: 1
   script:
     - nix-shell --run "poetry run make -C core test_emu_ui | ts -s"
+    - mv core/src/.coverage core/.coverage.test_emu
   after_script:
     - mv tests/ui_tests/reporting/reports/test/ test_ui_report
     - nix-shell --run "poetry run python ci/prepare_ui_artifacts.py | ts -s"
@@ -66,29 +69,9 @@ core device ui test:
       - tests/ui_tests/fixtures.suggestion.json
       - tests/junit.xml
       - tests/trezor.log
-    when: always
-    expire_in: 1 week
-    reports:
-      junit: tests/junit.xml
-
-core device test:
-  stage: test
-  <<: *gitlab_caching
-  needs:
-    - core unix frozen debug build
-  variables:
-    TREZOR_PROFILING: 1
-  script:
-    - nix-shell --run "poetry run make -C core test_emu | ts -s"
-    - mv core/src/.coverage core/.coverage.test_emu
-  artifacts:
-    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
-    paths:
-      - tests/trezor.log
-      - tests/junit.xml
       - core/.coverage.*
-    expire_in: 1 week
     when: always
+    expire_in: 1 week
     reports:
       junit: tests/junit.xml
 

@@ -233,7 +233,7 @@ ui tests core fixtures deploy:
     GIT_SUBMODULE_STRATEGY: "none"
   before_script: []  # no poetry
   needs:
-    - core device ui test
+    - core device test
   script:
     - echo "Deploying to $DEPLOY_PATH"
     - rsync --delete -va ci/ui_test_records/* "$DEPLOY_PATH"
