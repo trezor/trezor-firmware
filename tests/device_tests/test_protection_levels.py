@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from unittest import mock
+
 import pytest
 
 from trezorlib import btc, device, messages, misc
@@ -21,7 +23,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
-from ..common import MNEMONIC12, get_test_address
+from ..common import EXTERNAL_ENTROPY, MNEMONIC12, get_test_address
 from ..tx_cache import TxCache
 from .signtx import request_finished, request_input, request_meta, request_output
 
@@ -221,7 +223,8 @@ def test_wipe_device(client: Client):
 def test_reset_device(client: Client):
     assert client.features.pin_protection is False
     assert client.features.passphrase_protection is False
-    with client:
+    os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
+    with mock.patch("os.urandom", os_urandom), client:
         client.set_expected_responses(
             [messages.ButtonRequest]
             + [messages.EntropyRequest]
