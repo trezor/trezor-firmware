@@ -64,7 +64,7 @@ bool protectButton(ButtonRequestType type, bool confirm_only) {
 
     // button acked - check buttons
     if (acked) {
-      usbSleep(5);
+      waitAndProcessUSBRequests(5);
       buttonUpdate();
       if (button.YesUp) {
         result = true;

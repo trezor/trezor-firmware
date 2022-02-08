@@ -18,6 +18,7 @@
  */
 
 #include <stdint.h>
+#include <unistd.h>
 
 #include "usb.h"
 
@@ -35,7 +36,7 @@ void usbInit(void) { emulatorSocketInit(); }
 #define _ISDBG ('n')
 #endif
 
-void usbSleep(uint32_t millis) {
+void waitAndProcessUSBRequests(uint32_t millis) {
   emulatorPoll();
 
   static uint8_t buffer[USB_PACKET_SIZE];
@@ -63,7 +64,7 @@ void usbSleep(uint32_t millis) {
 #endif
 }
 
-void usbPoll(void) { usbSleep(0); }
+void usbPoll(void) { waitAndProcessUSBRequests(0); }
 
 char usbTiny(char set) {
   char old = tiny;
@@ -71,4 +72,10 @@ char usbTiny(char set) {
   return old;
 }
 
-void usbFlush(uint32_t millis) { usbSleep(millis); }
+void usbFlush(uint32_t millis) {
+  const uint8_t *data;
+  while ((data = msg_out_data()) != NULL) {
+    emulatorSocketWrite(0, data, USB_PACKET_SIZE);
+  }
+  usleep(millis * 1000);
+}
