@@ -85,9 +85,9 @@ build? This is most likely it.**
 
 ## Test
 
-### core device ui test
+### core device test
 
-UI tests for Core. See artifacts for a comprehensive report of UI. See [tests/ui-tests](../tests/ui-tests.html#reports)
+Device tests with UI report for Core. See artifacts for a comprehensive report of UI. See [tests/ui-tests](../tests/ui-tests.html#reports)
 for more info.
 
 ### hardware core regular device test

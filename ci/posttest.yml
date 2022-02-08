@@ -34,7 +34,7 @@ core unix ui changes:
     - master
   <<: *gitlab_caching
   needs:
-    - core device ui test
+    - core device test
   script:
     - nix-shell --run "cd tests/ui_tests ; poetry run python reporting/report_master_diff.py"
     - mv tests/ui_tests/reporting/reports/master_diff/ .
