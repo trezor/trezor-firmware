@@ -15,7 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import os
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Generator
 
 import pytest
 
@@ -62,7 +62,9 @@ def _raw_client(request: pytest.FixtureRequest) -> Client:
 
 
 @pytest.fixture(scope="function")
-def client(request: pytest.FixtureRequest, _raw_client: Client) -> Client:
+def client(
+    request: pytest.FixtureRequest, _raw_client: Client
+) -> Generator[Client, None, None]:
     """Client fixture.
 
     Every test function that requires a client instance will get it from here.
