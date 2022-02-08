@@ -21,7 +21,6 @@
 #include <string.h>
 #include "address.h"
 #include "base58.h"
-#include "cash_addr.h"
 #include "coins.h"
 #include "crypto.h"
 #include "debug.h"
@@ -34,6 +33,10 @@
 #include "segwit_addr.h"
 #include "util.h"
 #include "zkp_bip340.h"
+
+#if !BITCOIN_ONLY
+#include "cash_addr.h"
+#endif
 
 #define SEGWIT_VERSION_0 0
 #define SEGWIT_VERSION_1 1
@@ -151,13 +154,16 @@ bool compute_address(const CoinInfo *coin, InputScriptType script_type,
       }
     } else if (script_type == InputScriptType_SPENDADDRESS ||
                script_type == InputScriptType_SPENDMULTISIG) {
+#if !BITCOIN_ONLY
       if (coin->cashaddr_prefix) {
         raw[0] = CASHADDR_P2SH | CASHADDR_160;
         ripemd160(digest, 32, raw + 1);
         if (!cash_addr_encode(address, coin->cashaddr_prefix, raw, 21)) {
           return 0;
         }
-      } else {
+      } else
+#endif
+      {
         // non-segwit p2sh multisig
         prelen = address_prefix_bytes_len(coin->address_type_p2sh);
         address_write_prefix_bytes(coin->address_type_p2sh, raw);
@@ -202,13 +208,16 @@ bool compute_address(const CoinInfo *coin, InputScriptType script_type,
         coin->curve->hasher_base58, address, MAX_ADDR_SIZE);
   } else if (script_type == InputScriptType_SPENDADDRESS ||
              script_type == InputScriptType_SPENDMULTISIG) {
+#if !BITCOIN_ONLY
     if (coin->cashaddr_prefix) {
       ecdsa_get_address_raw(node->public_key, CASHADDR_P2KH | CASHADDR_160,
                             coin->curve->hasher_pubkey, raw);
       if (!cash_addr_encode(address, coin->cashaddr_prefix, raw, 21)) {
         return 0;
       }
-    } else {
+    } else
+#endif
+    {
       ecdsa_get_address(node->public_key, coin->address_type,
                         coin->curve->hasher_pubkey, coin->curve->hasher_base58,
                         address, MAX_ADDR_SIZE);
@@ -252,6 +261,7 @@ static int address_to_script_pubkey(const CoinInfo *coin, const char *address,
     return 1;
   }
 
+#if !BITCOIN_ONLY
   if (coin->cashaddr_prefix &&
       cash_addr_decode(addr_raw, &addr_raw_len, coin->cashaddr_prefix,
                        address)) {
@@ -276,6 +286,7 @@ static int address_to_script_pubkey(const CoinInfo *coin, const char *address,
       return 0;
     }
   }
+#endif
 
   // SegWit
   if (coin->bech32_prefix) {
@@ -991,6 +1002,7 @@ uint32_t tx_output_weight(const CoinInfo *coin, const TxOutputType *txoutput) {
     uint8_t addr_raw[MAX_ADDR_RAW_SIZE] = {0};
     int witver = 0;
     size_t addr_raw_len = 0;
+#if !BITCOIN_ONLY
     if (coin->cashaddr_prefix &&
         cash_addr_decode(addr_raw, &addr_raw_len, coin->cashaddr_prefix,
                          txoutput->address)) {
@@ -1000,18 +1012,22 @@ uint32_t tx_output_weight(const CoinInfo *coin, const TxOutputType *txoutput) {
                  addr_raw[0] == (CASHADDR_P2SH | CASHADDR_160)) {
         output_script_size = TXSIZE_P2SCRIPT;
       }
-    } else if (coin->bech32_prefix &&
-               segwit_addr_decode(&witver, addr_raw, &addr_raw_len,
-                                  coin->bech32_prefix, txoutput->address)) {
-      output_script_size = 2 + addr_raw_len;
-    } else {
-      addr_raw_len =
-          base58_decode_check(txoutput->address, coin->curve->hasher_base58,
-                              addr_raw, MAX_ADDR_RAW_SIZE);
-      if (address_check_prefix(addr_raw, coin->address_type)) {
-        output_script_size = TXSIZE_P2PKHASH;
-      } else if (address_check_prefix(addr_raw, coin->address_type_p2sh)) {
-        output_script_size = TXSIZE_P2SCRIPT;
+    } else
+#endif
+    {
+      if (coin->bech32_prefix &&
+          segwit_addr_decode(&witver, addr_raw, &addr_raw_len,
+                             coin->bech32_prefix, txoutput->address)) {
+        output_script_size = 2 + addr_raw_len;
+      } else {
+        addr_raw_len =
+            base58_decode_check(txoutput->address, coin->curve->hasher_base58,
+                                addr_raw, MAX_ADDR_RAW_SIZE);
+        if (address_check_prefix(addr_raw, coin->address_type)) {
+          output_script_size = TXSIZE_P2PKHASH;
+        } else if (address_check_prefix(addr_raw, coin->address_type_p2sh)) {
+          output_script_size = TXSIZE_P2SCRIPT;
+        }
       }
     }
   }

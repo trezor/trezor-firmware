@@ -101,7 +101,6 @@ OBJS += ../vendor/trezor-crypto/pbkdf2.o
 OBJS += ../vendor/trezor-crypto/base32.o
 OBJS += ../vendor/trezor-crypto/base58.o
 OBJS += ../vendor/trezor-crypto/segwit_addr.o
-OBJS += ../vendor/trezor-crypto/cash_addr.o
 
 OBJS += ../vendor/trezor-crypto/ripemd160.o
 OBJS += ../vendor/trezor-crypto/sha2.o
@@ -138,7 +137,9 @@ OBJS += protob/messages-common.pb.o
 OBJS += protob/messages-crypto.pb.o
 OBJS += protob/messages-debug.pb.o
 OBJS += protob/messages-management.pb.o
+
 ifneq ($(BITCOIN_ONLY),1)
+OBJS += ../vendor/trezor-crypto/cash_addr.o
 OBJS += protob/messages-ethereum.pb.o
 OBJS += protob/messages-nem.pb.o
 OBJS += protob/messages-stellar.pb.o

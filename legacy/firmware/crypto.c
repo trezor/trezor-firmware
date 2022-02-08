@@ -23,7 +23,6 @@
 #include "aes/aes.h"
 #include "base58.h"
 #include "bip32.h"
-#include "cash_addr.h"
 #include "coins.h"
 #include "curves.h"
 #include "hmac.h"
@@ -32,6 +31,10 @@
 #include "secp256k1.h"
 #include "segwit_addr.h"
 #include "sha2.h"
+
+#if !BITCOIN_ONLY
+#include "cash_addr.h"
+#endif
 
 #define PATH_MAX_ACCOUNT 100
 #define PATH_MAX_CHANGE 1
@@ -275,11 +278,14 @@ int cryptoMessageVerify(const CoinInfo *coin, const uint8_t *message,
   if (script_type == InputScriptType_SPENDADDRESS) {
     // p2pkh
     size_t len = 0;
+#if !BITCOIN_ONLY
     if (coin->cashaddr_prefix) {
       if (!cash_addr_decode(addr_raw, &len, coin->cashaddr_prefix, address)) {
         return 1;  // invalid address
       }
-    } else {
+    } else
+#endif
+    {
       len = base58_decode_check(address, coin->curve->hasher_base58, addr_raw,
                                 MAX_ADDR_RAW_SIZE);
     }
