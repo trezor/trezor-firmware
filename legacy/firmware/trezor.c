@@ -77,13 +77,13 @@ void check_lock_screen(void) {
     // wait until NoButton is released
     usbTiny(1);
     do {
-      usbSleep(5);
+      waitAndProcessUSBRequests(5);
       buttonUpdate();
     } while (!button.NoUp);
 
     // wait for confirmation/cancellation of the dialog
     do {
-      usbSleep(5);
+      waitAndProcessUSBRequests(5);
       buttonUpdate();
     } while (!button.YesUp && !button.NoUp);
     usbTiny(0);
@@ -180,7 +180,7 @@ int main(void) {
   usbInit();
   for (;;) {
 #if EMULATOR
-    usbSleep(10);
+    waitAndProcessUSBRequests(10);
 #else
     usbPoll();
 #endif

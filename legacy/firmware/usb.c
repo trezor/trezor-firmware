@@ -448,7 +448,7 @@ char usbTiny(char set) {
   return old;
 }
 
-void usbSleep(uint32_t millis) {
+void waitAndProcessUSBRequests(uint32_t millis) {
   uint32_t start = timer_ms();
 
   while ((timer_ms() - start) < millis) {

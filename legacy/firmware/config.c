@@ -564,7 +564,7 @@ void config_setHomescreen(const uint8_t *data, uint32_t size) {
 }
 
 static void get_root_node_callback(uint32_t iter, uint32_t total) {
-  usbSleep(1);
+  waitAndProcessUSBRequests(1);
   layoutProgress(_("Waking up"), 1000 * iter / total);
 }
 
