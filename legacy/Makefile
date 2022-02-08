@@ -29,7 +29,20 @@ libtrezor.a:
 	@printf "  AR      $@\n"
 	$(Q)$(AR) rcs $@ $^
 
-.PHONY: vendor
+.PHONY: vendor build_unix test_emu test_emu_ui test_emu_ui_record
 
 vendor:
 	git submodule update --init --recursive
+
+build_unix: ## build unix port
+	./script/setup
+	EMULATOR=1 DEBUG_LINK=1 ./script/cibuild
+
+test_emu: ## run integration tests
+	./script/test $(TESTOPTS)
+
+test_emu_ui: ## run ui integration tests
+	./script/test --ui=test --ui-check-missing $(TESTOPTS)
+
+test_emu_ui_record: ## record and hash screens for ui integration tests
+	./script/test --ui=record --ui-check-missing $(TESTOPTS)

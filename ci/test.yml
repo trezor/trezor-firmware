@@ -413,7 +413,7 @@ legacy test:
   variables:
     EMULATOR: "1"
   script:
-    - nix-shell --run "poetry run legacy/script/test | ts -s"
+    - nix-shell --run "poetry run make -C legacy test_emu_ui | ts -s"
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -433,7 +433,7 @@ legacy asan test:
   variables:
     EMULATOR: "1"
   script:
-    - nix-shell --run "poetry run legacy/script/test | ts -s"
+    - nix-shell --run "poetry run make -C legacy test_emu | ts -s"
 
 legacy btconly test:
   stage: test
@@ -445,7 +445,7 @@ legacy btconly test:
     EMULATOR_BINARY: "firmware/trezor-bitcoinonly.elf"
     TREZOR_PYTEST_SKIP_ALTCOINS: 1
   script:
-    - nix-shell --run "poetry run legacy/script/test | ts -s"
+    - nix-shell --run "poetry run make -C legacy test_emu | ts -s"
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -467,7 +467,7 @@ legacy btconly asan test:
     EMULATOR_BINARY: "firmware/trezor-bitcoinonly.elf"
     TREZOR_PYTEST_SKIP_ALTCOINS: 1
   script:
-    - nix-shell --run "poetry run legacy/script/test | ts -s"
+    - nix-shell --run "poetry run make -C legacy test_emu | ts -s"
 
 
 legacy upgrade test:
