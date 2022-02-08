@@ -20,6 +20,7 @@ from collections import namedtuple
 from copy import deepcopy
 from enum import IntEnum
 from itertools import zip_longest
+from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -37,6 +38,7 @@ from typing import (
 )
 
 from mnemonic import Mnemonic
+from PIL import Image
 
 from . import mapping, messages, protobuf
 from .client import TrezorClient
@@ -68,6 +70,14 @@ class DebugLink:
         self.transport = transport
         self.allow_interactions = auto_interact
         self.mapping = mapping.DEFAULT_MAPPING
+
+        # To be set by TrezorClientDebugLink (is not known during creation time)
+        self.model: Optional[str] = None
+
+        # For T1 screenshotting functionality in DebugUI
+        self.t1_take_screenshots = False
+        self.t1_screenshot_directory: Optional[Path] = None
+        self.t1_screenshot_counter = 0
 
     def open(self) -> None:
         self.transport.begin_session()
@@ -204,10 +214,20 @@ class DebugLink:
         return self._call(messages.DebugLinkReseedRandom(value=value))
 
     def start_recording(self, directory: str) -> None:
-        self._call(messages.DebugLinkRecordScreen(target_directory=directory))
+        # Different recording logic between TT and T1
+        if self.model == "T":
+            self._call(messages.DebugLinkRecordScreen(target_directory=directory))
+        else:
+            self.t1_screenshot_directory = Path(directory)
+            self.t1_screenshot_counter = 0
+            self.t1_take_screenshots = True
 
     def stop_recording(self) -> None:
-        self._call(messages.DebugLinkRecordScreen(target_directory=None))
+        # Different recording logic between TT and T1
+        if self.model == "T":
+            self._call(messages.DebugLinkRecordScreen(target_directory=None))
+        else:
+            self.t1_take_screenshots = False
 
     @expect(messages.DebugLinkMemory, field="memory", ret_type=bytes)
     def memory_read(self, address: int, length: int) -> protobuf.MessageType:
@@ -225,6 +245,36 @@ class DebugLink:
     @expect(messages.Success)
     def erase_sd_card(self, format: bool = True) -> messages.Success:
         return self._call(messages.DebugLinkEraseSdCard(format=format))
+
+    def take_t1_screenshot_if_relevant(self) -> None:
+        """Conditionally take screenshots on T1.
+
+        TT handles them differently, see debuglink.start_recording.
+        """
+        if self.model == "1" and self.t1_take_screenshots:
+            self.save_screenshot_for_t1()
+
+    def save_screenshot_for_t1(self) -> None:
+        layout = self.state().layout
+        assert layout is not None
+        assert len(layout) == 128 * 64 // 8
+
+        pixels: List[int] = []
+        for byteline in range(64 // 8):
+            offset = byteline * 128
+            row = layout[offset : offset + 128]
+            for bit in range(8):
+                pixels.extend(bool(px & (1 << bit)) for px in row)
+
+        im = Image.new("1", (128, 64))
+        im.putdata(pixels[::-1])
+
+        assert self.t1_screenshot_directory is not None
+        img_location = (
+            self.t1_screenshot_directory / f"{self.t1_screenshot_counter:04d}.png"
+        )
+        im.save(img_location)
+        self.t1_screenshot_counter += 1
 
 
 class NullDebugLink(DebugLink):
@@ -265,6 +315,8 @@ class DebugUI:
         ] = None
 
     def button_request(self, br: messages.ButtonRequest) -> None:
+        self.debuglink.take_t1_screenshot_if_relevant()
+
         if self.input_flow is None:
             if br.code == messages.ButtonRequestType.PinEntry:
                 self.debuglink.input(self.get_pin())
@@ -283,6 +335,8 @@ class DebugUI:
                 self.input_flow = self.INPUT_FLOW_DONE
 
     def get_pin(self, code: Optional["PinMatrixRequestType"] = None) -> str:
+        self.debuglink.take_t1_screenshot_if_relevant()
+
         if self.pins is None:
             raise RuntimeError("PIN requested but no sequence was configured")
 
@@ -292,6 +346,7 @@ class DebugUI:
             raise AssertionError("PIN sequence ended prematurely")
 
     def get_passphrase(self, available_on_device: bool) -> str:
+        self.debuglink.take_t1_screenshot_if_relevant()
         return self.passphrase
 
 
@@ -414,6 +469,9 @@ class TrezorClientDebugLink(TrezorClient):
         self.reset_debug_features()
 
         super().__init__(transport, ui=self.ui)
+
+        # So that we can choose right screenshotting logic (T1 vs TT)
+        self.debug.model = self.features.model
 
     def reset_debug_features(self) -> None:
         """Prepare the debugging client for a new testcase.
