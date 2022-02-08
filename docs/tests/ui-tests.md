@@ -41,12 +41,6 @@ If you wish to check that all test cases in `fixtures.json` were used set the `-
 pytest tests/device_tests --ui=test --ui-check-missing
 ```
 
-You can also skip tests marked as `skip_ui`.
-
-```sh
-pytest tests/device_tests --ui=test -m "not skip_ui"
-```
-
 # Updating Fixtures ("Recording")
 
 Short version:

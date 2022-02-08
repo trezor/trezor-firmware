@@ -96,7 +96,6 @@ def client(request: pytest.FixtureRequest, _raw_client: Client) -> Client:
         )
 
     test_ui = request.config.getoption("ui")
-    run_ui_tests = not request.node.get_closest_marker("skip_ui") and test_ui
 
     _raw_client.reset_debug_features()
     _raw_client.open()
@@ -106,7 +105,7 @@ def client(request: pytest.FixtureRequest, _raw_client: Client) -> Client:
         request.session.shouldstop = "Failed to communicate with Trezor"
         pytest.fail("Failed to communicate with Trezor")
 
-    if run_ui_tests:
+    if test_ui:
         # we need to reseed before the wipe
         _raw_client.debug.reseed(0)
 
@@ -153,7 +152,7 @@ def client(request: pytest.FixtureRequest, _raw_client: Client) -> Client:
 
         _raw_client.clear_session()
 
-    if run_ui_tests:
+    if test_ui:
         with ui_tests.screen_recording(_raw_client, request):
             yield _raw_client
     else:
@@ -248,9 +247,6 @@ def pytest_configure(config: "Config") -> None:
     config.addinivalue_line(
         "markers",
         'setup_client(mnemonic="all all all...", pin=None, passphrase=False, uninitialized=False): configure the client instance',
-    )
-    config.addinivalue_line(
-        "markers", "skip_ui: skip UI integration checks for this test"
     )
     with open(os.path.join(os.path.dirname(__file__), "REGISTERED_MARKERS")) as f:
         for line in f:
