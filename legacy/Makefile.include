@@ -75,7 +75,6 @@ CFLAGS   += $(OPTFLAGS) \
             $(FPUFLAGS) \
             $(CONFFLAG) \
             -DSTM32F2 \
-            -DRAND_PLATFORM_INDEPENDENT=1 \
             -I$(TOOLCHAIN_DIR)/include \
             -I$(TOP_DIR) \
             -I$(TOP_DIR)gen \
@@ -105,10 +104,6 @@ LIBDEPS  += $(TOP_DIR)/libtrezor.a $(TOP_DIR)emulator/libemulator.a
 CFLAGS   += $(shell pkg-config --cflags sdl2 SDL2_image)
 LDLIBS   += $(shell pkg-config --libs sdl2 SDL2_image)
 
-ifdef RANDOM_DEV_FILE
-CFLAGS += -DRANDOM_DEV_FILE=\"$(RANDOM_DEV_FILE)\"
-endif
-
 else
 ifdef APPVER
 CFLAGS   += -DAPPVER=$(APPVER)
@@ -118,6 +113,7 @@ LDSCRIPT  = $(TOP_DIR)/memory.ld
 endif
 
 CFLAGS   += -DEMULATOR=0
+CFLAGS   += -DRAND_PLATFORM_INDEPENDENT=1
 
 LDFLAGS  += --static \
             -Wl,--start-group \
