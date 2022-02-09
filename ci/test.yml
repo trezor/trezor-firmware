@@ -405,7 +405,7 @@ crypto test:
 
 # Legacy
 
-legacy test:
+legacy device test:
   stage: test
   <<: *gitlab_caching
   needs:
