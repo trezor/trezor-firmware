@@ -1,5 +1,5 @@
 use core::ops::Deref;
-use heapless::Vec;
+use heapless::String;
 
 use crate::{
     trezorhal::random,
@@ -26,7 +26,7 @@ const MAX_LENGTH: usize = 9;
 const DIGIT_COUNT: usize = 10; // 0..10
 
 pub struct PinKeyboard<T> {
-    digits: Vec<u8, MAX_LENGTH>,
+    digits: String<MAX_LENGTH>,
     allow_cancel: bool,
     major_prompt: Label<T>,
     minor_prompt: Label<T>,
@@ -40,7 +40,7 @@ pub struct PinKeyboard<T> {
 
 impl<T> PinKeyboard<T>
 where
-    T: Deref<Target = [u8]>,
+    T: Deref<Target = str>,
 {
     const HEADER_HEIGHT: i32 = 25;
     const HEADER_PADDING_SIDE: i32 = 5;
@@ -56,7 +56,7 @@ where
         major_warning: Option<T>,
         allow_cancel: bool,
     ) -> Self {
-        let digits = Vec::new();
+        let digits = String::new();
 
         // Control buttons.
         let reset_btn = Button::with_icon(theme::ICON_BACK)
@@ -97,7 +97,7 @@ where
     }
 
     fn pin_modified(&mut self, ctx: &mut EventCtx) {
-        let is_full = self.digits.is_full();
+        let is_full = self.digits.len() == self.digits.capacity();
         for btn in &mut self.digit_btns {
             btn.mutate(ctx, |ctx, btn| btn.enable_if(ctx, !is_full));
         }
@@ -118,14 +118,14 @@ where
             .mutate(ctx, |ctx, dots| dots.update(ctx, digit_count));
     }
 
-    pub fn pin(&self) -> &[u8] {
+    pub fn pin(&self) -> &str {
         &self.digits
     }
 }
 
 impl<T> Component for PinKeyboard<T>
 where
-    T: Deref<Target = [u8]>,
+    T: Deref<Target = str>,
 {
     type Msg = PinKeyboardMsg;
 
@@ -188,7 +188,7 @@ where
         for btn in &mut self.digit_btns {
             if let Some(Clicked) = btn.event(ctx, event) {
                 if let ButtonContent::Text(text) = btn.inner().content() {
-                    if self.digits.extend_from_slice(text.as_ref()).is_err() {
+                    if self.digits.push_str(text).is_err() {
                         // `self.pin` is full and wasn't able to accept all of
                         // `text`. Should not happen.
                     }
@@ -309,7 +309,7 @@ impl Component for PinDots {
 #[cfg(feature = "ui_debug")]
 impl<T> crate::trace::Trace for PinKeyboard<T>
 where
-    T: Deref<Target = [u8]>,
+    T: Deref<Target = str>,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("PinKeyboard");

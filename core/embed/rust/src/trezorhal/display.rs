@@ -67,7 +67,7 @@ pub fn backlight(val: i32) -> i32 {
     unsafe { display_backlight(val) }
 }
 
-pub fn text(baseline_x: i32, baseline_y: i32, text: &[u8], font: i32, fgcolor: u16, bgcolor: u16) {
+pub fn text(baseline_x: i32, baseline_y: i32, text: &str, font: i32, fgcolor: u16, bgcolor: u16) {
     unsafe {
         display_text(
             baseline_x,
@@ -81,8 +81,14 @@ pub fn text(baseline_x: i32, baseline_y: i32, text: &[u8], font: i32, fgcolor: u
     }
 }
 
-pub fn text_width(text: &[u8], font: i32) -> i32 {
+pub fn text_width(text: &str, font: i32) -> i32 {
     unsafe { display_text_width(text.as_ptr() as _, text.len() as _, font) }
+}
+
+pub fn char_width(ch: char, font: i32) -> i32 {
+    let mut buf = [0u8; 4];
+    let encoding = ch.encode_utf8(&mut buf);
+    text_width(encoding, font)
 }
 
 pub fn text_height(font: i32) -> i32 {

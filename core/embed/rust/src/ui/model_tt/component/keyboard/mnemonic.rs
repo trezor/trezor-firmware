@@ -19,17 +19,17 @@ pub struct MnemonicKeyboard<T, U> {
     /// Initial prompt, displayed on empty input.
     prompt: Child<Maybe<Label<U>>>,
     /// Backspace button.
-    back: Child<Maybe<Button<&'static [u8]>>>,
+    back: Child<Maybe<Button<&'static str>>>,
     /// Input area, acting as the auto-complete and confirm button.
     input: Child<Maybe<T>>,
     /// Key buttons.
-    keys: [Child<Button<&'static [u8]>>; MNEMONIC_KEY_COUNT],
+    keys: [Child<Button<&'static str>>; MNEMONIC_KEY_COUNT],
 }
 
 impl<T, U> MnemonicKeyboard<T, U>
 where
     T: MnemonicInput,
-    U: Deref<Target = [u8]>,
+    U: Deref<Target = str>,
 {
     pub fn new(input: T, prompt: U) -> Self {
         Self {
@@ -42,10 +42,7 @@ where
                 Button::with_icon(theme::ICON_BACK).styled(theme::button_clear()),
             )),
             input: Child::new(Maybe::hidden(theme::BG, input)),
-            keys: T::keys()
-                .map(str::as_bytes)
-                .map(Button::with_text)
-                .map(Child::new),
+            keys: T::keys().map(Button::with_text).map(Child::new),
         }
     }
 
@@ -87,7 +84,7 @@ where
 impl<T, U> Component for MnemonicKeyboard<T, U>
 where
     T: MnemonicInput,
-    U: Deref<Target = [u8]>,
+    U: Deref<Target = str>,
 {
     type Msg = MnemonicKeyboardMsg;
 

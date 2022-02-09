@@ -114,11 +114,11 @@ impl TextLayout {
         self.bounds.top_left() + Offset::y(self.text_font.text_height() + self.padding_top)
     }
 
-    pub fn fit_text(&self, text: &[u8]) -> LayoutFit {
+    pub fn fit_text(&self, text: &str) -> LayoutFit {
         self.layout_text(text, &mut self.initial_cursor(), &mut TextNoOp)
     }
 
-    pub fn render_text(&self, text: &[u8]) {
+    pub fn render_text(&self, text: &str) {
         self.layout_text(text, &mut self.initial_cursor(), &mut TextRenderer);
     }
 
@@ -167,7 +167,7 @@ impl TextLayout {
 
     pub fn layout_text(
         &self,
-        text: &[u8],
+        text: &str,
         cursor: &mut Point,
         sink: &mut dyn LayoutSink,
     ) -> LayoutFit {
@@ -276,7 +276,7 @@ impl LayoutFit {
 
 /// Visitor for text segment operations.
 pub trait LayoutSink {
-    fn text(&mut self, _cursor: Point, _layout: &TextLayout, _text: &[u8]) {}
+    fn text(&mut self, _cursor: Point, _layout: &TextLayout, _text: &str) {}
     fn hyphen(&mut self, _cursor: Point, _layout: &TextLayout) {}
     fn ellipsis(&mut self, _cursor: Point, _layout: &TextLayout) {}
     fn line_break(&mut self, _cursor: Point) {}
@@ -290,7 +290,7 @@ impl LayoutSink for TextNoOp {}
 pub struct TextRenderer;
 
 impl LayoutSink for TextRenderer {
-    fn text(&mut self, cursor: Point, layout: &TextLayout, text: &[u8]) {
+    fn text(&mut self, cursor: Point, layout: &TextLayout, text: &str) {
         display::text(
             cursor,
             text,
@@ -303,7 +303,7 @@ impl LayoutSink for TextRenderer {
     fn hyphen(&mut self, cursor: Point, layout: &TextLayout) {
         display::text(
             cursor,
-            b"-",
+            "-",
             layout.hyphen_font,
             layout.hyphen_color,
             layout.background_color,
@@ -313,7 +313,7 @@ impl LayoutSink for TextRenderer {
     fn ellipsis(&mut self, cursor: Point, layout: &TextLayout) {
         display::text(
             cursor,
-            b"...",
+            "...",
             layout.ellipsis_font,
             layout.ellipsis_color,
             layout.background_color,
@@ -330,8 +330,8 @@ pub mod trace {
     pub struct TraceSink<'a>(pub &'a mut dyn crate::trace::Tracer);
 
     impl<'a> LayoutSink for TraceSink<'a> {
-        fn text(&mut self, _cursor: Point, _layout: &TextLayout, text: &[u8]) {
-            self.0.bytes(text);
+        fn text(&mut self, _cursor: Point, _layout: &TextLayout, text: &str) {
+            self.0.string(text);
         }
 
         fn hyphen(&mut self, _cursor: Point, _layout: &TextLayout) {
@@ -351,7 +351,7 @@ pub mod trace {
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Op<'a> {
     /// Render text with current color and font.
-    Text(&'a [u8]),
+    Text(&'a str),
     /// Set current text color.
     Color(Color),
     /// Set currently used font.
@@ -396,22 +396,22 @@ struct Span {
 
 impl Span {
     fn fit_horizontally(
-        text: &[u8],
+        text: &str,
         max_width: i32,
         text_font: Font,
         hyphen_font: Font,
         breaking: LineBreaking,
     ) -> Self {
-        const ASCII_LF: u8 = b'\n';
-        const ASCII_CR: u8 = b'\r';
-        const ASCII_SPACE: u8 = b' ';
-        const ASCII_HYPHEN: u8 = b'-';
+        const ASCII_LF: char = '\n';
+        const ASCII_CR: char = '\r';
+        const ASCII_SPACE: char = ' ';
+        const ASCII_HYPHEN: char = '-';
 
-        fn is_whitespace(ch: u8) -> bool {
+        fn is_whitespace(ch: char) -> bool {
             ch == ASCII_SPACE || ch == ASCII_LF || ch == ASCII_CR
         }
 
-        let hyphen_width = hyphen_font.text_width(&[ASCII_HYPHEN]);
+        let hyphen_width = hyphen_font.char_width(ASCII_HYPHEN);
 
         // The span we return in case the line has to break. We mutate it in the
         // possible break points, and its initial value is returned in case no text
@@ -427,8 +427,8 @@ impl Span {
         let mut span_width = 0;
         let mut found_any_whitespace = false;
 
-        for (i, &ch) in text.iter().enumerate() {
-            let char_width = text_font.text_width(&[ch]);
+        for (i, ch) in text.char_indices() {
+            let char_width = text_font.char_width(ch);
 
             // Consider if we could be breaking the line at this position.
             if is_whitespace(ch) {

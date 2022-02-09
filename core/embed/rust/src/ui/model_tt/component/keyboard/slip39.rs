@@ -25,7 +25,7 @@ use crate::{
 const MAX_LENGTH: usize = 8;
 
 pub struct Slip39Input {
-    button: Button<&'static [u8]>,
+    button: Button<&'static str>,
     textbox: TextBox<MAX_LENGTH>,
     multi_tap: MultiTapKeyboard,
     final_word: Option<&'static str>,
@@ -139,8 +139,9 @@ impl Component for Slip39Input {
             if let (Some(key), Some(press)) =
                 (self.multi_tap.pending_key(), self.multi_tap.pending_press())
             {
-                let ascii_text = Self::keys()[key].as_bytes();
-                let ch = ascii_text[press % ascii_text.len()] as char;
+                assert!(!Self::keys()[key].is_empty());
+                // Now we can be sure that the looped iterator will return a value.
+                let ch = Self::keys()[key].chars().cycle().nth(press).unwrap();
                 text.pop();
                 text.push(ch)
                     .assert_if_debugging_ui("Text buffer is too small");
@@ -148,7 +149,7 @@ impl Component for Slip39Input {
         }
         display::text(
             text_baseline,
-            text.as_bytes(),
+            text.as_str(),
             style.font,
             style.text_color,
             style.button_color,
@@ -156,7 +157,7 @@ impl Component for Slip39Input {
 
         // Paint the pending marker.
         if self.multi_tap.pending_key().is_some() && self.final_word.is_none() {
-            paint_pending_marker(text_baseline, text.as_bytes(), style.font, style.text_color);
+            paint_pending_marker(text_baseline, text.as_str(), style.font, style.text_color);
         }
 
         // Paint the icon.
@@ -221,7 +222,7 @@ impl Slip39Input {
             // Disabled button.
             self.button.disable(ctx);
             self.button.set_stylesheet(ctx, theme::button_default());
-            self.button.set_content(ctx, ButtonContent::Text(b""));
+            self.button.set_content(ctx, ButtonContent::Text(""));
         }
     }
 

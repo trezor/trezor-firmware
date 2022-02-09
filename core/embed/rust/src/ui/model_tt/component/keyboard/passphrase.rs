@@ -250,7 +250,7 @@ impl Component for Input {
 
         let style = theme::label_default();
         let text_baseline = self.area.bottom_left() - TEXT_OFFSET;
-        let text = self.textbox.content().as_bytes();
+        let text = self.textbox.content();
 
         // Possible optimization is to redraw the background only when pending character
         // is replaced, or only draw rectangle over the pending character and

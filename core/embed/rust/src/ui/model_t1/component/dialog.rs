@@ -22,7 +22,7 @@ pub struct Dialog<T, U> {
 impl<T, U> Dialog<T, U>
 where
     T: Component,
-    U: AsRef<[u8]>,
+    U: AsRef<str>,
 {
     pub fn new(content: T, left: Option<Button<U>>, right: Option<Button<U>>) -> Self {
         Self {
@@ -40,7 +40,7 @@ where
 impl<T, U> Component for Dialog<T, U>
 where
     T: Component,
-    U: AsRef<[u8]>,
+    U: AsRef<str>,
 {
     type Msg = DialogMsg<T::Msg>;
 
@@ -80,7 +80,7 @@ where
 impl<T, U> crate::trace::Trace for Dialog<T, U>
 where
     T: crate::trace::Trace,
-    U: crate::trace::Trace + AsRef<[u8]>,
+    U: crate::trace::Trace + AsRef<str>,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("Dialog");

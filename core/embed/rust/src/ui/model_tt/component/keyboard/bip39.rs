@@ -20,7 +20,7 @@ use crate::{
 const MAX_LENGTH: usize = 8;
 
 pub struct Bip39Input {
-    button: Button<&'static [u8]>,
+    button: Button<&'static str>,
     textbox: TextBox<MAX_LENGTH>,
     multi_tap: MultiTapKeyboard,
     suggested_word: Option<&'static str>,
@@ -95,7 +95,7 @@ impl Component for Bip39Input {
         self.button.paint_background(&style);
 
         // Paint the entered content (the prefix of the suggested word).
-        let text = self.textbox.content().as_bytes();
+        let text = self.textbox.content();
         let width = style.font.text_width(text);
         // Content starts in the left-center point, offset by 16px to the right and 8px
         // to the bottom.
@@ -113,7 +113,7 @@ impl Component for Bip39Input {
             let word_baseline = text_baseline + Offset::new(width, 0);
             display::text(
                 word_baseline,
-                word.as_bytes(),
+                word,
                 style.font,
                 theme::GREY_LIGHT,
                 style.button_color,
@@ -211,7 +211,7 @@ impl Bip39Input {
             // Disabled button.
             self.button.disable(ctx);
             self.button.set_stylesheet(ctx, theme::button_default());
-            self.button.set_content(ctx, ButtonContent::Text(b""));
+            self.button.set_content(ctx, ButtonContent::Text(""));
         }
     }
 }

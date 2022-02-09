@@ -57,7 +57,7 @@ where
     fn paint_hint(&mut self) {
         display::text_center(
             self.pad.area.bottom_center() - Offset::y(3),
-            b"SWIPE TO CONTINUE",
+            "SWIPE TO CONTINUE",
             theme::FONT_BOLD, // FIXME: Figma has this as 14px but bold is 16px
             theme::GREY_LIGHT,
             theme::BG,

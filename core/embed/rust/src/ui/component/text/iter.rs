@@ -169,7 +169,7 @@ trait GlyphMetrics {
 
 impl GlyphMetrics for Font {
     fn char_width(&self, ch: char) -> i32 {
-        self.text_width(&[ch as u8])
+        Font::char_width(*self, ch)
     }
 
     fn line_height(&self) -> i32 {

@@ -2,7 +2,7 @@ use core::{convert::TryInto, ops::Deref};
 
 use crate::{
     error::Error,
-    micropython::{buffer::Buffer, map::Map, module::Module, obj::Obj, qstr::Qstr},
+    micropython::{buffer::StrBuffer, map::Map, module::Module, obj::Obj, qstr::Qstr},
     ui::{
         component::{
             base::ComponentExt,
@@ -30,7 +30,7 @@ use super::{
 impl<T, U> ComponentMsgObj for Dialog<T, Button<U>, Button<U>>
 where
     T: ComponentMsgObj,
-    U: AsRef<[u8]>,
+    U: AsRef<str>,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
@@ -57,7 +57,7 @@ where
 
 impl<T> ComponentMsgObj for PinKeyboard<T>
 where
-    T: Deref<Target = [u8]>,
+    T: Deref<Target = str>,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
@@ -79,7 +79,7 @@ impl ComponentMsgObj for PassphraseKeyboard {
 impl<T, U> ComponentMsgObj for MnemonicKeyboard<T, U>
 where
     T: MnemonicInput,
-    U: Deref<Target = [u8]>,
+    U: Deref<Target = str>,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
@@ -97,7 +97,7 @@ where
 impl<T, U> ComponentMsgObj for Frame<T, U>
 where
     T: ComponentMsgObj,
-    U: AsRef<[u8]>,
+    U: AsRef<str>,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         self.inner().msg_try_into_obj(msg)
@@ -120,11 +120,11 @@ where
 
 extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: Buffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let action: Option<Buffer> = kwargs.get(Qstr::MP_QSTR_action)?.try_into_option()?;
-        let description: Option<Buffer> =
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let action: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_action)?.try_into_option()?;
+        let description: Option<StrBuffer> =
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
-        let verb: Option<Buffer> = kwargs.get(Qstr::MP_QSTR_verb)?.try_into_option()?;
+        let verb: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_verb)?.try_into_option()?;
         let reverse: bool = kwargs.get(Qstr::MP_QSTR_reverse)?.try_into()?;
 
         let paragraphs = {
@@ -161,11 +161,11 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
 
 extern "C" fn new_request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let prompt: Buffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
-        let subprompt: Buffer = kwargs.get(Qstr::MP_QSTR_subprompt)?.try_into()?;
+        let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+        let subprompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_subprompt)?.try_into()?;
         let allow_cancel: Option<bool> =
             kwargs.get(Qstr::MP_QSTR_allow_cancel)?.try_into_option()?;
-        let warning: Option<Buffer> = kwargs.get(Qstr::MP_QSTR_warning)?.try_into_option()?;
+        let warning: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_warning)?.try_into_option()?;
         let obj = LayoutObj::new(
             PinKeyboard::new(prompt, subprompt, warning, allow_cancel.unwrap_or(true)).into_child(),
         )?;
@@ -176,7 +176,7 @@ extern "C" fn new_request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map)
 
 extern "C" fn new_request_passphrase(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let _prompt: Buffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+        let _prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
         let _max_len: u32 = kwargs.get(Qstr::MP_QSTR_max_len)?.try_into()?;
         let obj = LayoutObj::new(PassphraseKeyboard::new().into_child())?;
         Ok(obj.into())
@@ -186,7 +186,7 @@ extern "C" fn new_request_passphrase(n_args: usize, args: *const Obj, kwargs: *m
 
 extern "C" fn new_request_bip39(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let prompt: Buffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+        let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
         let obj = LayoutObj::new(MnemonicKeyboard::new(Bip39Input::new(), prompt).into_child())?;
         Ok(obj.into())
     };
@@ -195,7 +195,7 @@ extern "C" fn new_request_bip39(n_args: usize, args: *const Obj, kwargs: *mut Ma
 
 extern "C" fn new_request_slip39(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let prompt: Buffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+        let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
         let obj = LayoutObj::new(MnemonicKeyboard::new(Slip39Input::new(), prompt).into_child())?;
         Ok(obj.into())
     };
@@ -288,9 +288,9 @@ mod tests {
             FormattedText::new::<theme::TTDefaultText>(
                 "Testing text layout, with some text, and some more text. And {param}",
             )
-            .with(b"param", b"parameters!"),
-            Button::with_text(b"Left"),
-            Button::with_text(b"Right"),
+            .with("param", "parameters!"),
+            Button::with_text("Left"),
+            Button::with_text("Right"),
         );
         layout.place(SCREEN);
         assert_eq!(
