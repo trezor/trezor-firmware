@@ -79,9 +79,6 @@ impl MultiTapKeyboard {
     /// the pending state. Caller is required to handle the timer event and
     /// call `Self::clear_pending_state` when the timer hits.
     pub fn click_key(&mut self, ctx: &mut EventCtx, key: usize, key_text: &str) -> TextEdit {
-        // To simplify things, we assume the key text is ASCII-only.
-        let ascii_text = key_text.as_bytes();
-
         let (is_pending, press) = match &self.pending {
             Some(pending) if pending.key == key => {
                 // This key is pending. Cycle the last inserted character through the
@@ -102,7 +99,7 @@ impl MultiTapKeyboard {
         // progress into a pending state (to display the pending marker), but such
         // transition only happens as a result of an append op, so the painting should
         // be requested by handling the `TextEdit`.
-        self.pending = if ascii_text.len() > 1 {
+        self.pending = if key_text.len() > 1 {
             Some(Pending {
                 key,
                 press,
@@ -112,7 +109,9 @@ impl MultiTapKeyboard {
             None
         };
 
-        let ch = ascii_text[press % ascii_text.len()] as char;
+        assert!(!key_text.is_empty());
+        // Now we can be sure that a looped iterator will return a value
+        let ch = key_text.chars().cycle().nth(press).unwrap();
         if is_pending {
             TextEdit::ReplaceLast(ch)
         } else {
@@ -208,11 +207,11 @@ impl<const L: usize> TextBox<L> {
     }
 }
 
-pub fn paint_pending_marker(text_baseline: Point, text: &[u8], font: Font, color: Color) {
+pub fn paint_pending_marker(text_baseline: Point, text: &str, font: Font, color: Color) {
     // Measure the width of the last character of input.
-    if let Some(last) = text.last().copied() {
+    if let Some(last) = text.chars().last() {
         let width = font.text_width(text);
-        let last_width = font.text_width(&[last]);
+        let last_width = font.char_width(last);
         // Draw the marker 2px under the start of the baseline of the last character.
         let marker_origin = text_baseline + Offset::new(width - last_width, 2);
         // Draw the marker 1px longer than the last character, and 3px thick.

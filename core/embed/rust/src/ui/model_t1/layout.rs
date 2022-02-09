@@ -2,7 +2,7 @@ use core::convert::TryInto;
 
 use crate::{
     error::Error,
-    micropython::{buffer::Buffer, map::Map, module::Module, obj::Obj, qstr::Qstr},
+    micropython::{buffer::StrBuffer, map::Map, module::Module, obj::Obj, qstr::Qstr},
     ui::{
         component::{
             base::Component,
@@ -39,7 +39,7 @@ where
 impl<T, U> ComponentMsgObj for Frame<T, U>
 where
     T: ComponentMsgObj,
-    U: AsRef<[u8]>,
+    U: AsRef<str>,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         self.inner().msg_try_into_obj(msg)
@@ -48,12 +48,12 @@ where
 
 extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
-        let title: Buffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let action: Option<Buffer> = kwargs.get(Qstr::MP_QSTR_action)?.try_into_option()?;
-        let description: Option<Buffer> =
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let action: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_action)?.try_into_option()?;
+        let description: Option<StrBuffer> =
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
-        let verb: Option<Buffer> = kwargs.get(Qstr::MP_QSTR_verb)?.try_into_option()?;
-        let verb_cancel: Option<Buffer> =
+        let verb: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_verb)?.try_into_option()?;
+        let verb_cancel: Option<StrBuffer> =
             kwargs.get(Qstr::MP_QSTR_verb_cancel)?.try_into_option()?;
         let reverse: bool = kwargs.get(Qstr::MP_QSTR_reverse)?.try_into()?;
 
@@ -74,8 +74,8 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
             title,
             ButtonPage::new(
                 FormattedText::new::<theme::T1DefaultText>(format)
-                    .with(b"action", action.unwrap_or_default())
-                    .with(b"description", description.unwrap_or_default()),
+                    .with("action", action.unwrap_or_default())
+                    .with("description", description.unwrap_or_default()),
                 theme::BG,
             ),
         ))?;
@@ -86,9 +86,9 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
 
 extern "C" fn new_confirm_text(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
-        let title: Buffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let data: Buffer = kwargs.get(Qstr::MP_QSTR_data)?.try_into()?;
-        let description: Option<Buffer> =
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let data: StrBuffer = kwargs.get(Qstr::MP_QSTR_data)?.try_into()?;
+        let description: Option<StrBuffer> =
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
 
         let obj = LayoutObj::new(Frame::new(
@@ -165,7 +165,7 @@ mod tests {
     impl<T, U> ComponentMsgObj for Dialog<T, U>
     where
         T: ComponentMsgObj,
-        U: AsRef<[u8]>,
+        U: AsRef<str>,
     {
         fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
             match msg {
@@ -182,7 +182,7 @@ mod tests {
             FormattedText::new::<theme::T1DefaultText>(
                 "Testing text layout, with some text, and some more text. And {param}",
             )
-            .with(b"param", b"parameters!"),
+            .with("param", "parameters!"),
             Some(Button::with_text(
                 ButtonPos::Left,
                 "Left",
@@ -212,7 +212,7 @@ arameters! > left:<Button text:Left > right:<Button text:Right > >"#
                 FormattedText::new::<theme::T1DefaultText>(
                     "Testing text layout, with some text, and some more text. And {param}",
                 )
-                .with(b"param", b"parameters!"),
+                .with("param", "parameters!"),
                 Some(Button::with_text(
                     ButtonPos::Left,
                     "Left",

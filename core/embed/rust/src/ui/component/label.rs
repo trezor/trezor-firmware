@@ -21,7 +21,7 @@ pub struct Label<T> {
 
 impl<T> Label<T>
 where
-    T: Deref<Target = [u8]>,
+    T: Deref<Target = str>,
 {
     pub fn new(text: T, align: Alignment, style: LabelStyle) -> Self {
         Self {
@@ -58,7 +58,7 @@ where
 
 impl<T> Component for Label<T>
 where
-    T: Deref<Target = [u8]>,
+    T: Deref<Target = str>,
 {
     type Msg = Never;
 

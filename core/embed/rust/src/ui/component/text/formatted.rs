@@ -21,7 +21,7 @@ pub const MAX_ARGUMENTS: usize = 6;
 pub struct FormattedText<F, T> {
     layout: TextLayout,
     format: F,
-    args: LinearMap<&'static [u8], T, MAX_ARGUMENTS>,
+    args: LinearMap<&'static str, T, MAX_ARGUMENTS>,
     char_offset: usize,
 }
 
@@ -35,7 +35,7 @@ impl<F, T> FormattedText<F, T> {
         }
     }
 
-    pub fn with(mut self, key: &'static [u8], value: T) -> Self {
+    pub fn with(mut self, key: &'static str, value: T) -> Self {
         if self.args.insert(key, value).is_err() {
             #[cfg(feature = "ui_debug")]
             panic!("text args map is full");
@@ -83,18 +83,18 @@ impl<F, T> FormattedText<F, T> {
 
 impl<F, T> FormattedText<F, T>
 where
-    F: AsRef<[u8]>,
-    T: AsRef<[u8]>,
+    F: AsRef<str>,
+    T: AsRef<str>,
 {
     pub fn layout_content(&self, sink: &mut dyn LayoutSink) -> LayoutFit {
         let mut cursor = self.layout.initial_cursor();
         let mut ops = Op::skip_n_text_bytes(
             Tokenizer::new(self.format.as_ref()).flat_map(|arg| match arg {
                 Token::Literal(literal) => Some(Op::Text(literal)),
-                Token::Argument(b"mono") => Some(Op::Font(self.layout.mono_font)),
-                Token::Argument(b"bold") => Some(Op::Font(self.layout.bold_font)),
-                Token::Argument(b"normal") => Some(Op::Font(self.layout.normal_font)),
-                Token::Argument(b"medium") => Some(Op::Font(self.layout.medium_font)),
+                Token::Argument("mono") => Some(Op::Font(self.layout.mono_font)),
+                Token::Argument("bold") => Some(Op::Font(self.layout.bold_font)),
+                Token::Argument("normal") => Some(Op::Font(self.layout.normal_font)),
+                Token::Argument("medium") => Some(Op::Font(self.layout.medium_font)),
                 Token::Argument(argument) => self
                     .args
                     .get(argument)
@@ -108,8 +108,8 @@ where
 
 impl<F, T> Component for FormattedText<F, T>
 where
-    F: AsRef<[u8]>,
-    T: AsRef<[u8]>,
+    F: AsRef<str>,
+    T: AsRef<str>,
 {
     type Msg = Never;
 
@@ -141,8 +141,8 @@ pub mod trace {
 
     impl<'a, F, T> crate::trace::Trace for TraceText<'a, F, T>
     where
-        F: AsRef<[u8]>,
-        T: AsRef<[u8]>,
+        F: AsRef<str>,
+        T: AsRef<str>,
     {
         fn trace(&self, d: &mut dyn crate::trace::Tracer) {
             self.0.layout_content(&mut TraceSink(d));
@@ -153,8 +153,8 @@ pub mod trace {
 #[cfg(feature = "ui_debug")]
 impl<F, T> crate::trace::Trace for FormattedText<F, T>
 where
-    F: AsRef<[u8]>,
-    T: AsRef<[u8]>,
+    F: AsRef<str>,
+    T: AsRef<str>,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("Text");
@@ -166,9 +166,9 @@ where
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Token<'a> {
     /// Process literal text content.
-    Literal(&'a [u8]),
+    Literal(&'a str),
     /// Process argument with specified descriptor.
-    Argument(&'a [u8]),
+    Argument(&'a str),
 }
 
 /// Processes a format string into an iterator of `Token`s.
@@ -182,17 +182,18 @@ pub enum Token<'a> {
 /// assert!(matches!(parser.next(), Some(Token::Literal(", where you been?"))));
 /// ```
 pub struct Tokenizer<'a> {
-    input: &'a [u8],
+    input: &'a str,
     inner: Peekable<Enumerate<slice::Iter<'a, u8>>>,
 }
 
 impl<'a> Tokenizer<'a> {
     /// Create a new tokenizer for bytes of a formatting string `input`,
     /// returning an iterator.
-    pub fn new(input: &'a [u8]) -> Self {
+    pub fn new(input: &'a str) -> Self {
+        assert!(input.is_ascii());
         Self {
             input,
-            inner: input.iter().enumerate().peekable(),
+            inner: input.as_bytes().iter().enumerate().peekable(),
         }
     }
 }
@@ -246,26 +247,26 @@ mod tests {
 
     #[test]
     fn tokenizer_yields_expected_tokens() {
-        assert!(Tokenizer::new(b"").eq([]));
-        assert!(Tokenizer::new(b"x").eq([Token::Literal(b"x")]));
-        assert!(Tokenizer::new(b"x\0y").eq([Token::Literal("x\0y".as_bytes())]));
-        assert!(Tokenizer::new(b"{").eq([]));
-        assert!(Tokenizer::new(b"x{").eq([Token::Literal(b"x")]));
-        assert!(Tokenizer::new(b"x{y").eq([Token::Literal(b"x")]));
-        assert!(Tokenizer::new(b"{}").eq([Token::Argument(b"")]));
-        assert!(Tokenizer::new(b"x{}y{").eq([
-            Token::Literal(b"x"),
-            Token::Argument(b""),
-            Token::Literal(b"y"),
+        assert!(Tokenizer::new("").eq([]));
+        assert!(Tokenizer::new("x").eq([Token::Literal("x")]));
+        assert!(Tokenizer::new("x\0y").eq([Token::Literal("x\0y")]));
+        assert!(Tokenizer::new("{").eq([]));
+        assert!(Tokenizer::new("x{").eq([Token::Literal("x")]));
+        assert!(Tokenizer::new("x{y").eq([Token::Literal("x")]));
+        assert!(Tokenizer::new("{}").eq([Token::Argument("")]));
+        assert!(Tokenizer::new("x{}y{").eq([
+            Token::Literal("x"),
+            Token::Argument(""),
+            Token::Literal("y"),
         ]));
-        assert!(Tokenizer::new(b"{\0}").eq([Token::Argument("\0".as_bytes()),]));
-        assert!(Tokenizer::new(b"{{y}").eq([Token::Argument(b"{y"),]));
-        assert!(Tokenizer::new(b"{{{{xyz").eq([]));
-        assert!(Tokenizer::new(b"x{}{{}}}}").eq([
-            Token::Literal(b"x"),
-            Token::Argument(b""),
-            Token::Argument(b"{"),
-            Token::Literal(b"}}}"),
+        assert!(Tokenizer::new("{\0}").eq([Token::Argument("\0"),]));
+        assert!(Tokenizer::new("{{y}").eq([Token::Argument("{y"),]));
+        assert!(Tokenizer::new("{{{{xyz").eq([]));
+        assert!(Tokenizer::new("x{}{{}}}}").eq([
+            Token::Literal("x"),
+            Token::Argument(""),
+            Token::Argument("{"),
+            Token::Literal("}}}"),
         ]));
     }
 }

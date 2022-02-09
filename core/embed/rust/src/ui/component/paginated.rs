@@ -20,8 +20,8 @@ pub trait Paginate {
 
 impl<F, T> Paginate for FormattedText<F, T>
 where
-    F: AsRef<[u8]>,
-    T: AsRef<[u8]>,
+    F: AsRef<str>,
+    T: AsRef<str>,
 {
     fn page_count(&mut self) -> usize {
         let mut page_count = 1; // There's always at least one page.
