@@ -226,7 +226,7 @@ release legacy unix debug deploy:
 
 # UI tests
 
-ui tests core fixtures deploy:
+ui tests fixtures deploy:
   stage: deploy
   variables:
     DEPLOY_PATH: "${DEPLOY_BASE_DIR}/ui_tests/"
@@ -234,6 +234,7 @@ ui tests core fixtures deploy:
   before_script: []  # no poetry
   needs:
     - core device test
+    - legacy device test
   script:
     - echo "Deploying to $DEPLOY_PATH"
     - rsync --delete -va ci/ui_test_records/* "$DEPLOY_PATH"

@@ -90,5 +90,5 @@ creates a report where you find which tests were altered, added, or removed rela
 master. This useful for Pull Requests.
 
 This report is available as an artifact on CI as well. You can find it by
-visiting the "core unix ui changes" job in your pipeline - browse the
+visiting the "unix ui changes" job in your pipeline - browse the
 artifacts and open `master_diff/index.html`.

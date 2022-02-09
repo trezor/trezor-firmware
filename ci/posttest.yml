@@ -28,13 +28,14 @@ core unix coverage posttest:
     when: always
     expire_in: 1 week
 
-core unix ui changes:
+unix ui changes:
   stage: posttest
   except:
     - master
   <<: *gitlab_caching
   needs:
     - core device test
+    - legacy device test
   script:
     - nix-shell --run "cd tests/ui_tests ; poetry run python reporting/report_master_diff.py"
     - mv tests/ui_tests/reporting/reports/master_diff/ .
