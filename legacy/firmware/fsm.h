@@ -94,6 +94,7 @@ void fsm_msgDebugLinkStop(const DebugLinkStop *msg);
 void fsm_msgDebugLinkMemoryWrite(const DebugLinkMemoryWrite *msg);
 void fsm_msgDebugLinkMemoryRead(const DebugLinkMemoryRead *msg);
 void fsm_msgDebugLinkFlashErase(const DebugLinkFlashErase *msg);
+void fsm_msgDebugLinkReseedRandom(const DebugLinkReseedRandom *msg);
 #endif
 
 // ethereum
