@@ -58,7 +58,7 @@ core device test:
     - mv core/src/.coverage core/.coverage.test_emu
   after_script:
     - mv tests/ui_tests/reporting/reports/test/ test_ui_report
-    - nix-shell --run "poetry run python ci/prepare_ui_artifacts.py | ts -s"
+    - nix-shell --run "poetry run python ci/prepare_ui_artifacts.py TT | ts -s"
     - diff tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
@@ -416,7 +416,7 @@ legacy test:
     - nix-shell --run "poetry run make -C legacy test_emu_ui | ts -s"
   after_script:
     - mv tests/ui_tests/reporting/reports/test/ test_ui_report
-    - nix-shell --run "poetry run python ci/prepare_ui_artifacts.py | ts -s"
+    - nix-shell --run "poetry run python ci/prepare_ui_artifacts.py T1 | ts -s"
     - diff tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
