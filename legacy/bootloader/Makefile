@@ -1,4 +1,4 @@
-NAME  = bootloader
+NAME  = bootloader-unaligned
 
 OBJS += bootloader.o
 OBJS += signatures.o
@@ -44,5 +44,7 @@ include ../Makefile.include
 # Remove libtrezor from linking since we specified the small versions
 LDLIBS := $(filter-out -ltrezor,$(LDLIBS))
 
-align: $(NAME).bin
-	./firmware_align.py $(NAME).bin
+bootloader.bin: $(NAME).bin
+	./firmware_align.py $< $@
+
+all: bootloader.bin
