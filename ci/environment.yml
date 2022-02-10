@@ -19,6 +19,8 @@
     - docker build --tag $CONTAINER_NAME:$CI_COMMIT_SHA --tag $CONTAINER_NAME:latest --build-arg ALPINE_VERSION="$ALPINE_VERSION" --build-arg ALPINE_ARCH="$ALPINE_ARCH" --build-arg NIX_VERSION="$NIX_VERSION" --build-arg FULLDEPS_TESTING=1 ci/
     - docker push $CONTAINER_NAME:$CI_COMMIT_SHA
     - docker push $CONTAINER_NAME:latest
+  tags:
+    - runner0_dind
 
 environment manual:
   extends: .environment
