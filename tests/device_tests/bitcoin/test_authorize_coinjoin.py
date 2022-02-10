@@ -51,7 +51,7 @@ pytestmark = pytest.mark.skip_t1
 
 @pytest.mark.setup_client(pin=PIN)
 def test_sign_tx(client: Client):
-    commitment_data = b"www.example.com" + (1).to_bytes(ROUND_ID_LEN, "big")
+    commitment_data = b"\x0fwww.example.com" + (1).to_bytes(ROUND_ID_LEN, "big")
 
     with client:
         client.use_pin_sequence([PIN])
@@ -106,7 +106,7 @@ def test_sign_tx(client: Client):
             script_type=messages.InputScriptType.EXTERNAL,
             script_pubkey=bytes.fromhex("00149c02608d469160a92f40fdf8c6ccced029493088"),
             ownership_proof=bytearray.fromhex(
-                "534c001901016b2055d8190244b2ed2d46513c40658a574d3bc2deb6969c0535bb818b44d2c4000247304402207c7e55f9ad25b03f27e0f51bba5140bafb20d2f29f27dce08e8d0d8d2c4c2efc022060623701649897a8068d5d44efad69e27368e0b5d968daa487139a1367cf2444012103505f0d82bbdd251511591b34f36ad5eea37d3220c2b81a1189084431ddb3aa3d"
+                "534c001901016b2055d8190244b2ed2d46513c40658a574d3bc2deb6969c0535bb818b44d2c40002483045022100a6c7d59b453efa7b4abc9bc724a94c5655ae986d5924dc29d28bcc2b859cbace022047d2bc4422a47f7b044bd6cdfbf63fe1a0ecbf11393f4c0bf8565f867a5ced16012103505f0d82bbdd251511591b34f36ad5eea37d3220c2b81a1189084431ddb3aa3d"
             ),
             commitment_data=commitment_data,
         ),
@@ -267,9 +267,9 @@ def test_unfair_fee(client: Client):
             script_type=messages.InputScriptType.EXTERNAL,
             script_pubkey=bytes.fromhex("00149c02608d469160a92f40fdf8c6ccced029493088"),
             ownership_proof=bytearray.fromhex(
-                "534c001901016b2055d8190244b2ed2d46513c40658a574d3bc2deb6969c0535bb818b44d2c4000247304402207c7e55f9ad25b03f27e0f51bba5140bafb20d2f29f27dce08e8d0d8d2c4c2efc022060623701649897a8068d5d44efad69e27368e0b5d968daa487139a1367cf2444012103505f0d82bbdd251511591b34f36ad5eea37d3220c2b81a1189084431ddb3aa3d"
+                "534c001901016b2055d8190244b2ed2d46513c40658a574d3bc2deb6969c0535bb818b44d2c40002483045022100a6c7d59b453efa7b4abc9bc724a94c5655ae986d5924dc29d28bcc2b859cbace022047d2bc4422a47f7b044bd6cdfbf63fe1a0ecbf11393f4c0bf8565f867a5ced16012103505f0d82bbdd251511591b34f36ad5eea37d3220c2b81a1189084431ddb3aa3d"
             ),
-            commitment_data=b"www.example.org" + (1).to_bytes(ROUND_ID_LEN, "big"),
+            commitment_data=b"\x0fwww.example.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
         ),
         messages.TxInputType(
             address_n=parse_path("m/84h/1h/0h/1/0"),
@@ -368,9 +368,9 @@ def test_no_anonymity(client: Client):
             script_type=messages.InputScriptType.EXTERNAL,
             script_pubkey=bytes.fromhex("00149c02608d469160a92f40fdf8c6ccced029493088"),
             ownership_proof=bytearray.fromhex(
-                "534c001901016b2055d8190244b2ed2d46513c40658a574d3bc2deb6969c0535bb818b44d2c4000247304402207c7e55f9ad25b03f27e0f51bba5140bafb20d2f29f27dce08e8d0d8d2c4c2efc022060623701649897a8068d5d44efad69e27368e0b5d968daa487139a1367cf2444012103505f0d82bbdd251511591b34f36ad5eea37d3220c2b81a1189084431ddb3aa3d"
+                "534c001901016b2055d8190244b2ed2d46513c40658a574d3bc2deb6969c0535bb818b44d2c40002483045022100a6c7d59b453efa7b4abc9bc724a94c5655ae986d5924dc29d28bcc2b859cbace022047d2bc4422a47f7b044bd6cdfbf63fe1a0ecbf11393f4c0bf8565f867a5ced16012103505f0d82bbdd251511591b34f36ad5eea37d3220c2b81a1189084431ddb3aa3d"
             ),
-            commitment_data=b"www.example.org" + (1).to_bytes(ROUND_ID_LEN, "big"),
+            commitment_data=b"\x0fwww.example.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
         ),
         messages.TxInputType(
             address_n=parse_path("m/84h/1h/0h/1/0"),
@@ -479,7 +479,7 @@ def test_wrong_coordinator(client: Client):
             parse_path("m/84h/1h/0h/1/0"),
             script_type=messages.InputScriptType.SPENDWITNESS,
             user_confirmation=True,
-            commitment_data=b"www.example.org" + (1).to_bytes(ROUND_ID_LEN, "big"),
+            commitment_data=b"\x0fwww.example.org" + (1).to_bytes(ROUND_ID_LEN, "big"),
             preauthorized=True,
         )
 
@@ -505,7 +505,7 @@ def test_cancel_authorization(client: Client):
             parse_path("m/84h/1h/0h/1/0"),
             script_type=messages.InputScriptType.SPENDWITNESS,
             user_confirmation=True,
-            commitment_data=b"www.example.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
+            commitment_data=b"\x0fwww.example.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
             preauthorized=True,
         )
 
@@ -543,7 +543,7 @@ def test_multisession_authorization(client: Client):
             parse_path("m/84h/1h/0h/1/0"),
             script_type=messages.InputScriptType.SPENDWITNESS,
             user_confirmation=True,
-            commitment_data=b"www.example1.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
+            commitment_data=b"\x10www.example1.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
             preauthorized=True,
         )
 
@@ -554,13 +554,13 @@ def test_multisession_authorization(client: Client):
         parse_path("m/84h/1h/0h/1/0"),
         script_type=messages.InputScriptType.SPENDWITNESS,
         user_confirmation=True,
-        commitment_data=b"www.example2.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
+        commitment_data=b"\x10www.example2.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
         preauthorized=True,
     )
 
     assert (
         ownership_proof.hex()
-        == "534c00190101f3ce2cb33599634353452b60b38e311282b6fca743eb6147d3d492066c8963de00024830450221008adf2a7396dc4b73a60930942a29d3452a046310af5ef7d3b6815ad3a2e1666d0220255839c04f6926d85a14aa69fc06e84e85e7e527bc5ce500b6905832ff778828012103505647c017ff2156eb6da20fae72173d3b681a1d0a629f95f49e884db300689f"
+        == "534c00190101f3ce2cb33599634353452b60b38e311282b6fca743eb6147d3d492066c8963de0002483045022100e09d9c43108841930e5cb0b0336d022684ded53c7b76e2a8e037eab0950f62ae02205409788b59624c75d2af48cd0da4ab2c1814e719b6036baf2df946d9cc68b488012103505647c017ff2156eb6da20fae72173d3b681a1d0a629f95f49e884db300689f"
     )
 
     # Switch back to the first session.
@@ -574,13 +574,13 @@ def test_multisession_authorization(client: Client):
         parse_path("m/84h/1h/0h/1/0"),
         script_type=messages.InputScriptType.SPENDWITNESS,
         user_confirmation=True,
-        commitment_data=b"www.example1.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
+        commitment_data=b"\x10www.example1.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
         preauthorized=True,
     )
 
     assert (
         ownership_proof.hex()
-        == "534c00190101f3ce2cb33599634353452b60b38e311282b6fca743eb6147d3d492066c8963de0002483045022100b85411a7c87986b2dc032eb100f4aa7c79102b4aa066c85e86df7de688d04e0f02203cc45917a99f9d1313c51deb5cf8d2930b2308ac22bcf06dbded5872b8538da4012103505647c017ff2156eb6da20fae72173d3b681a1d0a629f95f49e884db300689f"
+        == "534c00190101f3ce2cb33599634353452b60b38e311282b6fca743eb6147d3d492066c8963de000247304402203522d44da76232481ae7f045cddec4a2aa3f3e4e46f7a54ffe456702b6f7185b02203c95860358a703c7497f5e22c9e4506114de5d7257af651ccff1bb6cf50b80cb012103505647c017ff2156eb6da20fae72173d3b681a1d0a629f95f49e884db300689f"
     )
 
     # Requesting a preauthorized ownership proof for www.example2.com should fail in session 1.
@@ -591,7 +591,7 @@ def test_multisession_authorization(client: Client):
             parse_path("m/84h/1h/0h/1/0"),
             script_type=messages.InputScriptType.SPENDWITNESS,
             user_confirmation=True,
-            commitment_data=b"www.example2.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
+            commitment_data=b"\x10www.example2.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
             preauthorized=True,
         )
 
@@ -606,7 +606,7 @@ def test_multisession_authorization(client: Client):
             parse_path("m/84h/1h/0h/1/0"),
             script_type=messages.InputScriptType.SPENDWITNESS,
             user_confirmation=True,
-            commitment_data=b"www.example1.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
+            commitment_data=b"\x10www.example1.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
             preauthorized=True,
         )
 
@@ -620,6 +620,6 @@ def test_multisession_authorization(client: Client):
         parse_path("m/84h/1h/0h/1/0"),
         script_type=messages.InputScriptType.SPENDWITNESS,
         user_confirmation=True,
-        commitment_data=b"www.example2.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
+        commitment_data=b"\x10www.example2.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
         preauthorized=True,
     )
