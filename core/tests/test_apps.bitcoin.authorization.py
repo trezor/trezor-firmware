@@ -36,7 +36,7 @@ class TestAuthorization(unittest.TestCase):
             coin_name=self.coin.coin_name,
             script_type=InputScriptType.SPENDWITNESS,
             user_confirmation=True,
-            commitment_data=b"www.example.com" + int.to_bytes(1, _ROUND_ID_LEN, "big"),
+            commitment_data=b"\x0fwww.example.com" + int.to_bytes(1, _ROUND_ID_LEN, "big"),
         )
 
         self.assertFalse(self.authorization.check_get_ownership_proof(msg))
@@ -48,7 +48,7 @@ class TestAuthorization(unittest.TestCase):
             coin_name=self.coin.coin_name,
             script_type=InputScriptType.SPENDWITNESS,
             user_confirmation=True,
-            commitment_data=b"www.example.com" + int.to_bytes(1, _ROUND_ID_LEN, "big"),
+            commitment_data=b"\x0fwww.example.com" + int.to_bytes(1, _ROUND_ID_LEN, "big"),
         )
 
         self.assertFalse(self.authorization.check_get_ownership_proof(msg))
@@ -60,19 +60,18 @@ class TestAuthorization(unittest.TestCase):
             coin_name=self.coin.coin_name,
             script_type=InputScriptType.SPENDWITNESS,
             user_confirmation=True,
-            commitment_data=b"www.example.org" + int.to_bytes(1, _ROUND_ID_LEN, "big"),
+            commitment_data=b"\x0fwww.example.org" + int.to_bytes(1, _ROUND_ID_LEN, "big"),
         )
 
         self.assertFalse(self.authorization.check_get_ownership_proof(msg))
 
-    def test_ownership_proof_wrong_round_id(self):
-        # Wrong round ID length.
+    def test_ownership_proof_wrong_coordinator_length(self):
         msg = GetOwnershipProof(
             address_n=[H_(84), H_(0), H_(0), 1, 2],
             coin_name=self.coin.coin_name,
             script_type=InputScriptType.SPENDWITNESS,
             user_confirmation=True,
-            commitment_data=b"www.example.com" + int.to_bytes(1, _ROUND_ID_LEN - 1, "big"),
+            commitment_data=b"\x0ewww.example.com" + int.to_bytes(1, _ROUND_ID_LEN - 1, "big"),
         )
 
         self.assertFalse(self.authorization.check_get_ownership_proof(msg))
@@ -82,7 +81,7 @@ class TestAuthorization(unittest.TestCase):
             coin_name=self.coin.coin_name,
             script_type=InputScriptType.SPENDWITNESS,
             user_confirmation=True,
-            commitment_data=b"www.example.com" + int.to_bytes(1, _ROUND_ID_LEN + 1, "big"),
+            commitment_data=b"\x10www.example.com" + int.to_bytes(1, _ROUND_ID_LEN + 1, "big"),
         )
 
         self.assertFalse(self.authorization.check_get_ownership_proof(msg))
@@ -94,7 +93,7 @@ class TestAuthorization(unittest.TestCase):
             coin_name=self.coin.coin_name,
             script_type=InputScriptType.SPENDWITNESS,
             user_confirmation=True,
-            commitment_data=b"www.example.com" + int.to_bytes(1, _ROUND_ID_LEN, "big"),
+            commitment_data=b"\x0fwww.example.com" + int.to_bytes(1, _ROUND_ID_LEN, "big"),
         )
 
         self.assertTrue(self.authorization.check_get_ownership_proof(msg))
