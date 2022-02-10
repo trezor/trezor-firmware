@@ -16,7 +16,7 @@ Emulator significantly speeds up development and has several features to help yo
    - or always use `poetry run ./emu.py`
 3. start the bridge:
    - to initalise the [bridge](https://github.com/trezor/trezord-go) with emulator support, start it with `trezord-go -e 21324`
-   - alternatively, launch the [desktop suite](https://suite.trezor.io/) from the command line with the argument `--bridge-dev` 
+   - alternatively, launch the [desktop suite](https://suite.trezor.io/) from the command line with the argument `--bridge-dev`
 
 Now you can use the emulator the same way as you use the device, for example you can use [Trezor Suite](https://suite.trezor.io), use our Python CLI tool (`trezorctl`), etc. Simply click to emulate screen touches.
 
