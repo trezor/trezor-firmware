@@ -79,8 +79,8 @@ enum MessageType {
     // Management
     MessageType_Initialize = 0 [(bitcoin_only) = true, (wire_in) = true, (wire_tiny) = true];
     MessageType_Ping = 1 [(bitcoin_only) = true, (wire_in) = true];
-    MessageType_Success = 2 [(bitcoin_only) = true, (wire_out) = true];
-    MessageType_Failure = 3 [(bitcoin_only) = true, (wire_out) = true];
+    MessageType_Success = 2 [(bitcoin_only) = true, (wire_out) = true, (wire_debug_out) = true];
+    MessageType_Failure = 3 [(bitcoin_only) = true, (wire_out) = true, (wire_debug_out) = true];
     MessageType_ChangePin = 4 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_WipeDevice = 5 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_GetEntropy = 9 [(bitcoin_only) = true, (wire_in) = true];
