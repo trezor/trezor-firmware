@@ -150,3 +150,53 @@ def with_client(func: "Callable[Concatenate[TrezorClient, P], R]") -> "Callable[
     # the return type of @click.pass_obj is improperly specified and pyright doesn't
     # understand that it converts f(obj, *args, **kwargs) to f(*args, **kwargs)
     return trezorctl_command_with_client  # type: ignore [cannot be assigned to return type]
+
+
+class AliasedGroup(click.Group):
+    """Command group that handles aliases and Click 6.x compatibility.
+
+    Click 7.0 silently switched all underscore_commands to dash-commands.
+    This implementation of `click.Group` responds to underscore_commands by invoking
+    the respective dash-command.
+
+    Supply an `aliases` dict at construction time to provide an alternative list of
+    command names:
+
+    >>> @click.command(cls=AliasedGroup, aliases={"do_bar", do_foo})
+    >>> def cli():
+    >>>     ...
+
+    If these commands are not known at the construction time, they can be set later:
+
+    >>> @click.command(cls=AliasedGroup)
+    >>> def cli():
+    >>>     ...
+    >>>
+    >>> @cli.command()
+    >>> def do_foo():
+    >>>     ...
+    >>>
+    >>> cli.aliases={"do_bar", do_foo}
+    """
+
+    def __init__(
+        self,
+        aliases: Optional[Dict[str, click.Command]] = None,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(*args, **kwargs)
+        self.aliases = aliases or {}
+
+    def get_command(self, ctx: click.Context, cmd_name: str) -> Optional[click.Command]:
+        cmd_name = cmd_name.replace("_", "-")
+        # try to look up the real name
+        cmd = super().get_command(ctx, cmd_name)
+        if cmd:
+            return cmd
+
+        # look for a backwards compatibility alias
+        if cmd_name in self.aliases:
+            return self.aliases[cmd_name]
+
+        return None
