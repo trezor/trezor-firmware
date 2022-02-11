@@ -14,7 +14,7 @@ jobs:
     steps:
       - name: Add new issue to the Backlog 🗂  project board
         if: github.event_name == 'issues' && github.event.action == 'opened'
-        run: gh issue edit $ISSUE --add-project "Backlog 🗂  "
+        run: gh issue edit $ISSUE --add-project "Backlog 🗂"
         env:
           ISSUE: ${{github.event.issue.html_url}}
           GITHUB_TOKEN: ${{ secrets.GH_BOT_TOKEN }}
