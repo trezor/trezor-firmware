@@ -29,6 +29,7 @@ from ..client import TrezorClient
 from ..transport import enumerate_devices
 from ..transport.udp import UdpTransport
 from . import (
+    AliasedGroup,
     TrezorConnection,
     binance,
     btc,
@@ -57,8 +58,8 @@ LOG = logging.getLogger(__name__)
 
 COMMAND_ALIASES = {
     "change-pin": settings.pin,
-    "enable-passphrase": settings.passphrase_enable,
-    "disable-passphrase": settings.passphrase_disable,
+    "enable-passphrase": settings.passphrase_on,
+    "disable-passphrase": settings.passphrase_off,
     "wipe-device": device.wipe,
     "reset-device": device.setup,
     "recovery-device": device.recover,
@@ -86,15 +87,8 @@ COMMAND_ALIASES = {
 }
 
 
-class TrezorctlGroup(click.Group):
+class TrezorctlGroup(AliasedGroup):
     """Command group that handles compatibility for trezorctl.
-
-    The purpose is twofold: convert underscores to dashes, and ensure old-style commands
-    still work with new-style groups.
-
-    Click 7.0 silently switched all underscore_commands to dash-commands.
-    This implementation of `click.Group` responds to underscore_commands by invoking
-    the respective dash-command.
 
     With trezorctl 0.11.5, we started to convert old-style long commands
     (such as "binance-sign-tx") to command groups ("binance") with subcommands
@@ -104,16 +98,12 @@ class TrezorctlGroup(click.Group):
     """
 
     def get_command(self, ctx: click.Context, cmd_name: str) -> Optional[click.Command]:
-        cmd_name = cmd_name.replace("_", "-")
-        # try to look up the real name
         cmd = super().get_command(ctx, cmd_name)
         if cmd:
             return cmd
 
-        # look for a backwards compatibility alias
-        if cmd_name in COMMAND_ALIASES:
-            return COMMAND_ALIASES[cmd_name]
-
+        # the subsequent lookups rely on dash-separated command names
+        cmd_name = cmd_name.replace("_", "-")
         # look for subcommand in btc - "sign-tx" is now "btc sign-tx"
         cmd = btc.cli.get_command(ctx, cmd_name)
         if cmd:
@@ -138,7 +128,11 @@ def configure_logging(verbose: int) -> None:
         log.OMITTED_MESSAGES.add(messages.Features)
 
 
-@click.command(cls=TrezorctlGroup, context_settings={"max_content_width": 400})
+@click.command(
+    cls=TrezorctlGroup,
+    context_settings={"max_content_width": 400},
+    aliases=COMMAND_ALIASES,
+)
 @click.option(
     "-p",
     "--path",
