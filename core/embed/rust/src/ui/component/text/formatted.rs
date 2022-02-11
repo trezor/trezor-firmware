@@ -26,10 +26,10 @@ pub struct FormattedText<F, T> {
 }
 
 impl<F, T> FormattedText<F, T> {
-    pub fn new<D: DefaultTextTheme>(area: Rect, format: F) -> Self {
+    pub fn new<D: DefaultTextTheme>(format: F) -> Self {
         Self {
-            layout: TextLayout::new::<D>(area),
             format,
+            layout: TextLayout::new::<D>(),
             args: LinearMap::new(),
             char_offset: 0,
         }
@@ -112,6 +112,11 @@ where
     T: AsRef<[u8]>,
 {
     type Msg = Never;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        self.layout.bounds = bounds;
+        self.layout.bounds
+    }
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
         None
@@ -237,32 +242,30 @@ impl<'a> Iterator for Tokenizer<'a> {
 
 #[cfg(test)]
 mod tests {
-    use std::array::IntoIter;
-
     use super::*;
 
     #[test]
     fn tokenizer_yields_expected_tokens() {
-        assert!(Tokenizer::new(b"").eq(IntoIter::new([])));
-        assert!(Tokenizer::new(b"x").eq(IntoIter::new([Token::Literal(b"x")])));
-        assert!(Tokenizer::new(b"x\0y").eq(IntoIter::new([Token::Literal("x\0y".as_bytes())])));
-        assert!(Tokenizer::new(b"{").eq(IntoIter::new([])));
-        assert!(Tokenizer::new(b"x{").eq(IntoIter::new([Token::Literal(b"x")])));
-        assert!(Tokenizer::new(b"x{y").eq(IntoIter::new([Token::Literal(b"x")])));
-        assert!(Tokenizer::new(b"{}").eq(IntoIter::new([Token::Argument(b"")])));
-        assert!(Tokenizer::new(b"x{}y{").eq(IntoIter::new([
+        assert!(Tokenizer::new(b"").eq([]));
+        assert!(Tokenizer::new(b"x").eq([Token::Literal(b"x")]));
+        assert!(Tokenizer::new(b"x\0y").eq([Token::Literal("x\0y".as_bytes())]));
+        assert!(Tokenizer::new(b"{").eq([]));
+        assert!(Tokenizer::new(b"x{").eq([Token::Literal(b"x")]));
+        assert!(Tokenizer::new(b"x{y").eq([Token::Literal(b"x")]));
+        assert!(Tokenizer::new(b"{}").eq([Token::Argument(b"")]));
+        assert!(Tokenizer::new(b"x{}y{").eq([
             Token::Literal(b"x"),
             Token::Argument(b""),
             Token::Literal(b"y"),
-        ])));
-        assert!(Tokenizer::new(b"{\0}").eq(IntoIter::new([Token::Argument("\0".as_bytes()),])));
-        assert!(Tokenizer::new(b"{{y}").eq(IntoIter::new([Token::Argument(b"{y"),])));
-        assert!(Tokenizer::new(b"{{{{xyz").eq(IntoIter::new([])));
-        assert!(Tokenizer::new(b"x{}{{}}}}").eq(IntoIter::new([
+        ]));
+        assert!(Tokenizer::new(b"{\0}").eq([Token::Argument("\0".as_bytes()),]));
+        assert!(Tokenizer::new(b"{{y}").eq([Token::Argument(b"{y"),]));
+        assert!(Tokenizer::new(b"{{{{xyz").eq([]));
+        assert!(Tokenizer::new(b"x{}{{}}}}").eq([
             Token::Literal(b"x"),
             Token::Argument(b""),
             Token::Argument(b"{"),
             Token::Literal(b"}}}"),
-        ])));
+        ]));
     }
 }

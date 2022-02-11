@@ -10,12 +10,16 @@ pub struct Pad {
 }
 
 impl Pad {
-    pub fn with_background(area: Rect, color: Color) -> Self {
+    pub fn with_background(color: Color) -> Self {
         Self {
-            area,
             color,
+            area: Rect::zero(),
             clear: false,
         }
+    }
+
+    pub fn place(&mut self, area: Rect) {
+        self.area = area;
     }
 
     pub fn clear(&mut self) {

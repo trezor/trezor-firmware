@@ -2,7 +2,7 @@ use crate::ui::{
     component::{Child, Component, Event, EventCtx, Label, Maybe},
     geometry::{Grid, Rect},
     model_tt::{
-        component::{keyboard::common::array_map_enumerate, Button, ButtonMsg},
+        component::{Button, ButtonMsg},
         theme,
     },
 };
@@ -28,43 +28,22 @@ impl<T> MnemonicKeyboard<T>
 where
     T: MnemonicInput,
 {
-    pub fn new(area: Rect, prompt: &'static [u8]) -> Self {
-        let grid = Grid::new(area, 3, 4);
-        let back_area = grid.row_col(0, 0);
-        let input_area = grid.row_col(0, 1).union(grid.row_col(0, 3));
-        let prompt_area = grid.row_col(0, 0).union(grid.row_col(0, 3));
-        let prompt_origin = prompt_area.top_left();
-
-        let input = T::new(input_area);
-        let keys = T::keys();
-
+    pub fn new(input: T, prompt: &'static [u8]) -> Self {
         Self {
             prompt: Child::new(Maybe::visible(
-                prompt_area,
                 theme::BG,
-                Label::left_aligned(prompt_origin, prompt, theme::label_default()),
+                Label::left_aligned(prompt, theme::label_default()),
             )),
             back: Child::new(Maybe::hidden(
-                back_area,
                 theme::BG,
-                Button::with_icon(back_area, theme::ICON_BACK).styled(theme::button_clear()),
+                Button::with_icon(theme::ICON_BACK).styled(theme::button_clear()),
             )),
-            input: Child::new(Maybe::hidden(input_area, theme::BG, input)),
-            keys: Self::key_buttons(keys, &grid, grid.cols), // Start in the second row.
+            input: Child::new(Maybe::hidden(theme::BG, input)),
+            keys: T::keys()
+                .map(str::as_bytes)
+                .map(Button::with_text)
+                .map(Child::new),
         }
-    }
-
-    fn key_buttons(
-        keys: [&'static str; MNEMONIC_KEY_COUNT],
-        grid: &Grid,
-        offset: usize,
-    ) -> [Child<Button<&'static [u8]>>; MNEMONIC_KEY_COUNT] {
-        array_map_enumerate(keys, |index, text| {
-            Child::new(Button::with_text(
-                grid.cell(offset + index),
-                text.as_bytes(),
-            ))
-        })
     }
 
     fn on_input_change(&mut self, ctx: &mut EventCtx) {
@@ -81,7 +60,7 @@ where
                 .inner()
                 .inner()
                 .can_key_press_lead_to_a_valid_word(key);
-            btn.mutate(ctx, |ctx, b| b.enabled(ctx, enabled));
+            btn.mutate(ctx, |ctx, b| b.enable_if(ctx, enabled));
         }
     }
 
@@ -103,6 +82,21 @@ where
     T: MnemonicInput,
 {
     type Msg = MnemonicKeyboardMsg;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        let grid = Grid::new(bounds, 3, 4);
+        let back_area = grid.row_col(0, 0);
+        let input_area = grid.row_col(0, 1).union(grid.row_col(0, 3));
+        let prompt_area = grid.row_col(0, 0).union(grid.row_col(0, 3));
+
+        self.prompt.place(prompt_area);
+        self.back.place(back_area);
+        self.input.place(input_area);
+        for (key, btn) in self.keys.iter_mut().enumerate() {
+            btn.place(grid.cell(key + grid.cols)); // Start in the second row.
+        }
+        bounds
+    }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         match self.input.event(ctx, event) {
@@ -145,7 +139,6 @@ where
 }
 
 pub trait MnemonicInput: Component<Msg = MnemonicInputMsg> {
-    fn new(area: Rect) -> Self;
     fn keys() -> [&'static str; MNEMONIC_KEY_COUNT];
     fn can_key_press_lead_to_a_valid_word(&self, key: usize) -> bool;
     fn on_key_click(&mut self, ctx: &mut EventCtx, key: usize);

@@ -4,8 +4,8 @@ use crate::{
     micropython::{buffer::Buffer, map::Map, obj::Obj, qstr::Qstr},
     ui::{
         component::{text::paragraphs::Paragraphs, FormattedText},
-        display,
         layout::obj::LayoutObj,
+        model_t1::component::ButtonPos,
     },
     util,
 };
@@ -40,21 +40,19 @@ extern "C" fn ui_layout_new_confirm_action(
         };
 
         let left = verb_cancel
-            .map(|label| |area, pos| Button::with_text(area, pos, label, theme::button_cancel()));
-        let right = verb
-            .map(|label| |area, pos| Button::with_text(area, pos, label, theme::button_default()));
+            .map(|label| Button::with_text(ButtonPos::Left, label, theme::button_cancel()));
+        let right =
+            verb.map(|label| Button::with_text(ButtonPos::Right, label, theme::button_default()));
 
-        let obj = LayoutObj::new(Frame::new(display::screen(), title, |area| {
+        let obj = LayoutObj::new(Frame::new(
+            title,
             ButtonPage::new(
-                area,
-                |area| {
-                    FormattedText::new::<theme::T1DefaultText>(area, format)
-                        .with(b"action", action.unwrap_or("".into()))
-                        .with(b"description", description.unwrap_or("".into()))
-                },
+                FormattedText::new::<theme::T1DefaultText>(format)
+                    .with(b"action", action.unwrap_or_default())
+                    .with(b"description", description.unwrap_or_default()),
                 theme::BG,
-            )
-        }))?;
+            ),
+        ))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -72,20 +70,18 @@ extern "C" fn ui_layout_new_confirm_text(
         let description: Option<Buffer> =
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
 
-        let obj = LayoutObj::new(Frame::new(display::screen(), title, |area| {
+        let obj = LayoutObj::new(Frame::new(
+            title,
             ButtonPage::new(
-                area,
-                |area| {
-                    Paragraphs::new(area)
-                        .add::<theme::T1DefaultText>(
-                            theme::FONT_NORMAL,
-                            description.unwrap_or("".into()),
-                        )
-                        .add::<theme::T1DefaultText>(theme::FONT_BOLD, data)
-                },
+                Paragraphs::new()
+                    .add::<theme::T1DefaultText>(
+                        theme::FONT_NORMAL,
+                        description.unwrap_or_default(),
+                    )
+                    .add::<theme::T1DefaultText>(theme::FONT_BOLD, data),
                 theme::BG,
-            )
-        }))?;
+            ),
+        ))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -96,7 +92,11 @@ mod tests {
     use crate::{
         error::Error,
         trace::Trace,
-        ui::model_t1::component::{Dialog, DialogMsg},
+        ui::{
+            component::Component,
+            display,
+            model_t1::component::{Dialog, DialogMsg},
+        },
     };
 
     use super::*;
@@ -125,18 +125,23 @@ mod tests {
 
     #[test]
     fn trace_example_layout() {
-        let layout = Dialog::new(
-            display::screen(),
-            |area| {
-                FormattedText::new::<theme::T1DefaultText>(
-                    area,
-                    "Testing text layout, with some text, and some more text. And {param}",
-                )
-                .with(b"param", b"parameters!")
-            },
-            Some(|area, pos| Button::with_text(area, pos, "Left", theme::button_cancel())),
-            Some(|area, pos| Button::with_text(area, pos, "Right", theme::button_default())),
+        let mut layout = Dialog::new(
+            FormattedText::new::<theme::T1DefaultText>(
+                "Testing text layout, with some text, and some more text. And {param}",
+            )
+            .with(b"param", b"parameters!"),
+            Some(Button::with_text(
+                ButtonPos::Left,
+                "Left",
+                theme::button_cancel(),
+            )),
+            Some(Button::with_text(
+                ButtonPos::Right,
+                "Right",
+                theme::button_default(),
+            )),
         );
+        layout.place(display::screen());
         assert_eq!(
             trace(&layout),
             r#"<Dialog content:<Text content:Testing text layout,
@@ -148,20 +153,26 @@ arameters! > left:<Button text:Left > right:<Button text:Right > >"#
 
     #[test]
     fn trace_layout_title() {
-        let layout = Frame::new(display::screen(), "Please confirm", |area| {
+        let mut layout = Frame::new(
+            "Please confirm",
             Dialog::new(
-                area,
-                |area| {
-                    FormattedText::new::<theme::T1DefaultText>(
-                        area,
-                        "Testing text layout, with some text, and some more text. And {param}",
-                    )
-                    .with(b"param", b"parameters!")
-                },
-                Some(|area, pos| Button::with_text(area, pos, "Left", theme::button_cancel())),
-                Some(|area, pos| Button::with_text(area, pos, "Right", theme::button_default())),
-            )
-        });
+                FormattedText::new::<theme::T1DefaultText>(
+                    "Testing text layout, with some text, and some more text. And {param}",
+                )
+                .with(b"param", b"parameters!"),
+                Some(Button::with_text(
+                    ButtonPos::Left,
+                    "Left",
+                    theme::button_cancel(),
+                )),
+                Some(Button::with_text(
+                    ButtonPos::Right,
+                    "Right",
+                    theme::button_default(),
+                )),
+            ),
+        );
+        layout.place(display::screen());
         assert_eq!(
             trace(&layout),
             r#"<Frame title:Please confirm content:<Dialog content:<Text content:Testing text layout,

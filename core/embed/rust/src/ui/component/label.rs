@@ -3,7 +3,7 @@ use core::ops::Deref;
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
     display::{self, Color, Font},
-    geometry::{Alignment, Point, Rect},
+    geometry::{Alignment, Offset, Rect},
 };
 
 pub struct LabelStyle {
@@ -14,6 +14,7 @@ pub struct LabelStyle {
 
 pub struct Label<T> {
     area: Rect,
+    align: Alignment,
     style: LabelStyle,
     text: T,
 }
@@ -22,45 +23,25 @@ impl<T> Label<T>
 where
     T: Deref<Target = [u8]>,
 {
-    pub fn new(origin: Point, align: Alignment, text: T, style: LabelStyle) -> Self {
-        let width = style.font.text_width(&text);
-        let height = style.font.line_height();
-        let area = match align {
-            // `origin` is the top-left point.
-            Alignment::Start => Rect {
-                x0: origin.x,
-                y0: origin.y,
-                x1: origin.x + width,
-                y1: origin.y + height,
-            },
-            // `origin` is the top-centered point.
-            Alignment::Center => Rect {
-                x0: origin.x - width / 2,
-                y0: origin.y,
-                x1: origin.x + width / 2,
-                y1: origin.y + height,
-            },
-            // `origin` is the top-right point.
-            Alignment::End => Rect {
-                x0: origin.x - width,
-                y0: origin.y,
-                x1: origin.x,
-                y1: origin.y + height,
-            },
-        };
-        Self { area, style, text }
+    pub fn new(text: T, align: Alignment, style: LabelStyle) -> Self {
+        Self {
+            area: Rect::zero(),
+            align,
+            style,
+            text,
+        }
     }
 
-    pub fn left_aligned(origin: Point, text: T, style: LabelStyle) -> Self {
-        Self::new(origin, Alignment::Start, text, style)
+    pub fn left_aligned(text: T, style: LabelStyle) -> Self {
+        Self::new(text, Alignment::Start, style)
     }
 
-    pub fn right_aligned(origin: Point, text: T, style: LabelStyle) -> Self {
-        Self::new(origin, Alignment::End, text, style)
+    pub fn right_aligned(text: T, style: LabelStyle) -> Self {
+        Self::new(text, Alignment::End, style)
     }
 
-    pub fn centered(origin: Point, text: T, style: LabelStyle) -> Self {
-        Self::new(origin, Alignment::Center, text, style)
+    pub fn centered(text: T, style: LabelStyle) -> Self {
+        Self::new(text, Alignment::Center, style)
     }
 
     pub fn text(&self) -> &T {
@@ -73,6 +54,35 @@ where
     T: Deref<Target = [u8]>,
 {
     type Msg = Never;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        let size = Offset::new(
+            self.style.font.text_width(&self.text),
+            self.style.font.line_height(),
+        );
+        self.area = match self.align {
+            Alignment::Start => Rect::from_top_left_and_size(bounds.top_left(), size),
+            Alignment::Center => {
+                let origin = bounds.top_left().center(bounds.top_right());
+                Rect {
+                    x0: origin.x - size.x / 2,
+                    y0: origin.y,
+                    x1: origin.x + size.x / 2,
+                    y1: origin.y + size.y,
+                }
+            }
+            Alignment::End => {
+                let origin = bounds.top_right();
+                Rect {
+                    x0: origin.x - size.x,
+                    y0: origin.y,
+                    x1: origin.x,
+                    y1: origin.y + size.y,
+                }
+            }
+        };
+        self.area
+    }
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
         None

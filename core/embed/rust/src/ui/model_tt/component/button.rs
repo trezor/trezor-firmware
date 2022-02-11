@@ -1,7 +1,7 @@
 use crate::ui::{
-    component::{Component, Event, EventCtx, Map},
+    component::{Component, ComponentExt, Event, EventCtx, GridPlaced, Map},
     display::{self, Color, Font},
-    geometry::{Grid, Insets, Offset, Rect},
+    geometry::{Insets, Offset, Rect},
 };
 
 use super::{event::TouchEvent, theme};
@@ -27,30 +27,38 @@ impl<T> Button<T> {
     /// (positive).
     pub const BASELINE_OFFSET: i32 = -3;
 
-    pub fn new(area: Rect, content: ButtonContent<T>) -> Self {
+    pub fn new(content: ButtonContent<T>) -> Self {
         Self {
-            area,
             content,
+            area: Rect::zero(),
             styles: theme::button_default(),
             state: State::Initial,
         }
     }
 
-    pub fn with_text(area: Rect, text: T) -> Self {
-        Self::new(area, ButtonContent::Text(text))
+    pub fn with_text(text: T) -> Self {
+        Self::new(ButtonContent::Text(text))
     }
 
-    pub fn with_icon(area: Rect, image: &'static [u8]) -> Self {
-        Self::new(area, ButtonContent::Icon(image))
+    pub fn with_icon(image: &'static [u8]) -> Self {
+        Self::new(ButtonContent::Icon(image))
     }
 
-    pub fn empty(area: Rect) -> Self {
-        Self::new(area, ButtonContent::Empty)
+    pub fn empty() -> Self {
+        Self::new(ButtonContent::Empty)
     }
 
     pub fn styled(mut self, styles: ButtonStyleSheet) -> Self {
         self.styles = styles;
         self
+    }
+
+    pub fn enable_if(&mut self, ctx: &mut EventCtx, enabled: bool) {
+        if enabled {
+            self.enable(ctx);
+        } else {
+            self.disable(ctx);
+        }
     }
 
     pub fn enable(&mut self, ctx: &mut EventCtx) {
@@ -59,14 +67,6 @@ impl<T> Button<T> {
 
     pub fn disable(&mut self, ctx: &mut EventCtx) {
         self.set(ctx, State::Disabled)
-    }
-
-    pub fn enabled(&mut self, ctx: &mut EventCtx, enabled: bool) {
-        if enabled {
-            self.enable(ctx);
-        } else {
-            self.disable(ctx);
-        }
     }
 
     pub fn is_enabled(&self) -> bool {
@@ -186,6 +186,11 @@ where
 {
     type Msg = ButtonMsg;
 
+    fn place(&mut self, bounds: Rect) -> Rect {
+        self.area = bounds;
+        self.area
+    }
+
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         match event {
             Event::Touch(TouchEvent::TouchStart(pos)) => {
@@ -297,26 +302,29 @@ pub struct ButtonStyle {
 }
 
 impl<T> Button<T> {
-    pub fn array2<F0, F1, R>(
-        area: Rect,
-        left: impl FnOnce(Rect) -> Button<T>,
+    pub fn left_right<F0, F1, R>(
+        left: Button<T>,
         left_map: F0,
-        right: impl FnOnce(Rect) -> Button<T>,
+        right: Button<T>,
         right_map: F1,
-    ) -> (Map<Self, F0>, Map<Self, F1>)
+    ) -> (Map<GridPlaced<Self>, F0>, Map<GridPlaced<Self>, F1>)
     where
         F0: Fn(ButtonMsg) -> Option<R>,
         F1: Fn(ButtonMsg) -> Option<R>,
         T: AsRef<[u8]>,
     {
         const BUTTON_SPACING: i32 = 6;
-        let grid = Grid::new(area, 1, 3).with_spacing(BUTTON_SPACING);
-        let left = left(grid.row_col(0, 0));
-        let right = right(Rect::new(
-            grid.row_col(0, 1).top_left(),
-            grid.row_col(0, 2).bottom_right(),
-        ));
-
-        (Map::new(left, left_map), Map::new(right, right_map))
+        (
+            GridPlaced::new(left)
+                .with_grid(1, 3)
+                .with_spacing(BUTTON_SPACING)
+                .with_row_col(0, 0)
+                .map(left_map),
+            GridPlaced::new(right)
+                .with_grid(1, 3)
+                .with_spacing(BUTTON_SPACING)
+                .with_from_to((0, 1), (0, 2))
+                .map(right_map),
+        )
     }
 }

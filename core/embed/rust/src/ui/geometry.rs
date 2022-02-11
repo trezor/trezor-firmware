@@ -148,6 +148,22 @@ impl Rect {
         }
     }
 
+    pub fn with_top_left(self, p0: Point) -> Self {
+        Self::from_top_left_and_size(p0, self.size())
+    }
+
+    pub fn with_size(self, size: Offset) -> Self {
+        Self::from_top_left_and_size(self.top_left(), size)
+    }
+
+    pub fn with_width(self, width: i32) -> Self {
+        self.with_size(Offset::new(width, self.height()))
+    }
+
+    pub fn with_height(self, height: i32) -> Self {
+        self.with_size(Offset::new(self.width(), height))
+    }
+
     pub fn width(&self) -> i32 {
         self.x1 - self.x0
     }
@@ -399,16 +415,28 @@ impl Grid {
     pub fn cell(&self, index: usize) -> Rect {
         self.row_col(index / self.cols, index % self.cols)
     }
+
+    pub fn cells(&self, cells: GridCellSpan) -> Rect {
+        let from = self.row_col(cells.from.0, cells.to.1);
+        let to = self.row_col(cells.to.0, cells.to.1);
+        from.union(to)
+    }
 }
 
 #[derive(Copy, Clone)]
-pub struct LinearLayout {
+pub struct GridCellSpan {
+    pub from: (usize, usize),
+    pub to: (usize, usize),
+}
+
+#[derive(Copy, Clone)]
+pub struct LinearPlacement {
     axis: Axis,
     align: Alignment,
     spacing: i32,
 }
 
-impl LinearLayout {
+impl LinearPlacement {
     pub fn horizontal() -> Self {
         Self {
             axis: Axis::Horizontal,
@@ -445,42 +473,20 @@ impl LinearLayout {
         self
     }
 
-    fn compute_spacing(&self, area: Rect, count: usize, size_sum: i32) -> (i32, i32) {
-        let spacing_count = count.saturating_sub(1);
-        let spacing_sum = spacing_count as i32 * self.spacing;
-        let naive_size = size_sum + spacing_sum;
-        let available_space = area.size().axis(self.axis);
-
-        // scale down spacing to fit everything into area
-        let (total_size, spacing) = if naive_size > available_space {
-            let scaled_space = (available_space - size_sum) / spacing_count as i32;
-            // forbid negative spacing
-            (available_space, scaled_space.max(0))
-        } else {
-            (naive_size, self.spacing)
-        };
-
-        let init_cursor = match self.align {
-            Alignment::Start => 0,
-            Alignment::Center => available_space / 2 - total_size / 2,
-            Alignment::End => available_space - total_size,
-        };
-
-        (init_cursor, spacing)
-    }
-
     /// Arranges all `items` by parameters configured in `self` into `area`.
-    /// Does not change the size of the items (only the position), but it needs
-    /// to iterate (and ask for the size) twice.
+    /// Does not change the size of the items (only the position).
     pub fn arrange(&self, area: Rect, items: &mut [impl Dimensions]) {
-        let item_sum: i32 = items.iter_mut().map(|i| i.get_size().axis(self.axis)).sum();
-        let (mut cursor, spacing) = self.compute_spacing(area, items.len(), item_sum);
+        let size_sum: i32 = items
+            .iter_mut()
+            .map(|i| i.area().size().axis(self.axis))
+            .sum();
+        let (mut cursor, spacing) = self.compute_spacing(area, items.len(), size_sum);
 
         for item in items {
-            let top_left = area.top_left() + Offset::on_axis(self.axis, cursor);
-            let size = item.get_size();
-            item.set_area(Rect::from_top_left_and_size(top_left, size));
-            cursor += size.axis(self.axis);
+            let item_origin = area.top_left() + Offset::on_axis(self.axis, cursor);
+            let item_area = item.area().with_top_left(item_origin);
+            item.fit(item_area);
+            cursor += item_area.size().axis(self.axis);
             cursor += spacing;
         }
     }
@@ -509,10 +515,34 @@ impl LinearLayout {
             cursor += spacing;
         }
     }
+
+    fn compute_spacing(&self, area: Rect, count: usize, size_sum: i32) -> (i32, i32) {
+        let spacing_count = count.saturating_sub(1);
+        let spacing_sum = spacing_count as i32 * self.spacing;
+        let naive_size = size_sum + spacing_sum;
+        let available_space = area.size().axis(self.axis);
+
+        // scale down spacing to fit everything into area
+        let (total_size, spacing) = if naive_size > available_space {
+            let scaled_space = (available_space - size_sum) / spacing_count.max(1) as i32;
+            // forbid negative spacing
+            (available_space, scaled_space.max(0))
+        } else {
+            (naive_size, self.spacing)
+        };
+
+        let initial_cursor = match self.align {
+            Alignment::Start => 0,
+            Alignment::Center => available_space / 2 - total_size / 2,
+            Alignment::End => available_space - total_size,
+        };
+
+        (initial_cursor, spacing)
+    }
 }
 
-/// Types that have a size and a position.
+/// Types that can place themselves within area specified by `bounds`.
 pub trait Dimensions {
-    fn get_size(&mut self) -> Offset;
-    fn set_area(&mut self, area: Rect);
+    fn fit(&mut self, bounds: Rect);
+    fn area(&self) -> Rect;
 }

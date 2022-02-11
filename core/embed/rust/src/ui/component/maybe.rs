@@ -19,12 +19,12 @@ impl<T> Maybe<T> {
         }
     }
 
-    pub fn visible(area: Rect, clear: Color, inner: T) -> Self {
-        Self::new(Pad::with_background(area, clear), inner, true)
+    pub fn visible(clear: Color, inner: T) -> Self {
+        Self::new(Pad::with_background(clear), inner, true)
     }
 
-    pub fn hidden(area: Rect, clear: Color, inner: T) -> Self {
-        Self::new(Pad::with_background(area, clear), inner, false)
+    pub fn hidden(clear: Color, inner: T) -> Self {
+        Self::new(Pad::with_background(clear), inner, false)
     }
 }
 
@@ -71,6 +71,12 @@ where
     T: Component,
 {
     type Msg = T::Msg;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        let area = self.inner.place(bounds);
+        self.pad.place(area);
+        area
+    }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if self.visible {

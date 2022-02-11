@@ -22,6 +22,12 @@ pub struct Buffer {
     len: usize,
 }
 
+impl Buffer {
+    pub fn empty() -> Self {
+        Self::from("")
+    }
+}
+
 impl TryFrom<Obj> for Buffer {
     type Error = Error;
 
@@ -32,6 +38,12 @@ impl TryFrom<Obj> for Buffer {
             ptr: bufinfo.buf as _,
             len: bufinfo.len as _,
         })
+    }
+}
+
+impl Default for Buffer {
+    fn default() -> Self {
+        Self::empty()
     }
 }
 
