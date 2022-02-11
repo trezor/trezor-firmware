@@ -351,3 +351,35 @@ def test_attack_script_type(client: Client):
             btc.sign_tx(client, "Testnet", [inp1, inp2], [out1], prev_txes=TX_API)
         assert exc.value.code == messages.FailureType.ProcessError
         assert exc.value.message.endswith("Transaction has changed during signing")
+
+
+@pytest.mark.parametrize(
+    "address",
+    (
+        # SegWit v1 pubkey not on the curve.
+        "tb1pam775nxmvam4pfpqlm5q06k0y84e3x9w0xuhdpmxuna2qj3dfg6qy2pq29",
+        # SegWit v1 invalid address length.
+        "tb1plycg5qvjtrp3qjf5f7zl382j9x6nrjz9n0dh50",
+        # Unrecognized SegWit version.
+        "tb1zlycg5qvjtrp3qjf5f7zl382j9x6nrjz9sdhenvyxq8c3808qxmusxanpxu",
+        # SegWit v1 pubkey x-coordinate exceeds the field size.
+        "tb1pllllllllllllllllllllllllllllllllllllllllllllallllscqgl4zhn",
+    ),
+)
+def test_send_invalid_address(client, address):
+    inp1 = messages.TxInputType(
+        # tb1pn2d0yjeedavnkd8z8lhm566p0f2utm3lgvxrsdehnl94y34txmts5s7t4c
+        address_n=parse_path("86'/1'/0'/1/0"),
+        amount=4600,
+        prev_hash=TXHASH_7956f1,
+        prev_index=1,
+        script_type=messages.InputScriptType.SPENDTAPROOT,
+    )
+    out1 = messages.TxOutputType(
+        address=address,
+        amount=4450,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+
+    with pytest.raises(TrezorFailure):
+        btc.sign_tx(client, "Testnet", [inp1], [out1], prev_txes=TX_API)
