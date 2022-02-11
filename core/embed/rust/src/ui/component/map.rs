@@ -19,6 +19,10 @@ where
 {
     type Msg = U;
 
+    fn place(&mut self, bounds: Rect) -> Rect {
+        self.inner.place(bounds)
+    }
+
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         self.inner.event(ctx, event).and_then(&self.func)
     }

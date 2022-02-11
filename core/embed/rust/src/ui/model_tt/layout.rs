@@ -4,8 +4,7 @@ use crate::{
     error::Error,
     micropython::{buffer::Buffer, map::Map, obj::Obj, qstr::Qstr},
     ui::{
-        component::{base::ComponentExt, text::paragraphs::Paragraphs, Child, FormattedText},
-        display,
+        component::{base::ComponentExt, text::paragraphs::Paragraphs, FormattedText},
         layout::obj::LayoutObj,
     },
     util,
@@ -52,13 +51,12 @@ where
 #[no_mangle]
 extern "C" fn ui_layout_new_example(_param: Obj) -> Obj {
     let block = move || {
-        let layout = LayoutObj::new(HoldToConfirm::new(display::screen(), |area| {
+        let layout = LayoutObj::new(HoldToConfirm::new(
             FormattedText::new::<theme::TTDefaultText>(
-                area,
                 "Testing text layout, with some text, and some more text. And {param}",
             )
-            .with(b"param", b"parameters!")
-        }))?;
+            .with(b"param", b"parameters!"),
+        ))?;
         Ok(layout.into())
     };
     unsafe { util::try_or_raise(block) }
@@ -78,41 +76,32 @@ extern "C" fn ui_layout_new_confirm_action(
         let verb: Option<Buffer> = kwargs.get(Qstr::MP_QSTR_verb)?.try_into_option()?;
         let reverse: bool = kwargs.get(Qstr::MP_QSTR_reverse)?.try_into()?;
 
+        let paragraphs = {
+            let action = action.unwrap_or_default();
+            let description = description.unwrap_or_default();
+            let mut paragraphs = Paragraphs::new();
+            if !reverse {
+                paragraphs = paragraphs
+                    .add::<theme::TTDefaultText>(theme::FONT_BOLD, action)
+                    .add::<theme::TTDefaultText>(theme::FONT_NORMAL, description);
+            } else {
+                paragraphs = paragraphs
+                    .add::<theme::TTDefaultText>(theme::FONT_NORMAL, description)
+                    .add::<theme::TTDefaultText>(theme::FONT_BOLD, action);
+            }
+            paragraphs
+        };
+
+        let buttons = Button::left_right(
+            Button::with_icon(theme::ICON_CANCEL),
+            |msg| (matches!(msg, ButtonMsg::Clicked)).then(|| false),
+            Button::with_text(verb.unwrap_or_else(|| "CONFIRM".into()))
+                .styled(theme::button_confirm()),
+            |msg| (matches!(msg, ButtonMsg::Clicked)).then(|| true),
+        );
+
         let obj = LayoutObj::new(
-            Frame::new(theme::borders(), title, |area| {
-                SwipePage::new(
-                    area,
-                    theme::BG,
-                    |area| {
-                        let action = action.unwrap_or("".into());
-                        let description = description.unwrap_or("".into());
-                        let mut para = Paragraphs::new(area);
-                        if !reverse {
-                            para = para
-                                .add::<theme::TTDefaultText>(theme::FONT_BOLD, action)
-                                .add::<theme::TTDefaultText>(theme::FONT_NORMAL, description);
-                        } else {
-                            para = para
-                                .add::<theme::TTDefaultText>(theme::FONT_NORMAL, description)
-                                .add::<theme::TTDefaultText>(theme::FONT_BOLD, action);
-                        }
-                        para
-                    },
-                    |area| {
-                        Button::array2(
-                            area,
-                            |area| Button::with_icon(area, theme::ICON_CANCEL),
-                            |msg| (matches!(msg, ButtonMsg::Clicked)).then(|| false),
-                            |area| {
-                                Button::with_text(area, verb.unwrap_or("CONFIRM".into()))
-                                    .styled(theme::button_confirm())
-                            },
-                            |msg| (matches!(msg, ButtonMsg::Clicked)).then(|| true),
-                        )
-                    },
-                )
-            })
-            .into_child(),
+            Frame::new(title, SwipePage::new(paragraphs, buttons, theme::BG)).into_child(),
         )?;
         Ok(obj.into())
     };
@@ -123,7 +112,11 @@ extern "C" fn ui_layout_new_confirm_action(
 mod tests {
     use crate::{
         trace::Trace,
-        ui::model_tt::component::{Button, Dialog},
+        ui::{
+            component::Component,
+            display,
+            model_tt::component::{Button, Dialog},
+        },
     };
 
     use super::*;
@@ -136,18 +129,15 @@ mod tests {
 
     #[test]
     fn trace_example_layout() {
-        let layout = Child::new(Dialog::new(
-            display::screen(),
-            |area| {
-                FormattedText::new::<theme::TTDefaultText>(
-                    area,
-                    "Testing text layout, with some text, and some more text. And {param}",
-                )
-                .with(b"param", b"parameters!")
-            },
-            |area| Button::with_text(area, b"Left"),
-            |area| Button::with_text(area, b"Right"),
-        ));
+        let mut layout = Dialog::new(
+            FormattedText::new::<theme::TTDefaultText>(
+                "Testing text layout, with some text, and some more text. And {param}",
+            )
+            .with(b"param", b"parameters!"),
+            Button::with_text(b"Left"),
+            Button::with_text(b"Right"),
+        );
+        layout.place(display::screen());
         assert_eq!(
             trace(&layout),
             "<Dialog content:<Text content:Testing text layout, with\nsome text, and some more\ntext. And parameters! > left:<Button text:Left > right:<Button text:Right > >",

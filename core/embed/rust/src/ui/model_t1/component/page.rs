@@ -21,52 +21,16 @@ where
     T: Paginate,
     T: Component,
 {
-    pub fn new(area: Rect, content: impl FnOnce(Rect) -> T, background: Color) -> Self {
-        let (content_area, scrollbar_area, button_area) = Self::areas(area);
-        let mut content = content(content_area);
-        let pad = Pad::with_background(area, background);
-
-        // Always start at the first page.
-        let scrollbar = ScrollBar::vertical_right(scrollbar_area, content.page_count(), 0);
-
-        // Create the button controls.
-        let prev = Button::with_text(button_area, ButtonPos::Left, "BACK", theme::button_cancel());
-        let next = Button::with_text(
-            button_area,
-            ButtonPos::Right,
-            "NEXT",
-            theme::button_default(),
-        );
-        let cancel = Button::with_text(
-            button_area,
-            ButtonPos::Left,
-            "CANCEL",
-            theme::button_cancel(),
-        );
-        let confirm = Button::with_text(
-            button_area,
-            ButtonPos::Right,
-            "CONFIRM",
-            theme::button_default(),
-        );
-
+    pub fn new(content: T, background: Color) -> Self {
         Self {
             content,
-            scrollbar,
-            pad,
-            prev,
-            next,
-            cancel,
-            confirm,
+            scrollbar: ScrollBar::vertical(),
+            pad: Pad::with_background(background),
+            prev: Button::with_text(ButtonPos::Left, "BACK", theme::button_cancel()),
+            next: Button::with_text(ButtonPos::Right, "NEXT", theme::button_default()),
+            cancel: Button::with_text(ButtonPos::Left, "CANCEL", theme::button_cancel()),
+            confirm: Button::with_text(ButtonPos::Right, "CONFIRM", theme::button_default()),
         }
-    }
-
-    fn areas(area: Rect) -> (Rect, Rect, Rect) {
-        let button_height = theme::FONT_BOLD.line_height() + 2;
-        let (content_area, button_area) = area.split_bottom(button_height);
-        let (content_area, scrollbar_area) = content_area.split_right(ScrollBar::WIDTH);
-        let (content_area, _) = content_area.split_bottom(1);
-        (content_area, scrollbar_area, button_area)
     }
 
     fn change_page(&mut self, ctx: &mut EventCtx, page: usize) {
@@ -84,6 +48,23 @@ where
     T: Paginate,
 {
     type Msg = PageMsg<T::Msg, bool>;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        let button_height = theme::FONT_BOLD.line_height() + 2;
+        let (content_area, button_area) = bounds.split_bottom(button_height);
+        let (content_area, scrollbar_area) = content_area.split_right(ScrollBar::WIDTH);
+        let content_area = content_area.inset(Insets::top(1));
+        self.pad.place(bounds);
+        self.content.place(content_area);
+        let page_count = self.content.page_count();
+        self.scrollbar.set_count_and_active_page(page_count, 0);
+        self.scrollbar.place(scrollbar_area);
+        self.prev.place(button_area);
+        self.next.place(button_area);
+        self.cancel.place(button_area);
+        self.confirm.place(button_area);
+        bounds
+    }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if self.scrollbar.has_previous_page() {
@@ -156,12 +137,17 @@ impl ScrollBar {
     pub const DOT_SIZE: Offset = Offset::new(4, 4);
     pub const DOT_INTERVAL: i32 = 6;
 
-    pub fn vertical_right(area: Rect, page_count: usize, active_page: usize) -> Self {
+    pub fn vertical() -> Self {
         Self {
-            area,
-            page_count,
-            active_page,
+            area: Rect::zero(),
+            page_count: 0,
+            active_page: 0,
         }
+    }
+
+    pub fn set_count_and_active_page(&mut self, page_count: usize, active_page: usize) {
+        self.page_count = page_count;
+        self.active_page = active_page;
     }
 
     pub fn has_next_page(&self) -> bool {
@@ -207,6 +193,11 @@ impl ScrollBar {
 
 impl Component for ScrollBar {
     type Msg = Never;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        self.area = bounds;
+        self.area
+    }
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
         None

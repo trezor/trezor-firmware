@@ -33,16 +33,6 @@ pub struct Slip39Input {
 }
 
 impl MnemonicInput for Slip39Input {
-    fn new(area: Rect) -> Self {
-        Self {
-            button: Button::empty(area),
-            textbox: TextBox::empty(),
-            multi_tap: MultiTapKeyboard::new(),
-            final_word: None,
-            input_mask: Slip39Mask::full(),
-        }
-    }
-
     /// Return the key set. Keys are further specified as indices into this
     /// array.
     fn keys() -> [&'static str; MNEMONIC_KEY_COUNT] {
@@ -93,6 +83,10 @@ impl MnemonicInput for Slip39Input {
 
 impl Component for Slip39Input {
     type Msg = MnemonicInputMsg;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        self.button.place(bounds)
+    }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if self.multi_tap.is_timeout_event(event) {
@@ -180,6 +174,16 @@ impl Component for Slip39Input {
 }
 
 impl Slip39Input {
+    pub fn new() -> Self {
+        Self {
+            button: Button::empty(),
+            textbox: TextBox::empty(),
+            multi_tap: MultiTapKeyboard::new(),
+            final_word: None,
+            input_mask: Slip39Mask::full(),
+        }
+    }
+
     /// Convert a key index into the key digit. This is what we push into the
     /// input buffer.
     ///

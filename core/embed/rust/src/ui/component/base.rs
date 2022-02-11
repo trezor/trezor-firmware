@@ -6,7 +6,10 @@ use heapless::Vec;
 use crate::ui::model_t1::event::ButtonEvent;
 #[cfg(feature = "model_tt")]
 use crate::ui::model_tt::event::TouchEvent;
-use crate::{time::Duration, ui::geometry::Rect};
+use crate::{
+    time::Duration,
+    ui::{component::Map, geometry::Rect},
+};
 
 /// Type used by components that do not return any messages.
 ///
@@ -14,12 +17,38 @@ use crate::{time::Duration, ui::geometry::Rect};
 pub enum Never {}
 
 /// User interface is composed of components that can react to `Event`s through
-/// the `event` method and know how to paint themselves to screen through the
+/// the `event` method, and know how to paint themselves to screen through the
 /// `paint` method.  Components can emit messages as a reaction to events.
 pub trait Component {
     type Msg;
+
+    /// Position the component into some available space, specified by `bounds`.
+    ///
+    /// Component should lay itself out, together with all children, and return
+    /// the total bounding box. This area can, occasionally, be larger than
+    /// `bounds` (it is a soft-limit), but the component **should never** paint
+    /// outside of it.
+    ///
+    /// No painting should be done in this phase.
+    fn place(&mut self, bounds: Rect) -> Rect;
+
+    /// React to an outside event. See the `Event` type for possible cases.
+    ///
+    /// Component should modify its internal state as a response to the event,
+    /// and usually call `EventCtx::request_paint` to mark itself for painting.
+    /// Component can also optionally return a message as a result of the
+    /// interaction.
+    ///
+    /// No painting should be done in this phase.
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg>;
+
+    /// Render to screen, based on current internal state.
+    ///
+    /// To prevent unnecessary over-draw, dirty state checking is performed in
+    /// the `Child` wrapper.
     fn paint(&mut self);
+
+    /// Report current paint bounds of this component. Used for debugging.
     fn bounds(&self, _sink: &mut dyn FnMut(Rect)) {}
 }
 
@@ -78,6 +107,10 @@ where
 {
     type Msg = T::Msg;
 
+    fn place(&mut self, bounds: Rect) -> Rect {
+        self.component.place(bounds)
+    }
+
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         self.mutate(ctx, |ctx, c| {
             // Handle the internal invalidation event here, so components don't have to. We
@@ -112,7 +145,47 @@ where
     }
 }
 
+impl<M, T, U> Component for (T, U)
+where
+    T: Component<Msg = M>,
+    U: Component<Msg = M>,
+{
+    type Msg = M;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        self.0.place(bounds).union(self.1.place(bounds))
+    }
+
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        self.0
+            .event(ctx, event)
+            .or_else(|| self.1.event(ctx, event))
+    }
+
+    fn paint(&mut self) {
+        self.0.paint();
+        self.1.paint();
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl<T, U> crate::trace::Trace for (T, U)
+where
+    T: Component,
+    T: crate::trace::Trace,
+    U: Component,
+    U: crate::trace::Trace,
+{
+    fn trace(&self, d: &mut dyn crate::trace::Tracer) {
+        d.open("Tuple");
+        d.field("0", &self.0);
+        d.field("1", &self.1);
+        d.close();
+    }
+}
+
 pub trait ComponentExt: Sized {
+    fn map<F>(self, func: F) -> Map<Self, F>;
     fn into_child(self) -> Child<Self>;
     fn request_complete_repaint(&mut self, ctx: &mut EventCtx);
 }
@@ -121,6 +194,10 @@ impl<T> ComponentExt for T
 where
     T: Component,
 {
+    fn map<F>(self, func: F) -> Map<Self, F> {
+        Map::new(self, func)
+    }
+
     fn into_child(self) -> Child<Self> {
         Child::new(self)
     }
@@ -172,6 +249,7 @@ impl TimerToken {
 pub struct EventCtx {
     timers: Vec<(TimerToken, Duration), { Self::MAX_TIMERS }>,
     next_token: u32,
+    place_requested: bool,
     paint_requested: bool,
     anim_frame_scheduled: bool,
 }
@@ -194,9 +272,24 @@ impl EventCtx {
         Self {
             timers: Vec::new(),
             next_token: Self::STARTING_TIMER_TOKEN,
-            paint_requested: false,
+            place_requested: true, // We need to perform a place pass in the beginning.
+            paint_requested: false, /* We also need to paint, but this is supplemented by
+                                    * `Child::marked_for_paint` being true. */
             anim_frame_scheduled: false,
         }
+    }
+
+    /// Indicate that position or sizes of components inside the component tree
+    /// have changed, and we should perform a place pass before next event or
+    /// paint traversals.
+    pub fn request_place(&mut self) {
+        self.place_requested = true;
+    }
+
+    /// Returns `true` if we should first perform a place traversal before
+    /// processing events or painting.
+    pub fn needs_place_before_next_event_or_paint(&self) -> bool {
+        self.place_requested
     }
 
     /// Indicate that the inner state of the component has changed, any screen
@@ -226,6 +319,7 @@ impl EventCtx {
     }
 
     pub fn clear(&mut self) {
+        self.place_requested = false;
         self.paint_requested = false;
         self.anim_frame_scheduled = false;
     }

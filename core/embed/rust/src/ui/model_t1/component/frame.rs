@@ -1,8 +1,8 @@
 use super::theme;
 use crate::ui::{
-    component::{Child, Component, ComponentExt, Event, EventCtx},
+    component::{Child, Component, Event, EventCtx},
     display,
-    geometry::{Offset, Rect},
+    geometry::{Insets, Offset, Rect},
 };
 
 pub struct Frame<T, U> {
@@ -11,29 +11,37 @@ pub struct Frame<T, U> {
     content: Child<T>,
 }
 
-impl<T: Component, U: AsRef<[u8]>> Frame<T, U> {
-    pub fn new(area: Rect, title: U, content: impl FnOnce(Rect) -> T) -> Self {
-        let (title_area, content_area) = Self::areas(area);
+impl<T, U> Frame<T, U>
+where
+    T: Component,
+    U: AsRef<[u8]>,
+{
+    pub fn new(title: U, content: T) -> Self {
         Self {
-            area: title_area,
             title,
-            content: content(content_area).into_child(),
+            area: Rect::zero(),
+            content: Child::new(content),
         }
-    }
-
-    fn areas(area: Rect) -> (Rect, Rect) {
-        const HEADER_SPACE: i32 = 4;
-        let header_height = theme::FONT_BOLD.line_height();
-
-        let (header_area, content_area) = area.split_top(header_height);
-        let (_space, content_area) = content_area.split_top(HEADER_SPACE);
-
-        (header_area, content_area)
     }
 }
 
-impl<T: Component, U: AsRef<[u8]>> Component for Frame<T, U> {
+impl<T, U> Component for Frame<T, U>
+where
+    T: Component,
+    U: AsRef<[u8]>,
+{
     type Msg = T::Msg;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        const TITLE_SPACE: i32 = 4;
+
+        let (title_area, content_area) = bounds.split_top(theme::FONT_BOLD.line_height());
+        let content_area = content_area.inset(Insets::top(TITLE_SPACE));
+
+        self.area = title_area;
+        self.content.place(content_area);
+        bounds
+    }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         self.content.event(ctx, event)

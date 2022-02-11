@@ -82,9 +82,11 @@ pub trait DefaultTextTheme {
 }
 
 impl TextLayout {
-    pub fn new<T: DefaultTextTheme>(bounds: Rect) -> Self {
+    /// Create a new text layout, with empty size and default text parameters
+    /// filled from `T`.
+    pub fn new<T: DefaultTextTheme>() -> Self {
         Self {
-            bounds,
+            bounds: Rect::zero(),
             padding_top: 0,
             padding_bottom: 0,
             background_color: T::BACKGROUND_COLOR,
@@ -103,8 +105,21 @@ impl TextLayout {
         }
     }
 
+    pub fn with_bounds(mut self, bounds: Rect) -> Self {
+        self.bounds = bounds;
+        self
+    }
+
     pub fn initial_cursor(&self) -> Point {
         self.bounds.top_left() + Offset::y(self.text_font.text_height() + self.padding_top)
+    }
+
+    pub fn fit_text(&self, text: &[u8]) -> LayoutFit {
+        self.layout_text(text, &mut self.initial_cursor(), &mut TextNoOp)
+    }
+
+    pub fn render_text(&self, text: &[u8]) {
+        self.layout_text(text, &mut self.initial_cursor(), &mut TextRenderer);
     }
 
     pub fn layout_ops<'o>(
@@ -233,16 +248,6 @@ impl TextLayout {
             processed_chars: text.len(),
             height: self.layout_height(init_cursor, *cursor),
         }
-    }
-
-    pub fn measure_ops_height(self, ops: &mut dyn Iterator<Item = Op>) -> i32 {
-        self.layout_ops(ops, &mut self.initial_cursor(), &mut TextNoOp)
-            .height()
-    }
-
-    pub fn measure_text_height(self, text: &[u8]) -> i32 {
-        self.layout_text(text, &mut self.initial_cursor(), &mut TextNoOp)
-            .height()
     }
 
     fn layout_height(&self, init_cursor: Point, end_cursor: Point) -> i32 {

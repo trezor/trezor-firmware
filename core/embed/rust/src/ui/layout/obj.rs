@@ -55,6 +55,7 @@ mod maybe_trace {
     impl<T> MaybeTrace for T {}
 }
 
+use crate::ui::display;
 /// Stand-in for the optionally-compiled trait `Trace`.
 /// If UI debugging is enabled, `MaybeTrace` implies `Trace` and is implemented
 /// for everything that implements Trace. If disabled, `MaybeTrace` is
@@ -69,6 +70,7 @@ use maybe_trace::MaybeTrace;
 /// T>` field. `Component` itself is not object-safe because of `Component::Msg`
 /// associated type.
 pub trait ObjComponent: MaybeTrace {
+    fn obj_place(&mut self, bounds: Rect) -> Rect;
     fn obj_event(&mut self, ctx: &mut EventCtx, event: Event) -> Result<Obj, Error>;
     fn obj_paint(&mut self);
     fn obj_bounds(&self, sink: &mut dyn FnMut(Rect));
@@ -78,6 +80,10 @@ impl<T> ObjComponent for Child<T>
 where
     T: ComponentMsgObj + MaybeTrace,
 {
+    fn obj_place(&mut self, bounds: Rect) -> Rect {
+        self.place(bounds)
+    }
+
     fn obj_event(&mut self, ctx: &mut EventCtx, event: Event) -> Result<Obj, Error> {
         if let Some(msg) = self.event(ctx, event) {
             self.inner().msg_try_into_obj(msg)
@@ -143,6 +149,12 @@ impl LayoutObj {
     fn obj_event(&self, event: Event) -> Result<Obj, Error> {
         let inner = &mut *self.inner.borrow_mut();
 
+        // Place the root component on the screen in case it was previously requested.
+        if inner.event_ctx.needs_place_before_next_event_or_paint() {
+            // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
+            unsafe { Gc::as_mut(&mut inner.root) }.obj_place(display::screen());
+        }
+
         // Clear the leftover flags from the previous event pass.
         inner.event_ctx.clear();
 
@@ -170,6 +182,13 @@ impl LayoutObj {
     /// Run a paint pass over the component tree.
     fn obj_paint_if_requested(&self) {
         let mut inner = self.inner.borrow_mut();
+
+        // Place the root component on the screen in case it was previously requested.
+        if inner.event_ctx.needs_place_before_next_event_or_paint() {
+            // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
+            unsafe { Gc::as_mut(&mut inner.root) }.obj_place(display::screen());
+        }
+
         // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
         unsafe { Gc::as_mut(&mut inner.root) }.obj_paint();
     }

@@ -38,34 +38,23 @@ pub struct Button<T> {
 }
 
 impl<T: AsRef<[u8]>> Button<T> {
-    pub fn new(
-        area: Rect,
-        pos: ButtonPos,
-        content: ButtonContent<T>,
-        styles: ButtonStyleSheet,
-    ) -> Self {
-        let (area, baseline) = Self::placement(area, pos, &content, &styles);
+    pub fn new(pos: ButtonPos, content: ButtonContent<T>, styles: ButtonStyleSheet) -> Self {
         Self {
-            area,
             pos,
-            baseline,
             content,
             styles,
+            baseline: Point::zero(),
+            area: Rect::zero(),
             state: State::Released,
         }
     }
 
-    pub fn with_text(area: Rect, pos: ButtonPos, text: T, styles: ButtonStyleSheet) -> Self {
-        Self::new(area, pos, ButtonContent::Text(text), styles)
+    pub fn with_text(pos: ButtonPos, text: T, styles: ButtonStyleSheet) -> Self {
+        Self::new(pos, ButtonContent::Text(text), styles)
     }
 
-    pub fn with_icon(
-        area: Rect,
-        pos: ButtonPos,
-        image: &'static [u8],
-        styles: ButtonStyleSheet,
-    ) -> Self {
-        Self::new(area, pos, ButtonContent::Icon(image), styles)
+    pub fn with_icon(pos: ButtonPos, image: &'static [u8], styles: ButtonStyleSheet) -> Self {
+        Self::new(pos, ButtonContent::Icon(image), styles)
     }
 
     pub fn content(&self) -> &ButtonContent<T> {
@@ -109,8 +98,18 @@ impl<T: AsRef<[u8]>> Button<T> {
     }
 }
 
-impl<T: AsRef<[u8]>> Component for Button<T> {
+impl<T> Component for Button<T>
+where
+    T: AsRef<[u8]>,
+{
     type Msg = ButtonMsg;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        let (area, baseline) = Self::placement(bounds, self.pos, &self.content, &self.styles);
+        self.area = area;
+        self.baseline = baseline;
+        self.area
+    }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         match event {

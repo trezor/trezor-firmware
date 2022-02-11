@@ -3,7 +3,7 @@ use crate::ui::{
         base::ComponentExt, paginated::PageMsg, Component, Event, EventCtx, Never, Pad, Paginate,
     },
     display::{self, Color},
-    geometry::{Dimensions, LinearLayout, Offset, Rect},
+    geometry::{LinearPlacement, Offset, Rect},
 };
 
 use super::{theme, Button, Swipe, SwipeDirection};
@@ -21,58 +21,31 @@ impl<T, U> SwipePage<T, U>
 where
     T: Paginate,
     T: Component,
-    T: Dimensions,
     U: Component,
 {
-    pub fn new(
-        area: Rect,
-        background: Color,
-        content: impl FnOnce(Rect) -> T,
-        controls: impl FnOnce(Rect) -> U,
-    ) -> Self {
-        let layout = PageLayout::new(area);
-        let mut content = Self::make_content(&layout, content);
-
-        // Always start at the first page.
-        let scrollbar = ScrollBar::vertical_right(layout.scrollbar, content.page_count(), 0);
-
-        let swipe = Self::make_swipe(area, &scrollbar);
-        let pad = Pad::with_background(area, background);
+    pub fn new(content: T, buttons: U, background: Color) -> Self {
         Self {
             content,
-            buttons: controls(layout.buttons),
-            scrollbar,
-            swipe,
-            pad,
+            buttons,
+            scrollbar: ScrollBar::vertical(),
+            swipe: Swipe::new(),
+            pad: Pad::with_background(background),
             fade: None,
         }
     }
 
-    fn make_swipe(area: Rect, scrollbar: &ScrollBar) -> Swipe {
-        let mut swipe = Swipe::new(area);
-        swipe.allow_up = scrollbar.has_next_page();
-        swipe.allow_down = scrollbar.has_previous_page();
-        swipe
+    fn setup_swipe(&mut self) {
+        self.swipe.allow_up = self.scrollbar.has_next_page();
+        self.swipe.allow_down = self.scrollbar.has_previous_page();
     }
 
-    fn make_content(layout: &PageLayout, content: impl FnOnce(Rect) -> T) -> T {
-        // Check if content fits on single page.
-        let mut content = content(layout.content_single_page);
-        if content.page_count() > 1 {
-            // Reduce area to make space for scrollbar if it doesn't fit.
-            content.set_area(layout.content);
-        }
-        content.change_page(0);
-        content
-    }
-
-    fn change_page(&mut self, ctx: &mut EventCtx, page: usize) {
-        // Adjust the swipe parameters.
-        self.swipe = Self::make_swipe(self.swipe.area, &self.scrollbar);
+    fn on_page_change(&mut self, ctx: &mut EventCtx) {
+        // Adjust the swipe parameters according to the scrollbar.
+        self.setup_swipe();
 
         // Change the page in the content, make sure it gets completely repainted and
         // clear the background under it.
-        self.content.change_page(page);
+        self.content.change_page(self.scrollbar.active_page);
         self.content.request_complete_repaint(ctx);
         self.pad.clear();
 
@@ -96,10 +69,38 @@ impl<T, U> Component for SwipePage<T, U>
 where
     T: Paginate,
     T: Component,
-    T: Dimensions,
     U: Component,
 {
     type Msg = PageMsg<T::Msg, U::Msg>;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        let layout = PageLayout::new(bounds);
+        self.pad.place(bounds);
+        self.swipe.place(bounds);
+        self.buttons.place(layout.buttons);
+        self.scrollbar.place(layout.scrollbar);
+
+        // Layout the content. Try to fit it on a single page first, and reduce the area
+        // to make space for a scrollbar if it doesn't fit.
+        self.content.place(layout.content_single_page);
+        let page_count = {
+            let count = self.content.page_count();
+            if count > 1 {
+                self.content.place(layout.content);
+                self.content.page_count() // Make sure to re-count it with the
+                                          // new size.
+            } else {
+                count // Content fits on a single page.
+            }
+        };
+
+        // Now that we finally have the page count, we can setup the scrollbar and the
+        // swiper.
+        self.scrollbar.set_count_and_active_page(page_count, 0);
+        self.setup_swipe();
+
+        bounds
+    }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if let Some(swipe) = self.swipe.event(ctx, event) {
@@ -107,13 +108,13 @@ where
                 SwipeDirection::Up => {
                     // Scroll down, if possible.
                     self.scrollbar.go_to_next_page();
-                    self.change_page(ctx, self.scrollbar.active_page);
+                    self.on_page_change(ctx);
                     return None;
                 }
                 SwipeDirection::Down => {
                     // Scroll up, if possible.
                     self.scrollbar.go_to_previous_page();
-                    self.change_page(ctx, self.scrollbar.active_page);
+                    self.on_page_change(ctx);
                     return None;
                 }
                 _ => {
@@ -193,12 +194,17 @@ impl ScrollBar {
     const ICON_UP: &'static [u8] = include_res!("model_tt/res/scroll-up.toif");
     const ICON_DOWN: &'static [u8] = include_res!("model_tt/res/scroll-down.toif");
 
-    pub fn vertical_right(area: Rect, page_count: usize, active_page: usize) -> Self {
+    pub fn vertical() -> Self {
         Self {
-            area,
-            page_count,
-            active_page,
+            area: Rect::zero(),
+            page_count: 0,
+            active_page: 0,
         }
+    }
+
+    pub fn set_count_and_active_page(&mut self, page_count: usize, active_page: usize) {
+        self.page_count = page_count;
+        self.active_page = active_page;
     }
 
     pub fn has_pages(&self) -> bool {
@@ -229,12 +235,17 @@ impl ScrollBar {
 impl Component for ScrollBar {
     type Msg = Never;
 
+    fn place(&mut self, bounds: Rect) -> Rect {
+        self.area = bounds;
+        self.area
+    }
+
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
         None
     }
 
     fn paint(&mut self) {
-        let layout = LinearLayout::vertical()
+        let layout = LinearPlacement::vertical()
             .align_at_center()
             .with_spacing(Self::DOT_INTERVAL);
 
@@ -315,7 +326,6 @@ mod tests {
         trace::Trace,
         ui::{
             component::{text::paragraphs::Paragraphs, Empty},
-            display,
             geometry::Point,
             model_tt::{event::TouchEvent, theme},
         },
@@ -357,12 +367,8 @@ mod tests {
 
     #[test]
     fn paragraphs_empty() {
-        let mut page = SwipePage::new(
-            display::screen(),
-            theme::BG,
-            |area| Paragraphs::<&[u8]>::new(area),
-            |_| Empty,
-        );
+        let mut page = SwipePage::new(Paragraphs::<&str>::new(), Empty, theme::BG);
+        page.place(display::screen());
 
         let expected =
             "<SwipePage active_page:0 page_count:1 content:<Paragraphs > buttons:<Empty > >";
@@ -377,21 +383,19 @@ mod tests {
     #[test]
     fn paragraphs_single() {
         let mut page = SwipePage::new(
-            display::screen(),
+            Paragraphs::new()
+                .add::<theme::TTDefaultText>(
+                    theme::FONT_NORMAL,
+                    "This is the first paragraph and it should fit on the screen entirely.",
+                )
+                .add::<theme::TTDefaultText>(
+                    theme::FONT_BOLD,
+                    "Second, bold, paragraph should also fit on the screen whole I think.",
+                ),
+            Empty,
             theme::BG,
-            |area| {
-                Paragraphs::new(area)
-                    .add::<theme::TTDefaultText>(
-                        theme::FONT_NORMAL,
-                        "This is the first paragraph and it should fit on the screen entirely.",
-                    )
-                    .add::<theme::TTDefaultText>(
-                        theme::FONT_BOLD,
-                        "Second, bold, paragraph should also fit on the screen whole I think.",
-                    )
-            },
-            |_| Empty,
         );
+        page.place(display::screen());
 
         let expected = "<SwipePage active_page:0 page_count:1 content:<Paragraphs This is the first paragraph\nand it should fit on the\nscreen entirely.\nSecond, bold, paragraph\nshould also fit on the\nscreen whole I think.\n> buttons:<Empty > >";
 
@@ -405,17 +409,15 @@ mod tests {
     #[test]
     fn paragraphs_one_long() {
         let mut page = SwipePage::new(
-            display::screen(),
+            Paragraphs::new()
+                .add::<theme::TTDefaultText>(
+                    theme::FONT_BOLD,
+                    "This is somewhat long paragraph that goes on and on and on and on and on and will definitely not fit on just a single screen. You have to swipe a bit to see all the text it contains I guess. There's just so much letters in it.",
+                ),
+            Empty,
             theme::BG,
-            |area| {
-                Paragraphs::new(area)
-                    .add::<theme::TTDefaultText>(
-                        theme::FONT_BOLD,
-                        "This is somewhat long paragraph that goes on and on and on and on and on and will definitely not fit on just a single screen. You have to swipe a bit to see all the text it contains I guess. There's just so much letters in it.",
-                    )
-            },
-            |_| Empty,
         );
+        page.place(display::screen());
 
         let expected1 = "<SwipePage active_page:0 page_count:2 content:<Paragraphs This is somewhat long\nparagraph that goes\non and on and on and\non and on and will\ndefinitely not fit on\njust a single screen.\nYou have to swipe a bit\nto see all the text it...\n> buttons:<Empty > >";
         let expected2 = "<SwipePage active_page:1 page_count:2 content:<Paragraphs contains I guess.\nThere's just so much\nletters in it.\n> buttons:<Empty > >";
@@ -434,25 +436,23 @@ mod tests {
     #[test]
     fn paragraphs_three_long() {
         let mut page = SwipePage::new(
-            display::screen(),
+            Paragraphs::new()
+                .add::<theme::TTDefaultText>(
+                    theme::FONT_BOLD,
+                    "This paragraph is using a bold font. It doesn't need to be all that long.",
+                )
+                .add::<theme::TTDefaultText>(
+                    theme::FONT_MONO,
+                    "And this one is using MONO. Monospace is nice for numbers, they have the same width and can be scanned quickly. Even if they span several pages or something.",
+                )
+                .add::<theme::TTDefaultText>(
+                    theme::FONT_BOLD,
+                    "Let's add another one for a good measure. This one should overflow all the way to the third page with a bit of luck.",
+                ),
+            Empty,
             theme::BG,
-            |area| {
-                Paragraphs::new(area)
-                    .add::<theme::TTDefaultText>(
-                        theme::FONT_BOLD,
-                        "This paragraph is using a bold font. It doesn't need to be all that long.",
-                    )
-                    .add::<theme::TTDefaultText>(
-                        theme::FONT_MONO,
-                        "And this one is using MONO. Monospace is nice for numbers, they have the same width and can be scanned quickly. Even if they span several pages or something.",
-                    )
-                    .add::<theme::TTDefaultText>(
-                        theme::FONT_BOLD,
-                        "Let's add another one for a good measure. This one should overflow all the way to the third page with a bit of luck.",
-                    )
-            },
-            |_| Empty,
         );
+        page.place(display::screen());
 
         let expected1 = "<SwipePage active_page:0 page_count:3 content:<Paragraphs This paragraph is\nusing a bold font. It\ndoesn't need to be all\nthat long.\nAnd this one is\nusing MONO.\nMonospace is nice\nfor numbers, they...\n> buttons:<Empty > >";
         let expected2 = "<SwipePage active_page:1 page_count:3 content:<Paragraphs have the same\nwidth and can be\nscanned quickly.\nEven if they span\nseveral pages or\nsomething.\nLet's add another one\nfor a good measure....\n> buttons:<Empty > >";

@@ -4,7 +4,7 @@ use crate::ui::{
     geometry::{Grid, Rect},
     model_tt::component::{
         button::{Button, ButtonContent, ButtonMsg::Clicked},
-        keyboard::common::{array_map_enumerate, MultiTapKeyboard, TextBox},
+        keyboard::common::{MultiTapKeyboard, TextBox},
         swipe::{Swipe, SwipeDirection},
         theme,
     },
@@ -38,47 +38,27 @@ const KEYBOARD: [[&str; KEY_COUNT]; PAGE_COUNT] = [
 const MAX_LENGTH: usize = 50;
 
 impl PassphraseKeyboard {
-    pub fn new(area: Rect) -> Self {
-        let input_area = Grid::new(area, 5, 1).row_col(0, 0);
-        let confirm_btn_area = Grid::new(area, 5, 3).cell(14);
-        let back_btn_area = Grid::new(area, 5, 3).cell(12);
-        let key_grid = Grid::new(area, 5, 3);
-
+    pub fn new() -> Self {
         Self {
-            page_swipe: Swipe::horizontal(area),
-            input: Input::new(input_area).into_child(),
-            confirm: Button::with_text(confirm_btn_area, "Confirm")
+            page_swipe: Swipe::horizontal(),
+            input: Input::new().into_child(),
+            confirm: Button::with_text("Confirm")
                 .styled(theme::button_confirm())
                 .into_child(),
-            back: Button::with_text(back_btn_area, "Back")
+            back: Button::with_text("Back")
                 .styled(theme::button_clear())
                 .into_child(),
-            keys: Self::generate_keyboard(&key_grid),
+            keys: KEYBOARD.map(|page| {
+                page.map(|text| {
+                    if text == " " {
+                        let icon = theme::ICON_SPACE;
+                        Child::new(Button::with_icon(icon))
+                    } else {
+                        Child::new(Button::with_text(text))
+                    }
+                })
+            }),
             key_page: STARTING_PAGE,
-        }
-    }
-
-    fn generate_keyboard(grid: &Grid) -> [[Child<Button<&'static str>>; KEY_COUNT]; PAGE_COUNT] {
-        array_map_enumerate(KEYBOARD, |_, page| {
-            array_map_enumerate(page, |key, text| Self::generate_key(grid, key, text))
-        })
-    }
-
-    fn generate_key(grid: &Grid, key: usize, text: &'static str) -> Child<Button<&'static str>> {
-        // Assign the keys in each page to buttons on a 5x3 grid, starting from the
-        // second row.
-        let area = grid.cell(if key < 9 {
-            // The grid has 3 columns, and we skip the first row.
-            key + 3
-        } else {
-            // For the last key (the "0" position) we skip one cell.
-            key + 1 + 3
-        });
-        if text == " " {
-            let icon = theme::ICON_SPACE;
-            Child::new(Button::with_icon(area, icon))
-        } else {
-            Child::new(Button::with_text(area, text))
         }
     }
 
@@ -117,6 +97,31 @@ impl PassphraseKeyboard {
 
 impl Component for PassphraseKeyboard {
     type Msg = PassphraseKeyboardMsg;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        let input_area = Grid::new(bounds, 5, 1).row_col(0, 0);
+        let confirm_btn_area = Grid::new(bounds, 5, 3).cell(14);
+        let back_btn_area = Grid::new(bounds, 5, 3).cell(12);
+        let key_grid = Grid::new(bounds, 5, 3);
+
+        self.page_swipe.place(bounds);
+        self.input.place(input_area);
+        self.confirm.place(confirm_btn_area);
+        self.back.place(back_btn_area);
+        for (key, btn) in self.keys[self.key_page].iter_mut().enumerate() {
+            // Assign the keys in each page to buttons on a 5x3 grid, starting from the
+            // second row.
+            let area = key_grid.cell(if key < 9 {
+                // The grid has 3 columns, and we skip the first row.
+                key + 3
+            } else {
+                // For the last key (the "0" position) we skip one cell.
+                key + 1 + 3
+            });
+            btn.place(area);
+        }
+        bounds
+    }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if self.input.inner().multi_tap.is_timeout_event(event) {
@@ -180,9 +185,9 @@ struct Input {
 }
 
 impl Input {
-    fn new(area: Rect) -> Self {
+    fn new() -> Self {
         Self {
-            area,
+            area: Rect::zero(),
             textbox: TextBox::empty(),
             multi_tap: MultiTapKeyboard::new(),
         }
@@ -191,6 +196,11 @@ impl Input {
 
 impl Component for Input {
     type Msg = Never;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        self.area = bounds;
+        self.area
+    }
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
         None

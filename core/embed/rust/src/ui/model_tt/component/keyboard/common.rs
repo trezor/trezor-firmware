@@ -199,16 +199,3 @@ impl<const L: usize> TextBox<L> {
         }
     }
 }
-
-/// Analogue to `[T]::enumerate().map(...)`.
-pub fn array_map_enumerate<T, U, const L: usize>(
-    array: [T; L],
-    mut func: impl FnMut(usize, T) -> U,
-) -> [U; L] {
-    let mut i = 0;
-    array.map(|t| {
-        let u = func(i, t);
-        i += 1;
-        u
-    })
-}

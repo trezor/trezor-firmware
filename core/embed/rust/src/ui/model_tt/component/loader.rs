@@ -4,7 +4,7 @@ use crate::{
         animation::Animation,
         component::{Component, Event, EventCtx},
         display::{self, Color},
-        geometry::Offset,
+        geometry::{Offset, Rect},
     },
 };
 
@@ -110,6 +110,11 @@ impl Loader {
 
 impl Component for Loader {
     type Msg = LoaderMsg;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        // TODO: Return the correct size.
+        bounds
+    }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         let now = Instant::now();

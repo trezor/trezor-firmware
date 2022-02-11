@@ -1,5 +1,5 @@
 use crate::ui::{
-    component::{base::ComponentExt, Child, Component, Event, EventCtx},
+    component::{Child, Component, Event, EventCtx},
     geometry::{Grid, Rect},
 };
 
@@ -21,17 +21,11 @@ where
     L: Component,
     R: Component,
 {
-    pub fn new(
-        area: Rect,
-        content: impl FnOnce(Rect) -> T,
-        left: impl FnOnce(Rect) -> L,
-        right: impl FnOnce(Rect) -> R,
-    ) -> Self {
-        let layout = DialogLayout::middle(area);
+    pub fn new(content: T, left: L, right: R) -> Self {
         Self {
-            content: content(layout.content).into_child(),
-            left: left(layout.left).into_child(),
-            right: right(layout.right).into_child(),
+            content: Child::new(content),
+            left: Child::new(left),
+            right: Child::new(right),
         }
     }
 }
@@ -43,6 +37,14 @@ where
     R: Component,
 {
     type Msg = DialogMsg<T::Msg, L::Msg, R::Msg>;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        let layout = DialogLayout::middle(bounds);
+        self.content.place(layout.content);
+        self.left.place(layout.left);
+        self.right.place(layout.right);
+        bounds
+    }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         self.content
