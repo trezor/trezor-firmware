@@ -44,7 +44,6 @@ if __debug__:
             display.bar(Display.WIDTH - side, 0, side, side, 0xF800)
         display.refresh()
 
-
 else:
     refresh = display.refresh  # type: ignore
 

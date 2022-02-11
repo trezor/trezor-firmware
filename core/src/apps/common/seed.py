@@ -77,7 +77,6 @@ if not utils.BITCOIN_ONLY:
         assert common_seed is not None
         return common_seed
 
-
 else:
     # === Bitcoin-only variant ===
     # We use the simple version of `get_seed` that never needs to derive anything else.
