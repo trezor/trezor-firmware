@@ -772,7 +772,7 @@ class Bitcoin:
             return SigHashType.SIGHASH_ALL
 
     def get_sighash_type(self, txi: TxInput) -> SigHashType:
-        """ Return the nHashType flags."""
+        """Return the nHashType flags."""
         # The nHashType is the 8 least significant bits of the sighash type.
         # Some coins set the 24 most significant bits of the sighash type to
         # the fork ID value.
