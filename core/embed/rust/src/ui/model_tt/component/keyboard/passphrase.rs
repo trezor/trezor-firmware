@@ -1,16 +1,12 @@
-use heapless::Vec;
-
-use crate::{
-    time::Duration,
-    ui::{
-        component::{base::ComponentExt, Child, Component, Event, EventCtx, Never, TimerToken},
-        display,
-        geometry::{Grid, Rect},
-        model_tt::component::{
-            button::{Button, ButtonContent, ButtonMsg::Clicked},
-            swipe::{Swipe, SwipeDirection},
-            theme,
-        },
+use crate::ui::{
+    component::{base::ComponentExt, Child, Component, Event, EventCtx, Never},
+    display,
+    geometry::{Grid, Rect},
+    model_tt::component::{
+        button::{Button, ButtonContent, ButtonMsg::Clicked},
+        keyboard::common::{array_map_enumerate, MultiTapKeyboard, TextBox},
+        swipe::{Swipe, SwipeDirection},
+        theme,
     },
 };
 
@@ -21,25 +17,18 @@ pub enum PassphraseKeyboardMsg {
 
 pub struct PassphraseKeyboard {
     page_swipe: Swipe,
-    textbox: Child<TextBox>,
-    back_btn: Child<Button<&'static str>>,
-    confirm_btn: Child<Button<&'static str>>,
-    key_btns: [[Child<Button<&'static [u8]>>; KEYS]; PAGES],
+    input: Child<Input>,
+    back: Child<Button<&'static str>>,
+    confirm: Child<Button<&'static str>>,
+    keys: [[Child<Button<&'static str>>; KEY_COUNT]; PAGE_COUNT],
     key_page: usize,
-    pending: Option<Pending>,
-}
-
-struct Pending {
-    key: usize,
-    char: usize,
-    timer: TimerToken,
 }
 
 const STARTING_PAGE: usize = 1;
-const PAGES: usize = 4;
-const KEYS: usize = 10;
+const PAGE_COUNT: usize = 4;
+const KEY_COUNT: usize = 10;
 #[rustfmt::skip]
-const KEYBOARD: [[&str; KEYS]; PAGES] = [
+const KEYBOARD: [[&str; KEY_COUNT]; PAGE_COUNT] = [
     ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
     [" ", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz", "*#"],
     [" ", "ABC", "DEF", "GHI", "JKL", "MNO", "PQRS", "TUV", "WXYZ", "*#"],
@@ -47,48 +36,35 @@ const KEYBOARD: [[&str; KEYS]; PAGES] = [
     ];
 
 const MAX_LENGTH: usize = 50;
-const PENDING_DEADLINE: Duration = Duration::from_secs(1);
 
 impl PassphraseKeyboard {
     pub fn new(area: Rect) -> Self {
-        let textbox_area = Grid::new(area, 5, 1).row_col(0, 0);
+        let input_area = Grid::new(area, 5, 1).row_col(0, 0);
         let confirm_btn_area = Grid::new(area, 5, 3).cell(14);
         let back_btn_area = Grid::new(area, 5, 3).cell(12);
         let key_grid = Grid::new(area, 5, 3);
 
-        let text = Vec::new();
-        let page_swipe = Swipe::horizontal(area);
-        let textbox = TextBox::new(textbox_area, text).into_child();
-        let confirm_btn = Button::with_text(confirm_btn_area, "Confirm")
-            .styled(theme::button_confirm())
-            .into_child();
-        let back_btn = Button::with_text(back_btn_area, "Back")
-            .styled(theme::button_clear())
-            .into_child();
-        let key_btns = Self::generate_keyboard(&key_grid);
-
         Self {
-            textbox,
-            page_swipe,
-            confirm_btn,
-            back_btn,
-            key_btns,
+            page_swipe: Swipe::horizontal(area),
+            input: Input::new(input_area).into_child(),
+            confirm: Button::with_text(confirm_btn_area, "Confirm")
+                .styled(theme::button_confirm())
+                .into_child(),
+            back: Button::with_text(back_btn_area, "Back")
+                .styled(theme::button_clear())
+                .into_child(),
+            keys: Self::generate_keyboard(&key_grid),
             key_page: STARTING_PAGE,
-            pending: None,
         }
     }
 
-    fn generate_keyboard(grid: &Grid) -> [[Child<Button<&'static [u8]>>; KEYS]; PAGES] {
-        // can't use a range because the result is a fixed-size array
-        [0, 1, 2, 3].map(|i| Self::generate_key_page(grid, i))
+    fn generate_keyboard(grid: &Grid) -> [[Child<Button<&'static str>>; KEY_COUNT]; PAGE_COUNT] {
+        array_map_enumerate(KEYBOARD, |_, page| {
+            array_map_enumerate(page, |key, text| Self::generate_key(grid, key, text))
+        })
     }
 
-    fn generate_key_page(grid: &Grid, page: usize) -> [Child<Button<&'static [u8]>>; KEYS] {
-        // can't use a range because the result is a fixed-size array
-        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(|i| Self::generate_key(grid, page, i))
-    }
-
-    fn generate_key(grid: &Grid, page: usize, key: usize) -> Child<Button<&'static [u8]>> {
+    fn generate_key(grid: &Grid, key: usize, text: &'static str) -> Child<Button<&'static str>> {
         // Assign the keys in each page to buttons on a 5x3 grid, starting from the
         // second row.
         let area = grid.cell(if key < 9 {
@@ -98,8 +74,7 @@ impl PassphraseKeyboard {
             // For the last key (the "0" position) we skip one cell.
             key + 1 + 3
         });
-        let text = KEYBOARD[page][key].as_bytes();
-        if text == b" " {
+        if text == " " {
             let icon = theme::ICON_SPACE;
             Child::new(Button::with_icon(area, icon))
         } else {
@@ -107,77 +82,35 @@ impl PassphraseKeyboard {
         }
     }
 
-    fn on_page_swipe(&mut self, swipe: SwipeDirection) {
+    fn key_text(content: &ButtonContent<&'static str>) -> &'static str {
+        match content {
+            ButtonContent::Text(text) => text,
+            ButtonContent::Icon(_) => " ",
+            ButtonContent::Empty => "",
+        }
+    }
+
+    fn on_page_swipe(&mut self, ctx: &mut EventCtx, swipe: SwipeDirection) {
+        // Change the page number.
         self.key_page = match swipe {
-            SwipeDirection::Left => (self.key_page as isize + 1) as usize % PAGES,
-            SwipeDirection::Right => (self.key_page as isize - 1) as usize % PAGES,
+            SwipeDirection::Left => (self.key_page as isize + 1) as usize % PAGE_COUNT,
+            SwipeDirection::Right => (self.key_page as isize - 1) as usize % PAGE_COUNT,
             _ => self.key_page,
         };
-        self.pending.take();
-    }
-
-    fn on_backspace_click(&mut self, ctx: &mut EventCtx) {
-        self.pending.take();
-        self.textbox.mutate(ctx, |ctx, t| t.delete_last(ctx));
-        self.after_edit(ctx);
-    }
-
-    fn on_key_click(&mut self, ctx: &mut EventCtx, key: usize) {
-        let content = self.key_content(self.key_page, key);
-
-        let char = match &self.pending {
-            Some(pending) if pending.key == key => {
-                // This key is pending. Cycle the last inserted character through the
-                // key content.
-                let char = (pending.char + 1) % content.len();
-                self.textbox
-                    .mutate(ctx, |ctx, t| t.replace_last(ctx, content[char]));
-                char
-            }
-            _ => {
-                // This key is not pending. Append the first character in the key.
-                let char = 0;
-                self.textbox
-                    .mutate(ctx, |ctx, t| t.append(ctx, content[char]));
-                char
-            }
-        };
-
-        // If the key has more then one character, we need to set it as pending, so we
-        // can cycle through on the repeated clicks. We also request a timer so we can
-        // reset the pending state after a deadline.
-        self.pending = if content.len() > 1 {
-            Some(Pending {
-                key,
-                char,
-                timer: ctx.request_timer(PENDING_DEADLINE),
-            })
-        } else {
-            None
-        };
-        let is_pending = self.pending.is_some();
-        self.textbox
-            .mutate(ctx, |ctx, t| t.toggle_pending_marker(ctx, is_pending));
-
-        self.after_edit(ctx);
-    }
-
-    fn on_timeout(&mut self) {
-        self.pending.take();
-    }
-
-    fn key_content(&self, page: usize, key: usize) -> &'static [u8] {
-        match self.key_btns[page][key].inner().content() {
-            ButtonContent::Text(text) => text,
-            ButtonContent::Icon(_) => b" ",
+        // Clear the pending state.
+        self.input
+            .mutate(ctx, |ctx, i| i.multi_tap.clear_pending_state(ctx));
+        // Make sure to completely repaint the buttons.
+        for btn in &mut self.keys[self.key_page] {
+            btn.request_complete_repaint(ctx);
         }
     }
 
     fn after_edit(&mut self, ctx: &mut EventCtx) {
-        if self.textbox.inner().is_empty() {
-            self.back_btn.mutate(ctx, |ctx, b| b.disable(ctx));
+        if self.input.inner().textbox.is_empty() {
+            self.back.mutate(ctx, |ctx, b| b.disable(ctx));
         } else {
-            self.back_btn.mutate(ctx, |ctx, b| b.enable(ctx));
+            self.back.mutate(ctx, |ctx, b| b.enable(ctx));
         }
     }
 }
@@ -186,35 +119,44 @@ impl Component for PassphraseKeyboard {
     type Msg = PassphraseKeyboardMsg;
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if matches!((event, &self.pending), (Event::Timer(t), Some(p)) if p.timer == t) {
-            // Our pending timer triggered, reset the pending state.
-            self.on_timeout();
+        if self.input.inner().multi_tap.is_timeout_event(event) {
+            self.input
+                .mutate(ctx, |ctx, i| i.multi_tap.clear_pending_state(ctx));
             return None;
         }
         if let Some(swipe) = self.page_swipe.event(ctx, event) {
             // We have detected a horizontal swipe. Change the keyboard page.
-            self.on_page_swipe(swipe);
+            self.on_page_swipe(ctx, swipe);
             return None;
         }
-        if let Some(Clicked) = self.confirm_btn.event(ctx, event) {
+        if let Some(Clicked) = self.confirm.event(ctx, event) {
             // Confirm button was clicked, we're done.
             return Some(PassphraseKeyboardMsg::Confirmed);
         }
-        if let Some(Clicked) = self.back_btn.event(ctx, event) {
+        if let Some(Clicked) = self.back.event(ctx, event) {
             // Backspace button was clicked. If we have any content in the textbox, let's
             // delete the last character. Otherwise cancel.
-            if self.textbox.inner().is_empty() {
-                return Some(PassphraseKeyboardMsg::Cancelled);
+            return if self.input.inner().textbox.is_empty() {
+                Some(PassphraseKeyboardMsg::Cancelled)
             } else {
-                self.on_backspace_click(ctx);
-                return None;
-            }
+                self.input.mutate(ctx, |ctx, i| {
+                    i.multi_tap.clear_pending_state(ctx);
+                    i.textbox.delete_last(ctx);
+                });
+                self.after_edit(ctx);
+                None
+            };
         }
-        for (key, btn) in self.key_btns[self.key_page].iter_mut().enumerate() {
+        for (key, btn) in self.keys[self.key_page].iter_mut().enumerate() {
             if let Some(Clicked) = btn.event(ctx, event) {
                 // Key button was clicked. If this button is pending, let's cycle the pending
                 // character in textbox. If not, let's just append the first character.
-                self.on_key_click(ctx, key);
+                let text = Self::key_text(btn.inner().content());
+                self.input.mutate(ctx, |ctx, i| {
+                    let edit = i.multi_tap.click_key(ctx, key, text);
+                    i.textbox.apply(ctx, edit);
+                });
+                self.after_edit(ctx);
                 return None;
             }
         }
@@ -222,63 +164,32 @@ impl Component for PassphraseKeyboard {
     }
 
     fn paint(&mut self) {
-        self.textbox.paint();
-        self.confirm_btn.paint();
-        self.back_btn.paint();
-        for btn in &mut self.key_btns[self.key_page] {
+        self.input.paint();
+        self.confirm.paint();
+        self.back.paint();
+        for btn in &mut self.keys[self.key_page] {
             btn.paint();
         }
     }
 }
 
-struct TextBox {
+struct Input {
     area: Rect,
-    text: Vec<u8, MAX_LENGTH>,
-    pending: bool,
+    textbox: TextBox<MAX_LENGTH>,
+    multi_tap: MultiTapKeyboard,
 }
 
-impl TextBox {
-    fn new(area: Rect, text: Vec<u8, MAX_LENGTH>) -> Self {
+impl Input {
+    fn new(area: Rect) -> Self {
         Self {
             area,
-            text,
-            pending: false,
+            textbox: TextBox::empty(),
+            multi_tap: MultiTapKeyboard::new(),
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.text.is_empty()
-    }
-
-    fn toggle_pending_marker(&mut self, ctx: &mut EventCtx, pending: bool) {
-        self.pending = pending;
-        ctx.request_paint();
-    }
-
-    fn delete_last(&mut self, ctx: &mut EventCtx) {
-        self.text.pop();
-        ctx.request_paint();
-    }
-
-    fn replace_last(&mut self, ctx: &mut EventCtx, char: u8) {
-        self.text.pop();
-        if self.text.push(char).is_err() {
-            #[cfg(feature = "ui_debug")]
-            panic!("textbox has zero capacity");
-        }
-        ctx.request_paint();
-    }
-
-    fn append(&mut self, ctx: &mut EventCtx, char: u8) {
-        if self.text.push(char).is_err() {
-            #[cfg(feature = "ui_debug")]
-            panic!("textbox is full");
-        }
-        ctx.request_paint();
     }
 }
 
-impl Component for TextBox {
+impl Component for Input {
     type Msg = Never;
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
@@ -290,7 +201,7 @@ impl Component for TextBox {
 
         display::text(
             self.area.bottom_left(),
-            &self.text,
+            self.textbox.content().as_bytes(),
             style.font,
             style.text_color,
             style.background_color,
