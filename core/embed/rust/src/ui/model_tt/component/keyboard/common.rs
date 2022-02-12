@@ -1,9 +1,9 @@
 use heapless::String;
 
-use crate::util::ResultExt;
 use crate::{
     time::Duration,
     ui::component::{Event, EventCtx, TimerToken},
+    util::ResultExt,
 };
 
 /// Contains state commonly used in implementations multi-tap keyboards.
