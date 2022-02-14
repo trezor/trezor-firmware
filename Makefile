@@ -32,6 +32,11 @@ pystyle_check: ## run code style check on application sources and tests
 	@echo [PYTHON]
 	make -C python style_check
 
+pystyle_quick_check: ## run the basic style checks, suitable for a quick git hook
+	@isort --check-only $(PY_FILES)
+	@black --check $(PY_FILES)
+	make -C python style_quick_check
+
 pystyle: ## apply code style on application sources and tests
 	@echo [ISORT]
 	@isort $(PY_FILES)

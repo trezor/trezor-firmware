@@ -57,6 +57,10 @@ style_check:
 	flake8
 	pyright
 
+style_quick_check:
+	black --check $(STYLE_TARGETS)
+	isort --check-only --recursive $(STYLE_TARGETS) --skip-glob "$(EXCLUDE_TARGETS)/*"
+
 .PHONY: all build install clean style style_check git-clean clean-build clean-pyc clean-test
 
 test:
