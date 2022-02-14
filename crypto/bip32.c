@@ -374,6 +374,13 @@ static CONFIDENTIAL struct {
   HDNode node;
 } private_ckd_cache[BIP32_CACHE_SIZE];
 
+void bip32_cache_clear(void) {
+  private_ckd_cache_root_set = false;
+  private_ckd_cache_index = 0;
+  memzero(&private_ckd_cache_root, sizeof(private_ckd_cache_root));
+  memzero(private_ckd_cache, sizeof(private_ckd_cache));
+}
+
 int hdnode_private_ckd_cached(HDNode *inout, const uint32_t *i, size_t i_count,
                               uint32_t *fingerprint) {
   if (i_count == 0) {
