@@ -21,21 +21,14 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, TextIO, Tuple
 
 import click
+import rlp
 
 from .. import ethereum, tools
 from . import with_client
 
 if TYPE_CHECKING:
-    from ..client import TrezorClient
-
-try:
-    import rlp
     import web3
-
-    HAVE_SIGN_TX = True
-except Exception:
-    HAVE_SIGN_TX = False
-
+    from ..client import TrezorClient
 
 PATH_HELP = "BIP-32 path, e.g. m/44'/60'/0'/0/0"
 
@@ -62,6 +55,26 @@ ETHER_UNITS = {
     'eth':          1000000000000000000,
 }
 # fmt: on
+
+# So that we can import the web3 library only when really used and reuse the instance
+_WEB3_INSTANCE: Optional["web3.Web3"] = None
+
+
+def _get_web3() -> "web3.Web3":
+    global _WEB3_INSTANCE
+    if _WEB3_INSTANCE is None:
+        try:
+            import web3
+
+            _WEB3_INSTANCE = web3.Web3()
+        except ModuleNotFoundError:
+            click.echo("Ethereum requirements not installed.")
+            click.echo("Please run:")
+            click.echo()
+            click.echo("  pip install web3")
+            sys.exit(1)
+
+    return _WEB3_INSTANCE
 
 
 def _amount_to_int(
@@ -113,9 +126,7 @@ def _list_units(ctx: click.Context, param: Any, value: bool) -> None:
     ctx.exit()
 
 
-def _erc20_contract(
-    w3: "web3.Web3", token_address: str, to_address: str, amount: int
-) -> str:
+def _erc20_contract(token_address: str, to_address: str, amount: int) -> str:
     min_abi = [
         {
             "name": "transfer",
@@ -128,7 +139,7 @@ def _erc20_contract(
             "outputs": [{"name": "", "type": "bool"}],
         }
     ]
-    contract = w3.eth.contract(address=token_address, abi=min_abi)  # type: ignore ["str" cannot be assigned to type "Address | ChecksumAddress | ENS"]
+    contract = _get_web3().eth.contract(address=token_address, abi=min_abi)  # type: ignore ["str" cannot be assigned to type "Address | ChecksumAddress | ENS"]
     return contract.encodeABI("transfer", [to_address, amount])
 
 
@@ -260,20 +271,13 @@ def sign_tx(
     try to connect to an ethereum node and auto-fill these values. You can configure
     the connection with WEB3_PROVIDER_URI environment variable.
     """
-    if not HAVE_SIGN_TX:
-        click.echo("Ethereum requirements not installed.")
-        click.echo("Please run:")
-        click.echo()
-        click.echo("  pip install web3 rlp")
-        sys.exit(1)
 
     is_eip1559 = eip2718_type == 2
-    w3 = web3.Web3()
     if (
         (not is_eip1559 and gas_price is None)
         or any(x is None for x in (gas_limit, nonce))
         or publish
-    ) and not w3.isConnected():
+    ) and not _get_web3().isConnected():
         click.echo("Failed to connect to Ethereum node.")
         click.echo(
             "If you want to sign offline, make sure you provide --gas-price, "
@@ -289,7 +293,7 @@ def sign_tx(
     from_address = ethereum.get_address(client, address_n)
 
     if token:
-        data = _erc20_contract(w3, token, to_address, amount)
+        data = _erc20_contract(token, to_address, amount)
         to_address = token
         amount = 0
 
@@ -299,7 +303,7 @@ def sign_tx(
         data_bytes = b""
 
     if gas_limit is None:
-        gas_limit = w3.eth.estimateGas(
+        gas_limit = _get_web3().eth.estimateGas(
             {
                 "to": to_address,
                 "from": from_address,
@@ -309,7 +313,7 @@ def sign_tx(
         )
 
     if nonce is None:
-        nonce = w3.eth.getTransactionCount(from_address)
+        nonce = _get_web3().eth.getTransactionCount(from_address)
 
     assert gas_limit is not None
     assert nonce is not None
@@ -332,7 +336,7 @@ def sign_tx(
         )
     else:
         if gas_price is None:
-            gas_price = w3.eth.gasPrice
+            gas_price = _get_web3().eth.gasPrice
         assert gas_price is not None
         sig = ethereum.sign_tx(
             client,
@@ -378,7 +382,7 @@ def sign_tx(
     tx_hex = f"0x{eip2718_prefix}{transaction.hex()}"
 
     if publish:
-        tx_hash = w3.eth.sendRawTransaction(tx_hex).hex()
+        tx_hash = _get_web3().eth.sendRawTransaction(tx_hex).hex()
         return f"Transaction published with ID: {tx_hash}"
     else:
         return f"Signed raw transaction:\n{tx_hex}"
