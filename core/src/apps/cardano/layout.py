@@ -445,6 +445,7 @@ async def confirm_transaction(
     ttl: int | None,
     validity_interval_start: int | None,
     is_network_id_verifiable: bool,
+    tx_hash: bytes | None,
 ) -> None:
     props: list[PropertyType] = [
         ("Transaction fee:", format_coin_amount(fee)),
@@ -455,6 +456,9 @@ async def confirm_transaction(
 
     props.append((f"Valid since: {format_optional_int(validity_interval_start)}", None))
     props.append((f"TTL: {format_optional_int(ttl)}", None))
+
+    if tx_hash:
+        props.append(("Transaction ID:", tx_hash))
 
     await confirm_properties(
         ctx,

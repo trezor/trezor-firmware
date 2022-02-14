@@ -189,10 +189,10 @@ async def sign_tx(
     with tx_dict:
         await _process_transaction(ctx, msg, keychain, tx_dict, account_path_checker)
 
-    await _confirm_transaction(ctx, msg, is_network_id_verifiable)
+    tx_hash = hash_fn.digest()
+    await _confirm_transaction(ctx, msg, is_network_id_verifiable, tx_hash)
 
     try:
-        tx_hash = hash_fn.digest()
         response_after_witness_requests = await _process_witness_requests(
             ctx,
             keychain,
@@ -362,11 +362,11 @@ async def _confirm_transaction(
     ctx: wire.Context,
     msg: CardanoSignTxInit,
     is_network_id_verifiable: bool,
+    tx_hash: bytes,
 ) -> None:
     if msg.signing_mode in (
         CardanoTxSigningMode.ORDINARY_TRANSACTION,
         CardanoTxSigningMode.MULTISIG_TRANSACTION,
-        CardanoTxSigningMode.PLUTUS_TRANSACTION,
     ):
         await confirm_transaction(
             ctx,
@@ -375,6 +375,20 @@ async def _confirm_transaction(
             msg.ttl,
             msg.validity_interval_start,
             is_network_id_verifiable,
+            tx_hash=None,
+        )
+    elif msg.signing_mode == CardanoTxSigningMode.PLUTUS_TRANSACTION:
+        # we display tx hash so that experienced users can compare it to the tx hash computed by
+        # a trusted device (in case the tx contains many items which are tedious to check one by
+        # one on the Trezor screen)
+        await confirm_transaction(
+            ctx,
+            msg.fee,
+            msg.protocol_magic,
+            msg.ttl,
+            msg.validity_interval_start,
+            is_network_id_verifiable,
+            tx_hash,
         )
     elif msg.signing_mode == CardanoTxSigningMode.POOL_REGISTRATION_AS_OWNER:
         await confirm_stake_pool_registration_final(
