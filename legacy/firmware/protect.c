@@ -404,6 +404,12 @@ bool protectPassphrase(char *passphrase) {
       msg_tiny_id = 0xFFFF;
       break;
     }
+#if DEBUG_LINK
+    if (msg_tiny_id == MessageType_MessageType_DebugLinkGetState) {
+      msg_tiny_id = 0xFFFF;
+      fsm_msgDebugLinkGetState((DebugLinkGetState *)msg_tiny);
+    }
+#endif
   }
   usbTiny(0);
   layoutHome();
