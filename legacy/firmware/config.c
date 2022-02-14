@@ -973,4 +973,11 @@ void config_wipe(void) {
   storage_set(KEY_UUID, config_uuid, sizeof(config_uuid));
   storage_set(KEY_VERSION, &CONFIG_VERSION, sizeof(CONFIG_VERSION));
   session_clear(false);
+
+#if USE_BIP32_CACHE
+  bip32_cache_clear();
+#endif
+#if USE_BIP39_CACHE
+  bip39_cache_clear();
+#endif
 }
