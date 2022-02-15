@@ -42,6 +42,8 @@ typing
 import typing
 usb
 import usb
+usb_empty
+import usb_empty
 storage
 import storage
 storage.cache
