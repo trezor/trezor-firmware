@@ -279,9 +279,9 @@ class TestCardanoAddress(unittest.TestCase):
 
     def test_testnet_byron_address(self):
         addresses = [
-            "2657WMsDfac5F3zbgs9BwNWx3dhGAJERkAL93gPa68NJ2i8mbCHm2pLUHWSj8Mfea",
-            "2657WMsDfac6ezKWszxLFqJjSUgpg9NgxKc1koqi24sVpRaPhiwMaExk4useKn5HA",
-            "2657WMsDfac7hr1ioJGr6g7r6JRx4r1My8Rj91tcPTeVjJDpfBYKURrPG2zVLx2Sq",
+            "2cWKMJemoBajmHz9haobccjHnxiynESe2hqtza25GBgHpKAtE8BpvUgd3ixRzrAvMjgfo",
+            "2cWKMJemoBakg9bfV8iHwNxF4TtoJVUsFMGZPJ2e1xnLLZ12WTcvYbTZg2eeXMBZmkrA1",
+            "2cWKMJemoBakYYADj3dviYVXQhzHxdDEHdsnkJfSYevd3wZi8eneSzEGRmXNvNDjYdjBw",
         ]
 
         for i, expected in enumerate(addresses):
