@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     from .client import TrezorClient
     from .protobuf import MessageType
 
-PROTOCOL_MAGICS = {"mainnet": 764824073, "testnet": 42}
+PROTOCOL_MAGICS = {"mainnet": 764824073, "testnet": 1097911063}
 NETWORK_IDS = {"mainnet": 1, "testnet": 0}
 
 REQUIRED_FIELDS_TRANSACTION = ("inputs", "outputs")
