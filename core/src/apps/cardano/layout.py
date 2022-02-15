@@ -271,22 +271,45 @@ async def confirm_sending_token(
     )
 
 
-async def show_credentials(
+async def show_address_credentials(
     ctx: wire.Context,
     payment_credential: Credential,
     stake_credential: Credential,
-    is_change_output: bool = False,
 ) -> None:
-    await _show_credential(ctx, payment_credential, is_change_output)
-    await _show_credential(ctx, stake_credential, is_change_output)
+    intro_text = "Address"
+    await _show_credential(ctx, payment_credential, intro_text, is_output=False)
+    await _show_credential(ctx, stake_credential, intro_text, is_output=False)
+
+
+async def show_change_output_credentials(
+    ctx: wire.Context,
+    payment_credential: Credential,
+    stake_credential: Credential,
+) -> None:
+    intro_text = "The following address is a change address. Its"
+    await _show_credential(ctx, payment_credential, intro_text, is_output=True)
+    await _show_credential(ctx, stake_credential, intro_text, is_output=True)
+
+
+async def show_device_owned_output_credentials(
+    ctx: wire.Context,
+    payment_credential: Credential,
+    stake_credential: Credential,
+    show_both_credentials: bool,
+) -> None:
+    intro_text = "The following address is owned by this device. Its"
+    await _show_credential(ctx, payment_credential, intro_text, is_output=True)
+    if show_both_credentials:
+        await _show_credential(ctx, stake_credential, intro_text, is_output=True)
 
 
 async def _show_credential(
     ctx: wire.Context,
     credential: Credential,
-    is_change_output: bool = False,
+    intro_text: str,
+    is_output: bool,
 ) -> None:
-    if is_change_output:
+    if is_output:
         title = "Confirm transaction"
     else:
         title = f"{ADDRESS_TYPE_NAMES[credential.address_type]} address"
@@ -297,15 +320,10 @@ async def _show_credential(
     # and reward address payment credential. In that case we don't want to
     # show some of the "props".
     if credential.is_set():
-        if is_change_output:
-            address_usage = "Change address"
-        else:
-            address_usage = "Address"
-
         credential_title = credential.get_title()
         props.append(
             (
-                f"{address_usage} {credential.type_name} credential is a {credential_title}:",
+                f"{intro_text} {credential.type_name} credential is a {credential_title}:",
                 None,
             )
         )

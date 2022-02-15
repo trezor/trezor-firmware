@@ -6,7 +6,7 @@ from trezor.messages import CardanoAddress
 from . import seed
 from .address import derive_human_readable_address, validate_address_parameters
 from .helpers.credential import Credential, should_show_address_credentials
-from .layout import show_cardano_address, show_credentials
+from .layout import show_address_credentials, show_cardano_address
 from .sign_tx import validate_network_info
 
 if TYPE_CHECKING:
@@ -47,7 +47,7 @@ async def _display_address(
     protocol_magic: int,
 ) -> None:
     if should_show_address_credentials(address_parameters):
-        await show_credentials(
+        await show_address_credentials(
             ctx,
             Credential.payment_credential(address_parameters),
             Credential.stake_credential(address_parameters),

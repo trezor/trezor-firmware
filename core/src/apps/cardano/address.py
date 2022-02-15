@@ -223,13 +223,12 @@ def validate_output_address_parameters(
 ) -> None:
     validate_address_parameters(parameters)
 
-    if parameters.address_type in (
-        CardanoAddressType.BASE_SCRIPT_KEY,
-        CardanoAddressType.BASE_SCRIPT_SCRIPT,
-        CardanoAddressType.POINTER_SCRIPT,
-        CardanoAddressType.ENTERPRISE_SCRIPT,
-        CardanoAddressType.REWARD,
-        CardanoAddressType.REWARD_SCRIPT,
+    if parameters.address_type not in (
+        CardanoAddressType.BASE,
+        CardanoAddressType.BASE_KEY_SCRIPT,
+        CardanoAddressType.POINTER,
+        CardanoAddressType.ENTERPRISE,
+        CardanoAddressType.BYRON,
     ):
         # Change outputs with script payment part are forbidden.
         # Reward addresses are forbidden as outputs in general, see also validate_output_address
