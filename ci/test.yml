@@ -386,6 +386,7 @@ crypto test:
     - crypto build
   variables:
     ASAN_OPTIONS: "verify_asan_link_order=0"
+    CK_TIMEOUT_MULTIPLIER: 5
   script:
     - ./crypto/tests/aestst
     - ./crypto/tests/test_check
