@@ -46,7 +46,7 @@
         }
       },
       {
-        "description": "Plutus transaction with output containing address parameters",
+        "description": "Plutus transaction with output containing forbidden address parameters",
         "parameters": {
           "protocol_magic": 764824073,
           "network_id": 1,
@@ -63,8 +63,8 @@
           ],
           "outputs": [
             {
-              "addressType": 0,
-              "path": "m/1852'/1815'/0'/0/0",
+              "addressType": 1,
+              "scriptPaymentHash": "8d7bebc7a58f1c7b5fb7c9391071ecd3b51b032695522f8c555343a9",
               "stakingPath": "m/1852'/1815'/0'/2/0",
               "amount": "7120787"
             }
@@ -84,7 +84,7 @@
           "include_network_id": false
         },
         "result": {
-          "error_message": "Invalid output"
+          "error_message": "Invalid address parameters"
         }
       },
       {

@@ -118,7 +118,8 @@ from .layout import (
     confirm_transaction,
     confirm_withdrawal,
     confirm_witness_request,
-    show_credentials,
+    show_change_output_credentials,
+    show_device_owned_output_credentials,
     show_transaction_signing_mode,
     show_warning_no_collateral_inputs,
     show_warning_no_script_data_hash,
@@ -444,6 +445,7 @@ async def _process_outputs(
                 output,
                 protocol_magic,
                 network_id,
+                signing_mode,
             )
 
         output_address = _get_output_address(
@@ -886,8 +888,12 @@ def _validate_output(
         raise INVALID_OUTPUT
 
     if address_parameters := output.address_parameters:
-        if signing_mode != CardanoTxSigningMode.ORDINARY_TRANSACTION:
-            # change outputs are allowed only in ORDINARY_TRANSACTION
+        if signing_mode not in (
+            CardanoTxSigningMode.ORDINARY_TRANSACTION,
+            CardanoTxSigningMode.PLUTUS_TRANSACTION,
+        ):
+            # Change outputs are allowed only in ORDINARY_TRANSACTION.
+            # In PLUTUS_TRANSACTION, we display device-owned outputs similarly to change outputs.
             raise INVALID_OUTPUT
 
         validate_output_address_parameters(address_parameters)
@@ -927,6 +933,11 @@ def _should_show_output(
         # Plutus script address without a datum hash is unspendable, we must show a warning
         return True
 
+    if signing_mode == CardanoTxSigningMode.PLUTUS_TRANSACTION:
+        # In Plutus transactions, all outputs need to be shown (even device-owned), because they
+        # might influence the script evaluation.
+        return True
+
     if signing_mode == CardanoTxSigningMode.POOL_REGISTRATION_AS_OWNER:
         # In a pool registration transaction, there are no inputs belonging to the user
         # and no spending witnesses. It is thus safe to not show the outputs.
@@ -946,34 +957,45 @@ async def _show_output(
     output: CardanoTxOutput,
     protocol_magic: int,
     network_id: int,
+    signing_mode: CardanoTxSigningMode,
 ) -> None:
     if output.datum_hash:
         await show_warning_tx_output_contains_datum_hash(ctx, output.datum_hash)
-
-    if output.asset_groups_count > 0:
-        await show_warning_tx_output_contains_tokens(ctx)
 
     address_type = _get_output_address_type(output)
     if output.datum_hash is None and address_type in ADDRESS_TYPES_PAYMENT_SCRIPT:
         await show_warning_tx_output_no_datum_hash(ctx)
 
-    is_change_output: bool
+    if output.asset_groups_count > 0:
+        await show_warning_tx_output_contains_tokens(ctx)
+
+    is_change_output = False
     if address_parameters := output.address_parameters:
-        is_change_output = True
-
-        await show_credentials(
-            ctx,
-            Credential.payment_credential(address_parameters),
-            Credential.stake_credential(address_parameters),
-            is_change_output=True,
-        )
-
         address = derive_human_readable_address(
             keychain, address_parameters, protocol_magic, network_id
         )
-    else:
-        is_change_output = False
+        payment_credential = Credential.payment_credential(address_parameters)
+        stake_credential = Credential.stake_credential(address_parameters)
 
+        if signing_mode == CardanoTxSigningMode.PLUTUS_TRANSACTION:
+            show_both_credentials = should_show_address_credentials(address_parameters)
+            # In ORDINARY_TRANSACTION, change outputs with matching payment and staking paths can
+            # be hidden, but we need to show them in PLUTUS_TRANSACTION because of the script
+            # evaluation. We at least hide the staking path if it matches the payment path.
+            await show_device_owned_output_credentials(
+                ctx,
+                payment_credential,
+                stake_credential,
+                show_both_credentials,
+            )
+        else:
+            is_change_output = True
+            await show_change_output_credentials(
+                ctx,
+                payment_credential,
+                stake_credential,
+            )
+    else:
         assert output.address is not None  # _validate_output
         address = output.address
 
