@@ -32,9 +32,10 @@ if __debug__:
 # as a UI callback for storage, which can be invoked at any time
 import trezor.pin  # noqa: F401
 
-# starting the empty USB
-import usb_empty
-usb_empty.bus.open("355C817510C0EABF2F147145")  # random 12byte hex
+# usb imports trezor.utils and trezor.io which is a C module
+import usb
+# opening empty usb
+usb.bus.open("355C817510C0EABF2F147145")  # random 12byte hex
 
 # create an unimport manager that will be reused in the main loop
 unimport_manager = utils.unimport()
@@ -44,10 +45,10 @@ with unimport_manager:
     import boot
     del boot
 
-# closing the empty USB and starting the real one
-usb_empty.bus.close()
-# usb imports trezor.utils and trezor.io which is a C module
-import usb
+# closing the empty USB, adding the interfaces and starting it again
+usb.bus.close()
+usb.add_interfaces()
+
 import storage.device
 
 usb.bus.open(storage.device.get_device_id())
