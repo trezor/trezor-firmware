@@ -37,24 +37,10 @@ iface_vcp: io.VCP | None = None
 
 
 def add_interfaces() -> None:
-    global bus
     global iface_wire
     global iface_debug
     global iface_webauthn
     global iface_vcp
-
-    # We need to recreate the bus as well
-    # Reusing the existing one results in Trezor red screen saying:
-    # FATAL ERROR ... core/embed/trezorhal/usb.c:104 ... check_desc_str(dev_info->manufacturer)
-    bus = io.USB(
-        vendor_id=0x1209,
-        product_id=0x53C1,
-        release_num=0x0200,
-        manufacturer="SatoshiLabs",
-        product="TREZOR",
-        interface="TREZOR Interface",
-        usb21_landing=False,
-    )
 
     # interface used for trezor wire protocol
     id_wire = next(_iface_iter)

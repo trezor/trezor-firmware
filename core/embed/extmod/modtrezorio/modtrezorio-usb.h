@@ -250,11 +250,8 @@ STATIC mp_obj_t mod_trezorio_USB_close(mp_obj_t self) {
   usb_deinit();
   mp_obj_list_set_len(MP_OBJ_FROM_PTR(&o->ifaces), 0);
   mp_seq_clear(o->ifaces.items, 0, o->ifaces.alloc, sizeof(*o->ifaces.items));
-  o->info.vendor_id = 0;
-  o->info.product_id = 0;
-  o->info.release_num = 0;
-  o->info.manufacturer = NULL;
-  o->info.product = NULL;
+  // NOTE: not resetting the other info attributes (manufacturer, vendor_id, ...)
+  // to be able to reconnect again with the same instance
   o->info.serial_number = NULL;
   o->state = USB_CLOSED;
 
