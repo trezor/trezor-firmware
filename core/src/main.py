@@ -41,7 +41,19 @@ config.init(show_pin_timeout)
 # usb imports trezor.utils and trezor.io which is a C module
 import usb
 # opening empty usb
-usb.bus.open(storage.device.get_device_id())
+# There is one special case when the device ID is not there
+# and cannot be set up, because the storage is not unlocked
+# It happens for example after wiping the bootloader
+# We are catching this error and assigning default device ID
+# TODO: this logic could be moved into get_device_id(),
+# and could require some kwarg, like `ignore_locked_storage=True`
+try:
+    device_id = storage.device.get_device_id()
+except RuntimeError as err:
+    if "Could not save value" not in str(err):
+        raise
+    device_id = "000000000000000000000000"
+usb.bus.open(device_id)
 
 # create an unimport manager that will be reused in the main loop
 unimport_manager = utils.unimport()
