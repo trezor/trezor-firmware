@@ -84,6 +84,15 @@ void fuzzer_reset_state(void) {
   // reset the PRNGs to make individual fuzzer runs deterministic
   srand(0);
   random_reseed(0);
+
+  // clear internal caches
+  // note: this is not strictly required for all fuzzer targets
+#if USE_BIP32_CACHE
+  bip32_cache_clear();
+#endif
+#if USE_BIP39_CACHE
+  bip39_cache_clear();
+#endif
 }
 
 void crash(void) {
