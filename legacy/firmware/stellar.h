@@ -54,7 +54,7 @@ typedef struct {
 
 // Signing process
 bool stellar_signingInit(const StellarSignTx *tx);
-void stellar_signingAbort(const char *reason);
+void stellar_signingAbort(void);
 bool stellar_confirmSourceAccount(bool has_source_account,
                                   const char *str_account);
 bool stellar_confirmCreateAccountOp(const StellarCreateAccountOp *msg);

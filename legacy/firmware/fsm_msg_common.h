@@ -95,8 +95,7 @@ bool get_features(Features *resp) {
 }
 
 void fsm_msgInitialize(const Initialize *msg) {
-  recovery_abort();
-  signing_abort();
+  fsm_abortWorkflows();
 
   uint8_t *session_id;
   if (msg && msg->has_session_id) {
@@ -347,11 +346,7 @@ void fsm_msgBackupDevice(const BackupDevice *msg) {
 
 void fsm_msgCancel(const Cancel *msg) {
   (void)msg;
-  recovery_abort();
-  signing_abort();
-#if !BITCOIN_ONLY
-  ethereum_signing_abort();
-#endif
+  fsm_abortWorkflows();
   fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 }
 

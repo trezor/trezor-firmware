@@ -149,4 +149,6 @@ bool fsm_checkCoinPath(const CoinInfo *coin, InputScriptType script_type,
                        uint32_t address_n_count, const uint32_t *address_n,
                        bool has_multisig, bool show_warning);
 
+void fsm_abortWorkflows(void);
+
 #endif
