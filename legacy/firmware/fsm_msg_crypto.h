@@ -75,6 +75,8 @@ void fsm_msgSignIdentity(const SignIdentity *msg) {
 
   CHECK_INITIALIZED
 
+  CHECK_PIN
+
   layoutSignIdentity(&(msg->identity),
                      msg->has_challenge_visual ? msg->challenge_visual : 0);
   if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
@@ -82,8 +84,6 @@ void fsm_msgSignIdentity(const SignIdentity *msg) {
     layoutHome();
     return;
   }
-
-  CHECK_PIN
 
   uint8_t hash[32];
   if (cryptoIdentityFingerprint(&(msg->identity), hash) == 0) {
@@ -179,14 +179,14 @@ void fsm_msgGetECDHSessionKey(const GetECDHSessionKey *msg) {
 
   CHECK_INITIALIZED
 
+  CHECK_PIN
+
   layoutDecryptIdentity(&msg->identity);
   if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
     fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
     layoutHome();
     return;
   }
-
-  CHECK_PIN
 
   uint8_t hash[32];
   if (cryptoIdentityFingerprint(&(msg->identity), hash) == 0) {
@@ -258,6 +258,8 @@ void fsm_msgCosiCommit(const CosiCommit *msg) {
 
   CHECK_PARAM(msg->has_data, _("No data provided"));
 
+  CHECK_PIN
+
   if (!fsm_checkCosiPath(msg->address_n_count, msg->address_n)) {
     layoutHome();
     return;
@@ -270,8 +272,6 @@ void fsm_msgCosiCommit(const CosiCommit *msg) {
     layoutHome();
     return;
   }
-
-  CHECK_PIN
 
   const HDNode *node = fsm_getDerivedNode(ED25519_NAME, msg->address_n,
                                           msg->address_n_count, NULL);
@@ -311,6 +311,8 @@ void fsm_msgCosiSign(const CosiSign *msg) {
     return;
   }
 
+  CHECK_PIN
+
   layoutCosiCommitSign(msg->address_n, msg->address_n_count, msg->data.bytes,
                        msg->data.size, true);
   if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
@@ -318,8 +320,6 @@ void fsm_msgCosiSign(const CosiSign *msg) {
     layoutHome();
     return;
   }
-
-  CHECK_PIN
 
   const HDNode *node = fsm_getDerivedNode(ED25519_NAME, msg->address_n,
                                           msg->address_n_count, NULL);

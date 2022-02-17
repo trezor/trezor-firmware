@@ -333,6 +333,8 @@ void fsm_msgNEMDecryptMessage(NEMDecryptMessage *msg) {
   CHECK_PARAM(msg->has_public_key, _("No public key provided"));
   CHECK_PARAM(msg->public_key.size == 32, _("Invalid public key"));
 
+  CHECK_PIN
+
   char address[NEM_ADDRESS_SIZE + 1];
   nem_get_address(msg->public_key.bytes, msg->network, address);
 
@@ -344,13 +346,10 @@ void fsm_msgNEMDecryptMessage(NEMDecryptMessage *msg) {
     return;
   }
 
-  CHECK_PIN
-
   if (!fsm_nemCheckPath(msg->address_n_count, msg->address_n, msg->network)) {
     layoutHome();
     return;
   }
-
   const HDNode *node = fsm_getDerivedNode(ED25519_KECCAK_NAME, msg->address_n,
                                           msg->address_n_count, NULL);
   if (!node) return;
