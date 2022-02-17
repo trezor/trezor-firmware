@@ -158,21 +158,7 @@ def test_ping(client: Client):
         client.ping("msg", True)
 
 
-@pytest.mark.skip_t2
-def test_get_entropy_t1(client: Client):
-    _assert_protection(client)
-    with client:
-        client.set_expected_responses(
-            [
-                messages.ButtonRequest(code=B.ProtectCall),
-                messages.Entropy,
-            ]
-        )
-        misc.get_entropy(client, 10)
-
-
-@pytest.mark.skip_t1
-def test_get_entropy_t2(client: Client):
+def test_get_entropy(client: Client):
     _assert_protection(client)
     with client:
         client.use_pin_sequence([PIN4])

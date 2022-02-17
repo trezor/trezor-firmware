@@ -251,6 +251,8 @@ void fsm_msgWipeDevice(const WipeDevice *msg) {
 }
 
 void fsm_msgGetEntropy(const GetEntropy *msg) {
+  CHECK_PIN
+
 #if !DEBUG_RNG
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
                     _("Do you really want to"), _("send entropy?"), NULL, NULL,
@@ -523,6 +525,8 @@ void fsm_msgWordAck(const WordAck *msg) {
 }
 
 void fsm_msgSetU2FCounter(const SetU2FCounter *msg) {
+  CHECK_PIN
+
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
                     _("Do you want to set"), _("the U2F counter?"), NULL, NULL,
                     NULL, NULL);
@@ -537,6 +541,8 @@ void fsm_msgSetU2FCounter(const SetU2FCounter *msg) {
 }
 
 void fsm_msgGetNextU2FCounter() {
+  CHECK_PIN
+
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
                     _("Do you want to"), _("increase and retrieve"),
                     _("the U2F counter?"), NULL, NULL, NULL);
