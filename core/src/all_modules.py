@@ -73,6 +73,8 @@ trezor.crypto.base58
 import trezor.crypto.base58
 trezor.crypto.bech32
 import trezor.crypto.bech32
+trezor.crypto.bolt11
+import trezor.crypto.bolt11
 trezor.crypto.cashaddr
 import trezor.crypto.cashaddr
 trezor.crypto.curve
