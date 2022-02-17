@@ -682,7 +682,7 @@ def cargo_build():
         features.append("bitcoin_only")
     if UI2:
         features.append("ui")
-        if PYOPT == "0":
+        if PYOPT == "0" or not FROZEN:
             features.append("ui_debug")
 
     return f'cd embed/rust; cargo build --profile {RUST_PROFILE} --target-dir=../../build/unix/rust --no-default-features --features "{" ".join(features)}"'
