@@ -912,6 +912,7 @@
 "TT_bitcoin-test_signtx_invalid_path.py::test_invalid_path_fail_asap": "1c100ce4b7c1e47e72428f390de0846c1ff933e9f07894872644a369a9422738",
 "TT_bitcoin-test_signtx_invalid_path.py::test_invalid_path_pass_forkid": "13168328e981bb88ebb3cc3739c594baa13992f75829e6c28b3c39066301d271",
 "TT_bitcoin-test_signtx_invalid_path.py::test_invalid_path_prompt": "fffb490aa6246315b9ae407e426f6563b051219bda8f025498f178af57881635",
+"TT_bitcoin-test_signtx_lnswap.py::test_lnswap": "4f221a3ee371deb7d05fc1aaf8cf367debf000d1d43fe72da42eb44425341231",
 "TT_bitcoin-test_signtx_mixed_inputs.py::test_non_segwit_segwit_inputs": "c3b55df982a921a4fdb72ffb579a9b43543537b6c520b6742421f67de2f4845f",
 "TT_bitcoin-test_signtx_mixed_inputs.py::test_non_segwit_segwit_non_segwit_inputs": "fb92593a2fceefffbc30a56a1df2b79b4de148d7db5d25ad17a2ee316260b18f",
 "TT_bitcoin-test_signtx_mixed_inputs.py::test_segwit_non_segwit_inputs": "c3b55df982a921a4fdb72ffb579a9b43543537b6c520b6742421f67de2f4845f",

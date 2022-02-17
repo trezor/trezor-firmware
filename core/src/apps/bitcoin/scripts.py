@@ -2,7 +2,8 @@ from typing import TYPE_CHECKING
 
 from trezor import utils, wire
 from trezor.crypto import base58, cashaddr
-from trezor.crypto.hashlib import sha256
+from trezor.crypto.hashlib import ripemd160, sha256
+from trezor.crypto.scripts import sha256_ripemd160
 from trezor.enums import InputScriptType
 
 from apps.common import address_type
@@ -591,6 +592,45 @@ def output_script_paytoopreturn(data: bytes) -> bytearray:
     w.append(0x6A)  # OP_RETURN
     write_op_push(w, len(data))
     w.extend(data)
+    return w
+
+
+# LNSWAP
+# ===
+
+
+def redeem_script_paytolnswap(
+    payment_hash: bytes,
+    htlc: bytes,
+    cltv: int,
+    refund_pubkey: bytes,
+) -> bytearray:
+    # create redeemscript
+    w = utils.empty_bytearray(3 + 20 + 4 + 33 + 2 + 3 + 5 + 20 + 3)
+    w.append(0x76)  # OP_DUP
+    w.append(0xA9)  # OP_HASH160
+    w.append(0x14)  # OP_DATA_20
+    write_bytes_fixed(w, ripemd160(payment_hash).digest(), 20)
+    w.append(0x87)  # OP_EQUAL
+    w.append(0x63)  # OP_IF
+    w.append(0x75)  # OP_DROP
+    w.append(0x21)  # OP_DATA_33
+    write_bytes_fixed(w, htlc, 33)
+    w.append(0x67)  # OP_ELSE
+    w.append(0x03)  # OP_DATA_3
+    if not 500_000 <= cltv <= 0xFF_FFFF:
+        raise wire.DataError("Invalid CLTV value")
+    write_bytes_fixed(w, cltv.to_bytes(3, "little"), 3)
+    w.append(0xB1)  # OP_CHECKLOCKTIMEVERIFY
+    w.append(0x75)  # OP_DROP
+    w.append(0x76)  # OP_DUP
+    w.append(0xA9)  # OP_HASH160
+    w.append(0x14)  # OP_DATA_20
+    # we support only SPENDADDRESS (P2PKH) and SPENDWITNESS (P2WPKH) for refunds
+    write_bytes_fixed(w, sha256_ripemd160(refund_pubkey).digest(), 20)
+    w.append(0x88)  # OP_EQUALVERIFY
+    w.append(0x68)  # OP_ENDIF
+    w.append(0xAC)  # OP_CHECKSIG
     return w
 
 

@@ -56,6 +56,7 @@ ICON_WRONG = "trezor/res/header_icons/wrong.toif"
 ICON_CONFIG = "trezor/res/header_icons/cog.toif"
 ICON_RECEIVE = "trezor/res/header_icons/receive.toif"
 ICON_SEND = "trezor/res/header_icons/send.toif"
+ICON_LNSWAP = "trezor/res/header_icons/lnswap.toif"
 
 ICON_DEFAULT = ICON_CONFIG
 

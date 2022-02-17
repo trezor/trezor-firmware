@@ -62,6 +62,7 @@ __all__ = (
     "show_warning",
     "confirm_output",
     "confirm_payment_request",
+    "confirm_lightning_swap",
     "confirm_blob",
     "confirm_properties",
     "confirm_total",
@@ -541,6 +542,34 @@ async def confirm_payment_request(
         interact(
             ctx, content, "confirm_payment_request", ButtonRequestType.ConfirmOutput
         )
+    )
+
+
+async def confirm_lightning_swap(
+    ctx: wire.GenericContext,
+    address: str,
+    amount: str,
+    payee: str,
+    ln_amount: str,
+    description: str | None,
+) -> None:
+    width_paginated = MONO_ADDR_PER_LINE - 1
+    para = [(ui.BOLD, amount)]
+    para.extend((ui.MONO, line) for line in chunks(address, width_paginated))
+    para.append(PAGEBREAK)
+    para.append((ui.NORMAL, "LN payee:"))
+    para.extend((ui.MONO, line) for line in chunks(payee, width_paginated))
+    para.append((ui.NORMAL, "LN amount:"))
+    para.append((ui.BOLD, ln_amount))
+    if description is not None:
+        para.append((ui.NORMAL, "LN description:"))
+        para.append((ui.BOLD, description))
+    content = paginate_paragraphs(
+        para, header="Confirm LN Swap", header_icon=ui.ICON_LNSWAP, icon_color=ui.YELLOW
+    )
+
+    await raise_if_cancelled(
+        interact(ctx, content, "confirm_output", ButtonRequestType.ConfirmOutput)
     )
 
 

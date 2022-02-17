@@ -88,6 +88,7 @@ SEGWIT_OUTPUT_SCRIPT_TYPES = (
     OutputScriptType.PAYTOP2SHWITNESS,
     OutputScriptType.PAYTOWITNESS,
     OutputScriptType.PAYTOTAPROOT,
+    OutputScriptType.PAYTOLNSWAP,
 )
 
 NONSEGWIT_INPUT_SCRIPT_TYPES = (
