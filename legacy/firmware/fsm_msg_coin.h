@@ -146,6 +146,8 @@ void fsm_msgSignTx(const SignTx *msg) {
 }
 
 void fsm_msgTxAck(TxAck *msg) {
+  CHECK_UNLOCKED
+
   CHECK_PARAM(msg->has_tx, _("No transaction provided"));
 
   signing_txack(&(msg->tx));

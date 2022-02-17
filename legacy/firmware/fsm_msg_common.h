@@ -516,7 +516,11 @@ void fsm_msgRecoveryDevice(const RecoveryDevice *msg) {
                 msg->has_u2f_counter ? msg->u2f_counter : 0, dry_run);
 }
 
-void fsm_msgWordAck(const WordAck *msg) { recovery_word(msg->word); }
+void fsm_msgWordAck(const WordAck *msg) {
+  CHECK_UNLOCKED
+
+  recovery_word(msg->word);
+}
 
 void fsm_msgSetU2FCounter(const SetU2FCounter *msg) {
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,

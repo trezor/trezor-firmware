@@ -97,6 +97,8 @@ void fsm_msgStellarSignTx(const StellarSignTx *msg) {
 }
 
 void fsm_msgStellarCreateAccountOp(const StellarCreateAccountOp *msg) {
+  CHECK_UNLOCKED
+
   if (!stellar_confirmCreateAccountOp(msg)) return;
 
   if (stellar_allOperationsConfirmed()) {
@@ -115,6 +117,8 @@ void fsm_msgStellarCreateAccountOp(const StellarCreateAccountOp *msg) {
 }
 
 void fsm_msgStellarPaymentOp(const StellarPaymentOp *msg) {
+  CHECK_UNLOCKED
+
   // This will display additional dialogs to the user
   if (!stellar_confirmPaymentOp(msg)) return;
 
@@ -136,6 +140,8 @@ void fsm_msgStellarPaymentOp(const StellarPaymentOp *msg) {
 
 void fsm_msgStellarPathPaymentStrictReceiveOp(
     const StellarPathPaymentStrictReceiveOp *msg) {
+  CHECK_UNLOCKED
+
   if (!stellar_confirmPathPaymentStrictReceiveOp(msg)) return;
 
   if (stellar_allOperationsConfirmed()) {
@@ -155,6 +161,8 @@ void fsm_msgStellarPathPaymentStrictReceiveOp(
 
 void fsm_msgStellarPathPaymentStrictSendOp(
     const StellarPathPaymentStrictSendOp *msg) {
+  CHECK_UNLOCKED
+
   if (!stellar_confirmPathPaymentStrictSendOp(msg)) return;
 
   if (stellar_allOperationsConfirmed()) {
@@ -173,6 +181,8 @@ void fsm_msgStellarPathPaymentStrictSendOp(
 }
 
 void fsm_msgStellarManageBuyOfferOp(const StellarManageBuyOfferOp *msg) {
+  CHECK_UNLOCKED
+
   if (!stellar_confirmManageBuyOfferOp(msg)) return;
 
   if (stellar_allOperationsConfirmed()) {
@@ -191,6 +201,8 @@ void fsm_msgStellarManageBuyOfferOp(const StellarManageBuyOfferOp *msg) {
 }
 
 void fsm_msgStellarManageSellOfferOp(const StellarManageSellOfferOp *msg) {
+  CHECK_UNLOCKED
+
   if (!stellar_confirmManageSellOfferOp(msg)) return;
 
   if (stellar_allOperationsConfirmed()) {
@@ -210,6 +222,8 @@ void fsm_msgStellarManageSellOfferOp(const StellarManageSellOfferOp *msg) {
 
 void fsm_msgStellarCreatePassiveSellOfferOp(
     const StellarCreatePassiveSellOfferOp *msg) {
+  CHECK_UNLOCKED
+
   if (!stellar_confirmCreatePassiveSellOfferOp(msg)) return;
 
   if (stellar_allOperationsConfirmed()) {
@@ -228,6 +242,8 @@ void fsm_msgStellarCreatePassiveSellOfferOp(
 }
 
 void fsm_msgStellarSetOptionsOp(const StellarSetOptionsOp *msg) {
+  CHECK_UNLOCKED
+
   if (!stellar_confirmSetOptionsOp(msg)) return;
 
   if (stellar_allOperationsConfirmed()) {
@@ -246,6 +262,8 @@ void fsm_msgStellarSetOptionsOp(const StellarSetOptionsOp *msg) {
 }
 
 void fsm_msgStellarChangeTrustOp(const StellarChangeTrustOp *msg) {
+  CHECK_UNLOCKED
+
   if (!stellar_confirmChangeTrustOp(msg)) return;
 
   if (stellar_allOperationsConfirmed()) {
@@ -264,6 +282,8 @@ void fsm_msgStellarChangeTrustOp(const StellarChangeTrustOp *msg) {
 }
 
 void fsm_msgStellarAllowTrustOp(const StellarAllowTrustOp *msg) {
+  CHECK_UNLOCKED
+
   if (!stellar_confirmAllowTrustOp(msg)) return;
 
   if (stellar_allOperationsConfirmed()) {
@@ -282,6 +302,8 @@ void fsm_msgStellarAllowTrustOp(const StellarAllowTrustOp *msg) {
 }
 
 void fsm_msgStellarAccountMergeOp(const StellarAccountMergeOp *msg) {
+  CHECK_UNLOCKED
+
   if (!stellar_confirmAccountMergeOp(msg)) return;
 
   if (stellar_allOperationsConfirmed()) {
@@ -300,6 +322,8 @@ void fsm_msgStellarAccountMergeOp(const StellarAccountMergeOp *msg) {
 }
 
 void fsm_msgStellarManageDataOp(const StellarManageDataOp *msg) {
+  CHECK_UNLOCKED
+
   if (!stellar_confirmManageDataOp(msg)) return;
 
   if (stellar_allOperationsConfirmed()) {
@@ -318,6 +342,8 @@ void fsm_msgStellarManageDataOp(const StellarManageDataOp *msg) {
 }
 
 void fsm_msgStellarBumpSequenceOp(const StellarBumpSequenceOp *msg) {
+  CHECK_UNLOCKED
+
   if (!stellar_confirmBumpSequenceOp(msg)) return;
 
   if (stellar_allOperationsConfirmed()) {
