@@ -33,6 +33,7 @@ enum OutputScriptType {
     PAYTOWITNESS = 4;       // only for change output
     PAYTOP2SHWITNESS = 5;   // only for change output
     PAYTOTAPROOT = 6;       // only for change output
+    PAYTOLNSWAP = 7;        // Lightning Network Swap
 }
 
 /**
@@ -70,6 +71,19 @@ message MultisigRedeemScriptType {
         required common.HDNodeType node = 1; // BIP-32 node in deserialized form
         repeated uint32 address_n = 2;                          // BIP-32 path to derive the key from node
     }
+}
+
+/**
+ * Lightning Network Submarine Swap used as output
+ * @embed
+ */
+ message LightningNetworkSwapType {
+    required string invoice = 1;                     // BOLT-11 invoice
+    required bytes htlc = 2;                         // destination HTLC public key
+    required uint32 cltv = 3;                        // CLTV (blockheight)
+    required InputScriptType swap_script_type = 4;   // SPENDP2SHWITNESS or SPENDWITNESS
+    repeated uint32 refund_address_n = 5;            // BIP32 path to use as refund address
+    required InputScriptType refund_script_type = 6; // SPENDADDRESS or SPENDWITNESS
 }
 
 /**
@@ -330,6 +344,7 @@ message TxAck {
             optional bytes orig_hash = 10;                  // tx_hash of the original transaction where this output was present (used when creating a replacement transaction)
             optional uint32 orig_index = 11;                // index of the output in the original transaction (used when creating a replacement transaction)
             optional uint32 payment_req_index = 12 [(experimental)=true]; // index of the PaymentRequest containing this output
+            optional LightningNetworkSwapType lnswap = 13;                // Lightning Swap data
         }
     }
 }
@@ -374,6 +389,7 @@ message TxOutput {
     optional bytes orig_hash = 10;                  // tx_hash of the original transaction where this output was present (used when creating a replacement transaction)
     optional uint32 orig_index = 11;                // index of the output in the original transaction (used when creating a replacement transaction)
     optional uint32 payment_req_index = 12 [(experimental)=true]; // index of the PaymentRequest containing this output
+    optional LightningNetworkSwapType lnswap = 13;                // Lightning Swap data
 }
 
 /** Data type for metadata about previous transaction which contains the UTXO being spent.

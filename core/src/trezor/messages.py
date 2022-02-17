@@ -407,6 +407,30 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MultisigRedeemScriptType"]:
             return isinstance(msg, cls)
 
+    class LightningNetworkSwapType(protobuf.MessageType):
+        invoice: "str"
+        htlc: "bytes"
+        cltv: "int"
+        swap_script_type: "InputScriptType"
+        refund_address_n: "list[int]"
+        refund_script_type: "InputScriptType"
+
+        def __init__(
+            self,
+            *,
+            invoice: "str",
+            htlc: "bytes",
+            cltv: "int",
+            swap_script_type: "InputScriptType",
+            refund_script_type: "InputScriptType",
+            refund_address_n: "list[int] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["LightningNetworkSwapType"]:
+            return isinstance(msg, cls)
+
     class GetPublicKey(protobuf.MessageType):
         address_n: "list[int]"
         ecdsa_curve_name: "str | None"
@@ -687,6 +711,7 @@ if TYPE_CHECKING:
         orig_hash: "bytes | None"
         orig_index: "int | None"
         payment_req_index: "int | None"
+        lnswap: "LightningNetworkSwapType | None"
 
         def __init__(
             self,
@@ -700,6 +725,7 @@ if TYPE_CHECKING:
             orig_hash: "bytes | None" = None,
             orig_index: "int | None" = None,
             payment_req_index: "int | None" = None,
+            lnswap: "LightningNetworkSwapType | None" = None,
         ) -> None:
             pass
 

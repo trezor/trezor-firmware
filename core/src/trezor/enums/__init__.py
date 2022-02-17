@@ -309,6 +309,7 @@ if TYPE_CHECKING:
         PAYTOWITNESS = 4
         PAYTOP2SHWITNESS = 5
         PAYTOTAPROOT = 6
+        PAYTOLNSWAP = 7
 
     class DecredStakingSpendType(IntEnum):
         SSGen = 0

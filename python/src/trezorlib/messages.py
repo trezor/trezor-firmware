@@ -322,6 +322,7 @@ class OutputScriptType(IntEnum):
     PAYTOWITNESS = 4
     PAYTOP2SHWITNESS = 5
     PAYTOTAPROOT = 6
+    PAYTOLNSWAP = 7
 
 
 class DecredStakingSpendType(IntEnum):
@@ -951,6 +952,35 @@ class MultisigRedeemScriptType(protobuf.MessageType):
         self.m = m
 
 
+class LightningNetworkSwapType(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("invoice", "string", repeated=False, required=True),
+        2: protobuf.Field("htlc", "bytes", repeated=False, required=True),
+        3: protobuf.Field("cltv", "uint32", repeated=False, required=True),
+        4: protobuf.Field("swap_script_type", "InputScriptType", repeated=False, required=True),
+        5: protobuf.Field("refund_address_n", "uint32", repeated=True, required=False),
+        6: protobuf.Field("refund_script_type", "InputScriptType", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        invoice: "str",
+        htlc: "bytes",
+        cltv: "int",
+        swap_script_type: "InputScriptType",
+        refund_script_type: "InputScriptType",
+        refund_address_n: Optional[Sequence["int"]] = None,
+    ) -> None:
+        self.refund_address_n: Sequence["int"] = refund_address_n if refund_address_n is not None else []
+        self.invoice = invoice
+        self.htlc = htlc
+        self.cltv = cltv
+        self.swap_script_type = swap_script_type
+        self.refund_script_type = refund_script_type
+
+
 class GetPublicKey(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 11
     FIELDS = {
@@ -1301,6 +1331,7 @@ class TxOutput(protobuf.MessageType):
         10: protobuf.Field("orig_hash", "bytes", repeated=False, required=False),
         11: protobuf.Field("orig_index", "uint32", repeated=False, required=False),
         12: protobuf.Field("payment_req_index", "uint32", repeated=False, required=False),
+        13: protobuf.Field("lnswap", "LightningNetworkSwapType", repeated=False, required=False),
     }
 
     def __init__(
@@ -1315,6 +1346,7 @@ class TxOutput(protobuf.MessageType):
         orig_hash: Optional["bytes"] = None,
         orig_index: Optional["int"] = None,
         payment_req_index: Optional["int"] = None,
+        lnswap: Optional["LightningNetworkSwapType"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.amount = amount
@@ -1325,6 +1357,7 @@ class TxOutput(protobuf.MessageType):
         self.orig_hash = orig_hash
         self.orig_index = orig_index
         self.payment_req_index = payment_req_index
+        self.lnswap = lnswap
 
 
 class PrevTx(protobuf.MessageType):
@@ -1809,6 +1842,7 @@ class TxOutputType(protobuf.MessageType):
         10: protobuf.Field("orig_hash", "bytes", repeated=False, required=False),
         11: protobuf.Field("orig_index", "uint32", repeated=False, required=False),
         12: protobuf.Field("payment_req_index", "uint32", repeated=False, required=False),
+        13: protobuf.Field("lnswap", "LightningNetworkSwapType", repeated=False, required=False),
     }
 
     def __init__(
@@ -1823,6 +1857,7 @@ class TxOutputType(protobuf.MessageType):
         orig_hash: Optional["bytes"] = None,
         orig_index: Optional["int"] = None,
         payment_req_index: Optional["int"] = None,
+        lnswap: Optional["LightningNetworkSwapType"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.amount = amount
@@ -1833,6 +1868,7 @@ class TxOutputType(protobuf.MessageType):
         self.orig_hash = orig_hash
         self.orig_index = orig_index
         self.payment_req_index = payment_req_index
+        self.lnswap = lnswap
 
 
 class PaymentRequestMemo(protobuf.MessageType):
