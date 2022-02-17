@@ -4,6 +4,7 @@ from ubinascii import hexlify
 
 import storage.cache
 from storage import common
+from trezor import config
 
 if TYPE_CHECKING:
     from trezor.enums import BackupType
@@ -86,6 +87,7 @@ def get_device_id() -> str:
     dev_id = common.get(_NAMESPACE, DEVICE_ID, public=True)
     if not dev_id:
         dev_id = _new_device_id().encode()
+        config.unlock("", None)
         common.set(_NAMESPACE, DEVICE_ID, dev_id, public=True)
     return dev_id.decode()
 
