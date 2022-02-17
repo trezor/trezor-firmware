@@ -98,6 +98,12 @@ static uint8_t msg_resp[MSG_OUT_DECODED_SIZE] __attribute__((aligned));
     return;                 \
   }
 
+#define CHECK_UNLOCKED         \
+  if (!session_isUnlocked()) { \
+    layoutHome();              \
+    return;                    \
+  }
+
 #define CHECK_PARAM(cond, errormsg)                             \
   if (!(cond)) {                                                \
     fsm_sendFailure(FailureType_Failure_DataError, (errormsg)); \

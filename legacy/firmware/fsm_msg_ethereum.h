@@ -125,6 +125,8 @@ void fsm_msgEthereumSignTxEIP1559(const EthereumSignTxEIP1559 *msg) {
 }
 
 void fsm_msgEthereumTxAck(const EthereumTxAck *msg) {
+  CHECK_UNLOCKED
+
   ethereum_signing_txack(msg);
 }
 
