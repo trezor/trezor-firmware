@@ -236,7 +236,7 @@ class CoreEmulator(Emulator):
         )
         if self.headless:
             env["SDL_VIDEODRIVER"] = "dummy"
-        if self.disable_animation:
+        if self.headless or self.disable_animation:
             env["TREZOR_DISABLE_FADE"] = "1"
             env["TREZOR_DISABLE_ANIMATION"] = "1"
 
