@@ -550,9 +550,13 @@ def format_message(
 
         return repr(value)
 
-    return "{name} ({size} bytes) {content}".format(
+    try:
+        byte_size = str(pb.ByteSize()) + " bytes"
+    except Exception:
+        byte_size = "encoding failed"
+    return "{name} ({size}) {content}".format(
         name=pb.__class__.__name__,
-        size=pb.ByteSize(),
+        size=byte_size,
         content=pformat("", pb.__dict__, indent),
     )
 
