@@ -178,5 +178,19 @@
             "Homepage": "https://tether.to"
         },
         "wallet": {}
+    },
+    {
+        "name": "Raptoreum",
+        "shortcut": "RTM",
+        "slip44": 10226,
+        "curve": "ed25519",
+        "decimals": 8,
+        "links": {
+            "Homepage": "https://raptoreum.com/",
+            "Github": "https://github.com/Raptor3um/raptoreum",
+        },
+        "wallet":{
+            "Raptoreum Wallet": "https://github.com/Raptor3um/raptoreum/releases"
+        }
     }
 ]
