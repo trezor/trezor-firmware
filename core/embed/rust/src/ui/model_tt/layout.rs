@@ -1,109 +1,124 @@
-use core::convert::{TryFrom, TryInto};
+use core::{convert::TryInto, ops::Deref};
 
 use crate::{
     error::Error,
-    micropython::{buffer::Buffer, map::Map, obj::Obj, qstr::Qstr},
+    micropython::{buffer::Buffer, map::Map, module::Module, obj::Obj, qstr::Qstr},
     ui::{
-        component::{base::ComponentExt, text::paragraphs::Paragraphs, FormattedText},
-        layout::obj::LayoutObj,
+        component::{
+            base::ComponentExt,
+            paginated::{PageMsg, Paginate},
+            text::paragraphs::Paragraphs,
+            Component,
+        },
+        layout::{
+            obj::{ComponentMsgObj, LayoutObj},
+            result::{CANCELLED, CONFIRMED},
+        },
     },
     util,
 };
 
 use super::{
     component::{
-        Bip39Input, Button, ButtonMsg, DialogMsg, Frame, HoldToConfirm, HoldToConfirmMsg,
-        MnemonicKeyboard, MnemonicKeyboardMsg, PassphraseKeyboard, PassphraseKeyboardMsg,
-        PinKeyboard, PinKeyboardMsg, Slip39Input, SwipePage,
+        Bip39Input, Button, ButtonMsg, Dialog, DialogMsg, Frame, HoldToConfirm, HoldToConfirmMsg,
+        MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, PassphraseKeyboard,
+        PassphraseKeyboardMsg, PinKeyboard, PinKeyboardMsg, Slip39Input, SwipePage,
     },
     theme,
 };
 
-impl<T> TryFrom<DialogMsg<T, ButtonMsg, ButtonMsg>> for Obj
+impl<T, U> ComponentMsgObj for Dialog<T, Button<U>, Button<U>>
 where
-    Obj: TryFrom<T>,
-    Error: From<<Obj as TryFrom<T>>::Error>,
+    T: ComponentMsgObj,
+    U: AsRef<[u8]>,
 {
-    type Error = Error;
-
-    fn try_from(val: DialogMsg<T, ButtonMsg, ButtonMsg>) -> Result<Self, Self::Error> {
-        match val {
-            DialogMsg::Content(c) => Ok(c.try_into()?),
-            DialogMsg::Left(ButtonMsg::Clicked) => 1.try_into(),
-            DialogMsg::Right(ButtonMsg::Clicked) => 2.try_into(),
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            DialogMsg::Content(c) => Ok(self.inner().msg_try_into_obj(c)?),
+            DialogMsg::Left(ButtonMsg::Clicked) => Ok(CANCELLED.as_obj()),
+            DialogMsg::Right(ButtonMsg::Clicked) => Ok(CONFIRMED.as_obj()),
             _ => Ok(Obj::const_none()),
         }
     }
 }
 
-impl<T> TryFrom<HoldToConfirmMsg<T>> for Obj
+impl<T> ComponentMsgObj for HoldToConfirm<T>
 where
-    Obj: TryFrom<T>,
-    Error: From<<Obj as TryFrom<T>>::Error>,
+    T: ComponentMsgObj,
 {
-    type Error = Error;
-
-    fn try_from(val: HoldToConfirmMsg<T>) -> Result<Self, Self::Error> {
-        match val {
-            HoldToConfirmMsg::Content(c) => Ok(c.try_into()?),
-            HoldToConfirmMsg::Confirmed => 1.try_into(),
-            HoldToConfirmMsg::Cancelled => 2.try_into(),
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            HoldToConfirmMsg::Content(c) => Ok(self.inner().msg_try_into_obj(c)?),
+            HoldToConfirmMsg::Confirmed => Ok(CONFIRMED.as_obj()),
+            HoldToConfirmMsg::Cancelled => Ok(CANCELLED.as_obj()),
         }
     }
 }
 
-impl TryFrom<PinKeyboardMsg> for Obj {
-    type Error = Error;
-
-    fn try_from(val: PinKeyboardMsg) -> Result<Self, Self::Error> {
-        match val {
-            PinKeyboardMsg::Confirmed => 1.try_into(),
-            PinKeyboardMsg::Cancelled => 2.try_into(),
+impl<T> ComponentMsgObj for PinKeyboard<T>
+where
+    T: Deref<Target = [u8]>,
+{
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            PinKeyboardMsg::Confirmed => self.pin().try_into(),
+            PinKeyboardMsg::Cancelled => Ok(CANCELLED.as_obj()),
         }
     }
 }
 
-impl TryFrom<MnemonicKeyboardMsg> for Obj {
-    type Error = Error;
-
-    fn try_from(val: MnemonicKeyboardMsg) -> Result<Self, Self::Error> {
-        match val {
-            MnemonicKeyboardMsg::Confirmed => Ok(Obj::const_true()),
+impl ComponentMsgObj for PassphraseKeyboard {
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            PassphraseKeyboardMsg::Confirmed => self.passphrase().try_into(),
+            PassphraseKeyboardMsg::Cancelled => Ok(CANCELLED.as_obj()),
         }
     }
 }
 
-impl TryFrom<PassphraseKeyboardMsg> for Obj {
-    type Error = Error;
-
-    fn try_from(val: PassphraseKeyboardMsg) -> Result<Self, Self::Error> {
-        match val {
-            PassphraseKeyboardMsg::Confirmed => Ok(Obj::const_true()),
-            PassphraseKeyboardMsg::Cancelled => Ok(Obj::const_none()),
+impl<T, U> ComponentMsgObj for MnemonicKeyboard<T, U>
+where
+    T: MnemonicInput,
+    U: Deref<Target = [u8]>,
+{
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            MnemonicKeyboardMsg::Confirmed => {
+                if let Some(word) = self.mnemonic() {
+                    word.try_into()
+                } else {
+                    panic!("invalid mnemonic")
+                }
+            }
         }
     }
 }
 
-#[no_mangle]
-extern "C" fn ui_layout_new_example(_param: Obj) -> Obj {
-    let block = move || {
-        let layout = LayoutObj::new(HoldToConfirm::new(
-            FormattedText::new::<theme::TTDefaultText>(
-                "Testing text layout, with some text, and some more text. And {param}",
-            )
-            .with(b"param", b"parameters!"),
-        ))?;
-        Ok(layout.into())
-    };
-    unsafe { util::try_or_raise(block) }
+impl<T, U> ComponentMsgObj for Frame<T, U>
+where
+    T: ComponentMsgObj,
+    U: AsRef<[u8]>,
+{
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        self.inner().msg_try_into_obj(msg)
+    }
 }
 
-#[no_mangle]
-extern "C" fn ui_layout_new_confirm_action(
-    n_args: usize,
-    args: *const Obj,
-    kwargs: *const Map,
-) -> Obj {
+impl<T, U> ComponentMsgObj for SwipePage<T, U>
+where
+    T: Component + Paginate,
+    U: Component<Msg = bool>,
+{
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            PageMsg::Content(_) => Err(Error::TypeError),
+            PageMsg::Controls(true) => Ok(CONFIRMED.as_obj()),
+            PageMsg::Controls(false) => Ok(CANCELLED.as_obj()),
+        }
+    }
+}
+
+extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: Buffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let action: Option<Buffer> = kwargs.get(Qstr::MP_QSTR_action)?.try_into_option()?;
@@ -144,8 +159,7 @@ extern "C" fn ui_layout_new_confirm_action(
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-#[no_mangle]
-extern "C" fn ui_layout_new_pin(n_args: usize, args: *const Obj, kwargs: *const Map) -> Obj {
+extern "C" fn new_request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let prompt: Buffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
         let subprompt: Buffer = kwargs.get(Qstr::MP_QSTR_subprompt)?.try_into()?;
@@ -160,8 +174,7 @@ extern "C" fn ui_layout_new_pin(n_args: usize, args: *const Obj, kwargs: *const 
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-#[no_mangle]
-extern "C" fn ui_layout_new_passphrase(n_args: usize, args: *const Obj, kwargs: *const Map) -> Obj {
+extern "C" fn new_request_passphrase(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let _prompt: Buffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
         let _max_len: u32 = kwargs.get(Qstr::MP_QSTR_max_len)?.try_into()?;
@@ -171,41 +184,88 @@ extern "C" fn ui_layout_new_passphrase(n_args: usize, args: *const Obj, kwargs: 
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-#[no_mangle]
-extern "C" fn ui_layout_new_bip39(n_args: usize, args: *const Obj, kwargs: *const Map) -> Obj {
+extern "C" fn new_request_bip39(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let _prompt: Buffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
-        let obj = LayoutObj::new(
-            MnemonicKeyboard::new(Bip39Input::new(), b"Type word 11 of 12").into_child(),
-        )?;
+        let prompt: Buffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+        let obj = LayoutObj::new(MnemonicKeyboard::new(Bip39Input::new(), prompt).into_child())?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_request_slip39(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let prompt: Buffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+        let obj = LayoutObj::new(MnemonicKeyboard::new(Slip39Input::new(), prompt).into_child())?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
 #[no_mangle]
-extern "C" fn ui_layout_new_slip39(n_args: usize, args: *const Obj, kwargs: *const Map) -> Obj {
-    let block = move |_args: &[Obj], kwargs: &Map| {
-        let _prompt: Buffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
-        let obj = LayoutObj::new(
-            MnemonicKeyboard::new(Slip39Input::new(), b"Type word 13 of 20").into_child(),
-        )?;
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
+pub static mp_module_trezorui2: Module = obj_module! {
+    Qstr::MP_QSTR___name__ => Qstr::MP_QSTR_trezorui2.to_obj(),
+
+    /// CONFIRMED: object
+    Qstr::MP_QSTR_CONFIRMED => CONFIRMED.as_obj(),
+
+    /// CANCELLED: object
+    Qstr::MP_QSTR_CANCELLED => CANCELLED.as_obj(),
+
+    /// def confirm_action(
+    ///     *,
+    ///     title: str,
+    ///     action: str | None = None,
+    ///     description: str | None = None,
+    ///     verb: str | None = None,
+    ///     verb_cancel: str | None = None,
+    ///     hold: bool | None = None,
+    ///     reverse: bool = False,
+    /// ) -> object:
+    ///     """Confirm action."""
+    Qstr::MP_QSTR_confirm_action => obj_fn_kw!(0, new_confirm_action).as_obj(),
+
+    /// def request_pin(
+    ///     *,
+    ///     prompt: str,
+    ///     subprompt: str | None = None,
+    ///     allow_cancel: bool = True,
+    ///     warning: str | None = None,
+    /// ) -> str | object:
+    ///     """Request pin on device."""
+    Qstr::MP_QSTR_request_pin => obj_fn_kw!(0, new_request_pin).as_obj(),
+
+    /// def request_passphrase(
+    ///     *,
+    ///     prompt: str,
+    ///     max_len: int,
+    /// ) -> str | object:
+    ///    """Passphrase input keyboard."""
+    Qstr::MP_QSTR_request_passphrase => obj_fn_kw!(0, new_request_passphrase).as_obj(),
+
+    /// def request_bip39(
+    ///     *,
+    ///     prompt: str,
+    /// ) -> str:
+    ///    """BIP39 word input keyboard."""
+    Qstr::MP_QSTR_request_bip39 => obj_fn_kw!(0, new_request_bip39).as_obj(),
+
+    /// def request_slip39(
+    ///     *,
+    ///     prompt: str,
+    /// ) -> str:
+    ///    """SLIP39 word input keyboard."""
+    Qstr::MP_QSTR_request_slip39 => obj_fn_kw!(0, new_request_slip39).as_obj(),
+};
 
 #[cfg(test)]
 mod tests {
     use crate::{
         trace::Trace,
         ui::{
-            component::Component,
+            component::{Component, FormattedText},
             geometry::Rect,
-            model_tt::{
-                component::{Button, Dialog},
-                constant,
-            },
+            model_tt::constant,
         },
     };
 

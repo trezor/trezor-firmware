@@ -11,8 +11,8 @@ use super::{theme, Button, ButtonMsg, Loader, LoaderMsg};
 
 pub enum HoldToConfirmMsg<T> {
     Content(T),
-    Cancelled,
     Confirmed,
+    Cancelled,
 }
 
 pub struct HoldToConfirm<T> {
@@ -35,6 +35,10 @@ where
             confirm: Child::new(Button::with_text("Hold")),
             pad: Pad::with_background(theme::BG),
         }
+    }
+
+    pub fn inner(&self) -> &T {
+        self.content.inner()
     }
 }
 

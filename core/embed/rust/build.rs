@@ -60,6 +60,7 @@ fn generate_micropython_bindings() {
         .allowlist_function("mp_obj_new_int_from_uint")
         .allowlist_function("mp_obj_new_bytes")
         .allowlist_function("mp_obj_new_str")
+        .allowlist_function("mp_obj_new_tuple")
         .allowlist_function("mp_obj_get_int_maybe")
         .allowlist_function("mp_obj_is_true")
         .allowlist_function("mp_call_function_n_kw")

@@ -64,6 +64,10 @@ impl MnemonicInput for Bip39Input {
     fn is_empty(&self) -> bool {
         self.textbox.is_empty()
     }
+
+    fn mnemonic(&self) -> Option<&'static str> {
+        self.suggested_word
+    }
 }
 
 impl Component for Bip39Input {

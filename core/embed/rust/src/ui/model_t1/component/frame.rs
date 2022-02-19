@@ -23,6 +23,10 @@ where
             content: Child::new(content),
         }
     }
+
+    pub fn inner(&self) -> &T {
+        self.content.inner()
+    }
 }
 
 impl<T, U> Component for Frame<T, U>

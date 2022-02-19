@@ -31,6 +31,10 @@ where
             right_btn: right.map(Child::new),
         }
     }
+
+    pub fn inner(&self) -> &T {
+        self.content.inner()
+    }
 }
 
 impl<T, U> Component for Dialog<T, U>

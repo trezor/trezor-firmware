@@ -1,3 +1,5 @@
+use core::ops::Deref;
+
 use crate::ui::{
     component::{Child, Component, Event, EventCtx, Label, Maybe},
     geometry::{Alignment, Grid, Rect},
@@ -13,9 +15,9 @@ pub enum MnemonicKeyboardMsg {
     Confirmed,
 }
 
-pub struct MnemonicKeyboard<T> {
+pub struct MnemonicKeyboard<T, U> {
     /// Initial prompt, displayed on empty input.
-    prompt: Child<Maybe<Label<&'static [u8]>>>,
+    prompt: Child<Maybe<Label<U>>>,
     /// Backspace button.
     back: Child<Maybe<Button<&'static [u8]>>>,
     /// Input area, acting as the auto-complete and confirm button.
@@ -24,11 +26,12 @@ pub struct MnemonicKeyboard<T> {
     keys: [Child<Button<&'static [u8]>>; MNEMONIC_KEY_COUNT],
 }
 
-impl<T> MnemonicKeyboard<T>
+impl<T, U> MnemonicKeyboard<T, U>
 where
     T: MnemonicInput,
+    U: Deref<Target = [u8]>,
 {
-    pub fn new(input: T, prompt: &'static [u8]) -> Self {
+    pub fn new(input: T, prompt: U) -> Self {
         Self {
             prompt: Child::new(Maybe::visible(
                 theme::BG,
@@ -75,11 +78,16 @@ where
         self.back
             .mutate(ctx, |ctx, b| b.show_if(ctx, !prompt_visible));
     }
+
+    pub fn mnemonic(&self) -> Option<&'static str> {
+        self.input.inner().inner().mnemonic()
+    }
 }
 
-impl<T> Component for MnemonicKeyboard<T>
+impl<T, U> Component for MnemonicKeyboard<T, U>
 where
     T: MnemonicInput,
+    U: Deref<Target = [u8]>,
 {
     type Msg = MnemonicKeyboardMsg;
 
@@ -158,6 +166,7 @@ pub trait MnemonicInput: Component<Msg = MnemonicInputMsg> {
     fn on_key_click(&mut self, ctx: &mut EventCtx, key: usize);
     fn on_backspace_click(&mut self, ctx: &mut EventCtx);
     fn is_empty(&self) -> bool;
+    fn mnemonic(&self) -> Option<&'static str>;
 }
 
 pub enum MnemonicInputMsg {
@@ -167,7 +176,7 @@ pub enum MnemonicInputMsg {
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for MnemonicKeyboard<T> {
+impl<T, U> crate::trace::Trace for MnemonicKeyboard<T, U> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("MnemonicKeyboard");
         t.close();
