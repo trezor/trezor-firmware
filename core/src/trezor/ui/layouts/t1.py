@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from trezor import io, log, loop, ui, wire, workflow
 from trezor.enums import ButtonRequestType
 
-from trezorui2 import layout_new_confirm_action, layout_new_confirm_text
+import trezorui2
 
 from .common import interact
 
@@ -84,7 +84,7 @@ async def confirm_action(
     result = await interact(
         ctx,
         _RustLayout(
-            layout_new_confirm_action(
+            trezorui2.confirm_action(
                 title=title.upper(),
                 action=action,
                 description=description,
@@ -97,7 +97,7 @@ async def confirm_action(
         br_type,
         br_code,
     )
-    if result == 1:
+    if result is not trezorui2.CONFIRMED:
         raise exc
 
 
@@ -114,7 +114,7 @@ async def confirm_text(
     result = await interact(
         ctx,
         _RustLayout(
-            layout_new_confirm_text(
+            trezorui2.confirm_text(
                 title=title.upper(),
                 data=data,
                 description=description,
@@ -123,7 +123,7 @@ async def confirm_text(
         br_type,
         br_code,
     )
-    if result == 0:
+    if result is not trezorui2.CONFIRMED:
         raise wire.ActionCancelled
 
 

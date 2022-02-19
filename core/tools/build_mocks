@@ -8,6 +8,7 @@ from pathlib import Path
 
 CORE_DIR = Path(__file__).resolve().parent.parent
 EXTMOD_PATH = CORE_DIR / "embed" / "extmod"
+RUSTMOD_PATH = CORE_DIR / "embed" / "rust" / "src"
 MOCKS_PATH = CORE_DIR / "mocks" / "generated"
 
 COMMENT_PREFIX = "/// "
@@ -101,6 +102,37 @@ def build_module(mod_file, dest):
         store_to_file(dest, split_to_parts(l, mod_desc))
 
 
+def build_rsmodule(mod_file, dest):
+    global current_indent
+    global current_class
+    global current_package
+
+    assert mod_file.suffix == ".rs"
+
+    start_prefix = "pub static mp_module_"
+    comment_prefix = f"    {COMMENT_PREFIX}"
+    in_module = False
+    current_indent = 0
+    current_class = None
+    mod_desc = str(mod_file.relative_to(CORE_DIR / "embed"))
+
+    for l in open(mod_file):
+        if l.startswith(start_prefix):
+            in_module = True
+            current_package = l[len(start_prefix) : ].split(":")[0]
+        elif l.startswith("}"):
+            in_module = False
+
+        if not in_module:
+            continue
+
+        if not l.startswith(comment_prefix):
+            continue
+
+        l = l[len(comment_prefix) :]
+        store_to_file(dest, split_to_parts(l, mod_desc))
+
+
 def place_symlinks(dest):
     # make symlinks for the non-generated files
     for pyi in MOCKS_PATH.glob("../*.pyi"):
@@ -111,6 +143,8 @@ def place_symlinks(dest):
 def build_directory(dest):
     for modfile in sorted(EXTMOD_PATH.glob("**/mod*.[ch]")):
         build_module(modfile, dest)
+    for modfile in sorted(RUSTMOD_PATH.glob("**/*.rs")):
+        build_rsmodule(modfile, dest)
     place_symlinks(dest)
 
 

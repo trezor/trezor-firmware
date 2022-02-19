@@ -14,7 +14,7 @@ use crate::{
     },
     time::Duration,
     ui::{
-        component::{Child, Component, Event, EventCtx, Never, PageMsg, TimerToken},
+        component::{Child, Component, Event, EventCtx, Never, TimerToken},
         geometry::Rect,
     },
     util,
@@ -33,13 +33,12 @@ pub trait ComponentMsgObj: Component {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error>;
 }
 
-impl<T> ComponentMsgObj for T
+impl<T> ComponentMsgObj for Child<T>
 where
-    T: Component,
-    T::Msg: TryInto<Obj, Error = Error>,
+    T: ComponentMsgObj,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
-        msg.try_into()
+        self.inner().msg_try_into_obj(msg)
     }
 }
 
@@ -306,17 +305,6 @@ impl TryFrom<Duration> for Obj {
     fn try_from(value: Duration) -> Result<Self, Self::Error> {
         let millis: usize = value.to_millis().try_into()?;
         millis.try_into()
-    }
-}
-
-impl<T> TryFrom<PageMsg<T, bool>> for Obj {
-    type Error = Error;
-
-    fn try_from(val: PageMsg<T, bool>) -> Result<Self, Self::Error> {
-        match val {
-            PageMsg::Content(_) => Err(Error::TypeError),
-            PageMsg::Controls(c) => Ok(c.into()),
-        }
     }
 }
 

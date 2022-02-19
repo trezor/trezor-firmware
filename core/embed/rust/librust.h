@@ -12,11 +12,7 @@ mp_obj_t protobuf_debug_msg_type();
 mp_obj_t protobuf_debug_msg_def_type();
 #endif
 
-mp_obj_t ui_layout_new_example(mp_obj_t);
-mp_obj_t ui_layout_new_confirm_action(size_t n_args, const mp_obj_t *args,
-                                      mp_map_t *kwargs);
-mp_obj_t ui_layout_new_confirm_text(size_t n_args, const mp_obj_t *args,
-                                    mp_map_t *kwargs);
+extern mp_obj_module_t mp_module_trezorui2;
 
 #ifdef TREZOR_EMULATOR
 mp_obj_t ui_debug_layout_type();

@@ -10,7 +10,15 @@ static void _librust_qstrs(void) {
   MP_QSTR_MESSAGE_NAME;
 
   // layout
+  MP_QSTR___name__;
+  MP_QSTR_trezorui2;
   MP_QSTR_Layout;
+  MP_QSTR_CONFIRMED;
+  MP_QSTR_CANCELLED;
+  MP_QSTR_confirm_action;
+  MP_QSTR_confirm_text;
+  MP_QSTR_request_pin;
+
   MP_QSTR_set_timer_fn;
   MP_QSTR_touch_event;
   MP_QSTR_button_event;

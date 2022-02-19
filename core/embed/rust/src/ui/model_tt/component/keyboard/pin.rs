@@ -239,3 +239,11 @@ impl Component for PinDots {
         }
     }
 }
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for PinKeyboard {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.open("PinKeyboard");
+        t.close();
+    }
+}

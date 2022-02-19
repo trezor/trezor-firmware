@@ -1,8 +1,10 @@
 from typing import *
+CONFIRMED: object
+CANCELLED: object
 
 
-# extmod/rustmods/modtrezorui2.c
-def layout_new_confirm_action(
+# rust/src/ui/model_t1/layout.rs
+def confirm_action(
     *,
     title: str,
     action: str | None = None,
@@ -12,19 +14,41 @@ def layout_new_confirm_action(
     hold: bool | None = None,
     reverse: bool = False,
 ) -> object:
-    """Example layout."""
+    """Confirm action."""
 
 
-# extmod/rustmods/modtrezorui2.c
-def layout_new_example(text: str) -> object:
-    """Example layout."""
-
-
-# extmod/rustmods/modtrezorui2.c
-def layout_new_confirm_text(
+# rust/src/ui/model_t1/layout.rs
+def confirm_text(
     *,
     title: str,
     data: str,
     description: str | None,
 ) -> object:
-    """Example layout."""
+    """Confirm text."""
+CONFIRMED: object
+CANCELLED: object
+
+
+# rust/src/ui/model_tt/layout.rs
+def confirm_action(
+    *,
+    title: str,
+    action: str | None = None,
+    description: str | None = None,
+    verb: str | None = None,
+    verb_cancel: str | None = None,
+    hold: bool | None = None,
+    reverse: bool = False,
+) -> object:
+    """Confirm action."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def request_pin(
+    *,
+    prompt: str,
+    subprompt: str | None = None,
+    allow_cancel: bool = True,
+    warning: str | None = None,
+) -> str:
+    """Request pin on device."

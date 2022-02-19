@@ -42,6 +42,10 @@ impl<T: Component, U: AsRef<[u8]>> Dialog<T, U> {
         let (content_area, button_area) = area.split_bottom(button_height);
         (content_area, button_area)
     }
+
+    pub fn inner(&self) -> &T {
+        self.content.inner()
+    }
 }
 
 impl<T: Component, U: AsRef<[u8]>> Component for Dialog<T, U> {

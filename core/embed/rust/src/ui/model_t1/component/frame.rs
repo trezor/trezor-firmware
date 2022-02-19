@@ -30,6 +30,10 @@ impl<T: Component, U: AsRef<[u8]>> Frame<T, U> {
 
         (header_area, content_area)
     }
+
+    pub fn inner(&self) -> &T {
+        self.content.inner()
+    }
 }
 
 impl<T: Component, U: AsRef<[u8]>> Component for Frame<T, U> {

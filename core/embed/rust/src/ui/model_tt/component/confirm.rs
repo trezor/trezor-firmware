@@ -36,6 +36,10 @@ where
             pad: Pad::with_background(layout.content, theme::BG),
         }
     }
+
+    pub fn inner(&self) -> &T {
+        self.content.inner()
+    }
 }
 
 impl<T> Component for HoldToConfirm<T>

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from trezor import io, log, loop, ui, wire, workflow
 from trezor.enums import ButtonRequestType
 
-from trezorui2 import layout_new_confirm_action
+import trezorui2
 
 from ...constants.tt import MONO_ADDR_PER_LINE
 from ..common import interact
@@ -92,7 +92,7 @@ async def confirm_action(
     result = await interact(
         ctx,
         _RustLayout(
-            layout_new_confirm_action(
+            trezorui2.confirm_action(
                 title=title.upper(),
                 action=action,
                 description=description,
@@ -104,7 +104,7 @@ async def confirm_action(
         br_type,
         br_code,
     )
-    if result is not True:
+    if result is not trezorui2.CONFIRMED:
         raise exc
 
 

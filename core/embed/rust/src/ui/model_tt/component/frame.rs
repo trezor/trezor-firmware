@@ -35,6 +35,10 @@ where
 
         (title_area, content_area)
     }
+
+    pub fn inner(&self) -> &T {
+        &self.content.inner()
+    }
 }
 
 impl<T, U> Component for Frame<T, U>
