@@ -447,7 +447,7 @@ impl Grid {
     }
 
     pub fn cells(&self, cells: GridCellSpan) -> Rect {
-        let from = self.row_col(cells.from.0, cells.to.1);
+        let from = self.row_col(cells.from.0, cells.from.1);
         let to = self.row_col(cells.to.0, cells.to.1);
         from.union(to)
     }

@@ -10,9 +10,9 @@ pub enum DialogMsg<T, L, R> {
 }
 
 pub struct Dialog<T, L, R> {
-    pub content: Child<T>,
-    pub left: Child<L>,
-    pub right: Child<R>,
+    content: Child<T>,
+    left: Child<L>,
+    right: Child<R>,
 }
 
 impl<T, L, R> Dialog<T, L, R>
@@ -27,6 +27,10 @@ where
             left: Child::new(left),
             right: Child::new(right),
         }
+    }
+
+    pub fn inner(&self) -> &T {
+        self.content.inner()
     }
 }
 

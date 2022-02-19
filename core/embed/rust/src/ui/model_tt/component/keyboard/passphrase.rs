@@ -100,6 +100,10 @@ impl PassphraseKeyboard {
             self.back.mutate(ctx, |ctx, b| b.enable(ctx));
         }
     }
+
+    pub fn passphrase(&self) -> &str {
+        self.input.inner().textbox.content()
+    }
 }
 
 impl Component for PassphraseKeyboard {

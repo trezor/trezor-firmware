@@ -3,15 +3,8 @@ from typing import TYPE_CHECKING
 from trezor import io, log, loop, ui, wire, workflow
 from trezor.enums import ButtonRequestType
 
-from trezorui2 import (
-    layout_new_bip39,
-    layout_new_confirm_action,
-    layout_new_passphrase,
-    layout_new_pin,
-    layout_new_slip39,
-)
+import trezorui2
 
-from ...components.tt import passphrase, pin
 from ...constants.tt import MONO_ADDR_PER_LINE
 from ..common import button_request, interact
 
@@ -99,7 +92,7 @@ async def confirm_action(
     result = await interact(
         ctx,
         _RustLayout(
-            layout_new_confirm_action(
+            trezorui2.confirm_action(
                 title=title.upper(),
                 action=action,
                 description=description,
@@ -111,7 +104,7 @@ async def confirm_action(
         br_type,
         br_code,
     )
-    if result is not True:
+    if result is not trezorui2.CONFIRMED:
         raise exc
 
 
@@ -454,10 +447,10 @@ async def request_passphrase_on_device(ctx: wire.GenericContext, max_len: int) -
     )
 
     keyboard = _RustLayout(
-        layout_new_passphrase(prompt="Enter passphrase", max_len=max_len)
+        trezorui2.request_passphrase(prompt="Enter passphrase", max_len=max_len)
     )
     result = await ctx.wait(keyboard)
-    if result is passphrase.CANCELLED:
+    if result is trezorui2.CANCELLED:
         raise wire.ActionCancelled("Passphrase entry cancelled")
 
     assert isinstance(result, str)
@@ -480,7 +473,7 @@ async def request_pin_on_device(
         subprompt = f"{attempts_remaining} tries left"
 
     dialog = _RustLayout(
-        layout_new_pin(
+        trezorui2.request_pin(
             prompt=prompt,
             subprompt=subprompt,
             allow_cancel=allow_cancel,
@@ -489,7 +482,7 @@ async def request_pin_on_device(
     )
     while True:
         result = await ctx.wait(dialog)
-        if result is pin.CANCELLED:
+        if result is trezorui2.CANCELLED:
             raise wire.PinCancelled
         assert isinstance(result, str)
         return result
@@ -500,11 +493,15 @@ async def request_word(
 ) -> str:
     if is_slip39:
         keyboard: Any = _RustLayout(
-            layout_new_bip39(prompt=f"Type word {word_index + 1} of {word_count}:")
+            trezorui2.request_bip39(
+                prompt=f"Type word {word_index + 1} of {word_count}:"
+            )
         )
     else:
         keyboard = _RustLayout(
-            layout_new_slip39(prompt=f"Type word {word_index + 1} of {word_count}:")
+            trezorui2.request_slip39(
+                prompt=f"Type word {word_index + 1} of {word_count}:"
+            )
         )
 
     word: str = await ctx.wait(keyboard)

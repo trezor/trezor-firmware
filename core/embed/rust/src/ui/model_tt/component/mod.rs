@@ -14,7 +14,7 @@ pub use dialog::{Dialog, DialogLayout, DialogMsg};
 pub use frame::Frame;
 pub use keyboard::{
     bip39::Bip39Input,
-    mnemonic::{MnemonicKeyboard, MnemonicKeyboardMsg},
+    mnemonic::{MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg},
     passphrase::{PassphraseKeyboard, PassphraseKeyboardMsg},
     pin::{PinKeyboard, PinKeyboardMsg},
     slip39::Slip39Input,

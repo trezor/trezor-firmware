@@ -81,6 +81,10 @@ impl MnemonicInput for Slip39Input {
     fn is_empty(&self) -> bool {
         self.textbox.is_empty()
     }
+
+    fn mnemonic(&self) -> Option<&'static str> {
+        self.final_word
+    }
 }
 
 impl Component for Slip39Input {
