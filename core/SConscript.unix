@@ -668,9 +668,13 @@ protobuf_blobs = env.Command(
 )
 env.Depends(protobuf_blobs, qstr_generated)
 
-RUST_PROFILE = 'dev' if ARGUMENTS.get('TREZOR_EMULATOR_DEBUGGABLE', 0) == '1' else 'release'
+if ARGUMENTS.get('TREZOR_EMULATOR_DEBUGGABLE', '0') == '1':
+    RUST_PROFILE = 'dev'
+    RUST_LIBDIR = 'build/unix/rust/debug'
+else:
+    RUST_PROFILE = 'release'
+    RUST_LIBDIR = 'build/unix/rust/release'
 RUST_LIB = 'trezor_lib'
-RUST_LIBDIR = f'build/unix/rust/{RUST_PROFILE}'
 RUST_LIBPATH = f'{RUST_LIBDIR}/lib{RUST_LIB}.a'
 
 def cargo_build():
