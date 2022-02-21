@@ -106,7 +106,7 @@ class TestSignTxDecred(unittest.TestCase):
                 ),
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
-            helpers.UiConfirmOutput(out1, coin_decred, AmountUnit.BITCOIN),
+            helpers.UiConfirmOutput(0, out1, coin_decred, AmountUnit.BITCOIN),
             True,
             helpers.UiConfirmTotal(380000 + 10000, 10000, coin_decred, AmountUnit.BITCOIN),
             True,

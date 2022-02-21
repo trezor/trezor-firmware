@@ -74,7 +74,7 @@ class TestSignTx(unittest.TestCase):
             TxAckInput(tx=TxAckInputWrapper(input=inp1)),
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
-            helpers.UiConfirmOutput(out1, coin_bitcoin, AmountUnit.BITCOIN),
+            helpers.UiConfirmOutput(0, out1, coin_bitcoin, AmountUnit.BITCOIN),
             True,
             helpers.UiConfirmTotal(380000 + 10000, 10000, coin_bitcoin, AmountUnit.BITCOIN),
             True,

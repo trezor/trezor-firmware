@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from trezor import log, wire, workflow
+from trezor import wire, workflow
 from trezor.enums import ButtonRequestType
 from trezor.messages import ButtonAck, ButtonRequest
 
