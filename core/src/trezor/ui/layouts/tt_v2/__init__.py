@@ -56,7 +56,7 @@ class _RustLayout(ui.Layout):
 
 async def confirm_action(
     ctx: wire.GenericContext,
-    br_type: str,
+    name: str,
     title: str,
     action: str | None = None,
     description: str | None = None,
@@ -91,7 +91,7 @@ async def confirm_action(
 
     result = await interact(
         ctx,
-        _RustLayout(
+        layout=_RustLayout(
             layout_new_confirm_action(
                 title=title.upper(),
                 action=action,
@@ -101,8 +101,8 @@ async def confirm_action(
                 reverse=reverse,
             )
         ),
-        br_type,
-        br_code,
+        name=name,
+        br_code=br_code,
     )
     if result is not True:
         raise exc
@@ -150,7 +150,7 @@ def show_pubkey(
 ) -> Awaitable[None]:
     return confirm_blob(
         ctx,
-        br_type="show_pubkey",
+        name="show_pubkey",
         title="Confirm public key",
         data=pubkey,
         br_code=ButtonRequestType.PublicKey,
@@ -160,7 +160,7 @@ def show_pubkey(
 
 async def _show_modal(
     ctx: wire.GenericContext,
-    br_type: str,
+    name: str,
     br_code: ButtonRequestType,
     header: str,
     subheader: str | None,
@@ -176,7 +176,7 @@ async def _show_modal(
 
 async def show_error_and_raise(
     ctx: wire.GenericContext,
-    br_type: str,
+    name: str,
     content: str,
     header: str = "Error",
     subheader: str | None = None,
@@ -186,7 +186,7 @@ async def show_error_and_raise(
 ) -> NoReturn:
     await _show_modal(
         ctx,
-        br_type=br_type,
+        name=name,
         br_code=ButtonRequestType.Other,
         header=header,
         subheader=subheader,
@@ -202,7 +202,7 @@ async def show_error_and_raise(
 
 def show_warning(
     ctx: wire.GenericContext,
-    br_type: str,
+    name: str,
     content: str,
     header: str = "Warning",
     subheader: str | None = None,
@@ -213,7 +213,7 @@ def show_warning(
 ) -> Awaitable[None]:
     return _show_modal(
         ctx,
-        br_type=br_type,
+        name=name,
         br_code=br_code,
         header=header,
         subheader=subheader,
@@ -227,14 +227,14 @@ def show_warning(
 
 def show_success(
     ctx: wire.GenericContext,
-    br_type: str,
+    name: str,
     content: str,
     subheader: str | None = None,
     button: str = "Continue",
 ) -> Awaitable[None]:
     return _show_modal(
         ctx,
-        br_type=br_type,
+        name=name,
         br_code=ButtonRequestType.Success,
         header="Success",
         subheader=subheader,
@@ -251,6 +251,7 @@ async def confirm_output(
     index: int,
     address: str,
     amount: str,
+    *,
     font_amount: int = ui.NORMAL,  # TODO cleanup @ redesign
     title: str = "Confirm sending",
     subtitle: str | None = None,  # TODO cleanup @ redesign
@@ -270,7 +271,7 @@ async def should_show_more(
     title: str,
     para: Iterable[tuple[int, str]],
     button_text: str = "Show all",
-    br_type: str = "should_show_more",
+    name: str = "should_show_more",
     br_code: ButtonRequestType = ButtonRequestType.Other,
     icon: str = ui.ICON_DEFAULT,
     icon_color: int = ui.ORANGE_ICON,
@@ -280,7 +281,7 @@ async def should_show_more(
 
 async def confirm_blob(
     ctx: wire.GenericContext,
-    br_type: str,
+    name: str,
     title: str,
     data: bytes | str,
     description: str | None = None,
@@ -298,7 +299,7 @@ def confirm_address(
     title: str,
     address: str,
     description: str | None = "Address:",
-    br_type: str = "confirm_address",
+    name: str = "confirm_address",
     br_code: ButtonRequestType = ButtonRequestType.Other,
     icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
     icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
@@ -308,7 +309,7 @@ def confirm_address(
 
 async def confirm_text(
     ctx: wire.GenericContext,
-    br_type: str,
+    name: str,
     title: str,
     data: str,
     description: str | None = None,
@@ -324,7 +325,7 @@ def confirm_amount(
     title: str,
     amount: str,
     description: str = "Amount:",
-    br_type: str = "confirm_amount",
+    name: str = "confirm_amount",
     br_code: ButtonRequestType = ButtonRequestType.Other,
     icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
     icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
@@ -334,7 +335,7 @@ def confirm_amount(
 
 async def confirm_properties(
     ctx: wire.GenericContext,
-    br_type: str,
+    name: str,
     title: str,
     props: Iterable[PropertyType],
     icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
@@ -353,7 +354,7 @@ async def confirm_total(
     total_label: str = "Total amount:\n",
     fee_label: str = "\nincluding fee:\n",
     icon_color: int = ui.GREEN,
-    br_type: str = "confirm_total",
+    name: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> None:
     raise NotImplementedError
@@ -367,7 +368,7 @@ async def confirm_joint_total(
 
 async def confirm_metadata(
     ctx: wire.GenericContext,
-    br_type: str,
+    name: str,
     title: str,
     content: str,
     param: str | None = None,
@@ -390,6 +391,7 @@ async def confirm_replacement(
 
 async def confirm_modify_output(
     ctx: wire.GenericContext,
+    index: int,
     address: str,
     sign: int,
     amount_change: str,

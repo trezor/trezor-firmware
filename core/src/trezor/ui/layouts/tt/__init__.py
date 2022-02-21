@@ -542,7 +542,10 @@ async def confirm_payment_request(
     )
     return await raise_if_cancelled(
         interact(
-            ctx, content, "confirm_payment_request", ButtonRequestType.ConfirmOutput
+            ctx,
+            layout=content,
+            name="confirm_payment_request",
+            br_code=ButtonRequestType.ConfirmOutput,
         )
     )
 
@@ -552,7 +555,7 @@ async def should_show_more(
     title: str,
     para: Iterable[tuple[int, str]],
     button_text: str = "Show all",
-    br_type: str = "should_show_more",
+    name: str = "should_show_more",
     br_code: ButtonRequestType = ButtonRequestType.Other,
     icon: str = ui.ICON_DEFAULT,
     icon_color: int = ui.ORANGE_ICON,
@@ -573,7 +576,9 @@ async def should_show_more(
         page.content.extend((font, text, "\n"))
     ask_dialog = Confirm(AskPaginated(page, button_text))
 
-    result = await raise_if_cancelled(interact(ctx, ask_dialog, br_type, br_code))
+    result = await raise_if_cancelled(
+        interact(ctx, layout=ask_dialog, name=name, br_code=br_code)
+    )
     assert result in (SHOW_PAGINATED, CONFIRMED)
 
     return result is SHOW_PAGINATED
@@ -581,7 +586,7 @@ async def should_show_more(
 
 async def _confirm_ask_pagination(
     ctx: wire.GenericContext,
-    br_type: str,
+    name: str,
     title: str,
     para: Iterable[tuple[int, str]],
     para_truncated: Iterable[tuple[int, str]],
@@ -595,7 +600,7 @@ async def _confirm_ask_pagination(
             ctx,
             title,
             para=para_truncated,
-            br_type=br_type,
+            name=name,
             br_code=br_code,
             icon=icon,
             icon_color=icon_color,
@@ -611,7 +616,7 @@ async def _confirm_ask_pagination(
                     content, cancel=None, confirm="Close", confirm_style=ButtonDefault
                 ),
             )
-        result = await interact(ctx, paginated, br_type, br_code)
+        result = await interact(ctx, layout=paginated, name=name, br_code=br_code)
         assert result in (CONFIRMED, GO_BACK)
 
     assert False
@@ -672,7 +677,9 @@ async def confirm_blob(
             per_line = MONO_HEX_PER_LINE
         text.mono(ui.FG, *chunks_intersperse(data_str, per_line))
         content: ui.Layout = HoldToConfirm(text) if hold else Confirm(text)
-        return await raise_if_cancelled(interact(ctx, content, br_type, br_code))
+        return await raise_if_cancelled(
+            interact(ctx, layout=content, name=name, br_code=br_code)
+        )
 
     elif ask_pagination:
         para = [(ui.MONO, line) for line in chunks(data_str, MONO_HEX_PER_LINE - 2)]
@@ -683,7 +690,7 @@ async def confirm_blob(
         para_truncated.extend(para[:TEXT_MAX_LINES])
 
         return await _confirm_ask_pagination(
-            ctx, br_type, title, para, para_truncated, br_code, icon, icon_color
+            ctx, name, title, para, para_truncated, br_code, icon, icon_color
         )
 
     else:
@@ -1033,21 +1040,23 @@ async def confirm_signverify(
 ) -> None:
     if verify:
         header = f"Verify {coin} message"
-        br_type = "verify_message"
+        name = "verify_message"
     else:
         header = f"Sign {coin} message"
-        br_type = "sign_message"
+        name = "sign_message"
 
     text = Text(header, new_lines=False)
     text.bold("Confirm address:\n")
     text.mono(*chunks_intersperse(address, MONO_ADDR_PER_LINE))
     await raise_if_cancelled(
-        interact(ctx, Confirm(text), br_type, br_code=ButtonRequestType.Other)
+        interact(ctx, Confirm(text), name, br_code=ButtonRequestType.Other)
     )
 
     para = [(ui.BOLD, "Confirm message:"), (ui.MONO, message)]
     content = paginate_paragraphs(para, header)
-    await raise_if_cancelled(interact(ctx, content, br_type, br_code=ButtonRequestType.Other))
+    await raise_if_cancelled(
+        interact(ctx, content, name, br_code=ButtonRequestType.Other)
+    )
 
 
 async def show_popup(

@@ -83,7 +83,7 @@ async def confirm_action(
 
     result = await interact(
         ctx,
-        _RustLayout(
+        layout=_RustLayout(
             layout_new_confirm_action(
                 title=title.upper(),
                 action=action,
@@ -94,8 +94,8 @@ async def confirm_action(
                 reverse=reverse,
             )
         ),
-        br_type,
-        br_code,
+        name=name,
+        br_code=br_code,
     )
     if result == 1:
         raise exc
@@ -103,7 +103,7 @@ async def confirm_action(
 
 async def confirm_text(
     ctx: wire.GenericContext,
-    br_type: str,
+    name: str,
     title: str,
     data: str,
     description: str | None = None,
@@ -113,15 +113,15 @@ async def confirm_text(
 ) -> None:
     result = await interact(
         ctx,
-        _RustLayout(
+        layout=_RustLayout(
             layout_new_confirm_text(
                 title=title.upper(),
                 data=data,
                 description=description,
             )
         ),
-        br_type,
-        br_code,
+        name=name,
+        br_code=br_code,
     )
     if result == 0:
         raise wire.ActionCancelled

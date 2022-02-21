@@ -138,7 +138,8 @@ async def ask_importance_transfer(
 async def _require_confirm_transfer(ctx: Context, recipient: str, value: int) -> None:
     await confirm_output(
         ctx,
-        recipient,
+        index=0,
+        address=recipient,
         amount=f"Send {format_amount(value, NEM_MAX_DIVISIBILITY)} XEM",
         font_amount=ui.BOLD,
         title="Confirm transfer",

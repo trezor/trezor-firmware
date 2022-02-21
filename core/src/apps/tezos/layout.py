@@ -20,8 +20,9 @@ if TYPE_CHECKING:
 async def require_confirm_tx(ctx: Context, to: str, value: int) -> None:
     await confirm_output(
         ctx,
-        to,
-        format_tezos_amount(value),
+        index=0,
+        address=to,
+        amount=format_tezos_amount(value),
         font_amount=ui.BOLD,
         to_str="\nto\n",
         width=18,

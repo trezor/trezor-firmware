@@ -39,6 +39,7 @@ def require_confirm_tx(
         to_str = "new contract?"
     return confirm_output(
         ctx,
+        index=0,
         address=to_str,
         amount=format_ethereum_amount(value, token, chain_id),
         font_amount=ui.BOLD,
@@ -155,7 +156,7 @@ async def should_show_domain(ctx: Context, name: bytes, version: bytes) -> bool:
         title="Confirm domain",
         para=para,
         button_text="Show full domain",
-        br_type="should_show_domain",
+        name="should_show_domain",
     )
 
 
@@ -179,7 +180,7 @@ async def should_show_struct(
         title=title,
         para=para,
         button_text=button_text,
-        br_type="should_show_struct",
+        name="should_show_struct",
     )
 
 
@@ -195,7 +196,7 @@ async def should_show_array(
         title=limit_str(".".join(parent_objects)),
         para=para,
         button_text="Show full array",
-        br_type="should_show_array",
+        name="should_show_array",
     )
 
 

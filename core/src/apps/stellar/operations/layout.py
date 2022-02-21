@@ -200,6 +200,7 @@ async def confirm_path_payment_strict_receive_op(
 ) -> None:
     await confirm_output(
         ctx,
+        index=0,
         address=op.destination_account,
         amount=format_amount(op.destination_amount, op.destination_asset),
         title="Path Pay",
@@ -221,6 +222,7 @@ async def confirm_path_payment_strict_send_op(
 ) -> None:
     await confirm_output(
         ctx,
+        index=0,
         address=op.destination_account,
         amount=format_amount(op.destination_min, op.destination_asset),
         title="Path Pay at least",
@@ -240,6 +242,7 @@ async def confirm_path_payment_strict_send_op(
 async def confirm_payment_op(ctx: Context, op: StellarPaymentOp) -> None:
     await confirm_output(
         ctx,
+        index=0,
         address=op.destination_account,
         amount=format_amount(op.amount, op.asset),
     )
