@@ -20,7 +20,7 @@ from ..common import button_request, interact
 
 
 async def request_word_count(ctx: wire.GenericContext, dry_run: bool) -> int:
-    await button_request(ctx, "word_count", code=ButtonRequestType.MnemonicWordCount)
+    await button_request(ctx, "word_count", br_code=ButtonRequestType.MnemonicWordCount)
 
     if dry_run:
         text = Text("Seed check", ui.ICON_RECOVERY)
@@ -121,7 +121,9 @@ async def continue_recovery(
             info="Info",
             cancel="Abort",
         )
-        await button_request(ctx, "recovery", ButtonRequestType.RecoveryHomepage)
+        await button_request(
+            ctx, "recovery", br_code=ButtonRequestType.RecoveryHomepage
+        )
         return await is_confirmed_info(ctx, content, info_func)
     else:
         return is_confirmed(

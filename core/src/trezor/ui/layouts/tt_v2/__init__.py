@@ -91,7 +91,7 @@ async def confirm_action(
 
     result = await interact(
         ctx,
-        layout=_RustLayout(
+        _RustLayout(
             layout_new_confirm_action(
                 title=title.upper(),
                 action=action,
@@ -101,7 +101,7 @@ async def confirm_action(
                 reverse=reverse,
             )
         ),
-        name=name,
+        name,
         br_code=br_code,
     )
     if result is not True:

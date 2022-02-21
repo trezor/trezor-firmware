@@ -521,7 +521,7 @@ async def confirm_output(
         content = Confirm(text)
 
     await raise_if_cancelled(
-        interact(ctx, content, name="confirm_output", br_code=br_code, index=index)
+        interact(ctx, content, "confirm_output", br_code=br_code, index=index)
     )
 
 
@@ -543,8 +543,8 @@ async def confirm_payment_request(
     return await raise_if_cancelled(
         interact(
             ctx,
-            layout=content,
-            name="confirm_payment_request",
+            content,
+            "confirm_payment_request",
             br_code=ButtonRequestType.ConfirmOutput,
         )
     )
@@ -576,9 +576,7 @@ async def should_show_more(
         page.content.extend((font, text, "\n"))
     ask_dialog = Confirm(AskPaginated(page, button_text))
 
-    result = await raise_if_cancelled(
-        interact(ctx, layout=ask_dialog, name=name, br_code=br_code)
-    )
+    result = await raise_if_cancelled(interact(ctx, ask_dialog, name, br_code=br_code))
     assert result in (SHOW_PAGINATED, CONFIRMED)
 
     return result is SHOW_PAGINATED
@@ -616,7 +614,7 @@ async def _confirm_ask_pagination(
                     content, cancel=None, confirm="Close", confirm_style=ButtonDefault
                 ),
             )
-        result = await interact(ctx, layout=paginated, name=name, br_code=br_code)
+        result = await interact(ctx, paginated, name, br_code=br_code)
         assert result in (CONFIRMED, GO_BACK)
 
     assert False
@@ -677,9 +675,7 @@ async def confirm_blob(
             per_line = MONO_HEX_PER_LINE
         text.mono(ui.FG, *chunks_intersperse(data_str, per_line))
         content: ui.Layout = HoldToConfirm(text) if hold else Confirm(text)
-        return await raise_if_cancelled(
-            interact(ctx, layout=content, name=name, br_code=br_code)
-        )
+        return await raise_if_cancelled(interact(ctx, content, name, br_code=br_code))
 
     elif ask_pagination:
         para = [(ui.MONO, line) for line in chunks(data_str, MONO_HEX_PER_LINE - 2)]
@@ -1082,7 +1078,7 @@ def draw_simple_text(title: str, description: str = "") -> None:
 
 async def request_passphrase_on_device(ctx: wire.GenericContext, max_len: int) -> str:
     await button_request(
-        ctx, "passphrase_device", code=ButtonRequestType.PassphraseEntry
+        ctx, "passphrase_device", br_code=ButtonRequestType.PassphraseEntry
     )
 
     keyboard = passphrase.PassphraseKeyboard("Enter passphrase", max_len)
@@ -1100,7 +1096,7 @@ async def request_pin_on_device(
     attempts_remaining: int | None,
     allow_cancel: bool,
 ) -> str:
-    await button_request(ctx, "pin_device", code=ButtonRequestType.PinEntry)
+    await button_request(ctx, "pin_device", br_code=ButtonRequestType.PinEntry)
 
     if attempts_remaining is None:
         subprompt = None

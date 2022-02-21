@@ -22,13 +22,14 @@ if __debug__:
 async def button_request(
     ctx: wire.GenericContext,
     name: str,
-    code: ButtonRequestType = ButtonRequestType.Other,
+    *,
+    br_code: ButtonRequestType = ButtonRequestType.Other,
     index: int | None = None,
     pages: int | None = None,
 ) -> None:
     workflow.close_others()
     await ctx.call(
-        ButtonRequest(code=code, name=name, index=index, pages=pages), ButtonAck
+        ButtonRequest(code=br_code, name=name, index=index, pages=pages), ButtonAck
     )
 
 
@@ -42,7 +43,7 @@ async def interact(
 ) -> Any:
     if layout.__class__.__name__ == "Paginated":
         assert isinstance(layout, Paginated)
-        return await layout.interact(ctx, name, code=br_code, index=index)
+        return await layout.interact(ctx, name, br_code=br_code, index=index)
     else:
-        await button_request(ctx, name, br_code, index=index)
+        await button_request(ctx, name, br_code=br_code, index=index)
         return await ctx.wait(layout)

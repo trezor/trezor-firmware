@@ -124,12 +124,15 @@ class Paginated(ui.Layout):
         self,
         ctx: wire.GenericContext,
         name: str,
-        code: ButtonRequestType,
+        *,
+        br_code: ButtonRequestType,
         index: int | None,
     ) -> Any:
         from ...layouts.common import button_request
 
-        await button_request(ctx, name, code=code, index=index, pages=len(self.pages))
+        await button_request(
+            ctx, name, br_code=br_code, index=index, pages=len(self.pages)
+        )
         result = WAS_PAGED
         while result is WAS_PAGED:
             result = await ctx.wait(self)
