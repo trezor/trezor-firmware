@@ -96,6 +96,7 @@ async def show_share_words(
             paginated,
             "backup_words",
             br_code=ButtonRequestType.ResetDevice,
+            index=share_index,
         )
     )
 

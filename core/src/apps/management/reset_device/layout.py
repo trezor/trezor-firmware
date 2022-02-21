@@ -71,7 +71,9 @@ async def _show_confirmation_success(
             subheader = f"Group {group_index + 1} - Share {share_index + 1}\nchecked successfully."
             text = "Continue with the next\nshare."
 
-    return await show_success(ctx, "success_recovery", text, subheader=subheader)
+    return await show_success(
+        ctx, "success_recovery", text, subheader=subheader, index=share_index
+    )
 
 
 async def _show_confirmation_failure(
@@ -89,6 +91,7 @@ async def _show_confirmation_failure(
         content="Please check again.",
         button="Check again",
         br_code=ButtonRequestType.ResetDevice,
+        index=share_index,
     )
 
 

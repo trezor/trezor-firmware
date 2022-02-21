@@ -170,6 +170,7 @@ async def _show_modal(
     icon: str,
     icon_color: int,
     exc: ExceptionType = wire.ActionCancelled,
+    index: int | None = None,
 ) -> None:
     raise NotImplementedError
 
@@ -210,6 +211,7 @@ def show_warning(
     br_code: ButtonRequestType = ButtonRequestType.Warning,
     icon: str = ui.ICON_WRONG,
     icon_color: int = ui.RED,
+    index: int | None = None,
 ) -> Awaitable[None]:
     return _show_modal(
         ctx,
@@ -222,6 +224,7 @@ def show_warning(
         button_cancel=None,
         icon=icon,
         icon_color=icon_color,
+        index=index,
     )
 
 
@@ -231,6 +234,7 @@ def show_success(
     content: str,
     subheader: str | None = None,
     button: str = "Continue",
+    index: int | None = None,
 ) -> Awaitable[None]:
     return _show_modal(
         ctx,
@@ -243,6 +247,7 @@ def show_success(
         button_cancel=None,
         icon=ui.ICON_CONFIRM,
         icon_color=ui.GREEN,
+        index=index,
     )
 
 
