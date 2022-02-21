@@ -25,7 +25,7 @@ def diag(client, ins=b"", data=b""):
     )
 
 @expect(messages.ZcashFullViewingKey, field="fvk")
-def get_fvk(client, z_address_n):
+def get_fvk(client, z_address_n, coin_name="Zcash",):
     """Returns raw Zcash Orchard Full Viewing Key encoded as:
 
     ak (32 bytes) || nk (32 bytes) || rivk (32 bytes)
@@ -34,11 +34,12 @@ def get_fvk(client, z_address_n):
     return client.call(
         messages.ZcashGetFullViewingKey(
             z_address_n=z_address_n,
+            coin_name=coin_name,
         )
     )
 
 @expect(messages.ZcashIncomingViewingKey, field="ivk")
-def get_ivk(client, z_address_n):
+def get_ivk(client, z_address_n, coin_name = "Zcash",):
     """Returns raw Zcash Orchard Incoming Viewing Key encoded as:
 
     dk (32 bytes) || ivk (32 bytes)
@@ -47,6 +48,7 @@ def get_ivk(client, z_address_n):
     return client.call(
         messages.ZcashGetIncomingViewingKey(
             z_address_n=z_address_n,
+            coin_name=coin_name,
         )
     )
 
@@ -56,7 +58,8 @@ def get_address(
     t_address_n=[],
     z_address_n=[],
     diversifier_index=0,
-    show_display=False
+    show_display=False,
+    coin_name = "Zcash",
 ):
     """Returns Zcash address."""
     return client.call(
@@ -65,6 +68,7 @@ def get_address(
             z_address_n=z_address_n,
             diversifier_index=diversifier_index,
             show_display=show_display,
+            coin_name=coin_name,
         )
     )
 
@@ -74,12 +78,13 @@ def sign_tx(
     outputs = [],
     t_inputs = [],
     t_outputs = [],
+    coin_name = "Zcash",
 ):
     msg = messages.SignTx()
 
     msg.inputs_count = len(t_inputs)
     msg.outputs_count = len(t_outputs)
-    msg.coin_name = "Zcash"
+    msg.coin_name = coin_name
     msg.version = 5                              
     msg.version_group_id = 0x892F2085 # protocol spec §7.1.2           
     msg.branch_id = 0x37519621 # https://zips.z.cash/zip-0252
@@ -187,4 +192,4 @@ def sign_tx(
     #    if i.script_type != messages.InputScriptType.EXTERNAL and sig is None:
     #        raise exceptions.TrezorException("Some signatures are missing!")
 
-    return t_signatures, o_signatures, serialized_tx
+    return t_signatures, o_signatures, serialized_tx, seed

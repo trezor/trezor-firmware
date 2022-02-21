@@ -25,6 +25,7 @@ ORCHARD = 0x03
 # coin_type according to SLIP-44
 MAINNET = get_coin_by_name("Zcash").slip44          # = 133
 TESTNET = get_coin_by_name("Zcash Testnet").slip44  # = 1
+
 # coin types for Zcash and Zcash-Testnet
 SLIP44_ZCASH_COIN_TYPES = (MAINNET, TESTNET)
 
@@ -72,7 +73,7 @@ def encode_unified(receivers: Dict[int,bytes], network_type: int = MAINNET) -> s
 	for (typecode, raw_bytes) in receivers:
 		write_compact_size(w, typecode)
 		write_compact_size(w, receiver_length[typecode])
-		write_bytes_fixed(w, raw_bytes, receiver_length[typecode])		
+		write_bytes_fixed(w, raw_bytes, receiver_length[typecode])
 
 	hrp = U_PREFIX[network_type]
 	write_bytes_fixed(w, padding(hrp), 16)

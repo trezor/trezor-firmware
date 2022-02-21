@@ -37,15 +37,18 @@ def write_sint64(w: Writer, n: int):
         write_uint64(w, 0x010000000000000000 + n)
 
 
-class Zip244Wrapper:
-    def __init__(self, hasher):
-        self.hasher = hasher
+class ZcashHasherWrapper:
+    def __init__(self, inner):
+        self.inner = inner
+
+    def unwrap(self):
+        return self.inner
 
     def add_input(self, txi: TxInput, script_pubkey: bytes):
-        self.hasher.transparent.add_input(txi, script_pubkey)
+        self.inner.transparent.add_input(txi, script_pubkey)
 
     def add_output(self, txo: TxOutput, script_pubkey: bytes):
-        self.hasher.transparent.add_output(txo, script_pubkey)
+        self.inner.transparent.add_output(txo, script_pubkey)
 
     def hash143(
         self,
@@ -56,10 +59,10 @@ class Zip244Wrapper:
         coin: coininfo.CoinInfo,
         hash_type: int,
     ) -> bytes:
-        txin_sig_digest = self.hasher.transparent.get_txin_sig_digest(
+        txin_sig_digest = get_txin_sig_digest(
             txi, public_keys, threshold, tx, coin, hash_type,
         )
-        return self.hasher.signature_digest(txin_sig_digest)
+        return self.inner.signature_digest(txin_sig_digest)
 
     def hash341(
         self,
@@ -69,12 +72,22 @@ class Zip244Wrapper:
     ) -> bytes:
         raise NotImplementedError
 
-class Zip244TxHasher:
-    def __init__(self, tx):
-        self.header = Zip244HeaderHasher(tx)
-        self.transparent = Zip244TransparentHasher()
-        self.sapling = Zip244SaplingHasher()
-        self.orchard = Zip244OrchardHasher()
+
+class ZcashHasher:
+    def __init__(self):
+        self.header = HeaderHasher()
+        self.transparent = TransparentHasher()
+        self.sapling = SaplingHasher()
+        self.orchard = OrchardHasher()
+
+        self.tx_hash_person = None
+
+    def wrap(self):
+        return ZcashHasherWrapper(self)
+
+    def initialize(self, tx):
+        """Initialize ZcashHasher with transaction data."""
+        self.header.initialize(tx)
 
         tx_hash_person = empty_bytearray(16)
         write_bytes_fixed(tx_hash_person, b'ZcashTxHash_', 12)
@@ -105,8 +118,11 @@ class Zip244TxHasher:
         return h.get_digest()
 
 
-class Zip244HeaderHasher:
-    def __init__(self, tx):
+class HeaderHasher:
+    def __init__(self):
+        self._digest = None
+
+    def initialize(self, tx):
         h = HashWriter(blake2b(outlen=32, personal=b'ZTxIdHeadersHash'))
 
         write_uint32(h, tx.version)           # T.1a: version             (4-byte little-endian version identifier including overwinter flag)
@@ -118,10 +134,11 @@ class Zip244HeaderHasher:
         self._digest = h.get_digest()
 
     def digest(self):
+        assert self._digest is not None
         return self._digest
 
 
-class Zip244TransparentHasher:
+class TransparentHasher:
     def __init__(self):
         self.prevouts =      HashWriter(blake2b(outlen=32, personal=b'ZTxIdPrevoutHash'))
         self.amounts  =      HashWriter(blake2b(outlen=32, personal=b'ZTxTrAmountsHash'))
@@ -174,30 +191,30 @@ class Zip244TransparentHasher:
 
         return h.get_digest()
 
-    def get_txin_sig_digest(
-        self,
-        txi: TxInput,
-        public_keys: Sequence[bytes | memoryview],
-        threshold: int,
-        tx: SignTx | PrevTx, # no need for tx, TODO: = None
-        coin: coininfo.CoinInfo,
-        sighash_type: int,
-    ):
-        """Returns `S.2g: txin_sig_digest` field for signature digest computation."""
-        assert sighash_type == SigHashType.SIGHASH_ALL
-        h = HashWriter(blake2b(outlen=32, personal=b'Zcash___TxInHash'))
 
-        write_prevout(h, txi)                       # S.2g.i:   prevout      (field encoding)
-        write_sint64(h, txi.amount)                 # S.2g.ii:  value        (8-byte signed little-endian)
-        scripts.write_bip143_script_code_prefixed(  # S.2g.iii: scriptPubKey (field encoding)
-            h, txi, public_keys, threshold, coin
-        )
-        write_uint32(h, txi.sequence)               # S.2g.iv:  nSequence    (4-byte unsigned little-endian)
+def get_txin_sig_digest(
+    txi: TxInput,
+    public_keys: Sequence[bytes | memoryview],
+    threshold: int,
+    tx: SignTx | PrevTx, # no need for tx, TODO: = None
+    coin: coininfo.CoinInfo,
+    sighash_type: int,
+):
+    """Returns `S.2g: txin_sig_digest` field for signature digest computation."""
+    assert sighash_type == SigHashType.SIGHASH_ALL
+    h = HashWriter(blake2b(outlen=32, personal=b'Zcash___TxInHash'))
 
-        return h.get_digest()
+    write_prevout(h, txi)                       # S.2g.i:   prevout      (field encoding)
+    write_sint64(h, txi.amount)                 # S.2g.ii:  value        (8-byte signed little-endian)
+    scripts.write_bip143_script_code_prefixed(  # S.2g.iii: scriptPubKey (field encoding)
+        h, txi, public_keys, threshold, coin
+    )
+    write_uint32(h, txi.sequence)               # S.2g.iv:  nSequence    (4-byte unsigned little-endian)
+
+    return h.get_digest()
 
 
-class Zip244SaplingHasher:
+class SaplingHasher:
     """Empty Sapling bundle hasher."""
     def digest(self):
         """Returns `T.3: sapling_digest` field."""
@@ -208,9 +225,10 @@ EMPTY = object()
 ADDING_ACTIONS = object()
 FINISHED = object()
 
-class Zip244OrchardHasher:
+
+class OrchardHasher:
     """Orchard bundle hasher."""
-    
+
     def __init__(self):
         self.h  = HashWriter(blake2b(outlen=32, personal=b"ZTxIdOrchardHash"))
         self.ch = HashWriter(blake2b(outlen=32, personal=b"ZTxIdOrcActCHash"))

@@ -9,7 +9,10 @@ from trezor.crypto.scripts import sha256_ripemd160
 from trezor import log, wire
 
 from . import orchard
-from .address import encode_unified, encode_transparent, P2PKH
+from .address import (
+    encode_unified, encode_transparent,
+    P2PKH, MAINNET, TESTNET, ORCHARD, P2PKH
+)
 
 if False:
     from trezor.wire import Context
@@ -21,26 +24,33 @@ async def get_address(ctx: Context, msg: ZcashGetAddress) -> ZcashAddress:
     if not (has_t_addr or has_z_addr):
         raise wire.DataError("t-address or z-address expected")
 
+    network = {
+        "Zcash": MAINNET,
+        "Zcash Testnet": TESTNET,
+    }[msg.coin_name]
+
     if has_z_addr:
         receivers = dict()
         receivers[ORCHARD] = await get_raw_orchard_address(ctx, msg)
 
-        if has_t_addr: 
-            if msg.z_address_n[1] != msg.t_address_n[1]:
-                raise wire.DataError("SLIP-44 coin_type of addresses differs.")
-            receivers[P2PKH] = await get_raw_transparent_address(ctx, msg)
-            title = "Unified Address"  # no title for unified address
-        else:
-            title = address_n_to_str(msg.z_address_n)
+        if has_t_addr:
+            if msg.t_address_n[2] != msg.z_address_n[2]:
+                raise wire.DataError("Receivers use different acount numbers.")
 
-        coin_type = msg.z_address_n[1] ^ HARDENED
-        address = encode_unified(receivers, coin_type)
+            receivers[P2PKH] = await get_raw_transparent_address(ctx, msg)
+        title = "u/{coin_type}/{account}/{receivers}".format(
+            coin_type   = msg.z_address_n[1] ^ HARDENED,
+            account     = msg.z_address_n[2] ^ HARDENED,
+            receivers   = ",".join(map(str, receivers.keys())),
+            #diversifier = msg.diversifier_index,
+        )
+
+        address = encode_unified(receivers, network)
 
     else:  # has only t-address
         title = address_n_to_str(msg.t_address_n)
         raw_address = await get_raw_transparent_address(ctx, msg)
-        coin_type = msg.t_address_n[1] ^ HARDENED
-        address = encode_transparent(raw_address, coin_type)
+        address = encode_transparent(raw_address, network)
 
     if msg.show_display:
         await show_address(

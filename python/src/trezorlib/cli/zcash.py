@@ -45,20 +45,36 @@ def diag(client, ins, data, ascii):
     except:
         return response.hex()
 
+def _parse_network(network):
+    return {
+        "mainnet": "Zcash",  #messages.ZcashNetwork.MAINNET,
+        "testnet": "Zcash Testnet",  #messages.ZcashNetwork.TESTNET,
+    }[network]
+
 @cli.command()
 @click.option("-z", "--z-address", help="ZIP-32 path of an Orchard shielded address.")
+@click.option(
+    "-w", "--network",
+    type=click.Choice(["mainnet", "testnet"]),
+    default="mainnet",
+)
 @with_client
-def get_fvk(client, z_address):
+def get_fvk(client, z_address, network):
     """Get Zcash Orchard Full Incoming Key."""
-    fvk = zcash.get_fvk(client, tools.parse_path(z_address))
+    fvk = zcash.get_fvk(client, tools.parse_path(z_address), _parse_network(network))
     return fvk.hex()
 
 @cli.command()
 @click.option("-z", "--z-address", help="ZIP-32 path of an Orchard shielded address.")
+@click.option(
+    "-w", "--network",
+    type=click.Choice(["mainnet", "testnet"]),
+    default="mainnet",
+)
 @with_client
-def get_ivk(client, z_address):
+def get_ivk(client, z_address, network):
     """Get Zcash Orchard Incoming Viewing Key."""
-    ivk = zcash.get_ivk(client, tools.parse_path(z_address))
+    ivk = zcash.get_ivk(client, tools.parse_path(z_address), _parse_network(network))
     return ivk.hex()
 
 @cli.command(help="""Example:\n
@@ -68,8 +84,13 @@ trezorctl zcash get-address -d -t m/44h/133h/0h/0/0 -z m/32h/133h/0h -j 0
 @click.option("-z", "--z-address", help="ZIP-32 path of an Orchard shielded address.")
 @click.option("-j", "--diversifier-index", default=0, type=int, help="diversifier index of the shielded address.")
 @click.option("-d", "--show-display", is_flag=True)
+@click.option(
+    "-w", "--network",
+    type=click.Choice(["mainnet", "testnet"]),
+    default="mainnet",
+)
 @with_client
-def get_address(client, t_address, z_address, diversifier_index, show_display):
+def get_address(client, t_address, z_address, diversifier_index, show_display, network):
     """Get Zcash address."""
     if not t_address and not z_address:
         return """Specify address path using -t (transparent) and -z (shielded) arguments.\nYou can use both to get Zcash unified address."""
@@ -82,7 +103,9 @@ def get_address(client, t_address, z_address, diversifier_index, show_display):
         kwargs["z_address_n"] = tools.parse_path(z_address)
         kwargs["diversifier_index"] = diversifier_index
 
+    kwargs["coin_name"] = _parse_network(network)
+
     try:
         return zcash.get_address(client, **kwargs)
     except ValueError as e:
-        return str(e)  
+        return str(e)

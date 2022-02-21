@@ -3,6 +3,7 @@ according to the https://zips.z.cash/zip-0032"""
 
 from apps.common.seed import get_seed
 from apps.common.keychain import Keychain
+from trezor.messages import SignTx
 
 from trezor.crypto.hashlib import blake2b
 from ..address import SLIP44_ZCASH_COIN_TYPES
@@ -115,7 +116,7 @@ async def get_keychain_for_coin(ctx, coin):
 def with_keychain(func):
     async def wrapper(ctx, msg):
         coin = get_coin_by_name(msg.coin_name)
-        keychain = get_keychain_for_coin(ctx, coin)
+        keychain = await get_keychain_for_coin(ctx, coin)
         return await func(ctx, msg, keychain)
 
     return wrapper

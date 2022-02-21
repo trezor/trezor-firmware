@@ -23,6 +23,12 @@ message DebugZcashDiagResponse {
     optional bytes data = 1;
 }
 
+//Deprecated
+/*enum ZcashNetwork {
+    TESTNET = 1;
+    MAINNET = 133;
+}*/
+
 /**
  * Request: Ask device for Full Viewing Key.
  * @start
@@ -30,7 +36,8 @@ message DebugZcashDiagResponse {
  * @next ZcashFullViewingKey
  */
 message ZcashGetFullViewingKey {
-    optional string coin_name = 1 [default='Zcash']; 
+    //optional ZcashNetwork network = 1 [default=MAINNET];
+    optional string coin_name = 1 [default = "Zcash"];
     repeated uint32 z_address_n = 2; // z-address ZIP 32 path    
 }
 
@@ -48,8 +55,9 @@ message ZcashFullViewingKey {
  * @next Failure
  * @next ZcashIncomingViewingKey
  */
-message ZcashGetIncomingViewingKey {
-    optional string coin_name = 1 [default='Zcash']; 
+message ZcashGetIncomingViewingKey { 
+    //optional ZcashNetwork network = 1 [default=MAINNET];
+    optional string coin_name = 1 [default = "Zcash"];    
     repeated uint32 z_address_n = 2; // z-address ZIP 32 path    
 }
 
@@ -72,7 +80,8 @@ message ZcashGetAddress {
     repeated uint32 z_address_n = 2;                      // z-address ZIP 32 path (Orchard)   
     optional uint64 diversifier_index = 3 [default = 0];  // z-address diversifier index
     optional bool   show_display = 4 [default = false];   // Optionally show on display before sending the result
-    optional string coin_name = 5 [default='Zcash']; 
+    //optional ZcashNetwork network = 5 [default=MAINNET]; 
+    optional string coin_name = 5 [default = "Zcash"];   
 }
 
 /**

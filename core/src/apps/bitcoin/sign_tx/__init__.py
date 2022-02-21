@@ -72,10 +72,10 @@ async def sign_tx(
             signer_class = decred.Decred
         elif coin.overwintered:
             if msg.version == 5:
-                signer_class = zcash_v5.ZcashV5
-                zip244_keychain = await zcash_v5.orchard.keychain.get_keychain_for_coin(ctx, coin)
-                keychain = (keychain, zip244_keychain)
-                approver = zcash_v5.ZcashApprover(msg, coin)
+                signer_class = zcash_v5.signer.ZcashV5
+                orchard_keychain = await zcash_v5.orchard.keychain.get_keychain_for_coin(ctx, coin)
+                keychain = (keychain, orchard_keychain)
+                approver = zcash_v5.signer.ZcashApprover(msg, coin)
             else:
                 signer_class = zcash.Zcashlike
 
