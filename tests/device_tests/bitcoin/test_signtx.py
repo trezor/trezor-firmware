@@ -385,7 +385,8 @@ def test_two_two(client: Client):
                 request_input(1),
                 request_output(0),
                 request_output(1),
-                messages.ButtonRequest(name="confirm_output", index=0),
+                # NOTE: it has index 1, as it corresponds to out2 - index0 is our change address
+                messages.ButtonRequest(name="confirm_output", index=1),
                 messages.ButtonRequest(name="confirm_total"),
                 request_input(0),
                 request_meta(TXHASH_ac4ca0),
@@ -530,7 +531,7 @@ def test_lots_of_change(client: Client):
             ]
             + request_change_outputs
             + [
-                messages.ButtonRequest(name="nondefault_locktime"),
+                messages.ButtonRequest(name="change_count_over_threshold"),
                 messages.ButtonRequest(name="confirm_total"),
                 request_input(0),
                 request_meta(TXHASH_892d06),
