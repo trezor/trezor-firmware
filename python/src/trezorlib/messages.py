@@ -356,6 +356,11 @@ class RequestType(IntEnum):
     TXORCHARDOUTPUT = 9
 
 
+class ZcashHMACType(IntEnum):
+    ORCHARD_INPUT = 5
+    ORCHARD_OUTPUT = 6
+
+
 class CardanoDerivationType(IntEnum):
     LEDGER = 0
     ICARUS = 1
@@ -1267,14 +1272,17 @@ class ZcashOrchardSpend(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
         3: protobuf.Field("note", "bytes", repeated=False, required=True),
+        4: protobuf.Field("hmac", "bytes", repeated=False, required=False),
     }
 
     def __init__(
         self,
         *,
         note: "bytes",
+        hmac: Optional["bytes"] = None,
     ) -> None:
         self.note = note
+        self.hmac = hmac
 
 
 class ZcashOrchardOutput(protobuf.MessageType):
@@ -1283,6 +1291,7 @@ class ZcashOrchardOutput(protobuf.MessageType):
         1: protobuf.Field("decryptable", "bool", repeated=False, required=False),
         2: protobuf.Field("ovk_address_n", "uint32", repeated=True, required=False),
         6: protobuf.Field("memo", "bytes", repeated=False, required=False),
+        7: protobuf.Field("hmac", "bytes", repeated=False, required=False),
     }
 
     def __init__(
@@ -1291,10 +1300,12 @@ class ZcashOrchardOutput(protobuf.MessageType):
         ovk_address_n: Optional[Sequence["int"]] = None,
         decryptable: Optional["bool"] = None,
         memo: Optional["bytes"] = None,
+        hmac: Optional["bytes"] = None,
     ) -> None:
         self.ovk_address_n: Sequence["int"] = ovk_address_n if ovk_address_n is not None else []
         self.decryptable = decryptable
         self.memo = memo
+        self.hmac = hmac
 
 
 class TxInput(protobuf.MessageType):
@@ -1745,6 +1756,9 @@ class ZcashOrchardData(protobuf.MessageType):
         2: protobuf.Field("signature", "bytes", repeated=False, required=False),
         3: protobuf.Field("randomness_seed", "bytes", repeated=False, required=False),
         4: protobuf.Field("debug", "string", repeated=False, required=False),
+        5: protobuf.Field("hmac_type", "ZcashHMACType", repeated=False, required=False),
+        6: protobuf.Field("hmac_index", "uint32", repeated=False, required=False),
+        7: protobuf.Field("hmac", "bytes", repeated=False, required=False),
     }
 
     def __init__(
@@ -1754,11 +1768,17 @@ class ZcashOrchardData(protobuf.MessageType):
         signature: Optional["bytes"] = None,
         randomness_seed: Optional["bytes"] = None,
         debug: Optional["str"] = None,
+        hmac_type: Optional["ZcashHMACType"] = None,
+        hmac_index: Optional["int"] = None,
+        hmac: Optional["bytes"] = None,
     ) -> None:
         self.signature_index = signature_index
         self.signature = signature
         self.randomness_seed = randomness_seed
         self.debug = debug
+        self.hmac_type = hmac_type
+        self.hmac_index = hmac_index
+        self.hmac = hmac
 
 
 class TransactionType(protobuf.MessageType):

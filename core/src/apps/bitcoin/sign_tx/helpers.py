@@ -345,6 +345,14 @@ def _clear_tx_request(tx_req: TxRequest) -> None:
     # typechecker thinks serialized_tx is `bytes`, which is immutable
     # we know that it is `bytearray` in reality
     tx_req.serialized.serialized_tx[:] = bytes()  # type: ignore
+    if tx_req.serialized.orchard is not None:
+        o = tx_req.serialized.orchard
+        o.signature_index = None
+        o.signature = None
+        o.randomness_seed = None
+        o.hmac_type = None
+        o.hmac_index = None
+        o.hmac = None
 
 
 # Data sanitizers

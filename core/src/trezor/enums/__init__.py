@@ -339,6 +339,10 @@ if TYPE_CHECKING:
         TXORCHARDINPUT = 8
         TXORCHARDOUTPUT = 9
 
+    class ZcashHMACType(IntEnum):
+        ORCHARD_INPUT = 5
+        ORCHARD_OUTPUT = 6
+
     class CardanoDerivationType(IntEnum):
         LEDGER = 0
         ICARUS = 1

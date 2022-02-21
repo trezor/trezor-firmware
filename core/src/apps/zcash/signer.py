@@ -3,23 +3,24 @@ from typing import TYPE_CHECKING
 from . import orchard
 
 from trezor import wire, protobuf, ui, messages
-from trezor.crypto import random
-from trezor.crypto import orchardlib
+from trezor.crypto import random, orchardlib, hmac, hashlib
 from trezor.crypto.hashlib import blake2b
 from trezor.messages import PrevTx, SignTx, TxInput, TxOutput, TxAckInput, TxAckOutput
 from trezor.messages import TxRequest
 
 from trezor.utils import HashWriter, ensure, BufferReader
 
-from trezor.enums import RequestType
+from trezor.enums import RequestType, ZcashHMACType as hmac_type
 from trezor.wire import ProcessError
 
 
 from apps.common.coininfo import CoinInfo
-from apps.common.writers import write_compact_size
+from apps.common.writers import (
+    write_compact_size,
+    write_uint32_le,
+    write_bytes_fixed,
+)
 from apps.common import readers
-
-from apps.bitcoin.writers import write_uint32
 
 from apps.bitcoin.sign_tx.matchcheck import MatchChecker
 from apps.bitcoin.sign_tx.bitcoinlike import Bitcoinlike
@@ -64,6 +65,7 @@ class ZcashV5(Bitcoinlike):
         self.orchard_wallet_path = OrchardWalletPathChecker()
 
         self.alphas = []  # TODO: request alphas from the client
+        self.hmac_secret = random.bytes(32)
 
     def create_sig_hasher(self) -> SigHasher:
         return ZcashHasher().wrap()
@@ -108,23 +110,17 @@ class ZcashV5(Bitcoinlike):
         await super().step7_finish()
 
     async def process_orchard_inputs(self):
-        hasher_in = HashWriter(blake2b(outlen=32, personal=b"_orchard_inputs_"))
-
         for i in range(self.tx_info.tx.orchard.inputs_count):
             txi = await self.get_orchard_input(i)
-            hasher_in.write(protobuf.dump_message_buffer(txi))
+            self.set_hmac(txi, hmac_type.ORCHARD_INPUT, i)
 
             self.orchard_wallet_path.add_input(txi)
             self.approver.add_orchard_input(txi)
 
-        self.orchard_inputs_hash = hasher_in.get_digest()
-
     async def approve_orchard_outputs(self):
-        hasher_out = HashWriter(blake2b(outlen=32, personal=b"_orchard_outputs"))
-
         for i in range(self.tx_info.tx.orchard.outputs_count):
             txo = await self.get_orchard_output(i)
-            hasher_out.write(protobuf.dump_message_buffer(txo))
+            self.set_hmac(txo, hmac_type.ORCHARD_OUTPUT, i)
 
             if orchard_output_is_change(txo):
                 self.approver.add_orchard_change_output(txo)
@@ -135,7 +131,34 @@ class ZcashV5(Bitcoinlike):
             if not self.orchard_wallet_path.output_matches(txo):
                 yield UiConfirmOrchardOutput(txo, self.orchard_multi_acount())
 
-        self.orchard_outputs_hash = hasher_out.get_digest()
+    def compute_hmac(self, msg, hmac_type, index):
+        key_buffer = bytearray(32 + 8)
+        write_bytes_fixed(key_buffer, self.hmac_secret, 32)
+        write_uint32_le(key_buffer, hmac_type)
+        write_uint32_le(key_buffer, index)
+        key = hashlib.sha256(key_buffer).digest()
+
+        mac = hmac(hmac.SHA256, key)
+        mac.update(protobuf.dump_message_buffer(msg))
+        return mac.digest()
+
+    def set_hmac(self, msg, hmac_type, index):
+        o = self.tx_req.serialized.orchard
+        assert o.hmac is None
+        o.hmac_type = hmac_type
+        o.hmac_index = index
+        o.hmac = self.compute_hmac(msg, hmac_type, index)
+
+    def verify_hmac(self, msg, hmac_type, index):
+        original_hmac = msg.orchard.hmac
+        if original_hmac is None:
+            raise ProcessError("Missing HMAC.")
+        msg.orchard.hmac = None
+
+        computed_hmac = self.compute_hmac(msg, hmac_type, index)
+
+        if original_hmac != computed_hmac:
+            raise ProcessError("Invalid HMAC.")
 
     async def shield_orchard_actions(self):
         if not self.has_orchard():
@@ -149,15 +172,12 @@ class ZcashV5(Bitcoinlike):
             "pos": 0,
         }
 
-        hasher_in = HashWriter(blake2b(outlen=32, personal=b"_orchard_inputs_"))
-        hasher_out = HashWriter(blake2b(outlen=32, personal=b"_orchard_outputs"))
-
         for i in range(self.orchard_actions_count()):
             action_info = dict()
 
             if i < self.tx_info.tx.orchard.inputs_count:
                 txi = await self.get_orchard_input(i)
-                hasher_in.write(protobuf.dump_message_buffer(txi))
+                self.verify_hmac(txi, hmac_type.ORCHARD_INPUT, i)
 
                 fvk = self.orchard_keychain.derive(txi.address_n).full_viewing_key()
                 action_info["spend_info"] = {
@@ -167,7 +187,7 @@ class ZcashV5(Bitcoinlike):
 
             if i < self.tx_info.tx.orchard.outputs_count:
                 txo = await self.get_orchard_output(i)
-                hasher_out.write(protobuf.dump_message_buffer(txo))
+                self.verify_hmac(txo, hmac_type.ORCHARD_OUTPUT, i)
 
                 if orchard_output_is_change(txo):
                     address = self.orchard_keychain.derive(txo.address_n).address()
@@ -191,12 +211,6 @@ class ZcashV5(Bitcoinlike):
             self.hasher.orchard.add_action(action)
 
             self.alphas.append(action["alpha"])
-
-        if (
-            hasher_in.get_digest() != self.orchard_inputs_hash or
-            hasher_out.get_digest() != self.orchard_outputs_hash
-        ):
-            raise ProcessError("Transaction data changed during the process.")
 
         # Orchard flags as defined in protocol §7.1 tx v5 format
         spends_flag = 0x01 if self.tx_info.tx.orchard.enable_spends else 0x00
@@ -252,11 +266,11 @@ class ZcashV5(Bitcoinlike):
             raise wire.DataError("Version group ID is missing")
         assert tx.expiry is not None # checked in sanitize_*
 
-        write_uint32(w, tx.version | OVERWINTERED)  # nVersion | fOverwintered
-        write_uint32(w, tx.version_group_id)        # nVersionGroupId
-        write_uint32(w, tx.branch_id)               # nConsensusBranchId
-        write_uint32(w, tx.lock_time)               # lock_time
-        write_uint32(w, tx.expiry)                  # expiryHeight
+        write_uint32_le(w, tx.version | OVERWINTERED)  # nVersion | fOverwintered
+        write_uint32_le(w, tx.version_group_id)        # nVersionGroupId
+        write_uint32_le(w, tx.branch_id)               # nConsensusBranchId
+        write_uint32_le(w, tx.lock_time)               # lock_time
+        write_uint32_le(w, tx.expiry)                  # expiryHeight
 
     def write_tx_footer(self, w: Writer, tx: SignTx | PrevTx) -> None:
         pass  # there is no footer in v5 tx format
@@ -338,9 +352,13 @@ def _clear_tx_request(req):
 
 
 def _clear_tx_request_orchard(req):
-    req.serialized.orchard.signature_index = None
-    req.serialized.orchard.signature = None
-    req.serialized.orchard.randomness_seed = None
+    o = req.serialized.orchard
+    o.signature_index = None
+    o.signature = None
+    o.randomness_seed = None
+    o.hmac_type = None
+    o.hmac_index = None
+    o.hmac = None
 
 
 def orchard_output_is_change(txo):

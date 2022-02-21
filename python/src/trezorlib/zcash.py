@@ -74,8 +74,8 @@ def get_address(
 
 def sign_tx(
     client,
-    inputs = [],
-    outputs = [],
+    o_inputs = [],
+    o_outputs = [],
     t_inputs = [],
     t_outputs = [],
     coin_name = "Zcash",
@@ -91,8 +91,8 @@ def sign_tx(
     msg.expiry = 0
 
     orchard = messages.ZcashOrchardBundleInfo()
-    orchard.outputs_count = len(outputs)
-    orchard.inputs_count = len(inputs)
+    orchard.outputs_count = len(o_outputs)
+    orchard.inputs_count = len(o_inputs)
     orchard.anchor = 32*b"\x00"
 
     msg.orchard = orchard
@@ -100,7 +100,10 @@ def sign_tx(
     res = client.call(msg)
     # Prepare structure for signatures
     t_signatures = [None] * len(t_inputs)  # transparent
-    o_signatures = [None] * len(inputs)    # Orchard
+    o_signatures = [None] * len(o_inputs)    # Orchard
+
+    orchard_input_hmacs = [None] * len(o_inputs)
+    orchard_output_hmacs = [None] * len(o_outputs)
 
     serialized_tx = b""
     seed = None
@@ -121,23 +124,35 @@ def sign_tx(
                 t_signatures[idx] = sig
 
             if res.serialized.orchard or True:
-                if res.serialized.orchard.signature_index is not None:
-                    idx = res.serialized.orchard.signature_index
-                    sig = res.serialized.orchard.signature
+                o = res.serialized.orchard
+                if o.signature_index is not None:
+                    idx = o.signature_index
+                    sig = o.signature
                     print("set  o signature", idx)
                     if o_signatures[idx] is not None:
                         raise ValueError("Signature for index %d already filled" % idx)
                     o_signatures[idx] = sig
 
-                if res.serialized.orchard.randomness_seed is not None:
+                if o.randomness_seed is not None:
                     print("set  o seed")
-                    seed = res.serialized.orchard.randomness_seed
+                    seed = o.randomness_seed
+
+                if o.hmac_index is not None:
+                    if o.hmac_type is messages.ZcashHMACType.ORCHARD_INPUT:
+                        hmacs = orchard_input_hmacs
+                        print(f"hmac o input  {o.hmac_index}")
+                    if o.hmac_type is messages.ZcashHMACType.ORCHARD_OUTPUT:
+                        hmacs = orchard_output_hmacs
+                        print(f"hmac o output {o.hmac_index}")
+
+                    assert hmacs[o.hmac_index] is None
+                    hmacs[o.hmac_index] = o.hmac
 
         if res.request_type == R.TXFINISHED:
             break
 
         elif res.request_type == R.TXORCHARDINPUT:
-            txi = inputs[res.details.request_index]
+            txi = o_inputs[res.details.request_index]
             msg = messages.TransactionType(
                 inputs = [messages.TxInputType(
                     address_n = txi["address_n"],
@@ -146,6 +161,7 @@ def sign_tx(
                     prev_hash = b"",
                     orchard = messages.ZcashOrchardSpend(
                         note = txi["note"],
+                        hmac = orchard_input_hmacs[res.details.request_index],
                     )
                 )]
             )
@@ -153,7 +169,7 @@ def sign_tx(
             res = client.call(messages.TxAck(tx=msg))
 
         elif res.request_type == R.TXORCHARDOUTPUT:
-            output = outputs[res.details.request_index]
+            output = o_outputs[res.details.request_index]
             msg = messages.TransactionType(
                 outputs = [messages.TxOutputType(
                     address = output.get("address"),
@@ -163,6 +179,7 @@ def sign_tx(
                         decryptable = output["decryptable"],
                         ovk_address_n = output.get("ovk_address_n") or [],
                         memo = output.get("memo"),
+                        hmac = orchard_output_hmacs[res.details.request_index],
                     )
                 )]
             )

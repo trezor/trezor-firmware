@@ -55,6 +55,7 @@ if TYPE_CHECKING:
     from trezor.enums import TezosBallotType  # noqa: F401
     from trezor.enums import TezosContractType  # noqa: F401
     from trezor.enums import WordRequestType  # noqa: F401
+    from trezor.enums import ZcashHMACType  # noqa: F401
 
     class BinanceGetAddress(protobuf.MessageType):
         address_n: "list[int]"
@@ -660,11 +661,13 @@ if TYPE_CHECKING:
 
     class ZcashOrchardSpend(protobuf.MessageType):
         note: "bytes"
+        hmac: "bytes | None"
 
         def __init__(
             self,
             *,
             note: "bytes",
+            hmac: "bytes | None" = None,
         ) -> None:
             pass
 
@@ -676,6 +679,7 @@ if TYPE_CHECKING:
         decryptable: "bool | None"
         ovk_address_n: "list[int]"
         memo: "bytes | None"
+        hmac: "bytes | None"
 
         def __init__(
             self,
@@ -683,6 +687,7 @@ if TYPE_CHECKING:
             ovk_address_n: "list[int] | None" = None,
             decryptable: "bool | None" = None,
             memo: "bytes | None" = None,
+            hmac: "bytes | None" = None,
         ) -> None:
             pass
 
@@ -1073,6 +1078,9 @@ if TYPE_CHECKING:
         signature: "bytes | None"
         randomness_seed: "bytes | None"
         debug: "str | None"
+        hmac_type: "ZcashHMACType | None"
+        hmac_index: "int | None"
+        hmac: "bytes | None"
 
         def __init__(
             self,
@@ -1081,6 +1089,9 @@ if TYPE_CHECKING:
             signature: "bytes | None" = None,
             randomness_seed: "bytes | None" = None,
             debug: "str | None" = None,
+            hmac_type: "ZcashHMACType | None" = None,
+            hmac_index: "int | None" = None,
+            hmac: "bytes | None" = None,
         ) -> None:
             pass
 

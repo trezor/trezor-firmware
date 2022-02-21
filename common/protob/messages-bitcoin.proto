@@ -266,6 +266,14 @@ message TxRequest {
             optional bytes signature = 2;           // signature of the signature_index input
             optional bytes randomness_seed = 3;     // a seed for ChaCha12Rng pseudo random generator
             optional string debug = 4;
+            optional ZcashHMACType hmac_type = 5;
+            enum ZcashHMACType {
+                // reserved 1, 2, 3, 4; // for transparent and Sapling
+                ORCHARD_INPUT = 5;
+                ORCHARD_OUTPUT = 6;
+            }
+            optional uint32 hmac_index = 6; 
+            optional bytes hmac = 7;
         }
     }
 }
@@ -361,6 +369,7 @@ message TxAck {
 message ZcashOrchardSpend {
     // repeated uint32 z_address_n = 1; // to derive ask (signing) and fvk (shielding)
     required bytes note = 3;
+    optional bytes hmac = 4;
 }
 
 message ZcashOrchardOutput {
@@ -370,6 +379,7 @@ message ZcashOrchardOutput {
     //repeated uint32 z_address_n = 4; // for internal transfers
     //required uint64 amount = 5;
     optional bytes memo = 6;
+    optional bytes hmac = 7;
 } 
 
 /** Data type for transaction input to be signed.
