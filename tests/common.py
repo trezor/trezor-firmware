@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING, Generator, List, Optional
 
 import pytest
 import requests
+from bitcoin.core import CTransaction
 
 from trezorlib import btc, tools
 from trezorlib.messages import ButtonRequestType
@@ -247,9 +248,13 @@ def get_test_address(client: "Client") -> str:
 
 def assert_tx_matches(serialized_tx: bytes, hash_link: str, tx_hex: str = None) -> None:
     """Verifies if a transaction is correctly formed."""
-    hash_str = hash_link.split("/")[-1]
-    assert tools.tx_hash(serialized_tx).hex() == hash_str
+    tx_id = hash_link.split("/")[-1]
 
+    # In case of the transaction being segwit, we need to calculate
+    # its tx_id specially
+
+    parsed_tx = CTransaction.deserialize(serialized_tx)
+    assert tx_id == parsed_tx.GetTxid()[::-1].hex()
     if tx_hex:
         assert serialized_tx.hex() == tx_hex
 
