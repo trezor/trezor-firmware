@@ -108,6 +108,7 @@ async def show_group_share_success(
 
 async def continue_recovery(
     ctx: wire.GenericContext,
+    name: str,
     button_label: str,
     text: str,
     subtext: str | None,
@@ -121,16 +122,14 @@ async def continue_recovery(
             info="Info",
             cancel="Abort",
         )
-        await button_request(
-            ctx, "recovery", br_code=ButtonRequestType.RecoveryHomepage
-        )
+        await button_request(ctx, name, br_code=ButtonRequestType.RecoveryHomepage)
         return await is_confirmed_info(ctx, content, info_func)
     else:
         return is_confirmed(
             await interact(
                 ctx,
                 Confirm(homepage, confirm=button_label, major_confirm=True),
-                "recovery",
+                name,
                 br_code=ButtonRequestType.RecoveryHomepage,
             )
         )

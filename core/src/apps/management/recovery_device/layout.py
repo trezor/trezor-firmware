@@ -142,13 +142,14 @@ async def show_group_threshold_reached(ctx: wire.GenericContext) -> None:
 
 async def homescreen_dialog(
     ctx: wire.GenericContext,
+    name: str,
     button_label: str,
     text: str,
     subtext: str | None = None,
     info_func: Callable | None = None,
 ) -> None:
     while True:
-        if await continue_recovery(ctx, button_label, text, subtext, info_func):
+        if await continue_recovery(ctx, name, button_label, text, subtext, info_func):
             # go forward in the recovery process
             break
         # user has chosen to abort, confirm the choice
