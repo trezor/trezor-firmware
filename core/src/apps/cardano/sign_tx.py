@@ -372,6 +372,7 @@ async def _confirm_transaction(
         await confirm_transaction(
             ctx,
             msg.fee,
+            msg.network_id,
             msg.protocol_magic,
             msg.ttl,
             msg.validity_interval_start,
@@ -385,6 +386,7 @@ async def _confirm_transaction(
         await confirm_transaction(
             ctx,
             msg.fee,
+            msg.network_id,
             msg.protocol_magic,
             msg.ttl,
             msg.validity_interval_start,
@@ -547,7 +549,7 @@ async def _process_certificates(
         validate_certificate(
             certificate, signing_mode, protocol_magic, network_id, account_path_checker
         )
-        await _show_certificate(ctx, certificate, signing_mode)
+        await _show_certificate(ctx, certificate, signing_mode, network_id)
 
         if certificate.type == CardanoCertificateType.STAKE_POOL_REGISTRATION:
             pool_parameters = certificate.pool_parameters
@@ -658,7 +660,7 @@ async def _process_withdrawals(
         )
         previous_reward_address_bytes = reward_address_bytes
 
-        await confirm_withdrawal(ctx, withdrawal, reward_address_bytes)
+        await confirm_withdrawal(ctx, withdrawal, reward_address_bytes, network_id)
 
         withdrawals_dict.add(reward_address_bytes, withdrawal.amount)
 
@@ -999,7 +1001,7 @@ async def _show_output(
         assert output.address is not None  # _validate_output
         address = output.address
 
-    await confirm_sending(ctx, output.amount, address, is_change_output)
+    await confirm_sending(ctx, output.amount, address, is_change_output, network_id)
 
 
 def _validate_asset_group(
@@ -1043,6 +1045,7 @@ async def _show_certificate(
     ctx: wire.Context,
     certificate: CardanoTxCertificate,
     signing_mode: CardanoTxSigningMode,
+    network_id: int,
 ) -> None:
     if signing_mode == CardanoTxSigningMode.ORDINARY_TRANSACTION:
         assert certificate.path  # validate_certificate
@@ -1056,7 +1059,7 @@ async def _show_certificate(
     ):
         await confirm_certificate(ctx, certificate)
     elif signing_mode == CardanoTxSigningMode.POOL_REGISTRATION_AS_OWNER:
-        await _show_stake_pool_registration_certificate(ctx, certificate)
+        await _show_stake_pool_registration_certificate(ctx, certificate, network_id)
     else:
         raise RuntimeError  # we didn't cover all signing modes
 
@@ -1174,7 +1177,9 @@ def _sign_tx_hash(
 
 
 async def _show_stake_pool_registration_certificate(
-    ctx: wire.Context, stake_pool_registration_certificate: CardanoTxCertificate
+    ctx: wire.Context,
+    stake_pool_registration_certificate: CardanoTxCertificate,
+    network_id: int,
 ) -> None:
     pool_parameters = stake_pool_registration_certificate.pool_parameters
     # _validate_stake_pool_registration_tx_structure ensures that there is only one
@@ -1182,7 +1187,7 @@ async def _show_stake_pool_registration_certificate(
     assert pool_parameters is not None
 
     # display the transaction (certificate) in UI
-    await confirm_stake_pool_parameters(ctx, pool_parameters)
+    await confirm_stake_pool_parameters(ctx, pool_parameters, network_id)
 
     await confirm_stake_pool_metadata(ctx, pool_parameters.metadata)
 
