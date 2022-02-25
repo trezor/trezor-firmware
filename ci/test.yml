@@ -362,6 +362,7 @@ core hwi test:
   <<: *gitlab_caching
   needs:
     - core unix frozen debug build
+  allow_failure: true
   script:
     - nix-shell --run "git clone https://github.com/bitcoin-core/HWI.git"
     - nix-shell --arg fullDeps true --run "cd HWI && poetry install && poetry run ./test/test_trezor.py --model_t ../core/build/unix/trezor-emu-core bitcoind"
@@ -526,6 +527,7 @@ legacy hwi test:
     - legacy emu regular debug build
   variables:
     EMULATOR: "1"
+  allow_failure: true
   script:
     - nix-shell --run "git clone https://github.com/bitcoin-core/HWI.git"
     - nix-shell --arg fullDeps true --run "cd HWI && poetry install && poetry run ./test/test_trezor.py --model_1 ../legacy/firmware/trezor.elf bitcoind"
