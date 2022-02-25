@@ -25,7 +25,7 @@ from apps.common.paths import address_n_to_str
 
 from . import seed
 from .address import derive_human_readable_address, encode_human_readable_address
-from .helpers import bech32, protocol_magics
+from .helpers import bech32, network_ids, protocol_magics
 from .helpers.utils import (
     format_account_number,
     format_asset_fingerprint,
@@ -85,8 +85,9 @@ CERTIFICATE_TYPE_NAMES = {
 }
 
 
-def format_coin_amount(amount: int) -> str:
-    return f"{format_amount(amount, 6)} ADA"
+def format_coin_amount(amount: int, network_id: int) -> str:
+    currency = "ADA" if network_ids.is_mainnet(network_id) else "tADA"
+    return f"{format_amount(amount, 6)} {currency}"
 
 
 def is_printable_ascii_bytestring(bytestr: bytes) -> bool:
@@ -232,12 +233,13 @@ async def confirm_sending(
     ada_amount: int,
     to: str,
     is_change_output: bool,
+    network_id: int,
 ) -> None:
     subtitle = "Change amount:" if is_change_output else "Confirm sending:"
     await confirm_output(
         ctx,
         to,
-        format_coin_amount(ada_amount),
+        format_coin_amount(ada_amount, network_id),
         title="Confirm transaction",
         subtitle=subtitle,
         font_amount=ui.BOLD,
@@ -459,6 +461,7 @@ async def confirm_witness_request(
 async def confirm_transaction(
     ctx: wire.Context,
     fee: int,
+    network_id: int,
     protocol_magic: int,
     ttl: int | None,
     validity_interval_start: int | None,
@@ -466,7 +469,7 @@ async def confirm_transaction(
     tx_hash: bytes | None,
 ) -> None:
     props: list[PropertyType] = [
-        ("Transaction fee:", format_coin_amount(fee)),
+        ("Transaction fee:", format_coin_amount(fee, network_id)),
     ]
 
     if is_network_id_verifiable:
@@ -516,7 +519,7 @@ async def confirm_certificate(
 
 
 async def confirm_stake_pool_parameters(
-    ctx: wire.Context, pool_parameters: CardanoPoolParametersType
+    ctx: wire.Context, pool_parameters: CardanoPoolParametersType, network_id: int
 ) -> None:
     margin_percentage = (
         100.0 * pool_parameters.margin_numerator / pool_parameters.margin_denominator
@@ -533,8 +536,8 @@ async def confirm_stake_pool_parameters(
             ),
             ("Pool reward account:", pool_parameters.reward_account),
             (
-                f"Pledge: {format_coin_amount(pool_parameters.pledge)}\n"
-                + f"Cost: {format_coin_amount(pool_parameters.cost)}\n"
+                f"Pledge: {format_coin_amount(pool_parameters.pledge, network_id)}\n"
+                + f"Cost: {format_coin_amount(pool_parameters.cost, network_id)}\n"
                 + f"Margin: {percentage_formatted}%",
                 None,
             ),
@@ -641,7 +644,10 @@ async def confirm_stake_pool_registration_final(
 
 
 async def confirm_withdrawal(
-    ctx: wire.Context, withdrawal: CardanoTxWithdrawal, reward_address_bytes: bytes
+    ctx: wire.Context,
+    withdrawal: CardanoTxWithdrawal,
+    reward_address_bytes: bytes,
+    network_id: int,
 ) -> None:
     address_type_name = "script reward" if withdrawal.script_hash else "reward"
     reward_address = encode_human_readable_address(reward_address_bytes)
@@ -656,7 +662,7 @@ async def confirm_withdrawal(
             )
         )
 
-    props.append(("Amount:", format_coin_amount(withdrawal.amount)))
+    props.append(("Amount:", format_coin_amount(withdrawal.amount, network_id)))
 
     await confirm_properties(
         ctx,
