@@ -319,7 +319,9 @@ class BasicApprover(Approver):
 
 
 class CoinJoinApprover(Approver):
-    MAX_OUTPUT_WEIGHT = const(4 * 43)
+    # Maximum weight of an output for standard scriptPubKeys P2PKH (25), P2SH (23), P2WPKH (22),
+    # P2WSH (34) and P2TR (34).
+    MAX_OUTPUT_WEIGHT = const(4 * (8 + 1 + 34))
 
     def __init__(
         self, tx: SignTx, coin: CoinInfo, authorization: CoinJoinAuthorization
@@ -344,9 +346,6 @@ class CoinJoinApprover(Approver):
 
         # amount of each output in the current group
         self.group_amount = 0
-
-        # flag indicating whether our outputs are gaining any anonymity
-        self.anonymity = False
 
     async def add_internal_input(self, txi: TxInput) -> None:
         self.our_weight.add_input(txi)
@@ -419,14 +418,6 @@ class CoinJoinApprover(Approver):
 
         if our_fees > our_coordinator_fee + our_max_mining_fee:
             raise wire.ProcessError("Total fee over threshold")
-
-        # Ensure that at least one of the user's outputs is in a group with an external output.
-        # Note: _get_coordinator_fee() needs to be called before checking this.
-        if not self.anonymity:
-            raise wire.ProcessError("No anonymity gain")
-
-        if tx_info.tx.lock_time > 0:
-            raise wire.ProcessError("nLockTime not allowed in CoinJoin")
 
         if not self.authorization.approve_sign_tx(tx_info.tx, our_fees):
             raise wire.ProcessError("Fees exceed authorized limit")
