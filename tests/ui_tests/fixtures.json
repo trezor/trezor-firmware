@@ -602,7 +602,6 @@
 "TT_binance-test_sign_tx.py::test_binance_sign_message[message2-expected_response2]": "323e0a474e71ede187ee1332e42952aeca501b42da95f88b2bad5445a3db858c",
 "TT_bitcoin-test_authorize_coinjoin.py::test_cancel_authorization": "9887e0f4da5c7800f832396e50391beb03229c8edcb5b0e078433703cac6e0d3",
 "TT_bitcoin-test_authorize_coinjoin.py::test_multisession_authorization": "fd412d086cf4ff677f6ae266e88de725549505d9a2abc1c2ba36f8f854461694",
-"TT_bitcoin-test_authorize_coinjoin.py::test_no_anonymity": "f0c8167a4a6aa05751c3eab3d8d944044acec497ca0bf05d2e2fc1577a36c5c4",
 "TT_bitcoin-test_authorize_coinjoin.py::test_sign_tx": "c48bbbaf032eacb42567e49f5b4b82ed51fe97bb613e165dca2c51207199f236",
 "TT_bitcoin-test_authorize_coinjoin.py::test_unfair_fee": "ab1aa516510b627b8ffc65391c1c113922ab08f48baf295861a9b597f27f8ea1",
 "TT_bitcoin-test_authorize_coinjoin.py::test_wrong_coordinator": "9887e0f4da5c7800f832396e50391beb03229c8edcb5b0e078433703cac6e0d3",
