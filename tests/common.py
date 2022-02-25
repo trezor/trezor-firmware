@@ -15,14 +15,10 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import json
-import os
-from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING, Generator, List, Optional
 
 import pytest
-import requests
-from bitcoin.core import CTransaction
 
 from trezorlib import btc, tools
 from trezorlib.messages import ButtonRequestType
@@ -31,6 +27,7 @@ if TYPE_CHECKING:
     from trezorlib.debuglink import DebugLink, TrezorClientDebugLink as Client
     from trezorlib.messages import ButtonRequest
     from _pytest.mark.structures import MarkDecorator
+
 
 # fmt: off
 #                1      2     3    4      5      6      7     8      9    10    11    12
@@ -244,30 +241,3 @@ def get_test_address(client: "Client") -> str:
     """Fetch a testnet address on a fixed path. Useful to make a pin/passphrase
     protected call, or to identify the root secret (seed+passphrase)"""
     return btc.get_address(client, "Testnet", TEST_ADDRESS_N)
-
-
-def assert_tx_matches(serialized_tx: bytes, hash_link: str, tx_hex: str = None) -> None:
-    """Verifies if a transaction is correctly formed."""
-    tx_id = hash_link.split("/")[-1]
-
-    # In case of the transaction being segwit, we need to calculate
-    # its tx_id specially
-
-    parsed_tx = CTransaction.deserialize(serialized_tx)
-    assert tx_id == parsed_tx.GetTxid()[::-1].hex()
-    if tx_hex:
-        assert serialized_tx.hex() == tx_hex
-
-    # TODO: we could probably do better than os.environ, this was the easiest solution
-    # (we could create a pytest option (and use config.getoption("use-blockbook")),
-    # but then each test would need to have access to config via function argument)
-    if int(os.environ.get("CHECK_ON_CHAIN", 0)):
-
-        def get_tx_hex(hash_link: str) -> str:
-            tx_data = requests.get(
-                hash_link, headers={"User-Agent": "BTC transactions test"}
-            ).json(parse_float=Decimal)
-
-            return tx_data["hex"]
-
-        assert serialized_tx.hex() == get_tx_hex(hash_link)
