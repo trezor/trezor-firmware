@@ -235,3 +235,5 @@ if not utils.BITCOIN_ONLY:
     ZcashIncomingViewingKey = 905
     ZcashGetAddress = 906
     ZcashAddress = 907
+    ZcashOrchardInput = 908
+    ZcashOrchardOutput = 909

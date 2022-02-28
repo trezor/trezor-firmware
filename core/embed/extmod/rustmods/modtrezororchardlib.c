@@ -26,20 +26,29 @@
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_orchardlib_diag, orchardlib_diag);
 
 
-/// def get_orchard_fvk(sk: bytes) -> bytes:
+/// def derive_full_viewing_key(spending_key: bytes, internal: bool) -> bytes:
 /// """Returns a raw Orchard Full Viewing Key."""
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_orchardlib_get_full_viewing_key, orchardlib_get_full_viewing_key);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_orchardlib_derive_full_viewing_key, orchardlib_derive_full_viewing_key);
 
-/// def get_orchard_ivk(sk: bytes) -> bytes:
+/// def derive_internal_full_viewing_key(full_viewing_key: bytes) -> bytes:
+/// """Returns a raw internal Orchard Full Viewing Key."""
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_orchardlib_derive_internal_full_viewing_key, orchardlib_derive_internal_full_viewing_key);
+
+/// def derive_incoming_viewing_key(full_viewing_key: bytes, internal: bool) -> bytes:
 /// """Returns a raw Orchard Incoming Viewing Key."""
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_orchardlib_get_incoming_viewing_key, orchardlib_get_incoming_viewing_key);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_orchardlib_derive_incoming_viewing_key, orchardlib_derive_incoming_viewing_key);
 
-/// def get_orchard_address(
-///     sk: bytes
-///     diversifier_index: int
+/// def derive_outgoing_viewing_key(full_viewing_key: bytes, internal: bool) -> bytes:
+/// """Returns a raw Orchard Outgoing Viewing Key."""
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_orchardlib_derive_outgoing_viewing_key, orchardlib_derive_outgoing_viewing_key);
+
+/// def derive_address(
+///     full_viewing_key: bytes,
+///     diversifier_index: int,
+///     internal: bool,
 /// ) -> bytes:
 /// """Returns a raw Orchard address."""
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_orchardlib_get_address, orchardlib_get_address);
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_orchardlib_derive_address, orchardlib_derive_address);
 
 /// def f4jumble(message: bytearray) -> None:
 ///     """Mutates a message by F4Jumble permutation."""
@@ -48,6 +57,13 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_orchardlib_f4jumble, orchardlib_f4jumble);
 /// def f4jumble_inv(message: bytearray) -> None:
 ///     """Mutates a message by F4Jumble inverse permutation."""
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_orchardlib_f4jumble_inv, orchardlib_f4jumble_inv);
+
+/// def shuffle(
+///     list,
+///     rng_config,
+/// ):
+/// """Shuffles a list."""
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_orchardlib_shuffle, orchardlib_shuffle);
 
 /// def shield(
 ///     action_info,
@@ -58,29 +74,32 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_orchardlib_f4jumble_inv, orchardlib_f4jumbl
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_orchardlib_shield, orchardlib_shield);
 
 /// def sign(
-///     sk: bytes,
+///     spending_key: bytes,
 ///     alpha: bytes,
 ///     sighash: bytes,
 /// ):
 /// """reddsa spend signature of over pallas
 ///  
 /// # Args:
-///     `sk` - spending key
+///     `spending_key` - spending key
 ///     `alpha` - randomizer (pallas scalar)
-///     `sighash` - signed data
+///     `sighash` - message digest
 /// """
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_orchardlib_sign, orchardlib_sign);
 
 STATIC const mp_rom_map_elem_t mp_module_trezororchardlib_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezororchardlib)},
     {MP_ROM_QSTR(MP_QSTR_diag),     MP_ROM_PTR(&mod_orchardlib_diag)},
-    {MP_ROM_QSTR(MP_QSTR_get_full_viewing_key),  MP_ROM_PTR(&mod_orchardlib_get_full_viewing_key)},
-    {MP_ROM_QSTR(MP_QSTR_get_incoming_viewing_key),  MP_ROM_PTR(&mod_orchardlib_get_incoming_viewing_key)},
-    {MP_ROM_QSTR(MP_QSTR_get_address), MP_ROM_PTR(&mod_orchardlib_get_address)},
+    {MP_ROM_QSTR(MP_QSTR_derive_full_viewing_key),  MP_ROM_PTR(&mod_orchardlib_derive_full_viewing_key)},
+    {MP_ROM_QSTR(MP_QSTR_derive_internal_full_viewing_key),  MP_ROM_PTR(&mod_orchardlib_derive_internal_full_viewing_key)},
+    {MP_ROM_QSTR(MP_QSTR_derive_incoming_viewing_key),  MP_ROM_PTR(&mod_orchardlib_derive_incoming_viewing_key)},
+    {MP_ROM_QSTR(MP_QSTR_derive_outgoing_viewing_key),  MP_ROM_PTR(&mod_orchardlib_derive_outgoing_viewing_key)},
+    {MP_ROM_QSTR(MP_QSTR_derive_address), MP_ROM_PTR(&mod_orchardlib_derive_address)},
     {MP_ROM_QSTR(MP_QSTR_f4jumble), MP_ROM_PTR(&mod_orchardlib_f4jumble)},
     {MP_ROM_QSTR(MP_QSTR_f4jumble_inv), MP_ROM_PTR(&mod_orchardlib_f4jumble_inv)},
     {MP_ROM_QSTR(MP_QSTR_shield), MP_ROM_PTR(&mod_orchardlib_shield)},
     {MP_ROM_QSTR(MP_QSTR_sign), MP_ROM_PTR(&mod_orchardlib_sign)},
+    {MP_ROM_QSTR(MP_QSTR_shuffle), MP_ROM_PTR(&mod_orchardlib_shuffle)},
 };
 
 STATIC MP_DEFINE_CONST_DICT(mp_module_trezororchardlib_globals,

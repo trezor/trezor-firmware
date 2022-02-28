@@ -2,19 +2,30 @@ from typing import *
 
 
 # extmod/rustmods/modtrezororchardlib.c
-def get_orchard_fvk(sk: bytes) -> bytes:
+def derive_full_viewing_key(spending_key: bytes, internal: bool) -> bytes:
 """Returns a raw Orchard Full Viewing Key."""
 
 
 # extmod/rustmods/modtrezororchardlib.c
-def get_orchard_ivk(sk: bytes) -> bytes:
+def derive_internal_full_viewing_key(full_viewing_key: bytes) -> bytes:
+"""Returns a raw internal Orchard Full Viewing Key."""
+
+
+# extmod/rustmods/modtrezororchardlib.c
+def derive_incoming_viewing_key(full_viewing_key: bytes, internal: bool) -> bytes:
 """Returns a raw Orchard Incoming Viewing Key."""
 
 
 # extmod/rustmods/modtrezororchardlib.c
-def get_orchard_address(
-    sk: bytes
-    diversifier_index: int
+def derive_outgoing_viewing_key(full_viewing_key: bytes, internal: bool) -> bytes:
+"""Returns a raw Orchard Outgoing Viewing Key."""
+
+
+# extmod/rustmods/modtrezororchardlib.c
+def derive_address(
+    full_viewing_key: bytes,
+    diversifier_index: int,
+    internal: bool,
 ) -> bytes:
 """Returns a raw Orchard address."""
 
@@ -30,6 +41,14 @@ def f4jumble_inv(message: bytearray) -> None:
 
 
 # extmod/rustmods/modtrezororchardlib.c
+def shuffle(
+    list,
+    rng_config,
+):
+"""Shuffles a list."""
+
+
+# extmod/rustmods/modtrezororchardlib.c
 def shield(
     action_info,
     rng_config,
@@ -40,14 +59,14 @@ def shield(
 
 # extmod/rustmods/modtrezororchardlib.c
 def sign(
-    sk: bytes,
+    spending_key: bytes,
     alpha: bytes,
     sighash: bytes,
 ):
 """reddsa spend signature of over pallas
  
 # Args:
-    `sk` - spending key
+    `spending_key` - spending key
     `alpha` - randomizer (pallas scalar)
-    `sighash` - signed data
+    `sighash` - message digest
 """

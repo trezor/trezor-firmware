@@ -33,6 +33,7 @@ static void _librust_qstrs(void) {
 
   // Zcash shielding
   MP_QSTR_fvk;
+  MP_QSTR_ovk;
   MP_QSTR_output_info;
   MP_QSTR_spend_info;
 

@@ -85,6 +85,8 @@ if not utils.BITCOIN_ONLY:
     import ${import_name}
 % endfor
 
+
+
 # generate full alphabet
 <%
 ALPHABET = "abcdefghijklmnopqrstuvwxyz"

@@ -94,6 +94,8 @@ def sign_tx(
     orchard.outputs_count = len(o_outputs)
     orchard.inputs_count = len(o_inputs)
     orchard.anchor = 32*b"\x00"
+    orchard.enable_spends = True
+    orchard.enable_outputs = True
 
     msg.orchard = orchard
 
@@ -153,41 +155,28 @@ def sign_tx(
 
         elif res.request_type == R.TXORCHARDINPUT:
             txi = o_inputs[res.details.request_index]
-            msg = messages.TransactionType(
-                inputs = [messages.TxInputType(
-                    address_n = txi["address_n"],
-                    amount = txi.get("amount") or 0,
-                    prev_index = 0,  # dump value to satisfy 'required' protobuf field 
-                    prev_hash = b"",
-                    orchard = messages.ZcashOrchardSpend(
-                        note = txi["note"],
-                        hmac = orchard_input_hmacs[res.details.request_index],
-                    )
-                )]
+            msg = messages.ZcashOrchardInput(
+                internal = True,  # TODO
+                amount = txi.get("amount") or 0,
+                note = txi["note"],
+                hmac = orchard_input_hmacs[res.details.request_index],
             )
             print("send o input ", res.details.request_index)
-            res = client.call(messages.TxAck(tx=msg))
+            res = client.call(msg)
 
         elif res.request_type == R.TXORCHARDOUTPUT:
             output = o_outputs[res.details.request_index]
-            msg = messages.TransactionType(
-                outputs = [messages.TxOutputType(
-                    address = output.get("address"),
-                    address_n = output.get("address_n") or None,
-                    amount = output["amount"],
-                    orchard = messages.ZcashOrchardOutput(
-                        decryptable = output["decryptable"],
-                        ovk_address_n = output.get("ovk_address_n") or [],
-                        memo = output.get("memo"),
-                        hmac = orchard_output_hmacs[res.details.request_index],
-                    )
-                )]
+            msg = messages.ZcashOrchardOutput(
+                address = output.get("address"),
+                amount = output["amount"],
+                memo = output.get("memo"),
+                hmac = orchard_output_hmacs[res.details.request_index],
             )
             print("send o output", res.details.request_index)
-            res = client.call(messages.TxAck(tx=msg))
+            res = client.call(msg)
 
         elif res.request_type == R.TXINPUT:
-            print("send t output", res.details.request_index)
+            print("send t input", res.details.request_index)
             msg = messages.TransactionType()
             msg.inputs = [t_inputs[res.details.request_index]]
             res = client.call(messages.TxAck(tx=msg))

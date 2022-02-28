@@ -452,6 +452,8 @@ if not utils.BITCOIN_ONLY:
     import apps.binance.sign_tx
     apps.bitcoin.sign_tx.zcash
     import apps.bitcoin.sign_tx.zcash
+    apps.bitcoin.sign_tx.zcash2
+    import apps.bitcoin.sign_tx.zcash2
     apps.cardano
     import apps.cardano
     apps.cardano.address
@@ -742,8 +744,6 @@ if not utils.BITCOIN_ONLY:
     import apps.zcash.diag
     apps.zcash.get_address
     import apps.zcash.get_address
-    apps.zcash.hasher
-    import apps.zcash.hasher
     apps.zcash.layout
     import apps.zcash.layout
     apps.zcash.orchard
@@ -754,8 +754,14 @@ if not utils.BITCOIN_ONLY:
     import apps.zcash.orchard.get_ivk
     apps.zcash.orchard.keychain
     import apps.zcash.orchard.keychain
+    apps.zcash.orchard.signer
+    import apps.zcash.orchard.signer
+    apps.zcash.sig_hasher
+    import apps.zcash.sig_hasher
     apps.zcash.signer
     import apps.zcash.signer
+
+
 
 # generate full alphabet
 a

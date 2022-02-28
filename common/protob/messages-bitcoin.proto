@@ -221,6 +221,8 @@ message ZcashOrchardBundleInfo {
  * @next TxAckPrevOutput
  * @next TxAckPrevExtraData
  * @next TxAckPaymentRequest
+ * @next ZcashOrchardInput
+ * @next ZcashOrchardOutput
  */
 message TxRequest {
     optional RequestType request_type = 1;              // what should be filled in TxAck message?
@@ -268,7 +270,7 @@ message TxRequest {
             optional string debug = 4;
             optional ZcashHMACType hmac_type = 5;
             enum ZcashHMACType {
-                // reserved 1, 2, 3, 4; // for transparent and Sapling
+                reserved 1, 2, 3, 4; // for transparent and Sapling
                 ORCHARD_INPUT = 5;
                 ORCHARD_OUTPUT = 6;
             }
@@ -335,7 +337,6 @@ message TxAck {
             optional uint32 orig_index = 17;                                    // index of the input in the original transaction (used when creating a replacement transaction)
             optional DecredStakingSpendType decred_staking_spend = 18;          // if not None this holds the type of stake spend: revocation or stake generation
             optional bytes script_pubkey = 19;                                  // scriptPubKey of the previous output spent by this input, only set of EXTERNAL inputs
-            optional ZcashOrchardSpend orchard = 20;
         }
         /**
         * Structure representing compiled transaction output
@@ -361,26 +362,9 @@ message TxAck {
             optional bytes orig_hash = 10;                  // tx_hash of the original transaction where this output was present (used when creating a replacement transaction)
             optional uint32 orig_index = 11;                // index of the output in the original transaction (used when creating a replacement transaction)
             optional uint32 payment_req_index = 12 [(experimental)=true]; // index of the PaymentRequest containing this output
-            optional ZcashOrchardOutput orchard = 13;
         }
     }
 }
-
-message ZcashOrchardSpend {
-    // repeated uint32 z_address_n = 1; // to derive ask (signing) and fvk (shielding)
-    required bytes note = 3;
-    optional bytes hmac = 4;
-}
-
-message ZcashOrchardOutput {
-    optional bool decryptable = 1;
-    repeated uint32 ovk_address_n = 2;
-    //optional string address = 3; // for outgoing transfers
-    //repeated uint32 z_address_n = 4; // for internal transfers
-    //required uint64 amount = 5;
-    optional bytes memo = 6;
-    optional bytes hmac = 7;
-} 
 
 /** Data type for transaction input to be signed.
  *
@@ -406,7 +390,6 @@ message TxInput {
     optional uint32 orig_index = 17;                                    // index of the input in the original transaction (used when creating a replacement transaction)
     optional DecredStakingSpendType decred_staking_spend = 18; 	        // if not None this holds the type of stake spend: revocation or stake generation
     optional bytes script_pubkey = 19;                                  // scriptPubKey of the previous output spent by this input, only set of EXTERNAL inputs
-    optional ZcashOrchardSpend orchard = 20;
 }
 
 /** Data type for transaction output to be signed.
@@ -423,7 +406,6 @@ message TxOutput {
     optional bytes orig_hash = 10;                  // tx_hash of the original transaction where this output was present (used when creating a replacement transaction)
     optional uint32 orig_index = 11;                // index of the output in the original transaction (used when creating a replacement transaction)
     optional uint32 payment_req_index = 12 [(experimental)=true]; // index of the PaymentRequest containing this output
-    optional ZcashOrchardOutput orchard = 13;
 }
 
 /** Data type for metadata about previous transaction which contains the UTXO being spent.

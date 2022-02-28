@@ -15,4 +15,4 @@ async def get_fvk(
 ) -> ZcashFullViewingKey:
     await layout.require_confirm_export_fvk(ctx)
     fvk = keychain.derive(msg.z_address_n).full_viewing_key()
-    return ZcashFullViewingKey(fvk=fvk)
+    return ZcashFullViewingKey(fvk=fvk.raw(internal=msg.internal))

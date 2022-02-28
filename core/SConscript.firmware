@@ -10,7 +10,7 @@ NEW_UI = TREZOR_MODEL == '1' or os.environ.get('NEW_UI', '0') == '1'
 
 FEATURE_FLAGS = {
     "RDI": True,
-    "SECP256K1_ZKP": False,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot)
+    "SECP256K1_ZKP": True,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot)
     "SYSTEM_VIEW": False,
 }
 
@@ -646,6 +646,7 @@ if FROZEN:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/zcash.py'))
 
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/zcash/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/zcash/orchard/*.py'))
 
     source_mpy = env.FrozenModule(source=SOURCE_PY, source_dir=SOURCE_PY_DIR, bitcoin_only=BITCOIN_ONLY)
 

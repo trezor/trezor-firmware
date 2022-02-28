@@ -261,6 +261,8 @@ class MessageType(IntEnum):
     ZcashIncomingViewingKey = 905
     ZcashGetAddress = 906
     ZcashAddress = 907
+    ZcashOrchardInput = 908
+    ZcashOrchardOutput = 909
 
 
 class FailureType(IntEnum):
@@ -1268,46 +1270,6 @@ class TxAck(protobuf.MessageType):
         self.tx = tx
 
 
-class ZcashOrchardSpend(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
-    FIELDS = {
-        3: protobuf.Field("note", "bytes", repeated=False, required=True),
-        4: protobuf.Field("hmac", "bytes", repeated=False, required=False),
-    }
-
-    def __init__(
-        self,
-        *,
-        note: "bytes",
-        hmac: Optional["bytes"] = None,
-    ) -> None:
-        self.note = note
-        self.hmac = hmac
-
-
-class ZcashOrchardOutput(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
-    FIELDS = {
-        1: protobuf.Field("decryptable", "bool", repeated=False, required=False),
-        2: protobuf.Field("ovk_address_n", "uint32", repeated=True, required=False),
-        6: protobuf.Field("memo", "bytes", repeated=False, required=False),
-        7: protobuf.Field("hmac", "bytes", repeated=False, required=False),
-    }
-
-    def __init__(
-        self,
-        *,
-        ovk_address_n: Optional[Sequence["int"]] = None,
-        decryptable: Optional["bool"] = None,
-        memo: Optional["bytes"] = None,
-        hmac: Optional["bytes"] = None,
-    ) -> None:
-        self.ovk_address_n: Sequence["int"] = ovk_address_n if ovk_address_n is not None else []
-        self.decryptable = decryptable
-        self.memo = memo
-        self.hmac = hmac
-
-
 class TxInput(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
@@ -1327,7 +1289,6 @@ class TxInput(protobuf.MessageType):
         17: protobuf.Field("orig_index", "uint32", repeated=False, required=False),
         18: protobuf.Field("decred_staking_spend", "DecredStakingSpendType", repeated=False, required=False),
         19: protobuf.Field("script_pubkey", "bytes", repeated=False, required=False),
-        20: protobuf.Field("orchard", "ZcashOrchardSpend", repeated=False, required=False),
     }
 
     def __init__(
@@ -1349,7 +1310,6 @@ class TxInput(protobuf.MessageType):
         orig_index: Optional["int"] = None,
         decred_staking_spend: Optional["DecredStakingSpendType"] = None,
         script_pubkey: Optional["bytes"] = None,
-        orchard: Optional["ZcashOrchardSpend"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.prev_hash = prev_hash
@@ -1367,7 +1327,6 @@ class TxInput(protobuf.MessageType):
         self.orig_index = orig_index
         self.decred_staking_spend = decred_staking_spend
         self.script_pubkey = script_pubkey
-        self.orchard = orchard
 
 
 class TxOutput(protobuf.MessageType):
@@ -1382,7 +1341,6 @@ class TxOutput(protobuf.MessageType):
         10: protobuf.Field("orig_hash", "bytes", repeated=False, required=False),
         11: protobuf.Field("orig_index", "uint32", repeated=False, required=False),
         12: protobuf.Field("payment_req_index", "uint32", repeated=False, required=False),
-        13: protobuf.Field("orchard", "ZcashOrchardOutput", repeated=False, required=False),
     }
 
     def __init__(
@@ -1397,7 +1355,6 @@ class TxOutput(protobuf.MessageType):
         orig_hash: Optional["bytes"] = None,
         orig_index: Optional["int"] = None,
         payment_req_index: Optional["int"] = None,
-        orchard: Optional["ZcashOrchardOutput"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.amount = amount
@@ -1408,7 +1365,6 @@ class TxOutput(protobuf.MessageType):
         self.orig_hash = orig_hash
         self.orig_index = orig_index
         self.payment_req_index = payment_req_index
-        self.orchard = orchard
 
 
 class PrevTx(protobuf.MessageType):
@@ -1853,7 +1809,6 @@ class TxInputType(protobuf.MessageType):
         17: protobuf.Field("orig_index", "uint32", repeated=False, required=False),
         18: protobuf.Field("decred_staking_spend", "DecredStakingSpendType", repeated=False, required=False),
         19: protobuf.Field("script_pubkey", "bytes", repeated=False, required=False),
-        20: protobuf.Field("orchard", "ZcashOrchardSpend", repeated=False, required=False),
     }
 
     def __init__(
@@ -1875,7 +1830,6 @@ class TxInputType(protobuf.MessageType):
         orig_index: Optional["int"] = None,
         decred_staking_spend: Optional["DecredStakingSpendType"] = None,
         script_pubkey: Optional["bytes"] = None,
-        orchard: Optional["ZcashOrchardSpend"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.prev_hash = prev_hash
@@ -1893,7 +1847,6 @@ class TxInputType(protobuf.MessageType):
         self.orig_index = orig_index
         self.decred_staking_spend = decred_staking_spend
         self.script_pubkey = script_pubkey
-        self.orchard = orchard
 
 
 class TxOutputBinType(protobuf.MessageType):
@@ -1928,7 +1881,6 @@ class TxOutputType(protobuf.MessageType):
         10: protobuf.Field("orig_hash", "bytes", repeated=False, required=False),
         11: protobuf.Field("orig_index", "uint32", repeated=False, required=False),
         12: protobuf.Field("payment_req_index", "uint32", repeated=False, required=False),
-        13: protobuf.Field("orchard", "ZcashOrchardOutput", repeated=False, required=False),
     }
 
     def __init__(
@@ -1943,7 +1895,6 @@ class TxOutputType(protobuf.MessageType):
         orig_hash: Optional["bytes"] = None,
         orig_index: Optional["int"] = None,
         payment_req_index: Optional["int"] = None,
-        orchard: Optional["ZcashOrchardOutput"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.amount = amount
@@ -1954,7 +1905,6 @@ class TxOutputType(protobuf.MessageType):
         self.orig_hash = orig_hash
         self.orig_index = orig_index
         self.payment_req_index = payment_req_index
-        self.orchard = orchard
 
 
 class PaymentRequestMemo(protobuf.MessageType):
@@ -7450,17 +7400,20 @@ class DebugZcashDiagResponse(protobuf.MessageType):
 class ZcashGetFullViewingKey(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 902
     FIELDS = {
-        1: protobuf.Field("coin_name", "string", repeated=False, required=False),
-        2: protobuf.Field("z_address_n", "uint32", repeated=True, required=False),
+        1: protobuf.Field("internal", "bool", repeated=False, required=False),
+        2: protobuf.Field("coin_name", "string", repeated=False, required=False),
+        3: protobuf.Field("z_address_n", "uint32", repeated=True, required=False),
     }
 
     def __init__(
         self,
         *,
         z_address_n: Optional[Sequence["int"]] = None,
+        internal: Optional["bool"] = False,
         coin_name: Optional["str"] = 'Zcash',
     ) -> None:
         self.z_address_n: Sequence["int"] = z_address_n if z_address_n is not None else []
+        self.internal = internal
         self.coin_name = coin_name
 
 
@@ -7481,17 +7434,20 @@ class ZcashFullViewingKey(protobuf.MessageType):
 class ZcashGetIncomingViewingKey(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 904
     FIELDS = {
-        1: protobuf.Field("coin_name", "string", repeated=False, required=False),
-        2: protobuf.Field("z_address_n", "uint32", repeated=True, required=False),
+        1: protobuf.Field("internal", "bool", repeated=False, required=False),
+        2: protobuf.Field("coin_name", "string", repeated=False, required=False),
+        3: protobuf.Field("z_address_n", "uint32", repeated=True, required=False),
     }
 
     def __init__(
         self,
         *,
         z_address_n: Optional[Sequence["int"]] = None,
+        internal: Optional["bool"] = False,
         coin_name: Optional["str"] = 'Zcash',
     ) -> None:
         self.z_address_n: Sequence["int"] = z_address_n if z_address_n is not None else []
+        self.internal = internal
         self.coin_name = coin_name
 
 
@@ -7512,11 +7468,12 @@ class ZcashIncomingViewingKey(protobuf.MessageType):
 class ZcashGetAddress(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 906
     FIELDS = {
-        1: protobuf.Field("t_address_n", "uint32", repeated=True, required=False),
-        2: protobuf.Field("z_address_n", "uint32", repeated=True, required=False),
-        3: protobuf.Field("diversifier_index", "uint64", repeated=False, required=False),
-        4: protobuf.Field("show_display", "bool", repeated=False, required=False),
-        5: protobuf.Field("coin_name", "string", repeated=False, required=False),
+        1: protobuf.Field("internal", "bool", repeated=False, required=False),
+        2: protobuf.Field("t_address_n", "uint32", repeated=True, required=False),
+        3: protobuf.Field("z_address_n", "uint32", repeated=True, required=False),
+        4: protobuf.Field("diversifier_index", "uint64", repeated=False, required=False),
+        5: protobuf.Field("show_display", "bool", repeated=False, required=False),
+        6: protobuf.Field("coin_name", "string", repeated=False, required=False),
     }
 
     def __init__(
@@ -7524,12 +7481,14 @@ class ZcashGetAddress(protobuf.MessageType):
         *,
         t_address_n: Optional[Sequence["int"]] = None,
         z_address_n: Optional[Sequence["int"]] = None,
+        internal: Optional["bool"] = False,
         diversifier_index: Optional["int"] = 0,
         show_display: Optional["bool"] = False,
         coin_name: Optional["str"] = 'Zcash',
     ) -> None:
         self.t_address_n: Sequence["int"] = t_address_n if t_address_n is not None else []
         self.z_address_n: Sequence["int"] = z_address_n if z_address_n is not None else []
+        self.internal = internal
         self.diversifier_index = diversifier_index
         self.show_display = show_display
         self.coin_name = coin_name
@@ -7547,3 +7506,52 @@ class ZcashAddress(protobuf.MessageType):
         address: Optional["str"] = None,
     ) -> None:
         self.address = address
+
+
+class ZcashOrchardInput(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 908
+    FIELDS = {
+        1: protobuf.Field("internal", "bool", repeated=False, required=True),
+        2: protobuf.Field("amount", "uint32", repeated=False, required=True),
+        3: protobuf.Field("note", "bytes", repeated=False, required=True),
+        4: protobuf.Field("hmac", "bytes", repeated=False, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        internal: "bool",
+        amount: "int",
+        note: "bytes",
+        hmac: Optional["bytes"] = None,
+    ) -> None:
+        self.internal = internal
+        self.amount = amount
+        self.note = note
+        self.hmac = hmac
+
+
+class ZcashOrchardOutput(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 909
+    FIELDS = {
+        1: protobuf.Field("internal", "bool", repeated=False, required=False),
+        3: protobuf.Field("address", "string", repeated=False, required=False),
+        5: protobuf.Field("amount", "uint64", repeated=False, required=True),
+        6: protobuf.Field("memo", "bytes", repeated=False, required=False),
+        8: protobuf.Field("hmac", "bytes", repeated=False, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        amount: "int",
+        internal: Optional["bool"] = None,
+        address: Optional["str"] = None,
+        memo: Optional["bytes"] = None,
+        hmac: Optional["bytes"] = None,
+    ) -> None:
+        self.amount = amount
+        self.internal = internal
+        self.address = address
+        self.memo = memo
+        self.hmac = hmac

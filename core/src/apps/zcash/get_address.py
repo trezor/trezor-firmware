@@ -80,4 +80,5 @@ async def get_raw_orchard_address(
     keychain: orchard.keychain.OrchardKeychain
 ) -> bytes:
     """Returns raw Zcash Orchard address."""
-    return keychain.derive(msg.z_address_n).address(msg.diversifier_index)
+    fvk = keychain.derive(msg.z_address_n).full_viewing_key()
+    return fvk.address(msg.diversifier_index, msg.internal)

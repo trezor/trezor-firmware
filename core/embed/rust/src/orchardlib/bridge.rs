@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 use core::array::TryFromSliceError;
 use core::convert::{TryFrom, TryInto};
 use core::ops::{Deref, DerefMut};
@@ -21,6 +22,7 @@ use crate::micropython::{
     buffer::{Buffer, BufferMut},
     dict::Dict,
     gc::Gc,
+    list::List,
     map::Map,
     obj::Obj,
     qstr::Qstr,
@@ -55,13 +57,34 @@ impl<const N: usize> TryFrom<[u8; N]> for Obj {
 }
 
 #[no_mangle]
+pub extern "C" fn orchardlib_shuffle(list: Obj, rng_config: Obj) -> Obj {
+    let block = || {
+        // micropython::List does not have any getter :((
+        // so I use Map instead
+        try_parse_map!(list);
+        let mut items: Vec<Obj> = (0..list.len())
+            .into_iter()
+            .map(|i| list.get_obj(i.try_into()?))
+            .collect::<Result<Vec<Obj>, _>>()?;
+
+        let mut rng = load_rng(rng_config)?;
+        use rand::seq::SliceRandom;
+        items.shuffle(&mut rng);
+        save_rng(rng, rng_config);
+
+        Ok(List::alloc(&items)?.into())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+#[no_mangle]
 pub extern "C" fn orchardlib_sign(sk: Obj, alpha: Obj, sighash: Obj) -> Obj {
     let block = || {
         let alpha: [u8; 32] = alpha.try_into()?;
         let alpha = pallas::Scalar::from_repr(alpha);
         let alpha = Option::from(alpha).ok_or(Error::TypeError)?;
         let sighash: [u8; 32] = sighash.try_into()?;
-        let sk = get_sk(sk)?;
+        let sk = parse_sk(sk)?;
         let ask: SpendAuthorizingKey = (&sk).into();
         let mut rng = trezorhal::random::HardwareRandomness;
         let signature = ask.randomize(&alpha).sign(rng, &sighash);
@@ -94,13 +117,9 @@ fn parse_output_info(
 > {
     //let output_info: &Map = try_into_map!(output_info)?;
     try_parse_map!(output_info);
-    let ovk_flag: bool = output_info.get(Qstr::MP_QSTR_ovk_flag)?.try_into()?;
-    let ovk: Option<OutgoingViewingKey> = if ovk_flag {
-        let fvk_bytes: [u8; 96] = output_info.get(Qstr::MP_QSTR_fvk)?.try_into()?;
-        let fvk = FullViewingKey::from_bytes(&fvk_bytes).ok_or(Error::TypeError)?;
-        Some((&fvk).into())
-    } else {
-        None
+    let ovk: Option<OutgoingViewingKey> = {
+        let ovk_bytes: [u8; 32] = output_info.get(Qstr::MP_QSTR_ovk)?.try_into()?;
+        Some(OutgoingViewingKey::from(ovk_bytes))
     };
     let address: [u8; 43] = output_info.get(Qstr::MP_QSTR_address)?.try_into()?;
     let address = Address::from_raw_address_bytes(&address);
@@ -200,7 +219,7 @@ impl From<TryFromSliceError> for Error {
 }
 
 /// Returns Orchard Full Viewing Key.
-fn get_sk(sk: Obj) -> Result<SpendingKey, Error> {
+fn parse_sk(sk: Obj) -> Result<SpendingKey, Error> {
     let sk_bytes: [u8; 32] = sk.try_into()?;
 
     // SpendingKey is not valid with a negligible probability.
@@ -216,10 +235,24 @@ fn get_sk(sk: Obj) -> Result<SpendingKey, Error> {
     Ok(sk)
 }
 
+fn parse_fvk(fvk: Obj) -> Result<FullViewingKey, Error> {
+    let fvk_bytes: [u8; 96] = fvk.try_into()?;
+    let fvk = FullViewingKey::from_bytes(&fvk_bytes);
+    let fvk = fvk.ok_or_else(|| {
+        let err_msg =
+            unsafe { CStr::from_bytes_with_nul_unchecked("Invalid Full Viewing Key\0".as_bytes()) };
+        Error::ValueError(err_msg)
+    })?;
+
+    Ok(fvk)
+}
+
+// TODO: internal switch
+
 #[no_mangle]
-pub extern "C" fn orchardlib_get_full_viewing_key(sk: Obj) -> Obj {
+pub extern "C" fn orchardlib_derive_full_viewing_key(spending_key: Obj, internal: Obj) -> Obj {
     let block = || {
-        let sk = get_sk(sk)?;
+        let sk = parse_sk(spending_key)?;
         let fvk: FullViewingKey = (&sk).into();
         let fvk_bytes = fvk.to_bytes();
         let fvk_obj = Obj::try_from(&fvk_bytes[..])?;
@@ -229,10 +262,24 @@ pub extern "C" fn orchardlib_get_full_viewing_key(sk: Obj) -> Obj {
 }
 
 #[no_mangle]
-pub extern "C" fn orchardlib_get_incoming_viewing_key(sk: Obj) -> Obj {
+pub extern "C" fn orchardlib_derive_internal_full_viewing_key(full_viewing_key: Obj) -> Obj {
     let block = || {
-        let sk = get_sk(sk)?;
-        let fvk: FullViewingKey = (&sk).into();
+        let fvk: FullViewingKey = parse_fvk(full_viewing_key)?;
+        // TODO
+        let fvk_bytes = fvk.to_bytes();
+        let fvk_obj = Obj::try_from(&fvk_bytes[..])?;
+        Ok(fvk_obj)
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+#[no_mangle]
+pub extern "C" fn orchardlib_derive_incoming_viewing_key(
+    full_viewing_key: Obj,
+    internal: Obj,
+) -> Obj {
+    let block = || {
+        let fvk: FullViewingKey = parse_fvk(full_viewing_key)?;
         let ivk: IncomingViewingKey = (&fvk).into();
         let ivk_bytes = ivk.to_bytes();
         let ivk_obj = Obj::try_from(&ivk_bytes[..])?;
@@ -242,10 +289,28 @@ pub extern "C" fn orchardlib_get_incoming_viewing_key(sk: Obj) -> Obj {
 }
 
 #[no_mangle]
-pub extern "C" fn orchardlib_get_address(sk: Obj, diversifier_index: Obj) -> Obj {
+pub extern "C" fn orchardlib_derive_outgoing_viewing_key(
+    full_viewing_key: Obj,
+    internal: Obj,
+) -> Obj {
     let block = || {
-        let sk = get_sk(sk)?;
-        let fvk: FullViewingKey = (&sk).into();
+        let fvk: FullViewingKey = parse_fvk(full_viewing_key)?;
+        let ovk: OutgoingViewingKey = (&fvk).into();
+        let ovk_bytes: [u8; 32] = ovk.as_ref().clone();
+        let ovk_obj = Obj::try_from(&ovk_bytes[..])?;
+        Ok(ovk_obj)
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+#[no_mangle]
+pub extern "C" fn orchardlib_derive_address(
+    full_viewing_key: Obj,
+    diversifier_index: Obj,
+    internal: Obj,
+) -> Obj {
+    let block = || {
+        let fvk: FullViewingKey = parse_fvk(full_viewing_key)?;
         let diversifier_index: u64 = diversifier_index.try_into()?;
         let addr = fvk.address_at(diversifier_index);
         let addr_bytes = addr.to_raw_address_bytes();

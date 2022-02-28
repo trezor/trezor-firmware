@@ -150,11 +150,11 @@ def by_name(name: str) -> CoinInfo:
 % endfor
     if not utils.BITCOIN_ONLY:
 % for coin in coins_alt:
-        if name == ${black_repr(coin["coin_name"])}:
-            return CoinInfo(
-                % for attr, func in ATTRIBUTES:
-                ${attr}=${func(coin[attr])},
-                % endfor
-            )
+    if name == ${black_repr(coin["coin_name"])}:
+        return CoinInfo(
+            % for attr, func in ATTRIBUTES:
+            ${attr}=${func(coin[attr])},
+            % endfor
+        )
 % endfor
     raise ValueError  # Unknown coin name

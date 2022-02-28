@@ -1,5 +1,3 @@
-from typing import TYPE_CHECKING
-
 from trezor.crypto.hashlib import blake2b
 from trezor.utils import HashWriter, empty_bytearray
 from apps.common import writers
@@ -18,15 +16,19 @@ from apps.bitcoin.common import SigHashType
 
 from trezor import log
 
+from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from trezor.messages import TxInput, TxOutput
+
 
 def write_hash(w: Writer, hash: bytes):
     write_bytes_fixed(w, hash, TX_HASH_SIZE)
 
+
 def write_prevout(w: Writer, txi: TxInput):
     write_bytes_reversed(w, txi.prev_hash, TX_HASH_SIZE)
     write_uint32(w, txi.prev_index)
+
 
 def write_sint64(w: Writer, n: int):
     """Writes signed 64-bit integer"""
@@ -37,43 +39,7 @@ def write_sint64(w: Writer, n: int):
         write_uint64(w, 0x010000000000000000 + n)
 
 
-class ZcashHasherWrapper:
-    def __init__(self, inner):
-        self.inner = inner
-
-    def unwrap(self):
-        return self.inner
-
-    def add_input(self, txi: TxInput, script_pubkey: bytes):
-        self.inner.transparent.add_input(txi, script_pubkey)
-
-    def add_output(self, txo: TxOutput, script_pubkey: bytes):
-        self.inner.transparent.add_output(txo, script_pubkey)
-
-    def hash143(
-        self,
-        txi: TxInput,
-        public_keys: Sequence[bytes | memoryview],
-        threshold: int,
-        tx: SignTx | PrevTx,
-        coin: coininfo.CoinInfo,
-        hash_type: int,
-    ) -> bytes:
-        txin_sig_digest = get_txin_sig_digest(
-            txi, public_keys, threshold, tx, coin, hash_type,
-        )
-        return self.inner.signature_digest(txin_sig_digest)
-
-    def hash341(
-        self,
-        i: int,
-        tx: SignTx | PrevTx,
-        sighash_type: SigHashType,
-    ) -> bytes:
-        raise NotImplementedError
-
-
-class ZcashHasher:
+class ZcashSigHasher:
     def __init__(self):
         self.header = HeaderHasher()
         self.transparent = TransparentHasher()
@@ -81,12 +47,10 @@ class ZcashHasher:
         self.orchard = OrchardHasher()
 
         self.tx_hash_person = None
-
-    def wrap(self):
-        return ZcashHasherWrapper(self)
+        self.initialized = False
 
     def initialize(self, tx):
-        """Initialize ZcashHasher with transaction data."""
+        """Initialize ZcashHasher with a transaction data."""
         self.header.initialize(tx)
 
         tx_hash_person = empty_bytearray(16)
@@ -94,8 +58,12 @@ class ZcashHasher:
         write_uint32(tx_hash_person, tx.branch_id)
         self.tx_hash_person = bytes(tx_hash_person)
 
+        self.initialized = True
+
     def txid_digest(self):
-        """Returns transaction identifier.""" 
+        """Returns the transaction identifier."""
+        assert self.initialized
+
         h = HashWriter(blake2b(outlen=32, personal=self.tx_hash_person))
 
         write_hash(h, self.header.digest())       # T.1: header_digest       (32-byte hash output)
@@ -106,7 +74,8 @@ class ZcashHasher:
         return h.get_digest()
 
     def signature_digest(self, txin_sig_digest=None):
-        """Returns transaction signature digest."""
+        """Returns the transaction signature digest."""
+        assert self.initialized
 
         h = HashWriter(blake2b(outlen=32, personal=self.tx_hash_person))
 

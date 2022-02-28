@@ -59,23 +59,17 @@ class ExtendedSpendingKey:
             state = state.child(digit)
         return state
 
+    def clone(self):
+        return ExtendedSpendingKey(self.sk, self.c)
+
     def spending_key(self):
         """Returns the Spending Key."""
         return self.sk
 
     def full_viewing_key(self):
         """Returns the Full Vieving Key."""
-        return orchardlib.get_full_viewing_key(self.sk)
-
-    def incoming_viewing_key(self):
-        """Returns the Incoming Vieving Key."""
-        return orchardlib.get_incoming_viewing_key(self.sk)
-
-    def address(self, diversifier=0):
-        return orchardlib.get_address(self.sk, diversifier)
-
-    def clone(self):
-        return ExtendedSpendingKey(self.sk, self.c)
+        fvk_bytes = orchardlib.derive_full_viewing_key(self.sk, False)  # TODO: remove internal
+        return FullViewingKey(fvk_bytes)
 
     @staticmethod
     def get_master(seed):
@@ -85,6 +79,29 @@ class ExtendedSpendingKey:
             data=seed
         ).digest()
         return ExtendedSpendingKey(sk=I[:32], c=I[32:])
+
+
+class FullViewingKey:
+    """Orchard Full Vieving Key."""
+    def __init__(self, fvk):
+        self.fvk = fvk
+
+    def raw(self, internal=False):
+        if internal:
+            return orchardlib.derive_internal_full_viewing_key(self.fvk)
+        else:
+            return self.fvk
+
+    def incoming_viewing_key(self, internal=False):
+        """Returns the Incoming Vieving Key."""
+        return orchardlib.derive_incoming_viewing_key(self.fvk, internal)
+
+    def outgoing_viewing_key(self, internal=False):
+        """Returns the Outgoing Vieving Key."""
+        return orchardlib.derive_outgoing_viewing_key(self.fvk, internal)
+
+    def address(self, diversifier=0, internal=False):
+        return orchardlib.derive_address(self.fvk, diversifier, internal)
 
 
 class OrchardKeychain(Keychain):

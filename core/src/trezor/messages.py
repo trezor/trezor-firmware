@@ -659,42 +659,6 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TxRequest"]:
             return isinstance(msg, cls)
 
-    class ZcashOrchardSpend(protobuf.MessageType):
-        note: "bytes"
-        hmac: "bytes | None"
-
-        def __init__(
-            self,
-            *,
-            note: "bytes",
-            hmac: "bytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["ZcashOrchardSpend"]:
-            return isinstance(msg, cls)
-
-    class ZcashOrchardOutput(protobuf.MessageType):
-        decryptable: "bool | None"
-        ovk_address_n: "list[int]"
-        memo: "bytes | None"
-        hmac: "bytes | None"
-
-        def __init__(
-            self,
-            *,
-            ovk_address_n: "list[int] | None" = None,
-            decryptable: "bool | None" = None,
-            memo: "bytes | None" = None,
-            hmac: "bytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["ZcashOrchardOutput"]:
-            return isinstance(msg, cls)
-
     class TxInput(protobuf.MessageType):
         address_n: "list[int]"
         prev_hash: "bytes"
@@ -712,7 +676,6 @@ if TYPE_CHECKING:
         orig_index: "int | None"
         decred_staking_spend: "DecredStakingSpendType | None"
         script_pubkey: "bytes | None"
-        orchard: "ZcashOrchardSpend | None"
 
         def __init__(
             self,
@@ -733,7 +696,6 @@ if TYPE_CHECKING:
             orig_index: "int | None" = None,
             decred_staking_spend: "DecredStakingSpendType | None" = None,
             script_pubkey: "bytes | None" = None,
-            orchard: "ZcashOrchardSpend | None" = None,
         ) -> None:
             pass
 
@@ -751,7 +713,6 @@ if TYPE_CHECKING:
         orig_hash: "bytes | None"
         orig_index: "int | None"
         payment_req_index: "int | None"
-        orchard: "ZcashOrchardOutput | None"
 
         def __init__(
             self,
@@ -765,7 +726,6 @@ if TYPE_CHECKING:
             orig_hash: "bytes | None" = None,
             orig_index: "int | None" = None,
             payment_req_index: "int | None" = None,
-            orchard: "ZcashOrchardOutput | None" = None,
         ) -> None:
             pass
 
@@ -5700,6 +5660,7 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ZcashGetFullViewingKey(protobuf.MessageType):
+        internal: "bool"
         coin_name: "str"
         z_address_n: "list[int]"
 
@@ -5707,6 +5668,7 @@ if TYPE_CHECKING:
             self,
             *,
             z_address_n: "list[int] | None" = None,
+            internal: "bool | None" = None,
             coin_name: "str | None" = None,
         ) -> None:
             pass
@@ -5730,6 +5692,7 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ZcashGetIncomingViewingKey(protobuf.MessageType):
+        internal: "bool"
         coin_name: "str"
         z_address_n: "list[int]"
 
@@ -5737,6 +5700,7 @@ if TYPE_CHECKING:
             self,
             *,
             z_address_n: "list[int] | None" = None,
+            internal: "bool | None" = None,
             coin_name: "str | None" = None,
         ) -> None:
             pass
@@ -5760,6 +5724,7 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ZcashGetAddress(protobuf.MessageType):
+        internal: "bool"
         t_address_n: "list[int]"
         z_address_n: "list[int]"
         diversifier_index: "int"
@@ -5771,6 +5736,7 @@ if TYPE_CHECKING:
             *,
             t_address_n: "list[int] | None" = None,
             z_address_n: "list[int] | None" = None,
+            internal: "bool | None" = None,
             diversifier_index: "int | None" = None,
             show_display: "bool | None" = None,
             coin_name: "str | None" = None,
@@ -5793,4 +5759,46 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["ZcashAddress"]:
+            return isinstance(msg, cls)
+
+    class ZcashOrchardInput(protobuf.MessageType):
+        internal: "bool"
+        amount: "int"
+        note: "bytes"
+        hmac: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            internal: "bool",
+            amount: "int",
+            note: "bytes",
+            hmac: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["ZcashOrchardInput"]:
+            return isinstance(msg, cls)
+
+    class ZcashOrchardOutput(protobuf.MessageType):
+        internal: "bool | None"
+        address: "str | None"
+        amount: "int"
+        memo: "bytes | None"
+        hmac: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            amount: "int",
+            internal: "bool | None" = None,
+            address: "str | None" = None,
+            memo: "bytes | None" = None,
+            hmac: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["ZcashOrchardOutput"]:
             return isinstance(msg, cls)
