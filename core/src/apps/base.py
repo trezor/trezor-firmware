@@ -176,7 +176,7 @@ async def handle_DoPreauthorized(
     if handler is None:
         return wire.unexpected_message()
 
-    return await handler(ctx, req, authorization.get())  # type: ignore
+    return await handler(ctx, req, authorization.get())  # type: ignore [Expected 2 positional arguments]
 
 
 async def handle_CancelAuthorization(

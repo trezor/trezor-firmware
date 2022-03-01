@@ -78,7 +78,7 @@ def xpub_deserialize(xpubstr: str) -> Tuple[str, messages.HDNodeType]:
         fingerprint=data.fingerprint,
         child_num=data.child_num,
         chain_code=data.chain_code,
-        public_key=public_key,  # type: ignore ["Unknown | None" cannot be assigned to parameter "public_key"]
+        public_key=public_key,  # type: ignore [Argument of type "Unknown | None" cannot be assigned to parameter "public_key" of type "bytes"]
         private_key=private_key,
     )
 

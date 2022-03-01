@@ -199,55 +199,55 @@ class UiConfirmNonDefaultLocktime(UiConfirm):
         )
 
 
-def confirm_output(output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[None]:  # type: ignore
+def confirm_output(output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[None]:  # type: ignore [awaitable-is-generator]
     return (yield UiConfirmOutput(output, coin, amount_unit))
 
 
-def confirm_decred_sstx_submission(output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[None]:  # type: ignore
+def confirm_decred_sstx_submission(output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[None]:  # type: ignore [awaitable-is-generator]
     return (yield UiConfirmDecredSSTXSubmission(output, coin, amount_unit))
 
 
-def confirm_payment_request(payment_req: TxAckPaymentRequest, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[Any]:  # type: ignore
+def confirm_payment_request(payment_req: TxAckPaymentRequest, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]
     return (yield UiConfirmPaymentRequest(payment_req, coin, amount_unit))
 
 
-def confirm_replacement(description: str, txid: bytes) -> Awaitable[Any]:  # type: ignore
+def confirm_replacement(description: str, txid: bytes) -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]
     return (yield UiConfirmReplacement(description, txid))
 
 
-def confirm_modify_output(txo: TxOutput, orig_txo: TxOutput, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[Any]:  # type: ignore
+def confirm_modify_output(txo: TxOutput, orig_txo: TxOutput, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]
     return (yield UiConfirmModifyOutput(txo, orig_txo, coin, amount_unit))
 
 
-def confirm_modify_fee(user_fee_change: int, total_fee_new: int, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[Any]:  # type: ignore
+def confirm_modify_fee(user_fee_change: int, total_fee_new: int, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]
     return (yield UiConfirmModifyFee(user_fee_change, total_fee_new, coin, amount_unit))
 
 
-def confirm_total(spending: int, fee: int, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[None]:  # type: ignore
+def confirm_total(spending: int, fee: int, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[None]:  # type: ignore [awaitable-is-generator]
     return (yield UiConfirmTotal(spending, fee, coin, amount_unit))
 
 
-def confirm_joint_total(spending: int, total: int, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[Any]:  # type: ignore
+def confirm_joint_total(spending: int, total: int, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]
     return (yield UiConfirmJointTotal(spending, total, coin, amount_unit))
 
 
-def confirm_feeoverthreshold(fee: int, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[Any]:  # type: ignore
+def confirm_feeoverthreshold(fee: int, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]
     return (yield UiConfirmFeeOverThreshold(fee, coin, amount_unit))
 
 
-def confirm_change_count_over_threshold(change_count: int) -> Awaitable[Any]:  # type: ignore
+def confirm_change_count_over_threshold(change_count: int) -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]
     return (yield UiConfirmChangeCountOverThreshold(change_count))
 
 
-def confirm_foreign_address(address_n: list) -> Awaitable[Any]:  # type: ignore
+def confirm_foreign_address(address_n: list) -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]
     return (yield UiConfirmForeignAddress(address_n))
 
 
-def confirm_nondefault_locktime(lock_time: int, lock_time_disabled: bool) -> Awaitable[Any]:  # type: ignore
+def confirm_nondefault_locktime(lock_time: int, lock_time_disabled: bool) -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]
     return (yield UiConfirmNonDefaultLocktime(lock_time, lock_time_disabled))
 
 
-def request_tx_meta(tx_req: TxRequest, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[PrevTx]:  # type: ignore
+def request_tx_meta(tx_req: TxRequest, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[PrevTx]:  # type: ignore [awaitable-is-generator]
     assert tx_req.details is not None
     tx_req.request_type = RequestType.TXMETA
     tx_req.details.tx_hash = tx_hash
@@ -258,7 +258,7 @@ def request_tx_meta(tx_req: TxRequest, coin: CoinInfo, tx_hash: bytes | None = N
 
 def request_tx_extra_data(
     tx_req: TxRequest, offset: int, size: int, tx_hash: bytes | None = None
-) -> Awaitable[bytearray]:  # type: ignore
+) -> Awaitable[bytearray]:  # type: ignore [awaitable-is-generator]
     assert tx_req.details is not None
     tx_req.request_type = RequestType.TXEXTRADATA
     tx_req.details.extra_data_offset = offset
@@ -269,7 +269,7 @@ def request_tx_extra_data(
     return ack.tx.extra_data_chunk
 
 
-def request_tx_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[TxInput]:  # type: ignore
+def request_tx_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[TxInput]:  # type: ignore [awaitable-is-generator]
     assert tx_req.details is not None
     if tx_hash:
         tx_req.request_type = RequestType.TXORIGINPUT
@@ -282,7 +282,7 @@ def request_tx_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes |
     return sanitize_tx_input(ack.tx.input, coin)
 
 
-def request_tx_prev_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[PrevInput]:  # type: ignore
+def request_tx_prev_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[PrevInput]:  # type: ignore [awaitable-is-generator]
     assert tx_req.details is not None
     tx_req.request_type = RequestType.TXINPUT
     tx_req.details.request_index = i
@@ -292,7 +292,7 @@ def request_tx_prev_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: by
     return sanitize_tx_prev_input(ack.tx.input, coin)
 
 
-def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[TxOutput]:  # type: ignore
+def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[TxOutput]:  # type: ignore [awaitable-is-generator]
     assert tx_req.details is not None
     if tx_hash:
         tx_req.request_type = RequestType.TXORIGOUTPUT
@@ -305,7 +305,7 @@ def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes 
     return sanitize_tx_output(ack.tx.output, coin)
 
 
-def request_tx_prev_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[PrevOutput]:  # type: ignore
+def request_tx_prev_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[PrevOutput]:  # type: ignore [awaitable-is-generator]
     assert tx_req.details is not None
     tx_req.request_type = RequestType.TXOUTPUT
     tx_req.details.request_index = i
@@ -316,7 +316,7 @@ def request_tx_prev_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: b
     return ack.tx.output
 
 
-def request_payment_req(tx_req: TxRequest, i: int) -> Awaitable[TxAckPaymentRequest]:  # type: ignore
+def request_payment_req(tx_req: TxRequest, i: int) -> Awaitable[TxAckPaymentRequest]:  # type: ignore [awaitable-is-generator]
     assert tx_req.details is not None
     tx_req.request_type = RequestType.TXPAYMENTREQ
     tx_req.details.request_index = i
@@ -325,7 +325,7 @@ def request_payment_req(tx_req: TxRequest, i: int) -> Awaitable[TxAckPaymentRequ
     return sanitize_payment_req(ack)
 
 
-def request_tx_finish(tx_req: TxRequest) -> Awaitable[None]:  # type: ignore
+def request_tx_finish(tx_req: TxRequest) -> Awaitable[None]:  # type: ignore [awaitable-is-generator]
     tx_req.request_type = RequestType.TXFINISHED
     yield None, tx_req
     _clear_tx_request(tx_req)
@@ -344,7 +344,7 @@ def _clear_tx_request(tx_req: TxRequest) -> None:
     tx_req.serialized.signature_index = None
     # typechecker thinks serialized_tx is `bytes`, which is immutable
     # we know that it is `bytearray` in reality
-    tx_req.serialized.serialized_tx[:] = bytes()  # type: ignore
+    tx_req.serialized.serialized_tx[:] = bytes()  # type: ignore ["__setitem__" method not defined on type "bytes"]
 
 
 # Data sanitizers

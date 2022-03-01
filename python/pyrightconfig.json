@@ -6,6 +6,7 @@
     ],
     "pythonVersion": "3.6",
     "typeCheckingMode": "basic",
+    "enableTypeIgnoreComments": false,
     "reportMissingImports": false,
     "reportUntypedFunctionDecorator": true,
     "reportUntypedClassDecorator": true,

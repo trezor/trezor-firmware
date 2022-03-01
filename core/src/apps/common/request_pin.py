@@ -106,8 +106,7 @@ async def verify_user_pin(
         raise RuntimeError
 
     while retry:
-        # request_pin_on_device possibly unbound
-        pin = await request_pin_on_device(  # type: ignore
+        pin = await request_pin_on_device(  # type: ignore ["request_pin_on_device" is possibly unbound]
             ctx, "Wrong PIN, enter again", config.get_pin_rem(), allow_cancel
         )
         if config.unlock(pin, salt):

@@ -105,9 +105,9 @@ class Swipe(ui.Component):
         raise ui.Result(swipe)
 
     def __await__(self) -> Generator:
-        return self.__iter__()  # type: ignore
+        return self.__iter__()  # type: ignore [Expression of type "Task" cannot be assigned to return type "Generator[Unknown, Unknown, Unknown]"]
 
-    def __iter__(self) -> loop.Task:  # type: ignore
+    def __iter__(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
         try:
             touch = loop.wait(io.TOUCH)
             while True:

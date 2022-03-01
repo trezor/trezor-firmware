@@ -282,7 +282,7 @@ def get_address_bytes_unsafe(address: str) -> bytes:
 
 
 def _get_address_type(address: bytes) -> CardanoAddressType:
-    return address[0] >> 4  # type: ignore
+    return address[0] >> 4  # type: ignore [int-into-enum]
 
 
 def _validate_shelley_address(

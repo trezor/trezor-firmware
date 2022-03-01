@@ -45,7 +45,7 @@ if __debug__:
         display.refresh()
 
 else:
-    refresh = display.refresh  # type: ignore
+    refresh = display.refresh  # type: ignore [obscured-by-same-name]
 
 
 # in both debug and production, emulator needs to draw the screen explicitly
@@ -115,7 +115,7 @@ async def click() -> Pos:
         ev, *pos = await touch
         if ev == io.TOUCH_END:
             break
-    return pos  # type: ignore
+    return pos  # type: ignore [Expression of type "list[Unknown]" cannot be assigned to return type "Pos"]
 
 
 def backlight_fade(val: int, delay: int = 14000, step: int = 15) -> None:
@@ -360,7 +360,7 @@ class Layout(Component):
     if TYPE_CHECKING:
 
         def __await__(self) -> Generator:
-            return self.__iter__()  # type: ignore
+            return self.__iter__()  # type: ignore [Expression of type "Coroutine[Any, Any, Any]" cannot be assigned to return type "Generator[Unknown, Unknown, Unknown]"]
 
     else:
         __await__ = __iter__
@@ -427,7 +427,7 @@ class Layout(Component):
         refresh()
         backlight_fade(self.BACKLIGHT_LEVEL)
 
-    def handle_rendering(self) -> loop.Task:  # type: ignore
+    def handle_rendering(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
         """Task that is rendering the layout in a busy loop."""
         self._before_render()
         sleep = self.RENDER_SLEEP
@@ -440,6 +440,6 @@ class Layout(Component):
             self.dispatch(RENDER, 0, 0)
 
 
-def wait_until_layout_is_running() -> Awaitable[None]:  # type: ignore
+def wait_until_layout_is_running() -> Awaitable[None]:  # type: ignore [awaitable-is-generator]
     while not layout_chan.takers:
         yield

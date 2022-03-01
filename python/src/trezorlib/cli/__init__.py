@@ -81,7 +81,7 @@ class TrezorConnection:
             # It is alright to return just the class object instead of instance,
             # as the ScriptUI class object itself is the implementation of TrezorClientUI
             # (ScriptUI is just a set of staticmethods)
-            return ScriptUI  # type: ignore [Expression of type "Type[ScriptUI]" cannot be assigned to return type "TrezorClientUI"]
+            return ScriptUI
         else:
             return ClickUI(passphrase_on_host=self.passphrase_on_host)
 
@@ -149,4 +149,4 @@ def with_client(func: "Callable[Concatenate[TrezorClient, P], R]") -> "Callable[
 
     # the return type of @click.pass_obj is improperly specified and pyright doesn't
     # understand that it converts f(obj, *args, **kwargs) to f(*args, **kwargs)
-    return trezorctl_command_with_client  # type: ignore
+    return trezorctl_command_with_client  # type: ignore [cannot be assigned to return type]

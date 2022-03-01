@@ -86,7 +86,7 @@ async def _operations(ctx: Context, w: Writer, num_operations: int) -> None:
     writers.write_uint32(w, num_operations)
     for _ in range(num_operations):
         op = await ctx.call_any(StellarTxOpRequest(), *consts.op_wire_types)
-        await process_operation(ctx, w, op)  # type: ignore
+        await process_operation(ctx, w, op)  # type: ignore [Argument of type "MessageType" cannot be assigned to parameter "op" of type "StellarMessageType" in function "process_operation"]
 
 
 async def _memo(ctx: Context, w: Writer, msg: StellarSignTx) -> None:

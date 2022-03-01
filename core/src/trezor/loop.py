@@ -147,7 +147,7 @@ def run() -> None:
             # timeout occurred, run the first scheduled task
             if _queue:
                 _queue.pop(task_entry)
-                _step(task_entry[1], task_entry[2])  # type: ignore
+                _step(task_entry[1], task_entry[2])  # type: ignore [Argument of type "int" cannot be assigned to parameter "task" of type "Task" in function "_step"]
                 # error: Argument 1 to "_step" has incompatible type "int"; expected "Coroutine[Any, Any, Any]"
                 # rationale: We use untyped lists here, because that is what the C API supports.
 
@@ -323,7 +323,7 @@ class race(Syscall):
                 # child is a layout -- type-wise, it is an Awaitable, but
                 # implementation-wise it is an Iterable and we know that its __iter__
                 # will return a Generator.
-                child_task = child.__iter__()  # type: ignore
+                child_task = child.__iter__()  # type: ignore [Cannot access member "__iter__" for type "Awaitable[Unknown]";;Cannot access member "__iter__" for type "Coroutine[Unknown, Unknown, Unknown]"]
             schedule(child_task, None, None, finalizer)
             scheduled.append(child_task)
 
@@ -347,7 +347,7 @@ class race(Syscall):
                 self.exit(task)
             schedule(self.callback, result)
 
-    def __iter__(self) -> Task:  # type: ignore
+    def __iter__(self) -> Task:  # type: ignore [awaitable-is-generator]
         try:
             return (yield self)
         except:  # noqa: E722
@@ -411,7 +411,7 @@ class chan:
         self.putters: list[tuple[Task | None, Any]] = []
         self.takers: list[Task] = []
 
-    def put(self, value: Any) -> Awaitable[None]:  # type: ignore
+    def put(self, value: Any) -> Awaitable[None]:  # type: ignore [awaitable-is-generator]
         put = chan.Put(self, value)
         try:
             return (yield put)
@@ -421,7 +421,7 @@ class chan:
                 self.putters.remove(entry)
             raise
 
-    def take(self) -> Awaitable[Any]:  # type: ignore
+    def take(self) -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]
         take = chan.Take(self)
         try:
             return (yield take)
@@ -521,7 +521,7 @@ class spawn(Syscall):
         if self.finalizer_callback is not None:
             self.finalizer_callback(self)
 
-    def __iter__(self) -> Task:  # type: ignore
+    def __iter__(self) -> Task:  # type: ignore [awaitable-is-generator]
         if self.finished:
             # exit immediately if we already have a return value
             if isinstance(self.return_value, BaseException):

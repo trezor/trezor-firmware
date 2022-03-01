@@ -153,7 +153,7 @@ if TYPE_CHECKING:
 
     class HashContextInitable(HashContext, Protocol):
         def __init__(  # pylint: disable=super-init-not-called
-            self, __data: bytes = None
+            self, __data: bytes | None = None
         ) -> None:
             ...
 
