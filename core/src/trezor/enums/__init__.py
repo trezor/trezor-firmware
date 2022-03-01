@@ -3,6 +3,23 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from enum import IntEnum
 
+    class BinanceOrderType(IntEnum):
+        OT_UNKNOWN = 0
+        MARKET = 1
+        LIMIT = 2
+        OT_RESERVED = 3
+
+    class BinanceOrderSide(IntEnum):
+        SIDE_UNKNOWN = 0
+        BUY = 1
+        SELL = 2
+
+    class BinanceTimeInForce(IntEnum):
+        TIF_UNKNOWN = 0
+        GTE = 1
+        TIF_RESERVED = 2
+        IOC = 3
+
     class MessageType(IntEnum):
         Initialize = 0
         Ping = 1
@@ -228,23 +245,6 @@ if TYPE_CHECKING:
         WebAuthnCredentials = 801
         WebAuthnAddResidentCredential = 802
         WebAuthnRemoveResidentCredential = 803
-
-    class BinanceOrderType(IntEnum):
-        OT_UNKNOWN = 0
-        MARKET = 1
-        LIMIT = 2
-        OT_RESERVED = 3
-
-    class BinanceOrderSide(IntEnum):
-        SIDE_UNKNOWN = 0
-        BUY = 1
-        SELL = 2
-
-    class BinanceTimeInForce(IntEnum):
-        TIF_UNKNOWN = 0
-        GTE = 1
-        TIF_RESERVED = 2
-        IOC = 3
 
     class FailureType(IntEnum):
         UnexpectedMessage = 1
