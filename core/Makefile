@@ -113,8 +113,10 @@ mypy: ## deprecated; use "make typecheck"
 	@echo "mypy is deprecated; use 'make typecheck'"
 	make typecheck
 
-typecheck:
-	pyright
+typecheck: pyright
+
+pyright:
+	python ./../tools/pyright_tool.py --dir core
 
 clippy:
 	cd embed/rust ; cargo clippy

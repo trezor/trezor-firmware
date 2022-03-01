@@ -134,7 +134,7 @@ def get_backup_type() -> BackupType:
     ):
         # Invalid backup type
         raise RuntimeError
-    return backup_type  # type: ignore
+    return backup_type  # type: ignore [int-into-enum]
 
 
 def is_passphrase_enabled() -> bool:
@@ -310,7 +310,7 @@ def safety_check_level() -> StorageSafetyCheckLevel:
     if level not in (SAFETY_CHECK_LEVEL_STRICT, SAFETY_CHECK_LEVEL_PROMPT):
         return _DEFAULT_SAFETY_CHECK_LEVEL
     else:
-        return level  # type: ignore
+        return level  # type: ignore [int-into-enum]
 
 
 # do not use this function directly, see apps.common.safety_checks instead

@@ -280,7 +280,7 @@ class DebugLink:
 class NullDebugLink(DebugLink):
     def __init__(self) -> None:
         # Ignoring type error as self.transport will not be touched while using NullDebugLink
-        super().__init__(None)  # type: ignore ["None" cannot be assigned to parameter of type "Transport"]
+        super().__init__(None)  # type: ignore [Argument of type "None" cannot be assigned to parameter "transport"]
 
     def open(self) -> None:
         pass

@@ -27,7 +27,7 @@ class _RustLayout(ui.Layout):
     def create_tasks(self) -> tuple[loop.Task, ...]:
         return self.handle_input_and_rendering(), self.handle_timers()
 
-    def handle_input_and_rendering(self) -> loop.Task:  # type: ignore
+    def handle_input_and_rendering(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
         touch = loop.wait(io.TOUCH)
         ui.display.clear()
         self.layout.paint()
@@ -44,7 +44,7 @@ class _RustLayout(ui.Layout):
             if msg is not None:
                 raise ui.Result(msg)
 
-    def handle_timers(self) -> loop.Task:  # type: ignore
+    def handle_timers(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
         while True:
             # Using `yield` instead of `await` to avoid allocations.
             token = yield self.timer

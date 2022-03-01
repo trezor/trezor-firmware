@@ -214,8 +214,8 @@ if __debug__:
         return Success()
 
     def boot() -> None:
-        workflow_handlers.register(MessageType.DebugLinkDecision, dispatch_DebugLinkDecision)  # type: ignore
-        workflow_handlers.register(MessageType.DebugLinkGetState, dispatch_DebugLinkGetState)  # type: ignore
+        workflow_handlers.register(MessageType.DebugLinkDecision, dispatch_DebugLinkDecision)  # type: ignore [Argument of type "(ctx: Context, msg: DebugLinkDecision) -> Coroutine[Any, Any, None]" cannot be assigned to parameter "handler" of type "Handler[Msg@register]" in function "register"]
+        workflow_handlers.register(MessageType.DebugLinkGetState, dispatch_DebugLinkGetState)  # type: ignore [Argument of type "(ctx: Context, msg: DebugLinkGetState) -> Coroutine[Any, Any, DebugLinkState | None]" cannot be assigned to parameter "handler" of type "Handler[Msg@register]" in function "register"]
         workflow_handlers.register(
             MessageType.DebugLinkReseedRandom, dispatch_DebugLinkReseedRandom
         )

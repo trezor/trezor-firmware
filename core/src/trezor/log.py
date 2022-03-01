@@ -65,11 +65,11 @@ def exception(name: str, exc: BaseException) -> None:
             name,
             DEBUG,
             "ui.Result: %s",
-            exc.value,  # type: ignore[attr-defined] # noqa: F821
+            exc.value,  # type: ignore[Cannot access member "value" for type "BaseException"]
         )
     elif exc.__class__.__name__ == "Cancelled":
         _log(name, DEBUG, "ui.Cancelled")
     else:
         _log(name, ERROR, "exception:")
         # since mypy 0.770 we cannot override sys, so print_exception is unknown
-        sys.print_exception(exc)  # type: ignore
+        sys.print_exception(exc)  # type: ignore ["print_exception" is not a known member of module]

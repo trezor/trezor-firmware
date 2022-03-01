@@ -24,7 +24,7 @@ INVALID_TYPE = const(-1)
 # use it at the same time, thus we check this at runtime in debug builds.
 if __debug__:
 
-    class BufferLock:  # type: ignore
+    class BufferLock:  # type: ignore [Class declaration "BufferLock" is obscured by a declaration of the same name]
         def __init__(self) -> None:
             self.in_use = False
 

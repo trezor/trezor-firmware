@@ -2,8 +2,8 @@ try:
     from trezorio import fatfs, sdcard
 
     HAVE_SDCARD = True
-    is_present = sdcard.is_present  # type: ignore
-    capacity = sdcard.capacity  # type: ignore
+    is_present = sdcard.is_present  # type: ignore [obscured-by-same-name]
+    capacity = sdcard.capacity  # type: ignore [obscured-by-same-name]
 
 except Exception:
     HAVE_SDCARD = False

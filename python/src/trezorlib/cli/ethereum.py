@@ -139,7 +139,7 @@ def _erc20_contract(token_address: str, to_address: str, amount: int) -> str:
             "outputs": [{"name": "", "type": "bool"}],
         }
     ]
-    contract = _get_web3().eth.contract(address=token_address, abi=min_abi)  # type: ignore ["str" cannot be assigned to type "Address | ChecksumAddress | ENS"]
+    contract = _get_web3().eth.contract(address=token_address, abi=min_abi)
     return contract.encodeABI("transfer", [to_address, amount])
 
 
