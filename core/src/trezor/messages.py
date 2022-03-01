@@ -3134,6 +3134,116 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EosActionUnknown"]:
             return isinstance(msg, cls)
 
+    class EthereumSignTypedData(protobuf.MessageType):
+        address_n: "list[int]"
+        primary_type: "str"
+        metamask_v4_compat: "bool"
+
+        def __init__(
+            self,
+            *,
+            primary_type: "str",
+            address_n: "list[int] | None" = None,
+            metamask_v4_compat: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumSignTypedData"]:
+            return isinstance(msg, cls)
+
+    class EthereumTypedDataStructRequest(protobuf.MessageType):
+        name: "str"
+
+        def __init__(
+            self,
+            *,
+            name: "str",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumTypedDataStructRequest"]:
+            return isinstance(msg, cls)
+
+    class EthereumTypedDataStructAck(protobuf.MessageType):
+        members: "list[EthereumStructMember]"
+
+        def __init__(
+            self,
+            *,
+            members: "list[EthereumStructMember] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumTypedDataStructAck"]:
+            return isinstance(msg, cls)
+
+    class EthereumTypedDataValueRequest(protobuf.MessageType):
+        member_path: "list[int]"
+
+        def __init__(
+            self,
+            *,
+            member_path: "list[int] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumTypedDataValueRequest"]:
+            return isinstance(msg, cls)
+
+    class EthereumTypedDataValueAck(protobuf.MessageType):
+        value: "bytes"
+
+        def __init__(
+            self,
+            *,
+            value: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumTypedDataValueAck"]:
+            return isinstance(msg, cls)
+
+    class EthereumStructMember(protobuf.MessageType):
+        type: "EthereumFieldType"
+        name: "str"
+
+        def __init__(
+            self,
+            *,
+            type: "EthereumFieldType",
+            name: "str",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumStructMember"]:
+            return isinstance(msg, cls)
+
+    class EthereumFieldType(protobuf.MessageType):
+        data_type: "EthereumDataType"
+        size: "int | None"
+        entry_type: "EthereumFieldType | None"
+        struct_name: "str | None"
+
+        def __init__(
+            self,
+            *,
+            data_type: "EthereumDataType",
+            size: "int | None" = None,
+            entry_type: "EthereumFieldType | None" = None,
+            struct_name: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumFieldType"]:
+            return isinstance(msg, cls)
+
     class EthereumGetPublicKey(protobuf.MessageType):
         address_n: "list[int]"
         show_display: "bool | None"
@@ -3394,116 +3504,6 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumAccessList"]:
-            return isinstance(msg, cls)
-
-    class EthereumSignTypedData(protobuf.MessageType):
-        address_n: "list[int]"
-        primary_type: "str"
-        metamask_v4_compat: "bool"
-
-        def __init__(
-            self,
-            *,
-            primary_type: "str",
-            address_n: "list[int] | None" = None,
-            metamask_v4_compat: "bool | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumSignTypedData"]:
-            return isinstance(msg, cls)
-
-    class EthereumTypedDataStructRequest(protobuf.MessageType):
-        name: "str"
-
-        def __init__(
-            self,
-            *,
-            name: "str",
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumTypedDataStructRequest"]:
-            return isinstance(msg, cls)
-
-    class EthereumTypedDataStructAck(protobuf.MessageType):
-        members: "list[EthereumStructMember]"
-
-        def __init__(
-            self,
-            *,
-            members: "list[EthereumStructMember] | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumTypedDataStructAck"]:
-            return isinstance(msg, cls)
-
-    class EthereumTypedDataValueRequest(protobuf.MessageType):
-        member_path: "list[int]"
-
-        def __init__(
-            self,
-            *,
-            member_path: "list[int] | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumTypedDataValueRequest"]:
-            return isinstance(msg, cls)
-
-    class EthereumTypedDataValueAck(protobuf.MessageType):
-        value: "bytes"
-
-        def __init__(
-            self,
-            *,
-            value: "bytes",
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumTypedDataValueAck"]:
-            return isinstance(msg, cls)
-
-    class EthereumStructMember(protobuf.MessageType):
-        type: "EthereumFieldType"
-        name: "str"
-
-        def __init__(
-            self,
-            *,
-            type: "EthereumFieldType",
-            name: "str",
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumStructMember"]:
-            return isinstance(msg, cls)
-
-    class EthereumFieldType(protobuf.MessageType):
-        data_type: "EthereumDataType"
-        size: "int | None"
-        entry_type: "EthereumFieldType | None"
-        struct_name: "str | None"
-
-        def __init__(
-            self,
-            *,
-            data_type: "EthereumDataType",
-            size: "int | None" = None,
-            entry_type: "EthereumFieldType | None" = None,
-            struct_name: "str | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumFieldType"]:
             return isinstance(msg, cls)
 
     class MoneroTransactionSourceEntry(protobuf.MessageType):
