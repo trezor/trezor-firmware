@@ -80,6 +80,8 @@ def find_message_handler_module(msg_type: int) -> str:
         return "apps.misc.get_ecdh_session_key"
     if msg_type == MessageType.CipherKeyValue:
         return "apps.misc.cipher_key_value"
+    if msg_type == MessageType.GetSecureInput:
+        return "apps.misc.secure_input"
 
     if not utils.BITCOIN_ONLY:
         if msg_type == MessageType.SetU2FCounter:

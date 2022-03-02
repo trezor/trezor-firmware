@@ -67,6 +67,7 @@ COMMAND_ALIASES = {
     "load-device": device.load,
     "self-test": device.self_test,
     "get-entropy": crypto.get_entropy,
+    "secure-input": crypto.secure_input,
     "encrypt-keyvalue": crypto.encrypt_keyvalue,
     "decrypt-keyvalue": crypto.decrypt_keyvalue,
     # currency name aliases:

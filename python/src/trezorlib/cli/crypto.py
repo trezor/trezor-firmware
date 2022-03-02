@@ -14,7 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import click
 
@@ -36,6 +36,19 @@ def cli() -> None:
 def get_entropy(client: "TrezorClient", size: int) -> str:
     """Get random bytes from device."""
     return misc.get_entropy(client, size).hex()
+
+
+@cli.command()
+@click.option("-p", "--prompt", help="Prompt to show on device")
+@click.option("-m", "--max-length", type=int, help="Max length of the input")
+@with_client
+def secure_input(
+    client: "TrezorClient",
+    prompt: Optional[str] = None,
+    max_length: Optional[int] = None,
+) -> str:
+    """Get secure input from device."""
+    return misc.get_secure_input(client, prompt, max_length)
 
 
 @cli.command()

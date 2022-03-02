@@ -253,6 +253,8 @@ class MessageType(IntEnum):
     WebAuthnCredentials = 801
     WebAuthnAddResidentCredential = 802
     WebAuthnRemoveResidentCredential = 803
+    GetSecureInput = 900
+    SecureInput = 901
 
 
 class FailureType(IntEnum):
@@ -914,6 +916,37 @@ class HDNodeType(protobuf.MessageType):
         self.chain_code = chain_code
         self.public_key = public_key
         self.private_key = private_key
+
+
+class GetSecureInput(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 900
+    FIELDS = {
+        1: protobuf.Field("prompt", "string", repeated=False, required=False),
+        2: protobuf.Field("max_length", "uint32", repeated=False, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        prompt: Optional["str"] = 'Secure input',
+        max_length: Optional["int"] = 99,
+    ) -> None:
+        self.prompt = prompt
+        self.max_length = max_length
+
+
+class SecureInput(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 901
+    FIELDS = {
+        1: protobuf.Field("text", "string", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        text: "str",
+    ) -> None:
+        self.text = text
 
 
 class MultisigRedeemScriptType(protobuf.MessageType):

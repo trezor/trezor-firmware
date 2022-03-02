@@ -227,3 +227,5 @@ if not utils.BITCOIN_ONLY:
     WebAuthnCredentials = 801
     WebAuthnAddResidentCredential = 802
     WebAuthnRemoveResidentCredential = 803
+    GetSecureInput = 900
+    SecureInput = 901

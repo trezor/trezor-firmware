@@ -30,6 +30,15 @@ def get_entropy(client: "TrezorClient", size: int) -> "MessageType":
     return client.call(messages.GetEntropy(size=size))
 
 
+@expect(messages.SecureInput, field="text", ret_type=str)
+def get_secure_input(
+    client: "TrezorClient",
+    prompt: Optional[str] = None,
+    max_length: Optional[int] = None,
+) -> "MessageType":
+    return client.call(messages.GetSecureInput(prompt=prompt, max_length=max_length))
+
+
 @expect(messages.SignedIdentity)
 def sign_identity(
     client: "TrezorClient",

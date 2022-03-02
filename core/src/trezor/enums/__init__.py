@@ -228,6 +228,8 @@ if TYPE_CHECKING:
         WebAuthnCredentials = 801
         WebAuthnAddResidentCredential = 802
         WebAuthnRemoveResidentCredential = 803
+        GetSecureInput = 900
+        SecureInput = 901
 
     class BinanceOrderType(IntEnum):
         OT_UNKNOWN = 0

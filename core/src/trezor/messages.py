@@ -384,6 +384,36 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["HDNodeType"]:
             return isinstance(msg, cls)
 
+    class GetSecureInput(protobuf.MessageType):
+        prompt: "str"
+        max_length: "int"
+
+        def __init__(
+            self,
+            *,
+            prompt: "str | None" = None,
+            max_length: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["GetSecureInput"]:
+            return isinstance(msg, cls)
+
+    class SecureInput(protobuf.MessageType):
+        text: "str"
+
+        def __init__(
+            self,
+            *,
+            text: "str",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["SecureInput"]:
+            return isinstance(msg, cls)
+
     class MultisigRedeemScriptType(protobuf.MessageType):
         pubkeys: "list[HDNodePathType]"
         signatures: "list[bytes]"
