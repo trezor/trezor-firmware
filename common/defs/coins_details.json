@@ -36223,7 +36223,7 @@
             "wallet": [
                 {
                     "name": "Nano Wallet",
-                    "url": "https://nem.io/downloads/"
+                    "url": "https://nemplatform.com/wallets/#desktop"
                 }
             ]
         },
@@ -36240,7 +36240,7 @@
             "wallet": [
                 {
                     "name": "Nano Wallet",
-                    "url": "https://nem.io/downloads/"
+                    "url": "https://nemplatform.com/wallets/#desktop"
                 }
             ]
         },
@@ -36258,7 +36258,7 @@
             "wallet": [
                 {
                     "name": "Nano Wallet",
-                    "url": "https://nem.io/downloads/"
+                    "url": "https://nemplatform.com/wallets/#desktop"
                 }
             ]
         },
@@ -36275,7 +36275,7 @@
             "wallet": [
                 {
                     "name": "Nano Wallet",
-                    "url": "https://nem.io/downloads/"
+                    "url": "https://nemplatform.com/wallets/#desktop"
                 }
             ]
         },
@@ -36292,13 +36292,13 @@
             "wallet": [
                 {
                     "name": "Nano Wallet",
-                    "url": "https://nem.io/downloads/"
+                    "url": "https://nemplatform.com/wallets/#desktop"
                 }
             ]
         },
         "nem:XEM": {
             "links": {
-                "Homepage": "https://nem.io"
+                "Homepage": "https://nemplatform.com"
             },
             "marketcap_usd": 1255848019,
             "name": "NEM",
@@ -36309,7 +36309,7 @@
             "wallet": [
                 {
                     "name": "Nano Wallet",
-                    "url": "https://nem.io/downloads/"
+                    "url": "https://nemplatform.com/wallets/#desktop"
                 }
             ]
         }

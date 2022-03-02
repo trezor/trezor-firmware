@@ -22,7 +22,7 @@ VERSIONS = coin_info.latest_releases()
 
 # automatic wallet entries
 WALLET_SUITE = {"Trezor Suite": "https://suite.trezor.io"}
-WALLET_NEM = {"Nano Wallet": "https://nem.io/downloads/"}
+WALLET_NEM = {"Nano Wallet": "https://nemplatform.com/wallets/#desktop"}
 WALLETS_ETH_3RDPARTY = {
     "MyEtherWallet": "https://www.myetherwallet.com",
     "MyCrypto": "https://mycrypto.com",
