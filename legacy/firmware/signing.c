@@ -59,7 +59,7 @@ enum {
 #endif
   STAGE_REQUEST_4_INPUT,
   STAGE_REQUEST_4_OUTPUT,
-  STAGE_REQUEST_SEGWIT_INPUT,
+  STAGE_REQUEST_NONLEGACY_INPUT,
   STAGE_REQUEST_5_OUTPUT,
   STAGE_REQUEST_SEGWIT_WITNESS,
 #if !BITCOIN_ONLY
@@ -72,6 +72,7 @@ static uint32_t idx1;      // The index of the input or output in the current tx
 static uint32_t idx2;  // The index of the input or output in the original tx
                        // (Phase 1), in the previous tx (Phase 2) or in the
                        // current tx when computing the legacy digest (Phase 2).
+static uint32_t external_inputs[16];  // bitfield of external input indices
 static uint32_t signatures;
 static TxRequest resp;
 static TxInputType input;
@@ -95,7 +96,7 @@ static uint8_t decred_hash_prefix[32];
 static uint8_t hash_inputs_check[32];
 static uint64_t total_in, total_out, change_out;
 static uint64_t orig_total_in, orig_total_out, orig_change_out;
-static uint32_t next_nonsegwit_input;
+static uint32_t next_legacy_input;
 static uint32_t progress, progress_step, progress_meta_step;
 static uint32_t tx_weight;
 
@@ -161,6 +162,10 @@ static uint8_t orig_hash[32];  // TXID of the original transaction.
 
 /* The maximum number of change-outputs allowed without user confirmation. */
 #define MAX_SILENT_CHANGE_COUNT 2
+
+/* The maximum number of inputs allowed in a transaction is limited by the
+ * number of external inputs that the firmware can count. */
+#define MAX_INPUTS_COUNT (sizeof(external_inputs) * 8)
 
 /* Setting nSequence to this value for every input in a transaction disables
    nLockTime. */
@@ -260,8 +265,8 @@ if (Decred)
     Skip to STAGE_REQUEST_DECRED_WITNESS
 
 foreach I (idx1):  // input to sign
-    if (idx1 is segwit)
-        Request I                                             STAGE_REQUEST_SEGWIT_INPUT
+    if (idx1 is not legacy)
+        Request I                                             STAGE_REQUEST_NONLEGACY_INPUT
         Return serialized input chunk
 
     else
@@ -324,6 +329,14 @@ static bool add_amount(uint64_t *dest, uint64_t amount) {
 
 static bool is_rbf_enabled(TxInfo *tx_info) {
   return tx_info->min_sequence <= MAX_BIP125_RBF_SEQUENCE;
+}
+
+static void set_external_input(uint32_t i) {
+  external_inputs[i / 32] |= (1 << (i % 32));
+}
+
+static bool is_external_input(uint32_t i) {
+  return external_inputs[i / 32] & (1 << (i % 32));
 }
 
 void send_req_1_input(void) {
@@ -492,7 +505,7 @@ void send_req_4_output(void) {
 }
 
 void send_req_segwit_input(void) {
-  signing_stage = STAGE_REQUEST_SEGWIT_INPUT;
+  signing_stage = STAGE_REQUEST_NONLEGACY_INPUT;
   resp.has_request_type = true;
   resp.request_type = RequestType_TXINPUT;
   resp.has_details = true;
@@ -614,7 +627,7 @@ void phase1_request_orig_input(void) {
 }
 
 void phase2_request_next_input(void) {
-  if (idx1 == next_nonsegwit_input) {
+  if (idx1 == next_legacy_input) {
     idx2 = 0;
     send_req_4_input();
   } else {
@@ -905,6 +918,12 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
   amount_unit = msg->has_amount_unit ? msg->amount_unit : AmountUnit_BITCOIN;
   memcpy(&root, _root, sizeof(HDNode));
 
+  if (msg->inputs_count > MAX_INPUTS_COUNT) {
+    fsm_sendFailure(FailureType_Failure_DataError, _("Too many inputs."));
+    signing_abort();
+    return;
+  }
+
   if (!tx_info_init(&info, msg->inputs_count, msg->outputs_count, msg->version,
                     msg->lock_time, msg->has_expiry, msg->expiry,
                     msg->has_branch_id, msg->branch_id,
@@ -935,6 +954,7 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
   orig_total_in = 0;
   orig_total_out = 0;
   orig_change_out = 0;
+  memzero(external_inputs, sizeof(external_inputs));
   memzero(&input, sizeof(TxInputType));
   memzero(&output, sizeof(TxOutputType));
   memzero(&resp, sizeof(TxRequest));
@@ -947,7 +967,7 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
   // this means 50 % per phase.
   progress_step = (500 << PROGRESS_PRECISION) / info.inputs_count;
 
-  next_nonsegwit_input = 0xffffffff;
+  next_legacy_input = 0xffffffff;
 
   tx_init(&to, info.inputs_count, info.outputs_count, info.version,
           info.lock_time, info.expiry, 0, coin->curve->hasher_sign,
@@ -1050,7 +1070,30 @@ static bool signing_validate_input(const TxInputType *txinput) {
     return false;
   }
 
-  if (!is_internal_input_script_type(txinput)) {
+  if (is_internal_input_script_type(txinput)) {
+    if (txinput->has_script_pubkey) {
+      // scriptPubKey should only be provided for external inputs
+      fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Input's script_pubkey provided but not expected."));
+      signing_abort();
+      return false;
+    }
+  } else if (txinput->script_type == InputScriptType_EXTERNAL) {
+    if (txinput->address_n_count != 0) {
+      fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Input's address_n provided but not expected."));
+      signing_abort();
+      return false;
+    }
+
+    if (!txinput->has_script_pubkey) {
+      // scriptPubKey should be provided for external inputs
+      fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Missing script_pubkey field."));
+      signing_abort();
+      return false;
+    }
+  } else {
     fsm_sendFailure(FailureType_Failure_DataError,
                     _("Unsupported script type."));
     signing_abort();
@@ -1088,15 +1131,6 @@ static bool signing_validate_input(const TxInputType *txinput) {
       signing_abort();
       return false;
     }
-  }
-
-  if (txinput->has_script_pubkey) {
-    // scriptPubKey should only be provided for external inputs, which are not
-    // supported in this firmware
-    fsm_sendFailure(FailureType_Failure_DataError,
-                    _("Input's script_pubkey provided but not expected."));
-    signing_abort();
-    return false;
   }
 
   return true;
@@ -1204,16 +1238,18 @@ static bool signing_validate_bin_output(TxOutputBinType *tx_bin_output) {
 }
 
 static bool tx_info_add_input(TxInfo *tx_info, const TxInputType *txinput) {
-  // Compute multisig fingerprint for change-output detection. In order for an
-  // output to be considered a change-output, it must have the same fingerprint
-  // as all inputs.
-  if (!extract_input_multisig_fp(tx_info, txinput)) {
-    return false;
-  }
+  if (txinput->script_type != InputScriptType_EXTERNAL) {
+    // Compute multisig fingerprint for change-output detection. In order for an
+    // output to be considered a change-output, it must have the same
+    // fingerprint as all inputs.
+    if (!extract_input_multisig_fp(tx_info, txinput)) {
+      return false;
+    }
 
-  // Remember the input's BIP-32 path. Change-outputs must use the same path
-  // as all inputs.
-  extract_input_bip32_path(tx_info, txinput);
+    // Remember the input's BIP-32 path. Change-outputs must use the same path
+    // as all inputs.
+    extract_input_bip32_path(tx_info, txinput);
+  }
 
   // Remember the minimum nSequence value.
   if (txinput->sequence < tx_info->min_sequence) {
@@ -1391,8 +1427,8 @@ static bool signing_add_output(TxOutputType *txoutput) {
 
   // Don't allow adding new external outputs in replacement transactions. There
   // is actually nothing wrong with adding new external outputs, but the only
-  // way to pay for them would be by supplying a new external input, which is
-  // currently not supported.
+  // way to pay for them would be by supplying a new (verified) external input,
+  // which is currently not supported.
   if (is_replacement && !txoutput->has_orig_hash && !is_change) {
     fsm_sendFailure(FailureType_Failure_ProcessError,
                     _("Adding new external outputs in replacement transactions "
@@ -1678,8 +1714,8 @@ static bool signing_add_orig_output(TxOutputType *orig_output) {
         }
       } else if (output.amount > orig_output->amount) {
         // Only PayJoin transactions may increase the value of external outputs
-        // by supplying an external input. However, external inputs are
-        // currently not supported.
+        // by supplying a verified external input. However, verified external
+        // inputs are currently not supported.
         fsm_sendFailure(
             FailureType_Failure_ProcessError,
             _("Increasing original output amounts is not supported."));
@@ -2213,6 +2249,14 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
   // idx1: index to sign
   uint8_t hash[32] = {0};
 
+  if (is_external_input(idx1) !=
+      (txinput->script_type == InputScriptType_EXTERNAL)) {
+    fsm_sendFailure(FailureType_Failure_DataError,
+                    _("Transaction has changed during signing"));
+    signing_abort();
+    return false;
+  }
+
   if (txinput->script_type == InputScriptType_SPENDTAPROOT) {
     signing_hash_bip341(&info, idx1, signing_hash_type(txinput), hash);
 
@@ -2291,14 +2335,24 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
       resp.serialized.serialized_tx.size = r;
     }
   } else {
-    // empty witness
+    // no signature to be generated
     resp.has_serialized = true;
     resp.serialized.has_signature_index = false;
     resp.serialized.has_signature = false;
     resp.serialized.has_serialized_tx = true;
-    resp.serialized.serialized_tx.bytes[0] = 0;
-    resp.serialized.serialized_tx.size = 1;
+    if (txinput->script_type == InputScriptType_EXTERNAL &&
+        txinput->has_witness) {
+      // fill in the provided witness
+      memcpy(resp.serialized.serialized_tx.bytes, txinput->witness.bytes,
+             txinput->witness.size);
+      resp.serialized.serialized_tx.size = txinput->witness.size;
+    } else {
+      // empty witness
+      resp.serialized.serialized_tx.bytes[0] = 0;
+      resp.serialized.serialized_tx.size = 1;
+    }
   }
+
   //  if last witness add tx footer
   if (idx1 == info.inputs_count - 1) {
     uint32_t r = resp.serialized.serialized_tx.size;
@@ -2367,7 +2421,8 @@ void signing_txack(TransactionType *tx) {
       }
 #endif
 
-      if (tx->inputs[0].script_type != InputScriptType_SPENDTAPROOT) {
+      if (tx->inputs[0].script_type != InputScriptType_SPENDTAPROOT &&
+          tx->inputs[0].script_type != InputScriptType_EXTERNAL) {
         taproot_only = false;
       }
 
@@ -2387,7 +2442,7 @@ void signing_txack(TransactionType *tx) {
         if (!coin->force_bip143 && !coin->overwintered) {
           // remember the first non-segwit input -- this is the first input
           // we need to sign during phase2
-          if (next_nonsegwit_input == 0xffffffff) next_nonsegwit_input = idx1;
+          if (next_legacy_input == 0xffffffff) next_legacy_input = idx1;
         }
       } else if (is_segwit_input_script_type(&tx->inputs[0])) {
         if (!to.is_segwit) {
@@ -2407,6 +2462,14 @@ void signing_txack(TransactionType *tx) {
 #else
         to.is_segwit = true;
 #endif
+      } else if (tx->inputs[0].script_type == InputScriptType_EXTERNAL) {
+        if (config_getSafetyCheckLevel() == SafetyCheckLevel_Strict) {
+          fsm_sendFailure(FailureType_Failure_ProcessError,
+                          _("External inputs not allowed."));
+          signing_abort();
+          return;
+        }
+        set_external_input(idx1);
       } else {
         fsm_sendFailure(FailureType_Failure_DataError,
                         _("Wrong input script type"));
@@ -2751,10 +2814,10 @@ void signing_txack(TransactionType *tx) {
         memcpy(privkey, node.private_key, 32);
         memcpy(pubkey, node.public_key, 33);
       } else {
-        if (next_nonsegwit_input == idx1 && idx2 > idx1 &&
+        if (next_legacy_input == idx1 && idx2 > idx1 &&
             (tx->inputs[0].script_type == InputScriptType_SPENDADDRESS ||
              tx->inputs[0].script_type == InputScriptType_SPENDMULTISIG)) {
-          next_nonsegwit_input = idx2;
+          next_legacy_input = idx2;
         }
         tx->inputs[0].script_sig.size = 0;
       }
@@ -2825,10 +2888,19 @@ void signing_txack(TransactionType *tx) {
       }
       return;
 
-    case STAGE_REQUEST_SEGWIT_INPUT:
+    case STAGE_REQUEST_NONLEGACY_INPUT:
       if (!signing_validate_input(&tx->inputs[0])) {
         return;
       }
+
+      if (is_external_input(idx1) !=
+          (tx->inputs[0].script_type == InputScriptType_EXTERNAL)) {
+        fsm_sendFailure(FailureType_Failure_DataError,
+                        _("Transaction has changed during signing"));
+        signing_abort();
+        return;
+      }
+
       resp.has_serialized = true;
       resp.serialized.has_signature_index = false;
       resp.serialized.has_signature = false;
@@ -2910,6 +2982,9 @@ void signing_txack(TransactionType *tx) {
           signing_abort();
           return;
         }
+      } else if (tx->inputs[0].script_type == InputScriptType_EXTERNAL &&
+                 tx->inputs[0].has_script_sig) {
+        // use the provided script_sig
       } else {
         // direct witness scripts require zero scriptSig
         tx->inputs[0].script_sig.size = 0;

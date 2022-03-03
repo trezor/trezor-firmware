@@ -411,6 +411,11 @@ int compile_output(const CoinInfo *coin, AmountUnit amount_unit,
 
 int fill_input_script_pubkey(const CoinInfo *coin, const HDNode *root,
                              TxInputType *in) {
+  if (in->script_type == InputScriptType_EXTERNAL) {
+    // External inputs should have scriptPubKey set by the host.
+    return in->has_script_pubkey;
+  }
+
   static CONFIDENTIAL HDNode node;
   memcpy(&node, root, sizeof(HDNode));
   char address[MAX_ADDR_SIZE] = {0};
