@@ -8,6 +8,7 @@ from trezor.ui.components.common.confirm import INFO
 from apps.common import safety_checks
 
 from ..authorization import FEE_PER_ANONYMITY_DECIMALS
+from ..common import input_is_external_unverified
 from ..keychain import validate_path_against_script_type
 from . import helpers, tx_weight
 from .payment_request import PaymentRequestVerifier
@@ -68,10 +69,16 @@ class Approver:
     def add_external_input(self, txi: TxInput) -> None:
         self.weight.add_input(txi)
         self.total_in += txi.amount
-        self.external_in += txi.amount
         if txi.orig_hash:
             self.orig_total_in += txi.amount
-            self.orig_external_in += txi.amount
+
+        if input_is_external_unverified(txi):
+            if safety_checks.is_strict():
+                raise wire.ProcessError("Unverifiable external input.")
+        else:
+            self.external_in += txi.amount
+            if txi.orig_hash:
+                self.orig_external_in += txi.amount
 
     def _add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         self.weight.add_output(script_pubkey)
@@ -350,6 +357,15 @@ class CoinJoinApprover(Approver):
         # The following can be removed once we start validating script_pubkey in step3_verify_inputs().
         if not self.authorization.check_sign_tx_input(txi, self.coin):
             raise wire.ProcessError("Unauthorized path")
+
+    def add_external_input(self, txi: TxInput) -> None:
+        super().add_external_input(txi)
+
+        # External inputs should always be verifiable in CoinJoin. This check
+        # is not critical for security, we are just being cautious, because
+        # CoinJoin is automated and this is not a very legitimate use-case.
+        if input_is_external_unverified(txi):
+            raise wire.ProcessError("Unverifiable external input.")
 
     def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         super().add_change_output(txo, script_pubkey)

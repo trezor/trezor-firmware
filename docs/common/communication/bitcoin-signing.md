@@ -150,16 +150,28 @@ Full documentation for multisig is TBD.
 
 #### External inputs
 
-Trezor T can include inputs that it will not sign, typically because they are owned by
-another party. Such inputs are of type `EXTERNAL` and the host does not specify a
-derivation path for the key. Instead, these inputs must either already have a valid
-signature or they must come with an ownership proof. If the input already has a valid
-signature, then the host provides the `script_sig` and/or `witness` fields. If the other
-signing party hasn't signed their input yet (i.e., with two Trezors, one must sign first
-so that the other can include a pre-signed input), they can instead provide a
+Trezor can include inputs that it will not sign, typically because they are
+owned by another party. Such inputs are of type `EXTERNAL` and the host does
+not specify a derivation path for the key, but sets the `script_pubkey` field
+to the scriptPubKey of the previous output that is being spent by the external
+input. An external input can either be *verified* or *unverified*. The amounts
+supplied to the transaction by verified external inputs are subtracted from the
+transaction total that the user is asked to confirm, whereas unverified
+external inputs are not subtracted.
+
+Verified external inputs are only supported on the Trezor T. They must either
+already have a valid signature or they must come with an ownership proof. If
+the input already has a valid signature, then the host provides the
+`script_sig` and/or `witness` fields. If the other signing party hasn't signed
+their input yet (i.e., with two Trezors, one must sign first so that the other
+can include a pre-signed input), they can instead provide a
 [SLIP-19](https://github.com/satoshilabs/slips/blob/master/slip-0019.md)
-ownership proof in the `ownership_proof` field, with optional commitment data in
-`commitment_data`. The `script_pubkey` field is required for all external inputs.
+ownership proof in the `ownership_proof` field, with optional commitment data
+in `commitment_data`.
+
+Unverified external inputs are accepted by Trezor only if
+[safety checks](https://wiki.trezor.io/Using_trezorctl_commands_with_Trezor#Safety-checks)
+are disabled on the device.
 
 ### Transaction output
 

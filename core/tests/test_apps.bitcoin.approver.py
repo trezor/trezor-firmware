@@ -49,6 +49,7 @@ class TestApprover(unittest.TestCase):
                 script_pubkey=bytes(22),
                 script_type=InputScriptType.EXTERNAL,
                 sequence=0xffffffff,
+                witness="",
             ) for i in range(99)
         ]
 
