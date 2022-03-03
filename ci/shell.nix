@@ -48,8 +48,8 @@ let
     src = nixpkgs.fetchFromGitHub {
       owner = "achow101";
       repo = "bitcoin";
-      rev = "taproot-psbt";
-      sha256 = "sha256-Am7SVxOTlTUjESk8O7kziwyV2GaBX6pGB1oksYPc1EE=";
+      rev = "b704884935766748cf533577c1babacfb6d4b5a5"; # taproot-psbt
+      sha256 = "sha256-gz/knimKY1pkpsp1YmYHPMCbeiSxKGSOGJOSEgFbptE=";
     };
   }));
 in
