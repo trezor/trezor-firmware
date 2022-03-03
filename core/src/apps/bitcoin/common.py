@@ -161,6 +161,15 @@ def input_is_external(txi: TxInput) -> bool:
     return txi.script_type == InputScriptType.EXTERNAL
 
 
+def input_is_external_unverified(txi: TxInput) -> bool:
+    return (
+        txi.script_type == InputScriptType.EXTERNAL
+        and txi.ownership_proof is None
+        and txi.witness is None
+        and txi.script_sig is None
+    )
+
+
 def tagged_hashwriter(tag: bytes) -> HashWriter:
     tag_digest = sha256(tag).digest()
     ctx = sha256(tag_digest)
