@@ -33,7 +33,7 @@ async def get_address(
         await show_address(
             ctx,
             address=address,
-            address_qr=address.upper(),
+            case_sensitive=False,
             title=title,
             network=get_network_str(msg.network),
         )

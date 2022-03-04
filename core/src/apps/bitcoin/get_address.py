@@ -55,15 +55,15 @@ async def get_address(
 
     address = addresses.get_address(msg.script_type, coin, node, msg.multisig)
     address_short = addresses.address_short(coin, address)
+
+    address_case_sensitive = True
     if coin.segwit and msg.script_type in (
         InputScriptType.SPENDWITNESS,
         InputScriptType.SPENDTAPROOT,
     ):
-        address_qr = address.upper()  # bech32 address
+        address_case_sensitive = False  # bech32 address
     elif coin.cashaddr_prefix is not None:
-        address_qr = address.upper()  # cashaddr address
-    else:
-        address_qr = address  # base58 address
+        address_case_sensitive = False  # cashaddr address
 
     mac: bytes | None = None
     multisig_xpub_magic = coin.xpub_magic
@@ -100,7 +100,7 @@ async def get_address(
             await show_address(
                 ctx,
                 address=address_short,
-                address_qr=address_qr,
+                case_sensitive=address_case_sensitive,
                 title=title,
                 multisig_index=multisig_index,
                 xpubs=_get_xpubs(coin, multisig_xpub_magic, pubnodes),
@@ -108,7 +108,10 @@ async def get_address(
         else:
             title = address_n_to_str(msg.address_n)
             await show_address(
-                ctx, address=address_short, address_qr=address_qr, title=title
+                ctx,
+                address=address_short,
+                case_sensitive=address_case_sensitive,
+                title=title,
             )
 
     return Address(address=address, mac=mac)

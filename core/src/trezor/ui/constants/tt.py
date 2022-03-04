@@ -12,5 +12,5 @@ MONO_ADDR_PER_LINE = const(17)
 MONO_HEX_PER_LINE = const(18)
 
 QR_X = const(120)
-QR_Y = const(115)
-QR_SIZE_THRESHOLD = const(63)
+QR_Y = const(112)
+QR_SIDE_MAX = const(140)
