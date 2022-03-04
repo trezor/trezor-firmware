@@ -4,9 +4,7 @@ use crate::ui::{
     geometry::Insets,
 };
 
-use super::{
-    component::{ButtonStyle, ButtonStyleSheet, LoaderStyle, LoaderStyleSheet},
-};
+use super::component::{ButtonStyle, ButtonStyleSheet, LoaderStyle, LoaderStyleSheet};
 
 // Font constants.
 pub const FONT_NORMAL: Font = Font::new(-1);
@@ -101,8 +99,8 @@ pub fn button_default() -> ButtonStyleSheet {
         },
         active: &ButtonStyle {
             font: FONT_BOLD,
-            text_color: BG,
-            button_color: FG,
+            text_color: FG,
+            button_color: GREY_MEDIUM,
             background_color: BG,
             border_color: FG,
             border_radius: RADIUS,
@@ -290,7 +288,7 @@ pub const KEYBOARD_SPACING: i32 = 8;
 /// +----------+
 /// |    13    |
 /// |  +----+  |
-/// |10|    | 5|
+/// |10|    |10|
 /// |  +----+  |
 /// |    14    |
 /// +----------+

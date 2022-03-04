@@ -259,7 +259,8 @@ impl LayoutObj {
             display::rect_stroke(r, color)
         }
 
-        // wireframe(display::screen());
+        // use crate::ui::model_tt::theme;
+        // wireframe(theme::borders());
         self.inner.borrow().root.obj_bounds(&mut wireframe);
     }
 

@@ -11,7 +11,7 @@ use crate::{
         model_tt::{
             component::{
                 keyboard::{
-                    common::{MultiTapKeyboard, TextBox, TextEdit},
+                    common::{paint_pending_marker, MultiTapKeyboard, TextBox, TextEdit},
                     mnemonic::{MnemonicInput, MnemonicInputMsg, MNEMONIC_KEY_COUNT},
                 },
                 Button, ButtonContent, ButtonMsg,
@@ -36,7 +36,7 @@ impl MnemonicInput for Slip39Input {
     /// Return the key set. Keys are further specified as indices into this
     /// array.
     fn keys() -> [&'static str; MNEMONIC_KEY_COUNT] {
-        ["ab", "cd", "ef", "ghij", "klm", "nopq", "rs", "tuv", "xyz"]
+        ["ab", "cd", "ef", "ghij", "klm", "nopq", "rs", "tuv", "wxyz"]
     }
 
     /// Returns `true` if given key index can continue towards a valid mnemonic
@@ -64,6 +64,8 @@ impl MnemonicInput for Slip39Input {
             // Ignore the pending char rotation. We use the pending key to paint
             // the last character, but the mnemonic word computation depends
             // only on the pressed key, not on the specific character inside it.
+            // Request paint of pending char.
+            ctx.request_paint();
         }
         self.complete_word_from_dictionary(ctx);
     }
@@ -147,20 +149,10 @@ impl Component for Slip39Input {
             style.text_color,
             style.button_color,
         );
-        let width = style.font.text_width(text.as_bytes());
 
         // Paint the pending marker.
         if self.multi_tap.pending_key().is_some() && self.final_word.is_none() {
-            // Measure the width of the last character of input.
-            if let Some(last) = text.as_bytes().last().copied() {
-                let last_width = style.font.text_width(&[last]);
-                // Draw the marker 2px under the start of the baseline of the last character.
-                let marker_origin = text_baseline + Offset::new(width - last_width, 2);
-                // Draw the marker 1px longer than the last character, and 3px thick.
-                let marker_rect =
-                    Rect::from_top_left_and_size(marker_origin, Offset::new(last_width + 1, 3));
-                display::rect_fill(marker_rect, style.text_color);
-            }
+            paint_pending_marker(text_baseline, text.as_bytes(), style.font, style.text_color);
         }
 
         // Paint the icon.
@@ -170,6 +162,10 @@ impl Component for Slip39Input {
             let icon_center = area.top_right().center(area.bottom_right()) - Offset::new(16 + 8, 0);
             display::icon(icon_center, icon, style.text_color, style.button_color);
         }
+    }
+
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
+        self.button.bounds(sink);
     }
 }
 
@@ -200,11 +196,15 @@ impl Slip39Input {
 
     fn complete_word_from_dictionary(&mut self, ctx: &mut EventCtx) {
         let sequence = self.input_sequence();
-        self.final_word = sequence.and_then(slip39::button_sequence_to_word);
         self.input_mask = sequence
             .and_then(slip39::word_completion_mask)
             .map(Slip39Mask)
             .unwrap_or_else(Slip39Mask::full);
+        self.final_word = if self.input_mask.is_final() {
+            sequence.and_then(slip39::button_sequence_to_word)
+        } else {
+            None
+        };
 
         // Change the style of the button depending on the input.
         if self.final_word.is_some() {

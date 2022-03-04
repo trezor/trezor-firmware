@@ -3,9 +3,15 @@ from typing import TYPE_CHECKING
 from trezor import io, log, loop, ui, wire, workflow
 from trezor.enums import ButtonRequestType
 
-from trezorui2 import layout_new_confirm_action, layout_new_pin
+from trezorui2 import (
+    layout_new_bip39,
+    layout_new_confirm_action,
+    layout_new_passphrase,
+    layout_new_pin,
+    layout_new_slip39,
+)
 
-from ...components.tt import pin
+from ...components.tt import passphrase, pin
 from ...constants.tt import MONO_ADDR_PER_LINE
 from ..common import button_request, interact
 
@@ -443,7 +449,19 @@ def draw_simple_text(title: str, description: str = "") -> None:
 
 
 async def request_passphrase_on_device(ctx: wire.GenericContext, max_len: int) -> str:
-    raise NotImplementedError
+    await button_request(
+        ctx, "passphrase_device", code=ButtonRequestType.PassphraseEntry
+    )
+
+    keyboard = _RustLayout(
+        layout_new_passphrase(prompt="Enter passphrase", max_len=max_len)
+    )
+    result = await ctx.wait(keyboard)
+    if result is passphrase.CANCELLED:
+        raise wire.ActionCancelled("Passphrase entry cancelled")
+
+    assert isinstance(result, str)
+    return result
 
 
 async def request_pin_on_device(
@@ -475,3 +493,19 @@ async def request_pin_on_device(
             raise wire.PinCancelled
         assert isinstance(result, str)
         return result
+
+
+async def request_word(
+    ctx: wire.GenericContext, word_index: int, word_count: int, is_slip39: bool
+) -> str:
+    if is_slip39:
+        keyboard: Any = _RustLayout(
+            layout_new_bip39(prompt=f"Type word {word_index + 1} of {word_count}:")
+        )
+    else:
+        keyboard = _RustLayout(
+            layout_new_slip39(prompt=f"Type word {word_index + 1} of {word_count}:")
+        )
+
+    word: str = await ctx.wait(keyboard)
+    return word

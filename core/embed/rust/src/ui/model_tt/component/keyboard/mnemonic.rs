@@ -1,6 +1,6 @@
 use crate::ui::{
     component::{Child, Component, Event, EventCtx, Label, Maybe},
-    geometry::{Grid, Rect},
+    geometry::{Alignment, Grid, Rect},
     model_tt::{
         component::{Button, ButtonMsg},
         theme,
@@ -32,7 +32,7 @@ where
         Self {
             prompt: Child::new(Maybe::visible(
                 theme::BG,
-                Label::left_aligned(prompt, theme::label_default()),
+                Label::centered(prompt, theme::label_keyboard()),
             )),
             back: Child::new(Maybe::hidden(
                 theme::BG,
@@ -84,10 +84,15 @@ where
     type Msg = MnemonicKeyboardMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let grid = Grid::new(bounds, 3, 4);
+        let grid =
+            Grid::new(bounds.inset(theme::borders()), 4, 3).with_spacing(theme::KEYBOARD_SPACING);
         let back_area = grid.row_col(0, 0);
         let input_area = grid.row_col(0, 1).union(grid.row_col(0, 3));
-        let prompt_area = grid.row_col(0, 0).union(grid.row_col(0, 3));
+
+        let prompt_center = grid.row_col(0, 0).union(grid.row_col(0, 3)).center();
+        let prompt_size = self.prompt.inner().inner().size();
+        let prompt_top_left = prompt_size.snap(prompt_center, Alignment::Center, Alignment::Center);
+        let prompt_area = Rect::from_top_left_and_size(prompt_top_left, prompt_size);
 
         self.prompt.place(prompt_area);
         self.back.place(back_area);
@@ -136,6 +141,15 @@ where
             btn.paint();
         }
     }
+
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
+        self.prompt.bounds(sink);
+        self.input.bounds(sink);
+        self.back.bounds(sink);
+        for btn in &self.keys {
+            btn.bounds(sink)
+        }
+    }
 }
 
 pub trait MnemonicInput: Component<Msg = MnemonicInputMsg> {
@@ -150,4 +164,12 @@ pub enum MnemonicInputMsg {
     Confirmed,
     Completed,
     TimedOut,
+}
+
+#[cfg(feature = "ui_debug")]
+impl<T> crate::trace::Trace for MnemonicKeyboard<T> {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.open("MnemonicKeyboard");
+        t.close();
+    }
 }

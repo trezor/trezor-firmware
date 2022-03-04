@@ -12,10 +12,11 @@ use crate::{
 
 use super::{
     component::{
-        Button, ButtonMsg, DialogMsg, Frame, HoldToConfirm, HoldToConfirmMsg, PinKeyboard,
-        PinKeyboardMsg, SwipePage,
+        Bip39Input, Button, ButtonMsg, DialogMsg, Frame, HoldToConfirm, HoldToConfirmMsg,
+        MnemonicKeyboard, MnemonicKeyboardMsg, PassphraseKeyboard, PassphraseKeyboardMsg,
+        PinKeyboard, PinKeyboardMsg, Slip39Input, SwipePage,
     },
-    constant, theme,
+    theme,
 };
 
 impl<T> TryFrom<DialogMsg<T, ButtonMsg, ButtonMsg>> for Obj
@@ -58,6 +59,27 @@ impl TryFrom<PinKeyboardMsg> for Obj {
         match val {
             PinKeyboardMsg::Confirmed => 1.try_into(),
             PinKeyboardMsg::Cancelled => 2.try_into(),
+        }
+    }
+}
+
+impl TryFrom<MnemonicKeyboardMsg> for Obj {
+    type Error = Error;
+
+    fn try_from(val: MnemonicKeyboardMsg) -> Result<Self, Self::Error> {
+        match val {
+            MnemonicKeyboardMsg::Confirmed => Ok(Obj::const_true()),
+        }
+    }
+}
+
+impl TryFrom<PassphraseKeyboardMsg> for Obj {
+    type Error = Error;
+
+    fn try_from(val: PassphraseKeyboardMsg) -> Result<Self, Self::Error> {
+        match val {
+            PassphraseKeyboardMsg::Confirmed => Ok(Obj::const_true()),
+            PassphraseKeyboardMsg::Cancelled => Ok(Obj::const_none()),
         }
     }
 }
@@ -132,6 +154,41 @@ extern "C" fn ui_layout_new_pin(n_args: usize, args: *const Obj, kwargs: *const 
         let warning: Option<Buffer> = kwargs.get(Qstr::MP_QSTR_warning)?.try_into_option()?;
         let obj = LayoutObj::new(
             PinKeyboard::new(prompt, subprompt, warning, allow_cancel.unwrap_or(true)).into_child(),
+        )?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+#[no_mangle]
+extern "C" fn ui_layout_new_passphrase(n_args: usize, args: *const Obj, kwargs: *const Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let _prompt: Buffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+        let _max_len: u32 = kwargs.get(Qstr::MP_QSTR_max_len)?.try_into()?;
+        let obj = LayoutObj::new(PassphraseKeyboard::new().into_child())?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+#[no_mangle]
+extern "C" fn ui_layout_new_bip39(n_args: usize, args: *const Obj, kwargs: *const Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let _prompt: Buffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+        let obj = LayoutObj::new(
+            MnemonicKeyboard::new(Bip39Input::new(), b"Type word 11 of 12").into_child(),
+        )?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+#[no_mangle]
+extern "C" fn ui_layout_new_slip39(n_args: usize, args: *const Obj, kwargs: *const Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let _prompt: Buffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+        let obj = LayoutObj::new(
+            MnemonicKeyboard::new(Slip39Input::new(), b"Type word 13 of 20").into_child(),
         )?;
         Ok(obj.into())
     };

@@ -461,9 +461,9 @@ pub struct GridCellSpan {
 
 #[derive(Copy, Clone)]
 pub struct LinearPlacement {
-    axis: Axis,
-    align: Alignment,
-    spacing: i32,
+    pub axis: Axis,
+    pub align: Alignment,
+    pub spacing: i32,
 }
 
 impl LinearPlacement {
