@@ -127,6 +127,9 @@ stdenvNoCC.mkDerivation ({
   # it's broken at the moment
   hardeningDisable = lib.optionals (stdenv.isDarwin && stdenv.isAarch64) [ "stackprotector" ];
 
+  # Enabling rust-analyzer extension in VSCode
+  RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
+
 } // (lib.optionalAttrs fullDeps) {
   TREZOR_MONERO_TESTS_PATH = moneroTestsPatched;
 })
