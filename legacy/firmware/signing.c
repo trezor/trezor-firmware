@@ -622,6 +622,39 @@ void phase2_request_next_input(void) {
   }
 }
 
+static bool extract_input_multisig_fp(TxInfo *tx_info,
+                                      const TxInputType *txinput) {
+  if (txinput->has_multisig && !tx_info->multisig_fp_mismatch) {
+    uint8_t h[32] = {0};
+    if (cryptoMultisigFingerprint(&txinput->multisig, h) == 0) {
+      fsm_sendFailure(FailureType_Failure_ProcessError,
+                      _("Error computing multisig fingerprint"));
+      signing_abort();
+      return false;
+    }
+    if (tx_info->multisig_fp_set) {
+      if (memcmp(tx_info->multisig_fp, h, 32) != 0) {
+        tx_info->multisig_fp_mismatch = true;
+      }
+    } else {
+      memcpy(tx_info->multisig_fp, h, 32);
+      tx_info->multisig_fp_set = true;
+    }
+  } else {  // single signature
+    tx_info->multisig_fp_mismatch = true;
+  }
+
+  return true;
+}
+
+bool check_change_multisig_fp(const TxInfo *tx_info,
+                              const TxOutputType *txoutput) {
+  uint8_t h[32] = {0};
+  return tx_info->multisig_fp_set && !tx_info->multisig_fp_mismatch &&
+         cryptoMultisigFingerprint(&(txoutput->multisig), h) &&
+         memcmp(tx_info->multisig_fp, h, 32) == 0;
+}
+
 void extract_input_bip32_path(TxInfo *tx_info, const TxInputType *tinput) {
   if (tx_info->in_address_n_count == BIP32_NOCHANGEALLOWED) {
     return;
@@ -1174,24 +1207,8 @@ static bool tx_info_add_input(TxInfo *tx_info, const TxInputType *txinput) {
   // Compute multisig fingerprint for change-output detection. In order for an
   // output to be considered a change-output, it must have the same fingerprint
   // as all inputs.
-  if (txinput->has_multisig && !tx_info->multisig_fp_mismatch) {
-    uint8_t h[32] = {0};
-    if (cryptoMultisigFingerprint(&txinput->multisig, h) == 0) {
-      fsm_sendFailure(FailureType_Failure_ProcessError,
-                      _("Error computing multisig fingerprint"));
-      signing_abort();
-      return false;
-    }
-    if (tx_info->multisig_fp_set) {
-      if (memcmp(tx_info->multisig_fp, h, 32) != 0) {
-        tx_info->multisig_fp_mismatch = true;
-      }
-    } else {
-      memcpy(tx_info->multisig_fp, h, 32);
-      tx_info->multisig_fp_set = true;
-    }
-  } else {  // single signature
-    tx_info->multisig_fp_mismatch = true;
+  if (!extract_input_multisig_fp(tx_info, txinput)) {
+    return false;
   }
 
   // Remember the input's BIP-32 path. Change-outputs must use the same path
@@ -1358,13 +1375,8 @@ static bool is_change_output(const TxInfo *tx_info,
   /*
    * For multisig check that all inputs are multisig
    */
-  if (txoutput->has_multisig) {
-    uint8_t h[32] = {0};
-    if (!tx_info->multisig_fp_set || tx_info->multisig_fp_mismatch ||
-        !cryptoMultisigFingerprint(&(txoutput->multisig), h) ||
-        memcmp(tx_info->multisig_fp, h, 32) != 0) {
-      return false;
-    }
+  if (txoutput->has_multisig && !check_change_multisig_fp(tx_info, txoutput)) {
+    return false;
   }
 
   return check_change_bip32_path(tx_info, txoutput);
