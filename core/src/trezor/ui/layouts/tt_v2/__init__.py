@@ -134,6 +134,8 @@ async def show_xpub(
 async def show_address(
     ctx: wire.GenericContext,
     address: str,
+    *,
+    case_sensitive: bool = True,
     address_qr: str | None = None,
     title: str = "Confirm address",
     network: str | None = None,

@@ -31,7 +31,6 @@ from ...components.tt.text import LINE_WIDTH_PAGINATED, Span, Text
 from ...constants.tt import (
     MONO_ADDR_PER_LINE,
     MONO_HEX_PER_LINE,
-    QR_SIZE_THRESHOLD,
     QR_X,
     QR_Y,
     TEXT_MAX_LINES,
@@ -228,11 +227,11 @@ async def confirm_path_warning(
 
 def _show_qr(
     address: str,
+    case_sensitive: bool,
     title: str,
     cancel: str = "Address",
 ) -> Confirm:
-    QR_COEF = const(4) if len(address) < QR_SIZE_THRESHOLD else const(3)
-    qr = Qr(address, QR_X, QR_Y, QR_COEF)
+    qr = Qr(address, case_sensitive, QR_X, QR_Y)
     text = Text(title, ui.ICON_RECEIVE, ui.GREEN)
 
     return Confirm(Container(qr, text), cancel=cancel, cancel_style=ButtonDefault)
@@ -315,7 +314,9 @@ async def show_xpub(
 async def show_address(
     ctx: wire.GenericContext,
     address: str,
+    *,
     address_qr: str | None = None,
+    case_sensitive: bool = True,
     title: str = "Confirm address",
     network: str | None = None,
     multisig_index: int | None = None,
@@ -344,6 +345,7 @@ async def show_address(
                 ctx,
                 _show_qr(
                     address if address_qr is None else address_qr,
+                    case_sensitive,
                     title if title_qr is None else title_qr,
                     cancel="XPUBs" if is_multisig else "Address",
                 ),

@@ -25,8 +25,6 @@ async def get_address(
 
     if msg.show_display:
         title = paths.address_n_to_str(msg.address_n)
-        await show_address(
-            ctx, address=address, address_qr=address.upper(), title=title
-        )
+        await show_address(ctx, address=address, case_sensitive=False, title=title)
 
     return StellarAddress(address=address)
