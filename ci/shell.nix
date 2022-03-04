@@ -28,7 +28,8 @@ let
     ${nixpkgs.patchelf}/bin/patchelf --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" "$out"
     chmod -w $out
   '';
-  rustStable = nixpkgs.rust-bin.stable."1.58.1".minimal.override {
+  rustProfiles = nixpkgs.rust-bin.stable."1.58.1";
+  rustStable = rustProfiles.minimal.override {
     targets = [
       "thumbv7em-none-eabihf" # TT
       "thumbv7m-none-eabi"    # T1
@@ -126,6 +127,9 @@ stdenvNoCC.mkDerivation ({
   # don't try to use stack protector for Apple Silicon (emulator) binaries
   # it's broken at the moment
   hardeningDisable = lib.optionals (stdenv.isDarwin && stdenv.isAarch64) [ "stackprotector" ];
+
+  # Enabling rust-analyzer extension in VSCode
+  RUST_SRC_PATH = "${rustProfiles.rust-src}/lib/rustlib/src/rust/library";
 
 } // (lib.optionalAttrs fullDeps) {
   TREZOR_MONERO_TESTS_PATH = moneroTestsPatched;
