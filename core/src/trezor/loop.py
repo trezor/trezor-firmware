@@ -62,7 +62,7 @@ def schedule(
 ) -> None:
     """
     Schedule task to be executed with `value` on given `deadline` (in
-    microseconds).  Does not start the event loop itself, see `run`.
+    milliseconds).  Does not start the event loop itself, see `run`.
     Usually done in very low-level cases, see `race` for more user-friendly
     and correct concept.
 
@@ -582,5 +582,6 @@ class Timer(Syscall):
         self.task = task
 
     def schedule(self, deadline: int, value: Any) -> None:
+        deadline = utime.ticks_add(utime.ticks_ms(), deadline)
         if self.task is not None:
             schedule(self.task, value, deadline)
