@@ -53,6 +53,31 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorui2_layout_new_example_obj,
 ///     """PIN keyboard."""
 STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_trezorui2_layout_new_pin_obj, 0,
                                   ui_layout_new_pin);
+
+/// def layout_new_passphrase(
+///     *,
+///     prompt: str,
+///     max_len: int,
+/// ) -> object:
+///     """Passphrase keyboard."""
+STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_trezorui2_layout_new_passphrase_obj, 0,
+                                  ui_layout_new_passphrase);
+
+/// def layout_new_bip39(
+///     *,
+///     prompt: str,
+/// ) -> object:
+///     """BIP39 keyboard."""
+STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_trezorui2_layout_new_bip39_obj, 0,
+                                  ui_layout_new_bip39);
+
+/// def layout_new_slip39(
+///     *,
+///     prompt: str,
+/// ) -> object:
+///     """BIP39 keyboard."""
+STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_trezorui2_layout_new_slip39_obj, 0,
+                                  ui_layout_new_slip39);
 #elif TREZOR_MODEL == 1
 /// def layout_new_confirm_text(
 ///     *,
@@ -75,6 +100,12 @@ STATIC const mp_rom_map_elem_t mp_module_trezorui2_globals_table[] = {
      MP_ROM_PTR(&mod_trezorui2_layout_new_example_obj)},
     {MP_ROM_QSTR(MP_QSTR_layout_new_pin),
      MP_ROM_PTR(&mod_trezorui2_layout_new_pin_obj)},
+    {MP_ROM_QSTR(MP_QSTR_layout_new_passphrase),
+     MP_ROM_PTR(&mod_trezorui2_layout_new_passphrase_obj)},
+    {MP_ROM_QSTR(MP_QSTR_layout_new_bip39),
+     MP_ROM_PTR(&mod_trezorui2_layout_new_bip39_obj)},
+    {MP_ROM_QSTR(MP_QSTR_layout_new_slip39),
+     MP_ROM_PTR(&mod_trezorui2_layout_new_slip39_obj)},
 #elif TREZOR_MODEL == 1
     {MP_ROM_QSTR(MP_QSTR_layout_new_confirm_text),
      MP_ROM_PTR(&mod_trezorui2_layout_new_confirm_text_obj)},

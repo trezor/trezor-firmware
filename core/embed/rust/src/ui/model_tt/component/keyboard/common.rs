@@ -2,9 +2,17 @@ use heapless::String;
 
 use crate::{
     time::Duration,
-    ui::component::{Event, EventCtx, TimerToken},
+    ui::{
+        component::{Event, EventCtx, TimerToken},
+        display::{self, Color, Font},
+        geometry::{Offset, Point, Rect},
+    },
     util::ResultExt,
 };
+
+pub const HEADER_HEIGHT: i32 = 25;
+pub const HEADER_PADDING_SIDE: i32 = 5;
+pub const HEADER_PADDING_BOTTOM: i32 = 12;
 
 /// Contains state commonly used in implementations multi-tap keyboards.
 pub struct MultiTapKeyboard {
@@ -197,5 +205,19 @@ impl<const L: usize> TextBox<L> {
             TextEdit::ReplaceLast(char) => self.replace_last(ctx, char),
             TextEdit::Append(char) => self.append(ctx, char),
         }
+    }
+}
+
+pub fn paint_pending_marker(text_baseline: Point, text: &[u8], font: Font, color: Color) {
+    // Measure the width of the last character of input.
+    if let Some(last) = text.last().copied() {
+        let width = font.text_width(text);
+        let last_width = font.text_width(&[last]);
+        // Draw the marker 2px under the start of the baseline of the last character.
+        let marker_origin = text_baseline + Offset::new(width - last_width, 2);
+        // Draw the marker 1px longer than the last character, and 3px thick.
+        let marker_rect =
+            Rect::from_top_left_and_size(marker_origin, Offset::new(last_width + 1, 3));
+        display::rect_fill(marker_rect, color);
     }
 }

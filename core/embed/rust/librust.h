@@ -19,6 +19,12 @@ mp_obj_t ui_layout_new_confirm_text(size_t n_args, const mp_obj_t *args,
                                     mp_map_t *kwargs);
 mp_obj_t ui_layout_new_pin(size_t n_args, const mp_obj_t *args,
                            mp_map_t *kwargs);
+mp_obj_t ui_layout_new_passphrase(size_t n_args, const mp_obj_t *args,
+                                  mp_map_t *kwargs);
+mp_obj_t ui_layout_new_bip39(size_t n_args, const mp_obj_t *args,
+                             mp_map_t *kwargs);
+mp_obj_t ui_layout_new_slip39(size_t n_args, const mp_obj_t *args,
+                              mp_map_t *kwargs);
 
 #ifdef TREZOR_EMULATOR
 mp_obj_t ui_debug_layout_type();

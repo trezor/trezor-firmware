@@ -25,10 +25,35 @@ def layout_new_pin(
     *,
     prompt: str,
     subprompt: str,
-    danger: bool,
     allow_cancel: bool,
+    warning: str | None,
 ) -> object:
     """PIN keyboard."""
+
+
+# extmod/rustmods/modtrezorui2.c
+def layout_new_passphrase(
+    *,
+    prompt: str,
+    max_len: int,
+) -> object:
+    """Passphrase keyboard."""
+
+
+# extmod/rustmods/modtrezorui2.c
+def layout_new_bip39(
+    *,
+    prompt: str,
+) -> object:
+    """BIP39 keyboard."""
+
+
+# extmod/rustmods/modtrezorui2.c
+def layout_new_slip39(
+    *,
+    prompt: str,
+) -> object:
+    """BIP39 keyboard."""
 
 
 # extmod/rustmods/modtrezorui2.c

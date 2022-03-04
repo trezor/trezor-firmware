@@ -257,6 +257,10 @@ where
         self.paint_background(&style);
         self.paint_content(&style);
     }
+
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
+        sink(self.area);
+    }
 }
 
 #[cfg(feature = "ui_debug")]

@@ -42,7 +42,6 @@ impl<T> PinKeyboard<T>
 where
     T: Deref<Target = [u8]>,
 {
-    const BUTTON_SPACING: i32 = 8;
     const HEADER_HEIGHT: i32 = 25;
     const HEADER_PADDING_SIDE: i32 = 5;
     const HEADER_PADDING_BOTTOM: i32 = 12;
@@ -57,7 +56,6 @@ where
         major_warning: Option<T>,
         allow_cancel: bool,
     ) -> Self {
-        let area = area.inset(Insets::right(theme::CONTENT_BORDER));
         let digits = Vec::new();
 
         // Control buttons.

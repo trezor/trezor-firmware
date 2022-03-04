@@ -7,7 +7,7 @@ use crate::{
         model_tt::{
             component::{
                 keyboard::{
-                    common::{MultiTapKeyboard, TextBox},
+                    common::{paint_pending_marker, MultiTapKeyboard, TextBox},
                     mnemonic::{MnemonicInput, MnemonicInputMsg, MNEMONIC_KEY_COUNT},
                 },
                 Button, ButtonContent, ButtonMsg,
@@ -118,16 +118,7 @@ impl Component for Bip39Input {
 
         // Paint the pending marker.
         if self.multi_tap.pending_key().is_some() {
-            // Measure the width of the last character of input.
-            if let Some(last) = text.last().copied() {
-                let last_width = style.font.text_width(&[last]);
-                // Draw the marker 2px under the start of the baseline of the last character.
-                let marker_origin = text_baseline + Offset::new(width - last_width, 2);
-                // Draw the marker 1px longer than the last character, and 3px thick.
-                let marker_rect =
-                    Rect::from_top_left_and_size(marker_origin, Offset::new(last_width + 1, 3));
-                display::rect_fill(marker_rect, style.text_color);
-            }
+            paint_pending_marker(text_baseline, text, style.font, style.text_color);
         }
 
         // Paint the icon.
@@ -137,6 +128,10 @@ impl Component for Bip39Input {
             let icon_center = area.top_right().center(area.bottom_right()) - Offset::new(16 + 8, 0);
             display::icon(icon_center, icon, style.text_color, style.button_color);
         }
+    }
+
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
+        self.button.bounds(sink);
     }
 }
 
