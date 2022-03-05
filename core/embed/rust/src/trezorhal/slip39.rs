@@ -1,12 +1,6 @@
 use cstr_core::CStr;
 
-mod ffi {
-    extern "C" {
-        // trezor-crypto/slip39.h
-        pub fn slip39_word_completion_mask(prefix: u16) -> u16;
-        pub fn button_sequence_to_word(sequence: u16) -> *const cty::c_char;
-    }
-}
+use super::ffi;
 
 /// Calculates which buttons still can be pressed after some already were.
 /// Returns a 9-bit bitmask, where each bit specifies which buttons
