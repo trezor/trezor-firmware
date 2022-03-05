@@ -21,6 +21,7 @@
 #define __DISPLAY_H__
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #if defined TREZOR_MODEL_T

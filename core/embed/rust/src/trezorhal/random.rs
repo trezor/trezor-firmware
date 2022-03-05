@@ -1,10 +1,5 @@
-extern "C" {
-    // trezor-crypto/rand.h
-    fn random_uniform(n: u32) -> u32;
-}
-
 pub fn uniform(n: u32) -> u32 {
-    unsafe { random_uniform(n) }
+    unsafe { super::ffi::random_uniform(n) }
 }
 
 pub fn shuffle<T>(slice: &mut [T]) {
