@@ -50,7 +50,7 @@ default_features = false
 # Build dependencies
 
 [build-dependencies.bindgen]
-version = "0.59.1"
+version = "0.60.1"
 default_features = false
 features = ["runtime"]
 

@@ -1,14 +1,6 @@
+use super::ffi;
 use core::cmp::Ordering;
 use cstr_core::CStr;
-
-// TODO: expose from trezor-crypto via build.rs
-const BIP39_WORD_COUNT: usize = 2048;
-
-extern "C" {
-    // trezor-crypto/bip39.h
-    fn mnemonic_word_completion_mask(prefix: *const cty::c_char, len: cty::c_int) -> u32;
-    pub static BIP39_WORDLIST_ENGLISH: [*const cty::c_char; BIP39_WORD_COUNT];
-}
 
 unsafe fn from_utf8_unchecked<'a>(word: *const cty::c_char) -> &'a str {
     // SAFETY: caller must pass a valid 0-terminated UTF-8 string.
@@ -49,14 +41,14 @@ pub fn complete_word(prefix: &str) -> Option<&'static str> {
 pub fn word_completion_mask(prefix: &str) -> u32 {
     // SAFETY: `mnemonic_word_completion_mask` shouldn't retain nor modify the
     // passed byte string, making the call safe.
-    unsafe { mnemonic_word_completion_mask(prefix.as_ptr() as _, prefix.len() as _) }
+    unsafe { ffi::mnemonic_word_completion_mask(prefix.as_ptr() as _, prefix.len() as _) }
 }
 
 pub struct Wordlist(&'static [*const cty::c_char]);
 
 impl Wordlist {
     pub fn all() -> Self {
-        Self(unsafe { &BIP39_WORDLIST_ENGLISH })
+        Self(unsafe { &ffi::BIP39_WORDLIST_ENGLISH })
     }
 
     pub const fn empty() -> Self {
@@ -104,6 +96,8 @@ impl Wordlist {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    const BIP39_WORD_COUNT: usize = ffi::BIP39_WORD_COUNT as usize;
 
     #[test]
     fn test_prefix_cmp() {
