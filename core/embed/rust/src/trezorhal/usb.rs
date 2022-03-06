@@ -11,8 +11,6 @@ pub enum UsbError {
     InterfaceNotFound,
 }
 
-pub struct Usb;
-
 pub enum Interest {
     Read,
     Write,
@@ -23,66 +21,64 @@ pub enum Event {
     Pending,
 }
 
-impl Usb {
-    pub fn open(mut config: UsbConfig) -> Result<Self, UsbError> {
-        // SAFETY:
-        unsafe { ffi::usb_init(&config.as_dev_info()) };
+pub fn usb_open(mut config: UsbConfig) -> Result<(), UsbError> {
+    // SAFETY:
+    unsafe { ffi::usb_init(&config.as_dev_info()) };
 
-        for iface in &mut config.interfaces {
-            let res = match iface {
-                IfaceConfig::Vcp(vcp) => vcp.register(),
-                IfaceConfig::Hid(hid) => hid.register(),
-                IfaceConfig::WebUsb(wusb) => wusb.register(),
-            };
-            if let Err(err) = res {
-                // SAFETY:
-                unsafe { ffi::usb_deinit() };
-
-                return Err(err);
-            }
-        }
-
-        // SAFETY:
-        unsafe { ffi::usb_start() };
-
-        Ok(Self)
-    }
-
-    pub fn poll(&mut self, ticket: IfaceTicket, interest: Interest) -> Result<Event, UsbError> {
-        let ready = match ticket {
-            IfaceTicket::Hid(iface_num) => match interest {
-                Interest::Read => HidConfig::ready_to_read(iface_num),
-                Interest::Write => HidConfig::ready_to_write(iface_num),
-            },
-            IfaceTicket::WebUsb(iface_num) => match interest {
-                Interest::Read => WebUsbConfig::ready_to_read(iface_num),
-                Interest::Write => WebUsbConfig::ready_to_write(iface_num),
-            },
+    for iface in &mut config.interfaces {
+        let res = match iface {
+            IfaceConfig::Vcp(vcp) => vcp.register(),
+            IfaceConfig::Hid(hid) => hid.register(),
+            IfaceConfig::WebUsb(wusb) => wusb.register(),
         };
-        Ok(if ready { Event::Ready } else { Event::Pending })
-    }
+        if let Err(err) = res {
+            // SAFETY:
+            unsafe { ffi::usb_deinit() };
 
-    pub fn read(&mut self, ticket: IfaceTicket, buffer: &mut [u8]) -> Result<usize, UsbError> {
-        match ticket {
-            IfaceTicket::Hid(iface_num) => HidConfig::read(iface_num, buffer),
-            IfaceTicket::WebUsb(iface_num) => WebUsbConfig::read(iface_num, buffer),
+            return Err(err);
         }
     }
 
-    pub fn write(&mut self, ticket: IfaceTicket, buffer: &[u8]) -> Result<usize, UsbError> {
-        match ticket {
-            IfaceTicket::Hid(iface_num) => HidConfig::write(iface_num, buffer),
-            IfaceTicket::WebUsb(iface_num) => WebUsbConfig::write(iface_num, buffer),
-        }
-    }
+    // SAFETY:
+    unsafe { ffi::usb_start() };
 
-    pub fn close(self) {
-        // SAFETY:
-        unsafe { ffi::usb_stop() };
+    Ok(())
+}
 
-        // SAFETY:
-        unsafe { ffi::usb_deinit() };
+pub fn usb_poll(ticket: IfaceTicket, interest: Interest) -> Result<Event, UsbError> {
+    let ready = match ticket {
+        IfaceTicket::Hid(iface_num) => match interest {
+            Interest::Read => HidConfig::ready_to_read(iface_num),
+            Interest::Write => HidConfig::ready_to_write(iface_num),
+        },
+        IfaceTicket::WebUsb(iface_num) => match interest {
+            Interest::Read => WebUsbConfig::ready_to_read(iface_num),
+            Interest::Write => WebUsbConfig::ready_to_write(iface_num),
+        },
+    };
+    Ok(if ready { Event::Ready } else { Event::Pending })
+}
+
+pub fn usb_read(ticket: IfaceTicket, buffer: &mut [u8]) -> Result<usize, UsbError> {
+    match ticket {
+        IfaceTicket::Hid(iface_num) => HidConfig::read(iface_num, buffer),
+        IfaceTicket::WebUsb(iface_num) => WebUsbConfig::read(iface_num, buffer),
     }
+}
+
+pub fn usb_write(ticket: IfaceTicket, buffer: &[u8]) -> Result<usize, UsbError> {
+    match ticket {
+        IfaceTicket::Hid(iface_num) => HidConfig::write(iface_num, buffer),
+        IfaceTicket::WebUsb(iface_num) => WebUsbConfig::write(iface_num, buffer),
+    }
+}
+
+pub fn usb_close() {
+    // SAFETY:
+    unsafe { ffi::usb_stop() };
+
+    // SAFETY:
+    unsafe { ffi::usb_deinit() };
 }
 
 const MAX_INTERFACE_COUNT: usize = 4;
@@ -464,21 +460,22 @@ mod tests {
             iface_vcp.add(&mut config).unwrap();
         }
 
-        let usb = Usb::open(config).unwrap();
+        usb_open(config).unwrap();
+        usb_close();
     }
 }
 
 fn set_global_serial_number(sn: &CStr) -> &'static CStr {
     static mut GLOBAL_BUFFER: [u8; 64] = [0; 64];
 
-    // SAFETY: We are in a single threaded context, no the only possible race on
+    // SAFETY: We are in a single threaded context, so the only possible race on
     // `GLOBAL_BUFFER` is with the USB stack. We should take care to only call
     // `set_global_serial_number` with the USB stopped.
     unsafe {
         let sn_nul = sn.to_bytes_with_nul();
 
         // Panics if `sn_nul` is bigger then `GLOBAL_BUFFER`.
-        &mut GLOBAL_BUFFER[..sn_nul.len()].copy_from_slice(sn_nul);
+        GLOBAL_BUFFER[..sn_nul.len()].copy_from_slice(sn_nul);
 
         CStr::from_bytes_with_nul_unchecked(&GLOBAL_BUFFER[..sn_nul.len()])
     }
