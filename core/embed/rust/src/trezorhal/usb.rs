@@ -5,8 +5,6 @@ use crate::trezorhal::secbool;
 
 use super::ffi;
 
-const MAX_IFACE_COUNT: usize = 4;
-
 #[derive(Debug)]
 pub enum UsbError {
     FailedToAddInterface,
@@ -87,19 +85,22 @@ impl Usb {
     }
 }
 
-pub struct UsbConfig {
+const MAX_INTERFACE_COUNT: usize = 4;
+
+#[derive(Default)]
+pub struct UsbConfig<'a> {
     pub vendor_id: u16,
     pub product_id: u16,
     pub release_num: u16,
     pub manufacturer: &'static CStr,
     pub product: &'static CStr,
-    pub serial_number: &'static CStr,
     pub interface: &'static CStr,
+    pub serial_number: &'a CStr,
     pub usb21_landing: bool,
-    pub interfaces: Vec<IfaceConfig, MAX_IFACE_COUNT>,
+    pub interfaces: Vec<IfaceConfig, MAX_INTERFACE_COUNT>,
 }
 
-impl UsbConfig {
+impl UsbConfig<'_> {
     fn as_dev_info(&self) -> ffi::usb_dev_info_t {
         ffi::usb_dev_info_t {
             device_class: 0,
@@ -110,8 +111,8 @@ impl UsbConfig {
             release_num: self.release_num,
             manufacturer: self.manufacturer.as_ptr(),
             product: self.product.as_ptr(),
-            serial_number: self.serial_number.as_ptr(),
             interface: self.interface.as_ptr(),
+            serial_number: set_global_serial_number(self.serial_number).as_ptr(),
             usb21_enabled: secbool::TRUE,
             usb21_landing: if self.usb21_landing {
                 secbool::TRUE
@@ -166,8 +167,9 @@ impl WebUsbConfig {
     fn as_webusb_info(&mut self) -> ffi::usb_webusb_info_t {
         ffi::usb_webusb_info_t {
             rx_buffer: self.rx_buffer.as_mut_ptr(), // With length of max_packet_len bytes.
-            max_packet_len: self.rx_buffer.len() as u8, // Length of the biggest report and of rx_buffer.
-            iface_num: self.iface_num,                  // Address of this WebUSB interface.
+            max_packet_len: self.rx_buffer.len() as u8, /* Length of the biggest report and of
+                                                     * rx_buffer. */
+            iface_num: self.iface_num, // Address of this WebUSB interface.
             // emu_port: self.emu_port, // UDP port of this interface in the emulator.
             ep_in: self.ep_in, // Address of IN endpoint (with the highest bit set).
             ep_out: self.ep_out, // Address of OUT endpoint.
@@ -247,8 +249,9 @@ impl HidConfig {
             report_desc: self.report_desc.as_ptr(), // With length of report_desc_len bytes.
             report_desc_len: self.report_desc.len() as u8, // Length of report_desc.
             rx_buffer: self.rx_buffer.as_mut_ptr(), // With length of max_packet_len bytes.
-            max_packet_len: self.rx_buffer.len() as u8, // Length of the biggest report and of rx_buffer.
-            iface_num: self.iface_num,                  // Address of this HID interface.
+            max_packet_len: self.rx_buffer.len() as u8, /* Length of the biggest report and of
+                                                     * rx_buffer. */
+            iface_num: self.iface_num, // Address of this HID interface.
             // emu_port: self.emu_port, // UDP port of this interface in the emulator.
             ep_in: self.ep_in, // Address of IN endpoint (with the highest bit set).
             ep_out: self.ep_out, // Address of OUT endpoint.
@@ -328,17 +331,24 @@ impl VcpConfig {
 
     fn as_vcp_info(&mut self) -> ffi::usb_vcp_info_t {
         ffi::usb_vcp_info_t {
-            tx_packet: self.tx_packet.as_mut_ptr(), // Buffer for one packet, with length of at least max_packet_len bytes.
-            tx_buffer: self.tx_buffer.as_mut_ptr(), // Buffer for IN EP ring buffer, with length of at least tx_buffer_len bytes.
-            rx_packet: self.rx_packet.as_mut_ptr(), // Buffer for one packet, with length of at least max_packet_len bytes.
-            rx_buffer: self.rx_buffer.as_mut_ptr(), // Buffer for OUT EP ring buffer, with length of at least rx_buffer_len bytes.
-            max_packet_len: self.rx_packet.len() as u8, // Length of the biggest packet, and of tx_packet and rx_packet.
+            tx_packet: self.tx_packet.as_mut_ptr(), /* Buffer for one packet, with length of at
+                                                     * least max_packet_len bytes. */
+            tx_buffer: self.tx_buffer.as_mut_ptr(), /* Buffer for IN EP ring buffer, with length
+                                                     * of at least tx_buffer_len bytes. */
+            rx_packet: self.rx_packet.as_mut_ptr(), /* Buffer for one packet, with length of at
+                                                     * least max_packet_len bytes. */
+            rx_buffer: self.rx_buffer.as_mut_ptr(), /* Buffer for OUT EP ring buffer, with length
+                                                     * of at least rx_buffer_len bytes. */
+            max_packet_len: self.rx_packet.len() as u8, /* Length of the biggest packet, and of
+                                                         * tx_packet and rx_packet. */
             tx_buffer_len: self.tx_buffer.len(), // Length of tx_buffer, needs to be a power of 2.
             rx_buffer_len: self.rx_buffer.len(), // Length of rx_buffer, needs to be a power of 2.
-            rx_intr_fn: self.rx_intr_fn, // Callback called from usb_vcp_class_data_out IRQ handler if rx_intr_byte matches.
+            rx_intr_fn: self.rx_intr_fn,         /* Callback called from usb_vcp_class_data_out
+                                                  * IRQ handler if rx_intr_byte matches. */
             rx_intr_byte: self.rx_intr_byte, // Value matched against every received byte.
-            iface_num: self.iface_num,   // Address of this VCP interface.
-            data_iface_num: self.data_iface_num, // Address of data interface of the VCP interface association.
+            iface_num: self.iface_num,       // Address of this VCP interface.
+            data_iface_num: self.data_iface_num, /* Address of data interface of the VCP interface
+                                              * association. */
             // emu_port: self.emu_port,  // UDP port of this interface in the emulator.
             ep_cmd: self.ep_cmd, // Address of IN CMD endpoint (with the highest bit set).
             ep_in: self.ep_in,   // Address of IN endpoint (with the highest bit set).
@@ -376,15 +386,15 @@ mod tests {
             release_num: 0x0200,
             manufacturer: cstr!("SatoshiLabs"),
             product: cstr!("TREZOR"),
-            serial_number: cstr!(""), // TODO
+            serial_number: cstr!(""),
             interface: cstr!("TREZOR Interface"),
             usb21_landing: false,
-            interfaces: Vec::new(),
+            ..UsbConfig::default()
         };
 
         let id_wire = iface_iter.next().unwrap();
         let iface_wire = WebUsbConfig {
-            rx_buffer: &mut [0; 64], // TODO
+            rx_buffer: &mut [0; 64],
             iface_num: id_wire,
             ep_in: 0x81 + id_wire,
             ep_out: 0x01 + id_wire,
@@ -395,7 +405,7 @@ mod tests {
         if ENABLE_IFACE_DEBUG {
             let id_debug = iface_iter.next().unwrap();
             let iface_debug = WebUsbConfig {
-                rx_buffer: &mut [0; 64], // TODO
+                rx_buffer: &mut [0; 64],
                 iface_num: id_debug,
                 ep_in: 0x81 + id_debug,
                 ep_out: 0x01 + id_debug,
@@ -425,7 +435,7 @@ mod tests {
                     0x91, 0x02, // OUTPUT (Data,Var,Abs)
                     0xc0, // END_COLLECTION
                 ],
-                rx_buffer: &mut [0; 64], // TODO
+                rx_buffer: &mut [0; 64],
                 iface_num: id_webauthn,
                 ep_in: 0x81 + id_webauthn,
                 ep_out: 0x01 + id_webauthn,
@@ -438,12 +448,12 @@ mod tests {
             let id_vcp = iface_iter.next().unwrap();
             let id_vcp_data = iface_iter.next().unwrap();
             let iface_vcp = VcpConfig {
-                rx_buffer: &mut [0; 1024], // TODO
-                tx_buffer: &mut [0; 1024], // TODO
-                rx_packet: &mut [0; 64],   // TODO
-                tx_packet: &mut [0; 64],   // TODO
-                rx_intr_fn: None,          // Use pendsv_kbd_intr here.
-                rx_intr_byte: 3,           // Ctrl-C
+                rx_buffer: &mut [0; 1024],
+                tx_buffer: &mut [0; 1024],
+                rx_packet: &mut [0; 64],
+                tx_packet: &mut [0; 64],
+                rx_intr_fn: None, // Use pendsv_kbd_intr here.
+                rx_intr_byte: 3,  // Ctrl-C
                 iface_num: id_vcp,
                 data_iface_num: id_vcp_data,
                 ep_in: 0x81 + id_vcp,
@@ -455,5 +465,21 @@ mod tests {
         }
 
         let usb = Usb::open(config).unwrap();
+    }
+}
+
+fn set_global_serial_number(sn: &CStr) -> &'static CStr {
+    static mut GLOBAL_BUFFER: [u8; 64] = [0; 64];
+
+    // SAFETY: We are in a single threaded context, no the only possible race on
+    // `GLOBAL_BUFFER` is with the USB stack. We should take care to only call
+    // `set_global_serial_number` with the USB stopped.
+    unsafe {
+        let sn_nul = sn.to_bytes_with_nul();
+
+        // Panics if `sn_nul` is bigger then `GLOBAL_BUFFER`.
+        &mut GLOBAL_BUFFER[..sn_nul.len()].copy_from_slice(sn_nul);
+
+        CStr::from_bytes_with_nul_unchecked(&GLOBAL_BUFFER[..sn_nul.len()])
     }
 }
