@@ -7,22 +7,37 @@ use super::ffi;
 
 #[derive(Debug)]
 pub enum UsbError {
+    /// Failed to register USB interface configuration.
     FailedToAddInterface,
+    /// Interface number not found, or found with an invalid type.
     InterfaceNotFound,
 }
 
 pub enum Interest {
+    /// Caller is interested to read bytes/messages.
     Read,
+    /// Caller is interested to write bytes/messages.
     Write,
 }
 
 pub enum Event {
+    /// Resource is ready to perform on selected `Interest`.
     Ready,
+    /// Resource is not yet ready. No side-effect was performed.
     Pending,
 }
 
+/// Initialize the USB stack with information from `config`, register all
+/// present USB interfaces, and start the communication.
+///
+/// Should be called only with the USB closed.
+///
+/// Returns error in case any interface registration fails.
+///
+/// USB stack should be shut down and de-initialized with `usb_close` when not
+/// needed.
 pub fn usb_open(mut config: UsbConfig) -> Result<(), UsbError> {
-    // SAFETY:
+    // SAFETY: All values in `config` should have static lifetime.
     unsafe { ffi::usb_init(&config.as_dev_info()) };
 
     for iface in &mut config.interfaces {
@@ -32,20 +47,23 @@ pub fn usb_open(mut config: UsbConfig) -> Result<(), UsbError> {
             IfaceConfig::WebUsb(wusb) => wusb.register(),
         };
         if let Err(err) = res {
-            // SAFETY:
+            // SAFETY: No other invariants.
             unsafe { ffi::usb_deinit() };
 
             return Err(err);
         }
     }
 
-    // SAFETY:
+    // SAFETY: No other invariants.
     unsafe { ffi::usb_start() };
 
     Ok(())
 }
 
-pub fn usb_poll(ticket: IfaceTicket, interest: Interest) -> Result<Event, UsbError> {
+/// Check if interface `ticket` is ready to perform on selected `interest`.
+///
+/// Returns immediately, does not block. Useful for constructing event loops.
+pub fn usb_poll(ticket: IfaceTicket, interest: Interest) -> Event {
     let ready = match ticket {
         IfaceTicket::Hid(iface_num) => match interest {
             Interest::Read => HidConfig::ready_to_read(iface_num),
@@ -56,29 +74,49 @@ pub fn usb_poll(ticket: IfaceTicket, interest: Interest) -> Result<Event, UsbErr
             Interest::Write => WebUsbConfig::ready_to_write(iface_num),
         },
     };
-    Ok(if ready { Event::Ready } else { Event::Pending })
+    if ready {
+        Event::Ready
+    } else {
+        Event::Pending
+    }
 }
 
-pub fn usb_read(ticket: IfaceTicket, buffer: &mut [u8]) -> Result<usize, UsbError> {
+/// Read a report from the interrupt interface specified by `ticket`.
+///
+/// Returns immediately, does not block. Returns the total number of bytes read,
+/// which will always be the full length of `buffer`. Zero return value means
+/// the resource is either not ready to read, or the `buffer` is too short for
+/// the report. Caller should always take care to supply buffers longer or equal
+/// to the length of the registered `rx_buffer`.
+pub fn usb_read_report(ticket: IfaceTicket, buffer: &mut [u8]) -> Result<usize, UsbError> {
     match ticket {
         IfaceTicket::Hid(iface_num) => HidConfig::read(iface_num, buffer),
         IfaceTicket::WebUsb(iface_num) => WebUsbConfig::read(iface_num, buffer),
     }
 }
 
-pub fn usb_write(ticket: IfaceTicket, buffer: &[u8]) -> Result<usize, UsbError> {
+/// Write a report to the interrupt interface specified by `ticket`.
+///
+/// Returns immediately, does not block. Returns the total number of bytes
+/// written, which will always be the full length of `buffer`. Zero return value
+/// means the resource is either not ready to write. Caller should not send
+/// buffers larger than the configured maximum report size.
+pub fn usb_write_report(ticket: IfaceTicket, buffer: &[u8]) -> Result<usize, UsbError> {
     match ticket {
         IfaceTicket::Hid(iface_num) => HidConfig::write(iface_num, buffer),
         IfaceTicket::WebUsb(iface_num) => WebUsbConfig::write(iface_num, buffer),
     }
 }
 
+/// Stop the USB communications and reset the stack.
+///
+/// Should be closed only with the USB running.
 pub fn usb_close() {
-    // SAFETY:
-    unsafe { ffi::usb_stop() };
-
-    // SAFETY:
-    unsafe { ffi::usb_deinit() };
+    // SAFETY: No other invariants.
+    unsafe {
+        ffi::usb_stop();
+        ffi::usb_deinit();
+    };
 }
 
 const MAX_INTERFACE_COUNT: usize = 4;
@@ -108,6 +146,7 @@ impl UsbConfig<'_> {
             manufacturer: self.manufacturer.as_ptr(),
             product: self.product.as_ptr(),
             interface: self.interface.as_ptr(),
+            // Because we set the SN dynamically, we need to copy it to the static storage first.
             serial_number: set_global_serial_number(self.serial_number).as_ptr(),
             usb21_enabled: secbool::TRUE,
             usb21_landing: if self.usb21_landing {
@@ -119,6 +158,8 @@ impl UsbConfig<'_> {
     }
 }
 
+/// Value used for reading or writing reports to a interrupt-report based USB
+/// interface. Used for HID and WebUSB interfaces.
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub enum IfaceTicket {
     Hid(u8),
@@ -150,7 +191,7 @@ impl WebUsbConfig {
     }
 
     fn register(&mut self) -> Result<(), UsbError> {
-        // SAFETY:
+        // SAFETY: We call this from `usb_open`, no other invariants.
         let res = unsafe { ffi::usb_webusb_add(&self.as_webusb_info()) };
 
         if res != secbool::TRUE {
@@ -176,17 +217,18 @@ impl WebUsbConfig {
     }
 
     fn ready_to_read(iface_num: u8) -> bool {
-        // SAFETY:
+        // SAFETY: Safe operation.
         unsafe { ffi::usb_webusb_can_read(iface_num) == secbool::TRUE }
     }
 
     fn ready_to_write(iface_num: u8) -> bool {
-        // SAFETY:
+        // SAFETY: Safe operation.
         unsafe { ffi::usb_webusb_can_write(iface_num) == secbool::TRUE }
     }
 
     fn read(iface_num: u8, buffer: &mut [u8]) -> Result<usize, UsbError> {
-        // SAFETY:
+        // SAFETY: Safe operation, does not retain `buffer` and does not write outside
+        // of it.
         let result =
             unsafe { ffi::usb_webusb_read(iface_num, buffer.as_mut_ptr(), buffer.len() as u32) };
 
@@ -198,7 +240,8 @@ impl WebUsbConfig {
     }
 
     fn write(iface_num: u8, buffer: &[u8]) -> Result<usize, UsbError> {
-        // SAFETY:
+        // SAFETY: Safe operation, does not retain `buffer` and does not read outside of
+        // it.
         let result =
             unsafe { ffi::usb_webusb_write(iface_num, buffer.as_ptr(), buffer.len() as u32) };
 
@@ -230,7 +273,7 @@ impl HidConfig {
     }
 
     fn register(&mut self) -> Result<(), UsbError> {
-        // SAFETY:
+        // SAFETY: We call this from `usb_open`, no other invariants.
         let res = unsafe { ffi::usb_hid_add(&self.as_hid_info()) };
 
         if res != secbool::TRUE {
@@ -258,17 +301,18 @@ impl HidConfig {
     }
 
     fn ready_to_read(iface_num: u8) -> bool {
-        // SAFETY:
+        // SAFETY: Safe operation.
         unsafe { ffi::usb_hid_can_read(iface_num) == secbool::TRUE }
     }
 
     fn ready_to_write(iface_num: u8) -> bool {
-        // SAFETY:
+        // SAFETY: Safe operation.
         unsafe { ffi::usb_hid_can_write(iface_num) == secbool::TRUE }
     }
 
     fn read(iface_num: u8, buffer: &mut [u8]) -> Result<usize, UsbError> {
-        // SAFETY:
+        // SAFETY: Safe operation, does not retain `buffer` and does not write outside
+        // of it.
         let result =
             unsafe { ffi::usb_hid_read(iface_num, buffer.as_mut_ptr(), buffer.len() as u32) };
 
@@ -280,7 +324,8 @@ impl HidConfig {
     }
 
     fn write(iface_num: u8, buffer: &[u8]) -> Result<usize, UsbError> {
-        // SAFETY:
+        // SAFETY: Safe operation, does not retain `buffer` and does not read outside of
+        // it.
         let result = unsafe { ffi::usb_hid_write(iface_num, buffer.as_ptr(), buffer.len() as u32) };
 
         if result < 0 {
@@ -315,7 +360,7 @@ impl VcpConfig {
     }
 
     fn register(&mut self) -> Result<(), UsbError> {
-        // SAFETY:
+        // SAFETY: We call this from `usb_open`, no other invariants.
         let res = unsafe { ffi::usb_vcp_add(&self.as_vcp_info()) };
 
         if res != secbool::TRUE {
