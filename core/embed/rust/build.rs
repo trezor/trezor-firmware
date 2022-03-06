@@ -218,7 +218,8 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("usb_webusb_can_read")
         .allowlist_function("usb_webusb_can_write")
         .allowlist_function("usb_webusb_read")
-        .allowlist_function("usb_webusb_write");
+        .allowlist_function("usb_webusb_write")
+        .allowlist_function("usb_vcp_add");
 
     // Write the bindings to a file in the OUR_DIR.
     bindings
