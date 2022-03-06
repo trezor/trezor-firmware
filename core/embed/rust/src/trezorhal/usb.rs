@@ -7,15 +7,13 @@ use super::ffi;
 
 const MAX_IFACE_COUNT: usize = 4;
 
+#[derive(Debug)]
 pub enum UsbError {
     FailedToAddInterface,
     InterfaceNotFound,
-    Io,
 }
 
-pub struct Usb {
-    config: UsbConfig,
-}
+pub struct Usb;
 
 pub enum Interest {
     Read,
@@ -34,6 +32,7 @@ impl Usb {
 
         for iface in &mut config.interfaces {
             let res = match iface {
+                IfaceConfig::Vcp(vcp) => vcp.register(),
                 IfaceConfig::Hid(hid) => hid.register(),
                 IfaceConfig::WebUsb(wusb) => wusb.register(),
             };
@@ -48,41 +47,34 @@ impl Usb {
         // SAFETY:
         unsafe { ffi::usb_start() };
 
-        Ok(Self { config })
+        Ok(Self)
     }
 
-    pub fn poll(&mut self, iface_num: u8, interest: Interest) -> Result<Event, UsbError> {
-        let iface = self.config.find_iface(iface_num)?;
-
-        let ready = match iface {
-            IfaceConfig::Hid(hid) => match interest {
-                Interest::Read => hid.ready_to_read(),
-                Interest::Write => hid.ready_to_write(),
+    pub fn poll(&mut self, ticket: IfaceTicket, interest: Interest) -> Result<Event, UsbError> {
+        let ready = match ticket {
+            IfaceTicket::Hid(iface_num) => match interest {
+                Interest::Read => HidConfig::ready_to_read(iface_num),
+                Interest::Write => HidConfig::ready_to_write(iface_num),
             },
-            IfaceConfig::WebUsb(wusb) => match interest {
-                Interest::Read => wusb.ready_to_read(),
-                Interest::Write => wusb.ready_to_write(),
+            IfaceTicket::WebUsb(iface_num) => match interest {
+                Interest::Read => WebUsbConfig::ready_to_read(iface_num),
+                Interest::Write => WebUsbConfig::ready_to_write(iface_num),
             },
         };
-
         Ok(if ready { Event::Ready } else { Event::Pending })
     }
 
-    pub fn read(&mut self, iface_num: u8, buffer: &mut [u8]) -> Result<usize, UsbError> {
-        let iface = self.config.find_iface(iface_num)?;
-
-        match iface {
-            IfaceConfig::Hid(hid) => hid.read(buffer),
-            IfaceConfig::WebUsb(wusb) => wusb.read(buffer),
+    pub fn read(&mut self, ticket: IfaceTicket, buffer: &mut [u8]) -> Result<usize, UsbError> {
+        match ticket {
+            IfaceTicket::Hid(iface_num) => HidConfig::read(iface_num, buffer),
+            IfaceTicket::WebUsb(iface_num) => WebUsbConfig::read(iface_num, buffer),
         }
     }
 
-    pub fn write(&mut self, iface_num: u8, buffer: &[u8]) -> Result<usize, UsbError> {
-        let iface = self.config.find_iface(iface_num)?;
-
-        match iface {
-            IfaceConfig::Hid(hid) => hid.write(buffer),
-            IfaceConfig::WebUsb(wusb) => wusb.write(buffer),
+    pub fn write(&mut self, ticket: IfaceTicket, buffer: &[u8]) -> Result<usize, UsbError> {
+        match ticket {
+            IfaceTicket::Hid(iface_num) => HidConfig::write(iface_num, buffer),
+            IfaceTicket::WebUsb(iface_num) => WebUsbConfig::write(iface_num, buffer),
         }
     }
 
@@ -128,36 +120,41 @@ impl UsbConfig {
             },
         }
     }
+}
 
-    fn find_iface(&mut self, iface_num: u8) -> Result<&mut IfaceConfig, UsbError> {
-        self.interfaces
-            .iter_mut()
-            .find(|iface| match iface {
-                IfaceConfig::Hid(hid) => hid.iface_num == iface_num,
-                IfaceConfig::WebUsb(wusb) => wusb.iface_num == iface_num,
-            })
-            .ok_or(UsbError::InterfaceNotFound)
-    }
+#[derive(Copy, Clone, Eq, PartialEq)]
+pub enum IfaceTicket {
+    Hid(u8),
+    WebUsb(u8),
 }
 
 pub enum IfaceConfig {
-    Hid(HidConfig),
     WebUsb(WebUsbConfig),
+    Hid(HidConfig),
+    Vcp(VcpConfig),
 }
 
-pub struct HidConfig {
-    pub report_desc: &'static [u8],
-    pub rx_buffer: &'static mut [u8],
+pub struct WebUsbConfig {
+    pub rx_buffer: &'static mut [u8; 64],
     pub iface_num: u8,
-    pub emu_port: u16,
     pub ep_in: u8,
     pub ep_out: u8,
+    pub emu_port: u16,
 }
 
-impl HidConfig {
+impl WebUsbConfig {
+    pub fn add(self, config: &mut UsbConfig) -> Result<IfaceTicket, UsbError> {
+        let ticket = IfaceTicket::WebUsb(self.iface_num);
+        config
+            .interfaces
+            .push(IfaceConfig::WebUsb(self))
+            .map(|_| ticket)
+            .map_err(|_| UsbError::FailedToAddInterface)
+    }
+
     fn register(&mut self) -> Result<(), UsbError> {
         // SAFETY:
-        let res = unsafe { ffi::usb_hid_add(&self.as_hid_info()) };
+        let res = unsafe { ffi::usb_webusb_add(&self.as_webusb_info()) };
 
         if res != secbool::TRUE {
             Err(UsbError::FailedToAddInterface)
@@ -166,37 +163,82 @@ impl HidConfig {
         }
     }
 
-    fn ready_to_read(&mut self) -> bool {
-        // SAFETY:
-        unsafe { ffi::usb_hid_can_read(self.iface_num) == secbool::TRUE }
+    fn as_webusb_info(&mut self) -> ffi::usb_webusb_info_t {
+        ffi::usb_webusb_info_t {
+            rx_buffer: self.rx_buffer.as_mut_ptr(), // With length of max_packet_len bytes.
+            max_packet_len: self.rx_buffer.len() as u8, // Length of the biggest report and of rx_buffer.
+            iface_num: self.iface_num,                  // Address of this WebUSB interface.
+            // emu_port: self.emu_port, // UDP port of this interface in the emulator.
+            ep_in: self.ep_in, // Address of IN endpoint (with the highest bit set).
+            ep_out: self.ep_out, // Address of OUT endpoint.
+            subclass: 0,       // usb_iface_subclass_t
+            protocol: 0,       // usb_iface_protocol_t
+            polling_interval: 1, // In units of 1ms.
+        }
     }
 
-    fn ready_to_write(&mut self) -> bool {
+    fn ready_to_read(iface_num: u8) -> bool {
         // SAFETY:
-        unsafe { ffi::usb_hid_can_write(self.iface_num) == secbool::TRUE }
+        unsafe { ffi::usb_webusb_can_read(iface_num) == secbool::TRUE }
     }
 
-    fn read(&mut self, buffer: &mut [u8]) -> Result<usize, UsbError> {
+    fn ready_to_write(iface_num: u8) -> bool {
+        // SAFETY:
+        unsafe { ffi::usb_webusb_can_write(iface_num) == secbool::TRUE }
+    }
+
+    fn read(iface_num: u8, buffer: &mut [u8]) -> Result<usize, UsbError> {
         // SAFETY:
         let result =
-            unsafe { ffi::usb_hid_read(self.iface_num, buffer.as_mut_ptr(), buffer.len() as u32) };
+            unsafe { ffi::usb_webusb_read(iface_num, buffer.as_mut_ptr(), buffer.len() as u32) };
 
         if result < 0 {
-            Err(UsbError::Io)
+            Err(UsbError::InterfaceNotFound)
         } else {
             Ok(result as usize)
         }
     }
 
-    fn write(&mut self, buffer: &[u8]) -> Result<usize, UsbError> {
+    fn write(iface_num: u8, buffer: &[u8]) -> Result<usize, UsbError> {
         // SAFETY:
         let result =
-            unsafe { ffi::usb_hid_write(self.iface_num, buffer.as_ptr(), buffer.len() as u32) };
+            unsafe { ffi::usb_webusb_write(iface_num, buffer.as_ptr(), buffer.len() as u32) };
 
         if result < 0 {
-            Err(UsbError::Io)
+            Err(UsbError::InterfaceNotFound)
         } else {
             Ok(result as usize)
+        }
+    }
+}
+
+pub struct HidConfig {
+    pub report_desc: &'static [u8],
+    pub rx_buffer: &'static mut [u8; 64],
+    pub iface_num: u8,
+    pub ep_in: u8,
+    pub ep_out: u8,
+    pub emu_port: u16,
+}
+
+impl HidConfig {
+    pub fn add(self, config: &mut UsbConfig) -> Result<IfaceTicket, UsbError> {
+        let ticket = IfaceTicket::Hid(self.iface_num);
+        config
+            .interfaces
+            .push(IfaceConfig::Hid(self))
+            .map(|_| ticket)
+            .map_err(|_| UsbError::FailedToAddInterface)
+    }
+
+    fn register(&mut self) -> Result<(), UsbError> {
+        // SAFETY:
+        let res = unsafe { ffi::usb_hid_add(&self.as_hid_info()) };
+
+        if res != secbool::TRUE {
+            Err(UsbError::FailedToAddInterface)
+        } else {
+            Ok(())
         }
     }
 
@@ -215,20 +257,67 @@ impl HidConfig {
             polling_interval: 1, // In units of 1ms.
         }
     }
+
+    fn ready_to_read(iface_num: u8) -> bool {
+        // SAFETY:
+        unsafe { ffi::usb_hid_can_read(iface_num) == secbool::TRUE }
+    }
+
+    fn ready_to_write(iface_num: u8) -> bool {
+        // SAFETY:
+        unsafe { ffi::usb_hid_can_write(iface_num) == secbool::TRUE }
+    }
+
+    fn read(iface_num: u8, buffer: &mut [u8]) -> Result<usize, UsbError> {
+        // SAFETY:
+        let result =
+            unsafe { ffi::usb_hid_read(iface_num, buffer.as_mut_ptr(), buffer.len() as u32) };
+
+        if result < 0 {
+            Err(UsbError::InterfaceNotFound)
+        } else {
+            Ok(result as usize)
+        }
+    }
+
+    fn write(iface_num: u8, buffer: &[u8]) -> Result<usize, UsbError> {
+        // SAFETY:
+        let result = unsafe { ffi::usb_hid_write(iface_num, buffer.as_ptr(), buffer.len() as u32) };
+
+        if result < 0 {
+            Err(UsbError::InterfaceNotFound)
+        } else {
+            Ok(result as usize)
+        }
+    }
 }
 
-pub struct WebUsbConfig {
-    pub rx_buffer: &'static mut [u8],
+pub struct VcpConfig {
+    pub rx_buffer: &'static mut [u8; 1024],
+    pub tx_buffer: &'static mut [u8; 1024],
+    pub rx_packet: &'static mut [u8; 64],
+    pub tx_packet: &'static mut [u8; 64],
+    pub rx_intr_fn: Option<unsafe extern "C" fn()>,
+    pub rx_intr_byte: u8,
     pub iface_num: u8,
-    pub emu_port: u16,
+    pub data_iface_num: u8,
     pub ep_in: u8,
     pub ep_out: u8,
+    pub ep_cmd: u8,
+    pub emu_port: u16,
 }
 
-impl WebUsbConfig {
+impl VcpConfig {
+    pub fn add(self, config: &mut UsbConfig) -> Result<(), UsbError> {
+        config
+            .interfaces
+            .push(IfaceConfig::Vcp(self))
+            .map_err(|_| UsbError::FailedToAddInterface)
+    }
+
     fn register(&mut self) -> Result<(), UsbError> {
         // SAFETY:
-        let res = unsafe { ffi::usb_webusb_add(&self.as_webusb_info()) };
+        let res = unsafe { ffi::usb_vcp_add(&self.as_vcp_info()) };
 
         if res != secbool::TRUE {
             Err(UsbError::FailedToAddInterface)
@@ -237,52 +326,134 @@ impl WebUsbConfig {
         }
     }
 
-    fn ready_to_read(&mut self) -> bool {
-        // SAFETY:
-        unsafe { ffi::usb_webusb_can_read(self.iface_num) == secbool::TRUE }
+    fn as_vcp_info(&mut self) -> ffi::usb_vcp_info_t {
+        ffi::usb_vcp_info_t {
+            tx_packet: self.tx_packet.as_mut_ptr(), // Buffer for one packet, with length of at least max_packet_len bytes.
+            tx_buffer: self.tx_buffer.as_mut_ptr(), // Buffer for IN EP ring buffer, with length of at least tx_buffer_len bytes.
+            rx_packet: self.rx_packet.as_mut_ptr(), // Buffer for one packet, with length of at least max_packet_len bytes.
+            rx_buffer: self.rx_buffer.as_mut_ptr(), // Buffer for OUT EP ring buffer, with length of at least rx_buffer_len bytes.
+            max_packet_len: self.rx_packet.len() as u8, // Length of the biggest packet, and of tx_packet and rx_packet.
+            tx_buffer_len: self.tx_buffer.len(), // Length of tx_buffer, needs to be a power of 2.
+            rx_buffer_len: self.rx_buffer.len(), // Length of rx_buffer, needs to be a power of 2.
+            rx_intr_fn: self.rx_intr_fn, // Callback called from usb_vcp_class_data_out IRQ handler if rx_intr_byte matches.
+            rx_intr_byte: self.rx_intr_byte, // Value matched against every received byte.
+            iface_num: self.iface_num,   // Address of this VCP interface.
+            data_iface_num: self.data_iface_num, // Address of data interface of the VCP interface association.
+            // emu_port: self.emu_port,  // UDP port of this interface in the emulator.
+            ep_cmd: self.ep_cmd, // Address of IN CMD endpoint (with the highest bit set).
+            ep_in: self.ep_in,   // Address of IN endpoint (with the highest bit set).
+            ep_out: self.ep_out, // Address of OUT endpoint.
+            polling_interval: 10, // In units of 1ms.
+        }
     }
+}
 
-    fn ready_to_write(&mut self) -> bool {
-        // SAFETY:
-        unsafe { ffi::usb_webusb_can_write(self.iface_num) == secbool::TRUE }
-    }
+#[cfg(test)]
+mod tests {
+    use cstr_core::cstr;
 
-    fn read(&mut self, buffer: &mut [u8]) -> Result<usize, UsbError> {
-        // SAFETY:
-        let result = unsafe {
-            ffi::usb_webusb_read(self.iface_num, buffer.as_mut_ptr(), buffer.len() as u32)
+    use super::*;
+
+    #[test]
+    fn test_usb() {
+        // Example port of usb.py.
+
+        const UDP_PORT: u16 = 0;
+        const WIRE_PORT_OFFSET: u16 = 0;
+        const DEBUGLINK_PORT_OFFSET: u16 = 1;
+        const WEBAUTHN_PORT_OFFSET: u16 = 2;
+        const VCP_PORT_OFFSET: u16 = 3;
+
+        let mut iface_iter = 0u8..;
+
+        const ENABLE_IFACE_DEBUG: bool = true;
+        const ENABLE_IFACE_WEBAUTHN: bool = true;
+        const ENABLE_IFACE_VCP: bool = true;
+
+        let mut config = UsbConfig {
+            vendor_id: 0x1209,
+            product_id: 0x53C1,
+            release_num: 0x0200,
+            manufacturer: cstr!("SatoshiLabs"),
+            product: cstr!("TREZOR"),
+            serial_number: cstr!(""), // TODO
+            interface: cstr!("TREZOR Interface"),
+            usb21_landing: false,
+            interfaces: Vec::new(),
         };
 
-        if result < 0 {
-            Err(UsbError::Io)
-        } else {
-            Ok(result as usize)
-        }
-    }
+        let id_wire = iface_iter.next().unwrap();
+        let iface_wire = WebUsbConfig {
+            rx_buffer: &mut [0; 64], // TODO
+            iface_num: id_wire,
+            ep_in: 0x81 + id_wire,
+            ep_out: 0x01 + id_wire,
+            emu_port: UDP_PORT + WIRE_PORT_OFFSET,
+        };
+        let ticket_wire = iface_wire.add(&mut config).unwrap();
 
-    fn write(&mut self, buffer: &[u8]) -> Result<usize, UsbError> {
-        // SAFETY:
-        let result =
-            unsafe { ffi::usb_webusb_write(self.iface_num, buffer.as_ptr(), buffer.len() as u32) };
-
-        if result < 0 {
-            Err(UsbError::Io)
-        } else {
-            Ok(result as usize)
+        if ENABLE_IFACE_DEBUG {
+            let id_debug = iface_iter.next().unwrap();
+            let iface_debug = WebUsbConfig {
+                rx_buffer: &mut [0; 64], // TODO
+                iface_num: id_debug,
+                ep_in: 0x81 + id_debug,
+                ep_out: 0x01 + id_debug,
+                emu_port: UDP_PORT + DEBUGLINK_PORT_OFFSET,
+            };
+            let ticket_debug = iface_debug.add(&mut config).unwrap();
         }
-    }
 
-    fn as_webusb_info(&mut self) -> ffi::usb_webusb_info_t {
-        ffi::usb_webusb_info_t {
-            rx_buffer: self.rx_buffer.as_mut_ptr(), // With length of max_packet_len bytes.
-            max_packet_len: self.rx_buffer.len() as u8, // Length of the biggest report and of rx_buffer.
-            iface_num: self.iface_num,                  // Address of this WebUSB interface.
-            // emu_port: self.emu_port, // UDP port of this interface in the emulator.
-            ep_in: self.ep_in, // Address of IN endpoint (with the highest bit set).
-            ep_out: self.ep_out, // Address of OUT endpoint.
-            subclass: 0,       // usb_iface_subclass_t
-            protocol: 0,       // usb_iface_protocol_t
-            polling_interval: 1, // In units of 1ms.
+        if ENABLE_IFACE_WEBAUTHN {
+            let id_webauthn = iface_iter.next().unwrap();
+            let iface_webauthn = HidConfig {
+                report_desc: &[
+                    0x06, 0xd0, 0xf1, // USAGE_PAGE (FIDO Alliance)
+                    0x09, 0x01, // USAGE (U2F HID Authenticator Device)
+                    0xa1, 0x01, // COLLECTION (Application)
+                    0x09, 0x20, // USAGE (Input Report Data)
+                    0x15, 0x00, // LOGICAL_MINIMUM (0)
+                    0x26, 0xff, 0x00, // LOGICAL_MAXIMUM (255)
+                    0x75, 0x08, // REPORT_SIZE (8)
+                    0x95, 0x40, // REPORT_COUNT (64)
+                    0x81, 0x02, // INPUT (Data,Var,Abs)
+                    0x09, 0x21, // USAGE (Output Report Data)
+                    0x15, 0x00, // LOGICAL_MINIMUM (0)
+                    0x26, 0xff, 0x00, // LOGICAL_MAXIMUM (255)
+                    0x75, 0x08, // REPORT_SIZE (8)
+                    0x95, 0x40, // REPORT_COUNT (64)
+                    0x91, 0x02, // OUTPUT (Data,Var,Abs)
+                    0xc0, // END_COLLECTION
+                ],
+                rx_buffer: &mut [0; 64], // TODO
+                iface_num: id_webauthn,
+                ep_in: 0x81 + id_webauthn,
+                ep_out: 0x01 + id_webauthn,
+                emu_port: UDP_PORT + WEBAUTHN_PORT_OFFSET,
+            };
+            let ticket_webauthn = iface_webauthn.add(&mut config).unwrap();
         }
+
+        if ENABLE_IFACE_VCP {
+            let id_vcp = iface_iter.next().unwrap();
+            let id_vcp_data = iface_iter.next().unwrap();
+            let iface_vcp = VcpConfig {
+                rx_buffer: &mut [0; 1024], // TODO
+                tx_buffer: &mut [0; 1024], // TODO
+                rx_packet: &mut [0; 64],   // TODO
+                tx_packet: &mut [0; 64],   // TODO
+                rx_intr_fn: None,          // Use pendsv_kbd_intr here.
+                rx_intr_byte: 3,           // Ctrl-C
+                iface_num: id_vcp,
+                data_iface_num: id_vcp_data,
+                ep_in: 0x81 + id_vcp,
+                ep_out: 0x01 + id_vcp,
+                ep_cmd: 0x81 + id_vcp_data,
+                emu_port: UDP_PORT + VCP_PORT_OFFSET,
+            };
+            iface_vcp.add(&mut config).unwrap();
+        }
+
+        let usb = Usb::open(config).unwrap();
     }
 }
