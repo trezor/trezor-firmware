@@ -266,6 +266,10 @@ def test_send_multisig_1(client: Client):
 
 
 def test_attack_change_input_address(client: Client):
+    # Simulates an attack where the user is coerced into unknowingly
+    # transferring funds from one account to another one of their accounts,
+    # potentially resulting in privacy issues.
+
     inp1 = messages.TxInputType(
         address_n=parse_path("m/49h/1h/0h/1/0"),
         # 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
@@ -285,12 +289,13 @@ def test_attack_change_input_address(client: Client):
         amount=123_456_789 - 11_000 - 12_300_000,
     )
 
-    # Test if the transaction can be signed normally
+    # Test if the transaction can be signed normally.
     with client:
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
+                # The user is required to confirm transfer to another account.
                 messages.ButtonRequest(code=B.ConfirmOutput),
                 request_output(1),
                 messages.ButtonRequest(code=B.ConfirmOutput),
@@ -330,28 +335,10 @@ def test_attack_change_input_address(client: Client):
     # Now run the attack, must trigger the exception
     with client:
         client.set_filter(messages.TxAck, attack_processor)
-        client.set_expected_responses(
-            [
-                request_input(0),
-                request_output(0),
-                messages.ButtonRequest(code=B.ConfirmOutput),
-                request_output(1),
-                messages.ButtonRequest(code=B.SignTx),
-                request_input(0),
-                request_meta(TXHASH_20912f),
-                request_input(0, TXHASH_20912f),
-                request_output(0, TXHASH_20912f),
-                request_output(1, TXHASH_20912f),
-                request_input(0),
-                messages.Failure(code=messages.FailureType.ProcessError),
-            ]
-        )
-        with pytest.raises(TrezorFailure) as exc:
+        with pytest.raises(TrezorFailure):
             btc.sign_tx(
                 client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API_TESTNET
             )
-        assert exc.value.code == messages.FailureType.ProcessError
-        assert exc.value.message.endswith("Transaction has changed during signing")
 
 
 def test_attack_mixed_inputs(client: Client):
