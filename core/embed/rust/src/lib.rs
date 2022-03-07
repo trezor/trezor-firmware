@@ -16,6 +16,7 @@ mod trezorhal;
 #[cfg(feature = "ui")]
 #[macro_use]
 mod ui;
+mod io;
 mod util;
 
 #[cfg(not(feature = "test"))]
