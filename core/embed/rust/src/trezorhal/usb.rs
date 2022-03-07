@@ -13,20 +13,6 @@ pub enum UsbError {
     InterfaceNotFound,
 }
 
-pub enum Interest {
-    /// Caller is interested to read bytes/messages.
-    Read,
-    /// Caller is interested to write bytes/messages.
-    Write,
-}
-
-pub enum Event {
-    /// Resource is ready to perform on selected `Interest`.
-    Ready,
-    /// Resource is not yet ready. No side-effect was performed.
-    Pending,
-}
-
 /// Initialize the USB stack with information from `config`, register all
 /// present USB interfaces, and start the communication.
 ///
@@ -60,24 +46,23 @@ pub fn usb_open(mut config: UsbConfig) -> Result<(), UsbError> {
     Ok(())
 }
 
-/// Check if interface `ticket` is ready to perform on selected `interest`.
+/// Check if interface `ticket` is ready to read a report.
 ///
 /// Returns immediately, does not block. Useful for constructing event loops.
-pub fn usb_poll(ticket: IfaceTicket, interest: Interest) -> Event {
-    let ready = match ticket {
-        IfaceTicket::Hid(iface_num) => match interest {
-            Interest::Read => HidConfig::ready_to_read(iface_num),
-            Interest::Write => HidConfig::ready_to_write(iface_num),
-        },
-        IfaceTicket::WebUsb(iface_num) => match interest {
-            Interest::Read => WebUsbConfig::ready_to_read(iface_num),
-            Interest::Write => WebUsbConfig::ready_to_write(iface_num),
-        },
-    };
-    if ready {
-        Event::Ready
-    } else {
-        Event::Pending
+pub fn usb_is_ready_to_read(ticket: IfaceTicket) -> bool {
+    match ticket {
+        IfaceTicket::Hid(iface_num) => HidConfig::ready_to_read(iface_num),
+        IfaceTicket::WebUsb(iface_num) => WebUsbConfig::ready_to_read(iface_num),
+    }
+}
+
+/// Check if interface `ticket` is ready to write a report.
+///
+/// Returns immediately, does not block. Useful for constructing event loops.
+pub fn usb_is_ready_to_write(ticket: IfaceTicket) -> bool {
+    match ticket {
+        IfaceTicket::Hid(iface_num) => HidConfig::ready_to_write(iface_num),
+        IfaceTicket::WebUsb(iface_num) => WebUsbConfig::ready_to_write(iface_num),
     }
 }
 
