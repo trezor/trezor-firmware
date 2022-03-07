@@ -21,13 +21,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import H_, parse_path
 
-from .signtx import (
-    forge_prevtx,
-    request_finished,
-    request_input,
-    request_meta,
-    request_output,
-)
+from .signtx import forge_prevtx, request_input
 
 B = messages.ButtonRequestType
 
@@ -113,25 +107,25 @@ def test_attack_path_segwit(client: Client):
     # avoid the path warning dialog, but in step6_sign_segwit_inputs() uses Bitcoin paths
     # to get a valid signature.
 
+    device.apply_settings(
+        client, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
+    )
+
     # Generate keys
     address_a = btc.get_address(
         client,
         "Testnet",
-        parse_path("m/84h/1h/0h/0/0"),
+        parse_path("m/84h/0h/0h/0/0"),
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
     address_b = btc.get_address(
         client,
         "Testnet",
-        parse_path("m/84h/1h/1h/0/1"),
+        parse_path("m/84h/0h/1h/0/1"),
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
     prev_hash, prev_tx = forge_prevtx(
         [(address_a, 9_426), (address_b, 7_086)], network="testnet"
-    )
-
-    device.apply_settings(
-        client, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
     )
 
     inp1 = messages.TxInputType(
@@ -174,47 +168,10 @@ def test_attack_path_segwit(client: Client):
 
     with client:
         client.set_filter(messages.TxAck, attack_processor)
-        client.set_expected_responses(
-            [
-                # Step: process inputs
-                request_input(0),
-                # Attacker bypasses warning about non-standard path.
-                request_input(1),
-                # Attacker bypasses warning about non-standard path.
-                # Step: approve outputs
-                request_output(0),
-                messages.ButtonRequest(code=B.ConfirmOutput),
-                messages.ButtonRequest(code=B.SignTx),
-                # Step: verify inputs
-                request_input(0),
-                request_meta(prev_hash),
-                request_input(0, prev_hash),
-                request_output(0, prev_hash),
-                request_output(1, prev_hash),
-                request_input(1),
-                request_meta(prev_hash),
-                request_input(0, prev_hash),
-                request_output(0, prev_hash),
-                request_output(1, prev_hash),
-                # Step: serialize inputs
-                request_input(0),
-                request_input(1),
-                # Step: serialize outputs
-                request_output(0),
-                # Step: sign segwit inputs
-                request_input(0),
-                # Trezor must warn about non-standard path before signing.
-                messages.ButtonRequest(code=B.UnknownDerivationPath),
-                request_input(1),
-                # Trezor must warn about non-standard path before signing.
-                messages.ButtonRequest(code=B.UnknownDerivationPath),
-                request_finished(),
-            ]
-        )
-
-        btc.sign_tx(
-            client, "Testnet", [inp1, inp2], [out1], prev_txes={prev_hash: prev_tx}
-        )
+        with pytest.raises(TrezorFailure):
+            btc.sign_tx(
+                client, "Testnet", [inp1, inp2], [out1], prev_txes={prev_hash: prev_tx}
+            )
 
 
 @pytest.mark.skip_t1(reason="T1 only prevents using paths known to be altcoins")

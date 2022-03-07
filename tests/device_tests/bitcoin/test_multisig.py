@@ -317,26 +317,7 @@ def test_attack_change_input(client: Client):
 
     with client:
         client.set_filter(messages.TxAck, attack_processor)
-        client.set_expected_responses(
-            [
-                request_input(0),
-                request_output(0),
-                messages.ButtonRequest(code=B.ConfirmOutput),
-                request_output(1),
-                messages.ButtonRequest(code=B.SignTx),
-                request_input(0),
-                request_meta(TXHASH_509e08),
-                request_input(0, TXHASH_509e08),
-                request_output(0, TXHASH_509e08),
-                request_input(0),
-                request_output(0),
-                request_output(1),
-                request_input(0),
-                messages.Failure(code=messages.FailureType.ProcessError),
-            ]
-        )
-
-        with pytest.raises(TrezorFailure) as exc:
+        with pytest.raises(TrezorFailure):
             btc.sign_tx(
                 client,
                 "Testnet",
@@ -344,6 +325,3 @@ def test_attack_change_input(client: Client):
                 [output_payee, output_change],
                 prev_txes=TX_API_TESTNET,
             )
-
-        assert exc.value.code == messages.FailureType.ProcessError
-        assert exc.value.message.endswith("Transaction has changed during signing")
