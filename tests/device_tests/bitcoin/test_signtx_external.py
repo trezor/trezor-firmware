@@ -16,9 +16,10 @@
 
 import pytest
 
-from trezorlib import btc, messages
+from trezorlib import btc, device, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
+from trezorlib.messages import SafetyCheckLevel
 from trezorlib.tools import parse_path
 
 from ...tx_cache import TxCache
@@ -767,3 +768,106 @@ def test_p2wpkh_with_false_proof(client: Client):
                 [out1],
                 prev_txes=TX_CACHE_TESTNET,
             )
+
+
+def test_p2tr_external_unverified(client: Client):
+    inp1 = messages.TxInputType(
+        # tb1pswrqtykue8r89t9u4rprjs0gt4qzkdfuursfnvqaa3f2yql07zmq8s8a5u
+        address_n=parse_path("m/86h/1h/0h/0/0"),
+        amount=6_800,
+        prev_hash=TXHASH_df862e,
+        prev_index=0,
+        script_type=messages.InputScriptType.SPENDTAPROOT,
+    )
+    inp2 = messages.TxInputType(
+        # tb1p8tvmvsvhsee73rhym86wt435qrqm92psfsyhy6a3n5gw455znnpqm8wald
+        # m/86'/1'/0'/0/1 for "all all ... all" seed.
+        amount=13_000,
+        prev_hash=TXHASH_3ac32e,
+        prev_index=1,
+        script_pubkey=bytes.fromhex(
+            "51203ad9b641978673e88ee4d9f4e5d63400c1b2a8304c09726bb19d10ead2829cc2"
+        ),
+        script_type=messages.InputScriptType.EXTERNAL,
+    )
+    out1 = messages.TxOutputType(
+        # 84'/1'/1'/0/0
+        address="tb1q7r9yvcdgcl6wmtta58yxf29a8kc96jkyxl7y88",
+        amount=15_000,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+    out2 = messages.TxOutputType(
+        # tb1pn2d0yjeedavnkd8z8lhm566p0f2utm3lgvxrsdehnl94y34txmts5s7t4c
+        address_n=parse_path("m/86h/1h/0h/1/0"),
+        script_type=messages.OutputScriptType.PAYTOTAPROOT,
+        amount=6_800 + 13_000 - 200 - 15_000,
+    )
+
+    # Unverified external inputs should be rejected when safety checks are enabled.
+    with pytest.raises(TrezorFailure, match="[Ee]xternal input"):
+        btc.sign_tx(
+            client, "Testnet", [inp1, inp2], [out1, out2], prev_txes=TX_CACHE_TESTNET
+        )
+
+    # Signing should succeed after disabling safety checks.
+    device.apply_settings(client, safety_checks=SafetyCheckLevel.PromptTemporarily)
+    _, serialized_tx = btc.sign_tx(
+        client, "Testnet", [inp1, inp2], [out1, out2], prev_txes=TX_CACHE_TESTNET
+    )
+
+    # Second witness is missing from the serialized transaction.
+    assert (
+        serialized_tx.hex()
+        == "010000000001029f67664b8972ae01498e25ea98a37889f19aa86a2f39ddad84ff31da312e86df0000000000ffffffff9b117a776a9aaf70d4c3ffe89f009dcd23210a03d649ee5e38791d83902ec33a0100000000ffffffff02983a000000000000160014f0ca4661a8c7f4edad7da1c864a8bd3db05d4ac4f8110000000000002251209a9af24b396f593b34e23fefba6b417a55c5ee3f430c3837379fcb5246ab36d70140b51992353d2f99b7b620c0882cb06694996f1b6c7e62a3c1d3036e0f896fbf0b92f3d9aeab94f2454809a501715667345f702c8214693f469225de5f6636b86b0000000000"
+    )
+
+
+def test_p2wpkh_external_unverified(client: Client):
+    inp1 = messages.TxInputType(
+        # tb1qkvwu9g3k2pdxewfqr7syz89r3gj557l3uuf9r9
+        address_n=parse_path("m/84h/1h/0h/0/0"),
+        prev_hash=TXHASH_70f987,
+        prev_index=0,
+        amount=100_000,
+        script_type=messages.InputScriptType.SPENDWITNESS,
+    )
+
+    inp2 = messages.TxInputType(
+        # tb1qldlynaqp0hy4zc2aag3pkenzvxy65saesxw3wd
+        # address_n=parse_path("m/84h/1h/0h/0/1"),
+        prev_hash=TXHASH_65b768,
+        prev_index=0,
+        amount=10_000,
+        script_type=messages.InputScriptType.EXTERNAL,
+        script_pubkey=bytes.fromhex("0014fb7e49f4017dc951615dea221b66626189aa43b9"),
+    )
+
+    out1 = messages.TxOutputType(
+        address="tb1qnspxpr2xj9s2jt6qlhuvdnxw6q55jvygcf89r2",
+        amount=50_000,
+        script_type=messages.OutputScriptType.PAYTOWITNESS,
+    )
+
+    out2 = messages.TxOutputType(
+        address_n=parse_path("m/84h/1h/0h/1/0"),
+        amount=100_000 + 10_000 - 50_000 - 1_000,
+        script_type=messages.OutputScriptType.PAYTOWITNESS,
+    )
+
+    # Unverified external inputs should be rejected when safety checks are enabled.
+    with pytest.raises(TrezorFailure, match="[Ee]xternal input"):
+        btc.sign_tx(
+            client, "Testnet", [inp1, inp2], [out1, out2], prev_txes=TX_CACHE_TESTNET
+        )
+
+    # Signing should succeed after disabling safety checks.
+    device.apply_settings(client, safety_checks=SafetyCheckLevel.PromptTemporarily)
+    _, serialized_tx = btc.sign_tx(
+        client, "Testnet", [inp1, inp2], [out1, out2], prev_txes=TX_CACHE_TESTNET
+    )
+
+    # Second witness is missing from the serialized transaction.
+    assert (
+        serialized_tx.hex()
+        == "010000000001029e506939e23ad82a559f2c5e812d13788644e1e0017afd5c40383ab01e87f9700000000000ffffffffd9375b60919f9d5e1db4d7c6aba3d61d4fa080fba195bdee09b2cfccda68b7650000000000ffffffff0250c30000000000001600149c02608d469160a92f40fdf8c6ccced02949308878e6000000000000160014cc8067093f6f843d6d3e22004a4290cd0c0f336b0247304402207be75627767e59046da2699328ca1c27b60cfb34bb257a9d90442e496b5f936202201f43e2b55e1b2acf5677d3e29b9c5a78e2a4ae03a01be5c50a17cf4b88a3b278012103adc58245cf28406af0ef5cc24b8afba7f1be6c72f279b642d85c48798685f8620000000000"
+    )
