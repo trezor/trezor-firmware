@@ -50,7 +50,7 @@ pub fn poll_io(resources: &[Resource], timeout: Duration) -> Result<Event, Error
 
     loop {
         // Poll all resources, return if ready.
-        for &resource in resources {
+        for resource in resources {
             match resource {
                 #[cfg(feature = "model_t1")]
                 Resource::Button => {
@@ -67,13 +67,13 @@ pub fn poll_io(resources: &[Resource], timeout: Duration) -> Result<Event, Error
                     }
                 }
                 Resource::UsbRead(ticket) => {
-                    if usb_is_ready_to_read(ticket) {
-                        return Ok(Event::UsbRead(ticket));
+                    if usb_is_ready_to_read(*ticket) {
+                        return Ok(Event::UsbRead(*ticket));
                     }
                 }
                 Resource::UsbWrite(ticket) => {
-                    if usb_is_ready_to_write(ticket) {
-                        return Ok(Event::UsbWrite(ticket));
+                    if usb_is_ready_to_write(*ticket) {
+                        return Ok(Event::UsbWrite(*ticket));
                     }
                 }
             }
