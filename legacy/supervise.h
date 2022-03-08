@@ -87,7 +87,7 @@ inline void svc_reboot_to_bootloader(void) {
 
 extern void svc_flash_unlock(void);
 extern void svc_flash_program(uint32_t program_size);
-extern void svc_flash_erase_sector(uint16_t sector);
+extern void svc_flash_erase_sector(uint8_t sector);
 extern uint32_t svc_flash_lock(void);
 extern uint32_t svc_timer_ms(void);
 
