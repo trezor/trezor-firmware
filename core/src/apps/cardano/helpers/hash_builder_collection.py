@@ -4,6 +4,7 @@ from apps.common import cbor
 
 if TYPE_CHECKING:
     from typing import Any, Generic, TypeVar
+    from trezor import wire
     from trezor.utils import HashContext
 
     T = TypeVar("T")
@@ -43,7 +44,13 @@ class HashBuilderCollection:
 
         self.remaining -= 1
 
-    def _hash_item(self, item: Any) -> None:
+    def _hash_item(self, item: Any) -> bytes:
+        assert self.hash_fn is not None
+        encoded_item = cbor.encode(item)
+        self.hash_fn.update(encoded_item)
+        return encoded_item
+
+    def _hash_item_streamed(self, item: Any) -> None:
         assert self.hash_fn is not None
         for chunk in cbor.encode_streamed(item):
             self.hash_fn.update(chunk)
@@ -74,7 +81,7 @@ class HashBuilderList(HashBuilderCollection, Generic[T]):
         if isinstance(item, HashBuilderCollection):
             self._insert_child(item)
         else:
-            self._hash_item(item)
+            self._hash_item_streamed(item)
 
         return item
 
@@ -83,16 +90,31 @@ class HashBuilderList(HashBuilderCollection, Generic[T]):
 
 
 class HashBuilderDict(HashBuilderCollection, Generic[K, V]):
+    key_order_error: wire.ProcessError
+    previous_encoded_key: bytes
+
+    def __init__(self, size: int, key_order_error: wire.ProcessError):
+        super().__init__(size)
+        self.key_order_error = key_order_error
+        self.previous_encoded_key = b""
+
     def add(self, key: K, value: V) -> V:
         self._do_enter_item()
+
         # enter key, this must not nest
         assert not isinstance(key, HashBuilderCollection)
-        self._hash_item(key)
+        encoded_key = self._hash_item(key)
+
+        # check key ordering
+        if not cbor.precedes(self.previous_encoded_key, encoded_key):
+            raise self.key_order_error
+        self.previous_encoded_key = encoded_key
+
         # enter value, this can nest
         if isinstance(value, HashBuilderCollection):
             self._insert_child(value)
         else:
-            self._hash_item(value)
+            self._hash_item_streamed(value)
 
         return value
 
