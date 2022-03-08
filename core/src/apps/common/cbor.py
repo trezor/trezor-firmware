@@ -320,11 +320,11 @@ def create_map_header(size: int) -> bytes:
     return _header(_CBOR_MAP, size)
 
 
-def are_canonically_ordered(previous: Value, current: Value) -> bool:
+def precedes(prev: bytes, curr: bytes) -> bool:
     """
-    Returns True if `previous` is smaller than `current` with regards to
+    Returns True if `prev` is smaller than `curr` with regards to
     the cbor map key ordering as defined in
     https://datatracker.ietf.org/doc/html/rfc7049#section-3.9
+    Note that `prev` and `curr` must already be cbor-encoded.
     """
-    u, v = encode(previous), encode(current)
-    return len(u) < len(v) or (len(u) == len(v) and u < v)
+    return len(prev) < len(curr) or (len(prev) == len(curr) and prev < curr)

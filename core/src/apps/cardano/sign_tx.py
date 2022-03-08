@@ -185,7 +185,9 @@ async def sign_tx(
     account_path_checker = AccountPathChecker()
 
     hash_fn = hashlib.blake2b(outlen=32)
-    tx_dict: HashBuilderDict[int, Any] = HashBuilderDict(tx_body_map_item_count)
+    tx_dict: HashBuilderDict[int, Any] = HashBuilderDict(
+        tx_body_map_item_count, INVALID_TX_SIGNING_REQUEST
+    )
     tx_dict.start(hash_fn)
     with tx_dict:
         await _process_transaction(ctx, msg, keychain, tx_dict, account_path_checker)
@@ -296,7 +298,7 @@ async def _process_transaction(
 
     if msg.withdrawals_count > 0:
         withdrawals_dict: HashBuilderDict[bytes, int] = HashBuilderDict(
-            msg.withdrawals_count
+            msg.withdrawals_count, INVALID_WITHDRAWAL
         )
         with tx_dict.add(TX_BODY_KEY_WITHDRAWALS, withdrawals_dict):
             await _process_withdrawals(
@@ -324,7 +326,7 @@ async def _process_transaction(
 
     if msg.minting_asset_groups_count > 0:
         minting_dict: HashBuilderDict[bytes, HashBuilderDict] = HashBuilderDict(
-            msg.minting_asset_groups_count
+            msg.minting_asset_groups_count, INVALID_TOKEN_BUNDLE_MINT
         )
         with tx_dict.add(TX_BODY_KEY_MINT, minting_dict):
             await _process_minting(ctx, minting_dict)
@@ -468,7 +470,9 @@ async def _process_outputs(
                     output_value_list.append(output.amount)
                     asset_groups_dict: HashBuilderDict[
                         bytes, HashBuilderDict[bytes, int]
-                    ] = HashBuilderDict(output.asset_groups_count)
+                    ] = HashBuilderDict(
+                        output.asset_groups_count, INVALID_TOKEN_BUNDLE_OUTPUT
+                    )
                     with output_value_list.append(asset_groups_dict):
                         await _process_asset_groups(
                             ctx,
@@ -492,15 +496,15 @@ async def _process_asset_groups(
     should_show_tokens: bool,
 ) -> None:
     """Read, validate and serialize the asset groups of an output."""
-    previous_policy_id: bytes = b""
     for _ in range(asset_groups_count):
         asset_group: CardanoAssetGroup = await ctx.call(
             CardanoTxItemAck(), CardanoAssetGroup
         )
-        _validate_asset_group(asset_group, previous_policy_id)
-        previous_policy_id = asset_group.policy_id
+        _validate_asset_group(asset_group)
 
-        tokens: HashBuilderDict[bytes, int] = HashBuilderDict(asset_group.tokens_count)
+        tokens: HashBuilderDict[bytes, int] = HashBuilderDict(
+            asset_group.tokens_count, INVALID_TOKEN_BUNDLE_OUTPUT
+        )
         with asset_groups_dict.add(asset_group.policy_id, tokens):
             await _process_tokens(
                 ctx,
@@ -519,11 +523,9 @@ async def _process_tokens(
     should_show_tokens: bool,
 ) -> None:
     """Read, validate, confirm and serialize the tokens of an asset group."""
-    previous_asset_name_bytes: bytes = b""
     for _ in range(tokens_count):
         token: CardanoToken = await ctx.call(CardanoTxItemAck(), CardanoToken)
-        _validate_token(token, previous_asset_name_bytes)
-        previous_asset_name_bytes = token.asset_name_bytes
+        _validate_token(token)
         if should_show_tokens:
             await confirm_sending_token(ctx, policy_id, token)
 
@@ -641,24 +643,18 @@ async def _process_withdrawals(
     if withdrawals_count == 0:
         return
 
-    previous_reward_address_bytes: bytes = b""
     for _ in range(withdrawals_count):
         withdrawal: CardanoTxWithdrawal = await ctx.call(
             CardanoTxItemAck(), CardanoTxWithdrawal
         )
         _validate_withdrawal(
-            keychain,
             withdrawal,
             signing_mode,
-            protocol_magic,
-            network_id,
             account_path_checker,
-            previous_reward_address_bytes,
         )
         reward_address_bytes = _derive_withdrawal_reward_address_bytes(
             keychain, withdrawal, protocol_magic, network_id
         )
-        previous_reward_address_bytes = reward_address_bytes
 
         await confirm_withdrawal(ctx, withdrawal, reward_address_bytes, network_id)
 
@@ -707,15 +703,15 @@ async def _process_minting(
 
     await show_warning_tx_contains_mint(ctx)
 
-    previous_policy_id: bytes = b""
     for _ in range(token_minting.asset_groups_count):
         asset_group: CardanoAssetGroup = await ctx.call(
             CardanoTxItemAck(), CardanoAssetGroup
         )
-        _validate_asset_group(asset_group, previous_policy_id, is_mint=True)
-        previous_policy_id = asset_group.policy_id
+        _validate_asset_group(asset_group, is_mint=True)
 
-        tokens: HashBuilderDict[bytes, int] = HashBuilderDict(asset_group.tokens_count)
+        tokens: HashBuilderDict[bytes, int] = HashBuilderDict(
+            asset_group.tokens_count, INVALID_TOKEN_BUNDLE_MINT
+        )
         with minting_dict.add(asset_group.policy_id, tokens):
             await _process_minting_tokens(
                 ctx,
@@ -732,11 +728,9 @@ async def _process_minting_tokens(
     tokens_count: int,
 ) -> None:
     """Read, validate, confirm and serialize the tokens of an asset group."""
-    previous_asset_name_bytes: bytes = b""
     for _ in range(tokens_count):
         token: CardanoToken = await ctx.call(CardanoTxItemAck(), CardanoToken)
-        _validate_token(token, previous_asset_name_bytes, is_mint=True)
-        previous_asset_name_bytes = token.asset_name_bytes
+        _validate_token(token, is_mint=True)
         await confirm_token_minting(ctx, policy_id, token)
 
         assert token.mint_amount is not None  # _validate_token
@@ -1005,7 +999,7 @@ async def _show_output(
 
 
 def _validate_asset_group(
-    asset_group: CardanoAssetGroup, previous_policy_id: bytes, is_mint: bool = False
+    asset_group: CardanoAssetGroup, is_mint: bool = False
 ) -> None:
     INVALID_TOKEN_BUNDLE = (
         INVALID_TOKEN_BUNDLE_MINT if is_mint else INVALID_TOKEN_BUNDLE_OUTPUT
@@ -1015,13 +1009,9 @@ def _validate_asset_group(
         raise INVALID_TOKEN_BUNDLE
     if asset_group.tokens_count == 0:
         raise INVALID_TOKEN_BUNDLE
-    if not cbor.are_canonically_ordered(previous_policy_id, asset_group.policy_id):
-        raise INVALID_TOKEN_BUNDLE
 
 
-def _validate_token(
-    token: CardanoToken, previous_asset_name_bytes: bytes, is_mint: bool = False
-) -> None:
+def _validate_token(token: CardanoToken, is_mint: bool = False) -> None:
     INVALID_TOKEN_BUNDLE = (
         INVALID_TOKEN_BUNDLE_MINT if is_mint else INVALID_TOKEN_BUNDLE_OUTPUT
     )
@@ -1034,10 +1024,6 @@ def _validate_token(
             raise INVALID_TOKEN_BUNDLE
 
     if len(token.asset_name_bytes) > MAX_ASSET_NAME_LENGTH:
-        raise INVALID_TOKEN_BUNDLE
-    if not cbor.are_canonically_ordered(
-        previous_asset_name_bytes, token.asset_name_bytes
-    ):
         raise INVALID_TOKEN_BUNDLE
 
 
@@ -1065,13 +1051,9 @@ async def _show_certificate(
 
 
 def _validate_withdrawal(
-    keychain: seed.Keychain,
     withdrawal: CardanoTxWithdrawal,
     signing_mode: CardanoTxSigningMode,
-    protocol_magic: int,
-    network_id: int,
     account_path_checker: AccountPathChecker,
-    previous_reward_address_bytes: bytes,
 ) -> None:
     validate_stake_credential(
         withdrawal.path,
@@ -1082,14 +1064,6 @@ def _validate_withdrawal(
     )
 
     if not 0 <= withdrawal.amount < LOVELACE_MAX_SUPPLY:
-        raise INVALID_WITHDRAWAL
-
-    reward_address_bytes = _derive_withdrawal_reward_address_bytes(
-        keychain, withdrawal, protocol_magic, network_id
-    )
-    if not cbor.are_canonically_ordered(
-        previous_reward_address_bytes, reward_address_bytes
-    ):
         raise INVALID_WITHDRAWAL
 
     account_path_checker.add_withdrawal(withdrawal)
