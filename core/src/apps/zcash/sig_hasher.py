@@ -119,7 +119,7 @@ class TransparentHasher:
     def add_input(self, txi: TxInput, script_pubkey: bytes) -> None:
         self.empty = False
         write_prevout(self.prevouts, txi)                        # (see S.2b prevouts_sig_digest)
-        write_sint64(self.amounts, txi.amount)                   # (see S.2c amounts_sig_digest) 
+        write_uint64(self.amounts, txi.amount)                   # (see S.2c amounts_sig_digest) 
         write_bytes_prefixed(self.scriptpubkeys, script_pubkey)  # (see S.2d scriptpubkeys_sig_digest)
         write_uint32(self.sequence, txi.sequence)                # (see S.2e sequence_sig_digest)
 
