@@ -79,12 +79,10 @@
         "decimals": 6,
         "links": {
             "Homepage": "https://www.cardano.org",
-            "Github": "https://github.com/input-output-hk/cardano-sl"
+            "Github": "https://github.com/input-output-hk/cardano-node"
         },
         "wallet": {
-            "AdaLite": "https://adalite.io/app",
-            "Yoroi": "https://yoroi-wallet.com",
-            "Daedalus": "https://daedaluswallet.io"
+            "Trezor Suite": "https://suite.trezor.io"
         }
     },
     {
@@ -95,12 +93,10 @@
         "decimals": 6,
         "links": {
             "Homepage": "https://www.cardano.org",
-            "Github": "https://github.com/input-output-hk/cardano-sl"
+            "Github": "https://github.com/input-output-hk/cardano-node"
         },
         "wallet": {
-            "AdaLite": "https://adalite.io/app",
-            "Yoroi": "https://yoroi-wallet.com",
-            "Daedalus": "https://daedaluswallet.io"
+            "Trezor Suite": "https://suite.trezor.io"
         }
     },
     {
