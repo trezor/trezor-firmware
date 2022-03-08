@@ -1372,3 +1372,17 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
         name="Molereum Network",
         rskip60=False,
     )
+    yield NetworkInfo(
+        chain_id=940,
+        slip44=60,
+        shortcut="tPLS",
+        name="PulseChain Testnet",
+        rskip60=False,
+    )
+    yield NetworkInfo(
+        chain_id=369,
+        slip44=60,
+        shortcut="PLS",
+        name="PulseChain",
+        rskip60=False,
+    )
