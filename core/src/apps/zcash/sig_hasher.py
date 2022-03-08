@@ -94,11 +94,11 @@ class HeaderHasher:
     def initialize(self, tx):
         h = HashWriter(blake2b(outlen=32, personal=b'ZTxIdHeadersHash'))
 
-        write_uint32(h, tx.version)           # T.1a: version             (4-byte little-endian version identifier including overwinter flag)
-        write_uint32(h, tx.version_group_id)  # T.1b: version_group_id    (4-byte little-endian version group identifier)
-        write_uint32(h, tx.branch_id)         # T.1c: consensus_branch_id (4-byte little-endian consensus branch id)
-        write_uint32(h, tx.lock_time)         # T.1d: lock_time           (4-byte little-endian nLockTime value)
-        write_uint32(h, tx.expiry)            # T.1e: expiry_height       (4-byte little-endian block height)
+        write_uint32(h, tx.version | (1 << 31))  # T.1a: version             (4-byte little-endian version identifier including overwinter flag)
+        write_uint32(h, tx.version_group_id)     # T.1b: version_group_id    (4-byte little-endian version group identifier)
+        write_uint32(h, tx.branch_id)            # T.1c: consensus_branch_id (4-byte little-endian consensus branch id)
+        write_uint32(h, tx.lock_time)            # T.1d: lock_time           (4-byte little-endian nLockTime value)
+        write_uint32(h, tx.expiry)               # T.1e: expiry_height       (4-byte little-endian block height)
 
         self._digest = h.get_digest()
 
@@ -118,14 +118,14 @@ class TransparentHasher:
 
     def add_input(self, txi: TxInput, script_pubkey: bytes) -> None:
         self.empty = False
-        write_prevout(self.prevouts, txi)                        # S.2b: prevouts_sig_digest      (32-byte hash)
-        write_uint32(self.amounts, txi.amount)                   # S.2c: amounts_sig_digest       (32-byte hash)
-        write_bytes_prefixed(self.scriptpubkeys, script_pubkey)  # S.2d: scriptpubkeys_sig_digest (32-byte hash)
-        write_uint32(self.sequence, txi.sequence)                # S.2e: sequence_sig_digest      (32-byte hash)
+        write_prevout(self.prevouts, txi)                        # (see S.2b prevouts_sig_digest)
+        write_sint64(self.amounts, txi.amount)                   # (see S.2c amounts_sig_digest) 
+        write_bytes_prefixed(self.scriptpubkeys, script_pubkey)  # (see S.2d scriptpubkeys_sig_digest)
+        write_uint32(self.sequence, txi.sequence)                # (see S.2e sequence_sig_digest)
 
     def add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         self.empty = False
-        write_tx_output(self.outputs, txo, script_pubkey)        # S.2f: outputs_sig_digest       (32-byte hash)
+        write_tx_output(self.outputs, txo, script_pubkey)        # (see S.2f outputs_sig_digest)
 
     def digest(self):
         """Returns `T.2: transparent_digest` field for txid computation."""
