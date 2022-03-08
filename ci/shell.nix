@@ -117,6 +117,7 @@ stdenvNoCC.mkDerivation ({
     dejavu_fonts
   ];
   LD_LIBRARY_PATH = "${libffi}/lib:${libjpeg.out}/lib:${libusb1}/lib:${libressl.out}/lib";
+  DYLD_LIBRARY_PATH = "${libffi}/lib:${libjpeg.out}/lib:${libusb1}/lib:${libressl.out}/lib";
   NIX_ENFORCE_PURITY = 0;
 
   # Fix bdist-wheel problem by setting source date epoch to a more recent date
