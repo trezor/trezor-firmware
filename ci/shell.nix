@@ -28,6 +28,7 @@ let
     ${nixpkgs.patchelf}/bin/patchelf --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" "$out"
     chmod -w $out
   '';
+  # NOTE: don't forget to update Minimum Supported Rust Version in docs/core/build/emulator.md
   rustProfiles = nixpkgs.rust-bin.stable."1.58.1";
   rustStable = rustProfiles.minimal.override {
     targets = [
