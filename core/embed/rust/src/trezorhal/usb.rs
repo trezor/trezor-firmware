@@ -107,19 +107,19 @@ pub fn usb_close() {
 const MAX_INTERFACE_COUNT: usize = 4;
 
 #[derive(Default)]
-pub struct UsbConfig<'a> {
+pub struct UsbConfig {
     pub vendor_id: u16,
     pub product_id: u16,
     pub release_num: u16,
     pub manufacturer: &'static CStr,
     pub product: &'static CStr,
     pub interface: &'static CStr,
-    pub serial_number: &'a CStr,
+    pub serial_number: &'static CStr,
     pub usb21_landing: bool,
     pub interfaces: Vec<IfaceConfig, MAX_INTERFACE_COUNT>,
 }
 
-impl UsbConfig<'_> {
+impl UsbConfig {
     fn as_dev_info(&self) -> ffi::usb_dev_info_t {
         ffi::usb_dev_info_t {
             device_class: 0,
@@ -131,8 +131,7 @@ impl UsbConfig<'_> {
             manufacturer: self.manufacturer.as_ptr(),
             product: self.product.as_ptr(),
             interface: self.interface.as_ptr(),
-            // Because we set the SN dynamically, we need to copy it to the static storage first.
-            serial_number: set_global_serial_number(self.serial_number).as_ptr(),
+            serial_number: self.serial_number.as_ptr(),
             usb21_enabled: secbool::TRUE,
             usb21_landing: if self.usb21_landing {
                 secbool::TRUE
@@ -149,6 +148,15 @@ impl UsbConfig<'_> {
 pub enum IfaceTicket {
     Hid(u8),
     WebUsb(u8),
+}
+
+impl IfaceTicket {
+    pub fn iface_num(&self) -> u8 {
+        match self {
+            IfaceTicket::Hid(iface_num) => *iface_num,
+            IfaceTicket::WebUsb(iface_num) => *iface_num,
+        }
+    }
 }
 
 pub enum IfaceConfig {
@@ -381,132 +389,5 @@ impl VcpConfig {
             ep_out: self.ep_out, // Address of OUT endpoint.
             polling_interval: 10, // In units of 1ms.
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use cstr_core::cstr;
-
-    use super::*;
-
-    #[test]
-    fn test_usb() {
-        // Example port of usb.py.
-
-        const UDP_PORT: u16 = 0;
-        const WIRE_PORT_OFFSET: u16 = 0;
-        const DEBUGLINK_PORT_OFFSET: u16 = 1;
-        const WEBAUTHN_PORT_OFFSET: u16 = 2;
-        const VCP_PORT_OFFSET: u16 = 3;
-
-        let mut iface_iter = 0u8..;
-
-        const ENABLE_IFACE_DEBUG: bool = true;
-        const ENABLE_IFACE_WEBAUTHN: bool = true;
-        const ENABLE_IFACE_VCP: bool = true;
-
-        let mut config = UsbConfig {
-            vendor_id: 0x1209,
-            product_id: 0x53C1,
-            release_num: 0x0200,
-            manufacturer: cstr!("SatoshiLabs"),
-            product: cstr!("TREZOR"),
-            serial_number: cstr!(""),
-            interface: cstr!("TREZOR Interface"),
-            usb21_landing: false,
-            ..UsbConfig::default()
-        };
-
-        let id_wire = iface_iter.next().unwrap();
-        let iface_wire = WebUsbConfig {
-            rx_buffer: &mut [0; 64],
-            iface_num: id_wire,
-            ep_in: 0x81 + id_wire,
-            ep_out: 0x01 + id_wire,
-            emu_port: UDP_PORT + WIRE_PORT_OFFSET,
-        };
-        let ticket_wire = iface_wire.add(&mut config).unwrap();
-
-        if ENABLE_IFACE_DEBUG {
-            let id_debug = iface_iter.next().unwrap();
-            let iface_debug = WebUsbConfig {
-                rx_buffer: &mut [0; 64],
-                iface_num: id_debug,
-                ep_in: 0x81 + id_debug,
-                ep_out: 0x01 + id_debug,
-                emu_port: UDP_PORT + DEBUGLINK_PORT_OFFSET,
-            };
-            let ticket_debug = iface_debug.add(&mut config).unwrap();
-        }
-
-        if ENABLE_IFACE_WEBAUTHN {
-            let id_webauthn = iface_iter.next().unwrap();
-            let iface_webauthn = HidConfig {
-                report_desc: &[
-                    0x06, 0xd0, 0xf1, // USAGE_PAGE (FIDO Alliance)
-                    0x09, 0x01, // USAGE (U2F HID Authenticator Device)
-                    0xa1, 0x01, // COLLECTION (Application)
-                    0x09, 0x20, // USAGE (Input Report Data)
-                    0x15, 0x00, // LOGICAL_MINIMUM (0)
-                    0x26, 0xff, 0x00, // LOGICAL_MAXIMUM (255)
-                    0x75, 0x08, // REPORT_SIZE (8)
-                    0x95, 0x40, // REPORT_COUNT (64)
-                    0x81, 0x02, // INPUT (Data,Var,Abs)
-                    0x09, 0x21, // USAGE (Output Report Data)
-                    0x15, 0x00, // LOGICAL_MINIMUM (0)
-                    0x26, 0xff, 0x00, // LOGICAL_MAXIMUM (255)
-                    0x75, 0x08, // REPORT_SIZE (8)
-                    0x95, 0x40, // REPORT_COUNT (64)
-                    0x91, 0x02, // OUTPUT (Data,Var,Abs)
-                    0xc0, // END_COLLECTION
-                ],
-                rx_buffer: &mut [0; 64],
-                iface_num: id_webauthn,
-                ep_in: 0x81 + id_webauthn,
-                ep_out: 0x01 + id_webauthn,
-                emu_port: UDP_PORT + WEBAUTHN_PORT_OFFSET,
-            };
-            let ticket_webauthn = iface_webauthn.add(&mut config).unwrap();
-        }
-
-        if ENABLE_IFACE_VCP {
-            let id_vcp = iface_iter.next().unwrap();
-            let id_vcp_data = iface_iter.next().unwrap();
-            let iface_vcp = VcpConfig {
-                rx_buffer: &mut [0; 1024],
-                tx_buffer: &mut [0; 1024],
-                rx_packet: &mut [0; 64],
-                tx_packet: &mut [0; 64],
-                rx_intr_fn: None, // Use pendsv_kbd_intr here.
-                rx_intr_byte: 3,  // Ctrl-C
-                iface_num: id_vcp,
-                data_iface_num: id_vcp_data,
-                ep_in: 0x81 + id_vcp,
-                ep_out: 0x01 + id_vcp,
-                ep_cmd: 0x81 + id_vcp_data,
-                emu_port: UDP_PORT + VCP_PORT_OFFSET,
-            };
-            iface_vcp.add(&mut config).unwrap();
-        }
-
-        usb_open(config).unwrap();
-        usb_close();
-    }
-}
-
-fn set_global_serial_number(sn: &CStr) -> &'static CStr {
-    static mut GLOBAL_BUFFER: [u8; 64] = [0; 64];
-
-    // SAFETY: We are in a single threaded context, so the only possible race on
-    // `GLOBAL_BUFFER` is with the USB stack. We should take care to only call
-    // `set_global_serial_number` with the USB stopped.
-    unsafe {
-        let sn_nul = sn.to_bytes_with_nul();
-
-        // Panics if `sn_nul` is bigger then `GLOBAL_BUFFER`.
-        GLOBAL_BUFFER[..sn_nul.len()].copy_from_slice(sn_nul);
-
-        CStr::from_bytes_with_nul_unchecked(&GLOBAL_BUFFER[..sn_nul.len()])
     }
 }

@@ -1,14 +1,14 @@
 use core::slice;
 
-use crate::micropython::time;
-use crate::time::Duration;
 use crate::{
     error::Error,
     micropython::{
         map::{Map, MapElem},
         obj::Obj,
         runtime::raise_exception,
+        time,
     },
+    time::Duration,
 };
 
 /// Wait an unspecified short amount of time. To be used in busy loops.

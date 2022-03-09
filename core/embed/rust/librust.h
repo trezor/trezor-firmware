@@ -1,5 +1,7 @@
 #include "librust_qstr.h"
 
+mp_obj_t io_usb_start(mp_obj_t serial_number);
+
 mp_obj_t protobuf_type_for_name(mp_obj_t name);
 mp_obj_t protobuf_type_for_wire(mp_obj_t wire_id);
 mp_obj_t protobuf_decode(mp_obj_t buf, mp_obj_t def,
