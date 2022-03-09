@@ -47,7 +47,16 @@ import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Final, TypedDict
+from typing import Any, Final, TypedDict, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    LineIgnores = list[LineIgnore]
+
+    FileIgnores = dict[str, LineIgnores]
+    FileSpecificIgnores = dict[str, list[FileSpecificIgnore]]
+
+    PyrightOffIgnores = list[PyrightOffIgnore]
+    FilePyrightOffIgnores = dict[str, PyrightOffIgnores]
 
 
 class RangeDetail(TypedDict):
@@ -68,9 +77,6 @@ class Error(TypedDict):
     rule: str
 
 
-Errors = list[Error]
-
-
 class Summary(TypedDict):
     filesAnalyzed: int
     errorCount: int
@@ -82,7 +88,7 @@ class Summary(TypedDict):
 class PyrightResults(TypedDict):
     version: str
     time: str
-    generalDiagnostics: Errors
+    generalDiagnostics: list[Error]
     summary: Summary
 
 
@@ -98,10 +104,6 @@ class LineIgnore:
     ignore_statements: list[IgnoreStatement]
 
 
-LineIgnores = list[LineIgnore]
-FileIgnores = dict[str, LineIgnores]
-
-
 @dataclass
 class FileSpecificIgnore:
     rule: str = ""
@@ -113,18 +115,12 @@ class FileSpecificIgnore:
             raise ValueError("Only one of rule|substring should be set")
 
 
-FileSpecificIgnores = dict[str, list[FileSpecificIgnore]]
-
-
 @dataclass
 class PyrightOffIgnore:
     start_line: int
     end_line: int
     already_used: bool = False
 
-
-PyrightOffIgnores = list[PyrightOffIgnore]
-FilePyrightOffIgnores = dict[str, PyrightOffIgnores]
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -198,7 +194,7 @@ class PyrightTool:
     all_files_to_check: set[str]
     all_pyright_ignores: FileIgnores
     pyright_off_ignores: FilePyrightOffIgnores
-    real_errors: Errors
+    real_errors: list[Error]
     unused_ignores: list[str]
     inconsistencies: list[str] = []
 
@@ -369,7 +365,7 @@ class PyrightTool:
 
         return pyright_results
 
-    def get_all_real_errors(self) -> Errors:
+    def get_all_real_errors(self) -> list[Error]:
         """Analyze all pyright errors and discard all that should be ignored.
 
         Ignores can be different:
@@ -377,7 +373,7 @@ class PyrightTool:
         - as per "file_specific_ignores"
         - as per "# pyright: off" mark
         """
-        real_errors: Errors = []
+        real_errors: list[Error] = []
         for error in self.original_pyright_results["generalDiagnostics"]:
             # Special handling of cycle import issues, which have different format
             if "range" not in error:
