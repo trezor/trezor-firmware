@@ -305,6 +305,48 @@ impl TryFrom<(Obj, Obj)> for Obj {
     }
 }
 
+impl From<()> for Obj {
+    fn from(_value: ()) -> Self {
+        // micropython/py/obj.h
+        // #define mp_const_empty_tuple (MP_OBJ_FROM_PTR(&mp_const_empty_tuple_obj))
+        unsafe {
+            let empty_tuple_ptr = &ffi::mp_const_empty_tuple_obj as *const _ as *mut _;
+            Obj::from_ptr(empty_tuple_ptr)
+        }
+    }
+}
+
+// TODO: WARNING: while rebasing I chose randomly to ignore this implementation
+// and use the abovementioned
+
+// impl TryFrom<(Obj, Obj)> for Obj {
+//     type Error = Error;
+
+//     fn try_from(value: (Obj, Obj)) -> Result<Self, Self::Error> {
+//         // SAFETY: `mp_obj_new_tuple` does not retain pointer to `items`,
+// expects to         // find `items.len()` elements and does not modify them.
+//         // EXCEPTION: Will raise if allocation fails.
+//         catch_exception(|| unsafe {
+//             let items = [value.0, value.1];
+//             ffi::mp_obj_new_tuple(items.len(), items.as_ptr())
+//         })
+//     }
+// }
+
+impl TryFrom<(Obj, Obj, Obj)> for Obj {
+    type Error = Error;
+
+    fn try_from(value: (Obj, Obj, Obj)) -> Result<Self, Self::Error> {
+        // SAFETY: `mp_obj_new_tuple` does not retain pointer to `items`, expects to
+        // find `items.len()` elements and does not modify them.
+        // EXCEPTION: Will raise if allocation fails.
+        catch_exception(|| unsafe {
+            let items = [value.0, value.1, value.2];
+            ffi::mp_obj_new_tuple(items.len(), items.as_ptr())
+        })
+    }
+}
+
 //
 // # Additional conversions based on the methods above.
 //

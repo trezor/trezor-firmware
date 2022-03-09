@@ -22,7 +22,7 @@ mod util;
 #[cfg(not(feature = "test"))]
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
-    use cstr_core::CStr;
+    use cstr_core::cstr;
 
     // Although it would be ideal to use the original error message, ignoring it
     // lets us avoid the `fmt` machinery and its code size and is also important for
@@ -30,9 +30,8 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
     // should also avoid printing "panic" or "rust" on the user screen to avoid any
     // confusion.
 
-    // SAFETY: Safe because we are passing in \0-terminated literals.
-    let empty = unsafe { CStr::from_bytes_with_nul_unchecked(b"\0") };
-    let msg = unsafe { CStr::from_bytes_with_nul_unchecked(b"rs\0") };
+    let empty = cstr!("");
+    let msg = cstr!("rs");
 
     // TODO: Ideally we would take the file and line info out of
     // `PanicInfo::location()`.

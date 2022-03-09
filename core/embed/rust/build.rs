@@ -129,6 +129,7 @@ fn generate_micropython_bindings() {
         .allowlist_function("trezor_obj_get_ll_checked")
         .allowlist_function("trezor_obj_get_ull_checked")
         .allowlist_function("trezor_obj_str_from_rom_text")
+        .allowlist_var("mp_const_empty_tuple_obj")
         // buffer
         .allowlist_function("mp_get_buffer")
         .allowlist_var("MP_BUFFER_READ")
