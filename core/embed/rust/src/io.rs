@@ -256,10 +256,12 @@ extern "C" fn io_usb_start(serial_number: Obj) -> Obj {
         let webauthn_id = Some(create_webauthn_iface(&mut ids).add(&mut usb)?.iface_num());
 
         #[cfg(feature = "ui_debug")]
-        {
-            create_vcp_iface(&mut ids).add(&mut usb)?;
-            // TODO: Enable MicroPython VCP support.
-        }
+        let vcp_id = {
+            let vcp = create_vcp_iface(&mut ids);
+            let vcp_id = vcp.iface_num;
+            vcp.add(&mut usb)?;
+            vcp_id
+        };
 
         // Convert used interface IDs to MicroPython objects.
         let wire_id_obj = Obj::try_from(wire_id as u32)?;
@@ -269,6 +271,15 @@ extern "C" fn io_usb_start(serial_number: Obj) -> Obj {
 
         // Initialize the USB and start the configured interfaces.
         usb_open(usb)?;
+
+        // Enable VCP support in MicroPython.
+        #[cfg(feature = "ui_debug")]
+        {
+            extern "C" {
+                fn mp_hal_set_vcp_iface(iface_num: cty::c_int);
+            }
+            mp_hal_set_cvp_iface(vcp_id);
+        }
 
         Ok(tuple)
     };
