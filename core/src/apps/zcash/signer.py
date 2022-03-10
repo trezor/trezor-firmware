@@ -2,6 +2,7 @@ from .orchard.signer import OrchardSigner
 from . import sig_hasher
 from .layout import UiConfirmOrchardOutput
 
+from trezor import log
 from trezor.utils import ensure
 from trezor.wire import ProcessError, DataError
 
@@ -22,7 +23,7 @@ if TYPE_CHECKING:
     from trezor.utils import HashWriter
     from trezor.messages import PrevTx, SignTx, TxInput, TxOutput, TxAckInput, TxAckOutput
 
-OVERWINTERED = 1 << 31
+OVERWINTERED = const(0x8000_0000)
 
 class Zcash(Bitcoinlike):
     def __init__(
@@ -34,7 +35,9 @@ class Zcash(Bitcoinlike):
     ) -> None:
         ensure(coin.overwintered)
         if tx.version != 5:
-            raise DataError("Unsupported transaction version.")
+            log.warning(__name__, "Transaction format version {} is not supported.".format(tx.version))
+            log.warning(__name__, "Switching to version 5.".format(tx.version))
+            tx.version = 5
 
         super().__init__(tx, keychain[0], coin, approver)
 
@@ -158,7 +161,7 @@ class ZcashExtendedSigHasher(sig_hasher.ZcashSigHasher):
         if not self.initialized:
             self.initialize(tx)
         txin_sig_digest = sig_hasher.get_txin_sig_digest(
-            txi, public_keys, threshold, tx, coin, hash_type,
+            txi, public_keys, threshold, coin, hash_type,
         )
         return self.signature_digest(txin_sig_digest)
 

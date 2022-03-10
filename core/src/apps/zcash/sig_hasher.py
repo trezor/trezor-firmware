@@ -18,7 +18,7 @@ from trezor import log
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from trezor.messages import TxInput, TxOutput
+    from trezor.messages import TxInput, TxOutput, SignTx, PrevTx
 
 
 def write_hash(w: Writer, hash: bytes):
@@ -49,7 +49,7 @@ class ZcashSigHasher:
         self.tx_hash_person = None
         self.initialized = False
 
-    def initialize(self, tx):
+    def initialize(self, tx: SignTx | PrevTx):
         """Initialize ZcashHasher with a transaction data."""
         self.header.initialize(tx)
 
@@ -73,7 +73,7 @@ class ZcashSigHasher:
 
         return h.get_digest()
 
-    def signature_digest(self, txin_sig_digest=None):
+    def signature_digest(self, txin_sig_digest: bytes | None = None):
         """Returns the transaction signature digest."""
         assert self.initialized
 
@@ -91,7 +91,7 @@ class HeaderHasher:
     def __init__(self):
         self._digest = None
 
-    def initialize(self, tx):
+    def initialize(self, tx: SignTx | PrevTx):
         h = HashWriter(blake2b(outlen=32, personal=b'ZTxIdHeadersHash'))
 
         write_uint32(h, tx.version | (1 << 31))  # T.1a: version             (4-byte little-endian version identifier including overwinter flag)
@@ -138,7 +138,7 @@ class TransparentHasher:
 
         return h.get_digest()
 
-    def sig_digest(self, txin_sig_digest):
+    def sig_digest(self, txin_sig_digest: bytes | None):
         """Returns `S.2: transparent_sig_digest` field for signature digest computation."""
         if self.empty:
             assert txin_sig_digest is None
@@ -165,7 +165,6 @@ def get_txin_sig_digest(
     txi: TxInput,
     public_keys: Sequence[bytes | memoryview],
     threshold: int,
-    tx: SignTx | PrevTx, # no need for tx, TODO: = None
     coin: coininfo.CoinInfo,
     sighash_type: int,
 ):
