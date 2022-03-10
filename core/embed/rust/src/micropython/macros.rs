@@ -193,9 +193,9 @@ macro_rules! obj_module {
                 base: ffi::mp_obj_base_t {
                     type_: &ffi::mp_type_module,
                 },
-                // This is safe only if we pass in `Dict` with fixed `Map` (created by
-                // `Map::fixed()`, usually through `obj_map!`), because only then will
-                // MicroPython treat `globals` as immutable, and make the mutable cast safe.
+                // This is safe only because we are passing in a static dict with fixed `Map`
+                // (created by `Map::from_fixed_static()`). Only then will MicroPython treat
+                // `globals` as immutable, making the mutable cast safe.
                 globals: &DICT as *const _ as *mut _,
             }
     }});
