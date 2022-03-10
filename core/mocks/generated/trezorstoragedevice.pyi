@@ -7,5 +7,10 @@ def is_version_stored() -> bool:
 
 
 # extmod/rustmods/modtrezorstoragedevice.c
+def get_version() -> bytes:
+    """Get from storage."""
+
+
+# extmod/rustmods/modtrezorstoragedevice.c
 def set_version(version: bytes) -> bool:
     """Save to storage."""

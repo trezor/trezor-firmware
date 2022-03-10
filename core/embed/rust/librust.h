@@ -10,7 +10,7 @@ mp_obj_t protobuf_len(mp_obj_t obj);
 mp_obj_t protobuf_encode(mp_obj_t buf, mp_obj_t obj);
 
 mp_obj_t storagedevice_is_version_stored();
-// mp_obj_t storagedevice_get_version();
+mp_obj_t storagedevice_get_version();
 mp_obj_t storagedevice_set_version(mp_obj_t key);
 
 #ifdef TREZOR_EMULATOR

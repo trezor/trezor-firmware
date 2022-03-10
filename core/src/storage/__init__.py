@@ -15,7 +15,7 @@ def wipe() -> None:
 
 def init_unlocked() -> None:
     # Check for storage version upgrade.
-    version = device.get_version()
+    version = trezorstoragedevice.get_version()
     if version == common.STORAGE_VERSION_01:
         _migrate_from_version_01()
 

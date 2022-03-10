@@ -66,8 +66,8 @@ SD_SALT_AUTH_KEY_LEN_BYTES = const(16)
 #     return bool(common.get(_NAMESPACE, _VERSION))
 
 
-def get_version() -> bytes | None:
-    return common.get(_NAMESPACE, _VERSION)
+# def get_version() -> bytes | None:
+#     return common.get(_NAMESPACE, _VERSION)
 
 
 # def set_version(version: bytes) -> None:
