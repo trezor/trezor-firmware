@@ -5,6 +5,8 @@ from ubinascii import hexlify
 import storage.cache
 from storage import common
 
+import trezorstoragedevice
+
 if TYPE_CHECKING:
     from trezor.enums import BackupType
     from typing_extensions import Literal
@@ -60,16 +62,16 @@ AUTOLOCK_DELAY_MAXIMUM = 0x2000_0000  # ~6 days
 SD_SALT_AUTH_KEY_LEN_BYTES = const(16)
 
 
-def is_version_stored() -> bool:
-    return bool(common.get(_NAMESPACE, _VERSION))
+# def is_version_stored() -> bool:
+#     return bool(common.get(_NAMESPACE, _VERSION))
 
 
 def get_version() -> bytes | None:
     return common.get(_NAMESPACE, _VERSION)
 
 
-def set_version(version: bytes) -> None:
-    common.set(_NAMESPACE, _VERSION, version)
+# def set_version(version: bytes) -> None:
+#     common.set(_NAMESPACE, _VERSION, version)
 
 
 def is_initialized() -> bool:
@@ -163,7 +165,7 @@ def store_mnemonic_secret(
     needs_backup: bool = False,
     no_backup: bool = False,
 ) -> None:
-    set_version(common.STORAGE_VERSION_CURRENT)
+    trezorstoragedevice.set_version(common.STORAGE_VERSION_CURRENT)
     common.set(_NAMESPACE, _MNEMONIC_SECRET, secret)
     common.set_uint8(_NAMESPACE, _BACKUP_TYPE, backup_type)
     common.set_true_or_delete(_NAMESPACE, _NO_BACKUP, no_backup)

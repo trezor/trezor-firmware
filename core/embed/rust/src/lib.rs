@@ -5,6 +5,7 @@
 #![allow(dead_code)]
 
 mod error;
+mod storagedevice;
 #[macro_use]
 mod micropython;
 mod protobuf;
