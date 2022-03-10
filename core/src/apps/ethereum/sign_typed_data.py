@@ -144,13 +144,17 @@ class TypedDataEnvelope:
         current_type = await self.ctx.call(req, EthereumTypedDataStructAck)
         self.types[type_name] = current_type
         for member in current_type.members:
-            validate_field_type(member.type)
+            member_type = member.type
+            validate_field_type(member_type)
+            while member_type.data_type == EthereumDataType.ARRAY:
+                assert member_type.entry_type is not None  # validate_field_type
+                member_type = member_type.entry_type
             if (
-                member.type.data_type == EthereumDataType.STRUCT
-                and member.type.struct_name not in self.types
+                member_type.data_type == EthereumDataType.STRUCT
+                and member_type.struct_name not in self.types
             ):
-                assert member.type.struct_name is not None  # validate_field_type
-                await self._collect_types(member.type.struct_name)
+                assert member_type.struct_name is not None  # validate_field_type
+                await self._collect_types(member_type.struct_name)
 
     async def hash_struct(
         self,
