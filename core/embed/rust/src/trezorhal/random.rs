@@ -17,7 +17,7 @@ pub fn shuffle<T>(slice: &mut [T]) {
 }
 
 pub fn bytes(buf: &mut [u8]) {
-    unsafe { random_buffer(buf.as_mut_ptr() as _, buf.len() as u16) };
+    unsafe { random_buffer(buf.as_mut_ptr(), buf.len() as u16) };
 }
 
 #[cfg(test)]

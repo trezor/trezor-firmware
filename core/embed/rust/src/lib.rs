@@ -13,10 +13,11 @@ mod time;
 #[cfg(feature = "ui_debug")]
 mod trace;
 mod trezorhal;
-
 #[cfg(feature = "ui")]
 #[macro_use]
 pub mod ui;
+mod lru;
+mod storage;
 mod util;
 
 #[cfg(not(test))]
