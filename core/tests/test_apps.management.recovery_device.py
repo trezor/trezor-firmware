@@ -1,8 +1,7 @@
 from common import *
-from mock_storage import mock_storage
 
 import storage
-import storage.recovery
+from trezor import config
 from apps.management.recovery_device.recover import process_slip39
 from trezor.enums import BackupType
 from apps.management.recovery_device.word_validity import check, IdentifierMismatch, AlreadyAdded, ThresholdReached
@@ -28,8 +27,10 @@ MNEMONIC_SLIP39_ADVANCED_33 = [
 
 class TestSlip39(unittest.TestCase):
 
-    @mock_storage
     def test_process_slip39_basic(self):
+        config.init()
+        config.wipe()
+
         storage.recovery.set_in_progress(True)
 
         # first share (member index 5)
@@ -58,8 +59,10 @@ class TestSlip39(unittest.TestCase):
         self.assertEqual(storage.recovery_shares.get(share.index, share.group_index), third)
         self.assertEqual(storage.recovery_shares.fetch_group(share.group_index), [second, third, first])  # ordered by index
 
-    @mock_storage
     def test_process_slip39_advanced(self):
+        config.init()
+        config.wipe()
+
         storage.recovery.set_in_progress(True)
 
         # complete group 1 (1of1)
@@ -109,8 +112,10 @@ class TestSlip39(unittest.TestCase):
         self.assertEqual(storage.recovery_shares.fetch_group(2), [MNEMONIC_SLIP39_ADVANCED_20[3], MNEMONIC_SLIP39_ADVANCED_20[2], MNEMONIC_SLIP39_ADVANCED_20[1]])
         self.assertEqual(storage.recovery.fetch_slip39_remaining_shares(), [16, 0, 0, 16])
 
-    @mock_storage
     def test_exceptions(self):
+        config.init()
+        config.wipe()
+
         storage.recovery.set_in_progress(True)
 
         words = MNEMONIC_SLIP39_BASIC_20_3of6[0]
@@ -142,8 +147,10 @@ class TestSlip39(unittest.TestCase):
             secret, share = process_slip39(words)
             self.assertIsNone(secret)
 
-    @mock_storage
     def test_check_word_validity(self):
+        config.init()
+        config.wipe()
+
         storage.recovery.set_in_progress(True)
 
         # We claim to know the backup type, but nothing is stored. That is an invalid state.

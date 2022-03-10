@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
+import storage
 import storage.cache
-import storage.device
 from trezor import config, utils, wire, workflow
 from trezor.enums import MessageType
 from trezor.messages import Success
@@ -24,9 +24,8 @@ if TYPE_CHECKING:
 
 
 def get_features() -> Features:
-    import storage.recovery
     import storage.sd_salt
-    import storage  # workaround for https://github.com/microsoft/pyright/issues/2685
+    import storage  # pylint: disable=reimported # workaround for https://github.com/microsoft/pyright/issues/2685
 
     from trezor import sdcard
     from trezor.enums import Capability
@@ -94,7 +93,7 @@ def get_features() -> Features:
         f.safety_checks = safety_checks.read_setting()
         f.auto_lock_delay_ms = storage.device.get_autolock_delay_ms()
         f.display_rotation = storage.device.get_rotation()
-        f.experimental_features = storage.device.get_experimental_features()
+        f.experimental_features = storage.device_old.get_experimental_features()
 
     return f
 
@@ -200,7 +199,7 @@ ALLOW_WHILE_LOCKED = (
 
 
 def set_homescreen() -> None:
-    import storage.recovery
+    import storage  # pylint: disable=reimported # workaround for https://github.com/microsoft/pyright/issues/2685
 
     if not config.is_unlocked():
         from apps.homescreen.lockscreen import lockscreen
@@ -277,7 +276,7 @@ def reload_settings_from_storage() -> None:
     workflow.idle_timer.set(
         storage.device.get_autolock_delay_ms(), lock_device_if_unlocked
     )
-    wire.experimental_enabled = storage.device.get_experimental_features()
+    wire.experimental_enabled = storage.device_old.get_experimental_features()
     ui.display.orientation(storage.device.get_rotation())
 
 

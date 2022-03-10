@@ -13,6 +13,10 @@ mp_obj_t protobuf_debug_msg_def_type();
 #endif
 
 extern mp_obj_module_t mp_module_trezorui2;
+extern mp_obj_module_t mp_module_trezorstoragedevice;
+extern mp_obj_module_t mp_module_trezorstoragerecovery;
+extern mp_obj_module_t mp_module_trezorstoragerecoveryshares;
+extern mp_obj_module_t mp_module_trezorstorageresidentcredentials;
 
 #ifdef TREZOR_EMULATOR
 mp_obj_t ui_debug_layout_type();

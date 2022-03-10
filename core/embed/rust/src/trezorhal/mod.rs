@@ -4,6 +4,7 @@ pub mod common;
 pub mod display;
 mod ffi;
 pub mod random;
+pub mod secbool;
 pub mod slip39;
 mod storage;
 pub mod storage_field;

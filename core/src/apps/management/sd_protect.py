@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-import storage.device
+import storage
 import storage.sd_salt
 from trezor import config, wire
 from trezor.crypto import random
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 def _make_salt() -> tuple[bytes, bytes, bytes]:
     salt = random.bytes(storage.sd_salt.SD_SALT_LEN_BYTES)
-    auth_key = random.bytes(storage.device.SD_SALT_AUTH_KEY_LEN_BYTES)
+    auth_key = random.bytes(storage.device_old.SD_SALT_AUTH_KEY_LEN_BYTES)
     tag = storage.sd_salt.compute_auth_tag(salt, auth_key)
     return salt, auth_key, tag
 
@@ -107,8 +107,7 @@ async def sd_protect_disable(ctx: wire.Context, msg: SdProtect) -> Success:
     # Check PIN and remove salt.
     if not config.change_pin(pin, pin, salt, None):
         await error_pin_invalid(ctx)
-
-    storage.device.set_sd_salt_auth_key(None)
+    storage.device.set_sd_salt_auth_key(b"")
 
     try:
         # Clean up.

@@ -1,9 +1,8 @@
-use core::marker::PhantomData;
-use core::str;
 use super::{
     ffi,
     storage::{self, StorageError},
 };
+use core::{marker::PhantomData, str};
 use heapless::{String, Vec};
 
 const TRUE_BYTE: u8 = 0x01;

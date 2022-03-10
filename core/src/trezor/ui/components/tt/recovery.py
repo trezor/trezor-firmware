@@ -1,4 +1,4 @@
-import storage.recovery
+import storage
 from trezor import ui
 
 

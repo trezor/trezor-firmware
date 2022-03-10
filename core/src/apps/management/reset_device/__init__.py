@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
 import storage
-import storage.device
 from trezor import config, wire
 from trezor.crypto import bip39, hashlib, random, slip39
 from trezor.enums import BackupType
@@ -86,9 +85,9 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
     if msg.label is not None:
         storage.device.set_label(msg.label)
     storage.device.set_passphrase_enabled(bool(msg.passphrase_protection))
-    storage.device.store_mnemonic_secret(
-        secret,  # for SLIP-39, this is the EMS
-        msg.backup_type,
+    storage.device.set_mnemonic_secret(
+        secret=secret,  # for SLIP-39, this is the EMS
+        backup_type=msg.backup_type,
         needs_backup=not perform_backup,
         no_backup=bool(msg.no_backup),
     )

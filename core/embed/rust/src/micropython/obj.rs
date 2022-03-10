@@ -7,6 +7,8 @@ use cstr_core::CStr;
 
 use crate::error::Error;
 
+use heapless::{String, Vec};
+
 use super::{ffi, runtime::catch_exception};
 
 pub type Obj = ffi::mp_obj_t;
@@ -253,6 +255,38 @@ impl TryFrom<&[u8]> for Obj {
         //  - Should work with any data
         // EXCEPTION: Will raise if allocation fails.
         catch_exception(|| unsafe { ffi::mp_obj_new_bytes(val.as_ptr(), val.len()) })
+    }
+}
+
+impl<const N: usize> TryFrom<Vec<u8, N>> for Obj {
+    type Error = Error;
+
+    fn try_from(val: Vec<u8, N>) -> Result<Self, Self::Error> {
+        // TODO: could be probably simplified
+        let mut object_list: Vec<Obj, N> = Vec::<Obj, N>::new();
+        for item in val {
+            // TODO: error handling?
+            object_list.push(item.into()).unwrap();
+        }
+        catch_exception(|| unsafe {
+            ffi::mp_obj_new_list(object_list.len(), object_list.as_ptr() as *mut Obj)
+        })
+    }
+}
+
+impl<const M: usize, const N: usize> TryFrom<Vec<String<M>, N>> for Obj {
+    type Error = Error;
+
+    fn try_from(val: Vec<String<M>, N>) -> Result<Self, Self::Error> {
+        // TODO: could be probably simplified
+        let mut object_list: Vec<Obj, N> = Vec::<Obj, N>::new();
+        for item in val {
+            // TODO: error handling?
+            object_list.push(item.as_str().try_into()?).unwrap();
+        }
+        catch_exception(|| unsafe {
+            ffi::mp_obj_new_list(object_list.len(), object_list.as_ptr() as *mut Obj)
+        })
     }
 }
 
