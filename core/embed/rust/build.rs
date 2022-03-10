@@ -6,6 +6,7 @@ fn main() {
     generate_qstr_bindings();
     generate_micropython_bindings();
     generate_trezorhal_bindings();
+    generate_storagedevice_bindings();
     #[cfg(feature = "test")]
     link_core_objects();
 }
@@ -231,6 +232,31 @@ fn generate_trezorhal_bindings() {
         .generate()
         .expect("Unable to generate bindings")
         .write_to_file(PathBuf::from(out_path).join("trezorhal.rs"))
+        .unwrap();
+}
+
+fn generate_storagedevice_bindings() {
+    // TODO: how to avoid defining `storage.h` in this directory
+    // (somehow specifying its location)
+    // core/vendor/trezor-storage/storage.h
+
+    let out_path = env::var("OUT_DIR").unwrap();
+
+    // Tell cargo to invalidate the built crate whenever the header changes.
+    println!("cargo:rerun-if-changed=storage.h");
+
+    let bindings = prepare_bindings()
+        .header("storage.h")
+        // storage
+        .allowlist_function("storage_set")
+        .allowlist_function("storage_delete")
+        .allowlist_function("storage_get");
+
+    // Write the bindings to a file in the OUT_DIR.
+    bindings
+        .generate()
+        .expect("Unable to generate bindings")
+        .write_to_file(PathBuf::from(out_path).join("storage.rs"))
         .unwrap();
 }
 

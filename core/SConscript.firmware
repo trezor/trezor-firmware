@@ -200,6 +200,7 @@ SOURCE_MOD += [
 # rust mods
 SOURCE_MOD += [
     'embed/extmod/rustmods/modtrezorproto.c',
+    'embed/extmod/rustmods/modtrezorstoragedevice.c',
 ]
 if UI2:
     SOURCE_MOD += [
