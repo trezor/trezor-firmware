@@ -58,7 +58,7 @@ fn prepare_bindings() -> bindgen::Builder {
             "-I../../vendor/micropython/lib/stm32lib/CMSIS/STM32F4xx/Include",
             "-I../../vendor/micropython/lib/cmsis/inc",
             "-DTREZOR_MODEL=T",
-            "-DSTM32F405xx",
+            "-DSTM32F427xx",
             "-DUSE_HAL_DRIVER",
             "-DSTM32_HAL_H=<stm32f4xx.h>",
         ]);
