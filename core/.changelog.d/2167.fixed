@@ -1,0 +1,1 @@
+Support EIP-712 messages where a struct type is only used as an array element.

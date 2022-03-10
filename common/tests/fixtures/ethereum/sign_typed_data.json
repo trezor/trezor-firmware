@@ -547,11 +547,215 @@
                     }
                 },
                 "domain_separator_hash": "0xf2cee375fa42b42143804025fc449deafd50cc031ca257e0b194a650a912090f",
-                "message_hash": "eb4221181ff3f1a83ea7313993ca9218496e424604ba9492bb4052c03d5c3df8"
+                "message_hash": "0xeb4221181ff3f1a83ea7313993ca9218496e424604ba9492bb4052c03d5c3df8"
             },
             "result": {
                 "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
                 "sig": "0x1d778d9ae559161f4ea57aad9135035eb7e26e5e4cf5b571c58736ee265b649b17c38730ede957efbcf7de4f30906b133a4262b9e4bb8e4ba3927a48512e3a561c"
+            }
+        },
+        {
+            "name": "array_of_structs",
+            "comment": "Struct used only as an array element (issue #2167)",
+            "parameters": {
+                "path": "m/44'/60'/0'/0/0",
+                "metamask_v4_compat": true,
+                "data": {
+                    "types": {
+                        "EIP712Domain": [],
+                        "Message": [
+                            {
+                                "name": "element",
+                                "type": "Element[]"
+                            }
+                        ],
+                        "Element": [
+                            {
+                                "name": "foo",
+                                "type": "int8"
+                            }
+                        ]
+                    },
+                    "primaryType": "Message",
+                    "message": {
+                        "element": [
+                            {
+                                "foo": 1
+                            },
+                            {
+                                "foo": 2
+                            }
+                        ]
+                    },
+                    "domain": {}
+                },
+                "message_hash": "0x7be2cca6dd2e37cf3e8ab76ab19df174e369ad48e3fd0088c7f99137cbf6a2d8",
+                "domain_separator_hash": "0x6192106f129ce05c9075d319c1fa6ea9b3ae37cbd0c1ef92e2be7137bb07baa1"
+            },
+            "result": {
+                "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
+                "sig": "0x5c7fe30cc1889a59177864c58c2e5f46e4c5fd4ad7b565a6a6c0416a2d1370d233da9c2c40fc95b694af21b8cb1e027d9d664118fa021f71e2fd0d8eada7fd5d1c"
+            }
+        },
+        {
+            "name": "injective_testcase",
+            "comment": "Full Injective Protocol testcase (issue #2167)",
+            "parameters": {
+                "path": "m/44'/60'/0'/0/0",
+                "metamask_v4_compat": true,
+                "data": {
+                    "types": {
+                        "Coin": [
+                            {
+                                "name": "denom",
+                                "type": "string"
+                            },
+                            {
+                                "name": "amount",
+                                "type": "string"
+                            }
+                        ],
+                        "EIP712Domain": [
+                            {
+                                "name": "name",
+                                "type": "string"
+                            },
+                            {
+                                "name": "version",
+                                "type": "string"
+                            },
+                            {
+                                "name": "chainId",
+                                "type": "uint256"
+                            },
+                            {
+                                "name": "verifyingContract",
+                                "type": "string"
+                            },
+                            {
+                                "name": "salt",
+                                "type": "string"
+                            }
+                        ],
+                        "Fee": [
+                            {
+                                "name": "amount",
+                                "type": "Coin[]"
+                            },
+                            {
+                                "name": "gas",
+                                "type": "string"
+                            }
+                        ],
+                        "Msg": [
+                            {
+                                "name": "type",
+                                "type": "string"
+                            },
+                            {
+                                "name": "value",
+                                "type": "MsgValue"
+                            }
+                        ],
+                        "MsgValue": [
+                            {
+                                "name": "delegator_address",
+                                "type": "string"
+                            },
+                            {
+                                "name": "validator_address",
+                                "type": "string"
+                            },
+                            {
+                                "name": "amount",
+                                "type": "TypeAmount"
+                            }
+                        ],
+                        "Tx": [
+                            {
+                                "name": "account_number",
+                                "type": "string"
+                            },
+                            {
+                                "name": "chain_id",
+                                "type": "string"
+                            },
+                            {
+                                "name": "fee",
+                                "type": "Fee"
+                            },
+                            {
+                                "name": "memo",
+                                "type": "string"
+                            },
+                            {
+                                "name": "msgs",
+                                "type": "Msg[]"
+                            },
+                            {
+                                "name": "sequence",
+                                "type": "string"
+                            },
+                            {
+                                "name": "timeout_height",
+                                "type": "string"
+                            }
+                        ],
+                        "TypeAmount": [
+                            {
+                                "name": "denom",
+                                "type": "string"
+                            },
+                            {
+                                "name": "amount",
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "primaryType": "Tx",
+                    "domain": {
+                        "name": "Injective Web3",
+                        "version": "1.0.0",
+                        "chainId": 1,
+                        "verifyingContract": "cosmos",
+                        "salt": "1646906878039"
+                    },
+                    "message": {
+                        "account_number": "5712",
+                        "chain_id": "injective-1",
+                        "fee": {
+                            "amount": [
+                                {
+                                    "amount": "200000000000000",
+                                    "denom": "inj"
+                                }
+                            ],
+                            "gas": "400000"
+                        },
+                        "memo": "",
+                        "msgs": [
+                            {
+                                "type": "cosmos-sdk/MsgDelegate",
+                                "value": {
+                                    "amount": {
+                                        "amount": "100000000000000000",
+                                        "denom": "inj"
+                                    },
+                                    "delegator_address": "inj17vy49gw9xnx700z8zwqqv4exl2rgdhanv75c4r",
+                                    "validator_address": "injvaloper1w3psm8a9td2qz06s46cxss03mz5umxaxegvhhs"
+                                }
+                            }
+                        ],
+                        "sequence": "0",
+                        "timeout_height": "8545415"
+                    }
+                },
+                "message_hash": "0x07df743324b2b3f805790b2bbd497e7b7571a1e3fe4e2d86b67f35ca9a120d90",
+                "domain_separator_hash": "0x8e96520578ec587b6ad9d06fe5fc352b34e98090044921089e1a9cbc1290901c"
+            },
+            "result": {
+                "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
+                "sig": "0x4873bf73cf22e35776d8b23a249f93f38a6d5aa8c1a121281675094f5fac64b55a3b6cf28e140930f9185156d07f171a17e06925b5cebd95a2a8761d074e43f91c"
             }
         }
     ]
