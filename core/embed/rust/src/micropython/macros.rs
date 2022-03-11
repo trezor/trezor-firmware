@@ -1,3 +1,20 @@
+/// Create an object for an exported function taking 0 args.
+macro_rules! obj_fn_0 {
+    ($f:expr) => {{
+        #[allow(unused_unsafe)]
+        unsafe {
+            use $crate::micropython::ffi;
+
+            ffi::mp_obj_fun_builtin_fixed_t {
+                base: ffi::mp_obj_base_t {
+                    type_: &ffi::mp_type_fun_builtin_0,
+                },
+                fun: ffi::_mp_obj_fun_builtin_fixed_t__bindgen_ty_1 { _0: Some($f) },
+            }
+        }
+    }};
+}
+
 /// Create an object for an exported function taking 1 arg.
 macro_rules! obj_fn_1 {
     ($f:expr) => {{

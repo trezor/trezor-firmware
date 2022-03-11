@@ -21,7 +21,10 @@ def init_unlocked() -> None:
 
     # In FWs <= 2.3.1 'version' denoted whether the device is initialized or not.
     # In 2.3.2 we have introduced a new field 'initialized' for that.
-    if trezorstoragedevice.is_version_stored() and not device.is_initialized():
+    if (
+        trezorstoragedevice.is_version_stored()
+        and not trezorstoragedevice.is_initialized()
+    ):
         common.set_bool(common.APP_DEVICE, device.INITIALIZED, True, public=True)
 
 

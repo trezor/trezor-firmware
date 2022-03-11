@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 async def backup_device(ctx: wire.Context, msg: BackupDevice) -> Success:
-    if not storage.device.is_initialized():
+    if not storage.trezorstoragedevice.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
     if not storage.device.needs_backup():
         raise wire.ProcessError("Seed already backed up")

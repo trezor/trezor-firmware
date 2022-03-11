@@ -143,6 +143,7 @@ fn generate_micropython_bindings() {
         .allowlist_var("mp_type_dict")
         // fun
         .allowlist_type("mp_obj_fun_builtin_fixed_t")
+        .allowlist_var("mp_type_fun_builtin_0")
         .allowlist_var("mp_type_fun_builtin_1")
         .allowlist_var("mp_type_fun_builtin_2")
         .allowlist_var("mp_type_fun_builtin_3")

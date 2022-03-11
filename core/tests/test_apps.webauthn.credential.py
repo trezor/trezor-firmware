@@ -12,7 +12,7 @@ class TestCredential(unittest.TestCase):
     def test_fido2_credential_decode(self):
         mnemonic_secret = b"all all all all all all all all all all all all"
         mnemonic.get_secret = lambda: mnemonic_secret
-        storage.device.is_initialized = lambda: True
+        storage.trezorstoragedevice.is_initialized = lambda: True
 
         cred_id = (
             b"f1d0020013e65c865634ad8abddf7a66df56ae7d8c3afd356f76426801508b2e"
@@ -24,9 +24,7 @@ class TestCredential(unittest.TestCase):
         rp_id = "example.com"
         rp_id_hash = sha256(rp_id).digest()
 
-        user_id = (
-            b"3082019330820138a0030201023082019330820138a003020102308201933082"
-        )
+        user_id = b"3082019330820138a0030201023082019330820138a003020102308201933082"
 
         user_name = "johnpsmith@example.com"
 
@@ -108,18 +106,32 @@ class TestCredential(unittest.TestCase):
 
         c2 = U2fCredential()
 
-        self.assertEqual(sorted(distinguishable_cred_list([a1, a2, a3, b1, b2, c1, c2])), [b2, a3, a1, c1])
-        self.assertEqual(sorted(distinguishable_cred_list([c2, c1, b2, b1, a3, a2, a1])), [b2, a3, a1, c2])
+        self.assertEqual(
+            sorted(distinguishable_cred_list([a1, a2, a3, b1, b2, c1, c2])),
+            [b2, a3, a1, c1],
+        )
+        self.assertEqual(
+            sorted(distinguishable_cred_list([c2, c1, b2, b1, a3, a2, a1])),
+            [b2, a3, a1, c2],
+        )
 
         # Test input by creation time.
-        self.assertEqual(sorted(distinguishable_cred_list([b2, a3, c1, a2, b1, a1, c2])), [b2, a3, a1, c1])
-        self.assertEqual(sorted(distinguishable_cred_list([c2, a1, b1, a2, c1, a3, b2])), [b2, a3, a1, c2])
+        self.assertEqual(
+            sorted(distinguishable_cred_list([b2, a3, c1, a2, b1, a1, c2])),
+            [b2, a3, a1, c1],
+        )
+        self.assertEqual(
+            sorted(distinguishable_cred_list([c2, a1, b1, a2, c1, a3, b2])),
+            [b2, a3, a1, c2],
+        )
 
         # Test duplicities.
-        self.assertEqual(sorted(distinguishable_cred_list([c1, a1, a1, c2, c1])), [a1, c1])
+        self.assertEqual(
+            sorted(distinguishable_cred_list([c1, a1, a1, c2, c1])), [a1, c1]
+        )
         self.assertEqual(sorted(distinguishable_cred_list([b2, b3])), [b2])
         self.assertEqual(sorted(distinguishable_cred_list([b3, b2])), [b3])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

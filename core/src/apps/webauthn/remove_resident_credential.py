@@ -28,7 +28,7 @@ class ConfirmRemoveCredential(ConfirmInfo):
 async def remove_resident_credential(
     ctx: wire.Context, msg: WebAuthnRemoveResidentCredential
 ) -> Success:
-    if not storage.device.is_initialized():
+    if not storage.trezorstoragedevice.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
     if msg.index is None:
         raise wire.ProcessError("Missing credential index parameter.")

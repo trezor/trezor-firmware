@@ -1,14 +1,17 @@
 use crate::{
-    micropython::{buffer::Buffer, obj::Obj},
+    micropython::{buffer::Buffer, map::Map, module::Module, obj::Obj, qstr::Qstr},
     trezorhal::secbool,
     util,
 };
 
 use core::convert::{TryFrom, TryInto};
 
-// TODO: transfer this into a struct with field specifying data type and
-// max_length
+const FLAG_PUBLIC: u8 = 0x80;
+
 const APP_DEVICE: u8 = 0x01;
+
+// TODO: transfer this into a struct with field specifying data type and
+// `max_length`, possibly even `is_public`
 
 const DEVICE_ID: u8 = 0x01;
 const _VERSION: u8 = 0x02;
@@ -50,20 +53,18 @@ extern "C" {
     fn storage_set(key: u16, val: Buffer, len: u16) -> secbool::Secbool;
 }
 
-#[no_mangle]
-pub extern "C" fn storagedevice_is_version_stored() -> Obj {
+extern "C" fn storagedevice_is_version_stored() -> Obj {
     let block = || {
-        let key = _get_appkey(_VERSION);
+        let key = _get_appkey(_VERSION, false);
         let result = storagedevice_storage_has(key);
         Ok(result.into())
     };
     unsafe { util::try_or_raise(block) }
 }
 
-#[no_mangle]
-pub extern "C" fn storagedevice_get_version() -> Obj {
+extern "C" fn storagedevice_get_version() -> Obj {
     let block = || {
-        let key = _get_appkey(_VERSION);
+        let key = _get_appkey(_VERSION, false);
         let (buf, len) = storagedevice_storage_get(key);
         let result = &buf[..len as usize];
         // let result = storagedevice_storage_get(key);
@@ -72,13 +73,22 @@ pub extern "C" fn storagedevice_get_version() -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-#[no_mangle]
-pub extern "C" fn storagedevice_set_version(version: Obj) -> Obj {
+extern "C" fn storagedevice_set_version(version: Obj) -> Obj {
     let block = || {
         let value = Buffer::try_from(version)?;
 
-        let key = _get_appkey(_VERSION);
+        let key = _get_appkey(_VERSION, false);
         let result = storagedevice_storage_set(key, value);
+        Ok(result.into())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagedevice_is_initialized() -> Obj {
+    let block = || {
+        let key = _get_appkey(INITIALIZED, true);
+        let (_, len) = storagedevice_storage_get(key);
+        let result = if len > 0 { true } else { false };
         Ok(result.into())
     };
     unsafe { util::try_or_raise(block) }
@@ -123,9 +133,37 @@ pub fn storagedevice_storage_delete(key: u16) -> bool {
     }
 }
 
-fn _get_appkey(key: u8) -> u16 {
-    ((APP_DEVICE as u16) << 8) | key as u16
+// TODO: we could include `is_public` bool into each key's struct item
+
+fn _get_appkey(key: u8, is_public: bool) -> u16 {
+    let app = if is_public {
+        APP_DEVICE | FLAG_PUBLIC
+    } else {
+        APP_DEVICE
+    };
+    ((app as u16) << 8) | key as u16
 }
+
+#[no_mangle]
+pub static mp_module_trezorstoragedevice: Module = obj_module! {
+    Qstr::MP_QSTR___name_storage__ => Qstr::MP_QSTR_trezorstoragedevice.to_obj(),
+
+    /// def is_version_stored() -> bool:
+    ///     """Whether version is in storage."""
+    Qstr::MP_QSTR_is_version_stored => obj_fn_0!(storagedevice_is_version_stored).as_obj(),
+
+    /// def is_initialized() -> bool:
+    ///     """Whether device is initialized."""
+    Qstr::MP_QSTR_is_initialized => obj_fn_0!(storagedevice_is_initialized).as_obj(),
+
+    /// def get_version() -> bytes:
+    ///     """Get from storage."""
+    Qstr::MP_QSTR_get_version => obj_fn_0!(storagedevice_get_version).as_obj(),
+
+    /// def set_version(version: bytes) -> bool:
+    ///     """Save to storage."""
+    Qstr::MP_QSTR_set_version => obj_fn_1!(storagedevice_set_version).as_obj(),
+};
 
 #[cfg(test)]
 mod tests {
@@ -133,7 +171,13 @@ mod tests {
 
     #[test]
     fn get_appkey() {
-        let result = _get_appkey(0x11);
+        let result = _get_appkey(0x11, false);
         assert_eq!(result, 0x0111);
+    }
+
+    #[test]
+    fn get_appkey_public() {
+        let result = _get_appkey(0x11, true);
+        assert_eq!(result, 0x8111);
     }
 }

@@ -8,7 +8,7 @@ from trezor.ui.layouts import confirm_action
 async def get_next_u2f_counter(
     ctx: wire.Context, msg: GetNextU2FCounter
 ) -> NextU2FCounter:
-    if not storage.device.is_initialized():
+    if not storage.trezorstoragedevice.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
 
     await confirm_action(

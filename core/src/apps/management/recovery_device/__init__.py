@@ -70,9 +70,9 @@ async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
 
 
 def _validate(msg: RecoveryDevice) -> None:
-    if not msg.dry_run and storage.device.is_initialized():
+    if not msg.dry_run and storage.trezorstoragedevice.is_initialized():
         raise wire.UnexpectedMessage("Already initialized")
-    if msg.dry_run and not storage.device.is_initialized():
+    if msg.dry_run and not storage.trezorstoragedevice.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
 
     if msg.enforce_wordlist is False:

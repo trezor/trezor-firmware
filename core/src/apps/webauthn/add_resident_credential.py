@@ -28,7 +28,7 @@ class ConfirmAddCredential(ConfirmInfo):
 async def add_resident_credential(
     ctx: wire.Context, msg: WebAuthnAddResidentCredential
 ) -> Success:
-    if not storage.device.is_initialized():
+    if not storage.trezorstoragedevice.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
     if not msg.credential_id:
         raise wire.ProcessError("Missing credential ID parameter.")

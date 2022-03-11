@@ -1190,7 +1190,7 @@ def msg_register(req: Msg, dialog_mgr: DialogManager) -> Cmd:
         dialog_mgr.set_state(new_state)
         return msg_error(req.cid, _SW_CONDITIONS_NOT_SATISFIED)
 
-    if not storage.device.is_initialized():
+    if not storage.trezorstoragedevice.is_initialized():
         if __debug__:
             log.warning(__name__, "not initialized")
         # There is no standard way to decline a U2F request, but responding with ERR_CHANNEL_BUSY
@@ -1271,7 +1271,7 @@ def msg_authenticate(req: Msg, dialog_mgr: DialogManager) -> Cmd:
         dialog_mgr.set_state(new_state)
         return msg_error(req.cid, _SW_CONDITIONS_NOT_SATISFIED)
 
-    if not storage.device.is_initialized():
+    if not storage.trezorstoragedevice.is_initialized():
         if __debug__:
             log.warning(__name__, "not initialized")
         # Device is not registered with the RP.
@@ -1450,7 +1450,7 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Cmd | None:
 def cbor_make_credential_process(req: Cmd, dialog_mgr: DialogManager) -> State | Cmd:
     from . import knownapps
 
-    if not storage.device.is_initialized():
+    if not storage.trezorstoragedevice.is_initialized():
         if __debug__:
             log.warning(__name__, "not initialized")
         return cbor_error(req.cid, _ERR_OTHER)
@@ -1628,7 +1628,7 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Cmd | None:
 
 
 def cbor_get_assertion_process(req: Cmd, dialog_mgr: DialogManager) -> State | Cmd:
-    if not storage.device.is_initialized():
+    if not storage.trezorstoragedevice.is_initialized():
         if __debug__:
             log.warning(__name__, "not initialized")
         return cbor_error(req.cid, _ERR_OTHER)
@@ -1888,7 +1888,7 @@ def cbor_client_pin(req: Cmd) -> Cmd:
 
 
 def cbor_reset(req: Cmd, dialog_mgr: DialogManager) -> Cmd | None:
-    if not storage.device.is_initialized():
+    if not storage.trezorstoragedevice.is_initialized():
         if __debug__:
             log.warning(__name__, "not initialized")
         # Return success, because the authenticator is already in factory default state.
