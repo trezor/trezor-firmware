@@ -1370,7 +1370,12 @@ static void tx_info_finish(TxInfo *tx_info) {
 
 static bool signing_add_input(TxInputType *txinput) {
   // hash all input data to check it later (relevant for fee computation)
-  tx_input_check_hash(&hasher_check, txinput);
+  if (!tx_input_check_hash(&hasher_check, txinput)) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Failed to hash input"));
+    signing_abort();
+    return false;
+  }
 
   if (!fsm_checkCoinPath(coin, txinput->script_type, txinput->address_n_count,
                          txinput->address_n, txinput->has_multisig, true)) {
@@ -1634,8 +1639,13 @@ static bool signing_add_orig_input(TxInputType *orig_input) {
     return false;
   }
 
-  // The first original input that has address_n set and a signature gets chosen
-  // as the verification input. Set script_sig for legacy digest computation.
+  // The first original non-multisig input that has address_n set and a
+  // signature gets chosen as the verification input. Set script_sig for legacy
+  // digest computation.
+  // NOTE: Supporting replacement transactions where all internal inputs are
+  // multisig would require checking the signatures of all of the original
+  // internal inputs or not allowing unverified external inputs in transactions
+  // where multisig inputs are present.
   if (!have_orig_verif_input && orig_input->address_n_count != 0 &&
       !orig_input->has_multisig &&
       ((orig_input->has_script_sig && orig_input->script_sig.size != 0) ||
@@ -2736,7 +2746,12 @@ void signing_txack(TransactionType *tx) {
       if (idx1 == 0) {
         hasher_Reset(&hasher_check);
       }
-      tx_input_check_hash(&hasher_check, tx->inputs);
+      if (!tx_input_check_hash(&hasher_check, tx->inputs)) {
+        fsm_sendFailure(FailureType_Failure_ProcessError,
+                        _("Failed to hash input"));
+        signing_abort();
+        return;
+      }
 
       memcpy(&input, tx->inputs, sizeof(TxInputType));
 
@@ -2943,7 +2958,12 @@ void signing_txack(TransactionType *tx) {
         hasher_Reset(&hasher_check);
       }
       // check inputs are the same as those in phase 1
-      tx_input_check_hash(&hasher_check, tx->inputs);
+      if (!tx_input_check_hash(&hasher_check, tx->inputs)) {
+        fsm_sendFailure(FailureType_Failure_ProcessError,
+                        _("Failed to hash input"));
+        signing_abort();
+        return;
+      }
       if (idx2 == idx1) {
         if (!tx_info_check_input(&info, &tx->inputs[0]) ||
             !derive_node(&tx->inputs[0]) ||
