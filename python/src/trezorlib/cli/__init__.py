@@ -41,7 +41,7 @@ if TYPE_CHECKING:
 
 class ChoiceType(click.Choice):
     def __init__(self, typemap: Dict[str, Any]) -> None:
-        super().__init__(typemap.keys())
+        super().__init__(list(typemap.keys()))
         self.typemap = typemap
 
     def convert(self, value: str, param: Any, ctx: click.Context) -> Any:
