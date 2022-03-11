@@ -1,0 +1,1 @@
+Fix a coin loss vulnerability related to replacement transactions with multisig inputs and unverified external inputs.
