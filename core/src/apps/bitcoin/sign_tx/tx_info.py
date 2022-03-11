@@ -153,8 +153,11 @@ class OriginalTxInfo(TxInfoBase):
         super().add_input(txi, script_pubkey)
         writers.write_tx_input(self.h_tx, txi, txi.script_sig or bytes())
 
-        # For verification use the first original input that specifies address_n.
-        if not self.verification_input and txi.address_n:
+        # For verification use the first original non-multisig input that specifies address_n.
+        # NOTE: Supporting replacement transactions where all internal inputs are multisig would
+        # require checking the signatures of all of the original internal inputs or not allowing
+        # unverified external inputs in transactions where multisig inputs are present.
+        if not self.verification_input and txi.address_n and not txi.multisig:
             self.verification_input = txi
             self.verification_index = self.index
 

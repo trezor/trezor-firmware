@@ -15,8 +15,6 @@ from apps.common.writers import (  # noqa: F401
     write_uint64_le,
 )
 
-from .common import input_is_external_unverified
-
 if TYPE_CHECKING:
     from trezor.messages import (
         PrevInput,
@@ -48,15 +46,23 @@ def write_tx_input(w: Writer, i: TxInput | PrevInput, script: bytes) -> None:
 
 
 def write_tx_input_check(w: Writer, i: TxInput) -> None:
-    write_bytes_fixed(w, i.prev_hash, TX_HASH_SIZE)
-    write_uint32(w, i.prev_index)
-    write_uint32(w, i.script_type)
-    write_uint8(w, input_is_external_unverified(i))
+    from .multisig import multisig_fingerprint
+
     write_uint32(w, len(i.address_n))
     for n in i.address_n:
         write_uint32(w, n)
+    write_bytes_fixed(w, i.prev_hash, TX_HASH_SIZE)
+    write_uint32(w, i.prev_index)
+    write_bytes_prefixed(w, i.script_sig or b"")
     write_uint32(w, i.sequence)
+    write_uint32(w, i.script_type)
+    multisig_fp = multisig_fingerprint(i.multisig) if i.multisig else b""
+    write_bytes_prefixed(w, multisig_fp)
     write_uint64(w, i.amount or 0)
+    write_bytes_prefixed(w, i.witness or b"")
+    write_bytes_prefixed(w, i.ownership_proof or b"")
+    write_bytes_prefixed(w, i.orig_hash or b"")
+    write_uint32(w, i.orig_index or 0)
     write_bytes_prefixed(w, i.script_pubkey or b"")
 
 
