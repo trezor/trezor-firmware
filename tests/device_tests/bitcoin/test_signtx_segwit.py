@@ -189,6 +189,7 @@ def test_testnet_segwit_big_amount(client: Client):
         _, serialized_tx = btc.sign_tx(
             client, "Testnet", [inp1], [out1], prev_txes={prev_hash: prev_tx}
         )
+    # Transaction does not exist on the blockchain, not using assert_tx_matches()
     assert (
         serialized_tx.hex()
         == "010000000001019e64f9a7d1af8c06e9d04362e6bd6ac1970f8be5321982ad1ce25a65eec3ae5500000000171600140099a7ecbd938ed1839f5f6bf6d50933c6db9d5cffffffff01010000000100000017a914097c569095163e84475d07aa95a1f736df895b7b87024830450221009d87f574f4b73d1f1114b6a053cb4e1e4f223e495bf5ba2c2f9e47eaf3aabb8c022033eaeb7fa07ab9948ed0180ca166e9d3209cc6f598dff7bfc61ea32ad3d995840121033add1f0e8e3c3136f7428dd4a4de1057380bd311f5b0856e2269170b4ffa65bf00000000"
@@ -316,6 +317,7 @@ def test_attack_change_input_address(client: Client):
             client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API_TESTNET
         )
 
+    # Transaction does not exist on the blockchain, not using assert_tx_matches()
     assert (
         serialized_tx.hex()
         == "0100000000010137c361fb8f2d9056ba8c98c5611930fcb48cacfdd0fe2e0449d83eea982f91200000000017160014d16b8c0680c61fc6ed2e407455715055e41052f5ffffffff02e0aebb00000000001976a91414fdede0ddc3be652a0ce1afbc1b509a55b6b94888ac3df39f060000000017a9142f98413cb83ff8b3eaf1926192e68973cbd68a3a8702473044022013cbce7c575337ca05dbe03b5920a0805b510cd8dfd3180bd7c5d01cec6439cd0220050001be4bcefb585caf973caae0ffec682347f2127cc22f26efd93ee54fd852012103e7bfe10708f715e8538c92d46ca50db6f657bbc455b7494e6a0303ccdb868b7900000000"
