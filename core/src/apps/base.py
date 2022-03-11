@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 import storage.cache
 import storage.device
+from storage import trezorstoragedevice
 from trezor import config, utils, wire, workflow
 from trezor.enums import MessageType
 from trezor.messages import Success
@@ -76,7 +77,7 @@ def get_features() -> Features:
             Capability.PassphraseEntry,
         ]
     f.sd_card_present = sdcard.is_present()
-    f.initialized = storage.device.is_initialized()
+    f.initialized = trezorstoragedevice.is_initialized()
 
     # private fields:
     if config.is_unlocked():

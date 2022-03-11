@@ -51,7 +51,7 @@ async def load_device(ctx: wire.Context, msg: LoadDevice) -> Success:
 
 
 def _validate(msg: LoadDevice) -> int:
-    if storage.device.is_initialized():
+    if storage.trezorstoragedevice.is_initialized():
         raise wire.UnexpectedMessage("Already initialized")
 
     if not msg.mnemonics:

@@ -19,6 +19,13 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_text;
   MP_QSTR_request_pin;
 
+  // storagedevice
+  MP_QSTR___name_storage__;
+  MP_QSTR_is_version_stored;
+  MP_QSTR_is_initialized;
+  MP_QSTR_get_version;
+  MP_QSTR_set_version;
+
   MP_QSTR_set_timer_fn;
   MP_QSTR_touch_event;
   MP_QSTR_button_event;

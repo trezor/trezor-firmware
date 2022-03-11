@@ -23,41 +23,6 @@
 
 #include "librust.h"
 
-/// def is_version_stored() -> bool:
-///     """Whether version is in storage."""
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(
-    mod_trezorutils_storagedevice_is_version_stored_obj,
-    storagedevice_is_version_stored);
-
-/// def get_version() -> bytes:
-///     """Get from storage."""
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_storagedevice_get_version_obj,
-                                 storagedevice_get_version);
-
-/// def set_version(version: bytes) -> bool:
-///     """Save to storage."""
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_storagedevice_set_version_obj,
-                                 storagedevice_set_version);
-
-STATIC const mp_rom_map_elem_t mp_module_trezorstoragedevice_globals_table[] = {
-    {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorstoragedevice)},
-
-    {MP_ROM_QSTR(MP_QSTR_is_version_stored),
-     MP_ROM_PTR(&mod_trezorutils_storagedevice_is_version_stored_obj)},
-    {MP_ROM_QSTR(MP_QSTR_get_version),
-     MP_ROM_PTR(&mod_trezorutils_storagedevice_get_version_obj)},
-    {MP_ROM_QSTR(MP_QSTR_set_version),
-     MP_ROM_PTR(&mod_trezorutils_storagedevice_set_version_obj)},
-};
-
-STATIC MP_DEFINE_CONST_DICT(mp_module_trezorstoragedevice_globals,
-                            mp_module_trezorstoragedevice_globals_table);
-
-const mp_obj_module_t mp_module_trezorstoragedevice = {
-    .base = {&mp_type_module},
-    .globals = (mp_obj_dict_t *)&mp_module_trezorstoragedevice_globals,
-};
-
 MP_REGISTER_MODULE(MP_QSTR_trezorstoragedevice, mp_module_trezorstoragedevice,
                    MICROPY_PY_TREZORSTORAGEDEVICE);
 

@@ -34,7 +34,7 @@ def validate_homescreen(homescreen: bytes) -> None:
 
 
 async def apply_settings(ctx: wire.Context, msg: ApplySettings) -> Success:
-    if not storage.device.is_initialized():
+    if not storage.trezorstoragedevice.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
     if (
         msg.homescreen is None
