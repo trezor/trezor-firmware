@@ -556,22 +556,37 @@ uint32_t serialize_script_multisig(const CoinInfo *coin,
 }
 
 // tx methods
-void tx_input_check_hash(Hasher *hasher, const TxInputType *input) {
-  hasher_Update(hasher, input->prev_hash.bytes, sizeof(input->prev_hash.bytes));
-  hasher_Update(hasher, (const uint8_t *)&input->prev_index,
-                sizeof(input->prev_index));
-  hasher_Update(hasher, (const uint8_t *)&input->script_type,
-                sizeof(input->script_type));
+bool tx_input_check_hash(Hasher *hasher, const TxInputType *input) {
   hasher_Update(hasher, (const uint8_t *)&input->address_n_count,
                 sizeof(input->address_n_count));
   for (int i = 0; i < input->address_n_count; ++i)
     hasher_Update(hasher, (const uint8_t *)&input->address_n[i],
                   sizeof(input->address_n[0]));
+  hasher_Update(hasher, input->prev_hash.bytes, sizeof(input->prev_hash.bytes));
+  hasher_Update(hasher, (const uint8_t *)&input->prev_index,
+                sizeof(input->prev_index));
+  tx_script_hash(hasher, input->script_sig.size, input->script_sig.bytes);
   hasher_Update(hasher, (const uint8_t *)&input->sequence,
                 sizeof(input->sequence));
+  hasher_Update(hasher, (const uint8_t *)&input->script_type,
+                sizeof(input->script_type));
+  uint8_t multisig_fp[32] = {0};
+  if (input->has_multisig) {
+    if (cryptoMultisigFingerprint(&input->multisig, multisig_fp) == 0) {
+      // Invalid multisig parameters.
+      return false;
+    }
+  }
+  hasher_Update(hasher, multisig_fp, sizeof(multisig_fp));
   hasher_Update(hasher, (const uint8_t *)&input->amount, sizeof(input->amount));
+  tx_script_hash(hasher, input->witness.size, input->witness.bytes);
+  hasher_Update(hasher, (const uint8_t *)&input->has_orig_hash,
+                sizeof(input->has_orig_hash));
+  hasher_Update(hasher, input->orig_hash.bytes, sizeof(input->orig_hash.bytes));
+  hasher_Update(hasher, (const uint8_t *)&input->orig_index,
+                sizeof(input->orig_index));
   tx_script_hash(hasher, input->script_pubkey.size, input->script_pubkey.bytes);
-  return;
+  return true;
 }
 
 uint32_t tx_prevout_hash(Hasher *hasher, const TxInputType *input) {
