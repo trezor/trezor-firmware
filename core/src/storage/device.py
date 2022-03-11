@@ -74,8 +74,8 @@ SD_SALT_AUTH_KEY_LEN_BYTES = const(16)
 #     common.set(_NAMESPACE, _VERSION, version)
 
 
-def is_initialized() -> bool:
-    return common.get_bool(_NAMESPACE, INITIALIZED, public=True)
+# def is_initialized() -> bool:
+#     return common.get_bool(_NAMESPACE, INITIALIZED, public=True)
 
 
 def _new_device_id() -> str:

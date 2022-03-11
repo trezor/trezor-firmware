@@ -13,28 +13,28 @@ const APP_DEVICE: u8 = 0x01;
 // TODO: transfer this into a struct with field specifying data type and
 // `max_length`, possibly even `is_public`
 
-const DEVICE_ID: u8 = 0x01;
-const _VERSION: u8 = 0x02;
-const _MNEMONIC_SECRET: u8 = 0x03;
-const _LANGUAGE: u8 = 0x04;
-const _LABEL: u8 = 0x05;
-const _USE_PASSPHRASE: u8 = 0x06;
-const _HOMESCREEN: u8 = 0x07;
-const _NEEDS_BACKUP: u8 = 0x08;
-const _FLAGS: u8 = 0x09;
-const U2F_COUNTER: u8 = 0x0A;
-const _PASSPHRASE_ALWAYS_ON_DEVICE: u8 = 0x0B;
-const _UNFINISHED_BACKUP: u8 = 0x0C;
-const _AUTOLOCK_DELAY_MS: u8 = 0x0D;
-const _NO_BACKUP: u8 = 0x0E;
-const _BACKUP_TYPE: u8 = 0x0F;
-const _ROTATION: u8 = 0x10;
-const _SLIP39_IDENTIFIER: u8 = 0x11;
-const _SLIP39_ITERATION_EXPONENT: u8 = 0x12;
-const _SD_SALT_AUTH_KEY: u8 = 0x13;
-const INITIALIZED: u8 = 0x14;
-const _SAFETY_CHECK_LEVEL: u8 = 0x15;
-const _EXPERIMENTAL_FEATURES: u8 = 0x16;
+const DEVICE_ID: u8 = 0x00;
+const _VERSION: u8 = 0x01;
+const _MNEMONIC_SECRET: u8 = 0x02;
+const _LANGUAGE: u8 = 0x03;
+const _LABEL: u8 = 0x04;
+const _USE_PASSPHRASE: u8 = 0x05;
+const _HOMESCREEN: u8 = 0x06;
+const _NEEDS_BACKUP: u8 = 0x07;
+const _FLAGS: u8 = 0x08;
+const U2F_COUNTER: u8 = 0x09;
+const _PASSPHRASE_ALWAYS_ON_DEVICE: u8 = 0x0A;
+const _UNFINISHED_BACKUP: u8 = 0x0B;
+const _AUTOLOCK_DELAY_MS: u8 = 0x0C;
+const _NO_BACKUP: u8 = 0x0D;
+const _BACKUP_TYPE: u8 = 0x0E;
+const _ROTATION: u8 = 0x0F;
+const _SLIP39_IDENTIFIER: u8 = 0x10;
+const _SLIP39_ITERATION_EXPONENT: u8 = 0x11;
+const _SD_SALT_AUTH_KEY: u8 = 0x12;
+const INITIALIZED: u8 = 0x13;
+const _SAFETY_CHECK_LEVEL: u8 = 0x14;
+const _EXPERIMENTAL_FEATURES: u8 = 0x15;
 
 extern "C" {
     // storage.h
