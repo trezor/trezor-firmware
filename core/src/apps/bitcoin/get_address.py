@@ -110,6 +110,7 @@ async def get_address(
             await show_address(
                 ctx,
                 address=address_short,
+                address_qr=address,
                 case_sensitive=address_case_sensitive,
                 title=title,
             )
