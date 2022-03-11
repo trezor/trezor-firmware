@@ -34,7 +34,6 @@ python-bitcoinlib = "^0.11.0"
 
 ## typing
 typing-extensions = ">=3.7.4"
-types-click = "*"
 
 ## style
 isort = "<5"  # 5 changes lots of stuff that need to be addressed first: https://timothycrosley.github.io/isort/docs/upgrade_guides/5.0.0/
@@ -51,7 +50,7 @@ demjson3 = "*"
 graphviz = "*"
 
 ## cointool
-click = "^7"
+click = "^8.0"
 ed25519 = "^1.4"
 requests = "^2.19"
 termcolor = "*"
