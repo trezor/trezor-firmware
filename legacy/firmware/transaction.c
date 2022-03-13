@@ -943,14 +943,15 @@ void tx_hash_final(TxStruct *t, uint8_t *hash, bool reverse) {
   }
 }
 
-static uint32_t tx_input_script_size(const TxInputType *txinput) {
+static uint32_t tx_input_script_size(const TxInputType *txinput,
+                                     InputScriptType script_type) {
   uint32_t input_script_size = 0;
   if (txinput->has_multisig) {
     uint32_t multisig_script_size =
         TXSIZE_MULTISIGSCRIPT +
         cryptoMultisigPubkeyCount(&(txinput->multisig)) * (1 + TXSIZE_PUBKEY);
-    if (txinput->script_type == InputScriptType_SPENDWITNESS ||
-        txinput->script_type == InputScriptType_SPENDP2SHWITNESS) {
+    if (script_type == InputScriptType_SPENDWITNESS ||
+        script_type == InputScriptType_SPENDP2SHWITNESS) {
       multisig_script_size += ser_length_size(multisig_script_size);
     } else {
       multisig_script_size += op_push_size(multisig_script_size);
@@ -958,7 +959,7 @@ static uint32_t tx_input_script_size(const TxInputType *txinput) {
     input_script_size = 1  // the OP_FALSE bug in multisig
                         + txinput->multisig.m * (1 + TXSIZE_DER_SIGNATURE) +
                         multisig_script_size;
-  } else if (txinput->script_type == InputScriptType_SPENDTAPROOT) {
+  } else if (script_type == InputScriptType_SPENDTAPROOT) {
     input_script_size = 1 + TXSIZE_SCHNORR_SIGNATURE;
   } else {
     input_script_size = (1 + TXSIZE_DER_SIGNATURE + 1 + TXSIZE_PUBKEY);
@@ -976,16 +977,37 @@ uint32_t tx_input_weight(const CoinInfo *coin, const TxInputType *txinput) {
   (void)coin;
 #endif
 
-  uint32_t input_script_size = tx_input_script_size(txinput);
+  InputScriptType script_type = txinput->script_type;
+  if (script_type == InputScriptType_EXTERNAL) {
+    // Guess the script type from the scriptPubKey.
+    switch (txinput->script_pubkey.bytes[0]) {
+      case 0x76:  // OP_DUP (P2PKH)
+        script_type = InputScriptType_SPENDADDRESS;
+        break;
+      case 0xA9:  // OP_HASH_160 (P2SH, probably nested P2WPKH)
+        script_type = InputScriptType_SPENDP2SHWITNESS;
+        break;
+      case 0x00:  // SegWit v0 (probably P2WPKH)
+        script_type = InputScriptType_SPENDWITNESS;
+        break;
+      case 0x51:  // SegWit v1 (P2TR)
+        script_type = InputScriptType_SPENDTAPROOT;
+        break;
+      default:  // Unknown script type.
+        break;
+    }
+  }
+
+  uint32_t input_script_size = tx_input_script_size(txinput, script_type);
   uint32_t weight = 4 * TXSIZE_INPUT;
-  if (txinput->script_type == InputScriptType_SPENDADDRESS ||
-      txinput->script_type == InputScriptType_SPENDMULTISIG) {
+  if (script_type == InputScriptType_SPENDADDRESS ||
+      script_type == InputScriptType_SPENDMULTISIG) {
     input_script_size += ser_length_size(input_script_size);
     weight += 4 * input_script_size;
-  } else if (txinput->script_type == InputScriptType_SPENDWITNESS ||
-             txinput->script_type == InputScriptType_SPENDTAPROOT ||
-             txinput->script_type == InputScriptType_SPENDP2SHWITNESS) {
-    if (txinput->script_type == InputScriptType_SPENDP2SHWITNESS) {
+  } else if (script_type == InputScriptType_SPENDWITNESS ||
+             script_type == InputScriptType_SPENDTAPROOT ||
+             script_type == InputScriptType_SPENDP2SHWITNESS) {
+    if (script_type == InputScriptType_SPENDP2SHWITNESS) {
       weight += 4 * (2 + (txinput->has_multisig ? TXSIZE_WITNESSSCRIPT
                                                 : TXSIZE_WITNESSPKHASH));
     } else {
@@ -993,6 +1015,7 @@ uint32_t tx_input_weight(const CoinInfo *coin, const TxInputType *txinput) {
     }
     weight += input_script_size;  // discounted witness
   }
+
   return weight;
 }
 
@@ -1060,7 +1083,8 @@ uint32_t tx_output_weight(const CoinInfo *coin, const TxOutputType *txoutput) {
 
 #if !BITCOIN_ONLY
 uint32_t tx_decred_witness_weight(const TxInputType *txinput) {
-  uint32_t input_script_size = tx_input_script_size(txinput);
+  uint32_t input_script_size =
+      tx_input_script_size(txinput, txinput->script_type);
   uint32_t size = TXSIZE_DECRED_WITNESS + ser_length_size(input_script_size) +
                   input_script_size;
 
