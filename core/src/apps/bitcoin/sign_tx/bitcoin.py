@@ -584,7 +584,7 @@ class Bitcoin:
         # STAGE_REQUEST_SEGWIT_WITNESS in legacy
         txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
         self.tx_info.check_input(txi)
-        await self.approver.check_internal_input(txi)
+        self.approver.check_internal_input(txi)
         if txi.script_type not in common.SEGWIT_INPUT_SCRIPT_TYPES:
             raise wire.ProcessError("Transaction has changed during signing")
 

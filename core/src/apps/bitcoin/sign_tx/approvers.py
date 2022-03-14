@@ -63,7 +63,7 @@ class Approver:
         if txi.orig_hash:
             self.orig_total_in += txi.amount
 
-    async def check_internal_input(self, txi: TxInput) -> None:
+    def check_internal_input(self, txi: TxInput) -> None:
         pass
 
     def add_external_input(self, txi: TxInput) -> None:
@@ -135,23 +135,25 @@ class BasicApprover(Approver):
     def __init__(self, tx: SignTx, coin: CoinInfo) -> None:
         super().__init__(tx, coin)
         self.change_count = 0  # the number of change-outputs
+        self.foreign_address_confirmed = False
 
     async def add_internal_input(self, txi: TxInput) -> None:
         if not validate_path_against_script_type(self.coin, txi):
             await helpers.confirm_foreign_address(txi.address_n)
+            self.foreign_address_confirmed = True
 
         await super().add_internal_input(txi)
 
-    async def check_internal_input(self, txi: TxInput) -> None:
-        if not validate_path_against_script_type(self.coin, txi):
-            # The following can be removed once we start validating script_pubkey in step3_verify_inputs().
-            if self.orig_total_in:
-                # Replacement transaction.
-                # This mitigates a cross-coin spending attack when safety checks are disabled.
-                raise wire.ProcessError(
-                    "Non-standard paths not allowed in replacement transactions."
-                )
-            await helpers.confirm_foreign_address(txi.address_n)
+    def check_internal_input(self, txi: TxInput) -> None:
+        # Sanity check not critical for security.
+        # The main reason for this is that we are not comfortable with using the same private key
+        # in multiple signatures schemes (ECDSA and Schnorr) and we want to be sure that the user
+        # went through a warning screen before we sign the input.
+        if (
+            not validate_path_against_script_type(self.coin, txi)
+            and not self.foreign_address_confirmed
+        ):
+            raise wire.ProcessError("Transaction has changed during signing")
 
     def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         super().add_change_output(txo, script_pubkey)
@@ -353,8 +355,11 @@ class CoinJoinApprover(Approver):
 
         await super().add_internal_input(txi)
 
-    async def check_internal_input(self, txi: TxInput) -> None:
-        # The following can be removed once we start validating script_pubkey in step3_verify_inputs().
+    def check_internal_input(self, txi: TxInput) -> None:
+        # Sanity check not critical for security.
+        # The main reason for this is that we are not comfortable with using the same private key
+        # in multiple signatures schemes (ECDSA and Schnorr) and we want to be sure that the user
+        # went through a warning screen before we sign the input.
         if not self.authorization.check_sign_tx_input(txi, self.coin):
             raise wire.ProcessError("Unauthorized path")
 
