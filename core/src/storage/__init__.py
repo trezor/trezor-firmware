@@ -1,11 +1,9 @@
 from storage import cache, common, device
-from trezor import config
-
-import trezorstoragedevice
+from trezor import config, storagedevice
 
 
 def set_current_version() -> None:
-    trezorstoragedevice.set_version(common.STORAGE_VERSION_CURRENT)
+    storagedevice.set_version(common.STORAGE_VERSION_CURRENT)
 
 
 def wipe() -> None:
@@ -15,16 +13,13 @@ def wipe() -> None:
 
 def init_unlocked() -> None:
     # Check for storage version upgrade.
-    version = trezorstoragedevice.get_version()
+    version = storagedevice.get_version()
     if version == common.STORAGE_VERSION_01:
         _migrate_from_version_01()
 
     # In FWs <= 2.3.1 'version' denoted whether the device is initialized or not.
     # In 2.3.2 we have introduced a new field 'initialized' for that.
-    if (
-        trezorstoragedevice.is_version_stored()
-        and not trezorstoragedevice.is_initialized()
-    ):
+    if storagedevice.is_version_stored() and not storagedevice.is_initialized():
         common.set_bool(common.APP_DEVICE, device.INITIALIZED, True, public=True)
 
 

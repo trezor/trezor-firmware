@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 import storage
 import storage.device
-from trezor import wire
+from trezor import storagedevice, wire
 from trezor.messages import Success
 
 from apps.common import mnemonic
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 async def backup_device(ctx: wire.Context, msg: BackupDevice) -> Success:
-    if not storage.trezorstoragedevice.is_initialized():
+    if not storagedevice.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
     if not storage.device.needs_backup():
         raise wire.ProcessError("Seed already backed up")

@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 import storage.device
-from trezor import ui, wire
+from trezor import storagedevice, ui, wire
 from trezor.enums import ButtonRequestType, SafetyCheckLevel
 from trezor.messages import Success
 from trezor.strings import format_duration_ms
@@ -34,7 +34,7 @@ def validate_homescreen(homescreen: bytes) -> None:
 
 
 async def apply_settings(ctx: wire.Context, msg: ApplySettings) -> Success:
-    if not storage.trezorstoragedevice.is_initialized():
+    if not storagedevice.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
     if (
         msg.homescreen is None
@@ -88,7 +88,7 @@ async def apply_settings(ctx: wire.Context, msg: ApplySettings) -> Success:
 
     if msg.display_rotation is not None:
         await require_confirm_change_display_rotation(ctx, msg.display_rotation)
-        storage.device.set_rotation(msg.display_rotation)
+        storagedevice.set_rotation(msg.display_rotation)
 
     if msg.experimental_features is not None:
         await require_confirm_experimental_features(ctx, msg.experimental_features)

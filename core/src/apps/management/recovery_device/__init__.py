@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 import storage
 import storage.device
 import storage.recovery
-from trezor import config, ui, wire, workflow
+from trezor import config, storagedevice, ui, wire, workflow
 from trezor.enums import ButtonRequestType
 from trezor.messages import Success
 from trezor.ui.layouts import confirm_action, confirm_reset_device
@@ -70,9 +70,9 @@ async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
 
 
 def _validate(msg: RecoveryDevice) -> None:
-    if not msg.dry_run and storage.trezorstoragedevice.is_initialized():
+    if not msg.dry_run and storagedevice.is_initialized():
         raise wire.UnexpectedMessage("Already initialized")
-    if msg.dry_run and not storage.trezorstoragedevice.is_initialized():
+    if msg.dry_run and not storagedevice.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
 
     if msg.enforce_wordlist is False:

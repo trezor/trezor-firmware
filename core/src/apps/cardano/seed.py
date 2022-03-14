@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
-from storage import cache, trezorstoragedevice
-from trezor import wire
+from storage import cache
+from trezor import storagedevice, wire
 from trezor.crypto import bip32, cardano
 from trezor.enums import CardanoDerivationType
 
@@ -115,7 +115,7 @@ def is_minting_path(path: Bip32Path) -> bool:
 
 
 def derive_and_store_secrets(passphrase: str) -> None:
-    assert trezorstoragedevice.is_initialized()
+    assert storagedevice.is_initialized()
     assert cache.get(cache.APP_COMMON_DERIVE_CARDANO)
 
     if not mnemonic.is_bip39():
@@ -152,7 +152,7 @@ async def _get_secret(ctx: wire.Context, cache_entry: int) -> bytes:
 async def _get_keychain_bip39(
     ctx: wire.Context, derivation_type: CardanoDerivationType
 ) -> Keychain:
-    if not trezorstoragedevice.is_initialized():
+    if not storagedevice.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
 
     if derivation_type == CardanoDerivationType.LEDGER:

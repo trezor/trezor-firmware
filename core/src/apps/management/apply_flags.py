@@ -1,8 +1,7 @@
 from typing import TYPE_CHECKING
 
-import storage.device
 from storage.device import set_flags
-from trezor import wire
+from trezor import storagedevice, wire
 from trezor.messages import Success
 
 if TYPE_CHECKING:
@@ -10,7 +9,7 @@ if TYPE_CHECKING:
 
 
 async def apply_flags(ctx: wire.GenericContext, msg: ApplyFlags) -> Success:
-    if not storage.trezorstoragedevice.is_initialized():
+    if not storagedevice.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
     set_flags(msg.flags)
     return Success(message="Flags applied")
