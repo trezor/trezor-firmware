@@ -119,6 +119,12 @@ protobuf: ## generate python protobuf headers
 protobuf_check: ## check that generated protobuf headers are up to date
 	./tools/build_protobuf --check
 
-gen:  mocks icons templates protobuf ## regeneate auto-generated files from sources
+ci_docs: ## generate CI documentation
+	./tools/generate_ci_docs.py
 
-gen_check: mocks_check icons_check templates_check protobuf_check ## check validity of auto-generated files
+ci_docs_check: ## check that generated CI documentation is up to date
+	./tools/generate_ci_docs.py --check
+
+gen:  mocks icons templates protobuf ci_docs ## regenerate auto-generated files from sources
+
+gen_check: mocks_check icons_check templates_check protobuf_check ci_docs_check ## check validity of auto-generated files

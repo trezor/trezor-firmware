@@ -1,3 +1,9 @@
+# Connected with creating the testing image for CI.
+
+# Environment job builds the `ci/Dockerfile` and pushes the built docker image
+# into our GitLab registry. Since modifications of this Dockerfile are very rare
+# this is a _manual_ job which needs to be triggered on GitLab.
+# Almost all CI jobs run inside this docker image.
 .environment:
   stage: environment
   image: docker
