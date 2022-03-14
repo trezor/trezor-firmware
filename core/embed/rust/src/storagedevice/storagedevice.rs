@@ -5,6 +5,8 @@ use crate::{
     util,
 };
 
+use heapless::Vec;
+
 use cstr_core::cstr;
 
 use core::convert::{TryFrom, TryInto};
@@ -13,8 +15,13 @@ const FLAG_PUBLIC: u8 = 0x80;
 
 const APP_DEVICE: u8 = 0x01;
 
+// Longest possible entry in storage
+const MAX_LEN: usize = 300;
+
 // TODO: transfer this into a struct with field specifying data type and
 // `max_length`, possibly even `is_public`
+// impl get a impl set
+// INITIALIZED: data_type...
 
 const DEVICE_ID: u8 = 0x00;
 const _VERSION: u8 = 0x01;
@@ -46,14 +53,14 @@ extern "C" {
     fn storage_get(
         key: u16,
         // val: *mut cty::c_void,
-        // val: *mut BufferMut,
-        val: *mut u8,
+        val: *const u8,
         max_len: u16,
         len: *mut u16,
     ) -> secbool::Secbool;
     // fn storage_set(key: u16, val: *const cty::c_void, len: u16) ->
     // secbool::Secbool;
-    fn storage_set(key: u16, val: Buffer, len: u16) -> secbool::Secbool;
+    fn storage_set(key: u16, val: *const u8, len: u16) -> secbool::Secbool;
+
 }
 
 extern "C" fn storagedevice_is_version_stored() -> Obj {
@@ -68,9 +75,7 @@ extern "C" fn storagedevice_is_version_stored() -> Obj {
 extern "C" fn storagedevice_get_version() -> Obj {
     let block = || {
         let key = _get_appkey(_VERSION, false);
-        let (buf, len) = storagedevice_storage_get(key);
-        let result = &buf[..len as usize];
-        // let result = storagedevice_storage_get(key);
+        let result = &storagedevice_storage_get(key) as &[u8];
         result.try_into()
     };
     unsafe { util::try_or_raise(block) }
@@ -79,9 +84,11 @@ extern "C" fn storagedevice_get_version() -> Obj {
 extern "C" fn storagedevice_set_version(value: Obj) -> Obj {
     let block = || {
         let value = Buffer::try_from(value)?;
+        let len = value.len() as u16;
+        let val = value.as_ptr();
 
         let key = _get_appkey(_VERSION, false);
-        let result = storagedevice_storage_set(key, value);
+        let result = storagedevice_storage_set(key, val, len);
         Ok(result.into())
     };
     unsafe { util::try_or_raise(block) }
@@ -90,8 +97,8 @@ extern "C" fn storagedevice_set_version(value: Obj) -> Obj {
 extern "C" fn storagedevice_is_initialized() -> Obj {
     let block = || {
         let key = _get_appkey(INITIALIZED, true);
-        let (_, len) = storagedevice_storage_get(key);
-        let result = if len > 0 { true } else { false };
+        let result = &storagedevice_storage_get(key) as &[u8];
+        let result = if result.len() > 0 { true } else { false };
         Ok(result.into())
     };
     unsafe { util::try_or_raise(block) }
@@ -100,50 +107,90 @@ extern "C" fn storagedevice_is_initialized() -> Obj {
 extern "C" fn storagedevice_get_rotation() -> Obj {
     let block = || {
         let key = _get_appkey(_ROTATION, true);
-        let (buf, len) = storagedevice_storage_get(key);
+        let result = &storagedevice_storage_get(key) as &[u8];
+
+        // It might be unset
+        if result.len() == 0 {
+            return Ok(0u16.into());
+        }
+
         // TODO: how to convert unknown size buff into int?
-        let result = (buf[0] as u16) << 8 + (buf[1] as u16);
-        Ok(result.into())
+        // We know the number is stored in two bytes
+        let num = u16::from_be_bytes([result[0], result[1]]);
+        Ok(num.into())
     };
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_set_rotation(value: Obj) -> Obj {
     let block = || {
+        let value = u16::try_from(value)?;
+
         // TODO: how to raise a micropython exception?
-        if ![0, 90, 180, 270].contains(&u16::try_from(value)?) {
+        if ![0, 90, 180, 270].contains(&value) {
             // return Error::ValueError(cstr!("Not valid rotation"));
         }
 
-        let value = Buffer::try_from(value)?;
+        let val = &value.to_be_bytes();
 
         let key = _get_appkey(_ROTATION, true);
-        let result = storagedevice_storage_set(key, value);
+        let result = storagedevice_storage_set(key, val as *const _, val.len() as u16);
         Ok(result.into())
     };
     unsafe { util::try_or_raise(block) }
 }
 
-// TODO: find out how to return the real result
-// pub fn storagedevice_storage_get(key: u16) -> &'static [u8] {
-// pub fn storagedevice_storage_get(key: u16) -> [u8] {
-pub fn storagedevice_storage_get(key: u16) -> ([u8; 300], u16) {
-    const MAX_LEN: usize = 300;
+extern "C" fn storagedevice_get_label() -> Obj {
+    let block = || {
+        let key = _get_appkey(_LABEL, true);
+        let result = &storagedevice_storage_get(key) as &[u8];
+        // TODO: how to convert into a string?
+        result.try_into()
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagedevice_set_label(value: Obj) -> Obj {
+    let block = || {
+        let value = Buffer::try_from(value)?;
+        let len = value.len() as u16;
+        let val = value.as_ptr();
+
+        let key = _get_appkey(_LABEL, true);
+        let result = storagedevice_storage_set(key, val, len);
+        Ok(result.into())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagedevice_get_mnemonic_secret() -> Obj {
+    let block = || {
+        let key = _get_appkey(_MNEMONIC_SECRET, false);
+        let result = &storagedevice_storage_get(key) as &[u8];
+        // TODO: find out how to return None
+        result.try_into()
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+pub fn storagedevice_storage_get(key: u16) -> Vec<u8, MAX_LEN> {
     let mut buf: [u8; MAX_LEN] = [0; MAX_LEN];
-    // let mut buf: BufferMut;
     let mut len: u16 = 0;
     unsafe { storage_get(key, &mut buf as *mut _, MAX_LEN as u16, &mut len as *mut _) };
     // TODO: when the result is empty, we could return None
     // Would mean having Option<XXX> as the return type
 
-    // &buf[..len as usize]
-    // buf[..len as usize]
-    (buf, len)
+    let result = &buf[..len as usize];
+    let mut vector_result = Vec::<u8, MAX_LEN>::new();
+    for byte in result {
+        vector_result.push(*byte).unwrap();
+    }
+
+    vector_result
 }
 
-pub fn storagedevice_storage_set(key: u16, value: Buffer) -> bool {
-    let len = value.len();
-    match unsafe { storage_set(key, value, len as u16) } {
+pub fn storagedevice_storage_set(key: u16, val: *const u8, len: u16) -> bool {
+    match unsafe { storage_set(key, val, len) } {
         secbool::TRUE => true,
         _ => false,
     }
@@ -201,6 +248,18 @@ pub static mp_module_trezorstoragedevice: Module = obj_module! {
     /// def set_rotation(value: int) -> bool:
     ///     """Set rotation."""
     Qstr::MP_QSTR_set_rotation => obj_fn_1!(storagedevice_set_rotation).as_obj(),
+
+    /// def get_label() -> str:
+    ///     """Get label."""
+    Qstr::MP_QSTR_get_label => obj_fn_0!(storagedevice_get_label).as_obj(),
+
+    /// def set_label(value: str) -> bool:
+    ///     """Set label."""
+    Qstr::MP_QSTR_set_label => obj_fn_1!(storagedevice_set_label).as_obj(),
+
+    /// def get_mnemonic_secret() -> bytes:
+    ///     """Get mnemonic secret."""
+    Qstr::MP_QSTR_get_mnemonic_secret => obj_fn_0!(storagedevice_get_mnemonic_secret).as_obj(),
 };
 
 #[cfg(test)]
