@@ -118,8 +118,8 @@ def set_label(label: str) -> None:
     common.set(_NAMESPACE, _LABEL, label.encode(), True)  # public
 
 
-def get_mnemonic_secret() -> bytes | None:
-    return common.get(_NAMESPACE, _MNEMONIC_SECRET)
+# def get_mnemonic_secret() -> bytes | None:
+#     return common.get(_NAMESPACE, _MNEMONIC_SECRET)
 
 
 def get_backup_type() -> BackupType:

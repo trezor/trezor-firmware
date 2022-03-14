@@ -13,9 +13,34 @@ def is_initialized() -> bool:
 
 # rust/src/storagedevice/storagedevice.rs
 def get_version() -> bytes:
-    """Get from storage."""
+    """Get version."""
 
 
 # rust/src/storagedevice/storagedevice.rs
-def set_version(version: bytes) -> bool:
-    """Save to storage."""
+def set_version(value: bytes) -> bool:
+    """Set version."""
+
+
+# rust/src/storagedevice/storagedevice.rs
+def get_rotation() -> int:
+    """Get rotation."""
+
+
+# rust/src/storagedevice/storagedevice.rs
+def set_rotation(value: int) -> bool:
+    """Set rotation."""
+
+
+# rust/src/storagedevice/storagedevice.rs
+def get_label() -> str:
+    """Get label."""
+
+
+# rust/src/storagedevice/storagedevice.rs
+def set_label(value: str) -> bool:
+    """Set label."""
+
+
+# rust/src/storagedevice/storagedevice.rs
+def get_mnemonic_secret() -> bytes:
+    """Get mnemonic secret."""

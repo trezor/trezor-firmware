@@ -27,6 +27,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_set_version;
   MP_QSTR_get_rotation;
   MP_QSTR_set_rotation;
+  MP_QSTR_get_label;
+  MP_QSTR_set_label;
+  MP_QSTR_get_mnemonic_secret;
 
   MP_QSTR_set_timer_fn;
   MP_QSTR_touch_event;
