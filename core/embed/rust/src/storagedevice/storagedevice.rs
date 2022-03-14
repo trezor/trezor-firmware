@@ -1,8 +1,11 @@
 use crate::{
+    error::Error,
     micropython::{buffer::Buffer, map::Map, module::Module, obj::Obj, qstr::Qstr},
     trezorhal::secbool,
     util,
 };
+
+use cstr_core::cstr;
 
 use core::convert::{TryFrom, TryInto};
 
@@ -73,9 +76,9 @@ extern "C" fn storagedevice_get_version() -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_set_version(version: Obj) -> Obj {
+extern "C" fn storagedevice_set_version(value: Obj) -> Obj {
     let block = || {
-        let value = Buffer::try_from(version)?;
+        let value = Buffer::try_from(value)?;
 
         let key = _get_appkey(_VERSION, false);
         let result = storagedevice_storage_set(key, value);
@@ -89,6 +92,33 @@ extern "C" fn storagedevice_is_initialized() -> Obj {
         let key = _get_appkey(INITIALIZED, true);
         let (_, len) = storagedevice_storage_get(key);
         let result = if len > 0 { true } else { false };
+        Ok(result.into())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagedevice_get_rotation() -> Obj {
+    let block = || {
+        let key = _get_appkey(_ROTATION, true);
+        let (buf, len) = storagedevice_storage_get(key);
+        // TODO: how to convert unknown size buff into int?
+        let result = (buf[0] as u16) << 8 + (buf[1] as u16);
+        Ok(result.into())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagedevice_set_rotation(value: Obj) -> Obj {
+    let block = || {
+        // TODO: how to raise a micropython exception?
+        if ![0, 90, 180, 270].contains(&u16::try_from(value)?) {
+            // return Error::ValueError(cstr!("Not valid rotation"));
+        }
+
+        let value = Buffer::try_from(value)?;
+
+        let key = _get_appkey(_ROTATION, true);
+        let result = storagedevice_storage_set(key, value);
         Ok(result.into())
     };
     unsafe { util::try_or_raise(block) }
@@ -157,12 +187,20 @@ pub static mp_module_trezorstoragedevice: Module = obj_module! {
     Qstr::MP_QSTR_is_initialized => obj_fn_0!(storagedevice_is_initialized).as_obj(),
 
     /// def get_version() -> bytes:
-    ///     """Get from storage."""
+    ///     """Get version."""
     Qstr::MP_QSTR_get_version => obj_fn_0!(storagedevice_get_version).as_obj(),
 
-    /// def set_version(version: bytes) -> bool:
-    ///     """Save to storage."""
+    /// def set_version(value: bytes) -> bool:
+    ///     """Set version."""
     Qstr::MP_QSTR_set_version => obj_fn_1!(storagedevice_set_version).as_obj(),
+
+    /// def get_rotation() -> int:
+    ///     """Get rotation."""
+    Qstr::MP_QSTR_get_rotation => obj_fn_0!(storagedevice_get_rotation).as_obj(),
+
+    /// def set_rotation(value: int) -> bool:
+    ///     """Set rotation."""
+    Qstr::MP_QSTR_set_rotation => obj_fn_1!(storagedevice_set_rotation).as_obj(),
 };
 
 #[cfg(test)]

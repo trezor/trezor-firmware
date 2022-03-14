@@ -92,17 +92,17 @@ def get_device_id() -> str:
     return dev_id.decode()
 
 
-def get_rotation() -> int:
-    rotation = common.get(_NAMESPACE, _ROTATION, public=True)
-    if not rotation:
-        return 0
-    return int.from_bytes(rotation, "big")
+# def get_rotation() -> int:
+#     rotation = common.get(_NAMESPACE, _ROTATION, public=True)
+#     if not rotation:
+#         return 0
+#     return int.from_bytes(rotation, "big")
 
 
-def set_rotation(value: int) -> None:
-    if value not in (0, 90, 180, 270):
-        raise ValueError  # unsupported display rotation
-    common.set(_NAMESPACE, _ROTATION, value.to_bytes(2, "big"), True)  # public
+# def set_rotation(value: int) -> None:
+#     if value not in (0, 90, 180, 270):
+#         raise ValueError  # unsupported display rotation
+#     common.set(_NAMESPACE, _ROTATION, value.to_bytes(2, "big"), True)  # public
 
 
 def get_label() -> str | None:
