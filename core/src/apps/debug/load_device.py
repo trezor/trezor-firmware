@@ -1,6 +1,6 @@
 import storage
 import storage.device
-from trezor import config, wire
+from trezor import config, storagedevice, wire
 from trezor.crypto import bip39, slip39
 from trezor.enums import BackupType
 from trezor.messages import LoadDevice, Success
@@ -51,7 +51,7 @@ async def load_device(ctx: wire.Context, msg: LoadDevice) -> Success:
 
 
 def _validate(msg: LoadDevice) -> int:
-    if storage.trezorstoragedevice.is_initialized():
+    if storagedevice.is_initialized():
         raise wire.UnexpectedMessage("Already initialized")
 
     if not msg.mnemonics:

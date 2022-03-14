@@ -4,8 +4,7 @@ from ubinascii import hexlify
 
 import storage.cache
 from storage import common
-
-import trezorstoragedevice
+from trezor import storagedevice
 
 if TYPE_CHECKING:
     from trezor.enums import BackupType
@@ -165,7 +164,7 @@ def store_mnemonic_secret(
     needs_backup: bool = False,
     no_backup: bool = False,
 ) -> None:
-    trezorstoragedevice.set_version(common.STORAGE_VERSION_CURRENT)
+    storagedevice.set_version(common.STORAGE_VERSION_CURRENT)
     common.set(_NAMESPACE, _MNEMONIC_SECRET, secret)
     common.set_uint8(_NAMESPACE, _BACKUP_TYPE, backup_type)
     common.set_true_or_delete(_NAMESPACE, _NO_BACKUP, no_backup)

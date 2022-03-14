@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 import storage.device
 import storage.sd_salt
-from trezor import config, wire
+from trezor import config, storagedevice, wire
 from trezor.crypto import random
 from trezor.enums import SdProtectOperationType
 from trezor.messages import Success
@@ -39,7 +39,7 @@ async def _set_salt(
 
 
 async def sd_protect(ctx: wire.Context, msg: SdProtect) -> Success:
-    if not storage.trezorstoragedevice.is_initialized():
+    if not storagedevice.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
 
     if msg.operation == SdProtectOperationType.ENABLE:

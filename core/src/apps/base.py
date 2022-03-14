@@ -2,8 +2,7 @@ from typing import TYPE_CHECKING
 
 import storage.cache
 import storage.device
-from storage import trezorstoragedevice
-from trezor import config, utils, wire, workflow
+from trezor import config, storagedevice, utils, wire, workflow
 from trezor.enums import MessageType
 from trezor.messages import Success
 
@@ -77,7 +76,7 @@ def get_features() -> Features:
             Capability.PassphraseEntry,
         ]
     f.sd_card_present = sdcard.is_present()
-    f.initialized = trezorstoragedevice.is_initialized()
+    f.initialized = storagedevice.is_initialized()
 
     # private fields:
     if config.is_unlocked():
@@ -94,7 +93,7 @@ def get_features() -> Features:
         f.passphrase_always_on_device = storage.device.get_passphrase_always_on_device()
         f.safety_checks = safety_checks.read_setting()
         f.auto_lock_delay_ms = storage.device.get_autolock_delay_ms()
-        f.display_rotation = trezorstoragedevice.get_rotation()
+        f.display_rotation = storagedevice.get_rotation()
         f.experimental_features = storage.device.get_experimental_features()
 
     return f
@@ -279,7 +278,7 @@ def reload_settings_from_storage() -> None:
         storage.device.get_autolock_delay_ms(), lock_device_if_unlocked
     )
     wire.experimental_enabled = storage.device.get_experimental_features()
-    ui.display.orientation(trezorstoragedevice.get_rotation())
+    ui.display.orientation(storagedevice.get_rotation())
 
 
 def boot() -> None:

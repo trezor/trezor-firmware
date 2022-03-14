@@ -1,6 +1,5 @@
 import storage.device
-from storage import trezorstoragedevice
-from trezor import ui, utils, workflow
+from trezor import storagedevice, ui, utils, workflow
 from trezor.enums import BackupType
 
 
@@ -9,7 +8,7 @@ def get() -> tuple[bytes | None, BackupType]:
 
 
 def get_secret() -> bytes | None:
-    return trezorstoragedevice.get_mnemonic_secret()
+    return storagedevice.get_mnemonic_secret()
 
 
 def get_type() -> BackupType:
