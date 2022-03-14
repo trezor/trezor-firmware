@@ -94,7 +94,7 @@ def get_features() -> Features:
         f.passphrase_always_on_device = storage.device.get_passphrase_always_on_device()
         f.safety_checks = safety_checks.read_setting()
         f.auto_lock_delay_ms = storage.device.get_autolock_delay_ms()
-        f.display_rotation = storage.device.get_rotation()
+        f.display_rotation = trezorstoragedevice.get_rotation()
         f.experimental_features = storage.device.get_experimental_features()
 
     return f
@@ -279,7 +279,7 @@ def reload_settings_from_storage() -> None:
         storage.device.get_autolock_delay_ms(), lock_device_if_unlocked
     )
     wire.experimental_enabled = storage.device.get_experimental_features()
-    ui.display.orientation(storage.device.get_rotation())
+    ui.display.orientation(trezorstoragedevice.get_rotation())
 
 
 def boot() -> None:

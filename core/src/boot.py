@@ -1,5 +1,6 @@
 import storage
 import storage.device
+from storage import trezorstoragedevice
 from trezor import config, log, loop, ui, utils, wire
 from trezor.pin import show_pin_timeout
 
@@ -9,7 +10,7 @@ from apps.homescreen.lockscreen import Lockscreen
 
 async def bootscreen() -> None:
     lockscreen = Lockscreen(bootscreen=True)
-    ui.display.orientation(storage.device.get_rotation())
+    ui.display.orientation(trezorstoragedevice.get_rotation())
     while True:
         try:
             if can_lock_device():
