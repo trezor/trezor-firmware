@@ -80,7 +80,9 @@ emu: ## run emulator
 test: ## run unit tests
 	cd tests ; ./run_tests.sh $(TESTOPTS)
 
-test_rust: ## run rs unit tests
+test_rust: clippy test_rust_unit ## run all rs tests
+
+test_rust_unit: ## run rs unit tests
 	cd embed/rust ; cargo test --no-default-features --features model_t$(shell echo $(TREZOR_MODEL) | tr "T" "t"),test,ui,ui_debug -- --test-threads=1
 
 test_emu: ## run selected device tests from python-trezor

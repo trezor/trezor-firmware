@@ -1,2 +1,2 @@
 #[macro_use]
-mod storagedevice;
+mod storage_device;
