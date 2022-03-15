@@ -8,16 +8,21 @@ use heapless::Vec;
 
 use core::convert::{TryFrom, TryInto};
 
+// TODO: can we import messages enums?
+
 const FLAG_PUBLIC: u8 = 0x80;
 
 const APP_DEVICE: u8 = 0x01;
 
-// Longest possible entry in storage (will need to increase because of
-// homescreen)
+// Longest possible entry in storage (homescreen is handled in separate
+// function)
 const MAX_LEN: usize = 300;
 
 const _FALSE_BYTE: u8 = 0x00;
 const _TRUE_BYTE: u8 = 0x01;
+
+const HOMESCREEN_MAXSIZE: usize = 16384;
+const LABEL_MAXLENGTH: u16 = 32;
 
 // TODO: transfer this into a struct with field specifying data type and
 // `max_length`, possibly even `is_public`
@@ -145,6 +150,7 @@ extern "C" fn storagedevice_get_label() -> Obj {
     let block = || {
         let key = _get_appkey(_LABEL, true);
         let result = &storagedevice_storage_get(key) as &[u8];
+        // TODO: return None in case it is empty
         // TODO: how to convert into a string?
         result.try_into()
     };
@@ -155,6 +161,13 @@ extern "C" fn storagedevice_set_label(label: Obj) -> Obj {
     let block = || {
         let label = Buffer::try_from(label)?;
         let len = label.len() as u16;
+
+        // TODO: how to raise a micropython exception?
+        if len > LABEL_MAXLENGTH {
+            return Ok(false.into());
+            // return Error::ValueError(cstr!("Label is too long"));
+        }
+
         let val = label.as_ptr();
 
         let key = _get_appkey(_LABEL, true);
@@ -268,15 +281,71 @@ extern "C" fn storagedevice_no_backup() -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
+extern "C" fn storagedevice_get_homescreen() -> Obj {
+    let block = || {
+        let key = _get_appkey(_HOMESCREEN, false);
+        let result = &storagedevice_storage_get_homescreen(key) as &[u8];
+        result.try_into()
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagedevice_set_homescreen(homescreen: Obj) -> Obj {
+    let block = || {
+        let version = Buffer::try_from(homescreen)?;
+        let len = version.len() as u16;
+
+        // TODO: how to raise a micropython exception?
+        if len > HOMESCREEN_MAXSIZE as u16 {
+            return Ok(false.into());
+            // return Error::ValueError(cstr!("Homescreen too large"));
+        }
+
+        let val = version.as_ptr();
+
+        let key = _get_appkey(_HOMESCREEN, false);
+        let result = storagedevice_storage_set(key, val, len);
+        Ok(result.into())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
 pub fn storagedevice_storage_get(key: u16) -> Vec<u8, MAX_LEN> {
     let mut buf: [u8; MAX_LEN] = [0; MAX_LEN];
     let mut len: u16 = 0;
+    // TODO: when the max_len is exceeded, it returns secbool::FALSE - we should
+    // catch it
     unsafe { storage_get(key, &mut buf as *mut _, MAX_LEN as u16, &mut len as *mut _) };
     // TODO: when the result is empty, we could return None
     // Would mean having Option<XXX> as the return type
 
     let result = &buf[..len as usize];
+    // TODO: can we somehow convert it more easily?
     let mut vector_result = Vec::<u8, MAX_LEN>::new();
+    for byte in result {
+        vector_result.push(*byte).unwrap();
+    }
+
+    vector_result
+}
+
+// TODO: is it worth having a special function to not allocate so much in all
+// other cases?
+// TODO: cannot we somehow use the above storagedevice_storage_get?
+pub fn storagedevice_storage_get_homescreen(key: u16) -> Vec<u8, HOMESCREEN_MAXSIZE> {
+    let mut buf: [u8; HOMESCREEN_MAXSIZE] = [0; HOMESCREEN_MAXSIZE];
+    let mut len: u16 = 0;
+    unsafe {
+        storage_get(
+            key,
+            &mut buf as *mut _,
+            HOMESCREEN_MAXSIZE as u16,
+            &mut len as *mut _,
+        )
+    };
+
+    let result = &buf[..len as usize];
+    let mut vector_result = Vec::<u8, HOMESCREEN_MAXSIZE>::new();
     for byte in result {
         vector_result.push(*byte).unwrap();
     }
@@ -363,7 +432,7 @@ pub static mp_module_trezorstoragedevice: Module = obj_module! {
     ///     """Set rotation."""
     Qstr::MP_QSTR_set_rotation => obj_fn_1!(storagedevice_set_rotation).as_obj(),
 
-    /// def get_label() -> str:
+    /// def get_label() -> str | None:
     ///     """Get label."""
     Qstr::MP_QSTR_get_label => obj_fn_0!(storagedevice_get_label).as_obj(),
 
@@ -410,6 +479,14 @@ pub static mp_module_trezorstoragedevice: Module = obj_module! {
     /// def no_backup() -> bool:
     ///     """Whether there is no backup."""
     Qstr::MP_QSTR_no_backup => obj_fn_0!(storagedevice_no_backup).as_obj(),
+
+    /// def get_homescreen() -> bytes | None:
+    ///     """Get homescreen."""
+    Qstr::MP_QSTR_get_homescreen => obj_fn_0!(storagedevice_get_homescreen).as_obj(),
+
+    /// def set_homescreen(homescreen: bytes) -> bool:
+    ///     """Set homescreen."""
+    Qstr::MP_QSTR_set_homescreen => obj_fn_1!(storagedevice_set_homescreen).as_obj(),
 };
 
 #[cfg(test)]

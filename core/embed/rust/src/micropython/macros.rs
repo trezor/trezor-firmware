@@ -192,6 +192,7 @@ macro_rules! obj_type {
 macro_rules! obj_module {
     ($($key:expr => $val:expr),*) => ({
         #[allow(unused_unsafe)]
+        #[allow(unused_doc_comments)]
         unsafe {
             use $crate::micropython::ffi;
 

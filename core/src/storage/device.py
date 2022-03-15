@@ -148,14 +148,14 @@ def get_backup_type() -> BackupType:
 #         set_passphrase_always_on_device(False)
 
 
-def get_homescreen() -> bytes | None:
-    return common.get(_NAMESPACE, _HOMESCREEN, public=True)
+# def get_homescreen() -> bytes | None:
+#     return common.get(_NAMESPACE, _HOMESCREEN, public=True)
 
 
-def set_homescreen(homescreen: bytes) -> None:
-    if len(homescreen) > HOMESCREEN_MAXSIZE:
-        raise ValueError  # homescreen too large
-    common.set(_NAMESPACE, _HOMESCREEN, homescreen, public=True)
+# def set_homescreen(homescreen: bytes) -> None:
+#     if len(homescreen) > HOMESCREEN_MAXSIZE:
+#         raise ValueError  # homescreen too large
+#     common.set(_NAMESPACE, _HOMESCREEN, homescreen, public=True)
 
 
 def store_mnemonic_secret(

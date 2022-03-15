@@ -32,7 +32,7 @@ def set_rotation(rotation: int) -> bool:
 
 
 # rust/src/storagedevice/storagedevice.rs
-def get_label() -> str:
+def get_label() -> str | None:
     """Get label."""
 
 
@@ -89,3 +89,13 @@ def set_backed_up() -> bool:
 # rust/src/storagedevice/storagedevice.rs
 def no_backup() -> bool:
     """Whether there is no backup."""
+
+
+# rust/src/storagedevice/storagedevice.rs
+def get_homescreen() -> bytes | None:
+    """Get homescreen."""
+
+
+# rust/src/storagedevice/storagedevice.rs
+def set_homescreen(homescreen: bytes) -> bool:
+    """Set homescreen."""
