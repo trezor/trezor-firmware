@@ -52,7 +52,7 @@ async def apply_settings(ctx: wire.Context, msg: ApplySettings) -> Success:
         validate_homescreen(msg.homescreen)
         await require_confirm_change_homescreen(ctx)
         try:
-            storage.device.set_homescreen(msg.homescreen)
+            storagedevice.set_homescreen(msg.homescreen)
         except ValueError:
             raise wire.DataError("Invalid homescreen")
 
