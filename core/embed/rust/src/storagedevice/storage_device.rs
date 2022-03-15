@@ -11,7 +11,7 @@ use core::convert::{TryFrom, TryInto};
 // TODO: can we import messages enums?
 
 // MISSING FUNCTIONALITY:
-// - returning strings into python (and getting them)
+// - returning strings into python
 
 const FLAG_PUBLIC: u8 = 0x80;
 
@@ -106,8 +106,7 @@ extern "C" fn storagedevice_set_version(version: Obj) -> Obj {
 extern "C" fn storagedevice_is_initialized() -> Obj {
     let block = || {
         let key = _get_appkey(INITIALIZED, true);
-        let result = &storagedevice_storage_get(key) as &[u8];
-        let result = if result.len() > 0 { true } else { false };
+        let result = storagedevice_storage_get_bool(key);
         Ok(result.into())
     };
     unsafe { util::try_or_raise(block) }
@@ -119,7 +118,7 @@ extern "C" fn storagedevice_get_rotation() -> Obj {
         let result = &storagedevice_storage_get(key) as &[u8];
 
         // It might be unset
-        if result.len() == 0 {
+        if result.is_empty() {
             return Ok(0u16.into());
         }
 
@@ -155,6 +154,7 @@ extern "C" fn storagedevice_get_label() -> Obj {
         let result = &storagedevice_storage_get(key) as &[u8];
         // TODO: return None in case it is empty
         // TODO: how to convert into a string?
+        // let label = StrBuffer::try_from(*result)?;
         result.try_into()
     };
     unsafe { util::try_or_raise(block) }
@@ -396,11 +396,7 @@ pub fn storagedevice_storage_get_homescreen(key: u16) -> Vec<u8, HOMESCREEN_MAXS
 
 pub fn storagedevice_storage_get_bool(key: u16) -> bool {
     let result = storagedevice_storage_get(key);
-    if result.len() == 1 && result[0] == _TRUE_BYTE {
-        true
-    } else {
-        false
-    }
+    result.len() == 1 && result[0] == _TRUE_BYTE
 }
 
 // TODO: can we somehow generalize this for u16 and u8?
@@ -423,10 +419,7 @@ pub fn storagedevice_storage_get_u8(key: u16) -> Option<u8> {
 }
 
 pub fn storagedevice_storage_set(key: u16, val: *const u8, len: u16) -> bool {
-    match unsafe { storage_set(key, val, len) } {
-        secbool::TRUE => true,
-        _ => false,
-    }
+    matches!(unsafe { storage_set(key, val, len) }, secbool::TRUE)
 }
 
 pub fn storagedevice_storage_set_bool(key: u16, val: bool) -> bool {
@@ -443,17 +436,11 @@ pub fn storagedevice_storage_set_u16(key: u16, val: u16) -> bool {
 }
 
 pub fn storagedevice_storage_has(key: u16) -> bool {
-    match unsafe { storage_has(key) } {
-        secbool::TRUE => true,
-        _ => false,
-    }
+    matches!(unsafe { storage_has(key) }, secbool::TRUE)
 }
 
 pub fn storagedevice_storage_delete(key: u16) -> bool {
-    match unsafe { storage_delete(key) } {
-        secbool::TRUE => true,
-        _ => false,
-    }
+    matches!(unsafe { storage_delete(key) }, secbool::TRUE)
 }
 
 // TODO: we could include `is_public` bool into each key's struct item

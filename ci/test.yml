@@ -16,7 +16,7 @@ core unit test:
     - core unix regular build
   script:
     - nix-shell --run "poetry run make -C core test | ts -s"
-    - nix-shell --run "poetry run make -C core test_rust | ts -s"
+    - nix-shell --run "poetry run make -C core test_rust_unit | ts -s"
     - nix-shell --run "poetry run make -C core clippy | ts -s"
 
 core unit test asan:
@@ -32,7 +32,7 @@ core unit test asan:
     LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
   script:
     - nix-shell --run "poetry run make -C core test | ts -s"
-    - nix-shell --run "poetry run make -C core test_rust | ts -s"
+    - nix-shell --run "poetry run make -C core test_rust_unit | ts -s"
     - nix-shell --run "poetry run make -C core clippy | ts -s"
 
 core unit test t1:
