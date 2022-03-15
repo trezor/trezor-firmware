@@ -138,14 +138,14 @@ def get_backup_type() -> BackupType:
     return backup_type  # type: ignore [int-into-enum]
 
 
-def is_passphrase_enabled() -> bool:
-    return common.get_bool(_NAMESPACE, _USE_PASSPHRASE)
+# def is_passphrase_enabled() -> bool:
+#     return common.get_bool(_NAMESPACE, _USE_PASSPHRASE)
 
 
-def set_passphrase_enabled(enable: bool) -> None:
-    common.set_bool(_NAMESPACE, _USE_PASSPHRASE, enable)
-    if not enable:
-        set_passphrase_always_on_device(False)
+# def set_passphrase_enabled(enable: bool) -> None:
+#     common.set_bool(_NAMESPACE, _USE_PASSPHRASE, enable)
+#     if not enable:
+#         set_passphrase_always_on_device(False)
 
 
 def get_homescreen() -> bytes | None:
@@ -173,38 +173,38 @@ def store_mnemonic_secret(
         common.set_true_or_delete(_NAMESPACE, _NEEDS_BACKUP, needs_backup)
 
 
-def needs_backup() -> bool:
-    return common.get_bool(_NAMESPACE, _NEEDS_BACKUP)
+# def needs_backup() -> bool:
+#     return common.get_bool(_NAMESPACE, _NEEDS_BACKUP)
 
 
-def set_backed_up() -> None:
-    common.delete(_NAMESPACE, _NEEDS_BACKUP)
+# def set_backed_up() -> None:
+#     common.delete(_NAMESPACE, _NEEDS_BACKUP)
 
 
-def unfinished_backup() -> bool:
-    return common.get_bool(_NAMESPACE, _UNFINISHED_BACKUP)
+# def unfinished_backup() -> bool:
+#     return common.get_bool(_NAMESPACE, _UNFINISHED_BACKUP)
 
 
-def set_unfinished_backup(state: bool) -> None:
-    common.set_bool(_NAMESPACE, _UNFINISHED_BACKUP, state)
+# def set_unfinished_backup(state: bool) -> None:
+#     common.set_bool(_NAMESPACE, _UNFINISHED_BACKUP, state)
 
 
-def no_backup() -> bool:
-    return common.get_bool(_NAMESPACE, _NO_BACKUP)
+# def no_backup() -> bool:
+#     return common.get_bool(_NAMESPACE, _NO_BACKUP)
 
 
-def get_passphrase_always_on_device() -> bool:
-    """
-    This is backwards compatible with _PASSPHRASE_SOURCE:
-    - If ASK(0) => returns False, the check against b"\x01" in get_bool fails.
-    - If DEVICE(1) => returns True, the check against b"\x01" in get_bool succeeds.
-    - If HOST(2) => returns False, the check against b"\x01" in get_bool fails.
-    """
-    return common.get_bool(_NAMESPACE, _PASSPHRASE_ALWAYS_ON_DEVICE)
+# def get_passphrase_always_on_device() -> bool:
+#     """
+#     This is backwards compatible with _PASSPHRASE_SOURCE:
+#     - If ASK(0) => returns False, the check against b"\x01" in get_bool fails.
+#     - If DEVICE(1) => returns True, the check against b"\x01" in get_bool succeeds.
+#     - If HOST(2) => returns False, the check against b"\x01" in get_bool fails.
+#     """
+#     return common.get_bool(_NAMESPACE, _PASSPHRASE_ALWAYS_ON_DEVICE)
 
 
-def set_passphrase_always_on_device(enable: bool) -> None:
-    common.set_bool(_NAMESPACE, _PASSPHRASE_ALWAYS_ON_DEVICE, enable)
+# def set_passphrase_always_on_device(enable: bool) -> None:
+#     common.set_bool(_NAMESPACE, _PASSPHRASE_ALWAYS_ON_DEVICE, enable)
 
 
 def get_flags() -> int:

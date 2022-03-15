@@ -1,5 +1,4 @@
 use crate::{
-    error::Error,
     micropython::{buffer::Buffer, map::Map, module::Module, obj::Obj, qstr::Qstr},
     trezorhal::secbool,
     util,
@@ -7,16 +6,18 @@ use crate::{
 
 use heapless::Vec;
 
-use cstr_core::cstr;
-
 use core::convert::{TryFrom, TryInto};
 
 const FLAG_PUBLIC: u8 = 0x80;
 
 const APP_DEVICE: u8 = 0x01;
 
-// Longest possible entry in storage
+// Longest possible entry in storage (will need to increase because of
+// homescreen)
 const MAX_LEN: usize = 300;
+
+const _FALSE_BYTE: u8 = 0x00;
+const _TRUE_BYTE: u8 = 0x01;
 
 // TODO: transfer this into a struct with field specifying data type and
 // `max_length`, possibly even `is_public`
@@ -26,7 +27,7 @@ const MAX_LEN: usize = 300;
 const DEVICE_ID: u8 = 0x00;
 const _VERSION: u8 = 0x01;
 const _MNEMONIC_SECRET: u8 = 0x02;
-const _LANGUAGE: u8 = 0x03;
+const _LANGUAGE: u8 = 0x03; // seems it is not used at all
 const _LABEL: u8 = 0x04;
 const _USE_PASSPHRASE: u8 = 0x05;
 const _HOMESCREEN: u8 = 0x06;
@@ -81,11 +82,11 @@ extern "C" fn storagedevice_get_version() -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_set_version(value: Obj) -> Obj {
+extern "C" fn storagedevice_set_version(version: Obj) -> Obj {
     let block = || {
-        let value = Buffer::try_from(value)?;
-        let len = value.len() as u16;
-        let val = value.as_ptr();
+        let version = Buffer::try_from(version)?;
+        let len = version.len() as u16;
+        let val = version.as_ptr();
 
         let key = _get_appkey(_VERSION, false);
         let result = storagedevice_storage_set(key, val, len);
@@ -122,19 +123,19 @@ extern "C" fn storagedevice_get_rotation() -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_set_rotation(value: Obj) -> Obj {
+extern "C" fn storagedevice_set_rotation(rotation: Obj) -> Obj {
     let block = || {
-        let value = u16::try_from(value)?;
+        let rotation = u16::try_from(rotation)?;
 
         // TODO: how to raise a micropython exception?
-        if ![0, 90, 180, 270].contains(&value) {
+        if ![0, 90, 180, 270].contains(&rotation) {
             // return Error::ValueError(cstr!("Not valid rotation"));
         }
 
-        let val = &value.to_be_bytes();
+        let val = &rotation.to_be_bytes();
 
         let key = _get_appkey(_ROTATION, true);
-        let result = storagedevice_storage_set(key, val as *const _, val.len() as u16);
+        let result = storagedevice_storage_set(key, val as *const _, 2);
         Ok(result.into())
     };
     unsafe { util::try_or_raise(block) }
@@ -150,11 +151,11 @@ extern "C" fn storagedevice_get_label() -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_set_label(value: Obj) -> Obj {
+extern "C" fn storagedevice_set_label(label: Obj) -> Obj {
     let block = || {
-        let value = Buffer::try_from(value)?;
-        let len = value.len() as u16;
-        let val = value.as_ptr();
+        let label = Buffer::try_from(label)?;
+        let len = label.len() as u16;
+        let val = label.as_ptr();
 
         let key = _get_appkey(_LABEL, true);
         let result = storagedevice_storage_set(key, val, len);
@@ -169,6 +170,100 @@ extern "C" fn storagedevice_get_mnemonic_secret() -> Obj {
         let result = &storagedevice_storage_get(key) as &[u8];
         // TODO: find out how to return None
         result.try_into()
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagedevice_is_passphrase_enabled() -> Obj {
+    let block = || {
+        let key = _get_appkey(_USE_PASSPHRASE, false);
+        let result = storagedevice_storage_get_bool(key);
+        Ok(result.into())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagedevice_set_passphrase_enabled(enable: Obj) -> Obj {
+    let block = || {
+        let enable = bool::try_from(enable)?;
+
+        let key = _get_appkey(_USE_PASSPHRASE, false);
+        let result = storagedevice_storage_set_bool(key, enable);
+
+        if !enable {
+            // TODO: could we reuse storagedevice_set_passphrase_always_on_device?
+            let key = _get_appkey(_PASSPHRASE_ALWAYS_ON_DEVICE, false);
+            storagedevice_storage_set_bool(key, false);
+        }
+
+        Ok(result.into())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagedevice_get_passphrase_always_on_device() -> Obj {
+    let block = || {
+        let key = _get_appkey(_PASSPHRASE_ALWAYS_ON_DEVICE, false);
+        let result = storagedevice_storage_get_bool(key);
+        Ok(result.into())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagedevice_set_passphrase_always_on_device(enable: Obj) -> Obj {
+    let block = || {
+        let enable = bool::try_from(enable)?;
+
+        let key = _get_appkey(_PASSPHRASE_ALWAYS_ON_DEVICE, false);
+        let result = storagedevice_storage_set_bool(key, enable);
+        Ok(result.into())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagedevice_unfinished_backup() -> Obj {
+    let block = || {
+        let key = _get_appkey(_UNFINISHED_BACKUP, false);
+        let result = storagedevice_storage_get_bool(key);
+        Ok(result.into())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagedevice_set_unfinished_backup(state: Obj) -> Obj {
+    let block = || {
+        let state = bool::try_from(state)?;
+
+        let key = _get_appkey(_UNFINISHED_BACKUP, false);
+        let result = storagedevice_storage_set_bool(key, state);
+        Ok(result.into())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagedevice_needs_backup() -> Obj {
+    let block = || {
+        let key = _get_appkey(_NEEDS_BACKUP, false);
+        let result = storagedevice_storage_get_bool(key);
+        Ok(result.into())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagedevice_set_backed_up() -> Obj {
+    let block = || {
+        let key = _get_appkey(_NEEDS_BACKUP, false);
+        let result = storagedevice_storage_delete(key);
+        Ok(result.into())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagedevice_no_backup() -> Obj {
+    let block = || {
+        let key = _get_appkey(_NO_BACKUP, false);
+        let result = storagedevice_storage_get_bool(key);
+        Ok(result.into())
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -189,8 +284,25 @@ pub fn storagedevice_storage_get(key: u16) -> Vec<u8, MAX_LEN> {
     vector_result
 }
 
+pub fn storagedevice_storage_get_bool(key: u16) -> bool {
+    let result = storagedevice_storage_get(key);
+    if result.len() == 1 && result[0] == _TRUE_BYTE {
+        true
+    } else {
+        false
+    }
+}
+
 pub fn storagedevice_storage_set(key: u16, val: *const u8, len: u16) -> bool {
     match unsafe { storage_set(key, val, len) } {
+        secbool::TRUE => true,
+        _ => false,
+    }
+}
+
+pub fn storagedevice_storage_set_bool(key: u16, val: bool) -> bool {
+    let val = if val { [_TRUE_BYTE] } else { [_FALSE_BYTE] };
+    match unsafe { storage_set(key, &val as *const _, 1) } {
         secbool::TRUE => true,
         _ => false,
     }
@@ -225,6 +337,8 @@ fn _get_appkey(key: u8, is_public: bool) -> u16 {
 pub static mp_module_trezorstoragedevice: Module = obj_module! {
     Qstr::MP_QSTR___name_storage__ => Qstr::MP_QSTR_trezorstoragedevice.to_obj(),
 
+    // TODO: should we return None or True in case of set_xxx?
+
     /// def is_version_stored() -> bool:
     ///     """Whether version is in storage."""
     Qstr::MP_QSTR_is_version_stored => obj_fn_0!(storagedevice_is_version_stored).as_obj(),
@@ -237,7 +351,7 @@ pub static mp_module_trezorstoragedevice: Module = obj_module! {
     ///     """Get version."""
     Qstr::MP_QSTR_get_version => obj_fn_0!(storagedevice_get_version).as_obj(),
 
-    /// def set_version(value: bytes) -> bool:
+    /// def set_version(version: bytes) -> bool:
     ///     """Set version."""
     Qstr::MP_QSTR_set_version => obj_fn_1!(storagedevice_set_version).as_obj(),
 
@@ -245,7 +359,7 @@ pub static mp_module_trezorstoragedevice: Module = obj_module! {
     ///     """Get rotation."""
     Qstr::MP_QSTR_get_rotation => obj_fn_0!(storagedevice_get_rotation).as_obj(),
 
-    /// def set_rotation(value: int) -> bool:
+    /// def set_rotation(rotation: int) -> bool:
     ///     """Set rotation."""
     Qstr::MP_QSTR_set_rotation => obj_fn_1!(storagedevice_set_rotation).as_obj(),
 
@@ -253,13 +367,49 @@ pub static mp_module_trezorstoragedevice: Module = obj_module! {
     ///     """Get label."""
     Qstr::MP_QSTR_get_label => obj_fn_0!(storagedevice_get_label).as_obj(),
 
-    /// def set_label(value: str) -> bool:
+    /// def set_label(label: str) -> bool:
     ///     """Set label."""
     Qstr::MP_QSTR_set_label => obj_fn_1!(storagedevice_set_label).as_obj(),
 
     /// def get_mnemonic_secret() -> bytes:
     ///     """Get mnemonic secret."""
     Qstr::MP_QSTR_get_mnemonic_secret => obj_fn_0!(storagedevice_get_mnemonic_secret).as_obj(),
+
+    /// def is_passphrase_enabled() -> bool:
+    ///     """Whether passphrase is enabled."""
+    Qstr::MP_QSTR_is_passphrase_enabled => obj_fn_0!(storagedevice_is_passphrase_enabled).as_obj(),
+
+    /// def set_passphrase_enabled(enable: bool) -> bool:
+    ///     """Set whether passphrase is enabled."""
+    Qstr::MP_QSTR_set_passphrase_enabled => obj_fn_1!(storagedevice_set_passphrase_enabled).as_obj(),
+
+    /// def get_passphrase_always_on_device() -> bool:
+    ///     """Whether passphrase is on device."""
+    Qstr::MP_QSTR_get_passphrase_always_on_device => obj_fn_0!(storagedevice_get_passphrase_always_on_device).as_obj(),
+
+    /// def set_passphrase_always_on_device(enable: bool) -> bool:
+    ///     """Set whether passphrase is on device."""
+    Qstr::MP_QSTR_set_passphrase_always_on_device => obj_fn_1!(storagedevice_set_passphrase_always_on_device).as_obj(),
+
+    /// def unfinished_backup() -> bool:
+    ///     """Whether backup is still in progress."""
+    Qstr::MP_QSTR_unfinished_backup => obj_fn_0!(storagedevice_unfinished_backup).as_obj(),
+
+    /// def set_unfinished_backup(state: bool) -> bool:
+    ///     """Set backup state."""
+    Qstr::MP_QSTR_set_unfinished_backup => obj_fn_1!(storagedevice_set_unfinished_backup).as_obj(),
+
+    /// def needs_backup() -> bool:
+    ///     """Whether backup is needed."""
+    Qstr::MP_QSTR_needs_backup => obj_fn_0!(storagedevice_needs_backup).as_obj(),
+
+    /// def set_backed_up() -> bool:
+    ///     """Signal that backup is finished."""
+    Qstr::MP_QSTR_set_backed_up => obj_fn_0!(storagedevice_set_backed_up).as_obj(),
+
+    /// def no_backup() -> bool:
+    ///     """Whether there is no backup."""
+    Qstr::MP_QSTR_no_backup => obj_fn_0!(storagedevice_no_backup).as_obj(),
 };
 
 #[cfg(test)]

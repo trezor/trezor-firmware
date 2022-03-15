@@ -30,6 +30,15 @@ static void _librust_qstrs(void) {
   MP_QSTR_get_label;
   MP_QSTR_set_label;
   MP_QSTR_get_mnemonic_secret;
+  MP_QSTR_is_passphrase_enabled;
+  MP_QSTR_set_passphrase_enabled;
+  MP_QSTR_get_passphrase_always_on_device;
+  MP_QSTR_set_passphrase_always_on_device;
+  MP_QSTR_unfinished_backup;
+  MP_QSTR_set_unfinished_backup;
+  MP_QSTR_needs_backup;
+  MP_QSTR_set_backed_up;
+  MP_QSTR_no_backup;
 
   MP_QSTR_set_timer_fn;
   MP_QSTR_touch_event;

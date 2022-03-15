@@ -81,16 +81,16 @@ def get_features() -> Features:
     # private fields:
     if config.is_unlocked():
         # passphrase_protection is private, see #1807
-        f.passphrase_protection = storage.device.is_passphrase_enabled()
-        f.needs_backup = storage.device.needs_backup()
-        f.unfinished_backup = storage.device.unfinished_backup()
-        f.no_backup = storage.device.no_backup()
+        f.passphrase_protection = storagedevice.is_passphrase_enabled()
+        f.needs_backup = storagedevice.needs_backup()
+        f.unfinished_backup = storagedevice.unfinished_backup()
+        f.no_backup = storagedevice.no_backup()
         f.flags = storage.device.get_flags()
         f.recovery_mode = storage.recovery.is_in_progress()
         f.backup_type = mnemonic.get_type()
         f.sd_protection = storage.sd_salt.is_enabled()
         f.wipe_code_protection = config.has_wipe_code()
-        f.passphrase_always_on_device = storage.device.get_passphrase_always_on_device()
+        f.passphrase_always_on_device = storagedevice.get_passphrase_always_on_device()
         f.safety_checks = safety_checks.read_setting()
         f.auto_lock_delay_ms = storage.device.get_autolock_delay_ms()
         f.display_rotation = storagedevice.get_rotation()
