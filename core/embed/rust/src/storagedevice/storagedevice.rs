@@ -10,6 +10,9 @@ use core::convert::{TryFrom, TryInto};
 
 // TODO: can we import messages enums?
 
+// MISSING FUNCTIONALITY:
+// - returning strings into python (and getting them)
+
 const FLAG_PUBLIC: u8 = 0x80;
 
 const APP_DEVICE: u8 = 0x01;
@@ -310,6 +313,44 @@ extern "C" fn storagedevice_set_homescreen(homescreen: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
+extern "C" fn storagedevice_get_slip39_identifier() -> Obj {
+    let block = || {
+        let key = _get_appkey(_SLIP39_IDENTIFIER, false);
+        Ok(storagedevice_storage_get_u16(key).into())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagedevice_set_slip39_identifier(identifier: Obj) -> Obj {
+    let block = || {
+        let identifier = u16::try_from(identifier)?;
+
+        let key = _get_appkey(_SLIP39_IDENTIFIER, false);
+        let result = storagedevice_storage_set_u16(key, identifier);
+        Ok(result.into())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagedevice_get_slip39_iteration_exponent() -> Obj {
+    let block = || {
+        let key = _get_appkey(_SLIP39_ITERATION_EXPONENT, false);
+        Ok(storagedevice_storage_get_u8(key).into())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagedevice_set_slip39_iteration_exponent(exponent: Obj) -> Obj {
+    let block = || {
+        let exponent = u8::try_from(exponent)?;
+
+        let key = _get_appkey(_SLIP39_ITERATION_EXPONENT, false);
+        let result = storagedevice_storage_set_u8(key, exponent);
+        Ok(result.into())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
 pub fn storagedevice_storage_get(key: u16) -> Vec<u8, MAX_LEN> {
     let mut buf: [u8; MAX_LEN] = [0; MAX_LEN];
     let mut len: u16 = 0;
@@ -362,6 +403,25 @@ pub fn storagedevice_storage_get_bool(key: u16) -> bool {
     }
 }
 
+// TODO: can we somehow generalize this for u16 and u8?
+pub fn storagedevice_storage_get_u16(key: u16) -> Option<u16> {
+    let result = storagedevice_storage_get(key);
+    if result.len() == 2 {
+        Some(u16::from_be_bytes([result[0], result[1]]))
+    } else {
+        None
+    }
+}
+
+pub fn storagedevice_storage_get_u8(key: u16) -> Option<u8> {
+    let result = storagedevice_storage_get(key);
+    if result.len() == 1 {
+        Some(u8::from_be_bytes([result[0]]))
+    } else {
+        None
+    }
+}
+
 pub fn storagedevice_storage_set(key: u16, val: *const u8, len: u16) -> bool {
     match unsafe { storage_set(key, val, len) } {
         secbool::TRUE => true,
@@ -371,10 +431,15 @@ pub fn storagedevice_storage_set(key: u16, val: *const u8, len: u16) -> bool {
 
 pub fn storagedevice_storage_set_bool(key: u16, val: bool) -> bool {
     let val = if val { [_TRUE_BYTE] } else { [_FALSE_BYTE] };
-    match unsafe { storage_set(key, &val as *const _, 1) } {
-        secbool::TRUE => true,
-        _ => false,
-    }
+    storagedevice_storage_set(key, &val as *const _, 1)
+}
+
+pub fn storagedevice_storage_set_u8(key: u16, val: u8) -> bool {
+    storagedevice_storage_set(key, &val.to_be_bytes() as *const _, 1)
+}
+
+pub fn storagedevice_storage_set_u16(key: u16, val: u16) -> bool {
+    storagedevice_storage_set(key, &val.to_be_bytes() as *const _, 2)
 }
 
 pub fn storagedevice_storage_has(key: u16) -> bool {
@@ -457,7 +522,13 @@ pub static mp_module_trezorstoragedevice: Module = obj_module! {
     Qstr::MP_QSTR_get_passphrase_always_on_device => obj_fn_0!(storagedevice_get_passphrase_always_on_device).as_obj(),
 
     /// def set_passphrase_always_on_device(enable: bool) -> bool:
-    ///     """Set whether passphrase is on device."""
+    ///     """Set whether passphrase is on device.
+    ///
+    ///     This is backwards compatible with _PASSPHRASE_SOURCE:
+    ///     - If ASK(0) => returns False, the check against b"\x01" in get_bool fails.
+    ///     - If DEVICE(1) => returns True, the check against b"\x01" in get_bool succeeds.
+    ///     - If HOST(2) => returns False, the check against b"\x01" in get_bool fails.
+    ///     """
     Qstr::MP_QSTR_set_passphrase_always_on_device => obj_fn_1!(storagedevice_set_passphrase_always_on_device).as_obj(),
 
     /// def unfinished_backup() -> bool:
@@ -487,6 +558,30 @@ pub static mp_module_trezorstoragedevice: Module = obj_module! {
     /// def set_homescreen(homescreen: bytes) -> bool:
     ///     """Set homescreen."""
     Qstr::MP_QSTR_set_homescreen => obj_fn_1!(storagedevice_set_homescreen).as_obj(),
+
+    /// def get_slip39_identifier() -> int | None:
+    ///     """The device's actual SLIP-39 identifier used in passphrase derivation."""
+    Qstr::MP_QSTR_get_slip39_identifier => obj_fn_0!(storagedevice_get_slip39_identifier).as_obj(),
+
+    /// def set_slip39_identifier(identifier: int) -> bool:
+    ///     """
+    ///     The device's actual SLIP-39 identifier used in passphrase derivation.
+    ///     Not to be confused with recovery.identifier, which is stored only during
+    ///     the recovery process and it is copied here upon success.
+    ///     """
+    Qstr::MP_QSTR_set_slip39_identifier => obj_fn_1!(storagedevice_set_slip39_identifier).as_obj(),
+
+    /// def get_slip39_iteration_exponent() -> int | None:
+    ///     """The device's actual SLIP-39 iteration exponent used in passphrase derivation."""
+    Qstr::MP_QSTR_get_slip39_iteration_exponent => obj_fn_0!(storagedevice_get_slip39_iteration_exponent).as_obj(),
+
+    /// def set_slip39_iteration_exponent(exponent: int) -> bool:
+    ///     """
+    ///     The device's actual SLIP-39 iteration exponent used in passphrase derivation.
+    ///     Not to be confused with recovery.iteration_exponent, which is stored only during
+    ///     the recovery process and it is copied here upon success.
+    ///     """
+    Qstr::MP_QSTR_set_slip39_iteration_exponent => obj_fn_1!(storagedevice_set_slip39_iteration_exponent).as_obj(),
 };
 
 #[cfg(test)]

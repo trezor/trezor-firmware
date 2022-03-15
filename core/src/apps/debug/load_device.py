@@ -33,8 +33,8 @@ async def load_device(ctx: wire.Context, msg: LoadDevice) -> Success:
         else:
             raise wire.ProcessError("Invalid group count")
 
-        storage.device.set_slip39_identifier(identifier)
-        storage.device.set_slip39_iteration_exponent(iteration_exponent)
+        storagedevice.set_slip39_identifier(identifier)
+        storagedevice.set_slip39_iteration_exponent(iteration_exponent)
 
     storage.device.store_mnemonic_secret(
         secret,
