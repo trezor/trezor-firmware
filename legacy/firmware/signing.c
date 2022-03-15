@@ -66,6 +66,7 @@ enum {
   STAGE_REQUEST_DECRED_WITNESS,
 #endif
 } signing_stage;
+static bool foreign_address_confirmed;  // indicates that user approved warning
 static bool taproot_only;  // indicates whether all internal inputs are Taproot
 static uint32_t idx1;      // The index of the input or output in the current tx
                            // which is being processed, signed or serialized.
@@ -746,25 +747,24 @@ static bool fill_input_script_sig(TxInputType *tinput) {
 
 static bool derive_node(TxInputType *tinput) {
   if (!coin_path_check(coin, tinput->script_type, tinput->address_n_count,
-                       tinput->address_n, tinput->has_multisig, false)) {
-    if (is_replacement) {
-      fsm_sendFailure(
-          FailureType_Failure_ProcessError,
-          _("Non-standard paths not allowed in replacement transactions."));
-      signing_abort();
-      return false;
-    }
+                       tinput->address_n, tinput->has_multisig, false) &&
+      config_getSafetyCheckLevel() == SafetyCheckLevel_Strict) {
+    fsm_sendFailure(FailureType_Failure_DataError, _("Forbidden key path"));
+    signing_abort();
+    return false;
+  }
 
-    if (config_getSafetyCheckLevel() == SafetyCheckLevel_Strict) {
-      fsm_sendFailure(FailureType_Failure_DataError, _("Forbidden key path"));
-      signing_abort();
-      return false;
-    }
-
-    if (!fsm_layoutPathWarning()) {
-      signing_abort();
-      return false;
-    }
+  // Sanity check not critical for security. The main reason for this is that we
+  // are not comfortable with using the same private key in multiple signature
+  // schemes (ECDSA and Schnorr) and we want to be sure that the user went
+  // through a warning screen before we sign the input.
+  if (!foreign_address_confirmed &&
+      !coin_path_check(coin, tinput->script_type, tinput->address_n_count,
+                       tinput->address_n, tinput->has_multisig, true)) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Transaction has changed during signing"));
+    signing_abort();
+    return false;
   }
 
   memcpy(&node, &root, sizeof(HDNode));
@@ -938,6 +938,7 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
 
   tx_weight = 4 * size;
 
+  foreign_address_confirmed = false;
   taproot_only = true;
   signatures = 0;
   idx1 = 0;
@@ -1328,10 +1329,22 @@ static bool signing_add_input(TxInputType *txinput) {
     return false;
   }
 
-  if (!fsm_checkCoinPath(coin, txinput->script_type, txinput->address_n_count,
-                         txinput->address_n, txinput->has_multisig, true)) {
-    signing_abort();
-    return false;
+  if (txinput->script_type != InputScriptType_EXTERNAL &&
+      !coin_path_check(coin, txinput->script_type, txinput->address_n_count,
+                       txinput->address_n, txinput->has_multisig, true)) {
+    if (config_getSafetyCheckLevel() == SafetyCheckLevel_Strict &&
+        !coin_path_check(coin, txinput->script_type, txinput->address_n_count,
+                         txinput->address_n, txinput->has_multisig, false)) {
+      fsm_sendFailure(FailureType_Failure_DataError, _("Forbidden key path"));
+      signing_abort();
+      return false;
+    }
+
+    if (!fsm_layoutPathWarning()) {
+      signing_abort();
+      return false;
+    }
+    foreign_address_confirmed = true;
   }
 
   if (!fill_input_script_pubkey(coin, &root, txinput)) {
