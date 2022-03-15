@@ -627,7 +627,7 @@ class PyrightTool:
         """Transform error object to a string readable by human."""
         file = error["file"]
         message = error["message"]
-        rule = error["rule"]
+        rule = error.get("rule", "No specific rule")
         line = error["range"]["start"]["line"]
 
         # Need to add +1 to the line, as it is zero-based index

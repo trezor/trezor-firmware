@@ -352,29 +352,37 @@ def sign_tx(
         )
 
     to = ethereum.decode_hex(to_address)
+
+    # NOTE: rlp.encode needs a list input to iterate through all its items,
+    # it does not work with a tuple
     if is_eip1559:
-        transaction = rlp.encode(
-            (
-                chain_id,
-                nonce,
-                max_priority_fee,
-                max_gas_fee,
-                gas_limit,
-                to,
-                amount,
-                data_bytes,
-                _format_access_list(access_list) if access_list is not None else [],
-            )
-            + sig
-        )
+        transaction_items = [
+            chain_id,
+            nonce,
+            max_priority_fee,
+            max_gas_fee,
+            gas_limit,
+            to,
+            amount,
+            data_bytes,
+            _format_access_list(access_list) if access_list is not None else [],
+            *sig,
+        ]
     elif tx_type is None:
-        transaction = rlp.encode(
-            (nonce, gas_price, gas_limit, to, amount, data_bytes) + sig
-        )
+        transaction_items = [nonce, gas_price, gas_limit, to, amount, data_bytes, *sig]
     else:
-        transaction = rlp.encode(
-            (tx_type, nonce, gas_price, gas_limit, to, amount, data_bytes) + sig
-        )
+        transaction_items = [
+            tx_type,
+            nonce,
+            gas_price,
+            gas_limit,
+            to,
+            amount,
+            data_bytes,
+            *sig,
+        ]
+    transaction = rlp.encode(transaction_items)
+
     if eip2718_type is not None:
         eip2718_prefix = f"{eip2718_type:02x}"
     else:
