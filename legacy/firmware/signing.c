@@ -1389,11 +1389,13 @@ static bool signing_add_input(TxInputType *txinput) {
       return false;
     }
 
-    if (!fsm_layoutPathWarning()) {
-      signing_abort();
-      return false;
+    if (!foreign_address_confirmed) {
+      if (!fsm_layoutPathWarning()) {
+        signing_abort();
+        return false;
+      }
+      foreign_address_confirmed = true;
     }
-    foreign_address_confirmed = true;
   }
 
   if (!fill_input_script_pubkey(coin, &root, txinput)) {
