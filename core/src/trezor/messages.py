@@ -926,8 +926,9 @@ if TYPE_CHECKING:
 
     class AuthorizeCoinJoin(protobuf.MessageType):
         coordinator: "str"
-        max_total_fee: "int"
-        fee_per_anonymity: "int"
+        max_rounds: "int"
+        max_coordinator_fee_rate: "int"
+        max_fee_per_kvbyte: "int"
         address_n: "list[int]"
         coin_name: "str"
         script_type: "InputScriptType"
@@ -937,9 +938,10 @@ if TYPE_CHECKING:
             self,
             *,
             coordinator: "str",
-            max_total_fee: "int",
+            max_rounds: "int",
+            max_coordinator_fee_rate: "int",
+            max_fee_per_kvbyte: "int",
             address_n: "list[int] | None" = None,
-            fee_per_anonymity: "int | None" = None,
             coin_name: "str | None" = None,
             script_type: "InputScriptType | None" = None,
             amount_unit: "AmountUnit | None" = None,

@@ -599,10 +599,11 @@ message AuthorizeCoinJoin {
     option (unstable) = true;
 
     required string coordinator = 1;                                    // coordinator identifier to approve as a prefix in commitment data (max. 36 ASCII characters)
-    required uint64 max_total_fee = 2;                                  // maximum total fees
-    optional uint32 fee_per_anonymity = 3 [default=0];                  // fee per anonymity set in units of 10^-9 percent
-    repeated uint32 address_n = 4;                                      // prefix of the BIP-32 path leading to the account (m / purpose' / coin_type' / account')
-    optional string coin_name = 5 [default='Bitcoin'];                  // coin to use
-    optional InputScriptType script_type = 6 [default=SPENDADDRESS];    // used to distinguish between various address formats (non-segwit, segwit, etc.)
-    optional AmountUnit amount_unit = 11 [default=BITCOIN];             // show amounts in
+    required uint64 max_rounds = 2;                                     // maximum number of rounds that Trezor is authorized to take part in
+    required uint32 max_coordinator_fee_rate = 3;                       // maximum coordination fee rate in units of 10^-8 percent
+    required uint32 max_fee_per_kvbyte = 4;                             // maximum mining fee rate in units of satoshis per 1000 vbytes
+    repeated uint32 address_n = 5;                                      // prefix of the BIP-32 path leading to the account (m / purpose' / coin_type' / account')
+    optional string coin_name = 6 [default='Bitcoin'];                  // coin to use
+    optional InputScriptType script_type = 7 [default=SPENDADDRESS];    // used to distinguish between various address formats (non-segwit, segwit, etc.)
+    optional AmountUnit amount_unit = 8 [default=BITCOIN];              // show amounts in
 }
