@@ -60,8 +60,9 @@ def test_sign_tx(client: Client):
         btc.authorize_coinjoin(
             client,
             coordinator="www.example.com",
-            max_total_fee=10_010,
-            fee_per_anonymity=5_000_000,  # 0.005 %
+            max_rounds=2,
+            max_coordinator_fee_rate=50_000_000,  # 0.5 %
+            max_fee_per_kvbyte=3500,
             n=parse_path("m/84h/1h/0h"),
             coin_name="Testnet",
             script_type=messages.InputScriptType.SPENDWITNESS,
@@ -141,21 +142,21 @@ def test_sign_tx(client: Client):
         messages.TxOutputType(
             # tb1qr5p6f5sk09sms57ket074vywfymuthlgud7xyx
             address_n=parse_path("m/84h/1h/0h/1/2"),
-            amount=7_289_000 - 50_000 - 5 - 5_000,
+            amount=7_289_000 - 50_000 - 36_445 - 490,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
             payment_req_index=0,
         ),
         # Other's change output.
         messages.TxOutputType(
             address="tb1q9cqhdr9ydetjzrct6tyeuccws9505hl96azwxk",
-            amount=100_000 - 50_000 - 5 - 5_000,
+            amount=100_000 - 50_000 - 500 - 490,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
             payment_req_index=0,
         ),
         # Coordinator's output.
         messages.TxOutputType(
             address="mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q",
-            amount=10,
+            amount=36_945,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
             payment_req_index=0,
         ),
@@ -217,7 +218,7 @@ def test_sign_tx(client: Client):
 
     assert (
         serialized_tx.hex()
-        == "010000000001028abbd1cf69e00fbf60fa3ba475dccdbdba4a859ffa6bfd1ee820a75b1be2b7e50000000000ffffffff0ab6ad3ba09261cfb4fa1d3680cb19332a8fe4d9de9ea89aa565bd83a2c082f90100000000ffffffff0550c3000000000000160014b7a51ede0a66ae36558a3ab097ad86bbd800786150c3000000000000160014167dae080bca35c9ea49c0c8335dcc4b252a1d70cb616e00000000001600141d03a4d2167961b853d6cadfeab08e4937c5dfe8c3af0000000000001600142e01768ca46e57210f0bd2c99e630e8168fa5fe50a000000000000001976a914a579388225827d9f2fe9014add644487808c695d88ac0002473044022010bcbb2ae63db4bfdfdce298bcf3e302e2b1923d02ff57a2155eaae65fdb2949022026289b6d04d7615bf53b7aa0030b25619c465d639b233297b10d0da9ce1a6ca4012103505647c017ff2156eb6da20fae72173d3b681a1d0a629f95f49e884db300689f00000000"
+        == "010000000001028abbd1cf69e00fbf60fa3ba475dccdbdba4a859ffa6bfd1ee820a75b1be2b7e50000000000ffffffff0ab6ad3ba09261cfb4fa1d3680cb19332a8fe4d9de9ea89aa565bd83a2c082f90100000000ffffffff0550c3000000000000160014b7a51ede0a66ae36558a3ab097ad86bbd800786150c3000000000000160014167dae080bca35c9ea49c0c8335dcc4b252a1d7011e56d00000000001600141d03a4d2167961b853d6cadfeab08e4937c5dfe872bf0000000000001600142e01768ca46e57210f0bd2c99e630e8168fa5fe551900000000000001976a914a579388225827d9f2fe9014add644487808c695d88ac000247304402204df07c5baacca264696cc4270665cb759be05387dead8942bd41f20309ceb29002203e685b8e9483435d9b70006bb424b5fef7249415a0f212abdf202b5d62859698012103505647c017ff2156eb6da20fae72173d3b681a1d0a629f95f49e884db300689f00000000"
     )
 
     # Test for a second time.
@@ -231,8 +232,8 @@ def test_sign_tx(client: Client):
         preauthorized=True,
     )
 
-    # Test for a third time, fees should exceed max_total_fee.
-    with pytest.raises(TrezorFailure, match="Fees exceed authorized limit"):
+    # Test for a third time, number of rounds should be exceeded.
+    with pytest.raises(TrezorFailure, match="Exceeded number of CoinJoin rounds"):
         btc.sign_tx(
             client,
             "Testnet",
@@ -251,8 +252,9 @@ def test_unfair_fee(client: Client):
         btc.authorize_coinjoin(
             client,
             coordinator="www.example.com",
-            max_total_fee=10_000,
-            fee_per_anonymity=5_000_000,  # 0.005 %
+            max_rounds=1,
+            max_fee_rate=50_000_000,  # 0.5 %
+            max_fee_per_kvbyte=3500,
             n=parse_path("m/84h/1h/0h"),
             coin_name="Testnet",
             script_type=messages.InputScriptType.SPENDWITNESS,
@@ -302,21 +304,21 @@ def test_unfair_fee(client: Client):
         messages.TxOutputType(
             # tb1qr5p6f5sk09sms57ket074vywfymuthlgud7xyx
             address_n=parse_path("m/84h/1h/0h/1/2"),
-            amount=7_289_000 - 50_000 - 5 - 6_000,  # unfair mining fee
+            amount=7_289_000 - 50_000 - 36_445 - 600,  # unfair mining fee
             script_type=messages.OutputScriptType.PAYTOWITNESS,
             payment_req_index=0,
         ),
         # Other's change output.
         messages.TxOutputType(
             address="tb1q9cqhdr9ydetjzrct6tyeuccws9505hl96azwxk",
-            amount=100_000 - 50_000 - 5 - 4_000,
+            amount=100_000 - 50_000 - 500 - 400,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
             payment_req_index=0,
         ),
         # Coordinator's output.
         messages.TxOutputType(
             address="mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q",
-            amount=10,
+            amount=36_945,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
             payment_req_index=0,
         ),
@@ -350,8 +352,10 @@ def test_wrong_coordinator(client: Client):
 
     btc.authorize_coinjoin(
         client,
-        max_total_fee=50_000,
         coordinator="www.example.com",
+        max_rounds=10,
+        max_coordinator_fee_rate=50_000_000,  # 0.5 %
+        max_fee_per_kvbyte=3500,
         n=parse_path("m/84h/1h/0h"),
         coin_name="Testnet",
         script_type=messages.InputScriptType.SPENDWITNESS,
@@ -374,8 +378,10 @@ def test_cancel_authorization(client: Client):
 
     btc.authorize_coinjoin(
         client,
-        max_total_fee=50_000,
         coordinator="www.example.com",
+        max_rounds=10,
+        max_coordinator_fee_rate=50_000_000,  # 0.5 %
+        max_fee_per_kvbyte=3500,
         n=parse_path("m/84h/1h/0h"),
         coin_name="Testnet",
         script_type=messages.InputScriptType.SPENDWITNESS,
@@ -399,8 +405,10 @@ def test_multisession_authorization(client: Client):
     # Authorize CoinJoin with www.example1.com in session 1.
     btc.authorize_coinjoin(
         client,
-        max_total_fee=50_000,
         coordinator="www.example1.com",
+        max_rounds=10,
+        max_coordinator_fee_rate=50_000_000,  # 0.5 %
+        max_fee_per_kvbyte=3500,
         n=parse_path("m/84h/1h/0h"),
         coin_name="Testnet",
         script_type=messages.InputScriptType.SPENDWITNESS,
@@ -413,8 +421,10 @@ def test_multisession_authorization(client: Client):
     # Authorize CoinJoin with www.example2.com in session 2.
     btc.authorize_coinjoin(
         client,
-        max_total_fee=50_000,
         coordinator="www.example2.com",
+        max_rounds=10,
+        max_coordinator_fee_rate=50_000_000,  # 0.5 %
+        max_fee_per_kvbyte=3500,
         n=parse_path("m/84h/1h/0h"),
         coin_name="Testnet",
         script_type=messages.InputScriptType.SPENDWITNESS,

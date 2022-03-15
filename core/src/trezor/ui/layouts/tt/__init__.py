@@ -988,14 +988,17 @@ async def confirm_modify_fee(
 
 
 async def confirm_coinjoin(
-    ctx: wire.GenericContext, fee_per_anonymity: str | None, total_fee: str
+    ctx: wire.GenericContext, coin_name: str, max_rounds: int, max_fee_per_vbyte: str
 ) -> None:
     text = Text("Authorize CoinJoin", ui.ICON_RECOVERY, new_lines=False)
-    if fee_per_anonymity is not None:
-        text.normal("Fee per anonymity set:\n")
-        text.bold(f"{fee_per_anonymity} %\n")
-    text.normal("Maximum total fees:\n")
-    text.bold(total_fee)
+    text.normal("Coin name: ")
+    text.bold(f"{coin_name}\n")
+    text.br_half()
+    text.normal("Maximum rounds: ")
+    text.bold(f"{max_rounds}\n")
+    text.br_half()
+    text.normal("Maximum mining fee:\n")
+    text.bold(f"{max_fee_per_vbyte} sats/vbyte")
     await raise_if_cancelled(
         interact(ctx, HoldToConfirm(text), "coinjoin_final", ButtonRequestType.Other)
     )

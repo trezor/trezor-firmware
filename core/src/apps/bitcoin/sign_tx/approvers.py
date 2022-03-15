@@ -7,7 +7,7 @@ from trezor.ui.components.common.confirm import INFO
 
 from apps.common import safety_checks
 
-from ..authorization import FEE_PER_ANONYMITY_DECIMALS
+from ..authorization import FEE_RATE_DECIMALS
 from ..common import input_is_external_unverified
 from ..keychain import validate_path_against_script_type
 from . import helpers, tx_weight
@@ -335,18 +335,6 @@ class CoinJoinApprover(Approver):
         # Upper bound on the user's contribution to the weight of the transaction.
         self.our_weight = tx_weight.TxWeightCalculator()
 
-        # base for coordinator fee to be multiplied by fee_per_anonymity
-        self.coordinator_fee_base = 0
-
-        # size of the current group of outputs
-        self.group_size = 0
-
-        # number of our change outputs in the current group
-        self.group_our_count = 0
-
-        # amount of each output in the current group
-        self.group_amount = 0
-
     async def add_internal_input(self, txi: TxInput) -> None:
         self.our_weight.add_input(txi)
         if not self.authorization.check_sign_tx_input(txi, self.coin):
@@ -374,7 +362,6 @@ class CoinJoinApprover(Approver):
     def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         super().add_change_output(txo, script_pubkey)
         self.our_weight.add_output(script_pubkey)
-        self.group_our_count += 1
 
     async def add_payment_request(
         self, msg: TxAckPaymentRequest, keychain: Keychain
@@ -395,11 +382,16 @@ class CoinJoinApprover(Approver):
     async def approve_tx(self, tx_info: TxInfo, orig_txs: list[OriginalTxInfo]) -> None:
         await super().approve_tx(tx_info, orig_txs)
 
+        max_fee_per_vbyte = self.authorization.params.max_fee_per_kvbyte / 1000
+        max_coordinator_fee_rate = (
+            self.authorization.params.max_coordinator_fee_rate
+            / pow(10, FEE_RATE_DECIMALS + 2)
+        )
+
         # The mining fee of the transaction as a whole.
         mining_fee = self.total_in - self.total_out
 
-        # mining_fee > (coin.maxfee per byte * tx size)
-        if mining_fee > (self.coin.maxfee_kb / 1000) * (self.weight.get_total() / 4):
+        if mining_fee > max_fee_per_vbyte * self.weight.get_total() / 4:
             raise wire.ProcessError("Mining fee over threshold")
 
         # The maximum mining fee that the user should be paying assuming that participants share
@@ -410,30 +402,19 @@ class CoinJoinApprover(Approver):
             / (self.weight.get_total() - self.MAX_OUTPUT_WEIGHT)
         )
 
-        # The coordinator fee for the user's outputs.
-        our_coordinator_fee = self._get_coordinator_fee()
+        # The maximum coordination fee for the user's inputs.
+        our_max_coordinator_fee = max_coordinator_fee_rate * (
+            self.total_in - self.external_in
+        )
 
         # Total fees that the user is paying.
         our_fees = self.total_in - self.external_in - self.change_out
 
-        if our_fees > our_coordinator_fee + our_max_mining_fee:
-            raise wire.ProcessError("Total fee over threshold")
+        if our_fees > our_max_coordinator_fee + our_max_mining_fee:
+            raise wire.ProcessError("Total fee over threshold.")
 
-        if not self.authorization.approve_sign_tx(tx_info.tx, our_fees):
-            raise wire.ProcessError("Fees exceed authorized limit")
-
-    # Coordinator fee calculation.
-
-    def _get_coordinator_fee(self) -> float:
-        # Add the coordinator fee for the last group of outputs.
-        self._new_group(0)
-
-        decimal_divisor: float = pow(10, FEE_PER_ANONYMITY_DECIMALS + 2)
-        return (
-            self.coordinator_fee_base
-            * self.authorization.params.fee_per_anonymity
-            / decimal_divisor
-        )
+        if not self.authorization.approve_sign_tx(tx_info.tx):
+            raise wire.ProcessError("Exceeded number of CoinJoin rounds.")
 
     def _add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         super()._add_output(txo, script_pubkey)
@@ -441,27 +422,3 @@ class CoinJoinApprover(Approver):
         # All CoinJoin outputs must be accompanied by a signed payment request.
         if txo.payment_req_index is None:
             raise wire.DataError("Missing payment request.")
-
-        # Assumption: CoinJoin outputs are grouped by amount. (If this assumption is
-        # not satisfied, then we will compute a lower coordinator fee, which may lead
-        # us to wrongfully decline the transaction.)
-        if self.group_amount != txo.amount:
-            self._new_group(txo.amount)
-
-        self.group_size += 1
-
-    def _new_group(self, amount: int) -> None:
-        # Add the base coordinator fee for the previous group of outputs.
-        # Skip groups of size 1, because those must be change-outputs.
-        if self.group_size > 1:
-            self.coordinator_fee_base += (
-                self.group_our_count * self.group_size * self.group_amount
-            )
-
-        # Check whether our outputs gained any anonymity.
-        if self.group_our_count and self.group_size > self.group_our_count:
-            self.anonymity = True
-
-        self.group_size = 0
-        self.group_our_count = 0
-        self.group_amount = amount

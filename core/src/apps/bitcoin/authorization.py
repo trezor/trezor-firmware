@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
     from apps.common.coininfo import CoinInfo
 
-FEE_PER_ANONYMITY_DECIMALS = const(9)
+FEE_RATE_DECIMALS = const(8)
 
 
 class CoinJoinAuthorization:
@@ -47,11 +47,11 @@ class CoinJoinAuthorization:
             and txi.script_type == self.params.script_type
         )
 
-    def approve_sign_tx(self, msg: SignTx, fee: int) -> bool:
-        if self.params.max_total_fee < fee or msg.coin_name != self.params.coin_name:
+    def approve_sign_tx(self, msg: SignTx) -> bool:
+        if self.params.max_rounds < 1 or msg.coin_name != self.params.coin_name:
             return False
 
-        self.params.max_total_fee -= fee
+        self.params.max_rounds -= 1
         authorization.set(self.params)
         return True
 
