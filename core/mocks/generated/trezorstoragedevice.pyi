@@ -63,7 +63,12 @@ def get_passphrase_always_on_device() -> bool:
 
 # rust/src/storagedevice/storagedevice.rs
 def set_passphrase_always_on_device(enable: bool) -> bool:
-    """Set whether passphrase is on device."""
+    """Set whether passphrase is on device.
+    This is backwards compatible with _PASSPHRASE_SOURCE:
+    - If ASK(0) => returns False, the check against b"\x01" in get_bool fails.
+    - If DEVICE(1) => returns True, the check against b"\x01" in get_bool succeeds.
+    - If HOST(2) => returns False, the check against b"\x01" in get_bool fails.
+    """
 
 
 # rust/src/storagedevice/storagedevice.rs
@@ -99,3 +104,31 @@ def get_homescreen() -> bytes | None:
 # rust/src/storagedevice/storagedevice.rs
 def set_homescreen(homescreen: bytes) -> bool:
     """Set homescreen."""
+
+
+# rust/src/storagedevice/storagedevice.rs
+def get_slip39_identifier() -> int | None:
+    """The device's actual SLIP-39 identifier used in passphrase derivation."""
+
+
+# rust/src/storagedevice/storagedevice.rs
+def set_slip39_identifier(identifier: int) -> bool:
+    """
+    The device's actual SLIP-39 identifier used in passphrase derivation.
+    Not to be confused with recovery.identifier, which is stored only during
+    the recovery process and it is copied here upon success.
+    """
+
+
+# rust/src/storagedevice/storagedevice.rs
+def get_slip39_iteration_exponent() -> int | None:
+    """The device's actual SLIP-39 iteration exponent used in passphrase derivation."""
+
+
+# rust/src/storagedevice/storagedevice.rs
+def set_slip39_iteration_exponent(exponent: int) -> bool:
+    """
+    The device's actual SLIP-39 iteration exponent used in passphrase derivation.
+    Not to be confused with recovery.iteration_exponent, which is stored only during
+    the recovery process and it is copied here upon success.
+    """

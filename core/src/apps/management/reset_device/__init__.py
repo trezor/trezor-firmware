@@ -64,8 +64,8 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
         secret = bip39.from_data(secret).encode()
     elif msg.backup_type in (BackupType.Slip39_Basic, BackupType.Slip39_Advanced):
         # generate and set SLIP39 parameters
-        storage.device.set_slip39_identifier(slip39.generate_random_identifier())
-        storage.device.set_slip39_iteration_exponent(slip39.DEFAULT_ITERATION_EXPONENT)
+        storagedevice.set_slip39_identifier(slip39.generate_random_identifier())
+        storagedevice.set_slip39_iteration_exponent(slip39.DEFAULT_ITERATION_EXPONENT)
     else:
         # Unknown backup type.
         raise RuntimeError
@@ -111,8 +111,8 @@ async def backup_slip39_basic(
     await layout.slip39_show_checklist(ctx, 1, BackupType.Slip39_Basic)
     threshold = await layout.slip39_prompt_threshold(ctx, shares_count)
 
-    identifier = storage.device.get_slip39_identifier()
-    iteration_exponent = storage.device.get_slip39_iteration_exponent()
+    identifier = storagedevice.get_slip39_identifier()
+    iteration_exponent = storagedevice.get_slip39_iteration_exponent()
     if identifier is None or iteration_exponent is None:
         raise ValueError
 
@@ -151,8 +151,8 @@ async def backup_slip39_advanced(
         share_threshold = await layout.slip39_prompt_threshold(ctx, share_count, i)
         groups.append((share_threshold, share_count))
 
-    identifier = storage.device.get_slip39_identifier()
-    iteration_exponent = storage.device.get_slip39_iteration_exponent()
+    identifier = storagedevice.get_slip39_identifier()
+    iteration_exponent = storagedevice.get_slip39_iteration_exponent()
     if identifier is None or iteration_exponent is None:
         raise ValueError
 

@@ -253,34 +253,34 @@ def set_u2f_counter(count: int) -> None:
     common.set_counter(_NAMESPACE, U2F_COUNTER, count, writable_locked=True)
 
 
-def set_slip39_identifier(identifier: int) -> None:
-    """
-    The device's actual SLIP-39 identifier used in passphrase derivation.
-    Not to be confused with recovery.identifier, which is stored only during
-    the recovery process and it is copied here upon success.
-    """
-    common.set_uint16(_NAMESPACE, _SLIP39_IDENTIFIER, identifier)
+# def set_slip39_identifier(identifier: int) -> None:
+#     """
+#     The device's actual SLIP-39 identifier used in passphrase derivation.
+#     Not to be confused with recovery.identifier, which is stored only during
+#     the recovery process and it is copied here upon success.
+#     """
+#     common.set_uint16(_NAMESPACE, _SLIP39_IDENTIFIER, identifier)
 
 
-def get_slip39_identifier() -> int | None:
-    """The device's actual SLIP-39 identifier used in passphrase derivation."""
-    return common.get_uint16(_NAMESPACE, _SLIP39_IDENTIFIER)
+# def get_slip39_identifier() -> int | None:
+#     """The device's actual SLIP-39 identifier used in passphrase derivation."""
+#     return common.get_uint16(_NAMESPACE, _SLIP39_IDENTIFIER)
 
 
-def set_slip39_iteration_exponent(exponent: int) -> None:
-    """
-    The device's actual SLIP-39 iteration exponent used in passphrase derivation.
-    Not to be confused with recovery.iteration_exponent, which is stored only during
-    the recovery process and it is copied here upon success.
-    """
-    common.set_uint8(_NAMESPACE, _SLIP39_ITERATION_EXPONENT, exponent)
+# def set_slip39_iteration_exponent(exponent: int) -> None:
+#     """
+#     The device's actual SLIP-39 iteration exponent used in passphrase derivation.
+#     Not to be confused with recovery.iteration_exponent, which is stored only during
+#     the recovery process and it is copied here upon success.
+#     """
+#     common.set_uint8(_NAMESPACE, _SLIP39_ITERATION_EXPONENT, exponent)
 
 
-def get_slip39_iteration_exponent() -> int | None:
-    """
-    The device's actual SLIP-39 iteration exponent used in passphrase derivation.
-    """
-    return common.get_uint8(_NAMESPACE, _SLIP39_ITERATION_EXPONENT)
+# def get_slip39_iteration_exponent() -> int | None:
+#     """
+#     The device's actual SLIP-39 iteration exponent used in passphrase derivation.
+#     """
+#     return common.get_uint8(_NAMESPACE, _SLIP39_ITERATION_EXPONENT)
 
 
 def get_sd_salt_auth_key() -> bytes | None:

@@ -2,7 +2,7 @@ import storage
 import storage.device
 import storage.recovery
 import storage.recovery_shares
-from trezor import strings, utils, wire, workflow
+from trezor import storagedevice, strings, utils, wire, workflow
 from trezor.crypto import slip39
 from trezor.crypto.hashlib import sha256
 from trezor.enums import BackupType, MessageType
@@ -105,11 +105,11 @@ async def _finish_recovery_dry_run(
     # Check that the identifier and iteration exponent match as well
     if is_slip39:
         result &= (
-            storage.device.get_slip39_identifier()
+            storagedevice.get_slip39_identifier()
             == storage.recovery.get_slip39_identifier()
         )
         result &= (
-            storage.device.get_slip39_iteration_exponent()
+            storagedevice.get_slip39_iteration_exponent()
             == storage.recovery.get_slip39_iteration_exponent()
         )
 
@@ -138,8 +138,8 @@ async def _finish_recovery(
         if identifier is None or exponent is None:
             # Identifier and exponent need to be stored in storage at this point
             raise RuntimeError
-        storage.device.set_slip39_identifier(identifier)
-        storage.device.set_slip39_iteration_exponent(exponent)
+        storagedevice.set_slip39_identifier(identifier)
+        storagedevice.set_slip39_iteration_exponent(exponent)
 
     storage.recovery.end_progress()
 
