@@ -603,7 +603,6 @@
 "TT_bitcoin-test_authorize_coinjoin.py::test_cancel_authorization": "2e5cffe7bd0dc6034852d21612fba8cf1ee3c45a14e76140a4c2786f360f54f0",
 "TT_bitcoin-test_authorize_coinjoin.py::test_multisession_authorization": "65c9435e10e3dede19169a9b02d373bd5acb22eba0ba3b31324271025d65d5a7",
 "TT_bitcoin-test_authorize_coinjoin.py::test_sign_tx": "87b81a29fe6e27fdfedfdbb1953b3d0178786749eadbb0fe01509c1af8075de5",
-"TT_bitcoin-test_authorize_coinjoin.py::test_unfair_fee": "ab1aa516510b627b8ffc65391c1c113922ab08f48baf295861a9b597f27f8ea1",
 "TT_bitcoin-test_authorize_coinjoin.py::test_wrong_coordinator": "2e5cffe7bd0dc6034852d21612fba8cf1ee3c45a14e76140a4c2786f360f54f0",
 "TT_bitcoin-test_bcash.py::test_attack_change_input": "b824d3eb233f6ba2567dd052fa4b52e9a1f170fe4a39af55c1cc262683f188b9",
 "TT_bitcoin-test_bcash.py::test_send_bch_change": "b824d3eb233f6ba2567dd052fa4b52e9a1f170fe4a39af55c1cc262683f188b9",

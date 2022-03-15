@@ -319,10 +319,6 @@ class BasicApprover(Approver):
 
 
 class CoinJoinApprover(Approver):
-    # Maximum weight of an output for standard scriptPubKeys P2PKH (25), P2SH (23), P2WPKH (22),
-    # P2WSH (34) and P2TR (34).
-    MAX_OUTPUT_WEIGHT = const(4 * (8 + 1 + 34))
-
     def __init__(
         self, tx: SignTx, coin: CoinInfo, authorization: CoinJoinAuthorization
     ) -> None:
@@ -394,13 +390,8 @@ class CoinJoinApprover(Approver):
         if mining_fee > max_fee_per_vbyte * self.weight.get_total() / 4:
             raise wire.ProcessError("Mining fee over threshold")
 
-        # The maximum mining fee that the user should be paying assuming that participants share
-        # the fees for the coordinator's output.
-        our_max_mining_fee = (
-            mining_fee
-            * self.our_weight.get_total()
-            / (self.weight.get_total() - self.MAX_OUTPUT_WEIGHT)
-        )
+        # The maximum mining fee that the user should be paying.
+        our_max_mining_fee = max_fee_per_vbyte * self.our_weight.get_total() / 4
 
         # The maximum coordination fee for the user's inputs.
         our_max_coordinator_fee = max_coordinator_fee_rate * (
