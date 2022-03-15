@@ -24,7 +24,7 @@ pub struct Buffer {
 
 impl Buffer {
     pub fn empty() -> Self {
-        Self::from("")
+        Self::from(b"")
     }
 }
 
@@ -70,8 +70,8 @@ impl From<&'static [u8]> for Buffer {
     }
 }
 
-impl From<&'static str> for Buffer {
-    fn from(val: &'static str) -> Self {
+impl<const N: usize> From<&'static [u8; N]> for Buffer {
+    fn from(val: &'static [u8; N]) -> Self {
         Buffer {
             ptr: val.as_ptr(),
             len: val.len(),
