@@ -38,11 +38,11 @@ class Homescreen(HomescreenBase):
 
     def do_render(self) -> None:
         # warning bar on top
-        if storagedevice.is_initialized() and storage.device.no_backup():
+        if storagedevice.is_initialized() and storagedevice.no_backup():
             ui.header_error("SEEDLESS")
-        elif storagedevice.is_initialized() and storage.device.unfinished_backup():
+        elif storagedevice.is_initialized() and storagedevice.unfinished_backup():
             ui.header_error("BACKUP FAILED!")
-        elif storagedevice.is_initialized() and storage.device.needs_backup():
+        elif storagedevice.is_initialized() and storagedevice.needs_backup():
             ui.header_warning("NEEDS BACKUP!")
         elif storagedevice.is_initialized() and not config.has_pin():
             ui.header_warning("PIN NOT SET!")

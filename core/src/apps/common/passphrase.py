@@ -1,13 +1,12 @@
 from micropython import const
 
-import storage.device
-from trezor import wire, workflow
+from trezor import storagedevice, wire, workflow
 
 _MAX_PASSPHRASE_LEN = const(50)
 
 
 def is_enabled() -> bool:
-    return storage.device.is_passphrase_enabled()
+    return storagedevice.is_passphrase_enabled()
 
 
 async def get(ctx: wire.Context) -> str:
@@ -19,7 +18,7 @@ async def get(ctx: wire.Context) -> str:
 
 async def _request_from_user(ctx: wire.Context) -> str:
     workflow.close_others()  # request exclusive UI access
-    if storage.device.get_passphrase_always_on_device():
+    if storagedevice.get_passphrase_always_on_device():
         from trezor.ui.layouts import request_passphrase_on_device
 
         passphrase = await request_passphrase_on_device(ctx, _MAX_PASSPHRASE_LEN)

@@ -85,7 +85,7 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
     # write settings and master secret into storage
     if msg.label is not None:
         storage.device.set_label(msg.label)
-    storage.device.set_passphrase_enabled(bool(msg.passphrase_protection))
+    storagedevice.set_passphrase_enabled(bool(msg.passphrase_protection))
     storage.device.store_mnemonic_secret(
         secret,  # for SLIP-39, this is the EMS
         msg.backup_type,
