@@ -229,8 +229,9 @@ def test_experimental_features(client: Client):
         btc.authorize_coinjoin(
             client,
             coordinator="www.example.com",
-            max_total_fee=10_010,
-            fee_per_anonymity=5_000_000,  # 0.005 %
+            max_rounds=10,
+            max_coordinator_fee_rate=50_000_000,  # 0.5 %
+            max_fee_per_kvbyte=3500,
             n=parse_path("m/84h/1h/0h"),
             coin_name="Testnet",
             script_type=messages.InputScriptType.SPENDWITNESS,

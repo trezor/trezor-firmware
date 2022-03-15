@@ -19,8 +19,9 @@ class TestAuthorization(unittest.TestCase):
     def setUp(self):
         self.msg_auth = AuthorizeCoinJoin(
             coordinator="www.example.com",
-            max_total_fee=40000,
-            fee_per_anonymity=int(0.003 * 10**9),
+            max_rounds=3,
+            max_coordinator_fee_rate=int(0.3 * 10**8),
+            max_fee_per_kvbyte=7000,
             address_n=[H_(84), H_(0), H_(0)],
             coin_name=self.coin.coin_name,
             script_type=InputScriptType.SPENDWITNESS,
@@ -102,10 +103,10 @@ class TestAuthorization(unittest.TestCase):
 
         msg = SignTx(outputs_count=10, inputs_count=21, coin_name=self.coin.coin_name, lock_time=0)
 
-        self.assertTrue(self.authorization.approve_sign_tx(msg, 10000))
-        self.assertTrue(self.authorization.approve_sign_tx(msg, 20000))
-        self.assertFalse(self.authorization.approve_sign_tx(msg, 10001))
-        self.assertTrue(self.authorization.approve_sign_tx(msg, 10000))
+        self.assertTrue(self.authorization.approve_sign_tx(msg))
+        self.assertTrue(self.authorization.approve_sign_tx(msg))
+        self.assertTrue(self.authorization.approve_sign_tx(msg))
+        self.assertFalse(self.authorization.approve_sign_tx(msg))
 
 
 if __name__ == '__main__':

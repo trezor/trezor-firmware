@@ -24,13 +24,14 @@ class TestApprover(unittest.TestCase):
 
     def setUp(self):
         self.coin = coins.by_name('Bitcoin')
-        self.fee_per_anonymity_percent = 0.003
+        self.max_fee_rate_percent = 0.3
         self.coordinator_name = "www.example.com"
 
         self.msg_auth = AuthorizeCoinJoin(
             coordinator=self.coordinator_name,
-            max_total_fee=40000,
-            fee_per_anonymity=int(self.fee_per_anonymity_percent * 10**9),
+            max_rounds=10,
+            max_coordinator_fee_rate=int(self.max_fee_rate_percent * 10**8),
+            max_fee_per_kvbyte=7000,
             address_n=[H_(84), H_(0), H_(0)],
             coin_name=self.coin.coin_name,
             script_type=InputScriptType.SPENDWITNESS,
@@ -39,13 +40,15 @@ class TestApprover(unittest.TestCase):
 
     def test_coinjoin_lots_of_inputs(self):
         denomination = 10000000
+        coordinator_fee = int(self.max_fee_rate_percent / 100 * denomination)
+        fees = coordinator_fee + 500
 
         # Other's inputs.
         inputs = [
             TxInput(
                 prev_hash=b"",
                 prev_index=0,
-                amount=denomination + 1000000 * (i + 1),
+                amount=denomination,
                 script_pubkey=bytes(22),
                 script_type=InputScriptType.EXTERNAL,
                 sequence=0xffffffff,
@@ -54,13 +57,12 @@ class TestApprover(unittest.TestCase):
         ]
 
         # Our input.
-        inputs.insert(
-            30,
+        inputs.insert(30,
             TxInput(
                 prev_hash=b"",
                 prev_index=0,
                 address_n=[H_(84), H_(0), H_(0), 0, 1],
-                amount=denomination + 1000000,
+                amount=denomination,
                 script_type=InputScriptType.SPENDWITNESS,
                 sequence=0xffffffff,
             )
@@ -70,7 +72,7 @@ class TestApprover(unittest.TestCase):
         outputs = [
             TxOutput(
                 address="",
-                amount=denomination,
+                amount=denomination-fees,
                 script_type=OutputScriptType.PAYTOWITNESS,
                 payment_req_index=0,
             ) for i in range(99)
@@ -82,32 +84,7 @@ class TestApprover(unittest.TestCase):
             TxOutput(
                 address="",
                 address_n=[H_(84), H_(0), H_(0), 0, 2],
-                amount=denomination,
-                script_type=OutputScriptType.PAYTOWITNESS,
-                payment_req_index=0,
-            )
-        )
-
-        coordinator_fee = int(self.fee_per_anonymity_percent / 100 * len(outputs) * denomination)
-        fees = coordinator_fee + 10000
-        total_coordinator_fee = coordinator_fee * len(outputs)
-
-        # Other's change-outputs.
-        outputs.extend(
-            TxOutput(
-                address="",
-                amount=1000000 * (i + 1) - fees,
-                script_type=OutputScriptType.PAYTOWITNESS,
-                payment_req_index=0,
-            ) for i in range(99)
-        )
-
-        # Our change-output.
-        outputs.append(
-            TxOutput(
-                address="",
-                address_n=[H_(84), H_(0), H_(0), 1, 1],
-                amount=1000000 - fees,
+                amount=denomination-fees,
                 script_type=OutputScriptType.PAYTOWITNESS,
                 payment_req_index=0,
             )
@@ -117,7 +94,7 @@ class TestApprover(unittest.TestCase):
         outputs.append(
             TxOutput(
                 address="",
-                amount=total_coordinator_fee,
+                amount=coordinator_fee * len(outputs),
                 script_type=OutputScriptType.PAYTOWITNESS,
                 payment_req_index=0,
             )
