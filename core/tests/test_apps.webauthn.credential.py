@@ -1,10 +1,7 @@
 from common import *
-import storage
-import storage.device
-from apps.common import mnemonic
+from apps.common import mnemonic, seed
 from apps.webauthn.credential import Fido2Credential, U2fCredential, NAME_MAX_LENGTH
 from apps.webauthn.fido2 import distinguishable_cred_list
-from trezor.crypto.curve import nist256p1
 from trezor.crypto.hashlib import sha256
 
 
@@ -12,7 +9,12 @@ class TestCredential(unittest.TestCase):
     def test_fido2_credential_decode(self):
         mnemonic_secret = b"all all all all all all all all all all all all"
         mnemonic.get_secret = lambda: mnemonic_secret
-        storage.trezorstoragedevice.is_initialized = lambda: True
+
+        # Bypassing the storagedevice.is_initialized() check, which would
+        # cause `Exception("Device is not initialized")`
+        seed._get_seed_without_passphrase = lambda: mnemonic.get_seed(
+            progress_bar=False
+        )
 
         cred_id = (
             b"f1d0020013e65c865634ad8abddf7a66df56ae7d8c3afd356f76426801508b2e"
