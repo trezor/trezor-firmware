@@ -404,19 +404,21 @@ def sign_tx(
 def authorize_coinjoin(
     client: "TrezorClient",
     coordinator: str,
-    max_total_fee: int,
+    max_rounds: int,
+    max_coordinator_fee_rate: int,
+    max_fee_per_kvbyte: int,
     n: "Address",
     coin_name: str,
-    fee_per_anonymity: Optional[int] = None,
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
 ) -> "MessageType":
     return client.call(
         messages.AuthorizeCoinJoin(
             coordinator=coordinator,
-            max_total_fee=max_total_fee,
+            max_rounds=max_rounds,
+            max_coordinator_fee_rate=max_coordinator_fee_rate,
+            max_fee_per_kvbyte=max_fee_per_kvbyte,
             address_n=n,
             coin_name=coin_name,
-            fee_per_anonymity=fee_per_anonymity,
             script_type=script_type,
         )
     )
