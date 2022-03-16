@@ -47,6 +47,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_set_slip39_iteration_exponent;
   MP_QSTR_get_autolock_delay_ms;
   MP_QSTR_set_autolock_delay_ms;
+  MP_QSTR_get_flags;
+  MP_QSTR_set_flags;
 
   MP_QSTR_set_timer_fn;
   MP_QSTR_touch_event;

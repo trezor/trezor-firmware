@@ -368,6 +368,32 @@ extern "C" fn storagedevice_set_autolock_delay_ms(delay_ms: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
+extern "C" fn storagedevice_get_flags() -> Obj {
+    let block = || {
+        let key = _get_appkey(_FLAGS, false);
+        match storagedevice_storage_get_u32(key) {
+            Some(flag) => flag.try_into(),
+            None => 0.try_into(),
+        }
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagedevice_set_flags(flags: Obj) -> Obj {
+    let block = || {
+        let flags = u32::try_from(flags)?;
+
+        let key = _get_appkey(_FLAGS, false);
+
+        let old_flags = storagedevice_storage_get_u32(key).unwrap_or(0);
+
+        // Not deleting old flags
+        let new_flags = flags | old_flags;
+        Ok(storagedevice_storage_set_u32(key, new_flags).into())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
 pub fn storagedevice_storage_get(key: u16) -> Vec<u8, MAX_LEN> {
     let mut buf: [u8; MAX_LEN] = [0; MAX_LEN];
     let mut len: u16 = 0;
@@ -619,6 +645,14 @@ pub static mp_module_trezorstoragedevice: Module = obj_module! {
     /// def set_autolock_delay_ms(delay_ms: int) -> bool:
     ///     """Set autolock delay."""
     Qstr::MP_QSTR_set_autolock_delay_ms => obj_fn_1!(storagedevice_set_autolock_delay_ms).as_obj(),
+
+    /// def get_flags() -> int:
+    ///     """Get flags."""
+    Qstr::MP_QSTR_get_flags => obj_fn_0!(storagedevice_get_flags).as_obj(),
+
+    /// def set_flags(flags: int) -> bool:
+    ///     """Set flags."""
+    Qstr::MP_QSTR_set_flags => obj_fn_1!(storagedevice_set_flags).as_obj(),
 };
 
 #[cfg(test)]

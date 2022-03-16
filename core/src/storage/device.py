@@ -10,6 +10,8 @@ if TYPE_CHECKING:
     from trezor.enums import BackupType
     from typing_extensions import Literal
 
+    StorageSafetyCheckLevel = Literal[0, 1]
+
 # Namespace:
 _NAMESPACE = common.APP_DEVICE
 
@@ -41,8 +43,6 @@ _EXPERIMENTAL_FEATURES     = const(0x15)  # bool (0x01 or empty)
 SAFETY_CHECK_LEVEL_STRICT  : Literal[0] = const(0)
 SAFETY_CHECK_LEVEL_PROMPT  : Literal[1] = const(1)
 _DEFAULT_SAFETY_CHECK_LEVEL = SAFETY_CHECK_LEVEL_STRICT
-if TYPE_CHECKING:
-    StorageSafetyCheckLevel = Literal[0, 1]
 # fmt: on
 
 HOMESCREEN_MAXSIZE = 16384
@@ -207,23 +207,24 @@ def store_mnemonic_secret(
 #     common.set_bool(_NAMESPACE, _PASSPHRASE_ALWAYS_ON_DEVICE, enable)
 
 
-def get_flags() -> int:
-    b = common.get(_NAMESPACE, _FLAGS)
-    if b is None:
-        return 0
-    else:
-        return int.from_bytes(b, "big")
+# def get_flags() -> int:
+#     b = common.get(_NAMESPACE, _FLAGS)
+#     if b is None:
+#         return 0
+#     else:
+#         return int.from_bytes(b, "big")
 
 
-def set_flags(flags: int) -> None:
-    b = common.get(_NAMESPACE, _FLAGS)
-    if b is None:
-        i = 0
-    else:
-        i = int.from_bytes(b, "big")
-    flags = (flags | i) & 0xFFFF_FFFF
-    if flags != i:
-        common.set(_NAMESPACE, _FLAGS, flags.to_bytes(4, "big"))
+# def set_flags(flags: int) -> None:
+#     b = common.get(_NAMESPACE, _FLAGS)
+#     if b is None:
+#         i = 0
+#     else:
+#         i = int.from_bytes(b, "big")
+#     flags = (flags | i) & 0xFFFF_FFFF
+#     print("flags_mpppppp", flags)
+#     if flags != i:
+#         common.set(_NAMESPACE, _FLAGS, flags.to_bytes(4, "big"))
 
 
 # def _normalize_autolock_delay(delay_ms: int) -> int:

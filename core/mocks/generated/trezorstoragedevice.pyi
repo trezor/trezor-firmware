@@ -142,3 +142,13 @@ def get_autolock_delay_ms() -> int:
 # rust/src/storagedevice/storage_device.rs
 def set_autolock_delay_ms(delay_ms: int) -> bool:
     """Set autolock delay."""
+
+
+# rust/src/storagedevice/storage_device.rs
+def get_flags() -> int:
+    """Get flags."""
+
+
+# rust/src/storagedevice/storage_device.rs
+def set_flags(flags: int) -> bool:
+    """Set flags."""
