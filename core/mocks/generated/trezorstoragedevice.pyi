@@ -132,3 +132,13 @@ def set_slip39_iteration_exponent(exponent: int) -> bool:
     Not to be confused with recovery.iteration_exponent, which is stored only during
     the recovery process and it is copied here upon success.
     """
+
+
+# rust/src/storagedevice/storage_device.rs
+def get_autolock_delay_ms() -> int:
+    """Get autolock delay."""
+
+
+# rust/src/storagedevice/storage_device.rs
+def set_autolock_delay_ms(delay_ms: int) -> bool:
+    """Set autolock delay."""

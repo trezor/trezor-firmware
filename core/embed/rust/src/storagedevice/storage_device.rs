@@ -55,6 +55,18 @@ const INITIALIZED: u8 = 0x13;
 const _SAFETY_CHECK_LEVEL: u8 = 0x14;
 const _EXPERIMENTAL_FEATURES: u8 = 0x15;
 
+// TODO: somehow determine the DEBUG_MODE value
+const DEBUG_MODE: bool = true;
+const AUTOLOCK_DELAY_DEFAULT: u32 = 10 * 60 * 1000; // 10 minutes
+const AUTOLOCK_DELAY_MINIMUM: u32 = if DEBUG_MODE {
+    10 * 1000 // 10 seconds
+} else {
+    60 * 1000 // 1 minute
+};
+// autolock intervals larger than AUTOLOCK_DELAY_MAXIMUM cause issues in the
+// scheduler
+const AUTOLOCK_DELAY_MAXIMUM: u32 = 0x2000_0000; // ~6 days
+
 extern "C" {
     // storage.h
     fn storage_has(key: u16) -> secbool::Secbool;
@@ -334,6 +346,28 @@ extern "C" fn storagedevice_set_slip39_iteration_exponent(exponent: Obj) -> Obj 
     unsafe { util::try_or_raise(block) }
 }
 
+extern "C" fn storagedevice_get_autolock_delay_ms() -> Obj {
+    let block = || {
+        let key = _get_appkey(_AUTOLOCK_DELAY_MS, false);
+        match storagedevice_storage_get_u32(key) {
+            // TODO: strange that u8 and u16 have .into(), but u32 needs .try_into()
+            Some(delay) => _normalize_autolock_delay(delay).try_into(),
+            None => AUTOLOCK_DELAY_DEFAULT.try_into(),
+        }
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagedevice_set_autolock_delay_ms(delay_ms: Obj) -> Obj {
+    let block = || {
+        let delay_ms = u32::try_from(delay_ms)?;
+
+        let key = _get_appkey(_AUTOLOCK_DELAY_MS, false);
+        Ok(storagedevice_storage_set_u32(key, delay_ms).into())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
 pub fn storagedevice_storage_get(key: u16) -> Vec<u8, MAX_LEN> {
     let mut buf: [u8; MAX_LEN] = [0; MAX_LEN];
     let mut len: u16 = 0;
@@ -382,7 +416,18 @@ pub fn storagedevice_storage_get_bool(key: u16) -> bool {
     result.len() == 1 && result[0] == _TRUE_BYTE
 }
 
-// TODO: can we somehow generalize this for u16 and u8?
+// TODO: can we somehow generalize this for all uint types?
+pub fn storagedevice_storage_get_u32(key: u16) -> Option<u32> {
+    let result = storagedevice_storage_get(key);
+    if result.len() == 4 {
+        Some(u32::from_be_bytes([
+            result[0], result[1], result[2], result[3],
+        ]))
+    } else {
+        None
+    }
+}
+
 pub fn storagedevice_storage_get_u16(key: u16) -> Option<u16> {
     let result = storagedevice_storage_get(key);
     if result.len() == 2 {
@@ -418,6 +463,10 @@ pub fn storagedevice_storage_set_u16(key: u16, val: u16) -> bool {
     storagedevice_storage_set(key, &val.to_be_bytes() as *const _, 2)
 }
 
+pub fn storagedevice_storage_set_u32(key: u16, val: u32) -> bool {
+    storagedevice_storage_set(key, &val.to_be_bytes() as *const _, 4)
+}
+
 pub fn storagedevice_storage_has(key: u16) -> bool {
     matches!(unsafe { storage_has(key) }, secbool::TRUE)
 }
@@ -435,6 +484,16 @@ fn _get_appkey(key: u8, is_public: bool) -> u16 {
         APP_DEVICE
     };
     ((app as u16) << 8) | key as u16
+}
+
+fn _normalize_autolock_delay(delay_ms: u32) -> u32 {
+    if delay_ms < AUTOLOCK_DELAY_MINIMUM {
+        AUTOLOCK_DELAY_MINIMUM
+    } else if delay_ms > AUTOLOCK_DELAY_MAXIMUM {
+        AUTOLOCK_DELAY_MAXIMUM
+    } else {
+        delay_ms
+    }
 }
 
 #[no_mangle]
@@ -552,6 +611,14 @@ pub static mp_module_trezorstoragedevice: Module = obj_module! {
     ///     the recovery process and it is copied here upon success.
     ///     """
     Qstr::MP_QSTR_set_slip39_iteration_exponent => obj_fn_1!(storagedevice_set_slip39_iteration_exponent).as_obj(),
+
+    /// def get_autolock_delay_ms() -> int:
+    ///     """Get autolock delay."""
+    Qstr::MP_QSTR_get_autolock_delay_ms => obj_fn_0!(storagedevice_get_autolock_delay_ms).as_obj(),
+
+    /// def set_autolock_delay_ms(delay_ms: int) -> bool:
+    ///     """Set autolock delay."""
+    Qstr::MP_QSTR_set_autolock_delay_ms => obj_fn_1!(storagedevice_set_autolock_delay_ms).as_obj(),
 };
 
 #[cfg(test)]
@@ -568,5 +635,23 @@ mod tests {
     fn get_appkey_public() {
         let result = _get_appkey(0x11, true);
         assert_eq!(result, 0x8111);
+    }
+
+    #[test]
+    fn normalize_autolock_delay_small() {
+        let result = _normalize_autolock_delay(123);
+        assert_eq!(result, AUTOLOCK_DELAY_MINIMUM);
+    }
+
+    #[test]
+    fn normalize_autolock_delay_big() {
+        let result = _normalize_autolock_delay(u32::MAX);
+        assert_eq!(result, AUTOLOCK_DELAY_MAXIMUM);
+    }
+
+    #[test]
+    fn normalize_autolock_delay_normal() {
+        let result = _normalize_autolock_delay(1_000_000);
+        assert_eq!(result, 1_000_000);
     }
 }

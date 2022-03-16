@@ -92,7 +92,7 @@ def get_features() -> Features:
         f.wipe_code_protection = config.has_wipe_code()
         f.passphrase_always_on_device = storagedevice.get_passphrase_always_on_device()
         f.safety_checks = safety_checks.read_setting()
-        f.auto_lock_delay_ms = storage.device.get_autolock_delay_ms()
+        f.auto_lock_delay_ms = storagedevice.get_autolock_delay_ms()
         f.display_rotation = storagedevice.get_rotation()
         f.experimental_features = storage.device.get_experimental_features()
 
@@ -275,7 +275,7 @@ def reload_settings_from_storage() -> None:
     from trezor import ui
 
     workflow.idle_timer.set(
-        storage.device.get_autolock_delay_ms(), lock_device_if_unlocked
+        storagedevice.get_autolock_delay_ms(), lock_device_if_unlocked
     )
     wire.experimental_enabled = storage.device.get_experimental_features()
     ui.display.orientation(storagedevice.get_rotation())
