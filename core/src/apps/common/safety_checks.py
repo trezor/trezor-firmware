@@ -1,7 +1,5 @@
 import storage.cache
 from storage.cache import APP_COMMON_SAFETY_CHECKS_TEMPORARY
-
-# TODO: export these constants also in storagedevice?
 from storage.device import SAFETY_CHECK_LEVEL_PROMPT, SAFETY_CHECK_LEVEL_STRICT
 from trezor import storagedevice
 from trezor.enums import SafetyCheckLevel
