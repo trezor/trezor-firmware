@@ -284,26 +284,26 @@ def set_u2f_counter(count: int) -> None:
 #     return common.get_uint8(_NAMESPACE, _SLIP39_ITERATION_EXPONENT)
 
 
-def get_sd_salt_auth_key() -> bytes | None:
-    """
-    The key used to check the authenticity of the SD card salt.
-    """
-    auth_key = common.get(_NAMESPACE, _SD_SALT_AUTH_KEY, public=True)
-    if auth_key is not None and len(auth_key) != SD_SALT_AUTH_KEY_LEN_BYTES:
-        raise ValueError
-    return auth_key
+# def get_sd_salt_auth_key() -> bytes | None:
+#     """
+#     The key used to check the authenticity of the SD card salt.
+#     """
+#     auth_key = common.get(_NAMESPACE, _SD_SALT_AUTH_KEY, public=True)
+#     if auth_key is not None and len(auth_key) != SD_SALT_AUTH_KEY_LEN_BYTES:
+#         raise ValueError
+#     return auth_key
 
 
-def set_sd_salt_auth_key(auth_key: bytes | None) -> None:
-    """
-    The key used to check the authenticity of the SD card salt.
-    """
-    if auth_key is not None:
-        if len(auth_key) != SD_SALT_AUTH_KEY_LEN_BYTES:
-            raise ValueError
-        return common.set(_NAMESPACE, _SD_SALT_AUTH_KEY, auth_key, public=True)
-    else:
-        return common.delete(_NAMESPACE, _SD_SALT_AUTH_KEY, public=True)
+# def set_sd_salt_auth_key(auth_key: bytes | None) -> None:
+#     """
+#     The key used to check the authenticity of the SD card salt.
+#     """
+#     if auth_key is not None:
+#         if len(auth_key) != SD_SALT_AUTH_KEY_LEN_BYTES:
+#             raise ValueError
+#         return common.set(_NAMESPACE, _SD_SALT_AUTH_KEY, auth_key, public=True)
+#     else:
+#         return common.delete(_NAMESPACE, _SD_SALT_AUTH_KEY, public=True)
 
 
 # # do not use this function directly, see apps.common.safety_checks instead

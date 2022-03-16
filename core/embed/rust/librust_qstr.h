@@ -51,6 +51,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_set_flags;
   MP_QSTR_get_safety_check_level;
   MP_QSTR_set_safety_check_level;
+  MP_QSTR_get_sd_salt_auth_key;
+  MP_QSTR_set_sd_salt_auth_key;
 
   MP_QSTR_set_timer_fn;
   MP_QSTR_touch_event;
