@@ -12,7 +12,6 @@ use core::convert::{TryFrom, TryInto};
 
 // MISSING FUNCTIONALITY:
 // - returning strings into python
-// - return either bytes or None
 
 const FLAG_PUBLIC: u8 = 0x80;
 
@@ -143,7 +142,10 @@ extern "C" fn storagedevice_get_label() -> Obj {
     let block = || {
         let key = _get_appkey(_LABEL, true);
         let result = &storagedevice_storage_get(key) as &[u8];
-        // TODO: return None in case it is empty
+        if result.is_empty() {
+            //  TODO: it did not work with None::<&[u8]>, but it should not matter
+            return Ok(None::<u16>.into());
+        }
         // TODO: how to convert into a string?
         // let label = StrBuffer::try_from(*result)?;
         result.try_into()
@@ -269,6 +271,9 @@ extern "C" fn storagedevice_get_homescreen() -> Obj {
     let block = || {
         let key = _get_appkey(_HOMESCREEN, false);
         let result = &storagedevice_storage_get_homescreen(key) as &[u8];
+        if result.is_empty() {
+            return Ok(None::<u16>.into());
+        }
         result.try_into()
     };
     unsafe { util::try_or_raise(block) }
