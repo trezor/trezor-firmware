@@ -83,7 +83,7 @@ async def sd_protect_enable(ctx: wire.Context, msg: SdProtect) -> Success:
             pass
         await error_pin_invalid(ctx)
 
-    storage.device.set_sd_salt_auth_key(salt_auth_key)
+    storagedevice.set_sd_salt_auth_key(salt_auth_key)
 
     await show_success(
         ctx, "success_sd", "You have successfully enabled SD protection."
@@ -108,7 +108,7 @@ async def sd_protect_disable(ctx: wire.Context, msg: SdProtect) -> Success:
     if not config.change_pin(pin, pin, salt, None):
         await error_pin_invalid(ctx)
 
-    storage.device.set_sd_salt_auth_key(None)
+    storagedevice.set_sd_salt_auth_key(None)
 
     try:
         # Clean up.
@@ -145,7 +145,7 @@ async def sd_protect_refresh(ctx: wire.Context, msg: SdProtect) -> Success:
     if not config.change_pin(pin, pin, old_salt, new_salt):
         await error_pin_invalid(ctx)
 
-    storage.device.set_sd_salt_auth_key(new_auth_key)
+    storagedevice.set_sd_salt_auth_key(new_auth_key)
 
     try:
         # Clean up.

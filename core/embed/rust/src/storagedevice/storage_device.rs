@@ -73,6 +73,10 @@ const AUTOLOCK_DELAY_MINIMUM: u32 = if DEBUG_MODE {
 // scheduler
 const AUTOLOCK_DELAY_MAXIMUM: u32 = 0x2000_0000; // ~6 days
 
+// Length of SD salt auth tag.
+// Other SD-salt-related constants are in core/src/storage/sd_salt.py
+const SD_SALT_AUTH_KEY_LEN_BYTES: u8 = 16;
+
 extern "C" {
     // storage.h
     fn storage_has(key: u16) -> secbool::Secbool;
@@ -421,6 +425,39 @@ extern "C" fn storagedevice_set_safety_check_level(level: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
+extern "C" fn storagedevice_get_sd_salt_auth_key() -> Obj {
+    let block = || {
+        let key = _get_appkey(_SD_SALT_AUTH_KEY, true);
+        let result = &storagedevice_storage_get(key) as &[u8];
+        if result.is_empty() {
+            return Ok(None::<u16>.into());
+        } else if result.len() != SD_SALT_AUTH_KEY_LEN_BYTES as usize {
+            // TODO: how to raise a micropython exception?
+            // return Error::ValueError(cstr!("Invalid key length"));
+        }
+        result.try_into()
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagedevice_set_sd_salt_auth_key(auth_key: Obj) -> Obj {
+    let block = || {
+        let auth_key = Buffer::try_from(auth_key)?;
+
+        let key = _get_appkey(_SD_SALT_AUTH_KEY, true);
+        if auth_key.is_empty() {
+            Ok(storagedevice_storage_delete(key).into())
+        } else {
+            // TODO: how to raise a micropython exception?
+            if auth_key.len() != SD_SALT_AUTH_KEY_LEN_BYTES as usize {
+                // return Error::ValueError(cstr!("Invalid key length"));
+            }
+            Ok(storagedevice_storage_set(key, auth_key.as_ptr(), auth_key.len() as u16).into())
+        }
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
 pub fn storagedevice_storage_get(key: u16) -> Vec<u8, MAX_LEN> {
     let mut buf: [u8; MAX_LEN] = [0; MAX_LEN];
     let mut len: u16 = 0;
@@ -694,6 +731,14 @@ pub static mp_module_trezorstoragedevice: Module = obj_module! {
     ///     Do not use this function directly, see apps.common.safety_checks instead.
     ///     """
     Qstr::MP_QSTR_set_safety_check_level => obj_fn_1!(storagedevice_set_safety_check_level).as_obj(),
+
+    /// def get_sd_salt_auth_key() -> bytes | None:
+    ///     """The key used to check the authenticity of the SD card salt."""
+    Qstr::MP_QSTR_get_sd_salt_auth_key => obj_fn_0!(storagedevice_get_sd_salt_auth_key).as_obj(),
+
+    /// def set_sd_salt_auth_key(auth_key: bytes | None) -> bool:
+    ///     """The key used to check the authenticity of the SD card salt."""
+    Qstr::MP_QSTR_set_sd_salt_auth_key => obj_fn_1!(storagedevice_set_sd_salt_auth_key).as_obj(),
 };
 
 #[cfg(test)]

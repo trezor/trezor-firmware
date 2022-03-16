@@ -2,7 +2,7 @@ from micropython import const
 from typing import TYPE_CHECKING
 
 import storage.device
-from trezor import io
+from trezor import io, storagedevice
 from trezor.sdcard import with_filesystem
 from trezor.utils import consteq
 
@@ -21,7 +21,7 @@ class WrongSdCard(Exception):
 
 
 def is_enabled() -> bool:
-    return storage.device.get_sd_salt_auth_key() is not None
+    return storagedevice.get_sd_salt_auth_key() is not None
 
 
 def compute_auth_tag(salt: bytes, auth_key: bytes) -> bytes:
@@ -62,7 +62,7 @@ def _load_salt(auth_key: bytes, path: str) -> bytearray | None:
 
 @with_filesystem
 def load_sd_salt() -> bytearray | None:
-    salt_auth_key = storage.device.get_sd_salt_auth_key()
+    salt_auth_key = storagedevice.get_sd_salt_auth_key()
     if salt_auth_key is None:
         return None
 
