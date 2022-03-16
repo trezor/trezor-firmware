@@ -77,6 +77,8 @@ const AUTOLOCK_DELAY_MAXIMUM: u32 = 0x2000_0000; // ~6 days
 // Other SD-salt-related constants are in core/src/storage/sd_salt.py
 const SD_SALT_AUTH_KEY_LEN_BYTES: u8 = 16;
 
+const STORAGE_VERSION_CURRENT: u8 = 0x02;
+
 extern "C" {
     // storage.h
     fn storage_has(key: u16) -> secbool::Secbool;
@@ -194,6 +196,50 @@ extern "C" fn storagedevice_get_mnemonic_secret() -> Obj {
         result.try_into()
     };
     unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagedevice_set_mnemonic_secret(
+    n_args: usize,
+    args: *const Obj,
+    kwargs: *mut Map,
+) -> Obj {
+    let block = |_args: &[Obj], kwargs: &Map| {
+        let secret: Buffer = kwargs.get(Qstr::MP_QSTR_secret)?.try_into()?;
+        let backup_type: u8 = kwargs.get(Qstr::MP_QSTR_backup_type)?.try_into()?;
+        let needs_backup: bool = if kwargs.contains_key(Qstr::MP_QSTR_needs_backup) {
+            kwargs.get(Qstr::MP_QSTR_needs_backup)?.try_into()?
+        } else {
+            false
+        };
+        let no_backup: bool = if kwargs.contains_key(Qstr::MP_QSTR_no_backup) {
+            kwargs.get(Qstr::MP_QSTR_needs_backup)?.try_into()?
+        } else {
+            false
+        };
+
+        let key = _get_appkey(_VERSION, false);
+        storagedevice_storage_set(key, &[STORAGE_VERSION_CURRENT] as *const _, 1);
+
+        let key = _get_appkey(_MNEMONIC_SECRET, false);
+        storagedevice_storage_set(key, secret.as_ptr(), secret.len() as u16);
+
+        let key = _get_appkey(_BACKUP_TYPE, false);
+        storagedevice_storage_set_u8(key, backup_type);
+
+        let key = _get_appkey(_NO_BACKUP, false);
+        storagedevice_storage_set_true_or_delete(key, no_backup);
+
+        let key = _get_appkey(INITIALIZED, true);
+        storagedevice_storage_set_bool(key, true);
+
+        if !no_backup {
+            let key = _get_appkey(_NEEDS_BACKUP, false);
+            storagedevice_storage_set_true_or_delete(key, needs_backup);
+        }
+
+        Ok(true.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
 extern "C" fn storagedevice_is_passphrase_enabled() -> Obj {
@@ -545,6 +591,14 @@ pub fn storagedevice_storage_set_bool(key: u16, val: bool) -> bool {
     storagedevice_storage_set(key, &val as *const _, 1)
 }
 
+pub fn storagedevice_storage_set_true_or_delete(key: u16, val: bool) -> bool {
+    if val {
+        storagedevice_storage_set_bool(key, true)
+    } else {
+        storagedevice_storage_delete(key)
+    }
+}
+
 pub fn storagedevice_storage_set_u8(key: u16, val: u8) -> bool {
     storagedevice_storage_set(key, &val.to_be_bytes() as *const _, 1)
 }
@@ -592,6 +646,7 @@ pub static mp_module_trezorstoragedevice: Module = obj_module! {
 
     // TODO: should we return None or True in case of set_xxx?
 
+    /// BackupTypeInt = TypeVar("BackupTypeInt", bound=int)
     /// StorageSafetyCheckLevel = Literal[0, 1]
 
     /// def is_version_stored() -> bool:
@@ -629,6 +684,15 @@ pub static mp_module_trezorstoragedevice: Module = obj_module! {
     /// def get_mnemonic_secret() -> bytes:
     ///     """Get mnemonic secret."""
     Qstr::MP_QSTR_get_mnemonic_secret => obj_fn_0!(storagedevice_get_mnemonic_secret).as_obj(),
+
+    /// def set_mnemonic_secret(
+    ///     secret: bytes,
+    ///     backup_type: BackupTypeInt,
+    ///     needs_backup: bool = False,
+    ///     no_backup: bool = False,
+    /// ) -> None:
+    ///     """Set mnemonic secret"""
+    Qstr::MP_QSTR_set_mnemonic_secret => obj_fn_kw!(0, storagedevice_set_mnemonic_secret).as_obj(),
 
     /// def is_passphrase_enabled() -> bool:
     ///     """Whether passphrase is enabled."""
