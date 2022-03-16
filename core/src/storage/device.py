@@ -306,20 +306,20 @@ def set_sd_salt_auth_key(auth_key: bytes | None) -> None:
         return common.delete(_NAMESPACE, _SD_SALT_AUTH_KEY, public=True)
 
 
-# do not use this function directly, see apps.common.safety_checks instead
-def safety_check_level() -> StorageSafetyCheckLevel:
-    level = common.get_uint8(_NAMESPACE, _SAFETY_CHECK_LEVEL)
-    if level not in (SAFETY_CHECK_LEVEL_STRICT, SAFETY_CHECK_LEVEL_PROMPT):
-        return _DEFAULT_SAFETY_CHECK_LEVEL
-    else:
-        return level  # type: ignore [int-into-enum]
+# # do not use this function directly, see apps.common.safety_checks instead
+# def safety_check_level() -> StorageSafetyCheckLevel:
+#     level = common.get_uint8(_NAMESPACE, _SAFETY_CHECK_LEVEL)
+#     if level not in (SAFETY_CHECK_LEVEL_STRICT, SAFETY_CHECK_LEVEL_PROMPT):
+#         return _DEFAULT_SAFETY_CHECK_LEVEL
+#     else:
+#         return level
 
 
-# do not use this function directly, see apps.common.safety_checks instead
-def set_safety_check_level(level: StorageSafetyCheckLevel) -> None:
-    if level not in (SAFETY_CHECK_LEVEL_STRICT, SAFETY_CHECK_LEVEL_PROMPT):
-        raise ValueError
-    common.set_uint8(_NAMESPACE, _SAFETY_CHECK_LEVEL, level)
+# # do not use this function directly, see apps.common.safety_checks instead
+# def set_safety_check_level(level: StorageSafetyCheckLevel) -> None:
+#     if level not in (SAFETY_CHECK_LEVEL_STRICT, SAFETY_CHECK_LEVEL_PROMPT):
+#         raise ValueError
+#     common.set_uint8(_NAMESPACE, _SAFETY_CHECK_LEVEL, level)
 
 
 @storage.cache.stored(storage.cache.STORAGE_DEVICE_EXPERIMENTAL_FEATURES)

@@ -12,6 +12,7 @@ use core::convert::{TryFrom, TryInto};
 
 // MISSING FUNCTIONALITY:
 // - returning strings into python
+// - raising custom exceptions into python
 
 const FLAG_PUBLIC: u8 = 0x80;
 
@@ -54,6 +55,11 @@ const _SD_SALT_AUTH_KEY: u8 = 0x12;
 const INITIALIZED: u8 = 0x13;
 const _SAFETY_CHECK_LEVEL: u8 = 0x14;
 const _EXPERIMENTAL_FEATURES: u8 = 0x15;
+
+const SAFETY_CHECK_LEVEL_STRICT: u8 = 0;
+const SAFETY_CHECK_LEVEL_PROMPT: u8 = 0;
+const _DEFAULT_SAFETY_CHECK_LEVEL: u8 = SAFETY_CHECK_LEVEL_STRICT;
+const SAFETY_CHECK_LEVELS: [u8; 2] = [SAFETY_CHECK_LEVEL_STRICT, SAFETY_CHECK_LEVEL_PROMPT];
 
 // TODO: somehow determine the DEBUG_MODE value
 const DEBUG_MODE: bool = true;
@@ -124,13 +130,7 @@ extern "C" fn storagedevice_is_initialized() -> Obj {
 extern "C" fn storagedevice_get_rotation() -> Obj {
     let block = || {
         let key = _get_appkey(_ROTATION, true);
-        // TODO: could create something like
-        // storagedevice_storage_get_u16_with_default(key, 0)
-        let result = storagedevice_storage_get_u16(key);
-        match result {
-            Some(num) => Ok(num.into()),
-            None => Ok(0u16.into()),
-        }
+        Ok(storagedevice_storage_get_u16(key).unwrap_or(0).into())
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -187,7 +187,6 @@ extern "C" fn storagedevice_get_mnemonic_secret() -> Obj {
     let block = || {
         let key = _get_appkey(_MNEMONIC_SECRET, false);
         let result = &storagedevice_storage_get(key) as &[u8];
-        // TODO: find out how to return None
         result.try_into()
     };
     unsafe { util::try_or_raise(block) }
@@ -371,10 +370,7 @@ extern "C" fn storagedevice_set_autolock_delay_ms(delay_ms: Obj) -> Obj {
 extern "C" fn storagedevice_get_flags() -> Obj {
     let block = || {
         let key = _get_appkey(_FLAGS, false);
-        match storagedevice_storage_get_u32(key) {
-            Some(flag) => flag.try_into(),
-            None => 0.try_into(),
-        }
+        storagedevice_storage_get_u32(key).unwrap_or(0).try_into()
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -390,6 +386,37 @@ extern "C" fn storagedevice_set_flags(flags: Obj) -> Obj {
         // Not deleting old flags
         let new_flags = flags | old_flags;
         Ok(storagedevice_storage_set_u32(key, new_flags).into())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagedevice_get_safety_check_level() -> Obj {
+    let block = || {
+        let key = _get_appkey(_SAFETY_CHECK_LEVEL, false);
+        let level = storagedevice_storage_get_u8(key).unwrap_or(0);
+
+        let level = if !SAFETY_CHECK_LEVELS.contains(&level) {
+            _DEFAULT_SAFETY_CHECK_LEVEL
+        } else {
+            level
+        };
+
+        Ok(level.into())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagedevice_set_safety_check_level(level: Obj) -> Obj {
+    let block = || {
+        let level = u8::try_from(level)?;
+
+        // TODO: how to raise a micropython exception?
+        if !SAFETY_CHECK_LEVELS.contains(&level) {
+            // return Error::ValueError(cstr!("Not valid safety level"));
+        }
+
+        let key = _get_appkey(_SAFETY_CHECK_LEVEL, false);
+        Ok(storagedevice_storage_set_u8(key, level).into())
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -528,6 +555,8 @@ pub static mp_module_trezorstoragedevice: Module = obj_module! {
 
     // TODO: should we return None or True in case of set_xxx?
 
+    /// StorageSafetyCheckLevel = Literal[0, 1]
+
     /// def is_version_stored() -> bool:
     ///     """Whether version is in storage."""
     Qstr::MP_QSTR_is_version_stored => obj_fn_0!(storagedevice_is_version_stored).as_obj(),
@@ -653,6 +682,18 @@ pub static mp_module_trezorstoragedevice: Module = obj_module! {
     /// def set_flags(flags: int) -> bool:
     ///     """Set flags."""
     Qstr::MP_QSTR_set_flags => obj_fn_1!(storagedevice_set_flags).as_obj(),
+
+    /// def get_safety_check_level() -> StorageSafetyCheckLevel:
+    ///     """Get safety check level.
+    ///     Do not use this function directly, see apps.common.safety_checks instead.
+    ///     """
+    Qstr::MP_QSTR_get_safety_check_level => obj_fn_0!(storagedevice_get_safety_check_level).as_obj(),
+
+    /// def set_safety_check_level(level: StorageSafetyCheckLevel) -> bool:
+    ///     """Set safety check level.
+    ///     Do not use this function directly, see apps.common.safety_checks instead.
+    ///     """
+    Qstr::MP_QSTR_set_safety_check_level => obj_fn_1!(storagedevice_set_safety_check_level).as_obj(),
 };
 
 #[cfg(test)]

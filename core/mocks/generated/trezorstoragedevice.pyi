@@ -1,4 +1,5 @@
 from typing import *
+StorageSafetyCheckLevel = Literal[0, 1]
 
 
 # rust/src/storagedevice/storage_device.rs
@@ -152,3 +153,17 @@ def get_flags() -> int:
 # rust/src/storagedevice/storage_device.rs
 def set_flags(flags: int) -> bool:
     """Set flags."""
+
+
+# rust/src/storagedevice/storage_device.rs
+def get_safety_check_level() -> StorageSafetyCheckLevel:
+    """Get safety check level.
+    Do not use this function directly, see apps.common.safety_checks instead.
+    """
+
+
+# rust/src/storagedevice/storage_device.rs
+def set_safety_check_level(level: StorageSafetyCheckLevel) -> bool:
+    """Set safety check level.
+    Do not use this function directly, see apps.common.safety_checks instead.
+    """
