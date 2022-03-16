@@ -1,4 +1,5 @@
 from typing import *
+BackupTypeInt = TypeVar("BackupTypeInt", bound=int)
 StorageSafetyCheckLevel = Literal[0, 1]
 
 
@@ -45,6 +46,16 @@ def set_label(label: str) -> bool:
 # rust/src/storagedevice/storage_device.rs
 def get_mnemonic_secret() -> bytes:
     """Get mnemonic secret."""
+
+
+# rust/src/storagedevice/storage_device.rs
+def set_mnemonic_secret(
+    secret: bytes,
+    backup_type: BackupTypeInt,
+    needs_backup: bool = False,
+    no_backup: bool = False,
+) -> None:
+    """Set mnemonic secret"""
 
 
 # rust/src/storagedevice/storage_device.rs

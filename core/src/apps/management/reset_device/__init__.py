@@ -86,9 +86,9 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
     if msg.label is not None:
         storage.device.set_label(msg.label)
     storagedevice.set_passphrase_enabled(bool(msg.passphrase_protection))
-    storage.device.store_mnemonic_secret(
-        secret,  # for SLIP-39, this is the EMS
-        msg.backup_type,
+    storagedevice.set_mnemonic_secret(
+        secret=secret,  # for SLIP-39, this is the EMS
+        backup_type=msg.backup_type,
         needs_backup=not perform_backup,
         no_backup=bool(msg.no_backup),
     )

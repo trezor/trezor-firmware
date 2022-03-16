@@ -36,9 +36,9 @@ async def load_device(ctx: wire.Context, msg: LoadDevice) -> Success:
         storagedevice.set_slip39_identifier(identifier)
         storagedevice.set_slip39_iteration_exponent(iteration_exponent)
 
-    storage.device.store_mnemonic_secret(
-        secret,
-        backup_type,
+    storagedevice.set_mnemonic_secret(
+        secret=secret,
+        backup_type=backup_type,
         needs_backup=msg.needs_backup is True,
         no_backup=msg.no_backup is True,
     )

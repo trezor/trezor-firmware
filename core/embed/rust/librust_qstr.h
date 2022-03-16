@@ -30,6 +30,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_get_label;
   MP_QSTR_set_label;
   MP_QSTR_get_mnemonic_secret;
+  MP_QSTR_set_mnemonic_secret;
   MP_QSTR_is_passphrase_enabled;
   MP_QSTR_set_passphrase_enabled;
   MP_QSTR_get_passphrase_always_on_device;
@@ -73,4 +74,5 @@ static void _librust_qstrs(void) {
   MP_QSTR_warning;
   MP_QSTR_allow_cancel;
   MP_QSTR_max_len;
+  MP_QSTR_secret;
 }

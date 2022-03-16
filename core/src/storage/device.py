@@ -4,7 +4,6 @@ from ubinascii import hexlify
 
 import storage.cache
 from storage import common
-from trezor import storagedevice
 
 # TODO: export all the constants also in storagedevice?
 
@@ -160,19 +159,19 @@ def get_backup_type() -> BackupType:
 #     common.set(_NAMESPACE, _HOMESCREEN, homescreen, public=True)
 
 
-def store_mnemonic_secret(
-    secret: bytes,
-    backup_type: BackupType,
-    needs_backup: bool = False,
-    no_backup: bool = False,
-) -> None:
-    storagedevice.set_version(common.STORAGE_VERSION_CURRENT)
-    common.set(_NAMESPACE, _MNEMONIC_SECRET, secret)
-    common.set_uint8(_NAMESPACE, _BACKUP_TYPE, backup_type)
-    common.set_true_or_delete(_NAMESPACE, _NO_BACKUP, no_backup)
-    common.set_bool(_NAMESPACE, INITIALIZED, True, public=True)
-    if not no_backup:
-        common.set_true_or_delete(_NAMESPACE, _NEEDS_BACKUP, needs_backup)
+# def store_mnemonic_secret(
+#     secret: bytes,
+#     backup_type: BackupType,
+#     needs_backup: bool = False,
+#     no_backup: bool = False,
+# ) -> None:
+#     storagedevice.set_version(common.STORAGE_VERSION_CURRENT)
+#     common.set(_NAMESPACE, _MNEMONIC_SECRET, secret)
+#     common.set_uint8(_NAMESPACE, _BACKUP_TYPE, backup_type)
+#     common.set_true_or_delete(_NAMESPACE, _NO_BACKUP, no_backup)
+#     common.set_bool(_NAMESPACE, INITIALIZED, True, public=True)
+#     if not no_backup:
+#         common.set_true_or_delete(_NAMESPACE, _NEEDS_BACKUP, needs_backup)
 
 
 # def needs_backup() -> bool:
