@@ -6,6 +6,8 @@ import storage.cache
 from storage import common
 from trezor import storagedevice
 
+# TODO: export all the constants also in storagedevice?
+
 if TYPE_CHECKING:
     from trezor.enums import BackupType
     from typing_extensions import Literal
@@ -18,31 +20,31 @@ _NAMESPACE = common.APP_DEVICE
 # fmt: off
 # Keys:
 DEVICE_ID                  = const(0x00)  # bytes
-_VERSION                   = const(0x01)  # int
+# _VERSION                   = const(0x01)  # int
 _MNEMONIC_SECRET           = const(0x02)  # bytes
-_LANGUAGE                  = const(0x03)  # str
+# _LANGUAGE                  = const(0x03)  # str
 _LABEL                     = const(0x04)  # str
-_USE_PASSPHRASE            = const(0x05)  # bool (0x01 or empty)
-_HOMESCREEN                = const(0x06)  # bytes
+# _USE_PASSPHRASE            = const(0x05)  # bool (0x01 or empty)
+# _HOMESCREEN                = const(0x06)  # bytes
 _NEEDS_BACKUP              = const(0x07)  # bool (0x01 or empty)
-_FLAGS                     = const(0x08)  # int
+# _FLAGS                     = const(0x08)  # int
 U2F_COUNTER                = const(0x09)  # int
-_PASSPHRASE_ALWAYS_ON_DEVICE = const(0x0A)  # bool (0x01 or empty)
-_UNFINISHED_BACKUP         = const(0x0B)  # bool (0x01 or empty)
-_AUTOLOCK_DELAY_MS         = const(0x0C)  # int
+# _PASSPHRASE_ALWAYS_ON_DEVICE = const(0x0A)  # bool (0x01 or empty)
+# _UNFINISHED_BACKUP         = const(0x0B)  # bool (0x01 or empty)
+# _AUTOLOCK_DELAY_MS         = const(0x0C)  # int
 _NO_BACKUP                 = const(0x0D)  # bool (0x01 or empty)
 _BACKUP_TYPE               = const(0x0E)  # int
-_ROTATION                  = const(0x0F)  # int
-_SLIP39_IDENTIFIER         = const(0x10)  # bool
-_SLIP39_ITERATION_EXPONENT = const(0x11)  # int
-_SD_SALT_AUTH_KEY          = const(0x12)  # bytes
+# _ROTATION                  = const(0x0F)  # int
+# _SLIP39_IDENTIFIER         = const(0x10)  # bool
+# _SLIP39_ITERATION_EXPONENT = const(0x11)  # int
+# _SD_SALT_AUTH_KEY          = const(0x12)  # bytes
 INITIALIZED                = const(0x13)  # bool (0x01 or empty)
-_SAFETY_CHECK_LEVEL        = const(0x14)  # int
+# _SAFETY_CHECK_LEVEL        = const(0x14)  # int
 _EXPERIMENTAL_FEATURES     = const(0x15)  # bool (0x01 or empty)
 
 SAFETY_CHECK_LEVEL_STRICT  : Literal[0] = const(0)
 SAFETY_CHECK_LEVEL_PROMPT  : Literal[1] = const(1)
-_DEFAULT_SAFETY_CHECK_LEVEL = SAFETY_CHECK_LEVEL_STRICT
+# _DEFAULT_SAFETY_CHECK_LEVEL = SAFETY_CHECK_LEVEL_STRICT
 # fmt: on
 
 HOMESCREEN_MAXSIZE = 16384
