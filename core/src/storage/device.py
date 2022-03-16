@@ -226,23 +226,23 @@ def set_flags(flags: int) -> None:
         common.set(_NAMESPACE, _FLAGS, flags.to_bytes(4, "big"))
 
 
-def _normalize_autolock_delay(delay_ms: int) -> int:
-    delay_ms = max(delay_ms, AUTOLOCK_DELAY_MINIMUM)
-    delay_ms = min(delay_ms, AUTOLOCK_DELAY_MAXIMUM)
-    return delay_ms
+# def _normalize_autolock_delay(delay_ms: int) -> int:
+#     delay_ms = max(delay_ms, AUTOLOCK_DELAY_MINIMUM)
+#     delay_ms = min(delay_ms, AUTOLOCK_DELAY_MAXIMUM)
+#     return delay_ms
 
 
-def get_autolock_delay_ms() -> int:
-    b = common.get(_NAMESPACE, _AUTOLOCK_DELAY_MS)
-    if b is None:
-        return AUTOLOCK_DELAY_DEFAULT
-    else:
-        return _normalize_autolock_delay(int.from_bytes(b, "big"))
+# def get_autolock_delay_ms() -> int:
+#     b = common.get(_NAMESPACE, _AUTOLOCK_DELAY_MS)
+#     if b is None:
+#         return AUTOLOCK_DELAY_DEFAULT
+#     else:
+#         return _normalize_autolock_delay(int.from_bytes(b, "big"))
 
 
-def set_autolock_delay_ms(delay_ms: int) -> None:
-    delay_ms = _normalize_autolock_delay(delay_ms)
-    common.set(_NAMESPACE, _AUTOLOCK_DELAY_MS, delay_ms.to_bytes(4, "big"))
+# def set_autolock_delay_ms(delay_ms: int) -> None:
+#     delay_ms = _normalize_autolock_delay(delay_ms)
+#     common.set(_NAMESPACE, _AUTOLOCK_DELAY_MS, delay_ms.to_bytes(4, "big"))
 
 
 def next_u2f_counter() -> int:

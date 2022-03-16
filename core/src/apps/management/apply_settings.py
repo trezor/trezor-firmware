@@ -80,7 +80,7 @@ async def apply_settings(ctx: wire.Context, msg: ApplySettings) -> Success:
         if msg.auto_lock_delay_ms > storage.device.AUTOLOCK_DELAY_MAXIMUM:
             raise wire.ProcessError("Auto-lock delay too long")
         await require_confirm_change_autolock_delay(ctx, msg.auto_lock_delay_ms)
-        storage.device.set_autolock_delay_ms(msg.auto_lock_delay_ms)
+        storagedevice.set_autolock_delay_ms(msg.auto_lock_delay_ms)
 
     if msg.safety_checks is not None:
         await require_confirm_safety_checks(ctx, msg.safety_checks)
