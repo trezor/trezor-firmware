@@ -12,6 +12,7 @@ use core::convert::{TryFrom, TryInto};
 
 // MISSING FUNCTIONALITY:
 // - returning strings into python
+// - return either bytes or None
 
 const FLAG_PUBLIC: u8 = 0x80;
 
@@ -75,8 +76,7 @@ extern "C" {
 extern "C" fn storagedevice_is_version_stored() -> Obj {
     let block = || {
         let key = _get_appkey(_VERSION, false);
-        let result = storagedevice_storage_has(key);
-        Ok(result.into())
+        Ok(storagedevice_storage_has(key).into())
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -97,8 +97,7 @@ extern "C" fn storagedevice_set_version(version: Obj) -> Obj {
         let val = version.as_ptr();
 
         let key = _get_appkey(_VERSION, false);
-        let result = storagedevice_storage_set(key, val, len);
-        Ok(result.into())
+        Ok(storagedevice_storage_set(key, val, len).into())
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -106,8 +105,7 @@ extern "C" fn storagedevice_set_version(version: Obj) -> Obj {
 extern "C" fn storagedevice_is_initialized() -> Obj {
     let block = || {
         let key = _get_appkey(INITIALIZED, true);
-        let result = storagedevice_storage_get_bool(key);
-        Ok(result.into())
+        Ok(storagedevice_storage_get_bool(key).into())
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -115,17 +113,13 @@ extern "C" fn storagedevice_is_initialized() -> Obj {
 extern "C" fn storagedevice_get_rotation() -> Obj {
     let block = || {
         let key = _get_appkey(_ROTATION, true);
-        let result = &storagedevice_storage_get(key) as &[u8];
-
-        // It might be unset
-        if result.is_empty() {
-            return Ok(0u16.into());
+        // TODO: could create something like
+        // storagedevice_storage_get_u16_with_default(key, 0)
+        let result = storagedevice_storage_get_u16(key);
+        match result {
+            Some(num) => Ok(num.into()),
+            None => Ok(0u16.into()),
         }
-
-        // TODO: how to convert unknown size buff into int?
-        // We know the number is stored in two bytes
-        let num = u16::from_be_bytes([result[0], result[1]]);
-        Ok(num.into())
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -139,11 +133,8 @@ extern "C" fn storagedevice_set_rotation(rotation: Obj) -> Obj {
             // return Error::ValueError(cstr!("Not valid rotation"));
         }
 
-        let val = &rotation.to_be_bytes();
-
         let key = _get_appkey(_ROTATION, true);
-        let result = storagedevice_storage_set(key, val as *const _, 2);
-        Ok(result.into())
+        Ok(storagedevice_storage_set_u16(key, rotation).into())
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -172,10 +163,8 @@ extern "C" fn storagedevice_set_label(label: Obj) -> Obj {
         }
 
         let val = label.as_ptr();
-
         let key = _get_appkey(_LABEL, true);
-        let result = storagedevice_storage_set(key, val, len);
-        Ok(result.into())
+        Ok(storagedevice_storage_set(key, val, len).into())
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -193,8 +182,7 @@ extern "C" fn storagedevice_get_mnemonic_secret() -> Obj {
 extern "C" fn storagedevice_is_passphrase_enabled() -> Obj {
     let block = || {
         let key = _get_appkey(_USE_PASSPHRASE, false);
-        let result = storagedevice_storage_get_bool(key);
-        Ok(result.into())
+        Ok(storagedevice_storage_get_bool(key).into())
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -220,8 +208,7 @@ extern "C" fn storagedevice_set_passphrase_enabled(enable: Obj) -> Obj {
 extern "C" fn storagedevice_get_passphrase_always_on_device() -> Obj {
     let block = || {
         let key = _get_appkey(_PASSPHRASE_ALWAYS_ON_DEVICE, false);
-        let result = storagedevice_storage_get_bool(key);
-        Ok(result.into())
+        Ok(storagedevice_storage_get_bool(key).into())
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -231,8 +218,7 @@ extern "C" fn storagedevice_set_passphrase_always_on_device(enable: Obj) -> Obj 
         let enable = bool::try_from(enable)?;
 
         let key = _get_appkey(_PASSPHRASE_ALWAYS_ON_DEVICE, false);
-        let result = storagedevice_storage_set_bool(key, enable);
-        Ok(result.into())
+        Ok(storagedevice_storage_set_bool(key, enable).into())
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -240,8 +226,7 @@ extern "C" fn storagedevice_set_passphrase_always_on_device(enable: Obj) -> Obj 
 extern "C" fn storagedevice_unfinished_backup() -> Obj {
     let block = || {
         let key = _get_appkey(_UNFINISHED_BACKUP, false);
-        let result = storagedevice_storage_get_bool(key);
-        Ok(result.into())
+        Ok(storagedevice_storage_get_bool(key).into())
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -251,8 +236,7 @@ extern "C" fn storagedevice_set_unfinished_backup(state: Obj) -> Obj {
         let state = bool::try_from(state)?;
 
         let key = _get_appkey(_UNFINISHED_BACKUP, false);
-        let result = storagedevice_storage_set_bool(key, state);
-        Ok(result.into())
+        Ok(storagedevice_storage_set_bool(key, state).into())
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -260,8 +244,7 @@ extern "C" fn storagedevice_set_unfinished_backup(state: Obj) -> Obj {
 extern "C" fn storagedevice_needs_backup() -> Obj {
     let block = || {
         let key = _get_appkey(_NEEDS_BACKUP, false);
-        let result = storagedevice_storage_get_bool(key);
-        Ok(result.into())
+        Ok(storagedevice_storage_get_bool(key).into())
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -269,8 +252,7 @@ extern "C" fn storagedevice_needs_backup() -> Obj {
 extern "C" fn storagedevice_set_backed_up() -> Obj {
     let block = || {
         let key = _get_appkey(_NEEDS_BACKUP, false);
-        let result = storagedevice_storage_delete(key);
-        Ok(result.into())
+        Ok(storagedevice_storage_delete(key).into())
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -278,8 +260,7 @@ extern "C" fn storagedevice_set_backed_up() -> Obj {
 extern "C" fn storagedevice_no_backup() -> Obj {
     let block = || {
         let key = _get_appkey(_NO_BACKUP, false);
-        let result = storagedevice_storage_get_bool(key);
-        Ok(result.into())
+        Ok(storagedevice_storage_get_bool(key).into())
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -295,8 +276,8 @@ extern "C" fn storagedevice_get_homescreen() -> Obj {
 
 extern "C" fn storagedevice_set_homescreen(homescreen: Obj) -> Obj {
     let block = || {
-        let version = Buffer::try_from(homescreen)?;
-        let len = version.len() as u16;
+        let homescreen = Buffer::try_from(homescreen)?;
+        let len = homescreen.len() as u16;
 
         // TODO: how to raise a micropython exception?
         if len > HOMESCREEN_MAXSIZE as u16 {
@@ -304,11 +285,10 @@ extern "C" fn storagedevice_set_homescreen(homescreen: Obj) -> Obj {
             // return Error::ValueError(cstr!("Homescreen too large"));
         }
 
-        let val = version.as_ptr();
+        let val = homescreen.as_ptr();
 
         let key = _get_appkey(_HOMESCREEN, false);
-        let result = storagedevice_storage_set(key, val, len);
-        Ok(result.into())
+        Ok(storagedevice_storage_set(key, val, len).into())
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -326,8 +306,7 @@ extern "C" fn storagedevice_set_slip39_identifier(identifier: Obj) -> Obj {
         let identifier = u16::try_from(identifier)?;
 
         let key = _get_appkey(_SLIP39_IDENTIFIER, false);
-        let result = storagedevice_storage_set_u16(key, identifier);
-        Ok(result.into())
+        Ok(storagedevice_storage_set_u16(key, identifier).into())
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -345,8 +324,7 @@ extern "C" fn storagedevice_set_slip39_iteration_exponent(exponent: Obj) -> Obj 
         let exponent = u8::try_from(exponent)?;
 
         let key = _get_appkey(_SLIP39_ITERATION_EXPONENT, false);
-        let result = storagedevice_storage_set_u8(key, exponent);
-        Ok(result.into())
+        Ok(storagedevice_storage_set_u8(key, exponent).into())
     };
     unsafe { util::try_or_raise(block) }
 }
