@@ -85,7 +85,7 @@ def get_features() -> Features:
         f.needs_backup = storagedevice.needs_backup()
         f.unfinished_backup = storagedevice.unfinished_backup()
         f.no_backup = storagedevice.no_backup()
-        f.flags = storage.device.get_flags()
+        f.flags = storagedevice.get_flags()
         f.recovery_mode = storage.recovery.is_in_progress()
         f.backup_type = mnemonic.get_type()
         f.sd_protection = storage.sd_salt.is_enabled()
