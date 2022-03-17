@@ -191,8 +191,10 @@ def get_sd_salt_auth_key() -> bytes | None:
 
 
 # rust/src/storagedevice/storage_device.rs
-def set_sd_salt_auth_key(auth_key: bytes | None) -> bool:
-    """The key used to check the authenticity of the SD card salt."""
+def set_sd_salt_auth_key(auth_key: bytes) -> bool:
+    """The key used to check the authenticity of the SD card salt.
+    Empty bytes will delete the salt.
+    """
 
 
 # rust/src/storagedevice/storage_device.rs
