@@ -26,7 +26,6 @@ Usage:
 
 Running the script:
 - see all script argument by calling `python pyright_tool.py --help`
-- only directories with existing `pyrightconfig.json` can be tested - see `--dir` flag
 
 Simplified program flow (as it happens in PyrightTool.run()):
 - extract and validate pyright config data from pyrightconfig.json
@@ -39,15 +38,17 @@ Simplified program flow (as it happens in PyrightTool.run()):
 
 from __future__ import annotations
 
-import argparse
+import io
 import json
-import os
 import re
 import subprocess
 import sys
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Final, TypedDict, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Final, Iterator, TypedDict
+
+import click
 
 if TYPE_CHECKING:
     LineIgnores = list[LineIgnore]
@@ -122,50 +123,6 @@ class PyrightOffIgnore:
     already_used: bool = False
 
 
-parser = argparse.ArgumentParser()
-parser.add_argument(
-    "--dev", action="store_true", help="Creating the error file and not deleting it"
-)
-parser.add_argument(
-    "--test",
-    action="store_true",
-    help="Reusing existing error file and not deleting it",
-)
-parser.add_argument("--log", action="store_true", help="Log details")
-parser.add_argument(
-    "--dir",
-    help="Directory which to test, relative to the repository root. When empty, taking the directory of this file.",
-    default="",
-)
-args = parser.parse_args()
-
-if args.dev:
-    should_generate_error_file = True
-    should_delete_error_file = False
-    print("Running in dev mode, creating the file and not deleting it")
-elif args.test:
-    should_generate_error_file = False
-    should_delete_error_file = False
-    print("Running in test mode, will reuse existing error file")
-else:
-    should_generate_error_file = True
-    should_delete_error_file = True
-
-SHOULD_GENERATE_ERROR_FILE = should_generate_error_file
-SHOULD_DELETE_ERROR_FILE = should_delete_error_file
-SHOULD_LOG = args.log
-
-if args.dir:
-    # Need to change the os directory to find all the files correctly
-    # Repository root + the wanted directory.
-    HERE = Path(__file__).resolve().parent.parent / args.dir
-    if not HERE.is_dir():
-        raise RuntimeError(f"Could not find directory {args.dir} under {HERE}")
-    os.chdir(HERE)
-else:
-    # Directory of this file
-    HERE = Path(__file__).resolve().parent
-
 # TODO: move into a JSON or other config file
 # Files need to have a relative location to the directory being tested
 # Example (when checking `python` directory):
@@ -200,25 +157,33 @@ class PyrightTool:
 
     def __init__(
         self,
-        pyright_config_file: str | Path,
+        workdir: Path,
+        pyright_config_file: io.TextIOWrapper,
         *,
         file_specific_ignores: FileSpecificIgnores | None = None,
         aliases: dict[str, str] | None = None,
-        error_file: str | Path = "temp_error_file.json",
-        should_generate_error_file: bool = True,
-        should_delete_error_file: bool = True,
-        should_log: bool = False,
+        input_file: io.TextIOWrapper | None = None,
+        error_file: io.TextIOWrapper | None = None,
+        verbose: bool = False,
     ) -> None:
-        self.pyright_config_file = pyright_config_file
+        # validate arguments
+        if not pyright_config_file.readable():
+            raise RuntimeError("pyright config file is not readable")
+        if input_file is not None and not input_file.readable():
+            raise RuntimeError("input file is not readable")
+        if error_file is not None and not error_file.writable():
+            raise RuntimeError("error file is not writable")
+
+        # save config
+        self.workdir = workdir.resolve()
+        self.pyright_config_data = self.load_config(pyright_config_file)
         self.file_specific_ignores = file_specific_ignores or {}
         self.aliases = aliases or {}
+        self.input_file = input_file
         self.error_file = error_file
-        self.should_generate_error_file = should_generate_error_file
-        self.should_delete_error_file = should_delete_error_file
-        self.should_log = should_log
+        self.verbose = verbose
 
         self.count_of_ignored_errors = 0
-
         self.check_input_correctness()
 
     def check_input_correctness(self) -> None:
@@ -247,8 +212,6 @@ class PyrightTool:
 
     def run(self) -> None:
         """Main function, putting together all logic and evaluating result."""
-        self.pyright_config_data = self.get_and_validate_pyright_config_data()
-
         self.original_pyright_results = self.get_original_pyright_results()
 
         self.all_files_to_check = self.get_all_files_to_check()
@@ -293,75 +256,71 @@ class PyrightTool:
                 print("And we have unused ignores or inconsistencies!")
             sys.exit(1)
 
-    def get_and_validate_pyright_config_data(self) -> dict[str, Any]:
-        """Verify that pyrightconfig exists and has correct data."""
-        if not os.path.isfile(self.pyright_config_file):
-            raise RuntimeError(
-                f"Pyright config file under {self.pyright_config_file} does not exist! "
-                "Tool relies on its existence, please create it."
-            )
-
+    def load_config(self, config: io.TextIOWrapper) -> dict[str, Any]:
+        """Load pyright config and validate any errors."""
         try:
-            config_data = json.loads(open(self.pyright_config_file, "r").read())
+            return json.load(config)
         except json.decoder.JSONDecodeError as err:
             raise RuntimeError(
-                f"Pyright config under {self.pyright_config_file} does not contain valid JSON! Err: {err}"
-            ) from None
+                f"Pyright config does not contain valid JSON! Err: {err}"
+            ) from err
 
-        # enableTypeIgnoreComments MUST be set to False, otherwise the "type: ignore"s
-        # will affect the original pyright result - and we need it to grab all the errors
-        # so we can handle them on our own
-        if (
-            "enableTypeIgnoreComments" not in config_data
-            or config_data["enableTypeIgnoreComments"]
-        ):
-            raise RuntimeError(
-                f"Please set '\"enableTypeIgnoreComments\": true' in {self.pyright_config_file}. "
-                "Otherwise the tool will not work as expected."
+    def get_pyright_output(self) -> str:
+        """Run pyright and return its output."""
+        # generate config with enableTypeIgnoreComments: false
+        config_data = self.pyright_config_data.copy()
+        config_data["enableTypeIgnoreComments"] = False
+        with tempfile.NamedTemporaryFile("w", suffix=".json", dir=self.workdir) as tmp:
+            json.dump(config_data, tmp)
+            tmp.flush()
+
+            cmd = (
+                "pyright",
+                "--outputjson",
+                "--project",
+                str(Path(tmp.name).resolve()),
             )
 
-        return config_data
+            # run pyright with generated config
+            result = subprocess.run(cmd, stdout=subprocess.PIPE, text=True)
+
+        # Checking if there was no non-type-checking error when running the above command
+        # Exit code 0 = all fine, no type-checking issues in pyright
+        # Exit code 1 = pyright has found some type-checking issues (expected)
+        # All other exit codes mean something non-type-related got wrong (or pyright was not found)
+        # https://github.com/microsoft/pyright/blob/main/docs/command-line.md#pyright-exit-codes
+        if result.returncode not in (0, 1):
+            raise RuntimeError(
+                f"Running '{' '.join(cmd)}' produced a non-expected exit code (see output above)."
+            )
+
+        if not result.stdout:
+            raise RuntimeError(
+                f"Running '{' '.join(cmd)}' produced no data (see output above)."
+            )
+
+        return result.stdout
 
     def get_original_pyright_results(self) -> PyrightResults:
-        """Extract all information from pyright.
+        """Extract pyright results data in a structured format.
 
-        `pyright --outputjson` will return all the results in
-        nice JSON format with `generalDiagnostics` array storing
-        all the errors - schema described in PyrightResults
+        That means either running `pyright --outputjson`, or loading the provided JSON
+        file created by an earlier run.
         """
-        if self.should_generate_error_file:
-            cmd = f"pyright -p {self.pyright_config_file} --outputjson > {self.error_file}"
-            exit_code = subprocess.call(cmd, shell=True)
-            # Checking if there was no non-type-checking error when running the above command
-            # Exit code 0 = all fine, no type-checking issues in pyright
-            # Exit code 1 = pyright has found some type-checking issues (expected)
-            # All other exit codes mean something non-type-related got wrong (or pyright was not found)
-            # https://github.com/microsoft/pyright/blob/main/docs/command-line.md#pyright-exit-codes
-            if exit_code not in (0, 1):
-                raise RuntimeError(
-                    f"Running '{cmd}' produced a non-expected exit code (see output above)."
-                )
+        if self.input_file is not None:
+            pyright_result_str = self.input_file.read()
+        else:
+            pyright_result_str = self.get_pyright_output()
 
-            if not os.path.isfile(self.error_file):
-                raise RuntimeError(
-                    f"Pyright error file under {self.error_file} was not generated by running '{cmd}'."
-                )
+        if self.error_file is not None:
+            self.error_file.write(pyright_result_str)
 
         try:
-            pyright_results: PyrightResults = json.loads(
-                open(self.error_file, "r").read()
-            )
-        except FileNotFoundError:
-            raise RuntimeError(
-                f"Error file under {self.error_file} does not exist!"
-            ) from None
+            pyright_results: PyrightResults = json.loads(pyright_result_str)
         except json.decoder.JSONDecodeError as err:
             raise RuntimeError(
-                f"Error file under {self.error_file} does not contain valid JSON! Err: {err}"
+                f"Input error file does not contain valid JSON! Err: {err}"
             ) from None
-
-        if self.should_delete_error_file:
-            os.remove(self.error_file)
 
         return pyright_results
 
@@ -412,38 +371,25 @@ class PyrightTool:
 
     def get_all_files_to_check(self) -> set[str]:
         """Get all files to be analyzed by pyright, based on its config."""
-        all_files: set[str] = set()
+        all_files: set[Path] = set()
 
-        if "include" in self.pyright_config_data:
-            for dir_or_file in self.pyright_config_data["include"]:
-                for file in self.get_all_py_files_recursively(dir_or_file):
-                    all_files.add(file)
-        else:
-            # "include" is missing, we should analyze all files in current dir
-            for file in self.get_all_py_files_recursively("."):
-                all_files.add(file)
+        def _all_files(entry: str) -> Iterator[Path]:
+            file_or_dir = Path(self.workdir / entry)
+            if file_or_dir.is_file():
+                yield file_or_dir
+            else:
+                yield from file_or_dir.glob("**/*.py")
 
-        if "exclude" in self.pyright_config_data:
-            for dir_or_file in self.pyright_config_data["exclude"]:
-                for file in self.get_all_py_files_recursively(dir_or_file):
-                    if file in all_files:
-                        all_files.remove(file)
+        # include all relevant files.
+        # use either the entries in `include`, or the current directory
+        for entry in self.pyright_config_data.get("include", ("",)):
+            all_files.update(_all_files(entry))
 
-        return all_files
+        # exclude specified files
+        for entry in self.pyright_config_data.get("exclude", ()):
+            all_files -= set(_all_files(entry))
 
-    @staticmethod
-    def get_all_py_files_recursively(dir_or_file: str) -> set[str]:
-        """Return all python files in certain directory (or the file itself)."""
-        if os.path.isfile(dir_or_file):
-            return set(str(HERE / dir_or_file))
-
-        all_files: set[str] = set()
-        for root, _, files in os.walk(dir_or_file):
-            for file in files:
-                if file.endswith(".py"):
-                    all_files.add(str(HERE / os.path.join(root, file)))
-
-        return all_files
+        return {str(f) for f in all_files}
 
     def get_all_pyright_ignores(self) -> FileIgnores:
         """Get ignore information from all the files to be analyzed."""
@@ -618,7 +564,7 @@ class PyrightTool:
 
     def log_ignore(self, error: Error, reason: str) -> None:
         """Print the action of ignoring certain error into the console."""
-        if self.should_log:
+        if self.verbose:
             err = self.get_human_readable_error_string(error)
             print(f"\nError ignored. Reason: {reason}.\nErr: {err}")
 
@@ -634,16 +580,53 @@ class PyrightTool:
         return f"{file}:{line + 1}: - error: {message} ({rule})\n"
 
 
+@click.command()
+@click.argument(
+    "workdir", type=click.Path(exists=True, file_okay=False, dir_okay=True), default="."
+)
+@click.option(
+    "--config",
+    type=click.File("r"),
+    help="Pyright configuration file. Defaults to pyrightconfig.json in the selected (or current) directory.",
+)
+@click.option(
+    "-o",
+    "--output",
+    "output_file",
+    type=click.File("w"),
+    help="Save pyright JSON output to file",
+)
+@click.option(
+    "-i",
+    "--input",
+    "input_file",
+    type=click.File("r"),
+    help="Use input file instead of running pyright",
+)
+@click.option("-v", "--verbose", is_flag=True, help="Print verbose output")
+def main(config, input_file, output_file, verbose, workdir):
+    workdir = Path(workdir)
+    if config is None:
+        config_path = workdir / "pyrightconfig.json"
+        try:
+            config = open(config_path)
+        except Exception:
+            raise click.ClickException(f"Failed to load {config_path}")
+
+    try:
+        tool = PyrightTool(
+            workdir=workdir,
+            pyright_config_file=config,
+            file_specific_ignores=FILE_SPECIFIC_IGNORES,
+            aliases=ALIASES,
+            input_file=input_file,
+            error_file=output_file,
+            verbose=verbose,
+        )
+        tool.run()
+    except Exception as e:
+        raise click.ClickException(str(e)) from e
+
+
 if __name__ == "__main__":
-    tool = PyrightTool(
-        pyright_config_file=HERE / "pyrightconfig.json",
-        file_specific_ignores={
-            str(HERE / k): v for k, v in FILE_SPECIFIC_IGNORES.items()
-        },
-        aliases=ALIASES,
-        error_file="errors_for_pyright_temp.json",
-        should_generate_error_file=SHOULD_GENERATE_ERROR_FILE,
-        should_delete_error_file=SHOULD_DELETE_ERROR_FILE,
-        should_log=SHOULD_LOG,
-    )
-    tool.run()
+    main()
