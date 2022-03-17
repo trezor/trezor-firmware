@@ -1,4 +1,3 @@
-import storage.device
 from trezor import storagedevice, ui, wire
 from trezor.enums import ButtonRequestType
 from trezor.messages import SetU2FCounter, Success
@@ -21,6 +20,6 @@ async def set_u2f_counter(ctx: wire.Context, msg: SetU2FCounter) -> Success:
         br_code=ButtonRequestType.ProtectCall,
     )
 
-    storage.device.set_u2f_counter(msg.u2f_counter)
+    storagedevice.set_u2f_counter(msg.u2f_counter)
 
     return Success(message="U2F counter set")

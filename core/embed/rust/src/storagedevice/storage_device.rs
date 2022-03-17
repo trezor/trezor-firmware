@@ -15,6 +15,7 @@ use core::convert::{TryFrom, TryInto};
 // - raising custom exceptions into python
 
 const FLAG_PUBLIC: u8 = 0x80;
+const FLAGS_WRITE: u8 = 0xC0;
 
 const APP_DEVICE: u8 = 0x01;
 
@@ -93,7 +94,8 @@ extern "C" {
     // fn storage_set(key: u16, val: *const cty::c_void, len: u16) ->
     // secbool::Secbool;
     fn storage_set(key: u16, val: *const u8, len: u16) -> secbool::Secbool;
-
+    fn storage_next_counter(key: u16, count: *mut u32) -> secbool::Secbool;
+    fn storage_set_counter(key: u16, count: u32) -> secbool::Secbool;
 }
 
 extern "C" fn storagedevice_is_version_stored() -> Obj {
@@ -524,6 +526,24 @@ extern "C" fn storagedevice_set_sd_salt_auth_key(auth_key: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
+extern "C" fn storagedevice_get_next_u2f_counter() -> Obj {
+    let block = || {
+        let key = _get_appkey_u2f(U2F_COUNTER, true);
+        storagedevice_storage_get_next_counter(key).try_into()
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagedevice_set_u2f_counter(count: Obj) -> Obj {
+    let block = || {
+        let count = u32::try_from(count)?;
+
+        let key = _get_appkey_u2f(U2F_COUNTER, true);
+        Ok(storagedevice_storage_set_counter(key, count).into())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
 pub fn storagedevice_storage_get(key: u16) -> Vec<u8, MAX_LEN> {
     let mut buf: [u8; MAX_LEN] = [0; MAX_LEN];
     let mut len: u16 = 0;
@@ -567,6 +587,12 @@ pub fn storagedevice_storage_get_homescreen(key: u16) -> Vec<u8, HOMESCREEN_MAXS
     vector_result
 }
 
+pub fn storagedevice_storage_get_next_counter(key: u16) -> u32 {
+    let mut count: u32 = 0;
+    unsafe { storage_next_counter(key, &mut count as *mut _) };
+    count
+}
+
 pub fn storagedevice_storage_get_bool(key: u16) -> bool {
     let result = storagedevice_storage_get(key);
     result.len() == 1 && result[0] == _TRUE_BYTE
@@ -604,6 +630,10 @@ pub fn storagedevice_storage_get_u8(key: u16) -> Option<u8> {
 
 pub fn storagedevice_storage_set(key: u16, val: *const u8, len: u16) -> bool {
     matches!(unsafe { storage_set(key, val, len) }, secbool::TRUE)
+}
+
+pub fn storagedevice_storage_set_counter(key: u16, count: u32) -> bool {
+    matches!(unsafe { storage_set_counter(key, count) }, secbool::TRUE)
 }
 
 pub fn storagedevice_storage_set_bool(key: u16, val: bool) -> bool {
@@ -646,6 +676,15 @@ fn _get_appkey(key: u8, is_public: bool) -> u16 {
         APP_DEVICE | FLAG_PUBLIC
     } else {
         APP_DEVICE
+    };
+    ((app as u16) << 8) | key as u16
+}
+
+fn _get_appkey_u2f(key: u8, writable_locked: bool) -> u16 {
+    let app = if writable_locked {
+        APP_DEVICE | FLAGS_WRITE
+    } else {
+        APP_DEVICE | FLAG_PUBLIC
     };
     ((app as u16) << 8) | key as u16
 }
@@ -827,6 +866,14 @@ pub static mp_module_trezorstoragedevice: Module = obj_module! {
     /// def set_sd_salt_auth_key(auth_key: bytes | None) -> bool:
     ///     """The key used to check the authenticity of the SD card salt."""
     Qstr::MP_QSTR_set_sd_salt_auth_key => obj_fn_1!(storagedevice_set_sd_salt_auth_key).as_obj(),
+
+    /// def get_next_u2f_counter() -> int:
+    ///     """Get next U2F counter."""
+    Qstr::MP_QSTR_get_next_u2f_counter => obj_fn_0!(storagedevice_get_next_u2f_counter).as_obj(),
+
+    /// def set_u2f_counter(count: int) -> bool:
+    ///     """Set U2F counter."""
+    Qstr::MP_QSTR_set_u2f_counter => obj_fn_1!(storagedevice_set_u2f_counter).as_obj(),
 };
 
 #[cfg(test)]
@@ -843,6 +890,18 @@ mod tests {
     fn get_appkey_public() {
         let result = _get_appkey(0x11, true);
         assert_eq!(result, 0x8111);
+    }
+
+    #[test]
+    fn get_appkey_u2f_writable_locked() {
+        let result = _get_appkey_u2f(0x09, true);
+        assert_eq!(result, 0xC109);
+    }
+
+    #[test]
+    fn get_appkey_u2f_not_writable_locked() {
+        let result = _get_appkey_u2f(0x09, false);
+        assert_eq!(result, 0x8109);
     }
 
     #[test]

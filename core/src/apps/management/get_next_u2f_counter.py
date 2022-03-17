@@ -1,4 +1,3 @@
-import storage.device
 from trezor import storagedevice, ui, wire
 from trezor.enums import ButtonRequestType
 from trezor.messages import GetNextU2FCounter, NextU2FCounter
@@ -20,4 +19,4 @@ async def get_next_u2f_counter(
         br_code=ButtonRequestType.ProtectCall,
     )
 
-    return NextU2FCounter(u2f_counter=storage.device.next_u2f_counter())
+    return NextU2FCounter(u2f_counter=storagedevice.get_next_u2f_counter())
