@@ -8,10 +8,10 @@ from storage import common
 # TODO: export all the constants also in storagedevice?
 
 if TYPE_CHECKING:
-    from trezor.enums import BackupType
+    #     from trezor.enums import BackupType
     from typing_extensions import Literal
 
-    StorageSafetyCheckLevel = Literal[0, 1]
+#     StorageSafetyCheckLevel = Literal[0, 1]
 
 # Namespace:
 _NAMESPACE = common.APP_DEVICE
@@ -20,19 +20,19 @@ _NAMESPACE = common.APP_DEVICE
 # Keys:
 DEVICE_ID                  = const(0x00)  # bytes
 # _VERSION                   = const(0x01)  # int
-_MNEMONIC_SECRET           = const(0x02)  # bytes
+# _MNEMONIC_SECRET           = const(0x02)  # bytes
 # _LANGUAGE                  = const(0x03)  # str
 _LABEL                     = const(0x04)  # str
 # _USE_PASSPHRASE            = const(0x05)  # bool (0x01 or empty)
 # _HOMESCREEN                = const(0x06)  # bytes
-_NEEDS_BACKUP              = const(0x07)  # bool (0x01 or empty)
+# _NEEDS_BACKUP              = const(0x07)  # bool (0x01 or empty)
 # _FLAGS                     = const(0x08)  # int
 U2F_COUNTER                = const(0x09)  # int
 # _PASSPHRASE_ALWAYS_ON_DEVICE = const(0x0A)  # bool (0x01 or empty)
 # _UNFINISHED_BACKUP         = const(0x0B)  # bool (0x01 or empty)
 # _AUTOLOCK_DELAY_MS         = const(0x0C)  # int
-_NO_BACKUP                 = const(0x0D)  # bool (0x01 or empty)
-_BACKUP_TYPE               = const(0x0E)  # int
+# _NO_BACKUP                 = const(0x0D)  # bool (0x01 or empty)
+# _BACKUP_TYPE               = const(0x0E)  # int
 # _ROTATION                  = const(0x0F)  # int
 # _SLIP39_IDENTIFIER         = const(0x10)  # bool
 # _SLIP39_ITERATION_EXPONENT = const(0x11)  # int
@@ -122,21 +122,21 @@ def set_label(label: str) -> None:
 #     return common.get(_NAMESPACE, _MNEMONIC_SECRET)
 
 
-def get_backup_type() -> BackupType:
-    from trezor.enums import BackupType
+# def get_backup_type() -> BackupType:
+#     from trezor.enums import BackupType
 
-    backup_type = common.get_uint8(_NAMESPACE, _BACKUP_TYPE)
-    if backup_type is None:
-        backup_type = BackupType.Bip39
+#     backup_type = common.get_uint8(_NAMESPACE, _BACKUP_TYPE)
+#     if backup_type is None:
+#         backup_type = BackupType.Bip39
 
-    if backup_type not in (
-        BackupType.Bip39,
-        BackupType.Slip39_Basic,
-        BackupType.Slip39_Advanced,
-    ):
-        # Invalid backup type
-        raise RuntimeError
-    return backup_type  # type: ignore [int-into-enum]
+#     if backup_type not in (
+#         BackupType.Bip39,
+#         BackupType.Slip39_Basic,
+#         BackupType.Slip39_Advanced,
+#     ):
+#         # Invalid backup type
+#         raise RuntimeError
+#     return backup_type  # type: ignore [int-into-enum]
 
 
 # def is_passphrase_enabled() -> bool:

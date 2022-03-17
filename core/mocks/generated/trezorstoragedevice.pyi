@@ -109,6 +109,11 @@ def no_backup() -> bool:
 
 
 # rust/src/storagedevice/storage_device.rs
+def get_backup_type() -> BackupTypeInt:
+    """Get backup type."""
+
+
+# rust/src/storagedevice/storage_device.rs
 def get_homescreen() -> bytes | None:
     """Get homescreen."""
 

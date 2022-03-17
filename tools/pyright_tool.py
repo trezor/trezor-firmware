@@ -50,12 +50,12 @@ from pathlib import Path
 from typing import Any, Final, TypedDict, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    LineIgnores = list[LineIgnore]
+    LineIgnores = list["LineIgnore"]
 
     FileIgnores = dict[str, LineIgnores]
-    FileSpecificIgnores = dict[str, list[FileSpecificIgnore]]
+    FileSpecificIgnores = dict[str, list["FileSpecificIgnore"]]
 
-    PyrightOffIgnores = list[PyrightOffIgnore]
+    PyrightOffIgnores = list["PyrightOffIgnore"]
     FilePyrightOffIgnores = dict[str, PyrightOffIgnores]
 
 
@@ -586,6 +586,9 @@ class PyrightTool:
         ignores: LineIgnores = []
         with open(file, "r") as f:
             for index, line in enumerate(f):
+                if line.strip().startswith("#"):
+                    continue
+
                 if self.IGNORE_PATTERN in line:
                     ignore_statements = self.get_ignore_statements(line)
                     if not ignore_statements:

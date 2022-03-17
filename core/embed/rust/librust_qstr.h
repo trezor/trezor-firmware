@@ -40,6 +40,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_needs_backup;
   MP_QSTR_set_backed_up;
   MP_QSTR_no_backup;
+  MP_QSTR_get_backup_type;
   MP_QSTR_get_homescreen;
   MP_QSTR_set_homescreen;
   MP_QSTR_get_slip39_identifier;
