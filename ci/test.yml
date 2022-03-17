@@ -632,7 +632,7 @@ core unix memory profiler:
 # Connect
 
 connect test core:
-  image: registry.gitlab.com/satoshilabs/trezor/trezor-user-env/trezor-user-env:latest
+  image: ghcr.io/trezor/trezor-user-env
   stage: test
   needs:
     - core unix frozen debug build
@@ -643,7 +643,7 @@ connect test core:
     - chmod u+x /trezor-user-env/src/binaries/firmware/bin/trezor-emu-core-v2.99.99
     - nix-shell -p autoPatchelfHook SDL2 SDL2_image --run "autoPatchelf /trezor-user-env/src/binaries/firmware/bin/trezor-emu-core-v2.99.99"
   script:
-    - /trezor-user-env/run.sh &
+    - /trezor-user-env/run-nix.sh &
     - nix-shell --run "tests/connect_tests/connect_tests.sh 2.99.99"
   after_script:
     - cp /trezor-user-env/logs/debugging.log trezor-user-env-debugging.log
