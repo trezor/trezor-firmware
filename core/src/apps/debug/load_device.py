@@ -1,5 +1,3 @@
-import storage
-import storage.device
 from trezor import config, storagedevice, wire
 from trezor.crypto import bip39, slip39
 from trezor.enums import BackupType
@@ -43,7 +41,7 @@ async def load_device(ctx: wire.Context, msg: LoadDevice) -> Success:
         no_backup=msg.no_backup is True,
     )
     storagedevice.set_passphrase_enabled(bool(msg.passphrase_protection))
-    storage.device.set_label(msg.label or "")
+    storagedevice.set_label(msg.label or "")
     if msg.pin:
         config.change_pin("", msg.pin, None, None)
 

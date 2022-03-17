@@ -14,3 +14,7 @@ pub fn shuffle<T>(slice: &mut [T]) {
         slice.swap(i, j);
     }
 }
+
+// TODO: create random_bytes()
+// from trezorcrypto import random
+// random_buffer

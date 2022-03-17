@@ -43,7 +43,7 @@ def get_features() -> Features:
         revision=utils.SCM_REVISION,
         model=utils.MODEL,
         device_id=storage.device.get_device_id(),
-        label=storage.device.get_label(),
+        label=storagedevice.get_label(),
         pin_protection=config.has_pin(),
         unlocked=config.is_unlocked(),
     )

@@ -60,7 +60,7 @@ async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
         if msg.u2f_counter is not None:
             storagedevice.set_u2f_counter(msg.u2f_counter)
         if msg.label is not None:
-            storage.device.set_label(msg.label)
+            storagedevice.set_label(msg.label)
 
     storage.recovery.set_in_progress(True)
     storage.recovery.set_dry_run(bool(msg.dry_run))
