@@ -19,8 +19,9 @@ core unit test:
     - core unix regular build
   script:
     - nix-shell --run "poetry run make -C core test | ts -s"
-    - nix-shell --run "poetry run make -C core test_rust | ts -s"
     - nix-shell --run "poetry run make -C core clippy | ts -s"
+    - nix-shell --run "poetry run make -C core clean build_unix UI2=1 | ts -s"
+    - nix-shell --run "poetry run make -C core test_rust UI2=1 | ts -s"
 
 core unit test asan:
   stage: test
@@ -35,8 +36,8 @@ core unit test asan:
     LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
   script:
     - nix-shell --run "poetry run make -C core test | ts -s"
-    - nix-shell --run "poetry run make -C core test_rust | ts -s"
-    - nix-shell --run "poetry run make -C core clippy | ts -s"
+    - nix-shell --run "poetry run make -C core clean build_unix UI2=1 | ts -s"
+    - nix-shell --run "poetry run make -C core test_rust UI2=1 | ts -s"
 
 core unit test t1:
   stage: test
