@@ -5,7 +5,11 @@ from ubinascii import hexlify
 import storage.cache
 from storage import common
 
+# TODO: try ... from trezorstoragedevice import *
+
+
 # TODO: export all the constants also in storagedevice?
+# majority of those
 
 if TYPE_CHECKING:
     #     from trezor.enums import BackupType
@@ -105,17 +109,17 @@ def get_device_id() -> str:
 #     common.set(_NAMESPACE, _ROTATION, value.to_bytes(2, "big"), True)  # public
 
 
-def get_label() -> str | None:
-    label = common.get(_NAMESPACE, _LABEL, True)  # public
-    if label is None:
-        return None
-    return label.decode()
+# def get_label() -> str | None:
+#     label = common.get(_NAMESPACE, _LABEL, True)  # public
+#     if label is None:
+#         return None
+#     return label.decode()
 
 
-def set_label(label: str) -> None:
-    if len(label) > LABEL_MAXLENGTH:
-        raise ValueError  # label too long
-    common.set(_NAMESPACE, _LABEL, label.encode(), True)  # public
+# def set_label(label: str) -> None:
+#     if len(label) > LABEL_MAXLENGTH:
+#         raise ValueError  # label too long
+#     common.set(_NAMESPACE, _LABEL, label.encode(), True)  # public
 
 
 # def get_mnemonic_secret() -> bytes | None:

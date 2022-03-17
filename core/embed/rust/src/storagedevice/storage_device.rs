@@ -1,18 +1,25 @@
 use crate::{
-    micropython::{buffer::Buffer, map::Map, module::Module, obj::Obj, qstr::Qstr},
+    error::Error,
+    micropython::{
+        buffer::{Buffer, StrBuffer},
+        map::Map,
+        module::Module,
+        obj::Obj,
+        qstr::Qstr,
+    },
     trezorhal::secbool,
     util,
 };
 
+use cstr_core::cstr;
 use heapless::Vec;
 
-use core::convert::{TryFrom, TryInto};
+use core::{
+    convert::{TryFrom, TryInto},
+    str,
+};
 
 // TODO: can we import messages enums?
-
-// MISSING FUNCTIONALITY:
-// - returning strings into python
-// - raising custom exceptions into python
 
 const FLAG_PUBLIC: u8 = 0x80;
 const FLAGS_WRITE: u8 = 0xC0;
@@ -76,7 +83,7 @@ const AUTOLOCK_DELAY_MAXIMUM: u32 = 0x2000_0000; // ~6 days
 
 // Length of SD salt auth tag.
 // Other SD-salt-related constants are in core/src/storage/sd_salt.py
-const SD_SALT_AUTH_KEY_LEN_BYTES: u8 = 16;
+const SD_SALT_AUTH_KEY_LEN_BYTES: usize = 16;
 
 const STORAGE_VERSION_CURRENT: u8 = 0x02;
 
@@ -147,14 +154,12 @@ extern "C" fn storagedevice_set_rotation(rotation: Obj) -> Obj {
     let block = || {
         let rotation = u16::try_from(rotation)?;
 
-        // TODO: how to raise a micropython exception?
         if ![0, 90, 180, 270].contains(&rotation) {
-            return Ok(false.into());
-            // return Error::ValueError(cstr!("Not valid rotation"));
+            Err(Error::ValueError(cstr!("Not valid rotation")))
+        } else {
+            let key = _get_appkey(_ROTATION, true);
+            Ok(storagedevice_storage_set_u16(key, rotation).into())
         }
-
-        let key = _get_appkey(_ROTATION, true);
-        Ok(storagedevice_storage_set_u16(key, rotation).into())
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -164,30 +169,27 @@ extern "C" fn storagedevice_get_label() -> Obj {
         let key = _get_appkey(_LABEL, true);
         let result = &storagedevice_storage_get(key) as &[u8];
         if result.is_empty() {
-            //  TODO: it did not work with None::<&[u8]>, but it should not matter
-            return Ok(None::<u16>.into());
+            Ok(Obj::const_none())
+        } else {
+            // TODO: replace unwrap() with "?"
+            str::from_utf8(result).unwrap().try_into()
         }
-        // TODO: how to convert into a string?
-        // let label = StrBuffer::try_from(*result)?;
-        result.try_into()
     };
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_set_label(label: Obj) -> Obj {
     let block = || {
-        let label = Buffer::try_from(label)?;
+        let label = StrBuffer::try_from(label)?;
         let len = label.len() as u16;
 
-        // TODO: how to raise a micropython exception?
         if len > LABEL_MAXLENGTH {
-            return Ok(false.into());
-            // return Error::ValueError(cstr!("Label is too long"));
+            Err(Error::ValueError(cstr!("Label is too long")))
+        } else {
+            let val = label.as_ptr();
+            let key = _get_appkey(_LABEL, true);
+            Ok(storagedevice_storage_set(key, val, len).into())
         }
-
-        let val = label.as_ptr();
-        let key = _get_appkey(_LABEL, true);
-        Ok(storagedevice_storage_set(key, val, len).into())
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -337,13 +339,11 @@ extern "C" fn storagedevice_get_backup_type() -> Obj {
         // TODO: we could import the BackupType enum
         let backup_type = storagedevice_storage_get_u8(key).unwrap_or(0);
 
-        // TODO: how to raise a micropython exception?
         if ![0, 1, 2].contains(&backup_type) {
-            return Ok(0u8.into());
-            // return Error::ValueError(cstr!("Invalid backup type"));
+            Err(Error::ValueError(cstr!("Invalid backup type")))
+        } else {
+            Ok(backup_type.into())
         }
-
-        Ok(backup_type.into())
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -353,9 +353,10 @@ extern "C" fn storagedevice_get_homescreen() -> Obj {
         let key = _get_appkey(_HOMESCREEN, false);
         let result = &storagedevice_storage_get_homescreen(key) as &[u8];
         if result.is_empty() {
-            return Ok(None::<u16>.into());
+            Ok(Obj::const_none())
+        } else {
+            result.try_into()
         }
-        result.try_into()
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -365,16 +366,13 @@ extern "C" fn storagedevice_set_homescreen(homescreen: Obj) -> Obj {
         let homescreen = Buffer::try_from(homescreen)?;
         let len = homescreen.len() as u16;
 
-        // TODO: how to raise a micropython exception?
         if len > HOMESCREEN_MAXSIZE as u16 {
-            return Ok(false.into());
-            // return Error::ValueError(cstr!("Homescreen too large"));
+            Err(Error::ValueError(cstr!("Homescreen too large")))
+        } else {
+            let val = homescreen.as_ptr();
+            let key = _get_appkey(_HOMESCREEN, false);
+            Ok(storagedevice_storage_set(key, val, len).into())
         }
-
-        let val = homescreen.as_ptr();
-
-        let key = _get_appkey(_HOMESCREEN, false);
-        Ok(storagedevice_storage_set(key, val, len).into())
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -480,14 +478,12 @@ extern "C" fn storagedevice_set_safety_check_level(level: Obj) -> Obj {
     let block = || {
         let level = u8::try_from(level)?;
 
-        // TODO: how to raise a micropython exception?
         if !SAFETY_CHECK_LEVELS.contains(&level) {
-            return Ok(false.into());
-            // return Error::ValueError(cstr!("Not valid safety level"));
+            return Err(Error::ValueError(cstr!("Not valid safety level")));
+        } else {
+            let key = _get_appkey(_SAFETY_CHECK_LEVEL, false);
+            Ok(storagedevice_storage_set_u8(key, level).into())
         }
-
-        let key = _get_appkey(_SAFETY_CHECK_LEVEL, false);
-        Ok(storagedevice_storage_set_u8(key, level).into())
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -496,13 +492,11 @@ extern "C" fn storagedevice_get_sd_salt_auth_key() -> Obj {
     let block = || {
         let key = _get_appkey(_SD_SALT_AUTH_KEY, true);
         let result = &storagedevice_storage_get(key) as &[u8];
-        if result.is_empty() {
-            return Ok(None::<u16>.into());
-        } else if result.len() != SD_SALT_AUTH_KEY_LEN_BYTES as usize {
-            // TODO: how to raise a micropython exception?
-            // return Error::ValueError(cstr!("Invalid key length"));
+        match result.len() {
+            0 => Ok(Obj::const_none()),
+            SD_SALT_AUTH_KEY_LEN_BYTES => result.try_into(),
+            _ => Err(Error::ValueError(cstr!("Invalid key length"))),
         }
-        result.try_into()
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -512,15 +506,13 @@ extern "C" fn storagedevice_set_sd_salt_auth_key(auth_key: Obj) -> Obj {
         let auth_key = Buffer::try_from(auth_key)?;
 
         let key = _get_appkey(_SD_SALT_AUTH_KEY, true);
-        if auth_key.is_empty() {
-            Ok(storagedevice_storage_delete(key).into())
-        } else {
-            // TODO: how to raise a micropython exception?
-            if auth_key.len() != SD_SALT_AUTH_KEY_LEN_BYTES as usize {
-                return Ok(false.into());
-                // return Error::ValueError(cstr!("Invalid key length"));
+
+        match auth_key.len() {
+            0 => Ok(storagedevice_storage_delete(key).into()),
+            SD_SALT_AUTH_KEY_LEN_BYTES => {
+                Ok(storagedevice_storage_set(key, auth_key.as_ptr(), auth_key.len() as u16).into())
             }
-            Ok(storagedevice_storage_set(key, auth_key.as_ptr(), auth_key.len() as u16).into())
+            _ => Err(Error::ValueError(cstr!("Invalid key length"))),
         }
     };
     unsafe { util::try_or_raise(block) }

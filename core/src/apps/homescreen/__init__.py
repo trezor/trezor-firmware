@@ -1,7 +1,6 @@
 from typing import Any
 
 import storage.cache
-import storage.device
 from trezor import res, storagedevice, ui
 
 
@@ -10,7 +9,7 @@ class HomescreenBase(ui.Layout):
 
     def __init__(self) -> None:
         super().__init__()
-        self.label = storage.device.get_label() or "My Trezor"
+        self.label = storagedevice.get_label() or "My Trezor"
         self.repaint = storage.cache.homescreen_shown is not self.RENDER_INDICATOR
 
     def get_image(self) -> bytes:
