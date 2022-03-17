@@ -3,8 +3,7 @@ from micropython import const
 from typing import Iterable
 from ubinascii import hexlify
 
-import storage.device
-from trezor import log, utils
+from trezor import log, storagedevice, utils
 from trezor.crypto import bip32, chacha20poly1305, der, hashlib, hmac, random
 from trezor.crypto.curve import ed25519, nist256p1
 
@@ -92,7 +91,7 @@ class Credential:
         return None
 
     def next_signature_counter(self) -> int:
-        return storage.device.next_u2f_counter() or 0
+        return storagedevice.get_next_u2f_counter() or 0
 
     @staticmethod
     def from_bytes(data: bytes, rp_id_hash: bytes) -> "Credential":
@@ -128,7 +127,7 @@ class Fido2Credential(Credential):
         return True
 
     def generate_id(self) -> None:
-        self.creation_time = storage.device.next_u2f_counter() or 0
+        self.creation_time = self.next_signature_counter()
 
         if not self.check_required_fields():
             raise AssertionError

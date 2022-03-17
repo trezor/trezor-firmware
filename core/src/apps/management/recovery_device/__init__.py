@@ -58,7 +58,7 @@ async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
 
         storagedevice.set_passphrase_enabled(bool(msg.passphrase_protection))
         if msg.u2f_counter is not None:
-            storage.device.set_u2f_counter(msg.u2f_counter)
+            storagedevice.set_u2f_counter(msg.u2f_counter)
         if msg.label is not None:
             storage.device.set_label(msg.label)
 

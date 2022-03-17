@@ -247,12 +247,12 @@ def set_label(label: str) -> None:
 #     common.set(_NAMESPACE, _AUTOLOCK_DELAY_MS, delay_ms.to_bytes(4, "big"))
 
 
-def next_u2f_counter() -> int:
-    return common.next_counter(_NAMESPACE, U2F_COUNTER, writable_locked=True)
+# def next_u2f_counter() -> int:
+#     return common.next_counter(_NAMESPACE, U2F_COUNTER, writable_locked=True)
 
 
-def set_u2f_counter(count: int) -> None:
-    common.set_counter(_NAMESPACE, U2F_COUNTER, count, writable_locked=True)
+# def set_u2f_counter(count: int) -> None:
+#     common.set_counter(_NAMESPACE, U2F_COUNTER, count, writable_locked=True)
 
 
 # def set_slip39_identifier(identifier: int) -> None:

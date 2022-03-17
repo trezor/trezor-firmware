@@ -251,7 +251,9 @@ fn generate_storagedevice_bindings() {
         // storage
         .allowlist_function("storage_set")
         .allowlist_function("storage_delete")
-        .allowlist_function("storage_get");
+        .allowlist_function("storage_get")
+        .allowlist_function("storage_set_counter")
+        .allowlist_function("storage_next_counter");
 
     // Write the bindings to a file in the OUT_DIR.
     bindings
