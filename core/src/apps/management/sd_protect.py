@@ -107,8 +107,7 @@ async def sd_protect_disable(ctx: wire.Context, msg: SdProtect) -> Success:
     # Check PIN and remove salt.
     if not config.change_pin(pin, pin, salt, None):
         await error_pin_invalid(ctx)
-
-    storagedevice.set_sd_salt_auth_key(None)
+    storagedevice.set_sd_salt_auth_key(b"")
 
     try:
         # Clean up.

@@ -863,8 +863,10 @@ pub static mp_module_trezorstoragedevice: Module = obj_module! {
     ///     """The key used to check the authenticity of the SD card salt."""
     Qstr::MP_QSTR_get_sd_salt_auth_key => obj_fn_0!(storagedevice_get_sd_salt_auth_key).as_obj(),
 
-    /// def set_sd_salt_auth_key(auth_key: bytes | None) -> bool:
-    ///     """The key used to check the authenticity of the SD card salt."""
+    /// def set_sd_salt_auth_key(auth_key: bytes) -> bool:
+    ///     """The key used to check the authenticity of the SD card salt.
+    ///     Empty bytes will delete the salt.
+    ///     """
     Qstr::MP_QSTR_set_sd_salt_auth_key => obj_fn_1!(storagedevice_set_sd_salt_auth_key).as_obj(),
 
     /// def get_next_u2f_counter() -> int:
