@@ -532,6 +532,9 @@ class PyrightTool:
         ignores: LineIgnores = []
         with open(file, "r") as f:
             for index, line in enumerate(f):
+                if line.strip().startswith("#"):
+                    continue
+
                 if self.IGNORE_PATTERN in line:
                     ignore_statements = self.get_ignore_statements(line)
                     if not ignore_statements:

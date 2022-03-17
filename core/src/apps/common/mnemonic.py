@@ -1,4 +1,3 @@
-import storage.device
 from trezor import storagedevice, ui, utils, workflow
 from trezor.enums import BackupType
 
@@ -12,7 +11,7 @@ def get_secret() -> bytes | None:
 
 
 def get_type() -> BackupType:
-    return storage.device.get_backup_type()
+    return storagedevice.get_backup_type()
 
 
 def is_bip39() -> bool:

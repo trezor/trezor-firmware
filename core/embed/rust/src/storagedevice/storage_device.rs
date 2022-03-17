@@ -329,6 +329,23 @@ extern "C" fn storagedevice_no_backup() -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
+extern "C" fn storagedevice_get_backup_type() -> Obj {
+    let block = || {
+        let key = _get_appkey(_BACKUP_TYPE, false);
+        // TODO: we could import the BackupType enum
+        let backup_type = storagedevice_storage_get_u8(key).unwrap_or(0);
+
+        // TODO: how to raise a micropython exception?
+        if ![0, 1, 2].contains(&backup_type) {
+            return Ok(0u8.into());
+            // return Error::ValueError(cstr!("Invalid backup type"));
+        }
+
+        Ok(backup_type.into())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
 extern "C" fn storagedevice_get_homescreen() -> Obj {
     let block = || {
         let key = _get_appkey(_HOMESCREEN, false);
@@ -738,6 +755,10 @@ pub static mp_module_trezorstoragedevice: Module = obj_module! {
     /// def no_backup() -> bool:
     ///     """Whether there is no backup."""
     Qstr::MP_QSTR_no_backup => obj_fn_0!(storagedevice_no_backup).as_obj(),
+
+    /// def get_backup_type() -> BackupTypeInt:
+    ///     """Get backup type."""
+    Qstr::MP_QSTR_get_backup_type => obj_fn_0!(storagedevice_get_backup_type).as_obj(),
 
     /// def get_homescreen() -> bytes | None:
     ///     """Get homescreen."""
