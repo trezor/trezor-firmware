@@ -57,7 +57,7 @@ const _SAFETY_CHECK_LEVEL: u8 = 0x14;
 const _EXPERIMENTAL_FEATURES: u8 = 0x15;
 
 const SAFETY_CHECK_LEVEL_STRICT: u8 = 0;
-const SAFETY_CHECK_LEVEL_PROMPT: u8 = 0;
+const SAFETY_CHECK_LEVEL_PROMPT: u8 = 1;
 const _DEFAULT_SAFETY_CHECK_LEVEL: u8 = SAFETY_CHECK_LEVEL_STRICT;
 const SAFETY_CHECK_LEVELS: [u8; 2] = [SAFETY_CHECK_LEVEL_STRICT, SAFETY_CHECK_LEVEL_PROMPT];
 
@@ -147,6 +147,7 @@ extern "C" fn storagedevice_set_rotation(rotation: Obj) -> Obj {
 
         // TODO: how to raise a micropython exception?
         if ![0, 90, 180, 270].contains(&rotation) {
+            return Ok(false.into());
             // return Error::ValueError(cstr!("Not valid rotation"));
         }
 
@@ -212,7 +213,7 @@ extern "C" fn storagedevice_set_mnemonic_secret(
             false
         };
         let no_backup: bool = if kwargs.contains_key(Qstr::MP_QSTR_no_backup) {
-            kwargs.get(Qstr::MP_QSTR_needs_backup)?.try_into()?
+            kwargs.get(Qstr::MP_QSTR_no_backup)?.try_into()?
         } else {
             false
         };
@@ -462,6 +463,7 @@ extern "C" fn storagedevice_set_safety_check_level(level: Obj) -> Obj {
 
         // TODO: how to raise a micropython exception?
         if !SAFETY_CHECK_LEVELS.contains(&level) {
+            return Ok(false.into());
             // return Error::ValueError(cstr!("Not valid safety level"));
         }
 
@@ -496,6 +498,7 @@ extern "C" fn storagedevice_set_sd_salt_auth_key(auth_key: Obj) -> Obj {
         } else {
             // TODO: how to raise a micropython exception?
             if auth_key.len() != SD_SALT_AUTH_KEY_LEN_BYTES as usize {
+                return Ok(false.into());
                 // return Error::ValueError(cstr!("Invalid key length"));
             }
             Ok(storagedevice_storage_set(key, auth_key.as_ptr(), auth_key.len() as u16).into())
