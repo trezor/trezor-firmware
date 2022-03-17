@@ -7,12 +7,12 @@ use crate::{
         obj::Obj,
         qstr::Qstr,
     },
-    trezorhal::secbool,
+    trezorhal::{random, secbool},
     util,
 };
 
 use cstr_core::cstr;
-use heapless::Vec;
+use heapless::{String, Vec};
 
 use core::{
     convert::{TryFrom, TryInto},
@@ -191,6 +191,26 @@ extern "C" fn storagedevice_set_label(label: Obj) -> Obj {
             let val = label.as_ptr();
             let key = _get_appkey(_LABEL, true);
             Ok(storagedevice_storage_set(key, val, len).into())
+        }
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagedevice_get_device_id() -> Obj {
+    let block = || {
+        let key = _get_appkey(DEVICE_ID, true);
+        let device_id = &storagedevice_storage_get(key) as &[u8];
+
+        // TODO: is there some easier way?
+        // TODO: replace unwrap() with "?"
+        if device_id.is_empty() {
+            let new_device_id = &random::get_random_bytes(12) as &[u8];
+            let hex_id = _hexlify_bytes(new_device_id);
+            let device_id_bytes = hex_id.as_str().as_bytes();
+            storagedevice_storage_set(key, device_id_bytes.as_ptr(), device_id_bytes.len() as u16);
+            hex_id.as_str().try_into()
+        } else {
+            str::from_utf8(device_id).unwrap().try_into()
         }
     };
     unsafe { util::try_or_raise(block) }
@@ -548,13 +568,7 @@ pub fn storagedevice_storage_get(key: u16) -> Vec<u8, MAX_LEN> {
     // Would mean having Option<XXX> as the return type
 
     let result = &buf[..len as usize];
-    // TODO: can we somehow convert it more easily?
-    let mut vector_result = Vec::<u8, MAX_LEN>::new();
-    for byte in result {
-        vector_result.push(*byte).unwrap();
-    }
-
-    vector_result
+    result.iter().cloned().collect()
 }
 
 // TODO: is it worth having a special function to not allocate so much in all
@@ -693,6 +707,23 @@ fn _normalize_autolock_delay(delay_ms: u32) -> u32 {
     }
 }
 
+// TODO: could be put elsewhere to be available for all modules
+pub fn _hexlify_bytes(bytes: &[u8]) -> String<64> {
+    let mut buf = String::<64>::from("");
+    for byte in bytes {
+        fn hex_from_digit(num: u8) -> char {
+            if num < 10 {
+                (b'0' + num) as char
+            } else {
+                (b'A' + num - 10) as char
+            }
+        }
+        buf.push(hex_from_digit(byte / 16)).unwrap();
+        buf.push(hex_from_digit(byte % 16)).unwrap();
+    }
+    buf
+}
+
 #[no_mangle]
 pub static mp_module_trezorstoragedevice: Module = obj_module! {
     Qstr::MP_QSTR___name_storage__ => Qstr::MP_QSTR_trezorstoragedevice.to_obj(),
@@ -733,6 +764,10 @@ pub static mp_module_trezorstoragedevice: Module = obj_module! {
     /// def set_label(label: str) -> bool:
     ///     """Set label."""
     Qstr::MP_QSTR_set_label => obj_fn_1!(storagedevice_set_label).as_obj(),
+
+    /// def get_device_id() -> str:
+    ///     """Get device ID."""
+    Qstr::MP_QSTR_get_device_id => obj_fn_0!(storagedevice_get_device_id).as_obj(),
 
     /// def get_mnemonic_secret() -> bytes:
     ///     """Get mnemonic secret."""
@@ -916,5 +951,12 @@ mod tests {
     fn normalize_autolock_delay_normal() {
         let result = _normalize_autolock_delay(1_000_000);
         assert_eq!(result, 1_000_000);
+    }
+
+    #[test]
+    fn hexlify_bytes() {
+        let bytes: &[u8; 6] = &[52, 241, 6, 151, 173, 74];
+        let result = _hexlify_bytes(bytes);
+        assert_eq!(result, String::<64>::from("34F10697AD4A"));
     }
 }

@@ -1,9 +1,11 @@
 from micropython import const
 from typing import TYPE_CHECKING
-from ubinascii import hexlify
 
 import storage.cache
 from storage import common
+
+# from ubinascii import hexlify
+
 
 # TODO: try ... from trezorstoragedevice import *
 
@@ -82,18 +84,18 @@ SD_SALT_AUTH_KEY_LEN_BYTES = const(16)
 #     return common.get_bool(_NAMESPACE, INITIALIZED, public=True)
 
 
-def _new_device_id() -> str:
-    from trezorcrypto import random  # avoid pulling in trezor.crypto
+# def _new_device_id() -> str:
+#     from trezorcrypto import random  # avoid pulling in trezor.crypto
 
-    return hexlify(random.bytes(12)).decode().upper()
+#     return hexlify(random.bytes(12)).decode().upper()
 
 
-def get_device_id() -> str:
-    dev_id = common.get(_NAMESPACE, DEVICE_ID, public=True)
-    if not dev_id:
-        dev_id = _new_device_id().encode()
-        common.set(_NAMESPACE, DEVICE_ID, dev_id, public=True)
-    return dev_id.decode()
+# def get_device_id() -> str:
+#     dev_id = common.get(_NAMESPACE, DEVICE_ID, public=True)
+#     if not dev_id:
+#         dev_id = _new_device_id().encode()
+#         common.set(_NAMESPACE, DEVICE_ID, dev_id, public=True)
+#     return dev_id.decode()
 
 
 # def get_rotation() -> int:

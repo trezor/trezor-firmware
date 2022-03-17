@@ -44,6 +44,11 @@ def set_label(label: str) -> bool:
 
 
 # rust/src/storagedevice/storage_device.rs
+def get_device_id() -> str:
+    """Get device ID."""
+
+
+# rust/src/storagedevice/storage_device.rs
 def get_mnemonic_secret() -> bytes:
     """Get mnemonic secret."""
 

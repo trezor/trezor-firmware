@@ -42,7 +42,7 @@ def get_features() -> Features:
         patch_version=utils.VERSION_PATCH,
         revision=utils.SCM_REVISION,
         model=utils.MODEL,
-        device_id=storage.device.get_device_id(),
+        device_id=storagedevice.get_device_id(),
         label=storagedevice.get_label(),
         pin_protection=config.has_pin(),
         unlocked=config.is_unlocked(),
