@@ -23,7 +23,6 @@ from trezorlib.tools import parse_path
 
 from ...tx_cache import TxCache
 from .signtx import (
-    assert_tx_matches,
     request_finished,
     request_input,
     request_meta,

@@ -42,6 +42,12 @@ TXHASH_e5040e = bytes.fromhex(
 TXHASH_d830b8 = bytes.fromhex(
     "d830b877c3d9237a0a68be88825a296da01ac282a2efd2f671d8f17f15117b74"
 )
+TXHASH_3ac32e = bytes.fromhex(
+    "3ac32e90831d79385eee49d6030a2123cd9d009fe8ffc3d470af9a6a777a119b"
+)
+TXHASH_df862e = bytes.fromhex(
+    "df862e31da31ff84addd392f6aa89af18978a398ea258e4901ae72894b66679f"
+)
 TXHASH_e5b7e2 = bytes.fromhex(
     "e5b7e21b5ba720e81efd6bfa9f854ababdcddc75a43bfa60bf0fe069cfd1bb8a"
 )
@@ -53,12 +59,6 @@ TXHASH_65b768 = bytes.fromhex(
 )
 TXHASH_a345b8 = bytes.fromhex(
     "a345b85759b385c6446055e4c3baa77e8161a65009dc009489b48aa6587ce348"
-)
-TXHASH_3ac32e = bytes.fromhex(
-    "3ac32e90831d79385eee49d6030a2123cd9d009fe8ffc3d470af9a6a777a119b"
-)
-TXHASH_df862e = bytes.fromhex(
-    "df862e31da31ff84addd392f6aa89af18978a398ea258e4901ae72894b66679f"
 )
 TXHASH_afde2d = bytes.fromhex(
     "afde2d41702948e922150825742cda3294d80d43b8e508865c1e2d648f6d4dae"
@@ -710,11 +710,12 @@ def test_p2tr_with_proof(client: Client):
             client, "Testnet", [inp1, inp2], [out1], prev_txes=TX_CACHE_TESTNET
         )
 
-    # TODO: fails with CHECK_ON_CHAIN=1 - tx_hex is different
-    assert_tx_matches(
-        serialized_tx,
-        hash_link="https://tbtc1.trezor.io/api/tx/48ec6dc7bb772ff18cbce0135fedda7c0e85212c7b2f85a5d0cc7a917d77c48a",
-        tx_hex="01000000000102ae4d6d8f642d1e5c8608e5b8430dd89432da2c7425081522e9482970412ddeaf0200000000ffffffffbf1cff9e0fc816acdc2753af9a45c1a6e92c04d0cff2b858372475b6abd912400000000000ffffffff0128a2010000000000225120e120bd124f345d412a91b50cb7e07650a448e90f48afd861b575a664b985b97f000140b524eaf406d413e19d7d32f7133273728f35b28509ac58dfd817f6dfbbac9901db21cd1ba4c2323c64bede38a7512647369d4767c645a915482bcf5167dcd77100000000",
+    # Transaction does not exist on the blockchain, not using assert_tx_matches()
+    # Transaction hex changed with fix #2085, all other details are the same as this tx:
+    # https://tbtc1.trezor.io/api/tx/48ec6dc7bb772ff18cbce0135fedda7c0e85212c7b2f85a5d0cc7a917d77c48a
+    assert (
+        serialized_tx.hex()
+        == "01000000000102ae4d6d8f642d1e5c8608e5b8430dd89432da2c7425081522e9482970412ddeaf0200000000ffffffffbf1cff9e0fc816acdc2753af9a45c1a6e92c04d0cff2b858372475b6abd912400000000000ffffffff0128a2010000000000225120e120bd124f345d412a91b50cb7e07650a448e90f48afd861b575a664b985b97f000140b524eaf406d413e19d7d32f7133273728f35b28509ac58dfd817f6dfbbac9901db21cd1ba4c2323c64bede38a7512647369d4767c645a915482bcf5167dcd77100000000"
     )
 
     # Test corrupted ownership proof.

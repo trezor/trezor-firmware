@@ -54,6 +54,12 @@ TXHASH_091446 = bytes.fromhex(
 TXHASH_65b811 = bytes.fromhex(
     "65b811d3eca0fe6915d9f2d77c86c5a7f19bf66b1b1253c2c51cb4ae5f0c017b"
 )
+TXHASH_ec5194 = bytes.fromhex(
+    "ec519494bea3746bd5fbdd7a15dac5049a873fa674c67e596d46505b9b835425"
+)
+TXHASH_c96621 = bytes.fromhex(
+    "c96621a96668f7dd505c4deb9ee2b2038503a5daa4888242560e9b640cca8819"
+)
 
 
 def test_send_p2tr(client: Client):
@@ -61,8 +67,8 @@ def test_send_p2tr(client: Client):
         # tb1pn2d0yjeedavnkd8z8lhm566p0f2utm3lgvxrsdehnl94y34txmts5s7t4c
         address_n=parse_path("m/86h/1h/0h/1/0"),
         amount=4_600,
-        prev_hash=TXHASH_7956f1,
-        prev_index=1,
+        prev_hash=TXHASH_ec5194,
+        prev_index=0,
         script_type=messages.InputScriptType.SPENDTAPROOT,
     )
     out1 = messages.TxOutputType(
@@ -88,11 +94,10 @@ def test_send_p2tr(client: Client):
             client, "Testnet", [inp1], [out1], prev_txes=TX_API
         )
 
-    # TODO: fails with CHECK_ON_CHAIN=1 - tx_hex is different
     assert_tx_matches(
         serialized_tx,
-        hash_link="https://tbtc1.trezor.io/api/tx/901593bed347678d9762fdee728c35dc4ec3cfdc3728a4d72dcaab3751122e85",
-        tx_hex="010000000001017b350e3faca092f39883d7086cdd502c82b6f0314ab61541b062733edef156790100000000ffffffff016211000000000000225120e9af2fc69e20b0be2629cd0e9c34da9f3ef56af7beac4fb4298262bc5a45ec5d01401039f62b3a327289b855a7fe72ed503d5d8f75af5a31a48efe38c136806211b26a3f91bb1e343dcc24a6f3c81ac5ed76d15a8e7fef731bd4a7454283524fde8600000000",
+        hash_link="https://tbtc1.trezor.io/api/tx/6dfac2f0d66e1972fea2bca80b6d6db80f6f48deacfdef42f15ff9625acdca59",
+        tx_hex="010000000001012554839b5b50466d597ec674a63f879a04c5da157addfbd56b74a3be949451ec0000000000ffffffff016211000000000000225120e9af2fc69e20b0be2629cd0e9c34da9f3ef56af7beac4fb4298262bc5a45ec5d0140aacd291b886f40025e93236f69653423b0c50912fbe43aacced10f2690cfc4872fb37694a947e893389084577ffce3c214b09ff4801006b1e7542ee23719abd100000000",
     )
 
 
@@ -101,7 +106,7 @@ def test_send_two_with_change(client: Client):
         # tb1pswrqtykue8r89t9u4rprjs0gt4qzkdfuursfnvqaa3f2yql07zmq8s8a5u
         address_n=parse_path("m/86h/1h/0h/0/0"),
         amount=6_800,
-        prev_hash=TXHASH_df862e,
+        prev_hash=TXHASH_c96621,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDTAPROOT,
     )
@@ -109,7 +114,7 @@ def test_send_two_with_change(client: Client):
         # tb1p8tvmvsvhsee73rhym86wt435qrqm92psfsyhy6a3n5gw455znnpqm8wald
         address_n=parse_path("m/86h/1h/0h/0/1"),
         amount=13_000,
-        prev_hash=TXHASH_3ac32e,
+        prev_hash=TXHASH_c96621,
         prev_index=1,
         script_type=messages.InputScriptType.SPENDTAPROOT,
     )
@@ -147,11 +152,10 @@ def test_send_two_with_change(client: Client):
             client, "Testnet", [inp1, inp2], [out1, out2], prev_txes=TX_API
         )
 
-    # TODO: fails with CHECK_ON_CHAIN=1 - tx_hex is different
     assert_tx_matches(
         serialized_tx,
-        hash_link="https://tbtc1.trezor.io/api/tx/7956f1de3e7362b04115b64a31f0b6822c50dd6c08d78398f392a0ac3f0e357b",
-        tx_hex="010000000001029f67664b8972ae01498e25ea98a37889f19aa86a2f39ddad84ff31da312e86df0000000000ffffffff9b117a776a9aaf70d4c3ffe89f009dcd23210a03d649ee5e38791d83902ec33a0100000000ffffffff02983a000000000000160014f0ca4661a8c7f4edad7da1c864a8bd3db05d4ac4f8110000000000002251209a9af24b396f593b34e23fefba6b417a55c5ee3f430c3837379fcb5246ab36d70140496fddbbddff45c7006d56c96fc9f2d6b5c785d7ca8f09230b944e2d2f07452610191bdbc3d6f625d5a0a0b04e49d85427df8a5bb033b3156541abef66e66aba0140977896bd776fb0d340b840d03a3ff02ce2696d5ad4e3adfed1ef49319bf559124a82c304f54a6613a24f4cc63f60a0a0e31cc63f5c1cd8e52703a0f421bbcb6100000000",
+        hash_link="https://tbtc1.trezor.io/api/tx/1054eb649110534518239bca2abebebee76d50addac27d0d582cef2b9b9d80c0",
+        tx_hex="010000000001021988ca0c649b0e56428288a4daa5038503b2e29eeb4d5c50ddf76866a92166c90000000000ffffffff1988ca0c649b0e56428288a4daa5038503b2e29eeb4d5c50ddf76866a92166c90100000000ffffffff02983a000000000000160014f0ca4661a8c7f4edad7da1c864a8bd3db05d4ac4f8110000000000002251209a9af24b396f593b34e23fefba6b417a55c5ee3f430c3837379fcb5246ab36d70140aad93b4abfdc18826a60d79dc648c58810d56c24273f02dde4ac614367395feec25e809c0fdb58fb31f5631ef798a95d82864efc2b0a48b1be83196193ece05401402624067d8ef3705b908956fa824d36998a1522b3f01f38272c11ad5488fb63cb6d7c68d82e8e2d052805610bce34048335ed9c15037ef36b6e2accc0d3f5893500000000",
     )
 
 
