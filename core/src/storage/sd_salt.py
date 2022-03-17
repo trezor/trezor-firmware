@@ -1,7 +1,6 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
-import storage.device
 from trezor import io, storagedevice
 from trezor.sdcard import with_filesystem
 from trezor.utils import consteq
@@ -32,7 +31,7 @@ def compute_auth_tag(salt: bytes, auth_key: bytes) -> bytes:
 
 
 def _get_device_dir() -> str:
-    return f"/trezor/device_{storage.device.get_device_id().lower()}"
+    return f"/trezor/device_{storagedevice.get_device_id().lower()}"
 
 
 def _get_salt_path(new: bool = False) -> str:

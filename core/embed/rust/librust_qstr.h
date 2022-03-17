@@ -29,6 +29,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_set_rotation;
   MP_QSTR_get_label;
   MP_QSTR_set_label;
+  MP_QSTR_get_device_id;
   MP_QSTR_get_mnemonic_secret;
   MP_QSTR_set_mnemonic_secret;
   MP_QSTR_is_passphrase_enabled;
