@@ -1,7 +1,7 @@
 use core::{
     convert::TryFrom,
     ops::{Deref, DerefMut},
-    ptr, slice,
+    ptr, slice, str,
 };
 
 use crate::{error::Error, micropython::obj::Obj};
@@ -22,6 +22,12 @@ pub struct Buffer {
     len: usize,
 }
 
+impl Buffer {
+    pub fn empty() -> Self {
+        Self::from(b"")
+    }
+}
+
 impl TryFrom<Obj> for Buffer {
     type Error = Error;
 
@@ -32,6 +38,12 @@ impl TryFrom<Obj> for Buffer {
             ptr: bufinfo.buf as _,
             len: bufinfo.len as _,
         })
+    }
+}
+
+impl Default for Buffer {
+    fn default() -> Self {
+        Self::empty()
     }
 }
 
@@ -51,6 +63,15 @@ impl AsRef<[u8]> for Buffer {
 
 impl From<&'static [u8]> for Buffer {
     fn from(val: &'static [u8]) -> Self {
+        Buffer {
+            ptr: val.as_ptr(),
+            len: val.len(),
+        }
+    }
+}
+
+impl<const N: usize> From<&'static [u8; N]> for Buffer {
+    fn from(val: &'static [u8; N]) -> Self {
         Buffer {
             ptr: val.as_ptr(),
             len: val.len(),
@@ -120,6 +141,50 @@ impl AsMut<[u8]> for BufferMut {
     }
 }
 
+/// Represents an immutable UTF-8 string stored on the MicroPython heap and
+/// owned by a `str` object.
+///
+/// # Safety
+///
+/// In most cases, it is unsound to store `StrBuffer` values in a GC-unreachable
+/// location, such as static data. It is also unsound to let the contents be
+/// modified while a reference to them is being held.
+#[derive(Default)]
+pub struct StrBuffer(Buffer);
+
+impl TryFrom<Obj> for StrBuffer {
+    type Error = Error;
+
+    fn try_from(obj: Obj) -> Result<Self, Self::Error> {
+        if unsafe { ffi::mp_type_str.is_type_of(obj) } {
+            Ok(Self(Buffer::try_from(obj)?))
+        } else {
+            Err(Error::TypeError)
+        }
+    }
+}
+
+impl Deref for StrBuffer {
+    type Target = str;
+
+    fn deref(&self) -> &Self::Target {
+        self.as_ref()
+    }
+}
+
+impl AsRef<str> for StrBuffer {
+    fn as_ref(&self) -> &str {
+        // SAFETY: MicroPython ensures that values of type `str` are UTF-8
+        unsafe { str::from_utf8_unchecked(self.0.as_ref()) }
+    }
+}
+
+impl From<&'static str> for StrBuffer {
+    fn from(val: &'static str) -> Self {
+        Self(Buffer::from(val.as_bytes()))
+    }
+}
+
 fn get_buffer_info(obj: Obj, flags: u32) -> Result<ffi::mp_buffer_info_t, Error> {
     let mut bufinfo = ffi::mp_buffer_info_t {
         buf: ptr::null_mut(),
@@ -167,6 +232,13 @@ fn buffer_as_mut<'a>(ptr: *mut u8, len: usize) -> &'a mut [u8] {
 
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for Buffer {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        self.as_ref().trace(t)
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for StrBuffer {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         self.as_ref().trace(t)
     }
