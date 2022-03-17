@@ -180,7 +180,9 @@ extern "C" fn storagedevice_get_label() -> Obj {
 
 extern "C" fn storagedevice_set_label(label: Obj) -> Obj {
     let block = || {
-        let label = StrBuffer::try_from(label)?;
+        // TODO: find out why StrBuffer throws TypeError
+        // let label = StrBuffer::try_from(label)?;
+        let label = Buffer::try_from(label)?;
         let len = label.len() as u16;
 
         if len > LABEL_MAXLENGTH {
