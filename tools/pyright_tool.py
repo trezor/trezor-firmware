@@ -51,12 +51,12 @@ from typing import TYPE_CHECKING, Any, Final, Iterator, TypedDict
 import click
 
 if TYPE_CHECKING:
-    LineIgnores = list[LineIgnore]
+    LineIgnores = list["LineIgnore"]
 
     FileIgnores = dict[str, LineIgnores]
-    FileSpecificIgnores = dict[str, list[FileSpecificIgnore]]
+    FileSpecificIgnores = dict[str, list["FileSpecificIgnore"]]
 
-    PyrightOffIgnores = list[PyrightOffIgnore]
+    PyrightOffIgnores = list["PyrightOffIgnore"]
     FilePyrightOffIgnores = dict[str, PyrightOffIgnores]
 
 
@@ -604,7 +604,13 @@ class PyrightTool:
     help="Use input file instead of running pyright",
 )
 @click.option("-v", "--verbose", is_flag=True, help="Print verbose output")
-def main(config, input_file, output_file, verbose, workdir):
+def main(
+    config: io.TextIOWrapper | None,
+    input_file: io.TextIOWrapper | None,
+    output_file: io.TextIOWrapper | None,
+    verbose: bool,
+    workdir: str | Path,
+) -> None:
     workdir = Path(workdir)
     if config is None:
         config_path = workdir / "pyrightconfig.json"
