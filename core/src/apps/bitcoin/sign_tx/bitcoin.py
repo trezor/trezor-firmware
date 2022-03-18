@@ -122,9 +122,9 @@ class Bitcoin:
         # stable device tests.
         self.orig_txs: list[OriginalTxInfo] = []
 
-        # The digests of the inputs streamed for approval in Step 1. These are used to ensure that
-        # the inputs streamed for verification in Step 3 are the same as those in Step 1.
-        self.h_inputs: bytes | None = None
+        # The digests of the external inputs streamed for approval in Step 1. These are used
+        # to ensure that the inputs streamed for verification in Step 3 are the same as
+        # those in Step 1.
         self.h_external_inputs: bytes | None = None
 
         # The index of the payment request being processed.
@@ -165,11 +165,12 @@ class Bitcoin:
             if txi.orig_hash:
                 await self.process_original_input(txi, script_pubkey)
 
-        self.h_inputs = self.tx_info.get_tx_check_digest()
+        self.tx_info.h_inputs_check = self.tx_info.get_tx_check_digest()
         self.h_external_inputs = h_external_inputs_check.get_digest()
 
         # Finalize original inputs.
         for orig in self.orig_txs:
+            orig.h_inputs_check = orig.get_tx_check_digest()
             if orig.index != orig.tx.inputs_count:
                 raise wire.ProcessError("Removal of original inputs is not supported.")
 
@@ -194,7 +195,7 @@ class Bitcoin:
             await orig.finalize_tx_hash()
 
     async def step3_verify_inputs(self) -> None:
-        # should come out the same as h_inputs, checked before continuing
+        # should come out the same as h_inputs_check, checked before continuing
         h_check = HashWriter(sha256())
 
         if self.taproot_only:
@@ -220,7 +221,7 @@ class Bitcoin:
             # inputs or to falsely claim that a transaction is a replacement of an already approved
             # transaction or to construct a valid transaction by combining signatures obtained in
             # multiple rounds of the attack.
-            expected_digest = self.h_inputs
+            expected_digest = self.tx_info.h_inputs_check
             for i in range(self.tx_info.tx.inputs_count):
                 progress.advance()
                 txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
@@ -406,29 +407,34 @@ class Bitcoin:
 
     async def verify_original_txs(self) -> None:
         for orig in self.orig_txs:
-            if orig.verification_input is None:
-                raise wire.ProcessError(
-                    "Each original transaction must specify address_n for at least one input."
-                )
+            # should come out the same as h_inputs_check, checked before continuing
+            h_check = HashWriter(sha256())
 
-            assert orig.verification_index is not None
-            txi = orig.verification_input
-            script_pubkey = self.input_derive_script(txi)
-            verifier = SignatureVerifier(
-                script_pubkey, txi.script_sig, txi.witness, self.coin
-            )
-            verifier.ensure_hash_type(
-                (SigHashType.SIGHASH_ALL_TAPROOT, self.get_sighash_type(txi))
-            )
-            tx_digest = await self.get_tx_digest(
-                orig.verification_index,
-                txi,
-                orig,
-                verifier.public_keys,
-                verifier.threshold,
-                script_pubkey,
-            )
-            verifier.verify(tx_digest)
+            for i in range(orig.tx.inputs_count):
+                txi = await helpers.request_tx_input(
+                    self.tx_req, i, self.coin, orig.orig_hash
+                )
+                writers.write_tx_input_check(h_check, txi)
+                script_pubkey = self.input_derive_script(txi)
+                verifier = SignatureVerifier(
+                    script_pubkey, txi.script_sig, txi.witness, self.coin
+                )
+                verifier.ensure_hash_type(
+                    (SigHashType.SIGHASH_ALL_TAPROOT, self.get_sighash_type(txi))
+                )
+                tx_digest = await self.get_tx_digest(
+                    i,
+                    txi,
+                    orig,
+                    verifier.public_keys,
+                    verifier.threshold,
+                    script_pubkey,
+                )
+                verifier.verify(tx_digest)
+
+            # check that the inputs were the same as those streamed for approval
+            if h_check.get_digest() != orig.h_inputs_check:
+                raise wire.ProcessError("Transaction has changed during signing")
 
     async def approve_output(
         self,
