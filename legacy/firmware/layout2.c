@@ -598,6 +598,13 @@ void layoutChangeCountOverThreshold(uint32_t change_count) {
                     _("Continue?"), NULL);
 }
 
+void layoutConfirmUnverifiedExternalInputs(void) {
+  layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                    _("Warning!"), _("The transaction"),
+                    _("contains unverified"), _("external inputs."),
+                    _("Continue?"), NULL);
+}
+
 void layoutConfirmNondefaultLockTime(uint32_t lock_time,
                                      bool lock_time_disabled) {
   if (lock_time_disabled) {
