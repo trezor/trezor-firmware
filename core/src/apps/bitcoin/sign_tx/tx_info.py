@@ -72,6 +72,11 @@ class TxInfoBase:
         # in Steps 1 and 2 and the ones streamed for signing legacy inputs in Step 4.
         self.h_tx_check = HashWriter(sha256())  # not a real tx hash
 
+        # The digests of the inputs streamed for approval in Step 1. These are used to
+        # ensure that the inputs streamed for verification in Step 3 are the same as
+        # those in Step 1.
+        self.h_inputs_check: bytes | None = None
+
         # BIP-0143 transaction hashing.
         self.sig_hasher = signer.create_sig_hasher()
 
@@ -145,21 +150,9 @@ class OriginalTxInfo(TxInfoBase):
         signer.write_tx_header(self.h_tx, tx, witness_marker=False)
         writers.write_compact_size(self.h_tx, tx.inputs_count)
 
-        # The input which will be used for verification and its index in the original transaction.
-        self.verification_input: TxInput | None = None
-        self.verification_index: int | None = None
-
     def add_input(self, txi: TxInput, script_pubkey: bytes) -> None:
         super().add_input(txi, script_pubkey)
         writers.write_tx_input(self.h_tx, txi, txi.script_sig or bytes())
-
-        # For verification use the first original non-multisig input that specifies address_n.
-        # NOTE: Supporting replacement transactions where all internal inputs are multisig would
-        # require checking the signatures of all of the original internal inputs or not allowing
-        # unverified external inputs in transactions where multisig inputs are present.
-        if not self.verification_input and txi.address_n and not txi.multisig:
-            self.verification_input = txi
-            self.verification_index = self.index
 
     def add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         super().add_output(txo, script_pubkey)
