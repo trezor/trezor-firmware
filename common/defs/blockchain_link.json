@@ -75,12 +75,6 @@
       "https://explorer.fujicoin.org"
     ]
   },
-  "bitcoin:GAME": {
-    "type": "blockbook",
-    "url": [
-      "https://blockbook.gamecredits.network"
-    ]
-  },
   "bitcoin:GRS": {
     "type": "blockbook",
     "url": [
@@ -126,12 +120,6 @@
     "type": "blockbook",
     "url": [
       "https://blockbook.pivx.link"
-    ]
-  },
-  "bitcoin:POLIS": {
-    "type": "blockbook",
-    "url": [
-      "https://blockbook.polispay.org"
     ]
   },
   "bitcoin:PPC": {
