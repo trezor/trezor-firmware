@@ -340,6 +340,14 @@ static bool is_external_input(uint32_t i) {
   return external_inputs[i / 32] & (1 << (i % 32));
 }
 
+static bool has_external_input(void) {
+  uint32_t sum = 0;
+  for (size_t i = 0; i < sizeof(external_inputs) / sizeof(uint32_t); ++i) {
+    sum |= external_inputs[i];
+  }
+  return sum != 0;
+}
+
 void send_req_1_input(void) {
   signing_stage = STAGE_REQUEST_1_INPUT;
   resp.has_request_type = true;
@@ -1754,6 +1762,15 @@ static bool signing_add_orig_output(TxOutputType *orig_output) {
 }
 
 static bool signing_confirm_tx(void) {
+  if (has_external_input()) {
+    layoutConfirmUnverifiedExternalInputs();
+    if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
+      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+      signing_abort();
+      return false;
+    }
+  }
+
   if (coin->negative_fee) {
     // bypass check for negative fee coins, required for reward TX
   } else {
