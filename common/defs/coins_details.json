@@ -362,24 +362,6 @@
                 }
             ]
         },
-        "bitcoin:GAME": {
-            "links": {
-                "Github": "https://github.com/gamecredits-project/gamecredits",
-                "Homepage": "https://gamecredits.org"
-            },
-            "marketcap_usd": 30648608,
-            "name": "GameCredits",
-            "shortcut": "GAME",
-            "t1_enabled": "yes",
-            "t2_enabled": "yes",
-            "type": "coin",
-            "wallet": [
-                {
-                    "name": "Electrum-GAME",
-                    "url": "https://electrum-game.org"
-                }
-            ]
-        },
         "bitcoin:GRS": {
             "links": {
                 "Github": "https://github.com/Groestlcoin/groestlcoin",
@@ -491,24 +473,6 @@
                 }
             ]
         },
-        "bitcoin:NIX": {
-            "links": {
-                "Github": "https://github.com/nixplatform/nixcore",
-                "Homepage": "https://nixplatform.io"
-            },
-            "marketcap_usd": 755580,
-            "name": "NIX",
-            "shortcut": "NIX",
-            "t1_enabled": "yes",
-            "t2_enabled": "yes",
-            "type": "coin",
-            "wallet": [
-                {
-                    "name": "NIX-Electrum",
-                    "url": "https://github.com/nixplatform/electrum-nix"
-                }
-            ]
-        },
         "bitcoin:NMC": {
             "links": {
                 "Github": "https://github.com/namecoin/namecoin-core",
@@ -528,24 +492,6 @@
                 {
                     "name": "Electrum-NMC",
                     "url": "https://github.com/namecoin/electrum-nmc"
-                }
-            ]
-        },
-        "bitcoin:POLIS": {
-            "links": {
-                "Github": "https://github.com/polispay/polis",
-                "Homepage": "https://www.polispay.org"
-            },
-            "marketcap_usd": 5255034,
-            "name": "Polis",
-            "shortcut": "POLIS",
-            "t1_enabled": "yes",
-            "t2_enabled": "yes",
-            "type": "coin",
-            "wallet": [
-                {
-                    "name": "PolisPay",
-                    "url": "https://polispay.com"
                 }
             ]
         },

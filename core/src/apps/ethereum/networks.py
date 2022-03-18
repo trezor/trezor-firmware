@@ -1205,6 +1205,13 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
         rskip60=False,
     )
     yield NetworkInfo(
+        chain_id=333999,
+        slip44=60,
+        shortcut="POLIS",
+        name="Polis",
+        rskip60=False,
+    )
+    yield NetworkInfo(
         chain_id=955305,
         slip44=1011,
         shortcut="ELV",
