@@ -7,6 +7,7 @@ use crate::{
         obj::Obj,
         qstr::Qstr,
     },
+    storagedevice::field::Field,
     trezorhal::{random, secbool},
     util,
 };
@@ -24,6 +25,7 @@ use core::{
 const FLAG_PUBLIC: u8 = 0x80;
 const FLAGS_WRITE: u8 = 0xC0;
 
+// TODO: could be defined as a part of `Field` not to repeat it so much
 const APP_DEVICE: u8 = 0x01;
 
 // Longest possible entry in storage (homescreen is handled in separate
@@ -34,35 +36,56 @@ const _FALSE_BYTE: u8 = 0x00;
 const _TRUE_BYTE: u8 = 0x01;
 
 const HOMESCREEN_MAXSIZE: usize = 16384;
-const LABEL_MAXLENGTH: u16 = 32;
+const LABEL_MAXLENGTH: usize = 32;
 
-// TODO: transfer this into a struct with field specifying data type and
-// `max_length`, possibly even `is_public`
-// impl get a impl set
-// INITIALIZED: data_type...
+// Length of SD salt auth tag.
+// Other SD-salt-related constants are in core/src/storage/sd_salt.py
+const SD_SALT_AUTH_KEY_LEN_BYTES: usize = 16;
 
-const DEVICE_ID: u8 = 0x00;
-const _VERSION: u8 = 0x01;
-const _MNEMONIC_SECRET: u8 = 0x02;
-const _LANGUAGE: u8 = 0x03; // seems it is not used at all
-const _LABEL: u8 = 0x04;
-const _USE_PASSPHRASE: u8 = 0x05;
-const _HOMESCREEN: u8 = 0x06;
-const _NEEDS_BACKUP: u8 = 0x07;
-const _FLAGS: u8 = 0x08;
+// TODO: how to export all public constants as integers?
+
+// const DEVICE_ID: u8 = 0x00;
+const DEVICE_ID: Field<String<24>> = Field::public(APP_DEVICE, 0x00);
+// const _VERSION: u8 = 0x01;
+const VERSION: Field<Vec<u8, 1>> = Field::private(APP_DEVICE, 0x01);
+// const _MNEMONIC_SECRET: u8 = 0x02;
+const _MNEMONIC_SECRET: Field<Vec<u8, 256>> = Field::private(APP_DEVICE, 0x02);
+// const _LANGUAGE: u8 = 0x03; // seems it is not used at all
+// const _LABEL: u8 = 0x04;
+const _LABEL: Field<String<LABEL_MAXLENGTH>> = Field::public(APP_DEVICE, 0x04);
+// const _USE_PASSPHRASE: u8 = 0x05;
+const _USE_PASSPHRASE: Field<bool> = Field::private(APP_DEVICE, 0x05);
+// const _HOMESCREEN: u8 = 0x06;
+const _HOMESCREEN: Field<Vec<u8, HOMESCREEN_MAXSIZE>> = Field::public(APP_DEVICE, 0x06);
+// const _NEEDS_BACKUP: u8 = 0x07;
+const _NEEDS_BACKUP: Field<bool> = Field::private(APP_DEVICE, 0x07);
+// const _FLAGS: u8 = 0x08;
+const _FLAGS: Field<u32> = Field::private(APP_DEVICE, 0x08);
 const U2F_COUNTER: u8 = 0x09;
-const _PASSPHRASE_ALWAYS_ON_DEVICE: u8 = 0x0A;
-const _UNFINISHED_BACKUP: u8 = 0x0B;
-const _AUTOLOCK_DELAY_MS: u8 = 0x0C;
-const _NO_BACKUP: u8 = 0x0D;
-const _BACKUP_TYPE: u8 = 0x0E;
-const _ROTATION: u8 = 0x0F;
-const _SLIP39_IDENTIFIER: u8 = 0x10;
-const _SLIP39_ITERATION_EXPONENT: u8 = 0x11;
-const _SD_SALT_AUTH_KEY: u8 = 0x12;
-const INITIALIZED: u8 = 0x13;
-const _SAFETY_CHECK_LEVEL: u8 = 0x14;
-const _EXPERIMENTAL_FEATURES: u8 = 0x15;
+// const _PASSPHRASE_ALWAYS_ON_DEVICE: u8 = 0x0A;
+const _PASSPHRASE_ALWAYS_ON_DEVICE: Field<bool> = Field::private(APP_DEVICE, 0x0A);
+// const _UNFINISHED_BACKUP: u8 = 0x0B;
+const _UNFINISHED_BACKUP: Field<bool> = Field::private(APP_DEVICE, 0x0B);
+// const _AUTOLOCK_DELAY_MS: u8 = 0x0C;
+const _AUTOLOCK_DELAY_MS: Field<u32> = Field::private(APP_DEVICE, 0x0C);
+// const _NO_BACKUP: u8 = 0x0D;
+const _NO_BACKUP: Field<bool> = Field::private(APP_DEVICE, 0x0D);
+// const _BACKUP_TYPE: u8 = 0x0E;
+const _BACKUP_TYPE: Field<u8> = Field::private(APP_DEVICE, 0x0E);
+// const _ROTATION: u8 = 0x0F;
+const ROTATION: Field<u16> = Field::public(APP_DEVICE, 0x0F);
+// const _SLIP39_IDENTIFIER: u8 = 0x10;
+const _SLIP39_IDENTIFIER: Field<u16> = Field::private(APP_DEVICE, 0x10);
+// const _SLIP39_ITERATION_EXPONENT: u8 = 0x11;
+const _SLIP39_ITERATION_EXPONENT: Field<u8> = Field::private(APP_DEVICE, 0x11);
+// const _SD_SALT_AUTH_KEY: u8 = 0x12;
+const _SD_SALT_AUTH_KEY: Field<Vec<u8, SD_SALT_AUTH_KEY_LEN_BYTES>> =
+    Field::public(APP_DEVICE, 0x12);
+// const INITIALIZED: u8 = 0x13;
+const INITIALIZED: Field<bool> = Field::public(APP_DEVICE, 0x13);
+// const _SAFETY_CHECK_LEVEL: u8 = 0x14;
+const _SAFETY_CHECK_LEVEL: Field<u8> = Field::private(APP_DEVICE, 0x14);
+// const _EXPERIMENTAL_FEATURES: u8 = 0x15;
 
 const SAFETY_CHECK_LEVEL_STRICT: u8 = 0;
 const SAFETY_CHECK_LEVEL_PROMPT: u8 = 1;
@@ -81,71 +104,40 @@ const AUTOLOCK_DELAY_MINIMUM: u32 = if DEBUG_MODE {
 // scheduler
 const AUTOLOCK_DELAY_MAXIMUM: u32 = 0x2000_0000; // ~6 days
 
-// Length of SD salt auth tag.
-// Other SD-salt-related constants are in core/src/storage/sd_salt.py
-const SD_SALT_AUTH_KEY_LEN_BYTES: usize = 16;
-
 const STORAGE_VERSION_CURRENT: u8 = 0x02;
+
+const NONE: Obj = Obj::const_none();
 
 extern "C" {
     // storage.h
-    fn storage_has(key: u16) -> secbool::Secbool;
-    fn storage_delete(key: u16) -> secbool::Secbool;
-    fn storage_get(
-        key: u16,
-        // val: *mut cty::c_void,
-        val: *const u8,
-        max_len: u16,
-        len: *mut u16,
-    ) -> secbool::Secbool;
-    // fn storage_set(key: u16, val: *const cty::c_void, len: u16) ->
-    // secbool::Secbool;
-    fn storage_set(key: u16, val: *const u8, len: u16) -> secbool::Secbool;
     fn storage_next_counter(key: u16, count: *mut u32) -> secbool::Secbool;
     fn storage_set_counter(key: u16, count: u32) -> secbool::Secbool;
 }
 
 extern "C" fn storagedevice_is_version_stored() -> Obj {
-    let block = || {
-        let key = _get_appkey(_VERSION, false);
-        Ok(storagedevice_storage_has(key).into())
-    };
+    let block = || Ok(VERSION.has().into());
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_get_version() -> Obj {
-    let block = || {
-        let key = _get_appkey(_VERSION, false);
-        let result = &storagedevice_storage_get(key) as &[u8];
-        result.try_into()
-    };
+    let block = || VERSION.get_result();
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_set_version(version: Obj) -> Obj {
-    let block = || {
-        let version = Buffer::try_from(version)?;
-        let len = version.len() as u16;
-        let val = version.as_ptr();
-
-        let key = _get_appkey(_VERSION, false);
-        Ok(storagedevice_storage_set(key, val, len).into())
-    };
+    let block = || Ok(VERSION.set(Buffer::try_from(version)?.as_ref()).into());
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_is_initialized() -> Obj {
-    let block = || {
-        let key = _get_appkey(INITIALIZED, true);
-        Ok(storagedevice_storage_get_bool(key).into())
-    };
+    let block = || INITIALIZED.get_result();
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_get_rotation() -> Obj {
     let block = || {
-        let key = _get_appkey(_ROTATION, true);
-        Ok(storagedevice_storage_get_u16(key).unwrap_or(0).into())
+        // 0 is a default when not there
+        Ok(ROTATION.get().unwrap_or(0).into())
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -157,24 +149,14 @@ extern "C" fn storagedevice_set_rotation(rotation: Obj) -> Obj {
         if ![0, 90, 180, 270].contains(&rotation) {
             Err(Error::ValueError(cstr!("Not valid rotation")))
         } else {
-            let key = _get_appkey(_ROTATION, true);
-            Ok(storagedevice_storage_set_u16(key, rotation).into())
+            Ok(ROTATION.set(rotation).into())
         }
     };
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_get_label() -> Obj {
-    let block = || {
-        let key = _get_appkey(_LABEL, true);
-        let result = &storagedevice_storage_get(key) as &[u8];
-        if result.is_empty() {
-            Ok(Obj::const_none())
-        } else {
-            // TODO: replace unwrap() with "?"
-            str::from_utf8(result).unwrap().try_into()
-        }
-    };
+    let block = || _LABEL.get_result();
     unsafe { util::try_or_raise(block) }
 }
 
@@ -183,14 +165,11 @@ extern "C" fn storagedevice_set_label(label: Obj) -> Obj {
         // TODO: find out why StrBuffer throws TypeError
         // let label = StrBuffer::try_from(label)?;
         let label = Buffer::try_from(label)?;
-        let len = label.len() as u16;
 
-        if len > LABEL_MAXLENGTH {
+        if label.len() > LABEL_MAXLENGTH {
             Err(Error::ValueError(cstr!("Label is too long")))
         } else {
-            let val = label.as_ptr();
-            let key = _get_appkey(_LABEL, true);
-            Ok(storagedevice_storage_set(key, val, len).into())
+            Ok(_LABEL.set(str::from_utf8(label.as_ref()).unwrap()).into())
         }
     };
     unsafe { util::try_or_raise(block) }
@@ -198,30 +177,22 @@ extern "C" fn storagedevice_set_label(label: Obj) -> Obj {
 
 extern "C" fn storagedevice_get_device_id() -> Obj {
     let block = || {
-        let key = _get_appkey(DEVICE_ID, true);
-        let device_id = &storagedevice_storage_get(key) as &[u8];
+        let device_id = DEVICE_ID.get();
 
-        // TODO: is there some easier way?
-        // TODO: replace unwrap() with "?"
-        if device_id.is_empty() {
+        if let Some(device_id) = device_id {
+            device_id.as_str().try_into()
+        } else {
             let new_device_id = &random::get_random_bytes(12) as &[u8];
             let hex_id = _hexlify_bytes(new_device_id);
-            let device_id_bytes = hex_id.as_str().as_bytes();
-            storagedevice_storage_set(key, device_id_bytes.as_ptr(), device_id_bytes.len() as u16);
+            DEVICE_ID.set(hex_id.as_str());
             hex_id.as_str().try_into()
-        } else {
-            str::from_utf8(device_id).unwrap().try_into()
         }
     };
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_get_mnemonic_secret() -> Obj {
-    let block = || {
-        let key = _get_appkey(_MNEMONIC_SECRET, false);
-        let result = &storagedevice_storage_get(key) as &[u8];
-        result.try_into()
-    };
+    let block = || _MNEMONIC_SECRET.get_result();
     unsafe { util::try_or_raise(block) }
 }
 
@@ -244,24 +215,15 @@ extern "C" fn storagedevice_set_mnemonic_secret(
             false
         };
 
-        let key = _get_appkey(_VERSION, false);
-        storagedevice_storage_set(key, &[STORAGE_VERSION_CURRENT] as *const _, 1);
-
-        let key = _get_appkey(_MNEMONIC_SECRET, false);
-        storagedevice_storage_set(key, secret.as_ptr(), secret.len() as u16);
-
-        let key = _get_appkey(_BACKUP_TYPE, false);
-        storagedevice_storage_set_u8(key, backup_type);
-
-        let key = _get_appkey(_NO_BACKUP, false);
-        storagedevice_storage_set_true_or_delete(key, no_backup);
-
-        let key = _get_appkey(INITIALIZED, true);
-        storagedevice_storage_set_bool(key, true);
+        // TODO: could check that all sets return true (succeed)
+        VERSION.set(&[STORAGE_VERSION_CURRENT]);
+        _MNEMONIC_SECRET.set(secret.as_ref());
+        _BACKUP_TYPE.set(backup_type);
+        _NO_BACKUP.set_true_or_delete(no_backup);
+        INITIALIZED.set(true);
 
         if !no_backup {
-            let key = _get_appkey(_NEEDS_BACKUP, false);
-            storagedevice_storage_set_true_or_delete(key, needs_backup);
+            _NEEDS_BACKUP.set_true_or_delete(needs_backup);
         }
 
         Ok(true.into())
@@ -270,10 +232,7 @@ extern "C" fn storagedevice_set_mnemonic_secret(
 }
 
 extern "C" fn storagedevice_is_passphrase_enabled() -> Obj {
-    let block = || {
-        let key = _get_appkey(_USE_PASSPHRASE, false);
-        Ok(storagedevice_storage_get_bool(key).into())
-    };
+    let block = || _USE_PASSPHRASE.get_result();
     unsafe { util::try_or_raise(block) }
 }
 
@@ -281,13 +240,10 @@ extern "C" fn storagedevice_set_passphrase_enabled(enable: Obj) -> Obj {
     let block = || {
         let enable = bool::try_from(enable)?;
 
-        let key = _get_appkey(_USE_PASSPHRASE, false);
-        let result = storagedevice_storage_set_bool(key, enable);
+        let mut result = _USE_PASSPHRASE.set(enable);
 
         if !enable {
-            // TODO: could we reuse storagedevice_set_passphrase_always_on_device?
-            let key = _get_appkey(_PASSPHRASE_ALWAYS_ON_DEVICE, false);
-            storagedevice_storage_set_bool(key, false);
+            result = _PASSPHRASE_ALWAYS_ON_DEVICE.set(false) && result;
         }
 
         Ok(result.into())
@@ -296,70 +252,48 @@ extern "C" fn storagedevice_set_passphrase_enabled(enable: Obj) -> Obj {
 }
 
 extern "C" fn storagedevice_get_passphrase_always_on_device() -> Obj {
-    let block = || {
-        let key = _get_appkey(_PASSPHRASE_ALWAYS_ON_DEVICE, false);
-        Ok(storagedevice_storage_get_bool(key).into())
-    };
+    let block = || _PASSPHRASE_ALWAYS_ON_DEVICE.get_result();
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_set_passphrase_always_on_device(enable: Obj) -> Obj {
     let block = || {
-        let enable = bool::try_from(enable)?;
-
-        let key = _get_appkey(_PASSPHRASE_ALWAYS_ON_DEVICE, false);
-        Ok(storagedevice_storage_set_bool(key, enable).into())
+        Ok(_PASSPHRASE_ALWAYS_ON_DEVICE
+            .set(bool::try_from(enable)?)
+            .into())
     };
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_unfinished_backup() -> Obj {
-    let block = || {
-        let key = _get_appkey(_UNFINISHED_BACKUP, false);
-        Ok(storagedevice_storage_get_bool(key).into())
-    };
+    let block = || _UNFINISHED_BACKUP.get_result();
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_set_unfinished_backup(state: Obj) -> Obj {
-    let block = || {
-        let state = bool::try_from(state)?;
-
-        let key = _get_appkey(_UNFINISHED_BACKUP, false);
-        Ok(storagedevice_storage_set_bool(key, state).into())
-    };
+    let block = || Ok(_UNFINISHED_BACKUP.set(bool::try_from(state)?).into());
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_needs_backup() -> Obj {
-    let block = || {
-        let key = _get_appkey(_NEEDS_BACKUP, false);
-        Ok(storagedevice_storage_get_bool(key).into())
-    };
+    let block = || _NEEDS_BACKUP.get_result();
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_set_backed_up() -> Obj {
-    let block = || {
-        let key = _get_appkey(_NEEDS_BACKUP, false);
-        Ok(storagedevice_storage_delete(key).into())
-    };
+    let block = || Ok(_NEEDS_BACKUP.delete().into());
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_no_backup() -> Obj {
-    let block = || {
-        let key = _get_appkey(_NO_BACKUP, false);
-        Ok(storagedevice_storage_get_bool(key).into())
-    };
+    let block = || _NO_BACKUP.get_result();
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_get_backup_type() -> Obj {
     let block = || {
-        let key = _get_appkey(_BACKUP_TYPE, false);
         // TODO: we could import the BackupType enum
-        let backup_type = storagedevice_storage_get_u8(key).unwrap_or(0);
+        let backup_type = _BACKUP_TYPE.get().unwrap_or(0);
 
         if ![0, 1, 2].contains(&backup_type) {
             Err(Error::ValueError(cstr!("Invalid backup type")))
@@ -371,97 +305,62 @@ extern "C" fn storagedevice_get_backup_type() -> Obj {
 }
 
 extern "C" fn storagedevice_get_homescreen() -> Obj {
-    let block = || {
-        let key = _get_appkey(_HOMESCREEN, false);
-        let result = &storagedevice_storage_get_homescreen(key) as &[u8];
-        if result.is_empty() {
-            Ok(Obj::const_none())
-        } else {
-            result.try_into()
-        }
-    };
+    let block = || _HOMESCREEN.get_result();
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_set_homescreen(homescreen: Obj) -> Obj {
     let block = || {
         let homescreen = Buffer::try_from(homescreen)?;
-        let len = homescreen.len() as u16;
 
-        if len > HOMESCREEN_MAXSIZE as u16 {
+        if homescreen.len() > HOMESCREEN_MAXSIZE {
             Err(Error::ValueError(cstr!("Homescreen too large")))
         } else {
-            let val = homescreen.as_ptr();
-            let key = _get_appkey(_HOMESCREEN, false);
-            Ok(storagedevice_storage_set(key, val, len).into())
+            Ok(_HOMESCREEN.set(homescreen.as_ref()).into())
         }
     };
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_get_slip39_identifier() -> Obj {
-    let block = || {
-        let key = _get_appkey(_SLIP39_IDENTIFIER, false);
-        Ok(storagedevice_storage_get_u16(key).into())
-    };
+    let block = || _SLIP39_IDENTIFIER.get_result();
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_set_slip39_identifier(identifier: Obj) -> Obj {
-    let block = || {
-        let identifier = u16::try_from(identifier)?;
-
-        let key = _get_appkey(_SLIP39_IDENTIFIER, false);
-        Ok(storagedevice_storage_set_u16(key, identifier).into())
-    };
+    let block = || Ok(_SLIP39_IDENTIFIER.set(u16::try_from(identifier)?).into());
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_get_slip39_iteration_exponent() -> Obj {
-    let block = || {
-        let key = _get_appkey(_SLIP39_ITERATION_EXPONENT, false);
-        Ok(storagedevice_storage_get_u8(key).into())
-    };
+    let block = || _SLIP39_ITERATION_EXPONENT.get_result();
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_set_slip39_iteration_exponent(exponent: Obj) -> Obj {
     let block = || {
-        let exponent = u8::try_from(exponent)?;
-
-        let key = _get_appkey(_SLIP39_ITERATION_EXPONENT, false);
-        Ok(storagedevice_storage_set_u8(key, exponent).into())
+        Ok(_SLIP39_ITERATION_EXPONENT
+            .set(u8::try_from(exponent)?)
+            .into())
     };
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_get_autolock_delay_ms() -> Obj {
     let block = || {
-        let key = _get_appkey(_AUTOLOCK_DELAY_MS, false);
-        match storagedevice_storage_get_u32(key) {
-            // TODO: strange that u8 and u16 have .into(), but u32 needs .try_into()
-            Some(delay) => _normalize_autolock_delay(delay).try_into(),
-            None => AUTOLOCK_DELAY_DEFAULT.try_into(),
-        }
+        let delay = _AUTOLOCK_DELAY_MS.get().unwrap_or(AUTOLOCK_DELAY_DEFAULT);
+        _normalize_autolock_delay(delay).try_into()
     };
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_set_autolock_delay_ms(delay_ms: Obj) -> Obj {
-    let block = || {
-        let delay_ms = u32::try_from(delay_ms)?;
-
-        let key = _get_appkey(_AUTOLOCK_DELAY_MS, false);
-        Ok(storagedevice_storage_set_u32(key, delay_ms).into())
-    };
+    let block = || Ok(_AUTOLOCK_DELAY_MS.set(u32::try_from(delay_ms)?).into());
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_get_flags() -> Obj {
-    let block = || {
-        let key = _get_appkey(_FLAGS, false);
-        storagedevice_storage_get_u32(key).unwrap_or(0).try_into()
-    };
+    let block = || _FLAGS.get().unwrap_or(0).try_into();
     unsafe { util::try_or_raise(block) }
 }
 
@@ -469,21 +368,20 @@ extern "C" fn storagedevice_set_flags(flags: Obj) -> Obj {
     let block = || {
         let flags = u32::try_from(flags)?;
 
-        let key = _get_appkey(_FLAGS, false);
-
-        let old_flags = storagedevice_storage_get_u32(key).unwrap_or(0);
+        let old_flags = _FLAGS.get().unwrap_or(0);
 
         // Not deleting old flags
         let new_flags = flags | old_flags;
-        Ok(storagedevice_storage_set_u32(key, new_flags).into())
+        Ok(_FLAGS.set(new_flags).into())
     };
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_get_safety_check_level() -> Obj {
     let block = || {
-        let key = _get_appkey(_SAFETY_CHECK_LEVEL, false);
-        let level = storagedevice_storage_get_u8(key).unwrap_or(0);
+        let level = _SAFETY_CHECK_LEVEL
+            .get()
+            .unwrap_or(_DEFAULT_SAFETY_CHECK_LEVEL);
 
         let level = if !SAFETY_CHECK_LEVELS.contains(&level) {
             _DEFAULT_SAFETY_CHECK_LEVEL
@@ -503,8 +401,7 @@ extern "C" fn storagedevice_set_safety_check_level(level: Obj) -> Obj {
         if !SAFETY_CHECK_LEVELS.contains(&level) {
             return Err(Error::ValueError(cstr!("Not valid safety level")));
         } else {
-            let key = _get_appkey(_SAFETY_CHECK_LEVEL, false);
-            Ok(storagedevice_storage_set_u8(key, level).into())
+            Ok(_SAFETY_CHECK_LEVEL.set(level).into())
         }
     };
     unsafe { util::try_or_raise(block) }
@@ -512,12 +409,15 @@ extern "C" fn storagedevice_set_safety_check_level(level: Obj) -> Obj {
 
 extern "C" fn storagedevice_get_sd_salt_auth_key() -> Obj {
     let block = || {
-        let key = _get_appkey(_SD_SALT_AUTH_KEY, true);
-        let result = &storagedevice_storage_get(key) as &[u8];
-        match result.len() {
-            0 => Ok(Obj::const_none()),
-            SD_SALT_AUTH_KEY_LEN_BYTES => result.try_into(),
-            _ => Err(Error::ValueError(cstr!("Invalid key length"))),
+        let result = _SD_SALT_AUTH_KEY.get();
+        if let Some(result) = result {
+            if result.len() == SD_SALT_AUTH_KEY_LEN_BYTES {
+                (&result as &[u8]).try_into()
+            } else {
+                Err(Error::ValueError(cstr!("Invalid key length")))
+            }
+        } else {
+            Ok(NONE)
         }
     };
     unsafe { util::try_or_raise(block) }
@@ -527,13 +427,9 @@ extern "C" fn storagedevice_set_sd_salt_auth_key(auth_key: Obj) -> Obj {
     let block = || {
         let auth_key = Buffer::try_from(auth_key)?;
 
-        let key = _get_appkey(_SD_SALT_AUTH_KEY, true);
-
         match auth_key.len() {
-            0 => Ok(storagedevice_storage_delete(key).into()),
-            SD_SALT_AUTH_KEY_LEN_BYTES => {
-                Ok(storagedevice_storage_set(key, auth_key.as_ptr(), auth_key.len() as u16).into())
-            }
+            0 => Ok(_SD_SALT_AUTH_KEY.delete().into()),
+            SD_SALT_AUTH_KEY_LEN_BYTES => Ok(_SD_SALT_AUTH_KEY.set(auth_key.as_ref()).into()),
             _ => Err(Error::ValueError(cstr!("Invalid key length"))),
         }
     };
@@ -558,126 +454,15 @@ extern "C" fn storagedevice_set_u2f_counter(count: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-pub fn storagedevice_storage_get(key: u16) -> Vec<u8, MAX_LEN> {
-    let mut buf: [u8; MAX_LEN] = [0; MAX_LEN];
-    let mut len: u16 = 0;
-    // TODO: when the max_len is exceeded, it returns secbool::FALSE - we should
-    // catch it
-    unsafe { storage_get(key, &mut buf as *mut _, MAX_LEN as u16, &mut len as *mut _) };
-    // TODO: when the result is empty, we could return None
-    // Would mean having Option<XXX> as the return type
-
-    let result = &buf[..len as usize];
-    result.iter().cloned().collect()
-}
-
-// TODO: is it worth having a special function to not allocate so much in all
-// other cases?
-// TODO: cannot we somehow use the above storagedevice_storage_get?
-pub fn storagedevice_storage_get_homescreen(key: u16) -> Vec<u8, HOMESCREEN_MAXSIZE> {
-    let mut buf: [u8; HOMESCREEN_MAXSIZE] = [0; HOMESCREEN_MAXSIZE];
-    let mut len: u16 = 0;
-    unsafe {
-        storage_get(
-            key,
-            &mut buf as *mut _,
-            HOMESCREEN_MAXSIZE as u16,
-            &mut len as *mut _,
-        )
-    };
-
-    let result = &buf[..len as usize];
-    let mut vector_result = Vec::<u8, HOMESCREEN_MAXSIZE>::new();
-    for byte in result {
-        vector_result.push(*byte).unwrap();
-    }
-
-    vector_result
-}
-
 pub fn storagedevice_storage_get_next_counter(key: u16) -> u32 {
     let mut count: u32 = 0;
     unsafe { storage_next_counter(key, &mut count as *mut _) };
     count
 }
 
-pub fn storagedevice_storage_get_bool(key: u16) -> bool {
-    let result = storagedevice_storage_get(key);
-    result.len() == 1 && result[0] == _TRUE_BYTE
-}
-
-// TODO: can we somehow generalize this for all uint types?
-pub fn storagedevice_storage_get_u32(key: u16) -> Option<u32> {
-    let result = storagedevice_storage_get(key);
-    if result.len() == 4 {
-        Some(u32::from_be_bytes([
-            result[0], result[1], result[2], result[3],
-        ]))
-    } else {
-        None
-    }
-}
-
-pub fn storagedevice_storage_get_u16(key: u16) -> Option<u16> {
-    let result = storagedevice_storage_get(key);
-    if result.len() == 2 {
-        Some(u16::from_be_bytes([result[0], result[1]]))
-    } else {
-        None
-    }
-}
-
-pub fn storagedevice_storage_get_u8(key: u16) -> Option<u8> {
-    let result = storagedevice_storage_get(key);
-    if result.len() == 1 {
-        Some(u8::from_be_bytes([result[0]]))
-    } else {
-        None
-    }
-}
-
-pub fn storagedevice_storage_set(key: u16, val: *const u8, len: u16) -> bool {
-    matches!(unsafe { storage_set(key, val, len) }, secbool::TRUE)
-}
-
 pub fn storagedevice_storage_set_counter(key: u16, count: u32) -> bool {
     matches!(unsafe { storage_set_counter(key, count) }, secbool::TRUE)
 }
-
-pub fn storagedevice_storage_set_bool(key: u16, val: bool) -> bool {
-    let val = if val { [_TRUE_BYTE] } else { [_FALSE_BYTE] };
-    storagedevice_storage_set(key, &val as *const _, 1)
-}
-
-pub fn storagedevice_storage_set_true_or_delete(key: u16, val: bool) -> bool {
-    if val {
-        storagedevice_storage_set_bool(key, true)
-    } else {
-        storagedevice_storage_delete(key)
-    }
-}
-
-pub fn storagedevice_storage_set_u8(key: u16, val: u8) -> bool {
-    storagedevice_storage_set(key, &val.to_be_bytes() as *const _, 1)
-}
-
-pub fn storagedevice_storage_set_u16(key: u16, val: u16) -> bool {
-    storagedevice_storage_set(key, &val.to_be_bytes() as *const _, 2)
-}
-
-pub fn storagedevice_storage_set_u32(key: u16, val: u32) -> bool {
-    storagedevice_storage_set(key, &val.to_be_bytes() as *const _, 4)
-}
-
-pub fn storagedevice_storage_has(key: u16) -> bool {
-    matches!(unsafe { storage_has(key) }, secbool::TRUE)
-}
-
-pub fn storagedevice_storage_delete(key: u16) -> bool {
-    matches!(unsafe { storage_delete(key) }, secbool::TRUE)
-}
-
-// TODO: we could include `is_public` bool into each key's struct item
 
 fn _get_appkey(key: u8, is_public: bool) -> u16 {
     let app = if is_public {

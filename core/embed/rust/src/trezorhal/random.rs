@@ -21,6 +21,7 @@ pub fn shuffle<T>(slice: &mut [T]) {
     }
 }
 
+// TODO: it seems it gets the same results every time?
 pub fn get_random_bytes(len: u8) -> Vec<u8, MAX_LEN> {
     let mut buf: [u8; MAX_LEN] = [0; MAX_LEN];
     unsafe { random_buffer(&mut buf as *mut _, len as u16) };
