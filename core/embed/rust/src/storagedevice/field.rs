@@ -167,7 +167,8 @@ impl Field<bool> {
         if let Some(result) = self.get() {
             Ok(result.into())
         } else {
-            Ok(NONE)
+            // If nothing there, assume false
+            Ok(false.into())
         }
     }
 
