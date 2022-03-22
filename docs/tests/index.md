@@ -31,7 +31,7 @@ Implement U2F/FIDO2 tests.
 
 ## Upgrade tests
 
-These tests test upgrade from one firmware version to another. They initialize an emulator on some specific version and then pass its storage to another version to see if the firmware operates as expected. They use fixtures from https://firmware.corp.sldev.cz/upgrade_tests/ which can be downloaded using the `download_emulators.sh` script.
+These tests test upgrade from one firmware version to another. They initialize an emulator on some specific version and then pass its storage to another version to see if the firmware operates as expected. They use fixtures from https://data.trezor.io/dev/firmware/releases/emulators/ which can be downloaded using the `download_emulators.sh` script.
 
 See the [upgrade-tests.md](upgrade-tests.md) for instructions how to run it.
 
