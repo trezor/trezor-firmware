@@ -1,4 +1,4 @@
-import storage.device
+import storage
 from trezor import wire
 from trezor.messages import Success, WebAuthnAddResidentCredential
 from trezor.ui.components.common.webauthn import ConfirmInfo

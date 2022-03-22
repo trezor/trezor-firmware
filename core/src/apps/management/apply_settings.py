@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-import storage.device
+import storage
 from trezor import ui, wire
 from trezor.enums import ButtonRequestType, SafetyCheckLevel
 from trezor.messages import Success
@@ -18,9 +18,9 @@ def validate_homescreen(homescreen: bytes) -> None:
     if homescreen == b"":
         return
 
-    if len(homescreen) > storage.device.HOMESCREEN_MAXSIZE:
+    if len(homescreen) > storage.device_old.HOMESCREEN_MAXSIZE:
         raise wire.DataError(
-            f"Homescreen is too large, maximum size is {storage.device.HOMESCREEN_MAXSIZE} bytes"
+            f"Homescreen is too large, maximum size is {storage.device_old.HOMESCREEN_MAXSIZE} bytes"
         )
 
     try:
@@ -57,7 +57,7 @@ async def apply_settings(ctx: wire.Context, msg: ApplySettings) -> Success:
             raise wire.DataError("Invalid homescreen")
 
     if msg.label is not None:
-        if len(msg.label) > storage.device.LABEL_MAXLENGTH:
+        if len(msg.label) > storage.device_old.LABEL_MAXLENGTH:
             raise wire.DataError("Label too long")
         await require_confirm_change_label(ctx, msg.label)
         storage.device.set_label(msg.label)
@@ -75,9 +75,9 @@ async def apply_settings(ctx: wire.Context, msg: ApplySettings) -> Success:
         storage.device.set_passphrase_always_on_device(msg.passphrase_always_on_device)
 
     if msg.auto_lock_delay_ms is not None:
-        if msg.auto_lock_delay_ms < storage.device.AUTOLOCK_DELAY_MINIMUM:
+        if msg.auto_lock_delay_ms < storage.device_old.AUTOLOCK_DELAY_MINIMUM:
             raise wire.ProcessError("Auto-lock delay too short")
-        if msg.auto_lock_delay_ms > storage.device.AUTOLOCK_DELAY_MAXIMUM:
+        if msg.auto_lock_delay_ms > storage.device_old.AUTOLOCK_DELAY_MAXIMUM:
             raise wire.ProcessError("Auto-lock delay too long")
         await require_confirm_change_autolock_delay(ctx, msg.auto_lock_delay_ms)
         storage.device.set_autolock_delay_ms(msg.auto_lock_delay_ms)
@@ -92,7 +92,7 @@ async def apply_settings(ctx: wire.Context, msg: ApplySettings) -> Success:
 
     if msg.experimental_features is not None:
         await require_confirm_experimental_features(ctx, msg.experimental_features)
-        storage.device.set_experimental_features(msg.experimental_features)
+        storage.device_old.set_experimental_features(msg.experimental_features)
 
     reload_settings_from_storage()
 

@@ -1,4 +1,4 @@
-import storage.device
+import storage
 from trezor import config, wire
 from trezor.crypto import bip39, slip39
 from trezor.enums import BackupType

@@ -1,5 +1,4 @@
 import storage
-import storage.device
 from trezor import config, log, loop, ui, utils, wire
 from trezor.pin import show_pin_timeout
 

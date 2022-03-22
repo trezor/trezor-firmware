@@ -1,6 +1,6 @@
 from micropython import const
 
-import storage.device
+import storage
 from trezor import wire, workflow
 
 _MAX_PASSPHRASE_LEN = const(50)

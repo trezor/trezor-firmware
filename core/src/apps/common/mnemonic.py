@@ -1,4 +1,4 @@
-import storage.device
+import storage
 from trezor import ui, utils, workflow
 from trezor.enums import BackupType
 

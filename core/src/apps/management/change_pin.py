@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from storage.device import is_initialized
+import storage
 from trezor import config, wire
 from trezor.messages import Success
 from trezor.ui.layouts import confirm_action, show_success
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 
 async def change_pin(ctx: wire.Context, msg: ChangePin) -> Success:
-    if not is_initialized():
+    if not storage.device.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
 
     # confirm that user wants to change the pin

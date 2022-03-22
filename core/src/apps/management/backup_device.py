@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
 import storage
-import storage.device
 from trezor import wire
 from trezor.messages import Success
 

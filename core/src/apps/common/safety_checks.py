@@ -1,7 +1,7 @@
+import storage
 import storage.cache
-import storage.device
 from storage.cache import APP_COMMON_SAFETY_CHECKS_TEMPORARY
-from storage.device import SAFETY_CHECK_LEVEL_PROMPT, SAFETY_CHECK_LEVEL_STRICT
+from storage.device_old import SAFETY_CHECK_LEVEL_PROMPT, SAFETY_CHECK_LEVEL_STRICT
 from trezor.enums import SafetyCheckLevel
 
 
