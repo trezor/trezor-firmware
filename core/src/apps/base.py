@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 import storage.cache
 import storage.device
-from trezor import config, storagedevice, utils, wire, workflow
+from trezor import config, utils, wire, workflow
 from trezor.enums import MessageType
 from trezor.messages import Success
 
@@ -42,8 +42,8 @@ def get_features() -> Features:
         patch_version=utils.VERSION_PATCH,
         revision=utils.SCM_REVISION,
         model=utils.MODEL,
-        device_id=storagedevice.get_device_id(),
-        label=storagedevice.get_label(),
+        device_id=storage.device.get_device_id(),
+        label=storage.device.get_label(),
         pin_protection=config.has_pin(),
         unlocked=config.is_unlocked(),
     )
@@ -76,24 +76,24 @@ def get_features() -> Features:
             Capability.PassphraseEntry,
         ]
     f.sd_card_present = sdcard.is_present()
-    f.initialized = storagedevice.is_initialized()
+    f.initialized = storage.device.is_initialized()
 
     # private fields:
     if config.is_unlocked():
         # passphrase_protection is private, see #1807
-        f.passphrase_protection = storagedevice.is_passphrase_enabled()
-        f.needs_backup = storagedevice.needs_backup()
-        f.unfinished_backup = storagedevice.unfinished_backup()
-        f.no_backup = storagedevice.no_backup()
-        f.flags = storagedevice.get_flags()
+        f.passphrase_protection = storage.device.is_passphrase_enabled()
+        f.needs_backup = storage.device.needs_backup()
+        f.unfinished_backup = storage.device.unfinished_backup()
+        f.no_backup = storage.device.no_backup()
+        f.flags = storage.device.get_flags()
         f.recovery_mode = storage.recovery.is_in_progress()
         f.backup_type = mnemonic.get_type()
         f.sd_protection = storage.sd_salt.is_enabled()
         f.wipe_code_protection = config.has_wipe_code()
-        f.passphrase_always_on_device = storagedevice.get_passphrase_always_on_device()
+        f.passphrase_always_on_device = storage.device.get_passphrase_always_on_device()
         f.safety_checks = safety_checks.read_setting()
-        f.auto_lock_delay_ms = storagedevice.get_autolock_delay_ms()
-        f.display_rotation = storagedevice.get_rotation()
+        f.auto_lock_delay_ms = storage.device.get_autolock_delay_ms()
+        f.display_rotation = storage.device.get_rotation()
         f.experimental_features = storage.device.get_experimental_features()
 
     return f
@@ -275,10 +275,10 @@ def reload_settings_from_storage() -> None:
     from trezor import ui
 
     workflow.idle_timer.set(
-        storagedevice.get_autolock_delay_ms(), lock_device_if_unlocked
+        storage.device.get_autolock_delay_ms(), lock_device_if_unlocked
     )
     wire.experimental_enabled = storage.device.get_experimental_features()
-    ui.display.orientation(storagedevice.get_rotation())
+    ui.display.orientation(storage.device.get_rotation())
 
 
 def boot() -> None:

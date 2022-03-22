@@ -50,8 +50,8 @@ storage.common
 import storage.common
 storage.debug
 import storage.debug
-storage.device
-import storage.device
+storage.device_old
+import storage.device_old
 storage.fido2
 import storage.fido2
 storage.recovery

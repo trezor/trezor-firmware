@@ -4,10 +4,12 @@ from typing import TYPE_CHECKING
 import storage.cache
 from storage import common
 
+from trezorstoragedevice import *  # noqa: F401,F403
+
+# (above, temporary) Importing all storage.device functionality from Rust
+
+
 # from ubinascii import hexlify
-
-
-# TODO: try ... from trezorstoragedevice import *
 
 
 # TODO: export all the constants also in storagedevice?
@@ -33,6 +35,7 @@ DEVICE_ID                  = const(0x00)  # bytes
 # _HOMESCREEN                = const(0x06)  # bytes
 # _NEEDS_BACKUP              = const(0x07)  # bool (0x01 or empty)
 # _FLAGS                     = const(0x08)  # int
+# MOVE to storage FIDO2
 U2F_COUNTER                = const(0x09)  # int
 # _PASSPHRASE_ALWAYS_ON_DEVICE = const(0x0A)  # bool (0x01 or empty)
 # _UNFINISHED_BACKUP         = const(0x0B)  # bool (0x01 or empty)
@@ -43,6 +46,7 @@ U2F_COUNTER                = const(0x09)  # int
 # _SLIP39_IDENTIFIER         = const(0x10)  # bool
 # _SLIP39_ITERATION_EXPONENT = const(0x11)  # int
 # _SD_SALT_AUTH_KEY          = const(0x12)  # bytes
+# TODO: move to init
 INITIALIZED                = const(0x13)  # bool (0x01 or empty)
 # _SAFETY_CHECK_LEVEL        = const(0x14)  # int
 _EXPERIMENTAL_FEATURES     = const(0x15)  # bool (0x01 or empty)
@@ -51,6 +55,8 @@ SAFETY_CHECK_LEVEL_STRICT  : Literal[0] = const(0)
 SAFETY_CHECK_LEVEL_PROMPT  : Literal[1] = const(1)
 # _DEFAULT_SAFETY_CHECK_LEVEL = SAFETY_CHECK_LEVEL_STRICT
 # fmt: on
+
+# STORAGE.CONSTNAST.PY
 
 HOMESCREEN_MAXSIZE = 16384
 LABEL_MAXLENGTH = 32

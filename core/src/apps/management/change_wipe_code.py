@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
-from trezor import config, storagedevice, ui, wire
+from storage.device import is_initialized
+from trezor import config, ui, wire
 from trezor.messages import Success
 from trezor.ui.layouts import confirm_action, show_popup, show_success
 
@@ -17,7 +18,7 @@ if TYPE_CHECKING:
 
 
 async def change_wipe_code(ctx: wire.Context, msg: ChangeWipeCode) -> Success:
-    if not storagedevice.is_initialized():
+    if not is_initialized():
         raise wire.NotInitialized("Device is not initialized")
 
     # Confirm that user wants to set or remove the wipe code.

@@ -1,7 +1,7 @@
 import storage.cache
+import storage.device
 from storage.cache import APP_COMMON_SAFETY_CHECKS_TEMPORARY
 from storage.device import SAFETY_CHECK_LEVEL_PROMPT, SAFETY_CHECK_LEVEL_STRICT
-from trezor import storagedevice
 from trezor.enums import SafetyCheckLevel
 
 
@@ -13,7 +13,7 @@ def read_setting() -> SafetyCheckLevel:
     if temporary_safety_check_level:
         return int.from_bytes(temporary_safety_check_level, "big")  # type: ignore [int-into-enum]
     else:
-        stored = storagedevice.get_safety_check_level()
+        stored = storage.device.get_safety_check_level()
         if stored == SAFETY_CHECK_LEVEL_STRICT:
             return SafetyCheckLevel.Strict
         elif stored == SAFETY_CHECK_LEVEL_PROMPT:
@@ -28,12 +28,12 @@ def apply_setting(level: SafetyCheckLevel) -> None:
     """
     if level == SafetyCheckLevel.Strict:
         storage.cache.delete(APP_COMMON_SAFETY_CHECKS_TEMPORARY)
-        storagedevice.set_safety_check_level(SAFETY_CHECK_LEVEL_STRICT)
+        storage.device.set_safety_check_level(SAFETY_CHECK_LEVEL_STRICT)
     elif level == SafetyCheckLevel.PromptAlways:
         storage.cache.delete(APP_COMMON_SAFETY_CHECKS_TEMPORARY)
-        storagedevice.set_safety_check_level(SAFETY_CHECK_LEVEL_PROMPT)
+        storage.device.set_safety_check_level(SAFETY_CHECK_LEVEL_PROMPT)
     elif level == SafetyCheckLevel.PromptTemporarily:
-        storagedevice.set_safety_check_level(SAFETY_CHECK_LEVEL_STRICT)
+        storage.device.set_safety_check_level(SAFETY_CHECK_LEVEL_STRICT)
         storage.cache.set(APP_COMMON_SAFETY_CHECKS_TEMPORARY, level.to_bytes(1, "big"))
     else:
         raise ValueError("Unknown SafetyCheckLevel")

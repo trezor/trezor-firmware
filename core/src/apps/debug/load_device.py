@@ -1,4 +1,5 @@
-from trezor import config, storagedevice, wire
+import storage.device
+from trezor import config, wire
 from trezor.crypto import bip39, slip39
 from trezor.enums import BackupType
 from trezor.messages import LoadDevice, Success
@@ -31,17 +32,17 @@ async def load_device(ctx: wire.Context, msg: LoadDevice) -> Success:
         else:
             raise wire.ProcessError("Invalid group count")
 
-        storagedevice.set_slip39_identifier(identifier)
-        storagedevice.set_slip39_iteration_exponent(iteration_exponent)
+        storage.device.set_slip39_identifier(identifier)
+        storage.device.set_slip39_iteration_exponent(iteration_exponent)
 
-    storagedevice.set_mnemonic_secret(
+    storage.device.set_mnemonic_secret(
         secret=secret,
         backup_type=backup_type,
         needs_backup=msg.needs_backup is True,
         no_backup=msg.no_backup is True,
     )
-    storagedevice.set_passphrase_enabled(bool(msg.passphrase_protection))
-    storagedevice.set_label(msg.label or "")
+    storage.device.set_passphrase_enabled(bool(msg.passphrase_protection))
+    storage.device.set_label(msg.label or "")
     if msg.pin:
         config.change_pin("", msg.pin, None, None)
 
@@ -49,7 +50,7 @@ async def load_device(ctx: wire.Context, msg: LoadDevice) -> Success:
 
 
 def _validate(msg: LoadDevice) -> int:
-    if storagedevice.is_initialized():
+    if storage.device.is_initialized():
         raise wire.UnexpectedMessage("Already initialized")
 
     if not msg.mnemonics:

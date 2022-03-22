@@ -10,7 +10,7 @@ class TestCredential(unittest.TestCase):
         mnemonic_secret = b"all all all all all all all all all all all all"
         mnemonic.get_secret = lambda: mnemonic_secret
 
-        # Bypassing the storagedevice.is_initialized() check, which would
+        # Bypassing the device.is_initialized() check, which would
         # cause `Exception("Device is not initialized")`
         seed._get_seed_without_passphrase = lambda: mnemonic.get_seed(
             progress_bar=False
