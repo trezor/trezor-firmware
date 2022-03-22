@@ -1,7 +1,8 @@
 from typing import TYPE_CHECKING
 
 import storage
-from trezor import config, storagedevice, wire
+import storage.device
+from trezor import config, wire
 from trezor.crypto import bip39, hashlib, random, slip39
 from trezor.enums import BackupType
 from trezor.messages import EntropyAck, EntropyRequest, Success
@@ -63,8 +64,8 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
         secret = bip39.from_data(secret).encode()
     elif msg.backup_type in (BackupType.Slip39_Basic, BackupType.Slip39_Advanced):
         # generate and set SLIP39 parameters
-        storagedevice.set_slip39_identifier(slip39.generate_random_identifier())
-        storagedevice.set_slip39_iteration_exponent(slip39.DEFAULT_ITERATION_EXPONENT)
+        storage.device.set_slip39_identifier(slip39.generate_random_identifier())
+        storage.device.set_slip39_iteration_exponent(slip39.DEFAULT_ITERATION_EXPONENT)
     else:
         # Unknown backup type.
         raise RuntimeError
@@ -83,11 +84,11 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
 
     # write settings and master secret into storage
     if msg.label is not None:
-        storagedevice.set_label(msg.label)
-    storagedevice.set_passphrase_enabled(bool(msg.passphrase_protection))
-    storagedevice.set_mnemonic_secret(
-        secret=secret,  # for SLIP-39, this is the EMS
-        backup_type=msg.backup_type,
+        storage.device.set_label(msg.label)
+    storage.device.set_passphrase_enabled(bool(msg.passphrase_protection))
+    storage.device.set_mnemonic_secret(
+        secret,  # for SLIP-39, this is the EMS
+        msg.backup_type,
         needs_backup=not perform_backup,
         no_backup=bool(msg.no_backup),
     )
@@ -110,8 +111,8 @@ async def backup_slip39_basic(
     await layout.slip39_show_checklist(ctx, 1, BackupType.Slip39_Basic)
     threshold = await layout.slip39_prompt_threshold(ctx, shares_count)
 
-    identifier = storagedevice.get_slip39_identifier()
-    iteration_exponent = storagedevice.get_slip39_iteration_exponent()
+    identifier = storage.device.get_slip39_identifier()
+    iteration_exponent = storage.device.get_slip39_iteration_exponent()
     if identifier is None or iteration_exponent is None:
         raise ValueError
 
@@ -150,8 +151,8 @@ async def backup_slip39_advanced(
         share_threshold = await layout.slip39_prompt_threshold(ctx, share_count, i)
         groups.append((share_threshold, share_count))
 
-    identifier = storagedevice.get_slip39_identifier()
-    iteration_exponent = storagedevice.get_slip39_iteration_exponent()
+    identifier = storage.device.get_slip39_identifier()
+    iteration_exponent = storage.device.get_slip39_iteration_exponent()
     if identifier is None or iteration_exponent is None:
         raise ValueError
 
@@ -184,7 +185,7 @@ def _validate_reset_device(msg: ResetDevice) -> None:
             raise wire.ProcessError("Invalid strength (has to be 128, 192 or 256 bits)")
     if msg.display_random and (msg.skip_backup or msg.no_backup):
         raise wire.ProcessError("Can't show internal entropy when backup is skipped")
-    if storagedevice.is_initialized():
+    if storage.device.is_initialized():
         raise wire.UnexpectedMessage("Already initialized")
 
 

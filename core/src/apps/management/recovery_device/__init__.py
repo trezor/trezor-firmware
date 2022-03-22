@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 import storage
 import storage.device
 import storage.recovery
-from trezor import config, storagedevice, ui, wire, workflow
+from trezor import config, ui, wire, workflow
 from trezor.enums import ButtonRequestType
 from trezor.messages import Success
 from trezor.ui.layouts import confirm_action, confirm_reset_device
@@ -56,11 +56,11 @@ async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
             newpin = await request_pin_confirm(ctx, allow_cancel=False)
             config.change_pin("", newpin, None, None)
 
-        storagedevice.set_passphrase_enabled(bool(msg.passphrase_protection))
+        storage.device.set_passphrase_enabled(bool(msg.passphrase_protection))
         if msg.u2f_counter is not None:
-            storagedevice.set_u2f_counter(msg.u2f_counter)
+            storage.device.set_u2f_counter(msg.u2f_counter)
         if msg.label is not None:
-            storagedevice.set_label(msg.label)
+            storage.device.set_label(msg.label)
 
     storage.recovery.set_in_progress(True)
     storage.recovery.set_dry_run(bool(msg.dry_run))
@@ -70,9 +70,9 @@ async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
 
 
 def _validate(msg: RecoveryDevice) -> None:
-    if not msg.dry_run and storagedevice.is_initialized():
+    if not msg.dry_run and storage.device.is_initialized():
         raise wire.UnexpectedMessage("Already initialized")
-    if msg.dry_run and not storagedevice.is_initialized():
+    if msg.dry_run and not storage.device.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
 
     if msg.enforce_wordlist is False:

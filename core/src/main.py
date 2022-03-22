@@ -45,9 +45,9 @@ with unimport_manager:
     del boot
 
 # start the USB
-from trezor import storagedevice
+import storage.device
 
-usb.bus.open(storagedevice.get_device_id())
+usb.bus.open(storage.device.get_device_id())
 
 # run the endless loop
 while True:

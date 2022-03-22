@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
-from storage import cache
-from trezor import storagedevice, utils, wire
+from storage import cache, device
+from trezor import utils, wire
 from trezor.crypto import bip32, hmac
 
 from . import mnemonic
@@ -48,7 +48,7 @@ if not utils.BITCOIN_ONLY:
     # expose a method for Cardano to do the same
 
     async def derive_and_store_roots(ctx: wire.Context) -> None:
-        if not storagedevice.is_initialized():
+        if not device.is_initialized():
             raise wire.NotInitialized("Device is not initialized")
 
         need_seed = not cache.is_set(cache.APP_COMMON_SEED)
@@ -89,7 +89,7 @@ else:
 
 @cache.stored(cache.APP_COMMON_SEED_WITHOUT_PASSPHRASE)
 def _get_seed_without_passphrase() -> bytes:
-    if not storagedevice.is_initialized():
+    if not device.is_initialized():
         raise Exception("Device is not initialized")
     return mnemonic.get_seed(progress_bar=False)
 

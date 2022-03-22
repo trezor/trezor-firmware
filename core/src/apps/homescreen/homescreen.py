@@ -4,7 +4,7 @@ from micropython import const
 import storage
 import storage.cache
 import storage.device
-from trezor import config, storagedevice, ui
+from trezor import config, ui
 from trezor.ui.loader import Loader, LoaderNeutral
 
 from apps.base import lock_device
@@ -25,7 +25,7 @@ class Homescreen(HomescreenBase):
 
     def __init__(self) -> None:
         super().__init__()
-        if not storagedevice.is_initialized():
+        if not storage.device.is_initialized():
             self.label = "Go to trezor.io/start"
 
         self.loader = Loader(
@@ -38,13 +38,13 @@ class Homescreen(HomescreenBase):
 
     def do_render(self) -> None:
         # warning bar on top
-        if storagedevice.is_initialized() and storagedevice.no_backup():
+        if storage.device.is_initialized() and storage.device.no_backup():
             ui.header_error("SEEDLESS")
-        elif storagedevice.is_initialized() and storagedevice.unfinished_backup():
+        elif storage.device.is_initialized() and storage.device.unfinished_backup():
             ui.header_error("BACKUP FAILED!")
-        elif storagedevice.is_initialized() and storagedevice.needs_backup():
+        elif storage.device.is_initialized() and storage.device.needs_backup():
             ui.header_warning("NEEDS BACKUP!")
-        elif storagedevice.is_initialized() and not config.has_pin():
+        elif storage.device.is_initialized() and not config.has_pin():
             ui.header_warning("PIN NOT SET!")
         elif storage.device.get_experimental_features():
             ui.header_warning("EXPERIMENTAL MODE!")

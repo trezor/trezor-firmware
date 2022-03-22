@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 import storage.device
 import storage.sd_salt
-from trezor import config, storagedevice, wire
+from trezor import config, wire
 from trezor.crypto import random
 from trezor.enums import SdProtectOperationType
 from trezor.messages import Success
@@ -39,7 +39,7 @@ async def _set_salt(
 
 
 async def sd_protect(ctx: wire.Context, msg: SdProtect) -> Success:
-    if not storagedevice.is_initialized():
+    if not storage.device.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
 
     if msg.operation == SdProtectOperationType.ENABLE:
@@ -83,7 +83,7 @@ async def sd_protect_enable(ctx: wire.Context, msg: SdProtect) -> Success:
             pass
         await error_pin_invalid(ctx)
 
-    storagedevice.set_sd_salt_auth_key(salt_auth_key)
+    storage.device.set_sd_salt_auth_key(salt_auth_key)
 
     await show_success(
         ctx, "success_sd", "You have successfully enabled SD protection."
@@ -107,7 +107,7 @@ async def sd_protect_disable(ctx: wire.Context, msg: SdProtect) -> Success:
     # Check PIN and remove salt.
     if not config.change_pin(pin, pin, salt, None):
         await error_pin_invalid(ctx)
-    storagedevice.set_sd_salt_auth_key(b"")
+    storage.device.set_sd_salt_auth_key(b"")
 
     try:
         # Clean up.
@@ -144,7 +144,7 @@ async def sd_protect_refresh(ctx: wire.Context, msg: SdProtect) -> Success:
     if not config.change_pin(pin, pin, old_salt, new_salt):
         await error_pin_invalid(ctx)
 
-    storagedevice.set_sd_salt_auth_key(new_auth_key)
+    storage.device.set_sd_salt_auth_key(new_auth_key)
 
     try:
         # Clean up.

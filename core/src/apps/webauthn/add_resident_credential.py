@@ -1,4 +1,5 @@
-from trezor import storagedevice, wire
+import storage.device
+from trezor import wire
 from trezor.messages import Success, WebAuthnAddResidentCredential
 from trezor.ui.components.common.webauthn import ConfirmInfo
 from trezor.ui.layouts import show_error_and_raise
@@ -27,7 +28,7 @@ class ConfirmAddCredential(ConfirmInfo):
 async def add_resident_credential(
     ctx: wire.Context, msg: WebAuthnAddResidentCredential
 ) -> Success:
-    if not storagedevice.is_initialized():
+    if not storage.device.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
     if not msg.credential_id:
         raise wire.ProcessError("Missing credential ID parameter.")

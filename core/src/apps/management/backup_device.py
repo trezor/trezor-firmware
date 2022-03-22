@@ -1,6 +1,8 @@
 from typing import TYPE_CHECKING
 
-from trezor import storagedevice, wire
+import storage
+import storage.device
+from trezor import wire
 from trezor.messages import Success
 
 from apps.common import mnemonic
@@ -12,21 +14,21 @@ if TYPE_CHECKING:
 
 
 async def backup_device(ctx: wire.Context, msg: BackupDevice) -> Success:
-    if not storagedevice.is_initialized():
+    if not storage.device.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
-    if not storagedevice.needs_backup():
+    if not storage.device.needs_backup():
         raise wire.ProcessError("Seed already backed up")
 
     mnemonic_secret, mnemonic_type = mnemonic.get()
     if mnemonic_secret is None:
         raise RuntimeError
 
-    storagedevice.set_unfinished_backup(True)
-    storagedevice.set_backed_up()
+    storage.device.set_unfinished_backup(True)
+    storage.device.set_backed_up()
 
     await backup_seed(ctx, mnemonic_type, mnemonic_secret)
 
-    storagedevice.set_unfinished_backup(False)
+    storage.device.set_unfinished_backup(False)
 
     await layout.show_backup_success(ctx)
 

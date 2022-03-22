@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 import storage.device
-from trezor import storagedevice, ui, wire
+from trezor import ui, wire
 from trezor.enums import ButtonRequestType, SafetyCheckLevel
 from trezor.messages import Success
 from trezor.strings import format_duration_ms
@@ -34,7 +34,7 @@ def validate_homescreen(homescreen: bytes) -> None:
 
 
 async def apply_settings(ctx: wire.Context, msg: ApplySettings) -> Success:
-    if not storagedevice.is_initialized():
+    if not storage.device.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
     if (
         msg.homescreen is None
@@ -52,7 +52,7 @@ async def apply_settings(ctx: wire.Context, msg: ApplySettings) -> Success:
         validate_homescreen(msg.homescreen)
         await require_confirm_change_homescreen(ctx)
         try:
-            storagedevice.set_homescreen(msg.homescreen)
+            storage.device.set_homescreen(msg.homescreen)
         except ValueError:
             raise wire.DataError("Invalid homescreen")
 
@@ -60,19 +60,19 @@ async def apply_settings(ctx: wire.Context, msg: ApplySettings) -> Success:
         if len(msg.label) > storage.device.LABEL_MAXLENGTH:
             raise wire.DataError("Label too long")
         await require_confirm_change_label(ctx, msg.label)
-        storagedevice.set_label(msg.label)
+        storage.device.set_label(msg.label)
 
     if msg.use_passphrase is not None:
         await require_confirm_change_passphrase(ctx, msg.use_passphrase)
-        storagedevice.set_passphrase_enabled(msg.use_passphrase)
+        storage.device.set_passphrase_enabled(msg.use_passphrase)
 
     if msg.passphrase_always_on_device is not None:
-        if not storagedevice.is_passphrase_enabled():
+        if not storage.device.is_passphrase_enabled():
             raise wire.DataError("Passphrase is not enabled")
         await require_confirm_change_passphrase_source(
             ctx, msg.passphrase_always_on_device
         )
-        storagedevice.set_passphrase_always_on_device(msg.passphrase_always_on_device)
+        storage.device.set_passphrase_always_on_device(msg.passphrase_always_on_device)
 
     if msg.auto_lock_delay_ms is not None:
         if msg.auto_lock_delay_ms < storage.device.AUTOLOCK_DELAY_MINIMUM:
@@ -80,7 +80,7 @@ async def apply_settings(ctx: wire.Context, msg: ApplySettings) -> Success:
         if msg.auto_lock_delay_ms > storage.device.AUTOLOCK_DELAY_MAXIMUM:
             raise wire.ProcessError("Auto-lock delay too long")
         await require_confirm_change_autolock_delay(ctx, msg.auto_lock_delay_ms)
-        storagedevice.set_autolock_delay_ms(msg.auto_lock_delay_ms)
+        storage.device.set_autolock_delay_ms(msg.auto_lock_delay_ms)
 
     if msg.safety_checks is not None:
         await require_confirm_safety_checks(ctx, msg.safety_checks)
@@ -88,7 +88,7 @@ async def apply_settings(ctx: wire.Context, msg: ApplySettings) -> Success:
 
     if msg.display_rotation is not None:
         await require_confirm_change_display_rotation(ctx, msg.display_rotation)
-        storagedevice.set_rotation(msg.display_rotation)
+        storage.device.set_rotation(msg.display_rotation)
 
     if msg.experimental_features is not None:
         await require_confirm_experimental_features(ctx, msg.experimental_features)

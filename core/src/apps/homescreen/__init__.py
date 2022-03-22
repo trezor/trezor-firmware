@@ -1,7 +1,8 @@
 from typing import Any
 
 import storage.cache
-from trezor import res, storagedevice, ui
+import storage.device
+from trezor import res, ui
 
 
 class HomescreenBase(ui.Layout):
@@ -9,11 +10,13 @@ class HomescreenBase(ui.Layout):
 
     def __init__(self) -> None:
         super().__init__()
-        self.label = storagedevice.get_label() or "My Trezor"
+        self.label = storage.device.get_label() or "My Trezor"
         self.repaint = storage.cache.homescreen_shown is not self.RENDER_INDICATOR
 
     def get_image(self) -> bytes:
-        return storagedevice.get_homescreen() or res.load("apps/homescreen/res/bg.toif")
+        return storage.device.get_homescreen() or res.load(
+            "apps/homescreen/res/bg.toif"
+        )
 
     async def __iter__(self) -> Any:
         # We need to catch the ui.Cancelled exception that kills us, because that means
