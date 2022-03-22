@@ -94,16 +94,15 @@ static uint8_t sig[64];     // Used in Phase 1 to store signature of original tx
 #if !BITCOIN_ONLY
 static uint8_t decred_hash_prefix[32];
 #endif
-static uint8_t hash_inputs_check[32];
 static uint64_t total_in, total_out, change_out;
 static uint64_t orig_total_in, orig_total_out, orig_change_out;
-static uint32_t next_legacy_input;
 static uint32_t progress, progress_step, progress_meta_step;
 static uint32_t tx_weight;
 
 typedef struct {
   uint32_t inputs_count;
   uint32_t outputs_count;
+  uint32_t next_legacy_input;
   uint32_t min_sequence;
   bool multisig_fp_set;
   bool multisig_fp_mismatch;
@@ -118,11 +117,13 @@ typedef struct {
 #if !BITCOIN_ONLY
   uint32_t branch_id;
 #endif
+  Hasher hasher_check;
   Hasher hasher_prevouts;
   Hasher hasher_amounts;
   Hasher hasher_scriptpubkeys;
   Hasher hasher_sequences;
   Hasher hasher_outputs;
+  uint8_t hash_inputs_check[32];
   uint8_t hash_prevouts[32];
   uint8_t hash_amounts[32];
   uint8_t hash_scriptpubkeys[32];
@@ -216,6 +217,7 @@ Phase1 - process inputs
        - check previous transactions
 =========================================================
 
+Stage 1: Get inputs and optionally get original inputs.
 foreach I (idx1):
     Request I                                                 STAGE_REQUEST_1_INPUT
     Add I to segwit sub-hashes
@@ -225,9 +227,11 @@ foreach I (idx1):
         Request input I2 orig_hash, orig_index                STAGE_REQUEST_1_ORIG_INPUT
         Check I matches I2
         Add I2 to original segwit sub-hashes
+        Add I2 to orig_hash_inputs_check
     if (Decred)
         Return I
 
+Stage 2: Get outputs and optionally get original outputs.
 foreach O (idx1):
     Request O                                                 STAGE_REQUEST_2_OUTPUT
     Add O to Decred decred_hash_prefix
@@ -245,8 +249,10 @@ foreach O (idx1):
 Check tx fee
 Ask for confirmation
 
+Stage 3: Check transaction.
+
 if (taproot_only)
-    Skip to Phase 2.
+    Skip checking of previous transactions.
 
 foreach I (idx1):
     Request I                                                 STAGE_REQUEST_3_INPUT
@@ -513,7 +519,7 @@ void send_req_4_output(void) {
   msg_write(MessageType_MessageType_TxRequest, &resp);
 }
 
-void send_req_segwit_input(void) {
+void send_req_nonlegacy_input(void) {
   signing_stage = STAGE_REQUEST_NONLEGACY_INPUT;
   resp.has_request_type = true;
   resp.request_type = RequestType_TXINPUT;
@@ -568,7 +574,6 @@ void phase1_request_next_input(void) {
     idx1++;
     send_req_1_input();
   } else {
-    hasher_Final(&hasher_check, hash_inputs_check);
     idx1 = 0;
 
     if (is_replacement) {
@@ -636,11 +641,11 @@ void phase1_request_orig_input(void) {
 }
 
 void phase2_request_next_input(void) {
-  if (idx1 == next_legacy_input) {
+  if (idx1 == info.next_legacy_input) {
     idx2 = 0;
     send_req_4_input();
   } else {
-    send_req_segwit_input();
+    send_req_nonlegacy_input();
   }
 }
 
@@ -831,6 +836,7 @@ static bool tx_info_init(TxInfo *tx_info, uint32_t inputs_count,
 
   tx_info->inputs_count = inputs_count;
   tx_info->outputs_count = outputs_count;
+  tx_info->next_legacy_input = 0xffffffff;
   tx_info->min_sequence = SEQUENCE_FINAL;
   tx_info->multisig_fp_set = false;
   tx_info->multisig_fp_mismatch = false;
@@ -890,6 +896,8 @@ static bool tx_info_init(TxInfo *tx_info, uint32_t inputs_count,
     tx_info->branch_id = 0;
   }
 #endif
+
+  hasher_Init(&tx_info->hasher_check, HASHER_SHA2);
 
 #if !BITCOIN_ONLY
   if (coin->overwintered) {
@@ -969,8 +977,6 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
   // we step by 500/inputs_count per input in phase1 and phase2
   // this means 50 % per phase.
   progress_step = (500 << PROGRESS_PRECISION) / info.inputs_count;
-
-  next_legacy_input = 0xffffffff;
 
   tx_init(&to, info.inputs_count, info.outputs_count, info.version,
           info.lock_time, info.expiry, 0, coin->curve->hasher_sign,
@@ -1305,6 +1311,7 @@ static bool tx_info_add_output(TxInfo *tx_info,
 }
 
 static void tx_info_finish(TxInfo *tx_info) {
+  hasher_Final(&tx_info->hasher_check, tx_info->hash_inputs_check);
   hasher_Final(&tx_info->hasher_prevouts, tx_info->hash_prevouts);
   hasher_Final(&tx_info->hasher_amounts, tx_info->hash_amounts);
   hasher_Final(&tx_info->hasher_scriptpubkeys, tx_info->hash_scriptpubkeys);
@@ -1328,9 +1335,33 @@ static void tx_info_finish(TxInfo *tx_info) {
   }
 }
 
+static bool tx_info_check_inputs_hash(TxInfo *tx_info) {
+  uint8_t hash[32];
+  hasher_Final(&tx_info->hasher_check, hash);
+  if (memcmp(hash, tx_info->hash_inputs_check, 32) != 0) {
+    fsm_sendFailure(FailureType_Failure_DataError,
+                    _("Transaction has changed during signing"));
+    signing_abort();
+    return false;
+  }
+  return true;
+}
+
+static bool tx_info_check_outputs_hash(TxInfo *tx_info) {
+  uint8_t hash[32] = {0};
+  hasher_Final(&tx_info->hasher_check, hash);
+  if (memcmp(hash, tx_info->hash_outputs, 32) != 0) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Transaction has changed during signing"));
+    signing_abort();
+    return false;
+  }
+  return true;
+}
+
 static bool signing_add_input(TxInputType *txinput) {
   // hash all input data to check it later (relevant for fee computation)
-  if (!tx_input_check_hash(&hasher_check, txinput)) {
+  if (!tx_input_check_hash(&info.hasher_check, txinput)) {
     fsm_sendFailure(FailureType_Failure_ProcessError,
                     _("Failed to hash input"));
     signing_abort();
@@ -1399,11 +1430,7 @@ static bool signing_check_prevtx_hash(void) {
     idx1++;
     send_req_3_input();
   } else {
-    hasher_Final(&hasher_check, hash);
-    if (memcmp(hash, hash_inputs_check, 32) != 0) {
-      fsm_sendFailure(FailureType_Failure_DataError,
-                      _("Transaction has changed during signing"));
-      signing_abort();
+    if (!tx_info_check_inputs_hash(&info)) {
       return false;
     }
 
@@ -2268,17 +2295,12 @@ static bool signing_sign_bip340(const uint8_t *private_key,
 }
 
 static bool signing_sign_legacy_input(void) {
-  uint8_t hash[32] = {0};
-  hasher_Final(&hasher_check, hash);
-  if (memcmp(hash, info.hash_outputs, 32) != 0 || taproot_only) {
-    fsm_sendFailure(FailureType_Failure_ProcessError,
-                    _("Transaction has changed during signing"));
-    signing_abort();
-    return false;
-  }
-
+  // Finalize legacy digest computation.
   uint32_t hash_type = signing_hash_type(&input);
   hasher_Update(&ti.hasher, (const uint8_t *)&hash_type, 4);
+
+  // Compute the digest and generate signature.
+  uint8_t hash[32] = {0};
   tx_hash_final(&ti, hash, false);
   resp.has_serialized = true;
   if (!signing_sign_ecdsa(&input, privkey, pubkey, hash)) return false;
@@ -2484,7 +2506,9 @@ void signing_txack(TransactionType *tx) {
         if (!coin->force_bip143 && !coin->overwintered) {
           // remember the first non-segwit input -- this is the first input
           // we need to sign during phase2
-          if (next_legacy_input == 0xffffffff) next_legacy_input = idx1;
+          if (info.next_legacy_input == 0xffffffff) {
+            info.next_legacy_input = idx1;
+          }
         }
       } else if (is_segwit_input_script_type(&tx->inputs[0])) {
         if (!to.is_segwit) {
@@ -2626,23 +2650,24 @@ void signing_txack(TransactionType *tx) {
       return;
 #endif
     case STAGE_REQUEST_3_INPUT:
-      if (!signing_validate_input(&tx->inputs[0])) {
+      if (idx1 == 0) {
+        hasher_Reset(&info.hasher_check);
+      }
+
+      if (!signing_validate_input(tx->inputs)) {
+        return;
+      }
+
+      if (!tx_input_check_hash(&info.hasher_check, tx->inputs)) {
+        fsm_sendFailure(FailureType_Failure_ProcessError,
+                        _("Failed to hash input"));
+        signing_abort();
         return;
       }
 
       if (!tx->inputs[0].has_amount) {
         fsm_sendFailure(FailureType_Failure_DataError,
                         _("Expected input with amount"));
-        signing_abort();
-        return;
-      }
-
-      if (idx1 == 0) {
-        hasher_Reset(&hasher_check);
-      }
-      if (!tx_input_check_hash(&hasher_check, tx->inputs)) {
-        fsm_sendFailure(FailureType_Failure_ProcessError,
-                        _("Failed to hash input"));
         signing_abort();
         return;
       }
@@ -2847,10 +2872,10 @@ void signing_txack(TransactionType *tx) {
         tx_init(&ti, info.inputs_count, info.outputs_count, info.version,
                 info.lock_time, info.expiry, 0, coin->curve->hasher_sign,
                 coin->overwintered, info.version_group_id, info.timestamp);
-        hasher_Reset(&hasher_check);
+        hasher_Reset(&info.hasher_check);
       }
       // check inputs are the same as those in phase 1
-      if (!tx_input_check_hash(&hasher_check, tx->inputs)) {
+      if (!tx_input_check_hash(&info.hasher_check, tx->inputs)) {
         fsm_sendFailure(FailureType_Failure_ProcessError,
                         _("Failed to hash input"));
         signing_abort();
@@ -2866,10 +2891,10 @@ void signing_txack(TransactionType *tx) {
         memcpy(privkey, node.private_key, 32);
         memcpy(pubkey, node.public_key, 33);
       } else {
-        if (next_legacy_input == idx1 && idx2 > idx1 &&
+        if (info.next_legacy_input == idx1 && idx2 > idx1 &&
             (tx->inputs[0].script_type == InputScriptType_SPENDADDRESS ||
              tx->inputs[0].script_type == InputScriptType_SPENDMULTISIG)) {
-          next_legacy_input = idx2;
+          info.next_legacy_input = idx2;
         }
         tx->inputs[0].script_sig.size = 0;
       }
@@ -2883,15 +2908,11 @@ void signing_txack(TransactionType *tx) {
         idx2++;
         send_req_4_input();
       } else {
-        uint8_t hash[32] = {0};
-        hasher_Final(&hasher_check, hash);
-        if (memcmp(hash, hash_inputs_check, 32) != 0) {
-          fsm_sendFailure(FailureType_Failure_DataError,
-                          _("Transaction has changed during signing"));
-          signing_abort();
+        if (!tx_info_check_inputs_hash(&info)) {
           return;
         }
-        hasher_Reset(&hasher_check);
+
+        hasher_Reset(&info.hasher_check);
         idx2 = 0;
         send_req_4_output();
       }
@@ -2911,7 +2932,7 @@ void signing_txack(TransactionType *tx) {
         return;
       }
       //  check hashOutputs
-      tx_output_hash(&hasher_check, &bin_output, coin->decred);
+      tx_output_hash(&info.hasher_check, &bin_output, coin->decred);
       if (!tx_serialize_output_hash(&ti, &bin_output)) {
         fsm_sendFailure(FailureType_Failure_ProcessError,
                         _("Failed to serialize output"));
@@ -2922,7 +2943,8 @@ void signing_txack(TransactionType *tx) {
         idx2++;
         send_req_4_output();
       } else {
-        if (!signing_sign_legacy_input()) {
+        if (!tx_info_check_outputs_hash(&info) ||
+            !signing_sign_legacy_input()) {
           return;
         }
         // since this took a longer time, update progress
