@@ -19,7 +19,7 @@ def get_version() -> bytes:
 
 
 # rust/src/storagedevice/storage_device.rs
-def set_version(version: bytes) -> bool:
+def set_version(version: bytes) -> None:
     """Set version."""
 
 
@@ -29,7 +29,7 @@ def get_rotation() -> int:
 
 
 # rust/src/storagedevice/storage_device.rs
-def set_rotation(rotation: int) -> bool:
+def set_rotation(rotation: int) -> None:
     """Set rotation."""
 
 
@@ -39,7 +39,7 @@ def get_label() -> str | None:
 
 
 # rust/src/storagedevice/storage_device.rs
-def set_label(label: str) -> bool:
+def set_label(label: str) -> None:
     """Set label."""
 
 
@@ -69,7 +69,7 @@ def is_passphrase_enabled() -> bool:
 
 
 # rust/src/storagedevice/storage_device.rs
-def set_passphrase_enabled(enable: bool) -> bool:
+def set_passphrase_enabled(enable: bool) -> None:
     """Set whether passphrase is enabled."""
 
 
@@ -79,7 +79,7 @@ def get_passphrase_always_on_device() -> bool:
 
 
 # rust/src/storagedevice/storage_device.rs
-def set_passphrase_always_on_device(enable: bool) -> bool:
+def set_passphrase_always_on_device(enable: bool) -> None:
     """Set whether passphrase is on device.
     This is backwards compatible with _PASSPHRASE_SOURCE:
     - If ASK(0) => returns False, the check against b"\x01" in get_bool fails.
@@ -94,7 +94,7 @@ def unfinished_backup() -> bool:
 
 
 # rust/src/storagedevice/storage_device.rs
-def set_unfinished_backup(state: bool) -> bool:
+def set_unfinished_backup(state: bool) -> None:
     """Set backup state."""
 
 
@@ -104,7 +104,7 @@ def needs_backup() -> bool:
 
 
 # rust/src/storagedevice/storage_device.rs
-def set_backed_up() -> bool:
+def set_backed_up() -> None:
     """Signal that backup is finished."""
 
 
@@ -124,7 +124,7 @@ def get_homescreen() -> bytes | None:
 
 
 # rust/src/storagedevice/storage_device.rs
-def set_homescreen(homescreen: bytes) -> bool:
+def set_homescreen(homescreen: bytes) -> None:
     """Set homescreen."""
 
 
@@ -134,7 +134,7 @@ def get_slip39_identifier() -> int | None:
 
 
 # rust/src/storagedevice/storage_device.rs
-def set_slip39_identifier(identifier: int) -> bool:
+def set_slip39_identifier(identifier: int) -> None:
     """
     The device's actual SLIP-39 identifier used in passphrase derivation.
     Not to be confused with recovery.identifier, which is stored only during
@@ -148,7 +148,7 @@ def get_slip39_iteration_exponent() -> int | None:
 
 
 # rust/src/storagedevice/storage_device.rs
-def set_slip39_iteration_exponent(exponent: int) -> bool:
+def set_slip39_iteration_exponent(exponent: int) -> None:
     """
     The device's actual SLIP-39 iteration exponent used in passphrase derivation.
     Not to be confused with recovery.iteration_exponent, which is stored only during
@@ -162,7 +162,7 @@ def get_autolock_delay_ms() -> int:
 
 
 # rust/src/storagedevice/storage_device.rs
-def set_autolock_delay_ms(delay_ms: int) -> bool:
+def set_autolock_delay_ms(delay_ms: int) -> None:
     """Set autolock delay."""
 
 
@@ -172,7 +172,7 @@ def get_flags() -> int:
 
 
 # rust/src/storagedevice/storage_device.rs
-def set_flags(flags: int) -> bool:
+def set_flags(flags: int) -> None:
     """Set flags."""
 
 
@@ -184,7 +184,7 @@ def get_safety_check_level() -> StorageSafetyCheckLevel:
 
 
 # rust/src/storagedevice/storage_device.rs
-def set_safety_check_level(level: StorageSafetyCheckLevel) -> bool:
+def set_safety_check_level(level: StorageSafetyCheckLevel) -> None:
     """Set safety check level.
     Do not use this function directly, see apps.common.safety_checks instead.
     """
@@ -196,7 +196,7 @@ def get_sd_salt_auth_key() -> bytes | None:
 
 
 # rust/src/storagedevice/storage_device.rs
-def set_sd_salt_auth_key(auth_key: bytes) -> bool:
+def set_sd_salt_auth_key(auth_key: bytes) -> None:
     """The key used to check the authenticity of the SD card salt.
     Empty bytes will delete the salt.
     """
@@ -208,5 +208,5 @@ def get_next_u2f_counter() -> int:
 
 
 # rust/src/storagedevice/storage_device.rs
-def set_u2f_counter(count: int) -> bool:
+def set_u2f_counter(count: int) -> None:
     """Set U2F counter."""

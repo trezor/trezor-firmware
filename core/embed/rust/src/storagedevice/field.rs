@@ -5,7 +5,8 @@ use heapless::{String, Vec};
 
 const FLAG_PUBLIC: u8 = 0x80;
 
-const NONE: Obj = Obj::const_none();
+// NOTE: it is impossible to create const with the error messages -
+// not &CStr nor &str
 
 extern "C" {
     // storage.h
@@ -22,7 +23,6 @@ pub struct Field<T> {
     app: u8,
     key: u8,
     public: bool,
-    max_len_error: bool, // Could pass the whole Error somehow (const issues)
     max_len_is_exact: bool,
     _marker: PhantomData<*const T>,
 }
@@ -33,7 +33,6 @@ impl<T> Field<T> {
             app,
             key,
             public: true,
-            max_len_error: false,
             max_len_is_exact: false,
             _marker: PhantomData,
         }
@@ -44,7 +43,6 @@ impl<T> Field<T> {
             app,
             key,
             public: false,
-            max_len_error: false,
             max_len_is_exact: false,
             _marker: PhantomData,
         }
@@ -53,13 +51,6 @@ impl<T> Field<T> {
     pub const fn exact(self) -> Self {
         Self {
             max_len_is_exact: true,
-            ..self
-        }
-    }
-
-    pub const fn max_len_error(self) -> Self {
-        Self {
-            max_len_error: true,
             ..self
         }
     }
@@ -76,10 +67,10 @@ impl<T> Field<T> {
         secbool::TRUE == unsafe { storage_has(self.appkey()) }
     }
 
-    pub fn delete(&self) -> Result<bool, Error> {
+    pub fn delete(&self) -> Result<(), Error> {
         // If there is nothing, storage_delete() would return false
         if !self.has() {
-            return Ok(true);
+            return Ok(());
         }
 
         let result = unsafe { storage_delete(self.appkey()) };
@@ -88,7 +79,7 @@ impl<T> Field<T> {
                 "Could not delete value in storage"
             )))
         } else {
-            Ok(true)
+            Ok(())
         }
     }
 
@@ -103,13 +94,13 @@ impl<T> Field<T> {
         }
     }
 
-    fn set_bytes(&self, buf: &[u8]) -> Result<bool, Error> {
+    fn set_bytes(&self, buf: &[u8]) -> Result<(), Error> {
         assert!(buf.len() <= u16::MAX as usize);
         let result = unsafe { storage_set(self.appkey(), buf.as_ptr(), buf.len() as u16) };
         if result != secbool::TRUE {
             Err(Error::ValueError(cstr!("Could not save value to storage")))
         } else {
-            Ok(true)
+            Ok(())
         }
     }
 }
@@ -125,7 +116,7 @@ impl Field<u32> {
         }
     }
 
-    pub fn set(&self, val: u32) -> Result<bool, Error> {
+    pub fn set(&self, val: u32) -> Result<(), Error> {
         self.set_bytes(&val.to_le_bytes())
     }
 }
@@ -145,11 +136,11 @@ impl Field<u16> {
         if let Some(result) = self.get() {
             Ok(result.into())
         } else {
-            Ok(NONE)
+            Ok(Obj::const_none())
         }
     }
 
-    pub fn set(&self, val: u16) -> Result<bool, Error> {
+    pub fn set(&self, val: u16) -> Result<(), Error> {
         self.set_bytes(&val.to_le_bytes())
     }
 }
@@ -169,11 +160,11 @@ impl Field<u8> {
         if let Some(result) = self.get() {
             Ok(result.into())
         } else {
-            Ok(NONE)
+            Ok(Obj::const_none())
         }
     }
 
-    pub fn set(&self, val: u8) -> Result<bool, Error> {
+    pub fn set(&self, val: u8) -> Result<(), Error> {
         self.set_bytes(&[val])
     }
 }
@@ -198,11 +189,11 @@ impl Field<bool> {
         }
     }
 
-    pub fn set(&self, val: bool) -> Result<bool, Error> {
+    pub fn set(&self, val: bool) -> Result<(), Error> {
         self.set_bytes(&[if val { 1 } else { 0 }])
     }
 
-    pub fn set_true_or_delete(self, val: bool) -> Result<bool, Error> {
+    pub fn set_true_or_delete(self, val: bool) -> Result<(), Error> {
         if val {
             self.set(true)
         } else {
@@ -219,9 +210,9 @@ impl<const N: usize> Field<String<N>> {
             let string = String::from(str::from_utf8(&buf[..len as usize]).ok().unwrap());
             if self.max_len_is_exact && string.len() as usize != N {
                 Ok(None)
-            } else if self.max_len_error && string.len() as usize > N {
+            } else if string.len() as usize > N {
                 // TODO: we could probably just return None and get rid of the Result
-                Err(Error::ValueError(cstr!("String too long")))
+                Err(Error::ValueError(cstr!("Value too big")))
             } else {
                 Ok(Some(string))
             }
@@ -234,15 +225,15 @@ impl<const N: usize> Field<String<N>> {
         if let Some(result) = self.get()? {
             result.as_str().try_into()
         } else {
-            Ok(NONE)
+            Ok(Obj::const_none())
         }
     }
 
-    pub fn set(&self, val: &str) -> Result<bool, Error> {
+    pub fn set(&self, val: &str) -> Result<(), Error> {
         if self.max_len_is_exact && val.chars().count() as usize != N {
-            Err(Error::ValueError(cstr!("String is not exact length")))
-        } else if self.max_len_error && val.chars().count() as usize > N {
-            Err(Error::ValueError(cstr!("String too long")))
+            Err(Error::ValueError(cstr!("Value is not exact")))
+        } else if val.chars().count() as usize > N {
+            Err(Error::ValueError(cstr!("Value too big")))
         } else {
             self.set_bytes(val.as_bytes())
         }
@@ -256,7 +247,7 @@ impl<const N: usize> Field<Vec<u8, N>> {
         if let Some(len) = len {
             if self.max_len_is_exact && len as usize != N {
                 Ok(None)
-            } else if self.max_len_error && len as usize > N {
+            } else if len as usize > N {
                 // TODO: we could probably just return None and get rid of the Result
                 Err(Error::ValueError(cstr!("Value too big")))
             } else {
@@ -271,14 +262,14 @@ impl<const N: usize> Field<Vec<u8, N>> {
         if let Some(result) = self.get()? {
             (&result as &[u8]).try_into()
         } else {
-            Ok(NONE)
+            Ok(Obj::const_none())
         }
     }
 
-    pub fn set(&self, val: &[u8]) -> Result<bool, Error> {
+    pub fn set(&self, val: &[u8]) -> Result<(), Error> {
         if self.max_len_is_exact && val.len() as usize != N {
-            Err(Error::ValueError(cstr!("Value is not exact size")))
-        } else if self.max_len_error && val.len() as usize > N {
+            Err(Error::ValueError(cstr!("Value is not exact")))
+        } else if val.len() as usize > N {
             Err(Error::ValueError(cstr!("Value too big")))
         } else {
             self.set_bytes(val)
