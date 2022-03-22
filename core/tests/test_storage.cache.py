@@ -1,7 +1,7 @@
 from common import *
-from mock_storage import mock_storage
 
 from storage import cache
+from trezor import config
 from trezor.messages import Initialize
 from trezor.messages import EndSession
 from trezor.wire import DUMMY_CONTEXT
@@ -163,8 +163,9 @@ class TestStorageCache(unittest.TestCase):
         # function is not called for a second time
         self.assertEqual(run_count, 1)
 
-    @mock_storage
     def test_Initialize(self):
+        config.init()
+
         def call_Initialize(**kwargs):
             msg = Initialize(**kwargs)
             return await_result(handle_Initialize(DUMMY_CONTEXT, msg))
