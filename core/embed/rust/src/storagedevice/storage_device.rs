@@ -150,7 +150,7 @@ extern "C" fn storagedevice_set_rotation(rotation: Obj) -> Obj {
         if ![0, 90, 180, 270].contains(&rotation) {
             Err(Error::ValueError(cstr!("Not valid rotation")))
         } else {
-            Ok(ROTATION.set(rotation).into())
+            Ok(ROTATION.set(rotation)?.into())
         }
     };
     unsafe { util::try_or_raise(block) }
@@ -214,12 +214,12 @@ extern "C" fn storagedevice_set_mnemonic_secret(
         // TODO: could check that all sets return true (succeed)
         VERSION.set(&[STORAGE_VERSION_CURRENT])?;
         _MNEMONIC_SECRET.set(secret.as_ref())?;
-        _BACKUP_TYPE.set(backup_type);
-        _NO_BACKUP.set_true_or_delete(no_backup);
-        INITIALIZED.set(true);
+        _BACKUP_TYPE.set(backup_type)?;
+        _NO_BACKUP.set_true_or_delete(no_backup)?;
+        INITIALIZED.set(true)?;
 
         if !no_backup {
-            _NEEDS_BACKUP.set_true_or_delete(needs_backup);
+            _NEEDS_BACKUP.set_true_or_delete(needs_backup)?;
         }
 
         Ok(true.into())
@@ -236,10 +236,10 @@ extern "C" fn storagedevice_set_passphrase_enabled(enable: Obj) -> Obj {
     let block = || {
         let enable = bool::try_from(enable)?;
 
-        let mut result = _USE_PASSPHRASE.set(enable);
+        let mut result = _USE_PASSPHRASE.set(enable)?;
 
         if !enable {
-            result = _PASSPHRASE_ALWAYS_ON_DEVICE.set(false) && result;
+            result = _PASSPHRASE_ALWAYS_ON_DEVICE.set(false)? && result;
         }
 
         Ok(result.into())
@@ -255,7 +255,7 @@ extern "C" fn storagedevice_get_passphrase_always_on_device() -> Obj {
 extern "C" fn storagedevice_set_passphrase_always_on_device(enable: Obj) -> Obj {
     let block = || {
         Ok(_PASSPHRASE_ALWAYS_ON_DEVICE
-            .set(bool::try_from(enable)?)
+            .set(bool::try_from(enable)?)?
             .into())
     };
     unsafe { util::try_or_raise(block) }
@@ -267,7 +267,7 @@ extern "C" fn storagedevice_unfinished_backup() -> Obj {
 }
 
 extern "C" fn storagedevice_set_unfinished_backup(state: Obj) -> Obj {
-    let block = || Ok(_UNFINISHED_BACKUP.set(bool::try_from(state)?).into());
+    let block = || Ok(_UNFINISHED_BACKUP.set(bool::try_from(state)?)?.into());
     unsafe { util::try_or_raise(block) }
 }
 
@@ -277,7 +277,7 @@ extern "C" fn storagedevice_needs_backup() -> Obj {
 }
 
 extern "C" fn storagedevice_set_backed_up() -> Obj {
-    let block = || Ok(_NEEDS_BACKUP.delete().into());
+    let block = || Ok(_NEEDS_BACKUP.delete()?.into());
     unsafe { util::try_or_raise(block) }
 }
 
@@ -319,7 +319,7 @@ extern "C" fn storagedevice_get_slip39_identifier() -> Obj {
 }
 
 extern "C" fn storagedevice_set_slip39_identifier(identifier: Obj) -> Obj {
-    let block = || Ok(_SLIP39_IDENTIFIER.set(u16::try_from(identifier)?).into());
+    let block = || Ok(_SLIP39_IDENTIFIER.set(u16::try_from(identifier)?)?.into());
     unsafe { util::try_or_raise(block) }
 }
 
@@ -331,7 +331,7 @@ extern "C" fn storagedevice_get_slip39_iteration_exponent() -> Obj {
 extern "C" fn storagedevice_set_slip39_iteration_exponent(exponent: Obj) -> Obj {
     let block = || {
         Ok(_SLIP39_ITERATION_EXPONENT
-            .set(u8::try_from(exponent)?)
+            .set(u8::try_from(exponent)?)?
             .into())
     };
     unsafe { util::try_or_raise(block) }
@@ -346,7 +346,7 @@ extern "C" fn storagedevice_get_autolock_delay_ms() -> Obj {
 }
 
 extern "C" fn storagedevice_set_autolock_delay_ms(delay_ms: Obj) -> Obj {
-    let block = || Ok(_AUTOLOCK_DELAY_MS.set(u32::try_from(delay_ms)?).into());
+    let block = || Ok(_AUTOLOCK_DELAY_MS.set(u32::try_from(delay_ms)?)?.into());
     unsafe { util::try_or_raise(block) }
 }
 
@@ -363,7 +363,7 @@ extern "C" fn storagedevice_set_flags(flags: Obj) -> Obj {
 
         // Not deleting old flags
         let new_flags = flags | old_flags;
-        Ok(_FLAGS.set(new_flags).into())
+        Ok(_FLAGS.set(new_flags)?.into())
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -392,7 +392,7 @@ extern "C" fn storagedevice_set_safety_check_level(level: Obj) -> Obj {
         if !SAFETY_CHECK_LEVELS.contains(&level) {
             return Err(Error::ValueError(cstr!("Not valid safety level")));
         } else {
-            Ok(_SAFETY_CHECK_LEVEL.set(level).into())
+            Ok(_SAFETY_CHECK_LEVEL.set(level)?.into())
         }
     };
     unsafe { util::try_or_raise(block) }
@@ -408,7 +408,7 @@ extern "C" fn storagedevice_set_sd_salt_auth_key(auth_key: Obj) -> Obj {
         let auth_key = Buffer::try_from(auth_key)?;
 
         if auth_key.is_empty() {
-            Ok(_SD_SALT_AUTH_KEY.delete().into())
+            Ok(_SD_SALT_AUTH_KEY.delete()?.into())
         } else {
             Ok(_SD_SALT_AUTH_KEY.set(auth_key.as_ref())?.into())
         }

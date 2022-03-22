@@ -76,8 +76,20 @@ impl<T> Field<T> {
         secbool::TRUE == unsafe { storage_has(self.appkey()) }
     }
 
-    pub fn delete(&self) -> bool {
-        secbool::TRUE == unsafe { storage_delete(self.appkey()) }
+    pub fn delete(&self) -> Result<bool, Error> {
+        // If there is nothing, storage_delete() would return false
+        if !self.has() {
+            return Ok(true);
+        }
+
+        let result = unsafe { storage_delete(self.appkey()) };
+        if result != secbool::TRUE {
+            Err(Error::ValueError(cstr!(
+                "Could not delete value in storage"
+            )))
+        } else {
+            Ok(true)
+        }
     }
 
     fn get_bytes<const N: usize>(&self, buf: &mut [u8; N]) -> Option<u16> {
@@ -91,10 +103,14 @@ impl<T> Field<T> {
         }
     }
 
-    // TODO: cannot throw an exception when storage_set returns false?
-    fn set_bytes(&self, buf: &[u8]) -> bool {
+    fn set_bytes(&self, buf: &[u8]) -> Result<bool, Error> {
         assert!(buf.len() <= u16::MAX as usize);
-        secbool::TRUE == unsafe { storage_set(self.appkey(), buf.as_ptr(), buf.len() as u16) }
+        let result = unsafe { storage_set(self.appkey(), buf.as_ptr(), buf.len() as u16) };
+        if result != secbool::TRUE {
+            Err(Error::ValueError(cstr!("Could not save value to storage")))
+        } else {
+            Ok(true)
+        }
     }
 }
 
@@ -109,7 +125,7 @@ impl Field<u32> {
         }
     }
 
-    pub fn set(&self, val: u32) -> bool {
+    pub fn set(&self, val: u32) -> Result<bool, Error> {
         self.set_bytes(&val.to_le_bytes())
     }
 }
@@ -133,7 +149,7 @@ impl Field<u16> {
         }
     }
 
-    pub fn set(&self, val: u16) -> bool {
+    pub fn set(&self, val: u16) -> Result<bool, Error> {
         self.set_bytes(&val.to_le_bytes())
     }
 }
@@ -157,7 +173,7 @@ impl Field<u8> {
         }
     }
 
-    pub fn set(&self, val: u8) -> bool {
+    pub fn set(&self, val: u8) -> Result<bool, Error> {
         self.set_bytes(&[val])
     }
 }
@@ -182,11 +198,11 @@ impl Field<bool> {
         }
     }
 
-    pub fn set(&self, val: bool) -> bool {
+    pub fn set(&self, val: bool) -> Result<bool, Error> {
         self.set_bytes(&[if val { 1 } else { 0 }])
     }
 
-    pub fn set_true_or_delete(self, val: bool) -> bool {
+    pub fn set_true_or_delete(self, val: bool) -> Result<bool, Error> {
         if val {
             self.set(true)
         } else {
@@ -200,14 +216,14 @@ impl<const N: usize> Field<String<N>> {
         let mut buf = [0u8; N];
         let len = self.get_bytes(&mut buf);
         if let Some(len) = len {
-            if self.max_len_is_exact && len as usize != N {
+            let string = String::from(str::from_utf8(&buf[..len as usize]).ok().unwrap());
+            if self.max_len_is_exact && string.len() as usize != N {
                 Ok(None)
-            } else if self.max_len_error && len as usize > N {
-                Err(Error::ValueError(cstr!("Value too big")))
+            } else if self.max_len_error && string.len() as usize > N {
+                // TODO: we could probably just return None and get rid of the Result
+                Err(Error::ValueError(cstr!("String too long")))
             } else {
-                Ok(Some(String::from(
-                    str::from_utf8(&buf[..len as usize]).ok().unwrap(),
-                )))
+                Ok(Some(string))
             }
         } else {
             Ok(None)
@@ -228,7 +244,7 @@ impl<const N: usize> Field<String<N>> {
         } else if self.max_len_error && val.chars().count() as usize > N {
             Err(Error::ValueError(cstr!("String too long")))
         } else {
-            Ok(self.set_bytes(val.as_bytes()))
+            self.set_bytes(val.as_bytes())
         }
     }
 }
@@ -265,7 +281,7 @@ impl<const N: usize> Field<Vec<u8, N>> {
         } else if self.max_len_error && val.len() as usize > N {
             Err(Error::ValueError(cstr!("Value too big")))
         } else {
-            Ok(self.set_bytes(val))
+            self.set_bytes(val)
         }
     }
 }
