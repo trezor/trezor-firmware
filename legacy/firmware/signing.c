@@ -57,6 +57,9 @@ enum {
 #if !BITCOIN_ONLY
   STAGE_REQUEST_3_PREV_EXTRADATA,
 #endif
+  STAGE_REQUEST_3_ORIG_INPUT,
+  STAGE_REQUEST_3_ORIG_OUTPUT,
+  STAGE_REQUEST_3_ORIG_NONLEGACY_INPUT,
   STAGE_REQUEST_4_INPUT,
   STAGE_REQUEST_4_OUTPUT,
   STAGE_REQUEST_NONLEGACY_INPUT,
@@ -138,10 +141,7 @@ typedef struct {
 static TxInfo info;
 
 /* Variables specific to replacement transactions. */
-static bool is_replacement;            // Is this a replacement transaction?
-static bool have_orig_verif_input;     // Is orig_verif_input, sig and node set?
-static uint32_t orig_verif_input_idx;  // Index of orig_verif_input in orig tx.
-static TxInputType orig_verif_input;   // The input for signature verification.
+static bool is_replacement;  // Is this a replacement transaction?
 static TxInfo orig_info;
 static uint8_t orig_hash[32];  // TXID of the original transaction.
 
@@ -228,7 +228,7 @@ foreach I (idx1):
         Request input I2 orig_hash, orig_index                STAGE_REQUEST_1_ORIG_INPUT
         Check I matches I2
         Add I2 to original segwit sub-hashes
-        Add I2 to orig_hash_inputs_check
+        Add I2 to orig_info.hash_inputs_check
     if (Decred)
         Return I
 
@@ -265,6 +265,34 @@ foreach I (idx1):
         Add amount of prevhash O (which is amount of I)
     Request prevhash extra data (if applicable)               STAGE_REQUEST_3_PREV_EXTRADATA
     Calculate hash of streamed tx, compare to prevhash I
+
+if (is_replacement)
+    foreach orig I (idx1):
+        if (orig idx1 is not legacy)
+            Request input I, orig_hash, idx1                  STAGE_REQUEST_3_ORIG_NONLEGACY_INPUT
+            Add I to OuterTransactionChecksum
+            Verify signature of I if I is internal
+        else
+            foreach orig I (idx2):
+                Request input I, orig_hash, idx2              STAGE_REQUEST_3_ORIG_INPUT
+                Add I to InnerTransactionChecksum
+                Add I to LegacyTransactionDigest
+                if idx1 == idx2
+                    Add I to OuterTransactionChecksum
+                    Save signature for verification
+
+            Ensure InnerTransactionChecksum matches orig_info.hash_inputs_check
+
+            foreach orig O (idx2):
+                Request output O, orig_hash, idx2             STAGE_REQUEST_3_ORIG_OUTPUT
+                Add O to InnerTransactionChecksum
+                Add O to LegacyTransactionDigest
+
+            Ensure InnerTransactionChecksum matches orig_hash_outputs
+            Verify signature of LegacyTransactionDigest
+
+Ensure OuterTransactionChecksum matches orig_info.hash_inputs_check
+
 
 Phase2: sign inputs, check that nothing changed
 ===============================================
@@ -371,9 +399,8 @@ void send_req_1_orig_meta(void) {
   resp.request_type = RequestType_TXMETA;
   resp.has_details = true;
   resp.details.has_tx_hash = true;
-  resp.details.tx_hash.size = input.orig_hash.size;
-  memcpy(resp.details.tx_hash.bytes, input.orig_hash.bytes,
-         resp.details.tx_hash.size);
+  resp.details.tx_hash.size = sizeof(orig_hash);
+  memcpy(resp.details.tx_hash.bytes, orig_hash, resp.details.tx_hash.size);
   msg_write(MessageType_MessageType_TxRequest, &resp);
 }
 
@@ -385,9 +412,8 @@ void send_req_1_orig_input(void) {
   resp.details.has_request_index = true;
   resp.details.request_index = idx2;
   resp.details.has_tx_hash = true;
-  resp.details.tx_hash.size = input.orig_hash.size;
-  memcpy(resp.details.tx_hash.bytes, input.orig_hash.bytes,
-         resp.details.tx_hash.size);
+  resp.details.tx_hash.size = sizeof(orig_hash);
+  memcpy(resp.details.tx_hash.bytes, orig_hash, resp.details.tx_hash.size);
   msg_write(MessageType_MessageType_TxRequest, &resp);
 }
 
@@ -409,9 +435,8 @@ void send_req_2_orig_output(void) {
   resp.details.has_request_index = true;
   resp.details.request_index = idx2;
   resp.details.has_tx_hash = true;
-  resp.details.tx_hash.size = output.orig_hash.size;
-  memcpy(resp.details.tx_hash.bytes, output.orig_hash.bytes,
-         resp.details.tx_hash.size);
+  resp.details.tx_hash.size = sizeof(orig_hash);
+  memcpy(resp.details.tx_hash.bytes, orig_hash, resp.details.tx_hash.size);
   msg_write(MessageType_MessageType_TxRequest, &resp);
 }
 
@@ -499,6 +524,45 @@ void send_req_3_prev_extradata(uint32_t chunk_offset, uint32_t chunk_len) {
   msg_write(MessageType_MessageType_TxRequest, &resp);
 }
 #endif
+
+void send_req_3_orig_nonlegacy_input(void) {
+  signing_stage = STAGE_REQUEST_3_ORIG_NONLEGACY_INPUT;
+  resp.has_request_type = true;
+  resp.request_type = RequestType_TXORIGINPUT;
+  resp.has_details = true;
+  resp.details.has_request_index = true;
+  resp.details.request_index = idx1;
+  resp.details.has_tx_hash = true;
+  resp.details.tx_hash.size = sizeof(orig_hash);
+  memcpy(resp.details.tx_hash.bytes, orig_hash, resp.details.tx_hash.size);
+  msg_write(MessageType_MessageType_TxRequest, &resp);
+}
+
+void send_req_3_orig_input(void) {
+  signing_stage = STAGE_REQUEST_3_ORIG_INPUT;
+  resp.has_request_type = true;
+  resp.request_type = RequestType_TXORIGINPUT;
+  resp.has_details = true;
+  resp.details.has_request_index = true;
+  resp.details.request_index = idx2;
+  resp.details.has_tx_hash = true;
+  resp.details.tx_hash.size = sizeof(orig_hash);
+  memcpy(resp.details.tx_hash.bytes, orig_hash, resp.details.tx_hash.size);
+  msg_write(MessageType_MessageType_TxRequest, &resp);
+}
+
+void send_req_3_orig_output(void) {
+  signing_stage = STAGE_REQUEST_3_ORIG_OUTPUT;
+  resp.has_request_type = true;
+  resp.request_type = RequestType_TXORIGOUTPUT;
+  resp.has_details = true;
+  resp.details.has_request_index = true;
+  resp.details.request_index = idx2;
+  resp.details.has_tx_hash = true;
+  resp.details.tx_hash.size = sizeof(orig_hash);
+  memcpy(resp.details.tx_hash.bytes, orig_hash, resp.details.tx_hash.size);
+  msg_write(MessageType_MessageType_TxRequest, &resp);
+}
 
 void send_req_4_input(void) {
   signing_stage = STAGE_REQUEST_4_INPUT;
@@ -647,6 +711,36 @@ void phase2_request_next_input(void) {
     send_req_4_input();
   } else {
     send_req_nonlegacy_input();
+  }
+}
+
+void phase2_request_orig_input(void) {
+  if (idx1 < orig_info.inputs_count) {
+    if (idx1 == 0) {
+      // Reset outer transaction check.
+      hasher_Reset(&hasher_check);
+    }
+
+    if (idx1 == orig_info.next_legacy_input) {
+      idx2 = 0;
+      send_req_3_orig_input();
+    } else {
+      send_req_3_orig_nonlegacy_input();
+    }
+  } else {
+    // Ensure that the original transaction inputs haven't changed for the outer
+    // transaction check.
+    uint8_t hash[32];
+    hasher_Final(&hasher_check, hash);
+    if (memcmp(hash, orig_info.hash_inputs_check, 32) != 0) {
+      fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Transaction has changed during signing"));
+      signing_abort();
+      return;
+    }
+
+    idx1 = 0;
+    phase2_request_next_input();
   }
 }
 
@@ -985,8 +1079,6 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
   memzero(&output, sizeof(TxOutputType));
   memzero(&resp, sizeof(TxRequest));
   is_replacement = false;
-  have_orig_verif_input = false;
-  orig_verif_input_idx = 0xffffffff;
   signing = true;
   progress = 0;
   // we step by 500/inputs_count per input in phase1 and phase2
@@ -1495,7 +1587,13 @@ static bool signing_check_prevtx_hash(void) {
     } else
 #endif
     {
-      phase2_request_next_input();
+      if (is_replacement) {
+        // Verify original transaction.
+        phase2_request_orig_input();
+      } else {
+        // Proceed to transaction signing.
+        phase2_request_next_input();
+      }
     }
   }
 
@@ -1643,6 +1741,14 @@ static bool save_signature(TxInputType *txinput) {
 }
 
 static bool signing_add_orig_input(TxInputType *orig_input) {
+  // hash all input data to check it later
+  if (!tx_input_check_hash(&orig_info.hasher_check, orig_input)) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Failed to hash input"));
+    signing_abort();
+    return false;
+  }
+
   if (!fill_input_script_pubkey(coin, &root, orig_input)) {
     fsm_sendFailure(FailureType_Failure_ProcessError,
                     _("Failed to derive scriptPubKey"));
@@ -1681,7 +1787,7 @@ static bool signing_add_orig_input(TxInputType *orig_input) {
     return false;
   }
 
-  // Add input to original TXID computation before script_sig is overwritten.
+  // Add input to original TXID computation.
   if (!tx_serialize_input_hash(&tp, orig_input)) {
     fsm_sendFailure(FailureType_Failure_ProcessError,
                     _("Failed to serialize input"));
@@ -1689,44 +1795,13 @@ static bool signing_add_orig_input(TxInputType *orig_input) {
     return false;
   }
 
-  // The first original non-multisig input that has address_n set and a
-  // signature gets chosen as the verification input. Set script_sig for legacy
-  // digest computation.
-  // NOTE: Supporting replacement transactions where all internal inputs are
-  // multisig would require checking the signatures of all of the original
-  // internal inputs or not allowing unverified external inputs in transactions
-  // where multisig inputs are present.
-  if (!have_orig_verif_input && orig_input->address_n_count != 0 &&
-      !orig_input->has_multisig &&
-      ((orig_input->has_script_sig && orig_input->script_sig.size != 0) ||
-       (orig_input->has_witness && orig_input->witness.size > 1))) {
-    // Save the signature before script_sig is overwritten.
-    if (!save_signature(orig_input)) {
-      return false;
+  // Remember the first original internal legacy input.
+  if ((orig_input->script_type == InputScriptType_SPENDMULTISIG ||
+       orig_input->script_type == InputScriptType_SPENDADDRESS) &&
+      !coin->force_bip143 && !coin->overwintered) {
+    if (orig_info.next_legacy_input == 0xffffffff) {
+      orig_info.next_legacy_input = idx2;
     }
-
-    // Derive node.public_key and fill script_sig with the legacy scriptPubKey
-    // (aka BIP-143 script code), which is what our code expects here in order
-    // to properly compute the legacy transaction digest or BIP-143 transaction
-    // digest.
-    if (!derive_node(orig_input) || !fill_input_script_sig(orig_input)) {
-      return false;
-    }
-
-    // Save the verification input with script_sig set to scriptPubKey.
-    memcpy(&orig_verif_input, orig_input, sizeof(TxInputType));
-    orig_verif_input_idx = idx2;
-    have_orig_verif_input = true;
-  } else {
-    orig_input->script_sig.size = 0;
-  }
-
-  // Add input to original legacy digest computation now that script_sig is set.
-  if (!tx_serialize_input_hash(&ti, orig_input)) {
-    fsm_sendFailure(FailureType_Failure_ProcessError,
-                    _("Failed to serialize input"));
-    signing_abort();
-    return false;
   }
 
   return true;
@@ -1748,10 +1823,8 @@ static bool signing_add_orig_output(TxOutputType *orig_output) {
     return false;
   }
 
-  // Add output to the original legacy digest computation (ti) and to the
-  // original TXID computation (tp).
-  if (!tx_serialize_output_hash(&ti, &orig_bin_output) ||
-      !tx_serialize_output_hash(&tp, &orig_bin_output)) {
+  // Add output to original TXID computation.
+  if (!tx_serialize_output_hash(&tp, &orig_bin_output)) {
     fsm_sendFailure(FailureType_Failure_ProcessError,
                     _("Failed to serialize output"));
     signing_abort();
@@ -2158,39 +2231,30 @@ static void signing_hash_zip244(const TxInfo *tx_info,
 }
 #endif
 
-static bool signing_check_orig_tx(void) {
-  uint8_t hash[32] = {0};
+static bool signing_verify_orig_nonlegacy_input(TxInputType *orig_input) {
+  // Nothing to verify for external inputs.
+  if (orig_input->script_type == InputScriptType_EXTERNAL) {
+    return true;
+  }
 
-  // Finalize original TXID computation and ensure it matches orig_hash.
-  tx_hash_final(&tp, hash, true);
-  if (memcmp(hash, orig_hash, sizeof(orig_hash)) != 0) {
-    // This may happen if incorrect information is supplied in the TXORIGINPUT
-    // or TXORIGOUTPUT responses or if the device is loaded with the wrong seed,
-    // because we derive the scriptPubKeys of change-outputs from the seed using
-    // the provided path.
-    fsm_sendFailure(FailureType_Failure_ProcessError,
-                    _("Invalid original TXID."));
-    signing_abort();
+  // Save the signature before script_sig is overwritten.
+  if (!save_signature(orig_input)) {
     return false;
   }
 
-  if (!have_orig_verif_input) {
-    fsm_sendFailure(FailureType_Failure_ProcessError,
-                    _("The original transaction must specify address_n for at "
-                      "least one input."));
-    signing_abort();
+  // Derive node.public_key and fill script_sig with the legacy scriptPubKey
+  // (aka BIP-143 script code), which is what our code expects here in order
+  // to properly compute the BIP-143 transaction digest.
+  if (!derive_node(orig_input) || !fill_input_script_sig(orig_input)) {
     return false;
   }
-
-  // Finish computation of BIP-143/BIP-341/ZIP-243 sub-hashes.
-  tx_info_finish(&orig_info);
 
   // Compute the signed digest and verify signature.
-  uint32_t hash_type = signing_hash_type(&orig_verif_input);
+  uint8_t hash[32] = {0};
+  uint32_t hash_type = signing_hash_type(orig_input);
   bool valid = false;
-  if (orig_verif_input.script_type == InputScriptType_SPENDTAPROOT) {
-    signing_hash_bip341(&orig_info, orig_verif_input_idx, hash_type & 0xff,
-                        hash);
+  if (orig_input->script_type == InputScriptType_SPENDTAPROOT) {
+    signing_hash_bip341(&orig_info, idx1, hash_type & 0xff, hash);
     uint8_t output_public_key[32] = {0};
     valid = (zkp_bip340_tweak_public_key(node.public_key + 1, NULL,
                                          output_public_key) == 0) &&
@@ -2198,18 +2262,11 @@ static bool signing_check_orig_tx(void) {
   } else {
 #if !BITCOIN_ONLY
     if (coin->overwintered) {
-      signing_hash_zip243(&orig_info, &orig_verif_input, hash);
+      signing_hash_zip243(&orig_info, orig_input, hash);
     } else
 #endif
     {
-      if (is_segwit_input_script_type(&orig_verif_input) ||
-          coin->force_bip143) {
-        signing_hash_bip143(&orig_info, &orig_verif_input, hash);
-      } else {
-        // Finalize legacy digest computation.
-        hasher_Update(&ti.hasher, (const uint8_t *)&hash_type, 4);
-        tx_hash_final(&ti, hash, false);
-      }
+      signing_hash_bip143(&orig_info, orig_input, hash);
     }
 
 #ifdef USE_SECP256K1_ZKP_ECDSA
@@ -2232,6 +2289,142 @@ static bool signing_check_orig_tx(void) {
   return valid;
 }
 
+static bool signing_verify_orig_legacy_input(void) {
+  // Finalize legacy digest computation.
+  uint32_t hash_type = signing_hash_type(&input);
+  hasher_Update(&ti.hasher, (const uint8_t *)&hash_type, 4);
+
+  // Compute the signed digest and verify signature.
+  uint8_t hash[32] = {0};
+  tx_hash_final(&ti, hash, false);
+
+  bool valid = false;
+#ifdef USE_SECP256K1_ZKP_ECDSA
+  if (coin->curve->params == &secp256k1) {
+    valid = zkp_ecdsa_verify_digest(coin->curve->params, node.public_key, sig,
+                                    hash) == 0;
+  } else
+#endif
+  {
+    valid = ecdsa_verify_digest(coin->curve->params, node.public_key, sig,
+                                hash) == 0;
+  }
+
+  if (!valid) {
+    fsm_sendFailure(FailureType_Failure_DataError, _("Invalid signature."));
+    signing_abort();
+  }
+
+  return valid;
+}
+
+static bool signing_hash_orig_input(TxInputType *orig_input) {
+  if (idx2 == 0) {
+    uint32_t branch_id = 0;
+#if !BITCOIN_ONLY
+    branch_id = orig_info.branch_id;
+#endif
+    tx_init(&ti, orig_info.inputs_count, orig_info.outputs_count,
+            orig_info.version, orig_info.lock_time, orig_info.expiry, branch_id,
+            0, coin->curve->hasher_sign, coin->overwintered,
+            orig_info.version_group_id, orig_info.timestamp);
+    // Reset the inner transaction check.
+    hasher_Reset(&orig_info.hasher_check);
+  }
+
+  // Add input to the inner transaction check.
+  if (!tx_input_check_hash(&orig_info.hasher_check, orig_input)) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Failed to hash input"));
+    signing_abort();
+    return false;
+  }
+
+  if (idx2 == idx1) {
+    // Add input to the outer transaction check.
+    if (!tx_input_check_hash(&hasher_check, orig_input)) {
+      fsm_sendFailure(FailureType_Failure_ProcessError,
+                      _("Failed to hash input"));
+      signing_abort();
+      return false;
+    }
+
+    // Save the signature before script_sig is overwritten.
+    if (!save_signature(orig_input)) {
+      return false;
+    }
+
+    // Derive node.public_key and fill script_sig with the legacy
+    // scriptPubKey which is what our code expects here in order to properly
+    // compute the transaction digest.
+    if (!derive_node(orig_input) || !fill_input_script_sig(orig_input)) {
+      return false;
+    }
+
+    memcpy(&input, orig_input, sizeof(input));
+  } else {
+    if (orig_info.next_legacy_input == idx1 && idx2 > idx1 &&
+        (orig_input->script_type == InputScriptType_SPENDADDRESS ||
+         orig_input->script_type == InputScriptType_SPENDMULTISIG)) {
+      orig_info.next_legacy_input = idx2;
+    }
+    orig_input->script_sig.size = 0;
+  }
+
+  // Add input to original legacy digest computation now that script_sig is
+  // set.
+  if (!tx_serialize_input_hash(&ti, orig_input)) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Failed to serialize input"));
+    signing_abort();
+    return false;
+  }
+
+  return true;
+}
+
+static bool signing_hash_orig_output(TxOutputType *orig_output) {
+  if (compile_output(coin, amount_unit, &root, orig_output, &bin_output,
+                     false) <= 0) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Failed to compile output"));
+    signing_abort();
+    return false;
+  }
+
+  // Add the output to the inner transaction check.
+  tx_output_hash(&orig_info.hasher_check, &bin_output, coin->decred);
+
+  // Add the output to original legacy digest computation
+  if (!tx_serialize_output_hash(&ti, &bin_output)) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Failed to serialize output"));
+    signing_abort();
+    return false;
+  }
+
+  return true;
+}
+
+static bool signing_check_orig_tx(void) {
+  uint8_t hash[32] = {0};
+
+  // Finalize original TXID computation and ensure it matches orig_hash.
+  tx_hash_final(&tp, hash, true);
+  if (memcmp(hash, orig_hash, sizeof(orig_hash)) != 0) {
+    // This may happen if incorrect information is supplied in the TXORIGINPUT
+    // or TXORIGOUTPUT responses or if the device is loaded with the wrong seed,
+    // because we derive the scriptPubKeys of change-outputs from the seed using
+    // the provided path.
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Invalid original TXID."));
+    signing_abort();
+    return false;
+  }
+
+  return true;
+}
+
 static void phase1_finish(void) {
 #if !BITCOIN_ONLY
   if (coin->decred) {
@@ -2240,8 +2433,9 @@ static void phase1_finish(void) {
   }
 #endif
 
-  // Compute BIP143 hashPrevouts, hashSequence and hashOutputs.
+  // Finish computation of BIP-143/BIP-341/ZIP-243 sub-hashes.
   tx_info_finish(&info);
+  tx_info_finish(&orig_info);
 
   if (is_replacement) {
     if (!signing_check_orig_tx()) {
@@ -2254,11 +2448,17 @@ static void phase1_finish(void) {
   }
 
   if (taproot_only) {
-    // All internal inputs are Taproot. We do not need to verify them so we
-    // proceed directly to Phase 2, where the transaction will be signed. We can
-    // trust the amounts and scriptPubKeys, because if an invalid value is
-    // provided then all issued signatures will be invalid.
-    phase2_request_next_input();
+    // All internal inputs are Taproot. We do not need to verify that their
+    // parameters match previous transactions. We can trust the amounts and
+    // scriptPubKeys, because if an invalid value is provided then all issued
+    // signatures will be invalid.
+    if (is_replacement) {
+      // Verify original transaction.
+      phase2_request_orig_input();
+    } else {
+      // Proceed directly to transaction signing.
+      phase2_request_next_input();
+    }
 #if !BITCOIN_ONLY
   } else if (coin->overwintered && info.version == 5) {
     // ZIP-244 transactions are treated same as Taproot.
@@ -2711,11 +2911,6 @@ void signing_txack(TransactionType *tx) {
         return;
       }
 
-      // Initialize computation of original legacy digest.
-      tx_init(&ti, tx->inputs_cnt, tx->outputs_cnt, tx->version, tx->lock_time,
-              tx->expiry, tx->branch_id, 0, coin->curve->hasher_sign,
-              coin->overwintered, tx->version_group_id, tx->timestamp);
-
       // Initialize computation of original TXID.
       tx_init(&tp, tx->inputs_cnt, tx->outputs_cnt, tx->version, tx->lock_time,
               tx->expiry, tx->branch_id, tx->extra_data_len,
@@ -3000,6 +3195,79 @@ void signing_txack(TransactionType *tx) {
       }
       return;
 #endif
+
+    case STAGE_REQUEST_3_ORIG_NONLEGACY_INPUT:
+      if (!signing_validate_input(tx->inputs)) {
+        return;
+      }
+
+      // Add input to the outer transaction check.
+      if (!tx_input_check_hash(&hasher_check, tx->inputs)) {
+        fsm_sendFailure(FailureType_Failure_ProcessError,
+                        _("Failed to hash input"));
+        signing_abort();
+        return;
+      }
+
+      if (!signing_verify_orig_nonlegacy_input(tx->inputs)) {
+        return;
+      }
+
+      idx1++;
+      phase2_request_orig_input();
+      return;
+
+    case STAGE_REQUEST_3_ORIG_INPUT:
+      if (!signing_validate_input(tx->inputs) ||
+          !signing_hash_orig_input(tx->inputs)) {
+        return;
+      }
+
+      idx2++;
+      if (idx2 < orig_info.inputs_count) {
+        send_req_3_orig_input();
+      } else {
+        // Ensure that the original transaction inputs haven't changed for the
+        // inner transaction check.
+        if (!tx_info_check_inputs_hash(&orig_info)) {
+          return;
+        }
+
+        // Reset the inner transaction check.
+        hasher_Reset(&orig_info.hasher_check);
+        idx2 = 0;
+        send_req_3_orig_output();
+      }
+
+      return;
+
+    case STAGE_REQUEST_3_ORIG_OUTPUT:
+      if (!signing_validate_output(tx->outputs) ||
+          !signing_hash_orig_output(tx->outputs)) {
+        return;
+      }
+
+      idx2++;
+      if (idx2 < orig_info.outputs_count) {
+        send_req_3_orig_output();
+      } else {
+        // Ensure that the original transaction outputs haven't changed for the
+        // inner transaction check.
+        if (!tx_info_check_outputs_hash(&orig_info)) {
+          return;
+        }
+
+        // Verify original signature.
+        if (!signing_verify_orig_legacy_input()) {
+          return;
+        }
+
+        idx1++;
+        phase2_request_orig_input();
+      }
+
+      return;
+
     case STAGE_REQUEST_4_INPUT:
       if (!signing_validate_input(&tx->inputs[0])) {
         return;
