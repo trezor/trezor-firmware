@@ -1,5 +1,6 @@
 use crate::{error::Error, micropython::obj::Obj, trezorhal::secbool};
 use core::{marker::PhantomData, str};
+use cstr_core::cstr;
 use heapless::{String, Vec};
 
 const FLAG_PUBLIC: u8 = 0x80;
@@ -15,13 +16,13 @@ extern "C" {
 }
 
 // TODO:
-// max_length: Option<u16>
 // default_value: <T>
 // possible_values: Vec<T>
 pub struct Field<T> {
     app: u8,
     key: u8,
     public: bool,
+    max_len_error: bool, // Could pass the whole Error somehow (const issues)
     max_len_is_exact: bool,
     _marker: PhantomData<*const T>,
 }
@@ -32,6 +33,7 @@ impl<T> Field<T> {
             app,
             key,
             public: true,
+            max_len_error: false,
             max_len_is_exact: false,
             _marker: PhantomData,
         }
@@ -42,6 +44,7 @@ impl<T> Field<T> {
             app,
             key,
             public: false,
+            max_len_error: false,
             max_len_is_exact: false,
             _marker: PhantomData,
         }
@@ -50,6 +53,13 @@ impl<T> Field<T> {
     pub const fn exact(self) -> Self {
         Self {
             max_len_is_exact: true,
+            ..self
+        }
+    }
+
+    pub const fn max_len_error(self) -> Self {
+        Self {
+            max_len_error: true,
             ..self
         }
     }
@@ -186,58 +196,77 @@ impl Field<bool> {
 }
 
 impl<const N: usize> Field<String<N>> {
-    pub fn get(&self) -> Option<String<N>> {
+    pub fn get(&self) -> Result<Option<String<N>>, Error> {
         let mut buf = [0u8; N];
         let len = self.get_bytes(&mut buf);
         if let Some(len) = len {
             if self.max_len_is_exact && len as usize != N {
-                None
+                Ok(None)
+            } else if self.max_len_error && len as usize > N {
+                Err(Error::ValueError(cstr!("Value too big")))
             } else {
-                Some(String::from(str::from_utf8(&buf[..len as usize]).ok()?))
+                Ok(Some(String::from(
+                    str::from_utf8(&buf[..len as usize]).ok().unwrap(),
+                )))
             }
         } else {
-            None
+            Ok(None)
         }
     }
 
     pub fn get_result(&self) -> Result<Obj, Error> {
-        if let Some(result) = self.get() {
+        if let Some(result) = self.get()? {
             result.as_str().try_into()
         } else {
             Ok(NONE)
         }
     }
 
-    pub fn set(&self, val: &str) -> bool {
-        self.set_bytes(val.as_bytes())
+    pub fn set(&self, val: &str) -> Result<bool, Error> {
+        if self.max_len_is_exact && val.chars().count() as usize != N {
+            Err(Error::ValueError(cstr!("String is not exact length")))
+        } else if self.max_len_error && val.chars().count() as usize > N {
+            Err(Error::ValueError(cstr!("String too long")))
+        } else {
+            Ok(self.set_bytes(val.as_bytes()))
+        }
     }
 }
 
 impl<const N: usize> Field<Vec<u8, N>> {
-    pub fn get(&self) -> Option<Vec<u8, N>> {
+    pub fn get(&self) -> Result<Option<Vec<u8, N>>, Error> {
         let mut buf = [0u8; N];
         let len = self.get_bytes(&mut buf);
         if let Some(len) = len {
             if self.max_len_is_exact && len as usize != N {
-                None
+                Ok(None)
+            } else if self.max_len_error && len as usize > N {
+                // TODO: we could probably just return None and get rid of the Result
+                Err(Error::ValueError(cstr!("Value too big")))
             } else {
-                Some(Vec::from_slice(&buf[..len as usize]).ok()?)
+                Ok(Some((&buf[..len as usize]).iter().cloned().collect()))
             }
         } else {
-            None
+            Ok(None)
         }
     }
 
     pub fn get_result(&self) -> Result<Obj, Error> {
-        if let Some(result) = self.get() {
+        if let Some(result) = self.get()? {
             (&result as &[u8]).try_into()
         } else {
             Ok(NONE)
         }
     }
 
-    pub fn set(&self, val: &[u8]) -> bool {
-        self.set_bytes(val)
+    pub fn set(&self, val: &[u8]) -> Result<bool, Error> {
+        if self.max_len_is_exact && val.len() as usize != N {
+            Err(Error::ValueError(cstr!("Value is not exact size")))
+        } else if self.max_len_error && val.len() as usize > N {
+            Err(Error::ValueError(cstr!("Value too big")))
+        } else {
+            Ok(self.set_bytes(val))
+        }
     }
 }
 
