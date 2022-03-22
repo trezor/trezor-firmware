@@ -1,3 +1,5 @@
+from micropython import const
+
 from .orchard.signer import OrchardSigner
 from . import sig_hasher
 from .layout import UiConfirmOrchardOutput

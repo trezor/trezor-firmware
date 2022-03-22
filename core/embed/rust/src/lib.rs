@@ -1,4 +1,4 @@
-#![feature(default_alloc_error_handler)]
+//#![feature(default_alloc_error_handler)]
 #![cfg_attr(not(test), no_std)]
 #![deny(clippy::all)]
 #![allow(clippy::new_without_default)]
@@ -25,8 +25,8 @@ use core::panic::PanicInfo;
 #[cfg(not(feature = "test"))]
 use cstr_core::CStr;
 
-#[macro_use]
-extern crate alloc;
+//#[macro_use]
+//extern crate alloc;
 
 #[cfg(not(feature = "test"))]
 #[panic_handler]
@@ -41,12 +41,12 @@ fn panic(info: &PanicInfo) -> ! {
     let empty = unsafe { CStr::from_bytes_with_nul_unchecked("\0".as_bytes()) };
     let msg = unsafe { CStr::from_bytes_with_nul_unchecked("rs\0".as_bytes()) };
     // TODO: remove this debug print
-    use alloc::borrow::ToOwned;
+    /*use alloc::borrow::ToOwned;
     let msg = format!("{}\0", info);
     let msg = msg.to_owned();
     let msg = &msg[..];
     let msg = unsafe { CStr::from_bytes_with_nul_unchecked(msg.as_bytes()) };
-
+    */
     // TODO: Ideally we would take the file and line info out of
     // `PanicInfo::location()`.
     trezorhal::common::fatal_error(empty, msg, empty, 0, empty);

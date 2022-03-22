@@ -63,6 +63,8 @@ def _default_script_type(address_n: Optional[List[int]], script_types: Any) -> s
 
 
 def parse_vin(s: str) -> Tuple[bytes, int]:
+    if s == "":
+        return None
     txid, vout = s.split(":")
     return bytes.fromhex(txid), int(vout)
 

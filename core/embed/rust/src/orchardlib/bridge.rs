@@ -1,4 +1,3 @@
-use alloc::vec::Vec;
 use core::array::TryFromSliceError;
 use core::convert::{TryFrom, TryInto};
 use core::ops::{Deref, DerefMut};
@@ -12,7 +11,7 @@ use orchard::{
     value::NoteValue,
     Address, Note,
 };
-use rand::SeedableRng;
+use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha12Rng;
 
 use group::ff::PrimeField;
@@ -22,7 +21,6 @@ use crate::micropython::{
     buffer::{Buffer, BufferMut},
     dict::Dict,
     gc::Gc,
-    list::List,
     map::Map,
     obj::Obj,
     qstr::Qstr,
@@ -31,6 +29,8 @@ use crate::{trezorhal, util};
 
 use pasta_curves::pallas;
 
+// Using a macro, because it is forbidden to return
+// a referce (`&Map`) from a function.
 macro_rules! try_parse_map {
     ($obj:ident) => {
         let dict: Gc<Dict> = $obj.try_into()?;
@@ -39,7 +39,11 @@ macro_rules! try_parse_map {
     };
 }
 
-// TODO: move to micropython/obj.rs ?
+fn value_error(msg: &'static str) -> Error {
+    Error::ValueError(unsafe { CStr::from_bytes_with_nul_unchecked(msg.as_bytes()) })
+}
+
+// TODO: move this to micropython/obj.rs ?
 impl<const N: usize> TryFrom<Obj> for [u8; N] {
     type Error = Error;
     fn try_from(obj: Obj) -> Result<[u8; N], Error> {
@@ -48,7 +52,7 @@ impl<const N: usize> TryFrom<Obj> for [u8; N] {
     }
 }
 
-// TODO: move to micropython/obj.rs ?
+// TODO: move this to micropython/obj.rs ?
 impl<const N: usize> TryFrom<[u8; N]> for Obj {
     type Error = Error;
     fn try_from(array: [u8; N]) -> Result<Obj, Error> {
@@ -57,22 +61,13 @@ impl<const N: usize> TryFrom<[u8; N]> for Obj {
 }
 
 #[no_mangle]
-pub extern "C" fn orchardlib_shuffle(list: Obj, rng_config: Obj) -> Obj {
+pub extern "C" fn orchardlib_randint(max: Obj, rng_state: Obj) -> Obj {
     let block = || {
-        // micropython::List does not have any getter :((
-        // so I use Map instead
-        try_parse_map!(list);
-        let mut items: Vec<Obj> = (0..list.len())
-            .into_iter()
-            .map(|i| list.get_obj(i.try_into()?))
-            .collect::<Result<Vec<Obj>, _>>()?;
-
-        let mut rng = load_rng(rng_config)?;
-        use rand::seq::SliceRandom;
-        items.shuffle(&mut rng);
-        save_rng(rng, rng_config);
-
-        Ok(List::alloc(&items)?.into())
+        let mut rng = load_rng(rng_state)?;
+        let max: usize = max.try_into()?;
+        let n: usize = rng.gen_range(0..max);
+        save_rng(rng, rng_state)?;
+        Ok(n.try_into()?)
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -95,12 +90,11 @@ pub extern "C" fn orchardlib_sign(sk: Obj, alpha: Obj, sighash: Obj) -> Obj {
 }
 
 fn parse_spend_info(spend_info: Obj) -> Result<(FullViewingKey, Note), Error> {
-    //let spend_info: &Map = try_into_map!(spend_info)?;
     try_parse_map!(spend_info);
     let fvk_bytes: [u8; 96] = spend_info.get(Qstr::MP_QSTR_fvk)?.try_into()?;
     let fvk = FullViewingKey::from_bytes(&fvk_bytes).ok_or(Error::TypeError)?;
     let note: [u8; 115] = spend_info.get(Qstr::MP_QSTR_note)?.try_into()?;
-    let note = orchard::hww::deserialize_note(note).ok_or(Error::TypeError)?; // TODO: Value Error
+    let note = orchard::hww::deserialize_note(note).ok_or_else(|| value_error("Invalid Note\0"))?;
     Ok((fvk, note))
 }
 
@@ -115,7 +109,6 @@ fn parse_output_info(
     ),
     Error,
 > {
-    //let output_info: &Map = try_into_map!(output_info)?;
     try_parse_map!(output_info);
     let ovk: Option<OutgoingViewingKey> = {
         let ovk_bytes: [u8; 32] = output_info.get(Qstr::MP_QSTR_ovk)?.try_into()?;
@@ -123,7 +116,7 @@ fn parse_output_info(
     };
     let address: [u8; 43] = output_info.get(Qstr::MP_QSTR_address)?.try_into()?;
     let address = Address::from_raw_address_bytes(&address);
-    let address = Option::from(address).ok_or(Error::TypeError)?; // TODO: ValueError
+    let address = Option::from(address).ok_or_else(|| value_error("Invalied Address\0"))?;
 
     let value: u64 = output_info.get(Qstr::MP_QSTR_value)?.try_into()?;
     let value = orchard::value::NoteValue::from_raw(value);
@@ -137,30 +130,28 @@ fn parse_output_info(
     Ok((ovk, address, value, memo))
 }
 
-fn load_rng(config: Obj) -> Result<ChaCha12Rng, Error> {
-    //let config: &Map = try_into_map!(config)?;
-    try_parse_map!(config);
-    let seed: [u8; 32] = config.get(Qstr::MP_QSTR_seed)?.try_into()?;
+fn load_rng(rng_state: Obj) -> Result<ChaCha12Rng, Error> {
+    try_parse_map!(rng_state);
+    let seed: [u8; 32] = rng_state.get(Qstr::MP_QSTR_seed)?.try_into()?;
     let mut rng = ChaCha12Rng::from_seed(seed);
-    let pos: u64 = config.get(Qstr::MP_QSTR_pos)?.try_into()?;
+    let pos: u64 = rng_state.get(Qstr::MP_QSTR_pos)?.try_into()?;
     rng.set_word_pos(pos as u128);
     Ok(rng)
 }
 
-fn save_rng(rng: ChaCha12Rng, config: Obj) -> Result<(), Error> {
-    let mut dict: Gc<Dict> = config.try_into()?;
+fn save_rng(rng: ChaCha12Rng, rng_state: Obj) -> Result<(), Error> {
+    let mut dict: Gc<Dict> = rng_state.try_into()?;
     let mut map = unsafe { Gc::as_mut(&mut dict) }.map_mut();
     map.set_obj(
         Qstr::MP_QSTR_pos.into(),
         (rng.get_word_pos() as u64).try_into()?,
-    );
+    )?;
     Ok(())
 }
 
 #[no_mangle]
-pub extern "C" fn orchardlib_shield(action_info: Obj, rng_config: Obj) -> Obj {
+pub extern "C" fn orchardlib_shield(action_info: Obj, rng_state: Obj) -> Obj {
     let block = || {
-        //let action_info: &Map = try_into_map!(action_info)?;
         try_parse_map!(action_info);
 
         let spend_info = action_info
@@ -173,10 +164,9 @@ pub extern "C" fn orchardlib_shield(action_info: Obj, rng_config: Obj) -> Obj {
             .and_then(parse_output_info)
             .ok();
 
-        //let rng = trezorhal::random::HardwareRandomness;
-        let mut rng = load_rng(rng_config)?;
+        let mut rng = load_rng(rng_state)?;
         let action = orchard::hww::shield(spend_info, output_info, &mut rng);
-        save_rng(rng, rng_config)?;
+        save_rng(rng, rng_state)?;
 
         let items: [(Qstr, Obj); 8] = [
             (Qstr::MP_QSTR_cv, action.cv_net().to_bytes().try_into()?),
@@ -218,7 +208,7 @@ impl From<TryFromSliceError> for Error {
     }
 }
 
-/// Returns Orchard Full Viewing Key.
+// parse SpendingKey
 fn parse_sk(sk: Obj) -> Result<SpendingKey, Error> {
     let sk_bytes: [u8; 32] = sk.try_into()?;
 
@@ -226,28 +216,18 @@ fn parse_sk(sk: Obj) -> Result<SpendingKey, Error> {
     let sk = SpendingKey::from_bytes(sk_bytes);
     // conversion from CtOption to Option
     let sk: Option<SpendingKey> = sk.into();
-    let sk = sk.ok_or_else(|| {
-        let err_msg =
-            unsafe { CStr::from_bytes_with_nul_unchecked("Invalid Spending Key\0".as_bytes()) };
-        Error::ValueError(err_msg)
-    })?;
+    let sk = sk.ok_or_else(|| value_error("Invalid Spending Key\0"))?;
 
     Ok(sk)
 }
 
+// parse Full Viewing Key
 fn parse_fvk(fvk: Obj) -> Result<FullViewingKey, Error> {
     let fvk_bytes: [u8; 96] = fvk.try_into()?;
     let fvk = FullViewingKey::from_bytes(&fvk_bytes);
-    let fvk = fvk.ok_or_else(|| {
-        let err_msg =
-            unsafe { CStr::from_bytes_with_nul_unchecked("Invalid Full Viewing Key\0".as_bytes()) };
-        Error::ValueError(err_msg)
-    })?;
-
+    let fvk = fvk.ok_or_else(|| value_error("Invalid Full Viewing Key\0"))?;
     Ok(fvk)
 }
-
-// TODO: internal switch
 
 #[no_mangle]
 pub extern "C" fn orchardlib_derive_full_viewing_key(spending_key: Obj, internal: Obj) -> Obj {
@@ -265,7 +245,9 @@ pub extern "C" fn orchardlib_derive_full_viewing_key(spending_key: Obj, internal
 pub extern "C" fn orchardlib_derive_internal_full_viewing_key(full_viewing_key: Obj) -> Obj {
     let block = || {
         let fvk: FullViewingKey = parse_fvk(full_viewing_key)?;
-        // TODO
+
+        Err(value_error("Internal keys not implemented\0"))?; // TODO !!!
+
         let fvk_bytes = fvk.to_bytes();
         let fvk_obj = Obj::try_from(&fvk_bytes[..])?;
         Ok(fvk_obj)

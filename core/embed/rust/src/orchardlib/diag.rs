@@ -89,11 +89,11 @@ pub extern "C" fn orchardlib_diag(ins: Obj, data: Obj) -> Obj {
                 Obj::try_from(&ak.to_bytes()[..])?
             }
             */
-            b"alloc" => {
+            /*b"alloc" => {
                 let size = as_u32_be(data) as usize;
                 let _ = vec![0u8; size];
                 Obj::try_from(&b"allocation successed"[..])?
-            }
+            }*/
             /*b"encrypt" => {
                 orchard::note_encryption::tests::test_vectors();
                 Obj::try_from(&b"encryption successed"[..])?

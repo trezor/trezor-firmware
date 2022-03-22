@@ -122,25 +122,27 @@ class OrchardSigner:
 
     @skip_if_empty
     async def compute_digest(self):
-        seed = self.set_seed()
-        # `rand_state` is used by orchardlib to construct a PRG
-        rand_state = {
+        seed = self.gen_shielding_seed()
+        # `rng_state` is used by orchardlib to construct a PRG
+        rng_state = {
             "seed": seed,
             "pos": 0,  # `pos` is modified by each orchardlib call
         }
 
-        inputs = list(range(self.tx_info.tx.orchard.inputs_count))
-        self.pad_and_shuffle(inputs, self.actions_count, rand_state)
+        inputs = list(range(self.inputs_count))
+        pad(inputs, self.actions_count)
+        shuffle(inputs, rng_state)
 
-        outputs = list(range(self.tx_info.tx.orchard.outputs_count))
-        self.pad_and_shuffle(outputs, self.actions_count, rand_state)
+        outputs = list(range(self.outputs_count))
+        pad(outputs, self.actions_count)
+        shuffle(outputs, rng_state)
 
         # precompute Full Viewing Key
         fvk = self.key_node.full_viewing_key()
 
         for i, j in zip(inputs, outputs):
             action_info = await self.build_action_info(i, j, fvk)
-            action = orchardlib.shield(action_info, rand_state)  # on this line the magic happens
+            action = orchardlib.shield(action_info, rng_state)  # on this line the magic happens
             self.tx_info.sig_hasher.orchard.add_action(action)
             self.alphas.append(action["alpha"])  # TODO: send alpha
 
@@ -150,16 +152,11 @@ class OrchardSigner:
             anchor=self.tx_info.tx.orchard.anchor,
         )
 
-    def set_seed(self):
+    def gen_shielding_seed(self):
         seed = random.bytes(32)
         assert self.tx_req.serialized.orchard.randomness_seed is None
         self.tx_req.serialized.orchard.randomness_seed = seed
         return seed
-
-    def pad_and_shuffle(self, items, target_length, rand_state):
-        items.extend((target_length - len(items))*[None])  # pad
-        items_dict = dict(zip(range(target_length), items))
-        items[:] = orchardlib.shuffle(items_dict, rand_state)  # shuffle 
 
     async def build_action_info(self, input_index, output_index, fvk):
         action_info = dict()
@@ -254,6 +251,16 @@ class OrchardSigner:
 
         if original_hmac != computed_hmac:
             raise ProcessError("Invalid HMAC.")
+
+
+def pad(items, target_length):
+    items.extend((target_length - len(items))*[None])  # pad
+
+
+def shuffle(items, rng_state):
+    for i in reversed(range(len(items))):
+        j = orchardlib.randint(i + 1, rng_state)
+        items[i], items[j] = items[j], items[i]
 
 
 def _sanitize_input(txi: ZcashOrchardInput):
