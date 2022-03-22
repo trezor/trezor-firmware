@@ -45,18 +45,19 @@ const SD_SALT_AUTH_KEY_LEN_BYTES: usize = 16;
 // TODO: how to export all public constants as integers?
 
 // const DEVICE_ID: u8 = 0x00;
-const DEVICE_ID: Field<String<24>> = Field::public(APP_DEVICE, 0x00);
+const DEVICE_ID: Field<String<24>> = Field::public(APP_DEVICE, 0x00).exact();
 // const _VERSION: u8 = 0x01;
-const VERSION: Field<Vec<u8, 1>> = Field::private(APP_DEVICE, 0x01);
+const VERSION: Field<Vec<u8, 1>> = Field::private(APP_DEVICE, 0x01).exact();
 // const _MNEMONIC_SECRET: u8 = 0x02;
 const _MNEMONIC_SECRET: Field<Vec<u8, 256>> = Field::private(APP_DEVICE, 0x02);
 // const _LANGUAGE: u8 = 0x03; // seems it is not used at all
 // const _LABEL: u8 = 0x04;
-const _LABEL: Field<String<LABEL_MAXLENGTH>> = Field::public(APP_DEVICE, 0x04);
+const _LABEL: Field<String<LABEL_MAXLENGTH>> = Field::public(APP_DEVICE, 0x04).max_len_error();
 // const _USE_PASSPHRASE: u8 = 0x05;
 const _USE_PASSPHRASE: Field<bool> = Field::private(APP_DEVICE, 0x05);
 // const _HOMESCREEN: u8 = 0x06;
-const _HOMESCREEN: Field<Vec<u8, HOMESCREEN_MAXSIZE>> = Field::public(APP_DEVICE, 0x06);
+const _HOMESCREEN: Field<Vec<u8, HOMESCREEN_MAXSIZE>> =
+    Field::public(APP_DEVICE, 0x06).max_len_error();
 // const _NEEDS_BACKUP: u8 = 0x07;
 const _NEEDS_BACKUP: Field<bool> = Field::private(APP_DEVICE, 0x07);
 // const _FLAGS: u8 = 0x08;
@@ -80,7 +81,7 @@ const _SLIP39_IDENTIFIER: Field<u16> = Field::private(APP_DEVICE, 0x10);
 const _SLIP39_ITERATION_EXPONENT: Field<u8> = Field::private(APP_DEVICE, 0x11);
 // const _SD_SALT_AUTH_KEY: u8 = 0x12;
 const _SD_SALT_AUTH_KEY: Field<Vec<u8, SD_SALT_AUTH_KEY_LEN_BYTES>> =
-    Field::public(APP_DEVICE, 0x12);
+    Field::public(APP_DEVICE, 0x12).exact();
 // const INITIALIZED: u8 = 0x13;
 const INITIALIZED: Field<bool> = Field::public(APP_DEVICE, 0x13);
 // const _SAFETY_CHECK_LEVEL: u8 = 0x14;
@@ -125,7 +126,7 @@ extern "C" fn storagedevice_get_version() -> Obj {
 }
 
 extern "C" fn storagedevice_set_version(version: Obj) -> Obj {
-    let block = || Ok(VERSION.set(Buffer::try_from(version)?.as_ref()).into());
+    let block = || Ok(VERSION.set(Buffer::try_from(version)?.as_ref())?.into());
     unsafe { util::try_or_raise(block) }
 }
 
@@ -165,26 +166,21 @@ extern "C" fn storagedevice_set_label(label: Obj) -> Obj {
         // TODO: find out why StrBuffer throws TypeError
         // let label = StrBuffer::try_from(label)?;
         let label = Buffer::try_from(label)?;
-
-        if label.len() > LABEL_MAXLENGTH {
-            Err(Error::ValueError(cstr!("Label is too long")))
-        } else {
-            Ok(_LABEL.set(str::from_utf8(label.as_ref()).unwrap()).into())
-        }
+        Ok(_LABEL.set(str::from_utf8(label.as_ref()).unwrap())?.into())
     };
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_get_device_id() -> Obj {
     let block = || {
-        let device_id = DEVICE_ID.get();
+        let device_id = DEVICE_ID.get()?;
 
         if let Some(device_id) = device_id {
             device_id.as_str().try_into()
         } else {
             let new_device_id = &random::get_random_bytes(12) as &[u8];
             let hex_id = _hexlify_bytes(new_device_id);
-            DEVICE_ID.set(hex_id.as_str());
+            DEVICE_ID.set(hex_id.as_str())?;
             hex_id.as_str().try_into()
         }
     };
@@ -216,8 +212,8 @@ extern "C" fn storagedevice_set_mnemonic_secret(
         };
 
         // TODO: could check that all sets return true (succeed)
-        VERSION.set(&[STORAGE_VERSION_CURRENT]);
-        _MNEMONIC_SECRET.set(secret.as_ref());
+        VERSION.set(&[STORAGE_VERSION_CURRENT])?;
+        _MNEMONIC_SECRET.set(secret.as_ref())?;
         _BACKUP_TYPE.set(backup_type);
         _NO_BACKUP.set_true_or_delete(no_backup);
         INITIALIZED.set(true);
@@ -312,12 +308,7 @@ extern "C" fn storagedevice_get_homescreen() -> Obj {
 extern "C" fn storagedevice_set_homescreen(homescreen: Obj) -> Obj {
     let block = || {
         let homescreen = Buffer::try_from(homescreen)?;
-
-        if homescreen.len() > HOMESCREEN_MAXSIZE {
-            Err(Error::ValueError(cstr!("Homescreen too large")))
-        } else {
-            Ok(_HOMESCREEN.set(homescreen.as_ref()).into())
-        }
+        Ok(_HOMESCREEN.set(homescreen.as_ref())?.into())
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -408,18 +399,7 @@ extern "C" fn storagedevice_set_safety_check_level(level: Obj) -> Obj {
 }
 
 extern "C" fn storagedevice_get_sd_salt_auth_key() -> Obj {
-    let block = || {
-        let result = _SD_SALT_AUTH_KEY.get();
-        if let Some(result) = result {
-            if result.len() == SD_SALT_AUTH_KEY_LEN_BYTES {
-                (&result as &[u8]).try_into()
-            } else {
-                Err(Error::ValueError(cstr!("Invalid key length")))
-            }
-        } else {
-            Ok(NONE)
-        }
-    };
+    let block = || _SD_SALT_AUTH_KEY.get_result();
     unsafe { util::try_or_raise(block) }
 }
 
@@ -427,10 +407,10 @@ extern "C" fn storagedevice_set_sd_salt_auth_key(auth_key: Obj) -> Obj {
     let block = || {
         let auth_key = Buffer::try_from(auth_key)?;
 
-        match auth_key.len() {
-            0 => Ok(_SD_SALT_AUTH_KEY.delete().into()),
-            SD_SALT_AUTH_KEY_LEN_BYTES => Ok(_SD_SALT_AUTH_KEY.set(auth_key.as_ref()).into()),
-            _ => Err(Error::ValueError(cstr!("Invalid key length"))),
+        if auth_key.is_empty() {
+            Ok(_SD_SALT_AUTH_KEY.delete().into())
+        } else {
+            Ok(_SD_SALT_AUTH_KEY.set(auth_key.as_ref())?.into())
         }
     };
     unsafe { util::try_or_raise(block) }
@@ -453,6 +433,8 @@ extern "C" fn storagedevice_set_u2f_counter(count: Obj) -> Obj {
     };
     unsafe { util::try_or_raise(block) }
 }
+
+// TODO: leave the counter logic here, or also somehow include it in field.rs?
 
 pub fn storagedevice_storage_get_next_counter(key: u16) -> u32 {
     let mut count: u32 = 0;
