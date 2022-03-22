@@ -1,4 +1,4 @@
-import storage.device
+import storage
 import storage.resident_credentials
 from trezor import wire
 from trezor.messages import Success, WebAuthnRemoveResidentCredential

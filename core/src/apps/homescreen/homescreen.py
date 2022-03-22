@@ -3,7 +3,6 @@ from micropython import const
 
 import storage
 import storage.cache
-import storage.device
 from trezor import config, ui
 from trezor.ui.loader import Loader, LoaderNeutral
 
@@ -46,7 +45,7 @@ class Homescreen(HomescreenBase):
             ui.header_warning("NEEDS BACKUP!")
         elif storage.device.is_initialized() and not config.has_pin():
             ui.header_warning("PIN NOT SET!")
-        elif storage.device.get_experimental_features():
+        elif storage.device_old.get_experimental_features():
             ui.header_warning("EXPERIMENTAL MODE!")
         else:
             ui.display.bar(0, 0, ui.WIDTH, ui.HEIGHT, ui.BG)

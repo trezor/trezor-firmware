@@ -3,7 +3,7 @@ from micropython import const
 from typing import Iterable
 from ubinascii import hexlify
 
-import storage.device
+import storage
 from trezor import log, utils
 from trezor.crypto import bip32, chacha20poly1305, der, hashlib, hmac, random
 from trezor.crypto.curve import ed25519, nist256p1

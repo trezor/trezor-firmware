@@ -45,8 +45,6 @@ with unimport_manager:
     del boot
 
 # start the USB
-import storage.device
-
 usb.bus.open(storage.device.get_device_id())
 
 # run the endless loop

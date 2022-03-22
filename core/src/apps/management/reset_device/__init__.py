@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
 import storage
-import storage.device
 from trezor import config, wire
 from trezor.crypto import bip39, hashlib, random, slip39
 from trezor.enums import BackupType

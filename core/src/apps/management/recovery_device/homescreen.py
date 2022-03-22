@@ -1,5 +1,4 @@
 import storage
-import storage.device
 import storage.recovery
 import storage.recovery_shares
 from trezor import strings, utils, wire, workflow

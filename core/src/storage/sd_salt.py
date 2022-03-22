@@ -1,7 +1,7 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
-import storage.device
+import storage
 from trezor import io
 from trezor.sdcard import with_filesystem
 from trezor.utils import consteq
