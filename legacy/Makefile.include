@@ -43,6 +43,9 @@ CPUFLAGS ?= -mcpu=cortex-m3 -mthumb
 FPUFLAGS ?= -msoft-float
 endif
 
+DEBUG_LINK ?= 0
+DEBUG_LOG  ?= 0
+
 CFLAGS   += $(OPTFLAGS) \
             $(DBGFLAGS) \
             $(SANFLAGS) \
@@ -75,6 +78,8 @@ CFLAGS   += $(OPTFLAGS) \
             $(FPUFLAGS) \
             $(CONFFLAG) \
             -DSTM32F2 \
+            -DDEBUG_LINK=$(DEBUG_LINK) \
+            -DDEBUG_LOG=$(DEBUG_LOG) \
             -I$(TOOLCHAIN_DIR)/include \
             -I$(TOP_DIR) \
             -I$(TOP_DIR)gen \

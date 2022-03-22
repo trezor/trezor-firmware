@@ -65,7 +65,6 @@
  */
 
 static uint8_t _oledbuffer[OLED_BUFSIZE];
-static bool is_debug_link = 0;
 
 /*
  * macros to convert coordinate to bit position
@@ -181,23 +180,23 @@ void oledInit() {
 void oledClear() { memzero(_oledbuffer, sizeof(_oledbuffer)); }
 
 void oledInvertDebugLink() {
-  if (is_debug_link) {
-    oledInvertPixel(OLED_WIDTH - 5, 0);
-    oledInvertPixel(OLED_WIDTH - 4, 0);
-    oledInvertPixel(OLED_WIDTH - 3, 0);
-    oledInvertPixel(OLED_WIDTH - 2, 0);
-    oledInvertPixel(OLED_WIDTH - 1, 0);
-    oledInvertPixel(OLED_WIDTH - 4, 1);
-    oledInvertPixel(OLED_WIDTH - 3, 1);
-    oledInvertPixel(OLED_WIDTH - 2, 1);
-    oledInvertPixel(OLED_WIDTH - 1, 1);
-    oledInvertPixel(OLED_WIDTH - 3, 2);
-    oledInvertPixel(OLED_WIDTH - 2, 2);
-    oledInvertPixel(OLED_WIDTH - 1, 2);
-    oledInvertPixel(OLED_WIDTH - 2, 3);
-    oledInvertPixel(OLED_WIDTH - 1, 3);
-    oledInvertPixel(OLED_WIDTH - 1, 4);
-  }
+#if DEBUG_LINK
+  oledInvertPixel(OLED_WIDTH - 5, 0);
+  oledInvertPixel(OLED_WIDTH - 4, 0);
+  oledInvertPixel(OLED_WIDTH - 3, 0);
+  oledInvertPixel(OLED_WIDTH - 2, 0);
+  oledInvertPixel(OLED_WIDTH - 1, 0);
+  oledInvertPixel(OLED_WIDTH - 4, 1);
+  oledInvertPixel(OLED_WIDTH - 3, 1);
+  oledInvertPixel(OLED_WIDTH - 2, 1);
+  oledInvertPixel(OLED_WIDTH - 1, 1);
+  oledInvertPixel(OLED_WIDTH - 3, 2);
+  oledInvertPixel(OLED_WIDTH - 2, 2);
+  oledInvertPixel(OLED_WIDTH - 1, 2);
+  oledInvertPixel(OLED_WIDTH - 2, 3);
+  oledInvertPixel(OLED_WIDTH - 1, 3);
+  oledInvertPixel(OLED_WIDTH - 1, 4);
+#endif
 }
 
 /*
@@ -231,11 +230,6 @@ void oledRefresh() {
 #endif
 
 const uint8_t *oledGetBuffer() { return _oledbuffer; }
-
-void oledSetDebugLink(bool set) {
-  is_debug_link = set;
-  oledRefresh();
-}
 
 void oledSetBuffer(uint8_t *buf) {
   memcpy(_oledbuffer, buf, sizeof(_oledbuffer));
