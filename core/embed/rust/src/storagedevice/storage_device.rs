@@ -520,7 +520,7 @@ pub static mp_module_trezorstoragedevice: Module = obj_module! {
     ///     """Whether device is initialized."""
     Qstr::MP_QSTR_is_initialized => obj_fn_0!(storagedevice_is_initialized).as_obj(),
 
-    /// def get_version() -> bytes:
+    /// def get_version() -> bytes | None:
     ///     """Get version."""
     Qstr::MP_QSTR_get_version => obj_fn_0!(storagedevice_get_version).as_obj(),
 
@@ -548,7 +548,7 @@ pub static mp_module_trezorstoragedevice: Module = obj_module! {
     ///     """Get device ID."""
     Qstr::MP_QSTR_get_device_id => obj_fn_0!(storagedevice_get_device_id).as_obj(),
 
-    /// def get_mnemonic_secret() -> bytes:
+    /// def get_mnemonic_secret() -> bytes | None:
     ///     """Get mnemonic secret."""
     Qstr::MP_QSTR_get_mnemonic_secret => obj_fn_0!(storagedevice_get_mnemonic_secret).as_obj(),
 

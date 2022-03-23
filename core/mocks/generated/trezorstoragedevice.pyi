@@ -14,7 +14,7 @@ def is_initialized() -> bool:
 
 
 # rust/src/storagedevice/storage_device.rs
-def get_version() -> bytes:
+def get_version() -> bytes | None:
     """Get version."""
 
 
@@ -49,7 +49,7 @@ def get_device_id() -> str:
 
 
 # rust/src/storagedevice/storage_device.rs
-def get_mnemonic_secret() -> bytes:
+def get_mnemonic_secret() -> bytes | None:
     """Get mnemonic secret."""
 
 
