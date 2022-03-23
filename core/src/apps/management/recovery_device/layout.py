@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-import storage.recovery
+import storage
 from trezor import ui, wire
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import confirm_action, show_success, show_warning

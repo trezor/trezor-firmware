@@ -1,5 +1,4 @@
 import storage
-import storage.recovery
 import storage.recovery_shares
 from trezor import strings, utils, wire, workflow
 from trezor.crypto import slip39

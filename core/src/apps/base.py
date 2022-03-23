@@ -24,7 +24,6 @@ if TYPE_CHECKING:
 
 
 def get_features() -> Features:
-    import storage.recovery
     import storage.sd_salt
     import storage  # workaround for https://github.com/microsoft/pyright/issues/2685
 
@@ -200,7 +199,7 @@ ALLOW_WHILE_LOCKED = (
 
 
 def set_homescreen() -> None:
-    import storage.recovery
+    import storage
 
     if not config.is_unlocked():
         from apps.homescreen.lockscreen import lockscreen

@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
 import storage
-import storage.recovery
 from trezor import config, ui, wire, workflow
 from trezor.enums import ButtonRequestType
 from trezor.messages import Success

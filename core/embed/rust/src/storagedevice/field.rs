@@ -1,20 +1,10 @@
-use crate::{error::Error, micropython::obj::Obj, trezorhal::secbool};
+use crate::{error::Error, micropython::obj::Obj, storagedevice::helpers};
 use core::{marker::PhantomData, str};
 use cstr_core::cstr;
 use heapless::{String, Vec};
 
-const FLAG_PUBLIC: u8 = 0x80;
-
 // NOTE: it is impossible to create const with the error messages -
 // not &CStr nor &str
-
-extern "C" {
-    // storage.h
-    fn storage_has(key: u16) -> secbool::Secbool;
-    fn storage_delete(key: u16) -> secbool::Secbool;
-    fn storage_get(key: u16, val: *const u8, max_len: u16, len: *mut u16) -> secbool::Secbool;
-    fn storage_set(key: u16, val: *const u8, len: u16) -> secbool::Secbool;
-}
 
 // TODO:
 // default_value: <T>
@@ -56,52 +46,23 @@ impl<T> Field<T> {
     }
 
     fn appkey(&self) -> u16 {
-        if self.public {
-            ((self.app | FLAG_PUBLIC) as u16) << 8 | self.key as u16
-        } else {
-            (self.app as u16) << 8 | self.key as u16
-        }
+        helpers::get_appkey(self.app, self.key, self.public)
     }
 
     pub fn has(&self) -> bool {
-        secbool::TRUE == unsafe { storage_has(self.appkey()) }
+        helpers::storage_has_rs(self.appkey())
     }
 
     pub fn delete(&self) -> Result<(), Error> {
-        // If there is nothing, storage_delete() would return false
-        if !self.has() {
-            return Ok(());
-        }
-
-        let result = unsafe { storage_delete(self.appkey()) };
-        if result != secbool::TRUE {
-            Err(Error::ValueError(cstr!(
-                "Could not delete value in storage"
-            )))
-        } else {
-            Ok(())
-        }
+        helpers::storage_delete_safe_rs(self.appkey())
     }
 
     fn get_bytes<const N: usize>(&self, buf: &mut [u8; N]) -> Option<u16> {
-        assert!(N <= u16::MAX as usize);
-        let mut len = 0;
-        let result = unsafe { storage_get(self.appkey(), buf.as_mut_ptr(), N as u16, &mut len) };
-        if result != secbool::TRUE {
-            None
-        } else {
-            Some(len)
-        }
+        helpers::storage_get_rs(self.appkey(), buf)
     }
 
     fn set_bytes(&self, buf: &[u8]) -> Result<(), Error> {
-        assert!(buf.len() <= u16::MAX as usize);
-        let result = unsafe { storage_set(self.appkey(), buf.as_ptr(), buf.len() as u16) };
-        if result != secbool::TRUE {
-            Err(Error::ValueError(cstr!("Could not save value to storage")))
-        } else {
-            Ok(())
-        }
+        helpers::storage_set_rs(self.appkey(), buf)
     }
 }
 
@@ -207,6 +168,7 @@ impl<const N: usize> Field<String<N>> {
         let mut buf = [0u8; N];
         let len = self.get_bytes(&mut buf);
         if let Some(len) = len {
+            // TODO: error handling
             let string = String::from(str::from_utf8(&buf[..len as usize]).ok().unwrap());
             if self.max_len_is_exact && string.len() as usize != N {
                 Ok(None)

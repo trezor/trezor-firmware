@@ -49,3 +49,23 @@ def get_slip39_group_count() -> int:
 # rust/src/storagedevice/recovery.rs
 def set_slip39_group_count(group_count: int) -> None:
     """Set slip39 group count."""
+
+
+# rust/src/storagedevice/recovery.rs
+def get_slip39_remaining_shares(group_index: int) -> int | None:
+    """Get slip39 remaining shares."""
+
+
+# rust/src/storagedevice/recovery.rs
+def fetch_slip39_remaining_shares() -> list[int] | None:
+    """Fetch slip39 remaining shares."""
+
+
+# rust/src/storagedevice/recovery.rs
+def set_slip39_remaining_shares(shares_remaining: int, group_index: int) -> None:
+    """Set slip39 remaining shares."""
+
+
+# rust/src/storagedevice/recovery.rs
+def end_progress() -> None:
+    """Finish recovery."""

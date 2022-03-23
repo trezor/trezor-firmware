@@ -7,18 +7,16 @@ use crate::{
         obj::Obj,
         qstr::Qstr,
     },
-    storagedevice::field::Field,
+    storagedevice::{field::Field, helpers},
     trezorhal::{random, secbool},
     util,
 };
-
-use cstr_core::cstr;
-use heapless::{String, Vec};
-
 use core::{
     convert::{TryFrom, TryInto},
     str,
 };
+use cstr_core::cstr;
+use heapless::{String, Vec};
 
 // TODO: can we import messages enums?
 
@@ -28,9 +26,6 @@ use core::{
 // Or some other way how to reduce it
 // NOTE: I tried the .map() and .and_then to return it as a chain, but it did
 // not work
-
-const FLAG_PUBLIC: u8 = 0x80;
-const FLAGS_WRITE: u8 = 0xC0;
 
 // TODO: could be defined as a part of `Field` not to repeat it so much
 const APP_DEVICE: u8 = 0x01;
@@ -47,48 +42,27 @@ const SD_SALT_AUTH_KEY_LEN_BYTES: usize = 16;
 
 // TODO: how to export all public constants as integers?
 
-// const DEVICE_ID: u8 = 0x00;
 const DEVICE_ID: Field<String<24>> = Field::public(APP_DEVICE, 0x00).exact();
-// const _VERSION: u8 = 0x01;
 const VERSION: Field<Vec<u8, 1>> = Field::private(APP_DEVICE, 0x01).exact();
-// const _MNEMONIC_SECRET: u8 = 0x02;
 const _MNEMONIC_SECRET: Field<Vec<u8, 256>> = Field::private(APP_DEVICE, 0x02);
-// const _LANGUAGE: u8 = 0x03; // seems it is not used at all
-// const _LABEL: u8 = 0x04;
 const _LABEL: Field<String<LABEL_MAXLENGTH>> = Field::public(APP_DEVICE, 0x04);
-// const _USE_PASSPHRASE: u8 = 0x05;
 const _USE_PASSPHRASE: Field<bool> = Field::private(APP_DEVICE, 0x05);
-// const _HOMESCREEN: u8 = 0x06;
 const _HOMESCREEN: Field<Vec<u8, HOMESCREEN_MAXSIZE>> = Field::public(APP_DEVICE, 0x06);
-// const _NEEDS_BACKUP: u8 = 0x07;
 const _NEEDS_BACKUP: Field<bool> = Field::private(APP_DEVICE, 0x07);
-// const _FLAGS: u8 = 0x08;
 const _FLAGS: Field<u32> = Field::private(APP_DEVICE, 0x08);
 const U2F_COUNTER: u8 = 0x09;
-// const _PASSPHRASE_ALWAYS_ON_DEVICE: u8 = 0x0A;
 const _PASSPHRASE_ALWAYS_ON_DEVICE: Field<bool> = Field::private(APP_DEVICE, 0x0A);
-// const _UNFINISHED_BACKUP: u8 = 0x0B;
 const _UNFINISHED_BACKUP: Field<bool> = Field::private(APP_DEVICE, 0x0B);
-// const _AUTOLOCK_DELAY_MS: u8 = 0x0C;
 const _AUTOLOCK_DELAY_MS: Field<u32> = Field::private(APP_DEVICE, 0x0C);
-// const _NO_BACKUP: u8 = 0x0D;
 const _NO_BACKUP: Field<bool> = Field::private(APP_DEVICE, 0x0D);
-// const _BACKUP_TYPE: u8 = 0x0E;
 const _BACKUP_TYPE: Field<u8> = Field::private(APP_DEVICE, 0x0E);
-// const _ROTATION: u8 = 0x0F;
 const ROTATION: Field<u16> = Field::public(APP_DEVICE, 0x0F);
-// const _SLIP39_IDENTIFIER: u8 = 0x10;
 const _SLIP39_IDENTIFIER: Field<u16> = Field::private(APP_DEVICE, 0x10);
-// const _SLIP39_ITERATION_EXPONENT: u8 = 0x11;
 const _SLIP39_ITERATION_EXPONENT: Field<u8> = Field::private(APP_DEVICE, 0x11);
-// const _SD_SALT_AUTH_KEY: u8 = 0x12;
 const _SD_SALT_AUTH_KEY: Field<Vec<u8, SD_SALT_AUTH_KEY_LEN_BYTES>> =
     Field::public(APP_DEVICE, 0x12).exact();
-// const INITIALIZED: u8 = 0x13;
 const INITIALIZED: Field<bool> = Field::public(APP_DEVICE, 0x13);
-// const _SAFETY_CHECK_LEVEL: u8 = 0x14;
 const _SAFETY_CHECK_LEVEL: Field<u8> = Field::private(APP_DEVICE, 0x14);
-// const _EXPERIMENTAL_FEATURES: u8 = 0x15;
 
 const SAFETY_CHECK_LEVEL_STRICT: u8 = 0;
 const SAFETY_CHECK_LEVEL_PROMPT: u8 = 1;
@@ -170,6 +144,7 @@ extern "C" fn storagedevice_set_label(label: Obj) -> Obj {
         // TODO: find out why StrBuffer throws TypeError
         // let label = StrBuffer::try_from(label)?;
         let label = Buffer::try_from(label)?;
+        // TODO: error handling
         _LABEL.set(str::from_utf8(label.as_ref()).unwrap())?;
         Ok(Obj::const_none())
     };
@@ -184,7 +159,7 @@ extern "C" fn storagedevice_get_device_id() -> Obj {
             device_id.as_str().try_into()
         } else {
             let new_device_id = &random::get_random_bytes(12) as &[u8];
-            let hex_id = _hexlify_bytes(new_device_id);
+            let hex_id = helpers::hexlify_bytes(new_device_id);
             DEVICE_ID.set(hex_id.as_str())?;
             hex_id.as_str().try_into()
         }
@@ -432,7 +407,7 @@ extern "C" fn storagedevice_set_sd_salt_auth_key(auth_key: Obj) -> Obj {
 
 extern "C" fn storagedevice_get_next_u2f_counter() -> Obj {
     let block = || {
-        let key = _get_appkey_u2f(U2F_COUNTER, true);
+        let key = helpers::get_appkey_u2f(APP_DEVICE, U2F_COUNTER, true);
         storagedevice_storage_get_next_counter(key).try_into()
     };
     unsafe { util::try_or_raise(block) }
@@ -442,7 +417,7 @@ extern "C" fn storagedevice_set_u2f_counter(count: Obj) -> Obj {
     let block = || {
         let count = u32::try_from(count)?;
 
-        let key = _get_appkey_u2f(U2F_COUNTER, true);
+        let key = helpers::get_appkey_u2f(APP_DEVICE, U2F_COUNTER, true);
         Ok(storagedevice_storage_set_counter(key, count).into())
     };
     unsafe { util::try_or_raise(block) }
@@ -460,24 +435,6 @@ pub fn storagedevice_storage_set_counter(key: u16, count: u32) -> bool {
     matches!(unsafe { storage_set_counter(key, count) }, secbool::TRUE)
 }
 
-fn _get_appkey(key: u8, is_public: bool) -> u16 {
-    let app = if is_public {
-        APP_DEVICE | FLAG_PUBLIC
-    } else {
-        APP_DEVICE
-    };
-    ((app as u16) << 8) | key as u16
-}
-
-fn _get_appkey_u2f(key: u8, writable_locked: bool) -> u16 {
-    let app = if writable_locked {
-        APP_DEVICE | FLAGS_WRITE
-    } else {
-        APP_DEVICE | FLAG_PUBLIC
-    };
-    ((app as u16) << 8) | key as u16
-}
-
 fn _normalize_autolock_delay(delay_ms: u32) -> u32 {
     if delay_ms < AUTOLOCK_DELAY_MINIMUM {
         AUTOLOCK_DELAY_MINIMUM
@@ -486,23 +443,6 @@ fn _normalize_autolock_delay(delay_ms: u32) -> u32 {
     } else {
         delay_ms
     }
-}
-
-// TODO: could be put elsewhere to be available for all modules
-pub fn _hexlify_bytes(bytes: &[u8]) -> String<64> {
-    let mut buf = String::<64>::from("");
-    for byte in bytes {
-        fn hex_from_digit(num: u8) -> char {
-            if num < 10 {
-                (b'0' + num) as char
-            } else {
-                (b'A' + num - 10) as char
-            }
-        }
-        buf.push(hex_from_digit(byte / 16)).unwrap();
-        buf.push(hex_from_digit(byte % 16)).unwrap();
-    }
-    buf
 }
 
 #[no_mangle]
@@ -692,30 +632,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn get_appkey() {
-        let result = _get_appkey(0x11, false);
-        assert_eq!(result, 0x0111);
-    }
-
-    #[test]
-    fn get_appkey_public() {
-        let result = _get_appkey(0x11, true);
-        assert_eq!(result, 0x8111);
-    }
-
-    #[test]
-    fn get_appkey_u2f_writable_locked() {
-        let result = _get_appkey_u2f(0x09, true);
-        assert_eq!(result, 0xC109);
-    }
-
-    #[test]
-    fn get_appkey_u2f_not_writable_locked() {
-        let result = _get_appkey_u2f(0x09, false);
-        assert_eq!(result, 0x8109);
-    }
-
-    #[test]
     fn normalize_autolock_delay_small() {
         let result = _normalize_autolock_delay(123);
         assert_eq!(result, AUTOLOCK_DELAY_MINIMUM);
@@ -731,12 +647,5 @@ mod tests {
     fn normalize_autolock_delay_normal() {
         let result = _normalize_autolock_delay(1_000_000);
         assert_eq!(result, 1_000_000);
-    }
-
-    #[test]
-    fn hexlify_bytes() {
-        let bytes: &[u8; 6] = &[52, 241, 6, 151, 173, 74];
-        let result = _hexlify_bytes(bytes);
-        assert_eq!(result, String::<64>::from("34F10697AD4A"));
     }
 }

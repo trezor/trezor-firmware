@@ -2,6 +2,7 @@ from storage import cache, common, device_old
 from trezor import config
 
 import trezorstoragedevice as device
+import trezorstoragerecovery as recovery  # noqa F401
 
 
 def set_current_version() -> None:

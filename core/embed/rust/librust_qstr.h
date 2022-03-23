@@ -67,6 +67,10 @@ static void _librust_qstrs(void) {
   MP_QSTR_set_dry_run;
   MP_QSTR_get_slip39_group_count;
   MP_QSTR_set_slip39_group_count;
+  MP_QSTR_get_slip39_remaining_shares;
+  MP_QSTR_fetch_slip39_remaining_shares;
+  MP_QSTR_set_slip39_remaining_shares;
+  MP_QSTR_end_progress;
 
   MP_QSTR_set_timer_fn;
   MP_QSTR_touch_event;

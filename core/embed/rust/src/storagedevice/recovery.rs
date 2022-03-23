@@ -1,15 +1,19 @@
 use crate::{
     error::Error,
     micropython::{map::Map, module::Module, obj::Obj, qstr::Qstr},
-    storagedevice::field::Field,
+    storagedevice::{field::Field, helpers},
     util,
 };
-
-use cstr_core::cstr;
-
 use core::convert::TryFrom;
+use cstr_core::cstr;
+use heapless::Vec;
+
+// The maximum number of shares/groups that can be created.
+const MAX_SHARE_COUNT: usize = 16;
+const MAX_GROUP_COUNT: usize = 16;
 
 const APP_RECOVERY: u8 = 0x02;
+const APP_RECOVERY_SHARES: u8 = 0x03;
 
 const _DEFAULT_SLIP39_GROUP_COUNT: u8 = 0x01;
 
@@ -17,7 +21,7 @@ const _IN_PROGRESS: Field<bool> = Field::private(APP_RECOVERY, 0x00);
 const _DRY_RUN: Field<bool> = Field::private(APP_RECOVERY, 0x01);
 const _SLIP39_IDENTIFIER: Field<u16> = Field::private(APP_RECOVERY, 0x03);
 const _SLIP39_THRESHOLD: Field<u16> = Field::private(APP_RECOVERY, 0x04);
-const _REMAINING: Field<u8> = Field::private(APP_RECOVERY, 0x05);
+const _REMAINING: Field<Vec<u8, MAX_SHARE_COUNT>> = Field::private(APP_RECOVERY, 0x05);
 const _SLIP39_ITERATION_EXPONENT: Field<u8> = Field::private(APP_RECOVERY, 0x06);
 const _SLIP39_GROUP_COUNT: Field<u8> = Field::private(APP_RECOVERY, 0x07);
 
@@ -105,6 +109,101 @@ extern "C" fn storagerecovery_set_slip39_group_count(group_count: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
+extern "C" fn storagerecovery_get_slip39_remaining_shares(group_index: Obj) -> Obj {
+    let block = || {
+        _require_progress()?;
+        let group_index = u8::try_from(group_index)? as usize;
+
+        let remaining = _REMAINING.get()?;
+        if let Some(remaining) = remaining {
+            let amount = remaining[group_index];
+            if amount == MAX_SHARE_COUNT as u8 {
+                Ok(Obj::const_none())
+            } else {
+                Ok(amount.into())
+            }
+        } else {
+            Ok(Obj::const_none())
+        }
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagerecovery_fetch_slip39_remaining_shares() -> Obj {
+    let block = || {
+        _require_progress()?;
+
+        let remaining = _REMAINING.get()?;
+        if remaining.is_none() {
+            return Ok(Obj::const_none());
+        }
+
+        let group_count = _SLIP39_GROUP_COUNT.get().unwrap_or(0) as usize;
+        if group_count == 0 {
+            return Err(Error::ValueError(cstr!("There are no remaining shares")));
+        }
+
+        // TODO: error handling
+        let result: Vec<u8, MAX_SHARE_COUNT> =
+            remaining.unwrap()[..group_count].iter().cloned().collect();
+
+        result.try_into()
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagerecovery_set_slip39_remaining_shares(
+    shares_remaining: Obj,
+    group_index: Obj,
+) -> Obj {
+    let block = || {
+        _require_progress()?;
+        let shares_remaining = u8::try_from(shares_remaining)?;
+        let group_index = u8::try_from(group_index)? as usize;
+
+        let group_count = _SLIP39_GROUP_COUNT.get().unwrap_or(0) as usize;
+        if group_count == 0 {
+            return Err(Error::ValueError(cstr!("There are no remaining shares")));
+        }
+
+        let mut default_remaining: Vec<u8, MAX_SHARE_COUNT> = Vec::<u8, MAX_SHARE_COUNT>::new();
+        for _ in 0..group_count {
+            // TODO: error handling
+            default_remaining.push(MAX_SHARE_COUNT as u8);
+        }
+        let mut remaining = _REMAINING.get()?.unwrap_or(default_remaining);
+        remaining[group_index] = shares_remaining;
+
+        _REMAINING.set(&remaining as &[u8])?;
+        Ok(Obj::const_none())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagerecovery_end_progress() -> Obj {
+    let block = || {
+        _require_progress()?;
+
+        _IN_PROGRESS.delete()?;
+        _DRY_RUN.delete()?;
+        _SLIP39_IDENTIFIER.delete()?;
+        _SLIP39_THRESHOLD.delete()?;
+        _REMAINING.delete()?;
+        _SLIP39_ITERATION_EXPONENT.delete()?;
+        _SLIP39_GROUP_COUNT.delete()?;
+
+        // TODO: could recreate and import from recovery_shares.rs as
+        // delete_recovery_shares()
+        for key in 0..MAX_SHARE_COUNT * MAX_GROUP_COUNT {
+            let appkey = helpers::get_appkey(APP_RECOVERY_SHARES, key as u8, false);
+            helpers::storage_delete_safe_rs(appkey)?;
+        }
+
+        Ok(Obj::const_none())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
 fn _require_progress() -> Result<(), Error> {
     let progress = _IN_PROGRESS.get().unwrap_or(false);
     if !progress {
@@ -158,4 +257,20 @@ pub static mp_module_trezorstoragerecovery: Module = obj_module! {
     /// def set_slip39_group_count(group_count: int) -> None:
     ///     """Set slip39 group count."""
     Qstr::MP_QSTR_set_slip39_group_count => obj_fn_1!(storagerecovery_set_slip39_group_count).as_obj(),
+
+    /// def get_slip39_remaining_shares(group_index: int) -> int | None:
+    ///     """Get slip39 remaining shares."""
+    Qstr::MP_QSTR_get_slip39_remaining_shares => obj_fn_1!(storagerecovery_get_slip39_remaining_shares).as_obj(),
+
+    /// def fetch_slip39_remaining_shares() -> list[int] | None:
+    ///     """Fetch slip39 remaining shares."""
+    Qstr::MP_QSTR_fetch_slip39_remaining_shares => obj_fn_0!(storagerecovery_fetch_slip39_remaining_shares).as_obj(),
+
+    /// def set_slip39_remaining_shares(shares_remaining: int, group_index: int) -> None:
+    ///     """Set slip39 remaining shares."""
+    Qstr::MP_QSTR_set_slip39_remaining_shares => obj_fn_2!(storagerecovery_set_slip39_remaining_shares).as_obj(),
+
+    /// def end_progress() -> None:
+    ///     """Finish recovery."""
+    Qstr::MP_QSTR_end_progress => obj_fn_0!(storagerecovery_end_progress).as_obj(),
 };
