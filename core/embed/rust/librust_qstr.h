@@ -59,6 +59,11 @@ static void _librust_qstrs(void) {
   MP_QSTR_get_next_u2f_counter;
   MP_QSTR_set_u2f_counter;
 
+  // storagerecovery
+  MP_QSTR___name_recovery__;
+  MP_QSTR_is_in_progress;
+  MP_QSTR_set_in_progress;
+
   MP_QSTR_set_timer_fn;
   MP_QSTR_touch_event;
   MP_QSTR_button_event;

@@ -2,6 +2,10 @@ from micropython import const
 
 from storage import common
 
+from trezorstoragerecovery import *  # noqa F403
+
+# (above, temporary) importing Rust functions until this module exists
+
 # Namespace:
 _NAMESPACE = common.APP_RECOVERY
 
@@ -28,12 +32,12 @@ def _require_progress() -> None:
         raise RuntimeError
 
 
-def set_in_progress(val: bool) -> None:
-    common.set_bool(_NAMESPACE, _IN_PROGRESS, val)
+# def set_in_progress(val: bool) -> None:
+#     common.set_bool(_NAMESPACE, _IN_PROGRESS, val)
 
 
-def is_in_progress() -> bool:
-    return common.get_bool(_NAMESPACE, _IN_PROGRESS)
+# def is_in_progress() -> bool:
+#     return common.get_bool(_NAMESPACE, _IN_PROGRESS)
 
 
 def set_dry_run(val: bool) -> None:

@@ -30,6 +30,7 @@ mp_obj_t ui_layout_new_slip39(size_t n_args, const mp_obj_t *args,
 
 extern mp_obj_module_t mp_module_trezorui2;
 extern mp_obj_module_t mp_module_trezorstoragedevice;
+extern mp_obj_module_t mp_module_trezorstoragerecovery;
 
 #ifdef TREZOR_EMULATOR
 mp_obj_t ui_debug_layout_type();
