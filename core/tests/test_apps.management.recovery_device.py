@@ -2,7 +2,6 @@ from common import *
 from mock_storage import mock_storage
 
 import storage
-import storage.recovery
 from apps.management.recovery_device.recover import process_slip39
 from trezor.enums import BackupType
 from apps.management.recovery_device.word_validity import check, IdentifierMismatch, AlreadyAdded, ThresholdReached
