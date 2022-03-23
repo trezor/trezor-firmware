@@ -63,6 +63,10 @@ static void _librust_qstrs(void) {
   MP_QSTR___name_recovery__;
   MP_QSTR_is_in_progress;
   MP_QSTR_set_in_progress;
+  MP_QSTR_is_dry_run;
+  MP_QSTR_set_dry_run;
+  MP_QSTR_get_slip39_group_count;
+  MP_QSTR_set_slip39_group_count;
 
   MP_QSTR_set_timer_fn;
   MP_QSTR_touch_event;

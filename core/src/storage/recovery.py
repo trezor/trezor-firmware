@@ -40,46 +40,46 @@ def _require_progress() -> None:
 #     return common.get_bool(_NAMESPACE, _IN_PROGRESS)
 
 
-def set_dry_run(val: bool) -> None:
-    _require_progress()
-    common.set_bool(_NAMESPACE, _DRY_RUN, val)
+# def set_dry_run(val: bool) -> None:
+#     _require_progress()
+#     common.set_bool(_NAMESPACE, _DRY_RUN, val)
 
 
-def is_dry_run() -> bool:
-    _require_progress()
-    return common.get_bool(_NAMESPACE, _DRY_RUN)
+# def is_dry_run() -> bool:
+#     _require_progress()
+#     return common.get_bool(_NAMESPACE, _DRY_RUN)
 
 
-def set_slip39_identifier(identifier: int) -> None:
-    _require_progress()
-    common.set_uint16(_NAMESPACE, _SLIP39_IDENTIFIER, identifier)
+# def set_slip39_identifier(identifier: int) -> None:
+#     _require_progress()
+#     common.set_uint16(_NAMESPACE, _SLIP39_IDENTIFIER, identifier)
 
 
-def get_slip39_identifier() -> int | None:
-    _require_progress()
-    return common.get_uint16(_NAMESPACE, _SLIP39_IDENTIFIER)
+# def get_slip39_identifier() -> int | None:
+#     _require_progress()
+#     return common.get_uint16(_NAMESPACE, _SLIP39_IDENTIFIER)
 
 
-def set_slip39_iteration_exponent(exponent: int) -> None:
-    _require_progress()
-    common.set_uint8(_NAMESPACE, _SLIP39_ITERATION_EXPONENT, exponent)
+# def set_slip39_iteration_exponent(exponent: int) -> None:
+#     _require_progress()
+#     common.set_uint8(_NAMESPACE, _SLIP39_ITERATION_EXPONENT, exponent)
 
 
-def get_slip39_iteration_exponent() -> int | None:
-    _require_progress()
-    return common.get_uint8(_NAMESPACE, _SLIP39_ITERATION_EXPONENT)
+# def get_slip39_iteration_exponent() -> int | None:
+#     _require_progress()
+#     return common.get_uint8(_NAMESPACE, _SLIP39_ITERATION_EXPONENT)
 
 
-def set_slip39_group_count(group_count: int) -> None:
-    _require_progress()
-    common.set_uint8(_NAMESPACE, _SLIP39_GROUP_COUNT, group_count)
+# def set_slip39_group_count(group_count: int) -> None:
+#     _require_progress()
+#     common.set_uint8(_NAMESPACE, _SLIP39_GROUP_COUNT, group_count)
 
 
-def get_slip39_group_count() -> int:
-    _require_progress()
-    return (
-        common.get_uint8(_NAMESPACE, _SLIP39_GROUP_COUNT) or _DEFAULT_SLIP39_GROUP_COUNT
-    )
+# def get_slip39_group_count() -> int:
+#     _require_progress()
+#     return (
+#         common.get_uint8(_NAMESPACE, _SLIP39_GROUP_COUNT) or _DEFAULT_SLIP39_GROUP_COUNT
+#     )
 
 
 def set_slip39_remaining_shares(shares_remaining: int, group_index: int) -> None:
