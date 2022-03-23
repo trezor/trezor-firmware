@@ -55,12 +55,13 @@ def get_mnemonic_secret() -> bytes:
 
 # rust/src/storagedevice/storage_device.rs
 def set_mnemonic_secret(
+    *,
     secret: bytes,
     backup_type: BackupTypeInt,
     needs_backup: bool = False,
     no_backup: bool = False,
 ) -> None:
-    """Set mnemonic secret"""
+    """Set mnemonic secret. Only kwargs are supported."""
 
 
 # rust/src/storagedevice/storage_device.rs

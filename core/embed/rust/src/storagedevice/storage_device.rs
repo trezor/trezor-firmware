@@ -553,12 +553,13 @@ pub static mp_module_trezorstoragedevice: Module = obj_module! {
     Qstr::MP_QSTR_get_mnemonic_secret => obj_fn_0!(storagedevice_get_mnemonic_secret).as_obj(),
 
     /// def set_mnemonic_secret(
+    ///     *,
     ///     secret: bytes,
     ///     backup_type: BackupTypeInt,
     ///     needs_backup: bool = False,
     ///     no_backup: bool = False,
     /// ) -> None:
-    ///     """Set mnemonic secret"""
+    ///     """Set mnemonic secret. Only kwargs are supported."""
     Qstr::MP_QSTR_set_mnemonic_secret => obj_fn_kw!(0, storagedevice_set_mnemonic_secret).as_obj(),
 
     /// def is_passphrase_enabled() -> bool:
