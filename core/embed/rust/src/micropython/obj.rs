@@ -265,8 +265,8 @@ impl<const N: usize> TryFrom<Vec<u8, N>> for Obj {
         // TODO: could be probably simplified
         let mut object_list: Vec<Obj, N> = Vec::<Obj, N>::new();
         for item in val {
-            // TODO: error handling
-            object_list.push(item.into());
+            // TODO: error handling?
+            object_list.push(item.into()).unwrap();
         }
         catch_exception(|| unsafe {
             ffi::mp_obj_new_list(object_list.len(), object_list.as_ptr() as *mut Obj)

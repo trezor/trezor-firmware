@@ -86,7 +86,7 @@ impl Field<u16> {
     pub fn get(&self) -> Option<u16> {
         let mut buf = [0u8; 2];
         let len = self.get_bytes(&mut buf);
-        if matches!(len, Some(1)) || matches!(len, Some(2)) {
+        if matches!(len, Some(2)) {
             Some(u16::from_le_bytes(buf))
         } else {
             None
@@ -168,8 +168,10 @@ impl<const N: usize> Field<String<N>> {
         let mut buf = [0u8; N];
         let len = self.get_bytes(&mut buf);
         if let Some(len) = len {
-            // TODO: error handling
-            let string = String::from(str::from_utf8(&buf[..len as usize]).ok().unwrap());
+            let string = match str::from_utf8(&buf[..len as usize]) {
+                Ok(str_slice) => String::from(str_slice),
+                Err(_) => return Err(Error::ValueError(cstr!("Cannot parse into str"))),
+            };
             if self.max_len_is_exact && string.len() as usize != N {
                 Ok(None)
             } else if string.len() as usize > N {

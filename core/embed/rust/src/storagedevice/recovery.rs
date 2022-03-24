@@ -133,19 +133,17 @@ extern "C" fn storagerecovery_fetch_slip39_remaining_shares() -> Obj {
     let block = || {
         _require_progress()?;
 
-        let remaining = _REMAINING.get()?;
-        if remaining.is_none() {
-            return Ok(Obj::const_none());
-        }
+        let remaining = match _REMAINING.get()? {
+            Some(remaining) => remaining,
+            None => return Ok(Obj::const_none()),
+        };
 
         let group_count = _SLIP39_GROUP_COUNT.get().unwrap_or(0) as usize;
         if group_count == 0 {
             return Err(Error::ValueError(cstr!("There are no remaining shares")));
         }
 
-        // TODO: error handling
-        let result: Vec<u8, MAX_SHARE_COUNT> =
-            remaining.unwrap()[..group_count].iter().cloned().collect();
+        let result: Vec<u8, MAX_SHARE_COUNT> = remaining[..group_count].iter().cloned().collect();
 
         result.try_into()
     };
@@ -168,8 +166,8 @@ extern "C" fn storagerecovery_set_slip39_remaining_shares(
 
         let mut default_remaining: Vec<u8, MAX_SHARE_COUNT> = Vec::<u8, MAX_SHARE_COUNT>::new();
         for _ in 0..group_count {
-            // TODO: error handling
-            default_remaining.push(MAX_SHARE_COUNT as u8);
+            // TODO: error handling?
+            default_remaining.push(MAX_SHARE_COUNT as u8).unwrap();
         }
         let mut remaining = _REMAINING.get()?.unwrap_or(default_remaining);
         remaining[group_index] = shares_remaining;

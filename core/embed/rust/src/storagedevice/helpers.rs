@@ -84,7 +84,7 @@ pub fn hexlify_bytes(bytes: &[u8]) -> String<64> {
                 (b'A' + num - 10) as char
             }
         }
-        // TODO: error handling
+        // TODO: error handling?
         buf.push(hex_from_digit(byte / 16)).unwrap();
         buf.push(hex_from_digit(byte % 16)).unwrap();
     }

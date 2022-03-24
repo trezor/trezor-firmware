@@ -144,8 +144,11 @@ extern "C" fn storagedevice_set_label(label: Obj) -> Obj {
         // TODO: find out why StrBuffer throws TypeError
         // let label = StrBuffer::try_from(label)?;
         let label = Buffer::try_from(label)?;
-        // TODO: error handling
-        _LABEL.set(str::from_utf8(label.as_ref()).unwrap())?;
+        let str_slice = match str::from_utf8(label.as_ref()) {
+            Ok(str_slice) => str_slice,
+            Err(_) => return Err(Error::ValueError(cstr!("Cannot parse into str"))),
+        };
+        _LABEL.set(str_slice)?;
         Ok(Obj::const_none())
     };
     unsafe { util::try_or_raise(block) }
