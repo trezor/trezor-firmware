@@ -14,6 +14,11 @@ def is_initialized() -> bool:
 
 
 # rust/src/storagedevice/storage_device.rs
+def set_is_initialized(is_initialized: bool) -> None:
+    """Whether device is initialized."""
+
+
+# rust/src/storagedevice/storage_device.rs
 def get_version() -> bytes | None:
     """Get version."""
 
@@ -46,6 +51,11 @@ def set_label(label: str) -> None:
 # rust/src/storagedevice/storage_device.rs
 def get_device_id() -> str:
     """Get device ID."""
+
+
+# rust/src/storagedevice/storage_device.rs
+def set_device_id(device_id: str) -> None:
+    """Set device ID."""
 
 
 # rust/src/storagedevice/storage_device.rs

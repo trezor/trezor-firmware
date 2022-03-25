@@ -18,6 +18,12 @@ use core::{
 use cstr_core::cstr;
 use heapless::{String, Vec};
 
+extern "C" {
+    // storage.h
+    fn storage_next_counter(key: u16, count: *mut u32) -> secbool::Secbool;
+    fn storage_set_counter(key: u16, count: u32) -> secbool::Secbool;
+}
+
 // TODO: can we import messages enums?
 
 // TODO: would be worth to write util::try_or_raise_and_return_none which would
@@ -83,12 +89,6 @@ const AUTOLOCK_DELAY_MAXIMUM: u32 = 0x2000_0000; // ~6 days
 
 const STORAGE_VERSION_CURRENT: u8 = 0x02;
 
-extern "C" {
-    // storage.h
-    fn storage_next_counter(key: u16, count: *mut u32) -> secbool::Secbool;
-    fn storage_set_counter(key: u16, count: u32) -> secbool::Secbool;
-}
-
 extern "C" fn storagedevice_is_version_stored() -> Obj {
     let block = || Ok(VERSION.has().into());
     unsafe { util::try_or_raise(block) }
@@ -109,6 +109,14 @@ extern "C" fn storagedevice_set_version(version: Obj) -> Obj {
 
 extern "C" fn storagedevice_is_initialized() -> Obj {
     let block = || INITIALIZED.get_result();
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagedevice_set_is_initialized(is_initialized: Obj) -> Obj {
+    let block = || {
+        INITIALIZED.set(bool::try_from(is_initialized)?)?;
+        Ok(Obj::const_none())
+    };
     unsafe { util::try_or_raise(block) }
 }
 
@@ -166,6 +174,19 @@ extern "C" fn storagedevice_get_device_id() -> Obj {
             DEVICE_ID.set(hex_id.as_str())?;
             hex_id.as_str().try_into()
         }
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagedevice_set_device_id(device_id: Obj) -> Obj {
+    let block = || {
+        let device_id = Buffer::try_from(device_id)?;
+        let str_slice = match str::from_utf8(device_id.as_ref()) {
+            Ok(str_slice) => str_slice,
+            Err(_) => return Err(Error::ValueError(cstr!("Cannot parse into str"))),
+        };
+        DEVICE_ID.set(str_slice)?;
+        Ok(Obj::const_none())
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -463,6 +484,10 @@ pub static mp_module_trezorstoragedevice: Module = obj_module! {
     ///     """Whether device is initialized."""
     Qstr::MP_QSTR_is_initialized => obj_fn_0!(storagedevice_is_initialized).as_obj(),
 
+    /// def set_is_initialized(is_initialized: bool) -> None:
+    ///     """Whether device is initialized."""
+    Qstr::MP_QSTR_set_is_initialized => obj_fn_1!(storagedevice_set_is_initialized).as_obj(),
+
     /// def get_version() -> bytes | None:
     ///     """Get version."""
     Qstr::MP_QSTR_get_version => obj_fn_0!(storagedevice_get_version).as_obj(),
@@ -490,6 +515,10 @@ pub static mp_module_trezorstoragedevice: Module = obj_module! {
     /// def get_device_id() -> str:
     ///     """Get device ID."""
     Qstr::MP_QSTR_get_device_id => obj_fn_0!(storagedevice_get_device_id).as_obj(),
+
+    /// def set_device_id(device_id: str) -> None:
+    ///     """Set device ID."""
+    Qstr::MP_QSTR_set_device_id => obj_fn_1!(storagedevice_set_device_id).as_obj(),
 
     /// def get_mnemonic_secret() -> bytes | None:
     ///     """Get mnemonic secret."""

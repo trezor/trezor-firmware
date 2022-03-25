@@ -23,6 +23,7 @@ static void _librust_qstrs(void) {
   MP_QSTR___name_storage__;
   MP_QSTR_is_version_stored;
   MP_QSTR_is_initialized;
+  MP_QSTR_set_is_initialized;
   MP_QSTR_get_version;
   MP_QSTR_set_version;
   MP_QSTR_get_rotation;
@@ -30,6 +31,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_get_label;
   MP_QSTR_set_label;
   MP_QSTR_get_device_id;
+  MP_QSTR_set_device_id;
   MP_QSTR_get_mnemonic_secret;
   MP_QSTR_set_mnemonic_secret;
   MP_QSTR_is_passphrase_enabled;
@@ -71,6 +73,14 @@ static void _librust_qstrs(void) {
   MP_QSTR_fetch_slip39_remaining_shares;
   MP_QSTR_set_slip39_remaining_shares;
   MP_QSTR_end_progress;
+
+  // storageresidentcredentials
+  // TODO: some of these Qstr like MP_QSTR_set are already defined - define them again?
+  MP_QSTR___name_residentcredentials__;
+  MP_QSTR_set;
+  MP_QSTR_get;
+  MP_QSTR_delete;
+  MP_QSTR_delete_all;
 
   MP_QSTR_set_timer_fn;
   MP_QSTR_touch_event;

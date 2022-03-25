@@ -1,5 +1,4 @@
 import storage
-import storage.resident_credentials
 from trezor import wire
 from trezor.messages import Success, WebAuthnRemoveResidentCredential
 from trezor.ui.components.common.webauthn import ConfirmInfo

@@ -1,12 +1,20 @@
+from micropython import const
+
 from storage import cache, common, device_old
 from trezor import config
 
 import trezorstoragedevice as device
 import trezorstoragerecovery as recovery  # noqa F401
+import trezorstorageresidentcredentials as resident_credentials  # noqa F401
+
+STORAGE_VERSION_01 = b"\x01"
+STORAGE_VERSION_CURRENT = b"\x02"
+
+MAX_RESIDENT_CREDENTIALS = const(100)
 
 
 def set_current_version() -> None:
-    device.set_version(common.STORAGE_VERSION_CURRENT)
+    device.set_version(STORAGE_VERSION_CURRENT)
 
 
 def wipe() -> None:
@@ -17,13 +25,13 @@ def wipe() -> None:
 def init_unlocked() -> None:
     # Check for storage version upgrade.
     version = device.get_version()
-    if version == common.STORAGE_VERSION_01:
+    if version == STORAGE_VERSION_01:
         _migrate_from_version_01()
 
     # In FWs <= 2.3.1 'version' denoted whether the device is initialized or not.
     # In 2.3.2 we have introduced a new field 'initialized' for that.
     if device.is_version_stored() and not device.is_initialized():
-        common.set_bool(common.APP_DEVICE, device_old.INITIALIZED, True, public=True)
+        device.set_is_initialized(True)
 
 
 def reset() -> None:
@@ -32,7 +40,7 @@ def reset() -> None:
     """
     device_id = device.get_device_id()
     wipe()
-    common.set(common.APP_DEVICE, device_old.DEVICE_ID, device_id.encode(), public=True)
+    device.set_device_id(device_id)
 
 
 def _migrate_from_version_01() -> None:
