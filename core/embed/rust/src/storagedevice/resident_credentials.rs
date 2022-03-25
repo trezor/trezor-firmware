@@ -20,7 +20,7 @@ extern "C" fn storageresidentcredentials_get(index: Obj) -> Obj {
             helpers::get_appkey(APP_WEBAUTHN, index + _RESIDENT_CREDENTIAL_START_KEY, false);
 
         // TODO: how big it is?
-        let mut buf = [0u8; 256];
+        let mut buf = [0u8; 4096];
         match helpers::storage_get_rs(appkey, &mut buf) {
             Some(len) => (&buf[..len as usize]).try_into(),
             None => Ok(Obj::const_none()),
@@ -80,11 +80,11 @@ pub static mp_module_trezorstorageresidentcredentials: Module = obj_module! {
 
     /// def get(index: int) -> bytes | None:
     ///     """Get credentials."""
-    Qstr::MP_QSTR_set => obj_fn_1!(storageresidentcredentials_get).as_obj(),
+    Qstr::MP_QSTR_get => obj_fn_1!(storageresidentcredentials_get).as_obj(),
 
     /// def set(index: int, data: bytes) -> None:
     ///     """Set credentials."""
-    Qstr::MP_QSTR_get => obj_fn_2!(storageresidentcredentials_set).as_obj(),
+    Qstr::MP_QSTR_set => obj_fn_2!(storageresidentcredentials_set).as_obj(),
 
     /// def delete(index: int) -> None:
     ///     """Delete credentials."""
