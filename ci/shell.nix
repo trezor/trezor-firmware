@@ -72,6 +72,7 @@ stdenvNoCC.mkDerivation ({
     SDL2
     SDL2_image
     autoflake
+    autoPatchelfHook
     bash
     check
     curl  # for connect tests
