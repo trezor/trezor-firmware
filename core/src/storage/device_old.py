@@ -1,15 +1,12 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
+import storage
 import storage.cache
-from storage import common
 
 if TYPE_CHECKING:
     from typing_extensions import Literal
 
-
-# Namespace:
-_NAMESPACE = common.APP_DEVICE
 
 # fmt: off
 # Keys:
@@ -18,8 +15,6 @@ DEVICE_ID                  = const(0x00)  # bytes
 U2F_COUNTER                = const(0x09)  # int
 # TODO: move to init
 INITIALIZED                = const(0x13)  # bool (0x01 or empty)
-# _SAFETY_CHECK_LEVEL        = const(0x14)  # int
-_EXPERIMENTAL_FEATURES     = const(0x15)  # bool (0x01 or empty)
 
 SAFETY_CHECK_LEVEL_STRICT  : Literal[0] = const(0)
 SAFETY_CHECK_LEVEL_PROMPT  : Literal[1] = const(1)
@@ -45,7 +40,7 @@ SD_SALT_AUTH_KEY_LEN_BYTES = const(16)
 
 @storage.cache.stored(storage.cache.STORAGE_DEVICE_EXPERIMENTAL_FEATURES)
 def _get_experimental_features() -> bytes:
-    if common.get_bool(_NAMESPACE, _EXPERIMENTAL_FEATURES):
+    if storage.device.get_experimental_features():
         return b"\x01"
     else:
         return b""
@@ -58,4 +53,4 @@ def get_experimental_features() -> bool:
 def set_experimental_features(enabled: bool) -> None:
     cached_bytes = b"\x01" if enabled else b""
     storage.cache.set(storage.cache.STORAGE_DEVICE_EXPERIMENTAL_FEATURES, cached_bytes)
-    common.set_true_or_delete(_NAMESPACE, _EXPERIMENTAL_FEATURES, enabled)
+    storage.device.set_experimental_features(enabled)

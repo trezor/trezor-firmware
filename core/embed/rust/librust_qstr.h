@@ -60,6 +60,10 @@ static void _librust_qstrs(void) {
   MP_QSTR_set_sd_salt_auth_key;
   MP_QSTR_get_next_u2f_counter;
   MP_QSTR_set_u2f_counter;
+  MP_QSTR_get_private_u2f_counter;
+  MP_QSTR_delete_private_u2f_counter;
+  MP_QSTR_get_experimental_features;
+  MP_QSTR_set_experimental_features;
 
   // storagerecovery
   MP_QSTR___name_recovery__;

@@ -1,6 +1,7 @@
 from micropython import const
 
-from storage import cache, common, device_old
+from storage import device_old  # noqa F401
+from storage import cache
 from trezor import config
 
 import trezorstoragedevice as device
@@ -46,10 +47,9 @@ def reset() -> None:
 
 def _migrate_from_version_01() -> None:
     # Make the U2F counter public and writable even when storage is locked.
-    # U2F counter wasn't public, so we are intentionally not using storage.device module.
-    counter = common.get(common.APP_DEVICE, device_old.U2F_COUNTER)
+    counter = device.get_private_u2f_counter()
     if counter is not None:
-        device.set_u2f_counter(int.from_bytes(counter, "big"))
+        device.set_u2f_counter(counter)
         # Delete the old, non-public U2F_COUNTER.
-        common.delete(common.APP_DEVICE, device_old.U2F_COUNTER)
+        device.delete_private_u2f_counter()
     set_current_version()

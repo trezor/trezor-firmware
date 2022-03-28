@@ -221,3 +221,23 @@ def get_next_u2f_counter() -> int:
 # rust/src/storagedevice/storage_device.rs
 def set_u2f_counter(count: int) -> None:
     """Set U2F counter."""
+
+
+# rust/src/storagedevice/storage_device.rs
+def get_private_u2f_counter() -> int | None:
+    """Get private U2F counter."""
+
+
+# rust/src/storagedevice/storage_device.rs
+def delete_private_u2f_counter() -> None:
+    """Delete private U2F counter."""
+
+
+# rust/src/storagedevice/storage_device.rs
+def get_experimental_features() -> bool:
+    """Whether we have experimental features."""
+
+
+# rust/src/storagedevice/storage_device.rs
+def set_experimental_features(enabled: bool) -> None:
+    """Set experimental features."""

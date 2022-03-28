@@ -53,6 +53,7 @@ const _USE_PASSPHRASE: Field<bool> = Field::private(APP_DEVICE, 0x05);
 const _HOMESCREEN: Field<Vec<u8, HOMESCREEN_MAXSIZE>> = Field::public(APP_DEVICE, 0x06);
 const _NEEDS_BACKUP: Field<bool> = Field::private(APP_DEVICE, 0x07);
 const _FLAGS: Field<u32> = Field::private(APP_DEVICE, 0x08);
+const _U2F_COUNTER_PRIVATE: Field<u8> = Field::private(APP_DEVICE, 0x09);
 const U2F_COUNTER: u8 = 0x09;
 const _PASSPHRASE_ALWAYS_ON_DEVICE: Field<bool> = Field::private(APP_DEVICE, 0x0A);
 const _UNFINISHED_BACKUP: Field<bool> = Field::private(APP_DEVICE, 0x0B);
@@ -66,6 +67,7 @@ const _SD_SALT_AUTH_KEY: Field<Vec<u8, SD_SALT_AUTH_KEY_LEN_BYTES>> =
     Field::public(APP_DEVICE, 0x12).exact();
 const INITIALIZED: Field<bool> = Field::public(APP_DEVICE, 0x13);
 const _SAFETY_CHECK_LEVEL: Field<u8> = Field::private(APP_DEVICE, 0x14);
+const _EXPERIMENTAL_FEATURES: Field<bool> = Field::private(APP_DEVICE, 0x15);
 
 const SAFETY_CHECK_LEVEL_STRICT: u8 = 0;
 const SAFETY_CHECK_LEVEL_PROMPT: u8 = 1;
@@ -280,6 +282,19 @@ extern "C" fn storagedevice_no_backup() -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
+extern "C" fn storagedevice_get_experimental_features() -> Obj {
+    let block = || _EXPERIMENTAL_FEATURES.get_result();
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagedevice_set_experimental_features(enable: Obj) -> Obj {
+    let block = || {
+        let enable = bool::try_from(enable)?;
+        Ok(_EXPERIMENTAL_FEATURES.set_true_or_delete(enable)?.into())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
 extern "C" fn storagedevice_get_backup_type() -> Obj {
     let block = || {
         // TODO: we could import the BackupType enum
@@ -432,6 +447,19 @@ extern "C" fn storagedevice_set_u2f_counter(count: Obj) -> Obj {
 
         let key = helpers::get_appkey_u2f(APP_DEVICE, U2F_COUNTER, true);
         Ok(storagedevice_storage_set_counter(key, count).into())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagedevice_get_private_u2f_counter() -> Obj {
+    let block = || _U2F_COUNTER_PRIVATE.get_result();
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn storagedevice_delete_private_u2f_counter() -> Obj {
+    let block = || {
+        _EXPERIMENTAL_FEATURES.delete()?;
+        Ok(Obj::const_none())
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -646,6 +674,22 @@ pub static mp_module_trezorstoragedevice: Module = obj_module! {
     /// def set_u2f_counter(count: int) -> None:
     ///     """Set U2F counter."""
     Qstr::MP_QSTR_set_u2f_counter => obj_fn_1!(storagedevice_set_u2f_counter).as_obj(),
+
+    /// def get_private_u2f_counter() -> int | None:
+    ///     """Get private U2F counter."""
+    Qstr::MP_QSTR_get_private_u2f_counter => obj_fn_0!(storagedevice_get_private_u2f_counter).as_obj(),
+
+    /// def delete_private_u2f_counter() -> None:
+    ///     """Delete private U2F counter."""
+    Qstr::MP_QSTR_delete_private_u2f_counter => obj_fn_0!(storagedevice_delete_private_u2f_counter).as_obj(),
+
+    /// def get_experimental_features() -> bool:
+    ///     """Whether we have experimental features."""
+    Qstr::MP_QSTR_get_experimental_features => obj_fn_0!(storagedevice_get_experimental_features).as_obj(),
+
+    /// def set_experimental_features(enabled: bool) -> None:
+    ///     """Set experimental features."""
+    Qstr::MP_QSTR_set_experimental_features => obj_fn_1!(storagedevice_set_experimental_features).as_obj(),
 };
 
 #[cfg(test)]
