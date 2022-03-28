@@ -18,5 +18,6 @@ wget -e robots=off \
 
 chmod u+x emulators/trezor-emu-*
 
+cd ..
 # are we in Nix(OS)?
-command -v nix-shell >/dev/null && nix-shell -p autoPatchelfHook SDL2 SDL2_image --run "autoPatchelf emulators/trezor-emu-*"
+command -v nix-shell >/dev/null && nix-shell --run "autoPatchelf tests/emulators/trezor-emu-*"
