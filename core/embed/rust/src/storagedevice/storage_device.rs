@@ -11,10 +11,7 @@ use crate::{
     trezorhal::{random, secbool},
     util,
 };
-use core::{
-    convert::{TryFrom, TryInto},
-    str,
-};
+use core::convert::{TryFrom, TryInto};
 use cstr_core::cstr;
 use heapless::{String, Vec};
 
@@ -152,11 +149,7 @@ extern "C" fn storagedevice_set_label(label: Obj) -> Obj {
         // TODO: find out why StrBuffer throws TypeError
         // let label = StrBuffer::try_from(label)?;
         let label = Buffer::try_from(label)?;
-        let str_slice = match str::from_utf8(label.as_ref()) {
-            Ok(str_slice) => str_slice,
-            Err(_) => return Err(Error::ValueError(cstr!("Cannot parse into str"))),
-        };
-        _LABEL.set(str_slice)?;
+        _LABEL.set(helpers::from_bytes_to_str(label.as_ref())?)?;
         Ok(Obj::const_none())
     };
     unsafe { util::try_or_raise(block) }
@@ -181,11 +174,7 @@ extern "C" fn storagedevice_get_device_id() -> Obj {
 extern "C" fn storagedevice_set_device_id(device_id: Obj) -> Obj {
     let block = || {
         let device_id = Buffer::try_from(device_id)?;
-        let str_slice = match str::from_utf8(device_id.as_ref()) {
-            Ok(str_slice) => str_slice,
-            Err(_) => return Err(Error::ValueError(cstr!("Cannot parse into str"))),
-        };
-        DEVICE_ID.set(str_slice)?;
+        DEVICE_ID.set(helpers::from_bytes_to_str(device_id.as_ref())?)?;
         Ok(Obj::const_none())
     };
     unsafe { util::try_or_raise(block) }

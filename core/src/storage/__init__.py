@@ -5,6 +5,7 @@ from trezor import config
 
 import trezorstoragedevice as device
 import trezorstoragerecovery as recovery  # noqa F401
+import trezorstoragerecoveryshares as recovery_shares  # noqa F401
 import trezorstorageresidentcredentials as resident_credentials  # noqa F401
 
 STORAGE_VERSION_01 = b"\x01"

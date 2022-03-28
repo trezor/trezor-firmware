@@ -1,11 +1,9 @@
 use crate::{
-    error::Error,
     micropython::{buffer::Buffer, map::Map, module::Module, obj::Obj, qstr::Qstr},
     storagedevice::helpers,
     util,
 };
-use core::{convert::TryFrom, str};
-use cstr_core::cstr;
+use core::convert::TryFrom;
 use heapless::{String, Vec};
 
 const APP_RECOVERY_SHARES: u8 = 0x03;
@@ -25,15 +23,12 @@ extern "C" fn storagerecoveryshares_get(index: Obj, group_index: Obj) -> Obj {
         );
 
         // TODO: how big it is?
-        let mut buf = [0u8; 256];
+        let mut buf = [0u8; 512];
         let bytes_result = match helpers::storage_get_rs(appkey, &mut buf) {
             Some(len) => &buf[..len as usize],
             None => return Ok(Obj::const_none()),
         };
-        match str::from_utf8(bytes_result) {
-            Ok(str_slice) => str_slice.try_into(),
-            Err(_) => Err(Error::ValueError(cstr!("Cannot parse into str"))),
-        }
+        helpers::from_bytes_to_str(bytes_result)?.try_into()
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -59,7 +54,7 @@ extern "C" fn storagerecoveryshares_fetch_group(group_index: Obj) -> Obj {
     let block = || {
         let group_index = u8::try_from(group_index)?;
 
-        let mut result: Vec<String<128>, MAX_SHARE_COUNT> = Vec::new();
+        let mut result: Vec<String<512>, MAX_SHARE_COUNT> = Vec::new();
         for index in 0..MAX_SHARE_COUNT {
             // TODO: create function out of this and use it in get() above as
             // well
@@ -71,10 +66,11 @@ extern "C" fn storagerecoveryshares_fetch_group(group_index: Obj) -> Obj {
 
             let mut buf = [0u8; 256];
             if let Some(len) = helpers::storage_get_rs(appkey, &mut buf) {
-                match str::from_utf8(&buf[..len as usize]) {
-                    Ok(str_slice) => result.push(String::from(str_slice)).unwrap(),
-                    Err(_) => return Err(Error::ValueError(cstr!("Cannot parse into str"))),
-                };
+                result
+                    .push(String::from(helpers::from_bytes_to_str(
+                        &buf[..len as usize],
+                    )?))
+                    .unwrap();
             };
         }
         result.try_into()

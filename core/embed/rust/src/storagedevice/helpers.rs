@@ -1,4 +1,5 @@
 use crate::{error::Error, trezorhal::secbool};
+use core::str;
 use cstr_core::cstr;
 use heapless::String;
 
@@ -91,17 +92,15 @@ pub fn hexlify_bytes(bytes: &[u8]) -> String<64> {
     buf
 }
 
-// TODO: from_bytes_to_str
 // TODO: from_str_to_bytes
 // TODO: storage_get_str_rs
 // TODO: storage_save_str_rs
 
-pub fn from_bytes_to_str(bytes: &[u8]) -> String<64> {
-    let mut buf = String::<64>::from("");
-    for byte in bytes {
-        buf.push(*byte as char).unwrap();
+pub fn from_bytes_to_str(bytes: &[u8]) -> Result<&str, Error> {
+    match str::from_utf8(bytes) {
+        Ok(str_slice) => Ok(str_slice),
+        Err(_) => return Err(Error::ValueError(cstr!("Cannot parse into str"))),
     }
-    buf
 }
 
 #[cfg(test)]

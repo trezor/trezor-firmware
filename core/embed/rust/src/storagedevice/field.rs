@@ -168,10 +168,7 @@ impl<const N: usize> Field<String<N>> {
         let mut buf = [0u8; N];
         let len = self.get_bytes(&mut buf);
         if let Some(len) = len {
-            let string = match str::from_utf8(&buf[..len as usize]) {
-                Ok(str_slice) => String::from(str_slice),
-                Err(_) => return Err(Error::ValueError(cstr!("Cannot parse into str"))),
-            };
+            let string = String::from(helpers::from_bytes_to_str(&buf[..len as usize])?);
             if self.max_len_is_exact && string.len() as usize != N {
                 Ok(None)
             } else if string.len() as usize > N {
