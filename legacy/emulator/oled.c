@@ -19,7 +19,7 @@
 
 #include "oled.h"
 
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 static SDL_Renderer *renderer = NULL;
 static SDL_Texture *texture = NULL;
