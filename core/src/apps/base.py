@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
 def get_features() -> Features:
     import storage.sd_salt
-    import storage  # workaround for https://github.com/microsoft/pyright/issues/2685
+    import storage  # pylint: disable=reimported # workaround for https://github.com/microsoft/pyright/issues/2685
 
     from trezor import sdcard
     from trezor.enums import Capability
@@ -199,7 +199,7 @@ ALLOW_WHILE_LOCKED = (
 
 
 def set_homescreen() -> None:
-    import storage
+    import storage  # pylint: disable=reimported # workaround for https://github.com/microsoft/pyright/issues/2685
 
     if not config.is_unlocked():
         from apps.homescreen.lockscreen import lockscreen
