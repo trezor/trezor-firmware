@@ -11,6 +11,16 @@ async def get_next_u2f_counter(
     if not storage.device.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
 
+    import trezorstoragerecoveryshares
+
+    group = trezorstoragerecoveryshares.set(3, 3, "prdel")
+    print("group", group)
+
+    group = trezorstoragerecoveryshares.fetch_group(3)
+    print("group", group)
+
+    return NextU2FCounter(u2f_counter=storage.device.get_next_u2f_counter())
+
     await confirm_action(
         ctx,
         "get_u2f_counter",

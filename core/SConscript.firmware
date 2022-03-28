@@ -202,6 +202,7 @@ SOURCE_MOD += [
     'embed/extmod/rustmods/modtrezorproto.c',
     'embed/extmod/rustmods/modtrezorstoragedevice.c',
     'embed/extmod/rustmods/modtrezorstoragerecovery.c',
+    'embed/extmod/rustmods/modtrezorstoragerecoveryshares.c',
     'embed/extmod/rustmods/modtrezorstorageresidentcredentials.c',
 ]
 if UI2:

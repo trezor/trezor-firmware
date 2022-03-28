@@ -91,6 +91,19 @@ pub fn hexlify_bytes(bytes: &[u8]) -> String<64> {
     buf
 }
 
+// TODO: from_bytes_to_str
+// TODO: from_str_to_bytes
+// TODO: storage_get_str_rs
+// TODO: storage_save_str_rs
+
+pub fn from_bytes_to_str(bytes: &[u8]) -> String<64> {
+    let mut buf = String::<64>::from("");
+    for byte in bytes {
+        buf.push(*byte as char).unwrap();
+    }
+    buf
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -82,6 +82,14 @@ static void _librust_qstrs(void) {
   MP_QSTR_delete;
   MP_QSTR_delete_all;
 
+  // storageresidentcredentials
+  // TODO: some of these Qstr like MP_QSTR_set are already defined - define them again?
+  MP_QSTR___name_recoveryshares__;
+  MP_QSTR_set;
+  MP_QSTR_get;
+  MP_QSTR_fetch_group;
+  MP_QSTR_delete;
+
   MP_QSTR_set_timer_fn;
   MP_QSTR_touch_event;
   MP_QSTR_button_event;
