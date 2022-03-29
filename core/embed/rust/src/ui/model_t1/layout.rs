@@ -4,7 +4,6 @@ use crate::{
     error::Error,
     micropython::{buffer::Buffer, map::Map, module::Module, obj::Obj, qstr::Qstr},
     ui::{
-        model_t1::component::ButtonPos,
         component::{
             base::Component,
             paginated::{PageMsg, Paginate},
@@ -16,6 +15,7 @@ use crate::{
             obj::{ComponentMsgObj, LayoutObj},
             result::{CANCELLED, CONFIRMED},
         },
+        model_t1::component::ButtonPos,
     },
     util,
 };

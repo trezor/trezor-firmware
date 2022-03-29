@@ -8,8 +8,7 @@ use crate::{
             base::ComponentExt,
             paginated::{PageMsg, Paginate},
             text::paragraphs::Paragraphs,
-            Component,
-            FormattedText
+            Component, FormattedText,
         },
         geometry::Dimensions,
         layout::{
@@ -22,10 +21,9 @@ use crate::{
 
 use super::{
     component::{
-        Bip39Input, Button, ButtonMsg, DialogMsg, Frame, HoldToConfirm, HoldToConfirmMsg,
+        Bip39Input, Button, ButtonMsg, Dialog, DialogMsg, Frame, HoldToConfirm, HoldToConfirmMsg,
         MnemonicKeyboard, MnemonicKeyboardMsg, PassphraseKeyboard, PassphraseKeyboardMsg,
         PinKeyboard, PinKeyboardMsg, Slip39Input, SwipePage,
-        Dialog
     },
     theme,
 };
@@ -276,14 +274,13 @@ mod tests {
     use crate::{
         trace::Trace,
         ui::{
-            component::Component,
+            component::{Child, Component, FormattedText},
+            display,
             geometry::Rect,
             model_tt::{
                 component::{Button, Dialog},
                 constant,
             },
-            component::{Child, FormattedText},
-            display,
         },
     };
 

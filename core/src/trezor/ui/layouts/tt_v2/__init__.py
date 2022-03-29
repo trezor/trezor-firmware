@@ -3,14 +3,13 @@ from typing import TYPE_CHECKING
 from trezor import io, log, loop, ui, wire, workflow
 from trezor.enums import ButtonRequestType
 
+import trezorui2
 from trezorui2 import (
     layout_new_bip39,
-    layout_new_confirm_action,
     layout_new_passphrase,
     layout_new_pin,
     layout_new_slip39,
 )
-import trezorui2
 
 from ...components.tt import passphrase, pin
 from ...constants.tt import MONO_ADDR_PER_LINE
