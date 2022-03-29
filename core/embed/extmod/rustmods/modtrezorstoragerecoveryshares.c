@@ -23,7 +23,8 @@
 
 #include "librust.h"
 
-MP_REGISTER_MODULE(MP_QSTR_trezorstoragerecoveryshares, mp_module_trezorstoragerecoveryshares,
+MP_REGISTER_MODULE(MP_QSTR_trezorstoragerecoveryshares,
+                   mp_module_trezorstoragerecoveryshares,
                    MICROPY_PY_TREZORSTORAGERECOVERYSHARES);
 
 #endif  // MICROPY_PY_TREZORSTORAGERECOVERYSHARES

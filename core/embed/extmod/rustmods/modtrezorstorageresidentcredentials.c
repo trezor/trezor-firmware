@@ -23,7 +23,8 @@
 
 #include "librust.h"
 
-MP_REGISTER_MODULE(MP_QSTR_trezorstorageresidentcredentials, mp_module_trezorstorageresidentcredentials,
+MP_REGISTER_MODULE(MP_QSTR_trezorstorageresidentcredentials,
+                   mp_module_trezorstorageresidentcredentials,
                    MICROPY_PY_TREZORSTORAGERESIDENTCREDENTIALS);
 
 #endif  // MICROPY_PY_TREZORSTORAGERESIDENTCREDENTIALS

@@ -79,7 +79,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_end_progress;
 
   // storageresidentcredentials
-  // TODO: some of these Qstr like MP_QSTR_set are already defined - define them again?
+  // TODO: some of these Qstr like MP_QSTR_set are already defined - define them
+  // again?
   MP_QSTR___name_residentcredentials__;
   MP_QSTR_set;
   MP_QSTR_get;
@@ -87,7 +88,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_delete_all;
 
   // storageresidentcredentials
-  // TODO: some of these Qstr like MP_QSTR_set are already defined - define them again?
+  // TODO: some of these Qstr like MP_QSTR_set are already defined - define them
+  // again?
   MP_QSTR___name_recoveryshares__;
   MP_QSTR_set;
   MP_QSTR_get;
