@@ -5,6 +5,9 @@
     "erc20:eth:LINK (Chainlink)": {
         "name": "Chainlink"
     },
+    "erc20:eth:SOL": {
+        "shortcut": "SOLA"
+    },
     "eth:CLO": {
         "coinmarketcap_alias": "callisto-network"
     },

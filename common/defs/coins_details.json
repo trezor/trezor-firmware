@@ -563,10 +563,6 @@
                 {
                     "name": "Electrum-RVN",
                     "url": "https://github.com/traysi/electrum-raven"
-                },
-                {
-                    "name": "Mango Farm",
-                    "url": "https://mangofarmassets.com/mangowallet"
                 }
             ]
         },
@@ -20464,7 +20460,7 @@
             "marketcap_usd": 0,
             "name": "Sola Token",
             "network": "eth",
-            "shortcut": "SOL",
+            "shortcut": "SOLA",
             "t1_enabled": "yes",
             "t2_enabled": "yes",
             "type": "erc20",
@@ -36095,6 +36091,10 @@
                 {
                     "name": "Exodus",
                     "url": "https://www.exodus.io"
+                },
+                {
+                    "name": "Stellarport",
+                    "url": "https://stellarport.io/"
                 }
             ]
         },

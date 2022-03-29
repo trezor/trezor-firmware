@@ -25,7 +25,8 @@
         },
         "wallet": {
             "Account Viewer": "https://accountviewer.stellar.org/",
-            "Exodus": "https://www.exodus.io"
+            "Exodus": "https://www.exodus.io",
+            "Stellarport": "https://stellarport.io/"
         }
     },
     {
