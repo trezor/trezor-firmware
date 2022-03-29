@@ -4,6 +4,39 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+
+## 1.11.1 [18th May 2022]
+
+### Added
+- Show "signature is valid" dialog when VerifyMessage succeeds.  [#1880]
+- Add extra check for Taproot scripts validity.  [#2077]
+- Support Electrum signatures in VerifyMessage.  [#2100]
+- \[emulator] Added support for `DebugLinkReseedRandom`.  [#2115]
+- Support unverified external inputs.  [#2144]
+- Support Zcash version 5 transaction format.  [#2031]
+- Add firmware hashing functionality.  [#2239]
+
+### Changed
+- Ensure input's script type and path match the scriptPubKey.  [#1018]
+- Included bootloader 1.11.0.
+
+### Removed
+- \[emulator] Removed support for /dev/urandom or custom entropy source.  [#2115]
+- GAME, NIX and POLIS support.  [#2181]
+
+### Fixed
+- Fix domain-only EIP-712 hashes (i.e. when `primaryType`=`EIP712Domain`).  [#2036]
+- Fix legacy technical debt in USB handling (readability and FSM unwanted states).  [#2107]
+
+### Security
+- Strict path validations for altcoins.
+- Fix soft-lock bypass vulnerability.
+- Make Bitcoin path checks as strict as in Trezor T.
+
+### Incompatible changes
+- Trezor will refuse to sign UTXOs that do not match the provided derivation path (e.g., transactions belonging to a different wallet, or synthetic transaction inputs).  [#1018]
+
+
 ## 1.10.5 [19th January 2022]
 
 ### Added
@@ -459,6 +492,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 [#131]: https://github.com/trezor/trezor-firmware/pull/131
 [#965]: https://github.com/trezor/trezor-firmware/pull/965
+[#1018]: https://github.com/trezor/trezor-firmware/pull/1018
 [#1030]: https://github.com/trezor/trezor-firmware/pull/1030
 [#1098]: https://github.com/trezor/trezor-firmware/pull/1098
 [#1105]: https://github.com/trezor/trezor-firmware/pull/1105
@@ -497,5 +531,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1854]: https://github.com/trezor/trezor-firmware/pull/1854
 [#1857]: https://github.com/trezor/trezor-firmware/pull/1857
 [#1872]: https://github.com/trezor/trezor-firmware/pull/1872
+[#1880]: https://github.com/trezor/trezor-firmware/pull/1880
 [#1897]: https://github.com/trezor/trezor-firmware/pull/1897
 [#1985]: https://github.com/trezor/trezor-firmware/pull/1985
+[#2031]: https://github.com/trezor/trezor-firmware/pull/2031
+[#2036]: https://github.com/trezor/trezor-firmware/pull/2036
+[#2077]: https://github.com/trezor/trezor-firmware/pull/2077
+[#2100]: https://github.com/trezor/trezor-firmware/pull/2100
+[#2107]: https://github.com/trezor/trezor-firmware/pull/2107
+[#2115]: https://github.com/trezor/trezor-firmware/pull/2115
+[#2144]: https://github.com/trezor/trezor-firmware/pull/2144
+[#2181]: https://github.com/trezor/trezor-firmware/pull/2181
+[#2239]: https://github.com/trezor/trezor-firmware/pull/2239
