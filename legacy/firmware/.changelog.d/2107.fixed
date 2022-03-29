@@ -1,1 +1,0 @@
-Fix legacy technical debt in USB handling (readability and FSM unwanted states).
