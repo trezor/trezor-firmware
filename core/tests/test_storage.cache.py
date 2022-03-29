@@ -165,6 +165,7 @@ class TestStorageCache(unittest.TestCase):
 
     def test_Initialize(self):
         config.init()
+        config.wipe()
 
         def call_Initialize(**kwargs):
             msg = Initialize(**kwargs)
