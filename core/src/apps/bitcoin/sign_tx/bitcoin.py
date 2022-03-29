@@ -226,7 +226,7 @@ class Bitcoin:
                     raise wire.DataError("Invalid amount specified")
 
                 if i in self.external:
-                    await self.verify_external_input(i, txi, script_pubkey)
+                    await self.verify_external_input(i, txi, txi.script_pubkey)
 
         # check that the inputs were the same as those streamed for approval
         if h_check.get_digest() != expected_digest:
