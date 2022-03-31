@@ -27,7 +27,7 @@ if TYPE_CHECKING:
         def create_hash_writer(self) -> HashWriter:
             ...
 
-        def create_sig_hasher(self) -> SigHasher:
+        def create_sig_hasher(self, tx: SignTx | PrevTx) -> SigHasher:
             ...
 
         def write_tx_header(
@@ -60,7 +60,7 @@ _MAX_BIP125_RBF_SEQUENCE = const(0xFFFF_FFFD)
 
 
 class TxInfoBase:
-    def __init__(self, signer: Signer) -> None:
+    def __init__(self, signer: Signer, tx: SignTx | PrevTx) -> None:
         # Checksum of multisig inputs, used to validate change-output.
         self.multisig_fingerprint = MultisigFingerprintChecker()
 
@@ -73,7 +73,7 @@ class TxInfoBase:
         self.h_tx_check = HashWriter(sha256())  # not a real tx hash
 
         # BIP-0143 transaction hashing.
-        self.sig_hasher = signer.create_sig_hasher()
+        self.sig_hasher = signer.create_sig_hasher(tx)
 
         # The minimum nSequence of all inputs.
         self.min_sequence = _SEQUENCE_FINAL
@@ -122,14 +122,14 @@ class TxInfoBase:
 # Used to keep track of the transaction currently being signed.
 class TxInfo(TxInfoBase):
     def __init__(self, signer: Signer, tx: SignTx) -> None:
-        super().__init__(signer)
+        super().__init__(signer, tx)
         self.tx = tx
 
 
 # Used to keep track of any original transactions which are being replaced by the current transaction.
 class OriginalTxInfo(TxInfoBase):
     def __init__(self, signer: Signer, tx: PrevTx, orig_hash: bytes) -> None:
-        super().__init__(signer)
+        super().__init__(signer, tx)
         self.tx = tx
         self.signer = signer
         self.orig_hash = orig_hash

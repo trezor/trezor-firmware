@@ -128,7 +128,7 @@ class Zcashlike(Bitcoinlike):
         if tx.version != 4:
             raise wire.DataError("Unsupported transaction version.")
 
-    def create_sig_hasher(self) -> SigHasher:
+    def create_sig_hasher(self, tx: SignTx | PrevTx) -> SigHasher:
         return ZcashSigHasher()
 
     async def step7_finish(self) -> None:
