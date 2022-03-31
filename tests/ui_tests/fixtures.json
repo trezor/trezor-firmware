@@ -249,9 +249,9 @@
 "T1_bitcoin-test_signtx_amount_unit.py::test_signtx[AmountUnit.MILLIBITCOIN]": "8081910bd937c704fb65226dc85e8fc58a7331102aa036a5a97652638a0bde20",
 "T1_bitcoin-test_signtx_amount_unit.py::test_signtx[AmountUnit.SATOSHI]": "a565b50e63776aad284c42c71bf53e5844dff12f159cbd00679b97d2fb74fd20",
 "T1_bitcoin-test_signtx_amount_unit.py::test_signtx[None]": "367fd3c75f30f7224435e3309562d210d9ac6809ce2fae392f7fe75070fda094",
-"T1_bitcoin-test_signtx_invalid_path.py::test_attack_path_segwit": "473636ae4c43d8a349db09187b74eb4c1aa2b7fe02742d5fa928cdbc2a9e4cfd",
 "T1_bitcoin-test_signtx_external.py::test_p2tr_external_unverified": "9640b4d0bdcde8fec8a4c077e1d12da211d02989458ad34115731237b3dad4f9",
 "T1_bitcoin-test_signtx_external.py::test_p2wpkh_external_unverified": "c478ef5c111b38c0fee1f79df1e0d00ecd5c0e81913e59051047cb0db65ece69",
+"T1_bitcoin-test_signtx_invalid_path.py::test_attack_path_segwit": "473636ae4c43d8a349db09187b74eb4c1aa2b7fe02742d5fa928cdbc2a9e4cfd",
 "T1_bitcoin-test_signtx_invalid_path.py::test_invalid_path_fail": "75e45c0b6039244afae5cb138aeb4eec2c01e71b91a3ce0d73797ca3b04ca94a",
 "T1_bitcoin-test_signtx_invalid_path.py::test_invalid_path_pass_forkid": "9c35bfcc194afff453802147f5b4a2d033492e564835be649c3293a62857de59",
 "T1_bitcoin-test_signtx_invalid_path.py::test_invalid_path_prompt": "57b20ea95e26ee7f675cbb177b9c781389ef36a02f2815f7939ab83c2d0f8f36",
@@ -1600,5 +1600,10 @@
 "TT_tezos-test_sign_tx.py::test_tezos_smart_contract_transfer": "f4c0775f55db8718ef56e684f376d5326afa4ee97b0ea85c42820a356ebff0d4",
 "TT_tezos-test_sign_tx.py::test_tezos_smart_contract_transfer_to_contract": "cadca03c9ce7db592663bc0224364c0d4bf99fcae60e0982b4a844ce629e500c",
 "TT_webauthn-test_msg_webauthn.py::test_add_remove": "3219e5ad2719319e74b5c75b1096ca7e3d30467215c15f57e57e475afdaa188f",
-"TT_webauthn-test_u2f_counter.py::test_u2f_counter": "19f77e2d284431da5fadac938f5822c1a6b17c07ee6c801085efd84974f3163f"
+"TT_webauthn-test_u2f_counter.py::test_u2f_counter": "19f77e2d284431da5fadac938f5822c1a6b17c07ee6c801085efd84974f3163f",
+"TT_zcash-test_sign_tx.py::test_external_presigned": "08a22a49793201f8387a085a554f006387d1df1b37ed8a34bef7aa79b363b44b",
+"TT_zcash-test_sign_tx.py::test_one_one": "b8aff4ae3c9b417acadf1ede52d7d45870dd4ef1f9251bf8e8f2ebf5280b9f3b",
+"TT_zcash-test_sign_tx.py::test_one_two": "d59aa3d5d03a276a31d3023c8214af940dbb8dec3cd686576608881965789fcb",
+"TT_zcash-test_sign_tx.py::test_refuse_replacement_tx": "1c100ce4b7c1e47e72428f390de0846c1ff933e9f07894872644a369a9422738",
+"TT_zcash-test_sign_tx.py::test_version_group_id_missing": "c09de07fbbf1e047442180e2facb5482d06a1a428891b875b7dd93c9e4704ae1"
 }
