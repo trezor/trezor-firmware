@@ -11,7 +11,7 @@ from .. import addresses
 from . import omni
 
 if not utils.BITCOIN_ONLY:
-    from trezor.ui.layouts.tt import altcoin
+    from trezor.ui.layouts import altcoin
 
 
 if TYPE_CHECKING:
