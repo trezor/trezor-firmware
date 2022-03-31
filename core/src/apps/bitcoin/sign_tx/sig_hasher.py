@@ -39,6 +39,13 @@ if TYPE_CHECKING:
         ) -> bytes:
             ...
 
+        def hash_zip244(
+            self,
+            txi: TxInput | None,
+            script_pubkey: bytes | None,
+        ) -> bytes:
+            ...
+
 
 # BIP-0143 hash
 class BitcoinSigHasher:
@@ -166,3 +173,10 @@ class BitcoinSigHasher:
         writers.write_uint32(h_sigmsg, i)
 
         return h_sigmsg.get_digest()
+
+    def hash_zip244(
+        self,
+        txi: TxInput | None,
+        script_pubkey: bytes | None,
+    ) -> bytes:
+        raise NotImplementedError
