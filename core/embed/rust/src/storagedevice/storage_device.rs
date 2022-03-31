@@ -94,7 +94,13 @@ extern "C" fn storagedevice_is_version_stored() -> Obj {
 }
 
 extern "C" fn storagedevice_get_version() -> Obj {
-    let block = || VERSION.get_result();
+    let block = || {
+        if let Some(result) = VERSION.get()? {
+            (&result as &[u8]).try_into()
+        } else {
+            Ok(Obj::const_none())
+        }
+    };
     unsafe { util::try_or_raise(block) }
 }
 
@@ -107,7 +113,13 @@ extern "C" fn storagedevice_set_version(version: Obj) -> Obj {
 }
 
 extern "C" fn storagedevice_is_initialized() -> Obj {
-    let block = || INITIALIZED.get_result();
+    let block = || {
+        if let Some(result) = INITIALIZED.get() {
+            Ok(result.into())
+        } else {
+            Ok(false.into())
+        }
+    };
     unsafe { util::try_or_raise(block) }
 }
 
@@ -142,7 +154,13 @@ extern "C" fn storagedevice_set_rotation(rotation: Obj) -> Obj {
 }
 
 extern "C" fn storagedevice_get_label() -> Obj {
-    let block = || _LABEL.get_result();
+    let block = || {
+        if let Some(result) = _LABEL.get()? {
+            result.as_str().try_into()
+        } else {
+            Ok(Obj::const_none())
+        }
+    };
     unsafe { util::try_or_raise(block) }
 }
 
@@ -181,7 +199,13 @@ extern "C" fn storagedevice_set_device_id(device_id: Obj) -> Obj {
 }
 
 extern "C" fn storagedevice_get_mnemonic_secret() -> Obj {
-    let block = || _MNEMONIC_SECRET.get_result();
+    let block = || {
+        if let Some(result) = _MNEMONIC_SECRET.get()? {
+            (&result as &[u8]).try_into()
+        } else {
+            Ok(Obj::const_none())
+        }
+    };
     unsafe { util::try_or_raise(block) }
 }
 
@@ -220,7 +244,13 @@ extern "C" fn storagedevice_set_mnemonic_secret(
 }
 
 extern "C" fn storagedevice_is_passphrase_enabled() -> Obj {
-    let block = || _USE_PASSPHRASE.get_result();
+    let block = || {
+        if let Some(result) = _USE_PASSPHRASE.get() {
+            Ok(result.into())
+        } else {
+            Ok(false.into())
+        }
+    };
     unsafe { util::try_or_raise(block) }
 }
 
@@ -240,7 +270,13 @@ extern "C" fn storagedevice_set_passphrase_enabled(enable: Obj) -> Obj {
 }
 
 extern "C" fn storagedevice_get_passphrase_always_on_device() -> Obj {
-    let block = || _PASSPHRASE_ALWAYS_ON_DEVICE.get_result();
+    let block = || {
+        if let Some(result) = _PASSPHRASE_ALWAYS_ON_DEVICE.get() {
+            Ok(result.into())
+        } else {
+            Ok(false.into())
+        }
+    };
     unsafe { util::try_or_raise(block) }
 }
 
@@ -253,7 +289,13 @@ extern "C" fn storagedevice_set_passphrase_always_on_device(enable: Obj) -> Obj 
 }
 
 extern "C" fn storagedevice_unfinished_backup() -> Obj {
-    let block = || _UNFINISHED_BACKUP.get_result();
+    let block = || {
+        if let Some(result) = _UNFINISHED_BACKUP.get() {
+            Ok(result.into())
+        } else {
+            Ok(false.into())
+        }
+    };
     unsafe { util::try_or_raise(block) }
 }
 
@@ -266,7 +308,13 @@ extern "C" fn storagedevice_set_unfinished_backup(state: Obj) -> Obj {
 }
 
 extern "C" fn storagedevice_needs_backup() -> Obj {
-    let block = || _NEEDS_BACKUP.get_result();
+    let block = || {
+        if let Some(result) = _NEEDS_BACKUP.get() {
+            Ok(result.into())
+        } else {
+            Ok(false.into())
+        }
+    };
     unsafe { util::try_or_raise(block) }
 }
 
@@ -279,12 +327,24 @@ extern "C" fn storagedevice_set_backed_up() -> Obj {
 }
 
 extern "C" fn storagedevice_no_backup() -> Obj {
-    let block = || _NO_BACKUP.get_result();
+    let block = || {
+        if let Some(result) = _NO_BACKUP.get() {
+            Ok(result.into())
+        } else {
+            Ok(false.into())
+        }
+    };
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_get_experimental_features() -> Obj {
-    let block = || _EXPERIMENTAL_FEATURES.get_result();
+    let block = || {
+        if let Some(result) = _EXPERIMENTAL_FEATURES.get() {
+            Ok(result.into())
+        } else {
+            Ok(false.into())
+        }
+    };
     unsafe { util::try_or_raise(block) }
 }
 
@@ -312,7 +372,13 @@ extern "C" fn storagedevice_get_backup_type() -> Obj {
 }
 
 extern "C" fn storagedevice_get_homescreen() -> Obj {
-    let block = || _HOMESCREEN.get_result();
+    let block = || {
+        if let Some(result) = _HOMESCREEN.get()? {
+            (&result as &[u8]).try_into()
+        } else {
+            Ok(Obj::const_none())
+        }
+    };
     unsafe { util::try_or_raise(block) }
 }
 
@@ -325,7 +391,13 @@ extern "C" fn storagedevice_set_homescreen(homescreen: Obj) -> Obj {
 }
 
 extern "C" fn storagedevice_get_slip39_identifier() -> Obj {
-    let block = || _SLIP39_IDENTIFIER.get_result();
+    let block = || {
+        if let Some(result) = _SLIP39_IDENTIFIER.get() {
+            Ok(result.into())
+        } else {
+            Ok(Obj::const_none())
+        }
+    };
     unsafe { util::try_or_raise(block) }
 }
 
@@ -338,7 +410,13 @@ extern "C" fn storagedevice_set_slip39_identifier(identifier: Obj) -> Obj {
 }
 
 extern "C" fn storagedevice_get_slip39_iteration_exponent() -> Obj {
-    let block = || _SLIP39_ITERATION_EXPONENT.get_result();
+    let block = || {
+        if let Some(result) = _SLIP39_ITERATION_EXPONENT.get() {
+            Ok(result.into())
+        } else {
+            Ok(Obj::const_none())
+        }
+    };
     unsafe { util::try_or_raise(block) }
 }
 
@@ -417,7 +495,13 @@ extern "C" fn storagedevice_set_safety_check_level(level: Obj) -> Obj {
 }
 
 extern "C" fn storagedevice_get_sd_salt_auth_key() -> Obj {
-    let block = || _SD_SALT_AUTH_KEY.get_result();
+    let block = || {
+        if let Some(result) = _SD_SALT_AUTH_KEY.get()? {
+            (&result as &[u8]).try_into()
+        } else {
+            Ok(Obj::const_none())
+        }
+    };
     unsafe { util::try_or_raise(block) }
 }
 
@@ -454,7 +538,13 @@ extern "C" fn storagedevice_set_u2f_counter(count: Obj) -> Obj {
 }
 
 extern "C" fn storagedevice_get_private_u2f_counter() -> Obj {
-    let block = || _U2F_COUNTER_PRIVATE.get_result();
+    let block = || {
+        if let Some(result) = _U2F_COUNTER_PRIVATE.get() {
+            Ok(result.into())
+        } else {
+            Ok(Obj::const_none())
+        }
+    };
     unsafe { util::try_or_raise(block) }
 }
 

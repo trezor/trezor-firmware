@@ -1,4 +1,5 @@
 use crate::{
+    error::Error,
     micropython::{buffer::Buffer, map::Map, module::Module, obj::Obj, qstr::Qstr},
     storagedevice::helpers,
     util,
@@ -16,19 +17,7 @@ extern "C" fn storagerecoveryshares_get(index: Obj, group_index: Obj) -> Obj {
         let index = u8::try_from(index)?;
         let group_index = u8::try_from(group_index)?;
 
-        let appkey = helpers::get_appkey(
-            APP_RECOVERY_SHARES,
-            index + group_index * MAX_SHARE_COUNT as u8,
-            false,
-        );
-
-        // TODO: how big it is?
-        let mut buf = [0u8; 512];
-        let bytes_result = match helpers::storage_get_rs(appkey, &mut buf) {
-            Some(len) => &buf[..len as usize],
-            None => return Ok(Obj::const_none()),
-        };
-        helpers::from_bytes_to_str(bytes_result)?.try_into()
+        get_share_string(index, group_index)?.as_str().try_into()
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -54,24 +43,12 @@ extern "C" fn storagerecoveryshares_fetch_group(group_index: Obj) -> Obj {
     let block = || {
         let group_index = u8::try_from(group_index)?;
 
-        let mut result: Vec<String<512>, MAX_SHARE_COUNT> = Vec::new();
+        let mut result: Vec<String<256>, MAX_SHARE_COUNT> = Vec::new();
         for index in 0..MAX_SHARE_COUNT {
-            // TODO: create function out of this and use it in get() above as
-            // well
-            let appkey = helpers::get_appkey(
-                APP_RECOVERY_SHARES,
-                index as u8 + group_index * MAX_SHARE_COUNT as u8,
-                false,
-            );
-
-            let mut buf = [0u8; 256];
-            if let Some(len) = helpers::storage_get_rs(appkey, &mut buf) {
-                result
-                    .push(String::from(helpers::from_bytes_to_str(
-                        &buf[..len as usize],
-                    )?))
-                    .unwrap();
-            };
+            let share = get_share_string(index as u8, group_index)?;
+            if !share.is_empty() {
+                result.push(share).unwrap();
+            }
         }
         result.try_into()
     };
@@ -87,6 +64,22 @@ extern "C" fn storagerecoveryshares_delete() -> Obj {
         Ok(Obj::const_none())
     };
     unsafe { util::try_or_raise(block) }
+}
+
+pub fn get_share_string(index: u8, group_index: u8) -> Result<String<256>, Error> {
+    let appkey = helpers::get_appkey(
+        APP_RECOVERY_SHARES,
+        index + group_index * MAX_SHARE_COUNT as u8,
+        false,
+    );
+    let mut buf = [0u8; 256];
+    if let Some(len) = helpers::storage_get_rs(appkey, &mut buf) {
+        Ok(String::from(helpers::from_bytes_to_str(
+            &buf[..len as usize],
+        )?))
+    } else {
+        Ok(String::from(""))
+    }
 }
 
 #[no_mangle]

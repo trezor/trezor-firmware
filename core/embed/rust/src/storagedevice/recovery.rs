@@ -29,7 +29,13 @@ const _SLIP39_GROUP_COUNT: Field<u8> = Field::private(APP_RECOVERY, 0x07);
 // # _WORD_COUNT                = const(0x02)  # int
 
 extern "C" fn storagerecovery_is_in_progress() -> Obj {
-    let block = || _IN_PROGRESS.get_result();
+    let block = || {
+        if let Some(result) = _IN_PROGRESS.get() {
+            Ok(result.into())
+        } else {
+            Ok(false.into())
+        }
+    };
     unsafe { util::try_or_raise(block) }
 }
 
@@ -44,7 +50,11 @@ extern "C" fn storagerecovery_set_in_progress(val: Obj) -> Obj {
 extern "C" fn storagerecovery_is_dry_run() -> Obj {
     let block = || {
         _require_progress()?;
-        _DRY_RUN.get_result()
+        if let Some(result) = _DRY_RUN.get() {
+            Ok(result.into())
+        } else {
+            Ok(false.into())
+        }
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -61,7 +71,11 @@ extern "C" fn storagerecovery_set_dry_run(val: Obj) -> Obj {
 extern "C" fn storagerecovery_get_slip39_identifier() -> Obj {
     let block = || {
         _require_progress()?;
-        _SLIP39_IDENTIFIER.get_result()
+        if let Some(result) = _SLIP39_IDENTIFIER.get() {
+            Ok(result.into())
+        } else {
+            Ok(Obj::const_none())
+        }
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -78,7 +92,11 @@ extern "C" fn storagerecovery_set_slip39_identifier(identifier: Obj) -> Obj {
 extern "C" fn storagerecovery_get_slip39_iteration_exponent() -> Obj {
     let block = || {
         _require_progress()?;
-        _SLIP39_ITERATION_EXPONENT.get_result()
+        if let Some(result) = _SLIP39_ITERATION_EXPONENT.get() {
+            Ok(result.into())
+        } else {
+            Ok(Obj::const_none())
+        }
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -95,7 +113,11 @@ extern "C" fn storagerecovery_set_slip39_iteration_exponent(exponent: Obj) -> Ob
 extern "C" fn storagerecovery_get_slip39_group_count() -> Obj {
     let block = || {
         _require_progress()?;
-        _SLIP39_GROUP_COUNT.get_result()
+        if let Some(result) = _SLIP39_GROUP_COUNT.get() {
+            Ok(result.into())
+        } else {
+            Ok(Obj::const_none())
+        }
     };
     unsafe { util::try_or_raise(block) }
 }
