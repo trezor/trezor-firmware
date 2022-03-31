@@ -79,6 +79,13 @@ class DecredSigHasher:
     ) -> bytes:
         raise NotImplementedError
 
+    def hash_zip244(
+        self,
+        txi: TxInput | None,
+        script_pubkey: bytes | None,
+    ) -> bytes:
+        raise NotImplementedError
+
 
 class Decred(Bitcoin):
     def __init__(

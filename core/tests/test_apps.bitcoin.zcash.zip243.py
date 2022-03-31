@@ -9,7 +9,7 @@ from apps.bitcoin.common import SigHashType
 from apps.bitcoin.writers import get_tx_hash
 
 if not utils.BITCOIN_ONLY:
-    from apps.bitcoin.sign_tx.zcash import ZcashSigHasher
+    from apps.bitcoin.sign_tx.zcash_v4 import Zip243SigHasher
 
 
 # test vectors inspired from https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/zip_0243.py
@@ -191,7 +191,7 @@ class TestZcashZip243(unittest.TestCase):
                 branch_id=v["branch_id"],
             )
 
-            zip243 = ZcashSigHasher()
+            zip243 = Zip243SigHasher()
 
             for i in v["inputs"]:
                 txi = TxInput(
