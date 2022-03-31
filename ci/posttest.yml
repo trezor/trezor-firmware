@@ -37,7 +37,7 @@ unix ui changes:
     - core device test
     - legacy device test
   script:
-    - nix-shell --run "cd tests/ui_tests ; poetry run python reporting/report_master_diff.py"
+    - nix-shell --run "cd tests/ui_tests ; poetry run python reporting/report_master_diff.py TT_ T1_"
     - mv tests/ui_tests/reporting/reports/master_diff/ .
   artifacts:
     name: core-unix-ui-changes
