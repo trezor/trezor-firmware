@@ -15,7 +15,7 @@ from trezor.ui.layouts import (
     confirm_total,
     should_show_more,
 )
-from trezor.ui.layouts.tt.altcoin import confirm_total_ethereum
+from trezor.ui.layouts.altcoin import confirm_total_ethereum
 
 from . import networks, tokens
 from .helpers import address_from_bytes, decode_typed_data, get_type_name

@@ -12,13 +12,6 @@ if TYPE_CHECKING:
     ExceptionType = BaseException | type[BaseException]
 
 
-if __debug__:
-    from trezor import utils
-
-    if utils.MODEL == "T":
-        from ..components.tt.scroll import Paginated
-
-
 async def button_request(
     ctx: wire.GenericContext,
     br_type: str,
@@ -37,6 +30,8 @@ async def interact(
     br_code: ButtonRequestType = ButtonRequestType.Other,
 ) -> Any:
     if layout.__class__.__name__ == "Paginated":
+        from ..components.tt.scroll import Paginated
+
         assert isinstance(layout, Paginated)
         return await layout.interact(ctx, code=br_code)
     else:

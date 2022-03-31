@@ -3,7 +3,7 @@ from typing import Sequence
 from trezor import ui, utils, wire
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import confirm_action, confirm_blob, show_success, show_warning
-from trezor.ui.layouts.tt.reset import (  # noqa: F401
+from trezor.ui.layouts.reset import (  # noqa: F401
     confirm_word,
     show_share_words,
     slip39_advanced_prompt_group_threshold,

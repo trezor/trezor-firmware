@@ -192,8 +192,14 @@ trezor.ui.container
 import trezor.ui.container
 trezor.ui.layouts
 import trezor.ui.layouts
+trezor.ui.layouts.altcoin
+import trezor.ui.layouts.altcoin
 trezor.ui.layouts.common
 import trezor.ui.layouts.common
+trezor.ui.layouts.recovery
+import trezor.ui.layouts.recovery
+trezor.ui.layouts.reset
+import trezor.ui.layouts.reset
 trezor.ui.layouts.t1
 import trezor.ui.layouts.t1
 trezor.ui.layouts.tt
@@ -206,6 +212,12 @@ trezor.ui.layouts.tt.reset
 import trezor.ui.layouts.tt.reset
 trezor.ui.layouts.tt_v2
 import trezor.ui.layouts.tt_v2
+trezor.ui.layouts.tt_v2.altcoin
+import trezor.ui.layouts.tt_v2.altcoin
+trezor.ui.layouts.tt_v2.recovery
+import trezor.ui.layouts.tt_v2.recovery
+trezor.ui.layouts.tt_v2.reset
+import trezor.ui.layouts.tt_v2.reset
 trezor.ui.loader
 import trezor.ui.loader
 trezor.ui.popup
@@ -438,6 +450,10 @@ if not utils.BITCOIN_ONLY:
     import trezor.ui.components.tt.webauthn
     trezor.ui.layouts.tt.webauthn
     import trezor.ui.layouts.tt.webauthn
+    trezor.ui.layouts.tt_v2.webauthn
+    import trezor.ui.layouts.tt_v2.webauthn
+    trezor.ui.layouts.webauthn
+    import trezor.ui.layouts.webauthn
     apps.binance
     import apps.binance
     apps.binance.get_address

@@ -111,7 +111,12 @@ async def confirm_action(
 async def confirm_reset_device(
     ctx: wire.GenericContext, prompt: str, recovery: bool = False
 ) -> None:
-    raise NotImplementedError
+    return await confirm_action(
+        ctx,
+        "recover_device" if recovery else "setup_device",
+        "not implemented",
+        action="not implemented",
+    )
 
 
 # TODO cleanup @ redesign
@@ -263,6 +268,15 @@ async def confirm_output(
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
     icon: str = ui.ICON_SEND,
 ) -> None:
+    raise NotImplementedError
+
+
+async def confirm_payment_request(
+    ctx: wire.GenericContext,
+    recipient_name: str,
+    amount: str,
+    memos: list[str],
+) -> Any:
     raise NotImplementedError
 
 
@@ -438,7 +452,7 @@ async def show_popup(
 
 
 def draw_simple_text(title: str, description: str = "") -> None:
-    raise NotImplementedError
+    log.error(__name__, "draw_simple_text not implemented")
 
 
 async def request_passphrase_on_device(ctx: wire.GenericContext, max_len: int) -> str:
@@ -486,23 +500,3 @@ async def request_pin_on_device(
             raise wire.PinCancelled
         assert isinstance(result, str)
         return result
-
-
-async def request_word(
-    ctx: wire.GenericContext, word_index: int, word_count: int, is_slip39: bool
-) -> str:
-    if is_slip39:
-        keyboard: Any = _RustLayout(
-            trezorui2.request_bip39(
-                prompt=f"Type word {word_index + 1} of {word_count}:"
-            )
-        )
-    else:
-        keyboard = _RustLayout(
-            trezorui2.request_slip39(
-                prompt=f"Type word {word_index + 1} of {word_count}:"
-            )
-        )
-
-    word: str = await ctx.wait(keyboard)
-    return word
