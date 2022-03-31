@@ -135,7 +135,7 @@ class Bitcoin:
     def create_hash_writer(self) -> HashWriter:
         return HashWriter(sha256())
 
-    def create_sig_hasher(self) -> SigHasher:
+    def create_sig_hasher(self, tx: SignTx | PrevTx) -> SigHasher:
         return BitcoinSigHasher()
 
     async def step1_process_inputs(self) -> None:
