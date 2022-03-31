@@ -1,8 +1,9 @@
 import shutil
+import sys
 import tempfile
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Dict, Sequence, Tuple
 
 import dominate
 from dominate.tags import br, h1, h2, hr, i, p, table, td, th, tr
@@ -15,9 +16,17 @@ REPORTS_PATH = Path(__file__).resolve().parent / "reports" / "master_diff"
 RECORDED_SCREENS_PATH = Path(__file__).resolve().parent.parent / "screens"
 
 
-def get_diff() -> Tuple[Dict[str, str], Dict[str, str], Dict[str, str]]:
+def get_diff(
+    test_prefixes: Sequence[str],
+) -> Tuple[Dict[str, str], Dict[str, str], Dict[str, str]]:
     master = download.fetch_fixtures_master()
     current = download.fetch_fixtures_current()
+
+    def matches_prefix(name: str) -> bool:
+        any(name.startswith(prefix) for prefix in test_prefixes)
+
+    master = {name: value for name, value in master.items() if matches_prefix(name)}
+    current = {name: value for name, value in current.items() if matches_prefix(name)}
 
     # removed items
     removed = {test: master[test] for test in (master.keys() - current.keys())}
@@ -154,8 +163,8 @@ def create_dirs() -> None:
     (REPORTS_PATH / "diff").mkdir()
 
 
-def create_reports() -> None:
-    removed_tests, added_tests, diff_tests = get_diff()
+def create_reports(test_prefixes: Sequence[str]) -> None:
+    removed_tests, added_tests, diff_tests = get_diff(test_prefixes)
 
     @contextmanager
     def tmpdir():
@@ -193,5 +202,5 @@ def create_reports() -> None:
 
 if __name__ == "__main__":
     create_dirs()
-    create_reports()
+    create_reports(sys.argv[1:] or [""])
     index()
