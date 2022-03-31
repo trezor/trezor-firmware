@@ -466,8 +466,8 @@ if not utils.BITCOIN_ONLY:
     import apps.binance.layout
     apps.binance.sign_tx
     import apps.binance.sign_tx
-    apps.bitcoin.sign_tx.zcash
-    import apps.bitcoin.sign_tx.zcash
+    apps.bitcoin.sign_tx.zcash_v4
+    import apps.bitcoin.sign_tx.zcash_v4
     apps.cardano
     import apps.cardano
     apps.cardano.address
@@ -750,6 +750,12 @@ if not utils.BITCOIN_ONLY:
     import apps.webauthn.remove_resident_credential
     apps.webauthn.resident_credentials
     import apps.webauthn.resident_credentials
+    apps.zcash
+    import apps.zcash
+    apps.zcash.hasher
+    import apps.zcash.hasher
+    apps.zcash.signer
+    import apps.zcash.signer
 
 # generate full alphabet
 a

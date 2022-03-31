@@ -35,7 +35,7 @@ if TYPE_CHECKING:
 OVERWINTERED = const(0x8000_0000)
 
 
-class ZcashSigHasher:
+class Zip243SigHasher:
     def __init__(self) -> None:
         self.h_prevouts = HashWriter(blake2b(outlen=32, personal=b"ZcashPrevoutHash"))
         self.h_sequence = HashWriter(blake2b(outlen=32, personal=b"ZcashSequencHash"))
@@ -113,8 +113,15 @@ class ZcashSigHasher:
     ) -> bytes:
         raise NotImplementedError
 
+    def hash_zip244(
+        self,
+        txi: TxInput | None,
+        script_pubkey: bytes | None,
+    ) -> bytes:
+        raise NotImplementedError
 
-class Zcashlike(Bitcoinlike):
+
+class ZcashV4(Bitcoinlike):
     def __init__(
         self,
         tx: SignTx,
@@ -129,7 +136,7 @@ class Zcashlike(Bitcoinlike):
             raise wire.DataError("Unsupported transaction version.")
 
     def create_sig_hasher(self, tx: SignTx | PrevTx) -> SigHasher:
-        return ZcashSigHasher()
+        return Zip243SigHasher()
 
     async def step7_finish(self) -> None:
         self.write_tx_footer(self.serialized_tx, self.tx_info.tx)
