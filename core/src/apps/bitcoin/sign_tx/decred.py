@@ -106,7 +106,7 @@ class Decred(Bitcoin):
     def create_hash_writer(self) -> HashWriter:
         return HashWriter(blake256())
 
-    def create_sig_hasher(self) -> SigHasher:
+    def create_sig_hasher(self, tx: SignTx | PrevTx) -> SigHasher:
         return DecredSigHasher(self.h_prefix)
 
     async def step2_approve_outputs(self) -> None:
