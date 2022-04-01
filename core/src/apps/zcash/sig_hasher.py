@@ -14,8 +14,6 @@ from apps.bitcoin.writers import (
 from apps.bitcoin import scripts
 from apps.bitcoin.common import SigHashType
 
-from trezor import log
-
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from trezor.messages import TxInput, TxOutput, SignTx, PrevTx

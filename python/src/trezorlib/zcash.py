@@ -26,11 +26,13 @@ def diag(client, ins=b"", data=b""):
 
 @expect(messages.ZcashFullViewingKey, field="fvk")
 def get_fvk(client, z_address_n, coin_name="Zcash",):
-    """Returns raw Zcash Orchard Full Viewing Key encoded as:
+    """
+    Returns raw Zcash Orchard Full Viewing Key encoded as:
 
     ak (32 bytes) || nk (32 bytes) || rivk (32 bytes)
-    
-    acording to the https://zips.z.cash/protocol/protocol.pdf § 5.6.4.4"""
+
+    acording to the https://zips.z.cash/protocol/protocol.pdf § 5.6.4.4
+    """
     return client.call(
         messages.ZcashGetFullViewingKey(
             z_address_n=z_address_n,
@@ -40,11 +42,13 @@ def get_fvk(client, z_address_n, coin_name="Zcash",):
 
 @expect(messages.ZcashIncomingViewingKey, field="ivk")
 def get_ivk(client, z_address_n, coin_name = "Zcash",):
-    """Returns raw Zcash Orchard Incoming Viewing Key encoded as:
+    """
+    Returns raw Zcash Orchard Incoming Viewing Key encoded as:
 
     dk (32 bytes) || ivk (32 bytes)
-    
-    acording to the https://zips.z.cash/protocol/protocol.pdf § 5.6.4.3"""
+
+    acording to the https://zips.z.cash/protocol/protocol.pdf § 5.6.4.3
+    """
     return client.call(
         messages.ZcashGetIncomingViewingKey(
             z_address_n=z_address_n,
@@ -61,7 +65,9 @@ def get_address(
     show_display=False,
     coin_name = "Zcash",
 ):
-    """Returns Zcash address."""
+    """
+    Returns a Zcash address.
+    """
     return client.call(
         messages.ZcashGetAddress(
             t_address_n=t_address_n,
@@ -71,6 +77,14 @@ def get_address(
             coin_name=coin_name,
         )
     )
+
+
+def encode_memo(memo):
+    encoded = memo.encode("utf-8")
+    if len(encoded) < 512:
+        raise ValueError("Memo is too long.")
+    return encoded + (512 - len(encoded))*b"\x00"
+
 
 def sign_tx(
     client,
@@ -85,9 +99,9 @@ def sign_tx(
     msg.inputs_count = len(t_inputs)
     msg.outputs_count = len(t_outputs)
     msg.coin_name = coin_name
-    msg.version = 5                              
-    msg.version_group_id = 0x892F2085 # protocol spec §7.1.2           
-    msg.branch_id = 0x37519621 # https://zips.z.cash/zip-0252
+    msg.version = 5
+    msg.version_group_id = 0x26A7270A # protocol spec §7.1.2
+    msg.branch_id = 0x37519621 # https://zips.z.cash/zip-0252 TODO: update this
     msg.expiry = 0
 
     orchard = messages.ZcashOrchardBundleInfo()

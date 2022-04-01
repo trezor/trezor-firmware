@@ -101,7 +101,7 @@ message ZcashAddress {
  */
 message ZcashOrchardInput {
     required bool internal = 1;
-    required uint32 amount = 2;
+    optional uint32 amount = 2;  // note value . This field is optional because it is included in note serialization.
     required bytes note = 3;
     optional bytes hmac = 4;
 }

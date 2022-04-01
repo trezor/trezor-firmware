@@ -1,6 +1,8 @@
 from common import *
 
-from apps.zcash import zip32
+from apps.zcash.orchard.keychain import ExtendedSpendingKey
+from apps.common.coininfo import by_name
+
 
 # source: https://github.com/jarys/zcash-test-vectors/blob/trezor/orchard_zip32.py
 # TODO: waiting for real zip32 test vectors 
@@ -38,7 +40,8 @@ TESTVECTORS_ZIP32 = [
 class TestZcashZIP32(unittest.TestCase):
 	def test_zip32(self):
 		for tv in TESTVECTORS_ZIP32:
-			sk = zip32.master(tv["seed"]).derive(tv["path"])
+			master = ExtendedSpendingKey.get_master(tv["seed"])
+			sk = master.derive_path(tv["path"]).spending_key()
 			self.assertEqual(sk, tv["sk"])
 			
 

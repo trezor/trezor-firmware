@@ -107,6 +107,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "block-modes"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2cb03d1bed155d89dce0f845b7899b18a9a163e148fd004e1c28421a783e2d8e"
+dependencies = [
+ "block-padding",
+ "cipher",
+]
+
+[[package]]
+name = "block-padding"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8d696c370c750c948ada61c69a0ee2cbbb9c50b1019ddb86d9317157a99c2cae"
+
+[[package]]
 name = "bls12_381"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -240,6 +256,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "fpe"
+version = "0.5.1"
+dependencies = [
+ "block-modes",
+ "cipher",
+ "libm",
+]
+
+[[package]]
 name = "funty"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -335,6 +360,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "libm"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "33a33a362ce288760ec6a508b94caaec573ae7d3bbbd91b87aa0bad4456839db"
+
+[[package]]
 name = "lock_api"
 version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -380,6 +411,7 @@ dependencies = [
  "bitvec",
  "blake2b_simd 1.0.0",
  "ff",
+ "fpe",
  "group",
  "pasta_curves",
  "rand",

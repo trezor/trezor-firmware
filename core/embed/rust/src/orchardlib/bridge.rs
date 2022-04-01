@@ -64,8 +64,8 @@ impl<const N: usize> TryFrom<[u8; N]> for Obj {
 pub extern "C" fn orchardlib_randint(max: Obj, rng_state: Obj) -> Obj {
     let block = || {
         let mut rng = load_rng(rng_state)?;
-        let max: usize = max.try_into()?;
-        let n: usize = rng.gen_range(0..max);
+        let max: u32 = max.try_into()?;
+        let n: u32 = rng.gen_range(0..max);
         save_rng(rng, rng_state)?;
         Ok(n.try_into()?)
     };
@@ -246,7 +246,8 @@ pub extern "C" fn orchardlib_derive_internal_full_viewing_key(full_viewing_key: 
     let block = || {
         let fvk: FullViewingKey = parse_fvk(full_viewing_key)?;
 
-        Err(value_error("Internal keys not implemented\0"))?; // TODO !!!
+        // TODO !!!
+        //Err(value_error("Internal keys not implemented\0"))?;
 
         let fvk_bytes = fvk.to_bytes();
         let fvk_obj = Obj::try_from(&fvk_bytes[..])?;

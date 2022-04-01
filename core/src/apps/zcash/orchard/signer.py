@@ -1,3 +1,4 @@
+from micropython import const
 from trezor import protobuf
 from trezor.crypto import random, orchardlib, hmac, hashlib
 from trezor.messages import (
@@ -25,7 +26,7 @@ from apps.common.paths import HARDENED
 from apps.bitcoin.sign_tx.bitcoinlike import Bitcoinlike
 from apps.bitcoin.sign_tx import approvers, helpers
 
-from apps import zcash  # TODO: beautify 
+from apps.zcash import addresses
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -35,7 +36,7 @@ if TYPE_CHECKING:
     from apps.bitcoin.writers import Writer
 
 
-OVERWINTERED = 1 << 31
+OVERWINTERED = const(1 << 31)
 
 
 def skip_if_empty(func):
@@ -60,7 +61,7 @@ class OrchardSigner:
         self.outputs_count = tx_info.tx.orchard.outputs_count
 
         self.actions_count = max(
-            2,  # minimal required amount of actions
+            1,  # minimal required amount of actions
             self.inputs_count,
             self.outputs_count,
         ) if self.inputs_count + self.outputs_count > 0 else 0
@@ -82,7 +83,6 @@ class OrchardSigner:
             account     | HARDENED,  # account
         ]
         self.key_node = keychain.derive(key_path)
-
         self.alphas = []  # TODO: request alphas from the client
         self.hmac_secret = random.bytes(32)
 
@@ -131,11 +131,11 @@ class OrchardSigner:
 
         inputs = list(range(self.inputs_count))
         pad(inputs, self.actions_count)
-        shuffle(inputs, rng_state)
+        #shuffle(inputs, rng_state)
 
         outputs = list(range(self.outputs_count))
         pad(outputs, self.actions_count)
-        shuffle(outputs, rng_state)
+        #shuffle(outputs, rng_state)
 
         # precompute Full Viewing Key
         fvk = self.key_node.full_viewing_key()
@@ -164,7 +164,7 @@ class OrchardSigner:
         if input_index is not None:
             txi = await self.get_input(input_index)
             self.verify_hmac(txi, hmac_type.ORCHARD_INPUT, input_index)
-
+            # TODO!: check that the fvk owns the note
             action_info["spend_info"] = {
                 "fvk": fvk.raw(internal=txi.internal),
                 "note": txi.note,
@@ -177,8 +177,8 @@ class OrchardSigner:
             if txo.internal:
                 address = fvk.address(internal=True)
             else:
-                receivers = zcash.address.decode_unified(txo.address)
-                address = receivers.get(zcash.address.ORCHARD)
+                receivers = addresses.decode_unified(txo.address)
+                address = receivers.get(addresses.ORCHARD)
                 if address is None:
                     raise ProcessError("Address has not an Orchard receiver.")
 
@@ -254,11 +254,15 @@ class OrchardSigner:
 
 
 def pad(items, target_length):
-    items.extend((target_length - len(items))*[None])  # pad
+    items.extend((target_length - len(items))*[None])
 
 
 def shuffle(items, rng_state):
-    for i in reversed(range(len(items))):
+    """
+    Mirror of Rust's `rand::seq::SliceRandom::shuffle`.
+    see: https://github.com/rust-random/rand/blob/a8474f7932e2f0b9d8ee2b009f946049fecc317c/src/seq/mod.rs#L586-L592
+    """
+    for i in reversed(range(1, len(items))):
         j = orchardlib.randint(i + 1, rng_state)
         items[i], items[j] = items[j], items[i]
 

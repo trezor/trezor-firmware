@@ -738,8 +738,8 @@ if not utils.BITCOIN_ONLY:
     import apps.webauthn.resident_credentials
     apps.zcash
     import apps.zcash
-    apps.zcash.address
-    import apps.zcash.address
+    apps.zcash.addresses
+    import apps.zcash.addresses
     apps.zcash.diag
     import apps.zcash.diag
     apps.zcash.get_address

@@ -44,7 +44,7 @@ T_PREFIX = {
 }
 
 # prefixes for Unified Adresses
-# source: https://zips.z.cash/zip-0032
+# source: https://zips.z.cash/zip-0316
 U_PREFIX = {
 	MAINNET: "u",
 	TESTNET: "utest"
@@ -85,8 +85,10 @@ def decode_unified(addr_str: str) -> Dict[int,bytes]:
 	# TODO: validation of receivers' encodings
 	(hrp, data, encoding) = bech32_decode(addr_str, max_bech_len=1000)
 	assert (hrp, data, encoding) != (None, None, None), "Bech32m decoding failed"
-	assert hrp != "utest", "testnet not supported"
-	assert hrp == "u", "unknown prefix"
+	# TODO: testnet
+	#assert hrp != "utest", "testnet not supported"
+	#assert hrp == "u", "unknown prefix"
+	assert hrp in ("u", "utest"), "unknown prefix"
 	assert encoding == Encoding.BECH32M, "Bech32m encoding required"
 
 	decoded = bytearray(convertbits(data, 5, 8, False))

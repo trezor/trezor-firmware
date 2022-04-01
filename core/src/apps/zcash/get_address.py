@@ -6,10 +6,10 @@ from apps.common.paths import address_n_to_str, HARDENED
 from apps.common.coininfo import CoinInfo
 
 from trezor.crypto.scripts import sha256_ripemd160
-from trezor import log, wire
+from trezor import wire
 
 from . import orchard
-from .address import (
+from .addresses import (
     encode_unified, encode_transparent,
     P2PKH, MAINNET, TESTNET, ORCHARD, P2PKH
 )
