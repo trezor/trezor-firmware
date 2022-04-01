@@ -5,3 +5,4 @@ pub mod display;
 mod ffi;
 pub mod random;
 pub mod slip39;
+mod storage;
