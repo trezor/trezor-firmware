@@ -228,11 +228,15 @@ fn generate_trezorhal_bindings() {
 
     let bindings = prepare_bindings()
         .header("trezorhal.h")
+        // common
+        .allowlist_var("HW_ENTROPY_DATA")
         // secbool
         .allowlist_type("secbool")
         .must_use_type("secbool")
         .allowlist_var("sectrue")
         .allowlist_var("secfalse")
+        // flash
+        .allowlist_function("flash_init")
         // storage
         .allowlist_var("EXTERNAL_SALT_SIZE")
         .allowlist_var("FLAG_PUBLIC")
@@ -247,6 +251,7 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("storage_has_pin")
         .allowlist_function("storage_get_pin_rem")
         .allowlist_function("storage_change_pin")
+        .allowlist_function("storage_ensure_not_wipe_code")
         .allowlist_function("storage_has")
         .allowlist_function("storage_get")
         .allowlist_function("storage_set")
