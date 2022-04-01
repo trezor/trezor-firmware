@@ -209,6 +209,8 @@ fn generate_trezorhal_bindings() {
 
     let bindings = prepare_bindings()
         .header("trezorhal.h")
+        // common
+        .allowlist_var("HW_ENTROPY_DATA")
         // secbool
         .allowlist_type("secbool")
         .must_use_type("secbool")
