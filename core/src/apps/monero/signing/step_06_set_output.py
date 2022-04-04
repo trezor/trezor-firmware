@@ -9,12 +9,11 @@ from trezor import utils
 
 from apps.monero import layout, signing
 from apps.monero.signing import offloading_keys
-from apps.monero.xmr import crypto, serialize
+from apps.monero.xmr import crypto, crypto_helpers, serialize
 
 from .state import State
 
 if TYPE_CHECKING:
-    from apps.monero.xmr.types import Sc25519, Ge25519
     from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhTuple
     from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import Bulletproof
     from trezor.messages import (
@@ -170,7 +169,7 @@ def _validate(
 
 def _compute_tx_keys(
     state: State, dst_entr: MoneroTransactionDestinationEntry
-) -> tuple[Ge25519, Sc25519]:
+) -> tuple[crypto.Point, crypto.Scalar]:
     """Computes tx_out_key, amount_key"""
 
     if state.is_processing_offloaded:
@@ -181,24 +180,26 @@ def _compute_tx_keys(
     # derivation = a*R or r*A or s*C
     derivation = _set_out_derivation(state, dst_entr, additional_txkey_priv)
     # amount key = H_s(derivation || i)
-    amount_key = crypto.derivation_to_scalar(derivation, state.current_output_index)
+    amount_key = crypto_helpers.derivation_to_scalar(
+        derivation, state.current_output_index
+    )
     # one-time destination address P = H_s(derivation || i)*G + B
-    tx_out_key = crypto.derive_public_key(
+    tx_out_key = crypto_helpers.derive_public_key(
         derivation,
         state.current_output_index,
-        crypto.decodepoint(dst_entr.addr.spend_public_key),
+        crypto_helpers.decodepoint(dst_entr.addr.spend_public_key),
     )
     del (derivation, additional_txkey_priv)
 
     from apps.monero.xmr import monero
 
-    mask = monero.commitment_mask(crypto.encodeint(amount_key))
+    mask = monero.commitment_mask(crypto_helpers.encodeint(amount_key))
     state.output_masks.append(mask)
     return tx_out_key, amount_key
 
 
 def _set_out_tx_out(
-    state: State, dst_entr: MoneroTransactionDestinationEntry, tx_out_key: Ge25519
+    state: State, dst_entr: MoneroTransactionDestinationEntry, tx_out_key: crypto.Point
 ) -> tuple[bytes, bytes]:
     """
     Manually serializes TxOut(0, TxoutToKey(key)) and calculates hmac.
@@ -223,7 +224,7 @@ def _set_out_tx_out(
 
 def _range_proof(
     state: State, rsig_data: MoneroTransactionRsigData
-) -> tuple[MoneroTransactionRsigData, Sc25519]:
+) -> tuple[MoneroTransactionRsigData, crypto.Scalar]:
     """
     Computes rangeproof and handles range proof offloading logic.
 
@@ -257,7 +258,9 @@ def _range_proof(
     # If not last, do not proceed to the BP processing.
     if not last_in_batch:
         rsig_data_new = (
-            _return_rsig_data(mask=crypto.encodeint(mask)) if offload_mask else None
+            _return_rsig_data(mask=crypto_helpers.encodeint(mask))
+            if offload_mask
+            else None
         )
         return rsig_data_new, mask
 
@@ -282,7 +285,7 @@ def _range_proof(
 
     # Construct new rsig data to send back to the host.
     rsig_data_new = _return_rsig_data(
-        rsig, crypto.encodeint(mask) if offload_mask else None
+        rsig, crypto_helpers.encodeint(mask) if offload_mask else None
     )
 
     if state.current_output_index + 1 == state.output_count and (
@@ -386,7 +389,7 @@ def _dump_rsig_bp(rsig: Bulletproof) -> bytes:
 
 
 def _return_rsig_data(
-    rsig: bytes = None, mask: bytes = None
+    rsig: bytes | None = None, mask: bytes | None = None
 ) -> MoneroTransactionRsigData:
     if rsig is None and mask is None:
         return None
@@ -405,17 +408,23 @@ def _return_rsig_data(
 
 
 def _get_ecdh_info_and_out_pk(
-    state: State, tx_out_key: Ge25519, amount: int, mask: Sc25519, amount_key: Sc25519
+    state: State,
+    tx_out_key: crypto.Point,
+    amount: int,
+    mask: crypto.Scalar,
+    amount_key: crypto.Scalar,
 ) -> tuple[bytes, bytes, bytes]:
     """
     Calculates the Pedersen commitment C = aG + bH and returns it as CtKey.
     Also encodes the two items - `mask` and `amount` - into ecdh info,
     so the recipient is able to reconstruct the commitment.
     """
-    out_pk_dest = crypto.encodepoint(tx_out_key)
-    out_pk_commitment = crypto.encodepoint(crypto.gen_commitment(mask, amount))
+    out_pk_dest = crypto_helpers.encodepoint(tx_out_key)
+    out_pk_commitment = crypto_helpers.encodepoint(
+        crypto.gen_commitment_into(None, mask, amount)
+    )
     crypto.sc_add_into(state.sumout, state.sumout, mask)
-    ecdh_info = _ecdh_encode(amount, crypto.encodeint(amount_key))
+    ecdh_info = _ecdh_encode(amount, crypto_helpers.encodeint(amount_key))
 
     # Manual ECDH info serialization
     ecdh_info_bin = _serialize_ecdh(ecdh_info)
@@ -442,7 +451,7 @@ def _ecdh_hash(shared_sec: bytes) -> bytes:
     data = bytearray(38)
     data[0:6] = b"amount"
     data[6:] = shared_sec
-    return crypto.cn_fast_hash(data)
+    return crypto.fast_hash_into(None, data)
 
 
 def _ecdh_encode(amount: int, amount_key: bytes) -> EcdhTuple:
@@ -451,16 +460,16 @@ def _ecdh_encode(amount: int, amount_key: bytes) -> EcdhTuple:
     """
     from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhTuple
 
-    ecdh_info = EcdhTuple(mask=crypto.NULL_KEY_ENC, amount=bytearray(32))
-    amnt = crypto.sc_init(amount)
+    ecdh_info = EcdhTuple(mask=crypto_helpers.NULL_KEY_ENC, amount=bytearray(32))
+    amnt = crypto.Scalar(amount)
     crypto.encodeint_into(ecdh_info.amount, amnt)
-    crypto.xor8(ecdh_info.amount, _ecdh_hash(amount_key))
+    crypto_helpers.xor8(ecdh_info.amount, _ecdh_hash(amount_key))
     return ecdh_info
 
 
 def _set_out_additional_keys(
     state: State, dst_entr: MoneroTransactionDestinationEntry
-) -> Sc25519:
+) -> crypto.Scalar:
     """
     If needed (decided in step 1), additional tx keys are calculated
     for this particular output.
@@ -472,15 +481,15 @@ def _set_out_additional_keys(
 
     if dst_entr.is_subaddress:
         # R=r*D
-        additional_txkey = crypto.decodepoint(dst_entr.addr.spend_public_key)
+        additional_txkey = crypto_helpers.decodepoint(dst_entr.addr.spend_public_key)
         crypto.scalarmult_into(
             additional_txkey, additional_txkey, additional_txkey_priv
         )
     else:
         # R=r*G
-        additional_txkey = crypto.scalarmult_base(additional_txkey_priv)
+        additional_txkey = crypto.scalarmult_base_into(None, additional_txkey_priv)
 
-    state.additional_tx_public_keys.append(crypto.encodepoint(additional_txkey))
+    state.additional_tx_public_keys.append(crypto_helpers.encodepoint(additional_txkey))
     state.additional_tx_private_keys.append(additional_txkey_priv)
     return additional_txkey_priv
 
@@ -488,8 +497,8 @@ def _set_out_additional_keys(
 def _set_out_derivation(
     state: State,
     dst_entr: MoneroTransactionDestinationEntry,
-    additional_txkey_priv: Sc25519,
-) -> Ge25519:
+    additional_txkey_priv: crypto.Scalar,
+) -> crypto.Point:
     """
     Calculates derivation which is then used in the one-time address as
     `P = H(derivation)*G + B`.
@@ -504,7 +513,7 @@ def _set_out_derivation(
     change_addr = state.change_address()
     if change_addr and addr_eq(dst_entr.addr, change_addr):
         # sending change to yourself; derivation = a*R
-        derivation = crypto.generate_key_derivation(
+        derivation = crypto_helpers.generate_key_derivation(
             state.tx_pub, state.creds.view_key_private
         )
 
@@ -514,8 +523,8 @@ def _set_out_derivation(
             deriv_priv = additional_txkey_priv
         else:
             deriv_priv = state.tx_priv
-        derivation = crypto.generate_key_derivation(
-            crypto.decodepoint(dst_entr.addr.view_public_key), deriv_priv
+        derivation = crypto_helpers.generate_key_derivation(
+            crypto_helpers.decodepoint(dst_entr.addr.view_public_key), deriv_priv
         )
     return derivation
 

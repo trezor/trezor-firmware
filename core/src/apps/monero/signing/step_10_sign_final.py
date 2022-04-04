@@ -8,18 +8,13 @@ so we can recover it just from the transaction and the spend key.
 The private tx keys are used in other numerous Monero features.
 """
 
-from typing import TYPE_CHECKING
-
+from trezor.crypto import random
 from trezor.messages import MoneroTransactionFinalAck
 
 from apps.monero import misc
-from apps.monero.xmr import crypto
-from apps.monero.xmr.crypto import chacha_poly
+from apps.monero.xmr import chacha_poly, crypto, crypto_helpers
 
 from .state import State
-
-if TYPE_CHECKING:
-    from apps.monero.xmr.types import Sc25519
 
 
 def final_msg(state: State) -> MoneroTransactionFinalAck:
@@ -32,8 +27,8 @@ def final_msg(state: State) -> MoneroTransactionFinalAck:
         state.creds.spend_key_private, state.tx_prefix_hash
     )
 
-    key_buff = crypto.encodeint(state.tx_priv) + b"".join(
-        [crypto.encodeint(x) for x in state.additional_tx_private_keys]
+    key_buff = crypto_helpers.encodeint(state.tx_priv) + b"".join(
+        [crypto_helpers.encodeint(x) for x in state.additional_tx_private_keys]
     )
     tx_enc_keys = chacha_poly.encrypt_pack(tx_key, key_buff)
     state.last_step = None
@@ -48,12 +43,12 @@ def final_msg(state: State) -> MoneroTransactionFinalAck:
 
 
 def _compute_tx_key(
-    spend_key_private: Sc25519, tx_prefix_hash: bytes
+    spend_key_private: crypto.Scalar, tx_prefix_hash: bytes
 ) -> tuple[bytes, bytes, bytes]:
-    salt = crypto.random_bytes(32)
+    salt = random.bytes(32)
 
     rand_mult_num = crypto.random_scalar()
-    rand_mult = crypto.encodeint(rand_mult_num)
+    rand_mult = crypto_helpers.encodeint(rand_mult_num)
 
     tx_key = misc.compute_tx_key(spend_key_private, tx_prefix_hash, salt, rand_mult_num)
     return tx_key, salt, rand_mult

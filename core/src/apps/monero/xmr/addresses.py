@@ -1,11 +1,11 @@
 from typing import TYPE_CHECKING
 
 from trezor.crypto import monero as tcry
+from trezor.enums import MoneroNetworkType
 
-from apps.monero.xmr.networks import NetworkTypes, net_version
+from apps.monero.xmr.networks import net_version
 
 if TYPE_CHECKING:
-    from apps.monero.xmr.types import Ge25519
     from trezor.messages import MoneroAccountPublicAddress
     from trezor.messages import MoneroTransactionDestinationEntry
 
@@ -18,7 +18,7 @@ def addr_to_hash(addr: MoneroAccountPublicAddress) -> bytes:
 
 
 def encode_addr(
-    version, spend_pub: Ge25519, view_pub: Ge25519, payment_id: bytes | None = None
+    version, spend_pub: bytes, view_pub: bytes, payment_id: bytes | None = None
 ) -> str:
     """
     Builds Monero address from public keys
@@ -40,8 +40,10 @@ def decode_addr(addr: bytes) -> tuple[int, bytes, bytes]:
 
 
 def public_addr_encode(
-    pub_addr: MoneroAccountPublicAddress, is_sub=False, net=NetworkTypes.MAINNET
-):
+    pub_addr: MoneroAccountPublicAddress,
+    is_sub: bool = False,
+    net: MoneroNetworkType = MoneroNetworkType.MAINNET,
+) -> str:
     """
     Encodes public address to Monero address
     """
@@ -52,13 +54,13 @@ def public_addr_encode(
 def classify_subaddresses(
     tx_dests: list[MoneroTransactionDestinationEntry],
     change_addr: MoneroAccountPublicAddress,
-) -> tuple[int, int, int]:
+) -> tuple[int, int, MoneroAccountPublicAddress | None]:
     """
     Classify destination subaddresses
     """
     num_stdaddresses = 0
     num_subaddresses = 0
-    single_dest_subaddress = None
+    single_dest_subaddress: MoneroAccountPublicAddress | None = None
     addr_set = set()
     for tx in tx_dests:
         if change_addr and addr_eq(change_addr, tx.addr):
@@ -75,7 +77,7 @@ def classify_subaddresses(
     return num_stdaddresses, num_subaddresses, single_dest_subaddress
 
 
-def addr_eq(a: MoneroAccountPublicAddress, b: MoneroAccountPublicAddress):
+def addr_eq(a: MoneroAccountPublicAddress, b: MoneroAccountPublicAddress) -> bool:
     return (
         a.spend_public_key == b.spend_public_key
         and a.view_public_key == b.view_public_key
@@ -84,8 +86,8 @@ def addr_eq(a: MoneroAccountPublicAddress, b: MoneroAccountPublicAddress):
 
 def get_change_addr_idx(
     outputs: list[MoneroTransactionDestinationEntry],
-    change_dts: MoneroTransactionDestinationEntry,
-) -> int:
+    change_dts: MoneroTransactionDestinationEntry | None,
+) -> int | None:
     """
     Returns ID of the change output from the change_dts and outputs
     """
