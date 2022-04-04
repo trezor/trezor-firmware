@@ -62,6 +62,7 @@ async def all_outputs_set(state: State) -> MoneroTransactionAllOutSetAck:
     state.current_output_index = None
     state.current_input_index = -1
 
+    assert state.full_message_hasher is not None
     state.full_message = state.full_message_hasher.get_digest()
     state.full_message_hasher = None
     state.output_pk_commitments = None
@@ -79,7 +80,7 @@ async def all_outputs_set(state: State) -> MoneroTransactionAllOutSetAck:
     )
 
 
-def _validate(state: State):
+def _validate(state: State) -> None:
     if state.last_step != state.STEP_OUT:
         raise ValueError("Invalid state transition")
     if state.current_output_index + 1 != state.output_count:
@@ -143,7 +144,7 @@ def _set_tx_extra(state: State) -> bytes:
     return extra
 
 
-def _set_tx_prefix(state: State, extra: bytes):
+def _set_tx_prefix(state: State, extra: bytes) -> None:
     """
     Adds `extra` to the tx_prefix_hash, which is the last needed item,
     so the tx_prefix_hash is now complete and can be incorporated
@@ -160,7 +161,7 @@ def _set_tx_prefix(state: State, extra: bytes):
     state.full_message_hasher.set_message(state.tx_prefix_hash)
 
 
-def _out_pk(state: State):
+def _out_pk(state: State) -> None:
     """
     Hashes out_pk into the full message.
     """

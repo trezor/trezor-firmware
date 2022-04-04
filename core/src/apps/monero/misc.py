@@ -1,10 +1,18 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from apps.monero.xmr.types import Sc25519
+    from apps.common.keychain import Keychain
+    from apps.common.paths import Bip32Path
+
+    from trezor.enums import MoneroNetworkType
+
+    from .xmr.crypto import Scalar
+    from .xmr.credentials import AccountCreds
 
 
-def get_creds(keychain, address_n=None, network_type=None):
+def get_creds(
+    keychain: Keychain, address_n: Bip32Path, network_type: MoneroNetworkType
+) -> AccountCreds:
     from apps.monero.xmr import monero
     from apps.monero.xmr.credentials import AccountCreds
 
@@ -18,25 +26,30 @@ def get_creds(keychain, address_n=None, network_type=None):
 
 
 def compute_tx_key(
-    spend_key_private: Sc25519,
+    spend_key_private: Scalar,
     tx_prefix_hash: bytes,
     salt: bytes,
-    rand_mult_num: Sc25519,
+    rand_mult_num: Scalar,
 ) -> bytes:
-    from apps.monero.xmr import crypto
+    from apps.monero.xmr import crypto, crypto_helpers
 
-    rand_inp = crypto.sc_add(spend_key_private, rand_mult_num)
-    passwd = crypto.keccak_2hash(crypto.encodeint(rand_inp) + tx_prefix_hash)
-    tx_key = crypto.compute_hmac(salt, passwd)
+    rand_inp = crypto.sc_add_into(None, spend_key_private, rand_mult_num)
+    passwd = crypto_helpers.keccak_2hash(
+        crypto_helpers.encodeint(rand_inp) + tx_prefix_hash
+    )
+    tx_key = crypto_helpers.compute_hmac(salt, passwd)
     return tx_key
 
 
 def compute_enc_key_host(
-    view_key_private: Sc25519, tx_prefix_hash: bytes
+    view_key_private: Scalar, tx_prefix_hash: bytes
 ) -> tuple[bytes, bytes]:
-    from apps.monero.xmr import crypto
+    from trezor.crypto import random
+    from apps.monero.xmr import crypto_helpers
 
-    salt = crypto.random_bytes(32)
-    passwd = crypto.keccak_2hash(crypto.encodeint(view_key_private) + tx_prefix_hash)
-    tx_key = crypto.compute_hmac(salt, passwd)
+    salt = random.bytes(32)
+    passwd = crypto_helpers.keccak_2hash(
+        crypto_helpers.encodeint(view_key_private) + tx_prefix_hash
+    )
+    tx_key = crypto_helpers.compute_hmac(salt, passwd)
     return tx_key, salt

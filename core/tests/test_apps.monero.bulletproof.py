@@ -12,8 +12,8 @@ class TestMoneroBulletproof(unittest.TestCase):
         pass
 
     def mask_consistency_check(self, bpi):
-        sv = [crypto.sc_init(123)]
-        gamma = [crypto.sc_init(432)]
+        sv = [crypto.Scalar(123)]
+        gamma = [crypto.Scalar(432)]
 
         M, logM, aL, aR, V, gamma = bpi.prove_setup(sv, gamma)
         x = bp._ensure_dst_key()
@@ -293,15 +293,15 @@ class TestMoneroBulletproof(unittest.TestCase):
 
     def test_prove(self):
         bpi = bp.BulletProofBuilder()
-        val = crypto.sc_init(123)
-        mask = crypto.sc_init(432)
+        val = crypto.Scalar(123)
+        mask = crypto.Scalar(432)
 
         bp_res = bpi.prove(val, mask)
         bpi.verify(bp_res)
 
     def test_prove_2(self):
         bpi = bp.BulletProofBuilder()
-        val = crypto.sc_init((1 << 30) - 1 + 16)
+        val = crypto.Scalar((1 << 30) - 1 + 16)
         mask = crypto.random_scalar()
 
         bp_res = bpi.prove(val, mask)
@@ -322,7 +322,7 @@ class TestMoneroBulletproof(unittest.TestCase):
     def test_prove_random_masks(self):
         bpi = bp.BulletProofBuilder()
         bpi.use_det_masks = False  # trully randomly generated mask vectors
-        val = crypto.sc_init((1 << 30) - 1 + 16)
+        val = crypto.Scalar((1 << 30) - 1 + 16)
         mask = crypto.random_scalar()
 
         bp_res = bpi.prove(val, mask)
@@ -331,8 +331,8 @@ class TestMoneroBulletproof(unittest.TestCase):
     def ctest_multiexp(self):
         scalars = [0, 1, 2, 3, 4, 99]
         point_base = [0, 2, 4, 7, 12, 18]
-        scalar_sc = [crypto.sc_init(x) for x in scalars]
-        points = [crypto.scalarmult_base(crypto.sc_init(x)) for x in point_base]
+        scalar_sc = [crypto.Scalar(x) for x in scalars]
+        points = [crypto.scalarmult_base_into(None, crypto.Scalar(x)) for x in point_base]
 
         muex = bp.MultiExp(scalars=[crypto.encodeint(x) for x in scalar_sc],
                            point_fnc=lambda i, d: crypto.encodepoint(points[i]))
@@ -340,24 +340,24 @@ class TestMoneroBulletproof(unittest.TestCase):
         self.assertEqual(len(muex), len(scalars))
         res = bp.multiexp(None, muex)
         res2 = bp.vector_exponent_custom(
-            A=bp.KeyVEval(3, lambda i, d: crypto.encodepoint_into(crypto.scalarmult_base(crypto.sc_init(point_base[i])), d)),
-            B=bp.KeyVEval(3, lambda i, d: crypto.encodepoint_into(crypto.scalarmult_base(crypto.sc_init(point_base[3+i])), d)),
-            a=bp.KeyVEval(3, lambda i, d: crypto.encodeint_into(crypto.sc_init(scalars[i]), d),),
-            b=bp.KeyVEval(3, lambda i, d: crypto.encodeint_into(crypto.sc_init(scalars[i+3]), d)),
+            A=bp.KeyVEval(3, lambda i, d: crypto.encodepoint_into(crypto.scalarmult_base_into(None, crypto.Scalar(point_base[i])), d)),
+            B=bp.KeyVEval(3, lambda i, d: crypto.encodepoint_into(crypto.scalarmult_base_into(None, crypto.Scalar(point_base[3+i])), d)),
+            a=bp.KeyVEval(3, lambda i, d: crypto.encodeint_into(crypto.Scalar(scalars[i]), d),),
+            b=bp.KeyVEval(3, lambda i, d: crypto.encodeint_into(crypto.Scalar(scalars[i+3]), d)),
         )
         self.assertEqual(res, res2)
 
     def test_prove_batch(self):
         bpi = bp.BulletProofBuilder()
-        sv = [crypto.sc_init(123), crypto.sc_init(768)]
-        gamma = [crypto.sc_init(456), crypto.sc_init(901)]
+        sv = [crypto.Scalar(123), crypto.Scalar(768)]
+        gamma = [crypto.Scalar(456), crypto.Scalar(901)]
         proof = bpi.prove_batch(sv, gamma)
         bpi.verify_batch([proof])
 
     def test_prove_batch16(self):
         bpi = bp.BulletProofBuilder()
-        sv = [crypto.sc_init(137*i) for i in range(16)]
-        gamma = [crypto.sc_init(991*i) for i in range(16)]
+        sv = [crypto.Scalar(137*i) for i in range(16)]
+        gamma = [crypto.Scalar(991*i) for i in range(16)]
         proof = bpi.prove_batch(sv, gamma)
         bpi.verify_batch([proof])
 

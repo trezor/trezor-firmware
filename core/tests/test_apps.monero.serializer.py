@@ -10,9 +10,7 @@ if not utils.BITCOIN_ONLY:
     )
     from apps.monero.xmr.serialize.readwriter import MemoryReaderWriter
     from apps.monero.xmr.serialize_messages.base import ECPoint
-    from apps.monero.xmr.serialize_messages.tx_prefix import (
-        TxinToKey,
-    )
+    from apps.monero.xmr.serialize_messages.tx_prefix import TxinToKey
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
@@ -66,7 +64,8 @@ class TestMoneroSerializer(unittest.TestCase):
         test_deser = TxinToKey.load(MemoryReaderWriter(writer.get_buffer()))
 
         self.assertEqual(msg.amount, test_deser.amount)
-        self.assertEqual(msg, test_deser)
+        self.assertEqual(msg.k_image, test_deser.k_image)
+        self.assertEqual(msg.key_offsets, test_deser.key_offsets)
 
 
 if __name__ == "__main__":
