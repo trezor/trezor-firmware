@@ -10,7 +10,7 @@ class TxinToKey(MessageType):
     VARIANT_CODE = const(0x2)
 
     @classmethod
-    def f_specs(cls):
+    def f_specs(cls) -> tuple:
         return (
             ("amount", UVarintType),
             ("key_offsets", ContainerType, UVarintType),

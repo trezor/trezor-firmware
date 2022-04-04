@@ -451,6 +451,12 @@ if TYPE_CHECKING:
         ARRAY = 7
         STRUCT = 8
 
+    class MoneroNetworkType(IntEnum):
+        MAINNET = 0
+        TESTNET = 1
+        STAGENET = 2
+        FAKECHAIN = 3
+
     class NEMMosaicLevy(IntEnum):
         MosaicLevy_Absolute = 1
         MosaicLevy_Percentile = 2

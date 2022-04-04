@@ -1,4 +1,5 @@
 import gc
+from typing import TYPE_CHECKING
 
 from trezor import log, utils, wire
 from trezor.enums import MessageType
@@ -6,9 +7,15 @@ from trezor.enums import MessageType
 from apps.common.keychain import auto_keychain
 from apps.monero.signing.state import State
 
+if TYPE_CHECKING:
+    from trezor.messages import MoneroTransactionFinalAck
+    from apps.common.keychain import Keychain
+
 
 @auto_keychain(__name__)
-async def sign_tx(ctx, received_msg, keychain):
+async def sign_tx(
+    ctx: wire.Context, received_msg, keychain: Keychain
+) -> MoneroTransactionFinalAck:
     state = State(ctx)
     mods = utils.unimport_begin()
 
@@ -34,7 +41,7 @@ async def sign_tx(ctx, received_msg, keychain):
     return result_msg
 
 
-async def sign_tx_dispatch(state, msg, keychain):
+async def sign_tx_dispatch(state: State, msg, keychain: Keychain) -> tuple:
     if msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionInitRequest:
         from apps.monero.signing import step_01_init_transaction
 
@@ -55,14 +62,6 @@ async def sign_tx_dispatch(state, msg, keychain):
                 MessageType.MoneroTransactionInputsPermutationRequest,
                 MessageType.MoneroTransactionInputViniRequest,
             ),
-        )
-
-    elif msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionInputsPermutationRequest:
-        from apps.monero.signing import step_03_inputs_permutation
-
-        return (
-            await step_03_inputs_permutation.tsx_inputs_permutation(state, msg.perm),
-            (MessageType.MoneroTransactionInputViniRequest,),
         )
 
     elif msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionInputViniRequest:

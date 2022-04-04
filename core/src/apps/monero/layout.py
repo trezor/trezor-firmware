@@ -14,18 +14,21 @@ DUMMY_PAYMENT_ID = b"\x00\x00\x00\x00\x00\x00\x00\x00"
 
 
 if TYPE_CHECKING:
-    from apps.monero.signing.state import State
+    from trezor.enums import MoneroNetworkType
     from trezor.messages import (
         MoneroTransactionData,
         MoneroTransactionDestinationEntry,
     )
+    from trezor.wire import Context
+
+    from .signing.state import State
 
 
-def _format_amount(value):
+def _format_amount(value: int) -> str:
     return f"{strings.format_amount(value, 12)} XMR"
 
 
-async def require_confirm_watchkey(ctx):
+async def require_confirm_watchkey(ctx: Context) -> None:
     await confirm_action(
         ctx,
         "get_watchkey",
@@ -37,7 +40,7 @@ async def require_confirm_watchkey(ctx):
     )
 
 
-async def require_confirm_keyimage_sync(ctx):
+async def require_confirm_keyimage_sync(ctx: Context) -> None:
     await confirm_action(
         ctx,
         "key_image_sync",
@@ -49,7 +52,7 @@ async def require_confirm_keyimage_sync(ctx):
     )
 
 
-async def require_confirm_live_refresh(ctx):
+async def require_confirm_live_refresh(ctx: Context) -> None:
     await confirm_action(
         ctx,
         "live_refresh",
@@ -61,7 +64,7 @@ async def require_confirm_live_refresh(ctx):
     )
 
 
-async def require_confirm_tx_key(ctx, export_key=False):
+async def require_confirm_tx_key(ctx: Context, export_key: bool = False) -> None:
     if export_key:
         description = "Do you really want to export tx_key?"
     else:
@@ -78,8 +81,11 @@ async def require_confirm_tx_key(ctx, export_key=False):
 
 
 async def require_confirm_transaction(
-    ctx, state: State, tsx_data: MoneroTransactionData, network_type: int
-):
+    ctx: Context,
+    state: State,
+    tsx_data: MoneroTransactionData,
+    network_type: MoneroNetworkType,
+) -> None:
     """
     Ask for confirmation from user.
     """
@@ -87,8 +93,6 @@ async def require_confirm_transaction(
 
     outputs = tsx_data.outputs
     change_idx = get_change_addr_idx(outputs, tsx_data.change_dts)
-    has_integrated = bool(tsx_data.integrated_indices)
-    has_payment = bool(tsx_data.payment_id)
 
     if tsx_data.unlock_time != 0:
         await _require_confirm_unlock_time(ctx, tsx_data.unlock_time)
@@ -100,13 +104,17 @@ async def require_confirm_transaction(
         is_dummy = change_idx is None and dst.amount == 0 and len(outputs) == 2
         if is_dummy:
             continue  # Dummy output does not need confirmation
-        if has_integrated and idx in tsx_data.integrated_indices:
+        if tsx_data.integrated_indices and idx in tsx_data.integrated_indices:
             cur_payment = tsx_data.payment_id
         else:
             cur_payment = None
         await _require_confirm_output(ctx, dst, network_type, cur_payment)
 
-    if has_payment and not has_integrated and tsx_data.payment_id != DUMMY_PAYMENT_ID:
+    if (
+        tsx_data.payment_id
+        and not tsx_data.integrated_indices
+        and tsx_data.payment_id != DUMMY_PAYMENT_ID
+    ):
         await _require_confirm_payment_id(ctx, tsx_data.payment_id)
 
     await _require_confirm_fee(ctx, tsx_data.fee)
@@ -114,8 +122,11 @@ async def require_confirm_transaction(
 
 
 async def _require_confirm_output(
-    ctx, dst: MoneroTransactionDestinationEntry, network_type: int, payment_id: bytes
-):
+    ctx: Context,
+    dst: MoneroTransactionDestinationEntry,
+    network_type: MoneroNetworkType,
+    payment_id: bytes | None,
+) -> None:
     """
     Single transaction destination confirmation
     """
@@ -129,14 +140,14 @@ async def _require_confirm_output(
 
     await confirm_output(
         ctx,
-        address=addr.decode(),
+        address=addr,
         amount=_format_amount(dst.amount),
         font_amount=ui.BOLD,
         br_code=ButtonRequestType.SignTx,
     )
 
 
-async def _require_confirm_payment_id(ctx, payment_id: bytes):
+async def _require_confirm_payment_id(ctx: Context, payment_id: bytes) -> None:
     await confirm_blob(
         ctx,
         "confirm_payment_id",
@@ -146,7 +157,7 @@ async def _require_confirm_payment_id(ctx, payment_id: bytes):
     )
 
 
-async def _require_confirm_fee(ctx, fee):
+async def _require_confirm_fee(ctx: Context, fee: int) -> None:
     await confirm_metadata(
         ctx,
         "confirm_final",
@@ -158,7 +169,7 @@ async def _require_confirm_fee(ctx, fee):
     )
 
 
-async def _require_confirm_unlock_time(ctx, unlock_time):
+async def _require_confirm_unlock_time(ctx: Context, unlock_time: int) -> None:
     await confirm_metadata(
         ctx,
         "confirm_locktime",
@@ -170,12 +181,12 @@ async def _require_confirm_unlock_time(ctx, unlock_time):
 
 
 class TransactionStep(ui.Component):
-    def __init__(self, state, info):
+    def __init__(self, state: State, info: list[str]) -> None:
         super().__init__()
         self.state = state
         self.info = info
 
-    def on_render(self):
+    def on_render(self) -> None:
         state = self.state
         info = self.info
         ui.header("Signing transaction", ui.ICON_SEND, ui.TITLE_GREY, ui.BG, ui.BLUE)
@@ -187,12 +198,12 @@ class TransactionStep(ui.Component):
 
 
 class KeyImageSyncStep(ui.Component):
-    def __init__(self, current, total_num):
+    def __init__(self, current: int, total_num: int) -> None:
         super().__init__()
         self.current = current
         self.total_num = total_num
 
-    def on_render(self):
+    def on_render(self) -> None:
         current = self.current
         total_num = self.total_num
         ui.header("Syncing", ui.ICON_SEND, ui.TITLE_GREY, ui.BG, ui.BLUE)
@@ -201,11 +212,11 @@ class KeyImageSyncStep(ui.Component):
 
 
 class LiveRefreshStep(ui.Component):
-    def __init__(self, current):
+    def __init__(self, current: int) -> None:
         super().__init__()
         self.current = current
 
-    def on_render(self):
+    def on_render(self) -> None:
         current = self.current
         ui.header("Refreshing", ui.ICON_SEND, ui.TITLE_GREY, ui.BG, ui.BLUE)
         p = (1000 * current // 8) % 1000
@@ -215,13 +226,11 @@ class LiveRefreshStep(ui.Component):
         )
 
 
-async def transaction_step(state: State, step: int, sub_step: int | None = None):
+async def transaction_step(state: State, step: int, sub_step: int = 0) -> None:
     if step == 0:
         info = ["Signing..."]
     elif step == state.STEP_INP:
         info = ["Processing inputs", f"{sub_step + 1}/{state.input_count}"]
-    elif step == state.STEP_PERM:
-        info = ["Sorting..."]
     elif step == state.STEP_VINI:
         info = ["Hashing inputs", f"{sub_step + 1}/{state.input_count}"]
     elif step == state.STEP_ALL_IN:
@@ -239,13 +248,13 @@ async def transaction_step(state: State, step: int, sub_step: int | None = None)
     await Popup(TransactionStep(state, info))
 
 
-async def keyimage_sync_step(ctx, current, total_num):
+async def keyimage_sync_step(ctx: Context, current: int | None, total_num: int) -> None:
     if current is None:
         return
     await Popup(KeyImageSyncStep(current, total_num))
 
 
-async def live_refresh_step(ctx, current):
+async def live_refresh_step(ctx: Context, current: int | None) -> None:
     if current is None:
         return
     await Popup(LiveRefreshStep(current))

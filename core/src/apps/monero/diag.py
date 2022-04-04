@@ -1,3 +1,9 @@
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from trezor.messages import Failure
+
+
 if __debug__:
     import gc
     import micropython
@@ -8,7 +14,7 @@ if __debug__:
     PREV_MEM = gc.mem_free()
     CUR_MES = 0
 
-    def log_trace(x=None):
+    def log_trace(x=None) -> None:
         log.debug(
             __name__,
             "Log trace %s, ... F: %s A: %s, S: %s",
@@ -18,7 +24,7 @@ if __debug__:
             micropython.stack_use(),
         )
 
-    def check_mem(x=""):
+    def check_mem(x: str | int = "") -> None:
         global PREV_MEM, CUR_MES
 
         gc.collect()
@@ -33,12 +39,12 @@ if __debug__:
         CUR_MES += 1
         PREV_MEM = free
 
-    def retit(**kwargs):
+    def retit(**kwargs) -> Failure:
         from trezor.messages import Failure
 
         return Failure(**kwargs)
 
-    async def diag(ctx, msg, **kwargs):
+    async def diag(ctx, msg, **kwargs) -> Failure:
         log.debug(__name__, "----diagnostics")
         gc.collect()
 
@@ -85,7 +91,7 @@ if __debug__:
             bpi.gc_fnc = gc.collect
             bpi.gc_trace = log_trace
 
-            vals = [crypto.sc_init((1 << 30) - 1 + 16), crypto.sc_init(22222)]
+            vals = [crypto.Scalar((1 << 30) - 1 + 16), crypto.Scalar(22222)]
             masks = [crypto.random_scalar(), crypto.random_scalar()]
             check_mem("BP pre input")
 

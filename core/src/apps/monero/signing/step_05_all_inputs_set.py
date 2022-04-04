@@ -27,7 +27,7 @@ async def all_inputs_set(state: State) -> MoneroTransactionAllInputsSetAck:
         raise ValueError("Invalid input count")
 
     # The sum of the masks must match the input masks sum.
-    state.sumout = crypto.sc_init(0)
+    state.sumout = crypto.Scalar()
     state.last_step = state.STEP_ALL_IN
     resp = MoneroTransactionAllInputsSetAck()
     return resp
