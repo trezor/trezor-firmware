@@ -2,22 +2,17 @@ from typing import *
 
 
 # extmod/rustmods/modtrezororchardlib.c
-def derive_full_viewing_key(spending_key: bytes, internal: bool) -> bytes:
+def derive_full_viewing_key(spending_key: bytes) -> bytes:
 """Returns a raw Orchard Full Viewing Key."""
 
 
 # extmod/rustmods/modtrezororchardlib.c
-def derive_internal_full_viewing_key(full_viewing_key: bytes) -> bytes:
-"""Returns a raw internal Orchard Full Viewing Key."""
-
-
-# extmod/rustmods/modtrezororchardlib.c
-def derive_incoming_viewing_key(full_viewing_key: bytes, internal: bool) -> bytes:
+def derive_incoming_viewing_key(full_viewing_key: bytes, scope: bool) -> bytes:
 """Returns a raw Orchard Incoming Viewing Key."""
 
 
 # extmod/rustmods/modtrezororchardlib.c
-def derive_outgoing_viewing_key(full_viewing_key: bytes, internal: bool) -> bytes:
+def derive_outgoing_viewing_key(full_viewing_key: bytes, scope: bool) -> bytes:
 """Returns a raw Orchard Outgoing Viewing Key."""
 
 
@@ -25,7 +20,7 @@ def derive_outgoing_viewing_key(full_viewing_key: bytes, internal: bool) -> byte
 def derive_address(
     full_viewing_key: bytes,
     diversifier_index: int,
-    internal: bool,
+    scope: bool,
 ) -> bytes:
 """Returns a raw Orchard address."""
 
@@ -38,14 +33,6 @@ def f4jumble(message: bytearray) -> None:
 # extmod/rustmods/modtrezororchardlib.c
 def f4jumble_inv(message: bytearray) -> None:
     """Mutates a message by F4Jumble inverse permutation."""
-
-
-# extmod/rustmods/modtrezororchardlib.c
-def shuffle(
-    list,
-    rng_config,
-):
-"""Shuffles a list."""
 
 
 # extmod/rustmods/modtrezororchardlib.c
@@ -63,10 +50,14 @@ def sign(
     alpha: bytes,
     sighash: bytes,
 ):
-"""reddsa spend signature of over pallas
- 
+"""Reddsa spend signature of over the pallas
 # Args:
     `spending_key` - spending key
     `alpha` - randomizer (pallas scalar)
     `sighash` - message digest
 """
+
+
+# extmod/rustmods/modtrezororchardlib.c
+def randint(max: int, rng_config) -> int:
+"""Generates an element of uniform distribution over `range(max)`"""

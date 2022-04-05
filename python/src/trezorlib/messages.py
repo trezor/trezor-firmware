@@ -551,6 +551,11 @@ class TezosBallotType(IntEnum):
     Pass = 2
 
 
+class ZcashKeychainScope(IntEnum):
+    EXTERNAL = 0
+    INTERNAL = 1
+
+
 class BinanceGetAddress(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 700
     FIELDS = {
@@ -7400,7 +7405,6 @@ class DebugZcashDiagResponse(protobuf.MessageType):
 class ZcashGetFullViewingKey(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 902
     FIELDS = {
-        1: protobuf.Field("internal", "bool", repeated=False, required=False),
         2: protobuf.Field("coin_name", "string", repeated=False, required=False),
         3: protobuf.Field("z_address_n", "uint32", repeated=True, required=False),
     }
@@ -7409,11 +7413,9 @@ class ZcashGetFullViewingKey(protobuf.MessageType):
         self,
         *,
         z_address_n: Optional[Sequence["int"]] = None,
-        internal: Optional["bool"] = False,
         coin_name: Optional["str"] = 'Zcash',
     ) -> None:
         self.z_address_n: Sequence["int"] = z_address_n if z_address_n is not None else []
-        self.internal = internal
         self.coin_name = coin_name
 
 
@@ -7434,7 +7436,7 @@ class ZcashFullViewingKey(protobuf.MessageType):
 class ZcashGetIncomingViewingKey(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 904
     FIELDS = {
-        1: protobuf.Field("internal", "bool", repeated=False, required=False),
+        1: protobuf.Field("scope", "ZcashKeychainScope", repeated=False, required=False),
         2: protobuf.Field("coin_name", "string", repeated=False, required=False),
         3: protobuf.Field("z_address_n", "uint32", repeated=True, required=False),
     }
@@ -7443,11 +7445,11 @@ class ZcashGetIncomingViewingKey(protobuf.MessageType):
         self,
         *,
         z_address_n: Optional[Sequence["int"]] = None,
-        internal: Optional["bool"] = False,
+        scope: Optional["ZcashKeychainScope"] = ZcashKeychainScope.EXTERNAL,
         coin_name: Optional["str"] = 'Zcash',
     ) -> None:
         self.z_address_n: Sequence["int"] = z_address_n if z_address_n is not None else []
-        self.internal = internal
+        self.scope = scope
         self.coin_name = coin_name
 
 
@@ -7468,7 +7470,7 @@ class ZcashIncomingViewingKey(protobuf.MessageType):
 class ZcashGetAddress(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 906
     FIELDS = {
-        1: protobuf.Field("internal", "bool", repeated=False, required=False),
+        1: protobuf.Field("scope", "ZcashKeychainScope", repeated=False, required=False),
         2: protobuf.Field("t_address_n", "uint32", repeated=True, required=False),
         3: protobuf.Field("z_address_n", "uint32", repeated=True, required=False),
         4: protobuf.Field("diversifier_index", "uint64", repeated=False, required=False),
@@ -7481,14 +7483,14 @@ class ZcashGetAddress(protobuf.MessageType):
         *,
         t_address_n: Optional[Sequence["int"]] = None,
         z_address_n: Optional[Sequence["int"]] = None,
-        internal: Optional["bool"] = False,
+        scope: Optional["ZcashKeychainScope"] = ZcashKeychainScope.EXTERNAL,
         diversifier_index: Optional["int"] = 0,
         show_display: Optional["bool"] = False,
         coin_name: Optional["str"] = 'Zcash',
     ) -> None:
         self.t_address_n: Sequence["int"] = t_address_n if t_address_n is not None else []
         self.z_address_n: Sequence["int"] = z_address_n if z_address_n is not None else []
-        self.internal = internal
+        self.scope = scope
         self.diversifier_index = diversifier_index
         self.show_display = show_display
         self.coin_name = coin_name
@@ -7511,8 +7513,7 @@ class ZcashAddress(protobuf.MessageType):
 class ZcashOrchardInput(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 908
     FIELDS = {
-        1: protobuf.Field("internal", "bool", repeated=False, required=True),
-        2: protobuf.Field("amount", "uint32", repeated=False, required=True),
+        2: protobuf.Field("amount", "uint32", repeated=False, required=False),
         3: protobuf.Field("note", "bytes", repeated=False, required=True),
         4: protobuf.Field("hmac", "bytes", repeated=False, required=False),
     }
@@ -7520,21 +7521,18 @@ class ZcashOrchardInput(protobuf.MessageType):
     def __init__(
         self,
         *,
-        internal: "bool",
-        amount: "int",
         note: "bytes",
+        amount: Optional["int"] = None,
         hmac: Optional["bytes"] = None,
     ) -> None:
-        self.internal = internal
-        self.amount = amount
         self.note = note
+        self.amount = amount
         self.hmac = hmac
 
 
 class ZcashOrchardOutput(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 909
     FIELDS = {
-        1: protobuf.Field("internal", "bool", repeated=False, required=False),
         3: protobuf.Field("address", "string", repeated=False, required=False),
         5: protobuf.Field("amount", "uint64", repeated=False, required=True),
         6: protobuf.Field("memo", "bytes", repeated=False, required=False),
@@ -7545,13 +7543,11 @@ class ZcashOrchardOutput(protobuf.MessageType):
         self,
         *,
         amount: "int",
-        internal: Optional["bool"] = None,
         address: Optional["str"] = None,
         memo: Optional["bytes"] = None,
         hmac: Optional["bytes"] = None,
     ) -> None:
         self.amount = amount
-        self.internal = internal
         self.address = address
         self.memo = memo
         self.hmac = hmac

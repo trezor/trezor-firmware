@@ -16,5 +16,5 @@ async def get_ivk(
     await layout.require_confirm_export_ivk(ctx)
     fvk = keychain.derive(msg.z_address_n).full_viewing_key()
     return ZcashIncomingViewingKey(
-        ivk=fvk.incoming_viewing_key(internal=msg.internal)
+        ivk=fvk.incoming_viewing_key(scope=msg.scope)
     )

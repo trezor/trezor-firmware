@@ -21,11 +21,10 @@ mp_obj_t ui_debug_layout_type();
 #endif
 
 mp_obj_t orchardlib_diag(mp_obj_t ins, mp_obj_t data);
-mp_obj_t orchardlib_derive_full_viewing_key(mp_obj_t spending_key, mp_obj_t internal);
-mp_obj_t orchardlib_derive_internal_full_viewing_key(mp_obj_t full_viewing_key);
-mp_obj_t orchardlib_derive_incoming_viewing_key(mp_obj_t full_viewing_key, mp_obj_t internal);
-mp_obj_t orchardlib_derive_outgoing_viewing_key(mp_obj_t full_viewing_key, mp_obj_t internal);
-mp_obj_t orchardlib_derive_address(mp_obj_t full_viewing_key, mp_obj_t diversifier_index, mp_obj_t internal);
+mp_obj_t orchardlib_derive_full_viewing_key(mp_obj_t spending_key);
+mp_obj_t orchardlib_derive_incoming_viewing_key(mp_obj_t full_viewing_key, mp_obj_t scope);
+mp_obj_t orchardlib_derive_outgoing_viewing_key(mp_obj_t full_viewing_key, mp_obj_t scope);
+mp_obj_t orchardlib_derive_address(mp_obj_t full_viewing_key, mp_obj_t diversifier_index, mp_obj_t scope);
 mp_obj_t orchardlib_f4jumble(mp_obj_t message);
 mp_obj_t orchardlib_f4jumble_inv(mp_obj_t message);
 mp_obj_t orchardlib_shield(mp_obj_t action_info, mp_obj_t rng_config);

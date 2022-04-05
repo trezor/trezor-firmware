@@ -6,6 +6,13 @@ option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageZcash";
 
 /**
+ * Type of Zcash Orchard Key.
+ */
+enum ZcashKeychainScope {
+    EXTERNAL = 0;  // for extenal operations like receiving funds from other users
+    INTERNAL = 1;  // for internal operations like change transfers
+}
+/**
  * Request: Universal Zcash protocol implementation diagnosis request.
  * @start
  * @next DebugZcashDiagResponse
@@ -37,7 +44,6 @@ message DebugZcashDiagResponse {
  */
 message ZcashGetFullViewingKey {
     //optional ZcashNetwork network = 1 [default=MAINNET];
-    optional bool internal = 1 [default = false];  
     optional string coin_name = 2 [default = "Zcash"];
     repeated uint32 z_address_n = 3; // z-address ZIP 32 path
 }
@@ -56,11 +62,11 @@ message ZcashFullViewingKey {
  * @next Failure
  * @next ZcashIncomingViewingKey
  */
-message ZcashGetIncomingViewingKey { 
+message ZcashGetIncomingViewingKey {
     //optional ZcashNetwork network = 1 [default=MAINNET];
-    optional bool internal = 1 [default = false];  
-    optional string coin_name = 2 [default = "Zcash"];    
-    repeated uint32 z_address_n = 3; // z-address ZIP 32 path    
+    optional ZcashKeychainScope scope = 1 [default = EXTERNAL];
+    optional string coin_name = 2 [default = "Zcash"];
+    repeated uint32 z_address_n = 3; // z-address ZIP 32 path
 }
 
 /**
@@ -78,13 +84,13 @@ message ZcashIncomingViewingKey {
  * @next ZcashAddress
  */
 message ZcashGetAddress {
-    optional bool internal = 1 [default = false];  
+    optional ZcashKeychainScope scope = 1 [default = EXTERNAL];
     repeated uint32 t_address_n = 2;                      // t-address BIP 32 path (P2PKH)
-    repeated uint32 z_address_n = 3;                      // z-address ZIP 32 path (Orchard)   
+    repeated uint32 z_address_n = 3;                      // z-address ZIP 32 path (Orchard)
     optional uint64 diversifier_index = 4 [default = 0];  // z-address diversifier index
     optional bool   show_display = 5 [default = false];   // Optionally show on display before sending the result
-    //optional ZcashNetwork network = 5 [default=MAINNET]; 
-    optional string coin_name = 6 [default = "Zcash"];   
+    //optional ZcashNetwork network = 5 [default=MAINNET];
+    optional string coin_name = 6 [default = "Zcash"];
 }
 
 /**
@@ -96,22 +102,21 @@ message ZcashAddress {
 }
 
 /**
- * Request: 
+ * Request:
  * @next TxRequest
  */
 message ZcashOrchardInput {
-    required bool internal = 1;
+    //required bool internal = 1;
     optional uint32 amount = 2;  // note value . This field is optional because it is included in note serialization.
     required bytes note = 3;
     optional bytes hmac = 4;
 }
 
 /**
- * Request: 
+ * Request:
  * @next TxRequest
  */
 message ZcashOrchardOutput {
-    optional bool internal = 1;
     optional string address = 3;  // for outgoing transfers
     required uint64 amount = 5;
     optional bytes memo = 6;

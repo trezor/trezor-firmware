@@ -6,7 +6,8 @@ use cstr_core::CStr;
 use f4jumble;
 use orchard::{
     keys::{
-        FullViewingKey, IncomingViewingKey, OutgoingViewingKey, SpendAuthorizingKey, SpendingKey,
+        FullViewingKey, IncomingViewingKey, OutgoingViewingKey, Scope, SpendAuthorizingKey,
+        SpendingKey,
     },
     value::NoteValue,
     Address, Note,
@@ -94,7 +95,8 @@ fn parse_spend_info(spend_info: Obj) -> Result<(FullViewingKey, Note), Error> {
     let fvk_bytes: [u8; 96] = spend_info.get(Qstr::MP_QSTR_fvk)?.try_into()?;
     let fvk = FullViewingKey::from_bytes(&fvk_bytes).ok_or(Error::TypeError)?;
     let note: [u8; 115] = spend_info.get(Qstr::MP_QSTR_note)?.try_into()?;
-    let note = orchard::hww::deserialize_note(note).ok_or_else(|| value_error("Invalid Note\0"))?;
+    let note =
+        orchard::hww_utils::deserialize_note(note).ok_or_else(|| value_error("Invalid Note\0"))?;
     Ok((fvk, note))
 }
 
@@ -165,7 +167,7 @@ pub extern "C" fn orchardlib_shield(action_info: Obj, rng_state: Obj) -> Obj {
             .ok();
 
         let mut rng = load_rng(rng_state)?;
-        let action = orchard::hww::shield(spend_info, output_info, &mut rng);
+        let action = orchard::hww_utils::shield(spend_info, output_info, &mut rng);
         save_rng(rng, rng_state)?;
 
         let items: [(Qstr, Obj); 8] = [
@@ -221,6 +223,15 @@ fn parse_sk(sk: Obj) -> Result<SpendingKey, Error> {
     Ok(sk)
 }
 
+fn parse_scope(scope: Obj) -> Result<Scope, Error> {
+    let scope: u32 = scope.try_into()?;
+    match scope {
+        0 => Ok(Scope::External),
+        1 => Ok(Scope::Internal),
+        _ => Err(value_error("Invalid scope (External = 0, Internal = 1)")),
+    }
+}
+
 // parse Full Viewing Key
 fn parse_fvk(fvk: Obj) -> Result<FullViewingKey, Error> {
     let fvk_bytes: [u8; 96] = fvk.try_into()?;
@@ -230,10 +241,10 @@ fn parse_fvk(fvk: Obj) -> Result<FullViewingKey, Error> {
 }
 
 #[no_mangle]
-pub extern "C" fn orchardlib_derive_full_viewing_key(spending_key: Obj, internal: Obj) -> Obj {
+pub extern "C" fn orchardlib_derive_full_viewing_key(spending_key: Obj) -> Obj {
     let block = || {
         let sk = parse_sk(spending_key)?;
-        let fvk: FullViewingKey = (&sk).into();
+        let mut fvk: FullViewingKey = (&sk).into();
         let fvk_bytes = fvk.to_bytes();
         let fvk_obj = Obj::try_from(&fvk_bytes[..])?;
         Ok(fvk_obj)
@@ -242,28 +253,11 @@ pub extern "C" fn orchardlib_derive_full_viewing_key(spending_key: Obj, internal
 }
 
 #[no_mangle]
-pub extern "C" fn orchardlib_derive_internal_full_viewing_key(full_viewing_key: Obj) -> Obj {
+pub extern "C" fn orchardlib_derive_incoming_viewing_key(full_viewing_key: Obj, scope: Obj) -> Obj {
     let block = || {
         let fvk: FullViewingKey = parse_fvk(full_viewing_key)?;
-
-        // TODO !!!
-        //Err(value_error("Internal keys not implemented\0"))?;
-
-        let fvk_bytes = fvk.to_bytes();
-        let fvk_obj = Obj::try_from(&fvk_bytes[..])?;
-        Ok(fvk_obj)
-    };
-    unsafe { util::try_or_raise(block) }
-}
-
-#[no_mangle]
-pub extern "C" fn orchardlib_derive_incoming_viewing_key(
-    full_viewing_key: Obj,
-    internal: Obj,
-) -> Obj {
-    let block = || {
-        let fvk: FullViewingKey = parse_fvk(full_viewing_key)?;
-        let ivk: IncomingViewingKey = (&fvk).into();
+        let scope = parse_scope(scope)?;
+        let ivk: IncomingViewingKey = (&fvk).to_ivk(scope);
         let ivk_bytes = ivk.to_bytes();
         let ivk_obj = Obj::try_from(&ivk_bytes[..])?;
         Ok(ivk_obj)
@@ -272,13 +266,11 @@ pub extern "C" fn orchardlib_derive_incoming_viewing_key(
 }
 
 #[no_mangle]
-pub extern "C" fn orchardlib_derive_outgoing_viewing_key(
-    full_viewing_key: Obj,
-    internal: Obj,
-) -> Obj {
+pub extern "C" fn orchardlib_derive_outgoing_viewing_key(full_viewing_key: Obj, scope: Obj) -> Obj {
     let block = || {
         let fvk: FullViewingKey = parse_fvk(full_viewing_key)?;
-        let ovk: OutgoingViewingKey = (&fvk).into();
+        let scope = parse_scope(scope)?;
+        let ovk: OutgoingViewingKey = (&fvk).to_ovk(scope);
         let ovk_bytes: [u8; 32] = ovk.as_ref().clone();
         let ovk_obj = Obj::try_from(&ovk_bytes[..])?;
         Ok(ovk_obj)
@@ -290,12 +282,13 @@ pub extern "C" fn orchardlib_derive_outgoing_viewing_key(
 pub extern "C" fn orchardlib_derive_address(
     full_viewing_key: Obj,
     diversifier_index: Obj,
-    internal: Obj,
+    scope: Obj,
 ) -> Obj {
     let block = || {
         let fvk: FullViewingKey = parse_fvk(full_viewing_key)?;
         let diversifier_index: u64 = diversifier_index.try_into()?;
-        let addr = fvk.address_at(diversifier_index);
+        let scope = parse_scope(scope)?;
+        let addr = fvk.address_at(diversifier_index, scope);
         let addr_bytes = addr.to_raw_address_bytes();
         let addr_obj = Obj::try_from(&addr_bytes[..])?;
         Ok(addr_obj)

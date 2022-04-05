@@ -8,6 +8,7 @@ from trezor.messages import (
     ZcashOrchardOutput,
 )
 
+from trezor import log
 from trezor.utils import BufferReader
 
 from trezor.enums import RequestType, ZcashHMACType as hmac_type
@@ -26,7 +27,8 @@ from apps.common.paths import HARDENED
 from apps.bitcoin.sign_tx.bitcoinlike import Bitcoinlike
 from apps.bitcoin.sign_tx import approvers, helpers
 
-from apps.zcash import addresses
+from .. import addresses
+from .keychain import Scope
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -36,7 +38,7 @@ if TYPE_CHECKING:
     from apps.bitcoin.writers import Writer
 
 
-OVERWINTERED = const(1 << 31)
+OVERWINTERED = const(0x8000_0000)
 
 
 def skip_if_empty(func):
@@ -61,7 +63,7 @@ class OrchardSigner:
         self.outputs_count = tx_info.tx.orchard.outputs_count
 
         self.actions_count = max(
-            1,  # minimal required amount of actions
+            2,  # minimal required amount of actions
             self.inputs_count,
             self.outputs_count,
         ) if self.inputs_count + self.outputs_count > 0 else 0
@@ -115,7 +117,7 @@ class OrchardSigner:
             txo = await self.get_output(i)
             self.set_hmac(txo, hmac_type.ORCHARD_OUTPUT, i)
 
-            if txo.internal:
+            if output_is_internal(txo):
                 self.approver.add_orchard_change_output(txo)
             else:
                 await self.approver.add_orchard_external_output(txo)
@@ -142,7 +144,9 @@ class OrchardSigner:
 
         for i, j in zip(inputs, outputs):
             action_info = await self.build_action_info(i, j, fvk)
+            log.debug(__name__, "ENTER orchardlib.shield")
             action = orchardlib.shield(action_info, rng_state)  # on this line the magic happens
+            log.debug(__name__, "EXIT orchardlib.shield")
             self.tx_info.sig_hasher.orchard.add_action(action)
             self.alphas.append(action["alpha"])  # TODO: send alpha
 
@@ -166,7 +170,7 @@ class OrchardSigner:
             self.verify_hmac(txi, hmac_type.ORCHARD_INPUT, input_index)
             # TODO!: check that the fvk owns the note
             action_info["spend_info"] = {
-                "fvk": fvk.raw(internal=txi.internal),
+                "fvk": fvk.raw(),
                 "note": txi.note,
             }
 
@@ -174,16 +178,18 @@ class OrchardSigner:
             txo = await self.get_output(output_index)
             self.verify_hmac(txo, hmac_type.ORCHARD_OUTPUT, output_index)
 
-            if txo.internal:
-                address = fvk.address(internal=True)
+            if output_is_internal(txo):
+                scope = Scope.INTERNAL
+                address = fvk.address(scope)
             else:
+                scope = Scope.EXTERNAL
                 receivers = addresses.decode_unified(txo.address)
                 address = receivers.get(addresses.ORCHARD)
                 if address is None:
                     raise ProcessError("Address has not an Orchard receiver.")
 
             action_info["output_info"] = {
-                "ovk": fvk.outgoing_viewing_key(internal=txo.internal),
+                "ovk": fvk.outgoing_viewing_key(scope),
                 "address": address,
                 "value": txo.amount,
                 "memo": txo.memo,
@@ -259,13 +265,15 @@ def pad(items, target_length):
 
 def shuffle(items, rng_state):
     """
-    Mirror of Rust's `rand::seq::SliceRandom::shuffle`.
+    Mirror of the Rust's `rand::seq::SliceRandom::shuffle`.
     see: https://github.com/rust-random/rand/blob/a8474f7932e2f0b9d8ee2b009f946049fecc317c/src/seq/mod.rs#L586-L592
     """
     for i in reversed(range(1, len(items))):
         j = orchardlib.randint(i + 1, rng_state)
         items[i], items[j] = items[j], items[i]
 
+def output_is_internal(txo: ZcashOrchardOutput):
+    return txo.address is None
 
 def _sanitize_input(txi: ZcashOrchardInput):
     # `txi.amount` equals `txi.orchard.note` value
@@ -276,7 +284,6 @@ def _sanitize_input(txi: ZcashOrchardInput):
 
 
 def _sanitize_output(txo: ZcashOrchardOutput):
-    txo.internal = txo.address is None
     if txo.memo is not None:
         if len(txo.memo) != 512:
             ProcessError("Memo length must be 512 bytes.")

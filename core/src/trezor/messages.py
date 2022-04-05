@@ -56,6 +56,7 @@ if TYPE_CHECKING:
     from trezor.enums import TezosContractType  # noqa: F401
     from trezor.enums import WordRequestType  # noqa: F401
     from trezor.enums import ZcashHMACType  # noqa: F401
+    from trezor.enums import ZcashKeychainScope  # noqa: F401
 
     class BinanceGetAddress(protobuf.MessageType):
         address_n: "list[int]"
@@ -5660,7 +5661,6 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ZcashGetFullViewingKey(protobuf.MessageType):
-        internal: "bool"
         coin_name: "str"
         z_address_n: "list[int]"
 
@@ -5668,7 +5668,6 @@ if TYPE_CHECKING:
             self,
             *,
             z_address_n: "list[int] | None" = None,
-            internal: "bool | None" = None,
             coin_name: "str | None" = None,
         ) -> None:
             pass
@@ -5692,7 +5691,7 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ZcashGetIncomingViewingKey(protobuf.MessageType):
-        internal: "bool"
+        scope: "ZcashKeychainScope"
         coin_name: "str"
         z_address_n: "list[int]"
 
@@ -5700,7 +5699,7 @@ if TYPE_CHECKING:
             self,
             *,
             z_address_n: "list[int] | None" = None,
-            internal: "bool | None" = None,
+            scope: "ZcashKeychainScope | None" = None,
             coin_name: "str | None" = None,
         ) -> None:
             pass
@@ -5724,7 +5723,7 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ZcashGetAddress(protobuf.MessageType):
-        internal: "bool"
+        scope: "ZcashKeychainScope"
         t_address_n: "list[int]"
         z_address_n: "list[int]"
         diversifier_index: "int"
@@ -5736,7 +5735,7 @@ if TYPE_CHECKING:
             *,
             t_address_n: "list[int] | None" = None,
             z_address_n: "list[int] | None" = None,
-            internal: "bool | None" = None,
+            scope: "ZcashKeychainScope | None" = None,
             diversifier_index: "int | None" = None,
             show_display: "bool | None" = None,
             coin_name: "str | None" = None,
@@ -5762,17 +5761,15 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ZcashOrchardInput(protobuf.MessageType):
-        internal: "bool"
-        amount: "int"
+        amount: "int | None"
         note: "bytes"
         hmac: "bytes | None"
 
         def __init__(
             self,
             *,
-            internal: "bool",
-            amount: "int",
             note: "bytes",
+            amount: "int | None" = None,
             hmac: "bytes | None" = None,
         ) -> None:
             pass
@@ -5782,7 +5779,6 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ZcashOrchardOutput(protobuf.MessageType):
-        internal: "bool | None"
         address: "str | None"
         amount: "int"
         memo: "bytes | None"
@@ -5792,7 +5788,6 @@ if TYPE_CHECKING:
             self,
             *,
             amount: "int",
-            internal: "bool | None" = None,
             address: "str | None" = None,
             memo: "bytes | None" = None,
             hmac: "bytes | None" = None,

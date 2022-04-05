@@ -118,6 +118,8 @@ class Zcash(Bitcoinlike):
     def write_tx_footer(self, w: Writer, tx: SignTx | PrevTx):
         pass  # no footer (see https://zips.z.cash/zip-0225)
 
+    def output_derive_script(self, )
+
 
 class ZcashApprover(approvers.BasicApprover):
     def __init__(self, *args, **kwargs):
@@ -174,4 +176,3 @@ class ZcashExtendedSigHasher(sig_hasher.ZcashSigHasher):
         sighash_type: SigHashType,
     ) -> bytes:
         raise NotImplementedError
-

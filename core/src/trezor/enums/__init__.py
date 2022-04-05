@@ -505,3 +505,7 @@ if TYPE_CHECKING:
         Yay = 0
         Nay = 1
         Pass = 2
+
+    class ZcashKeychainScope(IntEnum):
+        EXTERNAL = 0
+        INTERNAL = 1

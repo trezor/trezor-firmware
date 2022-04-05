@@ -432,6 +432,8 @@ if not utils.BITCOIN_ONLY:
     import trezor.enums.TezosContractType
     trezor.enums.ZcashHMACType
     import trezor.enums.ZcashHMACType
+    trezor.enums.ZcashKeychainScope
+    import trezor.enums.ZcashKeychainScope
     trezor.ui.components.common.webauthn
     import trezor.ui.components.common.webauthn
     trezor.ui.components.tt.webauthn

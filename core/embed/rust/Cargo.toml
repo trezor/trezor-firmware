@@ -34,14 +34,14 @@ rand = { version = "0.8", default-features = false }
 rand_core = { version = "0.6", default_features = false }
 rand_chacha = { version = "0.3.1", default-features = false }
 #pasta_curves = {version = "0.3", default-features = false, features = ["alloc"] } # { git = "https://github.com/jarys/pasta_curves.git", branch="alloc", default-features = false, features = ["bits"] }
-pasta_curves = { path="/home/agi/code/pasta_curves", default-features = false } #, features = ["unboxed_closures"] }
+pasta_curves = { path="/home/agi/code/pasta_curves", default-features = false, features = ["unboxed_closures"] }
 
 [dependencies.orchard]
 path = "/home/agi/code/orchard"
 #git = "https://github.com/jarys/orchard"
 #branch = "no-std-alloc"
 default-features = false
-features = []
+#features = []
 
 #[dependencies.pasta_curves]
 #git = "https://github.com/zcash/pasta_curves"

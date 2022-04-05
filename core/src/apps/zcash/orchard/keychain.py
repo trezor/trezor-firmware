@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 from apps.common.seed import get_seed
 from apps.common.keychain import Keychain
 from trezor.messages import SignTx
+from trezor.enums import ZcashKeychainScope as Scope
 
 from trezor.crypto.hashlib import blake2b
 from apps.common.paths import PathSchema
@@ -23,7 +24,6 @@ if TYPE_CHECKING:
     from apps.common.paths import Bip32Path, Slip21Path
 
 PATTERN_ZIP32 = "m/32'/coin_type'/account'"
-
 
 def i2leosp_32(x: int) -> bytes:
     """Converts uint32 to 4 bytes in little-endian order."""
@@ -56,7 +56,7 @@ class ExtendedSpendingKey:
 
     def full_viewing_key(self) -> FullViewingKey:
         """Returns the Full Vieving Key."""
-        fvk_bytes = orchardlib.derive_full_viewing_key(self.sk, False)  # TODO: remove internal
+        fvk_bytes = orchardlib.derive_full_viewing_key(self.sk)
         return FullViewingKey(fvk_bytes)
 
     @staticmethod
@@ -86,22 +86,19 @@ class FullViewingKey:
     def __init__(self, fvk: bytes):
         self.fvk = fvk
 
-    def raw(self, internal: bool = False) -> bytes:
-        if internal:
-            return orchardlib.derive_internal_full_viewing_key(self.fvk)
-        else:
-            return self.fvk
+    def raw(self) -> bytes:
+        return self.fvk
 
-    def incoming_viewing_key(self, internal: bool = False) -> bytes:
+    def incoming_viewing_key(self, scope: Scope = Scope.EXTERNAL) -> bytes:
         """Returns the Incoming Vieving Key."""
-        return orchardlib.derive_incoming_viewing_key(self.fvk, internal)
+        return orchardlib.derive_incoming_viewing_key(self.fvk, scope)
 
-    def outgoing_viewing_key(self, internal: bool = False) -> bytes:
+    def outgoing_viewing_key(self, scope: Scope = Scope.EXTERNAL) -> bytes:
         """Returns the Outgoing Vieving Key."""
-        return orchardlib.derive_outgoing_viewing_key(self.fvk, internal)
+        return orchardlib.derive_outgoing_viewing_key(self.fvk, scope)
 
-    def address(self, diversifier: int = 0, internal: bool = False) -> bytes:
-        return orchardlib.derive_address(self.fvk, diversifier, internal)
+    def address(self, diversifier: int = 0, scope: Scope = Scope.EXTERNAL) -> bytes:
+        return orchardlib.derive_address(self.fvk, diversifier, scope)
 
 
 class OrchardKeychain(Keychain):

@@ -26,26 +26,22 @@
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_orchardlib_diag, orchardlib_diag);
 
 
-/// def derive_full_viewing_key(spending_key: bytes, internal: bool) -> bytes:
+/// def derive_full_viewing_key(spending_key: bytes) -> bytes:
 /// """Returns a raw Orchard Full Viewing Key."""
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_orchardlib_derive_full_viewing_key, orchardlib_derive_full_viewing_key);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_orchardlib_derive_full_viewing_key, orchardlib_derive_full_viewing_key);
 
-/// def derive_internal_full_viewing_key(full_viewing_key: bytes) -> bytes:
-/// """Returns a raw internal Orchard Full Viewing Key."""
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_orchardlib_derive_internal_full_viewing_key, orchardlib_derive_internal_full_viewing_key);
-
-/// def derive_incoming_viewing_key(full_viewing_key: bytes, internal: bool) -> bytes:
+/// def derive_incoming_viewing_key(full_viewing_key: bytes, scope: bool) -> bytes:
 /// """Returns a raw Orchard Incoming Viewing Key."""
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_orchardlib_derive_incoming_viewing_key, orchardlib_derive_incoming_viewing_key);
 
-/// def derive_outgoing_viewing_key(full_viewing_key: bytes, internal: bool) -> bytes:
+/// def derive_outgoing_viewing_key(full_viewing_key: bytes, scope: bool) -> bytes:
 /// """Returns a raw Orchard Outgoing Viewing Key."""
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_orchardlib_derive_outgoing_viewing_key, orchardlib_derive_outgoing_viewing_key);
 
 /// def derive_address(
 ///     full_viewing_key: bytes,
 ///     diversifier_index: int,
-///     internal: bool,
+///     scope: bool,
 /// ) -> bytes:
 /// """Returns a raw Orchard address."""
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_orchardlib_derive_address, orchardlib_derive_address);
@@ -72,7 +68,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_orchardlib_shield, orchardlib_shield);
 ///     sighash: bytes,
 /// ):
 /// """Reddsa spend signature of over the pallas
-///  
+///
 /// # Args:
 ///     `spending_key` - spending key
 ///     `alpha` - randomizer (pallas scalar)
@@ -88,7 +84,6 @@ STATIC const mp_rom_map_elem_t mp_module_trezororchardlib_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezororchardlib)},
     {MP_ROM_QSTR(MP_QSTR_diag),     MP_ROM_PTR(&mod_orchardlib_diag)},
     {MP_ROM_QSTR(MP_QSTR_derive_full_viewing_key),  MP_ROM_PTR(&mod_orchardlib_derive_full_viewing_key)},
-    {MP_ROM_QSTR(MP_QSTR_derive_internal_full_viewing_key),  MP_ROM_PTR(&mod_orchardlib_derive_internal_full_viewing_key)},
     {MP_ROM_QSTR(MP_QSTR_derive_incoming_viewing_key),  MP_ROM_PTR(&mod_orchardlib_derive_incoming_viewing_key)},
     {MP_ROM_QSTR(MP_QSTR_derive_outgoing_viewing_key),  MP_ROM_PTR(&mod_orchardlib_derive_outgoing_viewing_key)},
     {MP_ROM_QSTR(MP_QSTR_derive_address), MP_ROM_PTR(&mod_orchardlib_derive_address)},
