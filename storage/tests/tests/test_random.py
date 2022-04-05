@@ -1,12 +1,9 @@
 import hypothesis.strategies as st
-import pytest
 from hypothesis import assume, settings
 from hypothesis.stateful import Bundle, RuleBasedStateMachine, invariant, rule
 
 from . import common
 from .storage_model import StorageModel
-
-pytestmark = pytest.mark.timeout(timeout=1500)
 
 
 class StorageComparison(RuleBasedStateMachine):
@@ -85,5 +82,5 @@ class StorageComparison(RuleBasedStateMachine):
 
 TestStorageComparison = StorageComparison.TestCase
 TestStorageComparison.settings = settings(
-    deadline=2000, max_examples=30, stateful_step_count=50
+    deadline=None, max_examples=30, stateful_step_count=50
 )

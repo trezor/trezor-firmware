@@ -596,6 +596,7 @@ storage test:
   <<: *gitlab_caching
   needs: []
   script:
+    - unset PYTEST_TIMEOUT
     - nix-shell --run "poetry run make -C storage/tests build | ts -s"
     - nix-shell --run "poetry run make -C storage/tests tests_all | ts -s"
   artifacts:
