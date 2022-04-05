@@ -398,8 +398,8 @@ crypto test:
   only:
     changes:
       - .gitlab-ci.yml
-      - ci/**/*
-      - crypto/**/*
+      - ci/**
+      - crypto/**
   <<: *gitlab_caching
   needs:
     - crypto build
@@ -568,9 +568,9 @@ python test:
     changes:
       - poetry.lock
       - .gitlab-ci.yml
-      - ci/**/*
-      - common/**/*
-      - python/**/*
+      - ci/**
+      - common/**
+      - python/**
   script:
     # Workaround for nixpkgs+tox integration failure which results in:
     #     ModuleNotFoundError: No module named '_sysconfigdata__linux_x86_64-linux-gnu'
@@ -591,8 +591,8 @@ storage test:
   only:
     changes:
       - .gitlab-ci.yml
-      - ci/**/*
-      - storage/**/*
+      - ci/**
+      - storage/**
   <<: *gitlab_caching
   needs: []
   script:
