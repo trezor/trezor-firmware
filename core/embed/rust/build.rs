@@ -54,6 +54,7 @@ fn generate_micropython_bindings() {
         .new_type_alias("mp_obj_t")
         .allowlist_type("mp_obj_type_t")
         .allowlist_type("mp_obj_base_t")
+        .allowlist_function("mp_obj_print")
         .allowlist_function("mp_obj_new_int")
         .allowlist_function("mp_obj_new_int_from_ll")
         .allowlist_function("mp_obj_new_int_from_ull")

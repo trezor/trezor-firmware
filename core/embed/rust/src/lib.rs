@@ -1,4 +1,4 @@
-//#![feature(default_alloc_error_handler)]
+#![feature(default_alloc_error_handler)]
 #![cfg_attr(not(test), no_std)]
 #![deny(clippy::all)]
 #![allow(clippy::new_without_default)]
@@ -25,8 +25,8 @@ use core::panic::PanicInfo;
 #[cfg(not(feature = "test"))]
 use cstr_core::CStr;
 
-//#[macro_use]
-//extern crate alloc;
+#[macro_use]
+extern crate alloc;
 
 #[cfg(not(feature = "test"))]
 #[panic_handler]

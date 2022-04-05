@@ -11,7 +11,7 @@ use orchard::primitives::sinsemilla::{CommitDomain, HashDomain};
 
 pub const COMMIT_IVK_PERSONALIZATION: &str = "z.cash:Orchard-CommitIvk";
 */
-
+use crate::trezorhal::log;
 use pasta_curves::{arithmetic::CurveExt, pallas};
 
 fn as_u32_le(array: &[u8]) -> u32 {
@@ -42,6 +42,10 @@ pub extern "C" fn orchardlib_diag(ins: Obj, data: Obj) -> Obj {
                 let p = pallas::Point::hash_to_curve("TrezroHash")(b"test");
                 let p_bytes = p.to_bytes();
                 Obj::try_from(&p_bytes[..])?
+            }
+            b"print" => {
+                log::_int_decorated(8888888);
+                Obj::try_from(&nothing[..])?
             }
             /*
             b"fvk" => {
@@ -89,11 +93,13 @@ pub extern "C" fn orchardlib_diag(ins: Obj, data: Obj) -> Obj {
                 Obj::try_from(&ak.to_bytes()[..])?
             }
             */
-            /*b"alloc" => {
+            b"alloc" => {
                 let size = as_u32_be(data) as usize;
-                let _ = vec![0u8; size];
+                log::_int_decorated(size as i64);
+                let v = vec![0u8; size];
+                log::_int_decorated(v[size - 1] as i64);
                 Obj::try_from(&b"allocation successed"[..])?
-            }*/
+            }
             /*b"encrypt" => {
                 orchard::note_encryption::tests::test_vectors();
                 Obj::try_from(&b"encryption successed"[..])?
