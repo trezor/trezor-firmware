@@ -337,8 +337,8 @@ crypto build:
   only:
     changes:
       - .gitlab-ci.yml
-      - ci/**/*
-      - crypto/**/*
+      - ci/**
+      - crypto/**
   script:
     - cp -r crypto crypto_noasan
     - nix-shell --run "poetry run make -C crypto"
