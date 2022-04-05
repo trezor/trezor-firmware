@@ -50,6 +50,13 @@ if __debug__:
     LAYOUT_WATCHER_STATE = 1
     LAYOUT_WATCHER_LAYOUT = 2
 
+    try:
+        import trezorui2
+
+        UI2 = True
+    except ImportError:
+        UI2 = False
+
     def screenshot() -> bool:
         if storage.save_screen:
             display.save(storage.save_screen_directory + "/refresh-")
@@ -62,10 +69,20 @@ if __debug__:
             layout_change_chan.publish(storage.current_content)
 
     async def dispatch_debuglink_decision(msg: DebugLinkDecision) -> None:
-        from trezor.enums import DebugButton
-        from trezor.enums import DebugSwipeDirection
+        from trezor.enums import DebugButton, DebugSwipeDirection
         from trezor.ui import Result
-        from trezor.ui.components.tt import confirm, swipe
+
+        if UI2:
+            confirm = trezorui2
+
+            class swipe:
+                SWIPE_UP = 0x01
+                SWIPE_DOWN = 0x02
+                SWIPE_LEFT = 0x04
+                SWIPE_RIGHT = 0x08
+
+        else:
+            from trezor.ui.components.tt import confirm, swipe
 
         if msg.button is not None:
             if msg.button == DebugButton.NO:

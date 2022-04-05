@@ -220,24 +220,30 @@ impl LayoutObj {
 
             fn symbol(&mut self, name: &str) {
                 self.0
-                    .call_with_n_args(&[name.try_into().unwrap()])
+                    .call_with_n_args(&[
+                        "<".try_into().unwrap(),
+                        name.try_into().unwrap(),
+                        ">".try_into().unwrap(),
+                    ])
                     .unwrap();
             }
 
             fn open(&mut self, name: &str) {
                 self.0
-                    .call_with_n_args(&[name.try_into().unwrap()])
+                    .call_with_n_args(&["<".try_into().unwrap(), name.try_into().unwrap()])
                     .unwrap();
             }
 
             fn field(&mut self, name: &str, value: &dyn Trace) {
                 self.0
-                    .call_with_n_args(&[name.try_into().unwrap()])
+                    .call_with_n_args(&[name.try_into().unwrap(), ": ".try_into().unwrap()])
                     .unwrap();
                 value.trace(self);
             }
 
-            fn close(&mut self) {}
+            fn close(&mut self) {
+                self.0.call_with_n_args(&[">".try_into().unwrap()]).unwrap();
+            }
         }
 
         self.inner
