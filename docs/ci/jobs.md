@@ -215,9 +215,9 @@ Persistence tests.
 
 ### [storage test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L589)
 
-### [core unix memory profiler](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L612)
+### [core unix memory profiler](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L613)
 
-### [connect test core](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L636)
+### [connect test core](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L637)
 
 ---
 ## TEST-HW stage - [test-hw.yml](../../ci/test-hw.yml)
