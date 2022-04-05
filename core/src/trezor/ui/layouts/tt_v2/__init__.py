@@ -24,11 +24,47 @@ class _RustLayout(ui.Layout):
     def set_timer(self, token: int, deadline: int) -> None:
         self.timer.schedule(deadline, token)
 
-    def create_tasks(self) -> tuple[loop.Task, ...]:
-        return self.handle_input_and_rendering(), self.handle_timers()
+    if __debug__:
+
+        def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
+            from apps.debug import confirm_signal, input_signal
+
+            return (
+                self.handle_input_and_rendering(),
+                self.handle_timers(),
+                confirm_signal(),
+                input_signal(),
+            )
+
+        def read_content(self) -> list[str]:
+            result = []
+
+            def callback(*args):
+                for arg in args:
+                    result.append(str(arg))
+
+            self.layout.trace(callback)
+            result = " ".join(result).split("\n")
+            return result
+
+    else:
+
+        def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
+            return self.handle_input_and_rendering(), self.handle_timers()
+
+    def _before_render(self) -> None:
+        if __debug__ and self.should_notify_layout_change:
+            from apps.debug import notify_layout_change
+
+            # notify about change and do not notify again until next await.
+            # (handle_rendering might be called multiple times in a single await,
+            # because of the endless loop in __iter__)
+            self.should_notify_layout_change = False
+            notify_layout_change(self)
 
     def handle_input_and_rendering(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
         touch = loop.wait(io.TOUCH)
+        self._before_render()
         ui.display.clear()
         self.layout.paint()
         # self.layout.bounds()

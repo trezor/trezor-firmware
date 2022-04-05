@@ -15,6 +15,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_Layout;
   MP_QSTR_CONFIRMED;
   MP_QSTR_CANCELLED;
+  MP_QSTR_INFO;
   MP_QSTR_confirm_action;
   MP_QSTR_confirm_text;
   MP_QSTR_request_pin;
