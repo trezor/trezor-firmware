@@ -74,6 +74,7 @@ class OrchardSigner:
         self.tx_info = tx_info
         self.keychain = keychain
         self.approver = approver
+        self.coin = coin
         self.tx_req = tx_req
 
         self.tx_req.serialized.orchard = ZcashOrchardData()
@@ -183,10 +184,10 @@ class OrchardSigner:
                 address = fvk.address(scope)
             else:
                 scope = Scope.EXTERNAL
-                receivers = addresses.decode_unified(txo.address)
+                receivers = addresses.decode_unified(txo.address, self.coin)
                 address = receivers.get(addresses.ORCHARD)
                 if address is None:
-                    raise ProcessError("Address has not an Orchard receiver.")
+                    raise DataError("Address has not an Orchard receiver.")
 
             action_info["output_info"] = {
                 "ovk": fvk.outgoing_viewing_key(scope),
@@ -286,7 +287,7 @@ def _sanitize_input(txi: ZcashOrchardInput):
 def _sanitize_output(txo: ZcashOrchardOutput):
     if txo.memo is not None:
         if len(txo.memo) != 512:
-            ProcessError("Memo length must be 512 bytes.")
+            DataError("Memo length must be 512 bytes.")
 
         # ZIP-302 Standardized Memo Field Format
         # (see https://zips.z.cash/zip-0302)
@@ -294,7 +295,7 @@ def _sanitize_output(txo: ZcashOrchardOutput):
             try:
                 txo.memo.rstrip(b"\x00").decode()
             except UnicodeDecodeError:
-                raise ProcessError("Invalid memo encoding.")
+                raise DataError("Invalid memo encoding.")
 
         if txo.memo[0] == 0xF6:
             no_memo = True

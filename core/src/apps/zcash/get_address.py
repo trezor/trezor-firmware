@@ -3,15 +3,15 @@ from trezor.ui.layouts import show_address
 
 from apps import bitcoin
 from apps.common.paths import address_n_to_str, HARDENED
-from apps.common.coininfo import CoinInfo
+from apps.common.coininfo import CoinInfo, by_name
 
 from trezor.crypto.scripts import sha256_ripemd160
 from trezor import wire
 
 from . import orchard
 from .addresses import (
-    encode_unified, encode_transparent,
-    P2PKH, MAINNET, TESTNET, ORCHARD, P2PKH
+    encode_unified, encode_p2pkh,
+    P2PKH, ORCHARD, P2PKH
 )
 
 if False:
@@ -24,10 +24,7 @@ async def get_address(ctx: Context, msg: ZcashGetAddress) -> ZcashAddress:
     if not (has_t_addr or has_z_addr):
         raise wire.DataError("t-address or z-address expected")
 
-    network = {
-        "Zcash": MAINNET,
-        "Zcash Testnet": TESTNET,
-    }[msg.coin_name]
+    coin = by_name(msg.coin_name)
 
     if has_z_addr:
         receivers = dict()
@@ -45,12 +42,12 @@ async def get_address(ctx: Context, msg: ZcashGetAddress) -> ZcashAddress:
             #diversifier = msg.diversifier_index,
         )
 
-        address = encode_unified(receivers, network)
+        address = encode_unified(receivers, coin)
 
     else:  # has only t-address
         title = address_n_to_str(msg.t_address_n)
         raw_address = await get_raw_transparent_address(ctx, msg)
-        address = encode_transparent(raw_address, network)
+        address = encode_p2pkh(raw_address, coin)
 
     if msg.show_display:
         await show_address(

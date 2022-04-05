@@ -15,6 +15,8 @@ from apps.common.writers import (
     write_uint32_le,
 )
 
+from . import addresses
+
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Sequence, Tuple
@@ -118,8 +120,22 @@ class Zcash(Bitcoinlike):
     def write_tx_footer(self, w: Writer, tx: SignTx | PrevTx):
         pass  # no footer (see https://zips.z.cash/zip-0225)
 
-    def output_derive_script(self, )
+    def output_derive_script(self, txo: TxOutput) -> bytes:
+        # add parser for unified addresses
+        if txo.address is not None and txo.address[0] == "u":
+            # TODO: tests
+            assert txo.script_type is OutputScriptType.PAYTOADDRESS
 
+            receivers = addresses.decode_unified(txo.address, self.coin)
+            if addresses.P2PKH in receivers:
+                pubkeyhash = receivers[addresses.P2PKH]
+                return scripts.output_script_p2pkh(pubkeyhash)
+            if addresses.P2SH in receivers:
+                scripthash = receivers[addresses.P2SH]
+                return scripts.output_script_p2sh(scripthash)
+            raise DataError("Unified address does not include a transparent receiver.")
+
+        return super().output_derive_script(txo)
 
 class ZcashApprover(approvers.BasicApprover):
     def __init__(self, *args, **kwargs):
