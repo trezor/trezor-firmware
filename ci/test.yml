@@ -33,6 +33,7 @@ core unit test asan:
   variables:
     RUSTC_BOOTSTRAP: "1"
     RUSTFLAGS: "-Z sanitizer=address"
+    ADDRESS_SANITIZER: "1"
     LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
   script:
     - nix-shell --run "poetry run make -C core test | ts -s"
