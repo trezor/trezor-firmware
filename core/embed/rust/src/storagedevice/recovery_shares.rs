@@ -1,7 +1,7 @@
 use crate::{
     error::Error,
-    micropython::{buffer::Buffer, map::Map, module::Module, obj::Obj, qstr::Qstr},
-    storagedevice::helpers,
+    micropython::{buffer::StrBuffer, map::Map, module::Module, obj::Obj, qstr::Qstr},
+    trezorhal::storage_field::Field,
     util,
 };
 use core::convert::TryFrom;
@@ -26,14 +26,13 @@ extern "C" fn storagerecoveryshares_set(index: Obj, group_index: Obj, mnemonic: 
     let block = || {
         let index = u8::try_from(index)?;
         let group_index = u8::try_from(group_index)?;
-        let mnemonic = Buffer::try_from(mnemonic)?;
+        let mnemonic = StrBuffer::try_from(mnemonic)?;
 
-        let appkey = helpers::get_appkey(
+        Field::<String<256>>::private(
             APP_RECOVERY_SHARES,
             index + group_index * MAX_SHARE_COUNT as u8,
-            false,
-        );
-        helpers::storage_set_rs(appkey, mnemonic.as_ref())?;
+        )
+        .set(mnemonic.as_ref())?;
         Ok(Obj::const_none())
     };
     unsafe { util::try_or_raise(block) }
@@ -57,29 +56,26 @@ extern "C" fn storagerecoveryshares_fetch_group(group_index: Obj) -> Obj {
 
 extern "C" fn storagerecoveryshares_delete() -> Obj {
     let block = || {
-        for index in 0..MAX_SHARE_COUNT * MAX_GROUP_COUNT {
-            let appkey = helpers::get_appkey(APP_RECOVERY_SHARES, index as u8, false);
-            helpers::storage_delete_safe_rs(appkey)?;
-        }
+        delete_all_recovery_shares()?;
         Ok(Obj::const_none())
     };
     unsafe { util::try_or_raise(block) }
 }
 
 pub fn get_share_string(index: u8, group_index: u8) -> Result<String<256>, Error> {
-    let appkey = helpers::get_appkey(
+    Ok(Field::<String<256>>::private(
         APP_RECOVERY_SHARES,
         index + group_index * MAX_SHARE_COUNT as u8,
-        false,
-    );
-    let mut buf = [0u8; 256];
-    if let Some(len) = helpers::storage_get_rs(appkey, &mut buf) {
-        Ok(String::from(helpers::from_bytes_to_str(
-            &buf[..len as usize],
-        )?))
-    } else {
-        Ok(String::from(""))
+    )
+    .get()
+    .unwrap_or_else(|| String::from("")))
+}
+
+pub fn delete_all_recovery_shares() -> Result<(), Error> {
+    for index in 0..MAX_SHARE_COUNT * MAX_GROUP_COUNT {
+        Field::<String<256>>::private(APP_RECOVERY_SHARES, index as u8).delete()?;
     }
+    Ok(())
 }
 
 #[no_mangle]

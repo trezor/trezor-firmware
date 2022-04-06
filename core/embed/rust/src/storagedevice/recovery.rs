@@ -1,7 +1,8 @@
 use crate::{
     error::Error,
     micropython::{map::Map, module::Module, obj::Obj, qstr::Qstr},
-    storagedevice::{field::Field, helpers},
+    storagedevice::recovery_shares,
+    trezorhal::storage_field::Field,
     util,
 };
 use core::convert::TryFrom;
@@ -136,8 +137,7 @@ extern "C" fn storagerecovery_get_slip39_remaining_shares(group_index: Obj) -> O
         _require_progress()?;
         let group_index = u8::try_from(group_index)? as usize;
 
-        let remaining = _REMAINING.get()?;
-        if let Some(remaining) = remaining {
+        if let Some(remaining) = _REMAINING.get() {
             let amount = remaining[group_index];
             if amount == MAX_SHARE_COUNT as u8 {
                 Ok(Obj::const_none())
@@ -155,7 +155,7 @@ extern "C" fn storagerecovery_fetch_slip39_remaining_shares() -> Obj {
     let block = || {
         _require_progress()?;
 
-        let remaining = match _REMAINING.get()? {
+        let remaining = match _REMAINING.get() {
             Some(remaining) => remaining,
             None => return Ok(Obj::const_none()),
         };
@@ -191,7 +191,7 @@ extern "C" fn storagerecovery_set_slip39_remaining_shares(
             // TODO: error handling?
             default_remaining.push(MAX_SHARE_COUNT as u8).unwrap();
         }
-        let mut remaining = _REMAINING.get()?.unwrap_or(default_remaining);
+        let mut remaining = _REMAINING.get().unwrap_or(default_remaining);
         remaining[group_index] = shares_remaining;
 
         _REMAINING.set(&remaining as &[u8])?;
@@ -212,13 +212,7 @@ extern "C" fn storagerecovery_end_progress() -> Obj {
         _SLIP39_ITERATION_EXPONENT.delete()?;
         _SLIP39_GROUP_COUNT.delete()?;
 
-        // TODO: could recreate and import from recovery_shares.rs as
-        // delete_recovery_shares()
-        for key in 0..MAX_SHARE_COUNT * MAX_GROUP_COUNT {
-            let appkey = helpers::get_appkey(APP_RECOVERY_SHARES, key as u8, false);
-            helpers::storage_delete_safe_rs(appkey)?;
-        }
-
+        recovery_shares::delete_all_recovery_shares()?;
         Ok(Obj::const_none())
     };
     unsafe { util::try_or_raise(block) }

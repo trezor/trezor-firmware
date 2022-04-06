@@ -1,11 +1,12 @@
 use crate::{
     error::Error,
     micropython::{buffer::Buffer, map::Map, module::Module, obj::Obj, qstr::Qstr},
-    storagedevice::helpers,
+    trezorhal::storage_field::Field,
     util,
 };
 use core::convert::TryFrom;
 use cstr_core::cstr;
+use heapless::Vec;
 
 const APP_WEBAUTHN: u8 = 0x04;
 
@@ -16,14 +17,15 @@ extern "C" fn storageresidentcredentials_get(index: Obj) -> Obj {
     let block = || {
         let index = u8::try_from(index)?;
         _require_valid_index(index)?;
-        let appkey =
-            helpers::get_appkey(APP_WEBAUTHN, index + _RESIDENT_CREDENTIAL_START_KEY, false);
 
-        // TODO: how big it is?
-        let mut buf = [0u8; 4096];
-        match helpers::storage_get_rs(appkey, &mut buf) {
-            Some(len) => (&buf[..len as usize]).try_into(),
-            None => Ok(Obj::const_none()),
+        let credentials =
+            Field::<Vec<u8, 4096>>::private(APP_WEBAUTHN, index + _RESIDENT_CREDENTIAL_START_KEY)
+                .get();
+
+        if let Some(credentials) = credentials {
+            (&credentials as &[u8]).try_into()
+        } else {
+            Ok(Obj::const_none())
         }
     };
     unsafe { util::try_or_raise(block) }
@@ -34,9 +36,8 @@ extern "C" fn storageresidentcredentials_set(index: Obj, data: Obj) -> Obj {
         let index = u8::try_from(index)?;
         _require_valid_index(index)?;
         let data = Buffer::try_from(data)?;
-        let appkey =
-            helpers::get_appkey(APP_WEBAUTHN, index + _RESIDENT_CREDENTIAL_START_KEY, false);
-        helpers::storage_set_rs(appkey, data.as_ref())?;
+        Field::<Vec<u8, 4096>>::private(APP_WEBAUTHN, index + _RESIDENT_CREDENTIAL_START_KEY)
+            .set(data.as_ref())?;
         Ok(Obj::const_none())
     };
     unsafe { util::try_or_raise(block) }
@@ -46,9 +47,8 @@ extern "C" fn storageresidentcredentials_delete(index: Obj) -> Obj {
     let block = || {
         let index = u8::try_from(index)?;
         _require_valid_index(index)?;
-        let appkey =
-            helpers::get_appkey(APP_WEBAUTHN, index + _RESIDENT_CREDENTIAL_START_KEY, false);
-        helpers::storage_delete_safe_rs(appkey)?;
+        Field::<Vec<u8, 4096>>::private(APP_WEBAUTHN, index + _RESIDENT_CREDENTIAL_START_KEY)
+            .delete()?;
         Ok(Obj::const_none())
     };
     unsafe { util::try_or_raise(block) }
@@ -57,9 +57,8 @@ extern "C" fn storageresidentcredentials_delete(index: Obj) -> Obj {
 extern "C" fn storageresidentcredentials_delete_all() -> Obj {
     let block = || {
         for index in 0..MAX_RESIDENT_CREDENTIALS {
-            let appkey =
-                helpers::get_appkey(APP_WEBAUTHN, index + _RESIDENT_CREDENTIAL_START_KEY, false);
-            helpers::storage_delete_safe_rs(appkey)?;
+            Field::<Vec<u8, 4096>>::private(APP_WEBAUTHN, index + _RESIDENT_CREDENTIAL_START_KEY)
+                .delete()?;
         }
         Ok(Obj::const_none())
     };

@@ -7,19 +7,13 @@ use crate::{
         obj::Obj,
         qstr::Qstr,
     },
-    storagedevice::{field::Field, helpers},
-    trezorhal::{random, secbool},
+    storagedevice::helpers,
+    trezorhal::{random, storage, storage_field::Field},
     util,
 };
 use core::convert::{TryFrom, TryInto};
 use cstr_core::cstr;
 use heapless::{String, Vec};
-
-extern "C" {
-    // storage.h
-    fn storage_next_counter(key: u16, count: *mut u32) -> secbool::Secbool;
-    fn storage_set_counter(key: u16, count: u32) -> secbool::Secbool;
-}
 
 // TODO: can we import messages enums?
 
@@ -95,7 +89,7 @@ extern "C" fn storagedevice_is_version_stored() -> Obj {
 
 extern "C" fn storagedevice_get_version() -> Obj {
     let block = || {
-        if let Some(result) = VERSION.get()? {
+        if let Some(result) = VERSION.get() {
             (&result as &[u8]).try_into()
         } else {
             Ok(Obj::const_none())
@@ -155,7 +149,7 @@ extern "C" fn storagedevice_set_rotation(rotation: Obj) -> Obj {
 
 extern "C" fn storagedevice_get_label() -> Obj {
     let block = || {
-        if let Some(result) = _LABEL.get()? {
+        if let Some(result) = _LABEL.get() {
             result.as_str().try_into()
         } else {
             Ok(Obj::const_none())
@@ -175,9 +169,7 @@ extern "C" fn storagedevice_set_label(label: Obj) -> Obj {
 
 extern "C" fn storagedevice_get_device_id() -> Obj {
     let block = || {
-        let device_id = DEVICE_ID.get()?;
-
-        if let Some(device_id) = device_id {
+        if let Some(device_id) = DEVICE_ID.get() {
             device_id.as_str().try_into()
         } else {
             let new_device_id = &random::get_random_bytes(12) as &[u8];
@@ -191,8 +183,8 @@ extern "C" fn storagedevice_get_device_id() -> Obj {
 
 extern "C" fn storagedevice_set_device_id(device_id: Obj) -> Obj {
     let block = || {
-        let device_id = Buffer::try_from(device_id)?;
-        DEVICE_ID.set(helpers::from_bytes_to_str(device_id.as_ref())?)?;
+        let device_id = StrBuffer::try_from(device_id)?;
+        DEVICE_ID.set(device_id.as_ref())?;
         Ok(Obj::const_none())
     };
     unsafe { util::try_or_raise(block) }
@@ -200,7 +192,7 @@ extern "C" fn storagedevice_set_device_id(device_id: Obj) -> Obj {
 
 extern "C" fn storagedevice_get_mnemonic_secret() -> Obj {
     let block = || {
-        if let Some(result) = _MNEMONIC_SECRET.get()? {
+        if let Some(result) = _MNEMONIC_SECRET.get() {
             (&result as &[u8]).try_into()
         } else {
             Ok(Obj::const_none())
@@ -373,7 +365,7 @@ extern "C" fn storagedevice_get_backup_type() -> Obj {
 
 extern "C" fn storagedevice_get_homescreen() -> Obj {
     let block = || {
-        if let Some(result) = _HOMESCREEN.get()? {
+        if let Some(result) = _HOMESCREEN.get() {
             (&result as &[u8]).try_into()
         } else {
             Ok(Obj::const_none())
@@ -496,7 +488,7 @@ extern "C" fn storagedevice_set_safety_check_level(level: Obj) -> Obj {
 
 extern "C" fn storagedevice_get_sd_salt_auth_key() -> Obj {
     let block = || {
-        if let Some(result) = _SD_SALT_AUTH_KEY.get()? {
+        if let Some(result) = _SD_SALT_AUTH_KEY.get() {
             (&result as &[u8]).try_into()
         } else {
             Ok(Obj::const_none())
@@ -522,7 +514,7 @@ extern "C" fn storagedevice_set_sd_salt_auth_key(auth_key: Obj) -> Obj {
 extern "C" fn storagedevice_get_next_u2f_counter() -> Obj {
     let block = || {
         let key = helpers::get_appkey_u2f(APP_DEVICE, U2F_COUNTER, true);
-        storagedevice_storage_get_next_counter(key).try_into()
+        storage::get_next_counter(key)?.try_into()
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -532,7 +524,8 @@ extern "C" fn storagedevice_set_u2f_counter(count: Obj) -> Obj {
         let count = u32::try_from(count)?;
 
         let key = helpers::get_appkey_u2f(APP_DEVICE, U2F_COUNTER, true);
-        Ok(storagedevice_storage_set_counter(key, count).into())
+        storage::set_counter(key, count)?;
+        Ok(Obj::const_none())
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -554,18 +547,6 @@ extern "C" fn storagedevice_delete_private_u2f_counter() -> Obj {
         Ok(Obj::const_none())
     };
     unsafe { util::try_or_raise(block) }
-}
-
-// TODO: leave the counter logic here, or also somehow include it in field.rs?
-
-pub fn storagedevice_storage_get_next_counter(key: u16) -> u32 {
-    let mut count: u32 = 0;
-    unsafe { storage_next_counter(key, &mut count as *mut _) };
-    count
-}
-
-pub fn storagedevice_storage_set_counter(key: u16, count: u32) -> bool {
-    matches!(unsafe { storage_set_counter(key, count) }, secbool::TRUE)
 }
 
 fn _normalize_autolock_delay(delay_ms: u32) -> u32 {

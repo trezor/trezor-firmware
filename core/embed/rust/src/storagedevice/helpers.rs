@@ -1,65 +1,7 @@
-use crate::{error::Error, trezorhal::secbool};
-use core::str;
-use cstr_core::cstr;
 use heapless::String;
-
-extern "C" {
-    // storage.h
-    fn storage_has(key: u16) -> secbool::Secbool;
-    fn storage_delete(key: u16) -> secbool::Secbool;
-    fn storage_get(key: u16, val: *const u8, max_len: u16, len: *mut u16) -> secbool::Secbool;
-    fn storage_set(key: u16, val: *const u8, len: u16) -> secbool::Secbool;
-}
 
 const FLAG_PUBLIC: u8 = 0x80;
 const FLAGS_WRITE: u8 = 0xC0;
-
-// TODO: decide on naming conventions of these wrappers (so far "_rs" suffix)
-
-pub fn storage_has_rs(key: u16) -> bool {
-    secbool::TRUE == unsafe { storage_has(key) }
-}
-
-pub fn storage_delete_rs(key: u16) -> Result<(), Error> {
-    let result = unsafe { storage_delete(key) };
-    if result != secbool::TRUE {
-        Err(Error::ValueError(cstr!(
-            "Could not delete value in storage"
-        )))
-    } else {
-        Ok(())
-    }
-}
-
-pub fn storage_delete_safe_rs(key: u16) -> Result<(), Error> {
-    // If there is nothing, storage_delete() would return false
-    if !storage_has_rs(key) {
-        Ok(())
-    } else {
-        storage_delete_rs(key)
-    }
-}
-
-pub fn storage_get_rs<const N: usize>(key: u16, buf: &mut [u8; N]) -> Option<u16> {
-    assert!(N <= u16::MAX as usize);
-    let mut len = 0;
-    let result = unsafe { storage_get(key, buf.as_mut_ptr(), N as u16, &mut len) };
-    if result != secbool::TRUE {
-        None
-    } else {
-        Some(len)
-    }
-}
-
-pub fn storage_set_rs(key: u16, buf: &[u8]) -> Result<(), Error> {
-    assert!(buf.len() <= u16::MAX as usize);
-    let result = unsafe { storage_set(key, buf.as_ptr(), buf.len() as u16) };
-    if result != secbool::TRUE {
-        Err(Error::ValueError(cstr!("Could not save value to storage")))
-    } else {
-        Ok(())
-    }
-}
 
 pub fn get_appkey(app: u8, key: u8, is_public: bool) -> u16 {
     let app = if is_public { app | FLAG_PUBLIC } else { app };
@@ -90,17 +32,6 @@ pub fn hexlify_bytes(bytes: &[u8]) -> String<64> {
         buf.push(hex_from_digit(byte % 16)).unwrap();
     }
     buf
-}
-
-// TODO: from_str_to_bytes
-// TODO: storage_get_str_rs
-// TODO: storage_save_str_rs
-
-pub fn from_bytes_to_str(bytes: &[u8]) -> Result<&str, Error> {
-    match str::from_utf8(bytes) {
-        Ok(str_slice) => Ok(str_slice),
-        Err(_) => return Err(Error::ValueError(cstr!("Cannot parse into str"))),
-    }
 }
 
 #[cfg(test)]
