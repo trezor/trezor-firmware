@@ -19,8 +19,8 @@ let
     sha256 = "02s3qkb6kz3ndyx7rfndjbvp4vlwiqc42fxypn3g6jnc0v5jyz95";
   }) { };
   moneroTests = nixpkgs.fetchurl {
-    url = "https://github.com/ph4r05/monero/releases/download/v0.17.1.9-tests/trezor_tests";
-    sha256 = "410bc4ff2ff1edc65e17f15b549bd1bf8a3776cf67abdea86aed52cf4bce8d9d";
+    url = "https://github.com/ph4r05/monero/releases/download/v0.17.3.0-dev-tests/trezor_tests";
+    sha256 = "sha256-tTQTe/Yk6oURq7GDOEotJ7Y2UpCgyuU5odjEHNTMrmE=";
   };
   moneroTestsPatched = nixpkgs.runCommandCC "monero_trezor_tests" {} ''
     cp ${moneroTests} $out
