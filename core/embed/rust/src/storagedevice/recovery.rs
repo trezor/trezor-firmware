@@ -5,7 +5,6 @@ use crate::{
     trezorhal::storage_field::Field,
     util,
 };
-use core::convert::TryFrom;
 use cstr_core::cstr;
 use heapless::Vec;
 
@@ -30,32 +29,19 @@ const _SLIP39_GROUP_COUNT: Field<u8> = Field::private(APP_RECOVERY, 0x07);
 // # _WORD_COUNT                = const(0x02)  # int
 
 extern "C" fn storagerecovery_is_in_progress() -> Obj {
-    let block = || {
-        if let Some(result) = _IN_PROGRESS.get() {
-            Ok(result.into())
-        } else {
-            Ok(false.into())
-        }
-    };
+    let block = || Ok(_IN_PROGRESS.get().unwrap_or(false).into());
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagerecovery_set_in_progress(val: Obj) -> Obj {
-    let block = || {
-        _IN_PROGRESS.set(bool::try_from(val)?)?;
-        Ok(Obj::const_none())
-    };
+    let block = || _IN_PROGRESS.set(val.try_into()?)?.try_into();
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagerecovery_is_dry_run() -> Obj {
     let block = || {
         _require_progress()?;
-        if let Some(result) = _DRY_RUN.get() {
-            Ok(result.into())
-        } else {
-            Ok(false.into())
-        }
+        Ok(_DRY_RUN.get().unwrap_or(false).into())
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -63,8 +49,7 @@ extern "C" fn storagerecovery_is_dry_run() -> Obj {
 extern "C" fn storagerecovery_set_dry_run(val: Obj) -> Obj {
     let block = || {
         _require_progress()?;
-        _DRY_RUN.set(bool::try_from(val)?)?;
-        Ok(Obj::const_none())
+        _DRY_RUN.set(val.try_into()?)?.try_into()
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -72,11 +57,9 @@ extern "C" fn storagerecovery_set_dry_run(val: Obj) -> Obj {
 extern "C" fn storagerecovery_get_slip39_identifier() -> Obj {
     let block = || {
         _require_progress()?;
-        if let Some(result) = _SLIP39_IDENTIFIER.get() {
-            Ok(result.into())
-        } else {
-            Ok(Obj::const_none())
-        }
+        _SLIP39_IDENTIFIER
+            .get()
+            .map_or(Ok(Obj::const_none()), |x| Ok(x.into()))
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -84,8 +67,7 @@ extern "C" fn storagerecovery_get_slip39_identifier() -> Obj {
 extern "C" fn storagerecovery_set_slip39_identifier(identifier: Obj) -> Obj {
     let block = || {
         _require_progress()?;
-        _SLIP39_IDENTIFIER.set(u16::try_from(identifier)?)?;
-        Ok(Obj::const_none())
+        _SLIP39_IDENTIFIER.set(identifier.try_into()?)?.try_into()
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -93,11 +75,9 @@ extern "C" fn storagerecovery_set_slip39_identifier(identifier: Obj) -> Obj {
 extern "C" fn storagerecovery_get_slip39_iteration_exponent() -> Obj {
     let block = || {
         _require_progress()?;
-        if let Some(result) = _SLIP39_ITERATION_EXPONENT.get() {
-            Ok(result.into())
-        } else {
-            Ok(Obj::const_none())
-        }
+        _SLIP39_ITERATION_EXPONENT
+            .get()
+            .map_or(Ok(Obj::const_none()), |x| Ok(x.into()))
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -105,8 +85,9 @@ extern "C" fn storagerecovery_get_slip39_iteration_exponent() -> Obj {
 extern "C" fn storagerecovery_set_slip39_iteration_exponent(exponent: Obj) -> Obj {
     let block = || {
         _require_progress()?;
-        _SLIP39_ITERATION_EXPONENT.set(u8::try_from(exponent)?)?;
-        Ok(Obj::const_none())
+        _SLIP39_ITERATION_EXPONENT
+            .set(exponent.try_into()?)?
+            .try_into()
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -114,11 +95,9 @@ extern "C" fn storagerecovery_set_slip39_iteration_exponent(exponent: Obj) -> Ob
 extern "C" fn storagerecovery_get_slip39_group_count() -> Obj {
     let block = || {
         _require_progress()?;
-        if let Some(result) = _SLIP39_GROUP_COUNT.get() {
-            Ok(result.into())
-        } else {
-            Ok(Obj::const_none())
-        }
+        _SLIP39_GROUP_COUNT
+            .get()
+            .map_or(Ok(Obj::const_none()), |x| Ok(x.into()))
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -126,8 +105,7 @@ extern "C" fn storagerecovery_get_slip39_group_count() -> Obj {
 extern "C" fn storagerecovery_set_slip39_group_count(group_count: Obj) -> Obj {
     let block = || {
         _require_progress()?;
-        _SLIP39_GROUP_COUNT.set(u8::try_from(group_count)?)?;
-        Ok(Obj::const_none())
+        _SLIP39_GROUP_COUNT.set(group_count.try_into()?)?.try_into()
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -135,7 +113,7 @@ extern "C" fn storagerecovery_set_slip39_group_count(group_count: Obj) -> Obj {
 extern "C" fn storagerecovery_get_slip39_remaining_shares(group_index: Obj) -> Obj {
     let block = || {
         _require_progress()?;
-        let group_index = u8::try_from(group_index)? as usize;
+        let group_index: usize = group_index.try_into()?;
 
         if let Some(remaining) = _REMAINING.get() {
             let amount = remaining[group_index];
@@ -165,9 +143,11 @@ extern "C" fn storagerecovery_fetch_slip39_remaining_shares() -> Obj {
             return Err(Error::ValueError(cstr!("There are no remaining shares")));
         }
 
-        let result: Vec<u8, MAX_SHARE_COUNT> = remaining[..group_count].iter().cloned().collect();
-
-        result.try_into()
+        remaining[..group_count]
+            .iter()
+            .cloned()
+            .collect::<Vec<u8, MAX_SHARE_COUNT>>()
+            .try_into()
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -178,8 +158,8 @@ extern "C" fn storagerecovery_set_slip39_remaining_shares(
 ) -> Obj {
     let block = || {
         _require_progress()?;
-        let shares_remaining = u8::try_from(shares_remaining)?;
-        let group_index = u8::try_from(group_index)? as usize;
+        let shares_remaining = shares_remaining.try_into()?;
+        let group_index: usize = group_index.try_into()?;
 
         let group_count = _SLIP39_GROUP_COUNT.get().unwrap_or(0) as usize;
         if group_count == 0 {
@@ -194,8 +174,7 @@ extern "C" fn storagerecovery_set_slip39_remaining_shares(
         let mut remaining = _REMAINING.get().unwrap_or(default_remaining);
         remaining[group_index] = shares_remaining;
 
-        _REMAINING.set(&remaining as &[u8])?;
-        Ok(Obj::const_none())
+        _REMAINING.set(&remaining as &[u8])?.try_into()
     };
     unsafe { util::try_or_raise(block) }
 }

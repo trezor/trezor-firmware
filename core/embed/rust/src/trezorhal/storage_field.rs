@@ -1,6 +1,6 @@
 use super::{
     ffi,
-    storage::{self, StorageError},
+    storage::{self, StorageError, StorageResult},
 };
 use core::{marker::PhantomData, str};
 use heapless::{String, Vec};
@@ -60,7 +60,7 @@ impl<T> Field<T> {
         }
     }
 
-    fn appkey(&self) -> u16 {
+    pub fn appkey(&self) -> u16 {
         let app = self.app | self.access as u8;
         (app as u16) << 8 | self.key as u16
     }
@@ -69,7 +69,7 @@ impl<T> Field<T> {
         storage::has(self.appkey())
     }
 
-    pub fn delete(&self) -> Result<(), StorageError> {
+    pub fn delete(&self) -> StorageResult<()> {
         // If there is nothing, storage_delete() would return false
         if !self.has() {
             return Ok(());
@@ -102,7 +102,7 @@ impl Field<u32> {
         }
     }
 
-    pub fn set(&self, val: u32) -> Result<(), StorageError> {
+    pub fn set(&self, val: u32) -> StorageResult<()> {
         storage::set(self.appkey(), &val.to_le_bytes())
     }
 }
@@ -118,7 +118,7 @@ impl Field<u16> {
         }
     }
 
-    pub fn set(&self, val: u16) -> Result<(), StorageError> {
+    pub fn set(&self, val: u16) -> StorageResult<()> {
         storage::set(self.appkey(), &val.to_le_bytes())
     }
 }
@@ -134,7 +134,7 @@ impl Field<u8> {
         }
     }
 
-    pub fn set(&self, val: u8) -> Result<(), StorageError> {
+    pub fn set(&self, val: u8) -> StorageResult<()> {
         storage::set(self.appkey(), &[val])
     }
 }
@@ -150,11 +150,11 @@ impl Field<bool> {
         }
     }
 
-    pub fn set(&self, val: bool) -> Result<(), StorageError> {
+    pub fn set(&self, val: bool) -> StorageResult<()> {
         storage::set(self.appkey(), &[if val { TRUE_BYTE } else { FALSE_BYTE }])
     }
 
-    pub fn set_true_or_delete(self, val: bool) -> Result<(), StorageError> {
+    pub fn set_true_or_delete(self, val: bool) -> StorageResult<()> {
         if val {
             self.set(true)
         } else {
@@ -168,7 +168,7 @@ impl<const N: usize> Field<String<N>> {
         let mut buf = [0u8; MAX_STRING];
         let len = storage::get(self.appkey(), &mut buf);
         len.ok().and_then(|len| {
-            let string = String::from(str::from_utf8(&buf[..len as usize]).ok().unwrap());
+            let string = String::from(str::from_utf8(&buf[..len as usize]).unwrap());
             if self.is_len_ok(string.chars().count(), N) {
                 Some(string)
             } else {
@@ -177,7 +177,7 @@ impl<const N: usize> Field<String<N>> {
         })
     }
 
-    pub fn set(&self, val: &str) -> Result<(), StorageError> {
+    pub fn set(&self, val: &str) -> StorageResult<()> {
         if self.is_len_ok(val.chars().count(), N) {
             storage::set(self.appkey(), val.as_bytes())
         } else {
@@ -227,6 +227,7 @@ mod tests {
 
     const VERSION: Field<u8> = Field::private(0x01, 0x01);
     const PUBLIC_STRING: Field<String<10>> = Field::public(0x01, 0x02);
+    const PUBLIC_VEC: Field<Vec<u8, 2>> = Field::public(0x01, 0x02);
 
     #[test]
     fn test_basic() {
@@ -237,6 +238,7 @@ mod tests {
         assert_eq!(VERSION.get(), Some(10));
         assert!(VERSION.has());
         assert!(VERSION.delete().is_ok());
+        assert!(!VERSION.has());
     }
 
     #[test]
@@ -262,5 +264,31 @@ mod tests {
         storage::lock();
         assert!(PUBLIC_STRING.set("world").is_err());
         assert_eq!(PUBLIC_STRING.get(), Some(String::from("hello")));
+    }
+
+    #[test]
+    fn test_value_too_long_str() {
+        init_storage(true);
+
+        // Normal input
+        assert!(PUBLIC_STRING.set("hello").is_ok());
+        assert_eq!(PUBLIC_STRING.get(), Some(String::from("hello")));
+
+        // Input too long
+        assert!(PUBLIC_STRING.set("someveryverylongstring").is_err());
+        assert_eq!(PUBLIC_STRING.get(), Some(String::from("hello")));
+    }
+
+    #[test]
+    fn test_value_too_long_vec() {
+        init_storage(true);
+
+        // Normal input
+        assert!(PUBLIC_VEC.set(&[1, 255]).is_ok());
+        assert_eq!(PUBLIC_VEC.get(), Vec::from_slice(&[1, 255]).ok());
+
+        // Input too long
+        assert!(PUBLIC_VEC.set(&[1, 2, 3]).is_err());
+        assert_eq!(PUBLIC_VEC.get(), Vec::from_slice(&[1, 255]).ok());
     }
 }

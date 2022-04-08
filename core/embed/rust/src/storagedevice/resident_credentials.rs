@@ -4,7 +4,6 @@ use crate::{
     trezorhal::storage_field::Field,
     util,
 };
-use core::convert::TryFrom;
 use cstr_core::cstr;
 use heapless::Vec;
 
@@ -15,41 +14,35 @@ const MAX_RESIDENT_CREDENTIALS: u8 = 100;
 
 extern "C" fn storageresidentcredentials_get(index: Obj) -> Obj {
     let block = || {
-        let index = u8::try_from(index)?;
+        let index = index.try_into()?;
         _require_valid_index(index)?;
 
-        let credentials =
-            Field::<Vec<u8, 4096>>::private(APP_WEBAUTHN, index + _RESIDENT_CREDENTIAL_START_KEY)
-                .get();
-
-        if let Some(credentials) = credentials {
-            (&credentials as &[u8]).try_into()
-        } else {
-            Ok(Obj::const_none())
-        }
+        Field::<Vec<u8, 4096>>::private(APP_WEBAUTHN, index + _RESIDENT_CREDENTIAL_START_KEY)
+            .get()
+            .map_or(Ok(Obj::const_none()), |x| (&x as &[u8]).try_into())
     };
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storageresidentcredentials_set(index: Obj, data: Obj) -> Obj {
     let block = || {
-        let index = u8::try_from(index)?;
+        let index = index.try_into()?;
         _require_valid_index(index)?;
-        let data = Buffer::try_from(data)?;
+        let data: Buffer = data.try_into()?;
         Field::<Vec<u8, 4096>>::private(APP_WEBAUTHN, index + _RESIDENT_CREDENTIAL_START_KEY)
-            .set(data.as_ref())?;
-        Ok(Obj::const_none())
+            .set(data.as_ref())?
+            .try_into()
     };
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storageresidentcredentials_delete(index: Obj) -> Obj {
     let block = || {
-        let index = u8::try_from(index)?;
+        let index = index.try_into()?;
         _require_valid_index(index)?;
         Field::<Vec<u8, 4096>>::private(APP_WEBAUTHN, index + _RESIDENT_CREDENTIAL_START_KEY)
-            .delete()?;
-        Ok(Obj::const_none())
+            .delete()?
+            .try_into()
     };
     unsafe { util::try_or_raise(block) }
 }

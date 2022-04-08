@@ -70,6 +70,8 @@ impl From<StorageError> for Error {
     }
 }
 
+pub type StorageResult<T> = Result<T, StorageError>;
+
 /// Initialize the storage layer.
 /// This function must be called before any other storage function.
 pub fn init() {
@@ -151,7 +153,7 @@ pub fn has(appkey: u16) -> bool {
 
 /// Get length of value stored for `appkey`.
 /// Returns an error if the value does not exist.
-pub fn get_length(appkey: u16) -> Result<usize, StorageError> {
+pub fn get_length(appkey: u16) -> StorageResult<usize> {
     let mut len = 0;
     if ffi::sectrue == unsafe { ffi::storage_get(appkey, ptr::null_mut() as _, 0, &mut len) } {
         Ok(len as usize)
@@ -168,7 +170,7 @@ pub fn get_length(appkey: u16) -> Result<usize, StorageError> {
 /// in the buffer beyond the copied data is not modified.
 /// If `appkey` is not present in storage, or the value is private and storage
 /// is locked, returns an error.
-pub fn get(appkey: u16, data: &mut [u8]) -> Result<usize, StorageError> {
+pub fn get(appkey: u16, data: &mut [u8]) -> StorageResult<usize> {
     let max_len = data.len().min(u16::MAX as usize) as u16;
     let mut len = 0u16;
     if ffi::sectrue
@@ -184,7 +186,7 @@ pub fn get(appkey: u16, data: &mut [u8]) -> Result<usize, StorageError> {
 /// The maximum length of the value is `u16::MAX`. Passing longer buffers will
 /// result in an error.
 /// If storage is locked and the value is not public-writable, returns an error.
-pub fn set(appkey: u16, data: &[u8]) -> Result<(), StorageError> {
+pub fn set(appkey: u16, data: &[u8]) -> StorageResult<()> {
     if data.len() > u16::MAX as usize {
         Err(StorageError::InvalidData)
     } else if ffi::sectrue
@@ -197,7 +199,7 @@ pub fn set(appkey: u16, data: &[u8]) -> Result<(), StorageError> {
 }
 
 /// Set value for monotonic counter `appkey` in storage.
-pub fn set_counter(appkey: u16, counter: u32) -> Result<(), StorageError> {
+pub fn set_counter(appkey: u16, counter: u32) -> StorageResult<()> {
     if ffi::sectrue == unsafe { ffi::storage_set_counter(appkey, counter) } {
         Ok(())
     } else {
@@ -207,7 +209,7 @@ pub fn set_counter(appkey: u16, counter: u32) -> Result<(), StorageError> {
 
 /// Atomically get and increment the value for monotonic counter `appkey` in
 /// storage.
-pub fn get_next_counter(appkey: u16) -> Result<u32, StorageError> {
+pub fn get_next_counter(appkey: u16) -> StorageResult<u32> {
     let mut counter = 0u32;
     if ffi::sectrue == unsafe { ffi::storage_next_counter(appkey, &mut counter) } {
         Ok(counter)

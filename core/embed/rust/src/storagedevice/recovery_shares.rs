@@ -4,7 +4,6 @@ use crate::{
     trezorhal::storage_field::Field,
     util,
 };
-use core::convert::TryFrom;
 use heapless::{String, Vec};
 
 const APP_RECOVERY_SHARES: u8 = 0x03;
@@ -14,8 +13,8 @@ const MAX_GROUP_COUNT: usize = 16;
 
 extern "C" fn storagerecoveryshares_get(index: Obj, group_index: Obj) -> Obj {
     let block = || {
-        let index = u8::try_from(index)?;
-        let group_index = u8::try_from(group_index)?;
+        let index = index.try_into()?;
+        let group_index = group_index.try_into()?;
 
         get_share_string(index, group_index)?.as_str().try_into()
     };
@@ -24,23 +23,23 @@ extern "C" fn storagerecoveryshares_get(index: Obj, group_index: Obj) -> Obj {
 
 extern "C" fn storagerecoveryshares_set(index: Obj, group_index: Obj, mnemonic: Obj) -> Obj {
     let block = || {
-        let index = u8::try_from(index)?;
-        let group_index = u8::try_from(group_index)?;
-        let mnemonic = StrBuffer::try_from(mnemonic)?;
+        let index: u8 = index.try_into()?;
+        let group_index: u8 = group_index.try_into()?;
+        let mnemonic: StrBuffer = mnemonic.try_into()?;
 
         Field::<String<256>>::private(
             APP_RECOVERY_SHARES,
             index + group_index * MAX_SHARE_COUNT as u8,
         )
-        .set(mnemonic.as_ref())?;
-        Ok(Obj::const_none())
+        .set(mnemonic.as_ref())?
+        .try_into()
     };
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagerecoveryshares_fetch_group(group_index: Obj) -> Obj {
     let block = || {
-        let group_index = u8::try_from(group_index)?;
+        let group_index = group_index.try_into()?;
 
         let mut result: Vec<String<256>, MAX_SHARE_COUNT> = Vec::new();
         for index in 0..MAX_SHARE_COUNT {
@@ -55,10 +54,7 @@ extern "C" fn storagerecoveryshares_fetch_group(group_index: Obj) -> Obj {
 }
 
 extern "C" fn storagerecoveryshares_delete() -> Obj {
-    let block = || {
-        delete_all_recovery_shares()?;
-        Ok(Obj::const_none())
-    };
+    let block = || delete_all_recovery_shares()?.try_into();
     unsafe { util::try_or_raise(block) }
 }
 

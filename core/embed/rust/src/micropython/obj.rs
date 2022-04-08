@@ -258,6 +258,14 @@ impl TryFrom<&[u8]> for Obj {
     }
 }
 
+impl TryFrom<()> for Obj {
+    type Error = Error;
+
+    fn try_from(_val: ()) -> Result<Self, Self::Error> {
+        catch_exception(Self::const_none)
+    }
+}
+
 impl<const N: usize> TryFrom<Vec<u8, N>> for Obj {
     type Error = Error;
 
