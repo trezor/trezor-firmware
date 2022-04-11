@@ -1,7 +1,7 @@
 use crate::{
     error::Error,
     micropython::{buffer::Buffer, map::Map, module::Module, obj::Obj, qstr::Qstr},
-    trezorhal::storage_field::Field,
+    trezorhal::storage_field::{Field, FieldGetSet},
     util,
 };
 use cstr_core::cstr;
@@ -30,7 +30,7 @@ extern "C" fn storageresidentcredentials_set(index: Obj, data: Obj) -> Obj {
         _require_valid_index(index)?;
         let data: Buffer = data.try_into()?;
         Field::<Vec<u8, 4096>>::private(APP_WEBAUTHN, index + _RESIDENT_CREDENTIAL_START_KEY)
-            .set(data.as_ref())?
+            .set(data.try_into()?)?
             .try_into()
     };
     unsafe { util::try_or_raise(block) }

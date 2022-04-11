@@ -1,7 +1,7 @@
 use crate::{
     error::Error,
     micropython::{buffer::StrBuffer, map::Map, module::Module, obj::Obj, qstr::Qstr},
-    trezorhal::storage_field::Field,
+    trezorhal::storage_field::{Field, FieldGetSet},
     util,
 };
 use heapless::{String, Vec};
@@ -31,7 +31,7 @@ extern "C" fn storagerecoveryshares_set(index: Obj, group_index: Obj, mnemonic: 
             APP_RECOVERY_SHARES,
             index + group_index * MAX_SHARE_COUNT as u8,
         )
-        .set(mnemonic.as_ref())?
+        .set(mnemonic.try_into()?)?
         .try_into()
     };
     unsafe { util::try_or_raise(block) }

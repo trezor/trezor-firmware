@@ -8,7 +8,10 @@ use crate::{
         qstr::Qstr,
     },
     storagedevice::helpers,
-    trezorhal::{random, storage, storage_field::Field},
+    trezorhal::{
+        random, storage,
+        storage_field::{set_true_or_delete, Field, FieldGetSet},
+    },
     util,
 };
 use core::convert::{TryFrom, TryInto};
@@ -91,7 +94,11 @@ extern "C" fn storagedevice_get_version() -> Obj {
 }
 
 extern "C" fn storagedevice_set_version(version: Obj) -> Obj {
-    let block = || VERSION.set(Buffer::try_from(version)?.as_ref())?.try_into();
+    let block = || {
+        VERSION
+            .set(Buffer::try_from(version)?.try_into()?)?
+            .try_into()
+    };
     unsafe { util::try_or_raise(block) }
 }
 
@@ -124,18 +131,14 @@ extern "C" fn storagedevice_set_rotation(rotation: Obj) -> Obj {
 }
 
 extern "C" fn storagedevice_get_label() -> Obj {
-    let block = || {
-        _LABEL
-            .get()
-            .map_or(Ok(Obj::const_none()), |x| x.as_str().try_into())
-    };
+    let block = || _LABEL.get().map_or(Ok(Obj::const_none()), |x| x.try_into());
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_set_label(label: Obj) -> Obj {
     let block = || {
         let label: StrBuffer = label.try_into()?;
-        _LABEL.set(label.as_ref())?.try_into()
+        _LABEL.set(label.try_into()?)?.try_into()
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -143,12 +146,12 @@ extern "C" fn storagedevice_set_label(label: Obj) -> Obj {
 extern "C" fn storagedevice_get_device_id() -> Obj {
     let block = || {
         if let Some(device_id) = DEVICE_ID.get() {
-            device_id.as_str().try_into()
+            device_id.try_into()
         } else {
             let new_device_id = &random::get_random_bytes(12) as &[u8];
             let hex_id = helpers::hexlify_bytes(new_device_id);
-            DEVICE_ID.set(hex_id.as_str())?;
-            hex_id.as_str().try_into()
+            DEVICE_ID.set(hex_id.clone())?;
+            hex_id.try_into()
         }
     };
     unsafe { util::try_or_raise(block) }
@@ -157,7 +160,7 @@ extern "C" fn storagedevice_get_device_id() -> Obj {
 extern "C" fn storagedevice_set_device_id(device_id: Obj) -> Obj {
     let block = || {
         let device_id: StrBuffer = device_id.try_into()?;
-        DEVICE_ID.set(device_id.as_ref())?.try_into()
+        DEVICE_ID.set(device_id.try_into()?)?.try_into()
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -190,14 +193,14 @@ extern "C" fn storagedevice_set_mnemonic_secret(
             false
         };
 
-        VERSION.set(&[STORAGE_VERSION_CURRENT])?;
-        _MNEMONIC_SECRET.set(secret.as_ref())?;
+        VERSION.set(Vec::from_slice(&[STORAGE_VERSION_CURRENT]).unwrap())?;
+        _MNEMONIC_SECRET.set(secret.try_into()?)?;
         _BACKUP_TYPE.set(backup_type)?;
-        _NO_BACKUP.set_true_or_delete(no_backup)?;
+        set_true_or_delete(_NO_BACKUP, no_backup)?;
         INITIALIZED.set(true)?;
 
         if !no_backup {
-            _NEEDS_BACKUP.set_true_or_delete(needs_backup)?;
+            set_true_or_delete(_NEEDS_BACKUP, needs_backup)?;
         }
 
         Ok(true.into())
@@ -270,11 +273,7 @@ extern "C" fn storagedevice_get_experimental_features() -> Obj {
 }
 
 extern "C" fn storagedevice_set_experimental_features(enable: Obj) -> Obj {
-    let block = || {
-        _EXPERIMENTAL_FEATURES
-            .set_true_or_delete(enable.try_into()?)?
-            .try_into()
-    };
+    let block = || set_true_or_delete(_EXPERIMENTAL_FEATURES, enable.try_into()?)?.try_into();
     unsafe { util::try_or_raise(block) }
 }
 
@@ -304,7 +303,7 @@ extern "C" fn storagedevice_get_homescreen() -> Obj {
 extern "C" fn storagedevice_set_homescreen(homescreen: Obj) -> Obj {
     let block = || {
         _HOMESCREEN
-            .set(Buffer::try_from(homescreen)?.as_ref())?
+            .set(Buffer::try_from(homescreen)?.try_into()?)?
             .try_into()
     };
     unsafe { util::try_or_raise(block) }
@@ -419,7 +418,7 @@ extern "C" fn storagedevice_set_sd_salt_auth_key(auth_key: Obj) -> Obj {
         if auth_key.is_empty() {
             _SD_SALT_AUTH_KEY.delete()?.try_into()
         } else {
-            _SD_SALT_AUTH_KEY.set(auth_key.as_ref())?.try_into()
+            _SD_SALT_AUTH_KEY.set(auth_key.try_into()?)?.try_into()
         }
     };
     unsafe { util::try_or_raise(block) }

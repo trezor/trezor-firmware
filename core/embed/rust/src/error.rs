@@ -5,7 +5,7 @@ use cstr_core::CStr;
 use crate::micropython::{ffi, obj::Obj, qstr::Qstr};
 
 #[allow(clippy::enum_variant_names)] // We mimic the Python exception classnames here.
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Error {
     TypeError,
     OutOfRange,

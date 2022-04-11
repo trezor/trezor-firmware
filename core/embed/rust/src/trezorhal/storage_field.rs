@@ -60,7 +60,7 @@ impl<T> Field<T> {
         }
     }
 
-    pub fn appkey(&self) -> u16 {
+    fn appkey(&self) -> u16 {
         let app = self.app | self.access as u8;
         (app as u16) << 8 | self.key as u16
     }
@@ -91,8 +91,31 @@ impl<T> Field<T> {
     }
 }
 
-impl Field<u32> {
-    pub fn get(&self) -> Option<u32> {
+// Traits to make sure all the fields are implemented correctly
+pub trait FieldOpsBase {
+    fn is_set(&self) -> bool;
+    fn delete(&self) -> StorageResult<()>;
+}
+impl<T> FieldOpsBase for Field<T> {
+    fn is_set(&self) -> bool {
+        self.has()
+    }
+
+    fn delete(&self) -> StorageResult<()> {
+        self.delete()
+    }
+}
+
+pub trait FieldGetSet<T> {
+    fn get(&self) -> Option<T>;
+    fn set(&self, value: T) -> StorageResult<()>;
+}
+
+pub trait FieldOps<T>: FieldOpsBase + FieldGetSet<T> {}
+impl<T> FieldOps<T> for Field<T> where Field<T>: FieldGetSet<T> {}
+
+impl FieldGetSet<u32> for Field<u32> {
+    fn get(&self) -> Option<u32> {
         let mut buf = [0u8; 4];
         let len = storage::get(self.appkey(), &mut buf);
         if matches!(len, Ok(4)) {
@@ -102,13 +125,13 @@ impl Field<u32> {
         }
     }
 
-    pub fn set(&self, val: u32) -> StorageResult<()> {
+    fn set(&self, val: u32) -> StorageResult<()> {
         storage::set(self.appkey(), &val.to_le_bytes())
     }
 }
 
-impl Field<u16> {
-    pub fn get(&self) -> Option<u16> {
+impl FieldGetSet<u16> for Field<u16> {
+    fn get(&self) -> Option<u16> {
         let mut buf = [0u8; 2];
         let len = storage::get(self.appkey(), &mut buf);
         if matches!(len, Ok(2)) {
@@ -118,13 +141,13 @@ impl Field<u16> {
         }
     }
 
-    pub fn set(&self, val: u16) -> StorageResult<()> {
+    fn set(&self, val: u16) -> StorageResult<()> {
         storage::set(self.appkey(), &val.to_le_bytes())
     }
 }
 
-impl Field<u8> {
-    pub fn get(&self) -> Option<u8> {
+impl FieldGetSet<u8> for Field<u8> {
+    fn get(&self) -> Option<u8> {
         let mut buf = [0u8];
         let len = storage::get(self.appkey(), &mut buf);
         if matches!(len, Ok(1)) {
@@ -134,13 +157,13 @@ impl Field<u8> {
         }
     }
 
-    pub fn set(&self, val: u8) -> StorageResult<()> {
+    fn set(&self, val: u8) -> StorageResult<()> {
         storage::set(self.appkey(), &[val])
     }
 }
 
-impl Field<bool> {
-    pub fn get(&self) -> Option<bool> {
+impl FieldGetSet<bool> for Field<bool> {
+    fn get(&self) -> Option<bool> {
         let mut buf = [0u8];
         let len = storage::get(self.appkey(), &mut buf);
         if matches!(len, Ok(1)) {
@@ -150,21 +173,21 @@ impl Field<bool> {
         }
     }
 
-    pub fn set(&self, val: bool) -> StorageResult<()> {
+    fn set(&self, val: bool) -> StorageResult<()> {
         storage::set(self.appkey(), &[if val { TRUE_BYTE } else { FALSE_BYTE }])
-    }
-
-    pub fn set_true_or_delete(self, val: bool) -> StorageResult<()> {
-        if val {
-            self.set(true)
-        } else {
-            self.delete()
-        }
     }
 }
 
-impl<const N: usize> Field<String<N>> {
-    pub fn get(&self) -> Option<String<N>> {
+pub fn set_true_or_delete(field: impl FieldOps<bool>, value: bool) -> StorageResult<()> {
+    if value {
+        field.set(true)
+    } else {
+        field.delete()
+    }
+}
+
+impl<const N: usize> FieldGetSet<String<N>> for Field<String<N>> {
+    fn get(&self) -> Option<String<N>> {
         let mut buf = [0u8; MAX_STRING];
         let len = storage::get(self.appkey(), &mut buf);
         len.ok().and_then(|len| {
@@ -177,7 +200,7 @@ impl<const N: usize> Field<String<N>> {
         })
     }
 
-    pub fn set(&self, val: &str) -> StorageResult<()> {
+    fn set(&self, val: String<N>) -> StorageResult<()> {
         if self.is_len_ok(val.chars().count(), N) {
             storage::set(self.appkey(), val.as_bytes())
         } else {
@@ -186,8 +209,8 @@ impl<const N: usize> Field<String<N>> {
     }
 }
 
-impl<const N: usize> Field<Vec<u8, N>> {
-    pub fn get(&self) -> Option<Vec<u8, N>> {
+impl<const N: usize> FieldGetSet<Vec<u8, N>> for Field<Vec<u8, N>> {
+    fn get(&self) -> Option<Vec<u8, N>> {
         let mut buf = [0u8; N];
         let len = storage::get(self.appkey(), &mut buf);
         len.ok().and_then(|len| {
@@ -199,9 +222,9 @@ impl<const N: usize> Field<Vec<u8, N>> {
         })
     }
 
-    pub fn set(&self, val: &[u8]) -> Result<(), StorageError> {
+    fn set(&self, val: Vec<u8, N>) -> Result<(), StorageError> {
         if self.is_len_ok(val.len(), N) {
-            storage::set(self.appkey(), val)
+            storage::set(self.appkey(), val.as_ref())
         } else {
             Err(StorageError::InvalidData)
         }
@@ -210,7 +233,13 @@ impl<const N: usize> Field<Vec<u8, N>> {
 
 #[cfg(test)]
 mod tests {
+    use cstr_core::cstr;
+
     use super::*;
+    use crate::{
+        error::Error,
+        micropython::buffer::{Buffer, StrBuffer},
+    };
 
     // TODO: we could have some global Map for testing purposes,
     // and we would be mocking the storage_set/get/has
@@ -258,11 +287,11 @@ mod tests {
     fn test_public() {
         init_storage(true);
 
-        assert!(PUBLIC_STRING.set("hello").is_ok());
+        assert!(PUBLIC_STRING.set(String::from("hello")).is_ok());
         assert_eq!(PUBLIC_STRING.get(), Some(String::from("hello")));
 
         storage::lock();
-        assert!(PUBLIC_STRING.set("world").is_err());
+        assert!(PUBLIC_STRING.set(String::from("world")).is_err());
         assert_eq!(PUBLIC_STRING.get(), Some(String::from("hello")));
     }
 
@@ -271,11 +300,26 @@ mod tests {
         init_storage(true);
 
         // Normal input
-        assert!(PUBLIC_STRING.set("hello").is_ok());
+        let good_string = StrBuffer::from("hello").try_into().unwrap();
+        assert!(PUBLIC_STRING.set(good_string).is_ok());
         assert_eq!(PUBLIC_STRING.get(), Some(String::from("hello")));
 
         // Input too long
-        assert!(PUBLIC_STRING.set("someveryverylongstring").is_err());
+        // Needs a function because the error happens in StrBuffer::try_into,
+        // which needs a context of String<N> being present in PUBLIC_STRING.set()
+        fn set_too_long_string() -> Result<(), Error> {
+            let long_string = StrBuffer::from("someveryverylongstring").try_into()?;
+            PUBLIC_STRING.set(long_string)?;
+            Ok(())
+        }
+
+        let result = set_too_long_string();
+        assert!(result.is_err());
+        assert_eq!(
+            result.err(),
+            Some(Error::ValueError(cstr!("String is too long to fit")))
+        );
+
         assert_eq!(PUBLIC_STRING.get(), Some(String::from("hello")));
     }
 
@@ -284,11 +328,26 @@ mod tests {
         init_storage(true);
 
         // Normal input
-        assert!(PUBLIC_VEC.set(&[1, 255]).is_ok());
+        let good_string = Buffer::from(&[1, 255]).try_into().unwrap();
+        assert!(PUBLIC_VEC.set(good_string).is_ok());
         assert_eq!(PUBLIC_VEC.get(), Vec::from_slice(&[1, 255]).ok());
 
         // Input too long
-        assert!(PUBLIC_VEC.set(&[1, 2, 3]).is_err());
+        // Needs a function because the error happens in Buffer::try_into,
+        // which needs a context of Vec<u8, N> being present in PUBLIC_VEC.set()
+        fn set_too_long_vec() -> Result<(), Error> {
+            let long_vec = Buffer::from(&[1, 255, 123]).try_into()?;
+            PUBLIC_VEC.set(long_vec)?;
+            Ok(())
+        }
+
+        let result = set_too_long_vec();
+        assert!(result.is_err());
+        assert_eq!(
+            result.err(),
+            Some(Error::ValueError(cstr!("Buffer is too long to fit")))
+        );
+
         assert_eq!(PUBLIC_VEC.get(), Vec::from_slice(&[1, 255]).ok());
     }
 }

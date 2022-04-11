@@ -3,6 +3,8 @@ use core::{
     ops::{Deref, DerefMut},
     ptr, slice, str,
 };
+use cstr_core::cstr;
+use heapless::{String, Vec};
 
 use crate::{error::Error, micropython::obj::Obj};
 
@@ -87,6 +89,18 @@ impl<const N: usize> From<&'static [u8; N]> for Buffer {
 //         }
 //     }
 // }
+
+impl<const N: usize> TryFrom<Buffer> for Vec<u8, N> {
+    type Error = Error;
+
+    fn try_from(buf: Buffer) -> Result<Vec<u8, N>, Self::Error> {
+        if buf.len() > N {
+            Err(Error::ValueError(cstr!("Buffer is too long to fit")))
+        } else {
+            Ok(Vec::from_slice(&buf).unwrap())
+        }
+    }
+}
 
 /// Represents a mutable slice of bytes stored on the MicroPython heap and
 /// owned by values that obey the `MP_BUFFER_WRITE` buffer protocol, such as
@@ -185,6 +199,19 @@ impl AsRef<str> for StrBuffer {
 impl From<&'static str> for StrBuffer {
     fn from(val: &'static str) -> Self {
         Self(Buffer::from(val.as_bytes()))
+    }
+}
+
+impl<const N: usize> TryFrom<StrBuffer> for String<N> {
+    type Error = Error;
+
+    fn try_from(str_buf: StrBuffer) -> Result<String<N>, Self::Error> {
+        let slice = str::from_utf8(&str_buf.0).unwrap();
+        if slice.chars().count() <= N {
+            Ok(String::from(slice))
+        } else {
+            Err(Error::ValueError(cstr!("String is too long to fit")))
+        }
     }
 }
 

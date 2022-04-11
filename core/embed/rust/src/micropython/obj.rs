@@ -312,6 +312,17 @@ impl TryFrom<&str> for Obj {
     }
 }
 
+impl<const N: usize> TryFrom<String<N>> for Obj {
+    type Error = Error;
+
+    fn try_from(val: String<N>) -> Result<Self, Self::Error> {
+        // SAFETY:
+        //  - `str` is guaranteed to be UTF-8.
+        // EXCEPTION: Will raise if allocation fails.
+        catch_exception(|| unsafe { ffi::mp_obj_new_str(val.as_ptr().cast(), val.len()) })
+    }
+}
+
 /// ROM null-terminated strings can be converted to `str` MicroPython objects
 /// without making a copy on the heap, only allocating the `mp_obj_str_t`
 /// struct.

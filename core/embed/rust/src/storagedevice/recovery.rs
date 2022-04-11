@@ -2,7 +2,7 @@ use crate::{
     error::Error,
     micropython::{map::Map, module::Module, obj::Obj, qstr::Qstr},
     storagedevice::recovery_shares,
-    trezorhal::storage_field::Field,
+    trezorhal::storage_field::{Field, FieldGetSet},
     util,
 };
 use cstr_core::cstr;
@@ -174,7 +174,9 @@ extern "C" fn storagerecovery_set_slip39_remaining_shares(
         let mut remaining = _REMAINING.get().unwrap_or(default_remaining);
         remaining[group_index] = shares_remaining;
 
-        _REMAINING.set(&remaining as &[u8])?.try_into()
+        _REMAINING
+            .set(Vec::from_slice(&remaining as &[u8]).unwrap())?
+            .try_into()
     };
     unsafe { util::try_or_raise(block) }
 }
