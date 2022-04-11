@@ -207,10 +207,10 @@ impl<const N: usize> TryFrom<StrBuffer> for String<N> {
 
     fn try_from(str_buf: StrBuffer) -> Result<String<N>, Self::Error> {
         let slice = str::from_utf8(&str_buf.0).unwrap();
-        if slice.chars().count() <= N {
-            Ok(String::from(slice))
-        } else {
+        if slice.chars().count() > N {
             Err(Error::ValueError(cstr!("String is too long to fit")))
+        } else {
+            Ok(String::from(slice))
         }
     }
 }

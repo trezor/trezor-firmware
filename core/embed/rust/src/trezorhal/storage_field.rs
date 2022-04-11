@@ -60,6 +60,7 @@ impl<T> Field<T> {
         }
     }
 
+    // TODO: would it be worth calculating it once and store as an attribute?
     fn appkey(&self) -> u16 {
         let app = self.app | self.access as u8;
         (app as u16) << 8 | self.key as u16
@@ -70,7 +71,7 @@ impl<T> Field<T> {
     }
 
     pub fn delete(&self) -> StorageResult<()> {
-        // If there is nothing, storage_delete() would return false
+        // If field is not there, storage::delete() would return Err()
         if !self.has() {
             return Ok(());
         }
@@ -82,6 +83,7 @@ impl<T> Field<T> {
         }
     }
 
+    /// Checking if the length of the field is not unexpected
     const fn is_len_ok(&self, len: usize, expected: usize) -> bool {
         if self.max_len_is_exact {
             len == expected
@@ -178,6 +180,7 @@ impl FieldGetSet<bool> for Field<bool> {
     }
 }
 
+/// Helper function defined only on boolean Fields
 pub fn set_true_or_delete(field: impl FieldOps<bool>, value: bool) -> StorageResult<()> {
     if value {
         field.set(true)
@@ -255,8 +258,9 @@ mod tests {
     }
 
     const VERSION: Field<u8> = Field::private(0x01, 0x01);
-    const PUBLIC_STRING: Field<String<10>> = Field::public(0x01, 0x02);
-    const PUBLIC_VEC: Field<Vec<u8, 2>> = Field::public(0x01, 0x02);
+    const PRIVATE_BOOL: Field<bool> = Field::private(0x01, 0x02);
+    const PUBLIC_STRING: Field<String<10>> = Field::public(0x01, 0x03);
+    const PUBLIC_VEC: Field<Vec<u8, 2>> = Field::public(0x01, 0x04);
 
     #[test]
     fn test_basic() {
@@ -299,16 +303,19 @@ mod tests {
     fn test_value_too_long_str() {
         init_storage(true);
 
+        const GOOD_VALUE: &str = "hello";
+        const TOO_LONG_VALUE: &str = "someveryverylongstring";
+
         // Normal input
-        let good_string = StrBuffer::from("hello").try_into().unwrap();
+        let good_string = StrBuffer::from(GOOD_VALUE).try_into().unwrap();
         assert!(PUBLIC_STRING.set(good_string).is_ok());
-        assert_eq!(PUBLIC_STRING.get(), Some(String::from("hello")));
+        assert_eq!(PUBLIC_STRING.get(), Some(String::from(GOOD_VALUE)));
 
         // Input too long
         // Needs a function because the error happens in StrBuffer::try_into,
         // which needs a context of String<N> being present in PUBLIC_STRING.set()
         fn set_too_long_string() -> Result<(), Error> {
-            let long_string = StrBuffer::from("someveryverylongstring").try_into()?;
+            let long_string = StrBuffer::from(TOO_LONG_VALUE).try_into()?;
             PUBLIC_STRING.set(long_string)?;
             Ok(())
         }
@@ -320,24 +327,27 @@ mod tests {
             Some(Error::ValueError(cstr!("String is too long to fit")))
         );
 
-        assert_eq!(PUBLIC_STRING.get(), Some(String::from("hello")));
+        assert_eq!(PUBLIC_STRING.get(), Some(String::from(GOOD_VALUE)));
     }
 
     #[test]
     fn test_value_too_long_vec() {
         init_storage(true);
 
+        const GOOD_VALUE: &[u8; 2] = &[1, 255];
+        const TOO_LONG_VALUE: &[u8; 3] = &[1, 255, 123];
+
         // Normal input
-        let good_string = Buffer::from(&[1, 255]).try_into().unwrap();
+        let good_string = Buffer::from(GOOD_VALUE).try_into().unwrap();
         assert!(PUBLIC_VEC.set(good_string).is_ok());
-        assert_eq!(PUBLIC_VEC.get(), Vec::from_slice(&[1, 255]).ok());
+        assert_eq!(PUBLIC_VEC.get(), Vec::from_slice(GOOD_VALUE).ok());
 
         // Input too long
         // Needs a function because the error happens in Buffer::try_into,
         // which needs a context of Vec<u8, N> being present in PUBLIC_VEC.set()
         fn set_too_long_vec() -> Result<(), Error> {
-            let long_vec = Buffer::from(&[1, 255, 123]).try_into()?;
-            PUBLIC_VEC.set(long_vec)?;
+            let too_long_vec = Buffer::from(TOO_LONG_VALUE).try_into()?;
+            PUBLIC_VEC.set(too_long_vec)?;
             Ok(())
         }
 
@@ -348,6 +358,22 @@ mod tests {
             Some(Error::ValueError(cstr!("Buffer is too long to fit")))
         );
 
-        assert_eq!(PUBLIC_VEC.get(), Vec::from_slice(&[1, 255]).ok());
+        assert_eq!(PUBLIC_VEC.get(), Vec::from_slice(GOOD_VALUE).ok());
+    }
+
+    #[test]
+    fn test_set_true_or_delete() {
+        init_storage(true);
+
+        assert!(!PRIVATE_BOOL.has());
+        assert!(PRIVATE_BOOL.set(false).is_ok());
+        assert!(PRIVATE_BOOL.has());
+        assert_eq!(PRIVATE_BOOL.get(), Some(false));
+
+        assert!(set_true_or_delete(PRIVATE_BOOL, true).is_ok());
+        assert_eq!(PRIVATE_BOOL.get(), Some(true));
+
+        assert!(set_true_or_delete(PRIVATE_BOOL, false).is_ok());
+        assert!(!PRIVATE_BOOL.has());
     }
 }

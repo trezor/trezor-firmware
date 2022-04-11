@@ -23,9 +23,6 @@ use heapless::{String, Vec};
 // TODO: could be defined as a part of `Field` not to repeat it so much
 const APP_DEVICE: u8 = 0x01;
 
-const _FALSE_BYTE: u8 = 0x00;
-const _TRUE_BYTE: u8 = 0x01;
-
 const HOMESCREEN_MAXSIZE: usize = 16384;
 const LABEL_MAXLENGTH: usize = 32;
 
@@ -34,35 +31,34 @@ const LABEL_MAXLENGTH: usize = 32;
 const SD_SALT_AUTH_KEY_LEN_BYTES: usize = 16;
 
 // TODO: how to export all public constants as integers?
-// TODO: probably get rid of all the underscores in variable names
 
 const DEVICE_ID: Field<String<24>> = Field::public(APP_DEVICE, 0x00).exact();
 const VERSION: Field<Vec<u8, 1>> = Field::private(APP_DEVICE, 0x01).exact();
-const _MNEMONIC_SECRET: Field<Vec<u8, 256>> = Field::private(APP_DEVICE, 0x02);
-const _LABEL: Field<String<LABEL_MAXLENGTH>> = Field::public(APP_DEVICE, 0x04);
-const _USE_PASSPHRASE: Field<bool> = Field::private(APP_DEVICE, 0x05);
-const _HOMESCREEN: Field<Vec<u8, HOMESCREEN_MAXSIZE>> = Field::public(APP_DEVICE, 0x06);
-const _NEEDS_BACKUP: Field<bool> = Field::private(APP_DEVICE, 0x07);
-const _FLAGS: Field<u32> = Field::private(APP_DEVICE, 0x08);
-const _U2F_COUNTER_PRIVATE: Field<u8> = Field::private(APP_DEVICE, 0x09);
+const MNEMONIC_SECRET: Field<Vec<u8, 256>> = Field::private(APP_DEVICE, 0x02);
+const LABEL: Field<String<LABEL_MAXLENGTH>> = Field::public(APP_DEVICE, 0x04);
+const USE_PASSPHRASE: Field<bool> = Field::private(APP_DEVICE, 0x05);
+const HOMESCREEN: Field<Vec<u8, HOMESCREEN_MAXSIZE>> = Field::public(APP_DEVICE, 0x06);
+const NEEDS_BACKUP: Field<bool> = Field::private(APP_DEVICE, 0x07);
+const FLAGS: Field<u32> = Field::private(APP_DEVICE, 0x08);
+const U2F_COUNTER_PRIVATE: Field<u8> = Field::private(APP_DEVICE, 0x09);
 const U2F_COUNTER: u8 = 0x09;
-const _PASSPHRASE_ALWAYS_ON_DEVICE: Field<bool> = Field::private(APP_DEVICE, 0x0A);
-const _UNFINISHED_BACKUP: Field<bool> = Field::private(APP_DEVICE, 0x0B);
-const _AUTOLOCK_DELAY_MS: Field<u32> = Field::private(APP_DEVICE, 0x0C);
-const _NO_BACKUP: Field<bool> = Field::private(APP_DEVICE, 0x0D);
-const _BACKUP_TYPE: Field<u8> = Field::private(APP_DEVICE, 0x0E);
+const PASSPHRASE_ALWAYS_ON_DEVICE: Field<bool> = Field::private(APP_DEVICE, 0x0A);
+const UNFINISHED_BACKUP: Field<bool> = Field::private(APP_DEVICE, 0x0B);
+const AUTOLOCK_DELAY_MS: Field<u32> = Field::private(APP_DEVICE, 0x0C);
+const NO_BACKUP: Field<bool> = Field::private(APP_DEVICE, 0x0D);
+const BACKUP_TYPE: Field<u8> = Field::private(APP_DEVICE, 0x0E);
 const ROTATION: Field<u16> = Field::public(APP_DEVICE, 0x0F);
-const _SLIP39_IDENTIFIER: Field<u16> = Field::private(APP_DEVICE, 0x10);
-const _SLIP39_ITERATION_EXPONENT: Field<u8> = Field::private(APP_DEVICE, 0x11);
-const _SD_SALT_AUTH_KEY: Field<Vec<u8, SD_SALT_AUTH_KEY_LEN_BYTES>> =
+const SLIP39_IDENTIFIER: Field<u16> = Field::private(APP_DEVICE, 0x10);
+const SLIP39_ITERATION_EXPONENT: Field<u8> = Field::private(APP_DEVICE, 0x11);
+const SD_SALT_AUTH_KEY: Field<Vec<u8, SD_SALT_AUTH_KEY_LEN_BYTES>> =
     Field::public(APP_DEVICE, 0x12).exact();
 const INITIALIZED: Field<bool> = Field::public(APP_DEVICE, 0x13);
-const _SAFETY_CHECK_LEVEL: Field<u8> = Field::private(APP_DEVICE, 0x14);
-const _EXPERIMENTAL_FEATURES: Field<bool> = Field::private(APP_DEVICE, 0x15);
+const SAFETY_CHECK_LEVEL: Field<u8> = Field::private(APP_DEVICE, 0x14);
+const EXPERIMENTAL_FEATURES: Field<bool> = Field::private(APP_DEVICE, 0x15);
 
 const SAFETY_CHECK_LEVEL_STRICT: u8 = 0;
 const SAFETY_CHECK_LEVEL_PROMPT: u8 = 1;
-const _DEFAULT_SAFETY_CHECK_LEVEL: u8 = SAFETY_CHECK_LEVEL_STRICT;
+const DEFAULT_SAFETY_CHECK_LEVEL: u8 = SAFETY_CHECK_LEVEL_STRICT;
 const SAFETY_CHECK_LEVELS: [u8; 2] = [SAFETY_CHECK_LEVEL_STRICT, SAFETY_CHECK_LEVEL_PROMPT];
 
 // TODO: somehow determine the DEBUG_MODE value
@@ -131,14 +127,14 @@ extern "C" fn storagedevice_set_rotation(rotation: Obj) -> Obj {
 }
 
 extern "C" fn storagedevice_get_label() -> Obj {
-    let block = || _LABEL.get().map_or(Ok(Obj::const_none()), |x| x.try_into());
+    let block = || LABEL.get().map_or(Ok(Obj::const_none()), |x| x.try_into());
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_set_label(label: Obj) -> Obj {
     let block = || {
         let label: StrBuffer = label.try_into()?;
-        _LABEL.set(label.try_into()?)?.try_into()
+        LABEL.set(label.try_into()?)?.try_into()
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -148,8 +144,8 @@ extern "C" fn storagedevice_get_device_id() -> Obj {
         if let Some(device_id) = DEVICE_ID.get() {
             device_id.try_into()
         } else {
-            let new_device_id = &random::get_random_bytes(12) as &[u8];
-            let hex_id = helpers::hexlify_bytes(new_device_id);
+            let new_device_id = random::get_random_bytes::<12>();
+            let hex_id = helpers::hexlify_bytes(&new_device_id);
             DEVICE_ID.set(hex_id.clone())?;
             hex_id.try_into()
         }
@@ -167,7 +163,7 @@ extern "C" fn storagedevice_set_device_id(device_id: Obj) -> Obj {
 
 extern "C" fn storagedevice_get_mnemonic_secret() -> Obj {
     let block = || {
-        _MNEMONIC_SECRET
+        MNEMONIC_SECRET
             .get()
             .map_or(Ok(Obj::const_none()), |x| (&x as &[u8]).try_into())
     };
@@ -194,13 +190,13 @@ extern "C" fn storagedevice_set_mnemonic_secret(
         };
 
         VERSION.set(Vec::from_slice(&[STORAGE_VERSION_CURRENT]).unwrap())?;
-        _MNEMONIC_SECRET.set(secret.try_into()?)?;
-        _BACKUP_TYPE.set(backup_type)?;
-        set_true_or_delete(_NO_BACKUP, no_backup)?;
+        MNEMONIC_SECRET.set(secret.try_into()?)?;
+        BACKUP_TYPE.set(backup_type)?;
+        set_true_or_delete(NO_BACKUP, no_backup)?;
         INITIALIZED.set(true)?;
 
         if !no_backup {
-            set_true_or_delete(_NEEDS_BACKUP, needs_backup)?;
+            set_true_or_delete(NEEDS_BACKUP, needs_backup)?;
         }
 
         Ok(true.into())
@@ -209,7 +205,7 @@ extern "C" fn storagedevice_set_mnemonic_secret(
 }
 
 extern "C" fn storagedevice_is_passphrase_enabled() -> Obj {
-    let block = || Ok(_USE_PASSPHRASE.get().unwrap_or(false).into());
+    let block = || Ok(USE_PASSPHRASE.get().unwrap_or(false).into());
     unsafe { util::try_or_raise(block) }
 }
 
@@ -217,10 +213,10 @@ extern "C" fn storagedevice_set_passphrase_enabled(enable: Obj) -> Obj {
     let block = || {
         let enable = enable.try_into()?;
 
-        _USE_PASSPHRASE.set(enable)?;
+        USE_PASSPHRASE.set(enable)?;
 
         if !enable {
-            _PASSPHRASE_ALWAYS_ON_DEVICE.set(false)?;
+            PASSPHRASE_ALWAYS_ON_DEVICE.set(false)?;
         }
 
         Ok(Obj::const_none())
@@ -229,13 +225,13 @@ extern "C" fn storagedevice_set_passphrase_enabled(enable: Obj) -> Obj {
 }
 
 extern "C" fn storagedevice_get_passphrase_always_on_device() -> Obj {
-    let block = || Ok(_PASSPHRASE_ALWAYS_ON_DEVICE.get().unwrap_or(false).into());
+    let block = || Ok(PASSPHRASE_ALWAYS_ON_DEVICE.get().unwrap_or(false).into());
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_set_passphrase_always_on_device(enable: Obj) -> Obj {
     let block = || {
-        _PASSPHRASE_ALWAYS_ON_DEVICE
+        PASSPHRASE_ALWAYS_ON_DEVICE
             .set(enable.try_into()?)?
             .try_into()
     };
@@ -243,44 +239,44 @@ extern "C" fn storagedevice_set_passphrase_always_on_device(enable: Obj) -> Obj 
 }
 
 extern "C" fn storagedevice_unfinished_backup() -> Obj {
-    let block = || Ok(_UNFINISHED_BACKUP.get().unwrap_or(false).into());
+    let block = || Ok(UNFINISHED_BACKUP.get().unwrap_or(false).into());
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_set_unfinished_backup(state: Obj) -> Obj {
-    let block = || _UNFINISHED_BACKUP.set(state.try_into()?)?.try_into();
+    let block = || UNFINISHED_BACKUP.set(state.try_into()?)?.try_into();
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_needs_backup() -> Obj {
-    let block = || Ok(_NEEDS_BACKUP.get().unwrap_or(false).into());
+    let block = || Ok(NEEDS_BACKUP.get().unwrap_or(false).into());
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_set_backed_up() -> Obj {
-    let block = || _NEEDS_BACKUP.delete()?.try_into();
+    let block = || NEEDS_BACKUP.delete()?.try_into();
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_no_backup() -> Obj {
-    let block = || Ok(_NO_BACKUP.get().unwrap_or(false).into());
+    let block = || Ok(NO_BACKUP.get().unwrap_or(false).into());
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_get_experimental_features() -> Obj {
-    let block = || Ok(_EXPERIMENTAL_FEATURES.get().unwrap_or(false).into());
+    let block = || Ok(EXPERIMENTAL_FEATURES.get().unwrap_or(false).into());
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_set_experimental_features(enable: Obj) -> Obj {
-    let block = || set_true_or_delete(_EXPERIMENTAL_FEATURES, enable.try_into()?)?.try_into();
+    let block = || set_true_or_delete(EXPERIMENTAL_FEATURES, enable.try_into()?)?.try_into();
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_get_backup_type() -> Obj {
     let block = || {
         // TODO: we could import the BackupType enum
-        let backup_type = _BACKUP_TYPE.get().unwrap_or(0);
+        let backup_type = BACKUP_TYPE.get().unwrap_or(0);
 
         if ![0, 1, 2].contains(&backup_type) {
             Err(Error::ValueError(cstr!("Invalid backup type")))
@@ -293,7 +289,7 @@ extern "C" fn storagedevice_get_backup_type() -> Obj {
 
 extern "C" fn storagedevice_get_homescreen() -> Obj {
     let block = || {
-        _HOMESCREEN
+        HOMESCREEN
             .get()
             .map_or(Ok(Obj::const_none()), |x| (&x as &[u8]).try_into())
     };
@@ -302,7 +298,7 @@ extern "C" fn storagedevice_get_homescreen() -> Obj {
 
 extern "C" fn storagedevice_set_homescreen(homescreen: Obj) -> Obj {
     let block = || {
-        _HOMESCREEN
+        HOMESCREEN
             .set(Buffer::try_from(homescreen)?.try_into()?)?
             .try_into()
     };
@@ -311,7 +307,7 @@ extern "C" fn storagedevice_set_homescreen(homescreen: Obj) -> Obj {
 
 extern "C" fn storagedevice_get_slip39_identifier() -> Obj {
     let block = || {
-        _SLIP39_IDENTIFIER
+        SLIP39_IDENTIFIER
             .get()
             .map_or(Ok(Obj::const_none()), |x| Ok(x.into()))
     };
@@ -319,13 +315,13 @@ extern "C" fn storagedevice_get_slip39_identifier() -> Obj {
 }
 
 extern "C" fn storagedevice_set_slip39_identifier(identifier: Obj) -> Obj {
-    let block = || _SLIP39_IDENTIFIER.set(identifier.try_into()?)?.try_into();
+    let block = || SLIP39_IDENTIFIER.set(identifier.try_into()?)?.try_into();
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_get_slip39_iteration_exponent() -> Obj {
     let block = || {
-        _SLIP39_ITERATION_EXPONENT
+        SLIP39_ITERATION_EXPONENT
             .get()
             .map_or(Ok(Obj::const_none()), |x| Ok(x.into()))
     };
@@ -334,7 +330,7 @@ extern "C" fn storagedevice_get_slip39_iteration_exponent() -> Obj {
 
 extern "C" fn storagedevice_set_slip39_iteration_exponent(exponent: Obj) -> Obj {
     let block = || {
-        _SLIP39_ITERATION_EXPONENT
+        SLIP39_ITERATION_EXPONENT
             .set(exponent.try_into()?)?
             .try_into()
     };
@@ -343,19 +339,19 @@ extern "C" fn storagedevice_set_slip39_iteration_exponent(exponent: Obj) -> Obj 
 
 extern "C" fn storagedevice_get_autolock_delay_ms() -> Obj {
     let block = || {
-        let delay = _AUTOLOCK_DELAY_MS.get().unwrap_or(AUTOLOCK_DELAY_DEFAULT);
+        let delay = AUTOLOCK_DELAY_MS.get().unwrap_or(AUTOLOCK_DELAY_DEFAULT);
         _normalize_autolock_delay(delay).try_into()
     };
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_set_autolock_delay_ms(delay_ms: Obj) -> Obj {
-    let block = || _AUTOLOCK_DELAY_MS.set(delay_ms.try_into()?)?.try_into();
+    let block = || AUTOLOCK_DELAY_MS.set(delay_ms.try_into()?)?.try_into();
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_get_flags() -> Obj {
-    let block = || _FLAGS.get().unwrap_or(0).try_into();
+    let block = || FLAGS.get().unwrap_or(0).try_into();
     unsafe { util::try_or_raise(block) }
 }
 
@@ -363,23 +359,23 @@ extern "C" fn storagedevice_set_flags(flags: Obj) -> Obj {
     let block = || {
         let flags: u32 = flags.try_into()?;
 
-        let old_flags = _FLAGS.get().unwrap_or(0);
+        let old_flags = FLAGS.get().unwrap_or(0);
 
         // Not deleting old flags
         let new_flags = flags | old_flags;
-        _FLAGS.set(new_flags)?.try_into()
+        FLAGS.set(new_flags)?.try_into()
     };
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_get_safety_check_level() -> Obj {
     let block = || {
-        let level = _SAFETY_CHECK_LEVEL
+        let level = SAFETY_CHECK_LEVEL
             .get()
-            .unwrap_or(_DEFAULT_SAFETY_CHECK_LEVEL);
+            .unwrap_or(DEFAULT_SAFETY_CHECK_LEVEL);
 
         let level = if !SAFETY_CHECK_LEVELS.contains(&level) {
-            _DEFAULT_SAFETY_CHECK_LEVEL
+            DEFAULT_SAFETY_CHECK_LEVEL
         } else {
             level
         };
@@ -396,7 +392,7 @@ extern "C" fn storagedevice_set_safety_check_level(level: Obj) -> Obj {
         if !SAFETY_CHECK_LEVELS.contains(&level) {
             Err(Error::ValueError(cstr!("Not valid safety level")))
         } else {
-            _SAFETY_CHECK_LEVEL.set(level)?.try_into()
+            SAFETY_CHECK_LEVEL.set(level)?.try_into()
         }
     };
     unsafe { util::try_or_raise(block) }
@@ -404,7 +400,7 @@ extern "C" fn storagedevice_set_safety_check_level(level: Obj) -> Obj {
 
 extern "C" fn storagedevice_get_sd_salt_auth_key() -> Obj {
     let block = || {
-        _SD_SALT_AUTH_KEY
+        SD_SALT_AUTH_KEY
             .get()
             .map_or(Ok(Obj::const_none()), |x| (&x as &[u8]).try_into())
     };
@@ -416,9 +412,9 @@ extern "C" fn storagedevice_set_sd_salt_auth_key(auth_key: Obj) -> Obj {
         let auth_key: Buffer = auth_key.try_into()?;
 
         if auth_key.is_empty() {
-            _SD_SALT_AUTH_KEY.delete()?.try_into()
+            SD_SALT_AUTH_KEY.delete()?.try_into()
         } else {
-            _SD_SALT_AUTH_KEY.set(auth_key.try_into()?)?.try_into()
+            SD_SALT_AUTH_KEY.set(auth_key.try_into()?)?.try_into()
         }
     };
     unsafe { util::try_or_raise(block) }
@@ -434,17 +430,15 @@ extern "C" fn storagedevice_get_next_u2f_counter() -> Obj {
 
 extern "C" fn storagedevice_set_u2f_counter(count: Obj) -> Obj {
     let block = || {
-        let count = count.try_into()?;
-
         let key = helpers::get_appkey_u2f(APP_DEVICE, U2F_COUNTER, true);
-        storage::set_counter(key, count)?.try_into()
+        storage::set_counter(key, count.try_into()?)?.try_into()
     };
     unsafe { util::try_or_raise(block) }
 }
 
 extern "C" fn storagedevice_get_private_u2f_counter() -> Obj {
     let block = || {
-        _U2F_COUNTER_PRIVATE
+        U2F_COUNTER_PRIVATE
             .get()
             .map_or(Ok(Obj::const_none()), |x| Ok(x.into()))
     };
@@ -452,7 +446,7 @@ extern "C" fn storagedevice_get_private_u2f_counter() -> Obj {
 }
 
 extern "C" fn storagedevice_delete_private_u2f_counter() -> Obj {
-    let block = || _EXPERIMENTAL_FEATURES.delete()?.try_into();
+    let block = || EXPERIMENTAL_FEATURES.delete()?.try_into();
     unsafe { util::try_or_raise(block) }
 }
 

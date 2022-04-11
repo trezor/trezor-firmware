@@ -9,7 +9,7 @@ use heapless::Vec;
 
 const APP_WEBAUTHN: u8 = 0x04;
 
-const _RESIDENT_CREDENTIAL_START_KEY: u8 = 1;
+const RESIDENT_CREDENTIAL_START_KEY: u8 = 1;
 const MAX_RESIDENT_CREDENTIALS: u8 = 100;
 
 extern "C" fn storageresidentcredentials_get(index: Obj) -> Obj {
@@ -17,7 +17,7 @@ extern "C" fn storageresidentcredentials_get(index: Obj) -> Obj {
         let index = index.try_into()?;
         _require_valid_index(index)?;
 
-        Field::<Vec<u8, 4096>>::private(APP_WEBAUTHN, index + _RESIDENT_CREDENTIAL_START_KEY)
+        Field::<Vec<u8, 4096>>::private(APP_WEBAUTHN, index + RESIDENT_CREDENTIAL_START_KEY)
             .get()
             .map_or(Ok(Obj::const_none()), |x| (&x as &[u8]).try_into())
     };
@@ -29,7 +29,7 @@ extern "C" fn storageresidentcredentials_set(index: Obj, data: Obj) -> Obj {
         let index = index.try_into()?;
         _require_valid_index(index)?;
         let data: Buffer = data.try_into()?;
-        Field::<Vec<u8, 4096>>::private(APP_WEBAUTHN, index + _RESIDENT_CREDENTIAL_START_KEY)
+        Field::<Vec<u8, 4096>>::private(APP_WEBAUTHN, index + RESIDENT_CREDENTIAL_START_KEY)
             .set(data.try_into()?)?
             .try_into()
     };
@@ -40,7 +40,7 @@ extern "C" fn storageresidentcredentials_delete(index: Obj) -> Obj {
     let block = || {
         let index = index.try_into()?;
         _require_valid_index(index)?;
-        Field::<Vec<u8, 4096>>::private(APP_WEBAUTHN, index + _RESIDENT_CREDENTIAL_START_KEY)
+        Field::<Vec<u8, 4096>>::private(APP_WEBAUTHN, index + RESIDENT_CREDENTIAL_START_KEY)
             .delete()?
             .try_into()
     };
@@ -50,7 +50,7 @@ extern "C" fn storageresidentcredentials_delete(index: Obj) -> Obj {
 extern "C" fn storageresidentcredentials_delete_all() -> Obj {
     let block = || {
         for index in 0..MAX_RESIDENT_CREDENTIALS {
-            Field::<Vec<u8, 4096>>::private(APP_WEBAUTHN, index + _RESIDENT_CREDENTIAL_START_KEY)
+            Field::<Vec<u8, 4096>>::private(APP_WEBAUTHN, index + RESIDENT_CREDENTIAL_START_KEY)
                 .delete()?;
         }
         Ok(Obj::const_none())

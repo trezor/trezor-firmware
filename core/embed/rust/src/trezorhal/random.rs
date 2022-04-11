@@ -6,9 +6,6 @@ extern "C" {
     fn random_buffer(buf: *const u8, len: u16);
 }
 
-// TODO: what is the sensible max size not to allocate too much every time?
-const MAX_LEN: usize = u8::MAX as usize;
-
 pub fn uniform(n: u32) -> u32 {
     unsafe { random_uniform(n) }
 }
@@ -21,11 +18,27 @@ pub fn shuffle<T>(slice: &mut [T]) {
     }
 }
 
-// TODO: it seems it gets the same results every time?
-pub fn get_random_bytes(len: u8) -> Vec<u8, MAX_LEN> {
-    let mut buf: [u8; MAX_LEN] = [0; MAX_LEN];
-    unsafe { random_buffer(&mut buf as *mut _, len as u16) };
+// TODO: it seems it gets the same results every time? (could be seeded with
+// device seed)
+pub fn get_random_bytes<const N: usize>() -> Vec<u8, N> {
+    let mut buf: [u8; N] = [0; N];
+    unsafe { random_buffer(&mut buf as *mut _, N as u16) };
 
-    let result = &buf[..len as usize];
-    result.iter().cloned().collect()
+    (&buf).iter().cloned().collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_random_bytes() {
+        let result = get_random_bytes::<12>();
+        assert_eq!(result.len(), 12);
+
+        let result_2 = get_random_bytes::<12>();
+        assert_eq!(result_2.len(), 12);
+
+        assert_ne!(result, result_2);
+    }
 }

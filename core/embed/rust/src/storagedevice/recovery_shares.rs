@@ -13,10 +13,9 @@ const MAX_GROUP_COUNT: usize = 16;
 
 extern "C" fn storagerecoveryshares_get(index: Obj, group_index: Obj) -> Obj {
     let block = || {
-        let index = index.try_into()?;
-        let group_index = group_index.try_into()?;
-
-        get_share_string(index, group_index)?.as_str().try_into()
+        get_share_string(index.try_into()?, group_index.try_into()?)?
+            .as_str()
+            .try_into()
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -39,11 +38,9 @@ extern "C" fn storagerecoveryshares_set(index: Obj, group_index: Obj, mnemonic: 
 
 extern "C" fn storagerecoveryshares_fetch_group(group_index: Obj) -> Obj {
     let block = || {
-        let group_index = group_index.try_into()?;
-
         let mut result: Vec<String<256>, MAX_SHARE_COUNT> = Vec::new();
         for index in 0..MAX_SHARE_COUNT {
-            let share = get_share_string(index as u8, group_index)?;
+            let share = get_share_string(index as u8, group_index.try_into()?)?;
             if !share.is_empty() {
                 result.push(share).unwrap();
             }
