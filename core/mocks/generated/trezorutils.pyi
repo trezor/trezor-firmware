@@ -72,6 +72,13 @@ def get_firmware_chunk(index: int, offset: int, buffer: bytearray) -> None:
     """
     Reads a chunk of the firmware into `buffer`.
     """
+
+
+# extmod/modtrezorutils/modtrezorutils.c
+def reboot_to_bootloader() -> None:
+    """
+    Reboots to bootloader.
+    """
 SCM_REVISION: bytes
 VERSION_MAJOR: int
 VERSION_MINOR: int

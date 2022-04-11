@@ -19,6 +19,9 @@
 
 #include "py/objstr.h"
 #include "py/runtime.h"
+#ifndef TREZOR_EMULATOR
+#include "supervise.h"
+#endif
 
 #include "version.h"
 
@@ -245,6 +248,19 @@ STATIC mp_obj_t mod_trezorutils_get_firmware_chunk(const mp_obj_t index_obj,
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorutils_get_firmware_chunk_obj,
                                  mod_trezorutils_get_firmware_chunk);
 
+/// def reboot_to_bootloader() -> None:
+///     """
+///     Reboots to bootloader.
+///     """
+STATIC mp_obj_t mod_trezorutils_reboot_to_bootloader() {
+#ifndef TREZOR_EMULATOR
+  svc_reboot_to_bootloader();
+#endif
+  return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_reboot_to_bootloader_obj,
+                                 mod_trezorutils_reboot_to_bootloader);
+
 STATIC mp_obj_str_t mod_trezorutils_revision_obj = {
     {&mp_type_bytes}, 0, sizeof(SCM_REVISION) - 1, (const byte *)SCM_REVISION};
 
@@ -272,7 +288,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
      MP_ROM_PTR(&mod_trezorutils_firmware_sector_size_obj)},
     {MP_ROM_QSTR(MP_QSTR_FIRMWARE_SECTORS_COUNT),
      MP_ROM_INT(FIRMWARE_SECTORS_COUNT)},
-
+    {MP_ROM_QSTR(MP_QSTR_reboot_to_bootloader),
+     MP_ROM_PTR(&mod_trezorutils_reboot_to_bootloader_obj)},
     // various built-in constants
     {MP_ROM_QSTR(MP_QSTR_SCM_REVISION),
      MP_ROM_PTR(&mod_trezorutils_revision_obj)},
