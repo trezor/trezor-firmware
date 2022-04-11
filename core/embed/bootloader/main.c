@@ -242,6 +242,10 @@ static void check_bootloader_version(void) {
 #endif
 
 int main(void) {
+  // grab "stay in bootloader" flag as soon as possible
+  register uint32_t r11 __asm__("r11");
+  volatile uint32_t stay_in_bootloader_flag = r11;
+
   random_delays_init();
   // display_init_seq();
 #if defined TREZOR_MODEL_T
@@ -281,6 +285,9 @@ int main(void) {
   vendor_header vhdr;
   image_header hdr;
   secbool stay_in_bootloader = secfalse;  // flag to stay in bootloader
+  if (stay_in_bootloader_flag == STAY_IN_BOOTLOADER_FLAG) {
+    stay_in_bootloader = sectrue;
+  }
 
   // detect whether the devices contains a valid firmware
 

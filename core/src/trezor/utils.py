@@ -16,6 +16,7 @@ from trezorutils import (  # noqa: F401
     get_firmware_chunk,
     halt,
     memcpy,
+    reboot_to_bootloader,
 )
 from typing import TYPE_CHECKING
 

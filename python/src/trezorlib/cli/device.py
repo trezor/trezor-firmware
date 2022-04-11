@@ -278,8 +278,4 @@ def reboot_to_bootloader(obj: "TrezorConnection") -> str:
     # avoid using @with_client because it closes the session afterwards,
     # which triggers double prompt on device
     with obj.client_context() as client:
-        if client.features.model != "1":
-            click.echo(
-                f"Warning: Rebooting into bootloader not supported on Trezor {client.features.model}"
-            )
         return device.reboot_to_bootloader(client)

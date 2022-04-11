@@ -371,6 +371,8 @@ apps.management.get_next_u2f_counter
 import apps.management.get_next_u2f_counter
 apps.management.get_nonce
 import apps.management.get_nonce
+apps.management.reboot_to_bootloader
+import apps.management.reboot_to_bootloader
 apps.management.recovery_device
 import apps.management.recovery_device
 apps.management.recovery_device.homescreen

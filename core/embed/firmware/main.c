@@ -41,6 +41,7 @@
 #include "compiler_traits.h"
 #include "display.h"
 #include "flash.h"
+#include "image.h"
 #include "mpu.h"
 #include "random_delays.h"
 #ifdef SYSTEM_VIEW
@@ -180,6 +181,13 @@ void UsageFault_Handler(void) {
   error_shutdown("Internal error", "(UF)", NULL, NULL);
 }
 
+__attribute__((noreturn)) void reboot_to_bootloader() {
+  jump_to_with_flag(BOOTLOADER_START + IMAGE_HEADER_SIZE,
+                    STAY_IN_BOOTLOADER_FLAG);
+  for (;;)
+    ;
+}
+
 void SVC_C_Handler(uint32_t *stack) {
   uint8_t svc_number = ((uint8_t *)stack[6])[-2];
   switch (svc_number) {
@@ -202,6 +210,16 @@ void SVC_C_Handler(uint32_t *stack) {
       for (;;)
         ;
       break;
+    case SVC_REBOOT_TO_BOOTLOADER:
+      mpu_config_bootloader();
+      __asm__ volatile("msr control, %0" ::"r"(0x0));
+      __asm__ volatile("isb");
+      // See stack layout in
+      // https://developer.arm.com/documentation/ka004005/latest We are changing
+      // return address in PC to land into reboot to avoid any bug with ROP and
+      // raising privileges.
+      stack[6] = (uintptr_t)reboot_to_bootloader;
+      return;
     default:
       stack[0] = 0xffffffff;
       break;

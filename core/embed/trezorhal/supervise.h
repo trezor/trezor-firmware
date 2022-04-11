@@ -4,9 +4,11 @@
 #define SVC_DISABLE_IRQ 1
 #define SVC_SET_PRIORITY 2
 #define SVC_SHUTDOWN 4
+#define SVC_REBOOT_TO_BOOTLOADER 5
 
 // from util.s
 extern void shutdown_privileged(void);
+extern void reboot_to_bootloader(void);
 
 static inline uint32_t is_mode_unprivileged(void) {
   uint32_t r0;
@@ -48,5 +50,12 @@ static inline void svc_shutdown(void) {
     __asm__ __volatile__("svc %0" ::"i"(SVC_SHUTDOWN) : "memory");
   } else {
     shutdown_privileged();
+  }
+}
+static inline void svc_reboot_to_bootloader(void) {
+  if (is_mode_unprivileged()) {
+    __asm__ __volatile__("svc %0" ::"i"(SVC_REBOOT_TO_BOOTLOADER) : "memory");
+  } else {
+    reboot_to_bootloader();
   }
 }

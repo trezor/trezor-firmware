@@ -49,6 +49,8 @@
   })
 #endif
 
+#define STAY_IN_BOOTLOADER_FLAG 0x0FC35A96
+
 void shutdown(void);
 
 void __attribute__((noreturn))
@@ -78,5 +80,6 @@ extern uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
 void memset_reg(volatile void *start, volatile void *stop, uint32_t val);
 void jump_to(uint32_t address);
 void jump_to_unprivileged(uint32_t address);
+void jump_to_with_flag(uint32_t address, uint32_t register_flag);
 
 #endif
