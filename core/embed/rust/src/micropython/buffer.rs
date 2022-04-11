@@ -165,8 +165,11 @@ impl Deref for StrBuffer {
 
 impl AsRef<str> for StrBuffer {
     fn as_ref(&self) -> &str {
-        // SAFETY: MicroPython ensures that values of type `str` are UTF-8
-        unsafe { str::from_utf8_unchecked(self.0.as_ref()) }
+        // MicroPython _should_ ensure that values of type `str` are UTF-8.
+        // Rust seems to be stricter in what it considers UTF-8 though.
+        // In case there's a mismatch, this code will cleanly panic
+        // before attempting to use the data.
+        str::from_utf8(self.0.as_ref()).unwrap()
     }
 }
 
