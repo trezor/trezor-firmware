@@ -238,6 +238,7 @@ def test_send_p2tr(client: Client):
     _, serialized_tx = btc.sign_tx(
         client, "Groestlcoin Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
     )
+    # Transaction hex changed with fix #2085, all other details are the same as this tx:
     # https://blockbook-test.groestlcoin.org/tx/c66a79075044aaab3dba17daffb23f48addee87d7c87c7bc88e2997ce38a74ee
     assert (
         serialized_tx.hex()

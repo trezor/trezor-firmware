@@ -43,6 +43,7 @@ def test_send_p2tr(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     _, serialized_tx = btc.sign_tx(client, "Fujicoin", [inp1], [out1])
+    # Transaction hex changed with fix #2085, all other details are the same as this tx:
     # https://explorer.fujicoin.org/tx/a1c6a81f5e8023b17e6e3e51e2596d5b5e1d4914ea13c0c31cef90b3c3edee86
     assert (
         serialized_tx.hex()
