@@ -710,11 +710,12 @@ def test_p2tr_with_proof(client: Client):
             client, "Testnet", [inp1, inp2], [out1], prev_txes=TX_CACHE_TESTNET
         )
 
-    # TODO: fails with CHECK_ON_CHAIN=1 - tx_hex is different
-    assert_tx_matches(
-        serialized_tx,
-        hash_link="https://tbtc1.trezor.io/api/tx/48ec6dc7bb772ff18cbce0135fedda7c0e85212c7b2f85a5d0cc7a917d77c48a",
-        tx_hex="01000000000102ae4d6d8f642d1e5c8608e5b8430dd89432da2c7425081522e9482970412ddeaf0200000000ffffffffbf1cff9e0fc816acdc2753af9a45c1a6e92c04d0cff2b858372475b6abd912400000000000ffffffff0128a2010000000000225120e120bd124f345d412a91b50cb7e07650a448e90f48afd861b575a664b985b97f000140b524eaf406d413e19d7d32f7133273728f35b28509ac58dfd817f6dfbbac9901db21cd1ba4c2323c64bede38a7512647369d4767c645a915482bcf5167dcd77100000000",
+    # Transaction does not exist on the blockchain, not using assert_tx_matches()
+    # Transaction hex changed with fix #2085, all other details are the same as this tx:
+    # https://tbtc1.trezor.io/api/tx/48ec6dc7bb772ff18cbce0135fedda7c0e85212c7b2f85a5d0cc7a917d77c48a
+    assert (
+        serialized_tx.hex()
+        == "01000000000102ae4d6d8f642d1e5c8608e5b8430dd89432da2c7425081522e9482970412ddeaf0200000000ffffffffbf1cff9e0fc816acdc2753af9a45c1a6e92c04d0cff2b858372475b6abd912400000000000ffffffff0128a2010000000000225120e120bd124f345d412a91b50cb7e07650a448e90f48afd861b575a664b985b97f000140b524eaf406d413e19d7d32f7133273728f35b28509ac58dfd817f6dfbbac9901db21cd1ba4c2323c64bede38a7512647369d4767c645a915482bcf5167dcd77100000000"
     )
 
     # Test corrupted ownership proof.
