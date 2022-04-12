@@ -2,6 +2,9 @@ build/
 build-docker/
 .sconsign.dblite
 compile_commands.json
+tools/fw_size_profiling_latest.json
+tools/fw_size_profiling_benchmark.json
+tools/mp_line_numbers_cache.json
 emu.config
 tests/trezor_monero_tests*
 .coverage
