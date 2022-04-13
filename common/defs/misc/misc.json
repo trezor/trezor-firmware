@@ -174,5 +174,17 @@
             "Homepage": "https://tether.to"
         },
         "wallet": {}
+    },
+    {
+        "name": "Pulsar Coin",
+        "shortcut": "PLSR",
+        "slip44": 775,
+        "curve": "secp256k1",
+        "decimals": 6,
+        "links": {
+            "Homepage": "https://pulsarcoin.org",
+            "Github": "https://github.com/PulsarCoin/Pulsar-Coin-Cryptocurrency"
+        },
+        "wallet": {}
     }
 ]
