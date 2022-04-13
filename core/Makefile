@@ -26,8 +26,10 @@ TREZOR_MEMPERF ?= 0
 ADDRESS_SANITIZER ?= 0
 UI2 ?= 0
 
-OPENOCD_INTERFACE ?= stlink   # -or- ftdi/olimex-arm-usb-tiny-h
-OPENOCD_TRANSPORT ?= hla_swd  # -or- jtag
+# OpenOCD interface default. Alternative: ftdi/olimex-arm-usb-tiny-h
+OPENOCD_INTERFACE ?= stlink
+# OpenOCD transport default. Alternative: jtag
+OPENOCD_TRANSPORT ?= hla_swd
 OPENOCD = openocd -f interface/$(OPENOCD_INTERFACE).cfg -c "transport select $(OPENOCD_TRANSPORT)" -f target/stm32f4x.cfg
 OPENOCD_T1 = openocd -f interface/$(OPENOCD_INTERFACE).cfg -c "transport select $(OPENOCD_TRANSPORT)" -f target/stm32f2x.cfg
 
