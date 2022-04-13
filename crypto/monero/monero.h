@@ -14,7 +14,6 @@
 #endif
 
 #include "base58.h"
-#include "range_proof.h"
 #include "serialize.h"
 #include "xmr.h"
 

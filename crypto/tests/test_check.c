@@ -9718,7 +9718,6 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_xmr_get_subaddress_secret_key);
   tcase_add_test(tc, test_xmr_gen_c);
   tcase_add_test(tc, test_xmr_varint);
-  tcase_add_test(tc, test_xmr_gen_range_sig);
   suite_add_tcase(s, tc);
 #endif
   return s;
