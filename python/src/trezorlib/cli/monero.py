@@ -18,8 +18,8 @@ from typing import TYPE_CHECKING, Dict
 
 import click
 
-from .. import monero, tools
-from . import with_client
+from .. import messages, monero, tools
+from . import ChoiceType, with_client
 
 if TYPE_CHECKING:
     from ..client import TrezorClient
@@ -36,29 +36,38 @@ def cli() -> None:
 @click.option("-n", "--address", required=True, help=PATH_HELP)
 @click.option("-d", "--show-display", is_flag=True)
 @click.option(
-    "-t", "--network-type", type=click.Choice(["0", "1", "2", "3"]), default="0"
+    "-t",
+    "--network-type",
+    type=ChoiceType({m.name: m for m in messages.MoneroNetworkType}),
+    default=messages.MoneroNetworkType.MAINNET,
 )
 @with_client
 def get_address(
-    client: "TrezorClient", address: str, show_display: bool, network_type: str
+    client: "TrezorClient",
+    address: str,
+    show_display: bool,
+    network_type: messages.MoneroNetworkType,
 ) -> bytes:
     """Get Monero address for specified path."""
     address_n = tools.parse_path(address)
-    return monero.get_address(client, address_n, show_display, int(network_type))
+    return monero.get_address(client, address_n, show_display, network_type)
 
 
 @cli.command()
 @click.option("-n", "--address", required=True, help=PATH_HELP)
 @click.option(
-    "-t", "--network-type", type=click.Choice(["0", "1", "2", "3"]), default="0"
+    "-t",
+    "--network-type",
+    type=ChoiceType({m.name: m for m in messages.MoneroNetworkType}),
+    default=messages.MoneroNetworkType.MAINNET,
 )
 @with_client
 def get_watch_key(
-    client: "TrezorClient", address: str, network_type: str
+    client: "TrezorClient", address: str, network_type: messages.MoneroNetworkType
 ) -> Dict[str, str]:
     """Get Monero watch key for specified path."""
     address_n = tools.parse_path(address)
-    res = monero.get_watch_key(client, address_n, int(network_type))
+    res = monero.get_watch_key(client, address_n, network_type)
     # TODO: could be made required in MoneroWatchKey
     assert res.address is not None
     assert res.watch_key is not None

@@ -1,0 +1,1 @@
+`trezorctl monero` network type arguments now accept symbolic names instead of numbers.
