@@ -1,0 +1,145 @@
+{
+    "ct_equals": [
+        "ct_equals"
+    ],
+    "xmr_fast_hash": [
+        "keccak_hash",
+        "keccak_hash_into"
+    ],
+    "ge25519_set_neutral": [
+        "identity",
+        "identity_into"
+    ],
+    "init256_modm": [
+        "new_scalar",
+        "sc_0",
+        "sc_0_into",
+        "sc_init",
+        "sc_init_into",
+        "sc_copy"
+    ],
+    "ge25519_unpack_vartime": [
+        "decodepoint",
+        "decodepoint_into"
+    ],
+    "ge25519_pack": [
+        "encodepoint",
+        "encodepoint_into"
+    ],
+    "unpack256_modm": [
+        "decodeint",
+        "decodeint_into_noreduce",
+        "decodeint_into"
+    ],
+    "unpack256_modm_noreduce": [
+        "decodeint_into_noreduce"
+    ],
+    "pack256_modm": [
+        "encodeint",
+        "encodeint_into"
+    ],
+    "ge25519_check": [
+        "check_ed25519point"
+    ],
+    "ge25519_scalarmult": [
+        "scalarmult_base",
+        "scalarmult_base_into",
+        "scalarmult",
+        "scalarmult_into"
+    ],
+    "ge25519_scalarmult_base": [
+        "scalarmult_base",
+        "scalarmult_base_into"
+    ],
+    "ge25519_add": [
+        "point_add",
+        "point_add_into"
+    ],
+    "ge25519_sub": [
+        "point_sub",
+        "point_sub_into"
+    ],
+    "ge25519_eq": [
+        "point_eq"
+    ],
+    "check256_modm": [
+        "sc_check",
+        "check_sc"
+    ],
+    "add256_modm": [
+        "sc_add",
+        "sc_add_into"
+    ],
+    "sub256_modm": [
+        "sc_sub",
+        "sc_sub_into"
+    ],
+    "mul256_modm": [
+        "sc_mul",
+        "sc_mul_into"
+    ],
+    "iszero256_modm": [
+        "sc_isnonzero"
+    ],
+    "eq256_modm": [
+        "sc_eq"
+    ],
+    "mulsub256_modm": [
+        "sc_mulsub",
+        "sc_mulsub_into"
+    ],
+    "muladd256_modm": [
+        "sc_muladd",
+        "sc_muladd_into"
+    ],
+    "inv256_modm": [
+        "sc_inv_into"
+    ],
+    "xmr_random_scalar": [
+        "random_scalar"
+    ],
+    "ge25519_double_scalarmult_vartime": [
+        "ge25519_double_scalarmult_base_vartime"
+    ],
+    "xmr_add_keys3": [
+        "ge25519_double_scalarmult_vartime2"
+    ],
+    "xmr_hash_to_scalar": [
+        "hash_to_scalar",
+        "hash_to_scalar_into"
+    ],
+    "xmr_hash_to_ec": [
+        "hash_to_point",
+        "hash_to_point_into"
+    ],
+    "xmr_add_keys2_vartime": [
+        "add_keys2",
+        "add_keys2_into"
+    ],
+    "xmr_add_keys2": [
+        "add_keys2",
+        "add_keys2_into"
+    ],
+    "xmr_add_keys3_vartime": [
+        "add_keys3",
+        "add_keys3_into"
+    ],
+    "xmr_gen_c": [
+        "gen_commitment"
+    ],
+    "xmr_generate_key_derivation": [
+        "generate_key_derivation"
+    ],
+    "xmr_derivation_to_scalar": [
+        "derivation_to_scalar"
+    ],
+    "xmr_derive_public_key": [
+        "derive_public_key"
+    ],
+    "xmr_derive_private_key": [
+        "derive_secret_key"
+    ],
+    "xmr_get_subaddress_secret_key": [
+        "get_subaddress_secret_key"
+    ]
+}
