@@ -118,7 +118,6 @@ SRCS  += ed25519-donna/ed25519.c ed25519-donna/curve25519-donna-scalarmult-base.
 SRCS  += monero/base58.c
 SRCS  += monero/serialize.c
 SRCS  += monero/xmr.c
-SRCS  += monero/range_proof.c
 SRCS  += blake256.c
 SRCS  += blake2b.c blake2s.c
 SRCS  += chacha_drbg.c
