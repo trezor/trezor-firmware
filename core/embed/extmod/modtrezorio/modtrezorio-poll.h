@@ -74,7 +74,7 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
 
       if (false) {
       }
-#if TREZOR_MODEL == T
+#if defined MODEL_T
       else if (iface == TOUCH_IFACE) {
         const uint32_t evt = touch_read();
         if (evt) {
@@ -110,7 +110,7 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
           return mp_const_true;
         }
       }
-#elif TREZOR_MODEL == 1
+#elif defined MODEL_1
       else if (iface == BUTTON_IFACE) {
         const uint32_t evt = button_read();
         if (evt & (BTN_EVT_DOWN | BTN_EVT_UP)) {
