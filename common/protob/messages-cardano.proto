@@ -287,18 +287,18 @@ message CardanoPoolMetadataType {
  * @embed
  */
 message CardanoPoolParametersType {
-    required bytes pool_id = 1;                                          // stake pool cold public key hash (28 bytes)
-    required bytes vrf_key_hash = 2;                                     // VRF key hash (32 bytes)
-    required uint64 pledge = 3;                                          // pledge amount in lovelace
-    required uint64 cost = 4;                                            // cost in lovelace
-    required uint64 margin_numerator = 5;                                // pool margin numerator
-    required uint64 margin_denominator = 6;                              // pool margin denominator
-    required string reward_account = 7;                                  // bech32 reward address where the pool receives rewards
-    repeated CardanoPoolOwner owners = 8 [deprecated = true];            // pool owners list
-    repeated CardanoPoolRelayParameters relays = 9 [deprecated = true];  // pool relays list
-    optional CardanoPoolMetadataType metadata = 10;                      // pool metadata
-    required uint32 owners_count = 11;                                   // number of pool owners
-    required uint32 relays_count = 12;                                   // number of pool relays
+    required bytes pool_id = 1;                         // stake pool cold public key hash (28 bytes)
+    required bytes vrf_key_hash = 2;                    // VRF key hash (32 bytes)
+    required uint64 pledge = 3;                         // pledge amount in lovelace
+    required uint64 cost = 4;                           // cost in lovelace
+    required uint64 margin_numerator = 5;               // pool margin numerator
+    required uint64 margin_denominator = 6;             // pool margin denominator
+    required string reward_account = 7;                 // bech32 reward address where the pool receives rewards
+    // repeated CardanoPoolOwner owners = 8;            // legacy pool owners list - support for pre-tx-streaming firmwares dropped
+    // repeated CardanoPoolRelayParameters relays = 9;  // legacy pool relays list - support for pre-tx-streaming firmwares dropped
+    optional CardanoPoolMetadataType metadata = 10;     // pool metadata
+    required uint32 owners_count = 11;                  // number of pool owners
+    required uint32 relays_count = 12;                  // number of pool relays
 }
 
 /**
@@ -441,130 +441,4 @@ message CardanoTxBodyHash {
  * @end
  */
 message CardanoSignTxFinished {
-}
-
-/**
- * Request: Ask device to sign Cardano transaction
- * @start
- * @next CardanoSignedTx
- * @next Failure
- */
-message CardanoSignTx {
-    option deprecated = true;
-
-    repeated CardanoTxInputType inputs = 1;                     // inputs to be used in transaction
-    repeated CardanoTxOutputType outputs = 2;                   // outputs to be used in transaction
-    // optional uint32 transactions_count = 3;                  // left as a comment so we know to skip the id 3 in the future
-    // optional uint32 network = 4;                             // replaced with protocol_magic
-    required uint32 protocol_magic = 5;                         // network's protocol magic
-    required uint64 fee = 6;                                    // transaction fee - added in shelley
-    optional uint64 ttl = 7;                                    // transaction ttl - added in shelley
-    required uint32 network_id = 8;                             // network id - mainnet or testnet
-    repeated CardanoTxCertificateType certificates = 9;         // transaction certificates - added in shelley
-    repeated CardanoTxWithdrawalType withdrawals = 10;          // transaction withdrawals - added in shelley
-    // optional bytes metadata = 11;                            // replaced in Mary era with auxiliary data below
-    optional uint64 validity_interval_start = 12;               // transaction validity start - added in allegra
-    optional CardanoTxAuxiliaryDataType auxiliary_data = 13;    // transaction auxiliary data
-
-    /**
-     * Structure representing cardano transaction input
-     */
-    message CardanoTxInputType {
-        repeated uint32 address_n = 1;  // BIP-32 path to derive the key from master node
-        required bytes prev_hash = 2;   // hash of previous transaction output to spend by this input
-        required uint32 prev_index = 3; // index of previous output to spend
-        // left as a comment so we know to skip the id 4 in the future
-        // optional uint32 type = 4;
-    }
-    /**
-     * Structure representing cardano transaction output
-     */
-    message CardanoTxOutputType {
-        optional string address = 1;                                    // target coin address in bech32 or base58
-        // repeated uint32 address_n = 2;                               // moved to address_parameters
-        required uint64 amount = 3;                                     // amount in Lovelace
-        optional CardanoAddressParametersType address_parameters = 4;   // parameters used to derive the address
-        repeated CardanoAssetGroupType token_bundle = 5;                // custom assets - added in mary
-    }
-
-    message CardanoAssetGroupType {
-        required bytes policy_id = 1;                  // asset group policy id
-        repeated CardanoTokenType tokens = 2;          // asset name-amount pair
-    }
-
-    message CardanoTokenType {
-        required bytes asset_name_bytes = 1;     // asset name as bytestring (may be either ascii string or hash)
-        required uint64 amount = 2;              // asset amount
-    }
-
-    /**
-     * Stake pool owner parameters
-     */
-    message CardanoPoolOwnerType {
-        repeated uint32 staking_key_path = 1;   // BIP-32-style path to derive staking key of the owner
-        optional bytes staking_key_hash = 2;    // owner's staking key if it is an external owner
-    }
-
-    /**
-     * Stake pool relay parameters
-     */
-    message CardanoPoolRelayParametersType {
-        required CardanoPoolRelayType type = 1;   // pool relay type
-        optional bytes ipv4_address = 2;          // ipv4 address of the relay given as 4 bytes
-        optional bytes ipv6_address = 3;          // ipv6 address of the relay given as 16 bytes
-        optional string host_name = 4;            // relay host name given as URL, at most 64 characters
-        optional uint32 port = 5;                 // relay port number in the range 0-65535
-    }
-
-    /**
-     * Structure representing cardano transaction certificate
-     */
-     message CardanoTxCertificateType {
-        required CardanoCertificateType type = 1;                 // certificate type
-        repeated uint32 path = 2;                                 // BIP-32 path to derive (staking) key
-        optional bytes pool = 3;                                  // pool hash
-        optional CardanoPoolParametersType pool_parameters = 4;   // used for stake pool registration certificate
-    }
-    /**
-     * Structure representing cardano transaction withdrawals
-     */
-    message CardanoTxWithdrawalType {
-        repeated uint32 path = 1;
-        required uint64 amount = 2;
-    }
-
-    message CardanoTxAuxiliaryDataType {
-        optional bytes blob = 1;
-        optional CardanoCatalystRegistrationParametersType catalyst_registration_parameters = 2;
-    }
-}
-
-/**
- * Response: Serialised signed cardano transaction chunk
- * @next CardanoSignedTxChunkAck
- */
-message CardanoSignedTxChunk {
-    option deprecated = true;
-
-    required bytes signed_tx_chunk = 1;         // serialised, signed transaction chunk
-}
-
-/**
- * Request: Serialised signed cardano transaction chunk acknowledgement
- * @next CardanoSignedTxChunk
- * @next CardanoSignedTx
- */
-message CardanoSignedTxChunkAck {
-    option deprecated = true;
-}
-
-/**
- * Response: Serialised signed cardano transaction
- * @end
- */
-message CardanoSignedTx {
-    option deprecated = true;
-
-    required bytes tx_hash = 1;               // hash of the transaction body
-    optional bytes serialized_tx = 2;         // deprecated since transaction is sent in chunks now - kept for backwards compatibility
 }

@@ -142,14 +142,10 @@ if not utils.BITCOIN_ONLY:
     StellarManageBuyOfferOp = 222
     StellarPathPaymentStrictSendOp = 223
     StellarSignedTx = 230
-    CardanoSignTx = 303
     CardanoGetPublicKey = 305
     CardanoPublicKey = 306
     CardanoGetAddress = 307
     CardanoAddress = 308
-    CardanoSignedTx = 310
-    CardanoSignedTxChunk = 311
-    CardanoSignedTxChunkAck = 312
     CardanoTxItemAck = 313
     CardanoTxAuxiliaryDataSupplement = 314
     CardanoTxWitnessRequest = 315

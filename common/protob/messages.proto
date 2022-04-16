@@ -255,14 +255,12 @@ enum MessageType {
     // Cardano
     // dropped Sign/VerifyMessage ids 300-302
     // dropped TxRequest/TxAck ids 304 and 309 (shelley update)
-    MessageType_CardanoSignTx = 303 [(wire_in) = true];
+    // dropped SignTx/SignedTx/SignedTxChunk/SignedTxChunkAck ids 303, 310, 311 and 312
+    reserved 300 to 304, 309 to 312;
     MessageType_CardanoGetPublicKey = 305 [(wire_in) = true];
     MessageType_CardanoPublicKey = 306 [(wire_out) = true];
     MessageType_CardanoGetAddress = 307 [(wire_in) = true];
     MessageType_CardanoAddress = 308 [(wire_out) = true];
-    MessageType_CardanoSignedTx = 310 [(wire_out) = true];
-    MessageType_CardanoSignedTxChunk = 311 [(wire_out) = true];
-    MessageType_CardanoSignedTxChunkAck = 312 [(wire_in) = true];
     MessageType_CardanoTxItemAck = 313 [(wire_out) = true];
     MessageType_CardanoTxAuxiliaryDataSupplement = 314 [(wire_out) = true];
     MessageType_CardanoTxWitnessRequest = 315 [(wire_in) = true];
