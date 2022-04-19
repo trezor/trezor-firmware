@@ -2,6 +2,7 @@ use core::{mem, ops::Deref};
 use heapless::String;
 
 use crate::{
+    time::Duration,
     trezorhal::random,
     ui::{
         component::{
@@ -9,13 +10,13 @@ use crate::{
             Pad,
         },
         display,
+        event::TouchEvent,
         geometry::{Alignment, Grid, Insets, Offset, Rect},
         model_tt::{
             component::{
-                button::{Button, ButtonContent, ButtonMsg::Clicked},
+                button::{Button, ButtonContent, ButtonMsg, ButtonMsg::Clicked},
                 theme,
             },
-            event::TouchEvent,
         },
     },
 };
@@ -27,6 +28,7 @@ pub enum PinKeyboardMsg {
 
 const MAX_LENGTH: usize = 9;
 const DIGIT_COUNT: usize = 10; // 0..10
+const ERASE_HOLD_DURATION: Duration = Duration::from_secs(2);
 
 const HEADER_HEIGHT: i32 = 25;
 const HEADER_PADDING_SIDE: i32 = 5;
@@ -45,7 +47,7 @@ pub struct PinKeyboard<T> {
     minor_prompt: Label<T>,
     major_warning: Option<Label<T>>,
     textbox: Child<PinDots>,
-    reset_btn: Child<Maybe<Button<&'static str>>>,
+    erase_btn: Child<Maybe<Button<&'static str>>>,
     cancel_btn: Child<Maybe<Button<&'static str>>>,
     confirm_btn: Child<Button<&'static str>>,
     digit_btns: [Child<Button<&'static str>>; DIGIT_COUNT],
@@ -66,10 +68,11 @@ where
         allow_cancel: bool,
     ) -> Self {
         // Control buttons.
-        let reset_btn = Button::with_icon(theme::ICON_BACK)
+        let erase_btn = Button::with_icon(theme::ICON_BACK)
             .styled(theme::button_reset())
+            .with_long_press(ERASE_HOLD_DURATION)
             .initially_enabled(false);
-        let reset_btn = Maybe::hidden(theme::BG, reset_btn).into_child();
+        let erase_btn = Maybe::hidden(theme::BG, erase_btn).into_child();
 
         let cancel_btn = Button::with_icon(theme::ICON_CANCEL).styled(theme::button_cancel());
         let cancel_btn =
@@ -82,7 +85,7 @@ where
             major_warning: major_warning
                 .map(|text| Label::left_aligned(text, theme::label_keyboard_warning())),
             textbox: PinDots::new(theme::label_default()).into_child(),
-            reset_btn,
+            erase_btn,
             cancel_btn,
             confirm_btn: Button::with_icon(theme::ICON_CONFIRM)
                 .styled(theme::button_confirm())
@@ -109,7 +112,7 @@ where
         for btn in &mut self.digit_btns {
             btn.mutate(ctx, |ctx, btn| btn.enable_if(ctx, !is_full));
         }
-        self.reset_btn.mutate(ctx, |ctx, btn| {
+        self.erase_btn.mutate(ctx, |ctx, btn| {
             btn.show_if(ctx, !is_empty);
             btn.inner_mut().enable_if(ctx, !is_empty);
         });
@@ -133,7 +136,8 @@ where
     type Msg = PinKeyboardMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        // Ignore the top padding for now, we need it to reliably register textbox touch events.
+        // Ignore the top padding for now, we need it to reliably register textbox touch
+        // events.
         let borders_no_top = Insets {
             top: 0,
             ..theme::borders()
@@ -156,9 +160,9 @@ where
         self.major_warning.as_mut().map(|c| c.place(major_area));
 
         // Control buttons.
-        let reset_cancel_area = grid.row_col(3, 0);
-        self.reset_btn.place(reset_cancel_area);
-        self.cancel_btn.place(reset_cancel_area);
+        let erase_cancel_area = grid.row_col(3, 0);
+        self.erase_btn.place(erase_cancel_area);
+        self.cancel_btn.place(erase_cancel_area);
         self.confirm_btn.place(grid.row_col(3, 2));
 
         // Digit buttons.
@@ -184,10 +188,18 @@ where
         if let Some(Clicked) = self.cancel_btn.event(ctx, event) {
             return Some(PinKeyboardMsg::Cancelled);
         }
-        if let Some(Clicked) = self.reset_btn.event(ctx, event) {
-            self.textbox.mutate(ctx, |ctx, t| t.clear(ctx));
-            self.pin_modified(ctx);
-            return None;
+        match self.erase_btn.event(ctx, event) {
+            Some(ButtonMsg::Clicked) => {
+                self.textbox.mutate(ctx, |ctx, t| t.pop(ctx));
+                self.pin_modified(ctx);
+                return None;
+            }
+            Some(ButtonMsg::LongPressed) => {
+                self.textbox.mutate(ctx, |ctx, t| t.clear(ctx));
+                self.pin_modified(ctx);
+                return None;
+            }
+            _ => {}
         }
         for btn in &mut self.digit_btns {
             if let Some(Clicked) = btn.event(ctx, event) {
@@ -202,7 +214,7 @@ where
     }
 
     fn paint(&mut self) {
-        self.reset_btn.paint();
+        self.erase_btn.paint();
         if self.textbox.inner().is_empty() {
             self.textbox.inner().clear_background();
             if let Some(ref mut w) = self.major_warning {
@@ -224,7 +236,7 @@ where
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.major_prompt.bounds(sink);
         self.minor_prompt.bounds(sink);
-        self.reset_btn.bounds(sink);
+        self.erase_btn.bounds(sink);
         self.cancel_btn.bounds(sink);
         self.confirm_btn.bounds(sink);
         self.textbox.bounds(sink);

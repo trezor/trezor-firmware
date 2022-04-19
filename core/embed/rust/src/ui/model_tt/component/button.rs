@@ -1,8 +1,11 @@
-use crate::ui::{
-    component::{Component, ComponentExt, Event, EventCtx, GridPlaced, Map},
-    display::{self, Color, Font},
-    event::TouchEvent,
-    geometry::{Insets, Offset, Rect},
+use crate::{
+    time::Duration,
+    ui::{
+        component::{Component, ComponentExt, Event, EventCtx, GridPlaced, Map, TimerToken},
+        display::{self, Color, Font},
+        event::TouchEvent,
+        geometry::{Insets, Offset, Rect},
+    },
 };
 
 use super::theme;
@@ -11,6 +14,7 @@ pub enum ButtonMsg {
     Pressed,
     Released,
     Clicked,
+    LongPressed,
 }
 
 pub struct Button<T> {
@@ -18,6 +22,8 @@ pub struct Button<T> {
     content: ButtonContent<T>,
     styles: ButtonStyleSheet,
     state: State,
+    long_press: Option<Duration>,
+    long_timer: Option<TimerToken>,
 }
 
 impl<T> Button<T> {
@@ -34,6 +40,8 @@ impl<T> Button<T> {
             area: Rect::zero(),
             styles: theme::button_default(),
             state: State::Initial,
+            long_press: None,
+            long_timer: None,
         }
     }
 
@@ -51,6 +59,11 @@ impl<T> Button<T> {
 
     pub fn styled(mut self, styles: ButtonStyleSheet) -> Self {
         self.styles = styles;
+        self
+    }
+
+    pub fn with_long_press(mut self, duration: Duration) -> Self {
+        self.long_press = Some(duration);
         self
     }
 
@@ -210,6 +223,9 @@ where
                         // Touch started in our area, transform to `Pressed` state.
                         if self.area.contains(pos) {
                             self.set(ctx, State::Pressed);
+                            if let Some(duration) = self.long_press {
+                                self.long_timer = Some(ctx.request_timer(duration));
+                            }
                             return Some(ButtonMsg::Pressed);
                         }
                     }
@@ -245,6 +261,16 @@ where
                     _ => {
                         // Touch finished outside our area.
                         self.set(ctx, State::Initial);
+                        self.long_timer = None;
+                    }
+                }
+            }
+            Event::Timer(token) => {
+                if self.long_timer == Some(token) {
+                    self.long_timer = None;
+                    if matches!(self.state, State::Pressed) {
+                        self.set(ctx, State::Initial);
+                        return Some(ButtonMsg::LongPressed);
                     }
                 }
             }
