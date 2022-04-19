@@ -17,4 +17,3 @@ These scripts do not need to have a high standard, but each of those should have
 
 ## [unused_monero/](./unused_monero)
 - Find functions from Monero cryptography that are not used.
-- The mapping file can be edited by hand in case the script misses something.

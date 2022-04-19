@@ -1,95 +1,96 @@
-from typing import Any, Dict, Set, List
-import json
+"""
+Find out which functions are unused in the Monero app - based on
+`monero.pyi` file.
+"""
+
 import subprocess
+from pathlib import Path
+from typing import Any, Dict, List, Set
 
-MAPPING_FILE = "monero_func_mapping.json"
-ALIAS_FILE = "core/src/apps/monero/xmr/crypto/__init__.py"
-MOCK_FILE = "core/mocks/generated/trezorcrypto/monero.pyi"
+CURRENT_DIR = Path(__file__).resolve().parent
+ROOT_DIR = CURRENT_DIR.parent.parent.parent
+
+HELPER_FILE = ROOT_DIR / "core/src/apps/monero/xmr/crypto_helpers.py"
+MOCK_FILE = ROOT_DIR / "core/mocks/generated/trezorcrypto/monero.pyi"
 
 
-def load_all_function_aliases() -> None:
-    functions: Set[str] = set()
+def generate_function_mapping() -> Dict[str, List[str]]:
+    """Look at all Monero functions and generate a mapping of their usage"""
+
+    # Load all the function names in .pyi file
+    pyi_functions: Set[str] = set()
     with open(MOCK_FILE, "r") as f:
         lines = f.readlines()
         for line in lines:
             if line.startswith("def"):
                 f_name = line.split("(")[0].split(" ")[1]
-                functions.add(f_name)
+                pyi_functions.add(f_name)
 
-    for f_name in functions:
-        print(f_name)
-
-    print(len(functions))
-
-
-    function_aliases: Dict[str, List[str]] = {}
-
-    with open(ALIAS_FILE, "r") as f:
+    # Load definitions of helper functions
+    helper_func_defs: Dict[str, str] = {}
+    with open(HELPER_FILE, "r") as f:
         lines = f.readlines()
+        current_func = ""
         for line in lines:
-            for func_name in functions:
-                if f"tcry.{func_name}" in line:
-                    alias = line.split("=")[0].strip()
-                    if func_name not in function_aliases:
-                        function_aliases[func_name] = []
-                    function_aliases[func_name].append(alias)
+            if line.startswith("def"):
+                current_func = line.split("(")[0].split(" ")[1]
+                helper_func_defs[current_func] = line
+            elif not current_func:
+                continue
+            else:
+                helper_func_defs[current_func] += line
 
-    print(function_aliases)
+    # Try to connect function names with helper definitions
+    func_mapping: Dict[str, List[str]] = {}
+    for func_name in pyi_functions:
+        func_mapping[func_name] = []
+        for func_def_name, func_code in helper_func_defs.items():
+            if f".{func_name}(" in func_code:
+                func_mapping[func_name].append(func_def_name)
 
-    # It was needed to modify something manually
-    # with open(MAPPING_FILE, "w") as f:
-    #     f.write(json.dumps(function_aliases, indent=4))
+        # Functions may not be used in helper file, alias them to themselves
+        if not func_mapping[func_name]:
+            func_mapping[func_name] = [func_name]
+
+    return func_mapping
 
 
-def check_definitions() -> None:
-    with open(MAPPING_FILE, "r") as f:
-        mapping = json.loads(f.read())
+def check_usage_of_functions(func_mapping: Dict[str, List[str]]) -> None:
+    """Go through all the functions and check if they are used in the Monero app"""
 
+    # Include boolean field to know what is used
     is_used_mappings: Dict[str, Dict[str, Any]] = {}
-    for func_name, aliases in mapping.items():
-        is_used_mappings[func_name] = {
-            "aliases": aliases,
-            "is_used": False
-        }
+    for func_name, mapping in func_mapping.items():
+        is_used_mappings[func_name] = {"mapping": mapping, "is_used": False}
 
+    # Check if any of the mapping names is used - and mark it as used if so
     for func_name in is_used_mappings:
-        aliases = is_used_mappings[func_name]["aliases"]
-        for alias in aliases:
-            is_there = is_used(alias)
+        for mapping in is_used_mappings[func_name]["mapping"]:
+            is_there = _is_used(mapping)
             if is_there:
                 is_used_mappings[func_name]["is_used"] = True
                 break
 
-    # for mapp in is_used_mappings:
-    #     print(f"{mapp}: {is_used_mappings[mapp]['is_used']}")
+    # Find unused functions and generate a report
+    unused_functions = {
+        fc: val for fc, val in is_used_mappings.items() if not val["is_used"]
+    }
+    if not unused_functions:
+        print("SUCCESS: no functions are unused")
+    else:
+        print(f"{len(unused_functions)} unused functions:")
+        for func, values in unused_functions.items():
+            print(func, values)
 
-    unused_functions = {fc: val for fc, val in is_used_mappings.items() if not val["is_used"]}
-    print("Unused functions:")
-    for func, values in unused_functions.items():
-        print(func, values)
-        # print(f"{func}: {values['aliases']}")
 
-
-def is_used(func_name: str) -> bool:
-    # Find definitions in the Monero app itself
-    cmd = f'grep -r "crypto.{func_name}" core/src/apps/monero'
-    grep_result = subprocess.run(
-        cmd, stdout=subprocess.PIPE, text=True, shell=True
-    )
-    # print(grep_result.stdout)
-
-    if grep_result.returncode == 0:
-        return True
-
-    # Find usages in __init__.py - alias file
-    cmd = f'grep  "{func_name}(" {ALIAS_FILE}'
-    grep_result = subprocess.run(
-        cmd, stdout=subprocess.PIPE, text=True, shell=True
-    )
+def _is_used(func_name: str) -> bool:
+    """Find function usage in the Monero app"""
+    cmd = f'grep -r ".{func_name}(" core/src/apps/monero'
+    grep_result = subprocess.run(cmd, stdout=subprocess.PIPE, text=True, shell=True)
 
     return grep_result.returncode == 0
 
 
 if "__main__" == __name__:
-    # load_all_function_aliases()
-    check_definitions()
+    func_mapping = generate_function_mapping()
+    check_usage_of_functions(func_mapping)
