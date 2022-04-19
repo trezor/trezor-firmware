@@ -84,11 +84,19 @@ def check_usage_of_functions(func_mapping: Dict[str, List[str]]) -> None:
 
 
 def _is_used(func_name: str) -> bool:
-    """Find function usage in the Monero app"""
-    cmd = f'grep -r ".{func_name}(" core/src/apps/monero'
-    grep_result = subprocess.run(cmd, stdout=subprocess.PIPE, text=True, shell=True)
+    """Find function usage in the Monero app or in test files"""
 
-    return grep_result.returncode == 0
+    cmds = [
+        rf'grep -r ".{func_name}\b" {ROOT_DIR}/core/src/apps/monero',
+        rf'grep -r ".{func_name}\b" {ROOT_DIR}/core/tests',
+    ]
+
+    for cmd in cmds:
+        grep_result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE)
+        if grep_result.returncode == 0:
+            return True
+
+    return False
 
 
 if "__main__" == __name__:
