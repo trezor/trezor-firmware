@@ -1028,27 +1028,6 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorcrypto_monero_xmr_derive_public_key_obj, 4, 4,
     mod_trezorcrypto_monero_xmr_derive_public_key);
 
-/// def xmr_add_keys2(
-///     r: Point | None, a: Scalar, b: Scalar, B: Point
-/// ) -> Point:
-///     """
-///     aG + bB, G is basepoint
-///     """
-STATIC mp_obj_t mod_trezorcrypto_monero_xmr_add_keys2(size_t n_args,
-                                                      const mp_obj_t *args) {
-  mp_arg_check_num(n_args, 0, 4, 4, false);
-  mp_obj_t res = mp_obj_new_ge25519_r(args[0]);
-  assert_scalar(args[1]);
-  assert_scalar(args[2]);
-  assert_ge25519(args[3]);
-  xmr_add_keys2(&MP_OBJ_GE25519(res), MP_OBJ_SCALAR(args[1]),
-                MP_OBJ_SCALAR(args[2]), &MP_OBJ_C_GE25519(args[3]));
-  return res;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
-    mod_trezorcrypto_monero_xmr_add_keys2_obj, 4, 4,
-    mod_trezorcrypto_monero_xmr_add_keys2);
-
 /// def add_keys2_into(
 ///     r: Point | None, a: Scalar, b: Scalar, B: Point
 /// ) -> Point:
@@ -1069,29 +1048,6 @@ STATIC mp_obj_t mod_trezorcrypto_monero_add_keys2_into(size_t n_args,
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorcrypto_monero_add_keys2_into_obj, 4, 4,
     mod_trezorcrypto_monero_add_keys2_into);
-
-/// def xmr_add_keys3(
-///     r: Point | None, a: Scalar, A: Point, b: Scalar, B: Point
-/// ) -> Point:
-///     """
-///     aA + bB
-///     """
-STATIC mp_obj_t mod_trezorcrypto_monero_xmr_add_keys3(size_t n_args,
-                                                      const mp_obj_t *args) {
-  mp_arg_check_num(n_args, 0, 5, 5, false);
-  mp_obj_t res = mp_obj_new_ge25519_r(args[0]);
-  assert_scalar(args[1]);
-  assert_ge25519(args[2]);
-  assert_scalar(args[3]);
-  assert_ge25519(args[4]);
-  xmr_add_keys3(&MP_OBJ_GE25519(res), MP_OBJ_SCALAR(args[1]),
-                &MP_OBJ_C_GE25519(args[2]), MP_OBJ_SCALAR(args[3]),
-                &MP_OBJ_C_GE25519(args[4]));
-  return res;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
-    mod_trezorcrypto_monero_xmr_add_keys3_obj, 5, 5,
-    mod_trezorcrypto_monero_xmr_add_keys3);
 
 /// def add_keys3_into(
 ///     r: Point | None, a: Scalar, A: Point, b: Scalar, B: Point
@@ -2526,12 +2482,8 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_monero_globals_table[] = {
      MP_ROM_PTR(&mod_trezorcrypto_monero_xmr_derive_private_key_obj)},
     {MP_ROM_QSTR(MP_QSTR_xmr_derive_public_key),
      MP_ROM_PTR(&mod_trezorcrypto_monero_xmr_derive_public_key_obj)},
-    {MP_ROM_QSTR(MP_QSTR_xmr_add_keys2),
-     MP_ROM_PTR(&mod_trezorcrypto_monero_xmr_add_keys2_obj)},
     {MP_ROM_QSTR(MP_QSTR_add_keys2_into),
      MP_ROM_PTR(&mod_trezorcrypto_monero_add_keys2_into_obj)},
-    {MP_ROM_QSTR(MP_QSTR_xmr_add_keys3),
-     MP_ROM_PTR(&mod_trezorcrypto_monero_xmr_add_keys3_obj)},
     {MP_ROM_QSTR(MP_QSTR_add_keys3_into),
      MP_ROM_PTR(&mod_trezorcrypto_monero_add_keys3_into_obj)},
     {MP_ROM_QSTR(MP_QSTR_xmr_get_subaddress_secret_key),

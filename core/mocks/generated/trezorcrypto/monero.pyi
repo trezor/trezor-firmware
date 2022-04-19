@@ -336,29 +336,11 @@ def xmr_derive_public_key(
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
-def xmr_add_keys2(
-    r: Point | None, a: Scalar, b: Scalar, B: Point
-) -> Point:
-    """
-    aG + bB, G is basepoint
-    """
-
-
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
 def add_keys2_into(
     r: Point | None, a: Scalar, b: Scalar, B: Point
 ) -> Point:
     """
     aG + bB, G is basepoint
-    """
-
-
-# extmod/modtrezorcrypto/modtrezorcrypto-monero.h
-def xmr_add_keys3(
-    r: Point | None, a: Scalar, A: Point, b: Scalar, B: Point
-) -> Point:
-    """
-    aA + bB
     """
 
 
