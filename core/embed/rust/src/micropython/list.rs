@@ -1,5 +1,4 @@
-use core::convert::TryFrom;
-use core::ptr;
+use core::{convert::TryFrom, ptr};
 
 use crate::error::Error;
 

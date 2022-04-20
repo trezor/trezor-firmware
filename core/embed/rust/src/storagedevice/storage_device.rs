@@ -89,13 +89,11 @@ const AUTOLOCK_DELAY_MAXIMUM: u32 = 0x2000_0000; // ~6 days
 const STORAGE_VERSION_CURRENT: u8 = 0x02;
 
 extern "C" fn is_version_stored() -> Obj {
-    let block = || Ok(VERSION.is_set().into());
-    unsafe { util::try_or_raise(block) }
+    VERSION.is_set().into()
 }
 
 extern "C" fn get_version() -> Obj {
-    let block = || Ok(VERSION.get().into());
-    unsafe { util::try_or_raise(block) }
+    VERSION.get().into()
 }
 
 extern "C" fn set_version(version: Obj) -> Obj {
@@ -104,8 +102,7 @@ extern "C" fn set_version(version: Obj) -> Obj {
 }
 
 extern "C" fn is_initialized() -> Obj {
-    let block = || Ok(INITIALIZED.is_set().into());
-    unsafe { util::try_or_raise(block) }
+    INITIALIZED.is_set().into()
 }
 
 extern "C" fn set_is_initialized(is_initialized: Obj) -> Obj {
@@ -114,8 +111,7 @@ extern "C" fn set_is_initialized(is_initialized: Obj) -> Obj {
 }
 
 extern "C" fn get_rotation() -> Obj {
-    let block = || Ok(ROTATION.get().unwrap_or(0).into());
-    unsafe { util::try_or_raise(block) }
+    ROTATION.get().unwrap_or(0).into()
 }
 
 extern "C" fn set_rotation(rotation: Obj) -> Obj {
@@ -195,14 +191,13 @@ extern "C" fn set_mnemonic_secret(n_args: usize, args: *const Obj, kwargs: *mut 
             set_true_or_delete(NEEDS_BACKUP, needs_backup)?;
         }
 
-        Ok(true.into())
+        Ok(Obj::const_none())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
 extern "C" fn is_passphrase_enabled() -> Obj {
-    let block = || Ok(USE_PASSPHRASE.get().unwrap_or(false).into());
-    unsafe { util::try_or_raise(block) }
+    USE_PASSPHRASE.get().unwrap_or(false).into()
 }
 
 extern "C" fn set_passphrase_enabled(enable: Obj) -> Obj {
@@ -221,8 +216,7 @@ extern "C" fn set_passphrase_enabled(enable: Obj) -> Obj {
 }
 
 extern "C" fn get_passphrase_always_on_device() -> Obj {
-    let block = || Ok(PASSPHRASE_ALWAYS_ON_DEVICE.get().unwrap_or(false).into());
-    unsafe { util::try_or_raise(block) }
+    PASSPHRASE_ALWAYS_ON_DEVICE.get().unwrap_or(false).into()
 }
 
 extern "C" fn set_passphrase_always_on_device(enable: Obj) -> Obj {
@@ -235,8 +229,7 @@ extern "C" fn set_passphrase_always_on_device(enable: Obj) -> Obj {
 }
 
 extern "C" fn unfinished_backup() -> Obj {
-    let block = || Ok(UNFINISHED_BACKUP.get().unwrap_or(false).into());
-    unsafe { util::try_or_raise(block) }
+    UNFINISHED_BACKUP.get().unwrap_or(false).into()
 }
 
 extern "C" fn set_unfinished_backup(state: Obj) -> Obj {
@@ -245,8 +238,7 @@ extern "C" fn set_unfinished_backup(state: Obj) -> Obj {
 }
 
 extern "C" fn needs_backup() -> Obj {
-    let block = || Ok(NEEDS_BACKUP.get().unwrap_or(false).into());
-    unsafe { util::try_or_raise(block) }
+    NEEDS_BACKUP.get().unwrap_or(false).into()
 }
 
 extern "C" fn set_backed_up() -> Obj {
@@ -255,13 +247,11 @@ extern "C" fn set_backed_up() -> Obj {
 }
 
 extern "C" fn no_backup() -> Obj {
-    let block = || Ok(NO_BACKUP.get().unwrap_or(false).into());
-    unsafe { util::try_or_raise(block) }
+    NO_BACKUP.get().unwrap_or(false).into()
 }
 
 extern "C" fn get_experimental_features() -> Obj {
-    let block = || Ok(EXPERIMENTAL_FEATURES.get().unwrap_or(false).into());
-    unsafe { util::try_or_raise(block) }
+    EXPERIMENTAL_FEATURES.get().unwrap_or(false).into()
 }
 
 extern "C" fn set_experimental_features(enable: Obj) -> Obj {
@@ -298,8 +288,7 @@ extern "C" fn set_homescreen(homescreen: Obj) -> Obj {
 }
 
 extern "C" fn get_slip39_identifier() -> Obj {
-    let block = || Ok(SLIP39_IDENTIFIER.get().into());
-    unsafe { util::try_or_raise(block) }
+    SLIP39_IDENTIFIER.get().into()
 }
 
 extern "C" fn set_slip39_identifier(identifier: Obj) -> Obj {
@@ -308,8 +297,7 @@ extern "C" fn set_slip39_identifier(identifier: Obj) -> Obj {
 }
 
 extern "C" fn get_slip39_iteration_exponent() -> Obj {
-    let block = || Ok(SLIP39_ITERATION_EXPONENT.get().into());
-    unsafe { util::try_or_raise(block) }
+    SLIP39_ITERATION_EXPONENT.get().into()
 }
 
 extern "C" fn set_slip39_iteration_exponent(exponent: Obj) -> Obj {
@@ -356,20 +344,15 @@ extern "C" fn set_flags(flags: Obj) -> Obj {
 }
 
 extern "C" fn get_safety_check_level() -> Obj {
-    let block = || {
-        let level = SAFETY_CHECK_LEVEL
-            .get()
-            .unwrap_or(DEFAULT_SAFETY_CHECK_LEVEL);
+    let level = SAFETY_CHECK_LEVEL
+        .get()
+        .unwrap_or(DEFAULT_SAFETY_CHECK_LEVEL);
 
-        let level = if !SAFETY_CHECK_LEVELS.contains(&level) {
-            DEFAULT_SAFETY_CHECK_LEVEL
-        } else {
-            level
-        };
-
-        Ok(level.into())
-    };
-    unsafe { util::try_or_raise(block) }
+    if !SAFETY_CHECK_LEVELS.contains(&level) {
+        DEFAULT_SAFETY_CHECK_LEVEL.into()
+    } else {
+        level.into()
+    }
 }
 
 extern "C" fn set_safety_check_level(level: Obj) -> Obj {
@@ -422,8 +405,7 @@ extern "C" fn set_u2f_counter(count: Obj) -> Obj {
 }
 
 extern "C" fn get_private_u2f_counter() -> Obj {
-    let block = || Ok(U2F_COUNTER_PRIVATE.get().into());
-    unsafe { util::try_or_raise(block) }
+    U2F_COUNTER_PRIVATE.get().into()
 }
 
 extern "C" fn delete_private_u2f_counter() -> Obj {

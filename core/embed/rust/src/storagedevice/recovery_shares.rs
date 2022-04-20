@@ -1,6 +1,6 @@
 use crate::{
     error::Error,
-    micropython::{buffer::StrBuffer, map::Map, module::Module, obj::Obj, qstr::Qstr, list::List},
+    micropython::{buffer::StrBuffer, list::List, map::Map, module::Module, obj::Obj, qstr::Qstr},
     trezorhal::storage_field::{Field, FieldGetSet, FieldOpsBase},
     util,
 };
