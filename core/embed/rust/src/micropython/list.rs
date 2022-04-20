@@ -1,4 +1,5 @@
 use core::convert::TryFrom;
+use core::ptr;
 
 use crate::error::Error;
 
@@ -15,6 +16,28 @@ impl List {
             let list = ffi::mp_obj_new_list(values.len(), values.as_ptr() as *mut Obj);
             Gc::from_raw(list.as_ptr().cast())
         })
+    }
+
+    pub fn with_capacity(capacity: usize) -> Result<Gc<Self>, Error> {
+        // EXCEPTION: Will raise if allocation fails.
+        catch_exception(|| unsafe {
+            let list = ffi::mp_obj_new_list(capacity, ptr::null_mut());
+            Gc::from_raw(list.as_ptr().cast())
+        })
+    }
+
+    pub fn from_iter<T, E>(iter: impl Iterator<Item = T>) -> Result<Gc<List>, Error>
+    where
+        T: TryInto<Obj, Error = E>,
+        Error: From<E>,
+    {
+        let max_size = iter.size_hint().1.unwrap_or(0);
+        let mut gc_list = List::with_capacity(max_size)?;
+        let list = unsafe { Gc::as_mut(&mut gc_list) };
+        for value in iter {
+            list.append(value.try_into()?)?;
+        }
+        Ok(gc_list)
     }
 
     pub fn append(&mut self, value: Obj) -> Result<(), Error> {

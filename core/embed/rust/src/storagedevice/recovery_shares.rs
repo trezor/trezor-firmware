@@ -1,6 +1,6 @@
 use crate::{
     error::Error,
-    micropython::{buffer::StrBuffer, map::Map, module::Module, obj::Obj, qstr::Qstr},
+    micropython::{buffer::StrBuffer, map::Map, module::Module, obj::Obj, qstr::Qstr, list::List},
     trezorhal::storage_field::{Field, FieldGetSet, FieldOpsBase},
     util,
 };
@@ -45,7 +45,7 @@ extern "C" fn fetch_group(group_index: Obj) -> Obj {
                 result.push(share).unwrap();
             }
         }
-        result.try_into()
+        List::from_iter(result.into_iter()).map(Into::into)
     };
     unsafe { util::try_or_raise(block) }
 }
