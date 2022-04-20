@@ -15,5 +15,5 @@ These scripts do not need to have a high standard, but each of those should have
 - need to specify all the files to be modified and optionally the path-to-address translation file
 - rewrites the files in place, or just prints the intended changes when run with `-c`
 
-## [unused_monero/](./unused_monero)
+## [monero_unused_functions](./monero_unused_functions.py)
 - Find functions from Monero cryptography that are not used.

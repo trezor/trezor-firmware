@@ -4,11 +4,12 @@ Find out which functions are unused in the Monero app - based on
 """
 
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any, Dict, List, Set
 
 CURRENT_DIR = Path(__file__).resolve().parent
-ROOT_DIR = CURRENT_DIR.parent.parent.parent
+ROOT_DIR = CURRENT_DIR.parent.parent
 
 HELPER_FILE = ROOT_DIR / "core/src/apps/monero/xmr/crypto_helpers.py"
 MOCK_FILE = ROOT_DIR / "core/mocks/generated/trezorcrypto/monero.pyi"
@@ -56,7 +57,10 @@ def generate_function_mapping() -> Dict[str, List[str]]:
 
 
 def check_usage_of_functions(func_mapping: Dict[str, List[str]]) -> None:
-    """Go through all the functions and check if they are used in the Monero app"""
+    """Go through all the functions and check if they are used in the Monero app.
+
+    Generates a report and exits with an appropriate exit code.
+    """
 
     # Include boolean field to know what is used
     is_used_mappings: Dict[str, Dict[str, Any]] = {}
@@ -77,10 +81,12 @@ def check_usage_of_functions(func_mapping: Dict[str, List[str]]) -> None:
     }
     if not unused_functions:
         print("SUCCESS: no functions are unused")
+        sys.exit(0)
     else:
         print(f"{len(unused_functions)} unused functions:")
         for func, values in unused_functions.items():
             print(func, values)
+        sys.exit(1)
 
 
 def _is_used(func_name: str) -> bool:
