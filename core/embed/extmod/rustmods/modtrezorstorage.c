@@ -29,8 +29,7 @@ MP_REGISTER_MODULE(MP_QSTR_trezorstoragedevice, mp_module_trezorstoragedevice,
                    MICROPY_PY_TREZORSTORAGE);
 
 MP_REGISTER_MODULE(MP_QSTR_trezorstoragerecovery,
-                   mp_module_trezorstoragerecovery,
-                   MICROPY_PY_TREZORSTORAGE);
+                   mp_module_trezorstoragerecovery, MICROPY_PY_TREZORSTORAGE);
 
 MP_REGISTER_MODULE(MP_QSTR_trezorstoragerecoveryshares,
                    mp_module_trezorstoragerecoveryshares,
