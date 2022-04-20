@@ -81,15 +81,6 @@ impl<const N: usize> From<&'static [u8; N]> for Buffer {
     }
 }
 
-// impl From<&'static str> for Buffer {
-//     fn from(val: &'static str) -> Self {
-//         Buffer {
-//             ptr: val.as_ptr(),
-//             len: val.len(),
-//         }
-//     }
-// }
-
 impl<const N: usize> TryFrom<Buffer> for Vec<u8, N> {
     type Error = Error;
 
@@ -206,7 +197,7 @@ impl<const N: usize> TryFrom<StrBuffer> for String<N> {
     type Error = Error;
 
     fn try_from(str_buf: StrBuffer) -> Result<String<N>, Self::Error> {
-        let slice = str::from_utf8(&str_buf.0).unwrap();
+        let slice = str_buf.as_ref();
         if slice.chars().count() > N {
             Err(Error::ValueError(cstr!("String is too long to fit")))
         } else {

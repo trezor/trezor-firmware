@@ -438,11 +438,39 @@ impl TryFrom<Obj> for usize {
     }
 }
 
-impl<T> From<Option<T>> for Obj
-where
-    T: Into<Obj>,
-{
-    fn from(val: Option<T>) -> Self {
+impl<const N: usize> TryFrom<Option<Vec<u8, N>>> for Obj {
+    type Error = Error;
+
+    fn try_from(val: Option<Vec<u8, N>>) -> Result<Obj, Error> {
+        match val {
+            Some(v) => (&v as &[u8]).try_into(),
+            None => Ok(Self::const_none()),
+        }
+    }
+}
+
+impl<const N: usize> TryFrom<Option<String<N>>> for Obj {
+    type Error = Error;
+
+    fn try_from(val: Option<String<N>>) -> Result<Obj, Error> {
+        match val {
+            Some(v) => v.try_into(),
+            None => Ok(Self::const_none()),
+        }
+    }
+}
+
+impl From<Option<u8>> for Obj {
+    fn from(val: Option<u8>) -> Obj {
+        match val {
+            Some(v) => v.into(),
+            None => Self::const_none(),
+        }
+    }
+}
+
+impl From<Option<u16>> for Obj {
+    fn from(val: Option<u16>) -> Obj {
         match val {
             Some(v) => v.into(),
             None => Self::const_none(),

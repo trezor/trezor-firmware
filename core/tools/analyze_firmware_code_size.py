@@ -30,7 +30,8 @@ print("changing directory to `core`")
 os.chdir(CURRENT_DIR.parent)
 
 BUILD_CMD = "make build_unix"
-BIN_TO_ANALYZE = "build/unix/trezor-emu-core"
+# BIN_TO_ANALYZE = "build/unix/trezor-emu-core"
+BIN_TO_ANALYZE = "build/firmware/firmware.elf"
 
 NM_CMD_BASE = f"nm --radix=dec --size-sort {BIN_TO_ANALYZE}"
 

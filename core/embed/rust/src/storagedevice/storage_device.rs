@@ -9,8 +9,8 @@ use crate::{
     },
     storagedevice::helpers,
     trezorhal::{
-        random, storage,
-        storage_field::{set_true_or_delete, Field, FieldGetSet},
+        random,
+        storage_field::{set_true_or_delete, Counter, Field, FieldGetSet, FieldOpsBase},
     },
     util,
 };
@@ -33,8 +33,9 @@ const SD_SALT_AUTH_KEY_LEN_BYTES: usize = 16;
 // TODO: how to export all public constants as integers?
 
 const DEVICE_ID: Field<String<24>> = Field::public(APP_DEVICE, 0x00).exact();
-const VERSION: Field<Vec<u8, 1>> = Field::private(APP_DEVICE, 0x01).exact();
+const VERSION: Field<u8> = Field::private(APP_DEVICE, 0x01);
 const MNEMONIC_SECRET: Field<Vec<u8, 256>> = Field::private(APP_DEVICE, 0x02);
+// NOTE: 0x03 key was used in the past for LANGUAGE. Not used anymore.
 const LABEL: Field<String<LABEL_MAXLENGTH>> = Field::public(APP_DEVICE, 0x04);
 const USE_PASSPHRASE: Field<bool> = Field::private(APP_DEVICE, 0x05);
 const HOMESCREEN: Field<Vec<u8, HOMESCREEN_MAXSIZE>> = Field::public(APP_DEVICE, 0x06);
@@ -56,10 +57,22 @@ const INITIALIZED: Field<bool> = Field::public(APP_DEVICE, 0x13);
 const SAFETY_CHECK_LEVEL: Field<u8> = Field::private(APP_DEVICE, 0x14);
 const EXPERIMENTAL_FEATURES: Field<bool> = Field::private(APP_DEVICE, 0x15);
 
-const SAFETY_CHECK_LEVEL_STRICT: u8 = 0;
-const SAFETY_CHECK_LEVEL_PROMPT: u8 = 1;
-const DEFAULT_SAFETY_CHECK_LEVEL: u8 = SAFETY_CHECK_LEVEL_STRICT;
-const SAFETY_CHECK_LEVELS: [u8; 2] = [SAFETY_CHECK_LEVEL_STRICT, SAFETY_CHECK_LEVEL_PROMPT];
+#[repr(u8)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum SafetyCheckLevel {
+    Strict = 0,
+    Prompt = 1,
+}
+
+const DEFAULT_SAFETY_CHECK_LEVEL: u8 = SafetyCheckLevel::Strict as u8;
+
+// It is not possible to iterate through all enum variants, so we need to
+// hardcode it
+// https://stackoverflow.com/questions/21371534/in-rust-is-there-a-way-to-iterate-through-the-values-of-an-enum
+const SAFETY_CHECK_LEVELS: [u8; 2] = [
+    SafetyCheckLevel::Strict as u8,
+    SafetyCheckLevel::Prompt as u8,
+];
 
 // TODO: somehow determine the DEBUG_MODE value
 const DEBUG_MODE: bool = true;
@@ -75,45 +88,37 @@ const AUTOLOCK_DELAY_MAXIMUM: u32 = 0x2000_0000; // ~6 days
 
 const STORAGE_VERSION_CURRENT: u8 = 0x02;
 
-extern "C" fn storagedevice_is_version_stored() -> Obj {
-    let block = || Ok(VERSION.has().into());
+extern "C" fn is_version_stored() -> Obj {
+    let block = || Ok(VERSION.is_set().into());
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_get_version() -> Obj {
-    let block = || {
-        VERSION
-            .get()
-            .map_or(Ok(Obj::const_none()), |x| (&x as &[u8]).try_into())
-    };
+extern "C" fn get_version() -> Obj {
+    let block = || Ok(VERSION.get().into());
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_set_version(version: Obj) -> Obj {
-    let block = || {
-        VERSION
-            .set(Buffer::try_from(version)?.try_into()?)?
-            .try_into()
-    };
+extern "C" fn set_version(version: Obj) -> Obj {
+    let block = || VERSION.set(version.try_into()?)?.try_into();
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_is_initialized() -> Obj {
-    let block = || Ok(INITIALIZED.get().unwrap_or(false).into());
+extern "C" fn is_initialized() -> Obj {
+    let block = || Ok(INITIALIZED.is_set().into());
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_set_is_initialized(is_initialized: Obj) -> Obj {
+extern "C" fn set_is_initialized(is_initialized: Obj) -> Obj {
     let block = || INITIALIZED.set(is_initialized.try_into()?)?.try_into();
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_get_rotation() -> Obj {
+extern "C" fn get_rotation() -> Obj {
     let block = || Ok(ROTATION.get().unwrap_or(0).into());
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_set_rotation(rotation: Obj) -> Obj {
+extern "C" fn set_rotation(rotation: Obj) -> Obj {
     let block = || {
         let rotation = rotation.try_into()?;
 
@@ -126,12 +131,12 @@ extern "C" fn storagedevice_set_rotation(rotation: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_get_label() -> Obj {
-    let block = || LABEL.get().map_or(Ok(Obj::const_none()), |x| x.try_into());
+extern "C" fn get_label() -> Obj {
+    let block = || LABEL.get().try_into();
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_set_label(label: Obj) -> Obj {
+extern "C" fn set_label(label: Obj) -> Obj {
     let block = || {
         let label: StrBuffer = label.try_into()?;
         LABEL.set(label.try_into()?)?.try_into()
@@ -139,13 +144,14 @@ extern "C" fn storagedevice_set_label(label: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_get_device_id() -> Obj {
+extern "C" fn get_device_id() -> Obj {
     let block = || {
         if let Some(device_id) = DEVICE_ID.get() {
             device_id.try_into()
         } else {
-            let new_device_id = random::get_random_bytes::<12>();
-            let hex_id = helpers::hexlify_bytes(&new_device_id);
+            let mut buf: [u8; 12] = [0; 12];
+            random::bytes(&mut buf);
+            let hex_id = helpers::hexlify_bytes(&buf);
             DEVICE_ID.set(hex_id.clone())?;
             hex_id.try_into()
         }
@@ -153,7 +159,7 @@ extern "C" fn storagedevice_get_device_id() -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_set_device_id(device_id: Obj) -> Obj {
+extern "C" fn set_device_id(device_id: Obj) -> Obj {
     let block = || {
         let device_id: StrBuffer = device_id.try_into()?;
         DEVICE_ID.set(device_id.try_into()?)?.try_into()
@@ -161,35 +167,25 @@ extern "C" fn storagedevice_set_device_id(device_id: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_get_mnemonic_secret() -> Obj {
-    let block = || {
-        MNEMONIC_SECRET
-            .get()
-            .map_or(Ok(Obj::const_none()), |x| (&x as &[u8]).try_into())
-    };
+extern "C" fn get_mnemonic_secret() -> Obj {
+    let block = || MNEMONIC_SECRET.get().try_into();
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_set_mnemonic_secret(
-    n_args: usize,
-    args: *const Obj,
-    kwargs: *mut Map,
-) -> Obj {
+extern "C" fn set_mnemonic_secret(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let secret: Buffer = kwargs.get(Qstr::MP_QSTR_secret)?.try_into()?;
         let backup_type: u8 = kwargs.get(Qstr::MP_QSTR_backup_type)?.try_into()?;
-        let needs_backup: bool = if kwargs.contains_key(Qstr::MP_QSTR_needs_backup) {
-            kwargs.get(Qstr::MP_QSTR_needs_backup)?.try_into()?
-        } else {
-            false
-        };
-        let no_backup: bool = if kwargs.contains_key(Qstr::MP_QSTR_no_backup) {
-            kwargs.get(Qstr::MP_QSTR_no_backup)?.try_into()?
-        } else {
-            false
-        };
+        let needs_backup: bool = kwargs
+            .get(Qstr::MP_QSTR_needs_backup)
+            .map(TryInto::try_into)
+            .unwrap_or(Ok(false))?;
+        let no_backup: bool = kwargs
+            .get(Qstr::MP_QSTR_no_backup)
+            .map(TryInto::try_into)
+            .unwrap_or(Ok(false))?;
 
-        VERSION.set(Vec::from_slice(&[STORAGE_VERSION_CURRENT]).unwrap())?;
+        VERSION.set(STORAGE_VERSION_CURRENT)?;
         MNEMONIC_SECRET.set(secret.try_into()?)?;
         BACKUP_TYPE.set(backup_type)?;
         set_true_or_delete(NO_BACKUP, no_backup)?;
@@ -204,12 +200,12 @@ extern "C" fn storagedevice_set_mnemonic_secret(
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn storagedevice_is_passphrase_enabled() -> Obj {
+extern "C" fn is_passphrase_enabled() -> Obj {
     let block = || Ok(USE_PASSPHRASE.get().unwrap_or(false).into());
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_set_passphrase_enabled(enable: Obj) -> Obj {
+extern "C" fn set_passphrase_enabled(enable: Obj) -> Obj {
     let block = || {
         let enable = enable.try_into()?;
 
@@ -224,12 +220,12 @@ extern "C" fn storagedevice_set_passphrase_enabled(enable: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_get_passphrase_always_on_device() -> Obj {
+extern "C" fn get_passphrase_always_on_device() -> Obj {
     let block = || Ok(PASSPHRASE_ALWAYS_ON_DEVICE.get().unwrap_or(false).into());
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_set_passphrase_always_on_device(enable: Obj) -> Obj {
+extern "C" fn set_passphrase_always_on_device(enable: Obj) -> Obj {
     let block = || {
         PASSPHRASE_ALWAYS_ON_DEVICE
             .set(enable.try_into()?)?
@@ -238,42 +234,42 @@ extern "C" fn storagedevice_set_passphrase_always_on_device(enable: Obj) -> Obj 
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_unfinished_backup() -> Obj {
+extern "C" fn unfinished_backup() -> Obj {
     let block = || Ok(UNFINISHED_BACKUP.get().unwrap_or(false).into());
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_set_unfinished_backup(state: Obj) -> Obj {
+extern "C" fn set_unfinished_backup(state: Obj) -> Obj {
     let block = || UNFINISHED_BACKUP.set(state.try_into()?)?.try_into();
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_needs_backup() -> Obj {
+extern "C" fn needs_backup() -> Obj {
     let block = || Ok(NEEDS_BACKUP.get().unwrap_or(false).into());
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_set_backed_up() -> Obj {
+extern "C" fn set_backed_up() -> Obj {
     let block = || NEEDS_BACKUP.delete()?.try_into();
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_no_backup() -> Obj {
+extern "C" fn no_backup() -> Obj {
     let block = || Ok(NO_BACKUP.get().unwrap_or(false).into());
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_get_experimental_features() -> Obj {
+extern "C" fn get_experimental_features() -> Obj {
     let block = || Ok(EXPERIMENTAL_FEATURES.get().unwrap_or(false).into());
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_set_experimental_features(enable: Obj) -> Obj {
+extern "C" fn set_experimental_features(enable: Obj) -> Obj {
     let block = || set_true_or_delete(EXPERIMENTAL_FEATURES, enable.try_into()?)?.try_into();
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_get_backup_type() -> Obj {
+extern "C" fn get_backup_type() -> Obj {
     let block = || {
         // TODO: we could import the BackupType enum
         let backup_type = BACKUP_TYPE.get().unwrap_or(0);
@@ -287,16 +283,12 @@ extern "C" fn storagedevice_get_backup_type() -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_get_homescreen() -> Obj {
-    let block = || {
-        HOMESCREEN
-            .get()
-            .map_or(Ok(Obj::const_none()), |x| (&x as &[u8]).try_into())
-    };
+extern "C" fn get_homescreen() -> Obj {
+    let block = || HOMESCREEN.get().try_into();
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_set_homescreen(homescreen: Obj) -> Obj {
+extern "C" fn set_homescreen(homescreen: Obj) -> Obj {
     let block = || {
         HOMESCREEN
             .set(Buffer::try_from(homescreen)?.try_into()?)?
@@ -305,30 +297,22 @@ extern "C" fn storagedevice_set_homescreen(homescreen: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_get_slip39_identifier() -> Obj {
-    let block = || {
-        SLIP39_IDENTIFIER
-            .get()
-            .map_or(Ok(Obj::const_none()), |x| Ok(x.into()))
-    };
+extern "C" fn get_slip39_identifier() -> Obj {
+    let block = || Ok(SLIP39_IDENTIFIER.get().into());
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_set_slip39_identifier(identifier: Obj) -> Obj {
+extern "C" fn set_slip39_identifier(identifier: Obj) -> Obj {
     let block = || SLIP39_IDENTIFIER.set(identifier.try_into()?)?.try_into();
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_get_slip39_iteration_exponent() -> Obj {
-    let block = || {
-        SLIP39_ITERATION_EXPONENT
-            .get()
-            .map_or(Ok(Obj::const_none()), |x| Ok(x.into()))
-    };
+extern "C" fn get_slip39_iteration_exponent() -> Obj {
+    let block = || Ok(SLIP39_ITERATION_EXPONENT.get().into());
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_set_slip39_iteration_exponent(exponent: Obj) -> Obj {
+extern "C" fn set_slip39_iteration_exponent(exponent: Obj) -> Obj {
     let block = || {
         SLIP39_ITERATION_EXPONENT
             .set(exponent.try_into()?)?
@@ -337,25 +321,28 @@ extern "C" fn storagedevice_set_slip39_iteration_exponent(exponent: Obj) -> Obj 
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_get_autolock_delay_ms() -> Obj {
+extern "C" fn get_autolock_delay_ms() -> Obj {
     let block = || {
-        let delay = AUTOLOCK_DELAY_MS.get().unwrap_or(AUTOLOCK_DELAY_DEFAULT);
-        _normalize_autolock_delay(delay).try_into()
+        AUTOLOCK_DELAY_MS
+            .get()
+            .unwrap_or(AUTOLOCK_DELAY_DEFAULT)
+            .clamp(AUTOLOCK_DELAY_MINIMUM, AUTOLOCK_DELAY_MAXIMUM)
+            .try_into()
     };
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_set_autolock_delay_ms(delay_ms: Obj) -> Obj {
+extern "C" fn set_autolock_delay_ms(delay_ms: Obj) -> Obj {
     let block = || AUTOLOCK_DELAY_MS.set(delay_ms.try_into()?)?.try_into();
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_get_flags() -> Obj {
+extern "C" fn get_flags() -> Obj {
     let block = || FLAGS.get().unwrap_or(0).try_into();
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_set_flags(flags: Obj) -> Obj {
+extern "C" fn set_flags(flags: Obj) -> Obj {
     let block = || {
         let flags: u32 = flags.try_into()?;
 
@@ -368,7 +355,7 @@ extern "C" fn storagedevice_set_flags(flags: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_get_safety_check_level() -> Obj {
+extern "C" fn get_safety_check_level() -> Obj {
     let block = || {
         let level = SAFETY_CHECK_LEVEL
             .get()
@@ -385,7 +372,7 @@ extern "C" fn storagedevice_get_safety_check_level() -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_set_safety_check_level(level: Obj) -> Obj {
+extern "C" fn set_safety_check_level(level: Obj) -> Obj {
     let block = || {
         let level = level.try_into()?;
 
@@ -398,16 +385,12 @@ extern "C" fn storagedevice_set_safety_check_level(level: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_get_sd_salt_auth_key() -> Obj {
-    let block = || {
-        SD_SALT_AUTH_KEY
-            .get()
-            .map_or(Ok(Obj::const_none()), |x| (&x as &[u8]).try_into())
-    };
+extern "C" fn get_sd_salt_auth_key() -> Obj {
+    let block = || SD_SALT_AUTH_KEY.get().try_into();
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_set_sd_salt_auth_key(auth_key: Obj) -> Obj {
+extern "C" fn set_sd_salt_auth_key(auth_key: Obj) -> Obj {
     let block = || {
         let auth_key: Buffer = auth_key.try_into()?;
 
@@ -420,44 +403,32 @@ extern "C" fn storagedevice_set_sd_salt_auth_key(auth_key: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_get_next_u2f_counter() -> Obj {
+extern "C" fn get_next_u2f_counter() -> Obj {
     let block = || {
-        let key = helpers::get_appkey_u2f(APP_DEVICE, U2F_COUNTER, true);
-        storage::get_next_counter(key)?.try_into()
+        Counter::public_writable(APP_DEVICE, U2F_COUNTER)
+            .get_and_increment()?
+            .try_into()
     };
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_set_u2f_counter(count: Obj) -> Obj {
+extern "C" fn set_u2f_counter(count: Obj) -> Obj {
     let block = || {
-        let key = helpers::get_appkey_u2f(APP_DEVICE, U2F_COUNTER, true);
-        storage::set_counter(key, count.try_into()?)?.try_into()
+        Counter::public_writable(APP_DEVICE, U2F_COUNTER)
+            .set(count.try_into()?)?
+            .try_into()
     };
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_get_private_u2f_counter() -> Obj {
-    let block = || {
-        U2F_COUNTER_PRIVATE
-            .get()
-            .map_or(Ok(Obj::const_none()), |x| Ok(x.into()))
-    };
+extern "C" fn get_private_u2f_counter() -> Obj {
+    let block = || Ok(U2F_COUNTER_PRIVATE.get().into());
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn storagedevice_delete_private_u2f_counter() -> Obj {
-    let block = || EXPERIMENTAL_FEATURES.delete()?.try_into();
+extern "C" fn delete_private_u2f_counter() -> Obj {
+    let block = || U2F_COUNTER_PRIVATE.delete()?.try_into();
     unsafe { util::try_or_raise(block) }
-}
-
-fn _normalize_autolock_delay(delay_ms: u32) -> u32 {
-    if delay_ms < AUTOLOCK_DELAY_MINIMUM {
-        AUTOLOCK_DELAY_MINIMUM
-    } else if delay_ms > AUTOLOCK_DELAY_MAXIMUM {
-        AUTOLOCK_DELAY_MAXIMUM
-    } else {
-        delay_ms
-    }
 }
 
 #[no_mangle]
@@ -469,51 +440,51 @@ pub static mp_module_trezorstoragedevice: Module = obj_module! {
 
     /// def is_version_stored() -> bool:
     ///     """Whether version is in storage."""
-    Qstr::MP_QSTR_is_version_stored => obj_fn_0!(storagedevice_is_version_stored).as_obj(),
+    Qstr::MP_QSTR_is_version_stored => obj_fn_0!(is_version_stored).as_obj(),
 
     /// def is_initialized() -> bool:
     ///     """Whether device is initialized."""
-    Qstr::MP_QSTR_is_initialized => obj_fn_0!(storagedevice_is_initialized).as_obj(),
+    Qstr::MP_QSTR_is_initialized => obj_fn_0!(is_initialized).as_obj(),
 
     /// def set_is_initialized(is_initialized: bool) -> None:
     ///     """Whether device is initialized."""
-    Qstr::MP_QSTR_set_is_initialized => obj_fn_1!(storagedevice_set_is_initialized).as_obj(),
+    Qstr::MP_QSTR_set_is_initialized => obj_fn_1!(set_is_initialized).as_obj(),
 
     /// def get_version() -> bytes | None:
     ///     """Get version."""
-    Qstr::MP_QSTR_get_version => obj_fn_0!(storagedevice_get_version).as_obj(),
+    Qstr::MP_QSTR_get_version => obj_fn_0!(get_version).as_obj(),
 
     /// def set_version(version: bytes) -> None:
     ///     """Set version."""
-    Qstr::MP_QSTR_set_version => obj_fn_1!(storagedevice_set_version).as_obj(),
+    Qstr::MP_QSTR_set_version => obj_fn_1!(set_version).as_obj(),
 
     /// def get_rotation() -> int:
     ///     """Get rotation."""
-    Qstr::MP_QSTR_get_rotation => obj_fn_0!(storagedevice_get_rotation).as_obj(),
+    Qstr::MP_QSTR_get_rotation => obj_fn_0!(get_rotation).as_obj(),
 
     /// def set_rotation(rotation: int) -> None:
     ///     """Set rotation."""
-    Qstr::MP_QSTR_set_rotation => obj_fn_1!(storagedevice_set_rotation).as_obj(),
+    Qstr::MP_QSTR_set_rotation => obj_fn_1!(set_rotation).as_obj(),
 
     /// def get_label() -> str | None:
     ///     """Get label."""
-    Qstr::MP_QSTR_get_label => obj_fn_0!(storagedevice_get_label).as_obj(),
+    Qstr::MP_QSTR_get_label => obj_fn_0!(get_label).as_obj(),
 
     /// def set_label(label: str) -> None:
     ///     """Set label."""
-    Qstr::MP_QSTR_set_label => obj_fn_1!(storagedevice_set_label).as_obj(),
+    Qstr::MP_QSTR_set_label => obj_fn_1!(set_label).as_obj(),
 
     /// def get_device_id() -> str:
     ///     """Get device ID."""
-    Qstr::MP_QSTR_get_device_id => obj_fn_0!(storagedevice_get_device_id).as_obj(),
+    Qstr::MP_QSTR_get_device_id => obj_fn_0!(get_device_id).as_obj(),
 
     /// def set_device_id(device_id: str) -> None:
     ///     """Set device ID."""
-    Qstr::MP_QSTR_set_device_id => obj_fn_1!(storagedevice_set_device_id).as_obj(),
+    Qstr::MP_QSTR_set_device_id => obj_fn_1!(set_device_id).as_obj(),
 
     /// def get_mnemonic_secret() -> bytes | None:
     ///     """Get mnemonic secret."""
-    Qstr::MP_QSTR_get_mnemonic_secret => obj_fn_0!(storagedevice_get_mnemonic_secret).as_obj(),
+    Qstr::MP_QSTR_get_mnemonic_secret => obj_fn_0!(get_mnemonic_secret).as_obj(),
 
     /// def set_mnemonic_secret(
     ///     *,
@@ -523,19 +494,19 @@ pub static mp_module_trezorstoragedevice: Module = obj_module! {
     ///     no_backup: bool = False,
     /// ) -> None:
     ///     """Set mnemonic secret. Only kwargs are supported."""
-    Qstr::MP_QSTR_set_mnemonic_secret => obj_fn_kw!(0, storagedevice_set_mnemonic_secret).as_obj(),
+    Qstr::MP_QSTR_set_mnemonic_secret => obj_fn_kw!(0, set_mnemonic_secret).as_obj(),
 
     /// def is_passphrase_enabled() -> bool:
     ///     """Whether passphrase is enabled."""
-    Qstr::MP_QSTR_is_passphrase_enabled => obj_fn_0!(storagedevice_is_passphrase_enabled).as_obj(),
+    Qstr::MP_QSTR_is_passphrase_enabled => obj_fn_0!(is_passphrase_enabled).as_obj(),
 
     /// def set_passphrase_enabled(enable: bool) -> None:
     ///     """Set whether passphrase is enabled."""
-    Qstr::MP_QSTR_set_passphrase_enabled => obj_fn_1!(storagedevice_set_passphrase_enabled).as_obj(),
+    Qstr::MP_QSTR_set_passphrase_enabled => obj_fn_1!(set_passphrase_enabled).as_obj(),
 
     /// def get_passphrase_always_on_device() -> bool:
     ///     """Whether passphrase is on device."""
-    Qstr::MP_QSTR_get_passphrase_always_on_device => obj_fn_0!(storagedevice_get_passphrase_always_on_device).as_obj(),
+    Qstr::MP_QSTR_get_passphrase_always_on_device => obj_fn_0!(get_passphrase_always_on_device).as_obj(),
 
     /// def set_passphrase_always_on_device(enable: bool) -> None:
     ///     """Set whether passphrase is on device.
@@ -545,43 +516,43 @@ pub static mp_module_trezorstoragedevice: Module = obj_module! {
     ///     - If DEVICE(1) => returns True, the check against b"\x01" in get_bool succeeds.
     ///     - If HOST(2) => returns False, the check against b"\x01" in get_bool fails.
     ///     """
-    Qstr::MP_QSTR_set_passphrase_always_on_device => obj_fn_1!(storagedevice_set_passphrase_always_on_device).as_obj(),
+    Qstr::MP_QSTR_set_passphrase_always_on_device => obj_fn_1!(set_passphrase_always_on_device).as_obj(),
 
     /// def unfinished_backup() -> bool:
     ///     """Whether backup is still in progress."""
-    Qstr::MP_QSTR_unfinished_backup => obj_fn_0!(storagedevice_unfinished_backup).as_obj(),
+    Qstr::MP_QSTR_unfinished_backup => obj_fn_0!(unfinished_backup).as_obj(),
 
     /// def set_unfinished_backup(state: bool) -> None:
     ///     """Set backup state."""
-    Qstr::MP_QSTR_set_unfinished_backup => obj_fn_1!(storagedevice_set_unfinished_backup).as_obj(),
+    Qstr::MP_QSTR_set_unfinished_backup => obj_fn_1!(set_unfinished_backup).as_obj(),
 
     /// def needs_backup() -> bool:
     ///     """Whether backup is needed."""
-    Qstr::MP_QSTR_needs_backup => obj_fn_0!(storagedevice_needs_backup).as_obj(),
+    Qstr::MP_QSTR_needs_backup => obj_fn_0!(needs_backup).as_obj(),
 
     /// def set_backed_up() -> None:
     ///     """Signal that backup is finished."""
-    Qstr::MP_QSTR_set_backed_up => obj_fn_0!(storagedevice_set_backed_up).as_obj(),
+    Qstr::MP_QSTR_set_backed_up => obj_fn_0!(set_backed_up).as_obj(),
 
     /// def no_backup() -> bool:
     ///     """Whether there is no backup."""
-    Qstr::MP_QSTR_no_backup => obj_fn_0!(storagedevice_no_backup).as_obj(),
+    Qstr::MP_QSTR_no_backup => obj_fn_0!(no_backup).as_obj(),
 
     /// def get_backup_type() -> BackupTypeInt:
     ///     """Get backup type."""
-    Qstr::MP_QSTR_get_backup_type => obj_fn_0!(storagedevice_get_backup_type).as_obj(),
+    Qstr::MP_QSTR_get_backup_type => obj_fn_0!(get_backup_type).as_obj(),
 
     /// def get_homescreen() -> bytes | None:
     ///     """Get homescreen."""
-    Qstr::MP_QSTR_get_homescreen => obj_fn_0!(storagedevice_get_homescreen).as_obj(),
+    Qstr::MP_QSTR_get_homescreen => obj_fn_0!(get_homescreen).as_obj(),
 
     /// def set_homescreen(homescreen: bytes) -> None:
     ///     """Set homescreen."""
-    Qstr::MP_QSTR_set_homescreen => obj_fn_1!(storagedevice_set_homescreen).as_obj(),
+    Qstr::MP_QSTR_set_homescreen => obj_fn_1!(set_homescreen).as_obj(),
 
     /// def get_slip39_identifier() -> int | None:
     ///     """The device's actual SLIP-39 identifier used in passphrase derivation."""
-    Qstr::MP_QSTR_get_slip39_identifier => obj_fn_0!(storagedevice_get_slip39_identifier).as_obj(),
+    Qstr::MP_QSTR_get_slip39_identifier => obj_fn_0!(get_slip39_identifier).as_obj(),
 
     /// def set_slip39_identifier(identifier: int) -> None:
     ///     """
@@ -589,11 +560,11 @@ pub static mp_module_trezorstoragedevice: Module = obj_module! {
     ///     Not to be confused with recovery.identifier, which is stored only during
     ///     the recovery process and it is copied here upon success.
     ///     """
-    Qstr::MP_QSTR_set_slip39_identifier => obj_fn_1!(storagedevice_set_slip39_identifier).as_obj(),
+    Qstr::MP_QSTR_set_slip39_identifier => obj_fn_1!(set_slip39_identifier).as_obj(),
 
     /// def get_slip39_iteration_exponent() -> int | None:
     ///     """The device's actual SLIP-39 iteration exponent used in passphrase derivation."""
-    Qstr::MP_QSTR_get_slip39_iteration_exponent => obj_fn_0!(storagedevice_get_slip39_iteration_exponent).as_obj(),
+    Qstr::MP_QSTR_get_slip39_iteration_exponent => obj_fn_0!(get_slip39_iteration_exponent).as_obj(),
 
     /// def set_slip39_iteration_exponent(exponent: int) -> None:
     ///     """
@@ -601,90 +572,67 @@ pub static mp_module_trezorstoragedevice: Module = obj_module! {
     ///     Not to be confused with recovery.iteration_exponent, which is stored only during
     ///     the recovery process and it is copied here upon success.
     ///     """
-    Qstr::MP_QSTR_set_slip39_iteration_exponent => obj_fn_1!(storagedevice_set_slip39_iteration_exponent).as_obj(),
+    Qstr::MP_QSTR_set_slip39_iteration_exponent => obj_fn_1!(set_slip39_iteration_exponent).as_obj(),
 
     /// def get_autolock_delay_ms() -> int:
     ///     """Get autolock delay."""
-    Qstr::MP_QSTR_get_autolock_delay_ms => obj_fn_0!(storagedevice_get_autolock_delay_ms).as_obj(),
+    Qstr::MP_QSTR_get_autolock_delay_ms => obj_fn_0!(get_autolock_delay_ms).as_obj(),
 
     /// def set_autolock_delay_ms(delay_ms: int) -> None:
     ///     """Set autolock delay."""
-    Qstr::MP_QSTR_set_autolock_delay_ms => obj_fn_1!(storagedevice_set_autolock_delay_ms).as_obj(),
+    Qstr::MP_QSTR_set_autolock_delay_ms => obj_fn_1!(set_autolock_delay_ms).as_obj(),
 
     /// def get_flags() -> int:
     ///     """Get flags."""
-    Qstr::MP_QSTR_get_flags => obj_fn_0!(storagedevice_get_flags).as_obj(),
+    Qstr::MP_QSTR_get_flags => obj_fn_0!(get_flags).as_obj(),
 
     /// def set_flags(flags: int) -> None:
     ///     """Set flags."""
-    Qstr::MP_QSTR_set_flags => obj_fn_1!(storagedevice_set_flags).as_obj(),
+    Qstr::MP_QSTR_set_flags => obj_fn_1!(set_flags).as_obj(),
 
     /// def get_safety_check_level() -> StorageSafetyCheckLevel:
     ///     """Get safety check level.
     ///     Do not use this function directly, see apps.common.safety_checks instead.
     ///     """
-    Qstr::MP_QSTR_get_safety_check_level => obj_fn_0!(storagedevice_get_safety_check_level).as_obj(),
+    Qstr::MP_QSTR_get_safety_check_level => obj_fn_0!(get_safety_check_level).as_obj(),
 
     /// def set_safety_check_level(level: StorageSafetyCheckLevel) -> None:
     ///     """Set safety check level.
     ///     Do not use this function directly, see apps.common.safety_checks instead.
     ///     """
-    Qstr::MP_QSTR_set_safety_check_level => obj_fn_1!(storagedevice_set_safety_check_level).as_obj(),
+    Qstr::MP_QSTR_set_safety_check_level => obj_fn_1!(set_safety_check_level).as_obj(),
 
     /// def get_sd_salt_auth_key() -> bytes | None:
     ///     """The key used to check the authenticity of the SD card salt."""
-    Qstr::MP_QSTR_get_sd_salt_auth_key => obj_fn_0!(storagedevice_get_sd_salt_auth_key).as_obj(),
+    Qstr::MP_QSTR_get_sd_salt_auth_key => obj_fn_0!(get_sd_salt_auth_key).as_obj(),
 
     /// def set_sd_salt_auth_key(auth_key: bytes) -> None:
     ///     """The key used to check the authenticity of the SD card salt.
     ///     Empty bytes will delete the salt.
     ///     """
-    Qstr::MP_QSTR_set_sd_salt_auth_key => obj_fn_1!(storagedevice_set_sd_salt_auth_key).as_obj(),
+    Qstr::MP_QSTR_set_sd_salt_auth_key => obj_fn_1!(set_sd_salt_auth_key).as_obj(),
 
     /// def get_next_u2f_counter() -> int:
     ///     """Get next U2F counter."""
-    Qstr::MP_QSTR_get_next_u2f_counter => obj_fn_0!(storagedevice_get_next_u2f_counter).as_obj(),
+    Qstr::MP_QSTR_get_next_u2f_counter => obj_fn_0!(get_next_u2f_counter).as_obj(),
 
     /// def set_u2f_counter(count: int) -> None:
     ///     """Set U2F counter."""
-    Qstr::MP_QSTR_set_u2f_counter => obj_fn_1!(storagedevice_set_u2f_counter).as_obj(),
+    Qstr::MP_QSTR_set_u2f_counter => obj_fn_1!(set_u2f_counter).as_obj(),
 
     /// def get_private_u2f_counter() -> int | None:
     ///     """Get private U2F counter."""
-    Qstr::MP_QSTR_get_private_u2f_counter => obj_fn_0!(storagedevice_get_private_u2f_counter).as_obj(),
+    Qstr::MP_QSTR_get_private_u2f_counter => obj_fn_0!(get_private_u2f_counter).as_obj(),
 
     /// def delete_private_u2f_counter() -> None:
     ///     """Delete private U2F counter."""
-    Qstr::MP_QSTR_delete_private_u2f_counter => obj_fn_0!(storagedevice_delete_private_u2f_counter).as_obj(),
+    Qstr::MP_QSTR_delete_private_u2f_counter => obj_fn_0!(delete_private_u2f_counter).as_obj(),
 
     /// def get_experimental_features() -> bool:
     ///     """Whether we have experimental features."""
-    Qstr::MP_QSTR_get_experimental_features => obj_fn_0!(storagedevice_get_experimental_features).as_obj(),
+    Qstr::MP_QSTR_get_experimental_features => obj_fn_0!(get_experimental_features).as_obj(),
 
     /// def set_experimental_features(enabled: bool) -> None:
     ///     """Set experimental features."""
-    Qstr::MP_QSTR_set_experimental_features => obj_fn_1!(storagedevice_set_experimental_features).as_obj(),
+    Qstr::MP_QSTR_set_experimental_features => obj_fn_1!(set_experimental_features).as_obj(),
 };
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn normalize_autolock_delay_small() {
-        let result = _normalize_autolock_delay(123);
-        assert_eq!(result, AUTOLOCK_DELAY_MINIMUM);
-    }
-
-    #[test]
-    fn normalize_autolock_delay_big() {
-        let result = _normalize_autolock_delay(u32::MAX);
-        assert_eq!(result, AUTOLOCK_DELAY_MAXIMUM);
-    }
-
-    #[test]
-    fn normalize_autolock_delay_normal() {
-        let result = _normalize_autolock_delay(1_000_000);
-        assert_eq!(result, 1_000_000);
-    }
-}

@@ -60,27 +60,9 @@ impl<T> Field<T> {
         }
     }
 
-    // TODO: would it be worth calculating it once and store as an attribute?
-    fn appkey(&self) -> u16 {
+    pub fn appkey(&self) -> u16 {
         let app = self.app | self.access as u8;
         (app as u16) << 8 | self.key as u16
-    }
-
-    pub fn has(&self) -> bool {
-        storage::has(self.appkey())
-    }
-
-    pub fn delete(&self) -> StorageResult<()> {
-        // If field is not there, storage::delete() would return Err()
-        if !self.has() {
-            return Ok(());
-        }
-
-        if !storage::delete(self.appkey()) {
-            Err(StorageError::WriteFailed)
-        } else {
-            Ok(())
-        }
     }
 
     /// Checking if the length of the field is not unexpected
@@ -100,11 +82,20 @@ pub trait FieldOpsBase {
 }
 impl<T> FieldOpsBase for Field<T> {
     fn is_set(&self) -> bool {
-        self.has()
+        storage::has(self.appkey())
     }
 
     fn delete(&self) -> StorageResult<()> {
-        self.delete()
+        // If field is not there, storage::delete() would return Err()
+        if !self.is_set() {
+            return Ok(());
+        }
+
+        if !storage::delete(self.appkey()) {
+            Err(StorageError::WriteFailed)
+        } else {
+            Ok(())
+        }
     }
 }
 
@@ -234,6 +225,28 @@ impl<const N: usize> FieldGetSet<Vec<u8, N>> for Field<Vec<u8, N>> {
     }
 }
 
+/// For usage in U2F
+pub struct Counter(Field<u32>);
+
+impl Counter {
+    pub const fn public(app: u8, key: u8) -> Self {
+        Self(Field::public(app, key))
+    }
+    pub const fn public_writable(app: u8, key: u8) -> Self {
+        Self(Field::public_writable(app, key))
+    }
+    pub const fn private(app: u8, key: u8) -> Self {
+        Self(Field::private(app, key))
+    }
+
+    pub fn get_and_increment(&self) -> StorageResult<u32> {
+        storage::get_next_counter(self.0.appkey())
+    }
+    pub fn set(&self, value: u32) -> StorageResult<()> {
+        storage::set_counter(self.0.appkey(), value)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use cstr_core::cstr;
@@ -266,12 +279,12 @@ mod tests {
     fn test_basic() {
         init_storage(true);
 
-        assert!(!VERSION.has());
+        assert!(!VERSION.is_set());
         assert!(VERSION.set(10).is_ok());
         assert_eq!(VERSION.get(), Some(10));
-        assert!(VERSION.has());
+        assert!(VERSION.is_set());
         assert!(VERSION.delete().is_ok());
-        assert!(!VERSION.has());
+        assert!(!VERSION.is_set());
     }
 
     #[test]
@@ -282,7 +295,7 @@ mod tests {
         assert_eq!(VERSION.get(), Some(10));
 
         storage::lock();
-        assert!(!VERSION.has());
+        assert!(!VERSION.is_set());
         assert!(VERSION.set(10).is_err());
         assert!(VERSION.get().is_none());
     }
@@ -365,15 +378,15 @@ mod tests {
     fn test_set_true_or_delete() {
         init_storage(true);
 
-        assert!(!PRIVATE_BOOL.has());
+        assert!(!PRIVATE_BOOL.is_set());
         assert!(PRIVATE_BOOL.set(false).is_ok());
-        assert!(PRIVATE_BOOL.has());
+        assert!(PRIVATE_BOOL.is_set());
         assert_eq!(PRIVATE_BOOL.get(), Some(false));
 
         assert!(set_true_or_delete(PRIVATE_BOOL, true).is_ok());
         assert_eq!(PRIVATE_BOOL.get(), Some(true));
 
         assert!(set_true_or_delete(PRIVATE_BOOL, false).is_ok());
-        assert!(!PRIVATE_BOOL.has());
+        assert!(!PRIVATE_BOOL.is_set());
     }
 }
