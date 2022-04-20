@@ -28,7 +28,7 @@
 
 #include "font_bitmap.h"
 
-#if defined MODEL_T
+#if defined TREZOR_MODEL_T
 
 // TT new rust UI
 #if TREZOR_UI2
@@ -75,7 +75,7 @@
 
 #endif
 
-#elif defined MODEL_1
+#elif defined TREZOR_MODEL_1
 
 #ifdef TREZOR_FONT_NORMAL_ENABLE
 #include "font_pixeloperator_regular_8.h"
@@ -115,9 +115,9 @@ static struct { int x, y; } DISPLAY_OFFSET;
 #ifdef TREZOR_EMULATOR
 #include "display-unix.h"
 #else
-#if defined MODEL_T
+#if defined TREZOR_MODEL_T
 #include "display-stm32_T.h"
-#elif defined MODEL_1
+#elif defined TREZOR_MODEL_1
 #include "display-stm32_1.h"
 #else
 #error Unknown Trezor model
@@ -261,7 +261,7 @@ static void uzlib_prepare(struct uzlib_uncomp *decomp, uint8_t *window,
 
 void display_image(int x, int y, int w, int h, const void *data,
                    uint32_t datalen) {
-#if defined MODEL_T
+#if defined TREZOR_MODEL_T
   x += DISPLAY_OFFSET.x;
   y += DISPLAY_OFFSET.y;
   int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
@@ -302,7 +302,7 @@ void display_image(int x, int y, int w, int h, const void *data,
 
 void display_avatar(int x, int y, const void *data, uint32_t datalen,
                     uint16_t fgcolor, uint16_t bgcolor) {
-#if defined MODEL_T
+#if defined TREZOR_MODEL_T
   x += DISPLAY_OFFSET.x;
   y += DISPLAY_OFFSET.y;
   int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
@@ -426,14 +426,14 @@ bool display_toif_info(const uint8_t *data, uint32_t len, uint16_t *out_w,
   return true;
 }
 
-#if defined MODEL_T
+#if defined TREZOR_MODEL_T
 #include "loader.h"
 #endif
 
 void display_loader(uint16_t progress, bool indeterminate, int yoffset,
                     uint16_t fgcolor, uint16_t bgcolor, const uint8_t *icon,
                     uint32_t iconlen, uint16_t iconfgcolor) {
-#if defined MODEL_T
+#if defined TREZOR_MODEL_T
   uint16_t colortable[16] = {0}, iconcolortable[16] = {0};
   set_color_table(colortable, fgcolor, bgcolor);
   if (icon) {
@@ -915,9 +915,9 @@ void display_offset(int set_xy[2], int *get_x, int *get_y) {
 
 int display_orientation(int degrees) {
   if (degrees != DISPLAY_ORIENTATION) {
-#if defined MODEL_T
+#if defined TREZOR_MODEL_T
     if (degrees == 0 || degrees == 90 || degrees == 180 || degrees == 270) {
-#elif defined MODEL_1
+#elif defined TREZOR_MODEL_1
     if (degrees == 0 || degrees == 180) {
 #else
 #error Unknown Trezor model
@@ -930,7 +930,7 @@ int display_orientation(int degrees) {
 }
 
 int display_backlight(int val) {
-#if defined MODEL_1
+#if defined TREZOR_MODEL_1
   val = 255;
 #endif
   if (DISPLAY_BACKLIGHT != val && val >= 0 && val <= 255) {

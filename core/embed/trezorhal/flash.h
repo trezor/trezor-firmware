@@ -26,9 +26,9 @@
 
 // see docs/memory.md for more information
 
-#if defined MODEL_T
+#if defined TREZOR_MODEL_T
 #define FLASH_SECTOR_COUNT 24
-#elif defined MODEL_1
+#elif defined TREZOR_MODEL_1
 #define FLASH_SECTOR_COUNT 12
 #else
 #error Unknown Trezor model
@@ -40,10 +40,10 @@
 
 //                                           3
 
-#if defined MODEL_T
+#if defined TREZOR_MODEL_T
 #define FLASH_SECTOR_STORAGE_1 4
 #define FLASH_SECTOR_STORAGE_2 16
-#elif defined MODEL_1
+#elif defined TREZOR_MODEL_1
 #define FLASH_SECTOR_STORAGE_1 2
 #define FLASH_SECTOR_STORAGE_2 3
 #else
