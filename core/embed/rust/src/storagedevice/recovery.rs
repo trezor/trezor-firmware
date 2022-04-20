@@ -133,7 +133,12 @@ extern "C" fn fetch_slip39_remaining_shares() -> Obj {
             return Err(Error::ValueError(cstr!("There are no remaining shares")));
         }
 
-        List::from_iter(remaining[..group_count].iter().copied()).map(Into::into)
+        let remaining = remaining[..group_count]
+            .iter()
+            .cloned()
+            .collect::<Vec<u8, MAX_SHARE_COUNT>>()
+            .into_iter();
+        List::from_iter(remaining).map(Into::into)
     };
     unsafe { util::try_or_raise(block) }
 }
