@@ -19,12 +19,25 @@
 
 #include "py/runtime.h"
 
-#if MICROPY_PY_TREZORSTORAGERESIDENTCREDENTIALS
+#if MICROPY_PY_TREZORSTORAGE
 
 #include "librust.h"
 
+// Register all the modules for storage
+
+MP_REGISTER_MODULE(MP_QSTR_trezorstoragedevice, mp_module_trezorstoragedevice,
+                   MICROPY_PY_TREZORSTORAGE);
+
+MP_REGISTER_MODULE(MP_QSTR_trezorstoragerecovery,
+                   mp_module_trezorstoragerecovery,
+                   MICROPY_PY_TREZORSTORAGE);
+
+MP_REGISTER_MODULE(MP_QSTR_trezorstoragerecoveryshares,
+                   mp_module_trezorstoragerecoveryshares,
+                   MICROPY_PY_TREZORSTORAGE);
+
 MP_REGISTER_MODULE(MP_QSTR_trezorstorageresidentcredentials,
                    mp_module_trezorstorageresidentcredentials,
-                   MICROPY_PY_TREZORSTORAGERESIDENTCREDENTIALS);
+                   MICROPY_PY_TREZORSTORAGE);
 
-#endif  // MICROPY_PY_TREZORSTORAGERESIDENTCREDENTIALS
+#endif  // MICROPY_PY_TREZORSTORAGE
