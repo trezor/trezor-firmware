@@ -112,14 +112,14 @@ impl FieldGetSet<u32> for Field<u32> {
         let mut buf = [0u8; 4];
         let len = storage::get(self.appkey(), &mut buf);
         if matches!(len, Ok(4)) {
-            Some(u32::from_le_bytes(buf))
+            Some(u32::from_be_bytes(buf))
         } else {
             None
         }
     }
 
     fn set(&self, val: u32) -> StorageResult<()> {
-        storage::set(self.appkey(), &val.to_le_bytes())
+        storage::set(self.appkey(), &val.to_be_bytes())
     }
 }
 
@@ -128,14 +128,14 @@ impl FieldGetSet<u16> for Field<u16> {
         let mut buf = [0u8; 2];
         let len = storage::get(self.appkey(), &mut buf);
         if matches!(len, Ok(2)) {
-            Some(u16::from_le_bytes(buf))
+            Some(u16::from_be_bytes(buf))
         } else {
             None
         }
     }
 
     fn set(&self, val: u16) -> StorageResult<()> {
-        storage::set(self.appkey(), &val.to_le_bytes())
+        storage::set(self.appkey(), &val.to_be_bytes())
     }
 }
 
