@@ -266,38 +266,6 @@ impl TryFrom<()> for Obj {
     }
 }
 
-impl<const N: usize> TryFrom<Vec<u8, N>> for Obj {
-    type Error = Error;
-
-    fn try_from(val: Vec<u8, N>) -> Result<Self, Self::Error> {
-        // TODO: could be probably simplified
-        let mut object_list: Vec<Obj, N> = Vec::<Obj, N>::new();
-        for item in val {
-            // TODO: error handling?
-            object_list.push(item.into()).unwrap();
-        }
-        catch_exception(|| unsafe {
-            ffi::mp_obj_new_list(object_list.len(), object_list.as_ptr() as *mut Obj)
-        })
-    }
-}
-
-impl<const M: usize, const N: usize> TryFrom<Vec<String<M>, N>> for Obj {
-    type Error = Error;
-
-    fn try_from(val: Vec<String<M>, N>) -> Result<Self, Self::Error> {
-        // TODO: could be probably simplified
-        let mut object_list: Vec<Obj, N> = Vec::<Obj, N>::new();
-        for item in val {
-            // TODO: error handling?
-            object_list.push(item.as_str().try_into()?).unwrap();
-        }
-        catch_exception(|| unsafe {
-            ffi::mp_obj_new_list(object_list.len(), object_list.as_ptr() as *mut Obj)
-        })
-    }
-}
-
 /// String slices are converted into `str` MicroPython objects. Strings that are
 /// already interned will turn up as QSTRs, strings not found in the QSTR pool
 /// will be allocated on the heap and copied.

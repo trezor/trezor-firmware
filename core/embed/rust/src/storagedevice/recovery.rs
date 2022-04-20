@@ -1,6 +1,6 @@
 use crate::{
     error::Error,
-    micropython::{map::Map, module::Module, obj::Obj, qstr::Qstr},
+    micropython::{list::List, map::Map, module::Module, obj::Obj, qstr::Qstr},
     storagedevice::recovery_shares,
     trezorhal::storage_field::{Field, FieldGetSet, FieldOpsBase},
     util,
@@ -133,11 +133,7 @@ extern "C" fn fetch_slip39_remaining_shares() -> Obj {
             return Err(Error::ValueError(cstr!("There are no remaining shares")));
         }
 
-        remaining[..group_count]
-            .iter()
-            .cloned()
-            .collect::<Vec<u8, MAX_SHARE_COUNT>>()
-            .try_into()
+        List::from_iter(remaining[..group_count].iter().copied()).map(Into::into)
     };
     unsafe { util::try_or_raise(block) }
 }

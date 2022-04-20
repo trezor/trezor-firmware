@@ -1,5 +1,3 @@
-use heapless::Vec;
-
 extern "C" {
     // trezor-crypto/rand.h
     fn random_uniform(n: u32) -> u32;
