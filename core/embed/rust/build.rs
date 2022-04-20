@@ -95,6 +95,7 @@ fn generate_micropython_bindings() {
         .allowlist_type("mp_obj_list_t")
         .allowlist_function("mp_obj_new_list")
         .allowlist_function("mp_obj_list_append")
+        .allowlist_function("mp_obj_list_set_len")
         .allowlist_var("mp_type_list")
         // map
         .allowlist_type("mp_map_elem_t")
