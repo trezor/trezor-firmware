@@ -12,6 +12,8 @@ use heapless::Vec;
 const MAX_SHARE_COUNT: usize = 16;
 const MAX_GROUP_COUNT: usize = 16;
 
+const DEFAULT_SLIP39_GROUP_COUNT: u8 = 1;
+
 const APP_RECOVERY: u8 = 0x02;
 const APP_RECOVERY_SHARES: u8 = 0x03;
 
@@ -87,7 +89,7 @@ extern "C" fn set_slip39_iteration_exponent(exponent: Obj) -> Obj {
 extern "C" fn get_slip39_group_count() -> Obj {
     let block = || {
         _require_progress()?;
-        Ok(SLIP39_GROUP_COUNT.get().into())
+        Ok(_get_slip39_group_count().into())
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -128,7 +130,7 @@ extern "C" fn fetch_slip39_remaining_shares() -> Obj {
             None => return Ok(Obj::const_none()),
         };
 
-        let group_count = SLIP39_GROUP_COUNT.get().unwrap_or(0) as usize;
+        let group_count = _get_slip39_group_count() as usize;
         if group_count == 0 {
             return Err(Error::ValueError(cstr!("There are no remaining shares")));
         }
@@ -149,7 +151,7 @@ extern "C" fn set_slip39_remaining_shares(shares_remaining: Obj, group_index: Ob
         let shares_remaining = shares_remaining.try_into()?;
         let group_index: usize = group_index.try_into()?;
 
-        let group_count = SLIP39_GROUP_COUNT.get().unwrap_or(0) as usize;
+        let group_count = _get_slip39_group_count() as usize;
         if group_count == 0 {
             return Err(Error::ValueError(cstr!("There are no remaining shares")));
         }
@@ -195,6 +197,13 @@ fn _require_progress() -> Result<(), Error> {
     } else {
         Ok(())
     }
+}
+
+/// Helper because there is a default value in case it is missing
+fn _get_slip39_group_count() -> u8 {
+    SLIP39_GROUP_COUNT
+        .get()
+        .unwrap_or(DEFAULT_SLIP39_GROUP_COUNT)
 }
 
 #[no_mangle]
