@@ -171,6 +171,18 @@ pub fn text_center(baseline: Point, text: &str, font: Font, fg_color: Color, bg_
     );
 }
 
+pub fn text_right(baseline: Point, text: &str, font: Font, fg_color: Color, bg_color: Color) {
+    let w = font.text_width(text);
+    display::text(
+        baseline.x - w,
+        baseline.y,
+        text,
+        font.0,
+        fg_color.into(),
+        bg_color.into(),
+    );
+}
+
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub struct Font(i32);
 

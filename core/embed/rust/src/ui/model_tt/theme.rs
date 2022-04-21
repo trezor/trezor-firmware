@@ -53,6 +53,7 @@ pub const ICON_NEXT: &[u8] = include_res!("model_tt/res/next.toif");
 // Scrollbar/PIN dots.
 pub const DOT_ACTIVE: &[u8] = include_res!("model_tt/res/scroll-active.toif");
 pub const DOT_INACTIVE: &[u8] = include_res!("model_tt/res/scroll-inactive.toif");
+pub const DOT_SMALL: &[u8] = include_res!("model_tt/res/scroll-small.toif");
 
 pub fn label_default() -> LabelStyle {
     LabelStyle {
