@@ -16,7 +16,6 @@ jobs:
         if: github.event_name == 'issues' && github.event.action == 'opened'
         run: |
           gh issue edit $ISSUE --add-project "Backlog 🗂"
-          gh issue edit $ISSUE --add-project "Issues Firmware"
         env:
           ISSUE: ${{github.event.issue.html_url}}
           GITHUB_TOKEN: ${{ secrets.GH_BOT_TOKEN }}
@@ -27,3 +26,13 @@ jobs:
         env:
           PULL_REQUEST: ${{github.event.pull_request.html_url}}
           GITHUB_TOKEN: ${{ secrets.GH_BOT_TOKEN }}
+
+  add-to-beta-project:
+    name: Add new issue to the beta Issues Firmware project
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/add-to-project@main
+        if: github.event_name == 'issues' && github.event.action == 'opened'
+        with:
+          project-url: https://github.com/orgs/trezor/projects/60
+          github-token: ${{ secrets.GH_BOT_TOKEN }}
