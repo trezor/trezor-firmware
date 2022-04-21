@@ -103,9 +103,10 @@ def client(
     _raw_client.open()
     try:
         _raw_client.init_device()
-    except Exception:
-        request.session.shouldstop = "Failed to communicate with Trezor"
-        pytest.fail("Failed to communicate with Trezor")
+    except Exception as e:
+        err = f"Failed to communicate with Trezor - {e}"
+        request.session.shouldstop = err
+        pytest.fail(err)
 
     if test_ui:
         # we need to reseed before the wipe

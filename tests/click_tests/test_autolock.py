@@ -192,4 +192,11 @@ def test_dryrun_enter_word_slowly(device_handler):
     layout = debug.click(buttons.CONFIRM_WORD, wait=True)
     # should not have locked, even though we took 9 seconds to type each letter
     assert layout.text == "Slip39Keyboard"
+
+    # locking the keyboard, to check it and to avoid ActionCancelled error
+    # when next test-case spawns the emulator
+    time.sleep(10.1)
+    layout = debug.wait_layout()
+    assert layout.text == "Lockscreen"
+
     device_handler.kill_task()
