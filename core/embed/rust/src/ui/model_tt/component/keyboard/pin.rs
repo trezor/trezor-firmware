@@ -24,7 +24,9 @@ pub enum PinKeyboardMsg {
     Cancelled,
 }
 
-const MAX_LENGTH: usize = 9;
+const MAX_LENGTH: usize = 50;
+const MAX_VISIBLE_DOTS: usize = 14;
+const MAX_VISIBLE_DIGITS: usize = 16;
 const DIGIT_COUNT: usize = 10; // 0..10
 const ERASE_HOLD_DURATION: Duration = Duration::from_secs(2);
 
@@ -268,7 +270,8 @@ struct PinDots {
 
 impl PinDots {
     const DOT: i32 = 6;
-    const PADDING: i32 = 4;
+    const PADDING: i32 = 6;
+    const TWITCH: i32 = 4;
 
     fn new(style: LabelStyle) -> Self {
         Self {
@@ -285,9 +288,9 @@ impl PinDots {
     }
 
     fn size(&self) -> Offset {
-        let digit_count = self.digits.len();
-        let mut width = Self::DOT * (digit_count as i32);
-        width += Self::PADDING * (digit_count.saturating_sub(1) as i32);
+        let ndots = self.digits.len().min(MAX_VISIBLE_DOTS);
+        let mut width = Self::DOT * (ndots as i32);
+        width += Self::PADDING * (ndots.saturating_sub(1) as i32);
         Offset::new(width, Self::DOT)
     }
 
@@ -324,13 +327,28 @@ impl PinDots {
 
     fn paint_digits(&self, area: Rect) {
         let center = area.center() + Offset::y(theme::FONT_MONO.text_height() / 2);
-        display::text_center(
-            center,
-            &self.digits,
-            theme::FONT_MONO,
-            self.style.text_color,
-            self.style.background_color,
-        );
+        let right =
+            center + Offset::x(theme::FONT_MONO.text_width("0") * (MAX_VISIBLE_DOTS as i32) / 2);
+        let digits = self.digits.len();
+
+        if digits <= MAX_VISIBLE_DOTS {
+            display::text_center(
+                center,
+                &self.digits,
+                theme::FONT_MONO,
+                self.style.text_color,
+                self.style.background_color,
+            );
+        } else {
+            let offset: usize = digits.saturating_sub(MAX_VISIBLE_DIGITS);
+            display::text_right(
+                right,
+                &self.digits[offset..],
+                theme::FONT_MONO,
+                self.style.text_color,
+                self.style.background_color,
+            );
+        }
     }
 
     fn paint_dots(&self, area: Rect) {
@@ -338,15 +356,44 @@ impl PinDots {
             .size()
             .snap(area.center(), Alignment::Center, Alignment::Center);
 
+        let digits = self.digits.len();
+        let dots_visible = digits.min(MAX_VISIBLE_DOTS);
+        let step = Self::DOT + Self::PADDING;
+
+        // Jiggle when overflowed.
+        if digits > dots_visible && digits % 2 == 0 {
+            cursor.x += Self::TWITCH
+        }
+
+        // Small leftmost dot.
+        if digits > dots_visible + 1 {
+            display::icon_top_left(
+                cursor - Offset::x(2 * step),
+                theme::DOT_SMALL,
+                self.style.text_color,
+                self.style.background_color,
+            );
+        }
+
+        // Greyed out dot.
+        if digits > dots_visible {
+            display::icon_top_left(
+                cursor - Offset::x(step),
+                theme::DOT_ACTIVE,
+                theme::GREY_LIGHT,
+                self.style.background_color,
+            );
+        }
+
         // Draw a dot for each PIN digit.
-        for _ in 0..self.digits.len() {
+        for _ in 0..dots_visible {
             display::icon_top_left(
                 cursor,
                 theme::DOT_ACTIVE,
                 self.style.text_color,
                 self.style.background_color,
             );
-            cursor.x += Self::DOT + Self::PADDING;
+            cursor.x += step;
         }
     }
 }
