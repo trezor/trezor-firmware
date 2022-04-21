@@ -19,7 +19,6 @@ class _RustLayout(ui.Layout):
     def __init__(self, layout: Any):
         self.layout = layout
         self.timer = loop.Timer()
-        self.layout.set_timer_fn(self.set_timer)
 
     def set_timer(self, token: int, deadline: int) -> None:
         self.timer.schedule(deadline, token)
@@ -30,8 +29,8 @@ class _RustLayout(ui.Layout):
             from apps.debug import confirm_signal, input_signal
 
             return (
-                self.handle_input_and_rendering(),
                 self.handle_timers(),
+                self.handle_input_and_rendering(),
                 confirm_signal(),
                 input_signal(),
             )
@@ -50,9 +49,13 @@ class _RustLayout(ui.Layout):
     else:
 
         def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
-            return self.handle_input_and_rendering(), self.handle_timers()
+            return self.handle_timers(), self.handle_input_and_rendering()
 
     def _before_render(self) -> None:
+        # Clear the screen of any leftovers.
+        ui.backlight_fade(ui.style.BACKLIGHT_DIM)
+        ui.display.clear()
+
         if __debug__ and self.should_notify_layout_change:
             from apps.debug import notify_layout_change
 
@@ -62,10 +65,13 @@ class _RustLayout(ui.Layout):
             self.should_notify_layout_change = False
             notify_layout_change(self)
 
+        # Turn the brightness on again.
+        ui.backlight_fade(self.BACKLIGHT_LEVEL)
+
     def handle_input_and_rendering(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
         touch = loop.wait(io.TOUCH)
         self._before_render()
-        ui.display.clear()
+        self.layout.attach_timer_fn(self.set_timer)
         self.layout.paint()
         # self.layout.bounds()
         while True:
