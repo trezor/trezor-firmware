@@ -521,11 +521,15 @@ async def request_pin_on_device(
 ) -> str:
     await button_request(ctx, "pin_device", code=ButtonRequestType.PinEntry)
 
+    warning = "Wrong PIN" if "Wrong" in prompt else None
+
     if attempts_remaining is None:
         subprompt = ""
     elif attempts_remaining == 1:
+        prompt = "Enter PIN"
         subprompt = "Last attempt"
     else:
+        prompt = "Enter PIN"
         subprompt = f"{attempts_remaining} tries left"
 
     dialog = _RustLayout(
@@ -533,7 +537,7 @@ async def request_pin_on_device(
             prompt=prompt,
             subprompt=subprompt,
             allow_cancel=allow_cancel,
-            warning=None,
+            warning=warning,
         )
     )
     while True:
