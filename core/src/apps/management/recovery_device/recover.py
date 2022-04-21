@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 import storage
+import storage.recovery_shares
 from trezor.crypto import bip39, slip39
 from trezor.errors import MnemonicError
 
