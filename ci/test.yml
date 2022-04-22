@@ -101,7 +101,7 @@ core device ui2 test:
     UI2: "1"
   script:
     - nix-shell --run "poetry run make -C core test_emu_ui | ts -s"
-    #- mv core/src/.coverage core/.coverage.test_emu
+    # - mv core/src/.coverage core/.coverage.test_emu
   after_script:
     - mv tests/ui_tests/reporting/reports/test/ test_ui_report
     - nix-shell --run "poetry run python ci/prepare_ui_artifacts.py TTui2 | ts -s"
@@ -117,7 +117,7 @@ core device ui2 test:
       - tests/ui_tests/fixtures.suggestion.json
       - tests/junit.xml
       - tests/trezor.log
-      #- core/.coverage.*
+      # - core/.coverage.*
       - master_diff
     when: always
     expire_in: 1 week
