@@ -8,19 +8,8 @@ if TYPE_CHECKING:
     from typing_extensions import Literal
 
 
-# fmt: off
-# Keys:
-DEVICE_ID                  = const(0x00)  # bytes
-# MOVE to storage FIDO2
-U2F_COUNTER                = const(0x09)  # int
-# TODO: move to init
-INITIALIZED                = const(0x13)  # bool (0x01 or empty)
-
 SAFETY_CHECK_LEVEL_STRICT  : Literal[0] = const(0)
 SAFETY_CHECK_LEVEL_PROMPT  : Literal[1] = const(1)
-# fmt: on
-
-# TODO: move to STORAGE_CONSTNAST.PY
 
 HOMESCREEN_MAXSIZE = 16384
 LABEL_MAXLENGTH = 32

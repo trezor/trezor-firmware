@@ -10,7 +10,6 @@ pub fn hexlify_bytes<const N: usize>(bytes: &[u8]) -> String<N> {
                 (b'A' + num - 10) as char
             }
         }
-        // TODO: error handling?
         buf.push(hex_from_digit(byte / 16)).unwrap();
         buf.push(hex_from_digit(byte % 16)).unwrap();
     }

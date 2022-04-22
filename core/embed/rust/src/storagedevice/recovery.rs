@@ -158,7 +158,6 @@ extern "C" fn set_slip39_remaining_shares(shares_remaining: Obj, group_index: Ob
 
         let mut default_remaining: Vec<u8, MAX_SHARE_COUNT> = Vec::<u8, MAX_SHARE_COUNT>::new();
         for _ in 0..group_count {
-            // TODO: error handling?
             default_remaining.push(MAX_SHARE_COUNT as u8).unwrap();
         }
         let mut remaining = REMAINING.get().unwrap_or(default_remaining);

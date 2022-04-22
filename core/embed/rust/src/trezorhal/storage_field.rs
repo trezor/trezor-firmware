@@ -185,7 +185,10 @@ impl<const N: usize> FieldGetSet<String<N>> for Field<String<N>> {
         let mut buf = [0u8; MAX_STRING];
         let len = storage::get(self.appkey(), &mut buf);
         len.ok().and_then(|len| {
-            let string = String::from(str::from_utf8(&buf[..len as usize]).unwrap());
+            let string = match str::from_utf8(&buf[..len as usize]) {
+                Ok(s) => String::from(s),
+                Err(_) => return None,
+            };
             if self.is_len_ok(string.chars().count(), N) {
                 Some(string)
             } else {
@@ -195,7 +198,7 @@ impl<const N: usize> FieldGetSet<String<N>> for Field<String<N>> {
     }
 
     fn set(&self, val: String<N>) -> StorageResult<()> {
-        if self.is_len_ok(val.chars().count(), N) {
+        if self.is_len_ok(val.len(), N) {
             storage::set(self.appkey(), val.as_bytes())
         } else {
             Err(StorageError::InvalidData)
@@ -256,10 +259,6 @@ mod tests {
         error::Error,
         micropython::buffer::{Buffer, StrBuffer},
     };
-
-    // TODO: we could have some global Map for testing purposes,
-    // and we would be mocking the storage_set/get/has
-    // OR https://stackoverflow.com/questions/63850791/unit-testing-mocking-and-traits-in-rust
 
     fn init_storage(unlock: bool) {
         storage::init();

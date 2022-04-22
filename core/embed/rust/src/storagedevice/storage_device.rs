@@ -20,7 +20,6 @@ use heapless::{String, Vec};
 
 // TODO: can we import messages enums?
 
-// TODO: could be defined as a part of `Field` not to repeat it so much
 const APP_DEVICE: u8 = 0x01;
 
 const HOMESCREEN_MAXSIZE: usize = 16384;
