@@ -31,3 +31,21 @@ class Bulletproof(MessageType):
             ("b", ECKey),
             ("t", ECKey),
         )
+
+
+class BulletproofPlus(MessageType):
+    __slots__ = ("A", "A1", "B", "r1", "s1", "d1", "V", "L", "R")
+
+    @classmethod
+    def f_specs(cls) -> tuple:
+        return (
+            ("A", ECKey),
+            ("A1", ECKey),
+            ("B", ECKey),
+            ("r1", ECKey),
+            ("s1", ECKey),
+            ("d1", ECKey),
+            ("V", _KeyV),
+            ("L", _KeyV),
+            ("R", _KeyV),
+        )
