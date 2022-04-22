@@ -23,7 +23,7 @@ import construct as c
 import ecdsa
 
 from . import cosi, messages
-from .tools import session
+from .tools import expect, session
 
 if TYPE_CHECKING:
     from .client import TrezorClient
@@ -518,3 +518,8 @@ def update(
         return
     else:
         raise RuntimeError(f"Unexpected message {resp}")
+
+
+@expect(messages.FirmwareHash, field="hash", ret_type=bytes)
+def get_hash(client: "TrezorClient", challenge: Optional[bytes]):
+    return client.call(messages.GetFirmwareHash(challenge=challenge))
