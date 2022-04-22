@@ -149,6 +149,13 @@ const void *flash_get_address(uint8_t sector, uint32_t offset, uint32_t size) {
   return FLASH_BUFFER + addr - FLASH_SECTOR_TABLE[0];
 }
 
+uint32_t flash_sector_size(uint8_t sector) {
+  if (sector >= FLASH_SECTOR_COUNT) {
+    return 0;
+  }
+  return FLASH_SECTOR_TABLE[sector + 1] - FLASH_SECTOR_TABLE[sector];
+}
+
 secbool flash_erase_sectors(const uint8_t *sectors, int len,
                             void (*progress)(int pos, int len)) {
   if (progress) {

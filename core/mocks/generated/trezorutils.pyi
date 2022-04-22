@@ -40,6 +40,14 @@ def halt(msg: str | None = None) -> None:
     """
     Halts execution.
     """
+
+
+# extmod/modtrezorutils/modtrezorutils.c
+def firmware_hash(challenge: bytes | None = None) -> bytes:
+    """
+    Computes the Blake2s hash of the firmware with an optional challenge as
+    the key.
+    """
 SCM_REVISION: bytes
 VERSION_MAJOR: int
 VERSION_MINOR: int
