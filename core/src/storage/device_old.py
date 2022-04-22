@@ -8,8 +8,8 @@ if TYPE_CHECKING:
     from typing_extensions import Literal
 
 
-SAFETY_CHECK_LEVEL_STRICT  : Literal[0] = const(0)
-SAFETY_CHECK_LEVEL_PROMPT  : Literal[1] = const(1)
+SAFETY_CHECK_LEVEL_STRICT: Literal[0] = const(0)
+SAFETY_CHECK_LEVEL_PROMPT: Literal[1] = const(1)
 
 HOMESCREEN_MAXSIZE = 16384
 LABEL_MAXLENGTH = 32
