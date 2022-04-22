@@ -590,3 +590,12 @@ def update(
         click.echo("Dry run. Not uploading firmware to device.")
     else:
         upload_firmware_into_device(client=client, firmware_data=firmware_data)
+
+
+@cli.command()
+@click.argument("hex_challenge", required=False)
+@with_client
+def get_hash(client: "TrezorClient", hex_challenge: Optional[str]) -> str:
+    """Get a hash of the installed firmware combined with the optional challenge."""
+    challenge = bytes.fromhex(hex_challenge) if hex_challenge else None
+    return firmware.get_hash(client, challenge).hex()
