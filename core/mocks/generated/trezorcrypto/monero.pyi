@@ -376,4 +376,5 @@ def ct_equals(a: bytes, b: bytes) -> bool:
     """
 BP_GI_PRE: bytes
 BP_HI_PRE: bytes
-BP_TWO_N: bytes
+BP_GI_PLUS_PRE: bytes
+BP_HI_PLUS_PRE: bytes
