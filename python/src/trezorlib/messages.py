@@ -66,6 +66,8 @@ class MessageType(IntEnum):
     PreauthorizedRequest = 85
     CancelAuthorization = 86
     RebootToBootloader = 87
+    GetFirmwareHash = 88
+    FirmwareHash = 89
     SetU2FCounter = 63
     GetNextU2FCounter = 80
     NextU2FCounter = 81
@@ -3485,6 +3487,34 @@ class Entropy(protobuf.MessageType):
         entropy: "bytes",
     ) -> None:
         self.entropy = entropy
+
+
+class GetFirmwareHash(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 88
+    FIELDS = {
+        1: protobuf.Field("challenge", "bytes", repeated=False, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        challenge: Optional["bytes"] = None,
+    ) -> None:
+        self.challenge = challenge
+
+
+class FirmwareHash(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 89
+    FIELDS = {
+        1: protobuf.Field("hash", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        hash: "bytes",
+    ) -> None:
+        self.hash = hash
 
 
 class WipeDevice(protobuf.MessageType):

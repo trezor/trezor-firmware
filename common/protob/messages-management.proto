@@ -235,6 +235,24 @@ message Entropy {
 }
 
 /**
+ * Request: Get a hash of the installed firmware combined with an optional challenge.
+ * @start
+ * @next FirmwareHash
+ * @next Failure
+ */
+message GetFirmwareHash {
+    optional bytes challenge = 1;   // Blake2s key up to 32 bytes in length.
+}
+
+/**
+ * Response: Hash of the installed firmware combined with the optional challenge.
+ * @end
+ */
+message FirmwareHash {
+    required bytes hash = 1;
+}
+
+/**
  * Request: Request device to wipe all sensitive data and settings
  * @start
  * @next Success
