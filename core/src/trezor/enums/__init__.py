@@ -58,6 +58,8 @@ if TYPE_CHECKING:
         PreauthorizedRequest = 85
         CancelAuthorization = 86
         RebootToBootloader = 87
+        GetFirmwareHash = 88
+        FirmwareHash = 89
         SetU2FCounter = 63
         GetNextU2FCounter = 80
         NextU2FCounter = 81
