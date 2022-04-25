@@ -117,8 +117,10 @@ static struct { int x, y; } DISPLAY_OFFSET;
 #else
 #if defined TREZOR_MODEL_T
 #include "display-stm32_T.h"
-#elif defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
+#elif defined TREZOR_MODEL_1
 #include "display-stm32_1.h"
+#elif defined TREZOR_MODEL_R
+#include "display-stm32_R.h"
 #else
 #error Unknown Trezor model
 #endif
@@ -930,7 +932,7 @@ int display_orientation(int degrees) {
 }
 
 int display_backlight(int val) {
-#if defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
+#if defined TREZOR_MODEL_1
   val = 255;
 #endif
   if (DISPLAY_BACKLIGHT != val && val >= 0 && val <= 255) {
