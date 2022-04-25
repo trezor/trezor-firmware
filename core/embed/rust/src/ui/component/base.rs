@@ -4,7 +4,11 @@ use heapless::Vec;
 
 use crate::{
     time::Duration,
-    ui::{component::Map, geometry::Rect},
+    ui::{
+        component::{maybe::PaintOverlapping, Map},
+        display::Color,
+        geometry::Rect,
+    },
 };
 
 #[cfg(feature = "buttons")]
@@ -136,6 +140,22 @@ where
     }
 }
 
+impl<T> PaintOverlapping for Child<T>
+where
+    T: PaintOverlapping,
+{
+    fn cleared_area(&self) -> Option<(Rect, Color)> {
+        self.component.cleared_area()
+    }
+
+    fn paint_overlapping(&mut self) {
+        if self.marked_for_paint {
+            self.marked_for_paint = false;
+            self.component.paint_overlapping()
+        }
+    }
+}
+
 #[cfg(feature = "ui_debug")]
 impl<T> crate::trace::Trace for Child<T>
 where
@@ -166,6 +186,11 @@ where
     fn paint(&mut self) {
         self.0.paint();
         self.1.paint();
+    }
+
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
+        self.0.bounds(sink);
+        self.1.bounds(sink);
     }
 }
 

@@ -1,7 +1,7 @@
 use core::ops::Deref;
 
 use crate::ui::{
-    component::{Child, Component, Event, EventCtx, Label, Maybe},
+    component::{maybe::paint_overlapping, Child, Component, Event, EventCtx, Label, Maybe},
     geometry::{Alignment, Grid, Rect},
     model_tt::{
         component::{Button, ButtonMsg},
@@ -139,9 +139,7 @@ where
     }
 
     fn paint(&mut self) {
-        self.prompt.paint();
-        self.input.paint();
-        self.back.paint();
+        paint_overlapping(&mut [&mut self.prompt, &mut self.input, &mut self.back]);
         for btn in &mut self.keys {
             btn.paint();
         }
