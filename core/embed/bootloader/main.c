@@ -29,7 +29,12 @@
 #include "mpu.h"
 #include "random_delays.h"
 #include "secbool.h"
+#ifdef TREZOR_MODEL_T
 #include "touch.h"
+#endif
+#if defined TREZOR_MODEL_R
+#include "button.h"
+#endif
 #include "usb.h"
 #include "version.h"
 
@@ -239,8 +244,14 @@ static void check_bootloader_version(void) {
 int main(void) {
   random_delays_init();
   // display_init_seq();
+#if defined TREZOR_MODEL_T
   touch_init();
   touch_power_on();
+#endif
+
+#if defined TREZOR_MODEL_R
+  button_init();
+#endif
 
   mpu_config_bootloader();
 
@@ -252,6 +263,7 @@ int main(void) {
 
   // delay to detect touch
   uint32_t touched = 0;
+#if defined TREZOR_MODEL_T
   for (int i = 0; i < 100; i++) {
     touched = touch_is_detected() | touch_read();
     if (touched) {
@@ -259,6 +271,12 @@ int main(void) {
     }
     hal_delay(1);
   }
+#elif defined TREZOR_MODEL_R
+  button_read();
+  if (button_state_left() == 1) {
+    touched = 1;
+  }
+#endif
 
   vendor_header vhdr;
   image_header hdr;
@@ -359,7 +377,24 @@ int main(void) {
 
     if ((vhdr.vtrust & VTRUST_CLICK) == 0) {
       ui_screen_boot_click();
+#if defined TREZOR_MODEL_T
       touch_click();
+#elif defined TREZOR_MODEL_R
+      for (;;) {
+        button_read();
+        if (button_state_left() != 0 && button_state_right() != 0) {
+          break;
+        }
+      }
+      for (;;) {
+        button_read();
+        if (button_state_left() != 1 && button_state_right() != 1) {
+          break;
+        }
+      }
+#else
+#error Unknown Trezor model
+#endif
     }
 
     ui_fadeout();
