@@ -91,6 +91,11 @@ int main(void) {
   button_init();
 #endif
 
+#if defined TREZOR_MODEL_R
+  button_init();
+  display_clear();
+#endif
+
 #if defined TREZOR_MODEL_T
   // display_init_seq();
   sdcard_init();
