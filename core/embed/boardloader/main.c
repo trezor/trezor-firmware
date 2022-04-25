@@ -25,7 +25,9 @@
 #include "flash.h"
 #include "image.h"
 #include "rng.h"
+#ifdef TREZOR_MODEL_T
 #include "sdcard.h"
+#endif
 
 #include "lowlevel.h"
 #include "version.h"
@@ -50,6 +52,7 @@ static const uint8_t * const BOARDLOADER_KEYS[] = {
 extern uint32_t sram_start[];
 #define sdcard_buf sram_start
 
+#if defined TREZOR_MODEL_T
 static uint32_t check_sdcard(void) {
   if (sectrue != sdcard_power_on()) {
     return 0;
@@ -165,6 +168,7 @@ static secbool copy_sdcard(void) {
 
   return sectrue;
 }
+#endif
 
 int main(void) {
   reset_flags_reset();
@@ -184,11 +188,14 @@ int main(void) {
   clear_otg_hs_memory();
 
   display_init();
+
+#if defined TREZOR_MODEL_T
   sdcard_init();
 
   if (check_sdcard()) {
     return copy_sdcard() == sectrue ? 0 : 3;
   }
+#endif
 
   image_header hdr;
 

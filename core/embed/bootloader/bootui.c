@@ -32,8 +32,15 @@
 #include "icon_welcome.h"
 #include "icon_wipe.h"
 #include "mini_printf.h"
-#include "touch.h"
 #include "version.h"
+
+#if defined TREZOR_MODEL_T
+#include "touch.h"
+#elif defined TREZOR_MODEL_R
+#include "button.h"
+#else
+#error Unknown Trezor model
+#endif
 
 #define BACKLIGHT_NORMAL 150
 
@@ -342,6 +349,7 @@ void ui_fadeout(void) {
 
 int ui_user_input(int zones) {
   for (;;) {
+#if defined TREZOR_MODEL_T
     uint32_t evt = touch_click();
     uint16_t x = touch_unpack_x(evt);
     uint16_t y = touch_unpack_y(evt);
@@ -365,5 +373,16 @@ int ui_user_input(int zones) {
         y < 54 + 32) {
       return INPUT_INFO;
     }
+#elif defined TREZOR_MODEL_R
+    uint32_t evt = button_read();
+    if (evt == (BTN_LEFT | BTN_EVT_DOWN)) {
+      return INPUT_CANCEL;
+    }
+    if (evt == (BTN_RIGHT | BTN_EVT_DOWN)) {
+      return INPUT_CONFIRM;
+    }
+#else
+#error Unknown Trezor model
+#endif
   }
 }

@@ -30,5 +30,7 @@
 
 void button_init(void);
 uint32_t button_read(void);
+char button_state_left(void);
+char button_state_right(void);
 
 #endif
