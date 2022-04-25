@@ -26,6 +26,18 @@ impl Pad {
         self.clear = true;
     }
 
+    pub fn cancel_clear(&mut self) {
+        self.clear = false;
+    }
+
+    pub fn will_paint(&self) -> Option<(Rect, Color)> {
+        if self.clear {
+            Some((self.area, self.color))
+        } else {
+            None
+        }
+    }
+
     pub fn paint(&mut self) {
         if self.clear {
             self.clear = false;
