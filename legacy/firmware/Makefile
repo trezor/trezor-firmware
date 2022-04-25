@@ -183,6 +183,8 @@ bl_data.h: bl_data.py bootloader.dat
 	@printf "  PYTHON  bl_data.py\n"
 	$(Q)$(PYTHON) bl_data.py
 
+header.o: version.h
+
 clean::
 	rm -f bl_data.h
 	find -maxdepth 1 -name "*.mako" | sed 's/.mako$$//' | xargs rm -f
