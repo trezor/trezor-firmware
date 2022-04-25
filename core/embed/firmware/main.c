@@ -100,8 +100,6 @@ int main(void) {
 #if defined TREZOR_MODEL_T
   // display_init_seq();
   sdcard_init();
-  touch_init();
-  touch_power_on();
 
   // jump to unprivileged mode
   // http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/CHDBIBGJ.html
