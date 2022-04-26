@@ -69,6 +69,13 @@ const void *flash_get_address(uint8_t sector, uint32_t offset, uint32_t size) {
   return (const void *)FLASH_PTR(addr);
 }
 
+uint32_t flash_sector_size(uint8_t sector) {
+  if (sector >= FLASH_SECTOR_COUNT) {
+    return 0;
+  }
+  return FLASH_SECTOR_TABLE[sector + 1] - FLASH_SECTOR_TABLE[sector];
+}
+
 secbool flash_erase(uint8_t sector) {
   ensure(flash_unlock_write(), NULL);
   svc_flash_erase_sector(sector);

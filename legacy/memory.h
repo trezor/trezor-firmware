@@ -93,6 +93,8 @@ extern uint8_t *emulator_flash_base;
 void memory_protect(void);
 void memory_write_unlock(void);
 int memory_bootloader_hash(uint8_t *hash);
+int memory_firmware_hash(const uint8_t *challenge, uint32_t challenge_size,
+                         uint8_t hash[32]);
 
 static inline void flash_write32(uint32_t addr, uint32_t word) {
   *(volatile uint32_t *)FLASH_PTR(addr) = word;
