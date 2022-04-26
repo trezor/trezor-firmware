@@ -69,6 +69,7 @@ void fsm_msgRecoveryDevice(const RecoveryDevice *msg);
 void fsm_msgWordAck(const WordAck *msg);
 void fsm_msgSetU2FCounter(const SetU2FCounter *msg);
 void fsm_msgGetNextU2FCounter(void);
+void fsm_msgGetFirmwareHash(const GetFirmwareHash *msg);
 
 // coin
 void fsm_msgGetPublicKey(const GetPublicKey *msg);

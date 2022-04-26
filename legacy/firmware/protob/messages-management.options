@@ -35,3 +35,6 @@ RecoveryDevice.label                    max_size:33
 WordAck.word                            max_size:12
 
 Nonce.nonce                             max_size:32
+
+GetFirmwareHash.challenge               max_size:32
+FirmwareHash.hash                       max_size:32

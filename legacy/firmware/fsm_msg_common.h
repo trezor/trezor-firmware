@@ -536,3 +536,15 @@ void fsm_msgGetNextU2FCounter() {
   msg_write(MessageType_MessageType_NextU2FCounter, resp);
   layoutHome();
 }
+
+void fsm_msgGetFirmwareHash(const GetFirmwareHash *msg) {
+  RESP_INIT(FirmwareHash);
+  if (memory_firmware_hash(msg->challenge.bytes, msg->challenge.size,
+                           resp->hash.bytes) != 0) {
+    fsm_sendFailure(FailureType_Failure_FirmwareError, NULL);
+    return;
+  }
+
+  resp->hash.size = sizeof(resp->hash.bytes);
+  msg_write(MessageType_MessageType_FirmwareHash, resp);
+}
