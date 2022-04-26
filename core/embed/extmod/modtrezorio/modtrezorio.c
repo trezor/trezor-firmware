@@ -44,7 +44,7 @@
 #include "modtrezorio-webusb.h"
 #include "modtrezorio-usb.h"
 // clang-format on
-#if TREZOR_MODEL == T
+#if defined TREZOR_MODEL_T
 #include "modtrezorio-fatfs.h"
 #include "modtrezorio-sbu.h"
 #include "modtrezorio-sdcard.h"
@@ -72,7 +72,7 @@
 STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorio)},
 
-#if TREZOR_MODEL == T
+#if defined TREZOR_MODEL_T
     {MP_ROM_QSTR(MP_QSTR_fatfs), MP_ROM_PTR(&mod_trezorio_fatfs_module)},
     {MP_ROM_QSTR(MP_QSTR_SBU), MP_ROM_PTR(&mod_trezorio_SBU_type)},
     {MP_ROM_QSTR(MP_QSTR_sdcard), MP_ROM_PTR(&mod_trezorio_sdcard_module)},
@@ -81,7 +81,7 @@ STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_TOUCH_START), MP_ROM_INT((TOUCH_START >> 24) & 0xFFU)},
     {MP_ROM_QSTR(MP_QSTR_TOUCH_MOVE), MP_ROM_INT((TOUCH_MOVE >> 24) & 0xFFU)},
     {MP_ROM_QSTR(MP_QSTR_TOUCH_END), MP_ROM_INT((TOUCH_END >> 24) & 0xFFU)},
-#elif TREZOR_MODEL == 1
+#elif defined TREZOR_MODEL_1
     {MP_ROM_QSTR(MP_QSTR_BUTTON), MP_ROM_INT(BUTTON_IFACE)},
     {MP_ROM_QSTR(MP_QSTR_BUTTON_PRESSED),
      MP_ROM_INT((BTN_EVT_DOWN >> 24) & 0x3U)},

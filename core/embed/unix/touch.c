@@ -46,7 +46,7 @@ static bool handle_emulator_events(const SDL_Event *event) {
   return false;
 }
 
-#if TREZOR_MODEL == T
+#if defined TREZOR_MODEL_T
 
 #include "touch.h"
 
@@ -102,7 +102,7 @@ uint32_t touch_read(void) {
   return 0;
 }
 
-#elif TREZOR_MODEL == 1
+#elif defined TREZOR_MODEL_1
 
 #include "button.h"
 

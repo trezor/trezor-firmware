@@ -25,7 +25,7 @@
 
 #define EMULATOR_BORDER 16
 
-#if TREZOR_MODEL == T
+#if defined TREZOR_MODEL_T
 
 #ifdef TREZOR_EMULATOR_RASPI
 #define WINDOW_WIDTH 480
@@ -39,7 +39,7 @@
 #define TOUCH_OFFSET_Y 110
 #endif
 
-#elif TREZOR_MODEL == 1
+#elif defined TREZOR_MODEL_1
 
 #define WINDOW_WIDTH 200
 #define WINDOW_HEIGHT 340
@@ -76,7 +76,7 @@ static struct {
 #define PIXELDATA_DIRTY()
 
 void PIXELDATA(uint16_t c) {
-#if TREZOR_MODEL == 1
+#if defined TREZOR_MODEL_1
   // set to white if highest bits of all R, G, B values are set to 1
   // bin(10000 100000 10000) = hex(0x8410)
   // otherwise set to black
@@ -173,11 +173,11 @@ void display_init(void) {
       RENDERER, SDL_RWFromMem(background_raspi_jpg, background_raspi_jpg_len),
       0);
 #else
-#if TREZOR_MODEL == T
+#if defined TREZOR_MODEL_T
 #include "background_T.h"
   BACKGROUND = IMG_LoadTexture_RW(
       RENDERER, SDL_RWFromMem(background_T_jpg, background_T_jpg_len), 0);
-#elif TREZOR_MODEL == 1
+#elif defined TREZOR_MODEL_1
 #include "background_1.h"
   BACKGROUND = IMG_LoadTexture_RW(
       RENDERER, SDL_RWFromMem(background_1_jpg, background_1_jpg_len), 0);

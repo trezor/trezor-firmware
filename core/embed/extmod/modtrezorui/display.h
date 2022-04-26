@@ -23,7 +23,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#if TREZOR_MODEL == T
+#if defined TREZOR_MODEL_T
 
 // ILI9341V, GC9307 and ST7789V drivers support 240px x 320px display resolution
 #define MAX_DISPLAY_RESX 240
@@ -32,7 +32,7 @@
 #define DISPLAY_RESY 240
 #define TREZOR_FONT_BPP 4
 
-#elif TREZOR_MODEL == 1
+#elif defined TREZOR_MODEL_1
 
 #define MAX_DISPLAY_RESX 128
 #define MAX_DISPLAY_RESY 64
