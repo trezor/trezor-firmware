@@ -3833,26 +3833,6 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroTransactionSetInputAck"]:
             return isinstance(msg, cls)
 
-    class MoneroTransactionInputsPermutationRequest(protobuf.MessageType):
-        perm: "list[int]"
-
-        def __init__(
-            self,
-            *,
-            perm: "list[int] | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroTransactionInputsPermutationRequest"]:
-            return isinstance(msg, cls)
-
-    class MoneroTransactionInputsPermutationAck(protobuf.MessageType):
-
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroTransactionInputsPermutationAck"]:
-            return isinstance(msg, cls)
-
     class MoneroTransactionInputViniRequest(protobuf.MessageType):
         src_entr: "MoneroTransactionSourceEntry | None"
         vini: "bytes | None"

@@ -407,7 +407,7 @@ class TestMoneroBulletproof(unittest.TestCase):
             t=unhexlify(b"0de43b393686af8dd0d89f4832a2995cda14e6288de9ecd2b4bf2fa39baba408")
         )
 
-    def bproof_plus_1(self):
+    def bproof_plus_2(self):
         return BulletproofPlus(
             V=[
                 unhexlify(b"e0dae61095ac728a15d4d9754f1f9f956c22d4fa2deee2c0ff1def031b083e02"),
@@ -484,9 +484,9 @@ class TestMoneroBulletproof(unittest.TestCase):
 
     def test_verify_plus(self):
         bpi = bp.BulletProofPlusBuilder()
-        bpi.verify_batch([self.bproof_plus_1()])
+        bpi.verify_batch([self.bproof_plus_2()])
 
-    def test_prove_plus_(self):
+    def test_prove_plus_1(self):
         bpi = bp.BulletProofPlusBuilder()
         sv = [crypto.Scalar(123)]
         gamma = [crypto.Scalar(456)]
@@ -500,10 +500,10 @@ class TestMoneroBulletproof(unittest.TestCase):
         proof = bpi.prove_batch(sv, gamma)
         bpi.verify_batch([proof])
 
-    def test_prove_plus_8(self):
+    def test_prove_plus_16(self):
         bpi = bp.BulletProofPlusBuilder()
-        sv = [crypto.Scalar(i*123 + 45) for i in range(8)]
-        gamma = [crypto.Scalar(i*456 * 17) for i in range(8)]
+        sv = [crypto.Scalar(i*123 + 45) for i in range(16)]
+        gamma = [crypto.Scalar(i*456 * 17) for i in range(16)]
         proof = bpi.prove_batch(sv, gamma)
         bpi.verify_batch([proof])
 

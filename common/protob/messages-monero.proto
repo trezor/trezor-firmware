@@ -172,7 +172,7 @@ message MoneroTransactionSetInputRequest {
 /**
  * Response: Response to setting UTXO for signature. Contains sealed values needed for further protocol steps.
  * @next MoneroTransactionSetInputAck
- * @next MoneroTransactionInputsPermutationRequest
+ * @next MoneroTransactionInputViniRequest
  */
 message MoneroTransactionSetInputAck {
     optional bytes vini = 1;      // xmrtypes.TxinToKey
@@ -181,21 +181,6 @@ message MoneroTransactionSetInputAck {
     optional bytes pseudo_out_hmac = 4;
     optional bytes pseudo_out_alpha = 5;
     optional bytes spend_key = 6;
-}
-
-/**
- * Request: Sub request of MoneroTransactionSign. Permutation on key images.
- * @next MoneroTransactionInputsPermutationAck
- */
-message MoneroTransactionInputsPermutationRequest {
-    repeated uint32 perm = 1;
-}
-
-/**
- * Response: Response to setting permutation on key images
- * @next MoneroTransactionInputViniRequest
- */
-message MoneroTransactionInputsPermutationAck {
 }
 
 /**
@@ -327,7 +312,7 @@ message MoneroTransactionFinalAck {
     optional bytes salt = 2;
     optional bytes rand_mult = 3;
     optional bytes tx_enc_keys = 4;
-    optional bytes opening_key = 5;  // enc master key to decrypt MLSAGs after protocol finishes correctly
+    optional bytes opening_key = 5;  // enc master key to decrypt CLSAGs after protocol finishes correctly
 }
 
 /**

@@ -61,7 +61,6 @@ async def init_transaction(
     state.fee = tsx_data.fee
     state.account_idx = tsx_data.account
     state.last_step = state.STEP_INIT
-    state.tx_type = signing.RctType.CLSAG
     if tsx_data.hard_fork:
         state.hard_fork = tsx_data.hard_fork
     if state.hard_fork < 13:
@@ -207,6 +206,11 @@ def _check_rsig_data(state: State, rsig_data: MoneroTransactionRsigData) -> None
 
     elif rsig_data.rsig_type not in (1, 2, 3):
         raise ValueError("Unknown rsig type")
+
+    state.tx_type = signing.RctType.CLSAG
+    if rsig_data.bp_version == 4:
+        state.rsig_is_bp_plus = True
+        state.tx_type = signing.RctType.RCTTypeBulletproofPlus
 
     if state.output_count > 2:
         state.rsig_offload = True

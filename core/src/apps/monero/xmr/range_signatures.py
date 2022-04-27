@@ -14,14 +14,19 @@ from typing import TYPE_CHECKING
 from apps.monero.xmr import crypto, crypto_helpers
 
 if TYPE_CHECKING:
-    from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import Bulletproof
+    from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import (
+        Bulletproof,
+        BulletproofPlus,
+    )
 
 
-def prove_range_bp_batch(amounts: list[int], masks: list[crypto.Scalar]) -> Bulletproof:
+def prove_range_bp_batch(
+    amounts: list[int], masks: list[crypto.Scalar], bp_plus: bool = False
+) -> Bulletproof | BulletproofPlus:
     """Calculates Bulletproof in batches"""
     from apps.monero.xmr import bulletproof as bp
 
-    bpi = bp.BulletProofBuilder()
+    bpi = bp.BulletProofPlusBuilder() if bp_plus else bp.BulletProofBuilder()
     bp_proof = bpi.prove_batch([crypto.Scalar(a) for a in amounts], masks)
     del (bpi, bp)
     gc.collect()
@@ -30,7 +35,9 @@ def prove_range_bp_batch(amounts: list[int], masks: list[crypto.Scalar]) -> Bull
 
 
 def verify_bp(
-    bp_proof: Bulletproof, amounts: list[int], masks: list[crypto.Scalar]
+    bp_proof: Bulletproof | BulletproofPlus,
+    amounts: list[int],
+    masks: list[crypto.Scalar],
 ) -> bool:
     """Verifies Bulletproof"""
     from apps.monero.xmr import bulletproof as bp
@@ -42,7 +49,13 @@ def verify_bp(
             crypto.scalarmult_into(C, C, crypto_helpers.INV_EIGHT_SC)
             bp_proof.V.append(crypto_helpers.encodepoint(C))
 
-    bpi = bp.BulletProofBuilder()
+    from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import BulletproofPlus
+
+    bpi = (
+        bp.BulletProofPlusBuilder()
+        if isinstance(bp_proof, BulletproofPlus)
+        else bp.BulletProofBuilder()
+    )
     res = bpi.verify(bp_proof)
     gc.collect()
     return res

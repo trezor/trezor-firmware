@@ -180,8 +180,6 @@ if not utils.BITCOIN_ONLY:
     MoneroTransactionInitAck = 502
     MoneroTransactionSetInputRequest = 503
     MoneroTransactionSetInputAck = 504
-    MoneroTransactionInputsPermutationRequest = 505
-    MoneroTransactionInputsPermutationAck = 506
     MoneroTransactionInputViniRequest = 507
     MoneroTransactionInputViniAck = 508
     MoneroTransactionAllInputsSetRequest = 509

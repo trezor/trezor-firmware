@@ -103,6 +103,7 @@ class State:
         self.rsig_grouping: list[int] | None = []
         # is range proof computing offloaded or not
         self.rsig_offload: bool | None = False
+        self.rsig_is_bp_plus: bool | None = False
 
         # sum of all inputs' pseudo out masks
         self.sumpouts_alphas: Scalar = crypto.Scalar(0)
