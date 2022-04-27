@@ -386,8 +386,8 @@ void display_icon(int x, int y, int w, int h, const void *data,
     int st = uzlib_uncompress(&decomp);
     if (st == TINF_DONE) break;  // all OK
     if (st < 0) break;           // error
-    const int px = pos % w;
-    const int py = pos / w;
+    const int px = (pos * 2) % w;
+    const int py = (pos * 2) / w;
     if (px >= x0 && px <= x1 && py >= y0 && py <= y1) {
       PIXELDATA(colortable[decomp_out >> 4]);
       PIXELDATA(colortable[decomp_out & 0x0F]);
