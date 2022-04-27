@@ -201,8 +201,6 @@ class MessageType(IntEnum):
     MoneroTransactionInitAck = 502
     MoneroTransactionSetInputRequest = 503
     MoneroTransactionSetInputAck = 504
-    MoneroTransactionInputsPermutationRequest = 505
-    MoneroTransactionInputsPermutationAck = 506
     MoneroTransactionInputViniRequest = 507
     MoneroTransactionInputViniAck = 508
     MoneroTransactionAllInputsSetRequest = 509
@@ -5253,24 +5251,6 @@ class MoneroTransactionSetInputAck(protobuf.MessageType):
         self.pseudo_out_hmac = pseudo_out_hmac
         self.pseudo_out_alpha = pseudo_out_alpha
         self.spend_key = spend_key
-
-
-class MoneroTransactionInputsPermutationRequest(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 505
-    FIELDS = {
-        1: protobuf.Field("perm", "uint32", repeated=True, required=False),
-    }
-
-    def __init__(
-        self,
-        *,
-        perm: Optional[Sequence["int"]] = None,
-    ) -> None:
-        self.perm: Sequence["int"] = perm if perm is not None else []
-
-
-class MoneroTransactionInputsPermutationAck(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 506
 
 
 class MoneroTransactionInputViniRequest(protobuf.MessageType):

@@ -3,10 +3,9 @@ from typing import TYPE_CHECKING
 from apps.monero.xmr import crypto_helpers
 from apps.monero.xmr.keccak_hasher import KeccakXmrArchive
 
-from .serialize_messages.tx_rsig_bulletproof import Bulletproof
-
 if TYPE_CHECKING:
     from trezor.utils import HashContext
+    from .serialize_messages.tx_rsig_bulletproof import Bulletproof, BulletproofPlus
 
 
 class PreMlsagHasher:
@@ -57,7 +56,9 @@ class PreMlsagHasher:
         self.kc_master.update(c_hash)
         self.rtcsig_hasher = None  # type: ignore
 
-    def rsig_val(self, p: bytes | list[bytes] | Bulletproof, raw: bool = False) -> None:
+    def rsig_val(
+        self, p: bytes | list[bytes] | Bulletproof | BulletproofPlus, raw: bool = False
+    ) -> None:
         if self.state == 8:
             raise ValueError("State error")
 
@@ -74,22 +75,30 @@ class PreMlsagHasher:
                 self.rsig_hasher.update(p)
             return
 
-        assert isinstance(p, Bulletproof)
+        from .serialize_messages.tx_rsig_bulletproof import Bulletproof, BulletproofPlus
+
+        is_plus = isinstance(p, BulletproofPlus)
+        assert isinstance(p, Bulletproof) or is_plus
 
         # Hash Bulletproof
-        self.rsig_hasher.update(p.A)
-        self.rsig_hasher.update(p.S)
-        self.rsig_hasher.update(p.T1)
-        self.rsig_hasher.update(p.T2)
-        self.rsig_hasher.update(p.taux)
-        self.rsig_hasher.update(p.mu)
+        fields = (
+            (p.A, p.A1, p.B, p.r1, p.s1, p.d1)
+            if is_plus
+            else (p.A, p.S, p.T1, p.T2, p.taux, p.mu)
+        )
+        for fld in fields:
+            self.rsig_hasher.update(fld)
+
+        del (fields,)
         for i in range(len(p.L)):
             self.rsig_hasher.update(p.L[i])
         for i in range(len(p.R)):
             self.rsig_hasher.update(p.R[i])
-        self.rsig_hasher.update(p.a)
-        self.rsig_hasher.update(p.b)
-        self.rsig_hasher.update(p.t)
+
+        if not is_plus:
+            self.rsig_hasher.update(p.a)
+            self.rsig_hasher.update(p.b)
+            self.rsig_hasher.update(p.t)
 
     def get_digest(self) -> bytes:
         if self.state != 6:

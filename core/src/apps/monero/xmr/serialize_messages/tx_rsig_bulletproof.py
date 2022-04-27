@@ -45,7 +45,6 @@ class BulletproofPlus(MessageType):
             ("r1", ECKey),
             ("s1", ECKey),
             ("d1", ECKey),
-            ("V", _KeyV),
             ("L", _KeyV),
             ("R", _KeyV),
         )

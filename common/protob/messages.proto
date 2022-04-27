@@ -292,8 +292,6 @@ enum MessageType {
     MessageType_MoneroTransactionInitAck = 502 [(wire_out) = true];
     MessageType_MoneroTransactionSetInputRequest = 503 [(wire_out) = true];
     MessageType_MoneroTransactionSetInputAck = 504 [(wire_out) = true];
-    MessageType_MoneroTransactionInputsPermutationRequest = 505 [(wire_out) = true];
-    MessageType_MoneroTransactionInputsPermutationAck = 506 [(wire_out) = true];
     MessageType_MoneroTransactionInputViniRequest = 507 [(wire_out) = true];
     MessageType_MoneroTransactionInputViniAck = 508 [(wire_out) = true];
     MessageType_MoneroTransactionAllInputsSetRequest = 509 [(wire_out) = true];
