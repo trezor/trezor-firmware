@@ -41,18 +41,16 @@ class DoublePressHandler:
             if self.left_pressed and button_num == io.BUTTON_LEFT:
                 self.left_pressed = False
                 if self.right_pressed:
-                    self.skip_rest = (
-                        True  # not send release event for the button itself
-                    )
+                    # not send release event for the button itself
+                    self.skip_rest = True
                 else:
                     self.send_double_press_released = True
                     self.skip_rest = False
             elif self.right_pressed and button_num == io.BUTTON_RIGHT:
                 self.right_pressed = False
                 if self.left_pressed:
-                    self.skip_rest = (
-                        True  # not send release event for the button itself
-                    )
+                    # not send release event for the button itself
+                    self.skip_rest = True
                 else:
                     self.send_double_press_released = True
                     self.skip_rest = False
@@ -357,8 +355,14 @@ async def request_pin_on_device(
 ) -> str:
     await button_request(ctx, "pin_device", code=ButtonRequestType.PinEntry)
 
-    # TODO: this should not be callable on TR
-    return "1234"
+    # TODO: implement attempts_remaining and allow_cancel parameters
+
+    while True:
+        result = await ctx.wait(_RustLayout(trezorui2.request_pin(prompt=prompt)))
+        if result is trezorui2.CANCELLED:
+            raise wire.PinCancelled
+        assert isinstance(result, str)
+        return result
 
 
 async def show_error_and_raise(
@@ -371,7 +375,17 @@ async def show_error_and_raise(
     red: bool = False,
     exc: ExceptionType = wire.ActionCancelled,
 ) -> NoReturn:
-    raise NotImplementedError
+    await interact(
+        ctx,
+        _RustLayout(
+            trezorui2.confirm_text(
+                title=header, data=content, description="Error happened"
+            )
+        ),
+        br_type,
+        br_code=ButtonRequestType.Warning,
+    )
+    raise exc
 
 
 async def show_popup(

@@ -44,6 +44,14 @@ def confirm_action(
 
 
 # rust/src/ui/model_tr/layout.rs
+def request_pin(
+    *,
+    prompt: str | None = None
+) -> int | object:
+    """Get pin."""
+
+
+# rust/src/ui/model_tr/layout.rs
 def confirm_text(
     *,
     title: str,

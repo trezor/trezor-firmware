@@ -19,7 +19,7 @@ use crate::{
 };
 
 use super::{
-    component::{Button, ButtonPage, ButtonPos, Frame},
+    component::{Button, ButtonPage, ButtonPos, Frame, PinPage, PinPageMsg},
     theme,
 };
 
@@ -32,6 +32,15 @@ where
             PageMsg::Content(_) => Err(Error::TypeError),
             PageMsg::Controls(true) => Ok(CONFIRMED.as_obj()),
             PageMsg::Controls(false) => Ok(CANCELLED.as_obj()),
+        }
+    }
+}
+
+impl ComponentMsgObj for PinPage {
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            PinPageMsg::Confirmed => self.pin().try_into(),
+            PinPageMsg::Cancelled => Ok(CANCELLED.as_obj()),
         }
     }
 }
@@ -84,6 +93,16 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = |_args: &[Obj], kwargs: &Map| {
+        let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+
+        let obj = LayoutObj::new(Frame::new(prompt, PinPage::new()))?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_confirm_text(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -130,6 +149,13 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> object:
     ///     """Confirm action."""
     Qstr::MP_QSTR_confirm_action => obj_fn_kw!(0, new_confirm_action).as_obj(),
+
+    /// def request_pin(
+    ///     *,
+    ///     prompt: str | None = None
+    /// ) -> int | object:
+    ///     """Get pin."""
+    Qstr::MP_QSTR_request_pin => obj_fn_kw!(0, request_pin).as_obj(),
 
     /// def confirm_text(
     ///     *,

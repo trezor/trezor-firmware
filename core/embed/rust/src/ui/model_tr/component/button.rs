@@ -76,6 +76,10 @@ impl<T: AsRef<str>> Button<T> {
         }
     }
 
+    pub fn set_released(&mut self, ctx: &mut EventCtx) {
+        self.set(ctx, State::Released);
+    }
+
     fn placement(
         area: Rect,
         pos: ButtonPos,
