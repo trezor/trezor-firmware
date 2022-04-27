@@ -221,6 +221,12 @@ fn link_core_objects() {
         let obj = obj.unwrap();
         cc.object(obj);
     }
+
+    // Add frozen modules, if present.
+    for obj in glob::glob(&format!("{}/*.o", build_path)).unwrap() {
+        cc.object(obj.unwrap());
+    }
+
     // Compile all the objects into a static library and link it in automatically.
     cc.compile("core_lib");
 
