@@ -45,6 +45,17 @@ def confirm_action(
 
 
 # rust/src/ui/model_tr/layout.rs
+def request_pin(
+    *,
+    prompt: str,
+    subprompt: str | None = None,
+    allow_cancel: bool | None = None,
+    shuffle: bool | None = None,
+) -> str | object:
+    """Request pin on device."""
+
+
+# rust/src/ui/model_tr/layout.rs
 def confirm_text(
     *,
     title: str,
