@@ -22,7 +22,6 @@ class _RustLayout(ui.Layout):
     def __init__(self, layout: Any):
         self.layout = layout
         self.timer = loop.Timer()
-        self.layout.attach_timer_fn(self.set_timer)
 
     def set_timer(self, token: int, deadline: int) -> None:
         self.timer.schedule(deadline, token)
@@ -69,6 +68,7 @@ class _RustLayout(ui.Layout):
         button = loop.wait(io.BUTTON)
         self._before_render()
         ui.display.clear()
+        self.layout.attach_timer_fn(self.set_timer)
         self.layout.paint()
         while True:
             # Using `yield` instead of `await` to avoid allocations.
@@ -810,8 +810,29 @@ async def request_pin_on_device(
     prompt: str,
     attempts_remaining: int | None,
     allow_cancel: bool,
+    shuffle: bool = False,
 ) -> str:
     await button_request(ctx, "pin_device", code=ButtonRequestType.PinEntry)
 
-    # Temporary workaround to be able to run UI tests, until we have proper PIN dialog
-    return "1234"
+    if attempts_remaining is None:
+        subprompt = ""
+    elif attempts_remaining == 1:
+        subprompt = "Last attempt"
+    else:
+        subprompt = f"{attempts_remaining} tries left"
+
+    while True:
+        result = await ctx.wait(
+            _RustLayout(
+                trezorui2.request_pin(
+                    prompt=prompt,
+                    subprompt=subprompt,
+                    allow_cancel=allow_cancel,
+                    shuffle=shuffle,  # type: ignore [No parameter named "shuffle"]
+                )
+            )
+        )
+        if result is trezorui2.CANCELLED:
+            raise wire.PinCancelled
+        assert isinstance(result, str)
+        return result
