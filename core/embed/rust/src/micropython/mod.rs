@@ -16,3 +16,6 @@ pub mod qstr;
 pub mod runtime;
 pub mod time;
 pub mod typ;
+
+#[cfg(test)]
+pub mod testutil;
