@@ -1,11 +1,11 @@
-use core::convert::TryInto;
+use core::{convert::TryInto, ops::Deref};
 
 use crate::{
     error::Error,
     micropython::{buffer::StrBuffer, map::Map, module::Module, obj::Obj, qstr::Qstr},
     ui::{
         component::{
-            base::Component,
+            base::{Component, ComponentExt},
             paginated::{PageMsg, Paginate},
             text::paragraphs::Paragraphs,
             FormattedText,
@@ -19,7 +19,7 @@ use crate::{
 };
 
 use super::{
-    component::{Button, ButtonPage, ButtonPos, Frame},
+    component::{Button, ButtonPage, ButtonPos, Frame, PinPage, PinPageMsg},
     theme,
 };
 
@@ -32,6 +32,18 @@ where
             PageMsg::Content(_) => Err(Error::TypeError),
             PageMsg::Controls(true) => Ok(CONFIRMED.as_obj()),
             PageMsg::Controls(false) => Ok(CANCELLED.as_obj()),
+        }
+    }
+}
+
+impl<T> ComponentMsgObj for PinPage<T>
+where
+    T: Deref<Target = str>,
+{
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            PinPageMsg::Confirmed => self.pin().try_into(),
+            PinPageMsg::Cancelled => Ok(CANCELLED.as_obj()),
         }
     }
 }
@@ -79,6 +91,28 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
                 theme::BG,
             ),
         ))?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = |_args: &[Obj], kwargs: &Map| {
+        let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+        let subprompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_subprompt)?.try_into()?;
+        let allow_cancel: Option<bool> =
+            kwargs.get(Qstr::MP_QSTR_allow_cancel)?.try_into_option()?;
+        let shuffle: Option<bool> = kwargs.get(Qstr::MP_QSTR_shuffle)?.try_into_option()?;
+
+        let obj = LayoutObj::new(
+            PinPage::new(
+                prompt,
+                subprompt,
+                allow_cancel.unwrap_or(true),
+                shuffle.unwrap_or(false),
+            )
+            .into_child(),
+        )?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -133,6 +167,16 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> object:
     ///     """Confirm action."""
     Qstr::MP_QSTR_confirm_action => obj_fn_kw!(0, new_confirm_action).as_obj(),
+
+    /// def request_pin(
+    ///     *,
+    ///     prompt: str,
+    ///     subprompt: str | None = None,
+    ///     allow_cancel: bool | None = None,
+    ///     shuffle: bool | None = None,
+    /// ) -> str | object:
+    ///     """Request pin on device."""
+    Qstr::MP_QSTR_request_pin => obj_fn_kw!(0, request_pin).as_obj(),
 
     /// def confirm_text(
     ///     *,
