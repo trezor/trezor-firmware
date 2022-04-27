@@ -35,7 +35,7 @@ else ifeq ($(ADDRESS_SANITIZER),1)
 SANFLAGS += -fsanitize=address,undefined
 endif
 
-CC       ?= gcc
+CC       ?= cc
 
 OPTFLAGS ?= -O3 -g
 

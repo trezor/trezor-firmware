@@ -1,4 +1,4 @@
-CC=gcc
+CC=cc
 CFLAGS=-Wall -fPIC
 LIBS=
 OBJ=storage.o norcow.o flash.o

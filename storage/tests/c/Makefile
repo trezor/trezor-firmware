@@ -1,4 +1,4 @@
-CC = gcc
+CC = cc
 CFLAGS = -Wall -Wshadow -Wextra -Wpedantic -Werror -Wno-missing-braces -fPIC -fsanitize=address,undefined
 LIBS =
 INC = -I ../../../crypto -I ../.. -I .
