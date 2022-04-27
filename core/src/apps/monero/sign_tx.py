@@ -59,7 +59,6 @@ async def sign_tx_dispatch(state: State, msg, keychain: Keychain) -> tuple:
             await step_02_set_input.set_input(state, msg.src_entr),
             (
                 MessageType.MoneroTransactionSetInputRequest,
-                MessageType.MoneroTransactionInputsPermutationRequest,
                 MessageType.MoneroTransactionInputViniRequest,
             ),
         )

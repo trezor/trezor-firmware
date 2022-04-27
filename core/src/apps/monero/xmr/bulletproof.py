@@ -347,7 +347,7 @@ def _invert_batch(x):
 
     for i in range(len(x) - 1, -1, -1):
         _sc_mul(tmp, acc, x[i])
-        _sc_mul(x[i], acc, scratch[i])
+        x[i] = _sc_mul(x[i], acc, scratch[i])
         memcpy(acc, 0, tmp, 0, 32)
     return x
 
@@ -1159,6 +1159,55 @@ class KeyPow2Vct(KeyVBase):
                 return crypto.encodeint_into(self.cur, self.cur_sc)
 
         return self.cur_sc if self.raw else self.cur
+
+
+class KeyChallengeCacheVct(KeyVBase):
+    """
+    Challenge cache vector for BP+ verification
+    More on this in the verification code, near "challenge_cache" definition
+    """
+
+    __slots__ = (
+        "nbits",
+        "ch_",
+        "chi",
+        "precomp",
+        "precomp_depth",
+        "cur",
+    )
+
+    def __init__(
+        self, nbits: int, ch_: KeyVBase, chi: KeyVBase, precomputed: KeyVBase | None
+    ):
+        super().__init__(1 << nbits)
+        self.nbits = nbits
+        self.ch_ = ch_
+        self.chi = chi
+        self.precomp = precomputed
+        self.precomp_depth = 0
+        self.cur = _ensure_dst_key()
+        if not precomputed:
+            return
+
+        while (1 << self.precomp_depth) < len(precomputed):
+            self.precomp_depth += 1
+
+    def __getitem__(self, item):
+        i = self.idxize(item)
+        bits_done = 0
+
+        if self.precomp:
+            _copy_key(self.cur, self.precomp[i >> (self.nbits - self.precomp_depth)])
+            bits_done += self.precomp_depth
+        else:
+            _copy_key(self.cur, _ONE)
+
+        for j in range(self.nbits - 1, bits_done - 1, -1):
+            if i & (1 << (self.nbits - 1 - j)) > 0:
+                _sc_mul(self.cur, self.cur, self.ch_[j])
+            else:
+                _sc_mul(self.cur, self.cur, self.chi[j])
+        return self.cur
 
 
 class KeyR0(KeyVBase):
@@ -2736,6 +2785,9 @@ class BulletProofPlusBuilder:
 
         return BulletproofPlus(V=V, A=A, A1=A1, B=B, r1=r1, s1=s1, d1=d1, L=L, R=R)
 
+    def verify(self, proof: BulletproofPlus) -> bool:
+        return self.verify_batch([proof])
+
     def verify_batch(self, proofs: list[BulletproofPlus]):
         """
         BP+ batch verification
@@ -2763,7 +2815,8 @@ class BulletProofPlusBuilder:
         max_logm = 0
 
         proof_data = []
-        to_invert = []
+        to_invert_offset = 0
+        to_invert = _ensure_dst_keyvect(None, 11 * len(proofs))
         for proof in proofs:
             max_length = max(max_length, len(proof.L))
             nV += len(proof.V)
@@ -2806,10 +2859,16 @@ class BulletProofPlusBuilder:
             # batch scalar inversions
             pd.inv_offset = inv_offset
             for j in range(rounds):  # max rounds is 10 = lg(16*64) = lg(1024)
-                to_invert.append(bytearray(pd.challenges[j]))
-            to_invert.append(bytearray(pd.y))
+                to_invert.read(to_invert_offset, pd.challenges[j])
+                to_invert_offset += 1
+
+            to_invert.read(to_invert_offset, pd.y)
+            to_invert_offset += 1
             inv_offset += rounds + 1
             self.gc(2)
+
+        to_invert.resize(inv_offset)
+        self.gc(2)
 
         utils.ensure(max_length < 32, "At least one proof is too large")
         maxMN = 1 << max_length
@@ -2937,31 +2996,54 @@ class BulletProofPlusBuilder:
             yinv = inverses[pd.inv_offset + rounds]
             self.gc(6)
 
-            # Compute challenge products
-            challenges_cache = _ensure_dst_keyvect(
-                None, 1 << rounds
-            )  # [_ZERO] * (1 << rounds)
+            # Description of challenges_cache:
+            #  Let define   ch_[i] = pd.challenges[i] and
+            #               chi[i] = pd.challenges[i]^{-1}
+            #  Also define  b_j[i] = i-th bit of integer j, 0 is MSB
+            #                        encoded in {rounds} bits
+            #
+            # challenges_cache[i] contains multiplication ch_ or chi depending on the b_i
+            # i.e., its binary representation. chi is for 0, ch_ for 1 in the b_i repr.
+            #
+            # challenges_cache[i] = \\mult_{j \in [0, rounds)} (b_i[j] * ch_[j]) +
+            #                                                (1-b_i[j]) * chi[j]
+            # Originally, it is constructed iteratively, starting with 1 bit, 2 bits.
+            # We cannot afford having it all precomputed, thus we precompute it up to
+            # a threshold challenges_cache_depth_lim bits, the rest is evaluated on the fly
+            challenges_cache_depth_lim = const(8)
+            challenges_cache_depth = min(rounds, challenges_cache_depth_lim)
+            challenges_cache = _ensure_dst_keyvect(None, 1 << challenges_cache_depth)
+
             challenges_cache[0] = inverses[pd.inv_offset]
             challenges_cache[1] = pd.challenges[0]
-            for j in range(1, rounds):
+
+            for j in range(1, challenges_cache_depth):
                 slots = 1 << (j + 1)
                 for s in range(slots - 1, -1, -2):
                     challenges_cache.read(
                         s,
                         _sc_mul(
-                            challenges_cache[s],
+                            _tmp_bf_0,
                             challenges_cache[s // 2],
-                            pd.challenges[j],
+                            pd.challenges[j],  # even s
                         ),
                     )
                     challenges_cache.read(
                         s - 1,
                         _sc_mul(
-                            challenges_cache[s - 1],
+                            _tmp_bf_0,
                             challenges_cache[s // 2],
-                            inverses[pd.inv_offset + j],
+                            inverses[pd.inv_offset + j],  # odd s
                         ),
                     )
+
+            if rounds > challenges_cache_depth:
+                challenges_cache = KeyChallengeCacheVct(
+                    rounds,
+                    pd.challenges,
+                    inverses.slice_view(pd.inv_offset, pd.inv_offset + rounds + 1),
+                    challenges_cache,
+                )
 
             # Gi and Hi
             self.gc(7)

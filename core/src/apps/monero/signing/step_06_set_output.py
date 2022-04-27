@@ -15,7 +15,10 @@ from .state import State
 
 if TYPE_CHECKING:
     from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhTuple
-    from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import Bulletproof
+    from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import (
+        Bulletproof,
+        BulletproofPlus,
+    )
     from trezor.messages import (
         MoneroTransactionDestinationEntry,
         MoneroTransactionSetOutputAck,
@@ -303,7 +306,7 @@ def _rsig_bp(state: State) -> bytes:
     from apps.monero.xmr import range_signatures
 
     rsig = range_signatures.prove_range_bp_batch(
-        state.output_amounts, state.output_masks
+        state.output_amounts, state.output_masks, state.rsig_is_bp_plus
     )
     state.mem_trace("post-bp" if __debug__ else None, collect=True)
 
@@ -314,7 +317,7 @@ def _rsig_bp(state: State) -> bytes:
     state.full_message_hasher.rsig_val(rsig, raw=False)
     state.mem_trace("post-bp-hash" if __debug__ else None, collect=True)
 
-    rsig = _dump_rsig_bp(rsig)
+    rsig = _dump_rsig_bp_plus(rsig) if state.rsig_is_bp_plus else _dump_rsig_bp(rsig)
     state.mem_trace(
         f"post-bp-ser, size: {len(rsig)}" if __debug__ else None, collect=True
     )
@@ -327,9 +330,15 @@ def _rsig_bp(state: State) -> bytes:
 
 def _rsig_process_bp(state: State, rsig_data: MoneroTransactionRsigData):
     from apps.monero.xmr import range_signatures
-    from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import Bulletproof
+    from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import (
+        Bulletproof,
+        BulletproofPlus,
+    )
 
-    bp_obj = serialize.parse_msg(rsig_data.rsig, Bulletproof)
+    if state.rsig_is_bp_plus:
+        bp_obj = serialize.parse_msg(rsig_data.rsig, BulletproofPlus)
+    else:
+        bp_obj = serialize.parse_msg(rsig_data.rsig, Bulletproof)
     rsig_data.rsig = None
 
     # BP is hashed with raw=False as hash does not contain L, R
@@ -366,8 +375,45 @@ def _dump_rsig_bp(rsig: Bulletproof) -> bytes:
     utils.memcpy(buff, 32 * 4, rsig.taux, 0, 32)
     utils.memcpy(buff, 32 * 5, rsig.mu, 0, 32)
 
-    buff[32 * 6] = len(rsig.L)
-    offset = 32 * 6 + 1
+    offset = _dump_rsig_lr(buff, 32 * 6, rsig)
+
+    utils.memcpy(buff, offset, rsig.a, 0, 32)
+    offset += 32
+    utils.memcpy(buff, offset, rsig.b, 0, 32)
+    offset += 32
+    utils.memcpy(buff, offset, rsig.t, 0, 32)
+    return buff
+
+
+def _dump_rsig_bp_plus(rsig: BulletproofPlus) -> bytes:
+    if len(rsig.L) > 127:
+        raise ValueError("Too large")
+
+    # Manual serialization as the generic purpose serialize.dump_msg_gc
+    # is more memory intensive which is not desired in the range proof section.
+
+    # BP: "V", "A", "A1", "B", "r1", "s1", "d1", "V", "L", "R"
+    # Commitment vector V is not serialized
+    # Vector size under 127 thus varint occupies 1 B
+    buff_size = 32 * (6 + 2 * (len(rsig.L))) + 2
+    buff = bytearray(buff_size)
+
+    utils.memcpy(buff, 0, rsig.A, 0, 32)
+    utils.memcpy(buff, 32, rsig.A1, 0, 32)
+    utils.memcpy(buff, 32 * 2, rsig.B, 0, 32)
+    utils.memcpy(buff, 32 * 3, rsig.r1, 0, 32)
+    utils.memcpy(buff, 32 * 4, rsig.s1, 0, 32)
+    utils.memcpy(buff, 32 * 5, rsig.d1, 0, 32)
+
+    _dump_rsig_lr(buff, 32 * 6, rsig)
+    return buff
+
+
+def _dump_rsig_lr(
+    buff: bytearray, offset: int, rsig: Bulletproof | BulletproofPlus
+) -> int:
+    buff[offset] = len(rsig.L)
+    offset += 1
 
     for x in rsig.L:
         utils.memcpy(buff, offset, x, 0, 32)
@@ -379,18 +425,12 @@ def _dump_rsig_bp(rsig: Bulletproof) -> bytes:
     for x in rsig.R:
         utils.memcpy(buff, offset, x, 0, 32)
         offset += 32
-
-    utils.memcpy(buff, offset, rsig.a, 0, 32)
-    offset += 32
-    utils.memcpy(buff, offset, rsig.b, 0, 32)
-    offset += 32
-    utils.memcpy(buff, offset, rsig.t, 0, 32)
-    return buff
+    return offset
 
 
 def _return_rsig_data(
     rsig: bytes | None = None, mask: bytes | None = None
-) -> MoneroTransactionRsigData:
+) -> MoneroTransactionRsigData | None:
     if rsig is None and mask is None:
         return None
 
@@ -420,9 +460,18 @@ def _get_ecdh_info_and_out_pk(
     so the recipient is able to reconstruct the commitment.
     """
     out_pk_dest = crypto_helpers.encodepoint(tx_out_key)
-    out_pk_commitment = crypto_helpers.encodepoint(
-        crypto.gen_commitment_into(None, mask, amount)
-    )
+    if state.rsig_is_bp_plus:
+        # HF15+ stores commitment multiplied by 8**-1
+        inv8 = crypto.decodeint_into_noreduce(None, crypto_helpers.INV_EIGHT)
+        mask8 = crypto.sc_mul_into(None, mask, inv8)
+        amnt8 = crypto.Scalar(amount)
+        amnt8 = crypto.sc_mul_into(amnt8, amnt8, inv8)
+        out_pk_commitment = crypto.add_keys2_into(None, mask8, amnt8, crypto.xmr_H())
+        del (inv8, mask8, amnt8)
+    else:
+        out_pk_commitment = crypto.gen_commitment_into(None, mask, amount)
+
+    out_pk_commitment = crypto_helpers.encodepoint(out_pk_commitment)
     crypto.sc_add_into(state.sumout, state.sumout, mask)
     ecdh_info = _ecdh_encode(amount, crypto_helpers.encodeint(amount_key))
 
