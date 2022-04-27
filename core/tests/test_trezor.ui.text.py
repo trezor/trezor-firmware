@@ -1,4 +1,3 @@
-import mock
 from common import *
 
 from trezor import ui

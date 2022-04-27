@@ -1,9 +1,6 @@
 from common import *
 
-from mock_storage import mock_storage
-
 from storage import cache
-from apps.common import safety_checks
 from apps.common.paths import PATTERN_SEP5, PathSchema
 from apps.common.keychain import LRUCache, Keychain, with_slip44_keychain, get_keychain
 from trezor import wire
@@ -18,7 +15,6 @@ class TestKeychain(unittest.TestCase):
     def tearDown(self):
         cache.clear_all()
 
-    @mock_storage
     def test_verify_path(self):
         schemas = (
             PathSchema.parse("m/44'/coin_type'", slip44_id=134),
@@ -43,7 +39,12 @@ class TestKeychain(unittest.TestCase):
                 keychain.verify_path(f)
 
         # turn off restrictions
-        safety_checks.apply_setting(SafetyCheckLevel.PromptTemporarily)
+        # Call to safety_checks.apply_setting() does not work here because
+        # storage is not ready to be written to
+        cache.set(
+            cache.APP_COMMON_SAFETY_CHECKS_TEMPORARY,
+            SafetyCheckLevel.PromptTemporarily.to_bytes(1, "big"),
+        )
         for path in correct + fails:
             keychain.verify_path(path)
 
@@ -74,9 +75,7 @@ class TestKeychain(unittest.TestCase):
         cache.set(cache.APP_COMMON_SEED, seed)
 
         schema = PathSchema.parse("m/44'/1'", 0)
-        keychain = await_result(
-            get_keychain(wire.DUMMY_CONTEXT, "secp256k1", [schema])
-        )
+        keychain = await_result(get_keychain(wire.DUMMY_CONTEXT, "secp256k1", [schema]))
 
         # valid path:
         self.assertIsNotNone(keychain.derive([H_(44), H_(1)]))

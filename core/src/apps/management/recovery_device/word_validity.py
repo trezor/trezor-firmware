@@ -1,4 +1,4 @@
-import storage.recovery
+import storage
 from trezor.enums import BackupType
 
 from . import recover

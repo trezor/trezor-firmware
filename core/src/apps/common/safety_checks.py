@@ -1,7 +1,7 @@
+import storage
 import storage.cache
-import storage.device
 from storage.cache import APP_COMMON_SAFETY_CHECKS_TEMPORARY
-from storage.device import SAFETY_CHECK_LEVEL_PROMPT, SAFETY_CHECK_LEVEL_STRICT
+from storage.device_old import SAFETY_CHECK_LEVEL_PROMPT, SAFETY_CHECK_LEVEL_STRICT
 from trezor.enums import SafetyCheckLevel
 
 
@@ -13,7 +13,7 @@ def read_setting() -> SafetyCheckLevel:
     if temporary_safety_check_level:
         return int.from_bytes(temporary_safety_check_level, "big")  # type: ignore [int-into-enum]
     else:
-        stored = storage.device.safety_check_level()
+        stored = storage.device.get_safety_check_level()
         if stored == SAFETY_CHECK_LEVEL_STRICT:
             return SafetyCheckLevel.Strict
         elif stored == SAFETY_CHECK_LEVEL_PROMPT:

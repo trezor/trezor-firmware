@@ -1,7 +1,7 @@
 from typing import Any
 
+import storage
 import storage.cache
-import storage.device
 from trezor import res, ui
 
 

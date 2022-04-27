@@ -45,6 +45,7 @@ SECTIONS {
   .flash2 : ALIGN(512) {
     build/firmware/frozen_mpy.o(.rodata*);
     build/firmware/vendor/secp256k1-zkp/src/secp256k1.o(.rodata*);
+    build/firmware/embed/extmod/modtrezorui/*.o(.rodata*);
     . = ALIGN(512);
   } >FLASH2 AT>FLASH2
 

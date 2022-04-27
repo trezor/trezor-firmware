@@ -5,7 +5,6 @@ from micropython import const
 from typing import Any, Callable, Coroutine, Iterable, Iterator
 
 import storage
-import storage.resident_credentials
 from storage.fido2 import KEY_AGREEMENT_PRIVKEY, KEY_AGREEMENT_PUBKEY
 from trezor import config, io, log, loop, ui, utils, workflow
 from trezor.crypto import aes, der, hashlib, hmac, random

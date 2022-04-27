@@ -25,7 +25,7 @@ if not utils.BITCOIN_ONLY:
 
 if __debug__:
     # storage.debug only imports C modules
-    import storage.debug
+    import storage.debug  # noqa: F401
 
 # trezor.pin imports trezor.utils
 # We need it as an always-active module because trezor.pin.show_pin_timeout is used
@@ -45,8 +45,6 @@ with unimport_manager:
     del boot
 
 # start the USB
-import storage.device
-
 usb.bus.open(storage.device.get_device_id())
 
 # run the endless loop

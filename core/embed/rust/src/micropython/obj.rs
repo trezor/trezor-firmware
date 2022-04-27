@@ -7,6 +7,8 @@ use cstr_core::CStr;
 
 use crate::error::Error;
 
+use heapless::{String, Vec};
+
 use super::{ffi, runtime::catch_exception};
 
 pub type Obj = ffi::mp_obj_t;
@@ -256,6 +258,14 @@ impl TryFrom<&[u8]> for Obj {
     }
 }
 
+impl TryFrom<()> for Obj {
+    type Error = Error;
+
+    fn try_from(_val: ()) -> Result<Self, Self::Error> {
+        catch_exception(Self::const_none)
+    }
+}
+
 /// String slices are converted into `str` MicroPython objects. Strings that are
 /// already interned will turn up as QSTRs, strings not found in the QSTR pool
 /// will be allocated on the heap and copied.
@@ -263,6 +273,17 @@ impl TryFrom<&str> for Obj {
     type Error = Error;
 
     fn try_from(val: &str) -> Result<Self, Self::Error> {
+        // SAFETY:
+        //  - `str` is guaranteed to be UTF-8.
+        // EXCEPTION: Will raise if allocation fails.
+        catch_exception(|| unsafe { ffi::mp_obj_new_str(val.as_ptr().cast(), val.len()) })
+    }
+}
+
+impl<const N: usize> TryFrom<String<N>> for Obj {
+    type Error = Error;
+
+    fn try_from(val: String<N>) -> Result<Self, Self::Error> {
         // SAFETY:
         //  - `str` is guaranteed to be UTF-8.
         // EXCEPTION: Will raise if allocation fails.
@@ -385,11 +406,39 @@ impl TryFrom<Obj> for usize {
     }
 }
 
-impl<T> From<Option<T>> for Obj
-where
-    T: Into<Obj>,
-{
-    fn from(val: Option<T>) -> Self {
+impl<const N: usize> TryFrom<Option<Vec<u8, N>>> for Obj {
+    type Error = Error;
+
+    fn try_from(val: Option<Vec<u8, N>>) -> Result<Obj, Error> {
+        match val {
+            Some(v) => (&v as &[u8]).try_into(),
+            None => Ok(Self::const_none()),
+        }
+    }
+}
+
+impl<const N: usize> TryFrom<Option<String<N>>> for Obj {
+    type Error = Error;
+
+    fn try_from(val: Option<String<N>>) -> Result<Obj, Error> {
+        match val {
+            Some(v) => v.try_into(),
+            None => Ok(Self::const_none()),
+        }
+    }
+}
+
+impl From<Option<u8>> for Obj {
+    fn from(val: Option<u8>) -> Obj {
+        match val {
+            Some(v) => v.into(),
+            None => Self::const_none(),
+        }
+    }
+}
+
+impl From<Option<u16>> for Obj {
+    fn from(val: Option<u16>) -> Obj {
         match val {
             Some(v) => v.into(),
             None => Self::const_none(),

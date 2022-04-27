@@ -8,6 +8,7 @@ mod error;
 #[macro_use]
 mod micropython;
 mod protobuf;
+mod storagedevice;
 mod time;
 #[cfg(feature = "ui_debug")]
 mod trace;

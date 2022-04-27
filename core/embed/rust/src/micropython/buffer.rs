@@ -3,6 +3,8 @@ use core::{
     ops::{Deref, DerefMut},
     ptr, slice, str,
 };
+use cstr_core::cstr;
+use heapless::{String, Vec};
 
 use crate::{error::Error, micropython::obj::Obj};
 
@@ -75,6 +77,18 @@ impl<const N: usize> From<&'static [u8; N]> for Buffer {
         Buffer {
             ptr: val.as_ptr(),
             len: val.len(),
+        }
+    }
+}
+
+impl<const N: usize> TryFrom<Buffer> for Vec<u8, N> {
+    type Error = Error;
+
+    fn try_from(buf: Buffer) -> Result<Vec<u8, N>, Self::Error> {
+        if buf.len() > N {
+            Err(Error::ValueError(cstr!("Buffer is too long to fit")))
+        } else {
+            Ok(Vec::from_slice(&buf).unwrap())
         }
     }
 }
@@ -176,6 +190,19 @@ impl AsRef<str> for StrBuffer {
 impl From<&'static str> for StrBuffer {
     fn from(val: &'static str) -> Self {
         Self(Buffer::from(val.as_bytes()))
+    }
+}
+
+impl<const N: usize> TryFrom<StrBuffer> for String<N> {
+    type Error = Error;
+
+    fn try_from(str_buf: StrBuffer) -> Result<String<N>, Self::Error> {
+        let slice = str_buf.as_ref();
+        if slice.len() > N {
+            Err(Error::ValueError(cstr!("String is too long to fit")))
+        } else {
+            Ok(String::from(slice))
+        }
     }
 }
 

@@ -46,20 +46,12 @@ storage
 import storage
 storage.cache
 import storage.cache
-storage.common
-import storage.common
 storage.debug
 import storage.debug
-storage.device
-import storage.device
+storage.device_old
+import storage.device_old
 storage.fido2
 import storage.fido2
-storage.recovery
-import storage.recovery
-storage.recovery_shares
-import storage.recovery_shares
-storage.resident_credentials
-import storage.resident_credentials
 storage.sd_salt
 import storage.sd_salt
 trezor

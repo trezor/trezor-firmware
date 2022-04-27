@@ -1,7 +1,4 @@
 import storage
-import storage.device
-import storage.recovery
-import storage.recovery_shares
 from trezor import strings, utils, wire, workflow
 from trezor.crypto import slip39
 from trezor.crypto.hashlib import sha256
@@ -129,8 +126,8 @@ async def _finish_recovery(
     if backup_type is None:
         raise RuntimeError
 
-    storage.device.store_mnemonic_secret(
-        secret, backup_type, needs_backup=False, no_backup=False
+    storage.device.set_mnemonic_secret(
+        secret=secret, backup_type=backup_type, needs_backup=False, no_backup=False
     )
     if backup_type in (BackupType.Slip39_Basic, BackupType.Slip39_Advanced):
         identifier = storage.recovery.get_slip39_identifier()

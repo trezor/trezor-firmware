@@ -1,4 +1,4 @@
-import storage.device
+import storage
 from trezor import ui, wire
 from trezor.enums import ButtonRequestType
 from trezor.messages import SetU2FCounter, Success

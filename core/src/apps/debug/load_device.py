@@ -1,5 +1,4 @@
 import storage
-import storage.device
 from trezor import config, wire
 from trezor.crypto import bip39, slip39
 from trezor.enums import BackupType
@@ -36,9 +35,9 @@ async def load_device(ctx: wire.Context, msg: LoadDevice) -> Success:
         storage.device.set_slip39_identifier(identifier)
         storage.device.set_slip39_iteration_exponent(iteration_exponent)
 
-    storage.device.store_mnemonic_secret(
-        secret,
-        backup_type,
+    storage.device.set_mnemonic_secret(
+        secret=secret,
+        backup_type=backup_type,
         needs_backup=msg.needs_backup is True,
         no_backup=msg.no_backup is True,
     )
