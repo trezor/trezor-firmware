@@ -680,7 +680,7 @@ if FROZEN:
 if FEATURE_FLAGS["SECP256K1_ZKP"]:
     host_env = Environment(ENV=os.environ)
     host_env.Replace(
-        CC=os.getenv('CC_FOR_BUILD') or 'gcc',
+        CC=os.getenv('CC_FOR_BUILD') or 'cc',
         COPT='-O2',
         CPPPATH='vendor/secp256k1-zkp',
         CPPDEFINES=[

@@ -6,8 +6,8 @@
 
 all: HIDTest U2FTest
 
-CC ?= gcc
-CXX ?= g++
+CC ?= cc
+CXX ?= c++
 CFLAGS ?= -Wall
 
 %.o: %.c

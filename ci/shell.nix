@@ -39,7 +39,6 @@ let
     # to use official binary, remove rustfmt from buildInputs and add it to extensions:
     extensions = [ "clippy" ];
   };
-  gcc = nixpkgs.gcc11;
   llvmPackages = nixpkgs.llvmPackages_13;
   # see pyright/README.md for update procedure
   pyright = nixpkgs.callPackage ./pyright {};
@@ -77,7 +76,6 @@ stdenvNoCC.mkDerivation ({
     check
     curl  # for connect tests
     editorconfig-checker
-    gcc
     gcc-arm-embedded
     git
     gitAndTools.git-subrepo

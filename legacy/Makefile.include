@@ -6,10 +6,10 @@ Q := @
 endif
 
 PYTHON ?= python
-CC_FOR_BUILD ?= gcc
+CC_FOR_BUILD ?= cc
 
 ifeq ($(EMULATOR),1)
-CC       ?= gcc
+CC       ?= cc
 LD       := $(CC)
 OBJCOPY  := true
 OBJDUMP  := true
