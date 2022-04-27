@@ -14,6 +14,7 @@ pub enum ButtonMsg {
 #[derive(Copy, Clone)]
 pub enum ButtonPos {
     Left,
+    Middle,
     Right,
 }
 
@@ -21,7 +22,9 @@ impl ButtonPos {
     fn hit(&self, b: &PhysicalButton) -> bool {
         matches!(
             (self, b),
-            (Self::Left, PhysicalButton::Left) | (Self::Right, PhysicalButton::Right)
+            (Self::Left, PhysicalButton::Left)
+                | (Self::Middle, PhysicalButton::Middle)
+                | (Self::Right, PhysicalButton::Right)
         )
     }
 }
@@ -88,6 +91,7 @@ impl<T: AsRef<str>> Button<T> {
         let area = match pos {
             ButtonPos::Left => area.split_left(button_width).0,
             ButtonPos::Right => area.split_right(button_width).1,
+            ButtonPos::Middle => area.split_center(button_width),
         };
 
         let start_of_baseline = area.bottom_left() + Offset::new(border_width, -2);

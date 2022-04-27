@@ -4,6 +4,7 @@ use core::convert::TryInto;
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum PhysicalButton {
     Left,
+    Middle,
     Right,
 }
 
@@ -18,6 +19,7 @@ impl ButtonEvent {
         let button = match button {
             0 => PhysicalButton::Left,
             1 => PhysicalButton::Right,
+            2 => PhysicalButton::Middle,
             _ => return Err(error::Error::OutOfRange),
         };
         let result = match event {

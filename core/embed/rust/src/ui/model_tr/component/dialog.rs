@@ -10,12 +10,14 @@ use crate::ui::{
 pub enum DialogMsg<T> {
     Content(T),
     LeftClicked,
+    MiddleClicked,
     RightClicked,
 }
 
 pub struct Dialog<T, U> {
     content: Child<T>,
     left_btn: Option<Child<Button<U>>>,
+    middle_btn: Option<Child<Button<U>>>,
     right_btn: Option<Child<Button<U>>>,
 }
 
@@ -24,10 +26,16 @@ where
     T: Component,
     U: AsRef<str>,
 {
-    pub fn new(content: T, left: Option<Button<U>>, right: Option<Button<U>>) -> Self {
+    pub fn new(
+        content: T,
+        left: Option<Button<U>>,
+        middle: Option<Button<U>>,
+        right: Option<Button<U>>,
+    ) -> Self {
         Self {
             content: Child::new(content),
             left_btn: left.map(Child::new),
+            middle_btn: middle.map(Child::new),
             right_btn: right.map(Child::new),
         }
     }
@@ -49,6 +57,7 @@ where
         let (content_area, button_area) = bounds.split_bottom(button_height);
         self.content.place(content_area);
         self.left_btn.as_mut().map(|b| b.place(button_area));
+        self.middle_btn.as_mut().map(|b| b.place(button_area));
         self.right_btn.as_mut().map(|b| b.place(button_area));
         bounds
     }
@@ -58,6 +67,8 @@ where
             Some(DialogMsg::Content(msg))
         } else if let Some(Clicked) = self.left_btn.as_mut().and_then(|b| b.event(ctx, event)) {
             Some(DialogMsg::LeftClicked)
+        } else if let Some(Clicked) = self.middle_btn.as_mut().and_then(|b| b.event(ctx, event)) {
+            Some(DialogMsg::MiddleClicked)
         } else if let Some(Clicked) = self.right_btn.as_mut().and_then(|b| b.event(ctx, event)) {
             Some(DialogMsg::RightClicked)
         } else {
