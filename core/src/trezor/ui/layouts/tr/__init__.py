@@ -13,12 +13,82 @@ if TYPE_CHECKING:
     ExceptionType = BaseException | Type[BaseException]
 
 
+class DoublePressHandler:
+    """Monitoring when to send double press events"""
+
+    def __init__(self) -> None:
+        self.left_pressed = False
+        self.right_pressed = False
+        self.wait_for_double_press_release = False
+        self.send_double_press_pressed = False
+        self.send_double_press_released = False
+        self.skip_rest = False
+
+        # Signal of double press, connected with the middle option on R screen
+        self.button_num = 2
+
+    def handle_double_press(self, event: int, button_num: int) -> None:
+        if event == io.BUTTON_PRESSED:
+            if button_num == io.BUTTON_LEFT:
+                self.left_pressed = True
+                if self.right_pressed:
+                    self.send_double_press_pressed = True
+            elif button_num == io.BUTTON_RIGHT:
+                self.right_pressed = True
+                if self.left_pressed:
+                    self.send_double_press_pressed = True
+        elif event == io.BUTTON_RELEASED:
+            if self.left_pressed and button_num == io.BUTTON_LEFT:
+                self.left_pressed = False
+                if self.right_pressed:
+                    self.skip_rest = (
+                        True  # not send release event for the button itself
+                    )
+                else:
+                    self.send_double_press_released = True
+                    self.skip_rest = False
+            elif self.right_pressed and button_num == io.BUTTON_RIGHT:
+                self.right_pressed = False
+                if self.left_pressed:
+                    self.skip_rest = (
+                        True  # not send release event for the button itself
+                    )
+                else:
+                    self.send_double_press_released = True
+                    self.skip_rest = False
+
+    def should_skip_rest(self) -> bool:
+        """In some situations we do not want to send individual events.
+
+        For example when releasing the first button from double press,
+        we do not want to send the release event for the button itself,
+        as that could trigger a click on the single button.
+        (Considering that first-to-release button was first-to-press.)
+        """
+        return self.skip_rest
+
+    def should_send_double_press_pressed(self) -> bool:
+        return self.send_double_press_pressed
+
+    def should_send_double_press_released(self) -> bool:
+        return self.wait_for_double_press_release and self.send_double_press_released
+
+    def account_for_double_press_pressed(self) -> None:
+        self.wait_for_double_press_release = True
+        self.send_double_press_pressed = False
+
+    def account_for_double_press_released(self) -> None:
+        self.send_double_press_released = False
+        self.wait_for_double_press_release = False
+
+
 class _RustLayout(ui.Layout):
     # pylint: disable=super-init-not-called
-    def __init__(self, layout: Any):
+    def __init__(self, layout: Any) -> None:
         self.layout = layout
         self.timer = loop.Timer()
         self.layout.set_timer_fn(self.set_timer)
+        self.d_p = DoublePressHandler()
 
     def set_timer(self, token: int, deadline: int) -> None:
         self.timer.schedule(deadline, token)
@@ -33,10 +103,29 @@ class _RustLayout(ui.Layout):
         while True:
             # Using `yield` instead of `await` to avoid allocations.
             event, button_num = yield button
+
+            # TODO: could have some timing mechanism to wait for double press
+            # (so that we do not send the "single" event first)
+
+            self.d_p.handle_double_press(event, button_num)
+            if self.d_p.should_skip_rest():
+                continue
+
             workflow.idle_timer.touch()
             msg = None
             if event in (io.BUTTON_PRESSED, io.BUTTON_RELEASED):
-                msg = self.layout.button_event(event, button_num)
+                if self.d_p.should_send_double_press_pressed():
+                    msg = self.layout.button_event(
+                        io.BUTTON_PRESSED, self.d_p.button_num
+                    )
+                    self.d_p.account_for_double_press_pressed()
+                elif self.d_p.should_send_double_press_released():
+                    msg = self.layout.button_event(
+                        io.BUTTON_RELEASED, self.d_p.button_num
+                    )
+                    self.d_p.account_for_double_press_released()
+                else:
+                    msg = self.layout.button_event(event, button_num)
             self.layout.paint()
             if msg is not None:
                 raise ui.Result(msg)
