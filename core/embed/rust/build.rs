@@ -139,7 +139,7 @@ fn generate_micropython_bindings() {
             "-I../../vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc",
             "-I../../vendor/micropython/lib/stm32lib/CMSIS/STM32F4xx/Include",
             "-I../../vendor/micropython/lib/cmsis/inc",
-            "-DTREZOR_MODEL=T",
+            "-DTREZOR_MODEL_T",
             "-DSTM32F405xx",
             "-DUSE_HAL_DRIVER",
             "-DSTM32_HAL_H=<stm32f4xx.h>",
