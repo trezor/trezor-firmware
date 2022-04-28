@@ -21,6 +21,7 @@ SOURCE_MOD = [
 
 PYOPT = ARGUMENTS.get('PYOPT', '1')
 FROZEN = ARGUMENTS.get('TREZOR_EMULATOR_FROZEN', 0)
+RASPI = os.getenv('TREZOR_EMULATOR_RASPI') == '1'
 
 # modtrezorconfig
 CPPPATH_MOD += [
@@ -188,6 +189,8 @@ if UI2:
     ]
 if FROZEN:
     CPPDEFINES_MOD += ['TREZOR_EMULATOR_FROZEN']
+if RASPI:
+    CPPDEFINES_MOD += ['TREZOR_EMULATOR_RASPI']
 
 # modtrezorutils
 SOURCE_MOD += [
