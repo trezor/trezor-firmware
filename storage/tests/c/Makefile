@@ -1,5 +1,5 @@
 CC = cc
-CFLAGS = -Wall -Wshadow -Wextra -Wpedantic -Werror -Wno-missing-braces -fPIC -fsanitize=address,undefined
+CFLAGS = -Wall -Wshadow -Wextra -Wpedantic -Werror -Wno-missing-braces -fPIC -fsanitize=address,undefined -DTREZOR_MODEL_T
 LIBS =
 INC = -I ../../../crypto -I ../.. -I .
 BASE = ../../../
