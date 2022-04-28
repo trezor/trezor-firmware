@@ -143,18 +143,31 @@ def header(
     display.text(44, 35, title, BOLD, fg, bg)
 
 
+# Common for both header functions
+MODEL_HEADER_HEIGHTS = {"1": 12, "R": 15, "T": 30}
+MODEL_Y_BASELINES = {"1": 10, "R": 11, "T": 22}
+
+
 def header_warning(message: str, clear: bool = True) -> None:
-    display.bar(0, 0, WIDTH, 30, style.YELLOW)
-    display.text_center(WIDTH // 2, 22, message, BOLD, style.BLACK, style.YELLOW)
+    height = MODEL_HEADER_HEIGHTS[utils.MODEL]
+    y_baseline = MODEL_Y_BASELINES[utils.MODEL]
+
+    display.bar(0, 0, WIDTH, height, style.YELLOW)
+    display.text_center(
+        WIDTH // 2, y_baseline, message, BOLD, style.BLACK, style.YELLOW
+    )
     if clear:
-        display.bar(0, 30, WIDTH, HEIGHT - 30, style.BG)
+        display.bar(0, height, WIDTH, HEIGHT - height, style.BG)
 
 
 def header_error(message: str, clear: bool = True) -> None:
-    display.bar(0, 0, WIDTH, 30, style.RED)
-    display.text_center(WIDTH // 2, 22, message, BOLD, style.WHITE, style.RED)
+    height = MODEL_HEADER_HEIGHTS[utils.MODEL]
+    y_baseline = MODEL_Y_BASELINES[utils.MODEL]
+
+    display.bar(0, 0, WIDTH, height, style.RED)
+    display.text_center(WIDTH // 2, y_baseline, message, BOLD, style.WHITE, style.RED)
     if clear:
-        display.bar(0, 30, WIDTH, HEIGHT - 30, style.BG)
+        display.bar(0, height, WIDTH, HEIGHT - height, style.BG)
 
 
 def draw_simple(t: "Component") -> None:
