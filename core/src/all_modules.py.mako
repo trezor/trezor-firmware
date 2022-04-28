@@ -1,4 +1,5 @@
 # generated from all_modules.py.mako
+# (by running `make templates` in `core`)
 # do not edit manually!
 # flake8: noqa
 # fmt: off

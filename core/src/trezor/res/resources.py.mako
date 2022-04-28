@@ -1,4 +1,5 @@
 # generated from resources.py.mako
+# (by running `make templates` in `core`)
 # do not edit manually!
 # fmt: off
 <%
