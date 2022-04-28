@@ -1,7 +1,7 @@
 try:
     from .resources import load_resource
 except ImportError:
-    raise RuntimeError("Please regenerate resources via 'make res'")
+    raise RuntimeError("Please regenerate resources via 'make templates'")
 
 
 def load(name: str) -> bytes:

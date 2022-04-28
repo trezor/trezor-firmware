@@ -1,4 +1,5 @@
 # generated from knownapps.py.mako
+# (by running `make templates` in `core`)
 # do not edit manually!
 
 
