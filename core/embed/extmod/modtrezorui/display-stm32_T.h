@@ -91,6 +91,8 @@ static uint32_t display_identify(void) {
   return id;
 }
 
+static void display_reset_state() {}
+
 static void __attribute__((unused)) display_sleep(void) {
   uint32_t id = display_identify();
   if ((id == DISPLAY_ID_ILI9341V) || (id == DISPLAY_ID_GC9307) ||

@@ -98,6 +98,8 @@ void PIXELDATA(uint16_t c) {
   }
 }
 
+static void display_reset_state() {}
+
 void display_init_seq(void) {}
 
 void display_deinit(void) {
