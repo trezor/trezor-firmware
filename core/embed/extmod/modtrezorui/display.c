@@ -158,6 +158,9 @@ static inline void clamp_coords(int x, int y, int w, int h, int *x0, int *y0,
 
 void display_clear(void) {
   const int saved_orientation = DISPLAY_ORIENTATION;
+
+  display_reset_state();
+
   // set MADCTL first so that we can set the window correctly next
   display_orientation(0);
   // address the complete frame memory

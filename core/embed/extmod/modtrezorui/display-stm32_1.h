@@ -89,6 +89,8 @@ void PIXELDATA(uint16_t c) {
   }
 }
 
+static void display_reset_state() {}
+
 void PIXELDATA_DIRTY() { pixeldata_dirty = true; }
 
 static void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1,
