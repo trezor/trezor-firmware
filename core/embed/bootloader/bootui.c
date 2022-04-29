@@ -44,12 +44,20 @@
 
 #define BACKLIGHT_NORMAL 150
 
-#define COLOR_BL_BG COLOR_WHITE                   // background
-#define COLOR_BL_FG COLOR_BLACK                   // foreground
+#define COLOR_BL_BG COLOR_WHITE  // background
+#define COLOR_BL_FG COLOR_BLACK  // foreground
+
+#ifdef RGB16
 #define COLOR_BL_FAIL RGB16(0xFF, 0x00, 0x00)     // red
 #define COLOR_BL_DONE RGB16(0x00, 0xAE, 0x0B)     // green
 #define COLOR_BL_PROCESS RGB16(0x4A, 0x90, 0xE2)  // blue
 #define COLOR_BL_GRAY RGB16(0x99, 0x99, 0x99)     // gray
+#else
+#define COLOR_BL_FAIL COLOR_BL_FG
+#define COLOR_BL_DONE COLOR_BL_FG
+#define COLOR_BL_PROCESS COLOR_BL_FG
+#define COLOR_BL_GRAY COLOR_BL_FG
+#endif
 
 #define COLOR_WELCOME_BG COLOR_WHITE  // welcome background
 #define COLOR_WELCOME_FG COLOR_BLACK  // welcome foreground
@@ -84,7 +92,7 @@ void ui_screen_boot(const vendor_header *const vhdr,
                     const image_header *const hdr) {
   const int show_string = ((vhdr->vtrust & VTRUST_STRING) == 0);
   if ((vhdr->vtrust & VTRUST_RED) == 0) {
-    boot_background = RGB16(0xFF, 0x00, 0x00);  // red
+    boot_background = COLOR_BL_FAIL;
   } else {
     boot_background = COLOR_BLACK;
   }

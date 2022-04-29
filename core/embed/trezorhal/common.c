@@ -29,7 +29,11 @@
 
 #include "stm32f4xx_ll_utils.h"
 
+#ifdef RGB16
 #define COLOR_FATAL_ERROR RGB16(0x7F, 0x00, 0x00)
+#else
+#define COLOR_FATAL_ERROR COLOR_BLACK
+#endif
 
 // from util.s
 extern void shutdown_privileged(void);
