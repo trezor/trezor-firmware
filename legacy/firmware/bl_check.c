@@ -132,6 +132,12 @@ static int known_bootloader(int r, const uint8_t *hash) {
              "\xb9\xc7\xf6\x03\xcd\xc7\x30\xe7\x30\x78\x50\xa3\xf4\xd6\x2a\x5c",
              32))
     return 1;  // 1.10.0 shipped with fw 1.10.0
+  if (0 ==
+      memcmp(hash,
+             "\xfa\x12\xa4\x4f\xa0\x5f\xd1\xd2\x05\x39\x35\x8b\x54\xf3\x01\xce"
+             "\xe4\xc3\x21\x9c\x9f\x1b\xb3\xa5\x77\x2f\xfd\x60\x9a\xf9\xe8\xe2",
+             32))
+    return 1;  // 1.11.0 shipped with fw 1.11.1
   return 0;
 }
 #endif
