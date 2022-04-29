@@ -32,7 +32,12 @@ void __shutdown(void) {
   main_clean_exit(3);
 }
 
+#ifdef RGB16
 #define COLOR_FATAL_ERROR RGB16(0x7F, 0x00, 0x00)
+#else
+// black on monochromatic displays
+#define COLOR_FATAL_ERROR 0x0000
+#endif
 
 void __attribute__((noreturn))
 __fatal_error(const char *expr, const char *msg, const char *file, int line,
