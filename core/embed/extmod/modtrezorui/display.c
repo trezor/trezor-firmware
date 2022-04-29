@@ -432,13 +432,15 @@ bool display_toif_info(const uint8_t *data, uint32_t len, uint16_t *out_w,
 }
 
 #if defined TREZOR_MODEL_T
-#include "loader.h"
+#include "loader_T.h"
+#elif defined TREZOR_MODEL_R
+#include "loader_R.h"
 #endif
 
 void display_loader(uint16_t progress, bool indeterminate, int yoffset,
                     uint16_t fgcolor, uint16_t bgcolor, const uint8_t *icon,
                     uint32_t iconlen, uint16_t iconfgcolor) {
-#if defined TREZOR_MODEL_T
+#if defined TREZOR_MODEL_T || defined TREZOR_MODEL_R
   uint16_t colortable[16] = {0}, iconcolortable[16] = {0};
   set_color_table(colortable, fgcolor, bgcolor);
   if (icon) {

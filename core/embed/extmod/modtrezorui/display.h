@@ -53,7 +53,13 @@
 #endif
 
 #define AVATAR_IMAGE_SIZE 144
+#if defined TREZOR_MODEL_T || defined TREZOR_MODEL_1
 #define LOADER_ICON_SIZE 64
+#elif defined TREZOR_MODEL_R
+#define LOADER_ICON_SIZE 24
+#else
+#error Unknown Trezor model
+#endif
 
 #ifdef TREZOR_MODEL_T
 #define RGB16(R, G, B) ((R & 0xF8) << 8) | ((G & 0xFC) << 3) | ((B & 0xF8) >> 3)
