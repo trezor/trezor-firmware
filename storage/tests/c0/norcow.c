@@ -220,7 +220,6 @@ static void compact() {
  * Initializes storage
  */
 void norcow_init(void) {
-  flash_init();
   secbool found = secfalse;
   // detect active sector - starts with magic
   for (uint8_t i = 0; i < NORCOW_SECTOR_COUNT; i++) {

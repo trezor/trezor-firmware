@@ -36,8 +36,6 @@
   (FLASH_SR_RDERR | FLASH_SR_PGSERR | FLASH_SR_PGPERR | FLASH_SR_PGAERR | \
    FLASH_SR_WRPERR | FLASH_SR_SOP | FLASH_SR_EOP)
 
-void flash_init(void);
-
 secbool __wur flash_unlock_write(void);
 secbool __wur flash_lock_write(void);
 

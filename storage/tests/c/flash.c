@@ -51,13 +51,9 @@ static const uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1] = {
     [23] = 0x081E0000,  // - 0x081FFFFF | 128 KiB
     [24] = 0x08200000,  // last element - not a valid sector
 };
-const uint32_t FLASH_SIZE = 0x200000;
+const uint32_t FLASH_SIZE =
+    FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT] - FLASH_SECTOR_TABLE[0];
 uint8_t *FLASH_BUFFER = NULL;
-
-void flash_init(void) {
-  assert(FLASH_SIZE ==
-         FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT] - FLASH_SECTOR_TABLE[0]);
-}
 
 secbool flash_unlock_write(void) { return sectrue; }
 

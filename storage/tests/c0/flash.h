@@ -26,8 +26,6 @@
 
 #define FLASH_SECTOR_COUNT 24
 
-void flash_init(void);
-
 secbool __wur flash_unlock(void);
 secbool __wur flash_lock(void);
 

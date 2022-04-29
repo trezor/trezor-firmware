@@ -81,8 +81,6 @@ const uint8_t STORAGE_SECTORS[STORAGE_SECTORS_COUNT] = {
     FLASH_SECTOR_STORAGE_2,
 };
 
-void flash_init(void) {}
-
 secbool flash_unlock_write(void) {
   HAL_FLASH_Unlock();
   FLASH->SR |= FLASH_STATUS_ALL_FLAGS;  // clear all status flags
