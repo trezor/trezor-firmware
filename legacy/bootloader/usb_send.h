@@ -1,5 +1,3 @@
-#include <assert.h>
-
 static void send_msg_success(usbd_device *dev) {
   uint8_t response[64];
   memzero(response, sizeof(response));
@@ -91,7 +89,7 @@ static void send_msg_features(usbd_device *dev) {
 
   // Check that the response will fit into an USB packet, and also that the
   // sizeof expression above fits into a single byte
-  static_assert(
+  _Static_assert(
       sizeof(feature_bytes) + sizeof(version_bytes) + sizeof(header_bytes) <=
           64,
       "Features response too long");
