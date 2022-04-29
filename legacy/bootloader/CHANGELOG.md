@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 1.11.0 [May 2022]
+
+### Added
+- Bootloader will report version of installed firmware.  [#2231]
+
+### Fixed
+- Compress firmware verification coordinates to be able link bootloader into preallocated space.  [#1884]
+
+### Security
+- Erase storage when downgrading below fix_version.
+- Avoid accidental build with broken stack protector  [#1642]
+
+
 ## 1.10.0 [May 2021]
 
 ### Added
@@ -112,3 +125,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial import of code.
 
 [#1461]: https://github.com/trezor/trezor-firmware/pull/1461
+[#1642]: https://github.com/trezor/trezor-firmware/pull/1642
+[#1884]: https://github.com/trezor/trezor-firmware/pull/1884
+[#2231]: https://github.com/trezor/trezor-firmware/pull/2231
