@@ -48,8 +48,6 @@ static secbool flash_check_success(uint32_t status) {
              : sectrue;
 }
 
-void flash_init(void) {}
-
 secbool flash_unlock_write(void) {
   svc_flash_unlock();
   return sectrue;
