@@ -4,7 +4,7 @@ from micropython import const
 import storage
 import storage.cache
 import storage.device
-from trezor import config, ui
+from trezor import config, ui, utils
 from trezor.ui.loader import Loader, LoaderNeutral
 
 from apps.base import lock_device
@@ -53,7 +53,10 @@ class Homescreen(HomescreenBase):
 
         # homescreen with shifted avatar and text on bottom
         ui.display.avatar(48, 48 - 10, self.get_image(), ui.WHITE, ui.BLACK)
-        ui.display.text_center(ui.WIDTH // 2, 220, self.label, ui.BOLD, ui.FG, ui.BG)
+        label_heights = {"1": 54, "R": 110, "T": 220}
+        ui.display.text_center(
+            ui.WIDTH // 2, label_heights[utils.MODEL], self.label, ui.BOLD, ui.FG, ui.BG
+        )
 
     def on_touch_start(self, _x: int, _y: int) -> None:
         if self.loader.start_ms is not None:

@@ -26,7 +26,7 @@
 
 // see docs/memory.md for more information
 
-#if defined TREZOR_MODEL_T
+#if defined TREZOR_MODEL_T || defined TREZOR_MODEL_R
 #define FLASH_SECTOR_COUNT 24
 #elif defined TREZOR_MODEL_1
 #define FLASH_SECTOR_COUNT 12
@@ -40,7 +40,7 @@
 
 //                                           3
 
-#if defined TREZOR_MODEL_T
+#if defined TREZOR_MODEL_T || defined TREZOR_MODEL_R
 #define FLASH_SECTOR_STORAGE_1 4
 #define FLASH_SECTOR_STORAGE_2 16
 #elif defined TREZOR_MODEL_1

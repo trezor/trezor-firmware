@@ -54,7 +54,6 @@ def get_features() -> Features:
             Capability.Crypto,
             Capability.Shamir,
             Capability.ShamirGroups,
-            Capability.PassphraseEntry,
         ]
     else:
         f.capabilities = [
@@ -73,8 +72,12 @@ def get_features() -> Features:
             Capability.U2F,
             Capability.Shamir,
             Capability.ShamirGroups,
-            Capability.PassphraseEntry,
         ]
+
+    # Other models are not capable of PassphraseEntry
+    if utils.MODEL in ("T",):
+        f.capabilities.append(Capability.PassphraseEntry)
+
     f.sd_card_present = sdcard.is_present()
     f.initialized = storage.device.is_initialized()
 
