@@ -75,7 +75,7 @@
 
 #endif
 
-#elif defined TREZOR_MODEL_1
+#elif defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
 
 #ifdef TREZOR_FONT_NORMAL_ENABLE
 #include "font_pixeloperator_regular_8.h"
@@ -117,7 +117,7 @@ static struct { int x, y; } DISPLAY_OFFSET;
 #else
 #if defined TREZOR_MODEL_T
 #include "display-stm32_T.h"
-#elif defined TREZOR_MODEL_1
+#elif defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
 #include "display-stm32_1.h"
 #else
 #error Unknown Trezor model
@@ -917,7 +917,7 @@ int display_orientation(int degrees) {
   if (degrees != DISPLAY_ORIENTATION) {
 #if defined TREZOR_MODEL_T
     if (degrees == 0 || degrees == 90 || degrees == 180 || degrees == 270) {
-#elif defined TREZOR_MODEL_1
+#elif defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
     if (degrees == 0 || degrees == 180) {
 #else
 #error Unknown Trezor model
@@ -930,7 +930,7 @@ int display_orientation(int degrees) {
 }
 
 int display_backlight(int val) {
-#if defined TREZOR_MODEL_1
+#if defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
   val = 255;
 #endif
   if (DISPLAY_BACKLIGHT != val && val >= 0 && val <= 255) {

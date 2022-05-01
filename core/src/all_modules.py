@@ -186,6 +186,8 @@ trezor.ui.constants
 import trezor.ui.constants
 trezor.ui.constants.t1
 import trezor.ui.constants.t1
+trezor.ui.constants.tr
+import trezor.ui.constants.tr
 trezor.ui.constants.tt
 import trezor.ui.constants.tt
 trezor.ui.container
@@ -202,6 +204,8 @@ trezor.ui.layouts.reset
 import trezor.ui.layouts.reset
 trezor.ui.layouts.t1
 import trezor.ui.layouts.t1
+trezor.ui.layouts.tr
+import trezor.ui.layouts.tr
 trezor.ui.layouts.tt
 import trezor.ui.layouts.tt
 trezor.ui.layouts.tt.altcoin

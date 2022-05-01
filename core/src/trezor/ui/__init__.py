@@ -49,7 +49,7 @@ else:
 
 
 # in both debug and production, emulator needs to draw the screen explicitly
-if utils.EMULATOR or utils.MODEL == "1":
+if utils.EMULATOR or utils.MODEL in ("1", "R"):
     loop.after_step_hook = refresh
 
 
@@ -240,7 +240,7 @@ class Component:
     def __init__(self) -> None:
         self.repaint = True
 
-    if utils.MODEL == "T":
+    if utils.MODEL in ("T",):
 
         def dispatch(self, event: int, x: int, y: int) -> None:
             if event is RENDER:
@@ -263,7 +263,7 @@ class Component:
         def on_touch_end(self, x: int, y: int) -> None:
             pass
 
-    elif utils.MODEL == "1":
+    elif utils.MODEL in ("1", "R"):
 
         def dispatch(self, event: int, x: int, y: int) -> None:
             if event is RENDER:
@@ -374,7 +374,7 @@ class Layout(Component):
         Usually overridden to add another tasks to the list."""
         return self.handle_input(), self.handle_rendering()
 
-    if utils.MODEL == "T":
+    if utils.MODEL in ("T",):
 
         def handle_input(self) -> Generator:
             """Task that is waiting for the user input."""
@@ -388,7 +388,7 @@ class Layout(Component):
                 # way to get the lowest input-to-render latency.
                 self.dispatch(RENDER, 0, 0)
 
-    elif utils.MODEL == "1":
+    elif utils.MODEL in ("1", "R"):
 
         def handle_input(self) -> Generator:
             """Task that is waiting for the user input."""

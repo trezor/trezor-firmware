@@ -6,7 +6,7 @@ import os
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
 EVERYTHING = BITCOIN_ONLY != '1'
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
-UI2 = ARGUMENTS.get('UI2', '0') == '1' or TREZOR_MODEL == '1'
+UI2 = ARGUMENTS.get('UI2', '0') == '1' or TREZOR_MODEL in ('1', 'R')
 
 FEATURE_FLAGS = {
     "RDI": True,
@@ -151,7 +151,7 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
 SOURCE_MOD += [
     'embed/extmod/modtrezorio/modtrezorio.c',
 ]
-if TREZOR_MODEL == "T":
+if TREZOR_MODEL in ("T",):
     SOURCE_MOD += [
         'embed/extmod/modtrezorio/ff.c',
         'embed/extmod/modtrezorio/ffunicode.c',
@@ -380,13 +380,13 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/util.s',
     'embed/trezorhal/vectortable.s',
 ]
-if TREZOR_MODEL == 'T':
+if TREZOR_MODEL in ('T',):
     SOURCE_TREZORHAL += [
         'embed/trezorhal/sbu.c',
         'embed/trezorhal/sdcard.c',
         'embed/trezorhal/touch.c',
     ]
-elif TREZOR_MODEL == '1':
+elif TREZOR_MODEL in ('1', 'R'):
     SOURCE_TREZORHAL += [
         'embed/trezorhal/button.c',
     ]
@@ -433,13 +433,13 @@ env.Replace(
 env.Replace(
     TREZOR_MODEL=TREZOR_MODEL, )
 
-if TREZOR_MODEL == 'T':
+if TREZOR_MODEL in ('T', 'R'):
     CPU_ASFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16'
     CPU_CCFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mtune=cortex-m4 '
     CPU_MODEL   = 'STM32F427xx'
     LD_VARIANT  = ''
     RUST_TARGET = 'thumbv7em-none-eabihf'
-elif TREZOR_MODEL == '1':
+elif TREZOR_MODEL in ('1',):
     CPU_ASFLAGS = '-mthumb -mcpu=cortex-m3 -mfloat-abi=soft'
     CPU_CCFLAGS = '-mthumb -mtune=cortex-m3 -mcpu=cortex-m3 -mfloat-abi=soft '
     CPU_MODEL   = 'STM32F405xx'
@@ -562,7 +562,7 @@ if FROZEN:
     if EVERYTHING:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/altcoin.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/webauthn.py'))
-    if TREZOR_MODEL == 'T' and UI2:
+    if TREZOR_MODEL in ('T') and UI2:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/constants/tt.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/__init__.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/reset.py'))
@@ -570,7 +570,7 @@ if FROZEN:
         if EVERYTHING:
             SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/altcoin.py'))
             SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/webauthn.py'))
-    elif TREZOR_MODEL == 'T':
+    elif TREZOR_MODEL in ('T',):
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/components/tt/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/constants/tt.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt/__init__.py'))
@@ -579,10 +579,12 @@ if FROZEN:
         if EVERYTHING:
             SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt/altcoin.py'))
             SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt/webauthn.py'))
-    elif TREZOR_MODEL == '1':
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/components/t1/*.py'))
+    elif TREZOR_MODEL in ('1',):
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/constants/t1.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/t1.py'))
+    elif TREZOR_MODEL in ('R',):
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/constants/tr.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tr/__init__.py'))
     else:
         raise ValueError('Unknown Trezor model')
 
@@ -614,7 +616,7 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*.py',
         exclude=[
             SOURCE_PY_DIR + 'apps/management/sd_protect.py',
-        ] if TREZOR_MODEL != 'T' else [])
+        ] if TREZOR_MODEL not in ('T',) else [])
     )
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/misc/*.py'))
@@ -727,8 +729,10 @@ def cargo_build():
         profile = '--release'
     else:
         profile = ''
-    if TREZOR_MODEL == "1":
+    if TREZOR_MODEL in ("1",):
         features = ["model_t1"]
+    elif TREZOR_MODEL in ("R",):
+        features = ["model_tr"]
     else:
         features = ["model_tt"]
     if BITCOIN_ONLY == "1":
@@ -796,7 +800,7 @@ program_elf = env.Command(
 
 env.Depends(program_elf, rust)
 
-if TREZOR_MODEL == 'T':
+if TREZOR_MODEL in ('T', 'R'):
     action_bin=[
         '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data --pad-to 0x08100000 $SOURCE ${TARGET}.p1',
         '$OBJCOPY -O binary -j .flash2 $SOURCE ${TARGET}.p2',
@@ -804,7 +808,7 @@ if TREZOR_MODEL == 'T':
         '$HEADERTOOL -h $TARGET ' + ('-D' if ARGUMENTS.get('PRODUCTION', '0') == '0' else ''),
         '$DD if=$TARGET of=${TARGET}.p1 skip=0 bs=128k count=6',
     ]
-elif TREZOR_MODEL == '1':
+elif TREZOR_MODEL in ('1',):
     action_bin=[
         '$OBJCOPY -O binary -j .header -j .flash -j .data $SOURCE $TARGET',
         '../legacy/bootloader/firmware_sign.py -f $TARGET',

@@ -39,7 +39,7 @@
 #define TOUCH_OFFSET_Y 110
 #endif
 
-#elif defined TREZOR_MODEL_1
+#elif defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
 
 #define WINDOW_WIDTH 200
 #define WINDOW_HEIGHT 340
@@ -76,7 +76,7 @@ static struct {
 #define PIXELDATA_DIRTY()
 
 void PIXELDATA(uint16_t c) {
-#if defined TREZOR_MODEL_1
+#if defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
   // set to white if highest bits of all R, G, B values are set to 1
   // bin(10000 100000 10000) = hex(0x8410)
   // otherwise set to black
@@ -181,6 +181,10 @@ void display_init(void) {
 #include "background_1.h"
   BACKGROUND = IMG_LoadTexture_RW(
       RENDERER, SDL_RWFromMem(background_1_jpg, background_1_jpg_len), 0);
+#elif defined TREZOR_MODEL_R
+#include "background_R.h"
+  BACKGROUND = IMG_LoadTexture_RW(
+      RENDERER, SDL_RWFromMem(background_R_jpg, background_R_jpg_len), 0);
 #endif
 #endif
   if (BACKGROUND) {

@@ -102,7 +102,7 @@ uint32_t touch_read(void) {
   return 0;
 }
 
-#elif defined TREZOR_MODEL_1
+#elif defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
 
 #include "button.h"
 

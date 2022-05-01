@@ -283,6 +283,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_MODEL), MP_ROM_QSTR(MP_QSTR_1)},
 #elif defined TREZOR_MODEL_T
     {MP_ROM_QSTR(MP_QSTR_MODEL), MP_ROM_QSTR(MP_QSTR_T)},
+#elif defined TREZOR_MODEL_R
+    {MP_ROM_QSTR(MP_QSTR_MODEL), MP_ROM_QSTR(MP_QSTR_R)},
 #else
 #error Unknown Trezor model
 #endif
