@@ -33,7 +33,15 @@ TREZOR_T = TrezorModel(
     default_mapping=mapping.DEFAULT_MAPPING,
 )
 
-TREZORS = {TREZOR_ONE, TREZOR_T}
+TREZOR_R = TrezorModel(
+    name="R",
+    minimum_version=(2, 1, 0),
+    vendors=VENDORS,
+    usb_ids=((0x1209, 0x53C1), (0x1209, 0x53C0)),
+    default_mapping=mapping.DEFAULT_MAPPING,
+)
+
+TREZORS = {TREZOR_ONE, TREZOR_T, TREZOR_R}
 
 
 def by_name(name: str) -> Optional[TrezorModel]:
