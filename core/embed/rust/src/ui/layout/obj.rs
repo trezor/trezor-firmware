@@ -20,14 +20,15 @@ use crate::{
     util,
 };
 
+#[cfg(any(feature = "model_t1", feature = "model_tr"))]
+use crate::ui::event::ButtonEvent;
 #[cfg(feature = "model_tt")]
-use crate::ui::model_tt::event::TouchEvent;
+use crate::ui::event::TouchEvent;
 
 #[cfg(feature = "model_t1")]
-use crate::ui::model_t1::event::ButtonEvent;
-
-#[cfg(not(feature = "model_tt"))]
 use crate::ui::model_t1::constant;
+#[cfg(feature = "model_tr")]
+use crate::ui::model_tr::constant;
 #[cfg(feature = "model_tt")]
 use crate::ui::model_tt::constant;
 
@@ -371,12 +372,12 @@ extern "C" fn ui_layout_touch_event(n_args: usize, args: *const Obj) -> Obj {
     unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
 }
 
-#[cfg(not(feature = "model_tt"))]
+#[cfg(any(feature = "model_t1", feature = "model_tr"))]
 extern "C" fn ui_layout_touch_event(_n_args: usize, _args: *const Obj) -> Obj {
     Obj::const_none()
 }
 
-#[cfg(feature = "model_t1")]
+#[cfg(any(feature = "model_t1", feature = "model_tr"))]
 extern "C" fn ui_layout_button_event(n_args: usize, args: *const Obj) -> Obj {
     let block = |args: &[Obj], _kwargs: &Map| {
         if args.len() != 3 {
@@ -390,7 +391,7 @@ extern "C" fn ui_layout_button_event(n_args: usize, args: *const Obj) -> Obj {
     unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
 }
 
-#[cfg(not(feature = "model_t1"))]
+#[cfg(feature = "model_tt")]
 extern "C" fn ui_layout_button_event(_n_args: usize, _args: *const Obj) -> Obj {
     Obj::const_none()
 }

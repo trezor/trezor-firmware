@@ -1,10 +1,11 @@
 use crate::ui::{
     component::{Component, Event, EventCtx},
     display,
+    event::TouchEvent,
     geometry::{Point, Rect},
 };
 
-use super::{event::TouchEvent, theme};
+use super::theme;
 
 pub enum SwipeDirection {
     Up,

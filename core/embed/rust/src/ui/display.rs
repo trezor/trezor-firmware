@@ -1,7 +1,9 @@
 use crate::{micropython::time, time::Duration, trezorhal::display};
 
-#[cfg(not(feature = "model_tt"))]
+#[cfg(feature = "model_t1")]
 use crate::ui::model_t1::constant;
+#[cfg(feature = "model_tr")]
+use crate::ui::model_tr::constant;
 #[cfg(feature = "model_tt")]
 use crate::ui::model_tt::constant;
 
