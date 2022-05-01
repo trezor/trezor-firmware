@@ -28,7 +28,6 @@ pub struct PinPage {
     pin_buffer: String<MAX_LENGTH>,
 }
 
-// TODO: somehow show the length of the PIN
 // TODO: somehow allow for viewing the PIN
 // TODO: somehow allow for deleting the digits in PIN
 
@@ -46,10 +45,30 @@ impl PinPage {
         }
     }
 
-    fn show_current_digit(&mut self) {
+    fn update_situation(&mut self) {
         // So that only relevant buttons are visible
         self.pad.clear();
 
+        self.show_pin_length();
+        self.show_current_digit();
+    }
+
+    fn show_pin_length(&mut self) {
+        // String::repeat() is not available for heapless::String
+        let mut dots: String<50> = String::new();
+        for _ in 0..self.pin_buffer.len() {
+            dots.push_str("*").unwrap();
+        }
+        display::text(
+            Point::new(0, 20),
+            &dots,
+            theme::FONT_BOLD,
+            theme::FG,
+            theme::BG,
+        );
+    }
+
+    fn show_current_digit(&mut self) {
         let digit: String<1> = String::from(self.pin_counter);
         display::text(
             Point::new(62, 62),
@@ -85,7 +104,7 @@ impl Component for PinPage {
             if let Some(ButtonMsg::Clicked) = self.prev.event(ctx, event) {
                 // Clicked BACK. Decrease the number.
                 self.pin_counter = self.pin_counter - 1;
-                self.show_current_digit();
+                self.update_situation();
                 return None;
             }
         } else if let Some(ButtonMsg::Clicked) = self.accept_pin.event(ctx, event) {
@@ -97,7 +116,7 @@ impl Component for PinPage {
             if let Some(ButtonMsg::Clicked) = self.next.event(ctx, event) {
                 // Clicked NEXT. Increase the number.
                 self.pin_counter = self.pin_counter + 1;
-                self.show_current_digit();
+                self.update_situation();
                 return None;
             }
         } else if let Some(ButtonMsg::Clicked) = self.cancel_pin.event(ctx, event) {
@@ -109,6 +128,8 @@ impl Component for PinPage {
             // Clicked OK. Append current digit to the buffer PIN string.
             let digit_as_str: String<1> = String::from(self.pin_counter);
             self.pin_buffer.push_str(&digit_as_str).unwrap();
+
+            self.update_situation();
 
             // Changing all other button's visual state to "released" state
             // (one of the buttons has a "pressed" state from
@@ -125,7 +146,7 @@ impl Component for PinPage {
 
     fn paint(&mut self) {
         self.pad.paint();
-        self.show_current_digit();
+        self.update_situation();
         if self.pin_counter > 0 {
             self.prev.paint();
         } else {
