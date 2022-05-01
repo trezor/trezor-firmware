@@ -2,14 +2,15 @@ use core::mem;
 
 use heapless::Vec;
 
-#[cfg(feature = "model_t1")]
-use crate::ui::model_t1::event::ButtonEvent;
-#[cfg(feature = "model_tt")]
-use crate::ui::model_tt::event::TouchEvent;
 use crate::{
     time::Duration,
     ui::{component::Map, geometry::Rect},
 };
+
+#[cfg(any(feature = "model_t1", feature = "model_tr"))]
+use crate::ui::event::ButtonEvent;
+#[cfg(feature = "model_tt")]
+use crate::ui::event::TouchEvent;
 
 /// Type used by components that do not return any messages.
 ///
@@ -218,7 +219,7 @@ where
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Event {
-    #[cfg(feature = "model_t1")]
+    #[cfg(any(feature = "model_t1", feature = "model_tr"))]
     Button(ButtonEvent),
     #[cfg(feature = "model_tt")]
     Touch(TouchEvent),

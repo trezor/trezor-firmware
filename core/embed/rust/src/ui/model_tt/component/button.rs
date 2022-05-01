@@ -1,10 +1,11 @@
 use crate::ui::{
     component::{Component, ComponentExt, Event, EventCtx, GridPlaced, Map},
     display::{self, Color, Font},
+    event::TouchEvent,
     geometry::{Insets, Offset, Rect},
 };
 
-use super::{event::TouchEvent, theme};
+use super::theme;
 
 pub enum ButtonMsg {
     Pressed,

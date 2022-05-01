@@ -1,8 +1,4 @@
-use crate::ui::{
-    component::{text::layout::Op, LineBreaking},
-    display::Font,
-    geometry::Offset,
-};
+use crate::ui::{component::LineBreaking, display::Font};
 use core::iter;
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]

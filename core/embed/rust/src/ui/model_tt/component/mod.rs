@@ -24,4 +24,4 @@ pub use page::SwipePage;
 pub use scroll::ScrollBar;
 pub use swipe::{Swipe, SwipeDirection};
 
-use super::{event, theme};
+use super::theme;

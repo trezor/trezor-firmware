@@ -213,8 +213,9 @@ mod tests {
         trace::Trace,
         ui::{
             component::{text::paragraphs::Paragraphs, Empty},
+            event::TouchEvent,
             geometry::Point,
-            model_tt::{constant, event::TouchEvent, theme},
+            model_tt::{constant, theme},
         },
     };
 
