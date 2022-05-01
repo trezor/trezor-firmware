@@ -26,13 +26,13 @@ g_header:
     . = . + 8                        // reserved
     . = . + 512                      // hash1 ... hash16
 
-#if defined TREZOR_MODEL_T
-// model T header specifics
+#if !defined TREZOR_MODEL_1
+// trezor-core header style
     . = . + 415                      // reserved
     .byte 0                          // sigmask
     . = . + 64                       // sig
-#elif defined TREZOR_MODEL_1
-// model 1 header specifics
+#else
+// model 1 compatibility header
     . = . + 64                       // sig1
     . = . + 64                       // sig2
     . = . + 64                       // sig3
@@ -41,8 +41,6 @@ g_header:
     .byte 0                          // sigindex3
     . = . + 220                      // reserved
     . = . + 65                       // reserved
-#else
-#error Unknown Trezor model
 #endif
 
 g_header_end:

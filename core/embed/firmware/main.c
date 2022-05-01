@@ -65,7 +65,7 @@ int main(void) {
 #endif
 
   // reinitialize HAL for Trezor One
-#if defined TREZOR_MODEL_1
+#if defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
   HAL_Init();
 #endif
 
@@ -86,7 +86,7 @@ int main(void) {
   // Init peripherals
   pendsv_init();
 
-#if defined TREZOR_MODEL_1
+#if defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
   display_init();
   button_init();
 #endif
