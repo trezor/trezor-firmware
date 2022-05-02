@@ -36,6 +36,7 @@ def get_features() -> Features:
 
     f = Features(
         vendor="trezor.io",
+        fw_vendor=utils.firmware_vendor(),
         language="en-US",
         major_version=utils.VERSION_MAJOR,
         minor_version=utils.VERSION_MINOR,

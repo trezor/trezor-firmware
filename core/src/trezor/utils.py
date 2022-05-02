@@ -10,6 +10,7 @@ from trezorutils import (  # noqa: F401
     VERSION_PATCH,
     consteq,
     firmware_hash,
+    firmware_vendor,
     halt,
     memcpy,
 )

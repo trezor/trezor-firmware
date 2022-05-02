@@ -99,8 +99,7 @@ secbool load_image_header(const uint8_t *const data, const uint32_t magic,
                                  *(const ed25519_signature *)hdr->sig));
 }
 
-secbool load_vendor_header(const uint8_t *const data, uint8_t key_m,
-                           uint8_t key_n, const uint8_t *const *keys,
+secbool read_vendor_header(const uint8_t *const data,
                            vendor_header *const vhdr) {
   memcpy(&vhdr->magic, data, 4);
   if (vhdr->magic != 0x565A5254) return secfalse;  // TRZV
@@ -140,6 +139,16 @@ secbool load_vendor_header(const uint8_t *const data, uint8_t key_m,
 
   memcpy(vhdr->sig, data + vhdr->hdrlen - IMAGE_SIG_SIZE + 1,
          IMAGE_SIG_SIZE - 1);
+
+  return sectrue;
+}
+
+secbool load_vendor_header(const uint8_t *const data, uint8_t key_m,
+                           uint8_t key_n, const uint8_t *const *keys,
+                           vendor_header *const vhdr) {
+  if (sectrue != read_vendor_header(data, vhdr)) {
+    return secfalse;
+  }
 
   // check header signature
 
