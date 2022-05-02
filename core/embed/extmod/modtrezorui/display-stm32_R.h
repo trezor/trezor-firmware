@@ -105,6 +105,16 @@ static void display_reset_state(void) {
   DISPLAY_STATE.window_y1 = DISPLAY_RESY - 1;
 }
 
+static void display_fast_clear(void) {
+  for (int y = 0; y < DISPLAY_RESY / 8; y++) {
+    display_set_page_and_col(y, 0);
+    for (int x = 0; x < DISPLAY_RESX; x++) {
+      DATA(0x00);
+    }
+  }
+  display_reset_state();
+}
+
 static void __attribute__((unused)) display_sleep(void) {
   CMD(0xAE);  // DISPOFF: Display Off
   HAL_Delay(5);
@@ -246,7 +256,7 @@ void display_init_seq(void) {
 
   send_init_seq_SH1107();
 
-  display_clear();
+  display_fast_clear();
   display_unsleep();
 }
 
