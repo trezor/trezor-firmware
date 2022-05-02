@@ -32,6 +32,10 @@
 #include "common.h"
 #include "flash.h"
 
+#ifndef TREZOR_EMULATOR
+#include "image.h"
+#endif
+
 /// def consteq(sec: bytes, pub: bytes) -> bool:
 ///     """
 ///     Compares the private information in `sec` with public, user-provided
@@ -162,6 +166,27 @@ STATIC mp_obj_t mod_trezorutils_firmware_hash(size_t n_args,
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorutils_firmware_hash_obj, 0,
                                            1, mod_trezorutils_firmware_hash);
 
+/// def firmware_vendor() -> str:
+///     """
+///     Returns the firmware vendor string from the vendor header.
+///     """
+STATIC mp_obj_t mod_trezorutils_firmware_vendor(void) {
+#ifdef TREZOR_EMULATOR
+  return mp_obj_new_str_copy(&mp_type_str, (const uint8_t *)"EMULATOR", 8);
+#else
+  vendor_header vhdr = {0};
+  uint32_t size = flash_sector_size(FLASH_SECTOR_FIRMWARE_START);
+  const void *data = flash_get_address(FLASH_SECTOR_FIRMWARE_START, 0, size);
+  if (data == NULL || sectrue != read_vendor_header(data, &vhdr)) {
+    mp_raise_msg(&mp_type_RuntimeError, "Failed to read vendor header.");
+  }
+  return mp_obj_new_str_copy(&mp_type_str, (const uint8_t *)vhdr.vstr,
+                             vhdr.vstr_len);
+#endif
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_firmware_vendor_obj,
+                                 mod_trezorutils_firmware_vendor);
+
 STATIC mp_obj_str_t mod_trezorutils_revision_obj = {
     {&mp_type_bytes}, 0, sizeof(SCM_REVISION) - 1, (const byte *)SCM_REVISION};
 
@@ -180,6 +205,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_halt), MP_ROM_PTR(&mod_trezorutils_halt_obj)},
     {MP_ROM_QSTR(MP_QSTR_firmware_hash),
      MP_ROM_PTR(&mod_trezorutils_firmware_hash_obj)},
+    {MP_ROM_QSTR(MP_QSTR_firmware_vendor),
+     MP_ROM_PTR(&mod_trezorutils_firmware_vendor_obj)},
     // various built-in constants
     {MP_ROM_QSTR(MP_QSTR_SCM_REVISION),
      MP_ROM_PTR(&mod_trezorutils_revision_obj)},

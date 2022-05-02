@@ -87,6 +87,9 @@ secbool __wur load_vendor_header(const uint8_t *const data, uint8_t key_m,
                                  uint8_t key_n, const uint8_t *const *keys,
                                  vendor_header *const vhdr);
 
+secbool __wur read_vendor_header(const uint8_t *const data,
+                                 vendor_header *const vhdr);
+
 void vendor_header_hash(const vendor_header *const vhdr, uint8_t *hash);
 
 secbool __wur check_single_hash(const uint8_t *const hash,
