@@ -36,6 +36,14 @@
 #include "image.h"
 #endif
 
+static void ui_progress(mp_obj_t ui_wait_callback, uint32_t current,
+                        uint32_t total) {
+  if (mp_obj_is_callable(ui_wait_callback)) {
+    mp_call_function_2_protected(ui_wait_callback, mp_obj_new_int(current),
+                                 mp_obj_new_int(total));
+  }
+}
+
 /// def consteq(sec: bytes, pub: bytes) -> bool:
 ///     """
 ///     Compares the private information in `sec` with public, user-provided
@@ -123,7 +131,10 @@ STATIC mp_obj_t mod_trezorutils_halt(size_t n_args, const mp_obj_t *args) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorutils_halt_obj, 0, 1,
                                            mod_trezorutils_halt);
 
-/// def firmware_hash(challenge: bytes | None = None) -> bytes:
+/// def firmware_hash(
+///     challenge: bytes | None = None,
+///     callback: Callable[[int, int], None] | None = None,
+/// ) -> bytes:
 ///     """
 ///     Computes the Blake2s hash of the firmware with an optional challenge as
 ///     the key.
@@ -144,6 +155,12 @@ STATIC mp_obj_t mod_trezorutils_firmware_hash(size_t n_args,
     blake2s_Init(&ctx, BLAKE2S_DIGEST_LENGTH);
   }
 
+  mp_obj_t ui_wait_callback = mp_const_none;
+  if (n_args > 1 && args[1] != mp_const_none) {
+    ui_wait_callback = args[1];
+  }
+
+  ui_progress(ui_wait_callback, 0, FIRMWARE_SECTORS_COUNT);
   for (int i = 0; i < FIRMWARE_SECTORS_COUNT; i++) {
     uint8_t sector = FIRMWARE_SECTORS[i];
     uint32_t size = flash_sector_size(sector);
@@ -152,6 +169,7 @@ STATIC mp_obj_t mod_trezorutils_firmware_hash(size_t n_args,
       mp_raise_msg(&mp_type_RuntimeError, "Failed to read firmware.");
     }
     blake2s_Update(&ctx, data, size);
+    ui_progress(ui_wait_callback, i + 1, FIRMWARE_SECTORS_COUNT);
   }
 
   vstr_t vstr = {0};
@@ -164,7 +182,7 @@ STATIC mp_obj_t mod_trezorutils_firmware_hash(size_t n_args,
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorutils_firmware_hash_obj, 0,
-                                           1, mod_trezorutils_firmware_hash);
+                                           2, mod_trezorutils_firmware_hash);
 
 /// def firmware_vendor() -> str:
 ///     """
