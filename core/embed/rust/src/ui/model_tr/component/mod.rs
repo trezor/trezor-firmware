@@ -6,7 +6,9 @@ mod pin;
 
 use super::theme;
 
-pub use button::{Button, ButtonContent, ButtonMsg, ButtonPos, ButtonStyle, ButtonStyleSheet};
+pub use button::{
+    Button, ButtonContent, ButtonMsg, ButtonPos, ButtonStyle, ButtonStyleSheet, DoublePressHandler,
+};
 pub use dialog::{Dialog, DialogMsg};
 pub use frame::Frame;
 pub use page::ButtonPage;

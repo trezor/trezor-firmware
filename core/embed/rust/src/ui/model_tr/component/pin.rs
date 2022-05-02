@@ -4,7 +4,7 @@ use crate::ui::{
     geometry::{Point, Rect},
 };
 
-use super::{theme, Button, ButtonMsg, ButtonPos};
+use super::{theme, Button, ButtonMsg, ButtonPos, DoublePressHandler};
 use heapless::String;
 
 pub enum PinPageMsg {
@@ -15,6 +15,7 @@ pub enum PinPageMsg {
 const MAX_LENGTH: usize = 50;
 
 pub struct PinPage {
+    double_press_handler: DoublePressHandler,
     pad: Pad,
     prev: Button<&'static str>,
     next: Button<&'static str>,
@@ -31,6 +32,7 @@ pub struct PinPage {
 impl PinPage {
     pub fn new() -> Self {
         Self {
+            double_press_handler: DoublePressHandler::new(),
             pad: Pad::with_background(theme::BG),
             prev: Button::with_text(ButtonPos::Left, "BACK", theme::button_default()),
             next: Button::with_text(ButtonPos::Right, "NEXT", theme::button_default()),
@@ -161,6 +163,18 @@ impl Component for PinPage {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        // Possibly replacing or skipping an event because of double-press aggregation
+        let event = self.double_press_handler.possibly_replace_event(event)?;
+
+        // In case of starting double-press, changing all other buttons to released
+        // state
+        if self
+            .double_press_handler
+            .is_event_double_press_pressed(event)
+        {
+            self.set_buttons_as_released(ctx);
+        }
+
         // Each event should cancel the visible PIN
         self.show_real_pin = false;
 
@@ -197,7 +211,6 @@ impl Component for PinPage {
                 let digit_as_str: String<1> = String::from(self.pin_counter);
                 self.pin_buffer.push_str(&digit_as_str).unwrap();
                 self.update_situation();
-                self.set_buttons_as_released(ctx);
                 return None;
             }
         } else if self.pin_counter == 10 {
@@ -205,7 +218,6 @@ impl Component for PinPage {
                 // Clicked SHOW. Showing the current PIN.
                 self.show_real_pin = true;
                 self.update_situation();
-                self.set_buttons_as_released(ctx);
                 return None;
             }
         } else if self.pin_counter == 11 {
@@ -213,7 +225,6 @@ impl Component for PinPage {
                 // Clicked DEL. Deleting the last digit.
                 self.delete_last_digit();
                 self.update_situation();
-                self.set_buttons_as_released(ctx);
                 return None;
             }
         }
