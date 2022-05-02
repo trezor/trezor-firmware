@@ -22,6 +22,7 @@
 #include <stdint.h>
 #include "blake2s.h"
 #include "flash.h"
+#include "layout.h"
 #include "sha2.h"
 
 #define FLASH_OPTION_BYTES_1 (*(const uint64_t *)0x1FFFC000)
@@ -86,6 +87,7 @@ int memory_bootloader_hash(uint8_t *hash) {
 }
 
 int memory_firmware_hash(const uint8_t *challenge, uint32_t challenge_size,
+                         void (*progress_callback)(uint32_t, uint32_t),
                          uint8_t hash[BLAKE2S_DIGEST_LENGTH]) {
   BLAKE2S_CTX ctx;
   if (challenge_size != 0) {
@@ -104,6 +106,10 @@ int memory_firmware_hash(const uint8_t *challenge, uint32_t challenge_size,
       return 1;
     }
     blake2s_Update(&ctx, data, size);
+    if (progress_callback != NULL) {
+      progress_callback(i - FLASH_CODE_SECTOR_FIRST,
+                        FLASH_CODE_SECTOR_LAST - FLASH_CODE_SECTOR_FIRST);
+    }
   }
 
   return blake2s_Final(&ctx, hash, BLAKE2S_DIGEST_LENGTH);

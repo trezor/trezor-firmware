@@ -537,14 +537,20 @@ void fsm_msgGetNextU2FCounter() {
   layoutHome();
 }
 
+static void progress_callback(uint32_t iter, uint32_t total) {
+  layoutProgress(_("Please wait"), 1000 * iter / total);
+}
+
 void fsm_msgGetFirmwareHash(const GetFirmwareHash *msg) {
   RESP_INIT(FirmwareHash);
+  layoutProgressSwipe(_("Please wait"), 0);
   if (memory_firmware_hash(msg->challenge.bytes, msg->challenge.size,
-                           resp->hash.bytes) != 0) {
+                           progress_callback, resp->hash.bytes) != 0) {
     fsm_sendFailure(FailureType_Failure_FirmwareError, NULL);
     return;
   }
 
   resp->hash.size = sizeof(resp->hash.bytes);
   msg_write(MessageType_MessageType_FirmwareHash, resp);
+  layoutHome();
 }
