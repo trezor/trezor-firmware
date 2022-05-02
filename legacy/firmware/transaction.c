@@ -620,17 +620,27 @@ uint32_t tx_serialize_script(uint32_t size, const uint8_t *data, uint8_t *out) {
 }
 
 uint32_t tx_serialize_header(TxStruct *tx, uint8_t *out) {
-  int r = 4;
+  int r = 0;
 #if !BITCOIN_ONLY
   if (tx->is_zcashlike && tx->version >= 3) {
     uint32_t ver = tx->version | TX_OVERWINTERED;
-    memcpy(out, &ver, 4);
-    memcpy(out + 4, &(tx->version_group_id), 4);
+    memcpy(out + r, &ver, 4);
     r += 4;
+    memcpy(out + r, &(tx->version_group_id), 4);
+    r += 4;
+    if (tx->version == 5) {
+      memcpy(out + r, &(tx->branch_id), 4);
+      r += 4;
+      memcpy(out + r, &(tx->lock_time), 4);
+      r += 4;
+      memcpy(out + r, &(tx->expiry), 4);
+      r += 4;
+    }
   } else
 #endif
   {
-    memcpy(out, &(tx->version), 4);
+    memcpy(out + r, &(tx->version), 4);
+    r += 4;
 #if !BITCOIN_ONLY
     if (tx->timestamp) {
       memcpy(out + r, &(tx->timestamp), 4);
@@ -801,22 +811,42 @@ uint32_t tx_serialize_middle_hash(TxStruct *tx) {
 }
 
 uint32_t tx_serialize_footer(TxStruct *tx, uint8_t *out) {
-  memcpy(out, &(tx->lock_time), 4);
+  uint32_t r = 0;
 #if !BITCOIN_ONLY
-  if (tx->is_zcashlike && tx->version == 4) {
-    memcpy(out + 4, &(tx->expiry), 4);
-    memzero(out + 8, 8);  // valueBalance
-    out[16] = 0x00;       // nShieldedSpend
-    out[17] = 0x00;       // nShieldedOutput
-    out[18] = 0x00;       // nJoinSplit
-    return 19;
-  }
-  if (tx->is_decred) {
-    memcpy(out + 4, &(tx->expiry), 4);
-    return 8;
-  }
+  if (tx->is_zcashlike) {
+    if (tx->version == 4) {
+      memcpy(out, &(tx->lock_time), 4);
+      r += 4;
+      memcpy(out + r, &(tx->expiry), 4);
+      r += 4;
+      memzero(out + r, 8);  // valueBalance
+      r += 8;
+      out[r] = 0x00;  // nShieldedSpend
+      r += 1;
+      out[r] = 0x00;  // nShieldedOutput
+      r += 1;
+      out[r] = 0x00;  // nJoinSplit
+      r += 1;
+    } else if (tx->version == 5) {
+      out[r] = 0x00;  // nSpendsSapling
+      r += 1;
+      out[r] = 0x00;  // nOutputsSapling
+      r += 1;
+      out[r] = 0x00;  // nActionsOrchard
+      r += 1;
+    }
+  } else if (tx->is_decred) {
+    memcpy(out, &(tx->lock_time), 4);
+    r += 4;
+    memcpy(out + r, &(tx->expiry), 4);
+    r += 4;
+  } else
 #endif
-  return 4;
+  {
+    memcpy(out, &(tx->lock_time), 4);
+    r += 4;
+  }
+  return r;
 }
 
 uint32_t tx_serialize_footer_hash(TxStruct *tx) {
@@ -913,13 +943,15 @@ uint32_t tx_serialize_extra_data_hash(TxStruct *tx, const uint8_t *data,
 
 void tx_init(TxStruct *tx, uint32_t inputs_len, uint32_t outputs_len,
              uint32_t version, uint32_t lock_time, uint32_t expiry,
-             uint32_t extra_data_len, HasherType hasher_sign, bool is_zcashlike,
+             uint32_t branch_id, uint32_t extra_data_len,
+             HasherType hasher_sign, bool is_zcashlike,
              uint32_t version_group_id, uint32_t timestamp) {
   tx->inputs_len = inputs_len;
   tx->outputs_len = outputs_len;
   tx->version = version;
   tx->lock_time = lock_time;
   tx->expiry = expiry;
+  tx->branch_id = branch_id;
   tx->have_inputs = 0;
   tx->have_outputs = 0;
   tx->extra_data_len = extra_data_len;

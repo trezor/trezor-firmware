@@ -49,7 +49,7 @@ TXHASH_4b6cec = bytes.fromhex(
 VERSION_GROUP_ID = 0x26A7270A
 BRANCH_ID = 0xC2D6D0B4
 
-pytestmark = [pytest.mark.altcoin, pytest.mark.zcash, pytest.mark.skip_t1]
+pytestmark = [pytest.mark.altcoin, pytest.mark.zcash]
 
 
 def test_version_group_id_missing(client: Client):
@@ -271,6 +271,7 @@ def test_one_two(client: Client):
         )
 
 
+@pytest.mark.skip_t1
 def test_external_presigned(client: Client):
     inp1 = messages.TxInputType(
         # tmQoJ3PTXgQLaRRZZYT6xk8XtjRbr2kCqwu

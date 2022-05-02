@@ -116,6 +116,7 @@ typedef struct {
   uint32_t timestamp;
 #if !BITCOIN_ONLY
   uint32_t branch_id;
+  uint8_t hash_header[32];
 #endif
   Hasher hasher_prevouts;
   Hasher hasher_amounts;
@@ -874,7 +875,7 @@ static bool tx_info_init(TxInfo *tx_info, uint32_t inputs_count,
       return false;
     }
 
-    if (tx_info->version != 4) {
+    if (tx_info->version != 4 && tx_info->version != 5) {
       fsm_sendFailure(FailureType_Failure_DataError,
                       _("Unsupported transaction version."));
       signing_abort();
@@ -891,13 +892,27 @@ static bool tx_info_init(TxInfo *tx_info, uint32_t inputs_count,
 
 #if !BITCOIN_ONLY
   if (coin->overwintered) {
-    // ZIP-243
-    hasher_InitParam(&tx_info->hasher_prevouts, HASHER_BLAKE2B_PERSONAL,
-                     "ZcashPrevoutHash", 16);
-    hasher_InitParam(&tx_info->hasher_sequences, HASHER_BLAKE2B_PERSONAL,
-                     "ZcashSequencHash", 16);
-    hasher_InitParam(&tx_info->hasher_outputs, HASHER_BLAKE2B_PERSONAL,
-                     "ZcashOutputsHash", 16);
+    if (tx_info->version == 5) {
+      // ZIP-244
+      hasher_InitParam(&tx_info->hasher_prevouts, HASHER_BLAKE2B_PERSONAL,
+                       "ZTxIdPrevoutHash", 16);
+      hasher_InitParam(&tx_info->hasher_amounts, HASHER_BLAKE2B_PERSONAL,
+                       "ZTxTrAmountsHash", 16);
+      hasher_InitParam(&tx_info->hasher_scriptpubkeys, HASHER_BLAKE2B_PERSONAL,
+                       "ZTxTrScriptsHash", 16);
+      hasher_InitParam(&tx_info->hasher_sequences, HASHER_BLAKE2B_PERSONAL,
+                       "ZTxIdSequencHash", 16);
+      hasher_InitParam(&tx_info->hasher_outputs, HASHER_BLAKE2B_PERSONAL,
+                       "ZTxIdOutputsHash", 16);
+    } else {
+      // ZIP-243
+      hasher_InitParam(&tx_info->hasher_prevouts, HASHER_BLAKE2B_PERSONAL,
+                       "ZcashPrevoutHash", 16);
+      hasher_InitParam(&tx_info->hasher_sequences, HASHER_BLAKE2B_PERSONAL,
+                       "ZcashSequencHash", 16);
+      hasher_InitParam(&tx_info->hasher_outputs, HASHER_BLAKE2B_PERSONAL,
+                       "ZcashOutputsHash", 16);
+    }
   } else
 #endif
   {
@@ -969,8 +984,13 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
 
   next_legacy_input = 0xffffffff;
 
+  uint32_t branch_id = 0;
+#if !BITCOIN_ONLY
+  branch_id = info.branch_id;
+#endif
+
   tx_init(&to, info.inputs_count, info.outputs_count, info.version,
-          info.lock_time, info.expiry, 0, coin->curve->hasher_sign,
+          info.lock_time, info.expiry, branch_id, 0, coin->curve->hasher_sign,
           coin->overwintered, info.version_group_id, info.timestamp);
 
 #if !BITCOIN_ONLY
@@ -979,7 +999,7 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
     to.is_decred = true;
 
     tx_init(&ti, info.inputs_count, info.outputs_count, info.version,
-            info.lock_time, info.expiry, 0, coin->curve->hasher_sign,
+            info.lock_time, info.expiry, branch_id, 0, coin->curve->hasher_sign,
             coin->overwintered, info.version_group_id, info.timestamp);
     ti.version |= (DECRED_SERIALIZE_NO_WITNESS << 16);
     ti.is_decred = true;
@@ -1301,6 +1321,29 @@ static bool tx_info_add_output(TxInfo *tx_info,
   return true;
 }
 
+#if !BITCOIN_ONLY
+static void txinfo_fill_zip244_header_hash(TxInfo *tx_info) {
+  // `T.1: header_digest` field.
+  // https://zips.z.cash/zip-0244#t-1-header-digest
+  Hasher hasher = {0};
+  hasher_InitParam(&hasher, HASHER_BLAKE2B_PERSONAL, "ZTxIdHeadersHash", 16);
+
+  // T.1a: version (4-byte little-endian version identifier including
+  // overwintered flag)
+  uint32_t ver = tx_info->version | TX_OVERWINTERED;
+  hasher_Update(&hasher, (const uint8_t *)&ver, 4);
+  // T.1b: version_group_id (4-byte little-endian version group identifier)
+  hasher_Update(&hasher, (const uint8_t *)&tx_info->version_group_id, 4);
+  // T.1c: consensus_branch_id (4-byte little-endian consensus branch id)
+  hasher_Update(&hasher, (const uint8_t *)&tx_info->branch_id, 4);
+  // T.1d: lock_time (4-byte little-endian nLockTime value)
+  hasher_Update(&hasher, (const uint8_t *)&tx_info->lock_time, 4);
+  // T.1e: expiry_height (4-byte little-endian block height)
+  hasher_Update(&hasher, (const uint8_t *)&tx_info->expiry, 4);
+  hasher_Final(&hasher, tx_info->hash_header);
+}
+#endif
+
 static void tx_info_finish(TxInfo *tx_info) {
   hasher_Final(&tx_info->hasher_prevouts, tx_info->hash_prevouts);
   hasher_Final(&tx_info->hasher_amounts, tx_info->hash_amounts);
@@ -1323,6 +1366,12 @@ static void tx_info_finish(TxInfo *tx_info) {
     memcpy(tx_info->hash_outputs143, tx_info->hash_outputs,
            sizeof(tx_info->hash_outputs));
   }
+
+#if !BITCOIN_ONLY
+  if (coin->overwintered && tx_info->version == 5) {
+    txinfo_fill_zip244_header_hash(tx_info);
+  }
+#endif
 }
 
 static bool signing_add_input(TxInputType *txinput) {
@@ -1918,6 +1967,7 @@ static void signing_hash_bip341(const TxInfo *tx_info, uint32_t i,
 static void signing_hash_zip243(const TxInfo *tx_info,
                                 const TxInputType *txinput, uint8_t *hash) {
   uint32_t hash_type = signing_hash_type(txinput);
+  const uint8_t null_bytes[32] = {0};
   uint8_t personal[16] = {0};
   memcpy(personal, "ZcashSigHash", 12);
   memcpy(personal + 12, &tx_info->branch_id, 4);
@@ -1938,18 +1988,17 @@ static void signing_hash_zip243(const TxInfo *tx_info,
   // 5. hashOutputs
   hasher_Update(&hasher_preimage, tx_info->hash_outputs, 32);
   // 6. hashJoinSplits
-  hasher_Update(&hasher_preimage, (const uint8_t *)"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 32);
+  hasher_Update(&hasher_preimage, null_bytes, 32);
   // 7. hashShieldedSpends
-  hasher_Update(&hasher_preimage, (const uint8_t *)"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 32);
+  hasher_Update(&hasher_preimage, null_bytes, 32);
   // 8. hashShieldedOutputs
-  hasher_Update(&hasher_preimage, (const uint8_t *)"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 32);
+  hasher_Update(&hasher_preimage, null_bytes, 32);
   // 9. nLockTime
   hasher_Update(&hasher_preimage, (const uint8_t *)&tx_info->lock_time, 4);
   // 10. expiryHeight
   hasher_Update(&hasher_preimage, (const uint8_t *)&tx_info->expiry, 4);
   // 11. valueBalance
-  hasher_Update(&hasher_preimage,
-                (const uint8_t *)"\x00\x00\x00\x00\x00\x00\x00\x00", 8);
+  hasher_Update(&hasher_preimage, null_bytes, 8);
   // 12. nHashType
   hasher_Update(&hasher_preimage, (const uint8_t *)&hash_type, 4);
   // 13a. outpoint
@@ -1963,6 +2012,80 @@ static void signing_hash_zip243(const TxInfo *tx_info,
   tx_sequence_hash(&hasher_preimage, txinput);
 
   hasher_Final(&hasher_preimage, hash);
+}
+#endif
+
+#if !BITCOIN_ONLY
+static void signing_hash_zip244(const TxInfo *tx_info,
+                                const TxInputType *txinput, uint8_t *hash) {
+  Hasher hasher = {0};
+
+  // `S.2g: txin_sig_digest` field for signature digest computation.
+  // https://zips.z.cash/zip-0244#s-2g-txin-sig-digest
+  uint8_t txin_sig_digest[32] = {0};
+  hasher_InitParam(&hasher, HASHER_BLAKE2B_PERSONAL, "Zcash___TxInHash", 16);
+  // S.2g.i: prevout (field encoding)
+  tx_prevout_hash(&hasher, txinput);
+  // S.2g.ii: value (8-byte signed little-endian)
+  hasher_Update(&hasher, (const uint8_t *)&txinput->amount, 8);
+  // S.2g.iii: scriptPubKey (field encoding)
+  tx_script_hash(&hasher, txinput->script_pubkey.size,
+                 txinput->script_pubkey.bytes);
+  // S.2g.iv: nSequence (4-byte unsigned little-endian)
+  hasher_Update(&hasher, (const uint8_t *)&txinput->sequence, 4);
+  hasher_Final(&hasher, txin_sig_digest);
+
+  // `S.2: transparent_sig_digest` field for signature digest computation.
+  // https://zips.z.cash/zip-0244#s-2-transparent-sig-digest
+  uint8_t transparent_sig_digest[32] = {0};
+  hasher_InitParam(&hasher, HASHER_BLAKE2B_PERSONAL, "ZTxIdTranspaHash", 16);
+  uint32_t hash_type = signing_hash_type(txinput);
+  // S.2a: hash_type (1 byte)
+  hasher_Update(&hasher, (const uint8_t *)&hash_type, 1);
+  // S.2b: prevouts_sig_digest (32-byte hash)
+  hasher_Update(&hasher, tx_info->hash_prevouts,
+                sizeof(tx_info->hash_prevouts));
+  // S.2c: amounts_sig_digest (32-byte hash)
+  hasher_Update(&hasher, tx_info->hash_amounts, sizeof(tx_info->hash_amounts));
+  // S.2d: scriptpubkeys_sig_digest (32-byte hash)
+  hasher_Update(&hasher, tx_info->hash_scriptpubkeys,
+                sizeof(tx_info->hash_scriptpubkeys));
+  // S.2e: sequence_sig_digest (32-byte hash)
+  hasher_Update(&hasher, tx_info->hash_sequences,
+                sizeof(tx_info->hash_sequences));
+  // S.2f: outputs_sig_digest (32-byte hash)
+  hasher_Update(&hasher, tx_info->hash_outputs, sizeof(tx_info->hash_outputs));
+  // S.2g: txin_sig_digest (32-byte hash)
+  hasher_Update(&hasher, txin_sig_digest, sizeof(txin_sig_digest));
+  hasher_Final(&hasher, transparent_sig_digest);
+
+  // `S.3: sapling_digest` field. Empty Sapling bundle.
+  uint8_t sapling_digest[32] = {0};
+  hasher_InitParam(&hasher, HASHER_BLAKE2B_PERSONAL, "ZTxIdSaplingHash", 16);
+  hasher_Final(&hasher, sapling_digest);
+
+  // `S.4: orchard_digest` field. Empty Orchard bundle.
+  uint8_t orchard_digest[32] = {0};
+  hasher_InitParam(&hasher, HASHER_BLAKE2B_PERSONAL, "ZTxIdOrchardHash", 16);
+  hasher_Final(&hasher, orchard_digest);
+
+  // Final transaction signature digest.
+  // https://zips.z.cash/zip-0244#id13
+  uint8_t personal[16] = {0};
+  memcpy(personal, "ZcashTxHash_", 12);
+  memcpy(personal + 12, &tx_info->branch_id, 4);
+  hasher_InitParam(&hasher, HASHER_BLAKE2B_PERSONAL, personal,
+                   sizeof(personal));
+  // S.1: header_digest (32-byte hash output)
+  hasher_Update(&hasher, tx_info->hash_header, sizeof(tx_info->hash_header));
+  // S.2: transparent_sig_digest (32-byte hash output)
+  hasher_Update(&hasher, transparent_sig_digest,
+                sizeof(transparent_sig_digest));
+  // S.3: sapling_digest (32-byte hash output)
+  hasher_Update(&hasher, sapling_digest, sizeof(sapling_digest));
+  // S.4: orchard_digest (32-byte hash output)
+  hasher_Update(&hasher, orchard_digest, sizeof(orchard_digest));
+  hasher_Final(&hasher, hash);
 }
 #endif
 
@@ -2067,6 +2190,11 @@ static void phase1_finish(void) {
     // trust the amounts and scriptPubKeys, because if an invalid value is
     // provided then all issued signatures will be invalid.
     phase2_request_next_input();
+#if !BITCOIN_ONLY
+  } else if (coin->overwintered && info.version == 5) {
+    // ZIP-244 transactions are treated same as Taproot.
+    phase2_request_next_input();
+#endif
   } else {
     // There are internal non-Taproot inputs. We need to verify all inputs,
     // because we can't trust any amounts or scriptPubKeys. If we did, then an
@@ -2478,6 +2606,15 @@ void signing_txack(TransactionType *tx) {
       }
 
       if (tx->inputs[0].has_orig_hash) {
+#if !BITCOIN_ONLY
+        if (coin->overwintered && info.version != 4) {
+          fsm_sendFailure(FailureType_Failure_ProcessError,
+                          _("Replacement transactions are not supported."));
+          signing_abort();
+          return;
+        }
+#endif
+
         memcpy(&input, &tx->inputs[0], sizeof(input));
         phase1_request_orig_input();
       } else {
@@ -2510,13 +2647,14 @@ void signing_txack(TransactionType *tx) {
 
       // Initialize computation of original legacy digest.
       tx_init(&ti, tx->inputs_cnt, tx->outputs_cnt, tx->version, tx->lock_time,
-              tx->expiry, 0, coin->curve->hasher_sign, coin->overwintered,
-              tx->version_group_id, tx->timestamp);
+              tx->expiry, tx->branch_id, 0, coin->curve->hasher_sign,
+              coin->overwintered, tx->version_group_id, tx->timestamp);
 
       // Initialize computation of original TXID.
       tx_init(&tp, tx->inputs_cnt, tx->outputs_cnt, tx->version, tx->lock_time,
-              tx->expiry, tx->extra_data_len, coin->curve->hasher_sign,
-              coin->overwintered, tx->version_group_id, tx->timestamp);
+              tx->expiry, tx->branch_id, tx->extra_data_len,
+              coin->curve->hasher_sign, coin->overwintered,
+              tx->version_group_id, tx->timestamp);
 
       phase1_request_orig_input();
       return;
@@ -2676,8 +2814,9 @@ void signing_txack(TransactionType *tx) {
         return;
       }
       tx_init(&tp, tx->inputs_cnt, tx->outputs_cnt, tx->version, tx->lock_time,
-              tx->expiry, tx->extra_data_len, coin->curve->hasher_sign,
-              coin->overwintered, tx->version_group_id, tx->timestamp);
+              tx->expiry, tx->branch_id, tx->extra_data_len,
+              coin->curve->hasher_sign, coin->overwintered,
+              tx->version_group_id, tx->timestamp);
 #if !BITCOIN_ONLY
       if (coin->decred) {
         tp.version |= (DECRED_SERIALIZE_NO_WITNESS << 16);
@@ -2798,8 +2937,9 @@ void signing_txack(TransactionType *tx) {
                  PROGRESS_PRECISION);
       if (idx2 == 0) {
         tx_init(&ti, info.inputs_count, info.outputs_count, info.version,
-                info.lock_time, info.expiry, 0, coin->curve->hasher_sign,
-                coin->overwintered, info.version_group_id, info.timestamp);
+                info.lock_time, info.expiry, tx->branch_id, 0,
+                coin->curve->hasher_sign, coin->overwintered,
+                info.version_group_id, info.timestamp);
         hasher_Reset(&hasher_check);
       }
       // check inputs are the same as those in phase 1
@@ -2928,14 +3068,23 @@ void signing_txack(TransactionType *tx) {
         uint8_t hash[32] = {0};
 #if !BITCOIN_ONLY
         if (coin->overwintered) {
-          if (info.version != 4) {
+          if (info.version == 4) {
+            signing_hash_zip243(&info, &tx->inputs[0], hash);
+          } else if (info.version == 5) {
+            if (!fill_input_script_pubkey(coin, &root, &tx->inputs[0])) {
+              fsm_sendFailure(FailureType_Failure_ProcessError,
+                              _("Failed to derive scriptPubKey"));
+              signing_abort();
+              return;
+            }
+            signing_hash_zip244(&info, &tx->inputs[0], hash);
+          } else {
             fsm_sendFailure(
                 FailureType_Failure_DataError,
                 _("Unsupported version for overwintered transaction"));
             signing_abort();
             return;
           }
-          signing_hash_zip243(&info, &tx->inputs[0], hash);
         } else
 #endif
         {
@@ -3059,15 +3208,17 @@ void signing_txack(TransactionType *tx) {
       if (idx1 == 0) {
         // witness
         tx_init(&to, info.inputs_count, info.outputs_count, info.version,
-                info.lock_time, info.expiry, 0, coin->curve->hasher_sign,
-                coin->overwintered, info.version_group_id, info.timestamp);
+                info.lock_time, info.expiry, tx->branch_id, 0,
+                coin->curve->hasher_sign, coin->overwintered,
+                info.version_group_id, info.timestamp);
         to.is_decred = true;
       }
 
       // witness hash
       tx_init(&ti, info.inputs_count, info.outputs_count, info.version,
-              info.lock_time, info.expiry, 0, coin->curve->hasher_sign,
-              coin->overwintered, info.version_group_id, info.timestamp);
+              info.lock_time, info.expiry, tx->branch_id, 0,
+              coin->curve->hasher_sign, coin->overwintered,
+              info.version_group_id, info.timestamp);
       ti.version |= (DECRED_SERIALIZE_WITNESS_SIGNING << 16);
       ti.is_decred = true;
       if (!tx_info_check_input(&info, &tx->inputs[0]) ||

@@ -39,6 +39,7 @@ typedef struct {
   uint32_t timestamp;
   uint32_t lock_time;
   uint32_t expiry;
+  uint32_t branch_id;
   bool is_segwit;
   bool is_decred;
   bool is_zcashlike;
@@ -97,7 +98,8 @@ uint32_t tx_serialize_decred_witness(TxStruct *tx, const TxInputType *input,
 
 void tx_init(TxStruct *tx, uint32_t inputs_len, uint32_t outputs_len,
              uint32_t version, uint32_t lock_time, uint32_t expiry,
-             uint32_t extra_data_len, HasherType hasher_sign, bool is_zcashlike,
+             uint32_t branch_id, uint32_t extra_data_len,
+             HasherType hasher_sign, bool is_zcashlike,
              uint32_t version_group_id, uint32_t timestamp);
 uint32_t tx_serialize_header_hash(TxStruct *tx);
 uint32_t tx_serialize_input_hash(TxStruct *tx, const TxInputType *input);
