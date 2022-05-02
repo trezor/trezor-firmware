@@ -13,7 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Compress firmware verification coordinates to be able link bootloader into preallocated space.  [#1884]
 
 ### Security
-- Erase storage when downgrading below fix_version.  
+- Erase storage when downgrading below fix_version.
 - Avoid accidental build with broken stack protector  [#1642]
 
 
