@@ -82,6 +82,8 @@ def find_message_handler_module(msg_type: int) -> str:
         return "apps.misc.cipher_key_value"
     if msg_type == MessageType.GetFirmwareHash:
         return "apps.misc.get_firmware_hash"
+    if msg_type == MessageType.GetFirmware:
+        return "apps.misc.get_firmware"
 
     if not utils.BITCOIN_ONLY:
         if msg_type == MessageType.SetU2FCounter:

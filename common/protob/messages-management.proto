@@ -253,6 +253,28 @@ message FirmwareHash {
 }
 
 /**
+ * Request: get firmware image. The firmware will send all chunks in sequence.
+ * @start
+ * @next FirmwareChunk
+ */
+message GetFirmware {}
+
+/**
+ * Response: firmware chunk.
+ * @next FirmwareChunkAck
+ */
+message FirmwareChunk {
+    required bytes chunk = 1;
+}
+
+/**
+ * Request: acknowledge firmware chunk.
+ * @next FirmwareChunk
+ * @next Success
+ */
+message FirmwareChunkAck {}
+
+/**
  * Request: Request device to wipe all sensitive data and settings
  * @start
  * @next Success
