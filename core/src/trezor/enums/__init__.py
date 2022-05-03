@@ -60,6 +60,9 @@ if TYPE_CHECKING:
         RebootToBootloader = 87
         GetFirmwareHash = 88
         FirmwareHash = 89
+        GetFirmware = 90
+        FirmwareChunk = 91
+        FirmwareChunkAck = 92
         SetU2FCounter = 63
         GetNextU2FCounter = 80
         NextU2FCounter = 81
