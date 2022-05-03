@@ -4,7 +4,7 @@ use crate::ui::{
     geometry::{Point, Rect},
 };
 
-use super::{theme, Button, ButtonMsg, ButtonPos, DoublePressHandler};
+use super::{theme, BothButtonPressHandler, Button, ButtonMsg, ButtonPos};
 use heapless::String;
 
 pub enum PinPageMsg {
@@ -15,7 +15,7 @@ pub enum PinPageMsg {
 const MAX_LENGTH: usize = 50;
 
 pub struct PinPage {
-    double_press_handler: DoublePressHandler,
+    both_button_press: BothButtonPressHandler,
     pad: Pad,
     prev: Button<&'static str>,
     next: Button<&'static str>,
@@ -32,7 +32,7 @@ pub struct PinPage {
 impl PinPage {
     pub fn new() -> Self {
         Self {
-            double_press_handler: DoublePressHandler::new(),
+            both_button_press: BothButtonPressHandler::new(),
             pad: Pad::with_background(theme::BG),
             prev: Button::with_text(ButtonPos::Left, "BACK", theme::button_default()),
             next: Button::with_text(ButtonPos::Right, "NEXT", theme::button_default()),
@@ -133,11 +133,11 @@ impl PinPage {
         &self.pin_buffer
     }
 
-    /// Changing all other button's visual state to "released" state
+    /// Changing all non-middle button's visual state to "released" state
     /// (one of the buttons has a "pressed" state from
-    /// the first press of the double-press)
+    /// the first press of the both-button-press)
     /// NOTE: does not cause any event to the button, it just repaints it
-    fn set_buttons_as_released(&mut self, ctx: &mut EventCtx) {
+    fn set_right_and_left_buttons_as_released(&mut self, ctx: &mut EventCtx) {
         self.prev.set_released(ctx);
         self.next.set_released(ctx);
         self.accept_pin.set_released(ctx);
@@ -163,16 +163,14 @@ impl Component for PinPage {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        // Possibly replacing or skipping an event because of double-press aggregation
-        let event = self.double_press_handler.possibly_replace_event(event)?;
+        // Possibly replacing or skipping an event because of both-button-press
+        // aggregation
+        let event = self.both_button_press.possibly_replace_event(event)?;
 
-        // In case of starting double-press, changing all other buttons to released
+        // In case of both-button-press, changing all other buttons to released
         // state
-        if self
-            .double_press_handler
-            .is_event_double_press_pressed(event)
-        {
-            self.set_buttons_as_released(ctx);
+        if self.both_button_press.are_both_buttons_pressed(event) {
+            self.set_right_and_left_buttons_as_released(ctx);
         }
 
         // Each event should cancel the visible PIN
