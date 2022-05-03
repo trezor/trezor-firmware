@@ -10,14 +10,11 @@ if TYPE_CHECKING:
 
 
 async def get_firmware_hash(ctx: Context, msg: GetFirmwareHash) -> FirmwareHash:
-    render_func = None
-    if not DISABLE_ANIMATION:
-        workflow.close_others()
-        draw_simple_text("Please wait")
-        render_func = _render_progress
+    workflow.close_others()
+    draw_simple_text("Please wait")
 
     try:
-        hash = firmware_hash(msg.challenge, render_func)
+        hash = firmware_hash(msg.challenge, _render_progress)
     except ValueError as e:
         raise wire.DataError(str(e))
 
@@ -25,6 +22,7 @@ async def get_firmware_hash(ctx: Context, msg: GetFirmwareHash) -> FirmwareHash:
 
 
 def _render_progress(progress: int, total: int) -> None:
-    p = 1000 * progress // total
-    ui.display.loader(p, False, 18, ui.WHITE, ui.BG)
-    ui.refresh()
+    if not DISABLE_ANIMATION:
+        p = 1000 * progress // total
+        ui.display.loader(p, False, 18, ui.WHITE, ui.BG)
+        ui.refresh()
