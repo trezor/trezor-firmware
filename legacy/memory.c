@@ -20,6 +20,7 @@
 #include "memory.h"
 #include <libopencm3/stm32/flash.h>
 #include <stdint.h>
+#include <string.h>
 #include "blake2s.h"
 #include "flash.h"
 #include "layout.h"
@@ -113,4 +114,17 @@ int memory_firmware_hash(const uint8_t *challenge, uint32_t challenge_size,
   }
 
   return blake2s_Final(&ctx, hash, BLAKE2S_DIGEST_LENGTH);
+}
+
+int memory_firmware_read(uint8_t *dest, uint8_t sector, uint32_t offset,
+                         uint32_t size) {
+  if (sector < FLASH_CODE_SECTOR_FIRST || sector > FLASH_CODE_SECTOR_LAST) {
+    return 1;
+  }
+  const void *data = flash_get_address(sector, offset, size);
+  if (data == NULL) {
+    return 1;
+  }
+  memcpy(dest, data, size);
+  return 0;
 }
