@@ -52,7 +52,7 @@
      - sig1[64], sig2[64], sig3[64]
      - sigindex1[1], sigindex2[1], sigindex3[1]
    * reserved[415] area is reduced to reserved[220]
- - see signatures.c for more details
+ - see fw_signatures.c for more details
 
  We pad the firmware chunks with zeroes if they are shorted.
 

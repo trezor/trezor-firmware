@@ -18,6 +18,14 @@
  */
 
 bool get_features(Features *resp) {
+  resp->has_fw_vendor = true;
+  const image_header *hdr =
+      (const image_header *)FLASH_PTR(FLASH_FWHEADER_START);
+  if (SIG_OK == signatures_new_ok(hdr, NULL)) {
+    strlcpy(resp->fw_vendor, "SatoshiLabs", sizeof(resp->fw_vendor));
+  } else {
+    strlcpy(resp->fw_vendor, "UNSAFE, DO NOT USE!", sizeof(resp->fw_vendor));
+  }
   resp->has_vendor = true;
   strlcpy(resp->vendor, "trezor.io", sizeof(resp->vendor));
   resp->major_version = VERSION_MAJOR;

@@ -1,7 +1,6 @@
 NAME  = bootloader-unaligned
 
 OBJS += bootloader.o
-OBJS += signatures.o
 OBJS += usb.o
 
 # Overrides from libtrezor.
@@ -10,6 +9,7 @@ CFLAGS += -DFONT_SKIP_FIXED=1
 OBJS += ../buttons.small.o
 OBJS += ../common.small.o
 OBJS += ../flash.small.o
+OBJS += ../fw_signatures.small.o
 OBJS += ../gen/bitmaps.small.o
 OBJS += ../gen/fonts.small.o
 OBJS += ../layout.small.o

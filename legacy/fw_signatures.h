@@ -17,8 +17,8 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __SIGNATURES_H__
-#define __SIGNATURES_H__
+#ifndef __FW_SIGNATURES_H__
+#define __FW_SIGNATURES_H__
 
 #include <stdbool.h>
 #include <stdint.h>

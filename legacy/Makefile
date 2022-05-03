@@ -7,6 +7,7 @@ endif
 OBJS += buttons.o
 OBJS += common.o
 OBJS += flash.o
+OBJS += fw_signatures.o
 OBJS += gen/bitmaps.o
 OBJS += gen/fonts.o
 OBJS += layout.o
