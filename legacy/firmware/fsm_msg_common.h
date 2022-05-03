@@ -562,3 +562,73 @@ void fsm_msgGetFirmwareHash(const GetFirmwareHash *msg) {
   msg_write(MessageType_MessageType_FirmwareHash, resp);
   layoutHome();
 }
+
+static bool in_dump_firmware = false;
+static uint8_t sector = 0;
+static uint32_t sector_offset = 0;
+static uint32_t total_bytes_sent = 0;
+#define FIRMWARE_PROGRESS_TOTAL (128 * 1024 * 7 + 64 * 1024)
+
+void firmware_dump_abort(void) {
+  in_dump_firmware = false;
+  sector = 0;
+  sector_offset = 0;
+  total_bytes_sent = 0;
+}
+
+void send_next_firmware_chunk(void) {
+  if (!in_dump_firmware) {
+    return;
+  }
+  if (sector_offset >= flash_sector_size(sector)) {
+    sector++;
+    sector_offset = 0;
+  }
+  if (sector > FLASH_CODE_SECTOR_LAST) {
+    fsm_sendSuccess(_("Firmware extracted"));
+    layoutHome();
+    firmware_dump_abort();
+    return;
+  }
+  RESP_INIT(FirmwareChunk);
+  if (memory_firmware_read(resp->chunk.bytes, sector, sector_offset,
+                           sizeof(resp->chunk.bytes)) != 0) {
+    fsm_sendFailure(FailureType_Failure_FirmwareError, NULL);
+    firmware_dump_abort();
+    return;
+  }
+  sector_offset += sizeof(resp->chunk.bytes);
+  resp->chunk.size = sizeof(resp->chunk.bytes);
+  total_bytes_sent += sizeof(resp->chunk.bytes);
+  layoutProgress(_("Extracting..."),
+                 1000 * total_bytes_sent / FIRMWARE_PROGRESS_TOTAL);
+  msg_write(MessageType_MessageType_FirmwareChunk, resp);
+}
+
+void fsm_msgGetFirmware(const GetFirmware *msg) {
+  (void)msg;
+  layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                    _("Do you want to"), _("extract firmware?"), NULL,
+                    _("Your seed will"), _("not be revealed."), NULL);
+  if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+    layoutHome();
+    return;
+  }
+
+  layoutProgressSwipe(_("Extracting..."), 0);
+  sector = FLASH_CODE_SECTOR_FIRST;
+  sector_offset = 0;
+  total_bytes_sent = 0;
+  in_dump_firmware = true;
+  send_next_firmware_chunk();
+}
+
+void fsm_msgFirmwareChunkAck(const FirmwareChunkAck *msg) {
+  (void)msg;
+  if (!in_dump_firmware) {
+    fsm_sendFailure(FailureType_Failure_UnexpectedMessage, NULL);
+  } else {
+    send_next_firmware_chunk();
+  }
+}
