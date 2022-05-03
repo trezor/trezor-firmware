@@ -1,3 +1,4 @@
+use core::ops::Deref;
 use crate::ui::{
     component::{Component, Event, EventCtx, Pad},
     display,
@@ -14,7 +15,10 @@ pub enum PinPageMsg {
 
 const MAX_LENGTH: usize = 50;
 
-pub struct PinPage {
+pub struct PinPage<T> {
+    major_prompt: T,
+    minor_prompt: T,
+    allow_cancel: bool,
     both_button_press: BothButtonPressHandler,
     pad: Pad,
     prev: Button<&'static str>,
@@ -29,9 +33,15 @@ pub struct PinPage {
     pin_buffer: String<MAX_LENGTH>,
 }
 
-impl PinPage {
-    pub fn new() -> Self {
+impl<T> PinPage<T>
+where
+    T: Deref<Target = str>,
+{
+    pub fn new(major_prompt: T, minor_prompt: T, allow_cancel: bool) -> Self {
         Self {
+            major_prompt,
+            minor_prompt,
+            allow_cancel,
             both_button_press: BothButtonPressHandler::new(),
             pad: Pad::with_background(theme::BG),
             prev: Button::with_text(ButtonPos::Left, "BACK", theme::button_default()),
@@ -47,13 +57,16 @@ impl PinPage {
         }
     }
 
+    fn render_header(&self) {
+        self.display_text(Point::new(0, 10), &self.major_prompt);
+        self.display_text(Point::new(0, 20), &self.minor_prompt);
+        display::dotted_line(Point::new(0, 25), 128, theme::FG);
+    }
+
     fn update_situation(&mut self) {
         // So that only relevant buttons are visible
         self.pad.clear();
 
-        // TODO: find out why it does not work with a boolean
-        // input argument into this function
-        // (maybe some async?)
         if self.show_real_pin {
             self.reveal_current_pin();
         } else {
@@ -69,60 +82,41 @@ impl PinPage {
         }
     }
 
-    fn show_pin_length(&mut self) {
+    fn show_pin_length(&self) {
         // String::repeat() is not available for heapless::String
         let mut dots: String<50> = String::new();
         for _ in 0..self.pin_buffer.len() {
             dots.push_str("*").unwrap();
         }
-        display::text(
-            Point::new(0, 20),
-            &dots,
-            theme::FONT_BOLD,
-            theme::FG,
-            theme::BG,
-        );
+        self.display_text(Point::new(0, 40), &dots);
     }
 
-    fn reveal_current_pin(&mut self) {
-        display::text(
-            Point::new(0, 20),
-            &self.pin_buffer,
-            theme::FONT_BOLD,
-            theme::FG,
-            theme::BG,
-        );
+    fn reveal_current_pin(&self) {
+        self.display_text(Point::new(0, 40), &self.pin_buffer);
     }
 
-    fn show_reveal_pin_option(&mut self) {
-        display::text(
-            Point::new(5, 62),
-            "Reveal current PIN",
-            theme::FONT_BOLD,
-            theme::FG,
-            theme::BG,
-        );
+    fn show_reveal_pin_option(&self) {
+        self.display_text(Point::new(5, 62), "Reveal current PIN");
     }
 
     fn delete_last_digit(&mut self) {
         self.pin_buffer.pop();
     }
 
-    fn show_delete_last_digit_option(&mut self) {
-        display::text(
-            Point::new(5, 62),
-            "Delete last digit",
-            theme::FONT_BOLD,
-            theme::FG,
-            theme::BG,
-        );
+    fn show_delete_last_digit_option(&self) {
+        self.display_text(Point::new(5, 62), "Delete last digit");
     }
 
-    fn show_current_digit(&mut self) {
+    fn show_current_digit(&self) {
         let digit: String<1> = String::from(self.pin_counter);
+        self.display_text(Point::new(62, 62), &digit);
+    }
+
+    /// Display bold white text on black background
+    fn display_text(&self, baseline: Point, text: &str) {
         display::text(
-            Point::new(62, 62),
-            &digit,
+            baseline,
+            text,
             theme::FONT_BOLD,
             theme::FG,
             theme::BG,
@@ -145,7 +139,10 @@ impl PinPage {
     }
 }
 
-impl Component for PinPage {
+impl<T> Component for PinPage<T>
+where
+    T: Deref<Target = str>,
+{
     type Msg = PinPageMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -199,7 +196,9 @@ impl Component for PinPage {
             }
         } else if let Some(ButtonMsg::Clicked) = self.cancel_pin.event(ctx, event) {
             // Clicked CANCEL. Sending CANCELLED to the client.
-            return Some(PinPageMsg::Cancelled);
+            if self.allow_cancel {
+                return Some(PinPageMsg::Cancelled);
+            }
         }
 
         // MIDDLE button clicks
@@ -232,23 +231,30 @@ impl Component for PinPage {
 
     fn paint(&mut self) {
         self.pad.paint();
+
+        // TOP header
+        self.render_header();
+
+        // MIDDLE panel
         self.update_situation();
 
-        // LEFT side
+        // BOTTOM LEFT side button
         if self.pin_counter > 0 {
             self.prev.paint();
         } else {
             self.accept_pin.paint();
         }
 
-        // RIGHT side
+        // BOTTOM RIGHT side button
         if self.pin_counter < 11 {
             self.next.paint();
         } else {
-            self.cancel_pin.paint();
+            if self.allow_cancel {
+                self.cancel_pin.paint();
+            }
         }
 
-        // MIDDLE
+        // BOTTOM MIDDLE button
         if self.pin_counter < 10 {
             self.ok.paint();
         } else if self.pin_counter == 10 {
@@ -260,7 +266,11 @@ impl Component for PinPage {
 }
 
 #[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for PinPage {
+impl<T> crate::trace::Trace for PinPage<T>
+where
+    T: Deref<Target = str>,
+{
+
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("PinPage");
         t.close();

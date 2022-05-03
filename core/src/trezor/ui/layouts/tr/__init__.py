@@ -269,10 +269,21 @@ async def request_pin_on_device(
 ) -> str:
     await button_request(ctx, "pin_device", code=ButtonRequestType.PinEntry)
 
-    # TODO: implement attempts_remaining and allow_cancel parameters
+    if attempts_remaining is None:
+        subprompt = ""
+    elif attempts_remaining == 1:
+        subprompt = "Last attempt"
+    else:
+        subprompt = f"{attempts_remaining} tries left"
 
     while True:
-        result = await ctx.wait(_RustLayout(trezorui2.request_pin(prompt=prompt)))
+        result = await ctx.wait(
+            _RustLayout(
+                trezorui2.request_pin(
+                    prompt=prompt, subprompt=subprompt, allow_cancel=allow_cancel
+                )
+            )
+        )
         if result is trezorui2.CANCELLED:
             raise wire.PinCancelled
         assert isinstance(result, str)
