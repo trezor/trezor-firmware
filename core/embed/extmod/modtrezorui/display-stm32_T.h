@@ -98,6 +98,8 @@ static uint32_t display_identify(void) {
 }
 
 static void display_reset_state() {}
+void display_trans_start(void) {}
+void display_trans_exec(transition_type_t trans) {}
 
 static void __attribute__((unused)) display_sleep(void) {
   uint32_t id = display_identify();

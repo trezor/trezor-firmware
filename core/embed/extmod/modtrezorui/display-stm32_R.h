@@ -34,12 +34,14 @@
 
 struct {
   uint8_t RAM[DISPLAY_RESY / 8][DISPLAY_RESX];
+  uint8_t RAM_PREP[DISPLAY_RESY / 8][DISPLAY_RESX];
   uint32_t row;
   uint32_t col;
   uint32_t window_x0;
   uint32_t window_x1;
   uint32_t window_y0;
   uint32_t window_y1;
+  bool prep;
 } DISPLAY_STATE;
 
 static void display_set_page_and_col(uint8_t page, uint8_t col) {
@@ -58,7 +60,13 @@ static void display_set_page_and_col(uint8_t page, uint8_t col) {
 }
 
 void display_pixeldata(uint16_t c) {
-  uint8_t data = DISPLAY_STATE.RAM[DISPLAY_STATE.row / 8][DISPLAY_STATE.col];
+  uint8_t data = 0;
+
+  if (DISPLAY_STATE.prep) {
+    data = DISPLAY_STATE.RAM_PREP[DISPLAY_STATE.row / 8][DISPLAY_STATE.col];
+  } else {
+    data = DISPLAY_STATE.RAM[DISPLAY_STATE.row / 8][DISPLAY_STATE.col];
+  }
 
   uint8_t bit = 1 << (DISPLAY_STATE.row % 8);
 
@@ -71,9 +79,15 @@ void display_pixeldata(uint16_t c) {
     data &= ~bit;
   }
 
-  DISPLAY_STATE.RAM[DISPLAY_STATE.row / 8][DISPLAY_STATE.col] = data;
+  if (DISPLAY_STATE.prep) {
+    DISPLAY_STATE.RAM_PREP[DISPLAY_STATE.row / 8][DISPLAY_STATE.col] = data;
+  } else {
+    DISPLAY_STATE.RAM[DISPLAY_STATE.row / 8][DISPLAY_STATE.col] = data;
+  }
 
-  DATA(data);
+  if (!DISPLAY_STATE.prep) {
+    DATA(data);
+  }
 
   DISPLAY_STATE.col++;
 
@@ -87,22 +101,97 @@ void display_pixeldata(uint16_t c) {
       DISPLAY_STATE.row = DISPLAY_STATE.window_y1;
     }
 
-    // set display to start of next line, sets also page, even if it stays on
-    // the same one
-    display_set_page_and_col(DISPLAY_STATE.row / 8, DISPLAY_STATE.col);
+    if (!DISPLAY_STATE.prep) {
+      // set display to start of next line, sets also page, even if it stays on
+      // the same one
+      display_set_page_and_col(DISPLAY_STATE.row / 8, DISPLAY_STATE.col);
+    }
   }
 }
 
 #define PIXELDATA(c) display_pixeldata(c)
 
 static void display_reset_state(void) {
-  memset(DISPLAY_STATE.RAM, 0, sizeof(DISPLAY_STATE.RAM));
-  DISPLAY_STATE.row = 0;
-  DISPLAY_STATE.col = 0;
-  DISPLAY_STATE.window_x0 = 0;
-  DISPLAY_STATE.window_x1 = DISPLAY_RESX - 1;
-  DISPLAY_STATE.window_y0 = 0;
-  DISPLAY_STATE.window_y1 = DISPLAY_RESY - 1;
+  if (!DISPLAY_STATE.prep) {
+    memset(DISPLAY_STATE.RAM, 0, sizeof(DISPLAY_STATE.RAM));
+    memset(DISPLAY_STATE.RAM_PREP, 0, sizeof(DISPLAY_STATE.RAM_PREP));
+    DISPLAY_STATE.row = 0;
+    DISPLAY_STATE.col = 0;
+    DISPLAY_STATE.window_x0 = 0;
+    DISPLAY_STATE.window_x1 = DISPLAY_RESX - 1;
+    DISPLAY_STATE.window_y0 = 0;
+    DISPLAY_STATE.window_y1 = DISPLAY_RESY - 1;
+  }
+}
+
+void display_trans_start(void) {
+  memcpy(DISPLAY_STATE.RAM_PREP, DISPLAY_STATE.RAM, sizeof(DISPLAY_STATE.RAM));
+  DISPLAY_STATE.prep = true;
+}
+
+void display_trans_slide_right(int step, int delay_ms) {
+  int i = 0;
+  while (i <= DISPLAY_RESX) {
+    i += step;
+    for (int y = 0; y < (DISPLAY_RESY / 8); y++) {
+      display_set_page_and_col(y, 0);
+      for (int x = 0; x < DISPLAY_RESX; x++) {
+        if (i >= x) {
+          DATA(DISPLAY_STATE.RAM_PREP[y][x]);
+        } else {
+          DATA(DISPLAY_STATE.RAM[y][x - i]);
+        }
+      }
+    }
+    HAL_Delay(delay_ms);
+  }
+}
+
+void display_trans_slide_left(int step, int delay_ms) {
+  int i = DISPLAY_RESX;
+  while (i > 0) {
+    i -= step;
+    for (int y = 0; y < (DISPLAY_RESY / 8); y++) {
+      display_set_page_and_col(y, 0);
+      for (int x = 0; x < DISPLAY_RESX; x++) {
+        if (i < x) {
+          DATA(DISPLAY_STATE.RAM_PREP[y][x]);
+        } else {
+          DATA(DISPLAY_STATE.RAM[y][DISPLAY_RESX - (i - x)]);
+        }
+      }
+    }
+    HAL_Delay(delay_ms);
+  }
+}
+
+void display_trans_fast(void) {
+  for (int y = 0; y < (DISPLAY_RESY / 8); y++) {
+    display_set_page_and_col(y, 0);
+    for (int x = 0; x < DISPLAY_RESX; x++) {
+      DATA(DISPLAY_STATE.RAM_PREP[y][x]);
+    }
+  }
+}
+
+void display_trans_exec(transition_type_t transition) {
+  DISPLAY_STATE.prep = true;
+
+  switch (transition) {
+    case TRANSITION_SLIDE_RIGHT:
+      display_trans_slide_right(1, 1);
+      break;
+    case TRANSITION_SLIDE_LEFT:
+      display_trans_slide_left(1, 1);
+      break;
+    default:
+    case TRANSITION_FAST:
+      display_trans_fast();
+      break;
+  }
+
+  memcpy(DISPLAY_STATE.RAM, DISPLAY_STATE.RAM_PREP, sizeof(DISPLAY_STATE.RAM));
+  DISPLAY_STATE.prep = false;
 }
 
 static void display_fast_clear(void) {
@@ -144,7 +233,9 @@ void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
     DISPLAY_STATE.row = y0;
     DISPLAY_STATE.col = x0;
 
-    display_set_page_and_col(DISPLAY_STATE.row / 8, DISPLAY_STATE.col);
+    if (!DISPLAY_STATE.prep) {
+      display_set_page_and_col(DISPLAY_STATE.row / 8, DISPLAY_STATE.col);
+    }
   }
 }
 

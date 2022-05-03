@@ -92,6 +92,8 @@ void display_pixeldata(uint16_t c) {
 #define PIXELDATA(c) display_pixeldata(c)
 
 static void display_reset_state() {}
+void display_trans_start(void) {}
+void display_trans_exec(transition_type_t trans) {}
 
 void PIXELDATA_DIRTY() { pixeldata_dirty = true; }
 
