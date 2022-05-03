@@ -26,6 +26,7 @@
 #include "bootloader.h"
 #include "buttons.h"
 #include "ecdsa.h"
+#include "fw_signatures.h"
 #include "layout.h"
 #include "memory.h"
 #include "memzero.h"
@@ -34,7 +35,6 @@
 #include "secbool.h"
 #include "secp256k1.h"
 #include "sha2.h"
-#include "signatures.h"
 #include "usb.h"
 #include "util.h"
 

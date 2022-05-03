@@ -31,6 +31,7 @@
 #include "debug.h"
 #include "ecdsa.h"
 #include "fsm.h"
+#include "fw_signatures.h"
 #include "gettext.h"
 #include "hmac.h"
 #include "layout2.h"
