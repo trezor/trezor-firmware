@@ -183,13 +183,20 @@ async def confirm_total(
     ctx: wire.Context,
     spending: int,
     fee: int,
+    fee_rate: float,
     coin: CoinInfo,
     amount_unit: AmountUnit,
 ) -> None:
+    fee_rate_str: str | None = None
+
+    if fee_rate >= 0:
+        fee_rate_str = f"({fee_rate:.1f} sat/vB)"
+
     await layouts.confirm_total(
         ctx,
         total_amount=format_coin_amount(spending, coin, amount_unit),
         fee_amount=format_coin_amount(fee, coin, amount_unit),
+        fee_rate_amount=fee_rate_str,
     )
 
 

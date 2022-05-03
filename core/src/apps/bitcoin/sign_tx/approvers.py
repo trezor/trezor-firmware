@@ -248,8 +248,9 @@ class BasicApprover(Approver):
 
         total = self.total_in - self.change_out
         spending = total - self.external_in
+        tx_size_vB = self.weight.get_total() / 4
         # fee_threshold = (coin.maxfee per byte * tx size)
-        fee_threshold = (self.coin.maxfee_kb / 1000) * (self.weight.get_total() / 4)
+        fee_threshold = (self.coin.maxfee_kb / 1000) * tx_size_vB
 
         # fee > (coin.maxfee per byte * tx size)
         if fee > fee_threshold:
@@ -316,7 +317,10 @@ class BasicApprover(Approver):
                 )
 
             if not self.external_in:
-                await helpers.confirm_total(total, fee, self.coin, self.amount_unit)
+                fee_rate = fee / tx_size_vB
+                await helpers.confirm_total(
+                    total, fee, fee_rate, self.coin, self.amount_unit
+                )
             else:
                 await helpers.confirm_joint_total(
                     spending, total, self.coin, self.amount_unit
