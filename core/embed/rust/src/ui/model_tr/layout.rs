@@ -5,8 +5,7 @@ use crate::{
     micropython::{buffer::StrBuffer, map::Map, module::Module, obj::Obj, qstr::Qstr},
     ui::{
         component::{
-            base::Component,
-            base::ComponentExt,
+            base::{Component, ComponentExt},
             paginated::{PageMsg, Paginate},
             text::paragraphs::Paragraphs,
             FormattedText,
@@ -38,10 +37,10 @@ where
 }
 
 impl<T> ComponentMsgObj for PinPage<T>
-    where
-        T: Deref<Target = str>,
-    {
-        fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+where
+    T: Deref<Target = str>,
+{
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
             PinPageMsg::Confirmed => self.pin().try_into(),
             PinPageMsg::Cancelled => Ok(CANCELLED.as_obj()),
@@ -103,9 +102,16 @@ extern "C" fn request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> 
         let subprompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_subprompt)?.try_into()?;
         let allow_cancel: Option<bool> =
             kwargs.get(Qstr::MP_QSTR_allow_cancel)?.try_into_option()?;
+        let shuffle: Option<bool> = kwargs.get(Qstr::MP_QSTR_shuffle)?.try_into_option()?;
 
         let obj = LayoutObj::new(
-            PinPage::new(prompt, subprompt, allow_cancel.unwrap_or(true)).into_child(),
+            PinPage::new(
+                prompt,
+                subprompt,
+                allow_cancel.unwrap_or(true),
+                shuffle.unwrap_or(false),
+            )
+            .into_child(),
         )?;
         Ok(obj.into())
     };
@@ -164,6 +170,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     prompt: str,
     ///     subprompt: str | None = None,
     ///     allow_cancel: bool | None = None,
+    ///     shuffle: bool | None = None,
     /// ) -> str | object:
     ///     """Request pin on device."""
     Qstr::MP_QSTR_request_pin => obj_fn_kw!(0, request_pin).as_obj(),

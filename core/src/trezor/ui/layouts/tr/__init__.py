@@ -266,6 +266,7 @@ async def request_pin_on_device(
     prompt: str,
     attempts_remaining: int | None,
     allow_cancel: bool,
+    shuffle: bool = False,
 ) -> str:
     await button_request(ctx, "pin_device", code=ButtonRequestType.PinEntry)
 
@@ -280,7 +281,10 @@ async def request_pin_on_device(
         result = await ctx.wait(
             _RustLayout(
                 trezorui2.request_pin(
-                    prompt=prompt, subprompt=subprompt, allow_cancel=allow_cancel
+                    prompt=prompt,
+                    subprompt=subprompt,
+                    allow_cancel=allow_cancel,
+                    shuffle=shuffle,
                 )
             )
         )

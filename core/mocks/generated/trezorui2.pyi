@@ -49,6 +49,7 @@ def request_pin(
     prompt: str,
     subprompt: str | None = None,
     allow_cancel: bool | None = None,
+    shuffle: bool | None = None,
 ) -> str | object:
     """Request pin on device."""
 
