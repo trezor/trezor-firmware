@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING, Any, Callable, List, Optional, Tuple
 import construct as c
 import ecdsa
 
-from . import cosi, messages
+from . import cosi, exceptions, messages
 from .tools import expect, session
 
 if TYPE_CHECKING:
@@ -523,3 +523,19 @@ def update(
 @expect(messages.FirmwareHash, field="hash", ret_type=bytes)
 def get_hash(client: "TrezorClient", challenge: Optional[bytes]):
     return client.call(messages.GetFirmwareHash(challenge=challenge))
+
+
+@session
+def get_firmware(
+    client: "TrezorClient", progress_update: Callable[[int], Any] = lambda _: None
+) -> bytes:
+    resp = client.call(messages.GetFirmware())
+    result = bytearray()
+    while isinstance(resp, messages.FirmwareChunk):
+        result.extend(resp.chunk)
+        progress_update(len(resp.chunk))
+        resp = client.call(messages.FirmwareChunkAck())
+
+    if not isinstance(resp, messages.Success):
+        raise exceptions.TrezorException(f"Unexpected message {resp}")
+    return bytes(result)
