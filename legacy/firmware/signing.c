@@ -2019,7 +2019,8 @@ static bool signing_confirm_tx(void) {
     }
 
     // last confirmation
-    layoutConfirmTx(coin, amount_unit, total_in, total_out, change_out);
+    layoutConfirmTx(coin, amount_unit, total_in, total_out, change_out,
+                    tx_weight);
     if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
       fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
       signing_abort();

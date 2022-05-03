@@ -503,9 +503,20 @@ static bool formatAmountDifference(const CoinInfo *coin, AmountUnit amount_unit,
                             output_length) != 0;
 }
 
+static bool formatFeeRate(uint64_t fee, uint64_t tx_weight, char *output,
+                          size_t output_length) {
+  // Compute fee rate and modify it in place for `bn_format_uint64` function -
+  // multiply by 10, because we only want to display 1 decimal digit
+  // and then get whole number by leaving it in `uint64_t`.
+  uint64_t fee_rate_multiplied = (fee * 10) / (tx_weight / 4);
+
+  return bn_format_uint64(fee_rate_multiplied, "(", " sat/vB)", 1, 0, false,
+                          output, output_length) != 0;
+}
+
 void layoutConfirmTx(const CoinInfo *coin, AmountUnit amount_unit,
-                     uint64_t total_in, uint64_t total_out,
-                     uint64_t change_out) {
+                     uint64_t total_in, uint64_t total_out, uint64_t change_out,
+                     uint64_t tx_weight) {
   char str_out[32] = {0};
   formatAmountDifference(coin, amount_unit, total_in, change_out, str_out,
                          sizeof(str_out));
@@ -514,9 +525,17 @@ void layoutConfirmTx(const CoinInfo *coin, AmountUnit amount_unit,
   formatAmountDifference(coin, amount_unit, total_in, total_out, str_fee,
                          sizeof(str_fee));
 
+  char str_fee_rate[32] = {0};
+  bool show_fee_rate = total_in >= total_out;
+
+  if (show_fee_rate) {
+    formatFeeRate(total_in - total_out, tx_weight, str_fee_rate,
+                  sizeof(str_fee_rate));
+  }
+
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
-                    _("Really send"), str_out, _("from your wallet?"),
-                    _("Fee included:"), str_fee, NULL);
+                    _("Confirm sending:"), str_out, _("including fee:"),
+                    str_fee, show_fee_rate ? str_fee_rate : NULL, NULL);
 }
 
 void layoutConfirmReplacement(const char *description, uint8_t txid[32]) {
