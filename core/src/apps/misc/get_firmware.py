@@ -23,12 +23,12 @@ async def get_firmware(ctx: Context, _msg: GetFirmware) -> Success:
         action="Do you want to extract device firmware?",
         description="Your seed will not be revealed.",
     )
-    if not utils.DISABLE_ANIMATION:
-        workflow.close_others()
-        draw_simple_text("Please wait")
-
     sector_buffer = bytearray(CHUNK_SIZE)
     packet = FirmwareChunk(chunk=sector_buffer)
+
+    workflow.close_others()
+    draw_simple_text("Please wait")
+
     progress = 0
     _render_progress(progress, PROGRESS_TOTAL)
     for i in range(utils.FIRMWARE_SECTORS_COUNT):
