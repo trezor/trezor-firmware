@@ -38,3 +38,5 @@ Nonce.nonce                             max_size:32
 
 GetFirmwareHash.challenge               max_size:32
 FirmwareHash.hash                       max_size:32
+
+FirmwareChunk.chunk                     max_size:2048
