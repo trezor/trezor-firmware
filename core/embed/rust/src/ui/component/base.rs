@@ -226,6 +226,9 @@ pub enum Event {
     /// Previously requested timer was triggered. This invalidates the timer
     /// token (another timer has to be requested).
     Timer(TimerToken),
+    /// Component has been attached to component tree. This event is sent once
+    /// before any other events.
+    Attach,
     /// Internally-handled event to inform all `Child` wrappers in a sub-tree to
     /// get scheduled for painting.
     RequestPaint,

@@ -1,4 +1,5 @@
 use crate::{
+    time::Duration,
     trezorhal::random,
     ui::{
         component::{Component, Event, EventCtx, Pad},
@@ -26,6 +27,7 @@ const MIDDLE_ROW: i32 = 72;
 const MAX_LENGTH: usize = 50;
 const MAX_VISIBLE_DOTS: usize = 18;
 const MAX_VISIBLE_DIGITS: usize = 18;
+const HOLD_DURATION: Duration = Duration::from_secs(2);
 
 const DIGITS: [&str; 10] = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
@@ -70,8 +72,10 @@ where
             pad: Pad::with_background(theme::BG),
             prev: Button::with_text(ButtonPos::Left, "BACK", theme::button_default()),
             next: Button::with_text(ButtonPos::Right, "NEXT", theme::button_default()),
-            accept_pin: Button::with_text(ButtonPos::Left, "ACCEPT", theme::button_default()),
-            cancel_pin: Button::with_text(ButtonPos::Right, "CANCEL", theme::button_cancel()),
+            accept_pin: Button::with_text(ButtonPos::Left, "ACCEPT", theme::button_default())
+                .with_long_press(HOLD_DURATION),
+            cancel_pin: Button::with_text(ButtonPos::Right, "CANCEL", theme::button_cancel())
+                .with_long_press(HOLD_DURATION),
             ok: Button::with_text(ButtonPos::Middle, "OK", theme::button_default()),
             reveal_pin: Button::with_text(ButtonPos::Middle, "SHOW", theme::button_default()),
             delete_last_digit: Button::with_text(ButtonPos::Middle, "DEL", theme::button_default()),
@@ -273,8 +277,8 @@ where
                 self.update_situation();
                 return None;
             }
-        } else if let Some(ButtonMsg::Clicked) = self.accept_pin.event(ctx, event) {
-            // Clicked ACCEPT. Sending the whole PIN string to the client.
+        } else if let Some(ButtonMsg::LongPressed) = self.accept_pin.event(ctx, event) {
+            // Long-pressed ACCEPT. Sending the whole PIN string to the client.
             return Some(PinPageMsg::Confirmed);
         }
 
@@ -286,8 +290,8 @@ where
                 self.update_situation();
                 return None;
             }
-        } else if let Some(ButtonMsg::Clicked) = self.cancel_pin.event(ctx, event) {
-            // Clicked CANCEL. Sending CANCELLED to the client.
+        } else if let Some(ButtonMsg::LongPressed) = self.cancel_pin.event(ctx, event) {
+            // Long-pressed CANCEL. Sending CANCELLED to the client.
             if self.allow_cancel {
                 return Some(PinPageMsg::Cancelled);
             }

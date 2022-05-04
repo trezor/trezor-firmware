@@ -274,7 +274,7 @@ impl LayoutObj {
         static TYPE: Type = obj_type! {
             name: Qstr::MP_QSTR_Layout,
             locals: &obj_dict!(obj_map! {
-                Qstr::MP_QSTR_set_timer_fn => obj_fn_2!(ui_layout_set_timer_fn).as_obj(),
+                Qstr::MP_QSTR_attach_timer_fn => obj_fn_2!(ui_layout_attach_timer_fn).as_obj(),
                 Qstr::MP_QSTR_touch_event => obj_fn_var!(4, 4, ui_layout_touch_event).as_obj(),
                 Qstr::MP_QSTR_button_event => obj_fn_var!(3, 3, ui_layout_button_event).as_obj(),
                 Qstr::MP_QSTR_timer => obj_fn_2!(ui_layout_timer).as_obj(),
@@ -345,7 +345,7 @@ impl From<Never> for Obj {
     }
 }
 
-extern "C" fn ui_layout_set_timer_fn(this: Obj, timer_fn: Obj) -> Obj {
+extern "C" fn ui_layout_attach_timer_fn(this: Obj, timer_fn: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
         this.obj_set_timer_fn(timer_fn);
