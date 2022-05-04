@@ -24,6 +24,8 @@ const PIN_ROW: i32 = 40;
 const MIDDLE_ROW: i32 = 72;
 
 const MAX_LENGTH: usize = 50;
+const MAX_VISIBLE_DOTS: usize = 18;
+const MAX_VISIBLE_DIGITS: usize = 18;
 
 const DIGITS: [&str; 10] = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
@@ -119,16 +121,38 @@ where
     }
 
     fn show_pin_length(&self) {
+        // Only showing the maximum visible length
+        let digits = self.pin_buffer.len();
+        let dots_visible = digits.min(MAX_VISIBLE_DOTS);
+
         // String::repeat() is not available for heapless::String
         let mut dots: String<50> = String::new();
-        for _ in 0..self.pin_buffer.len() {
+        for _ in 0..dots_visible {
             dots.push_str("*").unwrap();
         }
-        self.display_text(Point::new(0, PIN_ROW), &dots);
+
+        // Giving some notion of change even for longer-than-visible PINs
+        // - slightly shifting the dots to the left and right after each new digit
+        if digits > MAX_VISIBLE_DOTS && digits % 2 == 0 {
+            self.display_text_center(Point::new(61, PIN_ROW), &dots);
+        } else {
+            self.display_text_center(Point::new(64, PIN_ROW), &dots);
+        }
     }
 
     fn reveal_current_pin(&self) {
-        self.display_text(Point::new(0, PIN_ROW), &self.pin_buffer);
+        let digits = self.pin_buffer.len();
+
+        if digits <= MAX_VISIBLE_DOTS {
+            self.display_text(Point::new(0, PIN_ROW), &self.pin_buffer);
+        } else {
+            // Show the last part of PIN with preceding ellipsis to show something is hidden
+            let ellipsis = "...";
+            let offset: usize = digits.saturating_sub(MAX_VISIBLE_DIGITS) + ellipsis.len();
+            let mut to_show: String<MAX_VISIBLE_DIGITS> = String::from(ellipsis);
+            to_show.push_str(&self.pin_buffer[offset..]).unwrap();
+            self.display_text(Point::new(0, PIN_ROW), &to_show);
+        }
     }
 
     fn show_reveal_pin_option(&self, x: i32) {
@@ -177,8 +201,22 @@ where
         display::text(baseline, text, theme::FONT_BOLD, theme::FG, theme::BG);
     }
 
+    /// Display bold white text on black background, centered around a baseline
+    /// Point
+    fn display_text_center(&self, baseline: Point, text: &str) {
+        display::text_center(baseline, text, theme::FONT_BOLD, theme::FG, theme::BG);
+    }
+
     pub fn pin(&self) -> &str {
         &self.pin_buffer
+    }
+
+    fn is_full(&self) -> bool {
+        self.pin_buffer.len() == self.pin_buffer.capacity()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.pin_buffer.is_empty()
     }
 
     /// Changing all non-middle button's visual state to "released" state
@@ -259,23 +297,29 @@ where
         if self.page_counter < 10 {
             if let Some(ButtonMsg::Clicked) = self.ok.event(ctx, event) {
                 // Clicked OK. Append current digit to the buffer PIN string.
-                self.pin_buffer.push_str(self.get_current_digit()).unwrap();
-                self.update_situation();
-                return None;
+                if !self.is_full() {
+                    self.pin_buffer.push_str(self.get_current_digit()).unwrap();
+                    self.update_situation();
+                    return None;
+                }
             }
         } else if self.page_counter == 10 {
             if let Some(ButtonMsg::Clicked) = self.reveal_pin.event(ctx, event) {
-                // Clicked SHOW. Showing the current PIN.
-                self.show_real_pin = true;
-                self.update_situation();
-                return None;
+                if !self.is_empty() {
+                    // Clicked SHOW. Showing the current PIN.
+                    self.show_real_pin = true;
+                    self.update_situation();
+                    return None;
+                }
             }
         } else if self.page_counter == 11 {
             if let Some(ButtonMsg::Clicked) = self.delete_last_digit.event(ctx, event) {
-                // Clicked DEL. Deleting the last digit.
-                self.delete_last_digit();
-                self.update_situation();
-                return None;
+                if !self.is_empty() {
+                    // Clicked DEL. Deleting the last digit.
+                    self.delete_last_digit();
+                    self.update_situation();
+                    return None;
+                }
             }
         }
 
@@ -309,11 +353,17 @@ where
 
         // BOTTOM MIDDLE button
         if self.page_counter < 10 {
-            self.ok.paint();
+            if !self.is_full() {
+                self.ok.paint();
+            }
         } else if self.page_counter == 10 {
-            self.reveal_pin.paint();
+            if !self.is_empty() {
+                self.reveal_pin.paint();
+            }
         } else if self.page_counter == 11 {
-            self.delete_last_digit.paint();
+            if !self.is_empty() {
+                self.delete_last_digit.paint();
+            }
         }
     }
 }
