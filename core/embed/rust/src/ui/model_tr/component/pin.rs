@@ -148,14 +148,14 @@ where
         let digits = self.pin_buffer.len();
 
         if digits <= MAX_VISIBLE_DOTS {
-            self.display_text(Point::new(0, PIN_ROW), &self.pin_buffer);
+            self.display_text_center(Point::new(64, PIN_ROW), &self.pin_buffer);
         } else {
             // Show the last part of PIN with preceding ellipsis to show something is hidden
             let ellipsis = "...";
             let offset: usize = digits.saturating_sub(MAX_VISIBLE_DIGITS) + ellipsis.len();
             let mut to_show: String<MAX_VISIBLE_DIGITS> = String::from(ellipsis);
             to_show.push_str(&self.pin_buffer[offset..]).unwrap();
-            self.display_text(Point::new(0, PIN_ROW), &to_show);
+            self.display_text_center(Point::new(64, PIN_ROW), &to_show);
         }
     }
 
