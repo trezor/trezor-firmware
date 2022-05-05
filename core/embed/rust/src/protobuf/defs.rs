@@ -109,7 +109,7 @@ struct NameDef {
     msg_offset: u16,
 }
 
-#[cfg(target_arch = "arm")]
+#[cfg(all(target_arch = "arm", feature = "firmware"))]
 macro_rules! proto_def_path {
     ($filename:expr) => {
         concat!(
@@ -119,6 +119,18 @@ macro_rules! proto_def_path {
         )
     };
 }
+
+#[cfg(all(target_arch = "arm", feature = "bootloader"))]
+macro_rules! proto_def_path {
+    ($filename:expr) => {
+        concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../build/bootloader/rust/",
+            $filename
+        )
+    };
+}
+
 #[cfg(not(target_arch = "arm"))]
 macro_rules! proto_def_path {
     ($filename:expr) => {

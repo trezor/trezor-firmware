@@ -715,6 +715,7 @@ def cargo_build():
         features.append("ui")
         if PYOPT == "0":
             features.append("ui_debug")
+    features.append("firmware")
 
     return f'cd embed/rust; cargo build {profile} --target={RUST_TARGET} --target-dir=../../build/firmware/rust --no-default-features --features "{" ".join(features)}"'
 

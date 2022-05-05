@@ -33,6 +33,8 @@ fn generate_qstr_bindings() {
             "-I",
             if is_firmware() {
                 "../../build/firmware"
+            } else if is_bootloader() {
+                "../../build/bootloader"
             } else {
                 "../../build/unix"
             },
@@ -63,12 +65,20 @@ fn prepare_bindings() -> bindgen::Builder {
     ]);
 
     // Pass in correct include paths and defines.
-    if is_firmware() {
+    if is_firmware() || is_bootloader() {
+        let mut genhdr = "-I../../build/firmware";
+        let mut base_dir = "-I../firmware";
+
+        if is_bootloader() {
+            genhdr = "-I../../build/bootloader";
+            base_dir = "-I../bootloader";
+        }
+
         bindings = bindings.clang_args(&[
             "-nostdinc",
-            "-I../firmware",
+            base_dir,
             "-I../trezorhal",
-            "-I../../build/firmware",
+            genhdr,
             "-I../../vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc",
             "-I../../vendor/micropython/lib/stm32lib/CMSIS/STM32F4xx/Include",
             "-I../../vendor/micropython/lib/cmsis/inc",
@@ -280,8 +290,20 @@ fn generate_trezorhal_bindings() {
 }
 
 fn is_firmware() -> bool {
-    let target = env::var("TARGET").unwrap();
-    target.starts_with("thumbv7")
+    if cfg!(feature = "firmware") {
+        let target = env::var("TARGET").unwrap();
+        target.starts_with("thumbv7")
+    } else {
+        false
+    }
+}
+
+fn is_bootloader() -> bool {
+    if cfg!(feature = "bootloader") {
+        true
+    } else {
+        false
+    }
 }
 
 #[cfg(feature = "test")]

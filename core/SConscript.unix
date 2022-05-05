@@ -677,6 +677,7 @@ def cargo_build():
         features.append("ui")
         if PYOPT == "0" or not FROZEN:
             features.append("ui_debug")
+    features.append("firmware")
 
     features.append("emulator")
 
