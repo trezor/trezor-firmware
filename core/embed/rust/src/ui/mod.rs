@@ -8,7 +8,8 @@ pub mod display;
 pub mod event;
 pub mod geometry;
 pub mod lerp;
-mod util;
+pub mod screens;
+pub mod util;
 
 #[cfg(feature = "micropython")]
 pub mod layout;

@@ -25,14 +25,21 @@
 
 #include "common.h"
 #include "display.h"
+#ifdef FANCY_FATAL_ERROR
+#include "rust_ui.h"
+#endif
 #include "memzero.h"
 
 extern void main_clean_exit();
 
-void __shutdown(void) {
+void __attribute__((noreturn)) __shutdown(void) {
   printf("SHUTDOWN\n");
   main_clean_exit(3);
+  for (;;)
+    ;
 }
+
+void __attribute__((noreturn)) shutdown(void) { __shutdown(); }
 
 #ifdef RGB16
 #define COLOR_FATAL_ERROR RGB16(0x7F, 0x00, 0x00)
@@ -46,6 +53,13 @@ __fatal_error(const char *expr, const char *msg, const char *file, int line,
               const char *func) {
   display_orientation(0);
   display_backlight(255);
+
+#ifdef FANCY_FATAL_ERROR
+  char buf[256] = {0};
+  snprintf(buf, sizeof(buf), "%s: %d", file, line);
+  screen_fatal_error_c(msg, buf);
+  display_refresh();
+#else
   display_print_color(COLOR_WHITE, COLOR_FATAL_ERROR);
   display_printf("\nFATAL ERROR:\n");
   printf("\nFATAL ERROR:\n");
@@ -74,42 +88,35 @@ __fatal_error(const char *expr, const char *msg, const char *file, int line,
 #endif
   display_printf("\n\n\nHint:\nIsn't the emulator already running?\n");
   printf("Hint:\nIsn't the emulator already running?\n");
+#endif
   hal_delay(3000);
-  __shutdown();
-  for (;;)
-    ;
+  shutdown();
 }
 
 void __attribute__((noreturn))
-error_shutdown(const char *line1, const char *line2, const char *line3,
-               const char *line4) {
+error_shutdown(const char *label, const char *msg) {
+#ifdef FANCY_FATAL_ERROR
+  screen_error_shutdown_c(label, msg);
+  display_refresh();
+#else
   display_clear();
   display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_FATAL_ERROR);
   int y = 32;
-  if (line1) {
-    display_text(8, y, line1, -1, FONT_NORMAL, COLOR_WHITE, COLOR_FATAL_ERROR);
-    printf("%s\n", line1);
+  if (label) {
+    display_text(8, y, label, -1, FONT_NORMAL, COLOR_WHITE, COLOR_FATAL_ERROR);
+    printf("%s\n", label);
     y += 32;
   }
-  if (line2) {
-    display_text(8, y, line2, -1, FONT_NORMAL, COLOR_WHITE, COLOR_FATAL_ERROR);
-    printf("%s\n", line2);
-    y += 32;
-  }
-  if (line3) {
-    display_text(8, y, line3, -1, FONT_NORMAL, COLOR_WHITE, COLOR_FATAL_ERROR);
-    printf("%s\n", line3);
-    y += 32;
-  }
-  if (line4) {
-    display_text(8, y, line4, -1, FONT_NORMAL, COLOR_WHITE, COLOR_FATAL_ERROR);
-    printf("%s\n", line4);
+  if (msg) {
+    display_text(8, y, msg, -1, FONT_NORMAL, COLOR_WHITE, COLOR_FATAL_ERROR);
+    printf("%s\n", msg);
     y += 32;
   }
   y += 32;
   display_text(8, y, "Please unplug the device.", -1, FONT_NORMAL, COLOR_WHITE,
                COLOR_FATAL_ERROR);
   printf("\nPlease unplug the device.\n");
+#endif
   display_backlight(255);
   hal_delay(5000);
   exit(4);
@@ -153,3 +160,13 @@ void emulator_poll_events(void) {
 uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
 
 void collect_hw_entropy(void) { memzero(HW_ENTROPY_DATA, HW_ENTROPY_LEN); }
+
+void show_wipe_code_screen(void) {
+  error_shutdown(
+      "DEVICE WIPED!",
+      "You have entered the wipe code. All private data has been erased.");
+}
+void show_pin_too_many_screen(void) {
+  error_shutdown("DEVICE WIPED!",
+                 "Too many wrong PIN attempts. Storage has been wiped.");
+}

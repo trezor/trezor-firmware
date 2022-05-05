@@ -184,6 +184,11 @@ CPPDEFINES_MOD += [
     'TREZOR_UI2',
     'USE_RUST_LOADER'
 ]
+if TREZOR_MODEL not in ('1', ):
+    CPPDEFINES_MOD += [
+        'FANCY_FATAL_ERROR',
+    ]
+
 if FROZEN:
     CPPDEFINES_MOD += ['TREZOR_EMULATOR_FROZEN']
 if RASPI:

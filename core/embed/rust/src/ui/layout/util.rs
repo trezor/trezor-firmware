@@ -197,45 +197,6 @@ impl ParagraphSource for PropsList {
     }
 }
 
-impl<T: ParagraphStrType, const N: usize> ParagraphSource for Vec<Paragraph<T>, N> {
-    type StrType = T;
-
-    fn at(&self, index: usize, offset: usize) -> Paragraph<Self::StrType> {
-        let para = &self[index];
-        para.map(|content| content.skip_prefix(offset))
-    }
-
-    fn size(&self) -> usize {
-        self.len()
-    }
-}
-
-impl<T: ParagraphStrType, const N: usize> ParagraphSource for [Paragraph<T>; N] {
-    type StrType = T;
-
-    fn at(&self, index: usize, offset: usize) -> Paragraph<Self::StrType> {
-        let para = &self[index];
-        para.map(|content| content.skip_prefix(offset))
-    }
-
-    fn size(&self) -> usize {
-        self.len()
-    }
-}
-
-impl<T: ParagraphStrType> ParagraphSource for Paragraph<T> {
-    type StrType = T;
-
-    fn at(&self, index: usize, offset: usize) -> Paragraph<Self::StrType> {
-        assert_eq!(index, 0);
-        self.map(|content| content.skip_prefix(offset))
-    }
-
-    fn size(&self) -> usize {
-        1
-    }
-}
-
 impl ParagraphStrType for StrBuffer {
     fn skip_prefix(&self, chars: usize) -> Self {
         self.offset(chars)

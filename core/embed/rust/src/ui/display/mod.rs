@@ -23,10 +23,12 @@ use crate::{
     error::Error,
     time::Duration,
     trezorhal::{buffers::get_text_buffer, display, qr, time, uzlib::UzlibContext},
-    ui::{component::image::Image, lerp::Lerp},
+    ui::lerp::Lerp,
 };
 use core::slice;
 
+#[cfg(feature = "dma2d")]
+use crate::ui::component::image::Image;
 pub use crate::ui::display::toif::Icon;
 #[cfg(any(feature = "model_tt", feature = "model_tr"))]
 pub use loader::{loader, loader_indeterminate, LOADER_MAX, LOADER_MIN};
@@ -833,6 +835,19 @@ pub fn text_right(baseline: Point, text: &str, font: Font, fg_color: Color, bg_c
     );
 }
 
+pub fn text_top_left(position: Point, text: &str, font: Font, fg_color: Color, bg_color: Color) {
+    // let w = font.text_width(text);
+    let h = font.text_height();
+    display::text(
+        position.x,
+        position.y + h,
+        text,
+        font.into(),
+        fg_color.into(),
+        bg_color.into(),
+    );
+}
+
 #[inline(always)]
 pub fn pixeldata(color: Color) {
     display::pixeldata(color.into());
@@ -858,6 +873,10 @@ pub fn set_window(window: Rect) {
 
 pub fn sync() {
     display::sync();
+}
+
+pub fn refresh() {
+    display::refresh();
 }
 
 pub fn get_color_table(fg_color: Color, bg_color: Color) -> [Color; 16] {
