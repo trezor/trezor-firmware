@@ -28,7 +28,6 @@
 #include "icon_wipe.h"
 #include "mini_printf.h"
 
-
 #define COLOR_BL_BG COLOR_WHITE  // background
 #define COLOR_BL_FG COLOR_BLACK  // foreground
 
@@ -126,4 +125,3 @@ void ui_screen_fail(void) {
                       "Failed! Please, reconnect.", -1, FONT_NORMAL,
                       COLOR_BL_FG, COLOR_BL_BG);
 }
-
