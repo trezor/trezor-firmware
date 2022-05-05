@@ -47,7 +47,7 @@ pub const ERASE_BIG: &[u8] = include_res!("model_tt/res/erase_big.toif");
 pub const REBOOT: &[u8] = include_res!("model_tt/res/reboot.toif");
 pub const MENU: &[u8] = include_res!("model_tt/res/menu.toif");
 pub const RECEIVE: &[u8] = include_res!("model_tt/res/receive.toif");
-pub const LOGO_EMPTY: &[u8] = include_res!("model_tt/res/trezor_empty_white.toif");
+pub const LOGO_EMPTY: &[u8] = include_res!("model_tt/res/trezor_empty.toif");
 
 pub fn button_install_cancel() -> ButtonStyleSheet {
     ButtonStyleSheet {
