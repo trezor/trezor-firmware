@@ -776,7 +776,6 @@ macro_rules! alpha {
         }
     };
 }
-pub(crate) use alpha;
 
 impl Color {
     pub const fn from_u16(val: u16) -> Self {

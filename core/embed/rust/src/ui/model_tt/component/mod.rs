@@ -10,7 +10,7 @@ mod swipe;
 
 pub use button::{
     Button, ButtonContent, ButtonMsg, ButtonStyle, ButtonStyleSheet, CancelConfirmMsg,
-    CancelInfoConfirmMsg,
+    CancelInfoConfirmMsg, IconText
 };
 pub use dialog::{Dialog, DialogLayout, DialogMsg, IconDialog};
 pub use frame::Frame;

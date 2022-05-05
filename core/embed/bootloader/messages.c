@@ -31,6 +31,7 @@
 #include "usb.h"
 #include "version.h"
 
+#include "screens_rust.h"
 #include "bootui.h"
 #include "messages.h"
 
@@ -507,28 +508,24 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
       detect_installation(&current_vhdr, &current_hdr, &vhdr, &hdr, &is_new,
                           &is_upgrade, &is_downgrade_wipe);
 
-      int response = INPUT_CANCEL;
+      uint32_t response = INPUT_CANCEL;
       if (sectrue == is_new) {
         // new installation - auto confirm
         response = INPUT_CONFIRM;
       } else if (sectrue == is_upgrade) {
         // firmware upgrade
         ui_fadeout();
-        ui_screen_install_confirm_upgrade(&vhdr, &hdr);
-        ui_fadein();
-        response = ui_user_input(INPUT_CONFIRM | INPUT_CANCEL);
+        response = ui_screen_install_confirm_upgrade(&vhdr, &hdr);
       } else {
         // downgrade with wipe or new firmware vendor
         ui_fadeout();
-        ui_screen_install_confirm_newvendor_or_downgrade_wipe(
+        response = ui_screen_install_confirm_newvendor_or_downgrade_wipe(
             &vhdr, &hdr, is_downgrade_wipe);
-        ui_fadein();
-        response = ui_user_input(INPUT_CONFIRM | INPUT_CANCEL);
       }
 
       if (INPUT_CANCEL == response) {
         ui_fadeout();
-        ui_screen_firmware_info(&current_vhdr, &current_hdr);
+        screen_connect();
         ui_fadein();
         send_user_abort(iface_num, "Firmware install cancelled");
         return -4;
@@ -625,7 +622,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
   return (int)firmware_remaining;
 }
 
-int process_msg_WipeDevice(uint8_t iface_num, uint32_t msg_size, uint8_t *buf) {
+secbool bootloader_WipeDevice(void) {
   static const uint8_t sectors[] = {
       FLASH_SECTOR_STORAGE_1,
       FLASH_SECTOR_STORAGE_2,
@@ -648,8 +645,12 @@ int process_msg_WipeDevice(uint8_t iface_num, uint32_t msg_size, uint8_t *buf) {
       22,
       FLASH_SECTOR_FIRMWARE_EXTRA_END,
   };
-  if (sectrue !=
-      flash_erase_sectors(sectors, sizeof(sectors), ui_screen_wipe_progress)) {
+  return flash_erase_sectors(sectors, sizeof(sectors), ui_screen_wipe_progress);
+}
+
+int process_msg_WipeDevice(uint8_t iface_num, uint32_t msg_size, uint8_t *buf) {
+  int wipe_result = bootloader_WipeDevice();
+  if (sectrue != wipe_result) {
     MSG_SEND_INIT(Failure);
     MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
     MSG_SEND_ASSIGN_STRING(message, "Could not erase flash");
