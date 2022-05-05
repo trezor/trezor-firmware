@@ -3,6 +3,7 @@
 import os
 
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
+UI2 = ARGUMENTS.get('UI2', '1') == '1' or TREZOR_MODEL in ('R',)
 
 if TREZOR_MODEL in ('1', ):
     # skip bootloader build
@@ -53,12 +54,14 @@ CPPPATH_MOD += [
 ]
 CPPDEFINES_MOD += [
     'TREZOR_FONT_NORMAL_ENABLE',
-    'TREZOR_FONT_MONO_ENABLE',
+    'TREZOR_FONT_BOLD_ENABLE',
+
 ]
 SOURCE_MOD += [
     'embed/extmod/modtrezorui/display.c',
     'embed/extmod/modtrezorui/font_bitmap.c',
     'embed/extmod/modtrezorui/font_roboto_regular_20.c',
+    'embed/extmod/modtrezorui/font_roboto_bold_20.c',
     'embed/extmod/modtrezorui/font_robotomono_regular_20.c',
     'embed/extmod/modtrezorui/font_pixeloperator_bold_8.c',
     'embed/extmod/modtrezorui/font_pixeloperator_regular_8.c',
@@ -67,7 +70,16 @@ SOURCE_MOD += [
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
 ]
-
+if UI2:
+    CPPDEFINES_MOD += [
+        'TREZOR_FONT_MEDIUM_ENABLE',
+        'TREZOR_UI2',
+    ]
+    SOURCE_MOD += [
+        'embed/extmod/modtrezorui/font_tthoves_bold_16.c',
+        'embed/extmod/modtrezorui/font_tthoves_medium_20.c',
+        'embed/extmod/modtrezorui/font_tthoves_regular_18.c',
+    ]
 
 # rust mods
 SOURCE_MOD_RUST = [
@@ -317,7 +329,6 @@ obj_program += env.Object(source=SOURCE_BOOTLOADER)
 obj_program += env.Object(source=SOURCE_NANOPB)
 obj_program += env.Object(source=SOURCE_STMHAL)
 obj_program += env.Object(source=SOURCE_TREZORHAL)
-
 
 program_elf = env.Command(
     target='bootloader.elf',

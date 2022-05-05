@@ -8,7 +8,7 @@ mod page;
 mod scroll;
 mod swipe;
 
-pub use button::{Button, ButtonContent, ButtonMsg, ButtonStyle, ButtonStyleSheet};
+pub use button::{Button, ButtonContent, ButtonMsg, ButtonStyle, ButtonStyleSheet, IconText};
 pub use confirm::{HoldToConfirm, HoldToConfirmMsg};
 pub use dialog::{Dialog, DialogLayout, DialogMsg};
 pub use frame::Frame;
