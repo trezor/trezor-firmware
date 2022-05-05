@@ -29,7 +29,7 @@ const MAX_VISIBLE_DOTS: usize = 18;
 const MAX_VISIBLE_DIGITS: usize = 18;
 const HOLD_DURATION: Duration = Duration::from_secs(2);
 
-const DIGITS: [&str; 10] = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+const DIGITS: [&str; 10] = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
 
 pub struct PinPage<T> {
     major_prompt: T,
@@ -70,13 +70,13 @@ where
             digits,
             both_button_press: BothButtonPressHandler::new(),
             pad: Pad::with_background(theme::BG),
-            prev: Button::with_text(ButtonPos::Left, "BACK", theme::button_default()),
-            next: Button::with_text(ButtonPos::Right, "NEXT", theme::button_default()),
-            accept_pin: Button::with_text(ButtonPos::Left, "ACCEPT", theme::button_default())
+            prev: Button::with_text(ButtonPos::Left, "<", theme::button_default()),
+            next: Button::with_text(ButtonPos::Right, ">", theme::button_default()),
+            accept_pin: Button::with_text(ButtonPos::Middle, "CONFIRM", theme::button_default())
                 .with_long_press(HOLD_DURATION),
-            cancel_pin: Button::with_text(ButtonPos::Right, "CANCEL", theme::button_cancel())
+            cancel_pin: Button::with_text(ButtonPos::Left, "BIN", theme::button_cancel())
                 .with_long_press(HOLD_DURATION),
-            ok: Button::with_text(ButtonPos::Middle, "OK", theme::button_default()),
+            ok: Button::with_text(ButtonPos::Middle, "SELECT", theme::button_default()),
             reveal_pin: Button::with_text(ButtonPos::Middle, "SHOW", theme::button_default()),
             delete_last_digit: Button::with_text(ButtonPos::Middle, "DEL", theme::button_default()),
             page_counter: 0,
@@ -96,31 +96,30 @@ where
         self.pad.clear();
 
         // TOP section under header
-        if self.show_real_pin {
-            self.reveal_current_pin();
-        } else {
-            self.show_pin_length();
-        }
+        self.show_pin_length();
 
         // MIDDLE section above buttons
         if self.page_counter == 0 {
+            self.show_prompt(MIDDLE_COL);
+            self.show_next_digit();
+        } else if self.page_counter == 1 {
+            self.show_prompt(LEFT_COL);
             self.show_current_digit();
             self.show_next_digit();
-        } else if self.page_counter < 9 {
+        } else if self.page_counter < 10 {
             self.show_previous_digit();
             self.show_current_digit();
             self.show_next_digit();
-        } else if self.page_counter == 9 {
-            self.show_previous_digit();
-            self.show_current_digit();
-            self.show_reveal_pin_option(RIGHT_COL);
         } else if self.page_counter == 10 {
             self.show_previous_digit();
-            self.show_reveal_pin_option(MIDDLE_COL);
-            self.show_delete_last_digit_option(RIGHT_COL);
-        } else if self.page_counter == 11 {
-            self.show_reveal_pin_option(LEFT_COL);
-            self.show_delete_last_digit_option(MIDDLE_COL);
+            self.show_current_digit();
+        }
+    }
+
+    fn show_prompt(&self, x: i32) {
+        for (index, text) in self.major_prompt.split(' ').enumerate() {
+            let offset = MIDDLE_ROW + index as i32 * 10;
+            self.display_text(Point::new(x, offset), text);
         }
     }
 
@@ -155,7 +154,7 @@ where
             let offset: usize = digits.saturating_sub(MAX_VISIBLE_DIGITS) + ellipsis.len();
             let mut to_show: String<MAX_VISIBLE_DIGITS> = String::from(ellipsis);
             to_show.push_str(&self.pin_buffer[offset..]).unwrap();
-            self.display_text_center(Point::new(64, PIN_ROW), &to_show);
+            self.display_text_center(Point::new(32, PIN_ROW), &to_show);
         }
     }
 
@@ -180,15 +179,15 @@ where
     }
 
     fn get_current_digit(&self) -> &'static str {
-        self.digits[self.page_counter as usize]
-    }
-
-    fn get_previous_digit(&self) -> &str {
         self.digits[(self.page_counter - 1) as usize]
     }
 
+    fn get_previous_digit(&self) -> &str {
+        self.digits[(self.page_counter - 2) as usize]
+    }
+
     fn get_next_digit(&self) -> &str {
-        self.digits[(self.page_counter + 1) as usize]
+        self.digits[(self.page_counter) as usize]
     }
 
     fn show_current_digit(&self) {
@@ -283,50 +282,39 @@ where
                 self.update_situation();
                 return None;
             }
-        } else if let Some(ButtonMsg::LongPressed) = self.accept_pin.event(ctx, event) {
-            // Long-pressed ACCEPT. Sending the whole PIN string to the client.
-            return Some(PinPageMsg::Confirmed);
+        } else if let Some(ButtonMsg::Clicked) = self.cancel_pin.event(ctx, event) {
+            // Clicked BIN. Deleting the last digit or cancelling the action when empty.
+            if !self.is_empty() {
+                self.delete_last_digit();
+                self.update_situation();
+                return None;
+            } else {
+                return Some(PinPageMsg::Cancelled);
+            }
         }
 
         // RIGHT button clicks
-        if self.page_counter < 11 {
+        if self.page_counter < 10 {
             if let Some(ButtonMsg::Clicked) = self.next.event(ctx, event) {
                 // Clicked NEXT. Increase the page counter.
                 self.page_counter += 1;
                 self.update_situation();
                 return None;
             }
-        } else if let Some(ButtonMsg::LongPressed) = self.cancel_pin.event(ctx, event) {
-            // Long-pressed CANCEL. Sending CANCELLED to the client.
-            if self.allow_cancel {
-                return Some(PinPageMsg::Cancelled);
-            }
         }
 
         // MIDDLE button clicks
-        if self.page_counter < 10 {
+        if self.page_counter == 0 {
+            if let Some(ButtonMsg::Clicked) = self.accept_pin.event(ctx, event) {
+                // Clicked ACCEPT. Send PIN to the client.
+                return Some(PinPageMsg::Confirmed);
+            }
+        } else if self.page_counter < 11 {
             if let Some(ButtonMsg::Clicked) = self.ok.event(ctx, event) {
-                // Clicked OK. Append current digit to the buffer PIN string.
+                // Clicked CONFIRM. Append current digit to the buffer PIN string.
                 if !self.is_full() {
                     self.append_current_digit();
-                    self.update_situation();
-                    return None;
-                }
-            }
-        } else if self.page_counter == 10 {
-            if let Some(ButtonMsg::Clicked) = self.reveal_pin.event(ctx, event) {
-                if !self.is_empty() {
-                    // Clicked SHOW. Showing the current PIN.
-                    self.show_real_pin = true;
-                    self.update_situation();
-                    return None;
-                }
-            }
-        } else if self.page_counter == 11 {
-            if let Some(ButtonMsg::Clicked) = self.delete_last_digit.event(ctx, event) {
-                if !self.is_empty() {
-                    // Clicked DEL. Deleting the last digit.
-                    self.delete_last_digit();
+                    self.page_counter = 0;
                     self.update_situation();
                     return None;
                 }
@@ -340,32 +328,28 @@ where
         self.pad.paint();
 
         // TOP header
-        self.render_header();
+        // self.render_header();
 
         // MIDDLE panel
         self.update_situation();
 
         // BOTTOM LEFT button
-        if self.page_counter > 0 {
-            self.prev.paint();
+        if self.page_counter == 0 {
+            self.cancel_pin.paint();
         } else {
-            self.accept_pin.paint();
+            self.prev.paint();
         }
 
         // BOTTOM RIGHT button
-        if self.page_counter < 11 {
+        if self.page_counter < 10 {
             self.next.paint();
-        } else if self.allow_cancel {
-            self.cancel_pin.paint();
         }
 
         // BOTTOM MIDDLE button
-        if self.page_counter < 10 && !self.is_full() {
+        if self.page_counter == 0 {
+            self.accept_pin.paint();
+        } else {
             self.ok.paint();
-        } else if self.page_counter == 10 && !self.is_empty() {
-            self.reveal_pin.paint();
-        } else if self.page_counter == 11 && !self.is_empty() {
-            self.delete_last_digit.paint();
         }
     }
 }
