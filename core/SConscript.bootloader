@@ -68,6 +68,24 @@ SOURCE_MOD += [
     'vendor/micropython/lib/uzlib/tinflate.c',
 ]
 
+
+# rust mods
+SOURCE_MOD_RUST = [
+    'embed/extmod/rustmods/modtrezorproto.c',
+]
+
+
+# modutime
+SOURCE_MOD_RUST += [
+    'embed/extmod/modutime.c',
+]
+
+SOURCE_MICROPYTHON = [
+    'vendor/micropython/py/objtype.c',
+]
+
+
+
 SOURCE_STMHAL = [
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.c',
@@ -129,9 +147,16 @@ if TREZOR_MODEL in ('T',):
     SOURCE_TREZORHAL.append('embed/trezorhal/touch.c')
 
 
+SOURCE_QSTR = SOURCE_MOD + SOURCE_MOD_RUST + SOURCE_MICROPYTHON
+
 env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')))
 
+env.Tool('micropython')
+
 env.Replace(
+    CAT='cat',
+    DD='dd',
+    SED='sed',
     AS='arm-none-eabi-as',
     AR='arm-none-eabi-ar',
     CC='arm-none-eabi-gcc',
@@ -147,6 +172,12 @@ if TREZOR_MODEL in ('T', 'R'):
     CPU_ASFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16'
     CPU_CCFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mtune=cortex-m4 '
     CPU_MODEL   = 'STM32F427xx'
+    RUST_TARGET = 'thumbv7em-none-eabihf'
+elif TREZOR_MODEL in ('1',):
+    CPU_ASFLAGS = '-mthumb -mcpu=cortex-m3 -mfloat-abi=soft'
+    CPU_CCFLAGS = '-mthumb -mtune=cortex-m3 -mcpu=cortex-m3 -mfloat-abi=soft '
+    CPU_MODEL   = 'STM32F405xx'
+    RUST_TARGET = 'thumbv7m-none-eabi'
 else:
     raise ValueError('Unknown Trezor model')
 
@@ -163,11 +194,13 @@ env.Replace(
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
     LINKFLAGS='-T embed/bootloader/memory.ld -Wl,--gc-sections -Wl,-Map=build/bootloader/bootloader.map -Wl,--warn-common',
     CPPPATH=[
+        'embed/rust',
         'embed/bootloader',
         'embed/bootloader/nanopb',
         'embed/bootloader/protob',
         'embed/trezorhal',
         'embed/extmod/modtrezorui',
+        'vendor/micropython',
         'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc',
         'vendor/micropython/lib/stm32lib/CMSIS/STM32F4xx/Include',
         'vendor/micropython/lib/cmsis/inc',
@@ -187,7 +220,92 @@ env.Replace(
 
 env.Replace(
     HEADERTOOL='tools/headertool.py',
+    PYTHON='python',
+    MAKEQSTRDATA='$PYTHON vendor/micropython/py/makeqstrdata.py',
+    MAKEVERSIONHDR='$PYTHON vendor/micropython/py/makeversionhdr.py',
+    MAKEMODULEDEFS='$PYTHON vendor/micropython/py/makemoduledefs.py',
+    MPY_TOOL='$PYTHON vendor/micropython/tools/mpy-tool.py',
+    MPY_CROSS='vendor/micropython/mpy-cross/mpy-cross -O' + '0',
+    PB2PY='$PYTHON ../common/protob/pb2py',
 )
+
+#
+# Qstrings
+#
+
+PROTO_SOURCES_DIR = '../../../common/protob/'
+PROTO_SOURCES = Glob(PROTO_SOURCES_DIR + '*.proto',
+    exclude=[PROTO_SOURCES_DIR + 'messages-bootloader.proto']
+)
+qstr_protobuf = env.Command(
+    target=[
+        'genhdr/qstrdefs.protobuf.h',
+    ],
+    source=PROTO_SOURCES,
+    action='$PB2PY $SOURCES --qstr-out ${TARGET} --bitcoin-only=1',
+)
+
+qstr_micropython = 'vendor/micropython/py/qstrdefs.h'
+
+qstr_collected = env.CollectQstr(
+    target='genhdr/qstrdefs.collected.h', source=SOURCE_QSTR)
+
+qstr_preprocessed = env.PreprocessQstr(
+    target='genhdr/qstrdefs.preprocessed.h',
+    source=[qstr_micropython, qstr_protobuf, qstr_collected])
+
+qstr_generated = env.GenerateQstrDefs(
+    target='genhdr/qstrdefs.generated.h', source=qstr_preprocessed)
+
+env.Ignore(qstr_collected, qstr_generated)
+
+#
+# Rust library
+#
+
+protobuf_blobs = env.Command(
+    target=[
+        f'rust/proto_enums.data',
+        f'rust/proto_msgs.data',
+        f'rust/proto_names.data',
+        f'rust/proto_wire.data',
+    ],
+    source=PROTO_SOURCES,
+    action='$PB2PY --bitcoin-only=1 --blob-outdir ${TARGET.dir} $SOURCES --qstr-defs build/bootloader/genhdr/qstrdefs.generated.h',
+)
+env.Depends(protobuf_blobs, qstr_generated)
+
+RUST_PROFILE = 'release'
+RUST_LIB = 'trezor_lib'
+RUST_LIBDIR = f'build/bootloader/rust/{RUST_TARGET}/{RUST_PROFILE}'
+RUST_LIBPATH = f'{RUST_LIBDIR}/lib{RUST_LIB}.a'
+
+def cargo_build():
+    # Determine the profile build flags.
+    if RUST_PROFILE == 'release':
+        profile = '--release'
+    else:
+        profile = ''
+    if TREZOR_MODEL in ("1",):
+        features = ["model_t1"]
+    elif TREZOR_MODEL in ("R",):
+        features = ["model_tr"]
+    else:
+        features = ["model_tt"]
+    features.append("bitcoin_only")
+    features.append("ui")
+    features.append("bootloader")
+
+    return f'cd embed/rust; cargo build {profile} --target={RUST_TARGET} --target-dir=../../build/bootloader/rust --no-default-features --features "{" ".join(features)}"'
+
+rust = env.Command(
+    target=RUST_LIBPATH,
+    source='',
+    action=cargo_build(), )
+env.Depends(rust, protobuf_blobs)
+
+env.Append(LINKFLAGS=f' -L{RUST_LIBDIR}')
+env.Append(LINKFLAGS=f' -l{RUST_LIB}')
 
 #
 # Program objects
@@ -200,12 +318,16 @@ obj_program += env.Object(source=SOURCE_NANOPB)
 obj_program += env.Object(source=SOURCE_STMHAL)
 obj_program += env.Object(source=SOURCE_TREZORHAL)
 
+
 program_elf = env.Command(
     target='bootloader.elf',
     source=obj_program,
     action=
-    '$LINK -o $TARGET $CCFLAGS $CFLAGS $LINKFLAGS $SOURCES -lc_nano -lgcc',
+    '$LINK -o $TARGET $CCFLAGS $CFLAGS $SOURCES $LINKFLAGS -lc_nano -lm -lgcc',
 )
+
+env.Depends(program_elf, rust)
+
 
 program_bin = env.Command(
     target='bootloader.bin',
