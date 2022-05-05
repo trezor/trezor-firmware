@@ -302,7 +302,7 @@ impl Rect {
         // 42 % offset from right found out experimentally for "OK" button
         self.split_right(width)
             .1
-            .translate(Offset::new(-(self.width() as f64 * 0.42) as _, 0))
+            .translate(Offset::new(-(self.width() as f64 * 0.30) as _, 0))
     }
 
     pub fn translate(&self, offset: Offset) -> Self {
