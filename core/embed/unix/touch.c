@@ -24,28 +24,6 @@
 extern void __shutdown(void);
 extern const char *display_save(const char *prefix);
 
-static bool handle_emulator_events(const SDL_Event *event) {
-  switch (event->type) {
-    case SDL_KEYUP:
-      if (event->key.repeat) {
-        break;
-      }
-      switch (event->key.keysym.sym) {
-        case SDLK_ESCAPE:
-          __shutdown();
-          return true;
-        case SDLK_p:
-          display_save("emu");
-          return true;
-      }
-      break;
-    case SDL_QUIT:
-      __shutdown();
-      return true;
-  }
-  return false;
-}
-
 #if defined TREZOR_MODEL_T
 
 #include "touch.h"
@@ -57,9 +35,6 @@ uint32_t touch_read(void) {
   SDL_Event event;
   SDL_PumpEvents();
   if (SDL_PollEvent(&event) > 0) {
-    if (handle_emulator_events(&event)) {
-      return 0;
-    }
     switch (event.type) {
       case SDL_MOUSEBUTTONDOWN:
       case SDL_MOUSEMOTION:
@@ -110,9 +85,6 @@ uint32_t button_read(void) {
   SDL_Event event;
   SDL_PumpEvents();
   if (SDL_PollEvent(&event) > 0) {
-    if (handle_emulator_events(&event)) {
-      return 0;
-    }
     switch (event.type) {
       case SDL_KEYDOWN:
         if (event.key.repeat) {
