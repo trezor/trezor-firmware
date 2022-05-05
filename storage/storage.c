@@ -992,8 +992,7 @@ static secbool decrypt_dek(const uint8_t *kek, const uint8_t *keiv) {
 static void ensure_not_wipe_code(const uint8_t *pin, size_t pin_len) {
   if (sectrue != is_not_wipe_code(pin, pin_len)) {
     storage_wipe();
-    error_shutdown("You have entered the", "wipe code. All private",
-                   "data has been erased.", NULL);
+    show_wipe_code_screen();
   }
 }
 
@@ -1028,8 +1027,7 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
   wait_random();
   if (ctr >= PIN_MAX_TRIES) {
     storage_wipe();
-    error_shutdown("Too many wrong PIN", "attempts. Storage has", "been wiped.",
-                   NULL);
+    show_pin_too_many_screen();
     return secfalse;
   }
 
@@ -1091,8 +1089,7 @@ static secbool unlock(const uint8_t *pin, size_t pin_len,
     wait_random();
     if (ctr + 1 >= PIN_MAX_TRIES) {
       storage_wipe();
-      error_shutdown("Too many wrong PIN", "attempts. Storage has",
-                     "been wiped.", NULL);
+      show_pin_too_many_screen();
     }
     return secfalse;
   }

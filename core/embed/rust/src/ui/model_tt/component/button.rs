@@ -21,6 +21,7 @@ pub enum ButtonMsg {
 
 pub struct Button<T> {
     area: Rect,
+    touch_expand: Option<Insets>,
     content: ButtonContent<T>,
     styles: ButtonStyleSheet,
     state: State,
@@ -37,6 +38,7 @@ impl<T> Button<T> {
         Self {
             content,
             area: Rect::zero(),
+            touch_expand: None,
             styles: theme::button_default(),
             state: State::Initial,
             long_press: None,
@@ -62,6 +64,11 @@ impl<T> Button<T> {
 
     pub fn styled(mut self, styles: ButtonStyleSheet) -> Self {
         self.styles = styles;
+        self
+    }
+
+    pub fn with_expanded_touch_area(mut self, expand: Insets) -> Self {
+        self.touch_expand = Some(expand);
         self
     }
 
@@ -219,6 +226,12 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        let touch_area = if let Some(expand) = self.touch_expand {
+            self.area.outset(expand)
+        } else {
+            self.area
+        };
+
         match event {
             Event::Touch(TouchEvent::TouchStart(pos)) => {
                 match self.state {
@@ -227,7 +240,7 @@ where
                     }
                     _ => {
                         // Touch started in our area, transform to `Pressed` state.
-                        if self.area.contains(pos) {
+                        if touch_area.contains(pos) {
                             self.set(ctx, State::Pressed);
                             if let Some(duration) = self.long_press {
                                 self.long_timer = Some(ctx.request_timer(duration));
@@ -239,12 +252,12 @@ where
             }
             Event::Touch(TouchEvent::TouchMove(pos)) => {
                 match self.state {
-                    State::Released if self.area.contains(pos) => {
+                    State::Released if touch_area.contains(pos) => {
                         // Touch entered our area, transform to `Pressed` state.
                         self.set(ctx, State::Pressed);
                         return Some(ButtonMsg::Pressed);
                     }
-                    State::Pressed if !self.area.contains(pos) => {
+                    State::Pressed if !touch_area.contains(pos) => {
                         // Touch is leaving our area, transform to `Released` state.
                         self.set(ctx, State::Released);
                         return Some(ButtonMsg::Released);
@@ -259,7 +272,7 @@ where
                     State::Initial | State::Disabled => {
                         // Do nothing.
                     }
-                    State::Pressed if self.area.contains(pos) => {
+                    State::Pressed if touch_area.contains(pos) => {
                         // Touch finished in our area, we got clicked.
                         self.set(ctx, State::Initial);
                         return Some(ButtonMsg::Clicked);
@@ -538,7 +551,7 @@ impl IconText {
         Self { text, icon }
     }
 
-    pub fn paint(&self, area: Rect, style: &ButtonStyle, baseline_offset: i32) {
+    pub fn paint(&self, area: Rect, style: &ButtonStyle, baseline_offset: i16) {
         let width = style.font.text_width(self.text);
         let height = style.font.text_height();
 

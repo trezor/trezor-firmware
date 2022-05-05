@@ -167,7 +167,7 @@ pub fn toif_info(data: &[u8]) -> Option<(Offset, ToifFormat)> {
     }
 }
 
-/// Aborts if the TOIF file does not have the correct grayscale flag, do not use
+/// Aborts if the TOIF file does not have the correct format, do not use
 /// with user-supplied inputs.
 fn toif_info_ensure(data: &[u8], format: ToifFormat) -> (Offset, &[u8]) {
     let info = unwrap!(display::toif_info(data), "Invalid TOIF data");
@@ -866,6 +866,19 @@ pub fn text_right(baseline: Point, text: &str, font: Font, fg_color: Color, bg_c
     display::text(
         baseline.x - w,
         baseline.y,
+        text,
+        font.into(),
+        fg_color.into(),
+        bg_color.into(),
+    );
+}
+
+pub fn text_top_left(position: Point, text: &str, font: Font, fg_color: Color, bg_color: Color) {
+    // let w = font.text_width(text);
+    let h = font.text_height();
+    display::text(
+        position.x,
+        position.y + h,
         text,
         font.into(),
         fg_color.into(),

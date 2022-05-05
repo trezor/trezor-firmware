@@ -6,12 +6,13 @@ mod keyboard;
 mod loader;
 mod number_input;
 mod page;
+mod result;
 mod scroll;
 mod swipe;
 
 pub use button::{
     Button, ButtonContent, ButtonMsg, ButtonStyle, ButtonStyleSheet, CancelConfirmMsg,
-    CancelInfoConfirmMsg, SelectWordMsg,
+    CancelInfoConfirmMsg, IconText, SelectWordMsg,
 };
 pub use dialog::{Dialog, DialogMsg, IconDialog};
 pub use frame::{Frame, NotificationFrame};
@@ -27,6 +28,7 @@ pub use keyboard::{
 pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
 pub use number_input::{NumberInputDialog, NumberInputDialogMsg};
 pub use page::{SwipeHoldPage, SwipePage};
+pub use result::ResultScreen;
 pub use scroll::ScrollBar;
 pub use swipe::{Swipe, SwipeDirection};
 
