@@ -175,3 +175,9 @@ pub fn sync() {
         ffi::display_sync();
     }
 }
+
+pub fn refresh() {
+    unsafe {
+        ffi::display_refresh();
+    }
+}

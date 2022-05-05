@@ -26,6 +26,7 @@ mod trace;
 #[cfg(feature = "ui")]
 #[macro_use]
 pub mod ui;
+pub mod strutil;
 
 #[cfg(feature = "debug")]
 #[panic_handler]

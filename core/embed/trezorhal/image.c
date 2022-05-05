@@ -103,19 +103,22 @@ secbool check_image_model(const image_header *const hdr) {
   return sectrue;
 }
 
-secbool check_image_header_sig(const image_header *const hdr, uint8_t key_m,
-                               uint8_t key_n, const uint8_t *const *keys) {
-  // check header signature
+void get_image_fingerprint(const image_header *const hdr, uint8_t *const out) {
   BLAKE2S_CTX ctx;
-  uint8_t fingerprint[32];
-
   blake2s_Init(&ctx, BLAKE2S_DIGEST_LENGTH);
   blake2s_Update(&ctx, hdr, IMAGE_HEADER_SIZE - IMAGE_SIG_SIZE);
   for (int i = 0; i < IMAGE_SIG_SIZE; i++) {
     blake2s_Update(&ctx, (const uint8_t *)"\x00", 1);
   }
+  blake2s_Final(&ctx, out, BLAKE2S_DIGEST_LENGTH);
+}
 
-  blake2s_Final(&ctx, fingerprint, BLAKE2S_DIGEST_LENGTH);
+secbool check_image_header_sig(const image_header *const hdr, uint8_t key_m,
+                               uint8_t key_n, const uint8_t *const *keys) {
+  // check header signature
+
+  uint8_t fingerprint[32];
+  get_image_fingerprint(hdr, fingerprint);
 
   ed25519_public_key pub;
   if (sectrue != compute_pubkey(key_m, key_n, keys, hdr->sigmask, pub))

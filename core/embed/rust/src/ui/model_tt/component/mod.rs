@@ -5,24 +5,27 @@ mod fido;
 mod fido_icons;
 mod frame;
 mod hold_to_confirm;
+#[cfg(feature = "dma2d")]
 mod homescreen;
 mod keyboard;
 mod loader;
 mod number_input;
 mod page;
 mod progress;
+mod result;
 mod scroll;
 mod swipe;
 mod welcome_screen;
 
 pub use button::{
     Button, ButtonContent, ButtonMsg, ButtonStyle, ButtonStyleSheet, CancelConfirmMsg,
-    CancelInfoConfirmMsg, SelectWordMsg,
+    CancelInfoConfirmMsg, IconText, SelectWordMsg,
 };
 pub use dialog::{Dialog, DialogMsg, IconDialog};
 pub use fido::{FidoConfirm, FidoMsg};
 pub use frame::{Frame, NotificationFrame};
 pub use hold_to_confirm::{HoldToConfirm, HoldToConfirmMsg};
+#[cfg(feature = "dma2d")]
 pub use homescreen::{Homescreen, HomescreenMsg, Lockscreen};
 pub use keyboard::{
     bip39::Bip39Input,
@@ -36,6 +39,7 @@ pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
 pub use number_input::{NumberInputDialog, NumberInputDialogMsg};
 pub use page::{SwipeHoldPage, SwipePage};
 pub use progress::Progress;
+pub use result::ResultScreen;
 pub use scroll::ScrollBar;
 pub use swipe::{Swipe, SwipeDirection};
 pub use welcome_screen::WelcomeScreen;

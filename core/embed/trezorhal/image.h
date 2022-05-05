@@ -107,4 +107,6 @@ secbool __wur check_image_contents(const image_header *const hdr,
                                    uint32_t firstskip, const uint8_t *sectors,
                                    int blocks);
 
+void get_image_fingerprint(const image_header *const hdr, uint8_t *const out);
+
 #endif
