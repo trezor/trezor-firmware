@@ -149,6 +149,12 @@ if TREZOR_MODEL in ('T', 'R'):
     CPU_ASFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16'
     CPU_CCFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mtune=cortex-m4 '
     CPU_MODEL   = 'STM32F427xx'
+    RUST_TARGET = 'thumbv7em-none-eabihf'
+elif TREZOR_MODEL in ('1',):
+    CPU_ASFLAGS = '-mthumb -mcpu=cortex-m3 -mfloat-abi=soft'
+    CPU_CCFLAGS = '-mthumb -mtune=cortex-m3 -mcpu=cortex-m3 -mfloat-abi=soft '
+    CPU_MODEL   = 'STM32F405xx'
+    RUST_TARGET = 'thumbv7m-none-eabi'
 else:
     raise ValueError('Unknown Trezor model')
 
@@ -165,6 +171,7 @@ env.Replace(
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
     LINKFLAGS='-T embed/bootloader/memory.ld -Wl,--gc-sections -Wl,-Map=build/bootloader/bootloader.map -Wl,--warn-common',
     CPPPATH=[
+        'embed/rust',
         'embed/bootloader',
         'embed/bootloader/nanopb',
         'embed/bootloader/protob',
@@ -193,6 +200,32 @@ env.Replace(
 )
 
 #
+# Rust library
+#
+
+RUST_PROFILE = 'release'
+RUST_LIB = 'trezor_lib'
+RUST_LIBDIR = f'build/bootloader/rust/{RUST_TARGET}/{RUST_PROFILE}'
+RUST_LIBPATH = f'{RUST_LIBDIR}/lib{RUST_LIB}.a'
+
+def cargo_build():
+    # Determine the profile build flags.
+    if RUST_PROFILE == 'release':
+        profile = '--release'
+    else:
+        profile = ''
+    features = [f'model_t{TREZOR_MODEL.lower()}', 'bootloader', 'ui']
+    return f'cd embed/rust; cargo build {profile} --target={RUST_TARGET} --target-dir=../../build/bootloader/rust --no-default-features --features "{" ".join(features)}"'
+
+rust = env.Command(
+    target=RUST_LIBPATH,
+    source='',
+    action=cargo_build(), )
+
+env.Append(LINKFLAGS=f' -L{RUST_LIBDIR}')
+env.Append(LINKFLAGS=f' -l{RUST_LIB}')
+
+#
 # Program objects
 #
 
@@ -207,8 +240,10 @@ program_elf = env.Command(
     target='bootloader.elf',
     source=obj_program,
     action=
-    '$LINK -o $TARGET $CCFLAGS $CFLAGS $LINKFLAGS $SOURCES -lc_nano -lgcc',
+    '$LINK -o $TARGET $CCFLAGS $CFLAGS $SOURCES $LINKFLAGS -lc_nano -lm -lgcc',
 )
+
+env.Depends(program_elf, rust)
 
 program_bin = env.Command(
     target='bootloader.bin',

@@ -665,7 +665,7 @@ RUST_LIB = 'trezor_lib'
 RUST_LIBPATH = f'{RUST_LIBDIR}/lib{RUST_LIB}.a'
 
 def cargo_build():
-    features = ['micropython', 'protobuf', f'model_t{TREZOR_MODEL.lower()}']
+    features = ['micropython', 'protobuf', f'model_t{TREZOR_MODEL.lower()}', 'firmware']
     if BITCOIN_ONLY == '1':
         features.append('bitcoin_only')
     if UI2:
