@@ -46,12 +46,5 @@ void __fatal_error(const char *expr, const char *msg, const char *file,
   __shutdown();
 }
 
-void error_shutdown(const char *line1, const char *line2, const char *line3,
-                    const char *line4) {
-  // For testing do not treat pin_fails_check_max as a fatal error.
-  (void)line1;
-  (void)line2;
-  (void)line3;
-  (void)line4;
-  return;
-}
+void show_wipe_code_screen(void);
+void show_pin_too_many_screen(void);

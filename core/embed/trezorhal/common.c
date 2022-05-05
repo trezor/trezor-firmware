@@ -23,11 +23,15 @@
 
 #include "common.h"
 #include "display.h"
+#ifdef FANCY_FATAL_ERROR
+#include "rust_ui.h"
+#endif
 #include "flash.h"
 #include "rand.h"
 #include "stm32.h"
 #include "supervise.h"
 
+#include "mini_printf.h"
 #include "stm32f4xx_ll_utils.h"
 
 #ifdef RGB16
@@ -53,6 +57,12 @@ __fatal_error(const char *expr, const char *msg, const char *file, int line,
               const char *func) {
   display_orientation(0);
   display_backlight(255);
+
+#ifdef FANCY_FATAL_ERROR
+  char buf[256] = {0};
+  mini_snprintf(buf, sizeof(buf), "%s, line %d", file, line);
+  screen_fatal_error(msg, buf);
+#else
   display_print_color(COLOR_WHITE, COLOR_FATAL_ERROR);
   display_printf("\nFATAL ERROR:\n");
   if (expr) {
@@ -73,51 +83,24 @@ __fatal_error(const char *expr, const char *msg, const char *file, int line,
                  rev[4]);
 #endif
   display_printf("\nPlease contact Trezor support.\n");
+#endif
   shutdown();
   for (;;)
     ;
 }
 
 void __attribute__((noreturn))
-error_shutdown(const char *line1, const char *line2, const char *line3,
-               const char *line4) {
+error_shutdown(const char *label, const char *msg) {
   display_orientation(0);
-#ifdef TREZOR_FONT_NORMAL_ENABLE
-  display_clear();
-  display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_FATAL_ERROR);
-  int y = 32;
-  if (line1) {
-    display_text(8, y, line1, -1, FONT_NORMAL, COLOR_WHITE, COLOR_FATAL_ERROR);
-    y += 32;
-  }
-  if (line2) {
-    display_text(8, y, line2, -1, FONT_NORMAL, COLOR_WHITE, COLOR_FATAL_ERROR);
-    y += 32;
-  }
-  if (line3) {
-    display_text(8, y, line3, -1, FONT_NORMAL, COLOR_WHITE, COLOR_FATAL_ERROR);
-    y += 32;
-  }
-  if (line4) {
-    display_text(8, y, line4, -1, FONT_NORMAL, COLOR_WHITE, COLOR_FATAL_ERROR);
-    y += 32;
-  }
-  y += 32;
-  display_text(8, y, "Please unplug the device.", -1, FONT_NORMAL, COLOR_WHITE,
-               COLOR_FATAL_ERROR);
+#ifdef FANCY_FATAL_ERROR
+  screen_error_shutdown(label, msg);
 #else
   display_print_color(COLOR_WHITE, COLOR_FATAL_ERROR);
-  if (line1) {
-    display_printf("%s\n", line1);
+  if (label) {
+    display_printf("%s\n", label);
   }
-  if (line2) {
-    display_printf("%s\n", line2);
-  }
-  if (line3) {
-    display_printf("%s\n", line3);
-  }
-  if (line4) {
-    display_printf("%s\n", line4);
+  if (msg) {
+    display_printf("%s\n", msg);
   }
   display_printf("\nPlease unplug the device.\n");
 #endif
@@ -157,7 +140,7 @@ void clear_otg_hs_memory(void) {
 uint32_t __stack_chk_guard = 0;
 
 void __attribute__((noreturn)) __stack_chk_fail(void) {
-  error_shutdown("Internal error", "(SS)", NULL, NULL);
+  error_shutdown("Internal error", "(SS)");
 }
 
 uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
@@ -195,4 +178,14 @@ void ensure_compatible_settings(void) {
   set_core_clock(CLOCK_168_MHZ);
   display_set_slow_pwm();
 #endif
+}
+
+void show_wipe_code_screen(void) {
+  error_shutdown(
+      "DEVICE WIPED!",
+      "You have entered the wipe code. All private data has been erased.");
+}
+void show_pin_too_many_screen(void) {
+  error_shutdown("DEVICE WIPED!",
+                 "Too many wrong PIN attempts. Storage has been wiped.");
 }

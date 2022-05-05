@@ -199,8 +199,8 @@ static void _usb_webusb_read_retry(uint8_t iface_num, uint8_t *buf) {
         // only timeout => let's try again
       } else {
         // error
-        error_shutdown("Error reading", "from USB.", "Try different",
-                       "USB cable.");
+        error_shutdown("USB ERROR",
+                       "Error reading from USB. Try different USB cable.");
       }
     }
     return;  // success

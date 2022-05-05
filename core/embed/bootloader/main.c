@@ -43,7 +43,7 @@
 
 #include "bootui.h"
 #include "messages.h"
-// #include "mpu.h"
+#include "rust_ui.h"
 
 const uint8_t BOOTLOADER_KEY_M = 2;
 const uint8_t BOOTLOADER_KEY_N = 3;
@@ -124,12 +124,10 @@ static secbool bootloader_usb_loop(const vendor_header *const vhdr,
         break;
       case 5:  // WipeDevice
         ui_fadeout();
-        ui_screen_wipe_confirm();
-        ui_fadein();
-        int response = ui_user_input(INPUT_CONFIRM | INPUT_CANCEL);
+        uint32_t response = ui_screen_wipe_confirm();
         if (INPUT_CANCEL == response) {
           ui_fadeout();
-          ui_screen_firmware_info(vhdr, hdr);
+          screen_connect();
           ui_fadein();
           send_user_abort(USB_IFACE_NUM, "Wipe cancelled");
           break;
@@ -140,14 +138,14 @@ static secbool bootloader_usb_loop(const vendor_header *const vhdr,
         r = process_msg_WipeDevice(USB_IFACE_NUM, msg_size, buf);
         if (r < 0) {  // error
           ui_fadeout();
-          ui_screen_fail();
+          screen_wipe_fail();
           ui_fadein();
           usb_stop();
           usb_deinit();
           return secfalse;  // shutdown
         } else {            // success
           ui_fadeout();
-          ui_screen_done(0, sectrue);
+          screen_wipe_success();
           ui_fadein();
           usb_stop();
           usb_deinit();
@@ -180,6 +178,7 @@ static secbool bootloader_usb_loop(const vendor_header *const vhdr,
           usb_stop();
           usb_deinit();
           ui_fadeout();
+          ui_screen_boot_empty(true);
           return sectrue;  // jump to firmware
         }
         break;
@@ -274,8 +273,6 @@ int main(void) {
   check_bootloader_version();
 #endif
 
-  display_clear();
-
   // was there reboot with request to stay in bootloader?
   secbool stay_in_bootloader = secfalse;
   if (stay_in_bootloader_flag == STAY_IN_BOOTLOADER_FLAG) {
@@ -341,22 +338,16 @@ int main(void) {
 
   // start the bootloader if no or broken firmware found ...
   if (firmware_present != sectrue) {
+    // ignore stay in bootloader
+    stay_in_bootloader = secfalse;
+    touched = false;
+
     // show intro animation
 
-    // no ui_fadeout(); - we already start from black screen
-    ui_screen_welcome_first();
-    ui_fadein();
-
-    hal_delay(1000);
+    ui_set_initial_setup(true);
 
     ui_fadeout();
-    ui_screen_welcome_second();
-    ui_fadein();
-
-    hal_delay(1000);
-
-    ui_fadeout();
-    ui_screen_welcome_third();
+    ui_screen_welcome();
     ui_fadein();
 
     // erase storage
@@ -372,13 +363,79 @@ int main(void) {
   // ... or if user touched the screen on start
   // ... or we have stay_in_bootloader flag to force it
   if (touched || stay_in_bootloader == sectrue) {
-    // no ui_fadeout(); - we already start from black screen
-    ui_screen_firmware_info(&vhdr, hdr);
-    ui_fadein();
+    ui_set_initial_setup(false);
 
-    // and start the usb loop
-    if (bootloader_usb_loop(&vhdr, hdr) != sectrue) {
-      return 1;
+    screen_t screen = SCREEN_INTRO;
+
+    while (true) {
+      bool continue_to_firmware = false;
+      uint32_t ui_result = 0;
+
+      switch (screen) {
+        case SCREEN_INTRO:
+          ui_result = ui_screen_intro(&vhdr, hdr);
+          if (ui_result == 1) {
+            screen = SCREEN_MENU;
+          }
+          if (ui_result == 2) {
+            screen = SCREEN_WAIT_FOR_HOST;
+          }
+          break;
+        case SCREEN_MENU:
+          ui_result = ui_screen_menu();
+          if (ui_result == 1) {  // exit menu
+            screen = SCREEN_INTRO;
+          }
+          if (ui_result == 2) {  // reboot
+            ui_fadeout();
+            ui_screen_boot_empty(true);
+            continue_to_firmware = true;
+          }
+          if (ui_result == 3) {  // wipe
+            screen = SCREEN_WIPE_CONFIRM;
+          }
+          break;
+        case SCREEN_WIPE_CONFIRM:
+          ui_result = screen_wipe_confirm();
+          if (ui_result == INPUT_CANCEL) {
+            // canceled
+            screen = SCREEN_MENU;
+          }
+          if (ui_result == INPUT_CONFIRM) {
+            ui_fadeout();
+            ui_screen_wipe();
+            ui_fadein();
+            secbool r = bootloader_WipeDevice();
+            if (r != sectrue) {  // error
+              ui_fadeout();
+              screen_wipe_fail();
+              ui_fadein();
+              return 1;
+            } else {  // success
+              ui_fadeout();
+              screen_wipe_success();
+              ui_fadein();
+              return 1;
+            }
+          }
+          break;
+        case SCREEN_WAIT_FOR_HOST:
+          screen_connect();
+          ui_fadein();
+          if (sectrue == bootloader_usb_loop(&vhdr, hdr)) {
+            continue_to_firmware = true;
+          } else {
+            return 1;
+          }
+        default:
+          break;
+      }
+
+      if (continue_to_firmware) {
+        break;
+      } else {
+        ui_fadeout();
+      }
     }
   }
 
@@ -408,7 +465,7 @@ int main(void) {
   // if all VTRUST flags are unset = ultimate trust => skip the procedure
 
   if ((vhdr.vtrust & VTRUST_ALL) != VTRUST_ALL) {
-    // ui_fadeout();  // no fadeout - we start from black screen
+    ui_fadeout();
     ui_screen_boot(&vhdr, hdr);
     ui_fadein();
 
@@ -458,3 +515,5 @@ int main(void) {
 
   return 0;
 }
+
+void HardFault_Handler(void) { error_shutdown("INTERNAL ERROR!", "(HF)"); }

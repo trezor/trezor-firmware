@@ -190,6 +190,11 @@ CPPDEFINES_MOD += [
     'USE_RUST_LOADER'
 ]
 
+if TREZOR_MODEL not in ('1', ):
+    CPPDEFINES_MOD += [
+        'FANCY_FATAL_ERROR',
+    ]
+
 # modtrezorutils
 SOURCE_MOD += [
     'embed/extmod/modtrezorutils/modtrezorutils.c',

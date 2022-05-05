@@ -353,6 +353,15 @@ impl Rect {
     }
 
     /// Leave just the left side of a certain `width`.
+    pub const fn outset(&self, insets: Insets) -> Self {
+        Self {
+            x0: self.x0 - insets.left,
+            y0: self.y0 - insets.top,
+            x1: self.x1 + insets.right,
+            y1: self.y1 + insets.bottom,
+        }
+    }
+
     pub const fn cut_from_left(&self, width: i16) -> Self {
         Self {
             x0: self.x0,
