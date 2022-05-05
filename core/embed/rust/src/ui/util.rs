@@ -1,5 +1,7 @@
 use heapless::String;
 
+use cstr_core::CStr;
+
 pub trait ResultExt {
     fn assert_if_debugging_ui(self, message: &str);
 }
@@ -29,6 +31,28 @@ pub fn u32_to_str(num: u32, buffer: &mut [u8]) -> Option<&str> {
             let result = &mut buffer[..i];
             result.reverse();
             Some(core::str::from_utf8(result).unwrap())
+        }
+    }
+}
+
+pub unsafe fn from_c_str(c_str: *const cty::c_char) -> Option<&'static str> {
+    unsafe {
+        let bytes = CStr::from_ptr(c_str).to_bytes();
+        if bytes.is_ascii() {
+            Some(core::str::from_utf8_unchecked(bytes))
+        } else {
+            None
+        }
+    }
+}
+
+pub unsafe fn from_c_array(c_str: *const cty::c_char, len: usize) -> Option<&'static str> {
+    unsafe {
+        let slice = core::slice::from_raw_parts(c_str as *const u8, len);
+        if slice.is_ascii() {
+            Some(core::str::from_utf8_unchecked(slice))
+        } else {
+            None
         }
     }
 }

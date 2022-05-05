@@ -22,6 +22,15 @@
 
 #include "image.h"
 #include "secbool.h"
+#include "stdbool.h"
+
+typedef enum {
+  SCREEN_INTRO = 0,
+  SCREEN_MENU = 1,
+  SCREEN_WIPE_CONFIRM = 2,
+  SCREEN_FINGER_PRINT = 3,
+  SCREEN_WAIT_FOR_HOST = 4,
+} screen_t;
 
 void ui_screen_boot(const vendor_header* const vhdr,
                     const image_header* const hdr);
@@ -32,20 +41,23 @@ void ui_screen_welcome_first(void);
 void ui_screen_welcome_second(void);
 void ui_screen_welcome_third(void);
 
-void ui_screen_firmware_info(const vendor_header* const vhdr,
-                             const image_header* const hdr);
-void ui_screen_firmware_fingerprint(const image_header* const hdr);
+uint32_t ui_screen_intro(const vendor_header* const vhdr,
+                         const image_header* const hdr);
 
-void ui_screen_install_confirm_upgrade(const vendor_header* const vhdr,
-                                       const image_header* const hdr);
-void ui_screen_install_confirm_newvendor_or_downgrade_wipe(
+uint32_t ui_screen_menu(void);
+
+uint32_t ui_screen_firmware_fingerprint(const image_header* const hdr);
+
+uint32_t ui_screen_install_confirm_upgrade(const vendor_header* const vhdr,
+                                           const image_header* const hdr);
+uint32_t ui_screen_install_confirm_newvendor_or_downgrade_wipe(
     const vendor_header* const vhdr, const image_header* const hdr,
     secbool downgrade_wipe);
-void ui_screen_install_start(void);
+void ui_screen_install_start();
 void ui_screen_install_progress_erase(int pos, int len);
 void ui_screen_install_progress_upload(int pos);
 
-void ui_screen_wipe_confirm(void);
+uint32_t ui_screen_wipe_confirm(void);
 void ui_screen_wipe(void);
 void ui_screen_wipe_progress(int pos, int len);
 
@@ -55,6 +67,9 @@ void ui_screen_fail(void);
 
 void ui_fadein(void);
 void ui_fadeout(void);
+void ui_set_initial_setup(bool initial);
+
+void ui_screen_boot_empty();
 
 // clang-format off
 #define INPUT_CANCEL 0x01        // Cancel button

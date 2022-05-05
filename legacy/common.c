@@ -115,3 +115,12 @@ uint32_t drbg_random32(void) {
   drbg_generate((uint8_t *)&value, sizeof(value));
   return value;
 }
+
+void show_wipe_code_screen(void) {
+  error_shutdown("You have entered the", "wipe code. All private",
+                 "data has been erased.", NULL);
+}
+void show_pin_too_many_screen(void) {
+  error_shutdown("Too many wrong PIN", "attempts. Storage has", "been wiped.",
+                 NULL);
+}

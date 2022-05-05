@@ -132,7 +132,7 @@ static void _i2c_init(void) {
   i2c_handle.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
 
   if (HAL_OK != HAL_I2C_Init(&i2c_handle)) {
-    ensure(secfalse, NULL);
+    ensure(secfalse, "Touch screen panel was not loaded properly.");
     return;
   }
 }
@@ -210,7 +210,7 @@ void touch_set_mode(void) {
       sectrue * (HAL_OK == HAL_I2C_Master_Transmit(
                                &i2c_handle, TOUCH_ADDRESS, touch_panel_config,
                                sizeof(touch_panel_config), 10)),
-      NULL);
+      "Touch screen panel was not loaded properly.");
 }
 
 void touch_power_on(void) {

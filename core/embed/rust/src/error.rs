@@ -1,12 +1,11 @@
-use core::{
-    convert::{Infallible, TryInto},
-    num::TryFromIntError,
-};
-
-use cstr_core::CStr;
+use core::{convert::Infallible, num::TryFromIntError};
 
 #[cfg(feature = "micropython")]
-use crate::micropython::{ffi, obj::Obj, qstr::Qstr};
+use {
+    crate::micropython::{ffi, obj::Obj, qstr::Qstr},
+    core::convert::TryInto,
+    cstr_core::CStr,
+};
 
 #[allow(clippy::enum_variant_names)] // We mimic the Python exception classnames here.
 #[derive(Clone, Copy, Debug)]
