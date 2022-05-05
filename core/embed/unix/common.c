@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <SDL.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -109,6 +110,33 @@ error_shutdown(const char *line1, const char *line2, const char *line3,
 }
 
 void hal_delay(uint32_t ms) { usleep(1000 * ms); }
+
+static int SDLCALL emulator_event_filter(void *userdata, SDL_Event *event) {
+  switch (event->type) {
+    case SDL_QUIT:
+      __shutdown();
+      return 0;
+    case SDL_KEYUP:
+      if (event->key.repeat) {
+        return 0;
+      }
+      switch (event->key.keysym.sym) {
+        case SDLK_ESCAPE:
+          __shutdown();
+          return 0;
+        case SDLK_p:
+          display_save("emu");
+          return 0;
+      }
+      break;
+  }
+  return 1;
+}
+
+void emulator_poll_events(void) {
+  SDL_PumpEvents();
+  SDL_FilterEvents(emulator_event_filter, NULL);
+}
 
 uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
 

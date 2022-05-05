@@ -20,6 +20,7 @@
 #include <string.h>
 
 #include "button.h"
+#include "common.h"
 #include "display.h"
 #include "embed/extmod/trezorobj.h"
 
@@ -71,6 +72,10 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
       const mp_uint_t i = trezor_obj_get_uint(item);
       const mp_uint_t iface = i & 0x00FF;
       const mp_uint_t mode = i & 0xFF00;
+
+#if defined TREZOR_EMULATOR
+      emulator_poll_events();
+#endif
 
       if (false) {
       }
