@@ -26,17 +26,16 @@ use super::{
     theme,
 };
 
-impl<T, U> ComponentMsgObj for Dialog<T, Button<U>, Button<U>>
+impl<T, U> ComponentMsgObj for Dialog<T, U>
 where
     T: ComponentMsgObj,
-    U: AsRef<str>,
+    U: Component<Msg = bool>,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
             DialogMsg::Content(c) => Ok(self.inner().msg_try_into_obj(c)?),
-            DialogMsg::Left(ButtonMsg::Clicked) => Ok(CANCELLED.as_obj()),
-            DialogMsg::Right(ButtonMsg::Clicked) => Ok(CONFIRMED.as_obj()),
-            _ => Ok(Obj::const_none()),
+            DialogMsg::Controls(false) => Ok(CANCELLED.as_obj()),
+            DialogMsg::Controls(true) => Ok(CONFIRMED.as_obj()),
         }
     }
 }
@@ -283,18 +282,23 @@ mod tests {
 
     #[test]
     fn trace_example_layout() {
+        let buttons = Button::left_right(
+            Button::with_text("Left"),
+            |msg| (matches!(msg, ButtonMsg::Clicked)).then(|| false),
+            Button::with_text("Right"),
+            |msg| (matches!(msg, ButtonMsg::Clicked)).then(|| true),
+        );
         let mut layout = Dialog::new(
             FormattedText::new::<theme::TTDefaultText>(
                 "Testing text layout, with some text, and some more text. And {param}",
             )
             .with("param", "parameters!"),
-            Button::with_text("Left"),
-            Button::with_text("Right"),
+            buttons,
         );
         layout.place(SCREEN);
         assert_eq!(
             trace(&layout),
-            "<Dialog content:<Text content:Testing text layout, with\nsome text, and some more\ntext. And parameters! > left:<Button text:Left > right:<Button text:Right > >",
+            "<Dialog content:<Text content:Testing text layout, with\nsome text, and some more\ntext. And parameters! > controls:<Tuple 0:<GridPlaced inner:<Button text:Left > > 1:<GridPlaced inner:<Button text:Right > > > >",
         )
     }
 }

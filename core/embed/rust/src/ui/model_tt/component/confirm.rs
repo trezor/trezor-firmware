@@ -52,8 +52,9 @@ where
         let layout = DialogLayout::middle(bounds);
         self.loader.place(layout.content);
         self.content.place(layout.content);
-        self.cancel.place(layout.left);
-        self.confirm.place(layout.right);
+        let (left, right) = layout.controls.split_left(layout.controls.size().x);
+        self.cancel.place(left);
+        self.confirm.place(right);
         bounds
     }
 

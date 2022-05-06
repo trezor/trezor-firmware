@@ -210,6 +210,39 @@ where
     }
 }
 
+impl<T> Component for Option<T>
+where
+    T: Component,
+{
+    type Msg = T::Msg;
+
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        match self {
+            Some(ref mut c) => c.event(ctx, event),
+            _ => None,
+        }
+    }
+
+    fn paint(&mut self) {
+        if let Some(ref mut c) = self {
+            c.paint()
+        }
+    }
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        match self {
+            Some(ref mut c) => c.place(bounds),
+            _ => bounds.with_size(Offset::zero()),
+        }
+    }
+
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
+        if let Some(ref c) = self {
+            c.bounds(sink)
+        }
+    }
+}
+
 pub trait ComponentExt: Sized {
     fn map<F>(self, func: F) -> Map<Self, F>;
     fn into_child(self) -> Child<Self>;
