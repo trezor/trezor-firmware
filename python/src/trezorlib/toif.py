@@ -155,6 +155,8 @@ def from_image(
 
     if image.mode == "L":
         toif_mode = firmware.ToifMode.grayscale
+        if image.size[0] % 2 != 0:
+            raise ValueError("Only even-width grayscale images are supported")
         toif_data = _from_pil_grayscale(image.getdata())
     elif image.mode == "RGB":
         toif_mode = firmware.ToifMode.full_color
