@@ -47,6 +47,7 @@ pub struct PinPage<T> {
     delete_last_digit: Button<&'static str>,
     page_counter: u8,
     show_real_pin: bool,
+    we_are_finished: bool,
     pin_buffer: String<MAX_LENGTH>,
 }
 
@@ -81,6 +82,7 @@ where
             delete_last_digit: Button::with_text(ButtonPos::Middle, "DEL", theme::button_default()),
             page_counter: 0,
             show_real_pin: false,
+            we_are_finished: false,
             pin_buffer: String::new(),
         }
     }
@@ -94,6 +96,11 @@ where
     fn update_situation(&mut self) {
         // So that only relevant buttons are visible
         self.pad.clear();
+
+        if self.we_are_finished {
+            self.show_final_screen();
+            return;
+        }
 
         // TOP section under header
         self.show_pin_length();
@@ -114,6 +121,12 @@ where
             self.show_previous_digit();
             self.show_current_digit();
         }
+    }
+
+    fn show_final_screen(&mut self) {
+        self.display_text(Point::new(5, MIDDLE_ROW), "Got it");
+        self.display_text(Point::new(5, MIDDLE_ROW + 10), "Press any button");
+        self.display_text(Point::new(5, MIDDLE_ROW + 20), "to continue");
     }
 
     fn show_prompt(&self, x: i32) {
@@ -253,6 +266,13 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        if self.we_are_finished {
+            if let Event::Button(_) = event {
+                // Confirming the final screen. Send PIN to the client.
+                return Some(PinPageMsg::Confirmed);
+            }
+        }
+
         // Possibly replacing or skipping an event because of both-button-press
         // aggregation
         let event = self.both_button_press.possibly_replace_event(event)?;
@@ -298,8 +318,10 @@ where
         // MIDDLE button clicks
         if self.page_counter == 0 {
             if let Some(ButtonMsg::Clicked) = self.accept_pin.event(ctx, event) {
-                // Clicked ACCEPT. Send PIN to the client.
-                return Some(PinPageMsg::Confirmed);
+                // Clicked ACCEPT. Show final screen with request to press any button.
+                self.we_are_finished = true;
+                self.update_situation();
+                return None;
             }
         } else if self.page_counter < 11 {
             if let Some(ButtonMsg::Clicked) = self.ok.event(ctx, event) {
