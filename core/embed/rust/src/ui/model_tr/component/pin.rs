@@ -124,9 +124,9 @@ where
     }
 
     fn show_final_screen(&mut self) {
-        self.display_text(Point::new(5, MIDDLE_ROW), "Got it");
-        self.display_text(Point::new(5, MIDDLE_ROW + 10), "Press any button");
-        self.display_text(Point::new(5, MIDDLE_ROW + 20), "to continue");
+        self.display_text_center(Point::new(64, MIDDLE_ROW - 20), "Got it.");
+        self.display_text_center(Point::new(64, MIDDLE_ROW), "Press any button");
+        self.display_text_center(Point::new(64, MIDDLE_ROW + 10), "to continue.");
     }
 
     fn show_prompt(&self, x: i32) {
@@ -346,6 +346,10 @@ where
 
         // MIDDLE panel
         self.update_situation();
+
+        if self.we_are_finished {
+            return;
+        }
 
         // BOTTOM LEFT button
         if self.page_counter == 0 {
