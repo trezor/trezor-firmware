@@ -1,5 +1,6 @@
 { fullDeps ? false
 , hardwareTest ? false
+, poetryEnvironment ? false
  }:
 
 let
@@ -53,6 +54,9 @@ let
       sha256 = "sha256-gz/knimKY1pkpsp1YmYHPMCbeiSxKGSOGJOSEgFbptE=";
     };
   }));
+  poetryEnv = nixpkgs.poetry2nix.mkPoetryEnv {
+    projectDir = ./..;
+  };
 in
 with nixpkgs;
 stdenvNoCC.mkDerivation ({
@@ -114,6 +118,8 @@ stdenvNoCC.mkDerivation ({
     uhubctl
     ffmpeg
     dejavu_fonts
+  ] ++ lib.optionals poetryEnvironment [
+    poetryEnv
   ];
   LD_LIBRARY_PATH = "${libffi}/lib:${libjpeg.out}/lib:${libusb1}/lib:${libressl.out}/lib";
   DYLD_LIBRARY_PATH = "${libffi}/lib:${libjpeg.out}/lib:${libusb1}/lib:${libressl.out}/lib";
