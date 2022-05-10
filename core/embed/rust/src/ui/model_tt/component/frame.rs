@@ -25,7 +25,7 @@ where
     }
 
     pub fn inner(&self) -> &T {
-        &self.content.inner()
+        self.content.inner()
     }
 }
 

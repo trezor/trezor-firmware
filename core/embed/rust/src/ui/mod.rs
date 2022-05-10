@@ -3,6 +3,7 @@ pub mod macros;
 
 pub mod animation;
 pub mod component;
+pub mod constant;
 pub mod display;
 pub mod event;
 pub mod geometry;

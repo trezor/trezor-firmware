@@ -15,22 +15,16 @@ use crate::{
     time::Duration,
     ui::{
         component::{Child, Component, Event, EventCtx, Never, TimerToken},
+        constant,
         geometry::Rect,
     },
     util,
 };
 
-#[cfg(any(feature = "model_t1", feature = "model_tr"))]
+#[cfg(feature = "buttons")]
 use crate::ui::event::ButtonEvent;
-#[cfg(feature = "model_tt")]
+#[cfg(feature = "touch")]
 use crate::ui::event::TouchEvent;
-
-#[cfg(feature = "model_t1")]
-use crate::ui::model_t1::constant;
-#[cfg(feature = "model_tr")]
-use crate::ui::model_tr::constant;
-#[cfg(feature = "model_tt")]
-use crate::ui::model_tt::constant;
 
 /// Conversion trait implemented by components that know how to convert their
 /// message values into MicroPython `Obj`s. We can automatically implement
@@ -354,7 +348,7 @@ extern "C" fn ui_layout_set_timer_fn(this: Obj, timer_fn: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-#[cfg(feature = "model_tt")]
+#[cfg(feature = "touch")]
 extern "C" fn ui_layout_touch_event(n_args: usize, args: *const Obj) -> Obj {
     let block = |args: &[Obj], _kwargs: &Map| {
         if args.len() != 4 {
@@ -372,12 +366,12 @@ extern "C" fn ui_layout_touch_event(n_args: usize, args: *const Obj) -> Obj {
     unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
 }
 
-#[cfg(any(feature = "model_t1", feature = "model_tr"))]
+#[cfg(not(feature = "touch"))]
 extern "C" fn ui_layout_touch_event(_n_args: usize, _args: *const Obj) -> Obj {
     Obj::const_none()
 }
 
-#[cfg(any(feature = "model_t1", feature = "model_tr"))]
+#[cfg(feature = "buttons")]
 extern "C" fn ui_layout_button_event(n_args: usize, args: *const Obj) -> Obj {
     let block = |args: &[Obj], _kwargs: &Map| {
         if args.len() != 3 {
@@ -391,7 +385,7 @@ extern "C" fn ui_layout_button_event(n_args: usize, args: *const Obj) -> Obj {
     unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
 }
 
-#[cfg(feature = "model_tt")]
+#[cfg(not(feature = "buttons"))]
 extern "C" fn ui_layout_button_event(_n_args: usize, _args: *const Obj) -> Obj {
     Obj::const_none()
 }

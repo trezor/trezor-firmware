@@ -92,7 +92,7 @@ impl<T: AsRef<str>> Button<T> {
 
         let start_of_baseline = area.bottom_left() + Offset::new(border_width, -2);
 
-        return (area, start_of_baseline);
+        (area, start_of_baseline)
     }
 }
 
@@ -130,7 +130,7 @@ where
 
         match &self.content {
             ButtonContent::Text(text) => {
-                let background_color = style.text_color.neg();
+                let background_color = style.text_color.negate();
                 if style.border_horiz {
                     display::rect_fill_rounded1(self.area, background_color, theme::BG);
                 } else {
