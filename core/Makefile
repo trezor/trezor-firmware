@@ -121,7 +121,7 @@ pyright:
 	python ../tools/pyright_tool.py
 
 clippy:
-	cd embed/rust ; cargo clippy
+	cd embed/rust ; cargo clippy --all-features
 
 ## code generation:
 

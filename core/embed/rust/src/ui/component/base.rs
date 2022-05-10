@@ -7,9 +7,9 @@ use crate::{
     ui::{component::Map, geometry::Rect},
 };
 
-#[cfg(any(feature = "model_t1", feature = "model_tr"))]
+#[cfg(feature = "buttons")]
 use crate::ui::event::ButtonEvent;
-#[cfg(feature = "model_tt")]
+#[cfg(feature = "touch")]
 use crate::ui::event::TouchEvent;
 
 /// Type used by components that do not return any messages.
@@ -219,9 +219,9 @@ where
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Event {
-    #[cfg(any(feature = "model_t1", feature = "model_tr"))]
+    #[cfg(feature = "buttons")]
     Button(ButtonEvent),
-    #[cfg(feature = "model_tt")]
+    #[cfg(feature = "touch")]
     Touch(TouchEvent),
     /// Previously requested timer was triggered. This invalidates the timer
     /// token (another timer has to be requested).

@@ -255,8 +255,8 @@ where
 
     fn paint(&mut self) {
         let style = self.style();
-        self.paint_background(&style);
-        self.paint_content(&style);
+        self.paint_background(style);
+        self.paint_content(style);
     }
 
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {

@@ -19,7 +19,7 @@ pub mod ui;
 mod util;
 
 #[cfg(not(test))]
-#[cfg(not(feature = "test"))]
+#[cfg(any(not(feature = "test"), feature = "clippy"))]
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
     use cstr_core::CStr;

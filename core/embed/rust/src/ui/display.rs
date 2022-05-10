@@ -1,11 +1,5 @@
+use super::constant;
 use crate::{micropython::time, time::Duration, trezorhal::display};
-
-#[cfg(feature = "model_t1")]
-use crate::ui::model_t1::constant;
-#[cfg(feature = "model_tr")]
-use crate::ui::model_tr::constant;
-#[cfg(feature = "model_tt")]
-use crate::ui::model_tt::constant;
 
 use super::geometry::{Offset, Point, Rect};
 
@@ -233,7 +227,7 @@ impl Color {
         self.0
     }
 
-    pub fn neg(self) -> Self {
+    pub fn negate(self) -> Self {
         Self(!self.0)
     }
 }
