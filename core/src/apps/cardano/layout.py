@@ -7,7 +7,6 @@ from trezor.enums import (
     CardanoCertificateType,
     CardanoNativeScriptHashDisplayFormat,
     CardanoNativeScriptType,
-    CardanoTxSigningMode,
 )
 from trezor.messages import CardanoAddressParametersType
 from trezor.strings import format_amount
@@ -193,26 +192,25 @@ async def show_script_hash(
         )
 
 
-async def show_transaction_signing_mode(
-    ctx: wire.Context, signing_mode: CardanoTxSigningMode
-) -> None:
-    if signing_mode == CardanoTxSigningMode.MULTISIG_TRANSACTION:
-        await confirm_metadata(
-            ctx,
-            "confirm_signing_mode",
-            title="Confirm transaction",
-            content="Confirming a multisig transaction.",
-            larger_vspace=True,
-            br_code=ButtonRequestType.Other,
-        )
-    elif signing_mode == CardanoTxSigningMode.PLUTUS_TRANSACTION:
-        await confirm_metadata(
-            ctx,
-            "confirm_signing_mode",
-            title="Confirm transaction",
-            content="Confirming a Plutus transaction - loss of collateral is possible. Check all items carefully.",
-            br_code=ButtonRequestType.Other,
-        )
+async def show_multisig_transaction(ctx: wire.Context) -> None:
+    await confirm_metadata(
+        ctx,
+        "confirm_signing_mode",
+        title="Confirm transaction",
+        content="Confirming a multisig transaction.",
+        larger_vspace=True,
+        br_code=ButtonRequestType.Other,
+    )
+
+
+async def show_plutus_transaction(ctx: wire.Context) -> None:
+    await confirm_metadata(
+        ctx,
+        "confirm_signing_mode",
+        title="Confirm transaction",
+        content="Confirming a Plutus transaction - loss of collateral is possible. Check all items carefully.",
+        br_code=ButtonRequestType.Other,
+    )
 
 
 async def confirm_input(ctx: wire.Context, input: CardanoTxInput) -> None:
