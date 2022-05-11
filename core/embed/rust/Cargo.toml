@@ -43,13 +43,21 @@ version = "0.2.1"
 version = "0.7.3"
 default_features = false
 
+[dependencies.num-traits]
+version = "0.2.15"
+default_features = false
+
+[dependencies.num-derive]
+version = "0.3.3"
+
 [dependencies.spin]
 version = "0.9.2"
 default_features = false
 features = ["mutex", "spin_mutex"]
 
 [dependencies.zeroize]
-version = "1.5.3"
+version = "1.5.5"
+features = ["zeroize_derive"]
 default_features = false
 
 # Build dependencies
