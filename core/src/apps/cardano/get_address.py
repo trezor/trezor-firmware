@@ -6,8 +6,8 @@ from trezor.messages import CardanoAddress
 from . import seed
 from .address import derive_human_readable_address, validate_address_parameters
 from .helpers.credential import Credential, should_show_address_credentials
+from .helpers.utils import validate_network_info
 from .layout import show_address_credentials, show_cardano_address
-from .sign_tx import validate_network_info
 
 if TYPE_CHECKING:
     from trezor.messages import (
