@@ -1,5 +1,7 @@
 use core::slice;
 
+use heapless::String;
+
 use crate::{
     error::Error,
     micropython::{
@@ -80,4 +82,26 @@ pub unsafe fn try_with_args_and_kwargs_inline(
         func(args_slice, &kw_map)
     };
     unsafe { try_or_raise(block) }
+}
+
+pub trait ResultExt {
+    fn assert_if_debugging_ui(self, message: &str);
+}
+
+impl<T, E> ResultExt for Result<T, E> {
+    fn assert_if_debugging_ui(self, #[allow(unused)] message: &str) {
+        #[cfg(feature = "ui_debug")]
+        if self.is_err() {
+            panic!("{}", message);
+        }
+    }
+}
+
+/// Concatenates arbitrary amount of slices into a String
+pub fn format_string<const M: usize, const N: usize>(slices: [&str; M]) -> String<N> {
+    let mut formatted_string = String::new();
+    for slice in slices {
+        formatted_string.push_str(slice).unwrap();
+    }
+    formatted_string
 }

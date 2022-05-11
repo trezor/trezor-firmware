@@ -63,6 +63,26 @@ def confirm_text(
     description: str | None,
 ) -> object:
     """Confirm text."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def show_share_words(
+    *,
+    share_words: str,  # words delimited by "," ... TODO: support list[str]
+) -> None:
+    """Shows a backup seed."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def confirm_word(
+    *,
+    choices: str,  # words delimited by "," ... TODO: support list[str]
+    checked_index: int,
+    count: int,
+    share_index: int | None,
+    group_index: int | None,
+) -> None:
+    """Shows a backup seed."""
 CONFIRMED: object
 CANCELLED: object
 INFO: object

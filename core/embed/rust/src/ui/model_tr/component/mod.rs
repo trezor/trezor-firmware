@@ -1,9 +1,11 @@
 mod button;
+mod choice;
 mod confirm;
 mod dialog;
 mod frame;
 mod loader;
 mod page;
+mod pin;
 mod result_anim;
 mod result_popup;
 
@@ -14,8 +16,8 @@ pub use button::{
     ButtonStyleSheet,
 };
 pub use confirm::{HoldToConfirm, HoldToConfirmMsg};
-mod pin;
 
+pub use choice::{ChoicePage, ChoicePageMsg};
 pub use dialog::{Dialog, DialogMsg};
 pub use frame::Frame;
 pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
