@@ -1,4 +1,5 @@
 mod button;
+mod choice;
 mod dialog;
 mod frame;
 mod page;
@@ -10,6 +11,7 @@ pub use button::{
     BothButtonPressHandler, Button, ButtonContent, ButtonMsg, ButtonPos, ButtonStyle,
     ButtonStyleSheet,
 };
+pub use choice::{ChoicePage, ChoicePageMsg};
 pub use dialog::{Dialog, DialogMsg};
 pub use frame::Frame;
 pub use page::ButtonPage;
