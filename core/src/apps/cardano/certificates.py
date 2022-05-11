@@ -1,10 +1,6 @@
 from typing import TYPE_CHECKING
 
-from trezor.enums import (
-    CardanoCertificateType,
-    CardanoPoolRelayType,
-    CardanoTxSigningMode,
-)
+from trezor.enums import CardanoCertificateType, CardanoPoolRelayType
 
 from apps.common import cbor
 
@@ -41,22 +37,10 @@ MAX_PORT_NUMBER = 65535
 
 def validate_certificate(
     certificate: CardanoTxCertificate,
-    signing_mode: CardanoTxSigningMode,
     protocol_magic: int,
     network_id: int,
     account_path_checker: AccountPathChecker,
 ) -> None:
-    if (
-        signing_mode != CardanoTxSigningMode.POOL_REGISTRATION_AS_OWNER
-        and certificate.type == CardanoCertificateType.STAKE_POOL_REGISTRATION
-    ):
-        raise INVALID_CERTIFICATE
-    elif (
-        signing_mode == CardanoTxSigningMode.POOL_REGISTRATION_AS_OWNER
-        and certificate.type != CardanoCertificateType.STAKE_POOL_REGISTRATION
-    ):
-        raise INVALID_CERTIFICATE
-
     _validate_certificate_structure(certificate)
 
     if certificate.type in (
@@ -68,7 +52,6 @@ def validate_certificate(
             certificate.path,
             certificate.script_hash,
             certificate.key_hash,
-            signing_mode,
             INVALID_CERTIFICATE,
         )
 

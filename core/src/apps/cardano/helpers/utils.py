@@ -1,8 +1,9 @@
 from typing import TYPE_CHECKING
 
+from trezor import wire
 from trezor.crypto import hashlib
-from trezor.enums import CardanoTxSigningMode
 
+from apps.cardano.helpers import network_ids, protocol_magics
 from apps.cardano.helpers.paths import (
     ACCOUNT_PATH_INDEX,
     SCHEMA_STAKING_ANY_ACCOUNT,
@@ -13,7 +14,6 @@ from apps.common.seed import remove_ed25519_prefix
 from . import ADDRESS_KEY_HASH_SIZE, SCRIPT_HASH_SIZE, bech32
 
 if TYPE_CHECKING:
-    from trezor import wire
     from .. import seed
 
 
@@ -84,32 +84,27 @@ def validate_stake_credential(
     path: list[int],
     script_hash: bytes | None,
     key_hash: bytes | None,
-    signing_mode: CardanoTxSigningMode,
     error: wire.ProcessError,
 ) -> None:
     if sum(bool(k) for k in (path, script_hash, key_hash)) != 1:
         raise error
 
-    if path:
-        if signing_mode not in (
-            CardanoTxSigningMode.ORDINARY_TRANSACTION,
-            CardanoTxSigningMode.PLUTUS_TRANSACTION,
-        ):
-            raise error
-        if not SCHEMA_STAKING_ANY_ACCOUNT.match(path):
-            raise error
-    elif script_hash:
-        if signing_mode not in (
-            CardanoTxSigningMode.MULTISIG_TRANSACTION,
-            CardanoTxSigningMode.PLUTUS_TRANSACTION,
-        ):
-            raise error
-        if len(script_hash) != SCRIPT_HASH_SIZE:
-            raise error
-    elif key_hash:
-        if signing_mode != CardanoTxSigningMode.PLUTUS_TRANSACTION:
-            raise error
-        if len(key_hash) != ADDRESS_KEY_HASH_SIZE:
-            raise error
-    else:
+    if path and not SCHEMA_STAKING_ANY_ACCOUNT.match(path):
         raise error
+    if script_hash and len(script_hash) != SCRIPT_HASH_SIZE:
+        raise error
+    if key_hash and len(key_hash) != ADDRESS_KEY_HASH_SIZE:
+        raise error
+
+
+def validate_network_info(network_id: int, protocol_magic: int) -> None:
+    """
+    We are only concerned about checking that both network_id and protocol_magic
+    belong to the mainnet or that both belong to a testnet. We don't need to check for
+    consistency between various testnets (at least for now).
+    """
+    is_mainnet_network_id = network_ids.is_mainnet(network_id)
+    is_mainnet_protocol_magic = protocol_magics.is_mainnet(protocol_magic)
+
+    if is_mainnet_network_id != is_mainnet_protocol_magic:
+        raise wire.ProcessError("Invalid network id/protocol magic combination!")

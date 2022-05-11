@@ -523,6 +523,16 @@ if not utils.BITCOIN_ONLY:
     import apps.cardano.seed
     apps.cardano.sign_tx
     import apps.cardano.sign_tx
+    apps.cardano.sign_tx.multisig_signer
+    import apps.cardano.sign_tx.multisig_signer
+    apps.cardano.sign_tx.ordinary_signer
+    import apps.cardano.sign_tx.ordinary_signer
+    apps.cardano.sign_tx.plutus_signer
+    import apps.cardano.sign_tx.plutus_signer
+    apps.cardano.sign_tx.pool_owner_signer
+    import apps.cardano.sign_tx.pool_owner_signer
+    apps.cardano.sign_tx.signer
+    import apps.cardano.sign_tx.signer
     apps.common.mnemonic
     import apps.common.mnemonic
     apps.eos
