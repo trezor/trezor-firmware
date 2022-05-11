@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     ExceptionType = BaseException | Type[BaseException]
 
 
-class _RustLayout(ui.Layout):
+class RustLayout(ui.Layout):
     # pylint: disable=super-init-not-called
     def __init__(self, layout: Any):
         self.layout = layout
@@ -123,7 +123,7 @@ async def get_bool(
 ) -> bool:
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_text(
                 title=title,
                 data=data,
@@ -180,7 +180,7 @@ async def confirm_action(
     await raise_if_cancelled(
         interact(
             ctx,
-            _RustLayout(
+            RustLayout(
                 trezorui2.confirm_action(
                     title=title,
                     action=action,
@@ -525,7 +525,7 @@ async def confirm_text(
 ) -> Any:
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_text(
                 title=title,
                 data=data,
@@ -823,7 +823,7 @@ async def request_pin_on_device(
 
     while True:
         result = await ctx.wait(
-            _RustLayout(
+            RustLayout(
                 trezorui2.request_pin(
                     prompt=prompt,
                     subprompt=subprompt,
