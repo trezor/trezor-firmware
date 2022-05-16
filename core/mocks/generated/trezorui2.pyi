@@ -83,6 +83,23 @@ def confirm_word(
     group_index: int | None,
 ) -> None:
     """Shows a backup seed."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def request_word_count(
+    *,
+    title: str,
+    text: str,
+) -> str:  # TODO: make it return int
+    """Get word count for recovery."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def request_word_bip39(
+    *,
+    prompt: str,
+) -> str:
+    """Get recovery word for BIP39."""
 CONFIRMED: object
 CANCELLED: object
 INFO: object

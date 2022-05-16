@@ -38,6 +38,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_word;
   MP_QSTR_choices;
   MP_QSTR_checked_index;
+  MP_QSTR_request_word_count;
+  MP_QSTR_request_word_bip39;
 
   MP_QSTR_attach_timer_fn;
   MP_QSTR_touch_event;

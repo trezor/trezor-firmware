@@ -1,3 +1,4 @@
+mod bip39;
 mod button;
 mod choice;
 mod confirm;
@@ -11,6 +12,7 @@ mod result_popup;
 
 use super::theme;
 
+pub use bip39::{Bip39Page, Bip39PageMsg};
 pub use button::{
     BothButtonPressHandler, Button, ButtonContent, ButtonMsg, ButtonPos, ButtonStyle,
     ButtonStyleSheet,

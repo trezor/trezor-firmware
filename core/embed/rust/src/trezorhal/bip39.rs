@@ -44,6 +44,25 @@ pub fn word_completion_mask(prefix: &str) -> u32 {
     unsafe { ffi::mnemonic_word_completion_mask(prefix.as_ptr() as _, prefix.len() as _) }
 }
 
+/// Returns all possible letters that form a valid word together with some
+/// prefix.
+pub fn get_available_letters(prefix: &str) -> impl Iterator<Item = char> {
+    const CHARS: [char; 26] = [
+        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
+        's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+    ];
+
+    let mask = word_completion_mask(prefix);
+    CHARS
+        .iter()
+        .filter(move |ch| bitmask_from_char(ch) & mask != 0)
+        .copied()
+}
+
+fn bitmask_from_char(ch: &char) -> u32 {
+    1 << (*ch as u8 - b'a')
+}
+
 pub struct Wordlist(&'static [*const cty::c_char]);
 
 impl Wordlist {
@@ -189,5 +208,36 @@ mod tests {
             .iter()
             .collect::<Vec<_>>();
         assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn test_word_completion_mask() {
+        let result = word_completion_mask("ab");
+        assert_eq!(result, 0b101000100100100000001);
+        let result = word_completion_mask("zoo");
+        assert_eq!(result, 0b0);
+    }
+
+    #[test]
+    fn test_get_available_letters() {
+        let expected_result = vec!['a', 'i', 'l', 'o', 's', 'u'];
+        let result = get_available_letters("ab").collect::<Vec<_>>();
+        assert_eq!(result, expected_result);
+
+        let expected_result = vec!['a', 'e', 'i', 'o', 'u'];
+        let result = get_available_letters("str").collect::<Vec<_>>();
+        assert_eq!(result, expected_result);
+
+        let result = get_available_letters("zoo").collect::<Vec<_>>();
+        assert_eq!(result.len(), 0);
+    }
+
+    #[test]
+    fn test_bitmask_from_char() {
+        assert_eq!(bitmask_from_char(&'a'), 0b1);
+        assert_eq!(bitmask_from_char(&'b'), 0b10);
+        assert_eq!(bitmask_from_char(&'c'), 0b100);
+        assert_eq!(bitmask_from_char(&'m'), 0b1000000000000);
+        assert_eq!(bitmask_from_char(&'z'), 0b10000000000000000000000000);
     }
 }
