@@ -22,7 +22,8 @@ use crate::{
 
 use super::{
     component::{
-        Button, ButtonPage, ButtonPos, ChoicePage, ChoicePageMsg, Frame, PinPage, PinPageMsg,
+        Bip39Page, Bip39PageMsg, Button, ButtonPage, ButtonPos, ChoicePage, ChoicePageMsg, Frame,
+        PinPage, PinPageMsg,
     },
     theme,
 };
@@ -59,6 +60,17 @@ where
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
             ChoicePageMsg::Confirmed => self.get_current_choice().try_into(),
+        }
+    }
+}
+
+impl<T> ComponentMsgObj for Bip39Page<T>
+where
+    T: Deref<Target = str>,
+{
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            Bip39PageMsg::Confirmed => self.get_current_choice().as_str().try_into(),
         }
     }
 }
@@ -234,6 +246,36 @@ extern "C" fn confirm_word(n_args: usize, args: *const Obj, kwargs: *mut Map) ->
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn request_word_count(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let text: StrBuffer = kwargs.get(Qstr::MP_QSTR_text)?.try_into()?;
+
+        let text: String<50> = String::from(text.trim());
+        let title: String<50> = String::from(title.trim());
+
+        let mut choices: Vec<String<50>, 10> = Vec::new();
+        for choice in ["12", "18", "20", "24", "33"] {
+            let choice_str: String<50> = String::from(choice);
+            choices.push(choice_str).unwrap();
+        }
+
+        let obj = LayoutObj::new(ChoicePage::new(title, text, choices).into_child())?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn request_word_bip39(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = |_args: &[Obj], kwargs: &Map| {
+        let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+
+        let obj = LayoutObj::new(Bip39Page::new(prompt).into_child())?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 #[no_mangle]
 pub static mp_module_trezorui2: Module = obj_module! {
     Qstr::MP_QSTR___name__ => Qstr::MP_QSTR_trezorui2.to_obj(),
@@ -296,6 +338,21 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> None:
     ///     """Shows a backup seed."""
     Qstr::MP_QSTR_confirm_word => obj_fn_kw!(0, confirm_word).as_obj(),
+
+    /// def request_word_count(
+    ///     *,
+    ///     title: str,
+    ///     text: str,
+    /// ) -> str:  # TODO: make it return int
+    ///     """Get word count for recovery."""
+    Qstr::MP_QSTR_request_word_count => obj_fn_kw!(0, request_word_count).as_obj(),
+
+    /// def request_word_bip39(
+    ///     *,
+    ///     prompt: str,
+    /// ) -> str:
+    ///     """Get recovery word for BIP39."""
+    Qstr::MP_QSTR_request_word_bip39 => obj_fn_kw!(0, request_word_bip39).as_obj(),
 };
 
 #[cfg(test)]

@@ -1,3 +1,4 @@
+mod bip39;
 mod button;
 mod choice;
 mod dialog;
@@ -7,6 +8,7 @@ mod pin;
 
 use super::theme;
 
+pub use bip39::{Bip39Page, Bip39PageMsg};
 pub use button::{
     BothButtonPressHandler, Button, ButtonContent, ButtonMsg, ButtonPos, ButtonStyle,
     ButtonStyleSheet,
