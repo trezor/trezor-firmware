@@ -872,8 +872,7 @@ int display_text_height(int font) {
 
 #define QR_MAX_VERSION 9
 
-void display_qrcode(int x, int y, const char *data, uint32_t datalen,
-                    uint8_t scale) {
+void display_qrcode(int x, int y, const char *data, uint8_t scale) {
   if (scale < 1 || scale > 10) return;
 
   uint8_t codedata[qrcodegen_BUFFER_LEN_FOR_VERSION(QR_MAX_VERSION)] = {0};

@@ -385,7 +385,7 @@ int main(void) {
   // format: TREZOR2-YYMMDD
   if (sectrue == flash_otp_read(FLASH_OTP_BLOCK_BATCH, 0, (uint8_t *)dom, 32) &&
       0 == memcmp(dom, "TREZOR2-", 8) && dom[31] == 0) {
-    display_qrcode(DISPLAY_RESX / 2, DISPLAY_RESY / 2, dom, strlen(dom), 4);
+    display_qrcode(DISPLAY_RESX / 2, DISPLAY_RESY / 2, dom, 4);
     display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 30, dom + 8, -1,
                         FONT_BOLD, COLOR_WHITE, COLOR_BLACK);
   }
