@@ -40,5 +40,5 @@ class Qr(ui.Component):
 
     def on_render(self) -> None:
         if self.repaint:
-            ui.display.qrcode(self.x, self.y, self.data.encode(), self.scale)
+            ui.display.qrcode(self.x, self.y, self.data, self.scale)
             self.repaint = False

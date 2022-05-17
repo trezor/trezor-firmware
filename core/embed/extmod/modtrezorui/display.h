@@ -128,8 +128,7 @@ int display_text_split(const char *text, int textlen, int font,
                        int requested_width);
 int display_text_height(int font);
 
-void display_qrcode(int x, int y, const char *data, uint32_t datalen,
-                    uint8_t scale);
+void display_qrcode(int x, int y, const char *data, uint8_t scale);
 
 void display_offset(int set_xy[2], int *get_x, int *get_y);
 int display_orientation(int degrees);
