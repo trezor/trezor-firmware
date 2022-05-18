@@ -220,6 +220,16 @@ async def confirm_change_count_over_threshold(
     )
 
 
+async def confirm_unverified_external_input(ctx: wire.Context) -> None:
+    await layouts.confirm_metadata(
+        ctx,
+        "unverified_external_input",
+        "Warning",
+        "The transaction contains unverified external inputs.",
+        br_code=ButtonRequestType.SignTx,
+    )
+
+
 async def confirm_nondefault_locktime(
     ctx: wire.Context, lock_time: int, lock_time_disabled: bool
 ) -> None:

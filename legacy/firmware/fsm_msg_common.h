@@ -95,8 +95,7 @@ bool get_features(Features *resp) {
 }
 
 void fsm_msgInitialize(const Initialize *msg) {
-  recovery_abort();
-  signing_abort();
+  fsm_abortWorkflows();
 
   uint8_t *session_id;
   if (msg && msg->has_session_id) {
@@ -251,6 +250,8 @@ void fsm_msgWipeDevice(const WipeDevice *msg) {
 }
 
 void fsm_msgGetEntropy(const GetEntropy *msg) {
+  CHECK_PIN
+
 #if !DEBUG_RNG
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
                     _("Do you really want to"), _("send entropy?"), NULL, NULL,
@@ -345,11 +346,7 @@ void fsm_msgBackupDevice(const BackupDevice *msg) {
 
 void fsm_msgCancel(const Cancel *msg) {
   (void)msg;
-  recovery_abort();
-  signing_abort();
-#if !BITCOIN_ONLY
-  ethereum_signing_abort();
-#endif
+  fsm_abortWorkflows();
   fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 }
 
@@ -516,9 +513,15 @@ void fsm_msgRecoveryDevice(const RecoveryDevice *msg) {
                 msg->has_u2f_counter ? msg->u2f_counter : 0, dry_run);
 }
 
-void fsm_msgWordAck(const WordAck *msg) { recovery_word(msg->word); }
+void fsm_msgWordAck(const WordAck *msg) {
+  CHECK_UNLOCKED
+
+  recovery_word(msg->word);
+}
 
 void fsm_msgSetU2FCounter(const SetU2FCounter *msg) {
+  CHECK_PIN
+
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
                     _("Do you want to set"), _("the U2F counter?"), NULL, NULL,
                     NULL, NULL);
@@ -533,6 +536,8 @@ void fsm_msgSetU2FCounter(const SetU2FCounter *msg) {
 }
 
 void fsm_msgGetNextU2FCounter() {
+  CHECK_PIN
+
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
                     _("Do you want to"), _("increase and retrieve"),
                     _("the U2F counter?"), NULL, NULL, NULL);

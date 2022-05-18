@@ -17,6 +17,22 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+static bool fsm_ethereumCheckPath(uint32_t address_n_count,
+                                  const uint32_t *address_n, bool pubkey_export,
+                                  uint64_t chain_id) {
+  if (ethereum_path_check(address_n_count, address_n, pubkey_export,
+                          chain_id)) {
+    return true;
+  }
+
+  if (config_getSafetyCheckLevel() == SafetyCheckLevel_Strict) {
+    fsm_sendFailure(FailureType_Failure_DataError, _("Forbidden key path"));
+    return false;
+  }
+
+  return fsm_layoutPathWarning();
+}
+
 void fsm_msgEthereumGetPublicKey(const EthereumGetPublicKey *msg) {
   RESP_INIT(EthereumPublicKey);
 
@@ -27,6 +43,12 @@ void fsm_msgEthereumGetPublicKey(const EthereumGetPublicKey *msg) {
   // we use Bitcoin-like format for ETH
   const CoinInfo *coin = fsm_getCoin(true, "Bitcoin");
   if (!coin) return;
+
+  if (!fsm_ethereumCheckPath(msg->address_n_count, msg->address_n, true,
+                             CHAIN_ID_UNKNOWN)) {
+    layoutHome();
+    return;
+  }
 
   const char *curve = coin->curve_name;
   uint32_t fingerprint;
@@ -71,6 +93,12 @@ void fsm_msgEthereumSignTx(const EthereumSignTx *msg) {
 
   CHECK_PIN
 
+  if (!fsm_ethereumCheckPath(msg->address_n_count, msg->address_n, false,
+                             msg->chain_id)) {
+    layoutHome();
+    return;
+  }
+
   const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n,
                                           msg->address_n_count, NULL);
   if (!node) return;
@@ -83,6 +111,12 @@ void fsm_msgEthereumSignTxEIP1559(const EthereumSignTxEIP1559 *msg) {
 
   CHECK_PIN
 
+  if (!fsm_ethereumCheckPath(msg->address_n_count, msg->address_n, false,
+                             msg->chain_id)) {
+    layoutHome();
+    return;
+  }
+
   const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n,
                                           msg->address_n_count, NULL);
   if (!node) return;
@@ -91,6 +125,8 @@ void fsm_msgEthereumSignTxEIP1559(const EthereumSignTxEIP1559 *msg) {
 }
 
 void fsm_msgEthereumTxAck(const EthereumTxAck *msg) {
+  CHECK_UNLOCKED
+
   ethereum_signing_txack(msg);
 }
 
@@ -101,16 +137,25 @@ void fsm_msgEthereumGetAddress(const EthereumGetAddress *msg) {
 
   CHECK_PIN
 
+  if (!fsm_ethereumCheckPath(msg->address_n_count, msg->address_n, false,
+                             CHAIN_ID_UNKNOWN)) {
+    layoutHome();
+    return;
+  }
+
   const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n,
                                           msg->address_n_count, NULL);
   if (!node) return;
 
   uint8_t pubkeyhash[20];
 
-  if (!hdnode_get_ethereum_pubkeyhash(node, pubkeyhash)) return;
+  if (!hdnode_get_ethereum_pubkeyhash(node, pubkeyhash)) {
+    layoutHome();
+    return;
+  }
 
   uint32_t slip44 =
-      (msg->address_n_count > 1) ? (msg->address_n[1] & 0x7fffffff) : 0;
+      (msg->address_n_count > 1) ? (msg->address_n[1] & PATH_UNHARDEN_MASK) : 0;
   bool rskip60 = false;
   uint64_t chain_id = 0;
   // constants from trezor-common/defs/ethereum/networks.json
@@ -150,12 +195,19 @@ void fsm_msgEthereumSignMessage(const EthereumSignMessage *msg) {
 
   CHECK_PIN
 
+  if (!fsm_ethereumCheckPath(msg->address_n_count, msg->address_n, false,
+                             CHAIN_ID_UNKNOWN)) {
+    layoutHome();
+    return;
+  }
+
   const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n,
                                           msg->address_n_count, NULL);
   if (!node) return;
 
   uint8_t pubkeyhash[20] = {0};
   if (!hdnode_get_ethereum_pubkeyhash(node, pubkeyhash)) {
+    layoutHome();
     return;
   }
 
@@ -230,6 +282,12 @@ void fsm_msgEthereumSignTypedHash(const EthereumSignTypedHash *msg) {
     return;
   }
 
+  if (!fsm_ethereumCheckPath(msg->address_n_count, msg->address_n, false,
+                             CHAIN_ID_UNKNOWN)) {
+    layoutHome();
+    return;
+  }
+
   layoutDialogSwipe(&bmp_icon_warning, _("Abort"), _("Continue"), NULL,
                     _("Unable to show"), _("EIP-712 data."), NULL,
                     _("Sign at your own risk."), NULL, NULL);
@@ -245,6 +303,7 @@ void fsm_msgEthereumSignTypedHash(const EthereumSignTypedHash *msg) {
 
   uint8_t pubkeyhash[20] = {0};
   if (!hdnode_get_ethereum_pubkeyhash(node, pubkeyhash)) {
+    layoutHome();
     return;
   }
 

@@ -50,6 +50,7 @@ class Approver:
         self.orig_change_out = 0  # sum of original change output amounts
 
         self.amount_unit = tx.amount_unit
+        self.has_unverified_external_input = False
 
     def is_payjoin(self) -> bool:
         # A PayJoin is a replacement transaction which manipulates the external inputs of the
@@ -73,6 +74,7 @@ class Approver:
             self.orig_total_in += txi.amount
 
         if input_is_external_unverified(txi):
+            self.has_unverified_external_input = True
             if safety_checks.is_strict():
                 raise wire.ProcessError("Unverifiable external input.")
         else:
@@ -234,6 +236,9 @@ class BasicApprover(Approver):
 
     async def approve_tx(self, tx_info: TxInfo, orig_txs: list[OriginalTxInfo]) -> None:
         await super().approve_tx(tx_info, orig_txs)
+
+        if self.has_unverified_external_input:
+            await helpers.confirm_unverified_external_input()
 
         fee = self.total_in - self.total_out
 

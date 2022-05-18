@@ -431,7 +431,10 @@ void session_clearCache(Session *session) {
   session->seedCached = false;
 }
 
-void config_lockDevice(void) { storage_lock(); }
+void config_lockDevice(void) {
+  fsm_abortWorkflows();
+  storage_lock();
+}
 
 static void get_u2froot_callback(uint32_t iter, uint32_t total) {
   layoutProgress(_("Updating"), 1000 * iter / total);

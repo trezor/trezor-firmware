@@ -180,6 +180,11 @@ class UiConfirmChangeCountOverThreshold(UiConfirm):
         return layout.confirm_change_count_over_threshold(ctx, self.change_count)
 
 
+class UiConfirmUnverifiedExternalInput(UiConfirm):
+    def confirm_dialog(self, ctx: wire.Context) -> Awaitable[Any]:
+        return layout.confirm_unverified_external_input(ctx)
+
+
 class UiConfirmForeignAddress(UiConfirm):
     def __init__(self, address_n: list):
         self.address_n = address_n
@@ -237,6 +242,10 @@ def confirm_feeoverthreshold(fee: int, coin: CoinInfo, amount_unit: AmountUnit) 
 
 def confirm_change_count_over_threshold(change_count: int) -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]
     return (yield UiConfirmChangeCountOverThreshold(change_count))
+
+
+def confirm_unverified_external_input() -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]
+    return (yield UiConfirmUnverifiedExternalInput())
 
 
 def confirm_foreign_address(address_n: list) -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]

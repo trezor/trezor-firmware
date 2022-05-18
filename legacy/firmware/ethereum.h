@@ -25,6 +25,8 @@
 #include "bip32.h"
 #include "messages-ethereum.pb.h"
 
+#define CHAIN_ID_UNKNOWN UINT64_MAX
+
 void ethereum_signing_init(const EthereumSignTx *msg, const HDNode *node);
 void ethereum_signing_init_eip1559(const EthereumSignTxEIP1559 *msg,
                                    const HDNode *node);
@@ -39,4 +41,6 @@ void ethereum_typed_hash_sign(const EthereumSignTypedHash *msg,
                               EthereumTypedDataSignature *resp);
 bool ethereum_parse(const char *address, uint8_t pubkeyhash[20]);
 
+bool ethereum_path_check(uint32_t address_n_count, const uint32_t *address_n,
+                         bool pubkey_export, uint64_t chain);
 #endif

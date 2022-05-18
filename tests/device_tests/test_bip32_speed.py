@@ -18,8 +18,9 @@ import time
 
 import pytest
 
-from trezorlib import btc
+from trezorlib import btc, device
 from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.messages import SafetyCheckLevel
 from trezorlib.tools import H_
 
 pytestmark = [
@@ -29,6 +30,8 @@ pytestmark = [
 
 
 def test_public_ckd(client: Client):
+    # disable safety checks to access non-standard paths
+    device.apply_settings(client, safety_checks=SafetyCheckLevel.PromptTemporarily)
     btc.get_address(client, "Bitcoin", [])  # to compute root node via BIP39
 
     for depth in range(8):
@@ -41,6 +44,8 @@ def test_public_ckd(client: Client):
 
 
 def test_private_ckd(client: Client):
+    # disable safety checks to access non-standard paths
+    device.apply_settings(client, safety_checks=SafetyCheckLevel.PromptTemporarily)
     btc.get_address(client, "Bitcoin", [])  # to compute root node via BIP39
 
     for depth in range(8):
@@ -54,6 +59,9 @@ def test_private_ckd(client: Client):
 
 
 def test_cache(client: Client):
+    # disable safety checks to access non-standard paths
+    device.apply_settings(client, safety_checks=SafetyCheckLevel.PromptTemporarily)
+
     start = time.time()
     for x in range(10):
         btc.get_address(client, "Bitcoin", [x, 2, 3, 4, 5, 6, 7, 8])

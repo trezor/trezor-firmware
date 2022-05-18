@@ -79,7 +79,7 @@ int compile_output(const CoinInfo *coin, AmountUnit amount_unit,
 int fill_input_script_pubkey(const CoinInfo *coin, const HDNode *root,
                              TxInputType *in);
 
-void tx_input_check_hash(Hasher *hasher, const TxInputType *input);
+bool tx_input_check_hash(Hasher *hasher, const TxInputType *input);
 uint32_t tx_prevout_hash(Hasher *hasher, const TxInputType *input);
 uint32_t tx_amount_hash(Hasher *hasher, const TxInputType *input);
 uint32_t tx_script_hash(Hasher *hasher, uint32_t size, const uint8_t *data);

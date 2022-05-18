@@ -17,7 +17,8 @@
       "prev_index": 0,
       "script_sig": "",
       "script_type": "SPENDTAPROOT",
-      "sequence": 4294967293
+      "sequence": 4294967293,
+      "witness": "0140d961a3fc97561c8a305d0ba78488e8d1efed520ac36b226db76277c38e5ab112236a2f821b6dde82dc4013f74148d1ec6e1e471b952755b5265b7ed594afb723"
     }
   ],
   "lock_time": 0,

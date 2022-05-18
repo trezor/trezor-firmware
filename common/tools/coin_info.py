@@ -235,7 +235,8 @@ def _load_ethereum_networks():
         chain_data = load_json(chain)
         shortcut = chain_data["nativeCurrency"]["symbol"]
         name = chain_data["name"]
-        is_testnet = "testnet" in name.lower()
+        title = chain_data.get("title", "")
+        is_testnet = "testnet" in name.lower() or "testnet" in title.lower()
         if is_testnet:
             slip44 = 1
         else:

@@ -37,7 +37,7 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
 
   // derive m/0' to obtain root_fingerprint
   uint32_t root_fingerprint;
-  uint32_t path[1] = {0x80000000 | 0};
+  uint32_t path[1] = {PATH_HARDENED | 0};
   HDNode *node = fsm_getDerivedNode(curve, path, 1, &root_fingerprint);
   if (!node) return;
 
@@ -146,34 +146,32 @@ void fsm_msgSignTx(const SignTx *msg) {
 }
 
 void fsm_msgTxAck(TxAck *msg) {
+  CHECK_UNLOCKED
+
   CHECK_PARAM(msg->has_tx, _("No transaction provided"));
 
   signing_txack(&(msg->tx));
 }
 
-static bool fsm_checkCoinPath(const CoinInfo *coin, InputScriptType script_type,
-                              uint32_t address_n_count,
-                              const uint32_t *address_n, bool has_multisig) {
-  if (!coin_path_check(coin, script_type, address_n_count, address_n,
-                       has_multisig, CoinPathCheckLevel_SCRIPT_TYPE)) {
-    if (config_getSafetyCheckLevel() == SafetyCheckLevel_Strict &&
-        !coin_path_check(coin, script_type, address_n_count, address_n,
-                         has_multisig, CoinPathCheckLevel_KNOWN)) {
-      fsm_sendFailure(FailureType_Failure_DataError, _("Forbidden key path"));
-      layoutHome();
-      return false;
-    }
-
-    layoutDialogSwipe(&bmp_icon_warning, _("Abort"), _("Continue"), NULL,
-                      _("Wrong address path"), _("for selected coin."), NULL,
-                      _("Continue at your"), _("own risk!"), NULL);
-    if (!protectButton(ButtonRequestType_ButtonRequest_UnknownDerivationPath,
-                       false)) {
-      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
-      layoutHome();
-      return false;
-    }
+bool fsm_checkCoinPath(const CoinInfo *coin, InputScriptType script_type,
+                       uint32_t address_n_count, const uint32_t *address_n,
+                       bool has_multisig, bool show_warning) {
+  if (coin_path_check(coin, script_type, address_n_count, address_n,
+                      has_multisig, true)) {
+    return true;
   }
+
+  if (config_getSafetyCheckLevel() == SafetyCheckLevel_Strict &&
+      !coin_path_check(coin, script_type, address_n_count, address_n,
+                       has_multisig, false)) {
+    fsm_sendFailure(FailureType_Failure_DataError, _("Forbidden key path"));
+    return false;
+  }
+
+  if (show_warning) {
+    return fsm_layoutPathWarning();
+  }
+
   return true;
 }
 
@@ -186,6 +184,14 @@ void fsm_msgGetAddress(const GetAddress *msg) {
 
   const CoinInfo *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
   if (!coin) return;
+
+  if (!fsm_checkCoinPath(coin, msg->script_type, msg->address_n_count,
+                         msg->address_n, msg->has_multisig,
+                         msg->show_display)) {
+    layoutHome();
+    return;
+  }
+
   HDNode *node = fsm_getDerivedNode(coin->curve_name, msg->address_n,
                                     msg->address_n_count, NULL);
   if (!node) return;
@@ -223,11 +229,6 @@ void fsm_msgGetAddress(const GetAddress *msg) {
           cryptoMultisigPubkeyIndex(coin, &(msg->multisig), node->public_key);
     } else {
       strlcpy(desc, _("Address:"), sizeof(desc));
-    }
-
-    if (!fsm_checkCoinPath(coin, msg->script_type, msg->address_n_count,
-                           msg->address_n, msg->has_multisig)) {
-      return;
     }
 
     uint32_t multisig_xpub_magic = coin->xpub_magic;
@@ -274,7 +275,8 @@ void fsm_msgSignMessage(const SignMessage *msg) {
   if (!coin) return;
 
   if (!fsm_checkCoinPath(coin, msg->script_type, msg->address_n_count,
-                         msg->address_n, false)) {
+                         msg->address_n, false, true)) {
+    layoutHome();
     return;
   }
 

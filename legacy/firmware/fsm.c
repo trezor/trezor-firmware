@@ -100,6 +100,12 @@ static uint8_t msg_resp[MSG_OUT_DECODED_SIZE] __attribute__((aligned));
     return;                 \
   }
 
+#define CHECK_UNLOCKED         \
+  if (!session_isUnlocked()) { \
+    layoutHome();              \
+    return;                    \
+  }
+
 #define CHECK_PARAM(cond, errormsg)                             \
   if (!(cond)) {                                                \
     fsm_sendFailure(FailureType_Failure_DataError, (errormsg)); \
@@ -368,6 +374,27 @@ void fsm_msgRebootToBootloader(void) {
 #else
   printf("Reboot!\n");
 #endif
+}
+
+void fsm_abortWorkflows(void) {
+  recovery_abort();
+  signing_abort();
+#if !BITCOIN_ONLY
+  ethereum_signing_abort();
+  stellar_signingAbort();
+#endif
+}
+
+bool fsm_layoutPathWarning(void) {
+  layoutDialogSwipe(&bmp_icon_warning, _("Abort"), _("Continue"), NULL,
+                    _("Wrong address path"), _("for selected coin."), NULL,
+                    _("Continue at your"), _("own risk!"), NULL);
+  if (!protectButton(ButtonRequestType_ButtonRequest_UnknownDerivationPath,
+                     false)) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+    return false;
+  }
+  return true;
 }
 
 #include "fsm_msg_coin.h"

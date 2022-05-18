@@ -20,6 +20,7 @@
 #ifndef __FSM_H__
 #define __FSM_H__
 
+#include "coins.h"
 #include "messages-bitcoin.pb.h"
 #include "messages-crypto.pb.h"
 #include "messages-debug.pb.h"
@@ -142,5 +143,12 @@ void fsm_msgRebootToBootloader(void);
 
 bool fsm_layoutSignMessage(const uint8_t *msg, uint32_t len);
 bool fsm_layoutVerifyMessage(const uint8_t *msg, uint32_t len);
+
+bool fsm_layoutPathWarning(void);
+bool fsm_checkCoinPath(const CoinInfo *coin, InputScriptType script_type,
+                       uint32_t address_n_count, const uint32_t *address_n,
+                       bool has_multisig, bool show_warning);
+
+void fsm_abortWorkflows(void);
 
 #endif

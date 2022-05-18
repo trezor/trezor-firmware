@@ -19,6 +19,7 @@ import pytest
 from trezorlib import device, exceptions, messages
 from trezorlib.client import MAX_PIN_LENGTH
 from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.tools import parse_path
 
 PinType = messages.PinMatrixRequestType
 
@@ -177,7 +178,7 @@ def test_set_pin_to_wipe_code(client: Client):
     # Check that there is no PIN protection.
     client.init_device()
     assert client.features.pin_protection is False
-    resp = client.call_raw(messages.GetAddress())
+    resp = client.call_raw(messages.GetAddress(address_n=parse_path("m/44'/0'/0'/0/0")))
     assert isinstance(resp, messages.Address)
 
 

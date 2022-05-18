@@ -286,10 +286,10 @@ set to `tx.extra_data_chunk`.
 Trezor sets `request_type` to `TXORIGINPUT`. `request_details.tx_hash` is the
 transaction hash of the original transaction.
 
-Host must respond with a `TxAckInput` message. All relevant data must be set in
+The host must respond with a `TxAckInput` message. All relevant data must be set in
 `tx.input`. The derivation path and `script_type` are mandatory for all original
-internal inputs. For each original transaction, one of its original internal inputs must
-be accompanied with a valid signature in the `script_sig` and/or `witness` fields.
+internal inputs. All original internal inputs must also be accompanied with full
+transaction signature data in the `script_sig` and/or `witness` fields.
 
 ### Original transaction output
 

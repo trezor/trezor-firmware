@@ -18,6 +18,7 @@ import pytest
 
 from trezorlib import debuglink, device, messages, misc
 from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.tools import parse_path
 from trezorlib.transport import udp
 
 from ..common import MNEMONIC12
@@ -40,7 +41,7 @@ def test_mnemonic(client: Client):
 @pytest.mark.skip_t2
 @pytest.mark.setup_client(mnemonic=MNEMONIC12, pin="1234", passphrase="")
 def test_pin(client: Client):
-    resp = client.call_raw(messages.GetAddress())
+    resp = client.call_raw(messages.GetAddress(address_n=parse_path("m/44'/0'/0'/0/0")))
     assert isinstance(resp, messages.PinMatrixRequest)
 
     state = client.debug.state()

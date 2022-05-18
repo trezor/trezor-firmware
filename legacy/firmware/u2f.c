@@ -23,6 +23,7 @@
 #include "bip32.h"
 #include "buttons.h"
 #include "config.h"
+#include "crypto.h"
 #include "curves.h"
 #include "debug.h"
 #include "gettext.h"
@@ -481,7 +482,7 @@ static const HDNode *generateKeyHandle(const uint8_t app_id[],
   uint32_t key_path[KEY_PATH_ENTRIES] = {0};
   for (uint32_t i = 0; i < KEY_PATH_ENTRIES; i++) {
     // high bit for hardened keys
-    key_path[i] = 0x80000000 | random32();
+    key_path[i] = PATH_HARDENED | random32();
   }
 
   // First half of keyhandle is key_path
@@ -508,7 +509,7 @@ static const HDNode *validateKeyHandle(const uint8_t app_id[],
   memcpy(key_path, key_handle, KEY_PATH_LEN);
   for (unsigned int i = 0; i < KEY_PATH_ENTRIES; i++) {
     // check high bit for hardened keys
-    if (!(key_path[i] & 0x80000000)) {
+    if (!(key_path[i] & PATH_HARDENED)) {
       return NULL;
     }
   }

@@ -82,8 +82,7 @@
     },
     "bitcoin:RVN": {
         "Chaintek": "https://wallet.chaintek.net/",
-        "Electrum-RVN": "https://github.com/traysi/electrum-raven",
-        "Mango Farm": "https://mangofarmassets.com/mangowallet"
+        "Electrum-RVN": "https://github.com/traysi/electrum-raven"
     },
     "bitcoin:SMART": {
         "Electrum-SMART": "https://github.com/smartcash/electrum-smart"
