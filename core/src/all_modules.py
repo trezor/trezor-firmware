@@ -161,6 +161,20 @@ trezor.ui.layouts.reset
 import trezor.ui.layouts.reset
 trezor.ui.layouts.tr
 import trezor.ui.layouts.tr
+trezor.ui.layouts.tr.altcoin
+import trezor.ui.layouts.tr.altcoin
+trezor.ui.layouts.tr.recovery
+import trezor.ui.layouts.tr.recovery
+trezor.ui.layouts.tr.reset
+import trezor.ui.layouts.tr.reset
+trezor.ui.layouts.tt
+import trezor.ui.layouts.tt
+trezor.ui.layouts.tt.altcoin
+import trezor.ui.layouts.tt.altcoin
+trezor.ui.layouts.tt.recovery
+import trezor.ui.layouts.tt.recovery
+trezor.ui.layouts.tt.reset
+import trezor.ui.layouts.tt.reset
 trezor.ui.layouts.tt_v2
 import trezor.ui.layouts.tt_v2
 trezor.ui.layouts.tt_v2.fido
@@ -403,6 +417,18 @@ if not utils.BITCOIN_ONLY:
     import trezor.enums.TezosBallotType
     trezor.enums.TezosContractType
     import trezor.enums.TezosContractType
+    trezor.ui.components.common.webauthn
+    import trezor.ui.components.common.webauthn
+    trezor.ui.components.tt.webauthn
+    import trezor.ui.components.tt.webauthn
+    trezor.ui.layouts.tr.webauthn
+    import trezor.ui.layouts.tr.webauthn
+    trezor.ui.layouts.tt.webauthn
+    import trezor.ui.layouts.tt.webauthn
+    trezor.ui.layouts.tt_v2.webauthn
+    import trezor.ui.layouts.tt_v2.webauthn
+    trezor.ui.layouts.webauthn
+    import trezor.ui.layouts.webauthn
     apps.binance
     import apps.binance
     apps.binance.get_address

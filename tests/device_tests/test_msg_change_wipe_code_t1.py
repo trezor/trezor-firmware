@@ -29,7 +29,7 @@ WIPE_CODE6 = "456789"
 WIPE_CODE_MAX = "".join(chr((i % 9) + ord("1")) for i in range(MAX_PIN_LENGTH))
 WIPE_CODE_TOO_LONG = WIPE_CODE_MAX + "1"
 
-pytestmark = pytest.mark.skip_t2
+pytestmark = [pytest.mark.skip_t2, pytest.mark.skip_tr]
 
 
 def _set_wipe_code(client: Client, pin, wipe_code):

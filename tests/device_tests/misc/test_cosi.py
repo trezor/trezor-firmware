@@ -23,6 +23,8 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
+pytestmark = [pytest.mark.skip_t2, pytest.mark.skip_tr]
+
 DIGEST = sha256(b"this is not a pipe").digest()
 
 
