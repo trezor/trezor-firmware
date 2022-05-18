@@ -57,6 +57,7 @@ def test_correct_pin(client: Client):
 
 
 @pytest.mark.skip_t2
+@pytest.mark.skip_tr
 def test_incorrect_pin_t1(client: Client):
     with pytest.raises(PinException):
         client.use_pin_sequence([BAD_PIN])
@@ -86,6 +87,7 @@ def _check_backoff_time(attempts: int, start: float) -> None:
 
 
 @pytest.mark.skip_t2
+@pytest.mark.skip_tr
 def test_exponential_backoff_t1(client: Client):
     for attempt in range(3):
         start = time.time()

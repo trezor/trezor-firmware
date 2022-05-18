@@ -377,7 +377,7 @@ def show_pubkey(
     return confirm_blob(
         ctx,
         br_type="show_pubkey",
-        title="Confirm public key",
+        title=title,
         data=pubkey,
         br_code=ButtonRequestType.PublicKey,
         icon=ui.ICON_RECEIVE,
