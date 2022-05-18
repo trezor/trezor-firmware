@@ -12,7 +12,7 @@ use crate::{
         },
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
-            result::{CANCELLED, CONFIRMED},
+            result::{CANCELLED, CONFIRMED, INFO},
         },
     },
     util,
@@ -117,6 +117,9 @@ pub static mp_module_trezorui2: Module = obj_module! {
 
     /// CANCELLED: object
     Qstr::MP_QSTR_CANCELLED => CANCELLED.as_obj(),
+
+    /// INFO: object
+    Qstr::MP_QSTR_INFO => INFO.as_obj(),
 
     /// def confirm_action(
     ///     *,
