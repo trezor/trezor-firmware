@@ -207,6 +207,12 @@ trezor.ui.layouts.t1
 import trezor.ui.layouts.t1
 trezor.ui.layouts.tr
 import trezor.ui.layouts.tr
+trezor.ui.layouts.tr.altcoin
+import trezor.ui.layouts.tr.altcoin
+trezor.ui.layouts.tr.recovery
+import trezor.ui.layouts.tr.recovery
+trezor.ui.layouts.tr.reset
+import trezor.ui.layouts.tr.reset
 trezor.ui.layouts.tt
 import trezor.ui.layouts.tt
 trezor.ui.layouts.tt.altcoin
@@ -465,6 +471,8 @@ if not utils.BITCOIN_ONLY:
     import trezor.ui.components.common.webauthn
     trezor.ui.components.tt.webauthn
     import trezor.ui.components.tt.webauthn
+    trezor.ui.layouts.tr.webauthn
+    import trezor.ui.layouts.tr.webauthn
     trezor.ui.layouts.tt.webauthn
     import trezor.ui.layouts.tt.webauthn
     trezor.ui.layouts.tt_v2.webauthn

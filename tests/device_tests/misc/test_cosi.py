@@ -22,7 +22,7 @@ from trezorlib import cosi
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
-pytestmark = pytest.mark.skip_t2
+pytestmark = [pytest.mark.skip_t2, pytest.mark.skip_tr]
 
 DIGEST = sha256(b"this is not a pipe").digest()
 
