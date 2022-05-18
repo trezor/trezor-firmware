@@ -43,6 +43,7 @@ def test_ethereum_sign_typed_data(client: Client, parameters, result):
 
 
 @pytest.mark.skip_t2
+@pytest.mark.skip_tr
 @parametrize_using_common_fixtures("ethereum/sign_typed_data.json")
 def test_ethereum_sign_typed_data_blind(client: Client, parameters, result):
     with client:
@@ -142,6 +143,9 @@ def input_flow_cancel(client: Client):
 
 @pytest.mark.skip_t1
 def test_ethereum_sign_typed_data_show_more_button(client: Client):
+    if client.features.model == "R":
+        pytest.fail("would freeze at Show more dialogue")
+
     with client:
         client.watch_layout()
         client.set_input_flow(input_flow_show_more(client))

@@ -21,7 +21,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import SdProtectOperationType as Op
 
-pytestmark = pytest.mark.skip_t1
+pytestmark = [pytest.mark.skip_t1, pytest.mark.skip_tr, pytest.mark.sd_card]
 
 
 @pytest.mark.sd_card(formatted=False)

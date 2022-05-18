@@ -400,6 +400,9 @@ HEXDATA = "0123456789abcd000023456789abcd010003456789abcd020000456789abcd0300000
 )
 @pytest.mark.skip_t1
 def test_signtx_data_pagination(client: Client, flow):
+    if client.features.model == "R":
+        pytest.fail("causes freeze on the pagination screen")
+
     with client:
         client.watch_layout()
         client.set_input_flow(flow(client))
