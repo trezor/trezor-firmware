@@ -1,13 +1,10 @@
 from typing import TYPE_CHECKING
 
+from trezor import wire
 from trezor.crypto import hashlib
 from trezor.enums import CardanoNativeScriptType
 
-from apps.cardano.helpers import (
-    ADDRESS_KEY_HASH_SIZE,
-    INVALID_NATIVE_SCRIPT,
-    SCRIPT_HASH_SIZE,
-)
+from apps.cardano.helpers import ADDRESS_KEY_HASH_SIZE, SCRIPT_HASH_SIZE
 from apps.common import cbor
 
 from .helpers.paths import SCHEMA_MINT
@@ -23,6 +20,8 @@ if TYPE_CHECKING:
 
 
 def validate_native_script(script: CardanoNativeScript | None) -> None:
+    INVALID_NATIVE_SCRIPT = wire.ProcessError("Invalid native script")
+
     if not script:
         raise INVALID_NATIVE_SCRIPT
 
@@ -112,7 +111,7 @@ def _validate_native_script_structure(script: CardanoNativeScript) -> None:
     }
 
     if script.type not in fields_to_be_empty or any(fields_to_be_empty[script.type]):
-        raise INVALID_NATIVE_SCRIPT
+        raise wire.ProcessError("Invalid native script")
 
 
 def get_native_script_hash(keychain: Keychain, script: CardanoNativeScript) -> bytes:
@@ -131,7 +130,7 @@ def cborize_native_script(
         elif script.key_path:
             script_content = (get_public_key_hash(keychain, script.key_path),)
         else:
-            raise INVALID_NATIVE_SCRIPT
+            raise wire.ProcessError("Invalid native script")
     elif script.type == CardanoNativeScriptType.ALL:
         script_content = (
             tuple(
@@ -159,6 +158,6 @@ def cborize_native_script(
     elif script.type == CardanoNativeScriptType.INVALID_HEREAFTER:
         script_content = (script.invalid_hereafter,)
     else:
-        raise INVALID_NATIVE_SCRIPT
+        raise RuntimeError  # should be unreachable
 
     return (script.type,) + script_content

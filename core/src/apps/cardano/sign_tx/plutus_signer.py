@@ -10,7 +10,6 @@ from trezor.messages import (
 )
 
 from .. import seed
-from ..helpers import INVALID_CERTIFICATE, INVALID_WITNESS_REQUEST
 from ..helpers.credential import Credential, should_show_address_credentials
 from ..helpers.paths import SCHEMA_MINT
 from ..layout import (
@@ -95,7 +94,7 @@ class PlutusSigner(Signer):
     def _validate_certificate(self, certificate: CardanoTxCertificate) -> None:
         super()._validate_certificate(certificate)
         if certificate.type == CardanoCertificateType.STAKE_POOL_REGISTRATION:
-            raise INVALID_CERTIFICATE
+            raise wire.ProcessError("Invalid certificate")
 
     def _validate_witness_request(
         self, witness_request: CardanoTxWitnessRequest
@@ -109,4 +108,4 @@ class PlutusSigner(Signer):
             or is_multisig_path(witness_request.path)
             or is_minting
         ):
-            raise INVALID_WITNESS_REQUEST
+            raise wire.ProcessError("Invalid witness request")

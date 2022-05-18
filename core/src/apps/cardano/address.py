@@ -1,18 +1,11 @@
 from typing import TYPE_CHECKING
 
+from trezor import wire
 from trezor.crypto import base58
 from trezor.enums import CardanoAddressType
 
 from .byron_address import derive_byron_address, validate_byron_address
-from .helpers import (
-    ADDRESS_KEY_HASH_SIZE,
-    INVALID_ADDRESS,
-    INVALID_ADDRESS_PARAMETERS,
-    NETWORK_MISMATCH,
-    SCRIPT_HASH_SIZE,
-    bech32,
-    network_ids,
-)
+from .helpers import ADDRESS_KEY_HASH_SIZE, SCRIPT_HASH_SIZE, bech32, network_ids
 from .helpers.paths import SCHEMA_STAKING_ANY_ACCOUNT
 from .helpers.utils import get_public_key_hash, variable_length_encode
 from .seed import is_byron_path, is_shelley_path
@@ -50,16 +43,19 @@ MIN_ADDRESS_BYTES_LENGTH = 29
 MAX_ADDRESS_BYTES_LENGTH = 65
 
 
+def assert_address_params_cond(condition: bool) -> None:
+    if not condition:
+        raise wire.ProcessError("Invalid address parameters")
+
+
 def validate_address_parameters(parameters: CardanoAddressParametersType) -> None:
     _validate_address_parameters_structure(parameters)
 
     if parameters.address_type == CardanoAddressType.BYRON:
-        if not is_byron_path(parameters.address_n):
-            raise INVALID_ADDRESS_PARAMETERS
+        assert_address_params_cond(is_byron_path(parameters.address_n))
 
     elif parameters.address_type == CardanoAddressType.BASE:
-        if not is_shelley_path(parameters.address_n):
-            raise INVALID_ADDRESS_PARAMETERS
+        assert_address_params_cond(is_shelley_path(parameters.address_n))
         _validate_base_address_staking_info(
             parameters.address_n_staking, parameters.staking_key_hash
         )
@@ -71,8 +67,7 @@ def validate_address_parameters(parameters: CardanoAddressParametersType) -> Non
         )
 
     elif parameters.address_type == CardanoAddressType.BASE_KEY_SCRIPT:
-        if not is_shelley_path(parameters.address_n):
-            raise INVALID_ADDRESS_PARAMETERS
+        assert_address_params_cond(is_shelley_path(parameters.address_n))
         _validate_script_hash(parameters.script_staking_hash)
 
     elif parameters.address_type == CardanoAddressType.BASE_SCRIPT_SCRIPT:
@@ -80,34 +75,30 @@ def validate_address_parameters(parameters: CardanoAddressParametersType) -> Non
         _validate_script_hash(parameters.script_staking_hash)
 
     elif parameters.address_type == CardanoAddressType.POINTER:
-        if not is_shelley_path(parameters.address_n):
-            raise INVALID_ADDRESS_PARAMETERS
-        if parameters.certificate_pointer is None:
-            raise INVALID_ADDRESS_PARAMETERS
+        assert_address_params_cond(is_shelley_path(parameters.address_n))
+        assert_address_params_cond(parameters.certificate_pointer is not None)
 
     elif parameters.address_type == CardanoAddressType.POINTER_SCRIPT:
         _validate_script_hash(parameters.script_payment_hash)
-        if parameters.certificate_pointer is None:
-            raise INVALID_ADDRESS_PARAMETERS
+        assert_address_params_cond(parameters.certificate_pointer is not None)
 
     elif parameters.address_type == CardanoAddressType.ENTERPRISE:
-        if not is_shelley_path(parameters.address_n):
-            raise INVALID_ADDRESS_PARAMETERS
+        assert_address_params_cond(is_shelley_path(parameters.address_n))
 
     elif parameters.address_type == CardanoAddressType.ENTERPRISE_SCRIPT:
         _validate_script_hash(parameters.script_payment_hash)
 
     elif parameters.address_type == CardanoAddressType.REWARD:
-        if not is_shelley_path(parameters.address_n_staking):
-            raise INVALID_ADDRESS_PARAMETERS
-        if not SCHEMA_STAKING_ANY_ACCOUNT.match(parameters.address_n_staking):
-            raise INVALID_ADDRESS_PARAMETERS
+        assert_address_params_cond(is_shelley_path(parameters.address_n_staking))
+        assert_address_params_cond(
+            SCHEMA_STAKING_ANY_ACCOUNT.match(parameters.address_n_staking)
+        )
 
     elif parameters.address_type == CardanoAddressType.REWARD_SCRIPT:
         _validate_script_hash(parameters.script_staking_hash)
 
     else:
-        raise INVALID_ADDRESS_PARAMETERS
+        raise RuntimeError  # should be unreachable
 
 
 def _validate_address_parameters_structure(
@@ -190,32 +181,28 @@ def _validate_address_parameters_structure(
         ),
     }
 
-    if parameters.address_type not in fields_to_be_empty or any(
-        fields_to_be_empty[parameters.address_type]
-    ):
-        raise INVALID_ADDRESS_PARAMETERS
+    assert_address_params_cond(parameters.address_type in fields_to_be_empty)
+    assert_address_params_cond(not any(fields_to_be_empty[parameters.address_type]))
 
 
 def _validate_base_address_staking_info(
     staking_path: list[int],
     staking_key_hash: bytes | None,
 ) -> None:
-    if staking_key_hash and staking_path:
-        raise INVALID_ADDRESS_PARAMETERS
+    assert_address_params_cond(not (staking_key_hash and staking_path))
 
     if staking_key_hash:
-        if len(staking_key_hash) != ADDRESS_KEY_HASH_SIZE:
-            raise INVALID_ADDRESS_PARAMETERS
+        assert_address_params_cond(len(staking_key_hash) == ADDRESS_KEY_HASH_SIZE)
     elif staking_path:
-        if not SCHEMA_STAKING_ANY_ACCOUNT.match(staking_path):
-            raise INVALID_ADDRESS_PARAMETERS
+        assert_address_params_cond(SCHEMA_STAKING_ANY_ACCOUNT.match(staking_path))
     else:
-        raise INVALID_ADDRESS_PARAMETERS
+        raise wire.ProcessError("Invalid address parameters")
 
 
 def _validate_script_hash(script_hash: bytes | None) -> None:
-    if not script_hash or len(script_hash) != SCRIPT_HASH_SIZE:
-        raise INVALID_ADDRESS_PARAMETERS
+    assert_address_params_cond(
+        script_hash is not None and len(script_hash) == SCRIPT_HASH_SIZE
+    )
 
 
 def validate_output_address_parameters(
@@ -223,16 +210,23 @@ def validate_output_address_parameters(
 ) -> None:
     validate_address_parameters(parameters)
 
-    if parameters.address_type not in (
-        CardanoAddressType.BASE,
-        CardanoAddressType.BASE_KEY_SCRIPT,
-        CardanoAddressType.POINTER,
-        CardanoAddressType.ENTERPRISE,
-        CardanoAddressType.BYRON,
-    ):
-        # Change outputs with script payment part are forbidden.
-        # Reward addresses are forbidden as outputs in general, see also validate_output_address
-        raise INVALID_ADDRESS_PARAMETERS
+    # Change outputs with script payment part are forbidden.
+    # Reward addresses are forbidden as outputs in general, see also validate_output_address
+    assert_address_params_cond(
+        parameters.address_type
+        in (
+            CardanoAddressType.BASE,
+            CardanoAddressType.BASE_KEY_SCRIPT,
+            CardanoAddressType.POINTER,
+            CardanoAddressType.ENTERPRISE,
+            CardanoAddressType.BYRON,
+        )
+    )
+
+
+def assert_address_cond(condition: bool) -> None:
+    if not condition:
+        raise wire.ProcessError("Invalid address")
 
 
 def _validate_address_and_get_type(
@@ -242,8 +236,8 @@ def _validate_address_and_get_type(
     Validates Cardano address and returns its type
     for the convenience of outward-facing functions.
     """
-    if address is None or len(address) == 0:
-        raise INVALID_ADDRESS
+    assert_address_cond(address is not None)
+    assert_address_cond(len(address) > 0)
 
     address_bytes = get_address_bytes_unsafe(address)
     address_type = get_address_type(address_bytes)
@@ -253,26 +247,24 @@ def _validate_address_and_get_type(
     elif address_type in ADDRESS_TYPES_SHELLEY:
         _validate_shelley_address(address, address_bytes, network_id)
     else:
-        raise INVALID_ADDRESS
+        raise wire.ProcessError("Invalid address")
 
     return address_type
 
 
 def validate_output_address(address: str, protocol_magic: int, network_id: int) -> None:
     address_type = _validate_address_and_get_type(address, protocol_magic, network_id)
-
-    if address_type in (CardanoAddressType.REWARD, CardanoAddressType.REWARD_SCRIPT):
-        raise INVALID_ADDRESS
+    assert_address_cond(
+        address_type
+        not in (CardanoAddressType.REWARD, CardanoAddressType.REWARD_SCRIPT)
+    )
 
 
 def validate_reward_address(address: str, protocol_magic: int, network_id: int) -> None:
     address_type = _validate_address_and_get_type(address, protocol_magic, network_id)
-
-    if address_type not in (
-        CardanoAddressType.REWARD,
-        CardanoAddressType.REWARD_SCRIPT,
-    ):
-        raise INVALID_ADDRESS
+    assert_address_cond(
+        address_type in (CardanoAddressType.REWARD, CardanoAddressType.REWARD_SCRIPT)
+    )
 
 
 def get_address_bytes_unsafe(address: str) -> bytes:
@@ -282,7 +274,7 @@ def get_address_bytes_unsafe(address: str) -> bytes:
         try:
             address_bytes = base58.decode(address)
         except ValueError:
-            raise INVALID_ADDRESS
+            raise wire.ProcessError("Invalid address")
 
     return address_bytes
 
@@ -302,8 +294,9 @@ def _validate_shelley_address(
 
 
 def _validate_address_size(address_bytes: bytes) -> None:
-    if not MIN_ADDRESS_BYTES_LENGTH <= len(address_bytes) <= MAX_ADDRESS_BYTES_LENGTH:
-        raise INVALID_ADDRESS
+    assert_address_cond(
+        MIN_ADDRESS_BYTES_LENGTH <= len(address_bytes) <= MAX_ADDRESS_BYTES_LENGTH
+    )
 
 
 def _validate_address_bech32_hrp(
@@ -312,8 +305,7 @@ def _validate_address_bech32_hrp(
     valid_hrp = _get_bech32_hrp_for_address(address_type, network_id)
     bech32_hrp = bech32.get_hrp(address_str)
 
-    if valid_hrp != bech32_hrp:
-        raise INVALID_ADDRESS
+    assert_address_cond(valid_hrp == bech32_hrp)
 
 
 def _get_bech32_hrp_for_address(
@@ -337,7 +329,7 @@ def _get_bech32_hrp_for_address(
 
 def _validate_address_network_id(address: bytes, network_id: int) -> None:
     if _get_address_network_id(address) != network_id:
-        raise NETWORK_MISMATCH
+        raise wire.ProcessError("Output address network mismatch")
 
 
 def _get_address_network_id(address: bytes) -> int:
