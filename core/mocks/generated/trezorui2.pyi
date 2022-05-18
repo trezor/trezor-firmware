@@ -27,6 +27,7 @@ def confirm_text(
     """Confirm text."""
 CONFIRMED: object
 CANCELLED: object
+INFO: object
 
 
 # rust/src/ui/model_tr/layout.rs

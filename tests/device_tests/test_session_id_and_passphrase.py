@@ -312,6 +312,7 @@ def test_passphrase_always_on_device(client: Client):
 
 
 @pytest.mark.skip_t2
+@pytest.mark.skip_tr
 @pytest.mark.setup_client(passphrase="")
 def test_passphrase_on_device_not_possible_on_t1(client: Client):
     # This setting makes no sense on T1.
