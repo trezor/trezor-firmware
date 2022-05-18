@@ -1,11 +1,12 @@
 from typing import TYPE_CHECKING
 
+from trezor import wire
 from trezor.enums import CardanoCertificateType, CardanoPoolRelayType
 
 from apps.common import cbor
 
 from .address import get_address_bytes_unsafe, validate_reward_address
-from .helpers import ADDRESS_KEY_HASH_SIZE, INVALID_CERTIFICATE, LOVELACE_MAX_SUPPLY
+from .helpers import ADDRESS_KEY_HASH_SIZE, LOVELACE_MAX_SUPPLY
 from .helpers.paths import SCHEMA_STAKING_ANY_ACCOUNT
 from .helpers.utils import get_public_key_hash, validate_stake_credential
 
@@ -52,16 +53,16 @@ def validate_certificate(
             certificate.path,
             certificate.script_hash,
             certificate.key_hash,
-            INVALID_CERTIFICATE,
+            wire.ProcessError("Invalid certificate"),
         )
 
     if certificate.type == CardanoCertificateType.STAKE_DELEGATION:
         if not certificate.pool or len(certificate.pool) != POOL_HASH_SIZE:
-            raise INVALID_CERTIFICATE
+            raise wire.ProcessError("Invalid certificate")
 
     if certificate.type == CardanoCertificateType.STAKE_POOL_REGISTRATION:
         if certificate.pool_parameters is None:
-            raise INVALID_CERTIFICATE
+            raise wire.ProcessError("Invalid certificate")
         _validate_pool_parameters(
             certificate.pool_parameters, protocol_magic, network_id
         )
@@ -88,7 +89,7 @@ def _validate_certificate_structure(certificate: CardanoTxCertificate) -> None:
     if certificate.type not in fields_to_be_empty or any(
         fields_to_be_empty[certificate.type]
     ):
-        raise INVALID_CERTIFICATE
+        raise wire.ProcessError("Invalid certificate")
 
 
 def cborize_certificate(
@@ -119,7 +120,7 @@ def cborize_certificate(
             certificate.pool,
         )
     else:
-        raise INVALID_CERTIFICATE
+        raise RuntimeError  # should be unreachable
 
 
 def cborize_certificate_stake_credential(
@@ -135,7 +136,7 @@ def cborize_certificate_stake_credential(
         return 1, script_hash
 
     # should be unreachable unless there's a bug in validation
-    raise INVALID_CERTIFICATE
+    raise RuntimeError
 
 
 def cborize_initial_pool_registration_certificate_fields(
@@ -167,7 +168,7 @@ def cborize_initial_pool_registration_certificate_fields(
 
 def assert_certificate_cond(condition: bool) -> None:
     if not condition:
-        raise INVALID_CERTIFICATE
+        raise wire.ProcessError("Invalid certificate")
 
 
 def _validate_pool_parameters(
@@ -232,7 +233,7 @@ def validate_pool_relay(pool_relay: CardanoPoolRelayParameters) -> None:
             and len(pool_relay.host_name) <= MAX_URL_LENGTH
         )
     else:
-        raise INVALID_CERTIFICATE
+        raise RuntimeError  # should be unreachable
 
 
 def _validate_pool_metadata(pool_metadata: CardanoPoolMetadataType) -> None:
@@ -286,7 +287,7 @@ def cborize_pool_relay(
             pool_relay.host_name,
         )
     else:
-        raise INVALID_CERTIFICATE
+        raise RuntimeError  # should be unreachable
 
 
 def cborize_pool_metadata(

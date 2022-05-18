@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from trezor import wire
 from trezor.crypto import hashlib
 from trezor.crypto.curve import ed25519
 from trezor.enums import CardanoAddressType, CardanoTxAuxiliaryDataSupplementType
@@ -12,15 +13,13 @@ from .address import (
     derive_human_readable_address,
     validate_address_parameters,
 )
-from .helpers import INVALID_AUXILIARY_DATA, bech32
+from .helpers import bech32
 from .helpers.bech32 import HRP_JORMUN_PUBLIC_KEY
 from .helpers.paths import SCHEMA_STAKING_ANY_ACCOUNT
 from .helpers.utils import derive_public_key
 from .layout import confirm_catalyst_registration, show_auxiliary_data_hash
 
 if TYPE_CHECKING:
-    from trezor import wire
-
     from trezor.messages import (
         CardanoCatalystRegistrationParametersType,
         CardanoTxAuxiliaryData,
@@ -55,12 +54,12 @@ def validate_auxiliary_data(auxiliary_data: CardanoTxAuxiliaryData) -> None:
         )
 
     if fields_provided != 1:
-        raise INVALID_AUXILIARY_DATA
+        raise wire.ProcessError("Invalid auxiliary data")
 
 
 def _validate_auxiliary_data_hash(auxiliary_data_hash: bytes) -> None:
     if len(auxiliary_data_hash) != AUXILIARY_DATA_HASH_SIZE:
-        raise INVALID_AUXILIARY_DATA
+        raise wire.ProcessError("Invalid auxiliary data")
 
 
 def _validate_catalyst_registration_parameters(
@@ -70,16 +69,16 @@ def _validate_catalyst_registration_parameters(
         len(catalyst_registration_parameters.voting_public_key)
         != CATALYST_VOTING_PUBLIC_KEY_LENGTH
     ):
-        raise INVALID_AUXILIARY_DATA
+        raise wire.ProcessError("Invalid auxiliary data")
 
     if not SCHEMA_STAKING_ANY_ACCOUNT.match(
         catalyst_registration_parameters.staking_path
     ):
-        raise INVALID_AUXILIARY_DATA
+        raise wire.ProcessError("Invalid auxiliary data")
 
     address_parameters = catalyst_registration_parameters.reward_address_parameters
     if address_parameters.address_type == CardanoAddressType.BYRON:
-        raise INVALID_AUXILIARY_DATA
+        raise wire.ProcessError("Invalid auxiliary data")
 
     validate_address_parameters(address_parameters)
 

@@ -8,13 +8,6 @@ from trezor.messages import (
 )
 
 from .. import seed
-from ..helpers import (
-    INVALID_CERTIFICATE,
-    INVALID_OUTPUT,
-    INVALID_STAKE_POOL_REGISTRATION_TX_STRUCTURE,
-    INVALID_STAKEPOOL_REGISTRATION_TX_WITNESSES,
-    INVALID_TX_SIGNING_REQUEST,
-)
 from ..helpers.paths import SCHEMA_STAKING_ANY_ACCOUNT
 from ..layout import confirm_stake_pool_registration_final
 from .signer import Signer
@@ -45,14 +38,16 @@ class PoolOwnerSigner(Signer):
             or self.msg.withdrawals_count != 0
             or self.msg.minting_asset_groups_count != 0
         ):
-            raise INVALID_STAKE_POOL_REGISTRATION_TX_STRUCTURE
+            raise wire.ProcessError(
+                "Stakepool registration transaction cannot contain other certificates, withdrawals or minting"
+            )
 
         if (
             self.msg.script_data_hash is not None
             or self.msg.collateral_inputs_count != 0
             or self.msg.required_signers_count != 0
         ):
-            raise INVALID_TX_SIGNING_REQUEST
+            raise wire.ProcessError("Invalid tx signing request")
 
     async def _confirm_transaction(self, tx_hash: bytes) -> None:
         # super() omitted intentionally
@@ -65,10 +60,8 @@ class PoolOwnerSigner(Signer):
 
     def _validate_output(self, output: CardanoTxOutput) -> None:
         super()._validate_output(output)
-        if output.address_parameters is not None:
-            raise INVALID_OUTPUT
-        if output.datum_hash is not None:
-            raise INVALID_OUTPUT
+        if output.address_parameters is not None or output.datum_hash is not None:
+            raise wire.ProcessError("Invalid output")
 
     def _should_show_output(self, output: CardanoTxOutput) -> bool:
         # super() omitted intentionally
@@ -78,14 +71,16 @@ class PoolOwnerSigner(Signer):
     def _validate_certificate(self, certificate: CardanoTxCertificate) -> None:
         super()._validate_certificate(certificate)
         if certificate.type != CardanoCertificateType.STAKE_POOL_REGISTRATION:
-            raise INVALID_CERTIFICATE
+            raise wire.ProcessError("Invalid certificate")
 
     def _validate_witness_request(
         self, witness_request: CardanoTxWitnessRequest
     ) -> None:
         super()._validate_witness_request(witness_request)
         if not SCHEMA_STAKING_ANY_ACCOUNT.match(witness_request.path):
-            raise INVALID_STAKEPOOL_REGISTRATION_TX_WITNESSES
+            raise wire.ProcessError(
+                "Stakepool registration transaction can only contain staking witnesses"
+            )
 
     def _is_network_id_verifiable(self) -> bool:
         # super() omitted intentionally

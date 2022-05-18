@@ -8,12 +8,6 @@ from trezor.messages import (
 )
 
 from .. import seed
-from ..helpers import (
-    INVALID_CERTIFICATE,
-    INVALID_TX_SIGNING_REQUEST,
-    INVALID_WITHDRAWAL,
-    INVALID_WITNESS_REQUEST,
-)
 from ..helpers.paths import (
     SCHEMA_MINT,
     SCHEMA_PAYMENT,
@@ -42,7 +36,7 @@ class OrdinarySigner(Signer):
             self.msg.collateral_inputs_count != 0
             or self.msg.required_signers_count != 0
         ):
-            raise INVALID_TX_SIGNING_REQUEST
+            raise wire.ProcessError("Invalid tx signing request")
 
     async def _confirm_tx(self, tx_hash: bytes) -> None:
         # super() omitted intentionally
@@ -61,14 +55,14 @@ class OrdinarySigner(Signer):
     def _validate_certificate(self, certificate: messages.CardanoTxCertificate) -> None:
         super()._validate_certificate(certificate)
         if certificate.type == CardanoCertificateType.STAKE_POOL_REGISTRATION:
-            raise INVALID_CERTIFICATE
+            raise wire.ProcessError("Invalid certificate")
         if certificate.script_hash or certificate.key_hash:
-            raise INVALID_CERTIFICATE
+            raise wire.ProcessError("Invalid certificate")
 
     def _validate_withdrawal(self, withdrawal: CardanoTxWithdrawal) -> None:
         super()._validate_withdrawal(withdrawal)
         if withdrawal.script_hash or withdrawal.key_hash:
-            raise INVALID_WITHDRAWAL
+            raise wire.ProcessError("Invalid withdrawal")
 
     def _validate_witness_request(
         self, witness_request: CardanoTxWitnessRequest
@@ -80,11 +74,9 @@ class OrdinarySigner(Signer):
         if not (
             is_byron_path(witness_request.path)
             or is_shelley_path(witness_request.path)
-            or is_minting
+            or (is_minting and transaction_has_token_minting)
         ):
-            raise INVALID_WITNESS_REQUEST
-        if is_minting and not transaction_has_token_minting:
-            raise INVALID_WITNESS_REQUEST
+            raise wire.ProcessError("Invalid witness request")
 
     async def _show_witness_request(self, witness_path: list[int]) -> None:
         # super() omitted intentionally

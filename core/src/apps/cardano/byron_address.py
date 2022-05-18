@@ -1,11 +1,11 @@
 from typing import TYPE_CHECKING
 
-from trezor import log
+from trezor import log, wire
 from trezor.crypto import crc, hashlib
 
 from apps.common import cbor
 
-from .helpers import INVALID_ADDRESS, NETWORK_MISMATCH, protocol_magics
+from .helpers import protocol_magics
 from .helpers.utils import derive_public_key
 
 if TYPE_CHECKING:
@@ -62,21 +62,21 @@ def _decode_address_raw(address: bytes) -> bytes:
     except ValueError as e:
         if __debug__:
             log.exception(__name__, e)
-        raise INVALID_ADDRESS
+        raise wire.ProcessError("Invalid address")
 
     if not isinstance(address_unpacked, list) or len(address_unpacked) != 2:
-        raise INVALID_ADDRESS
+        raise wire.ProcessError("Invalid address")
 
     address_data_encoded = address_unpacked[0]
     if not isinstance(address_data_encoded, bytes):
-        raise INVALID_ADDRESS
+        raise wire.ProcessError("Invalid address")
 
     address_crc = address_unpacked[1]
     if not isinstance(address_crc, int):
-        raise INVALID_ADDRESS
+        raise wire.ProcessError("Invalid address")
 
     if address_crc != crc.crc32(address_data_encoded):
-        raise INVALID_ADDRESS
+        raise wire.ProcessError("Invalid address")
 
     return address_data_encoded
 
@@ -91,24 +91,24 @@ def _validate_address_data_protocol_magic(
     """
     address_data = cbor.decode(address_data_encoded)
     if not isinstance(address_data, list) or len(address_data) < 2:
-        raise INVALID_ADDRESS
+        raise wire.ProcessError("Invalid address")
 
     attributes = address_data[1]
     if protocol_magics.is_mainnet(protocol_magic):
         if PROTOCOL_MAGIC_KEY in attributes:
-            raise NETWORK_MISMATCH
+            raise wire.ProcessError("Output address network mismatch")
     else:  # testnet
         if len(attributes) == 0 or PROTOCOL_MAGIC_KEY not in attributes:
-            raise NETWORK_MISMATCH
+            raise wire.ProcessError("Output address network mismatch")
 
         protocol_magic_cbor = attributes[PROTOCOL_MAGIC_KEY]
         address_protocol_magic = cbor.decode(protocol_magic_cbor)
 
         if not isinstance(address_protocol_magic, int):
-            raise INVALID_ADDRESS
+            raise wire.ProcessError("Invalid address")
 
         if address_protocol_magic != protocol_magic:
-            raise NETWORK_MISMATCH
+            raise wire.ProcessError("Output address network mismatch")
 
 
 def _address_hash(data: list) -> bytes:

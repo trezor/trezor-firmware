@@ -62,16 +62,6 @@ from ..certificates import (
 from ..helpers import (
     ADDRESS_KEY_HASH_SIZE,
     INPUT_PREV_HASH_SIZE,
-    INVALID_COLLATERAL_INPUT,
-    INVALID_INPUT,
-    INVALID_OUTPUT,
-    INVALID_OUTPUT_DATUM_HASH,
-    INVALID_REQUIRED_SIGNER,
-    INVALID_SCRIPT_DATA_HASH,
-    INVALID_TOKEN_BUNDLE_MINT,
-    INVALID_TOKEN_BUNDLE_OUTPUT,
-    INVALID_TX_SIGNING_REQUEST,
-    INVALID_WITHDRAWAL,
     LOVELACE_MAX_SUPPLY,
     OUTPUT_DATUM_HASH_SIZE,
     SCRIPT_DATA_HASH_SIZE,
@@ -176,7 +166,7 @@ class Signer:
             )
         )
         self.tx_dict: HashBuilderDict[int, Any] = HashBuilderDict(
-            tx_body_map_item_count, INVALID_TX_SIGNING_REQUEST
+            tx_body_map_item_count, wire.ProcessError("Invalid tx signing request")
         )
 
     async def sign(self) -> None:
@@ -222,7 +212,7 @@ class Signer:
 
         if self.msg.withdrawals_count > 0:
             withdrawals_dict: HashBuilderDict[bytes, int] = HashBuilderDict(
-                self.msg.withdrawals_count, INVALID_WITHDRAWAL
+                self.msg.withdrawals_count, wire.ProcessError("Invalid withdrawal")
             )
             with self.tx_dict.add(TX_BODY_KEY_WITHDRAWALS, withdrawals_dict):
                 await self._process_withdrawals(withdrawals_dict)
@@ -237,7 +227,8 @@ class Signer:
 
         if self.msg.minting_asset_groups_count > 0:
             minting_dict: HashBuilderDict[bytes, HashBuilderDict] = HashBuilderDict(
-                self.msg.minting_asset_groups_count, INVALID_TOKEN_BUNDLE_MINT
+                self.msg.minting_asset_groups_count,
+                wire.ProcessError("Invalid mint token bundle"),
             )
             with self.tx_dict.add(TX_BODY_KEY_MINT, minting_dict):
                 await self._process_minting(minting_dict)
@@ -292,7 +283,7 @@ class Signer:
 
     def _validate_input(self, input: CardanoTxInput) -> None:
         if len(input.prev_hash) != INPUT_PREV_HASH_SIZE:
-            raise INVALID_INPUT
+            raise wire.ProcessError("Invalid input")
 
     async def _show_input(self, input: CardanoTxInput) -> None:
         # We never show the inputs, except for Plutus txs.
@@ -326,7 +317,8 @@ class Signer:
                         asset_groups_dict: HashBuilderDict[
                             bytes, HashBuilderDict[bytes, int]
                         ] = HashBuilderDict(
-                            output.asset_groups_count, INVALID_TOKEN_BUNDLE_OUTPUT
+                            output.asset_groups_count,
+                            wire.ProcessError("Invalid token bundle in output"),
                         )
                         with output_value_list.append(asset_groups_dict):
                             await self._process_asset_groups(
@@ -344,7 +336,7 @@ class Signer:
 
     def _validate_output(self, output: CardanoTxOutput) -> None:
         if output.address_parameters is not None and output.address is not None:
-            raise INVALID_OUTPUT
+            raise wire.ProcessError("Invalid output")
 
         if output.address_parameters is not None:
             validate_output_address_parameters(output.address_parameters)
@@ -354,14 +346,14 @@ class Signer:
                 output.address, self.msg.protocol_magic, self.msg.network_id
             )
         else:
-            raise INVALID_OUTPUT
+            raise wire.ProcessError("Invalid output")
 
         if output.datum_hash is not None:
             if len(output.datum_hash) != OUTPUT_DATUM_HASH_SIZE:
-                raise INVALID_OUTPUT_DATUM_HASH
+                raise wire.ProcessError("Invalid output datum hash")
             address_type = self._get_output_address_type(output)
             if address_type not in ADDRESS_TYPES_PAYMENT_SCRIPT:
-                raise INVALID_OUTPUT
+                raise wire.ProcessError("Invalid output")
 
         self.account_path_checker.add_output(output)
 
@@ -451,7 +443,8 @@ class Signer:
             self._validate_asset_group(asset_group)
 
             tokens: HashBuilderDict[bytes, int] = HashBuilderDict(
-                asset_group.tokens_count, INVALID_TOKEN_BUNDLE_OUTPUT
+                asset_group.tokens_count,
+                wire.ProcessError("Invalid token bundle in output"),
             )
             with asset_groups_dict.add(asset_group.policy_id, tokens):
                 await self._process_tokens(
@@ -465,7 +458,9 @@ class Signer:
         self, asset_group: CardanoAssetGroup, is_mint: bool = False
     ) -> None:
         INVALID_TOKEN_BUNDLE = (
-            INVALID_TOKEN_BUNDLE_MINT if is_mint else INVALID_TOKEN_BUNDLE_OUTPUT
+            wire.ProcessError("Invalid mint token bundle")
+            if is_mint
+            else wire.ProcessError("Invalid token bundle in output")
         )
 
         if len(asset_group.policy_id) != MINTING_POLICY_ID_LENGTH:
@@ -493,7 +488,9 @@ class Signer:
 
     def _validate_token(self, token: CardanoToken, is_mint: bool = False) -> None:
         INVALID_TOKEN_BUNDLE = (
-            INVALID_TOKEN_BUNDLE_MINT if is_mint else INVALID_TOKEN_BUNDLE_OUTPUT
+            wire.ProcessError("Invalid mint token bundle")
+            if is_mint
+            else wire.ProcessError("Invalid token bundle in output")
         )
 
         if is_mint:
@@ -644,11 +641,11 @@ class Signer:
             withdrawal.path,
             withdrawal.script_hash,
             withdrawal.key_hash,
-            INVALID_WITHDRAWAL,
+            wire.ProcessError("Invalid withdrawal"),
         )
 
         if not 0 <= withdrawal.amount < LOVELACE_MAX_SUPPLY:
-            raise INVALID_WITHDRAWAL
+            raise wire.ProcessError("Invalid withdrawal")
 
         self.account_path_checker.add_withdrawal(withdrawal)
 
@@ -696,7 +693,7 @@ class Signer:
             self._validate_asset_group(asset_group, is_mint=True)
 
             tokens: HashBuilderDict[bytes, int] = HashBuilderDict(
-                asset_group.tokens_count, INVALID_TOKEN_BUNDLE_MINT
+                asset_group.tokens_count, wire.ProcessError("Invalid mint token bundle")
             )
             with minting_dict.add(asset_group.policy_id, tokens):
                 await self._process_minting_tokens(
@@ -732,7 +729,7 @@ class Signer:
     def _validate_script_data_hash(self) -> None:
         assert self.msg.script_data_hash is not None
         if len(self.msg.script_data_hash) != SCRIPT_DATA_HASH_SIZE:
-            raise INVALID_SCRIPT_DATA_HASH
+            raise wire.ProcessError("Invalid script data hash")
 
     # collateral inputs
 
@@ -753,7 +750,7 @@ class Signer:
         self, collateral_input: CardanoTxCollateralInput
     ) -> None:
         if len(collateral_input.prev_hash) != INPUT_PREV_HASH_SIZE:
-            raise INVALID_COLLATERAL_INPUT
+            raise wire.ProcessError("Invalid collateral input")
 
     # required signers
 
@@ -775,6 +772,8 @@ class Signer:
     def _validate_required_signer(
         self, required_signer: CardanoTxRequiredSigner
     ) -> None:
+        INVALID_REQUIRED_SIGNER = wire.ProcessError("Invalid required signer")
+
         if required_signer.key_hash and required_signer.key_path:
             raise INVALID_REQUIRED_SIGNER
 
