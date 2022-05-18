@@ -8,7 +8,7 @@ if __debug__:
 
     import trezorui2
 
-    from trezor import log, loop, wire
+    from trezor import log, loop, utils, wire
     from trezor.ui import display
     from trezor.enums import MessageType
     from trezor.messages import (
@@ -139,7 +139,7 @@ if __debug__:
         x = msg.x  # local_cache_attribute
         y = msg.y  # local_cache_attribute
 
-        if x is not None and y is not None:
+        if x is not None and y is not None and utils.MODEL in ("T",):
             evt_down = io.TOUCH_START, x, y
             evt_up = io.TOUCH_END, x, y
             loop.synthetic_events.append((io.TOUCH, evt_down))
