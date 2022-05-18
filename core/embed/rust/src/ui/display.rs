@@ -209,6 +209,19 @@ pub fn set_window(window: Rect) {
     );
 }
 
+pub fn text_top_left(position: Point, text: &str, font: Font, fg_color: Color, bg_color: Color) {
+    // let w = font.text_width(text);
+    let h = font.text_height();
+    display::text(
+        position.x,
+        position.y + h,
+        text,
+        font.0,
+        fg_color.into(),
+        bg_color.into(),
+    );
+}
+
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub struct Font(i32);
 
@@ -237,6 +250,18 @@ impl Font {
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub struct Color(u16);
 
+#[macro_export]
+macro_rules! alpha {
+    ($n: expr) => {
+        if ($n >= 1.0) {
+            256_u16
+        } else {
+            ($n * 256.0) as u16
+        }
+    };
+}
+pub(crate) use alpha;
+
 impl Color {
     pub const fn from_u16(val: u16) -> Self {
         Self(val)
@@ -246,6 +271,21 @@ impl Color {
         let r = (r as u16 & 0xF8) << 8;
         let g = (g as u16 & 0xFC) << 3;
         let b = (b as u16 & 0xF8) >> 3;
+        Self(r | g | b)
+    }
+
+    pub const fn rgba(bg: Color, r: u8, g: u8, b: u8, alpha: u16) -> Self {
+        let r_u16 = r as u16;
+        let g_u16 = g as u16;
+        let b_u16 = b as u16;
+
+        let r = ((256 - alpha) * bg.r() as u16 + alpha * r_u16) >> 8;
+        let g = ((256 - alpha) * bg.g() as u16 + alpha * g_u16) >> 8;
+        let b = ((256 - alpha) * bg.b() as u16 + alpha * b_u16) >> 8;
+
+        let r = (r & 0xF8) << 8;
+        let g = (g & 0xFC) << 3;
+        let b = (b & 0xF8) >> 3;
         Self(r | g | b)
     }
 
