@@ -1,7 +1,4 @@
-from typing import TYPE_CHECKING
-
-from trezor import log, wire
-from trezor.messages import CardanoAddress
+from trezor import log, messages, wire
 
 from . import seed
 from .address import derive_human_readable_address, validate_address_parameters
@@ -9,17 +6,11 @@ from .helpers.credential import Credential, should_show_address_credentials
 from .helpers.utils import validate_network_info
 from .layout import show_address_credentials, show_cardano_address
 
-if TYPE_CHECKING:
-    from trezor.messages import (
-        CardanoAddressParametersType,
-        CardanoGetAddress,
-    )
-
 
 @seed.with_keychain
 async def get_address(
-    ctx: wire.Context, msg: CardanoGetAddress, keychain: seed.Keychain
-) -> CardanoAddress:
+    ctx: wire.Context, msg: messages.CardanoGetAddress, keychain: seed.Keychain
+) -> messages.CardanoAddress:
     address_parameters = msg.address_parameters
 
     validate_network_info(msg.network_id, msg.protocol_magic)
@@ -37,12 +28,12 @@ async def get_address(
     if msg.show_display:
         await _display_address(ctx, address_parameters, address, msg.protocol_magic)
 
-    return CardanoAddress(address=address)
+    return messages.CardanoAddress(address=address)
 
 
 async def _display_address(
     ctx: wire.Context,
-    address_parameters: CardanoAddressParametersType,
+    address_parameters: messages.CardanoAddressParametersType,
     address: str,
     protocol_magic: int,
 ) -> None:

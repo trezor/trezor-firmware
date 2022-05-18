@@ -7,10 +7,7 @@ from .paths import CHAIN_STAKING_KEY, SCHEMA_PAYMENT, SCHEMA_STAKING
 from .utils import bech32, to_account_path
 
 if TYPE_CHECKING:
-    from trezor.messages import (
-        CardanoBlockchainPointerType,
-        CardanoAddressParametersType,
-    )
+    from trezor import messages
     from trezor.ui.layouts import PropertyType
 
 CREDENTIAL_TYPE_PAYMENT: str = "payment"
@@ -30,7 +27,7 @@ class Credential:
     path: list[int]
     key_hash: bytes | None
     script_hash: bytes | None
-    pointer: CardanoBlockchainPointerType | None
+    pointer: messages.CardanoBlockchainPointerType | None
 
     is_reward: bool = False
     is_no_staking: bool = False
@@ -45,7 +42,7 @@ class Credential:
         path: list[int],
         key_hash: bytes | None,
         script_hash: bytes | None,
-        pointer: CardanoBlockchainPointerType | None,
+        pointer: messages.CardanoBlockchainPointerType | None,
     ):
         self.type_name = type_name
         self.address_type = address_type
@@ -56,7 +53,7 @@ class Credential:
 
     @classmethod
     def payment_credential(
-        cls, address_params: CardanoAddressParametersType
+        cls, address_params: messages.CardanoAddressParametersType
     ) -> "Credential":
         address_type = address_params.address_type
         credential = cls(
@@ -99,7 +96,7 @@ class Credential:
 
     @classmethod
     def stake_credential(
-        cls, address_params: CardanoAddressParametersType
+        cls, address_params: messages.CardanoAddressParametersType
     ) -> "Credential":
         address_type = address_params.address_type
         credential = cls(
@@ -207,7 +204,7 @@ class Credential:
 
 
 def should_show_address_credentials(
-    address_parameters: CardanoAddressParametersType,
+    address_parameters: messages.CardanoAddressParametersType,
 ) -> bool:
     return not (
         address_parameters.address_type == CardanoAddressType.BASE

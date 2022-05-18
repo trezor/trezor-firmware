@@ -1,8 +1,6 @@
-from typing import TYPE_CHECKING
 from ubinascii import hexlify
 
-from trezor import log, wire
-from trezor.messages import CardanoPublicKey, HDNodeType
+from trezor import log, messages, wire
 from trezor.ui.layouts import show_pubkey
 
 from apps.common import paths
@@ -11,14 +9,11 @@ from . import seed
 from .helpers.paths import SCHEMA_MINT, SCHEMA_PUBKEY
 from .helpers.utils import derive_public_key
 
-if TYPE_CHECKING:
-    from trezor.messages import CardanoGetPublicKey
-
 
 @seed.with_keychain
 async def get_public_key(
-    ctx: wire.Context, msg: CardanoGetPublicKey, keychain: seed.Keychain
-) -> CardanoPublicKey:
+    ctx: wire.Context, msg: messages.CardanoGetPublicKey, keychain: seed.Keychain
+) -> messages.CardanoPublicKey:
     await paths.validate_path(
         ctx,
         keychain,
@@ -41,14 +36,14 @@ async def get_public_key(
 
 def _get_public_key(
     keychain: seed.Keychain, derivation_path: list[int]
-) -> CardanoPublicKey:
+) -> messages.CardanoPublicKey:
     node = keychain.derive(derivation_path)
 
     public_key = hexlify(derive_public_key(keychain, derivation_path)).decode()
     chain_code = hexlify(node.chain_code()).decode()
     xpub_key = public_key + chain_code
 
-    node_type = HDNodeType(
+    node_type = messages.HDNodeType(
         depth=node.depth(),
         child_num=node.child_num(),
         fingerprint=node.fingerprint(),
@@ -56,4 +51,4 @@ def _get_public_key(
         public_key=derive_public_key(keychain, derivation_path),
     )
 
-    return CardanoPublicKey(node=node_type, xpub=xpub_key)
+    return messages.CardanoPublicKey(node=node_type, xpub=xpub_key)

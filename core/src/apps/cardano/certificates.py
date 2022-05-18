@@ -13,14 +13,7 @@ from .helpers.utils import get_public_key_hash, validate_stake_credential
 if TYPE_CHECKING:
     from typing import Any
 
-    from trezor.messages import (
-        CardanoPoolMetadataType,
-        CardanoPoolOwner,
-        CardanoPoolParametersType,
-        CardanoPoolRelayParameters,
-        CardanoTxCertificate,
-    )
-
+    from trezor import messages
     from apps.common.cbor import CborSequence
 
     from . import seed
@@ -37,7 +30,7 @@ MAX_PORT_NUMBER = 65535
 
 
 def validate_certificate(
-    certificate: CardanoTxCertificate,
+    certificate: messages.CardanoTxCertificate,
     protocol_magic: int,
     network_id: int,
     account_path_checker: AccountPathChecker,
@@ -70,7 +63,7 @@ def validate_certificate(
     account_path_checker.add_certificate(certificate)
 
 
-def _validate_certificate_structure(certificate: CardanoTxCertificate) -> None:
+def _validate_certificate_structure(certificate: messages.CardanoTxCertificate) -> None:
     pool = certificate.pool
     pool_parameters = certificate.pool_parameters
 
@@ -93,7 +86,7 @@ def _validate_certificate_structure(certificate: CardanoTxCertificate) -> None:
 
 
 def cborize_certificate(
-    keychain: seed.Keychain, certificate: CardanoTxCertificate
+    keychain: seed.Keychain, certificate: messages.CardanoTxCertificate
 ) -> CborSequence:
     if certificate.type in (
         CardanoCertificateType.STAKE_REGISTRATION,
@@ -140,7 +133,7 @@ def cborize_certificate_stake_credential(
 
 
 def cborize_initial_pool_registration_certificate_fields(
-    certificate: CardanoTxCertificate,
+    certificate: messages.CardanoTxCertificate,
 ) -> CborSequence:
     assert certificate.type == CardanoCertificateType.STAKE_POOL_REGISTRATION
 
@@ -172,7 +165,9 @@ def assert_certificate_cond(condition: bool) -> None:
 
 
 def _validate_pool_parameters(
-    pool_parameters: CardanoPoolParametersType, protocol_magic: int, network_id: int
+    pool_parameters: messages.CardanoPoolParametersType,
+    protocol_magic: int,
+    network_id: int,
 ) -> None:
     assert_certificate_cond(len(pool_parameters.pool_id) == POOL_HASH_SIZE)
     assert_certificate_cond(len(pool_parameters.vrf_key_hash) == VRF_KEY_HASH_SIZE)
@@ -192,7 +187,7 @@ def _validate_pool_parameters(
 
 
 def validate_pool_owner(
-    owner: CardanoPoolOwner, account_path_checker: AccountPathChecker
+    owner: messages.CardanoPoolOwner, account_path_checker: AccountPathChecker
 ) -> None:
     assert_certificate_cond(
         owner.staking_key_hash is not None or owner.staking_key_path is not None
@@ -207,7 +202,7 @@ def validate_pool_owner(
     account_path_checker.add_pool_owner(owner)
 
 
-def validate_pool_relay(pool_relay: CardanoPoolRelayParameters) -> None:
+def validate_pool_relay(pool_relay: messages.CardanoPoolRelayParameters) -> None:
     if pool_relay.type == CardanoPoolRelayType.SINGLE_HOST_IP:
         assert_certificate_cond(
             pool_relay.ipv4_address is not None or pool_relay.ipv6_address is not None
@@ -236,13 +231,15 @@ def validate_pool_relay(pool_relay: CardanoPoolRelayParameters) -> None:
         raise RuntimeError  # should be unreachable
 
 
-def _validate_pool_metadata(pool_metadata: CardanoPoolMetadataType) -> None:
+def _validate_pool_metadata(pool_metadata: messages.CardanoPoolMetadataType) -> None:
     assert_certificate_cond(len(pool_metadata.url) <= MAX_URL_LENGTH)
     assert_certificate_cond(len(pool_metadata.hash) == POOL_METADATA_HASH_SIZE)
     assert_certificate_cond(all((32 <= ord(c) < 127) for c in pool_metadata.url))
 
 
-def cborize_pool_owner(keychain: seed.Keychain, pool_owner: CardanoPoolOwner) -> bytes:
+def cborize_pool_owner(
+    keychain: seed.Keychain, pool_owner: messages.CardanoPoolOwner
+) -> bytes:
     if pool_owner.staking_key_path:
         return get_public_key_hash(keychain, pool_owner.staking_key_path)
     elif pool_owner.staking_key_hash:
@@ -266,7 +263,7 @@ def _cborize_ipv6_address(ipv6_address: bytes | None) -> bytes | None:
 
 
 def cborize_pool_relay(
-    pool_relay: CardanoPoolRelayParameters,
+    pool_relay: messages.CardanoPoolRelayParameters,
 ) -> CborSequence:
     if pool_relay.type == CardanoPoolRelayType.SINGLE_HOST_IP:
         return (
@@ -291,7 +288,7 @@ def cborize_pool_relay(
 
 
 def cborize_pool_metadata(
-    pool_metadata: CardanoPoolMetadataType | None,
+    pool_metadata: messages.CardanoPoolMetadataType | None,
 ) -> CborSequence | None:
     if not pool_metadata:
         return None
