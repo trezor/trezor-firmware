@@ -1,20 +1,13 @@
-from trezor import wire
+from trezor import messages, wire
 from trezor.enums import CardanoCertificateType
-from trezor.messages import (
-    CardanoSignTxInit,
-    CardanoTxCertificate,
-    CardanoTxWithdrawal,
-    CardanoTxWitnessRequest,
-)
 
-from .. import seed
+from .. import layout, seed
 from ..helpers.paths import (
     SCHEMA_MINT,
     SCHEMA_PAYMENT,
     SCHEMA_STAKING,
     WITNESS_PATH_NAME,
 )
-from ..layout import confirm_witness_request
 from ..seed import is_byron_path, is_shelley_path
 from .signer import Signer
 
@@ -26,7 +19,10 @@ class OrdinarySigner(Signer):
     """
 
     def __init__(
-        self, ctx: wire.Context, msg: CardanoSignTxInit, keychain: seed.Keychain
+        self,
+        ctx: wire.Context,
+        msg: messages.CardanoSignTxInit,
+        keychain: seed.Keychain,
     ) -> None:
         super().__init__(ctx, msg, keychain)
 
@@ -59,13 +55,13 @@ class OrdinarySigner(Signer):
         if certificate.script_hash or certificate.key_hash:
             raise wire.ProcessError("Invalid certificate")
 
-    def _validate_withdrawal(self, withdrawal: CardanoTxWithdrawal) -> None:
+    def _validate_withdrawal(self, withdrawal: messages.CardanoTxWithdrawal) -> None:
         super()._validate_withdrawal(withdrawal)
         if withdrawal.script_hash or withdrawal.key_hash:
             raise wire.ProcessError("Invalid withdrawal")
 
     def _validate_witness_request(
-        self, witness_request: CardanoTxWitnessRequest
+        self, witness_request: messages.CardanoTxWitnessRequest
     ) -> None:
         super()._validate_witness_request(witness_request)
         is_minting = SCHEMA_MINT.match(witness_request.path)
@@ -89,6 +85,6 @@ class OrdinarySigner(Signer):
         is_minting = SCHEMA_MINT.match(witness_path)
 
         if is_minting:
-            await confirm_witness_request(self.ctx, witness_path)
+            await layout.confirm_witness_request(self.ctx, witness_path)
         elif not is_payment and not is_staking:
             await self._fail_or_warn_path(witness_path, WITNESS_PATH_NAME)

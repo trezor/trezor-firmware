@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from trezor import ui
+from trezor import messages, ui
 from trezor.enums import (
     ButtonRequestType,
     CardanoAddressType,
@@ -8,7 +8,6 @@ from trezor.enums import (
     CardanoNativeScriptHashDisplayFormat,
     CardanoNativeScriptType,
 )
-from trezor.messages import CardanoAddressParametersType
 from trezor.strings import format_amount
 from trezor.ui.layouts import (
     confirm_blob,
@@ -36,18 +35,6 @@ from .seed import is_minting_path, is_multisig_path
 
 if TYPE_CHECKING:
     from trezor import wire
-    from trezor.messages import (
-        CardanoNativeScript,
-        CardanoTxCertificate,
-        CardanoTxCollateralInput,
-        CardanoTxInput,
-        CardanoTxRequiredSigner,
-        CardanoTxWithdrawal,
-        CardanoPoolParametersType,
-        CardanoPoolOwner,
-        CardanoPoolMetadataType,
-        CardanoToken,
-    )
 
     from trezor.ui.layouts import PropertyType
     from .helpers.credential import Credential
@@ -95,7 +82,7 @@ def is_printable_ascii_bytestring(bytestr: bytes) -> bool:
 
 async def show_native_script(
     ctx: wire.Context,
-    script: CardanoNativeScript,
+    script: messages.CardanoNativeScript,
     indices: list[int] | None = None,
 ) -> None:
     script_heading = "Script"
@@ -213,7 +200,7 @@ async def show_plutus_transaction(ctx: wire.Context) -> None:
     )
 
 
-async def confirm_input(ctx: wire.Context, input: CardanoTxInput) -> None:
+async def confirm_input(ctx: wire.Context, input: messages.CardanoTxInput) -> None:
     await confirm_properties(
         ctx,
         "confirm_input",
@@ -249,7 +236,7 @@ async def confirm_sending(
 
 
 async def confirm_sending_token(
-    ctx: wire.Context, policy_id: bytes, token: CardanoToken
+    ctx: wire.Context, policy_id: bytes, token: messages.CardanoToken
 ) -> None:
     assert token.amount is not None  # _validate_token
 
@@ -490,7 +477,7 @@ async def confirm_transaction(
 
 
 async def confirm_certificate(
-    ctx: wire.Context, certificate: CardanoTxCertificate
+    ctx: wire.Context, certificate: messages.CardanoTxCertificate
 ) -> None:
     # stake pool registration requires custom confirmation logic not covered
     # in this call
@@ -517,7 +504,9 @@ async def confirm_certificate(
 
 
 async def confirm_stake_pool_parameters(
-    ctx: wire.Context, pool_parameters: CardanoPoolParametersType, network_id: int
+    ctx: wire.Context,
+    pool_parameters: messages.CardanoPoolParametersType,
+    network_id: int,
 ) -> None:
     margin_percentage = (
         100.0 * pool_parameters.margin_numerator / pool_parameters.margin_denominator
@@ -547,7 +536,7 @@ async def confirm_stake_pool_parameters(
 async def confirm_stake_pool_owner(
     ctx: wire.Context,
     keychain: seed.Keychain,
-    owner: CardanoPoolOwner,
+    owner: messages.CardanoPoolOwner,
     protocol_magic: int,
     network_id: int,
 ) -> None:
@@ -558,7 +547,7 @@ async def confirm_stake_pool_owner(
             (
                 derive_human_readable_address(
                     keychain,
-                    CardanoAddressParametersType(
+                    messages.CardanoAddressParametersType(
                         address_type=CardanoAddressType.REWARD,
                         address_n=owner.staking_key_path,
                     ),
@@ -575,7 +564,7 @@ async def confirm_stake_pool_owner(
                 "Pool owner:",
                 derive_human_readable_address(
                     keychain,
-                    CardanoAddressParametersType(
+                    messages.CardanoAddressParametersType(
                         address_type=CardanoAddressType.REWARD,
                         staking_key_hash=owner.staking_key_hash,
                     ),
@@ -596,7 +585,7 @@ async def confirm_stake_pool_owner(
 
 async def confirm_stake_pool_metadata(
     ctx: wire.Context,
-    metadata: CardanoPoolMetadataType | None,
+    metadata: messages.CardanoPoolMetadataType | None,
 ) -> None:
     if metadata is None:
         await confirm_properties(
@@ -643,7 +632,7 @@ async def confirm_stake_pool_registration_final(
 
 async def confirm_withdrawal(
     ctx: wire.Context,
-    withdrawal: CardanoTxWithdrawal,
+    withdrawal: messages.CardanoTxWithdrawal,
     reward_address_bytes: bytes,
     network_id: int,
 ) -> None:
@@ -726,7 +715,7 @@ async def show_auxiliary_data_hash(
 
 
 async def confirm_token_minting(
-    ctx: wire.Context, policy_id: bytes, token: CardanoToken
+    ctx: wire.Context, policy_id: bytes, token: messages.CardanoToken
 ) -> None:
     assert token.mint_amount is not None  # _validate_token
     await confirm_properties(
@@ -777,7 +766,7 @@ async def confirm_script_data_hash(ctx: wire.Context, script_data_hash: bytes) -
 
 
 async def confirm_collateral_input(
-    ctx: wire.Context, collateral_input: CardanoTxCollateralInput
+    ctx: wire.Context, collateral_input: messages.CardanoTxCollateralInput
 ) -> None:
     await confirm_properties(
         ctx,
@@ -792,7 +781,7 @@ async def confirm_collateral_input(
 
 
 async def confirm_required_signer(
-    ctx: wire.Context, required_signer: CardanoTxRequiredSigner
+    ctx: wire.Context, required_signer: messages.CardanoTxRequiredSigner
 ) -> None:
     assert (
         required_signer.key_hash is not None or required_signer.key_path
@@ -814,7 +803,7 @@ async def confirm_required_signer(
 
 async def show_cardano_address(
     ctx: wire.Context,
-    address_parameters: CardanoAddressParametersType,
+    address_parameters: messages.CardanoAddressParametersType,
     address: str,
     protocol_magic: int,
 ) -> None:

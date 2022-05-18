@@ -16,18 +16,13 @@ if TYPE_CHECKING:
     from apps.common.paths import Bip32Path
     from apps.common.keychain import MsgOut, Handler
 
-    from trezor.messages import (
-        CardanoGetAddress,
-        CardanoGetPublicKey,
-        CardanoGetNativeScriptHash,
-        CardanoSignTxInit,
-    )
+    from trezor import messages
 
     CardanoMessages = (
-        CardanoGetAddress
-        | CardanoGetPublicKey
-        | CardanoGetNativeScriptHash
-        | CardanoSignTxInit
+        messages.CardanoGetAddress
+        | messages.CardanoGetPublicKey
+        | messages.CardanoGetNativeScriptHash
+        | messages.CardanoSignTxInit
     )
     MsgIn = TypeVar("MsgIn", bound=CardanoMessages)
 
