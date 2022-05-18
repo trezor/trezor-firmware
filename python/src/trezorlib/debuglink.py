@@ -215,7 +215,7 @@ class DebugLink:
 
     def start_recording(self, directory: str) -> None:
         # Different recording logic between TT and T1
-        if self.model == "T":
+        if self.model in ("T", "R"):
             self._call(messages.DebugLinkRecordScreen(target_directory=directory))
         else:
             self.t1_screenshot_directory = Path(directory)
@@ -224,7 +224,7 @@ class DebugLink:
 
     def stop_recording(self) -> None:
         # Different recording logic between TT and T1
-        if self.model == "T":
+        if self.model in ("T", "R"):
             self._call(messages.DebugLinkRecordScreen(target_directory=None))
         else:
             self.t1_take_screenshots = False

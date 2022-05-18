@@ -266,6 +266,20 @@ core unix frozen ui2 debug build:
     untracked: true
     expire_in: 1 week
 
+core unix frozen R debug build:
+  stage: build
+  <<: *gitlab_caching
+  needs: []
+  variables:
+    PYOPT: "0"
+    TREZOR_MODEL: "R"
+  script:
+    - nix-shell --run "poetry run make -C core build_unix_frozen"
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    untracked: true
+    expire_in: 1 week
+
 core unix frozen debug asan build:
   stage: build
   <<: *gitlab_caching

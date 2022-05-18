@@ -376,7 +376,7 @@ async def confirm_text(
     raise NotImplementedError
 
 
-def confirm_amount(
+async def confirm_amount(
     ctx: wire.GenericContext,
     title: str,
     amount: str,

@@ -6,7 +6,7 @@ if not __debug__:
 if __debug__:
     from storage import debug as storage
 
-    from trezor import log, loop, wire
+    from trezor import log, loop, utils, wire
     from trezor.ui import display
     from trezor.enums import MessageType
     from trezor.messages import (
@@ -145,7 +145,7 @@ if __debug__:
         if debuglink_decision_chan.putters:
             log.warning(__name__, "DebugLinkDecision queue is not empty")
 
-        if msg.x is not None and msg.y is not None:
+        if msg.x is not None and msg.y is not None and utils.MODEL in ("T",):
             evt_down = io.TOUCH_START, msg.x, msg.y
             evt_up = io.TOUCH_END, msg.x, msg.y
             loop.synthetic_events.append((io.TOUCH, evt_down))

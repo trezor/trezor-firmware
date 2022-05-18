@@ -70,7 +70,7 @@ def client(
     Every test function that requires a client instance will get it from here.
     If we can't connect to a debuggable device, the test will fail.
     If 'skip_t2' is used and TT is connected, the test is skipped. Vice versa with T1
-    and 'skip_t1'.
+    and 'skip_t1'. Same with TR.
 
     The client instance is wiped and preconfigured with "all all all..." mnemonic, no
     password and no pin. It is possible to customize this with the `setup_client`
@@ -88,6 +88,8 @@ def client(
         pytest.skip("Test excluded on Trezor T")
     if request.node.get_closest_marker("skip_t1") and _raw_client.features.model == "1":
         pytest.skip("Test excluded on Trezor 1")
+    if request.node.get_closest_marker("skip_tr") and _raw_client.features.model == "R":
+        pytest.skip("Test excluded on Trezor R")
 
     sd_marker = request.node.get_closest_marker("sd_card")
     if sd_marker and not _raw_client.features.sd_card_present:
@@ -146,7 +148,7 @@ def client(
             no_backup=setup_params["no_backup"],
         )
 
-        if _raw_client.features.model == "T":
+        if _raw_client.features.model in ("T", "R"):
             apply_settings(_raw_client, experimental_features=True)
 
         if use_passphrase and isinstance(setup_params["passphrase"], str):
@@ -246,6 +248,7 @@ def pytest_configure(config: "Config") -> None:
     # register known markers
     config.addinivalue_line("markers", "skip_t1: skip the test on Trezor One")
     config.addinivalue_line("markers", "skip_t2: skip the test on Trezor T")
+    config.addinivalue_line("markers", "skip_tr: skip the test on Trezor R")
     config.addinivalue_line(
         "markers",
         'setup_client(mnemonic="all all all...", pin=None, passphrase=False, uninitialized=False): configure the client instance',
@@ -265,8 +268,10 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
     Ensures that altcoin tests are skipped, and that no test is skipped on
     both T1 and TT.
     """
-    if item.get_closest_marker("skip_t1") and item.get_closest_marker("skip_t2"):
-        raise RuntimeError("Don't skip tests for both trezors!")
+    if all(
+        item.get_closest_marker(marker) for marker in ("skip_t1", "skip_t2", "skip_tr")
+    ):
+        raise RuntimeError("Don't skip tests for all trezor models!")
 
     skip_altcoins = int(os.environ.get("TREZOR_PYTEST_SKIP_ALTCOINS", 0))
     if item.get_closest_marker("altcoin") and skip_altcoins:
