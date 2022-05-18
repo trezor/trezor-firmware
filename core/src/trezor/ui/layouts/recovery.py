@@ -1,1 +1,4 @@
-from .tt_v2.recovery import *  # noqa: F401,F403
+if utils.MODEL in ("T",):
+    from .tt_v2.recovery import *  # noqa: F401,F403
+elif utils.MODEL in ("R",):
+    from .tr.recovery import *  # noqa: F401,F403

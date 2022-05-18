@@ -108,9 +108,14 @@ def header(
     bg: int = style.BG,
     ifg: int = style.GREEN,
 ) -> None:
-    if icon is not None:
-        display.icon(14, 15, res.load(icon), ifg, bg)
-    display.text(44, 35, title, BOLD, fg, bg)
+    if utils.MODEL in ("T",):
+        if icon is not None:
+            display.icon(14, 15, res.load(icon), ifg, bg)
+        display.text(44, 35, title, BOLD, fg, bg)
+    elif utils.MODEL in ("1", "R"):
+        display.text(5, 15, title, BOLD, fg, bg)
+        if icon is not None:
+            display.icon(55, 25, res.load(icon), ifg, bg)
 
 
 # Common for both header functions
