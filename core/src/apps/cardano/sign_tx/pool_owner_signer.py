@@ -1,15 +1,8 @@
-from trezor import wire
+from trezor import messages, wire
 from trezor.enums import CardanoCertificateType
-from trezor.messages import (
-    CardanoSignTxInit,
-    CardanoTxCertificate,
-    CardanoTxOutput,
-    CardanoTxWitnessRequest,
-)
 
-from .. import seed
+from .. import layout, seed
 from ..helpers.paths import SCHEMA_STAKING_ANY_ACCOUNT
-from ..layout import confirm_stake_pool_registration_final
 from .signer import Signer
 
 
@@ -27,7 +20,10 @@ class PoolOwnerSigner(Signer):
     """
 
     def __init__(
-        self, ctx: wire.Context, msg: CardanoSignTxInit, keychain: seed.Keychain
+        self,
+        ctx: wire.Context,
+        msg: messages.CardanoSignTxInit,
+        keychain: seed.Keychain,
     ) -> None:
         super().__init__(ctx, msg, keychain)
 
@@ -51,30 +47,30 @@ class PoolOwnerSigner(Signer):
 
     async def _confirm_transaction(self, tx_hash: bytes) -> None:
         # super() omitted intentionally
-        await confirm_stake_pool_registration_final(
+        await layout.confirm_stake_pool_registration_final(
             self.ctx,
             self.msg.protocol_magic,
             self.msg.ttl,
             self.msg.validity_interval_start,
         )
 
-    def _validate_output(self, output: CardanoTxOutput) -> None:
+    def _validate_output(self, output: messages.CardanoTxOutput) -> None:
         super()._validate_output(output)
         if output.address_parameters is not None or output.datum_hash is not None:
             raise wire.ProcessError("Invalid output")
 
-    def _should_show_output(self, output: CardanoTxOutput) -> bool:
+    def _should_show_output(self, output: messages.CardanoTxOutput) -> bool:
         # super() omitted intentionally
         # There are no spending witnesses, it is thus safe to hide outputs.
         return False
 
-    def _validate_certificate(self, certificate: CardanoTxCertificate) -> None:
+    def _validate_certificate(self, certificate: messages.CardanoTxCertificate) -> None:
         super()._validate_certificate(certificate)
         if certificate.type != CardanoCertificateType.STAKE_POOL_REGISTRATION:
             raise wire.ProcessError("Invalid certificate")
 
     def _validate_witness_request(
-        self, witness_request: CardanoTxWitnessRequest
+        self, witness_request: messages.CardanoTxWitnessRequest
     ) -> None:
         super()._validate_witness_request(witness_request)
         if not SCHEMA_STAKING_ANY_ACCOUNT.match(witness_request.path):

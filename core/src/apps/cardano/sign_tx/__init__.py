@@ -1,8 +1,7 @@
 from typing import Type
 
-from trezor import log, wire
+from trezor import log, messages, wire
 from trezor.enums import CardanoTxSigningMode
-from trezor.messages import CardanoSignTxFinished, CardanoSignTxInit
 
 from .. import seed
 from .signer import Signer
@@ -41,4 +40,4 @@ async def sign_tx(
             log.exception(__name__, e)
         raise wire.ProcessError("Signing failed")
 
-    return CardanoSignTxFinished()
+    return messages.CardanoSignTxFinished()

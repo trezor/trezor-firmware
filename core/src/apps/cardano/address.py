@@ -1,6 +1,6 @@
-from typing import TYPE_CHECKING
+from typing import Any
 
-from trezor import wire
+from trezor import messages, wire
 from trezor.crypto import base58
 from trezor.enums import CardanoAddressType
 
@@ -9,15 +9,6 @@ from .helpers import ADDRESS_KEY_HASH_SIZE, SCRIPT_HASH_SIZE, bech32, network_id
 from .helpers.paths import SCHEMA_STAKING_ANY_ACCOUNT
 from .helpers.utils import get_public_key_hash, variable_length_encode
 from .seed import is_byron_path, is_shelley_path
-
-if TYPE_CHECKING:
-    from typing import Any
-
-    from trezor.messages import (
-        CardanoAddressParametersType,
-        CardanoBlockchainPointerType,
-    )
-    from . import seed
 
 ADDRESS_TYPES_SHELLEY = (
     CardanoAddressType.BASE,
@@ -48,7 +39,9 @@ def assert_address_params_cond(condition: bool) -> None:
         raise wire.ProcessError("Invalid address parameters")
 
 
-def validate_address_parameters(parameters: CardanoAddressParametersType) -> None:
+def validate_address_parameters(
+    parameters: messages.CardanoAddressParametersType,
+) -> None:
     _validate_address_parameters_structure(parameters)
 
     if parameters.address_type == CardanoAddressType.BYRON:
@@ -102,7 +95,7 @@ def validate_address_parameters(parameters: CardanoAddressParametersType) -> Non
 
 
 def _validate_address_parameters_structure(
-    parameters: CardanoAddressParametersType,
+    parameters: messages.CardanoAddressParametersType,
 ) -> None:
     address_n = parameters.address_n
     address_n_staking = parameters.address_n_staking
@@ -206,7 +199,7 @@ def _validate_script_hash(script_hash: bytes | None) -> None:
 
 
 def validate_output_address_parameters(
-    parameters: CardanoAddressParametersType,
+    parameters: messages.CardanoAddressParametersType,
 ) -> None:
     validate_address_parameters(parameters)
 
@@ -338,7 +331,7 @@ def _get_address_network_id(address: bytes) -> int:
 
 def derive_human_readable_address(
     keychain: seed.Keychain,
-    parameters: CardanoAddressParametersType,
+    parameters: messages.CardanoAddressParametersType,
     protocol_magic: int,
     network_id: int,
 ) -> str:
@@ -364,7 +357,7 @@ def encode_human_readable_address(address_bytes: bytes) -> str:
 
 def derive_address_bytes(
     keychain: seed.Keychain,
-    parameters: CardanoAddressParametersType,
+    parameters: messages.CardanoAddressParametersType,
     protocol_magic: int,
     network_id: int,
 ) -> bytes:
@@ -379,7 +372,9 @@ def derive_address_bytes(
 
 
 def _derive_shelley_address(
-    keychain: seed.Keychain, parameters: CardanoAddressParametersType, network_id: int
+    keychain: seed.Keychain,
+    parameters: messages.CardanoAddressParametersType,
+    network_id: int,
 ) -> bytes:
     header = _create_address_header(parameters.address_type, network_id)
 
@@ -394,8 +389,8 @@ def _create_address_header(address_type: CardanoAddressType, network_id: int) ->
     return header.to_bytes(1, "little")
 
 
-def _get_address_payment_part(
-    keychain: seed.Keychain, parameters: CardanoAddressParametersType
+def _get_payment_part(
+    keychain: seed.Keychain, parameters: messages.CardanoAddressParametersType
 ) -> bytes:
     if parameters.address_n:
         return get_public_key_hash(keychain, parameters.address_n)
@@ -405,8 +400,8 @@ def _get_address_payment_part(
         return bytes()
 
 
-def _get_address_staking_part(
-    keychain: seed.Keychain, parameters: CardanoAddressParametersType
+def _get_staking_part(
+    keychain: seed.Keychain, parameters: messages.CardanoAddressParametersType
 ) -> bytes:
     if parameters.staking_key_hash:
         return parameters.staking_key_hash
@@ -420,7 +415,9 @@ def _get_address_staking_part(
         return bytes()
 
 
-def _encode_certificate_pointer(pointer: CardanoBlockchainPointerType) -> bytes:
+def _encode_certificate_pointer(
+    pointer: messages.CardanoBlockchainPointerType,
+) -> bytes:
     block_index_encoded = variable_length_encode(pointer.block_index)
     tx_index_encoded = variable_length_encode(pointer.tx_index)
     certificate_index_encoded = variable_length_encode(pointer.certificate_index)
