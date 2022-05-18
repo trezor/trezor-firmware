@@ -9,13 +9,6 @@ from trezor.messages import (
 )
 
 from .. import seed
-from ..helpers import (
-    INVALID_CERTIFICATE,
-    INVALID_OUTPUT,
-    INVALID_TX_SIGNING_REQUEST,
-    INVALID_WITHDRAWAL,
-    INVALID_WITNESS_REQUEST,
-)
 from ..helpers.paths import SCHEMA_MINT
 from ..layout import show_multisig_transaction
 from ..seed import is_multisig_path
@@ -38,7 +31,7 @@ class MultisigSigner(Signer):
             self.msg.collateral_inputs_count != 0
             or self.msg.required_signers_count != 0
         ):
-            raise INVALID_TX_SIGNING_REQUEST
+            raise wire.ProcessError("Invalid tx signing request")
 
     async def _show_tx_signing_request(self) -> None:
         await show_multisig_transaction(self.ctx)
@@ -61,19 +54,19 @@ class MultisigSigner(Signer):
     def _validate_output(self, output: messages.CardanoTxOutput) -> None:
         super()._validate_output(output)
         if output.address_parameters is not None:
-            raise INVALID_OUTPUT
+            raise wire.ProcessError("Invalid output")
 
     def _validate_certificate(self, certificate: CardanoTxCertificate) -> None:
         super()._validate_certificate(certificate)
         if certificate.type == CardanoCertificateType.STAKE_POOL_REGISTRATION:
-            raise INVALID_CERTIFICATE
+            raise wire.ProcessError("Invalid certificate")
         if certificate.path or certificate.key_hash:
-            raise INVALID_CERTIFICATE
+            raise wire.ProcessError("Invalid certificate")
 
     def _validate_withdrawal(self, withdrawal: CardanoTxWithdrawal) -> None:
         super()._validate_withdrawal(withdrawal)
         if withdrawal.path or withdrawal.key_hash:
-            raise INVALID_WITHDRAWAL
+            raise wire.ProcessError("Invalid withdrawal")
 
     def _validate_witness_request(
         self, witness_request: CardanoTxWitnessRequest
@@ -82,7 +75,8 @@ class MultisigSigner(Signer):
         is_minting = SCHEMA_MINT.match(witness_request.path)
         transaction_has_token_minting = self.msg.minting_asset_groups_count > 0
 
-        if not is_multisig_path(witness_request.path) and not is_minting:
-            raise INVALID_WITNESS_REQUEST
-        if is_minting and not transaction_has_token_minting:
-            raise INVALID_WITNESS_REQUEST
+        if not (
+            is_multisig_path(witness_request.path)
+            or (is_minting and transaction_has_token_minting)
+        ):
+            raise wire.ProcessError("Invalid witness request")
