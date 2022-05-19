@@ -30,9 +30,9 @@ from ..auxiliary_data import (
 from ..certificates import (
     assert_certificate_cond,
     cborize_certificate,
-    cborize_initial_pool_registration_certificate_fields,
     cborize_pool_metadata,
     cborize_pool_owner,
+    cborize_pool_registration_certificate_init,
     cborize_pool_relay,
     validate_certificate,
     validate_pool_owner,
@@ -46,7 +46,7 @@ from ..helpers import (
     SCRIPT_DATA_HASH_SIZE,
 )
 from ..helpers.account_path_check import AccountPathChecker
-from ..helpers.credential import Credential, should_show_address_credentials
+from ..helpers.credential import Credential, should_show_credentials
 from ..helpers.hash_builder_collection import HashBuilderDict, HashBuilderList
 from ..helpers.paths import (
     CERTIFICATE_PATH_NAME,
@@ -115,7 +115,7 @@ class Signer:
         self.account_path_checker = AccountPathChecker()
 
         # Inputs, outputs and fee are mandatory, count the number of optional fields present.
-        tx_body_map_item_count = 3 + sum(
+        tx_dict_items_count = 3 + sum(
             (
                 msg.ttl is not None,
                 msg.certificates_count > 0,
@@ -130,17 +130,17 @@ class Signer:
             )
         )
         self.tx_dict: HashBuilderDict[int, Any] = HashBuilderDict(
-            tx_body_map_item_count, wire.ProcessError("Invalid tx signing request")
+            tx_dict_items_count, wire.ProcessError("Invalid tx signing request")
         )
 
     async def sign(self) -> None:
         hash_fn = hashlib.blake2b(outlen=32)
         self.tx_dict.start(hash_fn)
         with self.tx_dict:
-            await self._processs_tx_signing_request()
+            await self._processs_tx_init()
 
         tx_hash = hash_fn.digest()
-        await self._confirm_transaction(tx_hash)
+        await self._confirm_tx(tx_hash)
 
         response_after_witness_requests = await self._process_witness_requests(tx_hash)
         await self.ctx.call(response_after_witness_requests, messages.CardanoTxHostAck)
@@ -150,9 +150,9 @@ class Signer:
 
     # signing request
 
-    async def _processs_tx_signing_request(self) -> None:
-        self._validate_tx_signing_request()
-        await self._show_tx_signing_request()
+    async def _processs_tx_init(self) -> None:
+        self._validate_tx_init()
+        await self._show_tx_init()
 
         inputs_list: HashBuilderList[tuple[bytes, int]] = HashBuilderList(
             self.msg.inputs_count
@@ -221,14 +221,14 @@ class Signer:
         if self.msg.include_network_id:
             self.tx_dict.add(TX_BODY_KEY_NETWORK_ID, self.msg.network_id)
 
-    def _validate_tx_signing_request(self) -> None:
+    def _validate_tx_init(self) -> None:
         if self.msg.fee > LOVELACE_MAX_SUPPLY:
             raise wire.ProcessError("Fee is out of range!")
         validate_network_info(self.msg.network_id, self.msg.protocol_magic)
 
-    async def _show_tx_signing_request(self) -> None:
+    async def _show_tx_init(self) -> None:
         if not self._is_network_id_verifiable():
-            await layout.show_warning_tx_network_unverifiable(self.ctx)
+            await layout.warn_tx_network_unverifiable(self.ctx)
 
     async def _confirm_tx(self, tx_hash: bytes) -> None:
         # Final signing confirmation is handled separately in each signing mode.
@@ -328,16 +328,14 @@ class Signer:
             return
 
         if output.datum_hash is not None:
-            await layout.show_warning_tx_output_contains_datum_hash(
-                self.ctx, output.datum_hash
-            )
+            await layout.warn_tx_output_contains_datum_hash(self.ctx, output.datum_hash)
 
         address_type = self._get_output_address_type(output)
         if output.datum_hash is None and address_type in ADDRESS_TYPES_PAYMENT_SCRIPT:
-            await layout.show_warning_tx_output_no_datum_hash(self.ctx)
+            await layout.warn_tx_output_no_datum_hash(self.ctx)
 
         if output.asset_groups_count > 0:
-            await layout.show_warning_tx_output_contains_tokens(self.ctx)
+            await layout.warn_tx_output_contains_tokens(self.ctx)
 
         if output.address_parameters is not None:
             address = derive_human_readable_address(
@@ -384,7 +382,7 @@ class Signer:
             return True
 
         if output.address_parameters is not None:  # change output
-            if not should_show_address_credentials(output.address_parameters):
+            if not should_show_credentials(output.address_parameters):
                 # We don't need to display simple address outputs.
                 return False
 
@@ -491,9 +489,7 @@ class Signer:
                     POOL_REGISTRATION_CERTIFICATE_ITEMS_COUNT
                 )
                 with certificates_list.append(pool_items_list):
-                    for item in cborize_initial_pool_registration_certificate_fields(
-                        certificate
-                    ):
+                    for item in cborize_pool_registration_certificate_init(certificate):
                         pool_items_list.append(item)
 
                     pool_owners_list: HashBuilderList[bytes] = HashBuilderList(
@@ -600,13 +596,11 @@ class Signer:
                 messages.CardanoTxItemAck(), messages.CardanoTxWithdrawal
             )
             self._validate_withdrawal(withdrawal)
-            reward_address_bytes = self._derive_withdrawal_reward_address_bytes(
-                withdrawal
-            )
+            address_bytes = self._derive_withdrawal_address_bytes(withdrawal)
             await layout.confirm_withdrawal(
-                self.ctx, withdrawal, reward_address_bytes, self.msg.network_id
+                self.ctx, withdrawal, address_bytes, self.msg.network_id
             )
-            withdrawals_dict.add(reward_address_bytes, withdrawal.amount)
+            withdrawals_dict.add(address_bytes, withdrawal.amount)
 
     def _validate_withdrawal(self, withdrawal: messages.CardanoTxWithdrawal) -> None:
         validate_stake_credential(
@@ -656,7 +650,7 @@ class Signer:
             messages.CardanoTxItemAck(), messages.CardanoTxMint
         )
 
-        await layout.show_warning_tx_contains_mint(self.ctx)
+        await layout.warn_tx_contains_mint(self.ctx)
 
         for _ in range(token_minting.asset_groups_count):
             asset_group: messages.CardanoAssetGroup = await self.ctx.call(
@@ -832,7 +826,7 @@ class Signer:
         assert output.address is not None  # _validate_output
         return get_address_type(get_address_bytes_unsafe(output.address))
 
-    def _derive_withdrawal_reward_address_bytes(
+    def _derive_withdrawal_address_bytes(
         self, withdrawal: messages.CardanoTxWithdrawal
     ) -> bytes:
         reward_address_type = (
@@ -888,7 +882,7 @@ class Signer:
         if safety_checks.is_strict():
             raise wire.DataError(f"Invalid {path_name.lower()}")
         else:
-            await layout.show_warning_path(self.ctx, path, path_name)
+            await layout.warn_path(self.ctx, path, path_name)
 
     def _fail_if_strict_and_unusual(
         self, address_parameters: messages.CardanoAddressParametersType

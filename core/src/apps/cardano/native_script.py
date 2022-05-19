@@ -32,9 +32,8 @@ def validate_native_script(script: messages.CardanoNativeScript | None) -> None:
             if len(script.key_hash) != ADDRESS_KEY_HASH_SIZE:
                 raise INVALID_NATIVE_SCRIPT
         elif script.key_path:
-            if not is_multisig_path(script.key_path) and not SCHEMA_MINT.match(
-                script.key_path
-            ):
+            is_minting = SCHEMA_MINT.match(script.key_path)
+            if not is_multisig_path(script.key_path) and not is_minting:
                 raise INVALID_NATIVE_SCRIPT
         else:
             raise INVALID_NATIVE_SCRIPT

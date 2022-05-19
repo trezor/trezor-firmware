@@ -2,7 +2,7 @@ from trezor import messages, wire
 from trezor.enums import CardanoCertificateType
 
 from .. import layout, seed
-from ..helpers.credential import Credential, should_show_address_credentials
+from ..helpers.credential import Credential, should_show_credentials
 from ..helpers.paths import SCHEMA_MINT
 from ..seed import is_multisig_path, is_shelley_path
 from .signer import Signer
@@ -22,22 +22,22 @@ class PlutusSigner(Signer):
     ) -> None:
         super().__init__(ctx, msg, keychain)
 
-    async def _show_tx_signing_request(self) -> None:
-        await layout.show_plutus_transaction(self.ctx)
-        await super()._show_tx_signing_request()
+    async def _show_tx_init(self) -> None:
+        await layout.show_plutus_tx(self.ctx)
+        await super()._show_tx_init()
         # These items should be present if a Plutus script is to be executed.
         if self.msg.script_data_hash is None:
-            await layout.show_warning_no_script_data_hash(self.ctx)
+            await layout.warn_no_script_data_hash(self.ctx)
         if self.msg.collateral_inputs_count == 0:
-            await layout.show_warning_no_collateral_inputs(self.ctx)
+            await layout.warn_no_collateral_inputs(self.ctx)
 
-    async def _confirm_transaction(self, tx_hash: bytes) -> None:
+    async def _confirm_tx(self, tx_hash: bytes) -> None:
         # super() omitted intentionally
         # We display tx hash so that experienced users can compare it to the tx hash
         # computed by a trusted device (in case the tx contains many items which are
         # tedious to check one by one on the Trezor screen).
         is_network_id_verifiable = self._is_network_id_verifiable()
-        await layout.confirm_transaction(
+        await layout.confirm_tx(
             self.ctx,
             self.msg.fee,
             self.msg.network_id,
@@ -59,7 +59,7 @@ class PlutusSigner(Signer):
         # In ordinary txs, change outputs with matching payment and staking paths can be
         # hidden, but we need to show them in Plutus txs because of the script
         # evaluation. We at least hide the staking path if it matches the payment path.
-        show_both_credentials = should_show_address_credentials(address_parameters)
+        show_both_credentials = should_show_credentials(address_parameters)
         await layout.show_device_owned_output_credentials(
             self.ctx,
             Credential.payment_credential(address_parameters),

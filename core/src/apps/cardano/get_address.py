@@ -2,23 +2,21 @@ from trezor import log, messages, wire
 
 from . import seed
 from .address import derive_human_readable_address, validate_address_parameters
-from .helpers.credential import Credential, should_show_address_credentials
+from .helpers.credential import Credential, should_show_credentials
 from .helpers.utils import validate_network_info
-from .layout import show_address_credentials, show_cardano_address
+from .layout import show_cardano_address, show_credentials
 
 
 @seed.with_keychain
 async def get_address(
     ctx: wire.Context, msg: messages.CardanoGetAddress, keychain: seed.Keychain
 ) -> messages.CardanoAddress:
-    address_parameters = msg.address_parameters
-
     validate_network_info(msg.network_id, msg.protocol_magic)
-    validate_address_parameters(address_parameters)
+    validate_address_parameters(msg.address_parameters)
 
     try:
         address = derive_human_readable_address(
-            keychain, address_parameters, msg.protocol_magic, msg.network_id
+            keychain, msg.address_parameters, msg.protocol_magic, msg.network_id
         )
     except ValueError as e:
         if __debug__:
@@ -26,7 +24,7 @@ async def get_address(
         raise wire.ProcessError("Deriving address failed")
 
     if msg.show_display:
-        await _display_address(ctx, address_parameters, address, msg.protocol_magic)
+        await _display_address(ctx, msg.address_parameters, address, msg.protocol_magic)
 
     return messages.CardanoAddress(address=address)
 
@@ -37,8 +35,8 @@ async def _display_address(
     address: str,
     protocol_magic: int,
 ) -> None:
-    if should_show_address_credentials(address_parameters):
-        await show_address_credentials(
+    if should_show_credentials(address_parameters):
+        await show_credentials(
             ctx,
             Credential.payment_credential(address_parameters),
             Credential.stake_credential(address_parameters),

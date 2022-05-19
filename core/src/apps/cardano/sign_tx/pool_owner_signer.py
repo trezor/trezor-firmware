@@ -27,8 +27,8 @@ class PoolOwnerSigner(Signer):
     ) -> None:
         super().__init__(ctx, msg, keychain)
 
-    def _validate_tx_signing_request(self) -> None:
-        super()._validate_tx_signing_request()
+    def _validate_tx_init(self) -> None:
+        super()._validate_tx_init()
         if (
             self.msg.certificates_count != 1
             or self.msg.withdrawals_count != 0
@@ -45,7 +45,7 @@ class PoolOwnerSigner(Signer):
         ):
             raise wire.ProcessError("Invalid tx signing request")
 
-    async def _confirm_transaction(self, tx_hash: bytes) -> None:
+    async def _confirm_tx(self, tx_hash: bytes) -> None:
         # super() omitted intentionally
         await layout.confirm_stake_pool_registration_final(
             self.ctx,
