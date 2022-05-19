@@ -20,17 +20,17 @@ class MultisigSigner(Signer):
     ) -> None:
         super().__init__(ctx, msg, keychain)
 
-    def _validate_tx_signing_request(self) -> None:
-        super()._validate_tx_signing_request()
+    def _validate_tx_init(self) -> None:
+        super()._validate_tx_init()
         if (
             self.msg.collateral_inputs_count != 0
             or self.msg.required_signers_count != 0
         ):
             raise wire.ProcessError("Invalid tx signing request")
 
-    async def _show_tx_signing_request(self) -> None:
-        await layout.show_multisig_transaction(self.ctx)
-        await super()._show_tx_signing_request()
+    async def _show_tx_init(self) -> None:
+        await layout.show_multisig_tx(self.ctx)
+        await super()._show_tx_init()
 
     async def _confirm_tx(self, tx_hash: bytes) -> None:
         # super() omitted intentionally
@@ -68,10 +68,10 @@ class MultisigSigner(Signer):
     ) -> None:
         super()._validate_witness_request(witness_request)
         is_minting = SCHEMA_MINT.match(witness_request.path)
-        transaction_has_token_minting = self.msg.minting_asset_groups_count > 0
+        tx_has_token_minting = self.msg.minting_asset_groups_count > 0
 
         if not (
             is_multisig_path(witness_request.path)
-            or (is_minting and transaction_has_token_minting)
+            or (is_minting and tx_has_token_minting)
         ):
             raise wire.ProcessError("Invalid witness request")

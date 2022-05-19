@@ -203,7 +203,7 @@ class Credential:
             return []
 
 
-def should_show_address_credentials(
+def should_show_credentials(
     address_parameters: messages.CardanoAddressParametersType,
 ) -> bool:
     return not (

@@ -179,7 +179,7 @@ async def show_script_hash(
         )
 
 
-async def show_multisig_transaction(ctx: wire.Context) -> None:
+async def show_multisig_tx(ctx: wire.Context) -> None:
     await confirm_metadata(
         ctx,
         "confirm_signing_mode",
@@ -190,7 +190,7 @@ async def show_multisig_transaction(ctx: wire.Context) -> None:
     )
 
 
-async def show_plutus_transaction(ctx: wire.Context) -> None:
+async def show_plutus_tx(ctx: wire.Context) -> None:
     await confirm_metadata(
         ctx,
         "confirm_signing_mode",
@@ -258,7 +258,7 @@ async def confirm_sending_token(
     )
 
 
-async def show_address_credentials(
+async def show_credentials(
     ctx: wire.Context,
     payment_credential: Credential,
     stake_credential: Credential,
@@ -348,11 +348,11 @@ async def _show_credential(
     )
 
 
-async def show_warning_path(ctx: wire.Context, path: list[int], title: str) -> None:
+async def warn_path(ctx: wire.Context, path: list[int], title: str) -> None:
     await confirm_path_warning(ctx, address_n_to_str(path), path_type=title)
 
 
-async def show_warning_tx_output_contains_tokens(ctx: wire.Context) -> None:
+async def warn_tx_output_contains_tokens(ctx: wire.Context) -> None:
     await confirm_metadata(
         ctx,
         "confirm_tokens",
@@ -363,7 +363,7 @@ async def show_warning_tx_output_contains_tokens(ctx: wire.Context) -> None:
     )
 
 
-async def show_warning_tx_contains_mint(ctx: wire.Context) -> None:
+async def warn_tx_contains_mint(ctx: wire.Context) -> None:
     await confirm_metadata(
         ctx,
         "confirm_tokens",
@@ -374,7 +374,7 @@ async def show_warning_tx_contains_mint(ctx: wire.Context) -> None:
     )
 
 
-async def show_warning_tx_output_contains_datum_hash(
+async def warn_tx_output_contains_datum_hash(
     ctx: wire.Context, datum_hash: bytes
 ) -> None:
     await confirm_properties(
@@ -392,7 +392,7 @@ async def show_warning_tx_output_contains_datum_hash(
     )
 
 
-async def show_warning_tx_output_no_datum_hash(ctx: wire.Context) -> None:
+async def warn_tx_output_no_datum_hash(ctx: wire.Context) -> None:
     await confirm_metadata(
         ctx,
         "confirm_no_datum_hash",
@@ -402,7 +402,7 @@ async def show_warning_tx_output_no_datum_hash(ctx: wire.Context) -> None:
     )
 
 
-async def show_warning_no_script_data_hash(ctx: wire.Context) -> None:
+async def warn_no_script_data_hash(ctx: wire.Context) -> None:
     await confirm_metadata(
         ctx,
         "confirm_no_script_data_hash",
@@ -412,7 +412,7 @@ async def show_warning_no_script_data_hash(ctx: wire.Context) -> None:
     )
 
 
-async def show_warning_no_collateral_inputs(ctx: wire.Context) -> None:
+async def warn_no_collateral_inputs(ctx: wire.Context) -> None:
     await confirm_metadata(
         ctx,
         "confirm_no_collateral_inputs",
@@ -443,7 +443,7 @@ async def confirm_witness_request(
     )
 
 
-async def confirm_transaction(
+async def confirm_tx(
     ctx: wire.Context,
     fee: int,
     network_id: int,
@@ -633,13 +633,13 @@ async def confirm_stake_pool_registration_final(
 async def confirm_withdrawal(
     ctx: wire.Context,
     withdrawal: messages.CardanoTxWithdrawal,
-    reward_address_bytes: bytes,
+    address_bytes: bytes,
     network_id: int,
 ) -> None:
     address_type_name = "script reward" if withdrawal.script_hash else "reward"
-    reward_address = encode_human_readable_address(reward_address_bytes)
+    address = encode_human_readable_address(address_bytes)
     props: list[PropertyType] = [
-        (f"Confirm withdrawal for {address_type_name} address:", reward_address),
+        (f"Confirm withdrawal for {address_type_name} address:", address),
     ]
 
     if withdrawal.path:
@@ -739,7 +739,7 @@ async def confirm_token_minting(
     )
 
 
-async def show_warning_tx_network_unverifiable(ctx: wire.Context) -> None:
+async def warn_tx_network_unverifiable(ctx: wire.Context) -> None:
     await confirm_metadata(
         ctx,
         "warning_no_outputs",
