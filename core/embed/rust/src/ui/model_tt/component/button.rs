@@ -6,7 +6,7 @@ use crate::{
         },
         display::{self, Color, Font},
         event::TouchEvent,
-        geometry::{Insets, Offset, Rect},
+        geometry::{Insets, Offset, Point, Rect},
     },
 };
 
@@ -50,6 +50,10 @@ impl<T> Button<T> {
 
     pub fn with_icon(image: &'static [u8]) -> Self {
         Self::new(ButtonContent::Icon(image))
+    }
+
+    pub fn with_icon_and_text(content: IconText) -> Self {
+        Self::new(ButtonContent::IconAndText(content))
     }
 
     pub fn empty() -> Self {
@@ -196,6 +200,9 @@ impl<T> Button<T> {
                     style.button_color,
                 );
             }
+            ButtonContent::IconAndText(child) => {
+                child.paint(self.area, self.style(), Self::BASELINE_OFFSET);
+            }
         }
     }
 }
@@ -300,6 +307,7 @@ where
             ButtonContent::Empty => {}
             ButtonContent::Text(text) => t.field("text", text),
             ButtonContent::Icon(_) => t.symbol("icon"),
+            ButtonContent::IconAndText(_) => {}
         }
         t.close();
     }
@@ -318,6 +326,7 @@ pub enum ButtonContent<T> {
     Empty,
     Text(T),
     Icon(&'static [u8]),
+    IconAndText(IconText),
 }
 
 #[derive(PartialEq, Eq)]
@@ -516,4 +525,56 @@ pub enum CancelInfoConfirmMsg {
 
 pub enum SelectWordMsg {
     Selected(usize),
+}
+
+#[derive(PartialEq, Eq)]
+pub struct IconText {
+    text: &'static str,
+    icon: &'static [u8],
+}
+
+impl IconText {
+    pub fn new(text: &'static str, icon: &'static [u8]) -> Self {
+        Self { text, icon }
+    }
+
+    pub fn paint(&self, area: Rect, style: &ButtonStyle, baseline_offset: i32) {
+        let width = style.font.text_width(self.text);
+        let height = style.font.text_height();
+
+        let mut use_icon = false;
+        let mut use_text = false;
+
+        let mut icon_pos = Point::new(area.top_left().x + 25, area.center().y);
+        let mut text_pos =
+            area.center() + Offset::new(-width / 2, height / 2) + Offset::y(baseline_offset);
+
+        if area.width() > (46 + 10 + width) {
+            //display both icon and text
+            let start_of_baseline = area.center() + Offset::new(-width / 2, height / 2);
+            text_pos = Point::new(area.top_left().x + 46, start_of_baseline.y);
+            use_text = true;
+            use_icon = true;
+        } else if area.width() > (width + 10) {
+            use_text = true;
+        } else {
+            //if we can't fit the text, retreat to centering the icon
+            icon_pos = area.center();
+            use_icon = true;
+        }
+
+        if use_text {
+            display::text(
+                text_pos,
+                self.text,
+                style.font,
+                style.text_color,
+                style.button_color,
+            );
+        }
+
+        if use_icon {
+            display::icon(icon_pos, self.icon, style.text_color, style.button_color);
+        }
+    }
 }
