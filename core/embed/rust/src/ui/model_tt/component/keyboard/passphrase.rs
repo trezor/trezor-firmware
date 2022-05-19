@@ -70,6 +70,7 @@ impl PassphraseKeyboard {
         match content {
             ButtonContent::Text(text) => text,
             ButtonContent::Icon(_) => " ",
+            ButtonContent::IconAndText(_) => " ",
             ButtonContent::Empty => "",
             ButtonContent::IconBlend(_, _, _) => "",
         }
