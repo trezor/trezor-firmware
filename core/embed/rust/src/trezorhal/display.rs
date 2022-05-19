@@ -1,6 +1,7 @@
 use super::ffi;
 use core::ptr;
 
+
 pub struct ToifInfo {
     pub width: u16,
     pub height: u16,
@@ -9,6 +10,13 @@ pub struct ToifInfo {
 
 pub fn backlight(val: i32) -> i32 {
     unsafe { ffi::display_backlight(val) }
+}
+
+pub fn fadein() {
+    unsafe { ffi::display_fadein() }
+}
+pub fn fadeout() {
+    unsafe { ffi::display_fadeout() }
 }
 
 pub fn text(baseline_x: i32, baseline_y: i32, text: &str, font: i32, fgcolor: u16, bgcolor: u16) {

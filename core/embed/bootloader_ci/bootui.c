@@ -28,7 +28,6 @@
 #include "icon_wipe.h"
 #include "mini_printf.h"
 
-#define BACKLIGHT_NORMAL 150
 
 #define COLOR_BL_BG COLOR_WHITE  // background
 #define COLOR_BL_FG COLOR_BLACK  // foreground
@@ -128,11 +127,3 @@ void ui_screen_fail(void) {
                       COLOR_BL_FG, COLOR_BL_BG);
 }
 
-// general functions
-
-void ui_fadein(void) { display_fade(0, BACKLIGHT_NORMAL, 1000); }
-
-void ui_fadeout(void) {
-  display_fade(BACKLIGHT_NORMAL, 0, 500);
-  display_clear();
-}
