@@ -26,8 +26,8 @@ class OrdinarySigner(Signer):
     ) -> None:
         super().__init__(ctx, msg, keychain)
 
-    def _validate_tx_signing_request(self) -> None:
-        super()._validate_tx_signing_request()
+    def _validate_tx_init(self) -> None:
+        super()._validate_tx_init()
         if (
             self.msg.collateral_inputs_count != 0
             or self.msg.required_signers_count != 0
@@ -65,12 +65,12 @@ class OrdinarySigner(Signer):
     ) -> None:
         super()._validate_witness_request(witness_request)
         is_minting = SCHEMA_MINT.match(witness_request.path)
-        transaction_has_token_minting = self.msg.minting_asset_groups_count > 0
+        tx_has_token_minting = self.msg.minting_asset_groups_count > 0
 
         if not (
             is_byron_path(witness_request.path)
             or is_shelley_path(witness_request.path)
-            or (is_minting and transaction_has_token_minting)
+            or (is_minting and tx_has_token_minting)
         ):
             raise wire.ProcessError("Invalid witness request")
 

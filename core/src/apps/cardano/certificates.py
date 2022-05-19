@@ -132,7 +132,7 @@ def cborize_certificate_stake_credential(
     raise RuntimeError
 
 
-def cborize_initial_pool_registration_certificate_fields(
+def cborize_pool_registration_certificate_init(
     certificate: messages.CardanoTxCertificate,
 ) -> CborSequence:
     assert certificate.type == CardanoCertificateType.STAKE_POOL_REGISTRATION
