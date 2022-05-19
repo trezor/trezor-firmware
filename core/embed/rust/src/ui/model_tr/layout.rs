@@ -23,7 +23,7 @@ use crate::{
 use super::{
     component::{
         Bip39Page, Bip39PageMsg, Button, ButtonPage, ButtonPos, ChoicePage, ChoicePageMsg, Frame,
-        PinPage, PinPageMsg,
+        PassphrasePage, PassphrasePageMsg, PinPage, PinPageMsg,
     },
     theme,
 };
@@ -71,6 +71,18 @@ where
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
             Bip39PageMsg::Confirmed => self.get_current_choice().as_str().try_into(),
+        }
+    }
+}
+
+impl<T> ComponentMsgObj for PassphrasePage<T>
+where
+    T: Deref<Target = str>,
+{
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            PassphrasePageMsg::Confirmed => self.passphrase().try_into(),
+            PassphrasePageMsg::Cancelled => Ok(CANCELLED.as_obj()),
         }
     }
 }
@@ -276,6 +288,17 @@ extern "C" fn request_word_bip39(n_args: usize, args: *const Obj, kwargs: *mut M
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn request_passphrase(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = |_args: &[Obj], kwargs: &Map| {
+        let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+        let max_len: u8 = kwargs.get(Qstr::MP_QSTR_max_len)?.try_into()?;
+
+        let obj = LayoutObj::new(PassphrasePage::new(prompt, max_len).into_child())?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 #[no_mangle]
 pub static mp_module_trezorui2: Module = obj_module! {
     Qstr::MP_QSTR___name__ => Qstr::MP_QSTR_trezorui2.to_obj(),
@@ -353,6 +376,14 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> str:
     ///     """Get recovery word for BIP39."""
     Qstr::MP_QSTR_request_word_bip39 => obj_fn_kw!(0, request_word_bip39).as_obj(),
+
+    /// def request_passphrase(
+    ///     *,
+    ///     prompt: str,
+    ///     max_len: int,
+    /// ) -> str:
+    ///     """Get passphrase."""
+    Qstr::MP_QSTR_request_passphrase => obj_fn_kw!(0, request_passphrase).as_obj(),
 };
 
 #[cfg(test)]

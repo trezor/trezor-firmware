@@ -201,7 +201,7 @@ def get_passphrase_always_on_device() -> bool:
     - If HOST(2) => returns False, the check against b"\x01" in get_bool fails.
     """
     # Some models do not support passphrase input on device
-    if utils.MODEL in ("1", "R"):
+    if utils.MODEL in ("1",):
         return False
     return common.get_bool(_NAMESPACE, _PASSPHRASE_ALWAYS_ON_DEVICE)
 
