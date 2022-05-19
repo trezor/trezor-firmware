@@ -7,6 +7,7 @@ pub mod display;
 #[cfg(feature = "dma2d")]
 pub mod dma2d;
 mod ffi;
+pub mod io;
 pub mod qr;
 pub mod random;
 #[cfg(feature = "model_tr")]
