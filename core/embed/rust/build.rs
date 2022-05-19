@@ -337,7 +337,16 @@ fn generate_trezorhal_bindings() {
         .allowlist_var("text_buffer_height")
         .allowlist_var("buffer_width")
         //usb
-        .allowlist_function("usb_configured");
+        .allowlist_function("usb_configured")
+        // touch
+        .allowlist_function("touch_read")
+        // button
+        .allowlist_function("button_read")
+        .allowlist_var("BTN_EVT_DOWN")
+        .allowlist_var("BTN_EVT_UP")
+        .allowlist_var("BTN_RIGHT")
+        .allowlist_var("BTN_LEFT");
+
     // Write the bindings to a file in the OUR_DIR.
     bindings
         .generate()
