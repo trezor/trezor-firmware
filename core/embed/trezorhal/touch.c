@@ -331,3 +331,6 @@ uint32_t touch_click(void) {
   // return last touch coordinate
   return r;
 }
+
+uint16_t touch_unpack_x(uint32_t evt) { return (evt >> 12) & 0xFFF; }
+uint16_t touch_unpack_y(uint32_t evt) { return (evt >> 0) & 0xFFF; }
