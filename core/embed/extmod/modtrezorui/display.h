@@ -135,6 +135,8 @@ void display_offset(int set_xy[2], int *get_x, int *get_y);
 int display_orientation(int degrees);
 int display_backlight(int val);
 void display_fade(int start, int end, int delay);
+void display_fadein(void);
+void display_fadeout(void);
 
 // helper for locating a substring in buffer with utf-8 string
 void display_utf8_substr(const char *buf_start, size_t buf_len, int char_off,

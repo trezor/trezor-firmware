@@ -11,6 +11,14 @@ pub fn set_backlight(val: i32) {
     display::backlight(val);
 }
 
+pub fn fadein() {
+    display::fadein()
+}
+
+pub fn fadeout() {
+    display::fadeout()
+}
+
 pub fn fade_backlight(target: i32) {
     const BACKLIGHT_DELAY: Duration = Duration::from_millis(14);
     const BACKLIGHT_STEP: usize = 15;
