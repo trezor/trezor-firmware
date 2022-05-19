@@ -100,6 +100,15 @@ def request_word_bip39(
     prompt: str,
 ) -> str:
     """Get recovery word for BIP39."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def request_passphrase(
+    *,
+    prompt: str,
+    max_len: int,
+) -> str:
+    """Get passphrase."""
 CONFIRMED: object
 CANCELLED: object
 INFO: object

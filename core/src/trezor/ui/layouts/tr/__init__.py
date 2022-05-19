@@ -802,7 +802,23 @@ def draw_simple_text(title: str, description: str = "") -> None:
 
 
 async def request_passphrase_on_device(ctx: wire.GenericContext, max_len: int) -> str:
-    return NotImplementedError  # type: ignore [Expression of type "Type[NotImplementedError]" cannot be assigned to return type "str"]
+    await button_request(
+        ctx, "passphrase_device", code=ButtonRequestType.PassphraseEntry
+    )
+
+    result = await ctx.wait(
+        RustLayout(
+            trezorui2.request_passphrase(
+                prompt="Enter passphrase",
+                max_len=max_len,
+            )
+        )
+    )
+    if result is trezorui2.CANCELLED:
+        raise wire.ActionCancelled("Passphrase entry cancelled")
+
+    assert isinstance(result, str)
+    return result
 
 
 async def request_pin_on_device(
