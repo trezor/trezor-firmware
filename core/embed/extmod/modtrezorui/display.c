@@ -107,6 +107,8 @@
 
 #include "memzero.h"
 
+#define BACKLIGHT_NORMAL 150
+
 static int DISPLAY_BACKLIGHT = -1;
 static int DISPLAY_ORIENTATION = -1;
 
@@ -987,6 +989,15 @@ void display_utf8_substr(const char *buf_start, size_t buf_len, int char_off,
 
   *out_start = buf_start + i_start;
   *out_len = i - i_start;
+}
+
+// general functions
+
+void display_fadein(void) { display_fade(0, BACKLIGHT_NORMAL, 1000); }
+
+void display_fadeout(void) {
+  display_fade(BACKLIGHT_NORMAL, 0, 500);
+  display_clear();
 }
 
 void display_pixeldata_dirty(void) { PIXELDATA_DIRTY(); }
