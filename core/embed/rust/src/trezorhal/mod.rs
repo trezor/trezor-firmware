@@ -5,6 +5,7 @@ pub mod common;
 #[cfg(feature = "ui")]
 pub mod display;
 mod ffi;
+pub mod io;
 pub mod qr;
 pub mod random;
 #[cfg(feature = "model_tr")]
