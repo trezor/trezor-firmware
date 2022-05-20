@@ -283,12 +283,13 @@ core unix frozen debug asan build:
     expire_in: 1 week
 
 core unix frozen debug build arm:
-  image: vdovhanych/nixos
+  image: nixos/nix
   stage: build
   <<: *gitlab_caching
   needs: []
   only:
     - master
+    - tags
     - /^release\//
     - /^secfix\//
   variables:
@@ -479,12 +480,13 @@ legacy emu regular debug asan build:
     expire_in: 1 week
 
 legacy emu regular debug build arm:
-  image: vdovhanych/nixos
+  image: nixos/nix
   stage: build
   <<: *gitlab_caching
   needs: []
   only:
     - master
+    - tags
     - /^release\//
     - /^secfix\//
   variables:
