@@ -33,7 +33,7 @@ impl<T> Animation<T> {
         T: Lerp,
     {
         let factor = self.elapsed(now) / self.duration;
-        T::lerp(self.from, self.to, factor)
+        T::lerp_bounded(self.from, self.to, factor)
     }
 
     /// Seek the animation such that `value` would be the current value.

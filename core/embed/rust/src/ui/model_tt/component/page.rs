@@ -1,12 +1,15 @@
 use crate::ui::{
     component::{
-        base::ComponentExt, paginated::PageMsg, Component, Event, EventCtx, Pad, Paginate,
+        base::ComponentExt, paginated::PageMsg, Component, Event, EventCtx, Label, Pad, Paginate,
     },
     display::{self, Color},
-    geometry::{Offset, Rect},
+    geometry::Rect,
 };
 
-use super::{theme, Button, ScrollBar, Swipe, SwipeDirection};
+use super::{
+    hold_to_confirm::{handle_hold_event, CancelHold, CancelHoldMsg},
+    theme, Button, Loader, ScrollBar, Swipe, SwipeDirection,
+};
 
 pub struct SwipePage<T, U> {
     content: T,
@@ -14,6 +17,7 @@ pub struct SwipePage<T, U> {
     pad: Pad,
     swipe: Swipe,
     scrollbar: ScrollBar,
+    hint: Label<&'static str>,
     fade: Option<i32>,
 }
 
@@ -30,6 +34,7 @@ where
             scrollbar: ScrollBar::vertical(),
             swipe: Swipe::new(),
             pad: Pad::with_background(background),
+            hint: Label::centered("SWIPE TO CONTINUE", theme::label_page_hint()),
             fade: None,
         }
     }
@@ -53,16 +58,6 @@ where
         // paint.
         self.fade = Some(theme::BACKLIGHT_NORMAL);
     }
-
-    fn paint_hint(&mut self) {
-        display::text_center(
-            self.pad.area.bottom_center() - Offset::y(3),
-            "SWIPE TO CONTINUE",
-            theme::FONT_BOLD, // FIXME: Figma has this as 14px but bold is 16px
-            theme::GREY_LIGHT,
-            theme::BG,
-        );
-    }
 }
 
 impl<T, U> Component for SwipePage<T, U>
@@ -77,6 +72,7 @@ where
         let layout = PageLayout::new(bounds);
         self.pad.place(bounds);
         self.swipe.place(bounds);
+        self.hint.place(layout.hint);
         self.buttons.place(layout.buttons);
         self.scrollbar.place(layout.scrollbar);
 
@@ -129,6 +125,8 @@ where
             if let Some(msg) = self.buttons.event(ctx, event) {
                 return Some(PageMsg::Controls(msg));
             }
+        } else {
+            self.hint.event(ctx, event);
         }
         None
     }
@@ -140,7 +138,7 @@ where
             self.scrollbar.paint();
         }
         if self.scrollbar.has_next_page() {
-            self.paint_hint();
+            self.hint.paint();
         } else {
             self.buttons.paint();
         }
@@ -156,6 +154,8 @@ where
         self.content.bounds(sink);
         if !self.scrollbar.has_next_page() {
             self.buttons.bounds(sink);
+        } else {
+            self.hint.bounds(sink);
         }
     }
 }
@@ -181,15 +181,18 @@ pub struct PageLayout {
     pub content: Rect,
     pub scrollbar: Rect,
     pub buttons: Rect,
+    pub hint: Rect,
 }
 
 impl PageLayout {
     const BUTTON_SPACE: i32 = 6;
     const SCROLLBAR_WIDTH: i32 = 10;
     const SCROLLBAR_SPACE: i32 = 10;
+    const HINT_OFF: i32 = 19;
 
     pub fn new(area: Rect) -> Self {
         let (content, buttons) = area.split_bottom(Button::<&str>::HEIGHT);
+        let (_, hint) = area.split_bottom(Self::HINT_OFF);
         let (content, _space) = content.split_bottom(Self::BUTTON_SPACE);
         let (buttons, _space) = buttons.split_right(theme::CONTENT_BORDER);
         let (_space, content) = content.split_left(theme::CONTENT_BORDER);
@@ -203,7 +206,100 @@ impl PageLayout {
             content,
             scrollbar,
             buttons,
+            hint,
         }
+    }
+}
+
+pub struct SwipeHoldPage<T> {
+    inner: SwipePage<T, CancelHold>,
+    loader: Loader,
+}
+
+impl<T> SwipeHoldPage<T>
+where
+    T: Paginate,
+    T: Component,
+{
+    pub fn new(content: T, background: Color) -> Self {
+        let buttons = CancelHold::new();
+        Self {
+            inner: SwipePage::new(content, buttons, background),
+            loader: Loader::new(),
+        }
+    }
+}
+
+impl<T> Component for SwipeHoldPage<T>
+where
+    T: Paginate,
+    T: Component,
+{
+    type Msg = PageMsg<T::Msg, bool>;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        self.inner.place(bounds);
+        self.loader.place(self.inner.pad.area);
+        bounds
+    }
+
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        let msg = self.inner.event(ctx, event);
+        let button_msg = match msg {
+            Some(PageMsg::Content(c)) => return Some(PageMsg::Content(c)),
+            Some(PageMsg::Controls(CancelHoldMsg::Cancelled)) => {
+                return Some(PageMsg::Controls(false))
+            }
+            Some(PageMsg::Controls(CancelHoldMsg::HoldButton(b))) => Some(b),
+            _ => None,
+        };
+        if handle_hold_event(
+            ctx,
+            event,
+            button_msg,
+            &mut self.loader,
+            &mut self.inner.pad,
+            &mut self.inner.content,
+        ) {
+            return Some(PageMsg::Controls(true));
+        }
+        None
+    }
+
+    fn paint(&mut self) {
+        self.inner.pad.paint();
+        if self.loader.is_animating() {
+            self.loader.paint()
+        } else {
+            self.inner.content.paint();
+        }
+        if self.inner.scrollbar.has_pages() {
+            self.inner.scrollbar.paint();
+        }
+        if self.inner.scrollbar.has_next_page() {
+            self.inner.hint.paint();
+        } else {
+            self.inner.buttons.paint();
+        }
+        if let Some(val) = self.inner.fade.take() {
+            // Note that this is blocking and takes some time.
+            display::fade_backlight(val);
+        }
+    }
+
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
+        self.loader.bounds(sink);
+        self.inner.bounds(sink);
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl<T> crate::trace::Trace for SwipeHoldPage<T>
+where
+    T: crate::trace::Trace,
+{
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        self.inner.trace(t)
     }
 }
 

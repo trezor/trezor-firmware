@@ -87,6 +87,14 @@ pub fn label_keyboard_minor() -> LabelStyle {
     }
 }
 
+pub fn label_page_hint() -> LabelStyle {
+    LabelStyle {
+        font: FONT_BOLD,
+        text_color: GREY_LIGHT,
+        background_color: BG,
+    }
+}
+
 pub fn button_default() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
@@ -285,6 +293,7 @@ impl DefaultTextTheme for TTDefaultText {
 
 pub const CONTENT_BORDER: i32 = 5;
 pub const KEYBOARD_SPACING: i32 = 8;
+pub const BUTTON_SPACING: i32 = 6;
 
 /// +----------+
 /// |    13    |
