@@ -314,6 +314,7 @@ pub struct EventCtx {
     place_requested: bool,
     paint_requested: bool,
     anim_frame_scheduled: bool,
+    page_count: Option<usize>,
 }
 
 impl EventCtx {
@@ -338,6 +339,7 @@ impl EventCtx {
             paint_requested: false, /* We also need to paint, but this is supplemented by
                                     * `Child::marked_for_paint` being true. */
             anim_frame_scheduled: false,
+            page_count: None,
         }
     }
 
@@ -376,6 +378,16 @@ impl EventCtx {
         }
     }
 
+    pub fn set_page_count(&mut self, count: usize) {
+        #[cfg(feature = "ui_debug")]
+        assert!(self.page_count.is_none());
+        self.page_count = Some(count);
+    }
+
+    pub fn page_count(&self) -> Option<usize> {
+        self.page_count
+    }
+
     pub fn pop_timer(&mut self) -> Option<(TimerToken, Duration)> {
         self.timers.pop()
     }
@@ -384,6 +396,7 @@ impl EventCtx {
         self.place_requested = false;
         self.paint_requested = false;
         self.anim_frame_scheduled = false;
+        self.page_count = None;
     }
 
     fn register_timer(&mut self, token: TimerToken, deadline: Duration) {

@@ -30,6 +30,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_paint;
   MP_QSTR_trace;
   MP_QSTR_bounds;
+  MP_QSTR_page_count;
 
   MP_QSTR_title;
   MP_QSTR_action;

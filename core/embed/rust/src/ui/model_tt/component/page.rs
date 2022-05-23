@@ -99,6 +99,7 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        ctx.set_page_count(self.scrollbar.page_count);
         if let Some(swipe) = self.swipe.event(ctx, event) {
             match swipe {
                 SwipeDirection::Up => {
@@ -339,6 +340,7 @@ mod tests {
                 TouchEvent::TouchMove(p)
             };
             component.event(&mut ctx, Event::Touch(ev));
+            ctx.clear();
             first = false;
         }
     }
