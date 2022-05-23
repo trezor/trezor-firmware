@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 import fnmatch
 import glob
 import json
@@ -8,10 +10,12 @@ import re
 import sys
 from collections import defaultdict
 from hashlib import sha256
+from typing import Any, Callable, Iterator, TextIO, cast
 
 import click
 
 import coin_info
+from coin_info import Coin, CoinBuckets, Coins, CoinsInfo, FidoApps, SupportInfo
 
 try:
     import termcolor
@@ -44,7 +48,9 @@ except ImportError:
 USE_COLORS = False
 
 
-def crayon(color, string, bold=False, dim=False):
+def crayon(
+    color: str | None, string: str, bold: bool = False, dim: bool = False
+) -> str:
     if not termcolor or not USE_COLORS:
         return string
     else:
@@ -57,7 +63,7 @@ def crayon(color, string, bold=False, dim=False):
         return termcolor.colored(string, color, attrs=attrs)
 
 
-def print_log(level, *args, **kwargs):
+def print_log(level: int, *args: Any, **kwargs: Any) -> None:
     prefix = logging.getLevelName(level)
     if level == logging.DEBUG:
         prefix = crayon("blue", prefix, bold=False)
@@ -73,11 +79,11 @@ def print_log(level, *args, **kwargs):
 # ======= Mako management ======
 
 
-def c_str_filter(b):
+def c_str_filter(b: Any) -> str:
     if b is None:
         return "NULL"
 
-    def hexescape(c):
+    def hexescape(c: bytes) -> str:
         return rf"\x{c:02x}"
 
     if isinstance(b, bytes):
@@ -86,7 +92,7 @@ def c_str_filter(b):
         return json.dumps(b)
 
 
-def black_repr_filter(val):
+def black_repr_filter(val: Any) -> str:
     if isinstance(val, str):
         if '"' in val:
             return repr(val)
@@ -98,12 +104,14 @@ def black_repr_filter(val):
         return repr(val)
 
 
-def ascii_filter(s):
+def ascii_filter(s: str) -> str:
     return re.sub("[^ -\x7e]", "_", s)
 
 
-def make_support_filter(support_info):
-    def supported_on(device, coins):
+def make_support_filter(
+    support_info: SupportInfo,
+) -> Callable[[str, Coins], Iterator[Coin]]:
+    def supported_on(device: str, coins: Coins) -> Iterator[Coin]:
         return (c for c in coins if support_info[c.key].get(device))
 
     return supported_on
@@ -116,7 +124,9 @@ MAKO_FILTERS = {
 }
 
 
-def render_file(src, dst, coins, support_info):
+def render_file(
+    src: str, dst: TextIO, coins: CoinsInfo, support_info: SupportInfo
+) -> None:
     """Renders `src` template into `dst`.
 
     `src` is a filename, `dst` is an open file object.
@@ -134,14 +144,14 @@ def render_file(src, dst, coins, support_info):
 # ====== validation functions ======
 
 
-def mark_unsupported(support_info, coins):
+def mark_unsupported(support_info: SupportInfo, coins: Coins) -> None:
     for coin in coins:
         key = coin["key"]
         # checking for explicit False because None means unknown
         coin["unsupported"] = all(v is False for v in support_info[key].values())
 
 
-def highlight_key(coin, color):
+def highlight_key(coin: Coin, color: str) -> str:
     """Return a colorful string where the SYMBOL part is bold."""
     keylist = coin["key"].split(":")
     if keylist[-1].isdigit():
@@ -153,9 +163,9 @@ def highlight_key(coin, color):
     return f"{key} {name}"
 
 
-def find_collisions(coins, field):
+def find_collisions(coins: Coins, field: str) -> CoinBuckets:
     """Detects collisions in a given field. Returns buckets of colliding coins."""
-    collisions = defaultdict(list)
+    collisions: CoinBuckets = defaultdict(list)
     for coin in coins:
         values = coin[field]
         if not isinstance(values, list):
@@ -165,7 +175,7 @@ def find_collisions(coins, field):
     return {k: v for k, v in collisions.items() if len(v) > 1}
 
 
-def check_eth(coins):
+def check_eth(coins: Coins) -> bool:
     check_passed = True
     chains = find_collisions(coins, "chain")
     for key, bucket in chains.items():
@@ -176,7 +186,7 @@ def check_eth(coins):
     return check_passed
 
 
-def check_btc(coins):
+def check_btc(coins: Coins) -> bool:
     check_passed = True
 
     # validate individual coin data
@@ -187,9 +197,9 @@ def check_btc(coins):
             print_log(logging.ERROR, "invalid definition for", coin["name"])
             print("\n".join(errors))
 
-    def collision_str(bucket):
+    def collision_str(bucket: Coins) -> str:
         """Generate a colorful string out of a bucket of colliding coins."""
-        coin_strings = []
+        coin_strings: list[str] = []
         for coin in bucket:
             name = coin["name"]
             prefix = ""
@@ -206,7 +216,12 @@ def check_btc(coins):
             coin_strings.append(prefix + hl)
         return ", ".join(coin_strings)
 
-    def print_collision_buckets(buckets, prefix, maxlevel=logging.ERROR, strict=False):
+    def print_collision_buckets(
+        buckets: CoinBuckets,
+        prefix: str,
+        maxlevel: int = logging.ERROR,
+        strict: bool = False,
+    ) -> bool:
         """Intelligently print collision buckets.
 
         For each bucket, if there are any collision with a mainnet, print it.
@@ -268,7 +283,7 @@ def check_btc(coins):
     return check_passed
 
 
-def check_dups(buckets, print_at_level=logging.WARNING):
+def check_dups(buckets: CoinBuckets, print_at_level: int = logging.WARNING) -> bool:
     """Analyze and pretty-print results of `coin_info.mark_duplicate_shortcuts`.
 
     `print_at_level` can be one of logging levels.
@@ -279,7 +294,7 @@ def check_dups(buckets, print_at_level=logging.WARNING):
     If the collision includes more than one non-token, it's ERROR and printed always.
     """
 
-    def coin_str(coin):
+    def coin_str(coin: Coin) -> str:
         """Colorize coins. Tokens are cyan, nontokens are red. Coins that are NOT
         marked duplicate get a green asterisk.
         """
@@ -347,7 +362,7 @@ def check_dups(buckets, print_at_level=logging.WARNING):
     return check_passed
 
 
-def check_backends(coins):
+def check_backends(coins: Coins) -> bool:
     check_passed = True
     for coin in coins:
         genesis_block = coin.get("hash_genesis_block")
@@ -357,6 +372,7 @@ def check_backends(coins):
         for backend in backends:
             print("checking", backend, "... ", end="", flush=True)
             try:
+                assert requests is not None
                 j = requests.get(backend + "/api/block-index/0").json()
                 if j["blockHash"] != genesis_block:
                     raise RuntimeError("genesis block mismatch")
@@ -368,7 +384,7 @@ def check_backends(coins):
     return check_passed
 
 
-def check_icons(coins):
+def check_icons(coins: Coins) -> bool:
     check_passed = True
     for coin in coins:
         key = coin["key"]
@@ -394,8 +410,8 @@ def check_icons(coins):
 IGNORE_NONUNIFORM_KEYS = frozenset(("unsupported", "duplicate"))
 
 
-def check_key_uniformity(coins):
-    keysets = defaultdict(list)
+def check_key_uniformity(coins: Coins) -> bool:
+    keysets: dict[frozenset[str], Coins] = defaultdict(list)
     for coin in coins:
         keyset = frozenset(coin.keys()) | IGNORE_NONUNIFORM_KEYS
         keysets[keyset].append(coin)
@@ -426,7 +442,7 @@ def check_key_uniformity(coins):
     return False
 
 
-def check_segwit(coins):
+def check_segwit(coins: Coins) -> bool:
     for coin in coins:
         segwit = coin["segwit"]
         segwit_fields = [
@@ -471,7 +487,7 @@ FIDO_KNOWN_KEYS = frozenset(
 )
 
 
-def check_fido(apps):
+def check_fido(apps: FidoApps) -> bool:
     check_passed = True
 
     u2fs = find_collisions((u for a in apps if "u2f" in a for u in a["u2f"]), "app_id")
@@ -488,7 +504,7 @@ def check_fido(apps):
         print_log(logging.ERROR, webauthn_str, bucket_str)
         check_passed = False
 
-    domain_hashes = {}
+    domain_hashes: dict[bytes, str] = {}
     for app in apps:
         if "webauthn" in app:
             for domain in app["webauthn"]:
@@ -574,7 +590,7 @@ def check_fido(apps):
     default=sys.stdout.isatty(),
     help="Force colored output on/off",
 )
-def cli(colors):
+def cli(colors: bool) -> None:
     global USE_COLORS
     USE_COLORS = colors
 
@@ -585,7 +601,7 @@ def cli(colors):
 @click.option("--icons/--no-icons", default=True, help="Check icon files")
 @click.option("-d", "--show-duplicates", type=click.Choice(("all", "nontoken", "errors")), default="errors", help="How much information about duplicate shortcuts should be shown.")
 # fmt: on
-def check(backend, icons, show_duplicates):
+def check(backend: bool, icons: bool, show_duplicates: str) -> None:
     """Validate coin definitions.
 
     Checks that every btc-like coin is properly filled out, reports duplicate symbols,
@@ -703,19 +719,19 @@ def check(backend, icons, show_duplicates):
 @click.option("-d", "--device", metavar="NAME", help="Only include coins supported on a given device")
 # fmt: on
 def dump(
-    outfile,
-    support,
-    pretty,
-    flat_list,
-    include,
-    exclude,
-    include_type,
-    exclude_type,
-    filter,
-    filter_exclude,
-    exclude_tokens,
-    device,
-):
+    outfile: TextIO,
+    support: bool,
+    pretty: bool,
+    flat_list: bool,
+    include: tuple[str, ...],
+    exclude: tuple[str, ...],
+    include_type: tuple[str, ...],
+    exclude_type: tuple[str, ...],
+    filter: tuple[str, ...],
+    filter_exclude: tuple[str, ...],
+    exclude_tokens: bool,
+    device: str,
+) -> None:
     """Dump coin data in JSON format.
 
     This file is structured the same as the internal data. That is, top-level object
@@ -744,7 +760,7 @@ def dump(
     so '-f name=bit*' finds all coins whose names start with "bit" or "Bit".
     """
     if exclude_tokens:
-        exclude_type = ("erc20",)
+        exclude_type = ["erc20"]
 
     if include and exclude:
         raise click.ClickException(
@@ -776,7 +792,7 @@ def dump(
     # always exclude 'address_bytes', not encodable in JSON
     exclude += ("address_bytes",)
 
-    def should_include_coin(coin):
+    def should_include_coin(coin: Coin) -> bool:
         for field, filter in include_filters:
             filter = filter.lower()
             if field not in coin:
@@ -795,11 +811,11 @@ def dump(
                 return False
         return True
 
-    def modify_coin(coin):
+    def modify_coin(coin: Coin) -> Coin:
         if include:
-            return {k: v for k, v in coin.items() if k in include}
+            return cast(Coin, {k: v for k, v in coin.items() if k in include})
         else:
-            return {k: v for k, v in coin.items() if k not in exclude}
+            return cast(Coin, {k: v for k, v in coin.items() if k not in exclude})
 
     for key, coinlist in coins_dict.items():
         coins_dict[key] = [modify_coin(c) for c in coinlist if should_include_coin(c)]
@@ -822,7 +838,9 @@ def dump(
 @click.option("-v", "--verbose", is_flag=True, help="Print rendered file names")
 @click.option("-b", "--bitcoin-only", is_flag=True, help="Accept only Bitcoin coins")
 # fmt: on
-def render(paths, outfile, verbose, bitcoin_only):
+def render(
+    paths: tuple[str, ...], outfile: TextIO, verbose: bool, bitcoin_only: bool
+) -> None:
     """Generate source code from Mako templates.
 
     For every "foo.bar.mako" filename passed, runs the template and
@@ -857,9 +875,9 @@ def render(paths, outfile, verbose, bitcoin_only):
     for key, value in support_info.items():
         support_info[key] = Munch(value)
 
-    def do_render(src, dst):
+    def do_render(src: str, dst: TextIO) -> None:
         if verbose:
-            click.echo(f"Rendering {src} => {dst}")
+            click.echo(f"Rendering {src} => {dst.name}")
         render_file(src, dst, defs, support_info)
 
     # single in-out case
@@ -869,9 +887,9 @@ def render(paths, outfile, verbose, bitcoin_only):
 
     # find files in directories
     if not paths:
-        paths = ["."]
+        paths = (".",)
 
-    files = []
+    files: list[str] = []
     for path in paths:
         if not os.path.exists(path):
             click.echo(f"Path {path} does not exist")
