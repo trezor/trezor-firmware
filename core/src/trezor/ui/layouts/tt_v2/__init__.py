@@ -19,6 +19,7 @@ class _RustLayout(ui.Layout):
     def __init__(self, layout: Any):
         self.layout = layout
         self.timer = loop.Timer()
+        self.layout.attach_timer_fn(self.set_timer)
 
     def set_timer(self, token: int, deadline: int) -> None:
         self.timer.schedule(deadline, token)
@@ -71,7 +72,6 @@ class _RustLayout(ui.Layout):
     def handle_input_and_rendering(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
         touch = loop.wait(io.TOUCH)
         self._before_render()
-        self.layout.attach_timer_fn(self.set_timer)
         self.layout.paint()
         # self.layout.bounds()
         while True:
@@ -94,6 +94,9 @@ class _RustLayout(ui.Layout):
             self.layout.paint()
             if msg is not None:
                 raise ui.Result(msg)
+
+    def page_count(self) -> int:
+        return self.layout.page_count()
 
 
 async def confirm_action(

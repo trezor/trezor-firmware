@@ -112,6 +112,7 @@ struct LayoutObjInner {
     root: Gc<dyn ObjComponent>,
     event_ctx: EventCtx,
     timer_fn: Obj,
+    page_count: u16,
 }
 
 impl LayoutObj {
@@ -130,6 +131,7 @@ impl LayoutObj {
                 root,
                 event_ctx: EventCtx::new(),
                 timer_fn: Obj::const_none(),
+                page_count: 1,
             }),
         })
     }
@@ -172,6 +174,10 @@ impl LayoutObj {
             } else {
                 // Failed to convert token or deadline into `Obj`, skip.
             }
+        }
+
+        if let Some(count) = inner.event_ctx.page_count() {
+            inner.page_count = count as u16;
         }
 
         Ok(msg)
@@ -247,6 +253,10 @@ impl LayoutObj {
             .trace(&mut CallbackTracer(callback));
     }
 
+    fn obj_page_count(&self) -> Obj {
+        self.inner.borrow().page_count.into()
+    }
+
     #[cfg(feature = "ui_debug")]
     fn obj_bounds(&self) {
         use crate::ui::display;
@@ -275,6 +285,7 @@ impl LayoutObj {
                 Qstr::MP_QSTR_paint => obj_fn_1!(ui_layout_paint).as_obj(),
                 Qstr::MP_QSTR_trace => obj_fn_2!(ui_layout_trace).as_obj(),
                 Qstr::MP_QSTR_bounds => obj_fn_1!(ui_layout_bounds).as_obj(),
+                Qstr::MP_QSTR_page_count => obj_fn_1!(ui_layout_page_count).as_obj(),
             }),
         };
         &TYPE
@@ -407,6 +418,14 @@ extern "C" fn ui_layout_paint(this: Obj) -> Obj {
         let this: Gc<LayoutObj> = this.try_into()?;
         this.obj_paint_if_requested();
         Ok(Obj::const_true())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn ui_layout_page_count(this: Obj) -> Obj {
+    let block = || {
+        let this: Gc<LayoutObj> = this.try_into()?;
+        Ok(this.obj_page_count())
     };
     unsafe { util::try_or_raise(block) }
 }

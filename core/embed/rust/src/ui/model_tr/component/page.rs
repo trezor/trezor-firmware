@@ -67,6 +67,7 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        ctx.set_page_count(self.scrollbar.page_count);
         if self.scrollbar.has_previous_page() {
             if let Some(ButtonMsg::Clicked) = self.prev.event(ctx, event) {
                 // Scroll up.
