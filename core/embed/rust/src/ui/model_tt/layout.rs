@@ -21,7 +21,7 @@ use super::{
     component::{
         Bip39Input, Button, ButtonMsg, Dialog, DialogMsg, Frame, HoldToConfirm, HoldToConfirmMsg,
         MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, PassphraseKeyboard,
-        PassphraseKeyboardMsg, PinKeyboard, PinKeyboardMsg, Slip39Input, SwipePage,
+        PassphraseKeyboardMsg, PinKeyboard, PinKeyboardMsg, Slip39Input, SwipeHoldPage, SwipePage,
     },
     theme,
 };
@@ -106,6 +106,19 @@ impl<T, U> ComponentMsgObj for SwipePage<T, U>
 where
     T: Component + Paginate,
     U: Component<Msg = bool>,
+{
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            PageMsg::Content(_) => Err(Error::TypeError),
+            PageMsg::Controls(true) => Ok(CONFIRMED.as_obj()),
+            PageMsg::Controls(false) => Ok(CANCELLED.as_obj()),
+        }
+    }
+}
+
+impl<T> ComponentMsgObj for SwipeHoldPage<T>
+where
+    T: Component + Paginate,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {

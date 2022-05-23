@@ -351,16 +351,15 @@ impl<T> Button<T> {
         F1: Fn(ButtonMsg) -> Option<R>,
         T: AsRef<str>,
     {
-        const BUTTON_SPACING: i32 = 6;
         (
             GridPlaced::new(left)
                 .with_grid(1, 3)
-                .with_spacing(BUTTON_SPACING)
+                .with_spacing(theme::BUTTON_SPACING)
                 .with_row_col(0, 0)
                 .map(left_map),
             GridPlaced::new(right)
                 .with_grid(1, 3)
-                .with_spacing(BUTTON_SPACING)
+                .with_spacing(theme::BUTTON_SPACING)
                 .with_from_to((0, 1), (0, 2))
                 .map(right_map),
         )

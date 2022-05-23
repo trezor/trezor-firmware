@@ -5,6 +5,7 @@ use crate::{
         component::{Component, Event, EventCtx},
         display::{self, Color},
         geometry::{Offset, Rect},
+        model_tt::constant,
     },
 };
 
@@ -32,9 +33,9 @@ pub struct Loader {
 impl Loader {
     pub const SIZE: Offset = Offset::new(120, 120);
 
-    pub fn new(offset_y: i32) -> Self {
+    pub fn new() -> Self {
         Self {
-            offset_y,
+            offset_y: 0,
             state: State::Initial,
             growing_duration: Duration::from_millis(1000),
             shrinking_duration: Duration::from_millis(500),
@@ -70,13 +71,16 @@ impl Loader {
             now,
         );
         if let State::Growing(growing) = &self.state {
-            anim.seek_to_value(display::LOADER_MAX - growing.value(now));
+            anim.seek_to_value(display::LOADER_MAX.saturating_sub(growing.value(now)));
         }
         self.state = State::Shrinking(anim);
 
-        // The animation should be already progressing at this point, so we don't need
-        // to request another animation frames, but we should request to get painted
-        // after this event pass.
+        // Request anim frame as the animation may not be running, e.g. when already
+        // grown completely.
+        ctx.request_anim_frame();
+
+        // We don't have to wait for the animation frame event with next paint,
+        // let's do that now.
         ctx.request_paint();
     }
 
@@ -112,8 +116,11 @@ impl Component for Loader {
     type Msg = LoaderMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        // TODO: Return the correct size.
-        bounds
+        // Current loader API only takes Y-offset relative to screen center, which we
+        // compute from the bounds center point.
+        let screen_center = constant::screen().center();
+        self.offset_y = screen_center.y - bounds.center().y;
+        Rect::from_center_and_size(screen_center + Offset::y(self.offset_y), Self::SIZE)
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
@@ -188,7 +195,7 @@ mod tests {
     #[test]
     fn loader_yields_expected_progress() {
         let mut ctx = EventCtx::new();
-        let mut l = Loader::new(0);
+        let mut l = Loader::new();
         let t = Instant::now();
         assert_eq!(l.progress(t), None);
         l.start_growing(&mut ctx, t);
