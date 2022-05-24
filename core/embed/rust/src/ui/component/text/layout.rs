@@ -1,3 +1,4 @@
+use super::iter::GlyphMetrics;
 use crate::ui::{
     display,
     display::{Color, Font},
@@ -380,6 +381,7 @@ impl<'a> Op<'a> {
     }
 }
 
+#[derive(Debug, PartialEq, Eq)]
 struct Span {
     /// How many characters from the input text this span is laying out.
     length: usize,
@@ -398,8 +400,8 @@ impl Span {
     fn fit_horizontally(
         text: &str,
         max_width: i32,
-        text_font: Font,
-        hyphen_font: Font,
+        text_font: impl GlyphMetrics,
+        hyphen_font: impl GlyphMetrics,
         breaking: LineBreaking,
     ) -> Self {
         const ASCII_LF: char = '\n';
@@ -427,7 +429,14 @@ impl Span {
         let mut span_width = 0;
         let mut found_any_whitespace = false;
 
-        for (i, ch) in text.char_indices() {
+        let mut char_indices_iter = text.char_indices().peekable();
+        // Iterating manually because we need a reference to the iterator inside the
+        // loop.
+        loop {
+            let (i, ch) = match char_indices_iter.next() {
+                Some(ch) => ch,
+                None => break,
+            };
             let char_width = text_font.char_width(ch);
 
             // Consider if we could be breaking the line at this position.
@@ -456,7 +465,10 @@ impl Span {
                     || !found_any_whitespace;
                 if have_space_for_break && can_break_word {
                     // Break after this character, append hyphen.
-                    line.length = i + 1;
+                    line.length = match char_indices_iter.peek() {
+                        Some((idx, _)) => *idx,
+                        None => text.len(),
+                    };
                     line.advance.x = span_width + char_width;
                     line.insert_hyphen_before_line_break = true;
                     line.skip_next_chars = 0;
@@ -473,5 +485,100 @@ impl Span {
             insert_hyphen_before_line_break: false,
             skip_next_chars: 0,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    pub struct Fixed {
+        pub width: i32,
+        pub height: i32,
+    }
+
+    impl GlyphMetrics for Fixed {
+        fn char_width(&self, _ch: char) -> i32 {
+            self.width
+        }
+
+        fn line_height(&self) -> i32 {
+            self.height
+        }
+    }
+
+    const FIXED_FONT: Fixed = Fixed {
+        width: 1,
+        height: 1,
+    };
+
+    #[test]
+    fn test_span() {
+        assert_eq!(spans_from("hello", 5), vec![("hello", false)]);
+        assert_eq!(spans_from("", 5), vec![("", false)]);
+        assert_eq!(
+            spans_from("hello world", 5),
+            vec![("hello", false), ("world", false)]
+        );
+        assert_eq!(
+            spans_from("hello\nworld", 5),
+            vec![("hello", false), ("world", false)]
+        );
+    }
+
+    #[test]
+    #[ignore]
+    fn test_leading_trailing() {
+        assert_eq!(
+            spans_from("\nhello\nworld\n", 5),
+            vec![("", false), ("hello", false), ("world", false), ("", false)]
+        );
+    }
+
+    #[test]
+    fn test_long_word() {
+        assert_eq!(
+            spans_from("Down with the establishment!", 5),
+            vec![
+                ("Down", false),
+                ("with", false),
+                ("the", false),
+                ("esta", true),
+                ("blis", true),
+                ("hmen", true),
+                ("t!", false),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_char_boundary() {
+        assert_eq!(
+            spans_from("+ěščřžýáíé", 5),
+            vec![("+ěšč", true), ("řžýá", true), ("íé", false)]
+        );
+    }
+
+    fn spans_from(text: &str, max_width: i32) -> Vec<(&str, bool)> {
+        let mut spans = vec![];
+        let mut remaining_text = text;
+        loop {
+            let span = Span::fit_horizontally(
+                remaining_text,
+                max_width,
+                FIXED_FONT,
+                FIXED_FONT,
+                LineBreaking::BreakAtWhitespace,
+            );
+            spans.push((
+                &remaining_text[..span.length],
+                span.insert_hyphen_before_line_break,
+            ));
+            remaining_text = &remaining_text[span.length + span.skip_next_chars..];
+            if remaining_text.is_empty() {
+                break;
+            }
+        }
+        spans
     }
 }
