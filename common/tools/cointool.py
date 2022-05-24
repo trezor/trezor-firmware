@@ -711,6 +711,7 @@ device_choice = click.Choice(["connect", "suite", "trezor1", "trezor2"])
 # fmt: off
 @click.option("-o", "--outfile", type=click.File(mode="w"), default="-")
 @click.option("-s/-S", "--support/--no-support", default=True, help="Include support data for each coin")
+@click.option("-w/-W", "--wallet/--no-wallet", default=True, help="Include wallet data for each coin")
 @click.option("-p", "--pretty", is_flag=True, help="Generate nicely formatted JSON")
 @click.option("-l", "--list", "flat_list", is_flag=True, help="Output a flat list of coins")
 @click.option("-i", "--include", metavar="FIELD", multiple=True, help="Include only these fields (-i shortcut -i name)")
@@ -726,6 +727,7 @@ device_choice = click.Choice(["connect", "suite", "trezor1", "trezor2"])
 def dump(
     outfile: TextIO,
     support: bool,
+    wallet: bool,
     pretty: bool,
     flat_list: bool,
     include: tuple[str, ...],
@@ -770,6 +772,9 @@ def dump(
     Also devices can be used as filters. For example to find out which coins are
     supported in Suite and connect but not on Trezor 1, it is possible to say
     '-d suite -d connect -D trezor1'.
+
+    Includes even the wallet data, unless turned off by '-W'.
+    These can be filtered by using '-f', for example `-f 'wallet=*exodus*'` (* are necessary)
     """
     if exclude_tokens:
         exclude_type += ("erc20",)
@@ -786,12 +791,19 @@ def dump(
     # getting initial info
     coins = coin_info.coin_info()
     support_info = coin_info.support_info(coins.as_list())
+    wallet_info = coin_info.wallet_info(coins)
 
     # optionally adding support info
     if support:
         for category in coins.values():
             for coin in category:
                 coin["support"] = support_info[coin["key"]]
+
+    # optionally adding wallet info
+    if wallet:
+        for category in coins.values():
+            for coin in category:
+                coin["wallet"] = wallet_info[coin["key"]]
 
     # filter types
     if include_type:
