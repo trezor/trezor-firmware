@@ -23,7 +23,7 @@ def get_diff(
     current = download.fetch_fixtures_current()
 
     def matches_prefix(name: str) -> bool:
-        any(name.startswith(prefix) for prefix in test_prefixes)
+        return any(name.startswith(prefix) for prefix in test_prefixes)
 
     master = {name: value for name, value in master.items() if matches_prefix(name)}
     current = {name: value for name, value in current.items() if matches_prefix(name)}
