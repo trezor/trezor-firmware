@@ -72,7 +72,7 @@ To get a full debug build, use:
 make build_firmware BITCOIN_ONLY=0 PYOPT=0
 ```
 
-You can then use `screen` to enter the device's console. Do not forget to add your user to the `dialout` group or use `sudo`. Note that both the group and the tty name can differ, use `ls -l` to find out proper names on your machine.
+Use `screen` to enter the device's console. Do not forget to add your user to the `dialout` group or use `sudo`. Note that both the group and the tty name can differ, use `ls -l /dev/tty*` or `ls /dev/tty* | grep usb` to find out proper names on your machine.
 
 ```sh
 screen /dev/ttyACM0
