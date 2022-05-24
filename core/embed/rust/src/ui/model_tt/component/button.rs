@@ -340,28 +340,115 @@ pub struct ButtonStyle {
 }
 
 impl<T> Button<T> {
-    pub fn left_right<F0, F1, R>(
+    pub fn cancel_confirm(
         left: Button<T>,
-        left_map: F0,
         right: Button<T>,
-        right_map: F1,
-    ) -> (Map<GridPlaced<Self>, F0>, Map<GridPlaced<Self>, F1>)
+        right_size_factor: usize,
+    ) -> CancelConfirm<
+        T,
+        impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
+        impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
+    >
     where
-        F0: Fn(ButtonMsg) -> Option<R>,
-        F1: Fn(ButtonMsg) -> Option<R>,
         T: AsRef<str>,
     {
+        let columns = 1 + right_size_factor;
         (
             GridPlaced::new(left)
-                .with_grid(1, 3)
+                .with_grid(1, columns)
                 .with_spacing(theme::BUTTON_SPACING)
                 .with_row_col(0, 0)
-                .map(left_map),
+                .map(|msg| {
+                    (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Cancelled)
+                }),
             GridPlaced::new(right)
-                .with_grid(1, 3)
+                .with_grid(1, columns)
                 .with_spacing(theme::BUTTON_SPACING)
-                .with_from_to((0, 1), (0, 2))
-                .map(right_map),
+                .with_from_to((0, 1), (0, right_size_factor))
+                .map(|msg| {
+                    (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
+                }),
         )
     }
+
+    pub fn cancel_confirm_text(
+        left: Option<T>,
+        right: T,
+    ) -> CancelConfirm<
+        T,
+        impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
+        impl Fn(ButtonMsg) -> Option<CancelConfirmMsg>,
+    >
+    where
+        T: AsRef<str>,
+    {
+        let (left, right_size_factor) = if let Some(verb) = left {
+            (Button::with_text(verb), 1)
+        } else {
+            (Button::with_icon(theme::ICON_CANCEL), 2)
+        };
+        let right = Button::with_text(right).styled(theme::button_confirm());
+
+        Self::cancel_confirm(left, right, right_size_factor)
+    }
+
+    pub fn cancel_info_confirm(
+        confirm: T,
+        info: T,
+    ) -> CancelInfoConfirm<
+        T,
+        impl Fn(ButtonMsg) -> Option<CancelInfoConfirmMsg>,
+        impl Fn(ButtonMsg) -> Option<CancelInfoConfirmMsg>,
+        impl Fn(ButtonMsg) -> Option<CancelInfoConfirmMsg>,
+    >
+    where
+        T: AsRef<str>,
+    {
+        let right = Button::with_text(confirm).styled(theme::button_confirm());
+        let top = Button::with_text(info);
+        let left = Button::with_icon(theme::ICON_CANCEL);
+        (
+            GridPlaced::new(left)
+                .with_grid(2, 3)
+                .with_spacing(theme::BUTTON_SPACING)
+                .with_row_col(1, 0)
+                .map(|msg| {
+                    (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Cancelled)
+                }),
+            GridPlaced::new(top)
+                .with_grid(2, 3)
+                .with_spacing(theme::BUTTON_SPACING)
+                .with_from_to((0, 0), (0, 2))
+                .map(|msg| (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Info)),
+            GridPlaced::new(right)
+                .with_grid(2, 3)
+                .with_spacing(theme::BUTTON_SPACING)
+                .with_from_to((1, 1), (1, 2))
+                .map(|msg| {
+                    (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Confirmed)
+                }),
+        )
+    }
+}
+
+type CancelConfirm<T, F0, F1> = (
+    Map<GridPlaced<Button<T>>, F0>,
+    Map<GridPlaced<Button<T>>, F1>,
+);
+
+pub enum CancelConfirmMsg {
+    Cancelled,
+    Confirmed,
+}
+
+type CancelInfoConfirm<T, F0, F1, F2> = (
+    Map<GridPlaced<Button<T>>, F0>,
+    Map<GridPlaced<Button<T>>, F1>,
+    Map<GridPlaced<Button<T>>, F2>,
+);
+
+pub enum CancelInfoConfirmMsg {
+    Cancelled,
+    Info,
+    Confirmed,
 }

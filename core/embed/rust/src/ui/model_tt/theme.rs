@@ -39,16 +39,24 @@ pub const GREY_DARK: Color = Color::rgb(51, 51, 51); // greyer
 // Commonly used corner radius (i.e. for buttons).
 pub const RADIUS: u8 = 2;
 
+// Full-size QR code.
+pub const QR_SIDE_MAX: u32 = 140;
+
 // Size of icons in the UI (i.e. inside buttons).
 pub const ICON_SIZE: i32 = 16;
 
-// UI icons.
+// UI icons (greyscale).
 pub const ICON_CANCEL: &[u8] = include_res!("model_tt/res/cancel.toif");
 pub const ICON_CONFIRM: &[u8] = include_res!("model_tt/res/confirm.toif");
 pub const ICON_SPACE: &[u8] = include_res!("model_tt/res/space.toif");
 pub const ICON_BACK: &[u8] = include_res!("model_tt/res/back.toif");
 pub const ICON_CLICK: &[u8] = include_res!("model_tt/res/click.toif");
 pub const ICON_NEXT: &[u8] = include_res!("model_tt/res/next.toif");
+
+// Large, color icons.
+pub const IMAGE_WARN: &[u8] = include_res!("model_tt/res/warn.toif");
+pub const IMAGE_SUCCESS: &[u8] = include_res!("model_tt/res/success.toif");
+pub const IMAGE_ERROR: &[u8] = include_res!("model_tt/res/error.toif");
 
 // Scrollbar/PIN dots.
 pub const DOT_ACTIVE: &[u8] = include_res!("model_tt/res/scroll-active.toif");
@@ -91,6 +99,22 @@ pub fn label_page_hint() -> LabelStyle {
     LabelStyle {
         font: FONT_BOLD,
         text_color: GREY_LIGHT,
+        background_color: BG,
+    }
+}
+
+pub fn label_warning() -> LabelStyle {
+    LabelStyle {
+        font: FONT_MEDIUM,
+        text_color: FG,
+        background_color: BG,
+    }
+}
+
+pub fn label_warning_value() -> LabelStyle {
+    LabelStyle {
+        font: FONT_NORMAL,
+        text_color: OFF_WHITE,
         background_color: BG,
     }
 }

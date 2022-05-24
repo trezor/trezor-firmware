@@ -100,6 +100,18 @@ impl Map {
         }
     }
 
+    pub fn get_or<T>(&self, index: impl Into<Obj>, default: T) -> Result<T, Error>
+    where
+        T: TryFrom<Obj, Error = Error>,
+    {
+        let res = self.get(index);
+        match res {
+            Ok(obj) => obj.try_into(),
+            Err(Error::KeyError(_)) => Ok(default),
+            Err(e) => Err(e),
+        }
+    }
+
     pub fn set(&mut self, index: impl Into<Obj>, value: impl Into<Obj>) -> Result<(), Error> {
         self.set_obj(index.into(), value.into())
     }

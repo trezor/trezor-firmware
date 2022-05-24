@@ -1,5 +1,6 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
+    display,
     geometry::Rect,
 };
 
@@ -35,4 +36,31 @@ where
     fn paint(&mut self) {
         (self.func)(self.area);
     }
+
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
+        sink(self.area)
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl<F> crate::trace::Trace for Painter<F> {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.string("Painter")
+    }
+}
+
+pub fn qrcode_painter<T>(data: T, max_size: u32, case_sensitive: bool) -> Painter<impl FnMut(Rect)>
+where
+    T: AsRef<str>,
+{
+    // Ignore errors as we currently can't propagate them out of paint().
+    let f = move |area: Rect| {
+        display::qrcode(area.center(), data.as_ref(), max_size, case_sensitive).unwrap_or(())
+    };
+    Painter::new(f)
+}
+
+pub fn image_painter(image: &'static [u8]) -> Painter<impl FnMut(Rect)> {
+    let f = move |area: Rect| display::image(area.center(), image);
+    Painter::new(f)
 }

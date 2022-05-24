@@ -1,7 +1,8 @@
 use super::constant;
 use crate::{
+    error::Error,
     time::Duration,
-    trezorhal::{display, time},
+    trezorhal::{display, qr, time},
 };
 
 use super::geometry::{Offset, Point, Rect};
@@ -91,6 +92,34 @@ pub fn icon(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
     );
 }
 
+pub fn image(center: Point, data: &[u8]) {
+    let toif_info = display::toif_info(data).unwrap();
+    assert!(!toif_info.grayscale);
+
+    let r = Rect::from_center_and_size(
+        center,
+        Offset::new(toif_info.width.into(), toif_info.height.into()),
+    );
+    display::image(
+        r.x0,
+        r.y0,
+        r.width(),
+        r.height(),
+        &data[12..], // Skip TOIF header.
+    );
+}
+
+pub fn toif_info(data: &[u8]) -> Option<(Offset, bool)> {
+    if let Ok(info) = display::toif_info(data) {
+        Some((
+            Offset::new(info.width.into(), info.height.into()),
+            info.grayscale,
+        ))
+    } else {
+        None
+    }
+}
+
 // Used on T1 only.
 pub fn rect_fill_rounded1(r: Rect, fg_color: Color, bg_color: Color) {
     display::bar(r.x0, r.y0, r.width(), r.height(), fg_color.into());
@@ -149,6 +178,10 @@ pub fn loader_indeterminate(
         icon.map(|i| i.0),
         icon.map(|i| i.1.into()).unwrap_or(0),
     );
+}
+
+pub fn qrcode(center: Point, data: &str, max_size: u32, case_sensitive: bool) -> Result<(), Error> {
+    qr::render_qrcode(center.x, center.y, data, max_size, case_sensitive)
 }
 
 pub fn text(baseline: Point, text: &str, font: Font, fg_color: Color, bg_color: Color) {

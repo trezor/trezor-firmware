@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING
+from ubinascii import hexlify
 
 from trezor import io, log, loop, ui, wire, workflow
 from trezor.enums import ButtonRequestType
@@ -120,19 +121,15 @@ async def confirm_action(
 ) -> None:
     if isinstance(verb, bytes) or isinstance(verb_cancel, bytes):
         raise NotImplementedError
-    elif isinstance(verb, str):
+    if isinstance(verb, str):
         verb = verb.upper()
+    if isinstance(verb_cancel, str):
+        verb_cancel = verb_cancel.upper()
 
     if description is not None and description_param is not None:
         if description_param_font != ui.BOLD:
             log.error(__name__, "confirm_action description_param_font not implemented")
         description = description.format(description_param)
-
-    if hold:
-        log.error(__name__, "confirm_action hold not implemented")
-
-    if verb_cancel:
-        log.error(__name__, "confirm_action verb_cancel not implemented")
 
     result = await interact(
         ctx,
@@ -142,6 +139,7 @@ async def confirm_action(
                 action=action,
                 description=description,
                 verb=verb,
+                verb_cancel=verb_cancel,
                 hold=hold,
                 reverse=reverse,
             )
@@ -172,21 +170,51 @@ async def confirm_backup(ctx: wire.GenericContext) -> bool:
 async def confirm_path_warning(
     ctx: wire.GenericContext, path: str, path_type: str = "Path"
 ) -> None:
-    raise NotImplementedError
+    result = await interact(
+        ctx,
+        _RustLayout(
+            trezorui2.show_warning(
+                title="Unknown path",
+                description=path,
+            )
+        ),
+        "path_warning",
+        ButtonRequestType.UnknownDerivationPath,
+    )
+    if result is not trezorui2.CONFIRMED:
+        raise wire.ActionCancelled
+
+
+def _show_xpub(xpub: str, title: str, cancel: str) -> ui.Layout:
+    content = _RustLayout(
+        trezorui2.confirm_blob(
+            title=title,
+            data=xpub,
+            verb_cancel=cancel,
+        )
+    )
+    return content
 
 
 async def show_xpub(
     ctx: wire.GenericContext, xpub: str, title: str, cancel: str
 ) -> None:
-    raise NotImplementedError
+    result = await interact(
+        ctx,
+        _show_xpub(xpub, title, cancel),
+        "show_xpub",
+        ButtonRequestType.PublicKey,
+    )
+    if result is not trezorui2.CONFIRMED:
+        raise wire.ActionCancelled
 
 
 async def show_address(
     ctx: wire.GenericContext,
     address: str,
     *,
-    case_sensitive: bool = True,
     address_qr: str | None = None,
+    case_sensitive: bool = True,
     title: str = "Confirm address",
     network: str | None = None,
     multisig_index: int | None = None,
@@ -194,7 +222,54 @@ async def show_address(
     address_extra: str | None = None,
     title_qr: str | None = None,
 ) -> None:
-    raise NotImplementedError
+    is_multisig = len(xpubs) > 0
+    while True:
+        result = await interact(
+            ctx,
+            _RustLayout(
+                trezorui2.confirm_blob(
+                    title=title.upper(),
+                    data=address,
+                    description=network or "",
+                    extra=address_extra or "",
+                    verb_cancel="QR",
+                )
+            ),
+            "show_address",
+            ButtonRequestType.Address,
+        )
+        if result is trezorui2.CONFIRMED:
+            break
+
+        result = await interact(
+            ctx,
+            _RustLayout(
+                trezorui2.show_qr(
+                    address=address if address_qr is None else address_qr,
+                    case_sensitive=case_sensitive,
+                    title=title.upper() if title_qr is None else title_qr.upper(),
+                    verb_cancel="XPUBs" if is_multisig else "ADDRESS",
+                )
+            ),
+            "show_qr",
+            ButtonRequestType.Address,
+        )
+        if result is trezorui2.CONFIRMED:
+            break
+
+        if is_multisig:
+            for i, xpub in enumerate(xpubs):
+                cancel = "NEXT" if i < len(xpubs) - 1 else "ADDRESS"
+                title_xpub = f"XPUB #{i + 1}"
+                title_xpub += " (yours)" if i == multisig_index else " (cosigner)"
+                result = await interact(
+                    ctx,
+                    _show_xpub(xpub, title=title_xpub, cancel=cancel),
+                    "show_xpub",
+                    ButtonRequestType.PublicKey,
+                )
+                if result is trezorui2.CONFIRMED:
+                    return
 
 
 def show_pubkey(
@@ -277,25 +352,27 @@ def show_warning(
     )
 
 
-def show_success(
+async def show_success(
     ctx: wire.GenericContext,
     br_type: str,
     content: str,
     subheader: str | None = None,
     button: str = "Continue",
-) -> Awaitable[None]:
-    return _show_modal(
+) -> None:
+    result = await interact(
         ctx,
-        br_type=br_type,
-        br_code=ButtonRequestType.Success,
-        header="Success",
-        subheader=subheader,
-        content=content,
-        button_confirm=button,
-        button_cancel=None,
-        icon=ui.ICON_CONFIRM,
-        icon_color=ui.GREEN,
+        _RustLayout(
+            trezorui2.show_success(
+                title=content,
+                description=subheader or "",
+                button=button.upper(),
+            )
+        ),
+        br_type,
+        ButtonRequestType.Success,
     )
+    if result is not trezorui2.CONFIRMED:
+        raise wire.ActionCancelled
 
 
 async def confirm_output(
@@ -303,7 +380,7 @@ async def confirm_output(
     address: str,
     amount: str,
     font_amount: int = ui.NORMAL,  # TODO cleanup @ redesign
-    title: str = "Confirm sending",
+    title: str = "SENDING",
     subtitle: str | None = None,  # TODO cleanup @ redesign
     color_to: int = ui.FG,  # TODO cleanup @ redesign
     to_str: str = " to\n",  # TODO cleanup @ redesign
@@ -313,7 +390,39 @@ async def confirm_output(
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
     icon: str = ui.ICON_SEND,
 ) -> None:
-    raise NotImplementedError
+    title = title.upper()
+    if title.startswith("CONFIRM "):
+        title = title[len("CONFIRM ") :]
+
+    result = await interact(
+        ctx,
+        _RustLayout(
+            trezorui2.confirm_output(
+                title=title,
+                description="To:",
+                value=address,
+            )
+        ),
+        "confirm_output",
+        br_code,
+    )
+    if result is not trezorui2.CONFIRMED:
+        raise wire.ActionCancelled
+
+    result = await interact(
+        ctx,
+        _RustLayout(
+            trezorui2.confirm_output(
+                title=title,
+                description="Amount:",
+                value=amount,
+            )
+        ),
+        "confirm_output",
+        br_code,
+    )
+    if result is not trezorui2.CONFIRMED:
+        raise wire.ActionCancelled
 
 
 async def confirm_payment_request(
@@ -322,7 +431,25 @@ async def confirm_payment_request(
     amount: str,
     memos: list[str],
 ) -> Any:
-    raise NotImplementedError
+    from ...components.common import confirm
+
+    result = await interact(
+        ctx,
+        _RustLayout(
+            trezorui2.confirm_payment_request(
+                description=f"{amount} to\n{recipient_name}",
+                memos=memos,
+            )
+        ),
+        "confirm_payment_request",
+        ButtonRequestType.ConfirmOutput,
+    )
+    if result is trezorui2.CONFIRMED:
+        return confirm.CONFIRMED
+    elif result is trezorui2.INFO:
+        return confirm.INFO
+    else:
+        raise wire.ActionCancelled
 
 
 async def should_show_more(
@@ -350,7 +477,25 @@ async def confirm_blob(
     icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
     ask_pagination: bool = False,
 ) -> None:
-    raise NotImplementedError
+    if isinstance(data, bytes):
+        data = hexlify(data).decode()
+
+    result = await interact(
+        ctx,
+        _RustLayout(
+            trezorui2.confirm_blob(
+                title=title.upper(),
+                description=description or "",
+                data=data,
+                ask_pagination=ask_pagination,
+                hold=hold,
+            )
+        ),
+        br_type,
+        br_code,
+    )
+    if result is not trezorui2.CONFIRMED:
+        raise wire.ActionCancelled
 
 
 def confirm_address(
@@ -410,20 +555,60 @@ async def confirm_total(
     total_amount: str,
     fee_amount: str,
     fee_rate_amount: str | None = None,
-    title: str = "Confirm transaction",
+    title: str = "SENDING",
     total_label: str = "Total amount:\n",
     fee_label: str = "\nincluding fee:\n",
     icon_color: int = ui.GREEN,
     br_type: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> None:
-    raise NotImplementedError
+    result = await interact(
+        ctx,
+        _RustLayout(
+            trezorui2.confirm_output(
+                title=title.upper(),
+                description="Fee:",
+                value=fee_amount,
+            )
+        ),
+        "confirm_total",
+        br_code,
+    )
+    if result is not trezorui2.CONFIRMED:
+        raise wire.ActionCancelled
+
+    result = await interact(
+        ctx,
+        _RustLayout(
+            trezorui2.confirm_total(
+                title=title.upper(),
+                description="Total amount:",
+                value=total_amount,
+            )
+        ),
+        "confirm_total",
+        br_code,
+    )
+    if result is not trezorui2.CONFIRMED:
+        raise wire.ActionCancelled
 
 
 async def confirm_joint_total(
     ctx: wire.GenericContext, spending_amount: str, total_amount: str
 ) -> None:
-    raise NotImplementedError
+    result = await interact(
+        ctx,
+        _RustLayout(
+            trezorui2.confirm_joint_total(
+                spending_amount=spending_amount,
+                total_amount=total_amount,
+            )
+        ),
+        "confirm_joint_total",
+        ButtonRequestType.SignTx,
+    )
+    if result is not trezorui2.CONFIRMED:
+        raise wire.ActionCancelled
 
 
 async def confirm_metadata(
@@ -440,13 +625,59 @@ async def confirm_metadata(
     icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
     larger_vspace: bool = False,  # TODO cleanup @ redesign
 ) -> None:
-    raise NotImplementedError
+    if param:
+        content = content.format(param)
+
+    if br_type == "fee_over_threshold":
+        layout = trezorui2.show_warning(
+            title="Unusually high fee",
+            description=param or "",
+        )
+    elif br_type == "change_count_over_threshold":
+        layout = trezorui2.show_warning(
+            title="A lot of change-outputs",
+            description=f"{param} outputs" if param is not None else "",
+        )
+    else:
+        if param is not None:
+            content = content.format(param)
+        # TODO: "unverified external inputs"
+
+        layout = trezorui2.confirm_action(
+            title=title.upper(),
+            verb="NEXT",
+            description=content,
+            hold=hold,
+        )
+
+    result = await interact(
+        ctx,
+        _RustLayout(layout),
+        br_type,
+        br_code,
+    )
+
+    if result is not trezorui2.CONFIRMED:
+        raise wire.ActionCancelled
 
 
 async def confirm_replacement(
     ctx: wire.GenericContext, description: str, txid: str
 ) -> None:
-    raise NotImplementedError
+    result = await interact(
+        ctx,
+        _RustLayout(
+            trezorui2.confirm_blob(
+                title=description.upper(),
+                description="Confirm transaction ID:",
+                data=txid,
+            )
+        ),
+        "confirm_replacement",
+        ButtonRequestType.SignTx,
+    )
+    if result is not trezorui2.CONFIRMED:
+        raise wire.ActionCancelled
 
 
 async def confirm_modify_output(
@@ -456,7 +687,21 @@ async def confirm_modify_output(
     amount_change: str,
     amount_new: str,
 ) -> None:
-    raise NotImplementedError
+    result = await interact(
+        ctx,
+        _RustLayout(
+            trezorui2.confirm_modify_output(
+                address=address,
+                sign=sign,
+                amount_change=amount_change,
+                amount_new=amount_new,
+            )
+        ),
+        "modify_output",
+        ButtonRequestType.ConfirmOutput,
+    )
+    if result is not trezorui2.CONFIRMED:
+        raise wire.ActionCancelled
 
 
 async def confirm_modify_fee(
@@ -465,13 +710,39 @@ async def confirm_modify_fee(
     user_fee_change: str,
     total_fee_new: str,
 ) -> None:
-    raise NotImplementedError
+    result = await interact(
+        ctx,
+        _RustLayout(
+            trezorui2.confirm_modify_fee(
+                sign=sign,
+                user_fee_change=user_fee_change,
+                total_fee_new=total_fee_new,
+            )
+        ),
+        "modify_fee",
+        ButtonRequestType.SignTx,
+    )
+    if result is not trezorui2.CONFIRMED:
+        raise wire.ActionCancelled
 
 
 async def confirm_coinjoin(
     ctx: wire.GenericContext, coin_name: str, max_rounds: int, max_fee_per_vbyte: str
 ) -> None:
-    raise NotImplementedError
+    result = await interact(
+        ctx,
+        _RustLayout(
+            trezorui2.confirm_coinjoin(
+                coin_name=coin_name,
+                max_rounds=str(max_rounds),
+                max_feerate=f"{max_fee_per_vbyte} sats/vbyte",
+            )
+        ),
+        "coinjoin_final",
+        ButtonRequestType.Other,
+    )
+    if result is not trezorui2.CONFIRMED:
+        raise wire.ActionCancelled
 
 
 # TODO cleanup @ redesign
@@ -484,7 +755,42 @@ async def confirm_sign_identity(
 async def confirm_signverify(
     ctx: wire.GenericContext, coin: str, message: str, address: str, verify: bool
 ) -> None:
-    raise NotImplementedError
+    if verify:
+        title = f"VERIFY {coin} MESSAGE"
+        br_type = "verify_message"
+    else:
+        title = f"SIGN {coin} MESSAGE"
+        br_type = "sign_message"
+
+    result = await interact(
+        ctx,
+        _RustLayout(
+            trezorui2.confirm_blob(
+                title=title,
+                description="Confirm address:",
+                data=address,
+            )
+        ),
+        br_type,
+        ButtonRequestType.Other,
+    )
+    if result is not trezorui2.CONFIRMED:
+        raise wire.ActionCancelled
+
+    result = await interact(
+        ctx,
+        _RustLayout(
+            trezorui2.confirm_blob(
+                title=title,
+                description="Confirm message:",
+                data=message,
+            )
+        ),
+        br_type,
+        ButtonRequestType.Other,
+    )
+    if result is not trezorui2.CONFIRMED:
+        raise wire.ActionCancelled
 
 
 async def show_popup(
