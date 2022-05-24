@@ -432,11 +432,7 @@ impl Span {
         let mut char_indices_iter = text.char_indices().peekable();
         // Iterating manually because we need a reference to the iterator inside the
         // loop.
-        loop {
-            let (i, ch) = match char_indices_iter.next() {
-                Some(ch) => ch,
-                None => break,
-            };
+        while let Some((i, ch)) = char_indices_iter.next() {
             let char_width = text_font.char_width(ch);
 
             // Consider if we could be breaking the line at this position.
