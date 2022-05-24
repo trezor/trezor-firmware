@@ -50,6 +50,9 @@ class SupportInfoItem(TypedDict):
 
 SupportInfo = dict[str, SupportInfoItem]
 
+WalletItems = dict[str, str]
+WalletInfo = dict[str, WalletItems]
+
 
 class Coin(TypedDict):
     # Necessary fields for BTC - from BTC_CHECKS
@@ -86,7 +89,7 @@ class Coin(TypedDict):
 
     # Other fields optionally coming from JSON
     links: dict[str, str]
-    wallet: dict[str, str]
+    wallet: WalletItems
     curve: str
     decimals: int
 
@@ -538,6 +541,115 @@ def support_info(coins: Iterable[Coin] | CoinsInfo | dict[str, Coin]) -> Support
         support[coin["key"]] = support_info_single(support_data, coin)
 
     return support
+
+
+# ====== wallet info ======
+
+WALLET_SUITE = {"Trezor Suite": "https://suite.trezor.io"}
+WALLET_NEM = {"Nano Wallet": "https://nemplatform.com/wallets/#desktop"}
+WALLETS_ETH_3RDPARTY = {
+    "MyEtherWallet": "https://www.myetherwallet.com",
+    "MyCrypto": "https://mycrypto.com",
+}
+
+
+def get_wallet_data() -> WalletInfo:
+    """Get wallet data from `wallets.json`."""
+    return load_json("wallets.json")
+
+
+def _suite_support(coin: Coin, support: SupportInfoItem) -> bool:
+    """Check the "suite" support property.
+    If set, check that at least one of the backends run on trezor.io.
+    If yes, assume we support the coin in our wallet.
+    Otherwise it's probably working with a custom backend, which means don't
+    link to our wallet.
+    """
+    if not support["suite"]:
+        return False
+    return any(".trezor.io" in url for url in coin["blockbook"])
+
+
+def wallet_info_single(
+    support_data: SupportInfo,
+    eth_networks_support_data: SupportInfo,
+    wallet_data: WalletInfo,
+    coin: Coin,
+) -> WalletItems:
+    """Adds together a dict of all wallets for a coin."""
+    wallets: WalletItems = {}
+
+    key = coin["key"]
+
+    # Add wallets from the coin itself
+    # (usually not there, only for the `misc` category)
+    wallets.update(coin.get("wallet", {}))
+
+    # Each coin category has different further logic
+    if key.startswith("bitcoin:"):
+        if _suite_support(coin, support_data[key]):
+            wallets.update(WALLET_SUITE)
+    elif key.startswith("eth:"):
+        if support_data[key]["suite"]:
+            wallets.update(WALLET_SUITE)
+        else:
+            wallets.update(WALLETS_ETH_3RDPARTY)
+    elif key.startswith("erc20:"):
+        if eth_networks_support_data[coin["chain"]]["suite"]:
+            wallets.update(WALLET_SUITE)
+        else:
+            wallets.update(WALLETS_ETH_3RDPARTY)
+    elif key.startswith("nem:"):
+        wallets.update(WALLET_NEM)
+    elif key.startswith("misc:"):
+        pass  # no special logic here
+    else:
+        raise ValueError(f"Unknown coin category: {key}")
+
+    # Add wallets from `wallets.json`
+    # This must come last as it offers the ability to override existing wallets
+    # (for example with `"MyEtherWallet": null` we delete the MyEtherWallet from the coin)
+    wallets.update(wallet_data.get(key, {}))
+
+    # Removing potentially disabled wallets from the last step
+    wallets = {name: url for name, url in wallets.items() if url}
+
+    return wallets
+
+
+def wallet_info(coins: Iterable[Coin] | CoinsInfo | dict[str, Coin]) -> WalletInfo:
+    """Generate Trezor wallet information.
+
+    Takes a collection of coins and generates a WalletItems entry for each.
+    The WalletItems is a dict with keys being the names of the wallets and
+    values being the URLs to those - same format as in `wallets.json`.
+
+    The `coins` argument can be a `CoinsInfo` object, a list or a dict of
+    coin items.
+
+    Wallet information is taken from `wallets.json`.
+    """
+    if isinstance(coins, CoinsInfo):
+        coins = coins.as_list()
+    elif isinstance(coins, dict):
+        coins = coins.values()
+
+    support_data = support_info(coins)
+    wallet_data = get_wallet_data()
+
+    # Needed to find out suitable wallets for all the erc20 coins (Suite vs 3rd party)
+    eth_networks = [coin for coin in coins if coin["key"].startswith("eth:")]
+    eth_networks_support_data = {
+        n["chain"]: support_data[n["key"]] for n in eth_networks
+    }
+
+    wallet: WalletInfo = {}
+    for coin in coins:
+        wallet[coin["key"]] = wallet_info_single(
+            support_data, eth_networks_support_data, wallet_data, coin
+        )
+
+    return wallet
 
 
 # ====== data cleanup functions ======

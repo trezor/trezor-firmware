@@ -123,5 +123,13 @@
     },
     "eth:WAN": {
         "Wanchain Wallet": "https://www.wanchain.org/getstarted/"
+    },
+    "eth:AUX": {
+        "MyEtherWallet": null
+    },
+    "eth:XDC": {
+        "MyCrypto": null,
+        "MyEtherWallet": null,
+        "XDC Wallet": "https://wallet.xinfin.network"
     }
 }
