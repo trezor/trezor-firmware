@@ -62,6 +62,10 @@ pub fn icon(x: i32, y: i32, w: i32, h: i32, data: &[u8], fgcolor: u16, bgcolor: 
     }
 }
 
+pub fn image(x: i32, y: i32, w: i32, h: i32, data: &[u8]) {
+    unsafe { ffi::display_image(x, y, w, h, data.as_ptr() as _, data.len() as _) }
+}
+
 pub fn toif_info(data: &[u8]) -> Result<ToifInfo, ()> {
     let mut width: cty::uint16_t = 0;
     let mut height: cty::uint16_t = 0;

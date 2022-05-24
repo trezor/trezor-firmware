@@ -8,7 +8,7 @@ use crate::ui::{
 
 use super::{
     hold_to_confirm::{handle_hold_event, CancelHold, CancelHoldMsg},
-    theme, Button, Loader, ScrollBar, Swipe, SwipeDirection,
+    theme, Button, CancelConfirmMsg, Loader, ScrollBar, Swipe, SwipeDirection,
 };
 
 pub struct SwipePage<T, U> {
@@ -19,6 +19,7 @@ pub struct SwipePage<T, U> {
     scrollbar: ScrollBar,
     hint: Label<&'static str>,
     fade: Option<i32>,
+    button_rows: i32,
 }
 
 impl<T, U> SwipePage<T, U>
@@ -36,7 +37,13 @@ where
             pad: Pad::with_background(background),
             hint: Label::centered("SWIPE TO CONTINUE", theme::label_page_hint()),
             fade: None,
+            button_rows: 1,
         }
+    }
+
+    pub fn with_button_rows(mut self, rows: usize) -> Self {
+        self.button_rows = rows as i32;
+        self
     }
 
     fn setup_swipe(&mut self) {
@@ -69,7 +76,7 @@ where
     type Msg = PageMsg<T::Msg, U::Msg>;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let layout = PageLayout::new(bounds);
+        let layout = PageLayout::new(bounds, self.button_rows);
         self.pad.place(bounds);
         self.swipe.place(bounds);
         self.hint.place(layout.hint);
@@ -186,15 +193,16 @@ pub struct PageLayout {
 }
 
 impl PageLayout {
-    const BUTTON_SPACE: i32 = 6;
     const SCROLLBAR_WIDTH: i32 = 10;
     const SCROLLBAR_SPACE: i32 = 10;
     const HINT_OFF: i32 = 19;
 
-    pub fn new(area: Rect) -> Self {
-        let (content, buttons) = area.split_bottom(Button::<&str>::HEIGHT);
+    pub fn new(area: Rect, button_rows: i32) -> Self {
+        let buttons_height = button_rows * Button::<&str>::HEIGHT
+            + button_rows.saturating_sub(1) * theme::BUTTON_SPACING;
+        let (content, buttons) = area.split_bottom(buttons_height);
         let (_, hint) = area.split_bottom(Self::HINT_OFF);
-        let (content, _space) = content.split_bottom(Self::BUTTON_SPACE);
+        let (content, _space) = content.split_bottom(theme::BUTTON_SPACING);
         let (buttons, _space) = buttons.split_right(theme::CONTENT_BORDER);
         let (_space, content) = content.split_left(theme::CONTENT_BORDER);
         let (content_single_page, _space) = content.split_right(theme::CONTENT_BORDER);
@@ -236,7 +244,7 @@ where
     T: Paginate,
     T: Component,
 {
-    type Msg = PageMsg<T::Msg, bool>;
+    type Msg = PageMsg<T::Msg, CancelConfirmMsg>;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.inner.place(bounds);
@@ -249,7 +257,7 @@ where
         let button_msg = match msg {
             Some(PageMsg::Content(c)) => return Some(PageMsg::Content(c)),
             Some(PageMsg::Controls(CancelHoldMsg::Cancelled)) => {
-                return Some(PageMsg::Controls(false))
+                return Some(PageMsg::Controls(CancelConfirmMsg::Cancelled))
             }
             Some(PageMsg::Controls(CancelHoldMsg::HoldButton(b))) => Some(b),
             _ => None,
@@ -262,7 +270,7 @@ where
             &mut self.inner.pad,
             &mut self.inner.content,
         ) {
-            return Some(PageMsg::Controls(true));
+            return Some(PageMsg::Controls(CancelConfirmMsg::Confirmed));
         }
         None
     }

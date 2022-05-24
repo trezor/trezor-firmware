@@ -7,7 +7,7 @@ use crate::{
     ui::{
         component::{maybe::PaintOverlapping, Map},
         display::Color,
-        geometry::Rect,
+        geometry::{Offset, Rect},
     },
 };
 
@@ -206,6 +206,60 @@ where
         d.open("Tuple");
         d.field("0", &self.0);
         d.field("1", &self.1);
+        d.close();
+    }
+}
+
+impl<M, T, U, V> Component for (T, U, V)
+where
+    T: Component<Msg = M>,
+    U: Component<Msg = M>,
+    V: Component<Msg = M>,
+{
+    type Msg = M;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        self.0
+            .place(bounds)
+            .union(self.1.place(bounds))
+            .union(self.2.place(bounds))
+    }
+
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        self.0
+            .event(ctx, event)
+            .or_else(|| self.1.event(ctx, event))
+            .or_else(|| self.2.event(ctx, event))
+    }
+
+    fn paint(&mut self) {
+        self.0.paint();
+        self.1.paint();
+        self.2.paint();
+    }
+
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
+        self.0.bounds(sink);
+        self.1.bounds(sink);
+        self.2.bounds(sink);
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl<T, U, V> crate::trace::Trace for (T, U, V)
+where
+    T: Component,
+    T: crate::trace::Trace,
+    U: Component,
+    U: crate::trace::Trace,
+    V: Component,
+    V: crate::trace::Trace,
+{
+    fn trace(&self, d: &mut dyn crate::trace::Tracer) {
+        d.open("Tuple");
+        d.field("0", &self.0);
+        d.field("1", &self.1);
+        d.field("2", &self.2);
         d.close();
     }
 }

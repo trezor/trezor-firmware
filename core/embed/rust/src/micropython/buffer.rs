@@ -143,6 +143,12 @@ impl AsMut<[u8]> for BufferMut {
 #[derive(Default)]
 pub struct StrBuffer(Buffer);
 
+impl StrBuffer {
+    pub fn empty() -> Self {
+        Self::from("")
+    }
+}
+
 impl TryFrom<Obj> for StrBuffer {
     type Error = Error;
 

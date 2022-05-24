@@ -27,8 +27,7 @@ use crate::ui::event::ButtonEvent;
 use crate::ui::event::TouchEvent;
 
 /// Conversion trait implemented by components that know how to convert their
-/// message values into MicroPython `Obj`s. We can automatically implement
-/// `ComponentMsgObj` for components whose message types implement `TryInto`.
+/// message values into MicroPython `Obj`s.
 pub trait ComponentMsgObj: Component {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error>;
 }
