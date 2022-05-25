@@ -16,6 +16,11 @@ REPORTS_PATH = HERE / "reports" / "test"
 
 STYLE = (HERE / "testreport.css").read_text()
 SCRIPT = (HERE / "testreport.js").read_text()
+SCREENSHOTS_WIDTH_PX_TO_DISPLAY = {
+    "T1": 128 * 2,  # original is 128px
+    "TT": 240,  # original is 240px
+    "TR": 128 * 2,  # original is 128px
+}
 
 ACTUAL_HASHES: Dict[str, str] = {}
 
@@ -147,7 +152,11 @@ def failed(
                 th("Expected")
                 th("Actual")
 
-            html.diff_table(recorded_screens, actual_screens)
+            html.diff_table(
+                recorded_screens,
+                actual_screens,
+                SCREENSHOTS_WIDTH_PX_TO_DISPLAY[test_name[:2]],
+            )
 
     return html.write(REPORTS_PATH / "failed", doc, test_name + ".html")
 
@@ -155,9 +164,12 @@ def failed(
 def passed(fixture_test_path: Path, test_name: str, actual_hash: str) -> Path:
     copy_tree(str(fixture_test_path / "actual"), str(fixture_test_path / "recorded"))
 
+    return recorded(fixture_test_path / "actual", test_name, actual_hash)
+
+
+def recorded(fixture_test_path: Path, test_name: str, actual_hash: str) -> Path:
     doc = document(title=test_name)
-    actual_path = fixture_test_path / "actual"
-    actual_screens = sorted(actual_path.iterdir())
+    actual_screens = sorted(fixture_test_path.iterdir())
 
     with doc:
         _header(test_name, actual_hash, actual_hash)
@@ -168,6 +180,6 @@ def passed(fixture_test_path: Path, test_name: str, actual_hash: str) -> Path:
 
             for screen in actual_screens:
                 with tr():
-                    html.image(screen)
+                    html.image(screen, SCREENSHOTS_WIDTH_PX_TO_DISPLAY[test_name[:2]])
 
     return html.write(REPORTS_PATH / "passed", doc, test_name + ".html")
