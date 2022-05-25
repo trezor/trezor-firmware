@@ -504,14 +504,15 @@ static bool formatAmountDifference(const CoinInfo *coin, AmountUnit amount_unit,
 }
 
 static bool formatFeeRate(uint64_t fee, uint64_t tx_weight, char *output,
-                          size_t output_length) {
+                          size_t output_length, bool segwit) {
   // Compute fee rate and modify it in place for `bn_format_uint64` function -
   // multiply by 10, because we only want to display 1 decimal digit
   // and then get whole number by leaving it in `uint64_t`.
   uint64_t fee_rate_multiplied = (fee * 10) / (tx_weight / 4);
 
-  return bn_format_uint64(fee_rate_multiplied, "(", " sat/vB)", 1, 0, false,
-                          output, output_length) != 0;
+  return bn_format_uint64(fee_rate_multiplied, "(",
+                          segwit ? " sat/vB)" : " sat/B)", 1, 0, false, output,
+                          output_length) != 0;
 }
 
 void layoutConfirmTx(const CoinInfo *coin, AmountUnit amount_unit,
@@ -530,7 +531,7 @@ void layoutConfirmTx(const CoinInfo *coin, AmountUnit amount_unit,
 
   if (show_fee_rate) {
     formatFeeRate(total_in - total_out, tx_weight, str_fee_rate,
-                  sizeof(str_fee_rate));
+                  sizeof(str_fee_rate), coin->has_segwit);
   }
 
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
