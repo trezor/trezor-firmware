@@ -33,6 +33,7 @@ class _RustLayout(ui.Layout):
             return (
                 self.handle_timers(),
                 self.handle_input_and_rendering(),
+                self.handle_swipe(),
                 confirm_signal(),
                 input_signal(),
             )
@@ -47,6 +48,37 @@ class _RustLayout(ui.Layout):
             self.layout.trace(callback)
             result = " ".join(result).split("\n")
             return result
+
+        async def handle_swipe(self):
+            from apps.debug import notify_layout_change, swipe_signal
+            from trezor.ui.components.common import (
+                SWIPE_UP,
+                SWIPE_DOWN,
+                SWIPE_LEFT,
+                SWIPE_RIGHT,
+            )
+
+            while True:
+                direction = await swipe_signal()
+                orig_x = orig_y = 120
+                off_x, off_y = {
+                    SWIPE_UP: (0, -30),
+                    SWIPE_DOWN: (0, 30),
+                    SWIPE_LEFT: (-30, 0),
+                    SWIPE_RIGHT: (30, 0),
+                }[direction]
+
+                for event, x, y in (
+                    (io.TOUCH_START, orig_x, orig_y),
+                    (io.TOUCH_MOVE, orig_x + 1 * off_x, orig_y + 1 * off_y),
+                    (io.TOUCH_END, orig_x + 2 * off_x, orig_y + 2 * off_y),
+                ):
+                    msg = self.layout.touch_event(event, x, y)
+                    self.layout.paint()
+                    if msg is not None:
+                        raise ui.Result(msg)
+
+                notify_layout_change(self)
 
     else:
 
