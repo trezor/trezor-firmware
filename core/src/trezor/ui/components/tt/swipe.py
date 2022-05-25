@@ -2,14 +2,11 @@ from micropython import const
 from typing import Generator
 
 from trezor import io, loop, ui
+from trezor.ui.components.common import SWIPE_DOWN, SWIPE_LEFT, SWIPE_RIGHT, SWIPE_UP
 
-SWIPE_UP = const(0x01)
-SWIPE_DOWN = const(0x02)
-SWIPE_LEFT = const(0x04)
-SWIPE_RIGHT = const(0x08)
-SWIPE_VERTICAL = const(SWIPE_UP | SWIPE_DOWN)
-SWIPE_HORIZONTAL = const(SWIPE_LEFT | SWIPE_RIGHT)
-SWIPE_ALL = const(SWIPE_VERTICAL | SWIPE_HORIZONTAL)
+SWIPE_VERTICAL = SWIPE_UP | SWIPE_DOWN
+SWIPE_HORIZONTAL = SWIPE_LEFT | SWIPE_RIGHT
+SWIPE_ALL = SWIPE_VERTICAL | SWIPE_HORIZONTAL
 
 _SWIPE_DISTANCE = const(120)
 _SWIPE_TRESHOLD = const(30)
