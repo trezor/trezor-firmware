@@ -165,7 +165,7 @@ def client(
 
 def pytest_sessionstart(session: pytest.Session) -> None:
     ui_tests.read_fixtures()
-    if session.config.getoption("ui") == "test":
+    if session.config.getoption("ui"):
         testreport.clear_dir()
 
 
@@ -181,13 +181,19 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: pytest.ExitCode) -
         return
 
     missing = session.config.getoption("ui_check_missing")
-    if session.config.getoption("ui") == "test":
+    test_ui = session.config.getoption("ui")
+
+    if test_ui == "test":
         if missing and ui_tests.list_missing():
             session.exitstatus = pytest.ExitCode.TESTS_FAILED
         ui_tests.write_fixtures_suggestion(missing)
         testreport.index()
-    if session.config.getoption("ui") == "record":
-        ui_tests.write_fixtures(missing)
+    if test_ui == "record":
+        if exitstatus == pytest.ExitCode.OK:
+            ui_tests.write_fixtures(missing)
+        else:
+            ui_tests.write_fixtures_suggestion(missing, only_passed_tests=True)
+        testreport.index()
 
 
 def pytest_terminal_summary(
@@ -214,6 +220,13 @@ def pytest_terminal_summary(
     if ui_option == "test" and _should_write_ui_report(exitstatus):
         println("\n-------- Suggested fixtures.json diff: --------")
         print("See", ui_tests.SUGGESTION_FILE)
+        println("")
+
+    if ui_option == "record" and exitstatus != pytest.ExitCode.OK:
+        println(
+            f"\n-------- WARNING! Recording to {ui_tests.HASH_FILE.name} was disabled due to failed tests. --------"
+        )
+        print("See", ui_tests.SUGGESTION_FILE, "for suggestions for ONLY PASSED tests.")
         println("")
 
     if _should_write_ui_report(exitstatus):
@@ -278,7 +291,7 @@ def pytest_runtest_teardown(item: pytest.Item) -> None:
 
     Dumps the current UI test report HTML.
     """
-    if item.session.config.getoption("ui") == "test":
+    if item.session.config.getoption("ui"):
         testreport.index()
 
 
@@ -298,12 +311,13 @@ def device_handler(client: Client, request: pytest.FixtureRequest) -> None:
     device_handler = BackgroundDeviceHandler(client)
     yield device_handler
 
-    # if test did not finish, e.g. interrupted by Ctrl+C, the pytest_runtest_makereport
-    # did not create the attribute we need
-    if not hasattr(request.node, "rep_call"):
+    # get call test result
+    test_res = ui_tests.get_last_call_test_result(request)
+
+    if test_res is None:
         return
 
     # if test finished, make sure all background tasks are done
     finalized_ok = device_handler.check_finalize()
-    if request.node.rep_call.passed and not finalized_ok:  # type: ignore [rep_call must exist]
+    if test_res and not finalized_ok:  # type: ignore [rep_call must exist]
         raise RuntimeError("Test did not check result of background task")
