@@ -190,7 +190,7 @@ async def confirm_total(
     fee_rate_str: str | None = None
 
     if fee_rate >= 0:
-        fee_rate_str = f"({fee_rate:.1f} sat/vB)"
+        fee_rate_str = f"({fee_rate:.1f} sat/{'v' if coin.segwit else ''}B)"
 
     await layouts.confirm_total(
         ctx,
