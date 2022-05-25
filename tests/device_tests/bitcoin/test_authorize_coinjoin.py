@@ -238,6 +238,78 @@ def test_sign_tx(client: Client):
         )
 
 
+def test_sign_tx_spend(client: Client):
+    # NOTE: FAKE input tx
+
+    inputs = [
+        messages.TxInputType(
+            address_n=parse_path("m/10025h/1h/0h/1h/1/0"),
+            amount=7_289_000,
+            prev_hash=FAKE_TXHASH_f982c0,
+            prev_index=1,
+            script_type=messages.InputScriptType.SPENDTAPROOT,
+        ),
+    ]
+
+    outputs = [
+        # Our change output.
+        messages.TxOutputType(
+            # tb1pchruvduckkwuzm5hmytqz85emften5dnmkqu9uhfxwfywaqhuu0qjggqyp
+            address_n=parse_path("m/10025h/1h/0h/1h/1/2"),
+            amount=7_289_000 - 50_000 - 400,
+            script_type=messages.OutputScriptType.PAYTOTAPROOT,
+        ),
+        # Payment output.
+        messages.TxOutputType(
+            address="mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q",
+            amount=50_000,
+            script_type=messages.OutputScriptType.PAYTOADDRESS,
+        ),
+    ]
+
+    # Ensure that Trezor refuses to spend from CoinJoin without user authorization.
+    with pytest.raises(TrezorFailure, match="Forbidden key path"):
+        _, serialized_tx = btc.sign_tx(
+            client,
+            "Testnet",
+            inputs,
+            outputs,
+            prev_txes=TX_CACHE_TESTNET,
+        )
+
+    with client:
+        client.set_expected_responses(
+            [
+                messages.ButtonRequest(code=B.Other),
+                messages.UnlockedPathRequest(),
+                request_input(0),
+                request_output(0),
+                request_output(1),
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.SignTx),
+                request_input(0),
+                request_output(0),
+                request_output(1),
+                request_input(0),
+                request_finished(),
+            ]
+        )
+        _, serialized_tx = btc.sign_tx(
+            client,
+            "Testnet",
+            inputs,
+            outputs,
+            prev_txes=TX_CACHE_TESTNET,
+            unlock_path=SLIP25_PATH,
+        )
+
+    # Transaction does not exist on the blockchain, not using assert_tx_matches()
+    assert (
+        serialized_tx.hex()
+        == "010000000001010ab6ad3ba09261cfb4fa1d3680cb19332a8fe4d9de9ea89aa565bd83a2c082f90100000000ffffffff02c8736e0000000000225120c5c7c63798b59dc16e97d916011e99da5799d1b3dd81c2f2e93392477417e71e50c30000000000001976a914a579388225827d9f2fe9014add644487808c695d88ac014006bc29900d39570fca291c038551817430965ac6aa26f286483559e692a14a82cfaf8e57610eae12a5af05ee1e9600acb31de4757349c0e3066701aa78f65d2a00000000"
+    )
+
+
 def test_wrong_coordinator(client: Client):
     # Ensure that a preauthorized GetOwnershipProof fails if the commitment_data doesn't match the coordinator.
 
