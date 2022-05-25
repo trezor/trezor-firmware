@@ -617,6 +617,7 @@
 "TT_bitcoin-test_authorize_coinjoin.py::test_get_public_key": "b1b4b17120b7131e7be00e59254e7afaf43afde1e547c5b0cc1ecd105e802654",
 "TT_bitcoin-test_authorize_coinjoin.py::test_multisession_authorization": "65c9435e10e3dede19169a9b02d373bd5acb22eba0ba3b31324271025d65d5a7",
 "TT_bitcoin-test_authorize_coinjoin.py::test_sign_tx": "87b81a29fe6e27fdfedfdbb1953b3d0178786749eadbb0fe01509c1af8075de5",
+"TT_bitcoin-test_authorize_coinjoin.py::test_sign_tx_spend": "68dca6c087240e7e2addd1f41efc0d7de1637ef88e66778d751f20fbc2f0cf15",
 "TT_bitcoin-test_authorize_coinjoin.py::test_wrong_account_type": "2e5cffe7bd0dc6034852d21612fba8cf1ee3c45a14e76140a4c2786f360f54f0",
 "TT_bitcoin-test_authorize_coinjoin.py::test_wrong_coordinator": "2e5cffe7bd0dc6034852d21612fba8cf1ee3c45a14e76140a4c2786f360f54f0",
 "TT_bitcoin-test_bcash.py::test_attack_change_input": "fecbdb1f4e28e564a4c351fe6d35b84a63f046c53028ae8d6d23ff187a7f047c",
