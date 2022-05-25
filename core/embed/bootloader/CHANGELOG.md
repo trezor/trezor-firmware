@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
+## 2.0.4 [May 2022]
+
+### Security
+- Intentionally skipped this version due to fake devices
+
 ## 2.0.3 [March 2019]
 
 ### Security
