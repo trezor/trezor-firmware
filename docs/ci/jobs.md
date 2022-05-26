@@ -54,7 +54,7 @@ or contain `[no changelog]` in the commit message.
 ## BUILD stage - [build.yml](../../ci/build.yml)
 All builds are published as artifacts so they can be downloaded and used.
 
-Consists of **29 jobs** below:
+Consists of **30 jobs** below:
 
 ### [core fw regular build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L20)
 Build of Core into firmware. Regular version.
@@ -106,9 +106,9 @@ it is just a single binary file that you can execute directly.
 
 ### [core unix frozen R debug build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L269)
 
-### [core unix frozen debug asan build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L283)
+### [core unix frozen R debug build arm](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L283)
 
-### [core unix frozen debug build arm](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L299)
+### [core unix frozen debug asan build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L301)
 
 ### [core macos frozen regular build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L323)
 
