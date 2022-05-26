@@ -13,6 +13,7 @@ wget -e robots=off \
     --no-host-directories \
     --recursive \
     --reject "index.html*" \
+    --reject "-arm" \
     -P emulators/ \
     $SITE
 
