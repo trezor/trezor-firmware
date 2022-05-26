@@ -296,6 +296,6 @@ Consists of **13 jobs** below:
 
 ### [sync emulators to aws](https://github.com/trezor/trezor-firmware/blob/master/ci/deploy.yml#L251)
 
-### [common sync](https://github.com/trezor/trezor-firmware/blob/master/ci/deploy.yml#L275)
+### [common sync](https://github.com/trezor/trezor-firmware/blob/master/ci/deploy.yml#L276)
 
 ---
