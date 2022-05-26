@@ -280,6 +280,24 @@ core unix frozen R debug build:
     untracked: true
     expire_in: 1 week
 
+core unix frozen R debug build arm:
+  image: nixos/nix
+  stage: build
+  <<: *gitlab_caching
+  needs: []
+  variables:
+    PYOPT: "0"
+    TREZOR_MODEL: "R"
+  script:
+    - nix-shell --run "poetry run make -C core build_unix_frozen"
+    - mv core/build/unix/trezor-emu-core core/build/unix/trezor-emu-core-arm
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    untracked: true
+    expire_in: 1 week
+  tags:
+    - docker_darwin_arm
+
 core unix frozen debug asan build:
   stage: build
   <<: *gitlab_caching
