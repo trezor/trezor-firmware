@@ -112,6 +112,18 @@ pub fn loader(
     }
 }
 
+pub fn trans_start() {
+    unsafe {
+        ffi::display_trans_start();
+    }
+}
+
+pub fn trans_exec(transition: i32) {
+    unsafe {
+        ffi::display_trans_exec(transition);
+    }
+}
+
 #[inline(always)]
 #[cfg(all(feature = "model_tt", target_arch = "arm"))]
 pub fn pixeldata(c: u16) {

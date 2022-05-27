@@ -219,6 +219,21 @@ pub fn text_right(baseline: Point, text: &str, font: Font, fg_color: Color, bg_c
     );
 }
 
+#[repr(i32)]
+pub enum DisplayTransition {
+    Fast = 0,
+    SlideRight = 1,
+    SlideLeft = 2,
+}
+
+pub fn display_trans_start() {
+    display::trans_start();
+}
+
+pub fn display_trans_exec(transition: DisplayTransition) {
+    display::trans_exec(transition as i32);
+}
+
 #[inline(always)]
 pub fn pixeldata(color: Color) {
     display::pixeldata(color.into());
