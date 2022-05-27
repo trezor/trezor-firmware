@@ -31,9 +31,9 @@
 #include "usb.h"
 #include "version.h"
 
-#include "screens_rust.h"
 #include "bootui.h"
 #include "messages.h"
+#include "screens_rust.h"
 
 #include "memzero.h"
 
