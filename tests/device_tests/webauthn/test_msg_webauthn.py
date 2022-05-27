@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import fido
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import Cancelled, TrezorFailure
 
 from ...common import MNEMONIC12
@@ -28,7 +29,7 @@ RK_CAPACITY = 100
 @pytest.mark.skip_t1
 @pytest.mark.altcoin
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_add_remove(client):
+def test_add_remove(client: Client):
     # Remove index 0 should fail.
     with pytest.raises(TrezorFailure):
         fido.remove_credential(client, 0)

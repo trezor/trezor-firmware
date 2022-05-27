@@ -15,9 +15,10 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 from trezorlib import messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 
-def test_ping(client):
+def test_ping(client: Client):
     with client:
         client.set_expected_responses([messages.Success])
         res = client.ping("random data")

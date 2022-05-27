@@ -431,7 +431,10 @@ void session_clearCache(Session *session) {
   session->seedCached = false;
 }
 
-void config_lockDevice(void) { storage_lock(); }
+void config_lockDevice(void) {
+  fsm_abortWorkflows();
+  storage_lock();
+}
 
 static void get_u2froot_callback(uint32_t iter, uint32_t total) {
   layoutProgress(_("Updating"), 1000 * iter / total);
@@ -564,7 +567,7 @@ void config_setHomescreen(const uint8_t *data, uint32_t size) {
 }
 
 static void get_root_node_callback(uint32_t iter, uint32_t total) {
-  usbSleep(1);
+  waitAndProcessUSBRequests(1);
   layoutProgress(_("Waking up"), 1000 * iter / total);
 }
 
@@ -973,4 +976,11 @@ void config_wipe(void) {
   storage_set(KEY_UUID, config_uuid, sizeof(config_uuid));
   storage_set(KEY_VERSION, &CONFIG_VERSION, sizeof(CONFIG_VERSION));
   session_clear(false);
+
+#if USE_BIP32_CACHE
+  bip32_cache_clear();
+#endif
+#if USE_BIP39_CACHE
+  bip39_cache_clear();
+#endif
 }

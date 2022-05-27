@@ -21,6 +21,7 @@ import pytest
 from shamir_mnemonic import MnemonicError, shamir
 
 from trezorlib import device, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import BackupType, ButtonRequestType as B
 
@@ -34,7 +35,7 @@ from ...common import (
 pytestmark = [pytest.mark.skip_t1]
 
 
-def reset_device(client, strength):
+def reset_device(client: Client, strength):
     member_threshold = 3
     all_mnemonics = []
 
@@ -125,12 +126,12 @@ def reset_device(client, strength):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_reset_device_slip39_basic(client):
+def test_reset_device_slip39_basic(client: Client):
     reset_device(client, 128)
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_reset_device_slip39_basic_256(client):
+def test_reset_device_slip39_basic_256(client: Client):
     reset_device(client, 256)
 
 

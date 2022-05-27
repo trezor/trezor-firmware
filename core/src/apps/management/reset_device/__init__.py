@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 import storage
 import storage.device
 from trezor import config, wire
@@ -14,7 +16,7 @@ from . import layout
 if __debug__:
     import storage.debug
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import ResetDevice
 
 _DEFAULT_BACKUP_TYPE = BackupType.Bip39

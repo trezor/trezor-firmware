@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import device, exceptions, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 from ...common import (
     MNEMONIC_SLIP39_BASIC_20_3of6,
@@ -47,7 +48,7 @@ VECTORS = (
 
 @pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.parametrize("shares, secret", VECTORS)
-def test_secret(client, shares, secret):
+def test_secret(client: Client, shares, secret):
     debug = client.debug
 
     def input_flow():
@@ -71,7 +72,7 @@ def test_secret(client, shares, secret):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_recover_with_pin_passphrase(client):
+def test_recover_with_pin_passphrase(client: Client):
     debug = client.debug
 
     def input_flow():
@@ -98,7 +99,7 @@ def test_recover_with_pin_passphrase(client):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_abort(client):
+def test_abort(client: Client):
     debug = client.debug
 
     def input_flow():
@@ -118,7 +119,7 @@ def test_abort(client):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_noabort(client):
+def test_noabort(client: Client):
     debug = client.debug
 
     def input_flow():
@@ -138,7 +139,7 @@ def test_noabort(client):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_ask_word_number(client):
+def test_ask_word_number(client: Client):
     debug = client.debug
 
     def input_flow_retry_first():
@@ -230,7 +231,7 @@ def test_ask_word_number(client):
 
 @pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.parametrize("nth_word", range(3))
-def test_wrong_nth_word(client, nth_word):
+def test_wrong_nth_word(client: Client, nth_word):
     debug = client.debug
     share = MNEMONIC_SLIP39_BASIC_20_3of6[0].split(" ")
 
@@ -269,7 +270,7 @@ def test_wrong_nth_word(client, nth_word):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_same_share(client):
+def test_same_share(client: Client):
     debug = client.debug
     first_share = MNEMONIC_SLIP39_BASIC_20_3of6[0].split(" ")
     # second share is first 4 words of first
@@ -306,7 +307,7 @@ def test_same_share(client):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_1of1(client):
+def test_1of1(client: Client):
     debug = client.debug
 
     def input_flow():

@@ -22,6 +22,7 @@ from trezorlib.cardano import (
     get_public_key,
     parse_optional_bytes,
 )
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.messages import CardanoAddressType, CardanoDerivationType
 from trezorlib.tools import parse_path
 
@@ -45,7 +46,7 @@ pytestmark = [
     "cardano/get_reward_address.json",
     "cardano/get_base_address.derivations.json",
 )
-def test_cardano_get_address(client, parameters, result):
+def test_cardano_get_address(client: Client, parameters, result):
     client.init_device(new_session=True, derive_cardano=True)
 
     derivation_type = CardanoDerivationType.__members__[
@@ -88,7 +89,7 @@ def test_cardano_get_address(client, parameters, result):
     "cardano/get_public_key.slip39.json",
     "cardano/get_public_key.derivations.json",
 )
-def test_cardano_get_public_key(client, parameters, result):
+def test_cardano_get_public_key(client: Client, parameters, result):
     client.init_device(new_session=True, derive_cardano=True)
 
     derivation_type = CardanoDerivationType.__members__[

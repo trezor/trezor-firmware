@@ -79,6 +79,10 @@ else
     echo "${ALPINE_CHECKSUM}  ci/${ALPINE_TARBALL}" | shasum -a 256 -c
 fi
 
+echo
+echo ">>> DOCKER BUILD ALPINE_VERSION=$ALPINE_VERSION ALPINE_ARCH=$ALPINE_ARCH NIX_VERSION=$NIX_VERSION -t $CONTAINER_NAME"
+echo
+
 docker build --build-arg ALPINE_VERSION="$ALPINE_VERSION" --build-arg ALPINE_ARCH="$ALPINE_ARCH" --build-arg NIX_VERSION="$NIX_VERSION" -t "$CONTAINER_NAME" ci/
 
 # stat under macOS has slightly different cli interface
@@ -116,6 +120,10 @@ for BITCOIN_ONLY in ${VARIANTS_core[@]}; do
                build/firmware/firmware.bin
     chown -R $USER:$GROUP /build
 EOF
+
+  echo
+  echo ">>> DOCKER RUN core BITCOIN_ONLY=$BITCOIN_ONLY PRODUCTION=$PRODUCTION"
+  echo
 
   docker run -it --rm \
     -v "$DIR:/local" \
@@ -158,6 +166,10 @@ for BITCOIN_ONLY in ${VARIANTS_legacy[@]}; do
                build/firmware/firmware.bin
     chown -R $USER:$GROUP /build
 EOF
+
+  echo
+  echo ">>> DOCKER RUN legacy BITCOIN_ONLY=$BITCOIN_ONLY PRODUCTION=$PRODUCTION"
+  echo
 
   docker run -it --rm \
     -v "$DIR:/local" \

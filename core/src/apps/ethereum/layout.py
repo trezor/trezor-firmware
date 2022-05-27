@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING
 from ubinascii import hexlify
 
 from trezor import ui
@@ -5,20 +6,23 @@ from trezor.enums import ButtonRequestType, EthereumDataType
 from trezor.messages import EthereumFieldType, EthereumStructMember
 from trezor.strings import format_amount, format_plural
 from trezor.ui.layouts import (
+    confirm_action,
     confirm_address,
     confirm_amount,
     confirm_blob,
     confirm_output,
     confirm_text,
+    confirm_total,
     should_show_more,
 )
-from trezor.ui.layouts.tt.altcoin import confirm_total_ethereum
+from trezor.ui.layouts.altcoin import confirm_total_ethereum
 
 from . import networks, tokens
 from .helpers import address_from_bytes, decode_typed_data, get_type_name
 
-if False:
-    from typing import Awaitable, Iterable, Optional
+if TYPE_CHECKING:
+    from typing import Awaitable, Iterable
+
     from trezor.wire import Context
 
 
@@ -60,7 +64,13 @@ def require_confirm_fee(
 
 
 async def require_confirm_eip1559_fee(
-    ctx: Context, max_priority_fee: int, max_gas_fee: int, gas_limit: int, chain_id: int
+    ctx: Context,
+    spending: int,
+    max_priority_fee: int,
+    max_gas_fee: int,
+    gas_limit: int,
+    chain_id: int,
+    token: tokens.TokenInfo | None = None,
 ) -> None:
     await confirm_amount(
         ctx,
@@ -74,11 +84,12 @@ async def require_confirm_eip1559_fee(
         description="Priority fee per gas",
         amount=format_ethereum_amount(max_priority_fee, None, chain_id),
     )
-    await confirm_amount(
+    await confirm_total(
         ctx,
-        title="Confirm fee",
-        description="Maximum fee",
-        amount=format_ethereum_amount(max_gas_fee * gas_limit, None, chain_id),
+        total_amount=format_ethereum_amount(spending, token, chain_id),
+        fee_amount=format_ethereum_amount(max_gas_fee * gas_limit, None, chain_id),
+        total_label="Amount sent:\n",
+        fee_label="\nMaximum fee:\n",
     )
 
 
@@ -109,13 +120,24 @@ def require_confirm_data(ctx: Context, data: bytes, data_total: int) -> Awaitabl
     )
 
 
-async def confirm_hash(ctx: Context, message_hash: bytes) -> None:
-    await confirm_blob(
+async def confirm_typed_data_final(ctx: Context) -> None:
+    await confirm_action(
         ctx,
-        "confirm_hash",
-        title="Confirm hash",
-        data="0x" + hexlify(message_hash).decode(),
+        "confirm_typed_data_final",
+        title="Confirm typed data",
+        action="Really sign EIP-712 typed data?",
+        verb="Hold to confirm",
         hold=True,
+    )
+
+
+def confirm_empty_typed_message(ctx: Context) -> Awaitable[None]:
+    return confirm_text(
+        ctx,
+        "confirm_empty_typed_message",
+        title="Confirm message",
+        data="",
+        description="No message field",
     )
 
 
@@ -183,7 +205,7 @@ async def confirm_typed_value(
     value: bytes,
     parent_objects: list[str],
     field: EthereumFieldType,
-    array_index: Optional[int] = None,
+    array_index: int | None = None,
 ) -> None:
     type_name = get_type_name(field)
 

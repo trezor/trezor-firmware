@@ -4,22 +4,23 @@ Minimalistic CBOR implementation, supports only what we need in cardano.
 
 import ustruct as struct
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor import log, utils
 
 from . import readers
 
-if False:
-    from typing import Any, Generic, Iterator, Tuple, TypeVar, Union
+if TYPE_CHECKING:
+    from typing import Any, Generic, Iterator, TypeVar
 
     K = TypeVar("K")
     V = TypeVar("V")
     Value = Any
-    CborSequence = Union[list[Value], Tuple[Value, ...]]
+    CborSequence = list[Value] | tuple[Value, ...]
 else:
-    # mypy cheat: Generic[K, V] will be `object` which is a valid parent type
-    Generic = {(0, 0): object}  # type: ignore
-    K = V = 0  # type: ignore
+    # typechecker cheat: Generic[K, V] will be `object` which is a valid parent type
+    Generic = {(0, 0): object}
+    K = V = 0
 
 _CBOR_TYPE_MASK = const(0xE0)
 _CBOR_INFO_BITS = const(0x1F)
@@ -317,3 +318,13 @@ def create_array_header(size: int) -> bytes:
 
 def create_map_header(size: int) -> bytes:
     return _header(_CBOR_MAP, size)
+
+
+def precedes(prev: bytes, curr: bytes) -> bool:
+    """
+    Returns True if `prev` is smaller than `curr` with regards to
+    the cbor map key ordering as defined in
+    https://datatracker.ietf.org/doc/html/rfc7049#section-3.9
+    Note that `prev` and `curr` must already be cbor-encoded.
+    """
+    return len(prev) < len(curr) or (len(prev) == len(curr) and prev < curr)

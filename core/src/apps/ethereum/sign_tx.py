@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import wire
 from trezor.crypto import rlp
 from trezor.crypto.curve import secp256k1
@@ -17,9 +19,7 @@ from .layout import (
     require_confirm_unknown_token,
 )
 
-if False:
-    from typing import Tuple
-
+if TYPE_CHECKING:
     from apps.common.keychain import Keychain
 
     from .keychain import EthereumSignTxAny
@@ -95,7 +95,7 @@ async def sign_tx(
 
 async def handle_erc20(
     ctx: wire.Context, msg: EthereumSignTxAny
-) -> Tuple[tokens.TokenInfo | None, bytes, bytes, int]:
+) -> tuple[tokens.TokenInfo | None, bytes, bytes, int]:
     token = None
     address_bytes = recipient = bytes_from_address(msg.to)
     value = int.from_bytes(msg.value, "big")
@@ -122,7 +122,7 @@ def get_total_length(msg: EthereumSignTx, data_total: int) -> int:
     if msg.tx_type is not None:
         length += rlp.length(msg.tx_type)
 
-    fields: Tuple[rlp.RLPItem, ...] = (
+    fields: tuple[rlp.RLPItem, ...] = (
         msg.nonce,
         msg.gas_price,
         msg.gas_limit,

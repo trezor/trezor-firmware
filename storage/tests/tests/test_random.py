@@ -82,5 +82,5 @@ class StorageComparison(RuleBasedStateMachine):
 
 TestStorageComparison = StorageComparison.TestCase
 TestStorageComparison.settings = settings(
-    deadline=2000, max_examples=30, stateful_step_count=50
+    deadline=None, max_examples=30, stateful_step_count=50
 )

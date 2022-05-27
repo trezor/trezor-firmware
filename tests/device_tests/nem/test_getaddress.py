@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import nem
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
 from ...common import MNEMONIC12
@@ -25,16 +26,16 @@ from ...common import MNEMONIC12
 @pytest.mark.altcoin
 @pytest.mark.nem
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_nem_getaddress(client):
+def test_nem_getaddress(client: Client):
     assert (
         nem.get_address(
-            client, parse_path("m/44'/1'/0'/0'/0'"), 0x68, show_display=True
+            client, parse_path("m/44h/1h/0h/0h/0h"), 0x68, show_display=True
         )
         == "NB3JCHVARQNGDS3UVGAJPTFE22UQFGMCQGHUBWQN"
     )
     assert (
         nem.get_address(
-            client, parse_path("m/44'/1'/0'/0'/0'"), 0x98, show_display=True
+            client, parse_path("m/44h/1h/0h/0h/0h"), 0x98, show_display=True
         )
         == "TB3JCHVARQNGDS3UVGAJPTFE22UQFGMCQHSBNBMF"
     )

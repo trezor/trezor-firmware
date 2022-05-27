@@ -283,6 +283,8 @@ def find_best_firmware_version(
                 if closest_version > want_version:
                     # stop at first that is higher than the requested
                     break
+            else:
+                raise click.ClickException("No versions were found!")
             # if there was no break, the newest is used
             click.echo(f"Closest available version: {version_str(closest_version)}")
             if not beta and want_version > highest_version:
@@ -588,3 +590,28 @@ def update(
         click.echo("Dry run. Not uploading firmware to device.")
     else:
         upload_firmware_into_device(client=client, firmware_data=firmware_data)
+
+
+@cli.command()
+@click.argument("hex_challenge", required=False)
+@with_client
+def get_hash(client: "TrezorClient", hex_challenge: Optional[str]) -> str:
+    """Get a hash of the installed firmware combined with the optional challenge."""
+    challenge = bytes.fromhex(hex_challenge) if hex_challenge else None
+    return firmware.get_hash(client, challenge).hex()
+
+
+@cli.command()
+@click.argument("file", type=click.File("wb"))
+@with_client
+def extract(client: "TrezorClient", file: BinaryIO) -> None:
+    """Extract the firmware from the device."""
+    if client.features.model == "T":
+        firmware_size = 13 * 128 * 1024
+    elif client.features.model == "1":
+        firmware_size = 7 * 128 * 1024 + 64 * 1024
+    else:
+        firmware_size = None
+
+    with click.progressbar(length=firmware_size) as bar:
+        file.write(firmware.get_firmware(client, bar.update))

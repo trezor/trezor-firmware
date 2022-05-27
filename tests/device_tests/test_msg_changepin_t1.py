@@ -18,6 +18,7 @@ import pytest
 
 from trezorlib import device, messages
 from trezorlib.client import MAX_PIN_LENGTH
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 
 from ..common import get_test_address
@@ -30,7 +31,7 @@ PIN_TOO_LONG = PIN_MAX + "1"
 pytestmark = pytest.mark.skip_t2
 
 
-def _check_pin(client, pin):
+def _check_pin(client: Client, pin):
     client.lock()
     with client:
         client.use_pin_sequence([pin])
@@ -38,14 +39,14 @@ def _check_pin(client, pin):
         get_test_address(client)
 
 
-def _check_no_pin(client):
+def _check_no_pin(client: Client):
     client.lock()
     with client:
         client.set_expected_responses([messages.Address])
         get_test_address(client)
 
 
-def test_set_pin(client):
+def test_set_pin(client: Client):
     assert client.features.pin_protection is False
 
     # Check that there's no PIN protection
@@ -72,7 +73,7 @@ def test_set_pin(client):
 
 
 @pytest.mark.setup_client(pin=PIN4)
-def test_change_pin(client):
+def test_change_pin(client: Client):
     assert client.features.pin_protection is True
     # Check that there's PIN protection
     _check_pin(client, PIN4)
@@ -99,7 +100,7 @@ def test_change_pin(client):
 
 
 @pytest.mark.setup_client(pin=PIN4)
-def test_remove_pin(client):
+def test_remove_pin(client: Client):
     assert client.features.pin_protection is True
     # Check that there's PIN protection
     _check_pin(client, PIN4)
@@ -122,7 +123,7 @@ def test_remove_pin(client):
     _check_no_pin(client)
 
 
-def test_set_mismatch(client):
+def test_set_mismatch(client: Client):
     assert client.features.pin_protection is False
     # Check that there's no PIN protection
     _check_no_pin(client)
@@ -148,7 +149,7 @@ def test_set_mismatch(client):
 
 
 @pytest.mark.setup_client(pin=PIN4)
-def test_change_mismatch(client):
+def test_change_mismatch(client: Client):
     assert client.features.pin_protection is True
 
     # Let's set new PIN
@@ -172,7 +173,7 @@ def test_change_mismatch(client):
 
 
 @pytest.mark.parametrize("invalid_pin", ("1204", "", PIN_TOO_LONG))
-def test_set_invalid(client, invalid_pin):
+def test_set_invalid(client: Client, invalid_pin):
     assert client.features.pin_protection is False
 
     # Let's set an invalid PIN
@@ -198,7 +199,7 @@ def test_set_invalid(client, invalid_pin):
 
 @pytest.mark.parametrize("invalid_pin", ("1204", "", PIN_TOO_LONG))
 @pytest.mark.setup_client(pin=PIN4)
-def test_enter_invalid(client, invalid_pin):
+def test_enter_invalid(client: Client, invalid_pin):
     assert client.features.pin_protection is True
 
     # use an invalid PIN

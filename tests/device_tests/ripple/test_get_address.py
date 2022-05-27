@@ -16,6 +16,7 @@
 
 import pytest
 
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.ripple import get_address
 from trezorlib.tools import parse_path
 
@@ -32,20 +33,20 @@ pytestmark = [
 ]
 
 
-def test_ripple_get_address(client):
+def test_ripple_get_address(client: Client):
     # data from https://iancoleman.io/bip39/
-    address = get_address(client, parse_path("m/44'/144'/0'/0/0"))
+    address = get_address(client, parse_path("m/44h/144h/0h/0/0"))
     assert address == "rNaqKtKrMSwpwZSzRckPf7S96DkimjkF4H"
-    address = get_address(client, parse_path("m/44'/144'/0'/0/1"))
+    address = get_address(client, parse_path("m/44h/144h/0h/0/1"))
     assert address == "rBKz5MC2iXdoS3XgnNSYmF69K1Yo4NS3Ws"
-    address = get_address(client, parse_path("m/44'/144'/1'/0/0"))
+    address = get_address(client, parse_path("m/44h/144h/1h/0/0"))
     assert address == "rJX2KwzaLJDyFhhtXKi3htaLfaUH2tptEX"
 
 
 @pytest.mark.setup_client(mnemonic=CUSTOM_MNEMONIC)
-def test_ripple_get_address_other(client):
+def test_ripple_get_address_other(client: Client):
     # data from https://github.com/you21979/node-ripple-bip32/blob/master/test/test.js
-    address = get_address(client, parse_path("m/44'/144'/0'/0/0"))
+    address = get_address(client, parse_path("m/44h/144h/0h/0/0"))
     assert address == "r4ocGE47gm4G4LkA9mriVHQqzpMLBTgnTY"
-    address = get_address(client, parse_path("m/44'/144'/0'/0/1"))
+    address = get_address(client, parse_path("m/44h/144h/0h/0/1"))
     assert address == "rUt9ULSrUvfCmke8HTFU1szbmFpWzVbBXW"

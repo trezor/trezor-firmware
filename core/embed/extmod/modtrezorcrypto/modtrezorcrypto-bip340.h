@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#if USE_SECP256K1_ZKP
+
 #include "py/objstr.h"
 
 #include "rand.h"
@@ -112,6 +114,23 @@ STATIC mp_obj_t mod_trezorcrypto_bip340_sign(mp_obj_t secret_key,
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_bip340_sign_obj,
                                  mod_trezorcrypto_bip340_sign);
+
+/// def verify_publickey(public_key: bytes) -> bool:
+///     """
+///     Verifies whether the public key is valid.
+///     Returns True on success.
+///     """
+STATIC mp_obj_t mod_trezorcrypto_bip340_verify_publickey(mp_obj_t public_key) {
+  mp_buffer_info_t pk = {0};
+  mp_get_buffer_raise(public_key, &pk, MP_BUFFER_READ);
+  if (pk.len != 32) {
+    return mp_const_false;
+  }
+  int ret = zkp_bip340_verify_publickey((const uint8_t *)pk.buf);
+  return mp_obj_new_bool(ret == 0);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_bip340_verify_publickey_obj,
+                                 mod_trezorcrypto_bip340_verify_publickey);
 
 /// def verify(public_key: bytes, signature: bytes, digest: bytes) -> bool:
 ///     """
@@ -229,6 +248,8 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_bip340_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_publickey),
      MP_ROM_PTR(&mod_trezorcrypto_bip340_publickey_obj)},
     {MP_ROM_QSTR(MP_QSTR_sign), MP_ROM_PTR(&mod_trezorcrypto_bip340_sign_obj)},
+    {MP_ROM_QSTR(MP_QSTR_verify_publickey),
+     MP_ROM_PTR(&mod_trezorcrypto_bip340_verify_publickey_obj)},
     {MP_ROM_QSTR(MP_QSTR_verify),
      MP_ROM_PTR(&mod_trezorcrypto_bip340_verify_obj)},
     {MP_ROM_QSTR(MP_QSTR_tweak_public_key),
@@ -242,3 +263,5 @@ STATIC const mp_obj_module_t mod_trezorcrypto_bip340_module = {
     .base = {&mp_type_module},
     .globals = (mp_obj_dict_t *)&mod_trezorcrypto_bip340_globals,
 };
+
+#endif

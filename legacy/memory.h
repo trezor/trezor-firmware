@@ -52,7 +52,7 @@
      - sig1[64], sig2[64], sig3[64]
      - sigindex1[1], sigindex2[1], sigindex3[1]
    * reserved[415] area is reduced to reserved[220]
- - see signatures.c for more details
+ - see fw_signatures.c for more details
 
  We pad the firmware chunks with zeroes if they are shorted.
 
@@ -93,6 +93,11 @@ extern uint8_t *emulator_flash_base;
 void memory_protect(void);
 void memory_write_unlock(void);
 int memory_bootloader_hash(uint8_t *hash);
+int memory_firmware_hash(const uint8_t *challenge, uint32_t challenge_size,
+                         void (*progress_callback)(uint32_t, uint32_t),
+                         uint8_t hash[32]);
+int memory_firmware_read(uint8_t *dest, uint8_t sector_idx, uint32_t offset,
+                         uint32_t len);
 
 static inline void flash_write32(uint32_t addr, uint32_t word) {
   *(volatile uint32_t *)FLASH_PTR(addr) = word;

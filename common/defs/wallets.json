@@ -26,6 +26,9 @@
     "bitcoin:CPU": {
         "Electrum-CPU": "https://cpuchain.org/download-page.html"
     },
+    "bitcoin:CRW": {
+        "Crown-Electrum": "https://github.com/Crowndev/crown-electrum"
+    },
     "bitcoin:DASH": {
         "Dash Electrum": "https://electrum.dash.org",
         "DMT": "https://github.com/Bertrand256/dash-masternode-tool",
@@ -49,9 +52,6 @@
     "bitcoin:FTC": {
         "Electrum-FTC": "https://github.com/Feathercoin-Foundation/electrum-ftc"
     },
-    "bitcoin:GAME": {
-        "Electrum-GAME": "https://electrum-game.org"
-    },
     "bitcoin:GRS": {
         "Electrum-GRS": "https://www.groestlcoin.org/groestlcoin-electrum-wallet"
     },
@@ -68,17 +68,11 @@
     "bitcoin:MUE": {
         "Electrum-MUE": "https://electrum.monetaryunit.org"
     },
-    "bitcoin:NIX": {
-        "NIX-Electrum": "https://github.com/nixplatform/electrum-nix"
-    },
     "bitcoin:NMC": {
         "Electrum-NMC": "https://github.com/namecoin/electrum-nmc"
     },
     "bitcoin:PART": {
         "Particl Core": "https://github.com/particl/particl-core/releases"
-    },
-    "bitcoin:POLIS": {
-        "PolisPay": "https://polispay.com"
     },
     "bitcoin:QTUM": {
         "Qtum-Electrum": "https://github.com/qtumproject/qtum-electrum"
@@ -88,8 +82,7 @@
     },
     "bitcoin:RVN": {
         "Chaintek": "https://wallet.chaintek.net/",
-        "Electrum-RVN": "https://github.com/traysi/electrum-raven",
-        "Mango Farm": "https://mangofarmassets.com/mangowallet"
+        "Electrum-RVN": "https://github.com/traysi/electrum-raven"
     },
     "bitcoin:SMART": {
         "Electrum-SMART": "https://github.com/smartcash/electrum-smart"

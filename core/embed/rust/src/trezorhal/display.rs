@@ -1,3 +1,5 @@
+use core::ptr;
+
 extern "C" {
     // trezorhal/display.c
     fn display_backlight(val: cty::c_int) -> cty::c_int;
@@ -15,6 +17,7 @@ extern "C" {
         textlen: cty::c_int,
         font: cty::c_int,
     ) -> cty::c_int;
+    fn display_text_height(font: cty::c_int) -> cty::c_int;
     fn display_bar(x: cty::c_int, y: cty::c_int, w: cty::c_int, h: cty::c_int, c: cty::uint16_t);
     fn display_bar_radius(
         x: cty::c_int,
@@ -42,12 +45,17 @@ extern "C" {
         out_h: *mut cty::uint16_t,
         out_grayscale: *mut bool,
     ) -> bool;
+    fn display_loader(
+        progress: cty::uint16_t,
+        indeterminate: bool,
+        yoffset: cty::c_int,
+        fgcolor: cty::uint16_t,
+        bgcolor: cty::uint16_t,
+        icon: *const cty::uint8_t,
+        iconlen: cty::uint32_t,
+        iconfgcolor: cty::uint16_t,
+    );
 }
-
-#[cfg(not(feature = "model_tt"))]
-use crate::ui::model_t1::constant;
-#[cfg(feature = "model_tt")]
-use crate::ui::model_tt::constant;
 
 pub struct ToifInfo {
     pub width: u16,
@@ -55,19 +63,11 @@ pub struct ToifInfo {
     pub grayscale: bool,
 }
 
-pub fn width() -> i32 {
-    constant::WIDTH
-}
-
-pub fn height() -> i32 {
-    constant::HEIGHT
-}
-
 pub fn backlight(val: i32) -> i32 {
     unsafe { display_backlight(val) }
 }
 
-pub fn text(baseline_x: i32, baseline_y: i32, text: &[u8], font: i32, fgcolor: u16, bgcolor: u16) {
+pub fn text(baseline_x: i32, baseline_y: i32, text: &str, font: i32, fgcolor: u16, bgcolor: u16) {
     unsafe {
         display_text(
             baseline_x,
@@ -81,8 +81,18 @@ pub fn text(baseline_x: i32, baseline_y: i32, text: &[u8], font: i32, fgcolor: u
     }
 }
 
-pub fn text_width(text: &[u8], font: i32) -> i32 {
+pub fn text_width(text: &str, font: i32) -> i32 {
     unsafe { display_text_width(text.as_ptr() as _, text.len() as _, font) }
+}
+
+pub fn char_width(ch: char, font: i32) -> i32 {
+    let mut buf = [0u8; 4];
+    let encoding = ch.encode_utf8(&mut buf);
+    text_width(encoding, font)
+}
+
+pub fn text_height(font: i32) -> i32 {
+    unsafe { display_text_height(font) }
 }
 
 pub fn bar(x: i32, y: i32, w: i32, h: i32, fgcolor: u16) {
@@ -128,5 +138,28 @@ pub fn toif_info(data: &[u8]) -> Result<ToifInfo, ()> {
         })
     } else {
         Err(())
+    }
+}
+
+pub fn loader(
+    progress: u16,
+    indeterminate: bool,
+    yoffset: i32,
+    fgcolor: u16,
+    bgcolor: u16,
+    icon: Option<&[u8]>,
+    iconfgcolor: u16,
+) {
+    unsafe {
+        display_loader(
+            progress,
+            indeterminate,
+            yoffset,
+            fgcolor,
+            bgcolor,
+            icon.map(|i| i.as_ptr()).unwrap_or(ptr::null()),
+            icon.map(|i| i.len()).unwrap_or(0) as _,
+            iconfgcolor,
+        );
     }
 }

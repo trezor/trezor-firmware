@@ -14,12 +14,12 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, cast
 
 import click
 
 from .. import device, firmware, messages, toif
-from . import ChoiceType, with_client
+from . import AliasedGroup, ChoiceType, with_client
 
 if TYPE_CHECKING:
     from ..client import TrezorClient
@@ -89,30 +89,49 @@ def image_to_tt(filename: str) -> bytes:
     return toif_image.to_bytes()
 
 
+def _should_remove(enable: Optional[bool], remove: bool) -> bool:
+    """Helper to decide whether to remove something or not.
+
+    Needed for backwards compatibility purposes, so we can support
+    both positive (enable) and negative (remove) args.
+    """
+    if remove and enable:
+        raise click.ClickException("Argument and option contradict each other")
+
+    if remove or enable is False:
+        return True
+
+    return False
+
+
 @click.group(name="set")
 def cli() -> None:
     """Device settings."""
 
 
 @cli.command()
-@click.option("-r", "--remove", is_flag=True)
+@click.option("-r", "--remove", is_flag=True, hidden=True)
+@click.argument("enable", type=ChoiceType({"on": True, "off": False}), required=False)
 @with_client
-def pin(client: "TrezorClient", remove: bool) -> str:
+def pin(client: "TrezorClient", enable: Optional[bool], remove: bool) -> str:
     """Set, change or remove PIN."""
-    return device.change_pin(client, remove)
+    # Remove argument is there for backwards compatibility
+    return device.change_pin(client, remove=_should_remove(enable, remove))
 
 
 @cli.command()
-@click.option("-r", "--remove", is_flag=True)
+@click.option("-r", "--remove", is_flag=True, hidden=True)
+@click.argument("enable", type=ChoiceType({"on": True, "off": False}), required=False)
 @with_client
-def wipe_code(client: "TrezorClient", remove: bool) -> str:
+def wipe_code(client: "TrezorClient", enable: Optional[bool], remove: bool) -> str:
     """Set or remove the wipe code.
 
     The wipe code functions as a "self-destruct PIN". If the wipe code is ever
     entered into any PIN entry dialog, then all private data will be immediately
     removed and the device will be reset to factory defaults.
     """
-    return device.change_wipe_code(client, remove)
+    # Remove argument is there for backwards compatibility
+    return device.change_wipe_code(client, remove=_should_remove(enable, remove))
 
 
 @cli.command()
@@ -233,25 +252,39 @@ def experimental_features(client: "TrezorClient", enable: bool) -> str:
 #
 
 
-@cli.group()
-def passphrase() -> None:
+# Using special class AliasedGroup, so we can support multiple commands
+# to invoke the same function to keep backwards compatibility
+@cli.command(cls=AliasedGroup, name="passphrase")
+def passphrase_main() -> None:
     """Enable, disable or configure passphrase protection."""
     # this exists in order to support command aliases for "enable-passphrase"
     # and "disable-passphrase". Otherwise `passphrase` would just take an argument.
 
 
-@passphrase.command(name="enabled")
+# Cast for type-checking purposes
+passphrase = cast(AliasedGroup, passphrase_main)
+
+
+@passphrase.command(name="on")
 @click.option("-f/-F", "--force-on-device/--no-force-on-device", default=None)
 @with_client
-def passphrase_enable(client: "TrezorClient", force_on_device: Optional[bool]) -> str:
+def passphrase_on(client: "TrezorClient", force_on_device: Optional[bool]) -> str:
     """Enable passphrase."""
     return device.apply_settings(
         client, use_passphrase=True, passphrase_always_on_device=force_on_device
     )
 
 
-@passphrase.command(name="disabled")
+@passphrase.command(name="off")
 @with_client
-def passphrase_disable(client: "TrezorClient") -> str:
+def passphrase_off(client: "TrezorClient") -> str:
     """Disable passphrase."""
     return device.apply_settings(client, use_passphrase=False)
+
+
+# Registering the aliases for backwards compatibility
+# (these are not shown in --help docs)
+passphrase.aliases = {
+    "enabled": passphrase_on,
+    "disabled": passphrase_off,
+}

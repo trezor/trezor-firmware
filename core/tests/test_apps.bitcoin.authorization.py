@@ -19,8 +19,9 @@ class TestAuthorization(unittest.TestCase):
     def setUp(self):
         self.msg_auth = AuthorizeCoinJoin(
             coordinator="www.example.com",
-            max_total_fee=40000,
-            fee_per_anonymity=int(0.003 * 10**9),
+            max_rounds=3,
+            max_coordinator_fee_rate=int(0.3 * 10**8),
+            max_fee_per_kvbyte=7000,
             address_n=[H_(84), H_(0), H_(0)],
             coin_name=self.coin.coin_name,
             script_type=InputScriptType.SPENDWITNESS,
@@ -36,7 +37,7 @@ class TestAuthorization(unittest.TestCase):
             coin_name=self.coin.coin_name,
             script_type=InputScriptType.SPENDWITNESS,
             user_confirmation=True,
-            commitment_data=b"www.example.com" + int.to_bytes(1, _ROUND_ID_LEN, "big"),
+            commitment_data=b"\x0fwww.example.com" + int.to_bytes(1, _ROUND_ID_LEN, "big"),
         )
 
         self.assertFalse(self.authorization.check_get_ownership_proof(msg))
@@ -48,7 +49,7 @@ class TestAuthorization(unittest.TestCase):
             coin_name=self.coin.coin_name,
             script_type=InputScriptType.SPENDWITNESS,
             user_confirmation=True,
-            commitment_data=b"www.example.com" + int.to_bytes(1, _ROUND_ID_LEN, "big"),
+            commitment_data=b"\x0fwww.example.com" + int.to_bytes(1, _ROUND_ID_LEN, "big"),
         )
 
         self.assertFalse(self.authorization.check_get_ownership_proof(msg))
@@ -60,19 +61,18 @@ class TestAuthorization(unittest.TestCase):
             coin_name=self.coin.coin_name,
             script_type=InputScriptType.SPENDWITNESS,
             user_confirmation=True,
-            commitment_data=b"www.example.org" + int.to_bytes(1, _ROUND_ID_LEN, "big"),
+            commitment_data=b"\x0fwww.example.org" + int.to_bytes(1, _ROUND_ID_LEN, "big"),
         )
 
         self.assertFalse(self.authorization.check_get_ownership_proof(msg))
 
-    def test_ownership_proof_wrong_round_id(self):
-        # Wrong round ID length.
+    def test_ownership_proof_wrong_coordinator_length(self):
         msg = GetOwnershipProof(
             address_n=[H_(84), H_(0), H_(0), 1, 2],
             coin_name=self.coin.coin_name,
             script_type=InputScriptType.SPENDWITNESS,
             user_confirmation=True,
-            commitment_data=b"www.example.com" + int.to_bytes(1, _ROUND_ID_LEN - 1, "big"),
+            commitment_data=b"\x0ewww.example.com" + int.to_bytes(1, _ROUND_ID_LEN - 1, "big"),
         )
 
         self.assertFalse(self.authorization.check_get_ownership_proof(msg))
@@ -82,7 +82,7 @@ class TestAuthorization(unittest.TestCase):
             coin_name=self.coin.coin_name,
             script_type=InputScriptType.SPENDWITNESS,
             user_confirmation=True,
-            commitment_data=b"www.example.com" + int.to_bytes(1, _ROUND_ID_LEN + 1, "big"),
+            commitment_data=b"\x10www.example.com" + int.to_bytes(1, _ROUND_ID_LEN + 1, "big"),
         )
 
         self.assertFalse(self.authorization.check_get_ownership_proof(msg))
@@ -94,7 +94,7 @@ class TestAuthorization(unittest.TestCase):
             coin_name=self.coin.coin_name,
             script_type=InputScriptType.SPENDWITNESS,
             user_confirmation=True,
-            commitment_data=b"www.example.com" + int.to_bytes(1, _ROUND_ID_LEN, "big"),
+            commitment_data=b"\x0fwww.example.com" + int.to_bytes(1, _ROUND_ID_LEN, "big"),
         )
 
         self.assertTrue(self.authorization.check_get_ownership_proof(msg))
@@ -103,10 +103,10 @@ class TestAuthorization(unittest.TestCase):
 
         msg = SignTx(outputs_count=10, inputs_count=21, coin_name=self.coin.coin_name, lock_time=0)
 
-        self.assertTrue(self.authorization.approve_sign_tx(msg, 10000))
-        self.assertTrue(self.authorization.approve_sign_tx(msg, 20000))
-        self.assertFalse(self.authorization.approve_sign_tx(msg, 10001))
-        self.assertTrue(self.authorization.approve_sign_tx(msg, 10000))
+        self.assertTrue(self.authorization.approve_sign_tx(msg))
+        self.assertTrue(self.authorization.approve_sign_tx(msg))
+        self.assertTrue(self.authorization.approve_sign_tx(msg))
+        self.assertFalse(self.authorization.approve_sign_tx(msg))
 
 
 if __name__ == '__main__':

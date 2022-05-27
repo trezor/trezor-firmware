@@ -1,3 +1,5 @@
+# Static checks on the code.
+
 image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/trezor-firmware-env.nix
 
 # Caching
@@ -7,6 +9,10 @@ image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/trezor-firmware-en
     paths:
       - .venv/
 
+# Check the code for style correctness and perform some static code analysis.
+# Biggest part is the python one - using `flake8`, `isort`, `black`, `pylint` and `pyright`,
+# also checking Rust files by `rustfmt` and C files by `clang-format`.
+# Changelogs formats are checked.
 style prebuild:
   stage: prebuild
   variables:
@@ -15,30 +21,35 @@ style prebuild:
   script:
     - nix-shell --run "poetry run make style_check"
 
+# Check validity of coin definitions and protobuf files.
 common prebuild:
   stage: prebuild
   <<: *gitlab_caching
   script:
     - nix-shell --run "poetry run make defs_check"
 
+# Check validity of auto-generated files.
 gen prebuild:
   stage: prebuild
   <<: *gitlab_caching
   script:
     - nix-shell --run "poetry run make gen_check"
 
+# Checking format of .editorconfig files.
 editor prebuild:
   stage: prebuild
   <<: *gitlab_caching
   script:
     - nix-shell --run "make editor_check"
 
+# All .yml/.yaml files are checked for syntax validity and other correctness.
 yaml prebuild:
   stage: prebuild
   <<: *gitlab_caching
   script:
     - nix-shell --run "poetry run make yaml_check"
 
+# Checking the format of release commit messages.
 release commit messages prebuild:
   stage: prebuild
   before_script: []  # nothing needed
@@ -54,6 +65,8 @@ release commit messages prebuild:
   script:
     - nix-shell --run "ci/check_release_commit_messages.sh"
 
+# Verifying that all commits changing some functionality have a changelog entry
+# or contain `[no changelog]` in the commit message.
 changelog prebuild:
   stage: prebuild
   except:

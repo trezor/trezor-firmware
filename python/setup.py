@@ -26,16 +26,17 @@ install_requires = [
     "ecdsa>=0.9",
     "mnemonic>=0.20",
     "requests>=2.4.0",
-    "click>=7,<9",
+    "click>=7,<8.1",
     "libusb1>=1.6.4",
     "construct>=2.9",
     "typing_extensions>=3.10",
     "dataclasses ; python_version<'3.7'",
+    "simple-rlp>=0.1.2 ; python_version>='3.7'",
 ]
 
 extras_require = {
     "hidapi": ["hidapi>=0.7.99.post20"],
-    "ethereum": ["rlp>=1.1.0", "web3>=4.8"],
+    "ethereum": ["rlp>=1.1.0 ; python_version<'3.7'", "web3>=4.8"],
     "qt-widgets": ["PyQt5"],
     "extra": ["Pillow"],
     "stellar": ["stellar-sdk>=4.0.0,<6.0.0"],

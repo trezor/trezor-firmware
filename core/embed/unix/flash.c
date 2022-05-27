@@ -47,7 +47,7 @@ static const uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1] = {
     [9] = 0x080A0000,   // - 0x080BFFFF | 128 KiB
     [10] = 0x080C0000,  // - 0x080DFFFF | 128 KiB
     [11] = 0x080E0000,  // - 0x080FFFFF | 128 KiB
-#if TREZOR_MODEL == T
+#if defined TREZOR_MODEL_T
     [12] = 0x08100000,  // - 0x08103FFF |  16 KiB
     [13] = 0x08104000,  // - 0x08107FFF |  16 KiB
     [14] = 0x08108000,  // - 0x0810BFFF |  16 KiB
@@ -61,7 +61,7 @@ static const uint32_t FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT + 1] = {
     [22] = 0x081C0000,  // - 0x081DFFFF | 128 KiB
     [23] = 0x081E0000,  // - 0x081FFFFF | 128 KiB
     [24] = 0x08200000,  // last element - not a valid sector
-#elif TREZOR_MODEL == 1
+#elif defined TREZOR_MODEL_1
     [12] = 0x08100000,  // last element - not a valid sector
 #else
 #error Unknown Trezor model
@@ -147,6 +147,13 @@ const void *flash_get_address(uint8_t sector, uint32_t offset, uint32_t size) {
     return NULL;
   }
   return FLASH_BUFFER + addr - FLASH_SECTOR_TABLE[0];
+}
+
+uint32_t flash_sector_size(uint8_t sector) {
+  if (sector >= FLASH_SECTOR_COUNT) {
+    return 0;
+  }
+  return FLASH_SECTOR_TABLE[sector + 1] - FLASH_SECTOR_TABLE[sector];
 }
 
 secbool flash_erase_sectors(const uint8_t *sectors, int len,

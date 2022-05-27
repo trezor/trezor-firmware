@@ -26,6 +26,14 @@ def sign(
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-bip340.h
+def verify_publickey(public_key: bytes) -> bool:
+    """
+    Verifies whether the public key is valid.
+    Returns True on success.
+    """
+
+
+# extmod/modtrezorcrypto/modtrezorcrypto-bip340.h
 def verify(public_key: bytes, signature: bytes, digest: bytes) -> bool:
     """
     Uses public key to verify the signature of the digest.

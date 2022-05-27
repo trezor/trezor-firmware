@@ -49,24 +49,22 @@ style:
 	isort --apply --recursive $(STYLE_TARGETS) --skip-glob "$(EXCLUDE_TARGETS)/*"
 	autoflake -i --remove-all-unused-imports -r $(STYLE_TARGETS) --exclude "$(EXCLUDE_TARGETS)"
 	flake8
-	pyright
+	make pyright
 
 style_check:
 	black --check $(STYLE_TARGETS)
 	isort --check-only --recursive $(STYLE_TARGETS) --skip-glob "$(EXCLUDE_TARGETS)/*"
 	flake8
-	pyright
+	make pyright
+
+style_quick_check:
+	black --check $(STYLE_TARGETS)
+	isort --check-only --recursive $(STYLE_TARGETS) --skip-glob "$(EXCLUDE_TARGETS)/*"
 
 .PHONY: all build install clean style style_check git-clean clean-build clean-pyc clean-test
 
 test:
 	pytest tests
 
-mypy:
-	mypy --config-file ./setup.cfg ./src/trezorlib/
-
-mypy_report:
-	mypy --config-file ./setup.cfg ./src/trezorlib/ --html-report mypy_report
-
 pyright:
-	pyright -p pyrightconfig.json
+	python ./../tools/pyright_tool.py

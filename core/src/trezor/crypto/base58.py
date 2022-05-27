@@ -13,8 +13,7 @@
 # This module adds shiny packaging and support for python3.
 #
 
-if False:
-    from typing import Callable
+from typing import Callable
 
 # 58 character alphabet used
 _alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"

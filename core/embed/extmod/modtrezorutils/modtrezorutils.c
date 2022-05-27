@@ -28,7 +28,21 @@
 #include "embed/extmod/trezorobj.h"
 
 #include <string.h>
+#include "blake2s.h"
 #include "common.h"
+#include "flash.h"
+
+#ifndef TREZOR_EMULATOR
+#include "image.h"
+#endif
+
+static void ui_progress(mp_obj_t ui_wait_callback, uint32_t current,
+                        uint32_t total) {
+  if (mp_obj_is_callable(ui_wait_callback)) {
+    mp_call_function_2_protected(ui_wait_callback, mp_obj_new_int(current),
+                                 mp_obj_new_int(total));
+  }
+}
 
 /// def consteq(sec: bytes, pub: bytes) -> bool:
 ///     """
@@ -117,11 +131,122 @@ STATIC mp_obj_t mod_trezorutils_halt(size_t n_args, const mp_obj_t *args) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorutils_halt_obj, 0, 1,
                                            mod_trezorutils_halt);
 
+/// def firmware_hash(
+///     challenge: bytes | None = None,
+///     callback: Callable[[int, int], None] | None = None,
+/// ) -> bytes:
+///     """
+///     Computes the Blake2s hash of the firmware with an optional challenge as
+///     the key.
+///     """
+STATIC mp_obj_t mod_trezorutils_firmware_hash(size_t n_args,
+                                              const mp_obj_t *args) {
+  BLAKE2S_CTX ctx;
+  mp_buffer_info_t chal = {0};
+  if (n_args > 0 && args[0] != mp_const_none) {
+    mp_get_buffer_raise(args[0], &chal, MP_BUFFER_READ);
+  }
+
+  if (chal.len != 0) {
+    if (blake2s_InitKey(&ctx, BLAKE2S_DIGEST_LENGTH, chal.buf, chal.len) != 0) {
+      mp_raise_msg(&mp_type_ValueError, "Invalid challenge.");
+    }
+  } else {
+    blake2s_Init(&ctx, BLAKE2S_DIGEST_LENGTH);
+  }
+
+  mp_obj_t ui_wait_callback = mp_const_none;
+  if (n_args > 1 && args[1] != mp_const_none) {
+    ui_wait_callback = args[1];
+  }
+
+  ui_progress(ui_wait_callback, 0, FIRMWARE_SECTORS_COUNT);
+  for (int i = 0; i < FIRMWARE_SECTORS_COUNT; i++) {
+    uint8_t sector = FIRMWARE_SECTORS[i];
+    uint32_t size = flash_sector_size(sector);
+    const void *data = flash_get_address(sector, 0, size);
+    if (data == NULL) {
+      mp_raise_msg(&mp_type_RuntimeError, "Failed to read firmware.");
+    }
+    blake2s_Update(&ctx, data, size);
+    ui_progress(ui_wait_callback, i + 1, FIRMWARE_SECTORS_COUNT);
+  }
+
+  vstr_t vstr = {0};
+  vstr_init_len(&vstr, BLAKE2S_DIGEST_LENGTH);
+  if (blake2s_Final(&ctx, vstr.buf, vstr.len) != 0) {
+    vstr_clear(&vstr);
+    mp_raise_msg(&mp_type_RuntimeError, "Failed to finalize firmware hash.");
+  }
+
+  return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorutils_firmware_hash_obj, 0,
+                                           2, mod_trezorutils_firmware_hash);
+
+/// def firmware_vendor() -> str:
+///     """
+///     Returns the firmware vendor string from the vendor header.
+///     """
+STATIC mp_obj_t mod_trezorutils_firmware_vendor(void) {
+#ifdef TREZOR_EMULATOR
+  return mp_obj_new_str_copy(&mp_type_str, (const uint8_t *)"EMULATOR", 8);
+#else
+  vendor_header vhdr = {0};
+  uint32_t size = flash_sector_size(FLASH_SECTOR_FIRMWARE_START);
+  const void *data = flash_get_address(FLASH_SECTOR_FIRMWARE_START, 0, size);
+  if (data == NULL || sectrue != read_vendor_header(data, &vhdr)) {
+    mp_raise_msg(&mp_type_RuntimeError, "Failed to read vendor header.");
+  }
+  return mp_obj_new_str_copy(&mp_type_str, (const uint8_t *)vhdr.vstr,
+                             vhdr.vstr_len);
+#endif
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_firmware_vendor_obj,
+                                 mod_trezorutils_firmware_vendor);
+
+/// def firmware_sector_size(sector: int) -> int:
+///     """
+///     Returns the size of the firmware sector.
+///     """
+STATIC mp_obj_t mod_trezorutils_firmware_sector_size(mp_obj_t sector) {
+  mp_uint_t sector_id = trezor_obj_get_uint(sector);
+  if (sector_id >= FIRMWARE_SECTORS_COUNT) {
+    mp_raise_msg(&mp_type_ValueError, "Invalid sector.");
+  }
+  return mp_obj_new_int(flash_sector_size(FIRMWARE_SECTORS[sector_id]));
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_firmware_sector_size_obj,
+                                 mod_trezorutils_firmware_sector_size);
+
+/// def get_firmware_chunk(index: int, offset: int, buffer: bytearray) -> None:
+///     """
+///     Reads a chunk of the firmware into `buffer`.
+///     """
+STATIC mp_obj_t mod_trezorutils_get_firmware_chunk(const mp_obj_t index_obj,
+                                                   const mp_obj_t offset_obj,
+                                                   const mp_obj_t buffer) {
+  mp_uint_t index = trezor_obj_get_uint(index_obj);
+  if (index >= FIRMWARE_SECTORS_COUNT) {
+    mp_raise_msg(&mp_type_ValueError, "Invalid sector.");
+  }
+  int sector = FIRMWARE_SECTORS[index];
+  mp_uint_t offset = trezor_obj_get_uint(offset_obj);
+  mp_buffer_info_t buf = {0};
+  mp_get_buffer_raise(buffer, &buf, MP_BUFFER_WRITE);
+  const void *data = flash_get_address(sector, offset, buf.len);
+  if (data == NULL) {
+    mp_raise_msg(&mp_type_ValueError, "Invalid read.");
+  }
+  memcpy(buf.buf, data, buf.len);
+
+  return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorutils_get_firmware_chunk_obj,
+                                 mod_trezorutils_get_firmware_chunk);
+
 STATIC mp_obj_str_t mod_trezorutils_revision_obj = {
     {&mp_type_bytes}, 0, sizeof(SCM_REVISION) - 1, (const byte *)SCM_REVISION};
-
-#define PASTER(s) MP_QSTR_##s
-#define MP_QSTR(s) PASTER(s)
 
 /// SCM_REVISION: bytes
 /// VERSION_MAJOR: int
@@ -130,19 +255,37 @@ STATIC mp_obj_str_t mod_trezorutils_revision_obj = {
 /// MODEL: str
 /// EMULATOR: bool
 /// BITCOIN_ONLY: bool
+/// FIRMWARE_SECTORS_COUNT: int
 
 STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorutils)},
     {MP_ROM_QSTR(MP_QSTR_consteq), MP_ROM_PTR(&mod_trezorutils_consteq_obj)},
     {MP_ROM_QSTR(MP_QSTR_memcpy), MP_ROM_PTR(&mod_trezorutils_memcpy_obj)},
     {MP_ROM_QSTR(MP_QSTR_halt), MP_ROM_PTR(&mod_trezorutils_halt_obj)},
+    {MP_ROM_QSTR(MP_QSTR_firmware_hash),
+     MP_ROM_PTR(&mod_trezorutils_firmware_hash_obj)},
+    {MP_ROM_QSTR(MP_QSTR_firmware_vendor),
+     MP_ROM_PTR(&mod_trezorutils_firmware_vendor_obj)},
+    {MP_ROM_QSTR(MP_QSTR_get_firmware_chunk),
+     MP_ROM_PTR(&mod_trezorutils_get_firmware_chunk_obj)},
+    {MP_ROM_QSTR(MP_QSTR_firmware_sector_size),
+     MP_ROM_PTR(&mod_trezorutils_firmware_sector_size_obj)},
+    {MP_ROM_QSTR(MP_QSTR_FIRMWARE_SECTORS_COUNT),
+     MP_ROM_INT(FIRMWARE_SECTORS_COUNT)},
+
     // various built-in constants
     {MP_ROM_QSTR(MP_QSTR_SCM_REVISION),
      MP_ROM_PTR(&mod_trezorutils_revision_obj)},
     {MP_ROM_QSTR(MP_QSTR_VERSION_MAJOR), MP_ROM_INT(VERSION_MAJOR)},
     {MP_ROM_QSTR(MP_QSTR_VERSION_MINOR), MP_ROM_INT(VERSION_MINOR)},
     {MP_ROM_QSTR(MP_QSTR_VERSION_PATCH), MP_ROM_INT(VERSION_PATCH)},
-    {MP_ROM_QSTR(MP_QSTR_MODEL), MP_ROM_QSTR(MP_QSTR(TREZOR_MODEL))},
+#if defined TREZOR_MODEL_1
+    {MP_ROM_QSTR(MP_QSTR_MODEL), MP_ROM_QSTR(MP_QSTR_1)},
+#elif defined TREZOR_MODEL_T
+    {MP_ROM_QSTR(MP_QSTR_MODEL), MP_ROM_QSTR(MP_QSTR_T)},
+#else
+#error Unknown Trezor model
+#endif
 #ifdef TREZOR_EMULATOR
     {MP_ROM_QSTR(MP_QSTR_EMULATOR), mp_const_true},
     MEMINFO_DICT_ENTRIES

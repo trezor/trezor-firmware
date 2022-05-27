@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha3_256
 from trezor.messages import EthereumMessageSignature
@@ -10,7 +12,7 @@ from apps.common.signverify import decode_message
 from .helpers import address_from_bytes
 from .keychain import PATTERNS_ADDRESS, with_keychain_from_path
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import EthereumSignMessage
     from trezor.wire import Context
 

@@ -9,10 +9,9 @@ use crate::{
     util,
 };
 
-use super::error;
-
 use super::{
     defs::{self, FieldDef, FieldType, MsgDef},
+    error,
     obj::{MsgDefObj, MsgObj},
     zigzag,
 };

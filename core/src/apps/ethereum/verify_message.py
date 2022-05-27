@@ -1,15 +1,17 @@
+from typing import TYPE_CHECKING
+
 from trezor import wire
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha3_256
 from trezor.messages import Success
-from trezor.ui.layouts import confirm_signverify
+from trezor.ui.layouts import confirm_signverify, show_success
 
 from apps.common.signverify import decode_message
 
 from .helpers import address_from_bytes, bytes_from_address
 from .sign_message import message_digest
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import EthereumVerifyMessage
     from trezor.wire import Context
 
@@ -37,4 +39,5 @@ async def verify_message(ctx: Context, msg: EthereumVerifyMessage) -> Success:
         ctx, "ETH", decode_message(msg.message), address=address, verify=True
     )
 
+    await show_success(ctx, "verify_message", "The signature is valid.")
     return Success(message="Message verified")

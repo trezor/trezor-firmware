@@ -2,6 +2,20 @@
 
 Unit tests test some smaller individual parts of code (mainly functions and classes) and are run by micropython directly.
 
+## How to run them
+
+Run all tests:
+```sh
+make test
+```
+
+Run a specific test file:
+```sh
+make test TESTOPTS=test_apps.bitcoin.signtx.py
+```
+
+__WARNING__: unittests cannot run with frozen emulator, use `make build_unix` to create non-frozen emulator.
+
 ## Usage
 
 Please use the unittest.TestCase class:

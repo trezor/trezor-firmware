@@ -20,6 +20,7 @@ import pytest
 from shamir_mnemonic import shamir
 
 from trezorlib import device, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import BackupType, ButtonRequestType as B
 
@@ -32,7 +33,7 @@ EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
 
 # TODO: test with different options
 @pytest.mark.setup_client(uninitialized=True)
-def test_reset_device_slip39_advanced(client):
+def test_reset_device_slip39_advanced(client: Client):
     strength = 128
     member_threshold = 3
     all_mnemonics = []

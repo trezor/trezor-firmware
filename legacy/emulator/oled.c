@@ -20,7 +20,7 @@
 
 #include "oled.h"
 
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 #ifdef PIZERO
 #include "pizero/pizero.h"

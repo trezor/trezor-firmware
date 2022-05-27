@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <unistd.h>
+#include <string.h>
 
 #include <libopencm3/stm32/flash.h>
 
@@ -31,50 +32,21 @@
 #include "rng.h"
 #include "setup.h"
 #include "timer.h"
+#include "flash.h"
 
 #define EMULATOR_FLASH_FILE "emulator.img"
-
-#ifndef RANDOM_DEV_FILE
-#define RANDOM_DEV_FILE "/dev/urandom"
-#endif
 
 uint8_t *emulator_flash_base = NULL;
 
 uint32_t __stack_chk_guard;
 
-static int random_fd = -1;
-
-static void setup_urandom(void);
 static void setup_flash(void);
 
-void setup(void) {
-  setup_urandom();
-  setup_flash();
-}
+void setup(void) { setup_flash(); }
 
 void __attribute__((noreturn)) shutdown(void) {
   sleep(5);
   exit(4);
-}
-
-void emulatorRandom(void *buffer, size_t size) {
-  ssize_t n = 0, len = 0;
-  do {
-    n = read(random_fd, (char *)buffer + len, size - len);
-    if (n < 0) {
-      perror("Failed to read " RANDOM_DEV_FILE);
-      exit(1);
-    }
-    len += n;
-  } while (len != (ssize_t)size);
-}
-
-static void setup_urandom(void) {
-  random_fd = open(RANDOM_DEV_FILE, O_RDONLY);
-  if (random_fd < 0) {
-    perror("Failed to open " RANDOM_DEV_FILE);
-    exit(1);
-  }
 }
 
 static void setup_flash(void) {
@@ -106,4 +78,12 @@ static void setup_flash(void) {
     /* Initialize the flash */
     flash_erase_all_sectors(FLASH_CR_PROGRAM_X32);
   }
+#ifdef PIZERO
+  /* clear firmware space */
+  for (int i = FLASH_CODE_SECTOR_FIRST; i <= FLASH_CODE_SECTOR_LAST; i++) {
+    uint32_t size = flash_sector_size(i);
+    const void *data = flash_get_address(i, 0, size);
+    memset((uint8_t *)data, 0, size);
+  }
+#endif
 }

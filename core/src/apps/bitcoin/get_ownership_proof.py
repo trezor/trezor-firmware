@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import ui, wire
 from trezor.enums import InputScriptType
 from trezor.messages import GetOwnershipProof, OwnershipProof
@@ -9,7 +11,7 @@ from . import addresses, common, scripts
 from .keychain import validate_path_against_script_type, with_keychain
 from .ownership import generate_proof, get_identifier
 
-if False:
+if TYPE_CHECKING:
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
     from .authorization import CoinJoinAuthorization

@@ -1,10 +1,8 @@
 # generated from networks.py.mako
 # do not edit manually!
+from typing import Iterator
 
 from apps.common.paths import HARDENED
-
-if False:
-    from typing import Iterator
 
 
 def shortcut_by_chain_id(chain_id: int) -> str:

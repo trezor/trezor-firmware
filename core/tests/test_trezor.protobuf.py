@@ -1,7 +1,7 @@
 from common import *
 
 from trezor import protobuf
-from trezor.messages import WebAuthnCredential, EosAsset, Failure, SignMessage
+from trezor.messages import WebAuthnCredential, Failure, SignMessage, DebugLinkMemoryRead
 
 
 def load_uvarint32(data: bytes) -> int:
@@ -18,8 +18,8 @@ def load_uvarint64(data: bytes) -> int:
     buffer = bytearray(len(data) + 1)
     buffer[1:] = data
     buffer[0] = (2 << 3) | 0  # field number 1, wire type 0
-    msg = protobuf.decode(buffer, EosAsset, False)
-    return msg.symbol
+    msg = protobuf.decode(buffer, DebugLinkMemoryRead, False)
+    return msg.length
 
 
 def dump_uvarint32(value: int) -> bytearray:
@@ -34,7 +34,7 @@ def dump_uvarint32(value: int) -> bytearray:
 
 def dump_uvarint64(value: int) -> bytearray:
     # use known uint64 field in an all-optional message
-    msg = EosAsset(symbol=value)
+    msg = DebugLinkMemoryRead(length=value)
     length = protobuf.encoded_length(msg)
     buffer = bytearray(length)
     protobuf.encode(buffer, msg)

@@ -101,7 +101,7 @@ int zkp_bip340_get_public_key(const uint8_t *private_key_bytes,
 // private_key_bytes has 32 bytes
 // digest has 32 bytes
 // signature_bytes has 64 bytes
-// auxiliary_data has 32 bytes or is NULL
+// auxiliary_data has 32 bytes or is NULL (32 zero bytes are used)
 // returns 0 on success
 int zkp_bip340_sign_digest(const uint8_t *private_key_bytes,
                            const uint8_t *digest, uint8_t *signature_bytes,
@@ -136,6 +136,10 @@ int zkp_bip340_sign_digest(const uint8_t *private_key_bytes,
   }
 
   if (result == 0) {
+    uint8_t zero[32] = {0};
+    if (!auxiliary_data) {
+      auxiliary_data = zero;
+    }
     if (secp256k1_schnorrsig_sign(context_writable, signature_bytes, digest,
                                   &keypair, auxiliary_data) != 1) {
       result = -1;
@@ -176,6 +180,27 @@ int zkp_bip340_verify_digest(const uint8_t *public_key_bytes,
     if (secp256k1_schnorrsig_verify(context_read_only, signature_bytes, digest,
                                     32, &xonly_pubkey) != 1) {
       result = 5;
+    }
+  }
+
+  memzero(&xonly_pubkey, sizeof(xonly_pubkey));
+
+  return result;
+}
+
+// BIP340 Schnorr public key verification
+// public_key_bytes has 32 bytes
+// returns 0 if verification succeeded
+int zkp_bip340_verify_publickey(const uint8_t *public_key_bytes) {
+  int result = 0;
+
+  secp256k1_xonly_pubkey xonly_pubkey = {0};
+  const secp256k1_context *context_read_only = zkp_context_get_read_only();
+
+  if (result == 0) {
+    if (secp256k1_xonly_pubkey_parse(context_read_only, &xonly_pubkey,
+                                     public_key_bytes) != 1) {
+      result = 1;
     }
   }
 

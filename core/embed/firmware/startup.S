@@ -10,7 +10,7 @@ reset_handler:
 // or the firmware was properly signed. All other variants end up in hard fault due to MPU
 // (cf mpu_config_firmware in legacy bootloader)
 
-#if TREZOR_MODEL == 1
+#if defined TREZOR_MODEL_1
   cpsid if
   ldr r0, =0xE000ED08  // r0 = VTOR address
   ldr r1, =0x08010400  // r1 = FLASH_APP_START
@@ -48,9 +48,9 @@ reset_handler:
   // according to "ARM Cortex-M Programming Guide to Memory Barrier Instructions" Application Note 321, section 4.7:
   // "If it is not necessary to ensure that a pended interrupt is recognized immediately before
   // subsequent operations, it is not necessary to insert a memory barrier instruction."
-#if TREZOR_MODEL == T
+#if defined TREZOR_MODEL_T
   cpsie f
-#elif TREZOR_MODEL == 1
+#elif defined TREZOR_MODEL_1
   cpsie if
 #endif
 

@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import device, exceptions, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 from ...common import (
     MNEMONIC_SLIP39_ADVANCED_20,
@@ -41,7 +42,7 @@ VECTORS = (
 
 
 # To allow reusing functionality for multiple tests
-def _test_secret(client, shares, secret, click_info=False):
+def _test_secret(client: Client, shares, secret, click_info=False):
     debug = client.debug
 
     def input_flow():
@@ -53,8 +54,6 @@ def _test_secret(client, shares, secret, click_info=False):
         )
 
     with client:
-        if click_info:
-            client.watch_layout()
         client.set_input_flow(input_flow)
         ret = device.recover(
             client, pin_protection=False, passphrase_protection=False, label="label"
@@ -71,18 +70,18 @@ def _test_secret(client, shares, secret, click_info=False):
 
 @pytest.mark.parametrize("shares, secret", VECTORS)
 @pytest.mark.setup_client(uninitialized=True)
-def test_secret(client, shares, secret):
+def test_secret(client: Client, shares, secret):
     _test_secret(client, shares, secret)
 
 
 @pytest.mark.parametrize("shares, secret", VECTORS)
 @pytest.mark.setup_client(uninitialized=True)
-def test_secret_click_info_button(client, shares, secret):
+def test_secret_click_info_button(client: Client, shares, secret):
     _test_secret(client, shares, secret, click_info=True)
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_extra_share_entered(client):
+def test_extra_share_entered(client: Client):
     _test_secret(
         client,
         shares=EXTRA_GROUP_SHARE + MNEMONIC_SLIP39_ADVANCED_20,
@@ -91,7 +90,7 @@ def test_extra_share_entered(client):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_abort(client):
+def test_abort(client: Client):
     debug = client.debug
 
     def input_flow():
@@ -111,7 +110,7 @@ def test_abort(client):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_noabort(client):
+def test_noabort(client: Client):
     debug = client.debug
 
     def input_flow():
@@ -133,7 +132,7 @@ def test_noabort(client):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_same_share(client):
+def test_same_share(client: Client):
     debug = client.debug
     # we choose the second share from the fixture because
     # the 1st is 1of1 and group threshold condition is reached first
@@ -174,7 +173,7 @@ def test_same_share(client):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_group_threshold_reached(client):
+def test_group_threshold_reached(client: Client):
     debug = client.debug
     # first share in the fixture is 1of1 so we choose that
     first_share = MNEMONIC_SLIP39_ADVANCED_20[0].split(" ")

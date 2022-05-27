@@ -11,6 +11,7 @@ on output masks as pseudo outputs have to remain same.
 """
 
 import gc
+from typing import TYPE_CHECKING
 
 from trezor import utils
 
@@ -19,7 +20,7 @@ from apps.monero.xmr import crypto
 
 from .state import State
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import MoneroTransactionSourceEntry
     from trezor.messages import MoneroTransactionSignInputAck
 

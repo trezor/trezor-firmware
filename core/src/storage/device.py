@@ -1,10 +1,11 @@
 from micropython import const
+from typing import TYPE_CHECKING
 from ubinascii import hexlify
 
 import storage.cache
 from storage import common
 
-if False:
+if TYPE_CHECKING:
     from trezor.enums import BackupType
     from typing_extensions import Literal
 
@@ -39,7 +40,7 @@ _EXPERIMENTAL_FEATURES     = const(0x15)  # bool (0x01 or empty)
 SAFETY_CHECK_LEVEL_STRICT  : Literal[0] = const(0)
 SAFETY_CHECK_LEVEL_PROMPT  : Literal[1] = const(1)
 _DEFAULT_SAFETY_CHECK_LEVEL = SAFETY_CHECK_LEVEL_STRICT
-if False:
+if TYPE_CHECKING:
     StorageSafetyCheckLevel = Literal[0, 1]
 # fmt: on
 
@@ -133,7 +134,7 @@ def get_backup_type() -> BackupType:
     ):
         # Invalid backup type
         raise RuntimeError
-    return backup_type  # type: ignore
+    return backup_type  # type: ignore [int-into-enum]
 
 
 def is_passphrase_enabled() -> bool:
@@ -309,7 +310,7 @@ def safety_check_level() -> StorageSafetyCheckLevel:
     if level not in (SAFETY_CHECK_LEVEL_STRICT, SAFETY_CHECK_LEVEL_PROMPT):
         return _DEFAULT_SAFETY_CHECK_LEVEL
     else:
-        return level  # type: ignore
+        return level  # type: ignore [int-into-enum]
 
 
 # do not use this function directly, see apps.common.safety_checks instead

@@ -1,5 +1,7 @@
+from typing import TYPE_CHECKING
+
 from trezor.crypto import hashlib
-from trezor.enums import CardanoAddressType, CardanoNativeScriptType
+from trezor.enums import CardanoNativeScriptType
 
 from apps.cardano.helpers import (
     ADDRESS_KEY_HASH_SIZE,
@@ -12,21 +14,12 @@ from .helpers.paths import SCHEMA_MINT
 from .helpers.utils import get_public_key_hash
 from .seed import Keychain, is_multisig_path
 
-if False:
+if TYPE_CHECKING:
     from typing import Any
 
     from trezor.messages import CardanoNativeScript
 
     from apps.common.cbor import CborSequence
-
-SCRIPT_ADDRESS_TYPES = (
-    CardanoAddressType.BASE_SCRIPT_KEY,
-    CardanoAddressType.BASE_KEY_SCRIPT,
-    CardanoAddressType.BASE_SCRIPT_SCRIPT,
-    CardanoAddressType.POINTER_SCRIPT,
-    CardanoAddressType.ENTERPRISE_SCRIPT,
-    CardanoAddressType.REWARD_SCRIPT,
-)
 
 
 def validate_native_script(script: CardanoNativeScript | None) -> None:

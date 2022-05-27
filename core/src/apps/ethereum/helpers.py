@@ -1,10 +1,11 @@
+from typing import TYPE_CHECKING
 from ubinascii import hexlify, unhexlify
 
 from trezor import wire
 from trezor.enums import EthereumDataType
 from trezor.messages import EthereumFieldType
 
-if False:
+if TYPE_CHECKING:
     from .networks import NetworkInfo
 
 

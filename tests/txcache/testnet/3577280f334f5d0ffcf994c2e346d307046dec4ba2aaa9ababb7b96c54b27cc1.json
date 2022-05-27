@@ -1,0 +1,64 @@
+{
+  "bin_outputs": [
+    {
+      "amount": 10000,
+      "script_pubkey": "76a914833af1a25e63456bf032ba032cc2788122f44d5288ac"
+    },
+    {
+      "amount": 10000,
+      "script_pubkey": "76a914a579388225827d9f2fe9014add644487808c695d88ac"
+    },
+    {
+      "amount": 10000,
+      "script_pubkey": "76a914a579388225827d9f2fe9014add644487808c695d88ac"
+    },
+    {
+      "amount": 10000,
+      "script_pubkey": "76a914a579388225827d9f2fe9014add644487808c695d88ac"
+    },
+    {
+      "amount": 10000,
+      "script_pubkey": "76a914a579388225827d9f2fe9014add644487808c695d88ac"
+    },
+    {
+      "amount": 10000,
+      "script_pubkey": "76a914b31dc2a236505a6cb9201fa0411ca38a254a7bf188ac"
+    },
+    {
+      "amount": 10000,
+      "script_pubkey": "76a914cc8067093f6f843d6d3e22004a4290cd0c0f336b88ac"
+    },
+    {
+      "amount": 10000,
+      "script_pubkey": "76a914cc8067093f6f843d6d3e22004a4290cd0c0f336b88ac"
+    },
+    {
+      "amount": 10000,
+      "script_pubkey": "76a914cc8067093f6f843d6d3e22004a4290cd0c0f336b88ac"
+    },
+    {
+      "amount": 10000,
+      "script_pubkey": "76a914cc8067093f6f843d6d3e22004a4290cd0c0f336b88ac"
+    },
+    {
+      "amount": 49482,
+      "script_pubkey": "00140000980a5f4432fcd12e20fd67b43cb7bcab12d6"
+    }
+  ],
+  "inputs": [
+    {
+      "prev_hash": "2161a89815814c3866f5953c1e59a977f7cd5432c731cd5633378cfc3fb87fdd",
+      "prev_index": 1,
+      "script_sig": "",
+      "sequence": 4294967293
+    },
+    {
+      "prev_hash": "d159fd2fcb5854a7c8b275d598765a446f1e2ff510bf077545a404a0c9db65f7",
+      "prev_index": 1,
+      "script_sig": "",
+      "sequence": 4294967293
+    }
+  ],
+  "lock_time": 0,
+  "version": 1
+}

@@ -44,6 +44,11 @@ static CONFIDENTIAL struct {
   uint8_t seed[512 / 8];
 } bip39_cache[BIP39_CACHE_SIZE];
 
+void bip39_cache_clear(void) {
+  memzero(bip39_cache, sizeof(bip39_cache));
+  bip39_cache_index = 0;
+}
+
 #endif
 
 const char *mnemonic_generate(int strength) {

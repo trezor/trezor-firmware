@@ -1,9 +1,7 @@
 import sys
 import utime
 from micropython import const
-
-if False:
-    from typing import Any
+from typing import Any
 
 NOTSET = const(0)
 DEBUG = const(10)
@@ -60,18 +58,18 @@ def critical(name: str, msg: str, *args: Any) -> None:
 
 def exception(name: str, exc: BaseException) -> None:
     # we are using `__class__.__name__` to avoid importing ui module
-    # we also need to instruct mypy to ignore the missing argument
+    # we also need to instruct typechecker to ignore the missing argument
     # in ui.Result exception
     if exc.__class__.__name__ == "Result":
         _log(
             name,
             DEBUG,
             "ui.Result: %s",
-            exc.value,  # type: ignore[attr-defined] # noqa: F821
+            exc.value,  # type: ignore[Cannot access member "value" for type "BaseException"]
         )
     elif exc.__class__.__name__ == "Cancelled":
         _log(name, DEBUG, "ui.Cancelled")
     else:
         _log(name, ERROR, "exception:")
         # since mypy 0.770 we cannot override sys, so print_exception is unknown
-        sys.print_exception(exc)  # type: ignore
+        sys.print_exception(exc)  # type: ignore ["print_exception" is not a known member of module]

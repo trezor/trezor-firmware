@@ -1,11 +1,24 @@
-if False:
-    from typing import TYPE_CHECKING
-else:
-    TYPE_CHECKING = False
-
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from enum import IntEnum
+
+    class BinanceOrderType(IntEnum):
+        OT_UNKNOWN = 0
+        MARKET = 1
+        LIMIT = 2
+        OT_RESERVED = 3
+
+    class BinanceOrderSide(IntEnum):
+        SIDE_UNKNOWN = 0
+        BUY = 1
+        SELL = 2
+
+    class BinanceTimeInForce(IntEnum):
+        TIF_UNKNOWN = 0
+        GTE = 1
+        TIF_RESERVED = 2
+        IOC = 3
 
     class MessageType(IntEnum):
         Initialize = 0
@@ -27,6 +40,8 @@ if TYPE_CHECKING:
         ButtonRequest = 26
         ButtonAck = 27
         ApplyFlags = 28
+        GetNonce = 31
+        Nonce = 33
         BackupDevice = 34
         EntropyRequest = 35
         EntropyAck = 36
@@ -43,6 +58,11 @@ if TYPE_CHECKING:
         PreauthorizedRequest = 85
         CancelAuthorization = 86
         RebootToBootloader = 87
+        GetFirmwareHash = 88
+        FirmwareHash = 89
+        GetFirmware = 90
+        FirmwareChunk = 91
+        FirmwareChunkAck = 92
         SetU2FCounter = 63
         GetNextU2FCounter = 80
         NextU2FCounter = 81
@@ -59,6 +79,7 @@ if TYPE_CHECKING:
         TxAck = 22
         GetAddress = 29
         Address = 30
+        TxAckPaymentRequest = 37
         SignMessage = 38
         VerifyMessage = 39
         MessageSignature = 40
@@ -167,6 +188,8 @@ if TYPE_CHECKING:
         CardanoGetNativeScriptHash = 330
         CardanoNativeScriptHash = 331
         CardanoTxMint = 332
+        CardanoTxCollateralInput = 333
+        CardanoTxRequiredSigner = 334
         RippleGetAddress = 400
         RippleAddress = 401
         RippleSignTx = 402
@@ -229,23 +252,6 @@ if TYPE_CHECKING:
         WebAuthnCredentials = 801
         WebAuthnAddResidentCredential = 802
         WebAuthnRemoveResidentCredential = 803
-
-    class BinanceOrderType(IntEnum):
-        OT_UNKNOWN = 0
-        MARKET = 1
-        LIMIT = 2
-        OT_RESERVED = 3
-
-    class BinanceOrderSide(IntEnum):
-        SIDE_UNKNOWN = 0
-        BUY = 1
-        SELL = 2
-
-    class BinanceTimeInForce(IntEnum):
-        TIF_UNKNOWN = 0
-        GTE = 1
-        TIF_RESERVED = 2
-        IOC = 3
 
     class FailureType(IntEnum):
         UnexpectedMessage = 1
@@ -328,6 +334,7 @@ if TYPE_CHECKING:
         TXEXTRADATA = 4
         TXORIGINPUT = 5
         TXORIGOUTPUT = 6
+        TXPAYMENTREQ = 7
 
     class CardanoDerivationType(IntEnum):
         LEDGER = 0
@@ -379,6 +386,7 @@ if TYPE_CHECKING:
         ORDINARY_TRANSACTION = 0
         POOL_REGISTRATION_AS_OWNER = 1
         MULTISIG_TRANSACTION = 2
+        PLUTUS_TRANSACTION = 3
 
     class CardanoTxWitnessType(IntEnum):
         BYRON_WITNESS = 0
@@ -432,6 +440,11 @@ if TYPE_CHECKING:
         DOWN = 1
         LEFT = 2
         RIGHT = 3
+
+    class DebugButton(IntEnum):
+        NO = 0
+        YES = 1
+        INFO = 2
 
     class EthereumDataType(IntEnum):
         UINT = 1

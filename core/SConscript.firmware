@@ -6,11 +6,11 @@ import os
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
 EVERYTHING = BITCOIN_ONLY != '1'
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
-NEW_UI = TREZOR_MODEL == '1' or os.environ.get('NEW_UI', '0') == '1'
+UI2 = ARGUMENTS.get('UI2', '0') == '1' or TREZOR_MODEL == '1'
 
 FEATURE_FLAGS = {
     "RDI": True,
-    "SECP256K1_ZKP": True,
+    "SECP256K1_ZKP": True,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot)
     "SYSTEM_VIEW": False,
 }
 
@@ -181,6 +181,16 @@ SOURCE_MOD += [
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
 ]
+if UI2:
+    CPPDEFINES_MOD += [
+        'TREZOR_FONT_MEDIUM_ENABLE',
+        'TREZOR_UI2',
+    ]
+    SOURCE_MOD += [
+        'embed/extmod/modtrezorui/font_tthoves_bold_16.c',
+        'embed/extmod/modtrezorui/font_tthoves_medium_20.c',
+        'embed/extmod/modtrezorui/font_tthoves_regular_18.c',
+    ]
 
 # modtrezorutils
 SOURCE_MOD += [
@@ -191,7 +201,7 @@ SOURCE_MOD += [
 SOURCE_MOD += [
     'embed/extmod/rustmods/modtrezorproto.c',
 ]
-if NEW_UI:
+if UI2:
     SOURCE_MOD += [
         'embed/extmod/rustmods/modtrezorui2.c',
     ]
@@ -354,6 +364,7 @@ SOURCE_FIRMWARE = [
 SOURCE_TREZORHAL = [
     'embed/trezorhal/common.c',
     'embed/trezorhal/dma.c',
+    'embed/trezorhal/image.c',
     'embed/trezorhal/flash.c',
     'embed/trezorhal/mini_printf.c',
     'embed/trezorhal/mpu.c',
@@ -461,7 +472,7 @@ env.Replace(
         'vendor/micropython/lib/cmsis/inc',
     ] + CPPPATH_MOD,
     CPPDEFINES=[
-        ('TREZOR_MODEL', '$TREZOR_MODEL'),
+        'TREZOR_MODEL_'+TREZOR_MODEL,
         CPU_MODEL,
         'USE_HAL_DRIVER',
         ('STM32_HAL_H', '"<stm32f4xx.h>"'),
@@ -546,7 +557,20 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/constants/__init__.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/__init__.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/common.py'))
-    if TREZOR_MODEL == 'T':
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/reset.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/recovery.py'))
+    if EVERYTHING:
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/altcoin.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/webauthn.py'))
+    if TREZOR_MODEL == 'T' and UI2:
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/constants/tt.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/__init__.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/reset.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/recovery.py'))
+        if EVERYTHING:
+            SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/altcoin.py'))
+            SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/webauthn.py'))
+    elif TREZOR_MODEL == 'T':
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/components/tt/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/constants/tt.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt/__init__.py'))
@@ -599,7 +623,7 @@ if FROZEN:
         exclude=[
             SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/decred.py',
             SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/bitcoinlike.py',
-            SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/zcash.py',
+            SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/zcash_v4.py',
         ])
     )
 
@@ -638,11 +662,13 @@ if FROZEN:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/tezos/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Tezos*.py'))
 
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/zcash/*.py'))
+
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/webauthn/*.py'))
 
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/decred.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/bitcoinlike.py'))
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/zcash.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/zcash_v4.py'))
 
     source_mpy = env.FrozenModule(source=SOURCE_PY, source_dir=SOURCE_PY_DIR, bitcoin_only=BITCOIN_ONLY)
 
@@ -657,7 +683,7 @@ if FROZEN:
 if FEATURE_FLAGS["SECP256K1_ZKP"]:
     host_env = Environment(ENV=os.environ)
     host_env.Replace(
-        CC=os.getenv('CC_FOR_BUILD') or 'gcc',
+        CC=os.getenv('CC_FOR_BUILD') or 'cc',
         COPT='-O2',
         CPPPATH='vendor/secp256k1-zkp',
         CPPDEFINES=[
@@ -707,7 +733,7 @@ def cargo_build():
         features = ["model_tt"]
     if BITCOIN_ONLY == "1":
         features.append("bitcoin_only")
-    if NEW_UI:
+    if UI2:
         features.append("ui")
         if PYOPT == "0":
             features.append("ui_debug")

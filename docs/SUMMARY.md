@@ -11,6 +11,7 @@
   - [Tests](core/tests/index.md)
   - [SystemView instrumentation](core/systemview/index.md)
   - [Miscellaneous](core/misc/index.md)
+    - [Code style](core/misc/codestyle.md)
     - [SLIP-39](core/misc/slip0039.md)
     - [Exceptions usage](core/misc/exceptions.md)
     - [Memory fragmentation management](core/misc/fragmentation.md)

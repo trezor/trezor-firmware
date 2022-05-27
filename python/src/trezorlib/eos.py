@@ -258,11 +258,9 @@ def parse_unknown(data: str) -> messages.EosActionUnknown:
 
 
 def parse_action(action: dict) -> messages.EosTxActionAck:
-    tx_action = messages.EosTxActionAck()
+    tx_action = messages.EosTxActionAck(common=parse_common(action))
+
     data = action["data"]
-
-    tx_action.common = parse_common(action)
-
     if action["account"] == "eosio":
         if action["name"] == "voteproducer":
             tx_action.vote_producer = parse_vote_producer(data)
@@ -337,11 +335,12 @@ def sign_tx(
 ) -> messages.EosSignedTx:
     header, actions = parse_transaction_json(transaction)
 
-    msg = messages.EosSignTx()
-    msg.address_n = address
-    msg.chain_id = bytes.fromhex(chain_id)
-    msg.header = header
-    msg.num_actions = len(actions)
+    msg = messages.EosSignTx(
+        address_n=address,
+        chain_id=bytes.fromhex(chain_id),
+        header=header,
+        num_actions=len(actions),
+    )
 
     response = client.call(msg)
 

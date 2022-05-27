@@ -26,12 +26,12 @@
 /// from trezor.protobuf import MessageType
 /// T = TypeVar("T", bound=MessageType)
 
-/// def type_for_name(name: str) -> Type[MessageType]:
+/// def type_for_name(name: str) -> type[T]:
 ///     """Find the message definition for the given protobuf name."""
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_protobuf_type_for_name_obj,
                                  protobuf_type_for_name);
 
-/// def type_for_wire(wire_type: int) -> Type[MessageType]:
+/// def type_for_wire(wire_type: int) -> type[T]:
 ///     """Find the message definition for the given wire type (numeric
 ///     identifier)."""
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_protobuf_type_for_wire_obj,

@@ -39,6 +39,7 @@
 
 #include "extmod/misc.h"
 #include "extmod/vfs_posix.h"
+#include "flash.h"
 #include "genhdr/mpversion.h"
 #include "input.h"
 #include "py/builtin.h"
@@ -479,6 +480,9 @@ MP_NOINLINE int main_(int argc, char **argv) {
 
   pre_process_options(argc, argv);
 
+  // Map trezor.flash to memory.
+  flash_init();
+
 #if MICROPY_ENABLE_GC
   char *heap = malloc(heap_size);
   gc_init(heap, heap + heap_size);
@@ -612,6 +616,7 @@ MP_NOINLINE int main_(int argc, char **argv) {
                   argv[0], argv[a], errno, strerror(errno));
         // CPython exits with 2 in such case
         ret = 2;
+        free(pathbuf);
         break;
       }
 

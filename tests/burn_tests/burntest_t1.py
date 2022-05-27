@@ -21,7 +21,7 @@ import random
 import string
 
 from trezorlib import device
-from trezorlib.debuglink import TrezorClientDebugLink
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.transport import enumerate_devices, get_transport
 
 
@@ -37,7 +37,7 @@ def get_device():
         raise RuntimeError("No debuggable device found")
 
 
-def pin_input_flow(client, old_pin, new_pin):
+def pin_input_flow(client: Client, old_pin: str, new_pin: str):
     # do you want to change pin?
     yield
     client.debug.press_yes()
@@ -55,7 +55,7 @@ def pin_input_flow(client, old_pin, new_pin):
 
 if __name__ == "__main__":
     wirelink = get_device()
-    client = TrezorClientDebugLink(wirelink)
+    client = Client(wirelink)
     client.open()
 
     i = 0

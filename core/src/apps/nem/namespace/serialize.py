@@ -11,7 +11,7 @@ from ..writers import (
 
 def serialize_provision_namespace(
     common: NEMTransactionCommon, namespace: NEMProvisionNamespace, public_key: bytes
-) -> bytearray:
+) -> bytes:
     tx = serialize_tx_common(
         common, public_key, NEM_TRANSACTION_TYPE_PROVISION_NAMESPACE
     )

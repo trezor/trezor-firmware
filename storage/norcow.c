@@ -299,7 +299,6 @@ static void compact(void) {
  * Initializes storage
  */
 void norcow_init(uint32_t *norcow_version) {
-  flash_init();
   secbool found = secfalse;
   *norcow_version = 0;
   norcow_active_sector = 0;

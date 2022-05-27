@@ -5,6 +5,41 @@
   },
   "tests": [
     {
+      "description": "Input prev hash has incorrect length",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
+            "amount": "3003112"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "error_message": "Invalid input"
+      }
+    },
+    {
       "description": "Output address is a valid CBOR but invalid Cardano address",
       "parameters": {
         "protocol_magic": 764824073,
@@ -28,8 +63,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid address"
@@ -59,8 +98,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid address"
@@ -90,8 +133,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid address"
@@ -121,8 +168,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid address"
@@ -152,8 +203,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid address"
@@ -183,8 +238,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Fee is out of range"
@@ -219,8 +278,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Total transaction amount is out of range!"
@@ -250,8 +313,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Output address network mismatch"
@@ -281,8 +348,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Output address network mismatch"
@@ -312,8 +383,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid address"
@@ -343,8 +418,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid address"
@@ -374,8 +453,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid network id/protocol magic combination!"
@@ -405,8 +488,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid network id/protocol magic combination!"
@@ -436,8 +523,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid address"
@@ -470,8 +561,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid output"
@@ -506,8 +601,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -542,8 +641,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -578,8 +681,52 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "error_message": "Invalid certificate"
+      }
+    },
+    {
+      "description": "Certificate has key hash",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [
+          {
+            "type": 0,
+            "key_hash": "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
+          }
+        ],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
+            "amount": "3003112"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -615,8 +762,53 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "error_message": "Invalid certificate"
+      }
+    },
+    {
+      "description": "Certificate has both path and key_hash",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [
+          {
+            "type": 0,
+            "path": "m/1852'/1815'/0'/0/0",
+            "key_hash": "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
+          }
+        ],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
+            "amount": "3003112"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -652,8 +844,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -688,8 +884,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid withdrawal"
@@ -724,8 +924,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid withdrawal"
@@ -760,8 +964,52 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "error_message": "Invalid withdrawal"
+      }
+    },
+    {
+      "description": "Withdrawal has key hash",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [
+          {
+            "key_hash": "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd",
+            "amount": "1000"
+          }
+        ],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
+            "amount": "3003112"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid withdrawal"
@@ -796,8 +1044,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid withdrawal"
@@ -833,15 +1085,19 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid withdrawal"
       }
     },
     {
-      "description": "Duplicate withdrawal",
+      "description": "Withdrawal contains both path and key_hash",
       "parameters": {
         "protocol_magic": 764824073,
         "network_id": 1,
@@ -851,11 +1107,8 @@
         "withdrawals": [
           {
             "path": "m/1852'/1815'/0'/2/0",
-            "amount": "1000"
-          },
-          {
-            "path": "m/1852'/1815'/0'/2/0",
-            "amount": "2000"
+            "amount": "1000",
+            "key_hash": "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
           }
         ],
         "auxiliary_data": null,
@@ -873,11 +1126,15 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
-        "error_message": "Duplicate withdrawals"
+        "error_message": "Invalid withdrawal"
       }
     },
     {
@@ -906,8 +1163,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid auxiliary data"
@@ -947,8 +1208,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid auxiliary data"
@@ -990,11 +1255,240 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid auxiliary data"
+      }
+    },
+    {
+      "description": "Output datum hash has incorrect length",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1",
+            "datum_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "error_message": "Invalid output datum hash"
+      }
+    },
+    {
+      "description": "Output datum hash with non-script address",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1",
+            "datum_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "error_message": "Invalid output"
+      }
+    },
+    {
+      "description": "Output datum hash with non-script address parameters",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "addressType": 2,
+            "path": "m/1852'/1815'/0'/0/0",
+            "scriptStakingHash": "8d7bebc7a58f1c7b5fb7c9391071ecd3b51b032695522f8c555343a9",
+            "amount": "7120787",
+            "datum_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "error_message": "Invalid output"
+      }
+    },
+    {
+      "description": "Script data hash has incorrect length",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "3003112"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": "d593fd793c377ac50a3169bb8378ffc257c944da31aa8f355dfa5a4f",
+        "collateral_inputs": [],
+        "required_signers": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "error_message": "Invalid script data hash"
+      }
+    },
+    {
+      "description": "Collateral input is present",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "3003112"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "required_signers": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "error_message": "Invalid tx signing request"
+      }
+    },
+    {
+      "description": "Required signer is present",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "3003112"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [
+          {
+            "key_hash": "3a7f09d3df4cf66a7399c2b05bfa234d5a29560c311fc5db4c490711"
+          }
+        ],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "error_message": "Invalid tx signing request"
       }
     },
     {
@@ -1027,8 +1521,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid change output path"
@@ -1064,8 +1562,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid change output staking path"
@@ -1101,8 +1603,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid address parameters"
@@ -1132,8 +1638,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid address"
@@ -1168,8 +1678,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid certificate path"
@@ -1214,8 +1728,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid token bundle in output"
@@ -1265,11 +1783,352 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid token bundle in output"
+      }
+    },
+    {
+      "description": "Repeated asset name in mint token group",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
+            "amount": "3003112"
+          }
+        ],
+        "mint": [
+          {
+            "policy_id": "95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
+            "tokens": [
+              {
+                "asset_name_bytes": "74652474436f696e",
+                "mint_amount": "7878754"
+              },
+              {
+                "asset_name_bytes": "74652474436f696e",
+                "mint_amount": "1234"
+              }
+            ]
+          }
+        ],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "error_message": "Invalid mint token bundle"
+      }
+    },
+    {
+      "description": "Repeated policyId in mint",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
+            "amount": "3003112"
+          }
+        ],
+        "mint": [
+          {
+            "policy_id": "95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
+            "tokens": [
+              {
+                "asset_name_bytes": "74652474436f696e",
+                "mint_amount": "7878754"
+              }
+            ]
+          },
+          {
+            "policy_id": "95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
+            "tokens": [
+              {
+                "asset_name_bytes": "74652474436f696f",
+                "mint_amount": "7878754"
+              }
+            ]
+          }
+        ],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "error_message": "Invalid mint token bundle"
+      }
+    },
+    {
+      "description": "Asset names in multiasset token group in wrong order",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
+            "amount": "3003112",
+            "token_bundle": [
+              {
+                "policy_id": "95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
+                "tokens": [
+                  {
+                    "asset_name_bytes": "74652474436f696e",
+                    "amount": "7878754"
+                  },
+                  {
+                    "asset_name_bytes": "76652474436f696e",
+                    "amount": "1234"
+                  },
+                  {
+                    "asset_name_bytes": "75652474436f696e",
+                    "amount": "1234"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "error_message": "Invalid token bundle in output"
+      }
+    },
+    {
+      "description": "PolicyIds in multiasset output in wrong order",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
+            "amount": "3003112",
+            "token_bundle": [
+              {
+                "policy_id": "95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
+                "tokens": [
+                  {
+                    "asset_name_bytes": "74652474436f696d",
+                    "amount": "7878754"
+                  }
+                ]
+              },
+              {
+                "policy_id": "9aa292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
+                "tokens": [
+                  {
+                    "asset_name_bytes": "74652474436f696e",
+                    "amount": "7878754"
+                  }
+                ]
+              },
+              {
+                "policy_id": "96a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
+                "tokens": [
+                  {
+                    "asset_name_bytes": "74652474436f696f",
+                    "amount": "7878754"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "error_message": "Invalid token bundle in output"
+      }
+    },
+    {
+      "description": "Asset names in mint token group in wrong order",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
+            "amount": "3003112"
+          }
+        ],
+        "mint": [
+          {
+            "policy_id": "95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
+            "tokens": [
+              {
+                "asset_name_bytes": "74652474436f696e",
+                "mint_amount": "7878754"
+              },
+              {
+                "asset_name_bytes": "76652474436f696e",
+                "mint_amount": "1234"
+              },
+              {
+                "asset_name_bytes": "75652474436f696e",
+                "mint_amount": "1234"
+              }
+            ]
+          }
+        ],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "error_message": "Invalid mint token bundle"
+      }
+    },
+    {
+      "description": "PolicyIds in mint in wrong order",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
+            "amount": "3003112"
+          }
+        ],
+        "mint": [
+          {
+            "policy_id": "95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
+            "tokens": [
+              {
+                "asset_name_bytes": "14652474436f696d",
+                "mint_amount": "7878754"
+              }
+            ]
+          },
+          {
+            "policy_id": "9aa292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
+            "tokens": [
+              {
+                "asset_name_bytes": "24652474436f696e",
+                "mint_amount": "7878754"
+              }
+            ]
+          },
+          {
+            "policy_id": "96a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
+            "tokens": [
+              {
+                "asset_name_bytes": "34652474436f696f",
+                "mint_amount": "7878754"
+              }
+            ]
+          }
+        ],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "error_message": "Invalid mint token bundle"
       }
     },
     {
@@ -1296,12 +2155,16 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [
           {
             "path": "m/1854'/1815'/0'/0/0"
           }
-        ]
+        ],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -1331,12 +2194,16 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [
           {
             "path": "m/1854'/1815'/0'/0/0"
           }
-        ]
+        ],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -1368,8 +2235,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid address parameters"
@@ -1447,12 +2318,16 @@
             ]
           }
         ],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [
           {
             "path": "m/1854'/1815'/0'/0/0"
           }
-        ]
+        ],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -1483,12 +2358,16 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [
           {
             "path": "m/1855'/1815'/0'"
           }
-        ]
+        ],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -1570,12 +2449,16 @@
             ]
           }
         ],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [
           {
             "path": "m/1855'/1815'/0'/0/0"
           }
-        ]
+        ],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -1611,8 +2494,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -1647,8 +2534,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -1683,8 +2574,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -1725,8 +2620,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -1767,8 +2666,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid withdrawal"
@@ -1808,8 +2711,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid withdrawal"
@@ -1843,8 +2750,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -1875,8 +2786,12 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
-        "additional_witness_requests": []
+        "additional_witness_requests": [],
+        "include_network_id": false
       },
       "result": {
         "error_message": "Invalid witness request"

@@ -65,7 +65,6 @@
 #include "rand.h"
 #include "rc4.h"
 #include "rfc6979.h"
-#include "schnorr.h"
 #include "script.h"
 #include "secp256k1.h"
 #include "sha2.h"
@@ -3574,6 +3573,14 @@ static void test_ecdsa_recover_pub_from_sig_helper(int (
           "0490d2bd2e9a564d6e1d8324fc6ad00aa4ae597684ecf4abea58bdfe7287ea4fa729"
           "68c2e5b0b40999ede3d7898d94e82c3f8dc4536a567a4bd45998c826a4c4b2"),
       65);
+  // The point at infinity is not considered to be a valid public key.
+  res = ecdsa_recover_pub_from_sig_fn(
+      curve, pubkey,
+      fromhex(
+          "220cf4c7b6d568f2256a8c30cc1784a625a28c3627dac404aa9a9ecd08314ec81a88"
+          "828f20d69d102bab5de5f6ee7ef040cb0ff7b8e1ba3f29d79efb5250f47d"),
+      digest, 0);
+  ck_assert_int_eq(res, 1);
 
   memcpy(
       digest,
@@ -6247,6 +6254,11 @@ START_TEST(test_ecdsa_der) {
           "00000000000000000000000000000000000000000000000000000000000000ff",
           "3008020200ee020200ff",
       },
+      {
+          "0000000000000000000000000000000000000000000000000000000000000000",
+          "0000000000000000000000000000000000000000000000000000000000000000",
+          "3006020100020100",
+      },
   };
 
   uint8_t sig[64];
@@ -7309,25 +7321,25 @@ START_TEST(test_ethereum_pubkeyhash) {
 END_TEST
 
 START_TEST(test_ethereum_address) {
-  static const char *vectors[] = {"52908400098527886E0F7030069857D2E4169EE7",
-                                  "8617E340B3D01FA5F11F306F4090FD50E238070D",
-                                  "de709f2102306220921060314715629080e2fb77",
-                                  "27b1fdb04752bbc536007a920d24acb045561c26",
-                                  "5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed",
-                                  "fB6916095ca1df60bB79Ce92cE3Ea74c37c5d359",
-                                  "dbF03B407c01E7cD3CBea99509d93f8DDDC8C6FB",
-                                  "D1220A0cf47c7B9Be7A2E6BA89F429762e7b9aDb",
-                                  "5A4EAB120fB44eb6684E5e32785702FF45ea344D",
-                                  "5be4BDC48CeF65dbCbCaD5218B1A7D37F58A0741",
-                                  "a7dD84573f5ffF821baf2205745f768F8edCDD58",
-                                  "027a49d11d118c0060746F1990273FcB8c2fC196",
-                                  "CD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826",
+  static const char *vectors[] = {"0x52908400098527886E0F7030069857D2E4169EE7",
+                                  "0x8617E340B3D01FA5F11F306F4090FD50E238070D",
+                                  "0xde709f2102306220921060314715629080e2fb77",
+                                  "0x27b1fdb04752bbc536007a920d24acb045561c26",
+                                  "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed",
+                                  "0xfB6916095ca1df60bB79Ce92cE3Ea74c37c5d359",
+                                  "0xdbF03B407c01E7cD3CBea99509d93f8DDDC8C6FB",
+                                  "0xD1220A0cf47c7B9Be7A2E6BA89F429762e7b9aDb",
+                                  "0x5A4EAB120fB44eb6684E5e32785702FF45ea344D",
+                                  "0x5be4BDC48CeF65dbCbCaD5218B1A7D37F58A0741",
+                                  "0xa7dD84573f5ffF821baf2205745f768F8edCDD58",
+                                  "0x027a49d11d118c0060746F1990273FcB8c2fC196",
+                                  "0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826",
                                   0};
   uint8_t addr[20];
-  char address[41];
+  char address[43];
   const char **vec = vectors;
   while (*vec) {
-    memcpy(addr, fromhex(*vec), 20);
+    memcpy(addr, fromhex(*vec + 2), 20);
     ethereum_address_checksum(addr, address, false, 0);
     ck_assert_str_eq(address, *vec);
     vec++;
@@ -7339,29 +7351,29 @@ END_TEST
 // https://github.com/rsksmart/RSKIPs/blob/master/IPs/RSKIP60.md
 START_TEST(test_rsk_address) {
   uint8_t addr[20];
-  char address[41];
+  char address[43];
 
   static const char *rskip60_chain30[] = {
-      "5aaEB6053f3e94c9b9a09f33669435E7ef1bEAeD",
-      "Fb6916095cA1Df60bb79ce92cE3EA74c37c5d359",
-      "DBF03B407c01E7CD3cBea99509D93F8Dddc8C6FB",
-      "D1220A0Cf47c7B9BE7a2e6ba89F429762E7B9adB", 0};
+      "0x5aaEB6053f3e94c9b9a09f33669435E7ef1bEAeD",
+      "0xFb6916095cA1Df60bb79ce92cE3EA74c37c5d359",
+      "0xDBF03B407c01E7CD3cBea99509D93F8Dddc8C6FB",
+      "0xD1220A0Cf47c7B9BE7a2e6ba89F429762E7B9adB", 0};
   const char **vec = rskip60_chain30;
   while (*vec) {
-    memcpy(addr, fromhex(*vec), 20);
+    memcpy(addr, fromhex(*vec + 2), 20);
     ethereum_address_checksum(addr, address, true, 30);
     ck_assert_str_eq(address, *vec);
     vec++;
   }
 
   static const char *rskip60_chain31[] = {
-      "5aAeb6053F3e94c9b9A09F33669435E7EF1BEaEd",
-      "Fb6916095CA1dF60bb79CE92ce3Ea74C37c5D359",
-      "dbF03B407C01E7cd3cbEa99509D93f8dDDc8C6fB",
-      "d1220a0CF47c7B9Be7A2E6Ba89f429762E7b9adB", 0};
+      "0x5aAeb6053F3e94c9b9A09F33669435E7EF1BEaEd",
+      "0xFb6916095CA1dF60bb79CE92ce3Ea74C37c5D359",
+      "0xdbF03B407C01E7cd3cbEa99509D93f8dDDc8C6fB",
+      "0xd1220a0CF47c7B9Be7A2E6Ba89f429762E7b9adB", 0};
   vec = rskip60_chain31;
   while (*vec) {
-    memcpy(addr, fromhex(*vec), 20);
+    memcpy(addr, fromhex(*vec + 2), 20);
     ethereum_address_checksum(addr, address, true, 31);
     ck_assert_str_eq(address, *vec);
     vec++;
@@ -8987,231 +8999,6 @@ START_TEST(test_compress_coords) {
 }
 END_TEST
 
-START_TEST(test_schnorr_sign_verify_digest) {
-  static struct {
-    const char *digest;
-    const char *priv_key;
-    const char *sig;
-  } tests[] = {
-      {
-          /* Very deterministic message */
-          "5255683DA567900BFD3E786ED8836A4E7763C221BF1AC20ECE2A5171B9199E8A",
-          "12B004FFF7F4B69EF8650E767F18F11EDE158148B425660723B9F9A66E61F747",
-          "2C56731AC2F7A7E7F11518FC7722A166B02438924CA9D8B4D111347B81D07175"
-          "71846DE67AD3D913A8FDF9D8F3F73161A4C48AE81CB183B214765FEB86E255CE",
-      },
-  };
-
-  const ecdsa_curve *curve = &secp256k1;
-  uint8_t digest[SHA256_DIGEST_LENGTH] = {0};
-  uint8_t priv_key[32] = {0};
-  uint8_t pub_key[33] = {0};
-  uint8_t result[SCHNORR_SIG_LENGTH] = {0};
-  uint8_t expected[SCHNORR_SIG_LENGTH] = {0};
-  int res = 0;
-
-  for (size_t i = 0; i < sizeof(tests) / sizeof(*tests); i++) {
-    memcpy(digest, fromhex(tests[i].digest), SHA256_DIGEST_LENGTH);
-    memcpy(priv_key, fromhex(tests[i].priv_key), 32);
-    memcpy(expected, fromhex(tests[i].sig), SCHNORR_SIG_LENGTH);
-
-    ck_assert_int_eq(ecdsa_get_public_key33(curve, priv_key, pub_key), 0);
-
-    schnorr_sign_digest(curve, priv_key, digest, result);
-
-    ck_assert_mem_eq(expected, result, SCHNORR_SIG_LENGTH);
-
-    res = schnorr_verify_digest(curve, pub_key, digest, result);
-    ck_assert_int_eq(res, 0);
-  }
-}
-END_TEST
-
-START_TEST(test_schnorr_verify_digest) {
-  static struct {
-    const char *digest;
-    const char *pub_key;
-    const char *sig;
-    const int res;
-  } tests[] = {
-      {
-          /* Very deterministic message */
-          "5255683DA567900BFD3E786ED8836A4E7763C221BF1AC20ECE2A5171B9199E8A",
-          "030B4C866585DD868A9D62348A9CD008D6A312937048FFF31670E7E920CFC7A744",
-          "2C56731AC2F7A7E7F11518FC7722A166B02438924CA9D8B4D111347B81D07175"
-          "71846DE67AD3D913A8FDF9D8F3F73161A4C48AE81CB183B214765FEB86E255CE",
-          0, /* Success */
-      },
-      {
-          /*
-           * From Bitcoin ABC libsecp256k1, test vector 1.
-           * https://github.com/Bitcoin-ABC/secp256k1/blob/master/src/modules/schnorr/tests_impl.h
-           */
-          "0000000000000000000000000000000000000000000000000000000000000000",
-          "0279BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798",
-          "787A848E71043D280C50470E8E1532B2DD5D20EE912A45DBDD2BD1DFBF187EF6"
-          "7031A98831859DC34DFFEEDDA86831842CCD0079E1F92AF177F7F22CC1DCED05",
-          0, /* Success */
-      },
-      {
-          /*
-           * From Bitcoin ABC libsecp256k1, test vector 2.
-           * https://github.com/Bitcoin-ABC/secp256k1/blob/master/src/modules/schnorr/tests_impl.h
-           */
-          "243F6A8885A308D313198A2E03707344A4093822299F31D0082EFA98EC4E6C89",
-          "02DFF1D77F2A671C5F36183726DB2341BE58FEAE1DA2DECED843240F7B502BA659",
-          "2A298DACAE57395A15D0795DDBFD1DCB564DA82B0F269BC70A74F8220429BA1D"
-          "1E51A22CCEC35599B8F266912281F8365FFC2D035A230434A1A64DC59F7013FD",
-          0, /* Success */
-      },
-      {
-          /*
-           * From Bitcoin ABC libsecp256k1, test vector 3.
-           * https://github.com/Bitcoin-ABC/secp256k1/blob/master/src/modules/schnorr/tests_impl.h
-           */
-          "5E2D58D8B3BCDF1ABADEC7829054F90DDA9805AAB56C77333024B9D0A508B75C",
-          "03FAC2114C2FBB091527EB7C64ECB11F8021CB45E8E7809D3C0938E4B8C0E5F84B",
-          "00DA9B08172A9B6F0466A2DEFD817F2D7AB437E0D253CB5395A963866B3574BE"
-          "00880371D01766935B92D2AB4CD5C8A2A5837EC57FED7660773A05F0DE142380",
-          0, /* Success */
-      },
-      {
-          /*
-           * From Bitcoin ABC libsecp256k1, test vector 4.
-           * https://github.com/Bitcoin-ABC/secp256k1/blob/master/src/modules/schnorr/tests_impl.h
-           */
-          "4DF3C3F68FCC83B27E9D42C90431A72499F17875C81A599B566C9889B9696703",
-          "03DEFDEA4CDB677750A420FEE807EACF21EB9898AE79B9768766E4FAA04A2D4A34",
-          "00000000000000000000003B78CE563F89A0ED9414F5AA28AD0D96D6795F9C63"
-          "02A8DC32E64E86A333F20EF56EAC9BA30B7246D6D25E22ADB8C6BE1AEB08D49D",
-          0, /* Success */
-      },
-      {
-          /*
-           * From Bitcoin ABC libsecp256k1, test vector 4b.
-           * https://github.com/Bitcoin-ABC/secp256k1/blob/master/src/modules/schnorr/tests_impl.h
-           */
-          "0000000000000000000000000000000000000000000000000000000000000000",
-          "031B84C5567B126440995D3ED5AABA0565D71E1834604819FF9C17F5E9D5DD078F",
-          "52818579ACA59767E3291D91B76B637BEF062083284992F2D95F564CA6CB4E35"
-          "30B1DA849C8E8304ADC0CFE870660334B3CFC18E825EF1DB34CFAE3DFC5D8187",
-          0, /* Success */
-      },
-      {
-          /*
-           * From Bitcoin ABC libsecp256k1, test vector 6.
-           * https://github.com/Bitcoin-ABC/secp256k1/blob/master/src/modules/schnorr/tests_impl.h
-           */
-          "243F6A8885A308D313198A2E03707344A4093822299F31D0082EFA98EC4E6C89",
-          "02DFF1D77F2A671C5F36183726DB2341BE58FEAE1DA2DECED843240F7B502BA659",
-          "2A298DACAE57395A15D0795DDBFD1DCB564DA82B0F269BC70A74F8220429BA1D"
-          "FA16AEE06609280A19B67A24E1977E4697712B5FD2943914ECD5F730901B4AB7",
-          6, /* R.y is not a quadratic residue */
-      },
-      {
-          /*
-           * From Bitcoin ABC libsecp256k1, test vector 7.
-           * https://github.com/Bitcoin-ABC/secp256k1/blob/master/src/modules/schnorr/tests_impl.h
-           */
-          "5E2D58D8B3BCDF1ABADEC7829054F90DDA9805AAB56C77333024B9D0A508B75C",
-          "03FAC2114C2FBB091527EB7C64ECB11F8021CB45E8E7809D3C0938E4B8C0E5F84B",
-          "00DA9B08172A9B6F0466A2DEFD817F2D7AB437E0D253CB5395A963866B3574BE"
-          "D092F9D860F1776A1F7412AD8A1EB50DACCC222BC8C0E26B2056DF2F273EFDEC",
-          5, /* Negated message hash, R.x mismatch */
-      },
-      {
-          /*
-           * From Bitcoin ABC libsecp256k1, test vector 8.
-           * https://github.com/Bitcoin-ABC/secp256k1/blob/master/src/modules/schnorr/tests_impl.h
-           */
-          "0000000000000000000000000000000000000000000000000000000000000000",
-          "0279BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798",
-          "787A848E71043D280C50470E8E1532B2DD5D20EE912A45DBDD2BD1DFBF187EF6"
-          "8FCE5677CE7A623CB20011225797CE7A8DE1DC6CCD4F754A47DA6C600E59543C",
-          5, /* Negated s, R.x mismatch */
-      },
-      {
-          /*
-           * From Bitcoin ABC libsecp256k1, test vector 9.
-           * https://github.com/Bitcoin-ABC/secp256k1/blob/master/src/modules/schnorr/tests_impl.h
-           */
-          "243F6A8885A308D313198A2E03707344A4093822299F31D0082EFA98EC4E6C89",
-          "03DFF1D77F2A671C5F36183726DB2341BE58FEAE1DA2DECED843240F7B502BA659",
-          "2A298DACAE57395A15D0795DDBFD1DCB564DA82B0F269BC70A74F8220429BA1D"
-          "1E51A22CCEC35599B8F266912281F8365FFC2D035A230434A1A64DC59F7013FD",
-          5, /* Negated P, R.x mismatch */
-      },
-      {
-          /*
-           * From Bitcoin ABC libsecp256k1, test vector 10.
-           * https://github.com/Bitcoin-ABC/secp256k1/blob/master/src/modules/schnorr/tests_impl.h
-           */
-          "243F6A8885A308D313198A2E03707344A4093822299F31D0082EFA98EC4E6C89",
-          "02DFF1D77F2A671C5F36183726DB2341BE58FEAE1DA2DECED843240F7B502BA659",
-          "2A298DACAE57395A15D0795DDBFD1DCB564DA82B0F269BC70A74F8220429BA1D"
-          "8C3428869A663ED1E954705B020CBB3E7BB6AC31965B9EA4C73E227B17C5AF5A",
-          4, /* s * G = e * P, R = 0 */
-      },
-      {
-          /*
-           * From Bitcoin ABC libsecp256k1, test vector 11.
-           * https://github.com/Bitcoin-ABC/secp256k1/blob/master/src/modules/schnorr/tests_impl.h
-           */
-          "243F6A8885A308D313198A2E03707344A4093822299F31D0082EFA98EC4E6C89",
-          "02DFF1D77F2A671C5F36183726DB2341BE58FEAE1DA2DECED843240F7B502BA659",
-          "4A298DACAE57395A15D0795DDBFD1DCB564DA82B0F269BC70A74F8220429BA1D"
-          "1E51A22CCEC35599B8F266912281F8365FFC2D035A230434A1A64DC59F7013FD",
-          5, /* R.x not on the curve, R.x mismatch */
-      },
-      {
-          /*
-           * From Bitcoin ABC libsecp256k1, test vector 12.
-           * https://github.com/Bitcoin-ABC/secp256k1/blob/master/src/modules/schnorr/tests_impl.h
-           */
-          "243F6A8885A308D313198A2E03707344A4093822299F31D0082EFA98EC4E6C89",
-          "02DFF1D77F2A671C5F36183726DB2341BE58FEAE1DA2DECED843240F7B502BA659",
-          "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC2F"
-          "1E51A22CCEC35599B8F266912281F8365FFC2D035A230434A1A64DC59F7013FD",
-          1, /* r = p */
-      },
-      {
-          /*
-           * From Bitcoin ABC libsecp256k1, test vector 13.
-           * https://github.com/Bitcoin-ABC/secp256k1/blob/master/src/modules/schnorr/tests_impl.h
-           */
-          "243F6A8885A308D313198A2E03707344A4093822299F31D0082EFA98EC4E6C89",
-          "02DFF1D77F2A671C5F36183726DB2341BE58FEAE1DA2DECED843240F7B502BA659",
-          "2A298DACAE57395A15D0795DDBFD1DCB564DA82B0F269BC70A74F8220429BA1D"
-          "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141",
-          1, /* s = n */
-      },
-      {
-          /* Very deterministic message */
-          "5255683DA567900BFD3E786ED8836A4E7763C221BF1AC20ECE2A5171B9199E8A",
-          "010B4C866585DD868A9D62348A9CD008D6A312937048FFF31670E7E920CFC7A744",
-          "2C56731AC2F7A7E7F11518FC7722A166B02438924CA9D8B4D111347B81D07175"
-          "71846DE67AD3D913A8FDF9D8F3F73161A4C48AE81CB183B214765FEB86E255CE",
-          2, /* Invalid public key */
-      },
-  };
-
-  const ecdsa_curve *curve = &secp256k1;
-  uint8_t digest[SHA256_DIGEST_LENGTH] = {0};
-  uint8_t pub_key[33] = {0};
-  uint8_t signature[SCHNORR_SIG_LENGTH] = {0};
-  int res = 0;
-
-  for (size_t i = 0; i < sizeof(tests) / sizeof(*tests); i++) {
-    memcpy(digest, fromhex(tests[i].digest), SHA256_DIGEST_LENGTH);
-    memcpy(pub_key, fromhex(tests[i].pub_key), 33);
-    memcpy(signature, fromhex(tests[i].sig), SCHNORR_SIG_LENGTH);
-
-    res = schnorr_verify_digest(curve, pub_key, digest, signature);
-    ck_assert_int_eq(res, tests[i].res);
-  }
-}
-END_TEST
-
 START_TEST(test_zkp_bip340_sign) {
   static struct {
     const char *priv_key;
@@ -9295,22 +9082,22 @@ START_TEST(test_zkp_bip340_sign) {
   uint8_t expected_pub_key[32] = {0};
   uint8_t aux_input[32] = {0};
   uint8_t digest[32] = {0};
-  uint8_t expected_sig[32] = {0};
+  uint8_t expected_sig[64] = {0};
   uint8_t pub_key[32] = {0};
-  uint8_t sig[32] = {0};
+  uint8_t sig[64] = {0};
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(*tests); i++) {
     memcpy(priv_key, fromhex(tests[i].priv_key), 32);
     memcpy(expected_pub_key, fromhex(tests[i].pub_key), 32);
     memcpy(aux_input, fromhex(tests[i].aux_input), 32);
     memcpy(digest, fromhex(tests[i].digest), 32);
-    memcpy(expected_sig, fromhex(tests[i].sig), 32);
+    memcpy(expected_sig, fromhex(tests[i].sig), 64);
 
     zkp_bip340_get_public_key(priv_key, pub_key);
     ck_assert_mem_eq(expected_pub_key, pub_key, 32);
 
     res = zkp_bip340_sign_digest(priv_key, digest, sig, aux_input);
-    ck_assert_mem_eq(expected_sig, sig, 32);
+    ck_assert_mem_eq(expected_sig, sig, 64);
     ck_assert_int_eq(res, 0);
   }
 }
@@ -9531,6 +9318,28 @@ START_TEST(test_zkp_bip340_tweak) {
     res = zkp_bip340_tweak_public_key(internal_pub, root_hash, result);
     ck_assert_int_eq(res, 0);
     ck_assert_mem_eq(output_pub, result, 32);
+  }
+}
+END_TEST
+
+START_TEST(test_zkp_bip340_verify_publickey) {
+  static struct {
+    const char *public_key;
+    const int result;
+  } tests[] = {
+      // Test vectors 0, 5 and 14 from
+      // https://github.com/bitcoin/bips/blob/afa13249ed45826c2d7086714026c9bc1ccbf963/bip-0340/test-vectors.csv
+      {"F9308A019258C31049344F85F89D5229B531C845836F99B08601F113BCE036F9", 0},
+      {"EEFDEA4CDB677750A420FEE807EACF21EB9898AE79B9768766E4FAA04A2D4A34", 1},
+      {"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC30", 1}};
+
+  int result = 0;
+  uint8_t public_key[32] = {0};
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(*tests); i++) {
+    memcpy(public_key, fromhex(tests[i].public_key), 32);
+    result = zkp_bip340_verify_publickey(public_key);
+    ck_assert_int_eq(result, tests[i].result);
   }
 }
 END_TEST
@@ -9843,15 +9652,11 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_compress_coords);
   suite_add_tcase(s, tc);
 
-  tc = tcase_create("schnorr");
-  tcase_add_test(tc, test_schnorr_sign_verify_digest);
-  tcase_add_test(tc, test_schnorr_verify_digest);
-  suite_add_tcase(s, tc);
-
   tc = tcase_create("zkp_bip340");
   tcase_add_test(tc, test_zkp_bip340_sign);
   tcase_add_test(tc, test_zkp_bip340_verify);
   tcase_add_test(tc, test_zkp_bip340_tweak);
+  tcase_add_test(tc, test_zkp_bip340_verify_publickey);
   suite_add_tcase(s, tc);
 
 #if USE_CARDANO

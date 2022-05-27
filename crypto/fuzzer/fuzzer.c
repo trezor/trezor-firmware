@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2020-2021 Christian Reitter
+ * Copyright (c) 2020-2022 Christian Reitter
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -43,6 +43,7 @@
 #include "ed25519-donna/ed25519-donna.h"
 #include "ed25519-donna/ed25519-keccak.h"
 #include "ed25519-donna/ed25519.h"
+#include "hasher.h"
 #include "hmac_drbg.h"
 #include "memzero.h"
 #include "monero/monero.h"
@@ -52,7 +53,6 @@
 #include "rand.h"
 #include "rc4.h"
 #include "rfc6979.h"
-#include "schnorr.h"
 #include "script.h"
 #include "secp256k1.h"
 #include "sha2.h"
@@ -60,6 +60,9 @@
 #include "shamir.h"
 #include "slip39.h"
 #include "slip39_wordlist.h"
+#include "zkp_bip340.h"
+#include "zkp_context.h"
+#include "zkp_ecdsa.h"
 
 /* fuzzer input data handling */
 const uint8_t *fuzzer_ptr;
@@ -81,6 +84,21 @@ void fuzzer_reset_state(void) {
   // reset the PRNGs to make individual fuzzer runs deterministic
   srand(0);
   random_reseed(0);
+
+  // clear internal caches
+  // note: this is not strictly required for all fuzzer targets
+#if USE_BIP32_CACHE
+  bip32_cache_clear();
+#endif
+#if USE_BIP39_CACHE
+  bip39_cache_clear();
+#endif
+}
+
+void crash(void) {
+  // intentionally exit the program, which is picked up as a crash by the fuzzer
+  // framework
+  exit(1);
 }
 
 /* individual fuzzer harness functions */
@@ -92,8 +110,9 @@ int fuzz_bn_format(void) {
     return 0;
   }
 
-  char buf[512] = {0};
-  int r;
+#define FUZZ_BN_FORMAT_OUTPUT_BUFFER_SIZE 512
+  char buf[FUZZ_BN_FORMAT_OUTPUT_BUFFER_SIZE] = {0};
+  int ret;
 
   // mutate the struct contents
   memcpy(&target_bignum, fuzzer_ptr, sizeof(target_bignum));
@@ -114,7 +133,7 @@ int fuzz_bn_format(void) {
   } else {
     return 0;
   }
-  // TODO fuzzer idea: allow prefix=NULL
+  // TODO idea: : allow prefix == NULL
 
   uint8_t suffixlen = 0;
   if (fuzzer_length < 1) {
@@ -131,7 +150,7 @@ int fuzz_bn_format(void) {
   } else {
     return 0;
   }
-  // TODO fuzzer idea: allow suffix=NULL
+  // TODO idea: allow suffix == NULL
   uint32_t decimals = 0;
   int32_t exponent = 0;
   bool trailing = false;
@@ -145,8 +164,14 @@ int fuzz_bn_format(void) {
     return 0;
   }
 
-  r = bn_format(&target_bignum, prefix, suffix, decimals, exponent, trailing,
-                buf, sizeof(buf));
+  ret = bn_format(&target_bignum, prefix, suffix, decimals, exponent, trailing,
+                  buf, FUZZ_BN_FORMAT_OUTPUT_BUFFER_SIZE);
+
+  // basic sanity checks for r
+  if (ret > FUZZ_BN_FORMAT_OUTPUT_BUFFER_SIZE) {
+    crash();
+  }
+
   return 0;
 }
 
@@ -263,13 +288,12 @@ int fuzz_xmr_base58_addr_decode_check(void) {
   char in_buffer[XMR_BASE58_ADDR_DECODE_MAX_INPUT_LEN] = {0};
   char out_buffer[XMR_BASE58_ADDR_DECODE_MAX_INPUT_LEN] = {0};
   size_t outlen = sizeof(out_buffer);
+  uint64_t tag = 0;
+  size_t raw_inlen = fuzzer_length;
 
   // mutate in_buffer
-  size_t raw_inlen = fuzzer_length;
-  memcpy(&in_buffer, fuzzer_ptr, raw_inlen);
-  fuzzer_input(raw_inlen);
+  memcpy(&in_buffer, fuzzer_input(raw_inlen), raw_inlen);
 
-  uint64_t tag;
   xmr_base58_addr_decode_check(in_buffer, raw_inlen, &tag, out_buffer, outlen);
   return 0;
 }
@@ -364,21 +388,26 @@ int fuzz_nem_validate_address(void) {
 }
 
 int fuzz_nem_get_address(void) {
-  unsigned char ed25519_public_key[32] = {0};
-  uint32_t network = 0;
+  unsigned char ed25519_public_key_fuzz[32] = {0};
+  uint8_t version = 0;
 
-  if (fuzzer_length != (sizeof(ed25519_public_key) + sizeof(network))) {
+  if (fuzzer_length != (sizeof(ed25519_public_key_fuzz) + sizeof(version))) {
     return 0;
   }
 
   char address[NEM_ADDRESS_SIZE + 1] = {0};
 
-  memcpy(ed25519_public_key, fuzzer_input(32), 32);
-  memcpy(&network, fuzzer_input(4), 4);
+  memcpy(ed25519_public_key_fuzz, fuzzer_input(32), 32);
+  memcpy(&version, fuzzer_input(1), 1);
 
-  nem_get_address(ed25519_public_key, network, address);
+  nem_get_address(ed25519_public_key_fuzz, version, address);
 
-  // TODO check return address for memory info leakage?
+#if defined(__has_feature)
+#if __has_feature(memory_sanitizer)
+  // TODO idea: check `address` for memory info leakage
+#endif
+#endif
+
   return 0;
 }
 
@@ -482,20 +511,22 @@ int fuzz_shamir_interpolate(void) {
   return 0;
 }
 
-int fuzz_ecdsa_sign_digest(void) {
+int fuzz_ecdsa_sign_digest_functions(void) {
+  // bug result reference: https://github.com/trezor/trezor-firmware/pull/1697
+
   uint8_t curve_decider = 0;
-  uint8_t sig[64] = {0};
   uint8_t priv_key[32] = {0};
   uint8_t digest[32] = {0};
 
-  if (fuzzer_length < 1 + sizeof(sig) + sizeof(priv_key) + sizeof(digest)) {
+  uint8_t sig1[64] = {0};
+  uint8_t sig2[64] = {0};
+  uint8_t pby1, pby2 = 0;
+  if (fuzzer_length < 1 + sizeof(priv_key) + sizeof(digest)) {
     return 0;
   }
   const ecdsa_curve *curve;
-  uint8_t pby = 0;
 
   memcpy(&curve_decider, fuzzer_input(1), 1);
-  memcpy(&sig, fuzzer_input(sizeof(sig)), sizeof(sig));
   memcpy(&priv_key, fuzzer_input(sizeof(priv_key)), sizeof(priv_key));
   memcpy(&digest, fuzzer_input(sizeof(digest)), sizeof(digest));
 
@@ -506,41 +537,46 @@ int fuzz_ecdsa_sign_digest(void) {
     curve = &nist256p1;
   }
 
-  // TODO optionally set a function for is_canonical()
-  int res = ecdsa_sign_digest(curve, priv_key, digest, sig, &pby, NULL);
+  int res = 0;
+
+  // TODO idea: optionally set a function for is_canonical() callback
+  int res1 = ecdsa_sign_digest(curve, priv_key, digest, sig1, &pby1, NULL);
+
+  // the zkp function variant is only defined for a specific curve
+  if (curve == &secp256k1) {
+    int res2 =
+        zkp_ecdsa_sign_digest(curve, priv_key, digest, sig2, &pby2, NULL);
+    if ((res1 == 0 && res2 != 0) || (res1 != 0 && res2 == 0)) {
+      // one variant succeeded where the other did not
+      crash();
+    }
+    if (res1 == 0 && res2 == 0) {
+      if ((pby1 != pby2) || memcmp(&sig1, &sig2, sizeof(sig1)) != 0) {
+        // result values are different
+        crash();
+      }
+    }
+  }
 
   // successful signing
-  if (res == 0) {
+  if (res1 == 0) {
     uint8_t pub_key[33] = {0};
-    ecdsa_get_public_key33(curve, priv_key, pub_key);
-    res = ecdsa_verify_digest(curve, pub_key, sig, digest);
+    res = ecdsa_get_public_key33(curve, priv_key, pub_key);
+    if (res != 0) {
+      // pubkey derivation did not succeed
+      crash();
+    }
 
+    res = ecdsa_verify_digest(curve, pub_key, sig1, digest);
     if (res != 0) {
       // verification did not succeed
-
-      // case: all zero pubkey value
-      uint8_t pub_key_zero[33] =
-          "\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-          "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
-
-      // case: all zero digest value
-      uint8_t digest_zero[32] =
-          "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-          "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
-
-      if (memcmp(&pub_key, &pub_key_zero, sizeof(pub_key_zero)) == 0 ||
-          memcmp(&digest, &digest_zero, sizeof(digest_zero)) == 0) {
-        return 0;
-      }
-
-      // handle as crash
-      exit(1);
+      crash();
     }
   }
   return 0;
 }
 
-int fuzz_ecdsa_verify_digest(void) {
+int fuzz_ecdsa_verify_digest_functions(void) {
   uint8_t curve_decider = 0;
   uint8_t hash[32] = {0};
   uint8_t sig[64] = {0};
@@ -563,14 +599,27 @@ int fuzz_ecdsa_verify_digest(void) {
     curve = &nist256p1;
   }
 
-  int res = ecdsa_verify_digest(curve, (const uint8_t *)&pub_key,
-                                (const uint8_t *)&sig, (const uint8_t *)&hash);
-
-  if (res == 0) {
+  int res1 = ecdsa_verify_digest(curve, (const uint8_t *)&pub_key,
+                                 (const uint8_t *)&sig, (const uint8_t *)&hash);
+  if (res1 == 0) {
     // See if the fuzzer ever manages to get find a correct verification
     // intentionally trigger a crash to make this case observable
     // TODO this is not an actual problem, remove in the future
-    exit(1);
+    crash();
+  }
+
+  // the zkp_ecdsa* function only accepts the secp256k1 curve
+  if (curve == &secp256k1) {
+    int res2 =
+        zkp_ecdsa_verify_digest(curve, (const uint8_t *)&pub_key,
+                                (const uint8_t *)&sig, (const uint8_t *)&hash);
+
+    // the error code behavior is different between both functions, compare only
+    // verification state
+    if ((res1 == 0 && res2 != 0) || (res1 != 0 && res2 == 0)) {
+      // results differ, this is a problem
+      crash();
+    }
   }
 
   return 0;
@@ -579,7 +628,6 @@ int fuzz_ecdsa_verify_digest(void) {
 int fuzz_word_index(void) {
 #define MAX_WORD_LENGTH 12
 
-  // TODO exact match?
   if (fuzzer_length < MAX_WORD_LENGTH) {
     return 0;
   }
@@ -606,19 +654,91 @@ int fuzz_slip39_word_completion_mask(void) {
   return 0;
 }
 
-int fuzz_mnemonic_to_bits(void) {
-  // length chosen somewhat arbitrarily
-#define MAX_MNEMONIC_LENGTH 256
-
-  if (fuzzer_length < MAX_MNEMONIC_LENGTH) {
+// regular MAX_MNEMONIC_LEN is 240, try some extra bytes
+#define MAX_MNEMONIC_FUZZ_LENGTH 256
+int fuzz_mnemonic_check(void) {
+  if (fuzzer_length < MAX_MNEMONIC_FUZZ_LENGTH) {
     return 0;
   }
 
-  char mnemonic[MAX_MNEMONIC_LENGTH + 1] = {0};
-  memcpy(&mnemonic, fuzzer_ptr, MAX_MNEMONIC_LENGTH);
-  uint8_t mnemonic_bits[32 + 1] = {0};
+  char mnemonic[MAX_MNEMONIC_FUZZ_LENGTH + 1] = {0};
+  memcpy(&mnemonic, fuzzer_ptr, MAX_MNEMONIC_FUZZ_LENGTH);
 
-  mnemonic_to_bits((const char *)&mnemonic, mnemonic_bits);
+  // as of 11/2021, mnemonic_check() internally calls mnemonic_to_bits() and
+  // checks the result
+  int ret = mnemonic_check(mnemonic);
+
+  (void)ret;
+  /*
+  if(ret == 1) {
+    // correct result
+  }
+  */
+
+  return 0;
+}
+
+int fuzz_mnemonic_from_data(void) {
+  if (fuzzer_length < 16 || fuzzer_length > 32) {
+    return 0;
+  }
+
+  const char *mnemo_result = mnemonic_from_data(fuzzer_ptr, fuzzer_length);
+  if (mnemo_result != NULL) {
+    int res = mnemonic_check(mnemo_result);
+    if (res == 0) {
+      // TODO the mnemonic_check() function is currently incorrectly rejecting
+      // valid 15 and 21 word seeds
+      // remove this workaround limitation later
+      if (fuzzer_length != 20 && fuzzer_length != 28) {
+        // the generated mnemonic has an invalid format
+        crash();
+      }
+    }
+  }
+  // scrub the internal buffer to rule out persistent side effects
+  mnemonic_clear();
+  return 0;
+}
+
+// passphrase normally has a 64 or 256 byte length maximum
+#define MAX_PASSPHRASE_FUZZ_LENGTH 257
+int fuzz_mnemonic_to_seed(void) {
+  if (fuzzer_length < MAX_MNEMONIC_FUZZ_LENGTH + MAX_PASSPHRASE_FUZZ_LENGTH) {
+    return 0;
+  }
+
+  char mnemonic[MAX_PASSPHRASE_FUZZ_LENGTH + 1] = {0};
+  char passphrase[MAX_MNEMONIC_FUZZ_LENGTH + 1] = {0};
+  uint8_t seed[512 / 8] = {0};
+
+  memcpy(&mnemonic, fuzzer_input(MAX_MNEMONIC_FUZZ_LENGTH),
+         MAX_MNEMONIC_FUZZ_LENGTH);
+  memcpy(&passphrase, fuzzer_input(MAX_PASSPHRASE_FUZZ_LENGTH),
+         MAX_PASSPHRASE_FUZZ_LENGTH);
+
+  mnemonic_to_seed(mnemonic, passphrase, seed, NULL);
+
+  return 0;
+}
+
+int fuzz_ethereum_address_checksum(void) {
+  uint8_t addr[20] = {0};
+  char address[43] = {0};
+  uint64_t chain_id = 0;
+  bool rskip60 = false;
+
+  if (fuzzer_length < sizeof(addr) + sizeof(address) + sizeof(chain_id) + 1) {
+    return 0;
+  }
+
+  memcpy(addr, fuzzer_input(sizeof(addr)), sizeof(addr));
+  memcpy(address, fuzzer_input(sizeof(address)), sizeof(address));
+  memcpy(&chain_id, fuzzer_input(sizeof(chain_id)), sizeof(chain_id));
+  // usually dependent on chain_id, but determined separately here
+  rskip60 = (*fuzzer_input(1)) & 0x1;
+
+  ethereum_address_checksum(addr, address, rskip60, chain_id);
 
   return 0;
 }
@@ -716,7 +836,7 @@ int fuzz_b58gph_encode_decode(void) {
     return 0;
   }
 
-  // TODO switch to malloc()'ed buffers for better out of bounds access
+  // TODO idea: switch to malloc()'ed buffers for better out of bounds access
   // detection?
 
   uint8_t encode_in_buffer[BASE58_GPH_MAX_INPUT_LEN] = {0};
@@ -739,7 +859,7 @@ int fuzz_b58gph_encode_decode(void) {
     if (ret == 0) {
       // mark as exception
       // TODO POTENTIAL BUG - followup
-      // exit(1);
+      // crash();
     }
   }
 
@@ -747,89 +867,6 @@ int fuzz_b58gph_encode_decode(void) {
   // previously computed output
   base58gph_decode_check(decode_in_buffer, (uint8_t *)&out_buffer,
                          chosen_outlen);
-  return 0;
-}
-
-#define SCHNORR_VERIFY_PUBKEY_DATA_LENGTH 33
-#define SCHNORR_VERIFY_PRIVKEY_DATA_LENGTH 32
-
-int fuzz_schnorr_verify_digest(void) {
-  if (fuzzer_length < SHA256_DIGEST_LENGTH + SCHNORR_VERIFY_PUBKEY_DATA_LENGTH +
-                          SCHNORR_SIG_LENGTH) {
-    return 0;
-  }
-
-  // TODO optionally try nist256p1 ?
-  const ecdsa_curve *curve = &secp256k1;
-  uint8_t digest[SHA256_DIGEST_LENGTH] = {0};
-  uint8_t pub_key[SCHNORR_VERIFY_PUBKEY_DATA_LENGTH] = {0};
-  uint8_t signature[SCHNORR_SIG_LENGTH] = {0};
-
-  memcpy(&digest, fuzzer_input(SHA256_DIGEST_LENGTH), SHA256_DIGEST_LENGTH);
-  memcpy(&pub_key, fuzzer_input(SCHNORR_VERIFY_PUBKEY_DATA_LENGTH),
-         SCHNORR_VERIFY_PUBKEY_DATA_LENGTH);
-  memcpy(&signature, fuzzer_input(SCHNORR_SIG_LENGTH), SCHNORR_SIG_LENGTH);
-
-  // TODO this limitation is a bug workaround
-  if (pub_key[0] != 0x04) {
-    int ret = schnorr_verify_digest(curve, pub_key, digest, signature);
-    if (ret == 0) {
-      // assuming that the fuzzer can't puzzle together validly signed inputs,
-      // exit with a forced crash if a successful verification is observed
-      exit(1);
-    }
-  }
-
-  return 0;
-}
-
-int fuzz_schnorr_sign_digest(void) {
-  if (fuzzer_length <
-      1 + SHA256_DIGEST_LENGTH + SCHNORR_VERIFY_PRIVKEY_DATA_LENGTH) {
-    return 0;
-  }
-
-  const ecdsa_curve *curve;
-  uint8_t digest[SHA256_DIGEST_LENGTH] = {0};
-  uint8_t priv_key[SCHNORR_VERIFY_PRIVKEY_DATA_LENGTH] = {0};
-  uint8_t signature[SCHNORR_SIG_LENGTH] = {0};
-  int ret = 0;
-
-  uint8_t curve_decider = 0;
-  memcpy(&curve_decider, fuzzer_input(1), 1);
-
-  if ((curve_decider & 0x1) == 1) {
-    curve = &secp256k1;
-  } else {
-    curve = &nist256p1;
-  }
-
-  memcpy(&digest, fuzzer_input(SHA256_DIGEST_LENGTH), SHA256_DIGEST_LENGTH);
-  memcpy(&priv_key, fuzzer_input(SCHNORR_VERIFY_PRIVKEY_DATA_LENGTH),
-         SCHNORR_VERIFY_PRIVKEY_DATA_LENGTH);
-
-  ret = schnorr_sign_digest(curve, priv_key, digest, signature);
-
-  if (ret == 0) {
-    // signing was successful, check if the verification works
-
-    // compute matching pubkey
-    uint8_t pub_key[33] = {0};
-    ecdsa_get_public_key33(curve, priv_key, pub_key);
-
-    if (schnorr_verify_digest(curve, pub_key, digest, signature) != 0) {
-      // ignore known case
-      uint8_t pub_key_null[33] =
-          "\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-          "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
-      if (memcmp(&pub_key, &pub_key_null, 33) == 0) {
-        return 0;
-      }
-
-      // something is wrong, mark as crash
-      exit(1);
-    }
-  }
   return 0;
 }
 
@@ -850,7 +887,7 @@ int fuzz_chacha_drbg(void) {
   uint8_t result[CHACHA_DRBG_RESULT_LENGTH] = {0};
   CHACHA_DRBG_CTX ctx;
 
-  // TODO improvement idea: switch to variable input sizes
+  // TODO idea: switch to variable input sizes
   memcpy(&entropy, fuzzer_input(CHACHA_DRBG_ENTROPY_LENGTH),
          CHACHA_DRBG_ENTROPY_LENGTH);
   memcpy(&reseed, fuzzer_input(CHACHA_DRBG_RESEED_LENGTH),
@@ -890,25 +927,215 @@ int fuzz_ed25519_sign_verify(void) {
   // verify message, we expect this to work
   ret = ed25519_sign_open(message, sizeof(message), public_key, signature);
 
-  // TODO are there other error values?
-  if (ret == -1) {
-    // mark as exception
-    exit(1);
+  if (ret != 0) {
+    // verification did not succeed
+    crash();
   }
 
   return 0;
 }
 
-// TODO more XMR functions
-// extern void xmr_hash_to_ec(ge25519 *P, const void *data, size_t length);
+int fuzz_zkp_bip340_sign_digest(void) {
+  // int res = 0;
+  uint8_t priv_key[32] = {0};
+  uint8_t aux_input[32] = {0};
+  uint8_t digest[32] = {0};
+  uint8_t pub_key[32] = {0};
+  uint8_t sig[64] = {0};
 
-// this function directly calls
-// hasher_Raw(HASHER_SHA3K, data, length, hash)
-// is this interesting at all?
-// extern void xmr_fast_hash(uint8_t *hash, const void *data, size_t length);
+  if (fuzzer_length <
+      sizeof(priv_key) + sizeof(aux_input) + sizeof(digest) + sizeof(sig)) {
+    return 0;
+  }
+  memcpy(priv_key, fuzzer_input(sizeof(priv_key)), sizeof(priv_key));
+  memcpy(aux_input, fuzzer_input(sizeof(aux_input)), sizeof(aux_input));
+  memcpy(digest, fuzzer_input(sizeof(digest)), sizeof(digest));
+  memcpy(sig, fuzzer_input(sizeof(sig)), sizeof(sig));
 
-// TODO target idea: re-create openssl_check() from test_openssl.c
-// to do differential fuzzing against OpenSSL functions
+  zkp_bip340_get_public_key(priv_key, pub_key);
+  zkp_bip340_sign_digest(priv_key, digest, sig, aux_input);
+  // TODO idea: test sign result?
+
+  return 0;
+}
+
+int fuzz_zkp_bip340_verify_digest(void) {
+  int res = 0;
+  uint8_t pub_key[32] = {0};
+  uint8_t digest[32] = {0};
+  uint8_t sig[64] = {0};
+
+  if (fuzzer_length < sizeof(digest) + sizeof(pub_key) + sizeof(sig)) {
+    return 0;
+  }
+  memcpy(pub_key, fuzzer_input(sizeof(pub_key)), sizeof(pub_key));
+  memcpy(digest, fuzzer_input(sizeof(digest)), sizeof(digest));
+  memcpy(sig, fuzzer_input(sizeof(sig)), sizeof(sig));
+
+  res = zkp_bip340_verify_digest(pub_key, sig, digest);
+
+  // res == 0 is valid, but crash to make successful passes visible
+  if (res == 0) {
+    crash();
+  }
+
+  return 0;
+}
+
+int fuzz_zkp_bip340_tweak_keys(void) {
+  int res = 0;
+  uint8_t internal_priv[32] = {0};
+  uint8_t root_hash[32] = {0};
+  uint8_t internal_pub[32] = {0};
+  uint8_t result[32] = {0};
+
+  if (fuzzer_length <
+      sizeof(internal_priv) + sizeof(root_hash) + sizeof(internal_pub)) {
+    return 0;
+  }
+  memcpy(internal_priv, fuzzer_input(sizeof(internal_priv)),
+         sizeof(internal_priv));
+  memcpy(root_hash, fuzzer_input(sizeof(root_hash)), sizeof(root_hash));
+  memcpy(internal_pub, fuzzer_input(sizeof(internal_pub)),
+         sizeof(internal_pub));
+
+  res = zkp_bip340_tweak_private_key(internal_priv, root_hash, result);
+  res = zkp_bip340_tweak_public_key(internal_pub, root_hash, result);
+  (void)res;
+
+  return 0;
+}
+
+int fuzz_ecdsa_get_public_key_functions(void) {
+  uint8_t privkey[32] = {0};
+  uint8_t pubkey33_1[33] = {0};
+  uint8_t pubkey33_2[33] = {0};
+  uint8_t pubkey65_1[65] = {0};
+  uint8_t pubkey65_2[65] = {0};
+
+  // note: the zkp_ecdsa_* variants require this specific curve
+  const ecdsa_curve *curve = &secp256k1;
+
+  if (fuzzer_length < sizeof(privkey)) {
+    return 0;
+  }
+  memcpy(privkey, fuzzer_input(sizeof(privkey)), sizeof(privkey));
+
+  int res_33_1 = ecdsa_get_public_key33(curve, privkey, pubkey33_1);
+  int res_33_2 = zkp_ecdsa_get_public_key33(curve, privkey, pubkey33_2);
+  int res_65_1 = ecdsa_get_public_key65(curve, privkey, pubkey65_1);
+  int res_65_2 = zkp_ecdsa_get_public_key65(curve, privkey, pubkey65_2);
+
+  // the function pairs have different return error codes for the same input
+  // so only fail if the one succeeds where the other does not
+  if ((res_33_1 == 0 && res_33_2 != 0) || (res_33_1 != 0 && res_33_2 == 0)) {
+    // function result mismatch
+    crash();
+  }
+  if ((res_65_1 == 0 && res_65_2 != 0) || (res_65_1 != 0 && res_65_2 == 0)) {
+    // function result mismatch
+    crash();
+  }
+
+  if (res_33_1 == 0 && res_33_2 == 0 &&
+      memcmp(&pubkey33_1, &pubkey33_2, sizeof(pubkey33_1)) != 0) {
+    // function result data mismatch
+    crash();
+  }
+
+  if (res_65_1 == 0 && res_65_2 == 0 &&
+      memcmp(&pubkey65_1, &pubkey65_2, sizeof(pubkey65_1)) != 0) {
+    // function result data mismatch
+    crash();
+  }
+
+  return 0;
+}
+
+int fuzz_ecdsa_recover_pub_from_sig_functions(void) {
+  uint8_t digest[32] = {0};
+  uint8_t sig[64] = {0};
+  const ecdsa_curve *curve = &secp256k1;
+  uint8_t recid = 0;
+  uint8_t pubkey1[65] = {0};
+  uint8_t pubkey2[65] = {0};
+
+  if (fuzzer_length < sizeof(digest) + sizeof(sig) + sizeof(recid)) {
+    return 0;
+  }
+  memcpy(digest, fuzzer_input(sizeof(digest)), sizeof(digest));
+  memcpy(sig, fuzzer_input(sizeof(sig)), sizeof(sig));
+  memcpy(&recid, fuzzer_input(sizeof(recid)), sizeof(recid));
+  // conform to parameter requirements
+  recid = recid & 0x03;
+
+  int res1 = zkp_ecdsa_recover_pub_from_sig(curve, pubkey1, sig, digest, recid);
+  int res2 = ecdsa_recover_pub_from_sig(curve, pubkey2, sig, digest, recid);
+
+  uint8_t zero_pubkey[65] = {0};
+  zero_pubkey[0] = 0x04;
+
+  if ((res1 == 0 && res2 != 0) || (res1 != 0 && res2 == 0)) {
+    // result mismatch
+    // bug result reference: https://github.com/trezor/trezor-firmware/pull/2050
+    crash();
+  }
+
+  if (res1 == 0 && res2 == 0 &&
+      memcmp(&pubkey1, &pubkey2, sizeof(pubkey1)) != 0) {
+    // pubkey result mismatch
+    crash();
+  }
+
+  return 0;
+}
+
+int fuzz_ecdsa_sig_from_der(void) {
+  // bug result reference: https://github.com/trezor/trezor-firmware/pull/2058
+  uint8_t der[72] = {0};
+  uint8_t out[72] = {0};
+
+  if (fuzzer_length < sizeof(der)) {
+    return 0;
+  }
+  memcpy(der, fuzzer_input(sizeof(der)), sizeof(der));
+  // null-terminate
+  der[sizeof(der) - 1] = 0;
+  size_t der_len = strlen((const char *)der);
+
+  // TODO idea: use different fuzzer-controlled der_len such as 1 to 73
+  int ret = ecdsa_sig_from_der(der, der_len, out);
+  (void)ret;
+  // TODO idea: check if back conversion works
+
+  return 0;
+}
+
+int fuzz_ecdsa_sig_to_der(void) {
+  uint8_t sig[64] = {0};
+  uint8_t der[72] = {0};
+
+  if (fuzzer_length < sizeof(sig)) {
+    return 0;
+  }
+  memcpy(sig, fuzzer_input(sizeof(sig)), sizeof(sig));
+
+  int ret = ecdsa_sig_to_der((const uint8_t *)&sig, der);
+  (void)ret;
+  // TODO idea: check if back conversion works
+
+  return 0;
+}
+
+void zkp_initialize_context_or_crash(void) {
+  // The current context usage has persistent side effects
+  // TODO switch to frequent re-initialization where necessary
+  if (!zkp_context_is_initialized()) {
+    if (zkp_context_init() != 0) {
+      crash();
+    }
+  }
+}
 
 #define META_HEADER_SIZE 3
 
@@ -921,12 +1148,13 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
 
   fuzzer_reset_state();
 
+  // this controls up to 256 different test cases
   uint8_t target_decision = data[0];
 
-  // TODO use once necessary
-  // uint8_t subdecision = data[1];
+  // data[1] is reserved for explicit sub decisions
+  // uint8_t target_sub_decision = data[1];
 
-  // note: data[2] is reserved for future use
+  // data[2] is reserved for future use
 
   // assign the fuzzer payload data for the target functions
   fuzzer_ptr = data + META_HEADER_SIZE;
@@ -986,8 +1214,9 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
       break;
     case 14:
 #ifdef FUZZ_ALLOW_SLOW
+      zkp_initialize_context_or_crash();
       // slow through expensive bignum operations
-      fuzz_ecdsa_verify_digest();
+      fuzz_ecdsa_verify_digest_functions();
 #endif
       break;
     case 15:
@@ -997,7 +1226,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
       fuzz_slip39_word_completion_mask();
       break;
     case 17:
-      fuzz_mnemonic_to_bits();
+      fuzz_mnemonic_check();
       break;
     case 18:
 #ifdef FUZZ_ALLOW_SLOW
@@ -1007,25 +1236,54 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     case 19:
       fuzz_b58gph_encode_decode();
       break;
-    case 20:
-      fuzz_schnorr_verify_digest();
-      break;
-    case 21:
-      fuzz_schnorr_sign_digest();
-      break;
     case 22:
       fuzz_chacha_drbg();
       break;
     case 23:
 #ifdef FUZZ_ALLOW_SLOW
+      zkp_initialize_context_or_crash();
       // slow through expensive bignum operations
-      fuzz_ecdsa_sign_digest();
+      fuzz_ecdsa_sign_digest_functions();
 #endif
       break;
     case 24:
       fuzz_ed25519_sign_verify();
       break;
-
+    case 25:
+      fuzz_mnemonic_from_data();
+      break;
+    case 26:
+      fuzz_mnemonic_to_seed();
+      break;
+    case 30:
+      fuzz_ethereum_address_checksum();
+      break;
+    case 41:
+      zkp_initialize_context_or_crash();
+      fuzz_zkp_bip340_sign_digest();
+      break;
+    case 42:
+      zkp_initialize_context_or_crash();
+      fuzz_zkp_bip340_verify_digest();
+      break;
+    case 43:
+      zkp_initialize_context_or_crash();
+      fuzz_zkp_bip340_tweak_keys();
+      break;
+    case 50:
+      zkp_initialize_context_or_crash();
+      fuzz_ecdsa_get_public_key_functions();
+      break;
+    case 51:
+      zkp_initialize_context_or_crash();
+      fuzz_ecdsa_recover_pub_from_sig_functions();
+      break;
+    case 52:
+      fuzz_ecdsa_sig_from_der();
+      break;
+    case 53:
+      fuzz_ecdsa_sig_to_der();
+      break;
     default:
       // do nothing
       break;

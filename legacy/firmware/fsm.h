@@ -20,6 +20,7 @@
 #ifndef __FSM_H__
 #define __FSM_H__
 
+#include "coins.h"
 #include "messages-bitcoin.pb.h"
 #include "messages-crypto.pb.h"
 #include "messages-debug.pb.h"
@@ -69,6 +70,9 @@ void fsm_msgRecoveryDevice(const RecoveryDevice *msg);
 void fsm_msgWordAck(const WordAck *msg);
 void fsm_msgSetU2FCounter(const SetU2FCounter *msg);
 void fsm_msgGetNextU2FCounter(void);
+void fsm_msgGetFirmwareHash(const GetFirmwareHash *msg);
+void fsm_msgGetFirmware(const GetFirmware *msg);
+void fsm_msgFirmwareChunkAck(const FirmwareChunkAck *msg);
 
 // coin
 void fsm_msgGetPublicKey(const GetPublicKey *msg);
@@ -94,6 +98,7 @@ void fsm_msgDebugLinkStop(const DebugLinkStop *msg);
 void fsm_msgDebugLinkMemoryWrite(const DebugLinkMemoryWrite *msg);
 void fsm_msgDebugLinkMemoryRead(const DebugLinkMemoryRead *msg);
 void fsm_msgDebugLinkFlashErase(const DebugLinkFlashErase *msg);
+void fsm_msgDebugLinkReseedRandom(const DebugLinkReseedRandom *msg);
 #endif
 
 // ethereum
@@ -138,5 +143,12 @@ void fsm_msgRebootToBootloader(void);
 
 bool fsm_layoutSignMessage(const uint8_t *msg, uint32_t len);
 bool fsm_layoutVerifyMessage(const uint8_t *msg, uint32_t len);
+
+bool fsm_layoutPathWarning(void);
+bool fsm_checkCoinPath(const CoinInfo *coin, InputScriptType script_type,
+                       uint32_t address_n_count, const uint32_t *address_n,
+                       bool has_multisig, bool show_warning);
+
+void fsm_abortWorkflows(void);
 
 #endif

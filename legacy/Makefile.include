@@ -6,10 +6,10 @@ Q := @
 endif
 
 PYTHON ?= python
-CC_FOR_BUILD ?= gcc
+CC_FOR_BUILD ?= cc
 
 ifeq ($(EMULATOR),1)
-CC       ?= gcc
+CC       ?= cc
 LD       := $(CC)
 OBJCOPY  := true
 OBJDUMP  := true
@@ -21,6 +21,9 @@ OPTFLAGS ?= -O3
 DBGFLAGS ?= -g3 -ggdb3
 CPUFLAGS ?=
 FPUFLAGS ?=
+ifeq ($(ADDRESS_SANITIZER),1)
+SANFLAGS += -fsanitize=address,undefined
+endif
 else
 PREFIX   ?= arm-none-eabi-
 CC       := $(PREFIX)gcc
@@ -42,6 +45,7 @@ endif
 
 CFLAGS   += $(OPTFLAGS) \
             $(DBGFLAGS) \
+            $(SANFLAGS) \
             -std=gnu11 \
             -W \
             -Wall \
@@ -71,7 +75,6 @@ CFLAGS   += $(OPTFLAGS) \
             $(FPUFLAGS) \
             $(CONFFLAG) \
             -DSTM32F2 \
-            -DRAND_PLATFORM_INDEPENDENT=1 \
             -I$(TOOLCHAIN_DIR)/include \
             -I$(TOP_DIR) \
             -I$(TOP_DIR)gen \
@@ -81,6 +84,7 @@ CFLAGS   += $(OPTFLAGS) \
 
 LDFLAGS  += -L$(TOP_DIR) \
             $(DBGFLAGS) \
+            $(SANFLAGS) \
             $(CPUFLAGS) \
             $(FPUFLAGS)
 
@@ -98,7 +102,7 @@ LDLIBS   += -ltrezor -lemulator
 LIBDEPS  += $(TOP_DIR)/libtrezor.a $(TOP_DIR)emulator/libemulator.a
 
 ifdef PIZERO
-CFLAGS   += -DPIZERO=1
+CFLAGS   += -DPIZERO=1 -DRAND_PLATFORM_INDEPENDENT=1
 LDFLAGS  += -L$(TOP_DIR)emulator/pizero
 LIBDEPS  += $(TOP_DIR)emulator/pizero/libpizero.a
 LDLIBS   += -lpizero -lbcm2835 -pthread
@@ -112,10 +116,6 @@ endif
 CFLAGS   += $(shell pkg-config --cflags sdl2 SDL2_image)
 LDLIBS   += $(shell pkg-config --libs sdl2 SDL2_image)
 
-ifdef RANDOM_DEV_FILE
-CFLAGS += -DRANDOM_DEV_FILE=\"$(RANDOM_DEV_FILE)\"
-endif
-
 else
 ifdef APPVER
 CFLAGS   += -DAPPVER=$(APPVER)
@@ -125,6 +125,7 @@ LDSCRIPT  = $(TOP_DIR)/memory.ld
 endif
 
 CFLAGS   += -DEMULATOR=0
+CFLAGS   += -DRAND_PLATFORM_INDEPENDENT=1
 
 LDFLAGS  += --static \
             -Wl,--start-group \

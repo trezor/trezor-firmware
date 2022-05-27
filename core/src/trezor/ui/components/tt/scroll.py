@@ -1,4 +1,5 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor import loop, res, ui, utils, wire, workflow
 from trezor.enums import ButtonRequestType
@@ -16,17 +17,13 @@ from .text import (
     Text,
 )
 
-if False:
-    from typing import Callable, Iterable
+if TYPE_CHECKING:
+    from typing import Any, Callable, Iterable
 
     from ..common.text import TextContent
 
 
 WAS_PAGED = object()
-
-
-if False:
-    from typing import Any
 
 
 def render_scrollbar(pages: int, page: int) -> None:
@@ -76,7 +73,7 @@ class Paginated(ui.Layout):
             area = ui.grid(16, n_x=4)
             icon = res.load(ui.ICON_BACK)
             self.back_button = Button(area, icon, ButtonDefault)
-            self.back_button.on_click = self.on_back_click  # type: ignore
+            self.back_button.on_click = self.on_back_click
 
     def dispatch(self, event: int, x: int, y: int) -> None:
         pages = self.pages
@@ -137,8 +134,8 @@ class Paginated(ui.Layout):
 
         return result
 
-    def create_tasks(self) -> tuple[loop.Task, ...]:
-        tasks: tuple[loop.Task, ...] = (
+    def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
+        tasks: tuple[loop.AwaitableTask, ...] = (
             self.handle_input(),
             self.handle_rendering(),
             self.handle_paging(),
@@ -172,7 +169,7 @@ class AskPaginated(ui.Component):
         super().__init__()
         self.content = content
         self.button = Button(ui.grid(3, n_x=1), button_text, ButtonDefault)
-        self.button.on_click = self.on_show_paginated_click  # type: ignore
+        self.button.on_click = self.on_show_paginated_click
 
     def dispatch(self, event: int, x: int, y: int) -> None:
         self.content.dispatch(event, x, y)
@@ -221,10 +218,10 @@ class PageWithButtons(ui.Component):
             right_style = ButtonConfirm
 
         self.left = Button(ui.grid(8, n_x=2), left, left_style)
-        self.left.on_click = self.on_left  # type: ignore
+        self.left.on_click = self.on_left
 
         self.right = Button(ui.grid(9, n_x=2), right, right_style)
-        self.right.on_click = self.on_right  # type: ignore
+        self.right.on_click = self.on_right
 
     def dispatch(self, event: int, x: int, y: int) -> None:
         self.content.dispatch(event, x, y)
@@ -292,7 +289,7 @@ class PaginatedWithButtons(ui.Layout):
         def read_content(self) -> list[str]:
             return self.pages[self.page].read_content()
 
-        def create_tasks(self) -> tuple[loop.Task, ...]:
+        def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
             from apps.debug import confirm_signal
 
             return super().create_tasks() + (confirm_signal(),)

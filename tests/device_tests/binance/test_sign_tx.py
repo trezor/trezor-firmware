@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import binance
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
 BINANCE_TEST_VECTORS = [
@@ -107,8 +108,8 @@ BINANCE_TEST_VECTORS = [
     mnemonic="offer caution gift cross surge pretty orange during eye soldier popular holiday mention east eight office fashion ill parrot vault rent devote earth cousin"
 )
 @pytest.mark.parametrize("message, expected_response", BINANCE_TEST_VECTORS)
-def test_binance_sign_message(client, message, expected_response):
-    response = binance.sign_tx(client, parse_path("m/44'/714'/0'/0/0"), message)
+def test_binance_sign_message(client: Client, message, expected_response):
+    response = binance.sign_tx(client, parse_path("m/44h/714h/0h/0/0"), message)
 
     assert response.public_key.hex() == expected_response["public_key"]
 

@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import btc, device, mapping, messages, models, protobuf
+from trezorlib._internal.emulator import Emulator
 from trezorlib.tools import parse_path
 
 from ..emulators import EmulatorWrapper
@@ -40,8 +41,9 @@ mapping.DEFAULT_MAPPING.register(ApplySettingsCompat)
 
 
 @pytest.fixture
-def emulator(gen, tag):
+def emulator(gen: str, tag: str) -> Emulator:
     with EmulatorWrapper(gen, tag) as emu:
+        assert emu.client is not None
         # set up a passphrase-protected device
         device.reset(
             emu.client,
@@ -60,8 +62,9 @@ def emulator(gen, tag):
     core_minimum_version=models.TREZOR_T.minimum_version,
     legacy_minimum_version=models.TREZOR_ONE.minimum_version,
 )
-def test_passphrase_works(emulator):
+def test_passphrase_works(emulator: Emulator):
     """Check that passphrase handling in trezorlib works correctly in all versions."""
+    assert emulator.client is not None
     if emulator.client.features.model == "T" and emulator.client.version < (2, 3, 0):
         expected_responses = [
             messages.PassphraseRequest,
@@ -95,10 +98,11 @@ def test_passphrase_works(emulator):
     core_minimum_version=models.TREZOR_T.minimum_version,
     legacy_minimum_version=(1, 9, 0),
 )
-def test_init_device(emulator):
+def test_init_device(emulator: Emulator):
     """Check that passphrase caching and session_id retaining works correctly across
     supported versions.
     """
+    assert emulator.client is not None
     if emulator.client.features.model == "T" and emulator.client.version < (2, 3, 0):
         expected_responses = [
             messages.PassphraseRequest,

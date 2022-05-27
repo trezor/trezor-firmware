@@ -1,9 +1,9 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor.enums import MessageType
 
-if False:
-    from typing import Union
+if TYPE_CHECKING:
     from trezor import protobuf
 
     from trezor.messages import (
@@ -22,21 +22,21 @@ if False:
         StellarSetOptionsOp,
     )
 
-    StellarMessageType = Union[
-        StellarAccountMergeOp,
-        StellarAllowTrustOp,
-        StellarBumpSequenceOp,
-        StellarChangeTrustOp,
-        StellarCreateAccountOp,
-        StellarCreatePassiveSellOfferOp,
-        StellarManageDataOp,
-        StellarManageBuyOfferOp,
-        StellarManageSellOfferOp,
-        StellarPathPaymentStrictReceiveOp,
-        StellarPathPaymentStrictSendOp,
-        StellarPaymentOp,
-        StellarSetOptionsOp,
-    ]
+    StellarMessageType = (
+        StellarAccountMergeOp
+        | StellarAllowTrustOp
+        | StellarBumpSequenceOp
+        | StellarChangeTrustOp
+        | StellarCreateAccountOp
+        | StellarCreatePassiveSellOfferOp
+        | StellarManageDataOp
+        | StellarManageBuyOfferOp
+        | StellarManageSellOfferOp
+        | StellarPathPaymentStrictReceiveOp
+        | StellarPathPaymentStrictSendOp
+        | StellarPaymentOp
+        | StellarSetOptionsOp
+    )
 
 
 TX_TYPE = b"\x00\x00\x00\x02"
@@ -99,4 +99,5 @@ def get_op_code(msg: protobuf.MessageType) -> int:
     wire = msg.MESSAGE_WIRE_TYPE
     if wire not in op_codes:
         raise ValueError("Stellar: op code unknown")
+    assert isinstance(wire, int)
     return op_codes[wire]

@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 import storage.cache
 import storage.device
 from trezor import config, utils, wire, workflow
@@ -6,9 +8,8 @@ from trezor.messages import Success
 
 from . import workflow_handlers
 
-if False:
+if TYPE_CHECKING:
     from trezor import protobuf
-    from typing import NoReturn
     from trezor.messages import (
         Features,
         Initialize,
@@ -25,6 +26,7 @@ if False:
 def get_features() -> Features:
     import storage.recovery
     import storage.sd_salt
+    import storage  # workaround for https://github.com/microsoft/pyright/issues/2685
 
     from trezor import sdcard
     from trezor.enums import Capability
@@ -34,6 +36,7 @@ def get_features() -> Features:
 
     f = Features(
         vendor="trezor.io",
+        fw_vendor=utils.firmware_vendor(),
         language="en-US",
         major_version=utils.VERSION_MAJOR,
         minor_version=utils.VERSION_MINOR,
@@ -130,7 +133,7 @@ async def handle_GetFeatures(ctx: wire.Context, msg: GetFeatures) -> Features:
     return get_features()
 
 
-async def handle_Cancel(ctx: wire.Context, msg: Cancel) -> NoReturn:
+async def handle_Cancel(ctx: wire.Context, msg: Cancel) -> Success:
     raise wire.ActionCancelled
 
 
@@ -174,7 +177,7 @@ async def handle_DoPreauthorized(
     if handler is None:
         return wire.unexpected_message()
 
-    return await handler(ctx, req, authorization.get())  # type: ignore
+    return await handler(ctx, req, authorization.get())  # type: ignore [Expected 2 positional arguments]
 
 
 async def handle_CancelAuthorization(
@@ -262,8 +265,6 @@ def get_pinlocked_handler(
         return orig_handler
 
     async def wrapper(ctx: wire.Context, msg: wire.Msg) -> protobuf.MessageType:
-        # mypy limitation: orig_handler is not recognized as non-None
-        assert orig_handler is not None
         await unlock_device(ctx)
         return await orig_handler(ctx, msg)
 

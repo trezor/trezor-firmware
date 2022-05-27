@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import wire
 from trezor.crypto import rlp
 from trezor.crypto.curve import secp256k1
@@ -16,9 +18,7 @@ from .layout import (
 )
 from .sign_tx import check_common_fields, handle_erc20, send_request_chunk
 
-if False:
-    from typing import Tuple
-
+if TYPE_CHECKING:
     from trezor.messages import EthereumSignTxEIP1559
 
     from apps.common.keychain import Keychain
@@ -70,10 +70,12 @@ async def sign_tx_eip1559(
 
     await require_confirm_eip1559_fee(
         ctx,
+        value,
         int.from_bytes(msg.max_priority_fee, "big"),
         int.from_bytes(msg.max_gas_fee, "big"),
         int.from_bytes(msg.gas_limit, "big"),
         msg.chain_id,
+        token,
     )
 
     data = bytearray()
@@ -88,7 +90,7 @@ async def sign_tx_eip1559(
 
     rlp.write_header(sha, total_length, rlp.LIST_HEADER_BYTE)
 
-    fields: Tuple[rlp.RLPItem, ...] = (
+    fields: tuple[rlp.RLPItem, ...] = (
         msg.chain_id,
         msg.nonce,
         msg.max_priority_fee,
@@ -122,7 +124,7 @@ async def sign_tx_eip1559(
 def get_total_length(msg: EthereumSignTxEIP1559, data_total: int) -> int:
     length = 0
 
-    fields: Tuple[rlp.RLPItem, ...] = (
+    fields: tuple[rlp.RLPItem, ...] = (
         msg.nonce,
         msg.gas_limit,
         bytes_from_address(msg.to),

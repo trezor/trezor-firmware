@@ -1,15 +1,18 @@
+from typing import TYPE_CHECKING
+
 from trezor.crypto import bip32
 from trezor.enums import InputScriptType
 from trezor.messages import Address
 from trezor.ui.layouts import show_address
 
+from apps.common.address_mac import get_address_mac
 from apps.common.paths import address_n_to_str, validate_path
 
 from . import addresses
 from .keychain import validate_path_against_script_type, with_keychain
 from .multisig import multisig_pubkey_index
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import GetAddress
     from trezor.messages import HDNodeType
     from trezor import wire
@@ -52,18 +55,19 @@ async def get_address(
 
     address = addresses.get_address(msg.script_type, coin, node, msg.multisig)
     address_short = addresses.address_short(coin, address)
+
+    address_case_sensitive = True
     if coin.segwit and msg.script_type in (
         InputScriptType.SPENDWITNESS,
         InputScriptType.SPENDTAPROOT,
     ):
-        address_qr = address.upper()  # bech32 address
+        address_case_sensitive = False  # bech32 address
     elif coin.cashaddr_prefix is not None:
-        address_qr = address.upper()  # cashaddr address
-    else:
-        address_qr = address  # base58 address
+        address_case_sensitive = False  # cashaddr address
 
+    mac: bytes | None = None
+    multisig_xpub_magic = coin.xpub_magic
     if msg.multisig:
-        multisig_xpub_magic = coin.xpub_magic
         if coin.segwit and not msg.ignore_xpub_magic:
             if (
                 msg.script_type == InputScriptType.SPENDWITNESS
@@ -75,6 +79,14 @@ async def get_address(
                 and coin.xpub_magic_multisig_segwit_p2sh is not None
             ):
                 multisig_xpub_magic = coin.xpub_magic_multisig_segwit_p2sh
+    else:
+        # Attach a MAC for single-sig addresses, but only if the path is standard
+        # or if the user explicitly confirms a non-standard path.
+        if msg.show_display or (
+            keychain.is_in_keychain(msg.address_n)
+            and validate_path_against_script_type(coin, msg)
+        ):
+            mac = get_address_mac(address, coin.slip44, keychain)
 
     if msg.show_display:
         if msg.multisig:
@@ -88,7 +100,7 @@ async def get_address(
             await show_address(
                 ctx,
                 address=address_short,
-                address_qr=address_qr,
+                case_sensitive=address_case_sensitive,
                 title=title,
                 multisig_index=multisig_index,
                 xpubs=_get_xpubs(coin, multisig_xpub_magic, pubnodes),
@@ -96,7 +108,11 @@ async def get_address(
         else:
             title = address_n_to_str(msg.address_n)
             await show_address(
-                ctx, address=address_short, address_qr=address_qr, title=title
+                ctx,
+                address=address_short,
+                address_qr=address,
+                case_sensitive=address_case_sensitive,
+                title=title,
             )
 
-    return Address(address=address)
+    return Address(address=address, mac=mac)

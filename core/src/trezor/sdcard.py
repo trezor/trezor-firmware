@@ -2,13 +2,27 @@ try:
     from trezorio import fatfs, sdcard
 
     HAVE_SDCARD = True
+    is_present = sdcard.is_present  # type: ignore [obscured-by-same-name]
+    capacity = sdcard.capacity  # type: ignore [obscured-by-same-name]
+
 except Exception:
     HAVE_SDCARD = False
 
-if False:
-    from typing import Any, Callable, TypeVar
+    def is_present() -> bool:
+        return False
 
-    T = TypeVar("T", bound=Callable)
+    def capacity() -> int:
+        return 0
+
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Any, Callable, TypeVar
+    from typing_extensions import ParamSpec
+
+    P = ParamSpec("P")
+    R = TypeVar("R")
 
 
 class FilesystemWrapper:
@@ -57,22 +71,9 @@ def filesystem(mounted: bool = True) -> FilesystemWrapper:
     return FilesystemWrapper.get_instance(mounted=mounted)
 
 
-def with_filesystem(func: T) -> T:
-    def wrapped_func(*args, **kwargs) -> Any:  # type: ignore
+def with_filesystem(func: Callable[P, R]) -> Callable[P, R]:
+    def wrapped_func(*args: P.args, **kwargs: P.kwargs) -> R:
         with filesystem():
             return func(*args, **kwargs)
 
-    return wrapped_func  # type: ignore
-
-
-if HAVE_SDCARD:
-    is_present = sdcard.is_present
-    capacity = sdcard.capacity
-
-else:
-
-    def is_present() -> bool:
-        return False
-
-    def capacity() -> int:
-        return 0
+    return wrapped_func

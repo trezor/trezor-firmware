@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from storage import cache, device
 from trezor import wire
 from trezor.crypto import bip32, cardano
@@ -8,8 +10,8 @@ from apps.common.seed import derive_and_store_roots, get_seed
 
 from .helpers import paths
 
-if False:
-    from typing import Callable, Awaitable, TypeVar, Union
+if TYPE_CHECKING:
+    from typing import Callable, Awaitable, TypeVar
 
     from apps.common.paths import Bip32Path
     from apps.common.keychain import MsgOut, Handler
@@ -21,12 +23,12 @@ if False:
         CardanoSignTxInit,
     )
 
-    CardanoMessages = Union[
-        CardanoGetAddress,
-        CardanoGetPublicKey,
-        CardanoGetNativeScriptHash,
-        CardanoSignTxInit,
-    ]
+    CardanoMessages = (
+        CardanoGetAddress
+        | CardanoGetPublicKey
+        | CardanoGetNativeScriptHash
+        | CardanoSignTxInit
+    )
     MsgIn = TypeVar("MsgIn", bound=CardanoMessages)
 
     HandlerWithKeychain = Callable[[wire.Context, MsgIn, "Keychain"], Awaitable[MsgOut]]

@@ -1,26 +1,34 @@
 import hashlib
 import json
+import os
 import re
 import shutil
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Dict, Generator, Set
 
 import pytest
 from _pytest.outcomes import Failed
 from PIL import Image
 
+from trezorlib.debuglink import TrezorClientDebugLink as Client
+
 from .reporting import testreport
 
-UI_TESTS_DIR = Path(__file__).parent.resolve()
+UI_TESTS_DIR = Path(__file__).resolve().parent
 SCREENS_DIR = UI_TESTS_DIR / "screens"
 HASH_FILE = UI_TESTS_DIR / "fixtures.json"
 SUGGESTION_FILE = UI_TESTS_DIR / "fixtures.suggestion.json"
-FILE_HASHES = {}
-ACTUAL_HASHES = {}
-PROCESSED = set()
+FILE_HASHES: Dict[str, str] = {}
+ACTUAL_HASHES: Dict[str, str] = {}
+PROCESSED: Set[str] = set()
+
+# T1/TT, to be set in screen_recording(), as we do not know it beforehand
+# TODO: it is not the cleanest, we could create a class out of this file
+MODEL = ""
 
 
-def get_test_name(node_id):
+def get_test_name(node_id: str) -> str:
     # Test item name is usually function name, but when parametrization is used,
     # parameters are also part of the name. Some functions have very long parameter
     # names (tx hashes etc) that run out of maximum allowable filename length, so
@@ -34,14 +42,14 @@ def get_test_name(node_id):
     return new_name[:91] + "-" + hashlib.sha256(new_name.encode()).hexdigest()[:8]
 
 
-def _process_recorded(screen_path, test_name):
+def _process_recorded(screen_path: Path, test_name: str) -> None:
     # calculate hash
     FILE_HASHES[test_name] = _hash_files(screen_path)
     _rename_records(screen_path)
     PROCESSED.add(test_name)
 
 
-def _rename_records(screen_path):
+def _rename_records(screen_path: Path) -> None:
     # rename screenshots
     for index, record in enumerate(sorted(screen_path.iterdir())):
         record.replace(screen_path / f"{index:08}.png")
@@ -65,7 +73,7 @@ def _get_bytes_from_png(png_file: str) -> bytes:
     return Image.open(png_file).tobytes()
 
 
-def _process_tested(fixture_test_path, test_name):
+def _process_tested(fixture_test_path: Path, test_name: str) -> None:
     PROCESSED.add(test_name)
 
     actual_path = fixture_test_path / "actual"
@@ -79,6 +87,7 @@ def _process_tested(fixture_test_path, test_name):
         pytest.fail(f"Hash of {test_name} not found in fixtures.json")
 
     if actual_hash != expected_hash:
+        assert expected_hash is not None
         file_path = testreport.failed(
             fixture_test_path, test_name, actual_hash, expected_hash
         )
@@ -94,9 +103,21 @@ def _process_tested(fixture_test_path, test_name):
 
 
 @contextmanager
-def screen_recording(client, request):
+def screen_recording(
+    client: Client, request: pytest.FixtureRequest
+) -> Generator[None, None, None]:
     test_ui = request.config.getoption("ui")
     test_name = get_test_name(request.node.nodeid)
+
+    # Differentiating test names between T1 and TT
+    # Making the model global for other functions
+    global MODEL
+    MODEL = f"T{client.features.model}"
+    if os.getenv("UI2") == "1":
+        MODEL += "ui2"
+
+    test_name = f"{MODEL}_{test_name}"
+
     screens_test_path = SCREENS_DIR / test_name
 
     if test_ui == "record":
@@ -126,35 +147,44 @@ def screen_recording(client, request):
         _process_tested(screens_test_path, test_name)
 
 
-def list_missing():
-    return set(FILE_HASHES.keys()) - PROCESSED
+def list_missing() -> Set[str]:
+    # Only listing the ones for the current model
+    relevant_cases = {
+        case for case in FILE_HASHES.keys() if case.startswith(f"{MODEL}_")
+    }
+    return relevant_cases - PROCESSED
 
 
-def read_fixtures():
+def read_fixtures() -> None:
     if not HASH_FILE.exists():
         raise ValueError("File fixtures.json not found.")
     global FILE_HASHES
     FILE_HASHES = json.loads(HASH_FILE.read_text())
 
 
-def write_fixtures(remove_missing: bool):
+def write_fixtures(remove_missing: bool) -> None:
     HASH_FILE.write_text(_get_fixtures_content(FILE_HASHES, remove_missing))
 
 
-def write_fixtures_suggestion(remove_missing: bool):
+def write_fixtures_suggestion(remove_missing: bool) -> None:
     SUGGESTION_FILE.write_text(_get_fixtures_content(ACTUAL_HASHES, remove_missing))
 
 
-def _get_fixtures_content(fixtures: dict, remove_missing: bool):
+def _get_fixtures_content(fixtures: Dict[str, str], remove_missing: bool) -> str:
     if remove_missing:
-        fixtures = {i: fixtures[i] for i in PROCESSED}
+        # Not removing the ones for different model
+        nonrelevant_cases = {
+            f: h for f, h in FILE_HASHES.items() if not f.startswith(f"{MODEL}_")
+        }
+        processed_fixtures = {i: fixtures[i] for i in PROCESSED}
+        fixtures = {**nonrelevant_cases, **processed_fixtures}
     else:
         fixtures = fixtures
 
     return json.dumps(fixtures, indent="", sort_keys=True) + "\n"
 
 
-def main():
+def main() -> None:
     read_fixtures()
     for record in SCREENS_DIR.iterdir():
         if not (record / "actual").exists():

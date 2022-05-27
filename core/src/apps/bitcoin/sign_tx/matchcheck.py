@@ -1,19 +1,21 @@
+from typing import TYPE_CHECKING
+
 from trezor import wire
 from trezor.utils import ensure
 
 from .. import multisig
 from ..common import BIP32_WALLET_DEPTH
 
-if False:
+if TYPE_CHECKING:
     from typing import Any, Generic, TypeVar
 
     from trezor.messages import TxInput, TxOutput
 
     T = TypeVar("T")
 else:
-    # mypy cheat: Generic[T] will be `object` which is a valid parent type
-    Generic = [object]  # type: ignore
-    T = 0  # type: ignore
+    # typechecker cheat: Generic[T] will be `object` which is a valid parent type
+    Generic = [object]
+    T = 0
 
 
 class MatchChecker(Generic[T]):

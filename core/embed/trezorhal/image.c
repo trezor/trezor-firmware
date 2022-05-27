@@ -99,8 +99,7 @@ secbool load_image_header(const uint8_t *const data, const uint32_t magic,
                                  *(const ed25519_signature *)hdr->sig));
 }
 
-secbool load_vendor_header(const uint8_t *const data, uint8_t key_m,
-                           uint8_t key_n, const uint8_t *const *keys,
+secbool read_vendor_header(const uint8_t *const data,
                            vendor_header *const vhdr) {
   memcpy(&vhdr->magic, data, 4);
   if (vhdr->magic != 0x565A5254) return secfalse;  // TRZV
@@ -141,6 +140,16 @@ secbool load_vendor_header(const uint8_t *const data, uint8_t key_m,
   memcpy(vhdr->sig, data + vhdr->hdrlen - IMAGE_SIG_SIZE + 1,
          IMAGE_SIG_SIZE - 1);
 
+  return sectrue;
+}
+
+secbool load_vendor_header(const uint8_t *const data, uint8_t key_m,
+                           uint8_t key_n, const uint8_t *const *keys,
+                           vendor_header *const vhdr) {
+  if (sectrue != read_vendor_header(data, vhdr)) {
+    return secfalse;
+  }
+
   // check header signature
 
   uint8_t hash[BLAKE2S_DIGEST_LENGTH];
@@ -161,22 +170,11 @@ secbool load_vendor_header(const uint8_t *const data, uint8_t key_m,
                                  *(const ed25519_signature *)vhdr->sig));
 }
 
-void vendor_keys_hash(const vendor_header *const vhdr, uint8_t *hash) {
+void vendor_header_hash(const vendor_header *const vhdr, uint8_t *hash) {
   BLAKE2S_CTX ctx;
   blake2s_Init(&ctx, BLAKE2S_DIGEST_LENGTH);
-  blake2s_Update(&ctx, &(vhdr->vsig_m), sizeof(vhdr->vsig_m));
-  blake2s_Update(&ctx, &(vhdr->vsig_n), sizeof(vhdr->vsig_n));
-  for (int i = 0; i < MAX_VENDOR_PUBLIC_KEYS; i++) {
-    if (vhdr->vpub[i] != 0) {
-      blake2s_Update(&ctx, vhdr->vpub[i], 32);
-    } else {
-      blake2s_Update(
-          &ctx,
-          "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-          "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00",
-          32);
-    }
-  }
+  blake2s_Update(&ctx, vhdr->vstr, vhdr->vstr_len);
+  blake2s_Update(&ctx, "Trezor Vendor Header", 20);
   blake2s_Final(&ctx, hash, BLAKE2S_DIGEST_LENGTH);
 }
 

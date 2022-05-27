@@ -23,7 +23,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#if TREZOR_MODEL == T
+#if defined TREZOR_MODEL_T
 
 // ILI9341V, GC9307 and ST7789V drivers support 240px x 320px display resolution
 #define MAX_DISPLAY_RESX 240
@@ -32,7 +32,7 @@
 #define DISPLAY_RESY 240
 #define TREZOR_FONT_BPP 4
 
-#elif TREZOR_MODEL == 1
+#elif defined TREZOR_MODEL_1
 
 #define MAX_DISPLAY_RESX 128
 #define MAX_DISPLAY_RESY 64
@@ -53,6 +53,9 @@
 
 #ifdef TREZOR_FONT_NORMAL_ENABLE
 #define FONT_NORMAL (-1)
+#endif
+#ifdef TREZOR_FONT_MEDIUM_ENABLE
+#define FONT_MEDIUM (-5)
 #endif
 #ifdef TREZOR_FONT_BOLD_ENABLE
 #define FONT_BOLD (-2)
@@ -105,6 +108,7 @@ void display_text_right(int x, int y, const char *text, int textlen, int font,
 int display_text_width(const char *text, int textlen, int font);
 int display_text_split(const char *text, int textlen, int font,
                        int requested_width);
+int display_text_height(int font);
 
 void display_qrcode(int x, int y, const char *data, uint32_t datalen,
                     uint8_t scale);

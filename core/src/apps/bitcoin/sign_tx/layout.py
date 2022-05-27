@@ -1,7 +1,8 @@
 from micropython import const
+from typing import TYPE_CHECKING
 from ubinascii import hexlify
 
-from trezor import utils
+from trezor import ui, utils, wire
 from trezor.enums import AmountUnit, ButtonRequestType, OutputScriptType
 from trezor.strings import format_amount, format_timestamp
 from trezor.ui import layouts
@@ -10,12 +11,13 @@ from .. import addresses
 from . import omni
 
 if not utils.BITCOIN_ONLY:
-    from trezor.ui.layouts.tt import altcoin
+    from trezor.ui.layouts import altcoin
 
 
-if False:
-    from trezor import wire
-    from trezor.messages import TxOutput
+if TYPE_CHECKING:
+    from typing import Any
+
+    from trezor.messages import TxAckPaymentRequest, TxOutput
     from trezor.ui.layouts import LayoutType
 
     from apps.common.coininfo import CoinInfo
@@ -65,8 +67,19 @@ async def confirm_output(
     else:
         assert output.address is not None
         address_short = addresses.address_short(coin, output.address)
+        if output.payment_req_index is not None:
+            title = "Confirm details"
+            icon = ui.ICON_CONFIRM
+        else:
+            title = "Confirm sending"
+            icon = ui.ICON_SEND
+
         layout = layouts.confirm_output(
-            ctx, address_short, format_coin_amount(output.amount, coin, amount_unit)
+            ctx,
+            address_short,
+            format_coin_amount(output.amount, coin, amount_unit),
+            title=title,
+            icon=icon,
         )
 
     await layout
@@ -80,6 +93,33 @@ async def confirm_decred_sstx_submission(
 
     await altcoin.confirm_decred_sstx_submission(
         ctx, address_short, format_coin_amount(output.amount, coin, amount_unit)
+    )
+
+
+async def confirm_payment_request(
+    ctx: wire.Context,
+    msg: TxAckPaymentRequest,
+    coin: CoinInfo,
+    amount_unit: AmountUnit,
+) -> Any:
+    memo_texts = []
+    for m in msg.memos:
+        if m.text_memo is not None:
+            memo_texts.append(m.text_memo.text)
+        elif m.refund_memo is not None:
+            pass
+        elif m.coin_purchase_memo is not None:
+            memo_texts.append(f"Buying {m.coin_purchase_memo.amount}.")
+        else:
+            raise wire.DataError("Unrecognized memo type in payment request memo.")
+
+    assert msg.amount is not None
+
+    return await layouts.confirm_payment_request(
+        ctx,
+        msg.recipient_name,
+        format_coin_amount(msg.amount, coin, amount_unit),
+        memo_texts,
     )
 
 
@@ -177,6 +217,16 @@ async def confirm_change_count_over_threshold(
         "There are {}\nchange-outputs.\n",
         str(change_count),
         ButtonRequestType.SignTx,
+    )
+
+
+async def confirm_unverified_external_input(ctx: wire.Context) -> None:
+    await layouts.confirm_metadata(
+        ctx,
+        "unverified_external_input",
+        "Warning",
+        "The transaction contains unverified external inputs.",
+        br_code=ButtonRequestType.SignTx,
     )
 
 

@@ -27,6 +27,7 @@
 #include "bignum.h"
 #include "bitmaps.h"
 #include "config.h"
+#include "crypto.h"
 #include "gettext.h"
 #include "layout2.h"
 #include "memzero.h"
@@ -43,10 +44,10 @@
 #if !BITCOIN_ONLY
 
 static const char *slip44_extras(uint32_t coin_type) {
-  if ((coin_type & 0x80000000) == 0) {
+  if ((coin_type & PATH_HARDENED) == 0) {
     return 0;
   }
-  switch (coin_type & 0x7fffffff) {
+  switch (coin_type & PATH_UNHARDEN_MASK) {
     case 40:
       return "EXP";  // Expanse
     case 43:
@@ -82,14 +83,15 @@ static const char *address_n_str(const uint32_t *address_n,
   // known BIP44/49/84/86 path
   static char path[100];
   if (address_n_count == 5 &&
-      (address_n[0] == (0x80000000 + 44) || address_n[0] == (0x80000000 + 49) ||
-       address_n[0] == (0x80000000 + 84) ||
-       address_n[0] == (0x80000000 + 86)) &&
-      (address_n[1] & 0x80000000) && (address_n[2] & 0x80000000) &&
+      (address_n[0] == (PATH_HARDENED + 44) ||
+       address_n[0] == (PATH_HARDENED + 49) ||
+       address_n[0] == (PATH_HARDENED + 84) ||
+       address_n[0] == (PATH_HARDENED + 86)) &&
+      (address_n[1] & PATH_HARDENED) && (address_n[2] & PATH_HARDENED) &&
       (address_n[3] <= 1) && (address_n[4] <= BIP32_MAX_LAST_ELEMENT)) {
-    bool taproot = (address_n[0] == (0x80000000 + 86));
-    bool native_segwit = (address_n[0] == (0x80000000 + 84));
-    bool p2sh_segwit = (address_n[0] == (0x80000000 + 49));
+    bool taproot = (address_n[0] == (PATH_HARDENED + 86));
+    bool native_segwit = (address_n[0] == (PATH_HARDENED + 84));
+    bool p2sh_segwit = (address_n[0] == (PATH_HARDENED + 49));
     bool legacy = false;
     const CoinInfo *coin = coinBySlip44(address_n[1]);
     const char *abbr = 0;
@@ -118,8 +120,8 @@ static const char *address_n_str(const uint32_t *address_n,
       }
     }
     const uint32_t accnum = address_is_account
-                                ? ((address_n[4] & 0x7fffffff) + 1)
-                                : (address_n[2] & 0x7fffffff) + 1;
+                                ? ((address_n[4] & PATH_UNHARDEN_MASK) + 1)
+                                : (address_n[2] & PATH_UNHARDEN_MASK) + 1;
     if (abbr && accnum < 100) {
       memzero(path, sizeof(path));
       strlcpy(path, abbr, sizeof(path));
@@ -164,11 +166,11 @@ static const char *address_n_str(const uint32_t *address_n,
 
   for (int n = (int)address_n_count - 1; n >= 0; n--) {
     uint32_t i = address_n[n];
-    if (i & 0x80000000) {
+    if (i & PATH_HARDENED) {
       *c = '\'';
       c--;
     }
-    i = i & 0x7fffffff;
+    i = i & PATH_UNHARDEN_MASK;
     do {
       *c = '0' + (i % 10);
       c--;
@@ -593,6 +595,13 @@ void layoutChangeCountOverThreshold(uint32_t change_count) {
   snprintf(str_change, sizeof(str_change), "There are %" PRIu32, change_count);
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
                     _("Warning!"), str_change, _("change-outputs."), NULL,
+                    _("Continue?"), NULL);
+}
+
+void layoutConfirmUnverifiedExternalInputs(void) {
+  layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                    _("Warning!"), _("The transaction"),
+                    _("contains unverified"), _("external inputs."),
                     _("Continue?"), NULL);
 }
 
@@ -1176,8 +1185,10 @@ void layoutNEMLevy(const NEMMosaicDefinition *definition, uint8_t network) {
 
 static inline bool is_slip18(const uint32_t *address_n,
                              size_t address_n_count) {
-  return address_n_count == 2 && address_n[0] == (0x80000000 + 10018) &&
-         (address_n[1] & 0x80000000) && (address_n[1] & 0x7FFFFFFF) <= 9;
+  // m / 10018' / [0-9]'
+  return address_n_count == 2 && address_n[0] == (PATH_HARDENED + 10018) &&
+         (address_n[1] & PATH_HARDENED) &&
+         (address_n[1] & PATH_UNHARDEN_MASK) <= 9;
 }
 
 void layoutCosiCommitSign(const uint32_t *address_n, size_t address_n_count,
@@ -1187,10 +1198,10 @@ void layoutCosiCommitSign(const uint32_t *address_n, size_t address_n_count,
   if (is_slip18(address_n, address_n_count)) {
     if (final_sign) {
       strlcpy(desc_buf, _("CoSi sign index #?"), sizeof(desc_buf));
-      desc_buf[16] = '0' + (address_n[1] & 0x7FFFFFFF);
+      desc_buf[16] = '0' + (address_n[1] & PATH_UNHARDEN_MASK);
     } else {
       strlcpy(desc_buf, _("CoSi commit index #?"), sizeof(desc_buf));
-      desc_buf[18] = '0' + (address_n[1] & 0x7FFFFFFF);
+      desc_buf[18] = '0' + (address_n[1] & PATH_UNHARDEN_MASK);
     }
     desc = desc_buf;
   }

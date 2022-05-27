@@ -52,7 +52,15 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
     mp_raise_TypeError("invalid list_ref");
   }
 
-  const mp_uint_t timeout = trezor_obj_get_uint(timeout_ms);
+  // The value `timeout_ms` can be negative in a minority of cases, indicating a
+  // deadline overrun. This is not a problem because we use the `timeout` only
+  // to calculate a `deadline`, and having deadline in the past works fine
+  // (except when it overflows, but the code misbehaves near the overflow
+  // anyway). Instead of bothering to correct the negative value in Python, we
+  // just coerce it to an uint. Deliberately assigning *get_int* to *uint_t*
+  // will give us C's wrapping unsigned overflow behavior, and the `deadline`
+  // result will come out correct.
+  const mp_uint_t timeout = trezor_obj_get_int(timeout_ms);
   const mp_uint_t deadline = mp_hal_ticks_ms() + timeout;
   mp_obj_iter_buf_t iterbuf = {0};
 
@@ -66,7 +74,7 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
 
       if (false) {
       }
-#if TREZOR_MODEL == T
+#if defined TREZOR_MODEL_T
       else if (iface == TOUCH_IFACE) {
         const uint32_t evt = touch_read();
         if (evt) {
@@ -102,7 +110,7 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
           return mp_const_true;
         }
       }
-#elif TREZOR_MODEL == 1
+#elif defined TREZOR_MODEL_1
       else if (iface == BUTTON_IFACE) {
         const uint32_t evt = button_read();
         if (evt & (BTN_EVT_DOWN | BTN_EVT_UP)) {

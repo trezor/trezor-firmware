@@ -39,8 +39,8 @@ BACKUP_TYPE = {
 }
 
 SD_PROTECT_OPERATIONS = {
-    "enable": messages.SdProtectOperationType.ENABLE,
-    "disable": messages.SdProtectOperationType.DISABLE,
+    "on": messages.SdProtectOperationType.ENABLE,
+    "off": messages.SdProtectOperationType.DISABLE,
     "refresh": messages.SdProtectOperationType.REFRESH,
 }
 
@@ -259,8 +259,8 @@ def sd_protect(
     device. The options are:
 
     \b
-    enable - Generate SD card secret and use it to protect the PIN and storage.
-    disable - Remove SD card secret protection.
+    on - Generate SD card secret and use it to protect the PIN and storage.
+    off - Remove SD card secret protection.
     refresh - Replace the current SD card secret with a new one.
     """
     if client.features.model == "1":

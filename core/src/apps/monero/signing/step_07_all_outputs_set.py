@@ -5,6 +5,7 @@ The prefix hash is then complete.
 """
 
 import gc
+from typing import TYPE_CHECKING
 
 from trezor import utils
 
@@ -13,7 +14,7 @@ from apps.monero.xmr import crypto
 
 from .state import State
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import MoneroTransactionAllOutSetAck
 
 

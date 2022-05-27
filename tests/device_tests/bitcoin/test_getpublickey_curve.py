@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import btc
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -53,18 +54,18 @@ VECTORS = (  # curve, path, pubkey
 
 
 @pytest.mark.parametrize("curve, path, pubkey", VECTORS)
-def test_publickey_curve(client, curve, path, pubkey):
+def test_publickey_curve(client: Client, curve, path, pubkey):
     resp = btc.get_public_node(client, path, ecdsa_curve_name=curve)
     assert resp.node.public_key.hex() == pubkey
 
 
-def test_ed25519_public(client):
+def test_ed25519_public(client: Client):
     with pytest.raises(TrezorFailure):
         btc.get_public_node(client, PATH_PUBLIC, ecdsa_curve_name="ed25519")
 
 
 @pytest.mark.xfail(reason="Currently path validation on get_public_node is disabled.")
-def test_coin_and_curve(client):
+def test_coin_and_curve(client: Client):
     with pytest.raises(
         TrezorFailure, match="Cannot use coin_name or script_type with ecdsa_curve_name"
     ):

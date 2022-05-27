@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 import storage.recovery
 import storage.recovery_shares
 from trezor.crypto import bip39, slip39
@@ -5,9 +7,8 @@ from trezor.errors import MnemonicError
 
 from .. import backup_types
 
-if False:
+if TYPE_CHECKING:
     from trezor.enums import BackupType
-    from typing import Union
 
 
 class RecoveryAborted(Exception):
@@ -91,8 +92,8 @@ def process_slip39(words: str) -> tuple[bytes | None, slip39.Share]:
     return secret, share
 
 
-if False:
-    Slip39State = Union[tuple[int, BackupType], tuple[None, None]]
+if TYPE_CHECKING:
+    Slip39State = tuple[int, BackupType] | tuple[None, None]
 
 
 def load_slip39_state() -> Slip39State:

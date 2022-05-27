@@ -17,6 +17,9 @@
 
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include <SDL.h>
 
@@ -24,11 +27,15 @@
 
 #include "pizero.h"
 #include "buttons.h"
+#include "rng.h"
 #include "oled_drivers.h"
+
+#define RANDOM_DEV_FILE "/dev/random"
 
 static uint8_t gpio_yes;
 static uint8_t gpio_no;
 static uint8_t oled_type = 0;
+static int random_fd = -1;
 
 static uint8_t buttonPin(const char* pinVarName, uint8_t defaultPin) {
 	int pin = defaultPin;
@@ -92,3 +99,27 @@ uint16_t buttonRead(void) {
 	return ~state;
 }
 
+uint32_t random32(void) {
+	static uint32_t last = 0;
+	uint32_t new = 0;
+
+	if (random_fd == -1)
+	{
+		random_fd = open(RANDOM_DEV_FILE, O_RDONLY);
+		if (random_fd < 0) {
+			fprintf(stderr, "Failed to open " RANDOM_DEV_FILE);
+			exit(1);
+		}
+	}
+
+	do {
+		ssize_t n = read(random_fd, &new, sizeof(new));
+		if (n < (int) sizeof(new)) {
+			fprintf(stderr, "Failed to read " RANDOM_DEV_FILE);
+			exit(1);
+		}
+	} while (last == new);
+
+	last = new;
+	return new;
+}

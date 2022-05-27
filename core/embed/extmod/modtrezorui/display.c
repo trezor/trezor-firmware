@@ -28,34 +28,74 @@
 
 #include "font_bitmap.h"
 
-#if TREZOR_MODEL == T
+#if defined TREZOR_MODEL_T
+
+// TT new rust UI
+#if TREZOR_UI2
 
 #ifdef TREZOR_FONT_NORMAL_ENABLE
-#include "font_roboto_regular_20.h"
-#define FONT_NORMAL_DATA Font_Roboto_Regular_20
+#include "font_tthoves_regular_18.h"
+#define FONT_NORMAL_DATA Font_TTHoves_Regular_18
+#define FONT_NORMAL_HEIGHT 18
+#endif
+#ifdef TREZOR_FONT_MEDIUM_ENABLE
+#include "font_tthoves_medium_20.h"
+#define FONT_MEDIUM_DATA Font_TTHoves_Medium_20
+#define FONT_MEDIUM_HEIGHT 20
 #endif
 #ifdef TREZOR_FONT_BOLD_ENABLE
-#include "font_roboto_bold_20.h"
-#define FONT_BOLD_DATA Font_Roboto_Bold_20
+#include "font_tthoves_bold_16.h"
+#define FONT_BOLD_DATA Font_TTHoves_Bold_16
+#define FONT_BOLD_HEIGHT 16
 #endif
 #ifdef TREZOR_FONT_MONO_ENABLE
 #include "font_robotomono_regular_20.h"
 #define FONT_MONO_DATA Font_RobotoMono_Regular_20
+#define FONT_MONO_HEIGHT 20
 #endif
 
-#elif TREZOR_MODEL == 1
+// TT old python UI
+#else
+
+#ifdef TREZOR_FONT_NORMAL_ENABLE
+#include "font_roboto_regular_20.h"
+#define FONT_NORMAL_DATA Font_Roboto_Regular_20
+#define FONT_NORMAL_HEIGHT 20
+#endif
+#ifdef TREZOR_FONT_BOLD_ENABLE
+#include "font_roboto_bold_20.h"
+#define FONT_BOLD_DATA Font_Roboto_Bold_20
+#define FONT_BOLD_HEIGHT 20
+#endif
+#ifdef TREZOR_FONT_MONO_ENABLE
+#include "font_robotomono_regular_20.h"
+#define FONT_MONO_DATA Font_RobotoMono_Regular_20
+#define FONT_MONO_HEIGHT 20
+#endif
+
+#endif
+
+#elif defined TREZOR_MODEL_1
 
 #ifdef TREZOR_FONT_NORMAL_ENABLE
 #include "font_pixeloperator_regular_8.h"
 #define FONT_NORMAL_DATA Font_PixelOperator_Regular_8
+#define FONT_NORMAL_HEIGHT 8
+#endif
+#ifdef TREZOR_FONT_MEDIUM_ENABLE
+#include "font_pixeloperator_regular_8.h"
+#define FONT_MEDIUM_DATA Font_PixelOperator_Regular_8
+#define FONT_MEDIUM_HEIGHT 8
 #endif
 #ifdef TREZOR_FONT_BOLD_ENABLE
 #include "font_pixeloperator_bold_8.h"
 #define FONT_BOLD_DATA Font_PixelOperator_Bold_8
+#define FONT_BOLD_HEIGHT 8
 #endif
 #ifdef TREZOR_FONT_MONO_ENABLE
 #include "font_pixeloperatormono_regular_8.h"
 #define FONT_MONO_DATA Font_PixelOperatorMono_Regular_8
+#define FONT_MONO_HEIGHT 8
 #endif
 
 #else
@@ -75,9 +115,9 @@ static struct { int x, y; } DISPLAY_OFFSET;
 #ifdef TREZOR_EMULATOR
 #include "display-unix.h"
 #else
-#if TREZOR_MODEL == T
+#if defined TREZOR_MODEL_T
 #include "display-stm32_T.h"
-#elif TREZOR_MODEL == 1
+#elif defined TREZOR_MODEL_1
 #include "display-stm32_1.h"
 #else
 #error Unknown Trezor model
@@ -221,7 +261,7 @@ static void uzlib_prepare(struct uzlib_uncomp *decomp, uint8_t *window,
 
 void display_image(int x, int y, int w, int h, const void *data,
                    uint32_t datalen) {
-#if TREZOR_MODEL == T
+#if defined TREZOR_MODEL_T
   x += DISPLAY_OFFSET.x;
   y += DISPLAY_OFFSET.y;
   int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
@@ -262,7 +302,7 @@ void display_image(int x, int y, int w, int h, const void *data,
 
 void display_avatar(int x, int y, const void *data, uint32_t datalen,
                     uint16_t fgcolor, uint16_t bgcolor) {
-#if TREZOR_MODEL == T
+#if defined TREZOR_MODEL_T
   x += DISPLAY_OFFSET.x;
   y += DISPLAY_OFFSET.y;
   int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
@@ -386,14 +426,14 @@ bool display_toif_info(const uint8_t *data, uint32_t len, uint16_t *out_w,
   return true;
 }
 
-#if TREZOR_MODEL == T
+#if defined TREZOR_MODEL_T
 #include "loader.h"
 #endif
 
 void display_loader(uint16_t progress, bool indeterminate, int yoffset,
                     uint16_t fgcolor, uint16_t bgcolor, const uint8_t *icon,
                     uint32_t iconlen, uint16_t iconfgcolor) {
-#if TREZOR_MODEL == T
+#if defined TREZOR_MODEL_T
   uint16_t colortable[16] = {0}, iconcolortable[16] = {0};
   set_color_table(colortable, fgcolor, bgcolor);
   if (icon) {
@@ -407,11 +447,11 @@ void display_loader(uint16_t progress, bool indeterminate, int yoffset,
                      DISPLAY_RESY / 2 - img_loader_size + yoffset,
                      DISPLAY_RESX / 2 + img_loader_size - 1,
                      DISPLAY_RESY / 2 + img_loader_size - 1 + yoffset);
+  uint8_t icondata[(LOADER_ICON_SIZE * LOADER_ICON_SIZE) / 2] = {0};
   if (icon && memcmp(icon, "TOIg", 4) == 0 &&
       LOADER_ICON_SIZE == *(uint16_t *)(icon + 4) &&
       LOADER_ICON_SIZE == *(uint16_t *)(icon + 6) &&
       iconlen == 12 + *(uint32_t *)(icon + 8)) {
-    uint8_t icondata[(LOADER_ICON_SIZE * LOADER_ICON_SIZE) / 2] = {0};
     memzero(&icondata, sizeof(icondata));
     struct uzlib_uncomp decomp = {0};
     uzlib_prepare(&decomp, NULL, icon + 12, iconlen - 12, icondata,
@@ -632,6 +672,10 @@ static const uint8_t *get_glyph(int font, uint8_t c) {
       case FONT_NORMAL:
         return FONT_NORMAL_DATA[c - ' '];
 #endif
+#ifdef TREZOR_FONT_MEDIUM_ENABLE
+      case FONT_MEDIUM:
+        return FONT_MEDIUM_DATA[c - ' '];
+#endif
 #ifdef TREZOR_FONT_BOLD_ENABLE
       case FONT_BOLD:
         return FONT_BOLD_DATA[c - ' '];
@@ -652,6 +696,10 @@ static const uint8_t *get_glyph(int font, uint8_t c) {
 #ifdef TREZOR_FONT_NORMAL_ENABLE
     case FONT_NORMAL:
       return NONPRINTABLE_GLYPH(FONT_NORMAL_DATA);
+#endif
+#ifdef TREZOR_FONT_MEDIUM_ENABLE
+    case FONT_MEDIUM:
+      return NONPRINTABLE_GLYPH(FONT_MEDIUM_DATA);
 #endif
 #ifdef TREZOR_FONT_BOLD_ENABLE
     case FONT_BOLD:
@@ -793,6 +841,28 @@ int display_text_split(const char *text, int textlen, int font,
   return textlen;
 }
 
+int display_text_height(int font) {
+  switch (font) {
+#ifdef TREZOR_FONT_NORMAL_ENABLE
+    case FONT_NORMAL:
+      return FONT_NORMAL_HEIGHT;
+#endif
+#ifdef TREZOR_FONT_MEDIUM_ENABLE
+    case FONT_MEDIUM:
+      return FONT_MEDIUM_HEIGHT;
+#endif
+#ifdef TREZOR_FONT_BOLD_ENABLE
+    case FONT_BOLD:
+      return FONT_BOLD_HEIGHT;
+#endif
+#ifdef TREZOR_FONT_MONO_ENABLE
+    case FONT_MONO:
+      return FONT_MONO_HEIGHT;
+#endif
+  }
+  return 0;
+}
+
 #define QR_MAX_VERSION 9
 
 void display_qrcode(int x, int y, const char *data, uint32_t datalen,
@@ -845,9 +915,9 @@ void display_offset(int set_xy[2], int *get_x, int *get_y) {
 
 int display_orientation(int degrees) {
   if (degrees != DISPLAY_ORIENTATION) {
-#if TREZOR_MODEL == T
+#if defined TREZOR_MODEL_T
     if (degrees == 0 || degrees == 90 || degrees == 180 || degrees == 270) {
-#elif TREZOR_MODEL == 1
+#elif defined TREZOR_MODEL_1
     if (degrees == 0 || degrees == 180) {
 #else
 #error Unknown Trezor model
@@ -860,7 +930,7 @@ int display_orientation(int degrees) {
 }
 
 int display_backlight(int val) {
-#if TREZOR_MODEL == 1
+#if defined TREZOR_MODEL_1
   val = 255;
 #endif
   if (DISPLAY_BACKLIGHT != val && val >= 0 && val <= 255) {

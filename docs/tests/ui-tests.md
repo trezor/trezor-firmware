@@ -41,12 +41,6 @@ If you wish to check that all test cases in `fixtures.json` were used set the `-
 pytest tests/device_tests --ui=test --ui-check-missing
 ```
 
-You can also skip tests marked as `skip_ui`.
-
-```sh
-pytest tests/device_tests --ui=test -m "not skip_ui"
-```
-
 # Updating Fixtures ("Recording")
 
 Short version:
@@ -96,5 +90,5 @@ creates a report where you find which tests were altered, added, or removed rela
 master. This useful for Pull Requests.
 
 This report is available as an artifact on CI as well. You can find it by
-visiting the "core unix ui changes" job in your pipeline - browse the
+visiting the "unix ui changes" job in your pipeline - browse the
 artifacts and open `master_diff/index.html`.

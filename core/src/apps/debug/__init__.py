@@ -16,7 +16,9 @@ if __debug__:
 
     from apps import workflow_handlers
 
-    if False:
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
         from trezor.ui import Layout
         from trezor.messages import (
             DebugLinkDecision,
@@ -48,6 +50,13 @@ if __debug__:
     LAYOUT_WATCHER_STATE = 1
     LAYOUT_WATCHER_LAYOUT = 2
 
+    try:
+        import trezorui2
+
+        UI2 = True
+    except ImportError:
+        UI2 = False
+
     def screenshot() -> bool:
         if storage.save_screen:
             display.save(storage.save_screen_directory + "/refresh-")
@@ -60,14 +69,28 @@ if __debug__:
             layout_change_chan.publish(storage.current_content)
 
     async def dispatch_debuglink_decision(msg: DebugLinkDecision) -> None:
-        from trezor.enums import DebugSwipeDirection
+        from trezor.enums import DebugButton, DebugSwipeDirection
         from trezor.ui import Result
-        from trezor.ui.components.tt import confirm, swipe
 
-        if msg.yes_no is not None:
-            await confirm_chan.put(
-                Result(confirm.CONFIRMED if msg.yes_no else confirm.CANCELLED)
-            )
+        if UI2:
+            confirm = trezorui2
+
+            class swipe:
+                SWIPE_UP = 0x01
+                SWIPE_DOWN = 0x02
+                SWIPE_LEFT = 0x04
+                SWIPE_RIGHT = 0x08
+
+        else:
+            from trezor.ui.components.tt import confirm, swipe
+
+        if msg.button is not None:
+            if msg.button == DebugButton.NO:
+                await confirm_chan.put(Result(confirm.CANCELLED))
+            elif msg.button == DebugButton.YES:
+                await confirm_chan.put(Result(confirm.CONFIRMED))
+            elif msg.button == DebugButton.INFO:
+                await confirm_chan.put(Result(confirm.INFO))
         if msg.swipe is not None:
             if msg.swipe == DebugSwipeDirection.UP:
                 await swipe_chan.put(swipe.SWIPE_UP)
@@ -108,7 +131,8 @@ if __debug__:
         from trezor import ui
 
         layout_change_chan.putters.clear()
-        await ui.wait_until_layout_is_running()
+        if msg.watch:
+            await ui.wait_until_layout_is_running()
         storage.watch_layout_changes = bool(msg.watch)
         log.debug(__name__, "Watch layout changes: %s", storage.watch_layout_changes)
         return Success()
@@ -207,8 +231,8 @@ if __debug__:
         return Success()
 
     def boot() -> None:
-        workflow_handlers.register(MessageType.DebugLinkDecision, dispatch_DebugLinkDecision)  # type: ignore
-        workflow_handlers.register(MessageType.DebugLinkGetState, dispatch_DebugLinkGetState)  # type: ignore
+        workflow_handlers.register(MessageType.DebugLinkDecision, dispatch_DebugLinkDecision)  # type: ignore [Argument of type "(ctx: Context, msg: DebugLinkDecision) -> Coroutine[Any, Any, None]" cannot be assigned to parameter "handler" of type "Handler[Msg@register]" in function "register"]
+        workflow_handlers.register(MessageType.DebugLinkGetState, dispatch_DebugLinkGetState)  # type: ignore [Argument of type "(ctx: Context, msg: DebugLinkGetState) -> Coroutine[Any, Any, DebugLinkState | None]" cannot be assigned to parameter "handler" of type "Handler[Msg@register]" in function "register"]
         workflow_handlers.register(
             MessageType.DebugLinkReseedRandom, dispatch_DebugLinkReseedRandom
         )

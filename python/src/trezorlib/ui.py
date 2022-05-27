@@ -172,6 +172,56 @@ class ClickUI:
                 raise Cancelled from None
 
 
+class ScriptUI:
+    """Interface to be used by scripts, not directly by user.
+
+    Communicates with a client application using print() and input().
+
+    Lot of `ClickUI` logic is outsourced to the client application, which
+    is responsible for supplying the PIN and passphrase.
+
+    Reference client implementation can be found under `tools/trezorctl_script_client.py`.
+    """
+
+    @staticmethod
+    def button_request(br: messages.ButtonRequest) -> None:
+        # TODO: send name={br.name} when it will be supported
+        code = br.code.name if br.code else None
+        print(f"?BUTTON code={code} pages={br.pages}")
+
+    @staticmethod
+    def get_pin(code: Optional[PinMatrixRequestType] = None) -> str:
+        if code is None:
+            print("?PIN")
+        else:
+            print(f"?PIN code={code.name}")
+
+        pin = input()
+        if pin == "CANCEL":
+            raise Cancelled from None
+        elif not pin.startswith(":"):
+            raise RuntimeError("Sent PIN must start with ':'")
+        else:
+            return pin[1:]
+
+    @staticmethod
+    def get_passphrase(available_on_device: bool) -> Union[str, object]:
+        if available_on_device:
+            print("?PASSPHRASE available_on_device")
+        else:
+            print("?PASSPHRASE")
+
+        passphrase = input()
+        if passphrase == "CANCEL":
+            raise Cancelled from None
+        elif passphrase == "ON_DEVICE":
+            return PASSPHRASE_ON_DEVICE
+        elif not passphrase.startswith(":"):
+            raise RuntimeError("Sent passphrase must start with ':'")
+        else:
+            return passphrase[1:]
+
+
 def mnemonic_words(
     expand: bool = False, language: str = "english"
 ) -> Callable[[WordRequestType], str]:

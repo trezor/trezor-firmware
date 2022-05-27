@@ -133,7 +133,7 @@ env.Replace(
         'vendor/micropython/lib/cmsis/inc',
     ] + CPPPATH_MOD,
     CPPDEFINES=[
-        ('TREZOR_MODEL', '$TREZOR_MODEL'),
+        'TREZOR_MODEL_'+TREZOR_MODEL,
         CPU_MODEL,
         'USE_HAL_DRIVER',
         ('STM32_HAL_H', '"<stm32f4xx.h>"'),

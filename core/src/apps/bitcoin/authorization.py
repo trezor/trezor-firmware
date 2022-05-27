@@ -1,13 +1,15 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
-from trezor import wire
+from trezor import utils, wire
 from trezor.messages import AuthorizeCoinJoin
 
 from apps.common import authorization
 
 from .common import BIP32_WALLET_DEPTH
+from .writers import write_bytes_prefixed
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import (
         GetOwnershipProof,
         SignTx,
@@ -17,8 +19,7 @@ if False:
 
     from apps.common.coininfo import CoinInfo
 
-_ROUND_ID_LEN = const(32)
-FEE_PER_ANONYMITY_DECIMALS = const(9)
+FEE_RATE_DECIMALS = const(8)
 
 
 class CoinJoinAuthorization:
@@ -27,13 +28,14 @@ class CoinJoinAuthorization:
 
     def check_get_ownership_proof(self, msg: GetOwnershipProof) -> bool:
         # Check whether the current params matches the parameters of the request.
+        coordinator = utils.empty_bytearray(1 + len(self.params.coordinator.encode()))
+        write_bytes_prefixed(coordinator, self.params.coordinator.encode())
         return (
             len(msg.address_n) >= BIP32_WALLET_DEPTH
             and msg.address_n[:-BIP32_WALLET_DEPTH] == self.params.address_n
             and msg.coin_name == self.params.coin_name
             and msg.script_type == self.params.script_type
-            and len(msg.commitment_data) >= _ROUND_ID_LEN
-            and msg.commitment_data[:-_ROUND_ID_LEN] == self.params.coordinator.encode()
+            and msg.commitment_data.startswith(bytes(coordinator))
         )
 
     def check_sign_tx_input(self, txi: TxInput, coin: CoinInfo) -> bool:
@@ -45,11 +47,11 @@ class CoinJoinAuthorization:
             and txi.script_type == self.params.script_type
         )
 
-    def approve_sign_tx(self, msg: SignTx, fee: int) -> bool:
-        if self.params.max_total_fee < fee or msg.coin_name != self.params.coin_name:
+    def approve_sign_tx(self, msg: SignTx) -> bool:
+        if self.params.max_rounds < 1 or msg.coin_name != self.params.coin_name:
             return False
 
-        self.params.max_total_fee -= fee
+        self.params.max_rounds -= 1
         authorization.set(self.params)
         return True
 

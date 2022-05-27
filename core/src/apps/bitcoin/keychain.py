@@ -1,5 +1,6 @@
 import gc
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor import wire
 from trezor.enums import InputScriptType
@@ -11,26 +12,43 @@ from apps.common.paths import PATTERN_BIP44, PathSchema
 from . import authorization
 from .common import BITCOIN_NAMES
 
-if False:
+if TYPE_CHECKING:
     from typing import Awaitable, Callable, Iterable, TypeVar
     from typing_extensions import Protocol
 
     from trezor.protobuf import MessageType
 
+    from trezor.messages import (
+        AuthorizeCoinJoin,
+        GetAddress,
+        GetOwnershipId,
+        GetOwnershipProof,
+        GetPublicKey,
+        SignMessage,
+        SignTx,
+        VerifyMessage,
+    )
+
     from apps.common.keychain import Keychain, MsgOut, Handler
     from apps.common.paths import Bip32Path
 
-    class MsgWithCoinName(Protocol):
-        coin_name: str
+    BitcoinMessage = (
+        AuthorizeCoinJoin
+        | GetAddress
+        | GetOwnershipId
+        | GetOwnershipProof
+        | GetPublicKey
+        | SignMessage
+        | SignTx
+        | VerifyMessage
+    )
 
     class MsgWithAddressScriptType(Protocol):
-        # XXX should be Bip32Path but that fails
-        address_n: list[int] = ...
-        script_type: InputScriptType = ...
+        address_n: Bip32Path
+        script_type: InputScriptType
 
-    MsgIn = TypeVar("MsgIn", bound=MsgWithCoinName)
+    MsgIn = TypeVar("MsgIn", bound=BitcoinMessage)
     HandlerWithCoinInfo = Callable[..., Awaitable[MsgOut]]
-
 
 # BIP-45 for multisig: https://github.com/bitcoin/bips/blob/master/bip-0045.mediawiki
 PATTERN_BIP45 = "m/45'/[0-100]/change/address_index"
@@ -220,7 +238,7 @@ async def get_keychain_for_coin(
 ) -> tuple[Keychain, coininfo.CoinInfo]:
     coin = get_coin_by_name(coin_name)
     schemas = get_schemas_for_coin(coin)
-    slip21_namespaces = [[b"SLIP-0019"]]
+    slip21_namespaces = [[b"SLIP-0019"], [b"SLIP-0024"]]
     keychain = await get_keychain(ctx, coin.curve_name, schemas, slip21_namespaces)
     return keychain, coin
 

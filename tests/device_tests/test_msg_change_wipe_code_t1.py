@@ -18,6 +18,8 @@ import pytest
 
 from trezorlib import device, exceptions, messages
 from trezorlib.client import MAX_PIN_LENGTH
+from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.tools import parse_path
 
 PinType = messages.PinMatrixRequestType
 
@@ -30,7 +32,7 @@ WIPE_CODE_TOO_LONG = WIPE_CODE_MAX + "1"
 pytestmark = pytest.mark.skip_t2
 
 
-def _set_wipe_code(client, pin, wipe_code):
+def _set_wipe_code(client: Client, pin, wipe_code):
     # Set/change wipe code.
     with client:
         if client.features.pin_protection:
@@ -56,7 +58,7 @@ def _set_wipe_code(client, pin, wipe_code):
         device.change_wipe_code(client)
 
 
-def _change_pin(client, old_pin, new_pin):
+def _change_pin(client: Client, old_pin, new_pin):
     assert client.features.pin_protection is True
     with client:
         client.use_pin_sequence([old_pin, new_pin, new_pin])
@@ -66,14 +68,14 @@ def _change_pin(client, old_pin, new_pin):
             return f.failure
 
 
-def _check_wipe_code(client, pin, wipe_code):
+def _check_wipe_code(client: Client, pin, wipe_code):
     """Check that wipe code is set by changing the PIN to it."""
     f = _change_pin(client, pin, wipe_code)
     assert isinstance(f, messages.Failure)
 
 
 @pytest.mark.setup_client(pin=PIN4)
-def test_set_remove_wipe_code(client):
+def test_set_remove_wipe_code(client: Client):
     # Check that wipe code protection status is not revealed in locked state.
     assert client.features.wipe_code_protection is None
 
@@ -107,7 +109,7 @@ def test_set_remove_wipe_code(client):
     assert client.features.wipe_code_protection is False
 
 
-def test_set_wipe_code_mismatch(client):
+def test_set_wipe_code_mismatch(client: Client):
     # Check that there is no wipe code protection.
     client.ensure_unlocked()
     assert client.features.wipe_code_protection is False
@@ -132,7 +134,7 @@ def test_set_wipe_code_mismatch(client):
 
 
 @pytest.mark.setup_client(pin=PIN4)
-def test_set_wipe_code_to_pin(client):
+def test_set_wipe_code_to_pin(client: Client):
     # Check that wipe code protection status is not revealed in locked state.
     assert client.features.wipe_code_protection is None
 
@@ -155,7 +157,7 @@ def test_set_wipe_code_to_pin(client):
     assert client.features.wipe_code_protection is False
 
 
-def test_set_pin_to_wipe_code(client):
+def test_set_pin_to_wipe_code(client: Client):
     # Set wipe code.
     _set_wipe_code(client, None, WIPE_CODE4)
 
@@ -176,12 +178,12 @@ def test_set_pin_to_wipe_code(client):
     # Check that there is no PIN protection.
     client.init_device()
     assert client.features.pin_protection is False
-    resp = client.call_raw(messages.GetAddress())
+    resp = client.call_raw(messages.GetAddress(address_n=parse_path("m/44'/0'/0'/0/0")))
     assert isinstance(resp, messages.Address)
 
 
 @pytest.mark.parametrize("invalid_wipe_code", ("1204", "", WIPE_CODE_TOO_LONG))
-def test_set_wipe_code_invalid(client, invalid_wipe_code):
+def test_set_wipe_code_invalid(client: Client, invalid_wipe_code):
     # Let's set the wipe code
     ret = client.call_raw(messages.ChangeWipeCode())
     assert isinstance(ret, messages.ButtonRequest)

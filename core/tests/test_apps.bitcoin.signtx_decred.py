@@ -32,32 +32,27 @@ from apps.bitcoin.sign_tx import decred, helpers
 
 EMPTY_SERIALIZED = TxRequestSerializedType(serialized_tx=bytearray())
 
-coin_decred = coins.by_name("Decred")
+coin_decred = coins.by_name("Decred Testnet")
 
-ptx1 = PrevTx(version=1, lock_time=0, inputs_count=2, outputs_count=1, extra_data_len=0)
+ptx1 = PrevTx(version=1, lock_time=0, inputs_count=1, outputs_count=2, extra_data_len=0)
 pinp1 = PrevInput(
     script_sig=unhexlify(
-        "483045022072ba61305fe7cb542d142b8f3299a7b10f9ea61f6ffaab5dca8142601869d53c0221009a8027ed79eb3b9bc13577ac2853269323434558528c6b6a7e542be46e7e9a820141047a2d177c0f3626fc68c53610b0270fa6156181f46586c679ba6a88b34c6f4874686390b4d92e5769fbb89c8050b984f4ec0b257a0e5c4ff8bd3b035a51709503"
+        "47304402207d127d59a44187952d9d0de94ad34a19dd9a84beb124fd8a3fb439c862544d3202206618f321385c30bda96fb01ce03f70a269d78a301c0b0c2e3e3689dfae3f4733012102ae1f6b51086bd753f072f94eb8ffe6806d3570c088a3ede46c678b6ea47d1675"
     ),
     prev_hash=unhexlify(
-        "c16a03f1cf8f99f6b5297ab614586cacec784c2d259af245909dedb0e39eddcf"
+        "21012b08c5077036460e8f75bbc57beb11d7bc30e7ad224ad5e67d15bd086500"
     ),
-    prev_index=1,
-    sequence=0xFFFF_FFFF,
-)
-pinp2 = PrevInput(
-    script_sig=unhexlify(
-        "48304502200fd63adc8f6cb34359dc6cca9e5458d7ea50376cbd0a74514880735e6d1b8a4c0221008b6ead7fe5fbdab7319d6dfede3a0bc8e2a7c5b5a9301636d1de4aa31a3ee9b101410486ad608470d796236b003635718dfc07c0cac0cfc3bfc3079e4f491b0426f0676e6643a39198e8e7bdaffb94f4b49ea21baa107ec2e237368872836073668214"
-    ),
-    prev_hash=unhexlify(
-        "1ae39a2f8d59670c8fc61179148a8e61e039d0d9e8ab08610cb69b4a19453eaf"
-    ),
-    prev_index=1,
+    prev_index=2,
     sequence=0xFFFF_FFFF,
 )
 pout1 = PrevOutput(
-    script_pubkey=unhexlify("76a91424a56db43cf6f2b02e838ea493f95d8d6047423188ac"),
-    amount=200000 + 200000 - 10000,
+    script_pubkey=unhexlify("76a914e4111051ae0349ab5589cf2b7e125c6da694a1a188ac"),
+    amount=153_185_001,
+    decred_script_version=0,
+)
+pout2 = PrevOutput(
+    script_pubkey=unhexlify("76a914dc1a98d791735eb9a8715a2a219c23680edcedad88ac"),
+    amount=200_000_000,
     decred_script_version=0,
 )
 
@@ -67,25 +62,28 @@ class TestSignTxDecred(unittest.TestCase):
     # pylint: disable=C0301
 
     def test_one_one_fee(self):
-
         inp1 = TxInput(
-            address_n=[44 | 0x80000000, 42 | 0x80000000, 0 | 0x80000000, 0, 0],
+            address_n=[44 | 0x80000000, 1 | 0x80000000, 0 | 0x80000000, 0, 0],
             prev_hash=unhexlify(
-                "df8f9cf58455e8aa22d7f7be09d7877f7a0a698da7695152374c057a3047c24a"
+                "4d8acde26d5efc7f5df1b3cdada6b11027616520c883e09c919b88f0f0cb6410"
             ),
-            prev_index=0,
-            amount=390000,
+            prev_index=1,
+            amount=200_000_000,
             multisig=None,
             sequence=0xFFFF_FFFF,
         )
         out1 = TxOutput(
-            address="DsaHnKa418BeeQmyhpQEGG4cxGAPrneydfv",
-            amount=390000 - 10000,
+            address="TscqTv1he8MZrV321SfRghw7LFBCJDKB3oz",
+            amount=200_000_000 - 100_000,
             script_type=OutputScriptType.PAYTOADDRESS,
             multisig=None,
         )
         tx = SignTx(
-            coin_name="Decred", version=1, lock_time=0, inputs_count=1, outputs_count=1
+            coin_name="Decred Testnet",
+            version=1,
+            lock_time=0,
+            inputs_count=1,
+            outputs_count=1,
         )
 
         messages = [
@@ -102,19 +100,25 @@ class TestSignTxDecred(unittest.TestCase):
                 request_type=TXOUTPUT,
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
                 serialized=TxRequestSerializedType(
-                    serialized_tx=unhexlify("4ac247307a054c37525169a78d690a7a7f87d709bef7d722aae85584f59c8fdf0000000000ffffffff01")
+                    serialized_tx=unhexlify(
+                        "1064cbf0f0889b919ce083c82065612710b1a6adcdb3f15d7ffc5e6de2cd8a4d0100000000ffffffff01"
+                    )
                 ),
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
             helpers.UiConfirmOutput(out1, coin_decred, AmountUnit.BITCOIN),
             True,
-            helpers.UiConfirmTotal(380000 + 10000, 10000, coin_decred, AmountUnit.BITCOIN),
+            helpers.UiConfirmTotal(
+                200_000_000, 100_000, coin_decred, AmountUnit.BITCOIN
+            ),
             True,
             TxRequest(
                 request_type=TXINPUT,
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
                 serialized=TxRequestSerializedType(
-                    serialized_tx=unhexlify("60cc05000000000000001976a914664b0cd46741a695a38f8ed37db2a20327471beb88ac0000000000000000")
+                    serialized_tx=unhexlify(
+                        "603bea0b0000000000001976a914819d291a2f7fbf770e784bfd78b5ce92c58e95ea88ac0000000000000000"
+                    )
                 ),
             ),
             TxAckInput(tx=TxAckInputWrapper(input=inp1)),
@@ -123,7 +127,7 @@ class TestSignTxDecred(unittest.TestCase):
                 details=TxRequestDetailsType(
                     request_index=None,
                     tx_hash=unhexlify(
-                        "df8f9cf58455e8aa22d7f7be09d7877f7a0a698da7695152374c057a3047c24a"
+                        "4d8acde26d5efc7f5df1b3cdada6b11027616520c883e09c919b88f0f0cb6410"
                     ),
                 ),
                 serialized=EMPTY_SERIALIZED,
@@ -134,40 +138,38 @@ class TestSignTxDecred(unittest.TestCase):
                 details=TxRequestDetailsType(
                     request_index=0,
                     tx_hash=unhexlify(
-                        "df8f9cf58455e8aa22d7f7be09d7877f7a0a698da7695152374c057a3047c24a"
+                        "4d8acde26d5efc7f5df1b3cdada6b11027616520c883e09c919b88f0f0cb6410"
                     ),
                 ),
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckPrevInput(tx=TxAckPrevInputWrapper(input=pinp1)),
             TxRequest(
-                request_type=TXINPUT,
-                details=TxRequestDetailsType(
-                    request_index=1,
-                    tx_hash=unhexlify(
-                        "df8f9cf58455e8aa22d7f7be09d7877f7a0a698da7695152374c057a3047c24a"
-                    ),
-                ),
-                serialized=EMPTY_SERIALIZED,
-            ),
-            TxAckPrevInput(tx=TxAckPrevInputWrapper(input=pinp2)),
-            TxRequest(
                 request_type=TXOUTPUT,
                 details=TxRequestDetailsType(
                     request_index=0,
                     tx_hash=unhexlify(
-                        "df8f9cf58455e8aa22d7f7be09d7877f7a0a698da7695152374c057a3047c24a"
+                        "4d8acde26d5efc7f5df1b3cdada6b11027616520c883e09c919b88f0f0cb6410"
                     ),
                 ),
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckPrevOutput(tx=TxAckPrevOutputWrapper(output=pout1)),
             TxRequest(
+                request_type=TXOUTPUT,
+                details=TxRequestDetailsType(
+                    request_index=1,
+                    tx_hash=unhexlify(
+                        "4d8acde26d5efc7f5df1b3cdada6b11027616520c883e09c919b88f0f0cb6410"
+                    ),
+                ),
+                serialized=EMPTY_SERIALIZED,
+            ),
+            TxAckPrevOutput(tx=TxAckPrevOutputWrapper(output=pout2)),
+            TxRequest(
                 request_type=TXINPUT,
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
-                serialized=TxRequestSerializedType(
-                    serialized_tx=unhexlify("01")
-                ),
+                serialized=TxRequestSerializedType(serialized_tx=unhexlify("01")),
             ),
             TxAckInput(tx=TxAckInputWrapper(input=inp1)),
             TxRequest(
@@ -176,15 +178,17 @@ class TestSignTxDecred(unittest.TestCase):
                 serialized=TxRequestSerializedType(
                     signature_index=0,
                     signature=unhexlify(
-                        "3044022078a5c388838796562eb9dad176b00e6d9425bc360083f633a14948685ca8a5ce02202a1b49cd44104a9d40aee8f988281a8aac94a497b5bc7337c77cc7ddbab16f23"
+                        "304402205ea5a0aec7e405eb3c792165f103f61f8ef862e76a2b0146bec1082b243cfbff022061e307113d389b969313bbee2c9a149fad4afdf715e8bd78df579438ef692814"
                     ),
-                    serialized_tx=unhexlify("70f305000000000000000000ffffffff6a473044022078a5c388838796562eb9dad176b00e6d9425bc360083f633a14948685ca8a5ce02202a1b49cd44104a9d40aee8f988281a8aac94a497b5bc7337c77cc7ddbab16f23012103fc15aa2f684457332c0ef1fe44d908ab97208102a1792caa13bcc5e886c4b321"),
+                    serialized_tx=unhexlify(
+                        "00c2eb0b0000000000000000ffffffff6a47304402205ea5a0aec7e405eb3c792165f103f61f8ef862e76a2b0146bec1082b243cfbff022061e307113d389b969313bbee2c9a149fad4afdf715e8bd78df579438ef6928140121030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0"
+                    ),
                 ),
             ),
         ]
 
         seed = bip39.seed(
-            "alcohol woman abuse must during monitor noble actual mixed trade anger aisle",
+            " ".join(["all"] * 12),
             "",
         )
         ns = get_schemas_for_coin(coin_decred)
@@ -203,35 +207,40 @@ class TestSignTxDecred(unittest.TestCase):
 
     def test_purchase_ticket(self):
         inp1 = TxInput(
-            address_n=[44 | 0x80000000, 42 | 0x80000000, 0 | 0x80000000, 0, 0],
+            address_n=[44 | 0x80000000, 1 | 0x80000000, 0 | 0x80000000, 0, 0],
             prev_hash=unhexlify(
-                "df8f9cf58455e8aa22d7f7be09d7877f7a0a698da7695152374c057a3047c24a"
+                "4d8acde26d5efc7f5df1b3cdada6b11027616520c883e09c919b88f0f0cb6410"
             ),
-            prev_index=0,
-            amount=390000,
+            prev_index=1,
+            amount=200_000_000,
             multisig=None,
             sequence=0xFFFF_FFFF,
         )
         out1 = TxOutput(
-            address="DsaHnKa418BeeQmyhpQEGG4cxGAPrneydfv",
-            amount=390000 - 10000,
+            address="TscqTv1he8MZrV321SfRghw7LFBCJDKB3oz",
+            amount=200_000_000 - 100_000,
             script_type=OutputScriptType.PAYTOADDRESS,
             multisig=None,
         )
         out2 = TxOutput(
-            address_n=[44 | 0x80000000, 42 | 0x80000000, 0 | 0x80000000, 0, 0],
-            amount=390000,
+            address_n=[44 | 0x80000000, 1 | 0x80000000, 0 | 0x80000000, 0, 0],
+            amount=200_000_000,
             script_type=OutputScriptType.PAYTOADDRESS,
             multisig=None,
         )
         out3 = TxOutput(
-            address="DsQxuVRvS4eaJ42dhQEsCXauMWjvopWgrVg",
+            address="TsR28UZRprhgQQhzWns2M6cAwchrNVvbYq2",
             amount=0,
             script_type=OutputScriptType.PAYTOADDRESS,
             multisig=None,
         )
         tx = SignTx(
-            coin_name="Decred", version=1, lock_time=0, inputs_count=1, outputs_count=3, decred_staking_ticket=True
+            coin_name="Decred Testnet",
+            version=1,
+            lock_time=0,
+            inputs_count=1,
+            outputs_count=3,
+            decred_staking_ticket=True,
         )
 
         messages = [
@@ -248,17 +257,23 @@ class TestSignTxDecred(unittest.TestCase):
                 request_type=TXOUTPUT,
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
                 serialized=TxRequestSerializedType(
-                    serialized_tx=unhexlify("4ac247307a054c37525169a78d690a7a7f87d709bef7d722aae85584f59c8fdf0000000000ffffffff03")
+                    serialized_tx=unhexlify(
+                        "1064cbf0f0889b919ce083c82065612710b1a6adcdb3f15d7ffc5e6de2cd8a4d0100000000ffffffff03"
+                    )
                 ),
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
-            helpers.UiConfirmDecredSSTXSubmission(out1, coin_decred, AmountUnit.BITCOIN),
+            helpers.UiConfirmDecredSSTXSubmission(
+                out1, coin_decred, AmountUnit.BITCOIN
+            ),
             True,
             TxRequest(
                 request_type=TXOUTPUT,
                 details=TxRequestDetailsType(request_index=1, tx_hash=None),
                 serialized=TxRequestSerializedType(
-                    serialized_tx=unhexlify("60cc05000000000000001aba76a914664b0cd46741a695a38f8ed37db2a20327471beb88ac")
+                    serialized_tx=unhexlify(
+                        "603bea0b0000000000001aba76a914819d291a2f7fbf770e784bfd78b5ce92c58e95ea88ac"
+                    )
                 ),
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out2)),
@@ -266,17 +281,23 @@ class TestSignTxDecred(unittest.TestCase):
                 request_type=TXOUTPUT,
                 details=TxRequestDetailsType(request_index=2, tx_hash=None),
                 serialized=TxRequestSerializedType(
-                    serialized_tx=unhexlify("00000000000000000000206a1e762e46655536d93ad13f88a49bde9a2df45fe62e70f30500000000000058")
+                    serialized_tx=unhexlify(
+                        "00000000000000000000206a1edc1a98d791735eb9a8715a2a219c23680edcedad00c2eb0b000000000058"
+                    )
                 ),
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out3)),
-            helpers.UiConfirmTotal(380000 + 10000, 10000, coin_decred, AmountUnit.BITCOIN),
+            helpers.UiConfirmTotal(
+                200_000_000, 100_000, coin_decred, AmountUnit.BITCOIN
+            ),
             True,
             TxRequest(
                 request_type=TXINPUT,
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
                 serialized=TxRequestSerializedType(
-                    serialized_tx=unhexlify("000000000000000000001abd76a914000000000000000000000000000000000000000088ac0000000000000000")
+                    serialized_tx=unhexlify(
+                        "000000000000000000001abd76a914000000000000000000000000000000000000000088ac0000000000000000"
+                    )
                 ),
             ),
             TxAckInput(tx=TxAckInputWrapper(input=inp1)),
@@ -285,7 +306,7 @@ class TestSignTxDecred(unittest.TestCase):
                 details=TxRequestDetailsType(
                     request_index=None,
                     tx_hash=unhexlify(
-                        "df8f9cf58455e8aa22d7f7be09d7877f7a0a698da7695152374c057a3047c24a"
+                        "4d8acde26d5efc7f5df1b3cdada6b11027616520c883e09c919b88f0f0cb6410"
                     ),
                 ),
                 serialized=EMPTY_SERIALIZED,
@@ -296,40 +317,38 @@ class TestSignTxDecred(unittest.TestCase):
                 details=TxRequestDetailsType(
                     request_index=0,
                     tx_hash=unhexlify(
-                        "df8f9cf58455e8aa22d7f7be09d7877f7a0a698da7695152374c057a3047c24a"
+                        "4d8acde26d5efc7f5df1b3cdada6b11027616520c883e09c919b88f0f0cb6410"
                     ),
                 ),
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckPrevInput(tx=TxAckPrevInputWrapper(input=pinp1)),
             TxRequest(
-                request_type=TXINPUT,
-                details=TxRequestDetailsType(
-                    request_index=1,
-                    tx_hash=unhexlify(
-                        "df8f9cf58455e8aa22d7f7be09d7877f7a0a698da7695152374c057a3047c24a"
-                    ),
-                ),
-                serialized=EMPTY_SERIALIZED,
-            ),
-            TxAckPrevInput(tx=TxAckPrevInputWrapper(input=pinp2)),
-            TxRequest(
                 request_type=TXOUTPUT,
                 details=TxRequestDetailsType(
                     request_index=0,
                     tx_hash=unhexlify(
-                        "df8f9cf58455e8aa22d7f7be09d7877f7a0a698da7695152374c057a3047c24a"
+                        "4d8acde26d5efc7f5df1b3cdada6b11027616520c883e09c919b88f0f0cb6410"
                     ),
                 ),
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckPrevOutput(tx=TxAckPrevOutputWrapper(output=pout1)),
             TxRequest(
+                request_type=TXOUTPUT,
+                details=TxRequestDetailsType(
+                    request_index=1,
+                    tx_hash=unhexlify(
+                        "4d8acde26d5efc7f5df1b3cdada6b11027616520c883e09c919b88f0f0cb6410"
+                    ),
+                ),
+                serialized=EMPTY_SERIALIZED,
+            ),
+            TxAckPrevOutput(tx=TxAckPrevOutputWrapper(output=pout2)),
+            TxRequest(
                 request_type=TXINPUT,
                 details=TxRequestDetailsType(request_index=0, tx_hash=None),
-                serialized=TxRequestSerializedType(
-                    serialized_tx=unhexlify("01")
-                ),
+                serialized=TxRequestSerializedType(serialized_tx=unhexlify("01")),
             ),
             TxAckInput(tx=TxAckInputWrapper(input=inp1)),
             TxRequest(
@@ -338,15 +357,17 @@ class TestSignTxDecred(unittest.TestCase):
                 serialized=TxRequestSerializedType(
                     signature_index=0,
                     signature=unhexlify(
-                        "3045022100d2a6baadc88ea67ec94a1f6dca70882e647e9af68d24e1bc72f9c27359e5e6ff02207b8a939e7cf82e79e2947e8fe59a14c11ee0b3a9cd1ff084d9bd54e23291b6be"
+                        "3045022100b3a11ff4befcc035623de7665aaa76dacc9252e53aabf2a5d61238151e696532022004cbcc537c1d539e04c823140bac4524bdba09f528f5c4b76f3f1022b7dc0ad4"
                     ),
-                    serialized_tx=unhexlify("70f305000000000000000000ffffffff6b483045022100d2a6baadc88ea67ec94a1f6dca70882e647e9af68d24e1bc72f9c27359e5e6ff02207b8a939e7cf82e79e2947e8fe59a14c11ee0b3a9cd1ff084d9bd54e23291b6be012103fc15aa2f684457332c0ef1fe44d908ab97208102a1792caa13bcc5e886c4b321")
+                    serialized_tx=unhexlify(
+                        "00c2eb0b0000000000000000ffffffff6b483045022100b3a11ff4befcc035623de7665aaa76dacc9252e53aabf2a5d61238151e696532022004cbcc537c1d539e04c823140bac4524bdba09f528f5c4b76f3f1022b7dc0ad40121030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0"
+                    ),
                 ),
             ),
         ]
 
         seed = bip39.seed(
-            "alcohol woman abuse must during monitor noble actual mixed trade anger aisle",
+            " ".join(["all"] * 12),
             "",
         )
         ns = get_schemas_for_coin(coin_decred)

@@ -19,6 +19,7 @@
 
 #include "common.h"
 #include <stdio.h>
+#include <unistd.h>
 #include "bitmaps.h"
 #include "firmware/usb.h"
 #include "hmac_drbg.h"
@@ -83,7 +84,17 @@ void __assert_func(const char *file, int line, const char *func,
 }
 #endif
 
-void hal_delay(uint32_t ms) { usbSleep(ms); }
+void hal_delay(uint32_t ms) {
+#if EMULATOR
+  usleep(ms * 1000);
+#else
+  uint32_t start = timer_ms();
+
+  while ((timer_ms() - start) < ms) {
+    asm("nop");
+  }
+#endif
+}
 
 void drbg_init() {
   uint8_t entropy[48] = {0};

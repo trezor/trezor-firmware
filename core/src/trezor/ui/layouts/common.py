@@ -1,20 +1,15 @@
+from typing import TYPE_CHECKING
+
 from trezor import log, wire, workflow
 from trezor.enums import ButtonRequestType
 from trezor.messages import ButtonAck, ButtonRequest
 
-if False:
-    from typing import Any, Awaitable, Optional, Tuple, Type, Union
+if TYPE_CHECKING:
+    from typing import Any, Awaitable
 
     LayoutType = Awaitable[Any]
-    PropertyType = Tuple[Optional[str], Union[str, bytes, None]]
-    ExceptionType = Union[BaseException, Type[BaseException]]
-
-
-if __debug__:
-    from trezor import utils
-
-    if utils.MODEL == "T":
-        from ..components.tt.scroll import Paginated
+    PropertyType = tuple[str | None, str | bytes | None]
+    ExceptionType = BaseException | type[BaseException]
 
 
 async def button_request(
@@ -35,6 +30,8 @@ async def interact(
     br_code: ButtonRequestType = ButtonRequestType.Other,
 ) -> Any:
     if layout.__class__.__name__ == "Paginated":
+        from ..components.tt.scroll import Paginated
+
         assert isinstance(layout, Paginated)
         return await layout.interact(ctx, code=br_code)
     else:

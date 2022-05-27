@@ -43,11 +43,12 @@ Author: Dusan Klinec, ph4r05, 2018
 """
 
 import gc
+from typing import TYPE_CHECKING
 
 from apps.monero.xmr import crypto
 from apps.monero.xmr.serialize import int_serialize
 
-if False:
+if TYPE_CHECKING:
     from apps.monero.xmr.types import Ge25519, Sc25519
     from apps.monero.xmr.serialize_messages.tx_ct_key import CtKey
     from trezor.messages import MoneroRctKeyPublic

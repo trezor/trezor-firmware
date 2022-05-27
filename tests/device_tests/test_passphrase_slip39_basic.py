@@ -16,12 +16,14 @@
 
 import pytest
 
+from trezorlib.debuglink import TrezorClientDebugLink as Client
+
 from ..common import MNEMONIC_SLIP39_BASIC_20_3of6, get_test_address
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6, passphrase="TREZOR")
 @pytest.mark.skip_t1
-def test_3of6_passphrase(client):
+def test_3of6_passphrase(client: Client):
     """
     BIP32 Root Key for passphrase TREZOR:
     provided by Andrew, address calculated via https://iancoleman.io/bip39/
@@ -40,7 +42,7 @@ def test_3of6_passphrase(client):
     passphrase="TREZOR",
 )
 @pytest.mark.skip_t1
-def test_2of5_passphrase(client):
+def test_2of5_passphrase(client: Client):
     """
     BIP32 Root Key for passphrase TREZOR:
     provided by Andrew, address calculated via https://iancoleman.io/bip39/

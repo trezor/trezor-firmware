@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import wire
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha3_256
@@ -18,14 +20,15 @@ from apps.common import paths
 from .helpers import address_from_bytes, get_type_name
 from .keychain import PATTERNS_ADDRESS, with_keychain_from_path
 from .layout import (
-    confirm_hash,
+    confirm_empty_typed_message,
+    confirm_typed_data_final,
     confirm_typed_value,
     should_show_array,
     should_show_domain,
     should_show_struct,
 )
 
-if False:
+if TYPE_CHECKING:
     from apps.common.keychain import Keychain
     from trezor.wire import Context
 
@@ -80,23 +83,30 @@ async def generate_typed_data_hash(
         parent_objects=["EIP712Domain"],
     )
 
-    show_message = await should_show_struct(
-        ctx,
-        description=primary_type,
-        data_members=typed_data_envelope.types[primary_type].members,
-        title="Confirm message",
-        button_text="Show full message",
-    )
-    message_hash = await typed_data_envelope.hash_struct(
-        primary_type=primary_type,
-        member_path=[1],
-        show_data=show_message,
-        parent_objects=[primary_type],
-    )
+    # Setting the primary_type to "EIP712Domain" is technically in spec
+    # In this case, we ignore the "message" part and only use the "domain" part
+    # https://ethereum-magicians.org/t/eip-712-standards-clarification-primarytype-as-domaintype/3286
+    if primary_type == "EIP712Domain":
+        await confirm_empty_typed_message(ctx)
+        message_hash = b""
+    else:
+        show_message = await should_show_struct(
+            ctx,
+            description=primary_type,
+            data_members=typed_data_envelope.types[primary_type].members,
+            title="Confirm message",
+            button_text="Show full message",
+        )
+        message_hash = await typed_data_envelope.hash_struct(
+            primary_type=primary_type,
+            member_path=[1],
+            show_data=show_message,
+            parent_objects=[primary_type],
+        )
 
-    await confirm_hash(ctx, message_hash)
+    await confirm_typed_data_final(ctx)
 
-    return keccak256(b"\x19" + b"\x01" + domain_separator + message_hash)
+    return keccak256(b"\x19\x01" + domain_separator + message_hash)
 
 
 def get_hash_writer() -> HashWriter:
@@ -134,13 +144,17 @@ class TypedDataEnvelope:
         current_type = await self.ctx.call(req, EthereumTypedDataStructAck)
         self.types[type_name] = current_type
         for member in current_type.members:
-            validate_field_type(member.type)
+            member_type = member.type
+            validate_field_type(member_type)
+            while member_type.data_type == EthereumDataType.ARRAY:
+                assert member_type.entry_type is not None  # validate_field_type
+                member_type = member_type.entry_type
             if (
-                member.type.data_type == EthereumDataType.STRUCT
-                and member.type.struct_name not in self.types
+                member_type.data_type == EthereumDataType.STRUCT
+                and member_type.struct_name not in self.types
             ):
-                assert member.type.struct_name is not None  # validate_field_type
-                await self._collect_types(member.type.struct_name)
+                assert member_type.struct_name is not None  # validate_field_type
+                await self._collect_types(member_type.struct_name)
 
     async def hash_struct(
         self,

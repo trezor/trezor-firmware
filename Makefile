@@ -5,7 +5,7 @@ help: ## show this help
 
 ## style commands:
 
-PY_FILES = $(shell find . -type f -name '*.py'   | grep -f ./tools/style.py.include | grep -v -f ./tools/style.py.exclude )
+PY_FILES = $(shell find . -type f -name '*.py'   | sed 'sO^\./OO' | grep -f ./tools/style.py.include | grep -v -f ./tools/style.py.exclude )
 C_FILES =  $(shell find . -type f -name '*.[ch]' | grep -f ./tools/style.c.include  | grep -v -f ./tools/style.c.exclude )
 
 
@@ -17,10 +17,10 @@ pystyle_check: ## run code style check on application sources and tests
 	flake8 --version
 	isort --version | awk '/VERSION/{print $$2}'
 	black --version
-	mypy --version
 	pylint --version
-	@echo [MYPY]
-	@make -C core mypy
+	pyright --version
+	@echo [TYPECHECK]
+	@make -C core typecheck
 	@echo [FLAKE8]
 	@flake8 $(PY_FILES)
 	@echo [ISORT]
@@ -32,13 +32,18 @@ pystyle_check: ## run code style check on application sources and tests
 	@echo [PYTHON]
 	make -C python style_check
 
+pystyle_quick_check: ## run the basic style checks, suitable for a quick git hook
+	@isort --check-only $(PY_FILES)
+	@black --check $(PY_FILES)
+	make -C python style_quick_check
+
 pystyle: ## apply code style on application sources and tests
 	@echo [ISORT]
 	@isort $(PY_FILES)
 	@echo [BLACK]
 	@black $(PY_FILES)
-	@echo [MYPY]
-	@make -C core mypy
+	@echo [TYPECHECK]
+	@make -C core typecheck
 	@echo [FLAKE8]
 	@flake8 $(PY_FILES)
 	@echo [PYLINT]
@@ -114,6 +119,12 @@ protobuf: ## generate python protobuf headers
 protobuf_check: ## check that generated protobuf headers are up to date
 	./tools/build_protobuf --check
 
-gen:  mocks icons templates protobuf ## regeneate auto-generated files from sources
+ci_docs: ## generate CI documentation
+	./tools/generate_ci_docs.py
 
-gen_check: mocks_check icons_check templates_check protobuf_check ## check validity of auto-generated files
+ci_docs_check: ## check that generated CI documentation is up to date
+	./tools/generate_ci_docs.py --check
+
+gen:  mocks icons templates protobuf ci_docs ## regenerate auto-generated files from sources
+
+gen_check: mocks_check icons_check templates_check protobuf_check ci_docs_check ## check validity of auto-generated files

@@ -55,7 +55,7 @@ message Features {
     optional uint32 fw_minor = 23;              // reported firmware version if in bootloader mode
     optional uint32 fw_patch = 24;              // reported firmware version if in bootloader mode
     optional string fw_vendor = 25;             // reported firmware vendor if in bootloader mode
-    optional bytes fw_vendor_keys = 26;         // reported firmware vendor keys (their hash)
+    // optional bytes fw_vendor_keys = 26;      // obsoleted, use fw_vendor
 }
 
 /**

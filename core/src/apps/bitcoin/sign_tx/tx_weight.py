@@ -6,13 +6,14 @@
 # https://github.com/trezor/trezor-mcu/commit/e1fa7af1da79e86ccaae5f3cd2a6c4644f546f8a
 
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor import wire
 from trezor.enums import InputScriptType
 
 from .. import common, ownership
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import TxInput
 
 # transaction header size: 4 byte version
@@ -50,35 +51,52 @@ class TxWeightCalculator:
     def add_input(self, i: TxInput) -> None:
         self.inputs_count += 1
 
+        script_type = i.script_type
+        if common.input_is_external_unverified(i):
+            assert i.script_pubkey is not None  # checked in sanitize_tx_input
+
+            # Guess the script type from the scriptPubKey.
+            if i.script_pubkey[0] == 0x76:  # OP_DUP (P2PKH)
+                script_type = InputScriptType.SPENDADDRESS
+            elif i.script_pubkey[0] == 0xA9:  # OP_HASH_160 (P2SH)
+                # Probably nested P2WPKH.
+                script_type = InputScriptType.SPENDP2SHWITNESS
+            elif i.script_pubkey[0] == 0x00:  # SegWit v0 (probably P2WPKH)
+                script_type = InputScriptType.SPENDWITNESS
+            elif i.script_pubkey[0] == 0x51:  # SegWit v1 (P2TR)
+                script_type = InputScriptType.SPENDTAPROOT
+            else:  # Unknown script type.
+                pass
+
         if i.multisig:
-            if i.script_type == InputScriptType.SPENDTAPROOT:
+            if script_type == InputScriptType.SPENDTAPROOT:
                 raise wire.ProcessError("Multisig not supported for taproot")
 
             n = len(i.multisig.nodes) if i.multisig.nodes else len(i.multisig.pubkeys)
             multisig_script_size = _TXSIZE_MULTISIGSCRIPT + n * (1 + _TXSIZE_PUBKEY)
-            if i.script_type in common.SEGWIT_INPUT_SCRIPT_TYPES:
-                multisig_script_size += self.varint_size(multisig_script_size)
+            if script_type in common.SEGWIT_INPUT_SCRIPT_TYPES:
+                multisig_script_size += self.compact_size_len(multisig_script_size)
             else:
-                multisig_script_size += self.op_push_size(multisig_script_size)
+                multisig_script_size += self.op_push_len(multisig_script_size)
 
             input_script_size = (
                 1  # the OP_FALSE bug in multisig
                 + i.multisig.m * (1 + _TXSIZE_DER_SIGNATURE)
                 + multisig_script_size
             )
-        elif i.script_type == InputScriptType.SPENDTAPROOT:
+        elif script_type == InputScriptType.SPENDTAPROOT:
             input_script_size = 1 + _TXSIZE_SCHNORR_SIGNATURE
         else:
             input_script_size = 1 + _TXSIZE_DER_SIGNATURE + 1 + _TXSIZE_PUBKEY
 
         self.counter += 4 * _TXSIZE_INPUT
 
-        if i.script_type in common.NONSEGWIT_INPUT_SCRIPT_TYPES:
-            input_script_size += self.varint_size(input_script_size)
+        if script_type in common.NONSEGWIT_INPUT_SCRIPT_TYPES:
+            input_script_size += self.compact_size_len(input_script_size)
             self.counter += 4 * input_script_size
-        elif i.script_type in common.SEGWIT_INPUT_SCRIPT_TYPES:
+        elif script_type in common.SEGWIT_INPUT_SCRIPT_TYPES:
             self.segwit_inputs_count += 1
-            if i.script_type == InputScriptType.SPENDP2SHWITNESS:
+            if script_type == InputScriptType.SPENDP2SHWITNESS:
                 # add script_sig size
                 if i.multisig:
                     self.counter += 4 * (2 + _TXSIZE_WITNESSSCRIPT)
@@ -87,7 +105,7 @@ class TxWeightCalculator:
             else:
                 self.counter += 4  # empty script_sig (1 byte)
             self.counter += 1 + input_script_size  # discounted witness
-        elif i.script_type == InputScriptType.EXTERNAL:
+        elif script_type == InputScriptType.EXTERNAL:
             if i.ownership_proof:
                 script_sig, witness = ownership.read_scriptsig_witness(
                     i.ownership_proof
@@ -101,20 +119,22 @@ class TxWeightCalculator:
             if witness_size > 1:
                 self.segwit_inputs_count += 1
 
-            self.counter += 4 * (self.varint_size(script_sig_size) + script_sig_size)
+            self.counter += 4 * (
+                self.compact_size_len(script_sig_size) + script_sig_size
+            )
             self.counter += witness_size
         else:
             raise wire.DataError("Invalid script type")
 
     def add_output(self, script: bytes) -> None:
         self.outputs_count += 1
-        script_size = self.varint_size(len(script)) + len(script)
+        script_size = self.compact_size_len(len(script)) + len(script)
         self.counter += 4 * (_TXSIZE_OUTPUT + script_size)
 
     def get_total(self) -> int:
         total = self.counter
-        total += 4 * self.varint_size(self.inputs_count)
-        total += 4 * self.varint_size(self.outputs_count)
+        total += 4 * self.compact_size_len(self.inputs_count)
+        total += 4 * self.compact_size_len(self.outputs_count)
         if self.segwit_inputs_count:
             total += _TXSIZE_SEGWIT_OVERHEAD
             # add one byte of witness stack item count per non-segwit input
@@ -123,7 +143,7 @@ class TxWeightCalculator:
         return total
 
     @staticmethod
-    def varint_size(length: int) -> int:
+    def compact_size_len(length: int) -> int:
         if length < 253:
             return 1
         if length < 0x1_0000:
@@ -131,7 +151,7 @@ class TxWeightCalculator:
         return 5
 
     @staticmethod
-    def op_push_size(length: int) -> int:
+    def op_push_len(length: int) -> int:
         if length < 0x4C:
             return 1
         if length < 0x100:

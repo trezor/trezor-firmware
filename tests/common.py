@@ -16,11 +16,18 @@
 
 import json
 from pathlib import Path
+from typing import TYPE_CHECKING, Generator, List, Optional
 
 import pytest
 
 from trezorlib import btc, tools
-from trezorlib.messages import ButtonRequestType as B
+from trezorlib.messages import ButtonRequestType
+
+if TYPE_CHECKING:
+    from trezorlib.debuglink import DebugLink, TrezorClientDebugLink as Client
+    from trezorlib.messages import ButtonRequest
+    from _pytest.mark.structures import MarkDecorator
+
 
 # fmt: off
 #                1      2     3    4      5      6      7     8      9    10    11    12
@@ -49,11 +56,11 @@ EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
 
 TEST_ADDRESS_N = tools.parse_path("m/44h/1h/0h/0/0")
 COMMON_FIXTURES_DIR = (
-    Path(__file__).parent.resolve().parent / "common" / "tests" / "fixtures"
+    Path(__file__).resolve().parent.parent / "common" / "tests" / "fixtures"
 )
 
 
-def parametrize_using_common_fixtures(*paths):
+def parametrize_using_common_fixtures(*paths: str) -> "MarkDecorator":
     fixtures = []
     for path in paths:
         fixtures.append(json.loads((COMMON_FIXTURES_DIR / path).read_text()))
@@ -82,7 +89,9 @@ def parametrize_using_common_fixtures(*paths):
     return pytest.mark.parametrize("parameters, result", tests)
 
 
-def generate_entropy(strength, internal_entropy, external_entropy):
+def generate_entropy(
+    strength: int, internal_entropy: bytes, external_entropy: bytes
+) -> bytes:
     """
     strength - length of produced seed. One of 128, 192, 256
     random - binary stream of random data from external HRNG
@@ -113,7 +122,12 @@ def generate_entropy(strength, internal_entropy, external_entropy):
     return entropy_stripped
 
 
-def recovery_enter_shares(debug, shares, groups=False, click_info=False):
+def recovery_enter_shares(
+    debug: "DebugLink",
+    shares: List[str],
+    groups: bool = False,
+    click_info: bool = False,
+) -> Generator[None, "ButtonRequest", None]:
     """Perform the recovery flow for a set of Shamir shares.
 
     For use in an input flow function.
@@ -131,7 +145,7 @@ def recovery_enter_shares(debug, shares, groups=False, click_info=False):
     debug.press_yes()
     # Input word number
     br = yield
-    assert br.code == B.MnemonicWordCount
+    assert br.code == ButtonRequestType.MnemonicWordCount
     debug.input(str(word_count))
     # Homescreen - proceed to share entry
     yield
@@ -139,7 +153,7 @@ def recovery_enter_shares(debug, shares, groups=False, click_info=False):
     # Enter shares
     for share in shares:
         br = yield
-        assert br.code == B.MnemonicInput
+        assert br.code == ButtonRequestType.MnemonicInput
         # Enter mnemonic words
         for word in share.split(" "):
             debug.input(word)
@@ -155,11 +169,8 @@ def recovery_enter_shares(debug, shares, groups=False, click_info=False):
 
         if click_info:
             # Moving through the INFO button
-            info_button = (120, 220)
-            debug.wait_layout()
-            debug.click(info_button)
+            debug.press_info()
             yield
-            debug.wait_layout()
             debug.swipe_up()
             debug.press_yes()
 
@@ -167,7 +178,9 @@ def recovery_enter_shares(debug, shares, groups=False, click_info=False):
         debug.press_yes()
 
 
-def click_through(debug, screens, code=None):
+def click_through(
+    debug: "DebugLink", screens: int, code: ButtonRequestType = None
+) -> Generator[None, "ButtonRequest", None]:
     """Click through N dialog screens.
 
     For use in an input flow function.
@@ -178,7 +191,7 @@ def click_through(debug, screens, code=None):
         # 2. Backup your seed
         # 3. Confirm warning
         # 4. Shares info
-        yield from click_through(client.debug, screens=4, code=B.ResetDevice)
+        yield from click_through(client.debug, screens=4, code=ButtonRequestType.ResetDevice)
     """
     for _ in range(screens):
         received = yield
@@ -187,7 +200,9 @@ def click_through(debug, screens, code=None):
         debug.press_yes()
 
 
-def read_and_confirm_mnemonic(debug, choose_wrong=False):
+def read_and_confirm_mnemonic(
+    debug: "DebugLink", choose_wrong: bool = False
+) -> Generator[None, "ButtonRequest", Optional[str]]:
     """Read a given number of mnemonic words from Trezor T screen and correctly
     answer confirmation questions. Return the full mnemonic.
 
@@ -201,6 +216,7 @@ def read_and_confirm_mnemonic(debug, choose_wrong=False):
     """
     mnemonic = []
     br = yield
+    assert br.pages is not None
     for _ in range(br.pages - 1):
         mnemonic.extend(debug.read_reset_word().split())
         debug.swipe_up(wait=True)
@@ -221,7 +237,7 @@ def read_and_confirm_mnemonic(debug, choose_wrong=False):
     return " ".join(mnemonic)
 
 
-def get_test_address(client):
+def get_test_address(client: "Client") -> str:
     """Fetch a testnet address on a fixed path. Useful to make a pin/passphrase
     protected call, or to identify the root secret (seed+passphrase)"""
     return btc.get_address(client, "Testnet", TEST_ADDRESS_N)

@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import strings, ui
 from trezor.enums import ButtonRequestType, StellarAssetType, StellarMemoType
 from trezor.ui.layouts import (
@@ -11,7 +13,7 @@ from trezor.wire import DataError
 
 from . import consts
 
-if False:
+if TYPE_CHECKING:
     from trezor.wire import Context
 
     from trezor.messages import StellarAsset

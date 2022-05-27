@@ -1,11 +1,10 @@
 # generated from coininfo.py.mako
 # do not edit manually!
+from typing import Any
+
 from trezor import utils
 from trezor.crypto.base58 import blake256d_32, groestl512d_32, keccak_32, sha256d_32
 from trezor.crypto.scripts import blake256_ripemd160, sha256_ripemd160
-
-if False:
-    from typing import Any, Type
 
 # flake8: noqa
 
@@ -69,7 +68,7 @@ class CoinInfo:
         if curve_name == "secp256k1-groestl":
             self.b58_hash = groestl512d_32
             self.sign_hash_double = False
-            self.script_hash: Type[utils.HashContext] = sha256_ripemd160
+            self.script_hash: type[utils.HashContextInitable] = sha256_ripemd160
         elif curve_name == "secp256k1-decred":
             self.b58_hash = blake256d_32
             self.sign_hash_double = False
@@ -91,9 +90,7 @@ class CoinInfo:
 
 # fmt: off
 def by_name(name: str) -> CoinInfo:
-    if False:
-        pass
-    elif name == "Bitcoin":
+    if name == "Bitcoin":
         return CoinInfo(
             coin_name=name,
             coin_shortcut="BTC",
@@ -122,7 +119,7 @@ def by_name(name: str) -> CoinInfo:
             overwintered=False,
             confidential_assets=None,
         )
-    elif name == "Regtest":
+    if name == "Regtest":
         return CoinInfo(
             coin_name=name,
             coin_shortcut="REGTEST",
@@ -151,7 +148,7 @@ def by_name(name: str) -> CoinInfo:
             overwintered=False,
             confidential_assets=None,
         )
-    elif name == "Testnet":
+    if name == "Testnet":
         return CoinInfo(
             coin_name=name,
             coin_shortcut="TEST",
@@ -181,9 +178,7 @@ def by_name(name: str) -> CoinInfo:
             confidential_assets=None,
         )
     if not utils.BITCOIN_ONLY:
-        if False:
-            pass
-        elif name == "Actinium":
+        if name == "Actinium":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="ACM",
@@ -212,7 +207,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Axe":
+        if name == "Axe":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="AXE",
@@ -241,7 +236,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Bcash":
+        if name == "Bcash":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="BCH",
@@ -270,7 +265,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Bcash Testnet":
+        if name == "Bcash Testnet":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="TBCH",
@@ -299,7 +294,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Bgold":
+        if name == "Bgold":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="BTG",
@@ -328,7 +323,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Bgold Testnet":
+        if name == "Bgold Testnet":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="TBTG",
@@ -357,7 +352,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Bprivate":
+        if name == "Bprivate":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="BTCP",
@@ -386,7 +381,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Bitcore":
+        if name == "Bitcore":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="BTX",
@@ -415,7 +410,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "CPUchain":
+        if name == "CPUchain":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="CPU",
@@ -444,7 +439,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Crown":
+        if name == "Crown":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="CRW",
@@ -473,7 +468,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Dash":
+        if name == "Dash":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="DASH",
@@ -502,7 +497,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Dash Testnet":
+        if name == "Dash Testnet":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="tDASH",
@@ -531,7 +526,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Decred":
+        if name == "Decred":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="DCR",
@@ -560,7 +555,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Decred Testnet":
+        if name == "Decred Testnet":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="TDCR",
@@ -589,7 +584,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "DigiByte":
+        if name == "DigiByte":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="DGB",
@@ -618,7 +613,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Dogecoin":
+        if name == "Dogecoin":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="DOGE",
@@ -647,7 +642,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Elements":
+        if name == "Elements":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="ELEMENTS",
@@ -676,7 +671,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets={'address_prefix': 4, 'blech32_prefix': 'el'},
             )
-        elif name == "Feathercoin":
+        if name == "Feathercoin":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="FTC",
@@ -705,7 +700,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Firo":
+        if name == "Firo":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="FIRO",
@@ -734,7 +729,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Firo Testnet":
+        if name == "Firo Testnet":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="tFIRO",
@@ -763,7 +758,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Florincoin":
+        if name == "Florincoin":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="FLO",
@@ -792,7 +787,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Fujicoin":
+        if name == "Fujicoin":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="FJC",
@@ -804,13 +799,13 @@ def by_name(name: str) -> CoinInfo:
                 xpub_magic=0x0488b21e,
                 xpub_magic_segwit_p2sh=0x049d7cb2,
                 xpub_magic_segwit_native=0x04b24746,
-                xpub_magic_multisig_segwit_p2sh=0x0488ade4,
-                xpub_magic_multisig_segwit_native=0x0488ade4,
+                xpub_magic_multisig_segwit_p2sh=0x0295b43f,
+                xpub_magic_multisig_segwit_native=0x02aa7ed3,
                 bech32_prefix="fc",
                 cashaddr_prefix=None,
                 slip44=75,
                 segwit=True,
-                taproot=False,
+                taproot=True,
                 fork_id=None,
                 force_bip143=False,
                 decred=False,
@@ -821,36 +816,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "GameCredits":
-            return CoinInfo(
-                coin_name=name,
-                coin_shortcut="GAME",
-                decimals=8,
-                address_type=38,
-                address_type_p2sh=62,
-                maxfee_kb=53000000000,
-                signed_message_header="GameCredits Signed Message:\n",
-                xpub_magic=0x019d9cfe,
-                xpub_magic_segwit_p2sh=0x01b26ef6,
-                xpub_magic_segwit_native=0x04b24746,
-                xpub_magic_multisig_segwit_p2sh=0x019da462,
-                xpub_magic_multisig_segwit_native=0x019da462,
-                bech32_prefix="game",
-                cashaddr_prefix=None,
-                slip44=101,
-                segwit=True,
-                taproot=False,
-                fork_id=None,
-                force_bip143=False,
-                decred=False,
-                negative_fee=False,
-                curve_name='secp256k1',
-                extra_data=False,
-                timestamp=False,
-                overwintered=False,
-                confidential_assets=None,
-            )
-        elif name == "Groestlcoin":
+        if name == "Groestlcoin":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="GRS",
@@ -868,7 +834,7 @@ def by_name(name: str) -> CoinInfo:
                 cashaddr_prefix=None,
                 slip44=17,
                 segwit=True,
-                taproot=False,
+                taproot=True,
                 fork_id=None,
                 force_bip143=False,
                 decred=False,
@@ -879,7 +845,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Groestlcoin Testnet":
+        if name == "Groestlcoin Testnet":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="tGRS",
@@ -897,7 +863,7 @@ def by_name(name: str) -> CoinInfo:
                 cashaddr_prefix=None,
                 slip44=1,
                 segwit=True,
-                taproot=False,
+                taproot=True,
                 fork_id=None,
                 force_bip143=False,
                 decred=False,
@@ -908,7 +874,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Komodo":
+        if name == "Komodo":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="KMD",
@@ -937,7 +903,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=True,
                 confidential_assets=None,
             )
-        elif name == "Koto":
+        if name == "Koto":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="KOTO",
@@ -966,7 +932,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=True,
                 confidential_assets=None,
             )
-        elif name == "Litecoin":
+        if name == "Litecoin":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="LTC",
@@ -995,7 +961,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Litecoin Testnet":
+        if name == "Litecoin Testnet":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="tLTC",
@@ -1024,7 +990,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Monacoin":
+        if name == "Monacoin":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="MONA",
@@ -1053,7 +1019,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "MonetaryUnit":
+        if name == "MonetaryUnit":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="MUE",
@@ -1082,36 +1048,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "NIX":
-            return CoinInfo(
-                coin_name=name,
-                coin_shortcut="NIX",
-                decimals=8,
-                address_type=38,
-                address_type_p2sh=53,
-                maxfee_kb=30000000000,
-                signed_message_header="NIX Signed Message:\n",
-                xpub_magic=0x0488b21e,
-                xpub_magic_segwit_p2sh=0x049d7cb2,
-                xpub_magic_segwit_native=0x04b24746,
-                xpub_magic_multisig_segwit_p2sh=0x0488b21e,
-                xpub_magic_multisig_segwit_native=0x0488b21e,
-                bech32_prefix="nix",
-                cashaddr_prefix=None,
-                slip44=400,
-                segwit=True,
-                taproot=False,
-                fork_id=None,
-                force_bip143=False,
-                decred=False,
-                negative_fee=False,
-                curve_name='secp256k1',
-                extra_data=False,
-                timestamp=False,
-                overwintered=False,
-                confidential_assets=None,
-            )
-        elif name == "Namecoin":
+        if name == "Namecoin":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="NMC",
@@ -1140,7 +1077,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Peercoin":
+        if name == "Peercoin":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="PPC",
@@ -1169,7 +1106,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Peercoin Testnet":
+        if name == "Peercoin Testnet":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="tPPC",
@@ -1198,36 +1135,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Polis":
-            return CoinInfo(
-                coin_name=name,
-                coin_shortcut="POLIS",
-                decimals=8,
-                address_type=55,
-                address_type_p2sh=56,
-                maxfee_kb=4900000000,
-                signed_message_header="Polis Signed Message:\n",
-                xpub_magic=0x03e25d7e,
-                xpub_magic_segwit_p2sh=None,
-                xpub_magic_segwit_native=None,
-                xpub_magic_multisig_segwit_p2sh=None,
-                xpub_magic_multisig_segwit_native=None,
-                bech32_prefix=None,
-                cashaddr_prefix=None,
-                slip44=1997,
-                segwit=False,
-                taproot=False,
-                fork_id=None,
-                force_bip143=False,
-                decred=False,
-                negative_fee=False,
-                curve_name='secp256k1',
-                extra_data=False,
-                timestamp=False,
-                overwintered=False,
-                confidential_assets=None,
-            )
-        elif name == "Primecoin":
+        if name == "Primecoin":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="XPM",
@@ -1256,7 +1164,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Qtum":
+        if name == "Qtum":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="QTUM",
@@ -1285,7 +1193,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Qtum Testnet":
+        if name == "Qtum Testnet":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="tQTUM",
@@ -1314,7 +1222,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Ravencoin":
+        if name == "Ravencoin":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="RVN",
@@ -1343,7 +1251,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Ravencoin Testnet":
+        if name == "Ravencoin Testnet":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="tRVN",
@@ -1372,7 +1280,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Ritocoin":
+        if name == "Ritocoin":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="RITO",
@@ -1401,7 +1309,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "SmartCash":
+        if name == "SmartCash":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="SMART",
@@ -1430,7 +1338,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "SmartCash Testnet":
+        if name == "SmartCash Testnet":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="tSMART",
@@ -1459,7 +1367,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Stakenet":
+        if name == "Stakenet":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="XSN",
@@ -1488,7 +1396,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Syscoin":
+        if name == "Syscoin":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="SYS",
@@ -1517,7 +1425,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Unobtanium":
+        if name == "Unobtanium":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="UNO",
@@ -1546,7 +1454,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "VIPSTARCOIN":
+        if name == "VIPSTARCOIN":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="VIPS",
@@ -1575,7 +1483,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Verge":
+        if name == "Verge":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="XVG",
@@ -1604,7 +1512,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Vertcoin":
+        if name == "Vertcoin":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="VTC",
@@ -1633,7 +1541,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Viacoin":
+        if name == "Viacoin":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="VIA",
@@ -1662,7 +1570,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "ZCore":
+        if name == "ZCore":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="ZCR",
@@ -1691,7 +1599,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Zcash":
+        if name == "Zcash":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="ZEC",
@@ -1720,7 +1628,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=True,
                 confidential_assets=None,
             )
-        elif name == "Zcash Testnet":
+        if name == "Zcash Testnet":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="TAZ",
@@ -1749,7 +1657,7 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=True,
                 confidential_assets=None,
             )
-        elif name == "Brhodium":
+        if name == "Brhodium":
             return CoinInfo(
                 coin_name=name,
                 coin_shortcut="XRC",

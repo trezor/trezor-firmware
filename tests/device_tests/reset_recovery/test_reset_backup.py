@@ -21,12 +21,13 @@ import pytest
 from shamir_mnemonic import shamir
 
 from trezorlib import device, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.messages import BackupType, ButtonRequestType as B
 
 from ...common import EXTERNAL_ENTROPY, click_through, read_and_confirm_mnemonic
 
 
-def backup_flow_bip39(client):
+def backup_flow_bip39(client: Client):
     mnemonic = None
 
     def input_flow():
@@ -65,7 +66,7 @@ def backup_flow_bip39(client):
     return mnemonic.encode()
 
 
-def backup_flow_slip39_basic(client):
+def backup_flow_slip39_basic(client: Client):
     mnemonics = []
 
     def input_flow():
@@ -111,7 +112,7 @@ def backup_flow_slip39_basic(client):
     return ems.ciphertext
 
 
-def backup_flow_slip39_advanced(client):
+def backup_flow_slip39_advanced(client: Client):
     mnemonics = []
 
     def input_flow():
@@ -181,7 +182,7 @@ VECTORS = [
 @pytest.mark.skip_t1
 @pytest.mark.parametrize("backup_type, backup_flow", VECTORS)
 @pytest.mark.setup_client(uninitialized=True)
-def test_skip_backup_msg(client, backup_type, backup_flow):
+def test_skip_backup_msg(client: Client, backup_type, backup_flow):
 
     os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
     with mock.patch("os.urandom", os_urandom), client:
@@ -216,7 +217,7 @@ def test_skip_backup_msg(client, backup_type, backup_flow):
 @pytest.mark.skip_t1
 @pytest.mark.parametrize("backup_type, backup_flow", VECTORS)
 @pytest.mark.setup_client(uninitialized=True)
-def test_skip_backup_manual(client, backup_type, backup_flow):
+def test_skip_backup_manual(client: Client, backup_type, backup_flow):
     def reset_skip_input_flow():
         yield  # Confirm Recovery
         client.debug.press_yes()

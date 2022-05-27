@@ -37,35 +37,24 @@ pub struct Button<T> {
     state: State,
 }
 
-impl<T: AsRef<[u8]>> Button<T> {
-    pub fn new(
-        area: Rect,
-        pos: ButtonPos,
-        content: ButtonContent<T>,
-        styles: ButtonStyleSheet,
-    ) -> Self {
-        let (area, baseline) = Self::placement(area, pos, &content, &styles);
+impl<T: AsRef<str>> Button<T> {
+    pub fn new(pos: ButtonPos, content: ButtonContent<T>, styles: ButtonStyleSheet) -> Self {
         Self {
-            area,
             pos,
-            baseline,
             content,
             styles,
+            baseline: Point::zero(),
+            area: Rect::zero(),
             state: State::Released,
         }
     }
 
-    pub fn with_text(area: Rect, pos: ButtonPos, text: T, styles: ButtonStyleSheet) -> Self {
-        Self::new(area, pos, ButtonContent::Text(text), styles)
+    pub fn with_text(pos: ButtonPos, text: T, styles: ButtonStyleSheet) -> Self {
+        Self::new(pos, ButtonContent::Text(text), styles)
     }
 
-    pub fn with_icon(
-        area: Rect,
-        pos: ButtonPos,
-        image: &'static [u8],
-        styles: ButtonStyleSheet,
-    ) -> Self {
-        Self::new(area, pos, ButtonContent::Icon(image), styles)
+    pub fn with_icon(pos: ButtonPos, image: &'static [u8], styles: ButtonStyleSheet) -> Self {
+        Self::new(pos, ButtonContent::Icon(image), styles)
     }
 
     pub fn content(&self) -> &ButtonContent<T> {
@@ -94,13 +83,13 @@ impl<T: AsRef<[u8]>> Button<T> {
     ) -> (Rect, Point) {
         let border_width = if styles.normal.border_horiz { 2 } else { 0 };
         let content_width = match content {
-            ButtonContent::Text(text) => display::text_width(text.as_ref(), styles.normal.font) - 1,
+            ButtonContent::Text(text) => styles.normal.font.text_width(text.as_ref()) - 1,
             ButtonContent::Icon(_icon) => todo!(),
         };
         let button_width = content_width + 2 * border_width;
         let area = match pos {
-            ButtonPos::Left => area.vsplit(button_width).0,
-            ButtonPos::Right => area.vsplit(-button_width).1,
+            ButtonPos::Left => area.split_left(button_width).0,
+            ButtonPos::Right => area.split_right(button_width).1,
         };
 
         let start_of_baseline = area.bottom_left() + Offset::new(border_width, -2);
@@ -109,8 +98,18 @@ impl<T: AsRef<[u8]>> Button<T> {
     }
 }
 
-impl<T: AsRef<[u8]>> Component for Button<T> {
+impl<T> Component for Button<T>
+where
+    T: AsRef<str>,
+{
     type Msg = ButtonMsg;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        let (area, baseline) = Self::placement(bounds, self.pos, &self.content, &self.styles);
+        self.area = area;
+        self.baseline = baseline;
+        self.area
+    }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         match event {
@@ -135,9 +134,9 @@ impl<T: AsRef<[u8]>> Component for Button<T> {
             ButtonContent::Text(text) => {
                 let background_color = style.text_color.neg();
                 if style.border_horiz {
-                    display::rounded_rect1(self.area, background_color, theme::BG);
+                    display::rect_fill_rounded1(self.area, background_color, theme::BG);
                 } else {
-                    display::rect(self.area, background_color)
+                    display::rect_fill(self.area, background_color)
                 }
 
                 display::text(
@@ -158,7 +157,7 @@ impl<T: AsRef<[u8]>> Component for Button<T> {
 #[cfg(feature = "ui_debug")]
 impl<T> crate::trace::Trace for Button<T>
 where
-    T: AsRef<[u8]> + crate::trace::Trace,
+    T: AsRef<str> + crate::trace::Trace,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("Button");

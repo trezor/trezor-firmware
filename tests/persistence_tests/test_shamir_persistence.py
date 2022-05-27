@@ -17,28 +17,29 @@
 import pytest
 
 from trezorlib import device
+from trezorlib.debuglink import DebugLink
 
 from .. import buttons
 from ..click_tests import recovery
 from ..common import MNEMONIC_SLIP39_ADVANCED_20, MNEMONIC_SLIP39_BASIC_20_3of6
 from ..device_handler import BackgroundDeviceHandler
-from ..emulators import EmulatorWrapper
+from ..emulators import Emulator, EmulatorWrapper
 from ..upgrade_tests import core_only
 
 
 @pytest.fixture
-def emulator():
+def emulator() -> Emulator:
     with EmulatorWrapper("core") as emu:
         yield emu
 
 
-def _restart(device_handler, emulator):
+def _restart(device_handler: BackgroundDeviceHandler, emulator: Emulator):
     device_handler.restart(emulator)
     return device_handler.debuglink()
 
 
 @core_only
-def test_abort(emulator):
+def test_abort(emulator: Emulator):
     device_handler = BackgroundDeviceHandler(emulator.client)
     debug = device_handler.debuglink()
     features = device_handler.features()
@@ -72,7 +73,7 @@ def test_abort(emulator):
 
 
 @core_only
-def test_recovery_single_reset(emulator):
+def test_recovery_single_reset(emulator: Emulator):
     device_handler = BackgroundDeviceHandler(emulator.client)
     debug = device_handler.debuglink()
     features = device_handler.features()
@@ -100,7 +101,7 @@ def test_recovery_single_reset(emulator):
 
 
 @core_only
-def test_recovery_on_old_wallet(emulator):
+def test_recovery_on_old_wallet(emulator: Emulator):
     """Check that the recovery workflow started on a disconnected device can survive
     handling by the old Wallet.
 
@@ -168,8 +169,8 @@ def test_recovery_on_old_wallet(emulator):
 
 
 @core_only
-def test_recovery_multiple_resets(emulator):
-    def enter_shares_with_restarts(debug):
+def test_recovery_multiple_resets(emulator: Emulator):
+    def enter_shares_with_restarts(debug: DebugLink) -> None:
         shares = MNEMONIC_SLIP39_ADVANCED_20
         layout = debug.read_layout()
         expected_text = "Enter any share"

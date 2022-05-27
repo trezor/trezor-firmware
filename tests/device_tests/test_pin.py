@@ -19,6 +19,7 @@ import time
 import pytest
 
 from trezorlib import messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import PinException
 
 from ..common import get_test_address
@@ -30,13 +31,13 @@ pytestmark = pytest.mark.setup_client(pin=PIN4)
 
 
 @pytest.mark.setup_client(pin=None)
-def test_no_protection(client):
+def test_no_protection(client: Client):
     with client:
         client.set_expected_responses([messages.Address])
         get_test_address(client)
 
 
-def test_correct_pin(client):
+def test_correct_pin(client: Client):
     with client:
         client.use_pin_sequence([PIN4])
         # Expected responses differ between T1 and TT
@@ -56,14 +57,14 @@ def test_correct_pin(client):
 
 
 @pytest.mark.skip_t2
-def test_incorrect_pin_t1(client):
+def test_incorrect_pin_t1(client: Client):
     with pytest.raises(PinException):
         client.use_pin_sequence([BAD_PIN])
         get_test_address(client)
 
 
 @pytest.mark.skip_t1
-def test_incorrect_pin_t2(client):
+def test_incorrect_pin_t2(client: Client):
     with client:
         # After first incorrect attempt, TT will not raise an error, but instead ask for another attempt
         client.use_pin_sequence([BAD_PIN, PIN4])
@@ -85,7 +86,7 @@ def _check_backoff_time(attempts: int, start: float) -> None:
 
 
 @pytest.mark.skip_t2
-def test_exponential_backoff_t1(client):
+def test_exponential_backoff_t1(client: Client):
     for attempt in range(3):
         start = time.time()
         with client, pytest.raises(PinException):
@@ -95,7 +96,7 @@ def test_exponential_backoff_t1(client):
 
 
 @pytest.mark.skip_t1
-def test_exponential_backoff_t2(client):
+def test_exponential_backoff_t2(client: Client):
     def input_flow():
         """Inputting some bad PINs and finally the correct one"""
         yield  # PIN entry

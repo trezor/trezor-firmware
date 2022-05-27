@@ -169,9 +169,9 @@ secbool load_vendor_header_keys(const uint8_t *const data,
                             BOOTLOADER_KEYS, vhdr);
 }
 
-static secbool check_vendor_keys_lock(const vendor_header *const vhdr) {
+static secbool check_vendor_header_lock(const vendor_header *const vhdr) {
   uint8_t lock[FLASH_OTP_BLOCK_SIZE];
-  ensure(flash_otp_read(FLASH_OTP_BLOCK_VENDOR_KEYS_LOCK, 0, lock,
+  ensure(flash_otp_read(FLASH_OTP_BLOCK_VENDOR_HEADER_LOCK, 0, lock,
                         FLASH_OTP_BLOCK_SIZE),
          NULL);
   if (0 ==
@@ -182,7 +182,7 @@ static secbool check_vendor_keys_lock(const vendor_header *const vhdr) {
     return sectrue;
   }
   uint8_t hash[32];
-  vendor_keys_hash(vhdr, hash);
+  vendor_header_hash(vhdr, hash);
   return sectrue * (0 == memcmp(lock, hash, 32));
 }
 
@@ -235,7 +235,7 @@ int main(void) {
   secbool firmware_present =
       load_vendor_header_keys((const uint8_t *)FIRMWARE_START, &vhdr);
   if (sectrue == firmware_present) {
-    firmware_present = check_vendor_keys_lock(&vhdr);
+    firmware_present = check_vendor_header_lock(&vhdr);
   }
   if (sectrue == firmware_present) {
     firmware_present = load_image_header(
@@ -263,7 +263,7 @@ int main(void) {
   ensure(load_vendor_header_keys((const uint8_t *)FIRMWARE_START, &vhdr),
          "invalid vendor header");
 
-  ensure(check_vendor_keys_lock(&vhdr), "unauthorized vendor keys");
+  ensure(check_vendor_header_lock(&vhdr), "unauthorized vendor keys");
 
   ensure(load_image_header((const uint8_t *)(FIRMWARE_START + vhdr.hdrlen),
                            FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE,

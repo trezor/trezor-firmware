@@ -25,9 +25,9 @@ import requests
 
 from trezorlib import btc, messages, protobuf
 
-REPOSITORY_ROOT = Path(__file__).parent.parent
+REPOSITORY_ROOT = Path(__file__).resolve().parent.parent
 TOOLS_PATH = REPOSITORY_ROOT / "common" / "tools"
-CACHE_PATH = Path(__file__).parent / "txcache"
+CACHE_PATH = Path(__file__).resolve().parent / "txcache"
 
 sys.path.insert(0, str(TOOLS_PATH))
 from coin_info import coin_info  # isort:skip
@@ -52,10 +52,10 @@ BLOCKBOOKS = _get_blockbooks()
 
 
 class TxCache:
-    def __init__(self, coin_name):
+    def __init__(self, coin_name: str) -> None:
         self.slug = coin_name.lower().replace(" ", "_")
 
-    def get_tx(self, txhash):
+    def get_tx(self, txhash: str) -> messages.TransactionType:
         try:
             (CACHE_PATH / self.slug).mkdir()
         except Exception:
@@ -71,10 +71,10 @@ class TxCache:
         txdict = json.loads(cache_file.read_text())
         return protobuf.dict_to_proto(messages.TransactionType, txdict)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: bytes) -> messages.TransactionType:
         return self.get_tx(key.hex())
 
-    def __contains__(self, key):
+    def __contains__(self, key: bytes) -> bool:
         try:
             self.get_tx(key.hex())
             return True
@@ -122,7 +122,7 @@ def cli(tx, coin_name):
         tx_dict = protobuf.to_dict(tx_proto)
         tx_json = json.dumps(tx_dict, sort_keys=True, indent=2) + "\n"
     except Exception as e:
-        raise click.ClickException(e) from e
+        raise click.ClickException(str(e)) from e
 
     cache_dir = CACHE_PATH / coin_name
     if not cache_dir.exists():

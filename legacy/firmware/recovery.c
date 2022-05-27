@@ -421,7 +421,7 @@ static void recovery_digit(const char digit) {
     oledInvert(x + 1, y, x + 62, y + 9);
     oledRefresh();
     usbTiny(1);
-    usbSleep(250);
+    waitAndProcessUSBRequests(250);
     usbTiny(0);
 
     /* index of the chosen word */

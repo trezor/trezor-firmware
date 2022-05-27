@@ -9,6 +9,14 @@ image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/trezor-firmware-en
 
 # Hardware
 
+# [Device tests](../docs/tests/device-tests.md) that run against an actual physical Trezor T.
+# The device needs to have special bootloader, found in `core/embed/bootloader_ci`, that
+# makes it possible to flash firmware without confirmation on the touchscreen.
+#
+# All hardware tests are run nightly on the `master` branch, as well as on push to branches
+# with whitelisted prefix. If you want hardware tests ran on your branch, make sure its
+# name starts with `hw/`.
+#
 # Currently it's not possible to run all regular TT tests without getting into
 # a state where the micropython heap is too fragmented and allocations fail
 # (often manifesting as a stuck test case). For that reason some tests are
@@ -42,6 +50,7 @@ hardware core regular device test:
     expire_in: 2 days
     when: always
 
+# Also device tests on physical Trezor T but with Bitcoin-only firmware.
 hardware core btconly device test:
   stage: test
   only:
@@ -98,6 +107,9 @@ hardware core monero test:
     expire_in: 2 days
     when: always
 
+# [Device tests](../docs/tests/device-tests.md) executed on physical Trezor 1.
+# This works thanks to [tpmb](https://github.com/mmahut/tpmb), which is a small arduino
+# device capable of pushing an actual buttons on the device.
 hardware legacy regular device test:
   stage: test
   only:
@@ -121,6 +133,7 @@ hardware legacy regular device test:
     expire_in: 2 days
     when: always
 
+# Also device tests on physical Trezor 1 but with Bitcoin-only firmware.
 hardware legacy btconly device test:
   stage: test
   variables:

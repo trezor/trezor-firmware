@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor.messages import StellarAddress, StellarGetAddress
 from trezor.ui.layouts import show_address
 
@@ -6,7 +8,7 @@ from apps.common.keychain import auto_keychain
 
 from . import helpers
 
-if False:
+if TYPE_CHECKING:
     from trezor.wire import Context
     from apps.common.keychain import Keychain
 
@@ -23,8 +25,6 @@ async def get_address(
 
     if msg.show_display:
         title = paths.address_n_to_str(msg.address_n)
-        await show_address(
-            ctx, address=address, address_qr=address.upper(), title=title
-        )
+        await show_address(ctx, address=address, case_sensitive=False, title=title)
 
     return StellarAddress(address=address)

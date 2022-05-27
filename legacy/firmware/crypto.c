@@ -23,7 +23,6 @@
 #include "aes/aes.h"
 #include "base58.h"
 #include "bip32.h"
-#include "cash_addr.h"
 #include "coins.h"
 #include "curves.h"
 #include "hmac.h"
@@ -33,9 +32,9 @@
 #include "segwit_addr.h"
 #include "sha2.h"
 
-#define PATH_MAX_ACCOUNT 100
-#define PATH_MAX_CHANGE 1
-#define PATH_MAX_ADDRESS_INDEX 1000000
+#if !BITCOIN_ONLY
+#include "cash_addr.h"
+#endif
 
 uint32_t ser_length(uint32_t len, uint8_t *out) {
   if (len < 253) {
@@ -177,12 +176,78 @@ int cryptoMessageSign(const CoinInfo *coin, HDNode *node,
   return result;
 }
 
+// Determines the script type from a non-multisig address.
+static InputScriptType address_to_script_type(const CoinInfo *coin,
+                                              const char *address) {
+  uint8_t addr_raw[MAX_ADDR_RAW_SIZE] = {0};
+  size_t addr_raw_len = 0;
+
+  // Native SegWit
+  if (coin->bech32_prefix) {
+    int witver = 0;
+    if (segwit_addr_decode(&witver, addr_raw, &addr_raw_len,
+                           coin->bech32_prefix, address)) {
+      switch (witver) {
+        case 0:
+          return InputScriptType_SPENDWITNESS;
+        case 1:
+          return InputScriptType_SPENDTAPROOT;
+        default:
+          return InputScriptType_EXTERNAL;  // unknown script type
+      }
+    }
+  }
+
+#if !BITCOIN_ONLY
+  if (coin->cashaddr_prefix &&
+      cash_addr_decode(addr_raw, &addr_raw_len, coin->cashaddr_prefix,
+                       address)) {
+    return InputScriptType_SPENDADDRESS;
+  }
+#endif
+
+  addr_raw_len = base58_decode_check(address, coin->curve->hasher_base58,
+                                     addr_raw, sizeof(addr_raw));
+
+  // P2PKH
+  if (addr_raw_len > address_prefix_bytes_len(coin->address_type) &&
+      address_check_prefix(addr_raw, coin->address_type)) {
+    return InputScriptType_SPENDADDRESS;
+  }
+
+  // P2SH
+  if (addr_raw_len > address_prefix_bytes_len(coin->address_type_p2sh) &&
+      address_check_prefix(addr_raw, coin->address_type_p2sh)) {
+    return InputScriptType_SPENDP2SHWITNESS;
+  }
+
+  return InputScriptType_EXTERNAL;  // unknown script type
+}
+
 int cryptoMessageVerify(const CoinInfo *coin, const uint8_t *message,
                         size_t message_len, const char *address,
                         const uint8_t *signature) {
-  // check for invalid signature prefix
-  if (signature[0] < 27 || signature[0] > 43) {
-    return 1;
+  // check if the address is correct
+  InputScriptType script_type = address_to_script_type(coin, address);
+  if (script_type == InputScriptType_EXTERNAL) {
+    return 1;  // invalid address
+  }
+
+  if (signature[0] >= 27 && signature[0] <= 34) {
+    // p2pkh or no script type provided
+    // use the script type from the address
+  } else if (signature[0] >= 35 && signature[0] <= 38) {
+    // segwit-in-p2sh
+    if (script_type != InputScriptType_SPENDP2SHWITNESS) {
+      return 2;  // script type mismatch
+    }
+  } else if (signature[0] >= 39 && signature[0] <= 42) {
+    // segwit
+    if (script_type != InputScriptType_SPENDWITNESS) {
+      return 2;  // script type mismatch
+    }
+  } else {
+    return 3;  // invalid signature prefix
   }
 
   uint8_t hash[HASHER_DIGEST_LENGTH] = {0};
@@ -195,25 +260,28 @@ int cryptoMessageVerify(const CoinInfo *coin, const uint8_t *message,
   uint8_t pubkey[65] = {0};
   if (ecdsa_recover_pub_from_sig(coin->curve->params, pubkey, signature + 1,
                                  hash, recid) != 0) {
-    return 3;
+    return 4;  // invalid signature data
   }
+
   // convert public key to compressed pubkey if necessary
   if (compressed) {
     pubkey[0] = 0x02 | (pubkey[64] & 1);
   }
 
-  // check if the address is correct
   uint8_t addr_raw[MAX_ADDR_RAW_SIZE] = {0};
   uint8_t recovered_raw[MAX_ADDR_RAW_SIZE] = {0};
 
-  // p2pkh
-  if (signature[0] >= 27 && signature[0] <= 34) {
+  if (script_type == InputScriptType_SPENDADDRESS) {
+    // p2pkh
     size_t len = 0;
+#if !BITCOIN_ONLY
     if (coin->cashaddr_prefix) {
       if (!cash_addr_decode(addr_raw, &len, coin->cashaddr_prefix, address)) {
-        return 2;
+        return 1;  // invalid address
       }
-    } else {
+    } else
+#endif
+    {
       len = base58_decode_check(address, coin->curve->hasher_base58, addr_raw,
                                 MAX_ADDR_RAW_SIZE);
     }
@@ -221,9 +289,9 @@ int cryptoMessageVerify(const CoinInfo *coin, const uint8_t *message,
                           coin->curve->hasher_pubkey, recovered_raw);
     if (memcmp(recovered_raw, addr_raw, len) != 0 ||
         len != address_prefix_bytes_len(coin->address_type) + 20) {
-      return 2;
+      return 5;  // signature does not match address and message
     }
-  } else if (signature[0] >= 35 && signature[0] <= 38) {
+  } else if (script_type == InputScriptType_SPENDP2SHWITNESS) {
     // segwit-in-p2sh
     size_t len = base58_decode_check(address, coin->curve->hasher_base58,
                                      addr_raw, MAX_ADDR_RAW_SIZE);
@@ -232,23 +300,23 @@ int cryptoMessageVerify(const CoinInfo *coin, const uint8_t *message,
                                       recovered_raw);
     if (memcmp(recovered_raw, addr_raw, len) != 0 ||
         len != address_prefix_bytes_len(coin->address_type_p2sh) + 20) {
-      return 2;
+      return 5;  // signature does not match address and message
     }
-  } else if (signature[0] >= 39 && signature[0] <= 42) {
+  } else if (script_type == InputScriptType_SPENDWITNESS) {
     // segwit
     int witver = 0;
     size_t len = 0;
     if (!coin->bech32_prefix ||
         !segwit_addr_decode(&witver, recovered_raw, &len, coin->bech32_prefix,
                             address)) {
-      return 4;
+      return 1;  // invalid address
     }
     ecdsa_get_pubkeyhash(pubkey, coin->curve->hasher_pubkey, addr_raw);
     if (memcmp(recovered_raw, addr_raw, len) != 0 || witver != 0 || len != 20) {
-      return 2;
+      return 5;  // signature does not match address and message
     }
   } else {
-    return 4;
+    return 1;  // invalid address
   }
 
   return 0;
@@ -419,231 +487,204 @@ static bool check_cointype(const CoinInfo *coin, uint32_t slip44, bool full) {
 
 bool coin_path_check(const CoinInfo *coin, InputScriptType script_type,
                      uint32_t address_n_count, const uint32_t *address_n,
-                     bool has_multisig, CoinPathCheckLevel level) {
-  // For level BASIC this function checks that a coin without strong replay
-  // protection doesn't access paths that are known to be used by another coin.
-  // Used by SignTx to ensure that a user cannot be coerced into signing a
-  // testnet transaction or a Litecoin transaction which in fact spends Bitcoin.
-  // For level KNOWN this function checks that the path is a recognized path for
-  // the given coin. Used by GetAddress to prevent ransom attacks where a user
-  // could be coerced to use an address with an unenumerable path.
-  // For level SCRIPT_TYPE this function makes the same checks as in level
-  // KNOWN, but includes script type checks.
+                     bool has_multisig, bool full_check) {
+  // This function checks that the path is a recognized path for the given coin.
+  // Used by GetAddress to prevent ransom attacks where a user could be coerced
+  // to use an address with an unenumerable path and used by SignTx to ensure
+  // that a user cannot be coerced into signing a testnet transaction or a
+  // Litecoin transaction which in fact spends Bitcoin. If full_check is true,
+  // then this function also checks that the path fully matches the script type
+  // and coin type. This is used to determine whether a warning should be shown.
 
-  const bool check_known = (level >= CoinPathCheckLevel_KNOWN);
-  const bool check_script_type = (level >= CoinPathCheckLevel_SCRIPT_TYPE);
+  if (address_n_count == 0) {
+    return false;
+  }
 
   bool valid = true;
   // m/44' : BIP44 Legacy
   // m / purpose' / coin_type' / account' / change / address_index
-  if (address_n_count > 0 && address_n[0] == (0x80000000 + 44)) {
-    if (check_known) {
-      valid = valid && (address_n_count == 5);
-    } else {
-      valid = valid && (address_n_count >= 2);
-    }
-    valid = valid && check_cointype(coin, address_n[1], check_known);
-    if (check_script_type) {
+  if (address_n[0] == PATH_HARDENED + 44) {
+    valid = valid && (address_n_count == 5);
+    valid = valid && check_cointype(coin, address_n[1], full_check);
+    valid = valid && (address_n[2] & PATH_HARDENED);
+    valid = valid && ((address_n[2] & PATH_UNHARDEN_MASK) <= PATH_MAX_ACCOUNT);
+    valid = valid && (address_n[3] <= PATH_MAX_CHANGE);
+    valid = valid && (address_n[4] <= PATH_MAX_ADDRESS_INDEX);
+    if (full_check) {
       valid = valid && (script_type == InputScriptType_SPENDADDRESS);
       valid = valid && (!has_multisig);
-    }
-    if (check_known) {
-      valid = valid && ((address_n[2] & 0x80000000) == 0x80000000);
-      valid = valid && ((address_n[2] & 0x7fffffff) <= PATH_MAX_ACCOUNT);
-      valid = valid && (address_n[3] <= PATH_MAX_CHANGE);
-      valid = valid && (address_n[4] <= PATH_MAX_ADDRESS_INDEX);
     }
     return valid;
   }
 
-  if (address_n_count > 0 && address_n[0] == (0x80000000 + 45)) {
-    if (check_script_type) {
-      valid = valid && has_multisig;
-    }
-
+  if (address_n[0] == PATH_HARDENED + 45) {
     if (address_n_count == 4) {
       // m/45' - BIP45 Copay Abandoned Multisig P2SH
       // m / purpose' / cosigner_index / change / address_index
       // Patterns without a coin_type field must be treated as Bitcoin paths.
-      valid = valid && check_cointype(coin, SLIP44_BITCOIN, check_known);
-      if (check_script_type) {
-        valid = valid && (script_type == InputScriptType_SPENDMULTISIG);
-      }
-      if (check_known) {
-        valid = valid && (address_n[1] <= 100);
-        valid = valid && (address_n[2] <= PATH_MAX_CHANGE);
-        valid = valid && (address_n[3] <= PATH_MAX_ADDRESS_INDEX);
-      }
+      valid = valid && check_cointype(coin, SLIP44_BITCOIN, false);
+      valid = valid && (address_n[1] <= 100);
+      valid = valid && (address_n[2] <= PATH_MAX_CHANGE);
+      valid = valid && (address_n[3] <= PATH_MAX_ADDRESS_INDEX);
     } else if (address_n_count == 5) {
       // Unchained Capital compatibility pattern. Will be removed in the
       // future.
       // m / 45' / coin_type' / account' / [0-1000000] / address_index
-      valid = valid && check_cointype(coin, address_n[1], check_known);
-      if (check_script_type) {
-        valid = valid && (script_type == InputScriptType_SPENDADDRESS ||
-                          script_type == InputScriptType_SPENDMULTISIG);
-      }
-      if (check_known) {
-        valid = valid && ((address_n[2] & 0x80000000) == 0x80000000);
-        valid = valid && ((address_n[2] & 0x7fffffff) <= PATH_MAX_ACCOUNT);
-        valid = valid && (address_n[3] <= 1000000);
-        valid = valid && (address_n[4] <= PATH_MAX_ADDRESS_INDEX);
-      }
+      valid = valid && check_cointype(coin, address_n[1], full_check);
+      valid = valid && (address_n[2] & PATH_HARDENED);
+      valid =
+          valid && ((address_n[2] & PATH_UNHARDEN_MASK) <= PATH_MAX_ACCOUNT);
+      valid = valid && (address_n[3] <= 1000000);
+      valid = valid && (address_n[4] <= PATH_MAX_ADDRESS_INDEX);
     } else if (address_n_count == 6) {
       // Unchained Capital compatibility pattern. Will be removed in the
       // future.
       // m/45'/coin_type'/account'/[0-1000000]/change/address_index
       // m/45'/coin_type/account/[0-1000000]/change/address_index
+      valid = valid &&
+              check_cointype(coin, PATH_HARDENED | address_n[1], full_check);
+      valid = valid && ((address_n[1] & PATH_HARDENED) ==
+                        (address_n[2] & PATH_HARDENED));
       valid =
-          valid && check_cointype(coin, 0x80000000 | address_n[1], check_known);
-      if (check_script_type) {
-        valid = valid && (script_type == InputScriptType_SPENDADDRESS ||
-                          script_type == InputScriptType_SPENDMULTISIG);
-      }
-      if (check_known) {
-        valid = valid &&
-                ((address_n[1] & 0x80000000) == (address_n[2] & 0x80000000));
-        valid = valid && ((address_n[2] & 0x7fffffff) <= PATH_MAX_ACCOUNT);
-        valid = valid && (address_n[3] <= 1000000);
-        valid = valid && (address_n[4] <= PATH_MAX_CHANGE);
-        valid = valid && (address_n[5] <= PATH_MAX_ADDRESS_INDEX);
-      }
+          valid && ((address_n[2] & PATH_UNHARDEN_MASK) <= PATH_MAX_ACCOUNT);
+      valid = valid && (address_n[3] <= 1000000);
+      valid = valid && (address_n[4] <= PATH_MAX_CHANGE);
+      valid = valid && (address_n[5] <= PATH_MAX_ADDRESS_INDEX);
     } else {
-      if (check_known) {
-        return false;
-      }
+      return false;
+    }
+
+    if (full_check) {
+      valid = valid && (script_type == InputScriptType_SPENDADDRESS ||
+                        script_type == InputScriptType_SPENDMULTISIG);
+      valid = valid && has_multisig;
     }
 
     return valid;
   }
 
-  // m/48' - BIP48 Copay Multisig P2SH
-  // m / purpose' / coin_type' / account' / change / address_index
-  // Electrum:
-  // m / purpose' / coin_type' / account' / type' / change / address_index
-  if (address_n_count > 0 && address_n[0] == (0x80000000 + 48)) {
-    if (check_known) {
-      valid = valid && (address_n_count == 5 || address_n_count == 6);
-    } else {
-      valid = valid && (address_n_count >= 2);
-    }
-    valid = valid && check_cointype(coin, address_n[1], check_known);
-    if (check_script_type) {
-      valid = valid && has_multisig;
-      // we do not support Multisig with Taproot yet
-      valid = valid && (script_type == InputScriptType_SPENDMULTISIG ||
-                        script_type == InputScriptType_SPENDP2SHWITNESS ||
-                        script_type == InputScriptType_SPENDWITNESS);
-    }
-    if (check_known) {
-      valid = valid && ((address_n[2] & 0x80000000) == 0x80000000);
-      valid = valid && ((address_n[2] & 0x7fffffff) <= PATH_MAX_ACCOUNT);
-      if (address_n_count == 5) {
-        valid = valid && (address_n[3] <= PATH_MAX_CHANGE);
-        valid = valid && (address_n[4] <= PATH_MAX_ADDRESS_INDEX);
-      } else if (address_n_count == 6) {
-        valid = valid && ((address_n[3] & 0x80000000) == 0x80000000);
-        valid = valid && ((address_n[3] & 0x7fffffff) <= 3);
-        valid = valid && (address_n[4] <= PATH_MAX_CHANGE);
-        valid = valid && (address_n[5] <= PATH_MAX_ADDRESS_INDEX);
-      } else {
-        return false;
+  if (address_n[0] == PATH_HARDENED + 48) {
+    valid = valid && (address_n_count == 5 || address_n_count == 6);
+    valid = valid && check_cointype(coin, address_n[1], full_check);
+    valid = valid && (address_n[2] & PATH_HARDENED);
+    valid = valid && ((address_n[2] & PATH_UNHARDEN_MASK) <= PATH_MAX_ACCOUNT);
+    if (address_n_count == 5) {
+      // [OBSOLETE] m/48' Copay Multisig P2SH
+      // m / purpose' / coin_type' / account' / change / address_index
+      // NOTE: this pattern is not recognized by trezor-core
+      valid = valid && (address_n[3] <= PATH_MAX_CHANGE);
+      valid = valid && (address_n[4] <= PATH_MAX_ADDRESS_INDEX);
+      if (full_check) {
+        valid = valid && has_multisig;
+        valid = valid && (script_type == InputScriptType_SPENDMULTISIG);
       }
+    } else if (address_n_count == 6) {
+      // BIP-48:
+      // m / purpose' / coin_type' / account' / type' / change / address_index
+      valid = valid && (address_n[3] & PATH_HARDENED);
+      uint32_t type = address_n[3] & PATH_UNHARDEN_MASK;
+      valid = valid && (type <= 2);
+      valid = valid && (type == 0 || coin->has_segwit);
+      valid = valid && (address_n[4] <= PATH_MAX_CHANGE);
+      valid = valid && (address_n[5] <= PATH_MAX_ADDRESS_INDEX);
+      if (full_check) {
+        valid = valid && has_multisig;
+        switch (type) {
+          case 0:
+            valid = valid && (script_type == InputScriptType_SPENDMULTISIG ||
+                              script_type == InputScriptType_SPENDADDRESS);
+            break;
+          case 1:
+            valid = valid && (script_type == InputScriptType_SPENDP2SHWITNESS);
+            break;
+          case 2:
+            valid = valid && (script_type == InputScriptType_SPENDWITNESS);
+            break;
+          default:
+            return false;
+        }
+      }
+    } else {
+      return false;
     }
     return valid;
   }
 
   // m/49' : BIP49 SegWit
   // m / purpose' / coin_type' / account' / change / address_index
-  if (address_n_count > 0 && address_n[0] == (0x80000000 + 49)) {
+  if (address_n[0] == PATH_HARDENED + 49) {
     valid = valid && coin->has_segwit;
-    if (check_known) {
-      valid = valid && (address_n_count == 5);
-    } else {
-      valid = valid && (address_n_count >= 2);
-    }
-    valid = valid && check_cointype(coin, address_n[1], check_known);
-    if (check_script_type) {
+    valid = valid && (address_n_count == 5);
+    valid = valid && check_cointype(coin, address_n[1], full_check);
+    valid = valid && (address_n[2] & PATH_HARDENED);
+    valid = valid && ((address_n[2] & PATH_UNHARDEN_MASK) <= PATH_MAX_ACCOUNT);
+    valid = valid && (address_n[3] <= PATH_MAX_CHANGE);
+    valid = valid && (address_n[4] <= PATH_MAX_ADDRESS_INDEX);
+    if (full_check) {
       valid = valid && (script_type == InputScriptType_SPENDP2SHWITNESS);
-    }
-    if (check_known) {
-      valid = valid && ((address_n[2] & 0x80000000) == 0x80000000);
-      valid = valid && ((address_n[2] & 0x7fffffff) <= PATH_MAX_ACCOUNT);
-      valid = valid && (address_n[3] <= PATH_MAX_CHANGE);
-      valid = valid && (address_n[4] <= PATH_MAX_ADDRESS_INDEX);
     }
     return valid;
   }
 
   // m/84' : BIP84 Native SegWit
   // m / purpose' / coin_type' / account' / change / address_index
-  if (address_n_count > 0 && address_n[0] == (0x80000000 + 84)) {
+  if (address_n[0] == PATH_HARDENED + 84) {
     valid = valid && coin->has_segwit;
     valid = valid && (coin->bech32_prefix != NULL);
-    if (check_known) {
-      valid = valid && (address_n_count == 5);
-    } else {
-      valid = valid && (address_n_count >= 2);
-    }
-    valid = valid && check_cointype(coin, address_n[1], check_known);
-    if (check_script_type) {
+    valid = valid && (address_n_count == 5);
+    valid = valid && check_cointype(coin, address_n[1], full_check);
+    valid = valid && (address_n[2] & PATH_HARDENED);
+    valid = valid && ((address_n[2] & PATH_UNHARDEN_MASK) <= PATH_MAX_ACCOUNT);
+    valid = valid && (address_n[3] <= PATH_MAX_CHANGE);
+    valid = valid && (address_n[4] <= PATH_MAX_ADDRESS_INDEX);
+    if (full_check) {
       valid = valid && (script_type == InputScriptType_SPENDWITNESS);
-    }
-    if (check_known) {
-      valid = valid && ((address_n[2] & 0x80000000) == 0x80000000);
-      valid = valid && ((address_n[2] & 0x7fffffff) <= PATH_MAX_ACCOUNT);
-      valid = valid && (address_n[3] <= PATH_MAX_CHANGE);
-      valid = valid && (address_n[4] <= PATH_MAX_ADDRESS_INDEX);
     }
     return valid;
   }
 
   // m/86' : BIP86 Taproot
   // m / purpose' / coin_type' / account' / change / address_index
-  if (address_n_count > 0 && address_n[0] == (0x80000000 + 86)) {
+  if (address_n[0] == PATH_HARDENED + 86) {
     valid = valid && coin->has_taproot;
     valid = valid && (coin->bech32_prefix != NULL);
-    if (check_known) {
-      valid = valid && (address_n_count == 5);
-    } else {
-      valid = valid && (address_n_count >= 2);
-    }
-    valid = valid && check_cointype(coin, address_n[1], check_known);
-    if (check_script_type) {
+    valid = valid && (address_n_count == 5);
+    valid = valid && check_cointype(coin, address_n[1], full_check);
+    valid = valid && (address_n[2] & PATH_HARDENED);
+    valid = valid && ((address_n[2] & PATH_UNHARDEN_MASK) <= PATH_MAX_ACCOUNT);
+    valid = valid && (address_n[3] <= PATH_MAX_CHANGE);
+    valid = valid && (address_n[4] <= PATH_MAX_ADDRESS_INDEX);
+    if (full_check) {
       // we do not support Multisig with Taproot yet
       valid = valid && !has_multisig;
       valid = valid && (script_type == InputScriptType_SPENDTAPROOT);
-    }
-    if (check_known) {
-      valid = valid && ((address_n[2] & 0x80000000) == 0x80000000);
-      valid = valid && ((address_n[2] & 0x7fffffff) <= PATH_MAX_ACCOUNT);
-      valid = valid && (address_n[3] <= PATH_MAX_CHANGE);
-      valid = valid && (address_n[4] <= PATH_MAX_ADDRESS_INDEX);
     }
     return valid;
   }
 
   // Green Address compatibility pattern. Will be removed in the future.
   // m / [1,4] / address_index
-  if (address_n_count > 0 && (address_n[0] == 1 || address_n[0] == 4)) {
+  if (address_n[0] == 1 || address_n[0] == 4) {
     valid = valid && (coin->coin_type == SLIP44_BITCOIN);
-    if (check_known) {
-      valid = valid && (address_n_count == 2);
-      valid = valid && (address_n[1] <= PATH_MAX_ADDRESS_INDEX);
+    valid = valid && (address_n_count == 2);
+    valid = valid && (address_n[1] <= PATH_MAX_ADDRESS_INDEX);
+    if (full_check) {
+      valid = valid && (script_type != InputScriptType_SPENDTAPROOT);
     }
     return valid;
   }
 
   // Green Address compatibility pattern. Will be removed in the future.
   // m / 3' / [1-100]' / [1,4] / address_index
-  if (address_n_count > 0 && address_n[0] == (0x80000000 + 3)) {
+  if (address_n[0] == PATH_HARDENED + 3) {
     valid = valid && (coin->coin_type == SLIP44_BITCOIN);
-    if (check_known) {
-      valid = valid && (address_n_count == 4);
-      valid = valid && ((address_n[1] & 0x80000000) == 0x80000000);
-      valid = valid && ((address_n[1] & 0x7fffffff) <= 100);
-      valid = valid && (address_n[2] == 1 || address_n[2] == 4);
-      valid = valid && (address_n[3] <= PATH_MAX_ADDRESS_INDEX);
+    valid = valid && (address_n_count == 4);
+    valid = valid && (address_n[1] & PATH_HARDENED);
+    valid = valid && ((address_n[1] & PATH_UNHARDEN_MASK) <= 100);
+    valid = valid && (address_n[2] == 1 || address_n[2] == 4);
+    valid = valid && (address_n[3] <= PATH_MAX_ADDRESS_INDEX);
+    if (full_check) {
+      valid = valid && (script_type != InputScriptType_SPENDTAPROOT);
     }
     return valid;
   }
@@ -651,41 +692,36 @@ bool coin_path_check(const CoinInfo *coin, InputScriptType script_type,
   // Green Address compatibility patterns. Will be removed in the future.
   // m / 1195487518
   // m / 1195487518 / 6 / address_index
-  if (address_n_count > 0 && address_n[0] == 1195487518) {
+  if (address_n[0] == 1195487518) {
     valid = valid && (coin->coin_type == SLIP44_BITCOIN);
-    if (check_known) {
-      if (address_n_count == 3) {
-        valid = valid && (address_n[1] == 6);
-        valid = valid && (address_n[2] <= PATH_MAX_ADDRESS_INDEX);
-      } else if (address_n_count != 1) {
-        return false;
-      }
+    if (address_n_count == 3) {
+      valid = valid && (address_n[1] == 6);
+      valid = valid && (address_n[2] <= PATH_MAX_ADDRESS_INDEX);
+    } else if (address_n_count != 1) {
+      return false;
+    }
+    if (full_check) {
+      return false;
     }
     return valid;
   }
 
   // Casa compatibility pattern. Will be removed in the future.
   // m / 49 / coin_type / account / change / address_index
-  if (address_n_count > 0 && address_n[0] == 49) {
-    if (check_known) {
-      valid = valid && (address_n_count == 5);
-    } else {
-      valid = valid && (address_n_count >= 2);
-    }
+  if (address_n[0] == 49) {
+    valid = valid && (address_n_count == 5);
     valid =
-        valid && check_cointype(coin, 0x80000000 | address_n[1], check_known);
-    if (check_script_type) {
+        valid && check_cointype(coin, PATH_HARDENED | address_n[1], full_check);
+    valid = valid && ((address_n[1] & PATH_HARDENED) == 0);
+    valid = valid && (address_n[2] <= PATH_MAX_ACCOUNT);
+    valid = valid && (address_n[3] <= PATH_MAX_CHANGE);
+    valid = valid && (address_n[4] <= PATH_MAX_ADDRESS_INDEX);
+    if (full_check) {
       valid = valid && (script_type == InputScriptType_SPENDP2SHWITNESS);
-    }
-    if (check_known) {
-      valid = valid && ((address_n[1] & 0x80000000) == 0);
-      valid = valid && (address_n[2] <= PATH_MAX_ACCOUNT);
-      valid = valid && (address_n[3] <= PATH_MAX_CHANGE);
-      valid = valid && (address_n[4] <= PATH_MAX_ADDRESS_INDEX);
     }
     return valid;
   }
 
-  // we allow unknown paths only when a full check is not required
-  return level == CoinPathCheckLevel_BASIC;
+  // unknown path
+  return false;
 }

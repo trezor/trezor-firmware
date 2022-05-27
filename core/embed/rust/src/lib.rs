@@ -8,15 +8,17 @@ mod error;
 #[macro_use]
 mod micropython;
 mod protobuf;
+mod time;
 #[cfg(feature = "ui_debug")]
 mod trace;
 mod trezorhal;
 
 #[cfg(feature = "ui")]
 #[macro_use]
-mod ui;
+pub mod ui;
 mod util;
 
+#[cfg(not(test))]
 #[cfg(not(feature = "test"))]
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {

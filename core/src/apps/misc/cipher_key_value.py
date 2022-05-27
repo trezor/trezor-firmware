@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import wire
 from trezor.crypto import aes, hmac
 from trezor.messages import CipheredKeyValue
@@ -6,16 +8,14 @@ from trezor.ui.layouts import confirm_action
 from apps.common.keychain import get_keychain
 from apps.common.paths import AlwaysMatchingSchema
 
-if False:
-    from trezor.wire import Context
-
+if TYPE_CHECKING:
     from trezor.messages import CipherKeyValue
 
 # This module implements the SLIP-0011 symmetric encryption of key-value pairs using a
 # deterministic hierarchy, see https://github.com/satoshilabs/slips/blob/master/slip-0011.md.
 
 
-async def cipher_key_value(ctx: Context, msg: CipherKeyValue) -> CipheredKeyValue:
+async def cipher_key_value(ctx: wire.Context, msg: CipherKeyValue) -> CipheredKeyValue:
     keychain = await get_keychain(ctx, "secp256k1", [AlwaysMatchingSchema])
 
     if len(msg.value) % 16 > 0:

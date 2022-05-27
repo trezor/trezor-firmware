@@ -29,6 +29,7 @@ from ..client import TrezorClient
 from ..transport import enumerate_devices
 from ..transport.udp import UdpTransport
 from . import (
+    AliasedGroup,
     TrezorConnection,
     binance,
     btc,
@@ -57,8 +58,8 @@ LOG = logging.getLogger(__name__)
 
 COMMAND_ALIASES = {
     "change-pin": settings.pin,
-    "enable-passphrase": settings.passphrase_enable,
-    "disable-passphrase": settings.passphrase_disable,
+    "enable-passphrase": settings.passphrase_on,
+    "disable-passphrase": settings.passphrase_off,
     "wipe-device": device.wipe,
     "reset-device": device.setup,
     "recovery-device": device.recover,
@@ -86,15 +87,8 @@ COMMAND_ALIASES = {
 }
 
 
-class TrezorctlGroup(click.Group):
+class TrezorctlGroup(AliasedGroup):
     """Command group that handles compatibility for trezorctl.
-
-    The purpose is twofold: convert underscores to dashes, and ensure old-style commands
-    still work with new-style groups.
-
-    Click 7.0 silently switched all underscore_commands to dash-commands.
-    This implementation of `click.Group` responds to underscore_commands by invoking
-    the respective dash-command.
 
     With trezorctl 0.11.5, we started to convert old-style long commands
     (such as "binance-sign-tx") to command groups ("binance") with subcommands
@@ -104,16 +98,12 @@ class TrezorctlGroup(click.Group):
     """
 
     def get_command(self, ctx: click.Context, cmd_name: str) -> Optional[click.Command]:
-        cmd_name = cmd_name.replace("_", "-")
-        # try to look up the real name
         cmd = super().get_command(ctx, cmd_name)
         if cmd:
             return cmd
 
-        # look for a backwards compatibility alias
-        if cmd_name in COMMAND_ALIASES:
-            return COMMAND_ALIASES[cmd_name]
-
+        # the subsequent lookups rely on dash-separated command names
+        cmd_name = cmd_name.replace("_", "-")
         # look for subcommand in btc - "sign-tx" is now "btc sign-tx"
         cmd = btc.cli.get_command(ctx, cmd_name)
         if cmd:
@@ -125,7 +115,7 @@ class TrezorctlGroup(click.Group):
             command, subcommand = cmd_name.split("-", maxsplit=1)
             # get_command can return None and the following line will fail.
             # We don't care, we ignore the exception anyway.
-            return super().get_command(ctx, command).get_command(ctx, subcommand)  # type: ignore ["get_command" is not a known member of "None"]
+            return super().get_command(ctx, command).get_command(ctx, subcommand)  # type: ignore ["get_command" is not a known member of "None";;Cannot access member "get_command" for type "Command"]
         except Exception:
             pass
 
@@ -138,7 +128,11 @@ def configure_logging(verbose: int) -> None:
         log.OMITTED_MESSAGES.add(messages.Features)
 
 
-@click.command(cls=TrezorctlGroup, context_settings={"max_content_width": 400})
+@click.command(
+    cls=TrezorctlGroup,
+    context_settings={"max_content_width": 400},
+    aliases=COMMAND_ALIASES,
+)
 @click.option(
     "-p",
     "--path",
@@ -156,6 +150,12 @@ def configure_logging(verbose: int) -> None:
     help="Enter passphrase on host.",
 )
 @click.option(
+    "-S",
+    "--script",
+    is_flag=True,
+    help="Use UI for usage in scripts.",
+)
+@click.option(
     "-s",
     "--session-id",
     metavar="HEX",
@@ -170,6 +170,7 @@ def cli_main(
     verbose: int,
     is_json: bool,
     passphrase_on_host: bool,
+    script: bool,
     session_id: Optional[str],
 ) -> None:
     configure_logging(verbose)
@@ -181,7 +182,7 @@ def cli_main(
         except ValueError:
             raise click.ClickException(f"Not a valid session id: {session_id}")
 
-    ctx.obj = TrezorConnection(path, bytes_session_id, passphrase_on_host)
+    ctx.obj = TrezorConnection(path, bytes_session_id, passphrase_on_host, script)
 
 
 # Creating a cli function that has the right types for future usage
@@ -189,10 +190,14 @@ cli = cast(TrezorctlGroup, cli_main)
 
 
 @cli.resultcallback()
-def print_result(res: Any, is_json: bool, **kwargs: Any) -> None:
+def print_result(res: Any, is_json: bool, script: bool, **kwargs: Any) -> None:
     if is_json:
         if isinstance(res, protobuf.MessageType):
-            click.echo(json.dumps({res.__class__.__name__: res.__dict__}))
+            res = protobuf.to_dict(res, hexlify_bytes=True)
+
+        # No newlines for scripts, pretty-print for users
+        if script:
+            click.echo(json.dumps(res))
         else:
             click.echo(json.dumps(res, sort_keys=True, indent=4))
     else:

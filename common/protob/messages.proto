@@ -79,8 +79,8 @@ enum MessageType {
     // Management
     MessageType_Initialize = 0 [(bitcoin_only) = true, (wire_in) = true, (wire_tiny) = true];
     MessageType_Ping = 1 [(bitcoin_only) = true, (wire_in) = true];
-    MessageType_Success = 2 [(bitcoin_only) = true, (wire_out) = true];
-    MessageType_Failure = 3 [(bitcoin_only) = true, (wire_out) = true];
+    MessageType_Success = 2 [(bitcoin_only) = true, (wire_out) = true, (wire_debug_out) = true];
+    MessageType_Failure = 3 [(bitcoin_only) = true, (wire_out) = true, (wire_debug_out) = true];
     MessageType_ChangePin = 4 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_WipeDevice = 5 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_GetEntropy = 9 [(bitcoin_only) = true, (wire_in) = true];
@@ -96,6 +96,8 @@ enum MessageType {
     MessageType_ButtonRequest = 26 [(bitcoin_only) = true, (wire_out) = true];
     MessageType_ButtonAck = 27 [(bitcoin_only) = true, (wire_in) = true, (wire_tiny) = true, (wire_no_fsm) = true];
     MessageType_ApplyFlags = 28 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_GetNonce = 31 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_Nonce = 33 [(bitcoin_only) = true, (wire_out) = true];
     MessageType_BackupDevice = 34 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_EntropyRequest = 35 [(bitcoin_only) = true, (wire_out) = true];
     MessageType_EntropyAck = 36 [(bitcoin_only) = true, (wire_in) = true];
@@ -112,6 +114,11 @@ enum MessageType {
     MessageType_PreauthorizedRequest = 85 [(bitcoin_only) = true, (wire_out) = true];
     MessageType_CancelAuthorization = 86 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_RebootToBootloader = 87 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_GetFirmwareHash = 88 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_FirmwareHash = 89 [(bitcoin_only) = true, (wire_out) = true];
+    MessageType_GetFirmware = 90 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_FirmwareChunk = 91 [(bitcoin_only) = true, (wire_out) = true];
+    MessageType_FirmwareChunkAck = 92 [(bitcoin_only) = true, (wire_in) = true];
 
     MessageType_SetU2FCounter = 63 [(wire_in) = true];
     MessageType_GetNextU2FCounter = 80 [(wire_in) = true];
@@ -136,6 +143,7 @@ enum MessageType {
     MessageType_TxAck = 22 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_GetAddress = 29 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_Address = 30 [(bitcoin_only) = true, (wire_out) = true];
+    MessageType_TxAckPaymentRequest = 37 [(wire_in) = true];
     MessageType_SignMessage = 38 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_VerifyMessage = 39 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_MessageSignature = 40 [(bitcoin_only) = true, (wire_out) = true];
@@ -275,6 +283,8 @@ enum MessageType {
     MessageType_CardanoGetNativeScriptHash = 330 [(wire_in) = true];
     MessageType_CardanoNativeScriptHash = 331 [(wire_out) = true];
     MessageType_CardanoTxMint = 332 [(wire_in) = true];
+    MessageType_CardanoTxCollateralInput = 333 [(wire_in) = true];
+    MessageType_CardanoTxRequiredSigner = 334 [(wire_in) = true];
 
     // Ripple
     MessageType_RippleGetAddress = 400 [(wire_in) = true];

@@ -15,6 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import dataclasses
+from typing import List
 
 import pytest
 
@@ -43,7 +44,7 @@ STRENGTH = 128
 
 
 @for_all()
-def test_upgrade_load(gen, tag):
+def test_upgrade_load(gen: str, tag: str):
     def asserts(client):
         assert not client.features.pin_protection
         assert not client.features.passphrase_protection
@@ -71,7 +72,7 @@ def test_upgrade_load(gen, tag):
 
 
 @for_all("legacy")
-def test_upgrade_load_pin(gen, tag):
+def test_upgrade_load_pin(gen: str, tag: str):
     PIN = "1234"
 
     def asserts(client):
@@ -113,7 +114,7 @@ def test_upgrade_load_pin(gen, tag):
     ("legacy", ["v1.7.0", "v1.9.0"]),
     ("legacy", ["v1.8.0", "v1.9.0"]),
 )
-def test_storage_upgrade_progressive(gen, tags):
+def test_storage_upgrade_progressive(gen: str, tags: List[str]):
     PIN = "1234"
 
     def asserts(client):
@@ -148,7 +149,7 @@ def test_storage_upgrade_progressive(gen, tags):
 
 
 @for_all("legacy", legacy_minimum_version=(1, 9, 0))
-def test_upgrade_wipe_code(gen, tag):
+def test_upgrade_wipe_code(gen: str, tag: str):
     PIN = "1234"
     WIPE_CODE = "4321"
 
@@ -193,7 +194,7 @@ def test_upgrade_wipe_code(gen, tag):
 
 
 @for_all("legacy")
-def test_upgrade_reset(gen, tag):
+def test_upgrade_reset(gen: str, tag: str):
     def asserts(client):
         assert not client.features.pin_protection
         assert not client.features.passphrase_protection
@@ -226,7 +227,7 @@ def test_upgrade_reset(gen, tag):
 
 
 @for_all()
-def test_upgrade_reset_skip_backup(gen, tag):
+def test_upgrade_reset_skip_backup(gen: str, tag: str):
     def asserts(client):
         assert not client.features.pin_protection
         assert not client.features.passphrase_protection
@@ -260,7 +261,7 @@ def test_upgrade_reset_skip_backup(gen, tag):
 
 
 @for_all(legacy_minimum_version=(1, 7, 2))
-def test_upgrade_reset_no_backup(gen, tag):
+def test_upgrade_reset_no_backup(gen: str, tag: str):
     def asserts(client):
         assert not client.features.pin_protection
         assert not client.features.passphrase_protection
@@ -295,7 +296,7 @@ def test_upgrade_reset_no_backup(gen, tag):
 
 # Although Shamir was introduced in 2.1.2 already, the debug instrumentation was not present until 2.1.9.
 @for_all("core", core_minimum_version=(2, 1, 9))
-def test_upgrade_shamir_recovery(gen, tag):
+def test_upgrade_shamir_recovery(gen: str, tag: str):
     with EmulatorWrapper(gen, tag) as emu, BackgroundDeviceHandler(
         emu.client
     ) as device_handler:
@@ -335,7 +336,7 @@ def test_upgrade_shamir_recovery(gen, tag):
 
 
 @for_all(legacy_minimum_version=(1, 8, 4), core_minimum_version=(2, 1, 9))
-def test_upgrade_u2f(gen, tag):
+def test_upgrade_u2f(gen: str, tag: str):
     """Check U2F counter stayed the same after an upgrade."""
     with EmulatorWrapper(gen, tag) as emu:
         debuglink.load_device_by_mnemonic(

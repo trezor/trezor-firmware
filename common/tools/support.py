@@ -102,6 +102,8 @@ def check_support_values():
     errors = []
     for device, values in SUPPORT_INFO.items():
         supported = values.get("supported")
+        unsupported = values.get("unsupported")
+
         if not isinstance(supported, dict):
             errors.append(f"Missing 'supported' dict for {device}")
         else:
@@ -112,10 +114,13 @@ def check_support_values():
                     else:
                         if value is not True:
                             raise ValueError(f"only allowed is True, but found {value}")
+
+                    if key in unsupported:
+                        raise ValueError(f"{key} is both supported and unsupported")
+
                 except Exception as e:
                     errors.append(f"{device}.supported.{key}: {e}")
 
-        unsupported = values.get("unsupported")
         if not isinstance(unsupported, dict):
             errors.append(f"Missing 'supported' dict for {device}")
         else:

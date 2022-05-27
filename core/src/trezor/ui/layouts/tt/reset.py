@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import ui, utils, wire
 from trezor.crypto import random
 from trezor.enums import BackupType, ButtonRequestType
@@ -12,7 +14,7 @@ from ...components.tt.scroll import Paginated
 from ...components.tt.text import Text
 from ..common import interact
 
-if False:
+if TYPE_CHECKING:
     from typing import Sequence
 
     NumberedWords = Sequence[tuple[int, str]]
@@ -81,7 +83,7 @@ async def show_share_words(
             words = [w for _, w in word_pages[paginated.page]]
             debug.reset_current_words.publish(words)
 
-        paginated.on_change = export_displayed_words  # type: ignore
+        paginated.on_change = export_displayed_words
         export_displayed_words()
 
     # make sure we display correct data

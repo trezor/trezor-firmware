@@ -20,6 +20,10 @@
 #include "memory.h"
 #include <libopencm3/stm32/flash.h>
 #include <stdint.h>
+#include <string.h>
+#include "blake2s.h"
+#include "flash.h"
+#include "layout.h"
 #include "sha2.h"
 
 #define FLASH_OPTION_BYTES_1 (*(const uint64_t *)0x1FFFC000)
@@ -81,4 +85,46 @@ int memory_bootloader_hash(uint8_t *hash) {
   sha256_Raw(FLASH_PTR(FLASH_BOOT_START), FLASH_BOOT_LEN, hash);
   sha256_Raw(hash, 32, hash);
   return 32;
+}
+
+int memory_firmware_hash(const uint8_t *challenge, uint32_t challenge_size,
+                         void (*progress_callback)(uint32_t, uint32_t),
+                         uint8_t hash[BLAKE2S_DIGEST_LENGTH]) {
+  BLAKE2S_CTX ctx;
+  if (challenge_size != 0) {
+    if (blake2s_InitKey(&ctx, BLAKE2S_DIGEST_LENGTH, challenge,
+                        challenge_size) != 0) {
+      return 1;
+    }
+  } else {
+    blake2s_Init(&ctx, BLAKE2S_DIGEST_LENGTH);
+  }
+
+  for (int i = FLASH_CODE_SECTOR_FIRST; i <= FLASH_CODE_SECTOR_LAST; i++) {
+    uint32_t size = flash_sector_size(i);
+    const void *data = flash_get_address(i, 0, size);
+    if (data == NULL) {
+      return 1;
+    }
+    blake2s_Update(&ctx, data, size);
+    if (progress_callback != NULL) {
+      progress_callback(i - FLASH_CODE_SECTOR_FIRST,
+                        FLASH_CODE_SECTOR_LAST - FLASH_CODE_SECTOR_FIRST);
+    }
+  }
+
+  return blake2s_Final(&ctx, hash, BLAKE2S_DIGEST_LENGTH);
+}
+
+int memory_firmware_read(uint8_t *dest, uint8_t sector, uint32_t offset,
+                         uint32_t size) {
+  if (sector < FLASH_CODE_SECTOR_FIRST || sector > FLASH_CODE_SECTOR_LAST) {
+    return 1;
+  }
+  const void *data = flash_get_address(sector, offset, size);
+  if (data == NULL) {
+    return 1;
+  }
+  memcpy(dest, data, size);
+  return 0;
 }

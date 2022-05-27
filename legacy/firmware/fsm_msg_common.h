@@ -18,6 +18,22 @@
  */
 
 bool get_features(Features *resp) {
+  resp->has_fw_vendor = true;
+#ifdef PIZERO
+  strlcpy(resp->fw_vendor, "PiTrezor", sizeof(resp->fw_vendor));
+#else
+#if EMULATOR
+  strlcpy(resp->fw_vendor, "EMULATOR", sizeof(resp->fw_vendor));
+#else
+  const image_header *hdr =
+      (const image_header *)FLASH_PTR(FLASH_FWHEADER_START);
+  if (SIG_OK == signatures_new_ok(hdr, NULL)) {
+    strlcpy(resp->fw_vendor, "SatoshiLabs", sizeof(resp->fw_vendor));
+  } else {
+    strlcpy(resp->fw_vendor, "UNSAFE, DO NOT USE!", sizeof(resp->fw_vendor));
+  }
+#endif
+#endif
   resp->has_vendor = true;
   strlcpy(resp->vendor, "trezor.io", sizeof(resp->vendor));
   resp->major_version = VERSION_MAJOR;
@@ -83,8 +99,7 @@ bool get_features(Features *resp) {
 }
 
 void fsm_msgInitialize(const Initialize *msg) {
-  recovery_abort();
-  signing_abort();
+  fsm_abortWorkflows();
 
   uint8_t *session_id;
   if (msg && msg->has_session_id) {
@@ -239,6 +254,8 @@ void fsm_msgWipeDevice(const WipeDevice *msg) {
 }
 
 void fsm_msgGetEntropy(const GetEntropy *msg) {
+  CHECK_PIN
+
 #if !DEBUG_RNG
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
                     _("Do you really want to"), _("send entropy?"), NULL, NULL,
@@ -333,11 +350,7 @@ void fsm_msgBackupDevice(const BackupDevice *msg) {
 
 void fsm_msgCancel(const Cancel *msg) {
   (void)msg;
-  recovery_abort();
-  signing_abort();
-#if !BITCOIN_ONLY
-  ethereum_signing_abort();
-#endif
+  fsm_abortWorkflows();
   fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
 }
 
@@ -504,9 +517,15 @@ void fsm_msgRecoveryDevice(const RecoveryDevice *msg) {
                 msg->has_u2f_counter ? msg->u2f_counter : 0, dry_run);
 }
 
-void fsm_msgWordAck(const WordAck *msg) { recovery_word(msg->word); }
+void fsm_msgWordAck(const WordAck *msg) {
+  CHECK_UNLOCKED
+
+  recovery_word(msg->word);
+}
 
 void fsm_msgSetU2FCounter(const SetU2FCounter *msg) {
+  CHECK_PIN
+
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
                     _("Do you want to set"), _("the U2F counter?"), NULL, NULL,
                     NULL, NULL);
@@ -521,6 +540,8 @@ void fsm_msgSetU2FCounter(const SetU2FCounter *msg) {
 }
 
 void fsm_msgGetNextU2FCounter() {
+  CHECK_PIN
+
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
                     _("Do you want to"), _("increase and retrieve"),
                     _("the U2F counter?"), NULL, NULL, NULL);
@@ -535,4 +556,92 @@ void fsm_msgGetNextU2FCounter() {
   resp->u2f_counter = counter;
   msg_write(MessageType_MessageType_NextU2FCounter, resp);
   layoutHome();
+}
+
+static void progress_callback(uint32_t iter, uint32_t total) {
+  layoutProgress(_("Please wait"), 1000 * iter / total);
+}
+
+void fsm_msgGetFirmwareHash(const GetFirmwareHash *msg) {
+  RESP_INIT(FirmwareHash);
+  layoutProgressSwipe(_("Please wait"), 0);
+  if (memory_firmware_hash(msg->challenge.bytes, msg->challenge.size,
+                           progress_callback, resp->hash.bytes) != 0) {
+    fsm_sendFailure(FailureType_Failure_FirmwareError, NULL);
+    return;
+  }
+
+  resp->hash.size = sizeof(resp->hash.bytes);
+  msg_write(MessageType_MessageType_FirmwareHash, resp);
+  layoutHome();
+}
+
+static bool in_dump_firmware = false;
+static uint8_t sector = 0;
+static uint32_t sector_offset = 0;
+static uint32_t total_bytes_sent = 0;
+#define FIRMWARE_PROGRESS_TOTAL (128 * 1024 * 7 + 64 * 1024)
+
+void firmware_dump_abort(void) {
+  in_dump_firmware = false;
+  sector = 0;
+  sector_offset = 0;
+  total_bytes_sent = 0;
+}
+
+void send_next_firmware_chunk(void) {
+  if (!in_dump_firmware) {
+    return;
+  }
+  if (sector_offset >= flash_sector_size(sector)) {
+    sector++;
+    sector_offset = 0;
+  }
+  if (sector > FLASH_CODE_SECTOR_LAST) {
+    fsm_sendSuccess(_("Firmware extracted"));
+    layoutHome();
+    firmware_dump_abort();
+    return;
+  }
+  RESP_INIT(FirmwareChunk);
+  if (memory_firmware_read(resp->chunk.bytes, sector, sector_offset,
+                           sizeof(resp->chunk.bytes)) != 0) {
+    fsm_sendFailure(FailureType_Failure_FirmwareError, NULL);
+    firmware_dump_abort();
+    return;
+  }
+  sector_offset += sizeof(resp->chunk.bytes);
+  resp->chunk.size = sizeof(resp->chunk.bytes);
+  total_bytes_sent += sizeof(resp->chunk.bytes);
+  layoutProgress(_("Extracting..."),
+                 1000 * total_bytes_sent / FIRMWARE_PROGRESS_TOTAL);
+  msg_write(MessageType_MessageType_FirmwareChunk, resp);
+}
+
+void fsm_msgGetFirmware(const GetFirmware *msg) {
+  (void)msg;
+  layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                    _("Do you want to"), _("extract firmware?"), NULL,
+                    _("Your seed will"), _("not be revealed."), NULL);
+  if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+    layoutHome();
+    return;
+  }
+
+  layoutProgressSwipe(_("Extracting..."), 0);
+  sector = FLASH_CODE_SECTOR_FIRST;
+  sector_offset = 0;
+  total_bytes_sent = 0;
+  in_dump_firmware = true;
+  send_next_firmware_chunk();
+}
+
+void fsm_msgFirmwareChunkAck(const FirmwareChunkAck *msg) {
+  (void)msg;
+  if (!in_dump_firmware) {
+    fsm_sendFailure(FailureType_Failure_UnexpectedMessage, NULL);
+  } else {
+    send_next_firmware_chunk();
+  }
 }

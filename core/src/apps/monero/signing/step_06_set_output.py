@@ -3,6 +3,7 @@ Output destinations are streamed one by one.
 Computes destination one-time address, amount key, range proof + HMAC, out_pk, ecdh_info.
 """
 import gc
+from typing import TYPE_CHECKING
 
 from trezor import utils
 
@@ -12,7 +13,7 @@ from apps.monero.xmr import crypto, serialize
 
 from .state import State
 
-if False:
+if TYPE_CHECKING:
     from apps.monero.xmr.types import Sc25519, Ge25519
     from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhTuple
     from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import Bulletproof

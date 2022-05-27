@@ -1,4 +1,5 @@
 from micropython import const
+from typing import TYPE_CHECKING
 from ubinascii import hexlify
 
 from trezor import ui, wire
@@ -19,7 +20,7 @@ from ...components.common.confirm import (
 )
 from ...components.tt import passphrase, pin
 from ...components.tt.button import ButtonCancel, ButtonDefault
-from ...components.tt.confirm import Confirm, HoldToConfirm
+from ...components.tt.confirm import Confirm, HoldToConfirm, InfoConfirm
 from ...components.tt.scroll import (
     PAGEBREAK,
     AskPaginated,
@@ -30,17 +31,17 @@ from ...components.tt.text import LINE_WIDTH_PAGINATED, Span, Text
 from ...constants.tt import (
     MONO_ADDR_PER_LINE,
     MONO_HEX_PER_LINE,
-    QR_SIZE_THRESHOLD,
     QR_X,
     QR_Y,
     TEXT_MAX_LINES,
 )
 from ..common import button_request, interact
 
-if False:
-    from typing import Awaitable, Iterable, Iterator, NoReturn, Sequence
+if TYPE_CHECKING:
+    from typing import Any, Awaitable, Iterable, Iterator, NoReturn, Sequence
 
     from ..common import PropertyType, ExceptionType
+    from ...components.tt.button import ButtonContent
 
 
 __all__ = (
@@ -60,6 +61,7 @@ __all__ = (
     "show_xpub",
     "show_warning",
     "confirm_output",
+    "confirm_payment_request",
     "confirm_blob",
     "confirm_properties",
     "confirm_total",
@@ -85,8 +87,8 @@ async def confirm_action(
     description: str | None = None,
     description_param: str | None = None,
     description_param_font: int = ui.BOLD,
-    verb: str | bytes | None = Confirm.DEFAULT_CONFIRM,
-    verb_cancel: str | bytes | None = Confirm.DEFAULT_CANCEL,
+    verb: ButtonContent = Confirm.DEFAULT_CONFIRM,
+    verb_cancel: ButtonContent | None = Confirm.DEFAULT_CANCEL,
     hold: bool = False,
     hold_danger: bool = False,
     icon: str | None = None,  # TODO cleanup @ redesign
@@ -126,17 +128,23 @@ async def confirm_action(
             param_font=description_param_font,
         )
 
-    cls = HoldToConfirm if hold else Confirm
-    kwargs = {}
+    layout: ui.Layout
     if hold_danger:
-        kwargs = {"loader_style": LoaderDanger, "confirm_style": ButtonCancel}
+        assert isinstance(verb, str)
+        layout = HoldToConfirm(
+            text,
+            confirm=verb,
+            loader_style=LoaderDanger,
+            confirm_style=ButtonCancel,
+            cancel=verb_cancel is not None,
+        )
+    elif hold:
+        assert isinstance(verb, str)
+        layout = HoldToConfirm(text, confirm=verb, cancel=verb_cancel is not None)
+    else:
+        layout = Confirm(text, confirm=verb, cancel=verb_cancel)
     await raise_if_cancelled(
-        interact(
-            ctx,
-            cls(text, confirm=verb, cancel=verb_cancel, **kwargs),
-            br_type,
-            br_code,
-        ),
+        interact(ctx, layout, br_type, br_code),
         exc,
     )
 
@@ -219,11 +227,11 @@ async def confirm_path_warning(
 
 def _show_qr(
     address: str,
+    case_sensitive: bool,
     title: str,
     cancel: str = "Address",
 ) -> Confirm:
-    QR_COEF = const(4) if len(address) < QR_SIZE_THRESHOLD else const(3)
-    qr = Qr(address, QR_X, QR_Y, QR_COEF)
+    qr = Qr(address, case_sensitive, QR_X, QR_Y)
     text = Text(title, ui.ICON_RECEIVE, ui.GREEN)
 
     return Confirm(Container(qr, text), cancel=cancel, cancel_style=ButtonDefault)
@@ -306,7 +314,9 @@ async def show_xpub(
 async def show_address(
     ctx: wire.GenericContext,
     address: str,
+    *,
     address_qr: str | None = None,
+    case_sensitive: bool = True,
     title: str = "Confirm address",
     network: str | None = None,
     multisig_index: int | None = None,
@@ -335,6 +345,7 @@ async def show_address(
                 ctx,
                 _show_qr(
                     address if address_qr is None else address_qr,
+                    case_sensitive,
                     title if title_qr is None else title_qr,
                     cancel="XPUBs" if is_multisig else "Address",
                 ),
@@ -488,6 +499,7 @@ async def confirm_output(
     width: int = MONO_ADDR_PER_LINE,
     width_paginated: int = MONO_ADDR_PER_LINE - 1,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
+    icon: str = ui.ICON_SEND,
 ) -> None:
     header_lines = to_str.count("\n") + int(subtitle is not None)
     if len(address) > (TEXT_MAX_LINES - header_lines) * width:
@@ -498,9 +510,9 @@ async def confirm_output(
         if to_paginated:
             para.append((ui.NORMAL, "to"))
         para.extend((ui.MONO, line) for line in chunks(address, width_paginated))
-        content: ui.Layout = paginate_paragraphs(para, title, ui.ICON_SEND, ui.GREEN)
+        content: ui.Layout = paginate_paragraphs(para, title, icon, ui.GREEN)
     else:
-        text = Text(title, ui.ICON_SEND, ui.GREEN, new_lines=False)
+        text = Text(title, icon, ui.GREEN, new_lines=False)
         if subtitle is not None:
             text.normal(subtitle, "\n")
         text.content = [font_amount, amount, ui.NORMAL, color_to, to_str, ui.FG]
@@ -508,6 +520,28 @@ async def confirm_output(
         content = Confirm(text)
 
     await raise_if_cancelled(interact(ctx, content, "confirm_output", br_code))
+
+
+async def confirm_payment_request(
+    ctx: wire.GenericContext,
+    recipient_name: str,
+    amount: str,
+    memos: list[str],
+) -> Any:
+    para = [(ui.NORMAL, f"{amount} to\n{recipient_name}")]
+    para.extend((ui.NORMAL, memo) for memo in memos)
+    content = paginate_paragraphs(
+        para,
+        "Confirm sending",
+        ui.ICON_SEND,
+        ui.GREEN,
+        confirm=lambda text: InfoConfirm(text, info="Details"),
+    )
+    return await raise_if_cancelled(
+        interact(
+            ctx, content, "confirm_payment_request", ButtonRequestType.ConfirmOutput
+        )
+    )
 
 
 async def should_show_more(
@@ -761,7 +795,7 @@ async def confirm_properties(
     ctx: wire.GenericContext,
     br_type: str,
     title: str,
-    props: Sequence[PropertyType],
+    props: Iterable[PropertyType],
     icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
     icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
     hold: bool = False,
@@ -954,14 +988,17 @@ async def confirm_modify_fee(
 
 
 async def confirm_coinjoin(
-    ctx: wire.GenericContext, fee_per_anonymity: str | None, total_fee: str
+    ctx: wire.GenericContext, coin_name: str, max_rounds: int, max_fee_per_vbyte: str
 ) -> None:
     text = Text("Authorize CoinJoin", ui.ICON_RECOVERY, new_lines=False)
-    if fee_per_anonymity is not None:
-        text.normal("Fee per anonymity set:\n")
-        text.bold(f"{fee_per_anonymity} %\n")
-    text.normal("Maximum total fees:\n")
-    text.bold(total_fee)
+    text.normal("Coin name: ")
+    text.bold(f"{coin_name}\n")
+    text.br_half()
+    text.normal("Maximum rounds: ")
+    text.bold(f"{max_rounds}\n")
+    text.br_half()
+    text.normal("Maximum mining fee:\n")
+    text.bold(f"{max_fee_per_vbyte} sats/vbyte")
     await raise_if_cancelled(
         interact(ctx, HoldToConfirm(text), "coinjoin_final", ButtonRequestType.Other)
     )

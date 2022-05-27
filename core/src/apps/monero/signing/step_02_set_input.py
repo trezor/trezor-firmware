@@ -11,12 +11,14 @@ If number of inputs is small, in-memory mode is used = alpha, pseudo_outs are ke
 Otherwise pseudo_outs are offloaded with HMAC, alpha is offloaded encrypted under chacha_poly with
 key derived for exactly this purpose.
 """
+from typing import TYPE_CHECKING
+
 from apps.monero import layout
 from apps.monero.xmr import crypto, monero, serialize
 
 from .state import State
 
-if False:
+if TYPE_CHECKING:
     from apps.monero.xmr.types import Sc25519, Ge25519
     from trezor.messages import MoneroTransactionSourceEntry
     from trezor.messages import MoneroTransactionSetInputAck

@@ -158,7 +158,7 @@ if __name__ == "__main__":
     if QT_VERSION_STR >= "5":
         ok.clicked.connect(clicked)
     elif QT_VERSION_STR >= "4":
-        QObject.connect(ok, SIGNAL("clicked()"), clicked)  # type: ignore [SIGNAL is not unbound]
+        QObject.connect(ok, SIGNAL("clicked()"), clicked)  # type: ignore ["QObject" is possibly unbound;;"SIGNAL" is possibly unbound]
     else:
         raise RuntimeError("Unsupported Qt version")
 

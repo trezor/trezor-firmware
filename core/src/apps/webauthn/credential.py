@@ -1,5 +1,6 @@
 import ustruct
 from micropython import const
+from typing import Iterable
 from ubinascii import hexlify
 
 import storage.device
@@ -11,9 +12,6 @@ from apps.common import cbor, seed
 from apps.common.paths import HARDENED
 
 from . import common
-
-if False:
-    from typing import Iterable
 
 # Credential ID values
 _CRED_ID_VERSION = b"\xf1\xd0\x02\x00"

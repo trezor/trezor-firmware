@@ -65,7 +65,7 @@ int main(void) {
 #endif
 
   // reinitialize HAL for Trezor One
-#if TREZOR_MODEL == 1
+#if defined TREZOR_MODEL_1
   HAL_Init();
 #endif
 
@@ -75,7 +75,7 @@ int main(void) {
   enable_systemview();
 #endif
 
-#if TREZOR_MODEL == T
+#if defined TREZOR_MODEL_T
 #if PRODUCTION
   check_and_replace_bootloader();
 #endif
@@ -86,12 +86,12 @@ int main(void) {
   // Init peripherals
   pendsv_init();
 
-#if TREZOR_MODEL == 1
+#if defined TREZOR_MODEL_1
   display_init();
   button_init();
 #endif
 
-#if TREZOR_MODEL == T
+#if defined TREZOR_MODEL_T
   // display_init_seq();
   sdcard_init();
   touch_init();

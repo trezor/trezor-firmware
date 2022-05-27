@@ -25,7 +25,7 @@ class TestNemMultisig(unittest.TestCase):
                         0)
         base_tx = serialize_aggregate_modification(m.transaction, m.aggregate_modification, unhexlify("abac2ee3d4aaa7a3bfb65261a00cc04c761521527dd3f2cf741e2815cbba83ac"))
 
-        base_tx = write_cosignatory_modification(base_tx, 2, unhexlify("e6cff9b3725a91f31089c3acca0fac3e341c00b1c8c6e9578f66c4514509c3b3"))
+        write_cosignatory_modification(base_tx, 2, unhexlify("e6cff9b3725a91f31089c3acca0fac3e341c00b1c8c6e9578f66c4514509c3b3"))
         m = _create_common_msg(NEM_NETWORK_TESTNET,
                                3939039,
                                6000000,
@@ -80,37 +80,41 @@ class TestNemMultisig(unittest.TestCase):
 
 
 def _create_common_msg(network: int, timestamp: int, fee: int, deadline: int):
-    m = NEMTransactionCommon()
-    m.network = network
-    m.timestamp = timestamp
-    m.fee = fee
-    m.deadline = deadline
-    return m
+    return NEMTransactionCommon(
+        network=network,
+        timestamp=timestamp,
+        fee=fee,
+        deadline=deadline,
+    )
 
 
 def _create_msg(network: int, timestamp: int, fee: int, deadline: int,
                 modifications: int, relative_change: int):
-    m = NEMSignTx()
-    m.transaction = _create_common_msg(network, timestamp, fee, deadline)
+    aggregate_modification = NEMAggregateModification(
+        modifications=[NEMCosignatoryModification(type=5, public_key=b"abc") for _ in range(modifications)],
+        relative_change=relative_change
+    )
 
-    m.aggregate_modification = NEMAggregateModification()
-    for i in range(modifications):
-        m.aggregate_modification.modifications.append(NEMCosignatoryModification())
-    m.aggregate_modification.relative_change = relative_change
-    return m
+    return NEMSignTx(
+        transaction=_create_common_msg(network, timestamp, fee, deadline),
+        aggregate_modification=aggregate_modification,
+    )
 
 
 def _create_provision_msg(network: int, timestamp: int, fee: int, deadline: int,
                           name: str, parent: str, sink: str, rental_fee: int):
-    m = NEMSignTx()
-    m.transaction = _create_common_msg(network, timestamp, fee, deadline)
+    provision_namespace = NEMProvisionNamespace(
+        namespace=name,
+        parent=parent,
+        sink=sink,
+        fee=rental_fee,
+    )
 
-    m.provision_namespace = NEMProvisionNamespace()
-    m.provision_namespace.namespace = name
-    m.provision_namespace.parent = parent
-    m.provision_namespace.sink = sink
-    m.provision_namespace.fee = rental_fee
-    return m
+    return NEMSignTx(
+        transaction=_create_common_msg(network, timestamp, fee, deadline),
+        provision_namespace=provision_namespace,
+    )
+
 
 
 if __name__ == '__main__':

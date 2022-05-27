@@ -17,15 +17,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
+#include <SDL.h>
+#include <SDL_image.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "profile.h"
 
 #define EMULATOR_BORDER 16
 
-#if TREZOR_MODEL == T
+#if defined TREZOR_MODEL_T
 
 #ifdef TREZOR_EMULATOR_RASPI
 #define WINDOW_WIDTH 480
@@ -39,7 +39,7 @@
 #define TOUCH_OFFSET_Y 110
 #endif
 
-#elif TREZOR_MODEL == 1
+#elif defined TREZOR_MODEL_1
 
 #define WINDOW_WIDTH 200
 #define WINDOW_HEIGHT 340
@@ -50,6 +50,7 @@
 #error Unknown Trezor model
 #endif
 
+static SDL_Window *WINDOW;
 static SDL_Renderer *RENDERER;
 static SDL_Surface *BUFFER;
 static SDL_Texture *TEXTURE, *BACKGROUND;
@@ -75,7 +76,7 @@ static struct {
 #define PIXELDATA_DIRTY()
 
 void PIXELDATA(uint16_t c) {
-#if TREZOR_MODEL == 1
+#if defined TREZOR_MODEL_1
   // set to white if highest bits of all R, G, B values are set to 1
   // bin(10000 100000 10000) = hex(0x8410)
   // otherwise set to black
@@ -99,19 +100,41 @@ void PIXELDATA(uint16_t c) {
 
 void display_init_seq(void) {}
 
+void display_deinit(void) {
+  SDL_FreeSurface(PREV_SAVED);
+  SDL_FreeSurface(BUFFER);
+  if (BACKGROUND != NULL) {
+    SDL_DestroyTexture(BACKGROUND);
+  }
+  if (TEXTURE != NULL) {
+    SDL_DestroyTexture(TEXTURE);
+  }
+  if (RENDERER != NULL) {
+    SDL_DestroyRenderer(RENDERER);
+  }
+  if (WINDOW != NULL) {
+    SDL_DestroyWindow(WINDOW);
+  }
+  SDL_Quit();
+}
+
 void display_init(void) {
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     printf("%s\n", SDL_GetError());
     ensure(secfalse, "SDL_Init error");
   }
-  atexit(SDL_Quit);
+  atexit(display_deinit);
 
   char *window_title = NULL;
-  if (!asprintf(&window_title, "Trezor^emu: %s", profile_name())) {
+  char *window_title_alloc = NULL;
+  if (asprintf(&window_title_alloc, "Trezor^emu: %s", profile_name()) > 0) {
+    window_title = window_title_alloc;
+  } else {
     window_title = "Trezor^emu";
+    window_title_alloc = NULL;
   }
 
-  SDL_Window *win =
+  WINDOW =
       SDL_CreateWindow(window_title, SDL_WINDOWPOS_UNDEFINED,
                        SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT,
 #ifdef TREZOR_EMULATOR_RASPI
@@ -120,14 +143,15 @@ void display_init(void) {
                        SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI
 #endif
       );
-  if (!win) {
+  free(window_title_alloc);
+  if (!WINDOW) {
     printf("%s\n", SDL_GetError());
     ensure(secfalse, "SDL_CreateWindow error");
   }
-  RENDERER = SDL_CreateRenderer(win, -1, SDL_RENDERER_SOFTWARE);
+  RENDERER = SDL_CreateRenderer(WINDOW, -1, SDL_RENDERER_SOFTWARE);
   if (!RENDERER) {
     printf("%s\n", SDL_GetError());
-    SDL_DestroyWindow(win);
+    SDL_DestroyWindow(WINDOW);
     ensure(secfalse, "SDL_CreateRenderer error");
   }
   SDL_SetRenderDrawColor(RENDERER, 0, 0, 0, 255);
@@ -141,7 +165,7 @@ void display_init(void) {
 #ifdef __APPLE__
   // macOS Mojave SDL black screen workaround
   SDL_PumpEvents();
-  SDL_SetWindowSize(win, WINDOW_WIDTH, WINDOW_HEIGHT);
+  SDL_SetWindowSize(WINDOW, WINDOW_WIDTH, WINDOW_HEIGHT);
 #endif
 #ifdef TREZOR_EMULATOR_RASPI
 #include "background_raspi.h"
@@ -149,11 +173,11 @@ void display_init(void) {
       RENDERER, SDL_RWFromMem(background_raspi_jpg, background_raspi_jpg_len),
       0);
 #else
-#if TREZOR_MODEL == T
+#if defined TREZOR_MODEL_T
 #include "background_T.h"
   BACKGROUND = IMG_LoadTexture_RW(
       RENDERER, SDL_RWFromMem(background_T_jpg, background_T_jpg_len), 0);
-#elif TREZOR_MODEL == 1
+#elif defined TREZOR_MODEL_1
 #include "background_1.h"
   BACKGROUND = IMG_LoadTexture_RW(
       RENDERER, SDL_RWFromMem(background_1_jpg, background_1_jpg_len), 0);
@@ -164,7 +188,7 @@ void display_init(void) {
     sdl_touch_offset_x = TOUCH_OFFSET_X;
     sdl_touch_offset_y = TOUCH_OFFSET_Y;
   } else {
-    SDL_SetWindowSize(win, DISPLAY_RESX + 2 * EMULATOR_BORDER,
+    SDL_SetWindowSize(WINDOW, DISPLAY_RESX + 2 * EMULATOR_BORDER,
                       DISPLAY_RESY + 2 * EMULATOR_BORDER);
     sdl_touch_offset_x = EMULATOR_BORDER;
     sdl_touch_offset_y = EMULATOR_BORDER;

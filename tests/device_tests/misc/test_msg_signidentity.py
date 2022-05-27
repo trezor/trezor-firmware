@@ -17,12 +17,13 @@
 import pytest
 
 from trezorlib import messages, misc
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 from ...common import MNEMONIC12
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_sign(client):
+def test_sign(client: Client):
     hidden = bytes.fromhex(
         "cd8552569d6e4509266ef137584d1e62c7579b5b8ed69bbafa4b864c6521e7c2"
     )

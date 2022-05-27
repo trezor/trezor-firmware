@@ -20,6 +20,7 @@
 #include "nem2.h"
 
 #include "aes/aes.h"
+#include "crypto.h"
 #include "fsm.h"
 #include "gettext.h"
 #include "layout2.h"
@@ -39,21 +40,6 @@ const char *nem_validate_common(NEMTransactionCommon *common, bool inner) {
                  : _("Invalid NEM network");
   }
 
-  if (!common->has_timestamp) {
-    return inner ? _("No timestamp provided in inner transaction")
-                 : _("No timestamp provided");
-  }
-
-  if (!common->has_fee) {
-    return inner ? _("No fee provided in inner transaction")
-                 : _("No fee provided");
-  }
-
-  if (!common->has_deadline) {
-    return inner ? _("No deadline provided in inner transaction")
-                 : _("No deadline provided");
-  }
-
   if (inner != common->has_signer) {
     return inner ? _("No signer provided in inner transaction")
                  : _("Signer not allowed in outer transaction");
@@ -68,9 +54,6 @@ const char *nem_validate_common(NEMTransactionCommon *common, bool inner) {
 
 const char *nem_validate_transfer(const NEMTransfer *transfer,
                                   uint8_t network) {
-  if (!transfer->has_recipient) return _("No recipient provided");
-  if (!transfer->has_amount) return _("No amount provided");
-
   if (transfer->has_public_key &&
       transfer->public_key.size != sizeof(ed25519_public_key)) {
     return _("Invalid recipient public key");
@@ -79,23 +62,11 @@ const char *nem_validate_transfer(const NEMTransfer *transfer,
   if (!nem_validate_address(transfer->recipient, network))
     return _("Invalid recipient address");
 
-  for (size_t i = 0; i < transfer->mosaics_count; i++) {
-    const NEMMosaic *mosaic = &transfer->mosaics[i];
-
-    if (!mosaic->has_namespace) return _("No mosaic namespace provided");
-    if (!mosaic->has_mosaic) return _("No mosaic name provided");
-    if (!mosaic->has_quantity) return _("No mosaic quantity provided");
-  }
-
   return NULL;
 }
 
 const char *nem_validate_provision_namespace(
     const NEMProvisionNamespace *provision_namespace, uint8_t network) {
-  if (!provision_namespace->has_namespace) return _("No namespace provided");
-  if (!provision_namespace->has_sink) return _("No rental sink provided");
-  if (!provision_namespace->has_fee) return _("No rental sink fee provided");
-
   if (!nem_validate_address(provision_namespace->sink, network))
     return _("Invalid rental sink address");
 
@@ -104,11 +75,6 @@ const char *nem_validate_provision_namespace(
 
 const char *nem_validate_mosaic_creation(
     const NEMMosaicCreation *mosaic_creation, uint8_t network) {
-  if (!mosaic_creation->has_definition)
-    return _("No mosaic definition provided");
-  if (!mosaic_creation->has_sink) return _("No creation sink provided");
-  if (!mosaic_creation->has_fee) return _("No creation sink fee provided");
-
   if (!nem_validate_address(mosaic_creation->sink, network))
     return _("Invalid creation sink address");
 
@@ -118,11 +84,6 @@ const char *nem_validate_mosaic_creation(
     return _("Ticker not allowed in mosaic creation transactions");
   if (mosaic_creation->definition.networks_count)
     return _("Networks not allowed in mosaic creation transactions");
-
-  if (!mosaic_creation->definition.has_namespace)
-    return _("No mosaic namespace provided");
-  if (!mosaic_creation->definition.has_mosaic)
-    return _("No mosaic name provided");
 
   if (mosaic_creation->definition.has_levy) {
     if (!mosaic_creation->definition.has_fee)
@@ -141,8 +102,6 @@ const char *nem_validate_mosaic_creation(
       return _("No supply mutability provided");
     if (!mosaic_creation->definition.has_transferable)
       return _("No mosaic transferability provided");
-    if (!mosaic_creation->definition.has_description)
-      return _("No description provided");
 
     if (mosaic_creation->definition.divisibility > NEM_MAX_DIVISIBILITY)
       return _("Invalid divisibility provided");
@@ -159,11 +118,7 @@ const char *nem_validate_mosaic_creation(
 
 const char *nem_validate_supply_change(
     const NEMMosaicSupplyChange *supply_change) {
-  if (!supply_change->has_namespace) return _("No namespace provided");
-  if (!supply_change->has_mosaic) return _("No mosaic provided");
-  if (!supply_change->has_type) return _("No type provided");
-  if (!supply_change->has_delta) return _("No delta provided");
-
+  (void)supply_change;
   return NULL;
 }
 
@@ -177,9 +132,6 @@ const char *nem_validate_aggregate_modification(
     const NEMCosignatoryModification *modification =
         &aggregate_modification->modifications[i];
 
-    if (!modification->has_type) return _("No modification type provided");
-    if (!modification->has_public_key)
-      return _("No cosignatory public key provided");
     if (modification->public_key.size != 32)
       return _("Invalid cosignatory public key provided");
 
@@ -194,9 +146,6 @@ const char *nem_validate_aggregate_modification(
 
 const char *nem_validate_importance_transfer(
     const NEMImportanceTransfer *importance_transfer) {
-  if (!importance_transfer->has_mode) return _("No mode provided");
-  if (!importance_transfer->has_public_key)
-    return _("No remote account provided");
   if (importance_transfer->public_key.size != 32)
     return _("Invalid remote account provided");
 
@@ -792,4 +741,45 @@ bool nem_mosaicFormatLevy(const NEMMosaicDefinition *definition,
     default:
       return false;
   }
+}
+
+bool nem_path_check(uint32_t address_n_count, const uint32_t *address_n,
+                    uint8_t network, bool check_coin_type) {
+  bool valid = (address_n_count >= 3);
+  valid = valid && (address_n[0] == (PATH_HARDENED | 44));
+  valid = valid && (address_n[1] == (PATH_HARDENED | 43) ||
+                    address_n[1] == (PATH_HARDENED | 1));
+  valid = valid && (address_n[2] & PATH_HARDENED);
+  valid = valid && ((address_n[2] & PATH_UNHARDEN_MASK) <= PATH_MAX_ACCOUNT);
+
+  if (address_n_count == 3) {
+    // SEP-0005 for non-UTXO-based currencies, defined by Stellar:
+    // https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0005.md
+    // m/44'/coin_type'/account'
+    // No further checks required.
+  } else if (address_n_count == 5) {
+    // NanoWallet compatibility path
+    // "m/44'/coin_type'/account'/0'/0'"
+    valid = valid && (address_n[3] == (PATH_HARDENED | 0));
+    valid = valid && (address_n[4] == (PATH_HARDENED | 0));
+  } else {
+    return false;
+  }
+
+  if (check_coin_type) {
+    // Check that the appropriate coin_type is set for the given network.
+    switch (network) {
+      case NEM_NETWORK_MAINNET:
+      case NEM_NETWORK_MIJIN:
+        valid = valid && (address_n[1] == (PATH_HARDENED | 43));
+        break;
+      case NEM_NETWORK_TESTNET:
+        valid = valid && (address_n[1] == (PATH_HARDENED | 1));
+        break;
+      default:
+        return false;
+    }
+  }
+
+  return valid;
 }

@@ -23,9 +23,13 @@ PYOPT      ?= 1
 BITCOIN_ONLY ?= 0
 TREZOR_MODEL ?= T
 TREZOR_MEMPERF ?= 0
+ADDRESS_SANITIZER ?= 0
+UI2 ?= 0
 
-OPENOCD_INTERFACE ?= stlink   # -or- ftdi/olimex-arm-usb-tiny-h
-OPENOCD_TRANSPORT ?= hla_swd  # -or- jtag
+# OpenOCD interface default. Alternative: ftdi/olimex-arm-usb-tiny-h
+OPENOCD_INTERFACE ?= stlink
+# OpenOCD transport default. Alternative: jtag
+OPENOCD_TRANSPORT ?= hla_swd
 OPENOCD = openocd -f interface/$(OPENOCD_INTERFACE).cfg -c "transport select $(OPENOCD_TRANSPORT)" -f target/stm32f4x.cfg
 OPENOCD_T1 = openocd -f interface/$(OPENOCD_INTERFACE).cfg -c "transport select $(OPENOCD_TRANSPORT)" -f target/stm32f2x.cfg
 
@@ -79,7 +83,7 @@ test: ## run unit tests
 	cd tests ; ./run_tests.sh $(TESTOPTS)
 
 test_rust: ## run rs unit tests
-	cd embed/rust ; cargo test --no-default-features --features model_t$(shell echo -e $(TREZOR_MODEL) | tr "T" "t"),test,ui,ui_debug -- --test-threads=1
+	cd embed/rust ; cargo test --no-default-features --features model_t$(shell echo $(TREZOR_MODEL) | tr "T" "t"),test,ui,ui_debug -- --test-threads=1
 
 test_emu: ## run selected device tests from python-trezor
 	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests $(TESTOPTS)
@@ -99,25 +103,22 @@ test_emu_click: ## run click tests
 	$(EMU_TEST) $(PYTEST) $(TESTPATH)/click_tests $(TESTOPTS)
 
 test_emu_ui: ## run ui integration tests
-	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests --ui=test --ui-check-missing -m "not skip_ui" $(TESTOPTS)
+	UI2="$(UI2)" $(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests --ui=test --ui-check-missing $(TESTOPTS)
 
 test_emu_ui_record: ## record and hash screens for ui integration tests
-	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests --ui=record --ui-check-missing -m "not skip_ui" $(TESTOPTS)
+	UI2="$(UI2)" $(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests --ui=record --ui-check-missing $(TESTOPTS)
 
 pylint: ## run pylint on application sources and tests
 	pylint -E $(shell find src tests -name *.py)
 
-mypy:
-	mypy --config-file ../setup.cfg \
-		src/main.py \
-		src/apps/bitcoin \
-		src/apps/cardano \
-		src/apps/ethereum \
-		src/apps/management \
-		src/apps/misc \
-		src/apps/stellar \
-		src/apps/webauthn \
-		src/trezor/ui
+mypy: ## deprecated; use "make typecheck"
+	@echo "mypy is deprecated; use 'make typecheck'"
+	make typecheck
+
+typecheck: pyright
+
+pyright:
+	python ../tools/pyright_tool.py
 
 clippy:
 	cd embed/rust ; cargo clippy
@@ -154,16 +155,16 @@ build_reflash: ## build reflash firmware + reflash image
 	dd if=build/bootloader/bootloader.bin of=$(REFLASH_BUILD_DIR)/sdimage.bin bs=1 seek=49152
 
 build_firmware: templates build_cross ## build firmware with frozen modules
-	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" TREZOR_MODEL="$(TREZOR_MODEL)" PYOPT="$(PYOPT)" BITCOIN_ONLY="$(BITCOIN_ONLY)" $(FIRMWARE_BUILD_DIR)/firmware.bin
+	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" TREZOR_MODEL="$(TREZOR_MODEL)" PYOPT="$(PYOPT)" BITCOIN_ONLY="$(BITCOIN_ONLY)" UI2="$(UI2)" $(FIRMWARE_BUILD_DIR)/firmware.bin
 
 build_unix: templates ## build unix port
-	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) TREZOR_MODEL="$(TREZOR_MODEL)" BITCOIN_ONLY="$(BITCOIN_ONLY)"
+	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) TREZOR_MODEL="$(TREZOR_MODEL)" BITCOIN_ONLY="$(BITCOIN_ONLY)" TREZOR_EMULATOR_ASAN="$(ADDRESS_SANITIZER)" UI2="$(UI2)"
 
 build_unix_frozen: templates build_cross ## build unix port with frozen modules
-	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) TREZOR_MODEL="$(TREZOR_MODEL)" PYOPT="$(PYOPT)" BITCOIN_ONLY="$(BITCOIN_ONLY)" TREZOR_MEMPERF=$(TREZOR_MEMPERF) TREZOR_EMULATOR_FROZEN=1
+	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) TREZOR_MODEL="$(TREZOR_MODEL)" PYOPT="$(PYOPT)" BITCOIN_ONLY="$(BITCOIN_ONLY)" TREZOR_EMULATOR_ASAN="$(ADDRESS_SANITIZER)" UI2="$(UI2)" TREZOR_MEMPERF="$(TREZOR_MEMPERF)" TREZOR_EMULATOR_FROZEN=1
 
 build_unix_debug: templates ## build unix port
-	$(SCONS) --max-drift=1 CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) TREZOR_MODEL="$(TREZOR_MODEL)" TREZOR_EMULATOR_ASAN=1 TREZOR_EMULATOR_DEBUGGABLE=1
+	$(SCONS) --max-drift=1 CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) TREZOR_MODEL="$(TREZOR_MODEL)" BITCOIN_ONLY="$(BITCOIN_ONLY)" TREZOR_EMULATOR_ASAN=1 UI2="$(UI2)" TREZOR_EMULATOR_DEBUGGABLE=1
 
 build_cross: ## build mpy-cross port
 	$(MAKE) -C vendor/micropython/mpy-cross $(CROSS_PORT_OPTS)
@@ -232,18 +233,18 @@ flash_erase_storage: ## erase storage sectors from flash
 	$(OPENOCD) -c "init; flash erase_sector 0 4 4; flash erase_sector 0 16 16; exit"
 
 flash_bootloader_jlink: $(BOOTLOADER_BUILD_DIR)/bootloader.bin ## flash bootloader using JLink
-	JLinkExe -nogui -commanderscript embed/bootloader/bootloader_flash.jlink
+	JLinkExe -nogui 1 -commanderscript embed/bootloader/bootloader_flash.jlink
 
 flash_bootloader_ci_jlink: $(BOOTLOADER_CI_BUILD_DIR)/bootloader.bin ## flash CI bootloader using JLink
-	JLinkExe -nogui -commanderscript embed/bootloader_ci/bootloader_flash.jlink
+	JLinkExe -nogui 1 -commanderscript embed/bootloader_ci/bootloader_flash.jlink
 
 flash_firmware_jlink: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash firmware using JLink. file names must end in .bin for JLink
 	cp -f $<.p1 $<.p1.bin
 	cp -f $<.p2 $<.p2.bin
-	JLinkExe -nogui -commanderscript embed/firmware/firmware_flash.jlink
+	JLinkExe -nogui 1 -commanderscript embed/firmware/firmware_flash.jlink
 
 flash_firmware_t1_jlink: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash T1 core port via JLink
-	JLinkExe -nogui -commanderscript embed/firmware/firmware_flash_t1.jlink
+	JLinkExe -nogui 1 -commanderscript embed/firmware/firmware_flash_t1.jlink
 
 ## openocd debug commands:
 

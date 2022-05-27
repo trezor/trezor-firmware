@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 import storage.device
 from trezor import ui, wire
 from trezor.enums import ButtonRequestType, SafetyCheckLevel
@@ -8,7 +10,7 @@ from trezor.ui.layouts import confirm_action
 from apps.base import reload_settings_from_storage
 from apps.common import safety_checks
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import ApplySettings
 
 

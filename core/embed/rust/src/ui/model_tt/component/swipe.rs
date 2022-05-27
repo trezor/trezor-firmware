@@ -14,7 +14,7 @@ pub enum SwipeDirection {
 }
 
 pub struct Swipe {
-    area: Rect,
+    pub area: Rect,
     pub allow_up: bool,
     pub allow_down: bool,
     pub allow_left: bool,
@@ -28,9 +28,9 @@ impl Swipe {
     const DISTANCE: i32 = 120;
     const THRESHOLD: f32 = 0.3;
 
-    pub fn new(area: Rect) -> Self {
+    pub fn new() -> Self {
         Self {
-            area,
+            area: Rect::zero(),
             allow_up: false,
             allow_down: false,
             allow_left: false,
@@ -41,12 +41,12 @@ impl Swipe {
         }
     }
 
-    pub fn vertical(area: Rect) -> Self {
-        Self::new(area).up().down()
+    pub fn vertical() -> Self {
+        Self::new().up().down()
     }
 
-    pub fn horizontal(area: Rect) -> Self {
-        Self::new(area).left().right()
+    pub fn horizontal() -> Self {
+        Self::new().left().right()
     }
 
     pub fn up(mut self) -> Self {
@@ -69,6 +69,10 @@ impl Swipe {
         self
     }
 
+    fn is_active(&self) -> bool {
+        self.allow_up || self.allow_down || self.allow_left || self.allow_right
+    }
+
     fn ratio(&self, dist: i32) -> f32 {
         (dist as f32 / Self::DISTANCE as f32).min(1.0)
     }
@@ -77,14 +81,22 @@ impl Swipe {
         let start = self.backlight_start as f32;
         let end = self.backlight_end as f32;
         let value = start + ratio * (end - start);
-        display::backlight(value as i32);
+        display::set_backlight(value as i32);
     }
 }
 
 impl Component for Swipe {
     type Msg = SwipeDirection;
 
+    fn place(&mut self, bounds: Rect) -> Rect {
+        self.area = bounds;
+        self.area
+    }
+
     fn event(&mut self, _ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        if !self.is_active() {
+            return None;
+        }
         match (event, self.origin) {
             (Event::Touch(TouchEvent::TouchStart(pos)), _) if self.area.contains(pos) => {
                 // Mark the starting position of this touch.

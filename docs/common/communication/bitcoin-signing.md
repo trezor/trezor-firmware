@@ -150,16 +150,28 @@ Full documentation for multisig is TBD.
 
 #### External inputs
 
-Trezor T can include inputs that it will not sign, typically because they are owned by
-another party. Such inputs are of type `EXTERNAL` and the host does not specify a
-derivation path for the key. Instead, these inputs must either already have a valid
-signature or they must come with an ownership proof. If the input already has a valid
-signature, then the host provides the `script_sig` and/or `witness` fields. If the other
-signing party hasn't signed their input yet (i.e., with two Trezors, one must sign first
-so that the other can include a pre-signed input), they can instead provide a
+Trezor can include inputs that it will not sign, typically because they are
+owned by another party. Such inputs are of type `EXTERNAL` and the host does
+not specify a derivation path for the key, but sets the `script_pubkey` field
+to the scriptPubKey of the previous output that is being spent by the external
+input. An external input can either be *verified* or *unverified*. The amounts
+supplied to the transaction by verified external inputs are subtracted from the
+transaction total that the user is asked to confirm, whereas unverified
+external inputs are not subtracted.
+
+Verified external inputs are only supported on the Trezor T. They must either
+already have a valid signature or they must come with an ownership proof. If
+the input already has a valid signature, then the host provides the
+`script_sig` and/or `witness` fields. If the other signing party hasn't signed
+their input yet (i.e., with two Trezors, one must sign first so that the other
+can include a pre-signed input), they can instead provide a
 [SLIP-19](https://github.com/satoshilabs/slips/blob/master/slip-0019.md)
-ownership proof in the `ownership_proof` field, with optional commitment data in
-`commitment_data`. The `script_pubkey` field is required for all external inputs.
+ownership proof in the `ownership_proof` field, with optional commitment data
+in `commitment_data`.
+
+Unverified external inputs are accepted by Trezor only if
+[safety checks](https://wiki.trezor.io/Using_trezorctl_commands_with_Trezor#Safety-checks)
+are disabled on the device.
 
 ### Transaction output
 
@@ -274,10 +286,10 @@ set to `tx.extra_data_chunk`.
 Trezor sets `request_type` to `TXORIGINPUT`. `request_details.tx_hash` is the
 transaction hash of the original transaction.
 
-Host must respond with a `TxAckInput` message. All relevant data must be set in
+The host must respond with a `TxAckInput` message. All relevant data must be set in
 `tx.input`. The derivation path and `script_type` are mandatory for all original
-internal inputs. For each original transaction, one of its original internal inputs must
-be accompanied with a valid signature in the `script_sig` and/or `witness` fields.
+internal inputs. All original internal inputs must also be accompanied with full
+transaction signature data in the `script_sig` and/or `witness` fields.
 
 ### Original transaction output
 
@@ -287,6 +299,14 @@ transaction hash of the original transaction.
 Host must respond with a `TxAckOutput` message. All relevant data must be set in
 `tx.output`. The derivation path and script type are mandatory for all original
 change-outputs.
+
+### Payment request
+
+Trezor sets `request_type` to `TXPAYMENTREQ`, and `request_details.tx_hash` is unset.
+`request_details.request_index` is the index of the payment request in the transaction:
+0 is the first payment request, 1 is second, etc.
+
+The host must respond with a `TxAckPaymentRequest` message.
 
 ## Replacement transactions
 
@@ -333,6 +353,22 @@ So the replacement transaction is, for example, allowed to:
 * Add external inputs (PayJoin) and use them to introduce new outputs, increase the
   original external outputs or even to increase the user's change outputs so as to
   decrease the amount that the user is spending.
+
+## Payment requests
+
+In Trezor T a set of transaction outputs can be accompanied by a payment request.
+Multiple payment requests per transaction are also possible. A payment request is a
+message signed by a trusted party requesting payment of certain amounts to a set of
+outputs as specified in [SLIP-24](https://github.com/satoshilabs/slips/blob/master/slip-0024.md).
+The user then does not have to verify the output addresses, but only confirms the
+payment of the requested amount to the recipient.
+
+The host signals that an output belongs to a payment request by setting the
+`payment_req_index` field in the `TxOutput` message. When Trezor encounters the first
+output that has this field set to a particular index, it will ask for the payment request
+that has the given index.
+
+All outputs belonging to one payment request must be consecutive in the transaction.
 
 ## Implementation notes
 

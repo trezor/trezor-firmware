@@ -1,20 +1,38 @@
 name: Add to GitHub Project
+
 on: [issues, pull_request]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  repository-projects: write
+
 jobs:
-  github-actions-automate-projects:
+  gh-automate-projects:
     runs-on: ubuntu-latest
     steps:
-      - name: add-new-issues-to-repository-based-project-column
-        uses: docker://takanabe/github-actions-automate-projects:v0.0.1
+      - name: Add new issue to the Backlog 🗂  project board
         if: github.event_name == 'issues' && github.event.action == 'opened'
+        run: |
+          gh issue edit $ISSUE --add-project "Backlog 🗂"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_PROJECT_URL: https://github.com/trezor/trezor-firmware/projects/1
-          GITHUB_PROJECT_COLUMN_NAME: 📥 Inbox
-      - name: add-new-prs-to-repository-based-project-column
-        uses: docker://takanabe/github-actions-automate-projects:v0.0.1
+          ISSUE: ${{github.event.issue.html_url}}
+          GITHUB_TOKEN: ${{ secrets.GH_BOT_TOKEN }}
+
+      - name: Add new pull request to the Pull Requests project board
         if: github.event_name == 'pull_request' && github.event.action == 'opened'
+        run: gh pr edit $PULL_REQUEST --add-project "Pull Requests"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_PROJECT_URL: https://github.com/trezor/trezor-firmware/projects/2
-          GITHUB_PROJECT_COLUMN_NAME: To be reviewed
+          PULL_REQUEST: ${{github.event.pull_request.html_url}}
+          GITHUB_TOKEN: ${{ secrets.GH_BOT_TOKEN }}
+
+  add-to-beta-project:
+    name: Add new issue to the beta Issues Firmware project
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/add-to-project@main
+        if: github.event_name == 'issues' && github.event.action == 'opened'
+        with:
+          project-url: https://github.com/orgs/trezor/projects/60
+          github-token: ${{ secrets.GH_BOT_TOKEN }}

@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 import storage
 import storage.device
 from trezor import wire
@@ -7,7 +9,7 @@ from apps.common import mnemonic
 
 from .reset_device import backup_seed, layout
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import BackupDevice
 
 

@@ -16,7 +16,7 @@ class MockStorage:
         self.namespace.setdefault(app, {})
         self.namespace[app][key] = data
 
-    def get(self, app: int, key: int, public: bool = False) -> Optional[bytes]:
+    def get(self, app: int, key: int, public: bool = False) -> bytes | None:
         self.namespace.setdefault(app, {})
         return self.namespace[app].get(key)
 

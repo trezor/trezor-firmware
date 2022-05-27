@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor.crypto import base58
 from trezor.enums import CardanoAddressType
 
@@ -15,7 +17,7 @@ from .helpers.paths import SCHEMA_STAKING_ANY_ACCOUNT
 from .helpers.utils import get_public_key_hash, variable_length_encode
 from .seed import is_byron_path, is_shelley_path
 
-if False:
+if TYPE_CHECKING:
     from typing import Any
 
     from trezor.messages import (
@@ -35,6 +37,13 @@ ADDRESS_TYPES_SHELLEY = (
     CardanoAddressType.ENTERPRISE_SCRIPT,
     CardanoAddressType.REWARD,
     CardanoAddressType.REWARD_SCRIPT,
+)
+
+ADDRESS_TYPES_PAYMENT_SCRIPT = (
+    CardanoAddressType.BASE_SCRIPT_KEY,
+    CardanoAddressType.BASE_SCRIPT_SCRIPT,
+    CardanoAddressType.POINTER_SCRIPT,
+    CardanoAddressType.ENTERPRISE_SCRIPT,
 )
 
 MIN_ADDRESS_BYTES_LENGTH = 29
@@ -214,13 +223,12 @@ def validate_output_address_parameters(
 ) -> None:
     validate_address_parameters(parameters)
 
-    if parameters.address_type in (
-        CardanoAddressType.BASE_SCRIPT_KEY,
-        CardanoAddressType.BASE_SCRIPT_SCRIPT,
-        CardanoAddressType.POINTER_SCRIPT,
-        CardanoAddressType.ENTERPRISE_SCRIPT,
-        CardanoAddressType.REWARD,
-        CardanoAddressType.REWARD_SCRIPT,
+    if parameters.address_type not in (
+        CardanoAddressType.BASE,
+        CardanoAddressType.BASE_KEY_SCRIPT,
+        CardanoAddressType.POINTER,
+        CardanoAddressType.ENTERPRISE,
+        CardanoAddressType.BYRON,
     ):
         # Change outputs with script payment part are forbidden.
         # Reward addresses are forbidden as outputs in general, see also validate_output_address
@@ -238,7 +246,7 @@ def _validate_address_and_get_type(
         raise INVALID_ADDRESS
 
     address_bytes = get_address_bytes_unsafe(address)
-    address_type = _get_address_type(address_bytes)
+    address_type = get_address_type(address_bytes)
 
     if address_type == CardanoAddressType.BYRON:
         validate_byron_address(address_bytes, protocol_magic)
@@ -279,14 +287,14 @@ def get_address_bytes_unsafe(address: str) -> bytes:
     return address_bytes
 
 
-def _get_address_type(address: bytes) -> CardanoAddressType:
-    return address[0] >> 4  # type: ignore
+def get_address_type(address: bytes) -> CardanoAddressType:
+    return address[0] >> 4  # type: ignore [int-into-enum]
 
 
 def _validate_shelley_address(
     address_str: str, address_bytes: bytes, network_id: int
 ) -> None:
-    address_type = _get_address_type(address_bytes)
+    address_type = get_address_type(address_bytes)
 
     _validate_address_size(address_bytes)
     _validate_address_bech32_hrp(address_str, address_type, network_id)
@@ -350,7 +358,7 @@ def derive_human_readable_address(
 
 
 def encode_human_readable_address(address_bytes: bytes) -> str:
-    address_type = _get_address_type(address_bytes)
+    address_type = get_address_type(address_bytes)
     if address_type == CardanoAddressType.BYRON:
         return base58.encode(address_bytes)
     elif address_type in ADDRESS_TYPES_SHELLEY:

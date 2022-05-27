@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import device, exceptions, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 from ...common import MNEMONIC12
 
@@ -24,7 +25,7 @@ pytestmark = pytest.mark.skip_t1
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_tt_pin_passphrase(client):
+def test_tt_pin_passphrase(client: Client):
     layout = client.debug.wait_layout
     mnemonic = MNEMONIC12.split(" ")
 
@@ -78,7 +79,7 @@ def test_tt_pin_passphrase(client):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_tt_nopin_nopassphrase(client):
+def test_tt_nopin_nopassphrase(client: Client):
     layout = client.debug.wait_layout
     mnemonic = MNEMONIC12.split(" ")
 
@@ -122,7 +123,7 @@ def test_tt_nopin_nopassphrase(client):
     assert client.features.label == "hello"
 
 
-def test_already_initialized(client):
+def test_already_initialized(client: Client):
     with pytest.raises(RuntimeError):
         device.recover(client)
 

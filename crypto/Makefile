@@ -1,18 +1,46 @@
+# CLANG_VERSION is empty if the compiler is not clang-based
+CLANG_VERSION = $(shell $(CC) --version | grep -Po "clang version \K[\d\.]+")
+CLANG_VERSION_MAJOR = $(shell echo $(CLANG_VERSION) | cut -f1 -d.)
+
+# determine specific version ranges
+ifneq ($(CLANG_VERSION),)
+$(if $(shell [ $(CLANG_VERSION_MAJOR) -ge 13 ] && echo "OK"), \
+    $(eval CLANG_AT_LEAST_13 := true), \
+    $(eval CLANG_AT_LEAST_13 := false))
+$(if $(shell [ $(CLANG_VERSION_MAJOR) -ge 14 ] && echo "OK"), \
+    $(eval CLANG_AT_LEAST_14 := true), \
+    $(eval CLANG_AT_LEAST_14 := false))
+endif
+
 ifeq ($(FUZZER),1)
 CC       ?= clang
 LD       ?= $(CC)
-
 SANFLAGS += -fsanitize=fuzzer
 
-CFLAGS   += $(SANFLAGS)
-LDFLAGS  += $(SANFLAGS)
+# only clang versions >= 13 support this feature
+ifeq ($(CLANG_AT_LEAST_13),true)
+$(info "info: using -fsanitize-ignorelist")
+SANFLAGS += -fsanitize-ignorelist=fuzzer/sanitizer_ignorelist.txt
+else
+$(info "info: not using -fsanitize-ignorelist")
 endif
 
-CC       ?= gcc
+# TODO is there a better solution, for example by disabling a specific optimization technique?
+# there is a clang optimization issue in relation with the blake2 code at -fsanitize=undefined
+$(warning "warning: disabling optimization on blake2 code as workaround")
+blake2b.o: OPTFLAGS += -O0
+blake2s.o: OPTFLAGS += -O0
+
+else ifeq ($(ADDRESS_SANITIZER),1)
+SANFLAGS += -fsanitize=address,undefined
+endif
+
+CC       ?= cc
 
 OPTFLAGS ?= -O3 -g
 
 CFLAGS   += $(OPTFLAGS) \
+            $(SANFLAGS) \
             -std=gnu99 \
             -W \
             -Wall \
@@ -49,6 +77,12 @@ ZKP_CFLAGS = \
 	-DENABLE_MODULE_EXTRAKEYS
 ZKP_PATH = ../vendor/secp256k1-zkp
 CFLAGS += -DSECP256K1_CONTEXT_SIZE=208
+
+# TODO remove this workaround once possible
+ifeq ($(CLANG_AT_LEAST_14),true)
+$(warning "warning: suppressing clang-14 compiler warning for secp256k1-zkp code")
+ZKP_CFLAGS += -Wno-bitwise-instead-of-logical
+endif
 
 VALGRIND ?= 1
 ifeq ($(VALGRIND),1)
@@ -98,7 +132,6 @@ SRCS  += shamir.c
 SRCS  += hmac_drbg.c
 SRCS  += rfc6979.c
 SRCS  += slip39.c
-SRCS  += schnorr.c
 SRCS  += zkp_context.c
 SRCS  += zkp_ecdsa.c
 SRCS  += zkp_bip340.c
@@ -118,18 +151,18 @@ all: tools tests
 tests: tests/test_check tests/test_openssl tests/test_speed tests/libtrezor-crypto.so tests/aestst
 
 tests/aestst: aes/aestst.o aes/aescrypt.o aes/aeskey.o aes/aestab.o
-	$(CC) $^ -o $@
+	$(CC) $(CFLAGS) $^ -o $@
 
 tests/test_check.o: tests/test_check_cardano.h tests/test_check_monero.h tests/test_check_cashaddr.h tests/test_check_segwit.h
 
 tests/test_check: tests/test_check.o $(OBJS)
-	$(CC) tests/test_check.o $(OBJS) $(TESTLIBS) -o tests/test_check
+	$(CC) $(CFLAGS) tests/test_check.o $(OBJS) $(TESTLIBS) -o tests/test_check
 
 tests/test_speed: tests/test_speed.o $(OBJS)
-	$(CC) tests/test_speed.o $(OBJS) -o tests/test_speed
+	$(CC) $(CFLAGS) tests/test_speed.o $(OBJS) -o tests/test_speed
 
 tests/test_openssl: tests/test_openssl.o $(OBJS)
-	$(CC) tests/test_openssl.o $(OBJS) $(TESTSSLLIBS) -o tests/test_openssl
+	$(CC) $(CFLAGS) tests/test_openssl.o $(OBJS) $(TESTSSLLIBS) -o tests/test_openssl
 
 tests/libtrezor-crypto.so: $(SRCS) secp256k1-zkp.o
 	$(CC) $(CFLAGS) -DAES_128 -DAES_192 -fPIC -shared $(SRCS) secp256k1-zkp.o -o tests/libtrezor-crypto.so
@@ -137,13 +170,13 @@ tests/libtrezor-crypto.so: $(SRCS) secp256k1-zkp.o
 tools: tools/xpubaddrgen tools/mktable tools/bip39bruteforce
 
 tools/xpubaddrgen: tools/xpubaddrgen.o $(OBJS)
-	$(CC) tools/xpubaddrgen.o $(OBJS) -o tools/xpubaddrgen
+	$(CC) $(CFLAGS) tools/xpubaddrgen.o $(OBJS) -o tools/xpubaddrgen
 
 tools/mktable: tools/mktable.o $(OBJS)
-	$(CC) tools/mktable.o $(OBJS) -o tools/mktable
+	$(CC) $(CFLAGS) tools/mktable.o $(OBJS) -o tools/mktable
 
 tools/bip39bruteforce: tools/bip39bruteforce.o $(OBJS)
-	$(CC) tools/bip39bruteforce.o $(OBJS) -o tools/bip39bruteforce
+	$(CC) $(CFLAGS) tools/bip39bruteforce.o $(OBJS) -o tools/bip39bruteforce
 
 fuzzer: fuzzer/fuzzer.o $(OBJS)
 	$(CC) $(CFLAGS) fuzzer/fuzzer.o $(OBJS) -o fuzzer/fuzzer

@@ -688,6 +688,10 @@ groestl_big_init(sph_groestl_big_context *sc, unsigned out_size)
 static void
 groestl_big_core(sph_groestl_big_context *sc, const void *data, size_t len)
 {
+  if (len == 0) {
+    return;
+  }
+
 	unsigned char *buf = NULL;
 	size_t ptr = 0;
 	DECL_STATE_BIG

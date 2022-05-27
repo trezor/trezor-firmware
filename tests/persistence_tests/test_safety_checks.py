@@ -4,12 +4,12 @@ from trezorlib import debuglink, device
 from trezorlib.messages import SafetyCheckLevel
 
 from ..common import MNEMONIC12
-from ..emulators import EmulatorWrapper
+from ..emulators import Emulator, EmulatorWrapper
 from ..upgrade_tests import core_only
 
 
 @pytest.fixture
-def emulator():
+def emulator() -> Emulator:
     with EmulatorWrapper("core") as emu:
         yield emu
 
@@ -23,7 +23,10 @@ def emulator():
         (SafetyCheckLevel.PromptAlways, SafetyCheckLevel.PromptAlways),
     ],
 )
-def test_safety_checks_level_after_reboot(emulator, set_level, after_level):
+def test_safety_checks_level_after_reboot(
+    emulator: Emulator, set_level: SafetyCheckLevel, after_level: SafetyCheckLevel
+):
+    assert emulator.client is not None
     device.wipe(emulator.client)
     debuglink.load_device(
         emulator.client,

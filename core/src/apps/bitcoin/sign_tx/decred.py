@@ -1,4 +1,5 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor import wire
 from trezor.crypto.hashlib import blake256
@@ -6,7 +7,7 @@ from trezor.enums import DecredStakingSpendType, InputScriptType
 from trezor.messages import PrevOutput
 from trezor.utils import HashWriter, ensure
 
-from apps.common.writers import write_bitcoin_varint
+from apps.common.writers import write_compact_size
 
 from .. import multisig, scripts_decred, writers
 from ..common import SigHashType, ecdsa_hash_pubkey, ecdsa_sign
@@ -22,7 +23,7 @@ OUTPUT_SCRIPT_NULL_SSTXCHANGE = (
     b"\xBD\x76\xA9\x14\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x88\xAC"
 )
 
-if False:
+if TYPE_CHECKING:
     from typing import Sequence
 
     from trezor.messages import (
@@ -78,6 +79,13 @@ class DecredSigHasher:
     ) -> bytes:
         raise NotImplementedError
 
+    def hash_zip244(
+        self,
+        txi: TxInput | None,
+        script_pubkey: bytes | None,
+    ) -> bytes:
+        raise NotImplementedError
+
 
 class Decred(Bitcoin):
     def __init__(
@@ -95,22 +103,22 @@ class Decred(Bitcoin):
         super().__init__(tx, keychain, coin, approver)
 
         self.write_tx_header(self.serialized_tx, self.tx_info.tx, witness_marker=True)
-        write_bitcoin_varint(self.serialized_tx, self.tx_info.tx.inputs_count)
+        write_compact_size(self.serialized_tx, self.tx_info.tx.inputs_count)
 
         writers.write_uint32(
             self.h_prefix, self.tx_info.tx.version | DECRED_SERIALIZE_NO_WITNESS
         )
-        write_bitcoin_varint(self.h_prefix, self.tx_info.tx.inputs_count)
+        write_compact_size(self.h_prefix, self.tx_info.tx.inputs_count)
 
     def create_hash_writer(self) -> HashWriter:
         return HashWriter(blake256())
 
-    def create_sig_hasher(self) -> SigHasher:
+    def create_sig_hasher(self, tx: SignTx | PrevTx) -> SigHasher:
         return DecredSigHasher(self.h_prefix)
 
     async def step2_approve_outputs(self) -> None:
-        write_bitcoin_varint(self.serialized_tx, self.tx_info.tx.outputs_count)
-        write_bitcoin_varint(self.h_prefix, self.tx_info.tx.outputs_count)
+        write_compact_size(self.serialized_tx, self.tx_info.tx.outputs_count)
+        write_compact_size(self.h_prefix, self.tx_info.tx.outputs_count)
 
         if self.tx_info.tx.decred_staking_ticket:
             await self.approve_staking_ticket()
@@ -142,7 +150,7 @@ class Decred(Bitcoin):
         self.write_tx_output(self.serialized_tx, txo, script_pubkey)
 
     async def step4_serialize_inputs(self) -> None:
-        write_bitcoin_varint(self.serialized_tx, self.tx_info.tx.inputs_count)
+        write_compact_size(self.serialized_tx, self.tx_info.tx.inputs_count)
 
         prefix_hash = self.h_prefix.get_digest()
 
@@ -160,7 +168,7 @@ class Decred(Bitcoin):
             writers.write_uint32(
                 h_witness, self.tx_info.tx.version | DECRED_SERIALIZE_WITNESS_SIGNING
             )
-            write_bitcoin_varint(h_witness, self.tx_info.tx.inputs_count)
+            write_compact_size(h_witness, self.tx_info.tx.inputs_count)
 
             for ii in range(self.tx_info.tx.inputs_count):
                 if ii == i_sign:
@@ -189,7 +197,7 @@ class Decred(Bitcoin):
                     else:
                         raise wire.DataError("Unsupported input script type")
                 else:
-                    write_bitcoin_varint(h_witness, 0)
+                    write_compact_size(h_witness, 0)
 
             witness_hash = writers.get_tx_hash(
                 h_witness, double=self.coin.sign_hash_double, reverse=False

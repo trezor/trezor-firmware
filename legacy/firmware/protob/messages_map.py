@@ -36,17 +36,16 @@ IFACE_DIR_PAIRS = {
 SPECIAL_DEBUG_MESSAGES = {"MessageType_LoadDevice"}
 
 
-def get_wire_extension(message):
+def get_wire_extensions(message):
     extensions = message.GetOptions().Extensions
-    return next(ext for ext in IFACE_DIR_PAIRS if extensions[ext])
+    return (ext for ext in IFACE_DIR_PAIRS if extensions[ext])
 
 
-def handle_message(fh, fl, skipped, message):
+def handle_message(fh, fl, skipped, message, extension):
     name = message.name
     short_name = name.split("MessageType_", 1).pop()
     assert short_name != name
 
-    extension = get_wire_extension(message)
     interface, direction = IFACE_DIR_PAIRS[extension]
 
     for s in skipped:
@@ -120,8 +119,8 @@ messages = defaultdict(list)
 for message in MessageType.DESCRIPTOR.values:
     if message.GetOptions().deprecated:
         continue
-    extension = get_wire_extension(message)
-    messages[extension].append(message)
+    for extension in get_wire_extensions(message):
+        messages[extension].append(message)
 
 for extension in (wire_in, wire_out, wire_debug_in, wire_debug_out):
     if extension == wire_debug_in:
@@ -133,7 +132,7 @@ for extension in (wire_in, wire_out, wire_debug_in, wire_debug_out):
     for message in messages[extension]:
         if message.name in SPECIAL_DEBUG_MESSAGES:
             fh.write("#if DEBUG_LINK\n")
-        handle_message(fh, fl, skipped, message)
+        handle_message(fh, fl, skipped, message, extension)
         if message.name in SPECIAL_DEBUG_MESSAGES:
             fh.write("#endif\n")
 

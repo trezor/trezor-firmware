@@ -1,4 +1,4 @@
-use crate::trezorhal::display;
+use crate::{micropython::time, time::Duration, trezorhal::display};
 
 #[cfg(not(feature = "model_tt"))]
 use crate::ui::model_t1::constant;
@@ -7,31 +7,45 @@ use crate::ui::model_tt::constant;
 
 use super::geometry::{Offset, Point, Rect};
 
-pub fn width() -> i32 {
-    display::width()
+pub fn backlight() -> i32 {
+    display::backlight(-1)
 }
 
-pub fn height() -> i32 {
-    display::height()
+pub fn set_backlight(val: i32) {
+    display::backlight(val);
 }
 
-pub fn size() -> Offset {
-    Offset::new(width(), height())
+pub fn fade_backlight(target: i32) {
+    const BACKLIGHT_DELAY: Duration = Duration::from_millis(14);
+    const BACKLIGHT_STEP: usize = 15;
+
+    let current = backlight();
+    if current < target {
+        for val in (current..target).step_by(BACKLIGHT_STEP) {
+            set_backlight(val);
+            time::sleep(BACKLIGHT_DELAY);
+        }
+    } else {
+        for val in (target..current).rev().step_by(BACKLIGHT_STEP) {
+            set_backlight(val);
+            time::sleep(BACKLIGHT_DELAY);
+        }
+    }
 }
 
-pub fn screen() -> Rect {
-    Rect::from_top_left_and_size(Point::zero(), size())
-}
-
-pub fn backlight(val: i32) -> i32 {
-    display::backlight(val)
-}
-
-pub fn rect(r: Rect, fg_color: Color) {
+pub fn rect_fill(r: Rect, fg_color: Color) {
     display::bar(r.x0, r.y0, r.width(), r.height(), fg_color.into());
 }
 
-pub fn rounded_rect(r: Rect, fg_color: Color, bg_color: Color, radius: u8) {
+pub fn rect_stroke(r: Rect, fg_color: Color) {
+    display::bar(r.x0, r.y0, r.width(), 1, fg_color.into());
+    display::bar(r.x0, r.y0 + r.height() - 1, r.width(), 1, fg_color.into());
+    display::bar(r.x0, r.y0, 1, r.height(), fg_color.into());
+    display::bar(r.x0 + r.width() - 1, r.y0, 1, r.height(), fg_color.into());
+}
+
+pub fn rect_fill_rounded(r: Rect, fg_color: Color, bg_color: Color, radius: u8) {
+    assert!([2, 4, 8, 16].iter().any(|allowed| radius == *allowed));
     display::bar_radius(
         r.x0,
         r.y0,
@@ -43,33 +57,49 @@ pub fn rounded_rect(r: Rect, fg_color: Color, bg_color: Color, radius: u8) {
     );
 }
 
+/// NOTE: Cannot start at odd x-coordinate. In this case icon is shifted 1px
+/// left.
+pub fn icon_top_left(top_left: Point, data: &[u8], fg_color: Color, bg_color: Color) {
+    let toif_info = display::toif_info(data).unwrap();
+    assert!(toif_info.grayscale);
+    display::icon(
+        top_left.x,
+        top_left.y,
+        toif_info.width.into(),
+        toif_info.height.into(),
+        &data[12..], // Skip TOIF header.
+        fg_color.into(),
+        bg_color.into(),
+    );
+}
+
 pub fn icon(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
     let toif_info = display::toif_info(data).unwrap();
     assert!(toif_info.grayscale);
 
     let r = Rect::from_center_and_size(
         center,
-        Offset::new(toif_info.width as _, toif_info.height as _),
+        Offset::new(toif_info.width.into(), toif_info.height.into()),
     );
     display::icon(
         r.x0,
         r.y0,
         r.width(),
         r.height(),
-        &data[12..], // skip TOIF header
+        &data[12..], // Skip TOIF header.
         fg_color.into(),
         bg_color.into(),
     );
 }
 
 // Used on T1 only.
-pub fn rounded_rect1(r: Rect, fg_color: Color, bg_color: Color) {
+pub fn rect_fill_rounded1(r: Rect, fg_color: Color, bg_color: Color) {
     display::bar(r.x0, r.y0, r.width(), r.height(), fg_color.into());
     let corners = [
         r.top_left(),
-        r.top_right() + Offset::new(-1, 0),
-        r.bottom_right() + Offset::new(-1, -1),
-        r.bottom_left() + Offset::new(0, -1),
+        r.top_right() - Offset::x(1),
+        r.bottom_right() - Offset::uniform(1),
+        r.bottom_left() - Offset::y(1),
     ];
     for p in corners.iter() {
         display::bar(p.x, p.y, 1, 1, bg_color.into());
@@ -83,7 +113,46 @@ pub fn dotted_line(start: Point, width: i32, color: Color) {
     }
 }
 
-pub fn text(baseline: Point, text: &[u8], font: Font, fg_color: Color, bg_color: Color) {
+pub const LOADER_MIN: u16 = 0;
+pub const LOADER_MAX: u16 = 1000;
+
+pub fn loader(
+    progress: u16,
+    y_offset: i32,
+    fg_color: Color,
+    bg_color: Color,
+    icon: Option<(&[u8], Color)>,
+) {
+    display::loader(
+        progress,
+        false,
+        y_offset,
+        fg_color.into(),
+        bg_color.into(),
+        icon.map(|i| i.0),
+        icon.map(|i| i.1.into()).unwrap_or(0),
+    );
+}
+
+pub fn loader_indeterminate(
+    progress: u16,
+    y_offset: i32,
+    fg_color: Color,
+    bg_color: Color,
+    icon: Option<(&[u8], Color)>,
+) {
+    display::loader(
+        progress,
+        true,
+        y_offset,
+        fg_color.into(),
+        bg_color.into(),
+        icon.map(|i| i.0),
+        icon.map(|i| i.1.into()).unwrap_or(0),
+    );
+}
+
+pub fn text(baseline: Point, text: &str, font: Font, fg_color: Color, bg_color: Color) {
     display::text(
         baseline.x,
         baseline.y,
@@ -94,16 +163,16 @@ pub fn text(baseline: Point, text: &[u8], font: Font, fg_color: Color, bg_color:
     );
 }
 
-pub fn text_width(text: &[u8], font: Font) -> i32 {
-    display::text_width(text, font.0)
-}
-
-pub fn text_height() -> i32 {
-    constant::TEXT_HEIGHT
-}
-
-pub fn line_height() -> i32 {
-    constant::LINE_HEIGHT
+pub fn text_center(baseline: Point, text: &str, font: Font, fg_color: Color, bg_color: Color) {
+    let w = font.text_width(text);
+    display::text(
+        baseline.x - w / 2,
+        baseline.y,
+        text,
+        font.0,
+        fg_color.into(),
+        bg_color.into(),
+    );
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -114,12 +183,20 @@ impl Font {
         Self(id)
     }
 
-    pub fn text_width(self, text: &[u8]) -> i32 {
-        text_width(text, self)
+    pub fn text_width(self, text: &str) -> i32 {
+        display::text_width(text, self.0)
+    }
+
+    pub fn char_width(self, ch: char) -> i32 {
+        display::char_width(ch, self.0)
+    }
+
+    pub fn text_height(self) -> i32 {
+        display::text_height(self.0)
     }
 
     pub fn line_height(self) -> i32 {
-        line_height()
+        constant::LINE_SPACE + self.text_height()
     }
 }
 
@@ -150,14 +227,6 @@ impl Color {
         (self.0 << 3) as u8 & 0xF8
     }
 
-    pub fn blend(self, other: Self, t: f32) -> Self {
-        Self::rgb(
-            lerp(self.r(), other.r(), t),
-            lerp(self.g(), other.g(), t),
-            lerp(self.b(), other.b(), t),
-        )
-    }
-
     pub fn to_u16(self) -> u16 {
         self.0
     }
@@ -177,8 +246,4 @@ impl From<Color> for u16 {
     fn from(val: Color) -> Self {
         val.to_u16()
     }
-}
-
-fn lerp(a: u8, b: u8, t: f32) -> u8 {
-    (a as f32 + t * (b - a) as f32) as u8
 }

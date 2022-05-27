@@ -1,0 +1,2 @@
+Allow passing empty `message_hash` for domain-only EIP-712 hashes
+for Trezor T1 (i.e. when `primaryType`=`EIP712Domain`)

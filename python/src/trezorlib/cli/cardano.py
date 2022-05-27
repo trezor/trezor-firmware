@@ -53,6 +53,7 @@ def cli() -> None:
     type=ChoiceType({m.name: m for m in messages.CardanoDerivationType}),
     default=messages.CardanoDerivationType.ICARUS,
 )
+@click.option("-i", "--include-network-id", is_flag=True)
 @with_client
 def sign_tx(
     client: "TrezorClient",
@@ -62,6 +63,7 @@ def sign_tx(
     network_id: int,
     testnet: bool,
     derivation_type: messages.CardanoDerivationType,
+    include_network_id: bool,
 ) -> cardano.SignTxResponse:
     """Sign Cardano transaction."""
     transaction = json.load(file)
@@ -85,6 +87,17 @@ def sign_tx(
     ]
     auxiliary_data = cardano.parse_auxiliary_data(transaction.get("auxiliary_data"))
     mint = cardano.parse_mint(transaction.get("mint", ()))
+    script_data_hash = cardano.parse_script_data_hash(
+        transaction.get("script_data_hash")
+    )
+    collateral_inputs = [
+        cardano.parse_collateral_input(collateral_input)
+        for collateral_input in transaction.get("collateral_inputs", ())
+    ]
+    required_signers = [
+        cardano.parse_required_signer(required_signer)
+        for required_signer in transaction.get("required_signers", ())
+    ]
     additional_witness_requests = [
         cardano.parse_additional_witness_request(p)
         for p in transaction["additional_witness_requests"]
@@ -105,8 +118,12 @@ def sign_tx(
         network_id,
         auxiliary_data,
         mint,
+        script_data_hash,
+        collateral_inputs,
+        required_signers,
         additional_witness_requests,
         derivation_type=derivation_type,
+        include_network_id=include_network_id,
     )
 
     sign_tx_response["tx_hash"] = sign_tx_response["tx_hash"].hex()

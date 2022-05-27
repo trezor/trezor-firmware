@@ -1,10 +1,12 @@
+from typing import TYPE_CHECKING
+
 from trezor import io, loop, res, ui, workflow
 from trezor.crypto import bip39
 from trezor.ui import display
 
 from .button import Button, ButtonClear, ButtonMono, ButtonMonoConfirm
 
-if False:
+if TYPE_CHECKING:
     from .button import ButtonContent, ButtonStyleStateType
 
 
@@ -104,10 +106,10 @@ class Bip39Keyboard(ui.Layout):
 
         icon_back = res.load(ui.ICON_BACK)
         self.back = Button(ui.grid(0, n_x=3, n_y=4), icon_back, ButtonClear)
-        self.back.on_click = self.on_back_click  # type: ignore
+        self.back.on_click = self.on_back_click
 
         self.input = InputButton(ui.grid(1, n_x=3, n_y=4, cells_x=2), "", "")
-        self.input.on_click = self.on_input_click  # type: ignore
+        self.input.on_click = self.on_input_click
 
         self.keys = [
             KeyButton(ui.grid(i + 3, n_y=4), k, self)
@@ -212,7 +214,7 @@ class Bip39Keyboard(ui.Layout):
 
     if __debug__:
 
-        def create_tasks(self) -> tuple[loop.Task, ...]:
+        def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
             from apps.debug import input_signal
 
             return super().create_tasks() + (input_signal(),)

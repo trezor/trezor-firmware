@@ -2,8 +2,7 @@
 
 export EMULATOR=1
 export PIZERO=1
-export PYTHON=python3.7
-export RANDOM_DEV_FILE="/dev/random"
+export PYTHON=python3
 
 #export DEBUG_LINK=1
 #export OPTFLAGS=-O0

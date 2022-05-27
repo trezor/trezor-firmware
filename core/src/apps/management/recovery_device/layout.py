@@ -1,9 +1,11 @@
+from typing import TYPE_CHECKING
+
 import storage.recovery
 from trezor import ui, wire
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import confirm_action, show_success, show_warning
 from trezor.ui.layouts.common import button_request
-from trezor.ui.layouts.tt.recovery import (  # noqa: F401
+from trezor.ui.layouts.recovery import (  # noqa: F401
     continue_recovery,
     request_word,
     request_word_count,
@@ -15,7 +17,7 @@ from .. import backup_types
 from . import word_validity
 from .recover import RecoveryAborted
 
-if False:
+if TYPE_CHECKING:
     from typing import Callable
     from trezor.enums import BackupType
 

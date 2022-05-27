@@ -21,7 +21,7 @@ except Exception:
     inotify = None
 
 
-HERE = Path(__file__).parent.resolve()
+HERE = Path(__file__).resolve().parent
 MICROPYTHON = HERE / "build" / "unix" / "trezor-emu-core"
 SRC_DIR = HERE / "src"
 
@@ -96,7 +96,7 @@ def _from_env(name):
 @click.option("--executable", type=click.Path(exists=True, dir_okay=False), default=os.environ.get("MICROPYTHON"), help="Alternate emulator executable")
 @click.option("-g", "--profiling/--no-profiling", default=_from_env("TREZOR_PROFILING"), help="Run with profiler wrapper")
 @click.option("-G", "--alloc-profiling/--no-alloc-profiling", default=_from_env("TREZOR_MEMPERF"), help="Profile memory allocation (requires special micropython build)")
-@click.option("-h", "--headless", is_flag=True, help="Headless mode (no display)")
+@click.option("-h", "--headless", is_flag=True, help="Headless mode (no display, disables animation)")
 @click.option("--heap-size", metavar="SIZE", default="20M", help="Configure heap size")
 @click.option("--main", help="Path to python main file")
 @click.option("--mnemonic", "mnemonics", multiple=True, help="Initialize device with given mnemonic. Specify multiple times for Shamir shares.")

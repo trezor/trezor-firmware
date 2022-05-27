@@ -17,6 +17,21 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+static bool fsm_nemCheckPath(uint32_t address_n_count,
+                             const uint32_t *address_n, uint8_t network) {
+  if (nem_path_check(address_n_count, address_n, network, true)) {
+    return true;
+  }
+
+  if (config_getSafetyCheckLevel() == SafetyCheckLevel_Strict &&
+      !nem_path_check(address_n_count, address_n, network, false)) {
+    fsm_sendFailure(FailureType_Failure_DataError, _("Forbidden key path"));
+    return false;
+  }
+
+  return fsm_layoutPathWarning();
+}
+
 void fsm_msgNEMGetAddress(NEMGetAddress *msg) {
   if (!msg->has_network) {
     msg->network = NEM_NETWORK_MAINNET;
@@ -31,11 +46,19 @@ void fsm_msgNEMGetAddress(NEMGetAddress *msg) {
 
   RESP_INIT(NEMAddress);
 
+  if (!fsm_nemCheckPath(msg->address_n_count, msg->address_n, msg->network)) {
+    layoutHome();
+    return;
+  }
+
   HDNode *node = fsm_getDerivedNode(ED25519_KECCAK_NAME, msg->address_n,
                                     msg->address_n_count, NULL);
   if (!node) return;
 
-  if (!hdnode_get_nem_address(node, msg->network, resp->address)) return;
+  if (!hdnode_get_nem_address(node, msg->network, resp->address)) {
+    layoutHome();
+    return;
+  }
 
   if (msg->has_show_display && msg->show_display) {
     char desc[16];
@@ -58,8 +81,6 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
 #define NEM_CHECK_PARAM(s) CHECK_PARAM((reason = (s)) == NULL, reason)
 #define NEM_CHECK_PARAM_WHEN(b, s) \
   CHECK_PARAM(!(b) || (reason = (s)) == NULL, reason)
-
-  CHECK_PARAM(msg->has_transaction, _("No common provided"));
 
   // Ensure exactly one transaction is provided
   unsigned int provided = msg->has_transfer + msg->has_provision_namespace +
@@ -117,6 +138,12 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
   }
 
   RESP_INIT(NEMSignedTx);
+
+  if (!fsm_nemCheckPath(msg->transaction.address_n_count,
+                        msg->transaction.address_n, msg->transaction.network)) {
+    layoutHome();
+    return;
+  }
 
   HDNode *node =
       fsm_getDerivedNode(ED25519_KECCAK_NAME, msg->transaction.address_n,
@@ -306,6 +333,8 @@ void fsm_msgNEMDecryptMessage(NEMDecryptMessage *msg) {
   CHECK_PARAM(msg->has_public_key, _("No public key provided"));
   CHECK_PARAM(msg->public_key.size == 32, _("Invalid public key"));
 
+  CHECK_PIN
+
   char address[NEM_ADDRESS_SIZE + 1];
   nem_get_address(msg->public_key.bytes, msg->network, address);
 
@@ -317,8 +346,10 @@ void fsm_msgNEMDecryptMessage(NEMDecryptMessage *msg) {
     return;
   }
 
-  CHECK_PIN
-
+  if (!fsm_nemCheckPath(msg->address_n_count, msg->address_n, msg->network)) {
+    layoutHome();
+    return;
+  }
   const HDNode *node = fsm_getDerivedNode(ED25519_KECCAK_NAME, msg->address_n,
                                           msg->address_n_count, NULL);
   if (!node) return;

@@ -26,12 +26,12 @@ g_header:
     . = . + 8                        // reserved
     . = . + 512                      // hash1 ... hash16
 
-#if TREZOR_MODEL == T
+#if defined TREZOR_MODEL_T
 // model T header specifics
     . = . + 415                      // reserved
     .byte 0                          // sigmask
     . = . + 64                       // sig
-#elif TREZOR_MODEL == 1
+#elif defined TREZOR_MODEL_1
 // model 1 header specifics
     . = . + 64                       // sig1
     . = . + 64                       // sig2

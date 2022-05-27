@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor.crypto.hashlib import sha256
 from trezor.messages import PrevTx, SignTx, TxInput, TxOutput
 from trezor.utils import HashWriter
@@ -7,7 +9,7 @@ from apps.common import coininfo
 from .. import scripts, writers
 from ..common import tagged_hashwriter
 
-if False:
+if TYPE_CHECKING:
     from typing import Protocol, Sequence
     from ..common import SigHashType
 
@@ -34,6 +36,13 @@ if False:
             i: int,
             tx: SignTx | PrevTx,
             sighash_type: SigHashType,
+        ) -> bytes:
+            ...
+
+        def hash_zip244(
+            self,
+            txi: TxInput | None,
+            script_pubkey: bytes | None,
         ) -> bytes:
             ...
 
@@ -164,3 +173,10 @@ class BitcoinSigHasher:
         writers.write_uint32(h_sigmsg, i)
 
         return h_sigmsg.get_digest()
+
+    def hash_zip244(
+        self,
+        txi: TxInput | None,
+        script_pubkey: bytes | None,
+    ) -> bytes:
+        raise NotImplementedError

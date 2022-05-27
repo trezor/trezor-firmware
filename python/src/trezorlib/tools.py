@@ -107,7 +107,7 @@ __b58base = len(__b58chars)
 
 
 def b58encode(v: bytes) -> str:
-    """ encode v, which is a string of bytes, to base58."""
+    """encode v, which is a string of bytes, to base58."""
 
     long_value = 0
     for c in v:
@@ -133,7 +133,7 @@ def b58encode(v: bytes) -> str:
 
 
 def b58decode(v: AnyStr, length: Optional[int] = None) -> bytes:
-    """ decode v into a string of len bytes."""
+    """decode v into a string of len bytes."""
     str_v = v.decode() if isinstance(v, bytes) else v
 
     for c in str_v:
@@ -211,13 +211,15 @@ def parse_path(nstr: str) -> Address:
         raise ValueError("Invalid BIP32 path", nstr) from e
 
 
-def normalize_nfc(txt: AnyStr) -> bytes:
+def prepare_message_bytes(txt: AnyStr) -> bytes:
     """
-    Normalize message to NFC and return bytes suitable for protobuf.
-    This seems to be bitcoin-qt standard of doing things.
+    Make message suitable for protobuf.
+    If the message is a Unicode string, normalize it.
+    If it's bytes, return the raw bytes.
     """
-    str_txt = txt.decode() if isinstance(txt, bytes) else txt
-    return unicodedata.normalize("NFC", str_txt).encode()
+    if isinstance(txt, bytes):
+        return txt
+    return unicodedata.normalize("NFC", txt).encode()
 
 
 # NOTE for type tests (mypy/pyright):

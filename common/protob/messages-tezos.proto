@@ -102,8 +102,8 @@ message TezosSignTx {
             optional TezosManagerTransfer transfer = 3;
 
             message TezosManagerTransfer {
-                optional TezosContractID destination = 1;
-                optional uint64 amount = 2;
+                required TezosContractID destination = 1;
+                required uint64 amount = 2;
             }
         }
     }
@@ -138,18 +138,18 @@ message TezosSignTx {
      * Structure representing information for proposal
      */
     message TezosProposalOp {
-        optional bytes source = 1;                  //Contains only public_key_hash, not to be confused with TezosContractID
-        optional uint64 period = 2;
+        required bytes source = 1;                  //Contains only public_key_hash, not to be confused with TezosContractID
+        required uint64 period = 2;
         repeated bytes proposals = 4;
     }
     /**
      * Structure representing information for ballot
      */
     message TezosBallotOp {
-        optional bytes source = 1;                  //Contains only public_key_hash, not to be confused with TezosContractID
-        optional uint64 period = 2;
-        optional bytes proposal = 3;
-        optional TezosBallotType ballot = 4;
+        required bytes source = 1;                  //Contains only public_key_hash, not to be confused with TezosContractID
+        required uint64 period = 2;
+        required bytes proposal = 3;
+        required TezosBallotType ballot = 4;
 
         enum TezosBallotType {
             Yay = 0;

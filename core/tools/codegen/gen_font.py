@@ -52,9 +52,9 @@ def process_bitmap_buffer(buf, bpp):
     return res
 
 
-def process_face(name, style, size, bpp=4, shave_bearingX=0):
+def process_face(name, style, size, bpp=4, shave_bearingX=0, ext="ttf"):
     print("Processing ... %s %s %s" % (name, style, size))
-    face = freetype.Face("fonts/%s-%s.ttf" % (name, style))
+    face = freetype.Face("fonts/%s-%s.%s" % (name, style, ext))
     face.set_pixel_sizes(0, size)
     fontname = "%s_%s_%d" % (name.lower(), style.lower(), size)
     with open("font_%s.h" % fontname, "wt") as f:
@@ -100,12 +100,18 @@ def process_face(name, style, size, bpp=4, shave_bearingX=0):
                 bearingX -= min(advance, bearingX, shave_bearingX)
             # the following code is here just for some letters (listed below)
             # not using negative bearingX makes life so much easier; add it to advance instead
-            if c in "jy}),/" and bearingX < 0:
-                advance += -bearingX
-                bearingX = 0
+            if bearingX < 0:
+                if c in "AXYjxy}),/_":
+                    advance += -bearingX
+                    bearingX = 0
+                else:
+                    raise ValueError("Negative bearingX for character '%s'" % c)
             bearingY = metrics.horiBearingY // 64
             assert advance >= 0 and advance <= 255
             assert bearingX >= 0 and bearingX <= 255
+            if bearingY < 0: # HACK
+                print("normalizing bearingY %d for '%s'" % (bearingY, c))
+                bearingY = 0
             assert bearingY >= 0 and bearingY <= 255
             print(
                 'Loaded glyph "%c" ... %d x %d @ %d grays (%d bytes, metrics: %d, %d, %d)'
@@ -155,8 +161,12 @@ def process_face(name, style, size, bpp=4, shave_bearingX=0):
 
 process_face("Roboto", "Regular", 20)
 process_face("Roboto", "Bold", 20)
+
+process_face("TTHoves", "Regular", 18, ext="otf")
+process_face("TTHoves", "Medium", 20, ext="otf")
+process_face("TTHoves", "Bold", 16, ext="otf")
 process_face("RobotoMono", "Regular", 20)
 
-process_face("PixelOperator", "Regular", 8, 1, 1)
-process_face("PixelOperator", "Bold", 8, 1, 1)
-process_face("PixelOperatorMono", "Regular", 8, 1, 1)
+process_face("PixelOperator", "Regular", 8, bpp=1, shave_bearingX=1)
+process_face("PixelOperator", "Bold", 8, bpp=1, shave_bearingX=1)
+process_face("PixelOperatorMono", "Regular", 8, bpp=1, shave_bearingX=1)

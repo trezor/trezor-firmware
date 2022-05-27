@@ -39,7 +39,7 @@ def get_network_str(network: int) -> str:
     elif network == NEM_NETWORK_MIJIN:
         return "Mijin"
 
-    raise RuntimeError  # network should be one of the NEM_NETWORK_* constants
+    raise ValueError  # no valid network
 
 
 def check_path(path: paths.Bip32Path, network: int) -> bool:

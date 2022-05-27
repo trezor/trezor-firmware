@@ -1,16 +1,19 @@
+from copy import copy
 from hashlib import sha256
 from io import BytesIO
 
 import pytest
 
 from trezorlib import btc, messages, tools
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 
-from ...tx_cache import TxCache
+from .signtx import forge_prevtx
 
-TXHASH_157041 = bytes.fromhex(
-    "1570416eb4302cf52979afd5e6909e37d8fdd874301f7cc87e547e509cb1caa6"
-)
+# address at seed "all all all..." path m/44h/0h/0h/0/0
+INPUT_ADDRESS = "1JAd7XCBzGudGpJQSDSfpmJhiygtLQWaGL"
+PREV_HASH, PREV_TX = forge_prevtx([(INPUT_ADDRESS, 100_000_000)])
+PREV_TXES = {PREV_HASH: PREV_TX}
 
 
 def write_prefixed_bytes(io, data) -> None:
@@ -76,17 +79,17 @@ with_bad_prevhashes = pytest.mark.parametrize(
 
 
 @with_bad_prevhashes
-def test_invalid_prev_hash(client, prev_hash):
+def test_invalid_prev_hash(client: Client, prev_hash):
     inp1 = messages.TxInputType(
         address_n=tools.parse_path("m/44h/0h/0h/0/0"),
-        amount=123456789,
+        amount=123_456_789,
         prev_hash=prev_hash,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
     )
     out1 = messages.TxOutputType(
         address="mhRx1CeVfaayqRwq5zgRQmD7W5aWBfD5mC",
-        amount=12300000,
+        amount=12_300_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -96,18 +99,18 @@ def test_invalid_prev_hash(client, prev_hash):
 
 
 @with_bad_prevhashes
-def test_invalid_prev_hash_attack(client, prev_hash):
+def test_invalid_prev_hash_attack(client: Client, prev_hash):
     # prepare input with a valid prev-hash
     inp1 = messages.TxInputType(
         address_n=tools.parse_path("m/44h/0h/0h/0/0"),
-        amount=100000000,
-        prev_hash=TXHASH_157041,
+        amount=100_000_000,
+        prev_hash=PREV_HASH,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
     )
     out1 = messages.TxOutputType(
         address="1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1",
-        amount=100000000 - 10000,
+        amount=100_000_000 - 10_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -130,7 +133,7 @@ def test_invalid_prev_hash_attack(client, prev_hash):
 
     with client, pytest.raises(TrezorFailure) as e:
         client.set_filter(messages.TxAck, attack_filter)
-        btc.sign_tx(client, "Bitcoin", [inp1], [out1], prev_txes=TxCache("Bitcoin"))
+        btc.sign_tx(client, "Bitcoin", [inp1], [out1], prev_txes=PREV_TXES)
 
     # check that injection was performed
     assert counter == 0
@@ -138,9 +141,8 @@ def test_invalid_prev_hash_attack(client, prev_hash):
 
 
 @with_bad_prevhashes
-def test_invalid_prev_hash_in_prevtx(client, prev_hash):
-    cache = TxCache("Bitcoin")
-    prev_tx = cache[TXHASH_157041]
+def test_invalid_prev_hash_in_prevtx(client: Client, prev_hash):
+    prev_tx = copy(PREV_TX)
 
     # smoke check: replace prev_hash with all zeros, reserialize and hash, try to sign
     prev_tx.inputs[0].prev_hash = b"\x00" * 32
@@ -148,13 +150,13 @@ def test_invalid_prev_hash_in_prevtx(client, prev_hash):
 
     inp0 = messages.TxInputType(
         address_n=tools.parse_path("m/44h/0h/0h/0/0"),
-        amount=100000000,
+        amount=100_000_000,
         prev_hash=tx_hash,
         prev_index=0,
     )
     out1 = messages.TxOutputType(
         address="1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1",
-        amount=99000000,
+        amount=99_000_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     btc.sign_tx(client, "Bitcoin", [inp0], [out1], prev_txes={tx_hash: prev_tx})

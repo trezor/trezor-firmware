@@ -27,4 +27,4 @@ fi
 echo "Will be running with ${EMU_VERSION} emulator"
 
 # Using -d flag to disable docker, as tenv is already running on the background
-nix-shell --run "yarn && tests/run.sh -d -f ${EMU_VERSION}"
+nix-shell --run "yarn && tests/run.sh -d -f ${EMU_VERSION} -s 'yarn test:integration methods'"

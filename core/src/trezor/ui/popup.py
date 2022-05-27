@@ -16,6 +16,6 @@ class Popup(ui.Layout):
     def create_tasks(self) -> tuple[loop.Task, ...]:
         return self.handle_input(), self.handle_rendering(), self.handle_timeout()
 
-    def handle_timeout(self) -> loop.Task:  # type: ignore
+    def handle_timeout(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
         yield loop.sleep(self.time_ms)
         raise ui.Result(None)

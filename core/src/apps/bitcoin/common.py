@@ -1,4 +1,5 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor import wire
 from trezor.crypto import bech32, bip32, der
@@ -7,13 +8,12 @@ from trezor.crypto.hashlib import sha256
 from trezor.enums import InputScriptType, OutputScriptType
 from trezor.utils import HashWriter, ensure
 
-if False:
+if TYPE_CHECKING:
     from enum import IntEnum
-    from typing import Tuple
     from apps.common.coininfo import CoinInfo
     from trezor.messages import TxInput
 else:
-    IntEnum = object  # type: ignore
+    IntEnum = object
 
 
 BITCOIN_NAMES = ("Bitcoin", "Regtest", "Testnet")
@@ -127,12 +127,16 @@ def encode_bech32_address(prefix: str, witver: int, script: bytes) -> str:
     return address
 
 
-def decode_bech32_address(prefix: str, address: str) -> Tuple[int, bytes]:
+def decode_bech32_address(prefix: str, address: str) -> tuple[int, bytes]:
     witver, raw = bech32.decode(prefix, address)
     if witver not in _BECH32_WITVERS:
-        raise wire.ProcessError("Invalid address witness program")
+        raise wire.DataError("Invalid address witness program")
+    assert witver is not None
     assert raw is not None
-    return witver, bytes(raw)
+    # check that P2TR address encodes a valid BIP340 public key
+    if witver == 1 and not bip340.verify_publickey(raw):
+        raise wire.DataError("Invalid Taproot witness program")
+    return witver, raw
 
 
 def input_is_segwit(txi: TxInput) -> bool:
@@ -155,6 +159,15 @@ def input_is_taproot(txi: TxInput) -> bool:
 
 def input_is_external(txi: TxInput) -> bool:
     return txi.script_type == InputScriptType.EXTERNAL
+
+
+def input_is_external_unverified(txi: TxInput) -> bool:
+    return (
+        txi.script_type == InputScriptType.EXTERNAL
+        and txi.ownership_proof is None
+        and txi.witness is None
+        and txi.script_sig is None
+    )
 
 
 def tagged_hashwriter(tag: bytes) -> HashWriter:

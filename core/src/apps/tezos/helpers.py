@@ -1,4 +1,5 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor import wire
 from trezor.crypto import base58
@@ -6,6 +7,10 @@ from trezor.utils import BufferReader, ensure
 
 from apps.common.readers import read_uint32_be
 from apps.common.writers import write_bytes_unchecked, write_uint8
+
+if TYPE_CHECKING:
+    from trezor.utils import Writer
+
 
 TEZOS_AMOUNT_DECIMALS = const(6)
 TEZOS_ED25519_ADDRESS_PREFIX = "tz1"
@@ -82,28 +87,28 @@ OP_TAG_DELEGATION = const(110)
 EP_TAG_NAMED = const(255)
 
 
-def base58_encode_check(payload, prefix=None):
+def base58_encode_check(payload: bytes, prefix: str | None = None) -> str:
     result = payload
     if prefix is not None:
         result = TEZOS_PREFIX_BYTES[prefix] + payload
     return base58.encode_check(result)
 
 
-def base58_decode_check(enc, prefix=None):
+def base58_decode_check(enc: str, prefix: str | None = None) -> bytes:
     decoded = base58.decode_check(enc)
     if prefix is not None:
         decoded = decoded[len(TEZOS_PREFIX_BYTES[prefix]) :]
     return decoded
 
 
-def write_bool(w: bytearray, boolean: bool):
+def write_bool(w: Writer, boolean: bool) -> None:
     if boolean:
         write_uint8(w, 255)
     else:
         write_uint8(w, 0)
 
 
-def write_instruction(w: bytearray, instruction: str) -> int:
+def write_instruction(w: Writer, instruction: str) -> None:
     write_bytes_unchecked(w, MICHELSON_INSTRUCTION_BYTES[instruction])
 
 

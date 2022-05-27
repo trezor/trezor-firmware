@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from storage import cache, device
 from trezor import utils, wire
 from trezor.crypto import bip32, hmac
@@ -5,7 +7,7 @@ from trezor.crypto import bip32, hmac
 from . import mnemonic
 from .passphrase import get as get_passphrase
 
-if False:
+if TYPE_CHECKING:
     from .paths import Bip32Path, Slip21Path
 
 
@@ -74,7 +76,6 @@ if not utils.BITCOIN_ONLY:
         common_seed = cache.get(cache.APP_COMMON_SEED)
         assert common_seed is not None
         return common_seed
-
 
 else:
     # === Bitcoin-only variant ===

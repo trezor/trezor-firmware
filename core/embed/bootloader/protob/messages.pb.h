@@ -61,7 +61,6 @@ typedef struct _Failure {
 } Failure;
 
 typedef PB_BYTES_ARRAY_T(20) Features_revision_t;
-typedef PB_BYTES_ARRAY_T(32) Features_fw_vendor_keys_t;
 typedef struct _Features {
     bool has_vendor;
     char vendor[33];
@@ -92,8 +91,6 @@ typedef struct _Features {
     uint32_t fw_patch;
     bool has_fw_vendor;
     char fw_vendor[256];
-    bool has_fw_vendor_keys;
-    Features_fw_vendor_keys_t fw_vendor_keys;
 } Features;
 
 typedef struct _FirmwareErase {
@@ -147,7 +144,7 @@ extern "C" {
 /* Initializer values for message structs */
 #define Initialize_init_default                  {0}
 #define GetFeatures_init_default                 {0}
-#define Features_init_default                    {false, "", 0, 0, 0, false, 0, false, "", false, "", false, "", false, 0, false, {0, {0}}, false, 0, false, "", false, 0, false, 0, false, 0, false, "", false, {0, {0}}}
+#define Features_init_default                    {false, "", 0, 0, 0, false, 0, false, "", false, "", false, "", false, 0, false, {0, {0}}, false, 0, false, "", false, 0, false, 0, false, 0, false, ""}
 #define Ping_init_default                        {false, ""}
 #define Success_init_default                     {false, ""}
 #define Failure_init_default                     {false, _FailureType_MIN, false, ""}
@@ -158,7 +155,7 @@ extern "C" {
 #define FirmwareUpload_init_default              {{{NULL}, NULL}, false, {0, {0}}}
 #define Initialize_init_zero                     {0}
 #define GetFeatures_init_zero                    {0}
-#define Features_init_zero                       {false, "", 0, 0, 0, false, 0, false, "", false, "", false, "", false, 0, false, {0, {0}}, false, 0, false, "", false, 0, false, 0, false, 0, false, "", false, {0, {0}}}
+#define Features_init_zero                       {false, "", 0, 0, 0, false, 0, false, "", false, "", false, "", false, 0, false, {0, {0}}, false, 0, false, "", false, 0, false, 0, false, 0, false, ""}
 #define Ping_init_zero                           {false, ""}
 #define Success_init_zero                        {false, ""}
 #define Failure_init_zero                        {false, _FailureType_MIN, false, ""}
@@ -188,7 +185,6 @@ extern "C" {
 #define Features_fw_minor_tag                    23
 #define Features_fw_patch_tag                    24
 #define Features_fw_vendor_tag                   25
-#define Features_fw_vendor_keys_tag              26
 #define FirmwareErase_length_tag                 1
 #define FirmwareRequest_offset_tag               1
 #define FirmwareRequest_length_tag               2
@@ -224,8 +220,7 @@ X(a, STATIC,   OPTIONAL, STRING,   model,            21) \
 X(a, STATIC,   OPTIONAL, UINT32,   fw_major,         22) \
 X(a, STATIC,   OPTIONAL, UINT32,   fw_minor,         23) \
 X(a, STATIC,   OPTIONAL, UINT32,   fw_patch,         24) \
-X(a, STATIC,   OPTIONAL, STRING,   fw_vendor,        25) \
-X(a, STATIC,   OPTIONAL, BYTES,    fw_vendor_keys,   26)
+X(a, STATIC,   OPTIONAL, STRING,   fw_vendor,        25)
 #define Features_CALLBACK NULL
 #define Features_DEFAULT NULL
 
@@ -302,7 +297,7 @@ extern const pb_msgdesc_t FirmwareUpload_msg;
 #define ButtonAck_size                           0
 #define ButtonRequest_size                       2
 #define Failure_size                             260
-#define Features_size                            493
+#define Features_size                            458
 #define FirmwareErase_size                       6
 #define FirmwareRequest_size                     12
 #define GetFeatures_size                         0

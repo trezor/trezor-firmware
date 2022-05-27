@@ -17,12 +17,13 @@
 import pytest
 
 from trezorlib import device, exceptions, messages
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 from ... import buttons
 from ...common import MNEMONIC12
 
 
-def do_recover_legacy(client, mnemonic, **kwargs):
+def do_recover_legacy(client: Client, mnemonic, **kwargs):
     def input_callback(_):
         word, pos = client.debug.read_recovery_word()
         if pos != 0:
@@ -45,7 +46,7 @@ def do_recover_legacy(client, mnemonic, **kwargs):
     return ret
 
 
-def do_recover_core(client, mnemonic, **kwargs):
+def do_recover_core(client: Client, mnemonic, **kwargs):
     def input_flow():
         yield
         layout = client.debug.wait_layout()
@@ -86,7 +87,7 @@ def do_recover_core(client, mnemonic, **kwargs):
         return device.recover(client, dry_run=True, **kwargs)
 
 
-def do_recover(client, mnemonic):
+def do_recover(client: Client, mnemonic):
     if client.features.model == "1":
         return do_recover_legacy(client, mnemonic)
     else:
@@ -94,13 +95,13 @@ def do_recover(client, mnemonic):
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_dry_run(client):
+def test_dry_run(client: Client):
     ret = do_recover(client, MNEMONIC12.split(" "))
     assert isinstance(ret, messages.Success)
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_seed_mismatch(client):
+def test_seed_mismatch(client: Client):
     with pytest.raises(
         exceptions.TrezorFailure, match="does not match the one in the device"
     ):
@@ -108,13 +109,13 @@ def test_seed_mismatch(client):
 
 
 @pytest.mark.skip_t2
-def test_invalid_seed_t1(client):
+def test_invalid_seed_t1(client: Client):
     with pytest.raises(exceptions.TrezorFailure, match="Invalid seed"):
         do_recover(client, ["stick"] * 12)
 
 
 @pytest.mark.skip_t1
-def test_invalid_seed_core(client):
+def test_invalid_seed_core(client: Client):
     def input_flow():
         yield
         layout = client.debug.wait_layout()
@@ -168,7 +169,7 @@ def test_invalid_seed_core(client):
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_uninitialized(client):
+def test_uninitialized(client: Client):
     with pytest.raises(exceptions.TrezorFailure, match="not initialized"):
         do_recover(client, ["all"] * 12)
 
@@ -197,7 +198,7 @@ def _make_bad_params():
 
 
 @pytest.mark.parametrize("field_name, field_value", _make_bad_params())
-def test_bad_parameters(client, field_name, field_value):
+def test_bad_parameters(client: Client, field_name, field_value):
     msg = messages.RecoveryDevice(
         dry_run=True,
         word_count=12,

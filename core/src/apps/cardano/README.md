@@ -18,6 +18,8 @@ REVIEWER = Jan Matejek <jan.matejek@satoshilabs.com>, Tomas Susanka <tomas.susan
 
 [Multi Asset CDDL spec](https://github.com/input-output-hk/cardano-ledger-specs/blob/097890495cbb0e8b62106bcd090a5721c3f4b36f/shelley-ma/shelley-ma-test/cddl-files/shelley-ma.cddl).
 
+[Plutus CDDL spec](https://github.com/input-output-hk/cardano-ledger/blob/9c3b4737b13b30f71529e76c5330f403165e28a6/eras/alonzo/test-suite/cddl-files/alonzo.cddl).
+
 [Byron address format](https://github.com/input-output-hk/cardano-wallet/wiki/About-Address-Format---Byron).
 
 [The Shelley 1852' purpose and staking path](https://github.com/input-output-hk/implementation-decisions/blob/e2d1bed5e617f0907bc5e12cf1c3f3302a4a7c42/text/1852-hd-chimeric.md).
@@ -85,6 +87,8 @@ _Current mainnet protocol magic:_ 764824073
 
 _Current mainnet network id:_ 1
 
+Since Alonzo era, network id may be included as an item in the transaction body.
+
 ## Key types
 
 In Shelley two types of keys are used. Payment key and staking key. Payment keys are derived from _m/1852'/1815'/x/[0,1]/y_ paths and are used for holding/transferring funds. Staking keys are derived from _m/1852'/1815'/x/2/0_ paths, thus there is only one staking key per account. They are used for staking operations - certificates, withdrawals. Shelley addresses are built from the combination of hashes of these keys.
@@ -111,7 +115,7 @@ Testnet: `2657WMsDfac7BteXkJq5Jzdog4h47fPbkwUM49isuWbYAr2cFRHa3rURP236h9PBe`
 
 #### Credentials
 
-Shelley addresses are built using credentials - `payment_credential` and `staking_credential`. These credentials can either be key hashes or script IDs (hashes). The type of the address (and thus also its header) changes based on which credentials are used. Addresses with key hashes usually represent accounts owned by single users. Addresses with scripts either represent multi-sig (shared) accounts derived from native scripts or they represent Plutus scripts directly.
+Shelley addresses are built using credentials - `payment_credential` and `staking_credential`. These credentials can either be key hashes or script IDs (hashes). The type of the address (and thus also its header) changes based on which credentials are used. Addresses with key hashes usually represent accounts owned by single users. Addresses with scripts either represent multi-sig (shared) accounts derived from native scripts or they represent Plutus scripts directly (note that these two cases cannot be distinguished from each other based only on the script hash itself).
 
 #### Base address
 
@@ -180,7 +184,7 @@ For security and in some cases UX purposes we use transaction signing mode so th
 
 #### Ordinary transaction
 
-An ordinary transaction cannot contain a pool registration certificate. Also multi-sig (1854') witnesses can't be requested.
+An ordinary transaction cannot contain a pool registration certificate or items related to Plutus script evaluation (collateral inputs and required signers). Also multi-sig (1854') witnesses can't be requested.
 
 #### Pool registration as owner
 
@@ -189,6 +193,7 @@ When signing a pool registration transaction as an owner, the transaction cannot
 - other certificates
 - withdrawals
 - token minting
+- items related to Plutus script evaluation (collateral inputs and required signers)
 
 Including inputs with a path would cause the transaction to be signed by such a path without letting the user know. Of course, we could let the user know that the transaction is being signed by the user's payment key, however, a pool owner should never be the one paying for the pool registration anyways so such a witness request doesn't make sense.
 
@@ -196,7 +201,11 @@ Just like a pool registration certificate, other certificates and withdrawals ar
 
 #### Multi-sig transaction
 
-Represents a multi-sig transaction using native scripts. Script credentials must be used in certificates and withdrawals when signing a multi-sig transaction. Ordinary (1852') witness requests are not allowed and all the witness requests are shown. Transaction cannot contain a pool registration certificate.
+Represents a multi-sig transaction using native scripts. Script credentials must be used in certificates and withdrawals when signing a multi-sig transaction. Ordinary (1852') witness requests are not allowed and all the witness requests are shown. Transaction cannot contain a pool registration certificate or items related to Plutus script evaluation (collateral inputs and required signers).
+
+#### Plutus transaction
+
+The signing mode intended for transactions containing Plutus script evaluation. Plutus scripts may access all transaction items and make decisions based on them, therefore all items must be shown to the user. Since Plutus scripts may have many unforseen use cases, we put no further limitations on transactions (except forbidding pool registration certificates). Stake credentials in certificates and withdrawals may be given as key paths, key hashes or script hashes.
 
 ### Single account model
 
@@ -286,22 +295,30 @@ Native scripts are used to describe the multi-sig scheme belonging to a script a
 
 In order for the user to be able to verify native scripts a `get_native_script_hash` is available on Trezor. This enables the user to verify the contents and the final hash of the script.
 
-#### Transaction Explorer
+### Plutus scripts
 
-[Cardano explorer](https://explorer.cardano.org/en.html).
+_Plutus script support has been added in the Cardano Alonzo era_
 
-#### Submitting a transaction
+When creating a UTXO with a script address (in any signing mode), it may also contain `datum_hash` which usually provides additional UTXO-related data to the script.
+
+When one wants to spend funds from the Plutus script address (which is possible only in the Plutus signing mode), they have to attach the Plutus script as well as the datum referenced in the UTXO and a corresponding redeemer. These items are outside the transaction body which is signed by Trezor, so their hash is included in transaction body as `script_data_hash`.
+
+### Transaction Explorer
+
+[Cardano explorer](https://explorer.cardano.org/en.html), [Cardanoscan](https://cardanoscan.io/).
+
+### Submitting a transaction
 
 You can use a combination of [cardano-node](https://github.com/input-output-hk/cardano-node) and cardano-cli (part of the cardano-node repo) to submit a transaction.
 
 ## Serialization format
-Cardano uses [CBOR](https://www.rfc-editor.org/info/rfc7049) as a serialization format. [Here](https://github.com/input-output-hk/cardano-ledger-specs/blob/097890495cbb0e8b62106bcd090a5721c3f4b36f/shelley-ma/shelley-ma-test/cddl-files/shelley-ma.cddl) is the [CDDL](https://tools.ietf.org/html/rfc8610) specification for after Multi Asset support has been added.
+Cardano uses [CBOR](https://www.rfc-editor.org/info/rfc7049) as a serialization format. [Here](https://github.com/input-output-hk/cardano-ledger/blob/9c3b4737b13b30f71529e76c5330f403165e28a6/eras/alonzo/test-suite/cddl-files/alonzo.cddl) is the [CDDL](https://tools.ietf.org/html/rfc8610) specification for after Plutus script support has been added.
 
 #### Transaction body example
-Input for trezorctl to sign the transaction can be found [here](https://gist.github.com/gabrielKerekes/ad6c168b12ebb43b082df5b92d67e276).
+Input for trezorctl to sign the transaction can be found [here](https://gist.github.com/gabrielKerekes/ad6c168b12ebb43b082df5b92d67e276). The command to use is `trezorctl cardano sign-tx -f tx_for_readme.json -s ORDINARY_TRANSACTION`.
 
 ```
-a900818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b700018282583901eb0baa5e570cffbe2934db29df0b6a3d7c0430ee65d4c3a7ab2fefb91bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff821904d2a1581c95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39a14874652474436f696e1910e18258390180f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b427719115c02182a030a048182008200581c122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b427705a1581de1122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b42771903e8075820a943e9166f1bb6d767b175384d3bd7d23645170df36fc1861fbf344135d8e120081409a1581c95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39a24874652474436f696e1a007838624875652474436f696e3a00783861
+a900818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b700018382583901eb0baa5e570cffbe2934db29df0b6a3d7c0430ee65d4c3a7ab2fefb91bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff821904d2a1581c95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39a14874652474436f696e1910e18258390180f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b427719115c83581d71477e52b3116b62fe8cd34a312615f5fcd678c94e1d6cdb86c1a3964c190c4658203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b702182a030a048182008200581c122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b427705a1581de1122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b42771903e8075820a943e9166f1bb6d767b175384d3bd7d23645170df36fc1861fbf344135d8e120081409a1581c95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39a24874652474436f696e1a007838624875652474436f696e3a00783861
 ```
 
 #### The same transaction body with structure description
@@ -313,8 +330,8 @@ a900818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b70001
   # uint(0), array(1), array(2), bytes(32), uint(0)
   0: [[h'3B4...', 0]],
 
-  # outputs [address, [ada_amount, { policy_id => { asset_name => asset_amount }}]]
-  # uint(1), array(2)
+  # outputs [address, [ada_amount, { policy_id => { asset_name => asset_amount }}], datum_hash?]
+  # uint(1), array(3)
   1: [
     # multi asset output
     # array(2), bytes(57), uint(1234), map(1), bytes(28), map(1), bytes(8), uint(4321)
@@ -330,6 +347,9 @@ a900818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b70001
     # output containing only ADA [address, ada_amount]
     # array(2), bytes(57), uint(4444)
     [h'018...', 4444],
+    # output with datum_hash [address, ada_amount, datum_hash]
+    # array(3), bytes(29), uint(3142), bytes(32)
+    [h'714...', 3142, h'3b4...'],
   ]
 
   # fee

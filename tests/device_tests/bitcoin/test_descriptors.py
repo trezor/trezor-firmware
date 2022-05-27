@@ -18,6 +18,7 @@ import pytest
 
 from trezorlib import messages
 from trezorlib.cli import btc
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 VECTORS_DESCRIPTORS = (  # coin, account, script_type, descriptors
     (
@@ -120,6 +121,6 @@ VECTORS_DESCRIPTORS = (  # coin, account, script_type, descriptors
 
 
 @pytest.mark.parametrize("coin, account, script_type, descriptors", VECTORS_DESCRIPTORS)
-def test_descriptors(client, coin, account, script_type, descriptors):
+def test_descriptors(client: Client, coin, account, script_type, descriptors):
     res = btc._get_descriptor(client, coin, account, script_type, show_display=True)
     assert res == descriptors

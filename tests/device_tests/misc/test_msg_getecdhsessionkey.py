@@ -17,12 +17,13 @@
 import pytest
 
 from trezorlib import messages, misc
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 from ...common import MNEMONIC12
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_ecdh(client):
+def test_ecdh(client: Client):
     identity = messages.IdentityType(
         proto="gpg",
         user="",

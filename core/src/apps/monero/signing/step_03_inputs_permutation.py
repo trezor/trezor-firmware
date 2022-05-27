@@ -16,11 +16,13 @@ HMAC correctness (host sends original sort idx) and ordering check
 on the key images. This step is skipped.
 """
 
+from typing import TYPE_CHECKING
+
 from apps.monero.layout import transaction_step
 
 from .state import State
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import MoneroTransactionInputsPermutationAck
 
 

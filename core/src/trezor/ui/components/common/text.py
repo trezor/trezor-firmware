@@ -1,4 +1,5 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor import ui
 
@@ -15,10 +16,10 @@ from ...constants import (
 LINE_WIDTH = ui.WIDTH - TEXT_MARGIN_LEFT
 LINE_WIDTH_PAGINATED = LINE_WIDTH - PAGINATION_MARGIN_RIGHT
 
-if False:
-    from typing import Any, Sequence, Union
+if TYPE_CHECKING:
+    from typing import Any, Sequence
 
-    TextContent = Union[str, int]
+    TextContent = str | int
 
 # needs to be different from all colors and font ids
 BR = const(-256)
@@ -341,7 +342,7 @@ if __debug__:
             return getattr(self.orig_display, key)
 
         def __enter__(self) -> None:
-            ui.display = self  # type: ignore
+            ui.display = self
 
         def __exit__(self, exc: Any, exc_type: Any, tb: Any) -> None:
             ui.display = self.orig_display

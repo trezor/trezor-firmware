@@ -38,6 +38,8 @@ main
 import main
 session
 import session
+typing
+import typing
 usb
 import usb
 storage
@@ -92,6 +94,8 @@ trezor.enums.ButtonRequestType
 import trezor.enums.ButtonRequestType
 trezor.enums.Capability
 import trezor.enums.Capability
+trezor.enums.DebugButton
+import trezor.enums.DebugButton
 trezor.enums.DebugSwipeDirection
 import trezor.enums.DebugSwipeDirection
 trezor.enums.DecredStakingSpendType
@@ -188,8 +192,14 @@ trezor.ui.container
 import trezor.ui.container
 trezor.ui.layouts
 import trezor.ui.layouts
+trezor.ui.layouts.altcoin
+import trezor.ui.layouts.altcoin
 trezor.ui.layouts.common
 import trezor.ui.layouts.common
+trezor.ui.layouts.recovery
+import trezor.ui.layouts.recovery
+trezor.ui.layouts.reset
+import trezor.ui.layouts.reset
 trezor.ui.layouts.t1
 import trezor.ui.layouts.t1
 trezor.ui.layouts.tt
@@ -200,6 +210,14 @@ trezor.ui.layouts.tt.recovery
 import trezor.ui.layouts.tt.recovery
 trezor.ui.layouts.tt.reset
 import trezor.ui.layouts.tt.reset
+trezor.ui.layouts.tt_v2
+import trezor.ui.layouts.tt_v2
+trezor.ui.layouts.tt_v2.altcoin
+import trezor.ui.layouts.tt_v2.altcoin
+trezor.ui.layouts.tt_v2.recovery
+import trezor.ui.layouts.tt_v2.recovery
+trezor.ui.layouts.tt_v2.reset
+import trezor.ui.layouts.tt_v2.reset
 trezor.ui.loader
 import trezor.ui.loader
 trezor.ui.popup
@@ -272,6 +290,8 @@ apps.bitcoin.sign_tx.matchcheck
 import apps.bitcoin.sign_tx.matchcheck
 apps.bitcoin.sign_tx.omni
 import apps.bitcoin.sign_tx.omni
+apps.bitcoin.sign_tx.payment_request
+import apps.bitcoin.sign_tx.payment_request
 apps.bitcoin.sign_tx.progress
 import apps.bitcoin.sign_tx.progress
 apps.bitcoin.sign_tx.sig_hasher
@@ -288,6 +308,8 @@ apps.bitcoin.writers
 import apps.bitcoin.writers
 apps.common
 import apps.common
+apps.common.address_mac
+import apps.common.address_mac
 apps.common.address_type
 import apps.common.address_type
 apps.common.authorization
@@ -328,8 +350,6 @@ apps.homescreen.homescreen
 import apps.homescreen.homescreen
 apps.homescreen.lockscreen
 import apps.homescreen.lockscreen
-apps.management
-import apps.management
 apps.management.apply_flags
 import apps.management.apply_flags
 apps.management.apply_settings
@@ -344,6 +364,8 @@ apps.management.change_wipe_code
 import apps.management.change_wipe_code
 apps.management.get_next_u2f_counter
 import apps.management.get_next_u2f_counter
+apps.management.get_nonce
+import apps.management.get_nonce
 apps.management.recovery_device
 import apps.management.recovery_device
 apps.management.recovery_device.homescreen
@@ -372,6 +394,10 @@ apps.misc.get_ecdh_session_key
 import apps.misc.get_ecdh_session_key
 apps.misc.get_entropy
 import apps.misc.get_entropy
+apps.misc.get_firmware
+import apps.misc.get_firmware
+apps.misc.get_firmware_hash
+import apps.misc.get_firmware_hash
 apps.misc.sign_identity
 import apps.misc.sign_identity
 apps.workflow_handlers
@@ -428,6 +454,10 @@ if not utils.BITCOIN_ONLY:
     import trezor.ui.components.tt.webauthn
     trezor.ui.layouts.tt.webauthn
     import trezor.ui.layouts.tt.webauthn
+    trezor.ui.layouts.tt_v2.webauthn
+    import trezor.ui.layouts.tt_v2.webauthn
+    trezor.ui.layouts.webauthn
+    import trezor.ui.layouts.webauthn
     apps.binance
     import apps.binance
     apps.binance.get_address
@@ -440,8 +470,8 @@ if not utils.BITCOIN_ONLY:
     import apps.binance.layout
     apps.binance.sign_tx
     import apps.binance.sign_tx
-    apps.bitcoin.sign_tx.zcash
-    import apps.bitcoin.sign_tx.zcash
+    apps.bitcoin.sign_tx.zcash_v4
+    import apps.bitcoin.sign_tx.zcash_v4
     apps.cardano
     import apps.cardano
     apps.cardano.address
@@ -724,6 +754,12 @@ if not utils.BITCOIN_ONLY:
     import apps.webauthn.remove_resident_credential
     apps.webauthn.resident_credentials
     import apps.webauthn.resident_credentials
+    apps.zcash
+    import apps.zcash
+    apps.zcash.hasher
+    import apps.zcash.hasher
+    apps.zcash.signer
+    import apps.zcash.signer
 
 # generate full alphabet
 a

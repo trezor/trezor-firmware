@@ -1,9 +1,7 @@
 from micropython import const
+from typing import Generator
 
 from trezor import io, loop, ui
-
-if False:
-    from typing import Generator
 
 SWIPE_UP = const(0x01)
 SWIPE_DOWN = const(0x02)
@@ -107,9 +105,9 @@ class Swipe(ui.Component):
         raise ui.Result(swipe)
 
     def __await__(self) -> Generator:
-        return self.__iter__()  # type: ignore
+        return self.__iter__()  # type: ignore [Expression of type "Task" cannot be assigned to return type "Generator[Unknown, Unknown, Unknown]"]
 
-    def __iter__(self) -> loop.Task:  # type: ignore
+    def __iter__(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
         try:
             touch = loop.wait(io.TOUCH)
             while True:

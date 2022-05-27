@@ -68,6 +68,7 @@ void layoutConfirmModifyFee(const CoinInfo *coin, AmountUnit amount_unit,
 void layoutFeeOverThreshold(const CoinInfo *coin, AmountUnit amount_unit,
                             uint64_t fee);
 void layoutChangeCountOverThreshold(uint32_t change_count);
+void layoutConfirmUnverifiedExternalInputs(void);
 void layoutConfirmNondefaultLockTime(uint32_t lock_time,
                                      bool lock_time_disabled);
 void layoutVerifyAddress(const CoinInfo *coin, const char *address);

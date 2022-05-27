@@ -18,6 +18,7 @@ import pytest
 
 from trezorlib import btc, device, messages
 from trezorlib.client import MAX_PIN_LENGTH, PASSPHRASE_TEST_PATH
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import Cancelled, TrezorFailure
 
 PIN4 = "1234"
@@ -27,7 +28,7 @@ PIN_MAX = "".join(chr((i % 10) + ord("0")) for i in range(MAX_PIN_LENGTH))
 pytestmark = pytest.mark.skip_t1
 
 
-def _check_pin(client, pin):
+def _check_pin(client: Client, pin):
     client.lock()
     assert client.features.pin_protection is True
     assert client.features.unlocked is False
@@ -38,7 +39,7 @@ def _check_pin(client, pin):
         btc.get_address(client, "Testnet", PASSPHRASE_TEST_PATH)
 
 
-def _check_no_pin(client):
+def _check_no_pin(client: Client):
     client.lock()
     assert client.features.pin_protection is False
 
@@ -47,7 +48,7 @@ def _check_no_pin(client):
         btc.get_address(client, "Testnet", PASSPHRASE_TEST_PATH)
 
 
-def test_set_pin(client):
+def test_set_pin(client: Client):
     assert client.features.pin_protection is False
 
     # Check that there's no PIN protection
@@ -67,7 +68,7 @@ def test_set_pin(client):
 
 
 @pytest.mark.setup_client(pin=PIN4)
-def test_change_pin(client):
+def test_change_pin(client: Client):
     assert client.features.pin_protection is True
 
     # Check current PIN value
@@ -89,7 +90,7 @@ def test_change_pin(client):
 
 
 @pytest.mark.setup_client(pin=PIN4)
-def test_remove_pin(client):
+def test_remove_pin(client: Client):
     assert client.features.pin_protection is True
 
     # Check current PIN value
@@ -109,7 +110,7 @@ def test_remove_pin(client):
     _check_no_pin(client)
 
 
-def test_set_failed(client):
+def test_set_failed(client: Client):
     assert client.features.pin_protection is False
 
     # Check that there's no PIN protection
@@ -141,7 +142,7 @@ def test_set_failed(client):
 
 
 @pytest.mark.setup_client(pin=PIN4)
-def test_change_failed(client):
+def test_change_failed(client: Client):
     assert client.features.pin_protection is True
 
     # Check current PIN value
@@ -175,7 +176,7 @@ def test_change_failed(client):
 
 
 @pytest.mark.setup_client(pin=PIN4)
-def test_change_invalid_current(client):
+def test_change_invalid_current(client: Client):
     assert client.features.pin_protection is True
 
     # Check current PIN value

@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib.cardano import get_public_key
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import CardanoDerivationType as D
 from trezorlib.tools import parse_path
@@ -29,10 +30,10 @@ pytestmark = [
     pytest.mark.skip_t1,
 ]
 
-ADDRESS_N = parse_path("m/1852'/1815'/0'")
+ADDRESS_N = parse_path("m/1852h/1815h/0h")
 
 
-def test_bad_session(client):
+def test_bad_session(client: Client):
     client.init_device(new_session=True)
     with pytest.raises(TrezorFailure, match="not enabled"):
         get_public_key(client, ADDRESS_N, derivation_type=D.ICARUS)
@@ -42,7 +43,7 @@ def test_bad_session(client):
         get_public_key(client, ADDRESS_N, derivation_type=D.ICARUS)
 
 
-def test_ledger_available_always(client):
+def test_ledger_available_always(client: Client):
     client.init_device(new_session=True, derive_cardano=False)
     get_public_key(client, ADDRESS_N, derivation_type=D.LEDGER)
 
@@ -52,7 +53,7 @@ def test_ledger_available_always(client):
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6)
 @pytest.mark.parametrize("derivation_type", D)  # try ALL derivation types
-def test_derivation_irrelevant_on_slip39(client, derivation_type):
+def test_derivation_irrelevant_on_slip39(client: Client, derivation_type):
     client.init_device(new_session=True, derive_cardano=False)
     pubkey = get_public_key(client, ADDRESS_N, derivation_type=D.ICARUS)
     test_pubkey = get_public_key(client, ADDRESS_N, derivation_type=derivation_type)

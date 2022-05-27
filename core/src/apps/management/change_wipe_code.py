@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from storage.device import is_initialized
 from trezor import config, ui, wire
 from trezor.messages import Success
@@ -9,7 +11,7 @@ from apps.common.request_pin import (
     request_pin_and_sd_salt,
 )
 
-if False:
+if TYPE_CHECKING:
     from typing import Awaitable
 
     from trezor.messages import ChangeWipeCode

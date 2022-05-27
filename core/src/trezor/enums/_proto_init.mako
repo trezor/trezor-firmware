@@ -1,8 +1,4 @@
-if False:
-    from typing import TYPE_CHECKING
-else:
-    TYPE_CHECKING = False
-
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from enum import IntEnum

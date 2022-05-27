@@ -4,50 +4,11 @@ cd $(dirname $0)/..
 
 PROTOB=common/protob
 
-CORE_PROTOBUF_SOURCES="\
-    $PROTOB/messages.proto \
-    $PROTOB/messages-binance.proto \
-    $PROTOB/messages-bitcoin.proto \
-    $PROTOB/messages-cardano.proto \
-    $PROTOB/messages-common.proto \
-    $PROTOB/messages-crypto.proto \
-    $PROTOB/messages-debug.proto \
-    $PROTOB/messages-eos.proto \
-    $PROTOB/messages-ethereum.proto \
-    $PROTOB/messages-ethereum-eip712.proto \
-    $PROTOB/messages-management.proto \
-    $PROTOB/messages-monero.proto \
-    $PROTOB/messages-nem.proto \
-    $PROTOB/messages-ripple.proto \
-    $PROTOB/messages-stellar.proto \
-    $PROTOB/messages-tezos.proto \
-    $PROTOB/messages-webauthn.proto \
-"
+# Bootloader messages cannot end up in core
+CORE_PROTOBUF_SOURCES=$(ls $PROTOB/*.proto | grep -v "bootloader")
 
+# Taking all files for python
 PYTHON_PROTOBUF_SOURCES=$PROTOB/*.proto
-
-CORE_MESSAGES_IGNORE="\
-    CosiCommit \
-    CosiCommitment \
-    CosiSign \
-    CosiSignature \
-    DebugLinkFlashErase \
-    DebugLinkLog \
-    DebugLinkMemory \
-    DebugLinkMemoryRead \
-    DebugLinkMemoryWrite \
-    DebugLinkStop \
-    NEMDecryptMessage \
-    NEMDecryptedMessage \
-    PinMatrixAck \
-    PinMatrixRequest \
-    PinMatrixRequestType \
-    WordAck \
-    WordRequest \
-    WordRequestType \
-"
-
-PYTHON_MESSAGES_IGNORE=""
 
 RETURN=0
 

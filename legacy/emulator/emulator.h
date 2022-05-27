@@ -27,7 +27,6 @@
 #include <stddef.h>
 
 void emulatorPoll(void);
-void emulatorRandom(void *buffer, size_t size);
 
 void emulatorSocketInit(void);
 size_t emulatorSocketRead(int *iface, void *buffer, size_t size,

@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages, tools
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 
 VECTORS = (  # path, script_type, address
@@ -39,20 +40,28 @@ VECTORS = (  # path, script_type, address
 
 
 @pytest.mark.parametrize("path, script_type, address", VECTORS)
-def test_show(client, path, script_type, address):
-    assert (
-        btc.get_address(
-            client,
-            "Bitcoin",
-            tools.parse_path(path),
-            script_type=script_type,
-            show_display=True,
+def test_show(client: Client, path, script_type, address):
+    def input_flow():
+        yield
+        client.debug.press_no()
+        yield
+        client.debug.press_yes()
+
+    with client:
+        client.set_input_flow(input_flow)
+        assert (
+            btc.get_address(
+                client,
+                "Bitcoin",
+                tools.parse_path(path),
+                script_type=script_type,
+                show_display=True,
+            )
+            == address
         )
-        == address
-    )
 
 
-def test_show_unrecognized_path(client):
+def test_show_unrecognized_path(client: Client):
     with pytest.raises(TrezorFailure):
         btc.get_address(
             client,
@@ -64,9 +73,9 @@ def test_show_unrecognized_path(client):
 
 
 @pytest.mark.multisig
-def test_show_multisig_3(client):
+def test_show_multisig_3(client: Client):
     node = btc.get_public_node(
-        client, tools.parse_path("45h/0/0"), coin_name="Bitcoin"
+        client, tools.parse_path("m/45h/0/0"), coin_name="Bitcoin"
     ).node
     multisig = messages.MultisigRedeemScriptType(
         pubkeys=[
@@ -83,7 +92,7 @@ def test_show_multisig_3(client):
             btc.get_address(
                 client,
                 "Bitcoin",
-                tools.parse_path(f"45h/0/0/{i}"),
+                tools.parse_path(f"m/45h/0/0/{i}"),
                 show_display=True,
                 multisig=multisig,
                 script_type=messages.InputScriptType.SPENDMULTISIG,
@@ -162,6 +171,8 @@ VECTORS_MULTISIG = (  # script_type, bip48_type, address, xpubs, ignore_xpub_mag
 )
 
 
+# NOTE: contains wait_layout race that manifests on hw sometimes
+@pytest.mark.flaky(max_runs=5)
 @pytest.mark.skip_t1
 @pytest.mark.multisig
 @pytest.mark.parametrize(
@@ -173,7 +184,7 @@ def test_show_multisig_xpubs(
     nodes = [
         btc.get_public_node(
             client,
-            tools.parse_path(f"48h/0h/{i}h/{bip48_type}h"),
+            tools.parse_path(f"m/48h/0h/{i}h/{bip48_type}h"),
             coin_name="Bitcoin",
         )
         for i in range(3)
@@ -235,7 +246,7 @@ def test_show_multisig_xpubs(
             btc.get_address(
                 client,
                 "Bitcoin",
-                tools.parse_path(f"48h/0h/{i}h/{bip48_type}h/0/0"),
+                tools.parse_path(f"m/48h/0h/{i}h/{bip48_type}h/0/0"),
                 show_display=True,
                 multisig=multisig,
                 script_type=script_type,
@@ -244,9 +255,9 @@ def test_show_multisig_xpubs(
 
 
 @pytest.mark.multisig
-def test_show_multisig_15(client):
+def test_show_multisig_15(client: Client):
     node = btc.get_public_node(
-        client, tools.parse_path("45h/0/0"), coin_name="Bitcoin"
+        client, tools.parse_path("m/45h/0/0"), coin_name="Bitcoin"
     ).node
 
     pubs = [messages.HDNodePathType(node=node, address_n=[x]) for x in range(15)]
@@ -260,7 +271,7 @@ def test_show_multisig_15(client):
             btc.get_address(
                 client,
                 "Bitcoin",
-                tools.parse_path(f"45h/0/0/{i}"),
+                tools.parse_path(f"m/45h/0/0/{i}"),
                 show_display=True,
                 multisig=multisig,
                 script_type=messages.InputScriptType.SPENDMULTISIG,
