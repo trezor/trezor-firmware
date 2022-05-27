@@ -623,6 +623,13 @@ python test:
     # https://github.com/NixOS/nixpkgs/pull/98915
     - nix-shell --arg fullDeps true --run "unset _PYTHON_SYSCONFIGDATA_NAME && cd python && poetry run tox | ts -s"
 
+python support test:
+  stage: test
+  <<: *gitlab_caching
+  needs: []
+  script:
+    - nix-shell --run "poetry run make python_support_check | ts -s"
+
 
 # Storage
 

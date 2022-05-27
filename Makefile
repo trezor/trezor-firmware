@@ -92,6 +92,9 @@ ruststyle_check:
 	@echo [RUSTFMT]
 	@cd core/embed/rust ; cargo fmt -- --check
 
+python_support_check:
+	./tests/test_python_support.py
+
 ## code generation commands:
 
 mocks: ## generate mock python headers from C modules
