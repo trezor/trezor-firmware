@@ -7,7 +7,14 @@ import os
 import re
 from collections import OrderedDict, defaultdict
 from pathlib import Path
-from typing import Any, Callable, Iterable, Iterator, Literal, TypedDict, cast
+from typing import Dict  # for python38 support, must be used in type aliases
+from typing import List  # for python38 support, must be used in type aliases
+from typing import Any, Callable, Iterable, Iterator, cast
+
+from typing_extensions import (  # for python37 support, is not present in typing there
+    Literal,
+    TypedDict,
+)
 
 try:
     import requests
@@ -48,10 +55,10 @@ class SupportInfoItem(TypedDict):
     trezor2: Literal[False] | str
 
 
-SupportInfo = dict[str, SupportInfoItem]
+SupportInfo = Dict[str, SupportInfoItem]
 
-WalletItems = dict[str, str]
-WalletInfo = dict[str, WalletItems]
+WalletItems = Dict[str, str]
+WalletInfo = Dict[str, WalletItems]
 
 
 class Coin(TypedDict):
@@ -126,8 +133,8 @@ class Coin(TypedDict):
     bitcore: list[str]
 
 
-Coins = list[Coin]
-CoinBuckets = dict[str, Coins]
+Coins = List[Coin]
+CoinBuckets = Dict[str, Coins]
 
 
 class FidoApp(TypedDict):
@@ -142,7 +149,7 @@ class FidoApp(TypedDict):
     icon: str
 
 
-FidoApps = list[FidoApp]
+FidoApps = List[FidoApp]
 
 
 def load_json(*path: str | Path) -> Any:
@@ -158,7 +165,7 @@ def load_json(*path: str | Path) -> Any:
 # ====== CoinsInfo ======
 
 
-class CoinsInfo(dict[str, Coins]):
+class CoinsInfo(Dict[str, Coins]):
     """Collection of information about all known kinds of coins.
 
     It contains the following lists:

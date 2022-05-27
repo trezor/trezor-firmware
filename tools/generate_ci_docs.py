@@ -16,6 +16,8 @@ Running the script:
 - `python generate_ci_docs.py --check` to check if documentation is up-to-date
 """
 
+from __future__ import annotations
+
 import argparse
 import filecmp
 import os
