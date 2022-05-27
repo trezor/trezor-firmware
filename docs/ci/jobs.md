@@ -141,7 +141,7 @@ Bitcoin-only version.
 ## TEST stage - [test.yml](../../ci/test.yml)
 All the tests run test cases on the freshly built emulators from the previous `BUILD` stage.
 
-Consists of **34 jobs** below:
+Consists of **35 jobs** below:
 
 ### [core unit test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L15)
 Python and rust unit tests, checking TT functionality.
@@ -219,11 +219,13 @@ Persistence tests.
 
 ### [python test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L600)
 
-### [storage test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L629)
+### [python support test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L626)
 
-### [core unix memory profiler](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L653)
+### [storage test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L636)
 
-### [connect test core](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L677)
+### [core unix memory profiler](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L660)
+
+### [connect test core](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L684)
 
 ---
 ## TEST-HW stage - [test-hw.yml](../../ci/test-hw.yml)
