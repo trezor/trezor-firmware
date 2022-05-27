@@ -265,15 +265,24 @@ int main(void) {
 
   display_clear();
 
-  // delay to detect touch
+  // was there reboot with request to stay in bootloader?
+  secbool stay_in_bootloader = secfalse;
+  if (stay_in_bootloader_flag == STAY_IN_BOOTLOADER_FLAG) {
+    stay_in_bootloader = sectrue;
+  }
+
+  // delay to detect touch or skip if we know we are staying in bootloader
+  // anyway
   uint32_t touched = 0;
 #if defined TREZOR_MODEL_T
-  for (int i = 0; i < 100; i++) {
-    touched = touch_is_detected() | touch_read();
-    if (touched) {
-      break;
+  if (stay_in_bootloader != sectrue) {
+    for (int i = 0; i < 100; i++) {
+      touched = touch_is_detected() | touch_read();
+      if (touched) {
+        break;
+      }
+      hal_delay(1);
     }
-    hal_delay(1);
   }
 #elif defined TREZOR_MODEL_R
   button_read();
@@ -284,11 +293,6 @@ int main(void) {
 
   vendor_header vhdr;
   image_header hdr;
-  secbool stay_in_bootloader = secfalse;  // flag to stay in bootloader
-  if (stay_in_bootloader_flag == STAY_IN_BOOTLOADER_FLAG) {
-    stay_in_bootloader = sectrue;
-  }
-
   // detect whether the devices contains a valid firmware
 
   secbool firmware_present =
