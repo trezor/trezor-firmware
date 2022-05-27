@@ -211,6 +211,14 @@ def by_rp_id_hash(rp_id_hash: bytes) -> FIDOApp | None:
             use_sign_count=None,
             use_self_attestation=None,
         )
+    if rp_id_hash == b"\x3f\x37\x50\x85\x33\x2c\xac\x4f\xad\xf9\xe5\xdd\x28\xcd\x54\x69\x8f\xab\x98\x4b\x75\xd9\xc3\x6a\x07\x2c\xb1\x60\x77\x3f\x91\x52":
+        # WebAuthn key for Kraken
+        return FIDOApp(
+            label="kraken.com",
+            icon="apps/webauthn/res/icon_kraken.toif",
+            use_sign_count=None,
+            use_self_attestation=None,
+        )
     if rp_id_hash == b"\xf8\x3f\xc3\xa1\xb2\x89\xa0\xde\xc5\xc1\xc8\xaa\x07\xe9\xb5\xdd\x9c\xbb\x76\xf6\xb2\xf5\x60\x60\x17\x66\x72\x68\xe5\xb9\xc4\x5e":
         # WebAuthn key for login.gov
         return FIDOApp(
