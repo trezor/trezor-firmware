@@ -21,7 +21,9 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-static const char* const wordlist[] = {
+#include "bip39.h"
+
+const char* const BIP39_WORDLIST_ENGLISH[BIP39_WORDS] = {
     "abandon",  "ability",  "able",     "about",    "above",    "absent",
     "absorb",   "abstract", "absurd",   "abuse",    "access",   "accident",
     "account",  "accuse",   "achieve",  "acid",     "acoustic", "acquire",
@@ -363,5 +365,5 @@ static const char* const wordlist[] = {
     "work",     "world",    "worry",    "worth",    "wrap",     "wreck",
     "wrestle",  "wrist",    "write",    "wrong",    "yard",     "year",
     "yellow",   "you",      "young",    "youth",    "zebra",    "zero",
-    "zone",     "zoo",      0,
+    "zone",     "zoo",
 };
