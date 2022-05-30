@@ -1,5 +1,5 @@
 # CLANG_VERSION is empty if the compiler is not clang-based
-CLANG_VERSION = $(shell $(CC) --version | grep -Po "clang version \K[\d\.]+")
+CLANG_VERSION = $(shell $(CC) --version | sed -nr 's/^.*clang version ([0-9.]+).*$$/\1/p')
 CLANG_VERSION_MAJOR = $(shell echo $(CLANG_VERSION) | cut -f1 -d.)
 
 # determine specific version ranges
