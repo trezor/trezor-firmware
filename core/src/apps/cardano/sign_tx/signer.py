@@ -313,7 +313,7 @@ class Signer:
             await layout.warn_tx_output_contains_tokens(self.ctx)
 
         if output.address_parameters is not None:
-            address = addresses.derive_human_readable_address(
+            address = addresses.derive_human_readable(
                 self.keychain,
                 output.address_parameters,
                 self.msg.protocol_magic,
@@ -467,7 +467,7 @@ class Signer:
                     POOL_REGISTRATION_CERTIFICATE_ITEMS_COUNT
                 )
                 with certificates_list.append(pool_items_list):
-                    for item in certificates.cborize_pool_registration_certificate_init(
+                    for item in certificates.cborize_pool_registration_init(
                         certificate
                     ):
                         pool_items_list.append(item)
@@ -493,11 +493,11 @@ class Signer:
                     )
             else:
                 certificates_list.append(
-                    certificates.cborize_certificate(self.keychain, certificate)
+                    certificates.cborize(self.keychain, certificate)
                 )
 
     def _validate_certificate(self, certificate: messages.CardanoTxCertificate) -> None:
-        certificates.validate_certificate(
+        certificates.validate(
             certificate,
             self.msg.protocol_magic,
             self.msg.network_id,
@@ -542,7 +542,7 @@ class Signer:
             if owner.staking_key_path:
                 owners_as_path_count += 1
 
-        certificates.assert_certificate_cond(owners_as_path_count == 1)
+        certificates.assert_cond(owners_as_path_count == 1)
 
     async def _show_pool_owner(self, owner: messages.CardanoPoolOwner) -> None:
         if owner.staking_key_path:
@@ -603,15 +603,15 @@ class Signer:
         data: messages.CardanoTxAuxiliaryData = await self.ctx.call(
             messages.CardanoTxItemAck(), messages.CardanoTxAuxiliaryData
         )
-        auxiliary_data.validate_auxiliary_data(data)
+        auxiliary_data.validate(data)
 
         (
             auxiliary_data_hash,
             auxiliary_data_supplement,
-        ) = auxiliary_data.get_auxiliary_data_hash_and_supplement(
+        ) = auxiliary_data.get_hash_and_supplement(
             self.keychain, data, self.msg.protocol_magic, self.msg.network_id
         )
-        await auxiliary_data.show_auxiliary_data(
+        await auxiliary_data.show(
             self.ctx,
             self.keychain,
             auxiliary_data_hash,
@@ -790,7 +790,7 @@ class Signer:
 
     def _get_output_address(self, output: messages.CardanoTxOutput) -> bytes:
         if output.address_parameters:
-            return addresses.derive_address_bytes(
+            return addresses.derive_bytes(
                 self.keychain,
                 output.address_parameters,
                 self.msg.protocol_magic,
@@ -798,7 +798,7 @@ class Signer:
             )
         else:
             assert output.address is not None  # _validate_output
-            return addresses.get_address_bytes_unsafe(output.address)
+            return addresses.get_bytes_unsafe(output.address)
 
     def _get_output_address_type(
         self, output: messages.CardanoTxOutput
@@ -806,9 +806,7 @@ class Signer:
         if output.address_parameters:
             return output.address_parameters.address_type
         assert output.address is not None  # _validate_output
-        return addresses.get_address_type(
-            addresses.get_address_bytes_unsafe(output.address)
-        )
+        return addresses.get_type(addresses.get_bytes_unsafe(output.address))
 
     def _derive_withdrawal_address_bytes(
         self, withdrawal: messages.CardanoTxWithdrawal
@@ -818,7 +816,7 @@ class Signer:
             if withdrawal.path or withdrawal.key_hash
             else CardanoAddressType.REWARD_SCRIPT
         )
-        return addresses.derive_address_bytes(
+        return addresses.derive_bytes(
             self.keychain,
             messages.CardanoAddressParametersType(
                 address_type=reward_address_type,

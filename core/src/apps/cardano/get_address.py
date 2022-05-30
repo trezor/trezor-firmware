@@ -14,7 +14,7 @@ async def get_address(
     addresses.validate_address_parameters(msg.address_parameters)
 
     try:
-        address = addresses.derive_human_readable_address(
+        address = addresses.derive_human_readable(
             keychain, msg.address_parameters, msg.protocol_magic, msg.network_id
         )
     except ValueError as e:
