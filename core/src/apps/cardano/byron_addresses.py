@@ -22,15 +22,13 @@ with base58 encoding and all the nuances of Byron addresses.
 """
 
 
-def _encode_address_raw(address_data_encoded: bytes) -> bytes:
+def _encode_raw(address_data_encoded: bytes) -> bytes:
     return cbor.encode(
         [cbor.Tagged(24, address_data_encoded), crc.crc32(address_data_encoded)]
     )
 
 
-def derive_byron_address(
-    keychain: seed.Keychain, path: list, protocol_magic: int
-) -> bytes:
+def derive(keychain: seed.Keychain, path: list, protocol_magic: int) -> bytes:
     address_attributes = get_address_attributes(protocol_magic)
 
     address_root = _get_address_root(keychain, path, address_attributes)
@@ -38,7 +36,7 @@ def derive_byron_address(
     address_data = [address_root, address_attributes, address_type]
     address_data_encoded = cbor.encode(address_data)
 
-    return _encode_address_raw(address_data_encoded)
+    return _encode_raw(address_data_encoded)
 
 
 def get_address_attributes(protocol_magic: int) -> dict:
@@ -51,12 +49,12 @@ def get_address_attributes(protocol_magic: int) -> dict:
     return address_attributes
 
 
-def validate_byron_address(address: bytes, protocol_magic: int) -> None:
-    address_data_encoded = _decode_address_raw(address)
-    _validate_address_data_protocol_magic(address_data_encoded, protocol_magic)
+def validate(address: bytes, protocol_magic: int) -> None:
+    address_data_encoded = _decode_raw(address)
+    _validate_protocol_magic(address_data_encoded, protocol_magic)
 
 
-def _decode_address_raw(address: bytes) -> bytes:
+def _decode_raw(address: bytes) -> bytes:
     try:
         address_unpacked = cbor.decode(address)
     except ValueError as e:
@@ -81,9 +79,7 @@ def _decode_address_raw(address: bytes) -> bytes:
     return address_data_encoded
 
 
-def _validate_address_data_protocol_magic(
-    address_data_encoded: bytes, protocol_magic: int
-) -> None:
+def _validate_protocol_magic(address_data_encoded: bytes, protocol_magic: int) -> None:
     """
     Determines whether the correct protocol magic (or none)
     is included in the address. Addresses on mainnet don't

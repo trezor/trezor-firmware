@@ -543,7 +543,7 @@ async def confirm_stake_pool_owner(
         props.append(("Pool owner:", address_n_to_str(owner.staking_key_path)))
         props.append(
             (
-                addresses.derive_human_readable_address(
+                addresses.derive_human_readable(
                     keychain,
                     messages.CardanoAddressParametersType(
                         address_type=CardanoAddressType.REWARD,
@@ -560,7 +560,7 @@ async def confirm_stake_pool_owner(
         props.append(
             (
                 "Pool owner:",
-                addresses.derive_human_readable_address(
+                addresses.derive_human_readable(
                     keychain,
                     messages.CardanoAddressParametersType(
                         address_type=CardanoAddressType.REWARD,
@@ -635,7 +635,7 @@ async def confirm_withdrawal(
     network_id: int,
 ) -> None:
     address_type_name = "script reward" if withdrawal.script_hash else "reward"
-    address = addresses.encode_human_readable_address(address_bytes)
+    address = addresses.encode_human_readable(address_bytes)
     props: list[PropertyType] = [
         (f"Confirm withdrawal for {address_type_name} address:", address),
     ]
