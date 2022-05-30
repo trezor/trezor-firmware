@@ -5,7 +5,7 @@ from trezor.enums import CardanoCertificateType, CardanoPoolRelayType
 
 from apps.common import cbor
 
-from .address import get_address_bytes_unsafe, validate_reward_address
+from . import addresses
 from .helpers import ADDRESS_KEY_HASH_SIZE, LOVELACE_MAX_SUPPLY
 from .helpers.paths import SCHEMA_STAKING_ANY_ACCOUNT
 from .helpers.utils import get_public_key_hash, validate_stake_credential
@@ -155,7 +155,7 @@ def cborize_pool_registration_certificate_init(
         ),
         # this relies on pool_parameters.reward_account being validated beforehand
         # in _validate_pool_parameters
-        get_address_bytes_unsafe(pool_parameters.reward_account),
+        addresses.get_address_bytes_unsafe(pool_parameters.reward_account),
     )
 
 
@@ -180,7 +180,9 @@ def _validate_pool_parameters(
     )
     assert_certificate_cond(pool_parameters.owners_count > 0)
 
-    validate_reward_address(pool_parameters.reward_account, protocol_magic, network_id)
+    addresses.validate_reward_address(
+        pool_parameters.reward_account, protocol_magic, network_id
+    )
 
     if pool_parameters.metadata:
         _validate_pool_metadata(pool_parameters.metadata)

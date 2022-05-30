@@ -6,7 +6,7 @@ from trezor.messages import CardanoTxCertificate, CardanoPoolParametersType
 from apps.common.paths import HARDENED
 
 if not utils.BITCOIN_ONLY:
-    from apps.cardano.certificates import validate_certificate
+    from apps.cardano import certificates
     from apps.cardano.helpers import protocol_magics, network_ids
     from apps.cardano.helpers.account_path_check import AccountPathChecker
 
@@ -344,7 +344,7 @@ class TestCardanoCertificate(unittest.TestCase):
         ]
 
         for certificate in valid_test_vectors:
-            validate_certificate(
+            certificates.validate(
                 certificate,
                 protocol_magics.MAINNET,
                 network_ids.MAINNET,
@@ -353,7 +353,7 @@ class TestCardanoCertificate(unittest.TestCase):
 
         for certificate in invalid_test_vectors:
             with self.assertRaises(wire.ProcessError):
-                validate_certificate(
+                certificates.validate(
                     certificate,
                     protocol_magics.MAINNET,
                     network_ids.MAINNET,
