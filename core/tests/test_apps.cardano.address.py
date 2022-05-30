@@ -9,8 +9,8 @@ from apps.common import seed
 from apps.common.paths import HARDENED
 
 if not utils.BITCOIN_ONLY:
-    from apps.cardano.address import derive_human_readable_address, validate_address_parameters
-    from apps.cardano.byron_address import _address_hash
+    from apps.cardano.addresses import derive_human_readable, validate_address_parameters
+    from apps.cardano.byron_addresses import _address_hash
     from apps.cardano.helpers import network_ids, protocol_magics
     from apps.cardano.seed import Keychain
 
@@ -37,7 +37,7 @@ class TestCardanoAddress(unittest.TestCase):
                 address_type=CardanoAddressType.BYRON,
                 address_n=[0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, 0x80000000 + i],
             )
-            address = derive_human_readable_address(self.keychain, address_parameters, protocol_magics.MAINNET, network_ids.MAINNET)
+            address = derive_human_readable(self.keychain, address_parameters, protocol_magics.MAINNET, network_ids.MAINNET)
             self.assertEqual(expected, address)
 
         nodes = [
@@ -81,7 +81,7 @@ class TestCardanoAddress(unittest.TestCase):
                 address_type=CardanoAddressType.BYRON,
                 address_n=[0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i],
             )
-            address = derive_human_readable_address(self.keychain, address_parameters, protocol_magics.MAINNET, network_ids.MAINNET)
+            address = derive_human_readable(self.keychain, address_parameters, protocol_magics.MAINNET, network_ids.MAINNET)
             self.assertEqual(address, expected)
 
         nodes = [
@@ -119,7 +119,7 @@ class TestCardanoAddress(unittest.TestCase):
             address_type=CardanoAddressType.BYRON,
             address_n=[0x80000000 | 44, 0x80000000 | 1815],
         )
-        address = derive_human_readable_address(self.keychain, address_parameters, protocol_magics.MAINNET, network_ids.MAINNET)
+        address = derive_human_readable(self.keychain, address_parameters, protocol_magics.MAINNET, network_ids.MAINNET)
         self.assertEqual(address, "Ae2tdPwUPEZ2FGHX3yCKPSbSgyuuTYgMxNq652zKopxT4TuWvEd8Utd92w3")
 
         priv, ext, pub, chain = (
@@ -202,7 +202,7 @@ class TestCardanoAddress(unittest.TestCase):
                 address_type=CardanoAddressType.BYRON,
                 address_n=[0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i],
             )
-            a = derive_human_readable_address(keychain, address_parameters, protocol_magics.MAINNET, network_ids.MAINNET)
+            a = derive_human_readable(keychain, address_parameters, protocol_magics.MAINNET, network_ids.MAINNET)
             n = keychain.derive([0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i])
             self.assertEqual(a, address)
             self.assertEqual(hexlify(n.private_key()), priv)
@@ -269,7 +269,7 @@ class TestCardanoAddress(unittest.TestCase):
                 address_type=CardanoAddressType.BYRON,
                 address_n=[0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i],
             )
-            a = derive_human_readable_address(keychain, address_parameters, protocol_magics.MAINNET, network_ids.MAINNET)
+            a = derive_human_readable(keychain, address_parameters, protocol_magics.MAINNET, network_ids.MAINNET)
             n = keychain.derive([0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i])
             self.assertEqual(a, address)
             self.assertEqual(hexlify(n.private_key()), priv)
@@ -290,7 +290,7 @@ class TestCardanoAddress(unittest.TestCase):
                 address_type=CardanoAddressType.BYRON,
                 address_n=[0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i],
             )
-            address = derive_human_readable_address(self.keychain, address_parameters, protocol_magics.TESTNET, 0)
+            address = derive_human_readable(self.keychain, address_parameters, protocol_magics.TESTNET, 0)
             self.assertEqual(expected, address)
 
     def test_derive_address(self):
@@ -411,7 +411,7 @@ class TestCardanoAddress(unittest.TestCase):
 
         for network_id, address_type, address_parameters, expected_address in test_vectors:
             validate_address_parameters(address_parameters)
-            actual_address = derive_human_readable_address(self.keychain, address_parameters, protocol_magics.MAINNET, network_id)
+            actual_address = derive_human_readable(self.keychain, address_parameters, protocol_magics.MAINNET, network_id)
 
             self.assertEqual(actual_address, expected_address)
 

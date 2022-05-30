@@ -483,12 +483,12 @@ if not utils.BITCOIN_ONLY:
     import apps.bitcoin.sign_tx.zcash_v4
     apps.cardano
     import apps.cardano
-    apps.cardano.address
-    import apps.cardano.address
+    apps.cardano.addresses
+    import apps.cardano.addresses
     apps.cardano.auxiliary_data
     import apps.cardano.auxiliary_data
-    apps.cardano.byron_address
-    import apps.cardano.byron_address
+    apps.cardano.byron_addresses
+    import apps.cardano.byron_addresses
     apps.cardano.certificates
     import apps.cardano.certificates
     apps.cardano.get_address

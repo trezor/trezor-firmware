@@ -3,7 +3,6 @@ from trezor.enums import CardanoCertificateType
 
 from .. import layout, seed
 from ..helpers.paths import SCHEMA_MINT
-from ..seed import is_multisig_path
 from .signer import Signer
 
 
@@ -71,7 +70,7 @@ class MultisigSigner(Signer):
         tx_has_token_minting = self.msg.minting_asset_groups_count > 0
 
         if not (
-            is_multisig_path(witness_request.path)
+            seed.is_multisig_path(witness_request.path)
             or (is_minting and tx_has_token_minting)
         ):
             raise wire.ProcessError("Invalid witness request")

@@ -21,8 +21,7 @@ from trezor.ui.layouts import (
 
 from apps.common.paths import address_n_to_str
 
-from . import seed
-from .address import derive_human_readable_address, encode_human_readable_address
+from . import addresses, seed
 from .helpers import bech32, network_ids, protocol_magics
 from .helpers.utils import (
     format_account_number,
@@ -31,7 +30,6 @@ from .helpers.utils import (
     format_stake_pool_id,
     to_account_path,
 )
-from .seed import is_minting_path, is_multisig_path
 
 if TYPE_CHECKING:
     from trezor import wire
@@ -426,9 +424,9 @@ async def confirm_witness_request(
     ctx: wire.Context,
     witness_path: list[int],
 ) -> None:
-    if is_multisig_path(witness_path):
+    if seed.is_multisig_path(witness_path):
         path_title = "multi-sig path"
-    elif is_minting_path(witness_path):
+    elif seed.is_minting_path(witness_path):
         path_title = "token minting path"
     else:
         path_title = "path"
@@ -545,7 +543,7 @@ async def confirm_stake_pool_owner(
         props.append(("Pool owner:", address_n_to_str(owner.staking_key_path)))
         props.append(
             (
-                derive_human_readable_address(
+                addresses.derive_human_readable_address(
                     keychain,
                     messages.CardanoAddressParametersType(
                         address_type=CardanoAddressType.REWARD,
@@ -562,7 +560,7 @@ async def confirm_stake_pool_owner(
         props.append(
             (
                 "Pool owner:",
-                derive_human_readable_address(
+                addresses.derive_human_readable_address(
                     keychain,
                     messages.CardanoAddressParametersType(
                         address_type=CardanoAddressType.REWARD,
@@ -637,7 +635,7 @@ async def confirm_withdrawal(
     network_id: int,
 ) -> None:
     address_type_name = "script reward" if withdrawal.script_hash else "reward"
-    address = encode_human_readable_address(address_bytes)
+    address = addresses.encode_human_readable_address(address_bytes)
     props: list[PropertyType] = [
         (f"Confirm withdrawal for {address_type_name} address:", address),
     ]
