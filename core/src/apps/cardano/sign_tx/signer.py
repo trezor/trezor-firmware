@@ -12,32 +12,7 @@ from trezor.enums import (
 
 from apps.common import cbor, safety_checks
 
-from .. import layout
-from ..address import (
-    ADDRESS_TYPES_PAYMENT_SCRIPT,
-    derive_address_bytes,
-    derive_human_readable_address,
-    get_address_bytes_unsafe,
-    get_address_type,
-    validate_output_address,
-    validate_output_address_parameters,
-)
-from ..auxiliary_data import (
-    get_auxiliary_data_hash_and_supplement,
-    show_auxiliary_data,
-    validate_auxiliary_data,
-)
-from ..certificates import (
-    assert_certificate_cond,
-    cborize_certificate,
-    cborize_pool_metadata,
-    cborize_pool_owner,
-    cborize_pool_registration_certificate_init,
-    cborize_pool_relay,
-    validate_certificate,
-    validate_pool_owner,
-    validate_pool_relay,
-)
+from .. import addresses, auxiliary_data, certificates, layout, seed
 from ..helpers import (
     ADDRESS_KEY_HASH_SIZE,
     INPUT_PREV_HASH_SIZE,
@@ -61,13 +36,10 @@ from ..helpers.utils import (
     validate_network_info,
     validate_stake_credential,
 )
-from ..seed import is_byron_path, is_minting_path, is_multisig_path, is_shelley_path
 
 if TYPE_CHECKING:
     from typing import Any
     from apps.common.paths import PathSchema
-
-    from .. import seed
 
     CardanoTxResponseType = (
         messages.CardanoTxItemAck | messages.CardanoTxWitnessResponse
@@ -305,10 +277,10 @@ class Signer:
             raise wire.ProcessError("Invalid output")
 
         if output.address_parameters is not None:
-            validate_output_address_parameters(output.address_parameters)
+            addresses.validate_output_address_parameters(output.address_parameters)
             self._fail_if_strict_and_unusual(output.address_parameters)
         elif output.address is not None:
-            validate_output_address(
+            addresses.validate_output_address(
                 output.address, self.msg.protocol_magic, self.msg.network_id
             )
         else:
@@ -318,7 +290,7 @@ class Signer:
             if len(output.datum_hash) != OUTPUT_DATUM_HASH_SIZE:
                 raise wire.ProcessError("Invalid output datum hash")
             address_type = self._get_output_address_type(output)
-            if address_type not in ADDRESS_TYPES_PAYMENT_SCRIPT:
+            if address_type not in addresses.ADDRESS_TYPES_PAYMENT_SCRIPT:
                 raise wire.ProcessError("Invalid output")
 
         self.account_path_checker.add_output(output)
@@ -331,14 +303,17 @@ class Signer:
             await layout.warn_tx_output_contains_datum_hash(self.ctx, output.datum_hash)
 
         address_type = self._get_output_address_type(output)
-        if output.datum_hash is None and address_type in ADDRESS_TYPES_PAYMENT_SCRIPT:
+        if (
+            output.datum_hash is None
+            and address_type in addresses.ADDRESS_TYPES_PAYMENT_SCRIPT
+        ):
             await layout.warn_tx_output_no_datum_hash(self.ctx)
 
         if output.asset_groups_count > 0:
             await layout.warn_tx_output_contains_tokens(self.ctx)
 
         if output.address_parameters is not None:
-            address = derive_human_readable_address(
+            address = addresses.derive_human_readable_address(
                 self.keychain,
                 output.address_parameters,
                 self.msg.protocol_magic,
@@ -377,7 +352,10 @@ class Signer:
             return True
 
         address_type = self._get_output_address_type(output)
-        if output.datum_hash is None and address_type in ADDRESS_TYPES_PAYMENT_SCRIPT:
+        if (
+            output.datum_hash is None
+            and address_type in addresses.ADDRESS_TYPES_PAYMENT_SCRIPT
+        ):
             # Plutus script address without a datum hash is unspendable, we must show a warning.
             return True
 
@@ -489,7 +467,9 @@ class Signer:
                     POOL_REGISTRATION_CERTIFICATE_ITEMS_COUNT
                 )
                 with certificates_list.append(pool_items_list):
-                    for item in cborize_pool_registration_certificate_init(certificate):
+                    for item in certificates.cborize_pool_registration_certificate_init(
+                        certificate
+                    ):
                         pool_items_list.append(item)
 
                     pool_owners_list: HashBuilderList[bytes] = HashBuilderList(
@@ -509,15 +489,15 @@ class Signer:
                         )
 
                     pool_items_list.append(
-                        cborize_pool_metadata(pool_parameters.metadata)
+                        certificates.cborize_pool_metadata(pool_parameters.metadata)
                     )
             else:
                 certificates_list.append(
-                    cborize_certificate(self.keychain, certificate)
+                    certificates.cborize_certificate(self.keychain, certificate)
                 )
 
     def _validate_certificate(self, certificate: messages.CardanoTxCertificate) -> None:
-        validate_certificate(
+        certificates.validate_certificate(
             certificate,
             self.msg.protocol_magic,
             self.msg.network_id,
@@ -553,14 +533,16 @@ class Signer:
             owner: messages.CardanoPoolOwner = await self.ctx.call(
                 messages.CardanoTxItemAck(), messages.CardanoPoolOwner
             )
-            validate_pool_owner(owner, self.account_path_checker)
+            certificates.validate_pool_owner(owner, self.account_path_checker)
             await self._show_pool_owner(owner)
-            pool_owners_list.append(cborize_pool_owner(self.keychain, owner))
+            pool_owners_list.append(
+                certificates.cborize_pool_owner(self.keychain, owner)
+            )
 
             if owner.staking_key_path:
                 owners_as_path_count += 1
 
-        assert_certificate_cond(owners_as_path_count == 1)
+        certificates.assert_certificate_cond(owners_as_path_count == 1)
 
     async def _show_pool_owner(self, owner: messages.CardanoPoolOwner) -> None:
         if owner.staking_key_path:
@@ -583,8 +565,8 @@ class Signer:
             relay: messages.CardanoPoolRelayParameters = await self.ctx.call(
                 messages.CardanoTxItemAck(), messages.CardanoPoolRelayParameters
             )
-            validate_pool_relay(relay)
-            relays_list.append(cborize_pool_relay(relay))
+            certificates.validate_pool_relay(relay)
+            relays_list.append(certificates.cborize_pool_relay(relay))
 
     # withdrawals
 
@@ -618,22 +600,22 @@ class Signer:
     # auxiliary data
 
     async def _process_auxiliary_data(self) -> None:
-        auxiliary_data: messages.CardanoTxAuxiliaryData = await self.ctx.call(
+        data: messages.CardanoTxAuxiliaryData = await self.ctx.call(
             messages.CardanoTxItemAck(), messages.CardanoTxAuxiliaryData
         )
-        validate_auxiliary_data(auxiliary_data)
+        auxiliary_data.validate_auxiliary_data(data)
 
         (
             auxiliary_data_hash,
             auxiliary_data_supplement,
-        ) = get_auxiliary_data_hash_and_supplement(
-            self.keychain, auxiliary_data, self.msg.protocol_magic, self.msg.network_id
+        ) = auxiliary_data.get_auxiliary_data_hash_and_supplement(
+            self.keychain, data, self.msg.protocol_magic, self.msg.network_id
         )
-        await show_auxiliary_data(
+        await auxiliary_data.show_auxiliary_data(
             self.ctx,
             self.keychain,
             auxiliary_data_hash,
-            auxiliary_data.catalyst_registration_parameters,
+            data.catalyst_registration_parameters,
             self.msg.protocol_magic,
             self.msg.network_id,
         )
@@ -750,9 +732,9 @@ class Signer:
                 raise INVALID_REQUIRED_SIGNER
         elif required_signer.key_path:
             if not (
-                is_shelley_path(required_signer.key_path)
-                or is_multisig_path(required_signer.key_path)
-                or is_minting_path(required_signer.key_path)
+                seed.is_shelley_path(required_signer.key_path)
+                or seed.is_multisig_path(required_signer.key_path)
+                or seed.is_minting_path(required_signer.key_path)
             ):
                 raise INVALID_REQUIRED_SIGNER
         else:
@@ -770,7 +752,7 @@ class Signer:
             self._validate_witness_request(witness_request)
             path = witness_request.path
             await self._show_witness_request(path)
-            if is_byron_path(path):
+            if seed.is_byron_path(path):
                 response = self._get_byron_witness(path, tx_hash)
             else:
                 response = self._get_shelley_witness(path, tx_hash)
@@ -808,7 +790,7 @@ class Signer:
 
     def _get_output_address(self, output: messages.CardanoTxOutput) -> bytes:
         if output.address_parameters:
-            return derive_address_bytes(
+            return addresses.derive_address_bytes(
                 self.keychain,
                 output.address_parameters,
                 self.msg.protocol_magic,
@@ -816,7 +798,7 @@ class Signer:
             )
         else:
             assert output.address is not None  # _validate_output
-            return get_address_bytes_unsafe(output.address)
+            return addresses.get_address_bytes_unsafe(output.address)
 
     def _get_output_address_type(
         self, output: messages.CardanoTxOutput
@@ -824,7 +806,9 @@ class Signer:
         if output.address_parameters:
             return output.address_parameters.address_type
         assert output.address is not None  # _validate_output
-        return get_address_type(get_address_bytes_unsafe(output.address))
+        return addresses.get_address_type(
+            addresses.get_address_bytes_unsafe(output.address)
+        )
 
     def _derive_withdrawal_address_bytes(
         self, withdrawal: messages.CardanoTxWithdrawal
@@ -834,7 +818,7 @@ class Signer:
             if withdrawal.path or withdrawal.key_hash
             else CardanoAddressType.REWARD_SCRIPT
         )
-        return derive_address_bytes(
+        return addresses.derive_address_bytes(
             self.keychain,
             messages.CardanoAddressParametersType(
                 address_type=reward_address_type,

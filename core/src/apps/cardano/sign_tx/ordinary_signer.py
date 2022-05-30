@@ -8,7 +8,6 @@ from ..helpers.paths import (
     SCHEMA_STAKING,
     WITNESS_PATH_NAME,
 )
-from ..seed import is_byron_path, is_shelley_path
 from .signer import Signer
 
 
@@ -68,8 +67,8 @@ class OrdinarySigner(Signer):
         tx_has_token_minting = self.msg.minting_asset_groups_count > 0
 
         if not (
-            is_byron_path(witness_request.path)
-            or is_shelley_path(witness_request.path)
+            seed.is_byron_path(witness_request.path)
+            or seed.is_shelley_path(witness_request.path)
             or (is_minting and tx_has_token_minting)
         ):
             raise wire.ProcessError("Invalid witness request")

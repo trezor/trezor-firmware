@@ -3,8 +3,9 @@ from typing import TYPE_CHECKING
 from trezor.enums import CardanoAddressType
 
 from ...common.paths import address_n_to_str
+from . import bech32
 from .paths import CHAIN_STAKING_KEY, SCHEMA_PAYMENT, SCHEMA_STAKING
-from .utils import bech32, to_account_path
+from .utils import to_account_path
 
 if TYPE_CHECKING:
     from trezor import messages

@@ -4,7 +4,6 @@ from trezor.enums import CardanoCertificateType
 from .. import layout, seed
 from ..helpers.credential import Credential, should_show_credentials
 from ..helpers.paths import SCHEMA_MINT
-from ..seed import is_multisig_path, is_shelley_path
 from .signer import Signer
 
 
@@ -91,8 +90,8 @@ class PlutusSigner(Signer):
 
         # In Plutus txs, we allow minting witnesses even when the tx doesn't have token minting.
         if not (
-            is_shelley_path(witness_request.path)
-            or is_multisig_path(witness_request.path)
+            seed.is_shelley_path(witness_request.path)
+            or seed.is_multisig_path(witness_request.path)
             or is_minting
         ):
             raise wire.ProcessError("Invalid witness request")

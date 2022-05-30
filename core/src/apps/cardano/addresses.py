@@ -4,11 +4,10 @@ from trezor import messages, wire
 from trezor.crypto import base58
 from trezor.enums import CardanoAddressType
 
-from .byron_address import derive_byron_address, validate_byron_address
+from . import byron_addresses, seed
 from .helpers import ADDRESS_KEY_HASH_SIZE, SCRIPT_HASH_SIZE, bech32, network_ids
 from .helpers.paths import SCHEMA_STAKING_ANY_ACCOUNT
 from .helpers.utils import get_public_key_hash, variable_length_encode
-from .seed import is_byron_path, is_shelley_path
 
 ADDRESS_TYPES_SHELLEY = (
     CardanoAddressType.BASE,
@@ -45,10 +44,10 @@ def validate_address_parameters(
     _validate_address_parameters_structure(parameters)
 
     if parameters.address_type == CardanoAddressType.BYRON:
-        assert_address_params_cond(is_byron_path(parameters.address_n))
+        assert_address_params_cond(seed.is_byron_path(parameters.address_n))
 
     elif parameters.address_type == CardanoAddressType.BASE:
-        assert_address_params_cond(is_shelley_path(parameters.address_n))
+        assert_address_params_cond(seed.is_shelley_path(parameters.address_n))
         _validate_base_address_staking_info(
             parameters.address_n_staking, parameters.staking_key_hash
         )
@@ -60,7 +59,7 @@ def validate_address_parameters(
         )
 
     elif parameters.address_type == CardanoAddressType.BASE_KEY_SCRIPT:
-        assert_address_params_cond(is_shelley_path(parameters.address_n))
+        assert_address_params_cond(seed.is_shelley_path(parameters.address_n))
         _validate_script_hash(parameters.script_staking_hash)
 
     elif parameters.address_type == CardanoAddressType.BASE_SCRIPT_SCRIPT:
@@ -68,7 +67,7 @@ def validate_address_parameters(
         _validate_script_hash(parameters.script_staking_hash)
 
     elif parameters.address_type == CardanoAddressType.POINTER:
-        assert_address_params_cond(is_shelley_path(parameters.address_n))
+        assert_address_params_cond(seed.is_shelley_path(parameters.address_n))
         assert_address_params_cond(parameters.certificate_pointer is not None)
 
     elif parameters.address_type == CardanoAddressType.POINTER_SCRIPT:
@@ -76,13 +75,13 @@ def validate_address_parameters(
         assert_address_params_cond(parameters.certificate_pointer is not None)
 
     elif parameters.address_type == CardanoAddressType.ENTERPRISE:
-        assert_address_params_cond(is_shelley_path(parameters.address_n))
+        assert_address_params_cond(seed.is_shelley_path(parameters.address_n))
 
     elif parameters.address_type == CardanoAddressType.ENTERPRISE_SCRIPT:
         _validate_script_hash(parameters.script_payment_hash)
 
     elif parameters.address_type == CardanoAddressType.REWARD:
-        assert_address_params_cond(is_shelley_path(parameters.address_n_staking))
+        assert_address_params_cond(seed.is_shelley_path(parameters.address_n_staking))
         assert_address_params_cond(
             SCHEMA_STAKING_ANY_ACCOUNT.match(parameters.address_n_staking)
         )
@@ -236,7 +235,7 @@ def _validate_address_and_get_type(
     address_type = get_address_type(address_bytes)
 
     if address_type == CardanoAddressType.BYRON:
-        validate_byron_address(address_bytes, protocol_magic)
+        byron_addresses.validate_byron_address(address_bytes, protocol_magic)
     elif address_type in ADDRESS_TYPES_SHELLEY:
         _validate_shelley_address(address, address_bytes, network_id)
     else:
@@ -364,7 +363,9 @@ def derive_address_bytes(
     is_byron_address = parameters.address_type == CardanoAddressType.BYRON
 
     if is_byron_address:
-        address = derive_byron_address(keychain, parameters.address_n, protocol_magic)
+        address = byron_addresses.derive_byron_address(
+            keychain, parameters.address_n, protocol_magic
+        )
     else:
         address = _derive_shelley_address(keychain, parameters, network_id)
 

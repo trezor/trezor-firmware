@@ -3,15 +3,16 @@ from typing import TYPE_CHECKING
 from trezor import wire
 from trezor.crypto import hashlib
 
-from apps.cardano.helpers import network_ids, protocol_magics
-from apps.cardano.helpers.paths import (
-    ACCOUNT_PATH_INDEX,
-    SCHEMA_STAKING_ANY_ACCOUNT,
-    unharden,
-)
 from apps.common.seed import remove_ed25519_prefix
 
-from . import ADDRESS_KEY_HASH_SIZE, SCRIPT_HASH_SIZE, bech32
+from . import (
+    ADDRESS_KEY_HASH_SIZE,
+    SCRIPT_HASH_SIZE,
+    bech32,
+    network_ids,
+    protocol_magics,
+)
+from .paths import ACCOUNT_PATH_INDEX, SCHEMA_STAKING_ANY_ACCOUNT, unharden
 
 if TYPE_CHECKING:
     from .. import seed
