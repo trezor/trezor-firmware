@@ -4,6 +4,8 @@ pub mod common;
 pub mod display;
 mod ffi;
 pub mod random;
+#[cfg(feature = "model_tr")]
+pub mod rgb_led;
 pub mod slip39;
 
 #[cfg(not(feature = "micropython"))]

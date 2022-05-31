@@ -274,6 +274,8 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("button_sequence_to_word")
         // random
         .allowlist_function("random_uniform")
+        // rgb led
+        .allowlist_function("rgb_led_set_color")
         // time
         .allowlist_function("hal_delay")
         .allowlist_function("hal_ticks_ms");

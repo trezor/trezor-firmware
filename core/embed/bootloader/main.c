@@ -34,6 +34,7 @@
 #endif
 #if defined TREZOR_MODEL_R
 #include "button.h"
+#include "rgb_led.h"
 #endif
 #include "usb.h"
 #include "version.h"
@@ -255,6 +256,7 @@ int main(void) {
 
 #if defined TREZOR_MODEL_R
   button_init();
+  rgb_led_init();
 #endif
 
   mpu_config_bootloader();

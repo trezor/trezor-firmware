@@ -37,7 +37,6 @@
 
 #include "bl_check.h"
 #include "board_capabilities.h"
-#include "button.h"
 #include "common.h"
 #include "compiler_traits.h"
 #include "display.h"
@@ -45,6 +44,13 @@
 #include "image.h"
 #include "mpu.h"
 #include "random_delays.h"
+#ifdef TREZOR_MODEL_R
+#include "rgb_led.h"
+#endif
+#if defined TREZOR_MODEL_R || defined TREZOR_MODEL_1
+#include "button.h"
+#endif
+
 #ifdef SYSTEM_VIEW
 #include "systemview.h"
 #endif
@@ -100,6 +106,7 @@ int main(void) {
 #if defined TREZOR_MODEL_R
   button_init();
   display_clear();
+  rgb_led_init();
 #endif
 
 #if defined TREZOR_MODEL_T

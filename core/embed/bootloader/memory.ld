@@ -49,6 +49,11 @@ SECTIONS {
     . = ALIGN(4);
   } >CCMRAM
 
+  .buf : ALIGN(4) {
+    *(.buf*);
+    . = ALIGN(4);
+  } >SRAM
+
   .stack : ALIGN(8) {
     . = 4K; /* this acts as a build time assertion that at least this much memory is available for stack use */
   } >CCMRAM
