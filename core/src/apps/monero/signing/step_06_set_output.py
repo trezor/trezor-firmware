@@ -460,16 +460,7 @@ def _get_ecdh_info_and_out_pk(
     so the recipient is able to reconstruct the commitment.
     """
     out_pk_dest = crypto_helpers.encodepoint(tx_out_key)
-    if state.rsig_is_bp_plus:
-        # HF15+ stores commitment multiplied by 8**-1
-        inv8 = crypto.decodeint_into_noreduce(None, crypto_helpers.INV_EIGHT)
-        mask8 = crypto.sc_mul_into(None, mask, inv8)
-        amnt8 = crypto.Scalar(amount)
-        amnt8 = crypto.sc_mul_into(amnt8, amnt8, inv8)
-        out_pk_commitment = crypto.add_keys2_into(None, mask8, amnt8, crypto.xmr_H())
-        del (inv8, mask8, amnt8)
-    else:
-        out_pk_commitment = crypto.gen_commitment_into(None, mask, amount)
+    out_pk_commitment = crypto.gen_commitment_into(None, mask, amount)
 
     out_pk_commitment = crypto_helpers.encodepoint(out_pk_commitment)
     crypto.sc_add_into(state.sumout, state.sumout, mask)
