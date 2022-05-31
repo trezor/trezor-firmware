@@ -7,6 +7,7 @@ TEMPLATE = app
 SOURCES += ../address.c
 SOURCES += ../bip32.c
 SOURCES += ../bip39.c
+SOURCES += ../bip39_english.c
 SOURCES += ../sha2.c
 SOURCES += ../pbkdf2.c
 SOURCES += ../hmac.c
