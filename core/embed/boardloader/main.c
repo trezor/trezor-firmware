@@ -19,6 +19,7 @@
 
 #include <string.h>
 
+#include "board_capabilities.h"
 #include "common.h"
 #include "compiler_traits.h"
 #include "display.h"
@@ -47,6 +48,27 @@ static const uint8_t * const BOARDLOADER_KEYS[] = {
     (const uint8_t *)"\x22\xfc\x29\x77\x92\xf0\xb6\xff\xc0\xbf\xcf\xdb\x7e\xdb\x0c\x0a\xa1\x4e\x02\x5a\x36\x5e\xc0\xe3\x42\xe8\x6e\x38\x29\xcb\x74\xb6",
 #endif
 };
+
+struct BoardCapabilities capablities
+    __attribute__((section(".capabilities_section"))) = {
+        .header = CAPABILITIES_HEADER,
+        .model_tag = MODEL_NAME,
+        .model_length = MODEL_NAME_MAX_LENGTH,
+#if defined TREZOR_MODEL_T
+        .model_name = "TREZORT",
+#elif defined TREZOR_MODEL_R
+        .model_name = "TREZORR",
+#else
+#error Unknown model
+#endif
+        .version_tag = BOARDLOADER_VERSION,
+        .version_length = sizeof(struct BoardloaderVersion),
+        .version = {.version_major = VERSION_MAJOR,
+                    .version_minor = VERSION_MINOR,
+                    .version_patch = VERSION_PATCH,
+                    .version_build = VERSION_BUILD},
+        .terminator_tag = TERMINATOR,
+        .terminator_length = 0};
 
 // we use SRAM as SD card read buffer (because DMA can't access the CCMRAM)
 extern uint32_t sram_start[];
