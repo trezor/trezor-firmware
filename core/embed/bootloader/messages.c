@@ -358,8 +358,10 @@ void process_msg_FirmwareErase(uint8_t iface_num, uint32_t msg_size,
 }
 
 static uint32_t chunk_size = 0;
-// SRAM is unused, so we can use it for chunk buffer
-uint8_t *const chunk_buffer = (uint8_t *const)0x20000000;
+
+__attribute__((section(".buf"))) uint32_t chunk_buffer[IMAGE_CHUNK_SIZE / 4];
+
+#define CHUNK_BUFFER_PTR ((const uint8_t *const)&chunk_buffer)
 
 /* we don't use secbool/sectrue/secfalse here as it is a nanopb api */
 static bool _read_payload(pb_istream_t *stream, const pb_field_t *field,
@@ -375,7 +377,7 @@ static bool _read_payload(pb_istream_t *stream, const pb_field_t *field,
 
   if (offset == 0) {
     // clear chunk buffer
-    memset(chunk_buffer, 0xFF, IMAGE_CHUNK_SIZE);
+    memset((uint8_t *)&chunk_buffer, 0xFF, IMAGE_CHUNK_SIZE);
   }
 
   uint32_t chunk_written = offset;
@@ -390,7 +392,7 @@ static bool _read_payload(pb_istream_t *stream, const pb_field_t *field,
     }
     // read data
     if (!pb_read(
-            stream, (pb_byte_t *)(chunk_buffer + chunk_written),
+            stream, (pb_byte_t *)(CHUNK_BUFFER_PTR + chunk_written),
             (stream->bytes_left > BUFSIZE) ? BUFSIZE : stream->bytes_left)) {
       chunk_size = 0;
       return false;
@@ -481,14 +483,14 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
     if (headers_offset == 0) {
       // first block and headers are not yet parsed
       vendor_header vhdr;
-      if (sectrue != load_vendor_header_keys(chunk_buffer, &vhdr)) {
+      if (sectrue != load_vendor_header_keys(CHUNK_BUFFER_PTR, &vhdr)) {
         MSG_SEND_INIT(Failure);
         MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
         MSG_SEND_ASSIGN_STRING(message, "Invalid vendor header");
         MSG_SEND(Failure);
         return -2;
       }
-      if (sectrue != load_image_header(chunk_buffer + vhdr.hdrlen,
+      if (sectrue != load_image_header(CHUNK_BUFFER_PTR + vhdr.hdrlen,
                                        FIRMWARE_IMAGE_MAGIC,
                                        FIRMWARE_IMAGE_MAXSIZE, vhdr.vsig_m,
                                        vhdr.vsig_n, vhdr.vpub, &hdr)) {
@@ -574,7 +576,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
   }
 
   if (sectrue != check_single_hash(hdr.hashes + firmware_block * 32,
-                                   chunk_buffer + headers_offset,
+                                   CHUNK_BUFFER_PTR + headers_offset,
                                    chunk_size - headers_offset)) {
     if (firmware_upload_chunk_retry > 0) {
       --firmware_upload_chunk_retry;
@@ -594,7 +596,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
 
   ensure(flash_unlock_write(), NULL);
 
-  const uint32_t *const src = (const uint32_t *const)chunk_buffer;
+  const uint32_t *const src = (const uint32_t *const)CHUNK_BUFFER_PTR;
   for (int i = 0; i < chunk_size / sizeof(uint32_t); i++) {
     ensure(flash_write_word(FIRMWARE_SECTORS[firmware_block],
                             i * sizeof(uint32_t), src[i]),

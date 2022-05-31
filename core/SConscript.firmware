@@ -384,7 +384,12 @@ if TREZOR_MODEL in ('T',):
         'embed/trezorhal/sdcard.c',
         'embed/trezorhal/touch.c',
     ]
-elif TREZOR_MODEL in ('1', 'R'):
+elif TREZOR_MODEL in ('R',):
+    SOURCE_TREZORHAL += [
+        'embed/trezorhal/button.c',
+        'embed/trezorhal/rgb_led.c',
+    ]
+elif TREZOR_MODEL in ('1',):
     SOURCE_TREZORHAL += [
         'embed/trezorhal/button.c',
     ]
@@ -470,6 +475,7 @@ env.Replace(
         'vendor/micropython/lib/cmsis/inc',
     ] + CPPPATH_MOD,
     CPPDEFINES=[
+        'FIRMWARE',
         'TREZOR_MODEL_'+TREZOR_MODEL,
         CPU_MODEL,
         'USE_HAL_DRIVER',
