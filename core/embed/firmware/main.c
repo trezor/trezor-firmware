@@ -36,6 +36,7 @@
 #include "ports/stm32/pendsv.h"
 
 #include "bl_check.h"
+#include "board_capabilities.h"
 #include "button.h"
 #include "common.h"
 #include "compiler_traits.h"
@@ -74,6 +75,10 @@ int main(void) {
 
 #ifdef SYSTEM_VIEW
   enable_systemview();
+#endif
+
+#if !defined TREZOR_MODEL_1
+  parse_boardloader_capabilities();
 #endif
 
 #if defined TREZOR_MODEL_T

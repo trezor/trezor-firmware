@@ -359,6 +359,7 @@ SOURCE_FIRMWARE = [
 ]
 
 SOURCE_TREZORHAL = [
+    'embed/trezorhal/board_capabilities.c',
     'embed/trezorhal/common.c',
     'embed/trezorhal/dma.c',
     'embed/trezorhal/image.c',

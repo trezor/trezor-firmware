@@ -48,6 +48,9 @@ SECTIONS {
     . = ALIGN(4); /* make the section size a multiple of the word size */
   } >CCMRAM
 
+  /* Hard-coded address for capabilities structure */
+  .capabilities 0x0800BF00 : {KEEP(*(.capabilities_section))}
+
   .stack : ALIGN(8) {
     . = 4K; /* this acts as a build time assertion that at least this much memory is available for stack use */
   } >CCMRAM
