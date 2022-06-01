@@ -55,6 +55,14 @@ extern "C" {
         iconlen: cty::uint32_t,
         iconfgcolor: cty::uint16_t,
     );
+    fn display_pixeldata(c: cty::uint16_t);
+    fn display_pixeldata_dirty();
+    fn display_set_window(
+        x0: cty::uint16_t,
+        y0: cty::uint16_t,
+        x1: cty::uint16_t,
+        y1: cty::uint16_t,
+    );
 }
 
 pub struct ToifInfo {
@@ -161,5 +169,23 @@ pub fn loader(
             icon.map(|i| i.len()).unwrap_or(0) as _,
             iconfgcolor,
         );
+    }
+}
+
+pub fn pixeldata(c: u16) {
+    unsafe {
+        display_pixeldata(c);
+    }
+}
+
+pub fn pixeldata_dirty() {
+    unsafe {
+        display_pixeldata_dirty();
+    }
+}
+
+pub fn set_window(x0: u16, y0: u16, x1: u16, y1: u16) {
+    unsafe {
+        display_set_window(x0, y0, x1, y1);
     }
 }

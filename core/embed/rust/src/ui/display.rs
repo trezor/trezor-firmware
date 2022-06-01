@@ -183,6 +183,18 @@ pub fn text_right(baseline: Point, text: &str, font: Font, fg_color: Color, bg_c
     );
 }
 
+pub fn pixeldata(color: Color) {
+    display::pixeldata(color.into());
+}
+
+pub fn pixeldata_dirty() {
+    display::pixeldata_dirty();
+}
+
+pub fn set_window(x0: u16, y0: u16, x1: u16, y1: u16) {
+    display::set_window(x0, y0, x1, y1);
+}
+
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub struct Font(i32);
 

@@ -75,7 +75,7 @@ static struct {
 // noop on unix, display is refreshed every loop step
 #define PIXELDATA_DIRTY()
 
-void PIXELDATA(uint16_t c) {
+void display_pixeldata(uint16_t c) {
 #if defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
   // set to white if highest bits of all R, G, B values are set to 1
   // bin(10000 100000 10000) = hex(0x8410)
@@ -97,6 +97,8 @@ void PIXELDATA(uint16_t c) {
     PIXELWINDOW.pos.y++;
   }
 }
+
+#define PIXELDATA(c) display_pixeldata(c)
 
 static void display_reset_state() {}
 
@@ -208,8 +210,7 @@ void display_init(void) {
 #endif
 }
 
-static void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1,
-                               uint16_t y1) {
+void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
   if (!RENDERER) {
     display_init();
   }

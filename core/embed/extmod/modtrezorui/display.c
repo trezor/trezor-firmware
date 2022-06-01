@@ -989,3 +989,5 @@ void display_utf8_substr(const char *buf_start, size_t buf_len, int char_off,
   *out_start = buf_start + i_start;
   *out_len = i - i_start;
 }
+
+void display_pixeldata_dirty(void) { PIXELDATA_DIRTY(); }
