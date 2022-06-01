@@ -68,7 +68,7 @@ static struct {
 
 static bool pixeldata_dirty = true;
 
-void PIXELDATA(uint16_t c) {
+void display_pixeldata(uint16_t c) {
   if (PIXELWINDOW.pos.x <= PIXELWINDOW.end.x &&
       PIXELWINDOW.pos.y <= PIXELWINDOW.end.y) {
     // set to white if highest bits of all R, G, B values are set to 1
@@ -89,12 +89,13 @@ void PIXELDATA(uint16_t c) {
   }
 }
 
+#define PIXELDATA(c) display_pixeldata(c)
+
 static void display_reset_state() {}
 
 void PIXELDATA_DIRTY() { pixeldata_dirty = true; }
 
-static void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1,
-                               uint16_t y1) {
+void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
   PIXELWINDOW.start.x = x0;
   PIXELWINDOW.start.y = y0;
   PIXELWINDOW.end.x = x1;

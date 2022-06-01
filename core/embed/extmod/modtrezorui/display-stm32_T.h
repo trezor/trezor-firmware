@@ -56,6 +56,8 @@ const volatile uint8_t DISPLAY_ST7789V_INVERT_COLORS = 0;
 // of ILI9341V datasheet
 #define DISPLAY_ID_ILI9341V 0x009341U
 
+void display_pixeldata(uint16_t c) { PIXELDATA(c); }
+
 static uint32_t read_display_id(uint8_t command) {
   volatile uint8_t c = 0;
   uint32_t id = 0;
@@ -117,8 +119,7 @@ static void display_unsleep(void) {
 
 static struct { uint16_t x, y; } BUFFER_OFFSET;
 
-static void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1,
-                               uint16_t y1) {
+void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
   x0 += BUFFER_OFFSET.x;
   x1 += BUFFER_OFFSET.x;
   y0 += BUFFER_OFFSET.y;
