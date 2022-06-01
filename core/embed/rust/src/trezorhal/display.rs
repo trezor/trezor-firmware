@@ -107,3 +107,21 @@ pub fn loader(
         );
     }
 }
+
+pub fn pixeldata(c: u16) {
+    unsafe {
+        ffi::display_pixeldata(c);
+    }
+}
+
+pub fn pixeldata_dirty() {
+    unsafe {
+        ffi::display_pixeldata_dirty();
+    }
+}
+
+pub fn set_window(x0: u16, y0: u16, x1: u16, y1: u16) {
+    unsafe {
+        ffi::display_set_window(x0, y0, x1, y1);
+    }
+}

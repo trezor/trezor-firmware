@@ -57,7 +57,7 @@ static void display_set_page_and_col(uint8_t page, uint8_t col) {
   }
 }
 
-void PIXELDATA(uint16_t c) {
+void display_pixeldata(uint16_t c) {
   uint8_t data = DISPLAY_STATE.RAM[DISPLAY_STATE.row / 8][DISPLAY_STATE.col];
 
   uint8_t bit = 1 << (DISPLAY_STATE.row % 8);
@@ -93,6 +93,8 @@ void PIXELDATA(uint16_t c) {
   }
 }
 
+#define PIXELDATA(c) display_pixeldata(c)
+
 static void display_reset_state(void) {
   memset(DISPLAY_STATE.RAM, 0, sizeof(DISPLAY_STATE.RAM));
   DISPLAY_STATE.row = 0;
@@ -115,8 +117,7 @@ static void display_unsleep(void) {
   CMD(0xAF);                                           // Display ON
 }
 
-static void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1,
-                               uint16_t y1) {
+void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
   if (x1 >= DISPLAY_RESX) {
     x1 = DISPLAY_RESX - 1;
   }
