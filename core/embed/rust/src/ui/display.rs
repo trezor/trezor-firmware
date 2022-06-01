@@ -191,8 +191,13 @@ pub fn pixeldata_dirty() {
     display::pixeldata_dirty();
 }
 
-pub fn set_window(x0: u16, y0: u16, x1: u16, y1: u16) {
-    display::set_window(x0, y0, x1, y1);
+pub fn set_window(window: Rect) {
+    display::set_window(
+        window.x0 as u16,
+        window.y0 as u16,
+        window.x1 as u16,
+        window.y1 as u16,
+    );
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
