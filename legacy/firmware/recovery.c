@@ -451,7 +451,7 @@ void next_word(void) {
   oledDrawStringCenter(OLED_WIDTH / 2, 8, _("Please enter"), FONT_STANDARD);
   word_pos = word_order[word_index];
   if (word_pos == 0) {
-    strlcpy(fake_word, mnemonic_get_word(random_uniform(BIP39_WORDS)),
+    strlcpy(fake_word, mnemonic_get_word(random_uniform(BIP39_WORD_COUNT)),
             sizeof(fake_word));
     oledDrawStringCenter(OLED_WIDTH / 2, 24, fake_word,
                          FONT_FIXED | FONT_DOUBLE);

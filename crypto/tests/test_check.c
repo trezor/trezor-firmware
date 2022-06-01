@@ -5603,7 +5603,7 @@ END_TEST
 START_TEST(test_mnemonic_find_word) {
   ck_assert_int_eq(-1, mnemonic_find_word("aaaa"));
   ck_assert_int_eq(-1, mnemonic_find_word("zzzz"));
-  for (int i = 0; i < BIP39_WORDS; i++) {
+  for (int i = 0; i < BIP39_WORD_COUNT; i++) {
     const char *word = mnemonic_get_word(i);
     int index = mnemonic_find_word(word);
     ck_assert_int_eq(i, index);

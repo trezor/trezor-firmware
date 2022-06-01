@@ -2,12 +2,12 @@ use core::cmp::Ordering;
 use cstr_core::CStr;
 
 // TODO: expose from trezor-crypto via build.rs
-const BIP39_WORDS: usize = 2048;
+const BIP39_WORD_COUNT: usize = 2048;
 
 extern "C" {
     // trezor-crypto/bip39.h
     fn mnemonic_word_completion_mask(prefix: *const cty::c_char, len: cty::c_int) -> u32;
-    pub static BIP39_WORDLIST_ENGLISH: [*const cty::c_char; BIP39_WORDS];
+    pub static BIP39_WORDLIST_ENGLISH: [*const cty::c_char; BIP39_WORD_COUNT];
 }
 
 unsafe fn from_utf8_unchecked<'a>(word: *const cty::c_char) -> &'a str {
@@ -136,9 +136,9 @@ mod tests {
     #[test]
     fn test_filter_prefix_empty() {
         let words = Wordlist::all().filter_prefix("");
-        assert_eq!(words.len(), BIP39_WORDS);
+        assert_eq!(words.len(), BIP39_WORD_COUNT);
         let iter = words.iter();
-        assert_eq!(iter.size_hint(), (BIP39_WORDS, Some(BIP39_WORDS)));
+        assert_eq!(iter.size_hint(), (BIP39_WORD_COUNT, Some(BIP39_WORD_COUNT)));
     }
 
     #[test]
@@ -171,9 +171,9 @@ mod tests {
     fn test_wordlist_get() {
         let words = Wordlist::all();
         assert_eq!(words.get(0), Some("abandon"));
-        assert_eq!(words.get(BIP39_WORDS - 1), Some("zoo"));
-        assert_eq!(words.get(BIP39_WORDS), None);
-        assert_eq!(words.get(BIP39_WORDS + 1), None);
+        assert_eq!(words.get(BIP39_WORD_COUNT - 1), Some("zoo"));
+        assert_eq!(words.get(BIP39_WORD_COUNT), None);
+        assert_eq!(words.get(BIP39_WORD_COUNT + 1), None);
 
         let filtered = words.filter_prefix("str");
         assert_eq!(filtered.get(0), Some("strategy"));
