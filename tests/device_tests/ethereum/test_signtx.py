@@ -410,6 +410,7 @@ def input_flow_go_back(client: Client, cancel: bool = False):
                 yield  # hold to confirm
                 client.debug.wait_layout()
                 client.debug.press_yes()
+            client.debug.wait_layout()  # wait for homescreen
             return
 
         elif i < br.pages - 1:

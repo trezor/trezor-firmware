@@ -24,8 +24,7 @@ if __debug__:
     SWIPE_RIGHT = const(0x08)
 
 
-# channel used to cancel layouts, see `Cancelled` exception
-layout_chan = loop.chan()
+RUNNING_LAYOUT: "Layout" | None = None
 
 # allow only one alert at a time to avoid alerts overlapping
 _alert_in_progress = False
@@ -254,11 +253,19 @@ class Layout(Component):
     BACKLIGHT_LEVEL = style.BACKLIGHT_NORMAL
     RENDER_SLEEP: loop.Syscall = loop.sleep(_RENDER_DELAY_MS)
 
+    def __init__(self):
+        super().__init__()
+        # channel used to cancel layouts, see `Cancelled` exception
+        self._cancel_chan = loop.chan()
+        self.should_notify_layout_change = False
+
     async def __iter__(self) -> Any:
         """
         Run the layout and wait until it completes.  Returns the result value.
         Usually not overridden.
         """
+        global RUNNING_LAYOUT
+
         if __debug__:
             # we want to call notify_layout_change() when the rendering is done;
             # but only the first time the layout is awaited. Here we indicate that we
@@ -270,18 +277,24 @@ class Layout(Component):
             # If any other layout is running (waiting on the layout channel),
             # we close it with the Cancelled exception, and wait until it is
             # closed, just to be sure.
-            if layout_chan.takers:
-                await layout_chan.put(Cancelled())
+            if RUNNING_LAYOUT and RUNNING_LAYOUT._cancel_chan.takers:
+                assert RUNNING_LAYOUT != self
+                await RUNNING_LAYOUT._cancel_chan.put(Cancelled())
+
+            RUNNING_LAYOUT = self
             # Now, no other layout should be running.  In a loop, we create new
             # layout tasks and execute them in parallel, while waiting on the
             # layout channel.  This allows other layouts to cancel us, and the
             # layout tasks to trigger restart by exiting (new tasks are created
             # and we continue, because we are in a loop).
             while True:
-                await loop.race(layout_chan.take(), *self.create_tasks())
+                await loop.race(self._cancel_chan.take(), *self.create_tasks())
         except Result as result:
             # Result exception was raised, this means this layout is complete.
             value = result.value
+        finally:
+            RUNNING_LAYOUT = None
+
         return value
 
     if TYPE_CHECKING:
@@ -368,5 +381,5 @@ class Layout(Component):
 
 
 def wait_until_layout_is_running() -> Awaitable[None]:  # type: ignore [awaitable-is-generator]
-    while not layout_chan.takers:
+    while RUNNING_LAYOUT is None:
         yield
