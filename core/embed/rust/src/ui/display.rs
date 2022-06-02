@@ -122,6 +122,69 @@ pub fn rect_fill_rounded1(r: Rect, fg_color: Color, bg_color: Color) {
     }
 }
 
+// Used on TR only.
+pub fn rect_rounded2(r: Rect, fg_color: Color, bg_color: Color, fill_from: i32, fill_to: i32) {
+
+    set_window(r);
+
+    for y in 0..r.height()+1 {
+        for x in 0..r.width()+1 {
+            let mut border = false;
+            if x == 0 || x == (r.width()) {
+                border = true;
+            }
+            if y == 0 || y == (r.height()) {
+                border = true;
+            }
+            let mut corner_out = false;
+            let mut corner_pix = false;
+            if x < 2 && y < 2 {
+                if ! (x == 1 && y == 1) {
+                    corner_out = true;
+                }
+                else{
+                    corner_pix = true;
+                }
+            }
+            if x < 2 && y > r.height()-2 {
+                if ! (x == 1 && y == r.height()-1) {
+                    corner_out = true;
+                }
+                else{
+                    corner_pix = true;
+                }
+            }
+            if x > r.width() - 2 && y < 2 {
+                if ! (x == r.width()-1 && y == 1) {
+                    corner_out = true;
+                }
+                else{
+                    corner_pix = true;
+                }
+            }
+            if x > r.width() - 2 && y > r.height()-2 {
+                if ! (x == r.width()-1 && y == r.height()-1) {
+                    corner_out = true;
+                }
+                else{
+                    corner_pix = true;
+                }
+            }
+
+            if !corner_out && (border
+                || corner_pix
+                || (x >= fill_from && fill_from >= 0 && (x <= fill_to || fill_to < fill_from))
+                || (x < fill_to && fill_to >= 0)){
+                pixeldata(fg_color);
+            }
+            else{
+                pixeldata(bg_color);
+            }
+        }
+    }
+
+}
+
 // Used on T1 only.
 pub fn dotted_line(start: Point, width: i32, color: Color) {
     for x in (start.x..width).step_by(2) {
