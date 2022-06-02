@@ -3,7 +3,7 @@ use core::{
     ops::{Div, Mul},
 };
 
-use crate::micropython::time;
+use crate::trezorhal::time;
 
 const MILLIS_PER_SEC: u32 = 1000;
 

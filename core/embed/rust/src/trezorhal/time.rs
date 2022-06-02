@@ -1,6 +1,5 @@
-use crate::time::Duration;
-
 use super::ffi;
+use crate::time::Duration;
 
 pub fn ticks_ms() -> u32 {
     unsafe { ffi::mp_hal_ticks_ms() as _ }

@@ -200,9 +200,6 @@ fn generate_micropython_bindings() {
         .allowlist_var("mp_type_OverflowError")
         .allowlist_var("mp_type_ValueError")
         .allowlist_var("mp_type_TypeError")
-        // time
-        .allowlist_function("mp_hal_ticks_ms")
-        .allowlist_function("mp_hal_delay_ms")
         // typ
         .allowlist_var("mp_type_type")
         // module
@@ -279,6 +276,9 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("touch_unpack_x")
         .allowlist_function("touch_unpack_y")
         .allowlist_function("button_read")
+        // time
+        .allowlist_function("mp_hal_ticks_ms")
+        .allowlist_function("mp_hal_delay_ms")
         // bip39
         .allowlist_function("mnemonic_word_completion_mask")
         .allowlist_var("BIP39_WORDLIST_ENGLISH")

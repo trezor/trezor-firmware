@@ -1,5 +1,6 @@
 use super::constant;
-use crate::{micropython::time, time::Duration, trezorhal::display};
+use crate::{time::Duration, trezorhal::display};
+use crate::trezorhal::time;
 
 use super::geometry::{Offset, Point, Rect};
 

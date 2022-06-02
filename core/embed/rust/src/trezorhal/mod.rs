@@ -6,3 +6,4 @@ mod ffi;
 pub mod io;
 pub mod random;
 pub mod slip39;
+pub mod time;
