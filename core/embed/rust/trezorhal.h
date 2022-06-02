@@ -1,8 +1,9 @@
-#include "display.h"
 #include "button.h"
-#include "touch.h"
+#include "delay.h"
+#include "display.h"
 #include "secbool.h"
 #include "storage.h"
+#include "touch.h"
 
 #include "bip39.h"
 #include "rand.h"
