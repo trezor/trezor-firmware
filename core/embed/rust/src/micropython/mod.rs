@@ -14,7 +14,6 @@ pub mod module;
 pub mod obj;
 pub mod qstr;
 pub mod runtime;
-pub mod time;
 pub mod typ;
 
 #[cfg(test)]
