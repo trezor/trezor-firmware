@@ -274,6 +274,11 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("display_set_window")
         .allowlist_var("DISPLAY_CMD_ADDRESS")
         .allowlist_var("DISPLAY_DATA_ADDRESS")
+        // io
+        .allowlist_function("touch_read")
+        .allowlist_function("touch_unpack_x")
+        .allowlist_function("touch_unpack_y")
+        .allowlist_function("button_read")
         // bip39
         .allowlist_function("mnemonic_word_completion_mask")
         .allowlist_var("BIP39_WORDLIST_ENGLISH")

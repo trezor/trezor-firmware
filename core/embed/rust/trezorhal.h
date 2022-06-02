@@ -1,4 +1,6 @@
 #include "display.h"
+#include "button.h"
+#include "touch.h"
 #include "secbool.h"
 #include "storage.h"
 
