@@ -1,6 +1,7 @@
 use crate::ui::{
     component::text::layout::DefaultTextTheme,
     display::{Color, Font},
+    model_tr::component::{LoaderStyle, LoaderStyleSheet},
 };
 
 use super::component::{ButtonStyle, ButtonStyleSheet};
@@ -44,6 +45,16 @@ pub fn button_cancel() -> ButtonStyleSheet {
             font: FONT_BOLD,
             text_color: BG,
             border_horiz: false,
+        },
+    }
+}
+
+pub fn loader_default() -> LoaderStyleSheet {
+    LoaderStyleSheet {
+        normal: &LoaderStyle {
+            font: FONT_NORMAL,
+            fg_color: FG,
+            bg_color: BG,
         },
     }
 }

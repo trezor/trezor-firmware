@@ -136,6 +136,138 @@ pub fn rect_fill_rounded1(r: Rect, fg_color: Color, bg_color: Color) {
     }
 }
 
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub struct TextOverlay<'a> {
+    area: Rect,
+    text: &'a str,
+    font: Font,
+}
+
+impl<'a> TextOverlay<'a> {
+    pub fn new(text: &'a str, font: Font) -> Self {
+        let area = Rect::zero();
+        Self { area, text, font }
+    }
+
+    pub fn place(&mut self, baseline: Point) {
+        let text_width = self.font.text_width(self.text);
+        let text_height = self.font.text_height();
+
+        let text_area_start = baseline + Offset::new(-(text_width / 2), -text_height);
+        let text_area_end = baseline + Offset::new(text_width / 2, 0);
+        let area = Rect::new(text_area_start, text_area_end);
+
+        self.area = area;
+    }
+
+    pub fn get_pixel(&self, underlying: Color, fg: Color, p: Point) -> Color {
+        if !self.area.contains(p) {
+            return underlying;
+        }
+
+        let mut tot_adv = 0;
+
+        let p_rel = Point::new(p.x - self.area.x0, p.y - self.area.y0);
+
+        for g in self.text.bytes().filter_map(|c| self.font.get_glyph(c)) {
+            let char_area = Rect::new(
+                Point::new(tot_adv + g.bearing_x, g.height - g.bearing_y),
+                Point::new(tot_adv + g.bearing_x + g.width, g.bearing_y),
+            );
+
+            tot_adv += g.adv;
+
+            if !char_area.contains(p_rel) {
+                continue;
+            }
+
+            let p_inner = p_rel - char_area.top_left();
+            let overlay_data = g.get_pixel_data(p_inner);
+            return Color::lerp(underlying, fg, overlay_data as f32 / 15_f32);
+        }
+
+        underlying
+    }
+}
+
+/// Gets a color of a pixel on `p` coordinates of rounded rectangle with corner
+/// radius 2
+fn rect_rounded2_get_pixel(
+    p: Offset,
+    size: Offset,
+    colortable: [Color; 16],
+    fill: bool,
+    line_width: i32,
+) -> Color {
+    let border = (p.x >= 0 && p.x < line_width)
+        || ((p.x >= size.x - line_width) && p.x <= (size.x - 1))
+        || (p.y >= 0 && p.y < line_width)
+        || ((p.y >= size.y - line_width) && p.y <= (size.y - 1));
+
+    let corner_lim = 2 * line_width;
+    let corner_inner = line_width;
+
+    let corner_all = ((p.x > size.x - (corner_lim + 1)) || p.x < corner_lim)
+        && (p.y < corner_lim || p.y > size.y - (corner_lim + 1));
+
+    let corner = corner_all
+        && (p.y >= corner_inner)
+        && (p.x >= corner_inner)
+        && (p.y <= size.y - (corner_inner + 1))
+        && (p.x <= size.x - (corner_inner + 1));
+
+    let corner_out = corner_all && !corner;
+
+    if (border || corner || fill) && !corner_out {
+        colortable[15]
+    } else {
+        colortable[0]
+    }
+}
+
+/// Draws a rounded rectangle with corner radius 2, partially filled
+/// according to `fill_from` and `fill_to` arguments.
+/// Optionally draws a text inside the rectangle and adjusts its color to match
+/// the fill. The coordinates of the text are specified in the TextOverlay
+/// struct.
+pub fn bar_with_text_and_fill(
+    area: Rect,
+    overlay: Option<TextOverlay>,
+    fg_color: Color,
+    bg_color: Color,
+    fill_from: i32,
+    fill_to: i32,
+) {
+    let r = area.translate(get_offset());
+    let clamped = r.clamp(constant::screen());
+    let colortable = get_color_table(fg_color, bg_color);
+
+    set_window(clamped);
+
+    for y_c in clamped.y0..clamped.y1 {
+        for x_c in clamped.x0..clamped.x1 {
+            let p = Point::new(x_c, y_c);
+            let r_offset = p - r.top_left();
+
+            let filled = (r_offset.x >= fill_from
+                && fill_from >= 0
+                && (r_offset.x <= fill_to || fill_to < fill_from))
+                || (r_offset.x < fill_to && fill_to >= 0);
+
+            let underlying_color =
+                rect_rounded2_get_pixel(r_offset, r.size(), colortable, filled, 1);
+
+            let final_color = overlay.map_or(underlying_color, |o| {
+                let text_color = if filled { bg_color } else { fg_color };
+                o.get_pixel(underlying_color, text_color, p)
+            });
+
+            pixeldata(final_color);
+        }
+    }
+    pixeldata_dirty();
+}
+
 // Used on T1 only.
 pub fn dotted_line(start: Point, width: i32, color: Color) {
     for x in (start.x..width).step_by(2) {
