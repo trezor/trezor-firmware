@@ -18,7 +18,7 @@ pub enum ButtonPos {
 }
 
 impl ButtonPos {
-    fn hit(&self, b: &PhysicalButton) -> bool {
+    pub fn hit(&self, b: &PhysicalButton) -> bool {
         matches!(
             (self, b),
             (Self::Left, PhysicalButton::Left) | (Self::Right, PhysicalButton::Right)
