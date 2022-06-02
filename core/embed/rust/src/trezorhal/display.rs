@@ -32,6 +32,21 @@ pub fn text(baseline_x: i32, baseline_y: i32, text: &str, font: i32, fgcolor: u1
     }
 }
 
+pub fn text_inv(baseline_x: i32, baseline_y: i32, text: &str, font: i32, fgcolor: u16, bgcolor: u16, invert_to: i32) {
+    unsafe {
+        ffi::display_text_inv(
+            baseline_x,
+            baseline_y,
+            text.as_ptr() as _,
+            text.len() as _,
+            font,
+            fgcolor,
+            bgcolor,
+            invert_to,
+        )
+    }
+}
+
 pub fn text_width(text: &str, font: i32) -> i32 {
     unsafe { ffi::display_text_width(text.as_ptr() as _, text.len() as _, font) }
 }

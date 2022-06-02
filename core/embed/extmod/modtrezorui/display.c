@@ -723,14 +723,17 @@ const uint8_t *display_get_glyph(int font, uint8_t c) {
 }
 
 static void display_text_render(int x, int y, const char *text, int textlen,
-                                int font, uint16_t fgcolor, uint16_t bgcolor) {
+                                int font, uint16_t fgcolor, uint16_t bgcolor,
+                                int invert_to) {
   // determine text length if not provided
   if (textlen < 0) {
     textlen = strlen(text);
   }
 
   uint16_t colortable[16] = {0};
+  uint16_t colortable_inverted[16] = {0};
   set_color_table(colortable, fgcolor, bgcolor);
+  set_color_table(colortable_inverted, bgcolor,fgcolor);
 
   // render glyphs
   for (int i = 0; i < textlen; i++) {
@@ -763,7 +766,12 @@ static void display_text_render(int x, int y, const char *text, int textlen,
 #else
 #error Unsupported TREZOR_FONT_BPP value
 #endif
-          PIXELDATA(colortable[c]);
+          if (invert_to >= 0 && i <= invert_to){
+            PIXELDATA(colortable_inverted[c]);
+          }
+          else{
+            PIXELDATA(colortable[c]);
+          }
         }
       }
     }
@@ -772,11 +780,20 @@ static void display_text_render(int x, int y, const char *text, int textlen,
   PIXELDATA_DIRTY();
 }
 
+
+void display_text_inv(int x, int y, const char *text, int textlen, int font,
+                  uint16_t fgcolor, uint16_t bgcolor, int invert_to){
+  x += DISPLAY_OFFSET.x;
+  y += DISPLAY_OFFSET.y;
+  display_text_render(x, y, text, textlen, font, fgcolor, bgcolor, invert_to);
+}
+
+
 void display_text(int x, int y, const char *text, int textlen, int font,
                   uint16_t fgcolor, uint16_t bgcolor) {
   x += DISPLAY_OFFSET.x;
   y += DISPLAY_OFFSET.y;
-  display_text_render(x, y, text, textlen, font, fgcolor, bgcolor);
+  display_text_render(x, y, text, textlen, font, fgcolor, bgcolor,  -1);
 }
 
 void display_text_center(int x, int y, const char *text, int textlen, int font,
@@ -784,7 +801,7 @@ void display_text_center(int x, int y, const char *text, int textlen, int font,
   x += DISPLAY_OFFSET.x;
   y += DISPLAY_OFFSET.y;
   int w = display_text_width(text, textlen, font);
-  display_text_render(x - w / 2, y, text, textlen, font, fgcolor, bgcolor);
+  display_text_render(x - w / 2, y, text, textlen, font, fgcolor, bgcolor, -1);
 }
 
 void display_text_right(int x, int y, const char *text, int textlen, int font,
@@ -792,7 +809,7 @@ void display_text_right(int x, int y, const char *text, int textlen, int font,
   x += DISPLAY_OFFSET.x;
   y += DISPLAY_OFFSET.y;
   int w = display_text_width(text, textlen, font);
-  display_text_render(x - w, y, text, textlen, font, fgcolor, bgcolor);
+  display_text_render(x - w, y, text, textlen, font, fgcolor, bgcolor, -1);
 }
 
 // compute the width of the text (in pixels)

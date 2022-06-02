@@ -191,6 +191,19 @@ pub fn text_center(baseline: Point, text: &str, font: Font, fg_color: Color, bg_
     );
 }
 
+pub fn text_center_inv(baseline: Point, text: &str, font: Font, fg_color: Color, bg_color: Color, invert_to: i32) {
+    let w = font.text_width(text);
+    display::text_inv(
+        baseline.x - w / 2,
+        baseline.y,
+        text,
+        font.0,
+        fg_color.into(),
+        bg_color.into(),
+        baseline.x - w / 2 + invert_to,
+    );
+}
+
 pub fn text_right(baseline: Point, text: &str, font: Font, fg_color: Color, bg_color: Color) {
     let w = font.text_width(text);
     display::text(
