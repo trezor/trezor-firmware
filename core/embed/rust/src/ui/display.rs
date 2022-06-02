@@ -115,6 +115,140 @@ pub fn rect_fill_rounded1(r: Rect, fg_color: Color, bg_color: Color) {
     }
 }
 
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub struct TextOverlay {
+    colortable: [Color; 16],
+    area: Rect,
+    text: &'static str,
+    font: Font,
+}
+
+impl TextOverlay {
+    pub fn new(bg_color: Color, fg_color: Color, text: &'static str, font: Font) -> Self {
+        let area = Rect::zero();
+        Self {
+            colortable: get_color_table(fg_color, bg_color),
+            area,
+            text,
+            font,
+        }
+    }
+
+    // baseline relative to the underlying render area
+    pub fn place(&mut self, baseline: Offset) {
+        let text_width = self.font.text_width(self.text);
+        let text_height = self.font.text_height();
+
+        let bl_left = baseline - Offset::x(text_width / 2);
+        let text_area_start = Point::new(0, -text_height) + bl_left;
+        let text_area_end = Point::new(text_width, 0) + bl_left;
+        let area = Rect::new(text_area_start, text_area_end);
+
+        self.area = area;
+    }
+
+    pub fn get_pixel(&self, underlying: Option<Color>, x: i32, y: i32) -> Option<Color> {
+        let mut overlay_color = None;
+
+        if x >= self.area.x0 && x < self.area.x1 && y >= self.area.y0 && y < self.area.y1 {
+            let mut tot_adv = 0;
+            let x_t = x - self.area.x0;
+            let y_t = y - self.area.y0;
+
+            for c in self.text.chars() {
+                if let Some(g) = self.font.get_glyph(c) {
+                    let w = g.get_width();
+                    let h = g.get_height();
+                    let b_x = g.get_bearing_x();
+                    let b_y = g.get_bearing_y();
+
+                    if x_t >= (tot_adv + b_x)
+                        && x_t < (tot_adv + b_x + w)
+                        && y_t >= (h - b_y)
+                        && y_t <= (b_y)
+                    {
+                        //position is for this char
+                        let overlay_data = g.get_pixel_data(x_t - tot_adv - b_x, y_t - (h - b_y));
+
+                        if overlay_data > 0 {
+                            if let Some(u) = underlying {
+                                overlay_color = Some(interpolate_colors(
+                                    self.colortable[15],
+                                    u,
+                                    overlay_data as u16,
+                                ));
+                            } else {
+                                overlay_color = Some(self.colortable[overlay_data as usize]);
+                            }
+                        }
+                        break;
+                    }
+                    tot_adv += g.get_advance();
+                }
+            }
+        }
+
+        overlay_color
+    }
+}
+
+pub fn bar_with_text_and_fill(
+    r: Rect,
+    overlay: Option<TextOverlay>,
+    fg_color: Color,
+    bg_color: Color,
+    fill_from: i32,
+    fill_to: i32,
+) {
+    let clamped = clamp_coords(r.top_left(), r.size());
+
+    set_window(clamped);
+
+    for y_c in clamped.y0..clamped.y1 {
+        for x_c in clamped.x0..clamped.x1 {
+            let y = y_c - r.y0;
+            let x = x_c - r.x0;
+
+            let filled =
+                (x >= fill_from && fill_from >= 0 && (x <= fill_to || fill_to < fill_from))
+                    || (x < fill_to && fill_to >= 0);
+
+            let border = x == 0 || x == (r.width() - 1) || y == 0 || y == (r.height() - 1);
+
+            let corner = (y == r.height() - 2 || y == 1) && x == 1
+                || (x == r.width() - 2 && y == 1)
+                || (x == r.width() - 2 && y == r.height() - 2);
+
+            let corner_out = !corner
+                && (((y > r.height() - 3 || y < 2) && x < 2)
+                    || ((x > r.width() - 3) && y < 2)
+                    || (x > r.width() - 3 && y > r.height() - 3));
+
+            let underlying_color = if (border || corner || filled) && !corner_out {
+                fg_color
+            } else {
+                bg_color
+            };
+
+            let mut overlay_color = None;
+            if let Some(o) = overlay {
+                overlay_color = o.get_pixel(None, x, y);
+            }
+
+            let mut final_color = underlying_color;
+
+            if let Some(overlay) = overlay_color {
+                if overlay == fg_color {
+                    final_color = underlying_color.negate();
+                }
+            }
+
+            pixeldata(final_color);
+        }
+    }
+    pixeldata_dirty();
+}
+
 // Used on T1 only.
 pub fn dotted_line(start: Point, width: i32, color: Color) {
     for x in (start.x..width).step_by(2) {
