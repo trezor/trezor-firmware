@@ -3,8 +3,18 @@ use crate::{
     time::Duration,
     trezorhal::{display, time},
 };
+use core::cmp::{max, min};
 
 use super::geometry::{Offset, Point, Rect};
+
+pub fn clamp_coords(pos: Point, size: Offset) -> Rect {
+    let x0 = max(pos.x, 0);
+    let y0 = max(pos.y, 0);
+    let x1 = min(pos.x + size.x, constant::WIDTH);
+    let y1 = min(pos.y + size.y, constant::HEIGHT);
+
+    Rect::new(Point::new(x0, y0), Point::new(x1, y1))
+}
 
 pub fn backlight() -> i32 {
     display::backlight(-1)
@@ -221,6 +231,111 @@ pub fn get_color_table(fg_color: Color, bg_color: Color) -> [Color; 16] {
     table
 }
 
+pub struct Glyph {
+    width: i32,
+    height: i32,
+    adv: i32,
+    bearing_x: i32,
+    bearing_y: i32,
+    data: *const u8,
+}
+
+impl Glyph {
+    pub fn new(
+        width: i32,
+        height: i32,
+        adv: i32,
+        bearing_x: i32,
+        bearing_y: i32,
+        data: *const u8,
+    ) -> Self {
+        Glyph {
+            width,
+            height,
+            adv,
+            bearing_x,
+            bearing_y,
+            data,
+        }
+    }
+
+    pub fn print(&self, pos: Point, colortable: [Color; 16]) -> i32 {
+        let bearing = Offset::new(self.bearing_x as i32, -(self.bearing_y as i32));
+        let size = Offset::new((self.width) as i32, (self.height) as i32);
+        let pos_adj = pos + bearing;
+        let window = clamp_coords(pos_adj, size);
+
+        set_window(window);
+
+        for i in window.y0..window.y1 {
+            for j in window.x0..window.x1 {
+                let rx = j - pos_adj.x;
+                let ry = i - pos_adj.y;
+
+                let c = self.get_pixel_data(rx, ry);
+                pixeldata(colortable[c as usize]);
+            }
+        }
+        self.adv
+    }
+
+    pub fn unpack_bpp1(&self, a: i32) -> u8 {
+        unsafe {
+            let c_data = self.data.offset((a / 8) as isize);
+            ((*c_data >> (7 - (a % 8))) & 0x01) * 15
+        }
+    }
+
+    pub fn unpack_bpp2(&self, a: i32) -> u8 {
+        unsafe {
+            let c_data = self.data.offset((a / 4) as isize);
+            ((*c_data >> (6 - (a % 4) * 2)) & 0x03) * 5
+        }
+    }
+
+    pub fn unpack_bpp4(&self, a: i32) -> u8 {
+        unsafe {
+            let c_data = self.data.offset((a / 2) as isize);
+            (*c_data >> (4 - (a % 2) * 4)) & 0x0F
+        }
+    }
+
+    pub fn unpack_bpp8(&self, a: i32) -> u8 {
+        unsafe {
+            let c_data = self.data.offset((a) as isize);
+            *c_data >> 4
+        }
+    }
+
+    pub fn get_advance(&self) -> i32 {
+        self.adv
+    }
+    pub fn get_width(&self) -> i32 {
+        self.width
+    }
+    pub fn get_height(&self) -> i32 {
+        self.height
+    }
+    pub fn get_bearing_x(&self) -> i32 {
+        self.bearing_x
+    }
+    pub fn get_bearing_y(&self) -> i32 {
+        self.bearing_y
+    }
+
+    pub fn get_pixel_data(&self, x: i32, y: i32) -> u8 {
+        let a = x + y * self.width;
+
+        match constant::FONT_BPP {
+            1 => self.unpack_bpp1(a),
+            2 => self.unpack_bpp2(a),
+            4 => self.unpack_bpp4(a),
+            8 => self.unpack_bpp8(a),
+            _ => 0,
+        }
+    }
+}
+
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub struct Font(i32);
 
@@ -243,6 +358,42 @@ impl Font {
 
     pub fn line_height(self) -> i32 {
         constant::LINE_SPACE + self.text_height()
+    }
+
+    pub fn get_glyph(self, ch: char) -> Option<Glyph> {
+        let gl_data = display::get_char_glyph(ch, self.0);
+
+        if gl_data.is_null() {
+            return None;
+        }
+
+        unsafe {
+            let width = *gl_data.offset(0) as i32;
+            let height = *gl_data.offset(1) as i32;
+            let adv = *gl_data.offset(2) as i32;
+            let bearing_x = *gl_data.offset(3) as i32;
+            let bearing_y = *gl_data.offset(4) as i32;
+            let data = gl_data.offset(5);
+            Some(Glyph::new(width, height, adv, bearing_x, bearing_y, data))
+        }
+    }
+
+    pub fn display_text(
+        self,
+        text: &'static str,
+        baseline: Point,
+        fg_color: Color,
+        bg_color: Color,
+    ) {
+        let colortable = get_color_table(fg_color, bg_color);
+        let mut adv_total = 0;
+        for c in text.chars() {
+            let g = self.get_glyph(c);
+            if let Some(gly) = g {
+                let adv = gly.print(baseline + Offset::new(adv_total, 0), colortable);
+                adv_total += adv;
+            }
+        }
     }
 }
 

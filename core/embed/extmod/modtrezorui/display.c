@@ -668,7 +668,7 @@ static uint8_t convert_char(const uint8_t c) {
   return 0;
 }
 
-static const uint8_t *get_glyph(int font, uint8_t c) {
+const uint8_t *display_get_glyph(int font, uint8_t c) {
   c = convert_char(c);
   if (!c) return 0;
 
@@ -732,7 +732,7 @@ static void display_text_render(int x, int y, const char *text, int textlen,
 
   // render glyphs
   for (int i = 0; i < textlen; i++) {
-    const uint8_t *g = get_glyph(font, (uint8_t)text[i]);
+    const uint8_t *g = display_get_glyph(font, (uint8_t)text[i]);
     if (!g) continue;
     const uint8_t w = g[0];      // width
     const uint8_t h = g[1];      // height
@@ -801,7 +801,7 @@ int display_text_width(const char *text, int textlen, int font) {
     textlen = strlen(text);
   }
   for (int i = 0; i < textlen; i++) {
-    const uint8_t *g = get_glyph(font, (uint8_t)text[i]);
+    const uint8_t *g = display_get_glyph(font, (uint8_t)text[i]);
     if (!g) continue;
     const uint8_t adv = g[2];  // advance
     width += adv;
@@ -833,7 +833,7 @@ int display_text_split(const char *text, int textlen, int font,
     if (text[i] == ' ') {
       lastspace = i;
     }
-    const uint8_t *g = get_glyph(font, (uint8_t)text[i]);
+    const uint8_t *g = display_get_glyph(font, (uint8_t)text[i]);
     if (!g) continue;
     const uint8_t adv = g[2];  // advance
     width += adv;
