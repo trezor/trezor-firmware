@@ -1,3 +1,5 @@
+use crate::ui::display::Font;
+use crate::ui::model_tr::theme::FONT_NORMAL;
 use crate::{
     time::{Duration, Instant},
     ui::{
@@ -7,8 +9,6 @@ use crate::{
         geometry::{Offset, Rect},
     },
 };
-use crate::ui::display::{Font};
-use crate::ui::geometry::Point;
 
 pub enum LoaderMsg {
     GrownCompletely,
@@ -24,7 +24,6 @@ enum State {
 
 pub struct Loader {
     area: Rect,
-    baseline: Point,
     state: State,
     growing_duration: Duration,
     shrinking_duration: Duration,
@@ -38,7 +37,6 @@ impl Loader {
     pub fn new(text: &'static str, styles: LoaderStyleSheet) -> Self {
         Self {
             area: Rect::zero(),
-            baseline: Point::zero(),
             state: State::Initial,
             growing_duration: Duration::from_millis(1000),
             shrinking_duration: Duration::from_millis(500),
@@ -48,7 +46,6 @@ impl Loader {
     }
 
     pub fn start_growing(&mut self, ctx: &mut EventCtx, now: Instant) {
-
         let mut anim = Animation::new(
             display::LOADER_MIN,
             display::LOADER_MAX,
@@ -115,20 +112,17 @@ impl Loader {
         matches!(self.progress(now), Some(display::LOADER_MIN))
     }
 
-
     pub fn paint_loader(&mut self, style: &LoaderStyle, done: i32) {
+        let invert_from = ((self.area.width() + 1) * done) / (display::LOADER_MAX as i32);
 
-        let invert_from = ((self.area.width() +1) * done)/ (display::LOADER_MAX as i32);
-
-        display::rect_rounded2(self.area, style.fg_color, style.bg_color, -1, invert_from);
-
-        display::text_center_inv(
-            self.baseline,
+        display::rect_rounded2(
+            self.area,
             self.text,
-            style.font,
+            FONT_NORMAL,
             style.fg_color,
             style.bg_color,
-            invert_from - ((self.baseline.x - style.font.text_width(self.text) / 2) - self.area.top_left().x),
+            -1,
+            invert_from,
         );
     }
 }
@@ -137,10 +131,7 @@ impl Component for Loader {
     type Msg = LoaderMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-
-        let start_of_baseline = bounds.bottom_center() + Offset::new(1, -2);
         self.area = bounds;
-        self.baseline = start_of_baseline;
         self.area
     }
 
@@ -175,22 +166,18 @@ impl Component for Loader {
         // other component in the tree takes a long time to draw.
         let now = Instant::now();
 
-
         if let State::Initial = self.state {
             self.paint_loader(self.styles.normal, 0);
         } else if let State::Grown = self.state {
             self.paint_loader(self.styles.normal, display::LOADER_MAX as i32);
         } else {
             let progress = self.progress(now);
-            if let Some(done) = progress{
+            if let Some(done) = progress {
                 self.paint_loader(self.styles.normal, done as i32);
-            }else{
+            } else {
                 self.paint_loader(self.styles.normal, 0);
             }
         }
-
-
-
     }
 }
 
@@ -202,7 +189,6 @@ pub struct LoaderStyle {
     pub font: Font,
     pub fg_color: Color,
     pub bg_color: Color,
-    pub cut_corners: bool,
 }
 
 #[cfg(feature = "ui_debug")]
@@ -212,4 +198,3 @@ impl crate::trace::Trace for Loader {
         d.close();
     }
 }
-

@@ -123,66 +123,129 @@ pub fn rect_fill_rounded1(r: Rect, fg_color: Color, bg_color: Color) {
 }
 
 // Used on TR only.
-pub fn rect_rounded2(r: Rect, fg_color: Color, bg_color: Color, fill_from: i32, fill_to: i32) {
+pub fn rect_rounded2(
+    r: Rect,
+    text: &'static str,
+    font: Font,
+    fg_color: Color,
+    bg_color: Color,
+    fill_from: i32,
+    fill_to: i32,
+) {
+    let text_width = font.text_width(text);
+    let text_height = font.text_height();
+
+    let start_of_baseline = r.bottom_center() + Offset::new(1 - (text_width / 2), -2);
+    let text_area_start =
+        start_of_baseline + Offset::new(0, -text_height) - Offset::new(r.x0, r.y0);
+    let text_area_end = start_of_baseline + Offset::new(text_width, 0) - Offset::new(r.x0, r.y0);
+    let text_area = Rect::new(text_area_start, text_area_end);
 
     set_window(r);
 
-    for y in 0..r.height()+1 {
-        for x in 0..r.width()+1 {
+    for y in 0..r.height() + 1 {
+        for x in 0..r.width() + 1 {
+            let inverted =
+                (x >= fill_from && fill_from >= 0 && (x <= fill_to || fill_to < fill_from))
+                    || (x < fill_to && fill_to >= 0);
+
+            let mut overlay_color = None;
+
+            if x >= text_area.x0 && x <= text_area.x1 && y >= text_area.y0 && y <= text_area.y1 {
+                let mut tot_adv = 0;
+                let x_t = x - text_area_start.x;
+                let y_t = y - text_area_start.y;
+
+                for c in text.chars() {
+                    if let Some(g) = font.get_glyph(c) {
+                        let w = g.get_width();
+                        let h = g.get_height();
+                        let b_x = g.get_bearing_x();
+                        let b_y = g.get_bearing_y();
+
+                        if x_t >= (tot_adv + b_x)
+                            && x_t < (tot_adv + b_x + w)
+                            && y_t >= (h - b_y)
+                            && y_t <= (b_y)
+                        {
+                            //position is for this char
+                            let overlay_data =
+                                g.get_pixel_data(x_t - tot_adv - b_x, y_t - (h - b_y));
+
+                            if overlay_data > 0 {
+                                overlay_color = Some(fg_color);
+                            }
+                        }
+                        tot_adv += g.get_advance();
+                    }
+                }
+            }
+
+            let underlying_color;
+
             let mut border = false;
+            let mut corner_out = false;
+            let mut corner_pix = false;
+
             if x == 0 || x == (r.width()) {
                 border = true;
             }
             if y == 0 || y == (r.height()) {
                 border = true;
             }
-            let mut corner_out = false;
-            let mut corner_pix = false;
             if x < 2 && y < 2 {
-                if ! (x == 1 && y == 1) {
+                if !(x == 1 && y == 1) {
                     corner_out = true;
-                }
-                else{
+                } else {
                     corner_pix = true;
                 }
             }
-            if x < 2 && y > r.height()-2 {
-                if ! (x == 1 && y == r.height()-1) {
+            if x < 2 && y > r.height() - 2 {
+                if !(x == 1 && y == r.height() - 1) {
                     corner_out = true;
-                }
-                else{
+                } else {
                     corner_pix = true;
                 }
             }
             if x > r.width() - 2 && y < 2 {
-                if ! (x == r.width()-1 && y == 1) {
+                if !(x == r.width() - 1 && y == 1) {
                     corner_out = true;
-                }
-                else{
+                } else {
                     corner_pix = true;
                 }
             }
-            if x > r.width() - 2 && y > r.height()-2 {
-                if ! (x == r.width()-1 && y == r.height()-1) {
+            if x > r.width() - 2 && y > r.height() - 2 {
+                if !(x == r.width() - 1 && y == r.height() - 1) {
                     corner_out = true;
-                }
-                else{
+                } else {
                     corner_pix = true;
                 }
             }
 
-            if !corner_out && (border
-                || corner_pix
-                || (x >= fill_from && fill_from >= 0 && (x <= fill_to || fill_to < fill_from))
-                || (x < fill_to && fill_to >= 0)){
-                pixeldata(fg_color);
+            if corner_out {
+                underlying_color = bg_color;
+            } else if border || corner_pix {
+                underlying_color = fg_color;
+            } else {
+                if inverted {
+                    underlying_color = fg_color;
+                } else {
+                    underlying_color = bg_color;
+                }
             }
-            else{
-                pixeldata(bg_color);
+
+            let mut final_color = underlying_color;
+
+            if let Some(overlay) = overlay_color {
+                if overlay == fg_color {
+                    final_color = underlying_color.negate();
+                }
             }
+
+            pixeldata(final_color);
         }
     }
-
+    pixeldata_dirty();
 }
 
 // Used on T1 only.
@@ -251,19 +314,6 @@ pub fn text_center(baseline: Point, text: &str, font: Font, fg_color: Color, bg_
         font.0,
         fg_color.into(),
         bg_color.into(),
-    );
-}
-
-pub fn text_center_inv(baseline: Point, text: &str, font: Font, fg_color: Color, bg_color: Color, invert_to: i32) {
-    let w = font.text_width(text);
-    display::text_inv(
-        baseline.x - w / 2,
-        baseline.y,
-        text,
-        font.0,
-        fg_color.into(),
-        bg_color.into(),
-        baseline.x - w / 2 + invert_to,
     );
 }
 

@@ -1,15 +1,15 @@
 mod button;
+mod confirm;
 mod dialog;
 mod frame;
-mod page;
-mod confirm;
 mod loader;
+mod page;
 
 use super::theme;
 
 pub use button::{Button, ButtonContent, ButtonMsg, ButtonPos, ButtonStyle, ButtonStyleSheet};
-pub use dialog::{Dialog, DialogMsg};
 pub use confirm::{HoldToConfirm, HoldToConfirmMsg};
-pub use loader::{Loader, LoaderStyle, LoaderStyleSheet, LoaderMsg};
+pub use dialog::{Dialog, DialogMsg};
 pub use frame::Frame;
+pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
 pub use page::ButtonPage;
