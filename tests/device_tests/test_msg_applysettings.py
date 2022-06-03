@@ -232,9 +232,9 @@ def test_experimental_features(client: Client):
             max_rounds=10,
             max_coordinator_fee_rate=50_000_000,  # 0.5 %
             max_fee_per_kvbyte=3500,
-            n=parse_path("m/84h/1h/0h"),
+            n=parse_path("m/10025h/1h/0h/1h"),
             coin_name="Testnet",
-            script_type=messages.InputScriptType.SPENDWITNESS,
+            script_type=messages.InputScriptType.SPENDTAPROOT,
         )
 
     assert client.features.experimental_features is None

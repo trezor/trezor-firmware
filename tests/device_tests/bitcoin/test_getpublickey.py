@@ -122,6 +122,16 @@ def test_invalid_path(client: Client, coin_name, path):
         btc.get_public_node(client, path, coin_name=coin_name)
 
 
+def test_slip25_path(client: Client):
+    # Ensure that CoinJoin XPUBs are inaccessible without user authorization.
+    with pytest.raises(TrezorFailure, match="Forbidden key path"):
+        btc.get_public_node(
+            client,
+            parse_path("m/10025h/0h/0h/1h"),
+            script_type=messages.InputScriptType.SPENDTAPROOT,
+        )
+
+
 VECTORS_SCRIPT_TYPES = (  # script_type, xpub, xpub_ignored_magic
     (
         None,
