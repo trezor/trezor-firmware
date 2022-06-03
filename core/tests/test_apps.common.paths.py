@@ -174,6 +174,31 @@ class TestPathSchemas(unittest.TestCase):
         )
         self.assertEqualSchema(schema_manual, schema_parsed)
 
+    def test_restrict(self):
+        PATTERN_BIP44 = "m/44'/coin_type'/account'/change/address_index"
+
+        # Restrict coin type to Bitcoin.
+        schema = PathSchema.parse(PATTERN_BIP44, (0, 145))
+        self.assertTrue(schema.restrict([H_(44), H_(0)]))
+        expected = PathSchema.parse(PATTERN_BIP44, 0)
+        self.assertEqualSchema(schema, expected)
+
+        # Restrict coin type to Bitcoin Cash and account 2.
+        schema = PathSchema.parse(PATTERN_BIP44, (0, 145))
+        self.assertTrue(schema.restrict([H_(44), H_(145), H_(2)]))
+        expected = PathSchema.parse("m/44'/145'/2'/change/address_index", 0)
+        self.assertEqualSchema(schema, expected)
+
+        # Restrict wildcards.
+        schema = PathSchema.parse("m/10018'/**", 0)
+        self.assertTrue(schema.restrict([H_(10018), H_(3), 7]))
+        expected = PathSchema.parse("m/10018'/3'/7/**", 0)
+        self.assertEqualSchema(schema, expected)
+
+        # Restrict to a never-matching schema.
+        schema = PathSchema.parse(PATTERN_BIP44, (0, 145))
+        self.assertFalse(schema.restrict([H_(44), H_(0), 0]))
+
 
 if __name__ == "__main__":
     unittest.main()

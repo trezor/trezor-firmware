@@ -4,7 +4,7 @@ import storage.cache
 import storage.device
 from trezor import config, utils, wire, workflow
 from trezor.enums import MessageType
-from trezor.messages import Success
+from trezor.messages import Success, UnlockPath
 
 from . import workflow_handlers
 
@@ -219,6 +219,55 @@ async def handle_DoPreauthorized(
     return await handler(ctx, req, authorization.get())  # type: ignore [Expected 2 positional arguments]
 
 
+async def handle_UnlockPath(ctx: wire.Context, msg: UnlockPath) -> protobuf.MessageType:
+    from trezor.crypto import hmac
+    from trezor.messages import UnlockedPathRequest
+    from trezor.ui.layouts import confirm_action
+    from apps.common.paths import SLIP25_PURPOSE
+    from apps.common.seed import Slip21Node, get_seed
+    from apps.common.writers import write_uint32_le
+
+    _KEYCHAIN_MAC_KEY_PATH = [b"TREZOR", b"Keychain MAC key"]
+
+    # UnlockPath is relevant only for SLIP-25 paths.
+    # Note: Currently we only allow unlocking the entire SLIP-25 purpose subtree instead of
+    # per-coin or per-account unlocking in order to avoid UI complexity.
+    if msg.address_n != [SLIP25_PURPOSE]:
+        raise wire.DataError("Invalid path")
+
+    seed = await get_seed(ctx)
+    node = Slip21Node(seed)
+    node.derive_path(_KEYCHAIN_MAC_KEY_PATH)
+    mac = utils.HashWriter(hmac(hmac.SHA256, node.key()))
+    for i in msg.address_n:
+        write_uint32_le(mac, i)
+    expected_mac = mac.get_digest()
+
+    # Require confirmation to access SLIP25 paths unless already authorized.
+    if msg.mac:
+        if len(msg.mac) != len(expected_mac) or not utils.consteq(
+            expected_mac, msg.mac
+        ):
+            raise wire.DataError("Invalid MAC")
+    else:
+        await confirm_action(
+            ctx,
+            "confirm_coinjoin_access",
+            title="CoinJoin account",
+            description="Do you want to allow access to CoinJoin accounts?",
+        )
+
+    wire_types = (MessageType.GetAddress, MessageType.GetPublicKey, MessageType.SignTx)
+    req = await ctx.call_any(UnlockedPathRequest(mac=expected_mac), *wire_types)
+
+    assert req.MESSAGE_WIRE_TYPE in wire_types
+    handler = workflow_handlers.find_registered_handler(
+        ctx.iface, req.MESSAGE_WIRE_TYPE
+    )
+    assert handler is not None
+    return await handler(ctx, req, msg)  # type: ignore [Expected 2 positional arguments]
+
+
 async def handle_CancelAuthorization(
     ctx: wire.Context, msg: CancelAuthorization
 ) -> protobuf.MessageType:
@@ -336,6 +385,7 @@ def boot() -> None:
     workflow_handlers.register(MessageType.EndSession, handle_EndSession)
     workflow_handlers.register(MessageType.Ping, handle_Ping)
     workflow_handlers.register(MessageType.DoPreauthorized, handle_DoPreauthorized)
+    workflow_handlers.register(MessageType.UnlockPath, handle_UnlockPath)
     workflow_handlers.register(
         MessageType.CancelAuthorization, handle_CancelAuthorization
     )

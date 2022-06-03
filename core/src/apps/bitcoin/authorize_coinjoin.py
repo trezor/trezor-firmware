@@ -8,7 +8,8 @@ from trezor.strings import format_amount
 from trezor.ui.layouts import confirm_action, confirm_coinjoin, confirm_metadata
 
 from apps.common import authorization, safety_checks
-from apps.common.paths import validate_path
+from apps.common.keychain import FORBIDDEN_KEY_PATH
+from apps.common.paths import SLIP25_PURPOSE, validate_path
 
 from .authorization import FEE_RATE_DECIMALS
 from .common import BIP32_WALLET_DEPTH
@@ -47,6 +48,9 @@ async def authorize_coinjoin(
     if not msg.address_n:
         raise wire.DataError("Empty path not allowed.")
 
+    if msg.address_n[0] != SLIP25_PURPOSE and safety_checks.is_strict():
+        raise FORBIDDEN_KEY_PATH
+
     await confirm_action(
         ctx,
         "coinjoin_coordinator",
@@ -57,18 +61,18 @@ async def authorize_coinjoin(
         icon=ui.ICON_RECOVERY,
     )
 
-    max_fee_per_vbyte = format_amount(msg.max_fee_per_kvbyte, 3)
-    await confirm_coinjoin(ctx, coin.coin_name, msg.max_rounds, max_fee_per_vbyte)
-
     validation_path = msg.address_n + [0] * BIP32_WALLET_DEPTH
     await validate_path(
         ctx,
         keychain,
         validation_path,
+        msg.address_n[0] == SLIP25_PURPOSE,
         validate_path_against_script_type(
             coin, address_n=validation_path, script_type=msg.script_type
         ),
     )
+
+    max_fee_per_vbyte = format_amount(msg.max_fee_per_kvbyte, 3)
 
     if msg.max_fee_per_kvbyte > coin.maxfee_kb:
         await confirm_metadata(
@@ -79,6 +83,8 @@ async def authorize_coinjoin(
             max_fee_per_vbyte,
             ButtonRequestType.FeeOverThreshold,
         )
+
+    await confirm_coinjoin(ctx, coin.coin_name, msg.max_rounds, max_fee_per_vbyte)
 
     authorization.set(msg)
 

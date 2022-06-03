@@ -2,20 +2,32 @@ from typing import TYPE_CHECKING
 
 from trezor import wire
 from trezor.enums import InputScriptType
-from trezor.messages import HDNodeType, PublicKey
+from trezor.messages import HDNodeType, PublicKey, UnlockPath
 
 from apps.common import coininfo, paths
-from apps.common.keychain import get_keychain
+from apps.common.keychain import FORBIDDEN_KEY_PATH, get_keychain
 
 if TYPE_CHECKING:
     from trezor.messages import GetPublicKey
+    from trezor.protobuf import MessageType
 
 
-async def get_public_key(ctx: wire.Context, msg: GetPublicKey) -> PublicKey:
+async def get_public_key(
+    ctx: wire.Context, msg: GetPublicKey, auth_msg: MessageType | None = None
+) -> PublicKey:
     coin_name = msg.coin_name or "Bitcoin"
     script_type = msg.script_type or InputScriptType.SPENDADDRESS
     coin = coininfo.by_name(coin_name)
     curve_name = msg.ecdsa_curve_name or coin.curve_name
+
+    if msg.address_n and msg.address_n[0] == paths.SLIP25_PURPOSE:
+        # UnlockPath is required to access SLIP25 paths.
+        if not UnlockPath.is_type_of(auth_msg):
+            raise FORBIDDEN_KEY_PATH
+
+        # Verify that the desired path lies in the unlocked subtree.
+        if auth_msg.address_n != msg.address_n[: len(auth_msg.address_n)]:
+            raise FORBIDDEN_KEY_PATH
 
     keychain = await get_keychain(ctx, curve_name, [paths.AlwaysMatchingSchema])
 
