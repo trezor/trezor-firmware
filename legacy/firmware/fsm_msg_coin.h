@@ -35,6 +35,14 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
     curve = msg->ecdsa_curve_name;
   }
 
+  // Do not allow access to SLIP25 paths.
+  if (msg->address_n_count > 0 && msg->address_n[0] == PATH_SLIP25_PURPOSE &&
+      config_getSafetyCheckLevel() == SafetyCheckLevel_Strict) {
+    fsm_sendFailure(FailureType_Failure_DataError, _("Forbidden key path"));
+    layoutHome();
+    return;
+  }
+
   // derive m/0' to obtain root_fingerprint
   uint32_t root_fingerprint;
   uint32_t path[1] = {PATH_HARDENED | 0};
