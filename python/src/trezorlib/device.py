@@ -19,8 +19,8 @@ import time
 from typing import TYPE_CHECKING, Callable, Optional
 
 from . import messages
-from .exceptions import Cancelled
-from .tools import expect, session
+from .exceptions import Cancelled, TrezorException
+from .tools import Address, expect, session
 
 if TYPE_CHECKING:
     from .client import TrezorClient
@@ -218,6 +218,19 @@ def backup(client: "TrezorClient") -> "MessageType":
 @expect(messages.Success, field="message", ret_type=str)
 def cancel_authorization(client: "TrezorClient") -> "MessageType":
     return client.call(messages.CancelAuthorization())
+
+
+@expect(messages.UnlockedPathRequest, field="mac", ret_type=bytes)
+def unlock_path(client: "TrezorClient", n: "Address") -> "MessageType":
+    resp = client.call(messages.UnlockPath(address_n=n))
+
+    # Cancel the UnlockPath workflow now that we have the authentication code.
+    try:
+        client.call(messages.Cancel())
+    except Cancelled:
+        return resp
+    else:
+        raise TrezorException("Unexpected response in UnlockPath flow")
 
 
 @session
