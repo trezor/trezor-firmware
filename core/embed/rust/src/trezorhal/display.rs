@@ -1,7 +1,6 @@
 use super::ffi;
 use core::ptr;
 
-
 pub struct ToifInfo {
     pub width: u16,
     pub height: u16,
@@ -41,6 +40,13 @@ pub fn char_width(ch: char, font: i32) -> i32 {
     let mut buf = [0u8; 4];
     let encoding = ch.encode_utf8(&mut buf);
     text_width(encoding, font)
+}
+
+pub fn get_char_glyph(ch: char, font: i32) -> *const u8 {
+    let mut buf = [0u8; 4];
+    let encoding = ch.encode_utf8(&mut buf);
+
+    unsafe { ffi::display_get_glyph(font, buf[0]) }
 }
 
 pub fn text_height(font: i32) -> i32 {

@@ -148,6 +148,8 @@ void display_pixeldata_dirty();
 void display_fadein(void);
 void display_fadeout(void);
 
+const uint8_t *display_get_glyph(int font, uint8_t c);
+
 #if !(defined EMULATOR) && (defined TREZOR_MODEL_T)
 extern volatile uint8_t *const DISPLAY_CMD_ADDRESS;
 extern volatile uint8_t *const DISPLAY_DATA_ADDRESS;
