@@ -37,6 +37,7 @@
 #define PATH_MAX_ACCOUNT 100
 #define PATH_MAX_CHANGE 1
 #define PATH_MAX_ADDRESS_INDEX 1000000
+#define PATH_SLIP25_PURPOSE (PATH_HARDENED | 10025)
 
 #define ser_length_size(len) ((len) < 253 ? 1 : (len) < 0x10000 ? 3 : 5)
 

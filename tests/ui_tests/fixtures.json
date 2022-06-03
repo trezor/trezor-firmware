@@ -119,6 +119,7 @@
 "T1_bitcoin-test_getpublickey.py::test_script_type[InputScriptType.SPENDP2SHWITNESS-ypub6WYmBsV-0710fbb3": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
 "T1_bitcoin-test_getpublickey.py::test_script_type[InputScriptType.SPENDWITNESS-zpub6qP2VY9x7Mx-84eaa56c": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
 "T1_bitcoin-test_getpublickey.py::test_script_type[None-xpub6BiVtCp7ozsRo7kaoYNrCNAVJwPYTQHjoXF-c37a47fd": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+"T1_bitcoin-test_getpublickey.py::test_slip25_path": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
 "T1_bitcoin-test_getpublickey_curve.py::test_coin_and_curve": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
 "T1_bitcoin-test_getpublickey_curve.py::test_ed25519_public": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
 "T1_bitcoin-test_getpublickey_curve.py::test_publickey_curve[ed25519-path4-002e28dc0346d6d30d4e-e6c7a440": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
