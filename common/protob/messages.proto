@@ -118,6 +118,8 @@ enum MessageType {
     MessageType_GetFirmwareHash = 88 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_FirmwareHash = 89 [(bitcoin_only) = true, (wire_out) = true];
     reserved 90 to 92;
+    MessageType_UnlockPath = 93 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_UnlockedPathRequest = 94 [(bitcoin_only) = true, (wire_out) = true];
 
     MessageType_SetU2FCounter = 63 [(wire_in) = true];
     MessageType_GetNextU2FCounter = 80 [(wire_in) = true];

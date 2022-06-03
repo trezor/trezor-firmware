@@ -61,6 +61,8 @@ if TYPE_CHECKING:
         RebootToBootloader = 87
         GetFirmwareHash = 88
         FirmwareHash = 89
+        UnlockPath = 93
+        UnlockedPathRequest = 94
         SetU2FCounter = 63
         GetNextU2FCounter = 80
         NextU2FCounter = 81

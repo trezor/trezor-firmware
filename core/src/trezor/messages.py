@@ -2520,6 +2520,36 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["Nonce"]:
             return isinstance(msg, cls)
 
+    class UnlockPath(protobuf.MessageType):
+        address_n: "list[int]"
+        mac: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            address_n: "list[int] | None" = None,
+            mac: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["UnlockPath"]:
+            return isinstance(msg, cls)
+
+    class UnlockedPathRequest(protobuf.MessageType):
+        mac: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            mac: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["UnlockedPathRequest"]:
+            return isinstance(msg, cls)
+
     class DebugLinkDecision(protobuf.MessageType):
         button: "DebugButton | None"
         swipe: "DebugSwipeDirection | None"

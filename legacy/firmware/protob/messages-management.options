@@ -38,3 +38,9 @@ Nonce.nonce                             max_size:32
 
 GetFirmwareHash.challenge               max_size:32
 FirmwareHash.hash                       max_size:32
+
+
+UnlockPath.address_n                    max_count:8
+UnlockPath.mac                          max_size:32
+
+UnlockedPathRequest.mac                 max_size:32
