@@ -3,6 +3,7 @@ use crate::ui::geometry::{Offset, Point, Rect};
 pub const WIDTH: i32 = 128;
 pub const HEIGHT: i32 = 128;
 pub const LINE_SPACE: i32 = 1;
+pub const FONT_BPP: i32 = 1;
 
 pub const fn size() -> Offset {
     Offset::new(WIDTH, HEIGHT)

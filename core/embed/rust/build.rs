@@ -268,6 +268,7 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("display_pixeldata")
         .allowlist_function("display_pixeldata_dirty")
         .allowlist_function("display_set_window")
+        .allowlist_function("display_get_glyph")
         .allowlist_var("DISPLAY_CMD_ADDRESS")
         .allowlist_var("DISPLAY_DATA_ADDRESS")
         // bip39

@@ -36,6 +36,10 @@ pub fn char_width(ch: char, font: i32) -> i32 {
     text_width(encoding, font)
 }
 
+pub fn get_char_glyph(ch: u8, font: i32) -> *const u8 {
+    unsafe { ffi::display_get_glyph(font, ch) }
+}
+
 pub fn text_height(font: i32) -> i32 {
     unsafe { ffi::display_text_height(font) }
 }
