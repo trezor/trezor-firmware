@@ -607,3 +607,4 @@ message AuthorizeCoinJoin {
     optional InputScriptType script_type = 7 [default=SPENDADDRESS];    // used to distinguish between various address formats (non-segwit, segwit, etc.)
     optional AmountUnit amount_unit = 8 [default=BITCOIN];              // show amounts in
 }
+
