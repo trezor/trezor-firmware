@@ -2,6 +2,7 @@ from micropython import const
 from typing import TYPE_CHECKING
 
 HARDENED = const(0x8000_0000)
+SLIP25_PURPOSE = const(10025 | HARDENED)
 
 if TYPE_CHECKING:
     from typing import (
@@ -243,6 +244,41 @@ class PathSchema:
         for value in path_iter:
             if value not in self.trailing_components:
                 return False
+
+        return True
+
+    def set_never_matching(self) -> None:
+        """Sets the schema to never match any paths."""
+        self.schema = []
+        self.trailing_components = self._EMPTY_TUPLE
+
+    def restrict(self, path: Bip32Path) -> bool:
+        """
+        Restricts the schema to patterns that are prefixed by the specified
+        path. If the restriction results in a never-matching schema, then False
+        is returned.
+        """
+
+        for i, value in enumerate(path):
+            if i < len(self.schema):
+                # Ensure that the path is a prefix of the schema.
+                if value not in self.schema[i]:
+                    self.set_never_matching()
+                    return False
+
+                # Restrict the schema component if there are multiple choices.
+                component = self.schema[i]
+                if not isinstance(component, tuple) or len(component) != 1:
+                    self.schema[i] = (value,)
+            else:
+                # The path is longer than the schema. We need to restrict the
+                # trailing components.
+
+                if value not in self.trailing_components:
+                    self.set_never_matching()
+                    return False
+
+                self.schema.append((value,))
 
         return True
 

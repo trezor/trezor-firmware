@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from trezor import wire
 from trezor.enums import InputScriptType
+from trezor.messages import AuthorizeCoinJoin, GetOwnershipProof, SignTx, UnlockPath
 
 from apps.common import coininfo
 from apps.common.keychain import get_keychain
@@ -19,13 +20,10 @@ if TYPE_CHECKING:
     from trezor.protobuf import MessageType
 
     from trezor.messages import (
-        AuthorizeCoinJoin,
         GetAddress,
         GetOwnershipId,
-        GetOwnershipProof,
         GetPublicKey,
         SignMessage,
-        SignTx,
         VerifyMessage,
     )
 
@@ -66,6 +64,10 @@ PATTERN_BIP49 = "m/49'/coin_type'/account'/change/address_index"
 PATTERN_BIP84 = "m/84'/coin_type'/account'/change/address_index"
 # BIP-86 for taproot: https://github.com/bitcoin/bips/blob/master/bip-0086.mediawiki
 PATTERN_BIP86 = "m/86'/coin_type'/account'/change/address_index"
+# SLIP-25 for CoinJoin: https://github.com/satoshilabs/slips/blob/master/slip-0025.md
+# Only account=0 and script_type=1 are supported for now.
+PATTERN_SLIP25_TAPROOT = "m/10025'/coin_type'/0'/1'/change/address_index"
+PATTERN_SLIP25_TAPROOT_EXTERNAL = "m/10025'/coin_type'/0'/1'/0/address_index"
 
 # compatibility patterns, will be removed in the future
 PATTERN_GREENADDRESS_A = "m/[1,4]/address_index"
@@ -151,13 +153,16 @@ def validate_path_against_script_type(
 
     elif coin.taproot and script_type == InputScriptType.SPENDTAPROOT:
         patterns.append(PATTERN_BIP86)
+        patterns.append(PATTERN_SLIP25_TAPROOT)
 
     return any(
         PathSchema.parse(pattern, coin.slip44).match(address_n) for pattern in patterns
     )
 
 
-def get_schemas_for_coin(coin: coininfo.CoinInfo) -> Iterable[PathSchema]:
+def get_schemas_for_coin(
+    coin: coininfo.CoinInfo, unlock_schemas: Iterable[PathSchema] = ()
+) -> Iterable[PathSchema]:
     # basic patterns
     patterns = [
         PATTERN_BIP44,
@@ -206,6 +211,16 @@ def get_schemas_for_coin(coin: coininfo.CoinInfo) -> Iterable[PathSchema]:
     if coin.taproot:
         patterns.append(PATTERN_BIP86)
 
+    schemas = get_schemas_from_patterns(patterns, coin)
+    schemas.extend(unlock_schemas)
+
+    gc.collect()
+    return [schema.copy() for schema in schemas]
+
+
+def get_schemas_from_patterns(
+    patterns: Iterable[str], coin: coininfo.CoinInfo
+) -> list[PathSchema]:
     schemas = [PathSchema.parse(pattern, coin.slip44) for pattern in patterns]
 
     # Some wallets such as Electron-Cash (BCH) store coins on Bitcoin paths.
@@ -219,8 +234,7 @@ def get_schemas_for_coin(coin: coininfo.CoinInfo) -> Iterable[PathSchema]:
             PathSchema.parse(pattern, SLIP44_BITCOIN) for pattern in patterns
         )
 
-    gc.collect()
-    return [schema.copy() for schema in schemas]
+    return schemas
 
 
 def get_coin_by_name(coin_name: str | None) -> coininfo.CoinInfo:
@@ -234,13 +248,52 @@ def get_coin_by_name(coin_name: str | None) -> coininfo.CoinInfo:
 
 
 async def get_keychain_for_coin(
-    ctx: wire.Context, coin_name: str | None
-) -> tuple[Keychain, coininfo.CoinInfo]:
-    coin = get_coin_by_name(coin_name)
-    schemas = get_schemas_for_coin(coin)
+    ctx: wire.Context,
+    coin: coininfo.CoinInfo,
+    unlock_schemas: Iterable[PathSchema] = (),
+) -> Keychain:
+    schemas = get_schemas_for_coin(coin, unlock_schemas)
     slip21_namespaces = [[b"SLIP-0019"], [b"SLIP-0024"]]
     keychain = await get_keychain(ctx, coin.curve_name, schemas, slip21_namespaces)
-    return keychain, coin
+    return keychain
+
+
+def _get_unlock_schemas(
+    msg: MessageType, auth_msg: MessageType | None, coin: coininfo.CoinInfo
+) -> list[PathSchema]:
+    """
+    Provides additional keychain schemas that are unlocked by the particular
+    combination of `msg` and `auth_msg`.
+    """
+
+    if AuthorizeCoinJoin.is_type_of(msg):
+        # When processing the AuthorizeCoinJoin message, validate_path() always
+        # needs to treat SLIP-25 paths as valid, so add SLIP-25 to the schemas.
+        return get_schemas_from_patterns([PATTERN_SLIP25_TAPROOT], coin)
+
+    if AuthorizeCoinJoin.is_type_of(auth_msg) or UnlockPath.is_type_of(auth_msg):
+        # The user has preauthorized access to certain paths. Here we create a
+        # list of all the patterns that can be unlocked by AuthorizeCoinJoin or
+        # by UnlockPath. At the moment only SLIP-25 paths can be unlocked.
+        patterns = []
+        if SignTx.is_type_of(msg) or GetOwnershipProof.is_type_of(msg):
+            # SignTx and GetOwnershipProof need access to all SLIP-25 addresses
+            # to create CoinJoin outputs.
+            patterns.append(PATTERN_SLIP25_TAPROOT)
+        else:
+            # In case of other messages like GetAddress or SignMessage there is
+            # no reason for the user to work with SLIP-25 change-addresses. For
+            # example, using a change-address to receive a payment may
+            # compromise privacy.
+            patterns.append(PATTERN_SLIP25_TAPROOT_EXTERNAL)
+
+        # Convert the unlockable patterns to schemas and select only the ones
+        # that are unlocked by the auth_msg, i.e. lie in a subtree of the
+        # auth_msg's path.
+        schemas = get_schemas_from_patterns(patterns, coin)
+        return [s for s in schemas if s.restrict(auth_msg.address_n)]
+
+    return []
 
 
 def with_keychain(func: HandlerWithCoinInfo[MsgOut]) -> Handler[MsgIn, MsgOut]:
@@ -249,8 +302,10 @@ def with_keychain(func: HandlerWithCoinInfo[MsgOut]) -> Handler[MsgIn, MsgOut]:
         msg: MsgIn,
         auth_msg: MessageType | None = None,
     ) -> MsgOut:
-        keychain, coin = await get_keychain_for_coin(ctx, msg.coin_name)
-        if auth_msg:
+        coin = get_coin_by_name(msg.coin_name)
+        unlock_schemas = _get_unlock_schemas(msg, auth_msg, coin)
+        keychain = await get_keychain_for_coin(ctx, coin, unlock_schemas)
+        if AuthorizeCoinJoin.is_type_of(auth_msg):
             auth_obj = authorization.from_cached_message(auth_msg)
             return await func(ctx, msg, keychain, coin, auth_obj)
         else:
