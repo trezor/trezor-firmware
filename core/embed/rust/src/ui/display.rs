@@ -141,10 +141,15 @@ pub fn rect_rounded2(
     let text_area_end = start_of_baseline + Offset::new(text_width, 0) - Offset::new(r.x0, r.y0);
     let text_area = Rect::new(text_area_start, text_area_end);
 
-    set_window(r);
+    let clamped = clamp_coords(r.top_left(), r.size() + Offset::new(1,1));
 
-    for y in 0..r.height() + 1 {
-        for x in 0..r.width() + 1 {
+    set_window(clamped);
+
+    for y_c in clamped.y0..=clamped.y1 {
+        for x_c in clamped.x0..=clamped.x1 {
+            let y = y_c - r.y0;
+            let x = x_c - r.x0;
+
             let inverted =
                 (x >= fill_from && fill_from >= 0 && (x <= fill_to || fill_to < fill_from))
                     || (x < fill_to && fill_to >= 0);
