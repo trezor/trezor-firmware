@@ -115,7 +115,7 @@ impl Loader {
     pub fn paint_loader(&mut self, style: &LoaderStyle, done: i32) {
         let invert_from = ((self.area.width() + 1) * done) / (display::LOADER_MAX as i32);
 
-        display::rect_rounded2(
+        display::progress_bar_with_text(
             self.area,
             self.text,
             FONT_NORMAL,

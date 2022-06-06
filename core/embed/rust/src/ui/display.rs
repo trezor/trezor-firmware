@@ -1,5 +1,6 @@
 use super::constant;
 use crate::trezorhal::time;
+use crate::ui::model_tr::component::ButtonContent::Text;
 use crate::ui::model_tr::theme::{BG, FG};
 use crate::{time::Duration, trezorhal::display};
 use core::cmp::{max, min};
@@ -122,8 +123,104 @@ pub fn rect_fill_rounded1(r: Rect, fg_color: Color, bg_color: Color) {
     }
 }
 
-// Used on TR only.
-pub fn rect_rounded2(
+struct TextOverlay {
+    bg_color: Color,
+    fg_color: Color,
+    area: Rect,
+    text: &'static str,
+    font: Font,
+}
+
+impl TextOverlay {
+    pub fn new(
+        bg_color: Color,
+        fg_color: Color,
+        baseline: Offset, //relative to the render area
+        text: &'static str,
+        font: Font,
+    ) -> Self {
+        let text_width = font.text_width(text);
+        let text_height = font.text_height();
+
+        let bl_left = baseline - Offset::x(text_width / 2);
+        let text_area_start = Point::new(0, -text_height) + bl_left;
+        let text_area_end = Point::new(text_width, 0) + bl_left;
+        let area = Rect::new(text_area_start, text_area_end);
+
+        Self {
+            bg_color,
+            fg_color,
+            area,
+            text,
+            font,
+        }
+    }
+
+    pub fn from_baseline(
+        bg_color: Color,
+        fg_color: Color,
+        render_area: Rect, //absulute coordinates
+        baseline: Point,   //absolute coordinates
+        text: &'static str,
+        font: Font,
+    ) -> Self {
+        let text_width = font.text_width(text);
+        let text_height = font.text_height();
+
+        let bl_left = baseline - Offset::x(text_width / 2);
+        let text_area_start =
+            bl_left + Offset::new(0, -text_height) - Offset::new(render_area.x0, render_area.y0);
+        let text_area_end =
+            bl_left + Offset::new(text_width, 0) - Offset::new(render_area.x0, render_area.y0);
+        let area = Rect::new(text_area_start, text_area_end);
+
+        Self {
+            bg_color,
+            fg_color,
+            area,
+            text,
+            font,
+        }
+    }
+
+    pub fn get_pixel(&self, x: i32, y: i32) -> Option<Color> {
+        let mut overlay_color = None;
+
+        if x >= self.area.x0 && x < self.area.x1 && y >= self.area.y0 && y < self.area.y1 {
+            let mut tot_adv = 0;
+            let x_t = x - self.area.x0;
+            let y_t = y - self.area.y0;
+
+            for c in self.text.chars() {
+                if let Some(g) = self.font.get_glyph(c) {
+                    let w = g.get_width();
+                    let h = g.get_height();
+                    let b_x = g.get_bearing_x();
+                    let b_y = g.get_bearing_y();
+
+                    if x_t >= (tot_adv + b_x)
+                        && x_t < (tot_adv + b_x + w)
+                        && y_t >= (h - b_y)
+                        && y_t <= (b_y)
+                    {
+                        //position is for this char
+                        let overlay_data = g.get_pixel_data(x_t - tot_adv - b_x, y_t - (h - b_y));
+
+                        if overlay_data > 0 {
+                            overlay_color = Some(self.fg_color);
+                        }
+                        break;
+                    }
+                    tot_adv += g.get_advance();
+                }
+            }
+        }
+
+        overlay_color
+    }
+}
+
+pub fn progress_bar_with_text(
     r: Rect,
     text: &'static str,
     font: Font,
@@ -132,14 +229,8 @@ pub fn rect_rounded2(
     fill_from: i32,
     fill_to: i32,
 ) {
-    let text_width = font.text_width(text);
-    let text_height = font.text_height();
-
-    let start_of_baseline = r.bottom_center() + Offset::new(1 - (text_width / 2), -2);
-    let text_area_start =
-        start_of_baseline + Offset::new(0, -text_height) - Offset::new(r.x0, r.y0);
-    let text_area_end = start_of_baseline + Offset::new(text_width, 0) - Offset::new(r.x0, r.y0);
-    let text_area = Rect::new(text_area_start, text_area_end);
+    let baseline = r.bottom_center() + Offset::new(1, -2);
+    let overlay = TextOverlay::from_baseline(bg_color, fg_color, r, baseline, text, font);
 
     let clamped = clamp_coords(r.top_left(), r.size());
 
@@ -154,37 +245,7 @@ pub fn rect_rounded2(
                 (x >= fill_from && fill_from >= 0 && (x <= fill_to || fill_to < fill_from))
                     || (x < fill_to && fill_to >= 0);
 
-            let mut overlay_color = None;
-
-            if x >= text_area.x0 && x <= text_area.x1 && y >= text_area.y0 && y <= text_area.y1 {
-                let mut tot_adv = 0;
-                let x_t = x - text_area_start.x;
-                let y_t = y - text_area_start.y;
-
-                for c in text.chars() {
-                    if let Some(g) = font.get_glyph(c) {
-                        let w = g.get_width();
-                        let h = g.get_height();
-                        let b_x = g.get_bearing_x();
-                        let b_y = g.get_bearing_y();
-
-                        if x_t >= (tot_adv + b_x)
-                            && x_t < (tot_adv + b_x + w)
-                            && y_t >= (h - b_y)
-                            && y_t <= (b_y)
-                        {
-                            //position is for this char
-                            let overlay_data =
-                                g.get_pixel_data(x_t - tot_adv - b_x, y_t - (h - b_y));
-
-                            if overlay_data > 0 {
-                                overlay_color = Some(fg_color);
-                            }
-                        }
-                        tot_adv += g.get_advance();
-                    }
-                }
-            }
+            let overlay_color = overlay.get_pixel(x, y);
 
             let underlying_color;
 
