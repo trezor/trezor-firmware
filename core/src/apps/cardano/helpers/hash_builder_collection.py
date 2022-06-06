@@ -120,3 +120,20 @@ class HashBuilderDict(HashBuilderCollection, Generic[K, V]):
 
     def _header_bytes(self) -> bytes:
         return cbor.create_map_header(self.size)
+
+
+class HashBuilderEmbeddedCBOR(HashBuilderCollection):
+    """
+    Accepts data chunks and serializes them as embedded CBOR.
+    Note that self.remaining holds the remaining data size in bytes (not chunks).
+    Child HashBuilders are not allowed.
+    """
+
+    def add(self, chunk: bytes) -> None:
+        assert self.hash_fn is not None
+        assert self.remaining >= len(chunk)
+        self.remaining -= len(chunk)
+        self.hash_fn.update(chunk)
+
+    def _header_bytes(self) -> bytes:
+        return cbor.create_embedded_cbor_bytes_header(self.size)
