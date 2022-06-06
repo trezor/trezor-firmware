@@ -140,4 +140,14 @@ void display_fade(int start, int end, int delay);
 void display_utf8_substr(const char *buf_start, size_t buf_len, int char_off,
                          int char_len, const char **out_start, int *out_len);
 
+// pixeldata accessors
+void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
+void display_pixeldata(uint16_t c);
+void display_pixeldata_dirty();
+
+#if !(defined EMULATOR) && (defined TREZOR_MODEL_T)
+extern volatile uint8_t *const DISPLAY_CMD_ADDRESS;
+extern volatile uint8_t *const DISPLAY_DATA_ADDRESS;
+#endif
+
 #endif
