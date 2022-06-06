@@ -195,8 +195,8 @@ pub fn set_window(window: Rect) {
     display::set_window(
         window.x0 as u16,
         window.y0 as u16,
-        window.x1 as u16,
-        window.y1 as u16,
+        window.x1 as u16 - 1,
+        window.y1 as u16 - 1,
     );
 }
 
