@@ -43,7 +43,7 @@ from ..helpers.utils import (
 )
 
 if TYPE_CHECKING:
-    from typing import Any
+    from typing import Any, Awaitable, ClassVar
     from apps.common.paths import PathSchema
 
     CardanoTxResponseType = (
@@ -92,6 +92,8 @@ class Signer:
     user confirmation and serialization of the tx item.
     """
 
+    SIGNING_MODE_TITLE: ClassVar[str]
+
     def __init__(
         self,
         ctx: wire.Context,
@@ -130,6 +132,8 @@ class Signer:
         self.tx_dict: HashBuilderDict[int, Any] = HashBuilderDict(
             tx_dict_items_count, wire.ProcessError("Invalid tx signing request")
         )
+
+        self.should_show_details = False
 
     async def sign(self) -> None:
         hash_fn = hashlib.blake2b(outlen=32)
@@ -243,6 +247,10 @@ class Signer:
         validate_network_info(self.msg.network_id, self.msg.protocol_magic)
 
     async def _show_tx_init(self) -> None:
+        self.should_show_details = await layout.show_tx_init(
+            self.ctx, self.SIGNING_MODE_TITLE
+        )
+
         if not self._is_network_id_verifiable():
             await layout.warn_tx_network_unverifiable(self.ctx)
 

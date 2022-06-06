@@ -11,13 +11,7 @@ class MultisigSigner(Signer):
     The multisig signing mode only allows signing with multisig (and minting) keys.
     """
 
-    def __init__(
-        self,
-        ctx: wire.Context,
-        msg: messages.CardanoSignTxInit,
-        keychain: seed.Keychain,
-    ) -> None:
-        super().__init__(ctx, msg, keychain)
+    SIGNING_MODE_TITLE = "Confirming a multisig transaction."
 
     def _validate_tx_init(self) -> None:
         super()._validate_tx_init()
@@ -25,10 +19,6 @@ class MultisigSigner(Signer):
         self._assert_tx_init_cond(not self.msg.has_collateral_return)
         self._assert_tx_init_cond(self.msg.total_collateral is None)
         self._assert_tx_init_cond(self.msg.reference_inputs_count == 0)
-
-    async def _show_tx_init(self) -> None:
-        await layout.show_multisig_tx(self.ctx)
-        await super()._show_tx_init()
 
     async def _confirm_tx(self, tx_hash: bytes) -> None:
         # super() omitted intentionally

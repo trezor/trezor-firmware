@@ -553,6 +553,8 @@ async def should_show_more(
     br_code: ButtonRequestType = ButtonRequestType.Other,
     icon: str = ui.ICON_DEFAULT,
     icon_color: int = ui.ORANGE_ICON,
+    confirm: ButtonContent = Confirm.DEFAULT_CONFIRM,
+    major_confirm: bool = False,
 ) -> bool:
     """Return True if the user wants to show more (they click a special button)
     and False when the user wants to continue without showing details.
@@ -568,7 +570,12 @@ async def should_show_more(
     )
     for font, text in para:
         page.content.extend((font, text, "\n"))
-    ask_dialog = Confirm(AskPaginated(page, button_text))
+
+    ask_dialog = Confirm(
+        AskPaginated(page, button_text),
+        confirm=confirm,
+        major_confirm=major_confirm,
+    )
 
     result = await raise_if_cancelled(interact(ctx, ask_dialog, br_type, br_code))
     assert result in (SHOW_PAGINATED, CONFIRMED)
