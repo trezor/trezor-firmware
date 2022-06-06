@@ -15,6 +15,7 @@ ui = []
 ui_debug = []
 buttons = []
 touch = []
+emulator = []
 clippy = []
 test = ["cc", "glob"]
 
