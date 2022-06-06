@@ -16,6 +16,7 @@ from trezor.ui.layouts import (
     confirm_path_warning,
     confirm_properties,
     confirm_text,
+    should_show_more,
     show_address,
 )
 
@@ -177,25 +178,25 @@ async def show_script_hash(
         )
 
 
-async def show_multisig_tx(ctx: wire.Context) -> None:
-    await confirm_metadata(
+async def show_tx_init(ctx: wire.Context, title: str) -> bool:
+    should_show_details = await should_show_more(
         ctx,
-        "confirm_signing_mode",
-        title="Confirm transaction",
-        content="Confirming a multisig transaction.",
-        larger_vspace=True,
-        br_code=ButtonRequestType.Other,
+        "Confirm transaction",
+        (
+            (
+                ui.BOLD,
+                title,
+            ),
+            (ui.NORMAL, "Choose level of details:"),
+        ),
+        button_text="Show All",
+        icon=ui.ICON_SEND,
+        icon_color=ui.GREEN,
+        confirm="Show Simple",
+        major_confirm=True,
     )
 
-
-async def show_plutus_tx(ctx: wire.Context) -> None:
-    await confirm_metadata(
-        ctx,
-        "confirm_signing_mode",
-        title="Confirm transaction",
-        content="Confirming a Plutus transaction.",
-        br_code=ButtonRequestType.Other,
-    )
+    return should_show_details
 
 
 async def confirm_input(ctx: wire.Context, input: messages.CardanoTxInput) -> None:

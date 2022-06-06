@@ -13,16 +13,9 @@ class PlutusSigner(Signer):
     validation rules are less strict, but more tx items/warnings are shown to the user.
     """
 
-    def __init__(
-        self,
-        ctx: wire.Context,
-        msg: messages.CardanoSignTxInit,
-        keychain: seed.Keychain,
-    ) -> None:
-        super().__init__(ctx, msg, keychain)
+    SIGNING_MODE_TITLE = "Confirming a Plutus transaction."
 
     async def _show_tx_init(self) -> None:
-        await layout.show_plutus_tx(self.ctx)
         await super()._show_tx_init()
 
         # These items should be present if a Plutus script is to be executed.

@@ -1,7 +1,7 @@
 from trezor import messages, wire
 from trezor.enums import CardanoCertificateType
 
-from .. import layout, seed
+from .. import layout
 from ..helpers.paths import SCHEMA_STAKING_ANY_ACCOUNT
 from .signer import Signer
 
@@ -19,13 +19,7 @@ class PoolOwnerSigner(Signer):
     staking key in the list of pool owners.
     """
 
-    def __init__(
-        self,
-        ctx: wire.Context,
-        msg: messages.CardanoSignTxInit,
-        keychain: seed.Keychain,
-    ) -> None:
-        super().__init__(ctx, msg, keychain)
+    SIGNING_MODE_TITLE = "Confirming pool registration as owner."
 
     def _validate_tx_init(self) -> None:
         super()._validate_tx_init()
