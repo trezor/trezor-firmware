@@ -46,6 +46,11 @@ enum CardanoNativeScriptHashDisplayFormat {
     POLICY_ID = 2;
 }
 
+enum CardanoTxOutputSerializationFormat {
+    ARRAY_LEGACY = 0; // legacy_transaction_output in CDDL
+    MAP_BABBAGE = 1;  // post_alonzo_transaction_output in CDDL
+}
+
 enum CardanoCertificateType {
     STAKE_REGISTRATION = 0;
     STAKE_DEREGISTRATION = 1;
@@ -210,6 +215,9 @@ message CardanoSignTxInit {
     optional bytes script_data_hash = 16;
     required uint32 collateral_inputs_count = 17;
     required uint32 required_signers_count = 18;
+    optional bool has_collateral_return = 19 [default=false];
+    optional uint64 total_collateral = 20;
+    optional uint32 reference_inputs_count = 21 [default=0];
 }
 
 /**
@@ -226,11 +234,14 @@ message CardanoTxInput {
  * @next CardanoTxItemAck
  */
 message CardanoTxOutput {
-    optional string address = 1;                                    // target coin address in bech32 or base58
-    optional CardanoAddressParametersType address_parameters = 2;   // parameters used to derive the address
-    required uint64 amount = 3;                                     // amount to spend
+    optional string address = 1;                                                    // target coin address in bech32 or base58
+    optional CardanoAddressParametersType address_parameters = 2;                   // parameters used to derive the address
+    required uint64 amount = 3;                                                     // amount to spend
     required uint32 asset_groups_count = 4;
     optional bytes datum_hash = 5;
+    optional CardanoTxOutputSerializationFormat format = 6 [default=ARRAY_LEGACY];
+    optional uint32 inline_datum_size = 7 [default=0];                              // 0 means no inline datum
+    optional uint32 reference_script_size = 8 [default=0];                          // 0 means no reference script
 }
 
 /**
@@ -250,6 +261,22 @@ message CardanoToken {
     required bytes asset_name_bytes = 1;     // asset name as bytestring (may be either ascii string or hash)
     optional uint64 amount = 2;              // asset amount
     optional sint64 mint_amount = 3;         // mint amount (can also be negative in which case the tokens are burnt)
+}
+
+/**
+ * Request: Transaction output inline datum chunk
+ * @next CardanoTxItemAck
+ */
+message CardanoTxInlineDatumChunk {
+    required bytes data = 1;                // expected maximum chunk size is 1024 bytes
+}
+
+/**
+ * Request: Transaction output reference script chunk
+ * @next CardanoTxItemAck
+ */
+message CardanoTxReferenceScriptChunk {
+    required bytes data = 1;                // expected maximum chunk size is 1024 bytes
 }
 
 /**
@@ -372,11 +399,22 @@ message CardanoTxRequiredSigner {
 }
 
 /**
+ * Request: Transaction reference input data
+ * @next CardanoTxItemAck
+ */
+message CardanoTxReferenceInput {
+    required bytes prev_hash = 1;
+    required uint32 prev_index = 2;
+}
+
+/**
  * Response: Acknowledgement of the last transaction item received
  * @next CardanoTxInput
  * @next CardanoTxOutput
  * @next CardanoAssetGroup
  * @next CardanoToken
+ * @next CardanoTxInlineDatumChunk
+ * @next CardanoTxReferenceScriptChunk
  * @next CardanoTxCertificate
  * @next CardanoPoolOwner
  * @next CardanoPoolRelayParameters
@@ -386,6 +424,7 @@ message CardanoTxRequiredSigner {
  * @next CardanoTxMint
  * @next CardanoTxCollateralInput
  * @next CardanoTxRequiredSigner
+ * @next CardanoTxReferenceInput
  */
 message CardanoTxItemAck {
 }

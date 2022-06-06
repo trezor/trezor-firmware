@@ -186,6 +186,9 @@ if TYPE_CHECKING:
         CardanoTxMint = 332
         CardanoTxCollateralInput = 333
         CardanoTxRequiredSigner = 334
+        CardanoTxInlineDatumChunk = 335
+        CardanoTxReferenceScriptChunk = 336
+        CardanoTxReferenceInput = 337
         RippleGetAddress = 400
         RippleAddress = 401
         RippleSignTx = 402
@@ -360,6 +363,10 @@ if TYPE_CHECKING:
         HIDE = 0
         BECH32 = 1
         POLICY_ID = 2
+
+    class CardanoTxOutputSerializationFormat(IntEnum):
+        ARRAY_LEGACY = 0
+        MAP_BABBAGE = 1
 
     class CardanoCertificateType(IntEnum):
         STAKE_REGISTRATION = 0

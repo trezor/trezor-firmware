@@ -431,6 +431,8 @@ if not utils.BITCOIN_ONLY:
     import trezor.enums.CardanoPoolRelayType
     trezor.enums.CardanoTxAuxiliaryDataSupplementType
     import trezor.enums.CardanoTxAuxiliaryDataSupplementType
+    trezor.enums.CardanoTxOutputSerializationFormat
+    import trezor.enums.CardanoTxOutputSerializationFormat
     trezor.enums.CardanoTxSigningMode
     import trezor.enums.CardanoTxSigningMode
     trezor.enums.CardanoTxWitnessType

@@ -283,6 +283,9 @@ enum MessageType {
     MessageType_CardanoTxMint = 332 [(wire_in) = true];
     MessageType_CardanoTxCollateralInput = 333 [(wire_in) = true];
     MessageType_CardanoTxRequiredSigner = 334 [(wire_in) = true];
+    MessageType_CardanoTxInlineDatumChunk = 335 [(wire_in) = true];
+    MessageType_CardanoTxReferenceScriptChunk = 336 [(wire_in) = true];
+    MessageType_CardanoTxReferenceInput = 337 [(wire_in) = true];
 
     // Ripple
     MessageType_RippleGetAddress = 400 [(wire_in) = true];
