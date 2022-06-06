@@ -30,6 +30,7 @@ if TYPE_CHECKING:
     from trezor.enums import CardanoNativeScriptType  # noqa: F401
     from trezor.enums import CardanoPoolRelayType  # noqa: F401
     from trezor.enums import CardanoTxAuxiliaryDataSupplementType  # noqa: F401
+    from trezor.enums import CardanoTxOutputSerializationFormat  # noqa: F401
     from trezor.enums import CardanoTxSigningMode  # noqa: F401
     from trezor.enums import CardanoTxWitnessType  # noqa: F401
     from trezor.enums import DebugButton  # noqa: F401
@@ -1336,6 +1337,9 @@ if TYPE_CHECKING:
         script_data_hash: "bytes | None"
         collateral_inputs_count: "int"
         required_signers_count: "int"
+        has_collateral_return: "bool"
+        total_collateral: "int | None"
+        reference_inputs_count: "int"
 
         def __init__(
             self,
@@ -1358,6 +1362,9 @@ if TYPE_CHECKING:
             validity_interval_start: "int | None" = None,
             include_network_id: "bool | None" = None,
             script_data_hash: "bytes | None" = None,
+            has_collateral_return: "bool | None" = None,
+            total_collateral: "int | None" = None,
+            reference_inputs_count: "int | None" = None,
         ) -> None:
             pass
 
@@ -1387,6 +1394,9 @@ if TYPE_CHECKING:
         amount: "int"
         asset_groups_count: "int"
         datum_hash: "bytes | None"
+        format: "CardanoTxOutputSerializationFormat"
+        inline_datum_size: "int"
+        reference_script_size: "int"
 
         def __init__(
             self,
@@ -1396,6 +1406,9 @@ if TYPE_CHECKING:
             address: "str | None" = None,
             address_parameters: "CardanoAddressParametersType | None" = None,
             datum_hash: "bytes | None" = None,
+            format: "CardanoTxOutputSerializationFormat | None" = None,
+            inline_datum_size: "int | None" = None,
+            reference_script_size: "int | None" = None,
         ) -> None:
             pass
 
@@ -1435,6 +1448,34 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoToken"]:
+            return isinstance(msg, cls)
+
+    class CardanoTxInlineDatumChunk(protobuf.MessageType):
+        data: "bytes"
+
+        def __init__(
+            self,
+            *,
+            data: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxInlineDatumChunk"]:
+            return isinstance(msg, cls)
+
+    class CardanoTxReferenceScriptChunk(protobuf.MessageType):
+        data: "bytes"
+
+        def __init__(
+            self,
+            *,
+            data: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxReferenceScriptChunk"]:
             return isinstance(msg, cls)
 
     class CardanoPoolOwner(protobuf.MessageType):
@@ -1647,6 +1688,22 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxRequiredSigner"]:
+            return isinstance(msg, cls)
+
+    class CardanoTxReferenceInput(protobuf.MessageType):
+        prev_hash: "bytes"
+        prev_index: "int"
+
+        def __init__(
+            self,
+            *,
+            prev_hash: "bytes",
+            prev_index: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxReferenceInput"]:
             return isinstance(msg, cls)
 
     class CardanoTxItemAck(protobuf.MessageType):

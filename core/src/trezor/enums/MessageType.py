@@ -168,6 +168,9 @@ if not utils.BITCOIN_ONLY:
     CardanoTxMint = 332
     CardanoTxCollateralInput = 333
     CardanoTxRequiredSigner = 334
+    CardanoTxInlineDatumChunk = 335
+    CardanoTxReferenceScriptChunk = 336
+    CardanoTxReferenceInput = 337
     RippleGetAddress = 400
     RippleAddress = 401
     RippleSignTx = 402
