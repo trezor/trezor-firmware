@@ -141,12 +141,12 @@ pub fn rect_rounded2(
     let text_area_end = start_of_baseline + Offset::new(text_width, 0) - Offset::new(r.x0, r.y0);
     let text_area = Rect::new(text_area_start, text_area_end);
 
-    let clamped = clamp_coords(r.top_left(), r.size() + Offset::new(1,1));
+    let clamped = clamp_coords(r.top_left(), r.size());
 
     set_window(clamped);
 
-    for y_c in clamped.y0..=clamped.y1 {
-        for x_c in clamped.x0..=clamped.x1 {
+    for y_c in clamped.y0..clamped.y1 {
+        for x_c in clamped.x0..clamped.x1 {
             let y = y_c - r.y0;
             let x = x_c - r.x0;
 
@@ -192,10 +192,10 @@ pub fn rect_rounded2(
             let mut corner_out = false;
             let mut corner_pix = false;
 
-            if x == 0 || x == (r.width()) {
+            if x == 0 || x == (r.width() - 1) {
                 border = true;
             }
-            if y == 0 || y == (r.height()) {
+            if y == 0 || y == (r.height() - 1) {
                 border = true;
             }
             if x < 2 && y < 2 {
@@ -205,22 +205,22 @@ pub fn rect_rounded2(
                     corner_pix = true;
                 }
             }
-            if x < 2 && y > r.height() - 2 {
-                if !(x == 1 && y == r.height() - 1) {
+            if x < 2 && y > r.height() - 3 {
+                if !(x == 1 && y == r.height() - 2) {
                     corner_out = true;
                 } else {
                     corner_pix = true;
                 }
             }
-            if x > r.width() - 2 && y < 2 {
-                if !(x == r.width() - 1 && y == 1) {
+            if x > r.width() - 3 && y < 2 {
+                if !(x == r.width() - 2 && y == 1) {
                     corner_out = true;
                 } else {
                     corner_pix = true;
                 }
             }
-            if x > r.width() - 2 && y > r.height() - 2 {
-                if !(x == r.width() - 1 && y == r.height() - 1) {
+            if x > r.width() - 3 && y > r.height() - 3 {
+                if !(x == r.width() - 2 && y == r.height() - 2) {
                     corner_out = true;
                 } else {
                     corner_pix = true;
