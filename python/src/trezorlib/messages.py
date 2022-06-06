@@ -194,6 +194,9 @@ class MessageType(IntEnum):
     CardanoTxMint = 332
     CardanoTxCollateralInput = 333
     CardanoTxRequiredSigner = 334
+    CardanoTxInlineDatumChunk = 335
+    CardanoTxReferenceScriptChunk = 336
+    CardanoTxReferenceInput = 337
     RippleGetAddress = 400
     RippleAddress = 401
     RippleSignTx = 402
@@ -380,6 +383,11 @@ class CardanoNativeScriptHashDisplayFormat(IntEnum):
     HIDE = 0
     BECH32 = 1
     POLICY_ID = 2
+
+
+class CardanoTxOutputSerializationFormat(IntEnum):
+    ARRAY_LEGACY = 0
+    MAP_BABBAGE = 1
 
 
 class CardanoCertificateType(IntEnum):
@@ -2257,6 +2265,9 @@ class CardanoSignTxInit(protobuf.MessageType):
         16: protobuf.Field("script_data_hash", "bytes", repeated=False, required=False),
         17: protobuf.Field("collateral_inputs_count", "uint32", repeated=False, required=True),
         18: protobuf.Field("required_signers_count", "uint32", repeated=False, required=True),
+        19: protobuf.Field("has_collateral_return", "bool", repeated=False, required=False),
+        20: protobuf.Field("total_collateral", "uint64", repeated=False, required=False),
+        21: protobuf.Field("reference_inputs_count", "uint32", repeated=False, required=False),
     }
 
     def __init__(
@@ -2280,6 +2291,9 @@ class CardanoSignTxInit(protobuf.MessageType):
         validity_interval_start: Optional["int"] = None,
         include_network_id: Optional["bool"] = False,
         script_data_hash: Optional["bytes"] = None,
+        has_collateral_return: Optional["bool"] = False,
+        total_collateral: Optional["int"] = None,
+        reference_inputs_count: Optional["int"] = 0,
     ) -> None:
         self.signing_mode = signing_mode
         self.protocol_magic = protocol_magic
@@ -2299,6 +2313,9 @@ class CardanoSignTxInit(protobuf.MessageType):
         self.validity_interval_start = validity_interval_start
         self.include_network_id = include_network_id
         self.script_data_hash = script_data_hash
+        self.has_collateral_return = has_collateral_return
+        self.total_collateral = total_collateral
+        self.reference_inputs_count = reference_inputs_count
 
 
 class CardanoTxInput(protobuf.MessageType):
@@ -2326,6 +2343,9 @@ class CardanoTxOutput(protobuf.MessageType):
         3: protobuf.Field("amount", "uint64", repeated=False, required=True),
         4: protobuf.Field("asset_groups_count", "uint32", repeated=False, required=True),
         5: protobuf.Field("datum_hash", "bytes", repeated=False, required=False),
+        6: protobuf.Field("format", "CardanoTxOutputSerializationFormat", repeated=False, required=False),
+        7: protobuf.Field("inline_datum_size", "uint32", repeated=False, required=False),
+        8: protobuf.Field("reference_script_size", "uint32", repeated=False, required=False),
     }
 
     def __init__(
@@ -2336,12 +2356,18 @@ class CardanoTxOutput(protobuf.MessageType):
         address: Optional["str"] = None,
         address_parameters: Optional["CardanoAddressParametersType"] = None,
         datum_hash: Optional["bytes"] = None,
+        format: Optional["CardanoTxOutputSerializationFormat"] = CardanoTxOutputSerializationFormat.ARRAY_LEGACY,
+        inline_datum_size: Optional["int"] = 0,
+        reference_script_size: Optional["int"] = 0,
     ) -> None:
         self.amount = amount
         self.asset_groups_count = asset_groups_count
         self.address = address
         self.address_parameters = address_parameters
         self.datum_hash = datum_hash
+        self.format = format
+        self.inline_datum_size = inline_datum_size
+        self.reference_script_size = reference_script_size
 
 
 class CardanoAssetGroup(protobuf.MessageType):
@@ -2379,6 +2405,34 @@ class CardanoToken(protobuf.MessageType):
         self.asset_name_bytes = asset_name_bytes
         self.amount = amount
         self.mint_amount = mint_amount
+
+
+class CardanoTxInlineDatumChunk(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 335
+    FIELDS = {
+        1: protobuf.Field("data", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        data: "bytes",
+    ) -> None:
+        self.data = data
+
+
+class CardanoTxReferenceScriptChunk(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 336
+    FIELDS = {
+        1: protobuf.Field("data", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        data: "bytes",
+    ) -> None:
+        self.data = data
 
 
 class CardanoPoolOwner(protobuf.MessageType):
@@ -2620,6 +2674,23 @@ class CardanoTxRequiredSigner(protobuf.MessageType):
     ) -> None:
         self.key_path: Sequence["int"] = key_path if key_path is not None else []
         self.key_hash = key_hash
+
+
+class CardanoTxReferenceInput(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 337
+    FIELDS = {
+        1: protobuf.Field("prev_hash", "bytes", repeated=False, required=True),
+        2: protobuf.Field("prev_index", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        prev_hash: "bytes",
+        prev_index: "int",
+    ) -> None:
+        self.prev_hash = prev_hash
+        self.prev_index = prev_index
 
 
 class CardanoTxItemAck(protobuf.MessageType):
