@@ -320,6 +320,14 @@ def create_map_header(size: int) -> bytes:
     return _header(_CBOR_MAP, size)
 
 
+def create_embedded_cbor_bytes_header(size: int) -> bytes:
+    """
+    Bytes wrapped in Tag 24 (embedded CBOR).
+    https://datatracker.ietf.org/doc/html/rfc7049#section-2.4.4.1
+    """
+    return _header(_CBOR_TAG, _CBOR_RAW_TAG) + _header(_CBOR_BYTE_STRING, size)
+
+
 def precedes(prev: bytes, curr: bytes) -> bool:
     """
     Returns True if `prev` is smaller than `curr` with regards to
