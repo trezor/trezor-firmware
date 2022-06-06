@@ -181,6 +181,7 @@ message VerifyMessage {
 /**
  * Request: Ask device to sign transaction
  * @start
+ * @next CoinInfo
  * @next TxRequest
  * @next Failure
  */
@@ -197,6 +198,15 @@ message SignTx {
     optional uint32 branch_id = 10;                            // only for Zcash, BRANCH_ID
     optional AmountUnit amount_unit = 11 [default=BITCOIN];    // show amounts in
     optional bool decred_staking_ticket = 12 [default=false];  // only for Decred, this is signing a ticket purchase
+}
+
+/**
+ * Request: Coin info provided by host
+ * @next TxRequest
+ * @next Failure
+ */
+message CoinInfo {
+    required string coin_name = 1;  // coin to use
 }
 
 /**
