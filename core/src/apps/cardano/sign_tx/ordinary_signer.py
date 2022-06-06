@@ -17,13 +17,7 @@ class OrdinarySigner(Signer):
     controlled by 1852' keys, dealing with staking and minting/burning tokens.
     """
 
-    def __init__(
-        self,
-        ctx: wire.Context,
-        msg: messages.CardanoSignTxInit,
-        keychain: seed.Keychain,
-    ) -> None:
-        super().__init__(ctx, msg, keychain)
+    SIGNING_MODE_TITLE = "Confirming a transaction."
 
     def _validate_tx_init(self) -> None:
         super()._validate_tx_init()
