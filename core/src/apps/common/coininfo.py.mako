@@ -136,9 +136,6 @@ btc_names = ["Bitcoin", "Testnet", "Regtest"]
 coins_btc = [c for c in supported_on("trezor2", bitcoin) if c.name in btc_names]
 coins_alt = [c for c in supported_on("trezor2", bitcoin) if c.name not in btc_names]
 
-for c in coins_btc + coins_alt:
-    c.overwintered = bool(c.consensus_branch_id)
-
 %>\
 def by_name(name: str) -> CoinInfo:
 % for coin in coins_btc:
