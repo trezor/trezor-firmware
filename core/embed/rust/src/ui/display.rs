@@ -3,6 +3,7 @@ use crate::{
     error::Error,
     time::Duration,
     trezorhal::{display, qr, time},
+    ui::lerp::Lerp,
 };
 
 use super::geometry::{Offset, Point, Rect};
@@ -237,6 +238,16 @@ pub fn set_window(window: Rect) {
     );
 }
 
+pub fn get_color_table(fg_color: Color, bg_color: Color) -> [Color; 16] {
+    let mut table: [Color; 16] = [Color::from_u16(0); 16];
+
+    for (i, item) in table.iter_mut().enumerate() {
+        *item = Color::lerp(bg_color, fg_color, i as f32 / 15_f32);
+    }
+
+    table
+}
+
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub struct Font(i32);
 
@@ -295,6 +306,15 @@ impl Color {
 
     pub fn negate(self) -> Self {
         Self(!self.0)
+    }
+}
+
+impl Lerp for Color {
+    fn lerp(a: Self, b: Self, t: f32) -> Self {
+        let r = u8::lerp(a.r(), b.r(), t);
+        let g = u8::lerp(a.g(), b.g(), t);
+        let b = u8::lerp(a.b(), b.b(), t);
+        Color::rgb(r, g, b)
     }
 }
 
