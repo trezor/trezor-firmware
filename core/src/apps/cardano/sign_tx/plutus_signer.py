@@ -24,11 +24,15 @@ class PlutusSigner(Signer):
     async def _show_tx_init(self) -> None:
         await layout.show_plutus_tx(self.ctx)
         await super()._show_tx_init()
+
         # These items should be present if a Plutus script is to be executed.
         if self.msg.script_data_hash is None:
             await layout.warn_no_script_data_hash(self.ctx)
         if self.msg.collateral_inputs_count == 0:
             await layout.warn_no_collateral_inputs(self.ctx)
+
+        if self.msg.total_collateral is None:
+            await layout.warn_unknown_total_collateral(self.ctx)
 
     async def _confirm_tx(self, tx_hash: bytes) -> None:
         # super() omitted intentionally
@@ -43,9 +47,16 @@ class PlutusSigner(Signer):
             self.msg.protocol_magic,
             self.msg.ttl,
             self.msg.validity_interval_start,
+            self.msg.total_collateral,
             is_network_id_verifiable,
             tx_hash,
         )
+
+    def _should_show_tx_hash(self) -> bool:
+        # super() omitted intentionally
+        # Plutus txs tend to contain a lot of opaque data, some users might
+        # want to verify only the tx hash.
+        return True
 
     async def _show_input(self, input: messages.CardanoTxInput) -> None:
         # super() omitted intentionally
