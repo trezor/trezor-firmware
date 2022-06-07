@@ -183,6 +183,7 @@ pub fn text_right(baseline: Point, text: &str, font: Font, fg_color: Color, bg_c
     );
 }
 
+#[inline(always)]
 pub fn pixeldata(color: Color) {
     display::pixeldata(color.into());
 }
