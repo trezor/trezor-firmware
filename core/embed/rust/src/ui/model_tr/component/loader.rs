@@ -1,5 +1,4 @@
 use crate::ui::display::Font;
-use crate::ui::model_tr::theme::FONT_NORMAL;
 use crate::{
     time::{Duration, Instant},
     ui::{
@@ -27,7 +26,7 @@ pub struct Loader {
     state: State,
     growing_duration: Duration,
     shrinking_duration: Duration,
-    text: &'static str,
+    text: display::TextOverlay,
     styles: LoaderStyleSheet,
 }
 
@@ -35,12 +34,19 @@ impl Loader {
     pub const SIZE: Offset = Offset::new(120, 120);
 
     pub fn new(text: &'static str, styles: LoaderStyleSheet) -> Self {
+        let overlay = display::TextOverlay::new(
+            styles.normal.bg_color,
+            styles.normal.fg_color,
+            text,
+            styles.normal.font,
+        );
+
         Self {
             area: Rect::zero(),
             state: State::Initial,
             growing_duration: Duration::from_millis(1000),
             shrinking_duration: Duration::from_millis(500),
-            text,
+            text: overlay,
             styles,
         }
     }
@@ -115,10 +121,9 @@ impl Loader {
     pub fn paint_loader(&mut self, style: &LoaderStyle, done: i32) {
         let invert_from = ((self.area.width() + 1) * done) / (display::LOADER_MAX as i32);
 
-        display::progress_bar_with_text(
+        display::bar_with_text_and_fill(
             self.area,
-            self.text,
-            FONT_NORMAL,
+            Some(self.text),
             style.fg_color,
             style.bg_color,
             -1,
@@ -132,6 +137,8 @@ impl Component for Loader {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
+        let baseline = Offset::new(bounds.width() / 2 + 1, bounds.height() - 2);
+        self.text.place(baseline);
         self.area
     }
 

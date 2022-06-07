@@ -123,67 +123,39 @@ pub fn rect_fill_rounded1(r: Rect, fg_color: Color, bg_color: Color) {
     }
 }
 
-struct TextOverlay {
-    bg_color: Color,
-    fg_color: Color,
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub struct TextOverlay {
+    colortable: [Color; 16],
     area: Rect,
     text: &'static str,
     font: Font,
 }
 
 impl TextOverlay {
-    pub fn new(
-        bg_color: Color,
-        fg_color: Color,
-        baseline: Offset, //relative to the render area
-        text: &'static str,
-        font: Font,
-    ) -> Self {
-        let text_width = font.text_width(text);
-        let text_height = font.text_height();
+    pub fn new(bg_color: Color, fg_color: Color, text: &'static str, font: Font) -> Self {
+        let area = Rect::zero();
+        Self {
+            colortable: get_color_table(fg_color, bg_color),
+            area,
+            text,
+            font,
+        }
+    }
+
+    // baseline relative to the underlying render area
+    pub fn place(&mut self, baseline: Offset) {
+        let text_width = self.font.text_width(self.text);
+        let text_height = self.font.text_height();
 
         let bl_left = baseline - Offset::x(text_width / 2);
         let text_area_start = Point::new(0, -text_height) + bl_left;
         let text_area_end = Point::new(text_width, 0) + bl_left;
         let area = Rect::new(text_area_start, text_area_end);
 
-        Self {
-            bg_color,
-            fg_color,
-            area,
-            text,
-            font,
-        }
+        self.area = area;
     }
 
-    pub fn from_baseline(
-        bg_color: Color,
-        fg_color: Color,
-        render_area: Rect, //absulute coordinates
-        baseline: Point,   //absolute coordinates
-        text: &'static str,
-        font: Font,
-    ) -> Self {
-        let text_width = font.text_width(text);
-        let text_height = font.text_height();
-
-        let bl_left = baseline - Offset::x(text_width / 2);
-        let text_area_start =
-            bl_left + Offset::new(0, -text_height) - Offset::new(render_area.x0, render_area.y0);
-        let text_area_end =
-            bl_left + Offset::new(text_width, 0) - Offset::new(render_area.x0, render_area.y0);
-        let area = Rect::new(text_area_start, text_area_end);
-
-        Self {
-            bg_color,
-            fg_color,
-            area,
-            text,
-            font,
-        }
-    }
-
-    pub fn get_pixel(&self, x: i32, y: i32) -> Option<Color> {
+    pub fn get_pixel(&self, underlying: Option<Color>, x: i32, y: i32) -> Option<Color> {
         let mut overlay_color = None;
 
         if x >= self.area.x0 && x < self.area.x1 && y >= self.area.y0 && y < self.area.y1 {
@@ -207,7 +179,15 @@ impl TextOverlay {
                         let overlay_data = g.get_pixel_data(x_t - tot_adv - b_x, y_t - (h - b_y));
 
                         if overlay_data > 0 {
-                            overlay_color = Some(self.fg_color);
+                            if let Some(u) = underlying {
+                                overlay_color = Some(interpolate_colors(
+                                    self.colortable[15],
+                                    u,
+                                    overlay_data as u16,
+                                ));
+                            } else {
+                                overlay_color = Some(self.colortable[overlay_data as usize]);
+                            }
                         }
                         break;
                     }
@@ -220,18 +200,14 @@ impl TextOverlay {
     }
 }
 
-pub fn progress_bar_with_text(
+pub fn bar_with_text_and_fill(
     r: Rect,
-    text: &'static str,
-    font: Font,
+    overlay: Option<TextOverlay>,
     fg_color: Color,
     bg_color: Color,
     fill_from: i32,
     fill_to: i32,
 ) {
-    let baseline = r.bottom_center() + Offset::new(1, -2);
-    let overlay = TextOverlay::from_baseline(bg_color, fg_color, r, baseline, text, font);
-
     let clamped = clamp_coords(r.top_left(), r.size());
 
     set_window(clamped);
@@ -241,11 +217,9 @@ pub fn progress_bar_with_text(
             let y = y_c - r.y0;
             let x = x_c - r.x0;
 
-            let inverted =
+            let filled =
                 (x >= fill_from && fill_from >= 0 && (x <= fill_to || fill_to < fill_from))
                     || (x < fill_to && fill_to >= 0);
-
-            let overlay_color = overlay.get_pixel(x, y);
 
             let underlying_color;
 
@@ -293,11 +267,16 @@ pub fn progress_bar_with_text(
             } else if border || corner_pix {
                 underlying_color = fg_color;
             } else {
-                if inverted {
+                if filled {
                     underlying_color = fg_color;
                 } else {
                     underlying_color = bg_color;
                 }
+            }
+
+            let mut overlay_color = None;
+            if let Some(o) = overlay {
+                overlay_color = o.get_pixel(None, x, y);
             }
 
             let mut final_color = underlying_color;
