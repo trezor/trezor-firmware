@@ -53,6 +53,14 @@ def test_cardano_sign_tx(client: Client, parameters, result):
     required_signers = [
         cardano.parse_required_signer(s) for s in parameters["required_signers"]
     ]
+    collateral_return = (
+        cardano.parse_output(parameters["collateral_return"])
+        if parameters["collateral_return"] is not None
+        else None
+    )
+    reference_inputs = [
+        cardano.parse_reference_input(i) for i in parameters["reference_inputs"]
+    ]
     additional_witness_requests = [
         cardano.parse_additional_witness_request(p)
         for p in parameters["additional_witness_requests"]
@@ -72,8 +80,8 @@ def test_cardano_sign_tx(client: Client, parameters, result):
             inputs=inputs,
             outputs=outputs,
             fee=parameters["fee"],
-            ttl=parameters.get("ttl"),
-            validity_interval_start=parameters.get("validity_interval_start"),
+            ttl=parameters["ttl"],
+            validity_interval_start=parameters["validity_interval_start"],
             certificates=certificates,
             withdrawals=withdrawals,
             protocol_magic=parameters["protocol_magic"],
@@ -83,6 +91,9 @@ def test_cardano_sign_tx(client: Client, parameters, result):
             script_data_hash=script_data_hash,
             collateral_inputs=collateral_inputs,
             required_signers=required_signers,
+            collateral_return=collateral_return,
+            total_collateral=parameters["total_collateral"],
+            reference_inputs=reference_inputs,
             additional_witness_requests=additional_witness_requests,
             include_network_id=parameters["include_network_id"],
         )
@@ -112,6 +123,14 @@ def test_cardano_sign_tx_failed(client: Client, parameters, result):
     required_signers = [
         cardano.parse_required_signer(s) for s in parameters["required_signers"]
     ]
+    collateral_return = (
+        cardano.parse_output(parameters["collateral_return"])
+        if parameters["collateral_return"] is not None
+        else None
+    )
+    reference_inputs = [
+        cardano.parse_reference_input(i) for i in parameters["reference_inputs"]
+    ]
     additional_witness_requests = [
         cardano.parse_additional_witness_request(p)
         for p in parameters["additional_witness_requests"]
@@ -132,8 +151,8 @@ def test_cardano_sign_tx_failed(client: Client, parameters, result):
                 inputs=inputs,
                 outputs=outputs,
                 fee=parameters["fee"],
-                ttl=parameters.get("ttl"),
-                validity_interval_start=parameters.get("validity_interval_start"),
+                ttl=parameters["ttl"],
+                validity_interval_start=parameters["validity_interval_start"],
                 certificates=certificates,
                 withdrawals=withdrawals,
                 protocol_magic=parameters["protocol_magic"],
@@ -143,6 +162,9 @@ def test_cardano_sign_tx_failed(client: Client, parameters, result):
                 script_data_hash=script_data_hash,
                 collateral_inputs=collateral_inputs,
                 required_signers=required_signers,
+                collateral_return=collateral_return,
+                total_collateral=parameters["total_collateral"],
+                reference_inputs=reference_inputs,
                 additional_witness_requests=additional_witness_requests,
                 include_network_id=parameters["include_network_id"],
             )

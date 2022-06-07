@@ -27,11 +27,11 @@ class OrdinarySigner(Signer):
 
     def _validate_tx_init(self) -> None:
         super()._validate_tx_init()
-        if (
-            self.msg.collateral_inputs_count != 0
-            or self.msg.required_signers_count != 0
-        ):
-            raise wire.ProcessError("Invalid tx signing request")
+        self._assert_tx_init_cond(self.msg.collateral_inputs_count == 0)
+        self._assert_tx_init_cond(self.msg.required_signers_count == 0)
+        self._assert_tx_init_cond(not self.msg.has_collateral_return)
+        self._assert_tx_init_cond(self.msg.total_collateral is None)
+        self._assert_tx_init_cond(self.msg.reference_inputs_count == 0)
 
     async def _confirm_tx(self, tx_hash: bytes) -> None:
         # super() omitted intentionally
@@ -43,6 +43,7 @@ class OrdinarySigner(Signer):
             self.msg.protocol_magic,
             self.msg.ttl,
             self.msg.validity_interval_start,
+            self.msg.total_collateral,
             is_network_id_verifiable,
             tx_hash=None,
         )

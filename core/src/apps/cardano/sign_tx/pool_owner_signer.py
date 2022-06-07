@@ -29,21 +29,15 @@ class PoolOwnerSigner(Signer):
 
     def _validate_tx_init(self) -> None:
         super()._validate_tx_init()
-        if (
-            self.msg.certificates_count != 1
-            or self.msg.withdrawals_count != 0
-            or self.msg.minting_asset_groups_count != 0
-        ):
-            raise wire.ProcessError(
-                "Stakepool registration transaction cannot contain other certificates, withdrawals or minting"
-            )
-
-        if (
-            self.msg.script_data_hash is not None
-            or self.msg.collateral_inputs_count != 0
-            or self.msg.required_signers_count != 0
-        ):
-            raise wire.ProcessError("Invalid tx signing request")
+        self._assert_tx_init_cond(self.msg.certificates_count == 1)
+        self._assert_tx_init_cond(self.msg.withdrawals_count == 0)
+        self._assert_tx_init_cond(self.msg.minting_asset_groups_count == 0)
+        self._assert_tx_init_cond(self.msg.script_data_hash is None)
+        self._assert_tx_init_cond(self.msg.collateral_inputs_count == 0)
+        self._assert_tx_init_cond(self.msg.required_signers_count == 0)
+        self._assert_tx_init_cond(not self.msg.has_collateral_return)
+        self._assert_tx_init_cond(self.msg.total_collateral is None)
+        self._assert_tx_init_cond(self.msg.reference_inputs_count == 0)
 
     async def _confirm_tx(self, tx_hash: bytes) -> None:
         # super() omitted intentionally
@@ -56,7 +50,12 @@ class PoolOwnerSigner(Signer):
 
     def _validate_output(self, output: messages.CardanoTxOutput) -> None:
         super()._validate_output(output)
-        if output.address_parameters is not None or output.datum_hash is not None:
+        if (
+            output.address_parameters is not None
+            or output.datum_hash is not None
+            or output.inline_datum_size > 0
+            or output.reference_script_size > 0
+        ):
             raise wire.ProcessError("Invalid output")
 
     def _should_show_output(self, output: messages.CardanoTxOutput) -> bool:

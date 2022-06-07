@@ -22,6 +22,14 @@ ADDRESS_TYPES_SHELLEY = (
     CardanoAddressType.REWARD_SCRIPT,
 )
 
+ADDRESS_TYPES_PAYMENT_KEY = (
+    CardanoAddressType.BASE,
+    CardanoAddressType.BASE_KEY_SCRIPT,
+    CardanoAddressType.POINTER,
+    CardanoAddressType.ENTERPRISE,
+    CardanoAddressType.BYRON,
+)
+
 ADDRESS_TYPES_PAYMENT_SCRIPT = (
     CardanoAddressType.BASE_SCRIPT_KEY,
     CardanoAddressType.BASE_SCRIPT_SCRIPT,
@@ -202,16 +210,7 @@ def validate_output_address_parameters(
 
     # Change outputs with script payment part are forbidden.
     # Reward addresses are forbidden as outputs in general, see also validate_output_address
-    assert_params_cond(
-        parameters.address_type
-        in (
-            CardanoAddressType.BASE,
-            CardanoAddressType.BASE_KEY_SCRIPT,
-            CardanoAddressType.POINTER,
-            CardanoAddressType.ENTERPRISE,
-            CardanoAddressType.BYRON,
-        )
-    )
+    assert_params_cond(parameters.address_type in ADDRESS_TYPES_PAYMENT_KEY)
 
 
 def assert_cond(condition: bool) -> None:
