@@ -284,7 +284,7 @@ impl Glyph {
         }
     }
 
-    pub fn print(&self, pos: Point) -> i32 {
+    pub fn print(&self, pos: Point, colortable: [Color; 16]) -> i32 {
         let bearing = Offset::new(self.bearing_x as i32, -(self.bearing_y as i32));
         let size = Offset::new((self.width) as i32, (self.height) as i32);
         let pos_adj = pos + bearing;
@@ -298,11 +298,7 @@ impl Glyph {
                 let ry = i - pos_adj.y;
 
                 let c = self.get_pixel_data(rx, ry);
-                if c > 0 {
-                    pixeldata(FG);
-                } else {
-                    pixeldata(BG);
-                }
+                pixeldata(colortable[c as usize]);
             }
         }
         self.adv
@@ -411,12 +407,19 @@ impl Font {
         }
     }
 
-    pub fn text(self, text: &'static str, baseline: Point) {
+    pub fn display_text(
+        self,
+        text: &'static str,
+        baseline: Point,
+        fg_color: Color,
+        bg_color: Color,
+    ) {
+        let colortable = get_color_table(fg_color, bg_color);
         let mut adv_total = 0;
         for c in text.chars() {
             let g = self.get_glyph(c);
             if let Some(gly) = g {
-                let adv = gly.print(baseline + Offset::new(adv_total, 0));
+                let adv = gly.print(baseline + Offset::new(adv_total, 0), colortable);
                 adv_total += adv;
             }
         }
