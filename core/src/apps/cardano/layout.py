@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from trezor import messages, ui
 from trezor.enums import (
@@ -193,7 +193,7 @@ async def show_plutus_tx(ctx: wire.Context) -> None:
         ctx,
         "confirm_signing_mode",
         title="Confirm transaction",
-        content="Confirming a Plutus transaction - loss of collateral is possible. Check all items carefully.",
+        content="Confirming a Plutus transaction.",
         br_code=ButtonRequestType.Other,
     )
 
@@ -215,16 +215,24 @@ async def confirm_sending(
     ctx: wire.Context,
     ada_amount: int,
     to: str,
-    is_change_output: bool,
+    output_type: Literal["address", "change", "collateral-return"],
     network_id: int,
 ) -> None:
-    subtitle = "Change amount:" if is_change_output else "Confirm sending:"
+    if output_type == "address":
+        message = "Confirm sending"
+    elif output_type == "change":
+        message = "Change amount"
+    elif output_type == "collateral-return":
+        message = "Collateral return"
+    else:
+        raise RuntimeError  # should be unreachable
+
     await confirm_output(
         ctx,
         to,
         format_coin_amount(ada_amount, network_id),
         title="Confirm transaction",
-        subtitle=subtitle,
+        subtitle=f"{message}:",
         font_amount=ui.BOLD,
         width_paginated=17,
         to_str="\nto\n",
@@ -252,6 +260,68 @@ async def confirm_sending_token(
             ),
             ("Amount sent:", format_amount(token.amount, 0)),
         ],
+        br_code=ButtonRequestType.Other,
+    )
+
+
+async def confirm_datum_hash(ctx: wire.Context, datum_hash: bytes) -> None:
+    await confirm_properties(
+        ctx,
+        "confirm_datum_hash",
+        title="Confirm transaction",
+        props=[
+            (
+                "Datum hash:",
+                bech32.encode(bech32.HRP_OUTPUT_DATUM_HASH, datum_hash),
+            ),
+        ],
+        br_code=ButtonRequestType.Other,
+    )
+
+
+async def confirm_inline_datum(
+    ctx: wire.Context, first_chunk: bytes, inline_datum_size: int
+) -> None:
+    await _confirm_data_chunk(
+        ctx,
+        "confirm_inline_datum",
+        "Inline datum",
+        first_chunk,
+        inline_datum_size,
+    )
+
+
+async def confirm_reference_script(
+    ctx: wire.Context, first_chunk: bytes, reference_script_size: int
+) -> None:
+    await _confirm_data_chunk(
+        ctx,
+        "confirm_reference_script",
+        "Reference script",
+        first_chunk,
+        reference_script_size,
+    )
+
+
+async def _confirm_data_chunk(
+    ctx: wire.Context, br_type: str, title: str, first_chunk: bytes, data_size: int
+) -> None:
+    MAX_DISPLAYED_SIZE = 56
+    displayed_bytes = first_chunk[:MAX_DISPLAYED_SIZE]
+    bytes_optional_plural = "byte" if data_size == 1 else "bytes"
+    props: list[tuple[str, bytes | None]] = [
+        (
+            f"{title} ({data_size} {bytes_optional_plural}):",
+            displayed_bytes,
+        )
+    ]
+    if data_size > MAX_DISPLAYED_SIZE:
+        props.append(("...", None))
+    await confirm_properties(
+        ctx,
+        br_type,
+        title="Confirm transaction",
+        props=props,
         br_code=ButtonRequestType.Other,
     )
 
@@ -350,12 +420,18 @@ async def warn_path(ctx: wire.Context, path: list[int], title: str) -> None:
     await confirm_path_warning(ctx, address_n_to_str(path), path_type=title)
 
 
-async def warn_tx_output_contains_tokens(ctx: wire.Context) -> None:
+async def warn_tx_output_contains_tokens(
+    ctx: wire.Context, is_collateral_return: bool = False
+) -> None:
+    if is_collateral_return:
+        content = "The collateral return\noutput contains tokens."
+    else:
+        content = "The following\ntransaction output\ncontains tokens."
     await confirm_metadata(
         ctx,
         "confirm_tokens",
         title="Confirm transaction",
-        content="The following\ntransaction output\ncontains tokens.",
+        content=content,
         larger_vspace=True,
         br_code=ButtonRequestType.Other,
     )
@@ -372,30 +448,12 @@ async def warn_tx_contains_mint(ctx: wire.Context) -> None:
     )
 
 
-async def warn_tx_output_contains_datum_hash(
-    ctx: wire.Context, datum_hash: bytes
-) -> None:
-    await confirm_properties(
-        ctx,
-        "confirm_datum_hash",
-        title="Confirm transaction",
-        props=[
-            (
-                "The following transaction output contains datum hash:",
-                bech32.encode(bech32.HRP_OUTPUT_DATUM_HASH, datum_hash),
-            ),
-            ("\nContinue?", None),
-        ],
-        br_code=ButtonRequestType.Other,
-    )
-
-
-async def warn_tx_output_no_datum_hash(ctx: wire.Context) -> None:
+async def warn_tx_output_no_datum(ctx: wire.Context) -> None:
     await confirm_metadata(
         ctx,
         "confirm_no_datum_hash",
         title="Confirm transaction",
-        content="The following transaction output contains a script address, but does not contain a datum hash.",
+        content="The following transaction output contains a script address, but does not contain a datum.",
         br_code=ButtonRequestType.Other,
     )
 
@@ -416,6 +474,16 @@ async def warn_no_collateral_inputs(ctx: wire.Context) -> None:
         "confirm_no_collateral_inputs",
         title="Confirm transaction",
         content="The transaction contains no collateral inputs. Plutus script will not be able to run.",
+        br_code=ButtonRequestType.Other,
+    )
+
+
+async def warn_unknown_total_collateral(ctx: wire.Context) -> None:
+    await confirm_metadata(
+        ctx,
+        "confirm_unknown_total_collateral",
+        title="Warning",
+        content="Unknown collateral amount, check all items carefully.",
         br_code=ButtonRequestType.Other,
     )
 
@@ -448,12 +516,18 @@ async def confirm_tx(
     protocol_magic: int,
     ttl: int | None,
     validity_interval_start: int | None,
+    total_collateral: int | None,
     is_network_id_verifiable: bool,
     tx_hash: bytes | None,
 ) -> None:
     props: list[PropertyType] = [
         ("Transaction fee:", format_coin_amount(fee, network_id)),
     ]
+
+    if total_collateral is not None:
+        props.append(
+            ("Total collateral:", format_coin_amount(total_collateral, network_id))
+        )
 
     if is_network_id_verifiable:
         props.append((f"Network: {protocol_magics.to_ui_string(protocol_magic)}", None))
@@ -773,6 +847,21 @@ async def confirm_collateral_input(
         props=[
             ("Collateral input ID:", collateral_input.prev_hash),
             ("Collateral input index:", str(collateral_input.prev_index)),
+        ],
+        br_code=ButtonRequestType.Other,
+    )
+
+
+async def confirm_reference_input(
+    ctx: wire.Context, reference_input: messages.CardanoTxReferenceInput
+) -> None:
+    await confirm_properties(
+        ctx,
+        "confirm_reference_input",
+        title="Confirm transaction",
+        props=[
+            ("Reference input ID:", reference_input.prev_hash),
+            ("Reference input index:", str(reference_input.prev_index)),
         ],
         br_code=ButtonRequestType.Other,
     )
