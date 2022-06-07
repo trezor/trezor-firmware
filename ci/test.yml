@@ -738,6 +738,36 @@ core unix memory profiler:
     expire_in: 1 week
     when: always
 
+# Flash size profiling
+
+# Finds out how much flash space we have left in the firmware build
+# Fails if the free space is less than certain threshold
+core firmware flash size checker:
+  stage: test
+  <<: *gitlab_caching
+  needs:
+    - core fw regular debug build
+  script:
+    - nix-shell --run "poetry run core/tools/size/checker.py /builds/satoshilabs/trezor/trezor-firmware/firmware.elf"
+
+# Compares the current flash space with the situation in the current master
+# Fails if the new binary is significantly larger than the master one
+# (the threshold is defined in the script, currently 5kb).
+# Allowing fir failure, not to prevent the merge.
+# Also generates a report with the current situation
+core firmware flash size compare master:
+  stage: test
+  <<: *gitlab_caching
+  allow_failure: true
+  needs:
+    - core fw regular build
+  script:
+    - nix-shell --run "poetry run core/tools/size/compare_master.py /builds/satoshilabs/trezor/trezor-firmware/firmware.elf -r firmware_elf_size_report.txt"
+  artifacts:
+    paths:
+      - firmware_elf_size_report.txt
+    expire_in: 1 week
+
 # Connect
 
 connect test core:
