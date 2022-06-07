@@ -268,6 +268,8 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("display_loader")
         .allowlist_function("display_pixeldata")
         .allowlist_function("display_pixeldata_dirty")
+        .allowlist_function("display_fadein")
+        .allowlist_function("display_fadeout")
         .allowlist_function("display_set_window")
         .allowlist_var("DISPLAY_CMD_ADDRESS")
         .allowlist_var("DISPLAY_DATA_ADDRESS")
