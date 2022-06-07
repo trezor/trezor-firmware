@@ -385,6 +385,20 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["HDNodeType"]:
             return isinstance(msg, cls)
 
+    class CoinInfoNeeded(protobuf.MessageType):
+        coin_name: "str"
+
+        def __init__(
+            self,
+            *,
+            coin_name: "str",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CoinInfoNeeded"]:
+            return isinstance(msg, cls)
+
     class MultisigRedeemScriptType(protobuf.MessageType):
         pubkeys: "list[HDNodePathType]"
         signatures: "list[bytes]"
@@ -613,6 +627,20 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["SignTx"]:
+            return isinstance(msg, cls)
+
+    class CoinInfoFromHost(protobuf.MessageType):
+        coin_name: "str"
+
+        def __init__(
+            self,
+            *,
+            coin_name: "str",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CoinInfoFromHost"]:
             return isinstance(msg, cls)
 
     class TxRequest(protobuf.MessageType):

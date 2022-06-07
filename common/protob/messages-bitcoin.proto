@@ -205,7 +205,7 @@ message SignTx {
  * @next TxRequest
  * @next Failure
  */
-message CoinInfo {
+message CoinInfoFromHost { // TODO: rename
     required string coin_name = 1;  // coin to use
 }
 

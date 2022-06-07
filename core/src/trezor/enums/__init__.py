@@ -31,6 +31,7 @@ if TYPE_CHECKING:
         Entropy = 10
         LoadDevice = 13
         ResetDevice = 14
+        CoinInfoNeeded = 16
         Features = 17
         PinMatrixRequest = 18
         PinMatrixAck = 19
@@ -88,6 +89,7 @@ if TYPE_CHECKING:
         GetOwnershipProof = 49
         OwnershipProof = 50
         AuthorizeCoinJoin = 51
+        CoinInfoFromHost = 52
         CipherKeyValue = 23
         CipheredKeyValue = 48
         SignIdentity = 53

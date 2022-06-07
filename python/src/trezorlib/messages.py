@@ -39,6 +39,7 @@ class MessageType(IntEnum):
     Entropy = 10
     LoadDevice = 13
     ResetDevice = 14
+    CoinInfoNeeded = 16
     Features = 17
     PinMatrixRequest = 18
     PinMatrixAck = 19
@@ -96,6 +97,7 @@ class MessageType(IntEnum):
     GetOwnershipProof = 49
     OwnershipProof = 50
     AuthorizeCoinJoin = 51
+    CoinInfoFromHost = 52
     CipherKeyValue = 23
     CipheredKeyValue = 48
     SignIdentity = 53
@@ -925,6 +927,20 @@ class HDNodeType(protobuf.MessageType):
         self.private_key = private_key
 
 
+class CoinInfoNeeded(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 16
+    FIELDS = {
+        1: protobuf.Field("coin_name", "string", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        coin_name: "str",
+    ) -> None:
+        self.coin_name = coin_name
+
+
 class MultisigRedeemScriptType(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
@@ -1194,6 +1210,20 @@ class SignTx(protobuf.MessageType):
         self.branch_id = branch_id
         self.amount_unit = amount_unit
         self.decred_staking_ticket = decred_staking_ticket
+
+
+class CoinInfoFromHost(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 52
+    FIELDS = {
+        1: protobuf.Field("coin_name", "string", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        coin_name: "str",
+    ) -> None:
+        self.coin_name = coin_name
 
 
 class TxRequest(protobuf.MessageType):

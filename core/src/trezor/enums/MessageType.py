@@ -65,6 +65,7 @@ OwnershipId = 44
 GetOwnershipProof = 49
 OwnershipProof = 50
 AuthorizeCoinJoin = 51
+CoinInfoFromHost = 52
 CipherKeyValue = 23
 CipheredKeyValue = 48
 SignIdentity = 53
@@ -90,6 +91,7 @@ DebugLinkRecordScreen = 9003
 DebugLinkEraseSdCard = 9005
 DebugLinkWatchLayout = 9006
 if not utils.BITCOIN_ONLY:
+    CoinInfoNeeded = 16
     SetU2FCounter = 63
     GetNextU2FCounter = 80
     NextU2FCounter = 81
