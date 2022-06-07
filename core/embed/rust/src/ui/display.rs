@@ -210,6 +210,28 @@ pub fn set_window(window: Rect) {
     );
 }
 
+pub fn interpolate_colors(color0: Color, color1: Color, step: u16) -> Color {
+    let cr: u16;
+    let cg: u16;
+    let cb: u16;
+
+    cr = ((color0.r() as u16) * step + (color1.r() as u16) * (15 - step)) / 15;
+    cg = ((color0.g() as u16) * step + (color1.g() as u16) * (15 - step)) / 15;
+    cb = ((color0.b() as u16) * step + (color1.b() as u16) * (15 - step)) / 15;
+
+    return Color::rgb(cr as u8, cg as u8, cb as u8);
+}
+
+pub fn get_color_table(fg_color: Color, bg_color: Color) -> [Color; 16] {
+    let mut table: [Color; 16] = [Color::from_u16(0); 16];
+
+    for i in 0..16 {
+        table[i] = interpolate_colors(fg_color, bg_color, i as u16);
+    }
+
+    table
+}
+
 pub fn text_top_left(position: Point, text: &str, font: Font, fg_color: Color, bg_color: Color) {
     // let w = font.text_width(text);
     let h = font.text_height();
