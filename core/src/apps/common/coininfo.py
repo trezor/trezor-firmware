@@ -1,13 +1,24 @@
 # generated from coininfo.py.mako
 # (by running `make templates` in `core`)
 # do not edit manually!
-from typing import Any
+from typing import TYPE_CHECKING
 
 from trezor import utils
 from trezor.crypto.base58 import blake256d_32, groestl512d_32, keccak_32, sha256d_32
 from trezor.crypto.scripts import blake256_ripemd160, sha256_ripemd160
+from trezor.messages import CoinInfoFromHost, CoinInfoNeeded
+
+if TYPE_CHECKING:
+    from typing import Any, Awaitable
+    from trezor import wire
 
 # flake8: noqa
+
+
+# TODO: insert this somehow into `by_name` function - first check stored coins and if not found - request from host
+async def get_coin_info(ctx: wire.Context, name: str) -> Awaitable[CoinInfoFromHost]:  # type: ignore [awaitable-is-generator]
+    info = await ctx.call(CoinInfoNeeded(coin_name=name), CoinInfoFromHost)
+    return info
 
 
 class CoinInfo:

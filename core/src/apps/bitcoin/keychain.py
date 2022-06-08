@@ -223,11 +223,16 @@ def get_schemas_for_coin(coin: coininfo.CoinInfo) -> Iterable[PathSchema]:
     return [schema.copy() for schema in schemas]
 
 
-def get_coin_by_name(coin_name: str | None) -> coininfo.CoinInfo:
+async def get_coin_by_name(ctx: wire.Context, coin_name: str | None) -> coininfo.CoinInfo:
     if coin_name is None:
         coin_name = "Bitcoin"
 
     try:
+        # get coin info from host
+        print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! calling")
+        ci = await coininfo.get_coin_info(ctx, coin_name)
+        print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! got {ci.coin_name}")
+
         return coininfo.by_name(coin_name)
     except ValueError:
         raise wire.DataError("Unsupported coin type")
@@ -236,7 +241,7 @@ def get_coin_by_name(coin_name: str | None) -> coininfo.CoinInfo:
 async def get_keychain_for_coin(
     ctx: wire.Context, coin_name: str | None
 ) -> tuple[Keychain, coininfo.CoinInfo]:
-    coin = get_coin_by_name(coin_name)
+    coin = await get_coin_by_name(ctx, coin_name)
     schemas = get_schemas_for_coin(coin)
     slip21_namespaces = [[b"SLIP-0019"], [b"SLIP-0024"]]
     keychain = await get_keychain(ctx, coin.curve_name, schemas, slip21_namespaces)

@@ -301,6 +301,11 @@ def sign_tx(
 
     res = client.call(signtx)
 
+    # Check whether device asked for coin info
+    if isinstance(res, messages.CoinInfoNeeded):
+        print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! got {res.coin_name}")
+        res = client.call(messages.CoinInfoFromHost(coin_name=res.coin_name+"_host"))
+
     # Prepare structure for signatures
     signatures: List[Optional[bytes]] = [None] * len(inputs)
     serialized_tx = b""
