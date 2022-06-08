@@ -21,7 +21,7 @@ pub struct SwipePage<T, U> {
     scrollbar: ScrollBar,
     hint: Label<&'static str>,
     button_back: Option<Button<&'static str>>,
-    fade: Option<i32>,
+    fade: Option<u16>,
 }
 
 impl<T, U> SwipePage<T, U>
