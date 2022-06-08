@@ -80,6 +80,7 @@ async def show(
     | None,
     protocol_magic: int,
     network_id: int,
+    should_show_details: bool,
 ) -> None:
     if catalyst_registration_parameters:
         await _show_catalyst_registration(
@@ -90,7 +91,8 @@ async def show(
             network_id,
         )
 
-    await show_auxiliary_data_hash(ctx, auxiliary_data_hash)
+    if should_show_details:
+        await show_auxiliary_data_hash(ctx, auxiliary_data_hash)
 
 
 async def _show_catalyst_registration(

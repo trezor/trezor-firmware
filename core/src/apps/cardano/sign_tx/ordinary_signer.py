@@ -81,3 +81,7 @@ class OrdinarySigner(Signer):
             await layout.confirm_witness_request(self.ctx, witness_path)
         elif not is_payment and not is_staking:
             await self._fail_or_warn_path(witness_path, WITNESS_PATH_NAME)
+        else:
+            await self._show_if_showing_details(
+                layout.confirm_witness_request(self.ctx, witness_path)
+            )

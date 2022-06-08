@@ -313,6 +313,10 @@ Note that including `inline_datum` and/or `reference_script` requires using the 
 
 When one wants to spend funds from a Plutus script address (which is possible only in the Plutus signing mode), they have to attach the Plutus script body as well as the datum referenced in the UTXO (if they did not utilize `inline_datum` and `reference_script` with `reference_inputs`). A redeemer must be provided too. These items are outside the transaction body which is signed by Trezor, so their hash is included in the transaction body as `script_data_hash`.
 
+### Level of details ("Show All"/"Show Simple")
+
+With the introduction of Plutus scripts the transaction signing UI has become a pain for the users. There are many elements which an ordinary user has no chance to verify and they might only confuse and bother him during the transaction signing process. This is why we have introduced the option to hide some transaction elements by letting the user choose the level of details for the transaction signing. This is done by adding an initial screen to the transaction signing flow on which two buttons are displayed: "Show All" button to display all transaction details and a "Show Simple" button to only show the critical transaction details.
+
 ### Transaction Explorer
 
 [Cardano explorer](https://explorer.cardano.org/en.html), [Cardanoscan](https://cardanoscan.io/).
