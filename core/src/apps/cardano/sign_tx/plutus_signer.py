@@ -54,7 +54,7 @@ class PlutusSigner(Signer):
     async def _show_input(self, input: messages.CardanoTxInput) -> None:
         # super() omitted intentionally
         # The inputs are not interchangeable (because of datums), so we must show them.
-        await layout.confirm_input(self.ctx, input)
+        await self._show_if_showing_details(layout.confirm_input(self.ctx, input))
 
     async def _show_output_credentials(
         self, address_parameters: messages.CardanoAddressParametersType
@@ -74,6 +74,10 @@ class PlutusSigner(Signer):
         # super() omitted intentionally
         # All outputs need to be shown (even device-owned), because they might influence
         # the script evaluation.
+        if self._is_simple_change_output(output):
+            # only display simple change outputs if showing details
+            return self.should_show_details
+
         return True
 
     def _is_change_output(self, output: messages.CardanoTxOutput) -> bool:
