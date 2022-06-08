@@ -104,11 +104,6 @@ class Signer:
         self.msg = msg
         self.keychain = keychain
 
-        # Some data (e.g. output inline datum) are too long to verify manually.
-        # We track their presence and eventually display the tx hash when
-        # confirming the tx.
-        self.has_hidden_data = False
-
         self.account_path_checker = AccountPathChecker()
 
         # Inputs, outputs and fee are mandatory, count the number of optional fields present.
@@ -259,8 +254,8 @@ class Signer:
         raise NotImplementedError
 
     def _should_show_tx_hash(self) -> bool:
-        # By default, we display tx hash only if some data wasn't shown.
-        return self.has_hidden_data
+        # By default we display tx hash only if showing details
+        return self.should_show_details
 
     # inputs
 
@@ -407,12 +402,6 @@ class Signer:
         Determines whether the output should be shown. Extracted from _show_output
         because of readability.
         """
-        if (
-            output.datum_hash is not None
-            or output.inline_datum_size > 0
-            or output.reference_script_size > 0
-        ):
-            return True
 
         address_type = self._get_output_address_type(output)
         if (
@@ -424,8 +413,13 @@ class Signer:
             return True
 
         if self._is_simple_change_output(output):
-            # We don't need to display simple address outputs.
-            return False
+            # Show change output only if showing details and if it contains plutus data
+            has_plutus_data = (
+                output.datum_hash is not None
+                or output.inline_datum_size > 0
+                or output.reference_script_size > 0
+            )
+            return self.should_show_details and has_plutus_data
 
         return True
 
@@ -459,7 +453,9 @@ class Signer:
 
         if output.datum_hash is not None:
             if should_show:
-                await layout.confirm_datum_hash(self.ctx, output.datum_hash)
+                await self._show_if_showing_details(
+                    layout.confirm_datum_hash(self.ctx, output.datum_hash)
+                )
             output_list.append(output.datum_hash)
 
     async def _process_babbage_output(
@@ -486,7 +482,9 @@ class Signer:
 
         if output.datum_hash is not None:
             if should_show:
-                await layout.confirm_datum_hash(self.ctx, output.datum_hash)
+                await self._show_if_showing_details(
+                    layout.confirm_datum_hash(self.ctx, output.datum_hash)
+                )
             output_dict.add(
                 BABBAGE_OUTPUT_KEY_DATUM_OPTION,
                 (DATUM_OPTION_KEY_HASH, output.datum_hash),
@@ -626,7 +624,6 @@ class Signer:
         should_show: bool,
     ) -> None:
         assert inline_datum_size > 0
-        self.has_hidden_data = True
 
         chunks_count = self._get_chunks_count(inline_datum_size)
         for chunk_number in range(chunks_count):
@@ -640,8 +637,8 @@ class Signer:
                 wire.ProcessError("Invalid inline datum chunk"),
             )
             if chunk_number == 0 and should_show:
-                await layout.confirm_inline_datum(
-                    self.ctx, chunk.data, inline_datum_size
+                await self._show_if_showing_details(
+                    layout.confirm_inline_datum(self.ctx, chunk.data, inline_datum_size)
                 )
             inline_datum_cbor.add(chunk.data)
 
@@ -654,7 +651,6 @@ class Signer:
         should_show: bool,
     ) -> None:
         assert reference_script_size > 0
-        self.has_hidden_data = True
 
         chunks_count = self._get_chunks_count(reference_script_size)
         for chunk_number in range(chunks_count):
@@ -668,8 +664,10 @@ class Signer:
                 wire.ProcessError("Invalid reference script chunk"),
             )
             if chunk_number == 0 and should_show:
-                await layout.confirm_reference_script(
-                    self.ctx, chunk.data, reference_script_size
+                await self._show_if_showing_details(
+                    layout.confirm_reference_script(
+                        self.ctx, chunk.data, reference_script_size
+                    )
                 )
             reference_script_cbor.add(chunk.data)
 
@@ -803,8 +801,10 @@ class Signer:
             )
             self._validate_withdrawal(withdrawal)
             address_bytes = self._derive_withdrawal_address_bytes(withdrawal)
-            await layout.confirm_withdrawal(
-                self.ctx, withdrawal, address_bytes, self.msg.network_id
+            await self._show_if_showing_details(
+                layout.confirm_withdrawal(
+                    self.ctx, withdrawal, address_bytes, self.msg.network_id
+                )
             )
             withdrawals_dict.add(address_bytes, withdrawal.amount)
 
@@ -842,6 +842,7 @@ class Signer:
             data.catalyst_registration_parameters,
             self.msg.protocol_magic,
             self.msg.network_id,
+            self.should_show_details,
         )
         self.tx_dict.add(TX_BODY_KEY_AUXILIARY_DATA, auxiliary_data_hash)
 
@@ -897,7 +898,9 @@ class Signer:
     async def _process_script_data_hash(self) -> None:
         assert self.msg.script_data_hash is not None
         self._validate_script_data_hash()
-        await layout.confirm_script_data_hash(self.ctx, self.msg.script_data_hash)
+        await self._show_if_showing_details(
+            layout.confirm_script_data_hash(self.ctx, self.msg.script_data_hash)
+        )
         self.tx_dict.add(TX_BODY_KEY_SCRIPT_DATA_HASH, self.msg.script_data_hash)
 
     def _validate_script_data_hash(self) -> None:
@@ -930,7 +933,9 @@ class Signer:
         self, collateral_input: messages.CardanoTxCollateralInput
     ) -> None:
         if self.msg.total_collateral is None:
-            await layout.confirm_collateral_input(self.ctx, collateral_input)
+            await self._show_if_showing_details(
+                layout.confirm_collateral_input(self.ctx, collateral_input)
+            )
 
     # required signers
 
@@ -942,7 +947,9 @@ class Signer:
                 messages.CardanoTxItemAck(), messages.CardanoTxRequiredSigner
             )
             self._validate_required_signer(required_signer)
-            await layout.confirm_required_signer(self.ctx, required_signer)
+            await self._show_if_showing_details(
+                layout.confirm_required_signer(self.ctx, required_signer)
+            )
 
             key_hash = required_signer.key_hash or get_public_key_hash(
                 self.keychain, required_signer.key_path
@@ -1064,7 +1071,7 @@ class Signer:
         if self._is_simple_change_output(output):
             return False
 
-        return True
+        return self.should_show_details
 
     # reference inputs
 
@@ -1076,7 +1083,9 @@ class Signer:
                 messages.CardanoTxItemAck(), messages.CardanoTxReferenceInput
             )
             self._validate_reference_input(reference_input)
-            await layout.confirm_reference_input(self.ctx, reference_input)
+            await self._show_if_showing_details(
+                layout.confirm_reference_input(self.ctx, reference_input)
+            )
             reference_inputs_list.append(
                 (reference_input.prev_hash, reference_input.prev_index)
             )
@@ -1244,3 +1253,7 @@ class Signer:
 
         if Credential.stake_credential(address_parameters).is_unusual_path:
             raise wire.DataError(f"Invalid {CHANGE_OUTPUT_STAKING_PATH_NAME.lower()}")
+
+    async def _show_if_showing_details(self, layout_fn: Awaitable) -> None:
+        if self.should_show_details:
+            await layout_fn
