@@ -11,6 +11,7 @@ use crate::{
         obj::{Obj, ObjBase},
         qstr::Qstr,
         typ::Type,
+        util,
     },
     time::Duration,
     ui::{
@@ -18,7 +19,6 @@ use crate::{
         constant,
         geometry::Rect,
     },
-    util,
 };
 
 #[cfg(feature = "buttons")]

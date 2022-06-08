@@ -5,8 +5,10 @@
 #![allow(dead_code)]
 
 mod error;
+#[cfg(feature = "micropython")]
 #[macro_use]
 mod micropython;
+#[cfg(feature = "protobuf")]
 mod protobuf;
 mod time;
 #[cfg(feature = "ui_debug")]
@@ -16,7 +18,6 @@ mod trezorhal;
 #[cfg(feature = "ui")]
 #[macro_use]
 pub mod ui;
-mod util;
 
 #[cfg(not(test))]
 #[cfg(any(not(feature = "test"), feature = "clippy"))]

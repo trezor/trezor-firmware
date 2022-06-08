@@ -1,7 +1,4 @@
-use core::{
-    convert::{TryFrom, TryInto},
-    num::TryFromIntError,
-};
+use core::convert::{TryFrom, TryInto};
 
 use cstr_core::CStr;
 
@@ -411,11 +408,5 @@ impl Obj {
             Ok(x) => Ok(Some(x)),
             Err(e) => Err(e.into()),
         }
-    }
-}
-
-impl From<TryFromIntError> for Error {
-    fn from(_: TryFromIntError) -> Self {
-        Self::OutOfRange
     }
 }

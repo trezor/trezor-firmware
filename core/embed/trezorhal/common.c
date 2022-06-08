@@ -134,6 +134,7 @@ void __assert_func(const char *file, int line, const char *func,
 #endif
 
 void hal_delay(uint32_t ms) { HAL_Delay(ms); }
+uint32_t hal_ticks_ms() { return HAL_GetTick(); }
 
 // reference RM0090 section 35.12.1 Figure 413
 #define USB_OTG_HS_DATA_FIFO_RAM (USB_OTG_HS_PERIPH_BASE + 0x20000U)

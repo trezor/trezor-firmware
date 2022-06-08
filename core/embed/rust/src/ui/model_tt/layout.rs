@@ -2,7 +2,7 @@ use core::{convert::TryInto, ops::Deref};
 
 use crate::{
     error::Error,
-    micropython::{buffer::StrBuffer, map::Map, module::Module, obj::Obj, qstr::Qstr},
+    micropython::{buffer::StrBuffer, map::Map, module::Module, obj::Obj, qstr::Qstr, util},
     ui::{
         component::{
             base::ComponentExt,
@@ -15,7 +15,6 @@ use crate::{
             result::{CANCELLED, CONFIRMED, INFO},
         },
     },
-    util,
 };
 
 use super::{

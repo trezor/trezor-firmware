@@ -20,6 +20,7 @@
 #include <SDL.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/time.h>
 #include <unistd.h>
 
 #include "common.h"
@@ -115,6 +116,12 @@ error_shutdown(const char *line1, const char *line2, const char *line3,
 }
 
 void hal_delay(uint32_t ms) { usleep(1000 * ms); }
+
+uint32_t hal_ticks_ms() {
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+}
 
 static int SDLCALL emulator_event_filter(void *userdata, SDL_Event *event) {
   switch (event->type) {

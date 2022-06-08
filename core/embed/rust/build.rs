@@ -3,7 +3,9 @@ use std::ffi::OsStr;
 use std::{env, path::PathBuf, process::Command};
 
 fn main() {
+    #[cfg(feature = "micropython")]
     generate_qstr_bindings();
+    #[cfg(feature = "micropython")]
     generate_micropython_bindings();
     generate_trezorhal_bindings();
     #[cfg(feature = "test")]
@@ -18,6 +20,7 @@ fn model() -> String {
 }
 
 /// Generates Rust module that exports QSTR constants used in firmware.
+#[cfg(feature = "micropython")]
 fn generate_qstr_bindings() {
     let out_path = env::var("OUT_DIR").unwrap();
 
@@ -117,6 +120,7 @@ fn prepare_bindings() -> bindgen::Builder {
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
 }
 
+#[cfg(feature = "micropython")]
 fn generate_micropython_bindings() {
     let out_path = env::var("OUT_DIR").unwrap();
 
@@ -269,7 +273,10 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("slip39_word_completion_mask")
         .allowlist_function("button_sequence_to_word")
         // random
-        .allowlist_function("random_uniform");
+        .allowlist_function("random_uniform")
+        // time
+        .allowlist_function("hal_delay")
+        .allowlist_function("hal_ticks_ms");
 
     // Write the bindings to a file in the OUR_DIR.
     bindings

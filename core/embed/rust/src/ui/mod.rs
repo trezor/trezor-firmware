@@ -7,6 +7,9 @@ pub mod constant;
 pub mod display;
 pub mod event;
 pub mod geometry;
+mod util;
+
+#[cfg(feature = "micropython")]
 pub mod layout;
 
 #[cfg(feature = "model_t1")]
