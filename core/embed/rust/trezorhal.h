@@ -1,3 +1,4 @@
+#include "common.h"
 #include "display.h"
 #include "secbool.h"
 #include "storage.h"

@@ -66,6 +66,7 @@ error_shutdown(const char *line1, const char *line2, const char *line3,
        : __fatal_error(#expr, msg, __FILE__, __LINE__, __func__))
 
 void hal_delay(uint32_t ms);
+uint32_t hal_ticks_ms();
 
 void clear_otg_hs_memory(void);
 

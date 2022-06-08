@@ -665,18 +665,13 @@ RUST_LIB = 'trezor_lib'
 RUST_LIBPATH = f'{RUST_LIBDIR}/lib{RUST_LIB}.a'
 
 def cargo_build():
-    if TREZOR_MODEL in ('1',):
-        features = ["model_t1"]
-    elif TREZOR_MODEL in ('R',):
-        features = ["model_tr"]
-    else:
-        features = ["model_tt"]
-    if BITCOIN_ONLY == "1":
-        features.append("bitcoin_only")
+    features = ['micropython', 'protobuf', f'model_t{TREZOR_MODEL.lower()}']
+    if BITCOIN_ONLY == '1':
+        features.append('bitcoin_only')
     if UI2:
-        features.append("ui")
-        if PYOPT == "0" or not FROZEN:
-            features.append("ui_debug")
+        features.append('ui')
+        if PYOPT == '0':
+            features.append('ui_debug')
 
     return f'cd embed/rust; cargo build --profile {RUST_PROFILE} --target-dir=../../build/unix/rust --no-default-features --features "{" ".join(features)}"'
 

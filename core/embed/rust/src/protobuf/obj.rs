@@ -10,8 +10,8 @@ use crate::{
         obj::{Obj, ObjBase},
         qstr::Qstr,
         typ::Type,
+        util,
     },
-    util,
 };
 
 use super::{

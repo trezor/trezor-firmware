@@ -3,7 +3,7 @@ use core::{
     ops::{Div, Mul},
 };
 
-use crate::micropython::time;
+use crate::trezorhal::time;
 
 const MILLIS_PER_SEC: u32 = 1000;
 
@@ -83,7 +83,6 @@ pub struct Instant {
 
 impl Instant {
     pub fn now() -> Self {
-        // TODO: We should move this to `micropython::time`.
         Self {
             millis: time::ticks_ms(),
         }

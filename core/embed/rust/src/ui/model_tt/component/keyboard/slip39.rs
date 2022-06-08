@@ -18,8 +18,8 @@ use crate::{
             },
             theme,
         },
+        util::ResultExt,
     },
-    util::ResultExt,
 };
 
 const MAX_LENGTH: usize = 8;

@@ -5,8 +5,7 @@ use core::{
 
 use crate::{
     error::Error,
-    micropython::{buffer::Buffer, gc::Gc, list::List, map::Map, obj::Obj, qstr::Qstr},
-    util,
+    micropython::{buffer::Buffer, gc::Gc, list::List, map::Map, obj::Obj, qstr::Qstr, util},
 };
 
 use super::{

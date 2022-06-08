@@ -704,18 +704,14 @@ def cargo_build():
         profile = '--release'
     else:
         profile = ''
-    if TREZOR_MODEL in ("1",):
-        features = ["model_t1"]
-    elif TREZOR_MODEL in ("R",):
-        features = ["model_tr"]
-    else:
-        features = ["model_tt"]
-    if BITCOIN_ONLY == "1":
-        features.append("bitcoin_only")
+
+    features = ['micropython', 'protobuf', f'model_t{TREZOR_MODEL.lower()}']
+    if BITCOIN_ONLY == '1':
+        features.append('bitcoin_only')
     if UI2:
-        features.append("ui")
-        if PYOPT == "0":
-            features.append("ui_debug")
+        features.append('ui')
+        if PYOPT == '0':
+            features.append('ui_debug')
 
     return f'cd embed/rust; cargo build {profile} --target={RUST_TARGET} --target-dir=../../build/firmware/rust --no-default-features --features "{" ".join(features)}"'
 
