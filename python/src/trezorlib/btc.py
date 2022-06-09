@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING, Any, AnyStr, List, Optional, Sequence, Tuple
 # TypedDict is not available in typing for python < 3.8
 from typing_extensions import Protocol, TypedDict
 
-from . import exceptions, messages
+from . import coininfo, exceptions, messages
 from .tools import expect, prepare_message_bytes, session
 
 if TYPE_CHECKING:
@@ -303,8 +303,7 @@ def sign_tx(
 
     # Check whether device asked for coin info
     if isinstance(res, messages.CoinInfoNeeded):
-        print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! got {res.coin_name}")
-        res = client.call(messages.CoinInfoFromHost(coin_name=res.coin_name+"_host"))
+        res = client.call(coininfo.by_name(coin_name))
 
     # Prepare structure for signatures
     signatures: List[Optional[bytes]] = [None] * len(inputs)

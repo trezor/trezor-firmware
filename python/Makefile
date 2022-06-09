@@ -7,7 +7,7 @@ EXCLUDE_TARGETS=messages
 
 all: build
 
-build:
+build: templates
 	$(SETUP) build
 
 install:
@@ -61,7 +61,13 @@ style_quick_check:
 	black --check $(STYLE_TARGETS)
 	isort --check-only --recursive $(STYLE_TARGETS) --skip-glob "$(EXCLUDE_TARGETS)/*"
 
-.PHONY: all build install clean style style_check git-clean clean-build clean-pyc clean-test
+templates: ## rebuild coin lists from definitions in common
+	./tools/build_templates
+
+templates_check: ## check that coin lists are up to date
+	./tools/build_templates --check
+
+.PHONY: all build install clean style style_check git-clean clean-build clean-pyc clean-test templates templates_check
 
 test:
 	pytest tests

@@ -97,7 +97,7 @@ class MessageType(IntEnum):
     GetOwnershipProof = 49
     OwnershipProof = 50
     AuthorizeCoinJoin = 51
-    CoinInfoFromHost = 52
+    CoinInfo = 52
     CipherKeyValue = 23
     CipheredKeyValue = 48
     SignIdentity = 53
@@ -929,16 +929,6 @@ class HDNodeType(protobuf.MessageType):
 
 class CoinInfoNeeded(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 16
-    FIELDS = {
-        1: protobuf.Field("coin_name", "string", repeated=False, required=True),
-    }
-
-    def __init__(
-        self,
-        *,
-        coin_name: "str",
-    ) -> None:
-        self.coin_name = coin_name
 
 
 class MultisigRedeemScriptType(protobuf.MessageType):
@@ -1212,18 +1202,90 @@ class SignTx(protobuf.MessageType):
         self.decred_staking_ticket = decred_staking_ticket
 
 
-class CoinInfoFromHost(protobuf.MessageType):
+class CoinInfo(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 52
     FIELDS = {
         1: protobuf.Field("coin_name", "string", repeated=False, required=True),
+        2: protobuf.Field("coin_shortcut", "string", repeated=False, required=True),
+        3: protobuf.Field("decimals", "uint32", repeated=False, required=True),
+        4: protobuf.Field("address_type", "uint32", repeated=False, required=True),
+        5: protobuf.Field("address_type_p2sh", "uint32", repeated=False, required=True),
+        6: protobuf.Field("maxfee_kb", "uint32", repeated=False, required=True),
+        7: protobuf.Field("signed_message_header", "string", repeated=False, required=True),
+        8: protobuf.Field("xpub_magic", "uint32", repeated=False, required=True),
+        9: protobuf.Field("xpub_magic_segwit_p2sh", "uint32", repeated=False, required=False),
+        10: protobuf.Field("xpub_magic_segwit_native", "uint32", repeated=False, required=False),
+        11: protobuf.Field("xpub_magic_multisig_segwit_p2sh", "uint32", repeated=False, required=False),
+        12: protobuf.Field("xpub_magic_multisig_segwit_native", "uint32", repeated=False, required=False),
+        13: protobuf.Field("bech32_prefix", "string", repeated=False, required=False),
+        14: protobuf.Field("cashaddr_prefix", "string", repeated=False, required=False),
+        15: protobuf.Field("slip44", "uint32", repeated=False, required=True),
+        16: protobuf.Field("segwit", "bool", repeated=False, required=True),
+        17: protobuf.Field("taproot", "bool", repeated=False, required=True),
+        18: protobuf.Field("fork_id", "uint32", repeated=False, required=False),
+        19: protobuf.Field("force_bip143", "bool", repeated=False, required=True),
+        20: protobuf.Field("decred", "bool", repeated=False, required=True),
+        21: protobuf.Field("negative_fee", "bool", repeated=False, required=True),
+        22: protobuf.Field("curve_name", "string", repeated=False, required=True),
+        23: protobuf.Field("extra_data", "bool", repeated=False, required=True),
+        24: protobuf.Field("timestamp", "bool", repeated=False, required=True),
+        25: protobuf.Field("overwintered", "bool", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
         coin_name: "str",
+        coin_shortcut: "str",
+        decimals: "int",
+        address_type: "int",
+        address_type_p2sh: "int",
+        maxfee_kb: "int",
+        signed_message_header: "str",
+        xpub_magic: "int",
+        slip44: "int",
+        segwit: "bool",
+        taproot: "bool",
+        force_bip143: "bool",
+        decred: "bool",
+        negative_fee: "bool",
+        curve_name: "str",
+        extra_data: "bool",
+        timestamp: "bool",
+        overwintered: "bool",
+        xpub_magic_segwit_p2sh: Optional["int"] = None,
+        xpub_magic_segwit_native: Optional["int"] = None,
+        xpub_magic_multisig_segwit_p2sh: Optional["int"] = None,
+        xpub_magic_multisig_segwit_native: Optional["int"] = None,
+        bech32_prefix: Optional["str"] = None,
+        cashaddr_prefix: Optional["str"] = None,
+        fork_id: Optional["int"] = None,
     ) -> None:
         self.coin_name = coin_name
+        self.coin_shortcut = coin_shortcut
+        self.decimals = decimals
+        self.address_type = address_type
+        self.address_type_p2sh = address_type_p2sh
+        self.maxfee_kb = maxfee_kb
+        self.signed_message_header = signed_message_header
+        self.xpub_magic = xpub_magic
+        self.slip44 = slip44
+        self.segwit = segwit
+        self.taproot = taproot
+        self.force_bip143 = force_bip143
+        self.decred = decred
+        self.negative_fee = negative_fee
+        self.curve_name = curve_name
+        self.extra_data = extra_data
+        self.timestamp = timestamp
+        self.overwintered = overwintered
+        self.xpub_magic_segwit_p2sh = xpub_magic_segwit_p2sh
+        self.xpub_magic_segwit_native = xpub_magic_segwit_native
+        self.xpub_magic_multisig_segwit_p2sh = xpub_magic_multisig_segwit_p2sh
+        self.xpub_magic_multisig_segwit_native = xpub_magic_multisig_segwit_native
+        self.bech32_prefix = bech32_prefix
+        self.cashaddr_prefix = cashaddr_prefix
+        self.fork_id = fork_id
 
 
 class TxRequest(protobuf.MessageType):

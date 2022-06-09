@@ -106,9 +106,11 @@ mocks_check: ## check validity of mock python headers
 
 templates: icons ## rebuild coin lists from definitions in common
 	./core/tools/build_templates
+	./python/tools/build_templates
 
 templates_check: ## check that coin lists are up to date
 	./core/tools/build_templates --check
+	./python/tools/build_templates --check
 
 icons: ## generate FIDO service icons
 	python3 core/tools/build_icons.py
