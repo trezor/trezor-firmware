@@ -96,33 +96,40 @@ impl Wordlist {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use cstr_core::cstr;
 
     const BIP39_WORD_COUNT: usize = ffi::BIP39_WORD_COUNT as usize;
 
     #[test]
     fn test_prefix_cmp() {
-        assert_eq!(unsafe { prefix_cmp("", "".as_ptr() as _) }, Ordering::Equal);
-
-        assert_eq!(unsafe { prefix_cmp("b", "".as_ptr() as _) }, Ordering::Less);
         assert_eq!(
-            unsafe { prefix_cmp("b", "a".as_ptr() as _) },
+            unsafe { prefix_cmp("", cstr!("").as_ptr()) },
+            Ordering::Equal
+        );
+
+        assert_eq!(
+            unsafe { prefix_cmp("b", cstr!("").as_ptr()) },
             Ordering::Less
         );
         assert_eq!(
-            unsafe { prefix_cmp("b", "b".as_ptr() as _) },
+            unsafe { prefix_cmp("b", cstr!("a").as_ptr()) },
+            Ordering::Less
+        );
+        assert_eq!(
+            unsafe { prefix_cmp("b", cstr!("b").as_ptr()) },
             Ordering::Equal
         );
         assert_eq!(
-            unsafe { prefix_cmp("b", "below".as_ptr() as _) },
+            unsafe { prefix_cmp("b", cstr!("below").as_ptr()) },
             Ordering::Equal
         );
         assert_eq!(
-            unsafe { prefix_cmp("b", "c".as_ptr() as _) },
+            unsafe { prefix_cmp("b", cstr!("c").as_ptr()) },
             Ordering::Greater
         );
 
         assert_eq!(
-            unsafe { prefix_cmp("bartender", "bar".as_ptr() as _) },
+            unsafe { prefix_cmp("bartender", cstr!("bar").as_ptr()) },
             Ordering::Less
         );
     }
