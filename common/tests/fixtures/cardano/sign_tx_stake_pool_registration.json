@@ -11,6 +11,7 @@
         "network_id": 1,
         "fee": 42,
         "ttl": 10,
+        "validity_interval_start": null,
         "certificates": [
           {
             "type": 3,
@@ -85,6 +86,9 @@
         "script_data_hash": null,
         "collateral_inputs": [],
         "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
         "signing_mode": "POOL_REGISTRATION_AS_OWNER",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -108,6 +112,7 @@
         "network_id": 1,
         "fee": 42,
         "ttl": 10,
+        "validity_interval_start": null,
         "certificates": [
           {
             "type": 3,
@@ -182,6 +187,9 @@
         "script_data_hash": null,
         "collateral_inputs": [],
         "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
         "signing_mode": "POOL_REGISTRATION_AS_OWNER",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -206,6 +214,7 @@
         "network_id": 1,
         "fee": 42,
         "ttl": 10,
+        "validity_interval_start": null,
         "certificates": [
           {
             "type": 3,
@@ -280,6 +289,9 @@
         "script_data_hash": null,
         "collateral_inputs": [],
         "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
         "signing_mode": "POOL_REGISTRATION_AS_OWNER",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -303,6 +315,7 @@
         "network_id": 1,
         "fee": 42,
         "ttl": 10,
+        "validity_interval_start": null,
         "certificates": [
           {
             "type": 3,
@@ -344,6 +357,9 @@
         "script_data_hash": null,
         "collateral_inputs": [],
         "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
         "signing_mode": "POOL_REGISTRATION_AS_OWNER",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -367,6 +383,7 @@
         "network_id": 0,
         "fee": 42,
         "ttl": 10,
+        "validity_interval_start": null,
         "certificates": [
           {
             "type": 3,
@@ -408,6 +425,9 @@
         "script_data_hash": null,
         "collateral_inputs": [],
         "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
         "signing_mode": "POOL_REGISTRATION_AS_OWNER",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -431,6 +451,7 @@
         "network_id": 1,
         "fee": 42,
         "ttl": 10,
+        "validity_interval_start": null,
         "certificates": [
           {
             "type": 3,
@@ -507,6 +528,9 @@
         "script_data_hash": null,
         "collateral_inputs": [],
         "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
         "signing_mode": "POOL_REGISTRATION_AS_OWNER",
         "additional_witness_requests": [],
         "include_network_id": false

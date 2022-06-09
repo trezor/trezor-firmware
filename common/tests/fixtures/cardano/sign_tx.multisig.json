@@ -82,6 +82,9 @@
         "script_data_hash": null,
         "collateral_inputs": [],
         "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
         "signing_mode": "MULTISIG_TRANSACTION",
         "additional_witness_requests": [
           {
@@ -118,6 +121,7 @@
         "network_id": 1,
         "fee": 42,
         "ttl": 10,
+        "validity_interval_start": null,
         "certificates": [
           {
             "type": 0,
@@ -142,6 +146,9 @@
         "script_data_hash": null,
         "collateral_inputs": [],
         "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
         "signing_mode": "MULTISIG_TRANSACTION",
         "additional_witness_requests": [
           {
@@ -169,6 +176,7 @@
         "network_id": 1,
         "fee": 42,
         "ttl": 10,
+        "validity_interval_start": null,
         "certificates": [
           {
             "type": 0,
@@ -198,6 +206,9 @@
         "script_data_hash": null,
         "collateral_inputs": [],
         "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
         "signing_mode": "MULTISIG_TRANSACTION",
         "additional_witness_requests": [
           {
@@ -234,6 +245,7 @@
         "network_id": 1,
         "fee": 42,
         "ttl": 10,
+        "validity_interval_start": null,
         "certificates": [
           {
             "type": 1,
@@ -258,6 +270,9 @@
         "script_data_hash": null,
         "collateral_inputs": [],
         "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
         "signing_mode": "MULTISIG_TRANSACTION",
         "additional_witness_requests": [
           {
@@ -294,6 +309,7 @@
         "network_id": 1,
         "fee": 42,
         "ttl": 10,
+        "validity_interval_start": null,
         "certificates": [
           {
             "type": 1,
@@ -323,6 +339,9 @@
         "script_data_hash": null,
         "collateral_inputs": [],
         "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
         "signing_mode": "MULTISIG_TRANSACTION",
         "additional_witness_requests": [
           {
@@ -430,6 +449,9 @@
         "script_data_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
         "collateral_inputs": [],
         "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
         "signing_mode": "MULTISIG_TRANSACTION",
         "additional_witness_requests": [
           {
@@ -475,6 +497,7 @@
         "network_id": 1,
         "fee": 42,
         "ttl": 10,
+        "validity_interval_start": null,
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": null,
@@ -495,6 +518,9 @@
         "script_data_hash": null,
         "collateral_inputs": [],
         "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
         "signing_mode": "MULTISIG_TRANSACTION",
         "additional_witness_requests": [
           {
@@ -522,6 +548,7 @@
         "network_id": 1,
         "fee": 42,
         "ttl": 10,
+        "validity_interval_start": null,
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": null,
@@ -541,6 +568,9 @@
         "script_data_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
         "collateral_inputs": [],
         "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
         "signing_mode": "MULTISIG_TRANSACTION",
         "additional_witness_requests": [
           {
@@ -556,6 +586,66 @@
             "type": 1,
             "pub_key": "b10be5c0d11ad8292bbe69e220ca0cfbe154610b3041a8e72f9d515c226ab3b1",
             "signature": "88ce2f590b662688ee626dd2ee471ec6e55cfac467c12645ef10c582a539dd85a1bac7ff7b95a59354576f604a031a28de8817c51eff88ec7d43cb00e824d90b",
+            "chain_code": null
+          }
+        ]
+      }
+    },
+    {
+      "description": "Multisig transaction with a required signer",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "validity_interval_start": null,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1w9rhu54nz94k9l5v6d9rzfs47h7dv7xffcwkekuxcx3evnqpvuxu0",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [
+          {
+            "key_path": "m/1854'/1815'/0'/0/1"
+          }
+        ],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
+        "signing_mode": "MULTISIG_TRANSACTION",
+        "additional_witness_requests": [
+          {
+            "path": "m/1854'/1815'/0'/0/2"
+          }
+        ],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "dae07f98f82878ecd1a6ad988c55f80870c2fb299705ed181458664906583e51",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "021a000e3be05eb09051983cbf728322149cc5687a79f0a1dbccd25b3a754c59",
+            "signature": "4ed37408b650b3fcf94f68007b4501dee814b27363eb7d19e6593966bc758d502114562c72698d9900eb0f5fdd06540922a4bc975fb4219e5d381a37a8dbd407",
+            "chain_code": null
+          },
+          {
+            "type": 1,
+            "pub_key": "e03c8b809288457c44e6dac9bc03d7c91cc0b26b482ae370f6b58da7c1fa90ec",
+            "signature": "295b4f5b5c8775e3bbca87796979dc552ad5b3c41cdfac5c0ca4e5d00ad3a6138f764bcdaf771964f5b3582c9067b88f5ec62b1412ef682f818310c62208320a",
             "chain_code": null
           }
         ]
