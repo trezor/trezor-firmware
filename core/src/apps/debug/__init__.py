@@ -133,6 +133,9 @@ if __debug__:
         if msg.watch:
             await ui.wait_until_layout_is_running()
         storage.watch_layout_changes = bool(msg.watch)
+        if msg.watch and ui.RUNNING_LAYOUT:
+            ui.RUNNING_LAYOUT.should_notify_layout_change = False
+            notify_layout_change(ui.RUNNING_LAYOUT)
         log.debug(__name__, "Watch layout changes: %s", storage.watch_layout_changes)
         return Success()
 

@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 class _RustLayout(ui.Layout):
     # pylint: disable=super-init-not-called
     def __init__(self, layout: Any):
+        super().__init__()
         self.layout = layout
         self.timer = loop.Timer()
         self.layout.attach_timer_fn(self.set_timer)
