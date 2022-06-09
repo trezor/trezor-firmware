@@ -328,7 +328,7 @@ def test_signmessage_pagination(client: Client, message: str):
 
     with client:
         client.set_input_flow(input_flow)
-        client.debug.watch_layout(True)
+        client.watch_layout()
         btc.sign_message(
             client,
             coin_name="Bitcoin",

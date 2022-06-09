@@ -33,6 +33,7 @@ if __debug__:
 class RustLayout(ui.Layout):
     # pylint: disable=super-init-not-called
     def __init__(self, layout: Any, is_backup: bool = False):
+        super().__init__()
         self.layout = layout
         self.timer = loop.Timer()
         self.layout.attach_timer_fn(self.set_timer)

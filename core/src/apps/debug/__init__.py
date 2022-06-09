@@ -102,6 +102,7 @@ if __debug__:
 
     async def return_layout_change() -> None:
         content = await layout_change_chan.take()
+        layout_change_chan.putters.clear()
         assert DEBUG_CONTEXT is not None
         if storage.layout_watcher is LAYOUT_WATCHER_LAYOUT:
             await DEBUG_CONTEXT.write(DebugLinkLayout(lines=content))
@@ -126,6 +127,9 @@ if __debug__:
         if msg.watch:
             await ui.wait_until_layout_is_running()
         storage.watch_layout_changes = bool(msg.watch)
+        if msg.watch and ui.RUNNING_LAYOUT:
+            ui.RUNNING_LAYOUT.should_notify_layout_change = False
+            notify_layout_change(ui.RUNNING_LAYOUT)
         log.debug(__name__, "Watch layout changes: %s", storage.watch_layout_changes)
         return Success()
 

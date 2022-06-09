@@ -141,6 +141,10 @@ if __debug__:
     PROTOBUF_BUFFER_SIZE_DEBUG = 1024
     WIRE_BUFFER_DEBUG = bytearray(PROTOBUF_BUFFER_SIZE_DEBUG)
 
+if __debug__:
+    PROTOBUF_BUFFER_SIZE_DEBUG = 1024
+    WIRE_BUFFER_DEBUG = bytearray(PROTOBUF_BUFFER_SIZE_DEBUG)
+
 
 class Context:
     def __init__(self, iface: WireInterface, sid: int, buffer: bytearray) -> None:

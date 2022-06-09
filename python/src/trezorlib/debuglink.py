@@ -705,6 +705,14 @@ class TrezorClientDebugLink(TrezorClient):
             # - TT < 2.3.0 does not reply to unknown debuglink messages due to a bug
             self.debug.watch_layout(watch)
 
+        if self.version >= (2, 5, 2) and watch:
+            first_layout = self.debug.wait_layout()
+            assert(any(hs in first_layout.text) for hs in (
+                "Homescreen",
+                "Lockscreen",
+                "RecoveryHomescreen",
+            ))
+
     def __enter__(self) -> "TrezorClientDebugLink":
         # For usage in with/expected_responses
         if self.in_with_statement:
