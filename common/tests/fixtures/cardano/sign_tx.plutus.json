@@ -11,6 +11,7 @@
         "network_id": 1,
         "fee": 42,
         "ttl": 10,
+        "validity_interval_start": null,
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": null,
@@ -36,6 +37,9 @@
           }
         ],
         "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -59,6 +63,7 @@
         "network_id": 1,
         "fee": 42,
         "ttl": 10,
+        "validity_interval_start": null,
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": null,
@@ -97,6 +102,9 @@
             "key_hash": "3a7f09d3df4cf66a7399c2b05bfa234d5a29560c311fc5db4c490711"
           }
         ],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -138,6 +146,7 @@
         "network_id": 1,
         "fee": 42,
         "ttl": 10,
+        "validity_interval_start": null,
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": null,
@@ -163,6 +172,9 @@
           }
         ],
         "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [
           {
@@ -214,6 +226,7 @@
         "network_id": 1,
         "fee": 42,
         "ttl": 10,
+        "validity_interval_start": null,
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": null,
@@ -237,6 +250,9 @@
             "key_path": "m/1852'/1815'/0'/0/1"
           }
         ],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -260,6 +276,7 @@
         "network_id": 1,
         "fee": 42,
         "ttl": 10,
+        "validity_interval_start": null,
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": null,
@@ -294,6 +311,9 @@
             "key_path": "m/1852'/1815'/0'/0/1"
           }
         ],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -410,6 +430,9 @@
             "key_path": "m/1852'/1815'/0'/0/1"
           }
         ],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [
           {
@@ -449,6 +472,7 @@
         "network_id": 1,
         "fee": 42,
         "ttl": 10,
+        "validity_interval_start": null,
         "certificates": [
           {
             "type": 0,
@@ -483,6 +507,9 @@
             "key_path": "m/1852'/1815'/0'/0/1"
           }
         ],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -512,6 +539,7 @@
         "network_id": 1,
         "fee": 42,
         "ttl": 10,
+        "validity_interval_start": null,
         "certificates": [
           {
             "type": 0,
@@ -554,6 +582,9 @@
             "key_path": "m/1854'/1815'/0'/2/0"
           }
         ],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -589,6 +620,7 @@
         "network_id": 1,
         "fee": 42,
         "ttl": 10,
+        "validity_interval_start": null,
         "certificates": [
           {
             "type": 1,
@@ -626,6 +658,9 @@
             "key_path": "m/1854'/1815'/0'/2/0"
           }
         ],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -661,6 +696,7 @@
         "network_id": 1,
         "fee": 42,
         "ttl": 10,
+        "validity_interval_start": null,
         "certificates": [
           {
             "type": 1,
@@ -703,6 +739,9 @@
             "key_path": "m/1854'/1815'/0'/2/0"
           }
         ],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -738,6 +777,7 @@
         "network_id": 1,
         "fee": 42,
         "ttl": 10,
+        "validity_interval_start": null,
         "certificates": [
           {
             "type": 1,
@@ -780,6 +820,9 @@
             "key_path": "m/1854'/1815'/0'/2/0"
           }
         ],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -821,6 +864,7 @@
         "network_id": 1,
         "fee": 42,
         "ttl": 10,
+        "validity_interval_start": null,
         "certificates": [
           {
             "type": 1,
@@ -863,6 +907,9 @@
             "key_path": "m/1854'/1815'/0'/2/0"
           }
         ],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -898,6 +945,7 @@
         "network_id": 1,
         "fee": 42,
         "ttl": 10,
+        "validity_interval_start": null,
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": null,
@@ -928,6 +976,9 @@
           }
         ],
         "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -951,6 +1002,7 @@
         "network_id": 1,
         "fee": 42,
         "ttl": 10,
+        "validity_interval_start": null,
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": null,
@@ -978,6 +1030,9 @@
           }
         ],
         "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -1001,6 +1056,7 @@
         "network_id": 1,
         "fee": 42,
         "ttl": 10,
+        "validity_interval_start": null,
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": null,
@@ -1028,6 +1084,9 @@
           }
         ],
         "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -1051,6 +1110,7 @@
         "network_id": 1,
         "fee": 42,
         "ttl": 10,
+        "validity_interval_start": null,
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": null,
@@ -1078,6 +1138,9 @@
           }
         ],
         "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
         "signing_mode": "PLUTUS_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -1089,6 +1152,383 @@
             "type": 1,
             "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
             "signature": "e82967f5030f8d2c8b986f75e5744fa92e77444f0eff4aa440492c6aad0b0639ada1501fcbb01db5cfb4b39333aff96362adec4620db6f7f9771039600b24300",
+            "chain_code": null
+          }
+        ]
+      }
+    },
+    {
+      "description": "Plutus transaction with external collateral return",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "validity_interval_start": null,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": "d593fd793c377ac50a3169bb8378ffc257c944da31aa8f355dfa5a4f6ff89e02",
+        "collateral_inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "required_signers": [],
+        "collateral_return": {
+          "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+          "amount": "2000000",
+          "token_bundle": [
+            {
+              "policy_id": "95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
+              "tokens": [
+                {
+                  "asset_name_bytes": "74652474436f696e",
+                  "amount": "7878754"
+                }
+              ]
+            }
+          ]
+        },
+        "total_collateral": null,
+        "reference_inputs": [],
+        "signing_mode": "PLUTUS_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "6c5ccc9f6ec1b0b25ccb81ae533b9d46e545af4b745f7e287c967f13a152d537",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
+            "signature": "d422f1e3937a971dab01534c418ee475e224532fabad3c857cce7bb2a5ad8bb1ce9ec65af6b007649f31efce1930ff7f5c2ac598777068870514422e81613606",
+            "chain_code": null
+          }
+        ]
+      }
+    },
+    {
+      "description": "Plutus transaction with device-owned collateral return",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "validity_interval_start": null,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": "d593fd793c377ac50a3169bb8378ffc257c944da31aa8f355dfa5a4f6ff89e02",
+        "collateral_inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "required_signers": [],
+        "collateral_return": {
+          "addressType": 0,
+          "path": "m/1852'/1815'/0'/0/0",
+          "stakingPath": "m/1852'/1815'/0'/2/0",
+          "amount": "2000000",
+          "token_bundle": [
+            {
+              "policy_id": "95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
+              "tokens": [
+                {
+                  "asset_name_bytes": "74652474436f696e",
+                  "amount": "7878754"
+                }
+              ]
+            }
+          ]
+        },
+        "total_collateral": null,
+        "reference_inputs": [],
+        "signing_mode": "PLUTUS_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "c95a6f99f5763d89926b44b8a0f7fa12f14ee3978c120e42c581a3f47638d490",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
+            "signature": "495b8941fac6fd3f61de87c592f65f06bd4c8499a683a396382c3da89faca348d8559d3775bb5046be6213f4623a917fc3412b26065f943731769df3452d6308",
+            "chain_code": null
+          }
+        ]
+      }
+    },
+    {
+      "description": "Plutus transaction with total collateral",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "validity_interval_start": null,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": "d593fd793c377ac50a3169bb8378ffc257c944da31aa8f355dfa5a4f6ff89e02",
+        "collateral_inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": 1000,
+        "reference_inputs": [],
+        "signing_mode": "PLUTUS_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "3a2a702ed7a907323a7f6ef7bf5d5ad4685bd1a605a0594e535b93597a33b574",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
+            "signature": "192aa5892b5b96ba9f4d4b4b682aaf77390ad1af22a00d67d3b29603457a2e2dfb41af518af7793a383c6367f879e5475e69800f5c6e9e92b28d8d91b7729d0e",
+            "chain_code": null
+          }
+        ]
+      }
+    },
+    {
+      "description": "Plutus transaction with total collateral and external collateral return",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "validity_interval_start": null,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": "d593fd793c377ac50a3169bb8378ffc257c944da31aa8f355dfa5a4f6ff89e02",
+        "collateral_inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "required_signers": [],
+        "collateral_return": {
+          "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+          "amount": "2000000",
+          "token_bundle": [
+            {
+              "policy_id": "95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
+              "tokens": [
+                {
+                  "asset_name_bytes": "74652474436f696e",
+                  "amount": "7878754"
+                }
+              ]
+            }
+          ]
+        },
+        "total_collateral": 1000,
+        "reference_inputs": [],
+        "signing_mode": "PLUTUS_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "6852e7285d0a187f692bdb2ea93451f96952303c54168d5bd7c428a78d0fac07",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
+            "signature": "7eae90f03a4ebcf6cab0a3604bb69d062120d31b3659a7e87e4f39fd1144bdbbbf4771d0c5620ebef6a839bac78db760caf362ad228ce99f9ec500d29e7fb20c",
+            "chain_code": null
+          }
+        ]
+      }
+    },
+    {
+      "description": "Plutus transaction with total collateral and device-owned collateral return",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "validity_interval_start": null,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": "d593fd793c377ac50a3169bb8378ffc257c944da31aa8f355dfa5a4f6ff89e02",
+        "collateral_inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "required_signers": [],
+        "collateral_return": {
+          "addressType": 0,
+          "path": "m/1852'/1815'/0'/0/0",
+          "stakingPath": "m/1852'/1815'/0'/2/0",
+          "amount": "2000000",
+          "token_bundle": [
+            {
+              "policy_id": "95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
+              "tokens": [
+                {
+                  "asset_name_bytes": "74652474436f696e",
+                  "amount": "7878754"
+                }
+              ]
+            }
+          ]
+        },
+        "total_collateral": 1000,
+        "reference_inputs": [],
+        "signing_mode": "PLUTUS_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "1bef5859c3e23fad63141b61e03aa45537c5ec10ad7c4780a4ed198c17bee165",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
+            "signature": "418c59ec2159f7a91e8608d9ee4bf1d6426b101a99ac8eedae04988c9c5342fdbed4d0b905e7ad7b0b0b58db3859b1b1ede51453d43803e1901546c508f7c308",
+            "chain_code": null
+          }
+        ]
+      }
+    },
+    {
+      "description": "Plutus transaction with reference input",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "validity_interval_start": null,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": "d593fd793c377ac50a3169bb8378ffc257c944da31aa8f355dfa5a4f6ff89e02",
+        "collateral_inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [
+          {
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "signing_mode": "PLUTUS_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "98657251d3014dfd98e1eab94bf0a7f6252968d683df9bc8585bf431b4c72a51",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
+            "signature": "6405f001eece1ad30e2807f2fc9b8585052003b059aacd41ef7c79994774fc074ca98936174290b02b46d2b8eeae1c5b7773123ba123097e5134b5c156a00900",
             "chain_code": null
           }
         ]
