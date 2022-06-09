@@ -683,11 +683,11 @@ def _get_witness_requests(
         for _, path in collateral_inputs:
             if path:
                 paths.add(tuple(path))
-        for required_signer in required_signers:
-            if required_signer.key_path:
-                paths.add(tuple(required_signer.key_path))
 
-    # add additional_witness_requests in all cases (because of minting)
+    # add required_signers and additional_witness_requests in all cases
+    for required_signer in required_signers:
+        if required_signer.key_path:
+            paths.add(tuple(required_signer.key_path))
     for additional_witness_request in additional_witness_requests:
         paths.add(tuple(additional_witness_request))
 

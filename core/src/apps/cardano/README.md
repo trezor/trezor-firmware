@@ -209,7 +209,7 @@ The signing mode intended for transactions containing Plutus script evaluation. 
 
 Even though Plutus scripts cannot access collateral inputs and the collateral return output, we must show them to the user so that they can verify what collateral amount is at stake. However, if the client declares this amount in the total collateral field, collateral inputs and the collateral return output (if it contains an address governed by the device) can be hidden.
 
-Collateral inputs, required signers, collateral return output, total collateral and reference inputs are allowed only in Plutus transactions.
+Collateral inputs, collateral return output, total collateral and reference inputs are allowed only in Plutus transactions. Required signers are meant for Plutus transactions as well (from the blockchain point of view), but some applications utilize them for their own purposes, so we allow them in all signing modes (except for pool registration as owner).
 
 Since Plutus scripts may have many unforseen use cases, we put no further limitations on transactions (except forbidding pool registration certificates). Stake credentials in certificates and withdrawals may be given as key paths, key hashes or script hashes.
 
