@@ -12,7 +12,6 @@ use crate::ui::{
 pub enum HoldToConfirmMsg {
     Confirmed,
     FailedToConfirm,
-    Cancelled,
 }
 
 pub struct HoldToConfirm {
