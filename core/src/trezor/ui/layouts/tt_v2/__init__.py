@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 from ubinascii import hexlify
 
-from trezor import io, log, loop, ui, wire, workflow
+from trezor import log, ui, wire
 from trezor.enums import ButtonRequestType
 
 import trezorui2
@@ -9,130 +9,12 @@ import trezorui2
 from ...components.tt.button import ButtonContent
 from ...components.tt.confirm import Confirm
 from ...constants.tt import MONO_ADDR_PER_LINE
-from ..common import button_request, interact
+from ..common import RustLayout, button_request, interact
 
 if TYPE_CHECKING:
     from typing import Any, Awaitable, Iterable, NoReturn, Sequence
 
     from ..common import PropertyType, ExceptionType
-
-
-class _RustLayout(ui.Layout):
-    # pylint: disable=super-init-not-called
-    def __init__(self, layout: Any):
-        super().__init__()
-        self.layout = layout
-        self.timer = loop.Timer()
-        self.layout.attach_timer_fn(self.set_timer)
-
-    def set_timer(self, token: int, deadline: int) -> None:
-        self.timer.schedule(deadline, token)
-
-    if __debug__:
-
-        def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
-            from apps.debug import confirm_signal, input_signal
-
-            return (
-                self.handle_timers(),
-                self.handle_input_and_rendering(),
-                self.handle_swipe(),
-                confirm_signal(),
-                input_signal(),
-            )
-
-        def read_content(self) -> list[str]:
-            result = []
-
-            def callback(*args):
-                for arg in args:
-                    result.append(str(arg))
-
-            self.layout.trace(callback)
-            result = " ".join(result).split("\n")
-            return result
-
-        async def handle_swipe(self):
-            from apps.debug import notify_layout_change, swipe_signal
-            from trezor.ui.components.common import (
-                SWIPE_UP,
-                SWIPE_DOWN,
-                SWIPE_LEFT,
-                SWIPE_RIGHT,
-            )
-
-            while True:
-                direction = await swipe_signal()
-                orig_x = orig_y = 120
-                off_x, off_y = {
-                    SWIPE_UP: (0, -30),
-                    SWIPE_DOWN: (0, 30),
-                    SWIPE_LEFT: (-30, 0),
-                    SWIPE_RIGHT: (30, 0),
-                }[direction]
-
-                for event, x, y in (
-                    (io.TOUCH_START, orig_x, orig_y),
-                    (io.TOUCH_MOVE, orig_x + 1 * off_x, orig_y + 1 * off_y),
-                    (io.TOUCH_END, orig_x + 2 * off_x, orig_y + 2 * off_y),
-                ):
-                    msg = self.layout.touch_event(event, x, y)
-                    self.layout.paint()
-                    if msg is not None:
-                        raise ui.Result(msg)
-
-                notify_layout_change(self)
-
-    else:
-
-        def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
-            return self.handle_timers(), self.handle_input_and_rendering()
-
-    def _before_render(self) -> None:
-        # Clear the screen of any leftovers.
-        ui.backlight_fade(ui.style.BACKLIGHT_DIM)
-        ui.display.clear()
-
-        if __debug__ and self.should_notify_layout_change:
-            from apps.debug import notify_layout_change
-
-            # notify about change and do not notify again until next await.
-            # (handle_rendering might be called multiple times in a single await,
-            # because of the endless loop in __iter__)
-            self.should_notify_layout_change = False
-            notify_layout_change(self)
-
-        # Turn the brightness on again.
-        ui.backlight_fade(self.BACKLIGHT_LEVEL)
-
-    def handle_input_and_rendering(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
-        touch = loop.wait(io.TOUCH)
-        self._before_render()
-        self.layout.paint()
-        # self.layout.bounds()
-        while True:
-            # Using `yield` instead of `await` to avoid allocations.
-            event, x, y = yield touch
-            workflow.idle_timer.touch()
-            msg = None
-            if event in (io.TOUCH_START, io.TOUCH_MOVE, io.TOUCH_END):
-                msg = self.layout.touch_event(event, x, y)
-            self.layout.paint()
-            # self.layout.bounds()
-            if msg is not None:
-                raise ui.Result(msg)
-
-    def handle_timers(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
-        while True:
-            # Using `yield` instead of `await` to avoid allocations.
-            token = yield self.timer
-            msg = self.layout.timer(token)
-            self.layout.paint()
-            if msg is not None:
-                raise ui.Result(msg)
-
-    def page_count(self) -> int:
-        return self.layout.page_count()
 
 
 async def confirm_action(
@@ -168,7 +50,7 @@ async def confirm_action(
 
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_action(
                 title=title.upper(),
                 action=action,
@@ -207,7 +89,7 @@ async def confirm_path_warning(
 ) -> None:
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.show_warning(
                 title="Unknown path",
                 description=path,
@@ -221,7 +103,7 @@ async def confirm_path_warning(
 
 
 def _show_xpub(xpub: str, title: str, cancel: str) -> ui.Layout:
-    content = _RustLayout(
+    content = RustLayout(
         trezorui2.confirm_blob(
             title=title,
             data=xpub,
@@ -261,7 +143,7 @@ async def show_address(
     while True:
         result = await interact(
             ctx,
-            _RustLayout(
+            RustLayout(
                 trezorui2.confirm_blob(
                     title=title.upper(),
                     data=address,
@@ -278,7 +160,7 @@ async def show_address(
 
         result = await interact(
             ctx,
-            _RustLayout(
+            RustLayout(
                 trezorui2.show_qr(
                     address=address if address_qr is None else address_qr,
                     case_sensitive=case_sensitive,
@@ -396,7 +278,7 @@ async def show_success(
 ) -> None:
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.show_success(
                 title=content,
                 description=subheader or "",
@@ -431,7 +313,7 @@ async def confirm_output(
 
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_output(
                 title=title,
                 description="To:",
@@ -446,7 +328,7 @@ async def confirm_output(
 
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_output(
                 title=title,
                 description="Amount:",
@@ -470,7 +352,7 @@ async def confirm_payment_request(
 
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_payment_request(
                 description=f"{amount} to\n{recipient_name}",
                 memos=memos,
@@ -519,7 +401,7 @@ async def confirm_blob(
 
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_blob(
                 title=title.upper(),
                 description=description or "",
@@ -601,7 +483,7 @@ async def confirm_total(
 ) -> None:
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_output(
                 title=title.upper(),
                 description="Fee:",
@@ -616,7 +498,7 @@ async def confirm_total(
 
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_total(
                 title=title.upper(),
                 description="Total amount:",
@@ -635,7 +517,7 @@ async def confirm_joint_total(
 ) -> None:
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_joint_total(
                 spending_amount=spending_amount,
                 total_amount=total_amount,
@@ -689,7 +571,7 @@ async def confirm_metadata(
 
     result = await interact(
         ctx,
-        _RustLayout(layout),
+        RustLayout(layout),
         br_type,
         br_code,
     )
@@ -703,7 +585,7 @@ async def confirm_replacement(
 ) -> None:
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_blob(
                 title=description.upper(),
                 description="Confirm transaction ID:",
@@ -726,7 +608,7 @@ async def confirm_modify_output(
 ) -> None:
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_modify_output(
                 address=address,
                 sign=sign,
@@ -749,7 +631,7 @@ async def confirm_modify_fee(
 ) -> None:
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_modify_fee(
                 sign=sign,
                 user_fee_change=user_fee_change,
@@ -768,7 +650,7 @@ async def confirm_coinjoin(
 ) -> None:
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_coinjoin(
                 coin_name=coin_name,
                 max_rounds=str(max_rounds),
@@ -801,7 +683,7 @@ async def confirm_signverify(
 
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_blob(
                 title=title,
                 description="Confirm address:",
@@ -816,7 +698,7 @@ async def confirm_signverify(
 
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_blob(
                 title=title,
                 description="Confirm message:",
@@ -849,7 +731,7 @@ async def request_passphrase_on_device(ctx: wire.GenericContext, max_len: int) -
         ctx, "passphrase_device", code=ButtonRequestType.PassphraseEntry
     )
 
-    keyboard = _RustLayout(
+    keyboard = RustLayout(
         trezorui2.request_passphrase(prompt="Enter passphrase", max_len=max_len)
     )
     result = await ctx.wait(keyboard)
@@ -879,7 +761,7 @@ async def request_pin_on_device(
         prompt = "Enter PIN"
         subprompt = f"{attempts_remaining} tries left"
 
-    dialog = _RustLayout(
+    dialog = RustLayout(
         trezorui2.request_pin(
             prompt=prompt,
             subprompt=subprompt,

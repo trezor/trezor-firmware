@@ -4,7 +4,7 @@ from trezor import wire
 
 import trezorui2
 
-from . import _RustLayout
+from . import RustLayout
 
 if TYPE_CHECKING:
     from typing import Iterable, Callable, Any
@@ -20,13 +20,13 @@ async def request_word(
     ctx: wire.GenericContext, word_index: int, word_count: int, is_slip39: bool
 ) -> str:
     if is_slip39:
-        keyboard: Any = _RustLayout(
+        keyboard: Any = RustLayout(
             trezorui2.request_bip39(
                 prompt=f"Type word {word_index + 1} of {word_count}:"
             )
         )
     else:
-        keyboard = _RustLayout(
+        keyboard = RustLayout(
             trezorui2.request_slip39(
                 prompt=f"Type word {word_index + 1} of {word_count}:"
             )

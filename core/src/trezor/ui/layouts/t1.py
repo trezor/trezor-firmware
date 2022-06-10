@@ -1,54 +1,16 @@
 from typing import TYPE_CHECKING
 
-from trezor import io, log, loop, ui, wire, workflow
+from trezor import log, ui, wire
 from trezor.enums import ButtonRequestType
 
 import trezorui2
 
-from .common import interact
+from .common import RustLayout, interact
 
 if TYPE_CHECKING:
-    from typing import Any, NoReturn, Type
+    from typing import NoReturn, Type
 
     ExceptionType = BaseException | Type[BaseException]
-
-
-class _RustLayout(ui.Layout):
-    # pylint: disable=super-init-not-called
-    def __init__(self, layout: Any):
-        self.layout = layout
-        self.timer = loop.Timer()
-
-    def set_timer(self, token: int, deadline: int) -> None:
-        self.timer.schedule(deadline, token)
-
-    def create_tasks(self) -> tuple[loop.Task, ...]:
-        return self.handle_timers(), self.handle_input_and_rendering()
-
-    def handle_input_and_rendering(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
-        button = loop.wait(io.BUTTON)
-        ui.display.clear()
-        self.layout.attach_timer_fn(self.set_timer)
-        self.layout.paint()
-        while True:
-            # Using `yield` instead of `await` to avoid allocations.
-            event, button_num = yield button
-            workflow.idle_timer.touch()
-            msg = None
-            if event in (io.BUTTON_PRESSED, io.BUTTON_RELEASED):
-                msg = self.layout.button_event(event, button_num)
-            self.layout.paint()
-            if msg is not None:
-                raise ui.Result(msg)
-
-    def handle_timers(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
-        while True:
-            # Using `yield` instead of `await` to avoid allocations.
-            token = yield self.timer
-            msg = self.layout.timer(token)
-            self.layout.paint()
-            if msg is not None:
-                raise ui.Result(msg)
 
 
 async def confirm_action(
@@ -83,7 +45,7 @@ async def confirm_action(
 
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_action(
                 title=title.upper(),
                 action=action,
@@ -113,7 +75,7 @@ async def confirm_text(
 ) -> None:
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_text(
                 title=title.upper(),
                 data=data,
