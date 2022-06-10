@@ -299,7 +299,7 @@ In order for the user to be able to verify native scripts a `get_native_script_h
 
 _Plutus script support has been added in the Cardano Alonzo era_
 
-When creating a UTXO with a script address (in any signing mode), it may also contain `datum_hash` which usually provides additional UTXO-related data to the script.
+When creating a UTXO with a Plutus script address (in any signing mode), it should also contain a `datum_hash` which provides additional UTXO-related data to the script. However, there are use cases for a `datum_hash` in an output controlled by a key, so we allow those as well.
 
 When one wants to spend funds from the Plutus script address (which is possible only in the Plutus signing mode), they have to attach the Plutus script as well as the datum referenced in the UTXO and a corresponding redeemer. These items are outside the transaction body which is signed by Trezor, so their hash is included in transaction body as `script_data_hash`.
 

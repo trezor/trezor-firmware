@@ -289,9 +289,6 @@ class Signer:
         if output.datum_hash is not None:
             if len(output.datum_hash) != OUTPUT_DATUM_HASH_SIZE:
                 raise wire.ProcessError("Invalid output datum hash")
-            address_type = self._get_output_address_type(output)
-            if address_type not in addresses.ADDRESS_TYPES_PAYMENT_SCRIPT:
-                raise wire.ProcessError("Invalid output")
 
         self.account_path_checker.add_output(output)
 
@@ -347,8 +344,6 @@ class Signer:
         of readability and because the same decision is made when displaying output tokens.
         """
         if output.datum_hash is not None:
-            # The `return False` case below should not be reachable when datum hash is
-            # present, but let's make it explicit.
             return True
 
         address_type = self._get_output_address_type(output)
