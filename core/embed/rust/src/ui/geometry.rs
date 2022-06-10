@@ -1,3 +1,4 @@
+use crate::ui::lerp::Lerp;
 use core::ops::{Add, Sub};
 
 /// Relative offset in 2D space, used for representing translation and
@@ -124,6 +125,12 @@ impl Sub<Point> for Point {
 
     fn sub(self, rhs: Point) -> Self::Output {
         Offset::new(self.x - rhs.x, self.y - rhs.y)
+    }
+}
+
+impl Lerp for Point {
+    fn lerp(a: Self, b: Self, t: f32) -> Self {
+        Point::new(i32::lerp(a.x, b.x, t), i32::lerp(a.y, b.y, t))
     }
 }
 
