@@ -204,6 +204,71 @@ impl TextOverlay {
     }
 }
 
+pub fn rect_rounded2_get_pixel(
+    x: i32,
+    y: i32,
+    w: i32,
+    h: i32,
+    colortable: [Color;16],
+    fill: bool,
+    line_width: i32,
+) -> Color {
+    let mut border = false;
+    let mut corner_out = false;
+    let mut corner_pix = false;
+
+    if (x >= 0 && x < line_width) || ((x >= w - line_width) && x <= (w - 1)) {
+        border = true;
+    }
+    if (y >= 0 && y < line_width) || ((y >= h - line_width) && y <= (h - 1)) {
+        border = true;
+    }
+
+    let corner_lim = 2 * line_width;
+    let corner_pix_lim = 1 * line_width;
+
+    if x < corner_lim && y < corner_lim {
+        if x < corner_pix_lim || y < corner_pix_lim {
+            corner_out = true;
+        } else {
+            corner_pix = true;
+        }
+    }
+    if x < corner_lim && y > h - (corner_lim + 1) {
+        if x < corner_pix_lim || y > h - (corner_pix_lim + 1) {
+            corner_out = true;
+        } else {
+            corner_pix = true;
+        }
+    }
+    if x > w - (corner_lim + 1) && y < corner_lim {
+        if x > w - (corner_pix_lim + 1) || y < corner_pix_lim {
+            corner_out = true;
+        } else {
+            corner_pix = true;
+        }
+    }
+    if x > w - (corner_lim + 1) && y > h - (corner_lim + 1) {
+        if x > w - (corner_pix_lim + 1) || y > h - (corner_pix_lim + 1) {
+            corner_out = true;
+        } else {
+            corner_pix = true;
+        }
+    }
+
+    return if corner_out {
+        colortable[0]
+    } else if border || corner_pix {
+        colortable[15]
+    } else {
+        if fill {
+            colortable[15]
+        } else {
+            colortable[0]
+        }
+    };
+}
+
 pub fn bar_with_text_and_fill(
     area: Rect,
     overlay: Option<TextOverlay>,
@@ -214,6 +279,7 @@ pub fn bar_with_text_and_fill(
 ) {
     let r = adjust_offset(area);
     let clamped = clamp_coords(r);
+    let colortable = get_color_table(fg_color, bg_color);
 
     set_window(clamped);
 
@@ -226,58 +292,8 @@ pub fn bar_with_text_and_fill(
                 (x >= fill_from && fill_from >= 0 && (x <= fill_to || fill_to < fill_from))
                     || (x < fill_to && fill_to >= 0);
 
-            let underlying_color;
-
-            let mut border = false;
-            let mut corner_out = false;
-            let mut corner_pix = false;
-
-            if x == 0 || x == (r.width() - 1) {
-                border = true;
-            }
-            if y == 0 || y == (r.height() - 1) {
-                border = true;
-            }
-            if x < 2 && y < 2 {
-                if !(x == 1 && y == 1) {
-                    corner_out = true;
-                } else {
-                    corner_pix = true;
-                }
-            }
-            if x < 2 && y > r.height() - 3 {
-                if !(x == 1 && y == r.height() - 2) {
-                    corner_out = true;
-                } else {
-                    corner_pix = true;
-                }
-            }
-            if x > r.width() - 3 && y < 2 {
-                if !(x == r.width() - 2 && y == 1) {
-                    corner_out = true;
-                } else {
-                    corner_pix = true;
-                }
-            }
-            if x > r.width() - 3 && y > r.height() - 3 {
-                if !(x == r.width() - 2 && y == r.height() - 2) {
-                    corner_out = true;
-                } else {
-                    corner_pix = true;
-                }
-            }
-
-            if corner_out {
-                underlying_color = bg_color;
-            } else if border || corner_pix {
-                underlying_color = fg_color;
-            } else {
-                if filled {
-                    underlying_color = fg_color;
-                } else {
-                    underlying_color = bg_color;
-                }
-            }
+            let underlying_color =
+                rect_rounded2_get_pixel(x, y, r.width(), r.height(), colortable, filled, 1);
 
             let mut overlay_color = None;
             if let Some(o) = overlay {
