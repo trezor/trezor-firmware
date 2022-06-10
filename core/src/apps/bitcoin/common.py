@@ -8,10 +8,11 @@ from trezor.crypto.hashlib import sha256
 from trezor.enums import InputScriptType, OutputScriptType
 from trezor.utils import HashWriter, ensure
 
+from apps.common.coininfo import get_CoinHashInfo
+
 if TYPE_CHECKING:
     from enum import IntEnum
-    from apps.common.coininfo import CoinInfo
-    from trezor.messages import TxInput
+    from trezor.messages import CoinInfo, TxInput
 else:
     IntEnum = object
 
@@ -116,7 +117,7 @@ def ecdsa_hash_pubkey(pubkey: bytes, coin: CoinInfo) -> bytes:
     else:
         ensure(len(pubkey) == 33)  # compresssed format
 
-    return coin.script_hash(pubkey).digest()
+    return get_CoinHashInfo(coin).script_hash(pubkey).digest()
 
 
 def encode_bech32_address(prefix: str, witver: int, script: bytes) -> str:

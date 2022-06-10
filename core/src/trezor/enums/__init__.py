@@ -89,7 +89,7 @@ if TYPE_CHECKING:
         GetOwnershipProof = 49
         OwnershipProof = 50
         AuthorizeCoinJoin = 51
-        CoinInfoFromHost = 52
+        CoinInfo = 52
         CipherKeyValue = 23
         CipheredKeyValue = 48
         SignIdentity = 53

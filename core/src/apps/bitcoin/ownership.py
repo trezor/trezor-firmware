@@ -20,8 +20,7 @@ from .scripts import read_bip322_signature_proof, write_bip322_signature_proof
 from .verification import SignatureVerifier
 
 if TYPE_CHECKING:
-    from trezor.messages import MultisigRedeemScriptType
-    from apps.common.coininfo import CoinInfo
+    from trezor.messages import CoinInfo, MultisigRedeemScriptType
 
 # This module implements the SLIP-0019 proof of ownership format, see
 # https://github.com/satoshilabs/slips/blob/master/slip-0019.md.

@@ -12,8 +12,8 @@ from .keychain import validate_path_against_script_type, with_keychain
 from .ownership import generate_proof, get_identifier
 
 if TYPE_CHECKING:
-    from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
+    from trezor.messages import CoinInfo
     from .authorization import CoinJoinAuthorization
 
 # Maximum number of characters per line in monospace font.

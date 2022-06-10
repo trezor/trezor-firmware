@@ -1,10 +1,10 @@
 from typing import TYPE_CHECKING
 
 from trezor.crypto.hashlib import sha256
-from trezor.messages import PrevTx, SignTx, TxInput, TxOutput
+from trezor.messages import CoinInfo, PrevTx, SignTx, TxInput, TxOutput
 from trezor.utils import HashWriter
 
-from apps.common import coininfo
+from apps.common.coininfo import get_CoinHashInfo
 
 from .. import scripts, writers
 from ..common import tagged_hashwriter
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
             public_keys: Sequence[bytes | memoryview],
             threshold: int,
             tx: SignTx | PrevTx,
-            coin: coininfo.CoinInfo,
+            coin: CoinInfo,
             hash_type: int,
         ) -> bytes:
             ...
@@ -74,7 +74,7 @@ class BitcoinSigHasher:
         public_keys: Sequence[bytes | memoryview],
         threshold: int,
         tx: SignTx | PrevTx,
-        coin: coininfo.CoinInfo,
+        coin: CoinInfo,
         hash_type: int,
     ) -> bytes:
         h_preimage = HashWriter(sha256())
@@ -84,13 +84,13 @@ class BitcoinSigHasher:
 
         # hashPrevouts
         prevouts_hash = writers.get_tx_hash(
-            self.h_prevouts, double=coin.sign_hash_double
+            self.h_prevouts, double=get_CoinHashInfo(coin).sign_hash_double
         )
         writers.write_bytes_fixed(h_preimage, prevouts_hash, writers.TX_HASH_SIZE)
 
         # hashSequence
         sequence_hash = writers.get_tx_hash(
-            self.h_sequences, double=coin.sign_hash_double
+            self.h_sequences, double=get_CoinHashInfo(coin).sign_hash_double
         )
         writers.write_bytes_fixed(h_preimage, sequence_hash, writers.TX_HASH_SIZE)
 
@@ -110,7 +110,9 @@ class BitcoinSigHasher:
         writers.write_uint32(h_preimage, txi.sequence)
 
         # hashOutputs
-        outputs_hash = writers.get_tx_hash(self.h_outputs, double=coin.sign_hash_double)
+        outputs_hash = writers.get_tx_hash(
+            self.h_outputs, double=get_CoinHashInfo(coin).sign_hash_double
+        )
         writers.write_bytes_fixed(h_preimage, outputs_hash, writers.TX_HASH_SIZE)
 
         # nLockTime
@@ -119,7 +121,9 @@ class BitcoinSigHasher:
         # nHashType
         writers.write_uint32(h_preimage, hash_type)
 
-        return writers.get_tx_hash(h_preimage, double=coin.sign_hash_double)
+        return writers.get_tx_hash(
+            h_preimage, double=get_CoinHashInfo(coin).sign_hash_double
+        )
 
     def hash341(
         self,

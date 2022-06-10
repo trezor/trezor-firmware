@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     )
     from trezor.protobuf import MessageType
 
-    from apps.common.coininfo import CoinInfo
+    from trezor.messages import CoinInfo
 
 FEE_RATE_DECIMALS = const(8)
 

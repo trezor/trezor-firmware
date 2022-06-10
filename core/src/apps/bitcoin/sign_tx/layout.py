@@ -17,10 +17,8 @@ if not utils.BITCOIN_ONLY:
 if TYPE_CHECKING:
     from typing import Any
 
-    from trezor.messages import TxAckPaymentRequest, TxOutput
+    from trezor.messages import CoinInfo, TxAckPaymentRequest, TxOutput
     from trezor.ui.layouts import LayoutType
-
-    from apps.common.coininfo import CoinInfo
 
 _LOCKTIME_TIMESTAMP_MIN_VALUE = const(500_000_000)
 

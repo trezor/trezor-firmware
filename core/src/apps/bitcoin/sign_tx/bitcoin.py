@@ -7,6 +7,7 @@ from trezor.enums import InputScriptType, OutputScriptType
 from trezor.messages import TxRequest, TxRequestDetailsType, TxRequestSerializedType
 from trezor.utils import HashWriter, empty_bytearray, ensure
 
+from apps.common.coininfo import get_CoinHashInfo
 from apps.common.writers import write_compact_size
 
 from .. import addresses, common, multisig, scripts, writers
@@ -30,6 +31,7 @@ if TYPE_CHECKING:
     from trezor.crypto import bip32
 
     from trezor.messages import (
+        CoinInfo,
         PrevInput,
         PrevOutput,
         PrevTx,
@@ -38,7 +40,6 @@ if TYPE_CHECKING:
         TxOutput,
     )
 
-    from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
 
     from .sig_hasher import SigHasher
@@ -692,7 +693,9 @@ class Bitcoin:
         if tx_info.get_tx_check_digest() != h_check.get_digest():
             raise wire.ProcessError("Transaction has changed during signing")
 
-        tx_digest = writers.get_tx_hash(h_sign, double=self.coin.sign_hash_double)
+        tx_digest = writers.get_tx_hash(
+            h_sign, double=get_CoinHashInfo(self.coin).sign_hash_double
+        )
         return tx_digest, txi_sign, node
 
     async def sign_nonsegwit_input(self, i: int) -> None:
@@ -762,7 +765,9 @@ class Bitcoin:
         await self.write_prev_tx_footer(txh, tx, prev_hash)
 
         if (
-            writers.get_tx_hash(txh, double=self.coin.sign_hash_double, reverse=True)
+            writers.get_tx_hash(
+                txh, double=get_CoinHashInfo(self.coin).sign_hash_double, reverse=True
+            )
             != prev_hash
         ):
             raise wire.ProcessError("Encountered invalid prev_hash")

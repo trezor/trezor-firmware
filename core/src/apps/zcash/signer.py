@@ -13,12 +13,12 @@ from .hasher import ZcashHasher
 
 if TYPE_CHECKING:
     from typing import Sequence
-    from apps.common.coininfo import CoinInfo
     from apps.bitcoin.sign_tx.tx_info import OriginalTxInfo, TxInfo
     from apps.bitcoin.writers import Writer
     from apps.bitcoin.sign_tx.approvers import Approver
     from trezor.utils import HashWriter
     from trezor.messages import (
+        CoinInfo,
         PrevTx,
         TxInput,
     )

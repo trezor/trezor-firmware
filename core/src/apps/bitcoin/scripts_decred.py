@@ -18,9 +18,7 @@ from .scripts import (  # noqa: F401
 from .writers import op_push_length, write_compact_size, write_op_push
 
 if TYPE_CHECKING:
-    from trezor.messages import MultisigRedeemScriptType
-
-    from apps.common.coininfo import CoinInfo
+    from trezor.messages import CoinInfo, MultisigRedeemScriptType
 
     from .writers import Writer
 

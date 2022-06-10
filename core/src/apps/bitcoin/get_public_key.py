@@ -4,7 +4,8 @@ from trezor import wire
 from trezor.enums import InputScriptType
 from trezor.messages import HDNodeType, PublicKey
 
-from apps.common import coininfo, paths
+from apps.common import paths
+from apps.common.coininfo import by_name
 from apps.common.keychain import get_keychain
 
 if TYPE_CHECKING:
@@ -14,7 +15,7 @@ if TYPE_CHECKING:
 async def get_public_key(ctx: wire.Context, msg: GetPublicKey) -> PublicKey:
     coin_name = msg.coin_name or "Bitcoin"
     script_type = msg.script_type or InputScriptType.SPENDADDRESS
-    coin = coininfo.by_name(coin_name)
+    coin = by_name(coin_name)
     curve_name = msg.ecdsa_curve_name or coin.curve_name
 
     keychain = await get_keychain(ctx, curve_name, [paths.AlwaysMatchingSchema])

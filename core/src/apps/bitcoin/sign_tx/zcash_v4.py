@@ -4,10 +4,9 @@ from typing import TYPE_CHECKING
 
 from trezor import wire
 from trezor.crypto.hashlib import blake2b
-from trezor.messages import PrevTx, SignTx, TxInput, TxOutput
+from trezor.messages import CoinInfo, PrevTx, SignTx, TxInput, TxOutput
 from trezor.utils import HashWriter, ensure
 
-from apps.common.coininfo import CoinInfo
 from apps.common.keychain import Keychain
 from apps.common.writers import write_compact_size
 
@@ -26,7 +25,6 @@ from .bitcoinlike import Bitcoinlike
 
 if TYPE_CHECKING:
     from typing import Sequence
-    from apps.common import coininfo
     from .sig_hasher import SigHasher
     from .tx_info import OriginalTxInfo, TxInfo
     from ..common import SigHashType
@@ -55,7 +53,7 @@ class Zip243SigHasher:
         public_keys: Sequence[bytes | memoryview],
         threshold: int,
         tx: SignTx | PrevTx,
-        coin: coininfo.CoinInfo,
+        coin: CoinInfo,
         hash_type: int,
     ) -> bytes:
         h_preimage = HashWriter(

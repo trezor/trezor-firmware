@@ -169,5 +169,4 @@ message HDNodeType {
  * @end
  */
 message CoinInfoNeeded {
-    required string coin_name = 1;  // coin to use
 }

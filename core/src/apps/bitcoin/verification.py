@@ -5,6 +5,8 @@ from trezor.crypto import der
 from trezor.crypto.curve import bip340, secp256k1
 from trezor.crypto.hashlib import sha256
 
+from apps.common.coininfo import get_CoinHashInfo
+
 from .common import OP_0, OP_1, SigHashType, ecdsa_hash_pubkey
 from .scripts import (
     output_script_native_segwit,
@@ -23,7 +25,7 @@ from .scripts import (
 
 if TYPE_CHECKING:
     from typing import Sequence
-    from apps.common.coininfo import CoinInfo
+    from trezor.messages import CoinInfo
 
 
 class SignatureVerifier:
@@ -70,7 +72,9 @@ class SignatureVerifier:
                 write_input_script_p2wpkh_in_p2sh(w, pubkey_hash)
                 if w != script_sig:
                     raise wire.DataError("Invalid public key hash")
-                script_hash = coin.script_hash(script_sig[1:]).digest()
+                script_hash = (
+                    get_CoinHashInfo(coin).script_hash(script_sig[1:]).digest()
+                )
                 if output_script_p2sh(script_hash) != script_pubkey:
                     raise wire.DataError("Invalid script hash")
                 self.public_keys = [public_key]
@@ -82,7 +86,9 @@ class SignatureVerifier:
                 write_input_script_p2wsh_in_p2sh(w, script_hash)
                 if w != script_sig:
                     raise wire.DataError("Invalid script hash")
-                script_hash = coin.script_hash(script_sig[1:]).digest()
+                script_hash = (
+                    get_CoinHashInfo(coin).script_hash(script_sig[1:]).digest()
+                )
                 if output_script_p2sh(script_hash) != script_pubkey:
                     raise wire.DataError("Invalid script hash")
                 self.public_keys, self.threshold = parse_output_script_multisig(script)
@@ -98,7 +104,7 @@ class SignatureVerifier:
                 self.signatures = [(signature, hash_type)]
             elif len(script_pubkey) == 23:  # P2SH
                 script, self.signatures = parse_input_script_multisig(script_sig)
-                script_hash = coin.script_hash(script).digest()
+                script_hash = get_CoinHashInfo(coin).script_hash(script).digest()
                 if output_script_p2sh(script_hash) != script_pubkey:
                     raise wire.DataError("Invalid script hash")
                 self.public_keys, self.threshold = parse_output_script_multisig(script)

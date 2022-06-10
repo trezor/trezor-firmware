@@ -15,7 +15,7 @@ from .common import BIP32_WALLET_DEPTH
 from .keychain import validate_path_against_script_type, with_keychain
 
 if TYPE_CHECKING:
-    from apps.common.coininfo import CoinInfo
+    from trezor.messages import CoinInfo
     from apps.common.keychain import Keychain
 
 _MAX_COORDINATOR_LEN = const(36)

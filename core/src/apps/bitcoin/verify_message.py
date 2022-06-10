@@ -8,6 +8,7 @@ from trezor.messages import Success
 from trezor.ui.layouts import confirm_signverify, show_success
 
 from apps.common import address_type, coins
+from apps.common.coininfo import get_CoinHashInfo
 from apps.common.signverify import decode_message, message_digest
 
 from . import common
@@ -20,8 +21,7 @@ from .addresses import (
 )
 
 if TYPE_CHECKING:
-    from apps.common.coininfo import CoinInfo
-    from trezor.messages import VerifyMessage
+    from trezor.messages import CoinInfo, VerifyMessage
 
 
 def address_to_script_type(address: str, coin: CoinInfo) -> InputScriptType:
@@ -44,7 +44,7 @@ def address_to_script_type(address: str, coin: CoinInfo) -> InputScriptType:
         return InputScriptType.SPENDADDRESS
 
     try:
-        raw_address = base58.decode_check(address, coin.b58_hash)
+        raw_address = base58.decode_check(address, get_CoinHashInfo(coin).b58_hash)
     except ValueError:
         raise wire.DataError("Invalid address")
 

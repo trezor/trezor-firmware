@@ -5,6 +5,8 @@ from trezor import wire
 from trezor.crypto.hashlib import sha256
 from trezor.utils import HashWriter
 
+from apps.common.coininfo import get_CoinHashInfo
+
 from .. import common, writers
 from ..common import BIP32_WALLET_DEPTH, input_is_external
 from .matchcheck import MultisigFingerprintChecker, WalletPathChecker
@@ -12,14 +14,13 @@ from .matchcheck import MultisigFingerprintChecker, WalletPathChecker
 if TYPE_CHECKING:
     from typing import Protocol
     from trezor.messages import (
+        CoinInfo,
         PrevTx,
         SignTx,
         TxInput,
         TxOutput,
     )
     from .sig_hasher import SigHasher
-
-    from apps.common.coininfo import CoinInfo
 
     class Signer(Protocol):
         coin: CoinInfo
@@ -165,7 +166,9 @@ class OriginalTxInfo(TxInfoBase):
     async def finalize_tx_hash(self) -> None:
         await self.signer.write_prev_tx_footer(self.h_tx, self.tx, self.orig_hash)
         if self.orig_hash != writers.get_tx_hash(
-            self.h_tx, double=self.signer.coin.sign_hash_double, reverse=True
+            self.h_tx,
+            double=get_CoinHashInfo(self.signer.coin).sign_hash_double,
+            reverse=True,
         ):
             # This may happen if incorrect information is supplied in the TXORIGINPUT
             # or TXORIGOUTPUT responses or if the device is loaded with the wrong seed,

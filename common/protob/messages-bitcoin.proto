@@ -181,7 +181,7 @@ message VerifyMessage {
 /**
  * Request: Ask device to sign transaction
  * @start
- * @next CoinInfo
+ * @next CoinInfoNeeded
  * @next TxRequest
  * @next Failure
  */
@@ -205,8 +205,32 @@ message SignTx {
  * @next TxRequest
  * @next Failure
  */
-message CoinInfoFromHost { // TODO: rename
+message CoinInfo { // TODO: rename? + comments
     required string coin_name = 1;  // coin to use
+    required string coin_shortcut = 2;
+    required uint32 decimals = 3;
+    required uint32 address_type = 4;
+    required uint32 address_type_p2sh = 5;
+    required uint32 maxfee_kb = 6;
+    required string signed_message_header = 7;
+    required uint32 xpub_magic = 8;
+    optional uint32 xpub_magic_segwit_p2sh = 9;
+    optional uint32 xpub_magic_segwit_native = 10;
+    optional uint32 xpub_magic_multisig_segwit_p2sh = 11;
+    optional uint32 xpub_magic_multisig_segwit_native = 12;
+    optional string bech32_prefix = 13;
+    optional string cashaddr_prefix = 14;
+    required uint32 slip44 = 15;
+    required bool segwit = 16;
+    required bool taproot = 17;
+    optional uint32 fork_id = 18;
+    required bool force_bip143 = 19;
+    required bool decred = 20;
+    required bool negative_fee = 21;
+    required string curve_name = 22;
+    required bool extra_data = 23;
+    required bool timestamp = 24;
+    required bool overwintered = 25;
 }
 
 /**

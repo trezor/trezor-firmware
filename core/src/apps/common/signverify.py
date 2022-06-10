@@ -4,10 +4,11 @@ from ubinascii import hexlify
 from trezor import utils, wire
 from trezor.crypto.hashlib import blake256, sha256
 
+from apps.common.coininfo import get_CoinHashInfo
 from apps.common.writers import write_compact_size
 
 if TYPE_CHECKING:
-    from apps.common.coininfo import CoinInfo
+    from trezor.messages import CoinInfo
 
 
 def message_digest(coin: CoinInfo, message: bytes) -> bytes:
@@ -22,7 +23,7 @@ def message_digest(coin: CoinInfo, message: bytes) -> bytes:
     write_compact_size(h, len(message))
     h.extend(message)
     ret = h.get_digest()
-    if coin.sign_hash_double:
+    if get_CoinHashInfo(coin).sign_hash_double:
         ret = sha256(ret).digest()
     return ret
 

@@ -7,6 +7,7 @@ from trezor.enums import DecredStakingSpendType, InputScriptType
 from trezor.messages import PrevOutput
 from trezor.utils import HashWriter, ensure
 
+from apps.common.coininfo import get_CoinHashInfo
 from apps.common.writers import write_compact_size
 
 from .. import multisig, scripts_decred, writers
@@ -27,6 +28,7 @@ if TYPE_CHECKING:
     from typing import Sequence
 
     from trezor.messages import (
+        CoinInfo,
         SignTx,
         TxInput,
         TxOutput,
@@ -34,7 +36,6 @@ if TYPE_CHECKING:
         PrevInput,
     )
 
-    from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
 
     from .sig_hasher import SigHasher
@@ -200,7 +201,9 @@ class Decred(Bitcoin):
                     write_compact_size(h_witness, 0)
 
             witness_hash = writers.get_tx_hash(
-                h_witness, double=self.coin.sign_hash_double, reverse=False
+                h_witness,
+                double=get_CoinHashInfo(self.coin).sign_hash_double,
+                reverse=False,
             )
 
             h_sign = self.create_hash_writer()
@@ -208,7 +211,9 @@ class Decred(Bitcoin):
             writers.write_bytes_fixed(h_sign, prefix_hash, writers.TX_HASH_SIZE)
             writers.write_bytes_fixed(h_sign, witness_hash, writers.TX_HASH_SIZE)
 
-            sig_hash = writers.get_tx_hash(h_sign, double=self.coin.sign_hash_double)
+            sig_hash = writers.get_tx_hash(
+                h_sign, double=get_CoinHashInfo(self.coin).sign_hash_double
+            )
             signature = ecdsa_sign(key_sign, sig_hash)
 
             # serialize input with correct signature

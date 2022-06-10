@@ -1,1 +1,1 @@
-from apps.common.coininfo import by_name  # noqa: F401
+from apps.common.coininfo import by_name, get_CoinHashInfo  # noqa: F401

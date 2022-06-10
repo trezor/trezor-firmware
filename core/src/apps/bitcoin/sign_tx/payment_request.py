@@ -7,14 +7,13 @@ from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha256
 from trezor.utils import HashWriter
 
-from apps.common import coininfo
 from apps.common.address_mac import check_address_mac
 from apps.common.keychain import Keychain
 
 from .. import writers
 
 if TYPE_CHECKING:
-    from trezor.messages import TxAckPaymentRequest, TxOutput
+    from trezor.messages import CoinInfo, TxAckPaymentRequest, TxOutput
 
 _MEMO_TYPE_TEXT = const(1)
 _MEMO_TYPE_REFUND = const(2)
@@ -29,7 +28,7 @@ class PaymentRequestVerifier:
         PUBLIC_KEY = b""
 
     def __init__(
-        self, msg: TxAckPaymentRequest, coin: coininfo.CoinInfo, keychain: Keychain
+        self, msg: TxAckPaymentRequest, coin: CoinInfo, keychain: Keychain
     ) -> None:
         self.h_outputs = HashWriter(sha256())
         self.amount = 0

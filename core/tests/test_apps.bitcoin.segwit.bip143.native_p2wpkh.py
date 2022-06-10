@@ -52,7 +52,7 @@ class TestSegwitBip143NativeP2WPKH(unittest.TestCase):
         sig_hasher = BitcoinSigHasher()
         sig_hasher.add_input(self.inp1, b"")
         sig_hasher.add_input(self.inp2, b"")
-        prevouts_hash = get_tx_hash(sig_hasher.h_prevouts, double=coin.sign_hash_double)
+        prevouts_hash = get_tx_hash(sig_hasher.h_prevouts, double=coins.get_CoinHashInfo(coin).sign_hash_double)
         self.assertEqual(hexlify(prevouts_hash), b'96b827c8483d4e9b96712b6713a7b68d6e8003a781feba36c31143470b4efd37')
 
     def test_sequence(self):
@@ -60,7 +60,7 @@ class TestSegwitBip143NativeP2WPKH(unittest.TestCase):
         sig_hasher = BitcoinSigHasher()
         sig_hasher.add_input(self.inp1, b"")
         sig_hasher.add_input(self.inp2, b"")
-        sequence_hash = get_tx_hash(sig_hasher.h_sequences, double=coin.sign_hash_double)
+        sequence_hash = get_tx_hash(sig_hasher.h_sequences, double=coins.get_CoinHashInfo(coin).sign_hash_double)
         self.assertEqual(hexlify(sequence_hash), b'52b0a642eea2fb7ae638c36f6252b6750293dbe574a806984b8e4d8548339a3b')
 
     def test_outputs(self):
@@ -74,7 +74,7 @@ class TestSegwitBip143NativeP2WPKH(unittest.TestCase):
             txo_bin = PrevOutput(amount=txo.amount, script_pubkey=script_pubkey)
             sig_hasher.add_output(txo_bin, script_pubkey)
 
-        outputs_hash = get_tx_hash(sig_hasher.h_outputs, double=coin.sign_hash_double)
+        outputs_hash = get_tx_hash(sig_hasher.h_outputs, double=coins.get_CoinHashInfo(coin).sign_hash_double)
         self.assertEqual(hexlify(outputs_hash), b'863ef3e1a92afbfdb97f31ad0fc7683ee943e9abcf2501590ff8f6551f47e5e5')
 
     def test_preimage_testdata(self):

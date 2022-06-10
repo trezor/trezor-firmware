@@ -5,11 +5,11 @@ from trezor.crypto import base58, cashaddr
 from trezor.crypto.curve import bip340
 from trezor.crypto.hashlib import sha256
 from trezor.enums import InputScriptType
-from trezor.messages import MultisigRedeemScriptType
+from trezor.messages import CoinInfo, MultisigRedeemScriptType
 from trezor.utils import HashWriter
 
 from apps.common import address_type
-from apps.common.coininfo import CoinInfo
+from apps.common.coininfo import get_CoinHashInfo
 
 from .common import ecdsa_hash_pubkey, encode_bech32_address
 from .multisig import multisig_get_pubkeys, multisig_pubkey_index
@@ -88,7 +88,7 @@ def get_address(
 def address_multisig_p2sh(pubkeys: list[bytes], m: int, coin: CoinInfo) -> str:
     if coin.address_type_p2sh is None:
         raise wire.ProcessError("Multisig not enabled on this coin")
-    redeem_script = HashWriter(coin.script_hash())
+    redeem_script = HashWriter(get_CoinHashInfo(coin).script_hash())
     write_output_script_multisig(redeem_script, pubkeys, m)
     return address_p2sh(redeem_script.get_digest(), coin)
 
@@ -110,25 +110,28 @@ def address_multisig_p2wsh(pubkeys: list[bytes], m: int, hrp: str) -> str:
 
 
 def address_pkh(pubkey: bytes, coin: CoinInfo) -> str:
-    s = address_type.tobytes(coin.address_type) + coin.script_hash(pubkey).digest()
-    return base58.encode_check(bytes(s), coin.b58_hash)
+    s = (
+        address_type.tobytes(coin.address_type)
+        + get_CoinHashInfo(coin).script_hash(pubkey).digest()
+    )
+    return base58.encode_check(bytes(s), get_CoinHashInfo(coin).b58_hash)
 
 
 def address_p2sh(redeem_script_hash: bytes, coin: CoinInfo) -> str:
     s = address_type.tobytes(coin.address_type_p2sh) + redeem_script_hash
-    return base58.encode_check(bytes(s), coin.b58_hash)
+    return base58.encode_check(bytes(s), get_CoinHashInfo(coin).b58_hash)
 
 
 def address_p2wpkh_in_p2sh(pubkey: bytes, coin: CoinInfo) -> str:
     pubkey_hash = ecdsa_hash_pubkey(pubkey, coin)
     redeem_script = output_script_native_segwit(0, pubkey_hash)
-    redeem_script_hash = coin.script_hash(redeem_script).digest()
+    redeem_script_hash = get_CoinHashInfo(coin).script_hash(redeem_script).digest()
     return address_p2sh(redeem_script_hash, coin)
 
 
 def address_p2wsh_in_p2sh(witness_script_hash: bytes, coin: CoinInfo) -> str:
     redeem_script = output_script_native_segwit(0, witness_script_hash)
-    redeem_script_hash = coin.script_hash(redeem_script).digest()
+    redeem_script_hash = get_CoinHashInfo(coin).script_hash(redeem_script).digest()
     return address_p2sh(redeem_script_hash, coin)
 
 
@@ -150,7 +153,7 @@ def address_p2tr(pubkey: bytes, coin: CoinInfo) -> str:
 
 def address_to_cashaddr(address: str, coin: CoinInfo) -> str:
     assert coin.cashaddr_prefix is not None
-    raw = base58.decode_check(address, coin.b58_hash)
+    raw = base58.decode_check(address, get_CoinHashInfo(coin).b58_hash)
     version, data = raw[0], raw[1:]
     if version == coin.address_type:
         version = cashaddr.ADDRESS_TYPE_P2KH

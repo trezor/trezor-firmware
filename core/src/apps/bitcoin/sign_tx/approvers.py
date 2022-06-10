@@ -15,12 +15,12 @@ from .payment_request import PaymentRequestVerifier
 from .tx_info import OriginalTxInfo, TxInfo
 
 if TYPE_CHECKING:
+    from trezor.messages import CoinInfo
     from trezor.messages import SignTx
     from trezor.messages import TxInput
     from trezor.messages import TxOutput
     from trezor.messages import TxAckPaymentRequest
 
-    from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
 
     from ..authorization import CoinJoinAuthorization

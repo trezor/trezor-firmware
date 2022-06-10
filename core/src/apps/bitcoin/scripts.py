@@ -6,6 +6,7 @@ from trezor.crypto.hashlib import sha256
 from trezor.enums import InputScriptType
 
 from apps.common import address_type
+from apps.common.coininfo import get_CoinHashInfo
 from apps.common.readers import read_compact_size
 from apps.common.writers import write_compact_size
 
@@ -28,9 +29,7 @@ from .writers import (
 if TYPE_CHECKING:
     from typing import Sequence
 
-    from trezor.messages import MultisigRedeemScriptType, TxInput
-
-    from apps.common.coininfo import CoinInfo
+    from trezor.messages import CoinInfo, MultisigRedeemScriptType, TxInput
 
     from .writers import Writer
 
@@ -100,7 +99,7 @@ def output_derive_script(address: str, coin: CoinInfo) -> bytes:
         raw_address = bytes([version]) + data
     else:
         try:
-            raw_address = base58.decode_check(address, coin.b58_hash)
+            raw_address = base58.decode_check(address, get_CoinHashInfo(coin).b58_hash)
         except ValueError:
             raise wire.DataError("Invalid address")
 

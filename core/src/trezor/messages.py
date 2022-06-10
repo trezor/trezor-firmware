@@ -386,14 +386,6 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class CoinInfoNeeded(protobuf.MessageType):
-        coin_name: "str"
-
-        def __init__(
-            self,
-            *,
-            coin_name: "str",
-        ) -> None:
-            pass
 
         @classmethod
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CoinInfoNeeded"]:
@@ -629,18 +621,66 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["SignTx"]:
             return isinstance(msg, cls)
 
-    class CoinInfoFromHost(protobuf.MessageType):
+    class CoinInfo(protobuf.MessageType):
         coin_name: "str"
+        coin_shortcut: "str"
+        decimals: "int"
+        address_type: "int"
+        address_type_p2sh: "int"
+        maxfee_kb: "int"
+        signed_message_header: "str"
+        xpub_magic: "int"
+        xpub_magic_segwit_p2sh: "int | None"
+        xpub_magic_segwit_native: "int | None"
+        xpub_magic_multisig_segwit_p2sh: "int | None"
+        xpub_magic_multisig_segwit_native: "int | None"
+        bech32_prefix: "str | None"
+        cashaddr_prefix: "str | None"
+        slip44: "int"
+        segwit: "bool"
+        taproot: "bool"
+        fork_id: "int | None"
+        force_bip143: "bool"
+        decred: "bool"
+        negative_fee: "bool"
+        curve_name: "str"
+        extra_data: "bool"
+        timestamp: "bool"
+        overwintered: "bool"
 
         def __init__(
             self,
             *,
             coin_name: "str",
+            coin_shortcut: "str",
+            decimals: "int",
+            address_type: "int",
+            address_type_p2sh: "int",
+            maxfee_kb: "int",
+            signed_message_header: "str",
+            xpub_magic: "int",
+            slip44: "int",
+            segwit: "bool",
+            taproot: "bool",
+            force_bip143: "bool",
+            decred: "bool",
+            negative_fee: "bool",
+            curve_name: "str",
+            extra_data: "bool",
+            timestamp: "bool",
+            overwintered: "bool",
+            xpub_magic_segwit_p2sh: "int | None" = None,
+            xpub_magic_segwit_native: "int | None" = None,
+            xpub_magic_multisig_segwit_p2sh: "int | None" = None,
+            xpub_magic_multisig_segwit_native: "int | None" = None,
+            bech32_prefix: "str | None" = None,
+            cashaddr_prefix: "str | None" = None,
+            fork_id: "int | None" = None,
         ) -> None:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CoinInfoFromHost"]:
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CoinInfo"]:
             return isinstance(msg, cls)
 
     class TxRequest(protobuf.MessageType):

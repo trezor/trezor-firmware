@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from trezor import wire
 from trezor.enums import InputScriptType
 
-from apps.common import coininfo
+from apps.common.coininfo import by_name
 from apps.common.keychain import get_keychain
 from apps.common.paths import PATTERN_BIP44, PathSchema
 
@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 
     from trezor.messages import (
         AuthorizeCoinJoin,
+        CoinInfo,
         GetAddress,
         GetOwnershipId,
         GetOwnershipProof,
@@ -91,7 +92,7 @@ SLIP44_TESTNET = const(1)
 
 
 def validate_path_against_script_type(
-    coin: coininfo.CoinInfo,
+    coin: CoinInfo,
     msg: MsgWithAddressScriptType | None = None,
     address_n: Bip32Path | None = None,
     script_type: InputScriptType | None = None,
@@ -157,7 +158,7 @@ def validate_path_against_script_type(
     )
 
 
-def get_schemas_for_coin(coin: coininfo.CoinInfo) -> Iterable[PathSchema]:
+def get_schemas_for_coin(coin: CoinInfo) -> Iterable[PathSchema]:
     # basic patterns
     patterns = [
         PATTERN_BIP44,
@@ -223,24 +224,19 @@ def get_schemas_for_coin(coin: coininfo.CoinInfo) -> Iterable[PathSchema]:
     return [schema.copy() for schema in schemas]
 
 
-async def get_coin_by_name(ctx: wire.Context, coin_name: str | None) -> coininfo.CoinInfo:
+async def get_coin_by_name(ctx: wire.Context, coin_name: str | None) -> CoinInfo:
     if coin_name is None:
         coin_name = "Bitcoin"
 
     try:
-        # get coin info from host
-        print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! calling")
-        ci = await coininfo.get_coin_info(ctx, coin_name)
-        print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! got {ci.coin_name}")
-
-        return coininfo.by_name(coin_name)
+        return by_name(coin_name)
     except ValueError:
         raise wire.DataError("Unsupported coin type")
 
 
 async def get_keychain_for_coin(
     ctx: wire.Context, coin_name: str | None
-) -> tuple[Keychain, coininfo.CoinInfo]:
+) -> tuple[Keychain, CoinInfo]:
     coin = await get_coin_by_name(ctx, coin_name)
     schemas = get_schemas_for_coin(coin)
     slip21_namespaces = [[b"SLIP-0019"], [b"SLIP-0024"]]

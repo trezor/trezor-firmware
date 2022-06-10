@@ -3,10 +3,10 @@ from ustruct import pack, unpack
 
 from trezor import wire
 from trezor.crypto.hashlib import sha256
-from trezor.messages import SignedIdentity
+from trezor.messages import CoinInfo, SignedIdentity
 from trezor.ui.layouts import confirm_sign_identity
 
-from apps.common import coininfo
+from apps.common.coininfo import by_name
 from apps.common.keychain import get_keychain
 from apps.common.paths import HARDENED, AlwaysMatchingSchema
 
@@ -31,7 +31,7 @@ async def sign_identity(ctx: wire.Context, msg: SignIdentity) -> SignedIdentity:
     address_n = get_identity_path(identity, msg.identity.index or 0)
     node = keychain.derive(address_n)
 
-    coin = coininfo.by_name("Bitcoin")
+    coin = by_name("Bitcoin")
     if msg.ecdsa_curve_name == "secp256k1":
         # hardcoded bitcoin address type
         address: str | None = node.address(coin.address_type)
@@ -122,7 +122,7 @@ def sign_challenge(
     seckey: bytes,
     challenge_hidden: bytes,
     challenge_visual: str,
-    sigtype: str | coininfo.CoinInfo,
+    sigtype: str | CoinInfo,
     curve: str,
 ) -> bytes:
     from apps.common.signverify import message_digest
@@ -138,7 +138,7 @@ def sign_challenge(
             data = sha256(challenge_hidden).digest()
         else:
             data = challenge_hidden
-    elif isinstance(sigtype, coininfo.CoinInfo):
+    elif isinstance(sigtype, CoinInfo):
         # sigtype is coin
         challenge = (
             sha256(challenge_hidden).digest()

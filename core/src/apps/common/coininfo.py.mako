@@ -1,106 +1,22 @@
 # generated from coininfo.py.mako
 # (by running `make templates` in `core`)
 # do not edit manually!
-from typing import TYPE_CHECKING
+from typing import NamedTuple, TYPE_CHECKING
 
 from trezor import utils
 from trezor.crypto.base58 import blake256d_32, groestl512d_32, keccak_32, sha256d_32
 from trezor.crypto.scripts import blake256_ripemd160, sha256_ripemd160
-from trezor.messages import CoinInfoFromHost, CoinInfoNeeded
+from trezor.messages import CoinInfo, CoinInfoNeeded
 
 if TYPE_CHECKING:
-    from typing import Any, Awaitable
+    from typing import Awaitable, Callable, TypeVar
     from trezor import wire
+
+    # type for CoinInfo class
+    T = TypeVar('T', bound='CoinInfo')
 
 # flake8: noqa
 
-
-# TODO: insert this somehow into `by_name` function - first check stored coins and if not found - request from host
-async def get_coin_info(ctx: wire.Context, name: str) -> Awaitable[CoinInfoFromHost]:  # type: ignore [awaitable-is-generator]
-    info = await ctx.call(CoinInfoNeeded(coin_name=name), CoinInfoFromHost)
-    return info
-
-
-class CoinInfo:
-    def __init__(
-        self,
-        coin_name: str,
-        coin_shortcut: str,
-        decimals: int,
-        address_type: int,
-        address_type_p2sh: int,
-        maxfee_kb: int,
-        signed_message_header: str,
-        xpub_magic: int,
-        xpub_magic_segwit_p2sh: int | None,
-        xpub_magic_segwit_native: int | None,
-        xpub_magic_multisig_segwit_p2sh: int | None,
-        xpub_magic_multisig_segwit_native: int | None,
-        bech32_prefix: str | None,
-        cashaddr_prefix: str | None,
-        slip44: int,
-        segwit: bool,
-        taproot: bool,
-        fork_id: int | None,
-        force_bip143: bool,
-        decred: bool,
-        negative_fee: bool,
-        curve_name: str,
-        extra_data: bool,
-        timestamp: bool,
-        overwintered: bool,
-        confidential_assets: dict[str, Any] | None,
-    ) -> None:
-        self.coin_name = coin_name
-        self.coin_shortcut = coin_shortcut
-        self.decimals = decimals
-        self.address_type = address_type
-        self.address_type_p2sh = address_type_p2sh
-        self.maxfee_kb = maxfee_kb
-        self.signed_message_header = signed_message_header
-        self.xpub_magic = xpub_magic
-        self.xpub_magic_segwit_p2sh = xpub_magic_segwit_p2sh
-        self.xpub_magic_segwit_native = xpub_magic_segwit_native
-        self.xpub_magic_multisig_segwit_p2sh = xpub_magic_multisig_segwit_p2sh
-        self.xpub_magic_multisig_segwit_native = xpub_magic_multisig_segwit_native
-        self.bech32_prefix = bech32_prefix
-        self.cashaddr_prefix = cashaddr_prefix
-        self.slip44 = slip44
-        self.segwit = segwit
-        self.taproot = taproot
-        self.fork_id = fork_id
-        self.force_bip143 = force_bip143
-        self.decred = decred
-        self.negative_fee = negative_fee
-        self.curve_name = curve_name
-        self.extra_data = extra_data
-        self.timestamp = timestamp
-        self.overwintered = overwintered
-        self.confidential_assets = confidential_assets
-        if curve_name == "secp256k1-groestl":
-            self.b58_hash = groestl512d_32
-            self.sign_hash_double = False
-            self.script_hash: type[utils.HashContextInitable] = sha256_ripemd160
-        elif curve_name == "secp256k1-decred":
-            self.b58_hash = blake256d_32
-            self.sign_hash_double = False
-            self.script_hash = blake256_ripemd160
-        elif curve_name == "secp256k1-smart":
-            self.b58_hash = keccak_32
-            self.sign_hash_double = False
-            self.script_hash = sha256_ripemd160
-        else:
-            self.b58_hash = sha256d_32
-            self.sign_hash_double = True
-            self.script_hash = sha256_ripemd160
-
-    def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, CoinInfo):
-            return NotImplemented
-        return self.coin_name == other.coin_name
-
-
-# fmt: off
 <%
 def hexfmt(x):
     if x is None:
@@ -114,32 +30,31 @@ def optional_dict(x):
     return dict(x)
 
 ATTRIBUTES = (
-    ("coin_name", lambda _: "name"),
-    ("coin_shortcut", black_repr),
-    ("decimals", int),
-    ("address_type", int),
-    ("address_type_p2sh", int),
-    ("maxfee_kb", int),
-    ("signed_message_header", black_repr),
-    ("xpub_magic", hexfmt),
-    ("xpub_magic_segwit_p2sh", hexfmt),
-    ("xpub_magic_segwit_native", hexfmt),
-    ("xpub_magic_multisig_segwit_p2sh", hexfmt),
-    ("xpub_magic_multisig_segwit_native", hexfmt),
-    ("bech32_prefix", black_repr),
-    ("cashaddr_prefix", black_repr),
-    ("slip44", int),
-    ("segwit", bool),
-    ("taproot", bool),
-    ("fork_id", black_repr),
-    ("force_bip143", bool),
-    ("decred", bool),
-    ("negative_fee", bool),
-    ("curve_name", lambda r: repr(r.replace("_", "-"))),
-    ("extra_data", bool),
-    ("timestamp", bool),
-    ("overwintered", bool),
-    ("confidential_assets", optional_dict),
+    ("coin_name", lambda _: "name", "str"),
+    ("coin_shortcut", black_repr, "str"),
+    ("decimals", int, "int"),
+    ("address_type", int, "int"),
+    ("address_type_p2sh", int, "int"),
+    ("maxfee_kb", int, "int"),
+    ("signed_message_header", black_repr, "str"),
+    ("xpub_magic", hexfmt, "int"),
+    ("xpub_magic_segwit_p2sh", hexfmt, "int | None"),
+    ("xpub_magic_segwit_native", hexfmt, "int | None"),
+    ("xpub_magic_multisig_segwit_p2sh", hexfmt, "int | None"),
+    ("xpub_magic_multisig_segwit_native", hexfmt, "int | None"),
+    ("bech32_prefix", black_repr, "str | None"),
+    ("cashaddr_prefix", black_repr, "str | None"),
+    ("slip44", int, "int"),
+    ("segwit", bool, "bool"),
+    ("taproot", bool, "bool"),
+    ("fork_id", black_repr, "int | None"),
+    ("force_bip143", bool, "bool"),
+    ("decred", bool, "bool"),
+    ("negative_fee", bool, "bool"),
+    ("curve_name", lambda r: repr(r.replace("_", "-")), "str"),
+    ("extra_data", bool, "bool"),
+    ("timestamp", bool, "bool"),
+    ("overwintered", bool, "bool"),
 )
 
 btc_names = ["Bitcoin", "Testnet", "Regtest"]
@@ -151,11 +66,43 @@ for c in coins_btc + coins_alt:
     c.overwintered = bool(c.consensus_branch_id)
 
 %>\
+
+
+class CoinHashInfo():
+    def __init__(
+        self,
+        b58_hash: Callable[[bytes], bytes],
+        sign_hash_double: bool,
+        script_hash: type[utils.HashContextInitable],
+    ) -> None:
+        self.b58_hash = b58_hash
+        self.sign_hash_double = sign_hash_double
+        self.script_hash = script_hash
+
+
+def get_CoinHashInfo(coin: CoinInfo) -> CoinHashInfo:
+    if coin.curve_name == "secp256k1-groestl":
+        return CoinHashInfo(groestl512d_32, False, sha256_ripemd160)
+    elif coin.curve_name == "secp256k1-decred":
+        return CoinHashInfo(blake256d_32, False, blake256_ripemd160)
+    elif coin.curve_name == "secp256k1-smart":
+        return CoinHashInfo(keccak_32, False, sha256_ripemd160)
+    else:
+        return CoinHashInfo(sha256d_32, True, sha256_ripemd160)
+
+
+# TODO: somehow include this to `by_name` function
+async def get_coin_from_host(ctx: wire.Context, name: str) -> CoinInfo:
+    return await ctx.call(CoinInfoNeeded(), CoinInfo)
+
+# fmt: off
+
+# TODO: rename
 def by_name(name: str) -> CoinInfo:
 % for coin in coins_btc:
     if name == ${black_repr(coin["coin_name"])}:
         return CoinInfo(
-            % for attr, func in ATTRIBUTES:
+            % for attr, func, _ in ATTRIBUTES:
             ${attr}=${func(coin[attr])},
             % endfor
         )
@@ -164,9 +111,11 @@ def by_name(name: str) -> CoinInfo:
 % for coin in coins_alt:
         if name == ${black_repr(coin["coin_name"])}:
             return CoinInfo(
-                % for attr, func in ATTRIBUTES:
+                % for attr, func, _ in ATTRIBUTES:
                 ${attr}=${func(coin[attr])},
                 % endfor
             )
 % endfor
     raise ValueError  # Unknown coin name
+##
+##     return await ctx.call(CoinInfoNeeded(), CoinInfo)

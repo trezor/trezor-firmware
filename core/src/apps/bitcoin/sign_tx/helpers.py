@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 from trezor import utils, wire
 from trezor.enums import InputScriptType, OutputScriptType, RequestType
 from trezor.messages import (
+    CoinInfo,
     PrevInput,
     PrevOutput,
     PrevTx,
@@ -20,7 +21,6 @@ from trezor.messages import (
 )
 
 from apps.common import paths
-from apps.common.coininfo import CoinInfo
 
 from .. import common
 from ..writers import TX_HASH_SIZE
