@@ -2,7 +2,7 @@ use super::constant;
 use crate::{
     error::Error,
     time::Duration,
-    trezorhal::{display, qr, time},
+    trezorhal::{display, qr, time, uzlib},
     ui::lerp::Lerp,
 };
 use core::slice;
@@ -92,6 +92,46 @@ pub fn icon(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
         fg_color.into(),
         bg_color.into(),
     );
+}
+
+pub fn icon_rust(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
+    let toif_info = display::toif_info(data).unwrap();
+    assert!(toif_info.grayscale);
+
+    let r = Rect::from_center_and_size(
+        center,
+        Offset::new(toif_info.width.into(), toif_info.height.into()),
+    );
+
+    let area = r.translate(get_offset());
+    let clamped = area.clamp(constant::screen());
+    let colortable = get_color_table(fg_color, bg_color);
+
+    set_window(clamped);
+
+    let mut dest = [0_u8; 1];
+    let mut ctx = uzlib::UzlibContext::new(&data[12..], true);
+
+    for py in area.y0..area.y1 {
+        for px in area.x0..area.x1 {
+            let p = Point::new(px, py);
+            let x = p.x - area.x0;
+
+            if clamped.contains(p) {
+                if x % 2 == 0 {
+                    ctx.uncompress(&mut dest).unwrap();
+                    pixeldata(colortable[(dest[0] >> 4) as usize]);
+                } else {
+                    pixeldata(colortable[(dest[0] & 0xF) as usize]);
+                }
+            } else if x % 2 == 0 {
+                //continue unzipping but dont write to display
+                ctx.uncompress(&mut dest).unwrap();
+            }
+        }
+    }
+
+    pixeldata_dirty();
 }
 
 pub fn image(center: Point, data: &[u8]) {
@@ -188,6 +228,172 @@ impl<'a> TextOverlay<'a> {
 
         underlying
     }
+}
+
+/// Performs a conversion from `angle` (in degrees) to a vector (`Point`)
+/// (polar to cartesian transformation)
+/// Suitable for cases where we don't care about distance, it is assumed 1000
+///
+/// The implementation could be replaced by (cos(`angle`), sin(`angle`)),
+/// if we allow trigonometric functions.
+/// In the meantime, approximate this with predefined octagon
+fn get_vector(angle: i32) -> Point {
+    //octagon vertices
+    let v = [
+        Point::new(0, 1000),
+        Point::new(707, 707),
+        Point::new(1000, 0),
+        Point::new(707, -707),
+        Point::new(0, -1000),
+        Point::new(-707, -707),
+        Point::new(-1000, 0),
+        Point::new(-707, 707),
+    ];
+
+    let angle = angle % 360;
+    let vertices = v.len() as i32;
+    let sector_length = 360 / vertices; // only works if 360 is divisible by vertices
+    let sector = angle / sector_length;
+    let sector_angle = (angle % sector_length) as f32;
+    let v1 = v[sector as usize];
+    let v2 = v[((sector + 1) % vertices) as usize];
+    Point::lerp(v1, v2, sector_angle / sector_length as f32)
+}
+
+/// Find whether vector `v2` is clockwise to another vector v1
+/// `n_v1` is counter clockwise normal vector to v1
+/// ( if v1=(x1,y1), then the counter-clockwise normal is n_v1=(-y1,x1)
+#[inline(always)]
+fn is_clockwise_or_equal(n_v1: Point, v2: Point) -> bool {
+    let psize = v2.x * n_v1.x + v2.y * n_v1.y;
+    psize < 0
+}
+
+/// Find whether vector v2 is clockwise or equal to another vector v1
+/// `n_v1` is counter clockwise normal vector to v1
+/// ( if v1=(x1,y1), then the counter-clockwise normal is n_v1=(-y1,x1)
+#[inline(always)]
+fn is_clockwise_or_equal_inc(n_v1: Point, v2: Point) -> bool {
+    let psize = v2.x * n_v1.x + v2.y * n_v1.y;
+    psize <= 0
+}
+
+/// Draw a rounded rectangle with corner radius 2
+/// Draws only a part (sector of a corresponding circe)
+/// of the rectangle according to `show_percent` argument,
+/// and optionally draw an `icon` inside
+pub fn rect_rounded2_partial(
+    area: Rect,
+    fg_color: Color,
+    bg_color: Color,
+    show_percent: i32,
+    icon: Option<(&[u8], Color)>,
+) {
+    const MAX_ICON_SIZE: u16 = 64;
+
+    let r = area.translate(get_offset());
+    let clamped = r.clamp(constant::screen());
+
+    set_window(clamped);
+
+    let center = r.center();
+    let colortable = get_color_table(fg_color, bg_color);
+    let mut icon_colortable = colortable;
+
+    let mut use_icon = false;
+    let mut icon_area = Rect::zero();
+    let mut icon_area_clamped = Rect::zero();
+    let mut icon_data = [0_u8; ((MAX_ICON_SIZE * MAX_ICON_SIZE) / 2) as usize];
+    let mut icon_width = 0;
+
+    if let Some((icon_bytes, icon_color)) = icon {
+        let toif_info = display::toif_info(icon_bytes).unwrap();
+        assert!(toif_info.grayscale);
+
+        if toif_info.width <= MAX_ICON_SIZE && toif_info.height <= MAX_ICON_SIZE {
+            icon_area = Rect::from_center_and_size(
+                center,
+                Offset::new(toif_info.width.into(), toif_info.height.into()),
+            );
+            icon_area_clamped = icon_area.clamp(constant::screen());
+
+            let mut ctx = uzlib::UzlibContext::new(&icon_bytes[12..], false);
+            ctx.uncompress(&mut icon_data).unwrap();
+            icon_colortable = get_color_table(icon_color, bg_color);
+            icon_width = toif_info.width.into();
+            use_icon = true;
+        }
+    }
+
+    let start = 0;
+    let end = (start + ((360 * show_percent) / 100)) % 360;
+
+    let start_vector;
+    let end_vector;
+
+    let mut show_all = false;
+    let mut inverted = false;
+
+    if show_percent >= 100 {
+        show_all = true;
+        start_vector = Point::zero();
+        end_vector = Point::zero();
+    } else if show_percent > 50 {
+        inverted = true;
+        start_vector = get_vector(end);
+        end_vector = get_vector(start);
+    } else {
+        start_vector = get_vector(start);
+        end_vector = get_vector(end);
+    }
+
+    let n_start = Point::new(-start_vector.y, start_vector.x);
+
+    for y_c in r.y0..r.y1 {
+        for x_c in r.x0..r.x1 {
+            let p = Point::new(x_c, y_c);
+
+            let mut icon_pixel = false;
+            if use_icon && icon_area_clamped.contains(p) {
+                let x_i = p.x - icon_area.x0;
+                let y_i = p.y - icon_area.y0;
+
+                let data = icon_data[(((x_i & 0xFE) + (y_i * icon_width)) / 2) as usize];
+                if (x_i & 0x01) == 0 {
+                    pixeldata(icon_colortable[(data >> 4) as usize]);
+                } else {
+                    pixeldata(icon_colortable[(data & 0xF) as usize]);
+                }
+                icon_pixel = true;
+            }
+
+            if !clamped.contains(p) || icon_pixel {
+                continue;
+            }
+
+            let y_p = -(p.y - center.y);
+            let x_p = p.x - center.x;
+
+            let vx = Point::new(x_p, y_p);
+            let n_vx = Point::new(-y_p, x_p);
+
+            let is_past_start = is_clockwise_or_equal(n_start, vx);
+            let is_before_end = is_clockwise_or_equal_inc(n_vx, end_vector);
+
+            if show_all
+                || (!inverted && (is_past_start && is_before_end))
+                || (inverted && !(is_past_start && is_before_end))
+            {
+                let p_b = p - r.top_left();
+                let c = rect_rounded2_get_pixel(p_b, r.size(), colortable, false, 2);
+                pixeldata(c);
+            } else {
+                pixeldata(bg_color);
+            }
+        }
+    }
+
+    pixeldata_dirty();
 }
 
 /// Gets a color of a pixel on `p` coordinates of rounded rectangle with corner
