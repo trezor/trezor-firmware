@@ -1,3 +1,5 @@
+import utime
+import utimeq
 from typing import TYPE_CHECKING
 
 from trezor import io, log, loop, ui
@@ -35,15 +37,19 @@ class RustLayout(ui.Layout):
     def __init__(self, layout: Any, is_backup: bool = False):
         super().__init__()
         self.layout = layout
-        self.timer = loop.Timer()
-        self.layout.attach_timer_fn(self.set_timer)
+        self.timers = utimeq.utimeq(64)
+        self.timer_task: loop.Task | None = None
         self.is_backup = is_backup
 
         if __debug__ and self.is_backup:
             self.notify_backup()
 
-    def set_timer(self, token: int, deadline: int) -> None:
-        self.timer.schedule(deadline, token)
+    def set_timer(self, token: int, duration: int) -> None:
+        deadline = utime.ticks_add(utime.ticks_ms(), duration)
+        self.timers.push(deadline, token, token)
+        if self.timer_task:
+            min_deadline = self.timers.peektime()
+            loop.schedule(self.timer_task, min_deadline, min_deadline, reschedule=True)
 
     def request_complete_repaint(self) -> None:
         msg = self.layout.request_complete_repaint()
@@ -157,6 +163,7 @@ class RustLayout(ui.Layout):
         from trezor import workflow
 
         touch = loop.wait(io.TOUCH)
+        self.layout.attach_timer_fn(self.set_timer)
         self._first_paint()
         # self.layout.bounds()
         while True:
@@ -172,13 +179,20 @@ class RustLayout(ui.Layout):
             # self.layout.bounds()
 
     def handle_timers(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
+        entry = [0, 0, 0]
         while True:
-            # Using `yield` instead of `await` to avoid allocations.
-            token = yield self.timer
-            msg = self.layout.timer(token)
-            if msg is not None:
-                raise ui.Result(msg)
-            self._paint()
+            delay = 1000
+            if self.timers:
+                delay = self.timers.peektime() - utime.ticks_ms()
+            yield loop.sleep(max(0, delay))
+
+            now = utime.ticks_ms()
+            while self.timers and self.timers.peektime() <= now:
+                self.timers.pop(entry)
+                msg = self.layout.timer(entry[1])
+                if msg is not None:
+                    raise ui.Result(msg)
+                self._paint()
 
     def page_count(self) -> int:
         return self.layout.page_count()

@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Sequence
 
-from trezor import io, log, loop, ui, wire, workflow
+from trezor import log, ui, wire
 from trezor.enums import ButtonRequestType
 from trezor.utils import DISABLE_ANIMATION
 
@@ -10,7 +10,7 @@ from ...components.common.confirm import is_confirmed
 from ..common import button_request, interact
 
 if TYPE_CHECKING:
-    from typing import Any, NoReturn, Type
+    from typing import NoReturn, Type
 
     ExceptionType = BaseException | Type[BaseException]
 
