@@ -18,6 +18,9 @@ pub const GREY_LIGHT: Color = WHITE; // Word/page break characters.
 pub const FG: Color = WHITE; // Default foreground (text & icon) color.
 pub const BG: Color = BLACK; // Default background color.
 
+pub const ICON_SUCCESS: &[u8] = include_res!("model_tr/res/success.toif");
+pub const ICON_FAIL: &[u8] = include_res!("model_tr/res/fail.toif");
+
 pub fn button_default() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
