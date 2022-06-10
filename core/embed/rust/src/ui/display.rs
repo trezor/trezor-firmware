@@ -5,11 +5,11 @@ use core::cmp::{max, min};
 
 use super::geometry::{Offset, Point, Rect};
 
-pub fn clamp_coords(pos: Point, size: Offset) -> Rect {
-    let x0 = max(pos.x, 0);
-    let y0 = max(pos.y, 0);
-    let x1 = min(pos.x + size.x, constant::WIDTH);
-    let y1 = min(pos.y + size.y, constant::HEIGHT);
+pub fn clamp_coords(r: Rect) -> Rect {
+    let x0 = max(r.x0, 0);
+    let y0 = max(r.y0, 0);
+    let x1 = min(r.x1, constant::WIDTH);
+    let y1 = min(r.y1, constant::HEIGHT);
 
     Rect::new(Point::new(x0, y0), Point::new(x1, y1))
 }
@@ -206,7 +206,7 @@ pub fn bar_with_text_and_fill(
     fill_from: i32,
     fill_to: i32,
 ) {
-    let clamped = clamp_coords(r.top_left(), r.size());
+    let clamped = clamp_coords(r);
 
     set_window(clamped);
 
@@ -457,7 +457,8 @@ impl Glyph {
         let bearing = Offset::new(self.bearing_x as i32, -(self.bearing_y as i32));
         let size = Offset::new((self.width) as i32, (self.height) as i32);
         let pos_adj = pos + bearing;
-        let window = clamp_coords(pos_adj, size);
+        let r = Rect::from_top_left_and_size(pos_adj, size);
+        let window = clamp_coords(r);
 
         set_window(window);
 
