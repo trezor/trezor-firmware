@@ -30,7 +30,7 @@ async def live_refresh(
 ) -> MoneroLiveRefreshFinalAck:
     state = LiveRefreshState()
 
-    res = await _init_step(state, ctx, msg, keychain)
+    res = await _init_step(state, msg, keychain)
     while True:
         step = await ctx.call_any(
             res,
@@ -39,7 +39,7 @@ async def live_refresh(
         )
         del res
         if MoneroLiveRefreshStepRequest.is_type_of(step):
-            res = await _refresh_step(state, ctx, step)
+            res = await _refresh_step(state, step)
         else:
             return MoneroLiveRefreshFinalAck()
         gc.collect()
@@ -53,14 +53,13 @@ class LiveRefreshState:
 
 async def _init_step(
     s: LiveRefreshState,
-    ctx: Context,
     msg: MoneroLiveRefreshStartRequest,
     keychain: Keychain,
 ) -> MoneroLiveRefreshStartAck:
-    await paths.validate_path(ctx, keychain, msg.address_n)
+    await paths.validate_path(keychain, msg.address_n)
 
     if not storage.cache.get(storage.cache.APP_MONERO_LIVE_REFRESH):
-        await layout.require_confirm_live_refresh(ctx)
+        await layout.require_confirm_live_refresh()
         storage.cache.set(storage.cache.APP_MONERO_LIVE_REFRESH, b"\x01")
 
     s.creds = misc.get_creds(keychain, msg.address_n, msg.network_type)
@@ -69,14 +68,14 @@ async def _init_step(
 
 
 async def _refresh_step(
-    s: LiveRefreshState, ctx: Context, msg: MoneroLiveRefreshStepRequest
+    s: LiveRefreshState, msg: MoneroLiveRefreshStepRequest
 ) -> MoneroLiveRefreshStepAck:
     assert s.creds is not None
 
     buff = bytearray(32 * 3)
     buff_mv = memoryview(buff)
 
-    await layout.live_refresh_step(ctx, s.current_output)
+    await layout.live_refresh_step(s.current_output)
     s.current_output += 1
 
     if __debug__:

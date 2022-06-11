@@ -15,7 +15,7 @@ async def lockscreen() -> None:
     # it should be a no-op storage-wise, but it resets the internal configuration
     # to an unlocked state.
     try:
-        await unlock_device()
+        await wire.with_context(wire.DUMMY_CONTEXT, unlock_device())
     except wire.PinCancelled:
         pass
 

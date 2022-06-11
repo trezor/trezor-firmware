@@ -13,7 +13,6 @@ if TYPE_CHECKING:
 
 async def require_confirm_fee(ctx: Context, fee: int) -> None:
     await confirm_metadata(
-        ctx,
         "confirm_fee",
         title="Confirm fee",
         content="Transaction fee:\n{}",
@@ -25,7 +24,6 @@ async def require_confirm_fee(ctx: Context, fee: int) -> None:
 
 async def require_confirm_destination_tag(ctx: Context, tag: int) -> None:
     await confirm_metadata(
-        ctx,
         "confirm_destination_tag",
         title="Confirm tag",
         content="Destination tag:\n{}",
@@ -36,4 +34,4 @@ async def require_confirm_destination_tag(ctx: Context, tag: int) -> None:
 
 
 async def require_confirm_tx(ctx: Context, to: str, value: int) -> None:
-    await confirm_total_ripple(ctx, to, format_amount(value, helpers.DECIMALS))
+    await confirm_total_ripple(to, format_amount(value, helpers.DECIMALS))

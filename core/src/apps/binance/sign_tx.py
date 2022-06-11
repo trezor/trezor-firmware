@@ -25,7 +25,7 @@ async def sign_tx(
     if envelope.msg_count > 1:
         raise wire.DataError("Multiple messages not supported.")
 
-    await paths.validate_path(ctx, keychain, envelope.address_n)
+    await paths.validate_path(keychain, envelope.address_n)
     node = keychain.derive(envelope.address_n)
 
     tx_req = BinanceTxRequest()

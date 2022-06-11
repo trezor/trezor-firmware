@@ -37,7 +37,7 @@ async def remove_resident_credential(
     if cred is None:
         raise wire.ProcessError("Invalid credential index.")
 
-    if not await confirm_webauthn(ctx, ConfirmRemoveCredential(cred)):
+    if not await confirm_webauthn(ConfirmRemoveCredential(cred)):
         raise wire.ActionCancelled
 
     assert cred.index is not None

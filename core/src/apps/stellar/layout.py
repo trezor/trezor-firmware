@@ -30,7 +30,6 @@ async def require_confirm_init(
     else:
         description = "Initialize signing with"
     await confirm_address(
-        ctx,
         title="Confirm Stellar",
         address=address,
         br_type="confirm_init",
@@ -41,7 +40,6 @@ async def require_confirm_init(
     network = get_network_warning(network_passphrase)
     if network:
         await confirm_metadata(
-            ctx,
             "confirm_init_network",
             title="Confirm network",
             content="Transaction is on {}",
@@ -54,7 +52,6 @@ async def require_confirm_init(
 
 async def require_confirm_timebounds(ctx: Context, start: int, end: int) -> None:
     await confirm_properties(
-        ctx,
         "confirm_timebounds",
         title="Confirm timebounds",
         props=(
@@ -83,7 +80,6 @@ async def require_confirm_memo(
         description = "Memo (RETURN)"
     else:
         return await confirm_action(
-            ctx,
             "confirm_memo",
             title="Confirm memo",
             action="No memo set!",
@@ -94,7 +90,6 @@ async def require_confirm_memo(
         )
 
     await confirm_blob(
-        ctx,
         "confirm_memo",
         title="Confirm memo",
         description=description,
@@ -105,7 +100,6 @@ async def require_confirm_memo(
 async def require_confirm_final(ctx: Context, fee: int, num_operations: int) -> None:
     op_str = strings.format_plural("{count} {plural}", num_operations, "operation")
     await confirm_metadata(
-        ctx,
         "confirm_final",
         title="Final confirm",
         content="Sign this transaction made up of " + op_str + " and pay {}\nfor fee?",

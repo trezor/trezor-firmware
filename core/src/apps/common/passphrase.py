@@ -22,7 +22,7 @@ async def _request_from_user(ctx: wire.Context) -> str:
     if storage.device.get_passphrase_always_on_device():
         from trezor.ui.layouts import request_passphrase_on_device
 
-        passphrase = await request_passphrase_on_device(ctx, _MAX_PASSPHRASE_LEN)
+        passphrase = await request_passphrase_on_device(_MAX_PASSPHRASE_LEN)
     else:
         passphrase = await _request_on_host(ctx)
     if len(passphrase.encode()) > _MAX_PASSPHRASE_LEN:
@@ -45,7 +45,7 @@ async def _request_on_host(ctx: wire.Context) -> str:
 
         if ack.passphrase is not None:
             raise wire.DataError("Passphrase provided when it should not be")
-        return await request_passphrase_on_device(ctx, _MAX_PASSPHRASE_LEN)
+        return await request_passphrase_on_device(_MAX_PASSPHRASE_LEN)
 
     if ack.passphrase is None:
         raise wire.DataError(
@@ -58,7 +58,6 @@ async def _request_on_host(ctx: wire.Context) -> str:
         from trezor.ui.layouts import confirm_action, confirm_blob
 
         await confirm_action(
-            ctx,
             "passphrase_host1",
             title="Hidden wallet",
             description="Access hidden wallet?\n\nNext screen will show\nthe passphrase!",
@@ -66,7 +65,6 @@ async def _request_on_host(ctx: wire.Context) -> str:
         )
 
         await confirm_blob(
-            ctx,
             "passphrase_host2",
             title="Hidden wallet",
             description="Use this passphrase?\n",

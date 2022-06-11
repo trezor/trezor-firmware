@@ -21,9 +21,7 @@ async def get_address(
     ctx: Context, msg: NEMGetAddress, keychain: Keychain
 ) -> NEMAddress:
     validate_network(msg.network)
-    await validate_path(
-        ctx, keychain, msg.address_n, check_path(msg.address_n, msg.network)
-    )
+    await validate_path(keychain, msg.address_n, check_path(msg.address_n, msg.network))
 
     node = keychain.derive(msg.address_n)
     address = node.nem_address(msg.network)
@@ -31,7 +29,6 @@ async def get_address(
     if msg.show_display:
         title = address_n_to_str(msg.address_n)
         await show_address(
-            ctx,
             address=address,
             case_sensitive=False,
             title=title,

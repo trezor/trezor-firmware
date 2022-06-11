@@ -18,9 +18,9 @@ if TYPE_CHECKING:
 async def get_watch_only(
     ctx: Context, msg: MoneroGetWatchKey, keychain: Keychain
 ) -> MoneroWatchKey:
-    await paths.validate_path(ctx, keychain, msg.address_n)
+    await paths.validate_path(keychain, msg.address_n)
 
-    await layout.require_confirm_watchkey(ctx)
+    await layout.require_confirm_watchkey()
 
     creds = misc.get_creds(keychain, msg.address_n, msg.network_type)
     address = creds.address

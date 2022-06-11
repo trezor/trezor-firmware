@@ -29,7 +29,7 @@ async def init_transaction(
     from apps.monero.signing import offloading_keys
     from apps.common import paths
 
-    await paths.validate_path(state.ctx, keychain, address_n)
+    await paths.validate_path(keychain, address_n)
 
     state.creds = misc.get_creds(keychain, address_n, network_type)
     state.client_version = tsx_data.client_version or 0
@@ -48,9 +48,7 @@ async def init_transaction(
     state.progress_cur = 0
 
     # Ask for confirmation
-    await layout.require_confirm_transaction(
-        state.ctx, state, tsx_data, state.creds.network_type
-    )
+    await layout.require_confirm_transaction(state, tsx_data, state.creds.network_type)
     state.creds.address = None
     state.creds.network_type = None
     gc.collect()

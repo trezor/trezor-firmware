@@ -28,13 +28,12 @@ async def sign_message(
     script_type = msg.script_type or InputScriptType.SPENDADDRESS
 
     await validate_path(
-        ctx, keychain, address_n, validate_path_against_script_type(coin, msg)
+        keychain, address_n, validate_path_against_script_type(coin, msg)
     )
 
     node = keychain.derive(address_n)
     address = get_address(script_type, coin, node)
     await confirm_signverify(
-        ctx,
         coin.coin_shortcut,
         decode_message(message),
         address_short(coin, address),

@@ -19,7 +19,6 @@ if TYPE_CHECKING:
         MoneroTransactionData,
         MoneroTransactionDestinationEntry,
     )
-    from trezor.wire import Context
 
     from .signing.state import State
 
@@ -28,9 +27,8 @@ def _format_amount(value: int) -> str:
     return f"{strings.format_amount(value, 12)} XMR"
 
 
-async def require_confirm_watchkey(ctx: Context) -> None:
+async def require_confirm_watchkey() -> None:
     await confirm_action(
-        ctx,
         "get_watchkey",
         "Confirm export",
         description="Do you really want to export watch-only credentials?",
@@ -40,9 +38,8 @@ async def require_confirm_watchkey(ctx: Context) -> None:
     )
 
 
-async def require_confirm_keyimage_sync(ctx: Context) -> None:
+async def require_confirm_keyimage_sync() -> None:
     await confirm_action(
-        ctx,
         "key_image_sync",
         "Confirm ki sync",
         description="Do you really want to\nsync key images?",
@@ -52,9 +49,8 @@ async def require_confirm_keyimage_sync(ctx: Context) -> None:
     )
 
 
-async def require_confirm_live_refresh(ctx: Context) -> None:
+async def require_confirm_live_refresh() -> None:
     await confirm_action(
-        ctx,
         "live_refresh",
         "Confirm refresh",
         description="Do you really want to\nstart refresh?",
@@ -64,13 +60,12 @@ async def require_confirm_live_refresh(ctx: Context) -> None:
     )
 
 
-async def require_confirm_tx_key(ctx: Context, export_key: bool = False) -> None:
+async def require_confirm_tx_key(export_key: bool = False) -> None:
     if export_key:
         description = "Do you really want to export tx_key?"
     else:
         description = "Do you really want to export tx_der\nfor tx_proof?"
     await confirm_action(
-        ctx,
         "export_tx_key",
         "Confirm export",
         description=description,
@@ -81,7 +76,6 @@ async def require_confirm_tx_key(ctx: Context, export_key: bool = False) -> None
 
 
 async def require_confirm_transaction(
-    ctx: Context,
     state: State,
     tsx_data: MoneroTransactionData,
     network_type: MoneroNetworkType,
@@ -95,7 +89,7 @@ async def require_confirm_transaction(
     change_idx = get_change_addr_idx(outputs, tsx_data.change_dts)
 
     if tsx_data.unlock_time != 0:
-        await _require_confirm_unlock_time(ctx, tsx_data.unlock_time)
+        await _require_confirm_unlock_time(tsx_data.unlock_time)
 
     for idx, dst in enumerate(outputs):
         is_change = change_idx is not None and idx == change_idx
@@ -108,21 +102,20 @@ async def require_confirm_transaction(
             cur_payment = tsx_data.payment_id
         else:
             cur_payment = None
-        await _require_confirm_output(ctx, dst, network_type, cur_payment)
+        await _require_confirm_output(dst, network_type, cur_payment)
 
     if (
         tsx_data.payment_id
         and not tsx_data.integrated_indices
         and tsx_data.payment_id != DUMMY_PAYMENT_ID
     ):
-        await _require_confirm_payment_id(ctx, tsx_data.payment_id)
+        await _require_confirm_payment_id(tsx_data.payment_id)
 
-    await _require_confirm_fee(ctx, tsx_data.fee)
+    await _require_confirm_fee(tsx_data.fee)
     await transaction_step(state, 0)
 
 
 async def _require_confirm_output(
-    ctx: Context,
     dst: MoneroTransactionDestinationEntry,
     network_type: MoneroNetworkType,
     payment_id: bytes | None,
@@ -139,7 +132,6 @@ async def _require_confirm_output(
     )
 
     await confirm_output(
-        ctx,
         address=addr,
         amount=_format_amount(dst.amount),
         font_amount=ui.BOLD,
@@ -147,9 +139,8 @@ async def _require_confirm_output(
     )
 
 
-async def _require_confirm_payment_id(ctx: Context, payment_id: bytes) -> None:
+async def _require_confirm_payment_id(payment_id: bytes) -> None:
     await confirm_blob(
-        ctx,
         "confirm_payment_id",
         title="Payment ID",
         data=payment_id,
@@ -157,9 +148,8 @@ async def _require_confirm_payment_id(ctx: Context, payment_id: bytes) -> None:
     )
 
 
-async def _require_confirm_fee(ctx: Context, fee: int) -> None:
+async def _require_confirm_fee(fee: int) -> None:
     await confirm_metadata(
-        ctx,
         "confirm_final",
         title="Confirm fee",
         content="{}",
@@ -169,9 +159,8 @@ async def _require_confirm_fee(ctx: Context, fee: int) -> None:
     )
 
 
-async def _require_confirm_unlock_time(ctx: Context, unlock_time: int) -> None:
+async def _require_confirm_unlock_time(unlock_time: int) -> None:
     await confirm_metadata(
-        ctx,
         "confirm_locktime",
         "Confirm unlock time",
         "Unlock time for this transaction is set to {}",
@@ -248,13 +237,13 @@ async def transaction_step(state: State, step: int, sub_step: int = 0) -> None:
     await Popup(TransactionStep(state, info))
 
 
-async def keyimage_sync_step(ctx: Context, current: int | None, total_num: int) -> None:
+async def keyimage_sync_step(current: int | None, total_num: int) -> None:
     if current is None:
         return
     await Popup(KeyImageSyncStep(current, total_num))
 
 
-async def live_refresh_step(ctx: Context, current: int | None) -> None:
+async def live_refresh_step(current: int | None) -> None:
     if current is None:
         return
     await Popup(LiveRefreshStep(current))

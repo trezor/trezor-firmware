@@ -27,9 +27,8 @@ if TYPE_CHECKING:
     from trezor.ui.layouts import PropertyType
 
 
-async def confirm_action_buyram(ctx: wire.Context, msg: EosActionBuyRam) -> None:
+async def confirm_action_buyram(msg: EosActionBuyRam) -> None:
     await confirm_properties(
-        ctx,
         "confirm_buyram",
         title="Buy RAM",
         props=[
@@ -42,11 +41,8 @@ async def confirm_action_buyram(ctx: wire.Context, msg: EosActionBuyRam) -> None
     )
 
 
-async def confirm_action_buyrambytes(
-    ctx: wire.Context, msg: EosActionBuyRamBytes
-) -> None:
+async def confirm_action_buyrambytes(msg: EosActionBuyRamBytes) -> None:
     await confirm_properties(
-        ctx,
         "confirm_buyrambytes",
         title="Buy RAM",
         props=[
@@ -59,7 +55,7 @@ async def confirm_action_buyrambytes(
     )
 
 
-async def confirm_action_delegate(ctx: wire.Context, msg: EosActionDelegate) -> None:
+async def confirm_action_delegate(msg: EosActionDelegate) -> None:
     props = [
         ("Sender:", helpers.eos_name_to_string(msg.sender)),
         ("Receiver:", helpers.eos_name_to_string(msg.receiver)),
@@ -73,7 +69,6 @@ async def confirm_action_delegate(ctx: wire.Context, msg: EosActionDelegate) -> 
         props.append(("Transfer:", "No"))
 
     await confirm_properties(
-        ctx,
         "confirm_delegate",
         title="Delegate",
         props=props,
@@ -82,9 +77,8 @@ async def confirm_action_delegate(ctx: wire.Context, msg: EosActionDelegate) -> 
     )
 
 
-async def confirm_action_sellram(ctx: wire.Context, msg: EosActionSellRam) -> None:
+async def confirm_action_sellram(msg: EosActionSellRam) -> None:
     await confirm_properties(
-        ctx,
         "confirm_sellram",
         title="Sell RAM",
         props=[
@@ -96,11 +90,8 @@ async def confirm_action_sellram(ctx: wire.Context, msg: EosActionSellRam) -> No
     )
 
 
-async def confirm_action_undelegate(
-    ctx: wire.Context, msg: EosActionUndelegate
-) -> None:
+async def confirm_action_undelegate(msg: EosActionUndelegate) -> None:
     await confirm_properties(
-        ctx,
         "confirm_undelegate",
         title="Undelegate",
         props=[
@@ -114,9 +105,8 @@ async def confirm_action_undelegate(
     )
 
 
-async def confirm_action_refund(ctx: wire.Context, msg: EosActionRefund) -> None:
+async def confirm_action_refund(msg: EosActionRefund) -> None:
     await confirm_properties(
-        ctx,
         "confirm_refund",
         title="Refund",
         props=[
@@ -127,13 +117,10 @@ async def confirm_action_refund(ctx: wire.Context, msg: EosActionRefund) -> None
     )
 
 
-async def confirm_action_voteproducer(
-    ctx: wire.Context, msg: EosActionVoteProducer
-) -> None:
+async def confirm_action_voteproducer(msg: EosActionVoteProducer) -> None:
     if msg.proxy and not msg.producers:
         # PROXY
         await confirm_properties(
-            ctx,
             "confirm_voteproducer",
             title="Vote for proxy",
             props=[
@@ -147,7 +134,6 @@ async def confirm_action_voteproducer(
     elif msg.producers:
         # PRODUCERS
         await confirm_properties(
-            ctx,
             "confirm_voteproducer",
             title="Vote for producers",
             props=(
@@ -161,7 +147,6 @@ async def confirm_action_voteproducer(
     else:
         # Cancel vote
         await confirm_properties(
-            ctx,
             "confirm_voteproducer",
             title="Cancel vote",
             props=[
@@ -172,9 +157,7 @@ async def confirm_action_voteproducer(
         )
 
 
-async def confirm_action_transfer(
-    ctx: wire.Context, msg: EosActionTransfer, account: str
-) -> None:
+async def confirm_action_transfer(msg: EosActionTransfer, account: str) -> None:
     props = [
         ("From:", helpers.eos_name_to_string(msg.sender)),
         ("To:", helpers.eos_name_to_string(msg.receiver)),
@@ -184,7 +167,6 @@ async def confirm_action_transfer(
     if msg.memo is not None:
         props.append(("Memo", msg.memo[:512]))
     await confirm_properties(
-        ctx,
         "confirm_transfer",
         title="Transfer",
         props=props,
@@ -193,9 +175,7 @@ async def confirm_action_transfer(
     )
 
 
-async def confirm_action_updateauth(
-    ctx: wire.Context, msg: EosActionUpdateAuth
-) -> None:
+async def confirm_action_updateauth(msg: EosActionUpdateAuth) -> None:
     props: list[PropertyType] = [
         ("Account:", helpers.eos_name_to_string(msg.account)),
         ("Permission:", helpers.eos_name_to_string(msg.permission)),
@@ -203,7 +183,6 @@ async def confirm_action_updateauth(
     ]
     props.extend(authorization_fields(msg.auth))
     await confirm_properties(
-        ctx,
         "confirm_updateauth",
         title="Update Auth",
         props=props,
@@ -212,11 +191,8 @@ async def confirm_action_updateauth(
     )
 
 
-async def confirm_action_deleteauth(
-    ctx: wire.Context, msg: EosActionDeleteAuth
-) -> None:
+async def confirm_action_deleteauth(msg: EosActionDeleteAuth) -> None:
     await confirm_properties(
-        ctx,
         "confirm_deleteauth",
         title="Delete Auth",
         props=[
@@ -228,9 +204,8 @@ async def confirm_action_deleteauth(
     )
 
 
-async def confirm_action_linkauth(ctx: wire.Context, msg: EosActionLinkAuth) -> None:
+async def confirm_action_linkauth(msg: EosActionLinkAuth) -> None:
     await confirm_properties(
-        ctx,
         "confirm_linkauth",
         title="Link Auth",
         props=[
@@ -244,11 +219,8 @@ async def confirm_action_linkauth(ctx: wire.Context, msg: EosActionLinkAuth) -> 
     )
 
 
-async def confirm_action_unlinkauth(
-    ctx: wire.Context, msg: EosActionUnlinkAuth
-) -> None:
+async def confirm_action_unlinkauth(msg: EosActionUnlinkAuth) -> None:
     await confirm_properties(
-        ctx,
         "confirm_unlinkauth",
         title="Unlink Auth",
         props=[
@@ -261,9 +233,7 @@ async def confirm_action_unlinkauth(
     )
 
 
-async def confirm_action_newaccount(
-    ctx: wire.Context, msg: EosActionNewAccount
-) -> None:
+async def confirm_action_newaccount(msg: EosActionNewAccount) -> None:
     props: list[PropertyType] = [
         ("Creator:", helpers.eos_name_to_string(msg.creator)),
         ("Name:", helpers.eos_name_to_string(msg.name)),
@@ -271,7 +241,6 @@ async def confirm_action_newaccount(
     props.extend(authorization_fields(msg.owner))
     props.extend(authorization_fields(msg.active))
     await confirm_properties(
-        ctx,
         "confirm_newaccount",
         title="New Account",
         props=props,
@@ -280,11 +249,8 @@ async def confirm_action_newaccount(
     )
 
 
-async def confirm_action_unknown(
-    ctx: wire.Context, action: EosActionCommon, checksum: bytes
-) -> None:
+async def confirm_action_unknown(action: EosActionCommon, checksum: bytes) -> None:
     await confirm_properties(
-        ctx,
         "confirm_unknown",
         title="Arbitrary data",
         props=[

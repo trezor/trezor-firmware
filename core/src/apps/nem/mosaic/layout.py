@@ -108,7 +108,6 @@ async def require_confirm_properties(
         properties.append(("Levy type:", levy_type))
 
     await confirm_properties(
-        ctx,
         "confirm_properties",
         title="Confirm properties",
         props=properties,

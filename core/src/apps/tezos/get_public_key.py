@@ -17,13 +17,13 @@ if TYPE_CHECKING:
 async def get_public_key(
     ctx: Context, msg: TezosGetPublicKey, keychain: Keychain
 ) -> TezosPublicKey:
-    await paths.validate_path(ctx, keychain, msg.address_n)
+    await paths.validate_path(keychain, msg.address_n)
 
     node = keychain.derive(msg.address_n)
     pk = seed.remove_ed25519_prefix(node.public_key())
     pk_prefixed = helpers.base58_encode_check(pk, prefix=helpers.TEZOS_PUBLICKEY_PREFIX)
 
     if msg.show_display:
-        await show_pubkey(ctx, pk_prefixed)
+        await show_pubkey(pk_prefixed)
 
     return TezosPublicKey(public_key=pk_prefixed)

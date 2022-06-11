@@ -56,6 +56,7 @@ if TYPE_CHECKING:
         Callable,
         Container,
         Coroutine,
+        Generator,
         Iterable,
         Protocol,
         TypeVar,
@@ -342,7 +343,7 @@ async def _handle_single_message(
         if use_workflow:
             # Spawn a workflow around the task. This ensures that concurrent
             # workflows are shut down.
-            res_msg = await workflow.spawn(task)
+            res_msg = await workflow.spawn(with_context(ctx, task))
         else:
             # For debug messages, ignore workflow processing and just await
             # results of the handler.
@@ -471,3 +472,31 @@ def failure(exc: BaseException) -> Failure:
 
 def unexpected_message() -> Failure:
     return Failure(code=FailureType.UnexpectedMessage, message="Unexpected message")
+
+
+CURRENT_CONTEXT: GenericContext = DUMMY_CONTEXT
+
+
+def with_context(ctx: GenericContext, workflow: loop.Task) -> Generator:
+    global CURRENT_CONTEXT
+    send_val = None
+
+    while True:
+        CURRENT_CONTEXT = ctx
+        try:
+            if isinstance(send_val, BaseException):
+                res = workflow.throw(send_val)
+            else:
+                res = workflow.send(send_val)
+        except StopIteration as st:
+            return st.value
+        finally:
+            CURRENT_CONTEXT = DUMMY_CONTEXT
+        try:
+            send_val = yield res
+        except Exception as e:
+            send_val = e
+
+
+def get_context() -> GenericContext:
+    return CURRENT_CONTEXT

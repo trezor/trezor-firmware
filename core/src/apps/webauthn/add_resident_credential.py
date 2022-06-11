@@ -37,7 +37,6 @@ async def add_resident_credential(
         cred = Fido2Credential.from_cred_id(bytes(msg.credential_id), None)
     except Exception:
         await show_error_and_raise(
-            ctx,
             "warning_credential",
             header="Import credential",
             button="Close",
@@ -45,7 +44,7 @@ async def add_resident_credential(
             red=True,
         )
 
-    if not await confirm_webauthn(ctx, ConfirmAddCredential(cred)):
+    if not await confirm_webauthn(ConfirmAddCredential(cred)):
         raise wire.ActionCancelled
 
     if store_resident_credential(cred):

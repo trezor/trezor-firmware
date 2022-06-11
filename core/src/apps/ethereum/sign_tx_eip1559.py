@@ -57,7 +57,7 @@ async def sign_tx_eip1559(
 ) -> EthereumTxRequest:
     check(msg)
 
-    await paths.validate_path(ctx, keychain, msg.address_n)
+    await paths.validate_path(keychain, msg.address_n)
 
     # Handle ERC20s
     token, address_bytes, recipient, value = await handle_erc20(ctx, msg)

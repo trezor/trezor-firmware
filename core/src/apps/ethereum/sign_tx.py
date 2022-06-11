@@ -36,7 +36,7 @@ async def sign_tx(
     ctx: wire.Context, msg: EthereumSignTx, keychain: Keychain
 ) -> EthereumTxRequest:
     check(msg)
-    await paths.validate_path(ctx, keychain, msg.address_n)
+    await paths.validate_path(keychain, msg.address_n)
 
     # Handle ERC20s
     token, address_bytes, recipient, value = await handle_erc20(ctx, msg)

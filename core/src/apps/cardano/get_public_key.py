@@ -15,7 +15,6 @@ async def get_public_key(
     ctx: wire.Context, msg: messages.CardanoGetPublicKey, keychain: seed.Keychain
 ) -> messages.CardanoPublicKey:
     await paths.validate_path(
-        ctx,
         keychain,
         msg.address_n,
         # path must match the PUBKEY schema
@@ -30,7 +29,7 @@ async def get_public_key(
         raise wire.ProcessError("Deriving public key failed")
 
     if msg.show_display:
-        await show_pubkey(ctx, hexlify(key.node.public_key).decode())
+        await show_pubkey(hexlify(key.node.public_key).decode())
     return key
 
 

@@ -33,7 +33,6 @@ async def get_ownership_proof(
             raise wire.ProcessError("Unauthorized operation")
     else:
         await validate_path(
-            ctx,
             keychain,
             msg.address_n,
             validate_path_against_script_type(coin, msg),
@@ -67,14 +66,12 @@ async def get_ownership_proof(
     # In order to set the "user confirmation" bit in the proof, the user must actually confirm.
     if msg.user_confirmation and not authorization:
         await confirm_action(
-            ctx,
             "confirm_ownership_proof",
             title="Proof of ownership",
             description="Do you want to create a proof of ownership?",
         )
         if msg.commitment_data:
             await confirm_blob(
-                ctx,
                 "confirm_ownership_proof",
                 title="Proof of ownership",
                 description="Commitment data:",

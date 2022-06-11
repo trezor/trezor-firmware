@@ -45,7 +45,6 @@ async def get_address(
     if msg.show_display:
         # skip soft-validation for silent calls
         await validate_path(
-            ctx,
             keychain,
             msg.address_n,
             validate_path_against_script_type(coin, msg),
@@ -98,7 +97,6 @@ async def get_address(
 
             title = f"Multisig {msg.multisig.m} of {len(pubnodes)}"
             await show_address(
-                ctx,
                 address=address_short,
                 case_sensitive=address_case_sensitive,
                 title=title,
@@ -108,7 +106,6 @@ async def get_address(
         else:
             title = address_n_to_str(msg.address_n)
             await show_address(
-                ctx,
                 address=address_short,
                 address_qr=address,
                 case_sensitive=address_case_sensitive,

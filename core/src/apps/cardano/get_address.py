@@ -23,22 +23,20 @@ async def get_address(
         raise wire.ProcessError("Deriving address failed")
 
     if msg.show_display:
-        await _display_address(ctx, msg.address_parameters, address, msg.protocol_magic)
+        await _display_address(msg.address_parameters, address, msg.protocol_magic)
 
     return messages.CardanoAddress(address=address)
 
 
 async def _display_address(
-    ctx: wire.Context,
     address_parameters: messages.CardanoAddressParametersType,
     address: str,
     protocol_magic: int,
 ) -> None:
     if should_show_credentials(address_parameters):
         await show_credentials(
-            ctx,
             Credential.payment_credential(address_parameters),
             Credential.stake_credential(address_parameters),
         )
 
-    await show_cardano_address(ctx, address_parameters, address, protocol_magic)
+    await show_cardano_address(address_parameters, address, protocol_magic)

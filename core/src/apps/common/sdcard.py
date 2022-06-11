@@ -8,10 +8,9 @@ class SdCardUnavailable(wire.ProcessError):
     pass
 
 
-async def _confirm_retry_wrong_card(ctx: wire.GenericContext) -> None:
+async def _confirm_retry_wrong_card() -> None:
     if SD_CARD_HOT_SWAPPABLE:
         await confirm_action(
-            ctx,
             "warning_wrong_sd",
             "SD card protection",
             action="Wrong SD card.",
@@ -24,7 +23,6 @@ async def _confirm_retry_wrong_card(ctx: wire.GenericContext) -> None:
         )
     else:
         await show_error_and_raise(
-            ctx,
             "warning_wrong_sd",
             header="SD card protection",
             subheader="Wrong SD card.",
@@ -33,10 +31,9 @@ async def _confirm_retry_wrong_card(ctx: wire.GenericContext) -> None:
         )
 
 
-async def _confirm_retry_insert_card(ctx: wire.GenericContext) -> None:
+async def _confirm_retry_insert_card() -> None:
     if SD_CARD_HOT_SWAPPABLE:
         await confirm_action(
-            ctx,
             "warning_no_sd",
             "SD card protection",
             action="SD card required.",
@@ -49,7 +46,6 @@ async def _confirm_retry_insert_card(ctx: wire.GenericContext) -> None:
         )
     else:
         await show_error_and_raise(
-            ctx,
             "warning_no_sd",
             header="SD card protection",
             subheader="SD card required.",
@@ -58,10 +54,9 @@ async def _confirm_retry_insert_card(ctx: wire.GenericContext) -> None:
         )
 
 
-async def _confirm_format_card(ctx: wire.GenericContext) -> None:
+async def _confirm_format_card() -> None:
     # Format card? yes/no
     await confirm_action(
-        ctx,
         "warning_format_sd",
         "SD card error",
         action="Unknown filesystem.",
@@ -76,7 +71,6 @@ async def _confirm_format_card(ctx: wire.GenericContext) -> None:
 
     # Confirm formatting
     await confirm_action(
-        ctx,
         "confirm_format_sd",
         "Format SD card",
         action="All data on the SD card will be lost.",
@@ -92,11 +86,9 @@ async def _confirm_format_card(ctx: wire.GenericContext) -> None:
 
 
 async def confirm_retry_sd(
-    ctx: wire.GenericContext,
     exc: wire.ProcessError = SdCardUnavailable("Error accessing SD card."),
 ) -> None:
     await confirm_action(
-        ctx,
         "warning_sd_retry",
         "SD card problem",
         action=None,
@@ -109,9 +101,7 @@ async def confirm_retry_sd(
     )
 
 
-async def ensure_sdcard(
-    ctx: wire.GenericContext, ensure_filesystem: bool = True
-) -> None:
+async def ensure_sdcard(ensure_filesystem: bool = True) -> None:
     """Ensure a SD card is ready for use.
 
     This function runs the UI flow needed to ask the user to insert a SD card if there
@@ -122,7 +112,7 @@ async def ensure_sdcard(
     mounted.
     """
     while not sdcard.is_present():
-        await _confirm_retry_insert_card(ctx)
+        await _confirm_retry_insert_card()
 
     if not ensure_filesystem:
         return
@@ -139,7 +129,7 @@ async def ensure_sdcard(
                 # no error when mounting
                 return
 
-            await _confirm_format_card(ctx)
+            await _confirm_format_card()
 
             # Proceed to formatting. Failure is caught by the outside OSError handler
             with sdcard.filesystem(mounted=False):
@@ -152,24 +142,22 @@ async def ensure_sdcard(
 
         except OSError:
             # formatting failed, or generic I/O error (SD card power-on failed)
-            await confirm_retry_sd(ctx)
+            await confirm_retry_sd()
 
 
-async def request_sd_salt(
-    ctx: wire.GenericContext = wire.DUMMY_CONTEXT,
-) -> bytearray | None:
+async def request_sd_salt() -> bytearray | None:
     if not storage.sd_salt.is_enabled():
         return None
 
     while True:
-        await ensure_sdcard(ctx, ensure_filesystem=False)
+        await ensure_sdcard(ensure_filesystem=False)
         try:
             return storage.sd_salt.load_sd_salt()
         except (storage.sd_salt.WrongSdCard, io.fatfs.NoFilesystem):
-            await _confirm_retry_wrong_card(ctx)
+            await _confirm_retry_wrong_card()
         except OSError:
             # Generic problem with loading the SD salt (hardware problem, or we could
             # not read the file, or there is a staged salt which cannot be committed).
             # In either case, there is no good way to recover. If the user clicks Retry,
             # we will try again.
-            await confirm_retry_sd(ctx)
+            await confirm_retry_sd()

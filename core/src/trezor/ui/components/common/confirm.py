@@ -34,7 +34,7 @@ async def is_confirmed_info(
         result = await ctx.wait(dialog)
 
         if result is INFO:
-            await info_func(ctx)
+            await info_func()
         else:
             return is_confirmed(result)
 

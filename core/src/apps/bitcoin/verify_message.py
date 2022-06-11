@@ -101,12 +101,11 @@ async def verify_message(ctx: wire.Context, msg: VerifyMessage) -> Success:
         raise wire.ProcessError("Invalid signature")
 
     await confirm_signverify(
-        ctx,
         coin.coin_shortcut,
         decode_message(message),
         address=address_short(coin, address),
         verify=True,
     )
 
-    await show_success(ctx, "verify_message", "The signature is valid.")
+    await show_success("verify_message", "The signature is valid.")
     return Success(message="Message verified")

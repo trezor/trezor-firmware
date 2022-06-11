@@ -16,7 +16,6 @@ async def reboot_to_bootloader(ctx: wire.Context, msg: RebootToBootloader) -> No
         raise wire.UnexpectedMessage("Experimental features are not enabled")
 
     await confirm_action(
-        ctx,
         "reboot",
         "Go to bootloader",
         "Do you want to restart Trezor in bootloader mode?",

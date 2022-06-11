@@ -12,13 +12,12 @@ if TYPE_CHECKING:
     pass
 
 
-async def request_word_count(ctx: wire.GenericContext, dry_run: bool) -> int:
+async def request_word_count(dry_run: bool) -> int:
     raise NotImplementedError
 
 
-async def request_word(
-    ctx: wire.GenericContext, word_index: int, word_count: int, is_slip39: bool
-) -> str:
+async def request_word(word_index: int, word_count: int, is_slip39: bool) -> str:
+    ctx = wire.get_context()
     if is_slip39:
         keyboard: Any = RustLayout(
             trezorui2.request_bip39(
@@ -37,7 +36,6 @@ async def request_word(
 
 
 async def show_remaining_shares(
-    ctx: wire.GenericContext,
     groups: Iterable[tuple[int, tuple[str, ...]]],  # remaining + list 3 words
     shares_remaining: list[int],
     group_threshold: int,
@@ -45,14 +43,11 @@ async def show_remaining_shares(
     raise NotImplementedError
 
 
-async def show_group_share_success(
-    ctx: wire.GenericContext, share_index: int, group_index: int
-) -> None:
+async def show_group_share_success(share_index: int, group_index: int) -> None:
     raise NotImplementedError
 
 
 async def continue_recovery(
-    ctx: wire.GenericContext,
     button_label: str,
     text: str,
     subtext: str | None,

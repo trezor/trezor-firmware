@@ -14,7 +14,6 @@ if TYPE_CHECKING:
 
 
 async def confirm_action(
-    ctx: wire.GenericContext,
     br_type: str,
     title: str,
     action: str | None = None,
@@ -44,7 +43,6 @@ async def confirm_action(
         log.error(__name__, "confirm_action hold not implemented")
 
     result = await interact(
-        ctx,
         RustLayout(
             trezorui2.confirm_action(
                 title=title.upper(),
@@ -64,7 +62,6 @@ async def confirm_action(
 
 
 async def confirm_text(
-    ctx: wire.GenericContext,
     br_type: str,
     title: str,
     data: str,
@@ -74,7 +71,6 @@ async def confirm_text(
     icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
 ) -> None:
     result = await interact(
-        ctx,
         RustLayout(
             trezorui2.confirm_text(
                 title=title.upper(),
@@ -90,12 +86,10 @@ async def confirm_text(
 
 
 async def show_success(
-    ctx: wire.GenericContext,
     br_type: str,
     content: str,
 ) -> None:
     result = await interact(
-        ctx,
         RustLayout(
             trezorui2.confirm_text(
                 title="Success",
@@ -111,7 +105,6 @@ async def show_success(
 
 
 async def show_address(
-    ctx: wire.GenericContext,
     address: str,
     *,
     case_sensitive: bool = True,
@@ -124,7 +117,6 @@ async def show_address(
     title_qr: str | None = None,
 ) -> None:
     result = await interact(
-        ctx,
         RustLayout(
             trezorui2.confirm_text(
                 title="ADDRESS",
@@ -140,7 +132,6 @@ async def show_address(
 
 
 async def confirm_output(
-    ctx: wire.GenericContext,
     address: str,
     amount: str,
     font_amount: int = ui.NORMAL,  # TODO cleanup @ redesign
@@ -148,7 +139,6 @@ async def confirm_output(
     icon: str = ui.ICON_SEND,
 ) -> None:
     result = await interact(
-        ctx,
         RustLayout(
             trezorui2.confirm_text(
                 title=title,
@@ -164,7 +154,6 @@ async def confirm_output(
 
 
 async def confirm_total(
-    ctx: wire.GenericContext,
     total_amount: str,
     fee_amount: str,
     title: str = "Confirm transaction",
@@ -175,7 +164,6 @@ async def confirm_total(
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> None:
     result = await interact(
-        ctx,
         RustLayout(
             trezorui2.confirm_text(
                 title=title,
@@ -191,7 +179,6 @@ async def confirm_total(
 
 
 async def confirm_blob(
-    ctx: wire.GenericContext,
     br_type: str,
     title: str,
     data: bytes | str,
@@ -203,7 +190,6 @@ async def confirm_blob(
     ask_pagination: bool = False,
 ) -> None:
     result = await interact(
-        ctx,
         RustLayout(
             trezorui2.confirm_text(
                 title=title,
@@ -223,11 +209,11 @@ def draw_simple_text(title: str, description: str = "") -> None:
 
 
 async def request_pin_on_device(
-    ctx: wire.GenericContext,
     prompt: str,
     attempts_remaining: int | None,
     allow_cancel: bool,
 ) -> str:
+    ctx = wire.get_context()
     await button_request(ctx, "pin_device", code=ButtonRequestType.PinEntry)
 
     # TODO: this should not be callable on TR
@@ -235,7 +221,6 @@ async def request_pin_on_device(
 
 
 async def show_error_and_raise(
-    ctx: wire.GenericContext,
     br_type: str,
     content: str,
     header: str = "Error",

@@ -14,7 +14,6 @@ if TYPE_CHECKING:
 
 
 async def confirm_action(
-    ctx: wire.GenericContext,
     br_type: str,
     title: str,
     action: str | None = None,
@@ -44,7 +43,6 @@ async def confirm_action(
         log.error(__name__, "confirm_action hold not implemented")
 
     result = await interact(
-        ctx,
         RustLayout(
             trezorui2.confirm_action(
                 title=title.upper(),
@@ -64,7 +62,6 @@ async def confirm_action(
 
 
 async def confirm_text(
-    ctx: wire.GenericContext,
     br_type: str,
     title: str,
     data: str,
@@ -74,7 +71,6 @@ async def confirm_text(
     icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
 ) -> None:
     result = await interact(
-        ctx,
         RustLayout(
             trezorui2.confirm_text(
                 title=title.upper(),
@@ -90,7 +86,6 @@ async def confirm_text(
 
 
 async def show_error_and_raise(
-    ctx: wire.GenericContext,
     br_type: str,
     content: str,
     header: str = "Error",

@@ -24,7 +24,6 @@ if __debug__:
 
 
 async def show_share_words(
-    ctx: wire.GenericContext,
     share_words: Sequence[str],
     share_index: int | None = None,
     group_index: int | None = None,
@@ -92,7 +91,6 @@ async def show_share_words(
     # confirm the share
     await raise_if_cancelled(
         interact(
-            ctx,
             paginated,
             "backup_words",
             ButtonRequestType.ResetDevice,
@@ -101,13 +99,14 @@ async def show_share_words(
 
 
 async def confirm_word(
-    ctx: wire.GenericContext,
     share_index: int | None,
     share_words: Sequence[str],
     offset: int,
     count: int,
     group_index: int | None = None,
 ) -> bool:
+    ctx = wire.get_context()
+
     # remove duplicates
     non_duplicates = list(set(share_words))
     # shuffle list
@@ -151,9 +150,7 @@ def _split_share_into_pages(
     return first, list(chunks), last
 
 
-async def slip39_show_checklist(
-    ctx: wire.GenericContext, step: int, backup_type: BackupType
-) -> None:
+async def slip39_show_checklist(step: int, backup_type: BackupType) -> None:
     checklist = Checklist("Backup checklist", ui.ICON_RESET)
     if backup_type is BackupType.Slip39_Basic:
         checklist.add("Set number of shares")
@@ -167,7 +164,6 @@ async def slip39_show_checklist(
 
     await raise_if_cancelled(
         interact(
-            ctx,
             Confirm(checklist, confirm="Continue", cancel=None),
             "slip39_checklist",
             ButtonRequestType.ResetDevice,
@@ -176,7 +172,7 @@ async def slip39_show_checklist(
 
 
 async def slip39_prompt_threshold(
-    ctx: wire.GenericContext, num_of_shares: int, group_id: int | None = None
+    num_of_shares: int, group_id: int | None = None
 ) -> int:
     count = num_of_shares // 2 + 1
     # min value of share threshold is 2 unless the number of shares is 1
@@ -190,7 +186,6 @@ async def slip39_prompt_threshold(
         )
         confirmed = is_confirmed(
             await interact(
-                ctx,
                 Confirm(
                     shares,
                     confirm="Continue",
@@ -233,9 +228,7 @@ async def slip39_prompt_threshold(
     return count
 
 
-async def slip39_prompt_number_of_shares(
-    ctx: wire.GenericContext, group_id: int | None = None
-) -> int:
+async def slip39_prompt_number_of_shares(group_id: int | None = None) -> int:
     count = 5
     min_count = 1
     max_count = 16
@@ -246,7 +239,6 @@ async def slip39_prompt_number_of_shares(
         )
         confirmed = is_confirmed(
             await interact(
-                ctx,
                 Confirm(
                     shares,
                     confirm="Continue",
@@ -285,7 +277,7 @@ async def slip39_prompt_number_of_shares(
     return count
 
 
-async def slip39_advanced_prompt_number_of_groups(ctx: wire.GenericContext) -> int:
+async def slip39_advanced_prompt_number_of_groups() -> int:
     count = 5
     min_count = 2
     max_count = 16
@@ -294,7 +286,6 @@ async def slip39_advanced_prompt_number_of_groups(ctx: wire.GenericContext) -> i
         shares = Slip39NumInput(Slip39NumInput.SET_GROUPS, count, min_count, max_count)
         confirmed = is_confirmed(
             await interact(
-                ctx,
                 Confirm(
                     shares,
                     confirm="Continue",
@@ -323,9 +314,7 @@ async def slip39_advanced_prompt_number_of_groups(ctx: wire.GenericContext) -> i
     return count
 
 
-async def slip39_advanced_prompt_group_threshold(
-    ctx: wire.GenericContext, num_of_groups: int
-) -> int:
+async def slip39_advanced_prompt_group_threshold(num_of_groups: int) -> int:
     count = num_of_groups // 2 + 1
     min_count = 1
     max_count = num_of_groups
@@ -336,7 +325,6 @@ async def slip39_advanced_prompt_group_threshold(
         )
         confirmed = is_confirmed(
             await interact(
-                ctx,
                 Confirm(
                     shares,
                     confirm="Continue",
