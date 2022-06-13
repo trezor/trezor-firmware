@@ -587,6 +587,7 @@ if FROZEN:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/constants/t1.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/t1.py'))
     elif TREZOR_MODEL in ('R',):
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/components/tr/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/constants/tr.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tr/__init__.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tr/reset.py'))

@@ -2,9 +2,11 @@ from typing import TYPE_CHECKING, Sequence
 
 from trezor import io, log, loop, ui, wire, workflow
 from trezor.enums import ButtonRequestType
+from trezor.ui.popup import Popup
 
 import trezorui2
 
+from ...components.tr.text import Text
 from ..common import button_request, interact
 
 if TYPE_CHECKING:
@@ -794,7 +796,17 @@ async def show_popup(
     description_param: str = "",
     timeout_ms: int = 3000,
 ) -> None:
-    raise NotImplementedError
+    text = Text(title, ui.ICON_WRONG, ui.RED)
+    # Need to add two newlines at the beginning of the text,
+    # so it is not colliding with the icon
+    if subtitle is not None:
+        subtitle = f"\n\n{subtitle}"
+        text.bold(subtitle)
+        text.br_half()
+    else:
+        description = f"\n\n{description}"
+    text.format_parametrized(description, description_param)
+    await Popup(text, timeout_ms)
 
 
 def draw_simple_text(title: str, description: str = "") -> None:
