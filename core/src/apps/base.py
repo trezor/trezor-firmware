@@ -75,8 +75,8 @@ def get_features() -> Features:
             Capability.ShamirGroups,
         ]
 
-    # Other models are not capable of PassphraseEntry
-    if utils.MODEL in ("T",):
+    # Some models are not capable of PassphraseEntry
+    if utils.MODEL in ("T", "R"):
         f.capabilities.append(Capability.PassphraseEntry)
 
     f.sd_card_present = sdcard.is_present()
