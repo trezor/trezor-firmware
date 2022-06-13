@@ -54,20 +54,12 @@ impl<T> PinPage<T>
 where
     T: Deref<Target = str>,
 {
-    pub fn new(major_prompt: T, minor_prompt: T, allow_cancel: bool, shuffle: bool) -> Self {
-        let digits = if shuffle {
-            let mut digits = DIGITS;
-            random::shuffle(&mut digits);
-            digits
-        } else {
-            DIGITS
-        };
-
+    pub fn new(major_prompt: T, minor_prompt: T, allow_cancel: bool) -> Self {
         Self {
             major_prompt,
             minor_prompt,
             allow_cancel,
-            digits,
+            digits: DIGITS,
             both_button_press: BothButtonPressHandler::new(),
             pad: Pad::with_background(theme::BG),
             prev: Button::with_text(ButtonPos::Left, "<", theme::button_default()),
@@ -314,7 +306,8 @@ where
                 // Clicked CONFIRM. Append current digit to the buffer PIN string.
                 if !self.is_full() {
                     self.append_current_digit();
-                    self.page_counter = 0;
+                    // Randomly selecting the "cursor" position for the next digit
+                    self.page_counter = random::uniform(10) as u8 + 1;
                     self.update_situation();
                     return None;
                 }
