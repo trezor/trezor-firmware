@@ -1,5 +1,6 @@
 from micropython import const
 
+from trezor import utils
 from trezor.ui import rgb
 
 # radius for buttons and other elements
@@ -67,5 +68,10 @@ ICON_BACK = "trezor/res/left.toif"
 ICON_SWIPE = "trezor/res/swipe.toif"
 ICON_SWIPE_LEFT = "trezor/res/swipe_left.toif"
 ICON_SWIPE_RIGHT = "trezor/res/swipe_right.toif"
-ICON_CHECK = "trezor/res/check.toif"
 ICON_SPACE = "trezor/res/space.toif"
+
+# Smaller-screen models need to have smaller icons
+if utils.MODEL in ("1", "R"):
+    ICON_CHECK = "trezor/res/check_model_r.toif"
+else:
+    ICON_CHECK = "trezor/res/check.toif"
