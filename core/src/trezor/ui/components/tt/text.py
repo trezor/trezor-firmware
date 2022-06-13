@@ -1,6 +1,6 @@
 from micropython import const
 
-from trezor import res, ui
+from trezor import res, ui, utils
 from trezor.ui import display, style
 
 from ..common.text import (  # noqa: F401
@@ -25,9 +25,14 @@ def header(
     bg: int = style.BG,
     ifg: int = style.GREEN,
 ) -> None:
-    if icon is not None:
-        display.icon(14, 15, res.load(icon), ifg, bg)
-    display.text(44, 35, title, ui.BOLD, fg, bg)
+    if utils.MODEL in ("T",):
+        if icon is not None:
+            display.icon(14, 15, res.load(icon), ifg, bg)
+        display.text(44, 35, title, ui.BOLD, fg, bg)
+    else:
+        if icon is not None:
+            display.icon(2, 2, res.load(icon), ifg, bg)
+        display.text(35, 18, title, ui.BOLD, fg, bg)
 
 
 class Text(TextBase):
