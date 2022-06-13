@@ -6,7 +6,7 @@ from trezor.ui.popup import Popup
 
 import trezorui2
 
-from ...components.tt.text import Text
+from ...components.tr.text import Text
 from ..common import button_request, interact
 
 if TYPE_CHECKING:

@@ -153,6 +153,8 @@ trezor.ui.components.common.confirm
 import trezor.ui.components.common.confirm
 trezor.ui.components.common.text
 import trezor.ui.components.common.text
+trezor.ui.components.tr.text
+import trezor.ui.components.tr.text
 trezor.ui.components.tt.button
 import trezor.ui.components.tt.button
 trezor.ui.components.tt.checklist
