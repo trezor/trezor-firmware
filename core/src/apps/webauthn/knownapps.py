@@ -67,6 +67,14 @@ def by_rp_id_hash(rp_id_hash: bytes) -> FIDOApp | None:
             use_sign_count=None,
             use_self_attestation=None,
         )
+    if rp_id_hash == b"\x19\x81\x5c\xb9\xa5\xfb\x25\xd8\x05\xde\xbd\x7b\x32\x53\x7e\xd5\x78\x63\x9b\x3e\xd1\x08\xec\x7c\x5b\xb9\xe8\xf0\xdf\xb1\x68\x73":
+        # WebAuthn key for Cloudflare
+        return FIDOApp(
+            label="dash.cloudflare.com",
+            icon="apps/webauthn/res/icon_cloudflare.toif",
+            use_sign_count=None,
+            use_self_attestation=None,
+        )
     if rp_id_hash == b"\xe2\x7d\x61\xb4\xe9\x9d\xe0\xed\x98\x16\x3c\xb3\x8b\x7a\xf9\x33\xc6\x66\x5e\x55\x09\xe8\x49\x08\x37\x05\x58\x13\x77\x8e\x23\x6a":
         # WebAuthn key for Coinbase
         return FIDOApp(
