@@ -52,7 +52,8 @@ pub fn word_completion_mask(prefix: &str) -> u32 {
     unsafe { mnemonic_word_completion_mask(prefix.as_ptr() as _, prefix.len() as _) }
 }
 
-/// Returns all possible letters that form a valid word together with some prefix.
+/// Returns all possible letters that form a valid word together with some
+/// prefix.
 pub fn get_available_letters(prefix: &str) -> impl Iterator<Item = char> {
     const CHARS: [char; 26] = [
         'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',

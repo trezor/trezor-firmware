@@ -128,6 +128,10 @@ where
         self.word_buffer.pop().unwrap();
     }
 
+    fn reset_wordlist(&mut self) {
+        self.words_list = bip39::Wordlist::all();
+    }
+
     fn increase_counter(&mut self) {
         self.page_counter += 1;
     }
@@ -157,7 +161,8 @@ where
         // The issue is how to unify the usage of `&str` and `char` into one
         if self.offer_words {
             let mut s = String::new();
-            s.push_str(self.words_list.get(index as usize).unwrap_or_default()).unwrap();
+            s.push_str(self.words_list.get(index as usize).unwrap_or_default())
+                .unwrap();
             s
         } else {
             let ch = self.letter_choices[index as usize];
@@ -255,7 +260,10 @@ where
             if !self.is_empty() {
                 if let Some(ButtonMsg::Clicked) = self.prev.event(ctx, event) {
                     // Clicked BIN. Delete last letter.
+                    // As deleting a letter is increasing the group of possible words,
+                    // we need to reset the wordlist and start filtering it again
                     self.delete_last_letter();
+                    self.reset_wordlist();
                     self.reflect_letter_change();
                     self.update_situation();
                     return None;
