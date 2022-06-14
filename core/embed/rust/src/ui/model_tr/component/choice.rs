@@ -22,7 +22,7 @@ pub struct ChoicePage<T, const N: usize> {
     pad: Pad,
     prev: Button<&'static str>,
     next: Button<&'static str>,
-    ok: Button<&'static str>,
+    select: Button<&'static str>,
     page_counter: u8,
 }
 
@@ -39,7 +39,7 @@ where
             pad: Pad::with_background(theme::BG),
             prev: Button::with_text(ButtonPos::Left, "BACK", theme::button_default()),
             next: Button::with_text(ButtonPos::Right, "NEXT", theme::button_default()),
-            ok: Button::with_text(ButtonPos::Middle, "OK", theme::button_default()),
+            select: Button::with_text(ButtonPos::Middle, "SELECT", theme::button_default()),
             page_counter: 0,
         }
     }
@@ -122,7 +122,7 @@ where
         self.pad.place(bounds);
         self.prev.place(button_area);
         self.next.place(button_area);
-        self.ok.place(button_area);
+        self.select.place(button_area);
         bounds
     }
 
@@ -158,8 +158,8 @@ where
         }
 
         // MIDDLE button clicks
-        if let Some(ButtonMsg::Clicked) = self.ok.event(ctx, event) {
-            // Clicked OK. Send current choice to the client.
+        if let Some(ButtonMsg::Clicked) = self.select.event(ctx, event) {
+            // Clicked SELECT. Send current choice to the client.
             return Some(ChoicePageMsg::Confirmed);
         }
 
@@ -186,7 +186,7 @@ where
         }
 
         // BOTTOM MIDDLE button
-        self.ok.paint();
+        self.select.paint();
     }
 }
 

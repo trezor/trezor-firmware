@@ -69,7 +69,7 @@ pub struct PassphrasePage<T> {
     next: Button<&'static str>,
     accept: Button<&'static str>,
     cancel: Button<&'static str>,
-    ok: Button<&'static str>,
+    select: Button<&'static str>,
     reveal: Button<&'static str>,
     del: Button<&'static str>,
     page_counter: u8,
@@ -101,7 +101,7 @@ where
                 .with_long_press(HOLD_DURATION),
             cancel: Button::with_text(ButtonPos::Right, "CANCEL", theme::button_cancel())
                 .with_long_press(HOLD_DURATION),
-            ok: Button::with_text(ButtonPos::Middle, "OK", theme::button_default()),
+            select: Button::with_text(ButtonPos::Middle, "SELECT", theme::button_default()),
             reveal: Button::with_text(ButtonPos::Middle, "SHOW", theme::button_default()),
             del: Button::with_text(ButtonPos::Middle, "DEL", theme::button_default()),
             page_counter: 0,
@@ -327,7 +327,7 @@ where
 
         // BOTTOM MIDDLE button
         if !self.is_full() {
-            self.ok.paint();
+            self.select.paint();
         }
 
         // BOTTOM RIGHT button
@@ -348,7 +348,7 @@ where
 
         // BOTTOM MIDDLE button
         if self.page_counter <= self.last_page() {
-            self.ok.paint();
+            self.select.paint();
         } else if self.page_counter == self.last_page() + 1 && !self.is_empty() {
             self.reveal.paint();
         } else if self.page_counter == self.last_page() + 2 && !self.is_empty() {
@@ -396,8 +396,8 @@ where
 
         // MIDDLE button clicks
         if self.page_counter <= self.last_page() {
-            if let Some(ButtonMsg::Clicked) = self.ok.event(ctx, event) {
-                // Clicked OK. Append current char to the buffer string.
+            if let Some(ButtonMsg::Clicked) = self.select.event(ctx, event) {
+                // Clicked SELECT. Append current char to the buffer string.
                 if !self.is_full() {
                     self.append_current_char();
                     self.update_middle_panel();
@@ -438,8 +438,8 @@ where
 
         // MIDDLE button clicks
         if self.page_counter <= self.last_page() {
-            if let Some(ButtonMsg::Clicked) = self.ok.event(ctx, event) {
-                // Clicked OK. Choose the character category.
+            if let Some(ButtonMsg::Clicked) = self.select.event(ctx, event) {
+                // Clicked SELECT. Choose the character category.
                 self.choose_new_character_category();
                 self.reset_page_counter();
                 self.update_middle_panel();
@@ -483,7 +483,7 @@ where
         self.menu_right.place(button_area);
         self.prev.place(button_area);
         self.next.place(button_area);
-        self.ok.place(button_area);
+        self.select.place(button_area);
         self.reveal.place(button_area);
         self.del.place(button_area);
         self.accept.place(button_area);

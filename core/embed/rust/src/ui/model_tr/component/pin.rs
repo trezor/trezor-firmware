@@ -42,7 +42,7 @@ pub struct PinPage<T> {
     next: Button<&'static str>,
     accept_pin: Button<&'static str>,
     cancel_pin: Button<&'static str>,
-    ok: Button<&'static str>,
+    select: Button<&'static str>,
     reveal_pin: Button<&'static str>,
     delete_last_digit: Button<&'static str>,
     page_counter: u8,
@@ -68,7 +68,7 @@ where
                 .with_long_press(HOLD_DURATION),
             cancel_pin: Button::with_text(ButtonPos::Left, "BIN", theme::button_cancel())
                 .with_long_press(HOLD_DURATION),
-            ok: Button::with_text(ButtonPos::Middle, "SELECT", theme::button_default()),
+            select: Button::with_text(ButtonPos::Middle, "SELECT", theme::button_default()),
             reveal_pin: Button::with_text(ButtonPos::Middle, "SHOW", theme::button_default()),
             delete_last_digit: Button::with_text(ButtonPos::Middle, "DEL", theme::button_default()),
             page_counter: 0,
@@ -244,7 +244,7 @@ where
         self.pad.place(bounds);
         self.prev.place(button_area);
         self.next.place(button_area);
-        self.ok.place(button_area);
+        self.select.place(button_area);
         self.reveal_pin.place(button_area);
         self.delete_last_digit.place(button_area);
         self.accept_pin.place(button_area);
@@ -302,7 +302,7 @@ where
                 return Some(PinPageMsg::Confirmed);
             }
         } else if self.page_counter < 11 {
-            if let Some(ButtonMsg::Clicked) = self.ok.event(ctx, event) {
+            if let Some(ButtonMsg::Clicked) = self.select.event(ctx, event) {
                 // Clicked CONFIRM. Append current digit to the buffer PIN string.
                 if !self.is_full() {
                     self.append_current_digit();
@@ -342,7 +342,7 @@ where
         if self.page_counter == 0 {
             self.accept_pin.paint();
         } else {
-            self.ok.paint();
+            self.select.paint();
         }
     }
 }

@@ -29,7 +29,7 @@ pub struct Bip39Page<T> {
     delete: Button<&'static str>,
     prev: Button<&'static str>,
     next: Button<&'static str>,
-    ok: Button<&'static str>,
+    select: Button<&'static str>,
     page_counter: u8,
     word_buffer: String<20>,
     offer_words: bool,
@@ -53,7 +53,7 @@ where
             delete: Button::with_text(ButtonPos::Left, "BIN", theme::button_default()),
             prev: Button::with_text(ButtonPos::Left, "BACK", theme::button_default()),
             next: Button::with_text(ButtonPos::Right, "NEXT", theme::button_default()),
-            ok: Button::with_text(ButtonPos::Middle, "OK", theme::button_default()),
+            select: Button::with_text(ButtonPos::Middle, "SELECT", theme::button_default()),
             page_counter: 0,
             word_buffer,
             offer_words: false,
@@ -240,7 +240,7 @@ where
         self.delete.place(button_area);
         self.prev.place(button_area);
         self.next.place(button_area);
-        self.ok.place(button_area);
+        self.select.place(button_area);
         bounds
     }
 
@@ -287,7 +287,7 @@ where
         }
 
         // MIDDLE button clicks
-        if let Some(ButtonMsg::Clicked) = self.ok.event(ctx, event) {
+        if let Some(ButtonMsg::Clicked) = self.select.event(ctx, event) {
             if self.offer_words {
                 // Clicked OK when word is there. Send current choice to the client.
                 return Some(Bip39PageMsg::Confirmed);
@@ -327,7 +327,7 @@ where
         }
 
         // BOTTOM MIDDLE button
-        self.ok.paint();
+        self.select.paint();
     }
 }
 
