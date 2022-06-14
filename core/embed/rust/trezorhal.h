@@ -1,3 +1,5 @@
+#include "uzlib.h"
+
 #include "button.h"
 #include "delay.h"
 #include "display.h"

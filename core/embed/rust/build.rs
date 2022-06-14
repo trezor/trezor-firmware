@@ -60,6 +60,7 @@ fn prepare_bindings() -> bindgen::Builder {
         "-I../../../crypto",
         "-I../../../storage",
         "-I../../vendor/micropython",
+        "-I../../vendor/micropython/lib/uzlib",
         "-I../extmod/modtrezorui", // for display.h
         format!("-DTREZOR_MODEL_{}", model()).as_str(),
     ]);
@@ -273,6 +274,9 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("display_get_glyph")
         .allowlist_var("DISPLAY_CMD_ADDRESS")
         .allowlist_var("DISPLAY_DATA_ADDRESS")
+        // uzlib
+        .allowlist_function("uzlib_uncompress_init")
+        .allowlist_function("uzlib_uncompress")
         // io
         .allowlist_function("touch_read")
         .allowlist_function("touch_unpack_x")
