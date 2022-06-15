@@ -21,8 +21,6 @@ the following commands:
 * **`check`**: check validity of json definitions and associated data. Used in CI.
 * **`dump`**: dump coin information, including support status, in JSON format. Various
   filtering options are available, check help for details.
-* **`coindefs`**: generate signed protobuf descriptions of coins. This is for future use
-  and could allow us to not need to store coin data in Trezor itself.
 
 Use `cointool.py command --help` to get more information on each command.
 
@@ -40,18 +38,6 @@ The following commands are available:
 * **`release`**: perform the [release workflow](#release-workflow).
 
 Use `support.py command --help` to get more information on each command.
-
-### `coins_details.py`
-
-Generates `coins_details.json`, source file for https://trezor.io/coins.
-Collects data on coins, downloads market caps and puts everything into a single file.
-Caches market cap data so you don't have to download it every time.
-
-### `diffize_coins_details.py`
-
-Compares generated `coins_details.json` to the released version currently served
-on https://trezor.io/coins, in a format that is nicely readable to humans and
-hard(er) to mess up by diff.
 
 ### `coin_info.py`
 
@@ -85,7 +71,7 @@ from the outside.
 
 ### `marketcap.py`
 
-Module for obtaining market cap and price data used by `coins_details.py` and `maxfee.py`.
+Module for obtaining market cap and price data used by `maxfee.py`.
 
 ### `maxfee.py`
 
@@ -130,32 +116,20 @@ Or mark them as unsupported explicitly.
 
 ## Releasing a new firmware
 
-#### **Step 1:** update the tokens repo
+#### **Step 1:** run the release script
 
 ```sh
-pushd defs/ethereum/tokens
-git checkout master
-git pull
-popd
-git add defs/ethereum/tokens
+./tools/release.sh
 ```
-
-#### **Step 2:** run the release flow
-
-```sh
-./tools/support.py release 2
-```
-
-The number `2` indicates that you are releasing Trezor 2. The version will be
-automatically determined, based on currently released firmwares. Or you can explicitly
-specify the version with `-r 2.1.0`.
 
 All currently known unreleased ERC20 tokens are automatically set to the given version.
 
-All coins marked _soon_ are set to the current version. This is automatic - coins that
+**_Note that "soon" feature was already removed and following paragraph is deprecated._**
+
+_All coins marked _soon_ are set to the current version. This is automatic - coins that
 were marked _soon_ were used in code generation and so should be released. If you want
 to avoid this, you will have to manually revert each coin to _soon_ status, either with
-`support.py set`, or by manually editing `support.json`.
+`support.py set`, or by manually editing `support.json`._
 
 Coins in state _unknown_, i.e., coins that are known in the definitions but not listed
 in support files, will be also added. But you will be interactively asked to confirm
@@ -170,13 +144,7 @@ Use `-g` or `--git-tag` to automatically tag the current `HEAD` with a version, 
 XXX this should also commit the changes though, otherwise the tag will apply to the wrong
 commit.
 
-#### **Step 3:** review and commit your changes
+#### **Step 2:** review and commit your changes
 
 Use `git diff` to review changes made, commit and push. If you tagged the commit in the
 previous step, don't forget to `git push --tags` too.
-
-#### **Step 4:** update submodule in your target repository
-
-Go to `trezor-core` or `trezor-mcu` checkout and update the submodule. Checkout the
-appropriate tag if you created it. If you're in `trezor-core`, run `make templates`
-to update source files.

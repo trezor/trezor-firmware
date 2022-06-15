@@ -33,19 +33,22 @@ Testnet is considered a separate coin, so it must have its own JSON and icon.
 
 We will not support coins that have `address_type` 0, i.e., same as Bitcoin.
 
-#### `eth`
+#### `eth` and `erc20`
 
-The file [`ethereum/networks.json`](ethereum/networks.json) has a list of descriptions
-of Ethereum networks. Each network must also have a PNG icon in `ethereum/<chain>.png`
-file.
+Definitions for Ethereum chains (networks) and tokens (erc20) are split in two parts:
 
-#### `erc20`
+1. built-in definitions - some of the chain and token definitions are built into the firmware
+   image. List of built-in chains is stored in [`ethereum/networks.json`](ethereum/networks.json)
+   and tokens in [`ethereum/tokens.json`](ethereum/tokens.json).
+2. external definitions - dynamically generated from multiple sources. Whole process is
+   described in separate
+   [document](https://docs.trezor.io/trezor-firmware/common/ethereum-definitions.html).
 
-`ethereum/tokens` is a submodule linking to [Ethereum Lists](https://github.com/ethereum-lists/tokens)
-project with descriptions of ERC20 tokens. If you want to add or update a token
-definition in Trezor, you need to get your change to the `tokens` repository first.
-
-Trezor will only support tokens that have a unique symbol.
+We generally do not accept updates to the built-in definitions. Instead, make sure your
+network or token is included in the external definitions. A good place to start is the
+[`ethereum-lists` GitHub organization](https://gitub.com/ethereum-lists): add your token
+to the [tokens](https://github.com/ethereum-lists/tokens) repository, or your EVM chain to the
+[chains](https://github.com/ethereum-lists/chains) repository.
 
 #### `nem`
 
@@ -57,82 +60,32 @@ Supported coins that are not derived from Bitcoin, Ethereum or NEM are currently
 and listed in separate file [`misc/misc.json`](misc/misc.json). Each coin must also have
 an icon in `misc/<short>.png`, where `short` is lowercased `shortcut` field from the JSON.
 
-## Keys
+### Keys
 
 Throughout the system, coins are identified by a _key_ - a colon-separated string
 generated from the coin's type and shortcut:
 
-* for Bitcoin-likes, key is `bitcoin:XYZ`
-* for Ethereum networks, key is `eth:XYZ`
-* for ERC20 tokens, key is `erc20:<chain>:XYZ`
-* for NEM mosaic, key is `nem:XYZ`
-* for others, key is `misc:XYZ`
+* for Bitcoin-likes, key is `bitcoin:<shortcut>`
+* for Ethereum networks, key is `eth:<shortcut>`
+* for ERC20 tokens, key is `erc20:<chain_symbol>:<token_shortcut>`
+* for NEM mosaic, key is `nem:<shortcut>`
+* for others, key is `misc:<shortcut>`
 
 If a token shortcut has a suffix, such as `CAT (BlockCat)`, the whole thing is part
 of the key (so the key is `erc20:eth:CAT (BlockCat)`).
 
-Sometimes coins end up with duplicate symbols, which in case of ERC20 tokens leads to
-key collisions. We do not allow duplicate symbols in the data, so this doesn't affect
-everyday use (see below). However, for validation purposes, it is sometimes useful
-to work with unfiltered data that includes the duplicates. In such cases, keys are
-deduplicated by adding a counter at end, e.g.: `erc20:eth:SMT:0`, `erc20:eth:SMT:1`.
-Note that the suffix _is not stable_, so these coins can't be reliably uniquely identified.
-
-## Duplicate Detection
-
-**Duplicate symbols are not allowed** in our data. Tokens that have symbol collisions
-are removed from the data set before processing. The duplicate status is mentioned
-in `support.json` (see below), but it is impossible to override from there.
-
-Duplicate detection works as follows:
-
-1. a _symbol_ is split off from the shortcut string. E.g., for `CAT (BlockCat)`, symbol
-   is just `CAT`. It is compared, case-insensitive, with other coins (so `WIC` and `WiC`
-   are considered the same symbol), and identical symbols are put into a _bucket_.
-2. if _all_ coins in the bucket also have a suffix (`CAT (BlockCat)` and `CAT (BitClave)`),
-   they are _not_ considered duplicate.
-3. if _any_ coin in the bucket does _not_ have a suffix (`MIT` and `MIT (Mychatcoin)`),
-   all coins in the bucket are considered duplicate.
-4. Duplicate tokens (coins from the `erc20` group) are automatically removed from data.
-   Duplicate non-tokens are marked but not removed. For instance, `bitcoin:FTC` (Feathercoin)
-   and `erc20:eth:FTC` (FTC) are duplicate, and `erc20:eth:FTC` is removed.
-5. If two non-tokens collide with each other, it is an error that fails the CI build.
-
-The file [`duplicity_overrides.json`](duplicity_overrides.json) can override detection
-results: keys set to `true` are considered duplicate (in a separate bucket), keys set
-to `false` are considered non-duplicate even if auto-detected. This is useful for
-whitelisting a supported token explicitly, or blacklisting things that the detection
-can't match (for instance "Battle" and "Bitlle" have suffixes, but they are too similar).
-
-External contributors should not make changes to `duplicity_overrides.json`, unless
-asked to.
-
-You can use `./tools/cointool.py check -d all` to inspect duplicate detection in detail.
+Duplicate keys are not allowed and coins that would result in duplicate keys cannot be
+added to the dataset.
 
 
-# Coins Details
 
-The file [`coins_details.json`](coins_details.json) is a list of all known coins
-with support status, market cap information and relevant links. This is the source
-file for https://trezor.io/coins.
-
-You should never make changes to `coins_details.json` directly. Use `./tools/coins_details.py`
-to regenerate it from known data.
-
-If you need to change information in this file, modify the source information instead -
-one of the JSON files in the groups listed above, support info in `support.json`, or
-make a pull request to the tokens repository.
+## Wallet URLs
 
 If you want to add a **wallet link**, modify the file [`wallets.json`](wallets.json).
 
-If this is not viable for some reason, or if there is no source information ,
-you can also edit [`coins_details.override.json`](coins_details.override.json).
-External contributors should not touch this file unless asked to.
-
-
 # Support Information
 
-We keep track of support status of each coin over our devices. That is
+We keep track of support status of each built-in coin over our devices. That is
 `trezor1` for Trezor One, `trezor2` for Trezor T, `connect` for [Connect](https://github.com/trezor/connect)
 and `suite` for [Trezor Suite](https://suite.trezor.io/). In further description, the word "device"
 applies to Connect and Suite as well.

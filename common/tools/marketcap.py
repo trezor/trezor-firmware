@@ -79,30 +79,6 @@ def init(api_key, refresh=None):
     COINS_SEARCHABLE = data_searchable
 
 
-def get_coin(coin):
-    if coin["type"] == "erc20":
-        address = coin["address"].lower()
-        return COINS_SEARCHABLE.get(address)
-
-    data = None
-    if "coinmarketcap_alias" in coin:
-        data = COINS_SEARCHABLE.get(coin["coinmarketcap_alias"])
-    if data is None:
-        slug = coin["name"].replace(" ", "-").lower()
-        data = COINS_SEARCHABLE.get(slug)
-    if data is None:
-        data = COINS_SEARCHABLE.get(coin["shortcut"].lower())
-    return data
-
-
-def marketcap(coin):
-    data = get_coin(coin)
-    if data is None:
-        return None
-
-    return int(data["quote"]["USD"]["market_cap"])
-
-
 def fiat_price(coin_symbol):
     data = COINS_SEARCHABLE.get(coin_symbol)
     if data is None:

@@ -1,0 +1,62 @@
+[
+    {
+        "chain": "eth",
+        "chain_id": 1,
+        "coingecko_id": "ethereum",
+        "is_testnet": false,
+        "name": "Ethereum",
+        "shortcut": "ETH",
+        "slip44": 60
+    },
+    {
+        "chain": "rop",
+        "chain_id": 3,
+        "is_testnet": true,
+        "name": "Ropsten",
+        "shortcut": "tROP",
+        "slip44": 1
+    },
+    {
+        "chain": "rin",
+        "chain_id": 4,
+        "is_testnet": true,
+        "name": "Rinkeby",
+        "shortcut": "tRIN",
+        "slip44": 1
+    },
+    {
+        "chain": "gor",
+        "chain_id": 5,
+        "is_testnet": true,
+        "name": "Görli",
+        "shortcut": "tGOR",
+        "slip44": 1
+    },
+    {
+        "chain": "bnb",
+        "chain_id": 56,
+        "coingecko_id": "binance-smart-chain",
+        "is_testnet": false,
+        "name": "Binance Smart Chain",
+        "shortcut": "BNB",
+        "slip44": 714
+    },
+    {
+        "chain": "etc",
+        "chain_id": 61,
+        "coingecko_id": "ethereum-classic",
+        "is_testnet": false,
+        "name": "Ethereum Classic",
+        "shortcut": "ETC",
+        "slip44": 61
+    },
+    {
+        "chain": "MATIC",
+        "chain_id": 137,
+        "coingecko_id": "polygon-pos",
+        "is_testnet": false,
+        "name": "Polygon",
+        "shortcut": "MATIC",
+        "slip44": 966
+    }
+]
