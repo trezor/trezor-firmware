@@ -297,12 +297,12 @@ impl Rect {
         self.split_left(self.width() - width)
     }
 
-    /// Is meant to accommodate a very small button, for example "OK"
     pub fn split_center(self, width: i32) -> Self {
-        // 42 % offset from right found out experimentally for "OK" button
+        // 33 % offset from right found out experimentally for "SELECT" button
+        // TODO: we should count with the content of the button
         self.split_right(width)
             .1
-            .translate(Offset::new(-(self.width() as f64 * 0.30) as _, 0))
+            .translate(Offset::new(-(self.width() as f64 * 0.33) as _, 0))
     }
 
     pub fn translate(&self, offset: Offset) -> Self {

@@ -178,13 +178,7 @@ where
 
     fn show_current_choice(&self) {
         let current = self.get_current_choice();
-        // Showing the middle word lower than other two so everything is visible
-        let y_value = if self.offer_words {
-            MIDDLE_ROW + 10
-        } else {
-            MIDDLE_ROW
-        };
-        self.display_text_center(Point::new(64, y_value), &current);
+        self.display_text_center(Point::new(64, MIDDLE_ROW + 10), &current);
     }
 
     fn show_previous_choice(&self) {
