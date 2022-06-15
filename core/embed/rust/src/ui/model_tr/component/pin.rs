@@ -184,7 +184,7 @@ where
 
     fn show_current_digit(&self) {
         let current = self.get_current_digit();
-        self.display_text(Point::new(62, MIDDLE_ROW), current);
+        self.display_text_center(Point::new(64, MIDDLE_ROW + 10), current);
     }
 
     fn show_previous_digit(&self) {
@@ -194,7 +194,7 @@ where
 
     fn show_next_digit(&self) {
         let next = self.get_next_digit();
-        self.display_text(Point::new(115, MIDDLE_ROW), next);
+        self.display_text_right(Point::new(123, MIDDLE_ROW), next);
     }
 
     /// Display bold white text on black background
@@ -206,6 +206,12 @@ where
     /// Point
     fn display_text_center(&self, baseline: Point, text: &str) {
         display::text_center(baseline, text, theme::FONT_BOLD, theme::FG, theme::BG);
+    }
+
+    /// Display bold white text on black background, with right boundary at a
+    /// baseline Point
+    fn display_text_right(&self, baseline: Point, text: &str) {
+        display::text_right(baseline, text, theme::FONT_BOLD, theme::FG, theme::BG);
     }
 
     pub fn pin(&self) -> &str {

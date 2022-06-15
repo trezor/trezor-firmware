@@ -258,7 +258,7 @@ where
     }
 
     fn show_current(&self) {
-        self.display_text(Point::new(62, MIDDLE_ROW), self.get_current());
+        self.display_text_center(Point::new(62, MIDDLE_ROW + 10), self.get_current());
     }
 
     fn show_previous(&self) {
@@ -266,7 +266,7 @@ where
     }
 
     fn show_next(&self) {
-        self.display_text(Point::new(115, MIDDLE_ROW), self.get_next());
+        self.display_text_right(Point::new(123, MIDDLE_ROW), self.get_next());
     }
 
     /// Display bold white text on black background
@@ -278,6 +278,12 @@ where
     /// Point
     fn display_text_center(&self, baseline: Point, text: &str) {
         display::text_center(baseline, text, theme::FONT_BOLD, theme::FG, theme::BG);
+    }
+
+    /// Display bold white text on black background, with right boundary at a
+    /// baseline Point
+    fn display_text_right(&self, baseline: Point, text: &str) {
+        display::text_right(baseline, text, theme::FONT_BOLD, theme::FG, theme::BG);
     }
 
     pub fn passphrase(&self) -> &str {

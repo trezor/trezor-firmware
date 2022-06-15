@@ -82,7 +82,7 @@ where
 
     fn show_current_choice(&self) {
         let current = self.get_current_choice();
-        self.display_text(Point::new(62, MIDDLE_ROW), current);
+        self.display_text_center(Point::new(64, MIDDLE_ROW + 10), current);
     }
 
     fn show_previous_choice(&self) {
@@ -92,12 +92,24 @@ where
 
     fn show_next_choice(&self) {
         let next = &self.choices[(self.page_counter + 1) as usize];
-        self.display_text(Point::new(115, MIDDLE_ROW), next);
+        self.display_text_right(Point::new(123, MIDDLE_ROW), next);
     }
 
     /// Display bold white text on black background
     fn display_text(&self, baseline: Point, text: &str) {
         display::text(baseline, text, theme::FONT_BOLD, theme::FG, theme::BG);
+    }
+
+    /// Display bold white text on black background, centered around a baseline
+    /// Point
+    fn display_text_center(&self, baseline: Point, text: &str) {
+        display::text_center(baseline, text, theme::FONT_BOLD, theme::FG, theme::BG);
+    }
+
+    /// Display bold white text on black background, with right boundary at a
+    /// baseline Point
+    fn display_text_right(&self, baseline: Point, text: &str) {
+        display::text_right(baseline, text, theme::FONT_BOLD, theme::FG, theme::BG);
     }
 
     /// Changing all non-middle button's visual state to "released" state
