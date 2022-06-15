@@ -155,69 +155,6 @@ def find_orphaned_support_keys(coins_dict):
     return orphans
 
 
-def find_supported_duplicate_tokens(coins_dict):
-    result = []
-    for _, supported, _ in all_support_dicts():
-        for key in supported:
-            if not key.startswith("erc20:"):
-                continue
-            if coins_dict.get(key, {}).get("duplicate"):
-                result.append(key)
-    return result
-
-
-def process_erc20(coins_dict):
-    """Make sure that:
-    * orphaned ERC20 support info is cleared out
-    * duplicate ERC20 tokens are not listed as supported
-    * non-duplicate ERC20 tokens are cleared out from the unsupported list
-    """
-    erc20_dict = {
-        key: coin.get("duplicate", False)
-        for key, coin in coins_dict.items()
-        if coin_info.is_token(coin)
-    }
-    for device, supported, unsupported in all_support_dicts():
-        nondups = set()
-        dups = set(key for key, value in erc20_dict.items() if value)
-        for key in supported:
-            if key not in erc20_dict:
-                continue
-            if not erc20_dict[key]:
-                dups.discard(key)
-
-        for key in unsupported:
-            if key not in erc20_dict:
-                continue
-            # ignore dups that are unsupported now
-            dups.discard(key)
-
-            if not erc20_dict[key] and unsupported[key] == ERC20_DUPLICATE_KEY:
-                # remove duplicate status
-                nondups.add(key)
-
-        for key in dups:
-            if device in coin_info.MISSING_SUPPORT_MEANS_NO:
-                clear_support(device, key)
-            else:
-                print(f"ERC20 on {device}: adding duplicate {key}")
-                set_unsupported(device, key, ERC20_DUPLICATE_KEY)
-
-        for key in nondups:
-            print(f"ERC20 on {device}: clearing non-duplicate {key}")
-            clear_support(device, key)
-
-
-def clear_erc20_mixed_buckets(buckets):
-    for bucket in buckets.values():
-        tokens = [coin for coin in bucket if coin_info.is_token(coin)]
-        if tokens == bucket:
-            continue
-
-        if len(tokens) == 1:
-            tokens[0]["duplicate"] = False
-
-
 @click.group()
 def cli():
     pass
@@ -228,10 +165,9 @@ def cli():
 def fix(dry_run):
     """Fix expected problems.
 
-    Prunes orphaned keys and ensures that ERC20 duplicate info matches support info.
+    Currently only prunes orphaned keys.
     """
-    all_coins, buckets = coin_info.coin_info_with_duplicates()
-    clear_erc20_mixed_buckets(buckets)
+    all_coins = coin_info.coin_info()
     coins_dict = all_coins.as_dict()
 
     orphaned = find_orphaned_support_keys(coins_dict)
@@ -240,32 +176,25 @@ def fix(dry_run):
         for device in SUPPORT_INFO:
             clear_support(device, orphan)
 
-    process_erc20(coins_dict)
     if not dry_run:
         write_support_info()
 
 
 @cli.command()
 # fmt: off
-@click.option("-T", "--check-tokens", is_flag=True, help="Also check unsupported ERC20 tokens, ignored by default")
 @click.option("-m", "--ignore-missing", is_flag=True, help="Do not fail on missing supportinfo")
 # fmt: on
-def check(check_tokens, ignore_missing):
+def check(ignore_missing):
     """Check validity of support information.
 
     Ensures that `support.json` data is well formed, there are no keys without
     corresponding coins, and there are no coins without corresponding keys.
 
-    If `--check-tokens` is specified, the check will also take into account ERC20 tokens
-    without support info. This is disabled by default, because support info for ERC20
-    tokens is not strictly required.
-
     If `--ignore-missing` is specified, the check will display coins with missing
     support info, but will not fail when missing coins are found. This is
     useful in Travis.
     """
-    all_coins, buckets = coin_info.coin_info_with_duplicates()
-    clear_erc20_mixed_buckets(buckets)
+    all_coins = coin_info.coin_info()
     coins_dict = all_coins.as_dict()
     checks_ok = True
 
@@ -282,20 +211,12 @@ def check(check_tokens, ignore_missing):
 
     missing = find_unsupported_coins(coins_dict)
     for device, values in missing.items():
-        if not check_tokens:
-            values = [coin for coin in values if not coin_info.is_token(coin)]
         if values:
             if not ignore_missing:
                 checks_ok = False
             print(f"Device {device} has missing support infos:")
             for coin in values:
                 print(f"{coin['key']} - {coin['name']}")
-
-    supported_dups = find_supported_duplicate_tokens(coins_dict)
-    for key in supported_dups:
-        coin = coins_dict[key]
-        checks_ok = False
-        print(f"Token {coin['key']} ({coin['name']}) is duplicate but supported")
 
     if not checks_ok:
         print("Some checks have failed")
@@ -308,7 +229,6 @@ def check(check_tokens, ignore_missing):
 @click.option("--v2", help="Version for TT release (default: guess from latest)")
 @click.option("-n", "--dry-run", is_flag=True, help="Do not write changes")
 @click.option("-f", "--force", is_flag=True, help="Proceed even with bad version/device info")
-@click.option("-v", "--verbose", is_flag=True, help="Be more verbose")
 @click.option("--skip-testnets/--no-skip-testnets", default=True, help="Automatically exclude testnets")
 # fmt: on
 @click.pass_context
@@ -318,7 +238,6 @@ def release(
     v2,
     dry_run,
     force,
-    verbose,
     skip_testnets,
 ):
     """Release a new Trezor firmware.
@@ -327,8 +246,7 @@ def release(
     By default, marks duplicate tokens and testnets as unsupported, and all coins that
     don't have support info are set to the released firmware version.
 
-    The tool will ask you to confirm each added coin. ERC20 tokens are added
-    automatically. Use `--verbose` to see them.
+    The tool will ask you to confirm each added coin.
     """
     latest_releases = coin_info.latest_releases()
 
@@ -391,18 +309,8 @@ def release(
             if coin not in missing_list:
                 missing_list.append(coin)
 
-    tokens = [coin for coin in missing_list if coin_info.is_token(coin)]
-    nontokens = [coin for coin in missing_list if not coin_info.is_token(coin)]
-    for coin in tokens:
-        key = coin["key"]
-        # assert not coin.get("duplicate"), key
-        if verbose:
-            print(f"Adding missing {key} ({coin['name']})")
-        for device, version in versions.items():
-            support_setdefault(device, key, version)
-
-    for coin in nontokens:
-        if skip_testnets and "testnet" in coin["name"].lower():
+    for coin in missing_list:
+        if skip_testnets and coin["is_testnet"]:
             for device, version in versions.items():
                 support_setdefault(device, coin["key"], False, "(AUTO) exclude testnet")
         else:
@@ -454,10 +362,6 @@ def set_support_value(key, entries, reason):
         click.echo(f"Failed to find key {key}")
         click.echo("Use 'support.py show' to search for the right one.")
         sys.exit(1)
-
-    if coins[key].get("duplicate") and coin_info.is_token(coins[key]):
-        shortcut = coins[key]["shortcut"]
-        click.echo(f"Note: shortcut {shortcut} is a duplicate.")
 
     for entry in entries:
         try:
