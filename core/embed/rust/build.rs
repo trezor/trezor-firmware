@@ -254,6 +254,7 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("storage_next_counter")
         // display
         .allowlist_function("display_init")
+        .allowlist_function("display_offset")
         .allowlist_function("display_refresh")
         .allowlist_function("display_backlight")
         .allowlist_function("display_text")

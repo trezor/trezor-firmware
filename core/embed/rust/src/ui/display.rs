@@ -14,6 +14,12 @@ pub fn clamp_coords(r: Rect) -> Rect {
     Rect::new(Point::new(x0, y0), Point::new(x1, y1))
 }
 
+pub fn adjust_offset(r: Rect) -> Rect {
+    let offset = display::get_offset();
+    let p = r.top_left() + Offset::new(offset.0, offset.1);
+    return Rect::from_top_left_and_size(p, r.size());
+}
+
 pub fn backlight() -> i32 {
     display::backlight(-1)
 }

@@ -150,3 +150,12 @@ pub fn set_window(x0: u16, y0: u16, x1: u16, y1: u16) {
         ffi::display_set_window(x0, y0, x1, y1);
     }
 }
+
+pub fn get_offset() -> (i32, i32) {
+    unsafe {
+        let mut x = [0; 1];
+        let mut y = [0; 1];
+        ffi::display_offset(ptr::null_mut(), x.as_mut_ptr(), y.as_mut_ptr());
+        return (x[0], y[0]);
+    }
+}
