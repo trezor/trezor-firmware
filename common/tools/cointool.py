@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import ed25519
 import fnmatch
 import glob
+import io
 import json
 import logging
 import os
@@ -10,12 +12,14 @@ import re
 import sys
 from collections import defaultdict
 from hashlib import sha256
-from typing import Any, Callable, Iterator, TextIO, cast
+from typing import Any, Callable, Dict, Iterator, TextIO, cast
 
 import click
 
 import coin_info
 from coin_info import Coin, CoinBuckets, Coins, CoinsInfo, FidoApps, SupportInfo
+from trezorlib import protobuf
+from trezorlib.messages import CoinInfo
 
 try:
     import termcolor
@@ -580,6 +584,37 @@ def check_fido(apps: FidoApps) -> bool:
     return check_passed
 
 
+# ====== coindefs generators ======
+
+
+def coindef_from_dict(coin: Coin) -> CoinInfo:
+    attributes: Dict[str, Any] = dict()
+    for field in CoinInfo.FIELDS.values():
+        val = coin.get(field.name)
+
+        if val is not None and field.name == "curve_name":
+            val.replace("_", "-")
+        elif field.name == "overwintered":
+            val = bool(coin.get("consensus_branch_id"))
+
+        attributes[field.name] = val
+
+    proto = CoinInfo(**attributes)
+
+    return proto
+
+
+def serialize_coindef(proto: CoinInfo) -> bytes:
+    buf = io.BytesIO()
+    protobuf.dump_message(buf, proto)
+    return buf.getvalue()
+
+
+def sign(data: bytes, sign_key: ed25519.SigningKey) -> bytes:
+    h = sha256(data).digest()
+    return sign_key.sign(h)
+
+
 # ====== click command handlers ======
 
 
@@ -864,6 +899,30 @@ def dump(
     with outfile:
         indent = 4 if pretty else None
         json.dump(output, outfile, indent=indent, sort_keys=True)
+        outfile.write("\n")
+
+
+@cli.command()
+@click.option("-o", "--outfile", type=click.File(mode="w"), default="./coindefs.json")
+def coindefs(outfile):
+    """Generate signed coin definitions for python-trezor and others."""
+    # TODO: remove
+    sign_key, verify_key = ed25519.create_keypair(lambda length: b"A" * length)
+    print(f"!!!!!!!!!!!!!!!! verify_key {verify_key.to_bytes().hex()}")
+
+    coins = coin_info.coin_info().bitcoin
+    coindefs: Dict[str, Dict[str, str]] = {}
+    for coin in coins:
+        key = coin["key"]
+        ser = serialize_coindef(coindef_from_dict(coin))
+        sig = sign(ser, sign_key)
+        coindefs[key] = {
+            "data": ser.hex(),
+            "signature": sig.hex(),
+        }
+
+    with outfile:
+        json.dump(coindefs, outfile, indent=4, sort_keys=True)
         outfile.write("\n")
 
 
