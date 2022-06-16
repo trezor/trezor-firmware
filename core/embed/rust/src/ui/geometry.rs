@@ -376,6 +376,10 @@ impl Insets {
     pub const fn left(d: i32) -> Self {
         Self::new(0, 0, 0, d)
     }
+
+    pub const fn sides(d: i32) -> Self {
+        Self::new(0, d, 0, d)
+    }
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
