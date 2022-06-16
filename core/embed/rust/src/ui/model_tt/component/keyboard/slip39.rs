@@ -141,7 +141,7 @@ impl Component for Slip39Input {
             {
                 assert!(!Self::keys()[key].is_empty());
                 // Now we can be sure that the looped iterator will return a value.
-                let ch = Self::keys()[key].chars().cycle().nth(press).unwrap();
+                let ch = unwrap!(Self::keys()[key].chars().cycle().nth(press));
                 text.pop();
                 text.push(ch)
                     .assert_if_debugging_ui("Text buffer is too small");
@@ -196,7 +196,7 @@ impl Slip39Input {
     /// ```
     fn key_digit(key: usize) -> char {
         let index = key + 1;
-        char::from_digit(index as u32, 10).unwrap()
+        unwrap!(char::from_digit(index as u32, 10))
     }
 
     fn complete_word_from_dictionary(&mut self, ctx: &mut EventCtx) {

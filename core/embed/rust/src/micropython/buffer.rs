@@ -175,7 +175,7 @@ impl AsRef<str> for StrBuffer {
         // Rust seems to be stricter in what it considers UTF-8 though.
         // In case there's a mismatch, this code will cleanly panic
         // before attempting to use the data.
-        str::from_utf8(self.0.as_ref()).unwrap()
+        unwrap!(str::from_utf8(self.0.as_ref()), "Invalid internal UTF-8.")
     }
 }
 

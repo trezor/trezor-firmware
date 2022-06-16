@@ -310,14 +310,14 @@ impl TryFrom<(Obj, Obj)> for Obj {
 impl From<u8> for Obj {
     fn from(val: u8) -> Self {
         // `u8` will fit into smallint so no error should happen here.
-        u32::from(val).try_into().unwrap()
+        unwrap!(u32::from(val).try_into())
     }
 }
 
 impl From<u16> for Obj {
     fn from(val: u16) -> Self {
         // `u16` will fit into smallint so no error should happen here.
-        u32::from(val).try_into().unwrap()
+        unwrap!(u32::from(val).try_into())
     }
 }
 

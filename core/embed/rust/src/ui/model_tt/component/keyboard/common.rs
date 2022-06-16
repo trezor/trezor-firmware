@@ -111,7 +111,7 @@ impl MultiTapKeyboard {
 
         assert!(!key_text.is_empty());
         // Now we can be sure that a looped iterator will return a value
-        let ch = key_text.chars().cycle().nth(press).unwrap();
+        let ch = unwrap!(key_text.chars().cycle().nth(press));
         if is_pending {
             TextEdit::ReplaceLast(ch)
         } else {

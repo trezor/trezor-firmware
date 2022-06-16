@@ -218,7 +218,7 @@ unsafe extern "C" fn msg_def_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut 
         match attr {
             Qstr::MP_QSTR_MESSAGE_NAME => {
                 // Return the QSTR name of this message def.
-                let name = Qstr::from_u16(find_name_by_msg_offset(this.def.offset).unwrap());
+                let name = Qstr::from_u16(unwrap!(find_name_by_msg_offset(this.def.offset)));
                 unsafe {
                     dest.write(name.into());
                 };
