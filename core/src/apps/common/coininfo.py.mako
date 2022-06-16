@@ -3,10 +3,16 @@
 # do not edit manually!
 from typing import NamedTuple, TYPE_CHECKING
 
-from trezor import utils
+import trezorproto
+
+from trezor import utils, wire
 from trezor.crypto.base58 import blake256d_32, groestl512d_32, keccak_32, sha256d_32
+from trezor.crypto.curve import ed25519
+from trezor.crypto.hashlib import sha256
 from trezor.crypto.scripts import blake256_ripemd160, sha256_ripemd160
-from trezor.messages import CoinInfo, CoinInfoNeeded
+from trezor.enums import CoinInfoAckType
+from trezor.messages import CoinInfo, CoinInfoAck, CoinInfoRequest
+from ubinascii import unhexlify
 
 if TYPE_CHECKING:
     from typing import Awaitable, Callable, TypeVar
@@ -91,9 +97,27 @@ def get_CoinHashInfo(coin: CoinInfo) -> CoinHashInfo:
         return CoinHashInfo(sha256d_32, True, sha256_ripemd160)
 
 
-# TODO: somehow include this to `by_name` function
+# TODO: somehow include this into `by_name` function
 async def get_coin_from_host(ctx: wire.Context, name: str) -> CoinInfo:
-    return await ctx.call(CoinInfoNeeded(), CoinInfo)
+    res = await ctx.call(CoinInfoRequest(), CoinInfoAck)
+
+    # TODO: remove
+    # "get" public key
+    verify_key = unhexlify("db995fe25169d141cab9bbba92baa01f9f2e1ece7df4cb2ac05190f37fcc1f9d")
+    # get sha256 of data
+    data_hash = sha256(res.encoded_coin).digest()
+
+    # verify signature
+    if not ed25519.verify(verify_key, res.signature, data_hash):
+        raise wire.ProcessError("Invalid signature")
+
+    # load data
+    if res.code == CoinInfoAckType.Bitcoin:
+        ci = trezorproto.decode(res.encoded_coin, CoinInfo, True)
+    else:
+        raise ValueError  # Unknown coin type
+
+    return ci
 
 # fmt: off
 
@@ -118,4 +142,4 @@ def by_name(name: str) -> CoinInfo:
 % endfor
     raise ValueError  # Unknown coin name
 ##
-##     return await ctx.call(CoinInfoNeeded(), CoinInfo)
+##     return await ctx.call(CoinInfoRequest(), CoinInfo)

@@ -1,6 +1,7 @@
 # generated from coininfo.py.mako
 # (by running `make templates` in `core`)
 # do not edit manually!
+from typing import Any, Optional
 
 from .messages import CoinInfo
 
