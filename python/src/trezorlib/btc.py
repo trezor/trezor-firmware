@@ -302,8 +302,12 @@ def sign_tx(
     res = client.call(signtx)
 
     # Check whether device asked for coin info
-    if isinstance(res, messages.CoinInfoNeeded):
-        res = client.call(coininfo.by_name(coin_name))
+    if isinstance(res, messages.CoinInfoRequest):
+        res = client.call(messages.CoinInfoAck(
+            signature=bytes.fromhex("03b4c4106c825c404acab14f97dd08ffb07ec341e6e322820e52b5fcf305b0e7646b54d3f1945da7aa4b385ee5d54120f7359b602e910e2076ec0b4a0810ad04"),
+            encoded_coin=bytes.fromhex("0a07546573746e65741204544553541808206f28c4013080ade2043a18426974636f696e205369676e6564204d6573736167653a0a40cf8fd62148e2a4a92250f6b9fc2258ef938a126083a9dd126a0274627801800101880101980100a00100a80100b20109736563703235366b31b80100c00100c80100"),
+            code=messages.CoinInfoAckType.Bitcoin,
+        ))
 
     # Prepare structure for signatures
     signatures: List[Optional[bytes]] = [None] * len(inputs)

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from trezor import wire
 from trezor.enums import InputScriptType
 
-from apps.common.coininfo import by_name
+from apps.common.coininfo import by_name, get_coin_from_host
 from apps.common.keychain import get_keychain
 from apps.common.paths import PATTERN_BIP44, PathSchema
 
@@ -229,7 +229,8 @@ async def get_coin_by_name(ctx: wire.Context, coin_name: str | None) -> CoinInfo
         coin_name = "Bitcoin"
 
     try:
-        return by_name(coin_name)
+        return await get_coin_from_host(ctx, coin_name)
+        # return by_name(coin_name)
     except ValueError:
         raise wire.DataError("Unsupported coin type")
 
