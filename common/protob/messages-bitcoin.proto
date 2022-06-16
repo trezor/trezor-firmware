@@ -181,7 +181,7 @@ message VerifyMessage {
 /**
  * Request: Ask device to sign transaction
  * @start
- * @next CoinInfoNeeded
+ * @next CoinInfoRequest
  * @next TxRequest
  * @next Failure
  */
@@ -201,17 +201,16 @@ message SignTx {
 }
 
 /**
- * Request: Coin info provided by host
- * @next TxRequest
- * @next Failure
+ * Coin info provided by host, encoded in generic message CoinInfoAck in `messages-common.proto`
+ * @embed
  */
-message CoinInfo { // TODO: rename? + comments
-    required string coin_name = 1;  // coin to use
+message CoinInfo { // TODO: comments to fields??
+    required string coin_name = 1;  // coin name
     required string coin_shortcut = 2;
     required uint32 decimals = 3;
     required uint32 address_type = 4;
     required uint32 address_type_p2sh = 5;
-    required uint32 maxfee_kb = 6;
+    required uint64 maxfee_kb = 6;
     required string signed_message_header = 7;
     required uint32 xpub_magic = 8;
     optional uint32 xpub_magic_segwit_p2sh = 9;

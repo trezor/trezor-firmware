@@ -39,7 +39,7 @@ class MessageType(IntEnum):
     Entropy = 10
     LoadDevice = 13
     ResetDevice = 14
-    CoinInfoNeeded = 16
+    CoinInfoRequest = 16
     Features = 17
     PinMatrixRequest = 18
     PinMatrixAck = 19
@@ -72,6 +72,7 @@ class MessageType(IntEnum):
     GetFirmware = 90
     FirmwareChunk = 91
     FirmwareChunkAck = 92
+    CoinInfoAck = 93
     SetU2FCounter = 63
     GetNextU2FCounter = 80
     NextU2FCounter = 81
@@ -97,7 +98,6 @@ class MessageType(IntEnum):
     GetOwnershipProof = 49
     OwnershipProof = 50
     AuthorizeCoinJoin = 51
-    CoinInfo = 52
     CipherKeyValue = 23
     CipheredKeyValue = 48
     SignIdentity = 53
@@ -305,6 +305,10 @@ class PinMatrixRequestType(IntEnum):
     NewSecond = 3
     WipeCodeFirst = 4
     WipeCodeSecond = 5
+
+
+class CoinInfoAckType(IntEnum):
+    Bitcoin = 1
 
 
 class InputScriptType(IntEnum):
@@ -927,8 +931,28 @@ class HDNodeType(protobuf.MessageType):
         self.private_key = private_key
 
 
-class CoinInfoNeeded(protobuf.MessageType):
+class CoinInfoRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 16
+
+
+class CoinInfoAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 93
+    FIELDS = {
+        1: protobuf.Field("signature", "bytes", repeated=False, required=True),
+        2: protobuf.Field("encoded_coin", "bytes", repeated=False, required=True),
+        3: protobuf.Field("code", "CoinInfoAckType", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        signature: "bytes",
+        encoded_coin: "bytes",
+        code: "CoinInfoAckType",
+    ) -> None:
+        self.signature = signature
+        self.encoded_coin = encoded_coin
+        self.code = code
 
 
 class MultisigRedeemScriptType(protobuf.MessageType):
@@ -1203,14 +1227,14 @@ class SignTx(protobuf.MessageType):
 
 
 class CoinInfo(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 52
+    MESSAGE_WIRE_TYPE = None
     FIELDS = {
         1: protobuf.Field("coin_name", "string", repeated=False, required=True),
         2: protobuf.Field("coin_shortcut", "string", repeated=False, required=True),
         3: protobuf.Field("decimals", "uint32", repeated=False, required=True),
         4: protobuf.Field("address_type", "uint32", repeated=False, required=True),
         5: protobuf.Field("address_type_p2sh", "uint32", repeated=False, required=True),
-        6: protobuf.Field("maxfee_kb", "uint32", repeated=False, required=True),
+        6: protobuf.Field("maxfee_kb", "uint64", repeated=False, required=True),
         7: protobuf.Field("signed_message_header", "string", repeated=False, required=True),
         8: protobuf.Field("xpub_magic", "uint32", repeated=False, required=True),
         9: protobuf.Field("xpub_magic_segwit_p2sh", "uint32", repeated=False, required=False),

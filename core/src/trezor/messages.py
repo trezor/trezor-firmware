@@ -32,6 +32,7 @@ if TYPE_CHECKING:
     from trezor.enums import CardanoTxAuxiliaryDataSupplementType  # noqa: F401
     from trezor.enums import CardanoTxSigningMode  # noqa: F401
     from trezor.enums import CardanoTxWitnessType  # noqa: F401
+    from trezor.enums import CoinInfoAckType  # noqa: F401
     from trezor.enums import DebugButton  # noqa: F401
     from trezor.enums import DebugSwipeDirection  # noqa: F401
     from trezor.enums import DecredStakingSpendType  # noqa: F401
@@ -385,10 +386,28 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["HDNodeType"]:
             return isinstance(msg, cls)
 
-    class CoinInfoNeeded(protobuf.MessageType):
+    class CoinInfoRequest(protobuf.MessageType):
 
         @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CoinInfoNeeded"]:
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CoinInfoRequest"]:
+            return isinstance(msg, cls)
+
+    class CoinInfoAck(protobuf.MessageType):
+        signature: "bytes"
+        encoded_coin: "bytes"
+        code: "CoinInfoAckType"
+
+        def __init__(
+            self,
+            *,
+            signature: "bytes",
+            encoded_coin: "bytes",
+            code: "CoinInfoAckType",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CoinInfoAck"]:
             return isinstance(msg, cls)
 
     class MultisigRedeemScriptType(protobuf.MessageType):

@@ -68,7 +68,7 @@ Using the template and the rules we can create for example this messages:
 /**
  * Request: Ask device to sign transaction
  * @start
- * @next CoinInfoNeeded
+ * @next CoinInfoRequest
  * @next TxRequest
  * @next Failure
  */

@@ -31,7 +31,7 @@ if TYPE_CHECKING:
         Entropy = 10
         LoadDevice = 13
         ResetDevice = 14
-        CoinInfoNeeded = 16
+        CoinInfoRequest = 16
         Features = 17
         PinMatrixRequest = 18
         PinMatrixAck = 19
@@ -64,6 +64,7 @@ if TYPE_CHECKING:
         GetFirmware = 90
         FirmwareChunk = 91
         FirmwareChunkAck = 92
+        CoinInfoAck = 93
         SetU2FCounter = 63
         GetNextU2FCounter = 80
         NextU2FCounter = 81
@@ -89,7 +90,6 @@ if TYPE_CHECKING:
         GetOwnershipProof = 49
         OwnershipProof = 50
         AuthorizeCoinJoin = 51
-        CoinInfo = 52
         CipherKeyValue = 23
         CipheredKeyValue = 48
         SignIdentity = 53
@@ -294,6 +294,9 @@ if TYPE_CHECKING:
         NewSecond = 3
         WipeCodeFirst = 4
         WipeCodeSecond = 5
+
+    class CoinInfoAckType(IntEnum):
+        Bitcoin = 1
 
     class InputScriptType(IntEnum):
         SPENDADDRESS = 0

@@ -165,8 +165,25 @@ message HDNodeType {
 }
 
 /**
- * Response: Device needs coin info from host
- * @end
+ * Response: Device needs coin/token info from host
+ * @auxstart
  */
-message CoinInfoNeeded {
+message CoinInfoRequest {
+}
+
+/**
+ * Request: Generic message containing signed message with coin/token info
+ * @auxend // TODO: ???? ask Andrew about security
+ */
+message CoinInfoAck {
+    required bytes signature = 1;      // signature of encoded_coin
+    required bytes encoded_coin = 2;   // encoded CoinInfo message
+    required CoinInfoAckType code = 3; // enumeration of encoded coin info types
+
+    /**
+    * Type of protobuf message representing encoded CoinInfo
+    */
+    enum CoinInfoAckType {
+        CoinInfoAck_Bitcoin = 1;
+    }
 }

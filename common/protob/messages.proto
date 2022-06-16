@@ -87,7 +87,7 @@ enum MessageType {
     MessageType_Entropy = 10 [(bitcoin_only) = true, (wire_out) = true];
     MessageType_LoadDevice = 13 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_ResetDevice = 14 [(bitcoin_only) = true, (wire_in) = true];
-    MessageType_CoinInfoNeeded = 16 [(wire_out) = true];
+    MessageType_CoinInfoRequest = 16 [(wire_out) = true];
     MessageType_Features = 17 [(bitcoin_only) = true, (wire_out) = true];
     MessageType_PinMatrixRequest = 18 [(bitcoin_only) = true, (wire_out) = true];
     MessageType_PinMatrixAck = 19 [(bitcoin_only) = true, (wire_in) = true, (wire_tiny) = true, (wire_no_fsm) = true];
@@ -120,6 +120,7 @@ enum MessageType {
     MessageType_GetFirmware = 90 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_FirmwareChunk = 91 [(bitcoin_only) = true, (wire_out) = true];
     MessageType_FirmwareChunkAck = 92 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_CoinInfoAck = 93 [(wire_in) = true];
 
     MessageType_SetU2FCounter = 63 [(wire_in) = true];
     MessageType_GetNextU2FCounter = 80 [(wire_in) = true];
@@ -153,7 +154,6 @@ enum MessageType {
     MessageType_GetOwnershipProof = 49 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_OwnershipProof = 50 [(bitcoin_only) = true, (wire_out) = true];
     MessageType_AuthorizeCoinJoin = 51 [(bitcoin_only) = true, (wire_in) = true];
-    MessageType_CoinInfo = 52 [(bitcoin_only) = true, (wire_in) = true];
 
     // Crypto
     MessageType_CipherKeyValue = 23 [(bitcoin_only) = true, (wire_in) = true];
