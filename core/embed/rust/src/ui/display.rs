@@ -229,6 +229,11 @@ pub fn pixeldata_dirty() {
     display::pixeldata_dirty();
 }
 
+pub fn get_offset() -> Offset {
+    let offset = display::get_offset();
+    Offset::new(offset.0, offset.1)
+}
+
 pub fn set_window(window: Rect) {
     display::set_window(
         window.x0 as u16,
