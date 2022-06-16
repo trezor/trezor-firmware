@@ -1,8 +1,9 @@
-use core::{
-    convert::{Infallible, TryInto},
-    num::TryFromIntError,
-};
+use core::{convert::Infallible, num::TryFromIntError};
 
+#[cfg(feature = "micropython")]
+use core::convert::TryInto;
+
+#[cfg(feature = "micropython")]
 use cstr_core::CStr;
 
 #[cfg(feature = "micropython")]
