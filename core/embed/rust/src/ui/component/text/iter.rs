@@ -64,9 +64,6 @@ fn break_text_to_spans(
             let start_of_line = last_break.offset;
             let end_of_line = lb.offset; // Not inclusive.
             last_break = lb;
-            if let BreakStyle::AtWhitespaceOrWordBoundary = lb.style {
-                last_break.offset += 1;
-            }
             Some(Span {
                 text: &text[start_of_line..end_of_line],
                 append: match lb.style {
@@ -92,9 +89,12 @@ fn select_line_breaks(
     available_width: i32,
 ) -> impl Iterator<Item = LineBreak> {
     let hyphen_width = hyphen_font.char_width('-');
+    let ellipsis_width = 3 * hyphen_font.char_width('.');
+    let line_height = text_font.line_height();
 
     let mut proposed = None;
     let mut line_width = 0;
+    let mut total_height = line_height;
     let mut found_any_whitespace = false;
 
     chars.filter_map(move |(offset, ch)| {
@@ -104,20 +104,23 @@ fn select_line_breaks(
         let can_break_word =
             matches!(breaking, LineBreaking::BreakWordsAndInsertHyphen) || !found_any_whitespace;
 
+        let next_offset = offset + ch.len_utf8();
+        let next_line_width = line_width + char_width;
+
         let break_line = match ch {
             '\n' | '\r' => {
                 // Immediate hard break.
                 Some(LineBreak {
-                    offset,
-                    width: line_width,
+                    offset: next_offset,
+                    width: next_line_width,
                     style: BreakStyle::Hard,
                 })
             }
             ' ' | '\t' => {
-                // Whitespace, propose a line-break before this character.
+                // Whitespace, propose a line-break after this character.
                 proposed = Some(LineBreak {
-                    offset,
-                    width: line_width,
+                    offset: next_offset,
+                    width: next_line_width,
                     style: BreakStyle::AtWhitespaceOrWordBoundary,
                 });
                 found_any_whitespace = true;
@@ -127,8 +130,8 @@ fn select_line_breaks(
                 // Propose a word-break after this character. In case the next character is
                 // whitespace, the proposed word break is replaced by a whitespace break.
                 proposed = Some(LineBreak {
-                    offset: offset + 1,
-                    width: line_width + char_width + hyphen_width,
+                    offset: next_offset,
+                    width: next_line_width,
                     style: BreakStyle::InsideWord,
                 });
                 None
@@ -145,16 +148,58 @@ fn select_line_breaks(
             }
             _ => None,
         };
-        if break_line.is_some() {
+        if let Some(br) = break_line {
             // Reset the state.
             proposed = None;
-            line_width = 0;
+            line_width -= br.width;
+            total_height += line_height;
             found_any_whitespace = false;
-        } else {
-            // Shift cursor.
-            line_width += char_width;
         }
+        // Shift cursor.
+        line_width += char_width;
         break_line
+    })
+}
+
+pub fn count_lines(
+    chars: impl Iterator<Item = (usize, char)>,
+    text_font: impl GlyphMetrics,
+    hyphen_font: impl GlyphMetrics,
+    breaking: LineBreaking,
+    available_width: i32,
+) -> usize {
+    select_line_breaks(chars, text_font, hyphen_font, breaking, available_width).count() + 1
+}
+
+pub fn select_pages(
+    chars: impl Iterator<Item = (usize, char)>,
+    text_font: impl GlyphMetrics,
+    hyphen_font: impl GlyphMetrics,
+    breaking: LineBreaking,
+    available_width: i32,
+    available_height: i32,
+) -> impl Iterator<Item = usize> {
+    let line_height = text_font.line_height();
+    let mut consumed_height = 0;
+    let mut breaks = select_line_breaks(chars, text_font, hyphen_font, breaking, available_width);
+    let mut finished = false;
+    let mut previous_page_at = 0;
+    iter::from_fn(move || {
+        while let Some(br) = breaks.next() {
+            consumed_height += line_height;
+            if consumed_height > available_height {
+                consumed_height = 0;
+                let result = Some(previous_page_at);
+                previous_page_at = br.offset;
+                return result;
+            }
+        }
+        if !finished {
+            finished = true;
+            Some(previous_page_at)
+        } else {
+            None
+        }
     })
 }
 
@@ -177,41 +222,18 @@ impl GlyphMetrics for Font {
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_selected_line_breaks() {
-        assert_eq!(line_breaks("abcd ef", 34), vec![inside_word(2, 25)]);
-    }
-
-    #[test]
-    fn test_break_text() {
-        assert_eq!(
-            break_text("abcd ef", 24),
-            vec![
-                Span {
-                    text: "a",
-                    append: Appendix::Hyphen
-                },
-                Span {
-                    text: "bcd",
-                    append: Appendix::None
-                },
-                Span {
-                    text: "ef",
-                    append: Appendix::None
-                }
-            ]
-        )
-    }
-
-    #[derive(Copy, Clone)]
-    struct Fixed {
-        width: i32,
-        height: i32,
+    pub struct Fixed {
+        pub width: i32,
+        pub height: i32,
     }
 
     impl GlyphMetrics for Fixed {
         fn char_width(&self, _ch: char) -> i32 {
-            self.width
+            if _ch == '\n' {
+                0
+            } else {
+                self.width
+            }
         }
 
         fn line_height(&self) -> i32 {
@@ -219,61 +241,76 @@ mod tests {
         }
     }
 
-    fn break_text(s: &str, w: i32) -> Vec<Span> {
+    const FIXED_FONT: Fixed = Fixed {
+        width: 1,
+        height: 1,
+    };
+
+    #[test]
+    fn test_span() {
+        assert_eq!(spans_from("hello", 5), vec![("hello", false)]);
+        assert_eq!(spans_from("", 5), vec![("", false)]);
+        assert_eq!(
+            spans_from("hello world", 5),
+            vec![("hello ", false), ("world", false)]
+        );
+        assert_eq!(
+            spans_from("hello\nworld", 5),
+            vec![("hello\n", false), ("world", false)]
+        );
+    }
+
+    #[test]
+    fn test_leading_trailing() {
+        assert_eq!(
+            spans_from("\nhello\nworld\n", 5),
+            vec![
+                ("\n", false),
+                ("hello\n", false),
+                ("world\n", false),
+                ("", false)
+            ]
+        );
+    }
+
+    #[test]
+    fn test_long_word() {
+        assert_eq!(
+            spans_from("Constantinople", 7),
+            vec![("Consta", true), ("ntinop", true), ("le", false)]
+        );
+
+        assert_eq!(
+            spans_from("Down with the establishment!", 5),
+            vec![
+                ("Down ", false),
+                ("with ", false),
+                ("the ", false),
+                ("esta", true),
+                ("blis", true),
+                ("hmen", true),
+                ("t!", false),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_char_boundary() {
+        assert_eq!(
+            spans_from("+ěščřžýáíé", 5),
+            vec![("+ěšč", true), ("řžýá", true), ("íé", false)]
+        );
+    }
+
+    fn spans_from(text: &str, max_width: i32) -> Vec<(&str, bool)> {
         break_text_to_spans(
-            s,
-            Fixed {
-                width: 10,
-                height: 10,
-            },
-            Fixed {
-                width: 5,
-                height: 10,
-            },
-            LineBreaking::BreakWordsAndInsertHyphen,
-            w,
+            text,
+            FIXED_FONT,
+            FIXED_FONT,
+            LineBreaking::BreakAtWhitespace,
+            max_width,
         )
-        .collect::<Vec<_>>()
-    }
-
-    fn line_breaks(s: &str, w: i32) -> Vec<LineBreak> {
-        select_line_breaks(
-            s.char_indices(),
-            Fixed {
-                width: 10,
-                height: 10,
-            },
-            Fixed {
-                width: 5,
-                height: 10,
-            },
-            LineBreaking::BreakWordsAndInsertHyphen,
-            w,
-        )
-        .collect::<Vec<_>>()
-    }
-
-    fn hard(offset: usize, width: i32) -> LineBreak {
-        LineBreak {
-            offset,
-            width,
-            style: BreakStyle::Hard,
-        }
-    }
-
-    fn whitespace(offset: usize, width: i32) -> LineBreak {
-        LineBreak {
-            offset,
-            width,
-            style: BreakStyle::AtWhitespaceOrWordBoundary,
-        }
-    }
-
-    fn inside_word(offset: usize, width: i32) -> LineBreak {
-        LineBreak {
-            offset,
-            width,
-            style: BreakStyle::InsideWord,
-        }
+        .map(|span| (span.text, matches!(span.append, Appendix::Hyphen)))
+        .collect()
     }
 }
