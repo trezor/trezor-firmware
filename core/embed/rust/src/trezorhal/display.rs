@@ -1,5 +1,6 @@
 use super::ffi;
 use core::ptr;
+use cty::c_int;
 
 pub struct ToifInfo {
     pub width: u16,
@@ -138,5 +139,14 @@ pub fn pixeldata_dirty() {
 pub fn set_window(x0: u16, y0: u16, x1: u16, y1: u16) {
     unsafe {
         ffi::display_set_window(x0, y0, x1, y1);
+    }
+}
+
+pub fn get_offset() -> (i32, i32) {
+    unsafe {
+        let mut x: c_int = 0;
+        let mut y: c_int = 0;
+        ffi::display_offset(ptr::null_mut(), &mut x, &mut y);
+        (x as i32, y as i32)
     }
 }
