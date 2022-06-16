@@ -21,8 +21,7 @@ the following commands:
 * **`check`**: check validity of json definitions and associated data. Used in CI.
 * **`dump`**: dump coin information, including support status, in JSON format. Various
   filtering options are available, check help for details.
-* **`coindefs`**: generate signed protobuf descriptions of coins. This is for future use
-  and could allow us to not need to store coin data in Trezor itself.
+* **`coindefs`**: generate signed protobuf definitions for Ethereum networks (chains) and tokens.
 
 Use `cointool.py command --help` to get more information on each command.
 
