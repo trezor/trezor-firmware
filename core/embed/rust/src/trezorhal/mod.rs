@@ -1,4 +1,6 @@
 pub mod bip39;
+#[macro_use]
+#[allow(unused_macros)]
 pub mod common;
 #[cfg(feature = "ui")]
 pub mod display;

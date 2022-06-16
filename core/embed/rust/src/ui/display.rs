@@ -62,7 +62,7 @@ pub fn rect_fill_rounded(r: Rect, fg_color: Color, bg_color: Color, radius: u8) 
 /// NOTE: Cannot start at odd x-coordinate. In this case icon is shifted 1px
 /// left.
 pub fn icon_top_left(top_left: Point, data: &[u8], fg_color: Color, bg_color: Color) {
-    let toif_info = display::toif_info(data).unwrap();
+    let toif_info = unwrap!(display::toif_info(data), "Invalid TOIF data");
     assert!(toif_info.grayscale);
     display::icon(
         top_left.x,
@@ -76,7 +76,7 @@ pub fn icon_top_left(top_left: Point, data: &[u8], fg_color: Color, bg_color: Co
 }
 
 pub fn icon(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
-    let toif_info = display::toif_info(data).unwrap();
+    let toif_info = unwrap!(display::toif_info(data), "Invalid TOIF data");
     assert!(toif_info.grayscale);
 
     let r = Rect::from_center_and_size(
@@ -95,7 +95,7 @@ pub fn icon(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
 }
 
 pub fn icon_rust(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
-    let toif_info = display::toif_info(data).unwrap();
+    let toif_info = unwrap!(display::toif_info(data), "Invalid TOIF data");
     assert!(toif_info.grayscale);
 
     let r = Rect::from_center_and_size(
@@ -119,14 +119,14 @@ pub fn icon_rust(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
 
             if clamped.contains(p) {
                 if x % 2 == 0 {
-                    ctx.uncompress(&mut dest).unwrap();
+                    unwrap!(ctx.uncompress(&mut dest), "Decompression failed");
                     pixeldata(colortable[(dest[0] >> 4) as usize]);
                 } else {
                     pixeldata(colortable[(dest[0] & 0xF) as usize]);
                 }
             } else if x % 2 == 0 {
                 //continue unzipping but dont write to display
-                ctx.uncompress(&mut dest).unwrap();
+                unwrap!(ctx.uncompress(&mut dest), "Decompression failed");
             }
         }
     }
@@ -135,7 +135,7 @@ pub fn icon_rust(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
 }
 
 pub fn image(center: Point, data: &[u8]) {
-    let toif_info = display::toif_info(data).unwrap();
+    let toif_info = unwrap!(display::toif_info(data), "Invalid TOIF data");
     assert!(!toif_info.grayscale);
 
     let r = Rect::from_center_and_size(
@@ -307,7 +307,7 @@ pub fn rect_rounded2_partial(
     let mut icon_width = 0;
 
     if let Some((icon_bytes, icon_color)) = icon {
-        let toif_info = display::toif_info(icon_bytes).unwrap();
+        let toif_info = unwrap!(display::toif_info(icon_bytes), "Invalid TOIF data");
         assert!(toif_info.grayscale);
 
         if toif_info.width <= MAX_ICON_SIZE && toif_info.height <= MAX_ICON_SIZE {
@@ -318,7 +318,7 @@ pub fn rect_rounded2_partial(
             icon_area_clamped = icon_area.clamp(constant::screen());
 
             let mut ctx = uzlib::UzlibContext::new(&icon_bytes[12..], false);
-            ctx.uncompress(&mut icon_data).unwrap();
+            unwrap!(ctx.uncompress(&mut icon_data), "Decompression failed");
             icon_colortable = get_color_table(icon_color, bg_color);
             icon_width = toif_info.width.into();
             use_icon = true;
