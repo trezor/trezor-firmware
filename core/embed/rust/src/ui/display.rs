@@ -205,13 +205,14 @@ impl TextOverlay {
 }
 
 pub fn bar_with_text_and_fill(
-    r: Rect,
+    area: Rect,
     overlay: Option<TextOverlay>,
     fg_color: Color,
     bg_color: Color,
     fill_from: i32,
     fill_to: i32,
 ) {
+    let r = adjust_offset(area);
     let clamped = clamp_coords(r);
 
     set_window(clamped);
@@ -464,7 +465,9 @@ impl Glyph {
         let size = Offset::new((self.width) as i32, (self.height) as i32);
         let pos_adj = pos + bearing;
         let r = Rect::from_top_left_and_size(pos_adj, size);
-        let window = clamp_coords(r);
+
+        let area = adjust_offset(r);
+        let window = clamp_coords(area);
 
         set_window(window);
 
