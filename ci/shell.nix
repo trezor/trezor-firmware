@@ -8,10 +8,10 @@ let
     url = "https://github.com/oxalica/rust-overlay/archive/2eae19e246433530998cbf239d5505b7b87bc854.tar.gz";
     sha256 = "0panx24sqcvx52wza02zsxmpkhg6xld7hklrv7dybc59akqm2ira";
   });
-  # the last successful build of nixpkgs-unstable as of 2022-02-10
+  # the last successful build of nixpkgs-unstable as of 2022-06-20
   nixpkgs = import (builtins.fetchTarball {
-    url = "https://github.com/NixOS/nixpkgs/archive/1882c6b7368fd284ad01b0a5b5601ef136321292.tar.gz";
-    sha256 = "0zg7ak2mcmwzi2kg29g4v9fvbvs0viykjsg2pwaphm1fi13s7s0i";
+    url = "https://github.com/NixOS/nixpkgs/archive/e0a42267f73ea52adc061a64650fddc59906fc99.tar.gz";
+    sha256 = "0r1dsj51x2rm016xwvdnkm94v517jb1rpn4rk63k6krc4d0n3kh9";
   }) { overlays = [ rustOverlay ]; };
   # commit before python36 was removed
   python36nixpkgs = import (builtins.fetchTarball {
@@ -88,7 +88,7 @@ stdenvNoCC.mkDerivation ({
     openssl
     pkgconfig
     poetry
-    protobuf3_6
+    protobuf
     pyright
     rustfmt
     rustStable
