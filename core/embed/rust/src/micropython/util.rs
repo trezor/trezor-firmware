@@ -97,11 +97,8 @@ impl<T, E> ResultExt for Result<T, E> {
     }
 }
 
-/// Concatenates arbitrary amount of slices into a String
-pub fn format_string<const M: usize, const N: usize>(slices: [&str; M]) -> String<N> {
-    let mut formatted_string = String::new();
-    for slice in slices {
-        formatted_string.push_str(slice).unwrap();
-    }
-    formatted_string
+pub fn char_to_string<const L: usize>(ch: char) -> String<L> {
+    let mut s = String::new();
+    s.push(ch).unwrap();
+    s
 }

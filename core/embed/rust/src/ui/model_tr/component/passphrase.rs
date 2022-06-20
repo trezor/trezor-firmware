@@ -1,14 +1,14 @@
 use crate::{
     time::Duration,
     ui::{
-        component::{Component, Event, EventCtx, Pad},
+        component::{text::common::TextBox, Component, Event, EventCtx, Pad},
         display,
         geometry::{Point, Rect},
     },
 };
 use core::ops::Deref;
 
-use super::{theme, BothButtonPressHandler, Button, ButtonMsg, ButtonPos};
+use super::{common, theme, BothButtonPressHandler, Button, ButtonMsg, ButtonPos};
 use heapless::String;
 
 pub enum PassphrasePageMsg {
@@ -74,7 +74,7 @@ pub struct PassphrasePage<T> {
     del: Button<&'static str>,
     page_counter: u8,
     show_plain_passphrase: bool,
-    passphrase_buffer: String<MAX_LENGTH>,
+    textbox: TextBox<MAX_LENGTH>,
     current_category: ChoiceCategory,
 }
 
@@ -106,13 +106,13 @@ where
             del: Button::with_text(ButtonPos::Middle, "DEL", theme::button_default()),
             page_counter: 0,
             show_plain_passphrase: false,
-            passphrase_buffer: String::new(),
+            textbox: TextBox::empty(),
             current_category: ChoiceCategory::Menu,
         }
     }
 
     fn render_header(&self) {
-        self.display_text(Point::new(0, 10), &self.prompt);
+        common::display_text(Point::new(0, 10), &self.prompt);
         display::dotted_line(Point::new(0, 15), 128, theme::FG);
     }
 
@@ -131,24 +131,24 @@ where
         if self.page_counter == 0 {
             self.show_current();
             self.show_next();
-        } else if self.page_counter < self.last_page() {
+        } else if self.page_counter < self.last_page_index() {
             self.show_previous();
             self.show_current();
             self.show_next();
-        } else if self.page_counter == self.last_page() {
+        } else if self.page_counter == self.last_page_index() {
             self.show_previous();
             self.show_current();
         }
 
         // MENU is special, as it offers two more screens
         if self.current_category == ChoiceCategory::Menu {
-            if self.page_counter == self.last_page() {
+            if self.page_counter == self.last_page_index() {
                 self.show_reveal_passphrase_option(RIGHT_COL);
-            } else if self.page_counter == self.last_page() + 1 {
+            } else if self.page_counter == self.last_page_index() + 1 {
                 self.show_previous();
                 self.show_reveal_passphrase_option(MIDDLE_COL);
                 self.show_delete_last_character_option(RIGHT_COL);
-            } else if self.page_counter == self.last_page() + 2 {
+            } else if self.page_counter == self.last_page_index() + 2 {
                 self.show_reveal_passphrase_option(LEFT_COL);
                 self.show_delete_last_character_option(MIDDLE_COL);
             }
@@ -157,7 +157,7 @@ where
 
     fn show_passphrase_length(&self) {
         // Only showing the maximum visible length
-        let char_amount = self.passphrase_buffer.len();
+        let char_amount = self.textbox.len();
         let dots_visible = char_amount.min(MAX_VISIBLE_CHARS);
 
         // String::repeat() is not available for heapless::String
@@ -169,45 +169,44 @@ where
         // Giving some notion of change even for longer-than-visible passphrases
         // - slightly shifting the dots to the left and right after each new digit
         if char_amount > MAX_VISIBLE_CHARS && char_amount % 2 == 0 {
-            self.display_text_center(Point::new(61, PASSPHRASE_ROW), &dots);
+            common::display_text_center(Point::new(61, PASSPHRASE_ROW), &dots);
         } else {
-            self.display_text_center(Point::new(64, PASSPHRASE_ROW), &dots);
+            common::display_text_center(Point::new(64, PASSPHRASE_ROW), &dots);
         }
     }
 
     fn reveal_current_passphrase(&self) {
-        let char_amount = self.passphrase_buffer.len();
+        let char_amount = self.textbox.len();
 
         if char_amount <= MAX_VISIBLE_CHARS {
-            self.display_text_center(Point::new(64, PASSPHRASE_ROW), &self.passphrase_buffer);
+            common::display_text_center(Point::new(64, PASSPHRASE_ROW), self.passphrase());
         } else {
             // Show the last part with preceding ellipsis to show something is hidden
             let ellipsis = "...";
             let offset: usize = char_amount.saturating_sub(MAX_VISIBLE_CHARS) + ellipsis.len();
-            let mut to_show: String<MAX_VISIBLE_CHARS> = String::from(ellipsis);
-            to_show.push_str(&self.passphrase_buffer[offset..]).unwrap();
-            self.display_text_center(Point::new(64, PASSPHRASE_ROW), &to_show);
+            let to_show = build_string!(MAX_VISIBLE_CHARS, ellipsis, &self.passphrase()[offset..]);
+            common::display_text_center(Point::new(64, PASSPHRASE_ROW), &to_show);
         }
     }
 
     fn show_reveal_passphrase_option(&self, x: i32) {
-        self.display_text(Point::new(x, MIDDLE_ROW), "Show");
-        self.display_text(Point::new(x, MIDDLE_ROW + 10), "curr");
-        self.display_text(Point::new(x, MIDDLE_ROW + 20), "PIN");
+        common::display_text(Point::new(x, MIDDLE_ROW), "Show");
+        common::display_text(Point::new(x, MIDDLE_ROW + 10), "curr");
+        common::display_text(Point::new(x, MIDDLE_ROW + 20), "pass");
     }
 
-    fn delete_last_character(&mut self) {
-        self.passphrase_buffer.pop();
+    fn delete_last_character(&mut self, ctx: &mut EventCtx) {
+        self.textbox.delete_last(ctx);
     }
 
     fn show_delete_last_character_option(&self, x: i32) {
-        self.display_text(Point::new(x, MIDDLE_ROW), "Del");
-        self.display_text(Point::new(x, MIDDLE_ROW + 10), "last");
-        self.display_text(Point::new(x, MIDDLE_ROW + 20), "char");
+        common::display_text(Point::new(x, MIDDLE_ROW), "Del");
+        common::display_text(Point::new(x, MIDDLE_ROW + 10), "last");
+        common::display_text(Point::new(x, MIDDLE_ROW + 20), "char");
     }
 
-    fn append_current_char(&mut self) {
-        self.passphrase_buffer.push_str(self.get_current()).unwrap();
+    fn append_current_char(&mut self, ctx: &mut EventCtx) {
+        self.textbox.append_slice(ctx, self.get_current());
     }
 
     fn get_current(&self) -> &'static str {
@@ -233,7 +232,7 @@ where
         }
     }
 
-    fn last_page(&self) -> u8 {
+    fn last_page_index(&self) -> u8 {
         match self.current_category {
             ChoiceCategory::Menu => self.menu_choices.len() as u8 - 1,
             ChoiceCategory::LowercaseLetter => self.lowercase_choices.len() as u8 - 1,
@@ -258,44 +257,31 @@ where
     }
 
     fn show_current(&self) {
-        self.display_text_center(Point::new(62, MIDDLE_ROW + 10), self.get_current());
+        common::display_text_center(Point::new(62, MIDDLE_ROW + 10), self.get_current());
     }
 
     fn show_previous(&self) {
-        self.display_text(Point::new(5, MIDDLE_ROW), self.get_previous());
+        common::display_text(Point::new(5, MIDDLE_ROW), self.get_previous());
     }
 
     fn show_next(&self) {
-        self.display_text_right(Point::new(123, MIDDLE_ROW), self.get_next());
-    }
-
-    /// Display bold white text on black background
-    fn display_text(&self, baseline: Point, text: &str) {
-        display::text(baseline, text, theme::FONT_BOLD, theme::FG, theme::BG);
-    }
-
-    /// Display bold white text on black background, centered around a baseline
-    /// Point
-    fn display_text_center(&self, baseline: Point, text: &str) {
-        display::text_center(baseline, text, theme::FONT_BOLD, theme::FG, theme::BG);
-    }
-
-    /// Display bold white text on black background, with right boundary at a
-    /// baseline Point
-    fn display_text_right(&self, baseline: Point, text: &str) {
-        display::text_right(baseline, text, theme::FONT_BOLD, theme::FG, theme::BG);
+        common::display_text_right(Point::new(123, MIDDLE_ROW), self.get_next());
     }
 
     pub fn passphrase(&self) -> &str {
-        &self.passphrase_buffer
+        self.textbox.content()
     }
 
     fn is_full(&self) -> bool {
-        self.passphrase_buffer.len() == self.max_len as usize
+        self.textbox.len() == self.max_len as usize
     }
 
     fn is_empty(&self) -> bool {
-        self.passphrase_buffer.is_empty()
+        self.textbox.is_empty()
+    }
+
+    fn is_there_next_choice(&self) -> bool {
+        self.page_counter < self.last_page_index()
     }
 
     fn decrease_page_counter(&mut self) {
@@ -337,7 +323,7 @@ where
         }
 
         // BOTTOM RIGHT button
-        if self.page_counter < self.last_page() {
+        if self.page_counter < self.last_page_index() {
             self.next.paint();
         } else {
             self.menu_right.paint();
@@ -353,16 +339,16 @@ where
         }
 
         // BOTTOM MIDDLE button
-        if self.page_counter <= self.last_page() {
+        if self.page_counter <= self.last_page_index() {
             self.select.paint();
-        } else if self.page_counter == self.last_page() + 1 && !self.is_empty() {
+        } else if self.page_counter == self.last_page_index() + 1 && !self.is_empty() {
             self.reveal.paint();
-        } else if self.page_counter == self.last_page() + 2 && !self.is_empty() {
+        } else if self.page_counter == self.last_page_index() + 2 && !self.is_empty() {
             self.del.paint();
         }
 
         // BOTTOM RIGHT button
-        if self.page_counter < self.last_page() + 2 {
+        if self.page_counter < self.last_page_index() + 2 {
             self.next.paint();
         } else {
             self.cancel.paint();
@@ -386,7 +372,7 @@ where
         }
 
         // RIGHT button clicks
-        if self.page_counter < self.last_page() {
+        if self.page_counter < self.last_page_index() {
             if let Some(ButtonMsg::Clicked) = self.next.event(ctx, event) {
                 // Clicked NEXT. Increase the page counter.
                 self.increase_page_counter();
@@ -401,11 +387,11 @@ where
         }
 
         // MIDDLE button clicks
-        if self.page_counter <= self.last_page() {
+        if self.page_counter <= self.last_page_index() {
             if let Some(ButtonMsg::Clicked) = self.select.event(ctx, event) {
                 // Clicked SELECT. Append current char to the buffer string.
                 if !self.is_full() {
-                    self.append_current_char();
+                    self.append_current_char(ctx);
                     self.update_middle_panel();
                     return None;
                 }
@@ -430,7 +416,7 @@ where
         }
 
         // RIGHT button clicks
-        if self.page_counter < self.last_page() + 2 {
+        if self.page_counter < self.last_page_index() + 2 {
             if let Some(ButtonMsg::Clicked) = self.next.event(ctx, event) {
                 // Clicked NEXT. Increase the page counter.
                 self.increase_page_counter();
@@ -443,7 +429,7 @@ where
         }
 
         // MIDDLE button clicks
-        if self.page_counter <= self.last_page() {
+        if self.page_counter <= self.last_page_index() {
             if let Some(ButtonMsg::Clicked) = self.select.event(ctx, event) {
                 // Clicked SELECT. Choose the character category.
                 self.choose_new_character_category();
@@ -451,7 +437,7 @@ where
                 self.update_middle_panel();
                 return None;
             }
-        } else if self.page_counter == self.last_page() + 1 {
+        } else if self.page_counter == self.last_page_index() + 1 {
             if let Some(ButtonMsg::Clicked) = self.reveal.event(ctx, event) {
                 if !self.is_empty() {
                     // Clicked SHOW. Showing the current passphrase.
@@ -460,11 +446,11 @@ where
                     return None;
                 }
             }
-        } else if self.page_counter == self.last_page() + 2 {
+        } else if self.page_counter == self.last_page_index() + 2 {
             if let Some(ButtonMsg::Clicked) = self.del.event(ctx, event) {
                 if !self.is_empty() {
                     // Clicked DEL. Deleting the last character.
-                    self.delete_last_character();
+                    self.delete_last_character(ctx);
                     self.update_middle_panel();
                     return None;
                 }

@@ -178,35 +178,39 @@ extern "C" fn show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map
         let share_words_len = share_words.split(',').count();
         let share_words_len_str: String<10> = String::from(share_words_len as i16);
 
-        let beginning_text: String<50> = util::format_string([
+        let beginning_text = build_string!(
+            50,
             "Write down these ",
             share_words_len_str.as_str(),
-            " words:\n\n",
-        ]);
+            " words:\n\n"
+        );
 
         let mut middle_words: String<500> = String::new();
         for (index, word) in share_words.split(',').enumerate() {
-            let line: String<50> = util::format_string([
+            let line = build_string!(
+                50,
                 String::<2>::from(index as i16 + 1).as_str(),
                 ". ",
                 word,
-                "\n\n\n",
-            ]);
+                "\n\n\n"
+            );
 
             middle_words.push_str(&line).unwrap();
         }
 
-        let end_text: String<50> = util::format_string([
+        let end_text = build_string!(
+            50,
             "I wrote down all ",
             share_words_len_str.as_str(),
-            " words in order.",
-        ]);
+            " words in order."
+        );
 
-        let text_to_show: String<600> = util::format_string([
+        let text_to_show = build_string!(
+            600,
             beginning_text.as_str(),
             middle_words.as_str(),
-            end_text.as_str(),
-        ]);
+            end_text.as_str()
+        );
 
         let obj = LayoutObj::new(Frame::new(
             title,
@@ -229,13 +233,14 @@ extern "C" fn confirm_word(n_args: usize, args: *const Obj, kwargs: *mut Map) ->
         let count_str: String<50> = String::from(count);
         let checked_index_str: String<50> = String::from(checked_index + 1);
 
-        let prompt: String<50> = util::format_string([
+        let prompt = build_string!(
+            50,
             "Select word ",
             checked_index_str.as_str(),
             " of ",
             count_str.as_str(),
-            ":",
-        ]);
+            ":"
+        );
 
         let words: Vec<String<50>, 24> = choices.split(',').map(String::from).collect();
 

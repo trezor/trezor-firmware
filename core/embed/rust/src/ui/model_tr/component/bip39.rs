@@ -1,14 +1,15 @@
 use crate::{
     trezorhal::bip39,
     ui::{
-        component::{Component, Event, EventCtx, Pad},
+        component::{text::common::TextBox, Component, Event, EventCtx, Pad},
         display,
         geometry::{Point, Rect},
     },
+    util,
 };
 use core::ops::Deref;
 
-use super::{theme, BothButtonPressHandler, Button, ButtonMsg, ButtonPos};
+use super::{common, theme, BothButtonPressHandler, Button, ButtonMsg, ButtonPos};
 use heapless::{String, Vec};
 
 pub enum Bip39PageMsg {
@@ -18,7 +19,9 @@ pub enum Bip39PageMsg {
 const LETTERS_ROW: i32 = 40;
 const MIDDLE_ROW: i32 = 72;
 
-/// Offer words when there will be fewer if them than this
+const MAX_LENGTH: usize = 20;
+
+/// Offer words when there will be fewer of them than this
 const WORD_THRESHOLD: usize = 10;
 
 pub struct Bip39Page<T> {
@@ -31,7 +34,7 @@ pub struct Bip39Page<T> {
     next: Button<&'static str>,
     select: Button<&'static str>,
     page_counter: u8,
-    word_buffer: String<20>,
+    textbox: TextBox<MAX_LENGTH>,
     offer_words: bool,
     words_list: bip39::Wordlist,
 }
@@ -41,13 +44,9 @@ where
     T: Deref<Target = str>,
 {
     pub fn new(prompt: T) -> Self {
-        // Getting the initial choices (basically whole alphabet and all words)
-        let word_buffer = String::new();
-        let letter_choices = bip39::get_available_letters(&word_buffer).collect();
-
         Self {
             prompt,
-            letter_choices,
+            letter_choices: bip39::get_available_letters("").collect(),
             both_button_press: BothButtonPressHandler::new(),
             pad: Pad::with_background(theme::BG),
             delete: Button::with_text(ButtonPos::Left, "BIN", theme::button_default()),
@@ -55,7 +54,7 @@ where
             next: Button::with_text(ButtonPos::Right, "NEXT", theme::button_default()),
             select: Button::with_text(ButtonPos::Middle, "SELECT", theme::button_default()),
             page_counter: 0,
-            word_buffer,
+            textbox: TextBox::empty(),
             offer_words: false,
             words_list: bip39::Wordlist::all(),
         }
@@ -63,20 +62,20 @@ where
 
     /// Gets up-to-date choices for letters or words.
     fn reflect_letter_change(&mut self) {
-        self.words_list = self.words_list.filter_prefix(&self.word_buffer);
+        self.words_list = self.words_list.filter_prefix(self.textbox.content());
 
         if self.words_list.len() < WORD_THRESHOLD {
             self.offer_words = true;
         } else {
             self.offer_words = false;
-            self.letter_choices = bip39::get_available_letters(&self.word_buffer.clone()).collect();
+            self.letter_choices = bip39::get_available_letters(self.textbox.content()).collect();
         }
 
         self.page_counter = 0;
     }
 
     fn render_header(&self) {
-        self.display_text(Point::new(0, 10), &self.prompt);
+        common::display_text(Point::new(0, 10), &self.prompt);
         display::dotted_line(Point::new(0, 15), 128, theme::FG);
     }
 
@@ -91,21 +90,19 @@ where
         if self.page_counter == 0 {
             self.show_current_choice();
             self.show_next_choice();
-        } else if self.page_counter < self.last_page_index() {
+        } else if self.is_there_next_choice() {
             self.show_previous_choice();
             self.show_current_choice();
             self.show_next_choice();
-        } else if self.page_counter == self.last_page_index() {
+        } else {
             self.show_previous_choice();
             self.show_current_choice();
         }
     }
 
     fn show_current_letters(&self) {
-        let mut to_show: String<21> = String::new();
-        to_show.push_str(&self.word_buffer).unwrap();
-        to_show.push_str("_").unwrap();
-        self.display_text_center(Point::new(61, LETTERS_ROW), &to_show);
+        let to_show = build_string!({ MAX_LENGTH + 1 }, self.textbox.content(), "_");
+        common::display_text_center(Point::new(61, LETTERS_ROW), &to_show);
     }
 
     fn last_page_index(&self) -> u8 {
@@ -116,16 +113,12 @@ where
         }
     }
 
-    fn append_current_letter(&mut self) {
-        let new_letter = &self.letter_choices[self.page_counter as usize];
-        let mut buf = [0u8; 4];
-        self.word_buffer
-            .push_str(new_letter.encode_utf8(&mut buf))
-            .unwrap();
+    fn append_current_letter(&mut self, ctx: &mut EventCtx) {
+        self.textbox.append(ctx, self.get_current_letter());
     }
 
-    fn delete_last_letter(&mut self) {
-        self.word_buffer.pop().unwrap();
+    fn delete_last_letter(&mut self, ctx: &mut EventCtx) {
+        self.textbox.delete_last(ctx);
     }
 
     fn reset_wordlist(&mut self) {
@@ -141,7 +134,7 @@ where
     }
 
     fn is_empty(&self) -> bool {
-        self.word_buffer.is_empty()
+        self.textbox.is_empty()
     }
 
     pub fn get_current_choice(&self) -> String<20> {
@@ -157,19 +150,15 @@ where
     }
 
     fn get_choice(&self, index: u8) -> String<20> {
-        // TODO: there must be some cleaner way than this
-        // The issue is how to unify the usage of `&str` and `char` into one
         if self.offer_words {
-            let mut s = String::new();
-            s.push_str(self.words_list.get(index as usize).unwrap_or_default())
-                .unwrap();
-            s
+            String::from(self.words_list.get(index as usize).unwrap_or_default())
         } else {
-            let ch = self.letter_choices[index as usize];
-            let mut s = String::new();
-            s.push(ch).unwrap();
-            s
+            util::char_to_string(self.letter_choices[index as usize])
         }
+    }
+
+    fn get_current_letter(&self) -> char {
+        self.letter_choices[self.page_counter as usize]
     }
 
     fn is_there_next_choice(&self) -> bool {
@@ -177,37 +166,15 @@ where
     }
 
     fn show_current_choice(&self) {
-        let current = self.get_current_choice();
-        self.display_text_center(Point::new(64, MIDDLE_ROW + 10), &current);
+        common::display_text_center(Point::new(64, MIDDLE_ROW + 10), &self.get_current_choice());
     }
 
     fn show_previous_choice(&self) {
-        let previous = self.get_previous_choice();
-        self.display_text(Point::new(5, MIDDLE_ROW), &previous);
+        common::display_text(Point::new(5, MIDDLE_ROW), &self.get_previous_choice());
     }
 
     fn show_next_choice(&self) {
-        if self.is_there_next_choice() {
-            let next = self.get_next_choice();
-            self.display_text_right(Point::new(123, MIDDLE_ROW), &next);
-        }
-    }
-
-    /// Display bold white text on black background
-    fn display_text(&self, baseline: Point, text: &str) {
-        display::text(baseline, text, theme::FONT_BOLD, theme::FG, theme::BG);
-    }
-
-    /// Display bold white text on black background, centered around a baseline
-    /// Point
-    fn display_text_center(&self, baseline: Point, text: &str) {
-        display::text_center(baseline, text, theme::FONT_BOLD, theme::FG, theme::BG);
-    }
-
-    /// Display bold white text on black background, with right boundary at a
-    /// baseline Point
-    fn display_text_right(&self, baseline: Point, text: &str) {
-        display::text_right(baseline, text, theme::FONT_BOLD, theme::FG, theme::BG);
+        common::display_text_right(Point::new(123, MIDDLE_ROW), &self.get_next_choice());
     }
 
     /// Changing all non-middle button's visual state to "released" state
@@ -256,7 +223,7 @@ where
                     // Clicked BIN. Delete last letter.
                     // As deleting a letter is increasing the group of possible words,
                     // we need to reset the wordlist and start filtering it again
-                    self.delete_last_letter();
+                    self.delete_last_letter(ctx);
                     self.reset_wordlist();
                     self.reflect_letter_change();
                     self.update_situation();
@@ -271,7 +238,7 @@ where
         }
 
         // RIGHT button clicks
-        if self.page_counter < self.last_page_index() {
+        if self.is_there_next_choice() {
             if let Some(ButtonMsg::Clicked) = self.next.event(ctx, event) {
                 // Clicked NEXT. Increase the page counter.
                 self.increase_counter();
@@ -287,7 +254,7 @@ where
                 return Some(Bip39PageMsg::Confirmed);
             } else {
                 // Clicked OK when letter is there. Reflect the new situation.
-                self.append_current_letter();
+                self.append_current_letter(ctx);
                 self.reflect_letter_change();
                 self.update_situation();
                 return None;
@@ -316,7 +283,7 @@ where
         }
 
         // BOTTOM RIGHT button
-        if self.page_counter < self.last_page_index() {
+        if self.is_there_next_choice() {
             self.next.paint();
         }
 

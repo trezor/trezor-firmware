@@ -5,7 +5,7 @@ use crate::ui::{
 };
 use core::ops::Deref;
 
-use super::{theme, BothButtonPressHandler, Button, ButtonMsg, ButtonPos};
+use super::{common, theme, BothButtonPressHandler, Button, ButtonMsg, ButtonPos};
 use heapless::Vec;
 
 pub enum ChoicePageMsg {
@@ -45,9 +45,9 @@ where
     }
 
     fn render_header(&self) {
-        self.display_text(Point::new(0, 10), &self.major_prompt);
+        common::display_text(Point::new(0, 10), &self.major_prompt);
         if !self.minor_prompt.is_empty() {
-            self.display_text(Point::new(0, 20), &self.minor_prompt);
+            common::display_text(Point::new(0, 20), &self.minor_prompt);
             display::dotted_line(Point::new(0, 25), 128, theme::FG);
         } else {
             display::dotted_line(Point::new(0, 15), 128, theme::FG);
@@ -59,14 +59,14 @@ where
         self.pad.clear();
 
         // MIDDLE section above buttons
-        if self.page_counter == 0 {
+        if !self.has_previous_choice() {
             self.show_current_choice();
             self.show_next_choice();
-        } else if self.page_counter < self.last_page_index() {
+        } else if self.has_next_choice() {
             self.show_previous_choice();
             self.show_current_choice();
             self.show_next_choice();
-        } else if self.page_counter == self.last_page_index() {
+        } else {
             self.show_previous_choice();
             self.show_current_choice();
         }
@@ -76,40 +76,44 @@ where
         self.choices.len() as u8 - 1
     }
 
+    fn has_previous_choice(&self) -> bool {
+        self.page_counter > 0
+    }
+
+    fn has_next_choice(&self) -> bool {
+        self.page_counter < self.last_page_index()
+    }
+
     pub fn get_current_choice(&self) -> &str {
         &self.choices[self.page_counter as usize]
     }
 
+    pub fn get_previous_choice(&self) -> &str {
+        &self.choices[(self.page_counter - 1) as usize]
+    }
+
+    pub fn get_next_choice(&self) -> &str {
+        &self.choices[(self.page_counter + 1) as usize]
+    }
+
     fn show_current_choice(&self) {
-        let current = self.get_current_choice();
-        self.display_text_center(Point::new(64, MIDDLE_ROW + 10), current);
+        common::display_text_center(Point::new(64, MIDDLE_ROW + 10), self.get_current_choice());
     }
 
     fn show_previous_choice(&self) {
-        let previous = &self.choices[(self.page_counter - 1) as usize];
-        self.display_text(Point::new(5, MIDDLE_ROW), previous);
+        common::display_text(Point::new(5, MIDDLE_ROW), self.get_previous_choice());
     }
 
     fn show_next_choice(&self) {
-        let next = &self.choices[(self.page_counter + 1) as usize];
-        self.display_text_right(Point::new(123, MIDDLE_ROW), next);
+        common::display_text_right(Point::new(123, MIDDLE_ROW), self.get_next_choice());
     }
 
-    /// Display bold white text on black background
-    fn display_text(&self, baseline: Point, text: &str) {
-        display::text(baseline, text, theme::FONT_BOLD, theme::FG, theme::BG);
+    fn decrease_page_counter(&mut self) {
+        self.page_counter -= 1;
     }
 
-    /// Display bold white text on black background, centered around a baseline
-    /// Point
-    fn display_text_center(&self, baseline: Point, text: &str) {
-        display::text_center(baseline, text, theme::FONT_BOLD, theme::FG, theme::BG);
-    }
-
-    /// Display bold white text on black background, with right boundary at a
-    /// baseline Point
-    fn display_text_right(&self, baseline: Point, text: &str) {
-        display::text_right(baseline, text, theme::FONT_BOLD, theme::FG, theme::BG);
+    fn increase_page_counter(&mut self) {
+        self.page_counter += 1;
     }
 
     /// Changing all non-middle button's visual state to "released" state
@@ -150,20 +154,20 @@ where
         }
 
         // LEFT button clicks
-        if self.page_counter > 0 {
+        if self.has_previous_choice() {
             if let Some(ButtonMsg::Clicked) = self.prev.event(ctx, event) {
                 // Clicked BACK. Decrease the page counter.
-                self.page_counter -= 1;
+                self.decrease_page_counter();
                 self.update_situation();
                 return None;
             }
         }
 
         // RIGHT button clicks
-        if self.page_counter < self.last_page_index() {
+        if self.has_next_choice() {
             if let Some(ButtonMsg::Clicked) = self.next.event(ctx, event) {
                 // Clicked NEXT. Increase the page counter.
-                self.page_counter += 1;
+                self.increase_page_counter();
                 self.update_situation();
                 return None;
             }
@@ -188,12 +192,12 @@ where
         self.update_situation();
 
         // BOTTOM LEFT button
-        if self.page_counter > 0 {
+        if self.has_previous_choice() {
             self.prev.paint();
         }
 
         // BOTTOM RIGHT button
-        if self.page_counter < self.last_page_index() {
+        if self.has_next_choice() {
             self.next.paint();
         }
 

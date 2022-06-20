@@ -2,14 +2,15 @@ use crate::{
     time::Duration,
     trezorhal::random,
     ui::{
-        component::{Component, Event, EventCtx, Pad},
+        component::{text::common::TextBox, Component, Event, EventCtx, Pad},
         display,
         geometry::{Point, Rect},
     },
+    util,
 };
 use core::ops::Deref;
 
-use super::{theme, BothButtonPressHandler, Button, ButtonMsg, ButtonPos};
+use super::{common, theme, BothButtonPressHandler, Button, ButtonMsg, ButtonPos};
 use heapless::String;
 
 pub enum PinPageMsg {
@@ -29,13 +30,13 @@ const MAX_VISIBLE_DOTS: usize = 18;
 const MAX_VISIBLE_DIGITS: usize = 18;
 const HOLD_DURATION: Duration = Duration::from_secs(2);
 
-const DIGITS: [&str; 10] = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
+const DIGITS: [char; 10] = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
 
 pub struct PinPage<T> {
     major_prompt: T,
     minor_prompt: T,
     allow_cancel: bool,
-    digits: [&'static str; 10],
+    digits: [char; 10],
     both_button_press: BothButtonPressHandler,
     pad: Pad,
     prev: Button<&'static str>,
@@ -47,7 +48,7 @@ pub struct PinPage<T> {
     delete_last_digit: Button<&'static str>,
     page_counter: u8,
     show_real_pin: bool,
-    pin_buffer: String<MAX_LENGTH>,
+    textbox: TextBox<MAX_LENGTH>,
 }
 
 impl<T> PinPage<T>
@@ -73,13 +74,13 @@ where
             delete_last_digit: Button::with_text(ButtonPos::Middle, "DEL", theme::button_default()),
             page_counter: 0,
             show_real_pin: false,
-            pin_buffer: String::new(),
+            textbox: TextBox::empty(),
         }
     }
 
     fn render_header(&self) {
-        self.display_text(Point::new(0, 10), &self.major_prompt);
-        self.display_text(Point::new(0, 20), &self.minor_prompt);
+        common::display_text(Point::new(0, 10), &self.major_prompt);
+        common::display_text(Point::new(0, 20), &self.minor_prompt);
         display::dotted_line(Point::new(0, 25), 128, theme::FG);
     }
 
@@ -111,13 +112,13 @@ where
     fn show_prompt(&self, x: i32) {
         for (index, text) in self.major_prompt.split(' ').enumerate() {
             let offset = MIDDLE_ROW + index as i32 * 10;
-            self.display_text(Point::new(x, offset), text);
+            common::display_text(Point::new(x, offset), text);
         }
     }
 
     fn show_pin_length(&self) {
         // Only showing the maximum visible length
-        let digits = self.pin_buffer.len();
+        let digits = self.textbox.len();
         let dots_visible = digits.min(MAX_VISIBLE_DOTS);
 
         // String::repeat() is not available for heapless::String
@@ -129,101 +130,108 @@ where
         // Giving some notion of change even for longer-than-visible PINs
         // - slightly shifting the dots to the left and right after each new digit
         if digits > MAX_VISIBLE_DOTS && digits % 2 == 0 {
-            self.display_text_center(Point::new(61, PIN_ROW), &dots);
+            common::display_text_center(Point::new(61, PIN_ROW), &dots);
         } else {
-            self.display_text_center(Point::new(64, PIN_ROW), &dots);
+            common::display_text_center(Point::new(64, PIN_ROW), &dots);
         }
     }
 
     fn reveal_current_pin(&self) {
-        let digits = self.pin_buffer.len();
+        let digits = self.textbox.len();
 
         if digits <= MAX_VISIBLE_DOTS {
-            self.display_text_center(Point::new(64, PIN_ROW), &self.pin_buffer);
+            common::display_text_center(Point::new(64, PIN_ROW), self.pin());
         } else {
             // Show the last part of PIN with preceding ellipsis to show something is hidden
             let ellipsis = "...";
             let offset: usize = digits.saturating_sub(MAX_VISIBLE_DIGITS) + ellipsis.len();
             let mut to_show: String<MAX_VISIBLE_DIGITS> = String::from(ellipsis);
-            to_show.push_str(&self.pin_buffer[offset..]).unwrap();
-            self.display_text_center(Point::new(32, PIN_ROW), &to_show);
+            to_show.push_str(&self.pin()[offset..]).unwrap();
+            common::display_text_center(Point::new(32, PIN_ROW), &to_show);
         }
     }
 
     fn show_reveal_pin_option(&self, x: i32) {
-        self.display_text(Point::new(x, MIDDLE_ROW), "Show");
-        self.display_text(Point::new(x, MIDDLE_ROW + 10), "curr");
-        self.display_text(Point::new(x, MIDDLE_ROW + 20), "PIN");
+        common::display_text(Point::new(x, MIDDLE_ROW), "Show");
+        common::display_text(Point::new(x, MIDDLE_ROW + 10), "curr");
+        common::display_text(Point::new(x, MIDDLE_ROW + 20), "PIN");
     }
 
-    fn delete_last_digit(&mut self) {
-        self.pin_buffer.pop();
+    fn delete_last_digit(&mut self, ctx: &mut EventCtx) {
+        self.textbox.delete_last(ctx);
     }
 
     fn show_delete_last_digit_option(&self, x: i32) {
-        self.display_text(Point::new(x, MIDDLE_ROW), "Del");
-        self.display_text(Point::new(x, MIDDLE_ROW + 10), "last");
-        self.display_text(Point::new(x, MIDDLE_ROW + 20), "digit");
+        common::display_text(Point::new(x, MIDDLE_ROW), "Del");
+        common::display_text(Point::new(x, MIDDLE_ROW + 10), "last");
+        common::display_text(Point::new(x, MIDDLE_ROW + 20), "digit");
     }
 
-    fn append_current_digit(&mut self) {
-        self.pin_buffer.push_str(self.get_current_digit()).unwrap();
+    fn append_current_digit(&mut self, ctx: &mut EventCtx) {
+        self.textbox.append(ctx, self.get_current_digit());
     }
 
-    fn get_current_digit(&self) -> &'static str {
-        self.digits[(self.page_counter - 1) as usize]
+    fn get_current_digit(&self) -> char {
+        self.get_digit(self.page_counter - 1)
     }
 
-    fn get_previous_digit(&self) -> &str {
-        self.digits[(self.page_counter - 2) as usize]
+    fn get_current_digit_str(&self) -> String<1> {
+        self.get_digit_str(self.page_counter - 1)
     }
 
-    fn get_next_digit(&self) -> &str {
-        self.digits[(self.page_counter) as usize]
+    fn get_previous_digit_str(&self) -> String<1> {
+        self.get_digit_str(self.page_counter - 2)
+    }
+
+    fn get_next_digit_str(&self) -> String<1> {
+        self.get_digit_str(self.page_counter)
+    }
+
+    fn get_digit(&self, index: u8) -> char {
+        self.digits[index as usize]
+    }
+
+    fn get_digit_str(&self, index: u8) -> String<1> {
+        util::char_to_string(self.get_digit(index))
     }
 
     fn show_current_digit(&self) {
-        let current = self.get_current_digit();
-        self.display_text_center(Point::new(64, MIDDLE_ROW + 10), current);
+        common::display_text_center(
+            Point::new(64, MIDDLE_ROW + 10),
+            &self.get_current_digit_str(),
+        );
     }
 
     fn show_previous_digit(&self) {
-        let previous = self.get_previous_digit();
-        self.display_text(Point::new(5, MIDDLE_ROW), previous);
+        common::display_text(Point::new(5, MIDDLE_ROW), &self.get_previous_digit_str());
     }
 
     fn show_next_digit(&self) {
-        let next = self.get_next_digit();
-        self.display_text_right(Point::new(123, MIDDLE_ROW), next);
+        common::display_text_right(Point::new(123, MIDDLE_ROW), &self.get_next_digit_str());
     }
 
-    /// Display bold white text on black background
-    fn display_text(&self, baseline: Point, text: &str) {
-        display::text(baseline, text, theme::FONT_BOLD, theme::FG, theme::BG);
+    fn decrease_page_counter(&mut self) {
+        self.page_counter -= 1;
     }
 
-    /// Display bold white text on black background, centered around a baseline
-    /// Point
-    fn display_text_center(&self, baseline: Point, text: &str) {
-        display::text_center(baseline, text, theme::FONT_BOLD, theme::FG, theme::BG);
+    fn increase_page_counter(&mut self) {
+        self.page_counter += 1;
     }
 
-    /// Display bold white text on black background, with right boundary at a
-    /// baseline Point
-    fn display_text_right(&self, baseline: Point, text: &str) {
-        display::text_right(baseline, text, theme::FONT_BOLD, theme::FG, theme::BG);
+    fn randomly_set_cursor(&mut self) {
+        self.page_counter = random::uniform(10) as u8 + 1;
     }
 
     pub fn pin(&self) -> &str {
-        &self.pin_buffer
+        self.textbox.content()
     }
 
     fn is_full(&self) -> bool {
-        self.pin_buffer.len() == self.pin_buffer.capacity()
+        self.textbox.is_full()
     }
 
     fn is_empty(&self) -> bool {
-        self.pin_buffer.is_empty()
+        self.textbox.is_empty()
     }
 
     /// Changing all non-middle button's visual state to "released" state
@@ -276,14 +284,14 @@ where
         if self.page_counter > 0 {
             if let Some(ButtonMsg::Clicked) = self.prev.event(ctx, event) {
                 // Clicked BACK. Decrease the page counter.
-                self.page_counter -= 1;
+                self.decrease_page_counter();
                 self.update_situation();
                 return None;
             }
         } else if let Some(ButtonMsg::Clicked) = self.cancel_pin.event(ctx, event) {
             // Clicked BIN. Deleting the last digit or cancelling the action when empty.
             if !self.is_empty() {
-                self.delete_last_digit();
+                self.delete_last_digit(ctx);
                 self.update_situation();
                 return None;
             } else {
@@ -295,7 +303,7 @@ where
         if self.page_counter < 10 {
             if let Some(ButtonMsg::Clicked) = self.next.event(ctx, event) {
                 // Clicked NEXT. Increase the page counter.
-                self.page_counter += 1;
+                self.increase_page_counter();
                 self.update_situation();
                 return None;
             }
@@ -310,10 +318,10 @@ where
         } else if self.page_counter < 11 {
             if let Some(ButtonMsg::Clicked) = self.select.event(ctx, event) {
                 // Clicked CONFIRM. Append current digit to the buffer PIN string.
+                // Randomly selecting the "cursor" position for the next digit
                 if !self.is_full() {
-                    self.append_current_digit();
-                    // Randomly selecting the "cursor" position for the next digit
-                    self.page_counter = random::uniform(10) as u8 + 1;
+                    self.append_current_digit(ctx);
+                    self.randomly_set_cursor();
                     self.update_situation();
                     return None;
                 }

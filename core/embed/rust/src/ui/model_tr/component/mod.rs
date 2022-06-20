@@ -1,6 +1,7 @@
 mod bip39;
 mod button;
 mod choice;
+mod common;
 mod confirm;
 mod dialog;
 mod frame;
