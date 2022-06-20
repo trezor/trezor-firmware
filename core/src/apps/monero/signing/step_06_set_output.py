@@ -60,7 +60,7 @@ async def set_output(
     state.mem_trace(5, True)
 
     # Compute tx keys and masks if applicable
-    tx_out_key, amount_key = _compute_tx_keys(state, dst_entr)
+    tx_out_key, amount_key, derivation = _compute_tx_keys(state, dst_entr)
     utils.unimport_end(mods)
     state.mem_trace(6, True)
 
@@ -76,7 +76,13 @@ async def set_output(
         return MoneroTransactionSetOutputAck()
 
     # Tx header prefix hashing, hmac dst_entr
-    tx_out_bin, hmac_vouti = _set_out_tx_out(state, dst_entr, tx_out_key)
+    tx_out_bin, hmac_vouti = _set_out_tx_out(
+        state,
+        dst_entr,
+        tx_out_key,
+        derivation,
+    )
+    del (derivation,)
     state.mem_trace(11, True)
 
     out_pk_dest, out_pk_commitment, ecdh_info_bin = _get_ecdh_info_and_out_pk(
@@ -172,11 +178,11 @@ def _validate(
 
 def _compute_tx_keys(
     state: State, dst_entr: MoneroTransactionDestinationEntry
-) -> tuple[crypto.Point, crypto.Scalar]:
+) -> tuple[crypto.Point, crypto.Scalar, crypto.Point]:
     """Computes tx_out_key, amount_key"""
 
     if state.is_processing_offloaded:
-        return None, None  # no need to recompute
+        return None, None, None  # no need to recompute
 
     # additional tx key if applicable
     additional_txkey_priv = _set_out_additional_keys(state, dst_entr)
@@ -192,26 +198,36 @@ def _compute_tx_keys(
         state.current_output_index,
         crypto_helpers.decodepoint(dst_entr.addr.spend_public_key),
     )
-    del (derivation, additional_txkey_priv)
+    del (additional_txkey_priv,)
 
     from apps.monero.xmr import monero
 
     mask = monero.commitment_mask(crypto_helpers.encodeint(amount_key))
     state.output_masks.append(mask)
-    return tx_out_key, amount_key
+    return tx_out_key, amount_key, derivation
 
 
 def _set_out_tx_out(
-    state: State, dst_entr: MoneroTransactionDestinationEntry, tx_out_key: crypto.Point
+    state: State,
+    dst_entr: MoneroTransactionDestinationEntry,
+    tx_out_key: crypto.Point,
+    derivation: crypto.Point,
 ) -> tuple[bytes, bytes]:
     """
     Manually serializes TxOut(0, TxoutToKey(key)) and calculates hmac.
     """
-    tx_out_bin = bytearray(34)
+    use_tags = state.hard_fork >= 15
+    tx_out_bin = bytearray(35 if use_tags else 34)
     tx_out_bin[0] = 0  # amount varint
-    tx_out_bin[1] = 2  # variant code TxoutToKey
+    tx_out_bin[1] = (
+        3 if use_tags else 2
+    )  # variant code txout_to_tagged_key or txout_to_key
     crypto.encodepoint_into(tx_out_bin, tx_out_key, 2)
-    state.mem_trace(8)
+    if use_tags:
+        view_tag = _derive_view_tags(derivation, state.current_output_index)
+        tx_out_bin[-1] = view_tag[0]
+
+    state.mem_trace(8, True)
 
     # Tx header prefix hashing
     state.tx_prefix_hasher.buffer(tx_out_bin)
@@ -567,6 +583,28 @@ def _set_out_derivation(
             crypto_helpers.decodepoint(dst_entr.addr.view_public_key), deriv_priv
         )
     return derivation
+
+
+def _derive_view_tags(derivation: crypto.Point, output_index: int) -> bytes:
+    """
+    Computes view tags for tx output - speeds up blockchain scanning for wallets
+    view_tag_full = H["view_tag"|derivation|output_index]
+    """
+    buff = bytearray(32)
+    ctx = crypto_helpers.get_keccak()
+    ctx.update(b"view_tag")
+    crypto.encodepoint_into(buff, derivation)
+    ctx.update(buff)
+
+    # Correct way of serializing output_index is calling dump_uvarint_b_into, but we
+    # know that output_index is always lower than 127 so we save imports and calls.
+    if output_index > 127:
+        raise ValueError("Output index too big")
+
+    buff[0] = output_index
+    ctx.update(buff[:1])
+    full_tag = ctx.digest()
+    return full_tag[:1]
 
 
 def _is_last_in_batch(state: State, idx: int, bidx: int) -> bool:
