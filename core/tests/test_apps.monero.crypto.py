@@ -236,6 +236,18 @@ class TestMoneroCrypto(unittest.TestCase):
         )
         self.assertEqual(pkey_ex, crypto_helpers.encodepoint(pkey_comp))
 
+    def test_view_tags(self):
+        from apps.monero.signing.step_06_set_output import _derive_view_tags
+
+        test_vectors = [
+            (b'0fc47054f355ced4d67de73bfa12e4c78ff19089548fffa7d07a674741860f97', 0, b'\x76'),
+            (b'fe7770c4b076e95ddb8026affcfab39d31c7c4a2266e0e25e343bc4badc907d0', 15, b'\xeb'),
+            (b'ea9337d0ddf480abdc4fc56a0cb223702729cb230ae7b9de50243ad25ce90e8d', 13, b'\x42'),
+        ]
+
+        for key, idx, exp in test_vectors:
+            self.assertEqual(_derive_view_tags(crypto_helpers.decodepoint(unhexlify(key)), idx), exp)
+
 
 if __name__ == "__main__":
     unittest.main()
