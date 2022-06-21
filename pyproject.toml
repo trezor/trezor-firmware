@@ -50,7 +50,7 @@ demjson3 = "*"
 graphviz = "*"
 
 ## cointool
-click = "^8.0"
+click = "^8"
 ed25519 = "^1.4"
 requests = "^2.19"
 termcolor = "*"
