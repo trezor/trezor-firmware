@@ -9,7 +9,7 @@ See <https://trezor.io> for more information.
 
 ## Install
 
-Python Trezor tools require Python 3.5 or higher, and libusb 1.0. The easiest
+Python Trezor tools require Python 3.6 or higher, and libusb 1.0. The easiest
 way to install it is with `pip`. The rest of this guide assumes you have
 a working `pip`; if not, you can refer to [this
 guide](https://packaging.python.org/tutorials/installing-packages/).
@@ -32,21 +32,11 @@ Current trezorlib version supports Trezor One version 1.8.0 and up, and Trezor T
 For firmware versions below 1.8.0 and 2.1.0 respectively, the only supported operation
 is "upgrade firmware".
 
-Trezor One with firmware _older than 1.7.0_ (including firmware-less out-of-the-box
-units) will not be recognized, unless you install HIDAPI support (see below).
+Trezor One with firmware _older than 1.7.0_ and bootloader _older than 1.6.0_
+(including pre-2021 fresh-out-of-the-box units) will not be recognized, unless
+you install HIDAPI support (see below).
 
 ### Installation options
-
-* **Firmware-less Trezor One**: If you are setting up a brand new Trezor One without
-  firmware, you will need HIDAPI support. On Linux, you will need the following packages
-  (or their equivalents) as prerequisites: `python3-dev`, `cython3`, `libusb-1.0-0-dev`,
-  `libudev-dev`.
-
-  Install with:
-
-  ```sh
-  pip3 install trezor[hidapi]
-  ```
 
 * **Ethereum**: To support Ethereum signing from command line, additional packages are
   needed. Install with:
@@ -60,6 +50,18 @@ units) will not be recognized, unless you install HIDAPI support (see below).
 
   ```sh
   pip3 install trezor[stellar]
+  ```
+
+* **Firmware-less Trezor One**: If you are setting up a brand new Trezor One
+  manufactured before 2021 (with pre-installed bootloader older than 1.6.0), you will
+  need HIDAPI support. On Linux, you will need the following packages (or their
+  equivalents) as prerequisites: `python3-dev`, `cython3`, `libusb-1.0-0-dev`,
+  `libudev-dev`.
+
+  Install with:
+
+  ```sh
+  pip3 install trezor[hidapi]
   ```
 
 To install all three, use `pip3 install trezor[hidapi,ethereum,stellar]`.
