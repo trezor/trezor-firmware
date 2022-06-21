@@ -461,6 +461,10 @@ if TYPE_CHECKING:
         ARRAY = 7
         STRUCT = 8
 
+    class EthereumDefinitionType(IntEnum):
+        NETWORK = 0
+        TOKEN = 1
+
     class MoneroNetworkType(IntEnum):
         MAINNET = 0
         TESTNET = 1

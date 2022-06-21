@@ -23,6 +23,7 @@ message EthereumSignTypedData {
     repeated uint32 address_n = 1;                       // BIP-32 path to derive the key from master node
     required string primary_type = 2;                    // name of the root message struct
     optional bool metamask_v4_compat = 3 [default=true]; // use MetaMask v4 (see https://github.com/MetaMask/eth-sig-util/issues/106)
+    optional bytes encoded_network = 4;                  // encoded Ethereum network, see protocol.md for details
 }
 
 /**

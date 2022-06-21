@@ -20,6 +20,18 @@ Following packets has the following structure:
 |      0 |      1 | char[1]     | '?' magic constant                                                                     |
 |      1 |     63 | uint8_t[63] | following bytes of message encoded in Protocol Buffers (padded with zeroes if shorter) |
 
+## Ethereum network and token definitions
+Ethereum network and token definitions could be sent from host to device. Definitions are generated in our CI job and are provided
+on publicly accessible website - on `data.trezor.io`. To ensure, that the definitions send to device are genuine, every generated
+definition is signed and checked in FW.
+Every definition (network/token) is encoded and has special format:
+1. prefix:
+   1. part: format version of the definition (UTF-8 string `trzd` + version number, padded with zeroes if shorter, 8 bytes)
+   2. part: type of data (unsigned integer, 1 byte)
+   3. part: data version of the definition (unsigned integer, 4 bytes)
+2. payload: serialized form of protobuf message EthereumNetworkInfo and/or EthereumTokenInfo (N bytes)
+3. suffix: signature of prefix+payload (plain bits, 64 bytes)
+
 ## Adding new message
 
 To add new message to Trezor protocol follow these steps:
