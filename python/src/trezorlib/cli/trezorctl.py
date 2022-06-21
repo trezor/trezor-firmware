@@ -20,7 +20,7 @@ import json
 import logging
 import os
 import time
-from typing import TYPE_CHECKING, Any, Iterable, Optional, cast
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Optional, TypeVar, cast
 
 import click
 
@@ -50,6 +50,8 @@ from . import (
     tezos,
     with_client,
 )
+
+F = TypeVar("F", bound=Callable)
 
 if TYPE_CHECKING:
     from ..transport import Transport
@@ -121,6 +123,12 @@ class TrezorctlGroup(AliasedGroup):
 
         return None
 
+    def result_callback(self, replace: bool = False) -> Callable[[F], F]:
+        """Compatibility wrapper for Click 7.x"""
+        if hasattr(self, "result_callback"):
+            return super().result_callback(replace)
+        return super().resultcallback(replace)  # type: ignore [Cannot access member]
+
 
 def configure_logging(verbose: int) -> None:
     if verbose:
@@ -189,7 +197,7 @@ def cli_main(
 cli = cast(TrezorctlGroup, cli_main)
 
 
-@cli.resultcallback()
+@cli.result_callback()
 def print_result(res: Any, is_json: bool, script: bool, **kwargs: Any) -> None:
     if is_json:
         if isinstance(res, protobuf.MessageType):
