@@ -39,7 +39,7 @@ def round_sats(sats, precision=1):
 
 def compute_maxfee(maxcost, price, txsize):
     coins_per_tx = maxcost / price
-    sats_per_tx = coins_per_tx * 10 ** 8
+    sats_per_tx = coins_per_tx * 10**8
     tx_per_kb = 1024.0 / txsize
     sats_per_kb = sats_per_tx * tx_per_kb
     return int(sats_per_kb)

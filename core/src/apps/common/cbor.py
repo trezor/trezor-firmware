@@ -50,13 +50,13 @@ _CBOR_RAW_TAG = const(0x18)
 def _header(typ: int, l: int) -> bytes:
     if l < 24:
         return struct.pack(">B", typ + l)
-    elif l < 2 ** 8:
+    elif l < 2**8:
         return struct.pack(">BB", typ + 24, l)
-    elif l < 2 ** 16:
+    elif l < 2**16:
         return struct.pack(">BH", typ + 25, l)
-    elif l < 2 ** 32:
+    elif l < 2**32:
         return struct.pack(">BI", typ + 26, l)
-    elif l < 2 ** 64:
+    elif l < 2**64:
         return struct.pack(">BQ", typ + 27, l)
     else:
         raise NotImplementedError  # Length not supported

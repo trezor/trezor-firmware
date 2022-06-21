@@ -155,18 +155,18 @@ def test_testnet_segwit_big_amount(client: Client):
         address_n,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
     )
-    prev_hash, prev_tx = forge_prevtx([(address, 2 ** 32 + 1)], network="testnet")
+    prev_hash, prev_tx = forge_prevtx([(address, 2**32 + 1)], network="testnet")
 
     inp1 = messages.TxInputType(
         address_n=address_n,
-        amount=2 ** 32 + 1,
+        amount=2**32 + 1,
         prev_hash=prev_hash,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
     )
     out1 = messages.TxOutputType(
         address="2Mt7P2BAfE922zmfXrdcYTLyR7GUvbwSEns",  # seed allallall, bip32: m/49h/1h/0h/0/1, script type:p2shsegwit
-        amount=2 ** 32 + 1,
+        amount=2**32 + 1,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:

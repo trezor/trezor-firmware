@@ -79,8 +79,8 @@ def int_to_bignum(number, limbs_number=limbs_number):
 
     bn = (limbs_number * limb_type)()
     for i in range(limbs_number):
-        bn[i] = number % 2 ** bits_per_limb
-        number //= 2 ** bits_per_limb
+        bn[i] = number % 2**bits_per_limb
+        number //= 2**bits_per_limb
 
     return bn
 
@@ -89,7 +89,7 @@ def bignum_to_int(bignum, limbs_number=limbs_number):
     number = 0
 
     for i in reversed(range(limbs_number)):
-        number *= 2 ** bits_per_limb
+        number *= 2**bits_per_limb
         number += bignum[i]
 
     return number
@@ -109,7 +109,7 @@ def integer_to_raw_number(number, endianess):
 
 def bignum_is_normalised(bignum):
     for limb in bignum:
-        if limb > 2 ** bits_per_limb:
+        if limb > 2**bits_per_limb:
             return False
     return True
 
@@ -127,20 +127,20 @@ class Random(random.Random):
         return self.randrange(0, 2 ** (limbs_number * bits_per_limb))
 
     def rand_int_256(self):
-        return self.randrange(0, 2 ** 256)
+        return self.randrange(0, 2**256)
 
     def rand_int_reduced(self, p):
         return self.randrange(0, 2 * p)
 
     def rand_int_bitsize(self, bitsize):
-        return self.randrange(0, 2 ** bitsize)
+        return self.randrange(0, 2**bitsize)
 
     def rand_bit_index(self):
         return self.randrange(0, limbs_number * bits_per_limb)
 
     def rand_bignum(self, limbs_number=limbs_number):
         return (limb_type * limbs_number)(
-            *[self.randrange(0, 256 ** 4) for _ in range(limbs_number)]
+            *[self.randrange(0, 256**4) for _ in range(limbs_number)]
         )
 
 
@@ -446,13 +446,13 @@ def assert_bn_sqrt(x_old, prime):
 
     assert bignum_is_normalised(bn_x)
     assert number_is_fully_reduced(x_new, prime)
-    assert x_new ** 2 % prime == x_old % prime
+    assert x_new**2 % prime == x_old % prime
 
 
 def assert_inverse_mod_power_two(x, m):
     return_value = lib.inverse_mod_power_two(c_uint32(x), c_uint32(m))
 
-    assert return_value * x % 2 ** m == 1
+    assert return_value * x % 2**m == 1
 
 
 def assert_bn_divide_base(x_old, prime):
@@ -467,7 +467,7 @@ def assert_bn_divide_base(x_old, prime):
     assert implication(
         number_is_partly_reduced(x_old, prime), number_is_partly_reduced(x_new, prime)
     )
-    assert x_new * 2 ** bits_per_limb % prime == x_old % prime
+    assert x_new * 2**bits_per_limb % prime == x_old % prime
 
 
 def assert_bn_inverse(x_old, prime):
@@ -610,7 +610,7 @@ def assert_bn_divmod10(x_old):
 def assert_bn_format(x, prefix, suffix, decimals, exponent, trailing):
     def format(amount, prefix, suffix, decimals, exponent, trailing):
         if exponent >= 0:
-            amount *= 10 ** exponent
+            amount *= 10**exponent
         else:
             amount //= 10 ** (-exponent)
 
@@ -684,8 +684,8 @@ def test_bn_bitcount_1(r):
 
 
 def test_bn_bitcount_2(bignum_bit_index):
-    assert_bn_bitcount(2 ** bignum_bit_index - 1)
-    assert_bn_bitcount(2 ** bignum_bit_index)
+    assert_bn_bitcount(2**bignum_bit_index - 1)
+    assert_bn_bitcount(2**bignum_bit_index)
 
 
 def test_bn_digitcount_1(r):
@@ -693,8 +693,8 @@ def test_bn_digitcount_1(r):
 
 
 def test_bn_digitcount_2(bignum_decimal_digit_index):
-    assert_bn_digitcount(10 ** bignum_decimal_digit_index - 1)
-    assert_bn_digitcount(10 ** bignum_decimal_digit_index)
+    assert_bn_digitcount(10**bignum_decimal_digit_index - 1)
+    assert_bn_digitcount(10**bignum_decimal_digit_index)
 
 
 def test_bn_zero():
@@ -711,7 +711,7 @@ def test_bn_is_zero_1():
 
 
 def test_bn_is_zero_2(bignum_bit_index):
-    assert_bn_is_zero(2 ** bignum_bit_index)
+    assert_bn_is_zero(2**bignum_bit_index)
 
 
 def test_bn_is_one_1():
@@ -720,7 +720,7 @@ def test_bn_is_one_1():
 
 
 def test_bn_is_one_2(bignum_bit_index):
-    assert_bn_is_one(2 ** bignum_bit_index)
+    assert_bn_is_one(2**bignum_bit_index)
 
 
 def test_bn_is_less_1(r):
@@ -734,7 +734,7 @@ def test_bn_is_less_1(r):
 def test_bn_is_less_2(r):
     a = r.rand_int_normalized()
     i = r.rand_bit_index()
-    b = a ^ 2 ** i
+    b = a ^ 2**i
     assert_bn_is_less(a, b)
 
 
@@ -829,8 +829,8 @@ def test_bn_mod_2(r, prime):
 
 
 def test_bn_multiply_long(r, prime):
-    x = r.randrange(floor(sqrt(2 ** 519)))
-    k = r.randrange(floor(sqrt(2 ** 519)))
+    x = r.randrange(floor(sqrt(2**519)))
+    k = r.randrange(floor(sqrt(2**519)))
     assert_bn_multiply_long(k, x)
 
 
@@ -841,8 +841,8 @@ def test_bn_multiply_reduce_step(r, prime):
 
 
 def test_bn_multiply(r, prime):
-    x = r.randrange(floor(sqrt(2 ** 519)))
-    k = r.randrange(floor(sqrt(2 ** 519)))
+    x = r.randrange(floor(sqrt(2**519)))
+    k = r.randrange(floor(sqrt(2**519)))
     assert_bn_multiply(k, x, prime)
 
 
@@ -880,7 +880,7 @@ def test_bn_sqrt_2(r, prime):
 
 def test_inverse_mod_power_two(r):
     m = r.randrange(1, 33)
-    i = r.randrange(1, 2 ** 29, 2)
+    i = r.randrange(1, 2**29, 2)
     assert_inverse_mod_power_two(i, m)
 
 
@@ -934,14 +934,14 @@ def test_bn_addmod(r, prime):
 def test_bn_addi_1(r):
     while True:
         a = r.rand_int_normalized()
-        b = r.randrange(2 ** 32 - 2 ** bits_per_limb + 1)
+        b = r.randrange(2**32 - 2**bits_per_limb + 1)
         if a + b < 2 ** (limbs_number * bits_per_limb):
             break
     assert_bn_addi(a, b)
 
 
 def test_bn_addi_2():
-    b = 2 ** 32 - 2 ** bits_per_limb
+    b = 2**32 - 2**bits_per_limb
     a = 2 ** (limbs_number * bits_per_limb) - 1 - b
     assert_bn_addi(a, b)
 
@@ -949,14 +949,14 @@ def test_bn_addi_2():
 def test_bn_subi_1(r, prime):
     while True:
         a = r.rand_int_normalized()
-        b = r.randrange(prime % 2 ** bits_per_limb)
+        b = r.randrange(prime % 2**bits_per_limb)
         if a + prime - b < 2 ** (limbs_number * bits_per_limb):
             break
     assert_bn_subi(a, b, prime)
 
 
 def test_bn_subi_2(prime):
-    b = (prime % 2 ** bits_per_limb) - 1
+    b = (prime % 2**bits_per_limb) - 1
     a = 2 ** (limbs_number * bits_per_limb) - 1 - prime + b
     assert_bn_subi(a, b, prime)
 

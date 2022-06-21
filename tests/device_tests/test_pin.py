@@ -80,7 +80,7 @@ def test_incorrect_pin_t2(client: Client):
 
 def _check_backoff_time(attempts: int, start: float) -> None:
     """Helper to assert the exponentially growing delay after incorrect PIN attempts"""
-    expected = (2 ** attempts) - 1
+    expected = (2**attempts) - 1
     got = round(time.time() - start, 2)
     assert got >= expected
 

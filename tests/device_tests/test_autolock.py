@@ -94,7 +94,7 @@ def test_autolock_default_value(client: Client):
 
 @pytest.mark.parametrize(
     "seconds",
-    [0, 1, 9, 536871, 2 ** 22],
+    [0, 1, 9, 536871, 2**22],
 )
 def test_apply_auto_lock_delay_out_of_range(client: Client, seconds):
     with client:
