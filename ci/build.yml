@@ -306,6 +306,7 @@ core unix frozen debug build arm:
 
 core unix frozen btconly debug t1 build:
   stage: build
+  <<: *gitlab_caching
   needs: []
   variables:
     BITCOIN_ONLY: "1"
