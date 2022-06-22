@@ -73,7 +73,7 @@ yamllint = "^1.25.0"
 
 [tool.poetry.dev-dependencies]
 scan-build = "*"
-towncrier = "^21.3.0"
+towncrier = "^21.9.0"
 
 [build-system]
 requires = ["poetry>=1;<1.1", "pip>=20"]
