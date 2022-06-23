@@ -131,6 +131,14 @@ def by_rp_id_hash(rp_id_hash: bytes) -> FIDOApp | None:
             use_sign_count=None,
             use_self_attestation=None,
         )
+    if rp_id_hash == b"\x3f\xcb\x82\x82\xb8\x46\x76\xeb\xee\x71\x40\xe3\x9e\xca\xe1\x6e\xeb\x19\x90\x64\xc7\xc7\xe4\x43\x2e\x28\xc9\xb5\x7e\x4b\x60\x39":
+        # WebAuthn key for FastMail
+        return FIDOApp(
+            label="fastmail.com",
+            icon="apps/webauthn/res/icon_fastmail.toif",
+            use_sign_count=None,
+            use_self_attestation=None,
+        )
     if rp_id_hash == b"\x9d\x61\x44\x2f\x5c\xe1\x33\xbd\x46\x54\x4f\xc4\x2f\x0a\x6d\x54\xc0\xde\xb8\x88\x40\xca\xc2\xb6\xae\xfa\x65\x14\xf8\x93\x49\xe9":
         # U2F key for Fedora
         return FIDOApp(
