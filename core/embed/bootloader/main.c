@@ -392,14 +392,14 @@ int main(void) {
       touch_click();
 #elif defined TREZOR_MODEL_R
       for (;;) {
-        button_read();
-        if (button_state_left() != 0 && button_state_right() != 0) {
+        uint32_t event = button_read();
+        if (event == (BTN_EVT_DOWN | BTN_BOTH)){
           break;
         }
       }
       for (;;) {
-        button_read();
-        if (button_state_left() != 1 && button_state_right() != 1) {
+        uint32_t event = button_read();
+        if (event == (BTN_EVT_UP | BTN_BOTH)){
           break;
         }
       }
