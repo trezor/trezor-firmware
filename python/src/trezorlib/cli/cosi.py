@@ -14,7 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from typing import TYPE_CHECKING
+import warnings
+from typing import TYPE_CHECKING, Optional
 
 import click
 
@@ -35,14 +36,17 @@ def cli() -> None:
 
 @cli.command()
 @click.option("-n", "--address", required=True, help=PATH_HELP)
-@click.argument("data")
+@click.argument("data_deprecated", required=False)
 @with_client
 def commit(
-    client: "TrezorClient", address: str, data: str
+    client: "TrezorClient", address: str, data_deprecated: Optional[str]
 ) -> "messages.CosiCommitment":
     """Ask device to commit to CoSi signing."""
+    if data_deprecated is not None:
+        warnings.warn("'data' argument is deprecated")
+
     address_n = tools.parse_path(address)
-    return cosi.commit(client, address_n, bytes.fromhex(data))
+    return cosi.commit(client, address_n)
 
 
 @cli.command()
