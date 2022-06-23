@@ -6,7 +6,7 @@ use crate::{
     },
 };
 
-use super::{common, common::StringChoiceItem, ChoicePage, ChoicePageMsg};
+use super::{common, common::MultilineStringChoiceItem, ChoicePage, ChoicePageMsg};
 use heapless::{String, Vec};
 
 pub enum PassphraseEntryMsg {
@@ -46,11 +46,13 @@ const SPECIAL_SYMBOLS: [char; 30] = [
 const MENU_LENGTH: usize = 6;
 const DEL_INDEX: usize = MENU_LENGTH - 1;
 const SHOW_INDEX: usize = MENU_LENGTH - 2;
-const MENU: [&str; MENU_LENGTH] = ["abc", "ABC", "123", "*#_", "SHOW", "DEL"];
+const MENU: [&str; MENU_LENGTH] = ["abc", "ABC", "123", "*#_", "SHOW\nPASS", "DEL\nLAST\nCHAR"];
 
 /// Component for entering a passphrase.
 pub struct PassphraseEntry {
-    choice_page: ChoicePage<StringChoiceItem, 30>,
+    // TODO: how to make ChoicePage accept both
+    // StringChoiceItem and MultilineStringChoiceItem?
+    choice_page: ChoicePage<MultilineStringChoiceItem, 30>,
     show_plain_passphrase: bool,
     textbox: TextBox<MAX_LENGTH>,
     current_category: ChoiceCategory,
@@ -61,7 +63,7 @@ impl PassphraseEntry {
         // Starting choice is the MENU with accept and cancel side buttons
         let choices = MENU
             .iter()
-            .map(|s| StringChoiceItem::from_slice(s))
+            .map(|s| MultilineStringChoiceItem::from_slice(s))
             .collect();
         let mut choice_page = ChoicePage::new(choices);
         choice_page.set_leftmost_button_longpress("ACC", HOLD_DURATION);
@@ -150,7 +152,7 @@ impl PassphraseEntry {
     fn show_menu_page(&mut self) {
         let new_choices = MENU
             .iter()
-            .map(|w| StringChoiceItem::from_slice(w))
+            .map(|w| MultilineStringChoiceItem::from_slice(w))
             .collect();
         self.choice_page.reset(new_choices, true, true);
         // Including accept button on the left and cancel on the very right
@@ -169,9 +171,9 @@ impl PassphraseEntry {
             ChoiceCategory::SpecialSymbol => SPECIAL_SYMBOLS.iter().collect(),
             ChoiceCategory::Menu => panic!("Menu does not have characters"),
         };
-        let new_choices: Vec<StringChoiceItem, 30> = new_characters
+        let new_choices: Vec<MultilineStringChoiceItem, 30> = new_characters
             .iter()
-            .map(|ch| StringChoiceItem::from_char(**ch))
+            .map(|ch| MultilineStringChoiceItem::from_char(**ch))
             .collect();
         self.choice_page.reset(new_choices, true, true);
         // Character categories need a way to return to the MENU

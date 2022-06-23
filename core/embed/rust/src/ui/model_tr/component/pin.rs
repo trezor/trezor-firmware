@@ -7,7 +7,7 @@ use crate::{
     },
 };
 
-use super::{common, common::StringChoiceItem, ChoicePage, ChoicePageMsg};
+use super::{common, common::MultilineStringChoiceItem, ChoicePage, ChoicePageMsg};
 use heapless::String;
 
 pub enum PinEntryMsg {
@@ -27,21 +27,34 @@ const CHOICE_LENGTH: usize = 12;
 const DEL_INDEX: usize = CHOICE_LENGTH - 1;
 const SHOW_INDEX: usize = CHOICE_LENGTH - 2;
 const DIGITS: [&str; CHOICE_LENGTH] = [
-    "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "SHOW", "DEL",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "0",
+    "SHOW\nPIN",
+    "DEL\nLAST\nDIG",
 ];
 
 /// Component for entering a PIN.
 pub struct PinEntry {
-    choice_page: ChoicePage<StringChoiceItem, CHOICE_LENGTH>,
+    choice_page: ChoicePage<MultilineStringChoiceItem, CHOICE_LENGTH>,
     show_real_pin: bool,
     textbox: TextBox<MAX_LENGTH>,
 }
 
 impl PinEntry {
     pub fn new(allow_cancel: bool) -> Self {
+        // TODO: it is possible to create a vector combining both
+        // StringChoiceItem and MultilineStringChoiceItem?
         let choices = DIGITS
             .iter()
-            .map(|s| StringChoiceItem::from_slice(s))
+            .map(|s| MultilineStringChoiceItem::from_slice(s))
             .collect();
         let mut choice_page = ChoicePage::new(choices);
         choice_page.set_leftmost_button_longpress("ACC", HOLD_DURATION);

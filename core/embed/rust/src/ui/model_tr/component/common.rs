@@ -7,6 +7,9 @@ use crate::ui::{display, geometry::Point};
 use super::theme;
 
 const MIDDLE_ROW: i32 = 72;
+const LEFT_COL: i32 = 5;
+const MIDDLE_COL: i32 = 64;
+const RIGHT_COL: i32 = 123;
 
 /// Display bold white text on black background
 pub fn display_bold(baseline: Point, text: &str) {
@@ -56,14 +59,59 @@ impl ChoiceItem for StringChoiceItem {
         // Displaying the center choice lower than the rest,
         // to make it more clear this is the current choice
         // (and also the left and right ones do not collide with it)
-        display_bold_center(Point::new(64, MIDDLE_ROW + 10), self.text.as_str());
+        display_bold_center(Point::new(MIDDLE_COL, MIDDLE_ROW + 10), self.text.as_str());
     }
 
     fn paint_left(&mut self) {
-        display_bold(Point::new(5, MIDDLE_ROW), self.text.as_str());
+        display_bold(Point::new(LEFT_COL, MIDDLE_ROW), self.text.as_str());
     }
 
     fn paint_right(&mut self) {
-        display_bold_right(Point::new(123, MIDDLE_ROW), self.text.as_str());
+        display_bold_right(Point::new(RIGHT_COL, MIDDLE_ROW), self.text.as_str());
+    }
+}
+
+/// Multiline string component used as a choice item.
+///
+/// Lines are delimited by '\n' character.
+pub struct MultilineStringChoiceItem {
+    // Arbitrary chosen. TODO: agree on this
+    text: String<100>,
+}
+
+impl MultilineStringChoiceItem {
+    pub fn from_slice(slice: &str) -> Self {
+        let text = String::from(slice);
+        Self { text }
+    }
+
+    pub fn from_char(ch: char) -> Self {
+        let text = util::char_to_string(ch);
+        Self { text }
+    }
+}
+
+impl ChoiceItem for MultilineStringChoiceItem {
+    fn paint_center(&mut self) {
+        // Displaying the center choice lower than the rest,
+        // to make it more clear this is the current choice
+        for (index, line) in self.text.split('\n').enumerate() {
+            let offset = MIDDLE_ROW + index as i32 * 10 + 10;
+            display_bold_center(Point::new(MIDDLE_COL, offset), line);
+        }
+    }
+
+    fn paint_left(&mut self) {
+        for (index, line) in self.text.split('\n').enumerate() {
+            let offset = MIDDLE_ROW + index as i32 * 10;
+            display_bold(Point::new(LEFT_COL, offset), line);
+        }
+    }
+
+    fn paint_right(&mut self) {
+        for (index, line) in self.text.split('\n').enumerate() {
+            let offset = MIDDLE_ROW + index as i32 * 10;
+            display_bold_right(Point::new(RIGHT_COL, offset), line);
+        }
     }
 }
