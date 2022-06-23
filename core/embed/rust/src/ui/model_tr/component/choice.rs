@@ -7,7 +7,7 @@ use crate::{
 };
 
 use super::{common::ChoiceItem, theme, BothButtonPressHandler, Button, ButtonMsg, ButtonPos};
-use heapless::Vec;
+use heapless::{LinearMap, Vec};
 
 pub enum ChoicePageMsg {
     Choice(u8),
@@ -48,9 +48,6 @@ impl SideButton {
 
 const MIDDLE_ROW: i32 = 72;
 
-// TODO: something like `disabled_items`, for example cannot add when PIN is too
-// long
-
 /// General component displaying a set of items on the screen
 /// and allowing the user to select one of them.
 ///
@@ -58,10 +55,14 @@ const MIDDLE_ROW: i32 = 72;
 /// supply a set of `ChoiceItem`s and will receive back
 /// the index of the selected choice.
 ///
-/// Using components can also specify the leftmost and rightmost buttons
-/// and receive messages whenever they are triggered.
+/// Using components can also specify the `leftmost` and `rightmost`
+/// buttons and receive messages whenever they are triggered.
+///
+/// `button_map` allows for specifying custom texts of the middle
+/// button according to the choice index.
 pub struct ChoicePage<T, const N: usize> {
     choices: Vec<T, N>,
+    button_map: Option<LinearMap<u8, &'static str, N>>,
     both_button_press: BothButtonPressHandler,
     pad: Pad,
     prev: Button<&'static str>,
@@ -84,8 +85,10 @@ where
     T: ChoiceItem,
 {
     pub fn new(choices: Vec<T, N>) -> Self {
+        // TODO: could allow for choosing the default "SELECT" text and also other texts
         Self {
             choices,
+            button_map: None,
             both_button_press: BothButtonPressHandler::new(),
             pad: Pad::with_background(theme::BG),
             prev: Button::with_text(ButtonPos::Left, "BACK", theme::button_default()),
@@ -100,6 +103,12 @@ where
             button_area: Rect::zero(), // will be set in `place`
             page_counter: 0,
         }
+    }
+
+    /// Adding the optional button map with texts for the middle button
+    pub fn with_button_map(mut self, button_map: LinearMap<u8, &'static str, N>) -> Self {
+        self.button_map = Some(button_map);
+        self
     }
 
     /// Resetting the component, which enables reusing the same instance
@@ -168,6 +177,31 @@ where
     pub fn replace_side_buttons(&mut self) {
         self.leftmost.button.place(self.button_area);
         self.rightmost.button.place(self.button_area);
+    }
+
+    /// Optionally changing the text of the middle button according to
+    /// current page index and `self.button_map`
+    fn handle_select_button_paint(&mut self) {
+        match &self.button_map {
+            // When there is a special button text connected with this page index,
+            // create a temporary button and paint it instead of the select one
+            // NOTE: it was not possible to redefine `self.select`, it must stay as is
+            // as it listens on the click events
+            Some(button_map) => {
+                match button_map.get(&self.page_counter) {
+                    Some(text) => {
+                        let mut temp_button =
+                            Button::with_text(ButtonPos::Middle, text, theme::button_default());
+                        temp_button.place(self.button_area);
+                        temp_button.paint();
+                    }
+                    None => self.select.paint(),
+                };
+            }
+            None => {
+                self.select.paint();
+            }
+        }
     }
 
     fn update_situation(&mut self) {
@@ -314,7 +348,7 @@ where
         }
 
         // BOTTOM MIDDLE button
-        self.select.paint();
+        self.handle_select_button_paint();
     }
 }
 

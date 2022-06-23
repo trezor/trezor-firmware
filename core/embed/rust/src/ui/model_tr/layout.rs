@@ -151,15 +151,11 @@ extern "C" fn new_confirm_text(n_args: usize, args: *const Obj, kwargs: *mut Map
 extern "C" fn request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
-        let subprompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_subprompt)?.try_into()?;
-        let allow_cancel: Option<bool> =
+        let _subprompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_subprompt)?.try_into()?;
+        let _allow_cancel: Option<bool> =
             kwargs.get(Qstr::MP_QSTR_allow_cancel)?.try_into_option()?;
 
-        let obj = LayoutObj::new(Frame::new(
-            prompt,
-            Some(subprompt),
-            PinEntry::new(allow_cancel.unwrap_or(true)).into_child(),
-        ))?;
+        let obj = LayoutObj::new(PinEntry::new(prompt).into_child())?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }

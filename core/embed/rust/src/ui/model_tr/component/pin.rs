@@ -1,5 +1,6 @@
+use core::ops::Deref;
+
 use crate::{
-    time::Duration,
     trezorhal::random,
     ui::{
         component::{text::common::TextBox, Component, Event, EventCtx},
@@ -8,14 +9,12 @@ use crate::{
 };
 
 use super::{common, common::MultilineStringChoiceItem, ChoicePage, ChoicePageMsg};
-use heapless::String;
+use heapless::{LinearMap, String, Vec};
 
 pub enum PinEntryMsg {
     Confirmed,
     Cancelled,
 }
-
-const HOLD_DURATION: Duration = Duration::from_secs(1);
 
 const PIN_ROW: i32 = 40;
 
@@ -23,10 +22,9 @@ const MAX_LENGTH: usize = 50;
 const MAX_VISIBLE_DOTS: usize = 18;
 const MAX_VISIBLE_DIGITS: usize = 18;
 
-const CHOICE_LENGTH: usize = 12;
-const DEL_INDEX: usize = CHOICE_LENGTH - 1;
-const SHOW_INDEX: usize = CHOICE_LENGTH - 2;
+const CHOICE_LENGTH: usize = 11;
 const DIGITS: [&str; CHOICE_LENGTH] = [
+    "PLACEHOLDER FOR THE PROMPT",
     "1",
     "2",
     "3",
@@ -37,8 +35,6 @@ const DIGITS: [&str; CHOICE_LENGTH] = [
     "8",
     "9",
     "0",
-    "SHOW\nPIN",
-    "DEL\nLAST\nDIG",
 ];
 
 /// Component for entering a PIN.
@@ -49,18 +45,35 @@ pub struct PinEntry {
 }
 
 impl PinEntry {
-    pub fn new(allow_cancel: bool) -> Self {
+    pub fn new<T>(prompt: T) -> Self
+    where
+        T: Deref<Target = str>,
+    {
         // TODO: it is possible to create a vector combining both
         // StringChoiceItem and MultilineStringChoiceItem?
-        let choices = DIGITS
-            .iter()
-            .map(|s| MultilineStringChoiceItem::from_slice(s))
-            .collect();
-        let mut choice_page = ChoicePage::new(choices);
-        choice_page.set_leftmost_button_longpress("ACC", HOLD_DURATION);
-        if allow_cancel {
-            choice_page.set_rightmost_button_longpress("CANC", HOLD_DURATION);
+
+        // TODO: there could be some better way of showing the prompt
+
+        // Putting the prompt at the first place of the choice list,
+        // replacing the placeholder
+        let mut choices: Vec<MultilineStringChoiceItem, CHOICE_LENGTH> = Vec::new();
+        for (index, digit) in DIGITS.iter().enumerate() {
+            let item = if index == 0 {
+                MultilineStringChoiceItem::from_slice(&prompt).use_delimiter(' ')
+            } else {
+                MultilineStringChoiceItem::from_slice(digit)
+            };
+            choices.push(item).unwrap();
         }
+
+        // Creating a custom middle-button-text for the prompt
+        let mut button_map = LinearMap::new();
+        button_map.insert(0, "ACCEPT").unwrap();
+
+        let mut choice_page = ChoicePage::new(choices).with_button_map(button_map);
+
+        // Setting the button to delete digits and cancel when there is no digit
+        choice_page.set_leftmost_button("BIN");
 
         Self {
             choice_page,
@@ -129,6 +142,10 @@ impl PinEntry {
     fn is_full(&self) -> bool {
         self.textbox.is_full()
     }
+
+    fn is_empty(&self) -> bool {
+        self.textbox.is_empty()
+    }
 }
 
 impl Component for PinEntry {
@@ -142,26 +159,27 @@ impl Component for PinEntry {
         let msg = self.choice_page.event(ctx, event);
 
         match msg {
-            Some(ChoicePageMsg::Choice(page_counter)) => match page_counter as usize {
-                DEL_INDEX => {
-                    self.delete_last_digit(ctx);
-                    None
-                }
-                SHOW_INDEX => {
-                    self.show_real_pin = true;
-                    None
-                }
+            // Sending the result, appending the new digit, deleting the last digit or cancelling
+            Some(ChoicePageMsg::Choice(page_counter)) => match page_counter {
+                0 => Some(PinEntryMsg::Confirmed),
                 _ => {
                     if !self.is_full() {
                         self.append_new_digit(ctx, page_counter);
-                        let new_page_counter = random::uniform_between(1, (SHOW_INDEX - 1) as u32);
+                        let new_page_counter =
+                            random::uniform_between(1, (CHOICE_LENGTH - 1) as u32);
                         self.choice_page.set_page_counter(new_page_counter as u8);
                     }
                     None
                 }
             },
-            Some(ChoicePageMsg::LeftMost) => Some(PinEntryMsg::Confirmed),
-            Some(ChoicePageMsg::RightMost) => Some(PinEntryMsg::Cancelled),
+            Some(ChoicePageMsg::LeftMost) => {
+                if self.is_empty() {
+                    Some(PinEntryMsg::Cancelled)
+                } else {
+                    self.delete_last_digit(ctx);
+                    None
+                }
+            }
             _ => None,
         }
     }

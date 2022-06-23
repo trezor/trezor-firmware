@@ -73,21 +73,35 @@ impl ChoiceItem for StringChoiceItem {
 
 /// Multiline string component used as a choice item.
 ///
-/// Lines are delimited by '\n' character.
+/// Lines are delimited by '\n' character, unless specified explicitly.
+#[derive(Debug)]
 pub struct MultilineStringChoiceItem {
     // Arbitrary chosen. TODO: agree on this
     text: String<100>,
+    delimiter: char,
 }
 
 impl MultilineStringChoiceItem {
     pub fn from_slice(slice: &str) -> Self {
         let text = String::from(slice);
-        Self { text }
+        Self {
+            text,
+            delimiter: '\n',
+        }
     }
 
     pub fn from_char(ch: char) -> Self {
         let text = util::char_to_string(ch);
-        Self { text }
+        Self {
+            text,
+            delimiter: '\n',
+        }
+    }
+
+    /// Allows for changing the line delimiter to arbitrary char.
+    pub fn use_delimiter(mut self, delimiter: char) -> Self {
+        self.delimiter = delimiter;
+        self
     }
 }
 
@@ -95,21 +109,21 @@ impl ChoiceItem for MultilineStringChoiceItem {
     fn paint_center(&mut self) {
         // Displaying the center choice lower than the rest,
         // to make it more clear this is the current choice
-        for (index, line) in self.text.split('\n').enumerate() {
+        for (index, line) in self.text.split(self.delimiter).enumerate() {
             let offset = MIDDLE_ROW + index as i32 * 10 + 10;
             display_bold_center(Point::new(MIDDLE_COL, offset), line);
         }
     }
 
     fn paint_left(&mut self) {
-        for (index, line) in self.text.split('\n').enumerate() {
+        for (index, line) in self.text.split(self.delimiter).enumerate() {
             let offset = MIDDLE_ROW + index as i32 * 10;
             display_bold(Point::new(LEFT_COL, offset), line);
         }
     }
 
     fn paint_right(&mut self) {
-        for (index, line) in self.text.split('\n').enumerate() {
+        for (index, line) in self.text.split(self.delimiter).enumerate() {
             let offset = MIDDLE_ROW + index as i32 * 10;
             display_bold_right(Point::new(RIGHT_COL, offset), line);
         }
