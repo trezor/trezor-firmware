@@ -44,7 +44,6 @@
 #include "protect.h"
 #include "recovery.h"
 #include "reset.h"
-#include "rfc6979.h"
 #include "rng.h"
 #include "secp256k1.h"
 #include "signing.h"

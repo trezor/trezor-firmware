@@ -1220,18 +1220,13 @@ static inline bool is_slip18(const uint32_t *address_n,
          (address_n[1] & PATH_UNHARDEN_MASK) <= 9;
 }
 
-void layoutCosiCommitSign(const uint32_t *address_n, size_t address_n_count,
-                          const uint8_t *data, uint32_t len, bool final_sign) {
-  char *desc = final_sign ? _("CoSi sign message?") : _("CoSi commit message?");
+void layoutCosiSign(const uint32_t *address_n, size_t address_n_count,
+                    const uint8_t *data, uint32_t len) {
+  char *desc = _("CoSi sign message?");
   char desc_buf[32] = {0};
   if (is_slip18(address_n, address_n_count)) {
-    if (final_sign) {
-      strlcpy(desc_buf, _("CoSi sign index #?"), sizeof(desc_buf));
-      desc_buf[16] = '0' + (address_n[1] & PATH_UNHARDEN_MASK);
-    } else {
-      strlcpy(desc_buf, _("CoSi commit index #?"), sizeof(desc_buf));
-      desc_buf[18] = '0' + (address_n[1] & PATH_UNHARDEN_MASK);
-    }
+    strlcpy(desc_buf, _("CoSi sign index #?"), sizeof(desc_buf));
+    desc_buf[16] = '0' + (address_n[1] & PATH_UNHARDEN_MASK);
     desc = desc_buf;
   }
   char str[4][17] = {0};
