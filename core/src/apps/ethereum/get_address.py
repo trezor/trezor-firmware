@@ -1,6 +1,13 @@
 from typing import TYPE_CHECKING
 
-from .keychain import PATTERNS_ADDRESS, with_keychain_from_path
+from trezor.messages import EthereumAddress
+from trezor.ui.layouts import show_address
+
+from apps.common import paths
+
+from . import networks
+from .helpers import address_from_bytes
+from .keychain import PATTERNS_ADDRESS, with_keychain_from_path_and_defs
 
 if TYPE_CHECKING:
     from trezor.messages import EthereumGetAddress, EthereumAddress
@@ -8,10 +15,12 @@ if TYPE_CHECKING:
 
     from apps.common.keychain import Keychain
 
+    from . import definitions
 
-@with_keychain_from_path(*PATTERNS_ADDRESS)
+
+@with_keychain_from_path_and_defs(*PATTERNS_ADDRESS)
 async def get_address(
-    ctx: Context, msg: EthereumGetAddress, keychain: Keychain
+    ctx: Context, msg: EthereumGetAddress, keychain: Keychain, defs: definitions.EthereumDefinitions
 ) -> EthereumAddress:
     from trezor.messages import EthereumAddress
     from trezor.ui.layouts import show_address
@@ -25,8 +34,12 @@ async def get_address(
 
     node = keychain.derive(address_n)
 
-    if len(address_n) > 1:  # path has slip44 network identifier
-        network = networks.by_slip44(address_n[1] & 0x7FFF_FFFF)
+    if len(msg.address_n) > 1:  # path has slip44 network identifier
+        slip44 = msg.address_n[1] & 0x7FFF_FFFF
+        if slip44 == defs.network.slip44:
+            network = defs.network
+        else:
+            network = networks.by_slip44(slip44)
     else:
         network = None
     address = address_from_bytes(node.ethereum_pubkeyhash(), network)

@@ -27,9 +27,19 @@ def group_tokens(tokens):
 %>\
 
 class TokenInfo:
-    def __init__(self, symbol: str, decimals: int) -> None:
+    def __init__(
+        self,
+        symbol: str,
+        decimals: int,
+        address: bytes = None,
+        chain_id: int = None,
+        name: str = None,
+    ) -> None:
         self.symbol = symbol
         self.decimals = decimals
+        self.address = address
+        self.chain_id = chain_id
+        self.name = name
 
 
 UNKNOWN_TOKEN = TokenInfo("Wei UNKN", 0)

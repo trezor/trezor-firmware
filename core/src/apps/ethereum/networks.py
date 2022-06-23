@@ -22,11 +22,12 @@ if TYPE_CHECKING:
         bool  # rskip60
     ]
     # fmt: on
+UNKNOWN_NETWORK_SHORTCUT = "UNKN"
 
 
 def shortcut_by_chain_id(chain_id: int) -> str:
     n = by_chain_id(chain_id)
-    return n.shortcut if n is not None else "UNKN"
+    return n.shortcut if n is not None else UNKNOWN_NETWORK_SHORTCUT
 
 
 def by_chain_id(chain_id: int) -> "NetworkInfo" | None:

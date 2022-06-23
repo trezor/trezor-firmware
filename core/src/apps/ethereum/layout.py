@@ -12,7 +12,7 @@ from trezor.ui.layouts import (
 )
 
 from . import networks
-from .helpers import decode_typed_data
+from .helpers import address_from_bytes, decode_typed_data, get_type_name
 
 if TYPE_CHECKING:
     from typing import Awaitable, Iterable
@@ -21,25 +21,29 @@ if TYPE_CHECKING:
     from trezor.wire import Context
     from . import tokens
 
+    from . import tokens
+
 
 def require_confirm_tx(
     ctx: Context,
     to_bytes: bytes,
     value: int,
-    chain_id: int,
-    token: tokens.TokenInfo | None = None,
+    network: networks.NetworkInfo,
+    token: tokens.TokenInfo,
 ) -> Awaitable[None]:
     from .helpers import address_from_bytes
     from trezor.ui.layouts import confirm_output
 
     if to_bytes:
-        to_str = address_from_bytes(to_bytes, networks.by_chain_id(chain_id))
+        to_str = address_from_bytes(to_bytes, network)
     else:
         to_str = "new contract?"
     return confirm_output(
         ctx,
-        to_str,
-        format_ethereum_amount(value, token, chain_id),
+        address=to_str,
+        amount=format_ethereum_amount(value, token, network),
+        font_amount=ui.BOLD,
+        color_to=ui.GREY,
         br_code=ButtonRequestType.SignTx,
     )
 
@@ -49,19 +53,19 @@ async def require_confirm_fee(
     spending: int,
     gas_price: int,
     gas_limit: int,
-    chain_id: int,
-    token: tokens.TokenInfo | None = None,
+    network: networks.NetworkInfo,
+    token: tokens.TokenInfo,
 ) -> None:
     await confirm_amount(
         ctx,
         title="Confirm fee",
         description="Gas price:",
-        amount=format_ethereum_amount(gas_price, None, chain_id),
+        amount=format_ethereum_amount(gas_price, None, network),
     )
     await confirm_total(
         ctx,
-        total_amount=format_ethereum_amount(spending, token, chain_id),
-        fee_amount=format_ethereum_amount(gas_price * gas_limit, None, chain_id),
+        total_amount=format_ethereum_amount(spending, token, network),
+        fee_amount=format_ethereum_amount(gas_price * gas_limit, None, network),
         total_label="Amount sent:",
         fee_label="Maximum fee:",
     )
@@ -73,25 +77,25 @@ async def require_confirm_eip1559_fee(
     max_priority_fee: int,
     max_gas_fee: int,
     gas_limit: int,
-    chain_id: int,
-    token: tokens.TokenInfo | None = None,
+    network: networks.NetworkInfo,
+    token: tokens.TokenInfo,
 ) -> None:
     await confirm_amount(
         ctx,
         "Confirm fee",
-        format_ethereum_amount(max_gas_fee, None, chain_id),
+        format_ethereum_amount(max_gas_fee, None, network),
         "Maximum fee per gas",
     )
     await confirm_amount(
         ctx,
         "Confirm fee",
-        format_ethereum_amount(max_priority_fee, None, chain_id),
+        format_ethereum_amount(max_priority_fee, None, network),
         "Priority fee per gas",
     )
     await confirm_total(
         ctx,
-        format_ethereum_amount(spending, token, chain_id),
-        format_ethereum_amount(max_gas_fee * gas_limit, None, chain_id),
+        format_ethereum_amount(spending, token, network),
+        format_ethereum_amount(max_gas_fee * gas_limit, None, network),
         total_label="Amount sent:",
         fee_label="Maximum fee:",
     )
@@ -249,7 +253,7 @@ async def confirm_typed_value(
 
 
 def format_ethereum_amount(
-    value: int, token: tokens.TokenInfo | None, chain_id: int
+    value: int, token: tokens.TokenInfo | None, network_info: networks.NetworkInfo | None
 ) -> str:
     from trezor.strings import format_amount
 
@@ -257,7 +261,10 @@ def format_ethereum_amount(
         suffix = token.symbol
         decimals = token.decimals
     else:
-        suffix = networks.shortcut_by_chain_id(chain_id)
+        if network_info is not None:
+            suffix = network_info.shortcut
+        else:
+            suffix = networks.UNKNOWN_NETWORK_SHORTCUT
         decimals = 18
 
     # Don't want to display wei values for tokens with small decimal numbers

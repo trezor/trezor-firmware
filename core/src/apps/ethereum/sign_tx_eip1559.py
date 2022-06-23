@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from trezor.crypto import rlp
 
 from .helpers import bytes_from_address
-from .keychain import with_keychain_from_chain_id
+from .keychain import with_keychain_from_chain_id_and_defs
 
 if TYPE_CHECKING:
     from trezor.messages import (
@@ -13,6 +13,7 @@ if TYPE_CHECKING:
         EthereumTxRequest,
     )
 
+    from . import definitions
     from apps.common.keychain import Keychain
     from trezor.wire import Context
 
@@ -28,9 +29,9 @@ def access_list_item_length(item: EthereumAccessList) -> int:
     )
 
 
-@with_keychain_from_chain_id
+@with_keychain_from_chain_id_and_defs
 async def sign_tx_eip1559(
-    ctx: Context, msg: EthereumSignTxEIP1559, keychain: Keychain
+    ctx: Context, msg: EthereumSignTxEIP1559, keychain: Keychain, defs: definitions.EthereumDefinitions
 ) -> EthereumTxRequest:
     from trezor.crypto.hashlib import sha3_256
     from trezor.utils import HashWriter
@@ -56,11 +57,11 @@ async def sign_tx_eip1559(
     await paths.validate_path(ctx, keychain, msg.address_n)
 
     # Handle ERC20s
-    token, address_bytes, recipient, value = await handle_erc20(ctx, msg)
+    token, address_bytes, recipient, value = await handle_erc20(ctx, msg, defs.token_dict)
 
     data_total = msg.data_length
 
-    await require_confirm_tx(ctx, recipient, value, msg.chain_id, token)
+    await require_confirm_tx(ctx, recipient, value, defs.network, token)
     if token is None and msg.data_length > 0:
         await require_confirm_data(ctx, msg.data_initial_chunk, data_total)
 
@@ -70,7 +71,7 @@ async def sign_tx_eip1559(
         int.from_bytes(msg.max_priority_fee, "big"),
         int.from_bytes(msg.max_gas_fee, "big"),
         int.from_bytes(gas_limit, "big"),
-        msg.chain_id,
+        defs.network,
         token,
     )
 

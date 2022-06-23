@@ -491,6 +491,8 @@ if not utils.BITCOIN_ONLY:
     import apps.eos.writers
     apps.ethereum
     import apps.ethereum
+    apps.ethereum.definitions
+    import apps.ethereum.definitions
     apps.ethereum.get_address
     import apps.ethereum.get_address
     apps.ethereum.get_public_key
