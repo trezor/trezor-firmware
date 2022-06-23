@@ -1368,8 +1368,7 @@ void stellar_getSignatureForActiveTx(uint8_t *out_signature) {
   sha256_Final(&(stellar_activeTx.sha256_ctx), to_sign);
 
   uint8_t signature[64] = {0};
-  ed25519_sign(to_sign, sizeof(to_sign), node->private_key,
-               node->public_key + 1, signature);
+  ed25519_sign(to_sign, sizeof(to_sign), node->private_key, signature);
 
   memcpy(out_signature, signature, sizeof(signature));
 }

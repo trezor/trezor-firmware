@@ -127,7 +127,7 @@ To generate a public key:
 To sign a message:
 
 	ed25519_signature sig;
-	ed25519_sign(message, message_len, sk, pk, signature);
+	ed25519_sign(message, message_len, sk, signature);
 
 To verify a signature:
 

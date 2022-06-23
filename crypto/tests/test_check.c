@@ -6595,7 +6595,7 @@ START_TEST(test_ed25519) {
     UNMARK_SECRET_DATA(pk, sizeof(pk));
     ck_assert_mem_eq(pk, fromhex(*spk), 32);
 
-    ed25519_sign(pk, 32, sk, pk, sig);
+    ed25519_sign(pk, 32, sk, sig);
     UNMARK_SECRET_DATA(sig, sizeof(sig));
     ck_assert_mem_eq(sig, fromhex(*ssig), 64);
 
@@ -6813,7 +6813,7 @@ START_TEST(test_ed25519_keccak) {
     ck_assert_mem_eq(public_key, fromhex(tests[i].public_key), 32);
 
     ed25519_sign_keccak(fromhex(tests[i].data), tests[i].length, private_key,
-                        public_key, signature);
+                        signature);
     UNMARK_SECRET_DATA(signature, sizeof(signature));
     ck_assert_mem_eq(signature, fromhex(tests[i].signature), 64);
 
