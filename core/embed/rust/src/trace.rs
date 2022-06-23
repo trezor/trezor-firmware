@@ -1,3 +1,5 @@
+use heapless::String;
+
 /// Visitor passed into `Trace` types.
 pub trait Tracer {
     fn int(&mut self, i: i64);
@@ -23,6 +25,12 @@ impl Trace for &[u8] {
 impl<const N: usize> Trace for &[u8; N] {
     fn trace(&self, t: &mut dyn Tracer) {
         t.bytes(&self[..])
+    }
+}
+
+impl<const N: usize> Trace for String<N> {
+    fn trace(&self, t: &mut dyn Tracer) {
+        t.string(&self[..])
     }
 }
 

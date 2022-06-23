@@ -10,6 +10,7 @@ use crate::{
 
 use super::theme;
 
+#[derive(PartialEq)]
 pub enum ButtonMsg {
     Clicked,
     LongPressed,
@@ -73,6 +74,10 @@ impl<T: AsRef<str>> Button<T> {
 
     pub fn content(&self) -> &ButtonContent<T> {
         &self.content
+    }
+
+    pub fn is_longpress(&mut self) -> bool {
+        self.long_press.is_some()
     }
 
     fn style(&self) -> &ButtonStyle {

@@ -21,8 +21,8 @@ use crate::{
 
 use super::{
     component::{
-        Bip39Page, Bip39PageMsg, Button, ButtonPage, ButtonPos, ChoicePage, ChoicePageMsg, Frame,
-        PassphrasePage, PassphrasePageMsg, PinPage, PinPageMsg,
+        Bip39Entry, Bip39EntryMsg, Button, ButtonPage, ButtonPos, Frame, PassphraseEntry,
+        PassphraseEntryMsg, PinEntry, PinEntryMsg, SimpleChoice, SimpleChoiceMsg,
     },
     theme,
 };
@@ -40,48 +40,39 @@ where
     }
 }
 
-impl<T> ComponentMsgObj for PinPage<T>
-where
-    T: Deref<Target = str>,
-{
+impl ComponentMsgObj for PinEntry {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
-            PinPageMsg::Confirmed => self.pin().try_into(),
-            PinPageMsg::Cancelled => Ok(CANCELLED.as_obj()),
+            PinEntryMsg::Confirmed => self.pin().try_into(),
+            PinEntryMsg::Cancelled => Ok(CANCELLED.as_obj()),
         }
     }
 }
 
-impl<T, const N: usize> ComponentMsgObj for ChoicePage<T, N>
+impl<T, const N: usize> ComponentMsgObj for SimpleChoice<T, N>
 where
     T: Deref<Target = str>,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
-            ChoicePageMsg::Confirmed => self.get_current_choice().try_into(),
+            SimpleChoiceMsg::Result(choice) => choice.as_str().try_into(),
         }
     }
 }
 
-impl<T> ComponentMsgObj for Bip39Page<T>
-where
-    T: Deref<Target = str>,
-{
+impl ComponentMsgObj for Bip39Entry {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
-            Bip39PageMsg::Confirmed => self.get_current_choice().as_str().try_into(),
+            Bip39EntryMsg::ResultWord(word) => word.as_str().try_into(),
         }
     }
 }
 
-impl<T> ComponentMsgObj for PassphrasePage<T>
-where
-    T: Deref<Target = str>,
-{
+impl ComponentMsgObj for PassphraseEntry {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
-            PassphrasePageMsg::Confirmed => self.passphrase().try_into(),
-            PassphrasePageMsg::Cancelled => Ok(CANCELLED.as_obj()),
+            PassphraseEntryMsg::Confirmed => self.passphrase().try_into(),
+            PassphraseEntryMsg::Cancelled => Ok(CANCELLED.as_obj()),
         }
     }
 }
@@ -122,6 +113,7 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
 
         let obj = LayoutObj::new(Frame::new(
             title,
+            None,
             ButtonPage::new(
                 FormattedText::new(theme::TEXT_NORMAL, theme::FORMATTED, format)
                     .with("action", action.unwrap_or_default())
@@ -143,6 +135,7 @@ extern "C" fn new_confirm_text(n_args: usize, args: *const Obj, kwargs: *mut Map
 
         let obj = LayoutObj::new(Frame::new(
             title,
+            None,
             ButtonPage::new(
                 Paragraphs::new()
                     .add(theme::TEXT_NORMAL, description.unwrap_or_default())
@@ -162,9 +155,11 @@ extern "C" fn request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> 
         let allow_cancel: Option<bool> =
             kwargs.get(Qstr::MP_QSTR_allow_cancel)?.try_into_option()?;
 
-        let obj = LayoutObj::new(
-            PinPage::new(prompt, subprompt, allow_cancel.unwrap_or(true)).into_child(),
-        )?;
+        let obj = LayoutObj::new(Frame::new(
+            prompt,
+            Some(subprompt),
+            PinEntry::new(allow_cancel.unwrap_or(true)).into_child(),
+        ))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -214,6 +209,7 @@ extern "C" fn show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map
 
         let obj = LayoutObj::new(Frame::new(
             title,
+            None,
             ButtonPage::new(
                 Paragraphs::new().add(theme::TEXT_BOLD, text_to_show),
                 theme::BG,
@@ -244,9 +240,11 @@ extern "C" fn confirm_word(n_args: usize, args: *const Obj, kwargs: *mut Map) ->
 
         let words: Vec<String<50>, 24> = choices.split(',').map(String::from).collect();
 
-        let obj = LayoutObj::new(
-            ChoicePage::new(prompt, String::<50_usize>::from(""), words).into_child(),
-        )?;
+        let obj = LayoutObj::new(Frame::new(
+            prompt,
+            None,
+            SimpleChoice::new(words).into_child(),
+        ))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -257,16 +255,13 @@ extern "C" fn request_word_count(n_args: usize, args: *const Obj, kwargs: *mut M
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let text: StrBuffer = kwargs.get(Qstr::MP_QSTR_text)?.try_into()?;
 
-        let text: String<50> = String::from(text.trim());
-        let title: String<50> = String::from(title.trim());
+        let choices: Vec<&str, 5> = ["12", "18", "20", "24", "33"].into_iter().collect();
 
-        let mut choices: Vec<String<50>, 10> = Vec::new();
-        for choice in ["12", "18", "20", "24", "33"] {
-            let choice_str: String<50> = String::from(choice);
-            choices.push(choice_str).unwrap();
-        }
-
-        let obj = LayoutObj::new(ChoicePage::new(title, text, choices).into_child())?;
+        let obj = LayoutObj::new(Frame::new(
+            title,
+            Some(text),
+            SimpleChoice::new(choices).into_child(),
+        ))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -276,7 +271,7 @@ extern "C" fn request_word_bip39(n_args: usize, args: *const Obj, kwargs: *mut M
     let block = |_args: &[Obj], kwargs: &Map| {
         let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
 
-        let obj = LayoutObj::new(Bip39Page::new(prompt).into_child())?;
+        let obj = LayoutObj::new(Frame::new(prompt, None, Bip39Entry::new().into_child()))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -285,9 +280,13 @@ extern "C" fn request_word_bip39(n_args: usize, args: *const Obj, kwargs: *mut M
 extern "C" fn request_passphrase(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
-        let max_len: u8 = kwargs.get(Qstr::MP_QSTR_max_len)?.try_into()?;
+        let _max_len: u8 = kwargs.get(Qstr::MP_QSTR_max_len)?.try_into()?;
 
-        let obj = LayoutObj::new(PassphrasePage::new(prompt, max_len).into_child())?;
+        let obj = LayoutObj::new(Frame::new(
+            prompt,
+            None,
+            PassphraseEntry::new().into_child(),
+        ))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }

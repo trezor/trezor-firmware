@@ -2,117 +2,66 @@ use crate::{
     time::Duration,
     trezorhal::random,
     ui::{
-        component::{text::common::TextBox, Component, Event, EventCtx, Pad},
-        display,
+        component::{text::common::TextBox, Component, Event, EventCtx},
         geometry::{Point, Rect},
     },
-    util,
 };
-use core::ops::Deref;
 
-use super::{common, theme, BothButtonPressHandler, Button, ButtonMsg, ButtonPos};
+use super::{common, common::StringChoiceItem, ChoicePage, ChoicePageMsg};
 use heapless::String;
 
-pub enum PinPageMsg {
+pub enum PinEntryMsg {
     Confirmed,
     Cancelled,
 }
 
-const LEFT_COL: i32 = 5;
-const MIDDLE_COL: i32 = 50;
-const RIGHT_COL: i32 = 90;
+const HOLD_DURATION: Duration = Duration::from_secs(1);
 
 const PIN_ROW: i32 = 40;
-const MIDDLE_ROW: i32 = 72;
 
 const MAX_LENGTH: usize = 50;
 const MAX_VISIBLE_DOTS: usize = 18;
 const MAX_VISIBLE_DIGITS: usize = 18;
-const HOLD_DURATION: Duration = Duration::from_secs(2);
 
-const DIGITS: [char; 10] = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
+const CHOICE_LENGTH: usize = 12;
+const DEL_INDEX: usize = CHOICE_LENGTH - 1;
+const SHOW_INDEX: usize = CHOICE_LENGTH - 2;
+const DIGITS: [&str; CHOICE_LENGTH] = [
+    "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "SHOW", "DEL",
+];
 
-pub struct PinPage<T> {
-    major_prompt: T,
-    minor_prompt: T,
-    allow_cancel: bool,
-    digits: [char; 10],
-    both_button_press: BothButtonPressHandler,
-    pad: Pad,
-    prev: Button<&'static str>,
-    next: Button<&'static str>,
-    accept_pin: Button<&'static str>,
-    cancel_pin: Button<&'static str>,
-    select: Button<&'static str>,
-    reveal_pin: Button<&'static str>,
-    delete_last_digit: Button<&'static str>,
-    page_counter: u8,
+/// Component for entering a PIN.
+pub struct PinEntry {
+    choice_page: ChoicePage<StringChoiceItem, CHOICE_LENGTH>,
     show_real_pin: bool,
     textbox: TextBox<MAX_LENGTH>,
 }
 
-impl<T> PinPage<T>
-where
-    T: Deref<Target = str>,
-{
-    pub fn new(major_prompt: T, minor_prompt: T, allow_cancel: bool) -> Self {
+impl PinEntry {
+    pub fn new(allow_cancel: bool) -> Self {
+        let choices = DIGITS
+            .iter()
+            .map(|s| StringChoiceItem::from_slice(s))
+            .collect();
+        let mut choice_page = ChoicePage::new(choices);
+        choice_page.set_leftmost_button_longpress("ACC", HOLD_DURATION);
+        if allow_cancel {
+            choice_page.set_rightmost_button_longpress("CANC", HOLD_DURATION);
+        }
+
         Self {
-            major_prompt,
-            minor_prompt,
-            allow_cancel,
-            digits: DIGITS,
-            both_button_press: BothButtonPressHandler::new(),
-            pad: Pad::with_background(theme::BG),
-            prev: Button::with_text(ButtonPos::Left, "<", theme::button_default()),
-            next: Button::with_text(ButtonPos::Right, ">", theme::button_default()),
-            accept_pin: Button::with_text(ButtonPos::Middle, "CONFIRM", theme::button_default())
-                .with_long_press(HOLD_DURATION),
-            cancel_pin: Button::with_text(ButtonPos::Left, "BIN", theme::button_cancel())
-                .with_long_press(HOLD_DURATION),
-            select: Button::with_text(ButtonPos::Middle, "SELECT", theme::button_default()),
-            reveal_pin: Button::with_text(ButtonPos::Middle, "SHOW", theme::button_default()),
-            delete_last_digit: Button::with_text(ButtonPos::Middle, "DEL", theme::button_default()),
-            page_counter: 0,
+            choice_page,
             show_real_pin: false,
             textbox: TextBox::empty(),
         }
     }
 
-    fn render_header(&self) {
-        common::display_text(Point::new(0, 10), &self.major_prompt);
-        common::display_text(Point::new(0, 20), &self.minor_prompt);
-        display::dotted_line(Point::new(0, 25), 128, theme::FG);
-    }
-
     fn update_situation(&mut self) {
-        // So that only relevant buttons are visible
-        self.pad.clear();
-
-        // TOP section under header
-        self.show_pin_length();
-
-        // MIDDLE section above buttons
-        if self.page_counter == 0 {
-            self.show_prompt(MIDDLE_COL);
-            self.show_next_digit();
-        } else if self.page_counter == 1 {
-            self.show_prompt(LEFT_COL);
-            self.show_current_digit();
-            self.show_next_digit();
-        } else if self.page_counter < 10 {
-            self.show_previous_digit();
-            self.show_current_digit();
-            self.show_next_digit();
-        } else if self.page_counter == 10 {
-            self.show_previous_digit();
-            self.show_current_digit();
-        }
-    }
-
-    fn show_prompt(&self, x: i32) {
-        for (index, text) in self.major_prompt.split(' ').enumerate() {
-            let offset = MIDDLE_ROW + index as i32 * 10;
-            common::display_text(Point::new(x, offset), text);
+        if self.show_real_pin {
+            self.reveal_current_pin();
+            self.show_real_pin = false;
+        } else {
+            self.show_pin_length();
         }
     }
 
@@ -130,9 +79,9 @@ where
         // Giving some notion of change even for longer-than-visible PINs
         // - slightly shifting the dots to the left and right after each new digit
         if digits > MAX_VISIBLE_DOTS && digits % 2 == 0 {
-            common::display_text_center(Point::new(61, PIN_ROW), &dots);
+            common::display_bold_center(Point::new(61, PIN_ROW), &dots);
         } else {
-            common::display_text_center(Point::new(64, PIN_ROW), &dots);
+            common::display_bold_center(Point::new(64, PIN_ROW), &dots);
         }
     }
 
@@ -140,86 +89,24 @@ where
         let digits = self.textbox.len();
 
         if digits <= MAX_VISIBLE_DOTS {
-            common::display_text_center(Point::new(64, PIN_ROW), self.pin());
+            common::display_bold_center(Point::new(64, PIN_ROW), self.pin());
         } else {
             // Show the last part of PIN with preceding ellipsis to show something is hidden
             let ellipsis = "...";
             let offset: usize = digits.saturating_sub(MAX_VISIBLE_DIGITS) + ellipsis.len();
             let mut to_show: String<MAX_VISIBLE_DIGITS> = String::from(ellipsis);
             to_show.push_str(&self.pin()[offset..]).unwrap();
-            common::display_text_center(Point::new(32, PIN_ROW), &to_show);
+            common::display_bold_center(Point::new(32, PIN_ROW), &to_show);
         }
     }
 
-    fn show_reveal_pin_option(&self, x: i32) {
-        common::display_text(Point::new(x, MIDDLE_ROW), "Show");
-        common::display_text(Point::new(x, MIDDLE_ROW + 10), "curr");
-        common::display_text(Point::new(x, MIDDLE_ROW + 20), "PIN");
+    fn append_new_digit(&mut self, ctx: &mut EventCtx, page_counter: u8) {
+        let digit = DIGITS[page_counter as usize];
+        self.textbox.append_slice(ctx, digit);
     }
 
     fn delete_last_digit(&mut self, ctx: &mut EventCtx) {
         self.textbox.delete_last(ctx);
-    }
-
-    fn show_delete_last_digit_option(&self, x: i32) {
-        common::display_text(Point::new(x, MIDDLE_ROW), "Del");
-        common::display_text(Point::new(x, MIDDLE_ROW + 10), "last");
-        common::display_text(Point::new(x, MIDDLE_ROW + 20), "digit");
-    }
-
-    fn append_current_digit(&mut self, ctx: &mut EventCtx) {
-        self.textbox.append(ctx, self.get_current_digit());
-    }
-
-    fn get_current_digit(&self) -> char {
-        self.get_digit(self.page_counter - 1)
-    }
-
-    fn get_current_digit_str(&self) -> String<1> {
-        self.get_digit_str(self.page_counter - 1)
-    }
-
-    fn get_previous_digit_str(&self) -> String<1> {
-        self.get_digit_str(self.page_counter - 2)
-    }
-
-    fn get_next_digit_str(&self) -> String<1> {
-        self.get_digit_str(self.page_counter)
-    }
-
-    fn get_digit(&self, index: u8) -> char {
-        self.digits[index as usize]
-    }
-
-    fn get_digit_str(&self, index: u8) -> String<1> {
-        util::char_to_string(self.get_digit(index))
-    }
-
-    fn show_current_digit(&self) {
-        common::display_text_center(
-            Point::new(64, MIDDLE_ROW + 10),
-            &self.get_current_digit_str(),
-        );
-    }
-
-    fn show_previous_digit(&self) {
-        common::display_text(Point::new(5, MIDDLE_ROW), &self.get_previous_digit_str());
-    }
-
-    fn show_next_digit(&self) {
-        common::display_text_right(Point::new(123, MIDDLE_ROW), &self.get_next_digit_str());
-    }
-
-    fn decrease_page_counter(&mut self) {
-        self.page_counter -= 1;
-    }
-
-    fn increase_page_counter(&mut self) {
-        self.page_counter += 1;
-    }
-
-    fn randomly_set_cursor(&mut self) {
-        self.page_counter = random::uniform(10) as u8 + 1;
     }
 
     pub fn pin(&self) -> &str {
@@ -229,145 +116,53 @@ where
     fn is_full(&self) -> bool {
         self.textbox.is_full()
     }
-
-    fn is_empty(&self) -> bool {
-        self.textbox.is_empty()
-    }
-
-    /// Changing all non-middle button's visual state to "released" state
-    /// (one of the buttons has a "pressed" state from
-    /// the first press of the both-button-press)
-    /// NOTE: does not cause any event to the button, it just repaints it
-    fn set_right_and_left_buttons_as_released(&mut self, ctx: &mut EventCtx) {
-        self.prev.set_released(ctx);
-        self.next.set_released(ctx);
-        self.accept_pin.set_released(ctx);
-        self.cancel_pin.set_released(ctx);
-    }
 }
 
-impl<T> Component for PinPage<T>
-where
-    T: Deref<Target = str>,
-{
-    type Msg = PinPageMsg;
+impl Component for PinEntry {
+    type Msg = PinEntryMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let button_height = theme::FONT_BOLD.line_height() + 2;
-        let (_content_area, button_area) = bounds.split_bottom(button_height);
-        self.pad.place(bounds);
-        self.prev.place(button_area);
-        self.next.place(button_area);
-        self.select.place(button_area);
-        self.reveal_pin.place(button_area);
-        self.delete_last_digit.place(button_area);
-        self.accept_pin.place(button_area);
-        self.cancel_pin.place(button_area);
-        bounds
+        self.choice_page.place(bounds)
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        // Possibly replacing or skipping an event because of both-button-press
-        // aggregation
-        let event = self.both_button_press.possibly_replace_event(event)?;
+        let msg = self.choice_page.event(ctx, event);
 
-        // In case of both-button-press, changing all other buttons to released
-        // state
-        if self.both_button_press.are_both_buttons_pressed(event) {
-            self.set_right_and_left_buttons_as_released(ctx);
-        }
-
-        // Each event should cancel the visible PIN
-        self.show_real_pin = false;
-
-        // LEFT button clicks
-        if self.page_counter > 0 {
-            if let Some(ButtonMsg::Clicked) = self.prev.event(ctx, event) {
-                // Clicked BACK. Decrease the page counter.
-                self.decrease_page_counter();
-                self.update_situation();
-                return None;
-            }
-        } else if let Some(ButtonMsg::Clicked) = self.cancel_pin.event(ctx, event) {
-            // Clicked BIN. Deleting the last digit or cancelling the action when empty.
-            if !self.is_empty() {
-                self.delete_last_digit(ctx);
-                self.update_situation();
-                return None;
-            } else {
-                return Some(PinPageMsg::Cancelled);
-            }
-        }
-
-        // RIGHT button clicks
-        if self.page_counter < 10 {
-            if let Some(ButtonMsg::Clicked) = self.next.event(ctx, event) {
-                // Clicked NEXT. Increase the page counter.
-                self.increase_page_counter();
-                self.update_situation();
-                return None;
-            }
-        }
-
-        // MIDDLE button clicks
-        if self.page_counter == 0 {
-            if let Some(ButtonMsg::Clicked) = self.accept_pin.event(ctx, event) {
-                // Clicked ACCEPT. Send PIN to the client.
-                return Some(PinPageMsg::Confirmed);
-            }
-        } else if self.page_counter < 11 {
-            if let Some(ButtonMsg::Clicked) = self.select.event(ctx, event) {
-                // Clicked CONFIRM. Append current digit to the buffer PIN string.
-                // Randomly selecting the "cursor" position for the next digit
-                if !self.is_full() {
-                    self.append_current_digit(ctx);
-                    self.randomly_set_cursor();
-                    self.update_situation();
-                    return None;
+        match msg {
+            Some(ChoicePageMsg::Choice(page_counter)) => match page_counter as usize {
+                DEL_INDEX => {
+                    self.delete_last_digit(ctx);
+                    None
                 }
-            }
+                SHOW_INDEX => {
+                    self.show_real_pin = true;
+                    None
+                }
+                _ => {
+                    if !self.is_full() {
+                        self.append_new_digit(ctx, page_counter);
+                        let new_page_counter = random::uniform_between(1, (SHOW_INDEX - 1) as u32);
+                        self.choice_page.set_page_counter(new_page_counter as u8);
+                    }
+                    None
+                }
+            },
+            Some(ChoicePageMsg::LeftMost) => Some(PinEntryMsg::Confirmed),
+            Some(ChoicePageMsg::RightMost) => Some(PinEntryMsg::Cancelled),
+            _ => None,
         }
-
-        None
     }
 
     fn paint(&mut self) {
-        self.pad.paint();
-
-        // TOP header
-        // self.render_header();
-
-        // MIDDLE panel
+        self.choice_page.paint();
         self.update_situation();
-
-        // BOTTOM LEFT button
-        if self.page_counter == 0 {
-            self.cancel_pin.paint();
-        } else {
-            self.prev.paint();
-        }
-
-        // BOTTOM RIGHT button
-        if self.page_counter < 10 {
-            self.next.paint();
-        }
-
-        // BOTTOM MIDDLE button
-        if self.page_counter == 0 {
-            self.accept_pin.paint();
-        } else {
-            self.select.paint();
-        }
     }
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for PinPage<T>
-where
-    T: Deref<Target = str>,
-{
+impl crate::trace::Trace for PinEntry {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("PinPage");
+        t.open("PinEntry");
         t.close();
     }
 }
