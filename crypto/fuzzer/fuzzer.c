@@ -922,7 +922,7 @@ int fuzz_ed25519_sign_verify(void) {
 
   ed25519_publickey(secret_key, public_key);
   // sign message, this should always succeed
-  ed25519_sign(message, sizeof(message), secret_key, public_key, signature);
+  ed25519_sign(message, sizeof(message), secret_key, signature);
 
   // verify message, we expect this to work
   ret = ed25519_sign_open(message, sizeof(message), public_key, signature);

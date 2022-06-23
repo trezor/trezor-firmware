@@ -95,8 +95,7 @@ START_TEST(test_ed25519_cardano_sign_vectors) {
     ck_assert_mem_eq(public_key, fromhex(*(test_data + 2)), 32);
 
     const uint8_t *message = (const uint8_t *)"Hello World";
-    ed25519_sign_ext(message, 11, secret_key, secret_key_extension, public_key,
-                     signature);
+    ed25519_sign_ext(message, 11, secret_key, secret_key_extension, signature);
     UNMARK_SECRET_DATA(signature, sizeof(signature));
 
     ck_assert_mem_eq(signature, fromhex(*(test_data + 3)), 64);

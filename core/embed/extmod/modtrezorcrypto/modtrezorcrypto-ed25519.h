@@ -77,7 +77,6 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_sign(size_t n_args,
   if (msg.len == 0) {
     mp_raise_ValueError("Empty data to sign");
   }
-  ed25519_public_key pk = {0};
   mp_buffer_info_t hash_func = {0};
   vstr_t sig = {0};
   vstr_init_len(&sig, sizeof(ed25519_signature));
@@ -86,16 +85,14 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_sign(size_t n_args,
     mp_get_buffer_raise(args[2], &hash_func, MP_BUFFER_READ);
     // if hash_func == 'keccak':
     if (memcmp(hash_func.buf, "keccak", sizeof("keccak")) == 0) {
-      ed25519_publickey_keccak(*(const ed25519_secret_key *)sk.buf, pk);
       ed25519_sign_keccak(msg.buf, msg.len, *(const ed25519_secret_key *)sk.buf,
-                          pk, *(ed25519_signature *)sig.buf);
+                          *(ed25519_signature *)sig.buf);
     } else {
       vstr_clear(&sig);
       mp_raise_ValueError("Unknown hash function");
     }
   } else {
-    ed25519_publickey(*(const ed25519_secret_key *)sk.buf, pk);
-    ed25519_sign(msg.buf, msg.len, *(const ed25519_secret_key *)sk.buf, pk,
+    ed25519_sign(msg.buf, msg.len, *(const ed25519_secret_key *)sk.buf,
                  *(ed25519_signature *)sig.buf);
   }
 
@@ -128,14 +125,10 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_sign_ext(mp_obj_t secret_key,
   if (msg.len == 0) {
     mp_raise_ValueError("Empty data to sign");
   }
-  ed25519_public_key pk = {0};
-
-  ed25519_publickey_ext(*(const ed25519_secret_key *)sk.buf,
-                        *(const ed25519_secret_key *)skext.buf, pk);
   vstr_t sig = {0};
   vstr_init_len(&sig, sizeof(ed25519_signature));
   ed25519_sign_ext(msg.buf, msg.len, *(const ed25519_secret_key *)sk.buf,
-                   *(const ed25519_secret_key *)skext.buf, pk,
+                   *(const ed25519_secret_key *)skext.buf,
                    *(ed25519_signature *)sig.buf);
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &sig);
 }
