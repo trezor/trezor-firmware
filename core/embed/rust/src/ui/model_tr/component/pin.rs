@@ -68,9 +68,13 @@ impl PinEntry {
 
         // Creating a custom middle-button-text for the prompt
         let mut button_map = LinearMap::new();
-        button_map.insert(0, "ACCEPT").unwrap();
+        button_map.insert(0, "CONFIRM").unwrap();
 
-        let mut choice_page = ChoicePage::new(choices).with_button_map(button_map);
+        let mut choice_page = ChoicePage::new(choices)
+            .with_select_button_map(button_map)
+            .with_select_button_text("SELECT")
+            .with_previous_button_text("<")
+            .with_next_button_text(">");
 
         // Setting the button to delete digits and cancel when there is no digit
         choice_page.set_leftmost_button("BIN");

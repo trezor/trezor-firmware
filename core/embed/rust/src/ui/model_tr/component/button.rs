@@ -87,6 +87,22 @@ impl<T: AsRef<str>> Button<T> {
         }
     }
 
+    /// Changing the text content of the button.
+    ///
+    /// NOTE: the button must/should be placed again
+    /// after this, to update the button boundaries.
+    pub fn set_text(&mut self, text: T, button_area: Rect) {
+        self.content = ButtonContent::Text(text);
+        self.place(button_area);
+    }
+
+    /// Allows for toggling the long press feature.
+    ///
+    /// Supplying `None` will disable it, `Some(Duration)` will set it.
+    pub fn set_long_press(&mut self, duration: Option<Duration>) {
+        self.long_press = duration;
+    }
+
     fn set(&mut self, ctx: &mut EventCtx, state: State) {
         if self.state != state {
             self.state = state;

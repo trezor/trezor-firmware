@@ -29,14 +29,16 @@ impl SideButton {
         }
     }
 
-    pub fn with_long_press(mut self, duration: Duration) -> Self {
-        self.button = self.button.with_long_press(duration);
-        self
+    /// Update the current instance
+    pub fn set(&mut self, text: &'static str, duration: Option<Duration>, button_area: Rect) {
+        self.button.set_text(text, button_area);
+        self.button.set_long_press(duration);
+        self.is_active = true;
     }
 
-    pub fn active(mut self) -> Self {
-        self.is_active = true;
-        self
+    /// Deactivate the current instance
+    pub fn unset(&mut self) {
+        self.is_active = false;
     }
 
     pub fn got_triggered(&mut self, ctx: &mut EventCtx, event: Event) -> bool {
@@ -58,16 +60,17 @@ const MIDDLE_ROW: i32 = 72;
 /// Using components can also specify the `leftmost` and `rightmost`
 /// buttons and receive messages whenever they are triggered.
 ///
-/// `button_map` allows for specifying custom texts of the middle
+/// `select_button_map` allows for specifying custom texts of the middle
 /// button according to the choice index.
 pub struct ChoicePage<T, const N: usize> {
     choices: Vec<T, N>,
-    button_map: Option<LinearMap<u8, &'static str, N>>,
+    select_button_map: Option<LinearMap<u8, &'static str, N>>,
     both_button_press: BothButtonPressHandler,
     pad: Pad,
     prev: Button<&'static str>,
     next: Button<&'static str>,
     select: Button<&'static str>,
+    select_text: &'static str,
     rightmost: SideButton,
     leftmost: SideButton,
     button_area: Rect,
@@ -85,29 +88,62 @@ where
     T: ChoiceItem,
 {
     pub fn new(choices: Vec<T, N>) -> Self {
-        // TODO: could allow for choosing the default "SELECT" text and also other texts
+        // Out of these button texts, only `select_text` is changeable
+        // after placing the component, so we need to store only
+        // `select_text` as an instance variable (at least right now).
+        // (Text of select button may be changed dynamically by `select_button_map`.)
+        let prev_text = "BACK";
+        let select_text = "SELECT";
+        let next_text = "NEXT";
         Self {
             choices,
-            button_map: None,
+            select_button_map: None,
             both_button_press: BothButtonPressHandler::new(),
             pad: Pad::with_background(theme::BG),
-            prev: Button::with_text(ButtonPos::Left, "BACK", theme::button_default()),
-            next: Button::with_text(ButtonPos::Right, "NEXT", theme::button_default()),
-            select: Button::with_text(ButtonPos::Middle, "SELECT", theme::button_default()),
+            prev: Button::with_text(ButtonPos::Left, prev_text, theme::button_default()),
+            next: Button::with_text(ButtonPos::Right, next_text, theme::button_default()),
+            select: Button::with_text(ButtonPos::Middle, select_text, theme::button_default()),
+            select_text,
             // Side buttons need to be set from the beginning (in inactive state),
             // so they are placed correctly
             // (using Option<SideButton> was not working properly, so using
-            // `is_active` for deciding whether to show it or not)
+            // `is_active` for deciding whether to show it and handle their events)
             leftmost: SideButton::new(ButtonPos::Left, "LEFT"),
             rightmost: SideButton::new(ButtonPos::Right, "RIGHT"),
-            button_area: Rect::zero(), // will be set in `place`
+            // Button area is needed so the buttons
+            // can be "re-placed" after their text is changed
+            // Will be set in `place`
+            button_area: Rect::zero(),
             page_counter: 0,
         }
     }
 
     /// Adding the optional button map with texts for the middle button
-    pub fn with_button_map(mut self, button_map: LinearMap<u8, &'static str, N>) -> Self {
-        self.button_map = Some(button_map);
+    pub fn with_select_button_map(
+        mut self,
+        select_button_map: LinearMap<u8, &'static str, N>,
+    ) -> Self {
+        self.select_button_map = Some(select_button_map);
+        self
+    }
+
+    /// Change the default text of the middle button before placing it
+    pub fn with_select_button_text(mut self, text: &'static str) -> Self {
+        // Need to save it, in case the `select_button_map` would exist
+        self.select_text = text;
+        self.select = Button::with_text(ButtonPos::Middle, text, theme::button_default());
+        self
+    }
+
+    /// Change the text of the next button before placing it
+    pub fn with_next_button_text(mut self, text: &'static str) -> Self {
+        self.next = Button::with_text(ButtonPos::Right, text, theme::button_default());
+        self
+    }
+
+    /// Change the text of the previous button before placing it
+    pub fn with_previous_button_text(mut self, text: &'static str) -> Self {
+        self.prev = Button::with_text(ButtonPos::Left, text, theme::button_default());
         self
     }
 
@@ -139,68 +175,42 @@ where
     }
 
     pub fn set_rightmost_button(&mut self, text: &'static str) {
-        self.rightmost = SideButton::new(ButtonPos::Right, text).active();
-        self.replace_side_buttons();
+        self.rightmost.set(text, None, self.button_area);
     }
 
     pub fn set_leftmost_button(&mut self, text: &'static str) {
-        self.leftmost = SideButton::new(ButtonPos::Left, text).active();
-        self.replace_side_buttons();
+        self.leftmost.set(text, None, self.button_area);
     }
 
     pub fn set_rightmost_button_longpress(&mut self, text: &'static str, duration: Duration) {
-        self.rightmost = SideButton::new(ButtonPos::Right, text)
-            .with_long_press(duration)
-            .active();
-        self.replace_side_buttons();
+        self.rightmost.set(text, Some(duration), self.button_area);
     }
 
     pub fn set_leftmost_button_longpress(&mut self, text: &'static str, duration: Duration) {
-        self.leftmost = SideButton::new(ButtonPos::Left, text)
-            .with_long_press(duration)
-            .active();
-        self.replace_side_buttons();
+        self.leftmost.set(text, Some(duration), self.button_area);
     }
 
     pub fn unset_rightmost_button(&mut self) {
-        self.rightmost.is_active = false;
-        self.replace_side_buttons();
+        self.rightmost.unset();
     }
 
     pub fn unset_leftmost_button(&mut self) {
-        self.leftmost.is_active = false;
-        self.replace_side_buttons();
-    }
-
-    /// Making sure all the side buttons are updated to the latest state.
-    /// Necessary to call this after setting new leftmost or rightmost button.
-    pub fn replace_side_buttons(&mut self) {
-        self.leftmost.button.place(self.button_area);
-        self.rightmost.button.place(self.button_area);
+        self.leftmost.unset();
     }
 
     /// Optionally changing the text of the middle button according to
-    /// current page index and `self.button_map`
-    fn handle_select_button_paint(&mut self) {
-        match &self.button_map {
-            // When there is a special button text connected with this page index,
-            // create a temporary button and paint it instead of the select one
-            // NOTE: it was not possible to redefine `self.select`, it must stay as is
-            // as it listens on the click events
-            Some(button_map) => {
-                match button_map.get(&self.page_counter) {
+    /// current page index and `self.select_button_map`
+    fn handle_select_text(&mut self) {
+        match &self.select_button_map {
+            Some(select_button_map) => {
+                match select_button_map.get(&self.page_counter) {
                     Some(text) => {
-                        let mut temp_button =
-                            Button::with_text(ButtonPos::Middle, text, theme::button_default());
-                        temp_button.place(self.button_area);
-                        temp_button.paint();
+                        self.select.set_text(text, self.button_area);
                     }
-                    None => self.select.paint(),
+                    None => self.select.set_text(self.select_text, self.button_area),
                 };
             }
-            None => {
-                self.select.paint();
-            }
+            None => {}
         }
     }
 
@@ -277,8 +287,8 @@ where
         self.select.place(button_area);
         self.leftmost.button.place(button_area);
         self.rightmost.button.place(button_area);
-        // Saving button area so that we can re-place the side buttons
-        // manually when when they get updated
+        // Saving button area so that we can re-place the buttons
+        // when when they get updated
         self.button_area = button_area;
         bounds
     }
@@ -348,7 +358,8 @@ where
         }
 
         // BOTTOM MIDDLE button
-        self.handle_select_button_paint();
+        self.handle_select_text();
+        self.select.paint();
     }
 }
 
