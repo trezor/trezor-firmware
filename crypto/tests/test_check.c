@@ -6926,8 +6926,7 @@ START_TEST(test_ed25519_cosi) {
 
     /* phase 1: create nonces, commitments (R values) and combine commitments */
     for (int j = 0; j < N; j++) {
-      generate_rfc6979(nonces[j], &rng);
-      ed25519_publickey(nonces[j], Rs[j]);
+      ed25519_cosi_commit(nonces[j], Rs[j]);
     }
     res = ed25519_cosi_combine_publickeys(R, Rs, N);
     ck_assert_int_eq(res, 0);
@@ -6935,7 +6934,9 @@ START_TEST(test_ed25519_cosi) {
     MARK_SECRET_DATA(keys, sizeof(keys));
     /* phase 2: sign and combine signatures */
     for (int j = 0; j < N; j++) {
-      ed25519_cosi_sign(msg, sizeof(msg), keys[j], nonces[j], R, pk, sigs[j]);
+      res = ed25519_cosi_sign(msg, sizeof(msg), keys[j], nonces[j], R, pk,
+                              sigs[j]);
+      ck_assert_int_eq(res, 0);
     }
     UNMARK_SECRET_DATA(sigs, sizeof(sigs));
 

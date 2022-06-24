@@ -18,6 +18,7 @@
  */
 
 static uint8_t cosi_nonce[32] = {0};
+static uint8_t cosi_commitment[32] = {0};
 static bool cosi_nonce_is_set = false;
 
 void fsm_msgCipherKeyValue(const CipherKeyValue *msg) {
@@ -271,7 +272,7 @@ void fsm_msgCosiCommit(const CosiCommit *msg) {
   if (!node) return;
 
   if (!cosi_nonce_is_set) {
-    random_buffer(cosi_nonce, sizeof(cosi_nonce));
+    ed25519_cosi_commit(cosi_nonce, cosi_commitment);
     cosi_nonce_is_set = true;
   }
 
@@ -280,7 +281,7 @@ void fsm_msgCosiCommit(const CosiCommit *msg) {
   resp->commitment.size = 32;
   resp->pubkey.size = 32;
 
-  ed25519_publickey(cosi_nonce, resp->commitment.bytes);
+  memcpy(resp->commitment.bytes, cosi_commitment, sizeof(cosi_commitment));
   ed25519_publickey(node->private_key, resp->pubkey.bytes);
 
   msg_write(MessageType_MessageType_CosiCommitment, resp);
@@ -326,11 +327,13 @@ void fsm_msgCosiSign(const CosiSign *msg) {
   resp->signature.size = 32;
   cosi_nonce_is_set = false;
 
-  ed25519_cosi_sign(msg->data.bytes, msg->data.size, node->private_key,
-                    cosi_nonce, msg->global_commitment.bytes,
-                    msg->global_pubkey.bytes, resp->signature.bytes);
+  if (ed25519_cosi_sign(msg->data.bytes, msg->data.size, node->private_key,
+                        cosi_nonce, msg->global_commitment.bytes,
+                        msg->global_pubkey.bytes, resp->signature.bytes) == 0) {
+    msg_write(MessageType_MessageType_CosiSignature, resp);
+  } else {
+    fsm_sendFailure(FailureType_Failure_FirmwareError, NULL);
+  }
   memzero(cosi_nonce, sizeof(cosi_nonce));
-
-  msg_write(MessageType_MessageType_CosiSignature, resp);
   layoutHome();
 }

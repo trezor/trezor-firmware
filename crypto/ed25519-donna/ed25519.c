@@ -18,6 +18,7 @@
 #include "ed25519.h"
 
 #include "ed25519-hash-custom.h"
+#include "rand.h"
 #include "memzero.h"
 
 /*
@@ -50,16 +51,34 @@ ED25519_FN(ed25519_publickey) (const ed25519_secret_key sk, ed25519_public_key p
 }
 
 void
+ED25519_FN(ed25519_cosi_commit) (ed25519_secret_key nonce, ed25519_public_key commitment) {
+	bignum256modm r = {0};
+	ge25519 ALIGN(16) R;
+	unsigned char extnonce[64] = {0};
+
+	/* r = random512 mod L */
+	random_buffer(extnonce, sizeof(extnonce));
+	expand256_modm(r, extnonce, sizeof(extnonce));
+	memzero(&extnonce, sizeof(extnonce));
+	contract256_modm(nonce, r);
+
+	/* R = rB */
+	ge25519_scalarmult_base_niels(&R, ge25519_niels_base_multiples, r);
+	memzero(&r, sizeof(r));
+	ge25519_pack(commitment, &R);
+}
+
+int
 ED25519_FN(ed25519_cosi_sign) (const unsigned char *m, size_t mlen, const ed25519_secret_key sk, const ed25519_secret_key nonce, const ed25519_public_key R, const ed25519_public_key pk, ed25519_cosi_signature sig) {
 	bignum256modm r = {0}, S = {0}, a = {0};
-	hash_512bits extsk = {0}, extnonce = {0}, hram = {0};
+	hash_512bits extsk = {0}, hram = {0};
 
 	ed25519_extsk(extsk, sk);
-	ed25519_extsk(extnonce, nonce);
 
-	/* r = nonce */
-	expand256_modm(r, extnonce, 32);
-	memzero(&extnonce, sizeof(extnonce));
+	/* r */
+	expand_raw256_modm(r, nonce);
+	if (!is_reduced256_modm(r))
+		return -1;
 
 	/* S = H(R,A,m).. */
 	ed25519_hram(hram, R, pk, m, mlen);
@@ -77,6 +96,8 @@ ED25519_FN(ed25519_cosi_sign) (const unsigned char *m, size_t mlen, const ed2551
 
 	/* S = (r + H(R,A,m)a) mod L */
 	contract256_modm(sig, S);
+
+	return 0;
 }
 
 void
@@ -155,7 +176,7 @@ ED25519_FN(ed25519_sign_open) (const unsigned char *m, size_t mlen, const ed2551
 	/* S */
 	expand_raw256_modm(S, RS + 32);
 	if (!is_reduced256_modm(S))
-	  return -1;
+		return -1;
 
 	/* SB - H(R,A,m)A */
 	ge25519_double_scalarmult_vartime(&R, &A, hram, S);
