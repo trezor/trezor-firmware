@@ -9,8 +9,9 @@ use crate::{
 };
 use core::ops::Deref;
 
-use super::{theme, BothButtonPressHandler, Button, ButtonMsg, ButtonPos};
+use super::{theme, Button, ButtonMsg, ButtonPos};
 use heapless::String;
+use crate::ui::event::{ButtonEvent, PhysicalButton};
 
 pub enum PinPageMsg {
     Confirmed,
@@ -36,7 +37,6 @@ pub struct PinPage<T> {
     minor_prompt: T,
     allow_cancel: bool,
     digits: [&'static str; 10],
-    both_button_press: BothButtonPressHandler,
     pad: Pad,
     prev: Button<&'static str>,
     next: Button<&'static str>,
@@ -60,7 +60,6 @@ where
             minor_prompt,
             allow_cancel,
             digits: DIGITS,
-            both_button_press: BothButtonPressHandler::new(),
             pad: Pad::with_background(theme::BG),
             prev: Button::with_text(ButtonPos::Left, "<", theme::button_default()),
             next: Button::with_text(ButtonPos::Right, ">", theme::button_default()),
@@ -259,13 +258,10 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        // Possibly replacing or skipping an event because of both-button-press
-        // aggregation
-        let event = self.both_button_press.possibly_replace_event(event)?;
 
         // In case of both-button-press, changing all other buttons to released
         // state
-        if self.both_button_press.are_both_buttons_pressed(event) {
+        if let Event::Button(ButtonEvent::ButtonPressed(PhysicalButton::Both)) = event{
             self.set_right_and_left_buttons_as_released(ctx);
         }
 
