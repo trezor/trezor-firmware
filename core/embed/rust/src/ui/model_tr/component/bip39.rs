@@ -8,8 +8,9 @@ use crate::{
 };
 use core::ops::Deref;
 
-use super::{theme, BothButtonPressHandler, Button, ButtonMsg, ButtonPos};
+use super::{theme, Button, ButtonMsg, ButtonPos};
 use heapless::{String, Vec};
+use crate::ui::event::{ButtonEvent, PhysicalButton};
 
 pub enum Bip39PageMsg {
     Confirmed,
@@ -24,7 +25,6 @@ const WORD_THRESHOLD: usize = 10;
 pub struct Bip39Page<T> {
     prompt: T,
     letter_choices: Vec<char, 26>,
-    both_button_press: BothButtonPressHandler,
     pad: Pad,
     delete: Button<&'static str>,
     prev: Button<&'static str>,
@@ -48,7 +48,6 @@ where
         Self {
             prompt,
             letter_choices,
-            both_button_press: BothButtonPressHandler::new(),
             pad: Pad::with_background(theme::BG),
             delete: Button::with_text(ButtonPos::Left, "BIN", theme::button_default()),
             prev: Button::with_text(ButtonPos::Left, "BACK", theme::button_default()),
@@ -239,13 +238,10 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        // Possibly replacing or skipping an event because of both-button-press
-        // aggregation
-        let event = self.both_button_press.possibly_replace_event(event)?;
 
         // In case of both-button-press, changing all other buttons to released
         // state
-        if self.both_button_press.are_both_buttons_pressed(event) {
+        if let Event::Button(ButtonEvent::ButtonPressed(PhysicalButton::Both)) = event{
             self.set_right_and_left_buttons_as_released(ctx);
         }
 

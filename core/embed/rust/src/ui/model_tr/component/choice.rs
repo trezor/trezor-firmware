@@ -5,8 +5,9 @@ use crate::ui::{
 };
 use core::ops::Deref;
 
-use super::{theme, BothButtonPressHandler, Button, ButtonMsg, ButtonPos};
+use super::{theme, Button, ButtonMsg, ButtonPos};
 use heapless::Vec;
+use crate::ui::event::{ButtonEvent, PhysicalButton};
 
 pub enum ChoicePageMsg {
     Confirmed,
@@ -18,7 +19,6 @@ pub struct ChoicePage<T, const N: usize> {
     major_prompt: T,
     minor_prompt: T,
     choices: Vec<T, N>,
-    both_button_press: BothButtonPressHandler,
     pad: Pad,
     prev: Button<&'static str>,
     next: Button<&'static str>,
@@ -35,7 +35,6 @@ where
             major_prompt,
             minor_prompt,
             choices,
-            both_button_press: BothButtonPressHandler::new(),
             pad: Pad::with_background(theme::BG),
             prev: Button::with_text(ButtonPos::Left, "BACK", theme::button_default()),
             next: Button::with_text(ButtonPos::Right, "NEXT", theme::button_default()),
@@ -139,13 +138,10 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        // Possibly replacing or skipping an event because of both-button-press
-        // aggregation
-        let event = self.both_button_press.possibly_replace_event(event)?;
 
         // In case of both-button-press, changing all other buttons to released
         // state
-        if self.both_button_press.are_both_buttons_pressed(event) {
+        if let Event::Button(ButtonEvent::ButtonPressed(PhysicalButton::Both)) = event{
             self.set_right_and_left_buttons_as_released(ctx);
         }
 

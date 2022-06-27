@@ -8,8 +8,9 @@ use crate::{
 };
 use core::ops::Deref;
 
-use super::{theme, BothButtonPressHandler, Button, ButtonMsg, ButtonPos};
+use super::{theme, Button, ButtonMsg, ButtonPos};
 use heapless::String;
+use crate::ui::event::{ButtonEvent, PhysicalButton};
 
 pub enum PassphrasePageMsg {
     Confirmed,
@@ -61,7 +62,6 @@ pub struct PassphrasePage<T> {
     digits_choices: [&'static str; 10],
     special_choices: [&'static str; 30],
     menu_choices: [&'static str; 4],
-    both_button_press: BothButtonPressHandler,
     pad: Pad,
     menu_left: Button<&'static str>,
     menu_right: Button<&'static str>,
@@ -91,7 +91,6 @@ where
             digits_choices: DIGITS,
             special_choices: SPECIAL_SYMBOLS,
             menu_choices: MENU,
-            both_button_press: BothButtonPressHandler::new(),
             pad: Pad::with_background(theme::BG),
             menu_left: Button::with_text(ButtonPos::Left, "MENU", theme::button_default()),
             menu_right: Button::with_text(ButtonPos::Right, "MENU", theme::button_default()),
@@ -498,13 +497,10 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        // Possibly replacing or skipping an event because of both-button-press
-        // aggregation
-        let event = self.both_button_press.possibly_replace_event(event)?;
 
         // In case of both-button-press, changing all other buttons to released
         // state
-        if self.both_button_press.are_both_buttons_pressed(event) {
+        if let Event::Button(ButtonEvent::ButtonPressed(PhysicalButton::Both)) = event{
             self.set_right_and_left_buttons_as_released(ctx);
         }
 
