@@ -6,7 +6,11 @@ use crate::{
     },
 };
 
-use super::{common, common::StringChoiceItem, ChoicePage, ChoicePageMsg};
+use super::{
+    common,
+    common::{ButtonDetails, StringChoiceItem},
+    ChoicePage, ChoicePageMsg,
+};
 use heapless::{String, Vec};
 
 pub enum Bip39EntryMsg {
@@ -35,20 +39,60 @@ impl Bip39Entry {
     pub fn new() -> Self {
         let letter_choices: Vec<char, MAX_CHOICE_LENGTH> =
             bip39::get_available_letters("").collect();
-        let choices = letter_choices
-            .iter()
-            .map(|ch| StringChoiceItem::from_char(*ch))
-            .collect();
-        let mut choice_page = ChoicePage::new(choices);
-        choice_page.set_leftmost_button("BIN");
+
+        let choices = Self::get_letter_choice_page_items(&letter_choices);
 
         Self {
-            choice_page,
+            choice_page: ChoicePage::new(choices),
             letter_choices,
             textbox: TextBox::empty(),
             offer_words: false,
             words_list: bip39::Wordlist::all(),
         }
+    }
+
+    /// Letter choice items with BIN leftmost button.
+    fn get_letter_choice_page_items(
+        letter_choices: &Vec<char, MAX_CHOICE_LENGTH>,
+    ) -> Vec<StringChoiceItem, MAX_CHOICE_LENGTH> {
+        let mut choices: Vec<StringChoiceItem, MAX_CHOICE_LENGTH> = letter_choices
+            .iter()
+            .map(|ch| {
+                StringChoiceItem::from_char(
+                    *ch,
+                    Some(ButtonDetails::new("BACK")),
+                    Some(ButtonDetails::new("SELECT")),
+                    Some(ButtonDetails::new("NEXT")),
+                )
+            })
+            .collect();
+        let last_index = choices.len() - 1;
+        choices[0].btn_left = Some(ButtonDetails::new("BIN"));
+        choices[last_index].btn_right = None;
+
+        choices
+    }
+
+    /// Word choice items with BIN leftmost button.
+    fn get_word_choice_page_items(
+        words_list: &bip39::Wordlist,
+    ) -> Vec<StringChoiceItem, MAX_CHOICE_LENGTH> {
+        let mut choices: Vec<StringChoiceItem, MAX_CHOICE_LENGTH> = words_list
+            .iter()
+            .map(|word| {
+                StringChoiceItem::from_str(
+                    word,
+                    Some(ButtonDetails::new("BACK")),
+                    Some(ButtonDetails::new("SELECT")),
+                    Some(ButtonDetails::new("NEXT")),
+                )
+            })
+            .collect();
+        let last_index = choices.len() - 1;
+        choices[0].btn_left = Some(ButtonDetails::new("BIN"));
+        choices[last_index].btn_right = None;
+
+        choices
     }
 
     /// Gets up-to-date choices for letters or words.
@@ -60,17 +104,13 @@ impl Bip39Entry {
         // Otherwise getting relevant letters
         if self.words_list.len() < OFFER_WORDS_THRESHOLD {
             self.offer_words = true;
-            self.words_list
-                .iter()
-                .map(StringChoiceItem::from_slice)
-                .collect()
+
+            Self::get_word_choice_page_items(&self.words_list)
         } else {
             self.offer_words = false;
             self.letter_choices = bip39::get_available_letters(self.textbox.content()).collect();
-            self.letter_choices
-                .iter()
-                .map(|ch| StringChoiceItem::from_char(*ch))
-                .collect()
+
+            Self::get_letter_choice_page_items(&self.letter_choices)
         }
     }
 
@@ -107,29 +147,30 @@ impl Component for Bip39Entry {
         let msg = self.choice_page.event(ctx, event);
         match msg {
             Some(ChoicePageMsg::Choice(page_counter)) => {
+                // Clicked SELECT.
+                // When we already offer words, return the word at the given index.
+                // Otherwise, appending the new letter and resetting the choice page
+                // with up-to-date choices.
                 if self.offer_words {
-                    // When we already offer words, return the word at the given index
                     let word = self
                         .words_list
                         .get(page_counter as usize)
                         .unwrap_or_default();
                     Some(Bip39EntryMsg::ResultWord(String::from(word)))
                 } else {
-                    // Otherwise, appending the new letter and resetting the choice page
-                    // with up-to-date choices
                     let new_letter = self.letter_choices[page_counter as usize];
                     self.append_letter(ctx, new_letter);
                     let new_choices = self.get_current_choices();
-                    self.choice_page.reset(new_choices, true, false);
+                    self.choice_page.reset(new_choices, true);
                     None
                 }
             }
             Some(ChoicePageMsg::LeftMost) => {
-                // Deleting last letter, updating wordlist and updating choices
+                // Clicked BIN. Deleting last letter, updating wordlist and updating choices
                 self.delete_last_letter(ctx);
                 self.reset_wordlist();
                 let new_choices = self.get_current_choices();
-                self.choice_page.reset(new_choices, true, false);
+                self.choice_page.reset(new_choices, true);
                 None
             }
             _ => None,

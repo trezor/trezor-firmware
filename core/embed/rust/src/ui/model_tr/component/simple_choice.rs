@@ -4,7 +4,10 @@ use crate::ui::{
 };
 use core::ops::Deref;
 
-use super::{common::StringChoiceItem, ChoicePage, ChoicePageMsg};
+use super::{
+    common::{ButtonDetails, StringChoiceItem},
+    ChoicePage, ChoicePageMsg,
+};
 use heapless::{String, Vec};
 
 pub enum SimpleChoiceMsg {
@@ -24,10 +27,22 @@ where
     T: Deref<Target = str>,
 {
     pub fn new(str_choices: Vec<T, N>) -> Self {
-        let choices = str_choices
+        let mut choices: Vec<StringChoiceItem, N> = str_choices
             .iter()
-            .map(|s| StringChoiceItem::from_slice(s))
+            .map(|digit| {
+                StringChoiceItem::from_str(
+                    digit.as_ref(),
+                    Some(ButtonDetails::new("BACK")),
+                    Some(ButtonDetails::new("SELECT")),
+                    Some(ButtonDetails::new("NEXT")),
+                )
+            })
             .collect();
+        // Not wanting anything as leftmost and rightmost button
+        let last_index = choices.len() - 1;
+        choices[0].btn_left = None;
+        choices[last_index].btn_right = None;
+
         Self {
             choices: str_choices,
             choice_page: ChoicePage::new(choices),

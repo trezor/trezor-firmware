@@ -8,8 +8,12 @@ use crate::{
     },
 };
 
-use super::{common, common::MultilineStringChoiceItem, ChoicePage, ChoicePageMsg};
-use heapless::{LinearMap, String, Vec};
+use super::{
+    common,
+    common::{ButtonDetails, MultilineStringChoiceItem},
+    ChoicePage, ChoicePageMsg,
+};
+use heapless::{String, Vec};
 
 pub enum PinEntryMsg {
     Confirmed,
@@ -49,41 +53,40 @@ impl PinEntry {
     where
         T: Deref<Target = str>,
     {
-        // TODO: it is possible to create a vector combining both
-        // StringChoiceItem and MultilineStringChoiceItem?
-
-        // TODO: there could be some better way of showing the prompt
-
-        // Putting the prompt at the first place of the choice list,
-        // replacing the placeholder
-        let mut choices: Vec<MultilineStringChoiceItem, CHOICE_LENGTH> = Vec::new();
-        for (index, digit) in DIGITS.iter().enumerate() {
-            let item = if index == 0 {
-                MultilineStringChoiceItem::from_slice(&prompt).use_delimiter(' ')
-            } else {
-                MultilineStringChoiceItem::from_slice(digit)
-            };
-            choices.push(item).unwrap();
-        }
-
-        // Creating a custom middle-button-text for the prompt
-        let mut button_map = LinearMap::new();
-        button_map.insert(0, "CONFIRM").unwrap();
-
-        let mut choice_page = ChoicePage::new(choices)
-            .with_select_button_map(button_map)
-            .with_select_button_text("SELECT")
-            .with_previous_button_text("<")
-            .with_next_button_text(">");
-
-        // Setting the button to delete digits and cancel when there is no digit
-        choice_page.set_leftmost_button("BIN");
+        let choices = Self::get_word_choice_page_items(prompt);
 
         Self {
-            choice_page,
+            choice_page: ChoicePage::new(choices),
             show_real_pin: false,
             textbox: TextBox::empty(),
         }
+    }
+
+    /// PIN choice with filled prompt at the first position and special middle
+    /// text. Also adding the BIN button at the leftmost position.
+    fn get_word_choice_page_items<T>(prompt: T) -> Vec<MultilineStringChoiceItem, CHOICE_LENGTH>
+    where
+        T: Deref<Target = str>,
+    {
+        let mut choices: Vec<MultilineStringChoiceItem, CHOICE_LENGTH> = DIGITS
+            .iter()
+            .map(|digit| {
+                MultilineStringChoiceItem::new(
+                    String::from(*digit),
+                    Some(ButtonDetails::new("<")),
+                    Some(ButtonDetails::new("SELECT")),
+                    Some(ButtonDetails::new(">")),
+                )
+                .use_delimiter(' ')
+            })
+            .collect();
+        let last_index = choices.len() - 1;
+        choices[0].btn_left = Some(ButtonDetails::new("BIN"));
+        choices[0].btn_middle = Some(ButtonDetails::new("CONFIRM"));
+        choices[0].text = String::from(prompt.as_ref());
+        choices[last_index].btn_right = None;
+
+        choices
     }
 
     fn update_situation(&mut self) {

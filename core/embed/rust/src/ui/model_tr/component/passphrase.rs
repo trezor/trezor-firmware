@@ -4,9 +4,14 @@ use crate::{
         component::{text::common::TextBox, Component, Event, EventCtx},
         geometry::{Point, Rect},
     },
+    util,
 };
 
-use super::{common, common::MultilineStringChoiceItem, ChoicePage, ChoicePageMsg};
+use super::{
+    common,
+    common::{ButtonDetails, MultilineStringChoiceItem},
+    ChoicePage, ChoicePageMsg,
+};
 use heapless::{String, Vec};
 
 pub enum PassphraseEntryMsg {
@@ -29,6 +34,8 @@ const PASSPHRASE_ROW: i32 = 40;
 const MAX_LENGTH: usize = 50;
 const MAX_VISIBLE_CHARS: usize = 18;
 const HOLD_DURATION: Duration = Duration::from_secs(1);
+
+const MAX_CHOICE_LENGTH: usize = 30;
 
 const DIGITS: [char; 10] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 const LOWERCASE_LETTERS: [char; 26] = [
@@ -60,17 +67,10 @@ pub struct PassphraseEntry {
 
 impl PassphraseEntry {
     pub fn new() -> Self {
-        // Starting choice is the MENU with accept and cancel side buttons
-        let choices = MENU
-            .iter()
-            .map(|s| MultilineStringChoiceItem::from_slice(s))
-            .collect();
-        let mut choice_page = ChoicePage::new(choices);
-        choice_page.set_leftmost_button_longpress("ACC", HOLD_DURATION);
-        choice_page.set_rightmost_button_longpress("CNC", HOLD_DURATION);
+        let menu_choices = Self::get_menu_choices();
 
         Self {
-            choice_page,
+            choice_page: ChoicePage::new(menu_choices),
             show_plain_passphrase: false,
             textbox: TextBox::empty(),
             current_category: ChoiceCategory::Menu,
@@ -148,18 +148,33 @@ impl PassphraseEntry {
         }
     }
 
+    /// MENU choices with accept and cancel hold-to-confirm side buttons.
+    fn get_menu_choices() -> Vec<MultilineStringChoiceItem, MAX_CHOICE_LENGTH> {
+        let mut choices: Vec<MultilineStringChoiceItem, MAX_CHOICE_LENGTH> = MENU
+            .iter()
+            .map(|menu_item| {
+                MultilineStringChoiceItem::new(
+                    String::from(*menu_item),
+                    Some(ButtonDetails::new("BACK")),
+                    Some(ButtonDetails::new("SELECT")),
+                    Some(ButtonDetails::new("NEXT")),
+                )
+            })
+            .collect();
+        // Including accept button on the left and cancel on the very right
+        let last_index = choices.len() - 1;
+        choices[0].btn_left = Some(ButtonDetails::new("ACC").with_duration(HOLD_DURATION));
+        choices[last_index].btn_right =
+            Some(ButtonDetails::new("CNC").with_duration(HOLD_DURATION));
+
+        choices
+    }
+
     /// Displaying the MENU
     fn show_menu_page(&mut self) {
-        let new_choices = MENU
-            .iter()
-            .map(|w| MultilineStringChoiceItem::from_slice(w))
-            .collect();
-        self.choice_page.reset(new_choices, true, true);
-        // Including accept button on the left and cancel on the very right
-        self.choice_page
-            .set_leftmost_button_longpress("ACC", HOLD_DURATION);
-        self.choice_page
-            .set_rightmost_button_longpress("CNC", HOLD_DURATION);
+        let menu_choices = Self::get_menu_choices();
+
+        self.choice_page.reset(menu_choices, true);
     }
 
     /// Displaying the character category
@@ -171,14 +186,25 @@ impl PassphraseEntry {
             ChoiceCategory::SpecialSymbol => SPECIAL_SYMBOLS.iter().collect(),
             ChoiceCategory::Menu => panic!("Menu does not have characters"),
         };
-        let new_choices: Vec<MultilineStringChoiceItem, 30> = new_characters
+
+        let mut choices: Vec<MultilineStringChoiceItem, MAX_CHOICE_LENGTH> = new_characters
             .iter()
-            .map(|ch| MultilineStringChoiceItem::from_char(**ch))
+            .map(|ch| {
+                MultilineStringChoiceItem::new(
+                    util::char_to_string(**ch),
+                    Some(ButtonDetails::new("BACK")),
+                    Some(ButtonDetails::new("SELECT")),
+                    Some(ButtonDetails::new("NEXT")),
+                )
+            })
             .collect();
-        self.choice_page.reset(new_choices, true, true);
-        // Character categories need a way to return to the MENU
-        self.choice_page.set_leftmost_button("MENU");
-        self.choice_page.set_rightmost_button("MENU");
+        // Categories need a way to return back to MENU.
+        // Putting that option on both sides.
+        let last_index = choices.len() - 1;
+        choices[0].btn_left = Some(ButtonDetails::new("MENU"));
+        choices[last_index].btn_right = Some(ButtonDetails::new("MENU"));
+
+        self.choice_page.reset(choices, true);
     }
 
     pub fn passphrase(&self) -> &str {
