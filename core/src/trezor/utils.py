@@ -14,6 +14,7 @@ from trezorutils import (  # noqa: F401
     halt,
     memcpy,
     reboot_to_bootloader,
+    usb_data_connected,
 )
 from typing import TYPE_CHECKING
 

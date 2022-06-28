@@ -25,6 +25,7 @@
 #include <sys/poll.h>
 #include <sys/socket.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "touch.h"
 #include "usb.h"
@@ -249,3 +250,11 @@ int usb_webusb_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
 void pendsv_kbd_intr(void) {}
 
 void mp_hal_set_vcp_iface(int iface_num) {}
+
+secbool usb_configured(void) {
+  if (access("/var/tmp/trezor.usb_data_disconnected", F_OK) == 0) {
+    return secfalse;
+  }
+
+  return sectrue;
+}

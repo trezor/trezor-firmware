@@ -1,10 +1,11 @@
 import utime
 from micropython import const
+from typing import Tuple
 
 import storage
 import storage.cache
 import storage.device
-from trezor import config, ui, utils
+from trezor import config, io, loop, ui, utils
 from trezor.ui.loader import Loader, LoaderNeutral
 
 from apps.base import lock_device
@@ -25,6 +26,7 @@ class Homescreen(HomescreenBase):
 
     def __init__(self) -> None:
         super().__init__()
+        self.is_connected = False
         if not storage.device.is_initialized():
             self.label = "Go to trezor.io/start"
 
@@ -35,6 +37,17 @@ class Homescreen(HomescreenBase):
             reverse_speedup=3,
         )
         self.touch_ms: int | None = None
+
+    def create_tasks(self) -> Tuple[loop.AwaitableTask, ...]:
+        return super().create_tasks() + (self.usb_checker_task(),)
+
+    async def usb_checker_task(self) -> None:
+        usbcheck = loop.wait(io.USB_CHECK)
+        while True:
+            is_connected = await usbcheck
+            if is_connected != self.is_connected:
+                self.is_connected = is_connected
+                self.set_repaint(True)
 
     def do_render(self) -> None:
         # warning bar on top
@@ -54,6 +67,9 @@ class Homescreen(HomescreenBase):
         # homescreen with shifted avatar and text on bottom
         # Differs for each model
 
+        if not utils.usb_data_connected():
+            ui.display.bar(0, 0, 8, 8, ui.BLUE)
+
         # TODO: support homescreen avatar change for R and 1
         if utils.MODEL in ("T",):
             ui.display.avatar(48, 48 - 10, self.get_image(), ui.WHITE, ui.BLACK)
@@ -68,6 +84,8 @@ class Homescreen(HomescreenBase):
         ui.display.text_center(
             ui.WIDTH // 2, label_heights[utils.MODEL], self.label, ui.BOLD, ui.FG, ui.BG
         )
+
+        ui.refresh()
 
     def on_touch_start(self, _x: int, _y: int) -> None:
         if self.loader.start_ms is not None:
