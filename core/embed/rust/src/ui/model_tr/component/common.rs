@@ -49,20 +49,20 @@ pub trait ChoiceItem {
     fn paint_center(&mut self);
     fn paint_left(&mut self);
     fn paint_right(&mut self);
-    fn btn_left(&mut self) -> Option<ButtonDetails>;
-    fn btn_middle(&mut self) -> Option<ButtonDetails>;
-    fn btn_right(&mut self) -> Option<ButtonDetails>;
+    fn btn_left(&mut self) -> Option<ButtonDetails<&'static str>>;
+    fn btn_middle(&mut self) -> Option<ButtonDetails<&'static str>>;
+    fn btn_right(&mut self) -> Option<ButtonDetails<&'static str>>;
 }
 
 /// Describing the button in the choice item.
 #[derive(Debug, Clone, Copy)]
-pub struct ButtonDetails {
-    pub text: &'static str,
+pub struct ButtonDetails<T> {
+    pub text: T,
     pub duration: Option<Duration>,
 }
 
-impl ButtonDetails {
-    pub fn new(text: &'static str) -> Self {
+impl<T: AsRef<str>> ButtonDetails<T> {
+    pub fn new(text: T) -> Self {
         Self {
             text,
             duration: None,
@@ -79,17 +79,17 @@ impl ButtonDetails {
 #[derive(Debug, Clone)]
 pub struct StringChoiceItem {
     pub text: String<100>,
-    pub btn_left: Option<ButtonDetails>,
-    pub btn_middle: Option<ButtonDetails>,
-    pub btn_right: Option<ButtonDetails>,
+    pub btn_left: Option<ButtonDetails<&'static str>>,
+    pub btn_middle: Option<ButtonDetails<&'static str>>,
+    pub btn_right: Option<ButtonDetails<&'static str>>,
 }
 
 impl StringChoiceItem {
     pub fn from_str<T>(
         text: T,
-        btn_left: Option<ButtonDetails>,
-        btn_middle: Option<ButtonDetails>,
-        btn_right: Option<ButtonDetails>,
+        btn_left: Option<ButtonDetails<&'static str>>,
+        btn_middle: Option<ButtonDetails<&'static str>>,
+        btn_right: Option<ButtonDetails<&'static str>>,
     ) -> Self
     where
         T: Deref<Target = str>,
@@ -104,9 +104,9 @@ impl StringChoiceItem {
 
     pub fn from_char(
         ch: char,
-        btn_left: Option<ButtonDetails>,
-        btn_middle: Option<ButtonDetails>,
-        btn_right: Option<ButtonDetails>,
+        btn_left: Option<ButtonDetails<&'static str>>,
+        btn_middle: Option<ButtonDetails<&'static str>>,
+        btn_right: Option<ButtonDetails<&'static str>>,
     ) -> Self {
         Self {
             text: util::char_to_string(ch),
@@ -136,15 +136,15 @@ impl ChoiceItem for StringChoiceItem {
         display_bold_right(Point::new(RIGHT_COL, MIDDLE_ROW), self.text.as_str());
     }
 
-    fn btn_left(&mut self) -> Option<ButtonDetails> {
+    fn btn_left(&mut self) -> Option<ButtonDetails<&'static str>> {
         self.btn_left
     }
 
-    fn btn_middle(&mut self) -> Option<ButtonDetails> {
+    fn btn_middle(&mut self) -> Option<ButtonDetails<&'static str>> {
         self.btn_middle
     }
 
-    fn btn_right(&mut self) -> Option<ButtonDetails> {
+    fn btn_right(&mut self) -> Option<ButtonDetails<&'static str>> {
         self.btn_right
     }
 }
@@ -157,17 +157,17 @@ pub struct MultilineStringChoiceItem {
     // Arbitrary chosen. TODO: agree on this
     pub text: String<100>,
     delimiter: char,
-    pub btn_left: Option<ButtonDetails>,
-    pub btn_middle: Option<ButtonDetails>,
-    pub btn_right: Option<ButtonDetails>,
+    pub btn_left: Option<ButtonDetails<&'static str>>,
+    pub btn_middle: Option<ButtonDetails<&'static str>>,
+    pub btn_right: Option<ButtonDetails<&'static str>>,
 }
 
 impl MultilineStringChoiceItem {
     pub fn new(
         text: String<100>,
-        btn_left: Option<ButtonDetails>,
-        btn_middle: Option<ButtonDetails>,
-        btn_right: Option<ButtonDetails>,
+        btn_left: Option<ButtonDetails<&'static str>>,
+        btn_middle: Option<ButtonDetails<&'static str>>,
+        btn_right: Option<ButtonDetails<&'static str>>,
     ) -> Self {
         Self {
             text,
@@ -209,15 +209,15 @@ impl ChoiceItem for MultilineStringChoiceItem {
         }
     }
 
-    fn btn_left(&mut self) -> Option<ButtonDetails> {
+    fn btn_left(&mut self) -> Option<ButtonDetails<&'static str>> {
         self.btn_left
     }
 
-    fn btn_middle(&mut self) -> Option<ButtonDetails> {
+    fn btn_middle(&mut self) -> Option<ButtonDetails<&'static str>> {
         self.btn_middle
     }
 
-    fn btn_right(&mut self) -> Option<ButtonDetails> {
+    fn btn_right(&mut self) -> Option<ButtonDetails<&'static str>> {
         self.btn_right
     }
 }

@@ -76,8 +76,12 @@ impl<T: AsRef<str>> Button<T> {
         &self.content
     }
 
-    pub fn is_longpress(&mut self) -> bool {
+    pub fn is_longpress(&self) -> bool {
         self.long_press.is_some()
+    }
+
+    pub fn get_longpress(&self) -> Option<Duration> {
+        self.long_press
     }
 
     fn style(&self) -> &ButtonStyle {
@@ -110,8 +114,17 @@ impl<T: AsRef<str>> Button<T> {
         }
     }
 
-    pub fn set_released(&mut self, ctx: &mut EventCtx) {
-        self.set(ctx, State::Released);
+    pub fn set_pressed(&mut self, is_pressed: bool) {
+        if is_pressed {
+            self.state = State::Pressed;
+        } else {
+            self.state = State::Released;
+        }
+    }
+
+    pub fn paint_pressed(&mut self, is_pressed: bool) {
+        self.set_pressed(is_pressed);
+        self.paint();
     }
 
     fn placement(
@@ -241,113 +254,4 @@ pub struct ButtonStyle {
     pub font: Font,
     pub text_color: Color,
     pub border_horiz: bool,
-}
-
-/// Monitoring when to send both-button-press events.
-/// Aggregates individual left-and-right clicks and issues
-/// a both-button-press (middle button press/release) when appropriate.
-pub struct BothButtonPressHandler {
-    left_pressed: bool,
-    right_pressed: bool,
-    wait_for_both_button_release: bool,
-    send_both_button_press: bool,
-    send_both_button_release: bool,
-    /// In some situations we do not want to send individual events.
-    /// For example when releasing the first button from both-button-press,
-    /// we do not want to send the release event for the button itself,
-    /// as that could trigger a click on the single button.
-    /// (Considering that first-to-release button was first-to-press.)
-    do_not_send_any_event: bool,
-}
-
-impl BothButtonPressHandler {
-    pub fn new() -> Self {
-        Self {
-            left_pressed: false,
-            right_pressed: false,
-            wait_for_both_button_release: false,
-            send_both_button_press: false,
-            send_both_button_release: false,
-            do_not_send_any_event: false,
-        }
-    }
-
-    /// Getting a possibly new event coming from both-button-press aggregation.
-    /// It is even possible that event will be ignored
-    /// (the release of the first button of the both-button-press will be
-    /// ignored, not to cause any "normal" event to the button).
-    pub fn possibly_replace_event(&mut self, event: Event) -> Option<Event> {
-        match event {
-            Event::Button(button_event) => {
-                let new_button_event = self.handle_both_button_press(button_event)?;
-                Some(Event::Button(new_button_event))
-            }
-            _ => Some(event),
-        }
-    }
-
-    /// Aggregates single-button-press events and issues
-    /// both-button-press events when appropriate.
-    pub fn handle_both_button_press(&mut self, original_event: ButtonEvent) -> Option<ButtonEvent> {
-        match original_event {
-            ButtonEvent::ButtonPressed(PhysicalButton::Left) => {
-                self.left_pressed = true;
-                if self.right_pressed {
-                    self.send_both_button_press = true;
-                }
-            }
-            ButtonEvent::ButtonPressed(PhysicalButton::Right) => {
-                self.right_pressed = true;
-                if self.left_pressed {
-                    self.send_both_button_press = true;
-                }
-            }
-            ButtonEvent::ButtonReleased(PhysicalButton::Left) => {
-                self.left_pressed = false;
-                if self.right_pressed {
-                    // not send release event for the button itself
-                    self.do_not_send_any_event = true;
-                } else {
-                    self.do_not_send_any_event = false;
-                    self.send_both_button_release = true;
-                }
-            }
-            ButtonEvent::ButtonReleased(PhysicalButton::Right) => {
-                self.right_pressed = false;
-                if self.left_pressed {
-                    // not send release event for the button itself
-                    self.do_not_send_any_event = true;
-                } else {
-                    self.do_not_send_any_event = false;
-                    self.send_both_button_release = true;
-                }
-            }
-            // Both button click event never come, it needs to be aggregated
-            _ => {}
-        };
-
-        // Deciding whether to send any event, and which
-        // By default, sending the original event
-        if self.do_not_send_any_event {
-            None
-        } else if self.send_both_button_press {
-            self.send_both_button_press = false;
-            self.wait_for_both_button_release = true;
-            Some(ButtonEvent::ButtonPressed(PhysicalButton::Both))
-        } else if self.wait_for_both_button_release && self.send_both_button_release {
-            self.send_both_button_release = false;
-            self.wait_for_both_button_release = false;
-            Some(ButtonEvent::ButtonReleased(PhysicalButton::Both))
-        } else {
-            Some(original_event)
-        }
-    }
-
-    /// Identify both button's press started, so we can take some action.
-    pub fn are_both_buttons_pressed(&self, event: Event) -> bool {
-        matches!(
-            event,
-            Event::Button(ButtonEvent::ButtonPressed(PhysicalButton::Both))
-        )
-    }
 }

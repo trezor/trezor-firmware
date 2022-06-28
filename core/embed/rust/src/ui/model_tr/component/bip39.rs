@@ -156,13 +156,12 @@ impl Component for Bip39Entry {
                         .words_list
                         .get(page_counter as usize)
                         .unwrap_or_default();
-                    Some(Bip39EntryMsg::ResultWord(String::from(word)))
+                    return Some(Bip39EntryMsg::ResultWord(String::from(word)));
                 } else {
                     let new_letter = self.letter_choices[page_counter as usize];
                     self.append_letter(ctx, new_letter);
                     let new_choices = self.get_current_choices();
                     self.choice_page.reset(new_choices, true);
-                    None
                 }
             }
             Some(ChoicePageMsg::LeftMost) => {
@@ -171,10 +170,13 @@ impl Component for Bip39Entry {
                 self.reset_wordlist();
                 let new_choices = self.get_current_choices();
                 self.choice_page.reset(new_choices, true);
-                None
             }
-            _ => None,
+            _ => {}
         }
+
+        // Need to paint to refresh the screen
+        self.paint();
+        None
     }
 
     fn paint(&mut self) {

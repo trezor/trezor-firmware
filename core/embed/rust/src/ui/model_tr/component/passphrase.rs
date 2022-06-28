@@ -80,7 +80,6 @@ impl PassphraseEntry {
     fn update_situation(&mut self) {
         if self.show_plain_passphrase {
             self.reveal_current_passphrase();
-            self.show_plain_passphrase = false;
         } else {
             self.show_passphrase_length();
         }
@@ -224,6 +223,9 @@ impl Component for PassphraseEntry {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        // Any event should hide the shown passphrase if there
+        self.show_plain_passphrase = false;
+
         let msg = self.choice_page.event(ctx, event);
 
         if self.current_category == ChoiceCategory::Menu {
@@ -232,21 +234,18 @@ impl Component for PassphraseEntry {
                 Some(ChoicePageMsg::Choice(page_counter)) => match page_counter as usize {
                     DEL_INDEX => {
                         self.delete_last_digit(ctx);
-                        None
                     }
                     SHOW_INDEX => {
                         self.show_plain_passphrase = true;
-                        None
                     }
                     _ => {
                         self.current_category = self.get_category_from_menu(page_counter);
                         self.show_category_page();
-                        None
                     }
                 },
-                Some(ChoicePageMsg::LeftMost) => Some(PassphraseEntryMsg::Confirmed),
-                Some(ChoicePageMsg::RightMost) => Some(PassphraseEntryMsg::Cancelled),
-                _ => None,
+                Some(ChoicePageMsg::LeftMost) => return Some(PassphraseEntryMsg::Confirmed),
+                Some(ChoicePageMsg::RightMost) => return Some(PassphraseEntryMsg::Cancelled),
+                _ => {}
             }
         } else {
             match msg {
@@ -256,16 +255,18 @@ impl Component for PassphraseEntry {
                         let new_letter = self.get_char(page_counter as usize);
                         self.append_char(ctx, new_letter);
                     }
-                    None
                 }
                 Some(ChoicePageMsg::LeftMost) | Some(ChoicePageMsg::RightMost) => {
                     self.current_category = ChoiceCategory::Menu;
                     self.show_menu_page();
-                    None
                 }
-                _ => None,
+                _ => {}
             }
         }
+
+        // Need to paint to refresh the screen
+        self.paint();
+        None
     }
 
     fn paint(&mut self) {

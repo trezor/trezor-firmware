@@ -164,11 +164,10 @@ impl Component for PinEntry {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         let msg = self.choice_page.event(ctx, event);
-
         match msg {
             // Sending the result, appending the new digit, deleting the last digit or cancelling
             Some(ChoicePageMsg::Choice(page_counter)) => match page_counter {
-                0 => Some(PinEntryMsg::Confirmed),
+                0 => return Some(PinEntryMsg::Confirmed),
                 _ => {
                     if !self.is_full() {
                         self.append_new_digit(ctx, page_counter);
@@ -176,19 +175,21 @@ impl Component for PinEntry {
                             random::uniform_between(1, (CHOICE_LENGTH - 1) as u32);
                         self.choice_page.set_page_counter(new_page_counter as u8);
                     }
-                    None
                 }
             },
             Some(ChoicePageMsg::LeftMost) => {
                 if self.is_empty() {
-                    Some(PinEntryMsg::Cancelled)
+                    return Some(PinEntryMsg::Cancelled);
                 } else {
                     self.delete_last_digit(ctx);
-                    None
                 }
             }
-            _ => None,
+            _ => {}
         }
+
+        // Need to paint to refresh the screen
+        self.paint();
+        None
     }
 
     fn paint(&mut self) {

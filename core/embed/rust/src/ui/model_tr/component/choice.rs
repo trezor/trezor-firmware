@@ -3,7 +3,7 @@ use crate::ui::{
     geometry::Rect,
 };
 
-use super::{common::ChoiceItem, theme, BothButtonPressHandler, Button, ButtonMsg, ButtonPos};
+use super::{common::ChoiceItem, theme, ButtonController, ButtonControllerMsg, ButtonPos};
 use heapless::Vec;
 
 pub enum ChoicePageMsg {
@@ -26,12 +26,8 @@ const MIDDLE_ROW: i32 = 72;
 /// on screen etc.
 pub struct ChoicePage<T, const N: usize> {
     choices: Vec<T, N>,
-    both_button_press: BothButtonPressHandler,
     pad: Pad,
-    prev: Button<&'static str>,
-    next: Button<&'static str>,
-    select: Button<&'static str>,
-    button_area: Rect,
+    buttons: ButtonController<&'static str>,
     page_counter: u8,
 }
 
@@ -42,17 +38,10 @@ where
     pub fn new(choices: Vec<T, N>) -> Self {
         Self {
             choices,
-            both_button_press: BothButtonPressHandler::new(),
             pad: Pad::with_background(theme::BG),
             // The button texts are just placeholders,
             // each `ChoiceItem` is responsible for setting those.
-            prev: Button::with_text(ButtonPos::Left, "BACK", theme::button_default()),
-            next: Button::with_text(ButtonPos::Right, "NEXT", theme::button_default()),
-            select: Button::with_text(ButtonPos::Middle, "SELECT", theme::button_default()),
-            // Button area is needed so the buttons
-            // can be "re-placed" after their text is changed
-            // Will be set in `place`
-            button_area: Rect::zero(),
+            buttons: ButtonController::new(Some("BACK"), Some("SELECT"), Some("NEXT")),
             page_counter: 0,
         }
     }
@@ -126,15 +115,6 @@ where
     fn increase_page_counter(&mut self) {
         self.page_counter += 1;
     }
-
-    /// Changing all non-middle button's visual state to "released" state
-    /// (one of the buttons has a "pressed" state from
-    /// the first press of the both-button-press)
-    /// NOTE: does not cause any event to the button, it just repaints it
-    fn set_right_and_left_buttons_as_released(&mut self, ctx: &mut EventCtx) {
-        self.prev.set_released(ctx);
-        self.next.set_released(ctx);
-    }
 }
 
 impl<T, const N: usize> Component for ChoicePage<T, N>
@@ -147,99 +127,64 @@ where
         let button_height = theme::FONT_BOLD.line_height() + 2;
         let (_content_area, button_area) = bounds.split_bottom(button_height);
         self.pad.place(bounds);
-        self.prev.place(button_area);
-        self.next.place(button_area);
-        self.select.place(button_area);
-        // Saving button area so that we can re-place the buttons
-        // when when they get updated
-        self.button_area = button_area;
+        self.buttons.place(button_area);
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        // Possibly replacing or skipping an event because of both-button-press
-        // aggregation
-        let event = self.both_button_press.possibly_replace_event(event)?;
-
-        // In case of both-button-press, changing all other buttons to released
-        // state
-        if self.both_button_press.are_both_buttons_pressed(event) {
-            self.set_right_and_left_buttons_as_released(ctx);
-        }
-
-        // LEFT button clicks
-        if self.current_choice().btn_left().is_some() {
-            let left_msg = self.prev.event(ctx, event);
-            if left_msg == Some(ButtonMsg::LongPressed) && self.prev.is_longpress()
-                || left_msg == Some(ButtonMsg::Clicked) && !self.prev.is_longpress()
-            {
-                if self.has_previous_choice() {
-                    // Clicked BACK. Decrease the page counter.
-                    self.decrease_page_counter();
-                    return None;
-                } else {
-                    // Triggered LEFTmost button. Send event
-                    return Some(ChoicePageMsg::LeftMost);
+        let button_event = self.buttons.event(ctx, event);
+        // Updating the visual state of the buttons after each event
+        self.buttons.paint();
+        match button_event {
+            Some(ButtonControllerMsg::Triggered(pos)) => match pos {
+                ButtonPos::Left => {
+                    if self.has_previous_choice() {
+                        // Clicked BACK. Decrease the page counter.
+                        self.decrease_page_counter();
+                        self.paint();
+                        None
+                    } else {
+                        // Triggered LEFTmost button. Send event
+                        Some(ChoicePageMsg::LeftMost)
+                    }
                 }
-            }
-        }
-
-        // RIGHT button clicks
-        if self.current_choice().btn_right().is_some() {
-            let right_msg = self.next.event(ctx, event);
-            if right_msg == Some(ButtonMsg::LongPressed) && self.next.is_longpress()
-                || right_msg == Some(ButtonMsg::Clicked) && !self.next.is_longpress()
-            {
-                if self.has_next_choice() {
-                    // Clicked NEXT. Increase the page counter.
-                    self.increase_page_counter();
-                    return None;
-                } else {
-                    // Triggered RIGHTmost button. Send event
-                    return Some(ChoicePageMsg::RightMost);
+                ButtonPos::Right => {
+                    if self.has_next_choice() {
+                        // Clicked NEXT. Increase the page counter.
+                        self.increase_page_counter();
+                        self.paint();
+                        None
+                    } else {
+                        // Triggered RIGHTmost button. Send event
+                        Some(ChoicePageMsg::RightMost)
+                    }
                 }
-            }
+                ButtonPos::Middle => {
+                    // Clicked SELECT. Send current choice index
+                    Some(ChoicePageMsg::Choice(self.page_counter))
+                }
+            },
+            _ => None,
         }
-
-        // MIDDLE button clicks
-        if self.current_choice().btn_middle().is_some() {
-            if let Some(ButtonMsg::Clicked) = self.select.event(ctx, event) {
-                // Clicked SELECT. Send current choice index
-                return Some(ChoicePageMsg::Choice(self.page_counter));
-            }
-        }
-
-        None
     }
 
     fn paint(&mut self) {
         self.pad.paint();
 
-        // MIDDLE panel
-        self.update_situation();
-
         // All three buttons are handled based upon the current choice.
         // If defined in the current choice, setting their text,
         // whether they are long-pressed, and painting them.
+        let new_left_btn = self.current_choice().btn_left();
+        self.buttons.set_left(new_left_btn);
+        let new_right_btn = self.current_choice().btn_right();
+        self.buttons.set_right(new_right_btn);
+        let new_middle_btn = self.current_choice().btn_middle();
+        self.buttons.set_middle(new_middle_btn);
 
-        // BOTTOM LEFT button
-        if let Some(left_btn) = self.current_choice().btn_left() {
-            self.prev.set_text(left_btn.text, self.button_area);
-            self.prev.set_long_press(left_btn.duration);
-            self.prev.paint();
-        }
-        // BOTTOM MIDDLE button
-        if let Some(middle_btn) = self.current_choice().btn_middle() {
-            self.select.set_text(middle_btn.text, self.button_area);
-            self.select.set_long_press(middle_btn.duration);
-            self.select.paint();
-        }
-        // BOTTOM RIGHT button
-        if let Some(right_btn) = self.current_choice().btn_right() {
-            self.next.set_text(right_btn.text, self.button_area);
-            self.next.set_long_press(right_btn.duration);
-            self.next.paint();
-        }
+        self.buttons.paint();
+
+        // MIDDLE panel
+        self.update_situation();
     }
 }
 
