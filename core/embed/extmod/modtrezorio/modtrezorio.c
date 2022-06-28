@@ -31,6 +31,9 @@
 #include "touch.h"
 #include "usb.h"
 
+// Whether USB data pins were connected on last check (USB configured)
+__attribute__((unused)) static bool usb_connected_previously = false;
+
 #define CHECK_PARAM_RANGE(value, minimum, maximum)  \
   if (value < minimum || value > maximum) {         \
     mp_raise_ValueError(#value " is out of range"); \
@@ -67,6 +70,8 @@
 /// BUTTON_LEFT: int  # button number of left button
 /// BUTTON_RIGHT: int  # button number of right button
 
+/// USB_CHECK: int # interface id for check of USB data connection
+
 /// WireInterface = Union[HID, WebUSB]
 
 STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
@@ -81,6 +86,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_TOUCH_START), MP_ROM_INT((TOUCH_START >> 24) & 0xFFU)},
     {MP_ROM_QSTR(MP_QSTR_TOUCH_MOVE), MP_ROM_INT((TOUCH_MOVE >> 24) & 0xFFU)},
     {MP_ROM_QSTR(MP_QSTR_TOUCH_END), MP_ROM_INT((TOUCH_END >> 24) & 0xFFU)},
+
+    {MP_ROM_QSTR(MP_QSTR_USB_CHECK), MP_ROM_INT(USB_DATA_IFACE)},
 #elif defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
     {MP_ROM_QSTR(MP_QSTR_BUTTON), MP_ROM_INT(BUTTON_IFACE)},
     {MP_ROM_QSTR(MP_QSTR_BUTTON_PRESSED),

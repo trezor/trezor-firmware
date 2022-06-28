@@ -34,6 +34,7 @@
 #include "blake2s.h"
 #include "common.h"
 #include "flash.h"
+#include "usb.h"
 
 #ifndef TREZOR_EMULATOR
 #include "image.h"
@@ -261,6 +262,17 @@ STATIC mp_obj_t mod_trezorutils_reboot_to_bootloader() {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_reboot_to_bootloader_obj,
                                  mod_trezorutils_reboot_to_bootloader);
 
+/// def usb_data_connected() -> bool:
+///     """
+///     Returns whether USB has been enumerated/configured
+///     (and is not just connected by cable without data pins)
+///     """
+STATIC mp_obj_t mod_trezorutils_usb_data_connected() {
+  return usb_configured() == sectrue ? mp_const_true : mp_const_false;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_usb_data_connected_obj,
+                                 mod_trezorutils_usb_data_connected);
+
 STATIC mp_obj_str_t mod_trezorutils_revision_obj = {
     {&mp_type_bytes}, 0, sizeof(SCM_REVISION) - 1, (const byte *)SCM_REVISION};
 
@@ -290,6 +302,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
      MP_ROM_INT(FIRMWARE_SECTORS_COUNT)},
     {MP_ROM_QSTR(MP_QSTR_reboot_to_bootloader),
      MP_ROM_PTR(&mod_trezorutils_reboot_to_bootloader_obj)},
+    {MP_ROM_QSTR(MP_QSTR_usb_data_connected),
+     MP_ROM_PTR(&mod_trezorutils_usb_data_connected_obj)},
     // various built-in constants
     {MP_ROM_QSTR(MP_QSTR_SCM_REVISION),
      MP_ROM_PTR(&mod_trezorutils_revision_obj)},

@@ -79,6 +79,14 @@ def reboot_to_bootloader() -> None:
     """
     Reboots to bootloader.
     """
+
+
+# extmod/modtrezorutils/modtrezorutils.c
+def usb_data_connected() -> bool:
+    """
+    Returns whether USB has been enumerated/configured
+    (and is not just connected by cable without data pins)
+    """
 SCM_REVISION: bytes
 VERSION_MAJOR: int
 VERSION_MINOR: int

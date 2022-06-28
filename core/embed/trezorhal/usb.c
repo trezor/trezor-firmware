@@ -152,6 +152,15 @@ void usb_start(void) { USBD_Start(&usb_dev_handle); }
 
 void usb_stop(void) { USBD_Stop(&usb_dev_handle); }
 
+secbool usb_configured(void) {
+  USBD_HandleTypeDef *pdev = &usb_dev_handle;
+  if (pdev->dev_state == USBD_STATE_CONFIGURED) {
+    return sectrue;
+  }
+
+  return secfalse;
+}
+
 /*
  * Utility functions for USB interfaces
  */
