@@ -26,7 +26,7 @@ import click
 
 from .. import log, messages, protobuf, ui
 from ..client import TrezorClient
-from ..transport import enumerate_devices
+from ..transport import DeviceIsBusy, enumerate_devices
 from ..transport.udp import UdpTransport
 from . import (
     AliasedGroup,
@@ -247,9 +247,15 @@ def list_devices(no_resolve: bool) -> Optional[Iterable["Transport"]]:
         return enumerate_devices()
 
     for transport in enumerate_devices():
-        client = TrezorClient(transport, ui=ui.ClickUI())
-        click.echo(f"{transport} - {format_device_name(client.features)}")
-        client.end_session()
+        try:
+            client = TrezorClient(transport, ui=ui.ClickUI())
+            description = format_device_name(client.features)
+            client.end_session()
+        except DeviceIsBusy:
+            description = "Device is in use by another process"
+        except Exception:
+            description = "Failed to read details"
+        click.echo(f"{transport} - {description}")
     return None
 
 

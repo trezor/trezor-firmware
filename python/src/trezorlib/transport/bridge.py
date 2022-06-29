@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional
 import requests
 
 from ..log import DUMP_PACKETS
-from . import MessagePayload, Transport, TransportException
+from . import DeviceIsBusy, MessagePayload, Transport, TransportException
 
 if TYPE_CHECKING:
     from ..models import TrezorModel
@@ -37,14 +37,19 @@ CONNECTION = requests.Session()
 CONNECTION.headers.update(TREZORD_ORIGIN_HEADER)
 
 
-def call_bridge(uri: str, data: Optional[str] = None) -> requests.Response:
-    url = TREZORD_HOST + "/" + uri
+class BridgeException(TransportException):
+    def __init__(self, path: str, status: int, message: str) -> None:
+        self.path = path
+        self.status = status
+        self.message = message
+        super().__init__(f"trezord: {path} failed with code {status}: {message}")
+
+
+def call_bridge(path: str, data: Optional[str] = None) -> requests.Response:
+    url = TREZORD_HOST + "/" + path
     r = CONNECTION.post(url, data=data)
     if r.status_code != 200:
-        error_str = (
-            f"trezord: {uri} failed with code {r.status_code}: {r.json()['error']}"
-        )
-        raise TransportException(error_str)
+        raise BridgeException(path, r.status_code, r.json()["error"])
     return r
 
 
@@ -150,7 +155,12 @@ class BridgeTransport(Transport):
             return []
 
     def begin_session(self) -> None:
-        data = self._call("acquire/" + self.device["path"])
+        try:
+            data = self._call("acquire/" + self.device["path"])
+        except BridgeException as e:
+            if e.message == "wrong previous session":
+                raise DeviceIsBusy(self.device["path"]) from e
+            raise
         self.session = data.json()["session"]
 
     def end_session(self) -> None:
