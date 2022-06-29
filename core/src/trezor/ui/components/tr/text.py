@@ -1,12 +1,7 @@
 from trezor import res, ui
 from trezor.ui import display, style
 
-from ..common.text import (
-    TEXT_HEADER_HEIGHT,
-    TEXT_LINE_HEIGHT,
-    TextBase,
-    render_text,
-)
+from ..common.text import TEXT_HEADER_HEIGHT, TEXT_LINE_HEIGHT, TextBase, render_text
 
 
 def header(

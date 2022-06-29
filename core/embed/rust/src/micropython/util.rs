@@ -1,7 +1,5 @@
 use core::slice;
 
-use heapless::String;
-
 use crate::{
     error::Error,
     micropython::{
@@ -95,10 +93,4 @@ impl<T, E> ResultExt for Result<T, E> {
             panic!("{}", message);
         }
     }
-}
-
-pub fn char_to_string<const L: usize>(ch: char) -> String<L> {
-    let mut s = String::new();
-    s.push(ch).unwrap();
-    s
 }

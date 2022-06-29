@@ -1,4 +1,4 @@
-use crate::{ui::component::EventCtx, util::ResultExt};
+use crate::ui::{component::EventCtx, util::ResultExt};
 use heapless::String;
 
 /// Reified editing operations of `TextBox`.

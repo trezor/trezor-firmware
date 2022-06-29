@@ -4,7 +4,6 @@ use crate::{
         component::{text::common::TextEdit, Event, EventCtx, TimerToken},
         display::{self, Color, Font},
         geometry::{Offset, Point, Rect},
-        util::ResultExt,
     },
 };
 

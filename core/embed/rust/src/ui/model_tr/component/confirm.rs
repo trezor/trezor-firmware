@@ -38,6 +38,7 @@ impl HoldToConfirm {
         match pos {
             ButtonPos::Left => area.split_left(button_width).0,
             ButtonPos::Right => area.split_right(button_width).1,
+            ButtonPos::Middle => area.split_center(button_width),
         }
     }
 }

@@ -3,8 +3,8 @@ use crate::{
     ui::{
         component::{text::common::TextBox, Component, Event, EventCtx},
         geometry::{Point, Rect},
+        util,
     },
-    util,
 };
 
 use super::{

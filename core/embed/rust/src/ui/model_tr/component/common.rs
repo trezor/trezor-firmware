@@ -2,9 +2,9 @@ use core::ops::Deref;
 
 use heapless::String;
 
-use crate::{time::Duration, util};
+use crate::time::Duration;
 
-use crate::ui::{display, geometry::Point};
+use crate::ui::{display, geometry::Point, util};
 
 use super::theme;
 
