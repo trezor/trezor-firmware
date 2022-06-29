@@ -490,8 +490,7 @@ int hdnode_fill_public_key(HDNode *node) {
       curve25519_scalarmult_basepoint(node->public_key + 1, node->private_key);
 #if USE_CARDANO
     } else if (node->curve == &ed25519_cardano_info) {
-      ed25519_publickey_ext(node->private_key, node->private_key_extension,
-                            node->public_key + 1);
+      ed25519_publickey_ext(node->private_key, node->public_key + 1);
 #endif
     }
   }
