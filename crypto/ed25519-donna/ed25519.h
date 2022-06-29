@@ -17,7 +17,7 @@ typedef unsigned char ed25519_cosi_signature[32];
 
 void ed25519_publickey(const ed25519_secret_key sk, ed25519_public_key pk);
 #if USE_CARDANO
-void ed25519_publickey_ext(const ed25519_secret_key sk, const ed25519_secret_key skext, ed25519_public_key pk);
+void ed25519_publickey_ext(const ed25519_secret_key extsk, ed25519_public_key pk);
 #endif
 
 int ed25519_sign_open(const unsigned char *m, size_t mlen, const ed25519_public_key pk, const ed25519_signature RS);

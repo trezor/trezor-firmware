@@ -89,7 +89,7 @@ START_TEST(test_ed25519_cardano_sign_vectors) {
     memcpy(secret_key_extension, fromhex(*(test_data + 1)), 32);
     MARK_SECRET_DATA(secret_key_extension, sizeof(secret_key_extension));
 
-    ed25519_publickey_ext(secret_key, secret_key_extension, public_key);
+    ed25519_publickey_ext(secret_key, public_key);
     UNMARK_SECRET_DATA(public_key, sizeof(public_key));
 
     ck_assert_mem_eq(public_key, fromhex(*(test_data + 2)), 32);
