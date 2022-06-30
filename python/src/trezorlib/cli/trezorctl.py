@@ -170,7 +170,7 @@ def configure_logging(verbose: int) -> None:
     help="Resume given session ID.",
     default=os.environ.get("TREZOR_SESSION_ID"),
 )
-@click.version_option()
+@click.version_option(package_name="trezor")
 @click.pass_context
 def cli_main(
     ctx: click.Context,
