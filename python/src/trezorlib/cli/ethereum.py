@@ -18,10 +18,19 @@ import json
 import re
 import sys
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, TextIO, Tuple
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    List,
+    NoReturn,
+    Optional,
+    Sequence,
+    TextIO,
+    Tuple,
+)
 
 import click
-import rlp
 
 from .. import ethereum, tools
 from . import with_client
@@ -60,6 +69,14 @@ ETHER_UNITS = {
 _WEB3_INSTANCE: Optional["web3.Web3"] = None
 
 
+def _print_eth_dependencies_and_die() -> NoReturn:
+    click.echo("Ethereum requirements not installed.")
+    click.echo("Please run:")
+    click.echo()
+    click.echo("  pip install trezor[ethereum]")
+    sys.exit(1)
+
+
 def _get_web3() -> "web3.Web3":
     global _WEB3_INSTANCE
     if _WEB3_INSTANCE is None:
@@ -68,11 +85,7 @@ def _get_web3() -> "web3.Web3":
 
             _WEB3_INSTANCE = web3.Web3()
         except ModuleNotFoundError:
-            click.echo("Ethereum requirements not installed.")
-            click.echo("Please run:")
-            click.echo()
-            click.echo("  pip install web3")
-            sys.exit(1)
+            _print_eth_dependencies_and_die()
 
     return _WEB3_INSTANCE
 
@@ -271,6 +284,10 @@ def sign_tx(
     try to connect to an ethereum node and auto-fill these values. You can configure
     the connection with WEB3_PROVIDER_URI environment variable.
     """
+    try:
+        import rlp
+    except ImportError:
+        _print_eth_dependencies_and_die()
 
     is_eip1559 = eip2718_type == 2
     if (
