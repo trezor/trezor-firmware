@@ -17,6 +17,9 @@ else
     cd ${CONNECT_DIR}
 fi
 
+echo "Changing 'localhost' to '127.0.0.1' in websocket client as a workaround for CI servers"
+sed -i 's/localhost/127.0.0.1/g' ./tests/websocket-client.js
+
 # Taking an optional script argument with emulator version
 if [ ! -z "${1}" ]
 then
