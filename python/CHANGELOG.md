@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.2] (2022-06-30)
+[0.13.2]: https://github.com/trezor/trezor-firmware/compare/python/v0.13.1...python/v0.13.2
+
+### Fixed
+- Fixed dependency error when running trezorctl without PIL.
+- Fixed dependency error when running trezorctl on Python 3.6 without rlp.
+- Fix `trezorctl --version` crash.  [#1702]
+
+
 ## [0.13.1] (2022-06-29)
 [0.13.1]: https://github.com/trezor/trezor-firmware/compare/python/v0.13.0...python/v0.13.1
 
@@ -617,6 +626,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#1668]: https://github.com/trezor/trezor-firmware/pull/1668
 [#1671]: https://github.com/trezor/trezor-firmware/pull/1671
 [#1683]: https://github.com/trezor/trezor-firmware/pull/1683
+[#1702]: https://github.com/trezor/trezor-firmware/pull/1702
 [#1710]: https://github.com/trezor/trezor-firmware/pull/1710
 [#1738]: https://github.com/trezor/trezor-firmware/pull/1738
 [#1745]: https://github.com/trezor/trezor-firmware/pull/1745

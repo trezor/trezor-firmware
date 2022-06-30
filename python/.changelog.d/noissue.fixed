@@ -1,1 +1,0 @@
-Fixed dependency error when running trezorctl without PIL.
