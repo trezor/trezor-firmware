@@ -1,0 +1,2 @@
+Allow Cardano's `required_signers` in ordinary and multisig transactions
+Allow Cardano's `datum_hash` in non-script outputs
