@@ -122,7 +122,7 @@ int mnemonic_to_bits(const char *mnemonic, uint8_t *bits) {
   }
 
   char current_word[10] = {0};
-  uint32_t j = 0, k = 0, ki = 0, bi = 0;
+  uint32_t j = 0, ki = 0, bi = 0;
   uint8_t result[32 + 1] = {0};
 
   memzero(result, sizeof(result));
@@ -141,22 +141,15 @@ int mnemonic_to_bits(const char *mnemonic, uint8_t *bits) {
     if (mnemonic[i] != 0) {
       i++;
     }
-    k = 0;
-    for (;;) {
-      if (!BIP39_WORDLIST_ENGLISH[k]) {  // word not found
-        return 0;
+    int k = mnemonic_find_word(current_word);
+    if (k < 0) {  // word not found
+      return 0;
+    }
+    for (ki = 0; ki < 11; ki++) {
+      if (k & (1 << (10 - ki))) {
+        result[bi / 8] |= 1 << (7 - (bi % 8));
       }
-      if (strcmp(current_word, BIP39_WORDLIST_ENGLISH[k]) ==
-          0) {  // word found on index k
-        for (ki = 0; ki < 11; ki++) {
-          if (k & (1 << (10 - ki))) {
-            result[bi / 8] |= 1 << (7 - (bi % 8));
-          }
-          bi++;
-        }
-        break;
-      }
-      k++;
+      bi++;
     }
   }
   if (bi != n * 11) {
