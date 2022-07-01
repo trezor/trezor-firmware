@@ -71,6 +71,13 @@ where
         self
     }
 
+    pub fn add_break(mut self) -> Self {
+        if let Some(ref mut para) = self.list.last_mut() {
+            para.break_after = true;
+        };
+        self
+    }
+
     /// Update bounding boxes of paragraphs on the current page. First determine
     /// the number of visible paragraphs and their sizes. These are then
     /// arranged according to the layout.
@@ -94,6 +101,10 @@ where
             remaining_area = free;
             self.visible += 1;
             char_offset = 0;
+
+            if paragraph.break_after {
+                break;
+            }
         }
 
         self.placement.arrange(
@@ -195,6 +206,7 @@ pub mod trace {
 pub struct Paragraph<T> {
     content: T,
     layout: TextLayout,
+    break_after: bool,
 }
 
 impl<T> Paragraph<T>
@@ -202,7 +214,11 @@ where
     T: AsRef<str>,
 {
     pub fn new(content: T, layout: TextLayout) -> Self {
-        Self { content, layout }
+        Self {
+            content,
+            layout,
+            break_after: false,
+        }
     }
 
     pub fn content(&self, char_offset: usize) -> &str {
@@ -274,6 +290,11 @@ where
                     current.par += 1;
                     current.chr = 0;
                     progress = true;
+
+                    // Handle hard break if requested for this paragraph.
+                    if paragraph.break_after && current.par < self.paragraphs.list.len() {
+                        return self.current;
+                    }
                 }
                 LayoutFit::OutOfBounds {
                     processed_chars, ..
