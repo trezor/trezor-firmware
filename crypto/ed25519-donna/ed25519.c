@@ -140,7 +140,7 @@ ED25519_FN(ed25519_sign) (const unsigned char *m, size_t mlen, const ed25519_sec
 
 int
 ED25519_FN(ed25519_sign_open) (const unsigned char *m, size_t mlen, const ed25519_public_key pk, const ed25519_signature RS) {
-	ge25519 ALIGN(16) R, A;
+	ge25519 ALIGN(16) R = {0}, A = {0};
 	hash_512bits hash = {0};
 	bignum256modm hram = {0}, S = {0};
 	unsigned char checkR[32] = {0};
@@ -168,7 +168,7 @@ ED25519_FN(ed25519_sign_open) (const unsigned char *m, size_t mlen, const ed2551
 int
 ED25519_FN(ed25519_scalarmult) (ed25519_public_key res, const ed25519_secret_key sk, const ed25519_public_key pk) {
 	bignum256modm a = {0};
-	ge25519 ALIGN(16) A, P;
+	ge25519 ALIGN(16) A = {0}, P = {0};
 	hash_512bits extsk = {0};
 
 	ed25519_extsk(extsk, sk);
@@ -194,7 +194,7 @@ ED25519_FN(ed25519_scalarmult) (ed25519_public_key res, const ed25519_secret_key
 void
 ed25519_publickey_ext(const ed25519_secret_key extsk, ed25519_public_key pk) {
 	bignum256modm a = {0};
-	ge25519 ALIGN(16) A;
+	ge25519 ALIGN(16) A = {0};
 
 	expand256_modm(a, extsk, 32);
 
@@ -256,8 +256,8 @@ void
 curve25519_scalarmult_basepoint(curve25519_key pk, const curve25519_key e) {
 	curve25519_key ec = {0};
 	bignum256modm s = {0};
-	bignum25519 ALIGN(16) yplusz, zminusy;
-	ge25519 ALIGN(16) p;
+	bignum25519 ALIGN(16) yplusz = {0}, zminusy = {0};
+	ge25519 ALIGN(16) p = {0};
 	size_t i = 0;
 
 	/* clamp */
