@@ -470,4 +470,32 @@ mod tests {
         swipe_down(&mut page);
         assert_eq!(trace(&page), expected1);
     }
+
+    #[test]
+    fn paragraphs_hard_break() {
+        let mut page = SwipePage::new(
+            Paragraphs::new()
+                .add(theme::TEXT_NORMAL, "Short one.")
+                .add_break()
+                .add(theme::TEXT_NORMAL, "Short two.")
+                .add_break()
+                .add(theme::TEXT_NORMAL, "Short three.")
+                .add_break(),
+            Empty,
+            theme::BG,
+        );
+        page.place(SCREEN);
+
+        let expected1 = "<SwipePage active_page:0 page_count:3 content:<Paragraphs Short one.\n> buttons:<Empty > >";
+        let expected2 = "<SwipePage active_page:1 page_count:3 content:<Paragraphs Short two.\n> buttons:<Empty > >";
+        let expected3 = "<SwipePage active_page:2 page_count:3 content:<Paragraphs Short three.\n> buttons:<Empty > >";
+
+        assert_eq!(trace(&page), expected1);
+        swipe_up(&mut page);
+        assert_eq!(trace(&page), expected2);
+        swipe_up(&mut page);
+        assert_eq!(trace(&page), expected3);
+        swipe_up(&mut page);
+        assert_eq!(trace(&page), expected3);
+    }
 }
