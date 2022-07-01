@@ -12,7 +12,7 @@
  * Out: b = 2^250 - 2^0
  */
 void curve25519_pow_two5mtwo0_two250mtwo0(bignum25519 b) {
-	bignum25519 ALIGN(16) t0,c;
+	bignum25519 ALIGN(16) t0 = {0}, c = {0};
 
 	/* 2^5  - 2^0 */ /* b */
 	/* 2^10 - 2^5 */ curve25519_square_times(t0, b, 5);
@@ -35,7 +35,7 @@ void curve25519_pow_two5mtwo0_two250mtwo0(bignum25519 b) {
  * z^(p - 2) = z(2^255 - 21)
  */
 void curve25519_recip(bignum25519 out, const bignum25519 z) {
-	bignum25519 ALIGN(16) a,t0,b;
+	bignum25519 ALIGN(16) a = {0}, t0 = {0}, b = {0};
 
 	/* 2 */ curve25519_square_times(a, z, 1); /* a = 2 */
 	/* 8 */ curve25519_square_times(t0, a, 2);
