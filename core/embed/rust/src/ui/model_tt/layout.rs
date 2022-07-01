@@ -376,7 +376,7 @@ extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs:
         let paragraphs = Paragraphs::new()
             .add(theme::TEXT_NORMAL, "Address:".into())
             .add(theme::TEXT_MONO, address)
-            // FIXME pagebreak
+            .add_break()
             .add(theme::TEXT_NORMAL, description.into())
             .add(theme::TEXT_MONO, amount_change)
             .add(theme::TEXT_NORMAL, "New amount:".into())
