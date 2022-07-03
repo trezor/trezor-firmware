@@ -1,8 +1,6 @@
-use core::ops::Deref;
-
 use crate::ui::{
-    component::{Child, Component, Event, EventCtx, Image, Label, Never},
-    geometry::{Grid, Insets, Rect},
+    component::{text::paragraphs::Paragraphs, Child, Component, Event, EventCtx, Image, Never},
+    geometry::{Grid, Insets, LinearPlacement, Rect},
 };
 
 use super::{theme, Button};
@@ -100,38 +98,48 @@ where
 
 pub struct IconDialog<T, U> {
     image: Child<Image>,
-    title: Label<T>,
-    description: Option<Label<T>>,
+    paragraphs: Paragraphs<T>,
     controls: Child<U>,
 }
 
 impl<T, U> IconDialog<T, U>
 where
-    T: Deref<Target = str>,
+    T: AsRef<str>,
     U: Component,
 {
     pub fn new(icon: &'static [u8], title: T, controls: U) -> Self {
         Self {
             image: Child::new(Image::new(icon)),
-            title: Label::centered(title, theme::label_warning()),
-            description: None,
+            paragraphs: Paragraphs::new()
+                .with_placement(
+                    LinearPlacement::vertical()
+                        .align_at_start()
+                        .with_spacing(Self::VALUE_SPACE),
+                )
+                .add(theme::TEXT_MEDIUM, title)
+                .centered(),
             controls: Child::new(controls),
         }
     }
 
     pub fn with_description(mut self, description: T) -> Self {
-        self.description = Some(Label::centered(description, theme::label_warning_value()));
+        if !description.as_ref().is_empty() {
+            self.paragraphs = self
+                .paragraphs
+                .add_color(theme::TEXT_NORMAL, theme::OFF_WHITE, description)
+                .centered();
+        }
         self
     }
 
     pub const ICON_AREA_HEIGHT: i32 = 64;
-    pub const DESCRIPTION_SPACE: i32 = 13;
-    pub const VALUE_SPACE: i32 = 9;
+    pub const DESCRIPTION_SPACE: i32 = 14;
+    pub const VALUE_SPACE: i32 = 5;
 }
 
 impl<T, U> Component for IconDialog<T, U>
 where
-    T: Deref<Target = str>,
+    T: AsRef<str>,
     U: Component,
 {
     type Msg = DialogMsg<Never, U::Msg>;
@@ -141,33 +149,27 @@ where
         let (content, buttons) = bounds.split_bottom(Button::<&str>::HEIGHT);
         let (image, content) = content.split_top(Self::ICON_AREA_HEIGHT);
         let content = content.inset(Insets::top(Self::DESCRIPTION_SPACE));
-        let (title, content) = content.split_top(self.title.size().y);
-        let content = content.inset(Insets::top(Self::VALUE_SPACE));
 
         self.image.place(image);
-        self.title.place(title);
-        self.description.place(content);
+        self.paragraphs.place(content);
         self.controls.place(buttons);
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        self.title.event(ctx, event);
-        self.description.event(ctx, event);
+        self.paragraphs.event(ctx, event);
         self.controls.event(ctx, event).map(Self::Msg::Controls)
     }
 
     fn paint(&mut self) {
         self.image.paint();
-        self.title.paint();
-        self.description.paint();
+        self.paragraphs.paint();
         self.controls.paint();
     }
 
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.image.bounds(sink);
-        self.title.bounds(sink);
-        self.description.bounds(sink);
+        self.paragraphs.bounds(sink);
         self.controls.bounds(sink);
     }
 }
@@ -175,15 +177,12 @@ where
 #[cfg(feature = "ui_debug")]
 impl<T, U> crate::trace::Trace for IconDialog<T, U>
 where
-    T: Deref<Target = str>,
+    T: AsRef<str>,
     U: crate::trace::Trace,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("IconDialog");
-        t.field("title", &self.title);
-        if let Some(ref description) = self.description {
-            t.field("description", description);
-        }
+        t.field("content", &self.paragraphs);
         t.field("controls", &self.controls);
         t.close();
     }

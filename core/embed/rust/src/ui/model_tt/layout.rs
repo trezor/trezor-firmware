@@ -77,7 +77,7 @@ where
 
 impl<T, U> ComponentMsgObj for IconDialog<T, U>
 where
-    T: Deref<Target = str>,
+    T: AsRef<str>,
     U: Component,
     <U as Component>::Msg: TryInto<Obj, Error = Error>,
 {
