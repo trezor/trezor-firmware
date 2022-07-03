@@ -2,7 +2,8 @@ use heapless::Vec;
 
 use crate::ui::{
     component::{Component, Event, EventCtx, Never, Paginate},
-    geometry::{Dimensions, Insets, LinearPlacement, Rect},
+    display::Color,
+    geometry::{Alignment, Dimensions, Insets, LinearPlacement, Rect},
 };
 
 use super::layout::{LayoutFit, TextLayout, TextStyle};
@@ -52,6 +53,14 @@ where
         self
     }
 
+    pub fn add_color(self, style: TextStyle, color: Color, content: T) -> Self {
+        let color_style = TextStyle {
+            text_color: color,
+            ..style
+        };
+        self.add(color_style, content)
+    }
+
     pub fn add(mut self, style: TextStyle, content: T) -> Self {
         if content.as_ref().is_empty() {
             return self;
@@ -68,6 +77,13 @@ where
             #[cfg(feature = "ui_debug")]
             panic!("paragraph list is full");
         }
+        self
+    }
+
+    pub fn centered(mut self) -> Self {
+        if let Some(ref mut para) = self.list.last_mut() {
+            para.layout.align = Alignment::Center;
+        };
         self
     }
 

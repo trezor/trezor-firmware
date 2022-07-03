@@ -2,7 +2,7 @@ use super::iter::GlyphMetrics;
 use crate::ui::{
     display,
     display::{Color, Font},
-    geometry::{Offset, Point, Rect},
+    geometry::{Alignment, Offset, Point, Rect},
 };
 
 #[derive(Copy, Clone)]
@@ -39,6 +39,8 @@ pub struct TextLayout {
 
     /// Fonts, colors, line/page breaking behavior.
     pub style: TextStyle,
+    /// Horizontal alignment.
+    pub align: Alignment,
 }
 
 #[derive(Copy, Clone)]
@@ -90,11 +92,17 @@ impl TextLayout {
             padding_top: 0,
             padding_bottom: 0,
             style,
+            align: Alignment::Start,
         }
     }
 
     pub fn with_bounds(mut self, bounds: Rect) -> Self {
         self.bounds = bounds;
+        self
+    }
+
+    pub fn with_align(mut self, align: Alignment) -> Self {
+        self.align = align;
         self
     }
 
@@ -173,12 +181,19 @@ impl TextLayout {
         }
 
         while !remaining_text.is_empty() {
+            let remaining_width = self.bounds.x1 - cursor.x;
             let span = Span::fit_horizontally(
                 remaining_text,
-                self.bounds.x1 - cursor.x,
+                remaining_width,
                 self.style.text_font,
                 self.style.line_breaking,
             );
+
+            cursor.x += match self.align {
+                Alignment::Start => 0,
+                Alignment::Center => (remaining_width - span.advance.x) / 2,
+                Alignment::End => remaining_width - span.advance.x,
+            };
 
             // Report the span at the cursor position.
             sink.text(*cursor, self, &remaining_text[..span.length]);
