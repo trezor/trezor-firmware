@@ -1,8 +1,11 @@
-use super::{common::ButtonDetails, theme, Button, ButtonPos, ButtonStyleSheet};
+use super::{
+    common::ButtonDetails, theme, Button, ButtonPos, ButtonStyleSheet, HoldToConfirm,
+    HoldToConfirmMsg, LoaderStyle, LoaderStyleSheet,
+};
 use crate::{
     time::Duration,
     ui::{
-        component::{base::Event, Component, EventCtx, TimerToken},
+        component::{base::Event, Component, EventCtx},
         event::{ButtonEvent, PhysicalButton},
         geometry::Rect,
     },
@@ -20,42 +23,62 @@ pub enum ButtonControllerMsg {
     Triggered(ButtonPos),
 }
 
+pub enum ButtonType {
+    Nothing,
+    NormalButton,
+    HoldToConfirm,
+}
+
 /// Wrapping a button and its active state, so that it can be easily
 /// shown/hidden according to `is_active`.
 pub struct ButtonContainer<T> {
     button: Button<T>,
-    is_active: bool,
+    hold_to_confirm: HoldToConfirm<T>,
+    button_type: ButtonType,
 }
 
-impl<T: AsRef<str>> ButtonContainer<T> {
+impl<T: Clone + AsRef<str>> ButtonContainer<T> {
     pub fn new(pos: ButtonPos, text: T, styles: ButtonStyleSheet, is_active: bool) -> Self {
         Self {
-            button: Button::with_text(pos, text, styles),
-            is_active,
+            button: Button::with_text(pos, text.clone(), styles),
+            hold_to_confirm: HoldToConfirm::new(
+                pos,
+                text,
+                LoaderStyleSheet {
+                    normal: &LoaderStyle {
+                        font: theme::FONT_BOLD,
+                        fg_color: theme::FG,
+                        bg_color: theme::BG,
+                    },
+                },
+                Duration::from_millis(1000),
+            ),
+            button_type: if is_active {
+                ButtonType::NormalButton
+            } else {
+                ButtonType::Nothing
+            },
         }
     }
 
     pub fn reacts_to_single_click(&self) -> bool {
-        self.is_active && !self.button.is_longpress()
-    }
-
-    pub fn get_longpress(&self) -> Option<Duration> {
-        if self.is_active {
-            self.button.get_longpress()
-        } else {
-            None
-        }
+        matches!(self.button_type, ButtonType::NormalButton)
     }
 
     /// Changing the state of the button.
     /// Passing `None` will mark the button as inactive.
     pub fn set(&mut self, btn_details: Option<ButtonDetails<T>>, button_area: Rect) {
         if let Some(btn_details) = btn_details {
-            self.button.set_text(btn_details.text, button_area);
-            self.button.set_long_press(btn_details.duration);
-            self.is_active = true;
+            if let Some(duration) = btn_details.duration {
+                self.hold_to_confirm.set_text(btn_details.text, button_area);
+                self.hold_to_confirm.set_duration(duration);
+                self.button_type = ButtonType::HoldToConfirm;
+            } else {
+                self.button.set_text(btn_details.text, button_area);
+                self.button_type = ButtonType::NormalButton;
+            }
         } else {
-            self.is_active = false;
+            self.button_type = ButtonType::Nothing;
         }
     }
 }
@@ -78,7 +101,6 @@ pub struct ButtonController<T> {
     middle_btn: ButtonContainer<T>,
     right_btn: ButtonContainer<T>,
     state: ButtonState,
-    long_timer: Option<TimerToken>,
     // Button area is needed so the buttons
     // can be "re-placed" after their text is changed
     // Will be set in `place`
@@ -112,13 +134,12 @@ impl ButtonController<&'static str> {
                 right_text.is_some(),
             ),
             state: ButtonState::Nothing,
-            long_timer: None,
             button_area: Rect::zero(),
         }
     }
 }
 
-impl<T: AsRef<str>> ButtonController<T> {
+impl<T: Clone + AsRef<str>> ButtonController<T> {
     pub fn set_left(&mut self, btn_details: Option<ButtonDetails<T>>) {
         self.left_btn.set(btn_details, self.button_area);
     }
@@ -132,31 +153,38 @@ impl<T: AsRef<str>> ButtonController<T> {
     }
 }
 
-impl<T: AsRef<str>> Component for ButtonController<T> {
+impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
     type Msg = ButtonControllerMsg;
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        // Handling the hold_to_confirm elements
+        if matches!(self.left_btn.button_type, ButtonType::HoldToConfirm) {
+            let msg = self.left_btn.hold_to_confirm.event(ctx, event);
+            if matches!(msg, Some(HoldToConfirmMsg::Confirmed)) {
+                self.state = ButtonState::Nothing;
+                return Some(ButtonControllerMsg::Triggered(ButtonPos::Left));
+            }
+        }
+        if matches!(self.right_btn.button_type, ButtonType::HoldToConfirm) {
+            let msg = self.right_btn.hold_to_confirm.event(ctx, event);
+            if matches!(msg, Some(HoldToConfirmMsg::Confirmed)) {
+                self.state = ButtonState::Nothing;
+                return Some(ButtonControllerMsg::Triggered(ButtonPos::Right));
+            }
+        }
+        if matches!(self.middle_btn.button_type, ButtonType::HoldToConfirm) {
+            let msg = self.middle_btn.hold_to_confirm.event(ctx, event);
+            if matches!(msg, Some(HoldToConfirmMsg::Confirmed)) {
+                self.state = ButtonState::Nothing;
+                return Some(ButtonControllerMsg::Triggered(ButtonPos::Middle));
+            }
+        }
+
         match event {
             Event::Button(button) => {
                 let (new_state, event) = match self.state {
                     ButtonState::Nothing => match button {
-                        ButtonEvent::ButtonPressed(which) => {
-                            // Starting the timer if button is a long press
-                            match which {
-                                PhysicalButton::Left => {
-                                    if let Some(duration) = self.left_btn.get_longpress() {
-                                        self.long_timer = Some(ctx.request_timer(duration));
-                                    }
-                                }
-                                PhysicalButton::Right => {
-                                    if let Some(duration) = self.right_btn.get_longpress() {
-                                        self.long_timer = Some(ctx.request_timer(duration));
-                                    }
-                                }
-                                _ => {}
-                            }
-                            (ButtonState::OneDown(which), None)
-                        }
+                        ButtonEvent::ButtonPressed(which) => (ButtonState::OneDown(which), None),
                         _ => (self.state, None),
                     },
                     ButtonState::OneDown(which_down) => match button {
@@ -181,9 +209,6 @@ impl<T: AsRef<str>> Component for ButtonController<T> {
                         },
 
                         ButtonEvent::ButtonPressed(b) if b != which_down => {
-                            if let Some(duration) = self.middle_btn.button.get_longpress() {
-                                self.long_timer = Some(ctx.request_timer(duration));
-                            }
                             (ButtonState::BothDown, None)
                         }
                         _ => (self.state, None),
@@ -210,18 +235,6 @@ impl<T: AsRef<str>> Component for ButtonController<T> {
                 self.state = new_state;
                 event
             }
-            Event::Timer(token) if self.long_timer == Some(token) => {
-                // Handling hold-to-confirm (long-press) buttons
-                self.long_timer = None;
-                let which_button = match self.state {
-                    ButtonState::OneDown(PhysicalButton::Left) => Some(ButtonPos::Left),
-                    ButtonState::OneDown(PhysicalButton::Right) => Some(ButtonPos::Right),
-                    ButtonState::BothDown | ButtonState::OneReleased(_) => Some(ButtonPos::Middle),
-                    _ => None,
-                };
-                self.state = ButtonState::Nothing;
-                which_button.map(ButtonControllerMsg::Triggered)
-            }
             _ => None,
         }
     }
@@ -236,20 +249,28 @@ impl<T: AsRef<str>> Component for ButtonController<T> {
             },
             ButtonState::BothDown | ButtonState::OneReleased(_) => Some(ButtonPos::Middle),
         };
-        if self.left_btn.is_active {
+        if matches!(self.left_btn.button_type, ButtonType::NormalButton) {
             self.left_btn
                 .button
                 .paint_pressed(matches!(highlight, Some(ButtonPos::Left)));
+        } else if matches!(self.left_btn.button_type, ButtonType::HoldToConfirm) {
+            self.left_btn.hold_to_confirm.paint();
         }
-        if self.middle_btn.is_active {
+
+        if matches!(self.middle_btn.button_type, ButtonType::NormalButton) {
             self.middle_btn
                 .button
                 .paint_pressed(matches!(highlight, Some(ButtonPos::Middle)));
+        } else if matches!(self.middle_btn.button_type, ButtonType::HoldToConfirm) {
+            self.middle_btn.hold_to_confirm.paint();
         }
-        if self.right_btn.is_active {
+
+        if matches!(self.right_btn.button_type, ButtonType::NormalButton) {
             self.right_btn
                 .button
                 .paint_pressed(matches!(highlight, Some(ButtonPos::Right)));
+        } else if matches!(self.right_btn.button_type, ButtonType::HoldToConfirm) {
+            self.right_btn.hold_to_confirm.paint();
         }
     }
 
@@ -257,14 +278,23 @@ impl<T: AsRef<str>> Component for ButtonController<T> {
         // Saving button area so that we can re-place the buttons
         // when when they get updated
         self.button_area = bounds;
-        if self.left_btn.is_active {
+
+        if matches!(self.left_btn.button_type, ButtonType::NormalButton) {
             self.left_btn.button.place(bounds);
+        } else if matches!(self.left_btn.button_type, ButtonType::HoldToConfirm) {
+            self.left_btn.hold_to_confirm.place(bounds);
         }
-        if self.middle_btn.is_active {
+
+        if matches!(self.middle_btn.button_type, ButtonType::NormalButton) {
             self.middle_btn.button.place(bounds);
+        } else if matches!(self.middle_btn.button_type, ButtonType::HoldToConfirm) {
+            self.middle_btn.hold_to_confirm.place(bounds);
         }
-        if self.right_btn.is_active {
+
+        if matches!(self.right_btn.button_type, ButtonType::NormalButton) {
             self.right_btn.button.place(bounds);
+        } else if matches!(self.right_btn.button_type, ButtonType::HoldToConfirm) {
+            self.right_btn.hold_to_confirm.place(bounds);
         }
         bounds
     }

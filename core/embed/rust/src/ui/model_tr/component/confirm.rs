@@ -1,5 +1,5 @@
 use crate::{
-    time::Instant,
+    time::{Duration, Instant},
     ui::{
         component::{Component, Event, EventCtx},
         event::ButtonEvent,
@@ -13,24 +13,33 @@ pub enum HoldToConfirmMsg {
     FailedToConfirm,
 }
 
-pub struct HoldToConfirm {
+pub struct HoldToConfirm<T> {
     area: Rect,
     pos: ButtonPos,
-    loader: Loader,
+    loader: Loader<T>,
     baseline: Point,
     text_width: i32,
 }
 
-impl HoldToConfirm {
-    pub fn new(pos: ButtonPos, text: &'static str, styles: LoaderStyleSheet) -> Self {
+impl<T: AsRef<str>> HoldToConfirm<T> {
+    pub fn new(pos: ButtonPos, text: T, styles: LoaderStyleSheet, duration: Duration) -> Self {
         let text_width = styles.normal.font.text_width(text.as_ref());
         Self {
             area: Rect::zero(),
             pos,
-            loader: Loader::new(text, styles),
+            loader: Loader::new(text, styles).with_growing_duration(duration),
             baseline: Point::zero(),
             text_width,
         }
+    }
+
+    pub fn set_text(&mut self, text: T, button_area: Rect) {
+        self.loader.set_text(text);
+        self.place(button_area);
+    }
+
+    pub fn set_duration(&mut self, duration: Duration) {
+        self.loader.set_duration(duration);
     }
 
     fn placement(&mut self, area: Rect, pos: ButtonPos) -> Rect {
@@ -43,7 +52,7 @@ impl HoldToConfirm {
     }
 }
 
-impl Component for HoldToConfirm {
+impl<T: AsRef<str>> Component for HoldToConfirm<T> {
     type Msg = HoldToConfirmMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -82,7 +91,7 @@ impl Component for HoldToConfirm {
 }
 
 #[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for HoldToConfirm {
+impl<T: AsRef<str>> crate::trace::Trace for HoldToConfirm<T> {
     fn trace(&self, d: &mut dyn crate::trace::Tracer) {
         d.open("HoldToConfirm");
         self.loader.trace(d);

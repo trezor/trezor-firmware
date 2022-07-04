@@ -195,6 +195,11 @@ impl<'a> TextOverlay<'a> {
         Self { area, text, font }
     }
 
+    pub fn set_text(&mut self, text: &'a str) {
+        self.text = text;
+    }
+
+    // baseline relative to the underlying render area
     pub fn place(&mut self, baseline: Point) {
         let text_width = self.font.text_width(self.text);
         let text_height = self.font.text_height();

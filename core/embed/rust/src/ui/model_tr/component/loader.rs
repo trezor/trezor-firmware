@@ -45,6 +45,19 @@ impl Loader {
         }
     }
 
+    pub fn with_growing_duration(mut self, growing_duration: Duration) -> Self {
+        self.growing_duration = growing_duration;
+        self
+    }
+
+    pub fn set_duration(&mut self, growing_duration: Duration) {
+        self.growing_duration = growing_duration;
+    }
+
+    pub fn set_text(&mut self, text: &'static str) {
+        self.text.set_text(text);
+    }
+
     pub fn start_growing(&mut self, ctx: &mut EventCtx, now: Instant) {
         let mut anim = Animation::new(
             display::LOADER_MIN,
@@ -116,7 +129,7 @@ impl Loader {
 
         display::bar_with_text_and_fill(
             self.area,
-            Some(self.text),
+            Some(&self.text),
             style.fg_color,
             style.bg_color,
             -1,
