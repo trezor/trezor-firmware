@@ -66,11 +66,6 @@
 #define USE_ETHEREUM 0
 #endif
 
-// support Graphene operations (STEEM, BitShares)
-#ifndef USE_GRAPHENE
-#define USE_GRAPHENE 0
-#endif
-
 // support NEM operations
 #ifndef USE_NEM
 #define USE_NEM 0

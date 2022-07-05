@@ -815,61 +815,6 @@ int fuzz_aes(void) {
   return 0;
 }
 
-int fuzz_b58gph_encode_decode(void) {
-  // note: encode and decode functions have an internal limit of 128
-#define BASE58_GPH_MAX_INPUT_LEN 130
-
-  if (fuzzer_length < 1 + 1 + BASE58_GPH_MAX_INPUT_LEN) {
-    return 0;
-  }
-
-  // use a flexible output buffer target size
-  uint8_t chosen_outlen = 0;
-  memcpy(&chosen_outlen, fuzzer_input(1), 1);
-  if (chosen_outlen > BASE58_GPH_MAX_INPUT_LEN) {
-    return 0;
-  }
-  // use a flexible input buffer target size
-  uint8_t chosen_inlen = 0;
-  memcpy(&chosen_inlen, fuzzer_input(1), 1);
-  if (chosen_inlen > BASE58_GPH_MAX_INPUT_LEN) {
-    return 0;
-  }
-
-  // TODO idea: switch to malloc()'ed buffers for better out of bounds access
-  // detection?
-
-  uint8_t encode_in_buffer[BASE58_GPH_MAX_INPUT_LEN] = {0};
-  // with null termination
-  char decode_in_buffer[BASE58_GPH_MAX_INPUT_LEN + 1] = {0};
-  char out_buffer[BASE58_GPH_MAX_INPUT_LEN] = {0};
-
-  memcpy(&encode_in_buffer, fuzzer_input(chosen_inlen), chosen_inlen);
-  memcpy(&decode_in_buffer, &encode_in_buffer, chosen_inlen);
-
-  int ret = 0;
-  ret = base58gph_encode_check(encode_in_buffer, chosen_inlen, out_buffer,
-                               chosen_outlen);
-
-  if (ret != 0) {
-    // successful encode, try decode
-    uint8_t dummy_buffer[BASE58_GPH_MAX_INPUT_LEN] = {0};
-    ret = base58gph_decode_check(out_buffer, (uint8_t *)&dummy_buffer,
-                                 chosen_outlen);
-    if (ret == 0) {
-      // mark as exception
-      // TODO POTENTIAL BUG - followup
-      // crash();
-    }
-  }
-
-  // do a second operation with the same input, without relationship to the
-  // previously computed output
-  base58gph_decode_check(decode_in_buffer, (uint8_t *)&out_buffer,
-                         chosen_outlen);
-  return 0;
-}
-
 int fuzz_chacha_drbg(void) {
 #define CHACHA_DRBG_ENTROPY_LENGTH 32
 #define CHACHA_DRBG_RESEED_LENGTH 32
@@ -1232,9 +1177,6 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
 #ifdef FUZZ_ALLOW_SLOW
       fuzz_aes();
 #endif
-      break;
-    case 19:
-      fuzz_b58gph_encode_decode();
       break;
     case 22:
       fuzz_chacha_drbg();
