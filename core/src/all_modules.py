@@ -459,6 +459,8 @@ if not utils.BITCOIN_ONLY:
     import trezor.enums.TezosBallotType
     trezor.enums.TezosContractType
     import trezor.enums.TezosContractType
+    trezor.enums.ZcashReceiverTypecode
+    import trezor.enums.ZcashReceiverTypecode
     trezor.ui.components.common.webauthn
     import trezor.ui.components.common.webauthn
     trezor.ui.components.tt.webauthn
@@ -775,6 +777,8 @@ if not utils.BITCOIN_ONLY:
     import apps.webauthn.resident_credentials
     apps.zcash
     import apps.zcash
+    apps.zcash.addresses
+    import apps.zcash.addresses
     apps.zcash.hasher
     import apps.zcash.hasher
     apps.zcash.signer

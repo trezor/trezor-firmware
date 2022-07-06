@@ -1,0 +1,17 @@
+syntax = "proto2";
+package hw.trezor.messages.zcash;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageZcash";
+
+/**
+ * Receiver typecodes for unified addresses.
+ * see: https://zips.z.cash/zip-0316#encoding-of-unified-addresses
+ */
+enum ZcashReceiverTypecode {
+  P2PKH = 0;
+  P2SH = 1;
+  SAPLING = 2;
+  ORCHARD = 3;
+}

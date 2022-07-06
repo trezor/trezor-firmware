@@ -504,3 +504,9 @@ if TYPE_CHECKING:
         Yay = 0
         Nay = 1
         Pass = 2
+
+    class ZcashReceiverTypecode(IntEnum):
+        P2PKH = 0
+        P2SH = 1
+        SAPLING = 2
+        ORCHARD = 3

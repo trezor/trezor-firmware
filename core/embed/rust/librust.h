@@ -17,3 +17,9 @@ extern mp_obj_module_t mp_module_trezorui2;
 #ifdef TREZOR_EMULATOR
 mp_obj_t ui_debug_layout_type();
 #endif
+
+// Zcash
+#if USE_ZCASH
+mp_obj_t orchardlib_f4jumble(mp_obj_t message);
+mp_obj_t orchardlib_f4jumble_inv(mp_obj_t message);
+#endif

@@ -1647,6 +1647,7 @@
 "TT_zcash-test_sign_tx.py::test_spend_multisig": "1f7cfe70831cffb4c076d0b4778704a982b37be4cc114e2cd9de85ee3173430e",
 "TT_zcash-test_sign_tx.py::test_spend_v4_input": "235910c3aa36150bb7012d21d52acdca347a2a216bb09a0588910329e464c8f0",
 "TT_zcash-test_sign_tx.py::test_spend_v5_input": "dd9b4f0050836b7d881d9be798d2f4d972e39f460b8acc3e4e1c038ba754ae7c",
+"TT_zcash-test_sign_tx.py::test_unified_address": "90c260abe850e4821f479a489e79efaa75b7cf9af3ac74752a3cf7099fef6b31",
 "TT_zcash-test_sign_tx.py::test_version_group_id_missing": "c09de07fbbf1e047442180e2facb5482d06a1a428891b875b7dd93c9e4704ae1",
 "TTui2_binance-test_get_address.py::test_binance_get_address[m-44h-714h-0h-0-0-bnb1hgm0p7khfk85zpz-68e2cb5a": "577553344793d14026b1d3c7f6185a4858378476dafee67a958319bd8d8f58ac",
 "TTui2_binance-test_get_address.py::test_binance_get_address[m-44h-714h-0h-0-1-bnb1egswqkszzfc2uq7-1adfb691": "9fedc9ad26c5573b264f28f70c83b8baf6503a71f2296de27be6c6c9166d5488",

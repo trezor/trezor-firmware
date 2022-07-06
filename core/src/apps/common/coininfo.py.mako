@@ -131,10 +131,16 @@ ATTRIBUTES = (
     ("confidential_assets", optional_dict),
 )
 
-btc_names = ["Bitcoin", "Testnet", "Regtest"]
-
-coins_btc = [c for c in supported_on("trezor2", bitcoin) if c.name in btc_names]
-coins_alt = [c for c in supported_on("trezor2", bitcoin) if c.name not in btc_names]
+coins_btc = []
+coins_zec = []
+coins_alt = []
+for c in supported_on("trezor2", bitcoin):
+    if c.name in ["Bitcoin", "Testnet", "Regtest"]:
+        coins_btc.append(c)
+    elif c.name in ["Zcash", "Zcash Testnet"]:
+        coins_zec.append(c)
+    else:
+        coins_alt.append(c)
 
 %>\
 def by_name(name: str) -> CoinInfo:
@@ -145,6 +151,15 @@ def by_name(name: str) -> CoinInfo:
             ${attr}=${func(coin[attr])},
             % endfor
         )
+% endfor
+    if utils.USE_ZCASH:
+% for coin in coins_zec:
+        if name == ${black_repr(coin["coin_name"])}:
+            return CoinInfo(
+                % for attr, func in ATTRIBUTES:
+                ${attr}=${func(coin[attr])},
+                % endfor
+            )
 % endfor
     if not utils.BITCOIN_ONLY:
 % for coin in coins_alt:

@@ -8,6 +8,8 @@ mod error;
 #[cfg(feature = "micropython")]
 #[macro_use]
 mod micropython;
+#[cfg(feature = "use_zcash")]
+mod orchardlib;
 #[cfg(feature = "protobuf")]
 mod protobuf;
 mod time;

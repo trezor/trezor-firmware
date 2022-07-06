@@ -6,6 +6,7 @@ from trezorutils import (  # noqa: F401
     FIRMWARE_SECTORS_COUNT,
     MODEL,
     SCM_REVISION,
+    USE_ZCASH,
     VERSION_MAJOR,
     VERSION_MINOR,
     VERSION_PATCH,

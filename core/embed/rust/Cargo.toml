@@ -13,12 +13,13 @@ model_t1 = ["buttons"]
 model_tr = ["buttons"]
 micropython = []
 protobuf = ["micropython"]
+use_zcash = ["micropython", "f4jumble"]
 ui = []
 ui_debug = []
 buttons = []
 touch = []
 clippy = []
-test = ["cc", "glob", "micropython", "protobuf", "ui", "ui_debug"]
+test = ["cc", "glob", "micropython", "protobuf", "use_zcash", "ui", "ui_debug"]
 
 [lib]
 crate-type = ["staticlib"]
@@ -48,6 +49,11 @@ default_features = false
 [dependencies.cstr_core]
 version = "0.2.4"
 default_features = false
+
+[dependencies.f4jumble]
+version = "0.1.0"
+default-features = false
+optional = true
 
 # Build dependencies
 

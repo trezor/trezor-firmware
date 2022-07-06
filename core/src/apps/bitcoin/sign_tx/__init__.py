@@ -9,7 +9,10 @@ from ..keychain import with_keychain
 from . import approvers, bitcoin, helpers, progress
 
 if not utils.BITCOIN_ONLY:
-    from . import bitcoinlike, decred, zcash_v4
+    from . import bitcoinlike, decred
+
+if utils.USE_ZCASH:
+    from . import zcash_v4
     from apps.zcash.signer import Zcash
 
 if TYPE_CHECKING:
@@ -65,18 +68,20 @@ async def sign_tx(
     if authorization:
         approver = approvers.CoinJoinApprover(msg, coin, authorization)
 
-    if utils.BITCOIN_ONLY or coin.coin_name in BITCOIN_NAMES:
+    if coin.coin_name in BITCOIN_NAMES:
         signer_class: type[SignerClass] = bitcoin.Bitcoin
-    else:
+    elif (utils.USE_ZCASH or not utils.BITCOIN_ONLY) and coin.overwintered:
+        if msg.version == 5:
+            signer_class = Zcash
+        else:
+            signer_class = zcash_v4.ZcashV4
+    elif not utils.BITCOIN_ONLY:
         if coin.decred:
             signer_class = decred.Decred
-        elif coin.overwintered:
-            if msg.version == 5:
-                signer_class = Zcash
-            else:
-                signer_class = zcash_v4.ZcashV4
         else:
             signer_class = bitcoinlike.Bitcoinlike
+    else:
+        raise wire.DataError("Unsupported coin type")
 
     signer = signer_class(msg, keychain, coin, approver).signer()
 

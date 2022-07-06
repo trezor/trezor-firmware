@@ -551,6 +551,13 @@ class TezosBallotType(IntEnum):
     Pass = 2
 
 
+class ZcashReceiverTypecode(IntEnum):
+    P2PKH = 0
+    P2SH = 1
+    SAPLING = 2
+    ORCHARD = 3
+
+
 class BinanceGetAddress(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 700
     FIELDS = {

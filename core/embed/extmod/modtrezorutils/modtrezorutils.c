@@ -271,6 +271,7 @@ STATIC mp_obj_str_t mod_trezorutils_revision_obj = {
 /// MODEL: str
 /// EMULATOR: bool
 /// BITCOIN_ONLY: bool
+/// USE_ZCASH: bool
 /// FIRMWARE_SECTORS_COUNT: int
 
 STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
@@ -315,6 +316,11 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_BITCOIN_ONLY), mp_const_true},
 #else
     {MP_ROM_QSTR(MP_QSTR_BITCOIN_ONLY), mp_const_false},
+#endif
+#if USE_ZCASH
+    {MP_ROM_QSTR(MP_QSTR_USE_ZCASH), mp_const_true},
+#else
+    {MP_ROM_QSTR(MP_QSTR_USE_ZCASH), mp_const_false},
 #endif
 };
 

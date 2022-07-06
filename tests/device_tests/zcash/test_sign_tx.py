@@ -272,6 +272,63 @@ def test_one_two(client: Client):
 
 
 @pytest.mark.skip_t1
+def test_unified_address(client: Client):
+    # identical to the test_one_two
+    # but receiver address is unified with a sapling address
+    inp1 = messages.TxInputType(
+        # tmQoJ3PTXgQLaRRZZYT6xk8XtjRbr2kCqwu
+        address_n=parse_path("m/44h/1h/0h/0/0"),
+        amount=4_134_720,
+        prev_hash=TXHASH_c5309b,
+        prev_index=0,
+    )
+
+    out1 = messages.TxOutputType(
+        # m/44h/1h/0h/0/8 + some Sapling address
+        address="utest1ehsqx89s6rm02dg3yw8yr9203d9gruazyuqkc4f8p78j9twyd8geum5h47j4fq7mjklgt2ynvkmlphg2yjne6quyqysuyy7286neetcsfm5rzvvwnmtc593k8qw6zrtr5ypz6qculv5",
+        amount=1_000_000,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+
+    out2 = messages.TxOutputType(
+        address_n=parse_path("m/44h/1h/0h/0/0"),
+        amount=4_134_720 - 1_000_000 - 2_000,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+
+    with client:
+        client.set_expected_responses(
+            [
+                request_input(0),
+                request_output(0),
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                request_output(1),
+                messages.ButtonRequest(code=B.SignTx),
+                request_input(0),
+                request_output(0),
+                request_output(1),
+                request_finished(),
+            ]
+        )
+
+        _, serialized_tx = btc.sign_tx(
+            client,
+            "Zcash Testnet",
+            [inp1],
+            [out1, out2],
+            version=5,
+            version_group_id=VERSION_GROUP_ID,
+            branch_id=BRANCH_ID,
+        )
+
+        # Accepted by network: txid = d8cfa377012ca0b8d856586693b530835bf2fa14add0380e24ec6755bed5b931
+        assert (
+            serialized_tx.hex()
+            == "050000800a27a726b4d0d6c2000000000000000001bf79ce8a0403de4775d3538c670de802af72e8961c8b9174f36b8fa1d69b30c5000000006b483045022100be78eccf801dda4dd33f9d4e04c2aae01022869d1d506d51669204ec269d71a90220394a51838faf40176058cf45fe7032be9c5c942e21aff35d7dbe4b96ab5e0a500121030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0ffffffff0240420f00000000001976a9141efeae5c937bfc7f095a06aabdb5476a5d6d19db88ac30cd2f00000000001976a914a579388225827d9f2fe9014add644487808c695d88ac000000"
+        )
+
+
+@pytest.mark.skip_t1
 def test_external_presigned(client: Client):
     inp1 = messages.TxInputType(
         # tmQoJ3PTXgQLaRRZZYT6xk8XtjRbr2kCqwu
