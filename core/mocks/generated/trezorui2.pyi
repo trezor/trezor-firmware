@@ -147,10 +147,23 @@ def confirm_modify_fee(
 
 
 # rust/src/ui/model_tt/layout.rs
+def show_error(
+    *,
+    title: str,
+    button: str,
+    description: str = "",
+    allow_cancel: bool = False,
+) -> object:
+    """Error modal."""
+
+
+# rust/src/ui/model_tt/layout.rs
 def show_warning(
     *,
     title: str,
+    button: str,
     description: str = "",
+    allow_cancel: bool = False,
 ) -> object:
     """Warning modal."""
 
@@ -161,8 +174,20 @@ def show_success(
     title: str,
     button: str,
     description: str = "",
+    allow_cancel: bool = False,
 ) -> object:
     """Success modal."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def show_info(
+    *,
+    title: str,
+    button: str,
+    description: str = "",
+    allow_cancel: bool = False,
+) -> object:
+    """Info modal."""
 
 
 # rust/src/ui/model_tt/layout.rs
