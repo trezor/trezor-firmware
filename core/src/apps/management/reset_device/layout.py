@@ -1,17 +1,24 @@
 from typing import Sequence
 
 from trezor import ui, utils, wire
+from trezor.crypto import random
 from trezor.enums import ButtonRequestType
-from trezor.ui.layouts import confirm_action, confirm_blob, show_success, show_warning
+from trezor.ui.layouts import confirm_blob, show_success, show_warning
 from trezor.ui.layouts.reset import (  # noqa: F401
-    confirm_word,
+    select_word,
     show_share_words,
+    show_warning_backup,
     slip39_advanced_prompt_group_threshold,
     slip39_advanced_prompt_number_of_groups,
     slip39_prompt_number_of_shares,
     slip39_prompt_threshold,
     slip39_show_checklist,
 )
+
+if __debug__:
+    from apps import debug
+
+NUM_OF_CHOICES = 3
 
 
 async def show_internal_entropy(ctx: wire.GenericContext, entropy: bytes) -> None:
@@ -24,6 +31,38 @@ async def show_internal_entropy(ctx: wire.GenericContext, entropy: bytes) -> Non
         icon_color=ui.ORANGE_ICON,
         br_code=ButtonRequestType.ResetDevice,
     )
+
+
+async def _confirm_word(
+    ctx: wire.GenericContext,
+    share_index: int | None,
+    share_words: Sequence[str],
+    offset: int,
+    count: int,
+    group_index: int | None = None,
+) -> bool:
+    # remove duplicates
+    non_duplicates = list(set(share_words))
+    # shuffle list
+    random.shuffle(non_duplicates)
+    # take top NUM_OF_CHOICES words
+    choices = non_duplicates[:NUM_OF_CHOICES]
+    # select first of them
+    checked_word = choices[0]
+    # find its index
+    checked_index = share_words.index(checked_word) + offset
+    # shuffle again so the confirmed word is not always the first choice
+    random.shuffle(choices)
+
+    if __debug__:
+        debug.reset_word_index.publish(checked_index)
+
+    # let the user pick a word
+    selected_word: str = await select_word(
+        ctx, choices, share_index, checked_index, count, group_index
+    )
+    # confirm it is the correct one
+    return selected_word == checked_word
 
 
 async def _confirm_share_words(
@@ -39,7 +78,7 @@ async def _confirm_share_words(
     offset = 0
     count = len(share_words)
     for part in utils.chunks(share_words, third):
-        if not await confirm_word(ctx, share_index, part, offset, count, group_index):
+        if not await _confirm_word(ctx, share_index, part, offset, count, group_index):
             return False
         offset += len(part)
 
@@ -93,20 +132,7 @@ async def _show_confirmation_failure(
 
 
 async def show_backup_warning(ctx: wire.GenericContext, slip39: bool = False) -> None:
-    if slip39:
-        description = "Never make a digital copy of your recovery shares and never upload them online!"
-    else:
-        description = "Never make a digital copy of your recovery seed and never upload\nit online!"
-    await confirm_action(
-        ctx,
-        "backup_warning",
-        "Caution",
-        description=description,
-        verb="I understand",
-        verb_cancel=None,
-        icon=ui.ICON_NOCOPY,
-        br_code=ButtonRequestType.ResetDevice,
-    )
+    await show_warning_backup(ctx, slip39)
 
 
 async def show_backup_success(ctx: wire.GenericContext) -> None:

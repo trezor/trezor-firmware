@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
 from trezor import ui, utils, wire
-from trezor.crypto import random
 from trezor.enums import BackupType, ButtonRequestType
 
 from ...components.common.confirm import is_confirmed, raise_if_cancelled
@@ -13,6 +12,7 @@ from ...components.tt.reset import MnemonicWordSelect, Slip39NumInput
 from ...components.tt.scroll import Paginated
 from ...components.tt.text import Text
 from ..common import interact
+from . import confirm_action
 
 if TYPE_CHECKING:
     from typing import Sequence
@@ -100,35 +100,18 @@ async def show_share_words(
     )
 
 
-async def confirm_word(
+async def select_word(
     ctx: wire.GenericContext,
+    words: Sequence[str],
     share_index: int | None,
-    share_words: Sequence[str],
-    offset: int,
+    checked_index: int,
     count: int,
     group_index: int | None = None,
-) -> bool:
-    # remove duplicates
-    non_duplicates = list(set(share_words))
-    # shuffle list
-    random.shuffle(non_duplicates)
-    # take top NUM_OF_CHOICES words
-    choices = non_duplicates[: MnemonicWordSelect.NUM_OF_CHOICES]
-    # select first of them
-    checked_word = choices[0]
-    # find its index
-    checked_index = share_words.index(checked_word) + offset
-    # shuffle again so the confirmed word is not always the first choice
-    random.shuffle(choices)
-
-    if __debug__:
-        debug.reset_word_index.publish(checked_index)
-
+) -> str:
     # let the user pick a word
-    select = MnemonicWordSelect(choices, share_index, checked_index, count, group_index)
+    select = MnemonicWordSelect(words, share_index, checked_index, count, group_index)
     selected_word: str = await ctx.wait(select)
-    # confirm it is the correct one
-    return selected_word == checked_word
+    return selected_word
 
 
 def _split_share_into_pages(
@@ -361,3 +344,20 @@ async def slip39_advanced_prompt_group_threshold(
             await info
 
     return count
+
+
+async def show_warning_backup(ctx: wire.GenericContext, slip39: bool) -> None:
+    if slip39:
+        description = "Never make a digital copy of your recovery shares and never upload them online!"
+    else:
+        description = "Never make a digital copy of your recovery seed and never upload\nit online!"
+    await confirm_action(
+        ctx,
+        "backup_warning",
+        "Caution",
+        description=description,
+        verb="I understand",
+        verb_cancel=None,
+        icon=ui.ICON_NOCOPY,
+        br_code=ButtonRequestType.ResetDevice,
+    )

@@ -553,7 +553,7 @@ async def should_show_more(
     br_code: ButtonRequestType = ButtonRequestType.Other,
     icon: str = ui.ICON_DEFAULT,
     icon_color: int = ui.ORANGE_ICON,
-    confirm: ButtonContent = Confirm.DEFAULT_CONFIRM,
+    confirm: str | bytes | None = None,
     major_confirm: bool = False,
 ) -> bool:
     """Return True if the user wants to show more (they click a special button)
@@ -561,6 +561,9 @@ async def should_show_more(
 
     Raises ActionCancelled if the user cancels.
     """
+    if confirm is None:
+        confirm = Confirm.DEFAULT_CONFIRM
+
     page = Text(
         title,
         header_icon=icon,
