@@ -58,4 +58,4 @@ async def continue_recovery(
     subtext: str | None,
     info_func: Callable | None,
 ) -> bool:
-    raise NotImplementedError
+    return False

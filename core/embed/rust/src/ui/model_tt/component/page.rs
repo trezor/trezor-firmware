@@ -237,6 +237,14 @@ where
             loader: Loader::new(),
         }
     }
+
+    pub fn without_cancel(content: T, background: Color) -> Self {
+        let buttons = CancelHold::without_cancel();
+        Self {
+            inner: SwipePage::new(content, buttons, background),
+            loader: Loader::new(),
+        }
+    }
 }
 
 impl<T> Component for SwipeHoldPage<T>

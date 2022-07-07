@@ -1,4 +1,5 @@
-use core::{convert::TryInto, ops::Deref};
+use core::{cmp::Ordering, convert::TryInto, ops::Deref};
+use cstr_core::cstr;
 
 use crate::{
     error::Error,
@@ -13,7 +14,6 @@ use crate::{
     },
     ui::{
         component::{
-            self,
             base::ComponentExt,
             paginated::{PageMsg, Paginate},
             painter,
@@ -30,10 +30,10 @@ use crate::{
 
 use super::{
     component::{
-        Bip39Input, Button, ButtonMsg, CancelConfirmMsg, CancelInfoConfirmMsg, Dialog, DialogMsg,
-        Frame, HoldToConfirm, HoldToConfirmMsg, IconDialog, MnemonicInput, MnemonicKeyboard,
-        MnemonicKeyboardMsg, PassphraseKeyboard, PassphraseKeyboardMsg, PinKeyboard,
-        PinKeyboardMsg, Slip39Input, SwipeHoldPage, SwipePage,
+        Bip39Input, Button, ButtonMsg, ButtonStyleSheet, CancelConfirmMsg, CancelInfoConfirmMsg,
+        Dialog, DialogMsg, Frame, HoldToConfirm, HoldToConfirmMsg, IconDialog, MnemonicInput,
+        MnemonicKeyboard, MnemonicKeyboardMsg, PassphraseKeyboard, PassphraseKeyboardMsg,
+        PinKeyboard, PinKeyboardMsg, SelectWordMsg, Slip39Input, SwipeHoldPage, SwipePage,
     },
     theme,
 };
@@ -57,6 +57,16 @@ impl TryFrom<CancelInfoConfirmMsg> for Obj {
             CancelInfoConfirmMsg::Cancelled => Ok(CANCELLED.as_obj()),
             CancelInfoConfirmMsg::Info => Ok(INFO.as_obj()),
             CancelInfoConfirmMsg::Confirmed => Ok(CONFIRMED.as_obj()),
+        }
+    }
+}
+
+impl TryFrom<SelectWordMsg> for Obj {
+    type Error = Error;
+
+    fn try_from(value: SelectWordMsg) -> Result<Self, Self::Error> {
+        match value {
+            SelectWordMsg::Selected(i) => i.try_into(),
         }
     }
 }
@@ -260,6 +270,27 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
                 Frame::new(title, SwipePage::new(paragraphs, buttons, theme::BG)).into_child(),
             )?
         };
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_confirm_reset_device(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+        let description: StrBuffer = "\nBy continuing you agree to".into();
+        let url: StrBuffer = "https://trezor.io/tos".into();
+
+        let paragraphs = Paragraphs::new()
+            .add(theme::TEXT_BOLD, prompt)
+            .add(theme::TEXT_NORMAL, description)
+            .add(theme::TEXT_BOLD, url);
+
+        let buttons = Button::cancel_confirm_text(None, "CONTINUE");
+        let obj = LayoutObj::new(
+            Frame::new(title, SwipePage::new(paragraphs, buttons, theme::BG)).into_child(),
+        )?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -601,6 +632,59 @@ extern "C" fn new_request_slip39(n_args: usize, args: *const Obj, kwargs: *mut M
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_select_word(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
+        let words_iterable: Obj = kwargs.get(Qstr::MP_QSTR_words)?;
+
+        let mut words = [StrBuffer::empty(), StrBuffer::empty(), StrBuffer::empty()];
+        let mut iter_buf = IterBuf::new();
+        let mut iter = Iter::try_from_obj_with_buf(words_iterable, &mut iter_buf)?;
+        let words_err = || Error::ValueError(cstr!("Invalid words count"));
+        for item in &mut words {
+            *item = iter.next().ok_or_else(words_err)?.try_into()?;
+        }
+        if iter.next().is_some() {
+            return Err(words_err());
+        }
+
+        let paragraphs = Paragraphs::new().add(theme::TEXT_NORMAL, description);
+        let buttons = Button::select_word(words);
+
+        let obj = LayoutObj::new(
+            Frame::new(
+                title,
+                SwipePage::new(paragraphs, buttons, theme::BG).with_button_rows(3),
+            )
+            .into_child(),
+        )?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let pages: Obj = kwargs.get(Qstr::MP_QSTR_pages)?;
+
+        let mut paragraphs = Paragraphs::new();
+        let mut iter_buf = IterBuf::new();
+        let iter = Iter::try_from_obj_with_buf(pages, &mut iter_buf)?;
+        for page in iter {
+            let text: StrBuffer = page.try_into()?;
+            paragraphs = paragraphs.add(theme::TEXT_MONO, text).add_break();
+        }
+
+        let obj = LayoutObj::new(
+            Frame::new(title, SwipeHoldPage::without_cancel(paragraphs, theme::BG)).into_child(),
+        )?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 #[no_mangle]
 pub static mp_module_trezorui2: Module = obj_module! {
     Qstr::MP_QSTR___name__ => Qstr::MP_QSTR_trezorui2.to_obj(),
@@ -639,6 +723,14 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> object:
     ///     """Confirm byte sequence data."""
     Qstr::MP_QSTR_confirm_blob => obj_fn_kw!(0, new_confirm_blob).as_obj(),
+
+    /// def confirm_reset_device(
+    ///     *,
+    ///     title: str,
+    ///     prompt: str,
+    /// ) -> object:
+    ///     """Confirm TOS before device setup."""
+    Qstr::MP_QSTR_confirm_reset_device => obj_fn_kw!(0, new_confirm_reset_device).as_obj(),
 
     /// def show_qr(
     ///     *,
@@ -784,6 +876,24 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> str:
     ///    """SLIP39 word input keyboard."""
     Qstr::MP_QSTR_request_slip39 => obj_fn_kw!(0, new_request_slip39).as_obj(),
+
+    /// def select_word(
+    ///     *,
+    ///     title: str,
+    ///     description: str,
+    ///     words: Iterable[str],
+    /// ) -> int:
+    ///    """Select mnemonic word from three possibilities - seed check after backup. The
+    ///    iterable must be of exact size. Returns index in range `0..3`."""
+    Qstr::MP_QSTR_select_word => obj_fn_kw!(0, new_select_word).as_obj(),
+
+    /// def show_share_words(
+    ///     *,
+    ///     title: str,
+    ///     pages: Iterable[str],
+    /// ) -> object:
+    ///    """Show mnemonic for backup. Expects the words pre-divided into individual pages."""
+    Qstr::MP_QSTR_show_share_words => obj_fn_kw!(0, new_show_share_words).as_obj(),
 };
 
 #[cfg(test)]
