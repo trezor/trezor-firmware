@@ -85,6 +85,15 @@ def confirm_blob(
 
 
 # rust/src/ui/model_tt/layout.rs
+def confirm_reset_device(
+    *,
+    title: str,
+    prompt: str,
+) -> object:
+    """Confirm TOS before device setup."""
+
+
+# rust/src/ui/model_tt/layout.rs
 def show_qr(
     *,
     title: str,
@@ -243,3 +252,23 @@ def request_slip39(
     prompt: str,
 ) -> str:
    """SLIP39 word input keyboard."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def select_word(
+    *,
+    title: str,
+    description: str,
+    words: Iterable[str],
+) -> int:
+   """Select mnemonic word from three possibilities - seed check after backup. The
+   iterable must be of exact size. Returns index in range `0..3`."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def show_share_words(
+    *,
+    title: str,
+    pages: Iterable[str],
+) -> object:
+   """Show mnemonic for backup. Expects the words pre-divided into individual pages."""

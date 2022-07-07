@@ -111,7 +111,7 @@ where
 }
 
 pub struct CancelHold {
-    cancel: Button<&'static str>,
+    cancel: Option<Button<&'static str>>,
     hold: Button<&'static str>,
 }
 
@@ -123,7 +123,14 @@ pub enum CancelHoldMsg {
 impl CancelHold {
     pub fn new() -> Self {
         Self {
-            cancel: Button::with_icon(theme::ICON_CANCEL),
+            cancel: Some(Button::with_icon(theme::ICON_CANCEL)),
+            hold: Button::with_text("HOLD TO CONFIRM").styled(theme::button_confirm()),
+        }
+    }
+
+    pub fn without_cancel() -> Self {
+        Self {
+            cancel: None,
             hold: Button::with_text("HOLD TO CONFIRM").styled(theme::button_confirm()),
         }
     }
@@ -133,10 +140,14 @@ impl Component for CancelHold {
     type Msg = CancelHoldMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let grid = Grid::new(bounds, 1, 4).with_spacing(theme::BUTTON_SPACING);
-        self.cancel.place(grid.row_col(0, 0));
-        self.hold
-            .place(grid.row_col(0, 1).union(grid.row_col(0, 3)));
+        if self.cancel.is_some() {
+            let grid = Grid::new(bounds, 1, 4).with_spacing(theme::BUTTON_SPACING);
+            self.cancel.place(grid.row_col(0, 0));
+            self.hold
+                .place(grid.row_col(0, 1).union(grid.row_col(0, 3)));
+        } else {
+            self.hold.place(bounds);
+        };
         bounds
     }
 

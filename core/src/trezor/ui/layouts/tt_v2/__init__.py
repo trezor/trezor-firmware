@@ -12,15 +12,18 @@ if TYPE_CHECKING:
     from typing import Any, Awaitable, Iterable, NoReturn, Sequence
 
     from ..common import PropertyType, ExceptionType
-    from ...components.tt.button import ButtonContent
 
 
 class _RustLayout(ui.Layout):
     # pylint: disable=super-init-not-called
-    def __init__(self, layout: Any):
+    def __init__(self, layout: Any, is_backup=False):
         self.layout = layout
         self.timer = loop.Timer()
         self.layout.attach_timer_fn(self.set_timer)
+        self.is_backup = is_backup
+
+        if __debug__ and self.is_backup:
+            self.notify_backup()
 
     def set_timer(self, token: int, deadline: int) -> None:
         self.timer.schedule(deadline, token)
@@ -78,7 +81,26 @@ class _RustLayout(ui.Layout):
                     if msg is not None:
                         raise ui.Result(msg)
 
+                if self.is_backup:
+                    self.notify_backup()
                 notify_layout_change(self)
+
+        def notify_backup(self):
+            from apps.debug import reset_current_words
+
+            content = "\n".join(self.read_content())
+            start = "< Paragraphs "
+            end = ">"
+            start_pos = content.index(start)
+            end_pos = content.index(end, start_pos)
+            words = []
+            for line in content[start_pos + len(start) : end_pos].split("\n"):
+                line = line.strip()
+                if not line:
+                    continue
+                space_pos = line.index(" ")
+                words.append(line[space_pos + 1 :])
+            reset_current_words.publish(words)
 
     else:
 
@@ -186,17 +208,60 @@ async def confirm_action(
 async def confirm_reset_device(
     ctx: wire.GenericContext, prompt: str, recovery: bool = False
 ) -> None:
-    return await confirm_action(
+    if recovery:
+        title = "RECOVERY MODE"
+    else:
+        title = "CREATE NEW WALLET"
+
+    result = await interact(
         ctx,
+        _RustLayout(
+            trezorui2.confirm_reset_device(
+                title=title.upper(),
+                prompt=prompt.replace("\n", " "),
+            )
+        ),
         "recover_device" if recovery else "setup_device",
-        "not implemented",
-        action="not implemented",
+        ButtonRequestType.ProtectCall if recovery else ButtonRequestType.ResetDevice,
     )
+    if result is not trezorui2.CONFIRMED:
+        raise wire.ActionCancelled
 
 
 # TODO cleanup @ redesign
 async def confirm_backup(ctx: wire.GenericContext) -> bool:
-    raise NotImplementedError
+    result = await interact(
+        ctx,
+        _RustLayout(
+            trezorui2.confirm_action(
+                title="SUCCESS",
+                action="New wallet created successfully.",
+                description="You should back up your new wallet right now.",
+                verb="BACK UP",
+                verb_cancel="SKIP",
+            )
+        ),
+        "backup_device",
+        ButtonRequestType.ResetDevice,
+    )
+    if result is trezorui2.CONFIRMED:
+        return True
+
+    result = await interact(
+        ctx,
+        _RustLayout(
+            trezorui2.confirm_action(
+                title="WARNING",
+                action="Are you sure you want to skip the backup?",
+                description="You can back up your Trezor once, at any time.",
+                verb="BACK UP",
+                verb_cancel="SKIP",
+            )
+        ),
+        "backup_device",
+        ButtonRequestType.ResetDevice,
+    )
+    return result is trezorui2.CONFIRMED
 
 
 async def confirm_path_warning(
@@ -482,7 +547,7 @@ async def should_show_more(
     br_code: ButtonRequestType = ButtonRequestType.Other,
     icon: str = ui.ICON_DEFAULT,
     icon_color: int = ui.ORANGE_ICON,
-    confirm: ButtonContent = None,
+    confirm: str | bytes | None = None,
     major_confirm: bool = False,
 ) -> bool:
     raise NotImplementedError

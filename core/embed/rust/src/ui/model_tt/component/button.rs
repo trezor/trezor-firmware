@@ -429,6 +429,31 @@ impl<T> Button<T> {
                 }),
         )
     }
+
+    pub fn select_word(
+        words: [T; 3],
+    ) -> CancelInfoConfirm<
+        T,
+        impl Fn(ButtonMsg) -> Option<SelectWordMsg>,
+        impl Fn(ButtonMsg) -> Option<SelectWordMsg>,
+        impl Fn(ButtonMsg) -> Option<SelectWordMsg>,
+    >
+    where
+        T: AsRef<str>,
+    {
+        let btn = move |i, word| {
+            GridPlaced::new(Button::with_text(word))
+                .with_grid(3, 1)
+                .with_spacing(theme::BUTTON_SPACING)
+                .with_row_col(i, 0)
+                .map(move |msg| {
+                    (matches!(msg, ButtonMsg::Clicked)).then(|| SelectWordMsg::Selected(i))
+                })
+        };
+
+        let [top, middle, bottom] = words;
+        (btn(0, top), btn(1, middle), btn(2, bottom))
+    }
 }
 
 type CancelConfirm<T, F0, F1> = (
@@ -451,4 +476,8 @@ pub enum CancelInfoConfirmMsg {
     Cancelled,
     Info,
     Confirmed,
+}
+
+pub enum SelectWordMsg {
+    Selected(usize),
 }

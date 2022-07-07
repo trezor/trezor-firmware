@@ -24,6 +24,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_modify_output;
   MP_QSTR_confirm_output;
   MP_QSTR_confirm_payment_request;
+  MP_QSTR_confirm_reset_device;
   MP_QSTR_confirm_text;
   MP_QSTR_confirm_total;
   MP_QSTR_show_error;
@@ -35,6 +36,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_request_passphrase;
   MP_QSTR_request_bip39;
   MP_QSTR_request_slip39;
+  MP_QSTR_select_word;
+  MP_QSTR_show_share_words;
 
   MP_QSTR_attach_timer_fn;
   MP_QSTR_touch_event;
@@ -70,4 +73,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_total_amount;
   MP_QSTR_total_fee_new;
   MP_QSTR_user_fee_change;
+  MP_QSTR_words;
+  MP_QSTR_pages;
 }
