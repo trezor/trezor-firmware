@@ -432,42 +432,71 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+fn new_show_modal(
+    kwargs: &Map,
+    icon: &'static [u8],
+    button_style: ButtonStyleSheet,
+) -> Result<Obj, Error> {
+    let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+    let description: StrBuffer = kwargs.get_or(Qstr::MP_QSTR_description, StrBuffer::empty())?;
+    let button: StrBuffer = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
+    let allow_cancel: bool = kwargs.get_or(Qstr::MP_QSTR_allow_cancel, true)?;
+
+    let obj = if allow_cancel {
+        LayoutObj::new(
+            IconDialog::new(
+                icon,
+                title,
+                Button::cancel_confirm(
+                    Button::with_icon(theme::ICON_CANCEL).styled(theme::button_cancel()),
+                    Button::with_text(button).styled(button_style),
+                    2,
+                ),
+            )
+            .with_description(description),
+        )?
+        .into()
+    } else {
+        LayoutObj::new(
+            IconDialog::new(
+                icon,
+                title,
+                Button::with_text(button).styled(button_style).map(|msg| {
+                    (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
+                }),
+            )
+            .with_description(description),
+        )?
+        .into()
+    };
+
+    Ok(obj)
+}
+
+extern "C" fn new_show_error(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        new_show_modal(kwargs, theme::IMAGE_ERROR, theme::button_default())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let description: StrBuffer =
-            kwargs.get_or(Qstr::MP_QSTR_description, StrBuffer::empty())?;
-
-        let buttons = Button::cancel_confirm(
-            Button::with_icon(theme::ICON_CANCEL).styled(theme::button_cancel()),
-            Button::with_text("CONTINUE").styled(theme::button_reset()),
-            2,
-        );
-
-        let obj = LayoutObj::new(
-            IconDialog::new(theme::IMAGE_WARN, title, buttons).with_description(description),
-        )?;
-        Ok(obj.into())
+        new_show_modal(kwargs, theme::IMAGE_WARN, theme::button_reset())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
 extern "C" fn new_show_success(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let description: StrBuffer =
-            kwargs.get_or(Qstr::MP_QSTR_description, StrBuffer::empty())?;
-        let button: StrBuffer = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
+        new_show_modal(kwargs, theme::IMAGE_SUCCESS, theme::button_confirm())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
 
-        let buttons = component::Map::new(
-            Button::with_text(button).styled(theme::button_confirm()),
-            |msg| (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed),
-        );
-
-        let obj = LayoutObj::new(
-            IconDialog::new(theme::IMAGE_SUCCESS, title, buttons).with_description(description),
-        )?;
-        Ok(obj.into())
+extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        new_show_modal(kwargs, theme::IMAGE_INFO, theme::button_info())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -667,10 +696,22 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Decrease or increase transaction fee."""
     Qstr::MP_QSTR_confirm_modify_fee => obj_fn_kw!(0, new_confirm_modify_fee).as_obj(),
 
+    /// def show_error(
+    ///     *,
+    ///     title: str,
+    ///     button: str,
+    ///     description: str = "",
+    ///     allow_cancel: bool = False,
+    /// ) -> object:
+    ///     """Error modal."""
+    Qstr::MP_QSTR_show_error => obj_fn_kw!(0, new_show_error).as_obj(),
+
     /// def show_warning(
     ///     *,
     ///     title: str,
+    ///     button: str,
     ///     description: str = "",
+    ///     allow_cancel: bool = False,
     /// ) -> object:
     ///     """Warning modal."""
     Qstr::MP_QSTR_show_warning => obj_fn_kw!(0, new_show_warning).as_obj(),
@@ -680,9 +721,20 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     title: str,
     ///     button: str,
     ///     description: str = "",
+    ///     allow_cancel: bool = False,
     /// ) -> object:
     ///     """Success modal."""
     Qstr::MP_QSTR_show_success => obj_fn_kw!(0, new_show_success).as_obj(),
+
+    /// def show_info(
+    ///     *,
+    ///     title: str,
+    ///     button: str,
+    ///     description: str = "",
+    ///     allow_cancel: bool = False,
+    /// ) -> object:
+    ///     """Info modal."""
+    Qstr::MP_QSTR_show_info => obj_fn_kw!(0, new_show_info).as_obj(),
 
     /// def confirm_payment_request(
     ///     *,

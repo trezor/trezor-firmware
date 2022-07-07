@@ -34,6 +34,7 @@ pub const YELLOW_DARK: Color = Color::rgb(154, 115, 6); // FIXME
 pub const GREEN: Color = Color::rgb(57, 168, 20); // grass-green
 pub const GREEN_DARK: Color = Color::rgb(48, 147, 15);
 pub const BLUE: Color = Color::rgb(0, 86, 190); // blue
+pub const BLUE_DARK: Color = Color::rgb(0, 68, 152); // FIXME
 pub const OFF_WHITE: Color = Color::rgb(222, 222, 222); // very light grey
 pub const GREY_LIGHT: Color = Color::rgb(168, 168, 168); // greyish
 pub const GREY_MEDIUM: Color = Color::rgb(100, 100, 100);
@@ -60,6 +61,7 @@ pub const ICON_NEXT: &[u8] = include_res!("model_tt/res/next.toif");
 pub const IMAGE_WARN: &[u8] = include_res!("model_tt/res/warn.toif");
 pub const IMAGE_SUCCESS: &[u8] = include_res!("model_tt/res/success.toif");
 pub const IMAGE_ERROR: &[u8] = include_res!("model_tt/res/error.toif");
+pub const IMAGE_INFO: &[u8] = include_res!("model_tt/res/info.toif");
 
 // Scrollbar/PIN dots.
 pub const DOT_ACTIVE: &[u8] = include_res!("model_tt/res/scroll-active.toif");
@@ -242,6 +244,38 @@ pub fn button_reset() -> ButtonStyleSheet {
             font: FONT_BOLD,
             text_color: GREY_LIGHT,
             button_color: YELLOW,
+            background_color: BG,
+            border_color: BG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+    }
+}
+
+pub fn button_info() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: FONT_BOLD,
+            text_color: FG,
+            button_color: BLUE,
+            background_color: BG,
+            border_color: BG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+        active: &ButtonStyle {
+            font: FONT_BOLD,
+            text_color: FG,
+            button_color: BLUE_DARK,
+            background_color: BG,
+            border_color: FG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+        disabled: &ButtonStyle {
+            font: FONT_BOLD,
+            text_color: GREY_LIGHT,
+            button_color: BLUE,
             background_color: BG,
             border_color: BG,
             border_radius: RADIUS,

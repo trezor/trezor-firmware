@@ -208,6 +208,7 @@ async def confirm_path_warning(
             trezorui2.show_warning(
                 title="Unknown path",
                 description=path,
+                button="CONTINUE",
             )
         ),
         "path_warning",
@@ -317,71 +318,58 @@ def show_pubkey(
     )
 
 
-async def _show_modal(
-    ctx: wire.GenericContext,
-    br_type: str,
-    br_code: ButtonRequestType,
-    header: str,
-    subheader: str | None,
-    content: str,
-    button_confirm: str | None,
-    button_cancel: str | None,
-    icon: str,
-    icon_color: int,
-    exc: ExceptionType = wire.ActionCancelled,
-) -> None:
-    raise NotImplementedError
-
-
 async def show_error_and_raise(
     ctx: wire.GenericContext,
     br_type: str,
     content: str,
     header: str = "Error",
     subheader: str | None = None,
-    button: str = "Close",
+    button: str = "CLOSE",
     red: bool = False,
     exc: ExceptionType = wire.ActionCancelled,
 ) -> NoReturn:
-    await _show_modal(
+    await interact(
         ctx,
-        br_type=br_type,
-        br_code=ButtonRequestType.Other,
-        header=header,
-        subheader=subheader,
-        content=content,
-        button_confirm=None,
-        button_cancel=button,
-        icon=ui.ICON_WRONG,
-        icon_color=ui.RED if red else ui.ORANGE_ICON,
-        exc=exc,
+        _RustLayout(
+            trezorui2.show_error(
+                title=content.replace("\n", " "),
+                description=subheader or "",
+                button=button.upper(),
+                allow_cancel=False,
+            )
+        ),
+        br_type,
+        ButtonRequestType.Other,
     )
     raise exc
 
 
-def show_warning(
+async def show_warning(
     ctx: wire.GenericContext,
     br_type: str,
     content: str,
     header: str = "Warning",
     subheader: str | None = None,
-    button: str = "Try again",
+    button: str = "TRY AGAIN",
     br_code: ButtonRequestType = ButtonRequestType.Warning,
     icon: str = ui.ICON_WRONG,
     icon_color: int = ui.RED,
-) -> Awaitable[None]:
-    return _show_modal(
+) -> None:
+    result = await interact(
         ctx,
-        br_type=br_type,
-        br_code=br_code,
-        header=header,
-        subheader=subheader,
-        content=content,
-        button_confirm=button,
-        button_cancel=None,
-        icon=icon,
-        icon_color=icon_color,
+        _RustLayout(
+            trezorui2.show_warning(
+                title=content.replace("\n", " "),
+                description=subheader or "",
+                button=button.upper(),
+                allow_cancel=False,
+            )
+        ),
+        br_type,
+        br_code,
     )
+    if result is not trezorui2.CONFIRMED:
+        raise wire.ActionCancelled
 
 
 async def show_success(
@@ -389,15 +377,16 @@ async def show_success(
     br_type: str,
     content: str,
     subheader: str | None = None,
-    button: str = "Continue",
+    button: str = "CONTINUE",
 ) -> None:
     result = await interact(
         ctx,
         _RustLayout(
             trezorui2.show_success(
-                title=content,
+                title=content.replace("\n", " "),
                 description=subheader or "",
                 button=button.upper(),
+                allow_cancel=False,
             )
         ),
         br_type,
@@ -666,11 +655,13 @@ async def confirm_metadata(
         layout = trezorui2.show_warning(
             title="Unusually high fee",
             description=param or "",
+            button="CONTINUE",
         )
     elif br_type == "change_count_over_threshold":
         layout = trezorui2.show_warning(
             title="A lot of change-outputs",
             description=f"{param} outputs" if param is not None else "",
+            button="CONTINUE",
         )
     else:
         if param is not None:
