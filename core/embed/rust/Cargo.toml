@@ -25,13 +25,17 @@ crate-type = ["staticlib"]
 
 [profile.dev]
 panic = "abort"
+opt-level = 2
 split-debuginfo = "unpacked"
+codegen-units = 1
+debug = 2
 
 [profile.release]
 panic = "abort"
 opt-level = "z"
 lto = true
 codegen-units = 1
+debug = 2
 
 [profile.test]
 split-debuginfo = "unpacked"
@@ -47,6 +51,16 @@ default_features = false
 
 [dependencies.cstr_core]
 version = "0.2.4"
+default_features = false
+
+[dependencies.getrandom]
+version = "0.2.6"
+default_features = false
+features = [ "custom" ]
+
+[dependencies.trezor-crypto-lib]
+git = "https://github.com/mobilecoinofficial/rust-trezor-crypto"
+#optional = true
 default_features = false
 
 # Build dependencies
@@ -65,3 +79,7 @@ version = "1.0.69"
 [build-dependencies.glob]
 optional = true
 version = "0.3.0"
+
+[patch.crates-io]
+curve25519-dalek = { git = "https://github.com/ryankurte/curve25519-dalek", branch="feature/ffi-raw-conversions" }
+ed25519-dalek = { git = "https://github.com/ryankurte/ed25519-dalek", branch="feature/generic-digests" }

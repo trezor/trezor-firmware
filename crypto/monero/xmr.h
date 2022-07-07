@@ -5,10 +5,12 @@
 #ifndef TREZOR_CRYPTO_XMR_H
 #define TREZOR_CRYPTO_XMR_H
 
-#include "ed25519-donna/ed25519-donna.h"
+#include "trezor-crypto.h"
+#include "trezor-crypto-modm.h"
+#include "trezor-crypto-ge.h"
 #include "hasher.h"
 
-extern const ge25519 ALIGN(16) xmr_h;
+extern const ge25519 xmr_h;
 
 typedef unsigned char xmr_key_t[32];
 

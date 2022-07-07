@@ -20,7 +20,7 @@
 #include <string.h>
 
 #include "blake2s.h"
-#include "ed25519-donna/ed25519.h"
+#include "trezor-crypto.h"
 
 #include "common.h"
 #include "flash.h"

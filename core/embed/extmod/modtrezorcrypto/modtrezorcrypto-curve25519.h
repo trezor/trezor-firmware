@@ -19,7 +19,7 @@
 
 #include "py/objstr.h"
 
-#include "ed25519-donna/ed25519.h"
+#include "trezor-crypto.h"
 
 #include "rand.h"
 
@@ -55,7 +55,7 @@ STATIC mp_obj_t mod_trezorcrypto_curve25519_publickey(mp_obj_t secret_key) {
   }
   vstr_t pk = {0};
   vstr_init_len(&pk, 32);
-  curve25519_scalarmult_basepoint((uint8_t *)pk.buf, (const uint8_t *)sk.buf);
+  curved25519_scalarmult_basepoint((uint8_t *)pk.buf, (const uint8_t *)sk.buf);
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &pk);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_curve25519_publickey_obj,

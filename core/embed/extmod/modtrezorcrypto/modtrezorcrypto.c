@@ -65,7 +65,9 @@ static void wrapped_ui_wait_callback(uint32_t current, uint32_t total) {
 #include "modtrezorcrypto-slip39.h"
 #if !BITCOIN_ONLY
 #include "modtrezorcrypto-cardano.h"
+#if USE_MONERO
 #include "modtrezorcrypto-monero.h"
+#endif
 #include "modtrezorcrypto-nem.h"
 #endif
 
@@ -89,7 +91,7 @@ STATIC const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
      MP_ROM_PTR(&mod_trezorcrypto_curve25519_module)},
     {MP_ROM_QSTR(MP_QSTR_ed25519),
      MP_ROM_PTR(&mod_trezorcrypto_ed25519_module)},
-#if !BITCOIN_ONLY
+#if !BITCOIN_ONLY && USE_MONERO
     {MP_ROM_QSTR(MP_QSTR_monero), MP_ROM_PTR(&mod_trezorcrypto_monero_module)},
 #endif
     {MP_ROM_QSTR(MP_QSTR_nist256p1),

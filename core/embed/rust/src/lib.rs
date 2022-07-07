@@ -19,6 +19,9 @@ mod trezorhal;
 #[macro_use]
 pub mod ui;
 
+// Include trezor crypto library (implements `trezor-crypto(.*).h` functions)
+use {trezor_crypto_lib as _};
+
 #[cfg(not(test))]
 #[cfg(any(not(feature = "test"), feature = "clippy"))]
 #[panic_handler]
@@ -39,3 +42,12 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
     // `PanicInfo::location()`.
     trezorhal::common::fatal_error(empty, msg, empty, 0, empty);
 }
+
+/// `rand` function calls out to platform RNG
+pub fn rand(buf: &mut [u8]) -> Result<(), getrandom::Error> {
+    trezorhal::random::buffer(buf);
+    Ok(())
+}
+
+/// Register custom rand function
+getrandom::register_custom_getrandom!(rand);

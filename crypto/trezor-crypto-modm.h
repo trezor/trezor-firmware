@@ -1,6 +1,15 @@
-/*
-	Public domain by Andrew M. <liquidsun@gmail.com>
-*/
+/// Trezor Crypto modulo m headers, implemented in `trezor-crypto-lib`, included from rust project.
+/// Based on modm-donna-32bit.h by Andrew M. <liquidsun@gmail.com>
+
+#ifndef TREZOR_CRYPTO_MODM_H
+#define TREZOR_CRYPTO_MODM_H
+
+#include <stdint.h>
+#include <stdlib.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
 /*
@@ -17,6 +26,7 @@
 
 typedef uint32_t bignum256modm_element_t;
 typedef bignum256modm_element_t bignum256modm[9];
+
 
 /* see HAC, Alg. 14.42 Step 4 */
 void reduce256_modm(bignum256modm r);
@@ -78,3 +88,10 @@ void mulsub256_modm(bignum256modm r, const bignum256modm a, const bignum256modm 
 
 /* (cc + aa * bb) % l */
 void muladd256_modm(bignum256modm r, const bignum256modm a, const bignum256modm b, const bignum256modm c);
+
+#ifdef __cplusplus
+}
+#endif
+
+
+#endif

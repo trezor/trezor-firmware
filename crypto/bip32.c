@@ -33,16 +33,13 @@
 #include "cardano.h"
 #include "curves.h"
 #include "ecdsa.h"
-#include "ed25519-donna/ed25519-sha3.h"
-#include "ed25519-donna/ed25519.h"
+#include "trezor-crypto.h"
 #include "hmac.h"
 #include "nist256p1.h"
 #include "secp256k1.h"
 #include "sha2.h"
 #include "sha3.h"
-#if USE_KECCAK
-#include "ed25519-donna/ed25519-keccak.h"
-#endif
+
 #if USE_NEM
 #include "nem.h"
 #endif
@@ -487,7 +484,7 @@ int hdnode_fill_public_key(HDNode *node) {
       ed25519_publickey_keccak(node->private_key, node->public_key + 1);
 #endif
     } else if (node->curve == &curve25519_info) {
-      curve25519_scalarmult_basepoint(node->public_key + 1, node->private_key);
+      curved25519_scalarmult_basepoint(node->public_key + 1, node->private_key);
 #if USE_CARDANO
     } else if (node->curve == &ed25519_cardano_info) {
       ed25519_publickey_ext(node->private_key, node->public_key + 1);
@@ -540,6 +537,7 @@ int hdnode_get_nem_address(HDNode *node, uint8_t version, char *address) {
   return nem_get_address(&node->public_key[1], version, address);
 }
 
+// TODO(@ryankurte): failing NEM tests share this
 int hdnode_get_nem_shared_key(const HDNode *node,
                               const ed25519_public_key peer_public_key,
                               const uint8_t *salt, ed25519_public_key mul,

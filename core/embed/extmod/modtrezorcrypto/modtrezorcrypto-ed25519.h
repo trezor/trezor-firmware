@@ -19,8 +19,7 @@
 
 #include "py/objstr.h"
 
-#include "ed25519-donna/ed25519-keccak.h"
-#include "ed25519-donna/ed25519.h"
+#include "trezor-crypto.h"
 
 #include "rand.h"
 
@@ -167,6 +166,8 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_verify(mp_obj_t public_key,
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorcrypto_ed25519_verify_obj,
                                  mod_trezorcrypto_ed25519_verify);
 
+
+
 /// def cosi_combine_publickeys(public_keys: list[bytes]) -> bytes:
 ///     """
 ///     Combines a list of public keys used in COSI cosigning scheme.
@@ -201,6 +202,8 @@ mod_trezorcrypto_ed25519_cosi_combine_publickeys(mp_obj_t public_keys) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(
     mod_trezorcrypto_ed25519_cosi_combine_publickeys_obj,
     mod_trezorcrypto_ed25519_cosi_combine_publickeys);
+
+#ifdef USE_COSI
 
 /// def cosi_combine_signatures(R: bytes, signatures: list[bytes]) -> bytes:
 ///     """
@@ -284,6 +287,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorcrypto_ed25519_cosi_sign_obj, 5, 5,
     mod_trezorcrypto_ed25519_cosi_sign);
 
+#endif
+
 STATIC const mp_rom_map_elem_t mod_trezorcrypto_ed25519_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_ed25519)},
     {MP_ROM_QSTR(MP_QSTR_generate_secret),
@@ -299,10 +304,12 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_ed25519_globals_table[] = {
      MP_ROM_PTR(&mod_trezorcrypto_ed25519_verify_obj)},
     {MP_ROM_QSTR(MP_QSTR_cosi_combine_publickeys),
      MP_ROM_PTR(&mod_trezorcrypto_ed25519_cosi_combine_publickeys_obj)},
+#ifdef USE_COSI
     {MP_ROM_QSTR(MP_QSTR_cosi_combine_signatures),
      MP_ROM_PTR(&mod_trezorcrypto_ed25519_cosi_combine_signatures_obj)},
     {MP_ROM_QSTR(MP_QSTR_cosi_sign),
      MP_ROM_PTR(&mod_trezorcrypto_ed25519_cosi_sign_obj)},
+#endif
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_ed25519_globals,
                             mod_trezorcrypto_ed25519_globals_table);

@@ -1,3 +1,36 @@
+/// Trezor Crypto ge headers, implemented in `trezor-crypto-lib`, included from rust project.
+/// Based on ed25519-donna-impl-base.h
+
+#ifndef TREZOR_CRYPTO_GE_H
+#define TREZOR_CRYPTO_GE_H
+
+#include <stdint.h>
+#include <string.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+typedef uint32_t bignum25519[10];
+
+typedef struct ge25519_t {
+	bignum25519 x, y, z, t;
+} ge25519;
+
+typedef struct ge25519_p1p1_t {
+	bignum25519 x, y, z, t;
+} ge25519_p1p1;
+
+typedef struct ge25519_niels_t {
+	bignum25519 ysubx, xaddy, t2d;
+} ge25519_niels;
+
+typedef struct ge25519_pniels_t {
+	bignum25519 ysubx, xaddy, z, t2d;
+} ge25519_pniels;
+
+
 /*
 	Timing safe memory compare
 */
@@ -102,3 +135,9 @@ int ge25519_unpack_vartime(ge25519 *r, const unsigned char *s);
 
 /* aG, wrapper for niels base mult. */
 void ge25519_scalarmult_base_wrapper(ge25519 *r, const bignum256modm s);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

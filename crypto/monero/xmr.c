@@ -8,7 +8,7 @@
 #include "rand.h"
 #include "serialize.h"
 
-const ge25519 ALIGN(16) xmr_h = {
+const ge25519 xmr_h = {
     {0x1861ec7, 0x1ceac77, 0x2f11626, 0x1f261d3, 0x346107c, 0x06d8c4a,
      0x254201d, 0x1675c09, 0x1301c3f, 0x0211d73},
     {0x326feb4, 0x12e30cc, 0x0cf54b4, 0x1117305, 0x318f5d5, 0x06cf754,
@@ -51,11 +51,13 @@ void xmr_hash_to_scalar(bignum256modm r, const void *data, size_t length) {
 }
 
 void xmr_hash_to_ec(ge25519 *P, const void *data, size_t length) {
-  ge25519 point2 = {0};
+  ge25519 point2 = {0}; 
+
   uint8_t hash[HASHER_DIGEST_LENGTH] = {0};
   hasher_Raw(HASHER_SHA3K, data, length, hash);
 
   ge25519_fromfe_frombytes_vartime(&point2, hash);
+  
   ge25519_mul8(P, &point2);
 }
 
@@ -86,7 +88,7 @@ void xmr_derive_public_key(ge25519 *r, const ge25519 *deriv, uint32_t idx,
   ge25519 p2 = {0};
 
   xmr_derivation_to_scalar(s, deriv, idx);
-  ge25519_scalarmult_base_niels(&p2, ge25519_niels_base_multiples, s);
+  ge25519_scalarmult_base_wrapper(&p2, s);
   ge25519_add(r, base, &p2, 0);
 }
 
@@ -94,7 +96,7 @@ void xmr_add_keys2(ge25519 *r, const bignum256modm a, const bignum256modm b,
                    const ge25519 *B) {
   // aG + bB, G is basepoint
   ge25519 aG = {0}, bB = {0};
-  ge25519_scalarmult_base_niels(&aG, ge25519_niels_base_multiples, a);
+  ge25519_scalarmult_base_wrapper(&aG, a);
   ge25519_scalarmult(&bB, B, b);
   ge25519_add(r, &aG, &bB, 0);
 }
