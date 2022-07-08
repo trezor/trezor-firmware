@@ -8,6 +8,12 @@ There is neither boardloader nor bootloader and no firmware uploads. Emulator ru
 
 Emulator significantly speeds up development and has several features to help you along the way.
 
+## ⚠️ Disclaimer ⚠️
+
+This emulator is for *development purposes only*. It uses a pseudo random number generator, and thus no guarantee on its entropy is made. No security or hardening efforts are made here. It is, and will continue to be, intended for development purposes only. Security and hardening efforts are only made available on [physical Trezor hardware](https://shop.trezor.io/).
+
+Any other usage of the emulator is discouraged. Doing so runs the risk of losing funds.
+
 ## How to run
 
 1. [build](../build/emulator.md) the emulator
