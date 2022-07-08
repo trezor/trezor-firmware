@@ -20,6 +20,9 @@ START_TEST(test_xmr_base58) {
        "1527d062c9fedeb2dad669f2f5585a00a88462b8c95c809a630e5734c",
        "9vacMKaj8JJV6MnwDzh2oNVdwTLJfTDyNRiB6NzV9TT7fqvzLivH2dB8Tv7VYR3ncn8vCb3"
        "KdNMJzQWrPAF1otYJ9cPKpkr"},
+      {0x12, "", "35EMFRj"},
+      {53, "d910642d8b3372fe72676dbc925277974d0401d387e4024",
+       "A1PkB4pLAiVjZTJpWewswLSJor6eEYDHj35UiF7"},
   };
 
   uint8_t rawn[512];

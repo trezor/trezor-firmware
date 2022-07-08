@@ -43,6 +43,7 @@ const size_t encoded_block_sizes[] = {0, 2, 3, 5, 6, 7, 9, 10, 11};
 const size_t full_block_size = sizeof(encoded_block_sizes) / sizeof(encoded_block_sizes[0]) - 1;
 const size_t full_encoded_block_size = 11; // encoded_block_sizes[full_block_size];
 const size_t addr_checksum_size = 4;
+const size_t max_bin_data_size = 64;
 const int decoded_block_sizes[] = {0, -1, 1, 2, -1, 3, 4, 5, -1, 6, 7, 8};
 #define reverse_alphabet(letter) ((int8_t) b58digits_map[(int)letter])
 
@@ -189,23 +190,28 @@ bool xmr_base58_decode(const char *b58, size_t b58sz, void *data, size_t *binsz)
 	char * data_bin = data;
 	for (size_t i = 0; i < full_block_count; ++i)
 	{
-		if (!decode_block(b58 + i * full_encoded_block_size, full_encoded_block_size, data_bin + i * full_block_size))
+		if (!decode_block(b58 + i * full_encoded_block_size, full_encoded_block_size, data_bin + i * full_block_size)) {
+			*binsz = 0;
 			return false;
+		}
 	}
 
 	if (0 < last_block_size)
 	{
 		if (!decode_block(b58 + full_block_count * full_encoded_block_size, last_block_size,
-											data_bin + full_block_count * full_block_size))
+											data_bin + full_block_count * full_block_size)) {
+			*binsz = 0;
 			return false;
+		}
 	}
 
+	*binsz = data_size;
 	return true;
 }
 
 int xmr_base58_addr_encode_check(uint64_t tag, const uint8_t *data, size_t binsz, char *b58, size_t b58sz)
 {
-	if (binsz > 128 || tag > 127) {  // tag varint
+	if (binsz > max_bin_data_size || tag > 127) {  // tag varint
 		return false;
 	}
 
@@ -223,7 +229,7 @@ int xmr_base58_addr_encode_check(uint64_t tag, const uint8_t *data, size_t binsz
 
 int xmr_base58_addr_decode_check(const char *addr, size_t sz, uint64_t *tag, void *data, size_t datalen)
 {
-	size_t buflen = 1 + 64 + addr_checksum_size;
+	size_t buflen = 1 + max_bin_data_size + addr_checksum_size;
 	uint8_t buf[buflen];
 	memset(buf, 0, sizeof(buf));
 	uint8_t hash[HASHER_DIGEST_LENGTH] = {0};
@@ -232,12 +238,12 @@ int xmr_base58_addr_decode_check(const char *addr, size_t sz, uint64_t *tag, voi
 		return 0;
 	}
 
-	size_t res_size = buflen - addr_checksum_size - 1;
-	if (datalen < res_size){
+	if (buflen <= addr_checksum_size + 1) {
 		return 0;
 	}
 
-	if (buflen <= addr_checksum_size+1) {
+	size_t res_size = buflen - addr_checksum_size - 1;
+	if (datalen < res_size){
 		return 0;
 	}
 
