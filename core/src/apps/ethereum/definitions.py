@@ -1,5 +1,5 @@
-from collections import defaultdict
-from typing import TYPE_CHECKING, Tuple
+from ubinascii import unhexlify
+from typing import TYPE_CHECKING
 
 from apps.ethereum import tokens
 
@@ -8,7 +8,7 @@ from trezor.crypto.curve import ed25519
 from trezor.enums import EthereumDefinitionType
 from trezor.messages import EthereumNetworkInfo, EthereumTokenInfo
 
-from . import networks
+from . import helpers, networks
 
 if TYPE_CHECKING:
     from trezor.protobuf import MessageType
@@ -22,7 +22,7 @@ MIN_DATA_VERSION = 1
 FORMAT_VERSION = "trzd1"
 
 if __debug__:
-    DEFINITIONS_DEV_PUBLIC_KEY = b""
+    DEFINITIONS_DEV_PUBLIC_KEY = unhexlify("db995fe25169d141cab9bbba92baa01f9f2e1ece7df4cb2ac05190f37fcc1f9d")
 
 
 class EthereumDefinitionParser:
@@ -68,7 +68,7 @@ def decode_definition(
 
     # decode it if it's OK
     if expected_type == EthereumDefinitionType.NETWORK:
-        info = protobuf.decode(parsed_definition.payload, EthereumNetworkInfo, True)
+        info = protobuf.decode(parsed_definition.clean_payload, EthereumNetworkInfo, True)
 
         # TODO: temporarily convert to internal class
         if info is not None:
@@ -81,7 +81,7 @@ def decode_definition(
                 rskip60=info.rskip60
             )
     else:
-        info = protobuf.decode(parsed_definition.payload, EthereumTokenInfo, True)
+        info = protobuf.decode(parsed_definition.clean_payload, EthereumTokenInfo, True)
 
         # TODO: temporarily convert to internal class
         if info is not None:
@@ -112,7 +112,7 @@ def _get_network_definiton(encoded_network_definition: bytes | None, ref_chain_i
         network = decode_definition(encoded_network_definition, EthereumDefinitionType.NETWORK)
 
         # check referential chain_id with encoded chain_id
-        if network.chain_id != ref_chain_id:
+        if ref_chain_id is not None and network.chain_id != ref_chain_id:
             raise wire.DataError("Invalid network definition - chain IDs not equal.")
 
         return network
@@ -120,9 +120,9 @@ def _get_network_definiton(encoded_network_definition: bytes | None, ref_chain_i
     return None
 
 
-def _get_token_definiton(encoded_token_definition: bytes | None, ref_chain_id: int | None = None, ref_address: int | None = None) -> TokenInfo:
+def _get_token_definiton(encoded_token_definition: bytes | None, ref_chain_id: int | None = None, ref_address: bytes | None = None) -> TokenInfo:
     if encoded_token_definition is None and (ref_chain_id is None or ref_address is None):
-        return None
+        return tokens.UNKNOWN_TOKEN
 
     # if we have a built-in definition, use it
     if ref_chain_id is not None and ref_address is not None:
@@ -151,23 +151,23 @@ class EthereumDefinitions:
         encoded_network_definition: bytes | None = None,
         encoded_token_definition: bytes | None = None,
         ref_chain_id: int | None = None,
-        ref_token_address: int | None = None,
+        ref_token_address: bytes | None = None,
     ) -> None:
         self.network = _get_network_definiton(encoded_network_definition, ref_chain_id)
-        self.token_dict: defaultdict[bytes, TokenInfo] = defaultdict(lambda: tokens.UNKNOWN_TOKEN)
+        self.token_dict: dict[bytes, TokenInfo] = dict()
 
         # if we have some network, we can try to get token
         if self.network is not None:
-            received_token = _get_token_definiton(encoded_token_definition, self.network.chain_id, ref_token_address)
-            if received_token is not tokens.UNKNOWN_TOKEN:
-                self.token_dict[received_token.address] = received_token
+            token = _get_token_definiton(encoded_token_definition, self.network.chain_id, ref_token_address)
+            if token is not tokens.UNKNOWN_TOKEN:
+                self.token_dict[token.address] = token
 
 
 def get_definitions_from_msg(msg: MessageType) -> EthereumDefinitions:
     encoded_network_definition: bytes | None = None
     encoded_token_definition: bytes | None = None
     chain_id: int | None = None
-    token_address: int | None = None
+    token_address: str | None = None
 
     # first try to get both definitions
     try:
@@ -175,7 +175,14 @@ def get_definitions_from_msg(msg: MessageType) -> EthereumDefinitions:
             encoded_network_definition = msg.definitions.encoded_network
             encoded_token_definition = msg.definitions.encoded_token
     except AttributeError:
-        encoded_network_definition = msg.encoded_network
+        pass
+
+    # check if we have network definition, if not give it a last try
+    if encoded_network_definition is None:
+        try:
+            encoded_network_definition = msg.encoded_network
+        except AttributeError:
+            pass
 
     # get chain_id
     try:
@@ -185,7 +192,7 @@ def get_definitions_from_msg(msg: MessageType) -> EthereumDefinitions:
 
     # get token_address
     try:
-        token_address = msg.to
+        token_address = helpers.bytes_from_address(msg.to)
     except AttributeError:
         pass
 

@@ -14,16 +14,25 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import re
-from typing import TYPE_CHECKING, Any, AnyStr, Dict, List, Optional, Tuple
+from itertools import chain
+import pathlib, re, requests
+from typing import TYPE_CHECKING, Any, AnyStr, Dict, List, Optional, TextIO, Tuple
 
 from . import exceptions, messages
-from .tools import expect, prepare_message_bytes, session
+from .tools import expect, UH_, prepare_message_bytes, session
 
 if TYPE_CHECKING:
     from .client import TrezorClient
     from .tools import Address
     from .protobuf import MessageType
+
+
+# TODO: change once we know the urls
+DEFS_BASE_URL="https://data.trezor.io/eth_definitions/{lookup_type}/{id}/{name}.dat"
+DEFS_NETWORK_BY_CHAINID_LOOKUP_TYPE="by_chain_id"
+DEFS_NETWORK_BY_SLIP44_LOOKUP_TYPE="by_slip44"
+DEFS_NETWORK_URI_NAME="network"
+DEFS_TOKEN_URI_NAME="token_{hex_address}"
 
 
 def int_to_big_endian(value: int) -> bytes:
@@ -141,24 +150,105 @@ def encode_data(value: Any, type_name: str) -> bytes:
     raise ValueError(f"Unsupported data type for direct field encoding: {type_name}")
 
 
+def download_from_url(url: str, error_msg: str = "") -> bytes:
+    try:
+        r = requests.get(url)
+        r.raise_for_status()
+        return r.content
+    except requests.exceptions.HTTPError as err:
+        raise RuntimeError(f"{error_msg}{err}")
+
+
+def download_network_definition(chain_id: Optional[int] = None, slip44_hardened: Optional[int] = None) -> Optional[bytes]:
+    if chain_id is None != slip44_hardened is None: # XOR
+        raise RuntimeError(f"Both/or neither of chain_id and slip44_hardened parameters are needed to download network definition.")
+
+    if chain_id is not None:
+        url = DEFS_BASE_URL.format(
+            lookup_type=DEFS_NETWORK_BY_CHAINID_LOOKUP_TYPE,
+            id=chain_id,
+            name=DEFS_NETWORK_URI_NAME,
+        )
+    else:
+        url = DEFS_BASE_URL.format(
+            lookup_type=DEFS_NETWORK_BY_SLIP44_LOOKUP_TYPE,
+            id=UH_(slip44_hardened),
+            name=DEFS_NETWORK_URI_NAME,
+        )
+
+    error_msg = f"While downloading network definition from \"{url}\" following HTTP error occured: "
+    return download_from_url(url, error_msg)
+
+
+def download_token_definition(chain_id: Optional[int] = None, token_address: Optional[str] = None) -> Optional[bytes]:
+    if chain_id is None or token_address is None:
+        raise RuntimeError(f"Both chain_id and token_address parameters are needed to download token definition.")
+
+    url = DEFS_BASE_URL.format(
+        lookup_type=DEFS_NETWORK_BY_CHAINID_LOOKUP_TYPE,
+        id=chain_id,
+        name=DEFS_TOKEN_URI_NAME.format(hex_address=token_address),
+    )
+
+    error_msg = f"While downloading token definition from \"{url}\" following HTTP error occured: "
+    return download_from_url(url, error_msg)
+
+
+def network_definition_from_dir(path: pathlib.Path, chain_id: Optional[int] = None, slip44_hardened: Optional[int] = None) -> Optional[bytes]:
+    if chain_id is None != slip44_hardened is None: # XOR
+        raise RuntimeError(f"Both/or neither of chain_id and slip44_hardened parameters are needed to load network definition from directory.")
+
+    def read_definition(path: pathlib.Path) -> Optional[bytes]:
+        if not path.exists() or not path.is_file():
+            return None
+
+        with open(path, mode="rb") as f:
+                return f.read()
+
+    if chain_id is not None:
+        return read_definition(path / DEFS_NETWORK_BY_CHAINID_LOOKUP_TYPE / str(chain_id) / (DEFS_NETWORK_URI_NAME + ".dat"))
+    else:
+        return read_definition(path / DEFS_NETWORK_BY_SLIP44_LOOKUP_TYPE / str(UH_(slip44_hardened)) / (DEFS_NETWORK_URI_NAME + ".dat"))
+
+
+def token_definition_from_dir(path: pathlib.Path, chain_id: Optional[int] = None, token_address: Optional[str] = None) -> Optional[bytes]:
+    if chain_id is None or token_address is None:
+        raise RuntimeError(f"Both chain_id and token_address parameters are needed to load token definition from directory.")
+
+    path = path / DEFS_NETWORK_BY_CHAINID_LOOKUP_TYPE / str(chain_id) / (DEFS_TOKEN_URI_NAME.format(hex_address=token_address) + ".dat")
+    if not path.exists() or not path.is_file():
+        return None
+
+    with open(path, mode="rb") as f:
+            return f.read()
+
+
 # ====== Client functions ====== #
 
 
 @expect(messages.EthereumAddress, field="address", ret_type=str)
 def get_address(
-    client: "TrezorClient", n: "Address", show_display: bool = False
+    client: "TrezorClient", n: "Address", show_display: bool = False, encoded_network: bytes = None
 ) -> "MessageType":
     return client.call(
-        messages.EthereumGetAddress(address_n=n, show_display=show_display)
+        messages.EthereumGetAddress(
+            address_n=n,
+            show_display=show_display,
+            encoded_network=encoded_network,
+        )
     )
 
 
 @expect(messages.EthereumPublicKey)
 def get_public_node(
-    client: "TrezorClient", n: "Address", show_display: bool = False
+    client: "TrezorClient", n: "Address", show_display: bool = False, encoded_network: bytes = None
 ) -> "MessageType":
     return client.call(
-        messages.EthereumGetPublicKey(address_n=n, show_display=show_display)
+        messages.EthereumGetPublicKey(
+            address_n=n,
+            show_display=show_display,
+            encoded_network=encoded_network,
+        )
     )
 
 
@@ -174,6 +264,7 @@ def sign_tx(
     data: Optional[bytes] = None,
     chain_id: Optional[int] = None,
     tx_type: Optional[int] = None,
+    definitions: Optional[messages.EthereumEncodedDefinitions] = None,
 ) -> Tuple[int, bytes, bytes]:
     if chain_id is None:
         raise exceptions.TrezorException("Chain ID cannot be undefined")
@@ -187,6 +278,7 @@ def sign_tx(
         to=to,
         chain_id=chain_id,
         tx_type=tx_type,
+        definitions=definitions,
     )
 
     if data is None:
@@ -231,6 +323,7 @@ def sign_tx_eip1559(
     max_gas_fee: int,
     max_priority_fee: int,
     access_list: Optional[List[messages.EthereumAccessList]] = None,
+    definitions: Optional[messages.EthereumEncodedDefinitions] = None,
 ) -> Tuple[int, bytes, bytes]:
     length = len(data)
     data, chunk = data[1024:], data[:1024]
@@ -246,6 +339,7 @@ def sign_tx_eip1559(
         access_list=access_list,
         data_length=length,
         data_initial_chunk=chunk,
+        definitions=definitions,
     )
 
     response = client.call(msg)
@@ -265,11 +359,13 @@ def sign_tx_eip1559(
 
 @expect(messages.EthereumMessageSignature)
 def sign_message(
-    client: "TrezorClient", n: "Address", message: AnyStr
+    client: "TrezorClient", n: "Address", message: AnyStr, encoded_network: bytes = None
 ) -> "MessageType":
     return client.call(
         messages.EthereumSignMessage(
-            address_n=n, message=prepare_message_bytes(message)
+            address_n=n,
+            message=prepare_message_bytes(message),
+            encoded_network=encoded_network,
         )
     )
 
@@ -281,6 +377,7 @@ def sign_typed_data(
     data: Dict[str, Any],
     *,
     metamask_v4_compat: bool = True,
+    encoded_network: bytes = None,
 ) -> "MessageType":
     data = sanitize_typed_data(data)
     types = data["types"]
@@ -289,6 +386,7 @@ def sign_typed_data(
         address_n=n,
         primary_type=data["primaryType"],
         metamask_v4_compat=metamask_v4_compat,
+        encoded_network=encoded_network,
     )
     response = client.call(request)
 
@@ -348,7 +446,7 @@ def sign_typed_data(
 
 
 def verify_message(
-    client: "TrezorClient", address: str, signature: bytes, message: AnyStr
+    client: "TrezorClient", address: str, signature: bytes, message: AnyStr, chain_id: int = 1, encoded_network: bytes = None
 ) -> bool:
     try:
         resp = client.call(
@@ -356,6 +454,7 @@ def verify_message(
                 address=address,
                 signature=signature,
                 message=prepare_message_bytes(message),
+                encoded_network=encoded_network,
             )
         )
     except exceptions.TrezorFailure:

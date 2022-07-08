@@ -8,7 +8,6 @@ from .helpers import bytes_from_address
 from .keychain import with_keychain_from_chain_id_and_defs
 
 if TYPE_CHECKING:
-    from collections import defaultdict
     from apps.common.keychain import Keychain
     from trezor.messages import EthereumSignTx, EthereumTxAck
     from trezor.wire import Context
@@ -101,7 +100,7 @@ async def sign_tx(
 
 
 async def handle_erc20(
-    ctx: Context, msg: EthereumSignTxAny, token_dict: defaultdict[bytes, tokens.TokenInfo]
+    ctx: Context, msg: EthereumSignTxAny, token_dict: dict[bytes, tokens.TokenInfo]
 ) -> tuple[tokens.TokenInfo | None, bytes, bytes, int]:
     from .layout import require_confirm_unknown_token
     from . import tokens
@@ -119,7 +118,7 @@ async def handle_erc20(
         and data_initial_chunk[:16]
         == b"\xa9\x05\x9c\xbb\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     ):
-        token = token_dict[address_bytes]
+        token = token_dict.get(address_bytes, tokens.UNKNOWN_TOKEN)
         recipient = data_initial_chunk[16:36]
         value = int.from_bytes(data_initial_chunk[36:68], "big")
 

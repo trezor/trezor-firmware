@@ -60,6 +60,13 @@ def H_(x: int) -> int:
     return x | HARDENED_FLAG
 
 
+def UH_(x: int) -> int:
+    """
+    Shortcut function that "un-hardens" a number in a BIP44 path.
+    """
+    return x & ~(HARDENED_FLAG)
+
+
 def btc_hash(data: bytes) -> bytes:
     """
     Double-SHA256 hash as used in BTC
