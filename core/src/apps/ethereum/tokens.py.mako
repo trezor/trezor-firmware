@@ -31,8 +31,8 @@ class TokenInfo:
         self,
         symbol: str,
         decimals: int,
-        address: bytes = None,
-        chain_id: int = None,
+        address: bytes,
+        chain_id: int,
         name: str = None,
     ) -> None:
         self.symbol = symbol
@@ -42,9 +42,9 @@ class TokenInfo:
         self.name = name
 
 
-UNKNOWN_TOKEN = TokenInfo("Wei UNKN", 0)
+UNKNOWN_TOKEN = TokenInfo("Wei UNKN", 0, b"", 0)
 
-
+# TODO: delete completely
 def token_by_chain_address(chain_id: int, address: bytes) -> TokenInfo:
     for addr, symbol, decimal in _token_iterator(chain_id):
         if address == addr:
@@ -54,6 +54,8 @@ def token_by_chain_address(chain_id: int, address: bytes) -> TokenInfo:
 
 def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int]]:
 % for token_chain_id, tokens in group_tokens(supported_on("trezor2", erc20)).items():
+    return UNKNOWN_TOKEN
+
     if chain_id == ${token_chain_id}:
         % for t in tokens:
         yield (  # address, symbol, decimals
