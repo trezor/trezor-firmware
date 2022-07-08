@@ -38,6 +38,10 @@ impl<T: AsRef<str>> HoldToConfirm<T> {
         self.place(button_area);
     }
 
+    pub fn reset(&mut self) {
+        self.loader.reset();
+    }
+
     pub fn set_duration(&mut self, duration: Duration) {
         self.loader.set_duration(duration);
     }

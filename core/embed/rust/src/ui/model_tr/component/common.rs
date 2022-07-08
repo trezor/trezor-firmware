@@ -49,9 +49,9 @@ pub trait ChoiceItem {
     fn paint_center(&mut self);
     fn paint_left(&mut self);
     fn paint_right(&mut self);
-    fn btn_left(&mut self) -> Option<ButtonDetails<&'static str>>;
-    fn btn_middle(&mut self) -> Option<ButtonDetails<&'static str>>;
-    fn btn_right(&mut self) -> Option<ButtonDetails<&'static str>>;
+    fn btn_left(&self) -> Option<ButtonDetails<&'static str>>;
+    fn btn_middle(&self) -> Option<ButtonDetails<&'static str>>;
+    fn btn_right(&self) -> Option<ButtonDetails<&'static str>>;
 }
 
 /// Describing the button in the choice item.
@@ -72,6 +72,21 @@ impl<T: AsRef<str>> ButtonDetails<T> {
     pub fn with_duration(mut self, duration: Duration) -> Self {
         self.duration = Some(duration);
         self
+    }
+
+    /// Identifier of this button configuration.
+    /// To quickly compare two buttons and see if there was a change.
+    pub fn id(&self) -> String<50> {
+        // TODO: we could maybe use `Eq` or `PartialEq` for comparison,
+        // but that wold require some generic Trait changes (T: PartialEq),
+        // which was not possible for AsRef<str>?
+        let duration_ms = self.duration.unwrap_or(Duration::ZERO).to_millis();
+        build_string!(
+            50,
+            self.text.as_ref(),
+            "--",
+            String::<20>::from(duration_ms).as_ref()
+        )
     }
 }
 
@@ -136,15 +151,15 @@ impl ChoiceItem for StringChoiceItem {
         display_bold_right(Point::new(RIGHT_COL, MIDDLE_ROW), self.text.as_str());
     }
 
-    fn btn_left(&mut self) -> Option<ButtonDetails<&'static str>> {
+    fn btn_left(&self) -> Option<ButtonDetails<&'static str>> {
         self.btn_left
     }
 
-    fn btn_middle(&mut self) -> Option<ButtonDetails<&'static str>> {
+    fn btn_middle(&self) -> Option<ButtonDetails<&'static str>> {
         self.btn_middle
     }
 
-    fn btn_right(&mut self) -> Option<ButtonDetails<&'static str>> {
+    fn btn_right(&self) -> Option<ButtonDetails<&'static str>> {
         self.btn_right
     }
 }
@@ -209,15 +224,28 @@ impl ChoiceItem for MultilineStringChoiceItem {
         }
     }
 
-    fn btn_left(&mut self) -> Option<ButtonDetails<&'static str>> {
+    fn btn_left(&self) -> Option<ButtonDetails<&'static str>> {
         self.btn_left
     }
 
-    fn btn_middle(&mut self) -> Option<ButtonDetails<&'static str>> {
+    fn btn_middle(&self) -> Option<ButtonDetails<&'static str>> {
         self.btn_middle
     }
 
-    fn btn_right(&mut self) -> Option<ButtonDetails<&'static str>> {
+    fn btn_right(&self) -> Option<ButtonDetails<&'static str>> {
         self.btn_right
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_btn_details_id() {
+        let btn = ButtonDetails::new("Test");
+        assert_eq!(btn.id(), String::<50>::from("Test--0"));
+        let btn = ButtonDetails::new("Duration").with_duration(Duration::from_secs(1));
+        assert_eq!(btn.id(), String::<50>::from("Duration--1000"));
     }
 }

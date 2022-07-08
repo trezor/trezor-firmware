@@ -153,9 +153,6 @@ impl Component for Loader {
 
         if let Event::Timer(EventCtx::ANIM_FRAME_TIMER) = event {
             if self.is_animating() {
-                // We have something to paint, so request to be painted in the next pass.
-                ctx.request_paint();
-
                 if self.is_completely_grown(now) {
                     self.state = State::Grown;
                     return Some(LoaderMsg::GrownCompletely);
@@ -165,6 +162,8 @@ impl Component for Loader {
                 } else {
                     // There is further progress in the animation, request an animation frame event.
                     ctx.request_anim_frame();
+                    // We have something to paint, so request to be painted in the next pass.
+                    ctx.request_paint();
                 }
             }
         }

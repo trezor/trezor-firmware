@@ -1,11 +1,12 @@
 use super::{
     common::ButtonDetails, theme, Button, ButtonPos, ButtonStyleSheet, HoldToConfirm,
-    HoldToConfirmMsg, LoaderStyle, LoaderStyleSheet,
+    HoldToConfirmMsg, LoaderStyleSheet,
 };
+use crate::ui::component::{ComponentExt, Pad};
 use crate::{
     time::Duration,
     ui::{
-        component::{base::Event, Component, EventCtx},
+        component::{base::Event, Child, Component, EventCtx},
         event::{ButtonEvent, PhysicalButton},
         geometry::Rect,
     },
@@ -23,62 +24,161 @@ pub enum ButtonControllerMsg {
     Triggered(ButtonPos),
 }
 
+// TODO: could have the possibility of `Both`,
+// so that button can be single-clicked or held longer time,
+// with different behavior
 pub enum ButtonType {
     Nothing,
     NormalButton,
     HoldToConfirm,
 }
 
-/// Wrapping a button and its active state, so that it can be easily
-/// shown/hidden according to `is_active`.
+impl ButtonType {
+    pub fn from_button_details<T: AsRef<str>>(details: Option<ButtonDetails<T>>) -> Self {
+        if let Some(details) = details {
+            if details.duration.is_some() {
+                Self::HoldToConfirm
+            } else {
+                Self::NormalButton
+            }
+        } else {
+            Self::Nothing
+        }
+    }
+}
+
+/// Wrapping a button and its state, so that it can be easily
+/// controller from outside.
+///
+/// Users have a choice of a normal button or Hold-to-confirm button.
+/// `button_type` specified what from those two is used, if anything.
 pub struct ButtonContainer<T> {
-    button: Button<T>,
-    hold_to_confirm: HoldToConfirm<T>,
+    button: Child<Button<T>>,
+    hold_to_confirm: Child<HoldToConfirm<T>>,
     button_type: ButtonType,
+    button_details: Option<ButtonDetails<T>>,
+}
+
+impl ButtonContainer<&'static str> {
+    pub fn from_button_details(
+        pos: ButtonPos,
+        btn_details: Option<ButtonDetails<&'static str>>,
+    ) -> Self {
+        Self::new(
+            pos,
+            btn_details
+                .unwrap_or_else(|| ButtonDetails::new("TEXT"))
+                .text,
+            theme::button_default(),
+            theme::loader_bold(),
+            ButtonType::from_button_details(btn_details),
+            btn_details,
+        )
+    }
 }
 
 impl<T: Clone + AsRef<str>> ButtonContainer<T> {
-    pub fn new(pos: ButtonPos, text: T, styles: ButtonStyleSheet, is_active: bool) -> Self {
+    pub fn new(
+        pos: ButtonPos,
+        text: T,
+        button_styles: ButtonStyleSheet,
+        loader_styles: LoaderStyleSheet,
+        button_type: ButtonType,
+        button_details: Option<ButtonDetails<T>>,
+    ) -> Self {
         Self {
-            button: Button::with_text(pos, text.clone(), styles),
-            hold_to_confirm: HoldToConfirm::new(
+            button: Child::new(Button::with_text(pos, text.clone(), button_styles)),
+            hold_to_confirm: Child::new(HoldToConfirm::new(
                 pos,
                 text,
-                LoaderStyleSheet {
-                    normal: &LoaderStyle {
-                        font: theme::FONT_BOLD,
-                        fg_color: theme::FG,
-                        bg_color: theme::BG,
-                    },
-                },
+                loader_styles,
                 Duration::from_millis(1000),
-            ),
-            button_type: if is_active {
-                ButtonType::NormalButton
-            } else {
-                ButtonType::Nothing
-            },
+            )),
+            button_type,
+            button_details,
         }
     }
 
-    pub fn reacts_to_single_click(&self) -> bool {
-        matches!(self.button_type, ButtonType::NormalButton)
-    }
-
     /// Changing the state of the button.
-    /// Passing `None` will mark the button as inactive.
-    pub fn set(&mut self, btn_details: Option<ButtonDetails<T>>, button_area: Rect) {
+    /// Passing `None` as `btn_details` will mark the button as inactive.
+    pub fn set(
+        &mut self,
+        ctx: &mut EventCtx,
+        btn_details: Option<ButtonDetails<T>>,
+        button_area: Rect,
+    ) {
+        // Saving the current button details for comparison with next state.
+        self.button_details = btn_details.clone();
+
         if let Some(btn_details) = btn_details {
+            // Choosing between Hold-to-confirm and normal button based on `duration`
             if let Some(duration) = btn_details.duration {
-                self.hold_to_confirm.set_text(btn_details.text, button_area);
-                self.hold_to_confirm.set_duration(duration);
+                self.hold_to_confirm.mutate(ctx, |_ctx, btn| {
+                    btn.set_text(btn_details.text, button_area);
+                    btn.set_duration(duration);
+                });
+                self.hold_to_confirm.request_complete_repaint(ctx);
                 self.button_type = ButtonType::HoldToConfirm;
             } else {
-                self.button.set_text(btn_details.text, button_area);
+                self.button.mutate(ctx, |_ctx, btn| {
+                    btn.set_text(btn_details.text, button_area);
+                });
+                self.button.request_complete_repaint(ctx);
                 self.button_type = ButtonType::NormalButton;
             }
         } else {
             self.button_type = ButtonType::Nothing;
+        }
+    }
+
+    /// Placing both possible components
+    pub fn place(&mut self, bounds: Rect) {
+        self.button.place(bounds);
+        self.hold_to_confirm.place(bounds);
+    }
+
+    /// Painting the component that should be currently visible, if any
+    pub fn paint(&mut self) {
+        if matches!(self.button_type, ButtonType::NormalButton) {
+            self.button.paint();
+        } else if matches!(self.button_type, ButtonType::HoldToConfirm) {
+            self.hold_to_confirm.paint();
+        }
+    }
+
+    /// Setting the visual state of the button - released/pressed
+    pub fn set_pressed(&mut self, ctx: &mut EventCtx, is_pressed: bool) {
+        self.button.mutate(ctx, |ctx, btn| {
+            btn.set_pressed(ctx, is_pressed);
+        });
+    }
+
+    /// Whether single-click should trigger action.
+    pub fn reacts_to_single_click(&self) -> bool {
+        matches!(self.button_type, ButtonType::NormalButton)
+    }
+
+    /// Whether hold-to-confirm was triggered
+    /// If so, also resetting the state of the button
+    pub fn hold_to_confirm_triggered(&mut self, ctx: &mut EventCtx, event: Event) -> bool {
+        if matches!(self.button_type, ButtonType::HoldToConfirm) {
+            let msg = self.hold_to_confirm.event(ctx, event);
+            if matches!(msg, Some(HoldToConfirmMsg::Confirmed)) {
+                self.hold_to_confirm.inner_mut().reset();
+                self.hold_to_confirm.request_complete_repaint(ctx);
+                return true;
+            }
+        };
+        false
+    }
+
+    /// Whether newly supplied button details are different from the
+    /// current one.
+    pub fn is_changing(&self, btn_details: Option<ButtonDetails<T>>) -> bool {
+        if btn_details.is_some() && self.button_details.is_some() {
+            btn_details.as_ref().unwrap().id() != self.button_details.as_ref().unwrap().id()
+        } else {
+            btn_details.is_some() != self.button_details.is_some()
         }
     }
 }
@@ -91,12 +191,12 @@ impl<T: Clone + AsRef<str>> ButtonContainer<T> {
 /// and handling their placement, painting and returning
 /// appropriate events when they are triggered.
 ///
-/// Buttons can be interactively changed by clients by appropriate
-/// `set_XXX()` methods.
+/// Buttons can be interactively changed by clients by `set()`.
 ///
 /// Only "final" button events are returned in `ButtonControllerMsg::Triggered`,
 /// based upon the buttons being long-press or not.
 pub struct ButtonController<T> {
+    pad: Pad,
     left_btn: ButtonContainer<T>,
     middle_btn: ButtonContainer<T>,
     right_btn: ButtonContainer<T>,
@@ -110,29 +210,15 @@ pub struct ButtonController<T> {
 impl ButtonController<&'static str> {
     /// Supplying `None` marks the appropriate button inactive.
     pub fn new(
-        left_text: Option<&'static str>,
-        mid_text: Option<&'static str>,
-        right_text: Option<&'static str>,
+        left: Option<ButtonDetails<&'static str>>,
+        mid: Option<ButtonDetails<&'static str>>,
+        right: Option<ButtonDetails<&'static str>>,
     ) -> Self {
         Self {
-            left_btn: ButtonContainer::new(
-                ButtonPos::Left,
-                left_text.unwrap_or("LEFT"),
-                theme::button_default(),
-                left_text.is_some(),
-            ),
-            middle_btn: ButtonContainer::new(
-                ButtonPos::Middle,
-                mid_text.unwrap_or("MID"),
-                theme::button_default(),
-                mid_text.is_some(),
-            ),
-            right_btn: ButtonContainer::new(
-                ButtonPos::Right,
-                right_text.unwrap_or("RIGHT"),
-                theme::button_default(),
-                right_text.is_some(),
-            ),
+            pad: Pad::with_background(theme::BG).with_clear(),
+            left_btn: ButtonContainer::from_button_details(ButtonPos::Left, left),
+            middle_btn: ButtonContainer::from_button_details(ButtonPos::Middle, mid),
+            right_btn: ButtonContainer::from_button_details(ButtonPos::Right, right),
             state: ButtonState::Nothing,
             button_area: Rect::zero(),
         }
@@ -140,16 +226,43 @@ impl ButtonController<&'static str> {
 }
 
 impl<T: Clone + AsRef<str>> ButtonController<T> {
-    pub fn set_left(&mut self, btn_details: Option<ButtonDetails<T>>) {
-        self.left_btn.set(btn_details, self.button_area);
+    /// If any button changed from previous state, updating all of them,
+    /// otherwise not doing anything not to flicker the screen.
+    pub fn set(
+        &mut self,
+        ctx: &mut EventCtx,
+        left: Option<ButtonDetails<T>>,
+        mid: Option<ButtonDetails<T>>,
+        right: Option<ButtonDetails<T>>,
+    ) {
+        // TODO: investigate how to make just one button to be repainted
+        // Tried to add pad to each and clear it on any change but not successful
+        // (I maybe forgot to paint the pad...)
+        if self.buttons_have_changed(left.clone(), mid.clone(), right.clone()) {
+            self.left_btn.set(ctx, left, self.button_area);
+            self.middle_btn.set(ctx, mid, self.button_area);
+            self.right_btn.set(ctx, right, self.button_area);
+            self.pad.clear();
+        }
     }
 
-    pub fn set_right(&mut self, btn_details: Option<ButtonDetails<T>>) {
-        self.right_btn.set(btn_details, self.button_area);
+    /// Find out if any of our buttons has changed.
+    fn buttons_have_changed(
+        &mut self,
+        left: Option<ButtonDetails<T>>,
+        mid: Option<ButtonDetails<T>>,
+        right: Option<ButtonDetails<T>>,
+    ) -> bool {
+        self.left_btn.is_changing(left)
+            || self.middle_btn.is_changing(mid)
+            || self.right_btn.is_changing(right)
     }
 
-    pub fn set_middle(&mut self, btn_details: Option<ButtonDetails<T>>) {
-        self.middle_btn.set(btn_details, self.button_area);
+    /// Setting the pressed state for all three buttons by boolean flags.
+    fn set_pressed(&mut self, ctx: &mut EventCtx, left: bool, mid: bool, right: bool) {
+        self.left_btn.set_pressed(ctx, left);
+        self.middle_btn.set_pressed(ctx, mid);
+        self.right_btn.set_pressed(ctx, right);
     }
 }
 
@@ -158,28 +271,17 @@ impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         // Handling the hold_to_confirm elements
-        if matches!(self.left_btn.button_type, ButtonType::HoldToConfirm) {
-            let msg = self.left_btn.hold_to_confirm.event(ctx, event);
-            if matches!(msg, Some(HoldToConfirmMsg::Confirmed)) {
-                self.state = ButtonState::Nothing;
-                return Some(ButtonControllerMsg::Triggered(ButtonPos::Left));
-            }
+        if self.left_btn.hold_to_confirm_triggered(ctx, event) {
+            return Some(ButtonControllerMsg::Triggered(ButtonPos::Left));
         }
-        if matches!(self.right_btn.button_type, ButtonType::HoldToConfirm) {
-            let msg = self.right_btn.hold_to_confirm.event(ctx, event);
-            if matches!(msg, Some(HoldToConfirmMsg::Confirmed)) {
-                self.state = ButtonState::Nothing;
-                return Some(ButtonControllerMsg::Triggered(ButtonPos::Right));
-            }
+        if self.middle_btn.hold_to_confirm_triggered(ctx, event) {
+            return Some(ButtonControllerMsg::Triggered(ButtonPos::Middle));
         }
-        if matches!(self.middle_btn.button_type, ButtonType::HoldToConfirm) {
-            let msg = self.middle_btn.hold_to_confirm.event(ctx, event);
-            if matches!(msg, Some(HoldToConfirmMsg::Confirmed)) {
-                self.state = ButtonState::Nothing;
-                return Some(ButtonControllerMsg::Triggered(ButtonPos::Middle));
-            }
+        if self.right_btn.hold_to_confirm_triggered(ctx, event) {
+            return Some(ButtonControllerMsg::Triggered(ButtonPos::Right));
         }
 
+        // State machine for the ButtonController
         match event {
             Event::Button(button) => {
                 let (new_state, event) = match self.state {
@@ -232,6 +334,26 @@ impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
                         _ => (self.state, None),
                     },
                 };
+
+                // Updating the visual feedback for the buttons
+                match new_state {
+                    ButtonState::Nothing => {
+                        self.set_pressed(ctx, false, false, false);
+                    }
+                    ButtonState::OneDown(down_button) => match down_button {
+                        PhysicalButton::Left => {
+                            self.set_pressed(ctx, true, false, false);
+                        }
+                        PhysicalButton::Right => {
+                            self.set_pressed(ctx, false, false, true);
+                        }
+                        _ => {}
+                    },
+                    ButtonState::BothDown | ButtonState::OneReleased(_) => {
+                        self.set_pressed(ctx, false, true, false);
+                    }
+                };
+
                 self.state = new_state;
                 event
             }
@@ -240,38 +362,10 @@ impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
     }
 
     fn paint(&mut self) {
-        let highlight = match self.state {
-            ButtonState::Nothing => None,
-            ButtonState::OneDown(down_button) => match down_button {
-                PhysicalButton::Left => Some(ButtonPos::Left),
-                PhysicalButton::Right => Some(ButtonPos::Right),
-                _ => None,
-            },
-            ButtonState::BothDown | ButtonState::OneReleased(_) => Some(ButtonPos::Middle),
-        };
-        if matches!(self.left_btn.button_type, ButtonType::NormalButton) {
-            self.left_btn
-                .button
-                .paint_pressed(matches!(highlight, Some(ButtonPos::Left)));
-        } else if matches!(self.left_btn.button_type, ButtonType::HoldToConfirm) {
-            self.left_btn.hold_to_confirm.paint();
-        }
-
-        if matches!(self.middle_btn.button_type, ButtonType::NormalButton) {
-            self.middle_btn
-                .button
-                .paint_pressed(matches!(highlight, Some(ButtonPos::Middle)));
-        } else if matches!(self.middle_btn.button_type, ButtonType::HoldToConfirm) {
-            self.middle_btn.hold_to_confirm.paint();
-        }
-
-        if matches!(self.right_btn.button_type, ButtonType::NormalButton) {
-            self.right_btn
-                .button
-                .paint_pressed(matches!(highlight, Some(ButtonPos::Right)));
-        } else if matches!(self.right_btn.button_type, ButtonType::HoldToConfirm) {
-            self.right_btn.hold_to_confirm.paint();
-        }
+        self.pad.paint();
+        self.left_btn.paint();
+        self.middle_btn.paint();
+        self.right_btn.paint();
     }
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -279,23 +373,11 @@ impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
         // when when they get updated
         self.button_area = bounds;
 
-        if matches!(self.left_btn.button_type, ButtonType::NormalButton) {
-            self.left_btn.button.place(bounds);
-        } else if matches!(self.left_btn.button_type, ButtonType::HoldToConfirm) {
-            self.left_btn.hold_to_confirm.place(bounds);
-        }
+        self.pad.place(bounds);
+        self.left_btn.place(bounds);
+        self.middle_btn.place(bounds);
+        self.right_btn.place(bounds);
 
-        if matches!(self.middle_btn.button_type, ButtonType::NormalButton) {
-            self.middle_btn.button.place(bounds);
-        } else if matches!(self.middle_btn.button_type, ButtonType::HoldToConfirm) {
-            self.middle_btn.hold_to_confirm.place(bounds);
-        }
-
-        if matches!(self.right_btn.button_type, ButtonType::NormalButton) {
-            self.right_btn.button.place(bounds);
-        } else if matches!(self.right_btn.button_type, ButtonType::HoldToConfirm) {
-            self.right_btn.hold_to_confirm.place(bounds);
-        }
         bounds
     }
 }

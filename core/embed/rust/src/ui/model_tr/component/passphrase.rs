@@ -170,14 +170,13 @@ impl PassphraseEntry {
     }
 
     /// Displaying the MENU
-    fn show_menu_page(&mut self) {
+    fn show_menu_page(&mut self, ctx: &mut EventCtx) {
         let menu_choices = Self::get_menu_choices();
-
-        self.choice_page.reset(menu_choices, true);
+        self.choice_page.reset(ctx, menu_choices, true);
     }
 
     /// Displaying the character category
-    fn show_category_page(&mut self) {
+    fn show_category_page(&mut self, ctx: &mut EventCtx) {
         let new_characters: Vec<&char, 30> = match self.current_category {
             ChoiceCategory::LowercaseLetter => LOWERCASE_LETTERS.iter().collect(),
             ChoiceCategory::UppercaseLetter => UPPERCASE_LETTERS.iter().collect(),
@@ -203,7 +202,7 @@ impl PassphraseEntry {
         choices[0].btn_left = Some(ButtonDetails::new("MENU"));
         choices[last_index].btn_right = Some(ButtonDetails::new("MENU"));
 
-        self.choice_page.reset(choices, true);
+        self.choice_page.reset(ctx, choices, true);
     }
 
     pub fn passphrase(&self) -> &str {
@@ -234,13 +233,16 @@ impl Component for PassphraseEntry {
                 Some(ChoicePageMsg::Choice(page_counter)) => match page_counter as usize {
                     DEL_INDEX => {
                         self.delete_last_digit(ctx);
+                        ctx.request_paint();
                     }
                     SHOW_INDEX => {
                         self.show_plain_passphrase = true;
+                        ctx.request_paint();
                     }
                     _ => {
                         self.current_category = self.get_category_from_menu(page_counter);
-                        self.show_category_page();
+                        self.show_category_page(ctx);
+                        ctx.request_paint();
                     }
                 },
                 Some(ChoicePageMsg::LeftMost) => return Some(PassphraseEntryMsg::Confirmed),
@@ -254,18 +256,18 @@ impl Component for PassphraseEntry {
                     if !self.is_full() {
                         let new_letter = self.get_char(page_counter as usize);
                         self.append_char(ctx, new_letter);
+                        ctx.request_paint();
                     }
                 }
                 Some(ChoicePageMsg::LeftMost) | Some(ChoicePageMsg::RightMost) => {
                     self.current_category = ChoiceCategory::Menu;
-                    self.show_menu_page();
+                    self.show_menu_page(ctx);
+                    ctx.request_paint();
                 }
                 _ => {}
             }
         }
 
-        // Need to paint to refresh the screen
-        self.paint();
         None
     }
 

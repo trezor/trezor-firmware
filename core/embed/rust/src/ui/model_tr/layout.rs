@@ -376,99 +376,99 @@ pub static mp_module_trezorui2: Module = obj_module! {
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        trace::Trace,
-        ui::{
-            component::Component,
-            model_tr::{
-                component::{Dialog, DialogMsg},
-                constant,
-            },
-        },
-    };
+    //     use crate::{
+    //         trace::Trace,
+    //         ui::{
+    //             component::Component,
+    //             model_tr::{
+    //                 component::{Dialog, DialogMsg},
+    //                 constant,
+    //             },
+    //         },
+    //     };
 
-    use super::*;
+    //     use super::*;
 
-    fn trace(val: &impl Trace) -> String {
-        let mut t = Vec::new();
-        val.trace(&mut t);
-        String::from_utf8(t).unwrap()
-    }
+    //     fn trace(val: &impl Trace) -> String {
+    //         let mut t = Vec::new();
+    //         val.trace(&mut t);
+    //         String::from_utf8(t).unwrap()
+    //     }
 
-    impl<T, U> ComponentMsgObj for Dialog<T, U>
-    where
-        T: ComponentMsgObj,
-        U: AsRef<str>,
-    {
-        fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
-            match msg {
-                DialogMsg::Content(c) => self.inner().msg_try_into_obj(c),
-                DialogMsg::LeftClicked => Ok(CANCELLED.as_obj()),
-                DialogMsg::RightClicked => Ok(CONFIRMED.as_obj()),
-            }
-        }
-    }
+    //     impl<T, U> ComponentMsgObj for Dialog<T, U>
+    //     where
+    //         T: ComponentMsgObj,
+    //         U: AsRef<str>,
+    //     {
+    //         fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error>
+    // {             match msg {
+    //                 DialogMsg::Content(c) =>
+    // self.inner().msg_try_into_obj(c),                 
+    // DialogMsg::LeftClicked => Ok(CANCELLED.as_obj()),                 
+    // DialogMsg::RightClicked => Ok(CONFIRMED.as_obj()),             }
+    //         }
+    //     }
 
-    #[test]
-    fn trace_example_layout() {
-        let mut layout = Dialog::new(
-            FormattedText::new(
-                theme::TEXT_NORMAL,
-                theme::FORMATTED,
-                "Testing text layout, with some text, and some more text. And {param}",
-            )
-            .with("param", "parameters!"),
-            Some(Button::with_text(
-                ButtonPos::Left,
-                "Left",
-                theme::button_cancel(),
-            )),
-            Some(Button::with_text(
-                ButtonPos::Right,
-                "Right",
-                theme::button_default(),
-            )),
-        );
-        layout.place(constant::screen());
-        assert_eq!(
-            trace(&layout),
-            r#"<Dialog content:<Text content:Testing text layout,
-with some text, and
-some more text. And p-
-arameters! > left:<Button text:Left > right:<Button text:Right > >"#
-        )
-    }
+    //     #[test]
+    //     fn trace_example_layout() {
+    //         let mut layout = Dialog::new(
+    //             FormattedText::new(
+    //                 theme::TEXT_NORMAL,
+    //                 theme::FORMATTED,
+    //                 "Testing text layout, with some text, and some more text.
+    // And {param}",             )
+    //             .with("param", "parameters!"),
+    //             Some(Button::with_text(
+    //                 ButtonPos::Left,
+    //                 "Left",
+    //                 theme::button_cancel(),
+    //             )),
+    //             Some(Button::with_text(
+    //                 ButtonPos::Right,
+    //                 "Right",
+    //                 theme::button_default(),
+    //             )),
+    //         );
+    //         layout.place(constant::screen());
+    //         assert_eq!(
+    //             trace(&layout),
+    //             r#"<Dialog content:<Text content:Testing text layout,
+    // with some text, and
+    // some more text. And p-
+    // arameters! > left:<Button text:Left > right:<Button text:Right > >"#
+    //         )
+    //     }
 
-    #[test]
-    fn trace_layout_title() {
-        let mut layout = Frame::new(
-            "Please confirm",
-            Dialog::new(
-                FormattedText::new(
-                    theme::TEXT_NORMAL,
-                    theme::FORMATTED,
-                    "Testing text layout, with some text, and some more text. And {param}",
-                )
-                .with("param", "parameters!"),
-                Some(Button::with_text(
-                    ButtonPos::Left,
-                    "Left",
-                    theme::button_cancel(),
-                )),
-                Some(Button::with_text(
-                    ButtonPos::Right,
-                    "Right",
-                    theme::button_default(),
-                )),
-            ),
-        );
-        layout.place(constant::screen());
-        assert_eq!(
-            trace(&layout),
-            r#"<Frame title:Please confirm content:<Dialog content:<Text content:Testing text layout,
-with some text, and
-some more text. And p-
-arameters! > left:<Button text:Left > right:<Button text:Right > > >"#
-        )
-    }
+    //     #[test]
+    //     fn trace_layout_title() {
+    //         let mut layout = Frame::new(
+    //             "Please confirm",
+    //             Dialog::new(
+    //                 FormattedText::new(
+    //                     theme::TEXT_NORMAL,
+    //                     theme::FORMATTED,
+    //                     "Testing text layout, with some text, and some more
+    // text. And {param}",                 )
+    //                 .with("param", "parameters!"),
+    //                 Some(Button::with_text(
+    //                     ButtonPos::Left,
+    //                     "Left",
+    //                     theme::button_cancel(),
+    //                 )),
+    //                 Some(Button::with_text(
+    //                     ButtonPos::Right,
+    //                     "Right",
+    //                     theme::button_default(),
+    //                 )),
+    //             ),
+    //         );
+    //         layout.place(constant::screen());
+    //         assert_eq!(
+    //             trace(&layout),
+    //             r#"<Frame title:Please confirm content:<Dialog content:<Text
+    // content:Testing text layout, with some text, and
+    // some more text. And p-
+    // arameters! > left:<Button text:Left > right:<Button text:Right > > >"#
+    //         )
+    //     }
 }

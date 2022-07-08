@@ -12,6 +12,18 @@ pub const FONT_MEDIUM: Font = Font::new(-5);
 pub const FONT_BOLD: Font = Font::new(-2);
 pub const FONT_MONO: Font = Font::new(-3);
 
+pub const TEXT_NORMAL: TextStyle = TextStyle::new(FONT_NORMAL, FG, BG, FG, FG);
+pub const TEXT_MEDIUM: TextStyle = TextStyle::new(FONT_MEDIUM, FG, BG, FG, FG);
+pub const TEXT_BOLD: TextStyle = TextStyle::new(FONT_BOLD, FG, BG, FG, FG);
+pub const TEXT_MONO: TextStyle = TextStyle::new(FONT_MONO, FG, BG, FG, FG);
+
+pub const FORMATTED: FormattedFonts = FormattedFonts {
+    normal: FONT_NORMAL,
+    medium: FONT_MEDIUM,
+    bold: FONT_BOLD,
+    mono: FONT_MONO,
+};
+
 // Color palette.
 pub const WHITE: Color = Color::rgb(255, 255, 255);
 pub const BLACK: Color = Color::rgb(0, 0, 0);
@@ -62,14 +74,12 @@ pub fn loader_default() -> LoaderStyleSheet {
     }
 }
 
-pub const TEXT_NORMAL: TextStyle = TextStyle::new(FONT_NORMAL, FG, BG, FG, FG);
-pub const TEXT_MEDIUM: TextStyle = TextStyle::new(FONT_MEDIUM, FG, BG, FG, FG);
-pub const TEXT_BOLD: TextStyle = TextStyle::new(FONT_BOLD, FG, BG, FG, FG);
-pub const TEXT_MONO: TextStyle = TextStyle::new(FONT_MONO, FG, BG, FG, FG);
-
-pub const FORMATTED: FormattedFonts = FormattedFonts {
-    normal: FONT_NORMAL,
-    medium: FONT_MEDIUM,
-    bold: FONT_BOLD,
-    mono: FONT_MONO,
-};
+pub fn loader_bold() -> LoaderStyleSheet {
+    LoaderStyleSheet {
+        normal: &LoaderStyle {
+            font: FONT_BOLD,
+            fg_color: FG,
+            bg_color: BG,
+        },
+    }
+}

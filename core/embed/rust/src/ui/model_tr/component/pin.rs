@@ -173,7 +173,9 @@ impl Component for PinEntry {
                         self.append_new_digit(ctx, page_counter);
                         let new_page_counter =
                             random::uniform_between(1, (CHOICE_LENGTH - 1) as u32);
-                        self.choice_page.set_page_counter(new_page_counter as u8);
+                        self.choice_page
+                            .set_page_counter(ctx, new_page_counter as u8);
+                        ctx.request_paint();
                     }
                 }
             },
@@ -182,13 +184,12 @@ impl Component for PinEntry {
                     return Some(PinEntryMsg::Cancelled);
                 } else {
                     self.delete_last_digit(ctx);
+                    ctx.request_paint();
                 }
             }
             _ => {}
         }
 
-        // Need to paint to refresh the screen
-        self.paint();
         None
     }
 
