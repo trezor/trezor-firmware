@@ -71,7 +71,6 @@ stdenvNoCC.mkDerivation ({
     SDL2
     SDL2_image
     autoflake
-    autoPatchelfHook
     bash
     check
     curl  # for connect tests
@@ -96,6 +95,7 @@ stdenvNoCC.mkDerivation ({
     zlib
     moreutils
   ] ++ lib.optionals (!stdenv.isDarwin) [
+    autoPatchelfHook
     procps
     valgrind
   ] ++ lib.optionals (stdenv.isDarwin) [
