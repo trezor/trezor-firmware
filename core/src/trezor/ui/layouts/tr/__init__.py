@@ -176,9 +176,6 @@ async def confirm_action(
             log.error(__name__, "confirm_action description_param_font not implemented")
         description = description.format(description_param)
 
-    if hold:
-        log.error(__name__, "confirm_action hold not implemented")
-
     await raise_if_cancelled(
         interact(
             ctx,

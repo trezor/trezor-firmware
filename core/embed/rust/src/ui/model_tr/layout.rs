@@ -5,6 +5,7 @@ use heapless::{String, Vec};
 use crate::{
     error::Error,
     micropython::{buffer::StrBuffer, map::Map, module::Module, obj::Obj, qstr::Qstr, util},
+    time::Duration,
     ui::{
         component::{
             base::{Component, ComponentExt},
@@ -21,8 +22,8 @@ use crate::{
 
 use super::{
     component::{
-        Bip39Entry, Bip39EntryMsg, Button, ButtonPage, ButtonPos, Frame, PassphraseEntry,
-        PassphraseEntryMsg, PinEntry, PinEntryMsg, SimpleChoice, SimpleChoiceMsg,
+        Bip39Entry, Bip39EntryMsg, Button, ButtonDetails, ButtonPage, ButtonPos, Frame,
+        PassphraseEntry, PassphraseEntryMsg, PinEntry, PinEntryMsg, SimpleChoice, SimpleChoiceMsg,
     },
     theme,
 };
@@ -97,6 +98,7 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
         let verb_cancel: Option<StrBuffer> =
             kwargs.get(Qstr::MP_QSTR_verb_cancel)?.try_into_option()?;
         let reverse: bool = kwargs.get(Qstr::MP_QSTR_reverse)?.try_into()?;
+        let hold: bool = kwargs.get(Qstr::MP_QSTR_hold)?.try_into()?;
 
         let format = match (&action, &description, reverse) {
             (Some(_), Some(_), false) => "{bold}{action}\n\r{normal}{description}",
@@ -105,6 +107,14 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
             (None, Some(_), _) => "{normal}{description}",
             _ => "",
         };
+
+        // TODO: use verb and verb_cancel
+
+        let cancel_btn = ButtonDetails::cancel("CANCEL");
+        let mut confirm_btn = ButtonDetails::new("CONFIRM");
+        if hold {
+            confirm_btn = confirm_btn.with_duration(Duration::from_secs(2));
+        }
 
         let _left = verb_cancel
             .map(|label| Button::with_text(ButtonPos::Left, label, theme::button_cancel()));
@@ -119,7 +129,9 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
                     .with("action", action.unwrap_or_default())
                     .with("description", description.unwrap_or_default()),
                 theme::BG,
-            ),
+            )
+            .with_cancel_btn(cancel_btn)
+            .with_confirm_btn(confirm_btn),
         ))?;
         Ok(obj.into())
     };
@@ -308,7 +320,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     description: str | None = None,
     ///     verb: str | None = None,
     ///     verb_cancel: str | None = None,
-    ///     hold: bool | None = None,
+    ///     hold: bool = False,
     ///     reverse: bool = False,
     /// ) -> object:
     ///     """Confirm action."""
