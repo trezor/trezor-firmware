@@ -31,7 +31,7 @@ of projects depending on Connect._
 #### Connect dependencies introduction
 
 Javascript projects that have Connect as a dependency are using the [Connect NPM
-package](https://www.npmjs.com/package/trezor-connect) on version specified in their
+package](https://www.npmjs.com/package/@trezor/connect) on version specified in their
 yarn.lock (or similar). This NPM package is not a complete Connect library, it is a
 simple layer that deals with opening an iframe and loading the newest Connect from
 connect.trezor.io.

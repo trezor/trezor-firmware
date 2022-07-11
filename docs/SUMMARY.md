@@ -31,6 +31,7 @@
       - [Migration](common/communication/passphrase-redesign-migration.md)
     - [Bitcoin signing](common/communication/bitcoin-signing.md)
   - [Reproducible builds](common/reproducible-build.md)
+  - [Message Workflows](common/message-workflows.md)
 - [Storage](storage/index.md)
 - [Tests](tests/index.md)
   - [Device Tests](tests/device-tests.md)
@@ -50,3 +51,5 @@
   - [Review Process](misc/review.md)
   - [Changelog](misc/changelog.md)
   - [TOIF Image Format](misc/toif.md)
+- [Developers guide](developers/index.md)
+  - [Libraries](developers/libraries.md)
