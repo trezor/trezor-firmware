@@ -1,11 +1,8 @@
-use crate::{
-    time::Duration,
-    ui::{
-        component::{Component, Event, EventCtx, TimerToken},
-        display::{self, Color, Font},
-        event::{ButtonEvent, PhysicalButton},
-        geometry::{Offset, Point, Rect},
-    },
+use crate::ui::{
+    component::{Component, Event, EventCtx},
+    display::{self, Color, Font},
+    event::{ButtonEvent, PhysicalButton},
+    geometry::{Offset, Point, Rect},
 };
 
 use super::theme;
@@ -41,9 +38,6 @@ pub struct Button<T> {
     content: ButtonContent<T>,
     styles: ButtonStyleSheet,
     state: State,
-    // TODO: probably remove, is handled by `HoldToConfirm`
-    long_press: Option<Duration>,
-    long_timer: Option<TimerToken>,
 }
 
 impl<T: AsRef<str>> Button<T> {
@@ -55,8 +49,6 @@ impl<T: AsRef<str>> Button<T> {
             baseline: Point::zero(),
             area: Rect::zero(),
             state: State::Released,
-            long_press: None,
-            long_timer: None,
         }
     }
 
@@ -68,21 +60,8 @@ impl<T: AsRef<str>> Button<T> {
         Self::new(pos, ButtonContent::Icon(image), styles)
     }
 
-    pub fn with_long_press(mut self, duration: Duration) -> Self {
-        self.long_press = Some(duration);
-        self
-    }
-
     pub fn content(&self) -> &ButtonContent<T> {
         &self.content
-    }
-
-    pub fn is_longpress(&self) -> bool {
-        self.long_press.is_some()
-    }
-
-    pub fn get_longpress(&self) -> Option<Duration> {
-        self.long_press
     }
 
     fn style(&self) -> &ButtonStyle {
@@ -104,13 +83,6 @@ impl<T: AsRef<str>> Button<T> {
     /// Changing the style of the button.
     pub fn set_style(&mut self, styles: ButtonStyleSheet) {
         self.styles = styles;
-    }
-
-    /// Allows for toggling the long press feature.
-    ///
-    /// Supplying `None` will disable it, `Some(Duration)` will set it.
-    pub fn set_long_press(&mut self, duration: Option<Duration>) {
-        self.long_press = duration;
     }
 
     fn set(&mut self, ctx: &mut EventCtx, state: State) {
@@ -167,26 +139,16 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        // Everything should be handled by `ButtonController`
+        // TODO: could be completely deleted, but `ResultPopup` is using Button.event()
         match event {
             Event::Button(ButtonEvent::ButtonPressed(which)) if self.pos.hit(&which) => {
                 self.set(ctx, State::Pressed);
-                if let Some(duration) = self.long_press {
-                    self.long_timer = Some(ctx.request_timer(duration));
-                }
             }
             Event::Button(ButtonEvent::ButtonReleased(which)) if self.pos.hit(&which) => {
                 if matches!(self.state, State::Pressed) {
                     self.set(ctx, State::Released);
                     return Some(ButtonMsg::Clicked);
-                }
-            }
-            Event::Timer(token) => {
-                if self.long_timer == Some(token) {
-                    self.long_timer = None;
-                    if matches!(self.state, State::Pressed) {
-                        self.set(ctx, State::Released);
-                        return Some(ButtonMsg::LongPressed);
-                    }
                 }
             }
             _ => {}
