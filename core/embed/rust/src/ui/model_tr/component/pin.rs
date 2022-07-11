@@ -9,8 +9,7 @@ use crate::{
 };
 
 use super::{
-    common,
-    common::{ButtonDetails, MultilineStringChoiceItem},
+    common::{display_bold_center, ButtonDetails, ButtonLayout, MultilineStringChoiceItem},
     ChoicePage, ChoicePageMsg,
 };
 use heapless::{String, Vec};
@@ -68,23 +67,23 @@ impl PinEntry {
     where
         T: Deref<Target = str>,
     {
+        let btn_layout = ButtonLayout::new(
+            Some(ButtonDetails::new("<")),
+            Some(ButtonDetails::new("SELECT")),
+            Some(ButtonDetails::new(">")),
+        );
         let mut choices: Vec<MultilineStringChoiceItem, CHOICE_LENGTH> = DIGITS
             .iter()
             .map(|digit| {
-                MultilineStringChoiceItem::new(
-                    String::from(*digit),
-                    Some(ButtonDetails::new("<")),
-                    Some(ButtonDetails::new("SELECT")),
-                    Some(ButtonDetails::new(">")),
-                )
-                .use_delimiter(' ')
+                MultilineStringChoiceItem::new(String::from(*digit), btn_layout.clone())
+                    .use_delimiter(' ')
             })
             .collect();
         let last_index = choices.len() - 1;
-        choices[0].btn_left = Some(ButtonDetails::new("BIN"));
-        choices[0].btn_middle = Some(ButtonDetails::new("CONFIRM"));
+        choices[0].btn_layout.btn_left = Some(ButtonDetails::new("BIN"));
+        choices[0].btn_layout.btn_middle = Some(ButtonDetails::new("CONFIRM"));
         choices[0].text = String::from(prompt.as_ref());
-        choices[last_index].btn_right = None;
+        choices[last_index].btn_layout.btn_right = None;
 
         choices
     }
@@ -112,9 +111,9 @@ impl PinEntry {
         // Giving some notion of change even for longer-than-visible PINs
         // - slightly shifting the dots to the left and right after each new digit
         if digits > MAX_VISIBLE_DOTS && digits % 2 == 0 {
-            common::display_bold_center(Point::new(61, PIN_ROW), &dots);
+            display_bold_center(Point::new(61, PIN_ROW), &dots);
         } else {
-            common::display_bold_center(Point::new(64, PIN_ROW), &dots);
+            display_bold_center(Point::new(64, PIN_ROW), &dots);
         }
     }
 
@@ -122,14 +121,14 @@ impl PinEntry {
         let digits = self.textbox.len();
 
         if digits <= MAX_VISIBLE_DOTS {
-            common::display_bold_center(Point::new(64, PIN_ROW), self.pin());
+            display_bold_center(Point::new(64, PIN_ROW), self.pin());
         } else {
             // Show the last part of PIN with preceding ellipsis to show something is hidden
             let ellipsis = "...";
             let offset: usize = digits.saturating_sub(MAX_VISIBLE_DIGITS) + ellipsis.len();
             let mut to_show: String<MAX_VISIBLE_DIGITS> = String::from(ellipsis);
             to_show.push_str(&self.pin()[offset..]).unwrap();
-            common::display_bold_center(Point::new(32, PIN_ROW), &to_show);
+            display_bold_center(Point::new(32, PIN_ROW), &to_show);
         }
     }
 

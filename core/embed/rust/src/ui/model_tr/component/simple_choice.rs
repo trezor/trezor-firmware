@@ -5,7 +5,7 @@ use crate::ui::{
 use core::ops::Deref;
 
 use super::{
-    common::{ButtonDetails, StringChoiceItem},
+    common::{ButtonLayout, StringChoiceItem},
     ChoicePage, ChoicePageMsg,
 };
 use heapless::{String, Vec};
@@ -29,19 +29,12 @@ where
     pub fn new(str_choices: Vec<T, N>) -> Self {
         let mut choices: Vec<StringChoiceItem, N> = str_choices
             .iter()
-            .map(|digit| {
-                StringChoiceItem::from_str(
-                    digit.as_ref(),
-                    Some(ButtonDetails::new("BACK")),
-                    Some(ButtonDetails::new("SELECT")),
-                    Some(ButtonDetails::new("NEXT")),
-                )
-            })
+            .map(|digit| StringChoiceItem::from_str(digit.as_ref(), ButtonLayout::default_three()))
             .collect();
         // Not wanting anything as leftmost and rightmost button
         let last_index = choices.len() - 1;
-        choices[0].btn_left = None;
-        choices[last_index].btn_right = None;
+        choices[0].btn_layout.btn_left = None;
+        choices[last_index].btn_layout.btn_right = None;
 
         Self {
             choices: str_choices,

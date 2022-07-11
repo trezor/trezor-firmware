@@ -1,6 +1,6 @@
 use super::{
-    common::ButtonDetails, theme, Button, ButtonPos, ButtonStyleSheet, HoldToConfirm,
-    HoldToConfirmMsg, LoaderStyleSheet,
+    common::ButtonDetails, common::ButtonLayout, theme, Button, ButtonPos, ButtonStyleSheet,
+    HoldToConfirm, HoldToConfirmMsg, LoaderStyleSheet,
 };
 use crate::ui::component::{ComponentExt, Pad};
 use crate::{
@@ -60,6 +60,7 @@ pub struct ButtonContainer<T> {
 }
 
 impl ButtonContainer<&'static str> {
+    /// Supplying `None` marks the appropriate button inactive.
     pub fn from_button_details(
         pos: ButtonPos,
         btn_details: Option<ButtonDetails<&'static str>>,
@@ -208,17 +209,15 @@ pub struct ButtonController<T> {
 }
 
 impl ButtonController<&'static str> {
-    /// Supplying `None` marks the appropriate button inactive.
-    pub fn new(
-        left: Option<ButtonDetails<&'static str>>,
-        mid: Option<ButtonDetails<&'static str>>,
-        right: Option<ButtonDetails<&'static str>>,
-    ) -> Self {
+    pub fn new(btn_layout: ButtonLayout<&'static str>) -> Self {
         Self {
             pad: Pad::with_background(theme::BG).with_clear(),
-            left_btn: ButtonContainer::from_button_details(ButtonPos::Left, left),
-            middle_btn: ButtonContainer::from_button_details(ButtonPos::Middle, mid),
-            right_btn: ButtonContainer::from_button_details(ButtonPos::Right, right),
+            left_btn: ButtonContainer::from_button_details(ButtonPos::Left, btn_layout.btn_left),
+            middle_btn: ButtonContainer::from_button_details(
+                ButtonPos::Middle,
+                btn_layout.btn_middle,
+            ),
+            right_btn: ButtonContainer::from_button_details(ButtonPos::Right, btn_layout.btn_right),
             state: ButtonState::Nothing,
             button_area: Rect::zero(),
         }
@@ -228,19 +227,16 @@ impl ButtonController<&'static str> {
 impl<T: Clone + AsRef<str>> ButtonController<T> {
     /// If any button changed from previous state, updating all of them,
     /// otherwise not doing anything not to flicker the screen.
-    pub fn set(
-        &mut self,
-        ctx: &mut EventCtx,
-        left: Option<ButtonDetails<T>>,
-        mid: Option<ButtonDetails<T>>,
-        right: Option<ButtonDetails<T>>,
-    ) {
+    pub fn set(&mut self, ctx: &mut EventCtx, btn_layout: ButtonLayout<T>) {
         // TODO: investigate how to make just one button to be repainted
         // Tried to add pad to each and clear it on any change but not successful
         // (I maybe forgot to paint the pad...)
-        if self.buttons_have_changed(left.clone(), mid.clone(), right.clone()) {
+        let left = btn_layout.btn_left;
+        let middle = btn_layout.btn_middle;
+        let right = btn_layout.btn_right;
+        if self.buttons_have_changed(left.clone(), middle.clone(), right.clone()) {
             self.left_btn.set(ctx, left, self.button_area);
-            self.middle_btn.set(ctx, mid, self.button_area);
+            self.middle_btn.set(ctx, middle, self.button_area);
             self.right_btn.set(ctx, right, self.button_area);
             self.pad.clear();
         }

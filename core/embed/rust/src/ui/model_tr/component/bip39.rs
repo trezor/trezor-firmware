@@ -7,8 +7,7 @@ use crate::{
 };
 
 use super::{
-    common,
-    common::{ButtonDetails, StringChoiceItem},
+    common::{display_bold_center, ButtonDetails, ButtonLayout, StringChoiceItem},
     ChoicePage, ChoicePageMsg,
 };
 use heapless::{String, Vec};
@@ -57,18 +56,11 @@ impl Bip39Entry {
     ) -> Vec<StringChoiceItem, MAX_CHOICE_LENGTH> {
         let mut choices: Vec<StringChoiceItem, MAX_CHOICE_LENGTH> = letter_choices
             .iter()
-            .map(|ch| {
-                StringChoiceItem::from_char(
-                    *ch,
-                    Some(ButtonDetails::new("BACK")),
-                    Some(ButtonDetails::new("SELECT")),
-                    Some(ButtonDetails::new("NEXT")),
-                )
-            })
+            .map(|ch| StringChoiceItem::from_char(*ch, ButtonLayout::default_three()))
             .collect();
         let last_index = choices.len() - 1;
-        choices[0].btn_left = Some(ButtonDetails::new("BIN"));
-        choices[last_index].btn_right = None;
+        choices[0].btn_layout.btn_left = Some(ButtonDetails::new("BIN"));
+        choices[last_index].btn_layout.btn_right = None;
 
         choices
     }
@@ -79,18 +71,11 @@ impl Bip39Entry {
     ) -> Vec<StringChoiceItem, MAX_CHOICE_LENGTH> {
         let mut choices: Vec<StringChoiceItem, MAX_CHOICE_LENGTH> = words_list
             .iter()
-            .map(|word| {
-                StringChoiceItem::from_str(
-                    word,
-                    Some(ButtonDetails::new("BACK")),
-                    Some(ButtonDetails::new("SELECT")),
-                    Some(ButtonDetails::new("NEXT")),
-                )
-            })
+            .map(|word| StringChoiceItem::from_str(word, ButtonLayout::default_three()))
             .collect();
         let last_index = choices.len() - 1;
-        choices[0].btn_left = Some(ButtonDetails::new("BIN"));
-        choices[last_index].btn_right = None;
+        choices[0].btn_layout.btn_left = Some(ButtonDetails::new("BIN"));
+        choices[last_index].btn_layout.btn_right = None;
 
         choices
     }
@@ -120,7 +105,7 @@ impl Bip39Entry {
 
     fn show_current_letters(&self) {
         let to_show = build_string!({ MAX_LENGTH + 1 }, self.textbox.content(), "_");
-        common::display_bold_center(Point::new(64, LETTERS_ROW), &to_show);
+        display_bold_center(Point::new(64, LETTERS_ROW), &to_show);
     }
 
     fn append_letter(&mut self, ctx: &mut EventCtx, letter: char) {

@@ -49,9 +49,7 @@ pub trait ChoiceItem {
     fn paint_center(&mut self);
     fn paint_left(&mut self);
     fn paint_right(&mut self);
-    fn btn_left(&self) -> Option<ButtonDetails<&'static str>>;
-    fn btn_middle(&self) -> Option<ButtonDetails<&'static str>>;
-    fn btn_right(&self) -> Option<ButtonDetails<&'static str>>;
+    fn btn_layout(&self) -> ButtonLayout<&'static str>;
 }
 
 /// Describing the button in the choice item.
@@ -90,44 +88,76 @@ impl<T: AsRef<str>> ButtonDetails<T> {
     }
 }
 
-/// Simple string component used as a choice item.
+/// Holding the button details for all three possible buttons.
 #[derive(Debug, Clone)]
-pub struct StringChoiceItem {
-    pub text: String<100>,
-    pub btn_left: Option<ButtonDetails<&'static str>>,
-    pub btn_middle: Option<ButtonDetails<&'static str>>,
-    pub btn_right: Option<ButtonDetails<&'static str>>,
+pub struct ButtonLayout<T> {
+    pub btn_left: Option<ButtonDetails<T>>,
+    pub btn_middle: Option<ButtonDetails<T>>,
+    pub btn_right: Option<ButtonDetails<T>>,
 }
 
-impl StringChoiceItem {
-    pub fn from_str<T>(
-        text: T,
-        btn_left: Option<ButtonDetails<&'static str>>,
-        btn_middle: Option<ButtonDetails<&'static str>>,
-        btn_right: Option<ButtonDetails<&'static str>>,
-    ) -> Self
-    where
-        T: Deref<Target = str>,
-    {
+impl<T: AsRef<str>> ButtonLayout<T> {
+    pub fn new(
+        btn_left: Option<ButtonDetails<T>>,
+        btn_middle: Option<ButtonDetails<T>>,
+        btn_right: Option<ButtonDetails<T>>,
+    ) -> Self {
         Self {
-            text: String::from(text.as_ref()),
             btn_left,
             btn_middle,
             btn_right,
         }
     }
+}
 
-    pub fn from_char(
-        ch: char,
-        btn_left: Option<ButtonDetails<&'static str>>,
-        btn_middle: Option<ButtonDetails<&'static str>>,
-        btn_right: Option<ButtonDetails<&'static str>>,
-    ) -> Self {
+impl ButtonLayout<&'static str> {
+    /// Default button layout for all three buttons.
+    pub fn default_three() -> Self {
+        Self::new(
+            Some(ButtonDetails::new("BACK")),
+            Some(ButtonDetails::new("SELECT")),
+            Some(ButtonDetails::new("NEXT")),
+        )
+    }
+
+    /// Default button layout for all three buttons.
+    pub fn default_left_right() -> Self {
+        Self::new(
+            Some(ButtonDetails::new("BACK")),
+            None,
+            Some(ButtonDetails::new("NEXT")),
+        )
+    }
+
+    /// Empty layout for when we cannot yet tell which buttons
+    /// should be on the screen.
+    pub fn empty() -> Self {
+        Self::new(None, None, None)
+    }
+}
+
+/// Simple string component used as a choice item.
+#[derive(Debug, Clone)]
+pub struct StringChoiceItem {
+    pub text: String<100>,
+    pub btn_layout: ButtonLayout<&'static str>,
+}
+
+impl StringChoiceItem {
+    pub fn from_str<T>(text: T, btn_layout: ButtonLayout<&'static str>) -> Self
+    where
+        T: Deref<Target = str>,
+    {
+        Self {
+            text: String::from(text.as_ref()),
+            btn_layout,
+        }
+    }
+
+    pub fn from_char(ch: char, btn_layout: ButtonLayout<&'static str>) -> Self {
         Self {
             text: util::char_to_string(ch),
-            btn_left,
-            btn_middle,
-            btn_right,
+            btn_layout,
         }
     }
 }
@@ -151,16 +181,8 @@ impl ChoiceItem for StringChoiceItem {
         display_bold_right(Point::new(RIGHT_COL, MIDDLE_ROW), self.text.as_str());
     }
 
-    fn btn_left(&self) -> Option<ButtonDetails<&'static str>> {
-        self.btn_left
-    }
-
-    fn btn_middle(&self) -> Option<ButtonDetails<&'static str>> {
-        self.btn_middle
-    }
-
-    fn btn_right(&self) -> Option<ButtonDetails<&'static str>> {
-        self.btn_right
+    fn btn_layout(&self) -> ButtonLayout<&'static str> {
+        self.btn_layout.clone()
     }
 }
 
@@ -172,24 +194,15 @@ pub struct MultilineStringChoiceItem {
     // Arbitrary chosen. TODO: agree on this
     pub text: String<100>,
     delimiter: char,
-    pub btn_left: Option<ButtonDetails<&'static str>>,
-    pub btn_middle: Option<ButtonDetails<&'static str>>,
-    pub btn_right: Option<ButtonDetails<&'static str>>,
+    pub btn_layout: ButtonLayout<&'static str>,
 }
 
 impl MultilineStringChoiceItem {
-    pub fn new(
-        text: String<100>,
-        btn_left: Option<ButtonDetails<&'static str>>,
-        btn_middle: Option<ButtonDetails<&'static str>>,
-        btn_right: Option<ButtonDetails<&'static str>>,
-    ) -> Self {
+    pub fn new(text: String<100>, btn_layout: ButtonLayout<&'static str>) -> Self {
         Self {
             text,
             delimiter: '\n',
-            btn_left,
-            btn_middle,
-            btn_right,
+            btn_layout,
         }
     }
 
@@ -224,16 +237,8 @@ impl ChoiceItem for MultilineStringChoiceItem {
         }
     }
 
-    fn btn_left(&self) -> Option<ButtonDetails<&'static str>> {
-        self.btn_left
-    }
-
-    fn btn_middle(&self) -> Option<ButtonDetails<&'static str>> {
-        self.btn_middle
-    }
-
-    fn btn_right(&self) -> Option<ButtonDetails<&'static str>> {
-        self.btn_right
+    fn btn_layout(&self) -> ButtonLayout<&'static str> {
+        self.btn_layout.clone()
     }
 }
 

@@ -8,8 +8,7 @@ use crate::{
 };
 
 use super::{
-    common,
-    common::{ButtonDetails, MultilineStringChoiceItem},
+    common::{display_bold_center, ButtonDetails, ButtonLayout, MultilineStringChoiceItem},
     ChoicePage, ChoicePageMsg,
 };
 use heapless::{String, Vec};
@@ -99,9 +98,9 @@ impl PassphraseEntry {
         // Giving some notion of change even for longer-than-visible passphrases
         // - slightly shifting the dots to the left and right after each new digit
         if char_amount > MAX_VISIBLE_CHARS && char_amount % 2 == 0 {
-            common::display_bold_center(Point::new(61, PASSPHRASE_ROW), &dots);
+            display_bold_center(Point::new(61, PASSPHRASE_ROW), &dots);
         } else {
-            common::display_bold_center(Point::new(64, PASSPHRASE_ROW), &dots);
+            display_bold_center(Point::new(64, PASSPHRASE_ROW), &dots);
         }
     }
 
@@ -109,13 +108,13 @@ impl PassphraseEntry {
         let char_amount = self.textbox.len();
 
         if char_amount <= MAX_VISIBLE_CHARS {
-            common::display_bold_center(Point::new(64, PASSPHRASE_ROW), self.passphrase());
+            display_bold_center(Point::new(64, PASSPHRASE_ROW), self.passphrase());
         } else {
             // Show the last part with preceding ellipsis to show something is hidden
             let ellipsis = "...";
             let offset: usize = char_amount.saturating_sub(MAX_VISIBLE_CHARS) + ellipsis.len();
             let to_show = build_string!(MAX_VISIBLE_CHARS, ellipsis, &self.passphrase()[offset..]);
-            common::display_bold_center(Point::new(64, PASSPHRASE_ROW), &to_show);
+            display_bold_center(Point::new(64, PASSPHRASE_ROW), &to_show);
         }
     }
 
@@ -154,16 +153,15 @@ impl PassphraseEntry {
             .map(|menu_item| {
                 MultilineStringChoiceItem::new(
                     String::from(*menu_item),
-                    Some(ButtonDetails::new("BACK")),
-                    Some(ButtonDetails::new("SELECT")),
-                    Some(ButtonDetails::new("NEXT")),
+                    ButtonLayout::default_three(),
                 )
             })
             .collect();
         // Including accept button on the left and cancel on the very right
         let last_index = choices.len() - 1;
-        choices[0].btn_left = Some(ButtonDetails::new("ACC").with_duration(HOLD_DURATION));
-        choices[last_index].btn_right =
+        choices[0].btn_layout.btn_left =
+            Some(ButtonDetails::new("ACC").with_duration(HOLD_DURATION));
+        choices[last_index].btn_layout.btn_right =
             Some(ButtonDetails::new("CNC").with_duration(HOLD_DURATION));
 
         choices
@@ -190,17 +188,15 @@ impl PassphraseEntry {
             .map(|ch| {
                 MultilineStringChoiceItem::new(
                     util::char_to_string(**ch),
-                    Some(ButtonDetails::new("BACK")),
-                    Some(ButtonDetails::new("SELECT")),
-                    Some(ButtonDetails::new("NEXT")),
+                    ButtonLayout::default_three(),
                 )
             })
             .collect();
         // Categories need a way to return back to MENU.
         // Putting that option on both sides.
         let last_index = choices.len() - 1;
-        choices[0].btn_left = Some(ButtonDetails::new("MENU"));
-        choices[last_index].btn_right = Some(ButtonDetails::new("MENU"));
+        choices[0].btn_layout.btn_left = Some(ButtonDetails::new("MENU"));
+        choices[last_index].btn_layout.btn_right = Some(ButtonDetails::new("MENU"));
 
         self.choice_page.reset(ctx, choices, true);
     }

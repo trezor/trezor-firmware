@@ -36,18 +36,12 @@ where
     T: ChoiceItem,
 {
     pub fn new(choices: Vec<T, N>) -> Self {
-        let initial_left = choices[0].btn_left();
-        let initial_right = choices[0].btn_right();
-        let initial_middle = choices[0].btn_middle();
+        let initial_btn_layout = choices[0].btn_layout();
 
         Self {
             choices,
             pad: Pad::with_background(theme::BG),
-            buttons: Child::new(ButtonController::new(
-                initial_left,
-                initial_middle,
-                initial_right,
-            )),
+            buttons: Child::new(ButtonController::new(initial_btn_layout)),
             page_counter: 0,
         }
     }
@@ -151,12 +145,9 @@ where
         // and Cancel as HTC. PIN client would check if the PIN is empty/not and
         // adjust the HTC/not.
 
-        let new_left_btn = self.current_choice().btn_left();
-        let new_middle_btn = self.current_choice().btn_middle();
-        let new_right_btn = self.current_choice().btn_right();
-
+        let btn_layout = self.current_choice().btn_layout();
         self.buttons.mutate(ctx, |ctx, buttons| {
-            buttons.set(ctx, new_left_btn, new_middle_btn, new_right_btn);
+            buttons.set(ctx, btn_layout);
         });
     }
 }
