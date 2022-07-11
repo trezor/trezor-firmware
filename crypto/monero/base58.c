@@ -173,7 +173,9 @@ bool xmr_base58_encode(char *b58, size_t *b58sz, const void *data, size_t binsz)
 bool xmr_base58_decode(const char *b58, size_t b58sz, void *data, size_t *binsz)
 {
 	if (b58sz == 0) {
-		*binsz = 0;
+		if (binsz) {
+			*binsz = 0;
+		}
 		return true;
 	}
 
@@ -187,7 +189,9 @@ bool xmr_base58_decode(const char *b58, size_t b58sz, void *data, size_t *binsz)
 
 	size_t data_size = full_block_count * full_block_size + last_block_decoded_size;
 	if (*binsz < data_size){
-		*binsz = 0;
+		if (binsz) {
+			*binsz = 0;
+		}
 		return false;
 	}
 
@@ -195,7 +199,9 @@ bool xmr_base58_decode(const char *b58, size_t b58sz, void *data, size_t *binsz)
 	for (size_t i = 0; i < full_block_count; ++i)
 	{
 		if (!decode_block(b58 + i * full_encoded_block_size, full_encoded_block_size, data_bin + i * full_block_size)) {
-			*binsz = 0;
+			if (binsz) {
+				*binsz = 0;
+			}
 			return false;
 		}
 	}
@@ -204,7 +210,9 @@ bool xmr_base58_decode(const char *b58, size_t b58sz, void *data, size_t *binsz)
 	{
 		if (!decode_block(b58 + full_block_count * full_encoded_block_size, last_block_size,
 											data_bin + full_block_count * full_block_size)) {
-			*binsz = 0;
+			if (binsz) {
+				*binsz = 0;
+			}
 			return false;
 		}
 	}
