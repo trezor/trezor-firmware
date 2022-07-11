@@ -38,7 +38,7 @@ def confirm_action(
     description: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = None,
-    hold: bool | None = None,
+    hold: bool = False,
     reverse: bool = False,
 ) -> object:
     """Confirm action."""
