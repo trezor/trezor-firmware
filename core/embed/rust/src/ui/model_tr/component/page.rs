@@ -204,7 +204,13 @@ impl Component for ScrollBar {
         None
     }
 
+    /// Displaying vertical dots on the right side - one for each page.
     fn paint(&mut self) {
+        // Not showing the scrollbar dot when there is only one page
+        if self.page_count <= 1 {
+            return;
+        }
+
         let count = self.page_count as i32;
         let interval = {
             let available_height = self.area.height();
