@@ -1,5 +1,7 @@
 # Build
 
+_Building for Trezor Model One? See the [legacy](../../legacy/index.md) documentation._
+
 ## New Project
 
 Run the following to checkout the project:
