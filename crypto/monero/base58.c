@@ -138,8 +138,12 @@ bool decode_block(const char* block, size_t size, char* res)
 
 bool xmr_base58_encode(char *b58, size_t *b58sz, const void *data, size_t binsz)
 {
-	if (binsz==0)
+	if (binsz==0) {
+		if (b58sz) {
+			*b58sz = 0;
+		}
 		return true;
+	}
 
 	const char * data_bin = data;
 	size_t full_block_count = binsz / full_block_size;
