@@ -41,6 +41,7 @@ pub struct Button<T> {
     content: ButtonContent<T>,
     styles: ButtonStyleSheet,
     state: State,
+    // TODO: probably remove, is handled by `HoldToConfirm`
     long_press: Option<Duration>,
     long_timer: Option<TimerToken>,
 }
@@ -98,6 +99,11 @@ impl<T: AsRef<str>> Button<T> {
     pub fn set_text(&mut self, text: T, button_area: Rect) {
         self.content = ButtonContent::Text(text);
         self.place(button_area);
+    }
+
+    /// Changing the style of the button.
+    pub fn set_style(&mut self, styles: ButtonStyleSheet) {
+        self.styles = styles;
     }
 
     /// Allows for toggling the long press feature.

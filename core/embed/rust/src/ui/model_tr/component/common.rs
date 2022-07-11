@@ -6,7 +6,7 @@ use crate::time::Duration;
 
 use crate::ui::{display, geometry::Point, util};
 
-use super::theme;
+use super::{theme, ButtonStyleSheet};
 
 const MIDDLE_ROW: i32 = 72;
 const LEFT_COL: i32 = 5;
@@ -57,6 +57,7 @@ pub trait ChoiceItem {
 pub struct ButtonDetails<T> {
     pub text: T,
     pub duration: Option<Duration>,
+    pub is_cancel: bool,
 }
 
 impl<T: AsRef<str>> ButtonDetails<T> {
@@ -64,12 +65,29 @@ impl<T: AsRef<str>> ButtonDetails<T> {
         Self {
             text,
             duration: None,
+            is_cancel: false,
+        }
+    }
+
+    pub fn cancel(text: T) -> Self {
+        Self {
+            text,
+            duration: None,
+            is_cancel: true,
         }
     }
 
     pub fn with_duration(mut self, duration: Duration) -> Self {
         self.duration = Some(duration);
         self
+    }
+
+    pub fn style(&self) -> ButtonStyleSheet {
+        if self.is_cancel {
+            theme::button_cancel()
+        } else {
+            theme::button_default()
+        }
     }
 
     /// Identifier of this button configuration.

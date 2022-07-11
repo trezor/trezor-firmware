@@ -70,7 +70,9 @@ impl ButtonContainer<&'static str> {
             btn_details
                 .unwrap_or_else(|| ButtonDetails::new("TEXT"))
                 .text,
-            theme::button_default(),
+            btn_details
+                .unwrap_or_else(|| ButtonDetails::new("normal style"))
+                .style(),
             theme::loader_bold(),
             ButtonType::from_button_details(btn_details),
             btn_details,
@@ -121,8 +123,10 @@ impl<T: Clone + AsRef<str>> ButtonContainer<T> {
                 self.hold_to_confirm.request_complete_repaint(ctx);
                 self.button_type = ButtonType::HoldToConfirm;
             } else {
+                let style = btn_details.style();
                 self.button.mutate(ctx, |_ctx, btn| {
                     btn.set_text(btn_details.text, button_area);
+                    btn.set_style(style);
                 });
                 self.button.request_complete_repaint(ctx);
                 self.button_type = ButtonType::NormalButton;
