@@ -1,19 +1,20 @@
 use crate::ui::{
-    component::{Component, ComponentExt, Event, EventCtx, Never, Pad, PageMsg, Paginate},
+    component::{Child, Component, ComponentExt, Event, EventCtx, Never, Pad, PageMsg, Paginate},
     display::{self, Color},
     geometry::{Insets, Offset, Point, Rect},
 };
 
-use super::{theme, Button, ButtonMsg, ButtonPos};
+use super::{theme, ButtonController, ButtonControllerMsg, ButtonDetails, ButtonLayout, ButtonPos};
 
 pub struct ButtonPage<T> {
     content: T,
     scrollbar: ScrollBar,
     pad: Pad,
-    prev: Button<&'static str>,
-    next: Button<&'static str>,
-    cancel: Button<&'static str>,
-    confirm: Button<&'static str>,
+    cancel_btn_details: ButtonDetails<&'static str>,
+    confirm_btn_details: ButtonDetails<&'static str>,
+    back_btn_details: ButtonDetails<&'static str>,
+    next_btn_details: ButtonDetails<&'static str>,
+    buttons: Child<ButtonController<&'static str>>,
 }
 
 impl<T> ButtonPage<T>
@@ -26,19 +27,75 @@ where
             content,
             scrollbar: ScrollBar::vertical(),
             pad: Pad::with_background(background),
-            prev: Button::with_text(ButtonPos::Left, "BACK", theme::button_cancel()),
-            next: Button::with_text(ButtonPos::Right, "NEXT", theme::button_default()),
-            cancel: Button::with_text(ButtonPos::Left, "CANCEL", theme::button_cancel()),
-            confirm: Button::with_text(ButtonPos::Right, "CONFIRM", theme::button_default()),
+            cancel_btn_details: ButtonDetails::cancel("CANCEL"),
+            confirm_btn_details: ButtonDetails::new("CONFIRM"),
+            back_btn_details: ButtonDetails::cancel("BACK"),
+            next_btn_details: ButtonDetails::new("NEXT"),
+            // Setting empty layout for now, we do not yet know the page count.
+            // Initial button layout will be set in `place()` after we can call `content.page_count()`.
+            buttons: Child::new(ButtonController::new(ButtonLayout::empty())),
         }
     }
 
+    pub fn with_cancel_btn(mut self, btn_details: ButtonDetails<&'static str>) -> Self {
+        self.cancel_btn_details = btn_details;
+        self
+    }
+
+    pub fn with_confirm_btn(mut self, btn_details: ButtonDetails<&'static str>) -> Self {
+        self.confirm_btn_details = btn_details;
+        self
+    }
+
+    /// Basically just determining whether the right button for
+    /// initial page should be "NEXT" or "CONFIRM".
+    /// Can only be called when we know the final page_count.
+    fn set_buttons_for_initial_page(&mut self, page_count: usize) {
+        let btn_layout = self.get_button_layout(false, page_count > 1);
+        self.buttons = Child::new(ButtonController::new(btn_layout));
+    }
+
+    /// Called when user pressed "BACK" or "NEXT".
+    /// Change the page in the content, clear the background under it and make sure
+    /// it gets completely repainted. Also updating the buttons.
     fn change_page(&mut self, ctx: &mut EventCtx, page: usize) {
-        // Change the page in the content, clear the background under it and make sure
-        // it gets completely repainted.
         self.content.change_page(page);
         self.content.request_complete_repaint(ctx);
+        self.update_buttons(ctx);
         self.pad.clear();
+    }
+
+    /// Reflecting the current page in the buttons.
+    fn update_buttons(&mut self, ctx: &mut EventCtx) {
+        let btn_layout = self.get_button_layout(
+            self.scrollbar.has_previous_page(),
+            self.scrollbar.has_next_page(),
+        );
+        self.buttons.mutate(ctx, |ctx, buttons| {
+            buttons.set(ctx, btn_layout);
+        });
+    }
+
+    fn get_button_layout(&self, has_prev: bool, has_next: bool) -> ButtonLayout<&'static str> {
+        let btn_left = self.get_left_button_details(has_prev);
+        let btn_right = self.get_right_button_details(has_next);
+        ButtonLayout::new(btn_left, None, btn_right)
+    }
+
+    fn get_left_button_details(&self, has_prev_page: bool) -> Option<ButtonDetails<&'static str>> {
+        if has_prev_page {
+            Some(self.back_btn_details)
+        } else {
+            Some(self.cancel_btn_details)
+        }
+    }
+
+    fn get_right_button_details(&self, has_next_page: bool) -> Option<ButtonDetails<&'static str>> {
+        if has_next_page {
+            Some(self.next_btn_details)
+        } else {
+            Some(self.confirm_btn_details)
+        }
     }
 }
 
@@ -51,43 +108,51 @@ where
 
     fn place(&mut self, bounds: Rect) -> Rect {
         let button_height = theme::FONT_BOLD.line_height() + 2;
-        let (content_area, button_area) = bounds.split_bottom(button_height);
-        let (content_area, scrollbar_area) = content_area.split_right(ScrollBar::WIDTH);
+        let (content_and_scrollbar_area, button_area) = bounds.split_bottom(button_height);
+        let (content_area, scrollbar_area) =
+            content_and_scrollbar_area.split_right(ScrollBar::WIDTH);
         let content_area = content_area.inset(Insets::top(1));
-        self.pad.place(bounds);
+        // Do not pad the button area, leave it to `ButtonController`
+        self.pad.place(content_and_scrollbar_area);
         self.content.place(content_area);
+        // Need to be called here, only after content is placed
+        // and we can calculate the page count
         let page_count = self.content.page_count();
         self.scrollbar.set_count_and_active_page(page_count, 0);
         self.scrollbar.place(scrollbar_area);
-        self.prev.place(button_area);
-        self.next.place(button_area);
-        self.cancel.place(button_area);
-        self.confirm.place(button_area);
+        self.set_buttons_for_initial_page(page_count);
+        self.buttons.place(button_area);
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         ctx.set_page_count(self.scrollbar.page_count);
-        if self.scrollbar.has_previous_page() {
-            if let Some(ButtonMsg::Clicked) = self.prev.event(ctx, event) {
-                // Scroll up.
-                self.scrollbar.go_to_previous_page();
-                self.change_page(ctx, self.scrollbar.active_page);
-                return None;
-            }
-        } else if let Some(ButtonMsg::Clicked) = self.cancel.event(ctx, event) {
-            return Some(PageMsg::Controls(false));
-        }
+        let button_event = self.buttons.event(ctx, event);
 
-        if self.scrollbar.has_next_page() {
-            if let Some(ButtonMsg::Clicked) = self.next.event(ctx, event) {
-                // Scroll down.
-                self.scrollbar.go_to_next_page();
-                self.change_page(ctx, self.scrollbar.active_page);
-                return None;
+        if let Some(ButtonControllerMsg::Triggered(pos)) = button_event {
+            match pos {
+                ButtonPos::Left => {
+                    if self.scrollbar.has_previous_page() {
+                        // Clicked BACK. Scroll up.
+                        self.scrollbar.go_to_previous_page();
+                        self.change_page(ctx, self.scrollbar.active_page);
+                    } else {
+                        // Clicked CANCEL. Send result.
+                        return Some(PageMsg::Controls(false));
+                    }
+                }
+                ButtonPos::Right => {
+                    if self.scrollbar.has_next_page() {
+                        // Clicked NEXT. Scroll down.
+                        self.scrollbar.go_to_next_page();
+                        self.change_page(ctx, self.scrollbar.active_page);
+                    } else {
+                        // Clicked CONFIRM. Send result.
+                        return Some(PageMsg::Controls(true));
+                    }
+                }
+                _ => {}
             }
-        } else if let Some(ButtonMsg::Clicked) = self.confirm.event(ctx, event) {
-            return Some(PageMsg::Controls(true));
         }
 
         if let Some(msg) = self.content.event(ctx, event) {
@@ -100,16 +165,7 @@ where
         self.pad.paint();
         self.content.paint();
         self.scrollbar.paint();
-        if self.scrollbar.has_previous_page() {
-            self.prev.paint();
-        } else {
-            self.cancel.paint();
-        }
-        if self.scrollbar.has_next_page() {
-            self.next.paint();
-        } else {
-            self.confirm.paint();
-        }
+        self.buttons.paint();
     }
 }
 
