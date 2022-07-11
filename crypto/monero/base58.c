@@ -151,7 +151,7 @@ bool xmr_base58_encode(char *b58, size_t *b58sz, const void *data, size_t binsz)
 	size_t res_size = full_block_count * full_encoded_block_size + encoded_block_sizes[last_block_size];
 
 	if (b58sz){
-		if (res_size >= *b58sz){
+		if (res_size > *b58sz){
 			return false;
 		}
 		*b58sz = res_size;
