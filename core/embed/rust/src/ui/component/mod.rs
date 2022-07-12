@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 
 pub mod base;
+pub mod border;
 pub mod empty;
 pub mod image;
 pub mod label;
@@ -13,6 +14,7 @@ pub mod placed;
 pub mod text;
 
 pub use base::{Child, Component, ComponentExt, Event, EventCtx, Never, TimerToken};
+pub use border::Border;
 pub use empty::Empty;
 pub use image::Image;
 pub use label::{Label, LabelStyle};

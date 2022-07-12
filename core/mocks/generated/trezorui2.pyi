@@ -200,6 +200,16 @@ def show_info(
 
 
 # rust/src/ui/model_tt/layout.rs
+def show_simple(
+    *,
+    title: str | None,
+    description: str,
+    button: str,
+) -> object:
+    """Simple dialog with text and one button."""
+
+
+# rust/src/ui/model_tt/layout.rs
 def confirm_payment_request(
     *,
     description: str,
@@ -272,3 +282,27 @@ def show_share_words(
     pages: Iterable[str],
 ) -> object:
    """Show mnemonic for backup. Expects the words pre-divided into individual pages."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def request_number(
+    *,
+    title: str,
+    count: int,
+    min_count: int,
+    max_count: int,
+    description: Callable[[int], str],
+) -> object:
+   """Number input with + and - buttons, description, and info button."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def show_checklist(
+    *,
+    title: str,
+    items: Iterable[str],
+    active: int,
+    button: str,
+) -> object:
+   """Checklist of backup steps. Active index is highlighted, previous items have check
+   mark nex to them."""
