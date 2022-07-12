@@ -17,8 +17,8 @@ use crate::{
             base::ComponentExt,
             paginated::{PageMsg, Paginate},
             painter,
-            text::paragraphs::Paragraphs,
-            Component,
+            text::paragraphs::{Checklist, Paragraphs},
+            Border, Component,
         },
         geometry,
         layout::{
@@ -32,8 +32,9 @@ use super::{
     component::{
         Bip39Input, Button, ButtonMsg, ButtonStyleSheet, CancelConfirmMsg, CancelInfoConfirmMsg,
         Dialog, DialogMsg, Frame, HoldToConfirm, HoldToConfirmMsg, IconDialog, MnemonicInput,
-        MnemonicKeyboard, MnemonicKeyboardMsg, PassphraseKeyboard, PassphraseKeyboardMsg,
-        PinKeyboard, PinKeyboardMsg, SelectWordMsg, Slip39Input, SwipeHoldPage, SwipePage,
+        MnemonicKeyboard, MnemonicKeyboardMsg, NumberInputDialog, NumberInputDialogMsg,
+        PassphraseKeyboard, PassphraseKeyboardMsg, PinKeyboard, PinKeyboardMsg, SelectWordMsg,
+        Slip39Input, SwipeHoldPage, SwipePage,
     },
     theme,
 };
@@ -193,6 +194,47 @@ where
 {
     fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         unreachable!()
+    }
+}
+
+impl<T> ComponentMsgObj for Paragraphs<T>
+where
+    T: AsRef<str>,
+{
+    fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
+        unreachable!()
+    }
+}
+
+impl<T> ComponentMsgObj for Checklist<T>
+where
+    T: AsRef<str>,
+{
+    fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
+        unreachable!()
+    }
+}
+
+impl<T, F> ComponentMsgObj for NumberInputDialog<T, F>
+where
+    T: AsRef<str>,
+    F: Fn(u32) -> T,
+{
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        let value = self.value().try_into()?;
+        match msg {
+            NumberInputDialogMsg::Selected => Ok((CONFIRMED.as_obj(), value).try_into()?),
+            NumberInputDialogMsg::InfoRequested => Ok((CANCELLED.as_obj(), value).try_into()?),
+        }
+    }
+}
+
+impl<T> ComponentMsgObj for Border<T>
+where
+    T: ComponentMsgObj,
+{
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        self.inner().msg_try_into_obj(msg)
     }
 }
 
@@ -532,6 +574,42 @@ extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_show_simple(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_title)?.try_into_option()?;
+        let description: StrBuffer =
+            kwargs.get_or(Qstr::MP_QSTR_description, StrBuffer::empty())?;
+        let button: StrBuffer = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
+
+        let obj = if let Some(t) = title {
+            LayoutObj::new(Frame::new(
+                t,
+                Dialog::new(
+                    Paragraphs::new().add(theme::TEXT_NORMAL, description),
+                    Button::with_text(button).map(|msg| {
+                        (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
+                    }),
+                ),
+            ))?
+            .into()
+        } else {
+            LayoutObj::new(Border::new(
+                theme::borders(),
+                Dialog::new(
+                    Paragraphs::new().add(theme::TEXT_NORMAL, description),
+                    Button::with_text(button).map(|msg| {
+                        (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
+                    }),
+                ),
+            ))?
+            .into()
+        };
+
+        Ok(obj)
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_confirm_payment_request(
     n_args: usize,
     args: *const Obj,
@@ -685,6 +763,79 @@ extern "C" fn new_show_share_words(n_args: usize, args: *const Obj, kwargs: *mut
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_request_number(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let min_count: u32 = kwargs.get(Qstr::MP_QSTR_min_count)?.try_into()?;
+        let max_count: u32 = kwargs.get(Qstr::MP_QSTR_max_count)?.try_into()?;
+        let count: u32 = kwargs.get(Qstr::MP_QSTR_count)?.try_into()?;
+        let description_callback: Obj = kwargs.get(Qstr::MP_QSTR_description)?;
+
+        let callback = move |i: u32| {
+            StrBuffer::try_from(
+                description_callback
+                    .call_with_n_args(&[i.try_into().unwrap()])
+                    .unwrap(),
+            )
+            .unwrap()
+        };
+
+        let obj = LayoutObj::new(
+            Frame::new(
+                title,
+                NumberInputDialog::new(min_count, max_count, count, callback),
+            )
+            .with_border(theme::borders())
+            .into_child(),
+        )?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let button: StrBuffer = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
+        let active: usize = kwargs.get(Qstr::MP_QSTR_active)?.try_into()?;
+        let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
+
+        let mut iter_buf = IterBuf::new();
+        let mut paragraphs = Paragraphs::new().with_spacing(theme::CHECKLIST_SPACING);
+        let iter = Iter::try_from_obj_with_buf(items, &mut iter_buf)?;
+        for (i, item) in iter.enumerate() {
+            let color = match i.cmp(&active) {
+                Ordering::Less => theme::GREEN_DARK,
+                Ordering::Equal => theme::FG,
+                Ordering::Greater => theme::GREY_LIGHT,
+            };
+            let text: StrBuffer = item.try_into()?;
+            paragraphs = paragraphs.add_color(theme::TEXT_NORMAL, color, text);
+        }
+
+        let obj = LayoutObj::new(
+            Frame::new(
+                title,
+                Dialog::new(
+                    Checklist::from_paragraphs(
+                        theme::ICON_LIST_CURRENT,
+                        theme::ICON_LIST_CHECK,
+                        active,
+                        paragraphs,
+                    ),
+                    Button::with_text(button).map(|msg| {
+                        (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
+                    }),
+                ),
+            )
+            .with_border(theme::borders())
+            .into_child(),
+        )?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 #[no_mangle]
 pub static mp_module_trezorui2: Module = obj_module! {
     Qstr::MP_QSTR___name__ => Qstr::MP_QSTR_trezorui2.to_obj(),
@@ -828,6 +979,15 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Info modal."""
     Qstr::MP_QSTR_show_info => obj_fn_kw!(0, new_show_info).as_obj(),
 
+    /// def show_simple(
+    ///     *,
+    ///     title: str | None,
+    ///     description: str,
+    ///     button: str,
+    /// ) -> object:
+    ///     """Simple dialog with text and one button."""
+    Qstr::MP_QSTR_show_simple => obj_fn_kw!(0, new_show_simple).as_obj(),
+
     /// def confirm_payment_request(
     ///     *,
     ///     description: str,
@@ -894,6 +1054,28 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> object:
     ///    """Show mnemonic for backup. Expects the words pre-divided into individual pages."""
     Qstr::MP_QSTR_show_share_words => obj_fn_kw!(0, new_show_share_words).as_obj(),
+
+    /// def request_number(
+    ///     *,
+    ///     title: str,
+    ///     count: int,
+    ///     min_count: int,
+    ///     max_count: int,
+    ///     description: Callable[[int], str],
+    /// ) -> object:
+    ///    """Number input with + and - buttons, description, and info button."""
+    Qstr::MP_QSTR_request_number => obj_fn_kw!(0, new_request_number).as_obj(),
+
+    /// def show_checklist(
+    ///     *,
+    ///     title: str,
+    ///     items: Iterable[str],
+    ///     active: int,
+    ///     button: str,
+    /// ) -> object:
+    ///    """Checklist of backup steps. Active index is highlighted, previous items have check
+    ///    mark nex to them."""
+    Qstr::MP_QSTR_show_checklist => obj_fn_kw!(0, new_show_checklist).as_obj(),
 };
 
 #[cfg(test)]

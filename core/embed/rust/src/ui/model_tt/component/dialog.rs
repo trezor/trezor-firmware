@@ -1,6 +1,6 @@
 use crate::ui::{
     component::{text::paragraphs::Paragraphs, Child, Component, Event, EventCtx, Image, Never},
-    geometry::{Grid, Insets, LinearPlacement, Rect},
+    geometry::{Insets, LinearPlacement, Rect},
 };
 
 use super::{theme, Button};
@@ -71,14 +71,11 @@ pub struct DialogLayout {
 
 impl DialogLayout {
     pub fn middle(area: Rect) -> Self {
-        let grid = Grid::new(area, 5, 1);
-        Self {
-            content: Rect::new(
-                grid.row_col(0, 0).top_left(),
-                grid.row_col(3, 0).bottom_right(),
-            ),
-            controls: grid.row_col(4, 0),
-        }
+        let (content, controls) = area.split_bottom(Button::<&str>::HEIGHT);
+        let content = content
+            .inset(Insets::bottom(theme::BUTTON_SPACING))
+            .inset(Insets::left(theme::CONTENT_BORDER));
+        Self { content, controls }
     }
 }
 
@@ -113,7 +110,7 @@ where
             paragraphs: Paragraphs::new()
                 .with_placement(
                     LinearPlacement::vertical()
-                        .align_at_start()
+                        .align_at_center()
                         .with_spacing(Self::VALUE_SPACE),
                 )
                 .add(theme::TEXT_MEDIUM, title)
@@ -132,8 +129,8 @@ where
         self
     }
 
-    pub const ICON_AREA_HEIGHT: i32 = 64;
-    pub const DESCRIPTION_SPACE: i32 = 14;
+    pub const ICON_AREA_PADDING: i32 = 2;
+    pub const ICON_AREA_HEIGHT: i32 = 60;
     pub const VALUE_SPACE: i32 = 5;
 }
 
@@ -145,10 +142,11 @@ where
     type Msg = DialogMsg<Never, U::Msg>;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let bounds = bounds.inset(theme::borders());
+        let bounds = bounds
+            .inset(theme::borders())
+            .inset(Insets::top(Self::ICON_AREA_PADDING));
         let (content, buttons) = bounds.split_bottom(Button::<&str>::HEIGHT);
         let (image, content) = content.split_top(Self::ICON_AREA_HEIGHT);
-        let content = content.inset(Insets::top(Self::DESCRIPTION_SPACE));
 
         self.image.place(image);
         self.paragraphs.place(content);
