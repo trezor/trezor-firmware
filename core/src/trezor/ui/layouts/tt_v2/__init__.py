@@ -28,6 +28,10 @@ class _RustLayout(ui.Layout):
     def set_timer(self, token: int, deadline: int) -> None:
         self.timer.schedule(deadline, token)
 
+    def request_complete_repaint(self) -> None:
+        msg = self.layout.request_complete_repaint()
+        assert msg is None
+
     if __debug__:
 
         def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
