@@ -4,6 +4,7 @@ mod frame;
 mod hold_to_confirm;
 mod keyboard;
 mod loader;
+mod number_input;
 mod page;
 mod scroll;
 mod swipe;
@@ -23,6 +24,7 @@ pub use keyboard::{
     slip39::Slip39Input,
 };
 pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
+pub use number_input::{NumberInputDialog, NumberInputDialogMsg};
 pub use page::{SwipeHoldPage, SwipePage};
 pub use scroll::ScrollBar;
 pub use swipe::{Swipe, SwipeDirection};

@@ -27,11 +27,14 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_reset_device;
   MP_QSTR_confirm_text;
   MP_QSTR_confirm_total;
+  MP_QSTR_show_checklist;
   MP_QSTR_show_error;
   MP_QSTR_show_qr;
   MP_QSTR_show_success;
   MP_QSTR_show_warning;
   MP_QSTR_show_info;
+  MP_QSTR_show_simple;
+  MP_QSTR_request_number;
   MP_QSTR_request_pin;
   MP_QSTR_request_passphrase;
   MP_QSTR_request_bip39;
@@ -75,4 +78,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_user_fee_change;
   MP_QSTR_words;
   MP_QSTR_pages;
+  MP_QSTR_count;
+  MP_QSTR_min_count;
+  MP_QSTR_max_count;
+  MP_QSTR_items;
+  MP_QSTR_active;
 }

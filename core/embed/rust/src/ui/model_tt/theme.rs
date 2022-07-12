@@ -32,7 +32,7 @@ pub const RED_DARK: Color = Color::rgb(166, 45, 45);
 pub const YELLOW: Color = Color::rgb(193, 144, 9); // ochre
 pub const YELLOW_DARK: Color = Color::rgb(154, 115, 6); // FIXME
 pub const GREEN: Color = Color::rgb(57, 168, 20); // grass-green
-pub const GREEN_DARK: Color = Color::rgb(48, 147, 15);
+pub const GREEN_DARK: Color = Color::rgb(16, 171, 87);
 pub const BLUE: Color = Color::rgb(0, 86, 190); // blue
 pub const BLUE_DARK: Color = Color::rgb(0, 68, 152); // FIXME
 pub const OFF_WHITE: Color = Color::rgb(222, 222, 222); // very light grey
@@ -56,6 +56,8 @@ pub const ICON_SPACE: &[u8] = include_res!("model_tt/res/space.toif");
 pub const ICON_BACK: &[u8] = include_res!("model_tt/res/back.toif");
 pub const ICON_CLICK: &[u8] = include_res!("model_tt/res/click.toif");
 pub const ICON_NEXT: &[u8] = include_res!("model_tt/res/next.toif");
+pub const ICON_LIST_CURRENT: &[u8] = include_res!("model_tt/res/current.toif");
+pub const ICON_LIST_CHECK: &[u8] = include_res!("model_tt/res/check.toif");
 
 // Large, color icons.
 pub const IMAGE_WARN: &[u8] = include_res!("model_tt/res/warn.toif");
@@ -72,6 +74,30 @@ pub fn label_default() -> LabelStyle {
     LabelStyle {
         font: FONT_NORMAL,
         text_color: FG,
+        background_color: BG,
+    }
+}
+
+pub fn label_checklist_default() -> LabelStyle {
+    LabelStyle {
+        font: FONT_NORMAL,
+        text_color: GREY_LIGHT,
+        background_color: BG,
+    }
+}
+
+pub fn label_checklist_selected() -> LabelStyle {
+    LabelStyle {
+        font: FONT_NORMAL,
+        text_color: FG,
+        background_color: BG,
+    }
+}
+
+pub fn label_checklist_done() -> LabelStyle {
+    LabelStyle {
+        font: FONT_NORMAL,
+        text_color: GREEN_DARK,
         background_color: BG,
     }
 }
@@ -316,6 +342,38 @@ pub fn button_pin() -> ButtonStyleSheet {
     }
 }
 
+pub fn button_counter() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: FONT_MEDIUM,
+            text_color: FG,
+            button_color: GREY_DARK,
+            background_color: BG,
+            border_color: BG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+        active: &ButtonStyle {
+            font: FONT_MEDIUM,
+            text_color: FG,
+            button_color: GREY_MEDIUM,
+            background_color: BG,
+            border_color: FG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+        disabled: &ButtonStyle {
+            font: FONT_MEDIUM,
+            text_color: GREY_LIGHT,
+            button_color: GREY_DARK,
+            background_color: BG,
+            border_color: BG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+    }
+}
+
 pub fn button_clear() -> ButtonStyleSheet {
     button_default()
 }
@@ -350,6 +408,7 @@ pub const FORMATTED: FormattedFonts = FormattedFonts {
 pub const CONTENT_BORDER: i32 = 5;
 pub const KEYBOARD_SPACING: i32 = 8;
 pub const BUTTON_SPACING: i32 = 6;
+pub const CHECKLIST_SPACING: i32 = 10;
 
 /// +----------+
 /// |    13    |

@@ -2,13 +2,13 @@ use heapless::Vec;
 
 use crate::ui::{
     component::{Component, Event, EventCtx, Never, Paginate},
-    display::Color,
-    geometry::{Alignment, Dimensions, Insets, LinearPlacement, Rect},
+    display::{self, Color},
+    geometry::{Alignment, Dimensions, Insets, LinearPlacement, Offset, Point, Rect},
 };
 
 use super::layout::{LayoutFit, TextLayout, TextStyle};
 
-pub const MAX_PARAGRAPHS: usize = 6;
+pub const MAX_PARAGRAPHS: usize = 9;
 /// Maximum space between paragraphs. Actual result may be smaller (even 0) if
 /// it would make paragraphs overflow the bounding box.
 pub const DEFAULT_SPACING: i32 = 0;
@@ -92,6 +92,13 @@ where
             para.break_after = true;
         };
         self
+    }
+
+    pub fn update(&mut self, i: usize, content: T) {
+        if i < self.list.len() {
+            self.list[i].content = content;
+            self.change_offset(PageOffset::default());
+        }
     }
 
     /// Update bounding boxes of paragraphs on the current page. First determine
@@ -330,5 +337,94 @@ where
 
         // Last page.
         None
+    }
+}
+
+pub struct Checklist<T> {
+    area: Rect,
+    paragraphs: Paragraphs<T>,
+    current: usize,
+    icon_current: &'static [u8],
+    icon_done: &'static [u8],
+}
+
+impl<T> Checklist<T>
+where
+    T: AsRef<str>,
+{
+    const CHECK_WIDTH: i32 = 16;
+    const DONE_OFFSET: Offset = Offset::new(-2, 6);
+    const CURRENT_OFFSET: Offset = Offset::new(2, 3);
+
+    pub fn from_paragraphs(
+        icon_current: &'static [u8],
+        icon_done: &'static [u8],
+        current: usize,
+        paragraphs: Paragraphs<T>,
+    ) -> Self {
+        Self {
+            area: Rect::zero(),
+            paragraphs,
+            current,
+            icon_current,
+            icon_done,
+        }
+    }
+
+    fn paint_icon(&self, index: usize, icon: &'static [u8], offset: Offset) {
+        let para = self.paragraphs.list[index].layout;
+        let top_left = Point::new(self.area.x0, para.bounds.y0);
+        display::icon_top_left(
+            top_left + offset,
+            icon,
+            para.style.text_color,
+            para.style.background_color,
+        );
+    }
+}
+
+impl<T> Component for Checklist<T>
+where
+    T: AsRef<str>,
+{
+    type Msg = Never;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        self.area = bounds;
+        let para_area = bounds.inset(Insets::left(Self::CHECK_WIDTH));
+        self.paragraphs.place(para_area);
+        self.area
+    }
+
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        self.paragraphs.event(ctx, event)
+    }
+
+    fn paint(&mut self) {
+        self.paragraphs.paint();
+        let first = self.paragraphs.offset.par;
+        let last = first + self.paragraphs.visible;
+        for i in first..last.min(self.current) {
+            self.paint_icon(i, self.icon_done, Self::DONE_OFFSET);
+        }
+        self.paint_icon(self.current, self.icon_current, Self::CURRENT_OFFSET)
+    }
+
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
+        sink(self.area);
+        self.paragraphs.bounds(sink);
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl<T> crate::trace::Trace for Checklist<T>
+where
+    T: AsRef<str>,
+{
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.open("Checklist");
+        t.field("current", &self.current);
+        t.field("items", &self.paragraphs);
+        t.close();
     }
 }
