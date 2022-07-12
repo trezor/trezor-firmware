@@ -47,6 +47,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_button_event;
   MP_QSTR_timer;
   MP_QSTR_paint;
+  MP_QSTR_request_complete_repaint;
   MP_QSTR_trace;
   MP_QSTR_bounds;
   MP_QSTR_page_count;
