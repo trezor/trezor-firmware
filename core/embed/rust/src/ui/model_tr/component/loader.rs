@@ -20,19 +20,19 @@ enum State {
     Grown,
 }
 
-pub struct Loader {
+pub struct Loader<T> {
     area: Rect,
     state: State,
     growing_duration: Duration,
     shrinking_duration: Duration,
-    text: display::TextOverlay<'static>,
+    text: display::TextOverlay<T>,
     styles: LoaderStyleSheet,
 }
 
-impl Loader {
+impl<T: AsRef<str>> Loader<T> {
     pub const SIZE: Offset = Offset::new(120, 120);
 
-    pub fn new(text: &'static str, styles: LoaderStyleSheet) -> Self {
+    pub fn new(text: T, styles: LoaderStyleSheet) -> Self {
         let overlay = display::TextOverlay::new(text, styles.normal.font);
 
         Self {
@@ -50,12 +50,19 @@ impl Loader {
         self
     }
 
+    /// Change the duration of the loader.
     pub fn set_duration(&mut self, growing_duration: Duration) {
         self.growing_duration = growing_duration;
     }
 
-    pub fn set_text(&mut self, text: &'static str) {
+    /// Change the text of the loader.
+    pub fn set_text(&mut self, text: T) {
         self.text.set_text(text);
+    }
+
+    /// Return width of given text according to current style.
+    pub fn get_text_width(&self, text: &T) -> i32 {
+        self.styles.normal.font.text_width(text.as_ref())
     }
 
     pub fn start_growing(&mut self, ctx: &mut EventCtx, now: Instant) {
@@ -138,7 +145,7 @@ impl Loader {
     }
 }
 
-impl Component for Loader {
+impl<T: AsRef<str>> Component for Loader<T> {
     type Msg = LoaderMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -204,7 +211,7 @@ pub struct LoaderStyle {
 }
 
 #[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for Loader {
+impl<T: AsRef<str>> crate::trace::Trace for Loader<T> {
     fn trace(&self, d: &mut dyn crate::trace::Tracer) {
         d.open("Loader");
         d.close();

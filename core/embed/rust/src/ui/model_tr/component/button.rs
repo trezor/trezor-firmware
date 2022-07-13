@@ -7,7 +7,7 @@ use crate::ui::{
 
 use super::theme;
 
-#[derive(PartialEq)]
+#[derive(Eq, PartialEq)]
 pub enum ButtonMsg {
     Clicked,
     LongPressed,

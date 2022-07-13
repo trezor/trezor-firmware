@@ -33,7 +33,9 @@ impl<T: AsRef<str>> HoldToConfirm<T> {
         }
     }
 
+    /// Updating the text of the component and re-placing it.
     pub fn set_text(&mut self, text: T, button_area: Rect) {
+        self.text_width = self.loader.get_text_width(&text);
         self.loader.set_text(text);
         self.place(button_area);
     }
