@@ -31,9 +31,6 @@
 #include "secp256k1.h"
 #include "transaction.h"
 #include "zkp_bip340.h"
-#ifdef USE_SECP256K1_ZKP_ECDSA
-#include "zkp_ecdsa.h"
-#endif
 #if DEBUG_LINK
 #include <inttypes.h>
 #include <stdio.h>
@@ -2942,16 +2939,8 @@ static bool signing_verify_orig_nonlegacy_input(TxInputType *orig_input) {
       signing_hash_bip143(&orig_info, orig_input, hash);
     }
 
-#ifdef USE_SECP256K1_ZKP_ECDSA
-    if (coin->curve->params == &secp256k1) {
-      valid = zkp_ecdsa_verify_digest(coin->curve->params, node.public_key, sig,
-                                      hash) == 0;
-    } else
-#endif
-    {
-      valid = ecdsa_verify_digest(coin->curve->params, node.public_key, sig,
-                                  hash) == 0;
-    }
+    valid = ecdsa_verify_digest(coin->curve->params, node.public_key, sig,
+                                hash) == 0;
   }
 
   if (!valid) {
@@ -2971,16 +2960,7 @@ static bool signing_verify_orig_legacy_input(void) {
   uint8_t hash[32] = {0};
   tx_hash_final(&ti, hash, false);
 
-  bool valid = false;
-#ifdef USE_SECP256K1_ZKP_ECDSA
-  if (coin->curve->params == &secp256k1) {
-    valid =
-        zkp_ecdsa_verify_digest(coin->curve->params, pubkey, sig, hash) == 0;
-  } else
-#endif
-  {
-    valid = ecdsa_verify_digest(coin->curve->params, pubkey, sig, hash) == 0;
-  }
+  bool valid = ecdsa_verify_digest(coin->curve->params, pubkey, sig, hash) == 0;
 
   if (!valid) {
     fsm_sendFailure(FailureType_Failure_DataError, _("Invalid signature."));

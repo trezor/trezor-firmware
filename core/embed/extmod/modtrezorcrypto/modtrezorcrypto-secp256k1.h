@@ -22,10 +22,6 @@
 #include "vendor/trezor-crypto/ecdsa.h"
 #include "vendor/trezor-crypto/secp256k1.h"
 
-#ifdef USE_SECP256K1_ZKP_ECDSA
-#include "zkp_ecdsa.h"
-#endif
-
 /// package: trezorcrypto.secp256k1
 
 /// def generate_secret() -> bytes:
@@ -75,23 +71,12 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_publickey(size_t n_args,
   bool compressed = n_args < 2 || args[1] == mp_const_true;
   if (compressed) {
     vstr_init_len(&pk, 33);
-#ifdef USE_SECP256K1_ZKP_ECDSA
-    ret = zkp_ecdsa_get_public_key33(&secp256k1, (const uint8_t *)sk.buf,
-                                     (uint8_t *)pk.buf);
-#else
     ret = ecdsa_get_public_key33(&secp256k1, (const uint8_t *)sk.buf,
                                  (uint8_t *)pk.buf);
-#endif
-
   } else {
     vstr_init_len(&pk, 65);
-#ifdef USE_SECP256K1_ZKP_ECDSA
-    ret = zkp_ecdsa_get_public_key65(&secp256k1, (const uint8_t *)sk.buf,
-                                     (uint8_t *)pk.buf);
-#else
     ret = ecdsa_get_public_key65(&secp256k1, (const uint8_t *)sk.buf,
                                  (uint8_t *)pk.buf);
-#endif
   }
   if (0 != ret) {
     vstr_clear(&pk);
@@ -166,20 +151,9 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_sign(size_t n_args,
   vstr_t sig = {0};
   vstr_init_len(&sig, 65);
   uint8_t pby = 0;
-  int ret = 0;
-#ifdef USE_SECP256K1_ZKP_ECDSA
-  if (!is_canonical) {
-    ret = zkp_ecdsa_sign_digest(&secp256k1, (const uint8_t *)sk.buf,
-                                (const uint8_t *)dig.buf,
-                                (uint8_t *)sig.buf + 1, &pby, is_canonical);
-  } else
-#endif
-  {
-    ret = ecdsa_sign_digest(&secp256k1, (const uint8_t *)sk.buf,
-                            (const uint8_t *)dig.buf, (uint8_t *)sig.buf + 1,
-                            &pby, is_canonical);
-  }
-  if (0 != ret) {
+  if (0 != ecdsa_sign_digest(&secp256k1, (const uint8_t *)sk.buf,
+                             (const uint8_t *)dig.buf, (uint8_t *)sig.buf + 1,
+                             &pby, is_canonical)) {
     vstr_clear(&sig);
     mp_raise_ValueError("Signing failed");
   }
@@ -212,16 +186,9 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_verify(mp_obj_t public_key,
   if (dig.len != 32) {
     return mp_const_false;
   }
-  int ret = 0;
-#ifdef USE_SECP256K1_ZKP_ECDSA
-  ret = zkp_ecdsa_verify_digest(&secp256k1, (const uint8_t *)pk.buf,
+  int ret = ecdsa_verify_digest(&secp256k1, (const uint8_t *)pk.buf,
                                 (const uint8_t *)sig.buf + offset,
                                 (const uint8_t *)dig.buf);
-#else
-  ret = ecdsa_verify_digest(&secp256k1, (const uint8_t *)pk.buf,
-                            (const uint8_t *)sig.buf + offset,
-                            (const uint8_t *)dig.buf);
-#endif
   return mp_obj_new_bool(ret == 0);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorcrypto_secp256k1_verify_obj,
@@ -251,17 +218,9 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_verify_recover(mp_obj_t signature,
   recid &= 3;
   vstr_t pk = {0};
   vstr_init_len(&pk, 65);
-  int ret = 0;
-#ifdef USE_SECP256K1_ZKP_ECDSA
-  ret = zkp_ecdsa_recover_pub_from_sig(&secp256k1, (uint8_t *)pk.buf,
-                                       (const uint8_t *)sig.buf + 1,
-                                       (const uint8_t *)dig.buf, recid);
-#else
-  ret = ecdsa_recover_pub_from_sig(&secp256k1, (uint8_t *)pk.buf,
-                                   (const uint8_t *)sig.buf + 1,
-                                   (const uint8_t *)dig.buf, recid);
-#endif
-  if (ret == 0) {
+  if (ecdsa_recover_pub_from_sig(&secp256k1, (uint8_t *)pk.buf,
+                                 (const uint8_t *)sig.buf + 1,
+                                 (const uint8_t *)dig.buf, recid) == 0) {
     if (compressed) {
       pk.buf[0] = 0x02 | (pk.buf[64] & 1);
       pk.len = 33;

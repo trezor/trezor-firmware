@@ -34,9 +34,6 @@
 #include "segwit_addr.h"
 #include "util.h"
 #include "zkp_bip340.h"
-#ifdef USE_SECP256K1_ZKP_ECDSA
-#include "zkp_ecdsa.h"
-#endif
 
 #if !BITCOIN_ONLY
 #include "cash_addr.h"
@@ -514,18 +511,8 @@ uint32_t serialize_p2tr_witness(const uint8_t *signature,
 
 bool tx_sign_ecdsa(const ecdsa_curve *curve, const uint8_t *private_key,
                    const uint8_t *hash, uint8_t *out, pb_size_t *size) {
-  int ret = 0;
   uint8_t signature[64] = {0};
-#ifdef USE_SECP256K1_ZKP_ECDSA
-  if (curve == &secp256k1) {
-    ret =
-        zkp_ecdsa_sign_digest(curve, private_key, hash, signature, NULL, NULL);
-  } else
-#endif
-  {
-    ret = ecdsa_sign_digest(curve, private_key, hash, signature, NULL, NULL);
-  }
-  if (ret != 0) {
+  if (ecdsa_sign_digest(curve, private_key, hash, signature, NULL, NULL) != 0) {
     return false;
   }
 
@@ -1306,19 +1293,9 @@ bool tx_input_verify_nonownership(
       return false;
     }
 
-#ifdef USE_SECP256K1_ZKP_ECDSA
-    if (coin->curve->params == &secp256k1) {
-      if (zkp_ecdsa_verify_digest(coin->curve->params, public_key, signature,
-                                  digest) != 0) {
-        return false;
-      }
-    } else
-#endif
-    {
-      if (ecdsa_verify_digest(coin->curve->params, public_key, signature,
-                              digest) != 0) {
-        return false;
-      }
+    if (ecdsa_verify_digest(coin->curve->params, public_key, signature,
+                            digest) != 0) {
+      return false;
     }
   } else if (txinput->script_pubkey.size == 34 &&
              memcmp(txinput->script_pubkey.bytes, "\x51\x20", 2) == 0) {
