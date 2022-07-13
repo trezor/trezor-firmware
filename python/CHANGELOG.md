@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.3] (2022-07-13)
+[0.13.3]: https://github.com/trezor/trezor-firmware/compare/python/v0.13.2...python/v0.13.3
+
+### Added
+- Support for Cardano Babbage era transaction items  [#2354]
+
+### Fixed
+- Fix Click 7.x compatibility.  [#2364]
+
+
 ## [0.13.2] (2022-06-30)
 [0.13.2]: https://github.com/trezor/trezor-firmware/compare/python/v0.13.1...python/v0.13.2
 
@@ -659,3 +669,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#2230]: https://github.com/trezor/trezor-firmware/pull/2230
 [#2239]: https://github.com/trezor/trezor-firmware/pull/2239
 [#2284]: https://github.com/trezor/trezor-firmware/pull/2284
+[#2354]: https://github.com/trezor/trezor-firmware/pull/2354
+[#2364]: https://github.com/trezor/trezor-firmware/pull/2364
