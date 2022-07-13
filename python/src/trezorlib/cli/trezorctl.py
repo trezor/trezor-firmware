@@ -24,7 +24,7 @@ from typing import TYPE_CHECKING, Any, Callable, Iterable, Optional, TypeVar, ca
 
 import click
 
-from .. import log, messages, protobuf, ui
+from .. import __version__, log, messages, protobuf, ui
 from ..client import TrezorClient
 from ..transport import DeviceIsBusy, enumerate_devices
 from ..transport.udp import UdpTransport
@@ -170,7 +170,7 @@ def configure_logging(verbose: int) -> None:
     help="Resume given session ID.",
     default=os.environ.get("TREZOR_SESSION_ID"),
 )
-@click.version_option(package_name="trezor")
+@click.version_option(version=__version__)
 @click.pass_context
 def cli_main(
     ctx: click.Context,
@@ -262,9 +262,7 @@ def list_devices(no_resolve: bool) -> Optional[Iterable["Transport"]]:
 @cli.command()
 def version() -> str:
     """Show version of trezorctl/trezorlib."""
-    from .. import __version__ as VERSION
-
-    return VERSION
+    return __version__
 
 
 #
