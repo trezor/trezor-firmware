@@ -148,29 +148,38 @@ def header(
             display.icon(55, 25, res.load(icon), ifg, bg)
 
 
-# Common for both header functions
+# Common for header functions
 MODEL_HEADER_HEIGHTS = {"1": 12, "R": 15, "T": 30}
 MODEL_Y_BASELINES = {"1": 10, "R": 11, "T": 22}
 
 
 def header_warning(message: str, clear: bool = True) -> None:
-    height = MODEL_HEADER_HEIGHTS[utils.MODEL]
-    y_baseline = MODEL_Y_BASELINES[utils.MODEL]
-
-    display.bar(0, 0, WIDTH, height, style.YELLOW)
-    display.text_center(
-        WIDTH // 2, y_baseline, message, BOLD, style.BLACK, style.YELLOW
+    header_message(
+        message, text_colour=style.BLACK, text_background=style.YELLOW, clear=clear
     )
-    if clear:
-        display.bar(0, height, WIDTH, HEIGHT - height, style.BG)
 
 
 def header_error(message: str, clear: bool = True) -> None:
+    header_message(
+        message, text_colour=style.WHITE, text_background=style.RED, clear=clear
+    )
+
+
+def header_message(
+    message: str, text_colour: int, text_background: int, clear: bool = True
+) -> None:
     height = MODEL_HEADER_HEIGHTS[utils.MODEL]
     y_baseline = MODEL_Y_BASELINES[utils.MODEL]
 
-    display.bar(0, 0, WIDTH, height, style.RED)
-    display.text_center(WIDTH // 2, y_baseline, message, BOLD, style.WHITE, style.RED)
+    # Black-white models can have only black text on white background
+    if utils.MODEL in ("1", "R"):
+        text_colour = style.BLACK
+        text_background = style.WHITE
+
+    display.bar(0, 0, WIDTH, height, text_background)
+    display.text_center(
+        WIDTH // 2, y_baseline, message, BOLD, text_colour, text_background
+    )
     if clear:
         display.bar(0, height, WIDTH, HEIGHT - height, style.BG)
 
