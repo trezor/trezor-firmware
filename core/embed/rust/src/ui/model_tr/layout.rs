@@ -225,13 +225,20 @@ extern "C" fn show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map
             end_text.as_str()
         );
 
+        // Adding hold-to-confirm button at the end
+        // Also no possibility of cancelling
+        let cancel_btn = None;
+        let confirm_btn = Some(ButtonDetails::new("CONFIRM").with_duration(Duration::from_secs(2)));
+
         let obj = LayoutObj::new(Frame::new(
             title,
             None,
             ButtonPage::new_str(
                 Paragraphs::new().add(theme::TEXT_BOLD, text_to_show),
                 theme::BG,
-            ),
+            )
+            .with_cancel_btn(cancel_btn)
+            .with_confirm_btn(confirm_btn),
         ))?;
         Ok(obj.into())
     };
