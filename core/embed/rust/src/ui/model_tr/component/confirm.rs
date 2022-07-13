@@ -3,7 +3,7 @@ use crate::{
     ui::{
         component::{Component, Event, EventCtx},
         event::ButtonEvent,
-        geometry::{Point, Rect},
+        geometry::Rect,
         model_tr::component::{loader::Loader, ButtonPos, LoaderMsg, LoaderStyleSheet},
     },
 };
@@ -17,7 +17,6 @@ pub struct HoldToConfirm<T> {
     area: Rect,
     pos: ButtonPos,
     loader: Loader<T>,
-    baseline: Point,
     text_width: i32,
 }
 
@@ -28,7 +27,6 @@ impl<T: AsRef<str>> HoldToConfirm<T> {
             area: Rect::zero(),
             pos,
             loader: Loader::new(text, styles).with_growing_duration(duration),
-            baseline: Point::zero(),
             text_width,
         }
     }
