@@ -220,6 +220,25 @@ impl<T: Clone + AsRef<str>> ButtonContainer<T> {
         false
     }
 
+    /// Registering hold event.
+    pub fn hold_started(&mut self, ctx: &mut EventCtx) {
+        self.send_htc_event(ctx, Event::Button(ButtonEvent::HoldStarted));
+    }
+
+    /// Cancelling hold event.
+    pub fn hold_ended(&mut self, ctx: &mut EventCtx) {
+        self.send_htc_event(ctx, Event::Button(ButtonEvent::HoldEnded));
+    }
+
+    /// Sending hold-to-confirm event in case the current button is HTC.
+    fn send_htc_event(&mut self, ctx: &mut EventCtx, event: Event) {
+        if matches!(self.button_type, ButtonType::HoldToConfirm) {
+            if let Some(hold_to_confirm) = &mut self.hold_to_confirm {
+                hold_to_confirm.inner_mut().event(ctx, event);
+            }
+        }
+    }
+
     /// Whether newly supplied button details are different from the
     /// current one.
     pub fn is_changing(&self, btn_details: Option<ButtonDetails<T>>) -> bool {
@@ -302,6 +321,14 @@ impl<T: Clone + AsRef<str>> ButtonController<T> {
         self.middle_btn.set_pressed(ctx, mid);
         self.right_btn.set_pressed(ctx, right);
     }
+
+    /// Handle middle button hold-to-confirm start.
+    /// We need to cancel possible holds in both other buttons.
+    fn middle_hold_started(&mut self, ctx: &mut EventCtx) {
+        self.left_btn.hold_ended(ctx);
+        self.middle_btn.hold_started(ctx);
+        self.right_btn.hold_ended(ctx);
+    }
 }
 
 impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
@@ -324,7 +351,18 @@ impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
             Event::Button(button) => {
                 let (new_state, event) = match self.state {
                     ButtonState::Nothing => match button {
-                        ButtonEvent::ButtonPressed(which) => (ButtonState::OneDown(which), None),
+                        ButtonEvent::ButtonPressed(which) => {
+                            match which {
+                                PhysicalButton::Left => {
+                                    self.left_btn.hold_started(ctx);
+                                }
+                                PhysicalButton::Right => {
+                                    self.right_btn.hold_started(ctx);
+                                }
+                                _ => {}
+                            }
+                            (ButtonState::OneDown(which), None)
+                        }
                         _ => (self.state, None),
                     },
                     ButtonState::OneDown(which_down) => match button {
@@ -334,6 +372,7 @@ impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
                                 if self.left_btn.reacts_to_single_click() {
                                     Some(ButtonControllerMsg::Triggered(ButtonPos::Left))
                                 } else {
+                                    self.left_btn.hold_ended(ctx);
                                     None
                                 },
                             ),
@@ -342,6 +381,7 @@ impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
                                 if self.right_btn.reacts_to_single_click() {
                                     Some(ButtonControllerMsg::Triggered(ButtonPos::Right))
                                 } else {
+                                    self.right_btn.hold_ended(ctx);
                                     None
                                 },
                             ),
@@ -349,16 +389,21 @@ impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
                         },
 
                         ButtonEvent::ButtonPressed(b) if b != which_down => {
+                            self.middle_hold_started(ctx);
                             (ButtonState::BothDown, None)
                         }
                         _ => (self.state, None),
                     },
                     ButtonState::BothDown => match button {
-                        ButtonEvent::ButtonReleased(b) => (ButtonState::OneReleased(b), None),
+                        ButtonEvent::ButtonReleased(b) => {
+                            self.middle_btn.hold_ended(ctx);
+                            (ButtonState::OneReleased(b), None)
+                        }
                         _ => (self.state, None),
                     },
                     ButtonState::OneReleased(which_up) => match button {
                         ButtonEvent::ButtonPressed(b) if b == which_up => {
+                            self.middle_hold_started(ctx);
                             (ButtonState::BothDown, None)
                         }
                         ButtonEvent::ButtonReleased(b) if b != which_up => (

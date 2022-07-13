@@ -2,6 +2,8 @@ use crate::{error, ui::geometry::Point};
 use core::convert::TryInto;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
+// TODO: delete Both and all its usage
+// ButtonPos.hit() should not be used anymore
 pub enum PhysicalButton {
     Left,
     Right,
@@ -12,6 +14,8 @@ pub enum PhysicalButton {
 pub enum ButtonEvent {
     ButtonPressed(PhysicalButton),
     ButtonReleased(PhysicalButton),
+    HoldStarted,
+    HoldEnded,
 }
 
 impl ButtonEvent {

@@ -66,10 +66,10 @@ impl<T: AsRef<str>> Component for HoldToConfirm<T> {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         match event {
-            Event::Button(ButtonEvent::ButtonPressed(which)) if self.pos.hit(&which) => {
+            Event::Button(ButtonEvent::HoldStarted) => {
                 self.loader.start_growing(ctx, Instant::now());
             }
-            Event::Button(ButtonEvent::ButtonReleased(which)) if self.pos.hit(&which) => {
+            Event::Button(ButtonEvent::HoldEnded) => {
                 if self.loader.is_animating() {
                     self.loader.start_shrinking(ctx, Instant::now());
                 }
