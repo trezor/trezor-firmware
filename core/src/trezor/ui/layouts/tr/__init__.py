@@ -176,6 +176,20 @@ async def confirm_action(
             log.error(__name__, "confirm_action description_param_font not implemented")
         description = description.format(description_param)
 
+    # Making the button text UPPERCASE, so it is better readable
+    if isinstance(verb, str):
+        verb = verb.upper()
+    if isinstance(verb_cancel, str):
+        verb_cancel = verb_cancel.upper()
+
+    # When there is a long verb, verb_cancel sometimes does not fit, so shortening it
+    # TODO: rather go through each layout and make it fit properly
+    if isinstance(verb, str) and isinstance(verb_cancel, str):
+        max_letters = 18
+        letters_for_cancel = max_letters - len(verb)
+        if len(verb_cancel) > letters_for_cancel:
+            verb_cancel = verb_cancel[:letters_for_cancel]
+
     await raise_if_cancelled(
         interact(
             ctx,
