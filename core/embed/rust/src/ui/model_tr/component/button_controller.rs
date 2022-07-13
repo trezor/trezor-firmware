@@ -100,11 +100,14 @@ impl<T: Clone + AsRef<str>> ButtonContainer<T> {
         pos: ButtonPos,
         btn_details: ButtonDetails<T>,
     ) -> Child<HoldToConfirm<T>> {
+        let duration = btn_details
+            .duration
+            .unwrap_or_else(|| Duration::from_millis(1000));
         Child::new(HoldToConfirm::new(
             pos,
             btn_details.text,
             theme::loader_bold(),
-            Duration::from_millis(1000),
+            duration,
         ))
     }
 
@@ -405,7 +408,7 @@ impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         // Saving button area so that we can re-place the buttons
-        // when when they get updated
+        // when they get updated
         self.button_area = bounds;
 
         self.pad.place(bounds);

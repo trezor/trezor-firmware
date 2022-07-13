@@ -83,6 +83,16 @@ where
         self
     }
 
+    pub fn with_back_btn(mut self, btn_details: Option<ButtonDetails<S>>) -> Self {
+        self.back_btn_details = btn_details;
+        self
+    }
+
+    pub fn with_next_btn(mut self, btn_details: Option<ButtonDetails<S>>) -> Self {
+        self.next_btn_details = btn_details;
+        self
+    }
+
     /// Basically just determining whether the right button for
     /// initial page should be "NEXT" or "CONFIRM".
     /// Can only be called when we know the final page_count.
