@@ -290,12 +290,12 @@ def sigdecode(sig, _):
     return map(bytes2num, [sig[:32], sig[32:]])
 
 
-def test_sign(curve, r):
+def test_sign_native(curve, r):
     priv = r.randbytes(32)
     digest = r.randbytes(32)
     sig = r.randbytes(64)
 
-    lib.ecdsa_sign_digest(curve.ptr, priv, digest, sig, c.c_void_p(0), c.c_void_p(0))
+    lib.tc_ecdsa_sign_digest(curve.ptr, priv, digest, sig, c.c_void_p(0), c.c_void_p(0))
 
     exp = bytes2num(priv)
     sk = ecdsa.SigningKey.from_secret_exponent(exp, curve, hashfunc=hashlib.sha256)

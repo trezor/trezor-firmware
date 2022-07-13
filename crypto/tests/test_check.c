@@ -53,6 +53,7 @@
 #include "chacha_drbg.h"
 #include "curves.h"
 #include "ecdsa.h"
+#include "ecdsa_internal.h"
 #include "ed25519-donna/ed25519-donna.h"
 #include "ed25519-donna/ed25519-keccak.h"
 #include "ed25519-donna/ed25519.h"
@@ -3493,8 +3494,8 @@ static void test_ecdsa_get_public_key33_helper(int (*ecdsa_get_public_key33_fn)(
       33);
 }
 
-START_TEST(test_ecdsa_get_public_key33) {
-  test_ecdsa_get_public_key33_helper(ecdsa_get_public_key33);
+START_TEST(test_tc_ecdsa_get_public_key33) {
+  test_ecdsa_get_public_key33_helper(tc_ecdsa_get_public_key33);
 }
 END_TEST
 
@@ -3525,8 +3526,8 @@ static void test_ecdsa_get_public_key65_helper(int (*ecdsa_get_public_key65_fn)(
       65);
 }
 
-START_TEST(test_ecdsa_get_public_key65) {
-  test_ecdsa_get_public_key65_helper(ecdsa_get_public_key65);
+START_TEST(test_tc_ecdsa_get_public_key65) {
+  test_ecdsa_get_public_key65_helper(tc_ecdsa_get_public_key65);
 }
 END_TEST
 
@@ -3733,8 +3734,8 @@ static void test_ecdsa_recover_pub_from_sig_helper(int (
   ck_assert_int_eq(res, 1);
 }
 
-START_TEST(test_ecdsa_recover_pub_from_sig) {
-  test_ecdsa_recover_pub_from_sig_helper(ecdsa_recover_pub_from_sig);
+START_TEST(test_tc_ecdsa_recover_pub_from_sig) {
+  test_ecdsa_recover_pub_from_sig_helper(tc_ecdsa_recover_pub_from_sig);
 }
 END_TEST
 
@@ -3773,8 +3774,8 @@ static void test_ecdsa_verify_digest_helper(int (*ecdsa_verify_digest_fn)(
   ck_assert_int_eq(res, 0);
 }
 
-START_TEST(test_ecdsa_verify_digest) {
-  test_ecdsa_verify_digest_helper(ecdsa_verify_digest);
+START_TEST(test_tc_ecdsa_verify_digest) {
+  test_ecdsa_verify_digest_helper(tc_ecdsa_verify_digest);
 }
 END_TEST
 
@@ -3869,8 +3870,8 @@ static void test_ecdsa_sign_digest_deterministic_helper(
   }
 }
 
-START_TEST(test_ecdsa_sign_digest_deterministic) {
-  test_ecdsa_sign_digest_deterministic_helper(ecdsa_sign_digest);
+START_TEST(test_tc_ecdsa_sign_digest_deterministic) {
+  test_ecdsa_sign_digest_deterministic_helper(tc_ecdsa_sign_digest);
 }
 END_TEST
 
@@ -9525,16 +9526,16 @@ Suite *test_suite(void) {
   suite_add_tcase(s, tc);
 
   tc = tcase_create("ecdsa");
-  tcase_add_test(tc, test_ecdsa_get_public_key33);
-  tcase_add_test(tc, test_ecdsa_get_public_key65);
-  tcase_add_test(tc, test_ecdsa_recover_pub_from_sig);
-  tcase_add_test(tc, test_ecdsa_verify_digest);
+  tcase_add_test(tc, test_tc_ecdsa_get_public_key33);
+  tcase_add_test(tc, test_tc_ecdsa_get_public_key65);
+  tcase_add_test(tc, test_tc_ecdsa_recover_pub_from_sig);
+  tcase_add_test(tc, test_tc_ecdsa_verify_digest);
   tcase_add_test(tc, test_zkp_ecdsa_get_public_key33);
   tcase_add_test(tc, test_zkp_ecdsa_get_public_key65);
   tcase_add_test(tc, test_zkp_ecdsa_recover_pub_from_sig);
   tcase_add_test(tc, test_zkp_ecdsa_verify_digest);
 #if USE_RFC6979
-  tcase_add_test(tc, test_ecdsa_sign_digest_deterministic);
+  tcase_add_test(tc, test_tc_ecdsa_sign_digest_deterministic);
   tcase_add_test(tc, test_zkp_ecdsa_sign_digest_deterministic);
 #endif
   suite_add_tcase(s, tc);
