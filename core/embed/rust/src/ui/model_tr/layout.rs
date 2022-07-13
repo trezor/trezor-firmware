@@ -113,7 +113,6 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
         let verb_cancel = verb_cancel.unwrap_or_default();
         let verb = verb.unwrap_or_default();
 
-        // Cancel Button is optional
         let cancel_btn = if verb_cancel.len() > 0 {
             Some(ButtonDetails::cancel(verb_cancel))
         } else {
@@ -123,7 +122,7 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
         let mut confirm_btn = if verb.len() > 0 {
             Some(ButtonDetails::new(verb))
         } else {
-            Some(ButtonDetails::new("CONFIRM".into()))
+            None
         };
 
         // Optional HoldToConfirm

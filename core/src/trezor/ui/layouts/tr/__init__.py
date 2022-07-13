@@ -333,15 +333,16 @@ async def _show_modal(
     icon_color: int,
     exc: ExceptionType = wire.ActionCancelled,
 ) -> None:
-    await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type=br_type,
-            title=header,
-            data=content,
-            description=subheader,
-            br_code=br_code,
-        )
+    await confirm_action(
+        ctx=ctx,
+        br_type=br_type,
+        br_code=br_code,
+        title=header,
+        action=subheader,
+        description=content,
+        verb=button_confirm,
+        verb_cancel=button_cancel,
+        exc=exc,
     )
 
 
