@@ -22,15 +22,17 @@ use crate::{
 
 use super::{
     component::{
-        Bip39Entry, Bip39EntryMsg, Button, ButtonDetails, ButtonPage, ButtonPos, Frame,
-        PassphraseEntry, PassphraseEntryMsg, PinEntry, PinEntryMsg, SimpleChoice, SimpleChoiceMsg,
+        Bip39Entry, Bip39EntryMsg, ButtonDetails, ButtonPage, Frame, PassphraseEntry,
+        PassphraseEntryMsg, PinEntry, PinEntryMsg, SimpleChoice, SimpleChoiceMsg,
     },
     theme,
 };
 
-impl<T> ComponentMsgObj for ButtonPage<T>
+impl<S, T> ComponentMsgObj for ButtonPage<S, T>
 where
     T: Component + Paginate,
+    S: AsRef<str>,
+    S: Clone,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
@@ -108,23 +110,32 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
             _ => "",
         };
 
-        // TODO: use verb and verb_cancel
+        let verb_cancel = verb_cancel.unwrap_or_default();
+        let verb = verb.unwrap_or_default();
 
-        let cancel_btn = ButtonDetails::cancel("CANCEL");
-        let mut confirm_btn = ButtonDetails::new("CONFIRM");
+        // Cancel Button is optional
+        let cancel_btn = if verb_cancel.len() > 0 {
+            Some(ButtonDetails::cancel(verb_cancel))
+        } else {
+            None
+        };
+
+        let mut confirm_btn = if verb.len() > 0 {
+            Some(ButtonDetails::new(verb))
+        } else {
+            Some(ButtonDetails::new("CONFIRM".into()))
+        };
+
+        // Optional HoldToConfirm
         if hold {
-            confirm_btn = confirm_btn.with_duration(Duration::from_secs(2));
+            // TODO: clients might want to set the duration
+            confirm_btn = confirm_btn.map(|btn| btn.with_duration(Duration::from_secs(2)));
         }
-
-        let _left = verb_cancel
-            .map(|label| Button::with_text(ButtonPos::Left, label, theme::button_cancel()));
-        let _right =
-            verb.map(|label| Button::with_text(ButtonPos::Right, label, theme::button_default()));
 
         let obj = LayoutObj::new(Frame::new(
             title,
             None,
-            ButtonPage::new(
+            ButtonPage::new_str_buf(
                 FormattedText::new(theme::TEXT_NORMAL, theme::FORMATTED, format)
                     .with("action", action.unwrap_or_default())
                     .with("description", description.unwrap_or_default()),
@@ -148,7 +159,7 @@ extern "C" fn new_confirm_text(n_args: usize, args: *const Obj, kwargs: *mut Map
         let obj = LayoutObj::new(Frame::new(
             title,
             None,
-            ButtonPage::new(
+            ButtonPage::new_str(
                 Paragraphs::new()
                     .add(theme::TEXT_NORMAL, description.unwrap_or_default())
                     .add(theme::TEXT_BOLD, data),
@@ -218,7 +229,7 @@ extern "C" fn show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map
         let obj = LayoutObj::new(Frame::new(
             title,
             None,
-            ButtonPage::new(
+            ButtonPage::new_str(
                 Paragraphs::new().add(theme::TEXT_BOLD, text_to_show),
                 theme::BG,
             ),
@@ -415,8 +426,8 @@ mod tests {
     //         fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error>
     // {             match msg {
     //                 DialogMsg::Content(c) =>
-    // self.inner().msg_try_into_obj(c),                 
-    // DialogMsg::LeftClicked => Ok(CANCELLED.as_obj()),                 
+    // self.inner().msg_try_into_obj(c),
+    // DialogMsg::LeftClicked => Ok(CANCELLED.as_obj()),
     // DialogMsg::RightClicked => Ok(CONFIRMED.as_obj()),             }
     //         }
     //     }

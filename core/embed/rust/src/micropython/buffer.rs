@@ -17,6 +17,7 @@ use super::ffi;
 /// In most cases, it is unsound to store `Buffer` values in a GC-unreachable
 /// location, such as static data. It is also unsound to let the contents be
 /// modified while a reference to them is being held.
+#[derive(Clone)]
 pub struct Buffer {
     ptr: *const u8,
     len: usize,
@@ -140,7 +141,7 @@ impl AsMut<[u8]> for BufferMut {
 /// In most cases, it is unsound to store `StrBuffer` values in a GC-unreachable
 /// location, such as static data. It is also unsound to let the contents be
 /// modified while a reference to them is being held.
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct StrBuffer(Buffer);
 
 impl StrBuffer {

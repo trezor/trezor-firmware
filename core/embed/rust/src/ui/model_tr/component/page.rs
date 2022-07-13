@@ -1,48 +1,84 @@
-use crate::ui::{
-    component::{Child, Component, ComponentExt, Event, EventCtx, Never, Pad, PageMsg, Paginate},
-    display::{self, Color},
-    geometry::{Insets, Offset, Point, Rect},
+use crate::{
+    micropython::buffer::StrBuffer,
+    ui::{
+        component::{
+            Child, Component, ComponentExt, Event, EventCtx, Never, Pad, PageMsg, Paginate,
+        },
+        display::{self, Color},
+        geometry::{Insets, Offset, Point, Rect},
+    },
 };
 
 use super::{theme, ButtonController, ButtonControllerMsg, ButtonDetails, ButtonLayout, ButtonPos};
 
-pub struct ButtonPage<T> {
+pub struct ButtonPage<S, T> {
     content: T,
     scrollbar: ScrollBar,
     pad: Pad,
-    cancel_btn_details: ButtonDetails<&'static str>,
-    confirm_btn_details: ButtonDetails<&'static str>,
-    back_btn_details: ButtonDetails<&'static str>,
-    next_btn_details: ButtonDetails<&'static str>,
-    buttons: Child<ButtonController<&'static str>>,
+    cancel_btn_details: Option<ButtonDetails<S>>,
+    confirm_btn_details: Option<ButtonDetails<S>>,
+    back_btn_details: Option<ButtonDetails<S>>,
+    next_btn_details: Option<ButtonDetails<S>>,
+    buttons: Child<ButtonController<S>>,
 }
 
-impl<T> ButtonPage<T>
+impl<T> ButtonPage<&'static str, T>
 where
     T: Paginate,
     T: Component,
 {
-    pub fn new(content: T, background: Color) -> Self {
+    /// Constructor for `&'static str` button-text type.
+    pub fn new_str(content: T, background: Color) -> Self {
         Self {
             content,
             scrollbar: ScrollBar::vertical(),
             pad: Pad::with_background(background),
-            cancel_btn_details: ButtonDetails::cancel("CANCEL"),
-            confirm_btn_details: ButtonDetails::new("CONFIRM"),
-            back_btn_details: ButtonDetails::cancel("BACK"),
-            next_btn_details: ButtonDetails::new("NEXT"),
+            cancel_btn_details: Some(ButtonDetails::cancel("CANCEL")),
+            confirm_btn_details: Some(ButtonDetails::new("CONFIRM")),
+            back_btn_details: Some(ButtonDetails::cancel("BACK")),
+            next_btn_details: Some(ButtonDetails::new("NEXT")),
             // Setting empty layout for now, we do not yet know the page count.
             // Initial button layout will be set in `place()` after we can call `content.page_count()`.
             buttons: Child::new(ButtonController::new(ButtonLayout::empty())),
         }
     }
+}
 
-    pub fn with_cancel_btn(mut self, btn_details: ButtonDetails<&'static str>) -> Self {
+impl<T> ButtonPage<StrBuffer, T>
+where
+    T: Paginate,
+    T: Component,
+{
+    /// Constructor for `StrBuffer` button-text type.
+    pub fn new_str_buf(content: T, background: Color) -> Self {
+        Self {
+            content,
+            scrollbar: ScrollBar::vertical(),
+            pad: Pad::with_background(background),
+            cancel_btn_details: Some(ButtonDetails::cancel("CANCEL".into())),
+            confirm_btn_details: Some(ButtonDetails::new("CONFIRM".into())),
+            back_btn_details: Some(ButtonDetails::cancel("BACK".into())),
+            next_btn_details: Some(ButtonDetails::new("NEXT".into())),
+            // Setting empty layout for now, we do not yet know the page count.
+            // Initial button layout will be set in `place()` after we can call `content.page_count()`.
+            buttons: Child::new(ButtonController::new(ButtonLayout::empty())),
+        }
+    }
+}
+
+impl<S, T> ButtonPage<S, T>
+where
+    T: Paginate,
+    T: Component,
+    S: AsRef<str>,
+    S: Clone,
+{
+    pub fn with_cancel_btn(mut self, btn_details: Option<ButtonDetails<S>>) -> Self {
         self.cancel_btn_details = btn_details;
         self
     }
 
-    pub fn with_confirm_btn(mut self, btn_details: ButtonDetails<&'static str>) -> Self {
+    pub fn with_confirm_btn(mut self, btn_details: Option<ButtonDetails<S>>) -> Self {
         self.confirm_btn_details = btn_details;
         self
     }
@@ -76,31 +112,33 @@ where
         });
     }
 
-    fn get_button_layout(&self, has_prev: bool, has_next: bool) -> ButtonLayout<&'static str> {
+    fn get_button_layout(&self, has_prev: bool, has_next: bool) -> ButtonLayout<S> {
         let btn_left = self.get_left_button_details(has_prev);
         let btn_right = self.get_right_button_details(has_next);
         ButtonLayout::new(btn_left, None, btn_right)
     }
 
-    fn get_left_button_details(&self, has_prev_page: bool) -> Option<ButtonDetails<&'static str>> {
+    fn get_left_button_details(&self, has_prev_page: bool) -> Option<ButtonDetails<S>> {
         if has_prev_page {
-            Some(self.back_btn_details)
+            self.back_btn_details.clone()
         } else {
-            Some(self.cancel_btn_details)
+            self.cancel_btn_details.clone()
         }
     }
 
-    fn get_right_button_details(&self, has_next_page: bool) -> Option<ButtonDetails<&'static str>> {
+    fn get_right_button_details(&self, has_next_page: bool) -> Option<ButtonDetails<S>> {
         if has_next_page {
-            Some(self.next_btn_details)
+            self.next_btn_details.clone()
         } else {
-            Some(self.confirm_btn_details)
+            self.confirm_btn_details.clone()
         }
     }
 }
 
-impl<T> Component for ButtonPage<T>
+impl<S, T> Component for ButtonPage<S, T>
 where
+    S: Clone,
+    S: AsRef<str>,
     T: Component,
     T: Paginate,
 {
@@ -170,7 +208,7 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for ButtonPage<T>
+impl<S, T> crate::trace::Trace for ButtonPage<S, T>
 where
     T: crate::trace::Trace,
 {

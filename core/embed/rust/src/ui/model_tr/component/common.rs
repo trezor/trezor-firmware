@@ -126,6 +126,12 @@ impl<T: AsRef<str>> ButtonLayout<T> {
             btn_right,
         }
     }
+
+    /// Empty layout for when we cannot yet tell which buttons
+    /// should be on the screen.
+    pub fn empty() -> Self {
+        Self::new(None, None, None)
+    }
 }
 
 impl ButtonLayout<&'static str> {
@@ -145,12 +151,6 @@ impl ButtonLayout<&'static str> {
             None,
             Some(ButtonDetails::new("NEXT")),
         )
-    }
-
-    /// Empty layout for when we cannot yet tell which buttons
-    /// should be on the screen.
-    pub fn empty() -> Self {
-        Self::new(None, None, None)
     }
 }
 
