@@ -123,11 +123,27 @@ class TrezorctlGroup(AliasedGroup):
 
         return None
 
-    def result_callback(self, replace: bool = False) -> Callable[[F], F]:
-        """Compatibility wrapper for Click 7.x"""
-        if hasattr(self, "result_callback"):
-            return super().result_callback(replace)
-        return super().resultcallback(replace)  # type: ignore [Cannot access member]
+    def set_result_callback(self) -> Callable[[F], F]:
+        """Set a function called to format the return value of a command.
+
+        Compatibility wrapper for Click 7.x `resultcallback` and >=8.1 `result_callback`
+        """
+        # Click 7.x uses `resultcallback` to configure the callback, and
+        #   `result_callback` to store its value.
+        # Click 8.x uses `result_callback` to configure the callback, and
+        #   `_result_callback` to store its value.
+        # Click 8.0 has a `resultcallback` function that emits a warning and delegates
+        #   to `result_callback`. Click 8.1 removes this function.
+        #
+        # This means that there is no reasonable way to use `hasattr` to detect where we
+        # are, unless we want to look at the private `_result_callback` attribute.
+        # Instead, we look at Click version and hope for the best.
+        from click import __version__ as click_version
+
+        if click_version.startswith("7."):
+            return super().resultcallback()  # type: ignore [Cannot access member]
+        else:
+            return super().result_callback()
 
 
 def configure_logging(verbose: int) -> None:
@@ -197,7 +213,7 @@ def cli_main(
 cli = cast(TrezorctlGroup, cli_main)
 
 
-@cli.result_callback()
+@cli.set_result_callback()
 def print_result(res: Any, is_json: bool, script: bool, **kwargs: Any) -> None:
     if is_json:
         if isinstance(res, protobuf.MessageType):
