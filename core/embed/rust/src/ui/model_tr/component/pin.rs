@@ -1,6 +1,7 @@
 use core::ops::Deref;
 
 use crate::{
+    time::Duration,
     trezorhal::random,
     ui::{
         component::{text::common::TextBox, Component, Event, EventCtx},
@@ -25,9 +26,17 @@ const MAX_LENGTH: usize = 50;
 const MAX_VISIBLE_DOTS: usize = 18;
 const MAX_VISIBLE_DIGITS: usize = 18;
 
-const CHOICE_LENGTH: usize = 11;
+const CHOICE_LENGTH: usize = 14;
+const EXIT_INDEX: usize = 0;
+const DELETE_INDEX: usize = 1;
+const SHOW_INDEX: usize = 2;
+const PROMPT_INDEX: usize = 3;
 const DIGITS: [&str; CHOICE_LENGTH] = [
+    "EXIT",
+    "DELETE",
+    "SHOW PIN",
     "PLACEHOLDER FOR THE PROMPT",
+    "0",
     "1",
     "2",
     "3",
@@ -37,7 +46,6 @@ const DIGITS: [&str; CHOICE_LENGTH] = [
     "7",
     "8",
     "9",
-    "0",
 ];
 
 /// Component for entering a PIN.
@@ -55,14 +63,15 @@ impl PinEntry {
         let choices = Self::get_word_choice_page_items(prompt);
 
         Self {
-            choice_page: ChoicePage::new(choices),
+            choice_page: ChoicePage::new(choices)
+                .with_initial_page_counter(3)
+                .with_carousel(),
             show_real_pin: false,
             textbox: TextBox::empty(),
         }
     }
 
-    /// PIN choice with filled prompt at the first position and special middle
-    /// text. Also adding the BIN button at the leftmost position.
+    /// Constructing list of choice items for PIN entry.
     fn get_word_choice_page_items<T>(prompt: T) -> Vec<MultilineStringChoiceItem, CHOICE_LENGTH>
     where
         T: Deref<Target = str>,
@@ -79,11 +88,15 @@ impl PinEntry {
                     .use_delimiter(' ')
             })
             .collect();
-        let last_index = choices.len() - 1;
-        choices[0].btn_layout.btn_left = Some(ButtonDetails::new("BIN"));
-        choices[0].btn_layout.btn_middle = Some(ButtonDetails::new("CONFIRM"));
-        choices[0].text = String::from(prompt.as_ref());
-        choices[last_index].btn_layout.btn_right = None;
+
+        // Action buttons have different text and some have duration
+        let confirm_btn = ButtonDetails::new("CONFIRM");
+        let duration = Duration::from_millis(500);
+        choices[EXIT_INDEX].btn_layout.btn_middle = Some(confirm_btn.with_duration(duration));
+        choices[DELETE_INDEX].btn_layout.btn_middle = Some(confirm_btn);
+        choices[SHOW_INDEX].btn_layout.btn_middle = Some(confirm_btn);
+        choices[PROMPT_INDEX].btn_layout.btn_middle = Some(confirm_btn.with_duration(duration));
+        choices[PROMPT_INDEX].text = String::from(prompt.as_ref());
 
         choices
     }
@@ -110,11 +123,12 @@ impl PinEntry {
 
         // Giving some notion of change even for longer-than-visible PINs
         // - slightly shifting the dots to the left and right after each new digit
-        if digits > MAX_VISIBLE_DOTS && digits % 2 == 0 {
-            display_bold_center(Point::new(61, PIN_ROW), &dots);
+        let x_baseline = if digits > MAX_VISIBLE_DOTS && digits % 2 == 0 {
+            61
         } else {
-            display_bold_center(Point::new(64, PIN_ROW), &dots);
-        }
+            64
+        };
+        display_bold_center(Point::new(x_baseline, PIN_ROW), &dots);
     }
 
     fn reveal_current_pin(&self) {
@@ -128,7 +142,7 @@ impl PinEntry {
             let offset: usize = digits.saturating_sub(MAX_VISIBLE_DIGITS) + ellipsis.len();
             let mut to_show: String<MAX_VISIBLE_DIGITS> = String::from(ellipsis);
             to_show.push_str(&self.pin()[offset..]).unwrap();
-            display_bold_center(Point::new(32, PIN_ROW), &to_show);
+            display_bold_center(Point::new(64, PIN_ROW), &to_show);
         }
     }
 
@@ -163,32 +177,32 @@ impl Component for PinEntry {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         let msg = self.choice_page.event(ctx, event);
-        match msg {
-            // Sending the result, appending the new digit, deleting the last digit or cancelling
-            Some(ChoicePageMsg::Choice(page_counter)) => match page_counter {
-                0 => return Some(PinEntryMsg::Confirmed),
+        if let Some(ChoicePageMsg::Choice(page_counter)) = msg {
+            // Performing action under specific index or appending new digit
+            match page_counter as usize {
+                EXIT_INDEX => return Some(PinEntryMsg::Cancelled),
+                DELETE_INDEX => {
+                    self.delete_last_digit(ctx);
+                    ctx.request_paint();
+                }
+                SHOW_INDEX => {
+                    self.show_real_pin = true;
+                    ctx.request_paint();
+                }
+                PROMPT_INDEX => return Some(PinEntryMsg::Confirmed),
                 _ => {
                     if !self.is_full() {
                         self.append_new_digit(ctx, page_counter);
+                        // Choosing any random digit to be shown next
                         let new_page_counter =
-                            random::uniform_between(1, (CHOICE_LENGTH - 1) as u32);
+                            random::uniform_between(4, (CHOICE_LENGTH - 1) as u32);
                         self.choice_page
                             .set_page_counter(ctx, new_page_counter as u8);
                         ctx.request_paint();
                     }
                 }
-            },
-            Some(ChoicePageMsg::LeftMost) => {
-                if self.is_empty() {
-                    return Some(PinEntryMsg::Cancelled);
-                } else {
-                    self.delete_last_digit(ctx);
-                    ctx.request_paint();
-                }
             }
-            _ => {}
         }
-
         None
     }
 
