@@ -247,6 +247,7 @@ extern "C" fn show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map
 
 extern "C" fn confirm_word(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
+        // TODO: how to accept List from python?
         let choices: StrBuffer = kwargs.get(Qstr::MP_QSTR_choices)?.try_into()?;
         let checked_index: u8 = kwargs.get(Qstr::MP_QSTR_checked_index)?.try_into()?;
         let count: u8 = kwargs.get(Qstr::MP_QSTR_count)?.try_into()?;
@@ -263,7 +264,7 @@ extern "C" fn confirm_word(n_args: usize, args: *const Obj, kwargs: *mut Map) ->
             ":"
         );
 
-        let words: Vec<String<50>, 24> = choices.split(',').map(String::from).collect();
+        let words: Vec<String<20>, 3> = choices.split(',').map(String::from).collect();
 
         let obj = LayoutObj::new(Frame::new(
             prompt,
