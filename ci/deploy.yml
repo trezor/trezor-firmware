@@ -285,6 +285,9 @@ sync emulators to aws:
     - wget https://firmware.corp.sldev.cz/releases/emulators/arm/ -O index.html && aws s3 cp index.html s3://$BUCKET/dev/firmware/releases/emulators/arm/
     # invalidate cloudfront cache for dev/ directory.
     - aws cloudfront create-invalidation --distribution-id E1ERY5K2OTKKI1 --paths '/dev/*'
+  only:
+    - /^legacy\//
+    - /^core\//
   except:
     - branches  # run for tags only
   tags:
