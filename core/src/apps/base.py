@@ -49,31 +49,49 @@ def get_features() -> Features:
         unlocked=config.is_unlocked(),
     )
 
-    if utils.BITCOIN_ONLY:
-        f.capabilities = [
-            Capability.Bitcoin,
-            Capability.Crypto,
-            Capability.Shamir,
-            Capability.ShamirGroups,
-        ]
-    else:
-        f.capabilities = [
-            Capability.Bitcoin,
-            Capability.Bitcoin_like,
-            Capability.Binance,
-            Capability.Cardano,
-            Capability.Crypto,
-            Capability.EOS,
-            Capability.Ethereum,
-            Capability.Monero,
-            Capability.NEM,
-            Capability.Ripple,
-            Capability.Stellar,
-            Capability.Tezos,
-            Capability.U2F,
-            Capability.Shamir,
-            Capability.ShamirGroups,
-        ]
+    f.capabilities = [
+        Capability.Bitcoin,
+        Capability.Crypto,
+        Capability.Shamir,
+        Capability.ShamirGroups,
+    ]
+
+    if not utils.BITCOIN_ONLY:
+        f.capabilities += [ Capability.Bitcoin_like ]
+
+    if utils.USE_BINANCE:
+        f.capabilities += [ Capability.Binance ]
+
+    if utils.USE_CARDANO:
+        f.capabilities += [ Capability.Cardano ]
+
+    if utils.USE_EOS:
+        f.capabilities += [ Capability.EOS ]
+
+    if utils.USE_ETHEREUM:
+        f.capabilities += [ Capability.Ethereum ]
+
+    if utils.USE_MOBILECOIN:
+        f.capabilities += [ Capability.Mobilecoin ]
+
+    if utils.USE_MONERO:
+        f.capabilities += [ Capability.Monero ]
+
+    if utils.USE_NEM:
+        f.capabilities += [ Capability.NEM ]
+
+    if utils.USE_RIPPLE:
+        f.capabilities += [ Capability.Ripple ]
+
+    if utils.USE_STELLAR:
+        f.capabilities += [ Capability.Stellar ]
+
+    if utils.USE_TEZOS:
+        f.capabilities += [ Capability.Tezos ]
+
+    if utils.USE_U2F:
+        f.capabilities += [ Capability.U2F ]
+
 
     # Other models are not capable of PassphraseEntry
     if utils.MODEL in ("T",):

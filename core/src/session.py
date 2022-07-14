@@ -5,7 +5,7 @@ import usb
 
 apps.base.boot()
 
-if not utils.BITCOIN_ONLY and usb.ENABLE_IFACE_WEBAUTHN:
+if utils.USE_WEBAUTHN and usb.ENABLE_IFACE_WEBAUTHN:
     import apps.webauthn
 
     apps.webauthn.boot()

@@ -17,6 +17,18 @@ from trezorutils import (  # noqa: F401
     halt,
     memcpy,
     reboot_to_bootloader,
+    USE_MONERO,
+    USE_CARDANO,
+    USE_BINANCE,
+    USE_EOS,
+    USE_ETHEREUM,
+    USE_NEM,
+    USE_MOBILECOIN,
+    USE_RIPPLE,
+    USE_STELLAR,
+    USE_TEZOS,
+    USE_ZCASH,
+    USE_WEBAUTHN,
 )
 from typing import TYPE_CHECKING
 

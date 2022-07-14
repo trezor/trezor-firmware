@@ -421,6 +421,7 @@ if TYPE_CHECKING:
         Shamir = 15
         ShamirGroups = 16
         PassphraseEntry = 17
+        Mobilecoin = 18
 
     class SdProtectOperationType(IntEnum):
         DISABLE = 0

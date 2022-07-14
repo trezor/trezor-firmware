@@ -8,6 +8,12 @@ EVERYTHING = BITCOIN_ONLY != '1'
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 UI2 = ARGUMENTS.get('UI2', '0') == '1' or TREZOR_MODEL in ('1', 'R')
 
+# fetch enabled coins
+COINS = [ "MONERO", "CARDANO", "BINANCE", "EOS", "ETHEREUM", "NEM", "MOBILECOIN", "RIPPLE", "STELLAR", "TEZOS", "ZCASH", "WEBAUTHN" ]
+USE = {}
+for coin in COINS:
+    USE[coin] = ARGUMENTS.get('USE_'+ coin, '0')
+
 FEATURE_FLAGS = {
     "SECP256K1_ZKP": True,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot)
 }
@@ -44,12 +50,11 @@ CPPDEFINES_MOD += [
     'AES_192',
     ('USE_BIP32_CACHE', '0'),
     ('USE_KECCAK', '1'),
-    ('USE_ETHEREUM', '1' if EVERYTHING else '0'),
-    ('USE_MONERO', '1' if EVERYTHING else '0'),
-    ('USE_CARDANO', '1' if EVERYTHING else '0'),
-    ('USE_NEM', '1' if EVERYTHING else '0'),
-    ('USE_EOS', '1' if EVERYTHING else '0'),
 ]
+
+for coin, enabled in USE.items():
+    CPPDEFINES_MOD += [('USE_' + coin, '1' if enabled else '0')]
+
 SOURCE_MOD += [
     'embed/extmod/trezorobj.c',
     'embed/extmod/modtrezorcrypto/modtrezorcrypto.c',
@@ -102,9 +107,13 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/shamir.c',
     'vendor/trezor-crypto/slip39.c',
 ]
-if EVERYTHING:
+if USE['CARDANO']:
     SOURCE_MOD += [
         'vendor/trezor-crypto/cardano.c',
+    ]
+
+if USE['MONERO']:
+    SOURCE_MOD += [
         'vendor/trezor-crypto/monero/base58.c',
         'vendor/trezor-crypto/monero/serialize.c',
         'vendor/trezor-crypto/monero/xmr.c',
@@ -589,45 +598,56 @@ if FROZEN:
         ])
     )
 
-    if EVERYTHING:
+    if USE['BINANCE']:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/binance/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Binance*.py'))
 
+    if USE['CARDANO']:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/cardano/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/cardano/*/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Cardano*.py'))
 
+    if USE['EOS']:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/eos/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/eos/*/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Eos*.py'))
 
+    if USE['ETHEREUM']:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/ethereum/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Ethereum*.py'))
 
+    if USE['MONERO']:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/monero/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/monero/*/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/monero/*/*/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/DebugMonero*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Monero*.py'))
 
+    if USE['NEM']:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/nem/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/nem/*/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/NEM*.py'))
 
+    if USE['RIPPLE']:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/ripple/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Ripple*.py'))
 
+    if USE['STELLAR']:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/stellar/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/stellar/*/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Stellar*.py'))
 
+    if USE['TEZOS']:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/tezos/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Tezos*.py'))
 
+    if USE['ZCASH']:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/zcash/*.py'))
 
+    if USE['WEBAUTHN']:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/webauthn/*.py'))
 
+    if EVERYTHING:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/decred.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/bitcoinlike.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/zcash_v4.py'))

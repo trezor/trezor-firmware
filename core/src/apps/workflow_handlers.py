@@ -87,7 +87,7 @@ def find_message_handler_module(msg_type: int) -> str:
     if msg_type == MessageType.GetFirmware:
         return "apps.misc.get_firmware"
 
-    if not utils.BITCOIN_ONLY:
+    if utils.USE_WEBAUTHN:
         if msg_type == MessageType.SetU2FCounter:
             return "apps.management.set_u2f_counter"
         if msg_type == MessageType.GetNextU2FCounter:
@@ -101,6 +101,7 @@ def find_message_handler_module(msg_type: int) -> str:
         if msg_type == MessageType.WebAuthnRemoveResidentCredential:
             return "apps.webauthn.remove_resident_credential"
 
+    if utils.USE_ETHEREUM:
         # ethereum
         if msg_type == MessageType.EthereumGetAddress:
             return "apps.ethereum.get_address"
@@ -117,6 +118,7 @@ def find_message_handler_module(msg_type: int) -> str:
         if msg_type == MessageType.EthereumSignTypedData:
             return "apps.ethereum.sign_typed_data"
 
+    if utils.USE_MONERO:
         # monero
         if msg_type == MessageType.MoneroGetAddress:
             return "apps.monero.get_address"
@@ -133,24 +135,28 @@ def find_message_handler_module(msg_type: int) -> str:
         if __debug__ and msg_type == MessageType.DebugMoneroDiagRequest:
             return "apps.monero.diag"
 
+    if utils.USE_NEM:
         # nem
         if msg_type == MessageType.NEMGetAddress:
             return "apps.nem.get_address"
         if msg_type == MessageType.NEMSignTx:
             return "apps.nem.sign_tx"
 
+    if utils.USE_STELLAR:
         # stellar
         if msg_type == MessageType.StellarGetAddress:
             return "apps.stellar.get_address"
         if msg_type == MessageType.StellarSignTx:
             return "apps.stellar.sign_tx"
 
+    if utils.USE_RIPPLE:
         # ripple
         if msg_type == MessageType.RippleGetAddress:
             return "apps.ripple.get_address"
         if msg_type == MessageType.RippleSignTx:
             return "apps.ripple.sign_tx"
 
+    if utils.USE_CARDANO:
         # cardano
         if msg_type == MessageType.CardanoGetAddress:
             return "apps.cardano.get_address"
@@ -161,6 +167,7 @@ def find_message_handler_module(msg_type: int) -> str:
         if msg_type == MessageType.CardanoGetNativeScriptHash:
             return "apps.cardano.get_native_script_hash"
 
+    if utils.USE_TEZOS:
         # tezos
         if msg_type == MessageType.TezosGetAddress:
             return "apps.tezos.get_address"
@@ -169,12 +176,14 @@ def find_message_handler_module(msg_type: int) -> str:
         if msg_type == MessageType.TezosGetPublicKey:
             return "apps.tezos.get_public_key"
 
+    if utils.USE_EOS:
         # eos
         if msg_type == MessageType.EosGetPublicKey:
             return "apps.eos.get_public_key"
         if msg_type == MessageType.EosSignTx:
             return "apps.eos.sign_tx"
 
+    if utils.USE_BINANCE:
         # binance
         if msg_type == MessageType.BinanceGetAddress:
             return "apps.binance.get_address"
@@ -182,6 +191,10 @@ def find_message_handler_module(msg_type: int) -> str:
             return "apps.binance.get_public_key"
         if msg_type == MessageType.BinanceSignTx:
             return "apps.binance.sign_tx"
+
+    if utils.USE_MOBILECOIN:
+        # TODO(@ryankurte): mobilecoin
+        pass
 
     raise ValueError
 

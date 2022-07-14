@@ -410,13 +410,27 @@ import apps.misc.sign_identity
 apps.workflow_handlers
 import apps.workflow_handlers
 
-if not utils.BITCOIN_ONLY:
+if utils.USE_BINANCE:
     trezor.enums.BinanceOrderSide
     import trezor.enums.BinanceOrderSide
     trezor.enums.BinanceOrderType
     import trezor.enums.BinanceOrderType
     trezor.enums.BinanceTimeInForce
     import trezor.enums.BinanceTimeInForce
+    apps.binance
+    import apps.binance
+    apps.binance.get_address
+    import apps.binance.get_address
+    apps.binance.get_public_key
+    import apps.binance.get_public_key
+    apps.binance.helpers
+    import apps.binance.helpers
+    apps.binance.layout
+    import apps.binance.layout
+    apps.binance.sign_tx
+    import apps.binance.sign_tx
+
+if utils.USE_CARDANO:
     trezor.enums.CardanoAddressType
     import trezor.enums.CardanoAddressType
     trezor.enums.CardanoCertificateType
@@ -437,52 +451,6 @@ if not utils.BITCOIN_ONLY:
     import trezor.enums.CardanoTxSigningMode
     trezor.enums.CardanoTxWitnessType
     import trezor.enums.CardanoTxWitnessType
-    trezor.enums.EthereumDataType
-    import trezor.enums.EthereumDataType
-    trezor.enums.MoneroNetworkType
-    import trezor.enums.MoneroNetworkType
-    trezor.enums.NEMImportanceTransferMode
-    import trezor.enums.NEMImportanceTransferMode
-    trezor.enums.NEMModificationType
-    import trezor.enums.NEMModificationType
-    trezor.enums.NEMMosaicLevy
-    import trezor.enums.NEMMosaicLevy
-    trezor.enums.NEMSupplyChangeType
-    import trezor.enums.NEMSupplyChangeType
-    trezor.enums.StellarAssetType
-    import trezor.enums.StellarAssetType
-    trezor.enums.StellarMemoType
-    import trezor.enums.StellarMemoType
-    trezor.enums.StellarSignerType
-    import trezor.enums.StellarSignerType
-    trezor.enums.TezosBallotType
-    import trezor.enums.TezosBallotType
-    trezor.enums.TezosContractType
-    import trezor.enums.TezosContractType
-    trezor.ui.components.common.webauthn
-    import trezor.ui.components.common.webauthn
-    trezor.ui.components.tt.webauthn
-    import trezor.ui.components.tt.webauthn
-    trezor.ui.layouts.tt.webauthn
-    import trezor.ui.layouts.tt.webauthn
-    trezor.ui.layouts.tt_v2.webauthn
-    import trezor.ui.layouts.tt_v2.webauthn
-    trezor.ui.layouts.webauthn
-    import trezor.ui.layouts.webauthn
-    apps.binance
-    import apps.binance
-    apps.binance.get_address
-    import apps.binance.get_address
-    apps.binance.get_public_key
-    import apps.binance.get_public_key
-    apps.binance.helpers
-    import apps.binance.helpers
-    apps.binance.layout
-    import apps.binance.layout
-    apps.binance.sign_tx
-    import apps.binance.sign_tx
-    apps.bitcoin.sign_tx.zcash_v4
-    import apps.bitcoin.sign_tx.zcash_v4
     apps.cardano
     import apps.cardano
     apps.cardano.addresses
@@ -535,8 +503,8 @@ if not utils.BITCOIN_ONLY:
     import apps.cardano.sign_tx.pool_owner_signer
     apps.cardano.sign_tx.signer
     import apps.cardano.sign_tx.signer
-    apps.common.mnemonic
-    import apps.common.mnemonic
+
+if utils.USE_EOS:
     apps.eos
     import apps.eos
     apps.eos.actions
@@ -553,6 +521,10 @@ if not utils.BITCOIN_ONLY:
     import apps.eos.sign_tx
     apps.eos.writers
     import apps.eos.writers
+
+if utils.USE_ETHEREUM:
+    trezor.enums.EthereumDataType
+    import trezor.enums.EthereumDataType
     apps.ethereum
     import apps.ethereum
     apps.ethereum.get_address
@@ -579,6 +551,10 @@ if not utils.BITCOIN_ONLY:
     import apps.ethereum.tokens
     apps.ethereum.verify_message
     import apps.ethereum.verify_message
+
+if utils.USE_MONERO:
+    trezor.enums.MoneroNetworkType
+    import trezor.enums.MoneroNetworkType
     apps.monero
     import apps.monero
     apps.monero.diag
@@ -667,6 +643,18 @@ if not utils.BITCOIN_ONLY:
     import apps.monero.xmr.serialize_messages.tx_prefix
     apps.monero.xmr.serialize_messages.tx_rsig_bulletproof
     import apps.monero.xmr.serialize_messages.tx_rsig_bulletproof
+
+if utils.USE_NEM:
+    trezor.enums.NEMImportanceTransferMode
+    import trezor.enums.NEMImportanceTransferMode
+    trezor.enums.NEMModificationType
+    import trezor.enums.NEMModificationType
+    trezor.enums.NEMMosaicLevy
+    import trezor.enums.NEMMosaicLevy
+    trezor.enums.NEMSupplyChangeType
+    import trezor.enums.NEMSupplyChangeType
+    apps.common.mnemonic
+    import apps.common.mnemonic
     apps.nem
     import apps.nem
     apps.nem.get_address
@@ -709,6 +697,8 @@ if not utils.BITCOIN_ONLY:
     import apps.nem.validators
     apps.nem.writers
     import apps.nem.writers
+
+if utils.USE_RIPPLE:
     apps.ripple
     import apps.ripple
     apps.ripple.base58_ripple
@@ -723,6 +713,14 @@ if not utils.BITCOIN_ONLY:
     import apps.ripple.serialize
     apps.ripple.sign_tx
     import apps.ripple.sign_tx
+
+if utils.USE_STELLAR:
+    trezor.enums.StellarAssetType
+    import trezor.enums.StellarAssetType
+    trezor.enums.StellarMemoType
+    import trezor.enums.StellarMemoType
+    trezor.enums.StellarSignerType
+    import trezor.enums.StellarSignerType
     apps.stellar
     import apps.stellar
     apps.stellar.consts
@@ -743,6 +741,12 @@ if not utils.BITCOIN_ONLY:
     import apps.stellar.sign_tx
     apps.stellar.writers
     import apps.stellar.writers
+
+if utils.USE_TEZOS:
+    trezor.enums.TezosBallotType
+    import trezor.enums.TezosBallotType
+    trezor.enums.TezosContractType
+    import trezor.enums.TezosContractType
     apps.tezos
     import apps.tezos
     apps.tezos.get_address
@@ -755,6 +759,18 @@ if not utils.BITCOIN_ONLY:
     import apps.tezos.layout
     apps.tezos.sign_tx
     import apps.tezos.sign_tx
+
+if utils.USE_WEBAUTHN:
+    trezor.ui.components.common.webauthn
+    import trezor.ui.components.common.webauthn
+    trezor.ui.components.tt.webauthn
+    import trezor.ui.components.tt.webauthn
+    trezor.ui.layouts.tt.webauthn
+    import trezor.ui.layouts.tt.webauthn
+    trezor.ui.layouts.tt_v2.webauthn
+    import trezor.ui.layouts.tt_v2.webauthn
+    trezor.ui.layouts.webauthn
+    import trezor.ui.layouts.webauthn
     apps.webauthn
     import apps.webauthn
     apps.webauthn.add_resident_credential
@@ -773,12 +789,17 @@ if not utils.BITCOIN_ONLY:
     import apps.webauthn.remove_resident_credential
     apps.webauthn.resident_credentials
     import apps.webauthn.resident_credentials
+
+if utils.USE_ZCASH:
+    apps.bitcoin.sign_tx.zcash_v4
+    import apps.bitcoin.sign_tx.zcash_v4
     apps.zcash
     import apps.zcash
     apps.zcash.hasher
     import apps.zcash.hasher
     apps.zcash.signer
     import apps.zcash.signer
+
 
 # generate full alphabet
 a
