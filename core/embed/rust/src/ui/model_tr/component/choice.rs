@@ -24,11 +24,15 @@ const MIDDLE_ROW: i32 = 72;
 /// Each `ChoiceItem` is responsible for setting the screen -
 /// choosing the button text, their duration, text displayed
 /// on screen etc.
+///
+/// `is_carousel` can be used to make the choice page "infinite" -
+/// after reaching one end, users will appear at the other end.
 pub struct ChoicePage<T, const N: usize> {
     choices: Vec<T, N>,
     pad: Pad,
     buttons: Child<ButtonController<&'static str>>,
     page_counter: u8,
+    is_carousel: bool,
 }
 
 impl<T, const N: usize> ChoicePage<T, N>
@@ -43,7 +47,20 @@ where
             pad: Pad::with_background(theme::BG),
             buttons: Child::new(ButtonController::new(initial_btn_layout)),
             page_counter: 0,
+            is_carousel: false,
         }
+    }
+
+    /// Set the page counter at the very beginning.
+    pub fn with_initial_page_counter(mut self, page_counter: u8) -> Self {
+        self.page_counter = page_counter;
+        self
+    }
+
+    /// Enabling the carousel mode.
+    pub fn with_carousel(mut self) -> Self {
+        self.is_carousel = true;
+        self
     }
 
     /// Resetting the component, which enables reusing the same instance
@@ -70,15 +87,21 @@ where
     /// Display current, previous and next choice according to
     /// the current ChoiceItem.
     fn paint_choices(&mut self) {
-        // MIDDLE section above buttons
         // Performing the appropriate `paint_XXX()` for the main choice
         // and two adjacent choices when present
+        // In case of carousel mode, also showing the ones from other end.
         self.show_current_choice();
+
         if self.has_previous_choice() {
             self.show_previous_choice();
+        } else if self.is_carousel {
+            self.show_last_choice_on_left();
         }
+
         if self.has_next_choice() {
             self.show_next_choice();
+        } else if self.is_carousel {
+            self.show_first_choice_on_right();
         }
     }
 
@@ -122,12 +145,29 @@ where
         self.choices[(self.page_counter + 1) as usize].paint_right();
     }
 
+    fn show_last_choice_on_left(&mut self) {
+        let last_index = self.last_page_index() as usize;
+        self.choices[last_index].paint_left();
+    }
+
+    fn show_first_choice_on_right(&mut self) {
+        self.choices[0].paint_right();
+    }
+
     fn decrease_page_counter(&mut self) {
         self.page_counter -= 1;
     }
 
     fn increase_page_counter(&mut self) {
         self.page_counter += 1;
+    }
+
+    fn page_counter_to_zero(&mut self) {
+        self.page_counter = 0;
+    }
+
+    fn page_counter_to_max(&mut self) {
+        self.page_counter = self.last_page_index();
     }
 
     /// Updating the visual state of the buttons after each event.
@@ -176,6 +216,10 @@ where
                         // Clicked BACK. Decrease the page counter.
                         self.decrease_page_counter();
                         self.update(ctx);
+                    } else if self.is_carousel {
+                        // In case of carousel going to the right end.
+                        self.page_counter_to_max();
+                        self.update(ctx);
                     } else {
                         // Triggered LEFTmost button. Send event
                         self.clear(ctx);
@@ -186,6 +230,10 @@ where
                     if self.has_next_choice() {
                         // Clicked NEXT. Increase the page counter.
                         self.increase_page_counter();
+                        self.update(ctx);
+                    } else if self.is_carousel {
+                        // In case of carousel going to the left end.
+                        self.page_counter_to_zero();
                         self.update(ctx);
                     } else {
                         // Triggered RIGHTmost button. Send event
