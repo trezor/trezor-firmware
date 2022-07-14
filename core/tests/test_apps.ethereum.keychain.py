@@ -11,12 +11,21 @@ if not utils.BITCOIN_ONLY:
         PATTERNS_ADDRESS,
         _schemas_from_address_n,
         with_keychain_from_path,
-        with_keychain_from_chain_id,
+        with_keychain_from_path_and_defs,
+        with_keychain_from_chain_id_and_defs,
     )
-    from apps.ethereum.networks import by_chain_id, by_slip44
 
-    from trezor.messages import EthereumGetAddress
-    from trezor.messages import EthereumSignTx
+    from ethereum_common import (
+        construct_network_info,
+        get_ethereum_encoded_definition,
+        get_ethereum_encoded_network_definition,
+    )
+
+    from trezor.messages import (
+        EthereumGetAddress,
+        EthereumGetPublicKey,
+        EthereumSignTx,
+    )
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
@@ -56,7 +65,11 @@ class TestEthereumKeychain(unittest.TestCase):
         cache.set(cache.APP_COMMON_SEED, seed)
 
     def from_address_n(self, address_n):
-        schemas = _schemas_from_address_n(PATTERNS_ADDRESS, address_n)
+        schemas = _schemas_from_address_n(
+            PATTERNS_ADDRESS,
+            address_n,
+            construct_network_info(0, address_n[1]),
+        )
         return await_result(get_keychain(wire.DUMMY_CONTEXT, CURVE, schemas))
 
     def test_from_address_n(self):
@@ -71,7 +84,11 @@ class TestEthereumKeychain(unittest.TestCase):
 
     def test_from_address_n_unknown(self):
         # try Bitcoin slip44 id m/44'/0'/0'
-        schemas = tuple(_schemas_from_address_n(PATTERNS_ADDRESS, [44 | HARDENED, 0 | HARDENED, 0 | HARDENED]))
+        schemas = tuple(_schemas_from_address_n(
+            PATTERNS_ADDRESS,
+            [44 | HARDENED, 0 | HARDENED, 0 | HARDENED],
+            None,
+        ))
         self.assertEqual(schemas, ())
 
     def test_bad_address_n(self):
@@ -87,8 +104,44 @@ class TestEthereumKeychain(unittest.TestCase):
         await_result(
             handler(
                 wire.DUMMY_CONTEXT,
+                EthereumGetPublicKey(
+                    address_n=[44 | HARDENED, 60 | HARDENED, 0 | HARDENED],
+                    encoded_network=get_ethereum_encoded_network_definition(slip44=60),
+                ),
+            )
+        )
+        await_result(
+            handler(
+                wire.DUMMY_CONTEXT,
+                EthereumGetPublicKey(
+                    address_n=[44 | HARDENED, 108 | HARDENED, 0 | HARDENED],
+                    encoded_network=get_ethereum_encoded_network_definition(slip44=108),
+                ),
+            )
+        )
+
+        with self.assertRaises(wire.DataError):
+            await_result(
+                handler(
+                    wire.DUMMY_CONTEXT,
+                    EthereumGetPublicKey(
+                        address_n=[44 | HARDENED, 0 | HARDENED, 0 | HARDENED],
+                        encoded_network=None,
+                    ),
+                )
+            )
+
+    def test_with_keychain_from_path_and_defs(self):
+        @with_keychain_from_path_and_defs(*PATTERNS_ADDRESS)
+        async def handler(ctx, msg, keychain, defs):
+            self._check_keychain(keychain, msg.address_n[1] & ~HARDENED)
+
+        await_result(
+            handler(
+                wire.DUMMY_CONTEXT,
                 EthereumGetAddress(
-                    address_n=[44 | HARDENED, 60 | HARDENED, 0 | HARDENED]
+                    address_n=[44 | HARDENED, 60 | HARDENED, 0 | HARDENED],
+                    encoded_network=get_ethereum_encoded_network_definition(slip44=60),
                 ),
             )
         )
@@ -106,7 +159,8 @@ class TestEthereumKeychain(unittest.TestCase):
             handler(
                 wire.DUMMY_CONTEXT,
                 EthereumGetAddress(
-                    address_n=[44 | HARDENED, 108 | HARDENED, 0 | HARDENED]
+                    address_n=[44 | HARDENED, 108 | HARDENED, 0 | HARDENED],
+                    encoded_network=get_ethereum_encoded_network_definition(slip44=108),
                 ),
             )
         )
@@ -116,14 +170,15 @@ class TestEthereumKeychain(unittest.TestCase):
                 handler(
                     wire.DUMMY_CONTEXT,
                     EthereumGetAddress(
-                        address_n=[44 | HARDENED, 0 | HARDENED, 0 | HARDENED]
+                        address_n=[44 | HARDENED, 0 | HARDENED, 0 | HARDENED],
+                        encoded_network=None,
                     ),
                 )
             )
 
-    def test_with_keychain_from_chain_id(self):
-        @with_keychain_from_chain_id
-        async def handler_chain_id(ctx, msg, keychain):
+    def test_with_keychain_from_chain_id_and_defs(self):
+        @with_keychain_from_chain_id_and_defs
+        async def handler_chain_id(ctx, msg, keychain, defs):
             slip44_id = msg.address_n[1] & ~HARDENED
             # standard tests
             self._check_keychain(keychain, slip44_id)
@@ -138,6 +193,7 @@ class TestEthereumKeychain(unittest.TestCase):
                     chain_id=1,
                     gas_price=b"",
                     gas_limit=b"",
+                    definitions=get_ethereum_encoded_definition(chain_id=1),
                 ),
             )
         )
@@ -162,6 +218,7 @@ class TestEthereumKeychain(unittest.TestCase):
                     chain_id=61,
                     gas_price=b"",
                     gas_limit=b"",
+                    definitions=get_ethereum_encoded_definition(chain_id=61),
                 ),
             )
         )
@@ -176,6 +233,7 @@ class TestEthereumKeychain(unittest.TestCase):
                     chain_id=61,
                     gas_price=b"",
                     gas_limit=b"",
+                    definitions=get_ethereum_encoded_definition(chain_id=61),
                 ),
             )
         )
@@ -189,10 +247,10 @@ class TestEthereumKeychain(unittest.TestCase):
                         chain_id=2,
                         gas_price=b"",
                         gas_limit=b"",
+                        definitions=get_ethereum_encoded_definition(chain_id=2),
                     ),
                 )
             )
-
 
 if __name__ == "__main__":
     unittest.main()
