@@ -160,15 +160,13 @@ int zkp_ecdsa_get_public_key65(const ecdsa_curve *curve,
 // digest has 32 bytes
 // signature_bytes has 64 bytes
 // pby is one byte
-// is_canonical has to be NULL
 // returns 0 on success
 int zkp_ecdsa_sign_digest(
     const ecdsa_curve *curve, const uint8_t *private_key_bytes,
     const uint8_t *digest, uint8_t *signature_bytes, uint8_t *pby,
     int (*is_canonical)(uint8_t by, uint8_t signature_bytes[64])) {
   assert(curve == &secp256k1);
-  assert(is_canonical == NULL);
-  if (curve != &secp256k1 || is_canonical != NULL) {
+  if (curve != &secp256k1) {
     return 1;
   }
 
@@ -191,40 +189,63 @@ int zkp_ecdsa_sign_digest(
       result = 1;
     }
   }
-  if (result == 0) {
-    if (secp256k1_context_writable_randomize(context_writable) != 0) {
-      result = 1;
-    }
-  }
 
-  secp256k1_ecdsa_recoverable_signature recoverable_signature = {0};
-  if (result == 0) {
-    if (secp256k1_ecdsa_sign_recoverable(context_writable,
-                                         &recoverable_signature, digest,
-                                         private_key_bytes, NULL, NULL) != 1) {
+  uint16_t retry_count = 0;
+  int recid = 0;
+  do {
+    if (retry_count >= 10000) {
       result = 1;
     }
-  }
+
+    if (result == 0) {
+      if (secp256k1_context_writable_randomize(context_writable) != 0) {
+        result = 1;
+      }
+    }
+
+    secp256k1_ecdsa_recoverable_signature recoverable_signature = {0};
+    if (result == 0) {
+      uint8_t rfc6979_nonce_data[32] = {0};
+      void *rfc6979_nonce = NULL;
+      if (retry_count != 0) {
+        // If this is a retry attempt, then randomize rfc6979 with the counter.
+        rfc6979_nonce_data[0] = retry_count & 0xff;
+        rfc6979_nonce_data[1] = (retry_count >> 8) & 0xff;
+        rfc6979_nonce = rfc6979_nonce_data;
+      }
+
+      if (secp256k1_ecdsa_sign_recoverable(
+              context_writable, &recoverable_signature, digest,
+              private_key_bytes, secp256k1_nonce_function_rfc6979,
+              rfc6979_nonce) != 1) {
+        result = 1;
+      }
+    }
+
+    if (result == 0) {
+      const secp256k1_context *context_read_only = zkp_context_get_read_only();
+      if (secp256k1_ecdsa_recoverable_signature_serialize_compact(
+              context_read_only, signature_bytes, &recid,
+              &recoverable_signature) != 1) {
+        result = 1;
+      }
+
+      if (pby != NULL) {
+        *pby = (uint8_t)recid;
+      }
+    }
+    memzero(&recoverable_signature, sizeof(recoverable_signature));
+
+    retry_count += 1;
+
+    // If the signature is not acceptable then retry.
+  } while (result == 0 && is_canonical != NULL &&
+           !is_canonical(recid, signature_bytes));
 
   if (context_writable) {
     zkp_context_release_writable();
     context_writable = NULL;
   }
-
-  if (result == 0) {
-    int recid = 0;
-    const secp256k1_context *context_read_only = zkp_context_get_read_only();
-    if (secp256k1_ecdsa_recoverable_signature_serialize_compact(
-            context_read_only, signature_bytes, &recid,
-            &recoverable_signature) != 1) {
-      result = 1;
-    }
-    if (pby != NULL) {
-      *pby = (uint8_t)recid;
-    }
-  }
-
-  memzero(&recoverable_signature, sizeof(recoverable_signature));
 
   return result;
 }

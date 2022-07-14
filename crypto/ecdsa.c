@@ -1277,7 +1277,7 @@ int ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key,
                       const uint8_t *digest, uint8_t *sig, uint8_t *pby,
                       int (*is_canonical)(uint8_t by, uint8_t sig[64])) {
 #ifdef USE_SECP256K1_ZKP_ECDSA
-  if (curve == &secp256k1 && is_canonical == NULL) {
+  if (curve == &secp256k1) {
     return zkp_ecdsa_sign_digest(curve, priv_key, digest, sig, pby,
                                  is_canonical);
   }
