@@ -23,10 +23,10 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_modify_fee;
   MP_QSTR_confirm_modify_output;
   MP_QSTR_confirm_output;
-  MP_QSTR_confirm_payment_request;
   MP_QSTR_confirm_reset_device;
   MP_QSTR_confirm_text;
   MP_QSTR_confirm_total;
+  MP_QSTR_confirm_with_info;
   MP_QSTR_show_checklist;
   MP_QSTR_show_error;
   MP_QSTR_show_qr;
@@ -84,4 +84,5 @@ static void _librust_qstrs(void) {
   MP_QSTR_max_count;
   MP_QSTR_items;
   MP_QSTR_active;
+  MP_QSTR_info_button;
 }
