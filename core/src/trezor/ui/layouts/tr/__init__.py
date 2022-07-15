@@ -121,19 +121,26 @@ async def get_bool(
     title: str,
     data: str,
     description: str | None = None,
+    verb: str | None = "CONFIRM",
+    verb_cancel: str | None = "CANCEL",
+    hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.Other,
 ) -> bool:
     result = await interact(
         ctx,
         RustLayout(
-            trezorui2.confirm_text(
+            trezorui2.confirm_action(
                 title=title,
-                data=data,
+                action=data,
                 description=description,
+                verb=verb,
+                verb_cancel=verb_cancel,
+                hold=hold,
+                reverse=False,
             )
         ),
-        br_type=br_type,
-        br_code=br_code,
+        br_type,
+        br_code,
     )
 
     return result is trezorui2.CONFIRMED
@@ -157,8 +164,8 @@ async def confirm_action(
     description: str | None = None,
     description_param: str | None = None,
     description_param_font: int = ui.BOLD,
-    verb: str | bytes | None = "OK",
-    verb_cancel: str | bytes | None = "cancel",
+    verb: str | bytes | None = "CONFIRM",
+    verb_cancel: str | bytes | None = "CANCEL",
     hold: bool = False,
     hold_danger: bool = False,
     icon: str | None = None,
@@ -167,7 +174,7 @@ async def confirm_action(
     larger_vspace: bool = False,
     exc: ExceptionType = wire.ActionCancelled,
     br_code: ButtonRequestType = ButtonRequestType.Other,
-) -> None:
+) -> Any:
     if isinstance(verb, bytes) or isinstance(verb_cancel, bytes):
         raise NotImplementedError
 
@@ -190,7 +197,7 @@ async def confirm_action(
         if len(verb_cancel) > letters_for_cancel:
             verb_cancel = verb_cancel[:letters_for_cancel]
 
-    await raise_if_cancelled(
+    return await raise_if_cancelled(
         interact(
             ctx,
             RustLayout(
@@ -234,6 +241,8 @@ async def confirm_backup(ctx: wire.GenericContext) -> bool:
         ctx=ctx,
         title="Success",
         data="New wallet created successfully!\n\nYou should back up your new wallet right now.",
+        verb="Back up",
+        verb_cancel="Skip",
         br_type="backup_device",
         br_code=ButtonRequestType.ResetDevice,
     ):
@@ -243,6 +252,8 @@ async def confirm_backup(ctx: wire.GenericContext) -> bool:
         ctx=ctx,
         title="Warning",
         data="Are you sure you want to skip the backup?\n\nYou can back up your Trezor once, at any time.",
+        verb="Back up",
+        verb_cancel="Skip",
         br_type="backup_device",
         br_code=ButtonRequestType.ResetDevice,
     )
