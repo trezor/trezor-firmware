@@ -818,8 +818,9 @@ async def show_popup(
     subtitle: str | None = None,
     description_param: str = "",
     timeout_ms: int = 3000,
+    icon: str = ui.ICON_WRONG,
 ) -> None:
-    text = Text(title, ui.ICON_WRONG, ui.RED)
+    text = Text(title, icon)
     # Need to add two newlines at the beginning of the text,
     # so it is not colliding with the icon
     if subtitle is not None:
@@ -832,8 +833,15 @@ async def show_popup(
     await Popup(text, timeout_ms)
 
 
-def draw_simple_text(title: str, description: str = "") -> None:
-    log.error(__name__, "draw_simple_text not implemented")
+def draw_simple_text(
+    title: str, description: str = "", icon: str = ui.ICON_CONFIG
+) -> None:
+    text = Text(title, icon, new_lines=False)
+    # Need to add two newlines at the beginning of the text,
+    # so it is not colliding with the icon
+    description = f"\n\n{description}"
+    text.normal(description)
+    ui.draw_simple(text)
 
 
 async def request_passphrase_on_device(ctx: wire.GenericContext, max_len: int) -> str:

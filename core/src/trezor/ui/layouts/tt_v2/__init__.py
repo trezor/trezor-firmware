@@ -834,11 +834,14 @@ async def show_popup(
     subtitle: str | None = None,
     description_param: str = "",
     timeout_ms: int = 3000,
+    icon: str = ui.ICON_WRONG,
 ) -> None:
     raise NotImplementedError
 
 
-def draw_simple_text(title: str, description: str = "") -> None:
+def draw_simple_text(
+    title: str, description: str = "", icon: str = ui.ICON_CONFIG
+) -> None:
     log.error(__name__, "draw_simple_text not implemented")
 
 
