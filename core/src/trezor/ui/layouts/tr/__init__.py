@@ -174,7 +174,7 @@ async def confirm_action(
     larger_vspace: bool = False,
     exc: ExceptionType = wire.ActionCancelled,
     br_code: ButtonRequestType = ButtonRequestType.Other,
-) -> Any:
+) -> None:
     if isinstance(verb, bytes) or isinstance(verb_cancel, bytes):
         raise NotImplementedError
 
@@ -197,7 +197,7 @@ async def confirm_action(
         if len(verb_cancel) > letters_for_cancel:
             verb_cancel = verb_cancel[:letters_for_cancel]
 
-    return await raise_if_cancelled(
+    await raise_if_cancelled(
         interact(
             ctx,
             RustLayout(
