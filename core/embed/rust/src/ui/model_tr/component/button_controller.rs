@@ -205,16 +205,13 @@ impl<T: Clone + AsRef<str>> ButtonContainer<T> {
     }
 
     /// Whether hold-to-confirm was triggered.
-    /// If so, also resetting the state of the button.
     pub fn hold_to_confirm_triggered(&mut self, ctx: &mut EventCtx, event: Event) -> bool {
         if matches!(self.button_type, ButtonType::HoldToConfirm) {
             let msg = self.hold_to_confirm.event(ctx, event);
             if matches!(msg, Some(HoldToConfirmMsg::Confirmed)) {
-                if let Some(hold_to_confirm) = &mut self.hold_to_confirm {
-                    hold_to_confirm.inner_mut().reset();
-                    hold_to_confirm.request_complete_repaint(ctx);
-                    return true;
-                }
+                // TODO: consider whether to reset and repaint the button or not
+                // Got deleted because of the wipe screen where it was better to not do that.
+                return self.hold_to_confirm.is_some();
             }
         };
         false
