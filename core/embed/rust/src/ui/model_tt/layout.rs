@@ -610,29 +610,27 @@ extern "C" fn new_show_simple(n_args: usize, args: *const Obj, kwargs: *mut Map)
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_confirm_payment_request(
-    n_args: usize,
-    args: *const Obj,
-    kwargs: *mut Map,
-) -> Obj {
+extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
-        let memos: Obj = kwargs.get(Qstr::MP_QSTR_memos)?;
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let button: StrBuffer = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
+        let info_button: StrBuffer = kwargs.get(Qstr::MP_QSTR_info_button)?.try_into()?;
+        let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
 
-        let mut paragraphs = Paragraphs::new().add(theme::TEXT_NORMAL, description);
+        let mut paragraphs = Paragraphs::new();
 
         let mut iter_buf = IterBuf::new();
-        let iter = Iter::try_from_obj_with_buf(memos, &mut iter_buf)?;
-        for memo in iter {
-            let text: StrBuffer = memo.try_into()?;
+        let iter = Iter::try_from_obj_with_buf(items, &mut iter_buf)?;
+        for text in iter {
+            let text: StrBuffer = text.try_into()?;
             paragraphs = paragraphs.add(theme::TEXT_NORMAL, text);
         }
 
-        let buttons = Button::cancel_info_confirm("CONFIRM", "DETAILS");
+        let buttons = Button::cancel_info_confirm(button, info_button);
 
         let obj = LayoutObj::new(
             Frame::new(
-                "SENDING",
+                title,
                 SwipePage::new(paragraphs, buttons, theme::BG).with_button_rows(2),
             )
             .into_child(),
@@ -988,13 +986,15 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Simple dialog with text and one button."""
     Qstr::MP_QSTR_show_simple => obj_fn_kw!(0, new_show_simple).as_obj(),
 
-    /// def confirm_payment_request(
+    /// def confirm_with_info(
     ///     *,
-    ///     description: str,
-    ///     memos: Iterable[str],
+    ///     title: str,
+    ///     button: str,
+    ///     info_button: str,
+    ///     items: Iterable[str],
     /// ) -> object:
-    ///     """Confirm payment request."""
-    Qstr::MP_QSTR_confirm_payment_request => obj_fn_kw!(0, new_confirm_payment_request).as_obj(),
+    ///     """Confirm action but with third button."""
+    Qstr::MP_QSTR_confirm_with_info => obj_fn_kw!(0, new_confirm_with_info).as_obj(),
 
     /// def confirm_coinjoin(
     ///     *,
