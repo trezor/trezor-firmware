@@ -526,9 +526,11 @@ async def confirm_payment_request(
     result = await interact(
         ctx,
         _RustLayout(
-            trezorui2.confirm_payment_request(
-                description=f"{amount} to\n{recipient_name}",
-                memos=memos,
+            trezorui2.confirm_with_info(
+                title="SENDING",
+                items=[f"{amount} to\n{recipient_name}"] + memos,
+                button="CONFIRM",
+                info_button="DETAILS",
             )
         ),
         "confirm_payment_request",
@@ -554,7 +556,39 @@ async def should_show_more(
     confirm: str | bytes | None = None,
     major_confirm: bool = False,
 ) -> bool:
-    raise NotImplementedError
+    """Return True if the user wants to show more (they click a special button)
+    and False when the user wants to continue without showing details.
+
+    Raises ActionCancelled if the user cancels.
+    """
+    if confirm is None or not isinstance(confirm, str):
+        confirm = "CONFIRM"
+
+    items = []
+    for _font, text in para:
+        items.append(text)
+
+    result = await interact(
+        ctx,
+        _RustLayout(
+            trezorui2.confirm_with_info(
+                title=title.upper(),
+                items=items,
+                button=confirm.upper(),
+                info_button=button_text.upper(),
+            )
+        ),
+        br_type,
+        br_code,
+    )
+
+    if result is trezorui2.CONFIRMED:
+        return False
+    elif result is trezorui2.INFO:
+        return True
+    else:
+        assert result is trezorui2.CANCELLED
+        raise wire.ActionCancelled
 
 
 async def confirm_blob(

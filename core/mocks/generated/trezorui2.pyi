@@ -210,12 +210,14 @@ def show_simple(
 
 
 # rust/src/ui/model_tt/layout.rs
-def confirm_payment_request(
+def confirm_with_info(
     *,
-    description: str,
-    memos: Iterable[str],
+    title: str,
+    button: str,
+    info_button: str,
+    items: Iterable[str],
 ) -> object:
-    """Confirm payment request."""
+    """Confirm action but with third button."""
 
 
 # rust/src/ui/model_tt/layout.rs
