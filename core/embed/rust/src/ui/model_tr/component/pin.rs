@@ -1,7 +1,6 @@
 use core::ops::Deref;
 
 use crate::{
-    time::Duration,
     trezorhal::random,
     ui::{
         component::{text::common::TextBox, Component, Event, EventCtx},
@@ -89,13 +88,12 @@ impl PinEntry {
             })
             .collect();
 
-        // Action buttons have different text and some have duration
+        // Action buttons have different text
         let confirm_btn = ButtonDetails::new("CONFIRM");
-        let duration = Duration::from_millis(500);
-        choices[EXIT_INDEX].btn_layout.btn_middle = Some(confirm_btn.with_duration(duration));
+        choices[EXIT_INDEX].btn_layout.btn_middle = Some(confirm_btn);
         choices[DELETE_INDEX].btn_layout.btn_middle = Some(confirm_btn);
         choices[SHOW_INDEX].btn_layout.btn_middle = Some(confirm_btn);
-        choices[PROMPT_INDEX].btn_layout.btn_middle = Some(confirm_btn.with_duration(duration));
+        choices[PROMPT_INDEX].btn_layout.btn_middle = Some(confirm_btn);
         choices[PROMPT_INDEX].text = String::from(prompt.as_ref());
 
         choices
