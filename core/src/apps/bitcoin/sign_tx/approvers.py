@@ -328,6 +328,12 @@ class BasicApprover(Approver):
 
 
 class CoinJoinApprover(Approver):
+    # Minimum registrable output amount in a CoinJoin.
+    MIN_REGISTRABLE_OUTPUT_AMOUNT = 5000
+
+    # Largest possible weight of an output supported by Trezor (P2TR or P2WSH).
+    MAX_OUTPUT_WEIGHT = 4 * (8 + 1 + 1 + 1 + 32)
+
     def __init__(
         self, tx: SignTx, coin: CoinInfo, authorization: CoinJoinAuthorization
     ) -> None:
@@ -410,7 +416,26 @@ class CoinJoinApprover(Approver):
         # Total fees that the user is paying.
         our_fees = self.total_in - self.external_in - self.change_out
 
-        if our_fees > our_max_coordinator_fee + our_max_mining_fee:
+        # For the next step we need to estimate an upper bound on the mining fee used by the
+        # coordinator. The coordinator does not include the base weight of the transaction when
+        # computing the mining fee, so we take this into account.
+        max_fee_per_weight_unit = mining_fee / (
+            self.weight.get_total() - self.weight.get_base_weight()
+        )
+
+        # Calculate the minimum registrable output amount in a CoinJoin plus the mining fee that it
+        # would cost to register. Amounts below this value are left to the coordinator or miners
+        # and effectively constitute an extra fee for the user.
+        min_allowed_output_amount_plus_fee = (
+            self.MIN_REGISTRABLE_OUTPUT_AMOUNT
+            + max_fee_per_weight_unit * self.MAX_OUTPUT_WEIGHT
+        )
+
+        if our_fees > (
+            our_max_coordinator_fee
+            + our_max_mining_fee
+            + min_allowed_output_amount_plus_fee
+        ):
             raise wire.ProcessError("Total fee over threshold.")
 
         if not self.authorization.approve_sign_tx(tx_info.tx):
