@@ -26,9 +26,15 @@ class AssertRaisesContext:
 
 
 class TestCase:
+    def __init__(self) -> None:
+        self.__equality_functions = {}
 
     def fail(self, msg=''):
         ensure(False, msg)
+
+    def addTypeEqualityFunc(self, typeobj, function):
+        ensure(callable(function))
+        self.__equality_functions[typeobj.__name__] = function
 
     def assertEqual(self, x, y, msg=''):
         if not msg:
@@ -36,6 +42,8 @@ class TestCase:
 
         if x.__class__ == y.__class__ and x.__class__.__name__ == "Msg":
             self.assertMessageEqual(x, y)
+        elif x.__class__.__name__ in self.__equality_functions:
+            self.__equality_functions[x.__class__.__name__](x, y, msg)
         else:
             ensure(x == y, msg)
 
