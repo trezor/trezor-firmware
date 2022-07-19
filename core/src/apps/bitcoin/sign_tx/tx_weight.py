@@ -45,7 +45,7 @@ class TxWeightCalculator:
     def __init__(self) -> None:
         self.inputs_count = 0
         self.outputs_count = 0
-        self.counter = 4 * (_TXSIZE_HEADER + _TXSIZE_FOOTER)
+        self.counter = 0
         self.segwit_inputs_count = 0
 
     def add_input(self, i: TxInput) -> None:
@@ -131,12 +131,19 @@ class TxWeightCalculator:
         script_size = self.compact_size_len(len(script)) + len(script)
         self.counter += 4 * (_TXSIZE_OUTPUT + script_size)
 
+    def get_base_weight(self) -> int:
+        base_weight = 4 * (_TXSIZE_HEADER + _TXSIZE_FOOTER)
+        base_weight += 4 * self.compact_size_len(self.inputs_count)
+        base_weight += 4 * self.compact_size_len(self.outputs_count)
+        if self.segwit_inputs_count:
+            base_weight += _TXSIZE_SEGWIT_OVERHEAD
+
+        return base_weight
+
     def get_total(self) -> int:
         total = self.counter
-        total += 4 * self.compact_size_len(self.inputs_count)
-        total += 4 * self.compact_size_len(self.outputs_count)
+        total += self.get_base_weight()
         if self.segwit_inputs_count:
-            total += _TXSIZE_SEGWIT_OVERHEAD
             # add one byte of witness stack item count per non-segwit input
             total += self.inputs_count - self.segwit_inputs_count
 
