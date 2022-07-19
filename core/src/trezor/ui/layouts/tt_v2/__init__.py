@@ -6,7 +6,6 @@ from trezor.enums import ButtonRequestType
 
 import trezorui2
 
-from ...components.tt.button import ButtonContent
 from ...components.tt.confirm import Confirm
 from ...constants.tt import MONO_ADDR_PER_LINE
 from ..common import button_request, interact
@@ -15,6 +14,7 @@ if TYPE_CHECKING:
     from typing import Any, Awaitable, Iterable, NoReturn, Sequence
 
     from ..common import PropertyType, ExceptionType
+    from ...components.tt.button import ButtonContent
 
 
 class _RustLayout(ui.Layout):
