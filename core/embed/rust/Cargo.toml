@@ -18,6 +18,7 @@ ui_debug = []
 buttons = []
 touch = []
 clippy = []
+debug = ["ui_debug"]
 test = ["cc", "glob", "micropython", "protobuf", "ui", "ui_debug"]
 
 [lib]

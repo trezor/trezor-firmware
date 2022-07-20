@@ -12,6 +12,7 @@ pub mod list;
 pub mod map;
 pub mod module;
 pub mod obj;
+pub mod print;
 pub mod qstr;
 pub mod runtime;
 pub mod time;
