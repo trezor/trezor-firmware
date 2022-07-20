@@ -671,7 +671,7 @@ def cargo_build():
     if UI2:
         features.append('ui')
         if PYOPT == '0':
-            features.append('ui_debug')
+            features.append('debug')
 
     return f'cd embed/rust; cargo build --profile {RUST_PROFILE} --target-dir=../../build/unix/rust --no-default-features --features "{" ".join(features)}"'
 
