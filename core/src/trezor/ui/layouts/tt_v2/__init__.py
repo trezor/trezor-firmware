@@ -251,7 +251,6 @@ async def show_success(
     content: str,
     subheader: str | None = None,
     button: str = "Continue",
-    ctx: wire.GenericContext | None = None,
 ) -> None:
     result = await interact(
         RustLayout(
@@ -263,7 +262,6 @@ async def show_success(
         ),
         br_type,
         ButtonRequestType.Success,
-        ctx=ctx,
     )
     if result is not trezorui2.CONFIRMED:
         raise wire.ActionCancelled
