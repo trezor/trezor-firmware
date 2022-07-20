@@ -35,7 +35,7 @@ from ...constants.tt import (
     QR_Y,
     TEXT_MAX_LINES,
 )
-from ..common import button_request, interact
+from ..common import interact
 
 if TYPE_CHECKING:
     from typing import Any, Awaitable, Iterable, Iterator, NoReturn, Sequence
@@ -1010,7 +1010,7 @@ async def show_popup(
         text.bold(subtitle)
         text.br_half()
     text.format_parametrized(description, description_param)
-    await Popup(text, timeout_ms)
+    await interact(Popup(text, timeout_ms), None)
 
 
 def draw_simple_text(title: str, description: str = "") -> None:
@@ -1020,13 +1020,10 @@ def draw_simple_text(title: str, description: str = "") -> None:
 
 
 async def request_passphrase_on_device(max_len: int) -> str:
-    ctx = wire.get_context()
-    await button_request(
-        ctx, "passphrase_device", code=ButtonRequestType.PassphraseEntry
-    )
-
     keyboard = passphrase.PassphraseKeyboard("Enter passphrase", max_len)
-    result = await ctx.wait(keyboard)
+    result = await interact(
+        keyboard, "passphrase_device", ButtonRequestType.PassphraseEntry
+    )
     if result is passphrase.CANCELLED:
         raise wire.ActionCancelled("Passphrase entry cancelled")
 
@@ -1039,9 +1036,6 @@ async def request_pin_on_device(
     attempts_remaining: int | None,
     allow_cancel: bool,
 ) -> str:
-    ctx = wire.get_context()
-    await button_request(ctx, "pin_device", code=ButtonRequestType.PinEntry)
-
     if attempts_remaining is None:
         subprompt = None
     elif attempts_remaining == 1:
@@ -1051,7 +1045,7 @@ async def request_pin_on_device(
 
     dialog = pin.PinDialog(prompt, subprompt, allow_cancel)
     while True:
-        result = await ctx.wait(dialog)
+        result = await interact(dialog, "pin_device", ButtonRequestType.PinEntry)
         if result is pin.CANCELLED:
             raise wire.PinCancelled
         assert isinstance(result, str)

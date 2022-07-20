@@ -2,7 +2,7 @@ import utime
 import utimeq
 from typing import TYPE_CHECKING
 
-from trezor import log, utils, wire, workflow
+from trezor import log, ui, utils, wire, workflow
 from trezor.enums import ButtonRequestType
 from trezor.messages import ButtonAck, ButtonRequest
 
@@ -38,26 +38,41 @@ async def button_request(
 
 async def interact(
     layout: LayoutType,
-    br_type: str,
+    br_type: str | None,
     br_code: ButtonRequestType = ButtonRequestType.Other,
 ) -> Any:
     ctx = wire.get_context()
-    if layout.__class__.__name__ == "Paginated":
-        from ..components.tt.scroll import Paginated
+    try:
+        previous_layout = ui.RUNNING_LAYOUT
+        if previous_layout is not None:
+            await previous_layout.do_cancel()
 
-        assert isinstance(layout, Paginated)
-        return await layout.interact(ctx, code=br_code)
-    elif hasattr(layout, "page_count") and layout.page_count() > 1:  # type: ignore [Cannot access member "page_count" for type "LayoutType"]
-        await button_request(ctx, br_type, br_code, pages=layout.page_count())  # type: ignore [Cannot access member "page_count" for type "LayoutType"]
-        return await ctx.wait(layout)
-    else:
-        await button_request(ctx, br_type, br_code)
-        return await ctx.wait(layout)
+        while ui.RUNNING_LAYOUT is not None:
+            yield
+        assert ui.RUNNING_LAYOUT is None
+        ui.RUNNING_LAYOUT = layout
+
+        if layout.__class__.__name__ == "Paginated":
+            from ..components.tt.scroll import Paginated
+
+            assert isinstance(layout, Paginated)
+            return await layout.interact(ctx, code=br_code)
+        elif hasattr(layout, "page_count") and layout.page_count() > 1:  # type: ignore [Cannot access member "page_count" for type "LayoutType"]
+            if br_type is not None:
+                await button_request(ctx, br_type, br_code, pages=layout.page_count())  # type: ignore [Cannot access member "page_count" for type "LayoutType"]
+            return await ctx.wait(layout)
+        else:
+            if br_type is not None:
+                await button_request(ctx, br_type, br_code)
+            return await ctx.wait(layout)
+
+    finally:
+        ui.RUNNING_LAYOUT = None
 
 
 if UI2:
 
-    from trezor import io, loop, ui
+    from trezor import io, loop
 
     class RustLayout(ui.Layout):
         def __init__(self, layout: Any):

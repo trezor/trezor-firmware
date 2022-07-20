@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from trezor import ui, utils, wire
+from trezor import ui, utils
 from trezor.crypto import random
 from trezor.enums import BackupType, ButtonRequestType
 
@@ -105,8 +105,6 @@ async def confirm_word(
     count: int,
     group_index: int | None = None,
 ) -> bool:
-    ctx = wire.get_context()
-
     # remove duplicates
     non_duplicates = list(set(share_words))
     # shuffle list
@@ -125,7 +123,7 @@ async def confirm_word(
 
     # let the user pick a word
     select = MnemonicWordSelect(choices, share_index, checked_index, count, group_index)
-    selected_word: str = await ctx.wait(select)
+    selected_word: str = await interact(select, None)
     # confirm it is the correct one
     return selected_word == checked_word
 
@@ -223,7 +221,7 @@ async def slip39_prompt_threshold(
                 text += f"need any {count} of {num_of_shares} shares "
             text += f"to form Group {group_id + 1}."
         info = InfoConfirm(text)
-        await info
+        await interact(info, None)
 
     return count
 
@@ -272,7 +270,7 @@ async def slip39_prompt_number_of_shares(group_id: int | None = None) -> int:
                 "shares needed to form "
                 f"Group {group_id + 1}."
             )
-        await info
+        await interact(info, None)
 
     return count
 
@@ -309,7 +307,7 @@ async def slip39_advanced_prompt_number_of_groups() -> int:
             "the numbers of shares "
             "and the thresholds."
         )
-        await info
+        await interact(info, None)
 
     return count
 
@@ -346,6 +344,6 @@ async def slip39_advanced_prompt_group_threshold(num_of_groups: int) -> int:
                 "groups required to "
                 "recover your wallet. "
             )
-            await info
+            await interact(info, None)
 
     return count

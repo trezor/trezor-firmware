@@ -9,7 +9,7 @@ import trezorui2
 from ...components.tt.button import ButtonContent
 from ...components.tt.confirm import Confirm
 from ...constants.tt import MONO_ADDR_PER_LINE
-from ..common import RustLayout, button_request, interact
+from ..common import RustLayout, interact
 
 if TYPE_CHECKING:
     from typing import Any, Awaitable, Iterable, NoReturn, Sequence
@@ -672,15 +672,12 @@ def draw_simple_text(title: str, description: str = "") -> None:
 
 
 async def request_passphrase_on_device(max_len: int) -> str:
-    ctx = wire.get_context()
-    await button_request(
-        ctx, "passphrase_device", code=ButtonRequestType.PassphraseEntry
-    )
-
     keyboard = RustLayout(
         trezorui2.request_passphrase(prompt="Enter passphrase", max_len=max_len)
     )
-    result = await ctx.wait(keyboard)
+    result = await interact(
+        keyboard, "passphrase_device", ButtonRequestType.PassphraseEntry
+    )
     if result is trezorui2.CANCELLED:
         raise wire.ActionCancelled("Passphrase entry cancelled")
 
@@ -693,9 +690,6 @@ async def request_pin_on_device(
     attempts_remaining: int | None,
     allow_cancel: bool,
 ) -> str:
-    ctx = wire.get_context()
-    await button_request(ctx, "pin_device", code=ButtonRequestType.PinEntry)
-
     warning = "Wrong PIN" if "Wrong" in prompt else None
 
     if attempts_remaining is None:
@@ -716,7 +710,7 @@ async def request_pin_on_device(
         )
     )
     while True:
-        result = await ctx.wait(dialog)
+        result = await interact(dialog, "pin_device", ButtonRequestType.PinEntry)
         if result is trezorui2.CANCELLED:
             raise wire.PinCancelled
         assert isinstance(result, str)

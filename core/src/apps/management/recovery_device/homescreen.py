@@ -22,7 +22,7 @@ async def recovery_homescreen() -> None:
         workflow.set_default(homescreen)
         return
 
-    await recovery_process()
+    await wire.with_context(wire.DUMMY_CONTEXT, recovery_process())
 
 
 async def recovery_process() -> Success:

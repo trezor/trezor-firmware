@@ -8,6 +8,7 @@ from trezor.ui.layouts import (
     confirm_metadata,
     confirm_output,
 )
+from trezor.ui.layouts.common import interact
 from trezor.ui.popup import Popup
 
 DUMMY_PAYMENT_ID = b"\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -234,16 +235,16 @@ async def transaction_step(state: State, step: int, sub_step: int = 0) -> None:
         info = ["Processing..."]
 
     state.progress_cur += 1
-    await Popup(TransactionStep(state, info))
+    await interact(Popup(TransactionStep(state, info)), None)
 
 
 async def keyimage_sync_step(current: int | None, total_num: int) -> None:
     if current is None:
         return
-    await Popup(KeyImageSyncStep(current, total_num))
+    await interact(Popup(KeyImageSyncStep(current, total_num)), None)
 
 
 async def live_refresh_step(current: int | None) -> None:
     if current is None:
         return
-    await Popup(LiveRefreshStep(current))
+    await interact(Popup(LiveRefreshStep(current)), None)

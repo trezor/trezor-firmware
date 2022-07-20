@@ -27,4 +27,4 @@ async def confirm_webauthn_reset() -> bool:
     text = Text("FIDO2 Reset", ui.ICON_CONFIG)
     text.normal("Do you really want to")
     text.bold("erase all credentials?")
-    return is_confirmed(await Confirm(text))
+    return is_confirmed(await interact(Confirm(text), None))

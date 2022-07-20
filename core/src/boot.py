@@ -7,13 +7,21 @@ from apps.common.request_pin import can_lock_device, verify_user_pin
 from apps.homescreen.lockscreen import Lockscreen
 
 
+async def interact(layout):
+    try:
+        ui.RUNNING_LAYOUT = layout
+        await layout
+    finally:
+        ui.RUNNING_LAYOUT = None
+
+
 async def bootscreen() -> None:
     lockscreen = Lockscreen(bootscreen=True)
     ui.display.orientation(storage.device.get_rotation())
     while True:
         try:
             if can_lock_device():
-                await lockscreen
+                await interact(lockscreen)
             await verify_user_pin()
             storage.init_unlocked()
             return

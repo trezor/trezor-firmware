@@ -1,9 +1,8 @@
 from typing import TYPE_CHECKING
 
-from trezor import wire
-
 import trezorui2
 
+from ..common import interact
 from . import RustLayout
 
 if TYPE_CHECKING:
@@ -17,7 +16,6 @@ async def request_word_count(dry_run: bool) -> int:
 
 
 async def request_word(word_index: int, word_count: int, is_slip39: bool) -> str:
-    ctx = wire.get_context()
     if is_slip39:
         keyboard: Any = RustLayout(
             trezorui2.request_bip39(
@@ -31,7 +29,7 @@ async def request_word(word_index: int, word_count: int, is_slip39: bool) -> str
             )
         )
 
-    word: str = await ctx.wait(keyboard)
+    word: str = await interact(keyboard, None)
     return word
 
 

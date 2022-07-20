@@ -7,6 +7,7 @@ from trezor.crypto import bip39, hashlib, random, slip39
 from trezor.enums import BackupType
 from trezor.messages import EntropyAck, EntropyRequest, Success
 from trezor.ui.layouts import confirm_backup, confirm_reset_device
+from trezor.ui.layouts.common import interact
 from trezor.ui.loader import LoadingAnimation
 
 from .. import backup_types
@@ -34,7 +35,7 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
     else:
         prompt = "Do you want to create\na new wallet?"
     await confirm_reset_device(prompt)
-    await LoadingAnimation()
+    await interact(LoadingAnimation(), None)
 
     # wipe storage to make sure the device is in a clear state
     storage.reset()

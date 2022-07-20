@@ -345,13 +345,14 @@ class Layout(Component):
         self._cancel_chan = loop.chan()
         self.should_notify_layout_change = False
 
+    async def do_cancel(self):
+        await self._cancel_chan.put(Cancelled())
+
     async def __iter__(self) -> Any:
         """
         Run the layout and wait until it completes.  Returns the result value.
         Usually not overridden.
         """
-        global RUNNING_LAYOUT
-
         if __debug__:
             # we want to call notify_layout_change() when the rendering is done;
             # but only the first time the layout is awaited. Here we indicate that we
@@ -363,11 +364,8 @@ class Layout(Component):
             # If any other layout is running (waiting on the layout channel),
             # we close it with the Cancelled exception, and wait until it is
             # closed, just to be sure.
-            if RUNNING_LAYOUT and RUNNING_LAYOUT._cancel_chan.takers:
-                assert RUNNING_LAYOUT != self
-                await RUNNING_LAYOUT._cancel_chan.put(Cancelled())
+            assert RUNNING_LAYOUT is self, f"running_layout is {RUNNING_LAYOUT}"
 
-            RUNNING_LAYOUT = self
             # Now, no other layout should be running.  In a loop, we create new
             # layout tasks and execute them in parallel, while waiting on the
             # layout channel.  This allows other layouts to cancel us, and the
@@ -378,8 +376,6 @@ class Layout(Component):
         except Result as result:
             # Result exception was raised, this means this layout is complete.
             value = result.value
-        finally:
-            RUNNING_LAYOUT = None
 
         return value
 

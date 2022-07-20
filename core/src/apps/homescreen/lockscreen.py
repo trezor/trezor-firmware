@@ -1,5 +1,6 @@
 import storage.cache
 from trezor import loop, res, ui, wire
+from trezor.ui.layouts.common import interact
 
 from . import HomescreenBase
 
@@ -10,7 +11,7 @@ async def lockscreen() -> None:
 
     # Only show the lockscreen UI if the device can in fact be locked.
     if can_lock_device():
-        await Lockscreen()
+        await interact(Lockscreen(), None)
     # Otherwise proceed directly to unlock() call. If the device is already unlocked,
     # it should be a no-op storage-wise, but it resets the internal configuration
     # to an unlocked state.
