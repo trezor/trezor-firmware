@@ -39,6 +39,9 @@
 #define Y_POS_MSB (touch_data[5] & 0x0FU)
 #define Y_POS_LSB (touch_data[6])
 
+#define EVENT_OLD_TIMEOUT_MS 50
+#define EVENT_MISSING_TIMEOUT_MS 50
+
 static I2C_HandleTypeDef i2c_handle;
 
 static void touch_default_pin_state(void) {
@@ -91,11 +94,12 @@ static void touch_active_pin_state(void) {
   HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
 
   // PC4 capacitive touch panel module (CTPM) interrupt (INT) input
-  GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStructure.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStructure.Pull = GPIO_PULLUP;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
   GPIO_InitStructure.Pin = GPIO_PIN_4;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
+  __HAL_GPIO_EXTI_CLEAR_FLAG(GPIO_PIN_4);
 
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_5, GPIO_PIN_SET);  // release CTPM reset
   HAL_Delay(310);  // "Time of starting to report point after resetting" min is
@@ -199,9 +203,9 @@ static void _i2c_cycle(void) {
 }
 
 void touch_set_mode(void) {
-  // set register 0xA4 G_MODE to interrupt polling mode (0x00). basically, CTPM
-  // keeps this input line (to PC4) low while a finger is on the screen.
-  uint8_t touch_panel_config[] = {0xA4, 0x00};
+  // set register 0xA4 G_MODE to interrupt trigger mode (0x01). basically, CTPM
+  // generates a pulse when new data is available
+  uint8_t touch_panel_config[] = {0xA4, 0x01};
   ensure(
       sectrue * (HAL_OK == HAL_I2C_Master_Transmit(
                                &i2c_handle, TOUCH_ADDRESS, touch_panel_config,
@@ -229,8 +233,18 @@ void touch_power_off(void) {
 }
 
 void touch_init(void) {
+  GPIO_InitTypeDef GPIO_InitStructure;
+
   // I2C device interface configuration
   _i2c_init();
+
+  // PC4 capacitive touch panel module (CTPM) interrupt (INT) input
+  GPIO_InitStructure.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStructure.Pull = GPIO_PULLUP;
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStructure.Pin = GPIO_PIN_4;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
+  __HAL_GPIO_EXTI_CLEAR_FLAG(GPIO_PIN_4);
 
   touch_set_mode();
   touch_sensitivity(0x06);
@@ -248,29 +262,61 @@ void touch_sensitivity(uint8_t value) {
 
 uint32_t touch_is_detected(void) {
   // check the interrupt line coming in from the CTPM.
-  // the line goes low when a touch event is actively detected.
-  // reference section 1.2 of "Application Note for FT6x06 CTPM".
-  // we configure the touch controller to use "interrupt polling mode".
-  return GPIO_PIN_RESET == HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_4);
+  // the line make a short pulse, which sets an interrupt flag when new data is
+  // available.
+  // Reference section 1.2 of "Application Note for FT6x06 CTPM". we
+  // configure the touch controller to use "interrupt trigger mode".
+
+  uint32_t event = __HAL_GPIO_EXTI_GET_FLAG(GPIO_PIN_4);
+  if (event != 0) {
+    __HAL_GPIO_EXTI_CLEAR_FLAG(GPIO_PIN_4);
+  }
+
+  return event;
+}
+
+uint32_t check_timeout(uint32_t prev, uint32_t timeout) {
+  uint32_t current = hal_ticks_ms();
+  uint32_t diff = current - prev;
+
+  if (diff >= timeout) {
+    return 1;
+  }
+
+  return 0;
 }
 
 uint32_t touch_read(void) {
-  static uint8_t touch_data[TOUCH_PACKET_SIZE],
-      previous_touch_data[TOUCH_PACKET_SIZE];
+  static uint8_t touch_data[TOUCH_PACKET_SIZE];
   static uint32_t xy;
-  static int touching;
+  static uint32_t last_check_time = 0;
+  static uint32_t last_event_time = 0;
+  static int touching = 0;
 
-  int last_packet = 0;
-  if (!touch_is_detected()) {
-    // only poll when the touch interrupt is active.
-    // when it's inactive, we might need to read one last data packet to get to
-    // the TOUCH_END event, which clears the `touching` flag.
-    if (touching) {
-      last_packet = 1;
-    } else {
-      return 0;
+  uint32_t detected = touch_is_detected();
+
+  if (detected == 0) {
+    last_check_time = hal_ticks_ms();
+
+    if (touching && check_timeout(last_event_time, EVENT_MISSING_TIMEOUT_MS)) {
+      // we didn't detect an event for a long time, but there was an active
+      // touch: send END event, as we probably missed the END event
+      touching = 0;
+      return TOUCH_END | xy;
     }
+
+    return 0;
   }
+
+  if ((touching == 0) &&
+      (check_timeout(last_check_time, EVENT_OLD_TIMEOUT_MS))) {
+    // we have detected an event, but it might be too old, rather drop it
+    // (only dropping old events if there was no touch active)
+    last_check_time = hal_ticks_ms();
+    return 0;
+  }
+
+  last_check_time = hal_ticks_ms();
 
   uint8_t outgoing[] = {0x00};  // start reading from address 0x00
   int result = HAL_I2C_Master_Transmit(&i2c_handle, TOUCH_ADDRESS, outgoing,
@@ -285,11 +331,7 @@ uint32_t touch_read(void) {
     return 0;  // read failure
   }
 
-  if (0 == memcmp(previous_touch_data, touch_data, TOUCH_PACKET_SIZE)) {
-    return 0;  // polled and got the same event again
-  } else {
-    memcpy(previous_touch_data, touch_data, TOUCH_PACKET_SIZE);
-  }
+  last_event_time = hal_ticks_ms();
 
   const uint32_t number_of_touch_points =
       touch_data[2] & 0x0F;  // valid values are 0, 1, 2 (invalid 0xF before
@@ -307,13 +349,6 @@ uint32_t touch_read(void) {
       touching = 0;
       return TOUCH_END | xy;
     }
-  }
-
-  if (last_packet) {
-    // interrupt line is inactive, we didn't read valid touch data, and as far
-    // as we know, we never sent a TOUCH_END event.
-    touching = 0;
-    return TOUCH_END | xy;
   }
 
   return 0;
