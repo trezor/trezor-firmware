@@ -110,6 +110,7 @@ int main(void) {
 #endif
 
 #if defined TREZOR_MODEL_T
+  touch_init();
   // display_init_seq();
   sdcard_init();
 
