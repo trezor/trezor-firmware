@@ -146,7 +146,7 @@ impl Component for Bip39Entry {
                     let new_letter = self.letter_choices[page_counter as usize];
                     self.append_letter(ctx, new_letter);
                     let new_choices = self.get_current_choices();
-                    self.choice_page.reset(ctx, new_choices, true);
+                    self.choice_page.reset(ctx, new_choices, true, false);
                     ctx.request_paint();
                 }
             }
@@ -155,7 +155,7 @@ impl Component for Bip39Entry {
                 self.delete_last_letter(ctx);
                 self.reset_wordlist();
                 let new_choices = self.get_current_choices();
-                self.choice_page.reset(ctx, new_choices, true);
+                self.choice_page.reset(ctx, new_choices, true, false);
                 ctx.request_paint();
             }
             _ => {}

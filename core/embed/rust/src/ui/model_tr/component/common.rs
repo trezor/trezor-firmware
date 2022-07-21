@@ -138,18 +138,36 @@ impl ButtonLayout<&'static str> {
     /// Default button layout for all three buttons.
     pub fn default_three() -> Self {
         Self::new(
-            Some(ButtonDetails::new("BACK")),
+            Some(ButtonDetails::new("<")),
             Some(ButtonDetails::new("SELECT")),
-            Some(ButtonDetails::new("NEXT")),
+            Some(ButtonDetails::new(">")),
         )
     }
 
-    /// Default button layout for all three buttons.
+    /// Just right and left, no middle.
     pub fn default_left_right() -> Self {
         Self::new(
-            Some(ButtonDetails::new("BACK")),
+            Some(ButtonDetails::new("<")),
             None,
-            Some(ButtonDetails::new("NEXT")),
+            Some(ButtonDetails::new(">")),
+        )
+    }
+
+    /// Setting a special middle text.
+    pub fn special_middle(middle: &'static str) -> Self {
+        Self::new(
+            Some(ButtonDetails::new("<")),
+            Some(ButtonDetails::new(middle)),
+            Some(ButtonDetails::new(">")),
+        )
+    }
+
+    /// Custom texts for all three buttons.
+    pub fn custom(left: &'static str, middle: &'static str, right: &'static str) -> Self {
+        Self::new(
+            Some(ButtonDetails::new(left)),
+            Some(ButtonDetails::new(middle)),
+            Some(ButtonDetails::new(right)),
         )
     }
 }

@@ -34,7 +34,7 @@ const MAX_LENGTH: usize = 50;
 const MAX_VISIBLE_CHARS: usize = 18;
 const HOLD_DURATION: Duration = Duration::from_secs(1);
 
-const MAX_CHOICE_LENGTH: usize = 30;
+const MAX_CHOICE_LENGTH: usize = 31; // accounting for MENU choice as well
 
 const DIGITS: [char; 10] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 const LOWERCASE_LETTERS: [char; 26] = [
@@ -58,10 +58,11 @@ const MENU: [&str; MENU_LENGTH] = ["abc", "ABC", "123", "*#_", "SHOW\nPASS", "DE
 pub struct PassphraseEntry {
     // TODO: how to make ChoicePage accept both
     // StringChoiceItem and MultilineStringChoiceItem?
-    choice_page: ChoicePage<MultilineStringChoiceItem, 30>,
+    choice_page: ChoicePage<MultilineStringChoiceItem, MAX_CHOICE_LENGTH>,
     show_plain_passphrase: bool,
     textbox: TextBox<MAX_LENGTH>,
     current_category: ChoiceCategory,
+    menu_position: u8, // position in the menu so we can return back
 }
 
 impl PassphraseEntry {
@@ -73,6 +74,7 @@ impl PassphraseEntry {
             show_plain_passphrase: false,
             textbox: TextBox::empty(),
             current_category: ChoiceCategory::Menu,
+            menu_position: 0,
         }
     }
 
@@ -170,7 +172,21 @@ impl PassphraseEntry {
     /// Displaying the MENU
     fn show_menu_page(&mut self, ctx: &mut EventCtx) {
         let menu_choices = Self::get_menu_choices();
-        self.choice_page.reset(ctx, menu_choices, true);
+        self.choice_page.reset(ctx, menu_choices, true, false);
+        // Going back to the last MENU position before showing the MENU
+        self.choice_page.set_page_counter(ctx, self.menu_position);
+    }
+
+    /// Whether this index is the MENU index - the last one in the list.
+    fn is_menu_choice(&self, page_counter: u8) -> bool {
+        let current_length = match self.current_category {
+            ChoiceCategory::LowercaseLetter => LOWERCASE_LETTERS.len(),
+            ChoiceCategory::UppercaseLetter => UPPERCASE_LETTERS.len(),
+            ChoiceCategory::Digit => DIGITS.len(),
+            ChoiceCategory::SpecialSymbol => SPECIAL_SYMBOLS.len(),
+            ChoiceCategory::Menu => panic!("Not callable from menu"),
+        };
+        page_counter == current_length as u8
     }
 
     /// Displaying the character category
@@ -192,13 +208,15 @@ impl PassphraseEntry {
                 )
             })
             .collect();
-        // Categories need a way to return back to MENU.
-        // Putting that option on both sides.
-        let last_index = choices.len() - 1;
-        choices[0].btn_layout.btn_left = Some(ButtonDetails::new("MENU"));
-        choices[last_index].btn_layout.btn_right = Some(ButtonDetails::new("MENU"));
 
-        self.choice_page.reset(ctx, choices, true);
+        // Including a MENU choice at the end (visible from start) to return back
+        let menu_choice = MultilineStringChoiceItem::new(
+            String::from("MENU"),
+            ButtonLayout::special_middle("RETURN"),
+        );
+        choices.push(menu_choice).unwrap();
+
+        self.choice_page.reset(ctx, choices, true, true);
     }
 
     pub fn passphrase(&self) -> &str {
@@ -236,6 +254,7 @@ impl Component for PassphraseEntry {
                         ctx.request_paint();
                     }
                     _ => {
+                        self.menu_position = page_counter;
                         self.current_category = self.get_category_from_menu(page_counter);
                         self.show_category_page(ctx);
                         ctx.request_paint();
@@ -246,21 +265,17 @@ impl Component for PassphraseEntry {
                 _ => {}
             }
         } else {
-            match msg {
-                // Adding new character or coming back to MENU
-                Some(ChoicePageMsg::Choice(page_counter)) => {
-                    if !self.is_full() {
-                        let new_letter = self.get_char(page_counter as usize);
-                        self.append_char(ctx, new_letter);
-                        ctx.request_paint();
-                    }
-                }
-                Some(ChoicePageMsg::LeftMost) | Some(ChoicePageMsg::RightMost) => {
+            // Coming back to MENU or adding new character
+            if let Some(ChoicePageMsg::Choice(page_counter)) = msg {
+                if self.is_menu_choice(page_counter) {
                     self.current_category = ChoiceCategory::Menu;
                     self.show_menu_page(ctx);
                     ctx.request_paint();
+                } else if !self.is_full() {
+                    let new_letter = self.get_char(page_counter as usize);
+                    self.append_char(ctx, new_letter);
+                    ctx.request_paint();
                 }
-                _ => {}
             }
         }
 

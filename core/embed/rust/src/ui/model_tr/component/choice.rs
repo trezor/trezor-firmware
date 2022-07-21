@@ -70,12 +70,19 @@ where
     /// always create a new instance with fresh setup, but I could not manage to
     /// properly clean up the previous instance - it would still be shown on
     /// screen and colliding with the new one.
-    pub fn reset(&mut self, ctx: &mut EventCtx, new_choices: Vec<T, N>, reset_page_counter: bool) {
+    pub fn reset(
+        &mut self,
+        ctx: &mut EventCtx,
+        new_choices: Vec<T, N>,
+        reset_page_counter: bool,
+        is_carousel: bool,
+    ) {
         self.choices = new_choices;
         if reset_page_counter {
             self.page_counter = 0;
         }
         self.update(ctx);
+        self.is_carousel = is_carousel;
     }
 
     /// Navigating to the chosen page index.

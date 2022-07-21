@@ -75,15 +75,10 @@ impl PinEntry {
     where
         T: Deref<Target = str>,
     {
-        let btn_layout = ButtonLayout::new(
-            Some(ButtonDetails::new("<")),
-            Some(ButtonDetails::new("SELECT")),
-            Some(ButtonDetails::new(">")),
-        );
         let mut choices: Vec<MultilineStringChoiceItem, CHOICE_LENGTH> = DIGITS
             .iter()
             .map(|digit| {
-                MultilineStringChoiceItem::new(String::from(*digit), btn_layout.clone())
+                MultilineStringChoiceItem::new(String::from(*digit), ButtonLayout::default_three())
                     .use_delimiter(' ')
             })
             .collect();
