@@ -8,12 +8,16 @@ use crate::ui::{display, geometry::Point, util};
 
 use super::{theme, ButtonStyleSheet};
 
-const MIDDLE_ROW: i32 = 72;
+const MIDDLE_ROW: i32 = 62;
 const LEFT_COL: i32 = 5;
 const MIDDLE_COL: i32 = 64;
 const RIGHT_COL: i32 = 123;
 
-const ROW_HEIGHT: i32 = 10;
+/// Helper to unite the row height.
+fn row_height_bold() -> i32 {
+    // It never reaches the maximum height
+    theme::FONT_BOLD.line_height() - 2
+}
 
 /// Display header text.
 pub fn display_header(baseline: Point, text: &str) {
@@ -209,7 +213,7 @@ impl ChoiceItem for StringChoiceItem {
         // to make it more clear this is the current choice
         // (and also the left and right ones do not collide with it)
         display_bold_center(
-            Point::new(MIDDLE_COL, MIDDLE_ROW + ROW_HEIGHT),
+            Point::new(MIDDLE_COL, MIDDLE_ROW + row_height_bold()),
             self.text.as_str(),
         );
     }
@@ -259,21 +263,21 @@ impl ChoiceItem for MultilineStringChoiceItem {
         // Displaying the center choice lower than the rest,
         // to make it more clear this is the current choice
         for (index, line) in self.text.split(self.delimiter).enumerate() {
-            let offset = MIDDLE_ROW + index as i32 * ROW_HEIGHT + ROW_HEIGHT;
+            let offset = MIDDLE_ROW + index as i32 * row_height_bold() + row_height_bold();
             display_bold_center(Point::new(MIDDLE_COL, offset), line);
         }
     }
 
     fn paint_left(&mut self) {
         for (index, line) in self.text.split(self.delimiter).enumerate() {
-            let offset = MIDDLE_ROW + index as i32 * ROW_HEIGHT;
+            let offset = MIDDLE_ROW + index as i32 * row_height_bold();
             display_bold(Point::new(LEFT_COL, offset), line);
         }
     }
 
     fn paint_right(&mut self) {
         for (index, line) in self.text.split(self.delimiter).enumerate() {
-            let offset = MIDDLE_ROW + index as i32 * ROW_HEIGHT;
+            let offset = MIDDLE_ROW + index as i32 * row_height_bold();
             display_bold_right(Point::new(RIGHT_COL, offset), line);
         }
     }

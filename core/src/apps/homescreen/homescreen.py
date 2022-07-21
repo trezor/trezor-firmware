@@ -21,6 +21,7 @@ async def homescreen() -> None:
     lock_device()
 
 
+# TODO: make separate homescreens for each model to avoid coupling
 class Homescreen(HomescreenBase):
     RENDER_INDICATOR = storage.cache.HOMESCREEN_ON
 
@@ -71,19 +72,33 @@ class Homescreen(HomescreenBase):
             ui.header_error("NO USB CONNECTION")
 
         # TODO: support homescreen avatar change for R and 1
+        # TODO: soo dirty, split for each model
         if utils.MODEL in ("T",):
             ui.display.avatar(48, 48 - 10, self.get_image(), ui.WHITE, ui.BLACK)
+            ui.display.text_center(
+                ui.WIDTH // 2, 220, self.label, ui.BOLD, ui.FG, ui.BG
+            )
         elif utils.MODEL in ("R",):
             icon = "trezor/res/homescreen_model_r.toif"  # 92x92 px
-            ui.display.icon(18, 18, ui.res.load(icon), ui.style.FG, ui.style.BG)
+            # When not initialized, there is no HEADER and FOOTER is bigger, so
+            # showing the ICON more on the top side and having two-line FOOTER to fit it on.
+            if not storage.device.is_initialized():
+                ui.display.icon(18, 2, ui.res.load(icon), ui.style.FG, ui.style.BG)
+                ui.display.text_center(
+                    ui.WIDTH // 2, 108, "Go to", ui.BOLD, ui.FG, ui.BG
+                )
+                ui.display.text_center(
+                    ui.WIDTH // 2, 122, "trezor.io/start", ui.BOLD, ui.FG, ui.BG
+                )
+            else:
+                ui.display.icon(18, 18, ui.res.load(icon), ui.style.FG, ui.style.BG)
+                ui.display.text_center(
+                    ui.WIDTH // 2, 122, self.label, ui.BOLD, ui.FG, ui.BG
+                )
         elif utils.MODEL in ("1",):
             icon = "trezor/res/homescreen_model_1.toif"  # 64x36 px
             ui.display.icon(33, 14, ui.res.load(icon), ui.style.FG, ui.style.BG)
-
-        label_heights = {"1": 60, "R": 120, "T": 220}
-        ui.display.text_center(
-            ui.WIDTH // 2, label_heights[utils.MODEL], self.label, ui.BOLD, ui.FG, ui.BG
-        )
+            ui.display.text_center(ui.WIDTH // 2, 60, self.label, ui.BOLD, ui.FG, ui.BG)
 
         ui.refresh()
 

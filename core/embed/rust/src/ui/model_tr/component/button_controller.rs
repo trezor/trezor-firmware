@@ -106,7 +106,7 @@ impl<T: Clone + AsRef<str>> ButtonContainer<T> {
         Child::new(HoldToConfirm::new(
             pos,
             btn_details.text,
-            theme::loader_bold(),
+            theme::loader_default(),
             duration,
         ))
     }

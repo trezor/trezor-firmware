@@ -70,17 +70,7 @@ pub fn button_cancel() -> ButtonStyleSheet {
 pub fn loader_default() -> LoaderStyleSheet {
     LoaderStyleSheet {
         normal: &LoaderStyle {
-            font: FONT_NORMAL,
-            fg_color: FG,
-            bg_color: BG,
-        },
-    }
-}
-
-pub fn loader_bold() -> LoaderStyleSheet {
-    LoaderStyleSheet {
-        normal: &LoaderStyle {
-            font: FONT_BOLD,
+            font: FONT_BUTTON,
             fg_color: FG,
             bg_color: BG,
         },
