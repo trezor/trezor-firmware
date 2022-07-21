@@ -155,7 +155,7 @@ where
     type Msg = PageMsg<T::Msg, bool>;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let button_height = theme::FONT_BOLD.line_height() + 2;
+        let button_height = theme::FONT_BUTTON.line_height() + 2;
         let (content_and_scrollbar_area, button_area) = bounds.split_bottom(button_height);
         let (content_area, scrollbar_area) =
             content_and_scrollbar_area.split_right(ScrollBar::WIDTH);

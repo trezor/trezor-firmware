@@ -44,7 +44,7 @@ where
         // Depending on whether there is subtitle or not
         let title_space = if self.subtitle.is_some() { 12 } else { 4 };
 
-        let (title_area, content_area) = bounds.split_top(theme::FONT_BOLD.line_height());
+        let (title_area, content_area) = bounds.split_top(theme::FONT_HEADER.line_height());
         let content_area = content_area.inset(Insets::top(title_space));
 
         self.area = title_area;
@@ -58,13 +58,13 @@ where
 
     fn paint(&mut self) {
         let title_baseline = self.area.bottom_left() - Offset::y(2);
-        common::display_bold(title_baseline, self.title.as_ref());
+        common::display_header(title_baseline, self.title.as_ref());
         // Optionally painting the subtitle as well
         // (and offsetting the dotted line in that case)
         let mut dot_offset = 0;
         if let Some(subtitle) = &self.subtitle {
             dot_offset = 10;
-            common::display_bold(title_baseline + Offset::y(dot_offset), subtitle.as_ref());
+            common::display_header(title_baseline + Offset::y(dot_offset), subtitle.as_ref());
         }
         display::dotted_line(
             self.area.bottom_left() + Offset::y(dot_offset),

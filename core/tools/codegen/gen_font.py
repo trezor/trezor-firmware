@@ -2,8 +2,14 @@
 
 # script used to generate /embed/extmod/modtrezorui/font_*_*.c
 
+from __future__ import annotations
+
+from pathlib import Path
 
 import freetype
+
+HERE = Path(__file__).parent
+FONTS_DIR = HERE / "fonts"
 
 MIN_GLYPH = ord(" ")
 MAX_GLYPH = ord("~")
@@ -11,7 +17,7 @@ MAX_GLYPH = ord("~")
 # metrics explanation: https://www.freetype.org/freetype2/docs/glyphs/metrics.png
 
 
-def process_bitmap_buffer(buf, bpp):
+def process_bitmap_buffer(buf: list[int], bpp: int) -> list[int]:
     res = buf[:]
     if bpp == 1:
         for _ in range(8 - len(res) % 8):
@@ -52,12 +58,20 @@ def process_bitmap_buffer(buf, bpp):
     return res
 
 
-def process_face(name, style, size, bpp=4, shave_bearingX=0, ext="ttf"):
+def process_face(
+    name: str,
+    style: str,
+    size: int,
+    bpp: int = 4,
+    shave_bearingX: int = 0,
+    ext: str = "ttf",
+) -> None:
     print("Processing ... %s %s %s" % (name, style, size))
-    face = freetype.Face("fonts/%s-%s.%s" % (name, style, ext))
+    file_name = FONTS_DIR / f"{name}-{style}.{ext}"
+    face = freetype.Face(str(file_name))
     face.set_pixel_sizes(0, size)
-    fontname = "%s_%s_%d" % (name.lower(), style.lower(), size)
-    with open("font_%s.h" % fontname, "wt") as f:
+    fontname = f"{name.lower()}_{style.lower()}_{size}"
+    with open(HERE / f"font_{fontname}.h", "wt") as f:
         f.write("#include <stdint.h>\n\n")
         f.write("#if TREZOR_FONT_BPP != %d\n" % bpp)
         f.write("#error Wrong TREZOR_FONT_BPP (expected %d)\n" % bpp)
@@ -74,7 +88,9 @@ def process_face(name, style, size, bpp=4, shave_bearingX=0, ext="ttf"):
         f.write("#include <stdint.h>\n\n")
         f.write("// clang-format off\n\n")
         f.write("// - the first two bytes are width and height of the glyph\n")
-        f.write("// - the third, fourth and fifth bytes are advance, bearingX and bearingY of the horizontal metrics of the glyph\n")
+        f.write(
+            "// - the third, fourth and fifth bytes are advance, bearingX and bearingY of the horizontal metrics of the glyph\n"
+        )
         f.write("// - the rest is packed %d-bit glyph data\n\n" % bpp)
         for i in range(MIN_GLYPH, MAX_GLYPH + 1):
             c = chr(i)
@@ -109,7 +125,7 @@ def process_face(name, style, size, bpp=4, shave_bearingX=0, ext="ttf"):
             bearingY = metrics.horiBearingY // 64
             assert advance >= 0 and advance <= 255
             assert bearingX >= 0 and bearingX <= 255
-            if bearingY < 0: # HACK
+            if bearingY < 0:  # HACK
                 print("normalizing bearingY %d for '%s'" % (bearingY, c))
                 bearingY = 0
             assert bearingY >= 0 and bearingY <= 255
@@ -170,3 +186,7 @@ process_face("RobotoMono", "Regular", 20)
 process_face("PixelOperator", "Regular", 8, bpp=1, shave_bearingX=1)
 process_face("PixelOperator", "Bold", 8, bpp=1, shave_bearingX=1)
 process_face("PixelOperatorMono", "Regular", 8, bpp=1, shave_bearingX=1)
+
+# For model R
+process_face("Unifont", "Regular", 16, bpp=1, shave_bearingX=1, ext="otf")
+process_face("Unifont", "Bold", 16, bpp=1, shave_bearingX=1, ext="otf")

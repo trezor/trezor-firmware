@@ -45,7 +45,7 @@ where
     type Msg = DialogMsg<T::Msg>;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let button_height = theme::FONT_BOLD.line_height() + 2;
+        let button_height = theme::FONT_BUTTON.line_height() + 2;
         let (content_area, button_area) = bounds.split_bottom(button_height);
         self.content.place(content_area);
         self.left_btn.as_mut().map(|b| b.place(button_area));

@@ -78,19 +78,19 @@
 #elif defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
 
 #ifdef TREZOR_FONT_NORMAL_ENABLE
-#include "font_pixeloperator_regular_8.h"
-#define FONT_NORMAL_DATA Font_PixelOperator_Regular_8
-#define FONT_NORMAL_HEIGHT 8
+#include "font_unifont_regular_16.h"
+#define FONT_NORMAL_DATA Font_Unifont_Regular_16
+#define FONT_NORMAL_HEIGHT 16
 #endif
 #ifdef TREZOR_FONT_MEDIUM_ENABLE
-#include "font_pixeloperator_regular_8.h"
-#define FONT_MEDIUM_DATA Font_PixelOperator_Regular_8
-#define FONT_MEDIUM_HEIGHT 8
+#include "font_unifont_regular_16.h"
+#define FONT_MEDIUM_DATA Font_Unifont_Regular_16
+#define FONT_MEDIUM_HEIGHT 16
 #endif
 #ifdef TREZOR_FONT_BOLD_ENABLE
-#include "font_pixeloperator_bold_8.h"
-#define FONT_BOLD_DATA Font_PixelOperator_Bold_8
-#define FONT_BOLD_HEIGHT 8
+#include "font_unifont_bold_16.h"
+#define FONT_BOLD_DATA Font_Unifont_Bold_16
+#define FONT_BOLD_HEIGHT 16
 #endif
 #ifdef TREZOR_FONT_MONO_ENABLE
 #include "font_pixeloperatormono_regular_8.h"

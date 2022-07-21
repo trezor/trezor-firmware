@@ -206,7 +206,7 @@ where
     type Msg = ChoicePageMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let button_height = theme::FONT_BOLD.line_height() + 2;
+        let button_height = theme::FONT_BUTTON.line_height() + 2;
         let (content_area, button_area) = bounds.split_bottom(button_height);
         self.pad.place(content_area);
         self.buttons.place(button_area);
