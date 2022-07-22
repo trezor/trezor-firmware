@@ -5,7 +5,7 @@ unified addresses according to the ZIP-316.
 see: https://zips.z.cash/zip-0316
 """
 
-from typing import TYPE_CHECKING
+from typing import Dict
 
 from trezor.crypto import orchardlib
 from trezor.crypto.bech32 import Encoding, bech32_decode, bech32_encode, convertbits
@@ -16,11 +16,6 @@ from trezor.wire import DataError
 from apps.common.coininfo import CoinInfo
 from apps.common.readers import read_compact_size
 from apps.common.writers import write_bytes_fixed, write_compact_size
-
-if TYPE_CHECKING:
-    from typing import Dict
-
-    pass  # this `pass` resolves syntax error in addresses.i
 
 
 def receiver_length(typecode: int):
