@@ -281,6 +281,7 @@ name = "trezor_lib"
 version = "0.1.0"
 dependencies = [
  "bindgen",
+ "blake2b_simd",
  "cc",
  "cstr_core",
  "cty",

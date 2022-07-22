@@ -5,7 +5,6 @@ import os
 
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
 EVERYTHING = BITCOIN_ONLY != '1'
-USE_ZCASH = BITCOIN_ONLY == '1'  # Zcash parasitizes on BITCOIN_ONLY free memory
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 UI2 = ARGUMENTS.get('UI2', '0') == '1' or TREZOR_MODEL in ('1', 'R')
 
@@ -199,7 +198,7 @@ SOURCE_MOD += [
 SOURCE_MOD += [
     'embed/extmod/rustmods/modtrezorproto.c',
 ]
-if USE_ZCASH:
+if EVERYTHING:
     SOURCE_MOD += [
         'embed/extmod/rustmods/modtrezororchardlib.c',
     ]
@@ -422,7 +421,7 @@ if FEATURE_FLAGS["SYSTEM_VIEW"]:
 
 SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_MICROPYTHON_SPEED
 
-env = Environment(ENV=os.environ, CFLAGS='%s -DPYOPT=%s -DBITCOIN_ONLY=%s -DUSE_ZCASH=%s' % (ARGUMENTS.get('CFLAGS', ''), PYOPT, BITCOIN_ONLY, '1' if USE_ZCASH else '0'))
+env = Environment(ENV=os.environ, CFLAGS='%s -DPYOPT=%s -DBITCOIN_ONLY=%s' % (ARGUMENTS.get('CFLAGS', ''), PYOPT, BITCOIN_ONLY))
 
 env.Tool('micropython')
 
@@ -677,7 +676,6 @@ if FROZEN:
 
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/decred.py'))
 
-    if EVERYTHING or USE_ZCASH:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/bitcoinlike.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/zcash_v4.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/zcash/*.py'))
@@ -718,10 +716,8 @@ def cargo_build():
         profile = ''
 
     features = ['micropython', 'protobuf', f'model_t{TREZOR_MODEL.lower()}']
-    if USE_ZCASH:
-        features.append('use_zcash')
-    if BITCOIN_ONLY == '1':
-        features.append('bitcoin_only')
+    if BITCOIN_ONLY != '1':
+        features.append('use_altcoins')
     if UI2:
         features.append('ui')
         if PYOPT == '0':

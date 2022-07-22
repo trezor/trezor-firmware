@@ -9,10 +9,7 @@ from ..keychain import with_keychain
 from . import approvers, bitcoin, helpers, progress
 
 if not utils.BITCOIN_ONLY:
-    from . import bitcoinlike, decred
-
-if utils.USE_ZCASH:
-    from . import zcash_v4
+    from . import bitcoinlike, decred, zcash_v4
     from apps.zcash.signer import Zcash
 
 if TYPE_CHECKING:
@@ -70,13 +67,13 @@ async def sign_tx(
 
     if coin.coin_name in BITCOIN_NAMES:
         signer_class: type[SignerClass] = bitcoin.Bitcoin
-    elif (utils.USE_ZCASH or not utils.BITCOIN_ONLY) and coin.overwintered:
-        if msg.version == 5:
-            signer_class = Zcash
-        else:
-            signer_class = zcash_v4.ZcashV4
     elif not utils.BITCOIN_ONLY:
-        if coin.decred:
+        if coin.overwintered:
+            if msg.version == 5:
+                signer_class = Zcash
+            else:
+                signer_class = zcash_v4.ZcashV4
+        elif coin.decred:
             signer_class = decred.Decred
         else:
             signer_class = bitcoinlike.Bitcoinlike

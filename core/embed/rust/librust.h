@@ -19,7 +19,7 @@ mp_obj_t ui_debug_layout_type();
 #endif
 
 // Zcash
-#if USE_ZCASH
+#if !BITCOIN_ONLY
 mp_obj_t orchardlib_f4jumble(mp_obj_t message);
 mp_obj_t orchardlib_f4jumble_inv(mp_obj_t message);
 #endif

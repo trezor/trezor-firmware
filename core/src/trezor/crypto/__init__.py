@@ -13,6 +13,4 @@ from trezor import utils
 
 if not utils.BITCOIN_ONLY:
     from trezorcrypto import cardano, monero, nem  # noqa: F401
-
-if utils.USE_ZCASH:
     import trezororchardlib as orchardlib  # noqa: F401

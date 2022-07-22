@@ -11,10 +11,8 @@ from apps.bitcoin.common import ecdsa_sign
 from apps.bitcoin.sign_tx.bitcoinlike import Bitcoinlike
 from apps.common.writers import write_compact_size, write_uint32_le
 
+from . import addresses
 from .hasher import ZcashHasher
-
-if utils.USE_ZCASH:
-    from . import addresses
 
 if TYPE_CHECKING:
     from typing import Sequence
@@ -121,21 +119,17 @@ class Zcash(Bitcoinlike):
         # unified addresses
         from trezor import log
 
-        log.warning(__name__, "USE_ZCASH:" + str(utils.USE_ZCASH))
-        if utils.USE_ZCASH:
-            if txo.address is not None and txo.address[0] == "u":
-                assert txo.script_type is OutputScriptType.PAYTOADDRESS
+        if txo.address is not None and txo.address[0] == "u":
+            assert txo.script_type is OutputScriptType.PAYTOADDRESS
 
-                receivers = addresses.decode_unified(txo.address, self.coin)
-                if Receiver.P2PKH in receivers:
-                    pubkeyhash = receivers[Receiver.P2PKH]
-                    return scripts.output_script_p2pkh(pubkeyhash)
-                if Receiver.P2SH in receivers:
-                    scripthash = receivers[Receiver.P2SH]
-                    return scripts.output_script_p2sh(scripthash)
-                raise DataError(
-                    "Unified address does not include a transparent receiver."
-                )
+            receivers = addresses.decode_unified(txo.address, self.coin)
+            if Receiver.P2PKH in receivers:
+                pubkeyhash = receivers[Receiver.P2PKH]
+                return scripts.output_script_p2pkh(pubkeyhash)
+            if Receiver.P2SH in receivers:
+                scripthash = receivers[Receiver.P2SH]
+                return scripts.output_script_p2sh(scripthash)
+            raise DataError("Unified address does not include a transparent receiver.")
 
         # transparent addresses
         return super().output_derive_script(txo)

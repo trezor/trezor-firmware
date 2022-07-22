@@ -6,14 +6,14 @@ edition = "2021"
 build = "build.rs"
 
 [features]
-default = ["model_tt"]
-bitcoin_only = []
+default = ["model_tt", "use_altcoins"]
+use_altcoins = ["use_zcash"]
 model_tt = ["touch"]
 model_t1 = ["buttons"]
 model_tr = ["buttons"]
 micropython = []
 protobuf = ["micropython"]
-use_zcash = ["micropython", "f4jumble"]
+use_zcash = ["micropython", "f4jumble", "blake2b_simd"]
 ui = []
 ui_debug = []
 buttons = []
@@ -53,6 +53,14 @@ default_features = false
 [dependencies.f4jumble]
 version = "0.1.0"
 default-features = false
+optional = true
+
+[dependencies.blake2b_simd]
+# this is a dependency of f4jumble crate
+# we recall it here to enable its `uninline_portable` feature
+version = "1"
+default_features = false
+features = ["uninline_portable"]
 optional = true
 
 # Build dependencies
