@@ -5,7 +5,7 @@ macro_rules! include_res {
     };
 }
 
-/// Concatenates arbitrary amount of slices into a String
+/// Concatenates arbitrary amount of slices into a String.
 macro_rules! build_string {
     ($max:expr, $($string:expr),+) => {
         {
@@ -14,4 +14,24 @@ macro_rules! build_string {
             new_string
         }
     }
+}
+
+#[allow(unused_macros)] // Mostly for debugging purposes.
+/// Transforms integer into string slice. For example for printing.
+macro_rules! inttostr {
+    ($int:expr) => {{
+        heapless::String::<10>::from($int).as_str()
+    }};
+}
+
+#[allow(unused_macros)] // Mostly for debugging purposes.
+/// Transforms bool into string slice. For example for printing.
+macro_rules! booltostr {
+    ($bool:expr) => {{
+        if $bool {
+            "true"
+        } else {
+            "false"
+        }
+    }};
 }
