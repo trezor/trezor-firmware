@@ -20,6 +20,10 @@ pub struct HoldToConfirm<T> {
     text_width: i32,
 }
 
+// TODO: support icons
+// TODO: could have some icon signaling "HOLD", so that we do not need
+// to write `HOLD TO CONFIRM` (which hardly fits the screen), but just `{icon} CONFIRM`
+
 impl<T: AsRef<str>> HoldToConfirm<T> {
     pub fn new(pos: ButtonPos, text: T, styles: LoaderStyleSheet, duration: Duration) -> Self {
         let text_width = styles.normal.font.text_width(text.as_ref());

@@ -64,51 +64,143 @@ pub trait ChoiceItem {
 /// Describing the button in the choice item.
 #[derive(Debug, Clone, Copy)]
 pub struct ButtonDetails<T> {
-    pub text: T,
+    pub text: Option<T>,
+    pub icon: Option<&'static [u8]>,
+    // TODO: `icon_text` is just hack so that we can instantiate
+    // HoldToConfirm element when text is None.
+    pub icon_text: Option<T>,
     pub duration: Option<Duration>,
     pub is_cancel: bool,
+    pub with_outline: bool,
+    pub with_arms: bool,
+    pub force_width: Option<i32>,
 }
 
-impl<T: AsRef<str>> ButtonDetails<T> {
+impl<T: Clone + AsRef<str>> ButtonDetails<T> {
+    /// Text button.
     pub fn new(text: T) -> Self {
         Self {
-            text,
+            text: Some(text),
+            icon: None,
+            icon_text: None,
             duration: None,
             is_cancel: false,
+            with_outline: true,
+            with_arms: false,
+            force_width: None,
         }
     }
 
-    pub fn cancel(text: T) -> Self {
+    /// Icon button.
+    /// NOTE: `icon_text` needs to be specified, any text is enough.
+    pub fn icon(icon: &'static [u8], icon_text: T) -> Self {
         Self {
-            text,
+            text: None,
+            icon: Some(icon),
+            icon_text: Some(icon_text),
             duration: None,
-            is_cancel: true,
+            is_cancel: false,
+            with_outline: true,
+            with_arms: false,
+            force_width: None,
         }
     }
 
+    /// Cancel style button.
+    pub fn with_cancel(mut self) -> Self {
+        self.is_cancel = true;
+        self
+    }
+
+    /// No outline around the button.
+    pub fn with_no_outline(mut self) -> Self {
+        self.with_outline = false;
+        self
+    }
+
+    /// Left and right "arms" around the button.
+    /// Automatically disabling the outline.
+    pub fn with_arms(mut self) -> Self {
+        self.with_arms = true;
+        self.with_outline = false;
+        self
+    }
+
+    /// Duration of the hold-to-confirm.
     pub fn with_duration(mut self, duration: Duration) -> Self {
         self.duration = Some(duration);
         self
     }
 
+    /// Width of the button.
+    pub fn force_width(mut self, width: i32) -> Self {
+        self.force_width = Some(width);
+        self
+    }
+
+    /// Print attributes for debugging purposes.
+    pub fn print(&self) {
+        let text = if let Some(text) = self.text.clone() {
+            String::<20>::from(text.as_ref())
+        } else {
+            String::<20>::from("None")
+        };
+        let icon_text = if let Some(icon_text) = self.icon_text.clone() {
+            String::<20>::from(icon_text.as_ref())
+        } else {
+            String::<20>::from("None")
+        };
+        let force_width = if let Some(force_width) = self.force_width.clone() {
+            String::<20>::from(inttostr!(force_width))
+        } else {
+            String::<20>::from("None")
+        };
+        println!(
+            "ButtonDetails:: text: ",
+            text.as_ref(),
+            ", icon_text: ",
+            icon_text.as_ref(),
+            ", with_outline: ",
+            booltostr!(self.with_outline),
+            ", with_arms: ",
+            booltostr!(self.with_arms),
+            ", force_width: ",
+            force_width.as_ref()
+        );
+    }
+
+    /// Button style that should be applied.
     pub fn style(&self) -> ButtonStyleSheet {
         if self.is_cancel {
-            theme::button_cancel()
+            ButtonStyleSheet::cancel(self.with_outline, self.with_arms, self.force_width)
         } else {
-            theme::button_default()
+            ButtonStyleSheet::default(self.with_outline, self.with_arms, self.force_width)
         }
     }
 
     /// Identifier of this button configuration.
     /// To quickly compare two buttons and see if there was a change.
-    pub fn id(&self) -> String<50> {
+    pub fn id(&self) -> String<60> {
         // TODO: we could maybe use `Eq` or `PartialEq` for comparison,
         // but that wold require some generic Trait changes (T: PartialEq),
         // which was not possible for AsRef<str>?
+        let text = if let Some(text) = self.text.clone() {
+            String::<20>::from(text.as_ref())
+        } else {
+            String::<20>::from("")
+        };
+        // TODO: the icon should be hashes, icon size is not really good but works for now
+        let icon_size = if let Some(icon) = self.icon {
+            icon.len()
+        } else {
+            0
+        };
         let duration_ms = self.duration.unwrap_or(Duration::ZERO).to_millis();
         build_string!(
-            50,
-            self.text.as_ref(),
+            60,
+            text.as_ref(),
+            "--",
+            String::<10>::from(icon_size as u32).as_ref(),
             "--",
             String::<20>::from(duration_ms).as_ref()
         )
@@ -144,12 +236,26 @@ impl<T: AsRef<str>> ButtonLayout<T> {
 }
 
 impl ButtonLayout<&'static str> {
+    /// Custom texts for all three buttons.
+    pub fn custom(left: &'static str, middle: &'static str, right: &'static str) -> Self {
+        Self::new(
+            Some(ButtonDetails::new(left)),
+            Some(ButtonDetails::new(middle)),
+            Some(ButtonDetails::new(right)),
+        )
+    }
+
     /// Default button layout for all three buttons.
     pub fn default_three() -> Self {
+        Self::custom("<", "SELECT", ">")
+    }
+
+    /// Default button layout for all three buttons - icons.
+    pub fn default_three_icons() -> Self {
         Self::new(
-            Some(ButtonDetails::new("<")),
-            Some(ButtonDetails::new("SELECT")),
-            Some(ButtonDetails::new(">")),
+            Some(ButtonDetails::icon(theme::ICON_ARROW_LEFT, "arr_left").with_no_outline()),
+            Some(ButtonDetails::new("SELECT").with_arms()),
+            Some(ButtonDetails::icon(theme::ICON_ARROW_RIGHT, "arr_right").with_no_outline()),
         )
     }
 
@@ -164,20 +270,7 @@ impl ButtonLayout<&'static str> {
 
     /// Setting a special middle text.
     pub fn special_middle(middle: &'static str) -> Self {
-        Self::new(
-            Some(ButtonDetails::new("<")),
-            Some(ButtonDetails::new(middle)),
-            Some(ButtonDetails::new(">")),
-        )
-    }
-
-    /// Custom texts for all three buttons.
-    pub fn custom(left: &'static str, middle: &'static str, right: &'static str) -> Self {
-        Self::new(
-            Some(ButtonDetails::new(left)),
-            Some(ButtonDetails::new(middle)),
-            Some(ButtonDetails::new(right)),
-        )
+        Self::custom("<", middle, ">")
     }
 }
 
@@ -206,6 +299,13 @@ impl StringChoiceItem {
         }
     }
 }
+
+// TODO: support multiple font sizes - 64 in the middle and 32 on the edges.
+// To it at least for the PIN and BIP39, maybe passphrase as well.
+// NOTE: beware of the size-limits of the flash - export just
+// those symbols that we really need.
+// Or maybe we could somehow scale the already existing symbols, not
+// to use any more space.
 
 impl ChoiceItem for StringChoiceItem {
     fn paint_center(&mut self) {
@@ -294,8 +394,8 @@ mod tests {
     #[test]
     fn test_btn_details_id() {
         let btn = ButtonDetails::new("Test");
-        assert_eq!(btn.id(), String::<50>::from("Test--0"));
+        assert_eq!(btn.id(), String::<50>::from("Test--0--0"));
         let btn = ButtonDetails::new("Duration").with_duration(Duration::from_secs(1));
-        assert_eq!(btn.id(), String::<50>::from("Duration--1000"));
+        assert_eq!(btn.id(), String::<50>::from("Duration--0--1000"));
     }
 }

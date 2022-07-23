@@ -246,6 +246,11 @@ impl Rect {
     pub const fn with_width(self, width: i32) -> Self {
         self.with_size(Offset::new(width, self.height()))
     }
+
+    pub fn with_height(self, height: i32) -> Self {
+        self.with_size(Offset::new(self.width(), height))
+    }
+
     /// Print the attributes for debugging purposes.
     pub fn print(&self) {
         println!(
@@ -258,10 +263,6 @@ impl Rect {
             ", y1: ",
             inttostr!(self.y1)
         );
-    }
-
-    pub const fn with_height(self, height: i32) -> Self {
-        self.with_size(Offset::new(self.width(), height))
     }
 
     pub const fn width(&self) -> i32 {
@@ -298,6 +299,14 @@ impl Rect {
 
     pub const fn bottom_center(&self) -> Point {
         self.bottom_left().center(self.bottom_right())
+    }
+
+    pub const fn left_center(&self) -> Point {
+        self.bottom_left().center(self.top_left())
+    }
+
+    pub const fn right_center(&self) -> Point {
+        self.bottom_right().center(self.top_right())
     }
 
     pub const fn contains(&self, point: Point) -> bool {
@@ -340,6 +349,24 @@ impl Rect {
         }
     }
 
+    pub const fn extend_left(&self, width: i32) -> Self {
+        Self {
+            x0: self.x0 - width,
+            y0: self.y0,
+            x1: self.x1,
+            y1: self.y1,
+        }
+    }
+
+    pub const fn extend_right(&self, width: i32) -> Self {
+        Self {
+            x0: self.x0,
+            y0: self.y0,
+            x1: self.x1 + width,
+            y1: self.y1,
+        }
+    }
+
     pub const fn split_top(self, height: i32) -> (Self, Self) {
         let height = clamp(height, 0, self.height());
 
@@ -376,7 +403,7 @@ impl Rect {
         self.split_left(self.width() - width)
     }
 
-    pub fn split_center(self, width: i32) -> Self {
+    pub const fn split_center(self, width: i32) -> Self {
         let x_center_offset = (self.width() - width) / 2;
         self.split_left(width)
             .0

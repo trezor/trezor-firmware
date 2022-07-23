@@ -1,3 +1,4 @@
+use super::LoaderStyleSheet;
 use super::{
     common::ButtonDetails, common::ButtonLayout, theme, Button, ButtonPos, HoldToConfirm,
     HoldToConfirmMsg,
@@ -88,11 +89,14 @@ impl<T: Clone + AsRef<str>> ButtonContainer<T> {
 
     /// Create `Button` component from `btn_details`.
     fn get_button(pos: ButtonPos, btn_details: ButtonDetails<T>) -> Child<Button<T>> {
-        Child::new(Button::with_text(
-            pos,
-            btn_details.clone().text,
-            btn_details.style(),
-        ))
+        // Deciding between text and icon
+        if let Some(text) = btn_details.clone().text {
+            Child::new(Button::with_text(pos, text, btn_details.style()))
+        } else if let Some(icon) = btn_details.icon {
+            Child::new(Button::with_icon(pos, icon, btn_details.style()))
+        } else {
+            panic!("ButtonContainer: no text or icon provided");
+        }
     }
 
     /// Create `HoldToConfirm` component from `btn_details`.
@@ -103,12 +107,25 @@ impl<T: Clone + AsRef<str>> ButtonContainer<T> {
         let duration = btn_details
             .duration
             .unwrap_or_else(|| Duration::from_millis(1000));
-        Child::new(HoldToConfirm::new(
-            pos,
-            btn_details.text,
-            theme::loader_default(),
-            duration,
-        ))
+        if let Some(text) = btn_details.text {
+            Child::new(HoldToConfirm::new(
+                pos,
+                text,
+                LoaderStyleSheet::default(),
+                duration,
+            ))
+        } else if let Some(icon_text) = btn_details.icon_text {
+            // TODO: this is hack to instantiate the HTC with icon,
+            // when HTC does not support icons yet
+            Child::new(HoldToConfirm::new(
+                pos,
+                icon_text,
+                LoaderStyleSheet::default(),
+                duration,
+            ))
+        } else {
+            panic!("ButtonContainer: no text or icon provided");
+        }
     }
 
     /// Changing the state of the button.
@@ -128,20 +145,24 @@ impl<T: Clone + AsRef<str>> ButtonContainer<T> {
 
         if let Some(btn_details) = btn_details {
             // Choosing between Hold-to-confirm and normal button based on `duration`.
-            // Creating the appropriate button if it does not exist and updating
-            // it to match the current btn_details.
-            // Even when button is freshly created, it needs to be updated,
-            // because it is not placed and that happens during `set_text()`.
+            // Creating and placing the appropriate button if it does
+            // not exist and updating it to match the current btn_details.
             if let Some(duration) = btn_details.duration {
                 self.button_type = ButtonType::HoldToConfirm;
                 if self.hold_to_confirm.is_none() {
                     self.hold_to_confirm =
                         Some(Self::get_hold_to_confirm(self.pos, btn_details.clone()));
+                    self.hold_to_confirm.place(button_area);
                 }
 
                 if let Some(hold_to_confirm) = &mut self.hold_to_confirm {
                     hold_to_confirm.mutate(ctx, |_ctx, btn| {
-                        btn.set_text(btn_details.text, button_area);
+                        // Deciding between text and icon
+                        if let Some(text) = btn_details.text {
+                            btn.set_text(text, button_area);
+                        } else if let Some(_icon) = btn_details.icon {
+                            todo!("support icon for HoldToConfirm");
+                        }
                         btn.set_duration(duration);
                     });
                     hold_to_confirm.request_complete_repaint(ctx);
@@ -150,12 +171,18 @@ impl<T: Clone + AsRef<str>> ButtonContainer<T> {
                 self.button_type = ButtonType::NormalButton;
                 if self.button.is_none() {
                     self.button = Some(Self::get_button(self.pos, btn_details.clone()));
+                    self.button.place(button_area);
                 }
 
                 if let Some(button) = &mut self.button {
                     let style = btn_details.style();
                     button.mutate(ctx, |_ctx, btn| {
-                        btn.set_text(btn_details.text, button_area);
+                        // Deciding between text and icon
+                        if let Some(text) = btn_details.text {
+                            btn.set_text(text);
+                        } else if let Some(icon) = btn_details.icon {
+                            btn.set_icon(icon);
+                        }
                         btn.set_style(style);
                     });
                     button.request_complete_repaint(ctx);

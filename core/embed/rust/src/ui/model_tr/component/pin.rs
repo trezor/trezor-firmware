@@ -78,13 +78,16 @@ impl PinEntry {
         let mut choices: Vec<MultilineStringChoiceItem, CHOICE_LENGTH> = DIGITS
             .iter()
             .map(|digit| {
-                MultilineStringChoiceItem::new(String::from(*digit), ButtonLayout::default_three())
-                    .use_delimiter(' ')
+                MultilineStringChoiceItem::new(
+                    String::from(*digit),
+                    ButtonLayout::default_three_icons(),
+                )
+                .use_delimiter(' ')
             })
             .collect();
 
         // Action buttons have different text
-        let confirm_btn = ButtonDetails::new("CONFIRM");
+        let confirm_btn = ButtonDetails::new("CONFIRM").with_arms();
         choices[EXIT_INDEX].btn_layout.btn_middle = Some(confirm_btn);
         choices[DELETE_INDEX].btn_layout.btn_middle = Some(confirm_btn);
         choices[SHOW_INDEX].btn_layout.btn_middle = Some(confirm_btn);

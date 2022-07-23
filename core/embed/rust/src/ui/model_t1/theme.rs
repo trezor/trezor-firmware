@@ -14,7 +14,6 @@ pub const FONT_MONO: Font = Font::new(-3);
 // Color palette.
 pub const WHITE: Color = Color::rgb(255, 255, 255);
 pub const BLACK: Color = Color::rgb(0, 0, 0);
-pub const GREY_LIGHT: Color = WHITE; // Word/page break characters.
 pub const FG: Color = WHITE; // Default foreground (text & icon) color.
 pub const BG: Color = BLACK; // Default background color.
 

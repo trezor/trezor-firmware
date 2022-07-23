@@ -5,6 +5,7 @@ use crate::{
         component::{Component, Event, EventCtx},
         display::{self, Color, Font},
         geometry::{Offset, Rect},
+        model_tr::theme,
     },
 };
 
@@ -208,6 +209,18 @@ pub struct LoaderStyle {
     pub font: Font,
     pub fg_color: Color,
     pub bg_color: Color,
+}
+
+impl LoaderStyleSheet {
+    pub fn default() -> Self {
+        Self {
+            normal: &LoaderStyle {
+                font: theme::FONT_BUTTON,
+                fg_color: theme::FG,
+                bg_color: theme::BG,
+            },
+        }
+    }
 }
 
 #[cfg(feature = "ui_debug")]

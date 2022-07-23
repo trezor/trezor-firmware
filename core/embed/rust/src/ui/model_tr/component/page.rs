@@ -22,6 +22,8 @@ pub struct ButtonPage<S, T> {
     buttons: Child<ButtonController<S>>,
 }
 
+const ARROW_BTN_WIDTH: i32 = 62;
+
 impl<T> ButtonPage<&'static str, T>
 where
     T: Paginate,
@@ -33,10 +35,19 @@ where
             content,
             scrollbar: ScrollBar::vertical(),
             pad: Pad::with_background(background),
-            cancel_btn_details: Some(ButtonDetails::cancel("CANCEL")),
+            cancel_btn_details: Some(
+                ButtonDetails::icon(theme::ICON_CANCEL, "cancel").with_cancel(),
+            ),
             confirm_btn_details: Some(ButtonDetails::new("CONFIRM")),
-            back_btn_details: Some(ButtonDetails::cancel("BACK")),
-            next_btn_details: Some(ButtonDetails::new("NEXT")),
+            back_btn_details: Some(
+                ButtonDetails::icon(theme::ICON_ARROW_UP, "arr_up")
+                    .force_width(ARROW_BTN_WIDTH)
+                    .with_cancel(),
+            ),
+            next_btn_details: Some(
+                ButtonDetails::icon(theme::ICON_ARROW_DOWN, "arr_down")
+                    .force_width(ARROW_BTN_WIDTH),
+            ),
             // Setting empty layout for now, we do not yet know the page count.
             // Initial button layout will be set in `place()` after we can call `content.page_count()`.
             buttons: Child::new(ButtonController::new(ButtonLayout::empty())),
@@ -55,10 +66,19 @@ where
             content,
             scrollbar: ScrollBar::vertical(),
             pad: Pad::with_background(background),
-            cancel_btn_details: Some(ButtonDetails::cancel("CANCEL".into())),
+            cancel_btn_details: Some(
+                ButtonDetails::icon(theme::ICON_CANCEL, "cancel".into()).with_cancel(),
+            ),
             confirm_btn_details: Some(ButtonDetails::new("CONFIRM".into())),
-            back_btn_details: Some(ButtonDetails::cancel("BACK".into())),
-            next_btn_details: Some(ButtonDetails::new("NEXT".into())),
+            back_btn_details: Some(
+                ButtonDetails::icon(theme::ICON_ARROW_UP, "arr_up".into())
+                    .force_width(ARROW_BTN_WIDTH)
+                    .with_cancel(),
+            ),
+            next_btn_details: Some(
+                ButtonDetails::icon(theme::ICON_ARROW_DOWN, "arr_down".into())
+                    .force_width(ARROW_BTN_WIDTH),
+            ),
             // Setting empty layout for now, we do not yet know the page count.
             // Initial button layout will be set in `place()` after we can call `content.page_count()`.
             buttons: Child::new(ButtonController::new(ButtonLayout::empty())),
@@ -155,8 +175,7 @@ where
     type Msg = PageMsg<T::Msg, bool>;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let button_height = theme::FONT_BUTTON.line_height() + 2;
-        let (content_and_scrollbar_area, button_area) = bounds.split_bottom(button_height);
+        let (content_and_scrollbar_area, button_area) = bounds.split_bottom(theme::BUTTON_HEIGHT);
         let (content_area, scrollbar_area) =
             content_and_scrollbar_area.split_right(ScrollBar::WIDTH);
         let content_area = content_area.inset(Insets::top(1));

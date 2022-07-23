@@ -32,9 +32,8 @@ impl ButtonPos {
 }
 
 pub struct Button<T> {
-    area: Rect,
+    bounds: Rect,
     pos: ButtonPos,
-    baseline: Point,
     content: ButtonContent<T>,
     styles: ButtonStyleSheet,
     state: State,
@@ -46,8 +45,7 @@ impl<T: AsRef<str>> Button<T> {
             pos,
             content,
             styles,
-            baseline: Point::zero(),
-            area: Rect::zero(),
+            bounds: Rect::zero(),
             state: State::Released,
         }
     }
@@ -64,20 +62,21 @@ impl<T: AsRef<str>> Button<T> {
         &self.content
     }
 
-    fn style(&self) -> &ButtonStyle {
+    fn style(&self) -> ButtonStyle {
         match self.state {
             State::Released => self.styles.normal,
             State::Pressed => self.styles.active,
         }
     }
 
+    /// Changing the icon content of the button.
+    pub fn set_icon(&mut self, image: &'static [u8]) {
+        self.content = ButtonContent::Icon(image);
+    }
+
     /// Changing the text content of the button.
-    ///
-    /// NOTE: the button must/should be placed again
-    /// after this, to update the button boundaries.
-    pub fn set_text(&mut self, text: T, button_area: Rect) {
+    pub fn set_text(&mut self, text: T) {
         self.content = ButtonContent::Text(text);
-        self.place(button_area);
     }
 
     /// Changing the style of the button.
@@ -85,6 +84,7 @@ impl<T: AsRef<str>> Button<T> {
         self.styles = styles;
     }
 
+    // Setting the visual state of the button.
     fn set(&mut self, ctx: &mut EventCtx, state: State) {
         if self.state != state {
             self.state = state;
@@ -92,6 +92,7 @@ impl<T: AsRef<str>> Button<T> {
         }
     }
 
+    // Setting the visual state of the button.
     pub fn set_pressed(&mut self, ctx: &mut EventCtx, is_pressed: bool) {
         let new_state = if is_pressed {
             State::Pressed
@@ -101,27 +102,42 @@ impl<T: AsRef<str>> Button<T> {
         self.set(ctx, new_state);
     }
 
-    fn placement(
-        area: Rect,
-        pos: ButtonPos,
-        content: &ButtonContent<T>,
-        styles: &ButtonStyleSheet,
-    ) -> (Rect, Point) {
-        let border_width = if styles.normal.border_horiz { 2 } else { 0 };
-        let content_width = match content {
-            ButtonContent::Text(text) => styles.normal.font.text_width(text.as_ref()) - 1,
-            ButtonContent::Icon(_icon) => todo!(),
-        };
-        let button_width = content_width + 2 * border_width;
-        let area = match pos {
-            ButtonPos::Left => area.split_left(button_width).0,
-            ButtonPos::Right => area.split_right(button_width).1,
-            ButtonPos::Middle => area.split_center(button_width),
+    /// Return the full area of the button according
+    /// to its current style, content and position.
+    fn get_current_area(&self) -> Rect {
+        let style = self.style();
+        // Button width may be forced. Otherwise calculate it.
+        let button_width = if let Some(width) = style.force_width {
+            width
+        } else {
+            let outline = if style.with_outline {
+                theme::BUTTON_OUTLINE
+            } else {
+                0
+            };
+            let content_width = match &self.content {
+                ButtonContent::Text(text) => style.font.text_width(text.as_ref()) - 1,
+                ButtonContent::Icon(icon) => display::toif_dimensions(icon, true).0 as i32 - 1,
+            };
+            content_width + 2 * outline
         };
 
-        let start_of_baseline = area.bottom_left() + Offset::new(border_width, -2);
+        match self.pos {
+            ButtonPos::Left => self.bounds.split_left(button_width).0,
+            ButtonPos::Right => self.bounds.split_right(button_width).1,
+            ButtonPos::Middle => self.bounds.split_center(button_width),
+        }
+    }
 
-        (area, start_of_baseline)
+    /// Determine baseline point for the text.
+    fn get_baseline(&self, style: &ButtonStyle) -> Point {
+        // Arms and outline require the text to be elevated.
+        if style.with_arms || style.with_outline {
+            let offset = theme::BUTTON_OUTLINE;
+            self.get_current_area().bottom_left() + Offset::new(offset, -offset)
+        } else {
+            self.get_current_area().bottom_left()
+        }
     }
 }
 
@@ -132,10 +148,8 @@ where
     type Msg = ButtonMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let (area, baseline) = Self::placement(bounds, self.pos, &self.content, &self.styles);
-        self.area = area;
-        self.baseline = baseline;
-        self.area
+        self.bounds = bounds;
+        self.get_current_area()
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
@@ -158,26 +172,58 @@ where
 
     fn paint(&mut self) {
         let style = self.style();
+        let text_color = style.text_color;
+        let background_color = text_color.negate();
+        let area = self.get_current_area();
+
+        // TODO: support another combinations of text and icons
+        // - text with OK icon on left
+
+        // Optionally display "arms" at both sides of content, or create
+        // a nice rounded outline around it.
+        // By default just fill the content background.
+        if style.with_arms {
+            // Prepare space for both the arms and content with BG color.
+            // Arms are icons 10*6 pixels.
+            let area_to_fill = area.extend_left(10).extend_right(15);
+            display::rect_fill(area_to_fill, background_color);
+
+            // Paint both arms.
+            // TODO: for "CONFIRM" there is one space at the right, but for "SELECT" there are two
+            let left_arm_center = area.left_center() - Offset::x(3) + Offset::y(3);
+            let right_arm_center = area.right_center() + Offset::x(9) + Offset::y(3);
+            display::icon(
+                left_arm_center,
+                theme::ICON_ARM_LEFT,
+                text_color,
+                background_color,
+            );
+            display::icon(
+                right_arm_center,
+                theme::ICON_ARM_RIGHT,
+                text_color,
+                background_color,
+            );
+        } else if style.with_outline {
+            display::rect_outline_rounded2(area, text_color, background_color);
+        } else {
+            display::rect_fill(area, background_color)
+        }
 
         match &self.content {
             ButtonContent::Text(text) => {
-                let background_color = style.text_color.negate();
-                if style.border_horiz {
-                    display::rect_fill_rounded1(self.area, background_color, theme::BG);
-                } else {
-                    display::rect_fill(self.area, background_color)
-                }
-
                 display::text(
-                    self.baseline,
+                    self.get_baseline(&style),
                     text.as_ref(),
                     style.font,
-                    style.text_color,
+                    text_color,
                     background_color,
                 );
             }
-            ButtonContent::Icon(_image) => {
-                todo!();
+            ButtonContent::Icon(icon) => {
+                // Accounting for the 8*8 icon with empty left column and bottom row.
+                let icon_center = area.center() + Offset::uniform(1);
+                display::icon(icon_center, icon, text_color, background_color);
             }
         }
     }
@@ -210,12 +256,57 @@ pub enum ButtonContent<T> {
 }
 
 pub struct ButtonStyleSheet {
-    pub normal: &'static ButtonStyle,
-    pub active: &'static ButtonStyle,
+    pub normal: ButtonStyle,
+    pub active: ButtonStyle,
 }
 
+#[derive(Clone, Copy)]
 pub struct ButtonStyle {
     pub font: Font,
     pub text_color: Color,
-    pub border_horiz: bool,
+    pub with_outline: bool,
+    pub with_arms: bool,
+    pub force_width: Option<i32>,
+}
+
+// TODO: currently `button_default` and `button_cancel`
+// are the same - decide whether to differentiate them.
+// In Figma, they are not differentiated.
+
+impl ButtonStyleSheet {
+    pub fn new(
+        normal_color: Color,
+        active_color: Color,
+        with_outline: bool,
+        with_arms: bool,
+        force_width: Option<i32>,
+    ) -> Self {
+        Self {
+            normal: ButtonStyle {
+                font: theme::FONT_BUTTON,
+                text_color: normal_color,
+                with_outline,
+                with_arms,
+                force_width,
+            },
+            active: ButtonStyle {
+                font: theme::FONT_BUTTON,
+                text_color: active_color,
+                with_outline,
+                with_arms,
+                force_width,
+            },
+        }
+    }
+
+    // White text in normal mode.
+    pub fn default(with_outline: bool, with_arms: bool, force_width: Option<i32>) -> Self {
+        Self::new(theme::FG, theme::BG, with_outline, with_arms, force_width)
+    }
+
+    // Black text in normal mode.
+    pub fn cancel(with_outline: bool, with_arms: bool, force_width: Option<i32>) -> Self {
+        Self::new(theme::FG, theme::BG, with_outline, with_arms, force_width)
+        // Self::new(theme::BG, theme::FG, with_outline, with_arms)
+    }
 }

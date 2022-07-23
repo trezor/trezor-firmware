@@ -9,7 +9,7 @@ use crate::{
         display, qr, time,
         uzlib::{UzlibContext, UZLIB_WINDOW_SIZE},
     },
-    ui::lerp::Lerp,
+    ui::{lerp::Lerp, model_tr::theme},
 };
 use core::slice;
 
@@ -63,16 +63,23 @@ pub fn rect_fill_rounded(r: Rect, fg_color: Color, bg_color: Color, radius: u8) 
     );
 }
 
+/// Get `width` and `height` of the toif icon/image.
+/// Asserts the `grayscale` attribute of the icon/image.
+pub fn toif_dimensions(data: &[u8], grayscale: bool) -> (u16, u16) {
+    let toif_info = unwrap!(display::toif_info(data), "Invalid TOIF data");
+    assert!(toif_info.grayscale == grayscale);
+    (toif_info.width, toif_info.height)
+}
+
 /// NOTE: Cannot start at odd x-coordinate. In this case icon is shifted 1px
 /// left.
 pub fn icon_top_left(top_left: Point, data: &[u8], fg_color: Color, bg_color: Color) {
-    let toif_info = unwrap!(display::toif_info(data), "Invalid TOIF data");
-    assert!(toif_info.grayscale);
+    let (width, height) = toif_dimensions(data, true);
     display::icon(
         top_left.x,
         top_left.y,
-        toif_info.width.into(),
-        toif_info.height.into(),
+        width.into(),
+        height.into(),
         &data[12..], // Skip TOIF header.
         fg_color.into(),
         bg_color.into(),
@@ -80,13 +87,9 @@ pub fn icon_top_left(top_left: Point, data: &[u8], fg_color: Color, bg_color: Co
 }
 
 pub fn icon(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
-    let toif_info = unwrap!(display::toif_info(data), "Invalid TOIF data");
-    assert!(toif_info.grayscale);
+    let (width, height) = toif_dimensions(data, true);
 
-    let r = Rect::from_center_and_size(
-        center,
-        Offset::new(toif_info.width.into(), toif_info.height.into()),
-    );
+    let r = Rect::from_center_and_size(center, Offset::new(width.into(), height.into()));
     display::icon(
         r.x0,
         r.y0,
@@ -99,13 +102,9 @@ pub fn icon(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
 }
 
 pub fn icon_rust(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
-    let toif_info = unwrap!(display::toif_info(data), "Invalid TOIF data");
-    assert!(toif_info.grayscale);
+    let (width, height) = toif_dimensions(data, true);
 
-    let r = Rect::from_center_and_size(
-        center,
-        Offset::new(toif_info.width.into(), toif_info.height.into()),
-    );
+    let r = Rect::from_center_and_size(center, Offset::new(width.into(), height.into()));
 
     let area = r.translate(get_offset());
     let clamped = area.clamp(constant::screen());
@@ -141,13 +140,9 @@ pub fn icon_rust(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
 }
 
 pub fn image(center: Point, data: &[u8]) {
-    let toif_info = unwrap!(display::toif_info(data), "Invalid TOIF data");
-    assert!(!toif_info.grayscale);
+    let (width, height) = toif_dimensions(data, false);
 
-    let r = Rect::from_center_and_size(
-        center,
-        Offset::new(toif_info.width.into(), toif_info.height.into()),
-    );
+    let r = Rect::from_center_and_size(center, Offset::new(width.into(), height.into()));
     display::image(
         r.x0,
         r.y0,
@@ -168,7 +163,7 @@ pub fn toif_info(data: &[u8]) -> Option<(Offset, bool)> {
     }
 }
 
-// Used on T1 only.
+// Used on T1/TR only.
 pub fn rect_fill_rounded1(r: Rect, fg_color: Color, bg_color: Color) {
     display::bar(r.x0, r.y0, r.width(), r.height(), fg_color.into());
     let corners = [
@@ -179,6 +174,55 @@ pub fn rect_fill_rounded1(r: Rect, fg_color: Color, bg_color: Color) {
     ];
     for p in corners.iter() {
         display::bar(p.x, p.y, 1, 1, bg_color.into());
+    }
+}
+
+// Creating a rectangular outline with a rounding of 2 pixels.
+pub fn rect_outline_rounded2(r: Rect, fg_color: Color, bg_color: Color) {
+    // Create the outline.
+    display::bar(r.x0, r.y0, r.width(), r.height(), fg_color.into());
+    display::bar(
+        r.x0 + 1,
+        r.y0 + 1,
+        r.width() - 2,
+        r.height() - 2,
+        bg_color.into(),
+    );
+
+    // BG - delete three points around each corner.
+    // Do it only for black background. No need on white.
+    if bg_color == theme::BG {
+        let bg_corners = [
+            r.top_left(),
+            r.top_left() + Offset::x(1),
+            r.top_left() + Offset::y(1),
+            // ...
+            r.top_right() - Offset::x(1),
+            r.top_right() - Offset::x(1) + Offset::y(1),
+            r.top_right() - Offset::x(2),
+            // ...
+            r.bottom_right() - Offset::uniform(1),
+            r.bottom_right() - Offset::uniform(1) - Offset::x(1),
+            r.bottom_right() - Offset::uniform(1) - Offset::y(1),
+            // ...
+            r.bottom_left() - Offset::y(1),
+            r.bottom_left() - Offset::y(1) + Offset::x(1),
+            r.bottom_left() - Offset::y(2),
+        ];
+        for p in bg_corners.iter() {
+            display::bar(p.x, p.y, 1, 1, bg_color.into());
+        }
+    }
+
+    // FG - write one point in each corner.
+    let fg_corners = [
+        r.top_left() + Offset::uniform(1),
+        r.top_right() - Offset::x(2) + Offset::y(1),
+        r.bottom_right() - Offset::uniform(2),
+        r.bottom_left() - Offset::y(2) + Offset::x(1),
+    ];
+    for p in fg_corners.iter() {
+        display::bar(p.x, p.y, 1, 1, fg_color.into());
     }
 }
 
@@ -220,7 +264,12 @@ impl<T: AsRef<str>> TextOverlay<T> {
 
         let p_rel = Point::new(p.x - self.area.x0, p.y - self.area.y0);
 
-        for g in self.text.as_ref().bytes().filter_map(|c| self.font.get_glyph(c)) {
+        for g in self
+            .text
+            .as_ref()
+            .bytes()
+            .filter_map(|c| self.font.get_glyph(c))
+        {
             let char_area = Rect::new(
                 Point::new(tot_adv + g.bearing_x, g.height - g.bearing_y),
                 Point::new(tot_adv + g.bearing_x + g.width, g.bearing_y),

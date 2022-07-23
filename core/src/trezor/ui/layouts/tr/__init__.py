@@ -189,10 +189,15 @@ async def confirm_action(
     if isinstance(verb_cancel, str):
         verb_cancel = verb_cancel.upper()
 
+    # "HOLD TO CONFIRM" is so long that it takes no space for the other button
+    # TODO: decide on how to handle this (could create an icon signalling `HOLD`)
+    if verb == "HOLD TO CONFIRM":
+        verb = "CONFIRM"
+
     # When there is a long verb, verb_cancel sometimes does not fit, so shortening it
     # TODO: rather go through each layout and make it fit properly
     if isinstance(verb, str) and isinstance(verb_cancel, str):
-        max_letters = 18
+        max_letters = 15
         letters_for_cancel = max_letters - len(verb)
         if len(verb_cancel) > letters_for_cancel:
             verb_cancel = verb_cancel[:letters_for_cancel]

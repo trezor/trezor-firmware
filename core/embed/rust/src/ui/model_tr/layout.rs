@@ -114,7 +114,7 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
         let verb = verb.unwrap_or_default();
 
         let cancel_btn = if verb_cancel.len() > 0 {
-            Some(ButtonDetails::cancel(verb_cancel))
+            Some(ButtonDetails::icon(theme::ICON_CANCEL, "cancel".into()).with_cancel())
         } else {
             None
         };
@@ -205,7 +205,7 @@ extern "C" fn show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map
                 String::<2>::from(index as i16 + 1).as_str(),
                 ". ",
                 word,
-                "\n\n\n"
+                "\n"
             );
 
             middle_words.push_str(&line).unwrap();
