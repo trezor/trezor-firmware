@@ -67,7 +67,7 @@ def confirm_text(
 # rust/src/ui/model_tr/layout.rs
 def show_share_words(
     *,
-    share_words: str,  # words delimited by "," ... TODO: support list[str]
+    share_words: Iterable[str],
 ) -> None:
     """Shows a backup seed."""
 
@@ -75,7 +75,7 @@ def show_share_words(
 # rust/src/ui/model_tr/layout.rs
 def confirm_word(
     *,
-    choices: str,  # words delimited by "," ... TODO: support list[str]
+    choices: Iterable[str],
     checked_index: int,
     count: int,
     share_index: int | None,

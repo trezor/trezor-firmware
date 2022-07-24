@@ -24,7 +24,7 @@ async def show_share_words(
         ctx,
         RustLayout(
             trezorui2.show_share_words(
-                share_words=",".join(share_words),
+                share_words=share_words,
             )
         ),
         br_type="backup_words",
@@ -57,7 +57,7 @@ async def confirm_word(
         ctx,
         RustLayout(
             trezorui2.confirm_word(
-                choices=",".join(choices),
+                choices=choices,
                 share_index=share_index,
                 checked_index=checked_index,
                 count=count,

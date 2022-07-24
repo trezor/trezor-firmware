@@ -4,7 +4,15 @@ use heapless::{String, Vec};
 
 use crate::{
     error::Error,
-    micropython::{buffer::StrBuffer, map::Map, module::Module, obj::Obj, qstr::Qstr, util},
+    micropython::{
+        buffer::StrBuffer,
+        iter::{Iter, IterBuf},
+        map::Map,
+        module::Module,
+        obj::Obj,
+        qstr::Qstr,
+        util,
+    },
     time::Duration,
     ui::{
         component::{
@@ -131,6 +139,9 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
             confirm_btn = confirm_btn.map(|btn| btn.with_duration(Duration::from_secs(2)));
         }
 
+        // TODO: make sure the text will not be colliding with the buttons
+        // - make there some space on the bottom of the text
+
         let obj = LayoutObj::new(Frame::new(
             title,
             None,
@@ -185,30 +196,34 @@ extern "C" fn request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> 
 
 extern "C" fn show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
-        // TODO: get these as a list
-        let share_words: StrBuffer = kwargs.get(Qstr::MP_QSTR_share_words)?.try_into()?;
+        let share_words_obj: Obj = kwargs.get(Qstr::MP_QSTR_share_words)?;
         let title = "Recovery seed";
 
-        let share_words_len = share_words.split(',').count();
-        let share_words_len_str: String<10> = String::from(share_words_len as i16);
+        // Parsing the list of share words.
+        // Assume there is always just 12 words in the newly generated seed
+        // (for now, later we might support SLIP39 with up to 33 words)
+        let mut iter_buf = IterBuf::new();
+        let iter_words = Iter::try_from_obj_with_buf(share_words_obj, &mut iter_buf)?;
+        let mut share_words: Vec<StrBuffer, 12> = Vec::new();
+        for word in iter_words {
+            share_words.push(word.try_into()?).unwrap();
+        }
+
+        let share_words_len = share_words.len() as u8;
 
         let beginning_text = build_string!(
             40,
             "Write down these ",
-            share_words_len_str.as_str(),
+            inttostr!(share_words_len),
             " words:\n\n"
         );
 
-        // Assume there is always just 12 words in the newly generated seed
         let mut middle_words: String<240> = String::new();
-        for (index, word) in share_words.split(',').enumerate() {
-            let line = build_string!(
-                20,
-                String::<2>::from(index as i16 + 1).as_str(),
-                ". ",
-                word,
-                "\n"
-            );
+        // Vec<StrBuffer> does not support `enumerate()`
+        let mut index: u8 = 0;
+        for word in share_words {
+            index += 1;
+            let line = build_string!(20, inttostr!(index), ". ", word.as_ref(), "\n");
 
             middle_words.push_str(&line).unwrap();
         }
@@ -216,10 +231,12 @@ extern "C" fn show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map
         let end_text = build_string!(
             40,
             "I wrote down all ",
-            share_words_len_str.as_str(),
+            inttostr!(share_words_len),
             " words in order."
         );
 
+        // TODO: instead of this could create a new paragraph for the beginning,
+        // each word and the end
         let text_to_show = build_string!(
             320,
             beginning_text.as_str(),
@@ -249,8 +266,7 @@ extern "C" fn show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map
 
 extern "C" fn confirm_word(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
-        // TODO: how to accept List from python?
-        let choices: StrBuffer = kwargs.get(Qstr::MP_QSTR_choices)?.try_into()?;
+        let choices: Obj = kwargs.get(Qstr::MP_QSTR_choices)?;
         let checked_index: u8 = kwargs.get(Qstr::MP_QSTR_checked_index)?.try_into()?;
         let count: u8 = kwargs.get(Qstr::MP_QSTR_count)?.try_into()?;
 
@@ -265,7 +281,16 @@ extern "C" fn confirm_word(n_args: usize, args: *const Obj, kwargs: *mut Map) ->
             count_str.as_str()
         );
 
-        let words: Vec<String<20>, 3> = choices.split(',').map(String::from).collect();
+        // Extracting three words out of choices.
+        // TODO: there might be some better way using `map` rather than pushing
+        // TODO: this also required to derive `Debug` on StrBuffer - does
+        // it take any space in the binary?
+        let mut iter_buf = IterBuf::new();
+        let iter_words = Iter::try_from_obj_with_buf(choices, &mut iter_buf)?;
+        let mut words: Vec<StrBuffer, 3> = Vec::new();
+        for word in iter_words {
+            words.push(word.try_into()?).unwrap();
+        }
 
         let obj = LayoutObj::new(Frame::new(
             prompt,
@@ -365,14 +390,14 @@ pub static mp_module_trezorui2: Module = obj_module! {
 
     /// def show_share_words(
     ///     *,
-    ///     share_words: str,  # words delimited by "," ... TODO: support list[str]
+    ///     share_words: Iterable[str],
     /// ) -> None:
     ///     """Shows a backup seed."""
     Qstr::MP_QSTR_show_share_words => obj_fn_kw!(0, show_share_words).as_obj(),
 
     /// def confirm_word(
     ///     *,
-    ///     choices: str,  # words delimited by "," ... TODO: support list[str]
+    ///     choices: Iterable[str],
     ///     checked_index: int,
     ///     count: int,
     ///     share_index: int | None,
