@@ -13,6 +13,8 @@ from trezor.ui.layouts.reset import (  # noqa: F401
     slip39_show_checklist,
 )
 
+from .. import text_r
+
 
 async def show_internal_entropy(ctx: wire.GenericContext, entropy: bytes) -> None:
     await confirm_blob(
@@ -96,7 +98,9 @@ async def show_backup_warning(ctx: wire.GenericContext, slip39: bool = False) ->
     if slip39:
         description = "Never make a digital copy of your recovery shares and never upload them online!"
     else:
-        description = "Never make a digital copy of your recovery seed and never upload\nit online!"
+        description = text_r(
+            "Never make a digital copy of your recovery seed and never upload\nit online!"
+        )
     await confirm_action(
         ctx,
         "backup_warning",
@@ -110,7 +114,7 @@ async def show_backup_warning(ctx: wire.GenericContext, slip39: bool = False) ->
 
 
 async def show_backup_success(ctx: wire.GenericContext) -> None:
-    text = "Use your backup\nwhen you need to\nrecover your wallet."
+    text = text_r("Use your backup\nwhen you need to\nrecover your wallet.")
     await show_success(ctx, "success_backup", text, subheader="Your backup is done.")
 
 

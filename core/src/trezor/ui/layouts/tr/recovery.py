@@ -39,7 +39,7 @@ async def request_word_count(ctx: wire.GenericContext, dry_run: bool) -> int:
 async def request_word(
     ctx: wire.GenericContext, word_index: int, word_count: int, is_slip39: bool
 ) -> str:
-    prompt = f"Choose word {word_index + 1} of {word_count}:"
+    prompt = f"Choose word {word_index + 1}/{word_count}"
 
     if is_slip39:
         raise NotImplementedError

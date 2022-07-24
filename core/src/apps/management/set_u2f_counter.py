@@ -4,6 +4,8 @@ from trezor.enums import ButtonRequestType
 from trezor.messages import SetU2FCounter, Success
 from trezor.ui.layouts import confirm_action
 
+from . import text_r
+
 
 async def set_u2f_counter(ctx: wire.Context, msg: SetU2FCounter) -> Success:
     if not storage.device.is_initialized():
@@ -15,7 +17,7 @@ async def set_u2f_counter(ctx: wire.Context, msg: SetU2FCounter) -> Success:
         ctx,
         "set_u2f_counter",
         title="Set U2F counter",
-        description="Do you really want to\nset the U2F counter\nto {}?",
+        description=text_r("Do you really want to\nset the U2F counter\nto {}?"),
         description_param=str(msg.u2f_counter),
         icon=ui.ICON_CONFIG,
         br_code=ButtonRequestType.ProtectCall,

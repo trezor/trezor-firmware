@@ -4,6 +4,8 @@ from trezor.enums import ButtonRequestType
 from trezor.messages import GetNextU2FCounter, NextU2FCounter
 from trezor.ui.layouts import confirm_action
 
+from . import text_r
+
 
 async def get_next_u2f_counter(
     ctx: wire.Context, msg: GetNextU2FCounter
@@ -15,7 +17,9 @@ async def get_next_u2f_counter(
         ctx,
         "get_u2f_counter",
         title="Get next U2F counter",
-        description="Do you really want to increase and retrieve\nthe U2F counter?",
+        description=text_r(
+            "Do you really want to increase and retrieve\nthe U2F counter?"
+        ),
         icon=ui.ICON_CONFIG,
         br_code=ButtonRequestType.ProtectCall,
     )

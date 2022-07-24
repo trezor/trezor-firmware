@@ -5,6 +5,8 @@ import storage.cache
 import storage.sd_salt
 from trezor import config, wire
 
+from apps.management import text_r
+
 from .sdcard import SdCardUnavailable, request_sd_salt
 
 
@@ -38,7 +40,7 @@ async def pin_mismatch() -> None:
 
     await show_popup(
         title="PIN mismatch",
-        description="The PINs you entered\ndo not match.\n\nPlease try again.",
+        description=text_r("The PINs you entered\ndo not match.\n\nPlease try again."),
     )
 
 
@@ -137,7 +139,7 @@ async def error_pin_matches_wipe_code(ctx: wire.Context) -> NoReturn:
         ctx,
         "warning_invalid_new_pin",
         header="Invalid PIN",
-        content="The new PIN must be different from your\nwipe code.",
+        content=text_r("The new PIN must be different from your\nwipe code."),
         red=True,
         exc=wire.PinInvalid,
     )

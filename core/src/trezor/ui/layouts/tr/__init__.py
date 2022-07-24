@@ -156,6 +156,9 @@ async def raise_if_cancelled(a: Awaitable[T], exc: Any = wire.ActionCancelled) -
 # BELOW ARE THE SAME AS IN tt/__init__.py
 
 
+# TODO: probably make special version of some `action` and
+# `description` strings for model R, as those for model T
+# have newlines at random places (suitable for T).
 async def confirm_action(
     ctx: wire.GenericContext,
     br_type: str,
@@ -231,8 +234,8 @@ async def confirm_reset_device(
             ctx=ctx,
             br_type="recover_device" if recovery else "setup_device",
             title="Recovery mode" if recovery else "Create new wallet",
-            data=f"{prompt}\n\nBy continuing you agree to\nhttps://trezor.io/tos",
-            description="",
+            data="By continuing you agree to trezor.io/tos",
+            description=prompt,
             br_code=ButtonRequestType.ProtectCall
             if recovery
             else ButtonRequestType.ResetDevice,
@@ -245,7 +248,7 @@ async def confirm_backup(ctx: wire.GenericContext) -> bool:
     if await get_bool(
         ctx=ctx,
         title="Success",
-        data="New wallet created successfully!\n\nYou should back up your new wallet right now.",
+        data="\nNew wallet created successfully!\n\n\nYou should back up your new wallet right now.",
         verb="Back up",
         verb_cancel="Skip",
         br_type="backup_device",
@@ -256,7 +259,8 @@ async def confirm_backup(ctx: wire.GenericContext) -> bool:
     confirmed = await get_bool(
         ctx=ctx,
         title="Warning",
-        data="Are you sure you want to skip the backup?\n\nYou can back up your Trezor once, at any time.",
+        data="Are you sure you want to skip the backup?\n\n",
+        description="You can back up your Trezor once, at any time.",
         verb="Back up",
         verb_cancel="Skip",
         br_type="backup_device",

@@ -365,6 +365,8 @@ apps.homescreen.homescreen
 import apps.homescreen.homescreen
 apps.homescreen.lockscreen
 import apps.homescreen.lockscreen
+apps.management
+import apps.management
 apps.management.apply_flags
 import apps.management.apply_flags
 apps.management.apply_settings

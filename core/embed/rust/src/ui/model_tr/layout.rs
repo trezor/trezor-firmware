@@ -185,6 +185,7 @@ extern "C" fn request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> 
 
 extern "C" fn show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
+        // TODO: get these as a list
         let share_words: StrBuffer = kwargs.get(Qstr::MP_QSTR_share_words)?.try_into()?;
         let title = "Recovery seed";
 
@@ -192,16 +193,17 @@ extern "C" fn show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map
         let share_words_len_str: String<10> = String::from(share_words_len as i16);
 
         let beginning_text = build_string!(
-            50,
+            40,
             "Write down these ",
             share_words_len_str.as_str(),
             " words:\n\n"
         );
 
-        let mut middle_words: String<500> = String::new();
+        // Assume there is always just 12 words in the newly generated seed
+        let mut middle_words: String<240> = String::new();
         for (index, word) in share_words.split(',').enumerate() {
             let line = build_string!(
-                50,
+                20,
                 String::<2>::from(index as i16 + 1).as_str(),
                 ". ",
                 word,
@@ -212,14 +214,14 @@ extern "C" fn show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map
         }
 
         let end_text = build_string!(
-            50,
+            40,
             "I wrote down all ",
             share_words_len_str.as_str(),
             " words in order."
         );
 
         let text_to_show = build_string!(
-            600,
+            320,
             beginning_text.as_str(),
             middle_words.as_str(),
             end_text.as_str()
@@ -256,12 +258,11 @@ extern "C" fn confirm_word(n_args: usize, args: *const Obj, kwargs: *mut Map) ->
         let checked_index_str: String<50> = String::from(checked_index + 1);
 
         let prompt = build_string!(
-            50,
+            20,
             "Select word ",
             checked_index_str.as_str(),
-            " of ",
-            count_str.as_str(),
-            ":"
+            "/",
+            count_str.as_str()
         );
 
         let words: Vec<String<20>, 3> = choices.split(',').map(String::from).collect();
