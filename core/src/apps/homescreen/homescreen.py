@@ -1,6 +1,6 @@
 import utime
 from micropython import const
-from typing import Tuple
+from typing import Any, Tuple
 
 import storage
 import storage.cache
@@ -16,13 +16,97 @@ _LOADER_DELAY_MS = const(500)
 _LOADER_TOTAL_MS = const(2500)
 
 
+# Overall TODO for the modelR vs modelT:
+# - we could somehow make sure that code unused by the other
+# model is not included in the binary
+# (R does not need any code regarding touch-screen etc.)
+
+
 async def homescreen() -> None:
-    await Homescreen()
+    """Is model-specific."""
+    if utils.MODEL in ("T",):
+        await HomescreenModelT()
+    elif utils.MODEL in ("R",):
+        await HomescreenModelR()
+    elif utils.MODEL in ("1",):
+        await HomescreenModel1()
     lock_device()
 
 
-# TODO: make separate homescreens for each model to avoid coupling
-class Homescreen(HomescreenBase):
+def render_top_header() -> None:
+    """Common for all the models."""
+    if storage.device.is_initialized() and storage.device.no_backup():
+        ui.header_error("SEEDLESS")
+    elif storage.device.is_initialized() and storage.device.unfinished_backup():
+        ui.header_error("BACKUP FAILED!")
+    elif storage.device.is_initialized() and storage.device.needs_backup():
+        ui.header_warning("NEEDS BACKUP!")
+    elif storage.device.is_initialized() and not config.has_pin():
+        ui.header_warning("PIN NOT SET!")
+    elif storage.device.get_experimental_features():
+        ui.header_warning("EXPERIMENTAL MODE!")
+    else:
+        ui.display.bar(0, 0, ui.WIDTH, ui.HEIGHT, ui.BG)
+
+    if not utils.usb_data_connected():
+        ui.header_error("NO USB CONNECTION")
+
+
+class render_header_and_refresh:
+    """Context manager to render the top header and refresh the screen afterwards."""
+
+    def __init__(self) -> None:
+        pass
+
+    def __enter__(self) -> None:
+        render_top_header()
+
+    def __exit__(self, *args: Any) -> None:
+        ui.refresh()
+
+
+class HomescreenModelR(HomescreenBase):
+    RENDER_INDICATOR = storage.cache.HOMESCREEN_ON
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    def do_render(self) -> None:
+        with render_header_and_refresh():
+            # When not initialized, showing the instruction text on two lines,
+            # as it cannot all fit on one line. In that case also putting
+            # the icon more on the top.
+            # Otherwise just showing the uppercase label in monospace.
+            if not storage.device.is_initialized():
+                ui.display.icon(34, 18, self.get_avatar(), ui.style.FG, ui.style.BG)
+                ui.display.text_center(
+                    ui.WIDTH // 2, 98, "Go to", ui.BOLD, ui.FG, ui.BG
+                )
+                ui.display.text_center(
+                    ui.WIDTH // 2, 112, "trezor.io/start", ui.BOLD, ui.FG, ui.BG
+                )
+            else:
+                ui.display.icon(34, 28, self.get_avatar(), ui.style.FG, ui.style.BG)
+                ui.display.text_center(
+                    ui.WIDTH // 2, 112, self.label.upper(), ui.MONO, ui.FG, ui.BG
+                )
+
+
+class HomescreenModel1(HomescreenBase):
+    RENDER_INDICATOR = storage.cache.HOMESCREEN_ON
+
+    def __init__(self) -> None:
+        super().__init__()
+        if not storage.device.is_initialized():
+            self.label = "Go to trezor.io/start"
+
+    def do_render(self) -> None:
+        with render_header_and_refresh():
+            ui.display.icon(33, 14, self.get_avatar(), ui.style.FG, ui.style.BG)
+            ui.display.text_center(ui.WIDTH // 2, 60, self.label, ui.BOLD, ui.FG, ui.BG)
+
+
+class HomescreenModelT(HomescreenBase):
     RENDER_INDICATOR = storage.cache.HOMESCREEN_ON
 
     def __init__(self) -> None:
@@ -42,6 +126,8 @@ class Homescreen(HomescreenBase):
     def create_tasks(self) -> Tuple[loop.AwaitableTask, ...]:
         return super().create_tasks() + (self.usb_checker_task(),)
 
+    # TODO: doing this for model R results in infinite loop of emulator logs with
+    # "AttributeError: 'module' object has no attribute 'USB_CHECK'"
     async def usb_checker_task(self) -> None:
         usbcheck = loop.wait(io.USB_CHECK)
         while True:
@@ -51,56 +137,11 @@ class Homescreen(HomescreenBase):
                 self.set_repaint(True)
 
     def do_render(self) -> None:
-        # warning bar on top
-        if storage.device.is_initialized() and storage.device.no_backup():
-            ui.header_error("SEEDLESS")
-        elif storage.device.is_initialized() and storage.device.unfinished_backup():
-            ui.header_error("BACKUP FAILED!")
-        elif storage.device.is_initialized() and storage.device.needs_backup():
-            ui.header_warning("NEEDS BACKUP!")
-        elif storage.device.is_initialized() and not config.has_pin():
-            ui.header_warning("PIN NOT SET!")
-        elif storage.device.get_experimental_features():
-            ui.header_warning("EXPERIMENTAL MODE!")
-        else:
-            ui.display.bar(0, 0, ui.WIDTH, ui.HEIGHT, ui.BG)
-
-        # homescreen with shifted avatar and text on bottom
-        # Differs for each model
-
-        if not utils.usb_data_connected():
-            ui.header_error("NO USB CONNECTION")
-
-        # TODO: support homescreen avatar change for R and 1
-        # TODO: soo dirty, split for each model
-        if utils.MODEL in ("T",):
-            ui.display.avatar(48, 48 - 10, self.get_image(), ui.WHITE, ui.BLACK)
+        with render_header_and_refresh():
+            ui.display.avatar(48, 48 - 10, self.get_avatar(), ui.WHITE, ui.BLACK)
             ui.display.text_center(
                 ui.WIDTH // 2, 220, self.label, ui.BOLD, ui.FG, ui.BG
             )
-        elif utils.MODEL in ("R",):
-            icon = "trezor/res/homescreen_model_r.toif"  # 92x92 px
-            # When not initialized, there is no HEADER and FOOTER is bigger, so
-            # showing the ICON more on the top side and having two-line FOOTER to fit it on.
-            if not storage.device.is_initialized():
-                ui.display.icon(18, 2, ui.res.load(icon), ui.style.FG, ui.style.BG)
-                ui.display.text_center(
-                    ui.WIDTH // 2, 108, "Go to", ui.BOLD, ui.FG, ui.BG
-                )
-                ui.display.text_center(
-                    ui.WIDTH // 2, 122, "trezor.io/start", ui.BOLD, ui.FG, ui.BG
-                )
-            else:
-                ui.display.icon(18, 18, ui.res.load(icon), ui.style.FG, ui.style.BG)
-                ui.display.text_center(
-                    ui.WIDTH // 2, 122, self.label, ui.BOLD, ui.FG, ui.BG
-                )
-        elif utils.MODEL in ("1",):
-            icon = "trezor/res/homescreen_model_1.toif"  # 64x36 px
-            ui.display.icon(33, 14, ui.res.load(icon), ui.style.FG, ui.style.BG)
-            ui.display.text_center(ui.WIDTH // 2, 60, self.label, ui.BOLD, ui.FG, ui.BG)
-
-        ui.refresh()
 
     def on_touch_start(self, _x: int, _y: int) -> None:
         if self.loader.start_ms is not None:

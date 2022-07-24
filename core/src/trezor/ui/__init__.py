@@ -148,11 +148,6 @@ def header(
             display.icon(55, 25, res.load(icon), ifg, bg)
 
 
-# Common for header functions
-MODEL_HEADER_HEIGHTS = {"1": 12, "R": 15, "T": 30}
-MODEL_Y_BASELINES = {"1": 10, "R": 11, "T": 22}
-
-
 def header_warning(message: str, clear: bool = True) -> None:
     header_message(
         message, text_colour=style.BLACK, text_background=style.YELLOW, clear=clear
@@ -165,20 +160,29 @@ def header_error(message: str, clear: bool = True) -> None:
     )
 
 
+# TODO: might split into model-specific functions
 def header_message(
     message: str, text_colour: int, text_background: int, clear: bool = True
 ) -> None:
-    height = MODEL_HEADER_HEIGHTS[utils.MODEL]
-    y_baseline = MODEL_Y_BASELINES[utils.MODEL]
+    height = {"1": 12, "R": 15, "T": 30}[utils.MODEL]
+    y_baseline = {"1": 10, "R": 11, "T": 22}[utils.MODEL]
 
-    # Black-white models can have only black text on white background
+    # Black-white models can have only white text on black background
     if utils.MODEL in ("1", "R"):
-        text_colour = style.BLACK
-        text_background = style.WHITE
+        text_colour = style.WHITE
+        text_background = style.BLACK
 
     display.bar(0, 0, WIDTH, height, text_background)
+
+    # Including the warning icons in both corners for model R
+    if utils.MODEL in ("R",):
+        warning_icon = res.load("trezor/res/model_r/warning.toif")
+        display.icon(0, 0, warning_icon, style.FG, style.BG)
+        display.icon(118, 0, warning_icon, style.FG, style.BG)
+
+    font = BOLD if utils.MODEL in ("T",) else MONO
     display.text_center(
-        WIDTH // 2, y_baseline, message, BOLD, text_colour, text_background
+        WIDTH // 2, y_baseline, message, font, text_colour, text_background
     )
     if clear:
         display.bar(0, height, WIDTH, HEIGHT - height, style.BG)

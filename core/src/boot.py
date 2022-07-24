@@ -4,11 +4,11 @@ from trezor import config, log, loop, ui, utils, wire
 from trezor.pin import show_pin_timeout
 
 from apps.common.request_pin import can_lock_device, verify_user_pin
-from apps.homescreen.lockscreen import Lockscreen
+from apps.homescreen.lockscreen import get_lockscreen
 
 
 async def bootscreen() -> None:
-    lockscreen = Lockscreen(bootscreen=True)
+    lockscreen = get_lockscreen(bootscreen=True)
     ui.display.orientation(storage.device.get_rotation())
     while True:
         try:

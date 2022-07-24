@@ -225,8 +225,11 @@ STATIC mp_obj_t mod_trezorui_Display_icon(size_t n_args, const mp_obj_t *args) {
   uint16_t h = 0;
   bool grayscale = false;
   bool valid = display_toif_info(data, icon.len, &w, &h, &grayscale);
-  if (!valid || !grayscale) {
-    mp_raise_ValueError("Invalid image format");
+  if (!valid) {
+    mp_raise_ValueError("Image not valid");
+  }
+  if (!grayscale) {
+    mp_raise_ValueError("Image not grayscale");
   }
   mp_int_t fgcolor = mp_obj_get_int(args[4]);
   mp_int_t bgcolor = mp_obj_get_int(args[5]);

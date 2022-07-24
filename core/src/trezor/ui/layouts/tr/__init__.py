@@ -57,6 +57,10 @@ class RustLayout(ui.Layout):
             return self.handle_timers(), self.handle_input_and_rendering()
 
     def _before_render(self) -> None:
+        # Clear the screen of any leftovers.
+        ui.backlight_fade(ui.style.BACKLIGHT_DIM)
+        ui.display.clear()
+
         if __debug__ and self.should_notify_layout_change:
             from apps.debug import notify_layout_change
 
@@ -65,6 +69,9 @@ class RustLayout(ui.Layout):
             # because of the endless loop in __iter__)
             self.should_notify_layout_change = False
             notify_layout_change(self)
+
+        # Turn the brightness on again.
+        ui.backlight_fade(self.BACKLIGHT_LEVEL)
 
     def handle_input_and_rendering(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
         button = loop.wait(io.BUTTON)
