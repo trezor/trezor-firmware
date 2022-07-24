@@ -50,7 +50,7 @@ def set_autolock_delay(device_handler, delay_ms):
     debug.click(buttons.OK)
 
     layout = debug.wait_layout()
-    assert layout.text == "Homescreen"
+    assert layout.text == "HomescreenModelT"
     assert device_handler.result() == "Settings applied"
 
 
@@ -126,7 +126,7 @@ def test_dryrun_locks_at_number_of_words(device_handler):
     # wait for autolock to trigger
     time.sleep(10.1)
     layout = debug.wait_layout()
-    assert layout.text == "Lockscreen"
+    assert layout.text == "LockscreenModelT"
     with pytest.raises(exceptions.Cancelled):
         device_handler.result()
 
@@ -161,7 +161,7 @@ def test_dryrun_locks_at_word_entry(device_handler):
     assert layout.text == "Slip39Keyboard"
     time.sleep(10.1)
     layout = debug.wait_layout()
-    assert layout.text == "Lockscreen"
+    assert layout.text == "LockscreenModelT"
     with pytest.raises(exceptions.Cancelled):
         device_handler.result()
 

@@ -67,7 +67,7 @@ def test_abort(emulator: Emulator):
     assert layout.text.startswith("Abort recovery")
     layout = debug.click(buttons.OK, wait=True)
 
-    assert layout.text == "Homescreen"
+    assert layout.text == "HomescreenModelT"
     features = device_handler.features()
     assert features.recovery_mode is False
 
@@ -210,7 +210,7 @@ def test_recovery_multiple_resets(emulator: Emulator):
     enter_shares_with_restarts(debug)
     debug = device_handler.debuglink()
     layout = debug.read_layout()
-    assert layout.text == "Homescreen"
+    assert layout.text == "HomescreenModelT"
 
     features = device_handler.features()
     assert features.initialized is True

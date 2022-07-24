@@ -150,7 +150,7 @@ impl<T: Clone + AsRef<str>> ButtonDetails<T> {
         } else {
             String::<20>::from("None")
         };
-        let force_width = if let Some(force_width) = self.force_width.clone() {
+        let force_width = if let Some(force_width) = self.force_width {
             String::<20>::from(inttostr!(force_width))
         } else {
             String::<20>::from("None")
