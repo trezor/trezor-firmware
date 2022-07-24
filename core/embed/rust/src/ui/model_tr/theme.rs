@@ -26,10 +26,8 @@ pub const FORMATTED: FormattedFonts = FormattedFonts {
 };
 
 // Color palette.
-pub const WHITE: Color = Color::rgb(255, 255, 255);
-pub const BLACK: Color = Color::rgb(0, 0, 0);
-pub const FG: Color = WHITE; // Default foreground (text & icon) color.
-pub const BG: Color = BLACK; // Default background color.
+pub const FG: Color = Color::white(); // Default foreground (text & icon) color.
+pub const BG: Color = Color::black(); // Default background color.
 
 pub const ICON_SUCCESS: &[u8] = include_res!("model_tr/res/success.toif");
 pub const ICON_FAIL: &[u8] = include_res!("model_tr/res/fail.toif");

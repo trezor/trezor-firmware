@@ -5,6 +5,7 @@ macro_rules! include_res {
     };
 }
 
+#[allow(unused_macros)] // Only used in TR so far.
 /// Concatenates arbitrary amount of slices into a String.
 macro_rules! build_string {
     ($max:expr, $($string:expr),+) => {
