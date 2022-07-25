@@ -18,6 +18,8 @@ import json
 import pathlib
 import re
 import sys
+import tarfile
+from io import BytesIO
 from decimal import Decimal
 from typing import (
     TYPE_CHECKING,
@@ -254,7 +256,9 @@ def download_definitions(outdir: pathlib.Path, unpack: bool) -> str:
     # unpack and/or save
     if unpack:
         # TODO: implement once we know archive format
-        pass
+        file_io = BytesIO(archived_definitions)
+        with tarfile.open(fileobj=file_io, mode="r:gz") as tar:
+            tar.extractall(outdir)
     else:
         with open(archive_filename, mode="wb+") as f:
             f.write(archived_definitions)
