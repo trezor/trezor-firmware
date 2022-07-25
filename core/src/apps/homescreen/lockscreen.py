@@ -51,7 +51,7 @@ class LockscreenModelR(HomescreenBase):
 
     def do_render(self) -> None:
         ui.display.text_center(
-            ui.WIDTH // 2, 10, self.label.upper(), ui.MONO, ui.FG, ui.BG
+            ui.WIDTH // 2, 9, self.label.upper(), ui.MONO, ui.FG, ui.BG
         )
         ui.display.icon(34, 18, self.get_avatar(), ui.style.FG, ui.style.BG)
 

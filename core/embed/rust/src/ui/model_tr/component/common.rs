@@ -189,7 +189,7 @@ impl<T: Clone + AsRef<str>> ButtonDetails<T> {
         } else {
             String::<20>::from("")
         };
-        // TODO: the icon should be hashes, icon size is not really good but works for now
+        // TODO: the icon should be hashed, icon size is not really good but works for now
         let icon_size = if let Some(icon) = self.icon {
             icon.len()
         } else {
@@ -301,7 +301,7 @@ impl StringChoiceItem {
 }
 
 // TODO: support multiple font sizes - 64 in the middle and 32 on the edges.
-// To it at least for the PIN and BIP39, maybe passphrase as well.
+// Do it at least for the PIN and BIP39, maybe passphrase as well.
 // NOTE: beware of the size-limits of the flash - export just
 // those symbols that we really need.
 // Or maybe we could somehow scale the already existing symbols, not

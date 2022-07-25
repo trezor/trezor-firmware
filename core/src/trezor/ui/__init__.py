@@ -164,8 +164,8 @@ def header_error(message: str, clear: bool = True) -> None:
 def header_message(
     message: str, text_colour: int, text_background: int, clear: bool = True
 ) -> None:
-    height = {"1": 12, "R": 15, "T": 30}[utils.MODEL]
-    y_baseline = {"1": 10, "R": 11, "T": 22}[utils.MODEL]
+    height = {"1": 12, "R": 11, "T": 30}[utils.MODEL]
+    y_baseline = {"1": 10, "R": 9, "T": 22}[utils.MODEL]
 
     # Black-white models can have only white text on black background
     if utils.MODEL in ("1", "R"):
@@ -175,10 +175,14 @@ def header_message(
     display.bar(0, 0, WIDTH, height, text_background)
 
     # Including the warning icons in both corners for model R
+    # Also removing the exclamation mark (from the end)
+    # (the warning icons are enough and it was causing some
+    # issues with centering the text)
     if utils.MODEL in ("R",):
         warning_icon = res.load("trezor/res/model_r/warning.toif")
         display.icon(0, 0, warning_icon, style.FG, style.BG)
-        display.icon(118, 0, warning_icon, style.FG, style.BG)
+        display.icon(117, 0, warning_icon, style.FG, style.BG)
+        message = message.replace("!", "")
 
     font = BOLD if utils.MODEL in ("T",) else MONO
     display.text_center(
