@@ -23,7 +23,7 @@ class HomescreenBase(ui.Layout):
             # TODO: make it possible to change
             # TODO: make it a requirement of 128x64 px
             # TODO: support it for ui.display.avatar, not only ui.display.icon
-            return res.load("trezor/res/model_r/homescreen.toif")  # 60*60 px
+            return res.load("trezor/res/model_r/homescreen.toif")  # 128*64 px
         elif utils.MODEL in ("1",):
             return res.load("trezor/res/homescreen_model_1.toif")  # 64x36 px
         else:

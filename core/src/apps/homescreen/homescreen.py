@@ -78,7 +78,7 @@ class HomescreenModelR(HomescreenBase):
             # the icon more on the top.
             # Otherwise just showing the uppercase label in monospace.
             if not storage.device.is_initialized():
-                ui.display.icon(34, 18, self.get_avatar(), ui.style.FG, ui.style.BG)
+                ui.display.icon(0, 11, self.get_avatar(), ui.style.FG, ui.style.BG)
                 ui.display.text_center(
                     ui.WIDTH // 2, 98, "Go to", ui.BOLD, ui.FG, ui.BG
                 )
@@ -86,7 +86,7 @@ class HomescreenModelR(HomescreenBase):
                     ui.WIDTH // 2, 112, "trezor.io/start", ui.BOLD, ui.FG, ui.BG
                 )
             else:
-                ui.display.icon(34, 28, self.get_avatar(), ui.style.FG, ui.style.BG)
+                ui.display.icon(0, 11, self.get_avatar(), ui.style.FG, ui.style.BG)
                 ui.display.text_center(
                     ui.WIDTH // 2, 112, self.label.upper(), ui.MONO, ui.FG, ui.BG
                 )
