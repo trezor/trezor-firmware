@@ -109,6 +109,7 @@ if __debug__:
 
     async def return_layout_change() -> None:
         content = await layout_change_chan.take()
+        layout_change_chan.putters.clear()
         assert DEBUG_CONTEXT is not None
         if storage.layout_watcher is LAYOUT_WATCHER_LAYOUT:
             await DEBUG_CONTEXT.write(DebugLinkLayout(lines=content))
