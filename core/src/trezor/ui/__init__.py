@@ -174,15 +174,18 @@ def header_message(
 
     display.bar(0, 0, WIDTH, height, text_background)
 
-    # Including the warning icons in both corners for model R
+    # Including the warning icons in both corners for model R.
     # Also removing the exclamation mark (from the end)
     # (the warning icons are enough and it was causing some
-    # issues with centering the text)
+    # issues with centering the text).
+    # Resolving one special case with `EXPERIMENTAL MODE` - it cannot
+    # fit the screen width, so shortening it a little.
     if utils.MODEL in ("R",):
         warning_icon = res.load("trezor/res/model_r/warning.toif")
         display.icon(0, 0, warning_icon, style.FG, style.BG)
         display.icon(117, 0, warning_icon, style.FG, style.BG)
         message = message.replace("!", "")
+        message = message.replace("EXPERIMENTAL", "EXPRMNTL")
 
     font = BOLD if utils.MODEL in ("T",) else MONO
     display.text_center(

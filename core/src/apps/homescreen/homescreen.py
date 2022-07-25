@@ -44,9 +44,6 @@ def render_top_header() -> None:
     elif storage.device.is_initialized() and not config.has_pin():
         ui.header_warning("PIN NOT SET!")
     elif storage.device.get_experimental_features():
-        # TODO: this is so long for model R that it collides with icons
-        # Could remove icons in this case, or change it to
-        # "EXPRMNTL MODE" or just "EXPERIMENTAL"
         ui.header_warning("EXPERIMENTAL MODE!")
     else:
         ui.display.bar(0, 0, ui.WIDTH, ui.HEIGHT, ui.BG)
