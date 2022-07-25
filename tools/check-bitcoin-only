@@ -17,4 +17,7 @@ for altcoin in $ALTCOINS; do
 done
 IFS=$OLDIFS
 
+if [ $RETURN -ne 0 ]; then
+    echo "ERROR: Altcoin strings found in Bitcoin-only firmware."
+fi
 exit $RETURN
