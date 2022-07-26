@@ -102,8 +102,6 @@ static void touch_active_pin_state(void) {
                    // 300ms, giving an extra 10ms
 }
 
-void touch_init(void) { touch_default_pin_state(); }
-
 void HAL_I2C_MspInit(I2C_HandleTypeDef *hi2c) {
   // enable I2C clock
   __HAL_RCC_I2C1_CLK_ENABLE();
@@ -200,18 +198,7 @@ static void _i2c_cycle(void) {
   HAL_Delay(10);
 }
 
-void touch_power_on(void) {
-  if (i2c_handle.Instance) {
-    return;
-  }
-
-  // turn on CTP circuitry
-  touch_active_pin_state();
-  HAL_Delay(50);
-
-  // I2C device interface configuration
-  _i2c_init();
-
+void touch_set_mode(void) {
   // set register 0xA4 G_MODE to interrupt polling mode (0x00). basically, CTPM
   // keeps this input line (to PC4) low while a finger is on the screen.
   uint8_t touch_panel_config[] = {0xA4, 0x00};
@@ -220,8 +207,18 @@ void touch_power_on(void) {
                                &i2c_handle, TOUCH_ADDRESS, touch_panel_config,
                                sizeof(touch_panel_config), 10)),
       NULL);
+}
 
-  touch_sensitivity(0x06);
+void touch_power_on(void) {
+  if (i2c_handle.Instance) {
+    return;
+  }
+
+  touch_default_pin_state();
+
+  // turn on CTP circuitry
+  touch_active_pin_state();
+  HAL_Delay(50);
 }
 
 void touch_power_off(void) {
@@ -229,6 +226,14 @@ void touch_power_off(void) {
   // turn off CTP circuitry
   HAL_Delay(50);
   touch_default_pin_state();
+}
+
+void touch_init(void) {
+  // I2C device interface configuration
+  _i2c_init();
+
+  touch_set_mode();
+  touch_sensitivity(0x06);
 }
 
 void touch_sensitivity(uint8_t value) {

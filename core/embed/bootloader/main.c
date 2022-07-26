@@ -250,8 +250,8 @@ int main(void) {
   random_delays_init();
   // display_init_seq();
 #if defined TREZOR_MODEL_T
-  touch_init();
   touch_power_on();
+  touch_init();
 #endif
 
 #if defined TREZOR_MODEL_R
