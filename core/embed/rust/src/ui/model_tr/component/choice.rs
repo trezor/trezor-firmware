@@ -28,6 +28,9 @@ const MIDDLE_ROW: i32 = 72;
 /// `is_carousel` can be used to make the choice page "infinite" -
 /// after reaching one end, users will appear at the other end.
 pub struct ChoicePage<T, const N: usize> {
+    // TODO: how to accept different things implementing ChoiceItem?
+    // https://stackoverflow.com/questions/25818082/vector-of-objects-belonging-to-a-trait
+    // We do not seem to have Box (from core::alloc)
     choices: Vec<T, N>,
     pad: Pad,
     buttons: Child<ButtonController<&'static str>>,

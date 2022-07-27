@@ -6,6 +6,7 @@ pub mod component;
 pub mod constant;
 pub mod display;
 pub mod event;
+pub mod font_multiplier;
 pub mod geometry;
 pub mod lerp;
 pub mod util;

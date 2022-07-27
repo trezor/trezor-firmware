@@ -130,7 +130,7 @@ impl Sub<Offset> for Offset {
 
 /// A point in 2D space defined by the the `x` and `y` coordinate. Relative
 /// coordinates, vectors, and offsets are represented by the `Offset` type.
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Point {
     pub x: i32,
     pub y: i32,

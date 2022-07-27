@@ -1,5 +1,6 @@
 use super::{
     constant,
+    font_multiplier::magnify_font,
     geometry::{Offset, Point, Rect},
 };
 use crate::{
@@ -12,6 +13,7 @@ use crate::{
     ui::lerp::Lerp,
 };
 use core::slice;
+use heapless::Vec;
 
 pub fn backlight() -> i32 {
     display::backlight(-1)
@@ -177,7 +179,7 @@ pub fn rect_fill_rounded1(r: Rect, fg_color: Color, bg_color: Color) {
     }
 }
 
-// Creating a rectangular outline with a rounding of 2 pixels.
+/// Creating a rectangular outline with a rounding of 2 pixels.
 pub fn rect_outline_rounded2(r: Rect, fg_color: Color, bg_color: Color) {
     // Create the outline.
     display::bar(r.x0, r.y0, r.width(), r.height(), fg_color.into());
@@ -534,7 +536,7 @@ pub fn bar_with_text_and_fill<T: AsRef<str>>(
     pixeldata_dirty();
 }
 
-// Used on T1 only.
+/// Used on T1/TR only.
 pub fn dotted_line(start: Point, width: i32, color: Color) {
     for x in (start.x..width).step_by(2) {
         display::bar(x, start.y, 1, 1, color.into());
@@ -717,6 +719,7 @@ impl Glyph {
         self.adv
     }
 
+    /// Returns 0 (black) or 15 (white).
     pub fn unpack_bpp1(&self, a: i32) -> u8 {
         let c_data = self.data[(a / 8) as usize];
         ((c_data >> (7 - (a % 8))) & 0x01) * 15
@@ -746,6 +749,79 @@ impl Glyph {
             4 => self.unpack_bpp4(a),
             8 => self.unpack_bpp8(a),
             _ => 0,
+        }
+    }
+}
+
+// TODO: could be connected with regular `Glyph`,
+// as there is a lot of duplication - most attributes,
+// `print` method etc.
+// For that to happen, `Glyph` would need to have
+// a field `magnification`, being `1` by default.
+// Also, we would need to unify the data type -
+// `Glyph` uses pointer to bytes data, this uses
+// local vector of bits.
+// However, the current method of magnification
+// probably only works for 1bpp colors. Or not?
+pub struct MagnifiedGlyph1BPP {
+    width: i32,
+    height: i32,
+    adv: i32,
+    bearing_x: i32,
+    bearing_y: i32,
+    // TODO: how to handle the maximum allocation?
+    data: Vec<bool, 1024>,
+}
+
+impl MagnifiedGlyph1BPP {
+    pub fn new(
+        width: i32,
+        height: i32,
+        adv: i32,
+        bearing_x: i32,
+        bearing_y: i32,
+        data: Vec<bool, 1024>,
+    ) -> Self {
+        MagnifiedGlyph1BPP {
+            width,
+            height,
+            adv,
+            bearing_x,
+            bearing_y,
+            data,
+        }
+    }
+
+    pub fn print(&self, pos: Point, colortable: [Color; 16]) -> i32 {
+        let bearing = Offset::new(self.bearing_x as i32, -(self.bearing_y as i32));
+        let size = Offset::new((self.width) as i32, (self.height) as i32);
+        let pos_adj = pos + bearing;
+        let r = Rect::from_top_left_and_size(pos_adj, size);
+
+        let area = adjust_offset(r);
+        let window = clamp_coords(area);
+
+        set_window(window);
+
+        for i in window.y0..window.y1 {
+            for j in window.x0..window.x1 {
+                let rx = j - pos_adj.x;
+                let ry = i - pos_adj.y;
+
+                let c = self.get_pixel_data(rx, ry);
+                pixeldata(colortable[c as usize]);
+            }
+        }
+        self.adv
+    }
+
+    pub fn get_pixel_data(&self, x: i32, y: i32) -> u8 {
+        let index = x + y * self.width;
+        let pixel = self.data[index as usize];
+        if pixel {
+            15
+        } else {
+            0
         }
     }
 }
@@ -788,6 +864,65 @@ impl Font {
         let mut adv_total = 0;
         for c in text.bytes() {
             let g = self.get_glyph(c);
+            if let Some(gly) = g {
+                let adv = gly.print(baseline + Offset::new(adv_total, 0), colortable);
+                adv_total += adv;
+            }
+        }
+    }
+
+    pub fn get_glyph_magnified(self, ch: char, magnification: u8) -> Option<MagnifiedGlyph1BPP> {
+        let gl_data = display::get_char_glyph(ch, self.0);
+
+        if gl_data.is_null() {
+            return None;
+        }
+
+        unsafe {
+            let width = *gl_data.offset(0) as i32;
+            let height = *gl_data.offset(1) as i32;
+            let adv = *gl_data.offset(2) as i32;
+            let bearing_x = *gl_data.offset(3) as i32;
+            let bearing_y = *gl_data.offset(4) as i32;
+            let data = gl_data.offset(5);
+
+            // Extracting the original data
+            let bytes_length = (width * height + 8 - 1) / 8; // Getting full bytes - rounding up
+            let bytes = slice::from_raw_parts(data, bytes_length as usize);
+            let bytes_vec: Vec<u8, 8> = Vec::from_slice(bytes).unwrap();
+
+            // Transforming the glyph to have a bigger size
+            let mut magnified_bits: Vec<bool, 1024> = Vec::new();
+            magnify_font(magnification, width, height, bytes_vec, &mut magnified_bits);
+
+            // All the properties need to be magnified accordingly as well
+            Some(MagnifiedGlyph1BPP::new(
+                width * magnification as i32,
+                height * magnification as i32,
+                adv * magnification as i32,
+                bearing_x * magnification as i32,
+                bearing_y * magnification as i32,
+                magnified_bits,
+            ))
+        }
+    }
+
+    pub fn display_text_magnified(
+        self,
+        magnification: u8,
+        text: &'static str,
+        baseline: Point,
+        fg_color: Color,
+        bg_color: Color,
+    ) {
+        if constant::FONT_BPP != 1 {
+            panic!("Magnification is only supported for 1BPP fonts");
+        }
+
+        let colortable = get_color_table(fg_color, bg_color);
+        let mut adv_total = 0;
+        for c in text.chars() {
+            let g = self.get_glyph_magnified(c, magnification);
             if let Some(gly) = g {
                 let adv = gly.print(baseline + Offset::new(adv_total, 0), colortable);
                 adv_total += adv;
@@ -837,6 +972,18 @@ impl Color {
 
     pub const fn black() -> Self {
         Self::rgb(0, 0, 0)
+    }
+
+    /// Print the attributes for debugging purposes.
+    pub fn print(&self) {
+        println!(
+            "Color:: R: ",
+            inttostr!(self.r()),
+            ", G: ",
+            inttostr!(self.g()),
+            ", B: ",
+            inttostr!(self.b())
+        );
     }
 }
 
