@@ -44,11 +44,15 @@ def test_reset_slip39_advanced_2of2groups_2of2shares(device_handler):
         pin_protection=False,
     )
 
+    assert debug.wait_layout().text == "Homescreen"
+
     # confirm new wallet
     reset.confirm_wait(debug, "Create new wallet")
 
+    assert debug.read_layout().text == "LoadingAnimation"
+
     # confirm back up
-    reset.confirm_read(debug, "Success")
+    reset.confirm_wait(debug, "Success")
 
     # confirm checklist
     reset.confirm_read(debug, "Checklist")
@@ -126,11 +130,15 @@ def test_reset_slip39_advanced_16of16groups_16of16shares(device_handler):
         pin_protection=False,
     )
 
+    assert debug.wait_layout().text == "Homescreen"
+
     # confirm new wallet
     reset.confirm_wait(debug, "Create new wallet")
 
+    assert debug.read_layout().text == "LoadingAnimation"
+
     # confirm back up
-    reset.confirm_read(debug, "Success")
+    reset.confirm_wait(debug, "Success")
 
     # confirm checklist
     reset.confirm_read(debug, "Checklist")

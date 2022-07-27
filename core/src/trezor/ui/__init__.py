@@ -343,7 +343,6 @@ class Layout(Component):
         super().__init__()
         # channel used to cancel layouts, see `Cancelled` exception
         self._cancel_chan = loop.chan()
-        self.should_notify_layout_change = False
 
     async def do_cancel(self):
         await self._cancel_chan.put(Cancelled())
@@ -353,12 +352,6 @@ class Layout(Component):
         Run the layout and wait until it completes.  Returns the result value.
         Usually not overridden.
         """
-        if __debug__:
-            # we want to call notify_layout_change() when the rendering is done;
-            # but only the first time the layout is awaited. Here we indicate that we
-            # are being awaited, and in handle_rendering() we send the appropriate event
-            self.should_notify_layout_change = True
-
         value = None
         try:
             # If any other layout is running (waiting on the layout channel),
@@ -433,15 +426,6 @@ class Layout(Component):
         display.clear()
         self.dispatch(REPAINT, 0, 0)
         self.dispatch(RENDER, 0, 0)
-
-        if __debug__ and self.should_notify_layout_change:
-            from apps.debug import notify_layout_change
-
-            # notify about change and do not notify again until next await.
-            # (handle_rendering might be called multiple times in a single await,
-            # because of the endless loop in __iter__)
-            self.should_notify_layout_change = False
-            notify_layout_change(self)
 
         # Display is usually refreshed after every loop step, but here we are
         # rendering everything synchronously, so refresh it manually and turn

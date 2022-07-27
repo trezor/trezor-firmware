@@ -117,6 +117,8 @@ def test_dryrun_locks_at_number_of_words(device_handler):
 
     # unlock
     layout = debug.wait_layout()
+    assert layout.text == "Homescreen"
+    layout = debug.wait_layout()
     assert "Do you really want to check the recovery seed?" in layout.text
     layout = debug.click(buttons.OK, wait=True)
     assert layout.text == "PinDialog"
@@ -148,6 +150,8 @@ def test_dryrun_locks_at_word_entry(device_handler):
 
     # unlock
     layout = debug.wait_layout()
+    assert layout.text == "Homescreen"
+    layout = debug.wait_layout()
     assert "Do you really want to check the recovery seed?" in layout.text
     layout = debug.click(buttons.OK, wait=True)
     assert layout.text == "PinDialog"
@@ -174,6 +178,8 @@ def test_dryrun_enter_word_slowly(device_handler):
     device_handler.run(device.recover, dry_run=True)
 
     # unlock
+    layout = debug.wait_layout()
+    assert layout.text == "Homescreen"
     layout = debug.wait_layout()
     assert "Do you really want to check the recovery seed?" in layout.text
     layout = debug.click(buttons.OK, wait=True)

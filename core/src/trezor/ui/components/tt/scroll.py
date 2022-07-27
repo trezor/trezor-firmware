@@ -130,6 +130,10 @@ class Paginated(ui.Layout):
         await ctx.call(ButtonRequest(code=code, pages=len(self.pages)), ButtonAck)
         result = WAS_PAGED
         while result is WAS_PAGED:
+            if __debug__:
+                from apps.debug import notify_layout_change
+
+                notify_layout_change(self)
             result = await ctx.wait(self)
 
         return result

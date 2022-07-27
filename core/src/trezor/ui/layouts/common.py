@@ -57,13 +57,18 @@ async def interact(
 
             assert isinstance(layout, Paginated)
             return await layout.interact(ctx, code=br_code)
-        elif hasattr(layout, "page_count") and layout.page_count() > 1:  # type: ignore [Cannot access member "page_count" for type "LayoutType"]
-            if br_type is not None:
-                await button_request(ctx, br_type, br_code, pages=layout.page_count())  # type: ignore [Cannot access member "page_count" for type "LayoutType"]
-            return await ctx.wait(layout)
         else:
             if br_type is not None:
-                await button_request(ctx, br_type, br_code)
+                pages = None
+                if hasattr(layout, "page_count") and layout.page_count() > 1:  # type: ignore [Cannot access member "page_count" for type "LayoutType"]
+                    pages = layout.page_count()
+                await button_request(ctx, br_type, br_code, pages=pages)
+
+            if __debug__:
+                from apps.debug import notify_layout_change
+
+                notify_layout_change(layout)
+
             return await ctx.wait(layout)
 
     finally:
@@ -141,15 +146,6 @@ if UI2:
                 ui.backlight_fade(ui.style.BACKLIGHT_DIM)
                 ui.display.clear()
 
-                if __debug__ and self.should_notify_layout_change:
-                    from apps.debug import notify_layout_change
-
-                    # notify about change and do not notify again until next await.
-                    # (handle_rendering might be called multiple times in a single await,
-                    # because of the endless loop in __iter__)
-                    self.should_notify_layout_change = False
-                    notify_layout_change(self)
-
                 # Turn the brightness on again.
                 ui.backlight_fade(self.BACKLIGHT_LEVEL)
 
@@ -178,12 +174,6 @@ if UI2:
                 ui.display.clear()
                 self.layout.attach_timer_fn(self.set_timer)
                 self.layout.paint()
-
-                if __debug__ and self.should_notify_layout_change:
-                    from apps.debug import notify_layout_change
-
-                    self.should_notify_layout_change = False
-                    notify_layout_change(self)
 
                 while True:
                     # Using `yield` instead of `await` to avoid allocations.
