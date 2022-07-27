@@ -3,7 +3,7 @@ use crate::ui::{
     geometry::Rect,
 };
 
-use super::{common::ChoiceItem, theme, ButtonController, ButtonControllerMsg, ButtonPos};
+use super::{theme, ButtonController, ButtonControllerMsg, ButtonPos, ChoiceItem, ChoiceItems};
 use heapless::Vec;
 
 pub enum ChoicePageMsg {
@@ -27,22 +27,19 @@ const MIDDLE_ROW: i32 = 72;
 ///
 /// `is_carousel` can be used to make the choice page "infinite" -
 /// after reaching one end, users will appear at the other end.
-pub struct ChoicePage<T, const N: usize> {
+pub struct ChoicePage<const N: usize> {
     // TODO: how to accept different things implementing ChoiceItem?
     // https://stackoverflow.com/questions/25818082/vector-of-objects-belonging-to-a-trait
     // We do not seem to have Box (from core::alloc)
-    choices: Vec<T, N>,
+    choices: Vec<ChoiceItems, N>,
     pad: Pad,
     buttons: Child<ButtonController<&'static str>>,
     page_counter: u8,
     is_carousel: bool,
 }
 
-impl<T, const N: usize> ChoicePage<T, N>
-where
-    T: ChoiceItem,
-{
-    pub fn new(choices: Vec<T, N>) -> Self {
+impl<const N: usize> ChoicePage<N> {
+    pub fn new(choices: Vec<ChoiceItems, N>) -> Self {
         let initial_btn_layout = choices[0].btn_layout();
 
         Self {
@@ -76,7 +73,7 @@ where
     pub fn reset(
         &mut self,
         ctx: &mut EventCtx,
-        new_choices: Vec<T, N>,
+        new_choices: Vec<ChoiceItems, N>,
         reset_page_counter: bool,
         is_carousel: bool,
     ) {
@@ -139,7 +136,7 @@ where
         self.page_counter < self.last_page_index()
     }
 
-    fn current_choice(&mut self) -> &mut T {
+    fn current_choice(&mut self) -> &mut ChoiceItems {
         &mut self.choices[self.page_counter as usize]
     }
 
@@ -202,10 +199,7 @@ where
     }
 }
 
-impl<T, const N: usize> Component for ChoicePage<T, N>
-where
-    T: ChoiceItem,
-{
+impl<const N: usize> Component for ChoicePage<N> {
     type Msg = ChoicePageMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -268,10 +262,7 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T, const N: usize> crate::trace::Trace for ChoicePage<T, N>
-where
-    T: ChoiceItem,
-{
+impl<const N: usize> crate::trace::Trace for ChoicePage<N> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("ChoicePage");
         t.close();

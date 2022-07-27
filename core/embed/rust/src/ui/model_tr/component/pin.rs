@@ -9,8 +9,8 @@ use crate::{
 };
 
 use super::{
-    common::{display_bold_center, ButtonDetails, ButtonLayout, MultilineStringChoiceItem},
-    ChoicePage, ChoicePageMsg,
+    common::display_bold_center, ButtonDetails, ButtonLayout, ChoiceItems, ChoicePage,
+    ChoicePageMsg, MultilineStringChoiceItem,
 };
 use heapless::{String, Vec};
 
@@ -49,7 +49,7 @@ const DIGITS: [&str; CHOICE_LENGTH] = [
 
 /// Component for entering a PIN.
 pub struct PinEntry {
-    choice_page: ChoicePage<MultilineStringChoiceItem, CHOICE_LENGTH>,
+    choice_page: ChoicePage<CHOICE_LENGTH>,
     show_real_pin: bool,
     textbox: TextBox<MAX_LENGTH>,
 }
@@ -71,28 +71,29 @@ impl PinEntry {
     }
 
     /// Constructing list of choice items for PIN entry.
-    fn get_word_choice_page_items<T>(prompt: T) -> Vec<MultilineStringChoiceItem, CHOICE_LENGTH>
+    fn get_word_choice_page_items<T>(prompt: T) -> Vec<ChoiceItems, CHOICE_LENGTH>
     where
         T: Deref<Target = str>,
     {
-        let mut choices: Vec<MultilineStringChoiceItem, CHOICE_LENGTH> = DIGITS
+        let mut choices: Vec<ChoiceItems, CHOICE_LENGTH> = DIGITS
             .iter()
             .map(|digit| {
-                MultilineStringChoiceItem::new(
+                let item = MultilineStringChoiceItem::new(
                     String::from(*digit),
                     ButtonLayout::default_three_icons(),
                 )
-                .use_delimiter(' ')
+                .use_delimiter(' ');
+                ChoiceItems::MultilineString(item)
             })
             .collect();
 
         // Action buttons have different text
         let confirm_btn = ButtonDetails::new("CONFIRM").with_arms();
-        choices[EXIT_INDEX].btn_layout.btn_middle = Some(confirm_btn);
-        choices[DELETE_INDEX].btn_layout.btn_middle = Some(confirm_btn);
-        choices[SHOW_INDEX].btn_layout.btn_middle = Some(confirm_btn);
-        choices[PROMPT_INDEX].btn_layout.btn_middle = Some(confirm_btn);
-        choices[PROMPT_INDEX].text = String::from(prompt.as_ref());
+        choices[EXIT_INDEX].set_middle_btn(Some(confirm_btn));
+        choices[DELETE_INDEX].set_middle_btn(Some(confirm_btn));
+        choices[SHOW_INDEX].set_middle_btn(Some(confirm_btn));
+        choices[PROMPT_INDEX].set_middle_btn(Some(confirm_btn));
+        choices[PROMPT_INDEX].set_text(String::from(prompt.as_ref()));
 
         choices
     }

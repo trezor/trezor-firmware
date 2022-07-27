@@ -1,13 +1,11 @@
-use super::LoaderStyleSheet;
 use super::{
-    common::ButtonDetails, common::ButtonLayout, theme, Button, ButtonPos, HoldToConfirm,
-    HoldToConfirmMsg,
+    theme, Button, ButtonDetails, ButtonLayout, ButtonPos, HoldToConfirm, HoldToConfirmMsg,
+    LoaderStyleSheet,
 };
-use crate::ui::component::{ComponentExt, Pad};
 use crate::{
     time::Duration,
     ui::{
-        component::{base::Event, Child, Component, EventCtx},
+        component::{base::Event, Child, Component, ComponentExt, EventCtx, Pad},
         event::{ButtonEvent, PhysicalButton},
         geometry::Rect,
     },

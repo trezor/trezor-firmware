@@ -4,10 +4,7 @@ use crate::ui::{
 };
 use core::ops::Deref;
 
-use super::{
-    common::{ButtonLayout, StringChoiceItem},
-    ChoicePage, ChoicePageMsg,
-};
+use super::{ButtonLayout, ChoiceItems, ChoicePage, ChoicePageMsg, StringChoiceItem};
 use heapless::{String, Vec};
 
 pub enum SimpleChoiceMsg {
@@ -18,7 +15,7 @@ pub enum SimpleChoiceMsg {
 /// inputting a list of values and receiving the chosen one.
 pub struct SimpleChoice<T, const N: usize> {
     choices: Vec<T, N>,
-    choice_page: ChoicePage<StringChoiceItem, N>,
+    choice_page: ChoicePage<N>,
     result_choice_index: usize,
 }
 
@@ -27,14 +24,18 @@ where
     T: Deref<Target = str>,
 {
     pub fn new(str_choices: Vec<T, N>) -> Self {
-        let mut choices: Vec<StringChoiceItem, N> = str_choices
+        let mut choices: Vec<ChoiceItems, N> = str_choices
             .iter()
-            .map(|digit| StringChoiceItem::from_str(digit.as_ref(), ButtonLayout::default_three()))
+            .map(|word| {
+                let choice =
+                    StringChoiceItem::from_str(word.as_ref(), ButtonLayout::default_three());
+                ChoiceItems::String(choice)
+            })
             .collect();
         // Not wanting anything as leftmost and rightmost button
         let last_index = choices.len() - 1;
-        choices[0].btn_layout.btn_left = None;
-        choices[last_index].btn_layout.btn_right = None;
+        choices[0].set_left_btn(None);
+        choices[last_index].set_right_btn(None);
 
         Self {
             choices: str_choices,

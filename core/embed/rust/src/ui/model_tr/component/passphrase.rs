@@ -3,13 +3,12 @@ use crate::{
     ui::{
         component::{text::common::TextBox, Component, Event, EventCtx},
         geometry::{Point, Rect},
-        util,
     },
 };
 
 use super::{
-    common::{display_bold_center, ButtonDetails, ButtonLayout, MultilineStringChoiceItem},
-    ChoicePage, ChoicePageMsg,
+    common::display_bold_center, ButtonDetails, ButtonLayout, ChoiceItems, ChoicePage,
+    ChoicePageMsg, MultilineStringChoiceItem, StringChoiceItem,
 };
 use heapless::{String, Vec};
 
@@ -56,9 +55,7 @@ const MENU: [&str; MENU_LENGTH] = ["abc", "ABC", "123", "*#_", "SHOW\nPASS", "DE
 
 /// Component for entering a passphrase.
 pub struct PassphraseEntry {
-    // TODO: how to make ChoicePage accept both
-    // StringChoiceItem and MultilineStringChoiceItem?
-    choice_page: ChoicePage<MultilineStringChoiceItem, MAX_CHOICE_LENGTH>,
+    choice_page: ChoicePage<MAX_CHOICE_LENGTH>,
     show_plain_passphrase: bool,
     textbox: TextBox<MAX_LENGTH>,
     current_category: ChoiceCategory,
@@ -149,22 +146,22 @@ impl PassphraseEntry {
     }
 
     /// MENU choices with accept and cancel hold-to-confirm side buttons.
-    fn get_menu_choices() -> Vec<MultilineStringChoiceItem, MAX_CHOICE_LENGTH> {
-        let mut choices: Vec<MultilineStringChoiceItem, MAX_CHOICE_LENGTH> = MENU
+    fn get_menu_choices() -> Vec<ChoiceItems, MAX_CHOICE_LENGTH> {
+        let mut choices: Vec<ChoiceItems, MAX_CHOICE_LENGTH> = MENU
             .iter()
             .map(|menu_item| {
-                MultilineStringChoiceItem::new(
+                let item = MultilineStringChoiceItem::new(
                     String::from(*menu_item),
                     ButtonLayout::default_three(),
-                )
+                );
+                ChoiceItems::MultilineString(item)
             })
             .collect();
         // Including accept button on the left and cancel on the very right
         let last_index = choices.len() - 1;
-        choices[0].btn_layout.btn_left =
-            Some(ButtonDetails::new("ACC").with_duration(HOLD_DURATION));
-        choices[last_index].btn_layout.btn_right =
-            Some(ButtonDetails::new("CNC").with_duration(HOLD_DURATION));
+        choices[0].set_left_btn(Some(ButtonDetails::new("ACC").with_duration(HOLD_DURATION)));
+        choices[last_index]
+            .set_right_btn(Some(ButtonDetails::new("CNC").with_duration(HOLD_DURATION)));
 
         choices
     }
@@ -199,22 +196,18 @@ impl PassphraseEntry {
             ChoiceCategory::Menu => panic!("Menu does not have characters"),
         };
 
-        let mut choices: Vec<MultilineStringChoiceItem, MAX_CHOICE_LENGTH> = new_characters
+        let mut choices: Vec<ChoiceItems, MAX_CHOICE_LENGTH> = new_characters
             .iter()
             .map(|ch| {
-                MultilineStringChoiceItem::new(
-                    util::char_to_string(**ch),
-                    ButtonLayout::default_three(),
-                )
+                let choice = StringChoiceItem::from_char(**ch, ButtonLayout::default_three());
+                ChoiceItems::String(choice)
             })
             .collect();
 
         // Including a MENU choice at the end (visible from start) to return back
-        let menu_choice = MultilineStringChoiceItem::new(
-            String::from("MENU"),
-            ButtonLayout::special_middle("RETURN"),
-        );
-        choices.push(menu_choice).unwrap();
+        let menu_choice =
+            StringChoiceItem::from_str("MENU", ButtonLayout::special_middle("RETURN"));
+        choices.push(ChoiceItems::String(menu_choice)).unwrap();
 
         self.choice_page.reset(ctx, choices, true, true);
     }

@@ -7,8 +7,8 @@ use crate::{
 };
 
 use super::{
-    common::{display_bold_center, ButtonDetails, ButtonLayout, StringChoiceItem},
-    ChoicePage, ChoicePageMsg,
+    common::display_bold_center, ButtonDetails, ButtonLayout, ChoiceItems, ChoicePage,
+    ChoicePageMsg, StringChoiceItem,
 };
 use heapless::{String, Vec};
 
@@ -27,7 +27,7 @@ const OFFER_WORDS_THRESHOLD: usize = 10;
 
 /// Component for entering a BIP39 mnemonic.
 pub struct Bip39Entry {
-    choice_page: ChoicePage<StringChoiceItem, MAX_CHOICE_LENGTH>,
+    choice_page: ChoicePage<MAX_CHOICE_LENGTH>,
     letter_choices: Vec<char, MAX_CHOICE_LENGTH>,
     textbox: TextBox<MAX_LENGTH>,
     offer_words: bool,
@@ -53,14 +53,17 @@ impl Bip39Entry {
     /// Letter choice items with BIN leftmost button.
     fn get_letter_choice_page_items(
         letter_choices: &Vec<char, MAX_CHOICE_LENGTH>,
-    ) -> Vec<StringChoiceItem, MAX_CHOICE_LENGTH> {
-        let mut choices: Vec<StringChoiceItem, MAX_CHOICE_LENGTH> = letter_choices
+    ) -> Vec<ChoiceItems, MAX_CHOICE_LENGTH> {
+        let mut choices: Vec<ChoiceItems, MAX_CHOICE_LENGTH> = letter_choices
             .iter()
-            .map(|ch| StringChoiceItem::from_char(*ch, ButtonLayout::default_three()))
+            .map(|ch| {
+                let choice = StringChoiceItem::from_char(*ch, ButtonLayout::default_three());
+                ChoiceItems::String(choice)
+            })
             .collect();
         let last_index = choices.len() - 1;
-        choices[0].btn_layout.btn_left = Some(ButtonDetails::new("BIN"));
-        choices[last_index].btn_layout.btn_right = None;
+        choices[0].set_left_btn(Some(ButtonDetails::new("BIN")));
+        choices[last_index].set_right_btn(None);
 
         choices
     }
@@ -68,20 +71,23 @@ impl Bip39Entry {
     /// Word choice items with BIN leftmost button.
     fn get_word_choice_page_items(
         words_list: &bip39::Wordlist,
-    ) -> Vec<StringChoiceItem, MAX_CHOICE_LENGTH> {
-        let mut choices: Vec<StringChoiceItem, MAX_CHOICE_LENGTH> = words_list
+    ) -> Vec<ChoiceItems, MAX_CHOICE_LENGTH> {
+        let mut choices: Vec<ChoiceItems, MAX_CHOICE_LENGTH> = words_list
             .iter()
-            .map(|word| StringChoiceItem::from_str(word, ButtonLayout::default_three()))
+            .map(|word| {
+                let choice = StringChoiceItem::from_str(word, ButtonLayout::default_three());
+                ChoiceItems::String(choice)
+            })
             .collect();
         let last_index = choices.len() - 1;
-        choices[0].btn_layout.btn_left = Some(ButtonDetails::new("BIN"));
-        choices[last_index].btn_layout.btn_right = None;
+        choices[0].set_left_btn(Some(ButtonDetails::new("BIN")));
+        choices[last_index].set_right_btn(None);
 
         choices
     }
 
     /// Gets up-to-date choices for letters or words.
-    fn get_current_choices(&mut self) -> Vec<StringChoiceItem, MAX_CHOICE_LENGTH> {
+    fn get_current_choices(&mut self) -> Vec<ChoiceItems, MAX_CHOICE_LENGTH> {
         // Narrowing the word list
         self.words_list = self.words_list.filter_prefix(self.textbox.content());
 

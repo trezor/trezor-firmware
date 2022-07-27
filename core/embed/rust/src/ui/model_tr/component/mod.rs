@@ -2,6 +2,7 @@ mod bip39;
 mod button;
 mod button_controller;
 mod choice;
+mod choice_item;
 mod common;
 mod confirm;
 mod dialog;
@@ -17,12 +18,15 @@ mod simple_choice;
 use super::theme;
 
 pub use bip39::{Bip39Entry, Bip39EntryMsg};
-pub use button::{Button, ButtonContent, ButtonMsg, ButtonPos, ButtonStyle, ButtonStyleSheet};
+pub use button::{
+    Button, ButtonContent, ButtonDetails, ButtonLayout, ButtonMsg, ButtonPos, ButtonStyle,
+    ButtonStyleSheet,
+};
 pub use confirm::{HoldToConfirm, HoldToConfirmMsg};
 
 pub use button_controller::{ButtonController, ButtonControllerMsg};
 pub use choice::{ChoicePage, ChoicePageMsg};
-pub use common::{ButtonDetails, ButtonLayout, ChoiceItem, StringChoiceItem};
+pub use choice_item::{ChoiceItem, ChoiceItems, MultilineStringChoiceItem, StringChoiceItem};
 pub use dialog::{Dialog, DialogMsg};
 pub use frame::Frame;
 pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
