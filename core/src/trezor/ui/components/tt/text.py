@@ -14,20 +14,9 @@ from ..common.text import (  # noqa: F401
     TEXT_MAX_LINES_NO_HEADER,
     Span,
     TextBase,
+    header,
     render_text,
 )
-
-
-def header(
-    title: str,
-    icon: str = style.ICON_DEFAULT,
-    fg: int = style.FG,
-    bg: int = style.BG,
-    ifg: int = style.GREEN,
-) -> None:
-    if icon is not None:
-        display.icon(14, 15, res.load(icon), ifg, bg)
-    display.text(44, 35, title, ui.BOLD, fg, bg)
 
 
 class Text(TextBase):
