@@ -12,13 +12,13 @@ class TestFormatEthereumAmount(unittest.TestCase):
         text = format_ethereum_amount(1, None, 1)
         self.assertEqual(text, '1 Wei ETH')
         text = format_ethereum_amount(1000, None, 1)
-        self.assertEqual(text, '1000 Wei ETH')
+        self.assertEqual(text, '1,000 Wei ETH')
         text = format_ethereum_amount(1000000, None, 1)
-        self.assertEqual(text, '1000000 Wei ETH')
+        self.assertEqual(text, '1,000,000 Wei ETH')
         text = format_ethereum_amount(10000000, None, 1)
-        self.assertEqual(text, '10000000 Wei ETH')
+        self.assertEqual(text, '10,000,000 Wei ETH')
         text = format_ethereum_amount(100000000, None, 1)
-        self.assertEqual(text, '100000000 Wei ETH')
+        self.assertEqual(text, '100,000,000 Wei ETH')
         text = format_ethereum_amount(1000000000, None, 1)
         self.assertEqual(text, '0.000000001 ETH')
         text = format_ethereum_amount(10000000000, None, 1)
@@ -44,7 +44,7 @@ class TestFormatEthereumAmount(unittest.TestCase):
         text = format_ethereum_amount(100000000000000000000, None, 1)
         self.assertEqual(text, '100 ETH')
         text = format_ethereum_amount(1000000000000000000000, None, 1)
-        self.assertEqual(text, '1000 ETH')
+        self.assertEqual(text, '1,000 ETH')
 
         text = format_ethereum_amount(1000000000000000000, None, 61)
         self.assertEqual(text, '1 ETC')
@@ -97,7 +97,7 @@ class TestFormatEthereumAmount(unittest.TestCase):
         self.assertEqual(text, '0 Wei UNKN')
         # unknown token has 0 decimals so is always wei
         text = format_ethereum_amount(1000000000000000000, unknown_token, 1)
-        self.assertEqual(text, '1000000000000000000 Wei UNKN')
+        self.assertEqual(text, '1,000,000,000,000,000,000 Wei UNKN')
 
 
 if __name__ == '__main__':

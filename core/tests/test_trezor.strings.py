@@ -4,13 +4,20 @@ from trezor import strings
 
 
 class TestStrings(unittest.TestCase):
-
     def test_format_amount(self):
         VECTORS = [
             (123456, 3, "123.456"),
             (4242, 7, "0.0004242"),
             (-123456, 3, "-123.456"),
             (-4242, 7, "-0.0004242"),
+            (123, 5, "0.00123"),
+            (100, 5, "0.001"),
+            (123456789, 0, "123,456,789"),
+            (100000000, 5, "1,000"),
+            (100000001, 5, "1,000.00001"),
+            (100001000, 5, "1,000.01"),
+            (-100001000, 5, "-1,000.01"),
+            (123_456_789_123_456_789_123_456_789, 18, "123,456,789.123456789123456789"),
         ]
         for v in VECTORS:
             self.assertEqual(strings.format_amount(v[0], v[1]), v[2])
@@ -151,5 +158,5 @@ class TestStrings(unittest.TestCase):
         strings.format_timestamp(1616057224)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

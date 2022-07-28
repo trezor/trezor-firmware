@@ -190,7 +190,12 @@ async def confirm_total(
     fee_rate_str: str | None = None
 
     if fee_rate >= 0:
-        fee_rate_str = f"({fee_rate:.1f} sat/{'v' if coin.segwit else ''}B)"
+        # Use format_amount to get correct thousands separator -- micropython's built-in
+        # formatting doesn't add thousands sep to floating point numbers.
+        # We multiply by 10 to get a fixed-point integer with one decimal place,
+        # and add 0.5 to round to the nearest integer.
+        fee_rate_formatted = format_amount(int(fee_rate * 10 + 0.5), 1)
+        fee_rate_str = f"({fee_rate_formatted} sat/{'v' if coin.segwit else ''}B)"
 
     await layouts.confirm_total(
         ctx,
