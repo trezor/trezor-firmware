@@ -3,12 +3,13 @@ use crate::{
     ui::{
         component::{text::common::TextBox, Component, Event, EventCtx},
         geometry::{Point, Rect},
+        model_tr::theme,
     },
 };
 
 use super::{
-    common::display_bold_center, ButtonDetails, ButtonLayout, ChoiceItems, ChoicePage,
-    ChoicePageMsg, StringChoiceItem,
+    choice_item::BigCharacterChoiceItem, common::display_center, ButtonDetails, ButtonLayout,
+    ChoiceItems, ChoicePage, ChoicePageMsg, TextChoiceItem,
 };
 use heapless::{String, Vec};
 
@@ -16,10 +17,9 @@ pub enum Bip39EntryMsg {
     ResultWord(String<50>),
 }
 
-const LETTERS_ROW: i32 = 40;
+const CURRENT_LETTERS_ROW: i32 = 25;
 
 const MAX_LENGTH: usize = 20;
-
 const MAX_CHOICE_LENGTH: usize = 26;
 
 /// Offer words when there will be fewer of them than this
@@ -50,15 +50,15 @@ impl Bip39Entry {
         }
     }
 
-    /// Letter choice items with BIN leftmost button.
+    /// Letter choice items with BIN leftmost button. Letters are BIG.
     fn get_letter_choice_page_items(
         letter_choices: &Vec<char, MAX_CHOICE_LENGTH>,
     ) -> Vec<ChoiceItems, MAX_CHOICE_LENGTH> {
         let mut choices: Vec<ChoiceItems, MAX_CHOICE_LENGTH> = letter_choices
             .iter()
             .map(|ch| {
-                let choice = StringChoiceItem::from_char(*ch, ButtonLayout::default_three());
-                ChoiceItems::String(choice)
+                let choice = BigCharacterChoiceItem::new(*ch, ButtonLayout::default_three());
+                ChoiceItems::BigCharacter(choice)
             })
             .collect();
         let last_index = choices.len() - 1;
@@ -75,8 +75,8 @@ impl Bip39Entry {
         let mut choices: Vec<ChoiceItems, MAX_CHOICE_LENGTH> = words_list
             .iter()
             .map(|word| {
-                let choice = StringChoiceItem::from_str(word, ButtonLayout::default_three());
-                ChoiceItems::String(choice)
+                let choice = TextChoiceItem::from_str(word, ButtonLayout::default_three());
+                ChoiceItems::Text(choice)
             })
             .collect();
         let last_index = choices.len() - 1;
@@ -111,7 +111,11 @@ impl Bip39Entry {
 
     fn show_current_letters(&self) {
         let to_show = build_string!({ MAX_LENGTH + 1 }, self.textbox.content(), "_");
-        display_bold_center(Point::new(64, LETTERS_ROW), &to_show);
+        display_center(
+            Point::new(64, CURRENT_LETTERS_ROW),
+            &to_show,
+            theme::FONT_MONO,
+        );
     }
 
     fn append_letter(&mut self, ctx: &mut EventCtx, letter: char) {

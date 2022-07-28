@@ -4,13 +4,14 @@ use crate::{
     trezorhal::random,
     ui::{
         component::{text::common::TextBox, Component, Event, EventCtx},
-        geometry::{Point, Rect},
+        geometry::Rect,
     },
 };
 
 use super::{
-    common::display_bold_center, ButtonDetails, ButtonLayout, ChoiceItems, ChoicePage,
-    ChoicePageMsg, MultilineStringChoiceItem,
+    choice_item::BigCharacterChoiceItem,
+    common::{display_dots_center_top, display_secret_center_top},
+    ButtonDetails, ButtonLayout, ChoiceItems, ChoicePage, ChoicePageMsg, MultilineTextChoiceItem,
 };
 use heapless::{String, Vec};
 
@@ -18,8 +19,6 @@ pub enum PinEntryMsg {
     Confirmed,
     Cancelled,
 }
-
-const PIN_ROW: i32 = 40;
 
 const MAX_LENGTH: usize = 50;
 const MAX_VISIBLE_DOTS: usize = 18;
@@ -30,7 +29,7 @@ const EXIT_INDEX: usize = 0;
 const DELETE_INDEX: usize = 1;
 const SHOW_INDEX: usize = 2;
 const PROMPT_INDEX: usize = 3;
-const DIGITS: [&str; CHOICE_LENGTH] = [
+const CHOICES: [&str; CHOICE_LENGTH] = [
     "EXIT",
     "DELETE",
     "SHOW PIN",
@@ -59,7 +58,7 @@ impl PinEntry {
     where
         T: Deref<Target = str>,
     {
-        let choices = Self::get_word_choice_page_items(prompt);
+        let choices = Self::get_page_items(prompt);
 
         Self {
             choice_page: ChoicePage::new(choices)
@@ -71,19 +70,29 @@ impl PinEntry {
     }
 
     /// Constructing list of choice items for PIN entry.
-    fn get_word_choice_page_items<T>(prompt: T) -> Vec<ChoiceItems, CHOICE_LENGTH>
+    /// Digits are BIG, the rest is multiline.
+    fn get_page_items<T>(prompt: T) -> Vec<ChoiceItems, CHOICE_LENGTH>
     where
         T: Deref<Target = str>,
     {
-        let mut choices: Vec<ChoiceItems, CHOICE_LENGTH> = DIGITS
+        let mut choices: Vec<ChoiceItems, CHOICE_LENGTH> = CHOICES
             .iter()
-            .map(|digit| {
-                let item = MultilineStringChoiceItem::new(
-                    String::from(*digit),
-                    ButtonLayout::default_three_icons(),
-                )
-                .use_delimiter(' ');
-                ChoiceItems::MultilineString(item)
+            .map(|choice| {
+                // Depending on whether it is a digit (one character) or a text
+                if choice.len() == 1 {
+                    let item = BigCharacterChoiceItem::from_str(
+                        *choice,
+                        ButtonLayout::default_three_icons(),
+                    );
+                    ChoiceItems::BigCharacter(item)
+                } else {
+                    let item = MultilineTextChoiceItem::new(
+                        String::from(*choice),
+                        ButtonLayout::default_three_icons(),
+                    )
+                    .use_delimiter(' ');
+                    ChoiceItems::MultilineText(item)
+                }
             })
             .collect();
 
@@ -108,43 +117,15 @@ impl PinEntry {
     }
 
     fn show_pin_length(&self) {
-        // Only showing the maximum visible length
-        let digits = self.textbox.len();
-        let dots_visible = digits.min(MAX_VISIBLE_DOTS);
-
-        // String::repeat() is not available for heapless::String
-        let mut dots: String<50> = String::new();
-        for _ in 0..dots_visible {
-            dots.push_str("*").unwrap();
-        }
-
-        // Giving some notion of change even for longer-than-visible PINs
-        // - slightly shifting the dots to the left and right after each new digit
-        let x_baseline = if digits > MAX_VISIBLE_DOTS && digits % 2 == 0 {
-            61
-        } else {
-            64
-        };
-        display_bold_center(Point::new(x_baseline, PIN_ROW), &dots);
+        display_dots_center_top(self.textbox.len(), 0);
     }
 
     fn reveal_current_pin(&self) {
-        let digits = self.textbox.len();
-
-        if digits <= MAX_VISIBLE_DOTS {
-            display_bold_center(Point::new(64, PIN_ROW), self.pin());
-        } else {
-            // Show the last part of PIN with preceding ellipsis to show something is hidden
-            let ellipsis = "...";
-            let offset: usize = digits.saturating_sub(MAX_VISIBLE_DIGITS) + ellipsis.len();
-            let mut to_show: String<MAX_VISIBLE_DIGITS> = String::from(ellipsis);
-            to_show.push_str(&self.pin()[offset..]).unwrap();
-            display_bold_center(Point::new(64, PIN_ROW), &to_show);
-        }
+        display_secret_center_top(self.pin(), 0);
     }
 
     fn append_new_digit(&mut self, ctx: &mut EventCtx, page_counter: u8) {
-        let digit = DIGITS[page_counter as usize];
+        let digit = CHOICES[page_counter as usize];
         self.textbox.append_slice(ctx, digit);
     }
 

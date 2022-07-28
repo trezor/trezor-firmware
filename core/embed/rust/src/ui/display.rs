@@ -770,7 +770,7 @@ pub struct MagnifiedGlyph1BPP {
     bearing_x: i32,
     bearing_y: i32,
     // TODO: how to handle the maximum allocation?
-    data: Vec<bool, 1024>,
+    data: Vec<bool, 2048>,
 }
 
 impl MagnifiedGlyph1BPP {
@@ -780,7 +780,7 @@ impl MagnifiedGlyph1BPP {
         adv: i32,
         bearing_x: i32,
         bearing_y: i32,
-        data: Vec<bool, 1024>,
+        data: Vec<bool, 2048>,
     ) -> Self {
         MagnifiedGlyph1BPP {
             width,
@@ -889,10 +889,10 @@ impl Font {
             // Extracting the original data
             let bytes_length = (width * height + 8 - 1) / 8; // Getting full bytes - rounding up
             let bytes = slice::from_raw_parts(data, bytes_length as usize);
-            let bytes_vec: Vec<u8, 8> = Vec::from_slice(bytes).unwrap();
+            let bytes_vec: Vec<u8, 16> = Vec::from_slice(bytes).unwrap();
 
             // Transforming the glyph to have a bigger size
-            let mut magnified_bits: Vec<bool, 1024> = Vec::new();
+            let mut magnified_bits: Vec<bool, 2048> = Vec::new();
             magnify_font(magnification, width, height, bytes_vec, &mut magnified_bits);
 
             // All the properties need to be magnified accordingly as well
@@ -907,24 +907,45 @@ impl Font {
         }
     }
 
-    pub fn display_text_magnified(
+    pub fn display_char_magnified(
         self,
+        ch: char,
         magnification: u8,
-        text: &'static str,
         baseline: Point,
         fg_color: Color,
         bg_color: Color,
-    ) {
+    ) -> Option<i32> {
         if constant::FONT_BPP != 1 {
             panic!("Magnification is only supported for 1BPP fonts");
         }
 
         let colortable = get_color_table(fg_color, bg_color);
+        let g = self.get_glyph_magnified(ch, magnification);
+        if let Some(gly) = g {
+            let advance = gly.print(baseline, colortable);
+            return Some(advance);
+        }
+        None
+    }
+
+    pub fn display_text_magnified<T: AsRef<str>>(
+        self,
+        magnification: u8,
+        text: T,
+        baseline: Point,
+        fg_color: Color,
+        bg_color: Color,
+    ) {
         let mut adv_total = 0;
-        for c in text.chars() {
-            let g = self.get_glyph_magnified(c, magnification);
-            if let Some(gly) = g {
-                let adv = gly.print(baseline + Offset::new(adv_total, 0), colortable);
+        for c in text.as_ref().chars() {
+            let advance = self.display_char_magnified(
+                c,
+                magnification,
+                baseline + Offset::new(adv_total, 0),
+                fg_color,
+                bg_color,
+            );
+            if let Some(adv) = advance {
                 adv_total += adv;
             }
         }

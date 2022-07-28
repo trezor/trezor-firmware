@@ -4,7 +4,7 @@ use crate::ui::{
 };
 use core::ops::Deref;
 
-use super::{ButtonLayout, ChoiceItems, ChoicePage, ChoicePageMsg, StringChoiceItem};
+use super::{ButtonLayout, ChoiceItems, ChoicePage, ChoicePageMsg, TextChoiceItem};
 use heapless::{String, Vec};
 
 pub enum SimpleChoiceMsg {
@@ -21,15 +21,14 @@ pub struct SimpleChoice<T, const N: usize> {
 
 impl<T, const N: usize> SimpleChoice<T, N>
 where
-    T: Deref<Target = str>,
+    T: AsRef<str>,
 {
     pub fn new(str_choices: Vec<T, N>) -> Self {
         let mut choices: Vec<ChoiceItems, N> = str_choices
             .iter()
             .map(|word| {
-                let choice =
-                    StringChoiceItem::from_str(word.as_ref(), ButtonLayout::default_three());
-                ChoiceItems::String(choice)
+                let choice = TextChoiceItem::from_str(word.as_ref(), ButtonLayout::default_three());
+                ChoiceItems::Text(choice)
             })
             .collect();
         // Not wanting anything as leftmost and rightmost button

@@ -26,7 +26,7 @@ pub use confirm::{HoldToConfirm, HoldToConfirmMsg};
 
 pub use button_controller::{ButtonController, ButtonControllerMsg};
 pub use choice::{ChoicePage, ChoicePageMsg};
-pub use choice_item::{ChoiceItem, ChoiceItems, MultilineStringChoiceItem, StringChoiceItem};
+pub use choice_item::{ChoiceItem, ChoiceItems, MultilineTextChoiceItem, TextChoiceItem};
 pub use dialog::{Dialog, DialogMsg};
 pub use frame::Frame;
 pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};

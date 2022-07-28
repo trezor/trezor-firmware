@@ -4,7 +4,6 @@ use crate::ui::{
 };
 
 // Font constants.
-// TODO: add some bigger fonts for PIN etc.
 pub const FONT_NORMAL: Font = Font::new(-1);
 pub const FONT_MEDIUM: Font = Font::new(-5);
 pub const FONT_BOLD: Font = Font::new(-2);

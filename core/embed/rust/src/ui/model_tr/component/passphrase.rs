@@ -2,13 +2,15 @@ use crate::{
     time::Duration,
     ui::{
         component::{text::common::TextBox, Component, Event, EventCtx},
-        geometry::{Point, Rect},
+        geometry::Rect,
     },
 };
 
 use super::{
-    common::display_bold_center, ButtonDetails, ButtonLayout, ChoiceItems, ChoicePage,
-    ChoicePageMsg, MultilineStringChoiceItem, StringChoiceItem,
+    choice_item::BigCharacterChoiceItem,
+    common::{display_dots_center_top, display_secret_center_top},
+    ButtonDetails, ButtonLayout, ChoiceItems, ChoicePage, ChoicePageMsg, MultilineTextChoiceItem,
+    TextChoiceItem,
 };
 use heapless::{String, Vec};
 
@@ -27,10 +29,10 @@ enum ChoiceCategory {
     SpecialSymbol,
 }
 
-const PASSPHRASE_ROW: i32 = 40;
+const PIN_ROW_DOTS: i32 = 8;
+const PIN_ROW_DIGITS: i32 = 10;
 
 const MAX_LENGTH: usize = 50;
-const MAX_VISIBLE_CHARS: usize = 18;
 const HOLD_DURATION: Duration = Duration::from_secs(1);
 
 const MAX_CHOICE_LENGTH: usize = 31; // accounting for MENU choice as well
@@ -84,37 +86,11 @@ impl PassphraseEntry {
     }
 
     fn show_passphrase_length(&self) {
-        // Only showing the maximum visible length
-        let char_amount = self.textbox.len();
-        let dots_visible = char_amount.min(MAX_VISIBLE_CHARS);
-
-        // String::repeat() is not available for heapless::String
-        let mut dots: String<MAX_LENGTH> = String::new();
-        for _ in 0..dots_visible {
-            dots.push_str("*").unwrap();
-        }
-
-        // Giving some notion of change even for longer-than-visible passphrases
-        // - slightly shifting the dots to the left and right after each new digit
-        if char_amount > MAX_VISIBLE_CHARS && char_amount % 2 == 0 {
-            display_bold_center(Point::new(61, PASSPHRASE_ROW), &dots);
-        } else {
-            display_bold_center(Point::new(64, PASSPHRASE_ROW), &dots);
-        }
+        display_dots_center_top(self.textbox.len(), 21);
     }
 
     fn reveal_current_passphrase(&self) {
-        let char_amount = self.textbox.len();
-
-        if char_amount <= MAX_VISIBLE_CHARS {
-            display_bold_center(Point::new(64, PASSPHRASE_ROW), self.passphrase());
-        } else {
-            // Show the last part with preceding ellipsis to show something is hidden
-            let ellipsis = "...";
-            let offset: usize = char_amount.saturating_sub(MAX_VISIBLE_CHARS) + ellipsis.len();
-            let to_show = build_string!(MAX_VISIBLE_CHARS, ellipsis, &self.passphrase()[offset..]);
-            display_bold_center(Point::new(64, PASSPHRASE_ROW), &to_show);
-        }
+        display_secret_center_top(self.passphrase(), 21);
     }
 
     fn append_char(&mut self, ctx: &mut EventCtx, ch: char) {
@@ -150,11 +126,11 @@ impl PassphraseEntry {
         let mut choices: Vec<ChoiceItems, MAX_CHOICE_LENGTH> = MENU
             .iter()
             .map(|menu_item| {
-                let item = MultilineStringChoiceItem::new(
+                let item = MultilineTextChoiceItem::new(
                     String::from(*menu_item),
                     ButtonLayout::default_three(),
                 );
-                ChoiceItems::MultilineString(item)
+                ChoiceItems::MultilineText(item)
             })
             .collect();
         // Including accept button on the left and cancel on the very right
@@ -199,15 +175,14 @@ impl PassphraseEntry {
         let mut choices: Vec<ChoiceItems, MAX_CHOICE_LENGTH> = new_characters
             .iter()
             .map(|ch| {
-                let choice = StringChoiceItem::from_char(**ch, ButtonLayout::default_three());
-                ChoiceItems::String(choice)
+                let choice = BigCharacterChoiceItem::new(**ch, ButtonLayout::default_three());
+                ChoiceItems::BigCharacter(choice)
             })
             .collect();
 
         // Including a MENU choice at the end (visible from start) to return back
-        let menu_choice =
-            StringChoiceItem::from_str("MENU", ButtonLayout::special_middle("RETURN"));
-        choices.push(ChoiceItems::String(menu_choice)).unwrap();
+        let menu_choice = TextChoiceItem::from_str("MENU", ButtonLayout::special_middle("RETURN"));
+        choices.push(ChoiceItems::Text(menu_choice)).unwrap();
 
         self.choice_page.reset(ctx, choices, true, true);
     }

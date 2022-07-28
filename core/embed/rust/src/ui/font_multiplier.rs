@@ -20,7 +20,7 @@ pub fn magnify_font<const M: usize, const N: usize>(
         panic!("Only supporting magnification 2 or 4");
     }
 
-    let mut bits: Vec<bool, 64> = Vec::new();
+    let mut bits: Vec<bool, 128> = Vec::new();
     let bits_to_take = width * height;
     bytes_to_bits(bytes, &mut bits, bits_to_take);
 
@@ -29,7 +29,7 @@ pub fn magnify_font<const M: usize, const N: usize>(
     if magnification == 2 {
         double_the_bits(width, bits, magnified_bits);
     } else if magnification == 4 {
-        let mut double_bits: Vec<bool, 256> = Vec::new();
+        let mut double_bits: Vec<bool, 512> = Vec::new();
         double_the_bits(width, bits, &mut double_bits);
         double_the_bits(width * 2, double_bits, magnified_bits);
     }
