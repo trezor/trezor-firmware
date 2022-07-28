@@ -21,7 +21,6 @@ async def sign_tx(ctx: wire.Context, msg: NEMSignTx, keychain: Keychain) -> NEMS
     validate(msg)
 
     await validate_path(
-        ctx,
         keychain,
         msg.transaction.address_n,
         check_path(msg.transaction.address_n, msg.transaction.network),

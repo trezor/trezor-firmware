@@ -242,12 +242,10 @@ class Signer:
         validate_network_info(self.msg.network_id, self.msg.protocol_magic)
 
     async def _show_tx_init(self) -> None:
-        self.should_show_details = await layout.show_tx_init(
-            self.ctx, self.SIGNING_MODE_TITLE
-        )
+        self.should_show_details = await layout.show_tx_init(self.SIGNING_MODE_TITLE)
 
         if not self._is_network_id_verifiable():
-            await layout.warn_tx_network_unverifiable(self.ctx)
+            await layout.warn_tx_network_unverifiable()
 
     async def _confirm_tx(self, tx_hash: bytes) -> None:
         # Final signing confirmation is handled separately in each signing mode.
@@ -363,10 +361,10 @@ class Signer:
             and output.inline_datum_size == 0
             and address_type in addresses.ADDRESS_TYPES_PAYMENT_SCRIPT
         ):
-            await layout.warn_tx_output_no_datum(self.ctx)
+            await layout.warn_tx_output_no_datum()
 
         if output.asset_groups_count > 0:
-            await layout.warn_tx_output_contains_tokens(self.ctx)
+            await layout.warn_tx_output_contains_tokens()
 
         if output.address_parameters is not None:
             address = addresses.derive_human_readable(
@@ -381,7 +379,6 @@ class Signer:
             address = output.address
 
         await layout.confirm_sending(
-            self.ctx,
             output.amount,
             address,
             "change" if self._is_change_output(output) else "address",
@@ -392,7 +389,6 @@ class Signer:
         self, address_parameters: messages.CardanoAddressParametersType
     ) -> None:
         await layout.show_change_output_credentials(
-            self.ctx,
             Credential.payment_credential(address_parameters),
             Credential.stake_credential(address_parameters),
         )
@@ -454,7 +450,7 @@ class Signer:
         if output.datum_hash is not None:
             if should_show:
                 await self._show_if_showing_details(
-                    layout.confirm_datum_hash(self.ctx, output.datum_hash)
+                    layout.confirm_datum_hash(output.datum_hash)
                 )
             output_list.append(output.datum_hash)
 
@@ -483,7 +479,7 @@ class Signer:
         if output.datum_hash is not None:
             if should_show:
                 await self._show_if_showing_details(
-                    layout.confirm_datum_hash(self.ctx, output.datum_hash)
+                    layout.confirm_datum_hash(output.datum_hash)
                 )
             output_dict.add(
                 BABBAGE_OUTPUT_KEY_DATUM_OPTION,
@@ -591,7 +587,7 @@ class Signer:
             )
             self._validate_token(token)
             if should_show_tokens:
-                await layout.confirm_sending_token(self.ctx, policy_id, token)
+                await layout.confirm_sending_token(policy_id, token)
 
             assert token.amount is not None  # _validate_token
             tokens_dict.add(token.asset_name_bytes, token.amount)
@@ -638,7 +634,7 @@ class Signer:
             )
             if chunk_number == 0 and should_show:
                 await self._show_if_showing_details(
-                    layout.confirm_inline_datum(self.ctx, chunk.data, inline_datum_size)
+                    layout.confirm_inline_datum(chunk.data, inline_datum_size)
                 )
             inline_datum_cbor.add(chunk.data)
 
@@ -665,9 +661,7 @@ class Signer:
             )
             if chunk_number == 0 and should_show:
                 await self._show_if_showing_details(
-                    layout.confirm_reference_script(
-                        self.ctx, chunk.data, reference_script_size
-                    )
+                    layout.confirm_reference_script(chunk.data, reference_script_size)
                 )
             reference_script_cbor.add(chunk.data)
 
@@ -737,13 +731,13 @@ class Signer:
         if certificate.type == CardanoCertificateType.STAKE_POOL_REGISTRATION:
             assert certificate.pool_parameters is not None
             await layout.confirm_stake_pool_parameters(
-                self.ctx, certificate.pool_parameters, self.msg.network_id
+                certificate.pool_parameters, self.msg.network_id
             )
             await layout.confirm_stake_pool_metadata(
-                self.ctx, certificate.pool_parameters.metadata
+                certificate.pool_parameters.metadata
             )
         else:
-            await layout.confirm_certificate(self.ctx, certificate)
+            await layout.confirm_certificate(certificate)
 
     # pool owners
 
@@ -773,7 +767,7 @@ class Signer:
             )
 
         await layout.confirm_stake_pool_owner(
-            self.ctx, self.keychain, owner, self.msg.protocol_magic, self.msg.network_id
+            self.keychain, owner, self.msg.protocol_magic, self.msg.network_id
         )
 
     # pool relays
@@ -803,7 +797,7 @@ class Signer:
             address_bytes = self._derive_withdrawal_address_bytes(withdrawal)
             await self._show_if_showing_details(
                 layout.confirm_withdrawal(
-                    self.ctx, withdrawal, address_bytes, self.msg.network_id
+                    withdrawal, address_bytes, self.msg.network_id
                 )
             )
             withdrawals_dict.add(address_bytes, withdrawal.amount)
@@ -836,7 +830,6 @@ class Signer:
             self.keychain, data, self.msg.protocol_magic, self.msg.network_id
         )
         await auxiliary_data.show(
-            self.ctx,
             self.keychain,
             auxiliary_data_hash,
             data.catalyst_registration_parameters,
@@ -857,7 +850,7 @@ class Signer:
             messages.CardanoTxItemAck(), messages.CardanoTxMint
         )
 
-        await layout.warn_tx_contains_mint(self.ctx)
+        await layout.warn_tx_contains_mint()
 
         for _ in range(token_minting.asset_groups_count):
             asset_group: messages.CardanoAssetGroup = await self.ctx.call(
@@ -888,7 +881,7 @@ class Signer:
                 messages.CardanoTxItemAck(), messages.CardanoToken
             )
             self._validate_token(token, is_mint=True)
-            await layout.confirm_token_minting(self.ctx, policy_id, token)
+            await layout.confirm_token_minting(policy_id, token)
 
             assert token.mint_amount is not None  # _validate_token
             tokens.add(token.asset_name_bytes, token.mint_amount)
@@ -899,7 +892,7 @@ class Signer:
         assert self.msg.script_data_hash is not None
         self._validate_script_data_hash()
         await self._show_if_showing_details(
-            layout.confirm_script_data_hash(self.ctx, self.msg.script_data_hash)
+            layout.confirm_script_data_hash(self.msg.script_data_hash)
         )
         self.tx_dict.add(TX_BODY_KEY_SCRIPT_DATA_HASH, self.msg.script_data_hash)
 
@@ -934,7 +927,7 @@ class Signer:
     ) -> None:
         if self.msg.total_collateral is None:
             await self._show_if_showing_details(
-                layout.confirm_collateral_input(self.ctx, collateral_input)
+                layout.confirm_collateral_input(collateral_input)
             )
 
     # required signers
@@ -948,7 +941,7 @@ class Signer:
             )
             self._validate_required_signer(required_signer)
             await self._show_if_showing_details(
-                layout.confirm_required_signer(self.ctx, required_signer)
+                layout.confirm_required_signer(required_signer)
             )
 
             key_hash = required_signer.key_hash or get_public_key_hash(
@@ -1028,9 +1021,7 @@ class Signer:
         # We don't display missing datum warning since datums are forbidden.
 
         if output.asset_groups_count > 0:
-            await layout.warn_tx_output_contains_tokens(
-                self.ctx, is_collateral_return=True
-            )
+            await layout.warn_tx_output_contains_tokens(is_collateral_return=True)
 
         if output.address_parameters is not None:
             address = addresses.derive_human_readable(
@@ -1047,7 +1038,6 @@ class Signer:
             address = output.address
 
         await layout.confirm_sending(
-            self.ctx,
             output.amount,
             address,
             "collateral-return",
@@ -1084,7 +1074,7 @@ class Signer:
             )
             self._validate_reference_input(reference_input)
             await self._show_if_showing_details(
-                layout.confirm_reference_input(self.ctx, reference_input)
+                layout.confirm_reference_input(reference_input)
             )
             reference_inputs_list.append(
                 (reference_input.prev_hash, reference_input.prev_index)
@@ -1124,7 +1114,7 @@ class Signer:
         self,
         witness_path: list[int],
     ) -> None:
-        await layout.confirm_witness_request(self.ctx, witness_path)
+        await layout.confirm_witness_request(witness_path)
 
     # helpers
 
@@ -1240,7 +1230,7 @@ class Signer:
         if safety_checks.is_strict():
             raise wire.DataError(f"Invalid {path_name.lower()}")
         else:
-            await layout.warn_path(self.ctx, path, path_name)
+            await layout.warn_path(path, path_name)
 
     def _fail_if_strict_and_unusual(
         self, address_parameters: messages.CardanoAddressParametersType

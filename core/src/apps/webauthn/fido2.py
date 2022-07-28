@@ -656,7 +656,7 @@ class U2fConfirmRegister(U2fState):
                 )
             return False
         else:
-            return await confirm_webauthn(None, self)
+            return await confirm_webauthn(self)
 
     def get_header(self) -> str:
         return "U2F Register"
@@ -679,7 +679,7 @@ class U2fConfirmAuthenticate(U2fState):
         return "U2F Authenticate"
 
     async def confirm_dialog(self) -> bool:
-        return await confirm_webauthn(None, self)
+        return await confirm_webauthn(self)
 
     def __eq__(self, other: object) -> bool:
         return (
@@ -795,7 +795,7 @@ class Fido2ConfirmMakeCredential(Fido2State, ConfirmInfo):
         return self._cred.account_name()
 
     async def confirm_dialog(self) -> bool:
-        if not await confirm_webauthn(None, self):
+        if not await confirm_webauthn(self):
             return False
         if self._user_verification:
             return await verify_user(KeepaliveCallback(self.cid, self.iface))
@@ -871,7 +871,7 @@ class Fido2ConfirmGetAssertion(Fido2State, ConfirmInfo, Pageable):
         return len(self._creds)
 
     async def confirm_dialog(self) -> bool:
-        if not await confirm_webauthn(None, self, pageable=self):
+        if not await confirm_webauthn(self, pageable=self):
             return False
         if self._user_verification:
             return await verify_user(KeepaliveCallback(self.cid, self.iface))

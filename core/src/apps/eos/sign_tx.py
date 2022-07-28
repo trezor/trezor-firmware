@@ -18,11 +18,11 @@ async def sign_tx(ctx: wire.Context, msg: EosSignTx, keychain: Keychain) -> EosS
     if not msg.num_actions:
         raise wire.DataError("No actions")
 
-    await paths.validate_path(ctx, keychain, msg.address_n)
+    await paths.validate_path(keychain, msg.address_n)
 
     node = keychain.derive(msg.address_n)
     sha = HashWriter(sha256())
-    await _init(ctx, sha, msg)
+    await _init(sha, msg)
     await _actions(ctx, sha, msg.num_actions)
     writers.write_uvarint(sha, 0)
     writers.write_bytes_fixed(sha, bytearray(32), 32)
@@ -35,16 +35,16 @@ async def sign_tx(ctx: wire.Context, msg: EosSignTx, keychain: Keychain) -> EosS
     return EosSignedTx(signature=base58_encode("SIG_", "K1", signature))
 
 
-async def _init(ctx: wire.Context, sha: HashWriter, msg: EosSignTx) -> None:
+async def _init(sha: HashWriter, msg: EosSignTx) -> None:
     writers.write_bytes_fixed(sha, msg.chain_id, 32)
     writers.write_header(sha, msg.header)
     writers.write_uvarint(sha, 0)
     writers.write_uvarint(sha, msg.num_actions)
 
-    await require_sign_tx(ctx, msg.num_actions)
+    await require_sign_tx(msg.num_actions)
 
 
 async def _actions(ctx: wire.Context, sha: HashWriter, num_actions: int) -> None:
     for _ in range(num_actions):
         action = await ctx.call(EosTxActionRequest(), EosTxActionAck)
-        await process_action(ctx, sha, action)
+        await process_action(sha, action)

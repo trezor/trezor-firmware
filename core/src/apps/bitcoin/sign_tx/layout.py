@@ -41,7 +41,7 @@ def format_coin_amount(amount: int, coin: CoinInfo, amount_unit: AmountUnit) -> 
 
 
 async def confirm_output(
-    ctx: wire.Context, output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit
+    output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit
 ) -> None:
     if output.script_type == OutputScriptType.PAYTOOPRETURN:
         data = output.op_return_data
@@ -49,7 +49,6 @@ async def confirm_output(
         if omni.is_valid(data):
             # OMNI transaction
             layout: LayoutType = layouts.confirm_metadata(
-                ctx,
                 "omni_transaction",
                 "OMNI transaction",
                 omni.parse(data),
@@ -58,7 +57,6 @@ async def confirm_output(
         else:
             # generic OP_RETURN
             layout = layouts.confirm_blob(
-                ctx,
                 "op_return",
                 title="OP_RETURN",
                 data=data,
@@ -75,7 +73,6 @@ async def confirm_output(
             icon = ui.ICON_SEND
 
         layout = layouts.confirm_output(
-            ctx,
             address_short,
             format_coin_amount(output.amount, coin, amount_unit),
             title=title,
@@ -86,18 +83,17 @@ async def confirm_output(
 
 
 async def confirm_decred_sstx_submission(
-    ctx: wire.Context, output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit
+    output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit
 ) -> None:
     assert output.address is not None
     address_short = addresses.address_short(coin, output.address)
 
     await altcoin.confirm_decred_sstx_submission(
-        ctx, address_short, format_coin_amount(output.amount, coin, amount_unit)
+        address_short, format_coin_amount(output.amount, coin, amount_unit)
     )
 
 
 async def confirm_payment_request(
-    ctx: wire.Context,
     msg: TxAckPaymentRequest,
     coin: CoinInfo,
     amount_unit: AmountUnit,
@@ -116,23 +112,20 @@ async def confirm_payment_request(
     assert msg.amount is not None
 
     return await layouts.confirm_payment_request(
-        ctx,
         msg.recipient_name,
         format_coin_amount(msg.amount, coin, amount_unit),
         memo_texts,
     )
 
 
-async def confirm_replacement(ctx: wire.Context, description: str, txid: bytes) -> None:
+async def confirm_replacement(description: str, txid: bytes) -> None:
     await layouts.confirm_replacement(
-        ctx,
         description,
         hexlify(txid).decode(),
     )
 
 
 async def confirm_modify_output(
-    ctx: wire.Context,
     txo: TxOutput,
     orig_txo: TxOutput,
     coin: CoinInfo,
@@ -142,7 +135,6 @@ async def confirm_modify_output(
     address_short = addresses.address_short(coin, txo.address)
     amount_change = txo.amount - orig_txo.amount
     await layouts.confirm_modify_output(
-        ctx,
         address_short,
         amount_change,
         format_coin_amount(abs(amount_change), coin, amount_unit),
@@ -151,14 +143,12 @@ async def confirm_modify_output(
 
 
 async def confirm_modify_fee(
-    ctx: wire.Context,
     user_fee_change: int,
     total_fee_new: int,
     coin: CoinInfo,
     amount_unit: AmountUnit,
 ) -> None:
     await layouts.confirm_modify_fee(
-        ctx,
         user_fee_change,
         format_coin_amount(abs(user_fee_change), coin, amount_unit),
         format_coin_amount(total_fee_new, coin, amount_unit),
@@ -166,21 +156,18 @@ async def confirm_modify_fee(
 
 
 async def confirm_joint_total(
-    ctx: wire.Context,
     spending: int,
     total: int,
     coin: CoinInfo,
     amount_unit: AmountUnit,
 ) -> None:
     await layouts.confirm_joint_total(
-        ctx,
         spending_amount=format_coin_amount(spending, coin, amount_unit),
         total_amount=format_coin_amount(total, coin, amount_unit),
     )
 
 
 async def confirm_total(
-    ctx: wire.Context,
     spending: int,
     fee: int,
     fee_rate: float,
@@ -193,7 +180,6 @@ async def confirm_total(
         fee_rate_str = f"({fee_rate:.1f} sat/{'v' if coin.segwit else ''}B)"
 
     await layouts.confirm_total(
-        ctx,
         total_amount=format_coin_amount(spending, coin, amount_unit),
         fee_amount=format_coin_amount(fee, coin, amount_unit),
         fee_rate_amount=fee_rate_str,
@@ -201,11 +187,10 @@ async def confirm_total(
 
 
 async def confirm_feeoverthreshold(
-    ctx: wire.Context, fee: int, coin: CoinInfo, amount_unit: AmountUnit
+    fee: int, coin: CoinInfo, amount_unit: AmountUnit
 ) -> None:
     fee_amount = format_coin_amount(fee, coin, amount_unit)
     await layouts.confirm_metadata(
-        ctx,
         "fee_over_threshold",
         "High fee",
         "The fee of\n{}is unexpectedly high.",
@@ -214,11 +199,8 @@ async def confirm_feeoverthreshold(
     )
 
 
-async def confirm_change_count_over_threshold(
-    ctx: wire.Context, change_count: int
-) -> None:
+async def confirm_change_count_over_threshold(change_count: int) -> None:
     await layouts.confirm_metadata(
-        ctx,
         "change_count_over_threshold",
         "Warning",
         "There are {}\nchange-outputs.\n",
@@ -227,9 +209,8 @@ async def confirm_change_count_over_threshold(
     )
 
 
-async def confirm_unverified_external_input(ctx: wire.Context) -> None:
+async def confirm_unverified_external_input() -> None:
     await layouts.confirm_metadata(
-        ctx,
         "unverified_external_input",
         "Warning",
         "The transaction contains unverified external inputs.",
@@ -237,9 +218,7 @@ async def confirm_unverified_external_input(ctx: wire.Context) -> None:
     )
 
 
-async def confirm_nondefault_locktime(
-    ctx: wire.Context, lock_time: int, lock_time_disabled: bool
-) -> None:
+async def confirm_nondefault_locktime(lock_time: int, lock_time_disabled: bool) -> None:
     if lock_time_disabled:
         title = "Warning"
         text = "Locktime is set but will\nhave no effect.\n"
@@ -254,7 +233,6 @@ async def confirm_nondefault_locktime(
         param = format_timestamp(lock_time)
 
     await layouts.confirm_metadata(
-        ctx,
         "nondefault_locktime",
         title,
         text,

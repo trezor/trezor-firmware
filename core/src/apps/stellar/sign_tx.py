@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 async def sign_tx(
     ctx: Context, msg: StellarSignTx, keychain: Keychain
 ) -> StellarSignedTx:
-    await paths.validate_path(ctx, keychain, msg.address_n)
+    await paths.validate_path(keychain, msg.address_n)
 
     node = keychain.derive(msg.address_n)
     pubkey = seed.remove_ed25519_prefix(node.public_key())
@@ -86,7 +86,7 @@ async def _operations(ctx: Context, w: Writer, num_operations: int) -> None:
     writers.write_uint32(w, num_operations)
     for _ in range(num_operations):
         op = await ctx.call_any(StellarTxOpRequest(), *consts.op_wire_types)
-        await process_operation(ctx, w, op)  # type: ignore [Argument of type "MessageType" cannot be assigned to parameter "op" of type "StellarMessageType" in function "process_operation"]
+        await process_operation(w, op)  # type: ignore [Argument of type "MessageType" cannot be assigned to parameter "op" of type "StellarMessageType" in function "process_operation"]
 
 
 async def _memo(ctx: Context, w: Writer, msg: StellarSignTx) -> None:

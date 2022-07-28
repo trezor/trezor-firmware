@@ -15,7 +15,6 @@ if TYPE_CHECKING:
 
 async def wipe_device(ctx: wire.GenericContext, msg: WipeDevice) -> Success:
     await confirm_action(
-        ctx,
         "confirm_wipe",
         title="Wipe device",
         description="Do you really want to\nwipe the device?\n",

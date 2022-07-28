@@ -12,7 +12,6 @@ if TYPE_CHECKING:
 
 async def require_confirm_text(ctx: Context, action: str) -> None:
     await confirm_metadata(
-        ctx,
         "confirm_nem",
         title="Confirm action",
         content=action,
@@ -23,7 +22,6 @@ async def require_confirm_text(ctx: Context, action: str) -> None:
 
 async def require_confirm_fee(ctx: Context, action: str, fee: int) -> None:
     await confirm_metadata(
-        ctx,
         "confirm_fee",
         title="Confirm fee",
         content=action + "\n{}",
@@ -35,7 +33,6 @@ async def require_confirm_fee(ctx: Context, action: str, fee: int) -> None:
 
 async def require_confirm_content(ctx: Context, headline: str, content: list) -> None:
     await confirm_properties(
-        ctx,
         "confirm_content",
         title=headline,
         props=content,
@@ -45,7 +42,6 @@ async def require_confirm_content(ctx: Context, headline: str, content: list) ->
 async def require_confirm_final(ctx: Context, fee: int) -> None:
     # we use SignTx, not ConfirmOutput, for compatibility with T1
     await confirm_metadata(
-        ctx,
         "confirm_final",
         title="Final confirm",
         content="Sign this transaction\n{}\nfor network fee?",

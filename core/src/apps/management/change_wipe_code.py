@@ -23,24 +23,24 @@ async def change_wipe_code(ctx: wire.Context, msg: ChangeWipeCode) -> Success:
 
     # Confirm that user wants to set or remove the wipe code.
     has_wipe_code = config.has_wipe_code()
-    await _require_confirm_action(ctx, msg, has_wipe_code)
+    await _require_confirm_action(msg, has_wipe_code)
 
     # Get the unlocking PIN.
-    pin, salt = await request_pin_and_sd_salt(ctx)
+    pin, salt = await request_pin_and_sd_salt()
 
     if not msg.remove:
         # Pre-check the entered PIN.
         if config.has_pin() and not config.check_pin(pin, salt):
-            await error_pin_invalid(ctx)
+            await error_pin_invalid()
 
         # Get new wipe code.
-        wipe_code = await _request_wipe_code_confirm(ctx, pin)
+        wipe_code = await _request_wipe_code_confirm(pin)
     else:
         wipe_code = ""
 
     # Write into storage.
     if not config.change_wipe_code(pin, salt, wipe_code):
-        await error_pin_invalid(ctx)
+        await error_pin_invalid()
 
     if wipe_code:
         if has_wipe_code:
@@ -53,16 +53,15 @@ async def change_wipe_code(ctx: wire.Context, msg: ChangeWipeCode) -> Success:
         msg_screen = "You have successfully disabled the wipe code."
         msg_wire = "Wipe code removed"
 
-    await show_success(ctx, "success_wipe_code", msg_screen)
+    await show_success("success_wipe_code", msg_screen)
     return Success(message=msg_wire)
 
 
 def _require_confirm_action(
-    ctx: wire.Context, msg: ChangeWipeCode, has_wipe_code: bool
+    msg: ChangeWipeCode, has_wipe_code: bool
 ) -> Awaitable[None]:
     if msg.remove and has_wipe_code:
         return confirm_action(
-            ctx,
             "disable_wipe_code",
             title="Disable wipe code",
             description="Do you really want to",
@@ -73,7 +72,6 @@ def _require_confirm_action(
 
     if not msg.remove and has_wipe_code:
         return confirm_action(
-            ctx,
             "change_wipe_code",
             title="Change wipe code",
             description="Do you really want to",
@@ -84,7 +82,6 @@ def _require_confirm_action(
 
     if not msg.remove and not has_wipe_code:
         return confirm_action(
-            ctx,
             "set_wipe_code",
             title="Set wipe code",
             description="Do you really want to",
@@ -97,14 +94,14 @@ def _require_confirm_action(
     raise wire.ProcessError("Wipe code protection is already disabled")
 
 
-async def _request_wipe_code_confirm(ctx: wire.Context, pin: str) -> str:
+async def _request_wipe_code_confirm(pin: str) -> str:
     while True:
-        code1 = await request_pin(ctx, "Enter new wipe code")
+        code1 = await request_pin("Enter new wipe code")
         if code1 == pin:
             await _wipe_code_invalid()
             continue
 
-        code2 = await request_pin(ctx, "Re-enter new wipe code")
+        code2 = await request_pin("Re-enter new wipe code")
         if code1 == code2:
             return code1
         await _wipe_code_mismatch()

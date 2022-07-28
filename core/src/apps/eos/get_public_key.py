@@ -25,7 +25,7 @@ def _get_public_key(node: bip32.HDNode) -> tuple[str, bytes]:
 async def get_public_key(
     ctx: wire.Context, msg: EosGetPublicKey, keychain: Keychain
 ) -> EosPublicKey:
-    await paths.validate_path(ctx, keychain, msg.address_n)
+    await paths.validate_path(keychain, msg.address_n)
 
     node = keychain.derive(msg.address_n)
     wif, public_key = _get_public_key(node)

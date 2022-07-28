@@ -22,7 +22,7 @@ async def sign_tx(
     ctx: Context, msg: RippleSignTx, keychain: Keychain
 ) -> RippleSignedTx:
     validate(msg)
-    await paths.validate_path(ctx, keychain, msg.address_n)
+    await paths.validate_path(keychain, msg.address_n)
 
     node = keychain.derive(msg.address_n)
     source_address = helpers.address_from_public_key(node.public_key())

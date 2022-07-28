@@ -36,7 +36,7 @@ if TYPE_CHECKING:
 
 @with_slip44_keychain(*PATTERNS, slip44_id=SLIP44_ID, curve=CURVE)
 async def sign_tx(ctx: Context, msg: TezosSignTx, keychain: Keychain) -> TezosSignedTx:
-    await paths.validate_path(ctx, keychain, msg.address_n)
+    await paths.validate_path(keychain, msg.address_n)
 
     node = keychain.derive(msg.address_n)
 

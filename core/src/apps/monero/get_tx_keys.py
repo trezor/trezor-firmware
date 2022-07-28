@@ -34,10 +34,10 @@ if TYPE_CHECKING:
 async def get_tx_keys(
     ctx: wire.Context, msg: MoneroGetTxKeyRequest, keychain: Keychain
 ) -> MoneroGetTxKeyAck:
-    await paths.validate_path(ctx, keychain, msg.address_n)
+    await paths.validate_path(keychain, msg.address_n)
 
     do_deriv = msg.reason == _GET_TX_KEY_REASON_TX_DERIVATION
-    await layout.require_confirm_tx_key(ctx, export_key=not do_deriv)
+    await layout.require_confirm_tx_key(export_key=not do_deriv)
 
     creds = misc.get_creds(keychain, msg.address_n, msg.network_type)
 

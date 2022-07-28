@@ -12,7 +12,6 @@ async def set_u2f_counter(ctx: wire.Context, msg: SetU2FCounter) -> Success:
         raise wire.ProcessError("No value provided")
 
     await confirm_action(
-        ctx,
         "set_u2f_counter",
         title="Set U2F counter",
         description="Do you really want to\nset the U2F counter\nto {}?",

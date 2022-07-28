@@ -5,12 +5,11 @@ from trezor.ui.layouts import confirm_action, show_pubkey
 
 
 async def require_get_public_key(ctx: wire.Context, public_key: str) -> None:
-    await show_pubkey(ctx, public_key)
+    await show_pubkey(public_key)
 
 
-async def require_sign_tx(ctx: wire.Context, num_actions: int) -> None:
+async def require_sign_tx(num_actions: int) -> None:
     await confirm_action(
-        ctx,
         "confirm_tx",
         title="Sign transaction",
         description="You are about to sign {}.",

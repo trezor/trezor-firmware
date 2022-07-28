@@ -1,10 +1,9 @@
 from typing import TYPE_CHECKING
 
-from trezor import wire
-
 import trezorui2
 
-from . import _RustLayout
+from ..common import interact
+from . import RustLayout
 
 if TYPE_CHECKING:
     from typing import Iterable, Callable, Any
@@ -12,32 +11,29 @@ if TYPE_CHECKING:
     pass
 
 
-async def request_word_count(ctx: wire.GenericContext, dry_run: bool) -> int:
+async def request_word_count(dry_run: bool) -> int:
     raise NotImplementedError
 
 
-async def request_word(
-    ctx: wire.GenericContext, word_index: int, word_count: int, is_slip39: bool
-) -> str:
+async def request_word(word_index: int, word_count: int, is_slip39: bool) -> str:
     if is_slip39:
-        keyboard: Any = _RustLayout(
+        keyboard: Any = RustLayout(
             trezorui2.request_bip39(
                 prompt=f"Type word {word_index + 1} of {word_count}:"
             )
         )
     else:
-        keyboard = _RustLayout(
+        keyboard = RustLayout(
             trezorui2.request_slip39(
                 prompt=f"Type word {word_index + 1} of {word_count}:"
             )
         )
 
-    word: str = await ctx.wait(keyboard)
+    word: str = await interact(keyboard, None)
     return word
 
 
 async def show_remaining_shares(
-    ctx: wire.GenericContext,
     groups: Iterable[tuple[int, tuple[str, ...]]],  # remaining + list 3 words
     shares_remaining: list[int],
     group_threshold: int,
@@ -45,14 +41,11 @@ async def show_remaining_shares(
     raise NotImplementedError
 
 
-async def show_group_share_success(
-    ctx: wire.GenericContext, share_index: int, group_index: int
-) -> None:
+async def show_group_share_success(share_index: int, group_index: int) -> None:
     raise NotImplementedError
 
 
 async def continue_recovery(
-    ctx: wire.GenericContext,
     button_label: str,
     text: str,
     subtext: str | None,

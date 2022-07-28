@@ -36,9 +36,9 @@ async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
     _validate(msg)
 
     if storage.recovery.is_in_progress():
-        return await recovery_process(ctx)
+        return await recovery_process()
 
-    await _continue_dialog(ctx, msg)
+    await _continue_dialog(msg)
 
     if not msg.dry_run:
         # wipe storage to make sure the device is in a clear state
@@ -46,14 +46,14 @@ async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
 
     # for dry run pin needs to be entered
     if msg.dry_run:
-        curpin, salt = await request_pin_and_sd_salt(ctx, "Enter PIN")
+        curpin, salt = await request_pin_and_sd_salt("Enter PIN")
         if not config.check_pin(curpin, salt):
-            await error_pin_invalid(ctx)
+            await error_pin_invalid()
 
     if not msg.dry_run:
         # set up pin if requested
         if msg.pin_protection:
-            newpin = await request_pin_confirm(ctx, allow_cancel=False)
+            newpin = await request_pin_confirm(allow_cancel=False)
             config.change_pin("", newpin, None, None)
 
         storage.device.set_passphrase_enabled(bool(msg.passphrase_protection))
@@ -66,7 +66,7 @@ async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
     storage.recovery.set_dry_run(bool(msg.dry_run))
 
     workflow.set_default(recovery_homescreen)
-    return await recovery_process(ctx)
+    return await recovery_process()
 
 
 def _validate(msg: RecoveryDevice) -> None:
@@ -87,14 +87,13 @@ def _validate(msg: RecoveryDevice) -> None:
                 raise wire.ProcessError(f"Forbidden field set in dry-run: {key}")
 
 
-async def _continue_dialog(ctx: wire.Context, msg: RecoveryDevice) -> None:
+async def _continue_dialog(msg: RecoveryDevice) -> None:
     if not msg.dry_run:
         await confirm_reset_device(
-            ctx, "Do you really want to\nrecover a wallet?", recovery=True
+            prompt="Do you really want to\nrecover a wallet?", recovery=True
         )
     else:
         await confirm_action(
-            ctx,
             "confirm_seedcheck",
             title="Seed check",
             description="Do you really want to check the recovery seed?",

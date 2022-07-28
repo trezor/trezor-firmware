@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 async def get_address(
     ctx: wire.Context, msg: MoneroGetAddress, keychain: Keychain
 ) -> MoneroAddress:
-    await paths.validate_path(ctx, keychain, msg.address_n)
+    await paths.validate_path(keychain, msg.address_n)
 
     creds = misc.get_creds(keychain, msg.address_n, msg.network_type)
     addr = creds.address
@@ -62,7 +62,6 @@ async def get_address(
     if msg.show_display:
         title = paths.address_n_to_str(msg.address_n)
         await show_address(
-            ctx,
             address=addr,
             address_qr="monero:" + addr,
             title=title,

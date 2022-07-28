@@ -1,12 +1,7 @@
 from trezor import utils
 
 from .common import *  # noqa: F401,F403
-
-try:
-    UI2 = True
-    import trezorui2  # noqa: F401
-except ImportError:
-    UI2 = False
+from .common import UI2
 
 # NOTE: using any import magic probably causes mypy not to check equivalence of
 #       layout type signatures across models

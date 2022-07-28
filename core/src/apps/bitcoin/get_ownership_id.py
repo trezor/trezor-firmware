@@ -20,7 +20,6 @@ async def get_ownership_id(
     ctx: wire.Context, msg: GetOwnershipId, keychain: Keychain, coin: CoinInfo
 ) -> OwnershipId:
     await validate_path(
-        ctx,
         keychain,
         msg.address_n,
         validate_path_against_script_type(coin, msg),

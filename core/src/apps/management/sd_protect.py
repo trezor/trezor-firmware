@@ -27,15 +27,13 @@ def _make_salt() -> tuple[bytes, bytes, bytes]:
     return salt, auth_key, tag
 
 
-async def _set_salt(
-    ctx: wire.Context, salt: bytes, salt_tag: bytes, stage: bool = False
-) -> None:
+async def _set_salt(salt: bytes, salt_tag: bytes, stage: bool = False) -> None:
     while True:
-        await ensure_sdcard(ctx)
+        await ensure_sdcard()
         try:
             return storage.sd_salt.set_sd_salt(salt, salt_tag, stage)
         except OSError:
-            await confirm_retry_sd(ctx, exc=wire.ProcessError("SD card I/O error."))
+            await confirm_retry_sd(exc=wire.ProcessError("SD card I/O error."))
 
 
 async def sd_protect(ctx: wire.Context, msg: SdProtect) -> Success:
@@ -43,34 +41,34 @@ async def sd_protect(ctx: wire.Context, msg: SdProtect) -> Success:
         raise wire.NotInitialized("Device is not initialized")
 
     if msg.operation == SdProtectOperationType.ENABLE:
-        return await sd_protect_enable(ctx, msg)
+        return await sd_protect_enable(msg)
     elif msg.operation == SdProtectOperationType.DISABLE:
-        return await sd_protect_disable(ctx, msg)
+        return await sd_protect_disable(msg)
     elif msg.operation == SdProtectOperationType.REFRESH:
-        return await sd_protect_refresh(ctx, msg)
+        return await sd_protect_refresh(msg)
     else:
         raise wire.ProcessError("Unknown operation")
 
 
-async def sd_protect_enable(ctx: wire.Context, msg: SdProtect) -> Success:
+async def sd_protect_enable(msg: SdProtect) -> Success:
     if storage.sd_salt.is_enabled():
         raise wire.ProcessError("SD card protection already enabled")
 
     # Confirm that user wants to proceed with the operation.
-    await require_confirm_sd_protect(ctx, msg)
+    await require_confirm_sd_protect(msg)
 
     # Make sure SD card is present.
-    await ensure_sdcard(ctx)
+    await ensure_sdcard()
 
     # Get the current PIN.
     if config.has_pin():
-        pin = await request_pin(ctx, "Enter PIN", config.get_pin_rem())
+        pin = await request_pin("Enter PIN", config.get_pin_rem())
     else:
         pin = ""
 
     # Check PIN and prepare salt file.
     salt, salt_auth_key, salt_tag = _make_salt()
-    await _set_salt(ctx, salt, salt_tag)
+    await _set_salt(salt, salt_tag)
 
     if not config.change_pin(pin, pin, None, salt):
         # Wrong PIN. Clean up the prepared salt file.
@@ -81,17 +79,15 @@ async def sd_protect_enable(ctx: wire.Context, msg: SdProtect) -> Success:
             # SD-protection. If it fails for any reason, we suppress the
             # exception, because primarily we need to raise wire.PinInvalid.
             pass
-        await error_pin_invalid(ctx)
+        await error_pin_invalid()
 
     storage.device.set_sd_salt_auth_key(salt_auth_key)
 
-    await show_success(
-        ctx, "success_sd", "You have successfully enabled SD protection."
-    )
+    await show_success("success_sd", "You have successfully enabled SD protection.")
     return Success(message="SD card protection enabled")
 
 
-async def sd_protect_disable(ctx: wire.Context, msg: SdProtect) -> Success:
+async def sd_protect_disable(msg: SdProtect) -> Success:
     if not storage.sd_salt.is_enabled():
         raise wire.ProcessError("SD card protection not enabled")
 
@@ -99,14 +95,14 @@ async def sd_protect_disable(ctx: wire.Context, msg: SdProtect) -> Success:
     # protection. The cleanup will not happen in such case, but that does not matter.
 
     # Confirm that user wants to proceed with the operation.
-    await require_confirm_sd_protect(ctx, msg)
+    await require_confirm_sd_protect(msg)
 
     # Get the current PIN and salt from the SD card.
-    pin, salt = await request_pin_and_sd_salt(ctx, "Enter PIN")
+    pin, salt = await request_pin_and_sd_salt("Enter PIN")
 
     # Check PIN and remove salt.
     if not config.change_pin(pin, pin, salt, None):
-        await error_pin_invalid(ctx)
+        await error_pin_invalid()
 
     storage.device.set_sd_salt_auth_key(None)
 
@@ -119,31 +115,29 @@ async def sd_protect_disable(ctx: wire.Context, msg: SdProtect) -> Success:
         # because overall SD-protection was successfully disabled.
         pass
 
-    await show_success(
-        ctx, "success_sd", "You have successfully disabled SD protection."
-    )
+    await show_success("success_sd", "You have successfully disabled SD protection.")
     return Success(message="SD card protection disabled")
 
 
-async def sd_protect_refresh(ctx: wire.Context, msg: SdProtect) -> Success:
+async def sd_protect_refresh(msg: SdProtect) -> Success:
     if not storage.sd_salt.is_enabled():
         raise wire.ProcessError("SD card protection not enabled")
 
     # Confirm that user wants to proceed with the operation.
-    await require_confirm_sd_protect(ctx, msg)
+    await require_confirm_sd_protect(msg)
 
     # Make sure SD card is present.
-    await ensure_sdcard(ctx)
+    await ensure_sdcard()
 
     # Get the current PIN and salt from the SD card.
-    pin, old_salt = await request_pin_and_sd_salt(ctx, "Enter PIN")
+    pin, old_salt = await request_pin_and_sd_salt("Enter PIN")
 
     # Check PIN and change salt.
     new_salt, new_auth_key, new_salt_tag = _make_salt()
-    await _set_salt(ctx, new_salt, new_salt_tag, stage=True)
+    await _set_salt(new_salt, new_salt_tag, stage=True)
 
     if not config.change_pin(pin, pin, old_salt, new_salt):
-        await error_pin_invalid(ctx)
+        await error_pin_invalid()
 
     storage.device.set_sd_salt_auth_key(new_auth_key)
 
@@ -156,13 +150,11 @@ async def sd_protect_refresh(ctx: wire.Context, msg: SdProtect) -> Success:
         # SD-protection was successfully refreshed.
         pass
 
-    await show_success(
-        ctx, "success_sd", "You have successfully refreshed SD protection."
-    )
+    await show_success("success_sd", "You have successfully refreshed SD protection.")
     return Success(message="SD card protection refreshed")
 
 
-def require_confirm_sd_protect(ctx: wire.Context, msg: SdProtect) -> Awaitable[None]:
+def require_confirm_sd_protect(msg: SdProtect) -> Awaitable[None]:
     if msg.operation == SdProtectOperationType.ENABLE:
         text = "Do you really want to secure your device with SD card protection?"
     elif msg.operation == SdProtectOperationType.DISABLE:
@@ -172,4 +164,4 @@ def require_confirm_sd_protect(ctx: wire.Context, msg: SdProtect) -> Awaitable[N
     else:
         raise wire.ProcessError("Unknown operation")
 
-    return confirm_action(ctx, "set_sd", "SD card protection", description=text)
+    return confirm_action("set_sd", "SD card protection", description=text)

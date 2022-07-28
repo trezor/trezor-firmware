@@ -17,7 +17,6 @@ PROGRESS_TOTAL = utils.FIRMWARE_SECTORS_COUNT * 128 * 1024
 
 async def get_firmware(ctx: Context, _msg: GetFirmware) -> Success:
     await confirm_action(
-        ctx,
         "dump_firmware",
         title="Extract firmware",
         action="Do you want to extract device firmware?",

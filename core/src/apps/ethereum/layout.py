@@ -38,7 +38,6 @@ def require_confirm_tx(
     else:
         to_str = "new contract?"
     return confirm_output(
-        ctx,
         address=to_str,
         amount=format_ethereum_amount(value, token, chain_id),
         font_amount=ui.BOLD,
@@ -56,7 +55,6 @@ def require_confirm_fee(
     token: tokens.TokenInfo | None = None,
 ) -> Awaitable[None]:
     return confirm_total_ethereum(
-        ctx,
         format_ethereum_amount(spending, token, chain_id),
         format_ethereum_amount(gas_price, None, chain_id),
         format_ethereum_amount(gas_price * gas_limit, None, chain_id),
@@ -73,19 +71,16 @@ async def require_confirm_eip1559_fee(
     token: tokens.TokenInfo | None = None,
 ) -> None:
     await confirm_amount(
-        ctx,
         title="Confirm fee",
         description="Maximum fee per gas",
         amount=format_ethereum_amount(max_gas_fee, None, chain_id),
     )
     await confirm_amount(
-        ctx,
         title="Confirm fee",
         description="Priority fee per gas",
         amount=format_ethereum_amount(max_priority_fee, None, chain_id),
     )
     await confirm_total(
-        ctx,
         total_amount=format_ethereum_amount(spending, token, chain_id),
         fee_amount=format_ethereum_amount(max_gas_fee * gas_limit, None, chain_id),
         total_label="Amount sent:\n",
@@ -98,7 +93,6 @@ def require_confirm_unknown_token(
 ) -> Awaitable[None]:
     contract_address_hex = "0x" + hexlify(address_bytes).decode()
     return confirm_address(
-        ctx,
         "Unknown token",
         contract_address_hex,
         description="Contract:",
@@ -110,7 +104,6 @@ def require_confirm_unknown_token(
 
 def require_confirm_data(ctx: Context, data: bytes, data_total: int) -> Awaitable[None]:
     return confirm_blob(
-        ctx,
         "confirm_data",
         title="Confirm data",
         description=f"Size: {data_total} bytes",
@@ -122,7 +115,6 @@ def require_confirm_data(ctx: Context, data: bytes, data_total: int) -> Awaitabl
 
 async def confirm_typed_data_final(ctx: Context) -> None:
     await confirm_action(
-        ctx,
         "confirm_typed_data_final",
         title="Confirm typed data",
         action="Really sign EIP-712 typed data?",
@@ -133,7 +125,6 @@ async def confirm_typed_data_final(ctx: Context) -> None:
 
 def confirm_empty_typed_message(ctx: Context) -> Awaitable[None]:
     return confirm_text(
-        ctx,
         "confirm_empty_typed_message",
         title="Confirm message",
         data="",
@@ -151,7 +142,6 @@ async def should_show_domain(ctx: Context, name: bytes, version: bytes) -> bool:
         (ui.BOLD, domain_version),
     )
     return await should_show_more(
-        ctx,
         title="Confirm domain",
         para=para,
         button_text="Show full domain",
@@ -175,7 +165,6 @@ async def should_show_struct(
         (ui.NORMAL, ", ".join(field.name for field in data_members)),
     )
     return await should_show_more(
-        ctx,
         title=title,
         para=para,
         button_text=button_text,
@@ -191,7 +180,6 @@ async def should_show_array(
 ) -> bool:
     para = ((ui.NORMAL, format_plural("Array of {count} {plural}", size, data_type)),)
     return await should_show_more(
-        ctx,
         title=limit_str(".".join(parent_objects)),
         para=para,
         button_text="Show full array",
@@ -220,7 +208,6 @@ async def confirm_typed_value(
 
     if field.data_type in (EthereumDataType.ADDRESS, EthereumDataType.BYTES):
         await confirm_blob(
-            ctx,
             "confirm_typed_value",
             title=title,
             data=data,
@@ -229,7 +216,6 @@ async def confirm_typed_value(
         )
     else:
         await confirm_text(
-            ctx,
             "confirm_typed_value",
             title=title,
             data=data,

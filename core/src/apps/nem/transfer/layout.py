@@ -54,7 +54,6 @@ async def ask_transfer_mosaic(
 
     if definition:
         await confirm_properties(
-            ctx,
             "confirm_mosaic",
             title="Confirm mosaic",
             props=[
@@ -74,7 +73,6 @@ async def ask_transfer_mosaic(
             )
 
             await confirm_properties(
-                ctx,
                 "confirm_mosaic_levy",
                 title="Confirm mosaic",
                 props=[
@@ -84,7 +82,6 @@ async def ask_transfer_mosaic(
 
     else:
         await confirm_action(
-            ctx,
             "confirm_mosaic_unknown",
             title="Confirm mosaic",
             action="Unknown mosaic!",
@@ -95,7 +92,6 @@ async def ask_transfer_mosaic(
         )
 
         await confirm_properties(
-            ctx,
             "confirm_mosaic_transfer",
             title="Confirm mosaic",
             props=[
@@ -137,7 +133,6 @@ async def ask_importance_transfer(
 
 async def _require_confirm_transfer(ctx: Context, recipient: str, value: int) -> None:
     await confirm_output(
-        ctx,
         recipient,
         amount=f"Send {format_amount(value, NEM_MAX_DIVISIBILITY)} XEM",
         font_amount=ui.BOLD,
@@ -150,7 +145,6 @@ async def _require_confirm_payload(
     ctx: Context, payload: bytes, encrypted: bool = False
 ) -> None:
     await confirm_text(
-        ctx,
         "confirm_payload",
         title="Confirm payload",
         description="Encrypted:" if encrypted else "Unencrypted:",

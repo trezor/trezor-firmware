@@ -41,7 +41,7 @@ MAX_VALUE_BYTE_SIZE = 1024
 async def sign_typed_data(
     ctx: Context, msg: EthereumSignTypedData, keychain: Keychain
 ) -> EthereumTypedDataSignature:
-    await paths.validate_path(ctx, keychain, msg.address_n)
+    await paths.validate_path(keychain, msg.address_n)
 
     data_hash = await generate_typed_data_hash(
         ctx, msg.primary_type, msg.metamask_v4_compat

@@ -1,6 +1,6 @@
 from typing import Sequence
 
-from trezor import ui, wire
+from trezor import ui
 from trezor.enums import ButtonRequestType
 from trezor.utils import chunks_intersperse
 
@@ -13,7 +13,7 @@ from ..common import interact
 
 
 async def confirm_total_ethereum(
-    ctx: wire.GenericContext, total_amount: str, gas_price: str, fee_max: str
+    total_amount: str, gas_price: str, fee_max: str
 ) -> None:
     text = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN, new_lines=False)
     text.bold(total_amount)
@@ -22,12 +22,11 @@ async def confirm_total_ethereum(
     text.normal(" ", ui.GREY, "Maximum fee:", ui.FG)
     text.bold(fee_max)
     await raise_if_cancelled(
-        interact(ctx, HoldToConfirm(text), "confirm_total", ButtonRequestType.SignTx)
+        interact(HoldToConfirm(text), "confirm_total", ButtonRequestType.SignTx)
     )
 
 
 async def confirm_total_ripple(
-    ctx: wire.GenericContext,
     address: str,
     amount: str,
 ) -> None:
@@ -38,12 +37,12 @@ async def confirm_total_ripple(
     text.mono(*chunks_intersperse(address, MONO_ADDR_PER_LINE))
 
     await raise_if_cancelled(
-        interact(ctx, HoldToConfirm(text), "confirm_output", ButtonRequestType.SignTx)
+        interact(HoldToConfirm(text), "confirm_output", ButtonRequestType.SignTx)
     )
 
 
 async def confirm_transfer_binance(
-    ctx: wire.GenericContext, inputs_outputs: Sequence[tuple[str, str, str]]
+    inputs_outputs: Sequence[tuple[str, str, str]]
 ) -> None:
     pages: list[ui.Component] = []
     for title, amount, address in inputs_outputs:
@@ -56,14 +55,11 @@ async def confirm_transfer_binance(
     pages[-1] = HoldToConfirm(pages[-1])
 
     await raise_if_cancelled(
-        interact(
-            ctx, Paginated(pages), "confirm_transfer", ButtonRequestType.ConfirmOutput
-        )
+        interact(Paginated(pages), "confirm_transfer", ButtonRequestType.ConfirmOutput)
     )
 
 
 async def confirm_decred_sstx_submission(
-    ctx: wire.GenericContext,
     address: str,
     amount: str,
 ) -> None:
@@ -73,7 +69,6 @@ async def confirm_decred_sstx_submission(
     text.mono(*chunks_intersperse(address, MONO_ADDR_PER_LINE))
     await raise_if_cancelled(
         interact(
-            ctx,
             Confirm(text),
             "confirm_decred_sstx_submission",
             ButtonRequestType.ConfirmOutput,

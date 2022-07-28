@@ -171,8 +171,6 @@ VECTORS_MULTISIG = (  # script_type, bip48_type, address, xpubs, ignore_xpub_mag
 )
 
 
-# NOTE: contains wait_layout race that manifests on hw sometimes
-@pytest.mark.flaky(max_runs=5)
 @pytest.mark.skip_t1
 @pytest.mark.multisig
 @pytest.mark.parametrize(
@@ -200,7 +198,7 @@ def test_show_multisig_xpubs(
 
         def input_flow():
             yield  # show address
-            lines = client.debug.wait_layout().lines  # TODO: do not need to *wait* now?
+            lines = client.debug.wait_layout().lines
             assert lines[0] == "Multisig 2 of 3"
             assert "".join(lines[1:]) == address
 

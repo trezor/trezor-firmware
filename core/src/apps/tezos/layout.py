@@ -19,7 +19,6 @@ if TYPE_CHECKING:
 
 async def require_confirm_tx(ctx: Context, to: str, value: int) -> None:
     await confirm_output(
-        ctx,
         to,
         format_tezos_amount(value),
         font_amount=ui.BOLD,
@@ -31,7 +30,6 @@ async def require_confirm_tx(ctx: Context, to: str, value: int) -> None:
 
 async def require_confirm_fee(ctx: Context, value: int, fee: int) -> None:
     await confirm_total(
-        ctx,
         total_amount=format_tezos_amount(value),
         total_label="Amount:\n",
         fee_amount=format_tezos_amount(fee),
@@ -41,7 +39,6 @@ async def require_confirm_fee(ctx: Context, value: int, fee: int) -> None:
 
 async def require_confirm_origination(ctx: Context, address: str) -> None:
     await confirm_address(
-        ctx,
         title="Confirm origination",
         address=address,
         description="Address:",
@@ -53,7 +50,6 @@ async def require_confirm_origination(ctx: Context, address: str) -> None:
 
 async def require_confirm_origination_fee(ctx: Context, balance: int, fee: int) -> None:
     await confirm_properties(
-        ctx,
         title="Confirm origination",
         props=(
             ("Balance:", format_tezos_amount(balance)),
@@ -67,7 +63,6 @@ async def require_confirm_origination_fee(ctx: Context, balance: int, fee: int) 
 
 async def require_confirm_delegation_baker(ctx: Context, baker: str) -> None:
     await confirm_address(
-        ctx,
         title="Confirm delegation",
         address=baker,
         description="Baker address:",
@@ -79,7 +74,6 @@ async def require_confirm_delegation_baker(ctx: Context, baker: str) -> None:
 
 async def require_confirm_set_delegate(ctx: Context, fee: int) -> None:
     await confirm_metadata(
-        ctx,
         "confirm_delegation_final",
         title="Confirm delegation",
         content="Fee:\n{}",
@@ -95,7 +89,6 @@ async def require_confirm_register_delegate(
     ctx: Context, address: str, fee: int
 ) -> None:
     await confirm_properties(
-        ctx,
         "confirm_register_delegate",
         title="Register delegate",
         props=(
@@ -114,7 +107,6 @@ def format_tezos_amount(value: int) -> str:
 
 async def require_confirm_ballot(ctx: Context, proposal: str, ballot: str) -> None:
     await confirm_properties(
-        ctx,
         "confirm_ballot",
         title="Submit ballot",
         props=(
@@ -133,7 +125,6 @@ async def require_confirm_proposals(ctx: Context, proposals: list[str]) -> None:
         title = "Submit proposal"
 
     await confirm_properties(
-        ctx,
         "confirm_proposals",
         title=title,
         props=[
@@ -148,7 +139,6 @@ async def require_confirm_delegation_manager_withdraw(
     ctx: Context, address: str
 ) -> None:
     await confirm_address(
-        ctx,
         title="Remove delegation",
         address=address,
         description="Delegator:",
@@ -161,7 +151,6 @@ async def require_confirm_delegation_manager_withdraw(
 
 async def require_confirm_manager_remove_delegate(ctx: Context, fee: int) -> None:
     await confirm_metadata(
-        ctx,
         "confirm_undelegation_final",
         title="Remove delegation",
         content="Fee:\n{}",

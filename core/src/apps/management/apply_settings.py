@@ -101,7 +101,6 @@ async def apply_settings(ctx: wire.Context, msg: ApplySettings) -> Success:
 
 async def require_confirm_change_homescreen(ctx: wire.GenericContext) -> None:
     await confirm_action(
-        ctx,
         "set_homescreen",
         "Set homescreen",
         description="Do you really want to change the homescreen image?",
@@ -111,7 +110,6 @@ async def require_confirm_change_homescreen(ctx: wire.GenericContext) -> None:
 
 async def require_confirm_change_label(ctx: wire.GenericContext, label: str) -> None:
     await confirm_action(
-        ctx,
         "set_label",
         "Change label",
         description="Do you really want to change the label to {}?",
@@ -128,7 +126,6 @@ async def require_confirm_change_passphrase(
     else:
         description = "Do you really want to disable passphrase encryption?"
     await confirm_action(
-        ctx,
         "set_passphrase",
         "Enable passphrase" if use else "Disable passphrase",
         description=description,
@@ -144,7 +141,6 @@ async def require_confirm_change_passphrase_source(
     else:
         description = "Do you want to revoke the passphrase on device setting?"
     await confirm_action(
-        ctx,
         "set_passphrase_source",
         "Passphrase source",
         description=description,
@@ -166,7 +162,6 @@ async def require_confirm_change_display_rotation(
     else:
         raise wire.DataError("Unsupported display rotation")
     await confirm_action(
-        ctx,
         "set_rotation",
         "Change rotation",
         description="Do you really want to change display rotation to {}?",
@@ -179,7 +174,6 @@ async def require_confirm_change_autolock_delay(
     ctx: wire.GenericContext, delay_ms: int
 ) -> None:
     await confirm_action(
-        ctx,
         "set_autolock_delay",
         "Auto-lock delay",
         description="Do you really want to auto-lock your device after {}?",
@@ -193,7 +187,6 @@ async def require_confirm_safety_checks(
 ) -> None:
     if level == SafetyCheckLevel.PromptAlways:
         await confirm_action(
-            ctx,
             "set_safety_checks",
             "Safety override",
             hold=True,
@@ -206,7 +199,6 @@ async def require_confirm_safety_checks(
         )
     elif level == SafetyCheckLevel.PromptTemporarily:
         await confirm_action(
-            ctx,
             "set_safety_checks",
             "Safety override",
             hold=True,
@@ -218,7 +210,6 @@ async def require_confirm_safety_checks(
         )
     elif level == SafetyCheckLevel.Strict:
         await confirm_action(
-            ctx,
             "set_safety_checks",
             "Safety checks",
             description="Do you really want to enforce strict safety checks (recommended)?",
@@ -233,7 +224,6 @@ async def require_confirm_experimental_features(
 ) -> None:
     if enable:
         await confirm_action(
-            ctx,
             "set_experimental_features",
             "Experimental mode",
             description="Enable experimental features?",

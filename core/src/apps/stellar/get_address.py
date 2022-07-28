@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 async def get_address(
     ctx: Context, msg: StellarGetAddress, keychain: Keychain
 ) -> StellarAddress:
-    await paths.validate_path(ctx, keychain, msg.address_n)
+    await paths.validate_path(keychain, msg.address_n)
 
     node = keychain.derive(msg.address_n)
     pubkey = seed.remove_ed25519_prefix(node.public_key())
@@ -25,6 +25,6 @@ async def get_address(
 
     if msg.show_display:
         title = paths.address_n_to_str(msg.address_n)
-        await show_address(ctx, address=address, case_sensitive=False, title=title)
+        await show_address(address=address, case_sensitive=False, title=title)
 
     return StellarAddress(address=address)

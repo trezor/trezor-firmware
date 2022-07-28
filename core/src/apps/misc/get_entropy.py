@@ -12,7 +12,6 @@ if TYPE_CHECKING:
 
 async def get_entropy(ctx: Context, msg: GetEntropy) -> Entropy:
     await confirm_action(
-        ctx,
         "get_entropy",
         "Confirm entropy",
         action="Do you really want\nto send entropy?",

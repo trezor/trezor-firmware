@@ -48,7 +48,6 @@ async def authorize_coinjoin(
         raise wire.DataError("Empty path not allowed.")
 
     await confirm_action(
-        ctx,
         "coinjoin_coordinator",
         title="Authorize CoinJoin",
         description="Do you really want to take part in a CoinJoin transaction at:\n{}",
@@ -58,11 +57,10 @@ async def authorize_coinjoin(
     )
 
     max_fee_per_vbyte = format_amount(msg.max_fee_per_kvbyte, 3)
-    await confirm_coinjoin(ctx, coin.coin_name, msg.max_rounds, max_fee_per_vbyte)
+    await confirm_coinjoin(coin.coin_name, msg.max_rounds, max_fee_per_vbyte)
 
     validation_path = msg.address_n + [0] * BIP32_WALLET_DEPTH
     await validate_path(
-        ctx,
         keychain,
         validation_path,
         validate_path_against_script_type(
@@ -72,7 +70,6 @@ async def authorize_coinjoin(
 
     if msg.max_fee_per_kvbyte > coin.maxfee_kb:
         await confirm_metadata(
-            ctx,
             "fee_over_threshold",
             "High mining fee",
             "The mining fee of\n{} sats/vbyte\nis unexpectedly high.",

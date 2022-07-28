@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 async def get_address(
     ctx: Context, msg: EthereumGetAddress, keychain: Keychain
 ) -> EthereumAddress:
-    await paths.validate_path(ctx, keychain, msg.address_n)
+    await paths.validate_path(keychain, msg.address_n)
 
     node = keychain.derive(msg.address_n)
 
@@ -32,6 +32,6 @@ async def get_address(
 
     if msg.show_display:
         title = paths.address_n_to_str(msg.address_n)
-        await show_address(ctx, address=address, title=title)
+        await show_address(address=address, title=title)
 
     return EthereumAddress(address=address)

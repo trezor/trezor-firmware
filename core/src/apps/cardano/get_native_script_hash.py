@@ -13,7 +13,7 @@ async def get_native_script_hash(
     script_hash = native_script.get_native_script_hash(keychain, msg.script)
 
     if msg.display_format != CardanoNativeScriptHashDisplayFormat.HIDE:
-        await layout.show_native_script(ctx, msg.script)
-        await layout.show_script_hash(ctx, script_hash, msg.display_format)
+        await layout.show_native_script(msg.script)
+        await layout.show_script_hash(script_hash, msg.display_format)
 
     return messages.CardanoNativeScriptHash(script_hash=script_hash)

@@ -83,7 +83,7 @@ async def require_confirm_sign_identity(
 ) -> None:
     proto = identity.proto.upper() if identity.proto else "identity"
     await confirm_sign_identity(
-        ctx, proto, serialize_identity_without_proto(identity), challenge_visual
+        proto, serialize_identity_without_proto(identity), challenge_visual
     )
 
 

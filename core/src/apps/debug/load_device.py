@@ -69,7 +69,6 @@ def _validate(msg: LoadDevice) -> int:
 
 async def _warn(ctx: wire.Context) -> None:
     await confirm_action(
-        ctx,
         "warn_loading_seed",
         "Loading seed",
         "Loading private seed\nis not recommended.",

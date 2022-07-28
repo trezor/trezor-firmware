@@ -36,12 +36,11 @@ async def require_confirm_transfer(ctx: Context, msg: BinanceTransferMsg) -> Non
     for txoutput in msg.outputs:
         make_input_output_pages(txoutput, "Confirm output")
 
-    await confirm_transfer_binance(ctx, items)
+    await confirm_transfer_binance(items)
 
 
 async def require_confirm_cancel(ctx: Context, msg: BinanceCancelMsg) -> None:
     await confirm_properties(
-        ctx,
         "confirm_cancel",
         title="Confirm cancel",
         props=[
@@ -63,7 +62,6 @@ async def require_confirm_order(ctx: Context, msg: BinanceOrderMsg) -> None:
         side = "Unknown"
 
     await confirm_properties(
-        ctx,
         "confirm_order",
         title="Confirm order",
         props=[

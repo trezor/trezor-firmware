@@ -73,7 +73,6 @@ def _validate_catalyst_registration_parameters(
 
 
 async def show(
-    ctx: wire.Context,
     keychain: seed.Keychain,
     auxiliary_data_hash: bytes,
     catalyst_registration_parameters: messages.CardanoCatalystRegistrationParametersType
@@ -84,7 +83,6 @@ async def show(
 ) -> None:
     if catalyst_registration_parameters:
         await _show_catalyst_registration(
-            ctx,
             keychain,
             catalyst_registration_parameters,
             protocol_magic,
@@ -92,11 +90,10 @@ async def show(
         )
 
     if should_show_details:
-        await show_auxiliary_data_hash(ctx, auxiliary_data_hash)
+        await show_auxiliary_data_hash(auxiliary_data_hash)
 
 
 async def _show_catalyst_registration(
-    ctx: wire.Context,
     keychain: seed.Keychain,
     catalyst_registration_parameters: messages.CardanoCatalystRegistrationParametersType,
     protocol_magic: int,
@@ -114,7 +111,7 @@ async def _show_catalyst_registration(
     nonce = catalyst_registration_parameters.nonce
 
     await confirm_catalyst_registration(
-        ctx, encoded_public_key, staking_path, reward_address, nonce
+        encoded_public_key, staking_path, reward_address, nonce
     )
 
 

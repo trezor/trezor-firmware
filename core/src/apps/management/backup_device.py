@@ -26,10 +26,10 @@ async def backup_device(ctx: wire.Context, msg: BackupDevice) -> Success:
     storage.device.set_unfinished_backup(True)
     storage.device.set_backed_up()
 
-    await backup_seed(ctx, mnemonic_type, mnemonic_secret)
+    await backup_seed(mnemonic_type, mnemonic_secret)
 
     storage.device.set_unfinished_backup(False)
 
-    await layout.show_backup_success(ctx)
+    await layout.show_backup_success()
 
     return Success(message="Seed successfully backed up")

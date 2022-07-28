@@ -13,7 +13,6 @@ async def list_resident_credentials(
     ctx: wire.Context, msg: WebAuthnListResidentCredentials
 ) -> WebAuthnCredentials:
     await confirm_action(
-        ctx,
         "credentials_list",
         title="List credentials",
         description="Do you want to export information about the resident credentials stored on this device?",
