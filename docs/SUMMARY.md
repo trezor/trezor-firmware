@@ -9,6 +9,7 @@
   - [Event Loop](core/src/event-loop.md)
   - [Apps](core/src/apps.md)
   - [Tests](core/tests/index.md)
+  - [Debugging on hardware](core/embed_debug/index.md)
   - [SystemView instrumentation](core/systemview/index.md)
   - [Miscellaneous](core/misc/index.md)
     - [Code style](core/misc/codestyle.md)
