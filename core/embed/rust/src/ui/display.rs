@@ -770,7 +770,7 @@ pub struct MagnifiedGlyph1BPP {
     bearing_x: i32,
     bearing_y: i32,
     // TODO: how to handle the maximum allocation?
-    data: Vec<bool, 2048>,
+    data: Vec<bool, 1280>,
 }
 
 impl MagnifiedGlyph1BPP {
@@ -780,7 +780,7 @@ impl MagnifiedGlyph1BPP {
         adv: i32,
         bearing_x: i32,
         bearing_y: i32,
-        data: Vec<bool, 2048>,
+        data: Vec<bool, 1280>,
     ) -> Self {
         MagnifiedGlyph1BPP {
             width,
@@ -892,7 +892,7 @@ impl Font {
             let bytes_vec: Vec<u8, 16> = Vec::from_slice(bytes).unwrap();
 
             // Transforming the glyph to have a bigger size
-            let mut magnified_bits: Vec<bool, 2048> = Vec::new();
+            let mut magnified_bits: Vec<bool, 1280> = Vec::new();
             magnify_font(magnification, width, height, bytes_vec, &mut magnified_bits);
 
             // All the properties need to be magnified accordingly as well
