@@ -4,11 +4,14 @@
 # `core/embed/rust/src/ui/font_multiplier.rs` is a Rust implementation
 # that is doing it on the actual Trezor.
 
-from typing import Literal
+from __future__ import annotations
+
+from typing_extensions import Literal
+from typing import Tuple
 
 
 Bit = Literal[0, 1]
-Point = tuple[int, int]
+Point = Tuple[int, int]
 
 
 def magnify_glyph_by_two(width: int, height: int, bytes_data: list[int]) -> list[int]:
