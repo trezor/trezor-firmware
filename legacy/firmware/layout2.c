@@ -405,8 +405,7 @@ static size_t format_coin_amount(uint64_t amount, const char *prefix,
       strlcpy(suffix + 1, coin->coin_shortcut, sizeof(suffix) - 1);
       break;
   }
-  return bn_format_uint64(amount, prefix, suffix, decimals, 0, false, output,
-                          output_len);
+  return bn_format_amount(amount, prefix, suffix, decimals, output, output_len);
 }
 
 void layoutConfirmOutput(const CoinInfo *coin, AmountUnit amount_unit,
@@ -455,7 +454,7 @@ void layoutConfirmOmni(const uint8_t *data, uint32_t size) {
     uint64_t amount_be = 0, amount = 0;
     memcpy(&amount_be, data + 12, sizeof(uint64_t));
     REVERSE64(amount_be, amount);
-    bn_format_uint64(amount, NULL, suffix, divisible ? 8 : 0, 0, false, str_out,
+    bn_format_amount(amount, NULL, suffix, divisible ? 8 : 0, str_out,
                      sizeof(str_out));
   } else {
     desc = _("Unknown transaction");
@@ -520,8 +519,8 @@ static bool formatFeeRate(uint64_t fee, uint64_t tx_weight, char *output,
   // one decimal digit.
   uint64_t fee_rate_multiplied = div_round(10 * fee, tx_size);
 
-  return bn_format_uint64(fee_rate_multiplied, "(",
-                          segwit ? " sat/vB)" : " sat/B)", 1, 0, false, output,
+  return bn_format_amount(fee_rate_multiplied, "(",
+                          segwit ? " sat/vB)" : " sat/B)", 1, output,
                           output_length) != 0;
 }
 
@@ -1186,7 +1185,7 @@ void layoutNEMLevy(const NEMMosaicDefinition *definition, uint8_t network) {
 
   switch (definition->levy) {
     case NEMMosaicLevy_MosaicLevy_Percentile:
-      bn_format_uint64(definition->fee, NULL, NULL, 0, 0, false, str_out,
+      bn_format_amount(definition->fee, NULL, NULL, 0, str_out,
                        sizeof(str_out));
 
       layoutDialogSwipe(
@@ -1267,8 +1266,7 @@ void layoutConfirmAutoLockDelay(uint32_t delay_ms) {
 
   strlcpy(line, _("after "), sizeof(line));
   size_t off = strlen(line);
-  bn_format_uint64(num, NULL, NULL, 0, 0, false, &line[off],
-                   sizeof(line) - off);
+  bn_format_amount(num, NULL, NULL, 0, &line[off], sizeof(line) - off);
   strlcat(line, " ", sizeof(line));
   strlcat(line, unit, sizeof(line));
   if (num > 1) {
