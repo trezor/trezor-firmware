@@ -503,12 +503,17 @@ static bool formatAmountDifference(const CoinInfo *coin, AmountUnit amount_unit,
                             output_length) != 0;
 }
 
+// Computes numer / denom and rounds to the nearest integer.
+static uint64_t div_round(uint64_t numer, uint64_t denom) {
+  return numer / denom + (2 * (numer % denom) >= denom);
+}
+
 static bool formatFeeRate(uint64_t fee, uint64_t tx_weight, char *output,
                           size_t output_length, bool segwit) {
-  // Compute fee rate and modify it in place for `bn_format_uint64` function -
-  // multiply by 10, because we only want to display 1 decimal digit
-  // and then get whole number by leaving it in `uint64_t`.
-  uint64_t fee_rate_multiplied = (fee * 10) / (tx_weight / 4);
+  // Compute fee rate and modify it in place for the bn_format_uint64()
+  // function. We multiply by 4 to convert from sats/WU to sats/vB. We multiply
+  // by 10, because we want bn_format_uint64() to display 1 decimal digit.
+  uint64_t fee_rate_multiplied = div_round(4 * 10 * fee, tx_weight);
 
   return bn_format_uint64(fee_rate_multiplied, "(",
                           segwit ? " sat/vB)" : " sat/B)", 1, 0, false, output,
