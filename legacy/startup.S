@@ -20,9 +20,30 @@ memset_reg:
   .type reset_handler, STT_FUNC
 reset_handler:
 
-#if PRODUCTION
-// we need to perform this in case an old bootloader (<1.8.0)
-// is starting the new firmware, these will be set incorrectly
+// We need to perform VTOR+stack setup case an old bootloader (<1.8.0)
+// is starting the new firmware, these will be set incorrectly.
+
+// To make development easier, set only if we are in privileged
+// mode. This resolves annoying combinations of PRODUCTION
+// settings for bootloader and FW.
+// Normally only signed firmware will let bootloader start FW
+// in privileged mode (PRODUCTION=1 variants with signed everything).
+// But with devel bootloader we let FW start in privileged mode
+// and let's do the check if we can set VTOR without fault
+
+// Since this startup code is shared with bootloader and FW,
+// a) in case of bootloader MCU starts in privileged mode,
+//    so the jump to "setup_as_unprivileged" never happens.
+//    VTOR and stack are set from MCU startup
+// b) in case of FW it will attempt to set VTOR and stack
+//    which will work for both signed bootloader+FW, but
+//    also for other variants with debug bootloader and
+//    unsigned FW or official bootloader and usigned FW
+  mrs r3, control
+  and r3, r3, #1
+  cmp r3, #1
+  beq .setup_as_unprivileged
+
   ldr r0, =0xE000ED08  // r0 = VTOR address
   ldr r1, =0x08010400  // r1 = FLASH_APP_START
   str r1, [r0]         // assign
@@ -30,8 +51,8 @@ reset_handler:
   msr msp, r0          // set stack pointer
   dsb
   isb
-#endif
 
+  .setup_as_unprivileged:
   ldr r0, =_stay_in_bootloader_flag_addr  // r0 - address of storage for "stay in bootloader" flag
   ldr r11, [r0]        // r11 - keep in register and hope it gets to main
 
