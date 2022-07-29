@@ -15,7 +15,7 @@
 "T1_bitcoin-test_bgold.py::test_send_p2sh_witness_change": "9fd0d868aa3d4b9ea4066b1124f51d469edcc57a9a234bc5dc48eef63f55ce6b",
 "T1_bitcoin-test_dash.py::test_send_dash": "f82f04808cbd87e88e268e923c35c05217ecde6c1aea27d114b44262cb813cd7",
 "T1_bitcoin-test_dash.py::test_send_dash_dip2_input": "e219fbf1899be32e6097ad57ea5fe204c347cc710d0659c7d4972b5253e63b25",
-"T1_bitcoin-test_decred.py::test_decred_multisig_change": "753e37c526434f2ed71ace99c15c610591600d8384e8303815e60376516a2bac",
+"T1_bitcoin-test_decred.py::test_decred_multisig_change": "e3e6bdcad7c8deee8c91c8cedff34668255bdd93bf1cfb4f4f46060a356cf494",
 "T1_bitcoin-test_decred.py::test_send_decred": "ef4422f3cff7add5192c753a5c5640dad06b82936bf31fd94baaebfae2280aac",
 "T1_bitcoin-test_decred.py::test_send_decred_change": "42814de3a9199b4b683bcde8595d7987b48cfeb609bd63926dd66abc7e5611fc",
 "T1_bitcoin-test_descriptors.py::test_descriptors[Bitcoin-0-InputScriptType.SPENDADDRESS-pkh([5-7a80e3db": "9b30c98b35338d933fe992e4a47fb259a54f0f6f204610f63c6e6cbff427dbb9",

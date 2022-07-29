@@ -1132,6 +1132,10 @@ uint32_t tx_output_weight(const CoinInfo *coin, const TxOutputType *txoutput) {
 uint32_t tx_decred_witness_weight(const TxInputType *txinput) {
   uint32_t input_script_size =
       tx_input_script_size(txinput, txinput->script_type);
+  if (txinput->script_type == InputScriptType_SPENDMULTISIG) {
+    // Decred fixed the the OP_FALSE bug in multisig.
+    input_script_size -= 1;  // Subtract one OP_FALSE byte.
+  }
   uint32_t size = TXSIZE_DECRED_WITNESS + ser_length_size(input_script_size) +
                   input_script_size;
 
