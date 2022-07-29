@@ -86,8 +86,8 @@ class TestSignTxDecred(unittest.TestCase):
             outputs_count=1,
         )
 
-        # precomputed tx weight is 768
-        fee_rate = 100_000 / (768 / 4)
+        # precomputed tx weight is 864
+        fee_rate = 100_000 / (864 / 4)
 
         messages = [
             None,
@@ -246,8 +246,8 @@ class TestSignTxDecred(unittest.TestCase):
             decred_staking_ticket=True,
         )
 
-        # precomputed tx weight is 1076
-        fee_rate = 100_000 / (1076 / 4)
+        # precomputed tx weight is 1188
+        fee_rate = 100_000 / (1188 / 4)
 
         messages = [
             None,
