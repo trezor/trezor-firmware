@@ -1,8 +1,7 @@
 use super::{common, theme};
 use crate::ui::{
     component::{Child, Component, Event, EventCtx},
-    display,
-    geometry::{Insets, Offset, Rect},
+    geometry::{Insets, Rect},
 };
 
 /// Component for holding another component and displaying
@@ -57,20 +56,7 @@ where
     }
 
     fn paint(&mut self) {
-        let title_baseline = self.area.bottom_left() - Offset::y(2);
-        common::display_header(title_baseline, self.title.as_ref());
-        // Optionally painting the subtitle as well
-        // (and offsetting the dotted line in that case)
-        let mut dot_offset = 0;
-        if let Some(subtitle) = &self.subtitle {
-            dot_offset = 10;
-            common::display_header(title_baseline + Offset::y(dot_offset), subtitle.as_ref());
-        }
-        display::dotted_line(
-            self.area.bottom_left() + Offset::y(dot_offset),
-            self.area.width(),
-            theme::FG,
-        );
+        common::paint_header(self.area.top_left(), &self.title, &self.subtitle);
         self.content.paint();
     }
 }

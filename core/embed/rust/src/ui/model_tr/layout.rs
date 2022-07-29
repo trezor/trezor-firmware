@@ -74,7 +74,7 @@ where
 impl ComponentMsgObj for Bip39Entry {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
-            Bip39EntryMsg::ResultWord(word) => word.as_str().try_into(),
+            Bip39EntryMsg::Finish => self.all_words().try_into(),
         }
     }
 }
@@ -319,11 +319,12 @@ extern "C" fn request_word_count(n_args: usize, args: *const Obj, kwargs: *mut M
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn request_word_bip39(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+extern "C" fn request_bip39_words(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
-        let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
+        let word_count: u8 = kwargs.get(Qstr::MP_QSTR_word_count)?.try_into()?;
+        // TODO: could validate that word_count is not bigger than 24
+        let obj = LayoutObj::new(Bip39Entry::new(word_count).into_child())?;
 
-        let obj = LayoutObj::new(Frame::new(prompt, None, Bip39Entry::new().into_child()))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -414,12 +415,12 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Get word count for recovery."""
     Qstr::MP_QSTR_request_word_count => obj_fn_kw!(0, request_word_count).as_obj(),
 
-    /// def request_word_bip39(
+    /// def request_bip39_words(
     ///     *,
-    ///     prompt: str,
-    /// ) -> str:
-    ///     """Get recovery word for BIP39."""
-    Qstr::MP_QSTR_request_word_bip39 => obj_fn_kw!(0, request_word_bip39).as_obj(),
+    ///     word_count: int,
+    /// ) -> list[str]:
+    ///     """Get all BIP39 recovery words."""
+    Qstr::MP_QSTR_request_bip39_words => obj_fn_kw!(0, request_bip39_words).as_obj(),
 
     /// def request_passphrase(
     ///     *,

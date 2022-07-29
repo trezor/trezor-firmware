@@ -1,20 +1,20 @@
 use crate::{
     trezorhal::bip39,
     ui::{
-        component::{text::common::TextBox, Component, Event, EventCtx},
+        component::{text::common::TextBox, Component, Event, EventCtx, Pad},
         geometry::{Point, Rect},
         model_tr::theme,
     },
 };
 
 use super::{
-    choice_item::BigCharacterChoiceItem, common::display_center, ButtonDetails, ButtonLayout,
-    ChoiceItems, ChoicePage, ChoicePageMsg, TextChoiceItem,
+    choice_item::BigCharacterChoiceItem, common, ButtonDetails, ButtonLayout, ChoiceItems,
+    ChoicePage, ChoicePageMsg, TextChoiceItem,
 };
 use heapless::{String, Vec};
 
 pub enum Bip39EntryMsg {
-    ResultWord(String<50>),
+    Finish,
 }
 
 const CURRENT_LETTERS_ROW: i32 = 25;
@@ -30,12 +30,15 @@ pub struct Bip39Entry {
     choice_page: ChoicePage<MAX_CHOICE_LENGTH>,
     letter_choices: Vec<char, MAX_CHOICE_LENGTH>,
     textbox: TextBox<MAX_LENGTH>,
+    pad: Pad,
     offer_words: bool,
-    words_list: bip39::Wordlist,
+    bip39_words_list: bip39::Wordlist,
+    words: Vec<String<8>, 24>, // BIP39 has at most 24 words, each at most 8 characters
+    word_count: u8,
 }
 
 impl Bip39Entry {
-    pub fn new() -> Self {
+    pub fn new(word_count: u8) -> Self {
         let letter_choices: Vec<char, MAX_CHOICE_LENGTH> =
             bip39::get_available_letters("").collect();
 
@@ -45,8 +48,11 @@ impl Bip39Entry {
             choice_page: ChoicePage::new(choices),
             letter_choices,
             textbox: TextBox::empty(),
+            pad: Pad::with_background(theme::BG),
             offer_words: false,
-            words_list: bip39::Wordlist::all(),
+            bip39_words_list: bip39::Wordlist::all(),
+            words: Vec::new(),
+            word_count,
         }
     }
 
@@ -54,6 +60,7 @@ impl Bip39Entry {
     fn get_letter_choice_page_items(
         letter_choices: &Vec<char, MAX_CHOICE_LENGTH>,
     ) -> Vec<ChoiceItems, MAX_CHOICE_LENGTH> {
+        // TODO: we could support carousel for letters to quicken it for users
         let mut choices: Vec<ChoiceItems, MAX_CHOICE_LENGTH> = letter_choices
             .iter()
             .map(|ch| {
@@ -70,9 +77,9 @@ impl Bip39Entry {
 
     /// Word choice items with BIN leftmost button.
     fn get_word_choice_page_items(
-        words_list: &bip39::Wordlist,
+        bip39_words_list: &bip39::Wordlist,
     ) -> Vec<ChoiceItems, MAX_CHOICE_LENGTH> {
-        let mut choices: Vec<ChoiceItems, MAX_CHOICE_LENGTH> = words_list
+        let mut choices: Vec<ChoiceItems, MAX_CHOICE_LENGTH> = bip39_words_list
             .iter()
             .map(|word| {
                 let choice = TextChoiceItem::from_str(word, ButtonLayout::default_three());
@@ -89,14 +96,14 @@ impl Bip39Entry {
     /// Gets up-to-date choices for letters or words.
     fn get_current_choices(&mut self) -> Vec<ChoiceItems, MAX_CHOICE_LENGTH> {
         // Narrowing the word list
-        self.words_list = self.words_list.filter_prefix(self.textbox.content());
+        self.bip39_words_list = self.bip39_words_list.filter_prefix(self.textbox.content());
 
         // Offering words when there is only a few of them
         // Otherwise getting relevant letters
-        if self.words_list.len() < OFFER_WORDS_THRESHOLD {
+        if self.bip39_words_list.len() < OFFER_WORDS_THRESHOLD {
             self.offer_words = true;
 
-            Self::get_word_choice_page_items(&self.words_list)
+            Self::get_word_choice_page_items(&self.bip39_words_list)
         } else {
             self.offer_words = false;
             self.letter_choices = bip39::get_available_letters(self.textbox.content()).collect();
@@ -106,28 +113,85 @@ impl Bip39Entry {
     }
 
     fn update_situation(&mut self) {
+        // On physical device, for a short moment, the header would display
+        // "Select word 13/12" before showing another screen.
+        if self.has_enough_words() {
+            return;
+        }
+        // TODO: header has no need to change most of the time,
+        // so we could maybe call it only when reaching a new word,
+        // to reduce the flickering
+        // (however, repaint is being called from `self.choice_page` on every letter change).
+        self.show_current_header();
         self.show_current_letters();
     }
 
+    /// Display prompt on the top with the current word index.
+    fn show_current_header(&mut self) {
+        // Clearing the pad not to conflict with the previous index there
+        self.pad.clear();
+        let title = build_string!(
+            20,
+            "Select word ",
+            inttostr!(self.words.len() as u8 + 1),
+            "/",
+            inttostr!(self.word_count)
+        );
+        common::paint_header(Point::zero(), &title, &None);
+    }
+
+    /// Displays current letters together with underscore.
     fn show_current_letters(&self) {
         let to_show = build_string!({ MAX_LENGTH + 1 }, self.textbox.content(), "_");
-        display_center(
+        common::display_center(
             Point::new(64, CURRENT_LETTERS_ROW),
             &to_show,
             theme::FONT_MONO,
         );
     }
 
-    fn append_letter(&mut self, ctx: &mut EventCtx, letter: char) {
-        self.textbox.append(ctx, letter);
+    fn reset_wordlist(&mut self) {
+        self.bip39_words_list = bip39::Wordlist::all();
+    }
+
+    fn has_enough_words(&self) -> bool {
+        self.word_count == self.words.len() as u8
+    }
+
+    pub fn all_words(&self) -> Vec<String<8>, 24> {
+        self.words.clone()
+    }
+
+    fn save_new_word(&mut self, word_index: u8) {
+        let word = self
+            .bip39_words_list
+            .get(word_index as usize)
+            .unwrap_or_default();
+        self.words.push(String::from(word)).unwrap();
+    }
+
+    fn start_with_another_word(&mut self, ctx: &mut EventCtx) {
+        self.textbox.clear(ctx);
+        self.reset_wordlist();
+        self.set_new_choices_and_repaint(ctx);
+    }
+
+    fn save_new_letter(&mut self, ctx: &mut EventCtx, letter_index: u8) {
+        let new_letter = self.letter_choices[letter_index as usize];
+        self.textbox.append(ctx, new_letter);
+        self.set_new_choices_and_repaint(ctx);
     }
 
     fn delete_last_letter(&mut self, ctx: &mut EventCtx) {
         self.textbox.delete_last(ctx);
+        self.reset_wordlist();
+        self.set_new_choices_and_repaint(ctx);
     }
 
-    fn reset_wordlist(&mut self) {
-        self.words_list = bip39::Wordlist::all();
+    fn set_new_choices_and_repaint(&mut self, ctx: &mut EventCtx) {
+        let new_choices = self.get_current_choices();
+        self.choice_page.reset(ctx, new_choices, true, false);
+        ctx.request_paint();
     }
 }
 
@@ -135,7 +199,12 @@ impl Component for Bip39Entry {
     type Msg = Bip39EntryMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        self.choice_page.place(bounds)
+        let header_height = theme::FONT_HEADER.text_height() + 3;
+        let (header_area, choice_area) = bounds.split_top(header_height);
+        self.pad.place(header_area);
+
+        self.choice_page.place(choice_area);
+        bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
@@ -143,30 +212,20 @@ impl Component for Bip39Entry {
         match msg {
             Some(ChoicePageMsg::Choice(page_counter)) => {
                 // Clicked SELECT.
-                // When we already offer words, return the word at the given index.
-                // Otherwise, appending the new letter and resetting the choice page
-                // with up-to-date choices.
                 if self.offer_words {
-                    let word = self
-                        .words_list
-                        .get(page_counter as usize)
-                        .unwrap_or_default();
-                    return Some(Bip39EntryMsg::ResultWord(String::from(word)));
+                    self.save_new_word(page_counter);
+                    if self.has_enough_words() {
+                        return Some(Bip39EntryMsg::Finish);
+                    } else {
+                        self.start_with_another_word(ctx);
+                    }
                 } else {
-                    let new_letter = self.letter_choices[page_counter as usize];
-                    self.append_letter(ctx, new_letter);
-                    let new_choices = self.get_current_choices();
-                    self.choice_page.reset(ctx, new_choices, true, false);
-                    ctx.request_paint();
+                    self.save_new_letter(ctx, page_counter);
                 }
             }
             Some(ChoicePageMsg::LeftMost) => {
-                // Clicked BIN. Deleting last letter, updating wordlist and updating choices
+                // Clicked BIN.
                 self.delete_last_letter(ctx);
-                self.reset_wordlist();
-                let new_choices = self.get_current_choices();
-                self.choice_page.reset(ctx, new_choices, true, false);
-                ctx.request_paint();
             }
             _ => {}
         }
@@ -175,6 +234,7 @@ impl Component for Bip39Entry {
     }
 
     fn paint(&mut self) {
+        self.pad.paint();
         self.choice_page.paint();
         self.update_situation();
     }

@@ -1,4 +1,5 @@
 use core::convert::{TryFrom, TryInto};
+use heapless::{String, Vec};
 
 use cstr_core::CStr;
 
@@ -300,6 +301,20 @@ impl TryFrom<(Obj, Obj)> for Obj {
         } else {
             Ok(obj)
         }
+    }
+}
+
+impl<const M: usize, const N: usize> TryFrom<Vec<String<M>, N>> for Obj {
+    type Error = Error;
+
+    fn try_from(val: Vec<String<M>, N>) -> Result<Self, Self::Error> {
+        let object_list: Vec<Obj, N> = val
+            .iter()
+            .map(|item| item.as_str().try_into())
+            .collect::<Result<_, _>>()?;
+        catch_exception(|| unsafe {
+            ffi::mp_obj_new_list(object_list.len(), object_list.as_ptr() as *mut Obj)
+        })
     }
 }
 

@@ -1,6 +1,7 @@
 use crate::ui::{
     display::{self, Font},
-    geometry::Point,
+    geometry::{Offset, Point},
+    model_tr::constant,
 };
 
 use heapless::String;
@@ -73,4 +74,24 @@ pub fn display_secret_center_top(secret: &str, offset_from_top: i32) {
         let to_show = build_string!(MAX_VISIBLE_CHARS, ellipsis, &secret[offset..]);
         display_center(Point::new(64, y_position), &to_show, theme::FONT_MONO);
     }
+}
+
+/// Display title and possible subtitle together with a dotted line spanning
+/// the entire width.
+pub fn paint_header<T: AsRef<str>>(top_left: Point, title: &T, subtitle: &Option<T>) {
+    let text_heigth = theme::FONT_HEADER.text_height();
+    let title_baseline = top_left + Offset::y(text_heigth);
+    display_header(title_baseline, title.as_ref());
+    // Optionally painting the subtitle as well
+    // (and offsetting the dotted line in that case)
+    let mut dotted_line_offset = text_heigth + 2;
+    if let Some(subtitle) = subtitle {
+        dotted_line_offset += text_heigth;
+        display_header(title_baseline + Offset::y(text_heigth), subtitle.as_ref());
+    }
+    display::dotted_line(
+        top_left + Offset::y(dotted_line_offset),
+        constant::WIDTH,
+        theme::FG,
+    );
 }
