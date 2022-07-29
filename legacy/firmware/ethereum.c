@@ -331,7 +331,7 @@ static void ethereumFormatAmount(const bignum256 *amnt, const TokenType *token,
   } else {
     ASSIGN_ETHEREUM_SUFFIX(suffix, chain_id);
   }
-  bn_format(amnt, NULL, suffix, decimals, 0, false, buf, buflen);
+  bn_format(amnt, NULL, suffix, decimals, 0, false, ',', buf, buflen);
 }
 
 static void layoutEthereumConfirmTx(const uint8_t *to, uint32_t to_len,

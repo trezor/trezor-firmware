@@ -1379,7 +1379,7 @@ void stellar_getSignatureForActiveTx(uint8_t *out_signature) {
  * "100.0"
  */
 void stellar_format_stroops(uint64_t number, char *out, size_t outlen) {
-  bn_format_uint64(number, NULL, NULL, 7, 0, false, out, outlen);
+  bn_format_amount(number, NULL, NULL, 7, out, outlen);
 }
 
 /*
@@ -1423,7 +1423,7 @@ void stellar_format_price(uint32_t numerator, uint32_t denominator, char *out,
   }
 
   // Format with bn_format_uint64
-  bn_format_uint64(value, NULL, NULL, 6, 6 - scale, true, out, outlen);
+  bn_format_uint64(value, NULL, NULL, 6, 6 - scale, true, ',', out, outlen);
 }
 
 /*
@@ -1432,14 +1432,14 @@ void stellar_format_price(uint32_t numerator, uint32_t denominator, char *out,
 void stellar_format_uint32(uint32_t number, char *out, size_t outlen) {
   bignum256 bn_number = {0};
   bn_read_uint32(number, &bn_number);
-  bn_format(&bn_number, NULL, NULL, 0, 0, false, out, outlen);
+  bn_format(&bn_number, NULL, NULL, 0, 0, false, ',', out, outlen);
 }
 
 /*
  * Returns a uint64 formatted as a string
  */
 void stellar_format_uint64(uint64_t number, char *out, size_t outlen) {
-  bn_format_uint64(number, NULL, NULL, 0, 0, false, out, outlen);
+  bn_format_uint64(number, NULL, NULL, 0, 0, false, ',', out, outlen);
 }
 
 /*
