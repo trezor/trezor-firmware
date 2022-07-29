@@ -7,6 +7,7 @@ from trezor.enums import DecredStakingSpendType, InputScriptType
 from trezor.messages import PrevOutput
 from trezor.utils import HashWriter, ensure
 
+from apps.bitcoin.sign_tx.tx_weight import TxWeightCalculator
 from apps.common.writers import write_compact_size
 
 from .. import multisig, scripts_decred, writers
@@ -40,7 +41,53 @@ if TYPE_CHECKING:
     from .sig_hasher import SigHasher
 
 
+# Decred input size (without script): 32 prevhash, 4 idx, 1 Decred tree, 4 sequence
+_TXSIZE_DECRED_INPUT = const(41)
+
+# Decred script version: 2 bytes
+_TXSIZE_DECRED_SCRIPT_VERSION = const(2)
+
+# Decred expiry size: 4 bytes in footer
+_TXSIZE_DECRED_EXPIRY = const(4)
+
+# Decred witness size (without script): 8 byte amount, 4 byte block height, 4 byte block index
+_TXSIZE_DECRED_WITNESS = 16
+
+
+class DecredTxWeightCalculator(TxWeightCalculator):
+    def get_base_weight(self) -> int:
+        base_weight = super().get_base_weight()
+        base_weight += 4 * _TXSIZE_DECRED_EXPIRY
+        # Add witness input count.
+        base_weight += 4 * self.compact_size_len(self.inputs_count)
+        return base_weight
+
+    def add_input(self, i: TxInput) -> None:
+        self.inputs_count += 1
+
+        # Input.
+        self.counter += 4 * _TXSIZE_DECRED_INPUT
+
+        # Input witness.
+        input_script_size = self.input_script_size(i)
+        if i.script_type == InputScriptType.SPENDMULTISIG:
+            # Decred fixed the the OP_FALSE bug in multisig.
+            input_script_size -= 1  # Subtract one OP_FALSE byte.
+
+        self.counter += 4 * _TXSIZE_DECRED_WITNESS
+        self.counter += 4 * self.compact_size_len(input_script_size)
+        self.counter += 4 * input_script_size
+
+    def add_output(self, script: bytes) -> None:
+        super().add_output(script)
+        self.counter += 4 * _TXSIZE_DECRED_SCRIPT_VERSION
+
+
 class DecredApprover(BasicApprover):
+    def __init__(self, tx: SignTx, coin: CoinInfo) -> None:
+        super().__init__(tx, coin)
+        self.weight = DecredTxWeightCalculator()
+
     async def add_decred_sstx_submission(
         self, txo: TxOutput, script_pubkey: bytes
     ) -> None:
