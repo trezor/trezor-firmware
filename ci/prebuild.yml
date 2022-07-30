@@ -19,7 +19,7 @@ style prebuild:
     GIT_SUBMODULE_STRATEGY: "none"
   <<: *gitlab_caching
   script:
-    - nix-shell --run "poetry run make style_check"
+    - nix-shell --run "poetry run make -j1 style_check"
 
 # Check validity of coin definitions and protobuf files.
 common prebuild:
@@ -33,7 +33,7 @@ gen prebuild:
   stage: prebuild
   <<: *gitlab_caching
   script:
-    - nix-shell --run "poetry run make gen_check"
+    - nix-shell --run "poetry run make -j1 gen_check"
 
 # Checking format of .editorconfig files.
 editor prebuild:
