@@ -30,7 +30,6 @@
 #include "curves.h"
 #include "debug.h"
 #include "ecdsa.h"
-#include "flash.h"
 #include "fsm.h"
 #include "fw_signatures.h"
 #include "gettext.h"
