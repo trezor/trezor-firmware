@@ -68,9 +68,6 @@ class MessageType(IntEnum):
     RebootToBootloader = 87
     GetFirmwareHash = 88
     FirmwareHash = 89
-    GetFirmware = 90
-    FirmwareChunk = 91
-    FirmwareChunkAck = 92
     SetU2FCounter = 63
     GetNextU2FCounter = 80
     NextU2FCounter = 81
@@ -3331,28 +3328,6 @@ class FirmwareHash(protobuf.MessageType):
         hash: "bytes",
     ) -> None:
         self.hash = hash
-
-
-class GetFirmware(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 90
-
-
-class FirmwareChunk(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 91
-    FIELDS = {
-        1: protobuf.Field("chunk", "bytes", repeated=False, required=True),
-    }
-
-    def __init__(
-        self,
-        *,
-        chunk: "bytes",
-    ) -> None:
-        self.chunk = chunk
-
-
-class FirmwareChunkAck(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 92
 
 
 class WipeDevice(protobuf.MessageType):

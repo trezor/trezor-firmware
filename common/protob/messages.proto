@@ -116,9 +116,7 @@ enum MessageType {
     MessageType_RebootToBootloader = 87 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_GetFirmwareHash = 88 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_FirmwareHash = 89 [(bitcoin_only) = true, (wire_out) = true];
-    MessageType_GetFirmware = 90 [(bitcoin_only) = true, (wire_in) = true];
-    MessageType_FirmwareChunk = 91 [(bitcoin_only) = true, (wire_out) = true];
-    MessageType_FirmwareChunkAck = 92 [(bitcoin_only) = true, (wire_in) = true];
+    reserved 90 to 92;
 
     MessageType_SetU2FCounter = 63 [(wire_in) = true];
     MessageType_GetNextU2FCounter = 80 [(wire_in) = true];
