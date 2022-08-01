@@ -208,46 +208,6 @@ STATIC mp_obj_t mod_trezorutils_firmware_vendor(void) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_firmware_vendor_obj,
                                  mod_trezorutils_firmware_vendor);
 
-/// def firmware_sector_size(sector: int) -> int:
-///     """
-///     Returns the size of the firmware sector.
-///     """
-STATIC mp_obj_t mod_trezorutils_firmware_sector_size(mp_obj_t sector) {
-  mp_uint_t sector_id = trezor_obj_get_uint(sector);
-  if (sector_id >= FIRMWARE_SECTORS_COUNT) {
-    mp_raise_msg(&mp_type_ValueError, "Invalid sector.");
-  }
-  return mp_obj_new_int(flash_sector_size(FIRMWARE_SECTORS[sector_id]));
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_firmware_sector_size_obj,
-                                 mod_trezorutils_firmware_sector_size);
-
-/// def get_firmware_chunk(index: int, offset: int, buffer: bytearray) -> None:
-///     """
-///     Reads a chunk of the firmware into `buffer`.
-///     """
-STATIC mp_obj_t mod_trezorutils_get_firmware_chunk(const mp_obj_t index_obj,
-                                                   const mp_obj_t offset_obj,
-                                                   const mp_obj_t buffer) {
-  mp_uint_t index = trezor_obj_get_uint(index_obj);
-  if (index >= FIRMWARE_SECTORS_COUNT) {
-    mp_raise_msg(&mp_type_ValueError, "Invalid sector.");
-  }
-  int sector = FIRMWARE_SECTORS[index];
-  mp_uint_t offset = trezor_obj_get_uint(offset_obj);
-  mp_buffer_info_t buf = {0};
-  mp_get_buffer_raise(buffer, &buf, MP_BUFFER_WRITE);
-  const void *data = flash_get_address(sector, offset, buf.len);
-  if (data == NULL) {
-    mp_raise_msg(&mp_type_ValueError, "Invalid read.");
-  }
-  memcpy(buf.buf, data, buf.len);
-
-  return mp_const_none;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorutils_get_firmware_chunk_obj,
-                                 mod_trezorutils_get_firmware_chunk);
-
 /// def reboot_to_bootloader() -> None:
 ///     """
 ///     Reboots to bootloader.
@@ -271,7 +231,6 @@ STATIC mp_obj_str_t mod_trezorutils_revision_obj = {
 /// MODEL: str
 /// EMULATOR: bool
 /// BITCOIN_ONLY: bool
-/// FIRMWARE_SECTORS_COUNT: int
 
 STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorutils)},
@@ -282,12 +241,6 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
      MP_ROM_PTR(&mod_trezorutils_firmware_hash_obj)},
     {MP_ROM_QSTR(MP_QSTR_firmware_vendor),
      MP_ROM_PTR(&mod_trezorutils_firmware_vendor_obj)},
-    {MP_ROM_QSTR(MP_QSTR_get_firmware_chunk),
-     MP_ROM_PTR(&mod_trezorutils_get_firmware_chunk_obj)},
-    {MP_ROM_QSTR(MP_QSTR_firmware_sector_size),
-     MP_ROM_PTR(&mod_trezorutils_firmware_sector_size_obj)},
-    {MP_ROM_QSTR(MP_QSTR_FIRMWARE_SECTORS_COUNT),
-     MP_ROM_INT(FIRMWARE_SECTORS_COUNT)},
     {MP_ROM_QSTR(MP_QSTR_reboot_to_bootloader),
      MP_ROM_PTR(&mod_trezorutils_reboot_to_bootloader_obj)},
     // various built-in constants

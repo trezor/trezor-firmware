@@ -3,7 +3,6 @@ import sys
 from trezorutils import (  # noqa: F401
     BITCOIN_ONLY,
     EMULATOR,
-    FIRMWARE_SECTORS_COUNT,
     MODEL,
     SCM_REVISION,
     VERSION_MAJOR,
@@ -11,9 +10,7 @@ from trezorutils import (  # noqa: F401
     VERSION_PATCH,
     consteq,
     firmware_hash,
-    firmware_sector_size,
     firmware_vendor,
-    get_firmware_chunk,
     halt,
     memcpy,
     reboot_to_bootloader,
