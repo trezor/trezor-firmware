@@ -738,7 +738,7 @@ def deduplicate_erc20(buckets: CoinBuckets, networks: Coins) -> None:
     as deprecated, with a deprecation pointing to the "main" token.
     """
 
-    testnet_networks = {n["chain"] for n in networks if "Testnet" in n["name"]}
+    testnet_networks = {n["chain"] for n in networks if n["slip44"] == 1}
 
     def clear_bucket(bucket: Coins) -> None:
         # allow all coins, except those that are explicitly marked through overrides
