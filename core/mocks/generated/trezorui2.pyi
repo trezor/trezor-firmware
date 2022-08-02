@@ -45,6 +45,15 @@ def confirm_action(
 
 
 # rust/src/ui/model_tr/layout.rs
+def confirm_output(
+    *,
+    address: str,
+    amount: str,
+) -> object:
+    """Confirm output."""
+
+
+# rust/src/ui/model_tr/layout.rs
 def request_pin(
     *,
     prompt: str,

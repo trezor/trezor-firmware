@@ -30,8 +30,9 @@ use crate::{
 
 use super::{
     component::{
-        Bip39Entry, Bip39EntryMsg, ButtonDetails, ButtonPage, Frame, PassphraseEntry,
-        PassphraseEntryMsg, PinEntry, PinEntryMsg, SimpleChoice, SimpleChoiceMsg,
+        Bip39Entry, Bip39EntryMsg, ButtonDetails, ButtonLayout, ButtonPage, ConfirmSendPage, Flow,
+        FlowMsg, FlowPages, Frame, PassphraseEntry, PassphraseEntryMsg, PinEntry, PinEntryMsg,
+        RecipientAddressPage, SimpleChoice, SimpleChoiceMsg,
     },
     theme,
 };
@@ -47,6 +48,15 @@ where
             PageMsg::Content(_) => Err(Error::TypeError),
             PageMsg::Controls(true) => Ok(CONFIRMED.as_obj()),
             PageMsg::Controls(false) => Ok(CANCELLED.as_obj()),
+        }
+    }
+}
+
+impl<const N: usize> ComponentMsgObj for Flow<N> {
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            FlowMsg::Confirmed => Ok(CONFIRMED.as_obj()),
+            FlowMsg::Cancelled => Ok(CANCELLED.as_obj()),
         }
     }
 }
@@ -176,6 +186,40 @@ extern "C" fn new_confirm_text(n_args: usize, args: *const Obj, kwargs: *mut Map
                 theme::BG,
             ),
         ))?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = |_args: &[Obj], kwargs: &Map| {
+        let address: StrBuffer = kwargs.get(Qstr::MP_QSTR_address)?.try_into()?;
+        let amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_amount)?.try_into()?;
+
+        let address_page = {
+            let btn_layout = ButtonLayout::new(
+                Some(ButtonDetails::cancel_no_outline("cancel")),
+                None,
+                Some(ButtonDetails::new("CONTINUE")),
+            );
+            let page = RecipientAddressPage::new(address.as_ref(), btn_layout);
+            FlowPages::RecipientAddress(page)
+        };
+        // TODO: we want the left button here to cancel and not to go back,
+        // it might be nice for FlowPages to specify the action - "cancel" or "back"
+        let confirm_page = {
+            let btn_layout = ButtonLayout::new(
+                Some(ButtonDetails::cancel_no_outline("cancel")),
+                None,
+                Some(ButtonDetails::new("HOLD TO CONFIRM").with_duration(Duration::from_secs(2))),
+            );
+            let page = ConfirmSendPage::new(address.as_ref(), amount.as_ref(), btn_layout);
+            FlowPages::ConfirmSend(page)
+        };
+
+        let pages: Vec<FlowPages, 2> = Vec::from_slice(&[address_page, confirm_page]).unwrap();
+
+        let obj = LayoutObj::new(Flow::new(pages).into_child())?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -370,6 +414,14 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> object:
     ///     """Confirm action."""
     Qstr::MP_QSTR_confirm_action => obj_fn_kw!(0, new_confirm_action).as_obj(),
+
+    /// def confirm_output(
+    ///     *,
+    ///     address: str,
+    ///     amount: str,
+    /// ) -> object:
+    ///     """Confirm output."""
+    Qstr::MP_QSTR_confirm_output => obj_fn_kw!(0, confirm_output).as_obj(),
 
     /// def request_pin(
     ///     *,
