@@ -175,15 +175,18 @@ def header_message(
     display.bar(0, 0, WIDTH, height, text_background)
 
     # Including the warning icons in both corners for model R.
+    # (Left and right are different icons because of TOIF limitations
+    # to display the icon starting on odd x-coordinate.)
     # Also removing the exclamation mark (from the end)
     # (the warning icons are enough and it was causing some
     # issues with centering the text).
     # Resolving one special case with `EXPERIMENTAL MODE` - it cannot
     # fit the screen width, so shortening it a little.
     if utils.MODEL in ("R",):
-        warning_icon = res.load("trezor/res/model_r/warning.toif")
-        display.icon(0, 0, warning_icon, style.FG, style.BG)
-        display.icon(117, 0, warning_icon, style.FG, style.BG)
+        warning_icon_left = res.load("trezor/res/model_r/warning_left.toif")
+        warning_icon_right = res.load("trezor/res/model_r/warning_right.toif")
+        display.icon(0, 0, warning_icon_left, style.FG, style.BG)
+        display.icon(117, 0, warning_icon_right, style.FG, style.BG)
         message = message.replace("!", "")
         message = message.replace("EXPERIMENTAL", "EXPRMNTL")
 
