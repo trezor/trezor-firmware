@@ -4,7 +4,7 @@ RETURN=0
 EXCEPTIONS="decred|omni|ripple|dash|TEXT_MARGIN_LEFT|dash_width|dashlane|flo|mnemonic|meter|refuse|fused|enemy|cinema|syntaxerror|mix|palm|UdesRsK|kcc|derive_cardano|ntity|gather|bmc|cloudflare"
 
 # dump all coins except the first 3 (Bitcoin, Testnet, Regtest)
-ALTCOINS=$(./common/tools/cointool.py dump -l -p -t | grep '"name"' | cut -d '"' -f 4 | tail -n +4)
+ALTCOINS=$(./common/tools/cointool.py dump -l -p -t -d trezor1 -d trezor2 | grep '"name"' | cut -d '"' -f 4 | tail -n +4)
 # split on newlines only
 OLDIFS=$IFS
 IFS="
