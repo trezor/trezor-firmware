@@ -248,7 +248,7 @@ class BasicApprover(Approver):
 
         total = self.total_in - self.change_out
         spending = total - self.external_in
-        tx_size_vB = self.weight.get_total() / 4
+        tx_size_vB = self.weight.get_virtual_size()
         # fee_threshold = (coin.maxfee per byte * tx size)
         fee_threshold = (self.coin.maxfee_kb / 1000) * tx_size_vB
 
@@ -402,11 +402,11 @@ class CoinJoinApprover(Approver):
         # The mining fee of the transaction as a whole.
         mining_fee = self.total_in - self.total_out
 
-        if mining_fee > max_fee_per_vbyte * self.weight.get_total() / 4:
+        if mining_fee > max_fee_per_vbyte * self.weight.get_virtual_size():
             raise wire.ProcessError("Mining fee over threshold")
 
         # The maximum mining fee that the user should be paying.
-        our_max_mining_fee = max_fee_per_vbyte * self.our_weight.get_total() / 4
+        our_max_mining_fee = max_fee_per_vbyte * self.our_weight.get_virtual_size()
 
         # The maximum coordination fee for the user's inputs.
         our_max_coordinator_fee = max_coordinator_fee_rate * (
@@ -420,7 +420,7 @@ class CoinJoinApprover(Approver):
         # coordinator. The coordinator does not include the base weight of the transaction when
         # computing the mining fee, so we take this into account.
         max_fee_per_weight_unit = mining_fee / (
-            self.weight.get_total() - self.weight.get_base_weight()
+            self.weight.get_weight() - self.weight.get_base_weight()
         )
 
         # Calculate the minimum registrable output amount in a CoinJoin plus the mining fee that it

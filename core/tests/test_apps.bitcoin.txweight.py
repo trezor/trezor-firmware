@@ -42,7 +42,7 @@ class TestCalculateTxWeight(unittest.TestCase):
         serialized_tx = '010000000182488650ef25a58fef6788bd71b8212038d7f2bbe4750bc7bcb44701e85ef6d5000000006b4830450221009a0b7be0d4ed3146ee262b42202841834698bb3ee39c24e7437df208b8b7077102202b79ab1e7736219387dffe8d615bbdba87e11477104b867ef47afed1a5ede7810121023230848585885f63803a0a8aecdd6538792d5c539215c91698e315bf0253b43dffffffff0160cc0500000000001976a914de9b2a8da088824e8fe51debea566617d851537888ac00000000'
         tx_weight = len(serialized_tx) / 2 * 4  # non-segwit tx's weight is simple length*4
 
-        self.assertEqual(calculator.get_total(), tx_weight)
+        self.assertEqual(calculator.get_weight(), tx_weight)
 
     def test_p2wpkh_in_p2sh_txweight(self):
 
@@ -78,7 +78,7 @@ class TestCalculateTxWeight(unittest.TestCase):
         calculator.add_output(output_derive_script(out1.address, coin))
         calculator.add_output(output_derive_script(out2.address, coin))
 
-        self.assertEqual(calculator.get_total(), 670)
+        self.assertEqual(calculator.get_weight(), 670)
         # non-segwit: header, inputs, outputs, locktime 4*(4+65+67+4) = 560
         # segwit: segwit header, witness stack item count, witness 1*(2+1+107) = 110
         # total 670
@@ -117,7 +117,7 @@ class TestCalculateTxWeight(unittest.TestCase):
         calculator.add_output(output_derive_script(out1.address, coin))
         calculator.add_output(output_derive_script(out2.address, coin))
 
-        self.assertEqual(calculator.get_total(), 566)
+        self.assertEqual(calculator.get_weight(), 566)
         # non-segwit: header, inputs, outputs, locktime 4*(4+42+64+4) = 456
         # segwit: segwit header, witness stack item count, witness 1*(2+1+107) = 110
         # total 566
@@ -144,7 +144,7 @@ class TestCalculateTxWeight(unittest.TestCase):
         calculator.add_output(output_derive_script(out1.address, coin))
 
         # 010000000001017b350e3faca092f39883d7086cdd502c82b6f0314ab61541b062733edef156790100000000ffffffff016211000000000000225120e9af2fc69e20b0be2629cd0e9c34da9f3ef56af7beac4fb4298262bc5a45ec5d0140493145b992dacbd7ea579a415efc2cba20c3bf0f7827d1bcf999109c0d11783fe96f91ddb04a889faa17ad21ecc5c81a578009744e95c7e721aff2a5c442916600000000
-        self.assertEqual(calculator.get_total(), 4*94 + 68)
+        self.assertEqual(calculator.get_weight(), 4*94 + 68)
 
     def test_legacy_multisig_txweight(self):
         coin = coins.by_name('Bitcoin')
@@ -186,7 +186,7 @@ class TestCalculateTxWeight(unittest.TestCase):
         calculator.add_output(output_derive_script(out1.address, coin))
 
         # 010000000152ba4dfcde9c4bed88f55479cdea03e711ae586e9a89352a98230c4cdf1a09c601000000fdfe00004830450221009276eea820aa54a24bd9f1a056cb09a15f50c0816570a7c7878bd1c5ee7248540220677d200aec5e2f25bcf4000bdfab3faa9e1746d7f80c4ae4bfa1f5892eb5dcbf01483045022100c2a9fbfbff1be87036d8a6a22745512b158154f7f3d8f4cad4ba7ed130b37b83022058f5299b4c26222588dcc669399bd88b6f2bc6e04b48276373683853187a4fd6014c69522103dc0ff15b9c85c0d2c87099758bf47d36229c2514aeefcf8dea123f0f93c679762102bfe426e8671601ad46d54d09ee15aa035610d36d411961c87474908d403fbc122102a5d57129c6c96df663ad29492aa18605dad97231e043be8a92f9406073815c5d53aeffffffff01a0860100000000001976a91412e8391ad256dcdc023365978418d658dfecba1c88ac00000000
-        self.assertEqual(calculator.get_total(), 4*341)
+        self.assertEqual(calculator.get_weight(), 4*341)
 
     def test_segwit_multisig_txweight(self):
         coin = coins.by_name('Testnet')
@@ -228,7 +228,7 @@ class TestCalculateTxWeight(unittest.TestCase):
         calculator.add_output(output_derive_script(out1.address, coin))
 
         # 01000000000101be0210025c5be68a473f6a38bf53b53bc88d5c46567616026dc056e72b92319c01000000232200208d398cfb58a1d9cdb59ccbce81559c095e8c6f4a3e64966ca385078d9879f95effffffff01887d180000000000220020c5f4a0a4ea7c0392efe0a9670a73264cffa90b19107cd8a8e9750ff93c77fdfb0400483045022100dd6342c65197af27d7894d8b8b88b16b568ee3b5ebfdc55fdfb7caa9650e3b4c02200c7074a5bcb0068f63d9014c7cd2b0490aba75822d315d41aad444e9b86adf5201483045022100e7e6c2d21109512ba0609e93903e84bfb7731ac3962ee2c1cad54a7a30ff99a20220421497930226c39fc3834e8d6da3fc876516239518b0e82e2dc1e3c46271a17c01695221021630971f20fa349ba940a6ba3706884c41579cd760c89901374358db5dd545b92102f2ff4b353702d2bb03d4c494be19d77d0ab53d16161b53fbcaf1afeef4ad0cb52103e9b6b1c691a12ce448f1aedbbd588e064869c79fbd760eae3b8cd8a5f1a224db53ae00000000
-        self.assertEqual(calculator.get_total(), 4*129 + 256)
+        self.assertEqual(calculator.get_weight(), 4*129 + 256)
 
     def test_mixed_txweight(self):
         coin = coins.by_name('Testnet')
@@ -302,7 +302,7 @@ class TestCalculateTxWeight(unittest.TestCase):
         # 010000000001045d77b6e482d770031ad3ce3423727cc1707bc2c82e729b1189d2b60aa1a73e8c0000000017160014a33c6e24c99e108b97bc411e7e9ef31e9d5d6164ffffffff7b350e3faca092f39883d7086cdd502c82b6f0314ab61541b062733edef156790000000000ffffffff852e125137abca2dd7a42837dccfc34edc358c72eefd62978d6747d3be9315900000000000ffffffff9b117a776a9aaf70d4c3ffe89f009dcd23210a03d649ee5e38791d83902ec33a020000006b483045022100f6bd64136839b49822cf7e2050bc5c91346fc18b5cf97a945d4fd6c502f712d002207d1859e66d218f705b704f3cfca0c75410349bb1f50623f4fc2d09d5d8df0a3f012103bae960983f83e28fcb8f0e5f3dc1f1297b9f9636612fd0835b768e1b7275fb9dffffffff05a861000000000000160014d1a739f628f7eca55e8b99e7f32b22dcdbf672d4581b0000000000001976a91402e9b094fd98e2a26e805894eb78f7ff3fef199b88acf41a00000000000017a9141ff816cbeb74817050de585ceb2c772ebf71147a870000000000000000186a1674657374206f66206f705f72657475726e206461746110270000000000002251205a02573f7b39770ac53f73d161dc86f5104c6812bac297cb6ba418f6f1219c070247304402205fae7fa2b5141548593d5623ce5bd82ee18dfc751c243526039c91848efd603702200febfbe3467a68c599245ff89055514f26e146c79b58d932ced2325e6dad1b1a0121021630971f20fa349ba940a6ba3706884c41579cd760c89901374358db5dd545b90247304402201b21212100c84207697cebb852374669c382ed97cbd08afbbdfe1b302802161602206b32b2140d094cf5b7e758135961c95478c8e82fea0df30f56ccee284b79eaea012103f6b2377d52960a6094ec158cf19dcf9e33b3da4798c2302aa5806483ed4187ae01404a81e4b7f55d6d4a26923c5e2daf3cc86ed6030f83ea6e7bb16d7b81b988b34585be21a64ab45ddcc2fb9f17be2dfeff6b22cf943bc3fc8f125a7f463af428ed0000000000
         # The witness data is 283 bytes, but two of the DER signatures are one byte below the
         # average length, so the caculator should estimate 285 bytes of witness data.
-        self.assertEqual(calculator.get_total(), 4*477 + 285)
+        self.assertEqual(calculator.get_weight(), 4*477 + 285)
 
     def test_external_txweight(self):
         coin = coins.by_name('Testnet')
@@ -352,7 +352,7 @@ class TestCalculateTxWeight(unittest.TestCase):
         calculator.add_input(inp3)
         calculator.add_output(output_derive_script(out1.address, coin))
 
-        self.assertEqual(calculator.get_total(), 4*164 + 325)
+        self.assertEqual(calculator.get_weight(), 4*164 + 325)
         # non-segwit: header, inputs, outputs, locktime 4*(4+1+3*41+1+31+4) = 4*164
         # segwit: segwit header, 2x estimated witness (including stack item count)
         # and 1x exact witness (including stack item count) 1*(2+108+108+107) = 325

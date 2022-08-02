@@ -79,8 +79,8 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
         )
         tx = SignTx(coin_name='Testnet', version=1, lock_time=0, inputs_count=1, outputs_count=2)
 
-        # precomputed tx weight is 566
-        fee_rate = 11000 / (566 / 4)
+        # precomputed tx weight is 142 = ceil(566 / 4)
+        fee_rate = 11000 / 142
 
         messages = [
             None,
@@ -213,8 +213,8 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
         )
         tx = SignTx(coin_name='Testnet', version=1, lock_time=0, inputs_count=1, outputs_count=2)
 
-        # precomputed tx weight is 566
-        fee_rate = 11000 / (566 / 4)
+        # precomputed tx weight is 142 = ceil(566 / 4)
+        fee_rate = 11000 / 142
 
         messages = [
             None,
