@@ -42,6 +42,8 @@ pub trait ChoiceItem {
 // TODO: consider having
 // pub trait ChoiceItemOperations {}
 
+/// TODO: consider storing all the text components as `T: AsRef<str>`
+
 /// Storing all the possible implementations of `ChoiceItem`.
 /// Done like this as we want to use multiple different choice pages
 /// at the same time in `ChoicePage` - for example Multiline and BigLetters
@@ -78,7 +80,7 @@ impl ChoiceItems {
         }
     }
 
-    pub fn set_text(&mut self, text: String<100>) {
+    pub fn set_text(&mut self, text: String<50>) {
         match self {
             ChoiceItems::Text(item) => item.text = text,
             ChoiceItems::MultilineText(item) => item.text = text,
@@ -126,7 +128,7 @@ impl ChoiceItem for ChoiceItems {
 /// Simple string component used as a choice item.
 #[derive(Debug, Clone)]
 pub struct TextChoiceItem {
-    pub text: String<100>,
+    pub text: String<50>,
     pub btn_layout: ButtonLayout<&'static str>,
 }
 
@@ -188,13 +190,13 @@ impl ChoiceItem for TextChoiceItem {
 #[derive(Debug)]
 pub struct MultilineTextChoiceItem {
     // Arbitrary chosen. TODO: agree on this
-    pub text: String<100>,
+    pub text: String<50>,
     delimiter: char,
     pub btn_layout: ButtonLayout<&'static str>,
 }
 
 impl MultilineTextChoiceItem {
-    pub fn new(text: String<100>, btn_layout: ButtonLayout<&'static str>) -> Self {
+    pub fn new(text: String<50>, btn_layout: ButtonLayout<&'static str>) -> Self {
         Self {
             text,
             delimiter: '\n',

@@ -1053,6 +1053,7 @@ pub struct Icon<T> {
     // erasing those empty rows/columns when we draw the icon.
 }
 
+// TODO: consider merging it together with ToifInfo
 impl<T> Icon<T>
 where
     T: AsRef<str>,

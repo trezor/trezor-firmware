@@ -8,6 +8,12 @@ pub trait FlowPage {
     fn btn_layout(&self) -> ButtonLayout<&'static str>;
 }
 
+// TODO: consider using `dyn` instead of `enum` to allow
+// for more components implementing `FlowPage`
+// Alloc screen by GC .. gc alloc, new
+// dyn... gc dyn obj component
+// Vec<Gc<dyn FlowPage>, 2>...
+
 #[derive(Clone, Debug)]
 pub enum FlowPages {
     RecipientAddress(RecipientAddressPage),
