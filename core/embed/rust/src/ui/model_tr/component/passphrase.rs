@@ -182,7 +182,7 @@ impl PassphraseEntry {
 
         // Including a MENU choice at the end (visible from start) to return back
         let menu_choice =
-            TextChoiceItem::from_str("MENU", ButtonLayout::three_icons_middle_text("RETURN"));
+            TextChoiceItem::new("MENU", ButtonLayout::three_icons_middle_text("RETURN"));
         choices.push(ChoiceItems::Text(menu_choice)).unwrap();
 
         self.choice_page.reset(ctx, choices, true, true);

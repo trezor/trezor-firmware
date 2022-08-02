@@ -1,4 +1,4 @@
-use crate::ui::{geometry::Point, model_tr::theme, util};
+use crate::ui::{geometry::Point, model_tr::theme};
 use heapless::String;
 
 use super::{
@@ -133,19 +133,12 @@ pub struct TextChoiceItem {
 }
 
 impl TextChoiceItem {
-    pub fn from_str<T>(text: T, btn_layout: ButtonLayout<&'static str>) -> Self
+    pub fn new<T>(text: T, btn_layout: ButtonLayout<&'static str>) -> Self
     where
         T: AsRef<str>,
     {
         Self {
             text: String::from(text.as_ref()),
-            btn_layout,
-        }
-    }
-
-    pub fn from_char(ch: char, btn_layout: ButtonLayout<&'static str>) -> Self {
-        Self {
-            text: util::char_to_string(ch),
             btn_layout,
         }
     }
@@ -158,7 +151,7 @@ impl ChoiceItem for TextChoiceItem {
         // (and also the left and right ones do not collide with it)
         display_center(
             Point::new(MIDDLE_COL, MIDDLE_ROW + row_height()),
-            self.text.as_str(),
+            &self.text,
             theme::FONT_NORMAL,
         );
     }
@@ -166,7 +159,7 @@ impl ChoiceItem for TextChoiceItem {
     fn paint_left(&mut self) {
         display(
             Point::new(LEFT_COL, MIDDLE_ROW),
-            self.text.as_str(),
+            &self.text,
             theme::FONT_NORMAL,
         );
     }
@@ -174,7 +167,7 @@ impl ChoiceItem for TextChoiceItem {
     fn paint_right(&mut self) {
         display_right(
             Point::new(RIGHT_COL, MIDDLE_ROW),
-            self.text.as_str(),
+            &self.text,
             theme::FONT_NORMAL,
         );
     }

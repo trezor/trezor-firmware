@@ -11,15 +11,18 @@ pub enum FlowMsg {
     Cancelled,
 }
 
-pub struct Flow<const N: usize> {
-    pages: Vec<FlowPages, N>,
+pub struct Flow<T, const N: usize> {
+    pages: Vec<FlowPages<T>, N>,
     pad: Pad,
     buttons: Child<ButtonController<&'static str>>,
     page_counter: u8,
 }
 
-impl<const N: usize> Flow<N> {
-    pub fn new(pages: Vec<FlowPages, N>) -> Self {
+impl<T, const N: usize> Flow<T, N>
+where
+    T: AsRef<str>,
+{
+    pub fn new(pages: Vec<FlowPages<T>, N>) -> Self {
         let initial_btn_layout = pages[0].btn_layout();
 
         Self {
@@ -58,7 +61,7 @@ impl<const N: usize> Flow<N> {
         self.page_counter < self.last_page_index()
     }
 
-    fn current_choice(&mut self) -> &mut FlowPages {
+    fn current_choice(&mut self) -> &mut FlowPages<T> {
         &mut self.pages[self.page_counter as usize]
     }
 
@@ -89,7 +92,10 @@ impl<const N: usize> Flow<N> {
     }
 }
 
-impl<const N: usize> Component for Flow<N> {
+impl<T, const N: usize> Component for Flow<T, N>
+where
+    T: AsRef<str>,
+{
     type Msg = FlowMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -142,7 +148,7 @@ impl<const N: usize> Component for Flow<N> {
 }
 
 #[cfg(feature = "ui_debug")]
-impl<const N: usize> crate::trace::Trace for Flow<N> {
+impl<T, const N: usize> crate::trace::Trace for Flow<T, N> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("Flow");
         t.close();

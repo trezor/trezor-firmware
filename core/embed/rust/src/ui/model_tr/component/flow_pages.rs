@@ -1,4 +1,9 @@
-use crate::ui::{display::Icon, geometry::Point, model_tr::theme};
+use crate::ui::{
+    display::{Font, Icon},
+    geometry::Point,
+    model_tr::theme,
+    util,
+};
 use heapless::{String, Vec};
 
 use super::{common, ButtonLayout};
@@ -15,16 +20,21 @@ pub trait FlowPage {
 // Vec<Gc<dyn FlowPage>, 2>...
 
 #[derive(Clone, Debug)]
-pub enum FlowPages {
-    RecipientAddress(RecipientAddressPage),
-    ConfirmSend(ConfirmSendPage),
+pub enum FlowPages<T> {
+    RecipientAddress(RecipientAddressPage<T>),
+    ConfirmSend(ConfirmSendPage<T>),
+    ConfirmTotal(ConfirmTotalPage<T>),
 }
 
-impl FlowPage for FlowPages {
+impl<T> FlowPage for FlowPages<T>
+where
+    T: AsRef<str>,
+{
     fn paint(&mut self) {
         match self {
             FlowPages::RecipientAddress(item) => item.paint(),
             FlowPages::ConfirmSend(item) => item.paint(),
+            FlowPages::ConfirmTotal(item) => item.paint(),
         }
     }
 
@@ -32,31 +42,34 @@ impl FlowPage for FlowPages {
         match self {
             FlowPages::RecipientAddress(item) => item.btn_layout(),
             FlowPages::ConfirmSend(item) => item.btn_layout(),
+            FlowPages::ConfirmTotal(item) => item.btn_layout(),
         }
     }
 }
 
 /// Page displaying recipient address.
 #[derive(Debug, Clone)]
-pub struct RecipientAddressPage {
-    // TODO: what is the maximum address length?
-    pub address: String<100>,
+pub struct RecipientAddressPage<T> {
+    pub address: T,
     pub btn_layout: ButtonLayout<&'static str>,
 }
 
-impl RecipientAddressPage {
-    pub fn new<T>(address: T, btn_layout: ButtonLayout<&'static str>) -> Self
-    where
-        T: AsRef<str>,
-    {
+impl<T> RecipientAddressPage<T>
+where
+    T: AsRef<str>,
+{
+    pub fn new(address: T, btn_layout: ButtonLayout<&'static str>) -> Self {
         Self {
-            address: String::from(address.as_ref()),
+            address,
             btn_layout,
         }
     }
 }
 
-impl FlowPage for RecipientAddressPage {
+impl<T> FlowPage for RecipientAddressPage<T>
+where
+    T: AsRef<str>,
+{
     fn paint(&mut self) {
         common::icon_with_text(
             Point::new(0, 12),
@@ -72,8 +85,8 @@ impl FlowPage for RecipientAddressPage {
         const CHUNKS_PER_PAGE: usize = 3;
         const ROW_CHARS: usize = CHUNK_SIZE * CHUNKS_PER_PAGE;
 
-        let rows: Vec<&str, 8> = self
-            .address
+        let addr_str: String<50> = String::from(self.address.as_ref());
+        let rows: Vec<&str, 8> = addr_str
             .as_bytes()
             .chunks(ROW_CHARS)
             .map(|buf| unsafe { core::str::from_utf8_unchecked(buf) })
@@ -103,29 +116,35 @@ impl FlowPage for RecipientAddressPage {
 
 /// Confirm address and amount for single output.
 #[derive(Debug, Clone)]
-pub struct ConfirmSendPage {
-    pub address: String<100>,
-    // TODO: what is the maximum amount length?
-    pub amount: String<25>,
+pub struct ConfirmSendPage<T> {
+    pub address: T,
+    pub amount: T,
     pub btn_layout: ButtonLayout<&'static str>,
 }
 
-impl ConfirmSendPage {
-    pub fn new<T>(address: T, amount: T, btn_layout: ButtonLayout<&'static str>) -> Self
-    where
-        T: AsRef<str>,
-    {
+impl<T> ConfirmSendPage<T>
+where
+    T: AsRef<str>,
+{
+    pub fn new(address: T, amount: T, btn_layout: ButtonLayout<&'static str>) -> Self {
         Self {
-            address: String::from(address.as_ref()),
-            amount: String::from(amount.as_ref()),
+            address,
+            amount,
             btn_layout,
         }
     }
 }
 
-impl FlowPage for ConfirmSendPage {
+impl<T> FlowPage for ConfirmSendPage<T>
+where
+    T: AsRef<str>,
+{
     fn paint(&mut self) {
-        common::display(Point::new(0, 12), "Send", theme::FONT_BOLD);
+        let y_offset = 12;
+        common::display(Point::new(0, y_offset), "Send", theme::FONT_BOLD);
+
+        // TODO: create a general ICON-KEY-VALUE component and use it here
+        // (probably then it can be called directly from layout.rs?)
 
         common::icon_with_text(
             Point::new(0, 32),
@@ -135,14 +154,10 @@ impl FlowPage for ConfirmSendPage {
         );
 
         // Displaying just the left and right end of the address
-
         const CHARS_TO_SHOW: usize = 4;
         const ELLIPSIS: &str = " ... ";
-
-        let len = self.address.len();
-        let start = self.address.get(0..CHARS_TO_SHOW).unwrap();
-        let end = self.address.get((len - CHARS_TO_SHOW)..len).unwrap();
-        let trunc_addr = build_string!(20, start, ELLIPSIS, end);
+        let trunc_addr: String<20> =
+            util::ellipsise_text(self.address.as_ref(), CHARS_TO_SHOW, ELLIPSIS);
         common::display(Point::new(1, 48), &trunc_addr, theme::FONT_BOLD);
 
         common::icon_with_text(
@@ -151,7 +166,101 @@ impl FlowPage for ConfirmSendPage {
             "Amount",
             theme::FONT_NORMAL,
         );
-        common::display(Point::new(1, 88), &self.amount, theme::FONT_BOLD);
+        common::display(Point::new(1, 88), self.amount.as_ref(), theme::FONT_BOLD);
+    }
+
+    fn btn_layout(&self) -> ButtonLayout<&'static str> {
+        self.btn_layout.clone()
+    }
+}
+
+/// Confirm address and amount for single output.
+#[derive(Debug, Clone)]
+pub struct ConfirmTotalPage<T> {
+    pub title: T,
+    pub total_amount: T,
+    pub fee_amount: T,
+    pub fee_rate_amount: Option<T>,
+    pub total_label: T,
+    pub fee_label: T,
+    pub btn_layout: ButtonLayout<&'static str>,
+}
+
+impl<T> ConfirmTotalPage<T>
+where
+    T: AsRef<str>,
+{
+    pub fn new(
+        title: T,
+        total_amount: T,
+        fee_amount: T,
+        fee_rate_amount: Option<T>,
+        total_label: T,
+        fee_label: T,
+        btn_layout: ButtonLayout<&'static str>,
+    ) -> Self {
+        Self {
+            title,
+            total_amount,
+            fee_amount,
+            fee_rate_amount,
+            total_label,
+            fee_label,
+            btn_layout,
+        }
+    }
+}
+
+impl<T> FlowPage for ConfirmTotalPage<T>
+where
+    T: AsRef<str>,
+{
+    fn paint(&mut self) {
+        // TODO: create a general ICON-KEY-VALUE component and use it here
+        // (probably then it can be called directly from layout.rs?)
+
+        const X_START: i32 = 0;
+        const LABEL_FONT: Font = theme::FONT_NORMAL;
+        const KEY_FONT: Font = theme::FONT_BOLD;
+        let param_icon = Icon::new(theme::ICON_PARAM, "param");
+
+        // Title/header
+        let y_offset = common::paint_header(Point::zero(), &self.title, None);
+
+        // Total amount
+        let new_y = y_offset + LABEL_FONT.line_height();
+        let y_offset = common::key_value_icon(
+            Point::new(X_START, new_y),
+            param_icon,
+            self.total_label.as_ref(),
+            LABEL_FONT,
+            self.total_amount.as_ref(),
+            KEY_FONT,
+        );
+
+        // Fee amount
+        let new_y = new_y + y_offset + LABEL_FONT.line_height();
+        let y_offset = common::key_value_icon(
+            Point::new(X_START, new_y),
+            param_icon,
+            self.fee_label.as_ref(),
+            LABEL_FONT,
+            self.fee_amount.as_ref(),
+            KEY_FONT,
+        );
+
+        // Optional fee rate amount
+        if let Some(fee_rate_amount) = &self.fee_rate_amount {
+            let new_y = new_y + y_offset + LABEL_FONT.line_height();
+            common::key_value_icon(
+                Point::new(X_START, new_y),
+                param_icon,
+                "Fee rate:",
+                LABEL_FONT,
+                fee_rate_amount.as_ref(),
+                KEY_FONT,
+            );
+        }
     }
 
     fn btn_layout(&self) -> ButtonLayout<&'static str> {

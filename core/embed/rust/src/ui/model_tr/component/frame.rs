@@ -56,7 +56,7 @@ where
     }
 
     fn paint(&mut self) {
-        common::paint_header(self.area.top_left(), &self.title, &self.subtitle);
+        common::paint_header(self.area.top_left(), &self.title, self.subtitle.as_ref());
         self.content.paint();
     }
 }

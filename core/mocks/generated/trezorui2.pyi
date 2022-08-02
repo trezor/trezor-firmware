@@ -54,6 +54,19 @@ def confirm_output_r(
 
 
 # rust/src/ui/model_tr/layout.rs
+def confirm_total_r(
+    *,
+    title: str,
+    total_amount: str,
+    fee_amount: str,
+    fee_rate_amount: str | None = None,
+    total_label: str,
+    fee_label: str,
+) -> object:
+    """Confirm summary of a transaction. Specific for model R."""
+
+
+# rust/src/ui/model_tr/layout.rs
 def request_pin(
     *,
     prompt: str,

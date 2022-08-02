@@ -447,19 +447,19 @@ async def confirm_output(
     color_to: str = "",
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
 ) -> None:
-    result = await interact(
-        ctx,
-        RustLayout(
-            trezorui2.confirm_output_r(
-                address=address,
-                amount=amount,
-            )
-        ),
-        "confirm_output",
-        br_code,
+    await raise_if_cancelled(
+        interact(
+            ctx,
+            RustLayout(
+                trezorui2.confirm_output_r(
+                    address=address,
+                    amount=amount,
+                )
+            ),
+            "confirm_output",
+            br_code,
+        )
     )
-    if result is not trezorui2.CONFIRMED:
-        raise wire.ActionCancelled
 
 
 async def confirm_payment_request(
@@ -616,21 +616,28 @@ async def confirm_total(
     total_amount: str,
     fee_amount: str,
     fee_rate_amount: str | None = None,
-    title: str = "Confirm transaction",
-    total_label: str = "Total amount:\n",
-    fee_label: str = "\nincluding fee:\n",
+    title: str = "Send transaction?",
+    total_label: str = "Total amount:",
+    fee_label: str = "Including fee:",
     icon_color: int = ui.GREEN,
     br_type: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> None:
     await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type=br_type,
-            title=title,
-            data=f"{total_label}{total_amount}{fee_label}{fee_amount}",
-            description="",
-            br_code=br_code,
+        interact(
+            ctx,
+            RustLayout(
+                trezorui2.confirm_total_r(
+                    title=title,
+                    total_amount=total_amount,
+                    fee_amount=fee_amount,
+                    fee_rate_amount=fee_rate_amount,
+                    total_label=total_label,
+                    fee_label=fee_label,
+                )
+            ),
+            br_type,
+            br_code,
         )
     )
 

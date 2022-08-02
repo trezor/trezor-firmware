@@ -27,6 +27,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_payment_request;
   MP_QSTR_confirm_text;
   MP_QSTR_confirm_total;
+  MP_QSTR_confirm_total_r;
   MP_QSTR_show_qr;
   MP_QSTR_show_success;
   MP_QSTR_show_warning;
@@ -78,4 +79,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_total_amount;
   MP_QSTR_total_fee_new;
   MP_QSTR_user_fee_change;
+  MP_QSTR_fee_amount;
+  MP_QSTR_fee_rate_amount;
+  MP_QSTR_total_label;
+  MP_QSTR_fee_label;
 }

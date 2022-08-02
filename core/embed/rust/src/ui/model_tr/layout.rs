@@ -30,9 +30,9 @@ use crate::{
 
 use super::{
     component::{
-        Bip39Entry, Bip39EntryMsg, ButtonDetails, ButtonLayout, ButtonPage, ConfirmSendPage, Flow,
-        FlowMsg, FlowPages, Frame, PassphraseEntry, PassphraseEntryMsg, PinEntry, PinEntryMsg,
-        RecipientAddressPage, SimpleChoice, SimpleChoiceMsg,
+        Bip39Entry, Bip39EntryMsg, ButtonDetails, ButtonLayout, ButtonPage, ConfirmSendPage,
+        ConfirmTotalPage, Flow, FlowMsg, FlowPages, Frame, PassphraseEntry, PassphraseEntryMsg,
+        PinEntry, PinEntryMsg, RecipientAddressPage, SimpleChoice, SimpleChoiceMsg,
     },
     theme,
 };
@@ -52,7 +52,10 @@ where
     }
 }
 
-impl<const N: usize> ComponentMsgObj for Flow<N> {
+impl<T, const N: usize> ComponentMsgObj for Flow<T, N>
+where
+    T: AsRef<str>,
+{
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
             FlowMsg::Confirmed => Ok(CONFIRMED.as_obj()),
@@ -202,7 +205,7 @@ extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) 
                 None,
                 Some(ButtonDetails::new("CONTINUE")),
             );
-            let page = RecipientAddressPage::new(address.as_ref(), btn_layout);
+            let page = RecipientAddressPage::new(address.clone(), btn_layout);
             FlowPages::RecipientAddress(page)
         };
         // TODO: we want the left button here to cancel and not to go back,
@@ -213,11 +216,49 @@ extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) 
                 None,
                 Some(ButtonDetails::new("HOLD TO CONFIRM").with_duration(Duration::from_secs(2))),
             );
-            let page = ConfirmSendPage::new(address.as_ref(), amount.as_ref(), btn_layout);
+            let page = ConfirmSendPage::new(address, amount, btn_layout);
             FlowPages::ConfirmSend(page)
         };
 
-        let pages: Vec<FlowPages, 2> = Vec::from_slice(&[address_page, confirm_page]).unwrap();
+        let pages: Vec<FlowPages<StrBuffer>, 2> =
+            Vec::from_slice(&[address_page, confirm_page]).unwrap();
+
+        let obj = LayoutObj::new(Flow::new(pages).into_child())?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let total_amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_total_amount)?.try_into()?;
+        let fee_amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_fee_amount)?.try_into()?;
+        let fee_rate_amount: Option<StrBuffer> = kwargs
+            .get(Qstr::MP_QSTR_fee_rate_amount)?
+            .try_into_option()?;
+        let total_label: StrBuffer = kwargs.get(Qstr::MP_QSTR_total_label)?.try_into()?;
+        let fee_label: StrBuffer = kwargs.get(Qstr::MP_QSTR_fee_label)?.try_into()?;
+
+        let confirm_page = {
+            let btn_layout = ButtonLayout::new(
+                Some(ButtonDetails::cancel_no_outline("cancel")),
+                None,
+                Some(ButtonDetails::new("HOLD TO SEND").with_duration(Duration::from_secs(2))),
+            );
+            let page = ConfirmTotalPage::new(
+                title,
+                total_amount,
+                fee_amount,
+                fee_rate_amount,
+                total_label,
+                fee_label,
+                btn_layout,
+            );
+            FlowPages::ConfirmTotal(page)
+        };
+
+        let pages: Vec<FlowPages<StrBuffer>, 1> = Vec::from_slice(&[confirm_page]).unwrap();
 
         let obj = LayoutObj::new(Flow::new(pages).into_child())?;
         Ok(obj.into())
@@ -422,6 +463,18 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> object:
     ///     """Confirm output. Specific for model R."""
     Qstr::MP_QSTR_confirm_output_r => obj_fn_kw!(0, confirm_output).as_obj(),
+
+    /// def confirm_total_r(
+    ///     *,
+    ///     title: str,
+    ///     total_amount: str,
+    ///     fee_amount: str,
+    ///     fee_rate_amount: str | None = None,
+    ///     total_label: str,
+    ///     fee_label: str,
+    /// ) -> object:
+    ///     """Confirm summary of a transaction. Specific for model R."""
+    Qstr::MP_QSTR_confirm_total_r => obj_fn_kw!(0, confirm_total).as_obj(),
 
     /// def request_pin(
     ///     *,

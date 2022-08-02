@@ -83,7 +83,7 @@ impl Bip39Entry {
         let mut choices: Vec<ChoiceItems, MAX_CHOICE_LENGTH> = bip39_words_list
             .iter()
             .map(|word| {
-                let choice = TextChoiceItem::from_str(word, ButtonLayout::default_three_icons());
+                let choice = TextChoiceItem::new(word, ButtonLayout::default_three_icons());
                 ChoiceItems::Text(choice)
             })
             .collect();
@@ -138,17 +138,13 @@ impl Bip39Entry {
             "/",
             inttostr!(self.word_count)
         );
-        common::paint_header(Point::zero(), &title, &None);
+        common::paint_header(Point::zero(), title, None);
     }
 
     /// Displays current letters together with underscore.
     fn show_current_letters(&self) {
-        let to_show = build_string!({ MAX_LENGTH + 1 }, self.textbox.content(), "_");
-        common::display_center(
-            Point::new(64, CURRENT_LETTERS_ROW),
-            &to_show,
-            theme::FONT_MONO,
-        );
+        let text = build_string!({ MAX_LENGTH + 1 }, self.textbox.content(), "_");
+        common::display_center(Point::new(64, CURRENT_LETTERS_ROW), text, theme::FONT_MONO);
     }
 
     fn reset_wordlist(&mut self) {
