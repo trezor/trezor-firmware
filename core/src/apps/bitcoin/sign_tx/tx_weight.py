@@ -142,7 +142,7 @@ class TxWeightCalculator:
 
         return base_weight
 
-    def get_total(self) -> int:
+    def get_weight(self) -> int:
         total = self.counter
         total += self.get_base_weight()
         if self.segwit_inputs_count:
@@ -150,6 +150,12 @@ class TxWeightCalculator:
             total += self.inputs_count - self.segwit_inputs_count
 
         return total
+
+    def get_virtual_size(self) -> int:
+        # Convert transaction weight to virtual transaction size, which is is defined
+        # as weight / 4 rounded up to the next integer.
+        # https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#transaction-size-calculations
+        return (self.get_weight() + 3) // 4
 
     @staticmethod
     def compact_size_len(length: int) -> int:

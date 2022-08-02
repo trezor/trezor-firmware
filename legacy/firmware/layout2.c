@@ -510,10 +510,15 @@ static uint64_t div_round(uint64_t numer, uint64_t denom) {
 
 static bool formatFeeRate(uint64_t fee, uint64_t tx_weight, char *output,
                           size_t output_length, bool segwit) {
+  // Convert transaction weight to virtual transaction size, which is is defined
+  // as tx_weight / 4 rounded up to the next integer.
+  // https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#transaction-size-calculations
+  uint64_t tx_size = (tx_weight + 3) / 4;
+
   // Compute fee rate and modify it in place for the bn_format_uint64()
-  // function. We multiply by 4 to convert from sats/WU to sats/vB. We multiply
-  // by 10, because we want bn_format_uint64() to display 1 decimal digit.
-  uint64_t fee_rate_multiplied = div_round(4 * 10 * fee, tx_weight);
+  // function. We multiply by 10, because we want bn_format_uint64() to display
+  // one decimal digit.
+  uint64_t fee_rate_multiplied = div_round(10 * fee, tx_size);
 
   return bn_format_uint64(fee_rate_multiplied, "(",
                           segwit ? " sat/vB)" : " sat/B)", 1, 0, false, output,

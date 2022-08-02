@@ -80,8 +80,8 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
         )
         tx = SignTx(coin_name='Groestlcoin Testnet', version=1, lock_time=650756, inputs_count=1, outputs_count=2)
 
-        # precomputed tx weight is 670
-        fee_rate = 11000 / (670 / 4)
+        # precomputed tx weight is 168 = ceil(670 / 4)
+        fee_rate = 11000 / 168
 
         messages = [
             None,
@@ -213,8 +213,8 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
         )
         tx = SignTx(coin_name='Groestlcoin Testnet', version=1, lock_time=650756, inputs_count=1, outputs_count=2)
 
-        # precomputed tx weight is 670
-        fee_rate = 11000 / (670 / 4)
+        # precomputed tx weight is 168 = ceil(670 / 4)
+        fee_rate = 11000 / 168
 
         messages = [
             None,
