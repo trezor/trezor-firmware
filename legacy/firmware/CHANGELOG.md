@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.11.2] (17th August 2022)
+
+### Added
+- Show the fee rate on the signing confirmation screen.  [#2249]
+- Show thousands separator when displaying large amounts.  [#2394]
+
+### Changed
+- Updated secp256k1-zkp.  [#2261]
+
+### Removed
+- Remove firmware dumping capability.  [#2433]
+
+### Security
+- Fix potential security issues in recovery workflow.
+- Fix key extraction vulnerability in Cothority Collective Signing (CoSi).
+- Fix nonce bias in CoSi signing.
+
 
 ## 1.11.1 [18th May 2022]
 
@@ -543,3 +560,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#2144]: https://github.com/trezor/trezor-firmware/pull/2144
 [#2181]: https://github.com/trezor/trezor-firmware/pull/2181
 [#2239]: https://github.com/trezor/trezor-firmware/pull/2239
+[#2249]: https://github.com/trezor/trezor-firmware/pull/2249
+[#2261]: https://github.com/trezor/trezor-firmware/pull/2261
+[#2394]: https://github.com/trezor/trezor-firmware/pull/2394
+[#2422]: https://github.com/trezor/trezor-firmware/pull/2422
+[#2433]: https://github.com/trezor/trezor-firmware/pull/2433

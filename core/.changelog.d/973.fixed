@@ -1,1 +1,0 @@
-_(Emulator)_ Emulator window will always react to shutdown events, even while waiting for USB packets.

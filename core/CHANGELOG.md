@@ -4,6 +4,39 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.5.2] (17th August 2022)
+
+### Added
+- Add model R emulator  [#2230]
+- Add support for Monero HF15 features.  [#2232]
+- Add basic Trezor Model R hardware support  [#2243]
+- Show the fee rate on the signing confirmation screen.  [#2249]
+- Jump and stay in bootloader from firmware through SVC call reverse trampoline.  [#2284]
+- Expose raw pixel access to Rust  [#2297]
+- Add RGB LED for Model R  [#2300]
+- Boardloader capabilities structure  [#2324]
+- Support for Cardano Babbage era transaction items  [#2354]
+- Add "Show All"/"Show Simple" choice to Cardano transaction signing  [#2355]
+- Documentation for embedded C+Rust debugging  [#2380]
+- Show thousands separator when displaying large amounts.  [#2394]
+
+### Changed
+- Refactor and cleanup of Monero code.  [#642]
+- Remove power-down power-up cycle from touch controller initialization in firmware  [#2130]
+- Updated secp256k1-zkp.  [#2261]
+- Cardano internal refactors  [#2313]
+- Allow Cardano's `required_signers` in ordinary and multisig transactions
+  Allow Cardano's `datum_hash` in non-script outputs  [#2354]
+
+### Removed
+- Removed support for obsolete Monero hardfork 12 and below  [#642]
+- Remove firmware dumping capability.  [#2433]
+
+### Fixed
+- _(Emulator)_ Emulator window will always react to shutdown events, even while waiting for USB packets.  [#973]
+- Ensure correct order when verifying external inputs in Bitcoin signing.  [#2415]
+- Fix Decred transaction weight calculation.  [#2422]
+
 
 ## 2.5.1 [18th May 2022]
 
@@ -483,10 +516,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 [#24]: https://github.com/trezor/trezor-firmware/pull/24
 [#379]: https://github.com/trezor/trezor-firmware/pull/379
+[#642]: https://github.com/trezor/trezor-firmware/pull/642
 [#741]: https://github.com/trezor/trezor-firmware/pull/741
 [#800]: https://github.com/trezor/trezor-firmware/pull/800
 [#948]: https://github.com/trezor/trezor-firmware/pull/948
 [#958]: https://github.com/trezor/trezor-firmware/pull/958
+[#973]: https://github.com/trezor/trezor-firmware/pull/973
 [#982]: https://github.com/trezor/trezor-firmware/pull/982
 [#1018]: https://github.com/trezor/trezor-firmware/pull/1018
 [#1027]: https://github.com/trezor/trezor-firmware/pull/1027
@@ -594,9 +629,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#2077]: https://github.com/trezor/trezor-firmware/pull/2077
 [#2100]: https://github.com/trezor/trezor-firmware/pull/2100
 [#2114]: https://github.com/trezor/trezor-firmware/pull/2114
+[#2130]: https://github.com/trezor/trezor-firmware/pull/2130
 [#2135]: https://github.com/trezor/trezor-firmware/pull/2135
 [#2144]: https://github.com/trezor/trezor-firmware/pull/2144
 [#2166]: https://github.com/trezor/trezor-firmware/pull/2166
 [#2167]: https://github.com/trezor/trezor-firmware/pull/2167
 [#2181]: https://github.com/trezor/trezor-firmware/pull/2181
+[#2230]: https://github.com/trezor/trezor-firmware/pull/2230
+[#2232]: https://github.com/trezor/trezor-firmware/pull/2232
 [#2239]: https://github.com/trezor/trezor-firmware/pull/2239
+[#2243]: https://github.com/trezor/trezor-firmware/pull/2243
+[#2249]: https://github.com/trezor/trezor-firmware/pull/2249
+[#2261]: https://github.com/trezor/trezor-firmware/pull/2261
+[#2284]: https://github.com/trezor/trezor-firmware/pull/2284
+[#2297]: https://github.com/trezor/trezor-firmware/pull/2297
+[#2300]: https://github.com/trezor/trezor-firmware/pull/2300
+[#2313]: https://github.com/trezor/trezor-firmware/pull/2313
+[#2324]: https://github.com/trezor/trezor-firmware/pull/2324
+[#2354]: https://github.com/trezor/trezor-firmware/pull/2354
+[#2355]: https://github.com/trezor/trezor-firmware/pull/2355
+[#2380]: https://github.com/trezor/trezor-firmware/pull/2380
+[#2394]: https://github.com/trezor/trezor-firmware/pull/2394
+[#2415]: https://github.com/trezor/trezor-firmware/pull/2415
+[#2422]: https://github.com/trezor/trezor-firmware/pull/2422
+[#2433]: https://github.com/trezor/trezor-firmware/pull/2433
