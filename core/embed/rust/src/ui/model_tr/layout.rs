@@ -122,7 +122,7 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
         let verb = verb.unwrap_or_default();
 
         let cancel_btn = if verb_cancel.len() > 0 {
-            Some(ButtonDetails::icon(theme::ICON_CANCEL, "cancel".into()).with_cancel())
+            Some(ButtonDetails::cancel_no_outline("cancel".into()))
         } else {
             None
         };

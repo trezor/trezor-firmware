@@ -199,19 +199,6 @@ async def confirm_action(
     if isinstance(verb_cancel, str):
         verb_cancel = verb_cancel.upper()
 
-    # "HOLD TO CONFIRM" is so long that it takes no space for the other button
-    # TODO: decide on how to handle this (could create an icon signalling `HOLD`)
-    if verb == "HOLD TO CONFIRM":
-        verb = "CONFIRM"
-
-    # When there is a long verb, verb_cancel sometimes does not fit, so shortening it
-    # TODO: rather go through each layout and make it fit properly
-    if isinstance(verb, str) and isinstance(verb_cancel, str):
-        max_letters = 15
-        letters_for_cancel = max_letters - len(verb)
-        if len(verb_cancel) > letters_for_cancel:
-            verb_cancel = verb_cancel[:letters_for_cancel]
-
     await raise_if_cancelled(
         interact(
             ctx,
@@ -460,16 +447,19 @@ async def confirm_output(
     color_to: str = "",
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
 ) -> None:
-    await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type="confirm_output",
-            title=title,
-            data=f"{amount} to\n{address}",
-            description=subtitle,
-            br_code=br_code,
-        )
+    result = await interact(
+        ctx,
+        RustLayout(
+            trezorui2.confirm_output(
+                address=address,
+                amount=amount,
+            )
+        ),
+        "confirm_output",
+        br_code,
     )
+    if result is not trezorui2.CONFIRMED:
+        raise wire.ActionCancelled
 
 
 async def confirm_payment_request(
@@ -625,6 +615,7 @@ async def confirm_total(
     ctx: wire.GenericContext,
     total_amount: str,
     fee_amount: str,
+    fee_rate_amount: str | None = None,
     title: str = "Confirm transaction",
     total_label: str = "Total amount:\n",
     fee_label: str = "\nincluding fee:\n",

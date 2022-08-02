@@ -35,17 +35,15 @@ where
             content,
             scrollbar: ScrollBar::vertical(),
             pad: Pad::with_background(background),
-            cancel_btn_details: Some(
-                ButtonDetails::icon(theme::ICON_CANCEL, "cancel").with_cancel(),
-            ),
+            cancel_btn_details: Some(ButtonDetails::cancel_no_outline("cancel")),
             confirm_btn_details: Some(ButtonDetails::new("CONFIRM")),
             back_btn_details: Some(
-                ButtonDetails::icon(theme::ICON_ARROW_UP, "arr_up")
+                ButtonDetails::icon(Icon::new(theme::ICON_ARROW_UP, "arr_up"))
                     .force_width(ARROW_BTN_WIDTH)
                     .with_cancel(),
             ),
             next_btn_details: Some(
-                ButtonDetails::icon(theme::ICON_ARROW_DOWN, "arr_down")
+                ButtonDetails::icon(Icon::new(theme::ICON_ARROW_DOWN, "arr_down"))
                     .force_width(ARROW_BTN_WIDTH),
             ),
             // Setting empty layout for now, we do not yet know the page count.
@@ -66,17 +64,15 @@ where
             content,
             scrollbar: ScrollBar::vertical(),
             pad: Pad::with_background(background),
-            cancel_btn_details: Some(
-                ButtonDetails::icon(theme::ICON_CANCEL, "cancel".into()).with_cancel(),
-            ),
+            cancel_btn_details: Some(ButtonDetails::cancel_no_outline("cancel".into())),
             confirm_btn_details: Some(ButtonDetails::new("CONFIRM".into())),
             back_btn_details: Some(
-                ButtonDetails::icon(theme::ICON_ARROW_UP, "arr_up".into())
+                ButtonDetails::icon(Icon::new(theme::ICON_ARROW_UP, "arr_up".into()))
                     .force_width(ARROW_BTN_WIDTH)
                     .with_cancel(),
             ),
             next_btn_details: Some(
-                ButtonDetails::icon(theme::ICON_ARROW_DOWN, "arr_down".into())
+                ButtonDetails::icon(Icon::new(theme::ICON_ARROW_DOWN, "arr_down".into()))
                     .force_width(ARROW_BTN_WIDTH),
             ),
             // Setting empty layout for now, we do not yet know the page count.

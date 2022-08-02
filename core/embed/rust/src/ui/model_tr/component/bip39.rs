@@ -69,6 +69,7 @@ impl Bip39Entry {
             })
             .collect();
         let last_index = choices.len() - 1;
+        // TODO: could put the BIN icon there instead of the text
         choices[0].set_left_btn(Some(ButtonDetails::new("BIN")));
         choices[last_index].set_right_btn(None);
 

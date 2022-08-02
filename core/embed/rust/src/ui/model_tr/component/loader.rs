@@ -135,6 +135,7 @@ impl<T: AsRef<str>> Loader<T> {
     pub fn paint_loader(&mut self, style: &LoaderStyle, done: i32) {
         let invert_from = ((self.area.width() + 1) * done) / (display::LOADER_MAX as i32);
 
+        // TODO: the text should be moved one pixel to the top so it is centered in the loader
         display::bar_with_text_and_fill(
             self.area,
             Some(&self.text),

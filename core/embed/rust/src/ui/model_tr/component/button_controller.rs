@@ -90,7 +90,7 @@ impl<T: Clone + AsRef<str>> ButtonContainer<T> {
         // Deciding between text and icon
         if let Some(text) = btn_details.clone().text {
             Child::new(Button::with_text(pos, text, btn_details.style()))
-        } else if let Some(icon) = btn_details.icon {
+        } else if let Some(icon) = btn_details.icon.clone() {
             Child::new(Button::with_icon(pos, icon, btn_details.style()))
         } else {
             panic!("ButtonContainer: no text or icon provided");
@@ -112,12 +112,12 @@ impl<T: Clone + AsRef<str>> ButtonContainer<T> {
                 LoaderStyleSheet::default(),
                 duration,
             ))
-        } else if let Some(icon_text) = btn_details.icon_text {
+        } else if let Some(icon) = btn_details.icon {
             // TODO: this is hack to instantiate the HTC with icon,
             // when HTC does not support icons yet
             Child::new(HoldToConfirm::new(
                 pos,
-                icon_text,
+                icon.text,
                 LoaderStyleSheet::default(),
                 duration,
             ))

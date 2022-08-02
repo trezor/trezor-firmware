@@ -54,7 +54,7 @@ impl ResultPopup {
             Child::new(Button::with_text(
                 ButtonPos::Right,
                 t,
-                ButtonStyleSheet::default(true, false, None),
+                ButtonStyleSheet::default(true, false, None, None),
             ))
         });
 

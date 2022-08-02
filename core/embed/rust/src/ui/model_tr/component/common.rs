@@ -1,5 +1,5 @@
 use crate::ui::{
-    display::{self, Font},
+    display::{self, Font, Icon},
     geometry::{Offset, Point},
     model_tr::constant,
 };
@@ -94,4 +94,11 @@ pub fn paint_header<T: AsRef<str>>(top_left: Point, title: &T, subtitle: &Option
         constant::WIDTH,
         theme::FG,
     );
+}
+
+/// Draws icon and text on the same line - icon on the left.
+pub fn icon_with_text<T: AsRef<str>>(baseline: Point, icon: Icon<T>, text: &str, font: Font) {
+    icon.draw_bottom_left(baseline, theme::FG, theme::BG);
+    let text_x_offset = icon.width() + 2;
+    display(baseline + Offset::x(text_x_offset), text, font);
 }

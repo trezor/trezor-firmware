@@ -30,7 +30,8 @@ pub const BG: Color = Color::black(); // Default background color.
 
 pub const ICON_SUCCESS: &[u8] = include_res!("model_tr/res/success.toif");
 pub const ICON_FAIL: &[u8] = include_res!("model_tr/res/fail.toif");
-pub const ICON_CANCEL: &[u8] = include_res!("model_tr/res/cancel_for_outline.toif"); // 8*8
+pub const ICON_CANCEL_OUTLINE: &[u8] = include_res!("model_tr/res/cancel_for_outline.toif"); // 8*8
+pub const ICON_CANCEL: &[u8] = include_res!("model_tr/res/cancel_no_outline.toif"); // 8*8
 pub const ICON_ARM_LEFT: &[u8] = include_res!("model_tr/res/arm_left.toif"); // 6*10
 pub const ICON_ARM_RIGHT: &[u8] = include_res!("model_tr/res/arm_right.toif"); // 6*10
 pub const ICON_ARROW_LEFT: &[u8] = include_res!("model_tr/res/arrow_left.toif"); // 6*10

@@ -1,6 +1,6 @@
 use crate::ui::{
     component::{Component, Event, EventCtx},
-    display::{self, Color, Font},
+    display::{self, Color, Font, Icon},
     event::{ButtonEvent, PhysicalButton},
     geometry::{Offset, Point, Rect},
 };
@@ -57,7 +57,7 @@ impl<T: AsRef<str>> Button<T> {
         Self::new(pos, ButtonContent::Text(text), styles)
     }
 
-    pub fn with_icon(pos: ButtonPos, image: &'static [u8], styles: ButtonStyleSheet) -> Self {
+    pub fn with_icon(pos: ButtonPos, image: Icon<T>, styles: ButtonStyleSheet) -> Self {
         Self::new(pos, ButtonContent::Icon(image), styles)
     }
 
@@ -73,7 +73,7 @@ impl<T: AsRef<str>> Button<T> {
     }
 
     /// Changing the icon content of the button.
-    pub fn set_icon(&mut self, image: &'static [u8]) {
+    pub fn set_icon(&mut self, image: Icon<T>) {
         self.content = ButtonContent::Icon(image);
     }
 
@@ -109,6 +109,7 @@ impl<T: AsRef<str>> Button<T> {
     /// to its current style, content and position.
     fn get_current_area(&self) -> Rect {
         let style = self.style();
+
         // Button width may be forced. Otherwise calculate it.
         let button_width = if let Some(width) = style.force_width {
             width
@@ -120,20 +121,42 @@ impl<T: AsRef<str>> Button<T> {
             };
             let content_width = match &self.content {
                 ButtonContent::Text(text) => style.font.text_width(text.as_ref()) - 1,
-                ButtonContent::Icon(icon) => display::toif_dimensions(icon, true).0 as i32 - 1,
+                ButtonContent::Icon(icon) => icon.width() - 1,
             };
             content_width + 2 * outline
         };
 
-        match self.pos {
-            ButtonPos::Left => self.bounds.split_left(button_width).0,
-            ButtonPos::Right => self.bounds.split_right(button_width).1,
-            ButtonPos::Middle => self.bounds.split_center(button_width),
+        // Button height may be adjusted for the icon without outline
+        // Done to avoid highlighting bigger area than necessary when
+        // drawing the icon in active (black on white) state
+        let button_height = match &self.content {
+            ButtonContent::Text(_) => theme::BUTTON_HEIGHT,
+            ButtonContent::Icon(icon) => {
+                if style.with_outline {
+                    theme::BUTTON_HEIGHT
+                } else {
+                    icon.height()
+                }
+            }
+        };
+
+        let button_bounds = self.bounds.split_bottom(button_height).1;
+        let area = match self.pos {
+            ButtonPos::Left => button_bounds.split_left(button_width).0,
+            ButtonPos::Right => button_bounds.split_right(button_width).1,
+            ButtonPos::Middle => button_bounds.split_center(button_width),
+        };
+
+        // Allowing for possible offset of the area from current style
+        if let Some(offset) = style.offset {
+            area.translate(offset)
+        } else {
+            area
         }
     }
 
     /// Determine baseline point for the text.
-    fn get_baseline(&self, style: &ButtonStyle) -> Point {
+    fn get_text_baseline(&self, style: &ButtonStyle) -> Point {
         // Arms and outline require the text to be elevated.
         if style.with_arms || style.with_outline {
             let offset = theme::BUTTON_OUTLINE;
@@ -192,18 +215,15 @@ where
             display::rect_fill(area_to_fill, background_color);
 
             // Paint both arms.
+            // Baselines need to be shifted little bit right to fit properly with the text
             // TODO: for "CONFIRM" there is one space at the right, but for "SELECT" there are two
-            let left_arm_center = area.left_center() - Offset::x(3) + Offset::y(3);
-            let right_arm_center = area.right_center() + Offset::x(9) + Offset::y(3);
-            display::icon(
-                left_arm_center,
-                theme::ICON_ARM_LEFT,
+            Icon::new(theme::ICON_ARM_LEFT, "arm_left").draw_top_right(
+                area.left_center() + Offset::x(2),
                 text_color,
                 background_color,
             );
-            display::icon(
-                right_arm_center,
-                theme::ICON_ARM_RIGHT,
+            Icon::new(theme::ICON_ARM_RIGHT, "arm_right").draw_top_left(
+                area.right_center() + Offset::x(4),
                 text_color,
                 background_color,
             );
@@ -216,7 +236,7 @@ where
         match &self.content {
             ButtonContent::Text(text) => {
                 display::text(
-                    self.get_baseline(&style),
+                    self.get_text_baseline(&style),
                     text.as_ref(),
                     style.font,
                     text_color,
@@ -224,9 +244,27 @@ where
                 );
             }
             ButtonContent::Icon(icon) => {
-                // Accounting for the 8*8 icon with empty left column and bottom row.
-                let icon_center = area.center() + Offset::uniform(1);
-                display::icon(icon_center, icon, text_color, background_color);
+                if style.with_outline {
+                    // Accounting for the 8*8 icon with empty left column and bottom row
+                    // (which fits the outline nicely and symmetrically)
+                    let center = area.center() + Offset::uniform(1);
+                    icon.draw_center(center, text_color, background_color);
+                } else {
+                    // Positioning the icon in the corresponding corner/center
+                    match self.pos {
+                        ButtonPos::Left => {
+                            icon.draw_bottom_left(area.bottom_left(), text_color, background_color)
+                        }
+                        ButtonPos::Right => icon.draw_bottom_right(
+                            area.bottom_right(),
+                            text_color,
+                            background_color,
+                        ),
+                        ButtonPos::Middle => {
+                            icon.draw_center(area.center(), text_color, background_color)
+                        }
+                    }
+                }
             }
         }
     }
@@ -255,7 +293,7 @@ enum State {
 
 pub enum ButtonContent<T> {
     Text(T),
-    Icon(&'static [u8]),
+    Icon(Icon<T>),
 }
 
 pub struct ButtonStyleSheet {
@@ -270,6 +308,7 @@ pub struct ButtonStyle {
     pub with_outline: bool,
     pub with_arms: bool,
     pub force_width: Option<i32>,
+    pub offset: Option<Offset>,
 }
 
 // TODO: currently `button_default` and `button_cancel`
@@ -283,6 +322,7 @@ impl ButtonStyleSheet {
         with_outline: bool,
         with_arms: bool,
         force_width: Option<i32>,
+        offset: Option<Offset>,
     ) -> Self {
         Self {
             normal: ButtonStyle {
@@ -291,6 +331,7 @@ impl ButtonStyleSheet {
                 with_outline,
                 with_arms,
                 force_width,
+                offset,
             },
             active: ButtonStyle {
                 font: theme::FONT_BUTTON,
@@ -298,18 +339,43 @@ impl ButtonStyleSheet {
                 with_outline,
                 with_arms,
                 force_width,
+                offset,
             },
         }
     }
 
     // White text in normal mode.
-    pub fn default(with_outline: bool, with_arms: bool, force_width: Option<i32>) -> Self {
-        Self::new(theme::FG, theme::BG, with_outline, with_arms, force_width)
+    pub fn default(
+        with_outline: bool,
+        with_arms: bool,
+        force_width: Option<i32>,
+        offset: Option<Offset>,
+    ) -> Self {
+        Self::new(
+            theme::FG,
+            theme::BG,
+            with_outline,
+            with_arms,
+            force_width,
+            offset,
+        )
     }
 
     // Black text in normal mode.
-    pub fn cancel(with_outline: bool, with_arms: bool, force_width: Option<i32>) -> Self {
-        Self::new(theme::FG, theme::BG, with_outline, with_arms, force_width)
+    pub fn cancel(
+        with_outline: bool,
+        with_arms: bool,
+        force_width: Option<i32>,
+        offset: Option<Offset>,
+    ) -> Self {
+        Self::new(
+            theme::FG,
+            theme::BG,
+            with_outline,
+            with_arms,
+            force_width,
+            offset,
+        )
         // Self::new(theme::BG, theme::FG, with_outline, with_arms)
     }
 }
@@ -318,15 +384,13 @@ impl ButtonStyleSheet {
 #[derive(Debug, Clone, Copy)]
 pub struct ButtonDetails<T> {
     pub text: Option<T>,
-    pub icon: Option<&'static [u8]>,
-    // TODO: `icon_text` is just hack so that we can instantiate
-    // HoldToConfirm element when text is None.
-    pub icon_text: Option<T>,
+    pub icon: Option<Icon<T>>,
     pub duration: Option<Duration>,
     pub is_cancel: bool,
     pub with_outline: bool,
     pub with_arms: bool,
     pub force_width: Option<i32>,
+    pub offset: Option<Offset>,
 }
 
 impl<T: Clone + AsRef<str>> ButtonDetails<T> {
@@ -335,29 +399,37 @@ impl<T: Clone + AsRef<str>> ButtonDetails<T> {
         Self {
             text: Some(text),
             icon: None,
-            icon_text: None,
             duration: None,
             is_cancel: false,
             with_outline: true,
             with_arms: false,
             force_width: None,
+            offset: None,
         }
     }
 
     /// Icon button.
-    /// NOTE: `icon_text` needs to be specified, any text is enough.
-    pub fn icon(icon: &'static [u8], icon_text: T) -> Self {
+    pub fn icon(icon: Icon<T>) -> Self {
         Self {
             text: None,
             icon: Some(icon),
-            icon_text: Some(icon_text),
             duration: None,
             is_cancel: false,
             with_outline: true,
             with_arms: false,
             force_width: None,
+            offset: None,
         }
     }
+
+    /// Cross-style-icon cancel button with no outline.
+    pub fn cancel_no_outline(text: T) -> Self {
+        Self::icon(Icon::new(theme::ICON_CANCEL, text))
+            .with_no_outline()
+            .with_offset(Offset::new(2, -2))
+    }
+
+    // TODO: might do more constructors for other common buttons like above
 
     /// Cancel style button.
     pub fn with_cancel(mut self) -> Self {
@@ -368,6 +440,14 @@ impl<T: Clone + AsRef<str>> ButtonDetails<T> {
     /// No outline around the button.
     pub fn with_no_outline(mut self) -> Self {
         self.with_outline = false;
+        self
+    }
+
+    /// Positioning the icon precisely where we want.
+    /// Buttons are by default placed exactly in the corners (left/right)
+    /// or in the center in case of center button. The offset can change it.
+    pub fn with_offset(mut self, offset: Offset) -> Self {
+        self.offset = Some(offset);
         self
     }
 
@@ -392,14 +472,17 @@ impl<T: Clone + AsRef<str>> ButtonDetails<T> {
     }
 
     /// Print attributes for debugging purposes.
+    /// TODO: find out how much storage it takes and
+    /// probably hide it behind debug feature
+    /// (relevant to all `print()` methods)
     pub fn print(&self) {
         let text = if let Some(text) = self.text.clone() {
             String::<20>::from(text.as_ref())
         } else {
             String::<20>::from("None")
         };
-        let icon_text = if let Some(icon_text) = self.icon_text.clone() {
-            String::<20>::from(icon_text.as_ref())
+        let icon_text = if let Some(icon) = &self.icon {
+            String::<20>::from(icon.text.as_ref())
         } else {
             String::<20>::from("None")
         };
@@ -425,9 +508,19 @@ impl<T: Clone + AsRef<str>> ButtonDetails<T> {
     /// Button style that should be applied.
     pub fn style(&self) -> ButtonStyleSheet {
         if self.is_cancel {
-            ButtonStyleSheet::cancel(self.with_outline, self.with_arms, self.force_width)
+            ButtonStyleSheet::cancel(
+                self.with_outline,
+                self.with_arms,
+                self.force_width,
+                self.offset,
+            )
         } else {
-            ButtonStyleSheet::default(self.with_outline, self.with_arms, self.force_width)
+            ButtonStyleSheet::default(
+                self.with_outline,
+                self.with_arms,
+                self.force_width,
+                self.offset,
+            )
         }
     }
 
@@ -443,17 +536,17 @@ impl<T: Clone + AsRef<str>> ButtonDetails<T> {
             String::<20>::from("")
         };
         // TODO: the icon should be hashed, icon size is not really good but works for now
-        let icon_size = if let Some(icon) = self.icon {
-            icon.len()
+        let icon_size: String<10> = if let Some(icon) = &self.icon {
+            build_string!(10, inttostr!(icon.width()), "x", inttostr!(icon.height()))
         } else {
-            0
+            String::from("0x0")
         };
         let duration_ms = self.duration.unwrap_or(Duration::ZERO).to_millis();
         build_string!(
             60,
             text.as_ref(),
             "--",
-            String::<10>::from(icon_size as u32).as_ref(),
+            icon_size.as_ref(),
             "--",
             String::<20>::from(duration_ms).as_ref()
         )
@@ -545,8 +638,8 @@ mod tests {
     #[test]
     fn test_btn_details_id() {
         let btn = ButtonDetails::new("Test");
-        assert_eq!(btn.id(), String::<50>::from("Test--0--0"));
+        assert_eq!(btn.id(), String::<50>::from("Test--0x0--0"));
         let btn = ButtonDetails::new("Duration").with_duration(Duration::from_secs(1));
-        assert_eq!(btn.id(), String::<50>::from("Duration--0--1000"));
+        assert_eq!(btn.id(), String::<50>::from("Duration--0x0--1000"));
     }
 }

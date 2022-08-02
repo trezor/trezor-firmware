@@ -88,10 +88,16 @@ pub fn icon_top_left(top_left: Point, data: &[u8], fg_color: Color, bg_color: Co
     );
 }
 
+/// Display icon given a center Point.
 pub fn icon(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
     let (width, height) = toif_dimensions(data, true);
 
     let r = Rect::from_center_and_size(center, Offset::new(width.into(), height.into()));
+    icon_rect(r, data, fg_color, bg_color);
+}
+
+/// Display icon at a specified Rectangle.
+pub fn icon_rect(r: Rect, data: &[u8], fg_color: Color, bg_color: Color) {
     display::icon(
         r.x0,
         r.y0,
@@ -798,8 +804,8 @@ impl MagnifiedGlyph1BPP {
         let pos_adj = pos + bearing;
         let r = Rect::from_top_left_and_size(pos_adj, size);
 
-        let area = adjust_offset(r);
-        let window = clamp_coords(area);
+        let area = r.translate(get_offset());
+        let window = area.clamp(constant::screen());
 
         set_window(window);
 
@@ -872,7 +878,7 @@ impl Font {
     }
 
     pub fn get_glyph_magnified(self, ch: char, magnification: u8) -> Option<MagnifiedGlyph1BPP> {
-        let gl_data = display::get_char_glyph(ch, self.0);
+        let gl_data = display::get_char_glyph(ch as u8, self.0);
 
         if gl_data.is_null() {
             return None;
@@ -1026,5 +1032,74 @@ impl From<u16> for Color {
 impl From<Color> for u16 {
     fn from(val: Color) -> Self {
         val.to_u16()
+    }
+}
+
+/// Holding icon data and allowing it to draw itself.
+/// Lots of draw methods exist so that we can easily
+/// "glue" the icon together with other elements
+/// (text, display boundary, etc.) according to their position.
+#[derive(Debug, Clone, Copy)]
+pub struct Icon<T> {
+    pub data: &'static [u8],
+    // NOTE: text is here mostly so that we can instantiate
+    // HTC with icon, when HTC does not support icons yet.
+    // It is also useful for debugging, as this text gets printed.
+    // TODO: it might be deleted when HTC supports icons
+    pub text: T,
+    // TODO: could include the info about "real" icon dimensions,
+    // accounting for the TOIF limitations (when we sometimes
+    // need to have empty row or column) - it could be
+    // erasing those empty rows/columns when we draw the icon.
+}
+
+impl<T> Icon<T>
+where
+    T: AsRef<str>,
+{
+    pub fn new(data: &'static [u8], text: T) -> Self {
+        Icon { data, text }
+    }
+
+    pub fn width(&self) -> i32 {
+        toif_dimensions(self.data, true).0 as _
+    }
+
+    pub fn height(&self) -> i32 {
+        toif_dimensions(self.data, true).1 as _
+    }
+
+    pub fn offset_size(&self) -> Offset {
+        Offset::new(self.width(), self.height())
+    }
+
+    /// Display the icon with left top baseline Point.
+    pub fn draw_top_left(&self, baseline: Point, fg_color: Color, bg_color: Color) {
+        let r = Rect::from_top_left_and_size(baseline, self.offset_size());
+        icon_rect(r, self.data, fg_color, bg_color);
+    }
+
+    /// Display the icon with right top baseline Point.
+    pub fn draw_top_right(&self, baseline: Point, fg_color: Color, bg_color: Color) {
+        let r = Rect::from_top_right_and_size(baseline, self.offset_size());
+        icon_rect(r, self.data, fg_color, bg_color);
+    }
+
+    /// Display the icon with right bottom baseline Point.
+    pub fn draw_bottom_right(&self, baseline: Point, fg_color: Color, bg_color: Color) {
+        let r = Rect::from_bottom_right_and_size(baseline, self.offset_size());
+        icon_rect(r, self.data, fg_color, bg_color);
+    }
+
+    /// Display the icon with left bottom baseline Point.
+    pub fn draw_bottom_left(&self, baseline: Point, fg_color: Color, bg_color: Color) {
+        let r = Rect::from_bottom_left_and_size(baseline, self.offset_size());
+        icon_rect(r, self.data, fg_color, bg_color);
+    }
+
+    /// Display the icon around center Point.
+    pub fn draw_center(&self, center: Point, fg_color: Color, bg_color: Color) {
+        let r = Rect::from_center_and_size(center, self.offset_size());
+        icon_rect(r, self.data, fg_color, bg_color);
     }
 }

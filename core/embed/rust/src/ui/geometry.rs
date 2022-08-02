@@ -226,6 +226,21 @@ impl Rect {
         }
     }
 
+    pub const fn from_top_right_and_size(p0: Point, size: Offset) -> Self {
+        let top_left = Point::new(p0.x - size.x, p0.y);
+        Self::from_top_left_and_size(top_left, size)
+    }
+
+    pub const fn from_bottom_left_and_size(p0: Point, size: Offset) -> Self {
+        let top_left = Point::new(p0.x, p0.y - size.y);
+        Self::from_top_left_and_size(top_left, size)
+    }
+
+    pub const fn from_bottom_right_and_size(p0: Point, size: Offset) -> Self {
+        let top_left = Point::new(p0.x - size.x, p0.y - size.y);
+        Self::from_top_left_and_size(top_left, size)
+    }
+
     pub const fn from_center_and_size(p: Point, size: Offset) -> Self {
         Self {
             x0: p.x - size.x / 2,
