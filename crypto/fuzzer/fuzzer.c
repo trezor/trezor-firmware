@@ -165,7 +165,7 @@ int fuzz_bn_format(void) {
   }
 
   ret = bn_format(&target_bignum, prefix, suffix, decimals, exponent, trailing,
-                  buf, FUZZ_BN_FORMAT_OUTPUT_BUFFER_SIZE);
+                  0, buf, FUZZ_BN_FORMAT_OUTPUT_BUFFER_SIZE);
 
   // basic sanity checks for r
   if (ret > FUZZ_BN_FORMAT_OUTPUT_BUFFER_SIZE) {

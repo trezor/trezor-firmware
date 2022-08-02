@@ -114,7 +114,8 @@ void bn_divmod1000(bignum256 *x, uint32_t *r);
 void bn_inverse(bignum256 *x, const bignum256 *prime);
 size_t bn_format(const bignum256 *amount, const char *prefix,
                  const char *suffix, unsigned int decimals, int exponent,
-                 bool trailing, char *output, size_t output_length);
+                 bool trailing, char thousands, char *output,
+                 size_t output_length);
 
 // Returns (uint32_t) in_number
 // Assumes in_number < 2**32
@@ -149,13 +150,21 @@ static inline int bn_is_odd(const bignum256 *x) { return (x->val[0] & 1) == 1; }
 
 static inline size_t bn_format_uint64(uint64_t amount, const char *prefix,
                                       const char *suffix, unsigned int decimals,
-                                      int exponent, bool trailing, char *output,
+                                      int exponent, bool trailing,
+                                      char thousands, char *output,
                                       size_t output_length) {
   bignum256 bn_amount;
   bn_read_uint64(amount, &bn_amount);
 
   return bn_format(&bn_amount, prefix, suffix, decimals, exponent, trailing,
-                   output, output_length);
+                   thousands, output, output_length);
+}
+
+static inline size_t bn_format_amount(uint64_t amount, const char *prefix,
+                                      const char *suffix, unsigned int decimals,
+                                      char *output, size_t output_length) {
+  return bn_format_uint64(amount, prefix, suffix, decimals, 0, false, ',',
+                          output, output_length);
 }
 
 #if USE_BN_PRINT

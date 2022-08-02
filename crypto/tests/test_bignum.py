@@ -5,6 +5,7 @@ import os
 import random
 from ctypes import (
     c_bool,
+    c_char,
     c_int,
     c_size_t,
     c_uint,
@@ -607,8 +608,8 @@ def assert_bn_divmod10(x_old):
     assert r == x_old % 10
 
 
-def assert_bn_format(x, prefix, suffix, decimals, exponent, trailing):
-    def format(amount, prefix, suffix, decimals, exponent, trailing):
+def assert_bn_format(x, prefix, suffix, decimals, exponent, trailing, thousands):
+    def format(amount, prefix, suffix, decimals, exponent, trailing, thousands):
         if exponent >= 0:
             amount *= 10**exponent
         else:
@@ -616,14 +617,18 @@ def assert_bn_format(x, prefix, suffix, decimals, exponent, trailing):
 
         d = pow(10, decimals)
 
-        if decimals:
-            output = "%d.%0*d" % (amount // d, decimals, amount % d)
-            if not trailing:
-                output = output.rstrip("0").rstrip(".")
-        else:
-            output = "%d" % (amount // d)
+        integer_part = amount // d
+        integer_str = f"{integer_part:,}".replace(",", thousands or "")
 
-        return prefix + output + suffix
+        if decimals:
+            decimal_part = amount % d
+            decimal_str = f".{decimal_part:0{decimals}d}"
+            if not trailing:
+                decimal_str = decimal_str.rstrip("0").rstrip(".")
+        else:
+            decimal_str = ""
+
+        return prefix + integer_str + decimal_str + suffix
 
     def string_to_char_p(string):
         return ctypes.create_string_buffer(string.encode("ascii"))
@@ -641,11 +646,12 @@ def assert_bn_format(x, prefix, suffix, decimals, exponent, trailing):
         c_uint(decimals),
         c_int(exponent),
         c_bool(trailing),
+        c_char(0),
         output,
         c_size_t(output_length),
     )
 
-    correct_output = format(x, prefix, suffix, decimals, exponent, trailing)
+    correct_output = format(x, prefix, suffix, decimals, exponent, trailing, "")
     correct_return_value = len(correct_output)
     if len(correct_output) >= output_length:
         correct_output = ""
@@ -1018,15 +1024,16 @@ def test_bn_divmod10(r):
 
 
 @pytest.mark.parametrize(
-    "decimals,exponent,trailing,prefix,suffix,value",
+    "decimals,exponent,trailing,prefix,suffix,thousands,value",
     itertools.product(
         range(0, 5),
         range(-5, 5),
         [True, False],
         ["", "prefix"],
         ["", "suffix"],
-        [123, 120],
+        ["", ",", " "],
+        [123, 120, 123_456, 12_345, 100001, 10001000],
     ),
 )
-def test_bn_format(decimals, exponent, trailing, prefix, suffix, value):
-    assert_bn_format(value, prefix, suffix, decimals, exponent, trailing)
+def test_bn_format(decimals, exponent, trailing, prefix, suffix, thousands, value):
+    assert_bn_format(value, prefix, suffix, decimals, exponent, trailing, thousands)

@@ -118,7 +118,7 @@ static inline bool nem_write_mosaic_u64(nem_transaction_ctx *ctx,
                                         const char *name, uint64_t value) {
   char buffer[21] = {0};
 
-  if (bn_format_uint64(value, NULL, NULL, 0, 0, false, buffer,
+  if (bn_format_uint64(value, NULL, NULL, 0, 0, false, 0, buffer,
                        sizeof(buffer)) == 0) {
     return false;
   }
