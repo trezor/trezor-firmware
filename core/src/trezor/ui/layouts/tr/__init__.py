@@ -450,7 +450,7 @@ async def confirm_output(
     result = await interact(
         ctx,
         RustLayout(
-            trezorui2.confirm_output(
+            trezorui2.confirm_output_r(
                 address=address,
                 amount=amount,
             )

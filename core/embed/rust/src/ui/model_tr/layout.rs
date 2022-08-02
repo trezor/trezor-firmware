@@ -415,13 +415,13 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Confirm action."""
     Qstr::MP_QSTR_confirm_action => obj_fn_kw!(0, new_confirm_action).as_obj(),
 
-    /// def confirm_output(
+    /// def confirm_output_r(
     ///     *,
     ///     address: str,
     ///     amount: str,
     /// ) -> object:
-    ///     """Confirm output."""
-    Qstr::MP_QSTR_confirm_output => obj_fn_kw!(0, confirm_output).as_obj(),
+    ///     """Confirm output. Specific for model R."""
+    Qstr::MP_QSTR_confirm_output_r => obj_fn_kw!(0, confirm_output).as_obj(),
 
     /// def request_pin(
     ///     *,

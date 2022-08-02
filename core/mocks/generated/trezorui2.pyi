@@ -45,12 +45,12 @@ def confirm_action(
 
 
 # rust/src/ui/model_tr/layout.rs
-def confirm_output(
+def confirm_output_r(
     *,
     address: str,
     amount: str,
 ) -> object:
-    """Confirm output."""
+    """Confirm output. Specific for model R."""
 
 
 # rust/src/ui/model_tr/layout.rs

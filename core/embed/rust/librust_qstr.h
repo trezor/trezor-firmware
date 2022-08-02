@@ -23,6 +23,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_modify_fee;
   MP_QSTR_confirm_modify_output;
   MP_QSTR_confirm_output;
+  MP_QSTR_confirm_output_r;
   MP_QSTR_confirm_payment_request;
   MP_QSTR_confirm_text;
   MP_QSTR_confirm_total;
