@@ -505,10 +505,21 @@ impl ButtonLayout<&'static str> {
 
     /// Default button layout for all three buttons - icons.
     pub fn default_three_icons() -> Self {
+        Self::three_icons_middle_text("SELECT")
+    }
+
+    /// Special middle text for default icon layout.
+    pub fn three_icons_middle_text(middle_text: &'static str) -> Self {
         Self::new(
-            Some(ButtonDetails::icon(theme::ICON_ARROW_LEFT, "arr_left").with_no_outline()),
-            Some(ButtonDetails::new("SELECT").with_arms()),
-            Some(ButtonDetails::icon(theme::ICON_ARROW_RIGHT, "arr_right").with_no_outline()),
+            Some(
+                ButtonDetails::icon(Icon::new(theme::ICON_ARROW_LEFT, "arr_left"))
+                    .with_no_outline(),
+            ),
+            Some(ButtonDetails::new(middle_text).with_arms()),
+            Some(
+                ButtonDetails::icon(Icon::new(theme::ICON_ARROW_RIGHT, "arr_right"))
+                    .with_no_outline(),
+            ),
         )
     }
 

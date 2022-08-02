@@ -128,7 +128,7 @@ impl PassphraseEntry {
             .map(|menu_item| {
                 let item = MultilineTextChoiceItem::new(
                     String::from(*menu_item),
-                    ButtonLayout::default_three(),
+                    ButtonLayout::default_three_icons(),
                 );
                 ChoiceItems::MultilineText(item)
             })
@@ -175,13 +175,14 @@ impl PassphraseEntry {
         let mut choices: Vec<ChoiceItems, MAX_CHOICE_LENGTH> = new_characters
             .iter()
             .map(|ch| {
-                let choice = BigCharacterChoiceItem::new(**ch, ButtonLayout::default_three());
+                let choice = BigCharacterChoiceItem::new(**ch, ButtonLayout::default_three_icons());
                 ChoiceItems::BigCharacter(choice)
             })
             .collect();
 
         // Including a MENU choice at the end (visible from start) to return back
-        let menu_choice = TextChoiceItem::from_str("MENU", ButtonLayout::special_middle("RETURN"));
+        let menu_choice =
+            TextChoiceItem::from_str("MENU", ButtonLayout::three_icons_middle_text("RETURN"));
         choices.push(ChoiceItems::Text(menu_choice)).unwrap();
 
         self.choice_page.reset(ctx, choices, true, true);

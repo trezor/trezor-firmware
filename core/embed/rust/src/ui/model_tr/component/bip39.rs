@@ -64,7 +64,7 @@ impl Bip39Entry {
         let mut choices: Vec<ChoiceItems, MAX_CHOICE_LENGTH> = letter_choices
             .iter()
             .map(|ch| {
-                let choice = BigCharacterChoiceItem::new(*ch, ButtonLayout::default_three());
+                let choice = BigCharacterChoiceItem::new(*ch, ButtonLayout::default_three_icons());
                 ChoiceItems::BigCharacter(choice)
             })
             .collect();
@@ -82,7 +82,7 @@ impl Bip39Entry {
         let mut choices: Vec<ChoiceItems, MAX_CHOICE_LENGTH> = bip39_words_list
             .iter()
             .map(|word| {
-                let choice = TextChoiceItem::from_str(word, ButtonLayout::default_three());
+                let choice = TextChoiceItem::from_str(word, ButtonLayout::default_three_icons());
                 ChoiceItems::Text(choice)
             })
             .collect();

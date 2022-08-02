@@ -27,7 +27,8 @@ where
         let mut choices: Vec<ChoiceItems, N> = str_choices
             .iter()
             .map(|word| {
-                let choice = TextChoiceItem::from_str(word.as_ref(), ButtonLayout::default_three());
+                let choice =
+                    TextChoiceItem::from_str(word.as_ref(), ButtonLayout::default_three_icons());
                 ChoiceItems::Text(choice)
             })
             .collect();
