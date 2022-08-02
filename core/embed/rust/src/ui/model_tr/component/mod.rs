@@ -13,6 +13,7 @@ mod passphrase;
 mod pin;
 mod result_anim;
 mod result_popup;
+mod scrollbar;
 mod simple_choice;
 
 use super::theme;
@@ -35,4 +36,5 @@ pub use passphrase::{PassphraseEntry, PassphraseEntryMsg};
 pub use pin::{PinEntry, PinEntryMsg};
 pub use result_anim::{ResultAnim, ResultAnimMsg};
 pub use result_popup::{ResultPopup, ResultPopupMsg};
+pub use scrollbar::ScrollBar;
 pub use simple_choice::{SimpleChoice, SimpleChoiceMsg};
