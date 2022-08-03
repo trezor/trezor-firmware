@@ -687,6 +687,8 @@ core unix memory profiler:
 connect test core:
   image: ghcr.io/trezor/trezor-user-env:185
   stage: test
+  tags:
+    - runner-internal
   needs:
     - core unix frozen debug build
   variables:
