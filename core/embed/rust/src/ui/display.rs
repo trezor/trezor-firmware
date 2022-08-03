@@ -41,6 +41,7 @@ pub fn fade_backlight(target: i32) {
     }
 }
 
+/// Fill a whole rectangle with a specific color.
 pub fn rect_fill(r: Rect, fg_color: Color) {
     display::bar(r.x0, r.y0, r.width(), r.height(), fg_color.into());
 }
@@ -181,7 +182,7 @@ pub fn rect_fill_rounded1(r: Rect, fg_color: Color, bg_color: Color) {
         r.bottom_left() - Offset::y(1),
     ];
     for p in corners.iter() {
-        display::bar(p.x, p.y, 1, 1, bg_color.into());
+        p.paint(bg_color);
     }
 }
 
@@ -218,7 +219,7 @@ pub fn rect_outline_rounded2(r: Rect, fg_color: Color, bg_color: Color) {
             r.bottom_left() - Offset::y(2),
         ];
         for p in bg_corners.iter() {
-            display::bar(p.x, p.y, 1, 1, bg_color.into());
+            p.paint(bg_color);
         }
     }
 
@@ -230,7 +231,7 @@ pub fn rect_outline_rounded2(r: Rect, fg_color: Color, bg_color: Color) {
         r.bottom_left() - Offset::y(2) + Offset::x(1),
     ];
     for p in fg_corners.iter() {
-        display::bar(p.x, p.y, 1, 1, fg_color.into());
+        p.paint(fg_color);
     }
 }
 
@@ -545,10 +546,14 @@ pub fn bar_with_text_and_fill<T: AsRef<str>>(
 /// Used on T1/TR only.
 pub fn dotted_line(start: Point, width: i32, color: Color) {
     for x in (start.x..width).step_by(2) {
-        display::bar(x, start.y, 1, 1, color.into());
+        Point::new(x, start.y).paint(color);
     }
 }
 
+/// Paints a pixel with a specific color on a given point.
+pub fn paint_point(point: &Point, color: Color) {
+    display::bar(point.x, point.y, 1, 1, color.into());
+}
 pub const LOADER_MIN: u16 = 0;
 pub const LOADER_MAX: u16 = 1000;
 

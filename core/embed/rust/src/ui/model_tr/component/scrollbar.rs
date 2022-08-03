@@ -5,10 +5,16 @@ use crate::ui::{
     model_tr::theme,
 };
 
+pub enum ScrollbarOrientation {
+    Vertical,
+    Horizontal,
+}
+
 pub struct ScrollBar {
     area: Rect,
     pub page_count: usize,
     pub active_page: usize,
+    pub orientation: ScrollbarOrientation,
 }
 
 impl ScrollBar {
@@ -16,11 +22,13 @@ impl ScrollBar {
     pub const DOT_SIZE: Offset = Offset::new(4, 4);
     pub const DOT_INTERVAL: i32 = 6;
 
-    pub fn vertical() -> Self {
+    /// Details will be given later as they are not available yet.
+    pub fn vertical_to_be_filled_later() -> Self {
         Self {
             area: Rect::zero(),
             page_count: 0,
             active_page: 0,
+            orientation: ScrollbarOrientation::Vertical,
         }
     }
 
@@ -45,27 +53,22 @@ impl ScrollBar {
         self.active_page = self.active_page.saturating_sub(1);
     }
 
+    /// Create a (seemingly circular) dot given its top left point.
+    /// Make it full when it is active, otherwise paint just the perimeter and leave center empty.
     fn paint_dot(&self, active: bool, top_left: Point) {
-        let sides = [
-            Rect::from_top_left_and_size(top_left + Offset::x(1), Offset::new(2, 1)),
-            Rect::from_top_left_and_size(top_left + Offset::y(1), Offset::new(1, 2)),
-            Rect::from_top_left_and_size(
-                top_left + Offset::new(1, Self::DOT_SIZE.y - 1),
-                Offset::new(2, 1),
-            ),
-            Rect::from_top_left_and_size(
-                top_left + Offset::new(Self::DOT_SIZE.x - 1, 1),
-                Offset::new(1, 2),
-            ),
-        ];
-        for side in sides {
-            display::rect_fill(side, theme::FG)
+        let full_square = Rect::from_top_left_and_size(top_left, ScrollBar::DOT_SIZE);
+
+        // FG - painting the full square
+        display::rect_fill(full_square, theme::FG);
+
+        // BG - erase four corners
+        for p in full_square.corner_points().iter() {
+            p.paint(theme::BG);
         }
-        if active {
-            display::rect_fill(
-                Rect::from_top_left_and_size(top_left, Self::DOT_SIZE).inset(Insets::uniform(1)),
-                theme::FG,
-            )
+
+        // BG - erasing the middle when not active
+        if !active {
+            display::rect_fill(full_square.inset(Insets::uniform(1)), theme::BG)
         }
     }
 }
@@ -91,21 +94,32 @@ impl Component for ScrollBar {
 
         let count = self.page_count as i32;
         let interval = {
-            let available_height = self.area.height();
-            let naive_height = count * Self::DOT_INTERVAL;
-            if naive_height > available_height {
-                available_height / count
+            let available_space = {
+                if matches!(self.orientation, ScrollbarOrientation::Vertical) {
+                    self.area.height()
+                } else {
+                    self.area.width()
+                }
+            };
+            let naive_space = count * Self::DOT_INTERVAL;
+            if naive_space > available_space {
+                available_space / count
             } else {
                 Self::DOT_INTERVAL
             }
         };
-        let mut dot = Point::new(
+        let mut top_left = Point::new(
             self.area.center().x - Self::DOT_SIZE.x / 2,
             self.area.center().y - (count / 2) * interval,
         );
         for i in 0..self.page_count {
-            self.paint_dot(i == self.active_page, dot);
-            dot.y += interval
+            self.paint_dot(i == self.active_page, top_left);
+            // Offsetting the next dot based on the orientation and interval
+            if matches!(self.orientation, ScrollbarOrientation::Vertical) {
+                top_left.y += interval;
+            } else {
+                top_left.x += interval;
+            }
         }
     }
 }

@@ -33,7 +33,7 @@ where
     pub fn new_str(content: T, background: Color) -> Self {
         Self {
             content,
-            scrollbar: ScrollBar::vertical(),
+            scrollbar: ScrollBar::vertical_to_be_filled_later(),
             pad: Pad::with_background(background),
             cancel_btn_details: Some(ButtonDetails::cancel_no_outline("cancel")),
             confirm_btn_details: Some(ButtonDetails::new("CONFIRM")),
@@ -62,7 +62,7 @@ where
     pub fn new_str_buf(content: T, background: Color) -> Self {
         Self {
             content,
-            scrollbar: ScrollBar::vertical(),
+            scrollbar: ScrollBar::vertical_to_be_filled_later(),
             pad: Pad::with_background(background),
             cancel_btn_details: Some(ButtonDetails::cancel_no_outline("cancel".into())),
             confirm_btn_details: Some(ButtonDetails::new("CONFIRM".into())),
