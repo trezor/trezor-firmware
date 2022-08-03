@@ -83,4 +83,5 @@ static void _librust_qstrs(void) {
   MP_QSTR_fee_rate_amount;
   MP_QSTR_total_label;
   MP_QSTR_fee_label;
+  MP_QSTR_truncated_address;
 }

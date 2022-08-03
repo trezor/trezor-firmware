@@ -447,12 +447,18 @@ async def confirm_output(
     color_to: str = "",
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
 ) -> None:
+    # Creating the truncated address here, not having to do it in Rust
+    chars_to_take = 4
+    ellipsis = " ... "
+    truncated_address = address[:chars_to_take] + ellipsis + address[-chars_to_take:]
+
     await raise_if_cancelled(
         interact(
             ctx,
             RustLayout(
                 trezorui2.confirm_output_r(
                     address=address,
+                    truncated_address=truncated_address,
                     amount=amount,
                 )
             ),

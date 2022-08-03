@@ -42,7 +42,9 @@ pub trait ChoiceItem {
 // TODO: consider having
 // pub trait ChoiceItemOperations {}
 
-/// TODO: consider storing all the text components as `T: AsRef<str>`
+// TODO: consider storing all the text components as `T: AsRef<str>`
+// Tried, but it makes the code unnecessarily messy with all the <T>
+// definitions, which needs to be added to all the components using it.
 
 /// Storing all the possible implementations of `ChoiceItem`.
 /// Done like this as we want to use multiple different choice pages

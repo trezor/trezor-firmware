@@ -32,9 +32,7 @@ pub use choice::{ChoicePage, ChoicePageMsg};
 pub use choice_item::{ChoiceItem, ChoiceItems, MultilineTextChoiceItem, TextChoiceItem};
 pub use dialog::{Dialog, DialogMsg};
 pub use flow::{Flow, FlowMsg};
-pub use flow_pages::{
-    ConfirmSendPage, ConfirmTotalPage, FlowPage, FlowPages, RecipientAddressPage,
-};
+pub use flow_pages::{FlowPage, FlowPages, KeyValueIcon, KeyValueIconPage, RecipientAddressPage};
 pub use frame::Frame;
 pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
 pub use page::ButtonPage;

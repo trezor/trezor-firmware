@@ -113,14 +113,14 @@ pub fn icon_with_text<T: AsRef<str>>(baseline: Point, icon: Icon<T>, text: T, fo
 pub fn key_value_icon<T: AsRef<str>>(
     baseline: Point,
     icon: Icon<T>,
-    label_text: T,
+    label: T,
     label_font: Font,
-    key_text: T,
-    key_font: Font,
+    value: T,
+    value_font: Font,
 ) -> i32 {
-    icon_with_text(baseline, icon, label_text, label_font);
-    let line_height = key_font.text_height();
+    icon_with_text(baseline, icon, label, label_font);
+    let line_height = value_font.text_height();
     let next_line = baseline + Offset::y(line_height);
-    display(next_line, key_text, key_font);
+    display(next_line, value, value_font);
     line_height
 }

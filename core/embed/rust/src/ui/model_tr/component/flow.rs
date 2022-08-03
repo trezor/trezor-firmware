@@ -1,9 +1,9 @@
 use crate::ui::{
     component::{Child, Component, Event, EventCtx, Pad},
-    geometry::Rect,
+    geometry::{Offset, Point, Rect},
 };
 
-use super::{theme, ButtonController, ButtonControllerMsg, ButtonPos, FlowPage, FlowPages};
+use super::{common, theme, ButtonController, ButtonControllerMsg, ButtonPos, FlowPage, FlowPages};
 use heapless::Vec;
 
 pub enum FlowMsg {
@@ -13,6 +13,7 @@ pub enum FlowMsg {
 
 pub struct Flow<T, const N: usize> {
     pages: Vec<FlowPages<T>, N>,
+    common_title: Option<T>,
     pad: Pad,
     buttons: Child<ButtonController<&'static str>>,
     page_counter: u8,
@@ -21,20 +22,41 @@ pub struct Flow<T, const N: usize> {
 impl<T, const N: usize> Flow<T, N>
 where
     T: AsRef<str>,
+    T: Clone,
 {
     pub fn new(pages: Vec<FlowPages<T>, N>) -> Self {
         let initial_btn_layout = pages[0].btn_layout();
 
         Self {
             pages,
+            common_title: None,
             pad: Pad::with_background(theme::BG),
             buttons: Child::new(ButtonController::new(initial_btn_layout)),
             page_counter: 0,
         }
     }
 
+    /// Adding a common title to all pages. The title will not be colliding
+    /// with the page content, as the content will be offset.
+    pub fn with_common_title(mut self, title: T) -> Self {
+        self.common_title = Some(title);
+        self
+    }
+
+    /// Rendering the whole page.
     fn paint_page(&mut self) {
-        self.show_current_choice();
+        // Optionally drawing the header.
+        // In that case offsetting the whole page by the height of the header.
+        // TODO: print statements uncovered that this is being called
+        // also when the button is just pressed, which is wasteful
+        // (and also repeatedly when the HTC was being pressed)
+        const TOP_LEFT: Point = Point::zero();
+        if let Some(title) = &self.common_title {
+            let y_offset = common::paint_header(TOP_LEFT, title, None);
+            self.current_choice().paint(TOP_LEFT + Offset::y(y_offset));
+        } else {
+            self.current_choice().paint(TOP_LEFT);
+        }
     }
 
     /// Setting current buttons, and clearing.
@@ -65,10 +87,6 @@ where
         &mut self.pages[self.page_counter as usize]
     }
 
-    fn show_current_choice(&mut self) {
-        self.pages[self.page_counter as usize].paint();
-    }
-
     fn decrease_page_counter(&mut self) {
         self.page_counter -= 1;
     }
@@ -95,6 +113,7 @@ where
 impl<T, const N: usize> Component for Flow<T, N>
 where
     T: AsRef<str>,
+    T: Clone,
 {
     type Msg = FlowMsg;
 
@@ -140,7 +159,6 @@ where
 
     fn paint(&mut self) {
         // TODO: might put horizontal scrollbar at the top right
-        // Also, top left corner could be used for some short title
         self.pad.paint();
         self.buttons.paint();
         self.paint_page();

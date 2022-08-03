@@ -21,6 +21,7 @@ use crate::{
             text::paragraphs::Paragraphs,
             FormattedText,
         },
+        display::Icon,
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
             result::{CANCELLED, CONFIRMED, INFO},
@@ -30,8 +31,8 @@ use crate::{
 
 use super::{
     component::{
-        Bip39Entry, Bip39EntryMsg, ButtonDetails, ButtonLayout, ButtonPage, ConfirmSendPage,
-        ConfirmTotalPage, Flow, FlowMsg, FlowPages, Frame, PassphraseEntry, PassphraseEntryMsg,
+        Bip39Entry, Bip39EntryMsg, ButtonDetails, ButtonLayout, ButtonPage, Flow, FlowMsg,
+        FlowPages, Frame, KeyValueIcon, KeyValueIconPage, PassphraseEntry, PassphraseEntryMsg,
         PinEntry, PinEntryMsg, RecipientAddressPage, SimpleChoice, SimpleChoiceMsg,
     },
     theme,
@@ -55,6 +56,7 @@ where
 impl<T, const N: usize> ComponentMsgObj for Flow<T, N>
 where
     T: AsRef<str>,
+    T: Clone,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
@@ -197,7 +199,18 @@ extern "C" fn new_confirm_text(n_args: usize, args: *const Obj, kwargs: *mut Map
 extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let address: StrBuffer = kwargs.get(Qstr::MP_QSTR_address)?.try_into()?;
+        // Getting this from micropython so it is also a `StrBuffer`, not having
+        // to handle the string operation in Rust, which would make it a `String`
+        // (which would them cause issues with general `T: AsRef<str>` parameter)
+        let truncated_address: StrBuffer =
+            kwargs.get(Qstr::MP_QSTR_truncated_address)?.try_into()?;
         let amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_amount)?.try_into()?;
+
+        // Showing two screens - the recipient address and summary confirmation
+        // Address page is a special page on its own
+        // Confirm page reuses the general `KeyValueIconPage`
+
+        let title: StrBuffer = "Send".into();
 
         let address_page = {
             let btn_layout = ButtonLayout::new(
@@ -205,9 +218,10 @@ extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) 
                 None,
                 Some(ButtonDetails::new("CONTINUE")),
             );
-            let page = RecipientAddressPage::new(address.clone(), btn_layout);
+            let page = RecipientAddressPage::new(address, btn_layout);
             FlowPages::RecipientAddress(page)
         };
+
         // TODO: we want the left button here to cancel and not to go back,
         // it might be nice for FlowPages to specify the action - "cancel" or "back"
         let confirm_page = {
@@ -216,14 +230,29 @@ extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) 
                 None,
                 Some(ButtonDetails::new("HOLD TO CONFIRM").with_duration(Duration::from_secs(2))),
             );
-            let page = ConfirmSendPage::new(address, amount, btn_layout);
-            FlowPages::ConfirmSend(page)
+
+            let pairs: Vec<KeyValueIcon<StrBuffer>, 3> = Vec::from_slice(&[
+                KeyValueIcon::normal_bold(
+                    "Recipient".into(),
+                    truncated_address,
+                    Icon::new(theme::ICON_USER, "user".into()),
+                ),
+                KeyValueIcon::normal_bold(
+                    "Amount".into(),
+                    amount,
+                    Icon::new(theme::ICON_AMOUNT, "amount".into()),
+                ),
+            ])
+            .unwrap();
+
+            let page = KeyValueIconPage::new(pairs, btn_layout);
+            FlowPages::KeyValueIcon(page)
         };
 
         let pages: Vec<FlowPages<StrBuffer>, 2> =
             Vec::from_slice(&[address_page, confirm_page]).unwrap();
 
-        let obj = LayoutObj::new(Flow::new(pages).into_child())?;
+        let obj = LayoutObj::new(Flow::new(pages).with_common_title(title).into_child())?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -240,27 +269,35 @@ extern "C" fn confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -
         let total_label: StrBuffer = kwargs.get(Qstr::MP_QSTR_total_label)?.try_into()?;
         let fee_label: StrBuffer = kwargs.get(Qstr::MP_QSTR_fee_label)?.try_into()?;
 
+        // Showing one screen - the general `KeyValueIconPage` with 2 or 3 pairs
+
         let confirm_page = {
             let btn_layout = ButtonLayout::new(
                 Some(ButtonDetails::cancel_no_outline("cancel")),
                 None,
                 Some(ButtonDetails::new("HOLD TO SEND").with_duration(Duration::from_secs(2))),
             );
-            let page = ConfirmTotalPage::new(
-                title,
-                total_amount,
-                fee_amount,
-                fee_rate_amount,
-                total_label,
-                fee_label,
-                btn_layout,
-            );
-            FlowPages::ConfirmTotal(page)
+
+            // Constructing all the key-value-icon pairs
+            let mut pairs: Vec<KeyValueIcon<StrBuffer>, 3> = Vec::from_slice(&[
+                KeyValueIcon::normal_bold_param(total_label, total_amount),
+                KeyValueIcon::normal_bold_param(fee_label, fee_amount),
+            ])
+            .unwrap();
+
+            // Optionally adding the fee-rate when it is there
+            if let Some(fee_rate_amount) = fee_rate_amount {
+                let new_pair = KeyValueIcon::normal_bold_param("Fee rate:".into(), fee_rate_amount);
+                pairs.push(new_pair).unwrap();
+            }
+
+            let page = KeyValueIconPage::new(pairs, btn_layout);
+            FlowPages::KeyValueIcon(page)
         };
 
         let pages: Vec<FlowPages<StrBuffer>, 1> = Vec::from_slice(&[confirm_page]).unwrap();
 
-        let obj = LayoutObj::new(Flow::new(pages).into_child())?;
+        let obj = LayoutObj::new(Flow::new(pages).with_common_title(title).into_child())?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -459,6 +496,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def confirm_output_r(
     ///     *,
     ///     address: str,
+    ///     truncated_address: str,
     ///     amount: str,
     /// ) -> object:
     ///     """Confirm output. Specific for model R."""

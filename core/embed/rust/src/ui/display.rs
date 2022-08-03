@@ -832,7 +832,7 @@ impl MagnifiedGlyph1BPP {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Font(i32);
 
 impl Font {

@@ -1,15 +1,17 @@
-use crate::ui::{
-    display::{Font, Icon},
-    geometry::Point,
-    model_tr::theme,
-    util,
+use crate::{
+    micropython::buffer::StrBuffer,
+    ui::{
+        display::{Font, Icon},
+        geometry::Point,
+        model_tr::theme,
+    },
 };
 use heapless::{String, Vec};
 
 use super::{common, ButtonLayout};
 
 pub trait FlowPage {
-    fn paint(&mut self);
+    fn paint(&mut self, left_top: Point);
     fn btn_layout(&self) -> ButtonLayout<&'static str>;
 }
 
@@ -22,27 +24,25 @@ pub trait FlowPage {
 #[derive(Clone, Debug)]
 pub enum FlowPages<T> {
     RecipientAddress(RecipientAddressPage<T>),
-    ConfirmSend(ConfirmSendPage<T>),
-    ConfirmTotal(ConfirmTotalPage<T>),
+    KeyValueIcon(KeyValueIconPage<T>),
 }
 
 impl<T> FlowPage for FlowPages<T>
 where
     T: AsRef<str>,
+    T: Clone,
 {
-    fn paint(&mut self) {
+    fn paint(&mut self, left_top: Point) {
         match self {
-            FlowPages::RecipientAddress(item) => item.paint(),
-            FlowPages::ConfirmSend(item) => item.paint(),
-            FlowPages::ConfirmTotal(item) => item.paint(),
+            FlowPages::RecipientAddress(item) => item.paint(left_top),
+            FlowPages::KeyValueIcon(item) => item.paint(left_top),
         }
     }
 
     fn btn_layout(&self) -> ButtonLayout<&'static str> {
         match self {
             FlowPages::RecipientAddress(item) => item.btn_layout(),
-            FlowPages::ConfirmSend(item) => item.btn_layout(),
-            FlowPages::ConfirmTotal(item) => item.btn_layout(),
+            FlowPages::KeyValueIcon(item) => item.btn_layout(),
         }
     }
 }
@@ -70,20 +70,30 @@ impl<T> FlowPage for RecipientAddressPage<T>
 where
     T: AsRef<str>,
 {
-    fn paint(&mut self) {
+    fn paint(&mut self, left_top: Point) {
+        let x_start = left_top.x;
+        let mut y_offset = left_top.y;
+
+        let used_font = theme::FONT_NORMAL;
+        y_offset += used_font.line_height();
+
         common::icon_with_text(
-            Point::new(0, 12),
+            Point::new(x_start, y_offset),
             Icon::new(theme::ICON_USER, "user"),
             "Recipient",
-            theme::FONT_NORMAL,
+            used_font,
         );
 
         // Showing the address in chunks of 4 characters, with 3 chunks per line.
         // Putting two spaces between chunks on the same line.
 
+        // TODO: we could have this logic in python and just sending the
+        // list of strings (one per line) with already inserted spaces.
+
         const CHUNK_SIZE: usize = 4;
         const CHUNKS_PER_PAGE: usize = 3;
         const ROW_CHARS: usize = CHUNK_SIZE * CHUNKS_PER_PAGE;
+        let line_height: i32 = theme::FONT_BOLD.line_height();
 
         let addr_str: String<50> = String::from(self.address.as_ref());
         let rows: Vec<&str, 8> = addr_str
@@ -92,7 +102,7 @@ where
             .map(|buf| unsafe { core::str::from_utf8_unchecked(buf) })
             .collect();
 
-        for (row_id, row) in rows.iter().enumerate() {
+        for row in rows.iter() {
             let mut buf: String<{ 2 * ROW_CHARS }> = String::new();
             for (ch_id, ch) in row.chars().enumerate() {
                 buf.push(ch).unwrap();
@@ -101,8 +111,9 @@ where
                     buf.push(' ').unwrap();
                 }
             }
+            y_offset += line_height;
             common::display(
-                Point::new(1, 40 + theme::FONT_BOLD.line_height() * row_id as i32),
+                Point::new(x_start, y_offset),
                 buf.as_str(),
                 theme::FONT_BOLD,
             );
@@ -114,152 +125,88 @@ where
     }
 }
 
-/// Confirm address and amount for single output.
-#[derive(Debug, Clone)]
-pub struct ConfirmSendPage<T> {
-    pub address: T,
-    pub amount: T,
-    pub btn_layout: ButtonLayout<&'static str>,
+/// Holding data for one element of key-value pair with icon.
+/// Also allowing these to be drawn at a certain Point.
+#[derive(Debug, Clone, Copy)]
+pub struct KeyValueIcon<T> {
+    pub label: T,
+    pub value: T,
+    pub label_font: Font,
+    pub value_font: Font,
+    pub icon: Icon<T>,
 }
 
-impl<T> ConfirmSendPage<T>
+impl<T> KeyValueIcon<T>
 where
     T: AsRef<str>,
+    T: Clone,
 {
-    pub fn new(address: T, amount: T, btn_layout: ButtonLayout<&'static str>) -> Self {
+    pub fn new(label: T, value: T, label_font: Font, value_font: Font, icon: Icon<T>) -> Self {
         Self {
-            address,
-            amount,
-            btn_layout,
+            label,
+            value,
+            label_font,
+            value_font,
+            icon,
         }
     }
-}
 
-impl<T> FlowPage for ConfirmSendPage<T>
-where
-    T: AsRef<str>,
-{
-    fn paint(&mut self) {
-        let y_offset = 12;
-        common::display(Point::new(0, y_offset), "Send", theme::FONT_BOLD);
-
-        // TODO: create a general ICON-KEY-VALUE component and use it here
-        // (probably then it can be called directly from layout.rs?)
-
-        common::icon_with_text(
-            Point::new(0, 32),
-            Icon::new(theme::ICON_USER, "user"),
-            "Recipient",
-            theme::FONT_NORMAL,
-        );
-
-        // Displaying just the left and right end of the address
-        const CHARS_TO_SHOW: usize = 4;
-        const ELLIPSIS: &str = " ... ";
-        let trunc_addr: String<20> =
-            util::ellipsise_text(self.address.as_ref(), CHARS_TO_SHOW, ELLIPSIS);
-        common::display(Point::new(1, 48), &trunc_addr, theme::FONT_BOLD);
-
-        common::icon_with_text(
-            Point::new(0, 72),
-            Icon::new(theme::ICON_AMOUNT, "amount"),
-            "Amount",
-            theme::FONT_NORMAL,
-        );
-        common::display(Point::new(1, 88), self.amount.as_ref(), theme::FONT_BOLD);
+    /// New element with normal font for label and bold font for value.
+    pub fn normal_bold(label: T, value: T, icon: Icon<T>) -> Self {
+        Self::new(label, value, theme::FONT_NORMAL, theme::FONT_BOLD, icon)
     }
 
-    fn btn_layout(&self) -> ButtonLayout<&'static str> {
-        self.btn_layout.clone()
+    /// Display itself starting at the given Point.
+    pub fn draw(&self, baseline: Point) -> i32 {
+        common::key_value_icon(
+            baseline,
+            self.icon.clone(),
+            self.label.clone(),
+            self.label_font,
+            self.value.clone(),
+            self.value_font,
+        )
     }
 }
 
-/// Confirm address and amount for single output.
+impl KeyValueIcon<StrBuffer> {
+    /// New element with normal font for label and bold font for value.
+    /// Also using the general `param` icon.
+    pub fn normal_bold_param(label: StrBuffer, value: StrBuffer) -> Self {
+        Self::normal_bold(label, value, Icon::new(theme::ICON_PARAM, "param".into()))
+    }
+}
+
+/// Show at most three key-value-icon pairs on a single screen.
 #[derive(Debug, Clone)]
-pub struct ConfirmTotalPage<T> {
-    pub title: T,
-    pub total_amount: T,
-    pub fee_amount: T,
-    pub fee_rate_amount: Option<T>,
-    pub total_label: T,
-    pub fee_label: T,
-    pub btn_layout: ButtonLayout<&'static str>,
+pub struct KeyValueIconPage<T> {
+    pairs: Vec<KeyValueIcon<T>, 3>,
+    btn_layout: ButtonLayout<&'static str>,
 }
 
-impl<T> ConfirmTotalPage<T>
+impl<T> KeyValueIconPage<T>
 where
     T: AsRef<str>,
 {
-    pub fn new(
-        title: T,
-        total_amount: T,
-        fee_amount: T,
-        fee_rate_amount: Option<T>,
-        total_label: T,
-        fee_label: T,
-        btn_layout: ButtonLayout<&'static str>,
-    ) -> Self {
-        Self {
-            title,
-            total_amount,
-            fee_amount,
-            fee_rate_amount,
-            total_label,
-            fee_label,
-            btn_layout,
-        }
+    pub fn new(pairs: Vec<KeyValueIcon<T>, 3>, btn_layout: ButtonLayout<&'static str>) -> Self {
+        Self { pairs, btn_layout }
     }
 }
 
-impl<T> FlowPage for ConfirmTotalPage<T>
+impl<T> FlowPage for KeyValueIconPage<T>
 where
     T: AsRef<str>,
+    T: Clone,
 {
-    fn paint(&mut self) {
-        // TODO: create a general ICON-KEY-VALUE component and use it here
-        // (probably then it can be called directly from layout.rs?)
+    fn paint(&mut self, left_top: Point) {
+        let x_start = left_top.x;
+        let mut y_offset = left_top.y;
 
-        const X_START: i32 = 0;
-        const LABEL_FONT: Font = theme::FONT_NORMAL;
-        const KEY_FONT: Font = theme::FONT_BOLD;
-        let param_icon = Icon::new(theme::ICON_PARAM, "param");
-
-        // Title/header
-        let y_offset = common::paint_header(Point::zero(), &self.title, None);
-
-        // Total amount
-        let new_y = y_offset + LABEL_FONT.line_height();
-        let y_offset = common::key_value_icon(
-            Point::new(X_START, new_y),
-            param_icon,
-            self.total_label.as_ref(),
-            LABEL_FONT,
-            self.total_amount.as_ref(),
-            KEY_FONT,
-        );
-
-        // Fee amount
-        let new_y = new_y + y_offset + LABEL_FONT.line_height();
-        let y_offset = common::key_value_icon(
-            Point::new(X_START, new_y),
-            param_icon,
-            self.fee_label.as_ref(),
-            LABEL_FONT,
-            self.fee_amount.as_ref(),
-            KEY_FONT,
-        );
-
-        // Optional fee rate amount
-        if let Some(fee_rate_amount) = &self.fee_rate_amount {
-            let new_y = new_y + y_offset + LABEL_FONT.line_height();
-            common::key_value_icon(
-                Point::new(X_START, new_y),
-                param_icon,
-                "Fee rate:",
-                LABEL_FONT,
-                fee_rate_amount.as_ref(),
-                KEY_FONT,
-            );
+        // Draw all the pairs - maximum three, can be even just one or two.
+        // Gradually incrementing the `y_offset` according to the drawn height.
+        for pair in self.pairs.iter() {
+            y_offset += pair.label_font.line_height();
+            y_offset += pair.draw(Point::new(x_start, y_offset));
         }
     }
 

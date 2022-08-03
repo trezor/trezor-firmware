@@ -48,6 +48,7 @@ def confirm_action(
 def confirm_output_r(
     *,
     address: str,
+    truncated_address: str,
     amount: str,
 ) -> object:
     """Confirm output. Specific for model R."""
