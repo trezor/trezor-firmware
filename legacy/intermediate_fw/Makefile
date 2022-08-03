@@ -5,6 +5,7 @@ NAME  = trezor
 OBJS += trezor.o
 OBJS += header.o
 OBJS += bl_check.o
+OBJS += startup.o
 OBJS += ../vendor/trezor-crypto/memzero.o
 OBJS += ../vendor/trezor-crypto/sha2.o
 

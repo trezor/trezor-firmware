@@ -1,6 +1,5 @@
 ifneq ($(EMULATOR),1)
 OBJS += setup.o
-OBJS += startup.o
 OBJS += timer.o
 endif
 

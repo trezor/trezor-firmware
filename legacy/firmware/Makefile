@@ -40,6 +40,7 @@ OBJS += usb.o
 OBJS += bl_check.o
 OBJS += otp.o
 OBJS += header.o
+OBJS += startup.o
 endif
 
 OBJS += messages.o
