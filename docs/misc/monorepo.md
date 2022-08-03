@@ -7,7 +7,7 @@ Generating
 
 Use the [create_monorepo] script to regenerate from current master(s).
 
-[create_monorepo]: ../../create_monorepo.py
+[create_monorepo]: https://github.com/trezor/trezor-firmware/blob/master/create_monorepo.py
 
 
 Structure
