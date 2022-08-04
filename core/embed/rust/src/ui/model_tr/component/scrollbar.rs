@@ -1,7 +1,7 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
     display,
-    geometry::{Insets, Offset, Point, Rect},
+    geometry::{Offset, Point, Rect},
     model_tr::theme,
 };
 
@@ -68,7 +68,7 @@ impl ScrollBar {
 
         // BG - erasing the middle when not active
         if !active {
-            display::rect_fill(full_square.inset(Insets::uniform(1)), theme::BG)
+            display::rect_fill(full_square.shrink(1), theme::BG)
         }
     }
 }

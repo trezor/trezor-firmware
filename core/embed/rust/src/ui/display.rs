@@ -53,17 +53,22 @@ pub fn rect_stroke(r: Rect, fg_color: Color) {
     display::bar(r.x0 + r.width() - 1, r.y0, 1, r.height(), fg_color.into());
 }
 
+/// Draw a rectangle with rounded corners.
 pub fn rect_fill_rounded(r: Rect, fg_color: Color, bg_color: Color, radius: u8) {
-    assert!([2, 4, 8, 16].iter().any(|allowed| radius == *allowed));
-    display::bar_radius(
-        r.x0,
-        r.y0,
-        r.width(),
-        r.height(),
-        fg_color.into(),
-        bg_color.into(),
-        radius,
-    );
+    if radius == 1 {
+        rect_fill_rounded1(r, fg_color, bg_color);
+    } else {
+        assert!([2, 4, 8, 16].iter().any(|allowed| radius == *allowed));
+        display::bar_radius(
+            r.x0,
+            r.y0,
+            r.width(),
+            r.height(),
+            fg_color.into(),
+            bg_color.into(),
+            radius,
+        );
+    }
 }
 
 /// Get `width` and `height` of the toif icon/image.
@@ -172,65 +177,33 @@ pub fn toif_info(data: &[u8]) -> Option<(Offset, bool)> {
     }
 }
 
-// Used on T1/TR only.
+/// Filling a rectangle with a rounding of 1 pixel - removing the corners.
 pub fn rect_fill_rounded1(r: Rect, fg_color: Color, bg_color: Color) {
-    display::bar(r.x0, r.y0, r.width(), r.height(), fg_color.into());
-    let corners = [
-        r.top_left(),
-        r.top_right() - Offset::x(1),
-        r.bottom_right() - Offset::uniform(1),
-        r.bottom_left() - Offset::y(1),
-    ];
-    for p in corners.iter() {
-        paint_point(p, bg_color);
+    rect_fill(r, fg_color);
+    rect_fill_corners(r, bg_color);
+}
+
+/// Creating a rectangular outline with a given radius/rounding.
+pub fn rect_outline_rounded(r: Rect, fg_color: Color, bg_color: Color, radius: u8) {
+    // Painting a bigger rectangle with FG and inner smaller with BG
+    // to create the outline.
+    let inner_r = r.shrink(1);
+    if radius == 1 {
+        rect_fill_rounded(r, fg_color, bg_color, 1);
+        rect_fill(inner_r, bg_color);
+    } else if radius == 2 {
+        rect_fill_rounded(r, fg_color, bg_color, 2);
+        rect_fill_rounded(inner_r, bg_color, fg_color, 1);
+    } else if radius == 4 {
+        rect_fill_rounded(r, fg_color, bg_color, 4);
+        rect_fill_rounded(inner_r, bg_color, fg_color, 2);
+        rect_fill_corners(inner_r, bg_color);
     }
 }
 
-/// Creating a rectangular outline with a rounding of 2 pixels.
-pub fn rect_outline_rounded2(r: Rect, fg_color: Color, bg_color: Color) {
-    // Create the outline.
-    display::bar(r.x0, r.y0, r.width(), r.height(), fg_color.into());
-    display::bar(
-        r.x0 + 1,
-        r.y0 + 1,
-        r.width() - 2,
-        r.height() - 2,
-        bg_color.into(),
-    );
-
-    // BG - delete three points around each corner.
-    // Do it only for black background. No need on white.
-    if bg_color == Color::black() {
-        let bg_corners = [
-            r.top_left(),
-            r.top_left() + Offset::x(1),
-            r.top_left() + Offset::y(1),
-            // ...
-            r.top_right() - Offset::x(1),
-            r.top_right() - Offset::x(1) + Offset::y(1),
-            r.top_right() - Offset::x(2),
-            // ...
-            r.bottom_right() - Offset::uniform(1),
-            r.bottom_right() - Offset::uniform(1) - Offset::x(1),
-            r.bottom_right() - Offset::uniform(1) - Offset::y(1),
-            // ...
-            r.bottom_left() - Offset::y(1),
-            r.bottom_left() - Offset::y(1) + Offset::x(1),
-            r.bottom_left() - Offset::y(2),
-        ];
-        for p in bg_corners.iter() {
-            paint_point(p, bg_color);
-        }
-    }
-
-    // FG - write one point in each corner.
-    let fg_corners = [
-        r.top_left() + Offset::uniform(1),
-        r.top_right() - Offset::x(2) + Offset::y(1),
-        r.bottom_right() - Offset::uniform(2),
-        r.bottom_left() - Offset::y(2) + Offset::x(1),
-    ];
-    for p in fg_corners.iter() {
+/// Filling all four corners of a rectangle with a given color.
+pub fn rect_fill_corners(r: Rect, fg_color: Color) {
+    for p in r.corner_points().iter() {
         paint_point(p, fg_color);
     }
 }
@@ -543,7 +516,6 @@ pub fn bar_with_text_and_fill<T: AsRef<str>>(
     pixeldata_dirty();
 }
 
-/// Used on T1/TR only.
 /// Draws a horizontal line of pixels with a step of 2 pixels.
 pub fn dotted_line_horizontal(start: Point, width: i32, color: Color) {
     for x in (start.x..width).step_by(2) {

@@ -144,7 +144,7 @@ impl<T: AsRef<str>> Button<T> {
         let area = match self.pos {
             ButtonPos::Left => button_bounds.split_left(button_width).0,
             ButtonPos::Right => button_bounds.split_right(button_width).1,
-            ButtonPos::Middle => button_bounds.split_center(button_width),
+            ButtonPos::Middle => button_bounds.split_center(button_width).1,
         };
 
         // Allowing for possible offset of the area from current style
@@ -228,7 +228,7 @@ where
                 background_color,
             );
         } else if style.with_outline {
-            display::rect_outline_rounded2(area, text_color, background_color);
+            display::rect_outline_rounded(area, text_color, background_color, 2);
         } else {
             display::rect_fill(area, background_color)
         }
@@ -475,6 +475,7 @@ impl<T: Clone + AsRef<str>> ButtonDetails<T> {
     /// TODO: find out how much storage it takes and
     /// probably hide it behind debug feature
     /// (relevant to all `print()` methods)
+    /// TODO: could also do a `Print`/`Debug` trait for these debugging operations.
     pub fn print(&self) {
         let text = if let Some(text) = self.text.clone() {
             String::<20>::from(text.as_ref())

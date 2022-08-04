@@ -324,10 +324,12 @@ impl Rect {
         self.bottom_right().center(self.top_right())
     }
 
+    /// Whether a `Point` is inside the `Rect`.
     pub const fn contains(&self, point: Point) -> bool {
         point.x >= self.x0 && point.x < self.x1 && point.y >= self.y0 && point.y < self.y1
     }
 
+    /// Create a bigger `Rect` that contains both `self` and `other`.
     pub const fn union(&self, other: Self) -> Self {
         Self {
             x0: min(self.x0, other.x0),
@@ -337,7 +339,7 @@ impl Rect {
         }
     }
 
-    /// Create a smaller rectangle from the bigger one by moving
+    /// Create a smaller `Rect` from the bigger one by moving
     /// all the four sides closer to the center.
     pub const fn inset(&self, insets: Insets) -> Self {
         Self {
@@ -348,6 +350,12 @@ impl Rect {
         }
     }
 
+    /// Move all the sides closer to the center by the same distance.
+    pub const fn shrink(&self, size: i32) -> Self {
+        self.inset(Insets::uniform(size))
+    }
+
+    /// Leave just the left side of a certain `width`.
     pub const fn cut_from_left(&self, width: i32) -> Self {
         Self {
             x0: self.x0,
@@ -357,6 +365,7 @@ impl Rect {
         }
     }
 
+    /// Leave just the right side of a certain `width`.
     pub const fn cut_from_right(&self, width: i32) -> Self {
         Self {
             x0: self.x1 - width,
@@ -366,6 +375,7 @@ impl Rect {
         }
     }
 
+    /// Make the `Rect` wider to the left side.
     pub const fn extend_left(&self, width: i32) -> Self {
         Self {
             x0: self.x0 - width,
@@ -375,6 +385,7 @@ impl Rect {
         }
     }
 
+    /// Make the `Rect` wider to the right side.
     pub const fn extend_right(&self, width: i32) -> Self {
         Self {
             x0: self.x0,
@@ -384,6 +395,7 @@ impl Rect {
         }
     }
 
+    /// Split `Rect` into top and bottom, given the top one's `height`.
     pub const fn split_top(self, height: i32) -> (Self, Self) {
         let height = clamp(height, 0, self.height());
 
@@ -398,10 +410,12 @@ impl Rect {
         (top, bottom)
     }
 
+    /// Split `Rect` into top and bottom, given the bottom one's `height`.
     pub const fn split_bottom(self, height: i32) -> (Self, Self) {
         self.split_top(self.height() - height)
     }
 
+    /// Split `Rect` into left and right, given the left one's `width`.
     pub const fn split_left(self, width: i32) -> (Self, Self) {
         let width = clamp(width, 0, self.width());
 
@@ -416,15 +430,19 @@ impl Rect {
         (left, right)
     }
 
+    /// Split `Rect` into left and right, given the right one's `width`.
     pub const fn split_right(self, width: i32) -> (Self, Self) {
         self.split_left(self.width() - width)
     }
 
-    pub const fn split_center(self, width: i32) -> Self {
-        let x_center_offset = (self.width() - width) / 2;
-        self.split_left(width)
-            .0
-            .translate(Offset::new(x_center_offset, 0))
+    /// Split `Rect` into left, center and right, given the center one's
+    /// `width`. Center element is symmetric, left and right have the same
+    /// size.
+    pub const fn split_center(self, width: i32) -> (Self, Self, Self) {
+        let left_right_width = (self.width() - width) / 2;
+        let (left, center_right) = self.split_left(left_right_width);
+        let (center, right) = center_right.split_left(width);
+        (left, center, right)
     }
 
     pub const fn clamp(self, limit: Rect) -> Self {
@@ -436,7 +454,7 @@ impl Rect {
         }
     }
 
-    /// Moving the rectangle by the given offset.
+    /// Moving `Rect` by the given offset.
     pub const fn translate(&self, offset: Offset) -> Self {
         Self {
             x0: self.x0 + offset.x,
@@ -569,7 +587,7 @@ impl Grid {
         let cell_height = (self.area.height() - spacing_height) / nrows;
 
         // Not every area can be fully covered by equal-sized cells and spaces, there
-        // might be serveral pixels left unused. We'll distribute them by 1px to
+        // might be several pixels left unused. We'll distribute them by 1px to
         // the leftmost cells.
         let leftover_width = (self.area.width() - spacing_width) % ncols;
         let leftover_height = (self.area.height() - spacing_height) % nrows;
