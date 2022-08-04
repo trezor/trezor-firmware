@@ -12,9 +12,14 @@ if [[ ! -d "${TREZOR_SUITE_DIR}" ]]
 then
     git clone https://github.com/trezor/trezor-suite.git
     cd ${TREZOR_SUITE_DIR}
+    git checkout tests-tuning
+    git pull origin tests-tuning
     git submodule update --init --recursive
 else
     cd ${TREZOR_SUITE_DIR}
+    git checkout tests-tuning
+    git pull origin tests-tuning
+
 fi
 
 echo "Changing 'localhost' to '127.0.0.1' in websocket client as a workaround for CI servers"
@@ -28,6 +33,9 @@ else
     EMU_VERSION="2-master"
 fi
 echo "Will be running with ${EMU_VERSION} emulator"
+
+# hmm, why is this undefined in node.js? should be set by docker-connect-test.sh
+export TESTS_FIRMWARE=${EMU_VERSION}
 
 # Using -d flag to disable docker, as tenv is already running on the background
 nix-shell --run "yarn && yarn build:libs && ./docker/docker-connect-test.sh node -p methods -d -f ${EMU_VERSION}"
