@@ -748,6 +748,7 @@ impl Glyph {
 // local vector of bits.
 // However, the current method of magnification
 // probably only works for 1bpp colors. Or not?
+// TODO: implement the magnifying in print(), it will remove a lot of complexity.
 pub struct MagnifiedGlyph1BPP {
     width: i32,
     height: i32,
@@ -978,18 +979,6 @@ impl Color {
 
     pub const fn black() -> Self {
         Self::rgb(0, 0, 0)
-    }
-
-    /// Print the attributes for debugging purposes.
-    pub fn print(&self) {
-        println!(
-            "Color:: R: ",
-            inttostr!(self.r()),
-            ", G: ",
-            inttostr!(self.g()),
-            ", B: ",
-            inttostr!(self.b())
-        );
     }
 }
 

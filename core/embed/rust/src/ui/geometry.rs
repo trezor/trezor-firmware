@@ -156,11 +156,6 @@ impl Point {
     pub const fn sub(self, rhs: Point) -> Offset {
         Offset::new(self.x - rhs.x, self.y - rhs.y)
     }
-
-    /// Print the attributes for debugging purposes.
-    pub fn print(&self) {
-        println!("Point:: x: ", inttostr!(self.x), ", y: ", inttostr!(self.y));
-    }
 }
 
 impl Add<Offset> for Point {
@@ -264,20 +259,6 @@ impl Rect {
 
     pub fn with_height(self, height: i32) -> Self {
         self.with_size(Offset::new(self.width(), height))
-    }
-
-    /// Print the attributes for debugging purposes.
-    pub fn print(&self) {
-        println!(
-            "Rect:: x0: ",
-            inttostr!(self.x0),
-            ", y0: ",
-            inttostr!(self.y0),
-            ", x1: ",
-            inttostr!(self.x1),
-            ", y1: ",
-            inttostr!(self.y1)
-        );
     }
 
     pub const fn width(&self) -> i32 {

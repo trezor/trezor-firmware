@@ -471,41 +471,6 @@ impl<T: Clone + AsRef<str>> ButtonDetails<T> {
         self
     }
 
-    /// Print attributes for debugging purposes.
-    /// TODO: find out how much storage it takes and
-    /// probably hide it behind debug feature
-    /// (relevant to all `print()` methods)
-    /// TODO: could also do a `Print`/`Debug` trait for these debugging operations.
-    pub fn print(&self) {
-        let text = if let Some(text) = self.text.clone() {
-            String::<20>::from(text.as_ref())
-        } else {
-            String::<20>::from("None")
-        };
-        let icon_text = if let Some(icon) = &self.icon {
-            String::<20>::from(icon.text.as_ref())
-        } else {
-            String::<20>::from("None")
-        };
-        let force_width = if let Some(force_width) = self.force_width {
-            String::<20>::from(inttostr!(force_width))
-        } else {
-            String::<20>::from("None")
-        };
-        println!(
-            "ButtonDetails:: text: ",
-            text.as_ref(),
-            ", icon_text: ",
-            icon_text.as_ref(),
-            ", with_outline: ",
-            booltostr!(self.with_outline),
-            ", with_arms: ",
-            booltostr!(self.with_arms),
-            ", force_width: ",
-            force_width.as_ref()
-        );
-    }
-
     /// Button style that should be applied.
     pub fn style(&self) -> ButtonStyleSheet {
         if self.is_cancel {
