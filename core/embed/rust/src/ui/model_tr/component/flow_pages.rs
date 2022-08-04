@@ -95,7 +95,11 @@ where
         const ROW_CHARS: usize = CHUNK_SIZE * CHUNKS_PER_PAGE;
         let line_height: i32 = theme::FONT_BOLD.line_height();
 
-        let addr_str: String<50> = String::from(self.address.as_ref());
+        // Taproot addresses are 62 characters, so rather allocating a little more
+        // TODO: however, these 62 characters do not fit properly on the screen,
+        // we can fit 5 rows by 12 characters, the last two are colliding with
+        // the left button.
+        let addr_str: String<80> = String::from(self.address.as_ref());
         let rows: Vec<&str, 8> = addr_str
             .as_bytes()
             .chunks(ROW_CHARS)
