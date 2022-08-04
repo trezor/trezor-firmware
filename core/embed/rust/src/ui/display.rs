@@ -182,7 +182,7 @@ pub fn rect_fill_rounded1(r: Rect, fg_color: Color, bg_color: Color) {
         r.bottom_left() - Offset::y(1),
     ];
     for p in corners.iter() {
-        p.paint(bg_color);
+        paint_point(p, bg_color);
     }
 }
 
@@ -219,7 +219,7 @@ pub fn rect_outline_rounded2(r: Rect, fg_color: Color, bg_color: Color) {
             r.bottom_left() - Offset::y(2),
         ];
         for p in bg_corners.iter() {
-            p.paint(bg_color);
+            paint_point(p, bg_color);
         }
     }
 
@@ -231,7 +231,7 @@ pub fn rect_outline_rounded2(r: Rect, fg_color: Color, bg_color: Color) {
         r.bottom_left() - Offset::y(2) + Offset::x(1),
     ];
     for p in fg_corners.iter() {
-        p.paint(fg_color);
+        paint_point(p, fg_color);
     }
 }
 
@@ -544,9 +544,10 @@ pub fn bar_with_text_and_fill<T: AsRef<str>>(
 }
 
 /// Used on T1/TR only.
-pub fn dotted_line(start: Point, width: i32, color: Color) {
+/// Draws a horizontal line of pixels with a step of 2 pixels.
+pub fn dotted_line_horizontal(start: Point, width: i32, color: Color) {
     for x in (start.x..width).step_by(2) {
-        Point::new(x, start.y).paint(color);
+        paint_point(&Point::new(x, start.y), color);
     }
 }
 
@@ -554,6 +555,7 @@ pub fn dotted_line(start: Point, width: i32, color: Color) {
 pub fn paint_point(point: &Point, color: Color) {
     display::bar(point.x, point.y, 1, 1, color.into());
 }
+
 pub const LOADER_MIN: u16 = 0;
 pub const LOADER_MAX: u16 = 1000;
 

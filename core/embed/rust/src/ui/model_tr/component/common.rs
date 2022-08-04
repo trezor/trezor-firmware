@@ -97,7 +97,7 @@ pub fn paint_header<T: AsRef<str>>(top_left: Point, title: T, subtitle: Option<T
         display_header(title_baseline + Offset::y(text_heigth), subtitle);
     }
     let line_start = top_left + Offset::y(dotted_line_offset);
-    display::dotted_line(line_start, constant::WIDTH, theme::FG);
+    display::dotted_line_horizontal(line_start, constant::WIDTH, theme::FG);
     dotted_line_offset
 }
 
@@ -119,7 +119,7 @@ pub fn key_value_icon<T: AsRef<str>>(
     value_font: Font,
 ) -> i32 {
     icon_with_text(baseline, icon, label, label_font);
-    let line_height = value_font.text_height();
+    let line_height = value_font.line_height();
     let next_line = baseline + Offset::y(line_height);
     display(next_line, value, value_font);
     line_height

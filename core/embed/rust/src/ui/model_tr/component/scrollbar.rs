@@ -63,7 +63,7 @@ impl ScrollBar {
 
         // BG - erase four corners
         for p in full_square.corner_points().iter() {
-            p.paint(theme::BG);
+            display::paint_point(p, theme::BG);
         }
 
         // BG - erasing the middle when not active

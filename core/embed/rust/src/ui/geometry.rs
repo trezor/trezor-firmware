@@ -27,8 +27,6 @@ const fn clamp(x: i32, min: i32, max: i32) -> i32 {
     }
 }
 
-use super::display::{self, Color};
-
 /// Relative offset in 2D space, used for representing translation and
 /// dimensions of objects. Absolute positions on the screen are represented by
 /// the `Point` type.
@@ -162,13 +160,6 @@ impl Point {
     /// Print the attributes for debugging purposes.
     pub fn print(&self) {
         println!("Point:: x: ", inttostr!(self.x), ", y: ", inttostr!(self.y));
-    }
-
-    /// Paints itself on the display, given a specific color.
-    /// TODO: agree if we want to have this method or not.
-    /// It might be an overhead for each created `Point`
-    pub fn paint(&self, color: Color) {
-        display::paint_point(self, color);
     }
 }
 
