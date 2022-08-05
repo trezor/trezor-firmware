@@ -44,6 +44,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_request_word_count;
   MP_QSTR_request_word_bip39;
   MP_QSTR_request_bip39_words;
+  MP_QSTR_tutorial;
 
   MP_QSTR_attach_timer_fn;
   MP_QSTR_touch_event;

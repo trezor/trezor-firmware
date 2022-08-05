@@ -68,6 +68,11 @@ def confirm_total_r(
 
 
 # rust/src/ui/model_tr/layout.rs
+def tutorial() -> object:
+    """Show user how to interact with the device."""
+
+
+# rust/src/ui/model_tr/layout.rs
 def request_pin(
     *,
     prompt: str,

@@ -33,6 +33,8 @@ pub use choice_item::{ChoiceItem, ChoiceItems, MultilineTextChoiceItem, TextChoi
 pub use dialog::{Dialog, DialogMsg};
 pub use flow::{BtnActions, Flow, FlowButtonAction, FlowMsg};
 pub use flow_pages::{
+    FlowPage, FlowPages, KeyValueIcon, KeyValueIconPage, RecipientAddressPage, TitleAndTextPage,
+};
 pub use frame::Frame;
 pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
 pub use page::ButtonPage;

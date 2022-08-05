@@ -34,7 +34,7 @@ use super::{
         Bip39Entry, Bip39EntryMsg, BtnActions, ButtonDetails, ButtonLayout, ButtonPage, Flow,
         FlowMsg, FlowPages, Frame, KeyValueIcon, KeyValueIconPage, PassphraseEntry,
         PassphraseEntryMsg, PinEntry, PinEntryMsg, RecipientAddressPage, SimpleChoice,
-        SimpleChoiceMsg,
+        SimpleChoiceMsg, TitleAndTextPage,
     },
     theme,
 };
@@ -305,6 +305,107 @@ extern "C" fn confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = |_args: &[Obj], _kwargs: &Map| {
+        // List of screens to show, with custom content, buttons and actions
+        // triggered by these buttons.
+        // Cancelling the first screen will point to the last one,
+        // which asks for confirmation whether user wants to
+        // really cancel the tutorial.
+        let screens = &[
+            // title, text, btn_layout, btn_actions
+            (
+                "Hello!",
+                "Welcome to Trezor.\n\n\nPress right to continue.",
+                ButtonLayout::cancel_and_arrow(),
+                BtnActions::last_next(),
+            ),
+            (
+                "Basics",
+                "Use Trezor by clicking left & right.\n\rPress right to continue.",
+                ButtonLayout::left_right_arrows(),
+                BtnActions::prev_next(),
+            ),
+            (
+                "Confirm",
+                "Press both left & right at the same time to confirm.",
+                ButtonLayout::new(
+                    Some(ButtonDetails::left_arrow_icon("left_arr")),
+                    Some(ButtonDetails::armed_text("CONFIRM")),
+                    None,
+                ),
+                BtnActions::prev_next_with_middle(),
+            ),
+            (
+                "Hold to confirm",
+                "Press & hold right to approve important operations.",
+                ButtonLayout::new(
+                    Some(ButtonDetails::left_arrow_icon("left_arr")),
+                    None,
+                    Some(
+                        ButtonDetails::text("HOLD TO CONFIRM")
+                            .with_duration(Duration::from_millis(2000)),
+                    ),
+                ),
+                BtnActions::prev_next(),
+            ),
+            (
+                "Screen scroll",
+                "Press right to scroll down to read all content when text doesn't...",
+                ButtonLayout::new(
+                    Some(ButtonDetails::left_arrow_icon("left_arr")),
+                    None,
+                    Some(ButtonDetails::down_arrow_icon_wide("down_arr")),
+                ),
+                BtnActions::prev_next(),
+            ),
+            (
+                "Screen scroll",
+                "fit on one screen. Press left to scroll up.",
+                ButtonLayout::new(
+                    Some(ButtonDetails::up_arrow_icon_wide("up_arr")),
+                    None,
+                    Some(ButtonDetails::text("CONFIRM")),
+                ),
+                BtnActions::prev_next(),
+            ),
+            (
+                "Congrats!",
+                "You're ready to use Trezor.",
+                ButtonLayout::new(
+                    Some(ButtonDetails::text("AGAIN")),
+                    None,
+                    Some(ButtonDetails::text("FINISH")),
+                ),
+                BtnActions::beginning_confirm(),
+            ),
+            (
+                "Skip tutorial?",
+                "Sure you want to skip the tutorial?",
+                ButtonLayout::new(
+                    Some(ButtonDetails::left_arrow_icon("arr_left")),
+                    None,
+                    Some(ButtonDetails::text("CONFIRM")),
+                ),
+                BtnActions::beginning_cancel(),
+            ),
+        ];
+
+        let pages: Vec<FlowPages<&str>, 8> = screens
+            .iter()
+            .map(|screen| {
+                let page =
+                    TitleAndTextPage::new(screen.0, screen.1, screen.2.clone(), screen.3.clone());
+                FlowPages::TitleAndText(page)
+            })
+            .collect();
+
+        let obj = LayoutObj::new(Flow::new(pages).into_child())?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
@@ -516,6 +617,10 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> object:
     ///     """Confirm summary of a transaction. Specific for model R."""
     Qstr::MP_QSTR_confirm_total_r => obj_fn_kw!(0, confirm_total).as_obj(),
+
+    /// def tutorial() -> object:
+    ///     """Show user how to interact with the device."""
+    Qstr::MP_QSTR_tutorial => obj_fn_kw!(0, tutorial).as_obj(),
 
     /// def request_pin(
     ///     *,

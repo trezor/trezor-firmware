@@ -223,6 +223,13 @@ async def confirm_action(
 async def confirm_reset_device(
     ctx: wire.GenericContext, prompt: str, recovery: bool = False
 ) -> None:
+    # Showing the tutorial, as this is the entry point of
+    # both the creation of new wallet and recovery of existing seed
+    # - the first user interactions with Trezor.
+    # (it is also special for model R, so not having to clutter the
+    # common code)
+    await tutorial(ctx)
+
     return await raise_if_cancelled(
         _placeholder_confirm(
             ctx=ctx,
@@ -465,6 +472,19 @@ async def confirm_output(
             "confirm_output",
             br_code,
         )
+    )
+
+
+async def tutorial(
+    ctx: wire.GenericContext,
+    br_code: ButtonRequestType = ButtonRequestType.Other,
+) -> None:
+    """Showing users how to interact with the device."""
+    await interact(
+        ctx,
+        RustLayout(trezorui2.tutorial()),
+        "tutorial",
+        br_code,
     )
 
 

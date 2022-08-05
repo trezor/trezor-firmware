@@ -1,9 +1,11 @@
 use crate::{
     micropython::buffer::StrBuffer,
     ui::{
+        component::base::Component,
+        component::FormattedText,
         display::{Font, Icon},
-        geometry::Point,
-        model_tr::theme,
+        geometry::{Point, Rect},
+        model_tr::{constant, theme},
     },
 };
 use heapless::{String, Vec};
@@ -27,6 +29,7 @@ pub trait FlowPage {
 pub enum FlowPages<T> {
     RecipientAddress(RecipientAddressPage<T>),
     KeyValueIcon(KeyValueIconPage<T>),
+    TitleAndText(TitleAndTextPage<T>),
 }
 
 impl<T> FlowPage for FlowPages<T>
@@ -38,6 +41,7 @@ where
         match self {
             FlowPages::RecipientAddress(item) => item.paint(left_top),
             FlowPages::KeyValueIcon(item) => item.paint(left_top),
+            FlowPages::TitleAndText(item) => item.paint(left_top),
         }
     }
 
@@ -45,6 +49,7 @@ where
         match self {
             FlowPages::RecipientAddress(item) => item.btn_layout(),
             FlowPages::KeyValueIcon(item) => item.btn_layout(),
+            FlowPages::TitleAndText(item) => item.btn_layout(),
         }
     }
 
@@ -52,6 +57,7 @@ where
         match self {
             FlowPages::RecipientAddress(item) => item.btn_actions(),
             FlowPages::KeyValueIcon(item) => item.btn_actions(),
+            FlowPages::TitleAndText(item) => item.btn_actions(),
         }
     }
 }
@@ -251,4 +257,60 @@ where
     }
 }
 
+/// Show just text with a bold title.
+/// The content should fit on one page, in other case it will not be all visible
+/// (pagination is not supported inside).
+#[derive(Debug, Clone)]
+pub struct TitleAndTextPage<T> {
+    title: T,
+    text: T,
+    btn_layout: ButtonLayout<&'static str>,
+    btn_actions: BtnActions,
+}
+
+impl<T> TitleAndTextPage<T>
+where
+    T: AsRef<str>,
+{
+    pub fn new(
+        title: T,
+        text: T,
+        btn_layout: ButtonLayout<&'static str>,
+        btn_actions: BtnActions,
+    ) -> Self {
+        Self {
+            title,
+            text,
+            btn_layout,
+            btn_actions,
+        }
+    }
+}
+
+impl<T> FlowPage for TitleAndTextPage<T>
+where
+    T: AsRef<str>,
+    T: Clone,
+{
+    fn paint(&mut self, left_top: Point) {
+        // Putting the attributes into a template
+        let format = "{bold}{title}\n{normal}{text}";
+        let mut text = FormattedText::new::<theme::TRDefaultText>(format)
+            .with("title", self.title.clone())
+            .with("text", self.text.clone());
+
+        // Placing the text in the biggest area as possible, just accounting for the buttons
+        let right_bottom = Point::new(constant::WIDTH, constant::HEIGHT - theme::BUTTON_HEIGHT);
+        text.place(Rect::new(left_top, right_bottom));
+
+        text.paint();
+    }
+
+    fn btn_layout(&self) -> ButtonLayout<&'static str> {
+        self.btn_layout.clone()
+    }
+
+    fn btn_actions(&self) -> BtnActions {
+        self.btn_actions.clone()
+    }
 }
