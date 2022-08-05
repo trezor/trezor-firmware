@@ -3,9 +3,14 @@
 
 use heapless::String;
 
-use super::display::Color;
-use super::geometry::{Point, Rect};
+use super::component::pad::Pad;
+use super::component::text::common::TextBox;
+use super::component::text::layout::{Span, TextLayout};
+use super::display::{Color, Font, Icon};
+use super::geometry::{Grid, Insets, Offset, Point, Rect};
 use super::model_tr::component::ButtonDetails;
+use crate::micropython::buffer::StrBuffer;
+use crate::time::Duration;
 
 // NOTE: not defining a common trait, like
 // Debug {fn print(&self);}, so that the trait does
@@ -15,6 +20,18 @@ use super::model_tr::component::ButtonDetails;
 
 /// TODO: find out how much storage these functions take
 /// and probably hide them behind debug feature
+
+impl StrBuffer {
+    pub fn print(&self) {
+        println!("StrBuffer:: ", self.as_ref());
+    }
+}
+
+impl Duration {
+    pub fn print(&self) {
+        println!("Duration:: ", inttostr!(self.to_millis()));
+    }
+}
 
 impl Point {
     pub fn print(&self) {
@@ -58,6 +75,12 @@ impl Color {
     }
 }
 
+impl Font {
+    pub fn print(&self) {
+        println!("Font:: ", "text_height: ", inttostr!(self.text_height()));
+    }
+}
+
 impl<T: Clone + AsRef<str>> ButtonDetails<T> {
     pub fn print(&self) {
         let text = if let Some(text) = self.text.clone() {
@@ -88,5 +111,106 @@ impl<T: Clone + AsRef<str>> ButtonDetails<T> {
             ", force_width: ",
             force_width.as_ref()
         );
+    }
+}
+
+impl Offset {
+    pub fn print(&self) {
+        println!(
+            "Offset:: ",
+            "x: ",
+            inttostr!(self.x),
+            ", y: ",
+            inttostr!(self.y)
+        );
+    }
+}
+
+impl Insets {
+    pub fn print(&self) {
+        println!(
+            "Insets:: ",
+            "top: ",
+            inttostr!(self.top),
+            ", right: ",
+            inttostr!(self.right),
+            ", bottom: ",
+            inttostr!(self.bottom),
+            ", left: ",
+            inttostr!(self.left)
+        );
+    }
+}
+
+impl Grid {
+    pub fn print(&self) {
+        print!(
+            "Grid:: ",
+            "rows: ",
+            inttostr!(self.rows as i32),
+            ", cols: ",
+            inttostr!(self.cols as i32),
+            ", spacing: ",
+            inttostr!(self.spacing as i32)
+        );
+        print!(", area: ");
+        self.area.print();
+    }
+}
+
+impl<T: AsRef<str>> Icon<T> {
+    pub fn print(&self) {
+        println!(
+            "Icon:: ",
+            "text: ",
+            self.text.as_ref(),
+            ", width: ",
+            inttostr!(self.width() as i32),
+            ", height: ",
+            inttostr!(self.height() as i32)
+        );
+    }
+}
+
+impl TextLayout {
+    pub fn print(&self) {
+        print!(
+            "TextLayout:: ",
+            "padding_top: ",
+            inttostr!(self.padding_top as i32),
+            ", padding_bottom: ",
+            inttostr!(self.padding_bottom as i32)
+        );
+        print!(", bounds: ");
+        self.bounds.print();
+    }
+}
+
+impl Span {
+    pub fn print(&self) {
+        print!(
+            "Span:: ",
+            "length: ",
+            inttostr!(self.length as i32),
+            ", skip_next_chars: ",
+            inttostr!(self.skip_next_chars as i32),
+            ", insert_hyphen_before_line_break: ",
+            booltostr!(self.insert_hyphen_before_line_break)
+        );
+        print!(", advance: ");
+        self.advance.print();
+    }
+}
+
+impl Pad {
+    pub fn print(&self) {
+        print!("Pad:: ", "area: ");
+        self.area.print();
+    }
+}
+
+impl<const L: usize> TextBox<L> {
+    pub fn print(&self) {
+        println!("TextBox:: ", "content: ", self.content());
     }
 }
