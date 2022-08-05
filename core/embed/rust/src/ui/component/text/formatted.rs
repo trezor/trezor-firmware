@@ -22,6 +22,8 @@ pub struct FormattedText<F, T> {
     fonts: FormattedFonts,
     format: F,
     args: LinearMap<&'static str, T, MAX_ARGUMENTS>,
+    /// Keeps track of "cursor" position, so that we can paginate
+    /// by skipping this amount of characters from the beginning.
     char_offset: usize,
 }
 
@@ -80,6 +82,8 @@ impl<F, T> FormattedText<F, T> {
         self
     }
 
+    /// Equals to changing the page so that we know what
+    /// content to render next.
     pub fn set_char_offset(&mut self, char_offset: usize) {
         self.char_offset = char_offset;
     }
@@ -98,10 +102,19 @@ where
     F: AsRef<str>,
     T: AsRef<str>,
 {
+    /// Tokenizing `self.format` and turning it into the list of `Op`s
+    /// which will be sent to `LayoutSink`.
+    /// It equals to painting the content when `sink` is `TextRenderer`.
     pub fn layout_content(&self, sink: &mut dyn LayoutSink) -> LayoutFit {
         let mut cursor = self.layout.initial_cursor();
+        // Accounting for pagination by skipping the `char_offset` characters from the
+        // beginning.
         let mut ops = Op::skip_n_text_bytes(
             Tokenizer::new(self.format.as_ref()).flat_map(|arg| match arg {
+                // TODO: support further tokens/arguments for useful actions:
+                // - embedding icon within text
+                // - customizable x offset between words/icons
+                // - customizable horizontal space between lines
                 Token::Literal(literal) => Some(Op::Text(literal)),
                 Token::Argument("mono") => Some(Op::Font(self.fonts.mono)),
                 Token::Argument("bold") => Some(Op::Font(self.fonts.bold)),

@@ -14,7 +14,9 @@ pub enum PageMsg<T, U> {
 }
 
 pub trait Paginate {
+    /// How many pages of content are there in total?
     fn page_count(&mut self) -> usize;
+    /// Navigate to the given page.
     fn change_page(&mut self, active_page: usize);
 }
 
@@ -27,6 +29,8 @@ where
         let mut page_count = 1; // There's always at least one page.
         let mut char_offset = 0;
 
+        // Looping through the content and counting pages
+        // until we finally fit.
         loop {
             let fit = self.layout_content(&mut TextNoOp);
             match fit {
@@ -57,6 +61,8 @@ where
         // Make sure we're starting from the beginning.
         self.set_char_offset(char_offset);
 
+        // Looping through the content until we arrive at
+        // the wanted page.
         while active_page < to_page {
             let fit = self.layout_content(&mut TextNoOp);
             match fit {

@@ -98,18 +98,23 @@ impl TextLayout {
         self
     }
 
+    /// Baseline `Point` where we are starting to draw the text.
     pub fn initial_cursor(&self) -> Point {
         self.bounds.top_left() + Offset::y(self.style.text_font.text_height() + self.padding_top)
     }
 
+    /// Trying to fit the content on the current screen.
     pub fn fit_text(&self, text: &str) -> LayoutFit {
         self.layout_text(text, &mut self.initial_cursor(), &mut TextNoOp)
     }
 
+    /// Draw as much text as possible on the current screen.
     pub fn render_text(&self, text: &str) {
         self.layout_text(text, &mut self.initial_cursor(), &mut TextRenderer);
     }
 
+    /// Perform some operations defined on `Op` - e.g. changing the color,
+    /// changing the font or rendering the text.
     pub fn layout_ops<'o>(
         mut self,
         ops: &mut dyn Iterator<Item = Op<'o>>,
@@ -153,6 +158,9 @@ impl TextLayout {
         }
     }
 
+    /// Loop through the `text` and try to fit it on the current screen,
+    /// reporting events to `sink`, which may do something with them (e.g. draw
+    /// on screen).
     pub fn layout_text(
         &self,
         text: &str,
@@ -237,6 +245,7 @@ impl TextLayout {
         }
     }
 
+    /// Overall height of the content, including paddings.
     fn layout_height(&self, init_cursor: Point, end_cursor: Point) -> i32 {
         self.padding_top
             + self.style.text_font.text_height()
@@ -245,6 +254,8 @@ impl TextLayout {
     }
 }
 
+/// Whether we can fit content on the current screen.
+/// Knows how many characters got processed and how high the content is.
 pub enum LayoutFit {
     /// Entire content fits. Vertical size is returned in `height`.
     Fitting { processed_chars: usize, height: i32 },
@@ -253,6 +264,7 @@ pub enum LayoutFit {
 }
 
 impl LayoutFit {
+    /// How high is the processed/fitted content.
     pub fn height(&self) -> i32 {
         match self {
             LayoutFit::Fitting { height, .. } => *height,
@@ -261,19 +273,33 @@ impl LayoutFit {
     }
 }
 
+// TODO: LayoutSink could support even things like drawing icons
+// or making custom x or y offsets from any position
+
 /// Visitor for text segment operations.
+/// Defines responses for certain kind of events encountered
+/// when processing the content.
 pub trait LayoutSink {
+    /// Text should be processed.
     fn text(&mut self, _cursor: Point, _layout: &TextLayout, _text: &str) {}
+    /// Hyphen at the end of line.
     fn hyphen(&mut self, _cursor: Point, _layout: &TextLayout) {}
+    /// Ellipsis at the end of the page.
     fn ellipsis(&mut self, _cursor: Point, _layout: &TextLayout) {}
+    /// Line break - a newline.
     fn line_break(&mut self, _cursor: Point) {}
+    /// Content cannot fit on the screen.
     fn out_of_bounds(&mut self) {}
 }
 
+/// `LayoutSink` without any functionality.
+/// Used to consume events when counting pages
+/// or navigating to a certain page number.
 pub struct TextNoOp;
 
 impl LayoutSink for TextNoOp {}
 
+/// `LayoutSink` for rendering the content.
 pub struct TextRenderer;
 
 impl LayoutSink for TextRenderer {
@@ -314,6 +340,7 @@ pub mod trace {
 
     use super::*;
 
+    /// `LayoutSink` for debugging purposes.
     pub struct TraceSink<'a>(pub &'a mut dyn crate::trace::Tracer);
 
     impl<'a> LayoutSink for TraceSink<'a> {
@@ -346,6 +373,10 @@ pub enum Op<'a> {
 }
 
 impl<'a> Op<'a> {
+    /// Filtering the list of `Op`s to throw away all the `Op::Text`
+    /// before a specific byte-threshold.
+    /// Used when showing the second, third... paginated page
+    /// to skip the first one, two... pages.
     pub fn skip_n_text_bytes(
         ops: impl Iterator<Item = Op<'a>>,
         skip_bytes: usize,
@@ -367,19 +398,21 @@ impl<'a> Op<'a> {
     }
 }
 
+/// Carries info about the content that was processed
+/// on the current line.
 #[derive(Debug, PartialEq, Eq)]
-struct Span {
+pub struct Span {
     /// How many characters from the input text this span is laying out.
-    length: usize,
+    pub length: usize,
     /// How many chars from the input text should we skip before fitting the
     /// next span?
-    skip_next_chars: usize,
+    pub skip_next_chars: usize,
     /// By how much to offset the cursor after this span. If the vertical offset
     /// is bigger than zero, it means we are breaking the line.
-    advance: Offset,
+    pub advance: Offset,
     /// If we are breaking the line, should we insert a hyphen right after this
     /// span to indicate a word-break?
-    insert_hyphen_before_line_break: bool,
+    pub insert_hyphen_before_line_break: bool,
 }
 
 impl Span {
@@ -438,7 +471,7 @@ impl Span {
                 }
                 found_any_whitespace = true;
             } else if span_width + char_width > max_width {
-                // Return the last breakpoint.
+                // Cannot fit on this line. Return the last breakpoint.
                 return line;
             } else {
                 let have_space_for_break = span_width + char_width + hyphen_width <= max_width;
@@ -459,7 +492,7 @@ impl Span {
             span_width += char_width;
         }
 
-        // The whole text is fitting.
+        // The whole text is fitting on the current line.
         Self {
             length: text.len(),
             advance: Offset::x(span_width),
