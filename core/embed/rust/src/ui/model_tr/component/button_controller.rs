@@ -60,9 +60,13 @@ pub struct ButtonContainer<T> {
     // (the default value for T: AsRef<str>) in case it is currently missing.
     button: Option<Child<Button<T>>>,
     hold_to_confirm: Option<Child<HoldToConfirm<T>>>,
-    pos: ButtonPos, // so that we can create the button later with correct position
+    /// Stored to create the button later with correct position
+    pos: ButtonPos,
     button_type: ButtonType,
     btn_details: Option<ButtonDetails<T>>,
+    /// We want to send the triggered event at a later time from the actual trigger
+    /// (only as soon as the button is released).
+    htc_triggered: bool,
 }
 
 impl<T: Clone + AsRef<str>> ButtonContainer<T> {
@@ -82,6 +86,7 @@ impl<T: Clone + AsRef<str>> ButtonContainer<T> {
             pos,
             button_type: ButtonType::from_button_details(btn_details.clone()),
             btn_details,
+            htc_triggered: false,
         }
     }
 
@@ -192,7 +197,6 @@ impl<T: Clone + AsRef<str>> ButtonContainer<T> {
     }
 
     /// Placing both possible components.
-    /// For next updates, the "new" buttons are places inside `Button::set_text()`
     pub fn place(&mut self, bounds: Rect) {
         if let Some(button) = self.button.as_mut() {
             button.place(bounds);
@@ -224,22 +228,42 @@ impl<T: Clone + AsRef<str>> ButtonContainer<T> {
         }
     }
 
+    /// Whether the button should send triggered event
+    /// when it is released.
+    pub fn send_event_on_release(&mut self) -> bool {
+        self.reacts_to_single_click() || self.hold_to_confirm_triggered()
+    }
+
     /// Whether single-click should trigger action.
     pub fn reacts_to_single_click(&self) -> bool {
         matches!(self.button_type, ButtonType::NormalButton)
     }
 
-    /// Whether hold-to-confirm was triggered.
-    pub fn hold_to_confirm_triggered(&mut self, ctx: &mut EventCtx, event: Event) -> bool {
+    /// Whether there was a HTC event between the last call to this and now.
+    pub fn hold_to_confirm_triggered(&mut self) -> bool {
+        if self.htc_triggered {
+            // Resetting the flag so it does not return true again
+            self.htc_triggered = false;
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Find out whether hold-to-confirm was triggered.
+    /// If so, setting the flag so next call to
+    /// `hold_to_confirm_triggered` will return `true`.
+    pub fn handle_hold_to_confirm(&mut self, ctx: &mut EventCtx, event: Event) {
         if matches!(self.button_type, ButtonType::HoldToConfirm) {
             let msg = self.hold_to_confirm.event(ctx, event);
             if matches!(msg, Some(HoldToConfirmMsg::Confirmed)) {
                 // TODO: consider whether to reset and repaint the button or not
                 // Got deleted because of the wipe screen where it was better to not do that.
-                return self.hold_to_confirm.is_some();
+                if self.hold_to_confirm.is_some() {
+                    self.htc_triggered = true;
+                }
             }
         };
-        false
     }
 
     /// Registering hold event.
@@ -351,23 +375,24 @@ impl<T: Clone + AsRef<str>> ButtonController<T> {
         self.middle_btn.hold_started(ctx);
         self.right_btn.hold_ended(ctx);
     }
+
+    /// Handling the HTC elements.
+    /// Just finding out if they have been triggered.
+    /// Only sending the events as soon as the appropriate
+    /// button is released, not to cause unintended events
+    /// from releasing on the next screen.
+    fn handle_hold_to_confirms(&mut self, ctx: &mut EventCtx, event: Event) {
+        self.left_btn.handle_hold_to_confirm(ctx, event);
+        self.middle_btn.handle_hold_to_confirm(ctx, event);
+        self.right_btn.handle_hold_to_confirm(ctx, event);
+    }
 }
 
 impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
     type Msg = ButtonControllerMsg;
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        // Handling the hold_to_confirm elements
-        if self.left_btn.hold_to_confirm_triggered(ctx, event) {
-            return Some(ButtonControllerMsg::Triggered(ButtonPos::Left));
-        }
-        if self.middle_btn.hold_to_confirm_triggered(ctx, event) {
-            return Some(ButtonControllerMsg::Triggered(ButtonPos::Middle));
-        }
-        if self.right_btn.hold_to_confirm_triggered(ctx, event) {
-            return Some(ButtonControllerMsg::Triggered(ButtonPos::Right));
-        }
-
+        self.handle_hold_to_confirms(ctx, event);
         // State machine for the ButtonController
         match event {
             Event::Button(button) => {
@@ -391,7 +416,7 @@ impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
                         ButtonEvent::ButtonReleased(b) if b == which_down => match which_down {
                             PhysicalButton::Left => (
                                 ButtonState::Nothing,
-                                if self.left_btn.reacts_to_single_click() {
+                                if self.left_btn.send_event_on_release() {
                                     Some(ButtonControllerMsg::Triggered(ButtonPos::Left))
                                 } else {
                                     self.left_btn.hold_ended(ctx);
@@ -400,7 +425,7 @@ impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
                             ),
                             PhysicalButton::Right => (
                                 ButtonState::Nothing,
-                                if self.right_btn.reacts_to_single_click() {
+                                if self.right_btn.send_event_on_release() {
                                     Some(ButtonControllerMsg::Triggered(ButtonPos::Right))
                                 } else {
                                     self.right_btn.hold_ended(ctx);
@@ -430,7 +455,7 @@ impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
                         }
                         ButtonEvent::ButtonReleased(b) if b != which_up => (
                             ButtonState::Nothing,
-                            if self.middle_btn.reacts_to_single_click() {
+                            if self.middle_btn.send_event_on_release() {
                                 Some(ButtonControllerMsg::Triggered(ButtonPos::Middle))
                             } else {
                                 None
