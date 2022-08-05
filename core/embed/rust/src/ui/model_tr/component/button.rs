@@ -1,5 +1,6 @@
 use crate::ui::{
     component::{Component, Event, EventCtx},
+    constant,
     display::{self, Color, Font, Icon},
     event::{ButtonEvent, PhysicalButton},
     geometry::{Offset, Point, Rect},
@@ -9,6 +10,8 @@ use crate::time::Duration;
 use heapless::String;
 
 use super::theme;
+
+const HALF_SCREEN_BUTTON_WIDTH: i32 = constant::WIDTH / 2 - 1;
 
 #[derive(Eq, PartialEq)]
 pub enum ButtonMsg {
@@ -395,7 +398,7 @@ pub struct ButtonDetails<T> {
 
 impl<T: Clone + AsRef<str>> ButtonDetails<T> {
     /// Text button.
-    pub fn new(text: T) -> Self {
+    pub fn text(text: T) -> Self {
         Self {
             text: Some(text),
             icon: None,
@@ -422,14 +425,37 @@ impl<T: Clone + AsRef<str>> ButtonDetails<T> {
         }
     }
 
+    /// Text with arms signalling double press.
+    pub fn armed_text(text: T) -> Self {
+        Self::text(text).with_arms()
+    }
+
     /// Cross-style-icon cancel button with no outline.
-    pub fn cancel_no_outline(text: T) -> Self {
+    pub fn cancel_icon(text: T) -> Self {
         Self::icon(Icon::new(theme::ICON_CANCEL, text))
             .with_no_outline()
             .with_offset(Offset::new(2, -2))
     }
 
-    // TODO: might do more constructors for other common buttons like above
+    /// Left arrow to signal going back.
+    pub fn left_arrow_icon(text: T) -> Self {
+        Self::icon(Icon::new(theme::ICON_ARROW_LEFT, text)).with_no_outline()
+    }
+
+    /// Right arrow to signal going forward.
+    pub fn right_arrow_icon(text: T) -> Self {
+        Self::icon(Icon::new(theme::ICON_ARROW_RIGHT, text)).with_no_outline()
+    }
+
+    /// Down arrow to signal paginating forward. Takes half the screen's width
+    pub fn down_arrow_icon_wide(text: T) -> Self {
+        Self::icon(Icon::new(theme::ICON_ARROW_DOWN, text)).force_width(HALF_SCREEN_BUTTON_WIDTH)
+    }
+
+    /// Up arrow to signal paginating back. Takes half the screen's width
+    pub fn up_arrow_icon_wide(text: T) -> Self {
+        Self::icon(Icon::new(theme::ICON_ARROW_UP, text)).force_width(HALF_SCREEN_BUTTON_WIDTH)
+    }
 
     /// Cancel style button.
     pub fn with_cancel(mut self) -> Self {
@@ -548,20 +574,6 @@ impl<T: AsRef<str>> ButtonLayout<T> {
 }
 
 impl ButtonLayout<&'static str> {
-    /// Custom texts for all three buttons.
-    pub fn custom(left: &'static str, middle: &'static str, right: &'static str) -> Self {
-        Self::new(
-            Some(ButtonDetails::new(left)),
-            Some(ButtonDetails::new(middle)),
-            Some(ButtonDetails::new(right)),
-        )
-    }
-
-    /// Default button layout for all three buttons.
-    pub fn default_three() -> Self {
-        Self::custom("<", "SELECT", ">")
-    }
-
     /// Default button layout for all three buttons - icons.
     pub fn default_three_icons() -> Self {
         Self::three_icons_middle_text("SELECT")
@@ -570,30 +582,28 @@ impl ButtonLayout<&'static str> {
     /// Special middle text for default icon layout.
     pub fn three_icons_middle_text(middle_text: &'static str) -> Self {
         Self::new(
-            Some(
-                ButtonDetails::icon(Icon::new(theme::ICON_ARROW_LEFT, "arr_left"))
-                    .with_no_outline(),
-            ),
-            Some(ButtonDetails::new(middle_text).with_arms()),
-            Some(
-                ButtonDetails::icon(Icon::new(theme::ICON_ARROW_RIGHT, "arr_right"))
-                    .with_no_outline(),
-            ),
+            Some(ButtonDetails::left_arrow_icon("arr_left")),
+            Some(ButtonDetails::armed_text(middle_text)),
+            Some(ButtonDetails::right_arrow_icon("arr_right")),
         )
     }
 
-    /// Just right and left, no middle.
-    pub fn default_left_right() -> Self {
+    /// Left and right arrow icons for navigation.
+    pub fn left_right_arrows() -> Self {
         Self::new(
-            Some(ButtonDetails::new("<")),
+            Some(ButtonDetails::left_arrow_icon("arr_left")),
             None,
-            Some(ButtonDetails::new(">")),
+            Some(ButtonDetails::right_arrow_icon("arr_right")),
         )
     }
 
-    /// Setting a special middle text.
-    pub fn special_middle(middle: &'static str) -> Self {
-        Self::custom("<", middle, ">")
+    /// Cancel cross on left and right arrow.
+    pub fn cancel_and_arrow() -> Self {
+        Self::new(
+            Some(ButtonDetails::cancel_icon("cancel")),
+            None,
+            Some(ButtonDetails::right_arrow_icon("arr_right")),
+        )
     }
 }
 
@@ -603,9 +613,9 @@ mod tests {
 
     #[test]
     fn test_btn_details_id() {
-        let btn = ButtonDetails::new("Test");
+        let btn = ButtonDetails::text("Test");
         assert_eq!(btn.id(), String::<50>::from("Test--0x0--0"));
-        let btn = ButtonDetails::new("Duration").with_duration(Duration::from_secs(1));
+        let btn = ButtonDetails::text("Duration").with_duration(Duration::from_secs(1));
         assert_eq!(btn.id(), String::<50>::from("Duration--0x0--1000"));
     }
 }

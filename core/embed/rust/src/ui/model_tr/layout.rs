@@ -137,13 +137,13 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
         let verb = verb.unwrap_or_default();
 
         let cancel_btn = if verb_cancel.len() > 0 {
-            Some(ButtonDetails::cancel_no_outline("cancel".into()))
+            Some(ButtonDetails::cancel_icon("cancel".into()))
         } else {
             None
         };
 
         let mut confirm_btn = if verb.len() > 0 {
-            Some(ButtonDetails::new(verb))
+            Some(ButtonDetails::text(verb))
         } else {
             None
         };
@@ -214,9 +214,9 @@ extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) 
 
         let address_page = {
             let btn_layout = ButtonLayout::new(
-                Some(ButtonDetails::cancel_no_outline("cancel")),
+                Some(ButtonDetails::cancel_icon("cancel")),
                 None,
-                Some(ButtonDetails::new("CONTINUE")),
+                Some(ButtonDetails::text("CONTINUE")),
             );
             let page = RecipientAddressPage::new(address, btn_layout);
             FlowPages::RecipientAddress(page)
@@ -226,9 +226,9 @@ extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) 
         // it might be nice for FlowPages to specify the action - "cancel" or "back"
         let confirm_page = {
             let btn_layout = ButtonLayout::new(
-                Some(ButtonDetails::cancel_no_outline("cancel")),
+                Some(ButtonDetails::cancel_icon("cancel")),
                 None,
-                Some(ButtonDetails::new("HOLD TO CONFIRM").with_duration(Duration::from_secs(2))),
+                Some(ButtonDetails::text("HOLD TO CONFIRM").with_duration(Duration::from_secs(2))),
             );
 
             let pairs: Vec<KeyValueIcon<StrBuffer>, 3> = Vec::from_slice(&[
@@ -273,9 +273,9 @@ extern "C" fn confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -
 
         let confirm_page = {
             let btn_layout = ButtonLayout::new(
-                Some(ButtonDetails::cancel_no_outline("cancel")),
+                Some(ButtonDetails::cancel_icon("cancel")),
                 None,
-                Some(ButtonDetails::new("HOLD TO SEND").with_duration(Duration::from_secs(2))),
+                Some(ButtonDetails::text("HOLD TO SEND").with_duration(Duration::from_secs(2))),
             );
 
             // Constructing all the key-value-icon pairs
@@ -369,7 +369,8 @@ extern "C" fn show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map
         // Adding hold-to-confirm button at the end
         // Also no possibility of cancelling
         let cancel_btn = None;
-        let confirm_btn = Some(ButtonDetails::new("CONFIRM").with_duration(Duration::from_secs(2)));
+        let confirm_btn =
+            Some(ButtonDetails::text("CONFIRM").with_duration(Duration::from_secs(2)));
 
         let obj = LayoutObj::new(Frame::new(
             title,

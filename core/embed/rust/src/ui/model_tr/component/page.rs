@@ -2,7 +2,7 @@ use crate::{
     micropython::buffer::StrBuffer,
     ui::{
         component::{Child, Component, ComponentExt, Event, EventCtx, Pad, PageMsg, Paginate},
-        display::{Color, Icon},
+        display::Color,
         geometry::{Insets, Rect},
     },
 };
@@ -22,8 +22,6 @@ pub struct ButtonPage<S, T> {
     buttons: Child<ButtonController<S>>,
 }
 
-const ARROW_BTN_WIDTH: i32 = 62;
-
 impl<T> ButtonPage<&'static str, T>
 where
     T: Paginate,
@@ -35,17 +33,10 @@ where
             content,
             scrollbar: ScrollBar::vertical_to_be_filled_later(),
             pad: Pad::with_background(background),
-            cancel_btn_details: Some(ButtonDetails::cancel_no_outline("cancel")),
-            confirm_btn_details: Some(ButtonDetails::new("CONFIRM")),
-            back_btn_details: Some(
-                ButtonDetails::icon(Icon::new(theme::ICON_ARROW_UP, "arr_up"))
-                    .force_width(ARROW_BTN_WIDTH)
-                    .with_cancel(),
-            ),
-            next_btn_details: Some(
-                ButtonDetails::icon(Icon::new(theme::ICON_ARROW_DOWN, "arr_down"))
-                    .force_width(ARROW_BTN_WIDTH),
-            ),
+            cancel_btn_details: Some(ButtonDetails::cancel_icon("cancel")),
+            confirm_btn_details: Some(ButtonDetails::text("CONFIRM")),
+            back_btn_details: Some(ButtonDetails::up_arrow_icon_wide("arr_up")),
+            next_btn_details: Some(ButtonDetails::down_arrow_icon_wide("arr_down")),
             // Setting empty layout for now, we do not yet know the page count.
             // Initial button layout will be set in `place()` after we can call `content.page_count()`.
             buttons: Child::new(ButtonController::new(ButtonLayout::empty())),
@@ -64,17 +55,10 @@ where
             content,
             scrollbar: ScrollBar::vertical_to_be_filled_later(),
             pad: Pad::with_background(background),
-            cancel_btn_details: Some(ButtonDetails::cancel_no_outline("cancel".into())),
-            confirm_btn_details: Some(ButtonDetails::new("CONFIRM".into())),
-            back_btn_details: Some(
-                ButtonDetails::icon(Icon::new(theme::ICON_ARROW_UP, "arr_up".into()))
-                    .force_width(ARROW_BTN_WIDTH)
-                    .with_cancel(),
-            ),
-            next_btn_details: Some(
-                ButtonDetails::icon(Icon::new(theme::ICON_ARROW_DOWN, "arr_down".into()))
-                    .force_width(ARROW_BTN_WIDTH),
-            ),
+            cancel_btn_details: Some(ButtonDetails::cancel_icon("cancel".into())),
+            confirm_btn_details: Some(ButtonDetails::text("CONFIRM".into())),
+            back_btn_details: Some(ButtonDetails::up_arrow_icon_wide("arr_up".into())),
+            next_btn_details: Some(ButtonDetails::down_arrow_icon_wide("arr_down".into())),
             // Setting empty layout for now, we do not yet know the page count.
             // Initial button layout will be set in `place()` after we can call `content.page_count()`.
             buttons: Child::new(ButtonController::new(ButtonLayout::empty())),

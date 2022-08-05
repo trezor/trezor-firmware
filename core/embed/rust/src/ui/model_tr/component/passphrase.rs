@@ -135,9 +135,12 @@ impl PassphraseEntry {
             .collect();
         // Including accept button on the left and cancel on the very right
         let last_index = choices.len() - 1;
-        choices[0].set_left_btn(Some(ButtonDetails::new("ACC").with_duration(HOLD_DURATION)));
-        choices[last_index]
-            .set_right_btn(Some(ButtonDetails::new("CNC").with_duration(HOLD_DURATION)));
+        choices[0].set_left_btn(Some(
+            ButtonDetails::text("ACC").with_duration(HOLD_DURATION),
+        ));
+        choices[last_index].set_right_btn(Some(
+            ButtonDetails::text("CNC").with_duration(HOLD_DURATION),
+        ));
 
         choices
     }

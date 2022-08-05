@@ -97,7 +97,7 @@ impl PinEntry {
             .collect();
 
         // Action buttons have different text
-        let confirm_btn = ButtonDetails::new("CONFIRM").with_arms();
+        let confirm_btn = ButtonDetails::armed_text("CONFIRM");
         choices[EXIT_INDEX].set_middle_btn(Some(confirm_btn));
         choices[DELETE_INDEX].set_middle_btn(Some(confirm_btn));
         choices[SHOW_INDEX].set_middle_btn(Some(confirm_btn));
