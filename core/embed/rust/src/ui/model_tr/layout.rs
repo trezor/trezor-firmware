@@ -31,9 +31,10 @@ use crate::{
 
 use super::{
     component::{
-        Bip39Entry, Bip39EntryMsg, ButtonDetails, ButtonLayout, ButtonPage, Flow, FlowMsg,
-        FlowPages, Frame, KeyValueIcon, KeyValueIconPage, PassphraseEntry, PassphraseEntryMsg,
-        PinEntry, PinEntryMsg, RecipientAddressPage, SimpleChoice, SimpleChoiceMsg,
+        Bip39Entry, Bip39EntryMsg, BtnActions, ButtonDetails, ButtonLayout, ButtonPage, Flow,
+        FlowMsg, FlowPages, Frame, KeyValueIcon, KeyValueIconPage, PassphraseEntry,
+        PassphraseEntryMsg, PinEntry, PinEntryMsg, RecipientAddressPage, SimpleChoice,
+        SimpleChoiceMsg,
     },
     theme,
 };
@@ -218,18 +219,18 @@ extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) 
                 None,
                 Some(ButtonDetails::text("CONTINUE")),
             );
-            let page = RecipientAddressPage::new(address, btn_layout);
+            let btn_actions = BtnActions::cancel_next();
+            let page = RecipientAddressPage::new(address, btn_layout, btn_actions);
             FlowPages::RecipientAddress(page)
         };
 
-        // TODO: we want the left button here to cancel and not to go back,
-        // it might be nice for FlowPages to specify the action - "cancel" or "back"
         let confirm_page = {
             let btn_layout = ButtonLayout::new(
                 Some(ButtonDetails::cancel_icon("cancel")),
                 None,
                 Some(ButtonDetails::text("HOLD TO CONFIRM").with_duration(Duration::from_secs(2))),
             );
+            let btn_actions = BtnActions::cancel_confirm();
 
             let pairs: Vec<KeyValueIcon<StrBuffer>, 3> = Vec::from_slice(&[
                 KeyValueIcon::normal_bold(
@@ -245,7 +246,7 @@ extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) 
             ])
             .unwrap();
 
-            let page = KeyValueIconPage::new(pairs, btn_layout);
+            let page = KeyValueIconPage::new(pairs, btn_layout, btn_actions);
             FlowPages::KeyValueIcon(page)
         };
 
@@ -277,6 +278,7 @@ extern "C" fn confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -
                 None,
                 Some(ButtonDetails::text("HOLD TO SEND").with_duration(Duration::from_secs(2))),
             );
+            let btn_actions = BtnActions::cancel_confirm();
 
             // Constructing all the key-value-icon pairs
             let mut pairs: Vec<KeyValueIcon<StrBuffer>, 3> = Vec::from_slice(&[
@@ -291,7 +293,7 @@ extern "C" fn confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -
                 pairs.push(new_pair).unwrap();
             }
 
-            let page = KeyValueIconPage::new(pairs, btn_layout);
+            let page = KeyValueIconPage::new(pairs, btn_layout, btn_actions);
             FlowPages::KeyValueIcon(page)
         };
 

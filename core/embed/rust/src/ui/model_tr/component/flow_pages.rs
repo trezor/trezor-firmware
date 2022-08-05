@@ -8,11 +8,13 @@ use crate::{
 };
 use heapless::{String, Vec};
 
+use super::flow::BtnActions;
 use super::{common, ButtonLayout};
 
 pub trait FlowPage {
     fn paint(&mut self, left_top: Point);
     fn btn_layout(&self) -> ButtonLayout<&'static str>;
+    fn btn_actions(&self) -> BtnActions;
 }
 
 // TODO: consider using `dyn` instead of `enum` to allow
@@ -45,23 +47,36 @@ where
             FlowPages::KeyValueIcon(item) => item.btn_layout(),
         }
     }
+
+    fn btn_actions(&self) -> BtnActions {
+        match self {
+            FlowPages::RecipientAddress(item) => item.btn_actions(),
+            FlowPages::KeyValueIcon(item) => item.btn_actions(),
+        }
+    }
 }
 
 /// Page displaying recipient address.
 #[derive(Debug, Clone)]
 pub struct RecipientAddressPage<T> {
-    pub address: T,
-    pub btn_layout: ButtonLayout<&'static str>,
+    address: T,
+    btn_layout: ButtonLayout<&'static str>,
+    btn_actions: BtnActions,
 }
 
 impl<T> RecipientAddressPage<T>
 where
     T: AsRef<str>,
 {
-    pub fn new(address: T, btn_layout: ButtonLayout<&'static str>) -> Self {
+    pub fn new(
+        address: T,
+        btn_layout: ButtonLayout<&'static str>,
+        btn_actions: BtnActions,
+    ) -> Self {
         Self {
             address,
             btn_layout,
+            btn_actions,
         }
     }
 }
@@ -127,6 +142,10 @@ where
     fn btn_layout(&self) -> ButtonLayout<&'static str> {
         self.btn_layout.clone()
     }
+
+    fn btn_actions(&self) -> BtnActions {
+        self.btn_actions.clone()
+    }
 }
 
 /// Holding data for one element of key-value pair with icon.
@@ -186,14 +205,23 @@ impl KeyValueIcon<StrBuffer> {
 pub struct KeyValueIconPage<T> {
     pairs: Vec<KeyValueIcon<T>, 3>,
     btn_layout: ButtonLayout<&'static str>,
+    btn_actions: BtnActions,
 }
 
 impl<T> KeyValueIconPage<T>
 where
     T: AsRef<str>,
 {
-    pub fn new(pairs: Vec<KeyValueIcon<T>, 3>, btn_layout: ButtonLayout<&'static str>) -> Self {
-        Self { pairs, btn_layout }
+    pub fn new(
+        pairs: Vec<KeyValueIcon<T>, 3>,
+        btn_layout: ButtonLayout<&'static str>,
+        btn_actions: BtnActions,
+    ) -> Self {
+        Self {
+            pairs,
+            btn_layout,
+            btn_actions,
+        }
     }
 }
 
@@ -217,4 +245,10 @@ where
     fn btn_layout(&self) -> ButtonLayout<&'static str> {
         self.btn_layout.clone()
     }
+
+    fn btn_actions(&self) -> BtnActions {
+        self.btn_actions.clone()
+    }
+}
+
 }

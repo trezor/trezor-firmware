@@ -31,8 +31,8 @@ pub use button_controller::{ButtonController, ButtonControllerMsg};
 pub use choice::{ChoicePage, ChoicePageMsg};
 pub use choice_item::{ChoiceItem, ChoiceItems, MultilineTextChoiceItem, TextChoiceItem};
 pub use dialog::{Dialog, DialogMsg};
-pub use flow::{Flow, FlowMsg};
-pub use flow_pages::{FlowPage, FlowPages, KeyValueIcon, KeyValueIconPage, RecipientAddressPage};
+pub use flow::{BtnActions, Flow, FlowButtonAction, FlowMsg};
+pub use flow_pages::{
 pub use frame::Frame;
 pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
 pub use page::ButtonPage;
