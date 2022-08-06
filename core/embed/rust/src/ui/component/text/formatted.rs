@@ -77,8 +77,14 @@ impl<F, T> FormattedText<F, T> {
         self
     }
 
-    pub fn with_page_breaking(mut self, page_breaking: PageBreaking) -> Self {
-        self.layout.style.page_breaking = page_breaking;
+    /// Whether text will have ellipsis at the end of each the page.
+    /// Currently it will have it by default.
+    pub fn with_ellipsis(mut self, have_it: bool) -> Self {
+        self.layout.style.page_breaking = if have_it {
+            PageBreaking::CutAndInsertEllipsis
+        } else {
+            PageBreaking::Cut
+        };
         self
     }
 

@@ -1,8 +1,7 @@
 use crate::{
     micropython::buffer::StrBuffer,
     ui::{
-        component::base::Component,
-        component::FormattedText,
+        component::{base::Component, FormattedText},
         display::{Font, Icon},
         geometry::{Point, Rect},
         model_tr::{constant, theme},
@@ -10,8 +9,7 @@ use crate::{
 };
 use heapless::{String, Vec};
 
-use super::flow::BtnActions;
-use super::{common, ButtonLayout};
+use super::{common, flow::BtnActions, ButtonLayout};
 
 pub trait FlowPage {
     fn paint(&mut self, left_top: Point);
@@ -295,11 +293,12 @@ where
     fn paint(&mut self, left_top: Point) {
         // Putting the attributes into a template
         let format = "{bold}{title}\n{normal}{text}";
-        let mut text = FormattedText::new::<theme::TRDefaultText>(format)
+        let mut text = FormattedText::new(theme::TEXT_NORMAL, theme::FORMATTED, format)
             .with("title", self.title.clone())
             .with("text", self.text.clone());
 
-        // Placing the text in the biggest area as possible, just accounting for the buttons
+        // Placing the text in the biggest area as possible, just accounting for the
+        // buttons
         let right_bottom = Point::new(constant::WIDTH, constant::HEIGHT - theme::BUTTON_HEIGHT);
         text.place(Rect::new(left_top, right_bottom));
 

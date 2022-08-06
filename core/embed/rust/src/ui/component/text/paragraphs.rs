@@ -5,7 +5,7 @@ use crate::ui::{
     geometry::{Dimensions, Insets, LinearPlacement, Rect},
 };
 
-use super::layout::{LayoutFit, TextLayout, TextStyle};
+use super::layout::{LayoutFit, PageBreaking, TextLayout, TextStyle};
 
 pub const MAX_PARAGRAPHS: usize = 6;
 /// Maximum space between paragraphs. Actual result may be smaller (even 0) if
@@ -49,6 +49,19 @@ where
 
     pub fn with_spacing(mut self, spacing: i32) -> Self {
         self.placement = self.placement.with_spacing(spacing);
+        self
+    }
+
+    /// Whether last paragraph will have ellipsis at the end of the page.
+    /// Currently it will have it by default.
+    pub fn with_ellipsis(mut self, have_it: bool) -> Self {
+        if let Some(ref mut para) = self.list.last_mut() {
+            para.layout.style.page_breaking = if have_it {
+                PageBreaking::CutAndInsertEllipsis
+            } else {
+                PageBreaking::Cut
+            };
+        };
         self
     }
 

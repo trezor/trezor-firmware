@@ -479,7 +479,9 @@ extern "C" fn show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map
             title,
             None,
             ButtonPage::new_str(
-                Paragraphs::new().add(theme::TEXT_BOLD, text_to_show),
+                Paragraphs::new()
+                    .add(theme::TEXT_BOLD, text_to_show)
+                    .with_ellipsis(false),
                 theme::BG,
             )
             .with_cancel_btn(cancel_btn)
@@ -503,7 +505,7 @@ extern "C" fn confirm_word(n_args: usize, args: *const Obj, kwargs: *mut Map) ->
             20,
             "Select word ",
             checked_index_str.as_str(),
-            "/",
+            "/", // " of " is too long to fit the header
             count_str.as_str()
         );
 
