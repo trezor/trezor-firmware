@@ -8,7 +8,7 @@ use heapless::LinearMap;
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
     display::{Color, Font},
-    geometry::Rect,
+    geometry::{Offset, Rect},
 };
 
 use super::layout::{
@@ -22,6 +22,7 @@ pub struct FormattedText<F, T> {
     fonts: FormattedFonts,
     format: F,
     args: LinearMap<&'static str, T, MAX_ARGUMENTS>,
+    icon_args: LinearMap<&'static str, &'static [u8], MAX_ARGUMENTS>,
     /// Keeps track of "cursor" position, so that we can paginate
     /// by skipping this amount of characters from the beginning.
     char_offset: usize,
@@ -45,6 +46,7 @@ impl<F, T> FormattedText<F, T> {
             fonts,
             layout: TextLayout::new(style),
             args: LinearMap::new(),
+            icon_args: LinearMap::new(),
             char_offset: 0,
         }
     }
@@ -53,6 +55,14 @@ impl<F, T> FormattedText<F, T> {
         if self.args.insert(key, value).is_err() {
             #[cfg(feature = "ui_debug")]
             panic!("text args map is full");
+        }
+        self
+    }
+
+    pub fn with_icon(mut self, key: &'static str, value: &'static [u8]) -> Self {
+        if self.icon_args.insert(key, value).is_err() {
+            #[cfg(feature = "ui_debug")]
+            panic!("icon args map is full");
         }
         self
     }
@@ -117,15 +127,30 @@ where
         // beginning.
         let mut ops = Op::skip_n_text_bytes(
             Tokenizer::new(self.format.as_ref()).flat_map(|arg| match arg {
-                // TODO: support further tokens/arguments for useful actions:
-                // - embedding icon within text
-                // - customizable x offset between words/icons
-                // - customizable horizontal space between lines
                 Token::Literal(literal) => Some(Op::Text(literal)),
                 Token::Argument("mono") => Some(Op::Font(self.fonts.mono)),
                 Token::Argument("bold") => Some(Op::Font(self.fonts.bold)),
                 Token::Argument("normal") => Some(Op::Font(self.fonts.normal)),
                 Token::Argument("medium") => Some(Op::Font(self.fonts.medium)),
+                // Offsetting x cursor position
+                Token::Argument(argument) if argument.starts_with("x_offset_") => {
+                    let offset = argument["x_offset_".len()..].parse::<i32>().unwrap();
+                    Some(Op::CursorOffset(Offset::x(offset)))
+                }
+                // Offsetting y cursor position
+                Token::Argument(argument) if argument.starts_with("y_offset_") => {
+                    let offset = argument["y_offset_".len()..].parse::<i32>().unwrap();
+                    Some(Op::CursorOffset(Offset::y(offset)))
+                }
+                // Drawing icon
+                // TODO: currently we always draw it with left-bottom corner on the cursor,
+                // we might support drawing it with other corners
+                // (however, one might hack around something like this by using `x_offset_`
+                // and `y_offset_` before and after drawing the icon)
+                Token::Argument(argument) if argument.starts_with("icon_") => {
+                    self.icon_args.get(argument).map(|value| Op::Icon(value))
+                }
+                // Rendering text
                 Token::Argument(argument) => self
                     .args
                     .get(argument)

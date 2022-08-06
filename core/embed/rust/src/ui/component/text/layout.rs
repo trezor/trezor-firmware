@@ -1,8 +1,9 @@
 use super::iter::GlyphMetrics;
 use crate::ui::{
     display,
-    display::{Color, Font},
+    display::{Color, Font, Icon},
     geometry::{Offset, Point, Rect},
+    model_tr::theme,
 };
 
 #[derive(Copy, Clone)]
@@ -113,6 +114,16 @@ impl TextLayout {
         self.layout_text(text, &mut self.initial_cursor(), &mut TextRenderer);
     }
 
+    /// Y coordinate of the bottom of the available space/bounds
+    pub fn bottom_y(&self) -> i32 {
+        (self.bounds.y1 - self.padding_bottom).max(self.bounds.y0)
+    }
+
+    /// X coordinate of the right of the available space/bounds
+    pub fn right_x(&self) -> i32 {
+        self.bounds.x1
+    }
+
     /// Perform some operations defined on `Op` - e.g. changing the color,
     /// changing the font or rendering the text.
     pub fn layout_ops<'o>(
@@ -132,23 +143,40 @@ impl TextLayout {
                 Op::Font(font) => {
                     self.style.text_font = font;
                 }
-                Op::Text(text) => match self.layout_text(text, cursor, sink) {
-                    LayoutFit::Fitting {
-                        processed_chars, ..
-                    } => {
-                        total_processed_chars += processed_chars;
-                    }
-                    LayoutFit::OutOfBounds {
-                        processed_chars, ..
-                    } => {
-                        total_processed_chars += processed_chars;
+                Op::CursorOffset(offset) => {
+                    cursor.x += offset.x;
+                    cursor.y += offset.y;
+                }
+                _ => {
+                    // Text and Icon behave similarly - we try to fit them
+                    // on the current page and if they do not fit,
+                    // return the appropriate OutOfBounds message
+                    let fit = if let Op::Text(text) = op {
+                        self.layout_text(text, cursor, sink)
+                    } else if let Op::Icon(icon) = op {
+                        self.layout_icon(icon, cursor, sink)
+                    } else {
+                        panic!("unexpected op type");
+                    };
 
-                        return LayoutFit::OutOfBounds {
-                            processed_chars: total_processed_chars,
-                            height: self.layout_height(init_cursor, *cursor),
-                        };
+                    match fit {
+                        LayoutFit::Fitting {
+                            processed_chars, ..
+                        } => {
+                            total_processed_chars += processed_chars;
+                        }
+                        LayoutFit::OutOfBounds {
+                            processed_chars, ..
+                        } => {
+                            total_processed_chars += processed_chars;
+
+                            return LayoutFit::OutOfBounds {
+                                processed_chars: total_processed_chars,
+                                height: self.layout_height(init_cursor, *cursor),
+                            };
+                        }
                     }
-                },
+                }
             }
         }
 
@@ -168,11 +196,10 @@ impl TextLayout {
         sink: &mut dyn LayoutSink,
     ) -> LayoutFit {
         let init_cursor = *cursor;
-        let bottom = (self.bounds.y1 - self.padding_bottom).max(self.bounds.y0);
         let mut remaining_text = text;
 
         // Check if bounding box is high enough for at least one line.
-        if cursor.y > bottom {
+        if cursor.y > self.bottom_y() {
             sink.out_of_bounds();
             return LayoutFit::OutOfBounds {
                 processed_chars: 0,
@@ -205,7 +232,7 @@ impl TextLayout {
                     sink.hyphen(*cursor, self);
                 }
                 // Check the amount of vertical space we have left.
-                if cursor.y + span.advance.y > bottom {
+                if cursor.y + span.advance.y > self.bottom_y() {
                     if !remaining_text.is_empty() {
                         // Append ellipsis to indicate more content is available, but only if we
                         // haven't already appended a hyphen.
@@ -242,6 +269,52 @@ impl TextLayout {
         LayoutFit::Fitting {
             processed_chars: text.len(),
             height: self.layout_height(init_cursor, *cursor),
+        }
+    }
+
+    /// Try to fit the `icon` on the current screen
+    pub fn layout_icon(
+        &self,
+        icon: &'static [u8],
+        cursor: &mut Point,
+        sink: &mut dyn LayoutSink,
+    ) -> LayoutFit {
+        // Check if bounding box is high enough for at least one line.
+        if cursor.y > self.bottom_y() {
+            sink.out_of_bounds();
+            return LayoutFit::OutOfBounds {
+                processed_chars: 0,
+                height: 0,
+            };
+        }
+
+        let icon_obj = Icon::new(icon, "icon");
+
+        // Icon is too wide to fit on current line.
+        // Trying to accommodate it on the next line, when it exists on this page.
+        if cursor.x + icon_obj.width() > self.right_x() {
+            cursor.x = self.bounds.x0;
+            cursor.y += self.text_font.line_height();
+            if cursor.y > self.bottom_y() {
+                sink.out_of_bounds();
+                return LayoutFit::OutOfBounds {
+                    processed_chars: 0,
+                    height: self.text_font.line_height(),
+                };
+            }
+        }
+
+        sink.icon(*cursor, icon_obj);
+
+        // TODO: currently we are using just small icons - that fit nicely to one line -
+        // but in case we would do bigger ones, we would need some anti-collision
+        // mechanism.
+
+        cursor.x += icon_obj.width() as i32;
+        LayoutFit::Fitting {
+            // TODO: how to handle this? It could collide with "skip_first_n_bytes"
+            processed_chars: 1,
+            height: 0, // it should just draw on one line
         }
     }
 
@@ -282,6 +355,8 @@ impl LayoutFit {
 pub trait LayoutSink {
     /// Text should be processed.
     fn text(&mut self, _cursor: Point, _layout: &TextLayout, _text: &str) {}
+    /// Text should be processed.
+    fn icon(&mut self, _cursor: Point, _icon: Icon<&'static str>) {}
     /// Hyphen at the end of line.
     fn hyphen(&mut self, _cursor: Point, _layout: &TextLayout) {}
     /// Ellipsis at the end of the page.
@@ -332,6 +407,10 @@ impl LayoutSink for TextRenderer {
             layout.style.background_color,
         );
     }
+
+    fn icon(&mut self, cursor: Point, icon: Icon<&'static str>) {
+        icon.draw_bottom_left(cursor, theme::FG, theme::BG);
+    }
 }
 
 #[cfg(feature = "ui_debug")]
@@ -366,10 +445,16 @@ pub mod trace {
 pub enum Op<'a> {
     /// Render text with current color and font.
     Text(&'a str),
+    /// Render icon.
+    /// TODO: make it have `display::Icon`, but it currently has
+    /// `T` parameter because of HTC not supporting icons
+    Icon(&'static [u8]),
     /// Set current text color.
     Color(Color),
     /// Set currently used font.
     Font(Font),
+    /// Move the current cursor by specified Offset.
+    CursorOffset(Offset),
 }
 
 impl<'a> Op<'a> {
