@@ -4,7 +4,7 @@ use crate::{
         component::{base::Component, FormattedText},
         display::{Font, Icon},
         geometry::{Point, Rect},
-        model_tr::{constant, theme},
+        model_tr::theme,
     },
 };
 use heapless::{String, Vec};
@@ -12,7 +12,7 @@ use heapless::{String, Vec};
 use super::{common, flow::BtnActions, ButtonLayout};
 
 pub trait FlowPage {
-    fn paint(&mut self, left_top: Point);
+    fn paint(&mut self, available_area: Rect);
     fn btn_layout(&self) -> ButtonLayout<&'static str>;
     fn btn_actions(&self) -> BtnActions;
 }
@@ -35,11 +35,11 @@ where
     T: AsRef<str>,
     T: Clone,
 {
-    fn paint(&mut self, left_top: Point) {
+    fn paint(&mut self, available_area: Rect) {
         match self {
-            FlowPages::RecipientAddress(item) => item.paint(left_top),
-            FlowPages::KeyValueIcon(item) => item.paint(left_top),
-            FlowPages::TitleAndText(item) => item.paint(left_top),
+            FlowPages::RecipientAddress(item) => item.paint(available_area),
+            FlowPages::KeyValueIcon(item) => item.paint(available_area),
+            FlowPages::TitleAndText(item) => item.paint(available_area),
         }
     }
 
@@ -89,9 +89,10 @@ impl<T> FlowPage for RecipientAddressPage<T>
 where
     T: AsRef<str>,
 {
-    fn paint(&mut self, left_top: Point) {
-        let x_start = left_top.x;
-        let mut y_offset = left_top.y;
+    fn paint(&mut self, available_area: Rect) {
+        let top_left = available_area.top_left();
+        let x_start = top_left.x;
+        let mut y_offset = top_left.y;
 
         let used_font = theme::FONT_NORMAL;
         y_offset += used_font.line_height();
@@ -234,12 +235,14 @@ where
     T: AsRef<str>,
     T: Clone,
 {
-    fn paint(&mut self, left_top: Point) {
-        let x_start = left_top.x;
-        let mut y_offset = left_top.y;
+    fn paint(&mut self, available_area: Rect) {
+        let top_left = available_area.top_left();
+        let x_start = top_left.x;
+        let mut y_offset = top_left.y;
 
         // Draw all the pairs - maximum three, can be even just one or two.
         // Gradually incrementing the `y_offset` according to the drawn height.
+        // Not actually checking that we are not exceeding the available area.
         for pair in self.pairs.iter() {
             y_offset += pair.label_font.line_height();
             y_offset += pair.draw(Point::new(x_start, y_offset));
@@ -290,18 +293,14 @@ where
     T: AsRef<str>,
     T: Clone,
 {
-    fn paint(&mut self, left_top: Point) {
+    fn paint(&mut self, available_area: Rect) {
         // Putting the attributes into a template
         let format = "{bold}{title}\n{normal}{text}";
         let mut text = FormattedText::new(theme::TEXT_NORMAL, theme::FORMATTED, format)
             .with("title", self.title.clone())
             .with("text", self.text.clone());
 
-        // Placing the text in the biggest area as possible, just accounting for the
-        // buttons
-        let right_bottom = Point::new(constant::WIDTH, constant::HEIGHT - theme::BUTTON_HEIGHT);
-        text.place(Rect::new(left_top, right_bottom));
-
+        text.place(available_area);
         text.paint();
     }
 

@@ -1,6 +1,7 @@
 use crate::ui::{
     component::{Child, Component, Event, EventCtx, Pad},
-    geometry::{Offset, Point, Rect},
+    geometry::{Point, Rect},
+    model_tr::constant,
 };
 
 use super::{common, theme, ButtonController, ButtonControllerMsg, ButtonPos, FlowPage, FlowPages};
@@ -136,6 +137,11 @@ impl BtnActions {
     }
 }
 
+// TODO: should support even paginated FlowPages, when the text
+// cannot fit on one page (and when we do not have control over its length)
+// This is currently needed for the recipient address verification, as
+// the address may, but may not fit on one screen (depends on external input)
+
 pub struct Flow<T, const N: usize> {
     pages: Vec<FlowPages<T>, N>,
     common_title: Option<T>,
@@ -170,18 +176,22 @@ where
 
     /// Rendering the whole page.
     fn paint_page(&mut self) {
-        // Optionally drawing the header.
-        // In that case offsetting the whole page by the height of the header.
         // TODO: print statements uncovered that this is being called
         // also when the button is just pressed, which is wasteful
         // (and also repeatedly when the HTC was being pressed)
-        const TOP_LEFT: Point = Point::zero();
+
+        // Painting the current_choice in the biggest area as possible,
+        // just accounting for the buttons.
+        let mut top_left = Point::zero();
+        let bottom_right = Point::new(constant::WIDTH, constant::HEIGHT - theme::BUTTON_HEIGHT);
+
+        // Optionally painting the header.
+        // In that case offsetting the current_choice by the height of the header.
         if let Some(title) = &self.common_title {
-            let y_offset = common::paint_header(TOP_LEFT, title, None);
-            self.current_choice().paint(TOP_LEFT + Offset::y(y_offset));
-        } else {
-            self.current_choice().paint(TOP_LEFT);
+            top_left.y += common::paint_header(top_left, title, None);
         }
+        self.current_choice()
+            .paint(Rect::new(top_left, bottom_right));
     }
 
     /// Setting current buttons and clearing.

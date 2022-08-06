@@ -165,7 +165,7 @@ where
         // Need to be called here, only after content is placed
         // and we can calculate the page count
         let page_count = self.content.page_count();
-        self.scrollbar.set_count_and_active_page(page_count, 0);
+        self.scrollbar.set_page_count(page_count);
         self.scrollbar.place(scrollbar_area);
         self.set_buttons_for_initial_page(page_count);
         self.buttons.place(button_area);

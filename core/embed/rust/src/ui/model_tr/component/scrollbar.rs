@@ -5,6 +5,7 @@ use crate::ui::{
     model_tr::theme,
 };
 
+/// In which direction should the scrollbar be positioned
 pub enum ScrollbarOrientation {
     Vertical,
     Horizontal,
@@ -22,18 +23,33 @@ impl ScrollBar {
     pub const DOT_SIZE: Offset = Offset::new(4, 4);
     pub const DOT_INTERVAL: i32 = 6;
 
-    /// Details will be given later as they are not available yet.
-    pub fn vertical_to_be_filled_later() -> Self {
+    pub fn new(page_count: usize, orientation: ScrollbarOrientation) -> Self {
         Self {
             area: Rect::zero(),
-            page_count: 0,
+            page_count,
             active_page: 0,
-            orientation: ScrollbarOrientation::Vertical,
+            orientation,
         }
     }
 
-    pub fn set_count_and_active_page(&mut self, page_count: usize, active_page: usize) {
+    /// Page count will be given later as it is not available yet.
+    pub fn vertical_to_be_filled_later() -> Self {
+        Self::vertical(0)
+    }
+
+    pub fn vertical(page_count: usize) -> Self {
+        Self::new(page_count, ScrollbarOrientation::Vertical)
+    }
+
+    pub fn horizontal(page_count: usize) -> Self {
+        Self::new(page_count, ScrollbarOrientation::Horizontal)
+    }
+
+    pub fn set_page_count(&mut self, page_count: usize) {
         self.page_count = page_count;
+    }
+
+    pub fn set_active_page(&mut self, active_page: usize) {
         self.active_page = active_page;
     }
 
@@ -71,6 +87,48 @@ impl ScrollBar {
             display::rect_fill(full_square.shrink(1), theme::BG)
         }
     }
+
+    fn paint_vertical(&mut self) {
+        let count = self.page_count as i32;
+        let interval = {
+            let available_space = self.area.height();
+            let naive_space = count * Self::DOT_INTERVAL;
+            if naive_space > available_space {
+                available_space / count
+            } else {
+                Self::DOT_INTERVAL
+            }
+        };
+        let mut top_left = Point::new(
+            self.area.center().x - Self::DOT_SIZE.x / 2,
+            self.area.center().y - (count / 2) * interval,
+        );
+        for i in 0..self.page_count {
+            self.paint_dot(i == self.active_page, top_left);
+            top_left.y += interval;
+        }
+    }
+
+    fn paint_horizontal(&mut self) {
+        let count = self.page_count as i32;
+        let interval = {
+            let available_space = self.area.width();
+            let naive_space = count * Self::DOT_INTERVAL;
+            if naive_space > available_space {
+                available_space / count
+            } else {
+                Self::DOT_INTERVAL
+            }
+        };
+        let mut top_left = Point::new(
+            self.area.center().x - (count / 2) * interval,
+            self.area.center().y - Self::DOT_SIZE.y / 2,
+        );
+        for i in 0..self.page_count {
+            self.paint_dot(i == self.active_page, top_left);
+            top_left.x += interval;
+        }
+    }
 }
 
 impl Component for ScrollBar {
@@ -85,41 +143,17 @@ impl Component for ScrollBar {
         None
     }
 
-    /// Displaying vertical dots on the right side - one for each page.
+    /// Displaying one dot for each page.
     fn paint(&mut self) {
         // Not showing the scrollbar dot when there is only one page
         if self.page_count <= 1 {
             return;
         }
 
-        let count = self.page_count as i32;
-        let interval = {
-            let available_space = {
-                if matches!(self.orientation, ScrollbarOrientation::Vertical) {
-                    self.area.height()
-                } else {
-                    self.area.width()
-                }
-            };
-            let naive_space = count * Self::DOT_INTERVAL;
-            if naive_space > available_space {
-                available_space / count
-            } else {
-                Self::DOT_INTERVAL
-            }
-        };
-        let mut top_left = Point::new(
-            self.area.center().x - Self::DOT_SIZE.x / 2,
-            self.area.center().y - (count / 2) * interval,
-        );
-        for i in 0..self.page_count {
-            self.paint_dot(i == self.active_page, top_left);
-            // Offsetting the next dot based on the orientation and interval
-            if matches!(self.orientation, ScrollbarOrientation::Vertical) {
-                top_left.y += interval;
-            } else {
-                top_left.x += interval;
-            }
+        if matches!(self.orientation, ScrollbarOrientation::Vertical) {
+            self.paint_vertical()
+        } else {
+            self.paint_horizontal()
         }
     }
 }
