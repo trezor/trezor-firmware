@@ -478,6 +478,15 @@ impl<'a> Op<'a> {
                     None
                 }
             }
+            Op::Icon(_) if skipped < skip_bytes => {
+                // Assume the icon accounts for one character
+                skipped = skipped.saturating_add(1);
+                None
+            }
+            Op::CursorOffset(_) if skipped < skip_bytes => {
+                // Skip any offsets
+                None
+            }
             op_to_pass_through => Some(op_to_pass_through),
         })
     }

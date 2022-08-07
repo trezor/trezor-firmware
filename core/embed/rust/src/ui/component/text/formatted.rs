@@ -17,6 +17,7 @@ use super::layout::{
 
 pub const MAX_ARGUMENTS: usize = 6;
 
+#[derive(Clone)]
 pub struct FormattedText<F, T> {
     layout: TextLayout,
     fonts: FormattedFonts,
@@ -124,9 +125,21 @@ where
     pub fn layout_content(&self, sink: &mut dyn LayoutSink) -> LayoutFit {
         let mut cursor = self.layout.initial_cursor();
         // Accounting for pagination by skipping the `char_offset` characters from the
-        // beginning.
+        // beginning. TODO: create an example of using the tokens with various
+        // arguments
         let mut ops = Op::skip_n_text_bytes(
             Tokenizer::new(self.format.as_ref()).flat_map(|arg| match arg {
+                // TODO: might want to differentiate the commands and arguments,
+                // for example adding "OP:" for commands - "OP:mono", "OP:x_offset_4", etc.
+                // TODO: could add ways to:
+                // - center text on a line {center}
+                // - right-align text on a line {right}
+                // - underscore the text {underscore}
+                // - strikethrough the text {strikethrough}
+                // - bullet-point on the line {bullet_point}
+                // - force going to the next page {next_page}
+                // - draw horizontal line {horizontal_line}
+                // - conditional rendering of some part {if_x} ... {/if_x}, with_if("x", true)
                 Token::Literal(literal) => Some(Op::Text(literal)),
                 Token::Argument("mono") => Some(Op::Font(self.fonts.mono)),
                 Token::Argument("bold") => Some(Op::Font(self.fonts.bold)),

@@ -1,10 +1,12 @@
 use crate::ui::{
     component::{Child, Component, Event, EventCtx, Pad},
     geometry::{Point, Rect},
-    model_tr::constant,
 };
 
-use super::{common, theme, ButtonController, ButtonControllerMsg, ButtonPos, FlowPage, FlowPages};
+use super::{
+    common, theme, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos, FlowPage,
+    FlowPages,
+};
 use heapless::Vec;
 
 /// To be returned directly from Flow.
@@ -137,14 +139,10 @@ impl BtnActions {
     }
 }
 
-// TODO: should support even paginated FlowPages, when the text
-// cannot fit on one page (and when we do not have control over its length)
-// This is currently needed for the recipient address verification, as
-// the address may, but may not fit on one screen (depends on external input)
-
 pub struct Flow<T, const N: usize> {
     pages: Vec<FlowPages<T>, N>,
     common_title: Option<T>,
+    content_area: Rect,
     pad: Pad,
     buttons: Child<ButtonController<&'static str>>,
     page_counter: u8,
@@ -156,13 +154,14 @@ where
     T: Clone,
 {
     pub fn new(pages: Vec<FlowPages<T>, N>) -> Self {
-        let initial_btn_layout = pages[0].btn_layout();
-
         Self {
             pages,
             common_title: None,
+            content_area: Rect::zero(),
             pad: Pad::with_background(theme::BG),
-            buttons: Child::new(ButtonController::new(initial_btn_layout)),
+            // Setting empty layout for now, we do not yet know how many sub-pages the first page has.
+            // Initial button layout will be set in `place()` after we can call `content.page_count()`.
+            buttons: Child::new(ButtonController::new(ButtonLayout::empty())),
             page_counter: 0,
         }
     }
@@ -174,28 +173,10 @@ where
         self
     }
 
-    /// Rendering the whole page.
-    fn paint_page(&mut self) {
-        // TODO: print statements uncovered that this is being called
-        // also when the button is just pressed, which is wasteful
-        // (and also repeatedly when the HTC was being pressed)
-
-        // Painting the current_choice in the biggest area as possible,
-        // just accounting for the buttons.
-        let mut top_left = Point::zero();
-        let bottom_right = Point::new(constant::WIDTH, constant::HEIGHT - theme::BUTTON_HEIGHT);
-
-        // Optionally painting the header.
-        // In that case offsetting the current_choice by the height of the header.
-        if let Some(title) = &self.common_title {
-            top_left.y += common::paint_header(top_left, title, None);
-        }
-        self.current_choice()
-            .paint(Rect::new(top_left, bottom_right));
-    }
-
-    /// Setting current buttons and clearing.
+    /// Placing current page, setting current buttons and clearing.
     fn update(&mut self, ctx: &mut EventCtx) {
+        let content_area = self.content_area;
+        self.current_choice().place(content_area);
         self.set_buttons(ctx);
         self.clear(ctx);
     }
@@ -253,6 +234,22 @@ where
             buttons.set(ctx, btn_layout);
         });
     }
+
+    /// When current choice contains paginated content, it may use the button
+    /// event to just paginate itself.
+    fn event_consumed_by_current_choice(&mut self, ctx: &mut EventCtx, pos: ButtonPos) -> bool {
+        if matches!(pos, ButtonPos::Left) && self.current_choice().has_prev_page() {
+            self.current_choice().go_to_prev_page();
+            self.update(ctx);
+            true
+        } else if matches!(pos, ButtonPos::Right) && self.current_choice().has_next_page() {
+            self.current_choice().go_to_next_page();
+            self.update(ctx);
+            true
+        } else {
+            false
+        }
+    }
 }
 
 impl<T, const N: usize> Component for Flow<T, N>
@@ -263,8 +260,20 @@ where
     type Msg = FlowMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let (content_area, button_area) = bounds.split_bottom(theme::BUTTON_HEIGHT);
-        self.pad.place(content_area);
+        let (title_content_area, button_area) = bounds.split_bottom(theme::BUTTON_HEIGHT);
+        // Accounting for possible title
+        let content_area = if self.common_title.is_some() {
+            title_content_area.split_top(10).1
+        } else {
+            title_content_area
+        };
+        self.content_area = content_area;
+
+        // We finally found how long is the first page, and can set its button layout.
+        self.current_choice().place(content_area);
+        self.buttons = Child::new(ButtonController::new(self.current_choice().btn_layout()));
+
+        self.pad.place(title_content_area);
         self.buttons.place(button_area);
         bounds
     }
@@ -275,6 +284,12 @@ where
         // Do something when a button was triggered
         // and we have some action connected with it
         if let Some(ButtonControllerMsg::Triggered(pos)) = button_event {
+            // When there is a previous or next screen in the current flow,
+            // handle that first and in case it triggers, then do not continue
+            if self.event_consumed_by_current_choice(ctx, pos) {
+                return None;
+            }
+
             let actions = self.current_choice().btn_actions();
             let action = actions.get_action(pos);
             if let Some(action) = action {
@@ -307,7 +322,10 @@ where
         // TODO: might put horizontal scrollbar at the top right
         self.pad.paint();
         self.buttons.paint();
-        self.paint_page();
+        if let Some(title) = &self.common_title {
+            common::paint_header(Point::zero(), title, None);
+        }
+        self.current_choice().paint();
     }
 }
 

@@ -29,6 +29,9 @@ where
         let mut page_count = 1; // There's always at least one page.
         let mut char_offset = 0;
 
+        // Make sure we're starting from the beginning.
+        self.set_char_offset(char_offset);
+
         // Looping through the content and counting pages
         // until we finally fit.
         loop {

@@ -459,12 +459,20 @@ async def confirm_output(
     ellipsis = " ... "
     truncated_address = address[:chars_to_take] + ellipsis + address[-chars_to_take:]
 
+    # Also splitting the address into chunks delimited by whitespace
+    chunk_length = 4
+    delimiter = " "
+    address_chunks: list[str] = []
+    for i in range(0, len(address), chunk_length):
+        address_chunks.append(address[i : i + chunk_length])
+    address_str = delimiter.join(address_chunks)
+
     await raise_if_cancelled(
         interact(
             ctx,
             RustLayout(
                 trezorui2.confirm_output_r(
-                    address=address,
+                    address=address_str,
                     truncated_address=truncated_address,
                     amount=amount,
                 )

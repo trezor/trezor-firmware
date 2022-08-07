@@ -21,7 +21,6 @@ use crate::{
             text::paragraphs::Paragraphs,
             FormattedText,
         },
-        display::Icon,
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
             result::{CANCELLED, CONFIRMED, INFO},
@@ -32,9 +31,8 @@ use crate::{
 use super::{
     component::{
         Bip39Entry, Bip39EntryMsg, BtnActions, ButtonDetails, ButtonLayout, ButtonPage, Flow,
-        FlowMsg, FlowPages, Frame, KeyValueIcon, KeyValueIconPage, PassphraseEntry,
-        PassphraseEntryMsg, PinEntry, PinEntryMsg, RecipientAddressPage, SimpleChoice,
-        SimpleChoiceMsg, TitleAndTextPage,
+        FlowMsg, FlowPages, FormattedTextPage, Frame, PassphraseEntry, PassphraseEntryMsg,
+        PinEntry, PinEntryMsg, SimpleChoice, SimpleChoiceMsg,
     },
     theme,
 };
@@ -126,6 +124,8 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
         let reverse: bool = kwargs.get(Qstr::MP_QSTR_reverse)?.try_into()?;
         let hold: bool = kwargs.get(Qstr::MP_QSTR_hold)?.try_into()?;
 
+        // TODO: could be replaced by Flow with one element after it supports pagination
+
         let format = match (&action, &description, reverse) {
             (Some(_), Some(_), false) => "{bold}{action}\n\r{normal}{description}",
             (Some(_), Some(_), true) => "{normal}{description}\n\r{bold}{action}",
@@ -182,6 +182,8 @@ extern "C" fn new_confirm_text(n_args: usize, args: *const Obj, kwargs: *mut Map
         let description: Option<StrBuffer> =
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
 
+        // TODO: could be replaced by Flow with one element after it supports pagination
+
         let obj = LayoutObj::new(Frame::new(
             title,
             None,
@@ -208,11 +210,10 @@ extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) 
         let amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_amount)?.try_into()?;
 
         // Showing two screens - the recipient address and summary confirmation
-        // Address page is a special page on its own
-        // Confirm page reuses the general `KeyValueIconPage`
 
         let title: StrBuffer = "Send".into();
 
+        // `icon + label + address`
         let address_page = {
             let btn_layout = ButtonLayout::new(
                 Some(ButtonDetails::cancel_icon("cancel")),
@@ -220,10 +221,16 @@ extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) 
                 Some(ButtonDetails::text("CONTINUE")),
             );
             let btn_actions = BtnActions::cancel_next();
-            let page = RecipientAddressPage::new(address, btn_layout, btn_actions);
-            FlowPages::RecipientAddress(page)
+            let format = "{icon_user}{x_offset_3}{label}\n{bold}{address}";
+            let text = FormattedText::new::<theme::TRDefaultText>(format)
+                .with_icon("icon_user", theme::ICON_USER)
+                .with("label", "Recipient".into())
+                .with("address", address);
+            let page = FormattedTextPage::new(text, btn_layout, btn_actions);
+            FlowPages::FormattedText(page)
         };
 
+        // 2 pairs `icon + label + text`
         let confirm_page = {
             let btn_layout = ButtonLayout::new(
                 Some(ButtonDetails::cancel_icon("cancel")),
@@ -232,22 +239,15 @@ extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) 
             );
             let btn_actions = BtnActions::cancel_confirm();
 
-            let pairs: Vec<KeyValueIcon<StrBuffer>, 3> = Vec::from_slice(&[
-                KeyValueIcon::normal_bold(
-                    "Recipient".into(),
-                    truncated_address,
-                    Icon::new(theme::ICON_USER, "user".into()),
-                ),
-                KeyValueIcon::normal_bold(
-                    "Amount".into(),
-                    amount,
-                    Icon::new(theme::ICON_AMOUNT, "amount".into()),
-                ),
-            ])
-            .unwrap();
-
-            let page = KeyValueIconPage::new(pairs, btn_layout, btn_actions);
-            FlowPages::KeyValueIcon(page)
+            let format = "{icon_user}{x_offset_3}{normal}Recipient\n{bold}{address}\n\
+                                {icon_amount}{x_offset_3}{normal}Amount\n{bold}{amount}";
+            let text = FormattedText::new::<theme::TRDefaultText>(format)
+                .with_icon("icon_user", theme::ICON_USER)
+                .with_icon("icon_amount", theme::ICON_AMOUNT)
+                .with("address", truncated_address)
+                .with("amount", amount);
+            let page = FormattedTextPage::new(text, btn_layout, btn_actions);
+            FlowPages::FormattedText(page)
         };
 
         let pages: Vec<FlowPages<StrBuffer>, 2> =
@@ -270,7 +270,7 @@ extern "C" fn confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -
         let total_label: StrBuffer = kwargs.get(Qstr::MP_QSTR_total_label)?.try_into()?;
         let fee_label: StrBuffer = kwargs.get(Qstr::MP_QSTR_fee_label)?.try_into()?;
 
-        // Showing one screen - the general `KeyValueIconPage` with 2 or 3 pairs
+        // One page with 2 or 3 pairs `icon + label + text`
 
         let confirm_page = {
             let btn_layout = ButtonLayout::new(
@@ -280,21 +280,29 @@ extern "C" fn confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -
             );
             let btn_actions = BtnActions::cancel_confirm();
 
-            // Constructing all the key-value-icon pairs
-            let mut pairs: Vec<KeyValueIcon<StrBuffer>, 3> = Vec::from_slice(&[
-                KeyValueIcon::normal_bold_param(total_label, total_amount),
-                KeyValueIcon::normal_bold_param(fee_label, fee_amount),
-            ])
-            .unwrap();
+            // TODO: how to make it more general?
+            // Is there some way to concatenate slices?
+            // We could have format as String<300> and append the optional values if there
+            // OR some {flag} to not continue if inputted value is None
+            let format = if fee_rate_amount.is_none() {
+                "{icon_param}{x_offset_3}{normal}{total_label}\n{bold}{total_amount}\n\
+                 {icon_param}{x_offset_3}{normal}{fee_label}\n{bold}{fee_amount}"
+            } else {
+                "{icon_param}{x_offset_3}{normal}{total_label}\n{bold}{total_amount}\n\
+                 {icon_param}{x_offset_3}{normal}{fee_label}\n{bold}{fee_amount}\n\
+                 {icon_param}{x_offset_3}{normal}Fee rate:\n{bold}{fee_rate_amount}"
+            };
 
-            // Optionally adding the fee-rate when it is there
-            if let Some(fee_rate_amount) = fee_rate_amount {
-                let new_pair = KeyValueIcon::normal_bold_param("Fee rate:".into(), fee_rate_amount);
-                pairs.push(new_pair).unwrap();
-            }
+            let text = FormattedText::new::<theme::TRDefaultText>(format)
+                .with_icon("icon_param", theme::ICON_PARAM)
+                .with("total_label", total_label)
+                .with("total_amount", total_amount)
+                .with("fee_label", fee_label)
+                .with("fee_amount", fee_amount)
+                .with("fee_rate_amount", fee_rate_amount.unwrap_or_default());
 
-            let page = KeyValueIconPage::new(pairs, btn_layout, btn_actions);
-            FlowPages::KeyValueIcon(page)
+            let page = FormattedTextPage::new(text, btn_layout, btn_actions);
+            FlowPages::FormattedText(page)
         };
 
         let pages: Vec<FlowPages<StrBuffer>, 1> = Vec::from_slice(&[confirm_page]).unwrap();
@@ -394,9 +402,12 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
         let pages: Vec<FlowPages<&str>, 8> = screens
             .iter()
             .map(|screen| {
-                let page =
-                    TitleAndTextPage::new(screen.0, screen.1, screen.2.clone(), screen.3.clone());
-                FlowPages::TitleAndText(page)
+                let format = "{bold}{title}\n{normal}{text}";
+                let text = FormattedText::new::<theme::TRDefaultText>(format)
+                    .with("title", screen.0)
+                    .with("text", screen.1);
+                let page = FormattedTextPage::new(text, screen.2.clone(), screen.3.clone());
+                FlowPages::FormattedText(page)
             })
             .collect();
 
