@@ -3,7 +3,6 @@ use crate::ui::{
     display,
     display::{Color, Font, Icon},
     geometry::{Offset, Point, Rect},
-    model_tr::theme,
 };
 
 #[derive(Copy, Clone)]
@@ -304,7 +303,7 @@ impl TextLayout {
             }
         }
 
-        sink.icon(*cursor, icon_obj);
+        sink.icon(*cursor, self, icon_obj);
 
         // TODO: currently we are using just small icons - that fit nicely to one line -
         // but in case we would do bigger ones, we would need some anti-collision
@@ -356,7 +355,7 @@ pub trait LayoutSink {
     /// Text should be processed.
     fn text(&mut self, _cursor: Point, _layout: &TextLayout, _text: &str) {}
     /// Text should be processed.
-    fn icon(&mut self, _cursor: Point, _icon: Icon<&'static str>) {}
+    fn icon(&mut self, _cursor: Point, _layout: &TextLayout, _icon: Icon<&'static str>) {}
     /// Hyphen at the end of line.
     fn hyphen(&mut self, _cursor: Point, _layout: &TextLayout) {}
     /// Ellipsis at the end of the page.
@@ -408,8 +407,8 @@ impl LayoutSink for TextRenderer {
         );
     }
 
-    fn icon(&mut self, cursor: Point, icon: Icon<&'static str>) {
-        icon.draw_bottom_left(cursor, theme::FG, theme::BG);
+    fn icon(&mut self, cursor: Point, layout: &TextLayout, icon: Icon<&'static str>) {
+        icon.draw_bottom_left(cursor, layout.text_color, layout.background_color);
     }
 }
 

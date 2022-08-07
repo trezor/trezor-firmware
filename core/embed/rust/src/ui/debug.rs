@@ -8,9 +8,11 @@ use super::component::text::common::TextBox;
 use super::component::text::layout::{Span, TextLayout};
 use super::display::{Color, Font, Icon};
 use super::geometry::{Grid, Insets, Offset, Point, Rect};
-use super::model_tr::component::ButtonDetails;
 use crate::micropython::buffer::StrBuffer;
 use crate::time::Duration;
+
+#[cfg(feature = "model_tr")]
+use super::model_tr::component::ButtonDetails;
 
 // NOTE: not defining a common trait, like
 // Debug {fn print(&self);}, so that the trait does
@@ -81,6 +83,7 @@ impl Font {
     }
 }
 
+#[cfg(feature = "model_tr")]
 impl<T: Clone + AsRef<str>> ButtonDetails<T> {
     pub fn print(&self) {
         let text = if let Some(text) = self.text.clone() {
