@@ -97,7 +97,7 @@ pub fn paint_header<T: AsRef<str>>(top_left: Point, title: T, subtitle: Option<T
         display_header(title_baseline + Offset::y(text_heigth), subtitle);
     }
     let line_start = top_left + Offset::y(dotted_line_offset);
-    display::dotted_line_horizontal(line_start, constant::WIDTH, theme::FG);
+    display::dotted_line_horizontal(line_start, constant::WIDTH, theme::FG, 2);
     dotted_line_offset
 }
 

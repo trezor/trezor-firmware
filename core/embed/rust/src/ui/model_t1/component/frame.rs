@@ -59,7 +59,7 @@ where
             theme::FG,
             theme::BG,
         );
-        display::dotted_line_horizontal(self.area.bottom_left(), self.area.width(), theme::FG);
+        display::dotted_line_horizontal(self.area.bottom_left(), self.area.width(), theme::FG, 2);
         self.content.paint();
     }
 }

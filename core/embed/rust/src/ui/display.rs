@@ -516,9 +516,10 @@ pub fn bar_with_text_and_fill<T: AsRef<str>>(
     pixeldata_dirty();
 }
 
-/// Draws a horizontal line of pixels with a step of 2 pixels.
-pub fn dotted_line_horizontal(start: Point, width: i32, color: Color) {
-    for x in (start.x..width).step_by(2) {
+/// Draws a horizontal line of pixels with a given step of pixels.
+/// Giving `step=1` draws a full line.
+pub fn dotted_line_horizontal(start: Point, width: i32, color: Color, step: usize) {
+    for x in (start.x..width).step_by(step) {
         paint_point(&Point::new(x, start.y), color);
     }
 }
@@ -569,6 +570,48 @@ pub fn loader_indeterminate(
 
 pub fn qrcode(center: Point, data: &str, max_size: u32, case_sensitive: bool) -> Result<(), Error> {
     qr::render_qrcode(center.x, center.y, data, max_size, case_sensitive)
+}
+
+/// Render text and draw a horizontal line below it.
+pub fn text_underscored(
+    baseline: Point,
+    text_to_write: &str,
+    font: Font,
+    fg_color: Color,
+    bg_color: Color,
+) {
+    text(baseline, text_to_write, font, fg_color, bg_color);
+    dotted_line_horizontal(
+        baseline + Offset::y(1),
+        font.text_width(text_to_write),
+        fg_color,
+        1,
+    );
+}
+
+/// Render text and create a strikethrough in it.
+pub fn text_strikethrough(
+    baseline: Point,
+    text_to_write: &str,
+    font: Font,
+    fg_color: Color,
+    bg_color: Color,
+) {
+    text(baseline, text_to_write, font, fg_color, bg_color);
+    let font_height = font.text_height();
+    // Our 16-sized font is actually not so high so drawing it in half
+    // would mean on the top of most letters
+    let y_offset = if font_height == 16 {
+        5
+    } else {
+        font_height / 2
+    };
+    dotted_line_horizontal(
+        baseline - Offset::y(y_offset),
+        font.text_width(text_to_write),
+        fg_color,
+        1,
+    );
 }
 
 pub fn text(baseline: Point, text: &str, font: Font, fg_color: Color, bg_color: Color) {
