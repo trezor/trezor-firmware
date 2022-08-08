@@ -283,19 +283,16 @@ extern "C" fn confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -
             // TODO: how to make it more general (creating arbitrary amount of pairs)?
             // Is there some way to concatenate slices?
             // We could have format as String<300> and append the optional values if there
-            // OR some {flag} to not continue if inputted value is None
-            let format = if fee_rate_amount.is_none() {
-                // TODO: could increase the y-spacing, to use the free space at the bottom
-                "{Icon::param}{Offset::x::3}{Font::normal}{total_label}\n{Font::bold}{total_amount}\n\
-                 {Icon::param}{Offset::x::3}{Font::normal}{fee_label}\n{Font::bold}{fee_amount}"
-            } else {
-                "{Icon::param}{Offset::x::3}{Font::normal}{total_label}\n{Font::bold}{total_amount}\n\
-                 {Icon::param}{Offset::x::3}{Font::normal}{fee_label}\n{Font::bold}{fee_amount}\n\
-                 {Icon::param}{Offset::x::3}{Font::normal}Fee rate:\n{Font::bold}{fee_rate_amount}"
-            };
+            let format =
+                 "{Icon::param}{Offset::x::3}{Font::normal}{total_label}\n{Font::bold}{total_amount}\n\
+                  {Icon::param}{Offset::x::3}{Font::normal}{fee_label}\n{Font::bold}{fee_amount}\
+                  {IF::has_fee_rate}\
+                      \n{Icon::param}{Offset::x::3}{Font::normal}Fee rate:\n{Font::bold}{fee_rate_amount}\
+                  {ENDIF::has_fee_rate}";
 
             let text = FormattedText::new(theme::TEXT_NORMAL, theme::FORMATTED, format)
                 .with_icon("param", theme::ICON_PARAM)
+                .with_bool("has_fee_rate", fee_rate_amount.is_some())
                 .with("total_label", total_label)
                 .with("total_amount", total_amount)
                 .with("fee_label", fee_label)

@@ -24,6 +24,7 @@ pub struct FormattedText<F, T> {
     format: F,
     args: LinearMap<&'static str, T, MAX_ARGUMENTS>,
     icon_args: LinearMap<&'static str, &'static [u8], MAX_ARGUMENTS>,
+    bool_args: LinearMap<&'static str, bool, MAX_ARGUMENTS>,
     /// Keeps track of "cursor" position, so that we can paginate
     /// by skipping this amount of characters from the beginning.
     char_offset: usize,
@@ -49,6 +50,7 @@ impl<F, T> FormattedText<F, T> {
             layout: TextLayout::new(style),
             args: LinearMap::new(),
             icon_args: LinearMap::new(),
+            bool_args: LinearMap::new(),
             char_offset: 0,
         }
     }
@@ -65,6 +67,14 @@ impl<F, T> FormattedText<F, T> {
         if self.icon_args.insert(key, value).is_err() {
             #[cfg(feature = "ui_debug")]
             panic!("icon args map is full");
+        }
+        self
+    }
+
+    pub fn with_bool(mut self, key: &'static str, value: bool) -> Self {
+        if self.bool_args.insert(key, value).is_err() {
+            #[cfg(feature = "ui_debug")]
+            panic!("bool args map is full");
         }
         self
     }
@@ -128,13 +138,39 @@ where
         // self.token_to_op(&arg)); TODO: It would be very nice to move all the
         // logic to `fn token_to_op(&self, token: &Token) -> Option<Op>`, but it
         // had some issues with lifetimes I could not solve
+        let mut should_include = true; // to help with the IF/ENDIF logic
         let all_ops = Tokenizer::new(self.format.as_ref()).flat_map(|arg| match arg {
             // TODO: could add ways to:
             // - underscore the text {Text::underscore}
             // - strikethrough the text {Text::strikethrough}
             // - bullet-point on the line {bullet_point}
             // - draw horizontal line {horizontal_line}
-            // - conditional rendering of some part {if_x} ... {/if_x}, with_if("x", true)
+
+            // Conditional operators that can be used to include/exclude
+            // segments of `format` based on external boolean condition.
+            // e.g. {IF::user_has_birthday}{ICON::cake}{ENDIF::user_has_birthday},
+            // .with_bool("user_has_birthday", user.birthday == today)
+            Token::Argument(condition) if condition.starts_with("IF::") => {
+                let condition_name = &condition["IF::".len()..];
+                should_include = match self.bool_args.get(condition_name).copied() {
+                    // TODO: this does not account for nested IFs
+                    Some(true) => true,
+                    Some(false) => false,
+                    None => {
+                        #[cfg(feature = "ui_debug")]
+                        panic!("missing bool argument: {}", condition_name);
+                    }
+                };
+                None
+            }
+            Token::Argument(condition) if condition.starts_with("ENDIF::") => {
+                // TODO: evaluate the condition name and set `should_include` accordingly
+                // (would be needed for some nested IFs)
+                should_include = true;
+                None
+            }
+            // Returning if the condition is false currently
+            _ if !should_include => None,
 
             // Normal text encountered
             Token::Literal(literal) => Some(Op::Text(literal)),
@@ -186,7 +222,7 @@ where
             }
             // Text with argument
             // e.g. `{address}`, .with("address", "abcd...")
-            // TODO: when arg is not found, we just do not display it,
+            // TODO: when arg is not found, we just do not display it (this returns None),
             // shouldn't we trigger some exception?
             // This branch is also triggered when users input some unsupported
             // operation like {Unsupported::black}
