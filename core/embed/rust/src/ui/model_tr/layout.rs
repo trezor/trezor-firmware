@@ -127,10 +127,10 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
         // TODO: could be replaced by Flow with one element after it supports pagination
 
         let format = match (&action, &description, reverse) {
-            (Some(_), Some(_), false) => "{bold}{action}\n\r{normal}{description}",
-            (Some(_), Some(_), true) => "{normal}{description}\n\r{bold}{action}",
-            (Some(_), None, _) => "{bold}{action}",
-            (None, Some(_), _) => "{normal}{description}",
+            (Some(_), Some(_), false) => "{Font::bold}{action}\n\r{Font::normal}{description}",
+            (Some(_), Some(_), true) => "{Font::normal}{description}\n\r{Font::bold}{action}",
+            (Some(_), None, _) => "{Font::bold}{action}",
+            (None, Some(_), _) => "{Font::normal}{description}",
             _ => "",
         };
 
@@ -221,9 +221,9 @@ extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) 
                 Some(ButtonDetails::text("CONTINUE")),
             );
             let btn_actions = BtnActions::cancel_next();
-            let format = "{icon_user}{x_offset_3}{label}\n{bold}{address}";
-            let text = FormattedText::new::<theme::TRDefaultText>(format)
-                .with_icon("icon_user", theme::ICON_USER)
+            let format = "{Icon::user}{Offset::x::3}{label}\n{Font::bold}{address}";
+            let text = FormattedText::new(theme::TEXT_NORMAL, theme::FORMATTED, format)
+                .with_icon("user", theme::ICON_USER)
                 .with("label", "Recipient".into())
                 .with("address", address);
             let page = FormattedTextPage::new(text, btn_layout, btn_actions);
@@ -239,11 +239,11 @@ extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) 
             );
             let btn_actions = BtnActions::cancel_confirm();
 
-            let format = "{icon_user}{x_offset_3}{normal}Recipient\n{bold}{address}\n\
-                                {icon_amount}{x_offset_3}{normal}Amount\n{bold}{amount}";
-            let text = FormattedText::new::<theme::TRDefaultText>(format)
-                .with_icon("icon_user", theme::ICON_USER)
-                .with_icon("icon_amount", theme::ICON_AMOUNT)
+            let format = "{Icon::user}{Offset::x::3}{Font::normal}Recipient\n{Font::bold}{address}\n\
+                                {Icon::amount}{Offset::x::3}{Font::normal}Amount\n{Font::bold}{amount}";
+            let text = FormattedText::new(theme::TEXT_NORMAL, theme::FORMATTED, format)
+                .with_icon("user", theme::ICON_USER)
+                .with_icon("amount", theme::ICON_AMOUNT)
                 .with("address", truncated_address)
                 .with("amount", amount);
             let page = FormattedTextPage::new(text, btn_layout, btn_actions);
@@ -280,21 +280,22 @@ extern "C" fn confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -
             );
             let btn_actions = BtnActions::cancel_confirm();
 
-            // TODO: how to make it more general?
+            // TODO: how to make it more general (creating arbitrary amount of pairs)?
             // Is there some way to concatenate slices?
             // We could have format as String<300> and append the optional values if there
             // OR some {flag} to not continue if inputted value is None
             let format = if fee_rate_amount.is_none() {
-                "{icon_param}{x_offset_3}{normal}{total_label}\n{bold}{total_amount}\n\
-                 {icon_param}{x_offset_3}{normal}{fee_label}\n{bold}{fee_amount}"
+                // TODO: could increase the y-spacing, to use the free space at the bottom
+                "{Icon::param}{Offset::x::3}{Font::normal}{total_label}\n{Font::bold}{total_amount}\n\
+                 {Icon::param}{Offset::x::3}{Font::normal}{fee_label}\n{Font::bold}{fee_amount}"
             } else {
-                "{icon_param}{x_offset_3}{normal}{total_label}\n{bold}{total_amount}\n\
-                 {icon_param}{x_offset_3}{normal}{fee_label}\n{bold}{fee_amount}\n\
-                 {icon_param}{x_offset_3}{normal}Fee rate:\n{bold}{fee_rate_amount}"
+                "{Icon::param}{Offset::x::3}{Font::normal}{total_label}\n{Font::bold}{total_amount}\n\
+                 {Icon::param}{Offset::x::3}{Font::normal}{fee_label}\n{Font::bold}{fee_amount}\n\
+                 {Icon::param}{Offset::x::3}{Font::normal}Fee rate:\n{Font::bold}{fee_rate_amount}"
             };
 
-            let text = FormattedText::new::<theme::TRDefaultText>(format)
-                .with_icon("icon_param", theme::ICON_PARAM)
+            let text = FormattedText::new(theme::TEXT_NORMAL, theme::FORMATTED, format)
+                .with_icon("param", theme::ICON_PARAM)
                 .with("total_label", total_label)
                 .with("total_amount", total_amount)
                 .with("fee_label", fee_label)
@@ -402,8 +403,8 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
         let pages: Vec<FlowPages<&str>, 8> = screens
             .iter()
             .map(|screen| {
-                let format = "{bold}{title}\n{normal}{text}";
-                let text = FormattedText::new::<theme::TRDefaultText>(format)
+                let format = "{Font::bold}{title}\n{Font::normal}{text}";
+                let text = FormattedText::new(theme::TEXT_NORMAL, theme::FORMATTED, format)
                     .with("title", screen.0)
                     .with("text", screen.1);
                 let page = FormattedTextPage::new(text, screen.2.clone(), screen.3.clone());

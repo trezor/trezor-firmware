@@ -29,6 +29,7 @@ pub struct FormattedText<F, T> {
     char_offset: usize,
 }
 
+#[derive(Clone)]
 pub struct FormattedFonts {
     /// Font used to format `{normal}`.
     pub normal: Font,
@@ -123,54 +124,81 @@ where
     /// which will be sent to `LayoutSink`.
     /// It equals to painting the content when `sink` is `TextRenderer`.
     pub fn layout_content(&self, sink: &mut dyn LayoutSink) -> LayoutFit {
-        let mut cursor = self.layout.initial_cursor();
+        // let all_ops = Tokenizer::new(self.format.as_ref()).flat_map(|arg|
+        // self.token_to_op(&arg)); TODO: It would be very nice to move all the
+        // logic to `fn token_to_op(&self, token: &Token) -> Option<Op>`, but it
+        // had some issues with lifetimes I could not solve
+        let all_ops = Tokenizer::new(self.format.as_ref()).flat_map(|arg| match arg {
+            // TODO: could add ways to:
+            // - underscore the text {Text::underscore}
+            // - strikethrough the text {Text::strikethrough}
+            // - bullet-point on the line {bullet_point}
+            // - draw horizontal line {horizontal_line}
+            // - conditional rendering of some part {if_x} ... {/if_x}, with_if("x", true)
+
+            // Normal text encountered
+            Token::Literal(literal) => Some(Op::Text(literal)),
+            // Force going to the next page
+            // `{next_page}`
+            Token::Argument(next_page) if next_page == "next_page" => Some(Op::NextPage),
+            // Changing currently used font
+            // e.g. `{Font::bold}`
+            Token::Argument(font) if font.starts_with("Font::") => {
+                let font_name = &font["Font::".len()..];
+                match font_name {
+                    "mono" => Some(Op::Font(self.fonts.mono)),
+                    "bold" => Some(Op::Font(self.fonts.bold)),
+                    "normal" => Some(Op::Font(self.fonts.normal)),
+                    "medium" => Some(Op::Font(self.fonts.medium)),
+                    _ => {
+                        #[cfg(feature = "ui_debug")]
+                        panic!("Unsupported font name");
+                    }
+                }
+            }
+            // Offsetting cursor position
+            // e.g. `{Offset::x::3}`
+            Token::Argument(offset) if offset.starts_with("Offset::") => {
+                let offset_args = &offset["Offset::".len()..];
+                let axis = &offset_args[..1];
+                // TODO: some error handling here?
+                let value = offset_args[3..].parse::<i32>().unwrap();
+                match axis {
+                    "x" => Some(Op::CursorOffset(Offset::x(value))),
+                    "y" => Some(Op::CursorOffset(Offset::y(value))),
+                    _ => {
+                        #[cfg(feature = "ui_debug")]
+                        panic!("Unsupported offset axis");
+                    }
+                }
+            }
+            // Drawing icon
+            // e.g. `{Icon::user}`, .with_icon("user", theme::ICON_USER)
+            // TODO: currently we always draw it with left-bottom corner on the cursor,
+            // we might support drawing it with other corners
+            // (however, one might hack around something like this by using `Offset::x`
+            // and `Offset::y` before and after drawing the icon)
+            // TODO: we could centralize all the icons here and connect them
+            // just with strings, so that users do not need to supply the &[u8] icon data
+            Token::Argument(icon) if icon.starts_with("Icon::") => {
+                let icon_name = &icon["Icon::".len()..];
+                self.icon_args.get(icon_name).map(|value| Op::Icon(value))
+            }
+            // Text with argument
+            // e.g. `{address}`, .with("address", "abcd...")
+            // TODO: when arg is not found, we just do not display it,
+            // shouldn't we trigger some exception?
+            // This branch is also triggered when users input some unsupported
+            // operation like {Unsupported::black}
+            Token::Argument(argument) => self
+                .args
+                .get(argument)
+                .map(|value| Op::Text(value.as_ref())),
+        });
         // Accounting for pagination by skipping the `char_offset` characters from the
-        // beginning. TODO: create an example of using the tokens with various
-        // arguments
-        let mut ops = Op::skip_n_text_bytes(
-            Tokenizer::new(self.format.as_ref()).flat_map(|arg| match arg {
-                // TODO: might want to differentiate the commands and arguments,
-                // for example adding "OP:" for commands - "OP:mono", "OP:x_offset_4", etc.
-                // TODO: could add ways to:
-                // - center text on a line {center}
-                // - right-align text on a line {right}
-                // - underscore the text {underscore}
-                // - strikethrough the text {strikethrough}
-                // - bullet-point on the line {bullet_point}
-                // - force going to the next page {next_page}
-                // - draw horizontal line {horizontal_line}
-                // - conditional rendering of some part {if_x} ... {/if_x}, with_if("x", true)
-                Token::Literal(literal) => Some(Op::Text(literal)),
-                Token::Argument("mono") => Some(Op::Font(self.fonts.mono)),
-                Token::Argument("bold") => Some(Op::Font(self.fonts.bold)),
-                Token::Argument("normal") => Some(Op::Font(self.fonts.normal)),
-                Token::Argument("medium") => Some(Op::Font(self.fonts.medium)),
-                // Offsetting x cursor position
-                Token::Argument(argument) if argument.starts_with("x_offset_") => {
-                    let offset = argument["x_offset_".len()..].parse::<i32>().unwrap();
-                    Some(Op::CursorOffset(Offset::x(offset)))
-                }
-                // Offsetting y cursor position
-                Token::Argument(argument) if argument.starts_with("y_offset_") => {
-                    let offset = argument["y_offset_".len()..].parse::<i32>().unwrap();
-                    Some(Op::CursorOffset(Offset::y(offset)))
-                }
-                // Drawing icon
-                // TODO: currently we always draw it with left-bottom corner on the cursor,
-                // we might support drawing it with other corners
-                // (however, one might hack around something like this by using `x_offset_`
-                // and `y_offset_` before and after drawing the icon)
-                Token::Argument(argument) if argument.starts_with("icon_") => {
-                    self.icon_args.get(argument).map(|value| Op::Icon(value))
-                }
-                // Rendering text
-                Token::Argument(argument) => self
-                    .args
-                    .get(argument)
-                    .map(|value| Op::Text(value.as_ref())),
-            }),
-            self.char_offset,
-        );
+        // beginning.
+        let mut ops = Op::skip_n_content_bytes(all_ops, self.char_offset);
+        let mut cursor = self.layout.initial_cursor();
         self.layout.layout_ops(&mut ops, &mut cursor, sink)
     }
 }

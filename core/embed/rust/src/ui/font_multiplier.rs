@@ -17,6 +17,7 @@ pub fn magnify_font<const M: usize, const N: usize>(
     magnified_bits: &mut Vec<bool, N>,
 ) {
     if ![2, 4].contains(&magnification) {
+        #[cfg(feature = "ui_debug")]
         panic!("Only supporting magnification 2 or 4");
     }
 

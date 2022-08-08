@@ -945,6 +945,7 @@ impl Font {
         bg_color: Color,
     ) -> Option<i32> {
         if constant::FONT_BPP != 1 {
+            #[cfg(feature = "ui_debug")]
             panic!("Magnification is only supported for 1BPP fonts");
         }
 

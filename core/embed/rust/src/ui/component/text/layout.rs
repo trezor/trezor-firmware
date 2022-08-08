@@ -24,6 +24,13 @@ pub enum PageBreaking {
     CutAndInsertEllipsis,
 }
 
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum LineAlignment {
+    Left,
+    Center,
+    Right,
+}
+
 /// Visual instructions for laying out a formatted block of text.
 #[derive(Copy, Clone)]
 pub struct TextLayout {
@@ -123,8 +130,8 @@ impl TextLayout {
         self.bounds.x1
     }
 
-    /// Perform some operations defined on `Op` - e.g. changing the color,
-    /// changing the font or rendering the text.
+    /// Perform some operations defined on `Op` for a list of those `Op`s
+    /// - e.g. changing the color, changing the font or rendering the text.
     pub fn layout_ops<'o>(
         mut self,
         ops: &mut dyn Iterator<Item = Op<'o>>,
@@ -136,17 +143,32 @@ impl TextLayout {
 
         for op in ops {
             match op {
+                // Changing color
                 Op::Color(color) => {
                     self.style.text_color = color;
                 }
+                // Changing font
                 Op::Font(font) => {
                     self.style.text_font = font;
                 }
+                // Moving the cursor
                 Op::CursorOffset(offset) => {
                     cursor.x += offset.x;
                     cursor.y += offset.y;
                 }
-                _ => {
+                // Moving to the next page
+                Op::NextPage => {
+                    // Pretending that nothing more fits on current page to force
+                    // continuing on the next one
+                    // Making that to account for one character for pagination purposes
+                    total_processed_chars += 1;
+                    return LayoutFit::OutOfBounds {
+                        processed_chars: total_processed_chars,
+                        height: self.layout_height(init_cursor, *cursor),
+                    };
+                }
+                // Drawing text or icon
+                Op::Text(_) | Op::Icon(_) => {
                     // Text and Icon behave similarly - we try to fit them
                     // on the current page and if they do not fit,
                     // return the appropriate OutOfBounds message
@@ -155,6 +177,7 @@ impl TextLayout {
                     } else if let Op::Icon(icon) = op {
                         self.layout_icon(icon, cursor, sink)
                     } else {
+                        #[cfg(feature = "ui_debug")]
                         panic!("unexpected op type");
                     };
 
@@ -215,7 +238,12 @@ impl TextLayout {
             );
 
             // Report the span at the cursor position.
-            sink.text(*cursor, self, &remaining_text[..span.length]);
+            // Not doing it when the span length is 0, as that
+            // means we encountered a newline/line-break, which we do not draw.
+            // Line-breaks are reported later.
+            if span.length > 0 {
+                sink.text(*cursor, self, &remaining_text[..span.length]);
+            }
 
             // Continue with the rest of the remaining_text.
             remaining_text = &remaining_text[span.length + span.skip_next_chars..];
@@ -293,12 +321,12 @@ impl TextLayout {
         // Trying to accommodate it on the next line, when it exists on this page.
         if cursor.x + icon_obj.width() > self.right_x() {
             cursor.x = self.bounds.x0;
-            cursor.y += self.text_font.line_height();
+            cursor.y += self.style.text_font.line_height();
             if cursor.y > self.bottom_y() {
                 sink.out_of_bounds();
                 return LayoutFit::OutOfBounds {
                     processed_chars: 0,
-                    height: self.text_font.line_height(),
+                    height: self.style.text_font.line_height(),
                 };
             }
         }
@@ -408,7 +436,11 @@ impl LayoutSink for TextRenderer {
     }
 
     fn icon(&mut self, cursor: Point, layout: &TextLayout, icon: Icon<&'static str>) {
-        icon.draw_bottom_left(cursor, layout.text_color, layout.background_color);
+        icon.draw_bottom_left(
+            cursor,
+            layout.style.text_color,
+            layout.style.background_color,
+        );
     }
 }
 
@@ -440,6 +472,7 @@ pub mod trace {
     }
 }
 
+/// Operations that can be done on FormattedText.
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Op<'a> {
     /// Render text with current color and font.
@@ -454,14 +487,16 @@ pub enum Op<'a> {
     Font(Font),
     /// Move the current cursor by specified Offset.
     CursorOffset(Offset),
+    /// Force continuing on the next page.
+    NextPage,
 }
 
 impl<'a> Op<'a> {
-    /// Filtering the list of `Op`s to throw away all the `Op::Text`
-    /// before a specific byte-threshold.
-    /// Used when showing the second, third... paginated page
+    /// Filtering the list of `Op`s to throw away all the content
+    /// (text, icons or other operations) before a specific byte/character
+    /// threshold. Used when showing the second, third... paginated page
     /// to skip the first one, two... pages.
-    pub fn skip_n_text_bytes(
+    pub fn skip_n_content_bytes(
         ops: impl Iterator<Item = Op<'a>>,
         skip_bytes: usize,
     ) -> impl Iterator<Item = Op<'a>> {
@@ -479,6 +514,11 @@ impl<'a> Op<'a> {
             }
             Op::Icon(_) if skipped < skip_bytes => {
                 // Assume the icon accounts for one character
+                skipped = skipped.saturating_add(1);
+                None
+            }
+            Op::NextPage if skipped < skip_bytes => {
+                // Skip the next page and consider it one character
                 skipped = skipped.saturating_add(1);
                 None
             }

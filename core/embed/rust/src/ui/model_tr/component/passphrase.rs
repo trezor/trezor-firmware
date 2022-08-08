@@ -107,7 +107,10 @@ impl PassphraseEntry {
             1 => ChoiceCategory::UppercaseLetter,
             2 => ChoiceCategory::Digit,
             3 => ChoiceCategory::SpecialSymbol,
-            _ => panic!("Not a category index"),
+            _ => {
+                #[cfg(feature = "ui_debug")]
+                panic!("Not a category index")
+            }
         }
     }
 
@@ -117,7 +120,10 @@ impl PassphraseEntry {
             ChoiceCategory::UppercaseLetter => UPPERCASE_LETTERS[index],
             ChoiceCategory::Digit => DIGITS[index],
             ChoiceCategory::SpecialSymbol => SPECIAL_SYMBOLS[index],
-            ChoiceCategory::Menu => panic!("Menu does not have characters"),
+            ChoiceCategory::Menu => {
+                #[cfg(feature = "ui_debug")]
+                panic!("Menu does not have characters")
+            }
         }
     }
 
@@ -160,7 +166,10 @@ impl PassphraseEntry {
             ChoiceCategory::UppercaseLetter => UPPERCASE_LETTERS.len(),
             ChoiceCategory::Digit => DIGITS.len(),
             ChoiceCategory::SpecialSymbol => SPECIAL_SYMBOLS.len(),
-            ChoiceCategory::Menu => panic!("Not callable from menu"),
+            ChoiceCategory::Menu => {
+                #[cfg(feature = "ui_debug")]
+                panic!("Not callable from menu")
+            }
         };
         page_counter == current_length as u8
     }
@@ -172,7 +181,10 @@ impl PassphraseEntry {
             ChoiceCategory::UppercaseLetter => UPPERCASE_LETTERS.iter().collect(),
             ChoiceCategory::Digit => DIGITS.iter().collect(),
             ChoiceCategory::SpecialSymbol => SPECIAL_SYMBOLS.iter().collect(),
-            ChoiceCategory::Menu => panic!("Menu does not have characters"),
+            ChoiceCategory::Menu => {
+                #[cfg(feature = "ui_debug")]
+                panic!("Menu does not have characters")
+            }
         };
 
         let mut choices: Vec<ChoiceItems, MAX_CHOICE_LENGTH> = new_characters
