@@ -134,7 +134,13 @@ where
             // - strikethrough the text {Text::strikethrough}
             // - bullet-point on the line {bullet_point}
             // - draw horizontal line {horizontal_line}
-            // - conditional rendering of some part {if_x} ... {/if_x}, with_if("x", true)
+            // - change line-spacing {Line-spacing::10px}
+            // - add default line offset {Line-offset::3px}
+
+            // NOTE / TODO: we agreed not to do these things here in production,
+            // but the ideas here apply for the common things that we might
+            // want to support "somewhere" and "somehow" - like the ability to
+            // change font, add icon etc.
 
             // Normal text encountered
             Token::Literal(literal) => Some(Op::Text(literal)),

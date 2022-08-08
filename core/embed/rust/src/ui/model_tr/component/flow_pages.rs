@@ -8,8 +8,6 @@ use super::{flow::BtnActions, ButtonDetails, ButtonLayout};
 pub trait FlowPage {
     fn paint(&mut self);
     fn place(&mut self, bounds: Rect) -> Rect;
-    // TODO: make the btn layout change itself when the page
-    // is paginated
     fn btn_layout(&self) -> ButtonLayout<&'static str>;
     fn btn_actions(&self) -> BtnActions;
     fn has_prev_page(&self) -> bool;
@@ -26,6 +24,18 @@ pub trait FlowPage {
 
 #[derive(Clone)]
 pub enum FlowPages<T> {
+    // NOTE / TODO: this FormattedText here as the only
+    // component was an experiment to use it as one-for-all
+    // component, when users would only supply a specific
+    // `format` string together with some arguments fitting
+    // into that format/template.
+    // Issue that this uncovers is mostly the inability to
+    // easily draw/do a certain sequence of steps on the screen,
+    // with all the features like supporting pagination,
+    // handling line ends, dynamic placement into a certain
+    // area etc.
+    // One part is also the difficulty of supporting a sequence
+    // of general components implementing `FlowPage` in `Flow`.
     FormattedText(FormattedTextPage<T>),
 }
 
