@@ -1,137 +1,64 @@
-use crate::ui::{
-    component::{base::Component, FormattedText, Paginate},
-    geometry::Rect,
+use crate::{
+    micropython::util::ResultExt,
+    ui::{
+        component::Paginate,
+        display::Font,
+        geometry::{Offset, Rect},
+        model_tr::theme,
+    },
 };
 
-use super::{flow::BtnActions, ButtonDetails, ButtonLayout};
+use heapless::{String, Vec};
 
-pub trait FlowPage {
-    fn paint(&mut self);
-    fn place(&mut self, bounds: Rect) -> Rect;
-    fn btn_layout(&self) -> ButtonLayout<&'static str>;
-    fn btn_actions(&self) -> BtnActions;
-    fn has_prev_page(&self) -> bool;
-    fn has_next_page(&self) -> bool;
-    fn go_to_prev_page(&mut self);
-    fn go_to_next_page(&mut self);
-}
-
-// TODO: consider using `dyn` instead of `enum` to allow
-// for more components implementing `FlowPage`
-// Alloc screen by GC .. gc alloc, new
-// dyn... gc dyn obj component
-// Vec<Gc<dyn FlowPage>, 2>...
+use super::{
+    flow::BtnActions,
+    flow_pages_poc_helpers::{
+        LayoutFit, LayoutSink, LineAlignment, Op, TextLayout, TextNoOp, TextRenderer, TextStyle,
+    },
+    ButtonDetails, ButtonLayout,
+};
 
 #[derive(Clone)]
-pub enum FlowPages<T> {
-    // NOTE / TODO: this FormattedText here as the only
-    // component was an experiment to use it as one-for-all
-    // component, when users would only supply a specific
-    // `format` string together with some arguments fitting
-    // into that format/template.
-    // Issue that this uncovers is mostly the inability to
-    // easily draw/do a certain sequence of steps on the screen,
-    // with all the features like supporting pagination,
-    // handling line ends, dynamic placement into a certain
-    // area etc.
-    // One part is also the difficulty of supporting a sequence
-    // of general components implementing `FlowPage` in `Flow`.
-    FormattedText(FormattedTextPage<T>),
-}
-
-impl<T> FlowPage for FlowPages<T>
-where
-    T: AsRef<str>,
-    T: Clone,
-{
-    fn paint(&mut self) {
-        match self {
-            FlowPages::FormattedText(item) => item.paint(),
-        }
-    }
-
-    fn place(&mut self, bounds: Rect) -> Rect {
-        match self {
-            FlowPages::FormattedText(item) => item.place(bounds),
-        }
-    }
-
-    fn btn_layout(&self) -> ButtonLayout<&'static str> {
-        match self {
-            FlowPages::FormattedText(item) => item.btn_layout(),
-        }
-    }
-
-    fn btn_actions(&self) -> BtnActions {
-        match self {
-            FlowPages::FormattedText(item) => item.btn_actions(),
-        }
-    }
-
-    fn has_prev_page(&self) -> bool {
-        match self {
-            FlowPages::FormattedText(item) => item.has_prev_page(),
-        }
-    }
-
-    fn has_next_page(&self) -> bool {
-        match self {
-            FlowPages::FormattedText(item) => item.has_next_page(),
-        }
-    }
-
-    fn go_to_prev_page(&mut self) {
-        match self {
-            FlowPages::FormattedText(item) => item.go_to_prev_page(),
-        }
-    }
-
-    fn go_to_next_page(&mut self) {
-        match self {
-            FlowPages::FormattedText(item) => item.go_to_next_page(),
-        }
-    }
-}
-
-/// Page displaying recipient address.
-#[derive(Clone)]
-pub struct FormattedTextPage<T> {
-    text: FormattedText<&'static str, T>,
+pub struct FlowPageMaker {
+    ops: Vec<Op, 30>, // TODO: HACK
+    layout: TextLayout,
     btn_layout: ButtonLayout<&'static str>,
     btn_actions: BtnActions,
     current_page: usize,
     page_count: usize,
+    char_offset: usize,
 }
 
-impl<T> FormattedTextPage<T>
-where
-    T: AsRef<str>,
-{
-    pub fn new(
-        text: FormattedText<&'static str, T>,
-        btn_layout: ButtonLayout<&'static str>,
-        btn_actions: BtnActions,
-    ) -> Self {
+// For `layout.rs`
+impl FlowPageMaker {
+    pub fn new(btn_layout: ButtonLayout<&'static str>, btn_actions: BtnActions) -> Self {
+        let style = TextStyle::new(
+            theme::FONT_NORMAL,
+            theme::FG,
+            theme::BG,
+            theme::FG,
+            theme::FG,
+        );
         Self {
-            text,
+            ops: Vec::new(),
+            layout: TextLayout::new(style),
             btn_layout,
             btn_actions,
             current_page: 0,
             page_count: 1,
+            char_offset: 0,
         }
     }
 }
 
-impl<T> FlowPage for FormattedTextPage<T>
-where
-    T: AsRef<str>,
-{
-    fn paint(&mut self) {
-        self.text.change_page(self.current_page);
-        self.text.paint();
+// For `flow.rs`
+impl FlowPageMaker {
+    pub fn paint(&mut self) {
+        self.change_page(self.current_page);
+        self.layout_content(&mut TextRenderer);
     }
 
-    fn btn_layout(&self) -> ButtonLayout<&'static str> {
+    pub fn btn_layout(&self) -> ButtonLayout<&'static str> {
         // When we are in pagination inside this flow,
         // show the up and down arrows on appropriate sides
         let current = self.btn_layout.clone();
@@ -150,29 +77,168 @@ where
         ButtonLayout::new(btn_left, current.btn_middle, btn_right)
     }
 
-    fn place(&mut self, bounds: Rect) -> Rect {
-        self.text.place(bounds);
-        self.page_count = self.text.page_count();
+    pub fn place(&mut self, bounds: Rect) -> Rect {
+        self.layout.bounds = bounds;
+        self.page_count = self.page_count();
         bounds
     }
 
-    fn btn_actions(&self) -> BtnActions {
+    pub fn btn_actions(&self) -> BtnActions {
         self.btn_actions.clone()
     }
 
-    fn has_prev_page(&self) -> bool {
+    pub fn has_prev_page(&self) -> bool {
         self.current_page > 0
     }
 
-    fn has_next_page(&self) -> bool {
+    pub fn has_next_page(&self) -> bool {
         self.current_page < self.page_count - 1
     }
 
-    fn go_to_prev_page(&mut self) {
+    pub fn go_to_prev_page(&mut self) {
         self.current_page -= 1;
     }
 
-    fn go_to_next_page(&mut self) {
+    pub fn go_to_next_page(&mut self) {
         self.current_page += 1;
+    }
+}
+
+// For `layout.rs` - single operations
+impl FlowPageMaker {
+    pub fn with_new_item(mut self, item: Op) -> Self {
+        self.ops
+            .push(item)
+            .assert_if_debugging_ui("Could not push to self.ops");
+        self
+    }
+    pub fn text(self, text: String<100>) -> Self {
+        self.with_new_item(Op::Text(text))
+    }
+
+    pub fn newline(self) -> Self {
+        self.with_new_item(Op::Text("\n".into()))
+    }
+
+    pub fn next_page(self) -> Self {
+        self.with_new_item(Op::NextPage)
+    }
+
+    pub fn icon(self, icon: &'static [u8]) -> Self {
+        self.with_new_item(Op::Icon(icon))
+    }
+
+    pub fn font(self, font: Font) -> Self {
+        self.with_new_item(Op::Font(font))
+    }
+
+    pub fn offset(self, offset: Offset) -> Self {
+        self.with_new_item(Op::CursorOffset(offset))
+    }
+
+    pub fn alignment(self, alignment: LineAlignment) -> Self {
+        self.with_new_item(Op::LineAlignment(alignment))
+    }
+}
+
+// For `layout.rs` - aggregating operations
+impl FlowPageMaker {
+    pub fn icon_label_text(
+        self,
+        icon: &'static [u8],
+        label: String<100>,
+        text: String<100>,
+    ) -> Self {
+        self.icon_with_offset(icon, 3)
+            .text_normal(label)
+            .newline()
+            .text_bold(text)
+    }
+
+    pub fn icon_with_offset(self, icon: &'static [u8], x_offset: i32) -> Self {
+        self.icon(icon).offset(Offset::x(x_offset))
+    }
+
+    pub fn text_normal(self, text: String<100>) -> Self {
+        self.font(theme::FONT_NORMAL).text(text)
+    }
+
+    pub fn text_bold(self, text: String<100>) -> Self {
+        self.font(theme::FONT_BOLD).text(text)
+    }
+}
+
+// For painting and pagination
+impl FlowPageMaker {
+    pub fn set_char_offset(&mut self, char_offset: usize) {
+        self.char_offset = char_offset;
+    }
+
+    pub fn layout_content(&self, sink: &mut dyn LayoutSink) -> LayoutFit {
+        let ops = Op::skip_n_content_bytes(self.ops.clone(), self.char_offset);
+        let mut cursor = self.layout.initial_cursor();
+        self.layout.layout_ops(ops, &mut cursor, sink)
+    }
+}
+
+// Pagination
+impl Paginate for FlowPageMaker {
+    fn page_count(&mut self) -> usize {
+        let mut page_count = 1; // There's always at least one page.
+        let mut char_offset = 0;
+
+        // Make sure we're starting from the beginning.
+        self.set_char_offset(char_offset);
+
+        // Looping through the content and counting pages
+        // until we finally fit.
+        loop {
+            let fit = self.layout_content(&mut TextNoOp);
+            match fit {
+                LayoutFit::Fitting { .. } => {
+                    break; // TODO: We should consider if there's more content
+                           // to render.
+                }
+                LayoutFit::OutOfBounds {
+                    processed_chars, ..
+                } => {
+                    page_count += 1;
+                    char_offset += processed_chars;
+                    self.set_char_offset(char_offset);
+                }
+            }
+        }
+
+        // Reset the char offset back to the beginning.
+        self.set_char_offset(0);
+
+        page_count
+    }
+
+    fn change_page(&mut self, to_page: usize) {
+        let mut active_page = 0;
+        let mut char_offset = 0;
+
+        // Make sure we're starting from the beginning.
+        self.set_char_offset(char_offset);
+
+        // Looping through the content until we arrive at
+        // the wanted page.
+        while active_page < to_page {
+            let fit = self.layout_content(&mut TextNoOp);
+            match fit {
+                LayoutFit::Fitting { .. } => {
+                    break; // TODO: We should consider if there's more content
+                           // to render.
+                }
+                LayoutFit::OutOfBounds {
+                    processed_chars, ..
+                } => {
+                    active_page += 1;
+                    char_offset += processed_chars;
+                    self.set_char_offset(char_offset);
+                }
+            }
+        }
     }
 }

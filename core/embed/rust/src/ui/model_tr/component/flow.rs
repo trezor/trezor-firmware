@@ -4,8 +4,7 @@ use crate::ui::{
 };
 
 use super::{
-    common, theme, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos, FlowPage,
-    FlowPages,
+    common, theme, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos, FlowPageMaker,
 };
 use heapless::Vec;
 
@@ -140,7 +139,7 @@ impl BtnActions {
 }
 
 pub struct Flow<T, const N: usize> {
-    pages: Vec<FlowPages<T>, N>,
+    pages: Vec<FlowPageMaker, N>,
     common_title: Option<T>,
     content_area: Rect,
     pad: Pad,
@@ -153,7 +152,7 @@ where
     T: AsRef<str>,
     T: Clone,
 {
-    pub fn new(pages: Vec<FlowPages<T>, N>) -> Self {
+    pub fn new(pages: Vec<FlowPageMaker, N>) -> Self {
         Self {
             pages,
             common_title: None,
@@ -188,7 +187,7 @@ where
     }
 
     /// Page that is/should be currently on the screen.
-    fn current_choice(&mut self) -> &mut FlowPages<T> {
+    fn current_choice(&mut self) -> &mut FlowPageMaker {
         &mut self.pages[self.page_counter as usize]
     }
 

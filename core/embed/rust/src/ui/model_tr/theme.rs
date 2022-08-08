@@ -3,6 +3,10 @@ use crate::ui::{
     display::{Color, Font},
 };
 
+// Color palette.
+pub const FG: Color = Color::white(); // Default foreground (text & icon) color.
+pub const BG: Color = Color::black(); // Default background color.
+
 // Font constants.
 pub const FONT_NORMAL: Font = Font::new(-1);
 pub const FONT_MEDIUM: Font = Font::new(-5);
@@ -23,10 +27,6 @@ pub const FORMATTED: FormattedFonts = FormattedFonts {
     bold: FONT_BOLD,
     mono: FONT_MONO,
 };
-
-// Color palette.
-pub const FG: Color = Color::white(); // Default foreground (text & icon) color.
-pub const BG: Color = Color::black(); // Default background color.
 
 pub const ICON_SUCCESS: &[u8] = include_res!("model_tr/res/success.toif");
 pub const ICON_FAIL: &[u8] = include_res!("model_tr/res/fail.toif");

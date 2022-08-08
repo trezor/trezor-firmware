@@ -31,8 +31,8 @@ use crate::{
 use super::{
     component::{
         Bip39Entry, Bip39EntryMsg, BtnActions, ButtonDetails, ButtonLayout, ButtonPage, Flow,
-        FlowMsg, FlowPages, FormattedTextPage, Frame, PassphraseEntry, PassphraseEntryMsg,
-        PinEntry, PinEntryMsg, SimpleChoice, SimpleChoiceMsg,
+        FlowMsg, FlowPageMaker, Frame, PassphraseEntry, PassphraseEntryMsg, PinEntry, PinEntryMsg,
+        SimpleChoice, SimpleChoiceMsg,
     },
     theme,
 };
@@ -221,13 +221,11 @@ extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) 
                 Some(ButtonDetails::text("CONTINUE")),
             );
             let btn_actions = BtnActions::cancel_next();
-            let format = "{Icon::user}{Offset::x::3}{label}\n{Font::bold}{address}";
-            let text = FormattedText::new(theme::TEXT_NORMAL, theme::FORMATTED, format)
-                .with_icon("user", theme::ICON_USER)
-                .with("label", "Recipient".into())
-                .with("address", address);
-            let page = FormattedTextPage::new(text, btn_layout, btn_actions);
-            FlowPages::FormattedText(page)
+            FlowPageMaker::new(btn_layout, btn_actions).icon_label_text(
+                theme::ICON_USER,
+                "Recipient".into(),
+                address.as_ref().into(),
+            )
         };
 
         // 2 pairs `icon + label + text`
@@ -239,19 +237,17 @@ extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) 
             );
             let btn_actions = BtnActions::cancel_confirm();
 
-            let format = "{Icon::user}{Offset::x::3}{Font::normal}Recipient\n{Font::bold}{address}\n\
-                                {Icon::amount}{Offset::x::3}{Font::normal}Amount\n{Font::bold}{amount}";
-            let text = FormattedText::new(theme::TEXT_NORMAL, theme::FORMATTED, format)
-                .with_icon("user", theme::ICON_USER)
-                .with_icon("amount", theme::ICON_AMOUNT)
-                .with("address", truncated_address)
-                .with("amount", amount);
-            let page = FormattedTextPage::new(text, btn_layout, btn_actions);
-            FlowPages::FormattedText(page)
+            FlowPageMaker::new(btn_layout, btn_actions)
+                .icon_label_text(
+                    theme::ICON_USER,
+                    "Recipient".into(),
+                    truncated_address.as_ref().into(),
+                )
+                .newline()
+                .icon_label_text(theme::ICON_AMOUNT, "Amount".into(), amount.as_ref().into())
         };
 
-        let pages: Vec<FlowPages<StrBuffer>, 2> =
-            Vec::from_slice(&[address_page, confirm_page]).unwrap();
+        let pages: Vec<FlowPageMaker, 2> = Vec::from_slice(&[address_page, confirm_page]).unwrap();
 
         let obj = LayoutObj::new(Flow::new(pages).with_common_title(title).into_child())?;
         Ok(obj.into())
@@ -280,33 +276,30 @@ extern "C" fn confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -
             );
             let btn_actions = BtnActions::cancel_confirm();
 
-            // TODO: how to make it more general (creating arbitrary amount of pairs)?
-            // Is there some way to concatenate slices?
-            // We could have format as String<300> and append the optional values if there
-            // OR some {flag} to not continue if inputted value is None
-            let format = if fee_rate_amount.is_none() {
-                // TODO: could increase the y-spacing, to use the free space at the bottom
-                "{Icon::param}{Offset::x::3}{Font::normal}{total_label}\n{Font::bold}{total_amount}\n\
-                 {Icon::param}{Offset::x::3}{Font::normal}{fee_label}\n{Font::bold}{fee_amount}"
-            } else {
-                "{Icon::param}{Offset::x::3}{Font::normal}{total_label}\n{Font::bold}{total_amount}\n\
-                 {Icon::param}{Offset::x::3}{Font::normal}{fee_label}\n{Font::bold}{fee_amount}\n\
-                 {Icon::param}{Offset::x::3}{Font::normal}Fee rate:\n{Font::bold}{fee_rate_amount}"
-            };
+            let mut page = FlowPageMaker::new(btn_layout, btn_actions)
+                .icon_label_text(
+                    theme::ICON_PARAM,
+                    total_label.as_ref().into(),
+                    total_amount.as_ref().into(),
+                )
+                .newline()
+                .icon_label_text(
+                    theme::ICON_PARAM,
+                    fee_label.as_ref().into(),
+                    fee_amount.as_ref().into(),
+                );
 
-            let text = FormattedText::new(theme::TEXT_NORMAL, theme::FORMATTED, format)
-                .with_icon("param", theme::ICON_PARAM)
-                .with("total_label", total_label)
-                .with("total_amount", total_amount)
-                .with("fee_label", fee_label)
-                .with("fee_amount", fee_amount)
-                .with("fee_rate_amount", fee_rate_amount.unwrap_or_default());
-
-            let page = FormattedTextPage::new(text, btn_layout, btn_actions);
-            FlowPages::FormattedText(page)
+            if let Some(fee_rate_amount) = fee_rate_amount {
+                page = page.newline().icon_label_text(
+                    theme::ICON_PARAM,
+                    "Fee rate".into(),
+                    fee_rate_amount.as_ref().into(),
+                )
+            }
+            page
         };
 
-        let pages: Vec<FlowPages<StrBuffer>, 1> = Vec::from_slice(&[confirm_page]).unwrap();
+        let pages: Vec<FlowPageMaker, 1> = Vec::from_slice(&[confirm_page]).unwrap();
 
         let obj = LayoutObj::new(Flow::new(pages).with_common_title(title).into_child())?;
         Ok(obj.into())
@@ -400,19 +393,17 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
             ),
         ];
 
-        let pages: Vec<FlowPages<&str>, 8> = screens
+        let pages: Vec<FlowPageMaker, 8> = screens
             .iter()
             .map(|screen| {
-                let format = "{Font::bold}{title}\n{Font::normal}{text}";
-                let text = FormattedText::new(theme::TEXT_NORMAL, theme::FORMATTED, format)
-                    .with("title", screen.0)
-                    .with("text", screen.1);
-                let page = FormattedTextPage::new(text, screen.2.clone(), screen.3.clone());
-                FlowPages::FormattedText(page)
+                FlowPageMaker::new(screen.2.clone(), screen.3.clone())
+                    .text_bold(screen.0.into())
+                    .newline()
+                    .text_normal(screen.1.into())
             })
             .collect();
 
-        let obj = LayoutObj::new(Flow::new(pages).into_child())?;
+        let obj = LayoutObj::new(Flow::<StrBuffer, 8>::new(pages).into_child())?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }

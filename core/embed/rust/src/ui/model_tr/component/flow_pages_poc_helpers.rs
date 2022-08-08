@@ -1,9 +1,78 @@
-use super::iter::GlyphMetrics;
+//! Mostly copy-pasted stuff from ui/component/text,
+//! but with small modifications.
+//! It is really mostly changing Op::Text(&'a str) to Op::Text(String<100>),
+//! having self.ops as Vec<Op, 30> and changes revolving around it.
+//! Even if some stuff could be reused now, I copy-pasted it anyway, as this
+//! extension for Icons, Offsets, etc. should no longer live in
+//! ui/component/text, and so they can be freely removed (as they are here as
+//! well).
+
 use crate::ui::{
-    display,
-    display::{Color, Font, Icon},
+    display::{self, Color, Font, Icon},
     geometry::{Offset, Point, Rect},
 };
+
+use heapless::{String, Vec};
+
+/// Operations that can be done on FormattedText.
+#[derive(Clone)]
+pub enum Op {
+    /// Render text with current color and font.
+    Text(String<100>), // TODO: HACK
+    /// Render icon.
+    /// TODO: make it have `display::Icon`, but it currently has
+    /// `T` parameter because of HTC not supporting icons
+    Icon(&'static [u8]),
+    /// Set current text color.
+    Color(Color),
+    /// Set currently used font.
+    Font(Font),
+    /// Set currently used line alignment.
+    LineAlignment(LineAlignment),
+    /// Move the current cursor by specified Offset.
+    CursorOffset(Offset),
+    /// Force continuing on the next page.
+    NextPage,
+}
+
+impl Op {
+    /// Filtering the list of `Op`s to throw away all the content
+    /// (text, icons or other operations) before a specific byte/character
+    /// threshold. Used when showing the second, third... paginated page
+    /// to skip the first one, two... pages.
+    pub fn skip_n_content_bytes(ops: Vec<Op, 30>, skip_bytes: usize) -> Vec<Op, 30> {
+        let mut skipped = 0;
+
+        ops.iter()
+            .filter_map(|op| match op {
+                Op::Text(text) if skipped < skip_bytes => {
+                    skipped = skipped.saturating_add(text.len());
+                    if skipped > skip_bytes {
+                        let leave_bytes = skipped - skip_bytes;
+                        Some(Op::Text((&text[text.len() - leave_bytes..]).into()))
+                    } else {
+                        None
+                    }
+                }
+                Op::Icon(_) if skipped < skip_bytes => {
+                    // Assume the icon accounts for one character
+                    skipped = skipped.saturating_add(1);
+                    None
+                }
+                Op::NextPage if skipped < skip_bytes => {
+                    // Skip the next page and consider it one character
+                    skipped = skipped.saturating_add(1);
+                    None
+                }
+                Op::CursorOffset(_) if skipped < skip_bytes => {
+                    // Skip any offsets
+                    None
+                }
+                op_to_pass_through => Some(op_to_pass_through.clone()),
+            })
+            .collect()
+    }
+}
 
 #[derive(Copy, Clone)]
 pub enum LineBreaking {
@@ -22,6 +91,13 @@ pub enum PageBreaking {
     /// Before stopping at the bottom-right edge, insert ellipsis to signify
     /// more content is available, but only if no hyphen has been inserted yet.
     CutAndInsertEllipsis,
+}
+
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum LineAlignment {
+    Left,
+    Center,
+    Right,
 }
 
 /// Visual instructions for laying out a formatted block of text.
@@ -59,6 +135,9 @@ pub struct TextStyle {
     pub line_breaking: LineBreaking,
     /// Specifies what to do at the end of the page.
     pub page_breaking: PageBreaking,
+
+    /// Specifies how to align text on the line.
+    pub line_alignment: LineAlignment,
 }
 
 impl TextStyle {
@@ -77,6 +156,7 @@ impl TextStyle {
             ellipsis_color,
             line_breaking: LineBreaking::BreakAtWhitespace,
             page_breaking: PageBreaking::CutAndInsertEllipsis,
+            line_alignment: LineAlignment::Left,
         }
     }
 }
@@ -125,9 +205,9 @@ impl TextLayout {
 
     /// Perform some operations defined on `Op` for a list of those `Op`s
     /// - e.g. changing the color, changing the font or rendering the text.
-    pub fn layout_ops<'o>(
+    pub fn layout_ops(
         mut self,
-        ops: &mut dyn Iterator<Item = Op<'o>>,
+        ops: Vec<Op, 30>,
         cursor: &mut Point,
         sink: &mut dyn LayoutSink,
     ) -> LayoutFit {
@@ -143,6 +223,10 @@ impl TextLayout {
                 // Changing font
                 Op::Font(font) => {
                     self.style.text_font = font;
+                }
+                // Changing line/text alignment
+                Op::LineAlignment(line_alignment) => {
+                    self.style.line_alignment = line_alignment;
                 }
                 // Moving the cursor
                 Op::CursorOffset(offset) => {
@@ -166,7 +250,7 @@ impl TextLayout {
                     // on the current page and if they do not fit,
                     // return the appropriate OutOfBounds message
                     let fit = if let Op::Text(text) = op {
-                        self.layout_text(text, cursor, sink)
+                        self.layout_text(text.as_ref(), cursor, sink)
                     } else if let Op::Icon(icon) = op {
                         self.layout_icon(icon, cursor, sink)
                     } else {
@@ -399,13 +483,41 @@ pub struct TextRenderer;
 
 impl LayoutSink for TextRenderer {
     fn text(&mut self, cursor: Point, layout: &TextLayout, text: &str) {
-        display::text(
-            cursor,
-            text,
-            layout.style.text_font,
-            layout.style.text_color,
-            layout.style.background_color,
-        );
+        // Accounting for the line-alignment - left, right or center.
+        // Assume the current line can be drawn on from the cursor
+        // to the right side of the screen.
+
+        match layout.style.line_alignment {
+            LineAlignment::Left => {
+                display::text(
+                    cursor,
+                    text,
+                    layout.style.text_font,
+                    layout.style.text_color,
+                    layout.style.background_color,
+                );
+            }
+            LineAlignment::Center => {
+                let center = Point::new(cursor.x + (layout.bounds.x1 - cursor.x) / 2, cursor.y);
+                display::text_center(
+                    center,
+                    text,
+                    layout.style.text_font,
+                    layout.style.text_color,
+                    layout.style.background_color,
+                );
+            }
+            LineAlignment::Right => {
+                let right = Point::new(layout.bounds.x1, cursor.y);
+                display::text_right(
+                    right,
+                    text,
+                    layout.style.text_font,
+                    layout.style.text_color,
+                    layout.style.background_color,
+                );
+            }
+        }
     }
 
     fn hyphen(&mut self, cursor: Point, layout: &TextLayout) {
@@ -437,90 +549,18 @@ impl LayoutSink for TextRenderer {
     }
 }
 
-#[cfg(feature = "ui_debug")]
-pub mod trace {
-    use crate::ui::geometry::Point;
+pub trait GlyphMetrics {
+    fn char_width(&self, ch: char) -> i32;
+    fn line_height(&self) -> i32;
+}
 
-    use super::*;
-
-    /// `LayoutSink` for debugging purposes.
-    pub struct TraceSink<'a>(pub &'a mut dyn crate::trace::Tracer);
-
-    impl<'a> LayoutSink for TraceSink<'a> {
-        fn text(&mut self, _cursor: Point, _layout: &TextLayout, text: &str) {
-            self.0.string(text);
-        }
-
-        fn hyphen(&mut self, _cursor: Point, _layout: &TextLayout) {
-            self.0.string("-");
-        }
-
-        fn ellipsis(&mut self, _cursor: Point, _layout: &TextLayout) {
-            self.0.string("...");
-        }
-
-        fn line_break(&mut self, _cursor: Point) {
-            self.0.string("\n");
-        }
+impl GlyphMetrics for Font {
+    fn char_width(&self, ch: char) -> i32 {
+        Font::char_width(*self, ch)
     }
-}
 
-/// Operations that can be done on FormattedText.
-#[derive(Copy, Clone, PartialEq, Eq)]
-pub enum Op<'a> {
-    /// Render text with current color and font.
-    Text(&'a str),
-    /// Render icon.
-    /// TODO: make it have `display::Icon`, but it currently has
-    /// `T` parameter because of HTC not supporting icons
-    Icon(&'static [u8]),
-    /// Set current text color.
-    Color(Color),
-    /// Set currently used font.
-    Font(Font),
-    /// Move the current cursor by specified Offset.
-    CursorOffset(Offset),
-    /// Force continuing on the next page.
-    NextPage,
-}
-
-impl<'a> Op<'a> {
-    /// Filtering the list of `Op`s to throw away all the content
-    /// (text, icons or other operations) before a specific byte/character
-    /// threshold. Used when showing the second, third... paginated page
-    /// to skip the first one, two... pages.
-    pub fn skip_n_content_bytes(
-        ops: impl Iterator<Item = Op<'a>>,
-        skip_bytes: usize,
-    ) -> impl Iterator<Item = Op<'a>> {
-        let mut skipped = 0;
-
-        ops.filter_map(move |op| match op {
-            Op::Text(text) if skipped < skip_bytes => {
-                skipped = skipped.saturating_add(text.len());
-                if skipped > skip_bytes {
-                    let leave_bytes = skipped - skip_bytes;
-                    Some(Op::Text(&text[text.len() - leave_bytes..]))
-                } else {
-                    None
-                }
-            }
-            Op::Icon(_) if skipped < skip_bytes => {
-                // Assume the icon accounts for one character
-                skipped = skipped.saturating_add(1);
-                None
-            }
-            Op::NextPage if skipped < skip_bytes => {
-                // Skip the next page and consider it one character
-                skipped = skipped.saturating_add(1);
-                None
-            }
-            Op::CursorOffset(_) if skipped < skip_bytes => {
-                // Skip any offsets
-                None
-            }
-            op_to_pass_through => Some(op_to_pass_through),
-        })
+    fn line_height(&self) -> i32 {
+        Font::line_height(*self)
     }
 }
 
@@ -625,99 +665,5 @@ impl Span {
             insert_hyphen_before_line_break: false,
             skip_next_chars: 0,
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    pub struct Fixed {
-        pub width: i32,
-        pub height: i32,
-    }
-
-    impl GlyphMetrics for Fixed {
-        fn char_width(&self, _ch: char) -> i32 {
-            self.width
-        }
-
-        fn line_height(&self) -> i32 {
-            self.height
-        }
-    }
-
-    const FIXED_FONT: Fixed = Fixed {
-        width: 1,
-        height: 1,
-    };
-
-    #[test]
-    fn test_span() {
-        assert_eq!(spans_from("hello", 5), vec![("hello", false)]);
-        assert_eq!(spans_from("", 5), vec![("", false)]);
-        assert_eq!(
-            spans_from("hello world", 5),
-            vec![("hello", false), ("world", false)]
-        );
-        assert_eq!(
-            spans_from("hello\nworld", 5),
-            vec![("hello", false), ("world", false)]
-        );
-    }
-
-    #[test]
-    #[ignore]
-    fn test_leading_trailing() {
-        assert_eq!(
-            spans_from("\nhello\nworld\n", 5),
-            vec![("", false), ("hello", false), ("world", false), ("", false)]
-        );
-    }
-
-    #[test]
-    fn test_long_word() {
-        assert_eq!(
-            spans_from("Down with the establishment!", 5),
-            vec![
-                ("Down", false),
-                ("with", false),
-                ("the", false),
-                ("esta", true),
-                ("blis", true),
-                ("hmen", true),
-                ("t!", false),
-            ]
-        );
-    }
-
-    #[test]
-    fn test_char_boundary() {
-        assert_eq!(
-            spans_from("+ěščřžýáíé", 5),
-            vec![("+ěšč", true), ("řžýá", true), ("íé", false)]
-        );
-    }
-
-    fn spans_from(text: &str, max_width: i32) -> Vec<(&str, bool)> {
-        let mut spans = vec![];
-        let mut remaining_text = text;
-        loop {
-            let span = Span::fit_horizontally(
-                remaining_text,
-                max_width,
-                FIXED_FONT,
-                LineBreaking::BreakAtWhitespace,
-            );
-            spans.push((
-                &remaining_text[..span.length],
-                span.insert_hyphen_before_line_break,
-            ));
-            remaining_text = &remaining_text[span.length + span.skip_next_chars..];
-            if remaining_text.is_empty() {
-                break;
-            }
-        }
-        spans
     }
 }
