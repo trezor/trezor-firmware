@@ -224,3 +224,16 @@ def cancel_authorization(client: "TrezorClient") -> "MessageType":
 @expect(messages.Success, field="message", ret_type=str)
 def reboot_to_bootloader(client: "TrezorClient") -> "MessageType":
     return client.call(messages.RebootToBootloader())
+
+
+@expect(messages.Success, field="message", ret_type=str)
+@session
+def set_busy(client: "TrezorClient", expiry_ms: Optional[int]) -> "MessageType":
+    """Sets or clears the busy state of the device.
+
+    In the busy state the device shows a "Do not disconnect" message instead of the homescreen.
+    Setting `expiry_ms=None` clears the busy state.
+    """
+    ret = client.call(messages.SetBusy(expiry_ms=expiry_ms))
+    client.refresh_features()
+    return ret
