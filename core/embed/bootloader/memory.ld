@@ -8,7 +8,7 @@ MEMORY {
   SRAM   (wal) : ORIGIN = 0x20000000, LENGTH = 192K
 }
 
-main_stack_base = ORIGIN(CCMRAM) + LENGTH(CCMRAM); /* 8-byte aligned full descending stack */
+main_stack_base = ORIGIN(CCMRAM) + SIZEOF(.stack) ; /* 8-byte aligned full descending stack */
 
 /* used by the startup code to populate variables used by the C code */
 data_lma = LOADADDR(.data);
@@ -39,6 +39,10 @@ SECTIONS {
     . = ALIGN(512);
   } >FLASH AT>FLASH
 
+  .stack : ALIGN(8) {
+    . = 16K; /* Exactly 16K allocated for stack. Overflow causes MemManage fault (when using MPU). */
+  } >CCMRAM
+
   .data : ALIGN(4) {
     *(.data*);
     . = ALIGN(512);
@@ -54,7 +58,4 @@ SECTIONS {
     . = ALIGN(4);
   } >SRAM
 
-  .stack : ALIGN(8) {
-    . = 4K; /* this acts as a build time assertion that at least this much memory is available for stack use */
-  } >CCMRAM
 }

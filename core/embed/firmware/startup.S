@@ -16,7 +16,7 @@ reset_handler:
   ldr r1, =0x08010400  // r1 = FLASH_APP_START
   str r1, [r0]         // assign
 
-  ldr r0, =_estack - 8  // r0 = stack pointer, T1 bootloader had 8 bytes reserved at end
+  ldr r0, =_estack      // r0 = stack pointer
   msr msp, r0           // set stack pointer
   dsb
   isb
@@ -58,5 +58,17 @@ reset_handler:
   bl main
 
   b shutdown_privileged
+
+  .global MemManage_Handler
+  .type MemManage_Handler, STT_FUNC
+MemManage_Handler:
+  ldr r2, =_sstack
+  mrs r1, msp
+  ldr r0, =_estack
+  msr msp, r0
+  cmp r1, r2
+  IT lt
+  bllt MemManage_Handler_SO
+  bl MemManage_Handler_MM
 
   .end

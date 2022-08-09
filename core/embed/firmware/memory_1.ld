@@ -7,7 +7,8 @@ MEMORY {
   SRAM   (wal) : ORIGIN = 0x20000000, LENGTH = 128K
 }
 
-main_stack_base = ORIGIN(SRAM) + LENGTH(SRAM); /* 8-byte aligned full descending stack */
+main_stack_base = ORIGIN(SRAM) + SIZEOF(.stack); /* 8-byte aligned full descending stack */
+_sstack = ORIGIN(SRAM);
 _estack = main_stack_base;
 
 /* used by the startup code to populate variables used by the C code */
@@ -52,6 +53,10 @@ SECTIONS {
     . = ALIGN(4);
   } >FLASH AT>FLASH
 
+  .stack : ALIGN(8) {
+    . = 16K; /* Exactly 16K allocated for stack. Overflow causes MemManage fault (when using MPU). */
+  } >SRAM
+
   .data : ALIGN(4) {
     *(.data*);
     . = ALIGN(512);
@@ -64,10 +69,6 @@ SECTIONS {
 
   .heap : ALIGN(4) {
     . = 37K; /* this acts as a build time assertion that at least this much memory is available for heap use */
-    . = ABSOLUTE(sram_end - 16K); /* this explicitly sets the end of the heap effectively giving the stack at most 16K */
-  } >SRAM
-
-  .stack : ALIGN(8) {
-    . = 4K; /* this acts as a build time assertion that at least this much memory is available for stack use */
+    . = ABSOLUTE(sram_end - 8); /* this explicitly sets the end of the heap, T1 bootloader had 8 bytes reserved at end */
   } >SRAM
 }
