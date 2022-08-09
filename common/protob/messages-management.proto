@@ -111,6 +111,7 @@ message Features {
     optional uint32 auto_lock_delay_ms = 38;    // number of milliseconds after which the device locks itself
     optional uint32 display_rotation = 39;      // in degrees from North
     optional bool experimental_features = 40;   // are experimental message types enabled?
+    optional bool busy = 41;                    // is the device busy, showing "Do not disconnect"?
 }
 
 /**
@@ -119,6 +120,15 @@ message Features {
  * @next Success
  */
 message LockDevice {
+}
+
+/**
+ * Request: Show a "Do not disconnect" dialog instead of the standard homescreen.
+ * @start
+ * @next Success
+ */
+message SetBusy {
+    optional uint32 expiry_ms = 1;  // The time in milliseconds after which the dialog will automatically disappear. Overrides any previously set expiry. If not set, then the dialog is hidden.
 }
 
 /**
