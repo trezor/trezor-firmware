@@ -87,6 +87,7 @@ enum MessageType {
     MessageType_Entropy = 10 [(bitcoin_only) = true, (wire_out) = true];
     MessageType_LoadDevice = 13 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_ResetDevice = 14 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_SetBusy = 16 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_Features = 17 [(bitcoin_only) = true, (wire_out) = true];
     MessageType_PinMatrixRequest = 18 [(bitcoin_only) = true, (wire_out) = true];
     MessageType_PinMatrixAck = 19 [(bitcoin_only) = true, (wire_in) = true, (wire_tiny) = true, (wire_no_fsm) = true];

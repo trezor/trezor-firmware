@@ -39,6 +39,7 @@ class MessageType(IntEnum):
     Entropy = 10
     LoadDevice = 13
     ResetDevice = 14
+    SetBusy = 16
     Features = 17
     PinMatrixRequest = 18
     PinMatrixAck = 19
@@ -3064,6 +3065,7 @@ class Features(protobuf.MessageType):
         38: protobuf.Field("auto_lock_delay_ms", "uint32", repeated=False, required=False),
         39: protobuf.Field("display_rotation", "uint32", repeated=False, required=False),
         40: protobuf.Field("experimental_features", "bool", repeated=False, required=False),
+        41: protobuf.Field("busy", "bool", repeated=False, required=False),
     }
 
     def __init__(
@@ -3107,6 +3109,7 @@ class Features(protobuf.MessageType):
         auto_lock_delay_ms: Optional["int"] = None,
         display_rotation: Optional["int"] = None,
         experimental_features: Optional["bool"] = None,
+        busy: Optional["bool"] = None,
     ) -> None:
         self.capabilities: Sequence["Capability"] = capabilities if capabilities is not None else []
         self.major_version = major_version
@@ -3146,10 +3149,25 @@ class Features(protobuf.MessageType):
         self.auto_lock_delay_ms = auto_lock_delay_ms
         self.display_rotation = display_rotation
         self.experimental_features = experimental_features
+        self.busy = busy
 
 
 class LockDevice(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 24
+
+
+class SetBusy(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 16
+    FIELDS = {
+        1: protobuf.Field("expiry_ms", "uint32", repeated=False, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        expiry_ms: Optional["int"] = None,
+    ) -> None:
+        self.expiry_ms = expiry_ms
 
 
 class EndSession(protobuf.MessageType):

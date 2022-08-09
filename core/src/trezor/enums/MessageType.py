@@ -14,6 +14,7 @@ GetEntropy = 9
 Entropy = 10
 LoadDevice = 13
 ResetDevice = 14
+SetBusy = 16
 Features = 17
 PinMatrixRequest = 18
 PinMatrixAck = 19

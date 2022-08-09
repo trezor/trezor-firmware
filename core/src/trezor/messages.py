@@ -2050,6 +2050,7 @@ if TYPE_CHECKING:
         auto_lock_delay_ms: "int | None"
         display_rotation: "int | None"
         experimental_features: "bool | None"
+        busy: "bool | None"
 
         def __init__(
             self,
@@ -2091,6 +2092,7 @@ if TYPE_CHECKING:
             auto_lock_delay_ms: "int | None" = None,
             display_rotation: "int | None" = None,
             experimental_features: "bool | None" = None,
+            busy: "bool | None" = None,
         ) -> None:
             pass
 
@@ -2102,6 +2104,20 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["LockDevice"]:
+            return isinstance(msg, cls)
+
+    class SetBusy(protobuf.MessageType):
+        expiry_ms: "int | None"
+
+        def __init__(
+            self,
+            *,
+            expiry_ms: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["SetBusy"]:
             return isinstance(msg, cls)
 
     class EndSession(protobuf.MessageType):
