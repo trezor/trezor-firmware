@@ -20,7 +20,24 @@ if TYPE_CHECKING:
         Ping,
         DoPreauthorized,
         CancelAuthorization,
+        SetBusy,
     )
+
+
+def busy_expiry_ms() -> int:
+    """
+    Returns the time left until the busy state expires or 0 if the device is not in the busy state.
+    """
+
+    busy_deadline_bytes = storage.cache.get(storage.cache.APP_COMMON_BUSY_DEADLINE_MS)
+    if busy_deadline_bytes is None:
+        return 0
+
+    import utime
+
+    busy_deadline_ms = int.from_bytes(busy_deadline_bytes, "big")
+    expiry_ms = utime.ticks_diff(busy_deadline_ms, utime.ticks_ms())
+    return expiry_ms if expiry_ms > 0 else 0
 
 
 def get_features() -> Features:
@@ -47,6 +64,7 @@ def get_features() -> Features:
         label=storage.device.get_label(),
         pin_protection=config.has_pin(),
         unlocked=config.is_unlocked(),
+        busy=busy_expiry_ms() > 0,
     )
 
     if utils.BITCOIN_ONLY:
@@ -145,6 +163,24 @@ async def handle_LockDevice(ctx: wire.Context, msg: LockDevice) -> Success:
     return Success()
 
 
+async def handle_SetBusy(ctx: wire.Context, msg: SetBusy) -> Success:
+    if not storage.device.is_initialized():
+        raise wire.NotInitialized("Device is not initialized")
+
+    if msg.expiry_ms:
+        import utime
+
+        deadline = utime.ticks_add(utime.ticks_ms(), msg.expiry_ms)
+        storage.cache.set(
+            storage.cache.APP_COMMON_BUSY_DEADLINE_MS, deadline.to_bytes(4, "big")
+        )
+    else:
+        storage.cache.delete(storage.cache.APP_COMMON_BUSY_DEADLINE_MS)
+    set_homescreen()
+    workflow.close_others()
+    return Success()
+
+
 async def handle_EndSession(ctx: wire.Context, msg: EndSession) -> Success:
     storage.cache.end_current_session()
     return Success()
@@ -200,13 +236,20 @@ ALLOW_WHILE_LOCKED = (
     MessageType.LockDevice,
     MessageType.DoPreauthorized,
     MessageType.WipeDevice,
+    MessageType.SetBusy,
 )
 
 
 def set_homescreen() -> None:
     import storage.recovery
+    import storage  # workaround for https://github.com/microsoft/pyright/issues/2685
 
-    if not config.is_unlocked():
+    if storage.cache.is_set(storage.cache.APP_COMMON_BUSY_DEADLINE_MS):
+        from apps.homescreen.busyscreen import busyscreen
+
+        workflow.set_default(busyscreen)
+
+    elif not config.is_unlocked():
         from apps.homescreen.lockscreen import lockscreen
 
         workflow.set_default(lockscreen)
@@ -296,6 +339,7 @@ def boot() -> None:
     workflow_handlers.register(
         MessageType.CancelAuthorization, handle_CancelAuthorization
     )
+    workflow_handlers.register(MessageType.SetBusy, handle_SetBusy)
 
     reload_settings_from_storage()
     if config.is_unlocked():
