@@ -1,5 +1,5 @@
 use crate::{
-    micropython::util::ResultExt,
+    micropython::{buffer::StrBuffer, util::ResultExt},
     ui::{
         component::Paginate,
         display::Font,
@@ -8,19 +8,20 @@ use crate::{
     },
 };
 
-use heapless::{String, Vec};
+use heapless::Vec;
 
 use super::{
     flow::BtnActions,
     flow_pages_poc_helpers::{
         LayoutFit, LayoutSink, LineAlignment, Op, TextLayout, TextNoOp, TextRenderer, TextStyle,
+        ToDisplay,
     },
     ButtonDetails, ButtonLayout,
 };
 
 #[derive(Clone)]
-pub struct FlowPageMaker<const N: usize, const M: usize> {
-    ops: Vec<Op<N>, M>,
+pub struct FlowPageMaker<const M: usize> {
+    ops: Vec<Op, M>,
     layout: TextLayout,
     btn_layout: ButtonLayout<&'static str>,
     btn_actions: BtnActions,
@@ -30,7 +31,7 @@ pub struct FlowPageMaker<const N: usize, const M: usize> {
 }
 
 // For `layout.rs`
-impl<const N: usize, const M: usize> FlowPageMaker<N, M> {
+impl<const M: usize> FlowPageMaker<M> {
     pub fn new(btn_layout: ButtonLayout<&'static str>, btn_actions: BtnActions) -> Self {
         let style = TextStyle::new(
             theme::FONT_NORMAL,
@@ -52,7 +53,7 @@ impl<const N: usize, const M: usize> FlowPageMaker<N, M> {
 }
 
 // For `flow.rs`
-impl<const N: usize, const M: usize> FlowPageMaker<N, M> {
+impl<const M: usize> FlowPageMaker<M> {
     pub fn paint(&mut self) {
         self.change_page(self.current_page);
         self.layout_content(&mut TextRenderer);
@@ -105,19 +106,19 @@ impl<const N: usize, const M: usize> FlowPageMaker<N, M> {
 }
 
 // For `layout.rs` - single operations
-impl<const N: usize, const M: usize> FlowPageMaker<N, M> {
-    pub fn with_new_item(mut self, item: Op<N>) -> Self {
+impl<const M: usize> FlowPageMaker<M> {
+    pub fn with_new_item(mut self, item: Op) -> Self {
         self.ops
             .push(item)
             .assert_if_debugging_ui("Could not push to self.ops");
         self
     }
-    pub fn text(self, text: String<N>) -> Self {
-        self.with_new_item(Op::Text(text))
+    pub fn text(self, text: StrBuffer) -> Self {
+        self.with_new_item(Op::Text(ToDisplay::new(text)))
     }
 
     pub fn newline(self) -> Self {
-        self.with_new_item(Op::Text("\n".into()))
+        self.with_new_item(Op::Text(ToDisplay::new("\n".into())))
     }
 
     pub fn next_page(self) -> Self {
@@ -142,8 +143,8 @@ impl<const N: usize, const M: usize> FlowPageMaker<N, M> {
 }
 
 // For `layout.rs` - aggregating operations
-impl<const N: usize, const M: usize> FlowPageMaker<N, M> {
-    pub fn icon_label_text(self, icon: &'static [u8], label: String<N>, text: String<N>) -> Self {
+impl<const M: usize> FlowPageMaker<M> {
+    pub fn icon_label_text(self, icon: &'static [u8], label: StrBuffer, text: StrBuffer) -> Self {
         self.icon_with_offset(icon, 3)
             .text_normal(label)
             .newline()
@@ -154,30 +155,30 @@ impl<const N: usize, const M: usize> FlowPageMaker<N, M> {
         self.icon(icon).offset(Offset::x(x_offset))
     }
 
-    pub fn text_normal(self, text: String<N>) -> Self {
+    pub fn text_normal(self, text: StrBuffer) -> Self {
         self.font(theme::FONT_NORMAL).text(text)
     }
 
-    pub fn text_bold(self, text: String<N>) -> Self {
+    pub fn text_bold(self, text: StrBuffer) -> Self {
         self.font(theme::FONT_BOLD).text(text)
     }
 }
 
 // For painting and pagination
-impl<const N: usize, const M: usize> FlowPageMaker<N, M> {
+impl<const M: usize> FlowPageMaker<M> {
     pub fn set_char_offset(&mut self, char_offset: usize) {
         self.char_offset = char_offset;
     }
 
     pub fn layout_content(&self, sink: &mut dyn LayoutSink) -> LayoutFit {
-        let ops = Op::skip_n_content_bytes(self.ops.clone(), self.char_offset);
         let mut cursor = self.layout.initial_cursor();
-        self.layout.layout_ops(ops, &mut cursor, sink)
+        self.layout
+            .layout_ops(self.ops.clone(), &mut cursor, self.char_offset, sink)
     }
 }
 
 // Pagination
-impl<const N: usize, const M: usize> Paginate for FlowPageMaker<N, M> {
+impl<const M: usize> Paginate for FlowPageMaker<M> {
     fn page_count(&mut self) -> usize {
         let mut page_count = 1; // There's always at least one page.
         let mut char_offset = 0;

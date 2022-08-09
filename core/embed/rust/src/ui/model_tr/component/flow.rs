@@ -138,8 +138,8 @@ impl BtnActions {
     }
 }
 
-pub struct Flow<T, const N: usize, const M: usize, const S: usize> {
-    pages: Vec<FlowPageMaker<M, S>, N>,
+pub struct Flow<T, const N: usize, const M: usize> {
+    pages: Vec<FlowPageMaker<M>, N>,
     common_title: Option<T>,
     content_area: Rect,
     pad: Pad,
@@ -147,12 +147,12 @@ pub struct Flow<T, const N: usize, const M: usize, const S: usize> {
     page_counter: u8,
 }
 
-impl<T, const N: usize, const M: usize, const S: usize> Flow<T, N, M, S>
+impl<T, const N: usize, const M: usize> Flow<T, N, M>
 where
     T: AsRef<str>,
     T: Clone,
 {
-    pub fn new(pages: Vec<FlowPageMaker<M, S>, N>) -> Self {
+    pub fn new(pages: Vec<FlowPageMaker<M>, N>) -> Self {
         Self {
             pages,
             common_title: None,
@@ -187,7 +187,7 @@ where
     }
 
     /// Page that is/should be currently on the screen.
-    fn current_choice(&mut self) -> &mut FlowPageMaker<M, S> {
+    fn current_choice(&mut self) -> &mut FlowPageMaker<M> {
         &mut self.pages[self.page_counter as usize]
     }
 
@@ -251,7 +251,7 @@ where
     }
 }
 
-impl<T, const N: usize, const M: usize, const S: usize> Component for Flow<T, N, M, S>
+impl<T, const N: usize, const M: usize> Component for Flow<T, N, M>
 where
     T: AsRef<str>,
     T: Clone,
@@ -329,7 +329,7 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T, const N: usize, const M: usize, const S: usize> crate::trace::Trace for Flow<T, N, M, S> {
+impl<T, const N: usize, const M: usize> crate::trace::Trace for Flow<T, N, M> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("Flow");
         t.close();

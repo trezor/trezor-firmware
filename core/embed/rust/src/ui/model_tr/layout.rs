@@ -52,7 +52,7 @@ where
     }
 }
 
-impl<T, const N: usize, const M: usize, const S: usize> ComponentMsgObj for Flow<T, N, M, S>
+impl<T, const N: usize, const M: usize> ComponentMsgObj for Flow<T, N, M>
 where
     T: AsRef<str>,
     T: Clone,
@@ -224,7 +224,7 @@ extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) 
             FlowPageMaker::new(btn_layout, btn_actions).icon_label_text(
                 theme::ICON_USER,
                 "Recipient".into(),
-                address.as_ref().into(),
+                address,
             )
         };
 
@@ -238,16 +238,12 @@ extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) 
             let btn_actions = BtnActions::cancel_confirm();
 
             FlowPageMaker::new(btn_layout, btn_actions)
-                .icon_label_text(
-                    theme::ICON_USER,
-                    "Recipient".into(),
-                    truncated_address.as_ref().into(),
-                )
+                .icon_label_text(theme::ICON_USER, "Recipient".into(), truncated_address)
                 .newline()
-                .icon_label_text(theme::ICON_AMOUNT, "Amount".into(), amount.as_ref().into())
+                .icon_label_text(theme::ICON_AMOUNT, "Amount".into(), amount)
         };
 
-        let pages: Vec<FlowPageMaker<100, 15>, 2> =
+        let pages: Vec<FlowPageMaker<15>, 2> =
             Vec::from_slice(&[address_page, confirm_page]).unwrap();
 
         let obj = LayoutObj::new(Flow::new(pages).with_common_title(title).into_child())?;
@@ -278,29 +274,21 @@ extern "C" fn confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -
             let btn_actions = BtnActions::cancel_confirm();
 
             let mut page = FlowPageMaker::new(btn_layout, btn_actions)
-                .icon_label_text(
-                    theme::ICON_PARAM,
-                    total_label.as_ref().into(),
-                    total_amount.as_ref().into(),
-                )
+                .icon_label_text(theme::ICON_PARAM, total_label, total_amount)
                 .newline()
-                .icon_label_text(
-                    theme::ICON_PARAM,
-                    fee_label.as_ref().into(),
-                    fee_amount.as_ref().into(),
-                );
+                .icon_label_text(theme::ICON_PARAM, fee_label, fee_amount);
 
             if let Some(fee_rate_amount) = fee_rate_amount {
                 page = page.newline().icon_label_text(
                     theme::ICON_PARAM,
                     "Fee rate".into(),
-                    fee_rate_amount.as_ref().into(),
+                    fee_rate_amount,
                 )
             }
             page
         };
 
-        let pages: Vec<FlowPageMaker<25, 25>, 1> = Vec::from_slice(&[confirm_page]).unwrap();
+        let pages: Vec<FlowPageMaker<25>, 1> = Vec::from_slice(&[confirm_page]).unwrap();
 
         let obj = LayoutObj::new(Flow::new(pages).with_common_title(title).into_child())?;
         Ok(obj.into())
@@ -394,7 +382,7 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
             ),
         ];
 
-        let pages: Vec<FlowPageMaker<80, 10>, 8> = screens
+        let pages: Vec<FlowPageMaker<10>, 8> = screens
             .iter()
             .map(|screen| {
                 FlowPageMaker::new(screen.2.clone(), screen.3.clone())
@@ -404,7 +392,7 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
             })
             .collect();
 
-        let obj = LayoutObj::new(Flow::<StrBuffer, 8, 80, 10>::new(pages).into_child())?;
+        let obj = LayoutObj::new(Flow::<StrBuffer, 8, 10>::new(pages).into_child())?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }

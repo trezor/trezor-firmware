@@ -7,18 +7,36 @@
 //! ui/component/text, and so they can be freely removed (as they are here as
 //! well).
 
-use crate::ui::{
-    display::{self, Color, Font, Icon},
-    geometry::{Offset, Point, Rect},
+use crate::{
+    micropython::buffer::StrBuffer,
+    ui::{
+        display::{self, Color, Font, Icon},
+        geometry::{Offset, Point, Rect},
+    },
 };
 
-use heapless::{String, Vec};
+use heapless::Vec;
+
+#[derive(Clone)]
+pub struct ToDisplay {
+    pub text: StrBuffer,
+    pub length: usize,
+}
+
+impl ToDisplay {
+    pub fn new(text: StrBuffer) -> Self {
+        Self {
+            text: text.clone(),
+            length: text.len(),
+        }
+    }
+}
 
 /// Operations that can be done on FormattedText.
 #[derive(Clone)]
-pub enum Op<const N: usize> {
+pub enum Op {
     /// Render text with current color and font.
-    Text(String<N>),
+    Text(ToDisplay),
     /// Render icon.
     /// TODO: make it have `display::Icon`, but it currently has
     /// `T` parameter because of HTC not supporting icons
@@ -33,48 +51,6 @@ pub enum Op<const N: usize> {
     CursorOffset(Offset),
     /// Force continuing on the next page.
     NextPage,
-}
-
-impl<const N: usize> Op<N> {
-    /// Filtering the list of `Op`s to throw away all the content
-    /// (text, icons or other operations) before a specific byte/character
-    /// threshold. Used when showing the second, third... paginated page
-    /// to skip the first one, two... pages.
-    pub fn skip_n_content_bytes<const M: usize>(
-        ops: Vec<Op<N>, M>,
-        skip_bytes: usize,
-    ) -> Vec<Op<N>, M> {
-        let mut skipped = 0;
-
-        ops.iter()
-            .filter_map(|op| match op {
-                Op::Text(text) if skipped < skip_bytes => {
-                    skipped = skipped.saturating_add(text.len());
-                    if skipped > skip_bytes {
-                        let leave_bytes = skipped - skip_bytes;
-                        Some(Op::Text((&text[text.len() - leave_bytes..]).into()))
-                    } else {
-                        None
-                    }
-                }
-                Op::Icon(_) if skipped < skip_bytes => {
-                    // Assume the icon accounts for one character
-                    skipped = skipped.saturating_add(1);
-                    None
-                }
-                Op::NextPage if skipped < skip_bytes => {
-                    // Skip the next page and consider it one character
-                    skipped = skipped.saturating_add(1);
-                    None
-                }
-                Op::CursorOffset(_) if skipped < skip_bytes => {
-                    // Skip any offsets
-                    None
-                }
-                op_to_pass_through => Some(op_to_pass_through.clone()),
-            })
-            .collect()
-    }
 }
 
 #[derive(Copy, Clone)]
@@ -208,74 +184,116 @@ impl TextLayout {
 
     /// Perform some operations defined on `Op` for a list of those `Op`s
     /// - e.g. changing the color, changing the font or rendering the text.
-    pub fn layout_ops<const N: usize, const M: usize>(
+    pub fn layout_ops<const M: usize>(
         mut self,
-        ops: Vec<Op<N>, M>,
+        ops: Vec<Op, M>,
         cursor: &mut Point,
+        skip_bytes: usize,
         sink: &mut dyn LayoutSink,
     ) -> LayoutFit {
         let init_cursor = *cursor;
         let mut total_processed_chars = 0;
 
+        let mut skipped = 0;
         for op in ops {
-            match op {
-                // Changing color
-                Op::Color(color) => {
-                    self.style.text_color = color;
-                }
-                // Changing font
-                Op::Font(font) => {
-                    self.style.text_font = font;
-                }
-                // Changing line/text alignment
-                Op::LineAlignment(line_alignment) => {
-                    self.style.line_alignment = line_alignment;
-                }
-                // Moving the cursor
-                Op::CursorOffset(offset) => {
-                    cursor.x += offset.x;
-                    cursor.y += offset.y;
-                }
-                // Moving to the next page
-                Op::NextPage => {
-                    // Pretending that nothing more fits on current page to force
-                    // continuing on the next one
-                    // Making that to account for one character for pagination purposes
-                    total_processed_chars += 1;
-                    return LayoutFit::OutOfBounds {
-                        processed_chars: total_processed_chars,
-                        height: self.layout_height(init_cursor, *cursor),
-                    };
-                }
-                // Drawing text or icon
-                Op::Text(_) | Op::Icon(_) => {
-                    // Text and Icon behave similarly - we try to fit them
-                    // on the current page and if they do not fit,
-                    // return the appropriate OutOfBounds message
-                    let fit = if let Op::Text(text) = op {
-                        self.layout_text(text.as_ref(), cursor, sink)
-                    } else if let Op::Icon(icon) = op {
-                        self.layout_icon(icon, cursor, sink)
-                    } else {
-                        #[cfg(feature = "ui_debug")]
-                        panic!("unexpected op type");
-                    };
-
-                    match fit {
-                        LayoutFit::Fitting {
-                            processed_chars, ..
-                        } => {
-                            total_processed_chars += processed_chars;
-                        }
-                        LayoutFit::OutOfBounds {
-                            processed_chars, ..
-                        } => {
-                            total_processed_chars += processed_chars;
-
-                            return LayoutFit::OutOfBounds {
-                                processed_chars: total_processed_chars,
-                                height: self.layout_height(init_cursor, *cursor),
+            let real_op = {
+                match op {
+                    Op::Text(to_display) if skipped < skip_bytes => {
+                        skipped = skipped.saturating_add(to_display.length);
+                        if skipped > skip_bytes {
+                            let leave_bytes = skipped - skip_bytes;
+                            let new_display = ToDisplay {
+                                text: to_display.text,
+                                length: leave_bytes,
                             };
+                            Some(Op::Text(new_display))
+                        } else {
+                            None
+                        }
+                    }
+                    Op::Icon(_) if skipped < skip_bytes => {
+                        // Assume the icon accounts for one character
+                        skipped = skipped.saturating_add(1);
+                        None
+                    }
+                    Op::NextPage if skipped < skip_bytes => {
+                        // Skip the next page and consider it one character
+                        skipped = skipped.saturating_add(1);
+                        None
+                    }
+                    Op::CursorOffset(_) if skipped < skip_bytes => {
+                        // Skip any offsets
+                        None
+                    }
+                    op_to_pass_through => Some(op_to_pass_through.clone()),
+                }
+            };
+
+            if let Some(op) = real_op {
+                match op {
+                    // Changing color
+                    Op::Color(color) => {
+                        self.style.text_color = color;
+                    }
+                    // Changing font
+                    Op::Font(font) => {
+                        self.style.text_font = font;
+                    }
+                    // Changing line/text alignment
+                    Op::LineAlignment(line_alignment) => {
+                        self.style.line_alignment = line_alignment;
+                    }
+                    // Moving the cursor
+                    Op::CursorOffset(offset) => {
+                        cursor.x += offset.x;
+                        cursor.y += offset.y;
+                    }
+                    // Moving to the next page
+                    Op::NextPage => {
+                        // Pretending that nothing more fits on current page to force
+                        // continuing on the next one
+                        // Making that to account for one character for pagination purposes
+                        total_processed_chars += 1;
+                        return LayoutFit::OutOfBounds {
+                            processed_chars: total_processed_chars,
+                            height: self.layout_height(init_cursor, *cursor),
+                        };
+                    }
+                    // Drawing text or icon
+                    Op::Text(_) | Op::Icon(_) => {
+                        // Text and Icon behave similarly - we try to fit them
+                        // on the current page and if they do not fit,
+                        // return the appropriate OutOfBounds message
+                        let fit = if let Op::Text(to_display) = op {
+                            let text = to_display.text.as_ref();
+                            let text_len = to_display.length;
+                            let start = text.len() - text_len;
+                            let to_really_display = &text[start..];
+                            // let to_really_display = text.text[text.start..text.end].to_string();
+                            self.layout_text(to_really_display, cursor, sink)
+                        } else if let Op::Icon(icon) = op {
+                            self.layout_icon(icon, cursor, sink)
+                        } else {
+                            #[cfg(feature = "ui_debug")]
+                            panic!("unexpected op type");
+                        };
+
+                        match fit {
+                            LayoutFit::Fitting {
+                                processed_chars, ..
+                            } => {
+                                total_processed_chars += processed_chars;
+                            }
+                            LayoutFit::OutOfBounds {
+                                processed_chars, ..
+                            } => {
+                                total_processed_chars += processed_chars;
+
+                                return LayoutFit::OutOfBounds {
+                                    processed_chars: total_processed_chars,
+                                    height: self.layout_height(init_cursor, *cursor),
+                                };
+                            }
                         }
                     }
                 }
