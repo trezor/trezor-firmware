@@ -16,9 +16,9 @@ use heapless::{String, Vec};
 
 /// Operations that can be done on FormattedText.
 #[derive(Clone)]
-pub enum Op {
+pub enum Op<const N: usize> {
     /// Render text with current color and font.
-    Text(String<100>), // TODO: HACK
+    Text(String<N>),
     /// Render icon.
     /// TODO: make it have `display::Icon`, but it currently has
     /// `T` parameter because of HTC not supporting icons
@@ -35,12 +35,15 @@ pub enum Op {
     NextPage,
 }
 
-impl Op {
+impl<const N: usize> Op<N> {
     /// Filtering the list of `Op`s to throw away all the content
     /// (text, icons or other operations) before a specific byte/character
     /// threshold. Used when showing the second, third... paginated page
     /// to skip the first one, two... pages.
-    pub fn skip_n_content_bytes(ops: Vec<Op, 30>, skip_bytes: usize) -> Vec<Op, 30> {
+    pub fn skip_n_content_bytes<const M: usize>(
+        ops: Vec<Op<N>, M>,
+        skip_bytes: usize,
+    ) -> Vec<Op<N>, M> {
         let mut skipped = 0;
 
         ops.iter()
@@ -205,9 +208,9 @@ impl TextLayout {
 
     /// Perform some operations defined on `Op` for a list of those `Op`s
     /// - e.g. changing the color, changing the font or rendering the text.
-    pub fn layout_ops(
+    pub fn layout_ops<const N: usize, const M: usize>(
         mut self,
-        ops: Vec<Op, 30>,
+        ops: Vec<Op<N>, M>,
         cursor: &mut Point,
         sink: &mut dyn LayoutSink,
     ) -> LayoutFit {

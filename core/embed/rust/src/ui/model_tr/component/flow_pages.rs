@@ -19,8 +19,8 @@ use super::{
 };
 
 #[derive(Clone)]
-pub struct FlowPageMaker {
-    ops: Vec<Op, 30>, // TODO: HACK
+pub struct FlowPageMaker<const N: usize, const M: usize> {
+    ops: Vec<Op<N>, M>,
     layout: TextLayout,
     btn_layout: ButtonLayout<&'static str>,
     btn_actions: BtnActions,
@@ -30,7 +30,7 @@ pub struct FlowPageMaker {
 }
 
 // For `layout.rs`
-impl FlowPageMaker {
+impl<const N: usize, const M: usize> FlowPageMaker<N, M> {
     pub fn new(btn_layout: ButtonLayout<&'static str>, btn_actions: BtnActions) -> Self {
         let style = TextStyle::new(
             theme::FONT_NORMAL,
@@ -52,7 +52,7 @@ impl FlowPageMaker {
 }
 
 // For `flow.rs`
-impl FlowPageMaker {
+impl<const N: usize, const M: usize> FlowPageMaker<N, M> {
     pub fn paint(&mut self) {
         self.change_page(self.current_page);
         self.layout_content(&mut TextRenderer);
@@ -105,14 +105,14 @@ impl FlowPageMaker {
 }
 
 // For `layout.rs` - single operations
-impl FlowPageMaker {
-    pub fn with_new_item(mut self, item: Op) -> Self {
+impl<const N: usize, const M: usize> FlowPageMaker<N, M> {
+    pub fn with_new_item(mut self, item: Op<N>) -> Self {
         self.ops
             .push(item)
             .assert_if_debugging_ui("Could not push to self.ops");
         self
     }
-    pub fn text(self, text: String<100>) -> Self {
+    pub fn text(self, text: String<N>) -> Self {
         self.with_new_item(Op::Text(text))
     }
 
@@ -142,13 +142,8 @@ impl FlowPageMaker {
 }
 
 // For `layout.rs` - aggregating operations
-impl FlowPageMaker {
-    pub fn icon_label_text(
-        self,
-        icon: &'static [u8],
-        label: String<100>,
-        text: String<100>,
-    ) -> Self {
+impl<const N: usize, const M: usize> FlowPageMaker<N, M> {
+    pub fn icon_label_text(self, icon: &'static [u8], label: String<N>, text: String<N>) -> Self {
         self.icon_with_offset(icon, 3)
             .text_normal(label)
             .newline()
@@ -159,17 +154,17 @@ impl FlowPageMaker {
         self.icon(icon).offset(Offset::x(x_offset))
     }
 
-    pub fn text_normal(self, text: String<100>) -> Self {
+    pub fn text_normal(self, text: String<N>) -> Self {
         self.font(theme::FONT_NORMAL).text(text)
     }
 
-    pub fn text_bold(self, text: String<100>) -> Self {
+    pub fn text_bold(self, text: String<N>) -> Self {
         self.font(theme::FONT_BOLD).text(text)
     }
 }
 
 // For painting and pagination
-impl FlowPageMaker {
+impl<const N: usize, const M: usize> FlowPageMaker<N, M> {
     pub fn set_char_offset(&mut self, char_offset: usize) {
         self.char_offset = char_offset;
     }
@@ -182,7 +177,7 @@ impl FlowPageMaker {
 }
 
 // Pagination
-impl Paginate for FlowPageMaker {
+impl<const N: usize, const M: usize> Paginate for FlowPageMaker<N, M> {
     fn page_count(&mut self) -> usize {
         let mut page_count = 1; // There's always at least one page.
         let mut char_offset = 0;

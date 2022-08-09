@@ -52,7 +52,7 @@ where
     }
 }
 
-impl<T, const N: usize> ComponentMsgObj for Flow<T, N>
+impl<T, const N: usize, const M: usize, const S: usize> ComponentMsgObj for Flow<T, N, M, S>
 where
     T: AsRef<str>,
     T: Clone,
@@ -247,7 +247,8 @@ extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) 
                 .icon_label_text(theme::ICON_AMOUNT, "Amount".into(), amount.as_ref().into())
         };
 
-        let pages: Vec<FlowPageMaker, 2> = Vec::from_slice(&[address_page, confirm_page]).unwrap();
+        let pages: Vec<FlowPageMaker<100, 15>, 2> =
+            Vec::from_slice(&[address_page, confirm_page]).unwrap();
 
         let obj = LayoutObj::new(Flow::new(pages).with_common_title(title).into_child())?;
         Ok(obj.into())
@@ -299,7 +300,7 @@ extern "C" fn confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -
             page
         };
 
-        let pages: Vec<FlowPageMaker, 1> = Vec::from_slice(&[confirm_page]).unwrap();
+        let pages: Vec<FlowPageMaker<25, 25>, 1> = Vec::from_slice(&[confirm_page]).unwrap();
 
         let obj = LayoutObj::new(Flow::new(pages).with_common_title(title).into_child())?;
         Ok(obj.into())
@@ -393,7 +394,7 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
             ),
         ];
 
-        let pages: Vec<FlowPageMaker, 8> = screens
+        let pages: Vec<FlowPageMaker<80, 10>, 8> = screens
             .iter()
             .map(|screen| {
                 FlowPageMaker::new(screen.2.clone(), screen.3.clone())
@@ -403,7 +404,7 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
             })
             .collect();
 
-        let obj = LayoutObj::new(Flow::<StrBuffer, 8>::new(pages).into_child())?;
+        let obj = LayoutObj::new(Flow::<StrBuffer, 8, 80, 10>::new(pages).into_child())?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
