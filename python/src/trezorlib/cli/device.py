@@ -290,3 +290,30 @@ def reboot_to_bootloader(obj: "TrezorConnection") -> str:
     # which triggers double prompt on device
     with obj.client_context() as client:
         return device.reboot_to_bootloader(client)
+
+
+@cli.command()
+@click.argument("enable", type=ChoiceType({"on": True, "off": False}), required=False)
+@click.option(
+    "-e",
+    "--expiry",
+    type=int,
+    help="Dialog expiry in seconds.",
+)
+@with_client
+def set_busy(
+    client: "TrezorClient", enable: Optional[bool], expiry: Optional[int]
+) -> str:
+    """Show a "Do not disconnect" dialog."""
+    if enable is False:
+        return device.set_busy(client, None)
+
+    if expiry is None:
+        raise click.ClickException("Missing option '-e' / '--expiry'.")
+
+    if expiry <= 0:
+        raise click.ClickException(
+            f"Invalid value for '-e' / '--expiry': '{expiry}' is not a positive integer."
+        )
+
+    return device.set_busy(client, expiry * 1000)
