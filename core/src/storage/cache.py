@@ -30,6 +30,7 @@ APP_COMMON_SEED_WITHOUT_PASSPHRASE = 0 | _SESSIONLESS_FLAG
 APP_COMMON_SAFETY_CHECKS_TEMPORARY = 1 | _SESSIONLESS_FLAG
 STORAGE_DEVICE_EXPERIMENTAL_FEATURES = 2 | _SESSIONLESS_FLAG
 APP_COMMON_REQUEST_PIN_LAST_UNLOCK = 3 | _SESSIONLESS_FLAG
+APP_COMMON_BUSY_DEADLINE_MS = 4 | _SESSIONLESS_FLAG
 
 
 # === Homescreen storage ===
@@ -40,6 +41,7 @@ APP_COMMON_REQUEST_PIN_LAST_UNLOCK = 3 | _SESSIONLESS_FLAG
 # is still on. This way we can avoid unnecessary fadeins/fadeouts when a workflow ends.
 HOMESCREEN_ON = object()
 LOCKSCREEN_ON = object()
+BUSYSCREEN_ON = object()
 homescreen_shown: object | None = None
 
 
@@ -132,6 +134,7 @@ class SessionlessCache(DataCache):
             1,  # APP_COMMON_SAFETY_CHECKS_TEMPORARY
             1,  # STORAGE_DEVICE_EXPERIMENTAL_FEATURES
             4,  # APP_COMMON_REQUEST_PIN_LAST_UNLOCK
+            4,  # APP_COMMON_BUSY_DEADLINE_MS
         )
         super().__init__()
 

@@ -351,6 +351,8 @@ apps.debug.load_device
 import apps.debug.load_device
 apps.homescreen
 import apps.homescreen
+apps.homescreen.busyscreen
+import apps.homescreen.busyscreen
 apps.homescreen.homescreen
 import apps.homescreen.homescreen
 apps.homescreen.lockscreen
