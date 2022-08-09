@@ -129,7 +129,7 @@ int main(void) {
   // Stack limit should be less than real stack size, so we have a chance
   // to recover from limit hit.
   mp_stack_set_top(&_estack);
-  mp_stack_set_limit((char *)&_estack - (char *)&_heap_end - 1024);
+  mp_stack_set_limit((char *)&_estack - (char *)&_sstack - 1024);
 
 #if MICROPY_ENABLE_PYSTACK
   static mp_obj_t pystack[1024];
@@ -179,8 +179,12 @@ void HardFault_Handler(void) {
   error_shutdown("Internal error", "(HF)", NULL, NULL);
 }
 
-void MemManage_Handler(void) {
+void MemManage_Handler_MM(void) {
   error_shutdown("Internal error", "(MM)", NULL, NULL);
+}
+
+void MemManage_Handler_SO(void) {
+  error_shutdown("Internal error", "(SO)", NULL, NULL);
 }
 
 void BusFault_Handler(void) {
