@@ -95,7 +95,7 @@ impl<T: Clone + AsRef<str>> ButtonContainer<T> {
         // Deciding between text and icon
         if let Some(text) = btn_details.clone().text {
             Child::new(Button::with_text(pos, text, btn_details.style()))
-        } else if let Some(icon) = btn_details.icon.clone() {
+        } else if let Some(icon) = btn_details.icon {
             Child::new(Button::with_icon(pos, icon, btn_details.style()))
         } else {
             #[cfg(feature = "ui_debug")]
@@ -112,18 +112,16 @@ impl<T: Clone + AsRef<str>> ButtonContainer<T> {
             .duration
             .unwrap_or_else(|| Duration::from_millis(1000));
         if let Some(text) = btn_details.text {
-            Child::new(HoldToConfirm::new(
+            Child::new(HoldToConfirm::text(
                 pos,
                 text,
                 LoaderStyleSheet::default(),
                 duration,
             ))
         } else if let Some(icon) = btn_details.icon {
-            // TODO: this is hack to instantiate the HTC with icon,
-            // when HTC does not support icons yet
-            Child::new(HoldToConfirm::new(
+            Child::new(HoldToConfirm::icon(
                 pos,
-                icon.text,
+                icon,
                 LoaderStyleSheet::default(),
                 duration,
             ))

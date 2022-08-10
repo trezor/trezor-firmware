@@ -1047,18 +1047,26 @@ impl From<Color> for u16 {
     }
 }
 
+/// Storing the icon together with its name
+/// Needs to be a tuple-struct, so it can be made `const`
+#[derive(Debug, Clone, Copy)]
+pub struct IconAndName(&'static [u8], &'static str);
+
+impl IconAndName {
+    pub const fn new(icon: &'static [u8], name: &'static str) -> Self {
+        Self(icon, name)
+    }
+}
+
 /// Holding icon data and allowing it to draw itself.
 /// Lots of draw methods exist so that we can easily
 /// "glue" the icon together with other elements
 /// (text, display boundary, etc.) according to their position.
 #[derive(Debug, Clone, Copy)]
-pub struct Icon<T> {
+pub struct Icon {
     pub data: &'static [u8],
-    // NOTE: text is here mostly so that we can instantiate
-    // HTC with icon, when HTC does not support icons yet.
-    // It is also useful for debugging, as this text gets printed.
-    // TODO: it might be deleted when HTC supports icons
-    pub text: T,
+    // Text is useful for debugging purposes.
+    pub text: &'static str,
     // TODO: could include the info about "real" icon dimensions,
     // accounting for the TOIF limitations (when we sometimes
     // need to have empty row or column) - it could be
@@ -1066,12 +1074,12 @@ pub struct Icon<T> {
 }
 
 // TODO: consider merging it together with ToifInfo
-impl<T> Icon<T>
-where
-    T: AsRef<str>,
-{
-    pub fn new(data: &'static [u8], text: T) -> Self {
-        Icon { data, text }
+impl Icon {
+    pub fn new(icon_and_name: IconAndName) -> Self {
+        Icon {
+            data: icon_and_name.0,
+            text: icon_and_name.1,
+        }
     }
 
     pub fn width(&self) -> i32 {

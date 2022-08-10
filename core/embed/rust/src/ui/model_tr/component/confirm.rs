@@ -2,6 +2,7 @@ use crate::{
     time::{Duration, Instant},
     ui::{
         component::{Component, Event, EventCtx},
+        display::Icon,
         event::ButtonEvent,
         geometry::Rect,
         model_tr::component::{loader::Loader, ButtonPos, LoaderMsg, LoaderStyleSheet},
@@ -26,12 +27,22 @@ pub struct HoldToConfirm<T> {
 // TODO: could unite with `Button` so we can use the same features for both
 
 impl<T: AsRef<str>> HoldToConfirm<T> {
-    pub fn new(pos: ButtonPos, text: T, styles: LoaderStyleSheet, duration: Duration) -> Self {
+    pub fn text(pos: ButtonPos, text: T, styles: LoaderStyleSheet, duration: Duration) -> Self {
         let text_width = styles.normal.font.text_width(text.as_ref());
         Self {
             area: Rect::zero(),
             pos,
-            loader: Loader::new(text, styles).with_growing_duration(duration),
+            loader: Loader::text(text, styles).with_growing_duration(duration),
+            text_width,
+        }
+    }
+
+    pub fn icon(pos: ButtonPos, icon: Icon, styles: LoaderStyleSheet, duration: Duration) -> Self {
+        let text_width = icon.width();
+        Self {
+            area: Rect::zero(),
+            pos,
+            loader: Loader::icon(icon, styles).with_growing_duration(duration),
             text_width,
         }
     }

@@ -60,7 +60,7 @@ impl<T: AsRef<str>> Button<T> {
         Self::new(pos, ButtonContent::Text(text), styles)
     }
 
-    pub fn with_icon(pos: ButtonPos, image: Icon<T>, styles: ButtonStyleSheet) -> Self {
+    pub fn with_icon(pos: ButtonPos, image: Icon, styles: ButtonStyleSheet) -> Self {
         Self::new(pos, ButtonContent::Icon(image), styles)
     }
 
@@ -76,7 +76,7 @@ impl<T: AsRef<str>> Button<T> {
     }
 
     /// Changing the icon content of the button.
-    pub fn set_icon(&mut self, image: Icon<T>) {
+    pub fn set_icon(&mut self, image: Icon) {
         self.content = ButtonContent::Icon(image);
     }
 
@@ -220,12 +220,12 @@ where
             // Paint both arms.
             // Baselines need to be shifted little bit right to fit properly with the text
             // TODO: for "CONFIRM" there is one space at the right, but for "SELECT" there are two
-            Icon::new(theme::ICON_ARM_LEFT, "arm_left").draw_top_right(
+            Icon::new(theme::ICON_ARM_LEFT).draw_top_right(
                 area.left_center() + Offset::x(2),
                 text_color,
                 background_color,
             );
-            Icon::new(theme::ICON_ARM_RIGHT, "arm_right").draw_top_left(
+            Icon::new(theme::ICON_ARM_RIGHT).draw_top_left(
                 area.right_center() + Offset::x(4),
                 text_color,
                 background_color,
@@ -296,7 +296,7 @@ enum State {
 
 pub enum ButtonContent<T> {
     Text(T),
-    Icon(Icon<T>),
+    Icon(Icon),
 }
 
 pub struct ButtonStyleSheet {
@@ -387,7 +387,7 @@ impl ButtonStyleSheet {
 #[derive(Debug, Clone, Copy)]
 pub struct ButtonDetails<T> {
     pub text: Option<T>,
-    pub icon: Option<Icon<T>>,
+    pub icon: Option<Icon>,
     pub duration: Option<Duration>,
     pub is_cancel: bool,
     pub with_outline: bool,
@@ -412,7 +412,7 @@ impl<T: Clone + AsRef<str>> ButtonDetails<T> {
     }
 
     /// Icon button.
-    pub fn icon(icon: Icon<T>) -> Self {
+    pub fn icon(icon: Icon) -> Self {
         Self {
             text: None,
             icon: Some(icon),
@@ -431,30 +431,30 @@ impl<T: Clone + AsRef<str>> ButtonDetails<T> {
     }
 
     /// Cross-style-icon cancel button with no outline.
-    pub fn cancel_icon(text: T) -> Self {
-        Self::icon(Icon::new(theme::ICON_CANCEL, text))
+    pub fn cancel_icon() -> Self {
+        Self::icon(Icon::new(theme::ICON_CANCEL))
             .with_no_outline()
             .with_offset(Offset::new(2, -2))
     }
 
     /// Left arrow to signal going back.
-    pub fn left_arrow_icon(text: T) -> Self {
-        Self::icon(Icon::new(theme::ICON_ARROW_LEFT, text)).with_no_outline()
+    pub fn left_arrow_icon() -> Self {
+        Self::icon(Icon::new(theme::ICON_ARROW_LEFT)).with_no_outline()
     }
 
     /// Right arrow to signal going forward.
-    pub fn right_arrow_icon(text: T) -> Self {
-        Self::icon(Icon::new(theme::ICON_ARROW_RIGHT, text)).with_no_outline()
+    pub fn right_arrow_icon() -> Self {
+        Self::icon(Icon::new(theme::ICON_ARROW_RIGHT)).with_no_outline()
     }
 
     /// Down arrow to signal paginating forward. Takes half the screen's width
-    pub fn down_arrow_icon_wide(text: T) -> Self {
-        Self::icon(Icon::new(theme::ICON_ARROW_DOWN, text)).force_width(HALF_SCREEN_BUTTON_WIDTH)
+    pub fn down_arrow_icon_wide() -> Self {
+        Self::icon(Icon::new(theme::ICON_ARROW_DOWN)).force_width(HALF_SCREEN_BUTTON_WIDTH)
     }
 
     /// Up arrow to signal paginating back. Takes half the screen's width
-    pub fn up_arrow_icon_wide(text: T) -> Self {
-        Self::icon(Icon::new(theme::ICON_ARROW_UP, text)).force_width(HALF_SCREEN_BUTTON_WIDTH)
+    pub fn up_arrow_icon_wide() -> Self {
+        Self::icon(Icon::new(theme::ICON_ARROW_UP)).force_width(HALF_SCREEN_BUTTON_WIDTH)
     }
 
     /// Cancel style button.
@@ -582,27 +582,27 @@ impl ButtonLayout<&'static str> {
     /// Special middle text for default icon layout.
     pub fn three_icons_middle_text(middle_text: &'static str) -> Self {
         Self::new(
-            Some(ButtonDetails::left_arrow_icon("arr_left")),
+            Some(ButtonDetails::left_arrow_icon()),
             Some(ButtonDetails::armed_text(middle_text)),
-            Some(ButtonDetails::right_arrow_icon("arr_right")),
+            Some(ButtonDetails::right_arrow_icon()),
         )
     }
 
     /// Left and right arrow icons for navigation.
     pub fn left_right_arrows() -> Self {
         Self::new(
-            Some(ButtonDetails::left_arrow_icon("arr_left")),
+            Some(ButtonDetails::left_arrow_icon()),
             None,
-            Some(ButtonDetails::right_arrow_icon("arr_right")),
+            Some(ButtonDetails::right_arrow_icon()),
         )
     }
 
     /// Cancel cross on left and right arrow.
     pub fn cancel_and_arrow() -> Self {
         Self::new(
-            Some(ButtonDetails::cancel_icon("cancel")),
+            Some(ButtonDetails::cancel_icon()),
             None,
-            Some(ButtonDetails::right_arrow_icon("arr_right")),
+            Some(ButtonDetails::right_arrow_icon()),
         )
     }
 }

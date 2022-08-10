@@ -38,9 +38,7 @@ pub enum Op {
     /// Render text with current color and font.
     Text(ToDisplay),
     /// Render icon.
-    /// TODO: make it have `display::Icon`, but it currently has
-    /// `T` parameter because of HTC not supporting icons
-    Icon(&'static [u8]),
+    Icon(Icon),
     /// Set current text color.
     Color(Color),
     /// Set currently used font.
@@ -400,7 +398,7 @@ impl TextLayout {
     /// Try to fit the `icon` on the current screen
     pub fn layout_icon(
         &self,
-        icon: &'static [u8],
+        icon: Icon,
         cursor: &mut Point,
         sink: &mut dyn LayoutSink,
     ) -> LayoutFit {
@@ -413,11 +411,9 @@ impl TextLayout {
             };
         }
 
-        let icon_obj = Icon::new(icon, "icon");
-
         // Icon is too wide to fit on current line.
         // Trying to accommodate it on the next line, when it exists on this page.
-        if cursor.x + icon_obj.width() > self.right_x() {
+        if cursor.x + icon.width() > self.right_x() {
             cursor.x = self.bounds.x0;
             cursor.y += self.style.text_font.line_height();
             if cursor.y > self.bottom_y() {
@@ -429,13 +425,13 @@ impl TextLayout {
             }
         }
 
-        sink.icon(*cursor, self, icon_obj);
+        sink.icon(*cursor, self, icon);
 
         // TODO: currently we are using just small icons - that fit nicely to one line -
         // but in case we would do bigger ones, we would need some anti-collision
         // mechanism.
 
-        cursor.x += icon_obj.width() as i32;
+        cursor.x += icon.width() as i32;
         LayoutFit::Fitting {
             // TODO: how to handle this? It could collide with "skip_first_n_bytes"
             processed_chars: 1,
@@ -481,7 +477,7 @@ pub trait LayoutSink {
     /// Text should be processed.
     fn text(&mut self, _cursor: Point, _layout: &TextLayout, _text: &str) {}
     /// Text should be processed.
-    fn icon(&mut self, _cursor: Point, _layout: &TextLayout, _icon: Icon<&'static str>) {}
+    fn icon(&mut self, _cursor: Point, _layout: &TextLayout, _icon: Icon) {}
     /// Hyphen at the end of line.
     fn hyphen(&mut self, _cursor: Point, _layout: &TextLayout) {}
     /// Ellipsis at the end of the page.
@@ -561,7 +557,7 @@ impl LayoutSink for TextRenderer {
         );
     }
 
-    fn icon(&mut self, cursor: Point, layout: &TextLayout, icon: Icon<&'static str>) {
+    fn icon(&mut self, cursor: Point, layout: &TextLayout, icon: Icon) {
         icon.draw_bottom_left(
             cursor,
             layout.style.text_color,

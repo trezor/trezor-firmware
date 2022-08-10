@@ -33,10 +33,10 @@ where
             content,
             scrollbar: ScrollBar::vertical_to_be_filled_later(),
             pad: Pad::with_background(background),
-            cancel_btn_details: Some(ButtonDetails::cancel_icon("cancel")),
+            cancel_btn_details: Some(ButtonDetails::cancel_icon()),
             confirm_btn_details: Some(ButtonDetails::text("CONFIRM")),
-            back_btn_details: Some(ButtonDetails::up_arrow_icon_wide("arr_up")),
-            next_btn_details: Some(ButtonDetails::down_arrow_icon_wide("arr_down")),
+            back_btn_details: Some(ButtonDetails::up_arrow_icon_wide()),
+            next_btn_details: Some(ButtonDetails::down_arrow_icon_wide()),
             // Setting empty layout for now, we do not yet know the page count.
             // Initial button layout will be set in `place()` after we can call `content.page_count()`.
             buttons: Child::new(ButtonController::new(ButtonLayout::empty())),
@@ -55,10 +55,10 @@ where
             content,
             scrollbar: ScrollBar::vertical_to_be_filled_later(),
             pad: Pad::with_background(background),
-            cancel_btn_details: Some(ButtonDetails::cancel_icon("cancel".into())),
+            cancel_btn_details: Some(ButtonDetails::cancel_icon()),
             confirm_btn_details: Some(ButtonDetails::text("CONFIRM".into())),
-            back_btn_details: Some(ButtonDetails::up_arrow_icon_wide("arr_up".into())),
-            next_btn_details: Some(ButtonDetails::down_arrow_icon_wide("arr_down".into())),
+            back_btn_details: Some(ButtonDetails::up_arrow_icon_wide()),
+            next_btn_details: Some(ButtonDetails::down_arrow_icon_wide()),
             // Setting empty layout for now, we do not yet know the page count.
             // Initial button layout will be set in `place()` after we can call `content.page_count()`.
             buttons: Child::new(ButtonController::new(ButtonLayout::empty())),

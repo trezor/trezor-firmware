@@ -2,7 +2,7 @@ use crate::{
     micropython::{buffer::StrBuffer, util::ResultExt},
     ui::{
         component::Paginate,
-        display::Font,
+        display::{Font, Icon, IconAndName},
         geometry::{Offset, Rect},
         model_tr::theme,
     },
@@ -65,12 +65,12 @@ impl<const M: usize> FlowPageMaker<M> {
         let current = self.btn_layout.clone();
 
         let btn_left = if self.has_prev_page() {
-            Some(ButtonDetails::up_arrow_icon_wide("arr_up"))
+            Some(ButtonDetails::up_arrow_icon_wide())
         } else {
             current.btn_left
         };
         let btn_right = if self.has_next_page() {
-            Some(ButtonDetails::down_arrow_icon_wide("arr_down"))
+            Some(ButtonDetails::down_arrow_icon_wide())
         } else {
             current.btn_right
         };
@@ -125,8 +125,8 @@ impl<const M: usize> FlowPageMaker<M> {
         self.with_new_item(Op::NextPage)
     }
 
-    pub fn icon(self, icon: &'static [u8]) -> Self {
-        self.with_new_item(Op::Icon(icon))
+    pub fn icon(self, icon: IconAndName) -> Self {
+        self.with_new_item(Op::Icon(Icon::new(icon)))
     }
 
     pub fn font(self, font: Font) -> Self {
@@ -144,14 +144,14 @@ impl<const M: usize> FlowPageMaker<M> {
 
 // For `layout.rs` - aggregating operations
 impl<const M: usize> FlowPageMaker<M> {
-    pub fn icon_label_text(self, icon: &'static [u8], label: StrBuffer, text: StrBuffer) -> Self {
+    pub fn icon_label_text(self, icon: IconAndName, label: StrBuffer, text: StrBuffer) -> Self {
         self.icon_with_offset(icon, 3)
             .text_normal(label)
             .newline()
             .text_bold(text)
     }
 
-    pub fn icon_with_offset(self, icon: &'static [u8], x_offset: i32) -> Self {
+    pub fn icon_with_offset(self, icon: IconAndName, x_offset: i32) -> Self {
         self.icon(icon).offset(Offset::x(x_offset))
     }
 

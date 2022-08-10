@@ -138,7 +138,7 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
         let verb = verb.unwrap_or_default();
 
         let cancel_btn = if verb_cancel.len() > 0 {
-            Some(ButtonDetails::cancel_icon("cancel".into()))
+            Some(ButtonDetails::cancel_icon())
         } else {
             None
         };
@@ -216,7 +216,7 @@ extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) 
         // `icon + label + address`
         let address_page = {
             let btn_layout = ButtonLayout::new(
-                Some(ButtonDetails::cancel_icon("cancel")),
+                Some(ButtonDetails::cancel_icon()),
                 None,
                 Some(ButtonDetails::text("CONTINUE")),
             );
@@ -231,7 +231,7 @@ extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) 
         // 2 pairs `icon + label + text`
         let confirm_page = {
             let btn_layout = ButtonLayout::new(
-                Some(ButtonDetails::cancel_icon("cancel")),
+                Some(ButtonDetails::cancel_icon()),
                 None,
                 Some(ButtonDetails::text("HOLD TO CONFIRM").with_duration(Duration::from_secs(2))),
             );
@@ -267,7 +267,7 @@ extern "C" fn confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -
 
         let confirm_page = {
             let btn_layout = ButtonLayout::new(
-                Some(ButtonDetails::cancel_icon("cancel")),
+                Some(ButtonDetails::cancel_icon()),
                 None,
                 Some(ButtonDetails::text("HOLD TO SEND").with_duration(Duration::from_secs(2))),
             );
@@ -321,7 +321,7 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                 "Confirm",
                 "Press both left & right at the same time to confirm.",
                 ButtonLayout::new(
-                    Some(ButtonDetails::left_arrow_icon("left_arr")),
+                    Some(ButtonDetails::left_arrow_icon()),
                     Some(ButtonDetails::armed_text("CONFIRM")),
                     None,
                 ),
@@ -331,7 +331,7 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                 "Hold to confirm",
                 "Press & hold right to approve important operations.",
                 ButtonLayout::new(
-                    Some(ButtonDetails::left_arrow_icon("left_arr")),
+                    Some(ButtonDetails::left_arrow_icon()),
                     None,
                     Some(
                         ButtonDetails::text("HOLD TO CONFIRM")
@@ -344,9 +344,9 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                 "Screen scroll",
                 "Press right to scroll down to read all content when text doesn't...",
                 ButtonLayout::new(
-                    Some(ButtonDetails::left_arrow_icon("left_arr")),
+                    Some(ButtonDetails::left_arrow_icon()),
                     None,
-                    Some(ButtonDetails::down_arrow_icon_wide("down_arr")),
+                    Some(ButtonDetails::down_arrow_icon_wide()),
                 ),
                 BtnActions::prev_next(),
             ),
@@ -354,7 +354,7 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                 "Screen scroll",
                 "fit on one screen. Press left to scroll up.",
                 ButtonLayout::new(
-                    Some(ButtonDetails::up_arrow_icon_wide("up_arr")),
+                    Some(ButtonDetails::up_arrow_icon_wide()),
                     None,
                     Some(ButtonDetails::text("CONFIRM")),
                 ),
@@ -374,7 +374,7 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                 "Skip tutorial?",
                 "Sure you want to skip the tutorial?",
                 ButtonLayout::new(
-                    Some(ButtonDetails::left_arrow_icon("arr_left")),
+                    Some(ButtonDetails::left_arrow_icon()),
                     None,
                     Some(ButtonDetails::text("CONFIRM")),
                 ),

@@ -1,7 +1,7 @@
 use super::iter::GlyphMetrics;
 use crate::ui::{
     display,
-    display::{Color, Font, Icon},
+    display::{Color, Font, Icon, IconAndName},
     geometry::{Offset, Point, Rect},
 };
 
@@ -308,7 +308,7 @@ impl TextLayout {
             };
         }
 
-        let icon_obj = Icon::new(icon, "icon");
+        let icon_obj = Icon::new(IconAndName::new(icon, "icon"));
 
         // Icon is too wide to fit on current line.
         // Trying to accommodate it on the next line, when it exists on this page.
@@ -376,7 +376,7 @@ pub trait LayoutSink {
     /// Text should be processed.
     fn text(&mut self, _cursor: Point, _layout: &TextLayout, _text: &str) {}
     /// Text should be processed.
-    fn icon(&mut self, _cursor: Point, _layout: &TextLayout, _icon: Icon<&'static str>) {}
+    fn icon(&mut self, _cursor: Point, _layout: &TextLayout, _icon: Icon) {}
     /// Hyphen at the end of line.
     fn hyphen(&mut self, _cursor: Point, _layout: &TextLayout) {}
     /// Ellipsis at the end of the page.
@@ -428,7 +428,7 @@ impl LayoutSink for TextRenderer {
         );
     }
 
-    fn icon(&mut self, cursor: Point, layout: &TextLayout, icon: Icon<&'static str>) {
+    fn icon(&mut self, cursor: Point, layout: &TextLayout, icon: Icon) {
         icon.draw_bottom_left(
             cursor,
             layout.style.text_color,

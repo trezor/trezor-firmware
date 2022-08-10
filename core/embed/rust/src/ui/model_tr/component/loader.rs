@@ -3,7 +3,7 @@ use crate::{
     ui::{
         animation::Animation,
         component::{Component, Event, EventCtx},
-        display::{self, Color, Font},
+        display::{self, Color, Font, Icon},
         geometry::{Offset, Rect},
         model_tr::theme,
     },
@@ -26,16 +26,14 @@ pub struct Loader<T> {
     state: State,
     growing_duration: Duration,
     shrinking_duration: Duration,
-    text: display::TextOverlay<T>,
+    text: Option<display::TextOverlay<T>>,
     styles: LoaderStyleSheet,
 }
 
 impl<T: AsRef<str>> Loader<T> {
     pub const SIZE: Offset = Offset::new(120, 120);
 
-    pub fn new(text: T, styles: LoaderStyleSheet) -> Self {
-        let overlay = display::TextOverlay::new(text, styles.normal.font);
-
+    pub fn new(overlay: Option<display::TextOverlay<T>>, styles: LoaderStyleSheet) -> Self {
         Self {
             area: Rect::zero(),
             state: State::Initial,
@@ -44,6 +42,20 @@ impl<T: AsRef<str>> Loader<T> {
             text: overlay,
             styles,
         }
+    }
+
+    pub fn text(text: T, styles: LoaderStyleSheet) -> Self {
+        let text_overlay = display::TextOverlay::new(
+            text,
+            styles.normal.font
+        );
+
+        Self::new(Some(text_overlay), styles)
+    }
+
+    // TODO: support the icon drawing
+    pub fn icon(_icon: Icon, styles: LoaderStyleSheet) -> Self {
+        Self::new(None, styles)
     }
 
     pub fn with_growing_duration(mut self, growing_duration: Duration) -> Self {
@@ -57,8 +69,22 @@ impl<T: AsRef<str>> Loader<T> {
     }
 
     /// Change the text of the loader.
+    /// When the text_overlay does not exist (as it was created by icon),
+    /// create it and place it
     pub fn set_text(&mut self, text: T) {
-        self.text.set_text(text);
+        if let Some(text) = &mut self.text {
+            text.set_text(text);
+        } else {
+            let text = display::TextOverlay::new(
+                text,
+                self.styles.normal.font,
+            );
+            self.text = Some(text);
+            if let Some(text) = &mut self.text {
+                let baseline = Offset::new(self.area.width() / 2 + 1, self.area.height() - 1);
+                text.place(baseline);
+            }
+        }
     }
 
     /// Return width of given text according to current style.
@@ -133,17 +159,20 @@ impl<T: AsRef<str>> Loader<T> {
     }
 
     pub fn paint_loader(&mut self, style: &LoaderStyle, done: i32) {
-        let invert_from = ((self.area.width() + 1) * done) / (display::LOADER_MAX as i32);
+        // TODO: support painting icons
+        if let Some(text) = &mut self.text {
+            let invert_from = ((self.area.width() + 1) * done) / (display::LOADER_MAX as i32);
 
-        // TODO: the text should be moved one pixel to the top so it is centered in the loader
-        display::bar_with_text_and_fill(
-            self.area,
-            Some(&self.text),
-            style.fg_color,
-            style.bg_color,
-            -1,
-            invert_from,
-        );
+            // TODO: the text should be moved one pixel to the top so it is centered in the loader
+            display::bar_with_text_and_fill(
+                self.area,
+                Some(text),
+                style.fg_color,
+                style.bg_color,
+                -1,
+                invert_from,
+            );
+        }
     }
 }
 
@@ -152,8 +181,10 @@ impl<T: AsRef<str>> Component for Loader<T> {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
-        let baseline = bounds.bottom_center() + Offset::new(1, -1);
-        self.text.place(baseline);
+        if let Some(text) = &mut self.text {
+            let baseline = bounds.bottom_center() + Offset::new(1, -1);
+            text.place(baseline);
+        }
         self.area
     }
 

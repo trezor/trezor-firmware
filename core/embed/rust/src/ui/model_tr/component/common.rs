@@ -102,7 +102,7 @@ pub fn paint_header<T: AsRef<str>>(top_left: Point, title: T, subtitle: Option<T
 }
 
 /// Draws icon and text on the same line - icon on the left.
-pub fn icon_with_text<T: AsRef<str>>(baseline: Point, icon: Icon<T>, text: T, font: Font) {
+pub fn icon_with_text<T: AsRef<str>>(baseline: Point, icon: Icon, text: T, font: Font) {
     icon.draw_bottom_left(baseline, theme::FG, theme::BG);
     let text_x_offset = icon.width() + 2;
     display(baseline + Offset::x(text_x_offset), text.as_ref(), font);
@@ -112,7 +112,7 @@ pub fn icon_with_text<T: AsRef<str>>(baseline: Point, icon: Icon<T>, text: T, fo
 /// Returns the height painted below the given baseline.
 pub fn key_value_icon<T: AsRef<str>>(
     baseline: Point,
-    icon: Icon<T>,
+    icon: Icon,
     label: T,
     label_font: Font,
     value: T,

@@ -3,13 +3,18 @@
 
 use heapless::String;
 
-use super::component::pad::Pad;
-use super::component::text::common::TextBox;
-use super::component::text::layout::{Span, TextLayout};
-use super::display::{Color, Font, Icon};
-use super::geometry::{Grid, Insets, Offset, Point, Rect};
-use crate::micropython::buffer::StrBuffer;
-use crate::time::Duration;
+use super::{
+    component::{
+        pad::Pad,
+        text::{
+            common::TextBox,
+            layout::{Span, TextLayout},
+        },
+    },
+    display::{Color, Font, Icon},
+    geometry::{Grid, Insets, Offset, Point, Rect},
+};
+use crate::{micropython::buffer::StrBuffer, time::Duration};
 
 #[cfg(feature = "model_tr")]
 use super::model_tr::component::ButtonDetails;
@@ -161,12 +166,12 @@ impl Grid {
     }
 }
 
-impl<T: AsRef<str>> Icon<T> {
+impl Icon {
     pub fn print(&self) {
         println!(
             "Icon:: ",
             "text: ",
-            self.text.as_ref(),
+            self.text,
             ", width: ",
             inttostr!(self.width() as i32),
             ", height: ",
