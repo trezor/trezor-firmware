@@ -7,6 +7,7 @@ pub mod constant;
 pub mod display;
 pub mod event;
 pub mod geometry;
+pub mod lerp;
 mod util;
 
 #[cfg(feature = "micropython")]
