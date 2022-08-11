@@ -125,37 +125,40 @@ impl<const N: usize> ChoicePage<N> {
         self.choices.len() as u8 - 1
     }
 
-    fn has_previous_choice(&self) -> bool {
+    pub fn has_previous_choice(&self) -> bool {
         self.page_counter > 0
     }
 
-    fn has_next_choice(&self) -> bool {
+    pub fn has_next_choice(&self) -> bool {
         self.page_counter < self.last_page_index()
     }
 
     fn current_choice(&mut self) -> &mut ChoiceItems {
-        &mut self.choices[self.page_counter as usize]
+        self.get_choice(self.page_counter)
+    }
+
+    fn get_choice(&mut self, index: u8) -> &mut ChoiceItems {
+        &mut self.choices[index as usize]
     }
 
     fn show_current_choice(&mut self) {
-        self.choices[self.page_counter as usize].paint_center();
+        self.current_choice().paint_center();
     }
 
     fn show_previous_choice(&mut self) {
-        self.choices[(self.page_counter - 1) as usize].paint_left();
+        self.get_choice(self.page_counter - 1).paint_left();
     }
 
     fn show_next_choice(&mut self) {
-        self.choices[(self.page_counter + 1) as usize].paint_right();
+        self.get_choice(self.page_counter + 1).paint_right();
     }
 
     fn show_last_choice_on_left(&mut self) {
-        let last_index = self.last_page_index() as usize;
-        self.choices[last_index].paint_left();
+        self.get_choice(self.last_page_index()).paint_left();
     }
 
     fn show_first_choice_on_right(&mut self) {
-        self.choices[0].paint_right();
+        self.get_choice(0).paint_right();
     }
 
     fn decrease_page_counter(&mut self) {
@@ -172,6 +175,10 @@ impl<const N: usize> ChoicePage<N> {
 
     fn page_counter_to_max(&mut self) {
         self.page_counter = self.last_page_index();
+    }
+
+    pub fn page_index(&self) -> u8 {
+        self.page_counter
     }
 
     /// Updating the visual state of the buttons after each event.
@@ -262,6 +269,42 @@ impl<const N: usize> Component for ChoicePage<N> {
 impl<const N: usize> crate::trace::Trace for ChoicePage<N> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("ChoicePage");
+        t.kw_pair("active_page", inttostr!(self.page_counter));
+        t.kw_pair("page_count", inttostr!(self.choices.len() as u8));
+        t.kw_pair("is_carousel", booltostr!(self.is_carousel));
+
+        if self.has_previous_choice() {
+            t.field(
+                "prev_choice",
+                &self.choices[(self.page_counter - 1) as usize],
+            );
+        } else if self.is_carousel {
+            // In case of carousel going to the left end.
+            t.field(
+                "prev_choice",
+                &self.choices[self.last_page_index() as usize],
+            );
+        } else {
+            t.string("prev_choice");
+            t.symbol("None");
+        }
+
+        t.field("current_choice", &self.choices[self.page_counter as usize]);
+
+        if self.has_next_choice() {
+            t.field(
+                "next_choice",
+                &self.choices[(self.page_counter + 1) as usize],
+            );
+        } else if self.is_carousel {
+            // In case of carousel going to the very left.
+            t.field("next_choice", &self.choices[0]);
+        } else {
+            t.string("next_choice");
+            t.symbol("None");
+        }
+
+        t.field("buttons", &self.buttons);
         t.close();
     }
 }

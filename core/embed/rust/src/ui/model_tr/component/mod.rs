@@ -23,8 +23,8 @@ use super::theme;
 
 pub use bip39::{Bip39Entry, Bip39EntryMsg};
 pub use button::{
-    Button, ButtonContent, ButtonDetails, ButtonLayout, ButtonMsg, ButtonPos, ButtonStyle,
-    ButtonStyleSheet,
+    Button, ButtonAction, ButtonActions, ButtonContent, ButtonDetails, ButtonLayout, ButtonMsg,
+    ButtonPos, ButtonStyle, ButtonStyleSheet,
 };
 pub use confirm::{HoldToConfirm, HoldToConfirmMsg};
 
@@ -32,7 +32,7 @@ pub use button_controller::{ButtonController, ButtonControllerMsg};
 pub use choice::{ChoicePage, ChoicePageMsg};
 pub use choice_item::{ChoiceItem, ChoiceItems, MultilineTextChoiceItem, TextChoiceItem};
 pub use dialog::{Dialog, DialogMsg};
-pub use flow::{BtnActions, Flow, FlowButtonAction, FlowMsg};
+pub use flow::{Flow, FlowMsg};
 pub use flow_pages::FlowPageMaker;
 pub use frame::Frame;
 pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};

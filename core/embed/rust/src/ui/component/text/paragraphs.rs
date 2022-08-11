@@ -190,6 +190,7 @@ pub mod trace {
     {
         fn trace(&self, t: &mut dyn crate::trace::Tracer) {
             t.open("Paragraphs");
+            t.content_flag();
             let mut char_offset = self.offset.chr;
             for paragraph in self.list.iter().skip(self.offset.par).take(self.visible) {
                 paragraph.layout.layout_text(
@@ -200,6 +201,7 @@ pub mod trace {
                 t.string("\n");
                 char_offset = 0;
             }
+            t.content_flag();
             t.close();
         }
     }

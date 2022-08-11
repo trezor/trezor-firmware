@@ -54,17 +54,32 @@ impl Point {
 
 impl Rect {
     pub fn print(&self) {
-        println!(
-            "Rect:: ",
-            "x0: ",
+        print!("Rect:: ");
+        println!(&self.corners_points());
+    }
+
+    pub fn corners_points(&self) -> String<30> {
+        build_string!(
+            30,
+            "(",
             inttostr!(self.x0),
-            ", y0: ",
+            ",",
             inttostr!(self.y0),
-            ", x1: ",
+            "), (",
             inttostr!(self.x1),
-            ", y1: ",
-            inttostr!(self.y1)
-        );
+            ",",
+            inttostr!(self.y1),
+            ")"
+        )
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for Rect {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.open("Rect");
+        t.string(&self.corners_points());
+        t.close();
     }
 }
 
@@ -91,20 +106,20 @@ impl Font {
 #[cfg(feature = "model_tr")]
 impl<T: Clone + AsRef<str>> ButtonDetails<T> {
     pub fn print(&self) {
-        let text = if let Some(text) = self.text.clone() {
-            String::<20>::from(text.as_ref())
+        let text: String<20> = if let Some(text) = self.text.clone() {
+            text.as_ref().into()
         } else {
-            String::<20>::from("None")
+            "None".into()
         };
-        let icon_text = if let Some(icon) = &self.icon {
-            String::<20>::from(icon.text.as_ref())
+        let icon_text: String<20> = if let Some(icon) = &self.icon {
+            icon.text.into()
         } else {
-            String::<20>::from("None")
+            "None".into()
         };
-        let force_width = if let Some(force_width) = self.force_width {
-            String::<20>::from(inttostr!(force_width))
+        let force_width: String<20> = if let Some(force_width) = self.force_width {
+            inttostr!(force_width).into()
         } else {
-            String::<20>::from("None")
+            "None".into()
         };
         println!(
             "ButtonDetails:: ",
@@ -167,6 +182,15 @@ impl Grid {
 }
 
 impl Icon {
+    pub fn dimension_str(&self) -> String<10> {
+        build_string!(
+            10,
+            inttostr!(self.width() as i32),
+            "x",
+            inttostr!(self.height() as i32)
+        )
+    }
+
     pub fn print(&self) {
         println!(
             "Icon:: ",

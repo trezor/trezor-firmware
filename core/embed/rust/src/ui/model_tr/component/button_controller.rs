@@ -511,3 +511,33 @@ impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
         bounds
     }
 }
+
+#[cfg(feature = "ui_debug")]
+impl<T> crate::trace::Trace for ButtonContainer<T>
+where
+    T: AsRef<str>,
+{
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.open("ButtonContainer");
+        if let Some(btn_details) = &self.btn_details {
+            t.field("btn_details", btn_details);
+        } else {
+            t.button(crate::trace::EMPTY_BTN);
+        }
+        t.close();
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl<T> crate::trace::Trace for ButtonController<T>
+where
+    T: AsRef<str>,
+{
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.open("ButtonController");
+        t.field("left_btn", &self.left_btn);
+        t.field("middle_btn", &self.middle_btn);
+        t.field("right_btn", &self.right_btn);
+        t.close();
+    }
+}

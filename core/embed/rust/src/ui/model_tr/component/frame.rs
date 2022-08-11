@@ -69,8 +69,10 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("Frame");
-        t.field("title", &self.title);
+        t.title(self.title.as_ref());
+        if let Some(ref subtitle) = self.subtitle {
+            t.title(subtitle.as_ref());
+        }
         t.field("content", &self.content);
-        t.close();
     }
 }

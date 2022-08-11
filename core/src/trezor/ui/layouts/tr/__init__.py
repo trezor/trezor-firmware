@@ -19,6 +19,128 @@ if TYPE_CHECKING:
     ExceptionType = BaseException | Type[BaseException]
 
 
+# TODO: could create object holding all the data - text, title, btn_actions...
+
+
+class RustLayoutContent:
+    """Providing shortcuts to the data returned by layouts.
+
+    Used only in debug mode.
+    """
+
+    # How will some information be identified in the content
+    TITLE_TAG = " **TITLE** "
+    CONTENT_TAG = " **CONTENT** "
+    BTN_TAG = " **BTN** "
+    EMPTY_BTN = "---"
+
+    def __init__(self, raw_content: list[str]) -> None:
+        self.raw_content = raw_content
+        self.str_content = " ".join(raw_content).replace("  ", " ")
+        # print("str_content", self.str_content)
+        print(60 * "-")
+        print("active_page:", self.active_page())
+        print("page_count:", self.page_count())
+        print("can_go_next:", self.can_go_next())
+        print("get_next_button:", self.get_next_button())
+        print(30 * "/")
+        print(self.visible_screen())
+
+    def active_page(self) -> int:
+        """Current index of the active page."""
+        return int(self.kw_pair("active_page"))
+
+    def page_count(self) -> int:
+        """Overall number of pages in this flow."""
+        return int(self.kw_pair("page_count"))
+
+    def can_go_next(self) -> bool:
+        """Checking if there is a next page."""
+        return self.get_next_button() != ""
+
+    def get_next_button(self) -> str:
+        """Position of the next button, if any."""
+        btn_names = ("left", "middle", "right")
+        for index, action in enumerate(self.button_actions()):
+            if action == "Next":
+                return btn_names[index]
+
+        return ""
+
+    def visible_screen(self) -> str:
+        """Getting all the visible screen content - header, content, buttons."""
+        title_separator = f"\n{20*'-'}\n"
+        btn_separator = f"\n{20*'*'}\n"
+
+        visible = ""
+        if self.title():
+            visible += self.title()
+            visible += title_separator
+        visible += self.content()
+        visible += btn_separator
+        visible += ", ".join(self.buttons())
+
+        return visible
+
+    def title(self) -> str:
+        """Getting text that is displayed as a title."""
+        # there could be multiple of those - title and subtitle for example
+        title_strings = self._get_strings_inside_tag(self.str_content, self.TITLE_TAG)
+        return "\n".join(title_strings)
+
+    def content(self) -> str:
+        """Getting text that is displayed in the main part of the screen."""
+        content_strings = self._get_strings_inside_tag(
+            self.str_content, self.CONTENT_TAG
+        )
+        # there are some unwanted spaces
+        strings = [s.replace("\n ", "\n").lstrip() for s in content_strings]
+        return "\n".join(strings)
+
+    def buttons(self) -> tuple[str, str, str]:
+        """Getting content and actions for all three buttons."""
+        contents = self.buttons_content()
+        actions = self.button_actions()
+        btns: list[str] = []
+        for i in range(3):
+            btn = f"{contents[i]} [{actions[i]}]"
+            btns.append(btn)
+
+        return tuple(btns)
+
+    def buttons_content(self) -> tuple[str, str, str]:
+        """Getting visual details for all three buttons."""
+        btns = self._get_strings_inside_tag(self.str_content, self.BTN_TAG)
+        assert len(btns) == 3
+        return btns[0], btns[1], btns[2]
+
+    def button_actions(self) -> tuple[str, str, str]:
+        """Getting actions for all three buttons."""
+        action_ids = ("left_action", "middle_action", "right_action")
+        return tuple(self.kw_pair(action) for action in action_ids)
+
+    def kw_pair(self, key: str) -> str:
+        """Getting the value of a key-value pair."""
+        # Pairs are sent in this format in the list:
+        # [..., "key", "::", "value", ...]
+        for key_index, item in enumerate(self.raw_content):
+            if item == key:
+                if self.raw_content[key_index + 1] == "::":
+                    return self.raw_content[key_index + 2]
+
+        return ""
+
+    @staticmethod
+    def _get_strings_inside_tag(string: str, tag: str) -> list[str]:
+        """Getting all strings that are inside two same tags."""
+        parts = string.split(tag)
+        if len(parts) == 1:
+            return []
+        else:
+            # returning all odd indexes in the list
+            return parts[1::2]
+
+
 class RustLayout(ui.Layout):
     # pylint: disable=super-init-not-called
     def __init__(self, layout: Any):
@@ -41,9 +163,9 @@ class RustLayout(ui.Layout):
             )
 
         def read_content(self) -> list[str]:
-            result = []
+            result: list[str] = []
 
-            def callback(*args):
+            def callback(*args: str):
                 for arg in args:
                     result.append(str(arg))
 
@@ -80,6 +202,9 @@ class RustLayout(ui.Layout):
         self.layout.attach_timer_fn(self.set_timer)
         self.layout.paint()
         while True:
+            if __debug__:
+                # Printing debugging info, just temporary
+                RustLayoutContent(self.read_content())
             # Using `yield` instead of `await` to avoid allocations.
             event, button_num = yield button
             workflow.idle_timer.touch()

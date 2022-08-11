@@ -1,4 +1,4 @@
-use core::{convert::TryInto, ops::Deref};
+use core::convert::TryInto;
 
 use heapless::{String, Vec};
 
@@ -30,7 +30,7 @@ use crate::{
 
 use super::{
     component::{
-        Bip39Entry, Bip39EntryMsg, BtnActions, ButtonDetails, ButtonLayout, ButtonPage, Flow,
+        Bip39Entry, Bip39EntryMsg, ButtonActions, ButtonDetails, ButtonLayout, ButtonPage, Flow,
         FlowMsg, FlowPageMaker, Frame, PassphraseEntry, PassphraseEntryMsg, PinEntry, PinEntryMsg,
         SimpleChoice, SimpleChoiceMsg,
     },
@@ -76,7 +76,7 @@ impl ComponentMsgObj for PinEntry {
 
 impl<T, const N: usize> ComponentMsgObj for SimpleChoice<T, N>
 where
-    T: Deref<Target = str>,
+    T: AsRef<str>,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
@@ -220,7 +220,7 @@ extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) 
                 None,
                 Some(ButtonDetails::text("CONTINUE")),
             );
-            let btn_actions = BtnActions::cancel_next();
+            let btn_actions = ButtonActions::cancel_next();
             FlowPageMaker::new(btn_layout, btn_actions).icon_label_text(
                 theme::ICON_USER,
                 "Recipient".into(),
@@ -235,7 +235,7 @@ extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) 
                 None,
                 Some(ButtonDetails::text("HOLD TO CONFIRM").with_duration(Duration::from_secs(2))),
             );
-            let btn_actions = BtnActions::cancel_confirm();
+            let btn_actions = ButtonActions::cancel_confirm();
 
             FlowPageMaker::new(btn_layout, btn_actions)
                 .icon_label_text(theme::ICON_USER, "Recipient".into(), truncated_address)
@@ -271,7 +271,7 @@ extern "C" fn confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -
                 None,
                 Some(ButtonDetails::text("HOLD TO SEND").with_duration(Duration::from_secs(2))),
             );
-            let btn_actions = BtnActions::cancel_confirm();
+            let btn_actions = ButtonActions::cancel_confirm();
 
             let mut page = FlowPageMaker::new(btn_layout, btn_actions)
                 .icon_label_text(theme::ICON_PARAM, total_label, total_amount)
@@ -309,13 +309,13 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                 "Hello!",
                 "Welcome to Trezor.\n\n\nPress right to continue.",
                 ButtonLayout::cancel_and_arrow(),
-                BtnActions::last_next(),
+                ButtonActions::last_next(),
             ),
             (
                 "Basics",
                 "Use Trezor by clicking left & right.\n\rPress right to continue.",
                 ButtonLayout::left_right_arrows(),
-                BtnActions::prev_next(),
+                ButtonActions::prev_next(),
             ),
             (
                 "Confirm",
@@ -325,7 +325,7 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                     Some(ButtonDetails::armed_text("CONFIRM")),
                     None,
                 ),
-                BtnActions::prev_next_with_middle(),
+                ButtonActions::prev_next_with_middle(),
             ),
             (
                 "Hold to confirm",
@@ -338,7 +338,7 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                             .with_duration(Duration::from_millis(2000)),
                     ),
                 ),
-                BtnActions::prev_next(),
+                ButtonActions::prev_next(),
             ),
             (
                 "Screen scroll",
@@ -348,7 +348,7 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                     None,
                     Some(ButtonDetails::down_arrow_icon_wide()),
                 ),
-                BtnActions::prev_next(),
+                ButtonActions::prev_next(),
             ),
             (
                 "Screen scroll",
@@ -358,7 +358,7 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                     None,
                     Some(ButtonDetails::text("CONFIRM")),
                 ),
-                BtnActions::prev_next(),
+                ButtonActions::prev_next(),
             ),
             (
                 "Congrats!",
@@ -368,7 +368,7 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                     None,
                     Some(ButtonDetails::text("FINISH")),
                 ),
-                BtnActions::beginning_confirm(),
+                ButtonActions::beginning_confirm(),
             ),
             (
                 "Skip tutorial?",
@@ -378,7 +378,7 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                     None,
                     Some(ButtonDetails::text("CONFIRM")),
                 ),
-                BtnActions::beginning_cancel(),
+                ButtonActions::beginning_cancel(),
             ),
         ];
 
@@ -490,8 +490,8 @@ extern "C" fn confirm_word(n_args: usize, args: *const Obj, kwargs: *mut Map) ->
         let checked_index: u8 = kwargs.get(Qstr::MP_QSTR_checked_index)?.try_into()?;
         let count: u8 = kwargs.get(Qstr::MP_QSTR_count)?.try_into()?;
 
-        let count_str: String<50> = String::from(count);
-        let checked_index_str: String<50> = String::from(checked_index + 1);
+        let count_str: String<5> = String::from(count);
+        let checked_index_str: String<5> = String::from(checked_index + 1);
 
         let prompt = build_string!(
             20,

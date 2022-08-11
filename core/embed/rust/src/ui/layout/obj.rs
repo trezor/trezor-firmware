@@ -219,30 +219,51 @@ impl LayoutObj {
             }
 
             fn symbol(&mut self, name: &str) {
-                self.0
-                    .call_with_n_args(&[
-                        "<".try_into().unwrap(),
-                        name.try_into().unwrap(),
-                        ">".try_into().unwrap(),
-                    ])
-                    .unwrap();
+                self.string("<");
+                self.string(name);
+                self.string(">");
             }
 
             fn open(&mut self, name: &str) {
-                self.0
-                    .call_with_n_args(&["<".try_into().unwrap(), name.try_into().unwrap()])
-                    .unwrap();
+                self.string("<");
+                self.string(name);
+                self.string(" ");
             }
 
             fn field(&mut self, name: &str, value: &dyn Trace) {
-                self.0
-                    .call_with_n_args(&[name.try_into().unwrap(), ": ".try_into().unwrap()])
-                    .unwrap();
+                self.string(name);
+                self.string(":");
                 value.trace(self);
+                self.string(" ");
+            }
+
+            /// Mark the string as a title/header.
+            fn title(&mut self, title: &str) {
+                self.string(crate::trace::TITLE_TAG);
+                self.string(title);
+                self.string(crate::trace::TITLE_TAG);
+            }
+
+            /// Mark the string as a button content.
+            fn button(&mut self, button: &str) {
+                self.string(crate::trace::BTN_TAG);
+                self.string(button);
+                self.string(crate::trace::BTN_TAG);
+            }
+
+            fn content_flag(&mut self) {
+                self.string(crate::trace::CONTENT_TAG);
+            }
+
+            fn kw_pair(&mut self, key: &str, value: &str) {
+                self.string(key);
+                self.string("::");
+                self.string(value);
+                self.string(","); // mostly for human readability
             }
 
             fn close(&mut self) {
-                self.0.call_with_n_args(&[">".try_into().unwrap()]).unwrap();
+                self.string(">")
             }
         }
 

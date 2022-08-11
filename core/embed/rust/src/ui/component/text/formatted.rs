@@ -248,7 +248,9 @@ pub mod trace {
         T: AsRef<str>,
     {
         fn trace(&self, d: &mut dyn crate::trace::Tracer) {
+            d.content_flag();
             self.0.layout_content(&mut TraceSink(d));
+            d.content_flag();
         }
     }
 }

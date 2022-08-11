@@ -11,12 +11,11 @@ use crate::{
 use heapless::Vec;
 
 use super::{
-    flow::BtnActions,
     flow_pages_poc_helpers::{
         LayoutFit, LayoutSink, LineAlignment, Op, TextLayout, TextNoOp, TextRenderer, TextStyle,
         ToDisplay,
     },
-    ButtonDetails, ButtonLayout,
+    ButtonActions, ButtonDetails, ButtonLayout,
 };
 
 #[derive(Clone)]
@@ -24,7 +23,7 @@ pub struct FlowPageMaker<const M: usize> {
     ops: Vec<Op, M>,
     layout: TextLayout,
     btn_layout: ButtonLayout<&'static str>,
-    btn_actions: BtnActions,
+    btn_actions: ButtonActions,
     current_page: usize,
     page_count: usize,
     char_offset: usize,
@@ -32,7 +31,7 @@ pub struct FlowPageMaker<const M: usize> {
 
 // For `layout.rs`
 impl<const M: usize> FlowPageMaker<M> {
-    pub fn new(btn_layout: ButtonLayout<&'static str>, btn_actions: BtnActions) -> Self {
+    pub fn new(btn_layout: ButtonLayout<&'static str>, btn_actions: ButtonActions) -> Self {
         let style = TextStyle::new(
             theme::FONT_NORMAL,
             theme::FG,
@@ -84,7 +83,7 @@ impl<const M: usize> FlowPageMaker<M> {
         bounds
     }
 
-    pub fn btn_actions(&self) -> BtnActions {
+    pub fn btn_actions(&self) -> ButtonActions {
         self.btn_actions.clone()
     }
 
@@ -236,5 +235,32 @@ impl<const M: usize> Paginate for FlowPageMaker<M> {
                 }
             }
         }
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+pub mod trace {
+    use crate::ui::model_tr::component::flow_pages_poc_helpers::TraceSink;
+
+    use super::*;
+
+    pub struct TraceText<'a, const M: usize>(pub &'a FlowPageMaker<M>);
+
+    impl<'a, const M: usize> crate::trace::Trace for TraceText<'a, M> {
+        fn trace(&self, d: &mut dyn crate::trace::Tracer) {
+            d.content_flag();
+            self.0.layout_content(&mut TraceSink(d));
+            d.content_flag();
+        }
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl<const M: usize> crate::trace::Trace for FlowPageMaker<M> {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.open("FlowPageMaker");
+        // TODO: could add the current/maximum flow page amount
+        t.field("content", &trace::TraceText(self));
+        t.close();
     }
 }

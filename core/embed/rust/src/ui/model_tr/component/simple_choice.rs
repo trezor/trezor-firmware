@@ -2,10 +2,12 @@ use crate::ui::{
     component::{Component, Event, EventCtx},
     geometry::Rect,
 };
-use core::ops::Deref;
 
 use super::{ButtonLayout, ChoiceItems, ChoicePage, ChoicePageMsg, TextChoiceItem};
 use heapless::{String, Vec};
+
+#[cfg(feature = "ui_debug")]
+use super::{ButtonAction, ButtonPos};
 
 pub enum SimpleChoiceMsg {
     Result(String<50>),
@@ -16,7 +18,6 @@ pub enum SimpleChoiceMsg {
 pub struct SimpleChoice<T, const N: usize> {
     choices: Vec<T, N>,
     choice_page: ChoicePage<N>,
-    result_choice_index: usize,
 }
 
 impl<T, const N: usize> SimpleChoice<T, N>
@@ -39,14 +40,13 @@ where
         Self {
             choices: str_choices,
             choice_page: ChoicePage::new(choices),
-            result_choice_index: 0,
         }
     }
 }
 
 impl<T, const N: usize> Component for SimpleChoice<T, N>
 where
-    T: Deref<Target = str>,
+    T: AsRef<str>,
 {
     type Msg = SimpleChoiceMsg;
 
@@ -73,10 +73,29 @@ where
 #[cfg(feature = "ui_debug")]
 impl<T, const N: usize> crate::trace::Trace for SimpleChoice<T, N>
 where
-    T: Deref<Target = str>,
+    T: AsRef<str>,
 {
+    fn get_btn_action(&self, pos: ButtonPos) -> String<25> {
+        match pos {
+            ButtonPos::Left => match self.choice_page.has_previous_choice() {
+                true => ButtonAction::PrevPage.string(),
+                false => ButtonAction::empty(),
+            },
+            ButtonPos::Right => match self.choice_page.has_next_choice() {
+                true => ButtonAction::NextPage.string(),
+                false => ButtonAction::empty(),
+            },
+            ButtonPos::Middle => {
+                let current_index = self.choice_page.page_index() as usize;
+                ButtonAction::select_item(self.choices[current_index].as_ref())
+            }
+        }
+    }
+
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("SimpleChoice");
+        self.report_btn_actions(t);
+        t.field("choice_page", &self.choice_page);
         t.close();
     }
 }

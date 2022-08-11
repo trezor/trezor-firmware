@@ -566,6 +566,34 @@ impl LayoutSink for TextRenderer {
     }
 }
 
+/// `LayoutSink` for debugging purposes.
+pub struct TraceSink<'a>(pub &'a mut dyn crate::trace::Tracer);
+
+impl<'a> LayoutSink for TraceSink<'a> {
+    fn text(&mut self, _cursor: Point, _layout: &TextLayout, text: &str) {
+        self.0.string(text);
+    }
+
+    fn icon(&mut self, _cursor: Point, _layout: &TextLayout, icon: Icon) {
+        self.0.open("Icon");
+        self.0.string(icon.text);
+        self.0.string(icon.dimension_str().as_str());
+        self.0.close();
+    }
+
+    fn hyphen(&mut self, _cursor: Point, _layout: &TextLayout) {
+        self.0.string("-");
+    }
+
+    fn ellipsis(&mut self, _cursor: Point, _layout: &TextLayout) {
+        self.0.string("...");
+    }
+
+    fn line_break(&mut self, _cursor: Point) {
+        self.0.string("\n");
+    }
+}
+
 pub trait GlyphMetrics {
     fn char_width(&self, ch: char) -> i32;
     fn line_height(&self) -> i32;

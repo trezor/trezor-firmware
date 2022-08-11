@@ -1,5 +1,3 @@
-use core::ops::Deref;
-
 use crate::{
     trezorhal::random,
     ui::{
@@ -56,7 +54,7 @@ pub struct PinEntry {
 impl PinEntry {
     pub fn new<T>(prompt: T) -> Self
     where
-        T: Deref<Target = str>,
+        T: AsRef<str>,
     {
         let choices = Self::get_page_items(prompt);
 
@@ -73,7 +71,7 @@ impl PinEntry {
     /// Digits are BIG, the rest is multiline.
     fn get_page_items<T>(prompt: T) -> Vec<ChoiceItems, CHOICE_LENGTH>
     where
-        T: Deref<Target = str>,
+        T: AsRef<str>,
     {
         let mut choices: Vec<ChoiceItems, CHOICE_LENGTH> = CHOICES
             .iter()
@@ -191,9 +189,34 @@ impl Component for PinEntry {
 }
 
 #[cfg(feature = "ui_debug")]
+use super::{ButtonAction, ButtonPos};
+
+#[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for PinEntry {
+    fn get_btn_action(&self, pos: ButtonPos) -> String<25> {
+        match pos {
+            ButtonPos::Left => ButtonAction::PrevPage.string(),
+            ButtonPos::Right => ButtonAction::NextPage.string(),
+            ButtonPos::Middle => {
+                let current_index = self.choice_page.page_index() as usize;
+                match current_index {
+                    EXIT_INDEX => ButtonAction::Cancel.string(),
+                    DELETE_INDEX => ButtonAction::Action("Delete last digit").string(),
+                    SHOW_INDEX => ButtonAction::Action("Show PIN").string(),
+                    PROMPT_INDEX => ButtonAction::Confirm.string(),
+                    _ => ButtonAction::select_item(CHOICES[current_index]),
+                }
+            }
+        }
+    }
+
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("PinEntry");
+        // NOTE: `show_real_pin` was not able to be transferred,
+        // as it is true only for a very small amount of time
+        t.kw_pair("textbox", self.textbox.content());
+        self.report_btn_actions(t);
+        t.field("choice_page", &self.choice_page);
         t.close();
     }
 }

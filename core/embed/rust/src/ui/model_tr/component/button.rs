@@ -457,6 +457,11 @@ impl<T: Clone + AsRef<str>> ButtonDetails<T> {
         Self::icon(Icon::new(theme::ICON_ARROW_UP)).force_width(HALF_SCREEN_BUTTON_WIDTH)
     }
 
+    /// Icon of a bin to signal deleting.
+    pub fn bin_icon() -> Self {
+        Self::icon(Icon::new(theme::ICON_BIN)).with_no_outline()
+    }
+
     /// Cancel style button.
     pub fn with_cancel(mut self) -> Self {
         self.is_cancel = true;
@@ -522,16 +527,16 @@ impl<T: Clone + AsRef<str>> ButtonDetails<T> {
         // TODO: we could maybe use `Eq` or `PartialEq` for comparison,
         // but that wold require some generic Trait changes (T: PartialEq),
         // which was not possible for AsRef<str>?
-        let text = if let Some(text) = self.text.clone() {
-            String::<20>::from(text.as_ref())
+        let text: String<20> = if let Some(text) = self.text.clone() {
+            text.as_ref().into()
         } else {
-            String::<20>::from("")
+            "".into()
         };
         // TODO: the icon should be hashed, icon size is not really good but works for now
         let icon_size: String<10> = if let Some(icon) = &self.icon {
             build_string!(10, inttostr!(icon.width()), "x", inttostr!(icon.height()))
         } else {
-            String::from("0x0")
+            "0x0".into()
         };
         let duration_ms = self.duration.unwrap_or(Duration::ZERO).to_millis();
         build_string!(
@@ -607,6 +612,160 @@ impl ButtonLayout<&'static str> {
     }
 }
 
+/// What happens when a button is triggered.
+/// Theoretically any action can be connected
+/// with any button.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ButtonAction {
+    /// Go to the next page of this flow
+    NextPage,
+    /// Go to the previous page of this flow
+    PrevPage,
+    /// Go to a page of this flow specified by an index.
+    /// Negative numbers can be used to count from the end.
+    /// (0 ~ GoToFirstPage, -1 ~ GoToLastPage etc.)
+    GoToIndex(i32),
+    /// Go forwards/backwards a specified number of pages.
+    /// Negative numbers mean going back.
+    MovePageRelative(i32),
+    /// Cancel the whole layout - send Msg::Cancelled
+    Cancel,
+    /// Confirm the whole layout - send Msg::Confirmed
+    Confirm,
+    /// Select current choice value
+    Select,
+    /// Some custom specific action
+    Action(&'static str),
+}
+
+#[cfg(feature = "ui_debug")]
+impl ButtonAction {
+    /// Describing the action as a string. Debug-only.
+    pub fn string(&self) -> String<25> {
+        match self {
+            ButtonAction::NextPage => "Next".into(),
+            ButtonAction::PrevPage => "Prev".into(),
+            ButtonAction::GoToIndex(index) => {
+                build_string!(25, "Index(", inttostr!(*index), ")")
+            }
+            ButtonAction::MovePageRelative(index) => {
+                build_string!(25, "Relative(", inttostr!(*index), ")")
+            }
+            ButtonAction::Cancel => "Cancel".into(),
+            ButtonAction::Confirm => "Confirm".into(),
+            ButtonAction::Select => "Select".into(),
+            ButtonAction::Action(action) => (*action).into(),
+        }
+    }
+
+    /// Adding a description to the Select action.
+    pub fn select_item<T: AsRef<str>>(item: T) -> String<25> {
+        build_string!(25, &Self::Select.string(), "(", item.as_ref(), ")")
+    }
+
+    /// When there is no action.
+    pub fn empty() -> String<25> {
+        "None".into()
+    }
+}
+
+// TODO: might consider defining ButtonAction::Empty
+// and only storing ButtonAction instead of Option<ButtonAction>...
+
+/// Storing actions for all three possible buttons.
+#[derive(Clone, Debug)]
+pub struct ButtonActions {
+    pub left: Option<ButtonAction>,
+    pub middle: Option<ButtonAction>,
+    pub right: Option<ButtonAction>,
+}
+
+impl ButtonActions {
+    pub fn new(
+        left: Option<ButtonAction>,
+        middle: Option<ButtonAction>,
+        right: Option<ButtonAction>,
+    ) -> Self {
+        Self {
+            left,
+            middle,
+            right,
+        }
+    }
+
+    /// Going back with left, going further with right
+    pub fn prev_next() -> Self {
+        Self::new(
+            Some(ButtonAction::PrevPage),
+            None,
+            Some(ButtonAction::NextPage),
+        )
+    }
+
+    /// Going back with left, going further with middle
+    pub fn prev_next_with_middle() -> Self {
+        Self::new(
+            Some(ButtonAction::PrevPage),
+            Some(ButtonAction::NextPage),
+            None,
+        )
+    }
+
+    /// Going to last page with left, to the next page with right
+    pub fn last_next() -> Self {
+        Self::new(
+            Some(ButtonAction::GoToIndex(-1)),
+            None,
+            Some(ButtonAction::NextPage),
+        )
+    }
+
+    /// Cancelling with left, going to the next page with right
+    pub fn cancel_next() -> Self {
+        Self::new(
+            Some(ButtonAction::Cancel),
+            None,
+            Some(ButtonAction::NextPage),
+        )
+    }
+
+    /// Cancelling with left, confirming with right
+    pub fn cancel_confirm() -> Self {
+        Self::new(
+            Some(ButtonAction::Cancel),
+            None,
+            Some(ButtonAction::Confirm),
+        )
+    }
+
+    /// Going to the beginning with left, confirming with right
+    pub fn beginning_confirm() -> Self {
+        Self::new(
+            Some(ButtonAction::GoToIndex(0)),
+            None,
+            Some(ButtonAction::Confirm),
+        )
+    }
+
+    /// Going to the beginning with left, cancelling with right
+    pub fn beginning_cancel() -> Self {
+        Self::new(
+            Some(ButtonAction::GoToIndex(0)),
+            None,
+            Some(ButtonAction::Cancel),
+        )
+    }
+
+    /// Having access to appropriate action based on the `ButtonPos`
+    pub fn get_action(&self, pos: ButtonPos) -> Option<ButtonAction> {
+        match pos {
+            ButtonPos::Left => self.left.clone(),
+            ButtonPos::Middle => self.middle.clone(),
+            ButtonPos::Right => self.right.clone(),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -617,5 +776,29 @@ mod tests {
         assert_eq!(btn.id(), String::<50>::from("Test--0x0--0"));
         let btn = ButtonDetails::text("Duration").with_duration(Duration::from_secs(1));
         assert_eq!(btn.id(), String::<50>::from("Duration--0x0--1000"));
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl<T> crate::trace::Trace for ButtonDetails<T>
+where
+    T: AsRef<str>,
+{
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.open("ButtonDetails");
+        let mut btn_text: String<30> = String::new();
+        if let Some(text) = &self.text {
+            btn_text.push_str(text.as_ref()).unwrap();
+        } else if let Some(icon) = &self.icon {
+            btn_text.push_str("Icon:").unwrap();
+            btn_text.push_str(icon.text.as_ref()).unwrap();
+        }
+        if let Some(duration) = &self.duration {
+            btn_text.push_str(" (HTC:").unwrap();
+            btn_text.push_str(inttostr!(duration.to_millis())).unwrap();
+            btn_text.push_str(")").unwrap();
+        }
+        t.button(btn_text.as_ref());
+        t.close();
     }
 }

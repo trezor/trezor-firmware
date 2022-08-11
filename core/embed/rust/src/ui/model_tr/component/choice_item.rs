@@ -279,3 +279,53 @@ impl ChoiceItem for BigCharacterChoiceItem {
         self.btn_layout.clone()
     }
 }
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for ChoiceItems {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.open("ChoiceItem");
+        match self {
+            ChoiceItems::Text(item) => item.trace(t),
+            ChoiceItems::MultilineText(item) => item.trace(t),
+            ChoiceItems::BigCharacter(item) => item.trace(t),
+        }
+        t.close();
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for TextChoiceItem {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.open("TextChoiceItem");
+        t.content_flag();
+        t.string(&self.text);
+        t.content_flag();
+        t.close();
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+use crate::ui::util;
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for MultilineTextChoiceItem {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.open("MultilineTextChoiceItem");
+        t.content_flag();
+        t.string(&self.text);
+        t.content_flag();
+        t.field("delimiter", &(util::char_to_string::<1>(self.delimiter)));
+        t.close();
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for BigCharacterChoiceItem {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.open("BigCharacterChoiceItem");
+        t.content_flag();
+        t.string(&util::char_to_string::<1>(self.ch));
+        t.content_flag();
+        t.close();
+    }
+}

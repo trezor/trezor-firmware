@@ -4,8 +4,10 @@ use crate::ui::{
 };
 
 use super::{
-    common, theme, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos, FlowPageMaker,
+    common, theme, ButtonAction, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos,
+    FlowPageMaker,
 };
+use heapless::String;
 use heapless::Vec;
 
 /// To be returned directly from Flow.
@@ -16,127 +18,6 @@ pub enum FlowMsg {
 
 // TODO: consider each FlowPage having the ability
 // to handle custom actions triggered by some btn.
-
-// TODO: might move FlowButtonAction together with ButtonDetails
-// Or at least rename it to `ButtonAction`, so it can be used elsewhere
-// Would be nice to use it in `ChoicePage` as well
-
-/// What happens when a button is triggered.
-/// Theoretically any action can be connected
-/// with any button.
-#[derive(Clone, Debug)]
-pub enum FlowButtonAction {
-    /// Go to the next page of this flow
-    NextPage,
-    /// Go to the previous page of this flow
-    PrevPage,
-    /// Go to a page of this flow specified by an index.
-    /// Negative numbers can be used to count from the end.
-    /// (0 ~ GoToFirstPage, -1 ~ GoToLastPage etc.)
-    GoToIndex(i32),
-    /// Go forwards/backwards a specified number of pages.
-    /// Negative numbers mean going back.
-    MovePageRelative(i32),
-    /// Cancel the whole flow - send FlowMsg::Cancelled
-    Cancel,
-    /// Confirm the whole flow - send FlowMsg::Confirmed
-    Confirm,
-}
-
-/// Storing actions for all three possible buttons.
-#[derive(Clone, Debug)]
-
-pub struct BtnActions {
-    pub left: Option<FlowButtonAction>,
-    pub middle: Option<FlowButtonAction>,
-    pub right: Option<FlowButtonAction>,
-}
-
-impl BtnActions {
-    pub fn new(
-        left: Option<FlowButtonAction>,
-        middle: Option<FlowButtonAction>,
-        right: Option<FlowButtonAction>,
-    ) -> Self {
-        Self {
-            left,
-            middle,
-            right,
-        }
-    }
-
-    /// Going back with left, going further with right
-    pub fn prev_next() -> Self {
-        Self::new(
-            Some(FlowButtonAction::PrevPage),
-            None,
-            Some(FlowButtonAction::NextPage),
-        )
-    }
-
-    /// Going back with left, going further with middle
-    pub fn prev_next_with_middle() -> Self {
-        Self::new(
-            Some(FlowButtonAction::PrevPage),
-            Some(FlowButtonAction::NextPage),
-            None,
-        )
-    }
-
-    /// Going to last page with left, to the next page with right
-    pub fn last_next() -> Self {
-        Self::new(
-            Some(FlowButtonAction::GoToIndex(-1)),
-            None,
-            Some(FlowButtonAction::NextPage),
-        )
-    }
-
-    /// Cancelling with left, going to the next page with right
-    pub fn cancel_next() -> Self {
-        Self::new(
-            Some(FlowButtonAction::Cancel),
-            None,
-            Some(FlowButtonAction::NextPage),
-        )
-    }
-
-    /// Cancelling with left, confirming with right
-    pub fn cancel_confirm() -> Self {
-        Self::new(
-            Some(FlowButtonAction::Cancel),
-            None,
-            Some(FlowButtonAction::Confirm),
-        )
-    }
-
-    /// Going to the beginning with left, confirming with right
-    pub fn beginning_confirm() -> Self {
-        Self::new(
-            Some(FlowButtonAction::GoToIndex(0)),
-            None,
-            Some(FlowButtonAction::Confirm),
-        )
-    }
-
-    /// Going to the beginning with left, cancelling with right
-    pub fn beginning_cancel() -> Self {
-        Self::new(
-            Some(FlowButtonAction::GoToIndex(0)),
-            None,
-            Some(FlowButtonAction::Cancel),
-        )
-    }
-
-    /// Having access to appropriate action based on the `ButtonPos`
-    pub fn get_action(&self, pos: ButtonPos) -> Option<FlowButtonAction> {
-        match pos {
-            ButtonPos::Left => self.left.clone(),
-            ButtonPos::Middle => self.middle.clone(),
-            ButtonPos::Right => self.right.clone(),
-        }
-    }
-}
 
 pub struct Flow<T, const N: usize, const M: usize> {
     pages: Vec<FlowPageMaker<M>, N>,
@@ -175,7 +56,7 @@ where
     /// Placing current page, setting current buttons and clearing.
     fn update(&mut self, ctx: &mut EventCtx) {
         let content_area = self.content_area;
-        self.current_choice().place(content_area);
+        self.current_choice_mut().place(content_area);
         self.set_buttons(ctx);
         self.clear(ctx);
     }
@@ -187,7 +68,12 @@ where
     }
 
     /// Page that is/should be currently on the screen.
-    fn current_choice(&mut self) -> &mut FlowPageMaker<M> {
+    fn current_choice(&self) -> &FlowPageMaker<M> {
+        &self.pages[self.page_counter as usize]
+    }
+
+    /// Page that is/should be currently on the screen. Mutable.
+    fn current_choice_mut(&mut self) -> &mut FlowPageMaker<M> {
         &mut self.pages[self.page_counter as usize]
     }
 
@@ -238,11 +124,11 @@ where
     /// event to just paginate itself.
     fn event_consumed_by_current_choice(&mut self, ctx: &mut EventCtx, pos: ButtonPos) -> bool {
         if matches!(pos, ButtonPos::Left) && self.current_choice().has_prev_page() {
-            self.current_choice().go_to_prev_page();
+            self.current_choice_mut().go_to_prev_page();
             self.update(ctx);
             true
         } else if matches!(pos, ButtonPos::Right) && self.current_choice().has_next_page() {
-            self.current_choice().go_to_next_page();
+            self.current_choice_mut().go_to_next_page();
             self.update(ctx);
             true
         } else {
@@ -269,7 +155,7 @@ where
         self.content_area = content_area;
 
         // We finally found how long is the first page, and can set its button layout.
-        self.current_choice().place(content_area);
+        self.current_choice_mut().place(content_area);
         self.buttons = Child::new(ButtonController::new(self.current_choice().btn_layout()));
 
         self.pad.place(title_content_area);
@@ -293,24 +179,26 @@ where
             let action = actions.get_action(pos);
             if let Some(action) = action {
                 match action {
-                    FlowButtonAction::PrevPage => {
+                    ButtonAction::PrevPage => {
                         self.go_to_prev_page(ctx);
                         return None;
                     }
-                    FlowButtonAction::NextPage => {
+                    ButtonAction::NextPage => {
                         self.go_to_next_page(ctx);
                         return None;
                     }
-                    FlowButtonAction::GoToIndex(index) => {
+                    ButtonAction::GoToIndex(index) => {
                         self.go_to_page_absolute(index, ctx);
                         return None;
                     }
-                    FlowButtonAction::MovePageRelative(jump) => {
+                    ButtonAction::MovePageRelative(jump) => {
                         self.go_to_page_relative(jump, ctx);
                         return None;
                     }
-                    FlowButtonAction::Cancel => return Some(FlowMsg::Cancelled),
-                    FlowButtonAction::Confirm => return Some(FlowMsg::Confirmed),
+                    ButtonAction::Cancel => return Some(FlowMsg::Cancelled),
+                    ButtonAction::Confirm => return Some(FlowMsg::Confirmed),
+                    ButtonAction::Select => {}
+                    ButtonAction::Action(_) => {}
                 }
             }
         };
@@ -324,14 +212,46 @@ where
         if let Some(title) = &self.common_title {
             common::paint_header(Point::zero(), title, None);
         }
-        self.current_choice().paint();
+        self.current_choice_mut().paint();
     }
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T, const N: usize, const M: usize> crate::trace::Trace for Flow<T, N, M> {
+impl<T, const N: usize, const M: usize> crate::trace::Trace for Flow<T, N, M>
+where
+    T: AsRef<str>,
+    T: Clone,
+{
+    /// Accounting for the possibility that button is connected with the
+    /// currently paginated flow_page (only Prev or Next in that case).
+    fn get_btn_action(&self, pos: ButtonPos) -> String<25> {
+        if matches!(pos, ButtonPos::Left) && self.current_choice().has_prev_page() {
+            ButtonAction::PrevPage.string()
+        } else if matches!(pos, ButtonPos::Right) && self.current_choice().has_next_page() {
+            ButtonAction::NextPage.string()
+        } else {
+            let btn_actions = self.pages[self.page_counter as usize].btn_actions();
+
+            match btn_actions.get_action(pos) {
+                Some(action) => action.string(),
+                None => ButtonAction::empty(),
+            }
+        }
+    }
+
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("Flow");
-        t.close();
+        t.kw_pair("active_page", inttostr!(self.page_counter));
+        t.kw_pair("page_count", inttostr!(N as u8));
+
+        self.report_btn_actions(t);
+
+        if let Some(title) = &self.common_title {
+            t.title(title.as_ref());
+        }
+        t.field("content_area", &self.content_area);
+        t.field("buttons", &self.buttons);
+        t.field("flow_page", &self.pages[self.page_counter as usize]);
+        t.close()
     }
 }

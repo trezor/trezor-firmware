@@ -7,6 +7,8 @@ use crate::{
     },
 };
 
+use heapless::String;
+
 use super::{
     theme, ButtonController, ButtonControllerMsg, ButtonDetails, ButtonLayout, ButtonPos, ScrollBar,
 };
@@ -220,11 +222,40 @@ where
 impl<S, T> crate::trace::Trace for ButtonPage<S, T>
 where
     T: crate::trace::Trace,
+    S: AsRef<str>,
 {
+    fn get_btn_action(&self, pos: ButtonPos) -> String<25> {
+        use super::ButtonAction;
+
+        match pos {
+            ButtonPos::Left => {
+                if self.scrollbar.has_previous_page() {
+                    ButtonAction::PrevPage.string()
+                } else if self.cancel_btn_details.is_some() {
+                    ButtonAction::Cancel.string()
+                } else {
+                    ButtonAction::empty()
+                }
+            }
+            ButtonPos::Right => {
+                if self.scrollbar.has_next_page() {
+                    ButtonAction::NextPage.string()
+                } else if self.confirm_btn_details.is_some() {
+                    ButtonAction::Confirm.string()
+                } else {
+                    ButtonAction::empty()
+                }
+            }
+            ButtonPos::Middle => ButtonAction::empty(),
+        }
+    }
+
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("ButtonPage");
-        t.field("active_page", &self.scrollbar.active_page);
-        t.field("page_count", &self.scrollbar.page_count);
+        t.kw_pair("active_page", inttostr!(self.scrollbar.active_page as u8));
+        t.kw_pair("page_count", inttostr!(self.scrollbar.page_count as u8));
+        self.report_btn_actions(t);
+        t.field("buttons", &self.buttons);
         t.field("content", &self.content);
         t.close();
     }

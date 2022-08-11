@@ -35,7 +35,7 @@ const PIN_ROW_DIGITS: i32 = 10;
 const MAX_LENGTH: usize = 50;
 const HOLD_DURATION: Duration = Duration::from_secs(1);
 
-const MAX_CHOICE_LENGTH: usize = 31; // accounting for MENU choice as well
+const MAX_CHOICE_LENGTH: usize = 30 + 1; // accounting for MENU choice as well
 
 const DIGITS: [char; 10] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 const LOWERCASE_LETTERS: [char; 26] = [
@@ -53,7 +53,7 @@ const SPECIAL_SYMBOLS: [char; 30] = [
 const MENU_LENGTH: usize = 6;
 const DEL_INDEX: usize = MENU_LENGTH - 1;
 const SHOW_INDEX: usize = MENU_LENGTH - 2;
-const MENU: [&str; MENU_LENGTH] = ["abc", "ABC", "123", "*#_", "SHOW\nPASS", "DEL\nLAST\nCHAR"];
+const MENU: [&str; MENU_LENGTH] = ["abc", "ABC", "123", "*#_", "SHOW PASS", "DEL LAST CHAR"];
 
 /// Component for entering a passphrase.
 pub struct PassphraseEntry {
@@ -135,7 +135,8 @@ impl PassphraseEntry {
                 let item = MultilineTextChoiceItem::new(
                     String::from(*menu_item),
                     ButtonLayout::default_three_icons(),
-                );
+                )
+                .use_delimiter(' ');
                 ChoiceItems::MultilineText(item)
             })
             .collect();
@@ -273,9 +274,68 @@ impl Component for PassphraseEntry {
 }
 
 #[cfg(feature = "ui_debug")]
+use super::{ButtonAction, ButtonPos};
+#[cfg(feature = "ui_debug")]
+use crate::ui::util;
+
+#[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for PassphraseEntry {
+    fn get_btn_action(&self, pos: ButtonPos) -> String<25> {
+        match pos {
+            ButtonPos::Left => match self.current_category {
+                ChoiceCategory::Menu => match self.choice_page.has_previous_choice() {
+                    true => ButtonAction::PrevPage.string(),
+                    false => ButtonAction::Confirm.string(),
+                },
+                _ => ButtonAction::PrevPage.string(),
+            },
+            ButtonPos::Right => match self.current_category {
+                ChoiceCategory::Menu => match self.choice_page.has_next_choice() {
+                    true => ButtonAction::NextPage.string(),
+                    false => ButtonAction::Cancel.string(),
+                },
+                _ => ButtonAction::NextPage.string(),
+            },
+            ButtonPos::Middle => {
+                let current_index = self.choice_page.page_index() as usize;
+                match &self.current_category {
+                    ChoiceCategory::Menu => match current_index {
+                        DEL_INDEX => ButtonAction::Action("Del last char").string(),
+                        SHOW_INDEX => ButtonAction::Action("Show pass").string(),
+                        _ => ButtonAction::select_item(MENU[current_index]),
+                    },
+                    _ => {
+                        // There is "MENU" option at the end
+                        match self.choice_page.has_next_choice() {
+                            false => ButtonAction::Action("Back to MENU").string(),
+                            true => {
+                                let ch = match &self.current_category {
+                                    ChoiceCategory::LowercaseLetter => {
+                                        LOWERCASE_LETTERS[current_index]
+                                    }
+                                    ChoiceCategory::UppercaseLetter => {
+                                        UPPERCASE_LETTERS[current_index]
+                                    }
+                                    ChoiceCategory::Digit => DIGITS[current_index],
+                                    ChoiceCategory::SpecialSymbol => SPECIAL_SYMBOLS[current_index],
+                                    ChoiceCategory::Menu => unreachable!(),
+                                };
+                                ButtonAction::select_item(util::char_to_string::<1>(ch))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("PassphraseEntry");
+        // NOTE: `show_plain_passphrase` was not able to be transferred,
+        // as it is true only for a very small amount of time
+        t.kw_pair("textbox", self.textbox.content());
+        self.report_btn_actions(t);
+        t.field("choice_page", &self.choice_page);
         t.close();
     }
 }

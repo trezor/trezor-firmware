@@ -69,8 +69,7 @@ impl Bip39Entry {
             })
             .collect();
         let last_index = choices.len() - 1;
-        // TODO: could put the BIN icon there instead of the text
-        choices[0].set_left_btn(Some(ButtonDetails::text("BIN")));
+        choices[0].set_left_btn(Some(ButtonDetails::bin_icon()));
         choices[last_index].set_right_btn(None);
 
         choices
@@ -238,9 +237,56 @@ impl Component for Bip39Entry {
 }
 
 #[cfg(feature = "ui_debug")]
+use super::{ButtonAction, ButtonPos};
+#[cfg(feature = "ui_debug")]
+use crate::ui::util;
+
+#[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for Bip39Entry {
+    fn get_btn_action(&self, pos: ButtonPos) -> String<25> {
+        match pos {
+            ButtonPos::Left => match self.choice_page.has_previous_choice() {
+                true => ButtonAction::PrevPage.string(),
+                false => ButtonAction::Action("Delete last char").string(),
+            },
+            ButtonPos::Right => match self.choice_page.has_next_choice() {
+                true => ButtonAction::NextPage.string(),
+                false => ButtonAction::empty(),
+            },
+            ButtonPos::Middle => {
+                let current_index = self.choice_page.page_index() as usize;
+                let choice: String<10> = if self.offer_words {
+                    self.bip39_words_list
+                        .get(current_index)
+                        .unwrap_or_default()
+                        .into()
+                } else {
+                    util::char_to_string(self.letter_choices[current_index])
+                };
+                ButtonAction::select_item(choice)
+            }
+        }
+    }
+
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("Bip39Entry");
+        t.kw_pair("textbox", self.textbox.content());
+
+        self.report_btn_actions(t);
+
+        t.open("words");
+        for word in &self.words {
+            t.string(word);
+        }
+        t.close();
+
+        t.open("letter_choices");
+        for ch in &self.letter_choices {
+            t.string(&util::char_to_string::<1>(*ch));
+        }
+        t.close();
+
+        t.field("choice_page", &self.choice_page);
         t.close();
     }
 }
