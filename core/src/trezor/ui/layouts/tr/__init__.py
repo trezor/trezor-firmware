@@ -101,12 +101,7 @@ class RustLayoutContent:
         """Getting content and actions for all three buttons."""
         contents = self.buttons_content()
         actions = self.button_actions()
-        btns: list[str] = []
-        for i in range(3):
-            btn = f"{contents[i]} [{actions[i]}]"
-            btns.append(btn)
-
-        return tuple(btns)
+        return tuple(f"{contents[i]} [{actions[i]}]" for i in range(3))
 
     def buttons_content(self) -> tuple[str, str, str]:
         """Getting visual details for all three buttons."""
@@ -170,7 +165,6 @@ class RustLayout(ui.Layout):
                     result.append(str(arg))
 
             self.layout.trace(callback)
-            result = " ".join(result).split("\n")
             return result
 
     else:

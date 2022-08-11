@@ -170,7 +170,6 @@ impl TextLayout {
                     } else if let Op::Icon(icon) = op {
                         self.layout_icon(icon, cursor, sink)
                     } else {
-                        #[cfg(feature = "ui_debug")]
                         panic!("unexpected op type");
                     };
 

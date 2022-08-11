@@ -272,7 +272,6 @@ impl TextLayout {
                         } else if let Op::Icon(icon) = op {
                             self.layout_icon(icon, cursor, sink)
                         } else {
-                            #[cfg(feature = "ui_debug")]
                             panic!("unexpected op type");
                         };
 
@@ -567,8 +566,10 @@ impl LayoutSink for TextRenderer {
 }
 
 /// `LayoutSink` for debugging purposes.
+#[cfg(feature = "ui_debug")]
 pub struct TraceSink<'a>(pub &'a mut dyn crate::trace::Tracer);
 
+#[cfg(feature = "ui_debug")]
 impl<'a> LayoutSink for TraceSink<'a> {
     fn text(&mut self, _cursor: Point, _layout: &TextLayout, text: &str) {
         self.0.string(text);

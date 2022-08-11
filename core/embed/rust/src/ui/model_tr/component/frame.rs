@@ -74,5 +74,6 @@ where
             t.title(subtitle.as_ref());
         }
         t.field("content", &self.content);
+        t.close();
     }
 }

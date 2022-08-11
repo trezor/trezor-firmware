@@ -98,7 +98,6 @@ impl<T: Clone + AsRef<str>> ButtonContainer<T> {
         } else if let Some(icon) = btn_details.icon {
             Child::new(Button::with_icon(pos, icon, btn_details.style()))
         } else {
-            #[cfg(feature = "ui_debug")]
             panic!("ButtonContainer: no text or icon provided");
         }
     }
@@ -126,7 +125,6 @@ impl<T: Clone + AsRef<str>> ButtonContainer<T> {
                 duration,
             ))
         } else {
-            #[cfg(feature = "ui_debug")]
             panic!("ButtonContainer: no text or icon provided");
         }
     }

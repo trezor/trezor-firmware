@@ -87,7 +87,6 @@ impl ChoiceItems {
             ChoiceItems::Text(item) => item.text = text,
             ChoiceItems::MultilineText(item) => item.text = text,
             ChoiceItems::BigCharacter(_) => {
-                #[cfg(feature = "ui_debug")]
                 panic!("No text setting for BigCharacter")
             }
         }

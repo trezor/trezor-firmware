@@ -259,7 +259,8 @@ pub mod trace {
 impl<const M: usize> crate::trace::Trace for FlowPageMaker<M> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("FlowPageMaker");
-        // TODO: could add the current/maximum flow page amount
+        t.kw_pair("flow_current_page", inttostr!(self.current_page as u8));
+        t.kw_pair("flow_page_count", inttostr!(self.page_count as u8));
         t.field("content", &trace::TraceText(self));
         t.close();
     }

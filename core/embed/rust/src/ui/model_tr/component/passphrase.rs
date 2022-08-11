@@ -108,7 +108,6 @@ impl PassphraseEntry {
             2 => ChoiceCategory::Digit,
             3 => ChoiceCategory::SpecialSymbol,
             _ => {
-                #[cfg(feature = "ui_debug")]
                 panic!("Not a category index")
             }
         }
@@ -121,7 +120,6 @@ impl PassphraseEntry {
             ChoiceCategory::Digit => DIGITS[index],
             ChoiceCategory::SpecialSymbol => SPECIAL_SYMBOLS[index],
             ChoiceCategory::Menu => {
-                #[cfg(feature = "ui_debug")]
                 panic!("Menu does not have characters")
             }
         }
@@ -168,7 +166,6 @@ impl PassphraseEntry {
             ChoiceCategory::Digit => DIGITS.len(),
             ChoiceCategory::SpecialSymbol => SPECIAL_SYMBOLS.len(),
             ChoiceCategory::Menu => {
-                #[cfg(feature = "ui_debug")]
                 panic!("Not callable from menu")
             }
         };
@@ -183,7 +180,6 @@ impl PassphraseEntry {
             ChoiceCategory::Digit => DIGITS.iter().collect(),
             ChoiceCategory::SpecialSymbol => SPECIAL_SYMBOLS.iter().collect(),
             ChoiceCategory::Menu => {
-                #[cfg(feature = "ui_debug")]
                 panic!("Menu does not have characters")
             }
         };

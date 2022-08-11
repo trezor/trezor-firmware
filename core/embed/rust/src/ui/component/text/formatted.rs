@@ -157,7 +157,6 @@ where
                     "normal" => Some(Op::Font(self.fonts.normal)),
                     "medium" => Some(Op::Font(self.fonts.medium)),
                     _ => {
-                        #[cfg(feature = "ui_debug")]
                         panic!("Unsupported font name");
                     }
                 }
@@ -173,7 +172,6 @@ where
                     "x" => Some(Op::CursorOffset(Offset::x(value))),
                     "y" => Some(Op::CursorOffset(Offset::y(value))),
                     _ => {
-                        #[cfg(feature = "ui_debug")]
                         panic!("Unsupported offset axis");
                     }
                 }

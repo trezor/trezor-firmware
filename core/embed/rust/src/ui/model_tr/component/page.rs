@@ -7,8 +7,6 @@ use crate::{
     },
 };
 
-use heapless::String;
-
 use super::{
     theme, ButtonController, ButtonControllerMsg, ButtonDetails, ButtonLayout, ButtonPos, ScrollBar,
 };
@@ -219,14 +217,17 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
+use super::ButtonAction;
+#[cfg(feature = "ui_debug")]
+use heapless::String;
+
+#[cfg(feature = "ui_debug")]
 impl<S, T> crate::trace::Trace for ButtonPage<S, T>
 where
     T: crate::trace::Trace,
     S: AsRef<str>,
 {
     fn get_btn_action(&self, pos: ButtonPos) -> String<25> {
-        use super::ButtonAction;
-
         match pos {
             ButtonPos::Left => {
                 if self.scrollbar.has_previous_page() {

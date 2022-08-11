@@ -7,7 +7,6 @@ use super::{
     common, theme, ButtonAction, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos,
     FlowPageMaker,
 };
-use heapless::String;
 use heapless::Vec;
 
 /// To be returned directly from Flow.
@@ -215,6 +214,9 @@ where
         self.current_choice_mut().paint();
     }
 }
+
+#[cfg(feature = "ui_debug")]
+use heapless::String;
 
 #[cfg(feature = "ui_debug")]
 impl<T, const N: usize, const M: usize> crate::trace::Trace for Flow<T, N, M>
