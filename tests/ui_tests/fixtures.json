@@ -1535,6 +1535,8 @@
 "TT_test_basic.py::test_device_id_same": "c09de07fbbf1e047442180e2facb5482d06a1a428891b875b7dd93c9e4704ae1",
 "TT_test_basic.py::test_features": "c09de07fbbf1e047442180e2facb5482d06a1a428891b875b7dd93c9e4704ae1",
 "TT_test_basic.py::test_ping": "c09de07fbbf1e047442180e2facb5482d06a1a428891b875b7dd93c9e4704ae1",
+"TT_test_busy_state.py::test_busy_expiry": "84cbf08ffe52f79e63d32ed2298dbdc60c74059bcf59eaa69c01f13acf61c8ae",
+"TT_test_busy_state.py::test_busy_state": "0517aa3301d4f55068766dfc130139e45449d8f90213d4a51c49776e3bbb7c98",
 "TT_test_cancel.py::test_cancel_message_via_cancel[message0]": "b014449cbf1a45739d64a370b30af75df2228f48c090a02227bac8ed20c7b2dc",
 "TT_test_cancel.py::test_cancel_message_via_cancel[message1]": "b014449cbf1a45739d64a370b30af75df2228f48c090a02227bac8ed20c7b2dc",
 "TT_test_cancel.py::test_cancel_message_via_initialize[message0]": "b014449cbf1a45739d64a370b30af75df2228f48c090a02227bac8ed20c7b2dc",
