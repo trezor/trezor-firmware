@@ -775,10 +775,14 @@ if not utils.BITCOIN_ONLY:
     import apps.webauthn.resident_credentials
     apps.zcash
     import apps.zcash
+    apps.zcash.f4jumble
+    import apps.zcash.f4jumble
     apps.zcash.hasher
     import apps.zcash.hasher
     apps.zcash.signer
     import apps.zcash.signer
+    apps.zcash.unified_addresses
+    import apps.zcash.unified_addresses
 
 # generate full alphabet
 a

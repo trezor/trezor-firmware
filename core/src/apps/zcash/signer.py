@@ -1,15 +1,19 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
+from trezor.enums import OutputScriptType
 from trezor.messages import SignTx
 from trezor.utils import ensure
 from trezor.wire import DataError, ProcessError
 
+from apps.bitcoin import scripts
 from apps.bitcoin.common import ecdsa_sign
 from apps.bitcoin.sign_tx.bitcoinlike import Bitcoinlike
 from apps.common.writers import write_compact_size, write_uint32_le
 
+from . import unified_addresses
 from .hasher import ZcashHasher
+from .unified_addresses import Typecode
 
 if TYPE_CHECKING:
     from typing import Sequence
@@ -21,6 +25,7 @@ if TYPE_CHECKING:
     from trezor.messages import (
         PrevTx,
         TxInput,
+        TxOutput,
     )
     from apps.bitcoin.keychain import Keychain
 
@@ -110,3 +115,20 @@ class Zcash(Bitcoinlike):
         write_compact_size(w, 0)  # nOutputsSapling
         # serialize Orchard bundle
         write_compact_size(w, 0)  # nActionsOrchard
+
+    def output_derive_script(self, txo: TxOutput) -> bytes:
+        # unified addresses
+        if txo.address is not None and txo.address[0] == "u":
+            assert txo.script_type is OutputScriptType.PAYTOADDRESS
+
+            receivers = unified_addresses.decode(txo.address, self.coin)
+            if Typecode.P2PKH in receivers:
+                pubkeyhash = receivers[Typecode.P2PKH]
+                return scripts.output_script_p2pkh(pubkeyhash)
+            if Typecode.P2SH in receivers:
+                scripthash = receivers[Typecode.P2SH]
+                return scripts.output_script_p2sh(scripthash)
+            raise DataError("Unified address does not include a transparent receiver.")
+
+        # transparent addresses
+        return super().output_derive_script(txo)
