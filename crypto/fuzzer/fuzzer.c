@@ -139,6 +139,9 @@ void check_msan(void *pointer, size_t length) {
 #endif
 }
 
+// simplify the pointer check after a var_pointer = malloc()
+#define RETURN_IF_NULL(var_pointer) if (var_pointer == NULL) { return 0; }
+
 /* individual fuzzer harness functions */
 
 int fuzz_bn_format(void) {
@@ -177,9 +180,8 @@ int fuzz_bn_format(void) {
   char *prefix = malloc(prefixlen);
   // IDEA allow suffix == NULL
   char *suffix = malloc(suffixlen);
-  if (prefix == NULL || suffix == NULL) {
-    return 0;
-  }
+  RETURN_IF_NULL(prefix);
+  RETURN_IF_NULL(suffix);
 
   memset(prefix, 0, prefixlen);
   memset(suffix, 0, suffixlen);
@@ -214,9 +216,8 @@ int fuzz_base32_decode(void) {
   char *in_buffer = malloc(fuzzer_length);
   // basic heuristic: the decoded output will always fit in less or equal space
   uint8_t *out_buffer = malloc(fuzzer_length);
-  if (in_buffer == NULL || out_buffer == NULL) {
-    return 0;
-  }
+  RETURN_IF_NULL(in_buffer);
+  RETURN_IF_NULL(out_buffer);
 
   size_t outlen = fuzzer_length;
   size_t raw_inlen = fuzzer_length;
@@ -248,9 +249,8 @@ int fuzz_base32_encode(void) {
   // TODO: find a better heuristic for output buffer size
   size_t outlen = 2 * fuzzer_length;
   char *out_buffer = malloc(outlen);
-  if (in_buffer == NULL || out_buffer == NULL) {
-    return 0;
-  }
+  RETURN_IF_NULL(in_buffer);
+  RETURN_IF_NULL(out_buffer);
 
   // mutate in_buffer
   size_t raw_inlen = fuzzer_length;
@@ -282,9 +282,8 @@ int fuzz_base58_encode_check(void) {
   // TODO: find a better heuristic for output buffer size
   size_t outlen = 2 * fuzzer_length;
   char *out_buffer = malloc(outlen);
-  if (in_buffer == NULL || out_buffer == NULL) {
-    return 0;
-  }
+  RETURN_IF_NULL(in_buffer);
+  RETURN_IF_NULL(out_buffer);
 
   // mutate in_buffer
   size_t raw_inlen = fuzzer_length;
@@ -321,9 +320,7 @@ int fuzz_base58_decode_check(void) {
   }
 
   uint8_t *in_buffer = malloc(fuzzer_length + 1);
-  if (in_buffer == NULL) {
-    return 0;
-  }
+  RETURN_IF_NULL(in_buffer);
 
   size_t raw_inlen = fuzzer_length;
   memcpy(in_buffer, fuzzer_input(raw_inlen), raw_inlen);
@@ -355,13 +352,12 @@ int fuzz_xmr_base58_addr_decode_check(void) {
   }
 
   // TODO no null termination used !?
-  char *in_buffer = malloc(fuzzer_length);
   // TODO use better size heuristic
   size_t outlen = fuzzer_length;
+  char *in_buffer = malloc(fuzzer_length);
   uint8_t *out_buffer = malloc(outlen);
-  if (in_buffer == NULL || out_buffer == NULL) {
-    return 0;
-  }
+  RETURN_IF_NULL(in_buffer);
+  RETURN_IF_NULL(out_buffer);
 
   // tag is only written to
   uint64_t tag = 0;
@@ -392,13 +388,13 @@ int fuzz_xmr_base58_decode(void) {
     return -1;
   }
 
-  char *in_buffer = malloc(fuzzer_length);
   // TODO better size heuristic
   size_t outlen = fuzzer_length;
+  char *in_buffer = malloc(fuzzer_length);
   uint8_t *out_buffer = malloc(outlen);
-  if (in_buffer == NULL || out_buffer == NULL) {
-    return 0;
-  }
+  RETURN_IF_NULL(in_buffer);
+  RETURN_IF_NULL(out_buffer);
+
   memset(out_buffer, 0, outlen);
 
   // mutate in_buffer
@@ -428,13 +424,13 @@ int fuzz_xmr_base58_addr_encode_check(void) {
   // mutate tag_in
   memcpy(&tag_in, fuzzer_input(tag_size), tag_size);
 
-  uint8_t *in_buffer = malloc(fuzzer_length);
   // TODO better size heuristic
   size_t outlen = fuzzer_length * 2;
+  uint8_t *in_buffer = malloc(fuzzer_length);
   char *out_buffer = malloc(outlen);
-  if (in_buffer == NULL || out_buffer == NULL) {
-    return 0;
-  }
+  RETURN_IF_NULL(in_buffer);
+  RETURN_IF_NULL(out_buffer);
+
   memset(out_buffer, 0, outlen);
 
   // mutate in_buffer
@@ -471,13 +467,13 @@ int fuzz_xmr_base58_encode(void) {
     return -1;
   }
 
-  uint8_t *in_buffer = malloc(fuzzer_length);
   // TODO better size heuristic
   size_t outlen = fuzzer_length * 2;
+  uint8_t *in_buffer = malloc(fuzzer_length);
   char *out_buffer = malloc(outlen);
-  if (in_buffer == NULL || out_buffer == NULL) {
-    return 0;
-  }
+  RETURN_IF_NULL(in_buffer);
+  RETURN_IF_NULL(out_buffer);
+
   memset(out_buffer, 0, outlen);
 
   // mutate in_buffer
@@ -512,9 +508,7 @@ int fuzz_xmr_serialize_varint(void) {
   // mutate in_buffer
   size_t raw_inlen = fuzzer_length;
   uint8_t *in_buffer = malloc(raw_inlen);
-  if (in_buffer == NULL) {
-    return 0;
-  }
+  RETURN_IF_NULL(in_buffer);
   memcpy(in_buffer, fuzzer_input(raw_inlen), raw_inlen);
 
   // use the varint
@@ -541,9 +535,7 @@ int fuzz_nem_validate_address(void) {
   uint8_t network = fuzzer_input(1)[0];
   size_t raw_inlen = fuzzer_length + 1;
   char *in_buffer = malloc(raw_inlen);
-  if (in_buffer == NULL) {
-    return 0;
-  }
+  RETURN_IF_NULL(in_buffer);
 
   // mutate the buffer
   memcpy(in_buffer, fuzzer_input(raw_inlen - 1), raw_inlen - 1);
