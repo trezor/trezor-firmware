@@ -20,6 +20,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -64,6 +65,25 @@
 #include "zkp_context.h"
 #include "zkp_ecdsa.h"
 
+#if defined(__has_feature)
+#if __has_feature(memory_sanitizer)
+#include <sanitizer/msan_interface.h>
+#endif
+#endif
+
+/* code design notes
+ *
+ * TODO note down design tradeoffs for this fuzzer style
+ */
+
+/* code performance notes
+ *
+ * use of #define for performance reasons
+ * avoid VLA arrays for performance reasons
+ * some expensive functions are hidden with compile-time switches
+ * fuzzer harnesses are meant to exit early if the preconditions are not met
+ */
+
 /* fuzzer input data handling */
 const uint8_t *fuzzer_ptr;
 size_t fuzzer_length;
@@ -101,68 +121,69 @@ void crash(void) {
   exit(1);
 }
 
+// IDEA are there advantages to turning this into a macro?
+//
+// check the memory area for memory information leaks if MSAN is available,
+// crash if problems are detected
+void check_msan(void *pointer, size_t length) {
+#if defined(__has_feature)
+#if __has_feature(memory_sanitizer)
+  // check `address` for memory info leakage
+  __msan_check_mem_is_initialized(pointer, length);
+#else
+  (void)pointer;
+  (void)length;
+#endif
+#endif
+}
+
 /* individual fuzzer harness functions */
 
 int fuzz_bn_format(void) {
   bignum256 target_bignum;
-  // we need some amount of data, bail if the input is too short
-  if (fuzzer_length < sizeof(target_bignum)) {
+  // we need some amount of initial data
+  if (fuzzer_length < sizeof(target_bignum) + 1 + 1) {
     return 0;
   }
 
 #define FUZZ_BN_FORMAT_OUTPUT_BUFFER_SIZE 512
   char buf[FUZZ_BN_FORMAT_OUTPUT_BUFFER_SIZE] = {0};
-  int ret;
+  int ret = 0;
 
   // mutate the struct contents
-  memcpy(&target_bignum, fuzzer_ptr, sizeof(target_bignum));
-  fuzzer_input(sizeof(target_bignum));
+  memcpy(&target_bignum, fuzzer_input(sizeof(target_bignum)),
+         sizeof(target_bignum));
 
   uint8_t prefixlen = 0;
-  if (fuzzer_length < 1) {
-    return 0;
-  }
-  memcpy(&prefixlen, fuzzer_input(1), 1);
-  char prefix[prefixlen];
-  memset(&prefix, 0, prefixlen);
-
-  if (prefixlen > 0 && prefixlen <= 128 && prefixlen <= fuzzer_length) {
-    memcpy(&prefix, fuzzer_input(prefixlen), prefixlen);
-    // force null termination
-    prefix[prefixlen - 1] = 0;
-  } else {
-    return 0;
-  }
-  // TODO idea: : allow prefix == NULL
-
   uint8_t suffixlen = 0;
-  if (fuzzer_length < 1) {
-    return 0;
-  }
-  memcpy(&suffixlen, fuzzer_input(1), 1);
-  char suffix[suffixlen];
-  memset(&suffix, 0, suffixlen);
-
-  if (suffixlen > 0 && suffixlen <= 128 && suffixlen <= fuzzer_length) {
-    memcpy(&suffix, fuzzer_input(suffixlen), suffixlen);
-    // force null termination
-    suffix[suffixlen - 1] = 0;
-  } else {
-    return 0;
-  }
-  // TODO idea: allow suffix == NULL
   uint32_t decimals = 0;
   int32_t exponent = 0;
   bool trailing = false;
+  // range 1 - 128
+  prefixlen = (fuzzer_input(1)[0] & 127) + 1;
+  suffixlen = (fuzzer_input(1)[0] & 127) + 1;
 
-  if (fuzzer_length >= 9) {
-    memcpy(&decimals, fuzzer_input(4), 4);
-    memcpy(&exponent, fuzzer_input(4), 4);
-
-    trailing = (fuzzer_input(1)[0] & 1);
-  } else {
+  // check for the second half of the data
+  if (fuzzer_length < prefixlen + suffixlen + 4 + 4 + 1 - 2) {
     return 0;
   }
+  memcpy(&decimals, fuzzer_input(4), 4);
+  memcpy(&exponent, fuzzer_input(4), 4);
+  trailing = (fuzzer_input(1)[0] & 1);
+
+  // TODO idea: allow prefix == NULL
+  char *prefix = malloc(prefixlen);
+  // TODO idea: allow suffix == NULL
+  char *suffix = malloc(suffixlen);
+  if (prefix == NULL || suffix == NULL) {
+    return 0;
+  }
+
+  memset(prefix, 0, prefixlen);
+  memset(suffix, 0, suffixlen);
+  // fetch (length - 1) to ensure null termination
+  memcpy(prefix, fuzzer_input(prefixlen - 1), prefixlen - 1);
+  memcpy(suffix, fuzzer_input(suffixlen - 1), suffixlen - 1);
 
   ret = bn_format(&target_bignum, prefix, suffix, decimals, exponent, trailing,
                   0, buf, FUZZ_BN_FORMAT_OUTPUT_BUFFER_SIZE);
@@ -172,6 +193,10 @@ int fuzz_bn_format(void) {
     crash();
   }
 
+  check_msan(&buf, FUZZ_BN_FORMAT_OUTPUT_BUFFER_SIZE);
+
+  free(prefix);
+  free(suffix);
   return 0;
 }
 
@@ -183,20 +208,28 @@ int fuzz_base32_decode(void) {
     return 0;
   }
 
-  char in_buffer[BASE32_DECODE_MAX_INPUT_LEN] = {0};
-  uint8_t out_buffer[BASE32_DECODE_MAX_INPUT_LEN] = {0};
-  size_t outlen = sizeof(out_buffer);
+  char *in_buffer = malloc(fuzzer_length);
+  // basic heuristic: the decoded output will always fit in less or equal space
+  uint8_t *out_buffer = malloc(fuzzer_length);
+  if (in_buffer == NULL || out_buffer == NULL) {
+    return 0;
+  }
 
-  // mutate in_buffer
+  size_t outlen = fuzzer_length;
   size_t raw_inlen = fuzzer_length;
-  memcpy(&in_buffer, fuzzer_ptr, raw_inlen);
-  fuzzer_input(raw_inlen);
+  memcpy(in_buffer, fuzzer_input(raw_inlen), raw_inlen);
 
   // null-terminate input buffer to prevent issues with strlen()
-  in_buffer[BASE32_DECODE_MAX_INPUT_LEN - 1] = 0;
-  size_t inlen = strlen(in_buffer);
+  in_buffer[raw_inlen - 1] = 0;
 
-  base32_decode(in_buffer, inlen, out_buffer, outlen, BASE32_ALPHABET_RFC4648);
+  uint8_t *ret = base32_decode(in_buffer, raw_inlen, out_buffer, outlen,
+                               BASE32_ALPHABET_RFC4648);
+
+  if (ret != NULL) {
+    check_msan(out_buffer, outlen);
+  }
+  free(in_buffer);
+  free(out_buffer);
   return 0;
 }
 
@@ -208,17 +241,29 @@ int fuzz_base32_encode(void) {
     return 0;
   }
 
-  uint8_t in_buffer[BASE32_ENCODE_MAX_INPUT_LEN] = {0};
-  char out_buffer[BASE32_ENCODE_MAX_INPUT_LEN] = {0};
-  size_t outlen = sizeof(out_buffer);
+  uint8_t *in_buffer = malloc(fuzzer_length);
+  // TODO: find a better heuristic for output buffer size
+  size_t outlen = 2 * fuzzer_length;
+  char *out_buffer = malloc(outlen);
+  if (in_buffer == NULL || out_buffer == NULL) {
+    return 0;
+  }
 
   // mutate in_buffer
   size_t raw_inlen = fuzzer_length;
-  memcpy(&in_buffer, fuzzer_ptr, raw_inlen);
+  memcpy(in_buffer, fuzzer_ptr, raw_inlen);
   fuzzer_input(raw_inlen);
 
-  base32_encode(in_buffer, raw_inlen, out_buffer, outlen,
-                BASE32_ALPHABET_RFC4648);
+  char *ret = base32_encode(in_buffer, raw_inlen, out_buffer, outlen,
+                            BASE32_ALPHABET_RFC4648);
+
+  if (ret != NULL) {
+    // the return value is a pointer to the end of the written buffer,
+    // use it to calculate the used buffer area
+    check_msan(out_buffer, ret - out_buffer);
+  }
+  free(in_buffer);
+  free(out_buffer);
   return 0;
 }
 
@@ -230,21 +275,37 @@ int fuzz_base58_encode_check(void) {
     return 0;
   }
 
-  uint8_t in_buffer[BASE58_ENCODE_MAX_INPUT_LEN] = {0};
-  char out_buffer[BASE58_ENCODE_MAX_INPUT_LEN] = {0};
-  size_t outlen = sizeof(out_buffer);
+  uint8_t *in_buffer = malloc(fuzzer_length);
+  // TODO: find a better heuristic for output buffer size
+  size_t outlen = 2 * fuzzer_length;
+  char *out_buffer = malloc(outlen);
+  if (in_buffer == NULL || out_buffer == NULL) {
+    return 0;
+  }
 
   // mutate in_buffer
   size_t raw_inlen = fuzzer_length;
-  memcpy(&in_buffer, fuzzer_ptr, raw_inlen);
-  fuzzer_input(raw_inlen);
+  memcpy(in_buffer, fuzzer_input(raw_inlen), raw_inlen);
 
+  int ret = 0;
   // run multiple hasher variants for the same input
-  base58_encode_check(in_buffer, raw_inlen, HASHER_SHA2D, out_buffer, outlen);
-  base58_encode_check(in_buffer, raw_inlen, HASHER_BLAKED, out_buffer, outlen);
-  base58_encode_check(in_buffer, raw_inlen, HASHER_GROESTLD_TRUNC, out_buffer,
-                      outlen);
-  base58_encode_check(in_buffer, raw_inlen, HASHER_SHA3K, out_buffer, outlen);
+  ret = base58_encode_check(in_buffer, raw_inlen, HASHER_SHA2D, out_buffer,
+                            outlen);
+  ret = base58_encode_check(in_buffer, raw_inlen, HASHER_BLAKED, out_buffer,
+                            outlen);
+  ret = base58_encode_check(in_buffer, raw_inlen, HASHER_GROESTLD_TRUNC,
+                            out_buffer, outlen);
+  ret = base58_encode_check(in_buffer, raw_inlen, HASHER_SHA3K, out_buffer,
+                            outlen);
+
+  // check one of the encode results
+  if (ret != 0) {
+    // the return value describes how many characters are written
+    check_msan(out_buffer, ret);
+  }
+
+  free(in_buffer);
+  free(out_buffer);
   return 0;
 }
 
@@ -256,28 +317,33 @@ int fuzz_base58_decode_check(void) {
     return 0;
   }
 
-  // with null terminator
-  uint8_t in_buffer[BASE58_DECODE_MAX_INPUT_LEN + 1] = {0};
-  uint8_t out_buffer[BASE58_DECODE_MAX_INPUT_LEN] = {0};
+  uint8_t *in_buffer = malloc(fuzzer_length + 1);
+  if (in_buffer == NULL) {
+    return 0;
+  }
 
-  // mutate in_buffer
   size_t raw_inlen = fuzzer_length;
-  memcpy(&in_buffer, fuzzer_ptr, raw_inlen);
-  fuzzer_input(raw_inlen);
+  memcpy(in_buffer, fuzzer_input(raw_inlen), raw_inlen);
+  uint8_t out_buffer[MAX_ADDR_RAW_SIZE] = {0};
+  // force null-termination
+  in_buffer[raw_inlen] = 0;
+  const char *in_char = (const char *)in_buffer;
 
   // run multiple hasher variants for the same input
-  base58_decode_check((const char *)in_buffer, HASHER_SHA2D, out_buffer,
+  base58_decode_check(in_char, HASHER_SHA2D, out_buffer, MAX_ADDR_RAW_SIZE);
+  base58_decode_check(in_char, HASHER_BLAKED, out_buffer, MAX_ADDR_RAW_SIZE);
+  base58_decode_check(in_char, HASHER_GROESTLD_TRUNC, out_buffer,
                       MAX_ADDR_RAW_SIZE);
-  base58_decode_check((const char *)in_buffer, HASHER_BLAKED, out_buffer,
-                      MAX_ADDR_RAW_SIZE);
-  base58_decode_check((const char *)in_buffer, HASHER_GROESTLD_TRUNC,
-                      out_buffer, MAX_ADDR_RAW_SIZE);
-  base58_decode_check((const char *)in_buffer, HASHER_SHA3K, out_buffer,
-                      MAX_ADDR_RAW_SIZE);
+  base58_decode_check(in_char, HASHER_SHA3K, out_buffer, MAX_ADDR_RAW_SIZE);
+
+  check_msan(out_buffer, MAX_ADDR_RAW_SIZE);
+
+  free(in_buffer);
   return 0;
 }
 
-// arbitrarily chosen maximum size
+// arbitrarily chosen maximum size meant to limit input complexity
+// there is no input size limit for the target function
 #define XMR_BASE58_ADDR_DECODE_MAX_INPUT_LEN 512
 
 int fuzz_xmr_base58_addr_decode_check(void) {
@@ -285,16 +351,33 @@ int fuzz_xmr_base58_addr_decode_check(void) {
     return 0;
   }
 
-  char in_buffer[XMR_BASE58_ADDR_DECODE_MAX_INPUT_LEN] = {0};
-  char out_buffer[XMR_BASE58_ADDR_DECODE_MAX_INPUT_LEN] = {0};
-  size_t outlen = sizeof(out_buffer);
+  // TODO no null termination used !?
+  char *in_buffer = malloc(fuzzer_length);
+  // TODO better size heuristic
+  size_t outlen = fuzzer_length;
+  uint8_t *out_buffer = malloc(outlen);
+  if (in_buffer == NULL || out_buffer == NULL) {
+    return 0;
+  }
+
+  // tag is only written to
   uint64_t tag = 0;
   size_t raw_inlen = fuzzer_length;
-
   // mutate in_buffer
-  memcpy(&in_buffer, fuzzer_input(raw_inlen), raw_inlen);
+  memcpy(in_buffer, fuzzer_input(raw_inlen), raw_inlen);
 
-  xmr_base58_addr_decode_check(in_buffer, raw_inlen, &tag, out_buffer, outlen);
+  int ret = xmr_base58_addr_decode_check(in_buffer, raw_inlen, &tag, out_buffer,
+                                         outlen);
+
+  // IDEA check tag for expected values?
+  // IDEA re-encode valid decoding results to check function consistency?
+
+  if (ret != 0) {
+    check_msan(out_buffer, outlen);
+  }
+
+  free(in_buffer);
+  free(out_buffer);
   return 0;
 }
 
@@ -302,61 +385,89 @@ int fuzz_xmr_base58_addr_decode_check(void) {
 #define XMR_BASE58_ADDR_ENCODE_MAX_INPUT_LEN 512
 
 int fuzz_xmr_base58_addr_encode_check(void) {
-  uint64_t tag_in;
+  // tag_in is internally limited
+  uint8_t tag_in;
+  int ret1 = 0;
   size_t tag_size = sizeof(tag_in);
-  if (fuzzer_length < tag_size ||
+  if (fuzzer_length < tag_size + 1 ||
       fuzzer_length > XMR_BASE58_ADDR_ENCODE_MAX_INPUT_LEN) {
     return 0;
   }
 
-  uint8_t in_buffer[XMR_BASE58_ADDR_ENCODE_MAX_INPUT_LEN] = {0};
-  char out_buffer[XMR_BASE58_ADDR_ENCODE_MAX_INPUT_LEN] = {0};
-  size_t outlen = sizeof(out_buffer);
-
   // mutate tag_in
-  memcpy(&tag_in, fuzzer_ptr, tag_size);
-  fuzzer_input(tag_size);
+  memcpy(&tag_in, fuzzer_input(tag_size), tag_size);
+
+  uint8_t *in_buffer = malloc(fuzzer_length);
+  // TODO better size heuristic
+  size_t outlen = fuzzer_length * 2;
+  char *out_buffer = malloc(outlen);
+  if (in_buffer == NULL || out_buffer == NULL) {
+    return 0;
+  }
+  memset(out_buffer, 0, outlen);
 
   // mutate in_buffer
-  memcpy(&in_buffer, fuzzer_ptr, fuzzer_length);
   size_t raw_inlen = fuzzer_length;
-  fuzzer_input(raw_inlen);
+  memcpy(in_buffer, fuzzer_input(raw_inlen), raw_inlen);
 
-  xmr_base58_addr_encode_check(tag_in, in_buffer, raw_inlen, out_buffer,
-                               outlen);
+  ret1 = xmr_base58_addr_encode_check(tag_in, in_buffer, raw_inlen, out_buffer,
+                                      outlen);
+
+  if (ret1 != 0) {
+    uint64_t second_tag = 0;
+    // TODO improve length
+    uint8_t dummy_buffer[512] = {0};
+    int ret2 = 0;
+    // encoding successful
+    ret2 = xmr_base58_addr_decode_check(out_buffer, outlen, &second_tag,
+                                        dummy_buffer, 512);
+    if (ret2 == 0) {
+      // TODO investigate irregularities
+      // crash();
+    }
+  }
+
+  free(in_buffer);
+  free(out_buffer);
   return 0;
 }
 
+int fuzz_xmr_serialize_varint(void) {
 // arbitrarily chosen maximum size
 #define XMR_SERIALIZE_VARINT_MAX_INPUT_LEN 128
 
-int fuzz_xmr_serialize_varint(void) {
   uint64_t varint_in;
   size_t varint_in_size = sizeof(varint_in);
-  if (fuzzer_length < varint_in_size ||
+  if (fuzzer_length <= varint_in_size ||
       fuzzer_length > XMR_SERIALIZE_VARINT_MAX_INPUT_LEN) {
     return 0;
   }
 
-  uint8_t in_buffer[XMR_SERIALIZE_VARINT_MAX_INPUT_LEN] = {0};
   uint8_t out_buffer[XMR_SERIALIZE_VARINT_MAX_INPUT_LEN] = {0};
   size_t outlen = sizeof(out_buffer);
   uint64_t varint_out = 0;
 
   // mutate varint_in
-  memcpy(&varint_in, fuzzer_ptr, varint_in_size);
-  fuzzer_input(varint_in_size);
+  memcpy(&varint_in, fuzzer_input(varint_in_size), varint_in_size);
 
   // mutate in_buffer
-  memcpy(&in_buffer, fuzzer_ptr, fuzzer_length);
   size_t raw_inlen = fuzzer_length;
-  fuzzer_input(raw_inlen);
+  uint8_t *in_buffer = malloc(raw_inlen);
+  if (in_buffer == NULL) {
+    return 0;
+  }
+  memcpy(in_buffer, fuzzer_input(raw_inlen), raw_inlen);
 
-  // call the actual xmr functions
+  // use the varint
   xmr_size_varint(varint_in);
   xmr_write_varint(out_buffer, outlen, varint_in);
+
+  // use the input buffer
   xmr_read_varint(in_buffer, raw_inlen, &varint_out);
 
+  // IDEA cross-check write/read results
+
+  free(in_buffer);
   return 0;
 }
 
@@ -364,26 +475,25 @@ int fuzz_xmr_serialize_varint(void) {
 #define NEM_VALIDATE_ADDRESS_MAX_INPUT_LEN 128
 
 int fuzz_nem_validate_address(void) {
-  if (fuzzer_length < (1 + 1) ||
-      fuzzer_length > NEM_VALIDATE_ADDRESS_MAX_INPUT_LEN) {
+  if (fuzzer_length < 1 || fuzzer_length > NEM_VALIDATE_ADDRESS_MAX_INPUT_LEN) {
     return 0;
   }
 
-  char in_buffer[NEM_VALIDATE_ADDRESS_MAX_INPUT_LEN] = {0};
+  uint8_t network = fuzzer_input(1)[0];
+  size_t raw_inlen = fuzzer_length + 1;
+  char *in_buffer = malloc(raw_inlen);
+  if (in_buffer == NULL) {
+    return 0;
+  }
 
-  uint8_t network = *fuzzer_ptr;
-  fuzzer_input(1);
-
-  // mutate the buffer with the remaining fuzzer input data
-  memcpy(&in_buffer, fuzzer_ptr, fuzzer_length);
-  size_t raw_inlen = fuzzer_length;
-  fuzzer_input(raw_inlen);
-  // TODO potential bug: is it clearly specified that the address has to be null
-  // terminated?
-  in_buffer[NEM_VALIDATE_ADDRESS_MAX_INPUT_LEN - 1] = 0;
+  // mutate the buffer
+  memcpy(in_buffer, fuzzer_input(raw_inlen - 1), raw_inlen - 1);
+  // force null-termination
+  in_buffer[raw_inlen - 1] = 0;
 
   nem_validate_address(in_buffer, network);
 
+  free(in_buffer);
   return 0;
 }
 
@@ -391,23 +501,20 @@ int fuzz_nem_get_address(void) {
   unsigned char ed25519_public_key_fuzz[32] = {0};
   uint8_t version = 0;
 
+  // TODO switch to < comparison?
   if (fuzzer_length != (sizeof(ed25519_public_key_fuzz) + sizeof(version))) {
     return 0;
   }
 
   char address[NEM_ADDRESS_SIZE + 1] = {0};
 
-  memcpy(ed25519_public_key_fuzz, fuzzer_input(32), 32);
-  memcpy(&version, fuzzer_input(1), 1);
+  memcpy(ed25519_public_key_fuzz, fuzzer_input(sizeof(ed25519_public_key_fuzz)),
+         sizeof(ed25519_public_key_fuzz));
+  memcpy(&version, fuzzer_input(sizeof(version)), sizeof(version));
 
   nem_get_address(ed25519_public_key_fuzz, version, address);
 
-#if defined(__has_feature)
-#if __has_feature(memory_sanitizer)
-  // TODO idea: check `address` for memory info leakage
-#endif
-#endif
-
+  check_msan(&address, sizeof(address));
   return 0;
 }
 
@@ -1072,6 +1179,17 @@ int fuzz_ecdsa_sig_to_der(void) {
   return 0;
 }
 
+void fuzz_button_sequence_to_word(void) {
+  uint16_t input = 0;
+  if (fuzzer_length < sizeof(input)) {
+    return;
+  }
+  memcpy(&input, fuzzer_input(sizeof(input)), sizeof(input));
+
+  button_sequence_to_word(input);
+  return;
+}
+
 void zkp_initialize_context_or_crash(void) {
   // The current context usage has persistent side effects
   // TODO switch to frequent re-initialization where necessary
@@ -1196,6 +1314,9 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
       break;
     case 26:
       fuzz_mnemonic_to_seed();
+      break;
+    case 27:
+      fuzz_button_sequence_to_word();
       break;
     case 30:
       fuzz_ethereum_address_checksum();
