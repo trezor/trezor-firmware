@@ -120,6 +120,10 @@ impl<const M: usize> FlowPageMaker<M> {
         self.with_new_item(Op::Text(ToDisplay::new("\n".into())))
     }
 
+    pub fn newline_half(self) -> Self {
+        self.with_new_item(Op::Text(ToDisplay::new("\r".into())))
+    }
+
     pub fn next_page(self) -> Self {
         self.with_new_item(Op::NextPage)
     }

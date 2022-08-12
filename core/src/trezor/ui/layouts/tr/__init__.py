@@ -304,6 +304,11 @@ async def confirm_action(
     exc: ExceptionType = wire.ActionCancelled,
     br_code: ButtonRequestType = ButtonRequestType.Other,
 ) -> None:
+    # TEMPORARY: when the action targets PIN, it gets handled differently
+    if br_type == "set_pin":
+        assert action is not None
+        return await pin_confirm_action(ctx, br_type, action)
+
     if isinstance(verb, bytes) or isinstance(verb_cancel, bytes):
         raise NotImplementedError
 
@@ -330,6 +335,36 @@ async def confirm_action(
                     verb_cancel=verb_cancel,
                     hold=hold,
                     reverse=reverse,
+                )
+            ),
+            br_type,
+            br_code,
+        ),
+        exc,
+    )
+
+
+async def pin_confirm_action(
+    ctx: wire.GenericContext,
+    br_type: str,
+    action: str,
+    exc: ExceptionType = wire.ActionCancelled,
+    br_code: ButtonRequestType = ButtonRequestType.Other,
+) -> None:
+    """Custom layout for PIN confirmation.
+
+    Contains some additional information about PIN,
+    divided into two screens with different buttons.
+    """
+    # Making the first letter in action upper
+    # There is no capitalize() method in micropython
+    action = action[0].upper() + action[1:]
+    await raise_if_cancelled(
+        interact(
+            ctx,
+            RustLayout(
+                trezorui2.pin_confirm_action(
+                    action=action,
                 )
             ),
             br_type,

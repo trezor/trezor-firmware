@@ -610,6 +610,24 @@ impl ButtonLayout<&'static str> {
             Some(ButtonDetails::right_arrow_icon()),
         )
     }
+
+    /// Cancel cross on left and text on the right.
+    pub fn cancel_and_text(text: &'static str) -> Self {
+        Self::new(
+            Some(ButtonDetails::cancel_icon()),
+            None,
+            Some(ButtonDetails::text(text)),
+        )
+    }
+
+    /// Cancel cross on left and hold-to-confirm text on the right.
+    pub fn cancel_and_htc_text(text: &'static str, duration: Duration) -> Self {
+        Self::new(
+            Some(ButtonDetails::cancel_icon()),
+            None,
+            Some(ButtonDetails::text(text).with_duration(duration)),
+        )
+    }
 }
 
 /// What happens when a button is triggered.
