@@ -80,9 +80,10 @@
  *
  * use #define over runtime checks for performance reasons
  * avoid VLA arrays for performance reasons
- * potential performance drawbacks of heap usage are accepted for better out of bounds error detection
- * some expensive functions are hidden with compile-time switches
- * fuzzer harnesses are meant to exit early if the preconditions are not met
+ * potential performance drawbacks of heap usage are accepted for better out of
+ * bounds error detection some expensive functions are hidden with compile-time
+ * switches fuzzer harnesses are meant to exit early if the preconditions are
+ * not met
  */
 
 /* fuzzer input data handling */
@@ -182,7 +183,8 @@ int fuzz_bn_format(void) {
 
   memset(prefix, 0, prefixlen);
   memset(suffix, 0, suffixlen);
-  // only fetch up to (length - 1) to ensure null termination together with the memset
+  // only fetch up to (length - 1) to ensure null termination together with the
+  // memset
   memcpy(prefix, fuzzer_input(prefixlen - 1), prefixlen - 1);
   memcpy(suffix, fuzzer_input(suffixlen - 1), suffixlen - 1);
 
@@ -386,7 +388,6 @@ int fuzz_xmr_base58_addr_decode_check(void) {
 #define XMR_BASE58_DECODE_MAX_INPUT_LEN 512
 // a more focused variant of the xmr_base58_addr_decode_check() harness
 int fuzz_xmr_base58_decode(void) {
-
   if (fuzzer_length > XMR_BASE58_DECODE_MAX_INPUT_LEN) {
     return -1;
   }
@@ -450,7 +451,7 @@ int fuzz_xmr_base58_addr_encode_check(void) {
     int ret2 = 0;
     // encoding successful
     ret2 = xmr_base58_addr_decode_check(out_buffer, outlen, &second_tag,
-                                        dummy_buffer, 512);
+                                        dummy_buffer, sizeof(dummy_buffer));
     if (ret2 == 0) {
       // TODO investigate irregularities
       // crash();
@@ -466,7 +467,6 @@ int fuzz_xmr_base58_addr_encode_check(void) {
 #define XMR_BASE58_ENCODE_MAX_INPUT_LEN 512
 // a more focused variant of the xmr_base58_addr_encode_check() harness
 int fuzz_xmr_base58_encode(void) {
-
   if (fuzzer_length > XMR_BASE58_ENCODE_MAX_INPUT_LEN) {
     return -1;
   }
@@ -1259,11 +1259,10 @@ int fuzz_button_sequence_to_word(void) {
 }
 
 int fuzz_xmr_add_keys(void) {
-
   bignum256modm a, b;
   ge25519 A, B;
 
-  if (fuzzer_length < sizeof(bignum256modm) * 2 +  sizeof(ge25519) * 2 ) {
+  if (fuzzer_length < sizeof(bignum256modm) * 2 + sizeof(ge25519) * 2) {
     return -1;
   }
   memcpy(&a, fuzzer_input(sizeof(bignum256modm)), sizeof(bignum256modm));
@@ -1289,7 +1288,6 @@ int fuzz_xmr_add_keys(void) {
 }
 
 int fuzz_ecdh_multiply(void) {
-
   uint8_t priv_key[32];
   // 33 or 65 bytes content
   uint8_t pub_key[65];
@@ -1307,18 +1305,19 @@ int fuzz_ecdh_multiply(void) {
   // TODO evaluate crash with &curve == NULL, documentation / convention issue?
 
   const ecdsa_curve *curve2;
-  // ecdh_multiply() is only called with secp256k1 and nist256p1 curve from modtrezorcrypto code
-  // theoretically other curve parameters are also possible
+  // ecdh_multiply() is only called with secp256k1 and nist256p1 curve from
+  // modtrezorcrypto code theoretically other curve parameters are also possible
   if ((decider & 1) == 0) {
     curve2 = &nist256p1;
   } else {
     curve2 = &secp256k1;
   }
 
-  res1 = ecdh_multiply(curve2, (uint8_t *)&priv_key, (uint8_t *)&pub_key, (uint8_t *)&session_key);
+  res1 = ecdh_multiply(curve2, (uint8_t *)&priv_key, (uint8_t *)&pub_key,
+                       (uint8_t *)&session_key);
   check_msan(&session_key, sizeof(session_key));
 
-  if(res1 != 0) {
+  if (res1 != 0) {
     // failure case
   }
 
@@ -1368,7 +1367,8 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
 
   // recent libFuzzer implementations support marking inputs as non-interesting
   // via return -1; instead of the regular return 0;
-  // see https://github.com/llvm/llvm-project/commit/92fb310151d2b1e349695fc0f1c5d5d50afb3b52
+  // see
+  // https://github.com/llvm/llvm-project/commit/92fb310151d2b1e349695fc0f1c5d5d50afb3b52
   int target_result = 0;
 
   // TODO reorder and regroup target functions
