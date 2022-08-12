@@ -78,8 +78,9 @@
 
 /* code performance notes
  *
- * use of #define for performance reasons
+ * use #define over runtime checks for performance reasons
  * avoid VLA arrays for performance reasons
+ * potential performance drawbacks of heap usage are accepted for better out of bounds error detection
  * some expensive functions are hidden with compile-time switches
  * fuzzer harnesses are meant to exit early if the preconditions are not met
  */
@@ -116,8 +117,8 @@ void fuzzer_reset_state(void) {
 }
 
 void crash(void) {
-  // intentionally exit the program, which is picked up as a crash by the fuzzer
-  // framework
+  // intentionally exit the program
+  // the fuzzer framework treats this as a crash
   exit(1);
 }
 
@@ -159,7 +160,7 @@ int fuzz_bn_format(void) {
   uint32_t decimals = 0;
   int32_t exponent = 0;
   bool trailing = false;
-  // range 1 - 128
+  // range 1 to 128
   prefixlen = (fuzzer_input(1)[0] & 127) + 1;
   suffixlen = (fuzzer_input(1)[0] & 127) + 1;
 
@@ -171,9 +172,9 @@ int fuzz_bn_format(void) {
   memcpy(&exponent, fuzzer_input(4), 4);
   trailing = (fuzzer_input(1)[0] & 1);
 
-  // TODO idea: allow prefix == NULL
+  // IDEA allow prefix == NULL
   char *prefix = malloc(prefixlen);
-  // TODO idea: allow suffix == NULL
+  // IDEA allow suffix == NULL
   char *suffix = malloc(suffixlen);
   if (prefix == NULL || suffix == NULL) {
     return 0;
@@ -181,14 +182,14 @@ int fuzz_bn_format(void) {
 
   memset(prefix, 0, prefixlen);
   memset(suffix, 0, suffixlen);
-  // fetch (length - 1) to ensure null termination
+  // only fetch up to (length - 1) to ensure null termination together with the memset
   memcpy(prefix, fuzzer_input(prefixlen - 1), prefixlen - 1);
   memcpy(suffix, fuzzer_input(suffixlen - 1), suffixlen - 1);
 
   ret = bn_format(&target_bignum, prefix, suffix, decimals, exponent, trailing,
                   0, buf, FUZZ_BN_FORMAT_OUTPUT_BUFFER_SIZE);
 
-  // basic sanity checks for r
+  // basic sanity checks for the return values
   if (ret > FUZZ_BN_FORMAT_OUTPUT_BUFFER_SIZE) {
     crash();
   }
@@ -353,7 +354,7 @@ int fuzz_xmr_base58_addr_decode_check(void) {
 
   // TODO no null termination used !?
   char *in_buffer = malloc(fuzzer_length);
-  // TODO better size heuristic
+  // TODO use better size heuristic
   size_t outlen = fuzzer_length;
   uint8_t *out_buffer = malloc(outlen);
   if (in_buffer == NULL || out_buffer == NULL) {
@@ -375,6 +376,35 @@ int fuzz_xmr_base58_addr_decode_check(void) {
   if (ret != 0) {
     check_msan(out_buffer, outlen);
   }
+
+  free(in_buffer);
+  free(out_buffer);
+  return 0;
+}
+
+// arbitrarily chosen maximum size
+#define XMR_BASE58_DECODE_MAX_INPUT_LEN 512
+// a more focused variant of the xmr_base58_addr_decode_check() harness
+int fuzz_xmr_base58_decode(void) {
+
+  if (fuzzer_length > XMR_BASE58_DECODE_MAX_INPUT_LEN) {
+    return 0;
+  }
+
+  char *in_buffer = malloc(fuzzer_length);
+  // TODO better size heuristic
+  size_t outlen = fuzzer_length;
+  uint8_t *out_buffer = malloc(outlen);
+  if (in_buffer == NULL || out_buffer == NULL) {
+    return 0;
+  }
+  memset(out_buffer, 0, outlen);
+
+  // mutate in_buffer
+  size_t raw_inlen = fuzzer_length;
+  memcpy(in_buffer, fuzzer_input(raw_inlen), raw_inlen);
+
+  xmr_base58_decode(in_buffer, raw_inlen, out_buffer, &outlen);
 
   free(in_buffer);
   free(out_buffer);
@@ -426,6 +456,35 @@ int fuzz_xmr_base58_addr_encode_check(void) {
       // crash();
     }
   }
+
+  free(in_buffer);
+  free(out_buffer);
+  return 0;
+}
+
+// arbitrarily chosen maximum size
+#define XMR_BASE58_ENCODE_MAX_INPUT_LEN 512
+// a more focused variant of the xmr_base58_addr_encode_check() harness
+int fuzz_xmr_base58_encode(void) {
+
+  if (fuzzer_length > XMR_BASE58_ENCODE_MAX_INPUT_LEN) {
+    return 0;
+  }
+
+  uint8_t *in_buffer = malloc(fuzzer_length);
+  // TODO better size heuristic
+  size_t outlen = fuzzer_length * 2;
+  char *out_buffer = malloc(outlen);
+  if (in_buffer == NULL || out_buffer == NULL) {
+    return 0;
+  }
+  memset(out_buffer, 0, outlen);
+
+  // mutate in_buffer
+  size_t raw_inlen = fuzzer_length;
+  memcpy(in_buffer, fuzzer_input(raw_inlen), raw_inlen);
+
+  xmr_base58_encode(out_buffer, &outlen, in_buffer, raw_inlen);
 
   free(in_buffer);
   free(out_buffer);
@@ -534,6 +593,7 @@ int fuzz_xmr_get_subaddress_secret_key(void) {
 
   xmr_get_subaddress_secret_key(output, major, minor, m);
 
+  check_msan(&output, sizeof(output));
   return 0;
 }
 
@@ -554,7 +614,7 @@ int fuzz_xmr_derive_private_key(void) {
   bignum256modm output = {0};
 
   xmr_derive_private_key(output, &deriv, idx, base);
-
+  check_msan(&output, sizeof(output));
   return 0;
 }
 
@@ -574,7 +634,7 @@ int fuzz_xmr_derive_public_key(void) {
   ge25519 output = {0};
 
   xmr_derive_public_key(&output, &deriv, idx, &base);
-
+  check_msan(&output, sizeof(output));
   return 0;
 }
 
@@ -615,6 +675,7 @@ int fuzz_shamir_interpolate(void) {
 
   shamir_interpolate(result, result_index, share_indices, share_values,
                      share_count, len);
+  check_msan(&result, sizeof(result));
   return 0;
 }
 
@@ -646,7 +707,7 @@ int fuzz_ecdsa_sign_digest_functions(void) {
 
   int res = 0;
 
-  // TODO idea: optionally set a function for is_canonical() callback
+  // IDEA optionally set a function for is_canonical() callback
   int res1 = ecdsa_sign_digest(curve, priv_key, digest, sig1, &pby1, NULL);
 
   // the zkp function variant is only defined for a specific curve
@@ -771,8 +832,8 @@ int fuzz_mnemonic_check(void) {
   char mnemonic[MAX_MNEMONIC_FUZZ_LENGTH + 1] = {0};
   memcpy(&mnemonic, fuzzer_ptr, MAX_MNEMONIC_FUZZ_LENGTH);
 
-  // as of 11/2021, mnemonic_check() internally calls mnemonic_to_bits() and
-  // checks the result
+  // at the time of creation of this fuzzer harness, mnemonic_check()
+  // internally calls mnemonic_to_bits() while checking the result
   int ret = mnemonic_check(mnemonic);
 
   (void)ret;
@@ -939,7 +1000,7 @@ int fuzz_chacha_drbg(void) {
   uint8_t result[CHACHA_DRBG_RESULT_LENGTH] = {0};
   CHACHA_DRBG_CTX ctx;
 
-  // TODO idea: switch to variable input sizes
+  // IDEA switch to variable input sizes
   memcpy(&entropy, fuzzer_input(CHACHA_DRBG_ENTROPY_LENGTH),
          CHACHA_DRBG_ENTROPY_LENGTH);
   memcpy(&reseed, fuzzer_input(CHACHA_DRBG_RESEED_LENGTH),
@@ -1000,13 +1061,19 @@ int fuzz_zkp_bip340_sign_digest(void) {
     return 0;
   }
   memcpy(priv_key, fuzzer_input(sizeof(priv_key)), sizeof(priv_key));
-  memcpy(aux_input, fuzzer_input(sizeof(aux_input)), sizeof(aux_input));
   memcpy(digest, fuzzer_input(sizeof(digest)), sizeof(digest));
+  // TODO leave initialized to 0x0?
+  memcpy(aux_input, fuzzer_input(sizeof(aux_input)), sizeof(aux_input));
+  // TODO leave initialized to 0x0?
   memcpy(sig, fuzzer_input(sizeof(sig)), sizeof(sig));
 
   zkp_bip340_get_public_key(priv_key, pub_key);
+  check_msan(&pub_key, sizeof(pub_key));
   zkp_bip340_sign_digest(priv_key, digest, sig, aux_input);
-  // TODO idea: test sign result?
+  check_msan(&sig, sizeof(sig));
+  check_msan(&aux_input, sizeof(aux_input));
+
+  // IDEA test sign result?
 
   return 0;
 }
@@ -1027,6 +1094,7 @@ int fuzz_zkp_bip340_verify_digest(void) {
   res = zkp_bip340_verify_digest(pub_key, sig, digest);
 
   // res == 0 is valid, but crash to make successful passes visible
+  // TODO remove this later
   if (res == 0) {
     crash();
   }
@@ -1155,10 +1223,10 @@ int fuzz_ecdsa_sig_from_der(void) {
   der[sizeof(der) - 1] = 0;
   size_t der_len = strlen((const char *)der);
 
-  // TODO idea: use different fuzzer-controlled der_len such as 1 to 73
+  // IDEA use different fuzzer-controlled der_len such as 1 to 73
   int ret = ecdsa_sig_from_der(der, der_len, out);
   (void)ret;
-  // TODO idea: check if back conversion works
+  // IDEA check if back conversion works
 
   return 0;
 }
@@ -1174,7 +1242,7 @@ int fuzz_ecdsa_sig_to_der(void) {
 
   int ret = ecdsa_sig_to_der((const uint8_t *)&sig, der);
   (void)ret;
-  // TODO idea: check if back conversion works
+  // IDEA check if back conversion works
 
   return 0;
 }
@@ -1187,6 +1255,73 @@ void fuzz_button_sequence_to_word(void) {
   memcpy(&input, fuzzer_input(sizeof(input)), sizeof(input));
 
   button_sequence_to_word(input);
+  return;
+}
+
+void fuzz_xmr_add_keys(void) {
+
+  bignum256modm a, b;
+  ge25519 A, B;
+
+  if (fuzzer_length < sizeof(bignum256modm) * 2 +  sizeof(ge25519) * 2 ) {
+    return;
+  }
+  memcpy(&a, fuzzer_input(sizeof(bignum256modm)), sizeof(bignum256modm));
+  memcpy(&b, fuzzer_input(sizeof(bignum256modm)), sizeof(bignum256modm));
+  memcpy(&A, fuzzer_input(sizeof(ge25519)), sizeof(ge25519));
+  memcpy(&B, fuzzer_input(sizeof(ge25519)), sizeof(ge25519));
+
+  ge25519 r;
+
+  xmr_add_keys2(&r, a, b, &B);
+  check_msan(&r, sizeof(r));
+
+  xmr_add_keys2_vartime(&r, a, b, &B);
+  check_msan(&r, sizeof(r));
+
+  xmr_add_keys3(&r, a, &A, b, &B);
+  check_msan(&r, sizeof(r));
+
+  xmr_add_keys3_vartime(&r, a, &A, b, &B);
+  check_msan(&r, sizeof(r));
+
+  return;
+}
+
+void fuzz_ecdh_multiply(void) {
+
+  uint8_t priv_key[32];
+  // 33 or 65 bytes content
+  uint8_t pub_key[65];
+  uint8_t decider;
+  if (fuzzer_length < sizeof(priv_key) + sizeof(pub_key) + sizeof(decider)) {
+    return;
+  }
+  memcpy(&priv_key, fuzzer_input(sizeof(priv_key)), sizeof(priv_key));
+  memcpy(&pub_key, fuzzer_input(sizeof(pub_key)), sizeof(pub_key));
+  memcpy(&decider, fuzzer_input(sizeof(decider)), sizeof(decider));
+
+  uint8_t session_key[65] = {0};
+  int res1 = 0;
+
+  // TODO evaluate crash with &curve == NULL, documentation / convention issue?
+
+  const ecdsa_curve *curve2;
+  // ecdh_multiply() is only called with secp256k1 and nist256p1 curve from modtrezorcrypto code
+  // theoretically other curve parameters are also possible
+  if ((decider & 1) == 0) {
+    curve2 = &nist256p1;
+  } else {
+    curve2 = &secp256k1;
+  }
+
+  res1 = ecdh_multiply(curve2, (uint8_t *)&priv_key, (uint8_t *)&pub_key, (uint8_t *)&session_key);
+  check_msan(&session_key, sizeof(session_key));
+
+  if(res1 != 0) {
+    // failure case
+  }
+
   return;
 }
 
@@ -1347,6 +1482,19 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     case 53:
       fuzz_ecdsa_sig_to_der();
       break;
+    case 60:
+      fuzz_xmr_base58_encode();
+      break;
+    case 61:
+      fuzz_xmr_base58_decode();
+      break;
+    case 63:
+      fuzz_xmr_add_keys();
+      break;
+    case 64:
+      fuzz_ecdh_multiply();
+      break;
+
     default:
       // do nothing
       break;
