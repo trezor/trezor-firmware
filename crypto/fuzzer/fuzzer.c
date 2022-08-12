@@ -56,6 +56,7 @@
 #include "rfc6979.h"
 #include "script.h"
 #include "secp256k1.h"
+#include "segwit_addr.h"
 #include "sha2.h"
 #include "sha3.h"
 #include "shamir.h"
@@ -140,7 +141,20 @@ void check_msan(void *pointer, size_t length) {
 }
 
 // simplify the pointer check after a var_pointer = malloc()
-#define RETURN_IF_NULL(var_pointer) if (var_pointer == NULL) { return 0; }
+#define RETURN_IF_NULL(var_pointer) \
+  if (var_pointer == NULL) {        \
+    return 0;                       \
+  }
+
+void zkp_initialize_context_or_crash(void) {
+  // The current context usage has persistent side effects
+  // TODO switch to frequent re-initialization where necessary
+  if (!zkp_context_is_initialized()) {
+    if (zkp_context_init() != 0) {
+      crash();
+    }
+  }
+}
 
 /* individual fuzzer harness functions */
 
@@ -409,7 +423,7 @@ int fuzz_xmr_base58_decode(void) {
 }
 
 // arbitrarily chosen maximum size
-#define XMR_BASE58_ADDR_ENCODE_MAX_INPUT_LEN 512
+#define XMR_BASE58_ADDR_ENCODE_MAX_INPUT_LEN 140
 
 int fuzz_xmr_base58_addr_encode_check(void) {
   // tag_in is internally limited
@@ -441,16 +455,18 @@ int fuzz_xmr_base58_addr_encode_check(void) {
                                       outlen);
 
   if (ret1 != 0) {
+    // encoding successful
     uint64_t second_tag = 0;
     // TODO improve length
-    uint8_t dummy_buffer[512] = {0};
+    uint8_t dummy_buffer[XMR_BASE58_ADDR_ENCODE_MAX_INPUT_LEN] = {0};
     int ret2 = 0;
-    // encoding successful
-    ret2 = xmr_base58_addr_decode_check(out_buffer, outlen, &second_tag,
+    // ret1 represents the actual length of the encoded string
+    // this is important for the decode function to succeed
+    ret2 = xmr_base58_addr_decode_check(out_buffer, ret1, &second_tag,
                                         dummy_buffer, sizeof(dummy_buffer));
-    if (ret2 == 0) {
-      // TODO investigate irregularities
-      // crash();
+    // the tag comparison is between unequal types, but this is acceptable here
+    if (ret2 == 0 || tag_in != second_tag) {
+      crash();
     }
   }
 
@@ -1041,7 +1057,6 @@ int fuzz_ed25519_sign_verify(void) {
 }
 
 int fuzz_zkp_bip340_sign_digest(void) {
-  // int res = 0;
   uint8_t priv_key[32] = {0};
   uint8_t aux_input[32] = {0};
   uint8_t digest[32] = {0};
@@ -1316,19 +1331,87 @@ int fuzz_ecdh_multiply(void) {
   return 0;
 }
 
-void zkp_initialize_context_or_crash(void) {
-  // The current context usage has persistent side effects
-  // TODO switch to frequent re-initialization where necessary
-  if (!zkp_context_is_initialized()) {
-    if (zkp_context_init() != 0) {
-      crash();
-    }
+int fuzz_segwit_addr_encode(void) {
+  // the current firmware code only uses witver = 0 and witver = 1
+  // we give more flexibility, but do not allow the full int range
+  uint8_t chosen_witver = 0;
+  // restrict fuzzer variations to lengths of 0 to 255
+  uint8_t chosen_witprog_len = 0;
+
+  // in typical use, hrp is a bech32 prefix of 2 to 4 chars
+  // TODO make this dynamic, investigate lowercase requirements
+  // see also https://github.com/sipa/bech32/issues/38
+  char *hrp = "bc";
+
+  if (fuzzer_length < sizeof(chosen_witver) + sizeof(chosen_witprog_len)) {
+    return -1;
   }
+  memcpy(&chosen_witver, fuzzer_input(sizeof(chosen_witver)),
+         sizeof(chosen_witver));
+  memcpy(&chosen_witprog_len, fuzzer_input(sizeof(chosen_witprog_len)),
+         sizeof(chosen_witprog_len));
+
+  if (chosen_witprog_len > fuzzer_length) {
+    return -1;
+  }
+
+  char output_address[MAX_ADDR_SIZE] = {0};
+  uint8_t *witprog = malloc(chosen_witprog_len);
+  RETURN_IF_NULL(witprog);
+  memcpy(witprog, fuzzer_input(chosen_witprog_len), chosen_witprog_len);
+
+  int ret = segwit_addr_encode(output_address, hrp, chosen_witver, witprog,
+                               chosen_witprog_len);
+
+  // IDEA act depending on ret
+  (void)ret;
+
+  free(witprog);
+  return 0;
 }
+
+// int segwit_addr_decode(int* witver, uint8_t* witdata, size_t* witdata_len,
+// const char* hrp, const char* addr) {
+int fuzz_segwit_addr_decode(void) {
+  int decoded_witver = 0;
+  size_t decoded_witprog_len = 0;
+  // TODO
+  uint8_t addr_raw[MAX_ADDR_RAW_SIZE] = {0};
+  uint8_t chosen_addr_len = 0;
+
+  if (fuzzer_length < sizeof(chosen_addr_len)) {
+    return -1;
+  }
+
+  memcpy(&chosen_addr_len, fuzzer_input(sizeof(chosen_addr_len)),
+         sizeof(chosen_addr_len));
+
+  if (chosen_addr_len > fuzzer_length) {
+    return -1;
+  }
+
+  char *addr = malloc(chosen_addr_len + 1);
+  RETURN_IF_NULL(addr);
+  memcpy(addr, fuzzer_input(chosen_addr_len), chosen_addr_len);
+  // null termination
+  addr[chosen_addr_len] = 0;
+
+  // TODO see comments in fuzz_segwit_addr_encode()
+  char *hrp = "bc";
+
+  int ret = segwit_addr_decode(&decoded_witver, addr_raw, &decoded_witprog_len,
+                               hrp, addr);
+  // IDEA act depending on ret
+  (void)ret;
+
+  free(addr);
+  return 0;
+}
+
+/* fuzzer main function */
 
 #define META_HEADER_SIZE 3
 
-// main fuzzer entry
 int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   // reject input that is too short
   if (size < META_HEADER_SIZE) {
@@ -1450,9 +1533,16 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     case 27:
       target_result = fuzz_button_sequence_to_word();
       break;
+    case 28:
+      target_result = fuzz_segwit_addr_encode();
+      break;
+    case 29:
+      target_result = fuzz_segwit_addr_decode();
+      break;
     case 30:
       target_result = fuzz_ethereum_address_checksum();
       break;
+
     case 41:
       zkp_initialize_context_or_crash();
       target_result = fuzz_zkp_bip340_sign_digest();

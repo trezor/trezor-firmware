@@ -10,7 +10,7 @@ Set the `CC=` environment variable if you want to use a special compiler variant
 
 ```bash
 make clean
-FUZZER=1 make fuzzer
+FUZZER=1 make fuzzer -j$(nproc)
 ```
 
 ### Sanitizers
@@ -28,28 +28,36 @@ Override `OPTFLAGS` to test the library at different optimization levels or simp
 Examples:
 
 * `OPTFLAGS="-O0 -ggdb3"`
-* `OPTFLAGS="-O3 -march=native"`
+* `OPTFLAGS="-O3 -march=native -fno-omit-frame-pointer -gline-tables-only"`
 
 To be determined:
 
-* use of `-fsanitize-ignorelist` to reduce sanitizer overhead on hot functions
+* semi-automatic use of `-fsanitize-ignorelist` to reduce sanitizer overhead on hot functions
 * `-flto` and `-flto=thin` link time optimization
 
 Advanced usage:
 * [Profile guided optimization](https://clang.llvm.org/docs/UsersManual.html#profile-guided-optimization)
+
+### Fuzzer-specific Configuration Flags
+
+* `-DFUZZ_ALLOW_SLOW` to enable optional fuzzing targets of slow functions
+* select a specific fuzz testing harness with `-DFUZZER_EXCLUSIVE_TARGET=` to disable the use of all other targets
+
 ### Other Flags
 
 To be determined:
 
 * `-DNDEBUG`
-* `-DUSE_BIP39_CACHE=0 -DUSE_BIP32_CACHE=0` to avoid persistent side effects through the cache
+* `-DUSE_BIP39_CACHE=0 -DUSE_BIP32_CACHE=0` to explicitly disable the cache, a workaround for automatic cache clearing is used otherwise
 * `-D_FORTIFY_SOURCE=2` together with optimization flag -O2 or above
 * `-fstack-protector-strong` or `-fstack-protector-all`
-* `-m32` to closer evaluate the 32 bit behavior
-    * this requires 32bit build support for gcc-multilib, libc and others
-    * adjust Makefile to `CFLAGS += -DSECP256K1_CONTEXT_SIZE=192`
+* `-m32` to closer emulate the 32-bit environment present on microcontroller platforms
+    * manually adjust Makefile `DSECP256K1_CONTEXT_SIZE=` for 32-bit values, see `legacy/firmware/Makefile`
+    * this flag requires 32-bit build support for gcc-multilib, libc and others
+    * switching from 64-bit to 32-bit has some effects on sanitizer internals such as Address Sanitizer
 * `-DSHA2_UNROLL_TRANSFORM` SHA2 optimization flags
 * `-fsanitize-coverage=edge,trace-cmp,trace-div,indirect-calls,trace-gep,no-prune` to add program counter granularity
+* starting with clang-15, the additional `trace-loads` and `trace-stores` sanitizer coverage options are also available
 
 ## Operation
 
@@ -65,7 +73,7 @@ Basic fuzzer call:
 Here is a more sophisticated multithreading example with a persistent input corpus and other optimizations:
 ```bash
 mkdir fuzzer/fuzzer_corpus
-./fuzzer/fuzzer -max_len=2048 -use_value_profile=1 -jobs=16 -timeout=1 -reload=5 -print_pcs=1 -print_funcs=42  fuzzer/fuzzer_corpus
+./fuzzer/fuzzer -max_len=2048 -use_value_profile=1 -workers=16 -jobs=16 -timeout=1 -reload=5 -print_pcs=1 -print_funcs=42  fuzzer/fuzzer_corpus
 ```
 
 Hint: for more permanent setups, consider invoking the fuzzer from outside of the source directory to avoid cluttering it with logfiles and crash inputs. Similarly, it is recommended to store the fuzzer corpus in another location.
