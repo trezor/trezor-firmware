@@ -33,39 +33,50 @@ class RustLayoutContent:
     CONTENT_TAG = " **CONTENT** "
     BTN_TAG = " **BTN** "
     EMPTY_BTN = "---"
+    NEXT_BTN = "Next"
 
     def __init__(self, raw_content: list[str]) -> None:
         self.raw_content = raw_content
         self.str_content = " ".join(raw_content).replace("  ", " ")
-        # print("str_content", self.str_content)
+        print("str_content", self.str_content)
         print(60 * "-")
         print("active_page:", self.active_page())
         print("page_count:", self.page_count())
+        print("flow_page:", self.flow_page())
+        print("flow_page_count:", self.flow_page_count())
         print("can_go_next:", self.can_go_next())
         print("get_next_button:", self.get_next_button())
         print(30 * "/")
         print(self.visible_screen())
 
     def active_page(self) -> int:
-        """Current index of the active page."""
-        return int(self.kw_pair("active_page"))
+        """Current index of the active page. Should always be there."""
+        return self.kw_pair_int_compulsory("active_page")
 
     def page_count(self) -> int:
-        """Overall number of pages in this flow."""
-        return int(self.kw_pair("page_count"))
+        """Overall number of pages in this screen. Should always be there."""
+        return self.kw_pair_int_compulsory("page_count")
+
+    def flow_page(self) -> int | None:
+        """When in flow, on which page we are. Missing when not in flow."""
+        return self.kw_pair_int("flow_page")
+
+    def flow_page_count(self) -> int | None:
+        """When in flow, how many unique pages it has. Missing when not in flow."""
+        return self.kw_pair_int("flow_page_count")
 
     def can_go_next(self) -> bool:
         """Checking if there is a next page."""
-        return self.get_next_button() != ""
+        return self.get_next_button() is not None
 
-    def get_next_button(self) -> str:
+    def get_next_button(self) -> str | None:
         """Position of the next button, if any."""
         btn_names = ("left", "middle", "right")
         for index, action in enumerate(self.button_actions()):
-            if action == "Next":
+            if action == self.NEXT_BTN:
                 return btn_names[index]
 
-        return ""
+        return None
 
     def visible_screen(self) -> str:
         """Getting all the visible screen content - header, content, buttons."""
@@ -104,18 +115,38 @@ class RustLayoutContent:
         return tuple(f"{contents[i]} [{actions[i]}]" for i in range(3))
 
     def buttons_content(self) -> tuple[str, str, str]:
-        """Getting visual details for all three buttons."""
+        """Getting visual details for all three buttons. They should always be there."""
         btns = self._get_strings_inside_tag(self.str_content, self.BTN_TAG)
         assert len(btns) == 3
         return btns[0], btns[1], btns[2]
 
     def button_actions(self) -> tuple[str, str, str]:
-        """Getting actions for all three buttons."""
+        """Getting actions for all three buttons. They should always be there."""
         action_ids = ("left_action", "middle_action", "right_action")
-        return tuple(self.kw_pair(action) for action in action_ids)
+        assert len(action_ids) == 3
+        return tuple(self.kw_pair_compulsory(action) for action in action_ids)
 
-    def kw_pair(self, key: str) -> str:
-        """Getting the value of a key-value pair."""
+    def kw_pair_int_compulsory(self, key: str) -> int:
+        """Getting integer that cannot be missing."""
+        val = self.kw_pair_int(key)
+        assert val is not None
+        return val
+
+    def kw_pair_int(self, key: str) -> int | None:
+        """Getting the value of a key-value pair as an integer. None if missing."""
+        val = self.kw_pair(key)
+        if val is None:
+            return None
+        return int(val)
+
+    def kw_pair_compulsory(self, key: str) -> str:
+        """Getting value of a key that cannot be missing."""
+        val = self.kw_pair(key)
+        assert val is not None
+        return val
+
+    def kw_pair(self, key: str) -> str | None:
+        """Getting the value of a key-value pair. None if missing."""
         # Pairs are sent in this format in the list:
         # [..., "key", "::", "value", ...]
         for key_index, item in enumerate(self.raw_content):
@@ -123,7 +154,7 @@ class RustLayoutContent:
                 if self.raw_content[key_index + 1] == "::":
                     return self.raw_content[key_index + 2]
 
-        return ""
+        return None
 
     @staticmethod
     def _get_strings_inside_tag(string: str, tag: str) -> list[str]:
@@ -153,11 +184,13 @@ class RustLayout(ui.Layout):
             return (
                 self.handle_input_and_rendering(),
                 self.handle_timers(),
+                self.handle_pagination(),
                 confirm_signal(),
                 input_signal(),
             )
 
         def read_content(self) -> list[str]:
+            """Reads raw trace content from Rust layout."""
             result: list[str] = []
 
             def callback(*args: str):
@@ -166,6 +199,62 @@ class RustLayout(ui.Layout):
 
             self.layout.trace(callback)
             return result
+
+        def _content_obj(self) -> RustLayoutContent:
+            """Gets object with user-friendly methods on Rust layout content."""
+            return RustLayoutContent(self.read_content())
+
+        def _press_left(self) -> Any:
+            """Triggers left button press."""
+            self.layout.button_event(io.BUTTON_PRESSED, io.BUTTON_LEFT)
+            return self.layout.button_event(io.BUTTON_RELEASED, io.BUTTON_LEFT)
+
+        def _press_right(self) -> Any:
+            """Triggers right button press."""
+            self.layout.button_event(io.BUTTON_PRESSED, io.BUTTON_RIGHT)
+            return self.layout.button_event(io.BUTTON_RELEASED, io.BUTTON_RIGHT)
+
+        def _press_middle(self) -> Any:
+            """Triggers middle button press."""
+            self.layout.button_event(io.BUTTON_PRESSED, io.BUTTON_LEFT)
+            self.layout.button_event(io.BUTTON_PRESSED, io.BUTTON_RIGHT)
+            self.layout.button_event(io.BUTTON_RELEASED, io.BUTTON_LEFT)
+            return self.layout.button_event(io.BUTTON_RELEASED, io.BUTTON_RIGHT)
+
+        async def handle_pagination(self):
+            """Paginates through the current page/flow page as far as possible.
+
+            After paginating, a single `press_yes` is enough to finish the flow.
+            Starts only as soon it receives a swipe signal.
+            """
+            from apps.debug import notify_layout_change, swipe_signal
+
+            # Awaiting any swipe signal to start paginating
+            await swipe_signal()
+            while True:
+                content_obj = self._content_obj()
+                # Not continuing in case there is no next page
+                if not content_obj.can_go_next():
+                    raise ui.Result(None)
+
+                # Next button can be any of the three
+                next_btn = content_obj.get_next_button()
+                assert next_btn is not None
+
+                if next_btn == "right":
+                    msg = self._press_right()
+                elif next_btn == "middle":
+                    msg = self._press_middle()
+                elif next_btn == "left":
+                    msg = self._press_left()
+                else:
+                    raise Exception(f"Unknown button: {next_btn}")
+
+                self.layout.paint()
+                if msg is not None:
+                    raise ui.Result(msg)
+
+                notify_layout_change(self)
 
     else:
 

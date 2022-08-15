@@ -243,8 +243,8 @@ where
 
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("Flow");
-        t.kw_pair("active_page", inttostr!(self.page_counter));
-        t.kw_pair("page_count", inttostr!(N as u8));
+        t.kw_pair("flow_page", inttostr!(self.page_counter));
+        t.kw_pair("flow_page_count", inttostr!(N as u8));
 
         self.report_btn_actions(t);
 

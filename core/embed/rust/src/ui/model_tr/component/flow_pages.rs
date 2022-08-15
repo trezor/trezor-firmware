@@ -112,6 +112,7 @@ impl<const M: usize> FlowPageMaker<M> {
             .assert_if_debugging_ui("Could not push to self.ops");
         self
     }
+
     pub fn text(self, text: StrBuffer) -> Self {
         self.with_new_item(Op::Text(ToDisplay::new(text)))
     }
@@ -263,8 +264,8 @@ pub mod trace {
 impl<const M: usize> crate::trace::Trace for FlowPageMaker<M> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("FlowPageMaker");
-        t.kw_pair("flow_current_page", inttostr!(self.current_page as u8));
-        t.kw_pair("flow_page_count", inttostr!(self.page_count as u8));
+        t.kw_pair("active_page", inttostr!(self.current_page as u8));
+        t.kw_pair("page_count", inttostr!(self.page_count as u8));
         t.field("content", &trace::TraceText(self));
         t.close();
     }
