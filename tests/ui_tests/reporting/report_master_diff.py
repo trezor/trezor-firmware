@@ -62,7 +62,7 @@ def removed(screens_path: Path, test_name: str) -> Path:
 
             for screen in screens:
                 with tr():
-                    html.image(screen)
+                    html.image_column(screen)
 
     return html.write(REPORTS_PATH / "removed", doc, test_name + ".html")
 
@@ -85,7 +85,7 @@ def added(screens_path: Path, test_name: str) -> Path:
 
             for screen in screens:
                 with tr():
-                    html.image(screen)
+                    html.image_column(screen)
 
     return html.write(REPORTS_PATH / "added", doc, test_name + ".html")
 

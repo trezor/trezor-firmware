@@ -219,4 +219,4 @@ def main() -> None:
         except Failed:
             print("FAILED:", record.name)
 
-    testreport.index()
+    testreport.generate_reports()
