@@ -4,6 +4,7 @@ from itertools import zip_longest
 from pathlib import Path
 from typing import Dict, List, Optional
 
+from dominate import document
 from dominate.tags import a, i, img, table, td, th, tr
 
 
@@ -25,29 +26,35 @@ def report_links(
                 td(a(test.name, href=path))
 
 
-def write(fixture_test_path: Path, doc, filename: str) -> Path:
-    (fixture_test_path / filename).write_text(doc.render())
+def write(fixture_test_path: Path, doc: document, filename: str) -> Path:
+    (fixture_test_path / filename).write_text((doc.render()))
     return fixture_test_path / filename
 
 
-def image(src: Path, image_width: Optional[int] = None) -> None:
+def image_column(src: Path, image_width: Optional[int] = None) -> None:
+    """Put image into table as one cell."""
     with td():
         if src:
-            # open image file
-            image = src.read_bytes()
-            # encode image as base64
-            image = base64.b64encode(image)
-            # convert output to str
-            image = image.decode()
-            # img(src=src.relative_to(fixture_test_path))
-            img(
-                src="data:image/png;base64, " + image,
-                style=f"width: {image_width}px; image-rendering: pixelated;"
-                if image_width
-                else "",
-            )
+            image_raw(src, image_width)
         else:
             i("missing")
+
+
+def image_raw(src: Path, image_width: Optional[int] = None) -> None:
+    """Display image on the screen"""
+    # open image file
+    image = src.read_bytes()
+    # encode image as base64
+    image = base64.b64encode(image)
+    # convert output to str
+    image = image.decode()
+    # img(src=src.relative_to(fixture_test_path))
+    img(
+        src="data:image/png;base64, " + image,
+        style=f"width: {image_width}px; image-rendering: pixelated;"
+        if image_width
+        else "",
+    )
 
 
 def diff_table(
@@ -61,5 +68,5 @@ def diff_table(
         else:
             background = "red"
         with tr(bgcolor=background):
-            image(left, image_width)
-            image(right, image_width)
+            image_column(left, image_width)
+            image_column(right, image_width)

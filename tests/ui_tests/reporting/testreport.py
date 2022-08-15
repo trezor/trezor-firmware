@@ -1,18 +1,21 @@
+import hashlib
 import shutil
+from collections import defaultdict
 from datetime import datetime
 from distutils.dir_util import copy_tree
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List, Set
 
 import dominate
 import dominate.tags as t
-from dominate.tags import div, h1, h2, hr, p, strong, table, th, tr
+from dominate.tags import a, div, h1, h2, hr, p, strong, table, th, tr
 from dominate.util import text
 
 from . import download, html
 
 HERE = Path(__file__).resolve().parent
 REPORTS_PATH = HERE / "reports" / "test"
+RECORDED_SCREENS_PATH = Path(__file__).resolve().parent.parent / "screens"
 
 STYLE = (HERE / "testreport.css").read_text()
 SCRIPT = (HERE / "testreport.js").read_text()
@@ -22,7 +25,19 @@ SCREENSHOTS_WIDTH_PX_TO_DISPLAY = {
     "TR": 128 * 2,  # original is 128px
 }
 
+# These two html files are referencing each other
+ALL_SCREENS = "all_screens.html"
+ALL_UNIQUE_SCREENS = "all_unique_screens.html"
+
 ACTUAL_HASHES: Dict[str, str] = {}
+
+
+def _image_width(test_name: str) -> int:
+    """Return the width of the image to display for the given test name.
+
+    Is model-specific. Model is at the beginning of each test-case.
+    """
+    return SCREENSHOTS_WIDTH_PX_TO_DISPLAY[test_name[:2]]
 
 
 def document(
@@ -63,7 +78,7 @@ def _header(test_name: str, expected_hash: str, actual_hash: str) -> None:
 
 
 def clear_dir() -> None:
-    # delete and create the reports dir to clear previous entries
+    """Delete and create the reports dir to clear previous entries."""
     shutil.rmtree(REPORTS_PATH, ignore_errors=True)
     REPORTS_PATH.mkdir()
     (REPORTS_PATH / "failed").mkdir()
@@ -71,6 +86,7 @@ def clear_dir() -> None:
 
 
 def index() -> Path:
+    """Generate index.html with all the test results - lists of failed and passed tests."""
     passed_tests = list((REPORTS_PATH / "passed").iterdir())
     failed_tests = list((REPORTS_PATH / "failed").iterdir())
 
@@ -112,9 +128,122 @@ def index() -> Path:
     return html.write(REPORTS_PATH, doc, "index.html")
 
 
+def all_screens(test_case_dirs: List[Path]) -> Path:
+    """Generate an HTML file for all the screens from the current test run.
+
+    Shows all test-cases at one place.
+    """
+    title = "All test cases"
+    doc = dominate.document(title=title)
+
+    with doc:
+        h1("All test cases")
+        hr()
+
+        count = 0
+        for test_case_dir in test_case_dirs:
+            test_case_name = test_case_dir.name
+            h2(test_case_name, id=test_case_name)
+            actual_dir = test_case_dir / "actual"
+            for png in sorted(actual_dir.rglob("*.png")):
+                # Including link to each image to see where else it occurs.
+                png_hash = _img_hash(png)
+                with a(href=f"{ALL_UNIQUE_SCREENS}#{png_hash}"):
+                    html.image_raw(png, _image_width(test_case_name))
+                count += 1
+
+        h2(f"{count} screens from {len(test_case_dirs)} testcases.")
+
+    return html.write(REPORTS_PATH, doc, ALL_SCREENS)
+
+
+def all_unique_screens(test_case_dirs: List[Path]) -> Path:
+    """Generate an HTML file with all the unique screens from the current test run."""
+    title = "All unique screens"
+    doc = dominate.document(title=title)
+
+    with doc:
+        h1("All unique screens")
+        hr()
+
+        screen_hashes: Dict[str, List[Path]] = defaultdict(list)
+        hash_images: Dict[str, Path] = {}
+
+        # Adding all unique images onto the page
+        for test_case_dir in test_case_dirs:
+            actual_dir = test_case_dir / "actual"
+            for png in sorted(actual_dir.rglob("*.png")):
+                png_hash = _img_hash(png)
+                if png_hash not in screen_hashes:
+                    # Adding link to the appropriate hash, where other testcases
+                    # with the same hash (screen) are listed.
+                    with a(href=f"#{png_hash}"):
+                        html.image_raw(png, _image_width(test_case_dir.name))
+
+                screen_hashes[png_hash].append(test_case_dir)
+                hash_images[png_hash] = png
+
+        # Adding all screen hashes together with links to testcases having these screens.
+        for png_hash, test_cases in screen_hashes.items():
+            h2(png_hash)
+            with div(id=png_hash):
+                # Showing the exact image as well (not magnifying it)
+                html.image_raw(hash_images[png_hash])
+                for case in test_cases:
+                    # Adding link to each test-case
+                    with a(href=f"{ALL_SCREENS}#{case.name}"):
+                        p(case.name.split("/")[-1])
+
+        h2(f"{len(screen_hashes)} unique screens from {len(test_case_dirs)} testcases.")
+
+    return html.write(REPORTS_PATH, doc, ALL_UNIQUE_SCREENS)
+
+
+def generate_reports() -> None:
+    """Generate HTML reports for the test."""
+    index()
+
+    # To only get screens from the last running test-cases,
+    # we need to get the list of all directories with screenshots.
+    current_testcases = _get_testcases_dirs()
+    all_screens(current_testcases)
+    all_unique_screens(current_testcases)
+
+
+def _img_hash(img: Path) -> str:
+    """Return the hash of the image."""
+    content = img.read_bytes()
+    return hashlib.md5(content).hexdigest()
+
+
+def _get_testcases_dirs() -> List[Path]:
+    """Get the list of test-cases dirs that the current test was running."""
+    current_testcases = _get_all_current_testcases()
+    all_test_cases_dirs = [
+        case
+        for case in (RECORDED_SCREENS_PATH).iterdir()
+        if case.name in current_testcases
+    ]
+    return sorted(all_test_cases_dirs)
+
+
+def _get_all_current_testcases() -> Set[str]:
+    """Get names of all current test-cases.
+
+    Equals to the names of HTML files in the reports dir.
+    """
+    passed_tests = list((REPORTS_PATH / "passed").glob("*.html"))
+    failed_tests = list((REPORTS_PATH / "failed").glob("*.html"))
+    return {test.stem for test in (passed_tests + failed_tests)}
+
+
 def failed(
     fixture_test_path: Path, test_name: str, actual_hash: str, expected_hash: str
 ) -> Path:
+    """Generate an HTML file for a failed test-case.
+
+    Compares the actual screenshots to the expected ones.
+    """
     ACTUAL_HASHES[test_name] = actual_hash
 
     doc = document(title=test_name, actual_hash=actual_hash)
@@ -155,19 +284,24 @@ def failed(
             html.diff_table(
                 recorded_screens,
                 actual_screens,
-                SCREENSHOTS_WIDTH_PX_TO_DISPLAY[test_name[:2]],
+                _image_width(test_name),
             )
 
     return html.write(REPORTS_PATH / "failed", doc, test_name + ".html")
 
 
 def passed(fixture_test_path: Path, test_name: str, actual_hash: str) -> Path:
+    """Generate an HTML file for a passed test-case."""
     copy_tree(str(fixture_test_path / "actual"), str(fixture_test_path / "recorded"))
 
     return recorded(fixture_test_path / "actual", test_name, actual_hash)
 
 
 def recorded(fixture_test_path: Path, test_name: str, actual_hash: str) -> Path:
+    """Generate an HTML file for a passed test-case.
+
+    Shows all the screens from it in exact order.
+    """
     doc = document(title=test_name)
     actual_screens = sorted(fixture_test_path.iterdir())
 
@@ -180,6 +314,6 @@ def recorded(fixture_test_path: Path, test_name: str, actual_hash: str) -> Path:
 
             for screen in actual_screens:
                 with tr():
-                    html.image(screen, SCREENSHOTS_WIDTH_PX_TO_DISPLAY[test_name[:2]])
+                    html.image_column(screen, _image_width(test_name))
 
     return html.write(REPORTS_PATH / "passed", doc, test_name + ".html")
