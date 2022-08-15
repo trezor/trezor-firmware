@@ -254,6 +254,7 @@ class RustLayout(ui.Layout):
                 if msg is not None:
                     raise ui.Result(msg)
 
+                ui.refresh()  # so that a screenshot is taken
                 notify_layout_change(self)
 
     else:
