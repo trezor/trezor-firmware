@@ -2,10 +2,44 @@ from typing import Any
 
 import storage.cache
 import storage.device
-from trezor import res, ui, utils
+from trezor import config, res, ui, utils
+
+
+def render_top_header() -> None:
+    """Common for all the models. Draws the top header."""
+    if storage.device.is_initialized() and storage.device.no_backup():
+        ui.header_error("SEEDLESS")
+    elif storage.device.is_initialized() and storage.device.unfinished_backup():
+        ui.header_error("BACKUP FAILED!")
+    elif storage.device.is_initialized() and storage.device.needs_backup():
+        ui.header_warning("NEEDS BACKUP!")
+    elif storage.device.is_initialized() and not config.has_pin():
+        ui.header_warning("PIN NOT SET!")
+    elif storage.device.get_experimental_features():
+        ui.header_warning("EXPERIMENTAL MODE!")
+    else:
+        ui.display.bar(0, 0, ui.WIDTH, ui.HEIGHT, ui.BG)
+
+    if not utils.usb_data_connected():
+        ui.header_error("NO USB CONNECTION")
+
+
+class render_header_and_refresh:
+    """Context manager to render the top header and refresh the screen afterwards."""
+
+    def __init__(self) -> None:
+        pass
+
+    def __enter__(self) -> None:
+        render_top_header()
+
+    def __exit__(self, *args: Any) -> None:
+        ui.refresh()
 
 
 class HomescreenBase(ui.Layout):
+    """Common base class for all model-specific homescreens."""
+
     RENDER_INDICATOR: object | None = None
 
     def __init__(self) -> None:

@@ -365,6 +365,12 @@ apps.homescreen.homescreen
 import apps.homescreen.homescreen
 apps.homescreen.lockscreen
 import apps.homescreen.lockscreen
+apps.homescreen.t1
+import apps.homescreen.t1
+apps.homescreen.tr
+import apps.homescreen.tr
+apps.homescreen.tt
+import apps.homescreen.tt
 apps.management
 import apps.management
 apps.management.apply_flags

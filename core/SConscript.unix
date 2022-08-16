@@ -581,7 +581,20 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/common/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/common/*/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/debug/*.py'))
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/homescreen/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/homescreen/*.py',
+        # Each homescreen gets included individually below, based on model
+        exclude=[
+            SOURCE_PY_DIR + 'apps/homescreen/tt.py',
+            SOURCE_PY_DIR + 'apps/homescreen/tr.py',
+            SOURCE_PY_DIR + 'apps/homescreen/t1.py',
+        ]
+    ))
+    if TREZOR_MODEL in ('T',):
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/homescreen/tt.py'))
+    elif TREZOR_MODEL in ('R',):
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/homescreen/tr.py'))
+    elif TREZOR_MODEL in ('1',):
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/homescreen/t1.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*.py',
         exclude=[
             SOURCE_PY_DIR + 'apps/management/sd_protect.py',
