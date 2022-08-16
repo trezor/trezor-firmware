@@ -17,6 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdbool.h>
+#include <stdint.h>
+#include "display_defs.h"
+#include "display_interface.h"
 #include STM32_HAL_H
 
 #define OLED_BUFSIZE (DISPLAY_RESX * DISPLAY_RESY / 8)
@@ -52,6 +56,8 @@
 #define OLED_RST_PORT GPIOB
 #define OLED_RST_PIN GPIO_PIN_1  // PB1 | Reset display
 
+static int DISPLAY_BACKLIGHT = -1;
+static int DISPLAY_ORIENTATION = -1;
 static uint8_t OLED_BUFFER[OLED_BUFSIZE];
 
 static struct {
@@ -91,7 +97,7 @@ void display_pixeldata(uint16_t c) {
 
 #define PIXELDATA(c) display_pixeldata(c)
 
-static void display_reset_state() {}
+void display_reset_state() {}
 
 void PIXELDATA_DIRTY() { pixeldata_dirty = true; }
 
@@ -104,9 +110,22 @@ void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
   PIXELWINDOW.pos.y = y0;
 }
 
-static void display_set_orientation(int degrees) { display_refresh(); }
+int display_orientation(int degrees) {
+  if (degrees != DISPLAY_ORIENTATION) {
+    if (degrees == 0 || degrees == 180) {
+      DISPLAY_ORIENTATION = degrees;
+      display_refresh();
+    }
+  }
+  return DISPLAY_ORIENTATION;
+}
 
-static void display_set_backlight(int val) {}
+int display_get_orientation(void) { return DISPLAY_ORIENTATION; }
+
+int display_backlight(int val) {
+  DISPLAY_BACKLIGHT = 255;
+  return DISPLAY_BACKLIGHT;
+}
 
 SPI_HandleTypeDef spi_handle;
 
@@ -207,7 +226,6 @@ void display_init(void) {
   spi_send(s, 25);
   HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_SET);  // SPI deselect
 
-  display_clear();
   display_refresh();
 }
 

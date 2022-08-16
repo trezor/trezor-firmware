@@ -14,6 +14,7 @@ model_tr = ["buttons"]
 micropython = []
 protobuf = ["micropython"]
 ui = []
+dma2d = []
 ui_debug = []
 firmware = []
 bootloader = []
@@ -41,6 +42,7 @@ debug = 2
 
 [profile.test]
 split-debuginfo = "off"
+debug = 2
 
 # Runtime dependencies
 

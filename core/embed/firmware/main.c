@@ -47,6 +47,9 @@
 #ifdef TREZOR_MODEL_R
 #include "rgb_led.h"
 #endif
+#ifdef TREZOR_MODEL_T
+#include "dma2d.h"
+#endif
 #if defined TREZOR_MODEL_R || defined TREZOR_MODEL_1
 #include "button.h"
 #endif
@@ -96,8 +99,13 @@ int main(void) {
   // Init peripherals
   pendsv_init();
 
+#ifdef USE_DMA2D
+  dma2d_init();
+#endif
+
 #if defined TREZOR_MODEL_1
   display_init();
+  display_clear();
   button_init();
 #endif
 
@@ -109,10 +117,11 @@ int main(void) {
 
 #if defined TREZOR_MODEL_T
   touch_init();
-  // display_init_seq();
+  display_set_little_endian();
   sdcard_init();
   display_clear();
 #endif
+
 
 #if !defined TREZOR_MODEL_1
   // jump to unprivileged mode

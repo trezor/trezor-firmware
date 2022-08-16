@@ -116,6 +116,7 @@ fn prepare_bindings() -> bindgen::Builder {
             "-I../unix",
             "-I../../build/unix",
             "-I../../vendor/micropython/ports/unix",
+            "-DTREZOR_EMULATOR",
         ]);
     }
 
@@ -269,6 +270,7 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("display_refresh")
         .allowlist_function("display_backlight")
         .allowlist_function("display_text")
+        .allowlist_function("display_text_render_buffer")
         .allowlist_function("display_text_width")
         .allowlist_function("display_bar")
         .allowlist_function("display_bar_radius")
@@ -285,6 +287,8 @@ fn generate_trezorhal_bindings() {
         .allowlist_var("DISPLAY_DATA_ADDRESS")
         // fonts
         .allowlist_function("font_height")
+        .allowlist_function("font_max_height")
+        .allowlist_function("font_baseline")
         .allowlist_function("font_get_glyph")
         // uzlib
         .allowlist_function("uzlib_uncompress_init")
@@ -302,8 +306,18 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("rgb_led_set_color")
         // time
         .allowlist_function("hal_delay")
-        .allowlist_function("hal_ticks_ms");
-
+        .allowlist_function("hal_ticks_ms")
+        // dma2d
+        .allowlist_function("dma2d_setup_4bpp_over_4bpp")
+        .allowlist_function("dma2d_setup_4bpp_over_16bpp")
+        .allowlist_function("dma2d_start_blend")
+        .allowlist_function("dma2d_wait_for_transfer")
+        //buffers
+        .allowlist_function("buffers_get_line_buffer_16bpp")
+        .allowlist_function("buffers_get_line_buffer_4bpp")
+        .allowlist_function("buffers_get_text_buffer")
+        .allowlist_var("text_buffer_height")
+        .allowlist_var("buffer_width");
     // Write the bindings to a file in the OUR_DIR.
     bindings
         .generate()

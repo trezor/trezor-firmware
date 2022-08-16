@@ -4,6 +4,8 @@ pub mod bip39;
 pub mod common;
 #[cfg(feature = "ui")]
 pub mod display;
+#[cfg(feature = "dma2d")]
+pub mod dma2d;
 mod ffi;
 pub mod io;
 pub mod qr;
