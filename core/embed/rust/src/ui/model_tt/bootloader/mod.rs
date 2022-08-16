@@ -6,7 +6,7 @@ use crate::{
         component::{Component, Event, EventCtx},
         display,
         event::TouchEvent,
-        model_tt::{bootloader::theme::TTBootloaderTextTemp, constant},
+        model_tt::constant,
     },
 };
 use cstr_core::CStr;
@@ -20,10 +20,17 @@ pub mod progress;
 mod theme;
 mod title;
 
-use crate::ui::{
-    component::text::paragraphs::Paragraphs,
-    geometry::LinearPlacement,
-    model_tt::{bootloader::connect::Connect, theme::FONT_NORMAL},
+use crate::{
+    time::Duration,
+    trezorhal::time,
+    ui::{
+        component::text::{paragraphs::Paragraphs, TextStyle},
+        geometry::LinearPlacement,
+        model_tt::{
+            bootloader::connect::Connect,
+            theme::{FONT_MEDIUM, FONT_NORMAL},
+        },
+    },
 };
 use confirm::Confirm;
 use fwinfo::FwInfo;
@@ -41,7 +48,6 @@ pub struct BootloaderLayout<F> {
 impl<F> BootloaderLayout<F>
 where
     F: Component,
-    F::Msg: ReturnToC,
 {
     pub fn new(frame: F) -> BootloaderLayout<F> {
         Self { frame }
@@ -50,19 +56,21 @@ where
     pub fn process(&mut self) -> u32 {
         self.frame.place(constant::screen());
         self.frame.paint();
-        display::fadein();
 
         loop {
             let event = touch_eval();
             if let Some(e) = event {
                 let mut ctx = EventCtx::new();
-                let msg = self.frame.event(&mut ctx, Event::Touch(e));
-
+                let _msg = self.frame.event(&mut ctx, Event::Touch(e));
                 self.frame.paint();
-                if let Some(message) = msg {
-                    return message.return_to_c();
-                }
+            } else {
+                let mut ctx = EventCtx::new();
+                let _msg = self
+                    .frame
+                    .event(&mut ctx, Event::Timer(EventCtx::ANIM_FRAME_TIMER));
+                self.frame.paint();
             }
+            time::sleep(Duration::from_millis(1));
         }
     }
 }
@@ -112,11 +120,18 @@ extern "C" fn screen_install_confirm(
     } else {
         "Update firmware"
     };
+    let style = TextStyle::new(
+        FONT_MEDIUM,
+        theme::BLD_FG,
+        theme::BLD_BG,
+        theme::BLD_FG,
+        theme::BLD_FG,
+    );
 
     let message = Paragraphs::new()
-        .add::<TTBootloaderTextTemp>(FONT_NORMAL, "Install firmware by")
-        .add::<TTBootloaderTextTemp>(FONT_NORMAL, text)
-        .add::<TTBootloaderTextTemp>(FONT_NORMAL, version)
+        .add(style, "Install firmware by")
+        .add(style, text)
+        .add(style, version)
         .with_placement(LinearPlacement::vertical().align_at_start());
 
     let mut frame = Confirm::new(title, ICON, message);
@@ -132,9 +147,16 @@ extern "C" fn screen_install_confirm(
 #[no_mangle]
 extern "C" fn screen_wipe_confirm() -> u32 {
     const ICON: Option<&'static [u8]> = Some(include_res!("model_tt/res/info.toif"));
+    let style = TextStyle::new(
+        FONT_MEDIUM,
+        theme::BLD_FG,
+        theme::BLD_BG,
+        theme::BLD_FG,
+        theme::BLD_FG,
+    );
 
     let message = Paragraphs::new()
-        .add::<TTBootloaderTextTemp>(FONT_NORMAL, "Do you want to wipe the device?")
+        .add(style, "Do you want to wipe the device?")
         .with_placement(LinearPlacement::vertical().align_at_start());
 
     let mut frame = Confirm::new("Wipe device", ICON, message);
@@ -170,7 +192,7 @@ extern "C" fn screen_intro(
     };
     let version = unsafe { CStr::from_ptr(version).to_str().unwrap() };
     let bld_version = unsafe { CStr::from_ptr(bld_version).to_str().unwrap() };
-
+    display::fadein();
     let mut layout = BootloaderLayout::new(Intro::new(bld_version, vendor, version));
     return layout.process();
 }

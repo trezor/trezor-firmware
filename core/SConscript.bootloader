@@ -4,7 +4,7 @@ import os
 
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 UI2 = ARGUMENTS.get('UI2', '1') == '1' or TREZOR_MODEL in ('R',)
-DMA2D = False
+DMA2D = True
 
 if TREZOR_MODEL in ('1', ):
     # skip bootloader build
@@ -78,14 +78,10 @@ SOURCE_MOD += [
 ]
 if UI2:
     CPPDEFINES_MOD += [
-        'TREZOR_FONT_MEDIUM_ENABLE',
         'TREZOR_UI2',
+        'USE_RUST_LOADER',
     ]
-    SOURCE_MOD += [
-        'embed/extmod/modtrezorui/font_tthoves_bold_16.c',
-        'embed/extmod/modtrezorui/font_tthoves_medium_20.c',
-        'embed/extmod/modtrezorui/font_tthoves_regular_18.c',
-    ]
+
 
 SOURCE_STMHAL = [
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c',
@@ -126,6 +122,7 @@ SOURCE_BOOTLOADER = [
 
 SOURCE_TREZORHAL = [
     'embed/trezorhal/common.c',
+    'embed/trezorhal/time_measurement.c',
     'embed/trezorhal/image.c',
     'embed/trezorhal/flash.c',
     'embed/trezorhal/mini_printf.c',
@@ -257,6 +254,8 @@ def cargo_build():
     else:
         profile = ''
     features = [f'model_t{TREZOR_MODEL.lower()}', 'bootloader', 'ui']
+    if DMA2D:
+        features.append('dma2d')
     return f'cd embed/rust; cargo build {profile} --target={RUST_TARGET} --target-dir=../../build/bootloader/rust --no-default-features --features "{" ".join(features)}"'
 
 rust = env.Command(

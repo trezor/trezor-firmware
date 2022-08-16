@@ -1,10 +1,11 @@
 use crate::{
     time::{Duration, Instant},
+    trezorhal::time::{clear_acc, get_ticks, init_ticks},
     ui::{
         animation::Animation,
         component::{Component, Event, EventCtx},
         display::{self, Color},
-        geometry::{Offset, Rect},
+        geometry::{Offset, Point, Rect},
         model_tt::constant,
     },
 };
@@ -132,8 +133,10 @@ impl Component for Loader {
                 ctx.request_paint();
 
                 if self.is_completely_grown(now) {
+                    clear_acc();
                     return Some(LoaderMsg::GrownCompletely);
                 } else if self.is_completely_shrunk(now) {
+                    clear_acc();
                     return Some(LoaderMsg::ShrunkCompletely);
                 } else {
                     // There is further progress in the animation, request an animation frame event.
@@ -158,6 +161,11 @@ impl Component for Loader {
             } else {
                 self.styles.active
             };
+
+            let r = Rect::new(Point::new(60, 60), Point::new(180, 180));
+
+            init_ticks();
+
             display::loader(
                 progress,
                 self.offset_y,
@@ -165,6 +173,19 @@ impl Component for Loader {
                 style.background_color,
                 style.icon,
             );
+
+            // display::loader_uncompress(
+            //     r,
+            //     style.loader_color,
+            //     style.background_color,
+            //     progress as i32,
+            //     false,
+            //     style.icon,
+            // );
+
+            //display::icon_rust(r.center(), theme::ICON_HS, style.loader_color,
+            // style.background_color);
+            get_ticks();
         }
     }
 }

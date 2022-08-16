@@ -1,7 +1,6 @@
 use crate::{
     alpha,
     ui::{
-        component::text::layout::DefaultTextTheme,
         display::{Color, Font},
         model_tt::{
             component::{ButtonStyle, ButtonStyleSheet},
@@ -31,6 +30,9 @@ pub const ICON_SIZE: i32 = 16;
 // UI icons.
 pub const ICON_CANCEL: &[u8] = include_res!("model_tt/res/cancel.toif");
 pub const ICON_CONFIRM: &[u8] = include_res!("model_tt/res/confirm.toif");
+pub const IMAGE_BG: &[u8] = include_res!("model_tt/res/bg.toif");
+pub const ICON_BG: &[u8] = include_res!("model_tt/res/homescreen_model_r.toif");
+pub const IMAGE_HS: &[u8] = include_res!("model_tt/res/bg_s.toif");
 
 // BLD icons
 pub const CLOSE: &'static [u8] = include_res!("model_tt/res/close.toif");
@@ -167,36 +169,36 @@ pub fn button_bld_menu_item() -> ButtonStyleSheet {
         },
     }
 }
-
-pub struct TTBootloaderTextTemp;
-//because old style confirm screen
-impl DefaultTextTheme for TTBootloaderTextTemp {
-    const BACKGROUND_COLOR: Color = WHITE;
-    const TEXT_FONT: Font = FONT_NORMAL;
-    const TEXT_COLOR: Color = BLACK;
-    const HYPHEN_FONT: Font = FONT_BOLD;
-    const HYPHEN_COLOR: Color = GREY_LIGHT;
-    const ELLIPSIS_FONT: Font = FONT_BOLD;
-    const ELLIPSIS_COLOR: Color = GREY_LIGHT;
-
-    const NORMAL_FONT: Font = FONT_NORMAL;
-    const MEDIUM_FONT: Font = FONT_MEDIUM;
-    const BOLD_FONT: Font = FONT_BOLD;
-    const MONO_FONT: Font = FONT_MONO;
-}
-
-pub struct TTBootloaderText;
-impl DefaultTextTheme for TTBootloaderText {
-    const BACKGROUND_COLOR: Color = BLD_BG;
-    const TEXT_FONT: Font = FONT_MEDIUM;
-    const TEXT_COLOR: Color = BLD_FG;
-    const HYPHEN_FONT: Font = FONT_BOLD;
-    const HYPHEN_COLOR: Color = GREY_LIGHT;
-    const ELLIPSIS_FONT: Font = FONT_BOLD;
-    const ELLIPSIS_COLOR: Color = GREY_LIGHT;
-
-    const NORMAL_FONT: Font = FONT_NORMAL;
-    const MEDIUM_FONT: Font = FONT_MEDIUM;
-    const BOLD_FONT: Font = FONT_BOLD;
-    const MONO_FONT: Font = FONT_MONO;
-}
+//
+// pub struct TTBootloaderTextTemp;
+// //because old style confirm screen
+// impl DefaultTextTheme for TTBootloaderTextTemp {
+//     const BACKGROUND_COLOR: Color = WHITE;
+//     const TEXT_FONT: Font = FONT_NORMAL;
+//     const TEXT_COLOR: Color = BLACK;
+//     const HYPHEN_FONT: Font = FONT_BOLD;
+//     const HYPHEN_COLOR: Color = GREY_LIGHT;
+//     const ELLIPSIS_FONT: Font = FONT_BOLD;
+//     const ELLIPSIS_COLOR: Color = GREY_LIGHT;
+//
+//     const NORMAL_FONT: Font = FONT_NORMAL;
+//     const MEDIUM_FONT: Font = FONT_MEDIUM;
+//     const BOLD_FONT: Font = FONT_BOLD;
+//     const MONO_FONT: Font = FONT_MONO;
+// }
+//
+// pub struct TTBootloaderText;
+// impl DefaultTextTheme for TTBootloaderText {
+//     const BACKGROUND_COLOR: Color = BLD_BG;
+//     const TEXT_FONT: Font = FONT_MEDIUM;
+//     const TEXT_COLOR: Color = BLD_FG;
+//     const HYPHEN_FONT: Font = FONT_BOLD;
+//     const HYPHEN_COLOR: Color = GREY_LIGHT;
+//     const ELLIPSIS_FONT: Font = FONT_BOLD;
+//     const ELLIPSIS_COLOR: Color = GREY_LIGHT;
+//
+//     const NORMAL_FONT: Font = FONT_NORMAL;
+//     const MEDIUM_FONT: Font = FONT_MEDIUM;
+//     const BOLD_FONT: Font = FONT_BOLD;
+//     const MONO_FONT: Font = FONT_MONO;
+// }

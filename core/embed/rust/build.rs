@@ -308,6 +308,9 @@ fn generate_trezorhal_bindings() {
         // time
         .allowlist_function("hal_delay")
         .allowlist_function("hal_ticks_ms")
+        .allowlist_function("init_ticks")
+        .allowlist_function("get_ticks")
+        .allowlist_function("clear_acc")
         // dma2d
         .allowlist_function("dma2d_setup_4bpp_over_4bpp")
         .allowlist_function("dma2d_setup_4bpp_over_16bpp")

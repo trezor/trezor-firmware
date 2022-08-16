@@ -7,6 +7,7 @@
 #include "rgb_led.h"
 #include "secbool.h"
 #include "storage.h"
+#include "time_measurement.h"
 
 #include "bip39.h"
 #include "rand.h"
