@@ -204,6 +204,16 @@ impl Icon {
     }
 }
 
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for Icon {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.open("Icon");
+        t.string(self.text);
+        t.string(&self.dimension_str());
+        t.close();
+    }
+}
+
 impl TextLayout {
     pub fn print(&self) {
         print!(

@@ -570,16 +570,16 @@ impl LayoutSink for TextRenderer {
 pub struct TraceSink<'a>(pub &'a mut dyn crate::trace::Tracer);
 
 #[cfg(feature = "ui_debug")]
+use crate::trace::Trace;
+
+#[cfg(feature = "ui_debug")]
 impl<'a> LayoutSink for TraceSink<'a> {
     fn text(&mut self, _cursor: Point, _layout: &TextLayout, text: &str) {
         self.0.string(text);
     }
 
     fn icon(&mut self, _cursor: Point, _layout: &TextLayout, icon: Icon) {
-        self.0.open("Icon");
-        self.0.string(icon.text);
-        self.0.string(icon.dimension_str().as_str());
-        self.0.close();
+        icon.trace(self.0);
     }
 
     fn hyphen(&mut self, _cursor: Point, _layout: &TextLayout) {

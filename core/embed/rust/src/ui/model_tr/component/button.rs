@@ -282,7 +282,7 @@ where
         t.open("Button");
         match &self.content {
             ButtonContent::Text(text) => t.field("text", text),
-            ButtonContent::Icon(_) => t.symbol("icon"),
+            ButtonContent::Icon(icon) => t.field("icon", icon),
         }
         t.close();
     }
