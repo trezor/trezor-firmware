@@ -5,6 +5,10 @@ pub const HEIGHT: i16 = 128;
 pub const LINE_SPACE: i16 = 1;
 pub const FONT_BPP: i16 = 1;
 
+pub const LOADER_OUTER: f32 = 20_f32;
+pub const LOADER_INNER: f32 = 14_f32;
+pub const LOADER_ICON_MAX_SIZE: i16 = 24;
+
 pub const fn size() -> Offset {
     Offset::new(WIDTH, HEIGHT)
 }

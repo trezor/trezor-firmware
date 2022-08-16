@@ -30,6 +30,7 @@
 #include "random_delays.h"
 #include "secbool.h"
 #ifdef TREZOR_MODEL_T
+#include "dma2d.h"
 #include "touch.h"
 #endif
 #if defined TREZOR_MODEL_R
@@ -249,7 +250,12 @@ int main(void) {
 
   random_delays_init();
   // display_init_seq();
+#ifdef USE_DMA2D
+  dma2d_init();
+#endif
+
 #if defined TREZOR_MODEL_T
+  display_set_little_endian();
   touch_power_on();
   touch_init();
 #endif
@@ -412,6 +418,8 @@ int main(void) {
 
     ui_fadeout();
   }
+
+  ensure_compatible_settings();
 
   // mpu_config_firmware();
   // jump_to_unprivileged(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE);

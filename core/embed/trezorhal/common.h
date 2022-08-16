@@ -82,5 +82,6 @@ void memset_reg(volatile void *start, volatile void *stop, uint32_t val);
 void jump_to(uint32_t address);
 void jump_to_unprivileged(uint32_t address);
 void jump_to_with_flag(uint32_t address, uint32_t register_flag);
+void ensure_compatible_settings(void);
 
 #endif

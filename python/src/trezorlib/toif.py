@@ -45,50 +45,68 @@ def _decompress(data: bytes) -> bytes:
     return zlib.decompress(data, wbits=-10)
 
 
-def _from_pil_rgb(pixels: Sequence[RGBPixel]) -> bytes:
+def _from_pil_rgb(pixels: Sequence[RGBPixel], little_endian: bool) -> bytes:
     data = bytearray()
     for r, g, b in pixels:
         c = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3)
-        data += struct.pack(">H", c)
+        if little_endian:
+            data += struct.pack("<H", c)
+        else:
+            data += struct.pack(">H", c)
     return bytes(data)
 
 
-def _to_rgb(data: bytes) -> bytes:
+def _to_rgb(data: bytes, little_endian: bool) -> bytes:
     res = bytearray()
     for i in range(0, len(data), 2):
-        (c,) = struct.unpack(">H", data[i : i + 2])
+        if little_endian:
+            (c,) = struct.unpack("<H", data[i : i + 2])
+        else:
+            (c,) = struct.unpack(">H", data[i : i + 2])
         r = (c & 0xF800) >> 8
-        g = (c & 0x07C0) >> 3
+        g = (c & 0x07E0) >> 3
         b = (c & 0x001F) << 3
         res += bytes((r, g, b))
     return bytes(res)
 
 
-def _from_pil_grayscale(pixels: Sequence[int]) -> bytes:
+def _from_pil_grayscale(pixels: Sequence[int], right_hi: bool) -> bytes:
     data = bytearray()
     for i in range(0, len(pixels), 2):
         left, right = pixels[i], pixels[i + 1]
-        c = (left & 0xF0) | ((right & 0xF0) >> 4)
+        if right_hi:
+            c = (right & 0xF0) | ((left & 0xF0) >> 4)
+        else:
+            c = (left & 0xF0) | ((right & 0xF0) >> 4)
         data += struct.pack(">B", c)
     return bytes(data)
 
 
-def _from_pil_grayscale_alpha(pixels: Sequence[Tuple[int, int]]) -> bytes:
+def _from_pil_grayscale_alpha(
+    pixels: Sequence[Tuple[int, int]], right_hi: bool
+) -> bytes:
     data = bytearray()
     for i in range(0, len(pixels), 2):
         left_w_alpha, right_w_alpha = pixels[i], pixels[i + 1]
         left = int((left_w_alpha[0] * left_w_alpha[1]) / 255)
         right = int((right_w_alpha[0] * right_w_alpha[1]) / 255)
-        c = (left & 0xF0) | ((right & 0xF0) >> 4)
+        if right_hi:
+            c = (right & 0xF0) | ((left & 0xF0) >> 4)
+        else:
+            c = (left & 0xF0) | ((right & 0xF0) >> 4)
         data += struct.pack(">B", c)
     return bytes(data)
 
 
-def _to_grayscale(data: bytes) -> bytes:
+def _to_grayscale(data: bytes, right_hi: bool) -> bytes:
     res = bytearray()
     for pixel in data:
-        left = pixel & 0xF0
-        right = (pixel & 0x0F) << 4
+        if right_hi:
+            right = pixel & 0xF0
+            left = (pixel & 0x0F) << 4
+        else:
+            left = pixel & 0xF0
+            right = (pixel & 0x0F) << 4
         res += bytes((left, right))
     return bytes(res)
 
@@ -102,7 +120,10 @@ class Toif:
     def __post_init__(self) -> None:
         # checking the data size
         width, height = self.size
-        if self.mode is firmware.ToifMode.grayscale:
+        if (
+            self.mode is firmware.ToifMode.grayscale
+            or self.mode is firmware.ToifMode.grayscale_eh
+        ):
             expected_size = width * height // 2
         else:
             expected_size = width * height * 2
@@ -123,10 +144,16 @@ class Toif:
         pil_mode: Literal["L", "RGB"]
         if self.mode is firmware.ToifMode.grayscale:
             pil_mode = "L"
-            raw_data = _to_grayscale(uncompressed)
-        else:
+            raw_data = _to_grayscale(uncompressed, right_hi=False)
+        elif self.mode is firmware.ToifMode.grayscale_eh:
+            pil_mode = "L"
+            raw_data = _to_grayscale(uncompressed, right_hi=True)
+        elif self.mode is firmware.ToifMode.full_color:
             pil_mode = "RGB"
-            raw_data = _to_rgb(uncompressed)
+            raw_data = _to_rgb(uncompressed, little_endian=False)
+        else:  # self.mode is firmware.ToifMode.full_color_le:
+            pil_mode = "RGB"
+            raw_data = _to_rgb(uncompressed, little_endian=True)
 
         return Image.frombuffer(pil_mode, self.size, raw_data, "raw", pil_mode, 0, 1)
 
@@ -152,7 +179,9 @@ def load(filename: str) -> Toif:
 
 
 def from_image(
-    image: "Image.Image", background: Tuple[int, int, int, int] = (0, 0, 0, 255)
+    image: "Image.Image",
+    background: Tuple[int, int, int, int] = (0, 0, 0, 255),
+    legacy_format: bool = False,
 ) -> Toif:
     if not PIL_AVAILABLE:
         raise RuntimeError(
@@ -168,18 +197,31 @@ def from_image(
         image = image.convert("L")
 
     if image.mode == "L":
-        toif_mode = firmware.ToifMode.grayscale
         if image.size[0] % 2 != 0:
             raise ValueError("Only even-width grayscale images are supported")
-        toif_data = _from_pil_grayscale(image.getdata())
+        if not legacy_format:
+            toif_mode = firmware.ToifMode.grayscale_eh
+            toif_data = _from_pil_grayscale(image.getdata(), right_hi=True)
+        else:
+            toif_mode = firmware.ToifMode.grayscale
+            toif_data = _from_pil_grayscale(image.getdata(), right_hi=False)
     elif image.mode == "LA":
         toif_mode = firmware.ToifMode.grayscale
         if image.size[0] % 2 != 0:
             raise ValueError("Only even-width grayscale images are supported")
-        toif_data = _from_pil_grayscale_alpha(image.getdata())
+        if not legacy_format:
+            toif_mode = firmware.ToifMode.grayscale_eh
+            toif_data = _from_pil_grayscale_alpha(image.getdata(), right_hi=True)
+        else:
+            toif_mode = firmware.ToifMode.grayscale
+            toif_data = _from_pil_grayscale_alpha(image.getdata(), right_hi=False)
     elif image.mode == "RGB":
-        toif_mode = firmware.ToifMode.full_color
-        toif_data = _from_pil_rgb(image.getdata())
+        if not legacy_format:
+            toif_mode = firmware.ToifMode.full_color_le
+            toif_data = _from_pil_rgb(image.getdata(), little_endian=True)
+        else:
+            toif_mode = firmware.ToifMode.full_color
+            toif_data = _from_pil_rgb(image.getdata(), little_endian=False)
     else:
         raise ValueError(f"Unsupported image mode: {image.mode}")
 

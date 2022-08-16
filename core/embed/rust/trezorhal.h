@@ -1,5 +1,8 @@
+#include "buffers.h"
 #include "common.h"
 #include "display.h"
+#include "display_interface.h"
+#include "dma2d.h"
 #include "fonts/fonts.h"
 #include "rgb_led.h"
 #include "secbool.h"

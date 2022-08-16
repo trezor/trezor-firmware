@@ -17,6 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdint.h>
+#include "display_defs.h"
+#include "display_interface.h"
+#include "memzero.h"
 #include STM32_HAL_H
 
 // FSMC/FMC Bank 1 - NOR/PSRAM 1
@@ -32,6 +36,8 @@
 // noop on TR as we don't need to push data to display
 #define PIXELDATA_DIRTY()
 
+static int DISPLAY_BACKLIGHT = -1;
+static int DISPLAY_ORIENTATION = -1;
 struct {
   uint8_t RAM[DISPLAY_RESY / 8][DISPLAY_RESX];
   uint32_t row;
@@ -95,8 +101,8 @@ void display_pixeldata(uint16_t c) {
 
 #define PIXELDATA(c) display_pixeldata(c)
 
-static void display_reset_state(void) {
-  memset(DISPLAY_STATE.RAM, 0, sizeof(DISPLAY_STATE.RAM));
+void display_reset_state(void) {
+  memzero(DISPLAY_STATE.RAM, sizeof(DISPLAY_STATE.RAM));
   DISPLAY_STATE.row = 0;
   DISPLAY_STATE.col = 0;
   DISPLAY_STATE.window_x0 = 0;
@@ -138,25 +144,38 @@ void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
   }
 }
 
-static void display_set_orientation(int degrees) {
-  if (degrees == 0) {
-    // Set Segment Re-map: (A0H - A1H)
-    CMD(0xA1);
-    // Set COM Output Scan Direction
-    CMD(0xC8);
+int display_orientation(int degrees) {
+  if (degrees != DISPLAY_ORIENTATION) {
+    if (degrees == 0 || degrees == 180) {
+      DISPLAY_ORIENTATION = degrees;
+      if (degrees == 0) {
+        // Set Segment Re-map: (A0H - A1H)
+        CMD(0xA1);
+        // Set COM Output Scan Direction
+        CMD(0xC8);
+      }
+      if (degrees == 180) {
+        // Set Segment Re-map: (A0H - A1H)
+        CMD(0xA0);
+        // Set COM Output Scan Direction
+        CMD(0xC0);
+      }
+    }
   }
-  if (degrees == 180) {
-    // Set Segment Re-map: (A0H - A1H)
-    CMD(0xA0);
-    // Set COM Output Scan Direction
-    CMD(0xC0);
-  }
+
+  return DISPLAY_ORIENTATION;
 }
 
-static void display_set_backlight(int val) {
-  // Set Contrast Control Register: (Double Bytes Command)
-  CMD(0x81);
-  CMD(val & 0xFF);
+int display_get_orientation(void) { return DISPLAY_ORIENTATION; }
+
+int display_backlight(int val) {
+  if (DISPLAY_BACKLIGHT != val && val >= 0 && val <= 255) {
+    DISPLAY_BACKLIGHT = val;
+    // Set Contrast Control Register: (Double Bytes Command)
+    CMD(0x81);
+    CMD(val & 0xFF);
+  }
+  return DISPLAY_BACKLIGHT;
 }
 
 static void send_init_seq_SH1107(void) {
@@ -246,7 +265,6 @@ void display_init_seq(void) {
 
   send_init_seq_SH1107();
 
-  display_clear();
   display_unsleep();
 }
 
