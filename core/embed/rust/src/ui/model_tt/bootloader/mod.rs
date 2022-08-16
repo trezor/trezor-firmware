@@ -1,11 +1,14 @@
 use core::slice;
 
-use crate::trezorhal::io::{io_touch_read, io_touch_unpack_x, io_touch_unpack_y};
-use crate::ui::component::{Component, Event, EventCtx};
-use crate::ui::display;
-use crate::ui::event::TouchEvent;
-use crate::ui::model_tt::bootloader::theme::TTBootloaderTextTemp;
-use crate::ui::model_tt::constant;
+use crate::{
+    trezorhal::io::{io_touch_read, io_touch_unpack_x, io_touch_unpack_y},
+    ui::{
+        component::{Component, Event, EventCtx},
+        display,
+        event::TouchEvent,
+        model_tt::{bootloader::theme::TTBootloaderTextTemp, constant},
+    },
+};
 use cstr_core::CStr;
 
 pub mod confirm;
@@ -17,10 +20,11 @@ pub mod progress;
 mod theme;
 mod title;
 
-use crate::ui::component::text::paragraphs::Paragraphs;
-use crate::ui::geometry::LinearPlacement;
-use crate::ui::model_tt::bootloader::connect::Connect;
-use crate::ui::model_tt::theme::FONT_NORMAL;
+use crate::ui::{
+    component::text::paragraphs::Paragraphs,
+    geometry::LinearPlacement,
+    model_tt::{bootloader::connect::Connect, theme::FONT_NORMAL},
+};
 use confirm::Confirm;
 use fwinfo::FwInfo;
 use intro::Intro;

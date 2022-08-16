@@ -1,20 +1,21 @@
-use crate::ui::component::text::paragraphs::Paragraphs;
-use crate::ui::component::Pad;
-use crate::ui::geometry::{LinearPlacement, Point};
-use crate::ui::model_tt::bootloader::theme::{
-    button_bld_menu, button_bld_menu_item, TTBootloaderText, BLD_BG, MENU,
-};
-use crate::ui::model_tt::bootloader::title::Title;
-use crate::ui::model_tt::bootloader::ReturnToC;
-use crate::ui::model_tt::component::ButtonMsg::Clicked;
-use crate::ui::model_tt::theme::FONT_MEDIUM;
 use crate::ui::{
-    component::{Child, Component, Event, EventCtx},
-    geometry::Rect,
+    component::{text::paragraphs::Paragraphs, Child, Component, Event, EventCtx, Pad},
+    geometry::{LinearPlacement, Point, Rect},
+    model_tt::{
+        bootloader::{
+            theme::{button_bld_menu, button_bld_menu_item, TTBootloaderText, BLD_BG, MENU},
+            title::Title,
+            ReturnToC,
+        },
+        component::ButtonMsg::Clicked,
+        theme::FONT_MEDIUM,
+    },
 };
 
-use crate::ui::model_tt::component::Button;
-use crate::ui::model_tt::constant::{HEIGHT, WIDTH};
+use crate::ui::model_tt::{
+    component::Button,
+    constant::{HEIGHT, WIDTH},
+};
 
 #[repr(u32)]
 #[derive(Copy, Clone)]

@@ -1,13 +1,15 @@
-use crate::ui::component::Pad;
-use crate::ui::geometry::Point;
-use crate::ui::model_tt::bootloader::theme::{BLD_BG, BLD_FG, RECEIVE};
-use crate::ui::model_tt::bootloader::ReturnToC;
-use crate::ui::model_tt::constant::{HEIGHT, WIDTH};
-use crate::ui::model_tt::theme::FONT_MEDIUM;
 use crate::ui::{
-    component::{Component, Event, EventCtx},
+    component::{Component, Event, EventCtx, Pad},
     display,
-    geometry::Rect,
+    geometry::{Point, Rect},
+    model_tt::{
+        bootloader::{
+            theme::{BLD_BG, BLD_FG, RECEIVE},
+            ReturnToC,
+        },
+        constant::{HEIGHT, WIDTH},
+        theme::FONT_MEDIUM,
+    },
 };
 
 #[repr(u32)]

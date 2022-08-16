@@ -1,12 +1,16 @@
-use crate::alpha;
-use crate::ui::model_tt::component::{ButtonStyle, ButtonStyleSheet};
-use crate::ui::model_tt::theme::{
-    BLACK, FG, FONT_BOLD, FONT_MEDIUM, FONT_MONO, FONT_NORMAL, GREEN, GREEN_DARK, GREY_LIGHT, RED,
-    RED_DARK, WHITE,
-};
-use crate::ui::{
-    component::text::layout::DefaultTextTheme,
-    display::{Color, Font},
+use crate::{
+    alpha,
+    ui::{
+        component::text::layout::DefaultTextTheme,
+        display::{Color, Font},
+        model_tt::{
+            component::{ButtonStyle, ButtonStyleSheet},
+            theme::{
+                BLACK, FG, FONT_BOLD, FONT_MEDIUM, FONT_MONO, FONT_NORMAL, GREEN, GREEN_DARK,
+                GREY_LIGHT, RED, RED_DARK, WHITE,
+            },
+        },
+    },
 };
 
 pub const BLD_BG: Color = Color::rgb(0x00, 0x17, 0xA3);

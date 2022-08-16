@@ -1,10 +1,11 @@
-use crate::ui::geometry::Point;
-use crate::ui::model_tt::bootloader::theme::{BLD_BG, BLD_TITLE_COLOR};
-use crate::ui::model_tt::theme::FONT_BOLD;
 use crate::ui::{
     component::{Component, Event, EventCtx},
     display,
-    geometry::Rect,
+    geometry::{Point, Rect},
+    model_tt::{
+        bootloader::theme::{BLD_BG, BLD_TITLE_COLOR},
+        theme::FONT_BOLD,
+    },
 };
 
 pub enum TitleMsg {

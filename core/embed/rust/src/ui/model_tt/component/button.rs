@@ -1,11 +1,10 @@
-use crate::ui::geometry::Point;
 use crate::{
     time::Duration,
     ui::{
         component::{Component, ComponentExt, Event, EventCtx, GridPlaced, Map, TimerToken},
         display::{self, Color, Font},
         event::TouchEvent,
-        geometry::{Insets, Offset, Rect},
+        geometry::{Insets, Offset, Point, Rect},
     },
 };
 

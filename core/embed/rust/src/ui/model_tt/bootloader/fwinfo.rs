@@ -1,16 +1,15 @@
-use crate::ui::component::{Child, Pad};
-use crate::ui::geometry::Point;
-use crate::ui::model_tt::bootloader::theme::{
-    button_bld_menu_item, BLD_BG, BLD_FG, BLD_TITLE_COLOR,
-};
-use crate::ui::model_tt::bootloader::ReturnToC;
-use crate::ui::model_tt::component::Button;
-use crate::ui::model_tt::component::ButtonMsg::Clicked;
-use crate::ui::model_tt::theme::{FONT_BOLD, FONT_MEDIUM};
 use crate::ui::{
-    component::{Component, Event, EventCtx},
+    component::{Child, Component, Event, EventCtx, Pad},
     display,
-    geometry::Rect,
+    geometry::{Point, Rect},
+    model_tt::{
+        bootloader::{
+            theme::{button_bld_menu_item, BLD_BG, BLD_FG, BLD_TITLE_COLOR},
+            ReturnToC,
+        },
+        component::{Button, ButtonMsg::Clicked},
+        theme::{FONT_BOLD, FONT_MEDIUM},
+    },
 };
 
 use crate::ui::model_tt::constant::{HEIGHT, WIDTH};

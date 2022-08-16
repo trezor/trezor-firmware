@@ -1,17 +1,17 @@
-use crate::ui::component::text::paragraphs::Paragraphs;
-use crate::ui::component::Pad;
-use crate::ui::display::Color;
-use crate::ui::geometry::Point;
-use crate::ui::model_tt::bootloader::theme::{button_cancel, button_confirm};
-use crate::ui::model_tt::bootloader::ReturnToC;
-use crate::ui::model_tt::component::Button;
-use crate::ui::model_tt::component::ButtonMsg::Clicked;
-use crate::ui::model_tt::constant::{HEIGHT, WIDTH};
-use crate::ui::model_tt::theme::{BG, FG, FONT_NORMAL, ICON_CANCEL, ICON_CONFIRM};
 use crate::ui::{
-    component::{Child, Component, Event, EventCtx},
+    component::{text::paragraphs::Paragraphs, Child, Component, Event, EventCtx, Pad},
     display,
-    geometry::Rect,
+    display::Color,
+    geometry::{Point, Rect},
+    model_tt::{
+        bootloader::{
+            theme::{button_cancel, button_confirm},
+            ReturnToC,
+        },
+        component::{Button, ButtonMsg::Clicked},
+        constant::{HEIGHT, WIDTH},
+        theme::{BG, FG, FONT_NORMAL, ICON_CANCEL, ICON_CONFIRM},
+    },
 };
 
 #[repr(u32)]

@@ -1,12 +1,14 @@
-use crate::ui::component::Pad;
-use crate::ui::geometry::Point;
-use crate::ui::model_tt::bootloader::theme::{BLD_BG, BLD_TITLE_COLOR};
-use crate::ui::model_tt::bootloader::ReturnToC;
-use crate::ui::model_tt::theme::FONT_BOLD;
 use crate::ui::{
-    component::{Component, Event, EventCtx},
+    component::{Component, Event, EventCtx, Pad},
     display,
-    geometry::Rect,
+    geometry::{Point, Rect},
+    model_tt::{
+        bootloader::{
+            theme::{BLD_BG, BLD_TITLE_COLOR},
+            ReturnToC,
+        },
+        theme::FONT_BOLD,
+    },
 };
 
 use crate::ui::model_tt::constant::{HEIGHT, WIDTH};

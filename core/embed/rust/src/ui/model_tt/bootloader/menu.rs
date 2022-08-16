@@ -1,16 +1,15 @@
-use crate::ui::component::Pad;
-use crate::ui::geometry::Point;
-use crate::ui::model_tt::bootloader::theme::{
-    button_bld_menu, button_bld_menu_item, BLD_BG, CLOSE, FWINFO, REBOOT, RESET,
-};
-use crate::ui::model_tt::bootloader::title::Title;
-use crate::ui::model_tt::bootloader::ReturnToC;
-use crate::ui::model_tt::component::ButtonMsg::Clicked;
-use crate::ui::model_tt::component::{Button, IconText};
-use crate::ui::model_tt::constant::{HEIGHT, WIDTH};
 use crate::ui::{
-    component::{Child, Component, Event, EventCtx},
-    geometry::Rect,
+    component::{Child, Component, Event, EventCtx, Pad},
+    geometry::{Point, Rect},
+    model_tt::{
+        bootloader::{
+            theme::{button_bld_menu, button_bld_menu_item, BLD_BG, CLOSE, FWINFO, REBOOT, RESET},
+            title::Title,
+            ReturnToC,
+        },
+        component::{Button, ButtonMsg::Clicked, IconText},
+        constant::{HEIGHT, WIDTH},
+    },
 };
 
 #[repr(u32)]
