@@ -192,6 +192,15 @@ static secbool copy_sdcard(void) {
 }
 #endif
 
+// this function resets settings changed in boardloader, which might be
+// incompatible with older bootloader versions, where this setting might be
+// unknown
+void set_bld_compatible_settings(void) {
+#ifdef TREZOR_MODEL_T
+  display_set_big_endian();
+#endif
+}
+
 int main(void) {
   reset_flags_reset();
 
@@ -210,6 +219,7 @@ int main(void) {
   clear_otg_hs_memory();
 
   display_init();
+  display_clear();
 
 #if defined TREZOR_MODEL_T
   sdcard_init();
@@ -232,6 +242,8 @@ int main(void) {
   };
   ensure(check_image_contents(&hdr, IMAGE_HEADER_SIZE, sectors, 1),
          "invalid bootloader hash");
+
+  set_bld_compatible_settings();
 
   jump_to(BOOTLOADER_START + IMAGE_HEADER_SIZE);
 

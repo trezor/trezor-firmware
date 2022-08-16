@@ -24,35 +24,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "colors.h"
+#include "display_defs.h"
+#include "display_interface.h"
 #include "fonts/fonts.h"
-#if defined TREZOR_MODEL_T
-
-// ILI9341V, GC9307 and ST7789V drivers support 240px x 320px display resolution
-#define MAX_DISPLAY_RESX 240
-#define MAX_DISPLAY_RESY 320
-#define DISPLAY_RESX 240
-#define DISPLAY_RESY 240
-#define TREZOR_FONT_BPP 4
-
-#elif defined TREZOR_MODEL_1
-
-#define MAX_DISPLAY_RESX 128
-#define MAX_DISPLAY_RESY 64
-#define DISPLAY_RESX 128
-#define DISPLAY_RESY 64
-#define TREZOR_FONT_BPP 1
-
-#elif defined TREZOR_MODEL_R
-
-#define MAX_DISPLAY_RESX 128
-#define MAX_DISPLAY_RESY 128
-#define DISPLAY_RESX 128
-#define DISPLAY_RESY 128
-#define TREZOR_FONT_BPP 1
-
-#else
-#error Unknown Trezor model
-#endif
 
 #define AVATAR_IMAGE_SIZE 144
 #if defined TREZOR_MODEL_T || defined TREZOR_MODEL_1
@@ -62,13 +37,6 @@
 #else
 #error Unknown Trezor model
 #endif
-
-#ifdef TREZOR_MODEL_T
-#define RGB16(R, G, B) ((R & 0xF8) << 8) | ((G & 0xFC) << 3) | ((B & 0xF8) >> 3)
-#endif
-
-#define COLOR_WHITE 0xFFFF
-#define COLOR_BLACK 0x0000
 
 // provided by port
 
@@ -114,26 +82,20 @@ void display_text_right(int x, int y, const char *text, int textlen, int font,
 int display_text_width(const char *text, int textlen, int font);
 int display_text_split(const char *text, int textlen, int font,
                        int requested_width);
+void display_text_render_buffer(const char *text, int textlen, int font,
+                                uint8_t *buffer, int buffer_len,
+                                int text_offset, int line_width);
 
 void display_qrcode(int x, int y, const char *data, uint8_t scale);
 
 void display_offset(int set_xy[2], int *get_x, int *get_y);
-int display_orientation(int degrees);
-int display_backlight(int val);
 void display_fade(int start, int end, int delay);
 
 // helper for locating a substring in buffer with utf-8 string
 void display_utf8_substr(const char *buf_start, size_t buf_len, int char_off,
                          int char_len, const char **out_start, int *out_len);
 
-// pixeldata accessors
-void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
-void display_pixeldata(uint16_t c);
+// pixeldata accessor
 void display_pixeldata_dirty();
-
-#if !(defined EMULATOR) && (defined TREZOR_MODEL_T)
-extern volatile uint8_t *const DISPLAY_CMD_ADDRESS;
-extern volatile uint8_t *const DISPLAY_DATA_ADDRESS;
-#endif
 
 #endif

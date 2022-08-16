@@ -1,17 +1,22 @@
-use super::{
-    constant,
-    geometry::{Offset, Point, Rect},
-};
+use super::constant;
 use crate::{
     error::Error,
     time::Duration,
-    trezorhal::{
-        display, qr, time,
-        uzlib::{UzlibContext, UZLIB_WINDOW_SIZE},
-    },
+    trezorhal::{display, qr, time},
     ui::lerp::Lerp,
 };
-use core::slice;
+use core::slice::from_raw_parts;
+
+use super::geometry::{Offset, Point, Rect};
+use crate::trezorhal::uzlib::{UzlibContext, UZLIB_WINDOW_SIZE};
+#[cfg(feature = "dma2d")]
+use crate::trezorhal::{
+    dma2d,
+    dma2d::{
+        dma2d_setup_4bpp_over_16bpp, dma2d_setup_4bpp_over_4bpp, dma2d_start_blend,
+        dma2d_wait_for_transfer, get_buffer_16bpp, get_buffer_4bpp, get_text_buffer,
+    },
+};
 
 pub fn backlight() -> i32 {
     display::backlight(-1)
@@ -126,9 +131,9 @@ pub fn icon_rust(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
             if clamped.contains(p) {
                 if x % 2 == 0 {
                     unwrap!(ctx.uncompress(&mut dest), "Decompression failed");
-                    pixeldata(colortable[(dest[0] >> 4) as usize]);
-                } else {
                     pixeldata(colortable[(dest[0] & 0xF) as usize]);
+                } else {
+                    pixeldata(colortable[(dest[0] >> 4) as usize]);
                 }
             } else if x % 2 == 0 {
                 //continue unzipping but dont write to display
@@ -366,9 +371,9 @@ pub fn rect_rounded2_partial(
 
                 let data = icon_data[(((x_i & 0xFE) + (y_i * icon_width)) / 2) as usize];
                 if (x_i & 0x01) == 0 {
-                    pixeldata(icon_colortable[(data >> 4) as usize]);
-                } else {
                     pixeldata(icon_colortable[(data & 0xF) as usize]);
+                } else {
+                    pixeldata(icon_colortable[(data > 4) as usize]);
                 }
                 icon_pixel = true;
             }
@@ -400,6 +405,745 @@ pub fn rect_rounded2_partial(
     }
 
     pixeldata_dirty();
+}
+
+#[cfg(any(feature = "model_tt", feature = "model_tr"))]
+pub fn loader_uncompress(
+    r: Rect,
+    fg_color: Color,
+    bg_color: Color,
+    progress: i32,
+    indeterminate: bool,
+    icon: Option<(&[u8], Color)>,
+) {
+    const ICON_MAX_SIZE: i32 = constant::LOADER_ICON_MAX_SIZE;
+
+    if let Some((data, color)) = icon {
+        let toif_info = unwrap!(display::toif_info(data), "Invalid TOIF data");
+        assert!(toif_info.grayscale);
+        if toif_info.width <= (ICON_MAX_SIZE as u16) && toif_info.height <= (ICON_MAX_SIZE as u16) {
+            let mut icon_data = [0_u8; ((ICON_MAX_SIZE * ICON_MAX_SIZE) / 2) as usize];
+            let icon_size = Offset::new(toif_info.width.into(), toif_info.height.into());
+            let mut ctx = UzlibContext::new(&data[12..], None);
+            unwrap!(ctx.uncompress(&mut icon_data), "Decompression failed");
+            let i = Some((icon_data.as_ref(), color, icon_size));
+            loader_rust(r, fg_color, bg_color, progress, indeterminate, i);
+        } else {
+            loader_rust(r, fg_color, bg_color, progress, indeterminate, None);
+        }
+    } else {
+        loader_rust(r, fg_color, bg_color, progress, indeterminate, None);
+    }
+}
+
+#[cfg(any(feature = "model_tt", feature = "model_tr"))]
+#[no_mangle]
+pub extern "C" fn loader_uncompress_r(
+    x: cty::uint16_t,
+    y: cty::uint16_t,
+    w: cty::uint16_t,
+    h: cty::uint16_t,
+    fg_color: cty::uint16_t,
+    bg_color: cty::uint16_t,
+    icon_color: cty::uint16_t,
+    progress: cty::int32_t,
+    indeterminate: cty::int32_t,
+    icon_data: cty::uintptr_t,
+    icon_data_size: cty::uint32_t,
+) {
+    let r = Rect::from_top_left_and_size(Point::new(x as _, y as _), Offset::new(w as _, h as _));
+    let fg = Color::from_u16(fg_color);
+    let bg = Color::from_u16(bg_color);
+    let ic_color = Color::from_u16(icon_color);
+
+    let i = if icon_data != 0 {
+        let data_slice = unsafe { from_raw_parts(icon_data as _, icon_data_size as _) };
+        Some((data_slice, ic_color))
+    } else {
+        None
+    };
+
+    loader_uncompress(r, fg, bg, progress, indeterminate != 0, i);
+}
+
+#[cfg(any(feature = "model_tt", feature = "model_tr"))]
+#[inline(always)]
+fn get_loader_vectors(indeterminate: bool, progress: i32) -> (Point, Point) {
+    let (start_progress, end_progress) = if indeterminate {
+        const LOADER_INDETERMINATE_WIDTH: i32 = 100;
+        (
+            progress - LOADER_INDETERMINATE_WIDTH,
+            progress + LOADER_INDETERMINATE_WIDTH,
+        )
+    } else {
+        (0, progress)
+    };
+
+    let start = ((360 * start_progress) / 1000) % 360;
+    let end = ((360 * end_progress) / 1000) % 360;
+
+    let start_vector;
+    let end_vector;
+
+    if indeterminate {
+        start_vector = get_vector(start);
+        end_vector = get_vector(end);
+    } else if progress >= 1000 {
+        start_vector = Point::zero();
+        end_vector = Point::zero();
+    } else if progress > 500 {
+        start_vector = get_vector(end);
+        end_vector = get_vector(start);
+    } else {
+        start_vector = get_vector(start);
+        end_vector = get_vector(end);
+    }
+
+    (start_vector, end_vector)
+}
+
+#[cfg(all(
+    any(feature = "model_tt", feature = "model_tr"),
+    not(feature = "dma2d")
+))]
+pub fn loader_rust(
+    r: Rect,
+    fg_color: Color,
+    bg_color: Color,
+    progress: i32,
+    indeterminate: bool,
+    icon: Option<(&[u8], Color, Offset)>,
+) {
+    const OUTER: f32 = constant::LOADER_OUTER;
+    const INNER: f32 = constant::LOADER_INNER;
+    const ICON_MAX_SIZE: i32 = constant::LOADER_ICON_MAX_SIZE;
+
+    const IN_INNER_ANTI: i32 = ((INNER - 0.5) * (INNER - 0.5)) as i32;
+    const INNER_MIN: i32 = ((INNER + 0.5) * (INNER + 0.5)) as i32;
+    const INNER_MAX: i32 = ((INNER + 1.5) * (INNER + 1.5)) as i32;
+    const INNER_OUTER_ANTI: i32 = ((INNER + 2.5) * (INNER + 2.5)) as i32;
+    const OUTER_OUT_ANTI: i32 = ((OUTER - 1.5) * (OUTER - 1.5)) as i32;
+    const OUTER_MAX: i32 = ((OUTER - 0.5) * (OUTER - 0.5)) as i32;
+
+    //let r = area.translate(get_offset());
+    let clamped = r.clamp(constant::screen());
+    set_window(clamped);
+
+    let center = r.center();
+    let colortable = get_color_table(fg_color, bg_color);
+    let mut icon_colortable = colortable.clone();
+
+    let mut use_icon = false;
+    let mut icon_area = Rect::zero();
+    let mut icon_area_clamped = Rect::zero();
+    let mut icon_width = 0;
+    let mut icon_data = [].as_ref();
+
+    if let Some((data, color, size)) = icon {
+        if size.x <= ICON_MAX_SIZE && size.y <= ICON_MAX_SIZE {
+            icon_width = size.x;
+            icon_area = Rect::from_center_and_size(center, size);
+            icon_area_clamped = icon_area.clamp(constant::screen());
+            icon_data = data;
+            use_icon = true;
+            icon_colortable = get_color_table(color, bg_color);
+        }
+    }
+
+    let show_all = !indeterminate && progress >= 1000;
+    let inverted = !indeterminate && progress > 500;
+    let (start_vector, end_vector) = get_loader_vectors(indeterminate, progress);
+
+    let n_start = Point::new(-start_vector.y, start_vector.x);
+
+    for y_c in r.y0..r.y1 {
+        for x_c in r.x0..r.x1 {
+            let p = Point::new(x_c, y_c);
+            let mut icon_pixel = false;
+
+            let mut underlying_color = bg_color;
+
+            if use_icon && icon_area_clamped.contains(p) {
+                let x = x_c - center.x;
+                let y = y_c - center.y;
+                if (x * x + y * y) <= IN_INNER_ANTI {
+                    let x_i = x_c - icon_area.x0;
+                    let y_i = y_c - icon_area.y0;
+
+                    let data = icon_data[(((x_i & 0xFE) + (y_i * icon_width)) / 2) as usize];
+                    if (x_i & 0x01) == 0 {
+                        underlying_color = icon_colortable[(data & 0xF) as usize];
+                    } else {
+                        underlying_color = icon_colortable[(data >> 4) as usize];
+                    }
+                    icon_pixel = true;
+                }
+            }
+
+            if clamped.contains(p) && !icon_pixel {
+                let y_p = -(y_c - center.y);
+                let x_p = x_c - center.x;
+
+                let vx = Point::new(x_p, y_p);
+                let n_vx = Point::new(-y_p, x_p);
+
+                let d = y_p * y_p + x_p * x_p;
+
+                let included = if inverted {
+                    !is_clockwise_or_equal(n_start, vx)
+                        || !is_clockwise_or_equal_inc(n_vx, end_vector)
+                } else {
+                    is_clockwise_or_equal(n_start, vx)
+                        && is_clockwise_or_equal_inc(n_vx, end_vector)
+                };
+
+                // The antialiasing calculation below uses simplified distance difference
+                // calculation. Optimally, SQRT should be used, but assuming
+                // diameter large enough and antialiasing over distance
+                // r_outer-r_inner = 1, the difference between simplified:
+                // (d^2-r_inner^2)/(r_outer^2-r_inner^2) and precise: (sqrt(d^2)
+                // - r_inner)/(r_outer-r_inner) is negligible
+
+                if show_all || included {
+                    //active part
+                    if d <= IN_INNER_ANTI {
+                        underlying_color = bg_color;
+                    } else if d <= INNER_MIN {
+                        let c_i =
+                            ((15 * (d - IN_INNER_ANTI)) / (INNER_MIN - IN_INNER_ANTI)) as usize;
+                        underlying_color = colortable[c_i];
+                    } else if d <= OUTER_OUT_ANTI {
+                        underlying_color = fg_color;
+                    } else if d <= OUTER_MAX {
+                        let c_i =
+                            ((15 * (d - OUTER_OUT_ANTI)) / (OUTER_MAX - OUTER_OUT_ANTI)) as usize;
+                        underlying_color = colortable[15 - c_i];
+                    } else {
+                        underlying_color = bg_color;
+                    }
+                } else {
+                    //inactive part
+                    if d <= IN_INNER_ANTI {
+                        underlying_color = bg_color;
+                    } else if d <= INNER_MIN {
+                        let c_i =
+                            ((15 * (d - IN_INNER_ANTI)) / (INNER_MIN - IN_INNER_ANTI)) as usize;
+                        underlying_color = colortable[c_i];
+                    } else if d <= INNER_MAX {
+                        underlying_color = fg_color;
+                    } else if d <= INNER_OUTER_ANTI {
+                        let c_i =
+                            ((10 * (d - INNER_MAX)) / (INNER_OUTER_ANTI - INNER_MAX)) as usize;
+                        underlying_color = colortable[15 - c_i];
+                    } else if d <= OUTER_OUT_ANTI {
+                        underlying_color = colortable[5];
+                    } else if d <= OUTER_MAX {
+                        let c_i =
+                            ((5 * (d - OUTER_OUT_ANTI)) / (OUTER_MAX - OUTER_OUT_ANTI)) as usize;
+                        underlying_color = colortable[5 - c_i];
+                    } else {
+                        underlying_color = bg_color;
+                    }
+                }
+            }
+
+            pixeldata(underlying_color);
+        }
+    }
+
+    pixeldata_dirty();
+}
+
+#[cfg(all(any(feature = "model_tt", feature = "model_tr"), feature = "dma2d"))]
+pub fn loader_rust(
+    r: Rect,
+    fg_color: Color,
+    bg_color: Color,
+    progress: i32,
+    indeterminate: bool,
+    icon: Option<(&[u8], Color, Offset)>,
+) {
+    const OUTER: f32 = constant::LOADER_OUTER;
+    const INNER: f32 = constant::LOADER_INNER;
+    const ICON_MAX_SIZE: i32 = constant::LOADER_ICON_MAX_SIZE;
+
+    const IN_INNER_ANTI: i32 = ((INNER - 0.5) * (INNER - 0.5)) as i32;
+    const INNER_MIN: i32 = ((INNER + 0.5) * (INNER + 0.5)) as i32;
+    const INNER_MAX: i32 = ((INNER + 1.5) * (INNER + 1.5)) as i32;
+    const INNER_OUTER_ANTI: i32 = ((INNER + 2.5) * (INNER + 2.5)) as i32;
+    const OUTER_OUT_ANTI: i32 = ((OUTER - 1.5) * (OUTER - 1.5)) as i32;
+    const OUTER_MAX: i32 = ((OUTER - 0.5) * (OUTER - 0.5)) as i32;
+
+    //let r = area.translate(get_offset());
+    let clamped = r.clamp(constant::screen());
+    set_window(clamped);
+
+    let center = r.center();
+
+    let mut use_icon = false;
+    let mut icon_area = Rect::zero();
+    let mut icon_area_clamped = Rect::zero();
+    let mut icon_width = 0;
+    let mut icon_offset = 0;
+    let mut icon_color = Color::from_u16(0);
+    let mut icon_data = [].as_ref();
+
+    if let Some((data, color, size)) = icon {
+        if size.x <= ICON_MAX_SIZE && size.y <= ICON_MAX_SIZE {
+            icon_width = size.x;
+            icon_area = Rect::from_center_and_size(center, size);
+            icon_area_clamped = icon_area.clamp(constant::screen());
+            icon_offset = (icon_area_clamped.x0 - r.x0) / 2;
+            icon_color = color;
+            icon_data = data;
+            use_icon = true;
+        }
+    }
+
+    let show_all = !indeterminate && progress >= 1000;
+    let inverted = !indeterminate && progress > 500;
+    let (start_vector, end_vector) = get_loader_vectors(indeterminate, progress);
+
+    let n_start = Point::new(-start_vector.y, start_vector.x);
+
+    let b1 = dma2d::get_buffer_16bpp(0, false);
+    let b2 = dma2d::get_buffer_16bpp(1, false);
+    let ib1 = dma2d::get_buffer_4bpp(0, true);
+    let ib2 = dma2d::get_buffer_4bpp(1, true);
+    let empty_line = dma2d::get_buffer_4bpp(2, true);
+
+    dma2d_setup_4bpp_over_4bpp(fg_color.into(), bg_color.into(), icon_color.into());
+
+    for y_c in r.y0..r.y1 {
+        let mut icon_buffer = &mut *empty_line;
+        let icon_buffer_used;
+        let loader_buffer;
+
+        if y_c % 2 == 0 {
+            icon_buffer_used = &mut *ib1;
+            loader_buffer = &mut *b1;
+        } else {
+            icon_buffer_used = &mut *ib2;
+            loader_buffer = &mut *b2;
+        }
+
+        if use_icon && y_c >= icon_area_clamped.y0 && y_c < icon_area_clamped.y1 {
+            let y_i = y_c - icon_area.y0;
+
+            // Optimally, we should cut corners of the icon if it happens to be large enough
+            // to invade loader area. but this would require calculation of circle chord
+            // length (since we need to limit data copied to the buffer),
+            // which requires expensive SQRT. Therefore, when using this method of loader
+            // drawing, special care needs to be taken to ensure that the icons
+            // have transparent corners.
+
+            icon_buffer_used[icon_offset as usize..(icon_offset + icon_width / 2) as usize]
+                .copy_from_slice(
+                    &icon_data[(y_i * (icon_width / 2)) as usize
+                        ..((y_i + 1) * (icon_width / 2)) as usize],
+                );
+            icon_buffer = icon_buffer_used;
+        }
+
+        let mut pix_c_idx_prev: u8 = 0;
+
+        for x_c in r.x0..r.x1 {
+            let p = Point::new(x_c, y_c);
+
+            let pix_c_idx: u8;
+
+            if clamped.contains(p) {
+                let y_p = -(y_c - center.y);
+                let x_p = x_c - center.x;
+
+                let vx = Point::new(x_p, y_p);
+                let n_vx = Point::new(-y_p, x_p);
+
+                let d = y_p * y_p + x_p * x_p;
+
+                let included = if inverted {
+                    !is_clockwise_or_equal(n_start, vx)
+                        || !is_clockwise_or_equal_inc(n_vx, end_vector)
+                } else {
+                    is_clockwise_or_equal(n_start, vx)
+                        && is_clockwise_or_equal_inc(n_vx, end_vector)
+                };
+
+                // The antialiasing calculation below uses simplified distance difference
+                // calculation. Optimally, SQRT should be used, but assuming
+                // diameter large enough and antialiasing over distance
+                // r_outer-r_inner = 1, the difference between simplified:
+                // (d^2-r_inner^2)/(r_outer^2-r_inner^2) and precise: (sqrt(d^2)
+                // - r_inner)/(r_outer-r_inner) is negligible
+
+                if show_all || included {
+                    //active part
+                    if d <= IN_INNER_ANTI {
+                        pix_c_idx = 0;
+                    } else if d <= INNER_MIN {
+                        let c_i = ((15 * (d - IN_INNER_ANTI)) / (INNER_MIN - IN_INNER_ANTI)) as u8;
+                        pix_c_idx = c_i;
+                    } else if d <= OUTER_OUT_ANTI {
+                        pix_c_idx = 15;
+                    } else if d <= OUTER_MAX {
+                        let c_i =
+                            ((15 * (d - OUTER_OUT_ANTI)) / (OUTER_MAX - OUTER_OUT_ANTI)) as u8;
+                        pix_c_idx = 15 - c_i;
+                    } else {
+                        pix_c_idx = 0;
+                    }
+                } else {
+                    //inactive part
+                    if d <= IN_INNER_ANTI {
+                        pix_c_idx = 0;
+                    } else if d <= INNER_MIN {
+                        let c_i = ((15 * (d - IN_INNER_ANTI)) / (INNER_MIN - IN_INNER_ANTI)) as u8;
+                        pix_c_idx = c_i;
+                    } else if d <= INNER_MAX {
+                        pix_c_idx = 15;
+                    } else if d <= INNER_OUTER_ANTI {
+                        let c_i = ((10 * (d - INNER_MAX)) / (INNER_OUTER_ANTI - INNER_MAX)) as u8;
+                        pix_c_idx = 15 - c_i;
+                    } else if d <= OUTER_OUT_ANTI {
+                        pix_c_idx = 5;
+                    } else if d <= OUTER_MAX {
+                        let c_i = ((5 * (d - OUTER_OUT_ANTI)) / (OUTER_MAX - OUTER_OUT_ANTI)) as u8;
+                        pix_c_idx = 5 - c_i;
+                    } else {
+                        pix_c_idx = 0;
+                    }
+                }
+            } else {
+                pix_c_idx = 0;
+            }
+
+            let x = x_c - r.x0;
+            if x % 2 == 0 {
+                pix_c_idx_prev = pix_c_idx;
+            } else {
+                loader_buffer[(x >> 1) as usize] = pix_c_idx_prev | pix_c_idx << 4;
+            }
+        }
+
+        dma2d_wait_for_transfer();
+        dma2d_start_blend(icon_buffer, loader_buffer, r.width());
+    }
+
+    dma2d_wait_for_transfer();
+}
+
+fn process_4bpp_buffer(
+    y: i32,
+    r: Rect,
+    offset: Offset,
+    ctx: &mut UzlibContext,
+    buffer: &mut [u8],
+    i: &mut i32,
+) -> bool {
+    let mut not_empty = false;
+    let mut uncomp_buffer = [0u8; (constant::WIDTH / 2) as usize];
+
+    if y >= r.y0 && y < r.y1 {
+        let line_idx = y - r.y0;
+
+        while *i < line_idx {
+            //compensate uncompressed unused lines
+            unwrap!(
+                ctx.uncompress(&mut uncomp_buffer[0..(r.width() / 2) as usize]),
+                "Decompression failed"
+            );
+
+            (*i) += 1;
+        }
+
+        // decompress whole line
+        unwrap!(
+            ctx.uncompress(&mut uncomp_buffer[0..(r.width() / 2) as usize]),
+            "Decompression failed"
+        );
+        (*i) += 1;
+
+        position_buffer(buffer, &uncomp_buffer, 4, offset.x, r.width());
+
+        not_empty = true;
+    }
+
+    not_empty
+}
+
+fn position_buffer(
+    dest_buffer: &mut [u8],
+    src_buffer: &[u8],
+    buffer_bpp: usize,
+    offset_x: i32,
+    data_width: i32,
+) {
+    // sets the pixel position inside dest buffer
+    // end of data will be cut in the DMA transfer
+    let start: usize = (offset_x).clamp(0, constant::WIDTH) as usize;
+    let end: usize = (offset_x + data_width).clamp(0, constant::WIDTH) as usize;
+    let width = end - start;
+    // if the offset is negative, need to skip beginning of uncompressed data
+    let x_sh = if offset_x < 0 {
+        (-offset_x).clamp(0, constant::WIDTH - width as i32) as usize
+    } else {
+        0
+    };
+    dest_buffer[((start * buffer_bpp) / 8)..((start + width) * buffer_bpp) / 8].copy_from_slice(
+        &src_buffer[((x_sh * buffer_bpp) / 8) as usize..((x_sh as usize + width) * buffer_bpp) / 8],
+    );
+}
+
+fn process_16bpp_buffer(
+    y: i32,
+    r: Rect,
+    offset: Offset,
+    ctx: &mut UzlibContext,
+    buffer: &mut [u8],
+    i: &mut i32,
+) -> bool {
+    let mut not_empty = false;
+    let mut uncomp_buffer = [0u8; (constant::WIDTH * 2) as usize];
+
+    if y >= r.y0 && y < r.y1 {
+        let line_idx = y - r.y0;
+
+        while *i < line_idx {
+            //compensate uncompressed unused lines
+            unwrap!(
+                ctx.uncompress(&mut uncomp_buffer[0..(r.width() * 2) as usize]),
+                "Decompression failed"
+            );
+
+            (*i) += 1;
+        }
+        // decompress whole line
+        unwrap!(
+            ctx.uncompress(&mut uncomp_buffer[0..(r.width() * 2) as usize]),
+            "Decompression failed"
+        );
+
+        (*i) += 1;
+
+        position_buffer(buffer, &uncomp_buffer, 16, offset.x, r.width());
+
+        not_empty = true;
+    }
+
+    not_empty
+}
+
+#[cfg(feature = "dma2d")]
+pub fn text_over_image(
+    bg_area: Option<(Rect, Color)>,
+    data: &[u8],
+    text: &str,
+    font: Font,
+    offset_img: Offset,
+    offset_text: Offset,
+    text_color: Color,
+) {
+    let text_buffer = get_text_buffer(0, true);
+    let img1 = get_buffer_16bpp(0, true);
+    let img2 = get_buffer_16bpp(1, true);
+    let empty_img = get_buffer_16bpp(2, true);
+    let t1 = get_buffer_4bpp(0, true);
+    let t2 = get_buffer_4bpp(1, true);
+    let empty_t = get_buffer_4bpp(2, true);
+
+    let toif_info = unwrap!(display::toif_info(data), "Invalid TOIF data");
+    assert!(!toif_info.grayscale);
+    assert!(toif_info.width <= constant::WIDTH as u16);
+
+    let r_img;
+    let area;
+    if let Some((a, color)) = bg_area {
+        let hi = (color.to_u16() >> 8) as u8;
+        let lo = (color.to_u16() & 0xFF) as u8;
+        //prefill image/bg buffers with the bg color
+        for i in 0..(constant::WIDTH) as usize {
+            img1[2 * i] = lo;
+            img1[2 * i + 1] = hi;
+            img2[2 * i] = lo;
+            img2[2 * i + 1] = hi;
+            empty_img[2 * i] = lo;
+            empty_img[2 * i + 1] = hi;
+        }
+        area = a;
+        r_img = Rect::from_top_left_and_size(
+            a.top_left() + offset_img,
+            Offset::new(toif_info.width.into(), toif_info.height.into()),
+        );
+    } else {
+        area = Rect::from_top_left_and_size(
+            Point::new(offset_img.x, offset_img.y),
+            Offset::new(toif_info.width.into(), toif_info.height.into()),
+        );
+        r_img = area;
+    }
+    let clamped = area.clamp(constant::screen());
+
+    let text_width = display::text_width(text, font.0);
+    let font_max_height = display::text_max_height(font.0);
+    let font_baseline = display::text_baseline(font.0);
+    let text_width_clamped = text_width.clamp(0, clamped.width());
+
+    let text_top = offset_text.y - font_max_height + font_baseline;
+    let text_bottom = offset_text.y + font_baseline;
+    let text_left = offset_text.x;
+    let text_right = offset_text.x + text_width_clamped;
+
+    let text_area = Rect::new(
+        Point::new(text_left, text_top),
+        Point::new(text_right, text_bottom),
+    );
+
+    display::text_into_buffer(text, font.0, text_buffer, text_area.x0, constant::WIDTH);
+
+    set_window(clamped);
+
+    let mut window = [0; UZLIB_WINDOW_SIZE];
+    let mut ctx = UzlibContext::new(&data[12..], Some(&mut window));
+
+    dma2d_setup_4bpp_over_16bpp(text_color.into());
+
+    let mut i = 0;
+
+    for y in clamped.y0..clamped.y1 {
+        let mut img_buffer = &mut *empty_img;
+        let mut t_buffer = &mut *empty_t;
+        let img_buffer_used;
+        let t_buffer_used;
+
+        if y % 2 == 0 {
+            t_buffer_used = &mut *t1;
+            img_buffer_used = &mut *img1;
+        } else {
+            t_buffer_used = &mut *t2;
+            img_buffer_used = &mut *img2;
+        }
+
+        let using_img =
+            process_16bpp_buffer(y, r_img, offset_img, &mut ctx, img_buffer_used, &mut i);
+
+        if y >= text_area.y0 && y < text_area.y1 {
+            let y_pos = y - text_area.y0;
+            position_buffer(
+                t_buffer_used,
+                &text_buffer[(y_pos * constant::WIDTH / 2) as usize
+                    ..((y_pos + 1) * constant::WIDTH / 2) as usize],
+                4,
+                0,
+                text_width,
+            );
+            t_buffer = t_buffer_used;
+        }
+
+        if using_img {
+            img_buffer = img_buffer_used;
+        }
+
+        dma2d_wait_for_transfer();
+        dma2d_start_blend(t_buffer, img_buffer, clamped.width());
+    }
+
+    dma2d_wait_for_transfer();
+}
+
+#[cfg(feature = "dma2d")]
+pub fn icon_over_icon(
+    bg_area: Option<Rect>,
+    bg: (&[u8], Offset, Color),
+    fg: (&[u8], Offset, Color),
+    bg_color: Color,
+) {
+    let bg1 = get_buffer_16bpp(0, true);
+    let bg2 = get_buffer_16bpp(1, true);
+    let empty1 = get_buffer_16bpp(2, true);
+    let fg1 = get_buffer_4bpp(0, true);
+    let fg2 = get_buffer_4bpp(1, true);
+    let empty2 = get_buffer_4bpp(2, true);
+
+    let (data_bg, offset_bg, color_icon_bg) = bg;
+    let (data_fg, offset_fg, color_icon_fg) = fg;
+
+    let toif_info_bg = unwrap!(display::toif_info(data_bg), "Invalid TOIF data");
+    assert!(toif_info_bg.grayscale);
+    assert!(toif_info_bg.width <= constant::WIDTH as u16);
+    assert_eq!(toif_info_bg.width % 2, 0);
+
+    let toif_info_fg = unwrap!(display::toif_info(data_fg), "Invalid TOIF data");
+    assert!(toif_info_fg.grayscale);
+    assert!(toif_info_fg.width <= constant::WIDTH as u16);
+    assert_eq!(toif_info_fg.width % 2, 0);
+
+    let area;
+    let r_bg;
+    if let Some(a) = bg_area {
+        area = a;
+        r_bg = Rect::from_top_left_and_size(
+            a.top_left() + offset_bg,
+            Offset::new(toif_info_bg.width.into(), toif_info_bg.height.into()),
+        );
+    } else {
+        r_bg = Rect::from_top_left_and_size(
+            Point::new(offset_bg.x, offset_bg.y),
+            Offset::new(toif_info_bg.width.into(), toif_info_bg.height.into()),
+        );
+        area = r_bg;
+    }
+
+    let r_fg = Rect::from_top_left_and_size(
+        area.top_left() + offset_fg,
+        Offset::new(toif_info_fg.width.into(), toif_info_fg.height.into()),
+    );
+
+    let clamped = area.clamp(constant::screen());
+
+    set_window(clamped);
+
+    let mut window_bg = [0; UZLIB_WINDOW_SIZE];
+    let mut ctx_bg = UzlibContext::new(&data_bg[12..], Some(&mut window_bg));
+
+    let mut window_fg = [0; UZLIB_WINDOW_SIZE];
+    let mut ctx_fg = UzlibContext::new(&data_fg[12..], Some(&mut window_fg));
+
+    dma2d_setup_4bpp_over_4bpp(color_icon_bg.into(), bg_color.into(), color_icon_fg.into());
+
+    let mut fg_i = 0;
+    let mut bg_i = 0;
+
+    for y in clamped.y0..clamped.y1 {
+        let mut fg_buffer = &mut *empty2;
+        let mut bg_buffer = &mut *empty1;
+        let fg_buffer_used;
+        let bg_buffer_used;
+
+        if y % 2 == 0 {
+            fg_buffer_used = &mut *fg1;
+            bg_buffer_used = &mut *bg1;
+        } else {
+            fg_buffer_used = &mut *fg2;
+            bg_buffer_used = &mut *bg2;
+        }
+
+        let using_fg =
+            process_4bpp_buffer(y, r_fg, offset_fg, &mut ctx_fg, fg_buffer_used, &mut fg_i);
+        let using_bg =
+            process_4bpp_buffer(y, r_bg, offset_bg, &mut ctx_bg, bg_buffer_used, &mut bg_i);
+
+        if using_fg {
+            fg_buffer = fg_buffer_used;
+        }
+        if using_bg {
+            bg_buffer = bg_buffer_used;
+        }
+
+        dma2d_wait_for_transfer();
+        dma2d_start_blend(fg_buffer, bg_buffer, clamped.width());
+    }
+
+    dma2d_wait_for_transfer();
 }
 
 /// Gets a color of a pixel on `p` coordinates of rounded rectangle with corner
@@ -636,7 +1380,7 @@ impl Glyph {
                 adv: *data.offset(2) as i32,
                 bearing_x: *data.offset(3) as i32,
                 bearing_y: *data.offset(4) as i32,
-                data: slice::from_raw_parts(data.offset(5), data_bytes as usize),
+                data: from_raw_parts(data.offset(5), data_bytes as usize),
             }
         }
     }
@@ -755,6 +1499,12 @@ impl Color {
         let g = (g as u16 & 0xFC) << 3;
         let b = (b as u16 & 0xF8) >> 3;
         Self(r | g | b)
+    }
+
+    pub const fn luminance(self) -> u32 {
+        ((self.r() as u32 * 299) / 1000)
+            + (self.g() as u32 * 587) / 1000
+            + (self.b() as u32 * 114) / 1000
     }
 
     pub const fn r(self) -> u8 {

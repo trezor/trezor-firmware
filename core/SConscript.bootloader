@@ -3,6 +3,7 @@
 import os
 
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
+DMA2D = False
 
 if TREZOR_MODEL in ('1', ):
     # skip bootloader build
@@ -64,7 +65,10 @@ CPPPATH_MOD += [
 ]
 
 SOURCE_MOD += [
+    'embed/extmod/modtrezorui/buffers.c',
+    'embed/extmod/modtrezorui/colors.c',
     'embed/extmod/modtrezorui/display.c',
+    f'embed/extmod/modtrezorui/display-stm32_{TREZOR_MODEL}.c',
     'embed/extmod/modtrezorui/fonts/fonts.c',
     'embed/extmod/modtrezorui/fonts/font_bitmap.c',
     'vendor/micropython/lib/uzlib/adler32.c',
@@ -134,6 +138,12 @@ if TREZOR_MODEL in ('R'):
 if TREZOR_MODEL in ('T',):
     SOURCE_TREZORHAL.append('embed/trezorhal/touch.c')
 
+if DMA2D:
+    SOURCE_STMHAL.append('vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma2d.c')
+    SOURCE_TREZORHAL.append('embed/trezorhal/dma2d.c')
+    CPPDEFINES_MOD += [
+        'USE_DMA2D',
+    ]
 
 # fonts
 def add_font(font_name, font, defines, sources):
@@ -170,6 +180,12 @@ if TREZOR_MODEL in ('T', 'R'):
     CPU_ASFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16'
     CPU_CCFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mtune=cortex-m4 '
     CPU_MODEL   = 'STM32F427xx'
+    RUST_TARGET = 'thumbv7em-none-eabihf'
+elif TREZOR_MODEL in ('1',):
+    CPU_ASFLAGS = '-mthumb -mcpu=cortex-m3 -mfloat-abi=soft'
+    CPU_CCFLAGS = '-mthumb -mtune=cortex-m3 -mcpu=cortex-m3 -mfloat-abi=soft '
+    CPU_MODEL   = 'STM32F405xx'
+    RUST_TARGET = 'thumbv7m-none-eabi'
 else:
     raise ValueError('Unknown Trezor model')
 
@@ -186,6 +202,7 @@ env.Replace(
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
     LINKFLAGS='-T embed/bootloader/memory.ld -Wl,--gc-sections -Wl,-Map=build/bootloader/bootloader.map -Wl,--warn-common',
     CPPPATH=[
+        'embed/rust',
         'embed/bootloader',
         'embed/bootloader/nanopb',
         'embed/bootloader/protob',

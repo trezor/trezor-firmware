@@ -26,6 +26,20 @@ pub fn text(baseline_x: i32, baseline_y: i32, text: &str, font: i32, fgcolor: u1
     }
 }
 
+pub fn text_into_buffer(text: &str, font: i32, buffer: &[u8], x_offset: i32, line_width: i32) {
+    unsafe {
+        ffi::display_text_render_buffer(
+            text.as_ptr() as _,
+            text.len() as _,
+            font,
+            buffer.as_ptr() as _,
+            buffer.len() as _,
+            x_offset,
+            line_width,
+        )
+    }
+}
+
 pub fn text_width(text: &str, font: i32) -> i32 {
     unsafe { ffi::display_text_width(text.as_ptr() as _, text.len() as _, font) }
 }
@@ -42,6 +56,14 @@ pub fn get_char_glyph(ch: u8, font: i32) -> *const u8 {
 
 pub fn text_height(font: i32) -> i32 {
     unsafe { ffi::font_height(font) }
+}
+
+pub fn text_max_height(font: i32) -> i32 {
+    unsafe { ffi::font_max_height(font) }
+}
+
+pub fn text_baseline(font: i32) -> i32 {
+    unsafe { ffi::font_baseline(font) }
 }
 
 pub fn bar(x: i32, y: i32, w: i32, h: i32, fgcolor: u16) {
@@ -121,8 +143,8 @@ pub fn loader(
 #[cfg(all(feature = "model_tt", target_arch = "arm"))]
 pub fn pixeldata(c: u16) {
     unsafe {
-        ffi::DISPLAY_DATA_ADDRESS.write_volatile((c >> 8) as u8);
         ffi::DISPLAY_DATA_ADDRESS.write_volatile((c & 0xff) as u8);
+        ffi::DISPLAY_DATA_ADDRESS.write_volatile((c >> 8) as u8);
     }
 }
 
