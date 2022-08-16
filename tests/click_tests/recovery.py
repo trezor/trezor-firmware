@@ -59,4 +59,4 @@ def enter_shares(debug, shares: list):
 def finalize(debug):
     layout = debug.click(buttons.OK, wait=True)
     # TODO: should we also run Click/Persistence tests for model R?
-    assert layout.text == "HomescreenModelT"
+    assert layout.text == "Homescreen"

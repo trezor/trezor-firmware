@@ -50,7 +50,7 @@ def set_autolock_delay(device_handler, delay_ms):
     debug.click(buttons.OK)
 
     layout = debug.wait_layout()
-    assert layout.text == "HomescreenModelT"
+    assert layout.text == "Homescreen"
     assert device_handler.result() == "Settings applied"
 
 
