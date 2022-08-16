@@ -26,20 +26,20 @@ pub struct Loader<T> {
     state: State,
     growing_duration: Duration,
     shrinking_duration: Duration,
-    text: Option<display::TextOverlay<T>>,
+    text_overlay: Option<display::TextOverlay<T>>,
     styles: LoaderStyleSheet,
 }
 
 impl<T: AsRef<str>> Loader<T> {
     pub const SIZE: Offset = Offset::new(120, 120);
 
-    pub fn new(overlay: Option<display::TextOverlay<T>>, styles: LoaderStyleSheet) -> Self {
+    pub fn new(text_overlay: Option<display::TextOverlay<T>>, styles: LoaderStyleSheet) -> Self {
         Self {
             area: Rect::zero(),
             state: State::Initial,
             growing_duration: Duration::from_millis(1000),
             shrinking_duration: Duration::from_millis(500),
-            text: overlay,
+            text_overlay,
             styles,
         }
     }
@@ -72,17 +72,17 @@ impl<T: AsRef<str>> Loader<T> {
     /// When the text_overlay does not exist (as it was created by icon),
     /// create it and place it
     pub fn set_text(&mut self, text: T) {
-        if let Some(text) = &mut self.text {
-            text.set_text(text);
+        if let Some(text_overlay) = &mut self.text_overlay {
+            text_overlay.set_text(text);
         } else {
             let text = display::TextOverlay::new(
                 text,
                 self.styles.normal.font,
             );
-            self.text = Some(text);
-            if let Some(text) = &mut self.text {
-                let baseline = Offset::new(self.area.width() / 2 + 1, self.area.height() - 1);
-                text.place(baseline);
+            self.text_overlay = Some(text);
+            if let Some(text_overlay) = &mut self.text_overlay {
+                let baseline = self.area.bottom_center() + Offset::new(1, -1);
+                text_overlay.place(baseline);
             }
         }
     }
@@ -160,13 +160,13 @@ impl<T: AsRef<str>> Loader<T> {
 
     pub fn paint_loader(&mut self, style: &LoaderStyle, done: i32) {
         // TODO: support painting icons
-        if let Some(text) = &mut self.text {
+        if let Some(text_overlay) = &mut self.text_overlay {
             let invert_from = ((self.area.width() + 1) * done) / (display::LOADER_MAX as i32);
 
             // TODO: the text should be moved one pixel to the top so it is centered in the loader
             display::bar_with_text_and_fill(
                 self.area,
-                Some(text),
+                Some(text_overlay),
                 style.fg_color,
                 style.bg_color,
                 -1,
@@ -181,9 +181,9 @@ impl<T: AsRef<str>> Component for Loader<T> {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
-        if let Some(text) = &mut self.text {
+        if let Some(text_overlay) = &mut self.text_overlay {
             let baseline = bounds.bottom_center() + Offset::new(1, -1);
-            text.place(baseline);
+            text_overlay.place(baseline);
         }
         self.area
     }
