@@ -45,10 +45,7 @@ impl<T: AsRef<str>> Loader<T> {
     }
 
     pub fn text(text: T, styles: LoaderStyleSheet) -> Self {
-        let text_overlay = display::TextOverlay::new(
-            text,
-            styles.normal.font
-        );
+        let text_overlay = display::TextOverlay::new(text, styles.normal.font);
 
         Self::new(Some(text_overlay), styles)
     }
@@ -75,10 +72,7 @@ impl<T: AsRef<str>> Loader<T> {
         if let Some(text_overlay) = &mut self.text_overlay {
             text_overlay.set_text(text);
         } else {
-            let text = display::TextOverlay::new(
-                text,
-                self.styles.normal.font,
-            );
+            let text = display::TextOverlay::new(text, self.styles.normal.font);
             self.text_overlay = Some(text);
             if let Some(text_overlay) = &mut self.text_overlay {
                 let baseline = self.area.bottom_center() + Offset::new(1, -1);

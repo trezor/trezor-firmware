@@ -1,3 +1,4 @@
+use crate::time::Duration;
 use crate::ui::{
     component::{Component, Event, EventCtx},
     constant,
@@ -5,7 +6,6 @@ use crate::ui::{
     event::{ButtonEvent, PhysicalButton},
     geometry::{Offset, Point, Rect},
 };
-use crate::time::Duration;
 
 use heapless::String;
 
