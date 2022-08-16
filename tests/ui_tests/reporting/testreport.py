@@ -8,7 +8,7 @@ from typing import Dict, List, Set
 
 import dominate
 import dominate.tags as t
-from dominate.tags import a, div, h1, h2, hr, p, strong, table, th, tr
+from dominate.tags import a, div, h1, h2, hr, p, span, strong, table, th, tr
 from dominate.util import text
 
 from . import download, html
@@ -178,7 +178,8 @@ def all_unique_screens(test_case_dirs: List[Path]) -> Path:
                     # Adding link to the appropriate hash, where other testcases
                     # with the same hash (screen) are listed.
                     with a(href=f"#{png_hash}"):
-                        html.image_raw(png, _image_width(test_case_dir.name))
+                        with span(id=png_hash[:8]):
+                            html.image_raw(png, _image_width(test_case_dir.name))
 
                 screen_hashes[png_hash].append(test_case_dir)
                 hash_images[png_hash] = png
@@ -188,7 +189,8 @@ def all_unique_screens(test_case_dirs: List[Path]) -> Path:
             h2(png_hash)
             with div(id=png_hash):
                 # Showing the exact image as well (not magnifying it)
-                html.image_raw(hash_images[png_hash])
+                with a(href=f"#{png_hash[:8]}"):
+                    html.image_raw(hash_images[png_hash])
                 for case in test_cases:
                     # Adding link to each test-case
                     with a(href=f"{ALL_SCREENS}#{case.name}"):
