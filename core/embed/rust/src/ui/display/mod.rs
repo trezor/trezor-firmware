@@ -1,17 +1,33 @@
+#[cfg(any(feature = "model_tt", feature = "model_tr"))]
+pub mod loader;
+
 use super::{
     constant,
     geometry::{Offset, Point, Rect},
+};
+#[cfg(feature = "dma2d")]
+use crate::trezorhal::{
+    buffers::{get_buffer_16bpp, get_buffer_4bpp, get_text_buffer},
+    dma2d::{
+        dma2d_setup_4bpp_over_16bpp, dma2d_setup_4bpp_over_4bpp, dma2d_start_blend,
+        dma2d_wait_for_transfer,
+    },
 };
 use crate::{
     error::Error,
     time::Duration,
     trezorhal::{
-        display, qr, time,
+        display,
+        display::ToifFormat,
+        qr, time,
         uzlib::{UzlibContext, UZLIB_WINDOW_SIZE},
     },
     ui::lerp::Lerp,
 };
 use core::slice;
+
+#[cfg(any(feature = "model_tt", feature = "model_tr"))]
+pub use loader::{loader, loader_indeterminate, LOADER_MAX, LOADER_MIN};
 
 pub fn backlight() -> i32 {
     display::backlight(-1)
@@ -66,7 +82,7 @@ pub fn rect_fill_rounded(r: Rect, fg_color: Color, bg_color: Color, radius: u8) 
 /// NOTE: Cannot start at odd x-coordinate. In this case icon is shifted 1px
 /// left.
 pub fn icon_top_left(top_left: Point, data: &[u8], fg_color: Color, bg_color: Color) {
-    let (toif_size, toif_data) = toif_info_ensure(data, true);
+    let (toif_size, toif_data) = toif_info_ensure(data, ToifFormat::GrayScaleEH);
     display::icon(
         top_left.x,
         top_left.y,
@@ -79,7 +95,7 @@ pub fn icon_top_left(top_left: Point, data: &[u8], fg_color: Color, bg_color: Co
 }
 
 pub fn icon(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
-    let (toif_size, toif_data) = toif_info_ensure(data, true);
+    let (toif_size, toif_data) = toif_info_ensure(data, ToifFormat::GrayScaleEH);
     let r = Rect::from_center_and_size(center, toif_size);
     display::icon(
         r.x0,
@@ -93,7 +109,7 @@ pub fn icon(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
 }
 
 pub fn icon_rust(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
-    let (toif_size, toif_data) = toif_info_ensure(data, true);
+    let (toif_size, toif_data) = toif_info_ensure(data, ToifFormat::GrayScaleEH);
     let r = Rect::from_center_and_size(center, toif_size);
 
     let area = r.translate(get_offset());
@@ -115,9 +131,9 @@ pub fn icon_rust(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
             if clamped.contains(p) {
                 if x % 2 == 0 {
                     unwrap!(ctx.uncompress(&mut dest), "Decompression failed");
-                    pixeldata(colortable[(dest[0] >> 4) as usize]);
-                } else {
                     pixeldata(colortable[(dest[0] & 0xF) as usize]);
+                } else {
+                    pixeldata(colortable[(dest[0] >> 4) as usize]);
                 }
             } else if x % 2 == 0 {
                 //continue unzipping but dont write to display
@@ -130,20 +146,20 @@ pub fn icon_rust(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
 }
 
 pub fn image(center: Point, data: &[u8]) {
-    let (toif_size, toif_data) = toif_info_ensure(data, false);
+    let (toif_size, toif_data) = toif_info_ensure(data, ToifFormat::FullColorLE);
 
     let r = Rect::from_center_and_size(center, toif_size);
     display::image(r.x0, r.y0, r.width(), r.height(), toif_data);
 }
 
-pub fn toif_info(data: &[u8]) -> Option<(Offset, bool)> {
+pub fn toif_info(data: &[u8]) -> Option<(Offset, ToifFormat)> {
     if let Ok(info) = display::toif_info(data) {
         Some((
             Offset::new(
                 unwrap!(info.width.try_into()),
                 unwrap!(info.height.try_into()),
             ),
-            info.grayscale,
+            info.format,
         ))
     } else {
         None
@@ -152,9 +168,9 @@ pub fn toif_info(data: &[u8]) -> Option<(Offset, bool)> {
 
 /// Aborts if the TOIF file does not have the correct grayscale flag, do not use
 /// with user-supplied inputs.
-fn toif_info_ensure(data: &[u8], grayscale: bool) -> (Offset, &[u8]) {
+fn toif_info_ensure(data: &[u8], format: ToifFormat) -> (Offset, &[u8]) {
     let info = unwrap!(display::toif_info(data), "Invalid TOIF data");
-    assert_eq!(grayscale, info.grayscale);
+    assert_eq!(info.format, format);
     let size = Offset::new(
         unwrap!(info.width.try_into()),
         unwrap!(info.height.try_into()),
@@ -266,7 +282,7 @@ fn get_vector(angle: i16) -> Point {
 /// ( if v1=(x1,y1), then the counter-clockwise normal is n_v1=(-y1,x1)
 #[inline(always)]
 fn is_clockwise_or_equal(n_v1: Point, v2: Point) -> bool {
-    let psize = v2.x * n_v1.x + v2.y * n_v1.y;
+    let psize = v2.x as i32 * n_v1.x as i32 + v2.y as i32 * n_v1.y as i32;
     psize < 0
 }
 
@@ -275,7 +291,7 @@ fn is_clockwise_or_equal(n_v1: Point, v2: Point) -> bool {
 /// ( if v1=(x1,y1), then the counter-clockwise normal is n_v1=(-y1,x1)
 #[inline(always)]
 fn is_clockwise_or_equal_inc(n_v1: Point, v2: Point) -> bool {
-    let psize = v2.x * n_v1.x + v2.y * n_v1.y;
+    let psize = v2.x as i32 * n_v1.x as i32 + v2.y as i32 * n_v1.y as i32;
     psize <= 0
 }
 
@@ -308,7 +324,7 @@ pub fn rect_rounded2_partial(
     let mut icon_width = 0;
 
     if let Some((icon_bytes, icon_color)) = icon {
-        let (toif_size, toif_data) = toif_info_ensure(icon_bytes, true);
+        let (toif_size, toif_data) = toif_info_ensure(icon_bytes, ToifFormat::GrayScaleEH);
 
         if toif_size.x <= MAX_ICON_SIZE && toif_size.y <= MAX_ICON_SIZE {
             icon_area = Rect::from_center_and_size(center, toif_size);
@@ -357,9 +373,9 @@ pub fn rect_rounded2_partial(
 
                 let data = icon_data[(((x_i & 0xFE) + (y_i * icon_width)) / 2) as usize];
                 if (x_i & 0x01) == 0 {
-                    pixeldata(icon_colortable[(data >> 4) as usize]);
-                } else {
                     pixeldata(icon_colortable[(data & 0xF) as usize]);
+                } else {
+                    pixeldata(icon_colortable[(data > 4) as usize]);
                 }
                 icon_pixel = true;
             }
@@ -391,6 +407,345 @@ pub fn rect_rounded2_partial(
     }
 
     pixeldata_dirty();
+}
+
+/// Shifts position of pixel data in `src_buffer` horizontally by `offset_x`
+/// pixels and places the result into `dest_buffer`. Or in another words,
+/// `src_buffer[n]` is copied into `dest_buffer[n+offset_x]`, if it fits the
+/// `dest_buffer`.
+///
+/// Buffers hold one line of pixels on the screen, the copying is limited to
+/// respect the size of screen.
+///
+/// `buffer_bpp` determines size of pixel data
+/// `data_width` sets the width of valid data in the `src_buffer`
+fn position_buffer(
+    dest_buffer: &mut [u8],
+    src_buffer: &[u8],
+    buffer_bpp: usize,
+    offset_x: i16,
+    data_width: i16,
+) {
+    let start: usize = (offset_x).clamp(0, constant::WIDTH) as usize;
+    let end: usize = (offset_x + data_width).clamp(0, constant::WIDTH) as usize;
+    let width = end - start;
+    // if the offset is negative, need to skip beginning of uncompressed data
+    let x_sh = if offset_x < 0 {
+        (-offset_x).clamp(0, constant::WIDTH - width as i16) as usize
+    } else {
+        0
+    };
+    dest_buffer[((start * buffer_bpp) / 8)..((start + width) * buffer_bpp) / 8].copy_from_slice(
+        &src_buffer[((x_sh * buffer_bpp) / 8) as usize..((x_sh as usize + width) * buffer_bpp) / 8],
+    );
+}
+
+/// Performs decompression of one line of pixels,
+/// vertically positions the line against the display area (current position of
+/// which is described by `display_area_y`) by skipping relevant number of lines
+/// and finally horizontally positions the line against the display area
+/// by calling `position_buffer`.
+///
+/// Number of already decompressed lines is stored in `decompressed_lines` to
+/// keep track of how many need to be skipped.
+///
+/// Signals to the caller whether some data should be drawn on this line.
+fn process_buffer(
+    display_area_y: i16,
+    img_area: Rect,
+    offset: Offset,
+    ctx: &mut UzlibContext,
+    buffer: &mut [u8],
+    decompressed_lines: &mut i16,
+    buffer_bpp: usize,
+) -> bool {
+    let mut not_empty = false;
+    let uncomp_buffer =
+        &mut [0u8; (constant::WIDTH * 2) as usize][..((constant::WIDTH as usize) * buffer_bpp) / 8];
+
+    if display_area_y >= img_area.y0 && display_area_y < img_area.y1 {
+        let img_line_idx = display_area_y - img_area.y0;
+
+        while *decompressed_lines < img_line_idx {
+            //compensate uncompressed unused lines
+            unwrap!(
+                ctx.uncompress(
+                    &mut uncomp_buffer[0..((img_area.width() * buffer_bpp as i16) / 8) as usize]
+                ),
+                "Decompression failed"
+            );
+
+            (*decompressed_lines) += 1;
+        }
+        // decompress whole line
+        unwrap!(
+            ctx.uncompress(
+                &mut uncomp_buffer[0..((img_area.width() * buffer_bpp as i16) / 8) as usize]
+            ),
+            "Decompression failed"
+        );
+
+        (*decompressed_lines) += 1;
+
+        position_buffer(
+            buffer,
+            uncomp_buffer,
+            buffer_bpp,
+            offset.x,
+            img_area.width(),
+        );
+
+        not_empty = true;
+    }
+
+    not_empty
+}
+
+/// Renders text over image background
+/// If `bg_area` is given, it is filled with its color in places where there are
+/// neither text or image Positioning also depends on whether `bg_area` is
+/// provided:
+/// - if it is, text and image are positioned relative to the `bg_area` top left
+///   corner, using respective offsets. Nothing is drawn outside the `bg_area`.
+/// - if it is not, text is positioned relative to the images top left corner
+///   using `offset_text` and image is positioned on the screen using
+///   `offset_img`. Nothing is drawn outside the image.
+/// `offset_text` is interpreted as baseline, so using (0,0) will position most
+/// of the text outside the drawing area in either case.
+///
+/// The drawing area is coerced to even width, which is due to dma2d limitation
+/// when using 4bpp
+#[cfg(feature = "dma2d")]
+pub fn text_over_image(
+    bg_area: Option<(Rect, Color)>,
+    image_data: &[u8],
+    text: &str,
+    font: Font,
+    offset_img: Offset,
+    offset_text: Offset,
+    text_color: Color,
+) {
+    let text_buffer = unsafe { get_text_buffer(0, true) };
+    let img1 = unsafe { get_buffer_16bpp(0, true) };
+    let img2 = unsafe { get_buffer_16bpp(1, true) };
+    let empty_img = unsafe { get_buffer_16bpp(2, true) };
+    let t1 = unsafe { get_buffer_4bpp(0, true) };
+    let t2 = unsafe { get_buffer_4bpp(1, true) };
+    let empty_t = unsafe { get_buffer_4bpp(2, true) };
+
+    let (toif_size, toif_data) = toif_info_ensure(image_data, ToifFormat::FullColorLE);
+
+    let r_img;
+    let area;
+    let offset_img_final;
+    if let Some((a, color)) = bg_area {
+        let hi = color.hi_byte();
+        let lo = color.lo_byte();
+        //prefill image/bg buffers with the bg color
+        for i in 0..(constant::WIDTH) as usize {
+            img1.buffer[2 * i] = lo;
+            img1.buffer[2 * i + 1] = hi;
+        }
+        img2.buffer.copy_from_slice(&img1.buffer);
+        empty_img.buffer.copy_from_slice(&img1.buffer);
+
+        area = a;
+        r_img = Rect::from_top_left_and_size(a.top_left() + offset_img, toif_size);
+        offset_img_final = offset_img;
+    } else {
+        area = Rect::from_top_left_and_size(offset_img.into(), toif_size);
+        r_img = area;
+        offset_img_final = Offset::zero();
+    }
+    let clamped = area.clamp(constant::screen()).ensure_even_width();
+
+    let text_width = display::text_width(text, font.into());
+    let font_max_height = display::text_max_height(font.into());
+    let font_baseline = display::text_baseline(font.into());
+    let text_width_clamped = text_width.clamp(0, clamped.width());
+
+    let text_top = area.y0 + offset_text.y - font_max_height + font_baseline;
+    let text_bottom = area.y0 + offset_text.y + font_baseline;
+    let text_left = area.x0 + offset_text.x;
+    let text_right = area.x0 + offset_text.x + text_width_clamped;
+
+    let text_area = Rect::new(
+        Point::new(text_left, text_top),
+        Point::new(text_right, text_bottom),
+    );
+
+    display::text_into_buffer(text, font.into(), text_buffer, 0);
+
+    set_window(clamped);
+
+    let mut window = [0; UZLIB_WINDOW_SIZE];
+    let mut ctx = UzlibContext::new(toif_data, Some(&mut window));
+
+    dma2d_setup_4bpp_over_16bpp(text_color.into());
+
+    let mut i = 0;
+
+    for y in clamped.y0..clamped.y1 {
+        let mut img_buffer = &mut *empty_img;
+        let mut t_buffer = &mut *empty_t;
+        let img_buffer_used;
+        let t_buffer_used;
+
+        if y % 2 == 0 {
+            t_buffer_used = &mut *t1;
+            img_buffer_used = &mut *img1;
+        } else {
+            t_buffer_used = &mut *t2;
+            img_buffer_used = &mut *img2;
+        }
+
+        let using_img = process_buffer(
+            y,
+            r_img,
+            offset_img_final,
+            &mut ctx,
+            &mut img_buffer_used.buffer,
+            &mut i,
+            16,
+        );
+
+        if y >= text_area.y0 && y < text_area.y1 {
+            let y_pos = y - text_area.y0;
+            position_buffer(
+                &mut t_buffer_used.buffer,
+                &text_buffer.buffer[(y_pos * constant::WIDTH / 2) as usize
+                    ..((y_pos + 1) * constant::WIDTH / 2) as usize],
+                4,
+                offset_text.x,
+                text_width,
+            );
+            t_buffer = t_buffer_used;
+        }
+
+        if using_img {
+            img_buffer = img_buffer_used;
+        }
+
+        dma2d_wait_for_transfer();
+        dma2d_start_blend(&t_buffer.buffer, &img_buffer.buffer, clamped.width());
+    }
+
+    dma2d_wait_for_transfer();
+}
+
+/// Renders text over image background
+/// If `bg_area` is given, it is filled with its color in places where there is
+/// neither icon. Positioning also depends on whether `bg_area` is provided:
+/// - if it is, icons are positioned relative to the `bg_area` top left corner,
+///   using respective offsets. Nothing is drawn outside the `bg_area`.
+/// - if it is not, `fg` icon is positioned relative to the `bg` icons top left
+///   corner using its offset and `fg` icon is positioned on the screen using
+///   its offset. Nothing is drawn outside the `bg` icon.
+///
+/// The drawing area is coerced to even width, which is due to dma2d limitation
+/// when using 4bpp
+#[cfg(feature = "dma2d")]
+pub fn icon_over_icon(
+    bg_area: Option<Rect>,
+    bg: (&[u8], Offset, Color),
+    fg: (&[u8], Offset, Color),
+    bg_color: Color,
+) {
+    let bg1 = unsafe { get_buffer_16bpp(0, true) };
+    let bg2 = unsafe { get_buffer_16bpp(1, true) };
+    let empty1 = unsafe { get_buffer_16bpp(2, true) };
+    let fg1 = unsafe { get_buffer_4bpp(0, true) };
+    let fg2 = unsafe { get_buffer_4bpp(1, true) };
+    let empty2 = unsafe { get_buffer_4bpp(2, true) };
+
+    let (data_bg, offset_bg, color_icon_bg) = bg;
+    let (data_fg, offset_fg, color_icon_fg) = fg;
+
+    let (toif_bg_size, toif_bg_data) = toif_info_ensure(data_bg, ToifFormat::GrayScaleEH);
+    assert!(toif_bg_size.x <= constant::WIDTH);
+    assert_eq!(toif_bg_size.x % 2, 0);
+
+    let (toif_fg_size, toif_fg_data) = toif_info_ensure(data_fg, ToifFormat::GrayScaleEH);
+    assert!(toif_bg_size.x <= constant::WIDTH);
+    assert_eq!(toif_bg_size.x % 2, 0);
+
+    let area;
+    let r_bg;
+    let final_offset_bg;
+    if let Some(a) = bg_area {
+        area = a;
+        r_bg = Rect::from_top_left_and_size(a.top_left() + offset_bg, toif_bg_size);
+        final_offset_bg = offset_bg;
+    } else {
+        r_bg = Rect::from_top_left_and_size(Point::new(offset_bg.x, offset_bg.y), toif_bg_size);
+        area = r_bg;
+        final_offset_bg = Offset::zero();
+    }
+
+    let r_fg = Rect::from_top_left_and_size(area.top_left() + offset_fg, toif_fg_size);
+
+    let clamped = area.clamp(constant::screen()).ensure_even_width();
+
+    set_window(clamped);
+
+    let mut window_bg = [0; UZLIB_WINDOW_SIZE];
+    let mut ctx_bg = UzlibContext::new(toif_bg_data, Some(&mut window_bg));
+
+    let mut window_fg = [0; UZLIB_WINDOW_SIZE];
+    let mut ctx_fg = UzlibContext::new(toif_fg_data, Some(&mut window_fg));
+
+    dma2d_setup_4bpp_over_4bpp(color_icon_bg.into(), bg_color.into(), color_icon_fg.into());
+
+    let mut fg_i = 0;
+    let mut bg_i = 0;
+
+    for y in clamped.y0..clamped.y1 {
+        let mut fg_buffer = &mut *empty2;
+        let mut bg_buffer = &mut *empty1;
+        let fg_buffer_used;
+        let bg_buffer_used;
+
+        if y % 2 == 0 {
+            fg_buffer_used = &mut *fg1;
+            bg_buffer_used = &mut *bg1;
+        } else {
+            fg_buffer_used = &mut *fg2;
+            bg_buffer_used = &mut *bg2;
+        }
+
+        const BUFFER_BPP: usize = 4;
+
+        let using_fg = process_buffer(
+            y,
+            r_fg,
+            offset_fg,
+            &mut ctx_fg,
+            &mut fg_buffer_used.buffer,
+            &mut fg_i,
+            4,
+        );
+        let using_bg = process_buffer(
+            y,
+            r_bg,
+            final_offset_bg,
+            &mut ctx_bg,
+            &mut bg_buffer_used.buffer,
+            &mut bg_i,
+            4,
+        );
+
+        if using_fg {
+            fg_buffer = fg_buffer_used;
+        }
+        if using_bg {
+            bg_buffer = bg_buffer_used;
+        }
+
+        dma2d_wait_for_transfer();
+        dma2d_start_blend(&fg_buffer.buffer, &bg_buffer.buffer, clamped.width());
+    }
+
+    dma2d_wait_for_transfer();
 }
 
 /// Gets a color of a pixel on `p` coordinates of rounded rectangle with corner
@@ -476,45 +831,6 @@ pub fn dotted_line(start: Point, width: i16, color: Color) {
     for x in (start.x..width).step_by(2) {
         display::bar(x, start.y, 1, 1, color.into());
     }
-}
-
-pub const LOADER_MIN: u16 = 0;
-pub const LOADER_MAX: u16 = 1000;
-
-pub fn loader(
-    progress: u16,
-    y_offset: i16,
-    fg_color: Color,
-    bg_color: Color,
-    icon: Option<(&[u8], Color)>,
-) {
-    display::loader(
-        progress,
-        false,
-        y_offset,
-        fg_color.into(),
-        bg_color.into(),
-        icon.map(|i| i.0),
-        icon.map(|i| i.1.into()).unwrap_or(0),
-    );
-}
-
-pub fn loader_indeterminate(
-    progress: u16,
-    y_offset: i16,
-    fg_color: Color,
-    bg_color: Color,
-    icon: Option<(&[u8], Color)>,
-) {
-    display::loader(
-        progress,
-        true,
-        y_offset,
-        fg_color.into(),
-        bg_color.into(),
-        icon.map(|i| i.0),
-        icon.map(|i| i.1.into()).unwrap_or(0),
-    );
 }
 
 pub fn qrcode(center: Point, data: &str, max_size: u32, case_sensitive: bool) -> Result<(), Error> {
@@ -758,6 +1074,12 @@ impl Color {
         Self(r | g | b)
     }
 
+    pub const fn luminance(self) -> u32 {
+        ((self.r() as u32 * 299) / 1000)
+            + (self.g() as u32 * 587) / 1000
+            + (self.b() as u32 * 114) / 1000
+    }
+
     pub const fn r(self) -> u8 {
         (self.0 >> 8) as u8 & 0xF8
     }
@@ -772,6 +1094,14 @@ impl Color {
 
     pub fn to_u16(self) -> u16 {
         self.0
+    }
+
+    pub fn hi_byte(self) -> u8 {
+        (self.to_u16() >> 8) as u8
+    }
+
+    pub fn lo_byte(self) -> u8 {
+        (self.to_u16() & 0xFF) as u8
     }
 
     pub fn negate(self) -> Self {

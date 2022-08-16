@@ -16,11 +16,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#define _GNU_SOURCE
 
 #include <SDL.h>
 #include <SDL_image.h>
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+#include "common.h"
+#include "display_defs.h"
+#include "display_interface.h"
 #include "profile.h"
 
 #define EMULATOR_BORDER 16
@@ -57,8 +67,13 @@ static SDL_Texture *TEXTURE, *BACKGROUND;
 
 static SDL_Surface *PREV_SAVED;
 
+static int DISPLAY_BACKLIGHT = -1;
+static int DISPLAY_ORIENTATION = -1;
 int sdl_display_res_x = DISPLAY_RESX, sdl_display_res_y = DISPLAY_RESY;
 int sdl_touch_offset_x, sdl_touch_offset_y;
+
+// this is just for compatibility with DMA2D using algorithms
+uint8_t *const DISPLAY_DATA_ADDRESS = 0;
 
 static struct {
   struct {
@@ -71,9 +86,6 @@ static struct {
     uint16_t x, y;
   } pos;
 } PIXELWINDOW;
-
-// noop on unix, display is refreshed every loop step
-#define PIXELDATA_DIRTY()
 
 void display_pixeldata(uint16_t c) {
 #if defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
@@ -100,7 +112,7 @@ void display_pixeldata(uint16_t c) {
 
 #define PIXELDATA(c) display_pixeldata(c)
 
-static void display_reset_state() {}
+void display_reset_state() {}
 
 void display_init_seq(void) {}
 
@@ -248,9 +260,34 @@ void display_refresh(void) {
   SDL_RenderPresent(RENDERER);
 }
 
-static void display_set_orientation(int degrees) { display_refresh(); }
+int display_orientation(int degrees) {
+  if (degrees != DISPLAY_ORIENTATION) {
+#if defined TREZOR_MODEL_T
+    if (degrees == 0 || degrees == 90 || degrees == 180 || degrees == 270) {
+#elif defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
+    if (degrees == 0 || degrees == 180) {
+#else
+#error Unknown Trezor model
+#endif
+      DISPLAY_ORIENTATION = degrees;
+      display_refresh();
+    }
+  }
+  return DISPLAY_ORIENTATION;
+}
 
-static void display_set_backlight(int val) { display_refresh(); }
+int display_get_orientation(void) { return DISPLAY_ORIENTATION; }
+
+int display_backlight(int val) {
+#if defined TREZOR_MODEL_1
+  val = 255;
+#endif
+  if (DISPLAY_BACKLIGHT != val && val >= 0 && val <= 255) {
+    DISPLAY_BACKLIGHT = val;
+    display_refresh();
+  }
+  return DISPLAY_BACKLIGHT;
+}
 
 const char *display_save(const char *prefix) {
   if (!RENDERER) {

@@ -11,6 +11,10 @@ class Display:
     FONT_MONO: int  # id of monospace font
     FONT_NORMAL: int  # id of normal-width font
     FONT_BOLD: int  # id of bold-width font
+    TOIF_FULL_COLOR_BE: int  # full color big endian TOI image
+    TOIF_FULL_COLOR_LE: int  # full color little endian TOI image
+    TOIF_GRAYSCALE_EH: int  # grayscale even high TOI image
+    TOIF_FULL_COLOR_BE: int  # grayscale odd high TOI image
 
     def __init__(self) -> None:
         """
@@ -49,11 +53,10 @@ class Display:
         are drawn with radius radius.
         """
 
-    def toif_info(self, image: bytes) -> tuple[int, int, bool]:
+    def toif_info(self, image: bytes) -> tuple[int, int, int]:
         """
         Returns tuple containing TOIF image dimensions: width, height, and
-        whether it is grayscale.
-        Raises an exception for corrupted images.
+        format Raises an exception for corrupted images.
         """
 
     def image(self, x: int, y: int, image: bytes) -> None:

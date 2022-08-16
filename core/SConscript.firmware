@@ -8,6 +8,7 @@ BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
 EVERYTHING = BITCOIN_ONLY != '1'
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 UI2 = ARGUMENTS.get('UI2', '0') == '1' or TREZOR_MODEL in ('1', 'R')
+DMA2D = TREZOR_MODEL in ('T', )
 
 FEATURE_FLAGS = {
     "RDI": True,
@@ -177,7 +178,10 @@ CPPPATH_MOD += [
         'vendor/micropython/lib/uzlib',
 ]
 SOURCE_MOD += [
+    'embed/extmod/modtrezorui/buffers.c',
+    'embed/extmod/modtrezorui/colors.c',
     'embed/extmod/modtrezorui/display.c',
+    f'embed/extmod/modtrezorui/display-stm32_{TREZOR_MODEL}.c',
     'embed/extmod/modtrezorui/fonts/fonts.c',
     'embed/extmod/modtrezorui/fonts/font_bitmap.c',
     'embed/extmod/modtrezorui/modtrezorui.c',
@@ -189,6 +193,7 @@ SOURCE_MOD += [
 if UI2:
     CPPDEFINES_MOD += [
         'TREZOR_UI2',
+        'USE_RUST_LOADER'
     ]
 
 # modtrezorutils
@@ -396,6 +401,18 @@ elif TREZOR_MODEL in ('1',):
         'embed/trezorhal/button.c',
     ]
 
+
+if DMA2D:
+    CPPDEFINES_MOD += [
+        'USE_DMA2D',
+    ]
+    SOURCE_TREZORHAL += [
+        'embed/trezorhal/dma2d.c',
+    ]
+    SOURCE_STMHAL += [
+        'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma2d.c',
+    ]
+
 CPPDEFINES_MOD += ['USE_SVC_SHUTDOWN']
 
 if FEATURE_FLAGS["RDI"]:
@@ -574,7 +591,7 @@ if FROZEN:
     if EVERYTHING:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/altcoin.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/webauthn.py'))
-    if TREZOR_MODEL in ('T') and UI2:
+    if TREZOR_MODEL in ('T',) and UI2:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/constants/tt.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/__init__.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/reset.py'))
@@ -699,10 +716,10 @@ if FROZEN:
 
 protobuf_blobs = env.Command(
     target=[
-        f'rust/proto_enums.data',
-        f'rust/proto_msgs.data',
-        f'rust/proto_names.data',
-        f'rust/proto_wire.data',
+        'rust/proto_enums.data',
+        'rust/proto_msgs.data',
+        'rust/proto_names.data',
+        'rust/proto_wire.data',
     ],
     source=PROTO_SOURCES,
     action='$PB2PY --bitcoin-only=%s --blob-outdir ${TARGET.dir} $SOURCES --qstr-defs build/firmware/genhdr/qstrdefs.generated.h' % BITCOIN_ONLY,
@@ -728,6 +745,8 @@ def cargo_build():
         features.append('ui')
         if PYOPT == '0':
             features.append('ui_debug')
+    if DMA2D:
+        features.append('dma2d')
 
     cargo_opts = [
         f'--target={RUST_TARGET}',

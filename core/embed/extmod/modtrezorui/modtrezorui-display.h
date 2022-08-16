@@ -29,6 +29,10 @@
 ///     FONT_MONO: int  # id of monospace font
 ///     FONT_NORMAL: int  # id of normal-width font
 ///     FONT_BOLD: int  # id of bold-width font
+///     TOIF_FULL_COLOR_BE: int  # full color big endian TOI image
+///     TOIF_FULL_COLOR_LE: int  # full color little endian TOI image
+///     TOIF_GRAYSCALE_EH: int  # grayscale even high TOI image
+///     TOIF_FULL_COLOR_BE: int  # grayscale odd high TOI image
 ///
 typedef struct _mp_obj_Display_t {
   mp_obj_base_t base;
@@ -117,11 +121,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_bar_radius_obj,
                                            8, 8,
                                            mod_trezorui_Display_bar_radius);
 
-/// def toif_info(self, image: bytes) -> tuple[int, int, bool]:
+/// def toif_info(self, image: bytes) -> tuple[int, int, int]:
 ///     """
 ///     Returns tuple containing TOIF image dimensions: width, height, and
-///     whether it is grayscale.
-///     Raises an exception for corrupted images.
+///     format Raises an exception for corrupted images.
 ///     """
 STATIC mp_obj_t mod_trezorui_Display_toif_info(mp_obj_t self, mp_obj_t image) {
   mp_buffer_info_t buffer = {0};
@@ -129,8 +132,8 @@ STATIC mp_obj_t mod_trezorui_Display_toif_info(mp_obj_t self, mp_obj_t image) {
 
   uint16_t w = 0;
   uint16_t h = 0;
-  bool grayscale = false;
-  bool valid = display_toif_info(buffer.buf, buffer.len, &w, &h, &grayscale);
+  toif_format_t format = TOIF_FULL_COLOR_BE;
+  bool valid = display_toif_info(buffer.buf, buffer.len, &w, &h, &format);
 
   if (!valid) {
     mp_raise_ValueError("Invalid image format");
@@ -138,7 +141,7 @@ STATIC mp_obj_t mod_trezorui_Display_toif_info(mp_obj_t self, mp_obj_t image) {
   mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(3, NULL));
   tuple->items[0] = MP_OBJ_NEW_SMALL_INT(w);
   tuple->items[1] = MP_OBJ_NEW_SMALL_INT(h);
-  tuple->items[2] = mp_obj_new_bool(grayscale);
+  tuple->items[2] = MP_OBJ_NEW_SMALL_INT(format);
   return MP_OBJ_FROM_PTR(tuple);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorui_Display_toif_info_obj,
@@ -160,9 +163,9 @@ STATIC mp_obj_t mod_trezorui_Display_image(size_t n_args,
 
   uint16_t w = 0;
   uint16_t h = 0;
-  bool grayscale = false;
-  bool valid = display_toif_info(data, image.len, &w, &h, &grayscale);
-  if (!valid || grayscale) {
+  toif_format_t format = TOIF_FULL_COLOR_BE;
+  bool valid = display_toif_info(data, image.len, &w, &h, &format);
+  if (!valid || format != TOIF_FULL_COLOR_LE) {
     mp_raise_ValueError("Invalid image format");
   }
   display_image(x, y, w, h, data + 12, image.len - 12);
@@ -190,9 +193,9 @@ STATIC mp_obj_t mod_trezorui_Display_avatar(size_t n_args,
 
   uint16_t w = 0;
   uint16_t h = 0;
-  bool grayscale = false;
-  bool valid = display_toif_info(data, image.len, &w, &h, &grayscale);
-  if (!valid || grayscale) {
+  toif_format_t format = TOIF_FULL_COLOR_BE;
+  bool valid = display_toif_info(data, image.len, &w, &h, &format);
+  if (!valid || format != TOIF_FULL_COLOR_BE) {
     mp_raise_ValueError("Invalid image format");
   }
   if (w != AVATAR_IMAGE_SIZE || h != AVATAR_IMAGE_SIZE) {
@@ -223,10 +226,10 @@ STATIC mp_obj_t mod_trezorui_Display_icon(size_t n_args, const mp_obj_t *args) {
 
   uint16_t w = 0;
   uint16_t h = 0;
-  bool grayscale = false;
-  bool valid = display_toif_info(data, icon.len, &w, &h, &grayscale);
-  if (!valid || !grayscale) {
-    mp_raise_ValueError("Invalid image format");
+  toif_format_t format = TOIF_FULL_COLOR_BE;
+  bool valid = display_toif_info(data, icon.len, &w, &h, &format);
+  if (!valid || format != TOIF_GRAYSCALE_EH) {
+    mp_raise_ValueError("Invalid icon format");
   }
   mp_int_t fgcolor = mp_obj_get_int(args[4]);
   mp_int_t bgcolor = mp_obj_get_int(args[5]);
@@ -265,7 +268,7 @@ STATIC mp_obj_t mod_trezorui_Display_loader(size_t n_args,
     mp_buffer_info_t icon = {0};
     mp_get_buffer_raise(args[6], &icon, MP_BUFFER_READ);
     const uint8_t *data = icon.buf;
-    if (icon.len < 8 || memcmp(data, "TOIg", 4) != 0) {
+    if (icon.len < 8 || memcmp(data, "TOIG", 4) != 0) {
       mp_raise_ValueError("Invalid image format");
     }
     mp_int_t w = *(uint16_t *)(data + 4);
@@ -642,6 +645,10 @@ STATIC const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_FONT_NORMAL), MP_ROM_INT(FONT_NORMAL)},
     {MP_ROM_QSTR(MP_QSTR_FONT_BOLD), MP_ROM_INT(FONT_BOLD)},
     {MP_ROM_QSTR(MP_QSTR_FONT_MONO), MP_ROM_INT(FONT_MONO)},
+    {MP_ROM_QSTR(MP_QSTR_TOIF_FULL_COLOR_BE), MP_ROM_INT(TOIF_FULL_COLOR_BE)},
+    {MP_ROM_QSTR(MP_QSTR_TOIF_FULL_COLOR_LE), MP_ROM_INT(TOIF_FULL_COLOR_LE)},
+    {MP_ROM_QSTR(MP_QSTR_TOIF_GRAYSCALE_EH), MP_ROM_INT(TOIF_GRAYSCALE_EH)},
+    {MP_ROM_QSTR(MP_QSTR_TOIF_GRAYSCALE_OH), MP_ROM_INT(TOIF_GRAYSCALE_OH)},
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorui_Display_locals_dict,
                             mod_trezorui_Display_locals_dict_table);

@@ -128,6 +128,12 @@ impl Sub<Offset> for Offset {
     }
 }
 
+impl From<Point> for Offset {
+    fn from(val: Point) -> Self {
+        Offset::new(val.x, val.y)
+    }
+}
+
 /// A point in 2D space defined by the the `x` and `y` coordinate. Relative
 /// coordinates, vectors, and offsets are represented by the `Offset` type.
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -185,6 +191,12 @@ impl Sub<Point> for Point {
 impl Lerp for Point {
     fn lerp(a: Self, b: Self, t: f32) -> Self {
         Point::new(i16::lerp(a.x, b.x, t), i16::lerp(a.y, b.y, t))
+    }
+}
+
+impl From<Offset> for Point {
+    fn from(val: Offset) -> Self {
+        Point::new(val.x, val.y)
     }
 }
 
@@ -364,6 +376,14 @@ impl Rect {
             y0: max(self.y0, limit.y0),
             x1: min(self.x1, limit.x1),
             y1: min(self.y1, limit.y1),
+        }
+    }
+
+    pub const fn ensure_even_width(self) -> Self {
+        if self.width() % 2 == 0 {
+            self
+        } else {
+            self.with_size(Offset::new(self.size().x - 1, self.size().y))
         }
     }
 

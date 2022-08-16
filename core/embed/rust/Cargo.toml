@@ -14,6 +14,7 @@ model_tr = ["buttons"]
 micropython = []
 protobuf = ["micropython"]
 ui = []
+dma2d = []
 ui_debug = []
 buttons = []
 touch = []
@@ -39,6 +40,7 @@ debug = 2
 
 [profile.test]
 split-debuginfo = "off"
+debug = 2
 
 # Runtime dependencies
 
@@ -48,6 +50,13 @@ version = "0.2.2"
 [dependencies.heapless]
 version = "0.7.3"
 default_features = false
+
+[dependencies.num-traits]
+version = "0.2.15"
+default_features = false
+
+[dependencies.num-derive]
+version = "0.3.3"
 
 [dependencies.cstr_core]
 version = "0.2.4"

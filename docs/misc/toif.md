@@ -15,10 +15,12 @@ All multibyte integer values are little endian!
 
 ## Format
 
-TOI currently supports 2 variants:
+TOI currently supports 4 variants:
 
-* `f`: full-color
-* `g`: gray-scale
+* `f`: full-color big endian
+* `F`: full-color little endian
+* `g`: gray-scale odd high
+* `G`: gray-scale even high
 
 ### Full-color
 
@@ -30,14 +32,24 @@ final 5 bits are blue:
 |----|----|----|----|----|----|---|---|---|---|---|---|---|---|---|---|
 | R | R | R | R | R | G | G | G | G | G | G | B | B | B | B | B |
 
+The data is stored according to endianness.
+
 ### Gray-scale
 
 Each pixel is encoded using a 4-bit value.
 Each byte contains color of two pixels:
 
+#### Odd high:
+
 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
 |---|---|---|---|---|---|---|---|
 | Po | Po | Po | Po | Pe | Pe | Pe | Pe |
+
+#### Even high:
+
+| 7   | 6   | 5   | 4   | 3   | 2   | 1   | 0   |
+|-----|-----|-----|-----|-----|-----|-----|-----|
+| Pe  | Pe  | Pe  | Pe  | Po  | Po  | Po  | Po  |
 
 Where Po is odd pixel and Pe is even pixel.
 

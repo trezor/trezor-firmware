@@ -8,6 +8,7 @@ BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
 EVERYTHING = BITCOIN_ONLY != '1'
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 UI2 = ARGUMENTS.get('UI2', '0') == '1' or TREZOR_MODEL in ('1', 'R')
+DMA2D =  TREZOR_MODEL in ('T', )
 
 FEATURE_FLAGS = {
     "SECP256K1_ZKP": True,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot)
@@ -70,15 +71,15 @@ CPPDEFINES_MOD += [
 ]
 SOURCE_MOD += [
     'embed/extmod/trezorobj.c',
-    'embed/extmod/modtrezorcrypto/modtrezorcrypto.c',
     'embed/extmod/modtrezorcrypto/crc.c',
+    'embed/extmod/modtrezorcrypto/modtrezorcrypto.c',
     'vendor/trezor-crypto/address.c',
+    'vendor/trezor-crypto/aes/aes_modes.c',
     'vendor/trezor-crypto/aes/aescrypt.c',
     'vendor/trezor-crypto/aes/aeskey.c',
-    'vendor/trezor-crypto/aes/aes_modes.c',
     'vendor/trezor-crypto/aes/aestab.c',
-    'vendor/trezor-crypto/base58.c',
     'vendor/trezor-crypto/base32.c',
+    'vendor/trezor-crypto/base58.c',
     'vendor/trezor-crypto/bignum.c',
     'vendor/trezor-crypto/bip32.c',
     'vendor/trezor-crypto/bip39.c',
@@ -86,22 +87,22 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/blake256.c',
     'vendor/trezor-crypto/blake2b.c',
     'vendor/trezor-crypto/blake2s.c',
-    'vendor/trezor-crypto/curves.c',
-    'vendor/trezor-crypto/ecdsa.c',
     'vendor/trezor-crypto/chacha20poly1305/chacha20poly1305.c',
     'vendor/trezor-crypto/chacha20poly1305/chacha_merged.c',
     'vendor/trezor-crypto/chacha20poly1305/poly1305-donna.c',
     'vendor/trezor-crypto/chacha20poly1305/rfc7539.c',
     'vendor/trezor-crypto/chacha_drbg.c',
+    'vendor/trezor-crypto/curves.c',
+    'vendor/trezor-crypto/ecdsa.c',
     'vendor/trezor-crypto/ed25519-donna/curve25519-donna-32bit.c',
     'vendor/trezor-crypto/ed25519-donna/curve25519-donna-helpers.c',
     'vendor/trezor-crypto/ed25519-donna/curve25519-donna-scalarmult-base.c',
-    'vendor/trezor-crypto/ed25519-donna/ed25519.c',
     'vendor/trezor-crypto/ed25519-donna/ed25519-donna-32bit-tables.c',
     'vendor/trezor-crypto/ed25519-donna/ed25519-donna-basepoint-table.c',
     'vendor/trezor-crypto/ed25519-donna/ed25519-donna-impl-base.c',
     'vendor/trezor-crypto/ed25519-donna/ed25519-keccak.c',
     'vendor/trezor-crypto/ed25519-donna/ed25519-sha3.c',
+    'vendor/trezor-crypto/ed25519-donna/ed25519.c',
     'vendor/trezor-crypto/ed25519-donna/modm-donna-32bit.c',
     'vendor/trezor-crypto/groestl.c',
     'vendor/trezor-crypto/hasher.c',
@@ -112,8 +113,8 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/nist256p1.c',
     'vendor/trezor-crypto/pbkdf2.c',
     'vendor/trezor-crypto/rand.c',
-    'vendor/trezor-crypto/ripemd160.c',
     'vendor/trezor-crypto/rfc6979.c',
+    'vendor/trezor-crypto/ripemd160.c',
     'vendor/trezor-crypto/secp256k1.c',
     'vendor/trezor-crypto/sha2.c',
     'vendor/trezor-crypto/sha3.c',
@@ -173,7 +174,10 @@ CPPPATH_MOD += [
         'vendor/micropython/lib/uzlib',
 ]
 SOURCE_MOD += [
+    'embed/extmod/modtrezorui/buffers.c',
+    'embed/extmod/modtrezorui/colors.c',
     'embed/extmod/modtrezorui/display.c',
+    'embed/extmod/modtrezorui/display-unix.c',
     'embed/extmod/modtrezorui/fonts/fonts.c',
     'embed/extmod/modtrezorui/fonts/font_bitmap.c',
     'embed/extmod/modtrezorui/modtrezorui.c',
@@ -185,6 +189,7 @@ SOURCE_MOD += [
 if UI2:
     CPPDEFINES_MOD += [
         'TREZOR_UI2',
+        'USE_RUST_LOADER'
     ]
 if FROZEN:
     CPPDEFINES_MOD += ['TREZOR_EMULATOR_FROZEN']
@@ -357,6 +362,15 @@ if TREZOR_MODEL in ('T',):
         'embed/unix/sbu.c',
         'embed/unix/sdcard.c',
     ]
+
+if DMA2D:
+    CPPDEFINES_MOD += [
+        'USE_DMA2D',
+    ]
+    SOURCE_UNIX += [
+        'embed/unix/dma2d.c',
+    ]
+
 
 # fonts
 tools.add_font('NORMAL', FONT_NORMAL, CPPDEFINES_MOD, SOURCE_MOD)
@@ -683,6 +697,8 @@ def cargo_build():
         features.append('ui')
         if PYOPT == '0':
             features.append('debug')
+    if DMA2D:
+        features.append('dma2d')
 
     return f'cd embed/rust; cargo build --profile {RUST_PROFILE} --target-dir=../../build/unix/rust --no-default-features --features "{" ".join(features)}"'
 
