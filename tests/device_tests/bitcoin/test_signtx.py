@@ -1411,6 +1411,9 @@ def test_lock_time(client: Client, lock_time, sequence):
 
 @pytest.mark.skip_t1(reason="Cannot test layouts on T1")
 def test_lock_time_blockheight(client: Client):
+    if client.features.model == "R":
+        pytest.fail("Input flow not ready for model R")
+
     # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5
 
     inp1 = messages.TxInputType(
@@ -1460,6 +1463,9 @@ def test_lock_time_blockheight(client: Client):
     "lock_time_str", ("1985-11-05 00:53:20", "2048-08-16 22:14:00")
 )
 def test_lock_time_datetime(client: Client, lock_time_str):
+    if client.features.model == "R":
+        pytest.fail("Input flow not ready for model R")
+
     # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5
 
     inp1 = messages.TxInputType(

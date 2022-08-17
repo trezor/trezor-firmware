@@ -37,6 +37,9 @@ EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
 
 
 def reset_device(client: Client, strength):
+    if client.features.model == "R":
+        pytest.fail("Input flow not ready for model R")
+
     mnemonic = None
 
     def input_flow():
@@ -85,6 +88,7 @@ def reset_device(client: Client, strength):
             pin_protection=False,
             label="test",
             language="en-US",
+            show_tutorial=False,
         )
 
     # generate mnemonic locally
@@ -120,6 +124,9 @@ def test_reset_device_192(client: Client):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_reset_device_pin(client: Client):
+    if client.features.model == "R":
+        pytest.fail("Input flow not ready for model R")
+
     mnemonic = None
     strength = 256  # 24 words
 
@@ -196,6 +203,7 @@ def test_reset_device_pin(client: Client):
             pin_protection=True,
             label="test",
             language="en-US",
+            show_tutorial=False,
         )
 
     # generate mnemonic locally
@@ -216,6 +224,9 @@ def test_reset_device_pin(client: Client):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_reset_failed_check(client: Client):
+    if client.features.model == "R":
+        pytest.fail("Input flow not ready for model R")
+
     mnemonic = None
     strength = 256  # 24 words
 
@@ -275,6 +286,7 @@ def test_reset_failed_check(client: Client):
             pin_protection=False,
             label="test",
             language="en-US",
+            show_tutorial=False,
         )
 
     # generate mnemonic locally
@@ -296,6 +308,9 @@ def test_reset_failed_check(client: Client):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_failed_pin(client: Client):
+    if client.features.model == "R":
+        pytest.fail("Input flow not ready for model R")
+
     # external_entropy = b'zlutoucky kun upel divoke ody' * 2
     strength = 128
     ret = client.call_raw(
@@ -323,4 +338,6 @@ def test_failed_pin(client: Client):
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
 def test_already_initialized(client: Client):
     with pytest.raises(Exception):
-        device.reset(client, False, 128, True, True, "label", "en-US")
+        device.reset(
+            client, False, 128, True, True, "label", "en-US", show_tutorial=False
+        )

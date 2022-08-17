@@ -323,16 +323,9 @@ class DebugUI:
                 self.debuglink.input(self.get_pin())
             else:
                 # Paginating (going as further as possible) and pressing Yes
-                if self.debuglink.model == "T":
-                    # For TT, we already know how many pages we have. Swiping through them.
-                    if br.pages is not None:
-                        for _ in range(br.pages - 1):
-                            self.debuglink.swipe_up(wait=True)
-                elif self.debuglink.model == "R":
-                    # For model R, going as further as possible.
-                    # (We at this point cannot say how many pages we have,
-                    # as the layout is not placed and painted.)
-                    self.debuglink.swipe_up(wait=True)
+                if br.pages is not None:
+                    for _ in range(br.pages - 1):
+                        self.debuglink.swipe_up(wait=True)
                 self.debuglink.press_yes()
         elif self.input_flow is self.INPUT_FLOW_DONE:
             raise AssertionError("input flow ended prematurely")

@@ -183,6 +183,8 @@ VECTORS = [
 @pytest.mark.parametrize("backup_type, backup_flow", VECTORS)
 @pytest.mark.setup_client(uninitialized=True)
 def test_skip_backup_msg(client: Client, backup_type, backup_flow):
+    if client.features.model == "R":
+        pytest.fail("Input flow not ready for model R")
 
     os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
     with mock.patch("os.urandom", os_urandom), client:
@@ -192,6 +194,7 @@ def test_skip_backup_msg(client: Client, backup_type, backup_flow):
             passphrase_protection=False,
             pin_protection=False,
             backup_type=backup_type,
+            show_tutorial=False,
         )
 
     assert client.features.initialized is True
@@ -218,6 +221,9 @@ def test_skip_backup_msg(client: Client, backup_type, backup_flow):
 @pytest.mark.parametrize("backup_type, backup_flow", VECTORS)
 @pytest.mark.setup_client(uninitialized=True)
 def test_skip_backup_manual(client: Client, backup_type, backup_flow):
+    if client.features.model == "R":
+        pytest.fail("Input flow not ready for model R")
+
     def reset_skip_input_flow():
         yield  # Confirm Recovery
         client.debug.press_yes()
@@ -246,6 +252,7 @@ def test_skip_backup_manual(client: Client, backup_type, backup_flow):
             pin_protection=False,
             passphrase_protection=False,
             backup_type=backup_type,
+            show_tutorial=False,
         )
 
     assert client.features.initialized is True

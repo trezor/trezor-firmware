@@ -43,6 +43,9 @@ VECTORS = (
 
 # To allow reusing functionality for multiple tests
 def _test_secret(client: Client, shares, secret, click_info=False):
+    if client.features.model == "R":
+        pytest.fail("Input flow not ready for model R")
+
     debug = client.debug
 
     def input_flow():
@@ -56,7 +59,11 @@ def _test_secret(client: Client, shares, secret, click_info=False):
     with client:
         client.set_input_flow(input_flow)
         ret = device.recover(
-            client, pin_protection=False, passphrase_protection=False, label="label"
+            client,
+            pin_protection=False,
+            passphrase_protection=False,
+            label="label",
+            show_tutorial=False,
         )
 
     # Workflow succesfully ended
@@ -91,6 +98,9 @@ def test_extra_share_entered(client: Client):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_abort(client: Client):
+    if client.features.model == "R":
+        pytest.fail("Input flow not ready for model R")
+
     debug = client.debug
 
     def input_flow():
@@ -104,13 +114,18 @@ def test_abort(client: Client):
     with client:
         client.set_input_flow(input_flow)
         with pytest.raises(exceptions.Cancelled):
-            device.recover(client, pin_protection=False, label="label")
+            device.recover(
+                client, pin_protection=False, label="label", show_tutorial=False
+            )
         client.init_device()
         assert client.features.initialized is False
 
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_noabort(client: Client):
+    if client.features.model == "R":
+        pytest.fail("Input flow not ready for model R")
+
     debug = client.debug
 
     def input_flow():
@@ -126,13 +141,16 @@ def test_noabort(client: Client):
 
     with client:
         client.set_input_flow(input_flow)
-        device.recover(client, pin_protection=False, label="label")
+        device.recover(client, pin_protection=False, label="label", show_tutorial=False)
         client.init_device()
         assert client.features.initialized is True
 
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_same_share(client: Client):
+    if client.features.model == "R":
+        pytest.fail("Input flow not ready for model R")
+
     debug = client.debug
     # we choose the second share from the fixture because
     # the 1st is 1of1 and group threshold condition is reached first
@@ -169,11 +187,16 @@ def test_same_share(client: Client):
     with client:
         client.set_input_flow(input_flow)
         with pytest.raises(exceptions.Cancelled):
-            device.recover(client, pin_protection=False, label="label")
+            device.recover(
+                client, pin_protection=False, label="label", show_tutorial=False
+            )
 
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_group_threshold_reached(client: Client):
+    if client.features.model == "R":
+        pytest.fail("Input flow not ready for model R")
+
     debug = client.debug
     # first share in the fixture is 1of1 so we choose that
     first_share = MNEMONIC_SLIP39_ADVANCED_20[0].split(" ")
@@ -209,4 +232,6 @@ def test_group_threshold_reached(client: Client):
     with client:
         client.set_input_flow(input_flow)
         with pytest.raises(exceptions.Cancelled):
-            device.recover(client, pin_protection=False, label="label")
+            device.recover(
+                client, pin_protection=False, label="label", show_tutorial=False
+            )

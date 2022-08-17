@@ -39,6 +39,7 @@ def do_recover_legacy(client: Client, mnemonic, **kwargs):
         word_count=len(mnemonic),
         type=messages.RecoveryDeviceType.ScrambledWords,
         input_callback=input_callback,
+        show_tutorial=False,
         **kwargs
     )
     # if the call succeeded, check that all words have been used
@@ -84,12 +85,18 @@ def do_recover_core(client: Client, mnemonic, **kwargs):
     with client:
         client.watch_layout()
         client.set_input_flow(input_flow)
-        return device.recover(client, dry_run=True, **kwargs)
+        return device.recover(client, dry_run=True, show_tutorial=False, **kwargs)
+
+
+def do_recover_r(client: Client, mnemonic, **kwargs):
+    pytest.fail("Input flow not ready for model R")
 
 
 def do_recover(client: Client, mnemonic):
     if client.features.model == "1":
         return do_recover_legacy(client, mnemonic)
+    elif client.features.model == "R":
+        return do_recover_r(client, mnemonic)
     else:
         return do_recover_core(client, mnemonic)
 
@@ -117,6 +124,9 @@ def test_invalid_seed_t1(client: Client):
 
 @pytest.mark.skip_t1
 def test_invalid_seed_core(client: Client):
+    if client.features.model == "R":
+        pytest.fail("Input flow not ready for model R")
+
     def input_flow():
         yield
         layout = client.debug.wait_layout()
@@ -166,7 +176,7 @@ def test_invalid_seed_core(client: Client):
         client.watch_layout()
         client.set_input_flow(input_flow)
         with pytest.raises(exceptions.Cancelled):
-            return device.recover(client, dry_run=True)
+            return device.recover(client, dry_run=True, show_tutorial=False)
 
 
 @pytest.mark.setup_client(uninitialized=True)
@@ -175,7 +185,13 @@ def test_uninitialized(client: Client):
         do_recover(client, ["all"] * 12)
 
 
-DRY_RUN_ALLOWED_FIELDS = ("dry_run", "word_count", "enforce_wordlist", "type")
+DRY_RUN_ALLOWED_FIELDS = (
+    "dry_run",
+    "word_count",
+    "enforce_wordlist",
+    "type",
+    "show_tutorial",
+)
 
 
 def _make_bad_params():

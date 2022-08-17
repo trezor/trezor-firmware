@@ -2337,6 +2337,7 @@ if TYPE_CHECKING:
         skip_backup: "bool | None"
         no_backup: "bool | None"
         backup_type: "BackupType"
+        show_tutorial: "bool"
 
         def __init__(
             self,
@@ -2351,6 +2352,7 @@ if TYPE_CHECKING:
             skip_backup: "bool | None" = None,
             no_backup: "bool | None" = None,
             backup_type: "BackupType | None" = None,
+            show_tutorial: "bool | None" = None,
         ) -> None:
             pass
 
@@ -2394,6 +2396,7 @@ if TYPE_CHECKING:
         type: "RecoveryDeviceType | None"
         u2f_counter: "int | None"
         dry_run: "bool | None"
+        show_tutorial: "bool"
 
         def __init__(
             self,
@@ -2407,6 +2410,7 @@ if TYPE_CHECKING:
             type: "RecoveryDeviceType | None" = None,
             u2f_counter: "int | None" = None,
             dry_run: "bool | None" = None,
+            show_tutorial: "bool | None" = None,
         ) -> None:
             pass
 

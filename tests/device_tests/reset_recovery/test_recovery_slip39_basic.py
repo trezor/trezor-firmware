@@ -49,6 +49,9 @@ VECTORS = (
 @pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.parametrize("shares, secret", VECTORS)
 def test_secret(client: Client, shares, secret):
+    if client.features.model == "R":
+        pytest.fail("Input flow not ready for model R")
+
     debug = client.debug
 
     def input_flow():
@@ -59,7 +62,9 @@ def test_secret(client: Client, shares, secret):
 
     with client:
         client.set_input_flow(input_flow)
-        ret = device.recover(client, pin_protection=False, label="label")
+        ret = device.recover(
+            client, pin_protection=False, label="label", show_tutorial=False
+        )
 
     # Workflow succesfully ended
     assert ret == messages.Success(message="Device recovered")
@@ -73,6 +78,9 @@ def test_secret(client: Client, shares, secret):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_recover_with_pin_passphrase(client: Client):
+    if client.features.model == "R":
+        pytest.fail("Input flow not ready for model R")
+
     debug = client.debug
 
     def input_flow():
@@ -88,7 +96,11 @@ def test_recover_with_pin_passphrase(client: Client):
     with client:
         client.set_input_flow(input_flow)
         ret = device.recover(
-            client, pin_protection=True, passphrase_protection=True, label="label"
+            client,
+            pin_protection=True,
+            passphrase_protection=True,
+            label="label",
+            show_tutorial=False,
         )
 
     # Workflow succesfully ended
@@ -100,6 +112,9 @@ def test_recover_with_pin_passphrase(client: Client):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_abort(client: Client):
+    if client.features.model == "R":
+        pytest.fail("Input flow not ready for model R")
+
     debug = client.debug
 
     def input_flow():
@@ -113,13 +128,18 @@ def test_abort(client: Client):
     with client:
         client.set_input_flow(input_flow)
         with pytest.raises(exceptions.Cancelled):
-            device.recover(client, pin_protection=False, label="label")
+            device.recover(
+                client, pin_protection=False, label="label", show_tutorial=False
+            )
         client.init_device()
         assert client.features.initialized is False
 
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_noabort(client: Client):
+    if client.features.model == "R":
+        pytest.fail("Input flow not ready for model R")
+
     debug = client.debug
 
     def input_flow():
@@ -133,13 +153,16 @@ def test_noabort(client: Client):
 
     with client:
         client.set_input_flow(input_flow)
-        device.recover(client, pin_protection=False, label="label")
+        device.recover(client, pin_protection=False, label="label", show_tutorial=False)
         client.init_device()
         assert client.features.initialized is True
 
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_ask_word_number(client: Client):
+    if client.features.model == "R":
+        pytest.fail("Input flow not ready for model R")
+
     debug = client.debug
 
     def input_flow_retry_first():
@@ -181,7 +204,9 @@ def test_ask_word_number(client: Client):
     with client:
         client.set_input_flow(input_flow_retry_first)
         with pytest.raises(exceptions.Cancelled):
-            device.recover(client, pin_protection=False, label="label")
+            device.recover(
+                client, pin_protection=False, label="label", show_tutorial=False
+            )
         client.init_device()
         assert client.features.initialized is False
 
@@ -224,7 +249,9 @@ def test_ask_word_number(client: Client):
     with client:
         client.set_input_flow(input_flow_retry_second)
         with pytest.raises(exceptions.Cancelled):
-            device.recover(client, pin_protection=False, label="label")
+            device.recover(
+                client, pin_protection=False, label="label", show_tutorial=False
+            )
         client.init_device()
         assert client.features.initialized is False
 
@@ -232,6 +259,9 @@ def test_ask_word_number(client: Client):
 @pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.parametrize("nth_word", range(3))
 def test_wrong_nth_word(client: Client, nth_word):
+    if client.features.model == "R":
+        pytest.fail("Input flow not ready for model R")
+
     debug = client.debug
     share = MNEMONIC_SLIP39_BASIC_20_3of6[0].split(" ")
 
@@ -266,11 +296,16 @@ def test_wrong_nth_word(client: Client, nth_word):
     with client:
         client.set_input_flow(input_flow)
         with pytest.raises(exceptions.Cancelled):
-            device.recover(client, pin_protection=False, label="label")
+            device.recover(
+                client, pin_protection=False, label="label", show_tutorial=False
+            )
 
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_same_share(client: Client):
+    if client.features.model == "R":
+        pytest.fail("Input flow not ready for model R")
+
     debug = client.debug
     first_share = MNEMONIC_SLIP39_BASIC_20_3of6[0].split(" ")
     # second share is first 4 words of first
@@ -303,11 +338,16 @@ def test_same_share(client: Client):
     with client:
         client.set_input_flow(input_flow)
         with pytest.raises(exceptions.Cancelled):
-            device.recover(client, pin_protection=False, label="label")
+            device.recover(
+                client, pin_protection=False, label="label", show_tutorial=False
+            )
 
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_1of1(client: Client):
+    if client.features.model == "R":
+        pytest.fail("Input flow not ready for model R")
+
     debug = client.debug
 
     def input_flow():
@@ -321,7 +361,11 @@ def test_1of1(client: Client):
     with client:
         client.set_input_flow(input_flow)
         ret = device.recover(
-            client, pin_protection=False, passphrase_protection=False, label="label"
+            client,
+            pin_protection=False,
+            passphrase_protection=False,
+            label="label",
+            show_tutorial=False,
         )
 
     # Workflow succesfully ended

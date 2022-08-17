@@ -33,7 +33,7 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
         prompt = text_r("Create a new wallet\nwith Super Shamir?")
     else:
         prompt = text_r("Do you want to create\na new wallet?")
-    await confirm_reset_device(ctx, prompt)
+    await confirm_reset_device(ctx, prompt, show_tutorial=bool(msg.show_tutorial))
     await LoadingAnimation()
 
     # wipe storage to make sure the device is in a clear state

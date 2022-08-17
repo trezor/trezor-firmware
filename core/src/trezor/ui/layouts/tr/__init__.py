@@ -34,6 +34,7 @@ class RustLayoutContent:
     BTN_TAG = " **BTN** "
     EMPTY_BTN = "---"
     NEXT_BTN = "Next"
+    PREV_BTN = "Prev"
 
     def __init__(self, raw_content: list[str]) -> None:
         self.raw_content = raw_content
@@ -71,9 +72,17 @@ class RustLayoutContent:
 
     def get_next_button(self) -> str | None:
         """Position of the next button, if any."""
+        return self._get_btn_by_action(self.NEXT_BTN)
+
+    def get_prev_button(self) -> str | None:
+        """Position of the previous button, if any."""
+        return self._get_btn_by_action(self.PREV_BTN)
+
+    def _get_btn_by_action(self, btn_action: str) -> str | None:
+        """Position of button described by some action. None if not found."""
         btn_names = ("left", "middle", "right")
         for index, action in enumerate(self.button_actions()):
-            if action == self.NEXT_BTN:
+            if action == btn_action:
                 return btn_names[index]
 
         return None
@@ -105,7 +114,10 @@ class RustLayoutContent:
             self.str_content, self.CONTENT_TAG
         )
         # there are some unwanted spaces
-        strings = [s.replace("\n ", "\n").lstrip() for s in content_strings]
+        strings = [
+            s.replace(" \n ", "\n").replace("\n ", "\n").lstrip()
+            for s in content_strings
+        ]
         return "\n".join(strings)
 
     def buttons(self) -> tuple[str, str, str]:
@@ -184,12 +196,21 @@ class RustLayout(ui.Layout):
             return (
                 self.handle_input_and_rendering(),
                 self.handle_timers(),
-                self.handle_pagination(),
+                self.handle_swipe(),
                 confirm_signal(),
                 input_signal(),
             )
 
         def read_content(self) -> list[str]:
+            """Gets the visible content of the screen."""
+            self._place_layout()
+            return self._content_obj().visible_screen().split("\n")
+
+        def _place_layout(self) -> None:
+            """It is necessary to place the layout to get data about its screen content."""
+            self.layout.place()
+
+        def _read_content_raw(self) -> list[str]:
             """Reads raw trace content from Rust layout."""
             result: list[str] = []
 
@@ -202,7 +223,7 @@ class RustLayout(ui.Layout):
 
         def _content_obj(self) -> RustLayoutContent:
             """Gets object with user-friendly methods on Rust layout content."""
-            return RustLayoutContent(self.read_content())
+            return RustLayoutContent(self._read_content_raw())
 
         def _press_left(self) -> Any:
             """Triggers left button press."""
@@ -221,34 +242,38 @@ class RustLayout(ui.Layout):
             self.layout.button_event(io.BUTTON_RELEASED, io.BUTTON_LEFT)
             return self.layout.button_event(io.BUTTON_RELEASED, io.BUTTON_RIGHT)
 
-        async def handle_pagination(self):
-            """Paginates through the current page/flow page as far as possible.
+        async def handle_swipe(self):
+            """Enales pagination through the current page/flow page.
 
-            After paginating, a single `press_yes` is enough to finish the flow.
-            Starts only as soon it receives a swipe signal.
+            Waits for `swipe_signal` and carries it out.
+            Only `UP` and `DOWN` directions are supported.
             """
             from apps.debug import notify_layout_change, swipe_signal
+            from trezor.ui.components.common import (
+                SWIPE_UP,
+                SWIPE_DOWN,
+            )
 
-            # Awaiting any swipe signal to start paginating
-            await swipe_signal()
             while True:
+                direction = await swipe_signal()
                 content_obj = self._content_obj()
-                # Not continuing in case there is no next page
-                if not content_obj.can_go_next():
-                    raise ui.Result(None)
 
-                # Next button can be any of the three
-                next_btn = content_obj.get_next_button()
-                assert next_btn is not None
+                if direction == SWIPE_UP:
+                    btn_to_press = content_obj.get_next_button()
+                elif direction == SWIPE_DOWN:
+                    btn_to_press = content_obj.get_prev_button()
+                else:
+                    raise Exception(f"Unsupported direction: {direction}")
 
-                if next_btn == "right":
+                assert btn_to_press is not None
+                if btn_to_press == "right":
                     msg = self._press_right()
-                elif next_btn == "middle":
+                elif btn_to_press == "middle":
                     msg = self._press_middle()
-                elif next_btn == "left":
+                elif btn_to_press == "left":
                     msg = self._press_left()
                 else:
-                    raise Exception(f"Unknown button: {next_btn}")
+                    raise Exception(f"Unknown button: {btn_to_press}")
 
                 self.layout.paint()
                 if msg is not None:
@@ -256,6 +281,12 @@ class RustLayout(ui.Layout):
 
                 ui.refresh()  # so that a screenshot is taken
                 notify_layout_change(self)
+
+        def page_count(self) -> int:
+            """How many paginated pages current screen has."""
+            # TODO: leave it debug-only or use always?
+            self._place_layout()
+            return self._content_obj().page_count()
 
     else:
 
@@ -288,7 +319,7 @@ class RustLayout(ui.Layout):
         while True:
             if __debug__:
                 # Printing debugging info, just temporary
-                RustLayoutContent(self.read_content())
+                RustLayoutContent(self._read_content_raw())
             # Using `yield` instead of `await` to avoid allocations.
             event, button_num = yield button
             workflow.idle_timer.touch()
@@ -465,14 +496,19 @@ async def pin_confirm_action(
 
 
 async def confirm_reset_device(
-    ctx: wire.GenericContext, prompt: str, recovery: bool = False
+    ctx: wire.GenericContext,
+    prompt: str,
+    recovery: bool = False,
+    show_tutorial: bool = True,
 ) -> None:
     # Showing the tutorial, as this is the entry point of
     # both the creation of new wallet and recovery of existing seed
     # - the first user interactions with Trezor.
     # (it is also special for model R, so not having to clutter the
     # common code)
-    await tutorial(ctx)
+
+    if show_tutorial:
+        await tutorial(ctx)
 
     return await raise_if_cancelled(
         _placeholder_confirm(
@@ -764,7 +800,9 @@ async def should_show_more(
     title: str,
     para: Iterable[tuple[int, str]],
     button_text: str = "Show all",
+    confirm: str = "Show all",
     br_type: str = "should_show_more",
+    major_confirm: bool = True,
     br_code: ButtonRequestType = ButtonRequestType.Other,
     icon: str = ui.ICON_DEFAULT,
     icon_color: int = ui.ORANGE_ICON,
@@ -772,7 +810,7 @@ async def should_show_more(
     return await get_bool(
         ctx=ctx,
         title=title,
-        data="Should show more?",
+        data=button_text,
         br_type=br_type,
         br_code=br_code,
     )
@@ -1172,18 +1210,21 @@ async def request_pin_on_device(
     else:
         subprompt = f"{attempts_remaining} tries left"
 
-    while True:
-        result = await ctx.wait(
-            RustLayout(
-                trezorui2.request_pin(
-                    prompt=prompt,
-                    subprompt=subprompt,
-                    allow_cancel=allow_cancel,
-                    shuffle=shuffle,  # type: ignore [No parameter named "shuffle"]
-                )
-            )
+    dialog = RustLayout(
+        trezorui2.request_pin(
+            prompt=prompt,
+            subprompt=subprompt,
+            allow_cancel=allow_cancel,
+            shuffle=shuffle,  # type: ignore [No parameter named "shuffle"]
         )
+    )
+
+    while True:
+        result = await ctx.wait(dialog)
         if result is trezorui2.CANCELLED:
             raise wire.PinCancelled
+        # TODO: strangely sometimes in UI tests, the result is `CONFIRMED`
+        # For example in `test_set_remove_wipe_code`, `test_set_pin_to_wipe_code` or
+        # `test_change_pin`
         assert isinstance(result, str)
         return result

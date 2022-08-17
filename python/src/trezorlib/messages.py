@@ -3405,6 +3405,7 @@ class ResetDevice(protobuf.MessageType):
         8: protobuf.Field("skip_backup", "bool", repeated=False, required=False),
         9: protobuf.Field("no_backup", "bool", repeated=False, required=False),
         10: protobuf.Field("backup_type", "BackupType", repeated=False, required=False),
+        11: protobuf.Field("show_tutorial", "bool", repeated=False, required=False),
     }
 
     def __init__(
@@ -3420,6 +3421,7 @@ class ResetDevice(protobuf.MessageType):
         skip_backup: Optional["bool"] = None,
         no_backup: Optional["bool"] = None,
         backup_type: Optional["BackupType"] = BackupType.Bip39,
+        show_tutorial: Optional["bool"] = True,
     ) -> None:
         self.display_random = display_random
         self.strength = strength
@@ -3431,6 +3433,7 @@ class ResetDevice(protobuf.MessageType):
         self.skip_backup = skip_backup
         self.no_backup = no_backup
         self.backup_type = backup_type
+        self.show_tutorial = show_tutorial
 
 
 class BackupDevice(protobuf.MessageType):
@@ -3467,6 +3470,7 @@ class RecoveryDevice(protobuf.MessageType):
         8: protobuf.Field("type", "RecoveryDeviceType", repeated=False, required=False),
         9: protobuf.Field("u2f_counter", "uint32", repeated=False, required=False),
         10: protobuf.Field("dry_run", "bool", repeated=False, required=False),
+        11: protobuf.Field("show_tutorial", "bool", repeated=False, required=False),
     }
 
     def __init__(
@@ -3481,6 +3485,7 @@ class RecoveryDevice(protobuf.MessageType):
         type: Optional["RecoveryDeviceType"] = None,
         u2f_counter: Optional["int"] = None,
         dry_run: Optional["bool"] = None,
+        show_tutorial: Optional["bool"] = True,
     ) -> None:
         self.word_count = word_count
         self.passphrase_protection = passphrase_protection
@@ -3491,6 +3496,7 @@ class RecoveryDevice(protobuf.MessageType):
         self.type = type
         self.u2f_counter = u2f_counter
         self.dry_run = dry_run
+        self.show_tutorial = show_tutorial
 
 
 class WordRequest(protobuf.MessageType):

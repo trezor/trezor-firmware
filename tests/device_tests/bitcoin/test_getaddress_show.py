@@ -181,6 +181,9 @@ VECTORS_MULTISIG = (  # script_type, bip48_type, address, xpubs, ignore_xpub_mag
 def test_show_multisig_xpubs(
     client, script_type, bip48_type, address, xpubs, ignore_xpub_magic
 ):
+    if client.features.model == "R":
+        pytest.fail("Input flow not ready for model R")
+
     nodes = [
         btc.get_public_node(
             client,

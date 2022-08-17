@@ -41,6 +41,9 @@ def click_info_button(debug):
 @pytest.mark.skip_t1  # TODO we want this for t1 too
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC12)
 def test_backup_bip39(client: Client):
+    if client.features.model == "R":
+        pytest.fail("Input flow not ready for model R")
+
     assert client.features.needs_backup is True
     mnemonic = None
 
@@ -84,6 +87,9 @@ def test_backup_bip39(client: Client):
     "click_info", [True, False], ids=["click_info", "no_click_info"]
 )
 def test_backup_slip39_basic(client: Client, click_info: bool):
+    if client.features.model == "R":
+        pytest.fail("Input flow not ready for model R")
+
     assert client.features.needs_backup is True
     mnemonics = []
 
@@ -152,6 +158,9 @@ def test_backup_slip39_basic(client: Client, click_info: bool):
     "click_info", [True, False], ids=["click_info", "no_click_info"]
 )
 def test_backup_slip39_advanced(client: Client, click_info: bool):
+    if client.features.model == "R":
+        pytest.fail("Input flow not ready for model R")
+
     assert client.features.needs_backup is True
     mnemonics = []
 
@@ -287,4 +296,5 @@ def test_no_backup_show_entropy_fails(client: Client):
             label="test",
             language="en-US",
             no_backup=True,
+            show_tutorial=False,
         )

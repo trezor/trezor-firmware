@@ -26,6 +26,9 @@ pytestmark = pytest.mark.skip_t1
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_tt_pin_passphrase(client: Client):
+    if client.features.model == "R":
+        pytest.fail("Input flow not ready for model R")
+
     layout = client.debug.wait_layout
     mnemonic = MNEMONIC12.split(" ")
 
@@ -67,7 +70,11 @@ def test_tt_pin_passphrase(client: Client):
         client.set_input_flow(input_flow)
         client.watch_layout()
         device.recover(
-            client, pin_protection=True, passphrase_protection=True, label="hello"
+            client,
+            pin_protection=True,
+            passphrase_protection=True,
+            label="hello",
+            show_tutorial=False,
         )
 
     assert client.debug.state().mnemonic_secret.decode() == MNEMONIC12
@@ -80,6 +87,9 @@ def test_tt_pin_passphrase(client: Client):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_tt_nopin_nopassphrase(client: Client):
+    if client.features.model == "R":
+        pytest.fail("Input flow not ready for model R")
+
     layout = client.debug.wait_layout
     mnemonic = MNEMONIC12.split(" ")
 
@@ -113,7 +123,11 @@ def test_tt_nopin_nopassphrase(client: Client):
         client.set_input_flow(input_flow)
         client.watch_layout()
         device.recover(
-            client, pin_protection=False, passphrase_protection=False, label="hello"
+            client,
+            pin_protection=False,
+            passphrase_protection=False,
+            label="hello",
+            show_tutorial=False,
         )
 
     assert client.debug.state().mnemonic_secret.decode() == MNEMONIC12
@@ -125,7 +139,7 @@ def test_tt_nopin_nopassphrase(client: Client):
 
 def test_already_initialized(client: Client):
     with pytest.raises(RuntimeError):
-        device.recover(client)
+        device.recover(client, show_tutorial=False)
 
     with pytest.raises(exceptions.TrezorFailure, match="Already initialized"):
         client.call(messages.RecoveryDevice())

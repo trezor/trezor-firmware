@@ -150,7 +150,10 @@ async def confirm_action(
 
 
 async def confirm_reset_device(
-    ctx: wire.GenericContext, prompt: str, recovery: bool = False
+    ctx: wire.GenericContext,
+    prompt: str,
+    recovery: bool = False,
+    show_tutorial: bool = True,
 ) -> None:
     if recovery:
         text = Text("Recovery mode", ui.ICON_RECOVERY, new_lines=False)

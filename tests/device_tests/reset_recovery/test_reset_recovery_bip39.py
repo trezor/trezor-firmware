@@ -40,6 +40,9 @@ def test_reset_recovery(client: Client):
 
 
 def reset(client: Client, strength=128, skip_backup=False):
+    if client.features.model == "R":
+        pytest.fail("Input flow not ready for model R")
+
     mnemonic = None
 
     def input_flow():
@@ -90,6 +93,7 @@ def reset(client: Client, strength=128, skip_backup=False):
             label="test",
             language="en-US",
             backup_type=BackupType.Bip39,
+            show_tutorial=False,
         )
 
     # Check if device is properly initialized
@@ -102,6 +106,9 @@ def reset(client: Client, strength=128, skip_backup=False):
 
 
 def recover(client: Client, mnemonic):
+    if client.features.model == "R":
+        pytest.fail("Input flow not ready for model R")
+
     debug = client.debug
     words = mnemonic.split(" ")
 
@@ -137,7 +144,9 @@ def recover(client: Client, mnemonic):
                 messages.Features,
             ]
         )
-        ret = device.recover(client, pin_protection=False, label="label")
+        ret = device.recover(
+            client, pin_protection=False, label="label", show_tutorial=False
+        )
 
     # Workflow successfully ended
     assert ret == messages.Success(message="Device recovered")
