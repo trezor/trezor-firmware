@@ -719,7 +719,16 @@ def cargo_build():
         if PYOPT == '0':
             features.append('ui_debug')
 
-    return f'cd embed/rust; cargo build {profile} --target={RUST_TARGET} --target-dir=../../build/firmware/rust --no-default-features --features "{" ".join(features)}"'
+    cargo_opts = [
+        f'--target={RUST_TARGET}',
+        f'--target-dir=../../build/firmware/rust',
+        '--no-default-features',
+        '--features ' + ','.join(features),
+        '-Z build-std=core',
+        '-Z build-std-features=panic_immediate_abort',
+    ]
+
+    return f'cd embed/rust; cargo build {profile} ' + ' '.join(cargo_opts)
 
 rust = env.Command(
     target=RUST_LIBPATH,
