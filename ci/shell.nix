@@ -37,7 +37,7 @@ let
     ];
     # we use rustfmt from nixpkgs because it's built with the nighly flag needed for wrap_comments
     # to use official binary, remove rustfmt from buildInputs and add it to extensions:
-    extensions = [ "clippy" "rustfmt" ];
+    extensions = [ "rust-src" "clippy" "rustfmt" ];
   };
   llvmPackages = nixpkgs.llvmPackages_13;
   # see pyright/README.md for update procedure
