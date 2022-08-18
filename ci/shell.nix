@@ -3,7 +3,7 @@
  }:
 
 let
-  # the last commit from master as of 2022-02-08
+  # the last commit from master as of 2022-08-02
   rustOverlay = import (builtins.fetchTarball {
     url = "https://github.com/oxalica/rust-overlay/archive/b38c1683594aeefa5c3c4dde115401f059146be6.tar.gz";
     sha256 = "0rk4i42cys2v7k2ir57x5qa8dc37nrs432cdpbr4cddskgvyi8ky";
@@ -29,15 +29,15 @@ let
     chmod -w $out
   '';
   # NOTE: don't forget to update Minimum Supported Rust Version in docs/core/build/emulator.md
-  rustProfiles = nixpkgs.rust-bin.stable."1.63.0";
-  rustStable = rustProfiles.minimal.override {
+  rustProfiles = nixpkgs.rust-bin.nightly."2022-08-02";
+  rustNightly = rustProfiles.minimal.override {
     targets = [
       "thumbv7em-none-eabihf" # TT
       "thumbv7m-none-eabi"    # T1
     ];
     # we use rustfmt from nixpkgs because it's built with the nighly flag needed for wrap_comments
     # to use official binary, remove rustfmt from buildInputs and add it to extensions:
-    extensions = [ "clippy" ];
+    extensions = [ "clippy" "rustfmt" ];
   };
   llvmPackages = nixpkgs.llvmPackages_13;
   # see pyright/README.md for update procedure
@@ -88,8 +88,7 @@ stdenvNoCC.mkDerivation ({
     poetry
     protobuf
     pyright
-    rustfmt
-    rustStable
+    rustNightly
     wget
     zlib
     moreutils

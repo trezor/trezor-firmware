@@ -54,12 +54,12 @@ brew install scons sdl2 sdl2_image pkg-config llvm
 
 ## Rust
 
-You will require Rust and Cargo. The currently supported version is 1.58 stable.
-The recommended way to install both is with [`rustup`](https://rustup.rs/). If you
-are installing `rustup` for the first time, the stable toolchain will be installed
-for you automatically. Otherwise, make sure you are up to date:
+You will require Rust and Cargo. The currently supported version is 1.64 nightly. The
+recommended way to install both is with [`rustup`](https://rustup.rs/). Make sure you
+are up to date:
 
 ```sh
+rustup default nightly
 rustup update
 ```
 
