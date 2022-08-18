@@ -61,6 +61,7 @@ impl Bip39Entry {
         letter_choices: &Vec<char, MAX_CHOICE_LENGTH>,
     ) -> Vec<ChoiceItems, MAX_CHOICE_LENGTH> {
         // TODO: we could support carousel for letters to quicken it for users
+        // (but then the BIN would need to be an option on its own, not so user-friendly)
         let mut choices: Vec<ChoiceItems, MAX_CHOICE_LENGTH> = letter_choices
             .iter()
             .map(|ch| {
@@ -87,7 +88,7 @@ impl Bip39Entry {
             })
             .collect();
         let last_index = choices.len() - 1;
-        choices[0].set_left_btn(Some(ButtonDetails::text("BIN")));
+        choices[0].set_left_btn(Some(ButtonDetails::bin_icon()));
         choices[last_index].set_right_btn(None);
 
         choices
