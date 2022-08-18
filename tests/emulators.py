@@ -17,7 +17,7 @@
 import tempfile
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from trezorlib._internal.emulator import CoreEmulator, Emulator, LegacyEmulator
 
@@ -67,7 +67,15 @@ ALL_TAGS = get_tags()
 
 
 class EmulatorWrapper:
-    def __init__(self, gen: str, tag: str = None, storage: bytes = None) -> None:
+    def __init__(
+        self,
+        gen: str,
+        tag: Optional[str] = None,
+        storage: Optional[bytes] = None,
+        port: Optional[int] = None,
+        headless: bool = True,
+        auto_interact: bool = True,
+    ) -> None:
         if tag is not None:
             executable = filename_from_tag(gen, tag)
         else:
@@ -87,7 +95,8 @@ class EmulatorWrapper:
                 executable,
                 self.profile_dir.name,
                 storage=storage,
-                headless=True,
+                headless=headless,
+                auto_interact=auto_interact,
             )
         elif gen == "core":
             self.emulator = CoreEmulator(
@@ -95,7 +104,9 @@ class EmulatorWrapper:
                 self.profile_dir.name,
                 storage=storage,
                 workdir=workdir,
-                headless=True,
+                port=port,
+                headless=headless,
+                auto_interact=auto_interact,
             )
         else:
             raise ValueError(
