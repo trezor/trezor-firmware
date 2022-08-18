@@ -57,19 +57,9 @@ def process_face(name, style, size, bpp=4, shave_bearingX=0, ext="ttf"):
     face = freetype.Face("fonts/%s-%s.%s" % (name, style, ext))
     face.set_pixel_sizes(0, size)
     fontname = "%s_%s_%d" % (name.lower(), style.lower(), size)
-    with open("font_%s.h" % fontname, "wt") as f:
-        f.write("#include <stdint.h>\n\n")
-        f.write("#if TREZOR_FONT_BPP != %d\n" % bpp)
-        f.write("#error Wrong TREZOR_FONT_BPP (expected %d)\n" % bpp)
-        f.write("#endif\n")
-        f.write(
-            "extern const uint8_t* const Font_%s_%s_%d[%d + 1 - %d];\n"
-            % (name, style, size, MAX_GLYPH, MIN_GLYPH)
-        )
-        f.write(
-            "extern const uint8_t Font_%s_%s_%d_glyph_nonprintable[];\n"
-            % (name, style, size)
-        )
+    font_ymin = 0
+    font_ymax = 0
+
     with open("font_%s.c" % fontname, "wt") as f:
         f.write("#include <stdint.h>\n\n")
         f.write("// clang-format off\n\n")
@@ -94,6 +84,7 @@ def process_face(name, style, size, bpp=4, shave_bearingX=0, ext="ttf"):
             rows = bitmap.rows
             advance = metrics.horiAdvance // 64
             bearingX = metrics.horiBearingX // 64
+
             # discard space on the left side
             if shave_bearingX > 0:
                 advance -= min(advance, bearingX, shave_bearingX)
@@ -148,6 +139,12 @@ def process_face(name, style, size, bpp=4, shave_bearingX=0, ext="ttf"):
                 )
                 nonprintable += " };\n"
 
+
+            yMin = bearingY - rows
+            yMax = yMin + rows
+            font_ymin = min(font_ymin, yMin)
+            font_ymax = max(font_ymax, yMax)
+
         f.write(nonprintable)
 
         f.write(
@@ -157,6 +154,24 @@ def process_face(name, style, size, bpp=4, shave_bearingX=0, ext="ttf"):
         for i in range(MIN_GLYPH, MAX_GLYPH + 1):
             f.write("    Font_%s_%s_%d_glyph_%d,\n" % (name, style, size, i))
         f.write("};\n")
+
+    with open("font_%s.h" % fontname, "wt") as f:
+        f.write("#include <stdint.h>\n\n")
+        f.write("#if TREZOR_FONT_BPP != %d\n" % bpp)
+        f.write("#error Wrong TREZOR_FONT_BPP (expected %d)\n" % bpp)
+        f.write("#endif\n")
+
+        f.write("#define Font_%s_%s_%d_HEIGHT %d\n" % (name, style, size, size))
+        f.write("#define Font_%s_%s_%d_MAX_HEIGHT %d\n" % (name, style, size, font_ymax - font_ymin))
+        f.write("#define Font_%s_%s_%d_BASELINE %d\n" % (name, style, size, -font_ymin))
+        f.write(
+            "extern const uint8_t* const Font_%s_%s_%d[%d + 1 - %d];\n"
+            % (name, style, size, MAX_GLYPH, MIN_GLYPH)
+        )
+        f.write(
+            "extern const uint8_t Font_%s_%s_%d_glyph_nonprintable[];\n"
+            % (name, style, size)
+        )
 
 
 process_face("Roboto", "Regular", 20)

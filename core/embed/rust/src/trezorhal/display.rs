@@ -41,12 +41,12 @@ pub fn char_width(ch: char, font: i32) -> i16 {
 }
 
 pub fn get_char_glyph(ch: u8, font: i32) -> *const u8 {
-    unsafe { ffi::display_get_glyph(font, ch) }
+    unsafe { ffi::font_get_glyph(font, ch) }
 }
 
 pub fn text_height(font: i32) -> i16 {
     unsafe {
-        ffi::display_text_height(font)
+        ffi::font_height(font)
             .try_into()
             .unwrap_or(i16::MAX)
     }

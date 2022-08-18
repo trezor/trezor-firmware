@@ -1,6 +1,7 @@
 # pylint: disable=E0602
 
 import os
+import tools
 
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 
@@ -8,6 +9,17 @@ CCFLAGS_MOD = ''
 CPPPATH_MOD = []
 CPPDEFINES_MOD = []
 SOURCE_MOD = []
+
+if TREZOR_MODEL in ('1', 'R'):
+    FONT_NORMAL=None
+    FONT_MEDIUM=None
+    FONT_BOLD='Font_PixelOperator_Bold_8'
+    FONT_MONO=None
+if TREZOR_MODEL in ('T', ):
+    FONT_NORMAL=None
+    FONT_MEDIUM=None
+    FONT_BOLD='Font_Roboto_Bold_20'
+    FONT_MONO=None
 
 # modtrezorcrypto
 CPPPATH_MOD += [
@@ -21,13 +33,10 @@ SOURCE_MOD += [
 CPPPATH_MOD += [
         'vendor/micropython/lib/uzlib',
 ]
-CPPDEFINES_MOD += [
-    'TREZOR_FONT_BOLD_ENABLE',
-]
 SOURCE_MOD += [
     'embed/extmod/modtrezorui/display.c',
+    'embed/extmod/modtrezorui/fonts/fonts.c',
     'embed/extmod/modtrezorui/font_bitmap.c',
-    'embed/extmod/modtrezorui/font_roboto_bold_20.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
@@ -80,6 +89,12 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/util.s',
     'embed/trezorhal/vectortable.s',
 ]
+
+# fonts
+tools.add_font('NORMAL', FONT_NORMAL, CPPDEFINES_MOD, SOURCE_MOD)
+tools.add_font('BOLD', FONT_BOLD, CPPDEFINES_MOD, SOURCE_MOD)
+tools.add_font('MEDIUM', FONT_MEDIUM, CPPDEFINES_MOD, SOURCE_MOD)
+tools.add_font('MONO', FONT_MONO, CPPDEFINES_MOD, SOURCE_MOD)
 
 env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')))
 
