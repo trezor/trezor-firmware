@@ -26,81 +26,7 @@
 #include "common.h"
 #include "display.h"
 
-#include "font_bitmap.h"
-
-#if defined TREZOR_MODEL_T
-
-// TT new rust UI
-#if TREZOR_UI2
-
-#ifdef TREZOR_FONT_NORMAL_ENABLE
-#include "font_tthoves_regular_18.h"
-#define FONT_NORMAL_DATA Font_TTHoves_Regular_18
-#define FONT_NORMAL_HEIGHT 18
-#endif
-#ifdef TREZOR_FONT_MEDIUM_ENABLE
-#include "font_tthoves_medium_20.h"
-#define FONT_MEDIUM_DATA Font_TTHoves_Medium_20
-#define FONT_MEDIUM_HEIGHT 20
-#endif
-#ifdef TREZOR_FONT_BOLD_ENABLE
-#include "font_tthoves_bold_16.h"
-#define FONT_BOLD_DATA Font_TTHoves_Bold_16
-#define FONT_BOLD_HEIGHT 16
-#endif
-#ifdef TREZOR_FONT_MONO_ENABLE
-#include "font_robotomono_regular_20.h"
-#define FONT_MONO_DATA Font_RobotoMono_Regular_20
-#define FONT_MONO_HEIGHT 20
-#endif
-
-// TT old python UI
-#else
-
-#ifdef TREZOR_FONT_NORMAL_ENABLE
-#include "font_roboto_regular_20.h"
-#define FONT_NORMAL_DATA Font_Roboto_Regular_20
-#define FONT_NORMAL_HEIGHT 20
-#endif
-#ifdef TREZOR_FONT_BOLD_ENABLE
-#include "font_roboto_bold_20.h"
-#define FONT_BOLD_DATA Font_Roboto_Bold_20
-#define FONT_BOLD_HEIGHT 20
-#endif
-#ifdef TREZOR_FONT_MONO_ENABLE
-#include "font_robotomono_regular_20.h"
-#define FONT_MONO_DATA Font_RobotoMono_Regular_20
-#define FONT_MONO_HEIGHT 20
-#endif
-
-#endif
-
-#elif defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
-
-#ifdef TREZOR_FONT_NORMAL_ENABLE
-#include "font_pixeloperator_regular_8.h"
-#define FONT_NORMAL_DATA Font_PixelOperator_Regular_8
-#define FONT_NORMAL_HEIGHT 8
-#endif
-#ifdef TREZOR_FONT_MEDIUM_ENABLE
-#include "font_pixeloperator_regular_8.h"
-#define FONT_MEDIUM_DATA Font_PixelOperator_Regular_8
-#define FONT_MEDIUM_HEIGHT 8
-#endif
-#ifdef TREZOR_FONT_BOLD_ENABLE
-#include "font_pixeloperator_bold_8.h"
-#define FONT_BOLD_DATA Font_PixelOperator_Bold_8
-#define FONT_BOLD_HEIGHT 8
-#endif
-#ifdef TREZOR_FONT_MONO_ENABLE
-#include "font_pixeloperatormono_regular_8.h"
-#define FONT_MONO_DATA Font_PixelOperatorMono_Regular_8
-#define FONT_MONO_HEIGHT 8
-#endif
-
-#else
-#error Unknown Trezor model
-#endif
+#include "fonts/fonts.h"
 
 #include <stdarg.h>
 #include <string.h>
@@ -636,91 +562,6 @@ void display_printf(const char *fmt, ...) {
 
 #endif  // TREZOR_PRINT_DISABLE
 
-static uint8_t convert_char(const uint8_t c) {
-  static char last_was_utf8 = 0;
-
-  // non-printable ASCII character
-  if (c < ' ') {
-    last_was_utf8 = 0;
-    return 0x7F;
-  }
-
-  // regular ASCII character
-  if (c < 0x80) {
-    last_was_utf8 = 0;
-    return c;
-  }
-
-  // UTF-8 handling: https://en.wikipedia.org/wiki/UTF-8#Encoding
-
-  // bytes 11xxxxxx are first bytes of UTF-8 characters
-  if (c >= 0xC0) {
-    last_was_utf8 = 1;
-    return 0x7F;
-  }
-
-  if (last_was_utf8) {
-    // bytes 10xxxxxx can be successive UTF-8 characters ...
-    return 0;  // skip glyph
-  } else {
-    // ... or they are just non-printable ASCII characters
-    return 0x7F;
-  }
-
-  return 0;
-}
-
-const uint8_t *display_get_glyph(int font, uint8_t c) {
-  c = convert_char(c);
-  if (!c) return 0;
-
-  // printable ASCII character
-  if (c >= ' ' && c < 0x7F) {
-    switch (font) {
-#ifdef TREZOR_FONT_NORMAL_ENABLE
-      case FONT_NORMAL:
-        return FONT_NORMAL_DATA[c - ' '];
-#endif
-#ifdef TREZOR_FONT_MEDIUM_ENABLE
-      case FONT_MEDIUM:
-        return FONT_MEDIUM_DATA[c - ' '];
-#endif
-#ifdef TREZOR_FONT_BOLD_ENABLE
-      case FONT_BOLD:
-        return FONT_BOLD_DATA[c - ' '];
-#endif
-#ifdef TREZOR_FONT_MONO_ENABLE
-      case FONT_MONO:
-        return FONT_MONO_DATA[c - ' '];
-#endif
-    }
-    return 0;
-  }
-
-// non-printable character
-#define PASTER(s) s##_glyph_nonprintable
-#define NONPRINTABLE_GLYPH(s) PASTER(s)
-
-  switch (font) {
-#ifdef TREZOR_FONT_NORMAL_ENABLE
-    case FONT_NORMAL:
-      return NONPRINTABLE_GLYPH(FONT_NORMAL_DATA);
-#endif
-#ifdef TREZOR_FONT_MEDIUM_ENABLE
-    case FONT_MEDIUM:
-      return NONPRINTABLE_GLYPH(FONT_MEDIUM_DATA);
-#endif
-#ifdef TREZOR_FONT_BOLD_ENABLE
-    case FONT_BOLD:
-      return NONPRINTABLE_GLYPH(FONT_BOLD_DATA);
-#endif
-#ifdef TREZOR_FONT_MONO_ENABLE
-    case FONT_MONO:
-      return NONPRINTABLE_GLYPH(FONT_MONO_DATA);
-#endif
-  }
-  return 0;
-}
 
 static void display_text_render(int x, int y, const char *text, int textlen,
                                 int font, uint16_t fgcolor, uint16_t bgcolor) {
@@ -734,7 +575,7 @@ static void display_text_render(int x, int y, const char *text, int textlen,
 
   // render glyphs
   for (int i = 0; i < textlen; i++) {
-    const uint8_t *g = display_get_glyph(font, (uint8_t)text[i]);
+    const uint8_t *g = font_get_glyph(font, (uint8_t)text[i]);
     if (!g) continue;
     const uint8_t w = g[0];      // width
     const uint8_t h = g[1];      // height
@@ -803,7 +644,7 @@ int display_text_width(const char *text, int textlen, int font) {
     textlen = strlen(text);
   }
   for (int i = 0; i < textlen; i++) {
-    const uint8_t *g = display_get_glyph(font, (uint8_t)text[i]);
+    const uint8_t *g = font_get_glyph(font, (uint8_t)text[i]);
     if (!g) continue;
     const uint8_t adv = g[2];  // advance
     width += adv;
@@ -835,7 +676,7 @@ int display_text_split(const char *text, int textlen, int font,
     if (text[i] == ' ') {
       lastspace = i;
     }
-    const uint8_t *g = display_get_glyph(font, (uint8_t)text[i]);
+    const uint8_t *g = font_get_glyph(font, (uint8_t)text[i]);
     if (!g) continue;
     const uint8_t adv = g[2];  // advance
     width += adv;
@@ -848,28 +689,6 @@ int display_text_split(const char *text, int textlen, int font,
     }
   }
   return textlen;
-}
-
-int display_text_height(int font) {
-  switch (font) {
-#ifdef TREZOR_FONT_NORMAL_ENABLE
-    case FONT_NORMAL:
-      return FONT_NORMAL_HEIGHT;
-#endif
-#ifdef TREZOR_FONT_MEDIUM_ENABLE
-    case FONT_MEDIUM:
-      return FONT_MEDIUM_HEIGHT;
-#endif
-#ifdef TREZOR_FONT_BOLD_ENABLE
-    case FONT_BOLD:
-      return FONT_BOLD_HEIGHT;
-#endif
-#ifdef TREZOR_FONT_MONO_ENABLE
-    case FONT_MONO:
-      return FONT_MONO_HEIGHT;
-#endif
-  }
-  return 0;
 }
 
 #define QR_MAX_VERSION 9

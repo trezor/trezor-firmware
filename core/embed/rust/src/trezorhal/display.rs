@@ -44,11 +44,11 @@ pub fn char_width(ch: char, font: i32) -> i32 {
 }
 
 pub fn get_char_glyph(ch: u8, font: i32) -> *const u8 {
-    unsafe { ffi::display_get_glyph(font, ch) }
+    unsafe { ffi::font_get_glyph(font, ch) }
 }
 
 pub fn text_height(font: i32) -> i32 {
-    unsafe { ffi::display_text_height(font) }
+    unsafe { ffi::font_height(font) }
 }
 
 pub fn bar(x: i32, y: i32, w: i32, h: i32, fgcolor: u16) {

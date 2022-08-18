@@ -1,5 +1,6 @@
 #include "common.h"
 #include "display.h"
+#include "fonts/fonts.h"
 #include "rgb_led.h"
 #include "secbool.h"
 #include "storage.h"
