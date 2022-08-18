@@ -1025,12 +1025,12 @@ async def confirm_modify_output(
     amount_change: str,
     amount_new: str,
 ) -> None:
-    text = "Address:\n{address}\n\n"
+    text = f"Address:\n{address}\n\n"
     if sign < 0:
-        text += "Decrease amount by:\n{amount_change}\n\n"
+        text += f"Decrease amount by:\n{amount_change}\n\n"
     else:
-        text += "Increase amount by:\n{amount_change}\n\n"
-    text += "New amount:\n{amount_new}"
+        text += f"Increase amount by:\n{amount_change}\n\n"
+    text += f"New amount:\n{amount_new}"
 
     await raise_if_cancelled(
         _placeholder_confirm(
