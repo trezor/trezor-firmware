@@ -274,9 +274,6 @@ sync emulators to aws:
     BUCKET: "data.trezor.io"
     GIT_SUBMODULE_STRATEGY: "none"
   before_script: []  # no poetry
-  needs:
-    - release legacy unix debug deploy
-    - release core unix debug deploy
   script:
     - source ${AWS_DEPLOY_DATA}
     - aws s3 sync $DEPLOY_PATH s3://$BUCKET/dev/firmware/releases/emulators/
