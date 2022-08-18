@@ -107,6 +107,7 @@ class Coin(TypedDict):
     icon: str
 
     # Special ETH fields
+    coingecko_id: str
     chain: str
     chain_id: str
     rskip60: bool
@@ -363,70 +364,6 @@ def _load_btc_coins() -> Coins:
         coins.append(coin)
 
     return coins
-
-
-def _load_ethereum_networks() -> Coins:
-    """Load ethereum networks from `ethereum/networks.json`"""
-    chains_path = DEFS_DIR / "ethereum" / "chains" / "_data" / "chains"
-    networks: Coins = []
-    for chain in sorted(
-        chains_path.glob("eip155-*.json"),
-        key=lambda x: int(x.stem.replace("eip155-", "")),
-    ):
-        chain_data = load_json(chain)
-        shortcut = chain_data["nativeCurrency"]["symbol"]
-        name = chain_data["name"]
-        title = chain_data.get("title", "")
-        is_testnet = "testnet" in name.lower() or "testnet" in title.lower()
-        if is_testnet:
-            slip44 = 1
-        else:
-            slip44 = chain_data.get("slip44", 60)
-
-        if is_testnet and not shortcut.lower().startswith("t"):
-            shortcut = "t" + shortcut
-
-        rskip60 = shortcut in ("RBTC", "TRBTC")
-
-        # strip out bullcrap in network naming
-        if "mainnet" in name.lower():
-            name = re.sub(r" mainnet.*$", "", name, flags=re.IGNORECASE)
-
-        network = dict(
-            chain=chain_data["shortName"],
-            chain_id=chain_data["chainId"],
-            slip44=slip44,
-            shortcut=shortcut,
-            name=name,
-            rskip60=rskip60,
-            url=chain_data["infoURL"],
-            key=f"eth:{shortcut}",
-        )
-        networks.append(cast(Coin, network))
-
-    return networks
-
-
-def _load_erc20_tokens() -> Coins:
-    """Load ERC20 tokens from `ethereum/tokens` submodule."""
-    networks = _load_ethereum_networks()
-    tokens: Coins = []
-    for network in networks:
-        chain = network["chain"]
-
-        chain_path = DEFS_DIR / "ethereum" / "tokens" / "tokens" / chain
-        for file in sorted(chain_path.glob("*.json")):
-            token: Coin = load_json(file)
-            token.update(
-                chain=chain,
-                chain_id=network["chain_id"],
-                address_bytes=bytes.fromhex(token["address"][2:]),
-                shortcut=token["symbol"],
-                key=f"erc20:{chain}:{token['symbol']}",
-            )
-            tokens.append(token)
-
-    return tokens
 
 
 def _load_nem_mosaics() -> Coins:
