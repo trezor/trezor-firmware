@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import os
 from typing import TYPE_CHECKING, Generator
 
@@ -26,9 +28,11 @@ from trezorlib.transport import enumerate_devices, get_transport
 
 from . import ui_tests
 from .device_handler import BackgroundDeviceHandler
+from .emulators import EmulatorWrapper
 from .ui_tests.reporting import testreport
 
 if TYPE_CHECKING:
+    from trezorlib._internal.emulator import Emulator
     from _pytest.config import Config
     from _pytest.config.argparsing import Parser
     from _pytest.terminal import TerminalReporter
@@ -38,27 +42,91 @@ pytest.register_assert_rewrite("tests.common")
 
 
 @pytest.fixture(scope="session")
+def emulator(request: pytest.FixtureRequest) -> Generator["Emulator", None, None]:
+    """Fixture for getting emulator connection in case tests should operate it on their own.
+
+    Is responsible for starting it at the start of the session and stopping
+    it at the end of the session - using `with EmulatorWrapper...`.
+
+    Makes sure that each process will run the emulator on a different
+    port and with different profile directory, which is cleaned afterwards.
+
+    Used so that we can run the device tests in parallel using `pytest-xdist` plugin.
+    Docs: https://pypi.org/project/pytest-xdist/
+
+    NOTE for parallel tests:
+    So that all worker processes will explore the tests in the exact same order,
+    we cannot use the "built-in" random order, we need to specify our own,
+    so that all the processes share the same order.
+    Done by appending `--random-order-seed=$RANDOM` as a `pytest` argument,
+    using system RNG.
+    """
+
+    model = str(request.session.config.getoption("model"))
+    interact = os.environ.get("INTERACT") == "1"
+
+    assert model in ("core", "legacy")
+    if model == "legacy":
+        raise RuntimeError(
+            "Legacy emulator is not supported until it can be run on arbitrary ports."
+        )
+
+    def _get_port() -> int:
+        """Get a unique port for this worker process on which it can run.
+
+        Guarantees to be unique because each worker has a different name.
+        gw0=>20000, gw1=>20003, gw2=>20006, etc.
+        """
+        worker_id = os.getenv("PYTEST_XDIST_WORKER")
+        assert worker_id is not None
+        assert worker_id.startswith("gw")
+        # One emulator instance occupies 3 consecutive ports:
+        # 1. normal link, 2. debug link and 3. webauthn fake interface
+        return 20000 + int(worker_id[2:]) * 3
+
+    with EmulatorWrapper(
+        model, port=_get_port(), headless=True, auto_interact=not interact
+    ) as emu:
+        yield emu
+
+
+@pytest.fixture(scope="session")
 def _raw_client(request: pytest.FixtureRequest) -> Client:
-    path = os.environ.get("TREZOR_PATH")
-    interact = int(os.environ.get("INTERACT", 0))
-    if path:
-        try:
-            transport = get_transport(path)
-            return Client(transport, auto_interact=not interact)
-        except Exception as e:
-            request.session.shouldstop = "Failed to communicate with Trezor"
-            raise RuntimeError(f"Failed to open debuglink for {path}") from e
-
+    # In case tests run in parallel, each process has its own emulator/client.
+    # Requesting the emulator fixture only if relevant.
+    if request.session.config.getoption("control_emulators"):
+        emu_fixture = request.getfixturevalue("emulator")
+        return emu_fixture.client
     else:
-        devices = enumerate_devices()
-        for device in devices:
-            try:
-                return Client(device, auto_interact=not interact)
-            except Exception:
-                pass
+        interact = os.environ.get("INTERACT") == "1"
+        path = os.environ.get("TREZOR_PATH")
+        if path:
+            return _client_from_path(request, path, interact)
+        else:
+            return _find_client(request, interact)
 
+
+def _client_from_path(
+    request: pytest.FixtureRequest, path: str, interact: bool
+) -> Client:
+    try:
+        transport = get_transport(path)
+        return Client(transport, auto_interact=not interact)
+    except Exception as e:
         request.session.shouldstop = "Failed to communicate with Trezor"
-        raise RuntimeError("No debuggable device found")
+        raise RuntimeError(f"Failed to open debuglink for {path}") from e
+
+
+def _find_client(request: pytest.FixtureRequest, interact: bool) -> Client:
+    devices = enumerate_devices()
+    for device in devices:
+        try:
+            return Client(device, auto_interact=not interact)
+        except Exception:
+            pass
+
+    request.session.shouldstop = "Failed to communicate with Trezor"
+    raise RuntimeError("No debuggable device found")
 
 
 @pytest.fixture(scope="function")
@@ -188,7 +256,7 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: pytest.ExitCode) -
             session.exitstatus = pytest.ExitCode.TESTS_FAILED
         ui_tests.write_fixtures_suggestion(missing)
         testreport.index()
-    if test_ui == "record":
+    elif test_ui == "record":
         if exitstatus == pytest.ExitCode.OK:
             ui_tests.write_fixtures(missing)
         else:
@@ -240,7 +308,7 @@ def pytest_addoption(parser: "Parser") -> None:
         "--ui",
         action="store",
         choices=["test", "record"],
-        help="Enable UI intergration tests: 'record' or 'test'",
+        help="Enable UI integration tests: 'record' or 'test'",
     )
     parser.addoption(
         "--ui-check-missing",
@@ -248,6 +316,20 @@ def pytest_addoption(parser: "Parser") -> None:
         default=False,
         help="Check UI fixtures are containing the appropriate test cases (fails on `test`,"
         "deletes old ones on `record`).",
+    )
+    parser.addoption(
+        "--control-emulators",
+        action="store_true",
+        default=False,
+        help="Pytest will be responsible for starting and stopping the emulators. "
+        "Useful when running tests in parallel.",
+    )
+    parser.addoption(
+        "--model",
+        action="store",
+        choices=["core", "legacy"],
+        help="Which emulator to use: 'core' or 'legacy'. "
+        "Only valid in connection with `--control-emulators`",
     )
 
 

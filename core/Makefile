@@ -88,6 +88,9 @@ test_rust: ## run rs unit tests
 test_emu: ## run selected device tests from python-trezor
 	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests $(TESTOPTS)
 
+test_emu_multicore: ## run device tests using multiple cores
+	$(PYTEST) -n auto $(TESTPATH)/device_tests $(TESTOPTS) --control-emulators --model=core --random-order-seed=$(shell echo $$RANDOM)
+
 test_emu_monero: ## run selected monero device tests from monero-agent
 	cd tests ; $(EMU_TEST) ./run_tests_device_emu_monero.sh $(TESTOPTS)
 
@@ -105,8 +108,14 @@ test_emu_click: ## run click tests
 test_emu_ui: ## run ui integration tests
 	UI2="$(UI2)" $(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests --ui=test --ui-check-missing $(TESTOPTS)
 
+test_emu_ui_multicore: ## run ui integration tests using multiple cores
+	UI2="$(UI2)" $(PYTEST) -n auto $(TESTPATH)/device_tests $(TESTOPTS) --ui=test --ui-check-missing --control-emulators --model=core --random-order-seed=$(shell echo $$RANDOM)
+
 test_emu_ui_record: ## record and hash screens for ui integration tests
 	UI2="$(UI2)" $(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests --ui=record --ui-check-missing $(TESTOPTS)
+
+test_emu_ui_record_multicore: ## record and hash screens for ui integration tests using multiple cores
+	UI2="$(UI2)" $(PYTEST) -n auto $(TESTPATH)/device_tests $(TESTOPTS) --ui=record --ui-check-missing --control-emulators --model=core --random-order-seed=$(shell echo $$RANDOM)
 
 pylint: ## run pylint on application sources and tests
 	pylint -E $(shell find src tests -name *.py)

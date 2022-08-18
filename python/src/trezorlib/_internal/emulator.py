@@ -48,6 +48,7 @@ class Emulator:
         storage: Optional[bytes] = None,
         headless: bool = False,
         debug: bool = True,
+        auto_interact: bool = True,
         extra_args: Iterable[str] = (),
     ) -> None:
         self.executable = Path(executable).resolve()
@@ -77,6 +78,7 @@ class Emulator:
         self.port = 21324
         self.headless = headless
         self.debug = debug
+        self.auto_interact = auto_interact
         self.extra_args = list(extra_args)
 
     def make_args(self) -> List[str]:
@@ -160,7 +162,7 @@ class Emulator:
         (self.profile_dir / "trezor.port").write_text(str(self.port) + "\n")
 
         transport = self._get_transport()
-        self.client = TrezorClientDebugLink(transport, auto_interact=self.debug)
+        self.client = TrezorClientDebugLink(transport, auto_interact=self.auto_interact)
 
         self.client.open()
 
