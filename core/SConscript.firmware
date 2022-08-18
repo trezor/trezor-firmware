@@ -2,6 +2,7 @@
 # fmt: off
 
 import os
+import tools
 
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
 EVERYTHING = BITCOIN_ONLY != '1'
@@ -21,6 +22,23 @@ SOURCE_MOD = []
 
 PYOPT = ARGUMENTS.get('PYOPT', '1')
 FROZEN = True
+
+if TREZOR_MODEL in ('1', 'R'):
+    FONT_NORMAL='Font_PixelOperator_Regular_8'
+    FONT_MEDIUM='Font_PixelOperator_Regular_8'
+    FONT_BOLD='Font_PixelOperator_Bold_8'
+    FONT_MONO='Font_PixelOperatorMono_Regular_8'
+if TREZOR_MODEL in ('T', ):
+    if UI2:
+        FONT_NORMAL='Font_TTHoves_Regular_18'
+        FONT_MEDIUM='Font_TTHoves_Medium_20'
+        FONT_BOLD='Font_TTHoves_Bold_16'
+        FONT_MONO='Font_RobotoMono_Regular_20'
+    else:
+        FONT_NORMAL='Font_Roboto_Regular_20'
+        FONT_MEDIUM=None
+        FONT_BOLD='Font_Roboto_Bold_20'
+        FONT_MONO='Font_RobotoMono_Regular_20'
 
 # modtrezorconfig
 CPPPATH_MOD += [
@@ -158,20 +176,10 @@ if TREZOR_MODEL in ('T',):
 CPPPATH_MOD += [
         'vendor/micropython/lib/uzlib',
 ]
-CPPDEFINES_MOD += [
-    'TREZOR_FONT_BOLD_ENABLE',
-    'TREZOR_FONT_NORMAL_ENABLE',
-    'TREZOR_FONT_MONO_ENABLE',
-]
 SOURCE_MOD += [
     'embed/extmod/modtrezorui/display.c',
-    'embed/extmod/modtrezorui/font_bitmap.c',
-    'embed/extmod/modtrezorui/font_roboto_bold_20.c',
-    'embed/extmod/modtrezorui/font_roboto_regular_20.c',
-    'embed/extmod/modtrezorui/font_robotomono_regular_20.c',
-    'embed/extmod/modtrezorui/font_pixeloperator_bold_8.c',
-    'embed/extmod/modtrezorui/font_pixeloperator_regular_8.c',
-    'embed/extmod/modtrezorui/font_pixeloperatormono_regular_8.c',
+    'embed/extmod/modtrezorui/fonts/fonts.c',
+    'embed/extmod/modtrezorui/fonts/font_bitmap.c',
     'embed/extmod/modtrezorui/modtrezorui.c',
     'embed/extmod/modtrezorui/qr-code-generator/qrcodegen.c',
     'vendor/micropython/lib/uzlib/adler32.c',
@@ -180,13 +188,7 @@ SOURCE_MOD += [
 ]
 if UI2:
     CPPDEFINES_MOD += [
-        'TREZOR_FONT_MEDIUM_ENABLE',
         'TREZOR_UI2',
-    ]
-    SOURCE_MOD += [
-        'embed/extmod/modtrezorui/font_tthoves_bold_16.c',
-        'embed/extmod/modtrezorui/font_tthoves_medium_20.c',
-        'embed/extmod/modtrezorui/font_tthoves_regular_18.c',
     ]
 
 # modtrezorutils
@@ -414,6 +416,12 @@ if FEATURE_FLAGS["SYSTEM_VIEW"]:
     ]
     CPPDEFINES_MOD += ['SYSTEM_VIEW']
     CCFLAGS_MOD += '-DSYSTEM_VIEW '
+
+# fonts
+tools.add_font('NORMAL', FONT_NORMAL, CPPDEFINES_MOD, SOURCE_MOD)
+tools.add_font('BOLD', FONT_BOLD, CPPDEFINES_MOD, SOURCE_MOD)
+tools.add_font('MEDIUM', FONT_MEDIUM, CPPDEFINES_MOD, SOURCE_MOD)
+tools.add_font('MONO', FONT_MONO, CPPDEFINES_MOD, SOURCE_MOD)
 
 SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_MICROPYTHON_SPEED
 

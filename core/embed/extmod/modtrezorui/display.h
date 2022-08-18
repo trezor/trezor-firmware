@@ -24,6 +24,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "fonts/fonts.h"
 #if defined TREZOR_MODEL_T
 
 // ILI9341V, GC9307 and ST7789V drivers support 240px x 320px display resolution
@@ -69,19 +70,6 @@
 #define COLOR_WHITE 0xFFFF
 #define COLOR_BLACK 0x0000
 
-#ifdef TREZOR_FONT_NORMAL_ENABLE
-#define FONT_NORMAL (-1)
-#endif
-#ifdef TREZOR_FONT_MEDIUM_ENABLE
-#define FONT_MEDIUM (-5)
-#endif
-#ifdef TREZOR_FONT_BOLD_ENABLE
-#define FONT_BOLD (-2)
-#endif
-#ifdef TREZOR_FONT_MONO_ENABLE
-#define FONT_MONO (-3)
-#endif
-
 // provided by port
 
 void display_init(void);
@@ -126,7 +114,6 @@ void display_text_right(int x, int y, const char *text, int textlen, int font,
 int display_text_width(const char *text, int textlen, int font);
 int display_text_split(const char *text, int textlen, int font,
                        int requested_width);
-int display_text_height(int font);
 
 void display_qrcode(int x, int y, const char *data, uint8_t scale);
 
@@ -143,8 +130,6 @@ void display_utf8_substr(const char *buf_start, size_t buf_len, int char_off,
 void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
 void display_pixeldata(uint16_t c);
 void display_pixeldata_dirty();
-
-const uint8_t *display_get_glyph(int font, uint8_t c);
 
 #if !(defined EMULATOR) && (defined TREZOR_MODEL_T)
 extern volatile uint8_t *const DISPLAY_CMD_ADDRESS;

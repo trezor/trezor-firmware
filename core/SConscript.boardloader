@@ -50,7 +50,8 @@ CPPPATH_MOD += [
 ]
 SOURCE_MOD += [
     'embed/extmod/modtrezorui/display.c',
-    'embed/extmod/modtrezorui/font_bitmap.c',
+    'embed/extmod/modtrezorui/fonts/fonts.c',
+    'embed/extmod/modtrezorui/fonts/font_bitmap.c',
 ]
 
 SOURCE_STMHAL = [
