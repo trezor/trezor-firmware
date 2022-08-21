@@ -1,13 +1,17 @@
-use super::constant;
+use super::{
+    constant,
+    geometry::{Offset, Point, Rect},
+};
 use crate::{
     error::Error,
     time::Duration,
-    trezorhal::{display, qr, time, uzlib},
+    trezorhal::{
+        display, qr, time,
+        uzlib::{UzlibContext, UZLIB_WINDOW_SIZE},
+    },
     ui::lerp::Lerp,
 };
 use core::slice;
-
-use super::geometry::{Offset, Point, Rect};
 
 pub fn backlight() -> i32 {
     display::backlight(-1)
@@ -110,7 +114,9 @@ pub fn icon_rust(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
     set_window(clamped);
 
     let mut dest = [0_u8; 1];
-    let mut ctx = uzlib::UzlibContext::new(&data[12..], true);
+
+    let mut window = [0; UZLIB_WINDOW_SIZE];
+    let mut ctx = UzlibContext::new(&data[12..], Some(&mut window));
 
     for py in area.y0..area.y1 {
         for px in area.x0..area.x1 {
@@ -317,7 +323,7 @@ pub fn rect_rounded2_partial(
             );
             icon_area_clamped = icon_area.clamp(constant::screen());
 
-            let mut ctx = uzlib::UzlibContext::new(&icon_bytes[12..], false);
+            let mut ctx = UzlibContext::new(&icon_bytes[12..], None);
             unwrap!(ctx.uncompress(&mut icon_data), "Decompression failed");
             icon_colortable = get_color_table(icon_color, bg_color);
             icon_width = toif_info.width.into();

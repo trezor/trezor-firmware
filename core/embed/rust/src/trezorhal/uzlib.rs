@@ -13,25 +13,25 @@ impl Default for ffi::uzlib_uncomp {
 pub struct UzlibContext<'a> {
     uncomp: ffi::uzlib_uncomp,
     src_data: PhantomData<&'a [u8]>,
-    window: Option<[u8; UZLIB_WINDOW_SIZE]>,
 }
 
 impl<'a> UzlibContext<'a> {
-    pub fn new(src: &'a [u8], use_window: bool) -> Self {
-        let window = use_window.then_some([0_u8; UZLIB_WINDOW_SIZE]);
-
+    pub fn new(src: &'a [u8], window: Option<&'a mut [u8; UZLIB_WINDOW_SIZE]>) -> Self {
         let mut ctx = Self {
             uncomp: uzlib_uncomp::default(),
             src_data: Default::default(),
-            window,
         };
 
         unsafe {
             ctx.uncomp.source = src.as_ptr();
             ctx.uncomp.source_limit = src.as_ptr().add(src.len());
 
-            if let Some(w) = ctx.window {
-                ffi::uzlib_uncompress_init(&mut ctx.uncomp, w.as_ptr() as _, w.len() as u32);
+            if let Some(w) = window {
+                ffi::uzlib_uncompress_init(
+                    &mut ctx.uncomp,
+                    w.as_mut_ptr() as _,
+                    UZLIB_WINDOW_SIZE as u32,
+                );
             } else {
                 ffi::uzlib_uncompress_init(&mut ctx.uncomp, ptr::null_mut(), 0);
             }
