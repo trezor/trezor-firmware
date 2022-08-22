@@ -54,6 +54,13 @@ def cosi_combine_signatures(R: bytes, signatures: list[bytes]) -> bytes:
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-ed25519.h
+def cosi_commit() -> tuple[bytes, bytes]:
+    """
+    Generate a nonce and commitment for the CoSi cosigning scheme.
+    """
+
+
+# extmod/modtrezorcrypto/modtrezorcrypto-ed25519.h
 def cosi_sign(
     secret_key: bytes,
     message: bytes,

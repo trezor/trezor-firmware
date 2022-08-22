@@ -17,6 +17,10 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+static uint8_t cosi_nonce[32] = {0};
+static uint8_t cosi_commitment[32] = {0};
+static bool cosi_nonce_is_set = false;
+
 void fsm_msgCipherKeyValue(const CipherKeyValue *msg) {
   CHECK_INITIALIZED
 
@@ -256,19 +260,9 @@ void fsm_msgCosiCommit(const CosiCommit *msg) {
 
   CHECK_INITIALIZED
 
-  CHECK_PARAM(msg->has_data, _("No data provided"));
-
   CHECK_PIN
 
   if (!fsm_checkCosiPath(msg->address_n_count, msg->address_n)) {
-    layoutHome();
-    return;
-  }
-
-  layoutCosiCommitSign(msg->address_n, msg->address_n_count, msg->data.bytes,
-                       msg->data.size, false);
-  if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
     layoutHome();
     return;
   }
@@ -277,18 +271,17 @@ void fsm_msgCosiCommit(const CosiCommit *msg) {
                                           msg->address_n_count, NULL);
   if (!node) return;
 
-  uint8_t nonce[32];
-  sha256_Raw(msg->data.bytes, msg->data.size, nonce);
-  rfc6979_state rng;
-  init_rfc6979(node->private_key, nonce, NULL, &rng);
-  generate_rfc6979(nonce, &rng);
+  if (!cosi_nonce_is_set) {
+    ed25519_cosi_commit(cosi_nonce, cosi_commitment);
+    cosi_nonce_is_set = true;
+  }
 
   resp->has_commitment = true;
   resp->has_pubkey = true;
   resp->commitment.size = 32;
   resp->pubkey.size = 32;
 
-  ed25519_publickey(nonce, resp->commitment.bytes);
+  memcpy(resp->commitment.bytes, cosi_commitment, sizeof(cosi_commitment));
   ed25519_publickey(node->private_key, resp->pubkey.bytes);
 
   msg_write(MessageType_MessageType_CosiCommitment, resp);
@@ -306,6 +299,12 @@ void fsm_msgCosiSign(const CosiSign *msg) {
   CHECK_PARAM(msg->has_global_pubkey && msg->global_pubkey.size == 32,
               _("Invalid global pubkey"));
 
+  if (!cosi_nonce_is_set) {
+    fsm_sendFailure(FailureType_Failure_ProcessError, _("CoSi nonce not set"));
+    layoutHome();
+    return;
+  }
+
   if (!fsm_checkCosiPath(msg->address_n_count, msg->address_n)) {
     layoutHome();
     return;
@@ -313,8 +312,8 @@ void fsm_msgCosiSign(const CosiSign *msg) {
 
   CHECK_PIN
 
-  layoutCosiCommitSign(msg->address_n, msg->address_n_count, msg->data.bytes,
-                       msg->data.size, true);
+  layoutCosiSign(msg->address_n, msg->address_n_count, msg->data.bytes,
+                 msg->data.size);
   if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
     fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
     layoutHome();
@@ -325,18 +324,16 @@ void fsm_msgCosiSign(const CosiSign *msg) {
                                           msg->address_n_count, NULL);
   if (!node) return;
 
-  uint8_t nonce[32];
-  sha256_Raw(msg->data.bytes, msg->data.size, nonce);
-  rfc6979_state rng;
-  init_rfc6979(node->private_key, nonce, NULL, &rng);
-  generate_rfc6979(nonce, &rng);
-
   resp->signature.size = 32;
+  cosi_nonce_is_set = false;
 
-  ed25519_cosi_sign(msg->data.bytes, msg->data.size, node->private_key, nonce,
-                    msg->global_commitment.bytes, msg->global_pubkey.bytes,
-                    resp->signature.bytes);
-
-  msg_write(MessageType_MessageType_CosiSignature, resp);
+  if (ed25519_cosi_sign(msg->data.bytes, msg->data.size, node->private_key,
+                        cosi_nonce, msg->global_commitment.bytes,
+                        msg->global_pubkey.bytes, resp->signature.bytes) == 0) {
+    msg_write(MessageType_MessageType_CosiSignature, resp);
+  } else {
+    fsm_sendFailure(FailureType_Failure_FirmwareError, NULL);
+  }
+  memzero(cosi_nonce, sizeof(cosi_nonce));
   layoutHome();
 }

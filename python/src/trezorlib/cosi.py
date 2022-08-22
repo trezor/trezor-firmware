@@ -14,8 +14,9 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import warnings
 from functools import reduce
-from typing import TYPE_CHECKING, Iterable, List, Tuple
+from typing import TYPE_CHECKING, Iterable, List, Optional, Tuple
 
 from . import _ed25519, messages
 from .tools import expect
@@ -141,8 +142,17 @@ def sign_with_privkey(
 
 
 @expect(messages.CosiCommitment)
-def commit(client: "TrezorClient", n: "Address", data: bytes) -> "MessageType":
-    return client.call(messages.CosiCommit(address_n=n, data=data))
+def commit(
+    client: "TrezorClient", n: "Address", data: Optional[bytes] = None
+) -> "MessageType":
+    if data is not None:
+        warnings.warn(
+            "'data' argument is deprecated",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
+    return client.call(messages.CosiCommit(address_n=n))
 
 
 @expect(messages.CosiSignature)

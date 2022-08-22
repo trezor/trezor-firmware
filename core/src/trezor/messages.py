@@ -1928,13 +1928,11 @@ if TYPE_CHECKING:
 
     class CosiCommit(protobuf.MessageType):
         address_n: "list[int]"
-        data: "bytes | None"
 
         def __init__(
             self,
             *,
             address_n: "list[int] | None" = None,
-            data: "bytes | None" = None,
         ) -> None:
             pass
 

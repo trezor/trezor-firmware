@@ -26,8 +26,7 @@ class TestCryptoEd25519Cosi(unittest.TestCase):
             nonces = [None] * N
             Rs = [None] * N
             for j in range(N):
-                nonces[j] = ed25519.generate_secret()
-                Rs[j] = ed25519.publickey(nonces[j])
+                nonces[j], Rs[j] = ed25519.cosi_commit()
 
             R = ed25519.cosi_combine_publickeys(Rs)
 
