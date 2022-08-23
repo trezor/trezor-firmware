@@ -12,24 +12,36 @@ use crate::ui::{
 };
 
 use super::layout::{
-    DefaultTextTheme, LayoutFit, LayoutSink, LineBreaking, Op, PageBreaking, TextLayout,
-    TextRenderer,
+    LayoutFit, LayoutSink, LineBreaking, Op, PageBreaking, TextLayout, TextRenderer, TextStyle,
 };
 
 pub const MAX_ARGUMENTS: usize = 6;
 
 pub struct FormattedText<F, T> {
     layout: TextLayout,
+    fonts: FormattedFonts,
     format: F,
     args: LinearMap<&'static str, T, MAX_ARGUMENTS>,
     char_offset: usize,
 }
 
+pub struct FormattedFonts {
+    /// Font used to format `{normal}`.
+    pub normal: Font,
+    /// Font used to format `{medium}`.
+    pub medium: Font,
+    /// Font used to format `{bold}`.
+    pub bold: Font,
+    /// Font used to format `{mono}`.
+    pub mono: Font,
+}
+
 impl<F, T> FormattedText<F, T> {
-    pub fn new<D: DefaultTextTheme>(format: F) -> Self {
+    pub fn new(style: TextStyle, fonts: FormattedFonts, format: F) -> Self {
         Self {
             format,
-            layout: TextLayout::new::<D>(),
+            fonts,
+            layout: TextLayout::new(style),
             args: LinearMap::new(),
             char_offset: 0,
         }
@@ -49,22 +61,22 @@ impl<F, T> FormattedText<F, T> {
     }
 
     pub fn with_text_font(mut self, text_font: Font) -> Self {
-        self.layout.text_font = text_font;
+        self.layout.style.text_font = text_font;
         self
     }
 
     pub fn with_text_color(mut self, text_color: Color) -> Self {
-        self.layout.text_color = text_color;
+        self.layout.style.text_color = text_color;
         self
     }
 
     pub fn with_line_breaking(mut self, line_breaking: LineBreaking) -> Self {
-        self.layout.line_breaking = line_breaking;
+        self.layout.style.line_breaking = line_breaking;
         self
     }
 
     pub fn with_page_breaking(mut self, page_breaking: PageBreaking) -> Self {
-        self.layout.page_breaking = page_breaking;
+        self.layout.style.page_breaking = page_breaking;
         self
     }
 
@@ -91,10 +103,10 @@ where
         let mut ops = Op::skip_n_text_bytes(
             Tokenizer::new(self.format.as_ref()).flat_map(|arg| match arg {
                 Token::Literal(literal) => Some(Op::Text(literal)),
-                Token::Argument("mono") => Some(Op::Font(self.layout.mono_font)),
-                Token::Argument("bold") => Some(Op::Font(self.layout.bold_font)),
-                Token::Argument("normal") => Some(Op::Font(self.layout.normal_font)),
-                Token::Argument("medium") => Some(Op::Font(self.layout.medium_font)),
+                Token::Argument("mono") => Some(Op::Font(self.fonts.mono)),
+                Token::Argument("bold") => Some(Op::Font(self.fonts.bold)),
+                Token::Argument("normal") => Some(Op::Font(self.fonts.normal)),
+                Token::Argument("medium") => Some(Op::Font(self.fonts.medium)),
                 Token::Argument(argument) => self
                     .args
                     .get(argument)

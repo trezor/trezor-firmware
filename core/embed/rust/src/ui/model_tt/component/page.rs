@@ -380,12 +380,12 @@ mod tests {
     fn paragraphs_single() {
         let mut page = SwipePage::new(
             Paragraphs::new()
-                .add::<theme::TTDefaultText>(
-                    theme::FONT_NORMAL,
+                .add(
+                    theme::TEXT_NORMAL,
                     "This is the first paragraph and it should fit on the screen entirely.",
                 )
-                .add::<theme::TTDefaultText>(
-                    theme::FONT_BOLD,
+                .add(
+                    theme::TEXT_BOLD,
                     "Second, bold, paragraph should also fit on the screen whole I think.",
                 ),
             Empty,
@@ -406,8 +406,8 @@ mod tests {
     fn paragraphs_one_long() {
         let mut page = SwipePage::new(
             Paragraphs::new()
-                .add::<theme::TTDefaultText>(
-                    theme::FONT_BOLD,
+                .add(
+                    theme::TEXT_BOLD,
                     "This is somewhat long paragraph that goes on and on and on and on and on and will definitely not fit on just a single screen. You have to swipe a bit to see all the text it contains I guess. There's just so much letters in it.",
                 ),
             Empty,
@@ -433,16 +433,16 @@ mod tests {
     fn paragraphs_three_long() {
         let mut page = SwipePage::new(
             Paragraphs::new()
-                .add::<theme::TTDefaultText>(
-                    theme::FONT_BOLD,
+                .add(
+                    theme::TEXT_BOLD,
                     "This paragraph is using a bold font. It doesn't need to be all that long.",
                 )
-                .add::<theme::TTDefaultText>(
-                    theme::FONT_MONO,
+                .add(
+                    theme::TEXT_MONO,
                     "And this one is using MONO. Monospace is nice for numbers, they have the same width and can be scanned quickly. Even if they span several pages or something.",
                 )
-                .add::<theme::TTDefaultText>(
-                    theme::FONT_BOLD,
+                .add(
+                    theme::TEXT_BOLD,
                     "Let's add another one for a good measure. This one should overflow all the way to the third page with a bit of luck.",
                 ),
             Empty,

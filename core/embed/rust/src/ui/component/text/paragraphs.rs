@@ -2,11 +2,10 @@ use heapless::Vec;
 
 use crate::ui::{
     component::{Component, Event, EventCtx, Never, Paginate},
-    display::Font,
     geometry::{Dimensions, Insets, LinearPlacement, Rect},
 };
 
-use super::layout::{DefaultTextTheme, LayoutFit, TextLayout};
+use super::layout::{LayoutFit, TextLayout, TextStyle};
 
 pub const MAX_PARAGRAPHS: usize = 6;
 /// Maximum space between paragraphs. Actual result may be smaller (even 0) if
@@ -53,17 +52,16 @@ where
         self
     }
 
-    pub fn add<D: DefaultTextTheme>(mut self, text_font: Font, content: T) -> Self {
+    pub fn add(mut self, style: TextStyle, content: T) -> Self {
         if content.as_ref().is_empty() {
             return self;
         }
         let paragraph = Paragraph::new(
             content,
             TextLayout {
-                text_font,
                 padding_top: PARAGRAPH_TOP_SPACE,
                 padding_bottom: PARAGRAPH_BOTTOM_SPACE,
-                ..TextLayout::new::<D>()
+                ..TextLayout::new(style)
             },
         );
         if self.list.push(paragraph).is_err() {
