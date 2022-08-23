@@ -1,5 +1,8 @@
 use crate::ui::{
-    component::{label::LabelStyle, text::layout::DefaultTextTheme},
+    component::{
+        label::LabelStyle,
+        text::{formatted::FormattedFonts, TextStyle},
+    },
     display::{Color, Font},
     geometry::Insets,
 };
@@ -298,22 +301,17 @@ pub fn loader_default() -> LoaderStyleSheet {
     }
 }
 
-pub struct TTDefaultText;
+pub const TEXT_NORMAL: TextStyle = TextStyle::new(FONT_NORMAL, FG, BG, GREY_LIGHT, GREY_LIGHT);
+pub const TEXT_MEDIUM: TextStyle = TextStyle::new(FONT_MEDIUM, FG, BG, GREY_LIGHT, GREY_LIGHT);
+pub const TEXT_BOLD: TextStyle = TextStyle::new(FONT_BOLD, FG, BG, GREY_LIGHT, GREY_LIGHT);
+pub const TEXT_MONO: TextStyle = TextStyle::new(FONT_MONO, FG, BG, GREY_LIGHT, GREY_LIGHT);
 
-impl DefaultTextTheme for TTDefaultText {
-    const BACKGROUND_COLOR: Color = BG;
-    const TEXT_FONT: Font = FONT_NORMAL;
-    const TEXT_COLOR: Color = FG;
-    const HYPHEN_FONT: Font = FONT_BOLD;
-    const HYPHEN_COLOR: Color = GREY_LIGHT;
-    const ELLIPSIS_FONT: Font = FONT_BOLD;
-    const ELLIPSIS_COLOR: Color = GREY_LIGHT;
-
-    const NORMAL_FONT: Font = FONT_NORMAL;
-    const MEDIUM_FONT: Font = FONT_MEDIUM;
-    const BOLD_FONT: Font = FONT_BOLD;
-    const MONO_FONT: Font = FONT_MONO;
-}
+pub const FORMATTED: FormattedFonts = FormattedFonts {
+    normal: FONT_NORMAL,
+    medium: FONT_MEDIUM,
+    bold: FONT_BOLD,
+    mono: FONT_MONO,
+};
 
 pub const CONTENT_BORDER: i32 = 5;
 pub const KEYBOARD_SPACING: i32 = 8;

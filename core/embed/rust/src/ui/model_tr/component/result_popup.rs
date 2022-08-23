@@ -2,16 +2,14 @@ use crate::{
     time::Instant,
     ui::{
         component::{
-            text::{layout::DefaultTextTheme, paragraphs::Paragraphs},
-            Child, Component, ComponentExt, Event, EventCtx, Label, LabelStyle, Pad,
+            text::paragraphs::Paragraphs, Child, Component, ComponentExt, Event, EventCtx, Label,
+            LabelStyle, Pad,
         },
         constant::screen,
-        display::{Color, Font},
         geometry::{Alignment, Insets, LinearPlacement, Point, Rect},
         model_tr::{
             component::{Button, ButtonMsg, ButtonPos, ResultAnim, ResultAnimMsg},
-            theme,
-            theme::{TRDefaultText, FONT_BOLD, FONT_MEDIUM},
+            theme::{self, FONT_BOLD},
         },
     },
 };
@@ -31,23 +29,6 @@ pub struct ResultPopup {
     autoclose: bool,
 }
 
-pub struct MessageText;
-
-impl DefaultTextTheme for MessageText {
-    const BACKGROUND_COLOR: Color = theme::BG;
-    const TEXT_FONT: Font = FONT_MEDIUM;
-    const TEXT_COLOR: Color = theme::FG;
-    const HYPHEN_FONT: Font = FONT_MEDIUM;
-    const HYPHEN_COLOR: Color = theme::FG;
-    const ELLIPSIS_FONT: Font = FONT_MEDIUM;
-    const ELLIPSIS_COLOR: Color = theme::FG;
-
-    const NORMAL_FONT: Font = FONT_MEDIUM;
-    const MEDIUM_FONT: Font = theme::FONT_MEDIUM;
-    const BOLD_FONT: Font = theme::FONT_BOLD;
-    const MONO_FONT: Font = theme::FONT_MONO;
-}
-
 const ANIM_SIZE: i32 = 18;
 const BUTTON_HEIGHT: i32 = 13;
 const ANIM_SPACE: i32 = 11;
@@ -63,7 +44,7 @@ impl ResultPopup {
         button_text: Option<&'static str>,
     ) -> Self {
         let p1 = Paragraphs::new()
-            .add::<TRDefaultText>(FONT_MEDIUM, text)
+            .add(theme::TEXT_MEDIUM, text)
             .with_placement(LinearPlacement::vertical().align_at_center());
 
         let button = button_text.map(|t| {

@@ -6,8 +6,6 @@ from trezor.enums import ButtonRequestType
 
 import trezorui2
 
-from ...components.tt.confirm import Confirm
-from ...constants.tt import MONO_ADDR_PER_LINE
 from ..common import button_request, interact
 
 if TYPE_CHECKING:
@@ -419,8 +417,8 @@ async def confirm_output(
     color_to: int = ui.FG,  # TODO cleanup @ redesign
     to_str: str = " to\n",  # TODO cleanup @ redesign
     to_paginated: bool = False,  # TODO cleanup @ redesign
-    width: int = MONO_ADDR_PER_LINE,
-    width_paginated: int = MONO_ADDR_PER_LINE - 1,
+    width: int = 0,  # TODO cleanup @ redesign
+    width_paginated: int = 0,  # TODO cleanup @ redesign
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
     icon: str = ui.ICON_SEND,
 ) -> None:
@@ -495,7 +493,7 @@ async def should_show_more(
     br_code: ButtonRequestType = ButtonRequestType.Other,
     icon: str = ui.ICON_DEFAULT,
     icon_color: int = ui.ORANGE_ICON,
-    confirm: ButtonContent = Confirm.DEFAULT_CONFIRM,
+    confirm: ButtonContent = None,
     major_confirm: bool = False,
 ) -> bool:
     raise NotImplementedError
