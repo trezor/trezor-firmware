@@ -348,6 +348,7 @@ SOURCE_UNIX = [
     'embed/unix/profile.c',
     'embed/unix/random_delays.c',
     'embed/unix/rng.c',
+    'embed/unix/time_measurement.c',
     'embed/unix/touch.c',
     'embed/unix/usb.c',
     'vendor/micropython/shared/runtime/gchelper_generic.c',
