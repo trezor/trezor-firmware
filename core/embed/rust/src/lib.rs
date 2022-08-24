@@ -35,10 +35,12 @@ pub mod ui;
 fn panic_debug(panic_info: &core::panic::PanicInfo) -> ! {
     // Filling at least the file and line information, if available.
     // TODO: find out how to display message from panic_info.message()
+
     if let Some(location) = panic_info.location() {
-        trezorhal::common::__fatal_error("", "rs", location.file(), location.line(), "");
+        let file = location.file();
+        trezorhal::fatal_error::__fatal_error("", "rs", file, location.line(), "");
     } else {
-        trezorhal::common::__fatal_error("", "rs", "", 0, "");
+        trezorhal::fatal_error::__fatal_error("", "rs", "", 0, "");
     }
 }
 
@@ -56,7 +58,7 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
     // raises a Hard Fault on hardware.
     //
     // Otherwise, use `unwrap!` macro from trezorhal.
-    trezorhal::common::__fatal_error("", "rs", "", 0, "");
+    fatal_error!("", "rs");
 }
 
 #[cfg(not(target_arch = "arm"))]
