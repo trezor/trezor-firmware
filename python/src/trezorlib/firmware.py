@@ -99,8 +99,11 @@ class Unsigned(FirmwareIntegrityError):
 
 
 class ToifMode(Enum):
-    full_color = b"f"
-    grayscale = b"g"
+    full_color = b"f"       # big endian
+    grayscale = b"g"        # odd hi
+    full_color_le = b"l"    # little endian
+    grayscale_eh = b"h"     # even hi
+
 
 
 class HeaderType(Enum):

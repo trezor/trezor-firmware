@@ -2,10 +2,18 @@ use super::ffi;
 use core::ptr;
 use cty::c_int;
 
+#[derive(PartialEq, Debug)]
+pub enum ToifFormat {
+    FullColorBE,
+    GrayScaleOH,
+    FullColorLE,
+    GrayScaleEH,
+}
+
 pub struct ToifInfo {
     pub width: u16,
     pub height: u16,
-    pub grayscale: bool,
+    pub format: ToifFormat,
 }
 
 pub fn backlight(val: i32) -> i32 {
@@ -96,20 +104,28 @@ pub fn image(x: i32, y: i32, w: i32, h: i32, data: &[u8]) {
 pub fn toif_info(data: &[u8]) -> Result<ToifInfo, ()> {
     let mut width: cty::uint16_t = 0;
     let mut height: cty::uint16_t = 0;
-    let mut grayscale: bool = false;
+    let mut format: ffi::toif_format_t = ffi::toif_format_t_TOIF_FULL_COLOR_BE;
     if unsafe {
         ffi::display_toif_info(
             data.as_ptr() as _,
             data.len() as _,
             &mut width,
             &mut height,
-            &mut grayscale,
+            &mut format,
         )
     } {
+        let format = match format {
+            ffi::toif_format_t_TOIF_FULL_COLOR_BE => ToifFormat::FullColorBE,
+            ffi::toif_format_t_TOIF_FULL_COLOR_LE => ToifFormat::FullColorLE,
+            ffi::toif_format_t_TOIF_GRAYSCALE_OH => ToifFormat::GrayScaleOH,
+            ffi::toif_format_t_TOIF_GRAYSCALE_EH => ToifFormat::GrayScaleEH,
+            _ => ToifFormat::FullColorBE,
+        };
+
         Ok(ToifInfo {
             width,
             height,
-            grayscale,
+            format,
         })
     } else {
         Err(())

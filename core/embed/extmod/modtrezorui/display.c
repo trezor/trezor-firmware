@@ -450,15 +450,19 @@ void display_icon(int x, int y, int w, int h, const void *data,
 
 // see docs/misc/toif.md for definition of the TOIF format
 bool display_toif_info(const uint8_t *data, uint32_t len, uint16_t *out_w,
-                       uint16_t *out_h, bool *out_grayscale) {
+                       uint16_t *out_h, toif_format_t *out_format) {
   if (len < 12 || memcmp(data, "TOI", 3) != 0) {
     return false;
   }
-  bool grayscale = false;
+  toif_format_t format = false;
   if (data[3] == 'f') {
-    grayscale = false;
+    format = TOIF_FULL_COLOR_BE;
   } else if (data[3] == 'g') {
-    grayscale = true;
+    format = TOIF_GRAYSCALE_OH;
+  } else if (data[3] == 'l') {
+    format = TOIF_FULL_COLOR_LE;
+  } else if (data[3] == 'h') {
+    format = TOIF_GRAYSCALE_EH;
   } else {
     return false;
   }
@@ -471,10 +475,10 @@ bool display_toif_info(const uint8_t *data, uint32_t len, uint16_t *out_w,
     return false;
   }
 
-  if (out_w != NULL && out_h != NULL && out_grayscale != NULL) {
+  if (out_w != NULL && out_h != NULL && out_format != NULL) {
     *out_w = w;
     *out_h = h;
-    *out_grayscale = grayscale;
+    *out_format = format;
   }
   return true;
 }
@@ -504,7 +508,7 @@ void display_loader(uint16_t progress, bool indeterminate, int yoffset,
                      DISPLAY_RESX / 2 + img_loader_size - 1,
                      DISPLAY_RESY / 2 + img_loader_size - 1 + yoffset);
   uint8_t icondata[(LOADER_ICON_SIZE * LOADER_ICON_SIZE) / 2] = {0};
-  if (icon && memcmp(icon, "TOIg", 4) == 0 &&
+  if (icon && memcmp(icon, "TOIh", 4) == 0 &&
       LOADER_ICON_SIZE == *(uint16_t *)(icon + 4) &&
       LOADER_ICON_SIZE == *(uint16_t *)(icon + 6) &&
       iconlen == 12 + *(uint32_t *)(icon + 8)) {
