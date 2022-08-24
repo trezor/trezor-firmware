@@ -1,29 +1,19 @@
 from typing import TYPE_CHECKING
 
-from trezor.enums import (
-    CardanoCertificateType,
-    CardanoPoolRelayType,
-    CardanoTxSigningMode,
-)
+from trezor import wire
+from trezor.enums import CardanoCertificateType, CardanoPoolRelayType
 
 from apps.common import cbor
 
-from .address import get_address_bytes_unsafe, validate_reward_address
-from .helpers import ADDRESS_KEY_HASH_SIZE, INVALID_CERTIFICATE, LOVELACE_MAX_SUPPLY
+from . import addresses
+from .helpers import ADDRESS_KEY_HASH_SIZE, LOVELACE_MAX_SUPPLY
 from .helpers.paths import SCHEMA_STAKING_ANY_ACCOUNT
 from .helpers.utils import get_public_key_hash, validate_stake_credential
 
 if TYPE_CHECKING:
     from typing import Any
 
-    from trezor.messages import (
-        CardanoPoolMetadataType,
-        CardanoPoolOwner,
-        CardanoPoolParametersType,
-        CardanoPoolRelayParameters,
-        CardanoTxCertificate,
-    )
-
+    from trezor import messages
     from apps.common.cbor import CborSequence
 
     from . import seed
@@ -39,25 +29,13 @@ MAX_URL_LENGTH = 64
 MAX_PORT_NUMBER = 65535
 
 
-def validate_certificate(
-    certificate: CardanoTxCertificate,
-    signing_mode: CardanoTxSigningMode,
+def validate(
+    certificate: messages.CardanoTxCertificate,
     protocol_magic: int,
     network_id: int,
     account_path_checker: AccountPathChecker,
 ) -> None:
-    if (
-        signing_mode != CardanoTxSigningMode.POOL_REGISTRATION_AS_OWNER
-        and certificate.type == CardanoCertificateType.STAKE_POOL_REGISTRATION
-    ):
-        raise INVALID_CERTIFICATE
-    elif (
-        signing_mode == CardanoTxSigningMode.POOL_REGISTRATION_AS_OWNER
-        and certificate.type != CardanoCertificateType.STAKE_POOL_REGISTRATION
-    ):
-        raise INVALID_CERTIFICATE
-
-    _validate_certificate_structure(certificate)
+    _validate_structure(certificate)
 
     if certificate.type in (
         CardanoCertificateType.STAKE_DELEGATION,
@@ -68,17 +46,16 @@ def validate_certificate(
             certificate.path,
             certificate.script_hash,
             certificate.key_hash,
-            signing_mode,
-            INVALID_CERTIFICATE,
+            wire.ProcessError("Invalid certificate"),
         )
 
     if certificate.type == CardanoCertificateType.STAKE_DELEGATION:
         if not certificate.pool or len(certificate.pool) != POOL_HASH_SIZE:
-            raise INVALID_CERTIFICATE
+            raise wire.ProcessError("Invalid certificate")
 
     if certificate.type == CardanoCertificateType.STAKE_POOL_REGISTRATION:
         if certificate.pool_parameters is None:
-            raise INVALID_CERTIFICATE
+            raise wire.ProcessError("Invalid certificate")
         _validate_pool_parameters(
             certificate.pool_parameters, protocol_magic, network_id
         )
@@ -86,7 +63,7 @@ def validate_certificate(
     account_path_checker.add_certificate(certificate)
 
 
-def _validate_certificate_structure(certificate: CardanoTxCertificate) -> None:
+def _validate_structure(certificate: messages.CardanoTxCertificate) -> None:
     pool = certificate.pool
     pool_parameters = certificate.pool_parameters
 
@@ -105,11 +82,11 @@ def _validate_certificate_structure(certificate: CardanoTxCertificate) -> None:
     if certificate.type not in fields_to_be_empty or any(
         fields_to_be_empty[certificate.type]
     ):
-        raise INVALID_CERTIFICATE
+        raise wire.ProcessError("Invalid certificate")
 
 
-def cborize_certificate(
-    keychain: seed.Keychain, certificate: CardanoTxCertificate
+def cborize(
+    keychain: seed.Keychain, certificate: messages.CardanoTxCertificate
 ) -> CborSequence:
     if certificate.type in (
         CardanoCertificateType.STAKE_REGISTRATION,
@@ -117,7 +94,7 @@ def cborize_certificate(
     ):
         return (
             certificate.type,
-            cborize_certificate_stake_credential(
+            cborize_stake_credential(
                 keychain,
                 certificate.path,
                 certificate.script_hash,
@@ -127,7 +104,7 @@ def cborize_certificate(
     elif certificate.type == CardanoCertificateType.STAKE_DELEGATION:
         return (
             certificate.type,
-            cborize_certificate_stake_credential(
+            cborize_stake_credential(
                 keychain,
                 certificate.path,
                 certificate.script_hash,
@@ -136,10 +113,10 @@ def cborize_certificate(
             certificate.pool,
         )
     else:
-        raise INVALID_CERTIFICATE
+        raise RuntimeError  # should be unreachable
 
 
-def cborize_certificate_stake_credential(
+def cborize_stake_credential(
     keychain: seed.Keychain,
     path: list[int],
     script_hash: bytes | None,
@@ -152,11 +129,11 @@ def cborize_certificate_stake_credential(
         return 1, script_hash
 
     # should be unreachable unless there's a bug in validation
-    raise INVALID_CERTIFICATE
+    raise RuntimeError
 
 
-def cborize_initial_pool_registration_certificate_fields(
-    certificate: CardanoTxCertificate,
+def cborize_pool_registration_init(
+    certificate: messages.CardanoTxCertificate,
 ) -> CborSequence:
     assert certificate.type == CardanoCertificateType.STAKE_POOL_REGISTRATION
 
@@ -178,87 +155,89 @@ def cborize_initial_pool_registration_certificate_fields(
         ),
         # this relies on pool_parameters.reward_account being validated beforehand
         # in _validate_pool_parameters
-        get_address_bytes_unsafe(pool_parameters.reward_account),
+        addresses.get_bytes_unsafe(pool_parameters.reward_account),
     )
 
 
-def assert_certificate_cond(condition: bool) -> None:
+def assert_cond(condition: bool) -> None:
     if not condition:
-        raise INVALID_CERTIFICATE
+        raise wire.ProcessError("Invalid certificate")
 
 
 def _validate_pool_parameters(
-    pool_parameters: CardanoPoolParametersType, protocol_magic: int, network_id: int
+    pool_parameters: messages.CardanoPoolParametersType,
+    protocol_magic: int,
+    network_id: int,
 ) -> None:
-    assert_certificate_cond(len(pool_parameters.pool_id) == POOL_HASH_SIZE)
-    assert_certificate_cond(len(pool_parameters.vrf_key_hash) == VRF_KEY_HASH_SIZE)
-    assert_certificate_cond(0 <= pool_parameters.pledge <= LOVELACE_MAX_SUPPLY)
-    assert_certificate_cond(0 <= pool_parameters.cost <= LOVELACE_MAX_SUPPLY)
-    assert_certificate_cond(pool_parameters.margin_numerator >= 0)
-    assert_certificate_cond(pool_parameters.margin_denominator > 0)
-    assert_certificate_cond(
-        pool_parameters.margin_numerator <= pool_parameters.margin_denominator
-    )
-    assert_certificate_cond(pool_parameters.owners_count > 0)
+    assert_cond(len(pool_parameters.pool_id) == POOL_HASH_SIZE)
+    assert_cond(len(pool_parameters.vrf_key_hash) == VRF_KEY_HASH_SIZE)
+    assert_cond(0 <= pool_parameters.pledge <= LOVELACE_MAX_SUPPLY)
+    assert_cond(0 <= pool_parameters.cost <= LOVELACE_MAX_SUPPLY)
+    assert_cond(pool_parameters.margin_numerator >= 0)
+    assert_cond(pool_parameters.margin_denominator > 0)
+    assert_cond(pool_parameters.margin_numerator <= pool_parameters.margin_denominator)
+    assert_cond(pool_parameters.owners_count > 0)
 
-    validate_reward_address(pool_parameters.reward_account, protocol_magic, network_id)
+    addresses.validate_reward_address(
+        pool_parameters.reward_account, protocol_magic, network_id
+    )
 
     if pool_parameters.metadata:
         _validate_pool_metadata(pool_parameters.metadata)
 
 
 def validate_pool_owner(
-    owner: CardanoPoolOwner, account_path_checker: AccountPathChecker
+    owner: messages.CardanoPoolOwner, account_path_checker: AccountPathChecker
 ) -> None:
-    assert_certificate_cond(
+    assert_cond(
         owner.staking_key_hash is not None or owner.staking_key_path is not None
     )
     if owner.staking_key_hash is not None:
-        assert_certificate_cond(len(owner.staking_key_hash) == ADDRESS_KEY_HASH_SIZE)
+        assert_cond(len(owner.staking_key_hash) == ADDRESS_KEY_HASH_SIZE)
     if owner.staking_key_path:
-        assert_certificate_cond(
-            SCHEMA_STAKING_ANY_ACCOUNT.match(owner.staking_key_path)
-        )
+        assert_cond(SCHEMA_STAKING_ANY_ACCOUNT.match(owner.staking_key_path))
 
     account_path_checker.add_pool_owner(owner)
 
 
-def validate_pool_relay(pool_relay: CardanoPoolRelayParameters) -> None:
+def validate_pool_relay(pool_relay: messages.CardanoPoolRelayParameters) -> None:
     if pool_relay.type == CardanoPoolRelayType.SINGLE_HOST_IP:
-        assert_certificate_cond(
+        assert_cond(
             pool_relay.ipv4_address is not None or pool_relay.ipv6_address is not None
         )
         if pool_relay.ipv4_address is not None:
-            assert_certificate_cond(len(pool_relay.ipv4_address) == IPV4_ADDRESS_SIZE)
+            assert_cond(len(pool_relay.ipv4_address) == IPV4_ADDRESS_SIZE)
         if pool_relay.ipv6_address is not None:
-            assert_certificate_cond(len(pool_relay.ipv6_address) == IPV6_ADDRESS_SIZE)
-        assert_certificate_cond(
+            assert_cond(len(pool_relay.ipv6_address) == IPV6_ADDRESS_SIZE)
+        assert_cond(
             pool_relay.port is not None and 0 <= pool_relay.port <= MAX_PORT_NUMBER
         )
     elif pool_relay.type == CardanoPoolRelayType.SINGLE_HOST_NAME:
-        assert_certificate_cond(
+        assert_cond(
             pool_relay.host_name is not None
             and len(pool_relay.host_name) <= MAX_URL_LENGTH
         )
-        assert_certificate_cond(
+        assert_cond(
             pool_relay.port is not None and 0 <= pool_relay.port <= MAX_PORT_NUMBER
         )
     elif pool_relay.type == CardanoPoolRelayType.MULTIPLE_HOST_NAME:
-        assert_certificate_cond(
+        assert_cond(
             pool_relay.host_name is not None
             and len(pool_relay.host_name) <= MAX_URL_LENGTH
         )
     else:
-        raise INVALID_CERTIFICATE
+        raise RuntimeError  # should be unreachable
 
 
-def _validate_pool_metadata(pool_metadata: CardanoPoolMetadataType) -> None:
-    assert_certificate_cond(len(pool_metadata.url) <= MAX_URL_LENGTH)
-    assert_certificate_cond(len(pool_metadata.hash) == POOL_METADATA_HASH_SIZE)
-    assert_certificate_cond(all((32 <= ord(c) < 127) for c in pool_metadata.url))
+def _validate_pool_metadata(pool_metadata: messages.CardanoPoolMetadataType) -> None:
+    assert_cond(len(pool_metadata.url) <= MAX_URL_LENGTH)
+    assert_cond(len(pool_metadata.hash) == POOL_METADATA_HASH_SIZE)
+    assert_cond(all((32 <= ord(c) < 127) for c in pool_metadata.url))
 
 
-def cborize_pool_owner(keychain: seed.Keychain, pool_owner: CardanoPoolOwner) -> bytes:
+def cborize_pool_owner(
+    keychain: seed.Keychain, pool_owner: messages.CardanoPoolOwner
+) -> bytes:
     if pool_owner.staking_key_path:
         return get_public_key_hash(keychain, pool_owner.staking_key_path)
     elif pool_owner.staking_key_hash:
@@ -282,7 +261,7 @@ def _cborize_ipv6_address(ipv6_address: bytes | None) -> bytes | None:
 
 
 def cborize_pool_relay(
-    pool_relay: CardanoPoolRelayParameters,
+    pool_relay: messages.CardanoPoolRelayParameters,
 ) -> CborSequence:
     if pool_relay.type == CardanoPoolRelayType.SINGLE_HOST_IP:
         return (
@@ -303,11 +282,11 @@ def cborize_pool_relay(
             pool_relay.host_name,
         )
     else:
-        raise INVALID_CERTIFICATE
+        raise RuntimeError  # should be unreachable
 
 
 def cborize_pool_metadata(
-    pool_metadata: CardanoPoolMetadataType | None,
+    pool_metadata: messages.CardanoPoolMetadataType | None,
 ) -> CborSequence | None:
     if not pool_metadata:
         return None

@@ -3,13 +3,24 @@ use std::ffi::OsStr;
 use std::{env, path::PathBuf, process::Command};
 
 fn main() {
+    #[cfg(feature = "micropython")]
     generate_qstr_bindings();
+    #[cfg(feature = "micropython")]
     generate_micropython_bindings();
+    generate_trezorhal_bindings();
     #[cfg(feature = "test")]
     link_core_objects();
 }
 
+fn model() -> String {
+    match env::var("TREZOR_MODEL") {
+        Ok(model) => model,
+        Err(_) => String::from("T"),
+    }
+}
+
 /// Generates Rust module that exports QSTR constants used in firmware.
+#[cfg(feature = "micropython")]
 fn generate_qstr_bindings() {
     let out_path = env::var("OUT_DIR").unwrap();
 
@@ -42,13 +53,81 @@ fn generate_qstr_bindings() {
         .unwrap();
 }
 
+fn prepare_bindings() -> bindgen::Builder {
+    let mut bindings = bindgen::Builder::default();
+
+    // Common include paths and defines
+    bindings = bindings.clang_args([
+        "-I../../../crypto",
+        "-I../../../storage",
+        "-I../../vendor/micropython",
+        "-I../extmod/modtrezorui", // for display.h
+        format!("-DTREZOR_MODEL_{}", model()).as_str(),
+    ]);
+
+    // Pass in correct include paths and defines.
+    if is_firmware() {
+        bindings = bindings.clang_args(&[
+            "-nostdinc",
+            "-I../firmware",
+            "-I../trezorhal",
+            "-I../../build/firmware",
+            "-I../../vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc",
+            "-I../../vendor/micropython/lib/stm32lib/CMSIS/STM32F4xx/Include",
+            "-I../../vendor/micropython/lib/cmsis/inc",
+            "-DSTM32F427xx",
+            "-DUSE_HAL_DRIVER",
+            "-DSTM32_HAL_H=<stm32f4xx.h>",
+        ]);
+        // Append gcc-arm-none-eabi's include paths.
+        let cc_output = Command::new("arm-none-eabi-gcc")
+            .arg("-E")
+            .arg("-Wp,-v")
+            .arg("-")
+            .output()
+            .expect("arm-none-eabi-gcc failed to execute");
+        if !cc_output.status.success() {
+            panic!("arm-none-eabi-gcc failed");
+        }
+        let include_paths =
+            String::from_utf8(cc_output.stderr).expect("arm-none-eabi-gcc returned invalid output");
+        let include_args = include_paths
+            .lines()
+            .skip_while(|s| !s.contains("search starts here:"))
+            .take_while(|s| !s.contains("End of search list."))
+            .filter(|s| s.starts_with(' '))
+            .map(|s| format!("-I{}", s.trim()));
+
+        bindings = bindings.clang_args(include_args);
+    } else {
+        bindings = bindings.clang_args(&[
+            "-I../unix",
+            "-I../../build/unix",
+            "-I../../vendor/micropython/ports/unix",
+        ]);
+    }
+
+    bindings
+        // Customize the standard types.
+        .use_core()
+        .ctypes_prefix("cty")
+        .size_t_is_usize(true)
+        // Disable the layout tests. They spew out a lot of code-style bindings, and are not too
+        // relevant for our use-case.
+        .layout_tests(false)
+        // Tell cargo to invalidate the built crate whenever any of the
+        // included header files change.
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+}
+
+#[cfg(feature = "micropython")]
 fn generate_micropython_bindings() {
     let out_path = env::var("OUT_DIR").unwrap();
 
     // Tell cargo to invalidate the built crate whenever the header changes.
     println!("cargo:rerun-if-changed=micropython.h");
 
-    let mut bindings = bindgen::Builder::default()
+    let bindings = prepare_bindings()
         .header("micropython.h")
         // obj
         .new_type_alias("mp_obj_t")
@@ -95,6 +174,7 @@ fn generate_micropython_bindings() {
         .allowlist_type("mp_obj_list_t")
         .allowlist_function("mp_obj_new_list")
         .allowlist_function("mp_obj_list_append")
+        .allowlist_function("mp_obj_list_set_len")
         .allowlist_var("mp_type_list")
         // map
         .allowlist_type("mp_map_elem_t")
@@ -116,78 +196,99 @@ fn generate_micropython_bindings() {
         // time
         .allowlist_function("mp_hal_ticks_ms")
         .allowlist_function("mp_hal_delay_ms")
+        // debug
+        .allowlist_function("mp_print_strn")
+        .allowlist_var("mp_plat_print")
         // typ
         .allowlist_var("mp_type_type")
         // module
         .allowlist_type("mp_obj_module_t")
-        .allowlist_var("mp_type_module");
+        .allowlist_var("mp_type_module")
+        // `ffi::mp_map_t` type is not allowed to be `Clone` or `Copy` because we tie it
+        // to the data lifetimes with the `MapRef` type, see `src/micropython/map.rs`.
+        // TODO: We should disable `Clone` and `Copy` for all types and only allow-list
+        // the specific cases we require.
+        .no_copy("_mp_map_t");
 
-    // `ffi::mp_map_t` type is not allowed to be `Clone` or `Copy` because we tie it
-    // to the data lifetimes with the `MapRef` type, see `src/micropython/map.rs`.
-    // TODO: We should disable `Clone` and `Copy` for all types and only allow-list
-    // the specific cases we require.
-    bindings = bindings.no_copy("_mp_map_t");
-
-    // Pass in correct include paths and defines.
-    if is_firmware() {
-        bindings = bindings.clang_args(&[
-            "-nostdinc",
-            "-I../firmware",
-            "-I../trezorhal",
-            "-I../../build/firmware",
-            "-I../../vendor/micropython",
-            "-I../../vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc",
-            "-I../../vendor/micropython/lib/stm32lib/CMSIS/STM32F4xx/Include",
-            "-I../../vendor/micropython/lib/cmsis/inc",
-            "-DTREZOR_MODEL_T",
-            "-DSTM32F405xx",
-            "-DUSE_HAL_DRIVER",
-            "-DSTM32_HAL_H=<stm32f4xx.h>",
-        ]);
-        // Append gcc-arm-none-eabi's include paths.
-        let cc_output = Command::new("arm-none-eabi-gcc")
-            .arg("-E")
-            .arg("-Wp,-v")
-            .arg("-")
-            .output()
-            .expect("arm-none-eabi-gcc failed to execute");
-        if !cc_output.status.success() {
-            panic!("arm-none-eabi-gcc failed");
-        }
-        let include_paths =
-            String::from_utf8(cc_output.stderr).expect("arm-none-eabi-gcc returned invalid output");
-        let include_args = include_paths
-            .lines()
-            .skip_while(|s| !s.contains("search starts here:"))
-            .take_while(|s| !s.contains("End of search list."))
-            .filter(|s| s.starts_with(' '))
-            .map(|s| format!("-I{}", s.trim()));
-
-        bindings = bindings.clang_args(include_args);
-    } else {
-        bindings = bindings.clang_args(&[
-            "-I../unix",
-            "-I../../build/unix",
-            "-I../../vendor/micropython",
-            "-I../../vendor/micropython/ports/unix",
-        ]);
-    }
-
+    // Write the bindings to a file in the OUR_DIR.
     bindings
-        // Customize the standard types.
-        .use_core()
-        .ctypes_prefix("cty")
-        .size_t_is_usize(true)
-        // Disable the layout tests. They spew out a lot of code-style bindings, and are not too
-        // relevant for our use-case.
-        .layout_tests(false)
-        // Tell cargo to invalidate the built crate whenever any of the
-        // included header files change.
-        .parse_callbacks(Box::new(bindgen::CargoCallbacks))
-        // Write the bindings to a file in the OUR_DIR.
         .generate()
-        .expect("Unable to generate Rust Micropython bindings")
+        .expect("Unable to generate bindings")
         .write_to_file(PathBuf::from(out_path).join("micropython.rs"))
+        .unwrap();
+}
+
+fn generate_trezorhal_bindings() {
+    let out_path = env::var("OUT_DIR").unwrap();
+
+    // Tell cargo to invalidate the built crate whenever the header changes.
+    println!("cargo:rerun-if-changed=trezorhal.h");
+
+    let bindings = prepare_bindings()
+        .header("trezorhal.h")
+        // secbool
+        .allowlist_type("secbool")
+        .must_use_type("secbool")
+        .allowlist_var("sectrue")
+        .allowlist_var("secfalse")
+        // storage
+        .allowlist_var("EXTERNAL_SALT_SIZE")
+        .allowlist_var("FLAG_PUBLIC")
+        .allowlist_var("FLAGS_WRITE")
+        .allowlist_var("MAX_APPID")
+        .allowlist_type("PIN_UI_WAIT_CALLBACK")
+        .allowlist_function("storage_init")
+        .allowlist_function("storage_wipe")
+        .allowlist_function("storage_is_unlocked")
+        .allowlist_function("storage_lock")
+        .allowlist_function("storage_unlock")
+        .allowlist_function("storage_has_pin")
+        .allowlist_function("storage_get_pin_rem")
+        .allowlist_function("storage_change_pin")
+        .allowlist_function("storage_has")
+        .allowlist_function("storage_get")
+        .allowlist_function("storage_set")
+        .allowlist_function("storage_delete")
+        .allowlist_function("storage_set_counter")
+        .allowlist_function("storage_next_counter")
+        // display
+        .allowlist_function("display_init")
+        .allowlist_function("display_refresh")
+        .allowlist_function("display_backlight")
+        .allowlist_function("display_text")
+        .allowlist_function("display_text_width")
+        .allowlist_function("display_text_height")
+        .allowlist_function("display_bar")
+        .allowlist_function("display_bar_radius")
+        .allowlist_function("display_icon")
+        .allowlist_function("display_image")
+        .allowlist_function("display_toif_info")
+        .allowlist_function("display_loader")
+        .allowlist_function("display_pixeldata")
+        .allowlist_function("display_pixeldata_dirty")
+        .allowlist_function("display_set_window")
+        .allowlist_var("DISPLAY_CMD_ADDRESS")
+        .allowlist_var("DISPLAY_DATA_ADDRESS")
+        // bip39
+        .allowlist_function("mnemonic_word_completion_mask")
+        .allowlist_var("BIP39_WORDLIST_ENGLISH")
+        .allowlist_var("BIP39_WORD_COUNT")
+        // slip39
+        .allowlist_function("slip39_word_completion_mask")
+        .allowlist_function("button_sequence_to_word")
+        // random
+        .allowlist_function("random_uniform")
+        // rgb led
+        .allowlist_function("rgb_led_set_color")
+        // time
+        .allowlist_function("hal_delay")
+        .allowlist_function("hal_ticks_ms");
+
+    // Write the bindings to a file in the OUR_DIR.
+    bindings
+        .generate()
+        .expect("Unable to generate bindings")
+        .write_to_file(PathBuf::from(out_path).join("trezorhal.rs"))
         .unwrap();
 }
 
@@ -201,9 +302,8 @@ fn link_core_objects() {
     let crate_path = env::var("CARGO_MANIFEST_DIR").unwrap();
     let build_path = format!("{}/../../build/unix", crate_path);
 
-    // List of object filenames to ignore in the `embed` and `vendor` directory
+    // List of object filenames to ignore in the `embed` directory
     let embed_blocklist = [OsStr::new("main_main.o")];
-    let vendor_blocklist = [OsStr::new("gen_context.o")];
 
     // Collect all objects that the `core` library uses, and link it in. We have to
     // make sure to avoid the object with the `_main` symbol, so we don't get any
@@ -220,11 +320,12 @@ fn link_core_objects() {
 
     for obj in glob::glob(&format!("{}/vendor/**/*.o", build_path)).unwrap() {
         let obj = obj.unwrap();
-        if vendor_blocklist.contains(&obj.file_name().unwrap()) {
-            // Ignore.
-        } else {
-            cc.object(obj);
-        }
+        cc.object(obj);
+    }
+
+    // Add frozen modules, if present.
+    for obj in glob::glob(&format!("{}/*.o", build_path)).unwrap() {
+        cc.object(obj.unwrap());
     }
 
     // Compile all the objects into a static library and link it in automatically.

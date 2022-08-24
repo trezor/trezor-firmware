@@ -1,5 +1,7 @@
 # Trezor One Bootloader and Firmware
 
+_Building for Trezor Model T? See the [core](../core/build/index.md) documentation._
+
 ## Building with Docker
 
 Ensure that you have Docker installed. You can follow [Docker's installation instructions](https://docs.docker.com/engine/installation/).

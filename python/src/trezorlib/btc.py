@@ -93,7 +93,7 @@ def from_json(json_dict: "Transaction") -> messages.TransactionType:
 
     def make_bin_output(vout: "Vout") -> messages.TxOutputBinType:
         return messages.TxOutputBinType(
-            amount=int(Decimal(vout["value"]) * (10 ** 8)),
+            amount=int(Decimal(vout["value"]) * (10**8)),
             script_pubkey=bytes.fromhex(vout["scriptPubKey"]["hex"]),
         )
 

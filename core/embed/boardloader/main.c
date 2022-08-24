@@ -19,13 +19,16 @@
 
 #include <string.h>
 
+#include "board_capabilities.h"
 #include "common.h"
 #include "compiler_traits.h"
 #include "display.h"
 #include "flash.h"
 #include "image.h"
 #include "rng.h"
+#ifdef TREZOR_MODEL_T
 #include "sdcard.h"
+#endif
 
 #include "lowlevel.h"
 #include "version.h"
@@ -46,10 +49,32 @@ static const uint8_t * const BOARDLOADER_KEYS[] = {
 #endif
 };
 
+struct BoardCapabilities capablities
+    __attribute__((section(".capabilities_section"))) = {
+        .header = CAPABILITIES_HEADER,
+        .model_tag = MODEL_NAME,
+        .model_length = MODEL_NAME_MAX_LENGTH,
+#if defined TREZOR_MODEL_T
+        .model_name = "TREZORT",
+#elif defined TREZOR_MODEL_R
+        .model_name = "TREZORR",
+#else
+#error Unknown model
+#endif
+        .version_tag = BOARDLOADER_VERSION,
+        .version_length = sizeof(struct BoardloaderVersion),
+        .version = {.version_major = VERSION_MAJOR,
+                    .version_minor = VERSION_MINOR,
+                    .version_patch = VERSION_PATCH,
+                    .version_build = VERSION_BUILD},
+        .terminator_tag = TERMINATOR,
+        .terminator_length = 0};
+
 // we use SRAM as SD card read buffer (because DMA can't access the CCMRAM)
 extern uint32_t sram_start[];
 #define sdcard_buf sram_start
 
+#if defined TREZOR_MODEL_T
 static uint32_t check_sdcard(void) {
   if (sectrue != sdcard_power_on()) {
     return 0;
@@ -165,6 +190,7 @@ static secbool copy_sdcard(void) {
 
   return sectrue;
 }
+#endif
 
 int main(void) {
   reset_flags_reset();
@@ -184,11 +210,14 @@ int main(void) {
   clear_otg_hs_memory();
 
   display_init();
+
+#if defined TREZOR_MODEL_T
   sdcard_init();
 
   if (check_sdcard()) {
     return copy_sdcard() == sectrue ? 0 : 3;
   }
+#endif
 
   image_header hdr;
 

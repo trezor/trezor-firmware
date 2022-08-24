@@ -38,7 +38,7 @@ typing-extensions = ">=3.7.4"
 ## style
 isort = "<5"  # 5 changes lots of stuff that need to be addressed first: https://timothycrosley.github.io/isort/docs/upgrade_guides/5.0.0/
 flake8 = ">=3.7.0"
-black = ">=20.8b0"
+black = ">=22.3"
 mako = "^1.0.7"
 munch = "^2.3.2"
 autoflake = "*"
@@ -50,7 +50,7 @@ demjson3 = "*"
 graphviz = "*"
 
 ## cointool
-click = "^8.0"
+click = "^8"
 ed25519 = "^1.4"
 requests = "^2.19"
 termcolor = "*"
@@ -73,7 +73,7 @@ yamllint = "^1.25.0"
 
 [tool.poetry.dev-dependencies]
 scan-build = "*"
-towncrier = "^21.3.0"
+towncrier = "^21.9.0"
 
 [build-system]
 requires = ["poetry>=1;<1.1", "pip>=20"]

@@ -20,6 +20,9 @@ START_TEST(test_xmr_base58) {
        "1527d062c9fedeb2dad669f2f5585a00a88462b8c95c809a630e5734c",
        "9vacMKaj8JJV6MnwDzh2oNVdwTLJfTDyNRiB6NzV9TT7fqvzLivH2dB8Tv7VYR3ncn8vCb3"
        "KdNMJzQWrPAF1otYJ9cPKpkr"},
+      {0x12, "", "35EMFRj"},
+      {53, "d910642d8b3372fe72676dbc925277974d0401d387e4024",
+       "A1PkB4pLAiVjZTJpWewswLSJor6eEYDHj35UiF7"},
   };
 
   uint8_t rawn[512];
@@ -1123,57 +1126,6 @@ START_TEST(test_xmr_varint) {
     read = xmr_read_varint(buff, sizeof(buff), &val);
     ck_assert_int_eq(read, written);
     ck_assert(tests[i].x == val);
-  }
-}
-END_TEST
-
-START_TEST(test_xmr_gen_range_sig) {
-  uint64_t tests[] = {
-      0, 1, 65535, 65537, 0xffffffffffffffffULL, 0xdeadc0deULL,
-  };
-
-  unsigned char buff[32];
-  xmr_range_sig_t sig;
-  ge25519 C, Ctmp, Cb, Ch, P1, P2, LL;
-  bignum256modm mask, hsh, ee, s, ee_comp;
-  Hasher hasher;
-
-  for (size_t i = 0; i < (sizeof(tests) / sizeof(*tests)); i++) {
-    xmr_gen_range_sig(&sig, &C, mask, tests[i], NULL);
-
-    ge25519_set_neutral(&Ctmp);
-    for (int j = 0; j < XMR_ATOMS; j++) {
-      ge25519_unpack_vartime(&Cb, sig.Ci[j]);
-      ge25519_add(&Ctmp, &Ctmp, &Cb, 0);
-    }
-
-    ck_assert_int_eq(ge25519_eq(&C, &Ctmp), 1);
-
-    xmr_hasher_init(&hasher);
-    ge25519_set_xmr_h(&Ch);
-    expand256_modm(ee, sig.asig.ee, 32);
-
-    for (int j = 0; j < XMR_ATOMS; j++) {
-      ge25519_unpack_vartime(&P1, sig.Ci[j]);
-      ge25519_add(&P2, &P1, &Ch, 1);
-      expand256_modm(s, sig.asig.s0[j], 32);
-
-      xmr_add_keys2(&LL, s, ee, &P1);
-      ge25519_pack(buff, &LL);
-      xmr_hash_to_scalar(hsh, buff, 32);
-
-      expand256_modm(s, sig.asig.s1[j], 32);
-      xmr_add_keys2(&LL, s, hsh, &P2);
-
-      ge25519_pack(buff, &LL);
-      xmr_hasher_update(&hasher, buff, 32);
-
-      ge25519_double(&Ch, &Ch);
-    }
-
-    xmr_hasher_final(&hasher, buff);
-    expand256_modm(ee_comp, buff, 32);
-    ck_assert_int_eq(eq256_modm(ee, ee_comp), 1);
   }
 }
 END_TEST

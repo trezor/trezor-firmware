@@ -353,7 +353,7 @@ bool nem_askMosaicCreation(const NEMTransactionCommon *common,
 
   bn_format_uint64(mosaic_creation->definition.supply, NULL, NULL,
                    mosaic_creation->definition.divisibility,
-                   mosaic_creation->definition.divisibility, true, str_out,
+                   mosaic_creation->definition.divisibility, true, ',', str_out,
                    sizeof(str_out));
 
   layoutDialogSwipe(
@@ -430,7 +430,7 @@ bool nem_askSupplyChange(const NEMTransactionCommon *common,
   }
 
   char str_out[32] = {0};
-  bn_format_uint64(supply_change->delta, NULL, NULL, 0, 0, false, str_out,
+  bn_format_uint64(supply_change->delta, NULL, NULL, 0, 0, false, ',', str_out,
                    sizeof(str_out));
 
   layoutDialogSwipe(
@@ -496,7 +496,7 @@ bool nem_askAggregateModification(
   if (relative_change) {
     char str_out[32] = {0};
     bn_format_uint64(relative_change < 0 ? -relative_change : relative_change,
-                     NULL, NULL, 0, 0, false, str_out, sizeof(str_out));
+                     NULL, NULL, 0, 0, false, ',', str_out, sizeof(str_out));
 
     layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Next"), desc,
                       creation ? _("Set minimum")
@@ -648,7 +648,7 @@ static inline size_t format_amount(const NEMMosaicDefinition *definition,
       &val, NULL,
       definition && definition->has_ticker ? definition->ticker : NULL,
       definition && definition->has_divisibility ? definition->divisibility : 0,
-      -divisor, false, str_out, size);
+      -divisor, false, ',', str_out, size);
 }
 
 void nem_canonicalizeMosaics(NEMTransfer *transfer) {

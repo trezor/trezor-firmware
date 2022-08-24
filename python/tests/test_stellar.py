@@ -15,15 +15,19 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import pytest
-from stellar_sdk import (
-    Account,
-    Asset,
-    Network,
-    TransactionBuilder,
-    TrustLineEntryFlag,
-    MuxedAccount,
-)
-from stellar_sdk.strkey import StrKey
+
+try:
+    from stellar_sdk import (
+        Account,
+        Asset,
+        Network,
+        TransactionBuilder,
+        TrustLineEntryFlag,
+        MuxedAccount,
+    )
+    from stellar_sdk.strkey import StrKey
+except ImportError:
+    pytest.skip("stellar_sdk not installed", allow_module_level=True)
 
 from trezorlib import messages, stellar
 
@@ -140,8 +144,7 @@ def test_multiple_operations():
     operation2_source = "GBHWKBPP3O4H2BUUKSFXE4PK5WHLQYVZIZUNUJ4AU5VUZZEVBDMXISAS"
 
     envelope = (
-        tx
-        .append_manage_data_op(
+        tx.append_manage_data_op(
             data_name=data_name, data_value=data_value, source=operation1_source
         )
         .append_payment_op(
@@ -186,15 +189,11 @@ def test_create_account():
     starting_balance = "100.0333"
     operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
 
-    envelope = (
-        tx
-        .append_create_account_op(
-            destination=destination,
-            starting_balance=starting_balance,
-            source=operation_source,
-        )
-        .build()
-    )
+    envelope = tx.append_create_account_op(
+        destination=destination,
+        starting_balance=starting_balance,
+        source=operation_source,
+    ).build()
 
     tx, operations = stellar.from_envelope(envelope)
     assert len(operations) == 1
@@ -212,17 +211,13 @@ def test_payment_native_asset():
     asset_issuer = None
     operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
 
-    envelope = (
-        tx
-        .append_payment_op(
-            destination=destination,
-            amount=amount,
-            asset_code=asset_code,
-            asset_issuer=asset_issuer,
-            source=operation_source,
-        )
-        .build()
-    )
+    envelope = tx.append_payment_op(
+        destination=destination,
+        amount=amount,
+        asset_code=asset_code,
+        asset_issuer=asset_issuer,
+        source=operation_source,
+    ).build()
 
     tx, operations = stellar.from_envelope(envelope)
     assert len(operations) == 1
@@ -243,17 +238,13 @@ def test_payment_alpha4_asset():
     asset_issuer = "GCSJ7MFIIGIRMAS4R3VT5FIFIAOXNMGDI5HPYTWS5X7HH74FSJ6STSGF"
     operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
 
-    envelope = (
-        tx
-        .append_payment_op(
-            destination=destination,
-            amount=amount,
-            asset_code=asset_code,
-            asset_issuer=asset_issuer,
-            source=operation_source,
-        )
-        .build()
-    )
+    envelope = tx.append_payment_op(
+        destination=destination,
+        amount=amount,
+        asset_code=asset_code,
+        asset_issuer=asset_issuer,
+        source=operation_source,
+    ).build()
 
     tx, operations = stellar.from_envelope(envelope)
     assert len(operations) == 1
@@ -274,17 +265,13 @@ def test_payment_alpha12_asset():
     asset_issuer = "GCSJ7MFIIGIRMAS4R3VT5FIFIAOXNMGDI5HPYTWS5X7HH74FSJ6STSGF"
     operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
 
-    envelope = (
-        tx
-        .append_payment_op(
-            destination=destination,
-            amount=amount,
-            asset_code=asset_code,
-            asset_issuer=asset_issuer,
-            source=operation_source,
-        )
-        .build()
-    )
+    envelope = tx.append_payment_op(
+        destination=destination,
+        amount=amount,
+        asset_code=asset_code,
+        asset_issuer=asset_issuer,
+        source=operation_source,
+    ).build()
 
     tx, operations = stellar.from_envelope(envelope)
     assert len(operations) == 1
@@ -314,21 +301,17 @@ def test_path_payment_strict_receive():
         "BANANA", "GC7EKO37HNSKQ3V6RZ274EO7SFOWASQRHLX3OR5FIZK6UMV6LIEDXHGZ"
     )
 
-    envelope = (
-        tx
-        .append_path_payment_strict_receive_op(
-            destination=destination,
-            send_code=send_code,
-            send_issuer=send_issuer,
-            send_max=send_max,
-            dest_code=dest_code,
-            dest_issuer=dest_issuer,
-            dest_amount=dest_amount,
-            path=[path_asset1, path_asset2],
-            source=operation_source,
-        )
-        .build()
-    )
+    envelope = tx.append_path_payment_strict_receive_op(
+        destination=destination,
+        send_code=send_code,
+        send_issuer=send_issuer,
+        send_max=send_max,
+        dest_code=dest_code,
+        dest_issuer=dest_issuer,
+        dest_amount=dest_amount,
+        path=[path_asset1, path_asset2],
+        source=operation_source,
+    ).build()
 
     tx, operations = stellar.from_envelope(envelope)
     assert len(operations) == 1
@@ -361,19 +344,15 @@ def test_manage_sell_offer_new_offer():
     buying_issuer = "GCSJ7MFIIGIRMAS4R3VT5FIFIAOXNMGDI5HPYTWS5X7HH74FSJ6STSGF"
     operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
 
-    envelope = (
-        tx
-        .append_manage_sell_offer_op(
-            selling_code=selling_code,
-            selling_issuer=selling_issuer,
-            buying_code=buying_code,
-            buying_issuer=buying_issuer,
-            amount=amount,
-            price=price,
-            source=operation_source,
-        )
-        .build()
-    )
+    envelope = tx.append_manage_sell_offer_op(
+        selling_code=selling_code,
+        selling_issuer=selling_issuer,
+        buying_code=buying_code,
+        buying_issuer=buying_issuer,
+        amount=amount,
+        price=price,
+        source=operation_source,
+    ).build()
 
     tx, operations = stellar.from_envelope(envelope)
     assert len(operations) == 1
@@ -400,20 +379,16 @@ def test_manage_sell_offer_update_offer():
     offer_id = 12345
     operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
 
-    envelope = (
-        tx
-        .append_manage_sell_offer_op(
-            selling_code=selling_code,
-            selling_issuer=selling_issuer,
-            buying_code=buying_code,
-            buying_issuer=buying_issuer,
-            amount=amount,
-            price=price,
-            offer_id=offer_id,
-            source=operation_source,
-        )
-        .build()
-    )
+    envelope = tx.append_manage_sell_offer_op(
+        selling_code=selling_code,
+        selling_issuer=selling_issuer,
+        buying_code=buying_code,
+        buying_issuer=buying_issuer,
+        amount=amount,
+        price=price,
+        offer_id=offer_id,
+        source=operation_source,
+    ).build()
 
     tx, operations = stellar.from_envelope(envelope)
     assert len(operations) == 1
@@ -439,19 +414,15 @@ def test_create_passive_sell_offer():
     buying_issuer = "GCSJ7MFIIGIRMAS4R3VT5FIFIAOXNMGDI5HPYTWS5X7HH74FSJ6STSGF"
     operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
 
-    envelope = (
-        tx
-        .append_create_passive_sell_offer_op(
-            selling_code=selling_code,
-            selling_issuer=selling_issuer,
-            buying_code=buying_code,
-            buying_issuer=buying_issuer,
-            amount=amount,
-            price=price,
-            source=operation_source,
-        )
-        .build()
-    )
+    envelope = tx.append_create_passive_sell_offer_op(
+        selling_code=selling_code,
+        selling_issuer=selling_issuer,
+        buying_code=buying_code,
+        buying_issuer=buying_issuer,
+        amount=amount,
+        price=price,
+        source=operation_source,
+    ).build()
 
     tx, operations = stellar.from_envelope(envelope)
     assert len(operations) == 1
@@ -478,21 +449,17 @@ def test_set_options():
     high_threshold = 30
     home_domain = "example.com"
 
-    envelope = (
-        tx
-        .append_set_options_op(
-            inflation_dest=inflation_dest,
-            clear_flags=clear_flags,
-            set_flags=set_flags,
-            master_weight=master_weight,
-            low_threshold=low_threshold,
-            med_threshold=med_threshold,
-            high_threshold=high_threshold,
-            home_domain=home_domain,
-            source=operation_source,
-        )
-        .build()
-    )
+    envelope = tx.append_set_options_op(
+        inflation_dest=inflation_dest,
+        clear_flags=clear_flags,
+        set_flags=set_flags,
+        master_weight=master_weight,
+        low_threshold=low_threshold,
+        med_threshold=med_threshold,
+        high_threshold=high_threshold,
+        home_domain=home_domain,
+        source=operation_source,
+    ).build()
 
     tx, operations = stellar.from_envelope(envelope)
     assert len(operations) == 1
@@ -517,13 +484,9 @@ def test_set_options_ed25519_signer():
     weight = 10
     operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
 
-    envelope = (
-        tx
-        .append_ed25519_public_key_signer(
-            account_id=signer, weight=weight, source=operation_source
-        )
-        .build()
-    )
+    envelope = tx.append_ed25519_public_key_signer(
+        account_id=signer, weight=weight, source=operation_source
+    ).build()
 
     tx, operations = stellar.from_envelope(envelope)
     assert len(operations) == 1
@@ -550,13 +513,9 @@ def test_set_options_pre_auth_tx_signer():
     weight = 30
     operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
 
-    envelope = (
-        tx
-        .append_pre_auth_tx_signer(
-            pre_auth_tx_hash=signer, weight=weight, source=operation_source
-        )
-        .build()
-    )
+    envelope = tx.append_pre_auth_tx_signer(
+        pre_auth_tx_hash=signer, weight=weight, source=operation_source
+    ).build()
 
     tx, operations = stellar.from_envelope(envelope)
     assert len(operations) == 1
@@ -574,11 +533,9 @@ def test_set_options_hashx_signer():
     weight = 20
     operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
 
-    envelope = (
-        tx
-        .append_hashx_signer(sha256_hash=signer, weight=weight, source=operation_source)
-        .build()
-    )
+    envelope = tx.append_hashx_signer(
+        sha256_hash=signer, weight=weight, source=operation_source
+    ).build()
 
     tx, operations = stellar.from_envelope(envelope)
     assert len(operations) == 1
@@ -595,16 +552,12 @@ def test_change_trust():
     limit = "1000"
     operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
 
-    envelope = (
-        tx
-        .append_change_trust_op(
-            asset_code=asset_code,
-            asset_issuer=asset_issuer,
-            limit=limit,
-            source=operation_source,
-        )
-        .build()
-    )
+    envelope = tx.append_change_trust_op(
+        asset_code=asset_code,
+        asset_issuer=asset_issuer,
+        limit=limit,
+        source=operation_source,
+    ).build()
 
     tx, operations = stellar.from_envelope(envelope)
     assert len(operations) == 1
@@ -622,16 +575,12 @@ def test_allow_trust():
     trustor = "GCSJ7MFIIGIRMAS4R3VT5FIFIAOXNMGDI5HPYTWS5X7HH74FSJ6STSGF"
     operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
 
-    envelope = (
-        tx
-        .append_allow_trust_op(
-            trustor=trustor,
-            asset_code=asset_code,
-            authorize=TrustLineEntryFlag.AUTHORIZED_FLAG,
-            source=operation_source,
-        )
-        .build()
-    )
+    envelope = tx.append_allow_trust_op(
+        trustor=trustor,
+        asset_code=asset_code,
+        authorize=TrustLineEntryFlag.AUTHORIZED_FLAG,
+        source=operation_source,
+    ).build()
 
     tx, operations = stellar.from_envelope(envelope)
     assert len(operations) == 1
@@ -648,11 +597,9 @@ def test_account_merge():
     destination = "GDNSSYSCSSJ76FER5WEEXME5G4MTCUBKDRQSKOYP36KUKVDB2VCMERS6"
     operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
 
-    envelope = (
-        tx
-        .append_account_merge_op(destination=destination, source=operation_source)
-        .build()
-    )
+    envelope = tx.append_account_merge_op(
+        destination=destination, source=operation_source
+    ).build()
 
     tx, operations = stellar.from_envelope(envelope)
     assert len(operations) == 1
@@ -667,13 +614,9 @@ def test_manage_data():
     data_value = b"Hello, Stellar"
     operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
 
-    envelope = (
-        tx
-        .append_manage_data_op(
-            data_name=data_name, data_value=data_value, source=operation_source
-        )
-        .build()
-    )
+    envelope = tx.append_manage_data_op(
+        data_name=data_name, data_value=data_value, source=operation_source
+    ).build()
 
     tx, operations = stellar.from_envelope(envelope)
     assert len(operations) == 1
@@ -689,13 +632,9 @@ def test_manage_data_remove_data_entity():
     data_value = None  # remove data entity
     operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
 
-    envelope = (
-        tx
-        .append_manage_data_op(
-            data_name=data_name, data_value=data_value, source=operation_source
-        )
-        .build()
-    )
+    envelope = tx.append_manage_data_op(
+        data_name=data_name, data_value=data_value, source=operation_source
+    ).build()
 
     tx, operations = stellar.from_envelope(envelope)
     assert len(operations) == 1
@@ -710,11 +649,9 @@ def test_bump_sequence():
     bump_to = 143487250972278900
     operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
 
-    envelope = (
-        tx
-        .append_bump_sequence_op(bump_to=bump_to, source=operation_source)
-        .build()
-    )
+    envelope = tx.append_bump_sequence_op(
+        bump_to=bump_to, source=operation_source
+    ).build()
 
     tx, operations = stellar.from_envelope(envelope)
     assert len(operations) == 1
@@ -810,21 +747,17 @@ def test_path_payment_strict_send():
         "BANANA", "GC7EKO37HNSKQ3V6RZ274EO7SFOWASQRHLX3OR5FIZK6UMV6LIEDXHGZ"
     )
 
-    envelope = (
-        tx
-        .append_path_payment_strict_send_op(
-            destination=destination,
-            send_code=send_code,
-            send_issuer=send_issuer,
-            send_amount=send_amount,
-            dest_code=dest_code,
-            dest_issuer=dest_issuer,
-            dest_min=dest_min,
-            path=[path_asset1, path_asset2],
-            source=operation_source,
-        )
-        .build()
-    )
+    envelope = tx.append_path_payment_strict_send_op(
+        destination=destination,
+        send_code=send_code,
+        send_issuer=send_issuer,
+        send_amount=send_amount,
+        dest_code=dest_code,
+        dest_issuer=dest_issuer,
+        dest_min=dest_min,
+        path=[path_asset1, path_asset2],
+        source=operation_source,
+    ).build()
 
     tx, operations = stellar.from_envelope(envelope)
     assert len(operations) == 1

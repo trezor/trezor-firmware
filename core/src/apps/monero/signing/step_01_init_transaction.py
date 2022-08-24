@@ -7,10 +7,9 @@ from typing import TYPE_CHECKING
 
 from apps.monero import layout, misc, signing
 from apps.monero.signing.state import State
-from apps.monero.xmr import crypto, monero
+from apps.monero.xmr import crypto, crypto_helpers, monero
 
 if TYPE_CHECKING:
-    from apps.monero.xmr.types import Sc25519, Ge25519
     from trezor.messages import (
         MoneroAccountPublicAddress,
         MoneroTransactionData,
@@ -34,16 +33,17 @@ async def init_transaction(
 
     state.creds = misc.get_creds(keychain, address_n, network_type)
     state.client_version = tsx_data.client_version or 0
-    if state.client_version == 0:
+    if state.client_version < 3:
         raise ValueError("Client version not supported")
 
     state.fee = state.fee if state.fee > 0 else 0
     state.tx_priv = crypto.random_scalar()
-    state.tx_pub = crypto.scalarmult_base(state.tx_priv)
+    state.tx_pub = crypto.scalarmult_base_into(None, state.tx_priv)
     state.mem_trace(1)
 
     state.input_count = tsx_data.num_inputs
     state.output_count = len(tsx_data.outputs)
+    assert state.input_count is not None
     state.progress_total = 4 + 3 * state.input_count + state.output_count
     state.progress_cur = 0
 
@@ -58,16 +58,13 @@ async def init_transaction(
 
     # Basic transaction parameters
     state.output_change = tsx_data.change_dts
-    state.mixin = tsx_data.mixin
     state.fee = tsx_data.fee
     state.account_idx = tsx_data.account
     state.last_step = state.STEP_INIT
     if tsx_data.hard_fork:
         state.hard_fork = tsx_data.hard_fork
-
-    state.tx_type = (
-        signing.RctType.CLSAG if state.hard_fork >= 13 else signing.RctType.Bulletproof2
-    )
+    if state.hard_fork < 13:
+        raise ValueError("Unsupported hard-fork version")
 
     # Ensure change is correct
     _check_change(state, tsx_data.outputs)
@@ -123,7 +120,9 @@ async def init_transaction(
     return MoneroTransactionInitAck(hmacs=hmacs, rsig_data=rsig_data)
 
 
-def _check_subaddresses(state: State, outputs: list[MoneroTransactionDestinationEntry]):
+def _check_subaddresses(
+    state: State, outputs: list[MoneroTransactionDestinationEntry]
+) -> None:
     """
     Using subaddresses leads to a few poorly documented exceptions.
 
@@ -156,8 +155,10 @@ def _check_subaddresses(state: State, outputs: list[MoneroTransactionDestination
     # we set (override) the tx pubkey to R=r*D and no additional
     # tx keys are needed
     if num_stdaddresses == 0 and num_subaddresses == 1:
-        state.tx_pub = crypto.scalarmult(
-            crypto.decodepoint(single_dest_subaddress.spend_public_key), state.tx_priv
+        state.tx_pub = crypto.scalarmult_into(
+            None,
+            crypto_helpers.decodepoint(single_dest_subaddress.spend_public_key),
+            state.tx_priv,
         )
 
     # if a subaddress is used and either standard address is as well
@@ -178,11 +179,12 @@ def _get_primary_change_address(state: State) -> MoneroAccountPublicAddress:
         state.creds.view_key_private, state.creds.spend_key_public, state.account_idx, 0
     )
     return MoneroAccountPublicAddress(
-        view_public_key=crypto.encodepoint(C), spend_public_key=crypto.encodepoint(D)
+        view_public_key=crypto_helpers.encodepoint(C),
+        spend_public_key=crypto_helpers.encodepoint(D),
     )
 
 
-def _check_rsig_data(state: State, rsig_data: MoneroTransactionRsigData):
+def _check_rsig_data(state: State, rsig_data: MoneroTransactionRsigData) -> None:
     """
     There are two types of monero ring confidential transactions:
     1. RCTTypeFull = 1 (used if num_inputs == 1 && Borromean)
@@ -205,13 +207,18 @@ def _check_rsig_data(state: State, rsig_data: MoneroTransactionRsigData):
     elif rsig_data.rsig_type not in (1, 2, 3):
         raise ValueError("Unknown rsig type")
 
+    state.tx_type = signing.RctType.CLSAG
+    if rsig_data.bp_version == 4:
+        state.rsig_is_bp_plus = True
+        state.tx_type = signing.RctType.RCTTypeBulletproofPlus
+
     if state.output_count > 2:
         state.rsig_offload = True
 
     _check_grouping(state)
 
 
-def _check_grouping(state: State):
+def _check_grouping(state: State) -> None:
     acc = 0
     for x in state.rsig_grouping:
         if x is None or x <= 0:
@@ -222,7 +229,9 @@ def _check_grouping(state: State):
         raise ValueError("Invalid grouping")
 
 
-def _check_change(state: State, outputs: list[MoneroTransactionDestinationEntry]):
+def _check_change(
+    state: State, outputs: list[MoneroTransactionDestinationEntry]
+) -> None:
     """
     Check if the change address in state.output_change (from `tsx_data.outputs`) is
     a) among tx outputs
@@ -269,7 +278,7 @@ def _check_change(state: State, outputs: list[MoneroTransactionDestinationEntry]
         raise signing.ChangeAddressError("Change address differs from ours")
 
 
-def _compute_sec_keys(state: State, tsx_data: MoneroTransactionData):
+def _compute_sec_keys(state: State, tsx_data: MoneroTransactionData) -> None:
     """
     Generate master key H( H(TsxData || tx_priv) || rand )
     """
@@ -278,16 +287,16 @@ def _compute_sec_keys(state: State, tsx_data: MoneroTransactionData):
 
     writer = get_keccak_writer()
     writer.write(protobuf.dump_message_buffer(tsx_data))
-    writer.write(crypto.encodeint(state.tx_priv))
+    writer.write(crypto_helpers.encodeint(state.tx_priv))
 
-    master_key = crypto.keccak_2hash(
-        writer.get_digest() + crypto.encodeint(crypto.random_scalar())
+    master_key = crypto_helpers.keccak_2hash(
+        writer.get_digest() + crypto_helpers.encodeint(crypto.random_scalar())
     )
-    state.key_hmac = crypto.keccak_2hash(b"hmac" + master_key)
-    state.key_enc = crypto.keccak_2hash(b"enc" + master_key)
+    state.key_hmac = crypto_helpers.keccak_2hash(b"hmac" + master_key)
+    state.key_enc = crypto_helpers.keccak_2hash(b"enc" + master_key)
 
 
-def _precompute_subaddr(state: State, account: int, indices: list[int]):
+def _precompute_subaddr(state: State, account: int, indices: list[int]) -> None:
     """
     Precomputes subaddresses for account (major) and list of indices (minors)
     Subaddresses have to be stored in encoded form - unique representation.
@@ -296,7 +305,7 @@ def _precompute_subaddr(state: State, account: int, indices: list[int]):
     monero.compute_subaddresses(state.creds, account, indices, state.subaddresses)
 
 
-def _process_payment_id(state: State, tsx_data: MoneroTransactionData):
+def _process_payment_id(state: State, tsx_data: MoneroTransactionData) -> None:
     """
     Writes payment id to the `extra` field under the TX_EXTRA_NONCE = 0x02 tag.
 
@@ -316,14 +325,14 @@ def _process_payment_id(state: State, tsx_data: MoneroTransactionData):
 
     if not tsx_data.payment_id or len(tsx_data.payment_id) == 8:
         view_key_pub_enc = _get_key_for_payment_id_encryption(
-            tsx_data, state.change_address(), state.client_version > 0
+            tsx_data, state.change_address(), True
         )
 
     if not tsx_data.payment_id:
         return
 
     elif len(tsx_data.payment_id) == 8:
-        view_key_pub = crypto.decodepoint(view_key_pub_enc)
+        view_key_pub = crypto_helpers.decodepoint(view_key_pub_enc)
         payment_id_encr = _encrypt_payment_id(
             tsx_data.payment_id, view_key_pub, state.tx_priv
         )
@@ -354,7 +363,7 @@ def _process_payment_id(state: State, tsx_data: MoneroTransactionData):
 
 def _get_key_for_payment_id_encryption(
     tsx_data: MoneroTransactionData,
-    change_addr=None,
+    change_addr: MoneroAccountPublicAddress | None = None,
     add_dummy_payment_id: bool = False,
 ) -> bytes:
     """
@@ -366,7 +375,8 @@ def _get_key_for_payment_id_encryption(
     from trezor.messages import MoneroAccountPublicAddress
 
     addr = MoneroAccountPublicAddress(
-        spend_public_key=crypto.NULL_KEY_ENC, view_public_key=crypto.NULL_KEY_ENC
+        spend_public_key=crypto_helpers.NULL_KEY_ENC,
+        view_public_key=crypto_helpers.NULL_KEY_ENC,
     )
     count = 0
     for dest in tsx_data.outputs:
@@ -390,23 +400,23 @@ def _get_key_for_payment_id_encryption(
     if count == 0 and change_addr:
         return change_addr.view_public_key
 
-    if addr.view_public_key == crypto.NULL_KEY_ENC:
+    if addr.view_public_key == crypto_helpers.NULL_KEY_ENC:
         raise ValueError("Invalid key")
 
     return addr.view_public_key
 
 
 def _encrypt_payment_id(
-    payment_id: bytes, public_key: Ge25519, secret_key: Sc25519
+    payment_id: bytes, public_key: crypto.Point, secret_key: crypto.Scalar
 ) -> bytes:
     """
     Encrypts payment_id hex.
     Used in the transaction extra. Only recipient is able to decrypt.
     """
-    derivation_p = crypto.generate_key_derivation(public_key, secret_key)
+    derivation_p = crypto_helpers.generate_key_derivation(public_key, secret_key)
     derivation = bytearray(33)
     derivation = crypto.encodepoint_into(derivation, derivation_p)
     derivation[32] = 0x8D  # ENCRYPTED_PAYMENT_ID_TAIL
-    hash = crypto.cn_fast_hash(derivation)
+    hash = crypto.fast_hash_into(None, derivation)
     pm_copy = bytearray(payment_id)
-    return crypto.xor8(pm_copy, hash)
+    return crypto_helpers.xor8(pm_copy, hash)

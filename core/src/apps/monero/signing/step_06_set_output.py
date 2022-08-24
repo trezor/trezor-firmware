@@ -9,14 +9,16 @@ from trezor import utils
 
 from apps.monero import layout, signing
 from apps.monero.signing import offloading_keys
-from apps.monero.xmr import crypto, serialize
+from apps.monero.xmr import crypto, crypto_helpers, serialize
 
 from .state import State
 
 if TYPE_CHECKING:
-    from apps.monero.xmr.types import Sc25519, Ge25519
     from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhTuple
-    from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import Bulletproof
+    from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import (
+        Bulletproof,
+        BulletproofPlus,
+    )
     from trezor.messages import (
         MoneroTransactionDestinationEntry,
         MoneroTransactionSetOutputAck,
@@ -58,7 +60,7 @@ async def set_output(
     state.mem_trace(5, True)
 
     # Compute tx keys and masks if applicable
-    tx_out_key, amount_key = _compute_tx_keys(state, dst_entr)
+    tx_out_key, amount_key, derivation = _compute_tx_keys(state, dst_entr)
     utils.unimport_end(mods)
     state.mem_trace(6, True)
 
@@ -74,7 +76,13 @@ async def set_output(
         return MoneroTransactionSetOutputAck()
 
     # Tx header prefix hashing, hmac dst_entr
-    tx_out_bin, hmac_vouti = _set_out_tx_out(state, dst_entr, tx_out_key)
+    tx_out_bin, hmac_vouti = _set_out_tx_out(
+        state,
+        dst_entr,
+        tx_out_key,
+        derivation,
+    )
+    del (derivation,)
     state.mem_trace(11, True)
 
     out_pk_dest, out_pk_commitment, ecdh_info_bin = _get_ecdh_info_and_out_pk(
@@ -170,44 +178,56 @@ def _validate(
 
 def _compute_tx_keys(
     state: State, dst_entr: MoneroTransactionDestinationEntry
-) -> tuple[Ge25519, Sc25519]:
+) -> tuple[crypto.Point, crypto.Scalar, crypto.Point]:
     """Computes tx_out_key, amount_key"""
 
     if state.is_processing_offloaded:
-        return None, None  # no need to recompute
+        return None, None, None  # no need to recompute
 
     # additional tx key if applicable
     additional_txkey_priv = _set_out_additional_keys(state, dst_entr)
     # derivation = a*R or r*A or s*C
     derivation = _set_out_derivation(state, dst_entr, additional_txkey_priv)
     # amount key = H_s(derivation || i)
-    amount_key = crypto.derivation_to_scalar(derivation, state.current_output_index)
+    amount_key = crypto_helpers.derivation_to_scalar(
+        derivation, state.current_output_index
+    )
     # one-time destination address P = H_s(derivation || i)*G + B
-    tx_out_key = crypto.derive_public_key(
+    tx_out_key = crypto_helpers.derive_public_key(
         derivation,
         state.current_output_index,
-        crypto.decodepoint(dst_entr.addr.spend_public_key),
+        crypto_helpers.decodepoint(dst_entr.addr.spend_public_key),
     )
-    del (derivation, additional_txkey_priv)
+    del (additional_txkey_priv,)
 
     from apps.monero.xmr import monero
 
-    mask = monero.commitment_mask(crypto.encodeint(amount_key))
+    mask = monero.commitment_mask(crypto_helpers.encodeint(amount_key))
     state.output_masks.append(mask)
-    return tx_out_key, amount_key
+    return tx_out_key, amount_key, derivation
 
 
 def _set_out_tx_out(
-    state: State, dst_entr: MoneroTransactionDestinationEntry, tx_out_key: Ge25519
+    state: State,
+    dst_entr: MoneroTransactionDestinationEntry,
+    tx_out_key: crypto.Point,
+    derivation: crypto.Point,
 ) -> tuple[bytes, bytes]:
     """
     Manually serializes TxOut(0, TxoutToKey(key)) and calculates hmac.
     """
-    tx_out_bin = bytearray(34)
+    use_tags = state.hard_fork >= 15
+    tx_out_bin = bytearray(35 if use_tags else 34)
     tx_out_bin[0] = 0  # amount varint
-    tx_out_bin[1] = 2  # variant code TxoutToKey
+    tx_out_bin[1] = (
+        3 if use_tags else 2
+    )  # variant code txout_to_tagged_key or txout_to_key
     crypto.encodepoint_into(tx_out_bin, tx_out_key, 2)
-    state.mem_trace(8)
+    if use_tags:
+        view_tag = _derive_view_tags(derivation, state.current_output_index)
+        tx_out_bin[-1] = view_tag[0]
+
+    state.mem_trace(8, True)
 
     # Tx header prefix hashing
     state.tx_prefix_hasher.buffer(tx_out_bin)
@@ -223,7 +243,7 @@ def _set_out_tx_out(
 
 def _range_proof(
     state: State, rsig_data: MoneroTransactionRsigData
-) -> tuple[MoneroTransactionRsigData, Sc25519]:
+) -> tuple[MoneroTransactionRsigData, crypto.Scalar]:
     """
     Computes rangeproof and handles range proof offloading logic.
 
@@ -257,7 +277,9 @@ def _range_proof(
     # If not last, do not proceed to the BP processing.
     if not last_in_batch:
         rsig_data_new = (
-            _return_rsig_data(mask=crypto.encodeint(mask)) if offload_mask else None
+            _return_rsig_data(mask=crypto_helpers.encodeint(mask))
+            if offload_mask
+            else None
         )
         return rsig_data_new, mask
 
@@ -282,7 +304,7 @@ def _range_proof(
 
     # Construct new rsig data to send back to the host.
     rsig_data_new = _return_rsig_data(
-        rsig, crypto.encodeint(mask) if offload_mask else None
+        rsig, crypto_helpers.encodeint(mask) if offload_mask else None
     )
 
     if state.current_output_index + 1 == state.output_count and (
@@ -300,7 +322,7 @@ def _rsig_bp(state: State) -> bytes:
     from apps.monero.xmr import range_signatures
 
     rsig = range_signatures.prove_range_bp_batch(
-        state.output_amounts, state.output_masks
+        state.output_amounts, state.output_masks, state.rsig_is_bp_plus
     )
     state.mem_trace("post-bp" if __debug__ else None, collect=True)
 
@@ -311,7 +333,7 @@ def _rsig_bp(state: State) -> bytes:
     state.full_message_hasher.rsig_val(rsig, raw=False)
     state.mem_trace("post-bp-hash" if __debug__ else None, collect=True)
 
-    rsig = _dump_rsig_bp(rsig)
+    rsig = _dump_rsig_bp_plus(rsig) if state.rsig_is_bp_plus else _dump_rsig_bp(rsig)
     state.mem_trace(
         f"post-bp-ser, size: {len(rsig)}" if __debug__ else None, collect=True
     )
@@ -324,9 +346,15 @@ def _rsig_bp(state: State) -> bytes:
 
 def _rsig_process_bp(state: State, rsig_data: MoneroTransactionRsigData):
     from apps.monero.xmr import range_signatures
-    from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import Bulletproof
+    from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import (
+        Bulletproof,
+        BulletproofPlus,
+    )
 
-    bp_obj = serialize.parse_msg(rsig_data.rsig, Bulletproof)
+    if state.rsig_is_bp_plus:
+        bp_obj = serialize.parse_msg(rsig_data.rsig, BulletproofPlus)
+    else:
+        bp_obj = serialize.parse_msg(rsig_data.rsig, Bulletproof)
     rsig_data.rsig = None
 
     # BP is hashed with raw=False as hash does not contain L, R
@@ -363,8 +391,45 @@ def _dump_rsig_bp(rsig: Bulletproof) -> bytes:
     utils.memcpy(buff, 32 * 4, rsig.taux, 0, 32)
     utils.memcpy(buff, 32 * 5, rsig.mu, 0, 32)
 
-    buff[32 * 6] = len(rsig.L)
-    offset = 32 * 6 + 1
+    offset = _dump_rsig_lr(buff, 32 * 6, rsig)
+
+    utils.memcpy(buff, offset, rsig.a, 0, 32)
+    offset += 32
+    utils.memcpy(buff, offset, rsig.b, 0, 32)
+    offset += 32
+    utils.memcpy(buff, offset, rsig.t, 0, 32)
+    return buff
+
+
+def _dump_rsig_bp_plus(rsig: BulletproofPlus) -> bytes:
+    if len(rsig.L) > 127:
+        raise ValueError("Too large")
+
+    # Manual serialization as the generic purpose serialize.dump_msg_gc
+    # is more memory intensive which is not desired in the range proof section.
+
+    # BP: "V", "A", "A1", "B", "r1", "s1", "d1", "V", "L", "R"
+    # Commitment vector V is not serialized
+    # Vector size under 127 thus varint occupies 1 B
+    buff_size = 32 * (6 + 2 * (len(rsig.L))) + 2
+    buff = bytearray(buff_size)
+
+    utils.memcpy(buff, 0, rsig.A, 0, 32)
+    utils.memcpy(buff, 32, rsig.A1, 0, 32)
+    utils.memcpy(buff, 32 * 2, rsig.B, 0, 32)
+    utils.memcpy(buff, 32 * 3, rsig.r1, 0, 32)
+    utils.memcpy(buff, 32 * 4, rsig.s1, 0, 32)
+    utils.memcpy(buff, 32 * 5, rsig.d1, 0, 32)
+
+    _dump_rsig_lr(buff, 32 * 6, rsig)
+    return buff
+
+
+def _dump_rsig_lr(
+    buff: bytearray, offset: int, rsig: Bulletproof | BulletproofPlus
+) -> int:
+    buff[offset] = len(rsig.L)
+    offset += 1
 
     for x in rsig.L:
         utils.memcpy(buff, offset, x, 0, 32)
@@ -376,18 +441,12 @@ def _dump_rsig_bp(rsig: Bulletproof) -> bytes:
     for x in rsig.R:
         utils.memcpy(buff, offset, x, 0, 32)
         offset += 32
-
-    utils.memcpy(buff, offset, rsig.a, 0, 32)
-    offset += 32
-    utils.memcpy(buff, offset, rsig.b, 0, 32)
-    offset += 32
-    utils.memcpy(buff, offset, rsig.t, 0, 32)
-    return buff
+    return offset
 
 
 def _return_rsig_data(
-    rsig: bytes = None, mask: bytes = None
-) -> MoneroTransactionRsigData:
+    rsig: bytes | None = None, mask: bytes | None = None
+) -> MoneroTransactionRsigData | None:
     if rsig is None and mask is None:
         return None
 
@@ -405,17 +464,23 @@ def _return_rsig_data(
 
 
 def _get_ecdh_info_and_out_pk(
-    state: State, tx_out_key: Ge25519, amount: int, mask: Sc25519, amount_key: Sc25519
+    state: State,
+    tx_out_key: crypto.Point,
+    amount: int,
+    mask: crypto.Scalar,
+    amount_key: crypto.Scalar,
 ) -> tuple[bytes, bytes, bytes]:
     """
     Calculates the Pedersen commitment C = aG + bH and returns it as CtKey.
     Also encodes the two items - `mask` and `amount` - into ecdh info,
     so the recipient is able to reconstruct the commitment.
     """
-    out_pk_dest = crypto.encodepoint(tx_out_key)
-    out_pk_commitment = crypto.encodepoint(crypto.gen_commitment(mask, amount))
+    out_pk_dest = crypto_helpers.encodepoint(tx_out_key)
+    out_pk_commitment = crypto.gen_commitment_into(None, mask, amount)
+
+    out_pk_commitment = crypto_helpers.encodepoint(out_pk_commitment)
     crypto.sc_add_into(state.sumout, state.sumout, mask)
-    ecdh_info = _ecdh_encode(amount, crypto.encodeint(amount_key))
+    ecdh_info = _ecdh_encode(amount, crypto_helpers.encodeint(amount_key))
 
     # Manual ECDH info serialization
     ecdh_info_bin = _serialize_ecdh(ecdh_info)
@@ -442,7 +507,7 @@ def _ecdh_hash(shared_sec: bytes) -> bytes:
     data = bytearray(38)
     data[0:6] = b"amount"
     data[6:] = shared_sec
-    return crypto.cn_fast_hash(data)
+    return crypto.fast_hash_into(None, data)
 
 
 def _ecdh_encode(amount: int, amount_key: bytes) -> EcdhTuple:
@@ -451,16 +516,16 @@ def _ecdh_encode(amount: int, amount_key: bytes) -> EcdhTuple:
     """
     from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhTuple
 
-    ecdh_info = EcdhTuple(mask=crypto.NULL_KEY_ENC, amount=bytearray(32))
-    amnt = crypto.sc_init(amount)
+    ecdh_info = EcdhTuple(mask=crypto_helpers.NULL_KEY_ENC, amount=bytearray(32))
+    amnt = crypto.Scalar(amount)
     crypto.encodeint_into(ecdh_info.amount, amnt)
-    crypto.xor8(ecdh_info.amount, _ecdh_hash(amount_key))
+    crypto_helpers.xor8(ecdh_info.amount, _ecdh_hash(amount_key))
     return ecdh_info
 
 
 def _set_out_additional_keys(
     state: State, dst_entr: MoneroTransactionDestinationEntry
-) -> Sc25519:
+) -> crypto.Scalar:
     """
     If needed (decided in step 1), additional tx keys are calculated
     for this particular output.
@@ -472,15 +537,15 @@ def _set_out_additional_keys(
 
     if dst_entr.is_subaddress:
         # R=r*D
-        additional_txkey = crypto.decodepoint(dst_entr.addr.spend_public_key)
+        additional_txkey = crypto_helpers.decodepoint(dst_entr.addr.spend_public_key)
         crypto.scalarmult_into(
             additional_txkey, additional_txkey, additional_txkey_priv
         )
     else:
         # R=r*G
-        additional_txkey = crypto.scalarmult_base(additional_txkey_priv)
+        additional_txkey = crypto.scalarmult_base_into(None, additional_txkey_priv)
 
-    state.additional_tx_public_keys.append(crypto.encodepoint(additional_txkey))
+    state.additional_tx_public_keys.append(crypto_helpers.encodepoint(additional_txkey))
     state.additional_tx_private_keys.append(additional_txkey_priv)
     return additional_txkey_priv
 
@@ -488,8 +553,8 @@ def _set_out_additional_keys(
 def _set_out_derivation(
     state: State,
     dst_entr: MoneroTransactionDestinationEntry,
-    additional_txkey_priv: Sc25519,
-) -> Ge25519:
+    additional_txkey_priv: crypto.Scalar,
+) -> crypto.Point:
     """
     Calculates derivation which is then used in the one-time address as
     `P = H(derivation)*G + B`.
@@ -504,7 +569,7 @@ def _set_out_derivation(
     change_addr = state.change_address()
     if change_addr and addr_eq(dst_entr.addr, change_addr):
         # sending change to yourself; derivation = a*R
-        derivation = crypto.generate_key_derivation(
+        derivation = crypto_helpers.generate_key_derivation(
             state.tx_pub, state.creds.view_key_private
         )
 
@@ -514,10 +579,32 @@ def _set_out_derivation(
             deriv_priv = additional_txkey_priv
         else:
             deriv_priv = state.tx_priv
-        derivation = crypto.generate_key_derivation(
-            crypto.decodepoint(dst_entr.addr.view_public_key), deriv_priv
+        derivation = crypto_helpers.generate_key_derivation(
+            crypto_helpers.decodepoint(dst_entr.addr.view_public_key), deriv_priv
         )
     return derivation
+
+
+def _derive_view_tags(derivation: crypto.Point, output_index: int) -> bytes:
+    """
+    Computes view tags for tx output - speeds up blockchain scanning for wallets
+    view_tag_full = H["view_tag"|derivation|output_index]
+    """
+    buff = bytearray(32)
+    ctx = crypto_helpers.get_keccak()
+    ctx.update(b"view_tag")
+    crypto.encodepoint_into(buff, derivation)
+    ctx.update(buff)
+
+    # Correct way of serializing output_index is calling dump_uvarint_b_into, but we
+    # know that output_index is always lower than 127 so we save imports and calls.
+    if output_index > 127:
+        raise ValueError("Output index too big")
+
+    buff[0] = output_index
+    ctx.update(buff[:1])
+    full_tag = ctx.digest()
+    return full_tag[:1]
 
 
 def _is_last_in_batch(state: State, idx: int, bidx: int) -> bool:

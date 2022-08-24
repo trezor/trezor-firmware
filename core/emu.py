@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 import logging
 import os
 import platform
@@ -6,8 +8,8 @@ import signal
 import subprocess
 import sys
 import tempfile
-import time
 from pathlib import Path
+from typing import TextIO
 
 import click
 
@@ -35,7 +37,7 @@ TREZOR_STORAGE_FILES = (
 )
 
 
-def run_command_with_emulator(emulator, command):
+def run_command_with_emulator(emulator: CoreEmulator, command: list[str]) -> int:
     with emulator:
         # first start the subprocess
         process = subprocess.Popen(command)
@@ -47,13 +49,14 @@ def run_command_with_emulator(emulator, command):
         return process.wait()
 
 
-def run_emulator(emulator):
+def run_emulator(emulator: CoreEmulator) -> int:
     with emulator:
         signal.signal(signal.SIGINT, signal.SIG_IGN)
         return emulator.wait()
 
 
-def watch_emulator(emulator):
+def watch_emulator(emulator: CoreEmulator) -> int:
+    assert inotify is not None
     watch = inotify.adapters.InotifyTree(str(SRC_DIR))
     try:
         for _, type_names, _, _ in watch.event_gen(yield_nones=False):
@@ -64,23 +67,23 @@ def watch_emulator(emulator):
     return 0
 
 
-def run_debugger(emulator):
+def run_debugger(emulator: CoreEmulator) -> None:
     os.chdir(emulator.workdir)
     env = emulator.make_env()
     if platform.system() == "Darwin":
         env["PATH"] = "/usr/bin"
         os.execvpe(
             "lldb",
-            ["lldb", "-f", emulator.executable, "--"] + emulator.make_args(),
+            ["lldb", "-f", str(emulator.executable), "--"] + emulator.make_args(),
             env,
         )
     else:
         os.execvpe(
-            "gdb", ["gdb", "--args", emulator.executable] + emulator.make_args(), env
+            "gdb", ["gdb", "--args", str(emulator.executable)] + emulator.make_args(), env
         )
 
 
-def _from_env(name):
+def _from_env(name: str) -> bool:
     return os.environ.get(name) == "1"
 
 
@@ -112,28 +115,28 @@ def _from_env(name):
 # fmt: on
 @click.argument("command", nargs=-1, type=click.UNPROCESSED)
 def cli(
-    disable_animation,
-    run_command,
-    production,
-    debugger,
-    erase,
-    executable,
-    profiling,
-    alloc_profiling,
-    headless,
-    heap_size,
-    main,
-    mnemonics,
-    log_memory,
-    profile,
-    port,
-    output,
-    quiet,
-    slip0014,
-    temporary_profile,
-    watch,
-    extra_args,
-    command,
+    disable_animation: bool,
+    run_command: bool,
+    production: bool,
+    debugger: bool,
+    erase: bool,
+    executable: str | Path,
+    profiling: bool,
+    alloc_profiling: bool,
+    headless: bool,
+    heap_size: str,
+    main: str,
+    mnemonics: list[str],
+    log_memory: bool,
+    profile: str,
+    port: int,
+    output: TextIO | None,
+    quiet: bool,
+    slip0014: bool,
+    temporary_profile: bool,
+    watch: bool,
+    extra_args: list[str],
+    command: list[str],
 ):
     """Run the trezor-core emulator.
 
@@ -261,6 +264,7 @@ def cli(
         else:
             label = "Emulator"
 
+        assert emulator.client is not None
         trezorlib.device.wipe(emulator.client)
         trezorlib.debuglink.load_device(
             emulator.client,

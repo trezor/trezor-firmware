@@ -1,25 +1,45 @@
 #include STM32_HAL_H
 #include "button.h"
 
-#define BTN_PIN_LEFT GPIO_PIN_5
-#define BTN_PIN_RIGHT GPIO_PIN_2
+#if defined TREZOR_MODEL_1
+#define BTN_LEFT_PIN GPIO_PIN_5
+#define BTN_LEFT_PORT GPIOC
+#define BTN_LEFT_CLK_ENA __HAL_RCC_GPIOC_CLK_ENABLE
+#define BTN_RIGHT_PIN GPIO_PIN_2
+#define BTN_RIGHT_PORT GPIOC
+#define BTN_RIGHT_CLK_ENA __HAL_RCC_GPIOC_CLK_ENABLE
+#elif defined TREZOR_MODEL_R
+#define BTN_LEFT_PIN GPIO_PIN_0
+#define BTN_LEFT_PORT GPIOA
+#define BTN_LEFT_CLK_ENA __HAL_RCC_GPIOA_CLK_ENABLE
+#define BTN_RIGHT_PIN GPIO_PIN_15
+#define BTN_RIGHT_PORT GPIOE
+#define BTN_RIGHT_CLK_ENA __HAL_RCC_GPIOE_CLK_ENABLE
+#else
+#error Unknown Trezor model
+#endif
+
+static char last_left = 0, last_right = 0;
 
 void button_init(void) {
-  __HAL_RCC_GPIOC_CLK_ENABLE();
+  BTN_LEFT_CLK_ENA();
+  BTN_RIGHT_CLK_ENA();
 
   GPIO_InitTypeDef GPIO_InitStructure;
 
   GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
   GPIO_InitStructure.Pull = GPIO_PULLUP;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStructure.Pin = BTN_PIN_LEFT | BTN_PIN_RIGHT;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = BTN_LEFT_PIN;
+  HAL_GPIO_Init(BTN_LEFT_PORT, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = BTN_RIGHT_PIN;
+  HAL_GPIO_Init(BTN_RIGHT_PORT, &GPIO_InitStructure);
 }
 
 uint32_t button_read(void) {
-  static char last_left = 0, last_right = 0;
-  char left = (GPIO_PIN_RESET == HAL_GPIO_ReadPin(GPIOC, BTN_PIN_LEFT));
-  char right = (GPIO_PIN_RESET == HAL_GPIO_ReadPin(GPIOC, BTN_PIN_RIGHT));
+  char left = (GPIO_PIN_RESET == HAL_GPIO_ReadPin(BTN_LEFT_PORT, BTN_LEFT_PIN));
+  char right =
+      (GPIO_PIN_RESET == HAL_GPIO_ReadPin(BTN_RIGHT_PORT, BTN_RIGHT_PIN));
   if (last_left != left) {
     last_left = left;
     if (left) {
@@ -38,3 +58,7 @@ uint32_t button_read(void) {
   }
   return 0;
 }
+
+char button_state_left(void) { return last_left; }
+
+char button_state_right(void) { return last_right; }

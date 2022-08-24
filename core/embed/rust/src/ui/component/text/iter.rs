@@ -1,8 +1,4 @@
-use crate::ui::{
-    component::{text::layout::Op, LineBreaking},
-    display::Font,
-    geometry::Offset,
-};
+use crate::ui::{component::LineBreaking, display::Font};
 use core::iter;
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
@@ -162,7 +158,7 @@ fn select_line_breaks(
     })
 }
 
-trait GlyphMetrics {
+pub trait GlyphMetrics {
     fn char_width(&self, ch: char) -> i32;
     fn line_height(&self) -> i32;
 }

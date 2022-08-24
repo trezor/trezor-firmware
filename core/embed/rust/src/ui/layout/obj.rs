@@ -11,29 +11,23 @@ use crate::{
         obj::{Obj, ObjBase},
         qstr::Qstr,
         typ::Type,
+        util,
     },
     time::Duration,
     ui::{
         component::{Child, Component, Event, EventCtx, Never, TimerToken},
+        constant,
         geometry::Rect,
     },
-    util,
 };
 
-#[cfg(feature = "model_tt")]
-use crate::ui::model_tt::event::TouchEvent;
-
-#[cfg(feature = "model_t1")]
-use crate::ui::model_t1::event::ButtonEvent;
-
-#[cfg(not(feature = "model_tt"))]
-use crate::ui::model_t1::constant;
-#[cfg(feature = "model_tt")]
-use crate::ui::model_tt::constant;
+#[cfg(feature = "buttons")]
+use crate::ui::event::ButtonEvent;
+#[cfg(feature = "touch")]
+use crate::ui::event::TouchEvent;
 
 /// Conversion trait implemented by components that know how to convert their
-/// message values into MicroPython `Obj`s. We can automatically implement
-/// `ComponentMsgObj` for components whose message types implement `TryInto`.
+/// message values into MicroPython `Obj`s.
 pub trait ComponentMsgObj: Component {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error>;
 }
@@ -117,6 +111,7 @@ struct LayoutObjInner {
     root: Gc<dyn ObjComponent>,
     event_ctx: EventCtx,
     timer_fn: Obj,
+    page_count: u16,
 }
 
 impl LayoutObj {
@@ -135,6 +130,7 @@ impl LayoutObj {
                 root,
                 event_ctx: EventCtx::new(),
                 timer_fn: Obj::const_none(),
+                page_count: 1,
             }),
         })
     }
@@ -177,6 +173,10 @@ impl LayoutObj {
             } else {
                 // Failed to convert token or deadline into `Obj`, skip.
             }
+        }
+
+        if let Some(count) = inner.event_ctx.page_count() {
+            inner.page_count = count as u16;
         }
 
         Ok(msg)
@@ -252,6 +252,10 @@ impl LayoutObj {
             .trace(&mut CallbackTracer(callback));
     }
 
+    fn obj_page_count(&self) -> Obj {
+        self.inner.borrow().page_count.into()
+    }
+
     #[cfg(feature = "ui_debug")]
     fn obj_bounds(&self) {
         use crate::ui::display;
@@ -273,13 +277,14 @@ impl LayoutObj {
         static TYPE: Type = obj_type! {
             name: Qstr::MP_QSTR_Layout,
             locals: &obj_dict!(obj_map! {
-                Qstr::MP_QSTR_set_timer_fn => obj_fn_2!(ui_layout_set_timer_fn).as_obj(),
+                Qstr::MP_QSTR_attach_timer_fn => obj_fn_2!(ui_layout_attach_timer_fn).as_obj(),
                 Qstr::MP_QSTR_touch_event => obj_fn_var!(4, 4, ui_layout_touch_event).as_obj(),
                 Qstr::MP_QSTR_button_event => obj_fn_var!(3, 3, ui_layout_button_event).as_obj(),
                 Qstr::MP_QSTR_timer => obj_fn_2!(ui_layout_timer).as_obj(),
                 Qstr::MP_QSTR_paint => obj_fn_1!(ui_layout_paint).as_obj(),
                 Qstr::MP_QSTR_trace => obj_fn_2!(ui_layout_trace).as_obj(),
                 Qstr::MP_QSTR_bounds => obj_fn_1!(ui_layout_bounds).as_obj(),
+                Qstr::MP_QSTR_page_count => obj_fn_1!(ui_layout_page_count).as_obj(),
             }),
         };
         &TYPE
@@ -344,16 +349,18 @@ impl From<Never> for Obj {
     }
 }
 
-extern "C" fn ui_layout_set_timer_fn(this: Obj, timer_fn: Obj) -> Obj {
+extern "C" fn ui_layout_attach_timer_fn(this: Obj, timer_fn: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
         this.obj_set_timer_fn(timer_fn);
-        Ok(Obj::const_true())
+        let msg = this.obj_event(Event::Attach)?;
+        assert!(msg == Obj::const_none());
+        Ok(Obj::const_none())
     };
     unsafe { util::try_or_raise(block) }
 }
 
-#[cfg(feature = "model_tt")]
+#[cfg(feature = "touch")]
 extern "C" fn ui_layout_touch_event(n_args: usize, args: *const Obj) -> Obj {
     let block = |args: &[Obj], _kwargs: &Map| {
         if args.len() != 4 {
@@ -371,12 +378,12 @@ extern "C" fn ui_layout_touch_event(n_args: usize, args: *const Obj) -> Obj {
     unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
 }
 
-#[cfg(not(feature = "model_tt"))]
+#[cfg(not(feature = "touch"))]
 extern "C" fn ui_layout_touch_event(_n_args: usize, _args: *const Obj) -> Obj {
     Obj::const_none()
 }
 
-#[cfg(feature = "model_t1")]
+#[cfg(feature = "buttons")]
 extern "C" fn ui_layout_button_event(n_args: usize, args: *const Obj) -> Obj {
     let block = |args: &[Obj], _kwargs: &Map| {
         if args.len() != 3 {
@@ -390,7 +397,7 @@ extern "C" fn ui_layout_button_event(n_args: usize, args: *const Obj) -> Obj {
     unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
 }
 
-#[cfg(not(feature = "model_t1"))]
+#[cfg(not(feature = "buttons"))]
 extern "C" fn ui_layout_button_event(_n_args: usize, _args: *const Obj) -> Obj {
     Obj::const_none()
 }
@@ -410,6 +417,14 @@ extern "C" fn ui_layout_paint(this: Obj) -> Obj {
         let this: Gc<LayoutObj> = this.try_into()?;
         this.obj_paint_if_requested();
         Ok(Obj::const_true())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn ui_layout_page_count(this: Obj) -> Obj {
+    let block = || {
+        let this: Gc<LayoutObj> = this.try_into()?;
+        Ok(this.obj_page_count())
     };
     unsafe { util::try_or_raise(block) }
 }

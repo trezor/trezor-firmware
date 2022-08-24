@@ -32,17 +32,32 @@
 #include "icon_welcome.h"
 #include "icon_wipe.h"
 #include "mini_printf.h"
-#include "touch.h"
 #include "version.h"
+
+#if defined TREZOR_MODEL_T
+#include "touch.h"
+#elif defined TREZOR_MODEL_R
+#include "button.h"
+#else
+#error Unknown Trezor model
+#endif
 
 #define BACKLIGHT_NORMAL 150
 
-#define COLOR_BL_BG COLOR_WHITE                   // background
-#define COLOR_BL_FG COLOR_BLACK                   // foreground
+#define COLOR_BL_BG COLOR_WHITE  // background
+#define COLOR_BL_FG COLOR_BLACK  // foreground
+
+#ifdef RGB16
 #define COLOR_BL_FAIL RGB16(0xFF, 0x00, 0x00)     // red
 #define COLOR_BL_DONE RGB16(0x00, 0xAE, 0x0B)     // green
 #define COLOR_BL_PROCESS RGB16(0x4A, 0x90, 0xE2)  // blue
 #define COLOR_BL_GRAY RGB16(0x99, 0x99, 0x99)     // gray
+#else
+#define COLOR_BL_FAIL COLOR_BL_FG
+#define COLOR_BL_DONE COLOR_BL_FG
+#define COLOR_BL_PROCESS COLOR_BL_FG
+#define COLOR_BL_GRAY COLOR_BL_FG
+#endif
 
 #define COLOR_WELCOME_BG COLOR_WHITE  // welcome background
 #define COLOR_WELCOME_FG COLOR_BLACK  // welcome foreground
@@ -77,7 +92,7 @@ void ui_screen_boot(const vendor_header *const vhdr,
                     const image_header *const hdr) {
   const int show_string = ((vhdr->vtrust & VTRUST_STRING) == 0);
   if ((vhdr->vtrust & VTRUST_RED) == 0) {
-    boot_background = RGB16(0xFF, 0x00, 0x00);  // red
+    boot_background = COLOR_BL_FAIL;
   } else {
     boot_background = COLOR_BLACK;
   }
@@ -342,6 +357,7 @@ void ui_fadeout(void) {
 
 int ui_user_input(int zones) {
   for (;;) {
+#if defined TREZOR_MODEL_T
     uint32_t evt = touch_click();
     uint16_t x = touch_unpack_x(evt);
     uint16_t y = touch_unpack_y(evt);
@@ -365,5 +381,16 @@ int ui_user_input(int zones) {
         y < 54 + 32) {
       return INPUT_INFO;
     }
+#elif defined TREZOR_MODEL_R
+    uint32_t evt = button_read();
+    if (evt == (BTN_LEFT | BTN_EVT_DOWN)) {
+      return INPUT_CANCEL;
+    }
+    if (evt == (BTN_RIGHT | BTN_EVT_DOWN)) {
+      return INPUT_CONFIRM;
+    }
+#else
+#error Unknown Trezor model
+#endif
   }
 }

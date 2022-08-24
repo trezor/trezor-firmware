@@ -490,8 +490,7 @@ int hdnode_fill_public_key(HDNode *node) {
       curve25519_scalarmult_basepoint(node->public_key + 1, node->private_key);
 #if USE_CARDANO
     } else if (node->curve == &ed25519_cardano_info) {
-      ed25519_publickey_ext(node->private_key, node->private_key_extension,
-                            node->public_key + 1);
+      ed25519_publickey_ext(node->private_key, node->public_key + 1);
 #endif
     }
   }
@@ -646,23 +645,12 @@ int hdnode_sign(HDNode *node, const uint8_t *msg, uint32_t msg_len,
     return 1;  // signatures are not supported
   } else {
     if (node->curve == &ed25519_info) {
-      if (hdnode_fill_public_key(node) != 0) {
-        return 1;
-      }
-      ed25519_sign(msg, msg_len, node->private_key, node->public_key + 1, sig);
+      ed25519_sign(msg, msg_len, node->private_key, sig);
     } else if (node->curve == &ed25519_sha3_info) {
-      if (hdnode_fill_public_key(node) != 0) {
-        return 1;
-      }
-      ed25519_sign_sha3(msg, msg_len, node->private_key, node->public_key + 1,
-                        sig);
+      ed25519_sign_sha3(msg, msg_len, node->private_key, sig);
 #if USE_KECCAK
     } else if (node->curve == &ed25519_keccak_info) {
-      if (hdnode_fill_public_key(node) != 0) {
-        return 1;
-      }
-      ed25519_sign_keccak(msg, msg_len, node->private_key, node->public_key + 1,
-                          sig);
+      ed25519_sign_keccak(msg, msg_len, node->private_key, sig);
 #endif
     } else {
       return 1;  // unknown or unsupported curve

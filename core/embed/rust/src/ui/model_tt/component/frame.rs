@@ -7,6 +7,7 @@ use crate::ui::{
 
 pub struct Frame<T, U> {
     area: Rect,
+    border: Insets,
     title: U,
     content: Child<T>,
 }
@@ -20,12 +21,18 @@ where
         Self {
             title,
             area: Rect::zero(),
+            border: theme::borders_scroll(),
             content: Child::new(content),
         }
     }
 
+    pub fn with_border(mut self, border: Insets) -> Self {
+        self.border = border;
+        self
+    }
+
     pub fn inner(&self) -> &T {
-        &self.content.inner()
+        self.content.inner()
     }
 }
 
@@ -37,11 +44,10 @@ where
     type Msg = T::Msg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        // Same as PageLayout::BUTTON_SPACE.
-        const TITLE_SPACE: i32 = 6;
+        const TITLE_SPACE: i32 = theme::BUTTON_SPACING;
 
         let (title_area, content_area) = bounds
-            .inset(theme::borders_scroll())
+            .inset(self.border)
             .split_top(theme::FONT_BOLD.text_height());
         let title_area = title_area.inset(Insets::left(theme::CONTENT_BORDER));
         let content_area = content_area.inset(Insets::top(TITLE_SPACE));

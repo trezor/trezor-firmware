@@ -57,8 +57,8 @@ void layoutConfirmOutput(const CoinInfo *coin, AmountUnit amount_unit,
 void layoutConfirmOmni(const uint8_t *data, uint32_t size);
 void layoutConfirmOpReturn(const uint8_t *data, uint32_t size);
 void layoutConfirmTx(const CoinInfo *coin, AmountUnit amount_unit,
-                     uint64_t total_in, uint64_t total_out,
-                     uint64_t change_out);
+                     uint64_t total_in, uint64_t total_out, uint64_t change_out,
+                     uint64_t tx_weight);
 void layoutConfirmReplacement(const char *description, uint8_t txid[32]);
 void layoutConfirmModifyOutput(const CoinInfo *coin, AmountUnit amount_unit,
                                TxOutputType *out, TxOutputType *orig_out,
@@ -105,8 +105,8 @@ void layoutNEMTransferPayload(const uint8_t *payload, size_t length,
 void layoutNEMMosaicDescription(const char *description);
 void layoutNEMLevy(const NEMMosaicDefinition *definition, uint8_t network);
 
-void layoutCosiCommitSign(const uint32_t *address_n, size_t address_n_count,
-                          const uint8_t *data, uint32_t len, bool final_sign);
+void layoutCosiSign(const uint32_t *address_n, size_t address_n_count,
+                    const uint8_t *data, uint32_t len);
 
 void layoutConfirmAutoLockDelay(uint32_t delay_ms);
 void layoutConfirmSafetyChecks(SafetyCheckLevel safety_checks_level);

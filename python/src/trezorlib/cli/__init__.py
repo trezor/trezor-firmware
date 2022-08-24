@@ -21,9 +21,8 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
 
 import click
 
-from .. import exceptions
+from .. import exceptions, transport
 from ..client import TrezorClient
-from ..transport import get_transport
 from ..ui import ClickUI, ScriptUI
 
 if TYPE_CHECKING:
@@ -67,14 +66,14 @@ class TrezorConnection:
     def get_transport(self) -> "Transport":
         try:
             # look for transport without prefix search
-            return get_transport(self.path, prefix_search=False)
+            return transport.get_transport(self.path, prefix_search=False)
         except Exception:
             # most likely not found. try again below.
             pass
 
         # look for transport with prefix search
         # if this fails, we want the exception to bubble up to the caller
-        return get_transport(self.path, prefix_search=True)
+        return transport.get_transport(self.path, prefix_search=True)
 
     def get_ui(self) -> "TrezorClientUI":
         if self.script:
@@ -101,6 +100,9 @@ class TrezorConnection:
         """
         try:
             client = self.get_client()
+        except transport.DeviceIsBusy:
+            click.echo("Device is in use by another process.")
+            sys.exit(1)
         except Exception:
             click.echo("Failed to find a Trezor device.")
             if self.path is not None:

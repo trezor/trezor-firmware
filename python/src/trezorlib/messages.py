@@ -68,9 +68,6 @@ class MessageType(IntEnum):
     RebootToBootloader = 87
     GetFirmwareHash = 88
     FirmwareHash = 89
-    GetFirmware = 90
-    FirmwareChunk = 91
-    FirmwareChunkAck = 92
     SetU2FCounter = 63
     GetNextU2FCounter = 80
     NextU2FCounter = 81
@@ -168,14 +165,10 @@ class MessageType(IntEnum):
     StellarManageBuyOfferOp = 222
     StellarPathPaymentStrictSendOp = 223
     StellarSignedTx = 230
-    CardanoSignTx = 303
     CardanoGetPublicKey = 305
     CardanoPublicKey = 306
     CardanoGetAddress = 307
     CardanoAddress = 308
-    CardanoSignedTx = 310
-    CardanoSignedTxChunk = 311
-    CardanoSignedTxChunkAck = 312
     CardanoTxItemAck = 313
     CardanoTxAuxiliaryDataSupplement = 314
     CardanoTxWitnessRequest = 315
@@ -198,6 +191,9 @@ class MessageType(IntEnum):
     CardanoTxMint = 332
     CardanoTxCollateralInput = 333
     CardanoTxRequiredSigner = 334
+    CardanoTxInlineDatumChunk = 335
+    CardanoTxReferenceScriptChunk = 336
+    CardanoTxReferenceInput = 337
     RippleGetAddress = 400
     RippleAddress = 401
     RippleSignTx = 402
@@ -206,8 +202,6 @@ class MessageType(IntEnum):
     MoneroTransactionInitAck = 502
     MoneroTransactionSetInputRequest = 503
     MoneroTransactionSetInputAck = 504
-    MoneroTransactionInputsPermutationRequest = 505
-    MoneroTransactionInputsPermutationAck = 506
     MoneroTransactionInputViniRequest = 507
     MoneroTransactionInputViniAck = 508
     MoneroTransactionAllInputsSetRequest = 509
@@ -388,6 +382,11 @@ class CardanoNativeScriptHashDisplayFormat(IntEnum):
     POLICY_ID = 2
 
 
+class CardanoTxOutputSerializationFormat(IntEnum):
+    ARRAY_LEGACY = 0
+    MAP_BABBAGE = 1
+
+
 class CardanoCertificateType(IntEnum):
     STAKE_REGISTRATION = 0
     STAKE_DEREGISTRATION = 1
@@ -489,6 +488,13 @@ class EthereumDataType(IntEnum):
     ADDRESS = 6
     ARRAY = 7
     STRUCT = 8
+
+
+class MoneroNetworkType(IntEnum):
+    MAINNET = 0
+    TESTNET = 1
+    STAGENET = 2
+    FAKECHAIN = 3
 
 
 class NEMMosaicLevy(IntEnum):
@@ -2256,6 +2262,9 @@ class CardanoSignTxInit(protobuf.MessageType):
         16: protobuf.Field("script_data_hash", "bytes", repeated=False, required=False),
         17: protobuf.Field("collateral_inputs_count", "uint32", repeated=False, required=True),
         18: protobuf.Field("required_signers_count", "uint32", repeated=False, required=True),
+        19: protobuf.Field("has_collateral_return", "bool", repeated=False, required=False),
+        20: protobuf.Field("total_collateral", "uint64", repeated=False, required=False),
+        21: protobuf.Field("reference_inputs_count", "uint32", repeated=False, required=False),
     }
 
     def __init__(
@@ -2279,6 +2288,9 @@ class CardanoSignTxInit(protobuf.MessageType):
         validity_interval_start: Optional["int"] = None,
         include_network_id: Optional["bool"] = False,
         script_data_hash: Optional["bytes"] = None,
+        has_collateral_return: Optional["bool"] = False,
+        total_collateral: Optional["int"] = None,
+        reference_inputs_count: Optional["int"] = 0,
     ) -> None:
         self.signing_mode = signing_mode
         self.protocol_magic = protocol_magic
@@ -2298,6 +2310,9 @@ class CardanoSignTxInit(protobuf.MessageType):
         self.validity_interval_start = validity_interval_start
         self.include_network_id = include_network_id
         self.script_data_hash = script_data_hash
+        self.has_collateral_return = has_collateral_return
+        self.total_collateral = total_collateral
+        self.reference_inputs_count = reference_inputs_count
 
 
 class CardanoTxInput(protobuf.MessageType):
@@ -2325,6 +2340,9 @@ class CardanoTxOutput(protobuf.MessageType):
         3: protobuf.Field("amount", "uint64", repeated=False, required=True),
         4: protobuf.Field("asset_groups_count", "uint32", repeated=False, required=True),
         5: protobuf.Field("datum_hash", "bytes", repeated=False, required=False),
+        6: protobuf.Field("format", "CardanoTxOutputSerializationFormat", repeated=False, required=False),
+        7: protobuf.Field("inline_datum_size", "uint32", repeated=False, required=False),
+        8: protobuf.Field("reference_script_size", "uint32", repeated=False, required=False),
     }
 
     def __init__(
@@ -2335,12 +2353,18 @@ class CardanoTxOutput(protobuf.MessageType):
         address: Optional["str"] = None,
         address_parameters: Optional["CardanoAddressParametersType"] = None,
         datum_hash: Optional["bytes"] = None,
+        format: Optional["CardanoTxOutputSerializationFormat"] = CardanoTxOutputSerializationFormat.ARRAY_LEGACY,
+        inline_datum_size: Optional["int"] = 0,
+        reference_script_size: Optional["int"] = 0,
     ) -> None:
         self.amount = amount
         self.asset_groups_count = asset_groups_count
         self.address = address
         self.address_parameters = address_parameters
         self.datum_hash = datum_hash
+        self.format = format
+        self.inline_datum_size = inline_datum_size
+        self.reference_script_size = reference_script_size
 
 
 class CardanoAssetGroup(protobuf.MessageType):
@@ -2378,6 +2402,34 @@ class CardanoToken(protobuf.MessageType):
         self.asset_name_bytes = asset_name_bytes
         self.amount = amount
         self.mint_amount = mint_amount
+
+
+class CardanoTxInlineDatumChunk(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 335
+    FIELDS = {
+        1: protobuf.Field("data", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        data: "bytes",
+    ) -> None:
+        self.data = data
+
+
+class CardanoTxReferenceScriptChunk(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 336
+    FIELDS = {
+        1: protobuf.Field("data", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        data: "bytes",
+    ) -> None:
+        self.data = data
 
 
 class CardanoPoolOwner(protobuf.MessageType):
@@ -2450,8 +2502,6 @@ class CardanoPoolParametersType(protobuf.MessageType):
         5: protobuf.Field("margin_numerator", "uint64", repeated=False, required=True),
         6: protobuf.Field("margin_denominator", "uint64", repeated=False, required=True),
         7: protobuf.Field("reward_account", "string", repeated=False, required=True),
-        8: protobuf.Field("owners", "CardanoPoolOwner", repeated=True, required=False),
-        9: protobuf.Field("relays", "CardanoPoolRelayParameters", repeated=True, required=False),
         10: protobuf.Field("metadata", "CardanoPoolMetadataType", repeated=False, required=False),
         11: protobuf.Field("owners_count", "uint32", repeated=False, required=True),
         12: protobuf.Field("relays_count", "uint32", repeated=False, required=True),
@@ -2469,12 +2519,8 @@ class CardanoPoolParametersType(protobuf.MessageType):
         reward_account: "str",
         owners_count: "int",
         relays_count: "int",
-        owners: Optional[Sequence["CardanoPoolOwner"]] = None,
-        relays: Optional[Sequence["CardanoPoolRelayParameters"]] = None,
         metadata: Optional["CardanoPoolMetadataType"] = None,
     ) -> None:
-        self.owners: Sequence["CardanoPoolOwner"] = owners if owners is not None else []
-        self.relays: Sequence["CardanoPoolRelayParameters"] = relays if relays is not None else []
         self.pool_id = pool_id
         self.vrf_key_hash = vrf_key_hash
         self.pledge = pledge
@@ -2627,6 +2673,23 @@ class CardanoTxRequiredSigner(protobuf.MessageType):
         self.key_hash = key_hash
 
 
+class CardanoTxReferenceInput(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 337
+    FIELDS = {
+        1: protobuf.Field("prev_hash", "bytes", repeated=False, required=True),
+        2: protobuf.Field("prev_index", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        prev_hash: "bytes",
+        prev_index: "int",
+    ) -> None:
+        self.prev_hash = prev_hash
+        self.prev_index = prev_index
+
+
 class CardanoTxItemAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 313
 
@@ -2708,259 +2771,6 @@ class CardanoTxBodyHash(protobuf.MessageType):
 
 class CardanoSignTxFinished(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 319
-
-
-class CardanoSignTx(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 303
-    FIELDS = {
-        1: protobuf.Field("inputs", "CardanoTxInputType", repeated=True, required=False),
-        2: protobuf.Field("outputs", "CardanoTxOutputType", repeated=True, required=False),
-        5: protobuf.Field("protocol_magic", "uint32", repeated=False, required=True),
-        6: protobuf.Field("fee", "uint64", repeated=False, required=True),
-        7: protobuf.Field("ttl", "uint64", repeated=False, required=False),
-        8: protobuf.Field("network_id", "uint32", repeated=False, required=True),
-        9: protobuf.Field("certificates", "CardanoTxCertificateType", repeated=True, required=False),
-        10: protobuf.Field("withdrawals", "CardanoTxWithdrawalType", repeated=True, required=False),
-        12: protobuf.Field("validity_interval_start", "uint64", repeated=False, required=False),
-        13: protobuf.Field("auxiliary_data", "CardanoTxAuxiliaryDataType", repeated=False, required=False),
-    }
-
-    def __init__(
-        self,
-        *,
-        protocol_magic: "int",
-        fee: "int",
-        network_id: "int",
-        inputs: Optional[Sequence["CardanoTxInputType"]] = None,
-        outputs: Optional[Sequence["CardanoTxOutputType"]] = None,
-        certificates: Optional[Sequence["CardanoTxCertificateType"]] = None,
-        withdrawals: Optional[Sequence["CardanoTxWithdrawalType"]] = None,
-        ttl: Optional["int"] = None,
-        validity_interval_start: Optional["int"] = None,
-        auxiliary_data: Optional["CardanoTxAuxiliaryDataType"] = None,
-    ) -> None:
-        self.inputs: Sequence["CardanoTxInputType"] = inputs if inputs is not None else []
-        self.outputs: Sequence["CardanoTxOutputType"] = outputs if outputs is not None else []
-        self.certificates: Sequence["CardanoTxCertificateType"] = certificates if certificates is not None else []
-        self.withdrawals: Sequence["CardanoTxWithdrawalType"] = withdrawals if withdrawals is not None else []
-        self.protocol_magic = protocol_magic
-        self.fee = fee
-        self.network_id = network_id
-        self.ttl = ttl
-        self.validity_interval_start = validity_interval_start
-        self.auxiliary_data = auxiliary_data
-
-
-class CardanoSignedTxChunk(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 311
-    FIELDS = {
-        1: protobuf.Field("signed_tx_chunk", "bytes", repeated=False, required=True),
-    }
-
-    def __init__(
-        self,
-        *,
-        signed_tx_chunk: "bytes",
-    ) -> None:
-        self.signed_tx_chunk = signed_tx_chunk
-
-
-class CardanoSignedTxChunkAck(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 312
-
-
-class CardanoSignedTx(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 310
-    FIELDS = {
-        1: protobuf.Field("tx_hash", "bytes", repeated=False, required=True),
-        2: protobuf.Field("serialized_tx", "bytes", repeated=False, required=False),
-    }
-
-    def __init__(
-        self,
-        *,
-        tx_hash: "bytes",
-        serialized_tx: Optional["bytes"] = None,
-    ) -> None:
-        self.tx_hash = tx_hash
-        self.serialized_tx = serialized_tx
-
-
-class CardanoTxInputType(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
-    FIELDS = {
-        1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
-        2: protobuf.Field("prev_hash", "bytes", repeated=False, required=True),
-        3: protobuf.Field("prev_index", "uint32", repeated=False, required=True),
-    }
-
-    def __init__(
-        self,
-        *,
-        prev_hash: "bytes",
-        prev_index: "int",
-        address_n: Optional[Sequence["int"]] = None,
-    ) -> None:
-        self.address_n: Sequence["int"] = address_n if address_n is not None else []
-        self.prev_hash = prev_hash
-        self.prev_index = prev_index
-
-
-class CardanoTxOutputType(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
-    FIELDS = {
-        1: protobuf.Field("address", "string", repeated=False, required=False),
-        3: protobuf.Field("amount", "uint64", repeated=False, required=True),
-        4: protobuf.Field("address_parameters", "CardanoAddressParametersType", repeated=False, required=False),
-        5: protobuf.Field("token_bundle", "CardanoAssetGroupType", repeated=True, required=False),
-    }
-
-    def __init__(
-        self,
-        *,
-        amount: "int",
-        token_bundle: Optional[Sequence["CardanoAssetGroupType"]] = None,
-        address: Optional["str"] = None,
-        address_parameters: Optional["CardanoAddressParametersType"] = None,
-    ) -> None:
-        self.token_bundle: Sequence["CardanoAssetGroupType"] = token_bundle if token_bundle is not None else []
-        self.amount = amount
-        self.address = address
-        self.address_parameters = address_parameters
-
-
-class CardanoAssetGroupType(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
-    FIELDS = {
-        1: protobuf.Field("policy_id", "bytes", repeated=False, required=True),
-        2: protobuf.Field("tokens", "CardanoTokenType", repeated=True, required=False),
-    }
-
-    def __init__(
-        self,
-        *,
-        policy_id: "bytes",
-        tokens: Optional[Sequence["CardanoTokenType"]] = None,
-    ) -> None:
-        self.tokens: Sequence["CardanoTokenType"] = tokens if tokens is not None else []
-        self.policy_id = policy_id
-
-
-class CardanoTokenType(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
-    FIELDS = {
-        1: protobuf.Field("asset_name_bytes", "bytes", repeated=False, required=True),
-        2: protobuf.Field("amount", "uint64", repeated=False, required=True),
-    }
-
-    def __init__(
-        self,
-        *,
-        asset_name_bytes: "bytes",
-        amount: "int",
-    ) -> None:
-        self.asset_name_bytes = asset_name_bytes
-        self.amount = amount
-
-
-class CardanoPoolOwnerType(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
-    FIELDS = {
-        1: protobuf.Field("staking_key_path", "uint32", repeated=True, required=False),
-        2: protobuf.Field("staking_key_hash", "bytes", repeated=False, required=False),
-    }
-
-    def __init__(
-        self,
-        *,
-        staking_key_path: Optional[Sequence["int"]] = None,
-        staking_key_hash: Optional["bytes"] = None,
-    ) -> None:
-        self.staking_key_path: Sequence["int"] = staking_key_path if staking_key_path is not None else []
-        self.staking_key_hash = staking_key_hash
-
-
-class CardanoPoolRelayParametersType(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
-    FIELDS = {
-        1: protobuf.Field("type", "CardanoPoolRelayType", repeated=False, required=True),
-        2: protobuf.Field("ipv4_address", "bytes", repeated=False, required=False),
-        3: protobuf.Field("ipv6_address", "bytes", repeated=False, required=False),
-        4: protobuf.Field("host_name", "string", repeated=False, required=False),
-        5: protobuf.Field("port", "uint32", repeated=False, required=False),
-    }
-
-    def __init__(
-        self,
-        *,
-        type: "CardanoPoolRelayType",
-        ipv4_address: Optional["bytes"] = None,
-        ipv6_address: Optional["bytes"] = None,
-        host_name: Optional["str"] = None,
-        port: Optional["int"] = None,
-    ) -> None:
-        self.type = type
-        self.ipv4_address = ipv4_address
-        self.ipv6_address = ipv6_address
-        self.host_name = host_name
-        self.port = port
-
-
-class CardanoTxCertificateType(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
-    FIELDS = {
-        1: protobuf.Field("type", "CardanoCertificateType", repeated=False, required=True),
-        2: protobuf.Field("path", "uint32", repeated=True, required=False),
-        3: protobuf.Field("pool", "bytes", repeated=False, required=False),
-        4: protobuf.Field("pool_parameters", "CardanoPoolParametersType", repeated=False, required=False),
-    }
-
-    def __init__(
-        self,
-        *,
-        type: "CardanoCertificateType",
-        path: Optional[Sequence["int"]] = None,
-        pool: Optional["bytes"] = None,
-        pool_parameters: Optional["CardanoPoolParametersType"] = None,
-    ) -> None:
-        self.path: Sequence["int"] = path if path is not None else []
-        self.type = type
-        self.pool = pool
-        self.pool_parameters = pool_parameters
-
-
-class CardanoTxWithdrawalType(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
-    FIELDS = {
-        1: protobuf.Field("path", "uint32", repeated=True, required=False),
-        2: protobuf.Field("amount", "uint64", repeated=False, required=True),
-    }
-
-    def __init__(
-        self,
-        *,
-        amount: "int",
-        path: Optional[Sequence["int"]] = None,
-    ) -> None:
-        self.path: Sequence["int"] = path if path is not None else []
-        self.amount = amount
-
-
-class CardanoTxAuxiliaryDataType(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
-    FIELDS = {
-        1: protobuf.Field("blob", "bytes", repeated=False, required=False),
-        2: protobuf.Field("catalyst_registration_parameters", "CardanoCatalystRegistrationParametersType", repeated=False, required=False),
-    }
-
-    def __init__(
-        self,
-        *,
-        blob: Optional["bytes"] = None,
-        catalyst_registration_parameters: Optional["CardanoCatalystRegistrationParametersType"] = None,
-    ) -> None:
-        self.blob = blob
-        self.catalyst_registration_parameters = catalyst_registration_parameters
 
 
 class CipherKeyValue(protobuf.MessageType):
@@ -3518,28 +3328,6 @@ class FirmwareHash(protobuf.MessageType):
         hash: "bytes",
     ) -> None:
         self.hash = hash
-
-
-class GetFirmware(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 90
-
-
-class FirmwareChunk(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 91
-    FIELDS = {
-        1: protobuf.Field("chunk", "bytes", repeated=False, required=True),
-    }
-
-    def __init__(
-        self,
-        *,
-        chunk: "bytes",
-    ) -> None:
-        self.chunk = chunk
-
-
-class FirmwareChunkAck(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 92
 
 
 class WipeDevice(protobuf.MessageType):
@@ -5148,7 +4936,7 @@ class MoneroGetAddress(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
         2: protobuf.Field("show_display", "bool", repeated=False, required=False),
-        3: protobuf.Field("network_type", "uint32", repeated=False, required=False),
+        3: protobuf.Field("network_type", "MoneroNetworkType", repeated=False, required=False),
         4: protobuf.Field("account", "uint32", repeated=False, required=False),
         5: protobuf.Field("minor", "uint32", repeated=False, required=False),
         6: protobuf.Field("payment_id", "bytes", repeated=False, required=False),
@@ -5159,7 +4947,7 @@ class MoneroGetAddress(protobuf.MessageType):
         *,
         address_n: Optional[Sequence["int"]] = None,
         show_display: Optional["bool"] = None,
-        network_type: Optional["int"] = None,
+        network_type: Optional["MoneroNetworkType"] = MoneroNetworkType.MAINNET,
         account: Optional["int"] = None,
         minor: Optional["int"] = None,
         payment_id: Optional["bytes"] = None,
@@ -5190,14 +4978,14 @@ class MoneroGetWatchKey(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 542
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
-        2: protobuf.Field("network_type", "uint32", repeated=False, required=False),
+        2: protobuf.Field("network_type", "MoneroNetworkType", repeated=False, required=False),
     }
 
     def __init__(
         self,
         *,
         address_n: Optional[Sequence["int"]] = None,
-        network_type: Optional["int"] = None,
+        network_type: Optional["MoneroNetworkType"] = MoneroNetworkType.MAINNET,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.network_type = network_type
@@ -5225,7 +5013,7 @@ class MoneroTransactionInitRequest(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("version", "uint32", repeated=False, required=False),
         2: protobuf.Field("address_n", "uint32", repeated=True, required=False),
-        3: protobuf.Field("network_type", "uint32", repeated=False, required=False),
+        3: protobuf.Field("network_type", "MoneroNetworkType", repeated=False, required=False),
         4: protobuf.Field("tsx_data", "MoneroTransactionData", repeated=False, required=False),
     }
 
@@ -5234,7 +5022,7 @@ class MoneroTransactionInitRequest(protobuf.MessageType):
         *,
         address_n: Optional[Sequence["int"]] = None,
         version: Optional["int"] = None,
-        network_type: Optional["int"] = None,
+        network_type: Optional["MoneroNetworkType"] = MoneroNetworkType.MAINNET,
         tsx_data: Optional["MoneroTransactionData"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
@@ -5301,24 +5089,6 @@ class MoneroTransactionSetInputAck(protobuf.MessageType):
         self.pseudo_out_hmac = pseudo_out_hmac
         self.pseudo_out_alpha = pseudo_out_alpha
         self.spend_key = spend_key
-
-
-class MoneroTransactionInputsPermutationRequest(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 505
-    FIELDS = {
-        1: protobuf.Field("perm", "uint32", repeated=True, required=False),
-    }
-
-    def __init__(
-        self,
-        *,
-        perm: Optional[Sequence["int"]] = None,
-    ) -> None:
-        self.perm: Sequence["int"] = perm if perm is not None else []
-
-
-class MoneroTransactionInputsPermutationAck(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 506
 
 
 class MoneroTransactionInputViniRequest(protobuf.MessageType):
@@ -5543,21 +5313,21 @@ class MoneroTransactionFinalAck(protobuf.MessageType):
 class MoneroKeyImageExportInitRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 530
     FIELDS = {
-        1: protobuf.Field("num", "uint64", repeated=False, required=False),
-        2: protobuf.Field("hash", "bytes", repeated=False, required=False),
+        1: protobuf.Field("num", "uint64", repeated=False, required=True),
+        2: protobuf.Field("hash", "bytes", repeated=False, required=True),
         3: protobuf.Field("address_n", "uint32", repeated=True, required=False),
-        4: protobuf.Field("network_type", "uint32", repeated=False, required=False),
+        4: protobuf.Field("network_type", "MoneroNetworkType", repeated=False, required=False),
         5: protobuf.Field("subs", "MoneroSubAddressIndicesList", repeated=True, required=False),
     }
 
     def __init__(
         self,
         *,
+        num: "int",
+        hash: "bytes",
         address_n: Optional[Sequence["int"]] = None,
         subs: Optional[Sequence["MoneroSubAddressIndicesList"]] = None,
-        num: Optional["int"] = None,
-        hash: Optional["bytes"] = None,
-        network_type: Optional["int"] = None,
+        network_type: Optional["MoneroNetworkType"] = MoneroNetworkType.MAINNET,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.subs: Sequence["MoneroSubAddressIndicesList"] = subs if subs is not None else []
@@ -5620,11 +5390,11 @@ class MoneroGetTxKeyRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 550
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
-        2: protobuf.Field("network_type", "uint32", repeated=False, required=False),
-        3: protobuf.Field("salt1", "bytes", repeated=False, required=False),
-        4: protobuf.Field("salt2", "bytes", repeated=False, required=False),
-        5: protobuf.Field("tx_enc_keys", "bytes", repeated=False, required=False),
-        6: protobuf.Field("tx_prefix_hash", "bytes", repeated=False, required=False),
+        2: protobuf.Field("network_type", "MoneroNetworkType", repeated=False, required=False),
+        3: protobuf.Field("salt1", "bytes", repeated=False, required=True),
+        4: protobuf.Field("salt2", "bytes", repeated=False, required=True),
+        5: protobuf.Field("tx_enc_keys", "bytes", repeated=False, required=True),
+        6: protobuf.Field("tx_prefix_hash", "bytes", repeated=False, required=True),
         7: protobuf.Field("reason", "uint32", repeated=False, required=False),
         8: protobuf.Field("view_public_key", "bytes", repeated=False, required=False),
     }
@@ -5632,21 +5402,21 @@ class MoneroGetTxKeyRequest(protobuf.MessageType):
     def __init__(
         self,
         *,
+        salt1: "bytes",
+        salt2: "bytes",
+        tx_enc_keys: "bytes",
+        tx_prefix_hash: "bytes",
         address_n: Optional[Sequence["int"]] = None,
-        network_type: Optional["int"] = None,
-        salt1: Optional["bytes"] = None,
-        salt2: Optional["bytes"] = None,
-        tx_enc_keys: Optional["bytes"] = None,
-        tx_prefix_hash: Optional["bytes"] = None,
+        network_type: Optional["MoneroNetworkType"] = MoneroNetworkType.MAINNET,
         reason: Optional["int"] = None,
         view_public_key: Optional["bytes"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
-        self.network_type = network_type
         self.salt1 = salt1
         self.salt2 = salt2
         self.tx_enc_keys = tx_enc_keys
         self.tx_prefix_hash = tx_prefix_hash
+        self.network_type = network_type
         self.reason = reason
         self.view_public_key = view_public_key
 
@@ -5675,14 +5445,14 @@ class MoneroLiveRefreshStartRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 552
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
-        2: protobuf.Field("network_type", "uint32", repeated=False, required=False),
+        2: protobuf.Field("network_type", "MoneroNetworkType", repeated=False, required=False),
     }
 
     def __init__(
         self,
         *,
         address_n: Optional[Sequence["int"]] = None,
-        network_type: Optional["int"] = None,
+        network_type: Optional["MoneroNetworkType"] = MoneroNetworkType.MAINNET,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.network_type = network_type
@@ -5695,21 +5465,21 @@ class MoneroLiveRefreshStartAck(protobuf.MessageType):
 class MoneroLiveRefreshStepRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 554
     FIELDS = {
-        1: protobuf.Field("out_key", "bytes", repeated=False, required=False),
-        2: protobuf.Field("recv_deriv", "bytes", repeated=False, required=False),
-        3: protobuf.Field("real_out_idx", "uint64", repeated=False, required=False),
-        4: protobuf.Field("sub_addr_major", "uint32", repeated=False, required=False),
-        5: protobuf.Field("sub_addr_minor", "uint32", repeated=False, required=False),
+        1: protobuf.Field("out_key", "bytes", repeated=False, required=True),
+        2: protobuf.Field("recv_deriv", "bytes", repeated=False, required=True),
+        3: protobuf.Field("real_out_idx", "uint64", repeated=False, required=True),
+        4: protobuf.Field("sub_addr_major", "uint32", repeated=False, required=True),
+        5: protobuf.Field("sub_addr_minor", "uint32", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        out_key: Optional["bytes"] = None,
-        recv_deriv: Optional["bytes"] = None,
-        real_out_idx: Optional["int"] = None,
-        sub_addr_major: Optional["int"] = None,
-        sub_addr_minor: Optional["int"] = None,
+        out_key: "bytes",
+        recv_deriv: "bytes",
+        real_out_idx: "int",
+        sub_addr_major: "int",
+        sub_addr_minor: "int",
     ) -> None:
         self.out_key = out_key
         self.recv_deriv = recv_deriv
@@ -5844,15 +5614,15 @@ class MoneroMultisigKLRki(protobuf.MessageType):
 class MoneroRctKeyPublic(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("dest", "bytes", repeated=False, required=False),
-        2: protobuf.Field("commitment", "bytes", repeated=False, required=False),
+        1: protobuf.Field("dest", "bytes", repeated=False, required=True),
+        2: protobuf.Field("commitment", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        dest: Optional["bytes"] = None,
-        commitment: Optional["bytes"] = None,
+        dest: "bytes",
+        commitment: "bytes",
     ) -> None:
         self.dest = dest
         self.commitment = commitment
@@ -5954,15 +5724,15 @@ class MoneroRingCtSig(protobuf.MessageType):
 class MoneroSubAddressIndicesList(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("account", "uint32", repeated=False, required=False),
+        1: protobuf.Field("account", "uint32", repeated=False, required=True),
         2: protobuf.Field("minor_indices", "uint32", repeated=True, required=False),
     }
 
     def __init__(
         self,
         *,
+        account: "int",
         minor_indices: Optional[Sequence["int"]] = None,
-        account: Optional["int"] = None,
     ) -> None:
         self.minor_indices: Sequence["int"] = minor_indices if minor_indices is not None else []
         self.account = account
@@ -5971,10 +5741,10 @@ class MoneroSubAddressIndicesList(protobuf.MessageType):
 class MoneroTransferDetails(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("out_key", "bytes", repeated=False, required=False),
-        2: protobuf.Field("tx_pub_key", "bytes", repeated=False, required=False),
+        1: protobuf.Field("out_key", "bytes", repeated=False, required=True),
+        2: protobuf.Field("tx_pub_key", "bytes", repeated=False, required=True),
         3: protobuf.Field("additional_tx_pub_keys", "bytes", repeated=True, required=False),
-        4: protobuf.Field("internal_output_index", "uint64", repeated=False, required=False),
+        4: protobuf.Field("internal_output_index", "uint64", repeated=False, required=True),
         5: protobuf.Field("sub_addr_major", "uint32", repeated=False, required=False),
         6: protobuf.Field("sub_addr_minor", "uint32", repeated=False, required=False),
     }
@@ -5982,10 +5752,10 @@ class MoneroTransferDetails(protobuf.MessageType):
     def __init__(
         self,
         *,
+        out_key: "bytes",
+        tx_pub_key: "bytes",
+        internal_output_index: "int",
         additional_tx_pub_keys: Optional[Sequence["bytes"]] = None,
-        out_key: Optional["bytes"] = None,
-        tx_pub_key: Optional["bytes"] = None,
-        internal_output_index: Optional["int"] = None,
         sub_addr_major: Optional["int"] = None,
         sub_addr_minor: Optional["int"] = None,
     ) -> None:

@@ -45,12 +45,11 @@ class TxWeightCalculator:
     def __init__(self) -> None:
         self.inputs_count = 0
         self.outputs_count = 0
-        self.counter = 4 * (_TXSIZE_HEADER + _TXSIZE_FOOTER)
+        self.counter = 0
         self.segwit_inputs_count = 0
 
-    def add_input(self, i: TxInput) -> None:
-        self.inputs_count += 1
-
+    @classmethod
+    def input_script_size(cls, i: TxInput) -> int:
         script_type = i.script_type
         if common.input_is_external_unverified(i):
             assert i.script_pubkey is not None  # checked in sanitize_tx_input
@@ -75,28 +74,31 @@ class TxWeightCalculator:
             n = len(i.multisig.nodes) if i.multisig.nodes else len(i.multisig.pubkeys)
             multisig_script_size = _TXSIZE_MULTISIGSCRIPT + n * (1 + _TXSIZE_PUBKEY)
             if script_type in common.SEGWIT_INPUT_SCRIPT_TYPES:
-                multisig_script_size += self.compact_size_len(multisig_script_size)
+                multisig_script_size += cls.compact_size_len(multisig_script_size)
             else:
-                multisig_script_size += self.op_push_len(multisig_script_size)
+                multisig_script_size += cls.op_push_len(multisig_script_size)
 
-            input_script_size = (
+            return (
                 1  # the OP_FALSE bug in multisig
                 + i.multisig.m * (1 + _TXSIZE_DER_SIGNATURE)
                 + multisig_script_size
             )
         elif script_type == InputScriptType.SPENDTAPROOT:
-            input_script_size = 1 + _TXSIZE_SCHNORR_SIGNATURE
+            return 1 + _TXSIZE_SCHNORR_SIGNATURE
         else:
-            input_script_size = 1 + _TXSIZE_DER_SIGNATURE + 1 + _TXSIZE_PUBKEY
+            return 1 + _TXSIZE_DER_SIGNATURE + 1 + _TXSIZE_PUBKEY
 
+    def add_input(self, i: TxInput) -> None:
+        self.inputs_count += 1
         self.counter += 4 * _TXSIZE_INPUT
+        input_script_size = self.input_script_size(i)
 
-        if script_type in common.NONSEGWIT_INPUT_SCRIPT_TYPES:
+        if i.script_type in common.NONSEGWIT_INPUT_SCRIPT_TYPES:
             input_script_size += self.compact_size_len(input_script_size)
             self.counter += 4 * input_script_size
-        elif script_type in common.SEGWIT_INPUT_SCRIPT_TYPES:
+        elif i.script_type in common.SEGWIT_INPUT_SCRIPT_TYPES:
             self.segwit_inputs_count += 1
-            if script_type == InputScriptType.SPENDP2SHWITNESS:
+            if i.script_type == InputScriptType.SPENDP2SHWITNESS:
                 # add script_sig size
                 if i.multisig:
                     self.counter += 4 * (2 + _TXSIZE_WITNESSSCRIPT)
@@ -105,7 +107,7 @@ class TxWeightCalculator:
             else:
                 self.counter += 4  # empty script_sig (1 byte)
             self.counter += 1 + input_script_size  # discounted witness
-        elif script_type == InputScriptType.EXTERNAL:
+        elif i.script_type == InputScriptType.EXTERNAL:
             if i.ownership_proof:
                 script_sig, witness = ownership.read_scriptsig_witness(
                     i.ownership_proof
@@ -131,16 +133,29 @@ class TxWeightCalculator:
         script_size = self.compact_size_len(len(script)) + len(script)
         self.counter += 4 * (_TXSIZE_OUTPUT + script_size)
 
-    def get_total(self) -> int:
-        total = self.counter
-        total += 4 * self.compact_size_len(self.inputs_count)
-        total += 4 * self.compact_size_len(self.outputs_count)
+    def get_base_weight(self) -> int:
+        base_weight = 4 * (_TXSIZE_HEADER + _TXSIZE_FOOTER)
+        base_weight += 4 * self.compact_size_len(self.inputs_count)
+        base_weight += 4 * self.compact_size_len(self.outputs_count)
         if self.segwit_inputs_count:
-            total += _TXSIZE_SEGWIT_OVERHEAD
+            base_weight += _TXSIZE_SEGWIT_OVERHEAD
+
+        return base_weight
+
+    def get_weight(self) -> int:
+        total = self.counter
+        total += self.get_base_weight()
+        if self.segwit_inputs_count:
             # add one byte of witness stack item count per non-segwit input
             total += self.inputs_count - self.segwit_inputs_count
 
         return total
+
+    def get_virtual_size(self) -> int:
+        # Convert transaction weight to virtual transaction size, which is is defined
+        # as weight / 4 rounded up to the next integer.
+        # https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#transaction-size-calculations
+        return (self.get_weight() + 3) // 4
 
     @staticmethod
     def compact_size_len(length: int) -> int:

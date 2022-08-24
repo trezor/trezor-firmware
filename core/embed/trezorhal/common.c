@@ -29,7 +29,11 @@
 
 #include "stm32f4xx_ll_utils.h"
 
+#ifdef RGB16
 #define COLOR_FATAL_ERROR RGB16(0x7F, 0x00, 0x00)
+#else
+#define COLOR_FATAL_ERROR COLOR_BLACK
+#endif
 
 // from util.s
 extern void shutdown_privileged(void);
@@ -130,6 +134,7 @@ void __assert_func(const char *file, int line, const char *func,
 #endif
 
 void hal_delay(uint32_t ms) { HAL_Delay(ms); }
+uint32_t hal_ticks_ms() { return HAL_GetTick(); }
 
 // reference RM0090 section 35.12.1 Figure 413
 #define USB_OTG_HS_DATA_FIFO_RAM (USB_OTG_HS_PERIPH_BASE + 0x20000U)

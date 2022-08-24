@@ -29,7 +29,13 @@
 #include "mpu.h"
 #include "random_delays.h"
 #include "secbool.h"
+#ifdef TREZOR_MODEL_T
 #include "touch.h"
+#endif
+#if defined TREZOR_MODEL_R
+#include "button.h"
+#include "rgb_led.h"
+#endif
 #include "usb.h"
 #include "version.h"
 
@@ -237,10 +243,21 @@ static void check_bootloader_version(void) {
 #endif
 
 int main(void) {
+  // grab "stay in bootloader" flag as soon as possible
+  register uint32_t r11 __asm__("r11");
+  volatile uint32_t stay_in_bootloader_flag = r11;
+
   random_delays_init();
   // display_init_seq();
-  touch_init();
+#if defined TREZOR_MODEL_T
   touch_power_on();
+  touch_init();
+#endif
+
+#if defined TREZOR_MODEL_R
+  button_init();
+  rgb_led_init();
+#endif
 
   mpu_config_bootloader();
 
@@ -250,20 +267,34 @@ int main(void) {
 
   display_clear();
 
-  // delay to detect touch
-  uint32_t touched = 0;
-  for (int i = 0; i < 100; i++) {
-    touched = touch_is_detected() | touch_read();
-    if (touched) {
-      break;
-    }
-    hal_delay(1);
+  // was there reboot with request to stay in bootloader?
+  secbool stay_in_bootloader = secfalse;
+  if (stay_in_bootloader_flag == STAY_IN_BOOTLOADER_FLAG) {
+    stay_in_bootloader = sectrue;
   }
+
+  // delay to detect touch or skip if we know we are staying in bootloader
+  // anyway
+  uint32_t touched = 0;
+#if defined TREZOR_MODEL_T
+  if (stay_in_bootloader != sectrue) {
+    for (int i = 0; i < 100; i++) {
+      touched = touch_is_detected() | touch_read();
+      if (touched) {
+        break;
+      }
+      hal_delay(1);
+    }
+  }
+#elif defined TREZOR_MODEL_R
+  button_read();
+  if (button_state_left() == 1) {
+    touched = 1;
+  }
+#endif
 
   vendor_header vhdr;
   image_header hdr;
-  secbool stay_in_bootloader = secfalse;  // flag to stay in bootloader
-
   // detect whether the devices contains a valid firmware
 
   secbool firmware_present =
@@ -359,7 +390,24 @@ int main(void) {
 
     if ((vhdr.vtrust & VTRUST_CLICK) == 0) {
       ui_screen_boot_click();
+#if defined TREZOR_MODEL_T
       touch_click();
+#elif defined TREZOR_MODEL_R
+      for (;;) {
+        button_read();
+        if (button_state_left() != 0 && button_state_right() != 0) {
+          break;
+        }
+      }
+      for (;;) {
+        button_read();
+        if (button_state_left() != 1 && button_state_right() != 1) {
+          break;
+        }
+      }
+#else
+#error Unknown Trezor model
+#endif
     }
 
     ui_fadeout();

@@ -4,6 +4,18 @@ import os
 
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 
+if TREZOR_MODEL in ('1', ):
+    # skip boardloader build
+    env = Environment()
+    def build_boardloader(target,source,env):
+        print(f'Boardloader: nothing to build for Model {TREZOR_MODEL}')
+    program_bin = env.Command(
+                 target='boardloader.bin',
+                 source=None,
+                 action=build_boardloader
+             )
+    Return()
+
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
 CPPDEFINES_MOD = []
@@ -69,6 +81,7 @@ SOURCE_BOARDLOADER = [
 ]
 
 SOURCE_TREZORHAL = [
+    'embed/trezorhal/board_capabilities.c',
     'embed/trezorhal/common.c',
     'embed/trezorhal/dma.c',
     'embed/trezorhal/image.c',
@@ -97,14 +110,10 @@ env.Replace(
 env.Replace(
     TREZOR_MODEL=TREZOR_MODEL, )
 
-if TREZOR_MODEL == 'T':
+if TREZOR_MODEL in ('T', 'R'):
     CPU_ASFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16'
     CPU_CCFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mtune=cortex-m4 '
     CPU_MODEL   = 'STM32F427xx'
-elif TREZOR_MODEL == '1':
-    CPU_ASFLAGS = '-mthumb -mcpu=cortex-m3 -mfloat-abi=soft'
-    CPU_CCFLAGS = '-mthumb -mtune=cortex-m3 -mcpu=cortex-m3 -mfloat-abi=soft '
-    CPU_MODEL   = 'STM32F405xx'
 else:
     raise ValueError('Unknown Trezor model')
 
@@ -130,6 +139,7 @@ env.Replace(
         'vendor/micropython/lib/cmsis/inc',
     ] + CPPPATH_MOD,
     CPPDEFINES=[
+        'BOARDLOADER',
         'TREZOR_MODEL_'+TREZOR_MODEL,
         CPU_MODEL,
         'USE_HAL_DRIVER',

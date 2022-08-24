@@ -203,15 +203,15 @@ class Bitcoin:
             # the amounts and scriptPubKeys, because if an invalid value is provided then all
             # issued signatures will be invalid.
             expected_digest = self.h_external_inputs
-            for i in self.external:
+            for i in range(self.tx_info.tx.inputs_count):
                 progress.advance()
-                txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
-                writers.write_tx_input_check(h_check, txi)
-                if not input_is_external_unverified(txi):
-                    assert txi.script_pubkey is not None  # checked in sanitize_tx_input
-                    await self.verify_external_input(i, txi, txi.script_pubkey)
-
-            progress.advance(self.tx_info.tx.inputs_count - len(self.external))
+                if i in self.external:
+                    txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
+                    writers.write_tx_input_check(h_check, txi)
+                    if not input_is_external_unverified(txi):
+                        # txi.script_pubkey checked in sanitize_tx_input
+                        assert txi.script_pubkey is not None
+                        await self.verify_external_input(i, txi, txi.script_pubkey)
         else:
             # There are internal non-Taproot inputs. We need to verify all inputs, because we can't
             # trust any amounts or scriptPubKeys. If we did, then an attacker who provides invalid

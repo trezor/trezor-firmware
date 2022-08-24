@@ -98,6 +98,16 @@ def sign_tx(
         cardano.parse_required_signer(required_signer)
         for required_signer in transaction.get("required_signers", ())
     ]
+    collateral_return = (
+        cardano.parse_output(transaction["collateral_return"])
+        if transaction.get("collateral_return")
+        else None
+    )
+    total_collateral = transaction.get("total_collateral")
+    reference_inputs = [
+        cardano.parse_reference_input(reference_input)
+        for reference_input in transaction.get("reference_inputs", ())
+    ]
     additional_witness_requests = [
         cardano.parse_additional_witness_request(p)
         for p in transaction["additional_witness_requests"]
@@ -121,6 +131,9 @@ def sign_tx(
         script_data_hash,
         collateral_inputs,
         required_signers,
+        collateral_return,
+        total_collateral,
+        reference_inputs,
         additional_witness_requests,
         derivation_type=derivation_type,
         include_network_id=include_network_id,

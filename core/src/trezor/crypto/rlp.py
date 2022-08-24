@@ -24,7 +24,7 @@ def _byte_size(x: int) -> int:
     if x < 0:
         raise ValueError  # only unsigned ints are supported
     for exp in range(64):
-        if x < 0x100 ** exp:
+        if x < 0x100**exp:
             return exp
 
     raise ValueError  # int is too large

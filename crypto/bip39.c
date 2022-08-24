@@ -25,7 +25,6 @@
 #include <string.h>
 
 #include "bip39.h"
-#include "bip39_english.h"
 #include "hmac.h"
 #include "memzero.h"
 #include "options.h"
@@ -87,8 +86,8 @@ const char *mnemonic_from_data(const uint8_t *data, int len) {
       idx <<= 1;
       idx += (bits[(i * 11 + j) / 8] & (1 << (7 - ((i * 11 + j) % 8)))) > 0;
     }
-    strcpy(p, wordlist[idx]);
-    p += strlen(wordlist[idx]);
+    strcpy(p, BIP39_WORDLIST_ENGLISH[idx]);
+    p += strlen(BIP39_WORDLIST_ENGLISH[idx]);
     *p = (i < mlen - 1) ? ' ' : 0;
     p++;
   }
@@ -123,7 +122,7 @@ int mnemonic_to_bits(const char *mnemonic, uint8_t *bits) {
   }
 
   char current_word[10] = {0};
-  uint32_t j = 0, k = 0, ki = 0, bi = 0;
+  uint32_t j = 0, ki = 0, bi = 0;
   uint8_t result[32 + 1] = {0};
 
   memzero(result, sizeof(result));
@@ -142,21 +141,15 @@ int mnemonic_to_bits(const char *mnemonic, uint8_t *bits) {
     if (mnemonic[i] != 0) {
       i++;
     }
-    k = 0;
-    for (;;) {
-      if (!wordlist[k]) {  // word not found
-        return 0;
+    int k = mnemonic_find_word(current_word);
+    if (k < 0) {  // word not found
+      return 0;
+    }
+    for (ki = 0; ki < 11; ki++) {
+      if (k & (1 << (10 - ki))) {
+        result[bi / 8] |= 1 << (7 - (bi % 8));
       }
-      if (strcmp(current_word, wordlist[k]) == 0) {  // word found on index k
-        for (ki = 0; ki < 11; ki++) {
-          if (k & (1 << (10 - ki))) {
-            result[bi / 8] |= 1 << (7 - (bi % 8));
-          }
-          bi++;
-        }
-        break;
-      }
-      k++;
+      bi++;
     }
   }
   if (bi != n * 11) {
@@ -242,10 +235,10 @@ void mnemonic_to_seed(const char *mnemonic, const char *passphrase,
 
 // binary search for finding the word in the wordlist
 int mnemonic_find_word(const char *word) {
-  int lo = 0, hi = BIP39_WORDS - 1;
+  int lo = 0, hi = BIP39_WORD_COUNT - 1;
   while (lo <= hi) {
     int mid = lo + (hi - lo) / 2;
-    int cmp = strcmp(word, wordlist[mid]);
+    int cmp = strcmp(word, BIP39_WORDLIST_ENGLISH[mid]);
     if (cmp == 0) {
       return mid;
     }
@@ -261,17 +254,17 @@ int mnemonic_find_word(const char *word) {
 const char *mnemonic_complete_word(const char *prefix, int len) {
   // we need to perform linear search,
   // because we want to return the first match
-  for (const char *const *w = wordlist; *w != 0; w++) {
-    if (strncmp(*w, prefix, len) == 0) {
-      return *w;
+  for (int i = 0; i < BIP39_WORD_COUNT; i++) {
+    if (strncmp(BIP39_WORDLIST_ENGLISH[i], prefix, len) == 0) {
+      return BIP39_WORDLIST_ENGLISH[i];
     }
   }
   return NULL;
 }
 
 const char *mnemonic_get_word(int index) {
-  if (index >= 0 && index < BIP39_WORDS) {
-    return wordlist[index];
+  if (index >= 0 && index < BIP39_WORD_COUNT) {
+    return BIP39_WORDLIST_ENGLISH[index];
   } else {
     return NULL;
   }
@@ -282,8 +275,8 @@ uint32_t mnemonic_word_completion_mask(const char *prefix, int len) {
     return 0x3ffffff;  // all letters (bits 1-26 set)
   }
   uint32_t res = 0;
-  for (const char *const *w = wordlist; *w != 0; w++) {
-    const char *word = *w;
+  for (int i = 0; i < BIP39_WORD_COUNT; i++) {
+    const char *word = BIP39_WORDLIST_ENGLISH[i];
     if (strncmp(word, prefix, len) == 0 && word[len] >= 'a' &&
         word[len] <= 'z') {
       res |= 1 << (word[len] - 'a');

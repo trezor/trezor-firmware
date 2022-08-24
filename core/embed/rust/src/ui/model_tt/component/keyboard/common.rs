@@ -6,8 +6,8 @@ use crate::{
         component::{Event, EventCtx, TimerToken},
         display::{self, Color, Font},
         geometry::{Offset, Point, Rect},
+        util::ResultExt,
     },
-    util::ResultExt,
 };
 
 pub const HEADER_HEIGHT: i32 = 25;

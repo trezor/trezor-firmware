@@ -168,13 +168,13 @@ class Field:
 
     def value_fits(self, value: int) -> bool:
         if self.type == "uint32":
-            return 0 <= value < 2 ** 32
+            return 0 <= value < 2**32
         if self.type == "uint64":
-            return 0 <= value < 2 ** 64
+            return 0 <= value < 2**64
         if self.type == "sint32":
-            return -(2 ** 31) <= value < 2 ** 31
+            return -(2**31) <= value < 2**31
         if self.type == "sint64":
-            return -(2 ** 63) <= value < 2 ** 63
+            return -(2**63) <= value < 2**63
 
         raise ValueError(f"Cannot check range bounds for {self.type}")
 

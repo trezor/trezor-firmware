@@ -75,7 +75,7 @@
 
 #endif
 
-#elif defined TREZOR_MODEL_1
+#elif defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
 
 #ifdef TREZOR_FONT_NORMAL_ENABLE
 #include "font_pixeloperator_regular_8.h"
@@ -119,6 +119,8 @@ static struct { int x, y; } DISPLAY_OFFSET;
 #include "display-stm32_T.h"
 #elif defined TREZOR_MODEL_1
 #include "display-stm32_1.h"
+#elif defined TREZOR_MODEL_R
+#include "display-stm32_R.h"
 #else
 #error Unknown Trezor model
 #endif
@@ -156,6 +158,9 @@ static inline void clamp_coords(int x, int y, int w, int h, int *x0, int *y0,
 
 void display_clear(void) {
   const int saved_orientation = DISPLAY_ORIENTATION;
+
+  display_reset_state();
+
   // set MADCTL first so that we can set the window correctly next
   display_orientation(0);
   // address the complete frame memory
@@ -384,8 +389,8 @@ void display_icon(int x, int y, int w, int h, const void *data,
     int st = uzlib_uncompress(&decomp);
     if (st == TINF_DONE) break;  // all OK
     if (st < 0) break;           // error
-    const int px = pos % w;
-    const int py = pos / w;
+    const int px = (pos * 2) % w;
+    const int py = (pos * 2) / w;
     if (px >= x0 && px <= x1 && py >= y0 && py <= y1) {
       PIXELDATA(colortable[decomp_out >> 4]);
       PIXELDATA(colortable[decomp_out & 0x0F]);
@@ -427,13 +432,15 @@ bool display_toif_info(const uint8_t *data, uint32_t len, uint16_t *out_w,
 }
 
 #if defined TREZOR_MODEL_T
-#include "loader.h"
+#include "loader_T.h"
+#elif defined TREZOR_MODEL_R
+#include "loader_R.h"
 #endif
 
 void display_loader(uint16_t progress, bool indeterminate, int yoffset,
                     uint16_t fgcolor, uint16_t bgcolor, const uint8_t *icon,
                     uint32_t iconlen, uint16_t iconfgcolor) {
-#if defined TREZOR_MODEL_T
+#if defined TREZOR_MODEL_T || defined TREZOR_MODEL_R
   uint16_t colortable[16] = {0}, iconcolortable[16] = {0};
   set_color_table(colortable, fgcolor, bgcolor);
   if (icon) {
@@ -865,8 +872,7 @@ int display_text_height(int font) {
 
 #define QR_MAX_VERSION 9
 
-void display_qrcode(int x, int y, const char *data, uint32_t datalen,
-                    uint8_t scale) {
+void display_qrcode(int x, int y, const char *data, uint8_t scale) {
   if (scale < 1 || scale > 10) return;
 
   uint8_t codedata[qrcodegen_BUFFER_LEN_FOR_VERSION(QR_MAX_VERSION)] = {0};
@@ -917,7 +923,7 @@ int display_orientation(int degrees) {
   if (degrees != DISPLAY_ORIENTATION) {
 #if defined TREZOR_MODEL_T
     if (degrees == 0 || degrees == 90 || degrees == 180 || degrees == 270) {
-#elif defined TREZOR_MODEL_1
+#elif defined TREZOR_MODEL_1 || defined TREZOR_MODEL_R
     if (degrees == 0 || degrees == 180) {
 #else
 #error Unknown Trezor model
@@ -982,3 +988,5 @@ void display_utf8_substr(const char *buf_start, size_t buf_len, int char_off,
   *out_start = buf_start + i_start;
   *out_len = i - i_start;
 }
+
+void display_pixeldata_dirty(void) { PIXELDATA_DIRTY(); }

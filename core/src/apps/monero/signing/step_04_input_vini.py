@@ -28,12 +28,12 @@ async def input_vini(
     from trezor.messages import MoneroTransactionInputViniAck
 
     await layout.transaction_step(state, state.STEP_VINI, state.current_input_index + 1)
-    if state.last_step not in (state.STEP_INP, state.STEP_PERM, state.STEP_VINI):
+    if state.last_step not in (state.STEP_INP, state.STEP_VINI):
         raise ValueError("Invalid state transition")
     if state.current_input_index >= state.input_count:
         raise ValueError("Too many inputs")
 
-    if state.client_version >= 2 and state.last_step < state.STEP_VINI:
+    if state.last_step < state.STEP_VINI:
         state.current_input_index = -1
         state.last_ki = None
 
@@ -44,9 +44,7 @@ async def input_vini(
         state.key_hmac,
         src_entr,
         vini_bin,
-        state.source_permutation[state.current_input_index]
-        if state.client_version <= 1
-        else orig_idx,
+        orig_idx,
     )
     if not crypto.ct_equals(hmac_vini_comp, vini_hmac):
         raise ValueError("HMAC is not correct")

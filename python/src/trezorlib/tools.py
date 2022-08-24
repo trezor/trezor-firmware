@@ -142,7 +142,7 @@ def b58decode(v: AnyStr, length: Optional[int] = None) -> bytes:
 
     long_value = 0
     for (i, c) in enumerate(str_v[::-1]):
-        long_value += __b58chars.find(c) * (__b58base ** i)
+        long_value += __b58chars.find(c) * (__b58base**i)
 
     result = b""
     while long_value >= 256:

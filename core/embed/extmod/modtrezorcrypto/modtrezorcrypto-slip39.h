@@ -94,7 +94,7 @@ STATIC mp_obj_t mod_trezorcrypto_slip39_get_word(mp_obj_t _index) {
   const char *word = get_word(index);
   if (word == NULL) {
     mp_raise_ValueError(
-        "Invalid wordlist index (range between 0 and 1024 is allowed)");
+        "Invalid wordlist index (range between 0 and 1023 is allowed)");
   }
 
   return mp_obj_new_str_copy(&mp_type_str, (const uint8_t *)word, strlen(word));

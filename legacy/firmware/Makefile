@@ -11,23 +11,17 @@ CFLAGS   += -DUSE_SECP256K1_ZKP_ECDSA
 ifndef PIZERO
 ifeq ($(EMULATOR),1)
 ifdef PIZERO
-CFLAGS += -DSECP256K1_CONTEXT_SIZE=184
+CFLAGS += -DSECP256K1_CONTEXT_SIZE=180
 else
 CFLAGS += -DSECP256K1_CONTEXT_SIZE=208
 endif
 else
-CFLAGS += -DSECP256K1_CONTEXT_SIZE=184
+CFLAGS += -DSECP256K1_CONTEXT_SIZE=180
 OBJS += field_10x26_arm.o
 endif
 endif
 ZKP_CFLAGS = \
 	-DUSE_ASM_ARM \
-	-DUSE_NUM_NONE \
-	-DUSE_FIELD_INV_BUILTIN \
-	-DUSE_SCALAR_INV_BUILTIN \
-	-DUSE_FIELD_10X26 \
-	-DUSE_SCALAR_8X32 \
-	-DUSE_ECMULT_STATIC_PRECOMPUTATION \
 	-DUSE_EXTERNAL_DEFAULT_CALLBACKS \
 	-DECMULT_GEN_PREC_BITS=4 \
 	-DECMULT_WINDOW_SIZE=8 \
@@ -41,6 +35,8 @@ ZKP_CFLAGS += -DUSE_EXTERNAL_ASM
 endif
 
 OBJS += secp256k1-zkp.o
+OBJS += precomputed_ecmult.o
+OBJS += precomputed_ecmult_gen.o
 OBJS += ../vendor/trezor-crypto/zkp_bip340.o
 OBJS += ../vendor/trezor-crypto/zkp_context.o
 OBJS += ../vendor/trezor-crypto/zkp_ecdsa.o
@@ -110,6 +106,7 @@ OBJS += ../vendor/trezor-crypto/ed25519-donna/ed25519-keccak.o
 OBJS += ../vendor/trezor-crypto/hmac.o
 OBJS += ../vendor/trezor-crypto/bip32.o
 OBJS += ../vendor/trezor-crypto/bip39.o
+OBJS += ../vendor/trezor-crypto/bip39_english.o
 OBJS += ../vendor/trezor-crypto/pbkdf2.o
 OBJS += ../vendor/trezor-crypto/base32.o
 OBJS += ../vendor/trezor-crypto/base58.o
@@ -169,13 +166,9 @@ OPTFLAGS ?= -Os
 
 include ../Makefile.include
 
-DEBUG_LINK ?= 0
-DEBUG_LOG  ?= 0
 
 CFLAGS += -Wno-sequence-point
 CFLAGS += -I../vendor/nanopb -Iprotob -DPB_FIELD_16BIT=1 -DPB_ENCODE_ARRAYS_UNPACKED=1 -DPB_VALIDATE_UTF8=1
-CFLAGS += -DDEBUG_LINK=$(DEBUG_LINK)
-CFLAGS += -DDEBUG_LOG=$(DEBUG_LOG)
 CFLAGS += -DSCM_REVISION='"$(shell git rev-parse HEAD | sed 's:\(..\):\\x\1:g')"'
 CFLAGS += -DUSE_MONERO=0
 ifneq ($(BITCOIN_ONLY),1)

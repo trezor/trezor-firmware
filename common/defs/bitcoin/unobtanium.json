@@ -40,7 +40,7 @@
   "max_address_length": 34,
   "negative_fee": false,
   "cooldown": 100,
-  "consensus_branch_id": null,
+  "overwintered": false,
   "extra_data": false,
   "timestamp": false,
   "confidential_assets": null

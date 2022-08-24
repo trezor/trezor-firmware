@@ -14,17 +14,17 @@ REVIEWER = Jan Matejek <jan.matejek@satoshilabs.com>, Tomas Susanka <tomas.susan
 
 [Cardano developer documentation](https://developers.cardano.org/) - official developer documentation.
 
+[Cardano Ledger repository](https://github.com/input-output-hk/cardano-ledger/tree/master) - design docs and CDDL specs for each Cardano era.
+
+[CIPs](https://github.com/cardano-foundation/CIPs) - Cardano improvement proposals.
+
 [Delegation Design Spec](https://hydra.iohk.io/build/2006688/download/1/delegation_design_spec.pdf) - contains information about delegation (addresses, certificates, withdrawals, ...).
-
-[Multi Asset CDDL spec](https://github.com/input-output-hk/cardano-ledger-specs/blob/097890495cbb0e8b62106bcd090a5721c3f4b36f/shelley-ma/shelley-ma-test/cddl-files/shelley-ma.cddl).
-
-[Plutus CDDL spec](https://github.com/input-output-hk/cardano-ledger/blob/9c3b4737b13b30f71529e76c5330f403165e28a6/eras/alonzo/test-suite/cddl-files/alonzo.cddl).
 
 [Byron address format](https://github.com/input-output-hk/cardano-wallet/wiki/About-Address-Format---Byron).
 
 [The Shelley 1852' purpose and staking path](https://github.com/input-output-hk/implementation-decisions/blob/e2d1bed5e617f0907bc5e12cf1c3f3302a4a7c42/text/1852-hd-chimeric.md).
 
-[cbor.me](http://cbor.me/) - very useful tool for CBOR inspection.
+[cbor.me](http://cbor.me/), [cbor.nemo157.com](https://cbor.nemo157.com/), [VS Code extension](https://marketplace.visualstudio.com/items?itemName=gabrielkerekes.cbor) - useful tools for CBOR inspection.
 
 
 ## Seed derivation schemes
@@ -184,7 +184,7 @@ For security and in some cases UX purposes we use transaction signing mode so th
 
 #### Ordinary transaction
 
-An ordinary transaction cannot contain a pool registration certificate or items related to Plutus script evaluation (collateral inputs and required signers). Also multi-sig (1854') witnesses can't be requested.
+An ordinary transaction cannot contain a pool registration certificate or items related to Plutus script evaluation (collateral inputs, ...). Also multi-sig (1854') witnesses can't be requested.
 
 #### Pool registration as owner
 
@@ -193,7 +193,7 @@ When signing a pool registration transaction as an owner, the transaction cannot
 - other certificates
 - withdrawals
 - token minting
-- items related to Plutus script evaluation (collateral inputs and required signers)
+- items related to Plutus script evaluation (collateral inputs, ...)
 
 Including inputs with a path would cause the transaction to be signed by such a path without letting the user know. Of course, we could let the user know that the transaction is being signed by the user's payment key, however, a pool owner should never be the one paying for the pool registration anyways so such a witness request doesn't make sense.
 
@@ -201,11 +201,17 @@ Just like a pool registration certificate, other certificates and withdrawals ar
 
 #### Multi-sig transaction
 
-Represents a multi-sig transaction using native scripts. Script credentials must be used in certificates and withdrawals when signing a multi-sig transaction. Ordinary (1852') witness requests are not allowed and all the witness requests are shown. Transaction cannot contain a pool registration certificate or items related to Plutus script evaluation (collateral inputs and required signers).
+Represents a multi-sig transaction using native scripts. Script credentials must be used in certificates and withdrawals when signing a multi-sig transaction. Ordinary (1852') witness requests are not allowed and all the witness requests are shown. Transaction cannot contain a pool registration certificate or items related to Plutus script evaluation (collateral inputs, ...).
 
 #### Plutus transaction
 
-The signing mode intended for transactions containing Plutus script evaluation. Plutus scripts may access all transaction items and make decisions based on them, therefore all items must be shown to the user. Since Plutus scripts may have many unforseen use cases, we put no further limitations on transactions (except forbidding pool registration certificates). Stake credentials in certificates and withdrawals may be given as key paths, key hashes or script hashes.
+The signing mode intended for transactions containing Plutus script evaluation. Plutus scripts may access almost all transaction items and make decisions based on them, therefore all items should be shown to the user.
+
+Even though Plutus scripts cannot access collateral inputs and the collateral return output, we must show them to the user so that they can verify what collateral amount is at stake. However, if the client declares this amount in the total collateral field, collateral inputs and the collateral return output (if it contains an address governed by the device) can be hidden.
+
+Collateral inputs, collateral return output, total collateral and reference inputs are allowed only in Plutus transactions. Required signers are meant for Plutus transactions as well (from the blockchain point of view), but some applications utilize them for their own purposes, so we allow them in all signing modes (except for pool registration as owner).
+
+Since Plutus scripts may have many unforseen use cases, we put no further limitations on transactions (except forbidding pool registration certificates). Stake credentials in certificates and withdrawals may be given as key paths, key hashes or script hashes.
 
 ### Single account model
 
@@ -299,9 +305,17 @@ In order for the user to be able to verify native scripts a `get_native_script_h
 
 _Plutus script support has been added in the Cardano Alonzo era_
 
-When creating a UTXO with a script address (in any signing mode), it may also contain `datum_hash` which usually provides additional UTXO-related data to the script.
+When creating a UTXO with a Plutus script address (in any signing mode), it should also contain a `datum_hash` or an `inline_datum` which provides additional UTXO-related data to the script. However, there are use cases for datums in an output controlled by a key, so we allow those as well.
 
-When one wants to spend funds from the Plutus script address (which is possible only in the Plutus signing mode), they have to attach the Plutus script as well as the datum referenced in the UTXO and a corresponding redeemer. These items are outside the transaction body which is signed by Trezor, so their hash is included in transaction body as `script_data_hash`.
+A UTXO can also contain a `reference_script` -- a script body that the user wants to embed in an output for later reference.
+
+Note that including `inline_datum` and/or `reference_script` requires using the `MAP_BABBAGE` (also known as post-Alonzo) output serialization format introduced in the Babbage era.
+
+When one wants to spend funds from a Plutus script address (which is possible only in the Plutus signing mode), they have to attach the Plutus script body as well as the datum referenced in the UTXO (if they did not utilize `inline_datum` and `reference_script` with `reference_inputs`). A redeemer must be provided too. These items are outside the transaction body which is signed by Trezor, so their hash is included in the transaction body as `script_data_hash`.
+
+### Level of details ("Show All"/"Show Simple")
+
+With the introduction of Plutus scripts the transaction signing UI has become a pain for the users. There are many elements which an ordinary user has no chance to verify and they might only confuse and bother him during the transaction signing process. This is why we have introduced the option to hide some transaction elements by letting the user choose the level of details for the transaction signing. This is done by adding an initial screen to the transaction signing flow on which two buttons are displayed: "Show All" button to display all transaction details and a "Show Simple" button to only show the critical transaction details.
 
 ### Transaction Explorer
 
@@ -312,9 +326,9 @@ When one wants to spend funds from the Plutus script address (which is possible 
 You can use a combination of [cardano-node](https://github.com/input-output-hk/cardano-node) and cardano-cli (part of the cardano-node repo) to submit a transaction.
 
 ## Serialization format
-Cardano uses [CBOR](https://www.rfc-editor.org/info/rfc7049) as a serialization format. [Here](https://github.com/input-output-hk/cardano-ledger/blob/9c3b4737b13b30f71529e76c5330f403165e28a6/eras/alonzo/test-suite/cddl-files/alonzo.cddl) is the [CDDL](https://tools.ietf.org/html/rfc8610) specification for after Plutus script support has been added.
+Cardano uses [CBOR](https://www.rfc-editor.org/info/rfc7049) as a serialization format. [Here](https://github.com/input-output-hk/cardano-ledger/blob/1cbf1fc2bb005a8206e5b5a7cdf44d35baaca455/eras/babbage/test-suite/cddl-files/babbage.cddl) is the [CDDL](https://tools.ietf.org/html/rfc8610) specification for Babbage era.
 
-#### Transaction body example
+### Transaction body example
 Input for trezorctl to sign the transaction can be found [here](https://gist.github.com/gabrielKerekes/ad6c168b12ebb43b082df5b92d67e276). The command to use is `trezorctl cardano sign-tx -f tx_for_readme.json -s ORDINARY_TRANSACTION`.
 
 ```
@@ -384,4 +398,11 @@ a900818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b70001
     }
   }
 }
+```
+
+### Babbage-era transaction body example
+This Plutus transaction body contains elements introduced in the Babbage era (perhaps the most interesting elements with regards to the CBOR encoding are the inline datum and the reference script). You can use one of the CBOR inspection tools listed on top of this document to examine the transaction body structure.
+
+```
+a8008182582094461e17271b4a108f679eb7b6947aea29573296a5edca635d583fb40785e05d000181a4005839008b3303988371208dd0916cc4548c4eafc2fd3d6205ea8ec180c1b1d9e0820d5929d99bce8aa81e86195fd2b824e6550820a03af325f6ff220100028201d81841a003d8185846820158425840010000332233322222253353004333573466ebc00c00801801440204c98d4c01ccd5ce2481094e6f7420457175616c000084984880084880048004480048004102000b5820853cbe68f7fccdeeeb0fd7b711ea147912190c35ac52d9d94080ae82809b2f840d8182582094461e17271b4a108f679eb7b6947aea29573296a5edca635d583fb40785e05d0110a2005839008b3303988371208dd0916cc4548c4eafc2fd3d6205ea8ec180c1b1d9e0820d5929d99bce8aa81e86195fd2b824e6550820a03af325f6ff220100110a128182582094461e17271b4a108f679eb7b6947aea29573296a5edca635d583fb40785e05d02
 ```

@@ -1,8 +1,4 @@
-class NetworkTypes:
-    MAINNET = 0
-    TESTNET = 1
-    STAGENET = 2
-    FAKECHAIN = 3
+from trezor.enums import MoneroNetworkType
 
 
 class MainNet:
@@ -24,8 +20,10 @@ class StageNet:
 
 
 def net_version(
-    network_type=NetworkTypes.MAINNET, is_subaddr=False, is_integrated=False
-):
+    network_type: MoneroNetworkType = MoneroNetworkType.MAINNET,
+    is_subaddr: bool = False,
+    is_integrated: bool = False,
+) -> bytes:
     """
     Network version bytes used for address construction
     """
@@ -33,11 +31,11 @@ def net_version(
         raise ValueError("Subaddress cannot be integrated")
 
     c_net = None
-    if network_type is None or network_type == NetworkTypes.MAINNET:
+    if network_type == MoneroNetworkType.MAINNET:
         c_net = MainNet
-    elif network_type == NetworkTypes.TESTNET:
+    elif network_type == MoneroNetworkType.TESTNET:
         c_net = TestNet
-    elif network_type == NetworkTypes.STAGENET:
+    elif network_type == MoneroNetworkType.STAGENET:
         c_net = StageNet
     else:
         raise ValueError(f"Unknown network type: {network_type}")

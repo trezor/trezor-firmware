@@ -16,11 +16,15 @@ async def button_request(
     ctx: wire.GenericContext,
     br_type: str,
     code: ButtonRequestType = ButtonRequestType.Other,
+    pages: int | None = None,
 ) -> None:
     if __debug__:
         log.debug(__name__, "ButtonRequest.type=%s", br_type)
     workflow.close_others()
-    await ctx.call(ButtonRequest(code=code), ButtonAck)
+    if pages is not None:
+        await ctx.call(ButtonRequest(code=code, pages=pages), ButtonAck)
+    else:
+        await ctx.call(ButtonRequest(code=code), ButtonAck)
 
 
 async def interact(
@@ -34,6 +38,9 @@ async def interact(
 
         assert isinstance(layout, Paginated)
         return await layout.interact(ctx, code=br_code)
+    elif hasattr(layout, "page_count") and layout.page_count() > 1:  # type: ignore [Cannot access member "page_count" for type "LayoutType"]
+        await button_request(ctx, br_type, br_code, pages=layout.page_count())  # type: ignore [Cannot access member "page_count" for type "LayoutType"]
+        return await ctx.wait(layout)
     else:
         await button_request(ctx, br_type, br_code)
         return await ctx.wait(layout)

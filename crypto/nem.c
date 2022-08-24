@@ -118,7 +118,7 @@ static inline bool nem_write_mosaic_u64(nem_transaction_ctx *ctx,
                                         const char *name, uint64_t value) {
   char buffer[21] = {0};
 
-  if (bn_format_uint64(value, NULL, NULL, 0, 0, false, buffer,
+  if (bn_format_uint64(value, NULL, NULL, 0, 0, false, 0, buffer,
                        sizeof(buffer)) == 0) {
     return false;
   }
@@ -205,8 +205,7 @@ size_t nem_transaction_end(nem_transaction_ctx *ctx,
                            const ed25519_secret_key private_key,
                            ed25519_signature signature) {
   if (private_key != NULL && signature != NULL) {
-    ed25519_sign_keccak(ctx->buffer, ctx->offset, private_key, ctx->public_key,
-                        signature);
+    ed25519_sign_keccak(ctx->buffer, ctx->offset, private_key, signature);
   }
 
   return ctx->offset;

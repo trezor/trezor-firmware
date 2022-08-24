@@ -1,0 +1,82 @@
+/*
+ * This file is part of the Trezor project, https://trezor.io/
+ *
+ * Copyright (c) SatoshiLabs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#ifndef __TREZORHAL_BOARD_CAPABILITIES_H__
+#define __TREZORHAL_BOARD_CAPABILITIES_H__
+
+/*
+Simple key-tag-length-value structure at fixed boardloader address.
+
+* header 4 bytes `TRZC`
+* each field is 4 bytes or multiple (because of alignment)
+* 4 bytes are
+  * 1-byte tag+type - CapabilityTag
+  * 1 byte length - counting from next byte forward
+  * 0 or more bytes of data, doesn't have to be aligned
+
+Last tag must be terminator or all space used.
+*/
+
+#include <stdint.h>
+
+#define BOARD_CAPABILITIES_ADDR 0x0800BF00
+#define BOARD_CAPABILITIES_SIZE 256
+#define CAPABILITIES_HEADER "TRZC"
+#define MODEL_NAME_MAX_LENGTH 16
+
+enum CapabilityTag {
+  TERMINATOR = 0x00,
+  CAPABILITY = 0x01,
+  MODEL_NAME = 0x02,
+  BOARDLOADER_VERSION = 0x03
+};
+
+struct __attribute__((packed)) BoardloaderVersion {
+  uint8_t version_major;
+  uint8_t version_minor;
+  uint8_t version_patch;
+  uint8_t version_build;
+};
+
+/*
+ * Structure of current boardloader. Older boardloaders can have it missing,
+ * reordered.
+ */
+struct __attribute__((packed)) BoardCapabilities {
+  uint8_t header[4];
+  uint8_t model_tag;
+  uint8_t model_length;
+  uint8_t model_name[MODEL_NAME_MAX_LENGTH];
+  uint8_t version_tag;
+  uint8_t version_length;
+  struct BoardloaderVersion version;
+  enum CapabilityTag terminator_tag;
+  uint8_t terminator_length;
+};
+
+/*
+ * Parse capabilities into RAM. Use while boardloader is accessible,
+ * before MPU is active.
+ */
+void parse_boardloader_capabilities();
+
+const uint8_t* get_board_name();
+const struct BoardloaderVersion* get_boardloader_version();
+
+#endif

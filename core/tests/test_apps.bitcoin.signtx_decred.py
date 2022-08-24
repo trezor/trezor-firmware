@@ -86,6 +86,9 @@ class TestSignTxDecred(unittest.TestCase):
             outputs_count=1,
         )
 
+        # precomputed tx weight is 864
+        fee_rate = 100_000 / (864 / 4)
+
         messages = [
             None,
             TxRequest(
@@ -109,7 +112,7 @@ class TestSignTxDecred(unittest.TestCase):
             helpers.UiConfirmOutput(out1, coin_decred, AmountUnit.BITCOIN),
             True,
             helpers.UiConfirmTotal(
-                200_000_000, 100_000, coin_decred, AmountUnit.BITCOIN
+                200_000_000, 100_000, fee_rate, coin_decred, AmountUnit.BITCOIN
             ),
             True,
             TxRequest(
@@ -243,6 +246,9 @@ class TestSignTxDecred(unittest.TestCase):
             decred_staking_ticket=True,
         )
 
+        # precomputed tx weight is 1188
+        fee_rate = 100_000 / (1188 / 4)
+
         messages = [
             None,
             TxRequest(
@@ -288,7 +294,7 @@ class TestSignTxDecred(unittest.TestCase):
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out3)),
             helpers.UiConfirmTotal(
-                200_000_000, 100_000, coin_decred, AmountUnit.BITCOIN
+                200_000_000, 100_000, fee_rate, coin_decred, AmountUnit.BITCOIN
             ),
             True,
             TxRequest(

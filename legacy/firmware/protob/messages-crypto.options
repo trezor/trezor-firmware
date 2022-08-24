@@ -6,7 +6,7 @@ CipherKeyValue.iv                       max_size:16
 CipheredKeyValue.value                  max_size:1024
 
 CosiCommit.address_n                    max_count:8
-CosiCommit.data                         max_size:32
+CosiCommit.data                         type:FT_IGNORE
 
 CosiCommitment.commitment               max_size:32
 CosiCommitment.pubkey                   max_size:32

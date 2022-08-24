@@ -1,1 +1,0 @@
-Rename `normalize_nfc` to `prepare_message_bytes` in tools.py

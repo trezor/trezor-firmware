@@ -16,23 +16,14 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import os.path
 import re
+from pathlib import Path
 
 from setuptools import find_packages, setup
 
-install_requires = [
-    "setuptools>=19.0",
-    "ecdsa>=0.9",
-    "mnemonic>=0.20",
-    "requests>=2.4.0",
-    "click>=7,<8.1",
-    "libusb1>=1.6.4",
-    "construct>=2.9",
-    "typing_extensions>=3.10",
-    "dataclasses ; python_version<'3.7'",
-    "simple-rlp>=0.1.2 ; python_version>='3.7'",
-]
+CWD = Path(__file__).resolve().parent
+
+install_requires = (CWD / "requirements.txt").read_text().splitlines()
 
 extras_require = {
     "hidapi": ["hidapi>=0.7.99.post20"],
@@ -44,17 +35,9 @@ extras_require = {
 
 extras_require["full"] = sum(extras_require.values(), [])
 
-CWD = os.path.dirname(os.path.realpath(__file__))
-
-
-def read(*path):
-    filename = os.path.join(CWD, *path)
-    with open(filename, "r") as f:
-        return f.read()
-
 
 def find_version():
-    version_file = read("src", "trezorlib", "__init__.py")
+    version_file = (CWD / "src" / "trezorlib" / "__init__.py").read_text()
     version_match = re.search(r"^__version__ = \"(.*)\"$", version_file, re.M)
     if version_match:
         return version_match.group(1)
@@ -69,7 +52,9 @@ setup(
     author_email="info@trezor.io",
     license="LGPLv3",
     description="Python library for communicating with Trezor Hardware Wallet",
-    long_description=read("README.md") + "\n\n" + read("CHANGELOG.md"),
+    long_description=(CWD / "README.md").read_text()
+    + "\n\n"
+    + (CWD / "CHANGELOG.md").read_text(),
     long_description_content_type="text/markdown",
     url="https://github.com/trezor/trezor-firmware/tree/master/python",
     packages=find_packages("src"),

@@ -599,19 +599,3 @@ def get_hash(client: "TrezorClient", hex_challenge: Optional[str]) -> str:
     """Get a hash of the installed firmware combined with the optional challenge."""
     challenge = bytes.fromhex(hex_challenge) if hex_challenge else None
     return firmware.get_hash(client, challenge).hex()
-
-
-@cli.command()
-@click.argument("file", type=click.File("wb"))
-@with_client
-def extract(client: "TrezorClient", file: BinaryIO) -> None:
-    """Extract the firmware from the device."""
-    if client.features.model == "T":
-        firmware_size = 13 * 128 * 1024
-    elif client.features.model == "1":
-        firmware_size = 7 * 128 * 1024 + 64 * 1024
-    else:
-        firmware_size = None
-
-    with click.progressbar(length=firmware_size) as bar:
-        file.write(firmware.get_firmware(client, bar.update))

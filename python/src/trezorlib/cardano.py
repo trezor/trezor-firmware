@@ -26,6 +26,8 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
+    Type,
+    TypeVar,
     Union,
 )
 
@@ -38,6 +40,8 @@ if TYPE_CHECKING:
 
 PROTOCOL_MAGICS = {"mainnet": 764824073, "testnet": 1097911063}
 NETWORK_IDS = {"mainnet": 1, "testnet": 0}
+
+MAX_CHUNK_SIZE = 1024
 
 REQUIRED_FIELDS_TRANSACTION = ("inputs", "outputs")
 REQUIRED_FIELDS_INPUT = ("prev_hash", "prev_index")
@@ -67,9 +71,18 @@ INVALID_MINT_TOKEN_BUNDLE_ENTRY = "The mint token_bundle entry is invalid"
 InputWithPath = Tuple[messages.CardanoTxInput, List[int]]
 CollateralInputWithPath = Tuple[messages.CardanoTxCollateralInput, List[int]]
 AssetGroupWithTokens = Tuple[messages.CardanoAssetGroup, List[messages.CardanoToken]]
-OutputWithAssetGroups = Tuple[messages.CardanoTxOutput, List[AssetGroupWithTokens]]
+OutputWithData = Tuple[
+    messages.CardanoTxOutput,
+    List[AssetGroupWithTokens],
+    List[messages.CardanoTxInlineDatumChunk],
+    List[messages.CardanoTxReferenceScriptChunk],
+]
 OutputItem = Union[
-    messages.CardanoTxOutput, messages.CardanoAssetGroup, messages.CardanoToken
+    messages.CardanoTxOutput,
+    messages.CardanoAssetGroup,
+    messages.CardanoToken,
+    messages.CardanoTxInlineDatumChunk,
+    messages.CardanoTxReferenceScriptChunk,
 ]
 CertificateItem = Union[
     messages.CardanoTxCertificate,
@@ -89,6 +102,12 @@ Path = List[int]
 Witness = Tuple[Path, bytes]
 AuxiliaryDataSupplement = Dict[str, Union[int, bytes]]
 SignTxResponse = Dict[str, Union[bytes, List[Witness], AuxiliaryDataSupplement]]
+Chunk = TypeVar(
+    "Chunk",
+    bound=Union[
+        messages.CardanoTxInlineDatumChunk, messages.CardanoTxReferenceScriptChunk
+    ],
+)
 
 
 def parse_optional_bytes(value: Optional[str]) -> Optional[bytes]:
@@ -158,7 +177,7 @@ def parse_input(tx_input: dict) -> InputWithPath:
     )
 
 
-def parse_output(output: dict) -> OutputWithAssetGroups:
+def parse_output(output: dict) -> OutputWithData:
     contains_address = "address" in output
     contains_address_type = "addressType" in output
 
@@ -181,6 +200,20 @@ def parse_output(output: dict) -> OutputWithAssetGroups:
 
     datum_hash = parse_optional_bytes(output.get("datum_hash"))
 
+    serialization_format = messages.CardanoTxOutputSerializationFormat.ARRAY_LEGACY
+    if "format" in output:
+        serialization_format = output["format"]
+
+    inline_datum_size, inline_datum_chunks = _parse_chunkable_data(
+        parse_optional_bytes(output.get("inline_datum")),
+        messages.CardanoTxInlineDatumChunk,
+    )
+
+    reference_script_size, reference_script_chunks = _parse_chunkable_data(
+        parse_optional_bytes(output.get("reference_script")),
+        messages.CardanoTxReferenceScriptChunk,
+    )
+
     return (
         messages.CardanoTxOutput(
             address=address,
@@ -188,8 +221,13 @@ def parse_output(output: dict) -> OutputWithAssetGroups:
             amount=int(output["amount"]),
             asset_groups_count=len(token_bundle),
             datum_hash=datum_hash,
+            format=serialization_format,
+            inline_datum_size=inline_datum_size,
+            reference_script_size=reference_script_size,
         ),
         token_bundle,
+        inline_datum_chunks,
+        reference_script_chunks,
     )
 
 
@@ -285,6 +323,23 @@ def _parse_address_parameters(
         script_payment_hash,
         script_staking_hash,
     )
+
+
+def _parse_chunkable_data(
+    data: Optional[bytes], chunk_type: Type[Chunk]
+) -> Tuple[int, List[Chunk]]:
+    if data is None:
+        return 0, []
+    data_size = len(data)
+    data_chunks = [chunk_type(data=chunk) for chunk in _create_data_chunks(data)]
+    return data_size, data_chunks
+
+
+def _create_data_chunks(data: bytes) -> Iterator[bytes]:
+    processed_size = 0
+    while processed_size < len(data):
+        yield data[processed_size : (processed_size + MAX_CHUNK_SIZE)]
+        processed_size += MAX_CHUNK_SIZE
 
 
 def parse_native_script(native_script: dict) -> messages.CardanoNativeScript:
@@ -565,6 +620,16 @@ def parse_required_signer(required_signer: dict) -> messages.CardanoTxRequiredSi
     )
 
 
+def parse_reference_input(reference_input: dict) -> messages.CardanoTxReferenceInput:
+    if not all(k in reference_input for k in REQUIRED_FIELDS_INPUT):
+        raise ValueError("The reference input is missing some fields")
+
+    return messages.CardanoTxReferenceInput(
+        prev_hash=bytes.fromhex(reference_input["prev_hash"]),
+        prev_index=reference_input["prev_index"],
+    )
+
+
 def parse_additional_witness_request(
     additional_witness_request: dict,
 ) -> Path:
@@ -618,11 +683,11 @@ def _get_witness_requests(
         for _, path in collateral_inputs:
             if path:
                 paths.add(tuple(path))
-        for required_signer in required_signers:
-            if required_signer.key_path:
-                paths.add(tuple(required_signer.key_path))
 
-    # add additional_witness_requests in all cases (because of minting)
+    # add required_signers and additional_witness_requests in all cases
+    for required_signer in required_signers:
+        if required_signer.key_path:
+            paths.add(tuple(required_signer.key_path))
     for additional_witness_request in additional_witness_requests:
         paths.add(tuple(additional_witness_request))
 
@@ -630,20 +695,32 @@ def _get_witness_requests(
     return [messages.CardanoTxWitnessRequest(path=path) for path in sorted_paths]
 
 
-def _get_input_items(inputs: List[InputWithPath]) -> Iterator[messages.CardanoTxInput]:
+def _get_inputs_items(inputs: List[InputWithPath]) -> Iterator[messages.CardanoTxInput]:
     for input, _ in inputs:
         yield input
 
 
-def _get_output_items(outputs: List[OutputWithAssetGroups]) -> Iterator[OutputItem]:
-    for output, asset_groups in outputs:
-        yield output
-        for asset_group, tokens in asset_groups:
-            yield asset_group
-            yield from tokens
+def _get_outputs_items(outputs: List[OutputWithData]) -> Iterator[OutputItem]:
+    for output_with_data in outputs:
+        yield from _get_output_items(output_with_data)
 
 
-def _get_certificate_items(
+def _get_output_items(output_with_data: OutputWithData) -> Iterator[OutputItem]:
+    (
+        output,
+        asset_groups,
+        inline_datum_chunks,
+        reference_script_chunks,
+    ) = output_with_data
+    yield output
+    for asset_group, tokens in asset_groups:
+        yield asset_group
+        yield from tokens
+    yield from inline_datum_chunks
+    yield from reference_script_chunks
+
+
+def _get_certificates_items(
     certificates: Sequence[CertificateWithPoolOwnersAndRelays],
 ) -> Iterator[CertificateItem]:
     for certificate, pool_owners_and_relays in certificates:
@@ -663,7 +740,7 @@ def _get_mint_items(mint: Sequence[AssetGroupWithTokens]) -> Iterator[MintItem]:
         yield from tokens
 
 
-def _get_collateral_input_items(
+def _get_collateral_inputs_items(
     collateral_inputs: Sequence[CollateralInputWithPath],
 ) -> Iterator[messages.CardanoTxCollateralInput]:
     for collateral_input, _ in collateral_inputs:
@@ -726,7 +803,7 @@ def sign_tx(
     client: "TrezorClient",
     signing_mode: messages.CardanoTxSigningMode,
     inputs: List[InputWithPath],
-    outputs: List[OutputWithAssetGroups],
+    outputs: List[OutputWithData],
     fee: int,
     ttl: Optional[int],
     validity_interval_start: Optional[int],
@@ -739,6 +816,9 @@ def sign_tx(
     script_data_hash: Optional[bytes] = None,
     collateral_inputs: Sequence[CollateralInputWithPath] = (),
     required_signers: Sequence[messages.CardanoTxRequiredSigner] = (),
+    collateral_return: Optional[OutputWithData] = None,
+    total_collateral: Optional[int] = None,
+    reference_inputs: Sequence[messages.CardanoTxReferenceInput] = (),
     additional_witness_requests: Sequence[Path] = (),
     derivation_type: messages.CardanoDerivationType = messages.CardanoDerivationType.ICARUS,
     include_network_id: bool = False,
@@ -772,6 +852,9 @@ def sign_tx(
             script_data_hash=script_data_hash,
             collateral_inputs_count=len(collateral_inputs),
             required_signers_count=len(required_signers),
+            has_collateral_return=collateral_return is not None,
+            total_collateral=total_collateral,
+            reference_inputs_count=len(reference_inputs),
             witness_requests_count=len(witness_requests),
             derivation_type=derivation_type,
             include_network_id=include_network_id,
@@ -781,9 +864,9 @@ def sign_tx(
         raise UNEXPECTED_RESPONSE_ERROR
 
     for tx_item in chain(
-        _get_input_items(inputs),
-        _get_output_items(outputs),
-        _get_certificate_items(certificates),
+        _get_inputs_items(inputs),
+        _get_outputs_items(outputs),
+        _get_certificates_items(certificates),
         withdrawals,
     ):
         response = client.call(tx_item)
@@ -812,10 +895,21 @@ def sign_tx(
 
     for tx_item in chain(
         _get_mint_items(mint),
-        _get_collateral_input_items(collateral_inputs),
+        _get_collateral_inputs_items(collateral_inputs),
         required_signers,
     ):
         response = client.call(tx_item)
+        if not isinstance(response, messages.CardanoTxItemAck):
+            raise UNEXPECTED_RESPONSE_ERROR
+
+    if collateral_return is not None:
+        for tx_item in _get_output_items(collateral_return):
+            response = client.call(tx_item)
+            if not isinstance(response, messages.CardanoTxItemAck):
+                raise UNEXPECTED_RESPONSE_ERROR
+
+    for reference_input in reference_inputs:
+        response = client.call(reference_input)
         if not isinstance(response, messages.CardanoTxItemAck):
             raise UNEXPECTED_RESPONSE_ERROR
 

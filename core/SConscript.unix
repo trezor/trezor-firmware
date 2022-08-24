@@ -6,7 +6,7 @@ import os
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
 EVERYTHING = BITCOIN_ONLY != '1'
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
-UI2 = ARGUMENTS.get('UI2', '0') == '1' or TREZOR_MODEL == '1'
+UI2 = ARGUMENTS.get('UI2', '0') == '1' or TREZOR_MODEL in ('1', 'R')
 
 FEATURE_FLAGS = {
     "SECP256K1_ZKP": True,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot)
@@ -64,6 +64,7 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/bignum.c',
     'vendor/trezor-crypto/bip32.c',
     'vendor/trezor-crypto/bip39.c',
+    'vendor/trezor-crypto/bip39_english.c',
     'vendor/trezor-crypto/blake256.c',
     'vendor/trezor-crypto/blake2b.c',
     'vendor/trezor-crypto/blake2s.c',
@@ -120,12 +121,6 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
         'USE_SECP256K1_ZKP',
         'USE_SECP256K1_ZKP_ECDSA',
         ('SECP256K1_CONTEXT_SIZE', '208'),
-        'USE_NUM_NONE',
-        'USE_FIELD_INV_BUILTIN',
-        'USE_SCALAR_INV_BUILTIN',
-        'USE_FIELD_10X26',
-        'USE_SCALAR_8X32',
-        'USE_ECMULT_STATIC_PRECOMPUTATION',
         'USE_EXTERNAL_DEFAULT_CALLBACKS',
         ('ECMULT_GEN_PREC_BITS', '4'),
         ('ECMULT_WINDOW_SIZE', '8'),
@@ -136,6 +131,8 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
     ]
     SOURCE_MOD_SECP256K1_ZKP = [
         'vendor/secp256k1-zkp/src/secp256k1.c',
+        'vendor/secp256k1-zkp/src/precomputed_ecmult.c',
+        'vendor/secp256k1-zkp/src/precomputed_ecmult_gen.c',
     ]
     SOURCE_MOD += [
         'vendor/trezor-crypto/zkp_context.c',
@@ -147,7 +144,7 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
 SOURCE_MOD += [
     'embed/extmod/modtrezorio/modtrezorio.c',
 ]
-if TREZOR_MODEL == "T":
+if TREZOR_MODEL in ('T',):
     SOURCE_MOD += [
         'embed/extmod/modtrezorio/ff.c',
         'embed/extmod/modtrezorio/ffunicode.c',
@@ -353,7 +350,7 @@ SOURCE_UNIX = [
     'vendor/micropython/ports/unix/input.c',
     'vendor/micropython/ports/unix/unix_mphal.c',
 ]
-if TREZOR_MODEL == 'T':
+if TREZOR_MODEL in ('T',):
     SOURCE_UNIX += [
         'embed/unix/sbu.c',
         'embed/unix/sdcard.c',
@@ -525,7 +522,7 @@ if FROZEN:
     if EVERYTHING:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/altcoin.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/webauthn.py'))
-    if TREZOR_MODEL == 'T' and UI2:
+    if TREZOR_MODEL in ('T',) and UI2:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/constants/tt.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/__init__.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/reset.py'))
@@ -533,7 +530,7 @@ if FROZEN:
         if EVERYTHING:
             SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/altcoin.py'))
             SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/webauthn.py'))
-    elif TREZOR_MODEL == 'T':
+    elif TREZOR_MODEL in ('T',):
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/components/tt/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/constants/tt.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt/__init__.py'))
@@ -542,10 +539,12 @@ if FROZEN:
         if EVERYTHING:
             SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt/altcoin.py'))
             SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt/webauthn.py'))
-    elif TREZOR_MODEL == '1':
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/components/t1/*.py'))
+    elif TREZOR_MODEL in ('1',):
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/constants/t1.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/t1.py'))
+    elif TREZOR_MODEL in ('R',):
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/constants/tr.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tr/__init__.py'))
     else:
         raise ValueError('Unknown Trezor model')
 
@@ -577,7 +576,7 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*.py',
         exclude=[
             SOURCE_PY_DIR + 'apps/management/sd_protect.py',
-        ] if TREZOR_MODEL != 'T' else [])
+        ] if TREZOR_MODEL not in ('T',) else [])
     )
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/misc/*.py'))
@@ -641,29 +640,6 @@ if FROZEN:
     env.Depends(source_mpyc, qstr_generated)
 
 #
-# static secp256-zkp ecmult context
-#
-if FEATURE_FLAGS["SECP256K1_ZKP"]:
-    host_env = Environment(ENV=os.environ)
-    host_env.Replace(
-        CC=os.getenv('CC_FOR_BUILD') or 'cc',
-        COPT='-O2',
-        CPPPATH='vendor/secp256k1-zkp',
-        CPPDEFINES=[
-            ('ECMULT_GEN_PREC_BITS', '4'),
-        ]
-    )
-    gen_context = host_env.Program(
-        target='vendor/secp256k1-zkp/gen_context',
-        source='vendor/secp256k1-zkp/src/gen_context.c',
-    )
-    secp256k1_zkp_ecmult_static_context = host_env.Command(
-        target='vendor/secp256k1-zkp/src/ecmult_static_context.h',
-        source='vendor/secp256k1-zkp/gen_context',
-        action='cd ${SOURCE.dir}; ./gen_context',
-    )
-
-#
 # Rust library
 #
 
@@ -689,16 +665,13 @@ RUST_LIB = 'trezor_lib'
 RUST_LIBPATH = f'{RUST_LIBDIR}/lib{RUST_LIB}.a'
 
 def cargo_build():
-    if TREZOR_MODEL == "1":
-        features = ["model_t1"]
-    else:
-        features = ["model_tt"]
-    if BITCOIN_ONLY == "1":
-        features.append("bitcoin_only")
+    features = ['micropython', 'protobuf', f'model_t{TREZOR_MODEL.lower()}']
+    if BITCOIN_ONLY == '1':
+        features.append('bitcoin_only')
     if UI2:
-        features.append("ui")
-        if PYOPT == "0" or not FROZEN:
-            features.append("ui_debug")
+        features.append('ui')
+        if PYOPT == '0':
+            features.append('debug')
 
     return f'cd embed/rust; cargo build --profile {RUST_PROFILE} --target-dir=../../build/unix/rust --no-default-features --features "{" ".join(features)}"'
 
@@ -726,8 +699,6 @@ if FROZEN:
     obj_program.extend(env.Object(source=source_mpyc))
 
 env.Depends(obj_program, qstr_generated)
-if FEATURE_FLAGS["SECP256K1_ZKP"]:
-    env.Depends(obj_program, secp256k1_zkp_ecmult_static_context)
 
 program = env.Command(
     target='trezor-emu-core',

@@ -12,14 +12,6 @@ jobs:
   gh-automate-projects:
     runs-on: ubuntu-latest
     steps:
-      - name: Add new issue to the Backlog 🗂  project board
-        if: github.event_name == 'issues' && github.event.action == 'opened'
-        run: |
-          gh issue edit $ISSUE --add-project "Backlog 🗂"
-        env:
-          ISSUE: ${{github.event.issue.html_url}}
-          GITHUB_TOKEN: ${{ secrets.GH_BOT_TOKEN }}
-
       - name: Add new pull request to the Pull Requests project board
         if: github.event_name == 'pull_request' && github.event.action == 'opened'
         run: gh pr edit $PULL_REQUEST --add-project "Pull Requests"

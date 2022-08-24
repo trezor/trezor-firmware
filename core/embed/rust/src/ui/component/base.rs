@@ -2,14 +2,19 @@ use core::mem;
 
 use heapless::Vec;
 
-#[cfg(feature = "model_t1")]
-use crate::ui::model_t1::event::ButtonEvent;
-#[cfg(feature = "model_tt")]
-use crate::ui::model_tt::event::TouchEvent;
 use crate::{
     time::Duration,
-    ui::{component::Map, geometry::Rect},
+    ui::{
+        component::{maybe::PaintOverlapping, Map},
+        display::Color,
+        geometry::{Offset, Rect},
+    },
 };
+
+#[cfg(feature = "buttons")]
+use crate::ui::event::ButtonEvent;
+#[cfg(feature = "touch")]
+use crate::ui::event::TouchEvent;
 
 /// Type used by components that do not return any messages.
 ///
@@ -135,6 +140,22 @@ where
     }
 }
 
+impl<T> PaintOverlapping for Child<T>
+where
+    T: PaintOverlapping,
+{
+    fn cleared_area(&self) -> Option<(Rect, Color)> {
+        self.component.cleared_area()
+    }
+
+    fn paint_overlapping(&mut self) {
+        if self.marked_for_paint {
+            self.marked_for_paint = false;
+            self.component.paint_overlapping()
+        }
+    }
+}
+
 #[cfg(feature = "ui_debug")]
 impl<T> crate::trace::Trace for Child<T>
 where
@@ -166,6 +187,11 @@ where
         self.0.paint();
         self.1.paint();
     }
+
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
+        self.0.bounds(sink);
+        self.1.bounds(sink);
+    }
 }
 
 #[cfg(feature = "ui_debug")]
@@ -181,6 +207,93 @@ where
         d.field("0", &self.0);
         d.field("1", &self.1);
         d.close();
+    }
+}
+
+impl<M, T, U, V> Component for (T, U, V)
+where
+    T: Component<Msg = M>,
+    U: Component<Msg = M>,
+    V: Component<Msg = M>,
+{
+    type Msg = M;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        self.0
+            .place(bounds)
+            .union(self.1.place(bounds))
+            .union(self.2.place(bounds))
+    }
+
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        self.0
+            .event(ctx, event)
+            .or_else(|| self.1.event(ctx, event))
+            .or_else(|| self.2.event(ctx, event))
+    }
+
+    fn paint(&mut self) {
+        self.0.paint();
+        self.1.paint();
+        self.2.paint();
+    }
+
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
+        self.0.bounds(sink);
+        self.1.bounds(sink);
+        self.2.bounds(sink);
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl<T, U, V> crate::trace::Trace for (T, U, V)
+where
+    T: Component,
+    T: crate::trace::Trace,
+    U: Component,
+    U: crate::trace::Trace,
+    V: Component,
+    V: crate::trace::Trace,
+{
+    fn trace(&self, d: &mut dyn crate::trace::Tracer) {
+        d.open("Tuple");
+        d.field("0", &self.0);
+        d.field("1", &self.1);
+        d.field("2", &self.2);
+        d.close();
+    }
+}
+
+impl<T> Component for Option<T>
+where
+    T: Component,
+{
+    type Msg = T::Msg;
+
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        match self {
+            Some(ref mut c) => c.event(ctx, event),
+            _ => None,
+        }
+    }
+
+    fn paint(&mut self) {
+        if let Some(ref mut c) = self {
+            c.paint()
+        }
+    }
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        match self {
+            Some(ref mut c) => c.place(bounds),
+            _ => bounds.with_size(Offset::zero()),
+        }
+    }
+
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
+        if let Some(ref c) = self {
+            c.bounds(sink)
+        }
     }
 }
 
@@ -218,13 +331,16 @@ where
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Event {
-    #[cfg(feature = "model_t1")]
+    #[cfg(feature = "buttons")]
     Button(ButtonEvent),
-    #[cfg(feature = "model_tt")]
+    #[cfg(feature = "touch")]
     Touch(TouchEvent),
     /// Previously requested timer was triggered. This invalidates the timer
     /// token (another timer has to be requested).
     Timer(TimerToken),
+    /// Component has been attached to component tree. This event is sent once
+    /// before any other events.
+    Attach,
     /// Internally-handled event to inform all `Child` wrappers in a sub-tree to
     /// get scheduled for painting.
     RequestPaint,
@@ -252,6 +368,7 @@ pub struct EventCtx {
     place_requested: bool,
     paint_requested: bool,
     anim_frame_scheduled: bool,
+    page_count: Option<usize>,
 }
 
 impl EventCtx {
@@ -276,6 +393,7 @@ impl EventCtx {
             paint_requested: false, /* We also need to paint, but this is supplemented by
                                     * `Child::marked_for_paint` being true. */
             anim_frame_scheduled: false,
+            page_count: None,
         }
     }
 
@@ -314,6 +432,16 @@ impl EventCtx {
         }
     }
 
+    pub fn set_page_count(&mut self, count: usize) {
+        #[cfg(feature = "ui_debug")]
+        assert!(self.page_count.is_none());
+        self.page_count = Some(count);
+    }
+
+    pub fn page_count(&self) -> Option<usize> {
+        self.page_count
+    }
+
     pub fn pop_timer(&mut self) -> Option<(TimerToken, Duration)> {
         self.timers.pop()
     }
@@ -322,6 +450,7 @@ impl EventCtx {
         self.place_requested = false;
         self.paint_requested = false;
         self.anim_frame_scheduled = false;
+        self.page_count = None;
     }
 
     fn register_timer(&mut self, token: TimerToken, deadline: Duration) {

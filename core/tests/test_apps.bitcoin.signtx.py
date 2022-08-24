@@ -94,6 +94,9 @@ class TestSignTx(unittest.TestCase):
             coin_name=None, version=1, lock_time=0, inputs_count=1, outputs_count=1
         )
 
+        # precomputed tx weight is 768
+        fee_rate = 50_000 / (768 / 4)
+
         messages = [
             None,
             TxRequest(
@@ -110,7 +113,7 @@ class TestSignTx(unittest.TestCase):
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
             helpers.UiConfirmOutput(out1, coin_bitcoin, AmountUnit.BITCOIN),
             True,
-            helpers.UiConfirmTotal(3_801_747, 50_000, coin_bitcoin, AmountUnit.BITCOIN),
+            helpers.UiConfirmTotal(3_801_747, 50_000, fee_rate, coin_bitcoin, AmountUnit.BITCOIN),
             True,
             # ButtonRequest(code=ButtonRequest_ConfirmOutput),
             # ButtonRequest(code=ButtonRequest_SignTx),

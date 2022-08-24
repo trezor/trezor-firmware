@@ -92,3 +92,13 @@ where
         sink(self.area)
     }
 }
+
+#[cfg(feature = "ui_debug")]
+impl<T> crate::trace::Trace for Label<T>
+where
+    T: Deref<Target = str>,
+{
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.string(&self.text)
+    }
+}

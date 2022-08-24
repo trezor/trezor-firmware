@@ -18,8 +18,8 @@ use crate::{
             },
             theme,
         },
+        util::ResultExt,
     },
-    util::ResultExt,
 };
 
 const MAX_LENGTH: usize = 8;
@@ -115,7 +115,7 @@ impl Component for Slip39Input {
         let style = self.button.style();
 
         // First, paint the button background.
-        self.button.paint_background(&style);
+        self.button.paint_background(style);
 
         // Content starts in the left-center point, offset by 16px to the right and 8px
         // to the bottom.

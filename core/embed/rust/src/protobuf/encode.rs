@@ -9,8 +9,8 @@ use crate::{
         list::List,
         obj::Obj,
         qstr::Qstr,
+        util,
     },
-    util,
 };
 
 use super::{

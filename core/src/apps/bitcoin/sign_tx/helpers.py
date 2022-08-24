@@ -132,16 +132,22 @@ class UiConfirmModifyFee(UiConfirm):
 
 class UiConfirmTotal(UiConfirm):
     def __init__(
-        self, spending: int, fee: int, coin: CoinInfo, amount_unit: AmountUnit
+        self,
+        spending: int,
+        fee: int,
+        fee_rate: float,
+        coin: CoinInfo,
+        amount_unit: AmountUnit,
     ):
         self.spending = spending
         self.fee = fee
+        self.fee_rate = fee_rate
         self.coin = coin
         self.amount_unit = amount_unit
 
     def confirm_dialog(self, ctx: wire.Context) -> Awaitable[Any]:
         return layout.confirm_total(
-            ctx, self.spending, self.fee, self.coin, self.amount_unit
+            ctx, self.spending, self.fee, self.fee_rate, self.coin, self.amount_unit
         )
 
 
@@ -228,8 +234,8 @@ def confirm_modify_fee(user_fee_change: int, total_fee_new: int, coin: CoinInfo,
     return (yield UiConfirmModifyFee(user_fee_change, total_fee_new, coin, amount_unit))
 
 
-def confirm_total(spending: int, fee: int, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[None]:  # type: ignore [awaitable-is-generator]
-    return (yield UiConfirmTotal(spending, fee, coin, amount_unit))
+def confirm_total(spending: int, fee: int, fee_rate: float, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[None]:  # type: ignore [awaitable-is-generator]
+    return (yield UiConfirmTotal(spending, fee, fee_rate, coin, amount_unit))
 
 
 def confirm_joint_total(spending: int, total: int, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]

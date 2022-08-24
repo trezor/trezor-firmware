@@ -405,8 +405,7 @@ static size_t format_coin_amount(uint64_t amount, const char *prefix,
       strlcpy(suffix + 1, coin->coin_shortcut, sizeof(suffix) - 1);
       break;
   }
-  return bn_format_uint64(amount, prefix, suffix, decimals, 0, false, output,
-                          output_len);
+  return bn_format_amount(amount, prefix, suffix, decimals, output, output_len);
 }
 
 void layoutConfirmOutput(const CoinInfo *coin, AmountUnit amount_unit,
@@ -455,7 +454,7 @@ void layoutConfirmOmni(const uint8_t *data, uint32_t size) {
     uint64_t amount_be = 0, amount = 0;
     memcpy(&amount_be, data + 12, sizeof(uint64_t));
     REVERSE64(amount_be, amount);
-    bn_format_uint64(amount, NULL, suffix, divisible ? 8 : 0, 0, false, str_out,
+    bn_format_amount(amount, NULL, suffix, divisible ? 8 : 0, str_out,
                      sizeof(str_out));
   } else {
     desc = _("Unknown transaction");
@@ -503,9 +502,31 @@ static bool formatAmountDifference(const CoinInfo *coin, AmountUnit amount_unit,
                             output_length) != 0;
 }
 
+// Computes numer / denom and rounds to the nearest integer.
+static uint64_t div_round(uint64_t numer, uint64_t denom) {
+  return numer / denom + (2 * (numer % denom) >= denom);
+}
+
+static bool formatFeeRate(uint64_t fee, uint64_t tx_weight, char *output,
+                          size_t output_length, bool segwit) {
+  // Convert transaction weight to virtual transaction size, which is is defined
+  // as tx_weight / 4 rounded up to the next integer.
+  // https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#transaction-size-calculations
+  uint64_t tx_size = (tx_weight + 3) / 4;
+
+  // Compute fee rate and modify it in place for the bn_format_uint64()
+  // function. We multiply by 10, because we want bn_format_uint64() to display
+  // one decimal digit.
+  uint64_t fee_rate_multiplied = div_round(10 * fee, tx_size);
+
+  return bn_format_amount(fee_rate_multiplied, "(",
+                          segwit ? " sat/vB)" : " sat/B)", 1, output,
+                          output_length) != 0;
+}
+
 void layoutConfirmTx(const CoinInfo *coin, AmountUnit amount_unit,
-                     uint64_t total_in, uint64_t total_out,
-                     uint64_t change_out) {
+                     uint64_t total_in, uint64_t total_out, uint64_t change_out,
+                     uint64_t tx_weight) {
   char str_out[32] = {0};
   formatAmountDifference(coin, amount_unit, total_in, change_out, str_out,
                          sizeof(str_out));
@@ -514,9 +535,17 @@ void layoutConfirmTx(const CoinInfo *coin, AmountUnit amount_unit,
   formatAmountDifference(coin, amount_unit, total_in, total_out, str_fee,
                          sizeof(str_fee));
 
+  char str_fee_rate[32] = {0};
+  bool show_fee_rate = total_in >= total_out;
+
+  if (show_fee_rate) {
+    formatFeeRate(total_in - total_out, tx_weight, str_fee_rate,
+                  sizeof(str_fee_rate), coin->has_segwit);
+  }
+
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
-                    _("Really send"), str_out, _("from your wallet?"),
-                    _("Fee included:"), str_fee, NULL);
+                    _("Confirm sending:"), str_out, _("including fee:"),
+                    str_fee, show_fee_rate ? str_fee_rate : NULL, NULL);
 }
 
 void layoutConfirmReplacement(const char *description, uint8_t txid[32]) {
@@ -1156,7 +1185,7 @@ void layoutNEMLevy(const NEMMosaicDefinition *definition, uint8_t network) {
 
   switch (definition->levy) {
     case NEMMosaicLevy_MosaicLevy_Percentile:
-      bn_format_uint64(definition->fee, NULL, NULL, 0, 0, false, str_out,
+      bn_format_amount(definition->fee, NULL, NULL, 0, str_out,
                        sizeof(str_out));
 
       layoutDialogSwipe(
@@ -1191,18 +1220,13 @@ static inline bool is_slip18(const uint32_t *address_n,
          (address_n[1] & PATH_UNHARDEN_MASK) <= 9;
 }
 
-void layoutCosiCommitSign(const uint32_t *address_n, size_t address_n_count,
-                          const uint8_t *data, uint32_t len, bool final_sign) {
-  char *desc = final_sign ? _("CoSi sign message?") : _("CoSi commit message?");
+void layoutCosiSign(const uint32_t *address_n, size_t address_n_count,
+                    const uint8_t *data, uint32_t len) {
+  char *desc = _("CoSi sign message?");
   char desc_buf[32] = {0};
   if (is_slip18(address_n, address_n_count)) {
-    if (final_sign) {
-      strlcpy(desc_buf, _("CoSi sign index #?"), sizeof(desc_buf));
-      desc_buf[16] = '0' + (address_n[1] & PATH_UNHARDEN_MASK);
-    } else {
-      strlcpy(desc_buf, _("CoSi commit index #?"), sizeof(desc_buf));
-      desc_buf[18] = '0' + (address_n[1] & PATH_UNHARDEN_MASK);
-    }
+    strlcpy(desc_buf, _("CoSi sign index #?"), sizeof(desc_buf));
+    desc_buf[16] = '0' + (address_n[1] & PATH_UNHARDEN_MASK);
     desc = desc_buf;
   }
   char str[4][17] = {0};
@@ -1237,8 +1261,7 @@ void layoutConfirmAutoLockDelay(uint32_t delay_ms) {
 
   strlcpy(line, _("after "), sizeof(line));
   size_t off = strlen(line);
-  bn_format_uint64(num, NULL, NULL, 0, 0, false, &line[off],
-                   sizeof(line) - off);
+  bn_format_amount(num, NULL, NULL, 0, &line[off], sizeof(line) - off);
   strlcat(line, " ", sizeof(line));
   strlcat(line, unit, sizeof(line));
   if (num > 1) {

@@ -36,13 +36,21 @@
 #include "ports/stm32/pendsv.h"
 
 #include "bl_check.h"
-#include "button.h"
+#include "board_capabilities.h"
 #include "common.h"
 #include "compiler_traits.h"
 #include "display.h"
 #include "flash.h"
+#include "image.h"
 #include "mpu.h"
 #include "random_delays.h"
+#ifdef TREZOR_MODEL_R
+#include "rgb_led.h"
+#endif
+#if defined TREZOR_MODEL_R || defined TREZOR_MODEL_1
+#include "button.h"
+#endif
+
 #ifdef SYSTEM_VIEW
 #include "systemview.h"
 #endif
@@ -75,7 +83,9 @@ int main(void) {
   enable_systemview();
 #endif
 
-#if defined TREZOR_MODEL_T
+#if !defined TREZOR_MODEL_1
+  parse_boardloader_capabilities();
+
 #if PRODUCTION
   check_and_replace_bootloader();
 #endif
@@ -91,18 +101,24 @@ int main(void) {
   button_init();
 #endif
 
+#if defined TREZOR_MODEL_R
+  button_init();
+  display_clear();
+  rgb_led_init();
+#endif
+
 #if defined TREZOR_MODEL_T
+  touch_init();
   // display_init_seq();
   sdcard_init();
-  touch_init();
-  touch_power_on();
+  display_clear();
+#endif
 
+#if !defined TREZOR_MODEL_1
   // jump to unprivileged mode
   // http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/CHDBIBGJ.html
   __asm__ volatile("msr control, %0" ::"r"(0x1));
   __asm__ volatile("isb");
-
-  display_clear();
 #endif
 
 #ifdef USE_SECP256K1_ZKP
@@ -175,6 +191,13 @@ void UsageFault_Handler(void) {
   error_shutdown("Internal error", "(UF)", NULL, NULL);
 }
 
+__attribute__((noreturn)) void reboot_to_bootloader() {
+  jump_to_with_flag(BOOTLOADER_START + IMAGE_HEADER_SIZE,
+                    STAY_IN_BOOTLOADER_FLAG);
+  for (;;)
+    ;
+}
+
 void SVC_C_Handler(uint32_t *stack) {
   uint8_t svc_number = ((uint8_t *)stack[6])[-2];
   switch (svc_number) {
@@ -197,6 +220,16 @@ void SVC_C_Handler(uint32_t *stack) {
       for (;;)
         ;
       break;
+    case SVC_REBOOT_TO_BOOTLOADER:
+      mpu_config_bootloader();
+      __asm__ volatile("msr control, %0" ::"r"(0x0));
+      __asm__ volatile("isb");
+      // See stack layout in
+      // https://developer.arm.com/documentation/ka004005/latest We are changing
+      // return address in PC to land into reboot to avoid any bug with ROP and
+      // raising privileges.
+      stack[6] = (uintptr_t)reboot_to_bootloader;
+      return;
     default:
       stack[0] = 0xffffffff;
       break;

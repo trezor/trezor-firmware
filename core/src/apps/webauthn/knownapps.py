@@ -1,4 +1,5 @@
 # generated from knownapps.py.mako
+# (by running `make templates` in `core`)
 # do not edit manually!
 
 
@@ -66,6 +67,14 @@ def by_rp_id_hash(rp_id_hash: bytes) -> FIDOApp | None:
             use_sign_count=None,
             use_self_attestation=None,
         )
+    if rp_id_hash == b"\x19\x81\x5c\xb9\xa5\xfb\x25\xd8\x05\xde\xbd\x7b\x32\x53\x7e\xd5\x78\x63\x9b\x3e\xd1\x08\xec\x7c\x5b\xb9\xe8\xf0\xdf\xb1\x68\x73":
+        # WebAuthn key for Cloudflare
+        return FIDOApp(
+            label="dash.cloudflare.com",
+            icon="apps/webauthn/res/icon_cloudflare.toif",
+            use_sign_count=None,
+            use_self_attestation=None,
+        )
     if rp_id_hash == b"\xe2\x7d\x61\xb4\xe9\x9d\xe0\xed\x98\x16\x3c\xb3\x8b\x7a\xf9\x33\xc6\x66\x5e\x55\x09\xe8\x49\x08\x37\x05\x58\x13\x77\x8e\x23\x6a":
         # WebAuthn key for Coinbase
         return FIDOApp(
@@ -118,6 +127,14 @@ def by_rp_id_hash(rp_id_hash: bytes) -> FIDOApp | None:
         # U2F key for FastMail
         return FIDOApp(
             label="www.fastmail.com",
+            icon="apps/webauthn/res/icon_fastmail.toif",
+            use_sign_count=None,
+            use_self_attestation=None,
+        )
+    if rp_id_hash == b"\x3f\xcb\x82\x82\xb8\x46\x76\xeb\xee\x71\x40\xe3\x9e\xca\xe1\x6e\xeb\x19\x90\x64\xc7\xc7\xe4\x43\x2e\x28\xc9\xb5\x7e\x4b\x60\x39":
+        # WebAuthn key for FastMail
+        return FIDOApp(
+            label="fastmail.com",
             icon="apps/webauthn/res/icon_fastmail.toif",
             use_sign_count=None,
             use_self_attestation=None,
@@ -207,6 +224,14 @@ def by_rp_id_hash(rp_id_hash: bytes) -> FIDOApp | None:
         return FIDOApp(
             label="keepersecurity.eu",
             icon="apps/webauthn/res/icon_keeper.toif",
+            use_sign_count=None,
+            use_self_attestation=None,
+        )
+    if rp_id_hash == b"\x3f\x37\x50\x85\x33\x2c\xac\x4f\xad\xf9\xe5\xdd\x28\xcd\x54\x69\x8f\xab\x98\x4b\x75\xd9\xc3\x6a\x07\x2c\xb1\x60\x77\x3f\x91\x52":
+        # WebAuthn key for Kraken
+        return FIDOApp(
+            label="kraken.com",
+            icon="apps/webauthn/res/icon_kraken.toif",
             use_sign_count=None,
             use_self_attestation=None,
         )

@@ -1,6 +1,6 @@
 use crate::ui::{
     component::{Component, ComponentExt, Event, EventCtx, Pad},
-    display::Color,
+    display::{self, Color},
     geometry::Rect,
 };
 
@@ -96,5 +96,50 @@ where
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         sink(self.pad.area);
         self.inner.bounds(sink);
+    }
+}
+
+pub trait PaintOverlapping {
+    /// Return area that would be cleared during regular paint, along with
+    /// background color, or None if clearing isn't requested.
+    fn cleared_area(&self) -> Option<(Rect, Color)>;
+
+    /// Paint the component but do not clear background beforehand.
+    fn paint_overlapping(&mut self);
+}
+
+impl<T> PaintOverlapping for Maybe<T>
+where
+    T: Component,
+{
+    fn cleared_area(&self) -> Option<(Rect, Color)> {
+        self.pad.will_paint()
+    }
+
+    fn paint_overlapping(&mut self) {
+        self.pad.cancel_clear();
+        self.paint()
+    }
+}
+
+/// Paint multiple Maybe<T> components, correctly handling clearing of
+/// background in the case the areas overlap, i.e. clear the combined area first
+/// and then paint over it.
+pub fn paint_overlapping(components: &mut [&mut dyn PaintOverlapping]) {
+    let mut area = Rect::zero();
+    let mut color = Color::rgb(0, 0, 0);
+    for component in components.iter() {
+        if let Some((clear_area, clear_color)) = component.cleared_area() {
+            area = area.union(clear_area);
+            color = clear_color;
+        }
+    }
+
+    if area != Rect::zero() {
+        display::rect_fill(area, color)
+    }
+
+    for component in components.iter_mut() {
+        component.paint_overlapping()
     }
 }

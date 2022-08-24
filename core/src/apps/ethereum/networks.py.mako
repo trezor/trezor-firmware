@@ -1,4 +1,5 @@
 # generated from networks.py.mako
+# (by running `make templates` in `core`)
 # do not edit manually!
 from typing import Iterator
 

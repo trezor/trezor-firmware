@@ -1,9 +1,9 @@
-use crate::{micropython::time, time::Duration, trezorhal::display};
-
-#[cfg(not(feature = "model_tt"))]
-use crate::ui::model_t1::constant;
-#[cfg(feature = "model_tt")]
-use crate::ui::model_tt::constant;
+use super::constant;
+use crate::{
+    error::Error,
+    time::Duration,
+    trezorhal::{display, qr, time},
+};
 
 use super::geometry::{Offset, Point, Rect};
 
@@ -92,6 +92,34 @@ pub fn icon(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
     );
 }
 
+pub fn image(center: Point, data: &[u8]) {
+    let toif_info = display::toif_info(data).unwrap();
+    assert!(!toif_info.grayscale);
+
+    let r = Rect::from_center_and_size(
+        center,
+        Offset::new(toif_info.width.into(), toif_info.height.into()),
+    );
+    display::image(
+        r.x0,
+        r.y0,
+        r.width(),
+        r.height(),
+        &data[12..], // Skip TOIF header.
+    );
+}
+
+pub fn toif_info(data: &[u8]) -> Option<(Offset, bool)> {
+    if let Ok(info) = display::toif_info(data) {
+        Some((
+            Offset::new(info.width.into(), info.height.into()),
+            info.grayscale,
+        ))
+    } else {
+        None
+    }
+}
+
 // Used on T1 only.
 pub fn rect_fill_rounded1(r: Rect, fg_color: Color, bg_color: Color) {
     display::bar(r.x0, r.y0, r.width(), r.height(), fg_color.into());
@@ -152,6 +180,10 @@ pub fn loader_indeterminate(
     );
 }
 
+pub fn qrcode(center: Point, data: &str, max_size: u32, case_sensitive: bool) -> Result<(), Error> {
+    qr::render_qrcode(center.x, center.y, data, max_size, case_sensitive)
+}
+
 pub fn text(baseline: Point, text: &str, font: Font, fg_color: Color, bg_color: Color) {
     display::text(
         baseline.x,
@@ -172,6 +204,36 @@ pub fn text_center(baseline: Point, text: &str, font: Font, fg_color: Color, bg_
         font.0,
         fg_color.into(),
         bg_color.into(),
+    );
+}
+
+pub fn text_right(baseline: Point, text: &str, font: Font, fg_color: Color, bg_color: Color) {
+    let w = font.text_width(text);
+    display::text(
+        baseline.x - w,
+        baseline.y,
+        text,
+        font.0,
+        fg_color.into(),
+        bg_color.into(),
+    );
+}
+
+#[inline(always)]
+pub fn pixeldata(color: Color) {
+    display::pixeldata(color.into());
+}
+
+pub fn pixeldata_dirty() {
+    display::pixeldata_dirty();
+}
+
+pub fn set_window(window: Rect) {
+    display::set_window(
+        window.x0 as u16,
+        window.y0 as u16,
+        window.x1 as u16 - 1,
+        window.y1 as u16 - 1,
     );
 }
 
@@ -231,7 +293,7 @@ impl Color {
         self.0
     }
 
-    pub fn neg(self) -> Self {
+    pub fn negate(self) -> Self {
         Self(!self.0)
     }
 }

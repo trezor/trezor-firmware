@@ -53,7 +53,10 @@ def cli() -> None:
 @cli.command()
 @with_client
 def self_test(client: "TrezorClient") -> str:
-    """Perform a self-test."""
+    """Perform a factory self-test.
+
+    Only available on PRODTEST firmware.
+    """
     return debuglink.self_test(client)
 
 
@@ -126,17 +129,25 @@ def load(
         if not label:
             label = "SLIP-0014"
 
-    return debuglink.load_device(
-        client,
-        mnemonic=list(mnemonic),
-        pin=pin,
-        passphrase_protection=passphrase_protection,
-        label=label,
-        language="en-US",
-        skip_checksum=ignore_checksum,
-        needs_backup=needs_backup,
-        no_backup=no_backup,
-    )
+    try:
+        return debuglink.load_device(
+            client,
+            mnemonic=list(mnemonic),
+            pin=pin,
+            passphrase_protection=passphrase_protection,
+            label=label,
+            language="en-US",
+            skip_checksum=ignore_checksum,
+            needs_backup=needs_backup,
+            no_backup=no_backup,
+        )
+    except exceptions.TrezorFailure as e:
+        if e.code == messages.FailureType.UnexpectedMessage:
+            raise click.ClickException(
+                "Unrecognized message. Make sure your Trezor is using debug firmware."
+            )
+        else:
+            raise
 
 
 @cli.command()
@@ -278,8 +289,4 @@ def reboot_to_bootloader(obj: "TrezorConnection") -> str:
     # avoid using @with_client because it closes the session afterwards,
     # which triggers double prompt on device
     with obj.client_context() as client:
-        if client.features.model != "1":
-            click.echo(
-                f"Warning: Rebooting into bootloader not supported on Trezor {client.features.model}"
-            )
         return device.reboot_to_bootloader(client)

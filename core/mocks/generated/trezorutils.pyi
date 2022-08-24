@@ -61,16 +61,9 @@ def firmware_vendor() -> str:
 
 
 # extmod/modtrezorutils/modtrezorutils.c
-def firmware_sector_size(sector: int) -> int:
+def reboot_to_bootloader() -> None:
     """
-    Returns the size of the firmware sector.
-    """
-
-
-# extmod/modtrezorutils/modtrezorutils.c
-def get_firmware_chunk(index: int, offset: int, buffer: bytearray) -> None:
-    """
-    Reads a chunk of the firmware into `buffer`.
+    Reboots to bootloader.
     """
 SCM_REVISION: bytes
 VERSION_MAJOR: int
@@ -79,4 +72,3 @@ VERSION_PATCH: int
 MODEL: str
 EMULATOR: bool
 BITCOIN_ONLY: bool
-FIRMWARE_SECTORS_COUNT: int

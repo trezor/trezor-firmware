@@ -10,9 +10,11 @@ except ImportError:
 
 # NOTE: using any import magic probably causes mypy not to check equivalence of
 #       layout type signatures across models
-if utils.MODEL == "1":
+if utils.MODEL in ("1",):
     from .t1 import *  # noqa: F401,F403
-elif utils.MODEL == "T":
+elif utils.MODEL in ("R",):
+    from .tr import *  # noqa: F401,F403
+elif utils.MODEL in ("T",):
     if not UI2:
         from .tt import *  # noqa: F401,F403
     else:

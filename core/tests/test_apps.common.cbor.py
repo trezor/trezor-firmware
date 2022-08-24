@@ -8,6 +8,7 @@ from apps.common.cbor import (
     Tagged,
     create_array_header,
     create_map_header,
+    create_embedded_cbor_bytes_header,
     decode,
     encode,
     encode_chunked,
@@ -47,6 +48,22 @@ class TestCardanoCbor(unittest.TestCase):
 
         with self.assertRaises(NotImplementedError):
             create_map_header(2 ** 64)
+
+    def test_create_embedded_cbor_bytes_header(self):
+        test_vectors = [
+            (0, 'd81840'),
+            (23, 'd81857'),
+            ((2 ** 8) - 1, 'd81858ff'),
+            ((2 ** 16) - 1, 'd81859ffff'),
+            ((2 ** 32) - 1, 'd8185affffffff'),
+            ((2 ** 64) - 1, 'd8185bffffffffffffffff'),
+        ]
+        for val, header_hex in test_vectors:
+            header = unhexlify(header_hex)
+            self.assertEqual(create_embedded_cbor_bytes_header(val), header)
+
+        with self.assertRaises(NotImplementedError):
+            create_embedded_cbor_bytes_header(2 ** 64)
 
     def test_cbor_encoding(self):
         test_vectors = [

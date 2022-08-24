@@ -5,7 +5,7 @@ import re
 import shutil
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Dict, Generator, Set
+from typing import Dict, Generator, Optional, Set
 
 import pytest
 from _pytest.outcomes import Failed
@@ -22,6 +22,7 @@ SUGGESTION_FILE = UI_TESTS_DIR / "fixtures.suggestion.json"
 FILE_HASHES: Dict[str, str] = {}
 ACTUAL_HASHES: Dict[str, str] = {}
 PROCESSED: Set[str] = set()
+FAILED_TESTS: Set[str] = set()
 
 # T1/TT, to be set in screen_recording(), as we do not know it beforehand
 # TODO: it is not the cleanest, we could create a class out of this file
@@ -44,9 +45,11 @@ def get_test_name(node_id: str) -> str:
 
 def _process_recorded(screen_path: Path, test_name: str) -> None:
     # calculate hash
-    FILE_HASHES[test_name] = _hash_files(screen_path)
+    actual_hash = _hash_files(screen_path)
+    FILE_HASHES[test_name] = actual_hash
+    ACTUAL_HASHES[test_name] = actual_hash
     _rename_records(screen_path)
-    PROCESSED.add(test_name)
+    testreport.recorded(screen_path, test_name, actual_hash)
 
 
 def _rename_records(screen_path: Path) -> None:
@@ -74,8 +77,6 @@ def _get_bytes_from_png(png_file: str) -> bytes:
 
 
 def _process_tested(fixture_test_path: Path, test_name: str) -> None:
-    PROCESSED.add(test_name)
-
     actual_path = fixture_test_path / "actual"
     actual_hash = _hash_files(actual_path)
     ACTUAL_HASHES[test_name] = actual_hash
@@ -100,6 +101,15 @@ def _process_tested(fixture_test_path: Path, test_name: str) -> None:
         )
     else:
         testreport.passed(fixture_test_path, test_name, actual_hash)
+
+
+def get_last_call_test_result(request: pytest.FixtureRequest) -> Optional[bool]:
+    # if test did not finish, e.g. interrupted by Ctrl+C, the pytest_runtest_makereport
+    # did not create the attribute we need
+    if not hasattr(request.node, "rep_call"):
+        return None
+
+    return request.node.rep_call.passed
 
 
 @contextmanager
@@ -141,10 +151,15 @@ def screen_recording(
         client.init_device()
         client.debug.stop_recording()
 
-    if test_ui == "record":
-        _process_recorded(screen_path, test_name)
-    else:
-        _process_tested(screens_test_path, test_name)
+    if test_ui:
+        PROCESSED.add(test_name)
+        if get_last_call_test_result(request) is False:
+            FAILED_TESTS.add(test_name)
+
+        if test_ui == "record":
+            _process_recorded(screen_path, test_name)
+        else:
+            _process_tested(screens_test_path, test_name)
 
 
 def list_missing() -> Set[str]:
@@ -166,17 +181,28 @@ def write_fixtures(remove_missing: bool) -> None:
     HASH_FILE.write_text(_get_fixtures_content(FILE_HASHES, remove_missing))
 
 
-def write_fixtures_suggestion(remove_missing: bool) -> None:
-    SUGGESTION_FILE.write_text(_get_fixtures_content(ACTUAL_HASHES, remove_missing))
+def write_fixtures_suggestion(
+    remove_missing: bool, only_passed_tests: bool = False
+) -> None:
+    SUGGESTION_FILE.write_text(
+        _get_fixtures_content(ACTUAL_HASHES, remove_missing, only_passed_tests)
+    )
 
 
-def _get_fixtures_content(fixtures: Dict[str, str], remove_missing: bool) -> str:
+def _get_fixtures_content(
+    fixtures: Dict[str, str], remove_missing: bool, only_passed_tests: bool = False
+) -> str:
     if remove_missing:
         # Not removing the ones for different model
         nonrelevant_cases = {
             f: h for f, h in FILE_HASHES.items() if not f.startswith(f"{MODEL}_")
         }
-        processed_fixtures = {i: fixtures[i] for i in PROCESSED}
+
+        filtered_processed_tests = PROCESSED
+        if only_passed_tests:
+            filtered_processed_tests = PROCESSED - FAILED_TESTS
+
+        processed_fixtures = {i: fixtures[i] for i in filtered_processed_tests}
         fixtures = {**nonrelevant_cases, **processed_fixtures}
     else:
         fixtures = fixtures

@@ -204,3 +204,27 @@ macro_rules! obj_module {
         obj_module!($($key => $val),*)
     });
 }
+
+/// Print arbitrary amounts of slices into a terminal.
+/// Does not include a newline at the end.
+/// Does not do anything when not in debugging mode.
+#[allow(unused_macros)] // Should be used only for debugging purposes
+macro_rules! print {
+    ($($string:expr),+) => {
+        #[cfg(feature = "debug")]
+        {
+            $(crate::micropython::print::print($string);)+
+        }
+    }
+}
+
+/// Print arbitrary amounts of slices into a terminal.
+/// Includes a newline at the end.
+/// Does not do anything when not in debugging mode.
+#[allow(unused_macros)] // Should be used only for debugging purposes
+macro_rules! println {
+    ($($string:expr),+) => {
+        // Just delegating to print! and adding a newline
+        print!($($string),+, "\n");
+    }
+}

@@ -13,6 +13,7 @@ wget -e robots=off \
     --no-host-directories \
     --recursive \
     --reject "index.html*" \
+    --reject "-arm" \
     -P emulators/ \
     $SITE
 
@@ -20,4 +21,4 @@ chmod u+x emulators/trezor-emu-*
 
 cd ..
 # are we in Nix(OS)?
-command -v nix-shell >/dev/null && nix-shell --run "autoPatchelf tests/emulators/trezor-emu-*"
+command -v nix-shell >/dev/null && nix-shell --run "autoPatchelf tests/emulators"

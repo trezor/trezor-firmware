@@ -3,7 +3,6 @@ import sys
 from trezorutils import (  # noqa: F401
     BITCOIN_ONLY,
     EMULATOR,
-    FIRMWARE_SECTORS_COUNT,
     MODEL,
     SCM_REVISION,
     VERSION_MAJOR,
@@ -11,11 +10,10 @@ from trezorutils import (  # noqa: F401
     VERSION_PATCH,
     consteq,
     firmware_hash,
-    firmware_sector_size,
     firmware_vendor,
-    get_firmware_chunk,
     halt,
     memcpy,
+    reboot_to_bootloader,
 )
 from typing import TYPE_CHECKING
 
@@ -304,29 +302,20 @@ class BufferReader:
 
 def obj_eq(self: Any, __o: Any) -> bool:
     """
-    Compares object contents, supports __slots__.
+    Compares object contents.
     """
     if self.__class__ is not __o.__class__:
         return False
-    if not hasattr(self, "__slots__"):
-        return self.__dict__ == __o.__dict__
-    if self.__slots__ is not __o.__slots__:
-        return False
-    for slot in self.__slots__:
-        if getattr(self, slot, None) != getattr(__o, slot, None):
-            return False
-    return True
+    assert not hasattr(self, "__slots__")
+    return self.__dict__ == __o.__dict__
 
 
 def obj_repr(self: Any) -> str:
     """
-    Returns a string representation of object, supports __slots__.
+    Returns a string representation of object.
     """
-    if hasattr(self, "__slots__"):
-        d = {attr: getattr(self, attr, None) for attr in self.__slots__}
-    else:
-        d = self.__dict__
-    return f"<{self.__class__.__name__}: {d}>"
+    assert not hasattr(self, "__slots__")
+    return f"<{self.__class__.__name__}: {self.__dict__}>"
 
 
 def truncate_utf8(string: str, max_bytes: int) -> str:

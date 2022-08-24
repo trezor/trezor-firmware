@@ -20,13 +20,13 @@ import json
 import logging
 import os
 import time
-from typing import TYPE_CHECKING, Any, Iterable, Optional, cast
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Optional, TypeVar, cast
 
 import click
 
-from .. import log, messages, protobuf, ui
+from .. import __version__, log, messages, protobuf, ui
 from ..client import TrezorClient
-from ..transport import enumerate_devices
+from ..transport import DeviceIsBusy, enumerate_devices
 from ..transport.udp import UdpTransport
 from . import (
     AliasedGroup,
@@ -50,6 +50,8 @@ from . import (
     tezos,
     with_client,
 )
+
+F = TypeVar("F", bound=Callable)
 
 if TYPE_CHECKING:
     from ..transport import Transport
@@ -121,6 +123,28 @@ class TrezorctlGroup(AliasedGroup):
 
         return None
 
+    def set_result_callback(self) -> Callable[[F], F]:
+        """Set a function called to format the return value of a command.
+
+        Compatibility wrapper for Click 7.x `resultcallback` and >=8.1 `result_callback`
+        """
+        # Click 7.x uses `resultcallback` to configure the callback, and
+        #   `result_callback` to store its value.
+        # Click 8.x uses `result_callback` to configure the callback, and
+        #   `_result_callback` to store its value.
+        # Click 8.0 has a `resultcallback` function that emits a warning and delegates
+        #   to `result_callback`. Click 8.1 removes this function.
+        #
+        # This means that there is no reasonable way to use `hasattr` to detect where we
+        # are, unless we want to look at the private `_result_callback` attribute.
+        # Instead, we look at Click version and hope for the best.
+        from click import __version__ as click_version
+
+        if click_version.startswith("7."):
+            return super().resultcallback()  # type: ignore [Cannot access member]
+        else:
+            return super().result_callback()
+
 
 def configure_logging(verbose: int) -> None:
     if verbose:
@@ -162,7 +186,7 @@ def configure_logging(verbose: int) -> None:
     help="Resume given session ID.",
     default=os.environ.get("TREZOR_SESSION_ID"),
 )
-@click.version_option()
+@click.version_option(version=__version__)
 @click.pass_context
 def cli_main(
     ctx: click.Context,
@@ -189,7 +213,7 @@ def cli_main(
 cli = cast(TrezorctlGroup, cli_main)
 
 
-@cli.resultcallback()
+@cli.set_result_callback()
 def print_result(res: Any, is_json: bool, script: bool, **kwargs: Any) -> None:
     if is_json:
         if isinstance(res, protobuf.MessageType):
@@ -239,18 +263,22 @@ def list_devices(no_resolve: bool) -> Optional[Iterable["Transport"]]:
         return enumerate_devices()
 
     for transport in enumerate_devices():
-        client = TrezorClient(transport, ui=ui.ClickUI())
-        click.echo(f"{transport} - {format_device_name(client.features)}")
-        client.end_session()
+        try:
+            client = TrezorClient(transport, ui=ui.ClickUI())
+            description = format_device_name(client.features)
+            client.end_session()
+        except DeviceIsBusy:
+            description = "Device is in use by another process"
+        except Exception:
+            description = "Failed to read details"
+        click.echo(f"{transport} - {description}")
     return None
 
 
 @cli.command()
 def version() -> str:
     """Show version of trezorctl/trezorlib."""
-    from .. import __version__ as VERSION
-
-    return VERSION
+    return __version__
 
 
 #

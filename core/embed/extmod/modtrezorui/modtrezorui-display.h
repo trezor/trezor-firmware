@@ -476,7 +476,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_text_split_obj,
                                            4, 4,
                                            mod_trezorui_Display_text_split);
 
-/// def qrcode(self, x: int, y: int, data: bytes, scale: int) -> None:
+/// def qrcode(self, x: int, y: int, data: str, scale: int) -> None:
 ///     """
 ///     Renders data encoded as a QR code centered at position (x,y).
 ///     Scale determines a zoom factor.
@@ -489,10 +489,9 @@ STATIC mp_obj_t mod_trezorui_Display_qrcode(size_t n_args,
   if (scale < 1 || scale > 10) {
     mp_raise_ValueError("Scale has to be between 1 and 10");
   }
-  mp_buffer_info_t data = {0};
-  mp_get_buffer_raise(args[3], &data, MP_BUFFER_READ);
-  if (data.len > 0) {
-    display_qrcode(x, y, data.buf, data.len, scale);
+  const char *data = mp_obj_str_get_str(args[3]);
+  if (data) {
+    display_qrcode(x, y, data, scale);
   }
   return mp_const_none;
 }

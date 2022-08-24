@@ -48,6 +48,10 @@ class TransportException(TrezorException):
     pass
 
 
+class DeviceIsBusy(TransportException):
+    pass
+
+
 class Transport:
     """Raw connection to a Trezor device.
 

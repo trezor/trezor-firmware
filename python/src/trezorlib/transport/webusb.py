@@ -22,7 +22,7 @@ from typing import Iterable, List, Optional
 
 from ..log import DUMP_PACKETS
 from ..models import TREZORS, TrezorModel
-from . import UDEV_RULES_STR, TransportException
+from . import UDEV_RULES_STR, DeviceIsBusy, TransportException
 from .protocol import ProtocolBasedTransport, ProtocolV1
 
 LOG = logging.getLogger(__name__)
@@ -57,7 +57,10 @@ class WebUsbHandle:
             else:
                 args = ()
             raise IOError("Cannot open device", *args)
-        self.handle.claimInterface(self.interface)
+        try:
+            self.handle.claimInterface(self.interface)
+        except usb1.USBErrorAccess as e:
+            raise DeviceIsBusy(self.device) from e
 
     def close(self) -> None:
         if self.handle is not None:

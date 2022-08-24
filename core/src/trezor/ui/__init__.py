@@ -49,7 +49,7 @@ else:
 
 
 # in both debug and production, emulator needs to draw the screen explicitly
-if utils.EMULATOR or utils.MODEL == "1":
+if utils.EMULATOR or utils.MODEL in ("1", "R"):
     loop.after_step_hook = refresh
 
 
@@ -143,18 +143,31 @@ def header(
     display.text(44, 35, title, BOLD, fg, bg)
 
 
+# Common for both header functions
+MODEL_HEADER_HEIGHTS = {"1": 12, "R": 15, "T": 30}
+MODEL_Y_BASELINES = {"1": 10, "R": 11, "T": 22}
+
+
 def header_warning(message: str, clear: bool = True) -> None:
-    display.bar(0, 0, WIDTH, 30, style.YELLOW)
-    display.text_center(WIDTH // 2, 22, message, BOLD, style.BLACK, style.YELLOW)
+    height = MODEL_HEADER_HEIGHTS[utils.MODEL]
+    y_baseline = MODEL_Y_BASELINES[utils.MODEL]
+
+    display.bar(0, 0, WIDTH, height, style.YELLOW)
+    display.text_center(
+        WIDTH // 2, y_baseline, message, BOLD, style.BLACK, style.YELLOW
+    )
     if clear:
-        display.bar(0, 30, WIDTH, HEIGHT - 30, style.BG)
+        display.bar(0, height, WIDTH, HEIGHT - height, style.BG)
 
 
 def header_error(message: str, clear: bool = True) -> None:
-    display.bar(0, 0, WIDTH, 30, style.RED)
-    display.text_center(WIDTH // 2, 22, message, BOLD, style.WHITE, style.RED)
+    height = MODEL_HEADER_HEIGHTS[utils.MODEL]
+    y_baseline = MODEL_Y_BASELINES[utils.MODEL]
+
+    display.bar(0, 0, WIDTH, height, style.RED)
+    display.text_center(WIDTH // 2, y_baseline, message, BOLD, style.WHITE, style.RED)
     if clear:
-        display.bar(0, 30, WIDTH, HEIGHT - 30, style.BG)
+        display.bar(0, height, WIDTH, HEIGHT - height, style.BG)
 
 
 def draw_simple(t: "Component") -> None:
@@ -240,7 +253,7 @@ class Component:
     def __init__(self) -> None:
         self.repaint = True
 
-    if utils.MODEL == "T":
+    if utils.MODEL in ("T",):
 
         def dispatch(self, event: int, x: int, y: int) -> None:
             if event is RENDER:
@@ -263,7 +276,7 @@ class Component:
         def on_touch_end(self, x: int, y: int) -> None:
             pass
 
-    elif utils.MODEL == "1":
+    elif utils.MODEL in ("1", "R"):
 
         def dispatch(self, event: int, x: int, y: int) -> None:
             if event is RENDER:
@@ -374,7 +387,7 @@ class Layout(Component):
         Usually overridden to add another tasks to the list."""
         return self.handle_input(), self.handle_rendering()
 
-    if utils.MODEL == "T":
+    if utils.MODEL in ("T",):
 
         def handle_input(self) -> Generator:
             """Task that is waiting for the user input."""
@@ -388,7 +401,7 @@ class Layout(Component):
                 # way to get the lowest input-to-render latency.
                 self.dispatch(RENDER, 0, 0)
 
-    elif utils.MODEL == "1":
+    elif utils.MODEL in ("1", "R"):
 
         def handle_input(self) -> Generator:
             """Task that is waiting for the user input."""

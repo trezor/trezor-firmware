@@ -77,7 +77,6 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_sign(size_t n_args,
   if (msg.len == 0) {
     mp_raise_ValueError("Empty data to sign");
   }
-  ed25519_public_key pk = {0};
   mp_buffer_info_t hash_func = {0};
   vstr_t sig = {0};
   vstr_init_len(&sig, sizeof(ed25519_signature));
@@ -86,16 +85,14 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_sign(size_t n_args,
     mp_get_buffer_raise(args[2], &hash_func, MP_BUFFER_READ);
     // if hash_func == 'keccak':
     if (memcmp(hash_func.buf, "keccak", sizeof("keccak")) == 0) {
-      ed25519_publickey_keccak(*(const ed25519_secret_key *)sk.buf, pk);
       ed25519_sign_keccak(msg.buf, msg.len, *(const ed25519_secret_key *)sk.buf,
-                          pk, *(ed25519_signature *)sig.buf);
+                          *(ed25519_signature *)sig.buf);
     } else {
       vstr_clear(&sig);
       mp_raise_ValueError("Unknown hash function");
     }
   } else {
-    ed25519_publickey(*(const ed25519_secret_key *)sk.buf, pk);
-    ed25519_sign(msg.buf, msg.len, *(const ed25519_secret_key *)sk.buf, pk,
+    ed25519_sign(msg.buf, msg.len, *(const ed25519_secret_key *)sk.buf,
                  *(ed25519_signature *)sig.buf);
   }
 
@@ -128,14 +125,10 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_sign_ext(mp_obj_t secret_key,
   if (msg.len == 0) {
     mp_raise_ValueError("Empty data to sign");
   }
-  ed25519_public_key pk = {0};
-
-  ed25519_publickey_ext(*(const ed25519_secret_key *)sk.buf,
-                        *(const ed25519_secret_key *)skext.buf, pk);
   vstr_t sig = {0};
   vstr_init_len(&sig, sizeof(ed25519_signature));
   ed25519_sign_ext(msg.buf, msg.len, *(const ed25519_secret_key *)sk.buf,
-                   *(const ed25519_secret_key *)skext.buf, pk,
+                   *(const ed25519_secret_key *)skext.buf,
                    *(ed25519_signature *)sig.buf);
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &sig);
 }
@@ -247,6 +240,25 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(
     mod_trezorcrypto_ed25519_cosi_combine_signatures_obj,
     mod_trezorcrypto_ed25519_cosi_combine_signatures);
 
+/// def cosi_commit() -> tuple[bytes, bytes]:
+///     """
+///     Generate a nonce and commitment for the CoSi cosigning scheme.
+///     """
+STATIC mp_obj_t mod_trezorcrypto_ed25519_cosi_commit() {
+  vstr_t nonce = {0};
+  vstr_t commitment = {0};
+  vstr_init_len(&nonce, 32);
+  vstr_init_len(&commitment, 32);
+  ed25519_cosi_commit(*(ed25519_secret_key *)nonce.buf,
+                      *(ed25519_public_key *)commitment.buf);
+  mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
+  tuple->items[0] = mp_obj_new_str_from_vstr(&mp_type_bytes, &nonce);
+  tuple->items[1] = mp_obj_new_str_from_vstr(&mp_type_bytes, &commitment);
+  return MP_OBJ_FROM_PTR(tuple);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_ed25519_cosi_commit_obj,
+                                 mod_trezorcrypto_ed25519_cosi_commit);
+
 /// def cosi_sign(
 ///     secret_key: bytes,
 ///     message: bytes,
@@ -279,12 +291,15 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_cosi_sign(size_t n_args,
   }
   vstr_t sig = {0};
   vstr_init_len(&sig, sizeof(ed25519_cosi_signature));
-  ;
-  ed25519_cosi_sign(msg.buf, msg.len, *(const ed25519_secret_key *)sk.buf,
-                    *(const ed25519_secret_key *)nonce.buf,
-                    *(const ed25519_public_key *)sigR.buf,
-                    *(const ed25519_secret_key *)pk.buf,
-                    *(ed25519_cosi_signature *)sig.buf);
+  if (0 != ed25519_cosi_sign(msg.buf, msg.len,
+                             *(const ed25519_secret_key *)sk.buf,
+                             *(const ed25519_secret_key *)nonce.buf,
+                             *(const ed25519_public_key *)sigR.buf,
+                             *(const ed25519_secret_key *)pk.buf,
+                             *(ed25519_cosi_signature *)sig.buf)) {
+    vstr_clear(&sig);
+    mp_raise_ValueError("Signing failed");
+  }
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &sig);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
@@ -308,6 +323,8 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_ed25519_globals_table[] = {
      MP_ROM_PTR(&mod_trezorcrypto_ed25519_cosi_combine_publickeys_obj)},
     {MP_ROM_QSTR(MP_QSTR_cosi_combine_signatures),
      MP_ROM_PTR(&mod_trezorcrypto_ed25519_cosi_combine_signatures_obj)},
+    {MP_ROM_QSTR(MP_QSTR_cosi_commit),
+     MP_ROM_PTR(&mod_trezorcrypto_ed25519_cosi_commit_obj)},
     {MP_ROM_QSTR(MP_QSTR_cosi_sign),
      MP_ROM_PTR(&mod_trezorcrypto_ed25519_cosi_sign_obj)},
 };

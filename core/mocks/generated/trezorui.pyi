@@ -175,7 +175,7 @@ class Display:
         font is used for rendering.
         """
 
-    def qrcode(self, x: int, y: int, data: bytes, scale: int) -> None:
+    def qrcode(self, x: int, y: int, data: str, scale: int) -> None:
         """
         Renders data encoded as a QR code centered at position (x,y).
         Scale determines a zoom factor.

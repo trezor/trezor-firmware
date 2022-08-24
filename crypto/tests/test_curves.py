@@ -202,7 +202,7 @@ def test_curve_parameters(curve):
 
 def test_point_multiply(curve, r):
     p = r.randpoint(curve)
-    k = r.randrange(0, 2 ** 256)
+    k = r.randrange(0, 2**256)
     kp = k * p
     res = POINT(int2bn(0), int2bn(0))
     lib.point_multiply(curve.ptr, int2bn(k), to_POINT(p), res)
@@ -236,8 +236,8 @@ def test_point_to_jacobian(curve, r):
     jp = JACOBIAN()
     lib.curve_to_jacobian(to_POINT(p), jp, int2bn(curve.p))
     jx, jy, jz = from_JACOBIAN(jp)
-    assert jx % curve.p == (p.x() * jz ** 2) % curve.p
-    assert jy % curve.p == (p.y() * jz ** 3) % curve.p
+    assert jx % curve.p == (p.x() * jz**2) % curve.p
+    assert jy % curve.p == (p.y() * jz**3) % curve.p
 
     q = POINT()
     lib.jacobian_to_curve(jp, q, int2bn(curve.p))

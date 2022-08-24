@@ -30,11 +30,14 @@ const volatile uint8_t DISPLAY_ST7789V_INVERT_COLORS = 0;
 #define DISPLAY_MEMORY_BASE 0x60000000
 #define DISPLAY_MEMORY_PIN 16
 
-#define CMD(X) (*((__IO uint8_t *)((uint32_t)(DISPLAY_MEMORY_BASE))) = (X))
-#define ADDR                                           \
-  (*((__IO uint8_t *)((uint32_t)(DISPLAY_MEMORY_BASE | \
-                                 (1 << DISPLAY_MEMORY_PIN)))))
-#define DATA(X) (ADDR) = (X)
+__IO uint8_t *const DISPLAY_CMD_ADDRESS =
+    (__IO uint8_t *const)((uint32_t)DISPLAY_MEMORY_BASE);
+__IO uint8_t *const DISPLAY_DATA_ADDRESS =
+    (__IO uint8_t *const)((uint32_t)DISPLAY_MEMORY_BASE |
+                          (1 << DISPLAY_MEMORY_PIN));
+
+#define CMD(X) (*DISPLAY_CMD_ADDRESS = (X))
+#define DATA(X) (*DISPLAY_DATA_ADDRESS = (X))
 #define PIXELDATA(X) \
   DATA((X) >> 8);    \
   DATA((X)&0xFF)
@@ -56,16 +59,19 @@ const volatile uint8_t DISPLAY_ST7789V_INVERT_COLORS = 0;
 // of ILI9341V datasheet
 #define DISPLAY_ID_ILI9341V 0x009341U
 
+void display_pixeldata(uint16_t c) { PIXELDATA(c); }
+
 static uint32_t read_display_id(uint8_t command) {
   volatile uint8_t c = 0;
   uint32_t id = 0;
   CMD(command);
-  c = ADDR;  // first returned value is a dummy value and should be discarded
-  c = ADDR;
+  c = *DISPLAY_DATA_ADDRESS;  // first returned value is a dummy value and
+                              // should be discarded
+  c = *DISPLAY_DATA_ADDRESS;
   id |= (c << 16);
-  c = ADDR;
+  c = *DISPLAY_DATA_ADDRESS;
   id |= (c << 8);
-  c = ADDR;
+  c = *DISPLAY_DATA_ADDRESS;
   id |= c;
   return id;
 }
@@ -91,6 +97,8 @@ static uint32_t display_identify(void) {
   return id;
 }
 
+static void display_reset_state() {}
+
 static void __attribute__((unused)) display_sleep(void) {
   uint32_t id = display_identify();
   if ((id == DISPLAY_ID_ILI9341V) || (id == DISPLAY_ID_GC9307) ||
@@ -115,8 +123,7 @@ static void display_unsleep(void) {
 
 static struct { uint16_t x, y; } BUFFER_OFFSET;
 
-static void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1,
-                               uint16_t y1) {
+void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
   x0 += BUFFER_OFFSET.x;
   x1 += BUFFER_OFFSET.x;
   y0 += BUFFER_OFFSET.y;

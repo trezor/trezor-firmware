@@ -21,6 +21,7 @@
 #define __DISPLAY_H__
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #if defined TREZOR_MODEL_T
@@ -40,14 +41,31 @@
 #define DISPLAY_RESY 64
 #define TREZOR_FONT_BPP 1
 
+#elif defined TREZOR_MODEL_R
+
+#define MAX_DISPLAY_RESX 128
+#define MAX_DISPLAY_RESY 128
+#define DISPLAY_RESX 128
+#define DISPLAY_RESY 128
+#define TREZOR_FONT_BPP 1
+
 #else
 #error Unknown Trezor model
 #endif
 
 #define AVATAR_IMAGE_SIZE 144
+#if defined TREZOR_MODEL_T || defined TREZOR_MODEL_1
 #define LOADER_ICON_SIZE 64
+#elif defined TREZOR_MODEL_R
+#define LOADER_ICON_SIZE 24
+#else
+#error Unknown Trezor model
+#endif
 
+#ifdef TREZOR_MODEL_T
 #define RGB16(R, G, B) ((R & 0xF8) << 8) | ((G & 0xFC) << 3) | ((B & 0xF8) >> 3)
+#endif
+
 #define COLOR_WHITE 0xFFFF
 #define COLOR_BLACK 0x0000
 
@@ -110,8 +128,7 @@ int display_text_split(const char *text, int textlen, int font,
                        int requested_width);
 int display_text_height(int font);
 
-void display_qrcode(int x, int y, const char *data, uint32_t datalen,
-                    uint8_t scale);
+void display_qrcode(int x, int y, const char *data, uint8_t scale);
 
 void display_offset(int set_xy[2], int *get_x, int *get_y);
 int display_orientation(int degrees);
@@ -121,5 +138,15 @@ void display_fade(int start, int end, int delay);
 // helper for locating a substring in buffer with utf-8 string
 void display_utf8_substr(const char *buf_start, size_t buf_len, int char_off,
                          int char_len, const char **out_start, int *out_len);
+
+// pixeldata accessors
+void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
+void display_pixeldata(uint16_t c);
+void display_pixeldata_dirty();
+
+#if !(defined EMULATOR) && (defined TREZOR_MODEL_T)
+extern volatile uint8_t *const DISPLAY_CMD_ADDRESS;
+extern volatile uint8_t *const DISPLAY_DATA_ADDRESS;
+#endif
 
 #endif

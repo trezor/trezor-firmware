@@ -1,4 +1,5 @@
 # generated from all_modules.py.mako
+# (by running `make templates` in `core`)
 # do not edit manually!
 # flake8: noqa
 # fmt: off
@@ -186,6 +187,8 @@ trezor.ui.constants
 import trezor.ui.constants
 trezor.ui.constants.t1
 import trezor.ui.constants.t1
+trezor.ui.constants.tr
+import trezor.ui.constants.tr
 trezor.ui.constants.tt
 import trezor.ui.constants.tt
 trezor.ui.container
@@ -202,6 +205,8 @@ trezor.ui.layouts.reset
 import trezor.ui.layouts.reset
 trezor.ui.layouts.t1
 import trezor.ui.layouts.t1
+trezor.ui.layouts.tr
+import trezor.ui.layouts.tr
 trezor.ui.layouts.tt
 import trezor.ui.layouts.tt
 trezor.ui.layouts.tt.altcoin
@@ -366,6 +371,8 @@ apps.management.get_next_u2f_counter
 import apps.management.get_next_u2f_counter
 apps.management.get_nonce
 import apps.management.get_nonce
+apps.management.reboot_to_bootloader
+import apps.management.reboot_to_bootloader
 apps.management.recovery_device
 import apps.management.recovery_device
 apps.management.recovery_device.homescreen
@@ -394,8 +401,6 @@ apps.misc.get_ecdh_session_key
 import apps.misc.get_ecdh_session_key
 apps.misc.get_entropy
 import apps.misc.get_entropy
-apps.misc.get_firmware
-import apps.misc.get_firmware
 apps.misc.get_firmware_hash
 import apps.misc.get_firmware_hash
 apps.misc.sign_identity
@@ -424,12 +429,16 @@ if not utils.BITCOIN_ONLY:
     import trezor.enums.CardanoPoolRelayType
     trezor.enums.CardanoTxAuxiliaryDataSupplementType
     import trezor.enums.CardanoTxAuxiliaryDataSupplementType
+    trezor.enums.CardanoTxOutputSerializationFormat
+    import trezor.enums.CardanoTxOutputSerializationFormat
     trezor.enums.CardanoTxSigningMode
     import trezor.enums.CardanoTxSigningMode
     trezor.enums.CardanoTxWitnessType
     import trezor.enums.CardanoTxWitnessType
     trezor.enums.EthereumDataType
     import trezor.enums.EthereumDataType
+    trezor.enums.MoneroNetworkType
+    import trezor.enums.MoneroNetworkType
     trezor.enums.NEMImportanceTransferMode
     import trezor.enums.NEMImportanceTransferMode
     trezor.enums.NEMModificationType
@@ -474,12 +483,12 @@ if not utils.BITCOIN_ONLY:
     import apps.bitcoin.sign_tx.zcash_v4
     apps.cardano
     import apps.cardano
-    apps.cardano.address
-    import apps.cardano.address
+    apps.cardano.addresses
+    import apps.cardano.addresses
     apps.cardano.auxiliary_data
     import apps.cardano.auxiliary_data
-    apps.cardano.byron_address
-    import apps.cardano.byron_address
+    apps.cardano.byron_addresses
+    import apps.cardano.byron_addresses
     apps.cardano.certificates
     import apps.cardano.certificates
     apps.cardano.get_address
@@ -514,6 +523,16 @@ if not utils.BITCOIN_ONLY:
     import apps.cardano.seed
     apps.cardano.sign_tx
     import apps.cardano.sign_tx
+    apps.cardano.sign_tx.multisig_signer
+    import apps.cardano.sign_tx.multisig_signer
+    apps.cardano.sign_tx.ordinary_signer
+    import apps.cardano.sign_tx.ordinary_signer
+    apps.cardano.sign_tx.plutus_signer
+    import apps.cardano.sign_tx.plutus_signer
+    apps.cardano.sign_tx.pool_owner_signer
+    import apps.cardano.sign_tx.pool_owner_signer
+    apps.cardano.sign_tx.signer
+    import apps.cardano.sign_tx.signer
     apps.common.mnemonic
     import apps.common.mnemonic
     apps.eos
@@ -588,8 +607,6 @@ if not utils.BITCOIN_ONLY:
     import apps.monero.signing.step_01_init_transaction
     apps.monero.signing.step_02_set_input
     import apps.monero.signing.step_02_set_input
-    apps.monero.signing.step_03_inputs_permutation
-    import apps.monero.signing.step_03_inputs_permutation
     apps.monero.signing.step_04_input_vini
     import apps.monero.signing.step_04_input_vini
     apps.monero.signing.step_05_all_inputs_set
@@ -602,22 +619,24 @@ if not utils.BITCOIN_ONLY:
     import apps.monero.signing.step_09_sign_input
     apps.monero.signing.step_10_sign_final
     import apps.monero.signing.step_10_sign_final
+    apps.monero.xmr
+    import apps.monero.xmr
     apps.monero.xmr.addresses
     import apps.monero.xmr.addresses
     apps.monero.xmr.bulletproof
     import apps.monero.xmr.bulletproof
+    apps.monero.xmr.chacha_poly
+    import apps.monero.xmr.chacha_poly
+    apps.monero.xmr.clsag
+    import apps.monero.xmr.clsag
     apps.monero.xmr.credentials
     import apps.monero.xmr.credentials
-    apps.monero.xmr.crypto
-    import apps.monero.xmr.crypto
-    apps.monero.xmr.crypto.chacha_poly
-    import apps.monero.xmr.crypto.chacha_poly
+    apps.monero.xmr.crypto_helpers
+    import apps.monero.xmr.crypto_helpers
     apps.monero.xmr.keccak_hasher
     import apps.monero.xmr.keccak_hasher
     apps.monero.xmr.key_image
     import apps.monero.xmr.key_image
-    apps.monero.xmr.mlsag
-    import apps.monero.xmr.mlsag
     apps.monero.xmr.mlsag_hasher
     import apps.monero.xmr.mlsag_hasher
     apps.monero.xmr.monero
@@ -646,8 +665,6 @@ if not utils.BITCOIN_ONLY:
     import apps.monero.xmr.serialize_messages.tx_prefix
     apps.monero.xmr.serialize_messages.tx_rsig_bulletproof
     import apps.monero.xmr.serialize_messages.tx_rsig_bulletproof
-    apps.monero.xmr.types
-    import apps.monero.xmr.types
     apps.nem
     import apps.nem
     apps.nem.get_address

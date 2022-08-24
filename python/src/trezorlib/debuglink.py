@@ -38,7 +38,6 @@ from typing import (
 )
 
 from mnemonic import Mnemonic
-from PIL import Image
 
 from . import mapping, messages, protobuf
 from .client import TrezorClient
@@ -255,6 +254,8 @@ class DebugLink:
             self.save_screenshot_for_t1()
 
     def save_screenshot_for_t1(self) -> None:
+        from PIL import Image
+
         layout = self.state().layout
         assert layout is not None
         assert len(layout) == 128 * 64 // 8

@@ -165,7 +165,6 @@ int main(void) {
 #endif
 
 #if DEBUG_LINK
-  oledSetDebugLink(1);
 #if !EMULATOR
   config_wipe();
 #endif

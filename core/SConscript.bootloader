@@ -4,6 +4,18 @@ import os
 
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 
+if TREZOR_MODEL in ('1', ):
+    # skip bootloader build
+    env = Environment()
+    def build_bootloader(target,source,env):
+        print(f'Bootloader: nothing to build for Model {TREZOR_MODEL}')
+    program_bin = env.Command(
+                 target='bootloader.bin',
+                 source=None,
+                 action=build_bootloader
+             )
+    Return()
+
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
 CPPDEFINES_MOD = []
@@ -48,6 +60,9 @@ SOURCE_MOD += [
     'embed/extmod/modtrezorui/font_bitmap.c',
     'embed/extmod/modtrezorui/font_roboto_regular_20.c',
     'embed/extmod/modtrezorui/font_robotomono_regular_20.c',
+    'embed/extmod/modtrezorui/font_pixeloperator_bold_8.c',
+    'embed/extmod/modtrezorui/font_pixeloperator_regular_8.c',
+    'embed/extmod/modtrezorui/font_pixeloperatormono_regular_8.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
@@ -56,6 +71,7 @@ SOURCE_MOD += [
 SOURCE_STMHAL = [
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ex.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.c',
@@ -99,7 +115,6 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/rng.c',
     'embed/trezorhal/stm32.c',
     'embed/trezorhal/systick.c',
-    'embed/trezorhal/touch.c',
     'embed/trezorhal/usb.c',
     'embed/trezorhal/usbd_conf.c',
     'embed/trezorhal/usbd_core.c',
@@ -108,6 +123,13 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/util.s',
     'embed/trezorhal/vectortable.s',
 ]
+
+if TREZOR_MODEL in ('R'):
+    SOURCE_TREZORHAL.append('embed/trezorhal/button.c')
+    SOURCE_TREZORHAL.append('embed/trezorhal/rgb_led.c')
+if TREZOR_MODEL in ('T',):
+    SOURCE_TREZORHAL.append('embed/trezorhal/touch.c')
+
 
 env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')))
 
@@ -123,14 +145,10 @@ env.Replace(
 env.Replace(
     TREZOR_MODEL=TREZOR_MODEL, )
 
-if TREZOR_MODEL == 'T':
+if TREZOR_MODEL in ('T', 'R'):
     CPU_ASFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16'
     CPU_CCFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mtune=cortex-m4 '
     CPU_MODEL   = 'STM32F427xx'
-elif TREZOR_MODEL == '1':
-    CPU_ASFLAGS = '-mthumb -mcpu=cortex-m3 -mfloat-abi=soft'
-    CPU_CCFLAGS = '-mthumb -mtune=cortex-m3 -mcpu=cortex-m3 -mfloat-abi=soft '
-    CPU_MODEL   = 'STM32F405xx'
 else:
     raise ValueError('Unknown Trezor model')
 
@@ -158,6 +176,7 @@ env.Replace(
         'vendor/nanopb',
     ] + CPPPATH_MOD,
     CPPDEFINES=[
+        'BOOTLOADER',
         'TREZOR_MODEL_'+TREZOR_MODEL,
         CPU_MODEL,
         'USE_HAL_DRIVER',

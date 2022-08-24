@@ -1,31 +1,19 @@
 from typing import TYPE_CHECKING
 
+from trezor import messages, wire
 from trezor.crypto import hashlib
 from trezor.crypto.curve import ed25519
 from trezor.enums import CardanoAddressType, CardanoTxAuxiliaryDataSupplementType
-from trezor.messages import CardanoTxAuxiliaryDataSupplement
 
 from apps.common import cbor
 
-from .address import (
-    derive_address_bytes,
-    derive_human_readable_address,
-    validate_address_parameters,
-)
-from .helpers import INVALID_AUXILIARY_DATA, bech32
-from .helpers.bech32 import HRP_JORMUN_PUBLIC_KEY
+from . import addresses
+from .helpers import bech32
 from .helpers.paths import SCHEMA_STAKING_ANY_ACCOUNT
 from .helpers.utils import derive_public_key
 from .layout import confirm_catalyst_registration, show_auxiliary_data_hash
 
 if TYPE_CHECKING:
-    from trezor import wire
-
-    from trezor.messages import (
-        CardanoCatalystRegistrationParametersType,
-        CardanoTxAuxiliaryData,
-    )
-
     CatalystRegistrationPayload = dict[int, bytes | int]
     SignedCatalystRegistrationPayload = tuple[CatalystRegistrationPayload, bytes]
     CatalystRegistrationSignature = dict[int, bytes]
@@ -43,11 +31,11 @@ METADATA_KEY_CATALYST_REGISTRATION = 61284
 METADATA_KEY_CATALYST_REGISTRATION_SIGNATURE = 61285
 
 
-def validate_auxiliary_data(auxiliary_data: CardanoTxAuxiliaryData) -> None:
+def validate(auxiliary_data: messages.CardanoTxAuxiliaryData) -> None:
     fields_provided = 0
     if auxiliary_data.hash:
         fields_provided += 1
-        _validate_auxiliary_data_hash(auxiliary_data.hash)
+        _validate_hash(auxiliary_data.hash)
     if auxiliary_data.catalyst_registration_parameters:
         fields_provided += 1
         _validate_catalyst_registration_parameters(
@@ -55,42 +43,44 @@ def validate_auxiliary_data(auxiliary_data: CardanoTxAuxiliaryData) -> None:
         )
 
     if fields_provided != 1:
-        raise INVALID_AUXILIARY_DATA
+        raise wire.ProcessError("Invalid auxiliary data")
 
 
-def _validate_auxiliary_data_hash(auxiliary_data_hash: bytes) -> None:
+def _validate_hash(auxiliary_data_hash: bytes) -> None:
     if len(auxiliary_data_hash) != AUXILIARY_DATA_HASH_SIZE:
-        raise INVALID_AUXILIARY_DATA
+        raise wire.ProcessError("Invalid auxiliary data")
 
 
 def _validate_catalyst_registration_parameters(
-    catalyst_registration_parameters: CardanoCatalystRegistrationParametersType,
+    catalyst_registration_parameters: messages.CardanoCatalystRegistrationParametersType,
 ) -> None:
     if (
         len(catalyst_registration_parameters.voting_public_key)
         != CATALYST_VOTING_PUBLIC_KEY_LENGTH
     ):
-        raise INVALID_AUXILIARY_DATA
+        raise wire.ProcessError("Invalid auxiliary data")
 
     if not SCHEMA_STAKING_ANY_ACCOUNT.match(
         catalyst_registration_parameters.staking_path
     ):
-        raise INVALID_AUXILIARY_DATA
+        raise wire.ProcessError("Invalid auxiliary data")
 
     address_parameters = catalyst_registration_parameters.reward_address_parameters
     if address_parameters.address_type == CardanoAddressType.BYRON:
-        raise INVALID_AUXILIARY_DATA
+        raise wire.ProcessError("Invalid auxiliary data")
 
-    validate_address_parameters(address_parameters)
+    addresses.validate_address_parameters(address_parameters)
 
 
-async def show_auxiliary_data(
+async def show(
     ctx: wire.Context,
     keychain: seed.Keychain,
     auxiliary_data_hash: bytes,
-    catalyst_registration_parameters: CardanoCatalystRegistrationParametersType | None,
+    catalyst_registration_parameters: messages.CardanoCatalystRegistrationParametersType
+    | None,
     protocol_magic: int,
     network_id: int,
+    should_show_details: bool,
 ) -> None:
     if catalyst_registration_parameters:
         await _show_catalyst_registration(
@@ -101,20 +91,21 @@ async def show_auxiliary_data(
             network_id,
         )
 
-    await show_auxiliary_data_hash(ctx, auxiliary_data_hash)
+    if should_show_details:
+        await show_auxiliary_data_hash(ctx, auxiliary_data_hash)
 
 
 async def _show_catalyst_registration(
     ctx: wire.Context,
     keychain: seed.Keychain,
-    catalyst_registration_parameters: CardanoCatalystRegistrationParametersType,
+    catalyst_registration_parameters: messages.CardanoCatalystRegistrationParametersType,
     protocol_magic: int,
     network_id: int,
 ) -> None:
     public_key = catalyst_registration_parameters.voting_public_key
-    encoded_public_key = bech32.encode(HRP_JORMUN_PUBLIC_KEY, public_key)
+    encoded_public_key = bech32.encode(bech32.HRP_JORMUN_PUBLIC_KEY, public_key)
     staking_path = catalyst_registration_parameters.staking_path
-    reward_address = derive_human_readable_address(
+    reward_address = addresses.derive_human_readable(
         keychain,
         catalyst_registration_parameters.reward_address_parameters,
         protocol_magic,
@@ -127,12 +118,12 @@ async def _show_catalyst_registration(
     )
 
 
-def get_auxiliary_data_hash_and_supplement(
+def get_hash_and_supplement(
     keychain: seed.Keychain,
-    auxiliary_data: CardanoTxAuxiliaryData,
+    auxiliary_data: messages.CardanoTxAuxiliaryData,
     protocol_magic: int,
     network_id: int,
-) -> tuple[bytes, CardanoTxAuxiliaryDataSupplement]:
+) -> tuple[bytes, messages.CardanoTxAuxiliaryDataSupplement]:
     if parameters := auxiliary_data.catalyst_registration_parameters:
         (
             catalyst_registration_payload,
@@ -140,10 +131,10 @@ def get_auxiliary_data_hash_and_supplement(
         ) = _get_signed_catalyst_registration_payload(
             keychain, parameters, protocol_magic, network_id
         )
-        auxiliary_data_hash = _get_catalyst_registration_auxiliary_data_hash(
+        auxiliary_data_hash = _get_catalyst_registration_hash(
             catalyst_registration_payload, catalyst_signature
         )
-        auxiliary_data_supplement = CardanoTxAuxiliaryDataSupplement(
+        auxiliary_data_supplement = messages.CardanoTxAuxiliaryDataSupplement(
             type=CardanoTxAuxiliaryDataSupplementType.CATALYST_REGISTRATION_SIGNATURE,
             auxiliary_data_hash=auxiliary_data_hash,
             catalyst_signature=catalyst_signature,
@@ -151,12 +142,12 @@ def get_auxiliary_data_hash_and_supplement(
         return auxiliary_data_hash, auxiliary_data_supplement
     else:
         assert auxiliary_data.hash is not None  # validate_auxiliary_data
-        return auxiliary_data.hash, CardanoTxAuxiliaryDataSupplement(
+        return auxiliary_data.hash, messages.CardanoTxAuxiliaryDataSupplement(
             type=CardanoTxAuxiliaryDataSupplementType.NONE
         )
 
 
-def _get_catalyst_registration_auxiliary_data_hash(
+def _get_catalyst_registration_hash(
     catalyst_registration_payload: CatalystRegistrationPayload,
     catalyst_registration_payload_signature: bytes,
 ) -> bytes:
@@ -164,9 +155,7 @@ def _get_catalyst_registration_auxiliary_data_hash(
         catalyst_registration_payload,
         catalyst_registration_payload_signature,
     )
-    return _hash_auxiliary_data(
-        cbor.encode(_wrap_metadata(cborized_catalyst_registration))
-    )
+    return _get_hash(cbor.encode(_wrap_metadata(cborized_catalyst_registration)))
 
 
 def _cborize_catalyst_registration(
@@ -183,7 +172,7 @@ def _cborize_catalyst_registration(
 
 def _get_signed_catalyst_registration_payload(
     keychain: seed.Keychain,
-    catalyst_registration_parameters: CardanoCatalystRegistrationParametersType,
+    catalyst_registration_parameters: messages.CardanoCatalystRegistrationParametersType,
     protocol_magic: int,
     network_id: int,
 ) -> SignedCatalystRegistrationPayload:
@@ -194,7 +183,7 @@ def _get_signed_catalyst_registration_payload(
     payload: CatalystRegistrationPayload = {
         1: catalyst_registration_parameters.voting_public_key,
         2: staking_key,
-        3: derive_address_bytes(
+        3: addresses.derive_bytes(
             keychain,
             catalyst_registration_parameters.reward_address_parameters,
             protocol_magic,
@@ -245,7 +234,7 @@ def _wrap_metadata(metadata: dict) -> tuple[dict, tuple]:
     return metadata, ()
 
 
-def _hash_auxiliary_data(auxiliary_data: bytes) -> bytes:
+def _get_hash(auxiliary_data: bytes) -> bytes:
     return hashlib.blake2b(
         data=auxiliary_data, outlen=AUXILIARY_DATA_HASH_SIZE
     ).digest()

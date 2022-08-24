@@ -14,12 +14,11 @@ key derived for exactly this purpose.
 from typing import TYPE_CHECKING
 
 from apps.monero import layout
-from apps.monero.xmr import crypto, monero, serialize
+from apps.monero.xmr import crypto, crypto_helpers, monero, serialize
 
 from .state import State
 
 if TYPE_CHECKING:
-    from apps.monero.xmr.types import Sc25519, Ge25519
     from trezor.messages import MoneroTransactionSourceEntry
     from trezor.messages import MoneroTransactionSetInputAck
 
@@ -28,7 +27,7 @@ async def set_input(
     state: State, src_entr: MoneroTransactionSourceEntry
 ) -> MoneroTransactionSetInputAck:
     from trezor.messages import MoneroTransactionSetInputAck
-    from apps.monero.xmr.crypto import chacha_poly
+    from apps.monero.xmr import chacha_poly
     from apps.monero.xmr.serialize_messages.tx_prefix import TxinToKey
     from apps.monero.signing import offloading_keys
 
@@ -49,9 +48,11 @@ async def set_input(
 
     # Secrets derivation
     # the UTXO's one-time address P
-    out_key = crypto.decodepoint(src_entr.outputs[src_entr.real_output].key.dest)
+    out_key = crypto_helpers.decodepoint(
+        src_entr.outputs[src_entr.real_output].key.dest
+    )
     # the tx_pub of our UTXO stored inside its transaction
-    tx_key = crypto.decodepoint(src_entr.real_out_tx_key)
+    tx_key = crypto_helpers.decodepoint(src_entr.real_out_tx_key)
     additional_tx_pub_key = _get_additional_public_key(src_entr)
 
     # Calculates `derivation = Ra`, private spend key `x = H(Ra||i) + b` to be able
@@ -70,7 +71,7 @@ async def set_input(
 
     # Construct tx.vin
     # If multisig is used then ki in vini should be src_entr.multisig_kLRki.ki
-    vini = TxinToKey(amount=src_entr.amount, k_image=crypto.encodepoint(ki))
+    vini = TxinToKey(amount=src_entr.amount, k_image=crypto_helpers.encodepoint(ki))
     vini.key_offsets = _absolute_output_offsets_to_relative(
         [x.idx for x in src_entr.outputs]
     )
@@ -92,22 +93,22 @@ async def set_input(
 
     # PseudoOuts commitment, alphas stored to state
     alpha, pseudo_out = _gen_commitment(state, src_entr.amount)
-    pseudo_out = crypto.encodepoint(pseudo_out)
+    pseudo_out = crypto_helpers.encodepoint(pseudo_out)
 
     # The alpha is encrypted and passed back for storage
-    pseudo_out_hmac = crypto.compute_hmac(
+    pseudo_out_hmac = crypto_helpers.compute_hmac(
         offloading_keys.hmac_key_txin_comm(state.key_hmac, state.current_input_index),
         pseudo_out,
     )
 
     alpha_enc = chacha_poly.encrypt_pack(
         offloading_keys.enc_key_txin_alpha(state.key_enc, state.current_input_index),
-        crypto.encodeint(alpha),
+        crypto_helpers.encodeint(alpha),
     )
 
     spend_enc = chacha_poly.encrypt_pack(
         offloading_keys.enc_key_spend(state.key_enc, state.current_input_index),
-        crypto.encodeint(xi),
+        crypto_helpers.encodeint(xi),
     )
 
     state.last_step = state.STEP_INP
@@ -127,7 +128,7 @@ async def set_input(
     )
 
 
-def _gen_commitment(state: State, in_amount: int) -> tuple[Sc25519, Ge25519]:
+def _gen_commitment(state: State, in_amount: int) -> tuple[crypto.Scalar, crypto.Point]:
     """
     Computes Pedersen commitment - pseudo outs
     Here is slight deviation from the original protocol.
@@ -139,8 +140,8 @@ def _gen_commitment(state: State, in_amount: int) -> tuple[Sc25519, Ge25519]:
     Returns pseudo_out
     """
     alpha = crypto.random_scalar()
-    state.sumpouts_alphas = crypto.sc_add(state.sumpouts_alphas, alpha)
-    return alpha, crypto.gen_commitment(alpha, in_amount)
+    state.sumpouts_alphas = crypto.sc_add_into(None, state.sumpouts_alphas, alpha)
+    return alpha, crypto.gen_commitment_into(None, alpha, in_amount)
 
 
 def _absolute_output_offsets_to_relative(off: list[int]) -> list[int]:
@@ -161,10 +162,10 @@ def _absolute_output_offsets_to_relative(off: list[int]) -> list[int]:
 
 def _get_additional_public_key(
     src_entr: MoneroTransactionSourceEntry,
-) -> Ge25519 | None:
+) -> crypto.Point | None:
     additional_tx_pub_key = None
     if len(src_entr.real_out_additional_tx_keys) == 1:  # compression
-        additional_tx_pub_key = crypto.decodepoint(
+        additional_tx_pub_key = crypto_helpers.decodepoint(
             src_entr.real_out_additional_tx_keys[0]
         )
     elif src_entr.real_out_additional_tx_keys:
@@ -172,7 +173,7 @@ def _get_additional_public_key(
             src_entr.real_out_additional_tx_keys
         ):
             raise ValueError("Wrong number of additional derivations")
-        additional_tx_pub_key = crypto.decodepoint(
+        additional_tx_pub_key = crypto_helpers.decodepoint(
             src_entr.real_out_additional_tx_keys[src_entr.real_output_in_tx_index]
         )
     return additional_tx_pub_key

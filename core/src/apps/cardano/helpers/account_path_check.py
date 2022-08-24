@@ -1,18 +1,13 @@
 from typing import TYPE_CHECKING
 
+from trezor import wire
+
 from ...common.paths import HARDENED
-from ..seed import is_byron_path, is_minting_path, is_multisig_path, is_shelley_path
-from . import (
-    INVALID_CERTIFICATE,
-    INVALID_OUTPUT,
-    INVALID_WITHDRAWAL,
-    INVALID_WITNESS_REQUEST,
-)
+from .. import seed
 from .paths import ACCOUNT_PATH_INDEX, ACCOUNT_PATH_LENGTH
 from .utils import to_account_path
 
 if TYPE_CHECKING:
-    from trezor import wire
     from trezor.messages import (
         CardanoPoolOwner,
         CardanoTxCertificate,
@@ -36,7 +31,7 @@ class AccountPathChecker:
 
     def _add(self, path: list[int], error: wire.ProcessError) -> None:
         # multi-sig and minting paths are always shown and thus don't need to be checked
-        if is_multisig_path(path) or is_minting_path(path):
+        if seed.is_multisig_path(path) or seed.is_minting_path(path):
             return
 
         account_path = to_account_path(path)
@@ -57,13 +52,13 @@ class AccountPathChecker:
         accounts without being bothered by more screens.
         """
         assert isinstance(self.account_path, list)
-        is_control_path_byron_or_shelley = is_byron_path(
+        is_control_path_byron_or_shelley = seed.is_byron_path(
             self.account_path
-        ) or is_shelley_path(self.account_path)
+        ) or seed.is_shelley_path(self.account_path)
 
-        is_new_path_byron_or_shelley = is_byron_path(account_path) or is_shelley_path(
+        is_new_path_byron_or_shelley = seed.is_byron_path(
             account_path
-        )
+        ) or seed.is_shelley_path(account_path)
 
         return (
             is_control_path_byron_or_shelley
@@ -81,25 +76,27 @@ class AccountPathChecker:
         if not output.address_parameters.address_n:
             return
 
-        self._add(output.address_parameters.address_n, INVALID_OUTPUT)
+        self._add(
+            output.address_parameters.address_n, wire.ProcessError("Invalid output")
+        )
 
     def add_certificate(self, certificate: CardanoTxCertificate) -> None:
         if not certificate.path:
             return
 
-        self._add(certificate.path, INVALID_CERTIFICATE)
+        self._add(certificate.path, wire.ProcessError("Invalid certificate"))
 
     def add_pool_owner(self, pool_owner: CardanoPoolOwner) -> None:
         if not pool_owner.staking_key_path:
             return
 
-        self._add(pool_owner.staking_key_path, INVALID_CERTIFICATE)
+        self._add(pool_owner.staking_key_path, wire.ProcessError("Invalid certificate"))
 
     def add_withdrawal(self, withdrawal: CardanoTxWithdrawal) -> None:
         if not withdrawal.path:
             return
 
-        self._add(withdrawal.path, INVALID_WITHDRAWAL)
+        self._add(withdrawal.path, wire.ProcessError("Invalid withdrawal"))
 
     def add_witness_request(self, witness_request: CardanoTxWitnessRequest) -> None:
-        self._add(witness_request.path, INVALID_WITNESS_REQUEST)
+        self._add(witness_request.path, wire.ProcessError("Invalid witness request"))

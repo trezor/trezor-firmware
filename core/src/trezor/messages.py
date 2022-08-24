@@ -30,6 +30,7 @@ if TYPE_CHECKING:
     from trezor.enums import CardanoNativeScriptType  # noqa: F401
     from trezor.enums import CardanoPoolRelayType  # noqa: F401
     from trezor.enums import CardanoTxAuxiliaryDataSupplementType  # noqa: F401
+    from trezor.enums import CardanoTxOutputSerializationFormat  # noqa: F401
     from trezor.enums import CardanoTxSigningMode  # noqa: F401
     from trezor.enums import CardanoTxWitnessType  # noqa: F401
     from trezor.enums import DebugButton  # noqa: F401
@@ -39,6 +40,7 @@ if TYPE_CHECKING:
     from trezor.enums import FailureType  # noqa: F401
     from trezor.enums import InputScriptType  # noqa: F401
     from trezor.enums import MessageType  # noqa: F401
+    from trezor.enums import MoneroNetworkType  # noqa: F401
     from trezor.enums import NEMImportanceTransferMode  # noqa: F401
     from trezor.enums import NEMModificationType  # noqa: F401
     from trezor.enums import NEMMosaicLevy  # noqa: F401
@@ -1335,6 +1337,9 @@ if TYPE_CHECKING:
         script_data_hash: "bytes | None"
         collateral_inputs_count: "int"
         required_signers_count: "int"
+        has_collateral_return: "bool"
+        total_collateral: "int | None"
+        reference_inputs_count: "int"
 
         def __init__(
             self,
@@ -1357,6 +1362,9 @@ if TYPE_CHECKING:
             validity_interval_start: "int | None" = None,
             include_network_id: "bool | None" = None,
             script_data_hash: "bytes | None" = None,
+            has_collateral_return: "bool | None" = None,
+            total_collateral: "int | None" = None,
+            reference_inputs_count: "int | None" = None,
         ) -> None:
             pass
 
@@ -1386,6 +1394,9 @@ if TYPE_CHECKING:
         amount: "int"
         asset_groups_count: "int"
         datum_hash: "bytes | None"
+        format: "CardanoTxOutputSerializationFormat"
+        inline_datum_size: "int"
+        reference_script_size: "int"
 
         def __init__(
             self,
@@ -1395,6 +1406,9 @@ if TYPE_CHECKING:
             address: "str | None" = None,
             address_parameters: "CardanoAddressParametersType | None" = None,
             datum_hash: "bytes | None" = None,
+            format: "CardanoTxOutputSerializationFormat | None" = None,
+            inline_datum_size: "int | None" = None,
+            reference_script_size: "int | None" = None,
         ) -> None:
             pass
 
@@ -1434,6 +1448,34 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoToken"]:
+            return isinstance(msg, cls)
+
+    class CardanoTxInlineDatumChunk(protobuf.MessageType):
+        data: "bytes"
+
+        def __init__(
+            self,
+            *,
+            data: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxInlineDatumChunk"]:
+            return isinstance(msg, cls)
+
+    class CardanoTxReferenceScriptChunk(protobuf.MessageType):
+        data: "bytes"
+
+        def __init__(
+            self,
+            *,
+            data: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxReferenceScriptChunk"]:
             return isinstance(msg, cls)
 
     class CardanoPoolOwner(protobuf.MessageType):
@@ -1646,6 +1688,22 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxRequiredSigner"]:
+            return isinstance(msg, cls)
+
+    class CardanoTxReferenceInput(protobuf.MessageType):
+        prev_hash: "bytes"
+        prev_index: "int"
+
+        def __init__(
+            self,
+            *,
+            prev_hash: "bytes",
+            prev_index: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxReferenceInput"]:
             return isinstance(msg, cls)
 
     class CardanoTxItemAck(protobuf.MessageType):
@@ -1870,13 +1928,11 @@ if TYPE_CHECKING:
 
     class CosiCommit(protobuf.MessageType):
         address_n: "list[int]"
-        data: "bytes | None"
 
         def __init__(
             self,
             *,
             address_n: "list[int] | None" = None,
-            data: "bytes | None" = None,
         ) -> None:
             pass
 
@@ -2216,32 +2272,6 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["FirmwareHash"]:
-            return isinstance(msg, cls)
-
-    class GetFirmware(protobuf.MessageType):
-
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["GetFirmware"]:
-            return isinstance(msg, cls)
-
-    class FirmwareChunk(protobuf.MessageType):
-        chunk: "bytes"
-
-        def __init__(
-            self,
-            *,
-            chunk: "bytes",
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["FirmwareChunk"]:
-            return isinstance(msg, cls)
-
-    class FirmwareChunkAck(protobuf.MessageType):
-
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["FirmwareChunkAck"]:
             return isinstance(msg, cls)
 
     class WipeDevice(protobuf.MessageType):
@@ -3691,7 +3721,7 @@ if TYPE_CHECKING:
     class MoneroGetAddress(protobuf.MessageType):
         address_n: "list[int]"
         show_display: "bool | None"
-        network_type: "int | None"
+        network_type: "MoneroNetworkType"
         account: "int | None"
         minor: "int | None"
         payment_id: "bytes | None"
@@ -3701,7 +3731,7 @@ if TYPE_CHECKING:
             *,
             address_n: "list[int] | None" = None,
             show_display: "bool | None" = None,
-            network_type: "int | None" = None,
+            network_type: "MoneroNetworkType | None" = None,
             account: "int | None" = None,
             minor: "int | None" = None,
             payment_id: "bytes | None" = None,
@@ -3728,13 +3758,13 @@ if TYPE_CHECKING:
 
     class MoneroGetWatchKey(protobuf.MessageType):
         address_n: "list[int]"
-        network_type: "int | None"
+        network_type: "MoneroNetworkType"
 
         def __init__(
             self,
             *,
             address_n: "list[int] | None" = None,
-            network_type: "int | None" = None,
+            network_type: "MoneroNetworkType | None" = None,
         ) -> None:
             pass
 
@@ -3761,7 +3791,7 @@ if TYPE_CHECKING:
     class MoneroTransactionInitRequest(protobuf.MessageType):
         version: "int | None"
         address_n: "list[int]"
-        network_type: "int | None"
+        network_type: "MoneroNetworkType"
         tsx_data: "MoneroTransactionData | None"
 
         def __init__(
@@ -3769,7 +3799,7 @@ if TYPE_CHECKING:
             *,
             address_n: "list[int] | None" = None,
             version: "int | None" = None,
-            network_type: "int | None" = None,
+            network_type: "MoneroNetworkType | None" = None,
             tsx_data: "MoneroTransactionData | None" = None,
         ) -> None:
             pass
@@ -3830,26 +3860,6 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroTransactionSetInputAck"]:
-            return isinstance(msg, cls)
-
-    class MoneroTransactionInputsPermutationRequest(protobuf.MessageType):
-        perm: "list[int]"
-
-        def __init__(
-            self,
-            *,
-            perm: "list[int] | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroTransactionInputsPermutationRequest"]:
-            return isinstance(msg, cls)
-
-    class MoneroTransactionInputsPermutationAck(protobuf.MessageType):
-
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["MoneroTransactionInputsPermutationAck"]:
             return isinstance(msg, cls)
 
     class MoneroTransactionInputViniRequest(protobuf.MessageType):
@@ -4051,20 +4061,20 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class MoneroKeyImageExportInitRequest(protobuf.MessageType):
-        num: "int | None"
-        hash: "bytes | None"
+        num: "int"
+        hash: "bytes"
         address_n: "list[int]"
-        network_type: "int | None"
+        network_type: "MoneroNetworkType"
         subs: "list[MoneroSubAddressIndicesList]"
 
         def __init__(
             self,
             *,
+            num: "int",
+            hash: "bytes",
             address_n: "list[int] | None" = None,
             subs: "list[MoneroSubAddressIndicesList] | None" = None,
-            num: "int | None" = None,
-            hash: "bytes | None" = None,
-            network_type: "int | None" = None,
+            network_type: "MoneroNetworkType | None" = None,
         ) -> None:
             pass
 
@@ -4128,23 +4138,23 @@ if TYPE_CHECKING:
 
     class MoneroGetTxKeyRequest(protobuf.MessageType):
         address_n: "list[int]"
-        network_type: "int | None"
-        salt1: "bytes | None"
-        salt2: "bytes | None"
-        tx_enc_keys: "bytes | None"
-        tx_prefix_hash: "bytes | None"
+        network_type: "MoneroNetworkType"
+        salt1: "bytes"
+        salt2: "bytes"
+        tx_enc_keys: "bytes"
+        tx_prefix_hash: "bytes"
         reason: "int | None"
         view_public_key: "bytes | None"
 
         def __init__(
             self,
             *,
+            salt1: "bytes",
+            salt2: "bytes",
+            tx_enc_keys: "bytes",
+            tx_prefix_hash: "bytes",
             address_n: "list[int] | None" = None,
-            network_type: "int | None" = None,
-            salt1: "bytes | None" = None,
-            salt2: "bytes | None" = None,
-            tx_enc_keys: "bytes | None" = None,
-            tx_prefix_hash: "bytes | None" = None,
+            network_type: "MoneroNetworkType | None" = None,
             reason: "int | None" = None,
             view_public_key: "bytes | None" = None,
         ) -> None:
@@ -4174,13 +4184,13 @@ if TYPE_CHECKING:
 
     class MoneroLiveRefreshStartRequest(protobuf.MessageType):
         address_n: "list[int]"
-        network_type: "int | None"
+        network_type: "MoneroNetworkType"
 
         def __init__(
             self,
             *,
             address_n: "list[int] | None" = None,
-            network_type: "int | None" = None,
+            network_type: "MoneroNetworkType | None" = None,
         ) -> None:
             pass
 
@@ -4195,20 +4205,20 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class MoneroLiveRefreshStepRequest(protobuf.MessageType):
-        out_key: "bytes | None"
-        recv_deriv: "bytes | None"
-        real_out_idx: "int | None"
-        sub_addr_major: "int | None"
-        sub_addr_minor: "int | None"
+        out_key: "bytes"
+        recv_deriv: "bytes"
+        real_out_idx: "int"
+        sub_addr_major: "int"
+        sub_addr_minor: "int"
 
         def __init__(
             self,
             *,
-            out_key: "bytes | None" = None,
-            recv_deriv: "bytes | None" = None,
-            real_out_idx: "int | None" = None,
-            sub_addr_major: "int | None" = None,
-            sub_addr_minor: "int | None" = None,
+            out_key: "bytes",
+            recv_deriv: "bytes",
+            real_out_idx: "int",
+            sub_addr_major: "int",
+            sub_addr_minor: "int",
         ) -> None:
             pass
 
@@ -4329,14 +4339,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class MoneroRctKeyPublic(protobuf.MessageType):
-        dest: "bytes | None"
-        commitment: "bytes | None"
+        dest: "bytes"
+        commitment: "bytes"
 
         def __init__(
             self,
             *,
-            dest: "bytes | None" = None,
-            commitment: "bytes | None" = None,
+            dest: "bytes",
+            commitment: "bytes",
         ) -> None:
             pass
 
@@ -4421,14 +4431,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class MoneroSubAddressIndicesList(protobuf.MessageType):
-        account: "int | None"
+        account: "int"
         minor_indices: "list[int]"
 
         def __init__(
             self,
             *,
+            account: "int",
             minor_indices: "list[int] | None" = None,
-            account: "int | None" = None,
         ) -> None:
             pass
 
@@ -4437,20 +4447,20 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class MoneroTransferDetails(protobuf.MessageType):
-        out_key: "bytes | None"
-        tx_pub_key: "bytes | None"
+        out_key: "bytes"
+        tx_pub_key: "bytes"
         additional_tx_pub_keys: "list[bytes]"
-        internal_output_index: "int | None"
+        internal_output_index: "int"
         sub_addr_major: "int | None"
         sub_addr_minor: "int | None"
 
         def __init__(
             self,
             *,
+            out_key: "bytes",
+            tx_pub_key: "bytes",
+            internal_output_index: "int",
             additional_tx_pub_keys: "list[bytes] | None" = None,
-            out_key: "bytes | None" = None,
-            tx_pub_key: "bytes | None" = None,
-            internal_output_index: "int | None" = None,
             sub_addr_major: "int | None" = None,
             sub_addr_minor: "int | None" = None,
         ) -> None:

@@ -18,17 +18,17 @@ class _RustLayout(ui.Layout):
     def __init__(self, layout: Any):
         self.layout = layout
         self.timer = loop.Timer()
-        self.layout.set_timer_fn(self.set_timer)
 
     def set_timer(self, token: int, deadline: int) -> None:
         self.timer.schedule(deadline, token)
 
     def create_tasks(self) -> tuple[loop.Task, ...]:
-        return self.handle_input_and_rendering(), self.handle_timers()
+        return self.handle_timers(), self.handle_input_and_rendering()
 
     def handle_input_and_rendering(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
         button = loop.wait(io.BUTTON)
         ui.display.clear()
+        self.layout.attach_timer_fn(self.set_timer)
         self.layout.paint()
         while True:
             # Using `yield` instead of `await` to avoid allocations.

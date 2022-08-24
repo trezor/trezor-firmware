@@ -563,13 +563,13 @@ START_TEST(test_bignum_format_uint64) {
   uint64_t m = 1;
   for (int i = 0; i <= 19; i++, m *= 10) {
     sprintf(str, "%" PRIu64, m);
-    r = bn_format_uint64(m, NULL, NULL, 0, 0, false, buf, sizeof(buf));
+    r = bn_format_uint64(m, NULL, NULL, 0, 0, false, 0, buf, sizeof(buf));
     ck_assert_uint_eq(r, strlen(str));
     ck_assert_str_eq(buf, str);
 
     uint64_t n = m - 1;
     sprintf(str, "%" PRIu64, n);
-    r = bn_format_uint64(n, NULL, NULL, 0, 0, false, buf, sizeof(buf));
+    r = bn_format_uint64(n, NULL, NULL, 0, 0, false, 0, buf, sizeof(buf));
     ck_assert_uint_eq(r, strlen(str));
     ck_assert_str_eq(buf, str);
   }
@@ -585,7 +585,7 @@ START_TEST(test_bignum_format) {
       fromhex(
           "0000000000000000000000000000000000000000000000000000000000000000"),
       &a);
-  r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
+  r = bn_format(&a, NULL, NULL, 0, 0, false, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 1);
   ck_assert_str_eq(buf, "0");
 
@@ -593,7 +593,7 @@ START_TEST(test_bignum_format) {
       fromhex(
           "0000000000000000000000000000000000000000000000000000000000000000"),
       &a);
-  r = bn_format(&a, NULL, NULL, 20, 0, true, buf, sizeof(buf));
+  r = bn_format(&a, NULL, NULL, 20, 0, true, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 22);
   ck_assert_str_eq(buf, "0.00000000000000000000");
 
@@ -601,7 +601,7 @@ START_TEST(test_bignum_format) {
       fromhex(
           "0000000000000000000000000000000000000000000000000000000000000000"),
       &a);
-  r = bn_format(&a, NULL, NULL, 0, 5, false, buf, sizeof(buf));
+  r = bn_format(&a, NULL, NULL, 0, 5, false, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 1);
   ck_assert_str_eq(buf, "0");
 
@@ -609,7 +609,7 @@ START_TEST(test_bignum_format) {
       fromhex(
           "0000000000000000000000000000000000000000000000000000000000000000"),
       &a);
-  r = bn_format(&a, NULL, NULL, 0, -5, false, buf, sizeof(buf));
+  r = bn_format(&a, NULL, NULL, 0, -5, false, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 1);
   ck_assert_str_eq(buf, "0");
 
@@ -617,7 +617,7 @@ START_TEST(test_bignum_format) {
       fromhex(
           "0000000000000000000000000000000000000000000000000000000000000000"),
       &a);
-  r = bn_format(&a, "", "", 0, 0, false, buf, sizeof(buf));
+  r = bn_format(&a, "", "", 0, 0, false, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 1);
   ck_assert_str_eq(buf, "0");
 
@@ -625,7 +625,7 @@ START_TEST(test_bignum_format) {
       fromhex(
           "0000000000000000000000000000000000000000000000000000000000000000"),
       &a);
-  r = bn_format(&a, NULL, "SFFX", 0, 0, false, buf, sizeof(buf));
+  r = bn_format(&a, NULL, "SFFX", 0, 0, false, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 1 + 4);
   ck_assert_str_eq(buf, "0SFFX");
 
@@ -633,7 +633,7 @@ START_TEST(test_bignum_format) {
       fromhex(
           "0000000000000000000000000000000000000000000000000000000000000000"),
       &a);
-  r = bn_format(&a, "PRFX", NULL, 0, 0, false, buf, sizeof(buf));
+  r = bn_format(&a, "PRFX", NULL, 0, 0, false, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 4 + 1);
   ck_assert_str_eq(buf, "PRFX0");
 
@@ -641,7 +641,7 @@ START_TEST(test_bignum_format) {
       fromhex(
           "0000000000000000000000000000000000000000000000000000000000000000"),
       &a);
-  r = bn_format(&a, "PRFX", "SFFX", 0, 0, false, buf, sizeof(buf));
+  r = bn_format(&a, "PRFX", "SFFX", 0, 0, false, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 4 + 1 + 4);
   ck_assert_str_eq(buf, "PRFX0SFFX");
 
@@ -649,7 +649,7 @@ START_TEST(test_bignum_format) {
       fromhex(
           "0000000000000000000000000000000000000000000000000000000000000000"),
       &a);
-  r = bn_format(&a, NULL, NULL, 18, 0, false, buf, sizeof(buf));
+  r = bn_format(&a, NULL, NULL, 18, 0, false, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 1);
   ck_assert_str_eq(buf, "0");
 
@@ -657,7 +657,7 @@ START_TEST(test_bignum_format) {
       fromhex(
           "0000000000000000000000000000000000000000000000000000000000000001"),
       &a);
-  r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
+  r = bn_format(&a, NULL, NULL, 0, 0, false, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 1);
   ck_assert_str_eq(buf, "1");
 
@@ -665,15 +665,55 @@ START_TEST(test_bignum_format) {
       fromhex(
           "0000000000000000000000000000000000000000000000000000000000000001"),
       &a);
-  r = bn_format(&a, NULL, NULL, 6, 6, true, buf, sizeof(buf));
+  r = bn_format(&a, NULL, NULL, 6, 6, true, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 8);
   ck_assert_str_eq(buf, "1.000000");
 
   bn_read_be(
       fromhex(
+          "0000000000000000000000000000000000000000000000000000000000000001"),
+      &a);
+  r = bn_format(&a, NULL, NULL, 1, 5, true, 0, buf, sizeof(buf));
+  ck_assert_uint_eq(r, 7);
+  ck_assert_str_eq(buf, "10000.0");
+
+  bn_read_be(
+      fromhex(
+          "0000000000000000000000000000000000000000000000000000000000000001"),
+      &a);
+  r = bn_format(&a, NULL, NULL, 1, 5, true, ',', buf, sizeof(buf));
+  ck_assert_uint_eq(r, 8);
+  ck_assert_str_eq(buf, "10,000.0");
+
+  bn_read_be(
+      fromhex(
+          "000000000000000000000000000000000000000000000000000000000001e240"),
+      &a);
+  r = bn_format(&a, NULL, NULL, 0, 0, true, ',', buf, sizeof(buf));
+  ck_assert_uint_eq(r, 7);
+  ck_assert_str_eq(buf, "123,456");
+
+  bn_read_be(
+      fromhex(
+          "000000000000000000000000000000000000000000000000000000000001e240"),
+      &a);
+  r = bn_format(&a, NULL, NULL, 0, 1, true, ',', buf, sizeof(buf));
+  ck_assert_uint_eq(r, 9);
+  ck_assert_str_eq(buf, "1,234,560");
+
+  bn_read_be(
+      fromhex(
+          "000000000000000000000000000000000000000000000000000000000001e240"),
+      &a);
+  r = bn_format(&a, NULL, NULL, 0, 5, true, ',', buf, sizeof(buf));
+  ck_assert_uint_eq(r, 14);
+  ck_assert_str_eq(buf, "12,345,600,000");
+
+  bn_read_be(
+      fromhex(
           "0000000000000000000000000000000000000000000000000000000000000002"),
       &a);
-  r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
+  r = bn_format(&a, NULL, NULL, 0, 0, false, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 1);
   ck_assert_str_eq(buf, "2");
 
@@ -681,7 +721,7 @@ START_TEST(test_bignum_format) {
       fromhex(
           "0000000000000000000000000000000000000000000000000000000000000005"),
       &a);
-  r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
+  r = bn_format(&a, NULL, NULL, 0, 0, false, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 1);
   ck_assert_str_eq(buf, "5");
 
@@ -689,7 +729,7 @@ START_TEST(test_bignum_format) {
       fromhex(
           "0000000000000000000000000000000000000000000000000000000000000009"),
       &a);
-  r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
+  r = bn_format(&a, NULL, NULL, 0, 0, false, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 1);
   ck_assert_str_eq(buf, "9");
 
@@ -697,7 +737,7 @@ START_TEST(test_bignum_format) {
       fromhex(
           "000000000000000000000000000000000000000000000000000000000000000a"),
       &a);
-  r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
+  r = bn_format(&a, NULL, NULL, 0, 0, false, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 2);
   ck_assert_str_eq(buf, "10");
 
@@ -705,7 +745,7 @@ START_TEST(test_bignum_format) {
       fromhex(
           "0000000000000000000000000000000000000000000000000000000000000014"),
       &a);
-  r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
+  r = bn_format(&a, NULL, NULL, 0, 0, false, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 2);
   ck_assert_str_eq(buf, "20");
 
@@ -713,7 +753,7 @@ START_TEST(test_bignum_format) {
       fromhex(
           "0000000000000000000000000000000000000000000000000000000000000032"),
       &a);
-  r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
+  r = bn_format(&a, NULL, NULL, 0, 0, false, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 2);
   ck_assert_str_eq(buf, "50");
 
@@ -721,7 +761,7 @@ START_TEST(test_bignum_format) {
       fromhex(
           "0000000000000000000000000000000000000000000000000000000000000063"),
       &a);
-  r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
+  r = bn_format(&a, NULL, NULL, 0, 0, false, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 2);
   ck_assert_str_eq(buf, "99");
 
@@ -729,7 +769,7 @@ START_TEST(test_bignum_format) {
       fromhex(
           "0000000000000000000000000000000000000000000000000000000000000064"),
       &a);
-  r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
+  r = bn_format(&a, NULL, NULL, 0, 0, false, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 3);
   ck_assert_str_eq(buf, "100");
 
@@ -737,7 +777,7 @@ START_TEST(test_bignum_format) {
       fromhex(
           "00000000000000000000000000000000000000000000000000000000000000c8"),
       &a);
-  r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
+  r = bn_format(&a, NULL, NULL, 0, 0, false, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 3);
   ck_assert_str_eq(buf, "200");
 
@@ -745,7 +785,7 @@ START_TEST(test_bignum_format) {
       fromhex(
           "00000000000000000000000000000000000000000000000000000000000001f4"),
       &a);
-  r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
+  r = bn_format(&a, NULL, NULL, 0, 0, false, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 3);
   ck_assert_str_eq(buf, "500");
 
@@ -753,7 +793,7 @@ START_TEST(test_bignum_format) {
       fromhex(
           "00000000000000000000000000000000000000000000000000000000000003e7"),
       &a);
-  r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
+  r = bn_format(&a, NULL, NULL, 0, 0, false, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 3);
   ck_assert_str_eq(buf, "999");
 
@@ -761,15 +801,23 @@ START_TEST(test_bignum_format) {
       fromhex(
           "00000000000000000000000000000000000000000000000000000000000003e8"),
       &a);
-  r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
+  r = bn_format(&a, NULL, NULL, 0, 0, false, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 4);
   ck_assert_str_eq(buf, "1000");
 
   bn_read_be(
       fromhex(
+          "00000000000000000000000000000000000000000000000000000000000003e8"),
+      &a);
+  r = bn_format(&a, NULL, NULL, 0, 0, false, ',', buf, sizeof(buf));
+  ck_assert_uint_eq(r, 5);
+  ck_assert_str_eq(buf, "1,000");
+
+  bn_read_be(
+      fromhex(
           "0000000000000000000000000000000000000000000000000000000000989680"),
       &a);
-  r = bn_format(&a, NULL, NULL, 7, 0, false, buf, sizeof(buf));
+  r = bn_format(&a, NULL, NULL, 7, 0, false, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 1);
   ck_assert_str_eq(buf, "1");
 
@@ -777,7 +825,7 @@ START_TEST(test_bignum_format) {
       fromhex(
           "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
       &a);
-  r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
+  r = bn_format(&a, NULL, NULL, 0, 0, false, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 78);
   ck_assert_str_eq(buf,
                    "11579208923731619542357098500868790785326998466564056403945"
@@ -787,7 +835,7 @@ START_TEST(test_bignum_format) {
       fromhex(
           "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
       &a);
-  r = bn_format(&a, NULL, NULL, 1, 0, false, buf, sizeof(buf));
+  r = bn_format(&a, NULL, NULL, 1, 0, false, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 79);
   ck_assert_str_eq(buf,
                    "11579208923731619542357098500868790785326998466564056403945"
@@ -797,7 +845,7 @@ START_TEST(test_bignum_format) {
       fromhex(
           "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
       &a);
-  r = bn_format(&a, NULL, NULL, 2, 0, false, buf, sizeof(buf));
+  r = bn_format(&a, NULL, NULL, 2, 0, false, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 79);
   ck_assert_str_eq(buf,
                    "11579208923731619542357098500868790785326998466564056403945"
@@ -807,7 +855,7 @@ START_TEST(test_bignum_format) {
       fromhex(
           "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
       &a);
-  r = bn_format(&a, NULL, NULL, 8, 0, false, buf, sizeof(buf));
+  r = bn_format(&a, NULL, NULL, 8, 0, false, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 79);
   ck_assert_str_eq(buf,
                    "11579208923731619542357098500868790785326998466564056403945"
@@ -815,9 +863,31 @@ START_TEST(test_bignum_format) {
 
   bn_read_be(
       fromhex(
+          "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+      &a);
+  r = bn_format(&a, NULL, NULL, 9, 0, false, ',', buf, sizeof(buf));
+  ck_assert_uint_eq(r, 101);
+  ck_assert_str_eq(
+      buf,
+      "115,792,089,237,316,195,423,570,985,008,687,907,853,269,984,"
+      "665,640,564,039,457,584,007,913.129639935");
+
+  bn_read_be(
+      fromhex(
+          "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+      &a);
+  r = bn_format(&a, NULL, NULL, 9, 0, false, ' ', buf, sizeof(buf));
+  ck_assert_uint_eq(r, 101);
+  ck_assert_str_eq(
+      buf,
+      "115 792 089 237 316 195 423 570 985 008 687 907 853 269 984 "
+      "665 640 564 039 457 584 007 913.129639935");
+
+  bn_read_be(
+      fromhex(
           "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffe3bbb00"),
       &a);
-  r = bn_format(&a, NULL, NULL, 8, 0, false, buf, sizeof(buf));
+  r = bn_format(&a, NULL, NULL, 8, 0, false, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 70);
   ck_assert_str_eq(buf,
                    "11579208923731619542357098500868790785326998466564056403945"
@@ -827,7 +897,7 @@ START_TEST(test_bignum_format) {
       fromhex(
           "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
       &a);
-  r = bn_format(&a, NULL, NULL, 18, 0, false, buf, sizeof(buf));
+  r = bn_format(&a, NULL, NULL, 18, 0, false, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 79);
   ck_assert_str_eq(buf,
                    "11579208923731619542357098500868790785326998466564056403945"
@@ -837,7 +907,7 @@ START_TEST(test_bignum_format) {
       fromhex(
           "fffffffffffffffffffffffffffffffffffffffffffffffff7e52fe5afe40000"),
       &a);
-  r = bn_format(&a, NULL, NULL, 18, 0, false, buf, sizeof(buf));
+  r = bn_format(&a, NULL, NULL, 18, 0, false, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 60);
   ck_assert_str_eq(
       buf, "115792089237316195423570985008687907853269984665640564039457");
@@ -846,7 +916,7 @@ START_TEST(test_bignum_format) {
       fromhex(
           "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
       &a);
-  r = bn_format(&a, NULL, NULL, 78, 0, false, buf, sizeof(buf));
+  r = bn_format(&a, NULL, NULL, 78, 0, false, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 80);
   ck_assert_str_eq(buf,
                    "0."
@@ -857,7 +927,7 @@ START_TEST(test_bignum_format) {
       fromhex(
           "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
       &a);
-  r = bn_format(&a, NULL, NULL, 0, 10, false, buf, sizeof(buf));
+  r = bn_format(&a, NULL, NULL, 0, 10, false, 0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 88);
   ck_assert_str_eq(buf,
                    "11579208923731619542357098500868790785326998466564056403945"
@@ -868,7 +938,7 @@ START_TEST(test_bignum_format) {
           "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
       &a);
   r = bn_format(&a, "quite a long prefix", "even longer suffix", 60, 0, false,
-                buf, sizeof(buf));
+                0, buf, sizeof(buf));
   ck_assert_uint_eq(r, 116);
   ck_assert_str_eq(buf,
                    "quite a long "
@@ -881,12 +951,12 @@ START_TEST(test_bignum_format) {
           "0000000000000000000000000000000000000000000000000123456789abcdef"),
       &a);
   memset(buf, 'a', sizeof(buf));
-  r = bn_format(&a, "prefix", "suffix", 10, 0, false, buf, 31);
+  r = bn_format(&a, "prefix", "suffix", 10, 0, false, 0, buf, 31);
   ck_assert_str_eq(buf, "prefix8198552.9216486895suffix");
   ck_assert_uint_eq(r, 30);
 
   memset(buf, 'a', sizeof(buf));
-  r = bn_format(&a, "prefix", "suffix", 10, 0, false, buf, 30);
+  r = bn_format(&a, "prefix", "suffix", 10, 0, false, 0, buf, 30);
   ck_assert_uint_eq(r, 0);
   ck_assert_str_eq(buf, "");
 }
@@ -3757,7 +3827,7 @@ END_TEST
 #define test_deterministic(KEY, MSG, K)           \
   do {                                            \
     sha256_Raw((uint8_t *)MSG, strlen(MSG), buf); \
-    init_rfc6979(fromhex(KEY), buf, &rng);        \
+    init_rfc6979(fromhex(KEY), buf, NULL, &rng);  \
     generate_k_rfc6979(&k, &rng);                 \
     bn_write_be(&k, buf);                         \
     ck_assert_mem_eq(buf, fromhex(K), 32);        \
@@ -3799,6 +3869,54 @@ START_TEST(test_rfc6979) {
       "about. It's a very serious disease and it interferes completely with "
       "the work. The trouble with computers is that you 'play' with them!",
       "1f4b84c23a86a221d233f2521be018d9318639d5b8bbd6374a8a59232d16ad3d");
+}
+END_TEST
+
+static void test_ecdsa_sign_digest_deterministic_helper(
+    int (*ecdsa_sign_digest_fn)(const ecdsa_curve *, const uint8_t *,
+                                const uint8_t *, uint8_t *, uint8_t *,
+                                int (*)(uint8_t by, uint8_t sig[64]))) {
+  static struct {
+    const char *priv_key;
+    const char *digest;
+    const char *sig;
+  } tests[] = {
+      {"312155017c70a204106e034520e0cdf17b3e54516e2ece38e38e38e38e38e38e",
+       "ffffffffffffffffffffffffffffffff20202020202020202020202020202020",
+       "e3d70248ea2fc771fc8d5e62d76b9cfd5402c96990333549eaadce1ae9f737eb"
+       "5cfbdc7d1e0ec18cc9b57bbb18f0a57dc929ec3c4dfac9073c581705015f6a8a"},
+      {"312155017c70a204106e034520e0cdf17b3e54516e2ece38e38e38e38e38e38e",
+       "2020202020202020202020202020202020202020202020202020202020202020",
+       "40666188895430715552a7e4c6b53851f37a93030fb94e043850921242db78e8"
+       "75aa2ac9fd7e5a19402973e60e64382cdc29a09ebf6cb37e92f23be5b9251aee"},
+  };
+
+  const ecdsa_curve *curve = &secp256k1;
+  uint8_t priv_key[32] = {0};
+  uint8_t digest[32] = {0};
+  uint8_t expected_sig[64] = {0};
+  uint8_t computed_sig[64] = {0};
+  int res = 0;
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(*tests); i++) {
+    memcpy(priv_key, fromhex(tests[i].priv_key), 32);
+    memcpy(digest, fromhex(tests[i].digest), 32);
+    memcpy(expected_sig, fromhex(tests[i].sig), 64);
+
+    res =
+        ecdsa_sign_digest_fn(curve, priv_key, digest, computed_sig, NULL, NULL);
+    ck_assert_int_eq(res, 0);
+    ck_assert_mem_eq(expected_sig, computed_sig, 64);
+  }
+}
+
+START_TEST(test_ecdsa_sign_digest_deterministic) {
+  test_ecdsa_sign_digest_deterministic_helper(ecdsa_sign_digest);
+}
+END_TEST
+
+START_TEST(test_zkp_ecdsa_sign_digest_deterministic) {
+  test_ecdsa_sign_digest_deterministic_helper(zkp_ecdsa_sign_digest);
 }
 END_TEST
 
@@ -5555,7 +5673,7 @@ END_TEST
 START_TEST(test_mnemonic_find_word) {
   ck_assert_int_eq(-1, mnemonic_find_word("aaaa"));
   ck_assert_int_eq(-1, mnemonic_find_word("zzzz"));
-  for (int i = 0; i < BIP39_WORDS; i++) {
+  for (int i = 0; i < BIP39_WORD_COUNT; i++) {
     const char *word = mnemonic_get_word(i);
     int index = mnemonic_find_word(word);
     ck_assert_int_eq(i, index);
@@ -6547,7 +6665,7 @@ START_TEST(test_ed25519) {
     UNMARK_SECRET_DATA(pk, sizeof(pk));
     ck_assert_mem_eq(pk, fromhex(*spk), 32);
 
-    ed25519_sign(pk, 32, sk, pk, sig);
+    ed25519_sign(pk, 32, sk, sig);
     UNMARK_SECRET_DATA(sig, sizeof(sig));
     ck_assert_mem_eq(sig, fromhex(*ssig), 64);
 
@@ -6765,7 +6883,7 @@ START_TEST(test_ed25519_keccak) {
     ck_assert_mem_eq(public_key, fromhex(tests[i].public_key), 32);
 
     ed25519_sign_keccak(fromhex(tests[i].data), tests[i].length, private_key,
-                        public_key, signature);
+                        signature);
     UNMARK_SECRET_DATA(signature, sizeof(signature));
     ck_assert_mem_eq(signature, fromhex(tests[i].signature), 64);
 
@@ -6790,7 +6908,7 @@ START_TEST(test_ed25519_cosi) {
           "26c76712d89d906e6672dafa614c42e5cb1caac8c6568e4d2493087db51f0d36"),
       fromhex(
           "26659c1cf7321c178c07437150639ff0c5b7679c7ea195253ed9abda2e081a37"),
-      &rng);
+      NULL, &rng);
 
   for (int N = 1; N < 11; N++) {
     ed25519_public_key pk;
@@ -6808,8 +6926,7 @@ START_TEST(test_ed25519_cosi) {
 
     /* phase 1: create nonces, commitments (R values) and combine commitments */
     for (int j = 0; j < N; j++) {
-      generate_rfc6979(nonces[j], &rng);
-      ed25519_publickey(nonces[j], Rs[j]);
+      ed25519_cosi_commit(nonces[j], Rs[j]);
     }
     res = ed25519_cosi_combine_publickeys(R, Rs, N);
     ck_assert_int_eq(res, 0);
@@ -6817,7 +6934,9 @@ START_TEST(test_ed25519_cosi) {
     MARK_SECRET_DATA(keys, sizeof(keys));
     /* phase 2: sign and combine signatures */
     for (int j = 0; j < N; j++) {
-      ed25519_cosi_sign(msg, sizeof(msg), keys[j], nonces[j], R, pk, sigs[j]);
+      res = ed25519_cosi_sign(msg, sizeof(msg), keys[j], nonces[j], R, pk,
+                              sigs[j]);
+      ck_assert_int_eq(res, 0);
     }
     UNMARK_SECRET_DATA(sigs, sizeof(sigs));
 
@@ -9461,6 +9580,10 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_zkp_ecdsa_get_public_key65);
   tcase_add_test(tc, test_zkp_ecdsa_recover_pub_from_sig);
   tcase_add_test(tc, test_zkp_ecdsa_verify_digest);
+#if USE_RFC6979
+  tcase_add_test(tc, test_ecdsa_sign_digest_deterministic);
+  tcase_add_test(tc, test_zkp_ecdsa_sign_digest_deterministic);
+#endif
   suite_add_tcase(s, tc);
 
   tc = tcase_create("rfc6979");
@@ -9718,7 +9841,6 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_xmr_get_subaddress_secret_key);
   tcase_add_test(tc, test_xmr_gen_c);
   tcase_add_test(tc, test_xmr_varint);
-  tcase_add_test(tc, test_xmr_gen_range_sig);
   suite_add_tcase(s, tc);
 #endif
   return s;

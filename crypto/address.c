@@ -73,7 +73,7 @@ void ethereum_address_checksum(const uint8_t *addr, char *address, bool rskip60,
   keccak_256_Init(&ctx);
   if (rskip60) {
     char prefix[16] = {0};
-    int prefix_size = bn_format_uint64(chain_id, NULL, "0x", 0, 0, false,
+    int prefix_size = bn_format_uint64(chain_id, NULL, "0x", 0, 0, false, 0,
                                        prefix, sizeof(prefix));
     keccak_Update(&ctx, (const uint8_t *)prefix, prefix_size);
   }

@@ -5,6 +5,55 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.3] (2022-07-13)
+[0.13.3]: https://github.com/trezor/trezor-firmware/compare/python/v0.13.2...python/v0.13.3
+
+### Added
+- Support for Cardano Babbage era transaction items  [#2354]
+
+### Fixed
+- Fix Click 7.x compatibility.  [#2364]
+
+
+## [0.13.2] (2022-06-30)
+[0.13.2]: https://github.com/trezor/trezor-firmware/compare/python/v0.13.1...python/v0.13.2
+
+### Fixed
+- Fixed dependency error when running trezorctl without PIL.
+- Fixed dependency error when running trezorctl on Python 3.6 without rlp.
+- Fix `trezorctl --version` crash.  [#1702]
+
+
+## [0.13.1] (2022-06-29)
+[0.13.1]: https://github.com/trezor/trezor-firmware/compare/python/v0.13.0...python/v0.13.1
+
+### Added
+- New exception type `DeviceIsBusy` indicates that the device is in use by another process.  [#1026]
+- Support payment requests and GetNonce command.  [#1430]
+- Add press_info() to DebugLink.  [#1430]
+- Add support for blind EIP-712 signing for Trezor One  [#1970]
+- Add ScriptUI for trezorctl, spawned by --script option  [#2023]
+- Support T1 screenshot saving in Debuglink  [#2093]
+- Support generating Electrum-compatible message signatures in CLI.  [#2100]
+- Support Cardano Alonzo-era transaction items and --include-network-id flag  [#2114]
+- trezorctl: Bitcoin commands can detect script type from derivation path.  [#2159]
+- Add support for model R  [#2230]
+- Add firmware get-hash command.  [#2239]
+- Jump and stay in bootloader from firmware through SVC call reverse trampoline.  [#2284]
+
+### Changed
+- Unify boolean arguments/options in trezorlib commands to on/off  [#2123]
+- Rename `normalize_nfc` to `prepare_message_bytes` in tools.py  [#2126]
+- `trezorctl monero` network type arguments now accept symbolic names instead of numbers.  [#2219]
+
+### Fixed
+- trezorctl will correctly report that device is in use.  [#1026]
+- Allow passing empty `message_hash` for domain-only EIP-712 hashes
+  for Trezor T1 (i.e. when `primaryType`=`EIP712Domain`)  [#2036]
+- Fixed error when printing protobuf message with a missing required field.  [#2135]
+- Add compatibility with Click 8.1  [#2199]
+
+
 ## [0.13.0] - 2021-12-09
 [0.13.0]: https://github.com/trezor/trezor-firmware/compare/python/v0.12.4...python/v0.13.0
 
@@ -564,6 +613,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#379]: https://github.com/trezor/trezor-firmware/pull/379
 [#810]: https://github.com/trezor/trezor-firmware/pull/810
 [#948]: https://github.com/trezor/trezor-firmware/pull/948
+[#1026]: https://github.com/trezor/trezor-firmware/pull/1026
 [#1052]: https://github.com/trezor/trezor-firmware/pull/1052
 [#1126]: https://github.com/trezor/trezor-firmware/pull/1126
 [#1179]: https://github.com/trezor/trezor-firmware/pull/1179
@@ -576,6 +626,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#1266]: https://github.com/trezor/trezor-firmware/pull/1266
 [#1296]: https://github.com/trezor/trezor-firmware/pull/1296
 [#1363]: https://github.com/trezor/trezor-firmware/pull/1363
+[#1430]: https://github.com/trezor/trezor-firmware/pull/1430
 [#1442]: https://github.com/trezor/trezor-firmware/pull/1442
 [#1449]: https://github.com/trezor/trezor-firmware/pull/1449
 [#1531]: https://github.com/trezor/trezor-firmware/pull/1531
@@ -585,6 +636,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#1668]: https://github.com/trezor/trezor-firmware/pull/1668
 [#1671]: https://github.com/trezor/trezor-firmware/pull/1671
 [#1683]: https://github.com/trezor/trezor-firmware/pull/1683
+[#1702]: https://github.com/trezor/trezor-firmware/pull/1702
 [#1710]: https://github.com/trezor/trezor-firmware/pull/1710
 [#1738]: https://github.com/trezor/trezor-firmware/pull/1738
 [#1745]: https://github.com/trezor/trezor-firmware/pull/1745
@@ -602,3 +654,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#1896]: https://github.com/trezor/trezor-firmware/pull/1896
 [#1959]: https://github.com/trezor/trezor-firmware/pull/1959
 [#1967]: https://github.com/trezor/trezor-firmware/pull/1967
+[#1970]: https://github.com/trezor/trezor-firmware/pull/1970
+[#2023]: https://github.com/trezor/trezor-firmware/pull/2023
+[#2036]: https://github.com/trezor/trezor-firmware/pull/2036
+[#2093]: https://github.com/trezor/trezor-firmware/pull/2093
+[#2100]: https://github.com/trezor/trezor-firmware/pull/2100
+[#2114]: https://github.com/trezor/trezor-firmware/pull/2114
+[#2123]: https://github.com/trezor/trezor-firmware/pull/2123
+[#2126]: https://github.com/trezor/trezor-firmware/pull/2126
+[#2135]: https://github.com/trezor/trezor-firmware/pull/2135
+[#2159]: https://github.com/trezor/trezor-firmware/pull/2159
+[#2199]: https://github.com/trezor/trezor-firmware/pull/2199
+[#2219]: https://github.com/trezor/trezor-firmware/pull/2219
+[#2230]: https://github.com/trezor/trezor-firmware/pull/2230
+[#2239]: https://github.com/trezor/trezor-firmware/pull/2239
+[#2284]: https://github.com/trezor/trezor-firmware/pull/2284
+[#2354]: https://github.com/trezor/trezor-firmware/pull/2354
+[#2364]: https://github.com/trezor/trezor-firmware/pull/2364
