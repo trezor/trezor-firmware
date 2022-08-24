@@ -38,6 +38,13 @@
 #error Unknown Trezor model
 #endif
 
+typedef enum {
+  TOIF_FULL_COLOR_BE = 0,  // big endian
+  TOIF_GRAYSCALE_OH = 1,   // odd hi
+  TOIF_FULL_COLOR_LE = 2,  // little endian
+  TOIF_GRAYSCALE_EH = 3,   // even hi
+} toif_format_t;
+
 // provided by port
 
 void display_init(void);
@@ -55,7 +62,7 @@ void display_bar_radius(int x, int y, int w, int h, uint16_t c, uint16_t b,
                         uint8_t r);
 
 bool display_toif_info(const uint8_t *buf, uint32_t len, uint16_t *out_w,
-                       uint16_t *out_h, bool *out_grayscale);
+                       uint16_t *out_h, toif_format_t *out_format);
 void display_image(int x, int y, int w, int h, const void *data,
                    uint32_t datalen);
 void display_avatar(int x, int y, const void *data, uint32_t datalen,

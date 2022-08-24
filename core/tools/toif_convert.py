@@ -24,7 +24,7 @@ def toif_convert(infile, outfile):
 
     elif outfile.name.endswith(".toif") or outfile.name == "-":
         im = Image.open(infile)
-        toi = toif.from_image(im)
+        toi = toif.from_image(im, format=1)
         outfile.write(toi.to_bytes())
 
     else:

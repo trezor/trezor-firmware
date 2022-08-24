@@ -46,7 +46,7 @@ def build_icons(check, remove):
 
         im = Image.open(app["icon"])
         resized = im.resize(ICON_SIZE, Image.BOX)
-        toi = toif.from_image(resized)
+        toi = toif.from_image(resized, format=1)
         dest_path = DESTINATION / f"icon_{app['key']}.toif"
 
         total_size += len(toi.to_bytes())

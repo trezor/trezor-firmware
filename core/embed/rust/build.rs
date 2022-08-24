@@ -285,6 +285,7 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("display_set_window")
         .allowlist_var("DISPLAY_CMD_ADDRESS")
         .allowlist_var("DISPLAY_DATA_ADDRESS")
+        .allowlist_type("toif_format_t")
         // fonts
         .allowlist_function("font_height")
         .allowlist_function("font_max_height")

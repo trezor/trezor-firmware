@@ -8,7 +8,10 @@ use crate::{
 use core::slice::from_raw_parts;
 
 use super::geometry::{Offset, Point, Rect};
-use crate::trezorhal::uzlib::{UzlibContext, UZLIB_WINDOW_SIZE};
+use crate::trezorhal::{
+    display::ToifFormat,
+    uzlib::{UzlibContext, UZLIB_WINDOW_SIZE},
+};
 #[cfg(feature = "dma2d")]
 use crate::trezorhal::{
     dma2d,
@@ -80,7 +83,7 @@ pub fn rect_fill_rounded(r: Rect, fg_color: Color, bg_color: Color, radius: u8) 
 /// left.
 pub fn icon_top_left(top_left: Point, data: &[u8], fg_color: Color, bg_color: Color) {
     let toif_info = unwrap!(display::toif_info(data), "Invalid TOIF data");
-    assert!(toif_info.grayscale);
+    assert_eq!(toif_info.format, ToifFormat::GrayScaleEH);
     display::icon(
         top_left.x,
         top_left.y,
@@ -94,7 +97,7 @@ pub fn icon_top_left(top_left: Point, data: &[u8], fg_color: Color, bg_color: Co
 
 pub fn icon(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
     let toif_info = unwrap!(display::toif_info(data), "Invalid TOIF data");
-    assert!(toif_info.grayscale);
+    assert_eq!(toif_info.format, ToifFormat::GrayScaleEH);
 
     let r = Rect::from_center_and_size(
         center,
@@ -113,7 +116,7 @@ pub fn icon(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
 
 pub fn icon_rust(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
     let toif_info = unwrap!(display::toif_info(data), "Invalid TOIF data");
-    assert!(toif_info.grayscale);
+    assert_eq!(toif_info.format, ToifFormat::GrayScaleEH);
 
     let r = Rect::from_center_and_size(
         center,
@@ -155,7 +158,7 @@ pub fn icon_rust(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
 
 pub fn image(center: Point, data: &[u8]) {
     let toif_info = unwrap!(display::toif_info(data), "Invalid TOIF data");
-    assert!(!toif_info.grayscale);
+    assert_eq!(toif_info.format, ToifFormat::FullColorLE);
 
     let r = Rect::from_center_and_size(
         center,
@@ -170,11 +173,11 @@ pub fn image(center: Point, data: &[u8]) {
     );
 }
 
-pub fn toif_info(data: &[u8]) -> Option<(Offset, bool)> {
+pub fn toif_info(data: &[u8]) -> Option<(Offset, ToifFormat)> {
     if let Ok(info) = display::toif_info(data) {
         Some((
             Offset::new(info.width.into(), info.height.into()),
-            info.grayscale,
+            info.format,
         ))
     } else {
         None
@@ -327,7 +330,7 @@ pub fn rect_rounded2_partial(
 
     if let Some((icon_bytes, icon_color)) = icon {
         let toif_info = unwrap!(display::toif_info(icon_bytes), "Invalid TOIF data");
-        assert!(toif_info.grayscale);
+        assert_eq!(toif_info.format, ToifFormat::GrayScaleEH);
 
         if toif_info.width <= MAX_ICON_SIZE && toif_info.height <= MAX_ICON_SIZE {
             icon_area = Rect::from_center_and_size(
@@ -428,7 +431,7 @@ pub fn loader_uncompress(
 
     if let Some((data, color)) = icon {
         let toif_info = unwrap!(display::toif_info(data), "Invalid TOIF data");
-        assert!(toif_info.grayscale);
+        assert_eq!(toif_info.format, ToifFormat::GrayScaleEH);
         if toif_info.width <= (ICON_MAX_SIZE as u16) && toif_info.height <= (ICON_MAX_SIZE as u16) {
             let mut icon_data = [0_u8; ((ICON_MAX_SIZE * ICON_MAX_SIZE) / 2) as usize];
             let icon_size = Offset::new(toif_info.width.into(), toif_info.height.into());
@@ -960,7 +963,7 @@ pub fn text_over_image(
     let empty_t = get_buffer_4bpp(2, true);
 
     let toif_info = unwrap!(display::toif_info(data), "Invalid TOIF data");
-    assert!(!toif_info.grayscale);
+    assert_eq!(toif_info.format, ToifFormat::FullColorLE);
     assert!(toif_info.width <= constant::WIDTH as u16);
 
     let r_img;
@@ -1076,12 +1079,12 @@ pub fn icon_over_icon(
     let (data_fg, offset_fg, color_icon_fg) = fg;
 
     let toif_info_bg = unwrap!(display::toif_info(data_bg), "Invalid TOIF data");
-    assert!(toif_info_bg.grayscale);
+    assert_eq!(toif_info_bg.format, ToifFormat::GrayScaleEH);
     assert!(toif_info_bg.width <= constant::WIDTH as u16);
     assert_eq!(toif_info_bg.width % 2, 0);
 
     let toif_info_fg = unwrap!(display::toif_info(data_fg), "Invalid TOIF data");
-    assert!(toif_info_fg.grayscale);
+    assert_eq!(toif_info_fg.format, ToifFormat::GrayScaleEH);
     assert!(toif_info_fg.width <= constant::WIDTH as u16);
     assert_eq!(toif_info_fg.width % 2, 0);
 
