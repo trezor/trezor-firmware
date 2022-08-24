@@ -1,7 +1,7 @@
 pub mod bip39;
 #[macro_use]
 #[allow(unused_macros)]
-pub mod common;
+pub mod fatal_error;
 #[cfg(feature = "ui")]
 pub mod display;
 #[cfg(feature = "dma2d")]
