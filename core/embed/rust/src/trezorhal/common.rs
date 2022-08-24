@@ -1,3 +1,5 @@
+use cstr_core::CStr;
+
 mod ffi {
     extern "C" {
         // trezorhal/common.c
@@ -11,43 +13,77 @@ mod ffi {
     }
 }
 
-pub fn __fatal_error(expr: &str, msg: &str, file: &str, line: u32, func: &str) -> ! {
-    const MAX_LEN: usize = 50 + 1; // Leave space for the null terminator.
+const NULL_TERMINATED_MAXLEN: usize = 50;
 
-    fn as_cstr_buf(s: &str) -> [cty::c_char; MAX_LEN] {
-        let mut buf = [0 as cty::c_char; MAX_LEN];
-        for (i, c) in s.as_bytes().iter().enumerate() {
-            if i >= MAX_LEN {
-                break;
-            }
-            buf[i] = *c as cty::c_char;
-        }
-        buf[MAX_LEN - 1] = 0;
-        buf
+pub struct StackCStr([u8; NULL_TERMINATED_MAXLEN]);
+
+impl StackCStr {
+    pub fn new(s: &str) -> Self {
+        let mut cstr = Self([0; NULL_TERMINATED_MAXLEN]);
+        cstr.set_truncated(s);
+        cstr
     }
 
-    let expr_buf = as_cstr_buf(expr);
-    let msg_buf = as_cstr_buf(msg);
-    let file_buf = as_cstr_buf(file);
-    let func_buf = as_cstr_buf(func);
+    pub fn set_truncated(&mut self, s: &str) {
+        let len = s.len().min(NULL_TERMINATED_MAXLEN - 1);
+        self.0[..len].copy_from_slice(&s.as_bytes()[..len]);
+        self.0[len] = 0;
+    }
+
+    pub fn cstr(&self) -> &CStr {
+        unsafe { CStr::from_bytes_with_nul_unchecked(&self.0) }
+    }
+}
+
+#[cfg(not(feature = "bootloader"))]
+pub fn __fatal_error(expr: &CStr, msg: &CStr, file: &CStr, line: u32, func: &CStr) -> ! {
+    unsafe {
+        ffi::__fatal_error(
+            expr.as_ptr(),
+            msg.as_ptr(),
+            file.as_ptr(),
+            line as i32,
+            func.as_ptr(),
+        );
+    }
+}
+
+#[cfg(feature = "bootloader")]
+pub fn __fatal_error(_expr: &CStr, _msg: &CStr, _file: &CStr, _line: u32, _func: &CStr) -> ! {
+    use core::ptr;
+    use cstr_core::cstr;
 
     unsafe {
         ffi::__fatal_error(
-            expr_buf.as_ptr(),
-            msg_buf.as_ptr(),
-            file_buf.as_ptr(),
-            line as i32,
-            func_buf.as_ptr(),
+            ptr::null(),
+            cstr!("BL.rs").as_ptr(),
+            ptr::null(),
+            0,
+            ptr::null(),
         );
     }
 }
 
 pub trait UnwrapOrFatalError<T> {
-    fn unwrap_or_fatal_error(self, expr: &str, msg: &str, file: &str, line: u32, func: &str) -> T;
+    fn unwrap_or_fatal_error(
+        self,
+        expr: &CStr,
+        msg: &CStr,
+        file: &CStr,
+        line: u32,
+        func: &CStr,
+    ) -> T;
 }
 
 impl<T> UnwrapOrFatalError<T> for Option<T> {
-    fn unwrap_or_fatal_error(self, expr: &str, msg: &str, file: &str, line: u32, func: &str) -> T {
+    fn unwrap_or_fatal_error(
+        self,
+        expr: &CStr,
+        msg: &CStr,
+        file: &CStr,
+        line: u32,
+        func: &CStr,
+    ) -> T {
         match self {
             Some(x) => x,
             None => __fatal_error(expr, msg, file, line, func),
@@ -56,7 +92,14 @@ impl<T> UnwrapOrFatalError<T> for Option<T> {
 }
 
 impl<T, E> UnwrapOrFatalError<T> for Result<T, E> {
-    fn unwrap_or_fatal_error(self, expr: &str, msg: &str, file: &str, line: u32, func: &str) -> T {
+    fn unwrap_or_fatal_error(
+        self,
+        expr: &CStr,
+        msg: &CStr,
+        file: &CStr,
+        line: u32,
+        func: &CStr,
+    ) -> T {
         match self {
             Ok(x) => x,
             Err(_) => __fatal_error(expr, msg, file, line, func),
@@ -66,27 +109,44 @@ impl<T, E> UnwrapOrFatalError<T> for Result<T, E> {
 
 macro_rules! function_name {
     () => {{
-        fn f() {}
-        fn type_name_of<T>(_: T) -> &'static str {
-            core::any::type_name::<T>()
+        #[cfg(not(feature = "bootloader"))]
+        {
+            use crate::trezorhal::common::StackCStr;
+
+            fn f() {}
+            fn type_name_of<T>(_: T) -> &'static str {
+                core::any::type_name::<T>()
+            }
+            let name = type_name_of(f);
+            let name_trunc = name.get(..name.len() - 3).unwrap_or("");
+            StackCStr::new(name_trunc).cstr()
         }
-        let name = type_name_of(f);
-        name.get(..name.len() - 3).unwrap_or("")
+        #[cfg(feature = "bootloader")]
+        {
+            cstr_core::cstr!("")
+        }
     }};
 }
 
 macro_rules! unwrap {
-    ($e:expr, $msg:expr) => {{
+    ($e:expr, $msg:literal) => {{
         use crate::trezorhal::common::UnwrapOrFatalError;
-        $e.unwrap_or_fatal_error("unwrap failed", $msg, file!(), line!(), function_name!())
+        use cstr_core::cstr;
+        $e.unwrap_or_fatal_error(
+            cstr!(stringify!($e)),
+            cstr!($msg),
+            cstr!(file!()),
+            line!(),
+            function_name!(),
+        )
     }};
     ($expr:expr) => {
-        unwrap!($expr, "")
+        unwrap!($expr, "unwrap failed")
     };
 }
 
 macro_rules! ensure {
-    ($what:expr, $error:expr) => {
+    ($what:expr, $error:literal) => {
         if !($what) {
             fatal_error!(stringify!($what), $error);
         }
@@ -94,7 +154,14 @@ macro_rules! ensure {
 }
 
 macro_rules! fatal_error {
-    ($expr:expr, $msg:expr) => {{
-        crate::trezorhal::common::__fatal_error($expr, $msg, file!(), line!(), function_name!());
+    ($expr:expr, $msg:literal) => {{
+        use cstr_core::cstr;
+        crate::trezorhal::common::__fatal_error(
+            cstr!(stringify!($expr)),
+            cstr!($msg),
+            cstr!(file!()),
+            line!(),
+            function_name!(),
+        );
     }};
 }
