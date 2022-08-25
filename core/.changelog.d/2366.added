@@ -1,1 +1,1 @@
-Show blue dot when USB data pins are not connected
+Show red error header when USB data pins are not connected

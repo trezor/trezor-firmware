@@ -68,7 +68,7 @@ class Homescreen(HomescreenBase):
         # Differs for each model
 
         if not utils.usb_data_connected():
-            ui.display.bar(0, 0, 8, 8, ui.BLUE)
+            ui.header_error("NO USB CONNECTION")
 
         # TODO: support homescreen avatar change for R and 1
         if utils.MODEL in ("T",):
