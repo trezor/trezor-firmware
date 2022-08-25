@@ -119,7 +119,7 @@ impl Component for Loader {
         // Current loader API only takes Y-offset relative to screen center, which we
         // compute from the bounds center point.
         let screen_center = constant::screen().center();
-        self.offset_y = screen_center.y - bounds.center().y;
+        self.offset_y = bounds.center().y - screen_center.y;
         Rect::from_center_and_size(screen_center + Offset::y(self.offset_y), Self::SIZE)
     }
 
