@@ -66,3 +66,9 @@ const char *profile_sdcard_path(void) {
   FILE_PATH(_sdcard_path, "/trezor.sdcard");
   return _sdcard_path;
 }
+
+const char *profile_usb_disconnect_path(void) {
+  SVAR(_disconnect_path);
+  FILE_PATH(_disconnect_path, "/trezor.usb_data_disconnected");
+  return _disconnect_path;
+}
