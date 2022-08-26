@@ -104,7 +104,10 @@ class Toif:
     def __post_init__(self) -> None:
         # checking the data size
         width, height = self.size
-        if self.mode is firmware.ToifMode.grayscale or self.mode is firmware.ToifMode.grayscale_eh:
+        if (
+            self.mode is firmware.ToifMode.grayscale
+            or self.mode is firmware.ToifMode.grayscale_eh
+        ):
             expected_size = width * height // 2
         else:
             expected_size = width * height * 2
@@ -132,7 +135,7 @@ class Toif:
         elif self.mode is firmware.ToifMode.full_color:
             pil_mode = "RGB"
             raw_data = _to_rgb(uncompressed, little_endian=False)
-        elif self.mode is firmware.ToifMode.full_color_le:
+        else:  # self.mode is firmware.ToifMode.full_color_le:
             pil_mode = "RGB"
             raw_data = _to_rgb(uncompressed, little_endian=True)
 
