@@ -743,6 +743,7 @@ async def confirm_modify_fee(
     sign: int,
     user_fee_change: str,
     total_fee_new: str,
+    fee_rate_amount: str | None = None,
 ) -> None:
     result = await interact(
         ctx,

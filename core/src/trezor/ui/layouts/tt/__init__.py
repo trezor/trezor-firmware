@@ -980,6 +980,7 @@ async def confirm_modify_fee(
     sign: int,
     user_fee_change: str,
     total_fee_new: str,
+    fee_rate_amount: str | None = None,
 ) -> None:
     text = Text("Modify fee", ui.ICON_SEND, ui.GREEN, new_lines=False)
     if sign == 0:
@@ -991,9 +992,10 @@ async def confirm_modify_fee(
             text.normal("Increase your fee by:\n")
         text.bold(user_fee_change)
         text.br()
-    text.br_half()
     text.normal("Transaction fee:\n")
     text.bold(total_fee_new)
+    if fee_rate_amount is not None:
+        text.normal("\n" + fee_rate_amount)
     await raise_if_cancelled(
         interact(ctx, HoldToConfirm(text), "modify_fee", ButtonRequestType.SignTx)
     )

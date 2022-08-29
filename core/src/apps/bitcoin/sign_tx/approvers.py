@@ -249,6 +249,7 @@ class BasicApprover(Approver):
         total = self.total_in - self.change_out
         spending = total - self.external_in
         tx_size_vB = self.weight.get_virtual_size()
+        fee_rate = fee / tx_size_vB
         # fee_threshold = (coin.maxfee per byte * tx size)
         fee_threshold = (self.coin.maxfee_kb / 1000) * tx_size_vB
 
@@ -295,14 +296,14 @@ class BasicApprover(Approver):
                 # coming entirely from the user's own funds and from decreases of external outputs.
                 # We consider the decreases as belonging to the user.
                 await helpers.confirm_modify_fee(
-                    fee - orig_fee, fee, self.coin, self.amount_unit
+                    fee - orig_fee, fee, fee_rate, self.coin, self.amount_unit
                 )
             elif spending > orig_spending:
                 # PayJoin and user is spending more: Show the increase in the user's contribution
                 # to the fee, ignoring any contribution from external inputs. Decreasing of
                 # external outputs is not allowed in PayJoin, so there is no need to handle those.
                 await helpers.confirm_modify_fee(
-                    spending - orig_spending, fee, self.coin, self.amount_unit
+                    spending - orig_spending, fee, fee_rate, self.coin, self.amount_unit
                 )
             else:
                 # PayJoin and user is not spending more: When new external inputs are involved and
@@ -317,7 +318,6 @@ class BasicApprover(Approver):
                 )
 
             if not self.external_in:
-                fee_rate = fee / tx_size_vB
                 await helpers.confirm_total(
                     total, fee, fee_rate, self.coin, self.amount_unit
                 )
