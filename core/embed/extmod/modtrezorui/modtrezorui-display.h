@@ -119,8 +119,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_bar_radius_obj,
 
 /// def toif_info(self, image: bytes) -> tuple[int, int, int]:
 ///     """
-///     Returns tuple containing TOIF image dimensions: width, height, and format
-///     Raises an exception for corrupted images.
+///     Returns tuple containing TOIF image dimensions: width, height, and
+///     format Raises an exception for corrupted images.
 ///     """
 STATIC mp_obj_t mod_trezorui_Display_toif_info(mp_obj_t self, mp_obj_t image) {
   mp_buffer_info_t buffer = {0};
