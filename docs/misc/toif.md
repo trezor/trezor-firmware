@@ -39,7 +39,7 @@ The data is stored according to endianness.
 Each pixel is encoded using a 4-bit value.
 Each byte contains color of two pixels:
 
-#### Odd high: 
+#### Odd high:
 
 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
 |---|---|---|---|---|---|---|---|
