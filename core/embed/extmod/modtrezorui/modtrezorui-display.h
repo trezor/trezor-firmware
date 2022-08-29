@@ -264,7 +264,7 @@ STATIC mp_obj_t mod_trezorui_Display_loader(size_t n_args,
     mp_buffer_info_t icon = {0};
     mp_get_buffer_raise(args[6], &icon, MP_BUFFER_READ);
     const uint8_t *data = icon.buf;
-    if (icon.len < 8 || memcmp(data, "TOIh", 4) != 0) {
+    if (icon.len < 8 || memcmp(data, "TOIG", 4) != 0) {
       mp_raise_ValueError("Invalid image format");
     }
     mp_int_t w = *(uint16_t *)(data + 4);

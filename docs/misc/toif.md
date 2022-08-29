@@ -18,9 +18,9 @@ All multibyte integer values are little endian!
 TOI currently supports 4 variants:
 
 * `f`: full-color big endian
-* `l`: full-color little endian
+* `F`: full-color little endian
 * `g`: gray-scale odd high
-* `h`: gray-scale even high
+* `G`: gray-scale even high
 
 ### Full-color
 
