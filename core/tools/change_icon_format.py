@@ -24,12 +24,12 @@ def header_to_toif(path) -> bool:
         outfile.write(bytes((0x49,)))
         if "g" in magic_line:
             outfile.write(bytes((ord('g'),)))
+        elif "G" in magic_line:
+            outfile.write(bytes((ord('G'),)))
         elif "f" in magic_line:
             outfile.write(bytes((ord('f'),)))
-        elif "l" in magic_line:
-            outfile.write(bytes((ord('l'),)))
-        elif "h" in magic_line:
-            outfile.write(bytes((ord('h'),)))
+        elif "F" in magic_line:
+            outfile.write(bytes((ord('F'),)))
         else:
             print(magic_line)
             raise Exception("Unknown format")
@@ -50,14 +50,14 @@ def toif_to_header(path, name):
         outfile.write("// clang-format off\n")
         outfile.write(f'static const uint8_t {name}[] = {{\n',)
         outfile.write("    // magic\n",)
-        if b[3] == ord('h'):
-            outfile.write("    'T', 'O', 'I', 'h',\n",)
+        if b[3] == ord('f'):
+            outfile.write("    'T', 'O', 'I', 'f',\n",)
+        elif b[3] == ord('F'):
+            outfile.write("    'T', 'O', 'I', 'F',\n",)
         elif b[3] == ord('g'):
             outfile.write("    'T', 'O', 'I', 'g',\n",)
-        elif b[3] == ord('l'):
-            outfile.write("    'T', 'O', 'I', 'l',\n",)
-        elif b[3] == ord('f'):
-            outfile.write("    'T', 'O', 'I', 'f',\n",)
+        elif b[3] == ord('G'):
+            outfile.write("    'T', 'O', 'I', 'G',\n",)
         else:
             raise Exception("Unknown format")
 
@@ -104,6 +104,9 @@ def reformat_c_icon(path):
         toi = toif.from_image(im, format=1)
         f.write(toi.to_bytes())
     toif_to_header(path, name)
+
+    os.remove("tmp.toif")
+    os.remove("tmp_c.toif")
 
 
 def reformat_c_icons(p):
