@@ -51,8 +51,8 @@ class Display:
 
     def toif_info(self, image: bytes) -> tuple[int, int, int]:
         """
-        Returns tuple containing TOIF image dimensions: width, height, and format
-        Raises an exception for corrupted images.
+        Returns tuple containing TOIF image dimensions: width, height, and
+        format Raises an exception for corrupted images.
         """
 
     def image(self, x: int, y: int, image: bytes) -> None:
