@@ -1,7 +1,7 @@
 // clang-format off
 static const uint8_t toi_icon_wipe[] = {
     // magic
-    'T', 'O', 'I', 'h',
+    'T', 'O', 'I', 'G',
     // width (16-bit), height (16-bit)
     0x40, 0x00, 0x40, 0x00,
     // compressed data length (32-bit)

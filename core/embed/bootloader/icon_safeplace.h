@@ -1,7 +1,7 @@
 // clang-format off
 static const uint8_t toi_icon_safeplace[] = {
     // magic
-    'T', 'O', 'I', 'h',
+    'T', 'O', 'I', 'G',
     // width (16-bit), height (16-bit)
     0xc8, 0x00, 0x3c, 0x00,
     // compressed data length (32-bit)
