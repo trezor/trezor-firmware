@@ -1,7 +1,7 @@
 // clang-format off
 static const uint8_t toi_icon_welcome[] = {
     // magic
-    'T', 'O', 'I', 'h',
+    'T', 'O', 'I', 'G',
     // width (16-bit), height (16-bit)
     0xb4, 0x00, 0x1e, 0x00,
     // compressed data length (32-bit)
