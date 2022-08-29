@@ -116,17 +116,24 @@ class UiConfirmModifyFee(UiConfirm):
         self,
         user_fee_change: int,
         total_fee_new: int,
+        fee_rate: float,
         coin: CoinInfo,
         amount_unit: AmountUnit,
     ):
         self.user_fee_change = user_fee_change
         self.total_fee_new = total_fee_new
+        self.fee_rate = fee_rate
         self.coin = coin
         self.amount_unit = amount_unit
 
     def confirm_dialog(self, ctx: wire.Context) -> Awaitable[Any]:
         return layout.confirm_modify_fee(
-            ctx, self.user_fee_change, self.total_fee_new, self.coin, self.amount_unit
+            ctx,
+            self.user_fee_change,
+            self.total_fee_new,
+            self.fee_rate,
+            self.coin,
+            self.amount_unit,
         )
 
 
@@ -230,8 +237,12 @@ def confirm_modify_output(txo: TxOutput, orig_txo: TxOutput, coin: CoinInfo, amo
     return (yield UiConfirmModifyOutput(txo, orig_txo, coin, amount_unit))
 
 
-def confirm_modify_fee(user_fee_change: int, total_fee_new: int, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]
-    return (yield UiConfirmModifyFee(user_fee_change, total_fee_new, coin, amount_unit))
+def confirm_modify_fee(user_fee_change: int, total_fee_new: int, fee_rate: float, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[Any]:  # type: ignore [awaitable-is-generator]
+    return (
+        yield UiConfirmModifyFee(
+            user_fee_change, total_fee_new, fee_rate, coin, amount_unit
+        )
+    )
 
 
 def confirm_total(spending: int, fee: int, fee_rate: float, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[None]:  # type: ignore [awaitable-is-generator]
