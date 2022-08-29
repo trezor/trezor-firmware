@@ -2,7 +2,7 @@ use super::ffi;
 use core::ptr;
 use cty::c_int;
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Eq)]
 pub enum ToifFormat {
     FullColorBE,
     GrayScaleOH,

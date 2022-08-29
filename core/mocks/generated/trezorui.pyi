@@ -49,10 +49,9 @@ class Display:
         are drawn with radius radius.
         """
 
-    def toif_info(self, image: bytes) -> tuple[int, int, bool]:
+    def toif_info(self, image: bytes) -> tuple[int, int, int]:
         """
-        Returns tuple containing TOIF image dimensions: width, height, and
-        whether it is grayscale.
+        Returns tuple containing TOIF image dimensions: width, height, and format
         Raises an exception for corrupted images.
         """
 
