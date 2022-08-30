@@ -277,7 +277,6 @@ async def confirm_path_warning(
             trezorui2.show_warning(
                 title="Unknown path",
                 description=path,
-                button="CONTINUE",
             )
         ),
         "path_warning",
@@ -758,13 +757,11 @@ async def confirm_metadata(
         layout = trezorui2.show_warning(
             title="Unusually high fee",
             description=param or "",
-            button="CONTINUE",
         )
     elif br_type == "change_count_over_threshold":
         layout = trezorui2.show_warning(
             title="A lot of change-outputs",
             description=f"{param} outputs" if param is not None else "",
-            button="CONTINUE",
         )
     else:
         if param is not None:
@@ -929,7 +926,16 @@ async def show_popup(
     description_param: str = "",
     timeout_ms: int = 3000,
 ) -> None:
-    raise NotImplementedError
+    if subtitle:
+        title += f"\n{subtitle}".format(subtitle)
+    await _RustLayout(
+        trezorui2.show_error(
+            title=title,
+            description=description.format(description_param),
+            button="",
+            time_ms=timeout_ms,
+        )
+    )
 
 
 def draw_simple_text(title: str, description: str = "") -> None:

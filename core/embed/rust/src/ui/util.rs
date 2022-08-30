@@ -34,7 +34,6 @@ pub fn u32_to_str(num: u32, buffer: &mut [u8]) -> Option<&str> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::str;
 
     #[test]
     fn u32_to_str_valid() {
