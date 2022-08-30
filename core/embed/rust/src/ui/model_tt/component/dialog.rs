@@ -3,7 +3,7 @@ use crate::ui::{
     geometry::{Insets, LinearPlacement, Rect},
 };
 
-use super::{theme, Button};
+use super::theme;
 
 pub enum DialogMsg<T, U> {
     Content(T),
@@ -40,9 +40,12 @@ where
     type Msg = DialogMsg<T::Msg, U::Msg>;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let layout = DialogLayout::middle(bounds);
-        self.content.place(layout.content);
-        self.controls.place(layout.controls);
+        let controls_area = self.controls.place(bounds);
+        let content_area = bounds
+            .inset(Insets::bottom(controls_area.height()))
+            .inset(Insets::bottom(theme::BUTTON_SPACING))
+            .inset(Insets::left(theme::CONTENT_BORDER));
+        self.content.place(content_area);
         bounds
     }
 
@@ -61,21 +64,6 @@ where
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.content.bounds(sink);
         self.controls.bounds(sink);
-    }
-}
-
-pub struct DialogLayout {
-    pub content: Rect,
-    pub controls: Rect,
-}
-
-impl DialogLayout {
-    pub fn middle(area: Rect) -> Self {
-        let (content, controls) = area.split_bottom(Button::<&str>::HEIGHT);
-        let content = content
-            .inset(Insets::bottom(theme::BUTTON_SPACING))
-            .inset(Insets::left(theme::CONTENT_BORDER));
-        Self { content, controls }
     }
 }
 
@@ -145,12 +133,14 @@ where
         let bounds = bounds
             .inset(theme::borders())
             .inset(Insets::top(Self::ICON_AREA_PADDING));
-        let (content, buttons) = bounds.split_bottom(Button::<&str>::HEIGHT);
-        let (image, content) = content.split_top(Self::ICON_AREA_HEIGHT);
 
-        self.image.place(image);
-        self.paragraphs.place(content);
-        self.controls.place(buttons);
+        let controls_area = self.controls.place(bounds);
+        let content_area = bounds.inset(Insets::bottom(controls_area.height()));
+
+        let (image_area, content_area) = content_area.split_top(Self::ICON_AREA_HEIGHT);
+
+        self.image.place(image_area);
+        self.paragraphs.place(content_area);
         bounds
     }
 

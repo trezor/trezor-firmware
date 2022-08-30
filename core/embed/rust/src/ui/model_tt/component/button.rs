@@ -1,7 +1,9 @@
 use crate::{
     time::Duration,
     ui::{
-        component::{Component, ComponentExt, Event, EventCtx, GridPlaced, Map, TimerToken},
+        component::{
+            Component, ComponentExt, Event, EventCtx, FixedHeightBar, GridPlaced, Map, TimerToken,
+        },
         display::{self, Color, Font},
         event::TouchEvent,
         geometry::{Insets, Offset, Rect},
@@ -27,9 +29,6 @@ pub struct Button<T> {
 }
 
 impl<T> Button<T> {
-    /// Standard height in pixels.
-    pub const HEIGHT: i32 = 38;
-
     /// Offsets the baseline of the button text either up (negative) or down
     /// (positive).
     pub const BASELINE_OFFSET: i32 = -3;
@@ -353,7 +352,7 @@ impl<T> Button<T> {
         T: AsRef<str>,
     {
         let columns = 1 + right_size_factor;
-        (
+        theme::button_bar((
             GridPlaced::new(left)
                 .with_grid(1, columns)
                 .with_spacing(theme::BUTTON_SPACING)
@@ -368,7 +367,7 @@ impl<T> Button<T> {
                 .map(|msg| {
                     (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
                 }),
-        )
+        ))
     }
 
     pub fn cancel_confirm_text(
@@ -407,26 +406,31 @@ impl<T> Button<T> {
         let right = Button::with_text(confirm).styled(theme::button_confirm());
         let top = Button::with_text(info);
         let left = Button::with_icon(theme::ICON_CANCEL);
-        (
-            GridPlaced::new(left)
-                .with_grid(2, 3)
-                .with_spacing(theme::BUTTON_SPACING)
-                .with_row_col(1, 0)
-                .map(|msg| {
-                    (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Cancelled)
-                }),
-            GridPlaced::new(top)
-                .with_grid(2, 3)
-                .with_spacing(theme::BUTTON_SPACING)
-                .with_from_to((0, 0), (0, 2))
-                .map(|msg| (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Info)),
-            GridPlaced::new(right)
-                .with_grid(2, 3)
-                .with_spacing(theme::BUTTON_SPACING)
-                .with_from_to((1, 1), (1, 2))
-                .map(|msg| {
-                    (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Confirmed)
-                }),
+        theme::button_bar_rows(
+            2,
+            (
+                GridPlaced::new(left)
+                    .with_grid(2, 3)
+                    .with_spacing(theme::BUTTON_SPACING)
+                    .with_row_col(1, 0)
+                    .map(|msg| {
+                        (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Cancelled)
+                    }),
+                GridPlaced::new(top)
+                    .with_grid(2, 3)
+                    .with_spacing(theme::BUTTON_SPACING)
+                    .with_from_to((0, 0), (0, 2))
+                    .map(|msg| {
+                        (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Info)
+                    }),
+                GridPlaced::new(right)
+                    .with_grid(2, 3)
+                    .with_spacing(theme::BUTTON_SPACING)
+                    .with_from_to((1, 1), (1, 2))
+                    .map(|msg| {
+                        (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Confirmed)
+                    }),
+            ),
         )
     }
 
@@ -452,25 +456,25 @@ impl<T> Button<T> {
         };
 
         let [top, middle, bottom] = words;
-        (btn(0, top), btn(1, middle), btn(2, bottom))
+        theme::button_bar_rows(3, (btn(0, top), btn(1, middle), btn(2, bottom)))
     }
 }
 
-type CancelConfirm<T, F0, F1> = (
+type CancelConfirm<T, F0, F1> = FixedHeightBar<(
     Map<GridPlaced<Button<T>>, F0>,
     Map<GridPlaced<Button<T>>, F1>,
-);
+)>;
 
 pub enum CancelConfirmMsg {
     Cancelled,
     Confirmed,
 }
 
-type CancelInfoConfirm<T, F0, F1, F2> = (
+type CancelInfoConfirm<T, F0, F1, F2> = FixedHeightBar<(
     Map<GridPlaced<Button<T>>, F0>,
     Map<GridPlaced<Button<T>>, F1>,
     Map<GridPlaced<Button<T>>, F2>,
-);
+)>;
 
 pub enum CancelInfoConfirmMsg {
     Cancelled,

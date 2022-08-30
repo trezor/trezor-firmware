@@ -71,7 +71,7 @@ where
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
-        let button_height = Button::<&str>::HEIGHT;
+        let button_height = theme::BUTTON_HEIGHT;
         let content_area = self.area.inset(Insets::top(2 * theme::BUTTON_SPACING));
         let (input_area, content_area) = content_area.split_top(button_height);
         let (content_area, button_area) = content_area.split_bottom(button_height);

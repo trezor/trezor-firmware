@@ -586,9 +586,9 @@ extern "C" fn new_show_simple(n_args: usize, args: *const Obj, kwargs: *mut Map)
                 t,
                 Dialog::new(
                     Paragraphs::new().add(theme::TEXT_NORMAL, description),
-                    Button::with_text(button).map(|msg| {
+                    theme::button_bar(Button::with_text(button).map(|msg| {
                         (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
-                    }),
+                    })),
                 ),
             ))?
             .into()
@@ -597,9 +597,9 @@ extern "C" fn new_show_simple(n_args: usize, args: *const Obj, kwargs: *mut Map)
                 theme::borders(),
                 Dialog::new(
                     Paragraphs::new().add(theme::TEXT_NORMAL, description),
-                    Button::with_text(button).map(|msg| {
+                    theme::button_bar(Button::with_text(button).map(|msg| {
                         (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
-                    }),
+                    })),
                 ),
             ))?
             .into()
@@ -629,11 +629,7 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
         let buttons = Button::cancel_info_confirm(button, info_button);
 
         let obj = LayoutObj::new(
-            Frame::new(
-                title,
-                SwipePage::new(paragraphs, buttons, theme::BG).with_button_rows(2),
-            )
-            .into_child(),
+            Frame::new(title, SwipePage::new(paragraphs, buttons, theme::BG)).into_child(),
         )?;
         Ok(obj.into())
     };
@@ -729,11 +725,7 @@ extern "C" fn new_select_word(n_args: usize, args: *const Obj, kwargs: *mut Map)
         let buttons = Button::select_word(words);
 
         let obj = LayoutObj::new(
-            Frame::new(
-                title,
-                SwipePage::new(paragraphs, buttons, theme::BG).with_button_rows(3),
-            )
-            .into_child(),
+            Frame::new(title, SwipePage::new(paragraphs, buttons, theme::BG)).into_child(),
         )?;
         Ok(obj.into())
     };
@@ -821,9 +813,9 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
                         active,
                         paragraphs,
                     ),
-                    Button::with_text(button).map(|msg| {
+                    theme::button_bar(Button::with_text(button).map(|msg| {
                         (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
-                    }),
+                    })),
                 ),
             )
             .with_border(theme::borders())
@@ -1115,7 +1107,7 @@ mod tests {
         layout.place(SCREEN);
         assert_eq!(
             trace(&layout),
-            "<Dialog content:<Text content:Testing text layout, with\nsome text, and some more\ntext. And parameters! > controls:<Tuple 0:<GridPlaced inner:<Button text:Left > > 1:<GridPlaced inner:<Button text:Right > > > >",
+            "<Dialog content:<Text content:Testing text layout, with\nsome text, and some more\ntext. And parameters! > controls:<FixedHeightBar inner:<Tuple 0:<GridPlaced inner:<Button text:Left > > 1:<GridPlaced inner:<Button text:Right > > > > >",
         )
     }
 }
