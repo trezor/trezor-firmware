@@ -24,5 +24,5 @@ pub use painter::{qrcode_painter, Painter};
 pub use placed::GridPlaced;
 pub use text::{
     formatted::FormattedText,
-    layout::{LineBreaking, PageBreaking, TextLayout},
+    layout::{LineBreaking, PageBreaking, TextStyle},
 };
