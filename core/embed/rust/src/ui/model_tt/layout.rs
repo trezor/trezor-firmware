@@ -762,7 +762,6 @@ mod tests {
         let mut layout = Dialog::new(
             FormattedText::new(
                 theme::TEXT_NORMAL,
-                theme::FORMATTED,
                 "Testing text layout, with some text, and some more text. And {param}",
             )
             .with("param", "parameters!"),

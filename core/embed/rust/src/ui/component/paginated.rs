@@ -1,7 +1,4 @@
-use crate::ui::component::{
-    text::layout::{LayoutFit, TextNoOp},
-    FormattedText,
-};
+use crate::ui::component::FormattedText;
 
 /// Common message type for pagination components.
 pub enum PageMsg<T, U> {
@@ -28,19 +25,13 @@ where
         let mut char_offset = 0;
 
         loop {
-            let fit = self.layout_content(&mut TextNoOp);
-            match fit {
-                LayoutFit::Fitting { .. } => {
-                    break; // TODO: We should consider if there's more content
-                           // to render.
-                }
-                LayoutFit::OutOfBounds {
-                    processed_chars, ..
-                } => {
-                    page_count += 1;
-                    char_offset += processed_chars;
-                    self.set_char_offset(char_offset);
-                }
+            let fit = self.fit();
+            if fit.chars > 0 {
+                page_count += 1;
+                char_offset += fit.chars;
+                self.set_char_offset(char_offset);
+            } else {
+                break;
             }
         }
 
@@ -58,19 +49,13 @@ where
         self.set_char_offset(char_offset);
 
         while active_page < to_page {
-            let fit = self.layout_content(&mut TextNoOp);
-            match fit {
-                LayoutFit::Fitting { .. } => {
-                    break; // TODO: We should consider if there's more content
-                           // to render.
-                }
-                LayoutFit::OutOfBounds {
-                    processed_chars, ..
-                } => {
-                    active_page += 1;
-                    char_offset += processed_chars;
-                    self.set_char_offset(char_offset);
-                }
+            let fit = self.fit();
+            if fit.chars > 0 {
+                active_page += 1;
+                char_offset += fit.chars;
+                self.set_char_offset(char_offset);
+            } else {
+                break;
             }
         }
     }

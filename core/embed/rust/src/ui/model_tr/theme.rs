@@ -1,5 +1,5 @@
 use crate::ui::{
-    component::text::{formatted::FormattedFonts, TextStyle},
+    component::text::TextStyle,
     display::{Color, Font},
     model_tr::component::{LoaderStyle, LoaderStyleSheet},
 };
@@ -66,10 +66,3 @@ pub const TEXT_NORMAL: TextStyle = TextStyle::new(FONT_NORMAL, FG, BG, FG, FG);
 pub const TEXT_MEDIUM: TextStyle = TextStyle::new(FONT_MEDIUM, FG, BG, FG, FG);
 pub const TEXT_BOLD: TextStyle = TextStyle::new(FONT_BOLD, FG, BG, FG, FG);
 pub const TEXT_MONO: TextStyle = TextStyle::new(FONT_MONO, FG, BG, FG, FG);
-
-pub const FORMATTED: FormattedFonts = FormattedFonts {
-    normal: FONT_NORMAL,
-    medium: FONT_MEDIUM,
-    bold: FONT_BOLD,
-    mono: FONT_MONO,
-};

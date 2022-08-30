@@ -1,8 +1,5 @@
 use crate::ui::{
-    component::{
-        label::LabelStyle,
-        text::{formatted::FormattedFonts, TextStyle},
-    },
+    component::{label::LabelStyle, text::TextStyle},
     display::{Color, Font},
     geometry::Insets,
 };
@@ -305,13 +302,6 @@ pub const TEXT_NORMAL: TextStyle = TextStyle::new(FONT_NORMAL, FG, BG, GREY_LIGH
 pub const TEXT_MEDIUM: TextStyle = TextStyle::new(FONT_MEDIUM, FG, BG, GREY_LIGHT, GREY_LIGHT);
 pub const TEXT_BOLD: TextStyle = TextStyle::new(FONT_BOLD, FG, BG, GREY_LIGHT, GREY_LIGHT);
 pub const TEXT_MONO: TextStyle = TextStyle::new(FONT_MONO, FG, BG, GREY_LIGHT, GREY_LIGHT);
-
-pub const FORMATTED: FormattedFonts = FormattedFonts {
-    normal: FONT_NORMAL,
-    medium: FONT_MEDIUM,
-    bold: FONT_BOLD,
-    mono: FONT_MONO,
-};
 
 pub const CONTENT_BORDER: i32 = 5;
 pub const KEYBOARD_SPACING: i32 = 8;

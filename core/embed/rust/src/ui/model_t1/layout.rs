@@ -72,7 +72,7 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
         let obj = LayoutObj::new(Frame::new(
             title,
             ButtonPage::new(
-                FormattedText::new(theme::TEXT_NORMAL, theme::FORMATTED, format)
+                FormattedText::new(theme::TEXT_NORMAL, format)
                     .with("action", action.unwrap_or_default())
                     .with("description", description.unwrap_or_default()),
                 theme::BG,
@@ -177,7 +177,6 @@ mod tests {
         let mut layout = Dialog::new(
             FormattedText::new(
                 theme::TEXT_NORMAL,
-                theme::FORMATTED,
                 "Testing text layout, with some text, and some more text. And {param}",
             )
             .with("param", "parameters!"),
@@ -209,7 +208,6 @@ arameters! > left:<Button text:Left > right:<Button text:Right > >"#
             Dialog::new(
                 FormattedText::new(
                     theme::TEXT_NORMAL,
-                    theme::FORMATTED,
                     "Testing text layout, with some text, and some more text. And {param}",
                 )
                 .with("param", "parameters!"),

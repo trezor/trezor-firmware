@@ -7,43 +7,38 @@ use heapless::LinearMap;
 
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
-    display::{Color, Font},
     geometry::Rect,
 };
 
-use super::layout::{
-    LayoutFit, LayoutSink, LineBreaking, Op, PageBreaking, TextLayout, TextRenderer, TextStyle,
-};
+use super::{layout::{Op, TextStyle}, iter::LayoutFit};
 
 pub const MAX_ARGUMENTS: usize = 6;
 
 pub struct FormattedText<F, T> {
-    layout: TextLayout,
-    fonts: FormattedFonts,
+    style: TextStyle,
+    param_style: TextStyle,
     format: F,
     args: LinearMap<&'static str, T, MAX_ARGUMENTS>,
     char_offset: usize,
-}
-
-pub struct FormattedFonts {
-    /// Font used to format `{normal}`.
-    pub normal: Font,
-    /// Font used to format `{medium}`.
-    pub medium: Font,
-    /// Font used to format `{bold}`.
-    pub bold: Font,
-    /// Font used to format `{mono}`.
-    pub mono: Font,
+    bounds: Rect,
 }
 
 impl<F, T> FormattedText<F, T> {
-    pub fn new(style: TextStyle, fonts: FormattedFonts, format: F) -> Self {
+    pub const fn new(style: TextStyle, format: F) -> Self {
         Self {
             format,
-            fonts,
-            layout: TextLayout::new(style),
+            style,
+            param_style: style,
             args: LinearMap::new(),
             char_offset: 0,
+            bounds: Rect::zero(),
+        }
+    }
+
+    pub const fn with_param_style(self, style: TextStyle) -> Self {
+        Self {
+            param_style: style,
+            ..self
         }
     }
 
@@ -60,36 +55,12 @@ impl<F, T> FormattedText<F, T> {
         self
     }
 
-    pub fn with_text_font(mut self, text_font: Font) -> Self {
-        self.layout.style.text_font = text_font;
-        self
-    }
-
-    pub fn with_text_color(mut self, text_color: Color) -> Self {
-        self.layout.style.text_color = text_color;
-        self
-    }
-
-    pub fn with_line_breaking(mut self, line_breaking: LineBreaking) -> Self {
-        self.layout.style.line_breaking = line_breaking;
-        self
-    }
-
-    pub fn with_page_breaking(mut self, page_breaking: PageBreaking) -> Self {
-        self.layout.style.page_breaking = page_breaking;
-        self
-    }
-
     pub fn set_char_offset(&mut self, char_offset: usize) {
         self.char_offset = char_offset;
     }
 
     pub fn char_offset(&mut self) -> usize {
         self.char_offset
-    }
-
-    pub fn layout_mut(&mut self) -> &mut TextLayout {
-        &mut self.layout
     }
 }
 
@@ -98,23 +69,22 @@ where
     F: AsRef<str>,
     T: AsRef<str>,
 {
-    pub fn layout_content(&self, sink: &mut dyn LayoutSink) -> LayoutFit {
-        let mut cursor = self.layout.initial_cursor();
-        let mut ops = Op::skip_n_text_bytes(
+    pub fn ops(&self) -> impl Iterator<Item = Op> + '_ {
+        Op::skip_n_text_bytes(
             Tokenizer::new(self.format.as_ref()).flat_map(|arg| match arg {
-                Token::Literal(literal) => Some(Op::Text(literal)),
-                Token::Argument("mono") => Some(Op::Font(self.fonts.mono)),
-                Token::Argument("bold") => Some(Op::Font(self.fonts.bold)),
-                Token::Argument("normal") => Some(Op::Font(self.fonts.normal)),
-                Token::Argument("medium") => Some(Op::Font(self.fonts.medium)),
+                Token::Literal(literal) => Some((self.style.text_font, literal)),
                 Token::Argument(argument) => self
                     .args
                     .get(argument)
-                    .map(|value| Op::Text(value.as_ref())),
-            }),
+                    .map(|value| (self.param_style.text_font, value.as_ref())),
+            }).flat_map(|(font, text)| [Op::Font(font), Op::Text(text)]),
             self.char_offset,
-        );
-        self.layout.layout_ops(&mut ops, &mut cursor, sink)
+        )
+    }
+
+    pub fn fit(&mut self) -> LayoutFit {
+        let mut ops = self.ops();
+        self.style.fit_ops(&mut ops, self.bounds.size())
     }
 }
 
@@ -126,8 +96,8 @@ where
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        self.layout.bounds = bounds;
-        self.layout.bounds
+        self.bounds = bounds;
+        self.bounds
     }
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
@@ -135,30 +105,12 @@ where
     }
 
     fn paint(&mut self) {
-        self.layout_content(&mut TextRenderer);
+        let mut ops = self.ops();
+        self.style.render_ops(&mut ops, self.bounds);
     }
 
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        sink(self.layout.bounds)
-    }
-}
-
-#[cfg(feature = "ui_debug")]
-pub mod trace {
-    use crate::ui::component::text::layout::trace::TraceSink;
-
-    use super::*;
-
-    pub struct TraceText<'a, F, T>(pub &'a FormattedText<F, T>);
-
-    impl<'a, F, T> crate::trace::Trace for TraceText<'a, F, T>
-    where
-        F: AsRef<str>,
-        T: AsRef<str>,
-    {
-        fn trace(&self, d: &mut dyn crate::trace::Tracer) {
-            self.0.layout_content(&mut TraceSink(d));
-        }
+        sink(self.bounds)
     }
 }
 
@@ -170,7 +122,11 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("Text");
-        t.field("content", &trace::TraceText(self));
+        for op in self.ops() {
+            if let Op::Text(text) = op {
+                t.string(text);
+            }
+        }
         t.close();
     }
 }
