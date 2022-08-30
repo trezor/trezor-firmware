@@ -117,6 +117,24 @@ where
         self
     }
 
+    pub fn new_shares(lines: [T; 4], controls: U) -> Self {
+        let [l0, l1, l2, l3] = lines;
+        Self {
+            image: Child::new(Image::new(theme::IMAGE_SUCCESS)),
+            paragraphs: Paragraphs::new()
+                .with_placement(LinearPlacement::vertical().align_at_center())
+                .add_color(theme::TEXT_NORMAL, theme::OFF_WHITE, l0)
+                .centered()
+                .add(theme::TEXT_MEDIUM, l1)
+                .centered()
+                .add_color(theme::TEXT_NORMAL, theme::OFF_WHITE, l2)
+                .centered()
+                .add(theme::TEXT_MEDIUM, l3)
+                .centered(),
+            controls: Child::new(controls),
+        }
+    }
+
     pub const ICON_AREA_PADDING: i32 = 2;
     pub const ICON_AREA_HEIGHT: i32 = 60;
     pub const VALUE_SPACE: i32 = 5;

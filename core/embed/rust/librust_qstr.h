@@ -27,6 +27,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_text;
   MP_QSTR_confirm_total;
   MP_QSTR_confirm_with_info;
+  MP_QSTR_confirm_recovery;
   MP_QSTR_show_checklist;
   MP_QSTR_show_error;
   MP_QSTR_show_qr;
@@ -40,6 +41,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_request_bip39;
   MP_QSTR_request_slip39;
   MP_QSTR_select_word;
+  MP_QSTR_select_word_count;
+  MP_QSTR_show_group_share_success;
+  MP_QSTR_show_remaining_shares;
   MP_QSTR_show_share_words;
 
   MP_QSTR_attach_timer_fn;
@@ -85,4 +89,5 @@ static void _librust_qstrs(void) {
   MP_QSTR_items;
   MP_QSTR_active;
   MP_QSTR_info_button;
+  MP_QSTR_time_ms;
 }

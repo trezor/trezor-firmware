@@ -112,8 +112,9 @@ async def continue_recovery(
     text: str,
     subtext: str | None,
     info_func: Callable | None,
+    dry_run: bool,
 ) -> bool:
-    homepage = RecoveryHomescreen(text, subtext)
+    homepage = RecoveryHomescreen(dry_run, text, subtext)
     if info_func is not None:
         content = InfoConfirm(
             homepage,

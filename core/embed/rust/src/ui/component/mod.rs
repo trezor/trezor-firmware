@@ -12,6 +12,7 @@ pub mod paginated;
 pub mod painter;
 pub mod placed;
 pub mod text;
+pub mod timeout;
 
 pub use base::{Child, Component, ComponentExt, Event, EventCtx, Never, TimerToken};
 pub use border::Border;
@@ -28,3 +29,4 @@ pub use text::{
     formatted::FormattedText,
     layout::{LineBreaking, PageBreaking, TextLayout},
 };
+pub use timeout::{Timeout, TimeoutMsg};

@@ -148,11 +148,13 @@ async def homescreen_dialog(
     info_func: Callable | None = None,
 ) -> None:
     while True:
-        if await continue_recovery(ctx, button_label, text, subtext, info_func):
+        dry_run = storage.recovery.is_dry_run()
+        if await continue_recovery(
+            ctx, button_label, text, subtext, info_func, dry_run
+        ):
             # go forward in the recovery process
             break
         # user has chosen to abort, confirm the choice
-        dry_run = storage.recovery.is_dry_run()
         try:
             await confirm_abort(ctx, dry_run)
         except wire.ActionCancelled:

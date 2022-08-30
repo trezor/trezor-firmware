@@ -434,6 +434,38 @@ impl<T> Button<T> {
         )
     }
 
+    pub fn abort_info_enter() -> CancelInfoConfirm<
+        &'static str,
+        impl Fn(ButtonMsg) -> Option<CancelInfoConfirmMsg>,
+        impl Fn(ButtonMsg) -> Option<CancelInfoConfirmMsg>,
+        impl Fn(ButtonMsg) -> Option<CancelInfoConfirmMsg>,
+    > {
+        let left = Button::with_text("ABORT").styled(theme::button_cancel());
+        let middle = Button::with_text("INFO");
+        let right = Button::with_text("ENTER").styled(theme::button_confirm());
+        theme::button_bar((
+            GridPlaced::new(left)
+                .with_grid(1, 3)
+                .with_spacing(theme::BUTTON_SPACING)
+                .with_row_col(0, 0)
+                .map(|msg| {
+                    (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Cancelled)
+                }),
+            GridPlaced::new(middle)
+                .with_grid(1, 3)
+                .with_spacing(theme::BUTTON_SPACING)
+                .with_row_col(0, 1)
+                .map(|msg| (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Info)),
+            GridPlaced::new(right)
+                .with_grid(1, 3)
+                .with_spacing(theme::BUTTON_SPACING)
+                .with_row_col(0, 2)
+                .map(|msg| {
+                    (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Confirmed)
+                }),
+        ))
+    }
+
     pub fn select_word(
         words: [T; 3],
     ) -> CancelInfoConfirm<
