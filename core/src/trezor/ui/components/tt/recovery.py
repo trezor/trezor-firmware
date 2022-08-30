@@ -1,13 +1,12 @@
-import storage.recovery
 from trezor import ui
 
 
 class RecoveryHomescreen(ui.Component):
-    def __init__(self, text: str, subtext: str | None = None):
+    def __init__(self, dry_run: bool, text: str, subtext: str | None = None):
         super().__init__()
         self.text = text
         self.subtext = subtext
-        self.dry_run = storage.recovery.is_dry_run()
+        self.dry_run = dry_run
 
     def on_render(self) -> None:
         if not self.repaint:

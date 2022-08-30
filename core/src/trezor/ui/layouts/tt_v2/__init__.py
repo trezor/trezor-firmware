@@ -929,7 +929,16 @@ async def show_popup(
     description_param: str = "",
     timeout_ms: int = 3000,
 ) -> None:
-    raise NotImplementedError
+    if subtitle:
+        title += f"\n{subtitle}".format(subtitle)
+    await _RustLayout(
+        trezorui2.show_error(
+            title=title,
+            description=description.format(description_param),
+            button="",
+            time_ms=timeout_ms,
+        )
+    )
 
 
 def draw_simple_text(title: str, description: str = "") -> None:

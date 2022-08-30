@@ -162,6 +162,7 @@ def show_error(
     button: str,
     description: str = "",
     allow_cancel: bool = False,
+    time_ms: int = 0,
 ) -> object:
     """Error modal."""
 
@@ -173,6 +174,7 @@ def show_warning(
     button: str,
     description: str = "",
     allow_cancel: bool = False,
+    time_ms: int = 0,
 ) -> object:
     """Warning modal."""
 
@@ -184,6 +186,7 @@ def show_success(
     button: str,
     description: str = "",
     allow_cancel: bool = False,
+    time_ms: int = 0,
 ) -> object:
     """Success modal."""
 
@@ -195,6 +198,7 @@ def show_info(
     button: str,
     description: str = "",
     allow_cancel: bool = False,
+    time_ms: int = 0,
 ) -> object:
     """Info modal."""
 
@@ -308,3 +312,39 @@ def show_checklist(
 ) -> object:
    """Checklist of backup steps. Active index is highlighted, previous items have check
    mark nex to them."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def confirm_recovery(
+    *,
+    title: str,
+    description: str,
+    button: str,
+    dry_run: bool,
+    info_button: bool,
+) -> object:
+   """Device recovery homescreen."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def select_word_count(
+    *,
+    dry_run: bool,
+) -> int | trezorui2.CANCELLED:
+   """Select mnemonic word count from (12, 18, 20, 24, 33)."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def show_group_share_success(
+    *,
+    lines: Iterable[str]
+) -> int:
+   """Shown after successfully finishing a group."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def show_remaining_shares(
+    *,
+    pages: Iterable[tuple[str, str]],
+) -> int:
+   """Shows SLIP39 state after info button is pressed on `confirm_recovery`."""

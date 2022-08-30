@@ -57,6 +57,7 @@ pub const ICON_SPACE: &[u8] = include_res!("model_tt/res/space.toif");
 pub const ICON_BACK: &[u8] = include_res!("model_tt/res/back.toif");
 pub const ICON_CLICK: &[u8] = include_res!("model_tt/res/click.toif");
 pub const ICON_NEXT: &[u8] = include_res!("model_tt/res/next.toif");
+pub const ICON_WARN: &[u8] = include_res!("model_tt/res/warn-icon.toif");
 pub const ICON_LIST_CURRENT: &[u8] = include_res!("model_tt/res/current.toif");
 pub const ICON_LIST_CHECK: &[u8] = include_res!("model_tt/res/check.toif");
 
@@ -144,6 +145,22 @@ pub fn label_warning() -> LabelStyle {
 }
 
 pub fn label_warning_value() -> LabelStyle {
+    LabelStyle {
+        font: FONT_NORMAL,
+        text_color: OFF_WHITE,
+        background_color: BG,
+    }
+}
+
+pub fn label_recovery_title() -> LabelStyle {
+    LabelStyle {
+        font: FONT_BOLD,
+        text_color: FG,
+        background_color: BG,
+    }
+}
+
+pub fn label_recovery_description() -> LabelStyle {
     LabelStyle {
         font: FONT_NORMAL,
         text_color: OFF_WHITE,
@@ -411,6 +428,8 @@ pub const KEYBOARD_SPACING: i32 = 8;
 pub const BUTTON_HEIGHT: i32 = 38;
 pub const BUTTON_SPACING: i32 = 6;
 pub const CHECKLIST_SPACING: i32 = 10;
+pub const RECOVERY_SPACING: i32 = 18;
+
 /// Standard button height in pixels.
 pub const fn button_rows(count: usize) -> i32 {
     let count = count as i32;
@@ -438,4 +457,8 @@ pub const fn borders() -> Insets {
 
 pub const fn borders_scroll() -> Insets {
     Insets::new(13, 5, 14, 10)
+}
+
+pub const fn borders_notification() -> Insets {
+    Insets::new(6, 10, 14, 10)
 }

@@ -1,5 +1,4 @@
 use core::{cmp::Ordering, convert::TryInto, ops::Deref};
-use cstr_core::cstr;
 
 use crate::{
     error::Error,
@@ -18,12 +17,13 @@ use crate::{
             paginated::{PageMsg, Paginate},
             painter,
             text::paragraphs::{Checklist, Paragraphs},
-            Border, Component,
+            Border, Component, Timeout, TimeoutMsg,
         },
         geometry,
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
             result::{CANCELLED, CONFIRMED, INFO},
+            util::iter_into_array,
         },
     },
 };
@@ -32,9 +32,10 @@ use super::{
     component::{
         Bip39Input, Button, ButtonMsg, ButtonStyleSheet, CancelConfirmMsg, CancelInfoConfirmMsg,
         Dialog, DialogMsg, Frame, HoldToConfirm, HoldToConfirmMsg, IconDialog, MnemonicInput,
-        MnemonicKeyboard, MnemonicKeyboardMsg, NumberInputDialog, NumberInputDialogMsg,
-        PassphraseKeyboard, PassphraseKeyboardMsg, PinKeyboard, PinKeyboardMsg, SelectWordMsg,
-        Slip39Input, SwipeHoldPage, SwipePage,
+        MnemonicKeyboard, MnemonicKeyboardMsg, NotificationFrame, NumberInputDialog,
+        NumberInputDialogMsg, PassphraseKeyboard, PassphraseKeyboardMsg, PinKeyboard,
+        PinKeyboardMsg, SelectWordCount, SelectWordCountMsg, SelectWordMsg, Slip39Input,
+        SwipeHoldPage, SwipePage,
     },
     theme,
 };
@@ -68,6 +69,16 @@ impl TryFrom<SelectWordMsg> for Obj {
     fn try_from(value: SelectWordMsg) -> Result<Self, Self::Error> {
         match value {
             SelectWordMsg::Selected(i) => i.try_into(),
+        }
+    }
+}
+
+impl TryFrom<SelectWordCountMsg> for Obj {
+    type Error = Error;
+
+    fn try_from(value: SelectWordCountMsg) -> Result<Self, Self::Error> {
+        match value {
+            SelectWordCountMsg::Selected(i) => i.try_into(),
         }
     }
 }
@@ -153,6 +164,16 @@ where
 }
 
 impl<T, U> ComponentMsgObj for Frame<T, U>
+where
+    T: ComponentMsgObj,
+    U: AsRef<str>,
+{
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        self.inner().msg_try_into_obj(msg)
+    }
+}
+
+impl<T, U> ComponentMsgObj for NotificationFrame<T, U>
 where
     T: ComponentMsgObj,
     U: AsRef<str>,
@@ -514,9 +535,10 @@ fn new_show_modal(
     let description: StrBuffer = kwargs.get_or(Qstr::MP_QSTR_description, StrBuffer::empty())?;
     let button: StrBuffer = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
     let allow_cancel: bool = kwargs.get_or(Qstr::MP_QSTR_allow_cancel, true)?;
+    let time_ms: u32 = kwargs.get_or(Qstr::MP_QSTR_time_ms, 0)?;
 
-    let obj = if allow_cancel {
-        LayoutObj::new(
+    let obj = match (allow_cancel, time_ms) {
+        (true, 0) => LayoutObj::new(
             IconDialog::new(
                 icon,
                 title,
@@ -528,19 +550,29 @@ fn new_show_modal(
             )
             .with_description(description),
         )?
-        .into()
-    } else {
-        LayoutObj::new(
+        .into(),
+        (false, 0) => LayoutObj::new(
             IconDialog::new(
                 icon,
                 title,
-                Button::with_text(button).styled(button_style).map(|msg| {
+                theme::button_bar(Button::with_text(button).styled(button_style).map(|msg| {
                     (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
+                })),
+            )
+            .with_description(description),
+        )?
+        .into(),
+        (_, time_ms) => LayoutObj::new(
+            IconDialog::new(
+                icon,
+                title,
+                Timeout::new(time_ms).map(|msg| {
+                    (matches!(msg, TimeoutMsg::TimedOut)).then(|| CancelConfirmMsg::Confirmed)
                 }),
             )
             .with_description(description),
         )?
-        .into()
+        .into(),
     };
 
     Ok(obj)
@@ -709,17 +741,7 @@ extern "C" fn new_select_word(n_args: usize, args: *const Obj, kwargs: *mut Map)
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let words_iterable: Obj = kwargs.get(Qstr::MP_QSTR_words)?;
-
-        let mut words = [StrBuffer::empty(), StrBuffer::empty(), StrBuffer::empty()];
-        let mut iter_buf = IterBuf::new();
-        let mut iter = Iter::try_from_obj_with_buf(words_iterable, &mut iter_buf)?;
-        let words_err = || Error::ValueError(cstr!("Invalid words count"));
-        for item in &mut words {
-            *item = iter.next().ok_or_else(words_err)?.try_into()?;
-        }
-        if iter.next().is_some() {
-            return Err(words_err());
-        }
+        let words: [StrBuffer; 3] = iter_into_array(words_iterable)?;
 
         let paragraphs = Paragraphs::new().add(theme::TEXT_NORMAL, description);
         let buttons = Button::select_word(words);
@@ -821,6 +843,140 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
             .with_border(theme::borders())
             .into_child(),
         )?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title).unwrap().try_into().unwrap();
+        let description: StrBuffer = kwargs
+            .get(Qstr::MP_QSTR_description)
+            .unwrap()
+            .try_into()
+            .unwrap();
+        let button: StrBuffer = kwargs
+            .get(Qstr::MP_QSTR_button)
+            .unwrap()
+            .try_into()
+            .unwrap();
+        let dry_run: bool = kwargs
+            .get(Qstr::MP_QSTR_dry_run)
+            .unwrap()
+            .try_into()
+            .unwrap();
+        let info_button: bool = kwargs.get_or(Qstr::MP_QSTR_info_button, false).unwrap();
+
+        let paragraphs = Paragraphs::new()
+            .with_spacing(theme::RECOVERY_SPACING)
+            .add(theme::TEXT_BOLD, title)
+            .centered()
+            .add_color(theme::TEXT_NORMAL, theme::OFF_WHITE, description)
+            .centered();
+
+        let notification = if dry_run {
+            "SEED CHECK"
+        } else {
+            "RECOVERY MODE"
+        };
+
+        let obj = if info_button {
+            LayoutObj::new(
+                NotificationFrame::new(
+                    theme::ICON_WARN,
+                    notification,
+                    Dialog::new(paragraphs, Button::<&'static str>::abort_info_enter()),
+                )
+                .into_child(),
+            )?
+        } else {
+            LayoutObj::new(
+                NotificationFrame::new(
+                    theme::ICON_WARN,
+                    notification,
+                    Dialog::new(paragraphs, Button::cancel_confirm_text(None, button)),
+                )
+                .into_child(),
+            )?
+        };
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let dry_run: bool = kwargs
+            .get(Qstr::MP_QSTR_dry_run)
+            .unwrap()
+            .try_into()
+            .unwrap();
+        let title = if dry_run {
+            "SEED CHECK"
+        } else {
+            "RECOVERY MODE"
+        };
+
+        let paragraphs = Paragraphs::new()
+            .add(theme::TEXT_BOLD, "Number of words?")
+            .centered();
+
+        let obj = LayoutObj::new(
+            Frame::new(title, Dialog::new(paragraphs, SelectWordCount::new()))
+                .with_border(theme::borders())
+                .into_child(),
+        )?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_show_group_share_success(
+    n_args: usize,
+    args: *const Obj,
+    kwargs: *mut Map,
+) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let lines_iterable: Obj = kwargs.get(Qstr::MP_QSTR_lines)?;
+        let lines: [StrBuffer; 4] = iter_into_array(lines_iterable)?;
+
+        let obj = LayoutObj::new(IconDialog::new_shares(
+            lines,
+            theme::button_bar(Button::with_text("CONTINUE").map(|msg| {
+                (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
+            })),
+        ))?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_show_remaining_shares(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let pages_iterable: Obj = kwargs.get(Qstr::MP_QSTR_pages)?;
+
+        let mut paragraphs = Paragraphs::new();
+        let mut iter_buf = IterBuf::new();
+        let iter = Iter::try_from_obj_with_buf(pages_iterable, &mut iter_buf)?;
+        for page in iter {
+            let [title, description]: [StrBuffer; 2] = iter_into_array(page)?;
+            paragraphs = paragraphs
+                .add(theme::TEXT_BOLD, title)
+                .add(theme::TEXT_NORMAL, description)
+                .add_break();
+        }
+
+        let obj = LayoutObj::new(Frame::new(
+            "REMAINING SHARES",
+            SwipePage::new(
+                paragraphs,
+                theme::button_bar(Button::with_text("CONTINUE").map(|msg| {
+                    (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
+                })),
+                theme::BG,
+            ),
+        ))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -935,6 +1091,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     button: str,
     ///     description: str = "",
     ///     allow_cancel: bool = False,
+    ///     time_ms: int = 0,
     /// ) -> object:
     ///     """Error modal."""
     Qstr::MP_QSTR_show_error => obj_fn_kw!(0, new_show_error).as_obj(),
@@ -945,6 +1102,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     button: str,
     ///     description: str = "",
     ///     allow_cancel: bool = False,
+    ///     time_ms: int = 0,
     /// ) -> object:
     ///     """Warning modal."""
     Qstr::MP_QSTR_show_warning => obj_fn_kw!(0, new_show_warning).as_obj(),
@@ -955,6 +1113,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     button: str,
     ///     description: str = "",
     ///     allow_cancel: bool = False,
+    ///     time_ms: int = 0,
     /// ) -> object:
     ///     """Success modal."""
     Qstr::MP_QSTR_show_success => obj_fn_kw!(0, new_show_success).as_obj(),
@@ -965,6 +1124,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     button: str,
     ///     description: str = "",
     ///     allow_cancel: bool = False,
+    ///     time_ms: int = 0,
     /// ) -> object:
     ///     """Info modal."""
     Qstr::MP_QSTR_show_info => obj_fn_kw!(0, new_show_info).as_obj(),
@@ -1068,6 +1228,38 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///    """Checklist of backup steps. Active index is highlighted, previous items have check
     ///    mark nex to them."""
     Qstr::MP_QSTR_show_checklist => obj_fn_kw!(0, new_show_checklist).as_obj(),
+
+    /// def confirm_recovery(
+    ///     *,
+    ///     title: str,
+    ///     description: str,
+    ///     button: str,
+    ///     dry_run: bool,
+    ///     info_button: bool,
+    /// ) -> object:
+    ///    """Device recovery homescreen."""
+    Qstr::MP_QSTR_confirm_recovery => obj_fn_kw!(0, new_confirm_recovery).as_obj(),
+
+    /// def select_word_count(
+    ///     *,
+    ///     dry_run: bool,
+    /// ) -> int | trezorui2.CANCELLED:
+    ///    """Select mnemonic word count from (12, 18, 20, 24, 33)."""
+    Qstr::MP_QSTR_select_word_count => obj_fn_kw!(0, new_select_word_count).as_obj(),
+
+    /// def show_group_share_success(
+    ///     *,
+    ///     lines: Iterable[str]
+    /// ) -> int:
+    ///    """Shown after successfully finishing a group."""
+    Qstr::MP_QSTR_show_group_share_success => obj_fn_kw!(0, new_show_group_share_success).as_obj(),
+
+    /// def show_remaining_shares(
+    ///     *,
+    ///     pages: Iterable[tuple[str, str]],
+    /// ) -> int:
+    ///    """Shows SLIP39 state after info button is pressed on `confirm_recovery`."""
+    Qstr::MP_QSTR_show_remaining_shares => obj_fn_kw!(0, new_show_remaining_shares).as_obj(),
 };
 
 #[cfg(test)]
