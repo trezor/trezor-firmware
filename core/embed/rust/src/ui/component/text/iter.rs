@@ -1,10 +1,10 @@
-use crate::ui::{component::LineBreaking, display::Font};
+use crate::ui::{component::LineBreaking, display::Font, geometry::Offset};
 use core::iter;
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 struct LineBreak {
     /// Index of character **after** the line-break.
-    offset: usize,
+    next_index: usize,
     /// Distance from the last line-break of the sequence, in pixels.
     width: i32,
     style: BreakStyle,
@@ -17,52 +17,90 @@ enum BreakStyle {
     InsideWord,
 }
 
-fn limit_line_breaks(
-    breaks: impl Iterator<Item = LineBreak>,
-    line_height: i32,
-    available_height: i32,
-) -> impl Iterator<Item = LineBreak> {
-    breaks.take(available_height as usize / line_height as usize)
-}
-
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
-enum Appendix {
+pub enum Appendix {
     None,
     Hyphen,
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
-struct Span<'a> {
-    text: &'a str,
-    append: Appendix,
+pub struct Span<'a> {
+    /// Text contents of the span, including any trailing space.
+    pub text: &'a str,
+    /// Line appendix, if any.
+    pub append: Appendix,
+    /// Width of the span, in pixels.
+    pub width: i32,
+    /// True if this is the last span.
+    pub is_last: bool,
 }
 
-fn break_text_to_spans(
+pub struct LayoutFit {
+    /// Total height of the content that fits in the bounds.
+    pub height: i32,
+    /// Total characters that fit in the bounds.
+    pub chars: usize,
+    /// End of last line as offset from line start.
+    pub final_offset: i32,
+}
+
+pub fn fit_text(
+    text: &str,
+    font: impl GlyphMetrics,
+    line_breaking: LineBreaking,
+    bounds: Offset,
+    initial_offset: i32,
+) -> LayoutFit {
+    let line_height = font.line_height();
+
+    let lines = bounds.y as usize / line_height as usize;
+    let breaks = select_line_breaks(
+        text.char_indices(),
+        font,
+        line_breaking,
+        bounds.x,
+        initial_offset,
+    );
+    match breaks.enumerate().take(lines).last() {
+        Some((i, last_break)) => LayoutFit {
+            height: (i + 1) as i32 * line_height,
+            chars: last_break.next_index,
+            final_offset: last_break.width,
+        },
+        None => LayoutFit {
+            height: 0,
+            chars: 0,
+            final_offset: initial_offset,
+        },
+    }
+}
+
+pub fn break_text_to_spans(
     text: &str,
     text_font: impl GlyphMetrics,
-    hyphen_font: impl GlyphMetrics,
     breaking: LineBreaking,
     available_width: i32,
+    initial_offset: i32,
 ) -> impl Iterator<Item = Span> {
     let mut finished = false;
     let mut last_break = LineBreak {
-        offset: 0,
+        next_index: 0,
         width: 0,
         style: BreakStyle::AtWhitespaceOrWordBoundary,
     };
     let mut breaks = select_line_breaks(
         text.char_indices(),
         text_font,
-        hyphen_font,
         breaking,
         available_width,
+        initial_offset,
     );
     iter::from_fn(move || {
         if finished {
             None
         } else if let Some(lb) = breaks.next() {
-            let start_of_line = last_break.offset;
-            let end_of_line = lb.offset; // Not inclusive.
+            let start_of_line = last_break.next_index;
+            let end_of_line = lb.next_index; // Not inclusive.
             last_break = lb;
             Some(Span {
                 text: &text[start_of_line..end_of_line],
@@ -70,12 +108,17 @@ fn break_text_to_spans(
                     BreakStyle::Hard | BreakStyle::AtWhitespaceOrWordBoundary => Appendix::None,
                     BreakStyle::InsideWord => Appendix::Hyphen,
                 },
+                width: lb.width,
+                is_last: false,
             })
         } else {
             finished = true;
+            let remaining_text = &text[last_break.next_index..];
             Some(Span {
-                text: &text[last_break.offset..],
+                text: remaining_text,
                 append: Appendix::None,
+                width: last_break.width,
+                is_last: true,
             })
         }
     })
@@ -84,16 +127,15 @@ fn break_text_to_spans(
 fn select_line_breaks(
     chars: impl Iterator<Item = (usize, char)>,
     text_font: impl GlyphMetrics,
-    hyphen_font: impl GlyphMetrics,
     breaking: LineBreaking,
     available_width: i32,
+    initial_offset: i32,
 ) -> impl Iterator<Item = LineBreak> {
-    let hyphen_width = hyphen_font.char_width('-');
-    let ellipsis_width = 3 * hyphen_font.char_width('.');
+    let hyphen_width = text_font.char_width('-');
     let line_height = text_font.line_height();
 
     let mut proposed = None;
-    let mut line_width = 0;
+    let mut line_width = initial_offset;
     let mut total_height = line_height;
     let mut found_any_whitespace = false;
 
@@ -111,7 +153,7 @@ fn select_line_breaks(
             '\n' | '\r' => {
                 // Immediate hard break.
                 Some(LineBreak {
-                    offset: next_offset,
+                    next_index: next_offset,
                     width: next_line_width,
                     style: BreakStyle::Hard,
                 })
@@ -119,7 +161,7 @@ fn select_line_breaks(
             ' ' | '\t' => {
                 // Whitespace, propose a line-break after this character.
                 proposed = Some(LineBreak {
-                    offset: next_offset,
+                    next_index: next_offset,
                     width: next_line_width,
                     style: BreakStyle::AtWhitespaceOrWordBoundary,
                 });
@@ -130,7 +172,7 @@ fn select_line_breaks(
                 // Propose a word-break after this character. In case the next character is
                 // whitespace, the proposed word break is replaced by a whitespace break.
                 proposed = Some(LineBreak {
-                    offset: next_offset,
+                    next_index: next_offset,
                     width: next_line_width,
                     style: BreakStyle::InsideWord,
                 });
@@ -141,7 +183,7 @@ fn select_line_breaks(
                 // proposed, we hard-break immediately before this character. This only happens
                 // if the first character of the line doesn't fit.
                 Some(proposed.unwrap_or(LineBreak {
-                    offset,
+                    next_index: offset,
                     width: line_width,
                     style: BreakStyle::Hard,
                 }))
@@ -158,48 +200,6 @@ fn select_line_breaks(
         // Shift cursor.
         line_width += char_width;
         break_line
-    })
-}
-
-pub fn count_lines(
-    chars: impl Iterator<Item = (usize, char)>,
-    text_font: impl GlyphMetrics,
-    hyphen_font: impl GlyphMetrics,
-    breaking: LineBreaking,
-    available_width: i32,
-) -> usize {
-    select_line_breaks(chars, text_font, hyphen_font, breaking, available_width).count() + 1
-}
-
-pub fn select_pages(
-    chars: impl Iterator<Item = (usize, char)>,
-    text_font: impl GlyphMetrics,
-    hyphen_font: impl GlyphMetrics,
-    breaking: LineBreaking,
-    available_width: i32,
-    available_height: i32,
-) -> impl Iterator<Item = usize> {
-    let line_height = text_font.line_height();
-    let mut consumed_height = 0;
-    let mut breaks = select_line_breaks(chars, text_font, hyphen_font, breaking, available_width);
-    let mut finished = false;
-    let mut previous_page_at = 0;
-    iter::from_fn(move || {
-        while let Some(br) = breaks.next() {
-            consumed_height += line_height;
-            if consumed_height > available_height {
-                consumed_height = 0;
-                let result = Some(previous_page_at);
-                previous_page_at = br.offset;
-                return result;
-            }
-        }
-        if !finished {
-            finished = true;
-            Some(previous_page_at)
-        } else {
-            None
-        }
     })
 }
 
@@ -306,9 +306,9 @@ mod tests {
         break_text_to_spans(
             text,
             FIXED_FONT,
-            FIXED_FONT,
             LineBreaking::BreakAtWhitespace,
             max_width,
+            0,
         )
         .map(|span| (span.text, matches!(span.append, Appendix::Hyphen)))
         .collect()
