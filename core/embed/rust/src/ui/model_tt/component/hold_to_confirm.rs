@@ -1,9 +1,8 @@
 use crate::{
     time::Instant,
     ui::{
-        component::{Child, Component, ComponentExt, Event, EventCtx, Pad},
-        geometry::{Grid, Rect},
-        model_tt::component::DialogLayout,
+        component::{Child, Component, ComponentExt, Event, EventCtx, FixedHeightBar, Pad},
+        geometry::{Grid, Insets, Rect},
     },
 };
 
@@ -18,7 +17,7 @@ pub enum HoldToConfirmMsg<T> {
 pub struct HoldToConfirm<T> {
     loader: Loader,
     content: Child<T>,
-    buttons: CancelHold,
+    buttons: FixedHeightBar<CancelHold>,
     pad: Pad,
 }
 
@@ -47,11 +46,14 @@ where
     type Msg = HoldToConfirmMsg<T::Msg>;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let layout = DialogLayout::middle(bounds);
-        self.pad.place(layout.content);
-        self.loader.place(layout.content);
-        self.content.place(layout.content);
-        self.buttons.place(layout.controls);
+        let controls_area = self.buttons.place(bounds);
+        let content_area = bounds
+            .inset(Insets::bottom(controls_area.height()))
+            .inset(Insets::bottom(theme::BUTTON_SPACING))
+            .inset(Insets::left(theme::CONTENT_BORDER));
+        self.pad.place(content_area);
+        self.loader.place(content_area);
+        self.content.place(content_area);
         bounds
     }
 
@@ -121,18 +123,18 @@ pub enum CancelHoldMsg {
 }
 
 impl CancelHold {
-    pub fn new() -> Self {
-        Self {
+    pub fn new() -> FixedHeightBar<Self> {
+        theme::button_bar(Self {
             cancel: Some(Button::with_icon(theme::ICON_CANCEL)),
             hold: Button::with_text("HOLD TO CONFIRM").styled(theme::button_confirm()),
-        }
+        })
     }
 
-    pub fn without_cancel() -> Self {
-        Self {
+    pub fn without_cancel() -> FixedHeightBar<Self> {
+        theme::button_bar(Self {
             cancel: None,
             hold: Button::with_text("HOLD TO CONFIRM").styled(theme::button_confirm()),
-        }
+        })
     }
 }
 

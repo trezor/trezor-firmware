@@ -23,7 +23,7 @@ pub use maybe::Maybe;
 pub use pad::Pad;
 pub use paginated::{PageMsg, Paginate};
 pub use painter::{qrcode_painter, Painter};
-pub use placed::GridPlaced;
+pub use placed::{FixedHeightBar, GridPlaced};
 pub use text::{
     formatted::FormattedText,
     layout::{LineBreaking, PageBreaking, TextLayout},
