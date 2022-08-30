@@ -1,14 +1,15 @@
 use crate::ui::{
     component::{
-        base::ComponentExt, paginated::PageMsg, Component, Event, EventCtx, Label, Pad, Paginate,
+        base::ComponentExt, paginated::PageMsg, Component, Event, EventCtx, FixedHeightBar, Label,
+        Pad, Paginate,
     },
     display::{self, Color},
-    geometry::Rect,
+    geometry::{Insets, Rect},
 };
 
 use super::{
     hold_to_confirm::{handle_hold_event, CancelHold, CancelHoldMsg},
-    theme, Button, CancelConfirmMsg, Loader, ScrollBar, Swipe, SwipeDirection,
+    theme, CancelConfirmMsg, Loader, ScrollBar, Swipe, SwipeDirection,
 };
 
 pub struct SwipePage<T, U> {
@@ -19,7 +20,6 @@ pub struct SwipePage<T, U> {
     scrollbar: ScrollBar,
     hint: Label<&'static str>,
     fade: Option<i32>,
-    button_rows: i32,
 }
 
 impl<T, U> SwipePage<T, U>
@@ -37,13 +37,7 @@ where
             pad: Pad::with_background(background),
             hint: Label::centered("SWIPE TO CONTINUE", theme::label_page_hint()),
             fade: None,
-            button_rows: 1,
         }
-    }
-
-    pub fn with_button_rows(mut self, rows: usize) -> Self {
-        self.button_rows = rows as i32;
-        self
     }
 
     fn setup_swipe(&mut self) {
@@ -76,20 +70,27 @@ where
     type Msg = PageMsg<T::Msg, U::Msg>;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let layout = PageLayout::new(bounds, self.button_rows);
+        let layout = PageLayout::new(bounds);
         self.pad.place(bounds);
         self.swipe.place(bounds);
         self.hint.place(layout.hint);
-        self.buttons.place(layout.buttons);
-        self.scrollbar.place(layout.scrollbar);
+        let buttons_area = self.buttons.place(layout.buttons);
+        let buttons_height = buttons_area.height() + theme::BUTTON_SPACING;
+        self.scrollbar
+            .place(layout.scrollbar.inset(Insets::bottom(buttons_height)));
 
         // Layout the content. Try to fit it on a single page first, and reduce the area
         // to make space for a scrollbar if it doesn't fit.
-        self.content.place(layout.content_single_page);
+        self.content.place(
+            layout
+                .content_single_page
+                .inset(Insets::bottom(buttons_height)),
+        );
         let page_count = {
             let count = self.content.page_count();
             if count > 1 {
-                self.content.place(layout.content);
+                self.content
+                    .place(layout.content.inset(Insets::bottom(buttons_height)));
                 self.content.page_count() // Make sure to re-count it with the
                                           // new size.
             } else {
@@ -197,14 +198,10 @@ impl PageLayout {
     const SCROLLBAR_SPACE: i32 = 10;
     const HINT_OFF: i32 = 19;
 
-    pub fn new(area: Rect, button_rows: i32) -> Self {
-        let buttons_height = button_rows * Button::<&str>::HEIGHT
-            + button_rows.saturating_sub(1) * theme::BUTTON_SPACING;
-        let (content, buttons) = area.split_bottom(buttons_height);
+    pub fn new(area: Rect) -> Self {
         let (_, hint) = area.split_bottom(Self::HINT_OFF);
-        let (content, _space) = content.split_bottom(theme::BUTTON_SPACING);
-        let (buttons, _space) = buttons.split_right(theme::CONTENT_BORDER);
-        let (_space, content) = content.split_left(theme::CONTENT_BORDER);
+        let (buttons, _space) = area.split_right(theme::CONTENT_BORDER);
+        let (_space, content) = area.split_left(theme::CONTENT_BORDER);
         let (content_single_page, _space) = content.split_right(theme::CONTENT_BORDER);
         let (content, scrollbar) =
             content.split_right(Self::SCROLLBAR_SPACE + Self::SCROLLBAR_WIDTH);
@@ -221,7 +218,7 @@ impl PageLayout {
 }
 
 pub struct SwipeHoldPage<T> {
-    inner: SwipePage<T, CancelHold>,
+    inner: SwipePage<T, FixedHeightBar<CancelHold>>,
     loader: Loader,
 }
 
@@ -328,7 +325,7 @@ mod tests {
             component::{text::paragraphs::Paragraphs, Empty},
             event::TouchEvent,
             geometry::Point,
-            model_tt::{constant, theme},
+            model_tt::{component::Button, constant, theme},
         },
     };
 
@@ -418,13 +415,13 @@ mod tests {
                     theme::TEXT_BOLD,
                     "This is somewhat long paragraph that goes on and on and on and on and on and will definitely not fit on just a single screen. You have to swipe a bit to see all the text it contains I guess. There's just so much letters in it.",
                 ),
-            Empty,
+            theme::button_bar(Button::with_text("NO")),
             theme::BG,
         );
         page.place(SCREEN);
 
-        let expected1 = "<SwipePage active_page:0 page_count:2 content:<Paragraphs This is somewhat long\nparagraph that goes on\nand on and on and on\nand on and will definitely\nnot fit on just a single\nscreen. You have to\nswipe a bit to see all the\ntext it contains I guess....\n> buttons:<Empty > >";
-        let expected2 = "<SwipePage active_page:1 page_count:2 content:<Paragraphs There's just so much\nletters in it.\n> buttons:<Empty > >";
+        let expected1 = "<SwipePage active_page:0 page_count:2 content:<Paragraphs This is somewhat long\nparagraph that goes on\nand on and on and on\nand on and will definitely\nnot fit on just a single\nscreen. You have to\nswipe a bit to see all the\ntext it contains I guess....\n> buttons:<FixedHeightBar inner:<Button text:NO > > >";
+        let expected2 = "<SwipePage active_page:1 page_count:2 content:<Paragraphs There's just so much\nletters in it.\n> buttons:<FixedHeightBar inner:<Button text:NO > > >";
 
         assert_eq!(trace(&page), expected1);
         swipe_down(&mut page);
@@ -453,14 +450,14 @@ mod tests {
                     theme::TEXT_BOLD,
                     "Let's add another one for a good measure. This one should overflow all the way to the third page with a bit of luck.",
                 ),
-            Empty,
+            theme::button_bar(Button::with_text("IDK")),
             theme::BG,
         );
         page.place(SCREEN);
 
-        let expected1 = "<SwipePage active_page:0 page_count:3 content:<Paragraphs This paragraph is using a\nbold font. It doesn't\nneed to be all that long.\nAnd this one is\nusing MONO.\nMonospace is\nnice for...\n> buttons:<Empty > >";
-        let expected2 = "<SwipePage active_page:1 page_count:3 content:<Paragraphs numbers, they\nhave the same\nwidth and can be\nscanned quickly.\nEven if they\nspan several\npages or...\n> buttons:<Empty > >";
-        let expected3 = "<SwipePage active_page:2 page_count:3 content:<Paragraphs something.\nLet's add another one\nfor a good measure. This\none should overflow all\nthe way to the third\npage with a bit of luck.\n> buttons:<Empty > >";
+        let expected1 = "<SwipePage active_page:0 page_count:3 content:<Paragraphs This paragraph is using a\nbold font. It doesn't\nneed to be all that long.\nAnd this one is\nusing MONO.\nMonospace is\nnice for...\n> buttons:<FixedHeightBar inner:<Button text:IDK > > >";
+        let expected2 = "<SwipePage active_page:1 page_count:3 content:<Paragraphs numbers, they\nhave the same\nwidth and can be\nscanned quickly.\nEven if they\nspan several\npages or...\n> buttons:<FixedHeightBar inner:<Button text:IDK > > >";
+        let expected3 = "<SwipePage active_page:2 page_count:3 content:<Paragraphs something.\nLet's add another one\nfor a good measure. This\none should overflow all\nthe way to the third\npage with a bit of luck.\n> buttons:<FixedHeightBar inner:<Button text:IDK > > >";
 
         assert_eq!(trace(&page), expected1);
         swipe_down(&mut page);
@@ -489,14 +486,14 @@ mod tests {
                 .add_break()
                 .add(theme::TEXT_NORMAL, "Short three.")
                 .add_break(),
-            Empty,
+            theme::button_bar(Empty),
             theme::BG,
         );
         page.place(SCREEN);
 
-        let expected1 = "<SwipePage active_page:0 page_count:3 content:<Paragraphs Short one.\n> buttons:<Empty > >";
-        let expected2 = "<SwipePage active_page:1 page_count:3 content:<Paragraphs Short two.\n> buttons:<Empty > >";
-        let expected3 = "<SwipePage active_page:2 page_count:3 content:<Paragraphs Short three.\n> buttons:<Empty > >";
+        let expected1 = "<SwipePage active_page:0 page_count:3 content:<Paragraphs Short one.\n> buttons:<FixedHeightBar inner:<Empty > > >";
+        let expected2 = "<SwipePage active_page:1 page_count:3 content:<Paragraphs Short two.\n> buttons:<FixedHeightBar inner:<Empty > > >";
+        let expected3 = "<SwipePage active_page:2 page_count:3 content:<Paragraphs Short three.\n> buttons:<FixedHeightBar inner:<Empty > > >";
 
         assert_eq!(trace(&page), expected1);
         swipe_up(&mut page);

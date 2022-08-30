@@ -2,6 +2,7 @@ use crate::ui::{
     component::{
         label::LabelStyle,
         text::{formatted::FormattedFonts, TextStyle},
+        FixedHeightBar,
     },
     display::{Color, Font},
     geometry::Insets,
@@ -407,8 +408,22 @@ pub const FORMATTED: FormattedFonts = FormattedFonts {
 
 pub const CONTENT_BORDER: i32 = 5;
 pub const KEYBOARD_SPACING: i32 = 8;
+pub const BUTTON_HEIGHT: i32 = 38;
 pub const BUTTON_SPACING: i32 = 6;
 pub const CHECKLIST_SPACING: i32 = 10;
+/// Standard button height in pixels.
+pub const fn button_rows(count: usize) -> i32 {
+    let count = count as i32;
+    BUTTON_HEIGHT * count + BUTTON_SPACING * count.saturating_sub(1)
+}
+
+pub const fn button_bar_rows<T>(rows: usize, inner: T) -> FixedHeightBar<T> {
+    FixedHeightBar::bottom(inner, button_rows(rows))
+}
+
+pub const fn button_bar<T>(inner: T) -> FixedHeightBar<T> {
+    button_bar_rows(1, inner)
+}
 
 /// +----------+
 /// |    13    |
