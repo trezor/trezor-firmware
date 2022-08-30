@@ -153,8 +153,16 @@ void usb_start(void) { USBD_Start(&usb_dev_handle); }
 void usb_stop(void) { USBD_Stop(&usb_dev_handle); }
 
 secbool usb_configured(void) {
-  USBD_HandleTypeDef *pdev = &usb_dev_handle;
+  const USBD_HandleTypeDef *pdev = &usb_dev_handle;
   if (pdev->dev_state == USBD_STATE_CONFIGURED) {
+    return sectrue;
+  }
+
+  // Linux has autosuspend device after 2 seconds by default.
+  // So a suspended device that was seen as configured is reported as
+  // configured.
+  if (pdev->dev_state == USBD_STATE_SUSPENDED &&
+      pdev->dev_old_state == USBD_STATE_CONFIGURED) {
     return sectrue;
   }
 
