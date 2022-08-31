@@ -1,6 +1,7 @@
 from common import *
 
 if not utils.BITCOIN_ONLY:
+    from trezor.crypto import monero as tcry
     from trezor.enums import MoneroNetworkType
     from apps.monero.xmr import crypto, crypto_helpers, monero
     from apps.monero.xmr.addresses import encode_addr
@@ -152,6 +153,22 @@ class TestMoneroCrypto(unittest.TestCase):
             hexlify(crypto_helpers.encodeint(res)),
             b"bcf365a551e6358f3f281a6241d4a25eded60230b60a1d48c67b51a85e33d70e",
         )
+
+    def test_addr_encode(self):
+        addr_exp = "4LL9oSLmtpccfufTMvppY6JwXNouMBzSkbLYfpAV5Usx3skxNgYeYTRj5UzqtReoS44qo9mtmXCqY45DJ852K5Jv2bYXZKKQePHES9khPK"
+        addr = tcry.xmr_base58_addr_encode_check(
+            19,
+            unhexlify(b"eda9fe8dfcdd25d5430ea64229d04f6b41b2e5a1587c29cd499a63eb79d117113076a02b73d130fb904c9e91075fcd16f735c6850dfadb125eb826d96a113f098a125052fe6f3877"))
+
+        addr2 = encode_addr(
+            bytes([19]),
+            unhexlify(b"eda9fe8dfcdd25d5430ea64229d04f6b41b2e5a1587c29cd499a63eb79d11711"),
+            unhexlify(b"3076a02b73d130fb904c9e91075fcd16f735c6850dfadb125eb826d96a113f09"),
+            unhexlify(b"8a125052fe6f3877")
+        )
+
+        self.assertEqual(addr, addr_exp)
+        self.assertEqual(addr2, addr_exp)
 
     def test_wallet_addr(self):
         addr = encode_addr(
