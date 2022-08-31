@@ -685,7 +685,7 @@ core unix memory profiler:
 # Connect
 
 connect test core:
-  image: ghcr.io/trezor/trezor-user-env:185
+  image: ghcr.io/trezor/trezor-user-env
   stage: test
   tags:
     - runner-internal

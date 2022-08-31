@@ -30,4 +30,4 @@ fi
 echo "Will be running with ${EMU_VERSION} emulator"
 
 # Using -d flag to disable docker, as tenv is already running on the background
-nix-shell --run "yarn && yarn build:libs && ./docker/docker-connect-test.sh node -p methods -d -f ${EMU_VERSION}"
+nix-shell --run "yarn && yarn build:libs && ./docker/docker-connect-test.sh node -p methods -d -c -f ${EMU_VERSION}"
