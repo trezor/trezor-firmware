@@ -56,6 +56,7 @@ pub const ICON_BACK: &[u8] = include_res!("model_tt/res/back.toif");
 pub const ICON_CLICK: &[u8] = include_res!("model_tt/res/click.toif");
 pub const ICON_NEXT: &[u8] = include_res!("model_tt/res/next.toif");
 pub const ICON_TREZOR_EMPTY: &[u8] = include_res!("model_tt/res/trezor_empty.toif");
+pub const ICON_TREZOR_FULL: &[u8] = include_res!("model_tt/res/trezor_full.toif");
 
 // Large, color icons.
 pub const IMAGE_WARN: &[u8] = include_res!("model_tt/res/warn.toif");

@@ -115,6 +115,8 @@ int main(void) {
   display_clear();
 #endif
 
+  boot_firmware(0);
+
 #if !defined TREZOR_MODEL_1
   // jump to unprivileged mode
   // http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/CHDBIBGJ.html
@@ -126,7 +128,6 @@ int main(void) {
   ensure(sectrue * (zkp_context_init() == 0), NULL);
 #endif
 
-  boot_firmware(0);
 
   printf("CORE: Preparing stack\n");
   // Stack limit should be less than real stack size, so we have a chance
@@ -151,6 +152,8 @@ int main(void) {
   mp_obj_list_append(
       mp_sys_path,
       MP_OBJ_NEW_QSTR(MP_QSTR_));  // current dir (or base dir of the script)
+
+  boot_firmware(1);
 
   // Execute the main script
   printf("CORE: Executing main script\n");
