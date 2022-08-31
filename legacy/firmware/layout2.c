@@ -586,7 +586,8 @@ void layoutConfirmModifyOutput(const CoinInfo *coin, AmountUnit amount_unit,
 }
 
 void layoutConfirmModifyFee(const CoinInfo *coin, AmountUnit amount_unit,
-                            uint64_t fee_old, uint64_t fee_new) {
+                            uint64_t fee_old, uint64_t fee_new,
+                            uint64_t tx_weight) {
   char str_fee_change[32] = {0};
   char str_fee_new[32] = {0};
   char *question = NULL;
@@ -605,9 +606,14 @@ void layoutConfirmModifyFee(const CoinInfo *coin, AmountUnit amount_unit,
   format_coin_amount(fee_new, NULL, coin, amount_unit, str_fee_new,
                      sizeof(str_fee_new));
 
+  char str_fee_rate[32] = {0};
+
+  formatFeeRate(fee_new, tx_weight, str_fee_rate, sizeof(str_fee_rate),
+                coin->has_segwit);
+
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
-                    question, str_fee_change, NULL, _("Transaction fee:"),
-                    str_fee_new, NULL);
+                    question, str_fee_change, _("Transaction fee:"),
+                    str_fee_new, str_fee_rate, NULL);
 }
 
 void layoutFeeOverThreshold(const CoinInfo *coin, AmountUnit amount_unit,
