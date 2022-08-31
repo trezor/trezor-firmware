@@ -48,7 +48,7 @@ const size_t encoded_block_sizes[] = {
 const size_t full_block_size =
     sizeof(encoded_block_sizes) / sizeof(encoded_block_sizes[0]) - 1;
 const size_t addr_checksum_size = 4;
-const size_t max_bin_data_size = 64;
+const size_t max_bin_data_size = 72;
 const int decoded_block_sizes[] = {0, -1, 1, 2, -1, 3, 4, 5, -1, 6, 7, 8};
 #define reverse_alphabet(letter) ((int8_t)b58digits_map[(int)letter])
 
