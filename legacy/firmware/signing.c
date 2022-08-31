@@ -1998,7 +1998,7 @@ static bool signing_confirm_tx(void) {
 
     // Fee modification.
     if (fee != orig_fee) {
-      layoutConfirmModifyFee(coin, amount_unit, orig_fee, fee);
+      layoutConfirmModifyFee(coin, amount_unit, orig_fee, fee, tx_weight);
       if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
         fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
         signing_abort();
