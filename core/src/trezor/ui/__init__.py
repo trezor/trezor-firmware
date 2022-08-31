@@ -148,7 +148,7 @@ MODEL_HEADER_HEIGHTS = {"1": 12, "R": 15, "T": 30}
 MODEL_Y_BASELINES = {"1": 10, "R": 11, "T": 22}
 
 
-def header_warning(message: str, clear: bool = True) -> None:
+def header_warning(message: str) -> None:
     height = MODEL_HEADER_HEIGHTS[utils.MODEL]
     y_baseline = MODEL_Y_BASELINES[utils.MODEL]
 
@@ -156,18 +156,18 @@ def header_warning(message: str, clear: bool = True) -> None:
     display.text_center(
         WIDTH // 2, y_baseline, message, BOLD, style.BLACK, style.YELLOW
     )
-    if clear:
-        display.bar(0, height, WIDTH, HEIGHT - height, style.BG)
 
 
-def header_error(message: str, clear: bool = True) -> None:
+def header_error(message: str) -> None:
     height = MODEL_HEADER_HEIGHTS[utils.MODEL]
     y_baseline = MODEL_Y_BASELINES[utils.MODEL]
 
     display.bar(0, 0, WIDTH, height, style.RED)
     display.text_center(WIDTH // 2, y_baseline, message, BOLD, style.WHITE, style.RED)
-    if clear:
-        display.bar(0, height, WIDTH, HEIGHT - height, style.BG)
+
+
+def get_header_height() -> int:
+    return MODEL_HEADER_HEIGHTS[utils.MODEL]
 
 
 def draw_simple(t: "Component") -> None:
