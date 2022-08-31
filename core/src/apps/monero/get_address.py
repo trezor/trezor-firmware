@@ -25,7 +25,11 @@ async def get_address(
     creds = misc.get_creds(keychain, msg.address_n, msg.network_type)
     addr = creds.address
 
-    have_subaddress = msg.account is not None and msg.minor is not None
+    have_subaddress = (
+        msg.account is not None
+        and msg.minor is not None
+        and (msg.account, msg.minor) != (0, 0)
+    )
     have_payment_id = msg.payment_id is not None
 
     if (msg.account is None) != (msg.minor is None):
