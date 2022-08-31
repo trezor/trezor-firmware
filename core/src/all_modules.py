@@ -33,8 +33,6 @@ from trezor import utils
 
 all_modules
 import all_modules
-boot
-import boot
 main
 import main
 session
@@ -139,8 +137,6 @@ trezor.loop
 import trezor.loop
 trezor.messages
 import trezor.messages
-trezor.pin
-import trezor.pin
 trezor.protobuf
 import trezor.protobuf
 trezor.sdcard

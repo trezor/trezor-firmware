@@ -27,11 +27,13 @@ disp_i8080_8bit_dw = [] # write pixels directly to peripheral
 disp_i8080_16bit_dw = [] # write pixels directly to peripheral
 debug = ["ui_debug"]
 sbu = []
-sd_card = []
+sd_card = ["sd_card_hotswap"]
+sd_card_hotswap = []
 rgb_led = []
 backlight = []
 usb = []
 optiga = []
+emulator = []
 test = [
     "button",
     "cc",

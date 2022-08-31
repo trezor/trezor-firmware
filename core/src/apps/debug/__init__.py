@@ -12,7 +12,6 @@ if __debug__:
     from trezor import log, loop, utils, wire
     from trezor.enums import MessageType
     from trezor.messages import DebugLinkLayout, Success
-    from trezor.ui import display
     from trezor.wire import context
 
     from apps import workflow_handlers
@@ -48,18 +47,6 @@ if __debug__:
     LAYOUT_WATCHER_NONE = 0
     LAYOUT_WATCHER_STATE = 1
     LAYOUT_WATCHER_LAYOUT = 2
-
-    REFRESH_INDEX = 0
-
-    def screenshot() -> bool:
-        if storage.save_screen:
-            # Starting with "refresh00", allowing for 100 emulator restarts
-            # without losing the order of the screenshots based on filename.
-            display.save(
-                storage.save_screen_directory + f"/refresh{REFRESH_INDEX:0>2}-"
-            )
-            return True
-        return False
 
     def notify_layout_change(layout: Layout, event_id: int | None = None) -> None:
         layout.read_content_into(storage.current_content_tokens)
@@ -212,17 +199,13 @@ if __debug__:
         return m
 
     async def dispatch_DebugLinkRecordScreen(msg: DebugLinkRecordScreen) -> Success:
-        if msg.target_directory:
-            # In case emulator is restarted but we still want to record screenshots
-            # into the same directory as before, we need to increment the refresh index,
-            # so that the screenshots are not overwritten.
-            global REFRESH_INDEX
-            REFRESH_INDEX = msg.refresh_index
-            storage.save_screen_directory = msg.target_directory
-            storage.save_screen = True
-        else:
-            storage.save_screen = False
-            display.clear_save()  # clear C buffers
+        if utils.EMULATOR:
+            from trezor.utils import screenshot_clear, screenshot_prepare
+
+            if msg.target_directory:
+                screenshot_prepare(msg.refresh_index, msg.target_directory)
+            else:
+                screenshot_clear()  # clear C buffers
 
         return Success()
 

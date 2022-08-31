@@ -26,9 +26,13 @@ _alert_in_progress = False
 if __debug__:
 
     def refresh() -> None:
-        from apps.debug import screenshot
+        if utils.EMULATOR:
+            from trezor.utils import screenshot
 
-        if not screenshot():
+            if not screenshot():
+                side = Display.WIDTH // 30
+                display.bar(Display.WIDTH - side, 0, side, side, 0xF800)
+        else:
             side = Display.WIDTH // 30
             display.bar(Display.WIDTH - side, 0, side, side, 0xF800)
         display.refresh()
@@ -83,6 +87,8 @@ def backlight_fade(val: int, delay: int = 14000, step: int = 15) -> None:
             return
         elif current > val:
             step = -step
+        if current < 0:
+            current = 0
         for i in range(current, val, step):
             display.backlight(i)
             utime.sleep_us(delay)

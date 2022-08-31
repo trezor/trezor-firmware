@@ -55,7 +55,7 @@ pub use homescreen::{check_homescreen_format, ConfirmHomescreen, Homescreen, Loc
 pub use input_methods::{
     number_input::NumberInput,
     passphrase::PassphraseEntry,
-    pin::PinEntry,
+    pin::{PinEntry, PinKeyboard, PinKeyboardMsg},
     simple_choice::SimpleChoice,
     wordlist::{WordlistEntry, WordlistType},
 };

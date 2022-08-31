@@ -1,14 +1,18 @@
 #include TREZOR_BOARD
+#include "alloc_only.h"
 #include "buffers.h"
 #include "button.h"
 #include "common.h"
 #include "display.h"
 #include "display_interface.h"
 #include "dma2d.h"
+#include "ff.h"
 #include "flash.h"
 #include "fonts/fonts.h"
 #include "model.h"
 #include "rgb_led.h"
+#include "screenshot.h"
+#include "sdcard.h"
 #include "secbool.h"
 #include "storage.h"
 #include "touch.h"
@@ -19,3 +23,6 @@
 #include "slip39.h"
 
 #include "uzlib.h"
+
+#include "hmac.h"
+#include "sha2.h"

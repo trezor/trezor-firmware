@@ -567,19 +567,22 @@ class KeepaliveCallback:
 
 
 async def verify_user(keepalive_callback: KeepaliveCallback) -> bool:
-    import trezor.pin
     from trezor.wire import PinCancelled, PinInvalid
 
     from apps.common.request_pin import verify_user_pin
 
     try:
-        trezor.pin.keepalive_callback = keepalive_callback
+        from trezor.ui.layouts import set_keepalive_callback
+
+        set_keepalive_callback(keepalive_callback)
         await verify_user_pin(cache_time_ms=_UV_CACHE_TIME_MS)
         ret = True
     except (PinCancelled, PinInvalid):
         ret = False
     finally:
-        trezor.pin.keepalive_callback = None
+        from trezor.ui.layouts import remove_keepalive_callback
+
+        remove_keepalive_callback()
 
     return ret
 

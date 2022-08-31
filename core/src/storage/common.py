@@ -13,7 +13,6 @@ APP_WEBAUTHN           = const(0x04)
 _FALSE_BYTE = b"\x00"
 _TRUE_BYTE = b"\x01"
 
-STORAGE_VERSION_01 = b"\x01"
 STORAGE_VERSION_CURRENT = b"\x02"
 
 

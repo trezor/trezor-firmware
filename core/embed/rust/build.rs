@@ -103,6 +103,8 @@ fn prepare_bindings() -> bindgen::Builder {
         clang_args.push("-nostdinc");
         clang_args.push("-I../firmware");
         clang_args.push("-I../../build/firmware");
+        clang_args.push("-I../extmod/modtrezorio");
+        clang_args.push("-I../../vendor/trezor-crypto");
         clang_args.push("-I../../vendor/micropython/lib/cmsis/inc");
         clang_args.push("-DUSE_HAL_DRIVER");
         bindings = bindings.clang_args(&clang_args);
@@ -132,6 +134,7 @@ fn prepare_bindings() -> bindgen::Builder {
             "-I../unix",
             "-I../trezorhal/unix",
             "-I../../build/unix",
+            "-I../extmod/modtrezorio",
             "-I../../vendor/micropython/ports/unix",
             "-DTREZOR_EMULATOR",
         ]);
@@ -172,6 +175,7 @@ fn generate_micropython_bindings() {
         .allowlist_function("mp_obj_new_tuple")
         .allowlist_function("mp_obj_get_int_maybe")
         .allowlist_function("mp_obj_is_true")
+        .allowlist_function("mp_call_function_0")
         .allowlist_function("mp_call_function_n_kw")
         .allowlist_function("trezor_obj_get_ll_checked")
         .allowlist_function("trezor_obj_str_from_rom_text")
@@ -263,8 +267,26 @@ fn generate_trezorhal_bindings() {
         // model
         .allowlist_var("MODEL_INTERNAL_NAME")
         .allowlist_var("MODEL_FULL_NAME")
+        .allowlist_function("alloc_only")
+        .allowlist_function("alloc_only_init")
+        // sdcard
+        .allowlist_function("sdcard_is_present")
+        .allowlist_function("sdcard_power_on")
+        .allowlist_function("sdcard_power_off")
+        // fatfs
+        .allowlist_function("f_mount")
+        .allowlist_function("f_unmount")
+        .allowlist_function("f_open")
+        .allowlist_function("f_close")
+        .allowlist_function("f_read")
+        .allowlist_function("f_unlink")
+        .allowlist_function("f_rename")
+        // hmac
+        .allowlist_var("SHA256_DIGEST_LENGTH")
+        .allowlist_function("hmac_sha256")
         // common
         .allowlist_var("HW_ENTROPY_DATA")
+        .allowlist_var("HW_ENTROPY_LEN")
         // secbool
         .allowlist_type("secbool")
         .must_use_type("secbool")
@@ -274,11 +296,16 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("flash_init")
         // storage
         .allowlist_var("EXTERNAL_SALT_SIZE")
+        .allowlist_var("FLAG_PUBLIC")
+        .allowlist_var("FLAGS_WRITE")
+        .allowlist_var("MAX_APPID")
+        .allowlist_type("PIN_UI_WAIT_CALLBACK")
         .allowlist_function("storage_init")
         .allowlist_function("storage_wipe")
         .allowlist_function("storage_is_unlocked")
         .allowlist_function("storage_lock")
         .allowlist_function("storage_unlock")
+        .allowlist_function("storage_init_unlocked")
         .allowlist_function("storage_has_pin")
         .allowlist_function("storage_get_pin_rem")
         .allowlist_function("storage_change_pin")
@@ -294,6 +321,7 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("display_offset")
         .allowlist_function("display_refresh")
         .allowlist_function("display_backlight")
+        .allowlist_function("display_orientation")
         .allowlist_function("display_text")
         .allowlist_function("display_text_render_buffer")
         .allowlist_function("display_text_width")
@@ -330,6 +358,7 @@ fn generate_trezorhal_bindings() {
         .allowlist_var("SLIP39_WORD_COUNT")
         // random
         .allowlist_function("random_uniform")
+        .allowlist_function("random_buffer")
         // rgb led
         .allowlist_function("rgb_led_set_color")
         // time
@@ -374,8 +403,13 @@ fn generate_trezorhal_bindings() {
         // touch
         .allowlist_function("touch_read")
         // button
-        .allowlist_function("button_read");
-
+        .allowlist_function("button_read")
+        .allowlist_var("BTN_EVT_DOWN")
+        .allowlist_var("BTN_EVT_UP")
+        .allowlist_var("BTN_RIGHT")
+        .allowlist_var("BTN_LEFT")
+        // screenshot
+        .allowlist_function("screenshot");
     // Write the bindings to a file in the OUR_DIR.
     bindings
         .generate()

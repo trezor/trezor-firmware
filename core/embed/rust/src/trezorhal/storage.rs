@@ -86,6 +86,8 @@ pub fn init() {
             ffi::HW_ENTROPY_DATA.as_ptr(),
             ffi::HW_ENTROPY_DATA.len() as u16,
         );
+
+        ffi::HW_ENTROPY_DATA.fill(0);
     }
 }
 

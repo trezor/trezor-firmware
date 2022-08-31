@@ -12,10 +12,23 @@ pub mod screens;
 #[macro_use]
 pub mod util;
 
-#[cfg(feature = "micropython")]
 pub mod layout;
 
 #[cfg(feature = "model_tr")]
 pub mod model_tr;
 #[cfg(feature = "model_tt")]
 pub mod model_tt;
+
+#[cfg(all(
+    feature = "model_t1",
+    not(feature = "model_tr"),
+    not(feature = "model_tt")
+))]
+pub use model_t1 as model;
+#[cfg(all(feature = "model_tr", not(feature = "model_tt")))]
+pub use model_tr as model;
+#[cfg(feature = "model_tt")]
+pub use model_tt as model;
+
+#[cfg(feature = "micropython")]
+pub mod workflow;

@@ -31,6 +31,10 @@ pub fn backlight(val: i32) -> i32 {
     unsafe { ffi::display_backlight(val) }
 }
 
+pub fn orientation(degrees: i32) -> i32 {
+    unsafe { ffi::display_orientation(degrees) }
+}
+
 pub fn text(baseline_x: i16, baseline_y: i16, text: &str, font: i32, fgcolor: u16, bgcolor: u16) {
     unsafe {
         ffi::display_text(

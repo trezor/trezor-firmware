@@ -1,0 +1,1 @@
+Improved device boot time (boot sequence rewritten to rust)

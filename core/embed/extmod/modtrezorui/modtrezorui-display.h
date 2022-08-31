@@ -123,32 +123,6 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_backlight_obj,
                                            1, 2,
                                            mod_trezorui_Display_backlight);
 
-/// def save(self, prefix: str) -> None:
-///     """
-///     Saves current display contents to PNG file with given prefix.
-///     """
-STATIC mp_obj_t mod_trezorui_Display_save(mp_obj_t self, mp_obj_t prefix) {
-  mp_buffer_info_t pfx = {0};
-  mp_get_buffer_raise(prefix, &pfx, MP_BUFFER_READ);
-  if (pfx.len > 0) {
-    display_save(pfx.buf);
-  }
-  return mp_const_none;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorui_Display_save_obj,
-                                 mod_trezorui_Display_save);
-
-/// def clear_save(self) -> None:
-///     """
-///     Clears buffers in display saving.
-///     """
-STATIC mp_obj_t mod_trezorui_Display_clear_save(mp_obj_t self) {
-  display_clear_save();
-  return mp_const_none;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorui_Display_clear_save_obj,
-                                 mod_trezorui_Display_clear_save);
-
 STATIC const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_refresh),
      MP_ROM_PTR(&mod_trezorui_Display_refresh_obj)},
@@ -157,9 +131,6 @@ STATIC const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
      MP_ROM_PTR(&mod_trezorui_Display_orientation_obj)},
     {MP_ROM_QSTR(MP_QSTR_backlight),
      MP_ROM_PTR(&mod_trezorui_Display_backlight_obj)},
-    {MP_ROM_QSTR(MP_QSTR_save), MP_ROM_PTR(&mod_trezorui_Display_save_obj)},
-    {MP_ROM_QSTR(MP_QSTR_clear_save),
-     MP_ROM_PTR(&mod_trezorui_Display_clear_save_obj)},
     {MP_ROM_QSTR(MP_QSTR_WIDTH), MP_ROM_INT(DISPLAY_RESX)},
     {MP_ROM_QSTR(MP_QSTR_HEIGHT), MP_ROM_INT(DISPLAY_RESY)},
     {MP_ROM_QSTR(MP_QSTR_FONT_NORMAL), MP_ROM_INT(FONT_NORMAL)},

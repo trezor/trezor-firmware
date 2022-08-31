@@ -1,7 +1,7 @@
 #[cfg(feature = "micropython")]
 use crate::micropython::buffer::StrBuffer;
 use crate::ui::{
-    component::base::Component, constant::screen, display, model_tr::component::WelcomeScreen,
+    component::base::Component, layout::simplified::show, model::component::WelcomeScreen,
 };
 
 use super::{component::ErrorScreen, constant};
@@ -33,8 +33,5 @@ pub fn screen_fatal_error(title: &str, msg: &str, footer: &str) {
 #[no_mangle]
 extern "C" fn screen_boot_full() {
     let mut frame = WelcomeScreen::new(false);
-    frame.place(screen());
-    display::sync();
-    frame.paint();
-    display::refresh();
+    show(&mut frame, false);
 }

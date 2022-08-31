@@ -1425,3 +1425,15 @@ async def confirm_firmware_update(description: str, fingerprint: str) -> None:
             BR_TYPE_OTHER,
         )
     )
+
+
+def set_keepalive_callback(callback):
+    trezorui2.set_keepalive_callback(callback)
+
+
+def remove_keepalive_callback():
+    trezorui2.remove_keepalive_callback()
+
+
+def render_empty_loader(msg: str, description: str):
+    trezorui2.render_empty_loader(message=msg, description=description)

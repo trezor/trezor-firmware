@@ -3,5 +3,6 @@
 #![allow(clippy::upper_case_acronyms)]
 #![allow(non_snake_case)]
 #![allow(dead_code)]
+#![allow(clippy::upper_case_acronyms)]
 
 include!(concat!(env!("OUT_DIR"), "/trezorhal.rs"));
