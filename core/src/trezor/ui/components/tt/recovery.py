@@ -16,7 +16,7 @@ class RecoveryHomescreen(ui.Component):
             heading = "SEED CHECK"
         else:
             heading = "RECOVERY MODE"
-        ui.header_warning(heading, clear=False)
+        ui.header_warning(heading)
 
         if not self.subtext:
             ui.display.text_center(ui.WIDTH // 2, 80, self.text, ui.BOLD, ui.FG, ui.BG)

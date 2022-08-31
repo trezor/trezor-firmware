@@ -26,7 +26,6 @@ class Homescreen(HomescreenBase):
 
     def __init__(self) -> None:
         super().__init__()
-        self.is_connected = False
         if not storage.device.is_initialized():
             self.label = "Go to trezor.io/start"
 
@@ -44,10 +43,8 @@ class Homescreen(HomescreenBase):
     async def usb_checker_task(self) -> None:
         usbcheck = loop.wait(io.USB_CHECK)
         while True:
-            is_connected = await usbcheck
-            if is_connected != self.is_connected:
-                self.is_connected = is_connected
-                self.set_repaint(True)
+            await usbcheck
+            self.set_repaint(True)
 
     def do_render(self) -> None:
         # warning bar on top
@@ -62,7 +59,7 @@ class Homescreen(HomescreenBase):
         elif storage.device.get_experimental_features():
             ui.header_warning("EXPERIMENTAL MODE!")
         else:
-            ui.display.bar(0, 0, ui.WIDTH, ui.HEIGHT, ui.BG)
+            ui.display.bar(0, 0, ui.WIDTH, ui.get_header_height(), ui.BG)
 
         # homescreen with shifted avatar and text on bottom
         # Differs for each model
@@ -95,6 +92,7 @@ class Homescreen(HomescreenBase):
 
     def on_touch_end(self, _x: int, _y: int) -> None:
         if self.loader.start_ms is not None:
+            ui.display.clear()
             self.set_repaint(True)
         self.loader.stop()
         self.touch_ms = None
