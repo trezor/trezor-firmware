@@ -680,12 +680,14 @@ protobuf_blobs = env.Command(
 )
 env.Depends(protobuf_blobs, qstr_generated)
 
+TARGET = os.popen("rustc -vV | sed -n 's/host: //p'").read().strip()
+
 if ARGUMENTS.get('TREZOR_EMULATOR_DEBUGGABLE', '0') == '1':
     RUST_PROFILE = 'dev'
-    RUST_LIBDIR = 'build/unix/rust/debug'
+    RUST_LIBDIR = f'build/unix/rust/{TARGET}/debug'
 else:
     RUST_PROFILE = 'release'
-    RUST_LIBDIR = 'build/unix/rust/release'
+    RUST_LIBDIR = f'build/unix/rust/{TARGET}/release'
 RUST_LIB = 'trezor_lib'
 RUST_LIBPATH = f'{RUST_LIBDIR}/lib{RUST_LIB}.a'
 
@@ -700,7 +702,7 @@ def cargo_build():
     if DMA2D:
         features.append('dma2d')
 
-    return f'cd embed/rust; cargo build --profile {RUST_PROFILE} --target-dir=../../build/unix/rust --no-default-features --features "{" ".join(features)}"'
+    return f'cd embed/rust; cargo build --profile {RUST_PROFILE} --target-dir=../../build/unix/rust --no-default-features --features "{" ".join(features)}"  --target {TARGET}'
 
 rust = env.Command(
     target=RUST_LIBPATH,
