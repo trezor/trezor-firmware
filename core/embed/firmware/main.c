@@ -50,6 +50,7 @@
 #if defined TREZOR_MODEL_R || defined TREZOR_MODEL_1
 #include "button.h"
 #endif
+#include "rust_ui.h"
 
 #ifdef SYSTEM_VIEW
 #include "systemview.h"
@@ -124,6 +125,8 @@ int main(void) {
 #ifdef USE_SECP256K1_ZKP
   ensure(sectrue * (zkp_context_init() == 0), NULL);
 #endif
+
+  boot_firmware(0);
 
   printf("CORE: Preparing stack\n");
   // Stack limit should be less than real stack size, so we have a chance
