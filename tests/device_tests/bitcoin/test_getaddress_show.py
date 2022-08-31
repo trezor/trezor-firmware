@@ -36,6 +36,11 @@ VECTORS = (  # path, script_type, address
         messages.InputScriptType.SPENDWITNESS,
         "bc1qduvap743hcl7twn8u6f9l0u8y7x83965xy0raj",
     ),
+    (
+        "m/86h/0h/12h/0/0",
+        messages.InputScriptType.SPENDTAPROOT,
+        "bc1pnzsh9t0n0vjanwgkuf9cyrp6j6lhfe63xaekuu7qxkse93vkyvgqxn4hff",
+    ),
 )
 
 
