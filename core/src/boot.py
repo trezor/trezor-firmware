@@ -28,9 +28,6 @@ async def bootscreen() -> None:
                 log.exception(__name__, e)
             utils.halt(e.__class__.__name__)
 
-
-ui.display.backlight(ui.BACKLIGHT_NONE)
-ui.backlight_fade(ui.BACKLIGHT_NORMAL)
 config.init(show_pin_timeout)
 
 if __debug__ and not utils.EMULATOR:
