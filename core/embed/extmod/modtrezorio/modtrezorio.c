@@ -32,7 +32,7 @@
 #include "usb.h"
 
 // Whether USB data pins were connected on last check (USB configured)
-__attribute__((unused)) static bool usb_connected_previously = false;
+bool usb_connected_previously = true;
 
 #define CHECK_PARAM_RANGE(value, minimum, maximum)  \
   if (value < minimum || value > maximum) {         \

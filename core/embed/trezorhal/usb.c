@@ -153,8 +153,26 @@ void usb_start(void) { USBD_Start(&usb_dev_handle); }
 void usb_stop(void) { USBD_Stop(&usb_dev_handle); }
 
 secbool usb_configured(void) {
+
+  static uint32_t usb_configured_first_check = 0;
+  uint32_t ticks =  hal_ticks_ms();
+
   USBD_HandleTypeDef *pdev = &usb_dev_handle;
   if (pdev->dev_state == USBD_STATE_CONFIGURED) {
+    return sectrue;
+  }
+  if (pdev->dev_state == USBD_STATE_SUSPENDED && pdev->dev_old_state == USBD_STATE_CONFIGURED) {
+    return sectrue;
+  }
+  if (usb_configured_first_check == 0) {
+    usb_configured_first_check = ticks;
+    return sectrue;
+  }
+  if (usb_configured_first_check > ticks) {
+    //probably overflow of 32bit ms counter, ignore as its just once in a long time
+    return sectrue;
+  }
+  if ((hal_ticks_ms() - usb_configured_first_check) < 2000) {
     return sectrue;
   }
 

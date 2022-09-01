@@ -26,7 +26,6 @@ class Homescreen(HomescreenBase):
 
     def __init__(self) -> None:
         super().__init__()
-        self.is_connected = False
         if not storage.device.is_initialized():
             self.label = "Go to trezor.io/start"
 
@@ -44,10 +43,8 @@ class Homescreen(HomescreenBase):
     async def usb_checker_task(self) -> None:
         usbcheck = loop.wait(io.USB_CHECK)
         while True:
-            is_connected = await usbcheck
-            if is_connected != self.is_connected:
-                self.is_connected = is_connected
-                self.set_repaint(True)
+            await usbcheck
+            self.set_repaint(True)
 
     def do_render(self) -> None:
         # warning bar on top
