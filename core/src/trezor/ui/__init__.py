@@ -126,6 +126,8 @@ def backlight_fade(val: int, delay: int = 14000, step: int = 15) -> None:
     current = display.backlight()
     if current > val:
         step = -step
+    if current < 0:
+        current = 0
     for i in range(current, val, step):
         display.backlight(i)
         utime.sleep_us(delay)
