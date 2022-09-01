@@ -1049,6 +1049,7 @@ async def confirm_modify_fee(
     sign: int,
     user_fee_change: str,
     total_fee_new: str,
+    fee_rate_amount: str | None = None,
 ) -> None:
     text = ""
     if sign == 0:
@@ -1060,6 +1061,8 @@ async def confirm_modify_fee(
             text += "Increase your fee by:\n"
         text += f"{user_fee_change}\n"
     text += f"Transaction fee:\n{total_fee_new}"
+    if fee_rate_amount is not None:
+        text += "\n" + fee_rate_amount
 
     await raise_if_cancelled(
         _placeholder_confirm(

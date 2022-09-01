@@ -1,8 +1,8 @@
-from typing import Any
+from typing import Any, Tuple
 
 import storage.cache
 import storage.device
-from trezor import config, res, ui, utils
+from trezor import config, io, loop, res, ui, utils
 
 
 def render_top_header() -> None:
@@ -46,6 +46,18 @@ class HomescreenBase(ui.Layout):
         super().__init__()
         self.label = storage.device.get_label() or "My Trezor"
         self.repaint = storage.cache.homescreen_shown is not self.RENDER_INDICATOR
+        self.is_connected = False
+
+    def create_tasks(self) -> Tuple[loop.AwaitableTask, ...]:
+        return super().create_tasks() + (self.usb_checker_task(),)
+
+    async def usb_checker_task(self) -> None:
+        usbcheck = loop.wait(io.USB_CHECK)
+        while True:
+            is_connected = await usbcheck
+            if is_connected != self.is_connected:
+                self.is_connected = is_connected
+                self.set_repaint(True)
 
     def get_avatar(self) -> bytes:
         """Returns the image for homescreen. Is model-specific."""

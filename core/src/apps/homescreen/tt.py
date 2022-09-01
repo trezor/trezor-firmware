@@ -4,7 +4,7 @@ from micropython import const
 import storage
 import storage.cache
 import storage.device
-from trezor import config, io, loop, res, ui
+from trezor import config, loop, res, ui
 from trezor.ui.loader import Loader, LoaderNeutral
 
 from . import HomescreenBase, render_header_and_refresh
@@ -20,7 +20,6 @@ class Homescreen(HomescreenBase):
 
     def __init__(self) -> None:
         super().__init__()
-        self.is_connected = False
         if not storage.device.is_initialized():
             self.label = "Go to trezor.io/start"
 
@@ -31,16 +30,6 @@ class Homescreen(HomescreenBase):
             reverse_speedup=3,
         )
         self.touch_ms: int | None = None
-
-    # TODO: doing this for model R results in infinite loop of emulator logs with
-    # "AttributeError: 'module' object has no attribute 'USB_CHECK'"
-    async def usb_checker_task(self) -> None:
-        usbcheck = loop.wait(io.USB_CHECK)
-        while True:
-            is_connected = await usbcheck
-            if is_connected != self.is_connected:
-                self.is_connected = is_connected
-                self.set_repaint(True)
 
     def do_render(self) -> None:
         with render_header_and_refresh():

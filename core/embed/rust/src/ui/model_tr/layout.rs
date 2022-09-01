@@ -422,7 +422,7 @@ extern "C" fn pin_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
         let pages: Vec<FlowPageMaker<10>, 2> = screens
             .iter()
             .map(|screen| {
-                FlowPageMaker::new::<theme::TRDefaultText>(screen.2.clone(), screen.3.clone())
+                FlowPageMaker::new(screen.2.clone(), screen.3.clone())
                     .text_bold(screen.0.clone())
                     .newline()
                     .newline_half()
