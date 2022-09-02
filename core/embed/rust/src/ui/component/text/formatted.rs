@@ -1,5 +1,5 @@
 use core::{
-    iter::{Enumerate, Peekable, self},
+    iter::{Enumerate, Peekable},
     slice,
 };
 
@@ -7,10 +7,10 @@ use heapless::LinearMap;
 
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
-    geometry::Rect, display::{Font, Color},
+    geometry::Rect,
 };
 
-use super::{layout::{Op, TextStyle}, iter::{LayoutFit, Span, break_text_to_spans}};
+use super::{iter::LayoutFit, layout::TextStyle};
 
 pub const MAX_ARGUMENTS: usize = 6;
 
@@ -69,50 +69,46 @@ where
     F: AsRef<str>,
     T: AsRef<str>,
 {
-    pub fn ops(&self) -> impl Iterator<Item = Op> + '_ {
-        Op::skip_n_text_bytes(
-            Tokenizer::new(self.format.as_ref()).flat_map(|arg| match arg {
-                Token::Literal(literal) => Some((self.style.text_font, literal)),
+    fn layout_items(&self) -> impl Iterator<Item = (&TextStyle, &str)> {
+        let mut offset = self.char_offset;
+        Tokenizer::new(self.format.as_ref())
+            // convert tokens to a stream of (style, text) pairs
+            .flat_map(|arg| match arg {
+                Token::Literal(literal) => Some((&self.style, literal)),
                 Token::Argument(argument) => self
                     .args
                     .get(argument)
-                    .map(|value| (self.param_style.text_font, value.as_ref())),
-            }).flat_map(|(font, text)| [Op::Font(font), Op::Text(text)]),
-            self.char_offset,
-        )
-    }
-
-    pub fn spans(&self) -> impl Iterator<Item = (Font, Color, Span)>
-    {
-        let mut font = self.style.text_font;
-        let mut color = self.style.text_color;
-        let mut offset = 0;
-
-        self.ops().filter_map(move |op| {
-            match op {
-                Op::Color(c) => {
-                    color = c;
+                    .map(|value| (&self.param_style, value.as_ref())),
+            })
+            // filter out starting `char_offset` bytes
+            .filter_map(move |(style, text)| {
+                if offset == 0 {
+                    Some((style, text))
+                } else if offset < text.len() {
+                    let text = &text[offset..];
+                    offset = 0;
+                    Some((style, text))
+                } else {
+                    offset -= text.len();
                     None
                 }
-                Op::Font(f) => {
-                    font = f;
-                    None
-                }
-                Op::Text(text) => {
-                    let spans = break_text_to_spans(text, font, self.style.line_breaking, self.bounds.width(), offset);
-                    Some(spans.map(move |s| {
-                        (font, color, s)
-                    }))
-                }
-            }
-        }).flatten()
+            })
     }
 
     pub fn fit(&mut self) -> LayoutFit {
-        let mut ops = self.ops();
-        //self.style.fit_ops(&mut ops, self.bounds.size())
-        //TODO
-        LayoutFit::empty()
+        let mut fit = LayoutFit::empty();
+        let max_lines = (self.bounds.height() / self.style.text_font.line_height()) as usize;
+        for (style, text) in self.layout_items() {
+            let spans = style.spans(text, self.bounds.width(), fit.final_offset);
+            for span in spans {
+                let new_fit = fit.consume(span);
+                if new_fit.lines > max_lines {
+                    return fit;
+                }
+                fit = new_fit;
+            }
+        }
+        fit
     }
 }
 
@@ -133,8 +129,13 @@ where
     }
 
     fn paint(&mut self) {
-        let mut ops = self.ops();
-        //TODOself.style.render_ops(&mut ops, self.bounds);
+        let mut cursor = self.style.initial_cursor(self.bounds);
+        for (style, text) in self.layout_items() {
+            cursor = style.render_text_at(text, self.bounds, cursor);
+            if cursor.y > self.bounds.y1 {
+                break;
+            }
+        }
     }
 
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
@@ -150,11 +151,23 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("Text");
-        for op in self.ops() {
-            if let Op::Text(text) = op {
-                t.string(text);
+        let mut fit = LayoutFit::empty();
+        let max_lines = (self.bounds.height() / self.style.text_font.line_height()) as usize;
+        for (style, text) in self.layout_items() {
+            let spans = style.spans(text, self.bounds.width(), fit.final_offset);
+            for span in spans {
+                t.string(span.text);
+                if span.end.is_linebreak() {
+                    t.string("\n");
+                }
+                let new_fit = fit.consume(span);
+                if new_fit.lines > max_lines {
+                    break;
+                }
+                fit = new_fit;
             }
         }
+
         t.close();
     }
 }

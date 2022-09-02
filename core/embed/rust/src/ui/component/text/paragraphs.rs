@@ -5,8 +5,6 @@ use crate::ui::{
     geometry::{Dimensions, Insets, LinearPlacement, Offset, Rect},
 };
 
-extern crate alloc;
-
 use super::{iter::LayoutFit, layout::TextStyle};
 
 pub const MAX_PARAGRAPHS: usize = 6;
@@ -78,13 +76,11 @@ where
         let mut remaining_area = self.area;
 
         for paragraph in &mut self.list[self.offset.par..] {
-            let height = paragraph
-                .fit_text(remaining_area.size(), char_offset)
-                .lines as i32
-                * paragraph.style.text_font.line_height();
-            if height == 0 {
+            let fit = paragraph.fit_text(remaining_area.size(), char_offset);
+            if fit.lines == 0 {
                 break;
             }
+            let height = paragraph.style.text_font.lines_height(fit.lines);
             let (used, free) =
                 remaining_area.split_top(height + PARAGRAPH_TOP_SPACE + PARAGRAPH_BOTTOM_SPACE);
             paragraph.fit(used);
@@ -126,9 +122,10 @@ where
     fn paint(&mut self) {
         let mut char_offset = self.offset.chr;
         for paragraph in &self.list[self.offset.par..self.offset.par + self.visible] {
-            paragraph
-                .style
-                .render_text(paragraph.content(char_offset), paragraph.bounds, 0);
+            paragraph.style.render_text(
+                paragraph.content(char_offset),
+                paragraph.bounds.inset(PARAGRAPH_INSETS),
+            );
             char_offset = 0;
         }
     }
@@ -304,7 +301,7 @@ pub mod trace {
     {
         pub fn trace(&self, char_offset: usize, t: &mut dyn crate::trace::Tracer) {
             t.open("Paragraph");
-            let max_lines = self.bounds.height() / self.style.text_font.line_height();
+            let max_lines = self.style.text_font.max_lines(self.bounds.height());
             for span in break_text_to_spans(
                 self.content(char_offset),
                 self.style.text_font,

@@ -118,6 +118,11 @@ impl LayoutFit {
 // }
 
 /// Generate spans of text to render as separate lines.
+/// 
+/// Spans emitted by a single call to `break_text_to_spans` represent individual lines
+/// of text. It is possible to get a line count by calling `count()` on the iterator.
+/// However, this does not hold true when concatenating two results: a subsequent
+/// result can continue on the same line where the previous one left off.
 ///
 /// Spans include trailing whitespace, which is also accounted for in the
 /// returned `width`.

@@ -1,4 +1,4 @@
-use super::iter::{break_text_to_spans, SpanEnd, LayoutFit};
+use super::iter::{break_text_to_spans, LayoutFit, Span, SpanEnd};
 use crate::ui::{
     display,
     display::{Color, Font},
@@ -63,34 +63,41 @@ impl TextStyle {
         }
     }
 
-    fn initial_cursor(&self, area: Rect, initial_offset: i32) -> Point {
-        area.top_left() + Offset::new(initial_offset, self.text_font.text_height())
+    pub fn initial_cursor(&self, area: Rect) -> Point {
+        area.top_left() + Offset::new(0, self.text_font.text_height())
+    }
+
+    pub fn spans<'a>(
+        &self,
+        text: &'a str,
+        available_width: i32,
+        initial_offset: i32,
+    ) -> impl Iterator<Item = Span<'a>> {
+        break_text_to_spans(
+            text,
+            self.text_font,
+            self.line_breaking,
+            available_width,
+            initial_offset,
+        )
     }
 
     pub fn fit_text(&self, text: &str, bounds: Offset, initial_offset: i32) -> LayoutFit {
-        let spans = break_text_to_spans(
-            text,
-            self.text_font,
-            self.line_breaking,
-            bounds.x,
-            initial_offset,
-        );
-        let max_lines = bounds.y / self.text_font.line_height();
-        LayoutFit::of(spans.take(max_lines as usize))
+        LayoutFit::of(
+            self.spans(text, bounds.x, initial_offset)
+                .take(self.text_font.max_lines(bounds.y)),
+        )
     }
 
-    pub fn render_text(&self, text: &str, area: Rect, initial_offset: i32) -> LayoutFit {
-        let mut cursor = self.initial_cursor(area, initial_offset);
+    pub fn render_text(&self, text: &str, area: Rect) -> Point {
+        let cursor = self.initial_cursor(area);
+        self.render_text_at(text, area, cursor)
+    }
+
+    pub fn render_text_at(&self, text: &str, area: Rect, mut cursor: Point) -> Point {
+        let initial_offset = cursor.x - area.x0;
         let line_height = self.text_font.line_height();
-        let mut fit = LayoutFit::empty();
-        for span in break_text_to_spans(
-            text,
-            self.text_font,
-            self.line_breaking,
-            area.width(),
-            initial_offset,
-        ) {
-            fit.update(span);
+        for span in self.spans(text, area.width(), initial_offset) {
             display::text(
                 cursor,
                 span.text,
@@ -98,52 +105,31 @@ impl TextStyle {
                 self.text_color,
                 self.background_color,
             );
-            if matches!(span.end, SpanEnd::HyphenAndBreak) {
-                display::text(
-                    cursor + Offset::x(span.width),
-                    "-",
-                    self.text_font,
-                    self.hyphen_color,
-                    self.background_color,
-                );
+            match span.end {
+                SpanEnd::HyphenAndBreak => {
+                    display::text(
+                        cursor + Offset::x(span.width),
+                        "-",
+                        self.text_font,
+                        self.hyphen_color,
+                        self.background_color,
+                    );
+                    cursor = Point::new(area.x0, cursor.y + line_height);
+                }
+                SpanEnd::LineBreak => {
+                    cursor = Point::new(area.x0, cursor.y + line_height);
+                }
+                SpanEnd::Continue => {
+                    cursor.x += span.width;
+                }
             }
-            cursor = Point::new(0, cursor.y + line_height);
-            if !area.contains(cursor) {
+            // If the cursor goes _below_ the area, we stop rendering.
+            // We do not care about cursor moving right of area, because our spans are
+            // guaranteed not to render anything there.
+            if cursor.y > area.y1 {
                 break;
             }
         }
-        fit
-    }
-}
-
-#[derive(Copy, Clone, PartialEq, Eq)]
-pub enum Op<'a> {
-    /// Render text with current color and font.
-    Text(&'a str),
-    /// Set current text color.
-    Color(Color),
-    /// Set currently used font.
-    Font(Font),
-}
-
-impl<'a> Op<'a> {
-    pub fn skip_n_text_bytes(
-        ops: impl Iterator<Item = Op<'a>>,
-        skip_bytes: usize,
-    ) -> impl Iterator<Item = Op<'a>> {
-        let mut skipped = 0;
-
-        ops.filter_map(move |op| match op {
-            Op::Text(text) if skipped < skip_bytes => {
-                skipped = skipped.saturating_add(text.len());
-                if skipped > skip_bytes {
-                    let leave_bytes = skipped - skip_bytes;
-                    Some(Op::Text(&text[text.len() - leave_bytes..]))
-                } else {
-                    None
-                }
-            }
-            op_to_pass_through => Some(op_to_pass_through),
-        })
+        cursor
     }
 }
