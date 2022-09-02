@@ -94,6 +94,10 @@ int main(void) {
   mpu_config_firmware();
 #endif
 
+
+  SCB->SHCSR |= SCB_SHCSR_USGFAULTENA_Msk;
+  SCB->SHCSR |= SCB_SHCSR_BUSFAULTENA_Msk;
+
   // Init peripherals
   pendsv_init();
 
