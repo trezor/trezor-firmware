@@ -720,6 +720,18 @@ impl Font {
         constant::LINE_SPACE + self.text_height()
     }
 
+    pub fn lines_height(self, lines: usize) -> i32 {
+        if lines == 0 {
+            0
+        } else {
+            lines as i32 * self.line_height() - constant::LINE_SPACE
+        }
+    }
+
+    pub fn max_lines(self, height: i32) -> usize {
+        ((height + constant::LINE_SPACE) / self.line_height()) as usize
+    }
+
     pub fn get_glyph(self, char_byte: u8) -> Option<Glyph> {
         let gl_data = display::get_char_glyph(char_byte, self.0);
 
