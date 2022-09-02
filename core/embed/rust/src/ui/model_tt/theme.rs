@@ -63,10 +63,15 @@ pub const IMAGE_WARN: &[u8] = include_res!("model_tt/res/warn.toif");
 pub const IMAGE_SUCCESS: &[u8] = include_res!("model_tt/res/success.toif");
 pub const IMAGE_ERROR: &[u8] = include_res!("model_tt/res/error.toif");
 
+// Default homescreen imange
+pub const IMAGE_HOMESCREEN: &[u8] = include_res!("model_tt/res/bg.toif");
+
 // Scrollbar/PIN dots.
 pub const DOT_ACTIVE: &[u8] = include_res!("model_tt/res/scroll-active.toif");
 pub const DOT_INACTIVE: &[u8] = include_res!("model_tt/res/scroll-inactive.toif");
 pub const DOT_SMALL: &[u8] = include_res!("model_tt/res/scroll-small.toif");
+
+
 
 pub fn label_default() -> LabelStyle {
     LabelStyle {

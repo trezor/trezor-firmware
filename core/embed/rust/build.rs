@@ -262,6 +262,7 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("display_text_height")
         .allowlist_function("display_bar")
         .allowlist_function("display_bar_radius")
+        .allowlist_function("display_avatar")
         .allowlist_function("display_icon")
         .allowlist_function("display_image")
         .allowlist_function("display_toif_info")
@@ -288,7 +289,10 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("rgb_led_set_color")
         // time
         .allowlist_function("hal_delay")
-        .allowlist_function("hal_ticks_ms");
+        .allowlist_function("hal_ticks_ms")
+        // touch
+        .allowlist_function("touch_read")
+        ;
 
     // Write the bindings to a file in the OUR_DIR.
     bindings

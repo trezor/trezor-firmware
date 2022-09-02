@@ -157,6 +157,24 @@ pub fn image(center: Point, data: &[u8]) {
     );
 }
 
+
+pub fn avatar(center: Point, data: &[u8], fgcolor: Color, bgcolor: Color) {
+    let toif_info = unwrap!(display::toif_info(data), "Invalid TOIF data");
+    assert!(!toif_info.grayscale);
+
+    let r = Rect::from_center_and_size(
+        center,
+        Offset::new(toif_info.width.into(), toif_info.height.into()),
+    );
+    display::avatar(
+        r.x0,
+        r.y0,
+        &data[12..], // Skip TOIF header.
+        fgcolor.into(),
+        bgcolor.into(),
+    );
+}
+
 pub fn toif_info(data: &[u8]) -> Option<(Offset, bool)> {
     if let Ok(info) = display::toif_info(data) {
         Some((

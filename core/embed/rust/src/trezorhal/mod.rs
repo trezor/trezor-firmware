@@ -14,5 +14,7 @@ pub mod uzlib;
 
 #[cfg(not(feature = "micropython"))]
 pub mod time;
+pub mod io;
+
 #[cfg(feature = "micropython")]
 pub use crate::micropython::time;
