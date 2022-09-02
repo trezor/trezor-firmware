@@ -393,7 +393,18 @@ mod tests {
         );
         page.place(SCREEN);
 
-        let expected = "<SwipePage active_page:0 page_count:1 content:<Paragraphs This is the first paragraph\nand it should fit on the\nscreen entirely.\nSecond, bold, paragraph\nshould also fit on the\nscreen whole I think.\n> buttons:<Empty > >";
+        let expected = "<SwipePage active_page:0 page_count:1 content:\
+                                <Paragraphs \
+                                    <Paragraph \
+                                        This is the first paragraph \n\
+                                        and it should fit on the \nscreen entirely.\
+                                    >\n\
+                                    <Paragraph \
+                                        Second, bold, paragraph \n\
+                                        should also fit on the \n\
+                                        screen whole I think.\
+                                    >\n\
+                                > buttons:<Empty > >";
 
         assert_eq!(trace(&page), expected);
         swipe_up(&mut page);
@@ -415,8 +426,12 @@ mod tests {
         );
         page.place(SCREEN);
 
-        let expected1 = "<SwipePage active_page:0 page_count:2 content:<Paragraphs This is somewhat long\nparagraph that goes on\nand on and on and on\nand on and will definitely\nnot fit on just a single\nscreen. You have to\nswipe a bit to see all the\ntext it contains I guess....\n> buttons:<Empty > >";
-        let expected2 = "<SwipePage active_page:1 page_count:2 content:<Paragraphs There's just so much\nletters in it.\n> buttons:<Empty > >";
+        let expected1 = "<SwipePage active_page:0 page_count:2 content:<Paragraphs \
+                    <Paragraph This is somewhat long \nparagraph that goes on \nand on and on and on \n\
+                    and on and will definitely \nnot fit on just a single \nscreen. You have to \nswipe \
+                    a bit to see all the \ntext it contains I guess. \n>\n> buttons:<Empty > >";
+        let expected2 = "<SwipePage active_page:1 page_count:2 content:<Paragraphs \
+                    <Paragraph There's just so much \nletters in it.>\n> buttons:<Empty > >";
 
         assert_eq!(trace(&page), expected1);
         swipe_down(&mut page);
@@ -450,9 +465,45 @@ mod tests {
         );
         page.place(SCREEN);
 
-        let expected1 = "<SwipePage active_page:0 page_count:3 content:<Paragraphs This paragraph is using a\nbold font. It doesn't\nneed to be all that long.\nAnd this one is\nusing MONO.\nMonospace is\nnice for...\n> buttons:<Empty > >";
-        let expected2 = "<SwipePage active_page:1 page_count:3 content:<Paragraphs numbers, they\nhave the same\nwidth and can be\nscanned quickly.\nEven if they\nspan several\npages or...\n> buttons:<Empty > >";
-        let expected3 = "<SwipePage active_page:2 page_count:3 content:<Paragraphs something.\nLet's add another one\nfor a good measure. This\none should overflow all\nthe way to the third\npage with a bit of luck.\n> buttons:<Empty > >";
+        let expected1 = "<SwipePage active_page:0 page_count:3 content:\
+                                    <Paragraphs \
+                                        <Paragraph \
+                                            This paragraph is using a \n\
+                                            bold font. It doesn't \n\
+                                            need to be all that long.\
+                                        >\n\
+                                        <Paragraph \
+                                            And this one is \n\
+                                            using MONO. \n\
+                                            Monospace is \n\
+                                            nice for \n\
+                                        >\n\
+                                    > buttons:<Empty > >";
+        let expected2 = "<SwipePage active_page:1 page_count:3 content:\
+                                    <Paragraphs \
+                                        <Paragraph \
+                                            numbers, they \n\
+                                            have the same \n\
+                                            width and can be \n\
+                                            scanned quickly. \n\
+                                            Even if they \n\
+                                            span several \n\
+                                            pages or \n\
+                                        >\n\
+                                        > buttons:<Empty > >";
+        let expected3 = "<SwipePage active_page:2 page_count:3 content:\
+                                    <Paragraphs \
+                                        <Paragraph \
+                                            something.\
+                                        >\n\
+                                        <Paragraph \
+                                            Let's add another one \n\
+                                            for a good measure. This \n\
+                                            one should overflow all \n\
+                                            the way to the third \n\
+                                            page with a bit of luck.\
+                                        >\n\
+                                    > buttons:<Empty > >";
 
         assert_eq!(trace(&page), expected1);
         swipe_down(&mut page);

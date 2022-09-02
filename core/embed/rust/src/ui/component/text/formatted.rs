@@ -1,5 +1,5 @@
 use core::{
-    iter::{Enumerate, Peekable},
+    iter::{Enumerate, Peekable, self},
     slice,
 };
 
@@ -7,10 +7,10 @@ use heapless::LinearMap;
 
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
-    geometry::Rect,
+    geometry::Rect, display::{Font, Color},
 };
 
-use super::{layout::{Op, TextStyle}, iter::LayoutFit};
+use super::{layout::{Op, TextStyle}, iter::{LayoutFit, Span, break_text_to_spans}};
 
 pub const MAX_ARGUMENTS: usize = 6;
 
@@ -35,7 +35,7 @@ impl<F, T> FormattedText<F, T> {
         }
     }
 
-    pub const fn with_param_style(self, style: TextStyle) -> Self {
+    pub fn with_param_style(self, style: TextStyle) -> Self {
         Self {
             param_style: style,
             ..self
@@ -82,9 +82,37 @@ where
         )
     }
 
+    pub fn spans(&self) -> impl Iterator<Item = (Font, Color, Span)>
+    {
+        let mut font = self.style.text_font;
+        let mut color = self.style.text_color;
+        let mut offset = 0;
+
+        self.ops().filter_map(move |op| {
+            match op {
+                Op::Color(c) => {
+                    color = c;
+                    None
+                }
+                Op::Font(f) => {
+                    font = f;
+                    None
+                }
+                Op::Text(text) => {
+                    let spans = break_text_to_spans(text, font, self.style.line_breaking, self.bounds.width(), offset);
+                    Some(spans.map(move |s| {
+                        (font, color, s)
+                    }))
+                }
+            }
+        }).flatten()
+    }
+
     pub fn fit(&mut self) -> LayoutFit {
         let mut ops = self.ops();
-        self.style.fit_ops(&mut ops, self.bounds.size())
+        //self.style.fit_ops(&mut ops, self.bounds.size())
+        //TODO
+        LayoutFit::empty()
     }
 }
 
@@ -106,7 +134,7 @@ where
 
     fn paint(&mut self) {
         let mut ops = self.ops();
-        self.style.render_ops(&mut ops, self.bounds);
+        //TODOself.style.render_ops(&mut ops, self.bounds);
     }
 
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {

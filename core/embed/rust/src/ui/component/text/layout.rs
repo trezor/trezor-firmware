@@ -1,8 +1,8 @@
-use super::iter::{break_text_to_spans, fit_text, Appendix, GlyphMetrics, LayoutFit};
+use super::iter::{break_text_to_spans, SpanEnd, LayoutFit};
 use crate::ui::{
     display,
     display::{Color, Font},
-    geometry::{Offset, Point, Rect, Insets},
+    geometry::{Offset, Point, Rect},
 };
 
 #[derive(Copy, Clone)]
@@ -52,7 +52,7 @@ impl TextStyle {
         hyphen_color: Color,
         ellipsis_color: Color,
     ) -> Self {
-        TextStyle {
+        Self {
             text_font,
             text_color,
             background_color,
@@ -68,21 +68,21 @@ impl TextStyle {
     }
 
     pub fn fit_text(&self, text: &str, bounds: Offset, initial_offset: i32) -> LayoutFit {
-        fit_text(
+        let spans = break_text_to_spans(
             text,
             self.text_font,
             self.line_breaking,
-            bounds,
+            bounds.x,
             initial_offset,
-        )
+        );
+        let max_lines = bounds.y / self.text_font.line_height();
+        LayoutFit::of(spans.take(max_lines as usize))
     }
 
     pub fn render_text(&self, text: &str, area: Rect, initial_offset: i32) -> LayoutFit {
         let mut cursor = self.initial_cursor(area, initial_offset);
         let line_height = self.text_font.line_height();
-        let mut height = 0;
-        let mut chars = 0;
-        let mut final_offset = initial_offset;
+        let mut fit = LayoutFit::empty();
         for span in break_text_to_spans(
             text,
             self.text_font,
@@ -90,6 +90,7 @@ impl TextStyle {
             area.width(),
             initial_offset,
         ) {
+            fit.update(span);
             display::text(
                 cursor,
                 span.text,
@@ -97,10 +98,7 @@ impl TextStyle {
                 self.text_color,
                 self.background_color,
             );
-            height += line_height;
-            chars += span.text.len();
-            final_offset = span.width;
-            if matches!(span.append, Appendix::Hyphen) {
+            if matches!(span.end, SpanEnd::HyphenAndBreak) {
                 display::text(
                     cursor + Offset::x(span.width),
                     "-",
@@ -114,73 +112,7 @@ impl TextStyle {
                 break;
             }
         }
-        LayoutFit {
-            height,
-            chars,
-            final_offset,
-        }
-    }
-
-    pub fn fit_ops<'o>(&self, ops: &mut dyn Iterator<Item = Op<'o>>, bounds: Offset) -> LayoutFit {
-        let mut height = 0;
-        let mut chars = 0;
-        let mut offset = 0;
-        let mut font = self.text_font;
-        for op in ops {
-            match op {
-                Op::Text(text) => {
-                    let fit = fit_text(text, font, self.line_breaking, bounds, offset);
-                    if fit.chars == 0 {
-                        break;
-                    }
-                    chars += fit.chars;
-                    height += fit.height;
-                    offset = fit.final_offset;
-                    bounds = bounds - Offset::y(fit.height);
-                }
-                Op::Font(f) => {
-                    font = f;
-                }
-                _ => {}
-            }
-        }
-        LayoutFit {
-            height,
-            chars,
-            final_offset: offset,
-        }
-    }
-
-    pub fn render_ops<'o>(&self, ops: &mut dyn Iterator<Item = Op<'o>>, area: Rect) -> LayoutFit {
-        let mut remaining = area;
-        let mut text_style = self.clone();
-        let mut offset = 0;
-        let mut total_processed_chars = 0;
-
-        for op in ops {
-            match op {
-                Op::Color(color) => {
-                    text_style.text_color = color;
-                }
-                Op::Font(font) => {
-                    text_style.text_font = font;
-                }
-                Op::Text(text) => {
-                    let fit = text_style.render_text(text, remaining, offset);
-                    if fit.chars == 0 {
-                        break;
-                    }
-                    remaining = remaining.inset(Insets::top(fit.height));
-                    total_processed_chars += fit.chars;
-                    offset = fit.final_offset;
-                }
-            }
-        }
-        LayoutFit {
-            height: area.height() - remaining.height(),
-            chars: total_processed_chars,
-            final_offset: offset,
-        }
+        fit
     }
 }
 

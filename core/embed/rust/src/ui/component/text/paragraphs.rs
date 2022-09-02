@@ -2,10 +2,12 @@ use heapless::Vec;
 
 use crate::ui::{
     component::{Component, Event, EventCtx, Never, Paginate},
-    geometry::{Dimensions, Insets, LinearPlacement, Rect},
+    geometry::{Dimensions, Insets, LinearPlacement, Offset, Rect},
 };
 
-use super::layout::{LayoutFit, TextLayout, TextStyle};
+extern crate alloc;
+
+use super::{iter::LayoutFit, layout::TextStyle};
 
 pub const MAX_PARAGRAPHS: usize = 6;
 /// Maximum space between paragraphs. Actual result may be smaller (even 0) if
@@ -17,6 +19,8 @@ pub const DEFAULT_SPACING: i32 = 0;
 pub const PARAGRAPH_TOP_SPACE: i32 = -1;
 /// Offset of paragraph bounding box bottom relative to bottom of its text.
 pub const PARAGRAPH_BOTTOM_SPACE: i32 = 5;
+
+pub const PARAGRAPH_INSETS: Insets = Insets::new(PARAGRAPH_TOP_SPACE, 0, PARAGRAPH_BOTTOM_SPACE, 0);
 
 pub struct Paragraphs<T> {
     area: Rect,
@@ -56,14 +60,7 @@ where
         if content.as_ref().is_empty() {
             return self;
         }
-        let paragraph = Paragraph::new(
-            content,
-            TextLayout {
-                padding_top: PARAGRAPH_TOP_SPACE,
-                padding_bottom: PARAGRAPH_BOTTOM_SPACE,
-                ..TextLayout::new(style)
-            },
-        );
+        let paragraph = Paragraph::new(content, style);
         if self.list.push(paragraph).is_err() {
             #[cfg(feature = "ui_debug")]
             panic!("paragraph list is full");
@@ -81,15 +78,15 @@ where
         let mut remaining_area = self.area;
 
         for paragraph in &mut self.list[self.offset.par..] {
-            paragraph.fit(remaining_area);
             let height = paragraph
-                .layout
-                .fit_text(paragraph.content(char_offset))
-                .height();
+                .fit_text(remaining_area.size(), char_offset)
+                .lines as i32
+                * paragraph.style.text_font.line_height();
             if height == 0 {
                 break;
             }
-            let (used, free) = remaining_area.split_top(height);
+            let (used, free) =
+                remaining_area.split_top(height + PARAGRAPH_TOP_SPACE + PARAGRAPH_BOTTOM_SPACE);
             paragraph.fit(used);
             remaining_area = free;
             self.visible += 1;
@@ -129,7 +126,9 @@ where
     fn paint(&mut self) {
         let mut char_offset = self.offset.chr;
         for paragraph in &self.list[self.offset.par..self.offset.par + self.visible] {
-            paragraph.layout.render_text(paragraph.content(char_offset));
+            paragraph
+                .style
+                .render_text(paragraph.content(char_offset), paragraph.bounds, 0);
             char_offset = 0;
         }
     }
@@ -137,7 +136,7 @@ where
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
         sink(self.area);
         for paragraph in &self.list[self.offset.par..self.offset.par + self.visible] {
-            sink(paragraph.layout.bounds)
+            sink(paragraph.bounds)
         }
     }
 }
@@ -165,48 +164,35 @@ where
     }
 }
 
-#[cfg(feature = "ui_debug")]
-pub mod trace {
-    use crate::ui::component::text::layout::trace::TraceSink;
-
-    use super::*;
-
-    impl<T> crate::trace::Trace for Paragraphs<T>
-    where
-        T: AsRef<str>,
-    {
-        fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-            t.open("Paragraphs");
-            let mut char_offset = self.offset.chr;
-            for paragraph in self.list.iter().skip(self.offset.par).take(self.visible) {
-                paragraph.layout.layout_text(
-                    paragraph.content(char_offset),
-                    &mut paragraph.layout.initial_cursor(),
-                    &mut TraceSink(t),
-                );
-                t.string("\n");
-                char_offset = 0;
-            }
-            t.close();
-        }
-    }
-}
-
 pub struct Paragraph<T> {
+    bounds: Rect,
     content: T,
-    layout: TextLayout,
+    style: TextStyle,
 }
 
 impl<T> Paragraph<T>
 where
     T: AsRef<str>,
 {
-    pub fn new(content: T, layout: TextLayout) -> Self {
-        Self { content, layout }
+    pub fn new(content: T, style: TextStyle) -> Self {
+        Self {
+            bounds: Rect::zero(),
+            content,
+            style,
+        }
     }
 
     pub fn content(&self, char_offset: usize) -> &str {
         &self.content.as_ref()[char_offset..]
+    }
+
+    pub fn fit_text(&self, bounds: Offset, char_offset: usize) -> LayoutFit {
+        let bounds_with_padding = Offset::new(
+            bounds.x,
+            bounds.y - PARAGRAPH_TOP_SPACE - PARAGRAPH_BOTTOM_SPACE,
+        );
+        self.style
+            .fit_text(self.content(char_offset), bounds_with_padding, 0)
     }
 }
 
@@ -215,11 +201,11 @@ where
     T: AsRef<str>,
 {
     fn fit(&mut self, area: Rect) {
-        self.layout.bounds = area;
+        self.bounds = area;
     }
 
     fn area(&self) -> Rect {
-        self.layout.bounds
+        self.bounds
     }
 }
 
@@ -257,41 +243,83 @@ where
             return self.current;
         }
 
-        let mut remaining_area = self.paragraphs.area;
+        let mut bounds = self.paragraphs.area.size();
         let mut progress = false;
 
         for paragraph in self.paragraphs.list.iter().skip(current.par) {
-            let fit = paragraph
-                .layout
-                .with_bounds(remaining_area)
-                .fit_text(paragraph.content(current.chr));
-            match fit {
-                LayoutFit::Fitting { height, .. } => {
-                    // Text fits, update remaining area.
-                    remaining_area = remaining_area.inset(Insets::top(height));
+            let text = paragraph.content(current.chr);
+            let fit = paragraph.fit_text(bounds, current.chr);
+            if text.len() > fit.chars {
+                // Text does not fit, assume whatever fits takes the entire remaining area.
+                current.chr += fit.chars;
+                if fit.chars == 0 && !progress {
+                    // Nothing fits yet page is empty: terminate iterator to avoid looping
+                    // forever.
+                    return None;
+                }
+                // Return current offset.
+                return self.current;
+            } else {
+                // Text fits, update remaining area.
+                bounds =
+                    bounds - Offset::y(fit.lines as i32 * paragraph.style.text_font.line_height());
 
-                    // Continue with start of next paragraph.
-                    current.par += 1;
-                    current.chr = 0;
-                    progress = true;
-                }
-                LayoutFit::OutOfBounds {
-                    processed_chars, ..
-                } => {
-                    // Text does not fit, assume whatever fits takes the entire remaining area.
-                    current.chr += processed_chars;
-                    if processed_chars == 0 && !progress {
-                        // Nothing fits yet page is empty: terminate iterator to avoid looping
-                        // forever.
-                        return None;
-                    }
-                    // Return current offset.
-                    return self.current;
-                }
+                // Continue with start of next paragraph.
+                current.par += 1;
+                current.chr = 0;
+                progress = true;
             }
         }
 
         // Last page.
         None
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+pub mod trace {
+    use crate::ui::component::text::iter::break_text_to_spans;
+
+    use super::*;
+
+    impl<T> crate::trace::Trace for Paragraphs<T>
+    where
+        T: AsRef<str>,
+    {
+        fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+            t.open("Paragraphs");
+            let mut char_offset = self.offset.chr;
+            for paragraph in self.list.iter().skip(self.offset.par).take(self.visible) {
+                paragraph.trace(char_offset, t);
+                t.string("\n");
+                char_offset = 0;
+            }
+            t.close();
+        }
+    }
+
+    impl<T> Paragraph<T>
+    where
+        T: AsRef<str>,
+    {
+        pub fn trace(&self, char_offset: usize, t: &mut dyn crate::trace::Tracer) {
+            t.open("Paragraph");
+            let max_lines = self.bounds.height() / self.style.text_font.line_height();
+            for span in break_text_to_spans(
+                self.content(char_offset),
+                self.style.text_font,
+                self.style.line_breaking,
+                self.bounds.width(),
+                0,
+            )
+            .take(max_lines as usize)
+            {
+                t.string(span.text);
+                if span.end.is_linebreak() {
+                    t.string("\n");
+                }
+            }
+            t.close();
+        }
     }
 }

@@ -696,7 +696,7 @@ impl Glyph {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct Font(i32);
 
 impl Font {
@@ -742,7 +742,7 @@ impl Font {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct Color(u16);
 
 impl Color {
