@@ -1,7 +1,9 @@
+use heapless::Vec;
+use crate::time::{Instant};
 use crate::trezorhal::io::{io_touch_read};
-use crate::ui::component::{Child, Component, Event, EventCtx};
+use crate::ui::component::{Child, Component, Event, EventCtx, TimerToken};
 use crate::ui::display::icon;
-use crate::ui::model_tt::theme::{ICON_TREZOR_EMPTY, ICON_TREZOR_FULL, BLUE, BLACK, WHITE};
+use crate::ui::model_tt::theme::{ICON_TREZOR_EMPTY, ICON_TREZOR_FULL, BLACK, WHITE};
 use crate::ui::model_tt::component::Homescreen;
 use crate::ui::constant;
 use crate::ui::event::TouchEvent;
@@ -37,6 +39,7 @@ fn touch_eval() -> Option<TouchEvent> {
 pub struct RustLayout<F> {
     root: Child<F>,
     event_ctx: EventCtx,
+    timers: Vec<(TimerToken, Instant), 4>,
     page_count: u16,
 }
 
@@ -46,11 +49,14 @@ impl<F> RustLayout<F>
         // F::Msg: ReturnToC,
 {
     pub fn new(root: F) -> Self {
-        Self {
+        let mut instance = Self {
             root: Child::new(root),
             event_ctx: EventCtx::new(),
+            timers: Vec::new(),
             page_count: 1,
-        }
+        };
+        instance.event(Event::Attach);
+        instance
     }
 
     /// Run an event pass over the component tree. After the traversal, any
@@ -73,16 +79,12 @@ impl<F> RustLayout<F>
         // All concerning `Child` wrappers should have already marked themselves for
         // painting by now, and we're prepared for a paint pass.
 
-        // Drain any pending timers into the callback.
-        // while let Some((token, deadline)) = inner.event_ctx.pop_timer() {
-        //     let token = token.try_into();
-        //     let deadline = deadline.try_into();
-        //     if let (Ok(token), Ok(deadline)) = (token, deadline) {
-        //         inner.timer_fn.call_with_n_args(&[token, deadline])?;
-        //     } else {
-        //         // Failed to convert token or deadline into `Obj`, skip.
-        //     }
-        // }
+        // Drain any pending timers.
+        while let Some((token, duration)) = self.event_ctx.pop_timer() {
+
+            let deadline = unwrap!(Instant::now().checked_add(duration), "Too long timer");
+            unwrap!(self.timers.push((token, deadline)), "Timer queue full");
+        }
 
         if let Some(count) = self.event_ctx.page_count() {
             self.page_count = count as u16;
@@ -107,12 +109,34 @@ impl<F> RustLayout<F>
         loop {
             let event = touch_eval();
             if let Some(e) = event {
-                let msg = self.root.event(&mut self.event_ctx, Event::Touch(e));
+                let msg = self.event(Event::Touch(e));
 
                 if let Some(_) = msg {
                     return;
                 }
             }
+
+            let now = Instant::now();
+            let mut new_timers: Vec<(TimerToken, Instant), 4> = Vec::new();
+            let mut timer_events: Vec<TimerToken, 4> = Vec::new();
+
+            for t in self.timers.iter() {
+                if now > t.1 {
+                    unwrap!(timer_events.push(t.0));
+                } else {
+                    unwrap!(new_timers.push(*t));
+                }
+            }
+            self.timers = new_timers;
+
+            for t in timer_events {
+                let msg = self.event(Event::Timer(t));
+
+                if let Some(_) = msg {
+                    return;
+                }
+            }
+
 
             self.paint_if_requested();
         }
