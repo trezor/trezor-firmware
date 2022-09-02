@@ -791,7 +791,8 @@ impl Glyph {
 // local vector of bits.
 // However, the current method of magnification
 // probably only works for 1bpp colors. Or not?
-// TODO: implement the magnifying in print(), it will remove a lot of complexity.
+// TODO: implement the magnifying in print(), it will remove a lot of
+// complexity.
 pub struct MagnifiedGlyph1BPP {
     width: i32,
     height: i32,

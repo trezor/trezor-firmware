@@ -38,8 +38,9 @@ where
             common_title: None,
             content_area: Rect::zero(),
             pad: Pad::with_background(theme::BG),
-            // Setting empty layout for now, we do not yet know how many sub-pages the first page has.
-            // Initial button layout will be set in `place()` after we can call `content.page_count()`.
+            // Setting empty layout for now, we do not yet know how many sub-pages the first page
+            // has. Initial button layout will be set in `place()` after we can call
+            // `content.page_count()`.
             buttons: Child::new(ButtonController::new(ButtonLayout::empty())),
             page_counter: 0,
         }

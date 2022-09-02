@@ -61,7 +61,8 @@ impl Bip39Entry {
         letter_choices: &Vec<char, MAX_CHOICE_LENGTH>,
     ) -> Vec<ChoiceItems, MAX_CHOICE_LENGTH> {
         // TODO: we could support carousel for letters to quicken it for users
-        // (but then the BIN would need to be an option on its own, not so user-friendly)
+        // (but then the BIN would need to be an option on its own, not so
+        // user-friendly)
         let mut choices: Vec<ChoiceItems, MAX_CHOICE_LENGTH> = letter_choices
             .iter()
             .map(|ch| {
@@ -122,7 +123,8 @@ impl Bip39Entry {
         // TODO: header has no need to change most of the time,
         // so we could maybe call it only when reaching a new word,
         // to reduce the flickering
-        // (however, repaint is being called from `self.choice_page` on every letter change).
+        // (however, repaint is being called from `self.choice_page` on every letter
+        // change).
         self.show_current_header();
         self.show_current_letters();
     }

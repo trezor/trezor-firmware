@@ -1,10 +1,12 @@
-use crate::time::Duration;
-use crate::ui::{
-    component::{Component, Event, EventCtx},
-    constant,
-    display::{self, Color, Font, Icon},
-    event::{ButtonEvent, PhysicalButton},
-    geometry::{Offset, Point, Rect},
+use crate::{
+    time::Duration,
+    ui::{
+        component::{Component, Event, EventCtx},
+        constant,
+        display::{self, Color, Font, Icon},
+        event::{ButtonEvent, PhysicalButton},
+        geometry::{Offset, Point, Rect},
+    },
 };
 
 use heapless::String;
@@ -219,7 +221,8 @@ where
 
             // Paint both arms.
             // Baselines need to be shifted little bit right to fit properly with the text
-            // TODO: for "CONFIRM" there is one space at the right, but for "SELECT" there are two
+            // TODO: for "CONFIRM" there is one space at the right, but for "SELECT" there
+            // are two
             Icon::new(theme::ICON_ARM_LEFT).draw_top_right(
                 area.left_center() + Offset::x(2),
                 text_color,
@@ -532,7 +535,8 @@ impl<T: Clone + AsRef<str>> ButtonDetails<T> {
         } else {
             "".into()
         };
-        // TODO: the icon should be hashed, icon size is not really good but works for now
+        // TODO: the icon should be hashed, icon size is not really good but works for
+        // now
         let icon_size: String<10> = if let Some(icon) = &self.icon {
             build_string!(10, inttostr!(icon.width()), "x", inttostr!(icon.height()))
         } else {

@@ -64,8 +64,8 @@ pub struct ButtonContainer<T> {
     pos: ButtonPos,
     button_type: ButtonType,
     btn_details: Option<ButtonDetails<T>>,
-    /// We want to send the triggered event at a later time from the actual trigger
-    /// (only as soon as the button is released).
+    /// We want to send the triggered event at a later time from the actual
+    /// trigger (only as soon as the button is released).
     htc_triggered: bool,
 }
 

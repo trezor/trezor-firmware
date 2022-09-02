@@ -70,7 +70,8 @@ impl ScrollBar {
     }
 
     /// Create a (seemingly circular) dot given its top left point.
-    /// Make it full when it is active, otherwise paint just the perimeter and leave center empty.
+    /// Make it full when it is active, otherwise paint just the perimeter and
+    /// leave center empty.
     fn paint_dot(&self, active: bool, top_left: Point) {
         let full_square = Rect::from_top_left_and_size(top_left, ScrollBar::DOT_SIZE);
 

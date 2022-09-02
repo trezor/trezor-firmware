@@ -38,7 +38,8 @@ where
             back_btn_details: Some(ButtonDetails::up_arrow_icon_wide()),
             next_btn_details: Some(ButtonDetails::down_arrow_icon_wide()),
             // Setting empty layout for now, we do not yet know the page count.
-            // Initial button layout will be set in `place()` after we can call `content.page_count()`.
+            // Initial button layout will be set in `place()` after we can call
+            // `content.page_count()`.
             buttons: Child::new(ButtonController::new(ButtonLayout::empty())),
         }
     }
@@ -60,7 +61,8 @@ where
             back_btn_details: Some(ButtonDetails::up_arrow_icon_wide()),
             next_btn_details: Some(ButtonDetails::down_arrow_icon_wide()),
             // Setting empty layout for now, we do not yet know the page count.
-            // Initial button layout will be set in `place()` after we can call `content.page_count()`.
+            // Initial button layout will be set in `place()` after we can call
+            // `content.page_count()`.
             buttons: Child::new(ButtonController::new(ButtonLayout::empty())),
         }
     }
@@ -102,8 +104,8 @@ where
     }
 
     /// Called when user pressed "BACK" or "NEXT".
-    /// Change the page in the content, clear the background under it and make sure
-    /// it gets completely repainted. Also updating the buttons.
+    /// Change the page in the content, clear the background under it and make
+    /// sure it gets completely repainted. Also updating the buttons.
     fn change_page(&mut self, ctx: &mut EventCtx, page: usize) {
         self.content.change_page(page);
         self.content.request_complete_repaint(ctx);

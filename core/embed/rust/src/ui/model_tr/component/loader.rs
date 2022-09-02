@@ -157,7 +157,8 @@ impl<T: AsRef<str>> Loader<T> {
         if let Some(text_overlay) = &mut self.text_overlay {
             let invert_from = ((self.area.width() + 1) * done) / (display::LOADER_MAX as i32);
 
-            // TODO: the text should be moved one pixel to the top so it is centered in the loader
+            // TODO: the text should be moved one pixel to the top so it is centered in the
+            // loader
             display::bar_with_text_and_fill(
                 self.area,
                 Some(text_overlay),

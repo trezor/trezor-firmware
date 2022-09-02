@@ -23,8 +23,9 @@ pub struct HoldToConfirm<T> {
 
 // TODO: support icons
 // TODO: could have some icon signaling "HOLD", so that we do not need
-// to write `HOLD TO CONFIRM` (which hardly fits the screen), but just `{icon} CONFIRM`
-// TODO: could unite with `Button` so we can use the same features for both
+// to write `HOLD TO CONFIRM` (which hardly fits the screen), but just `{icon}
+// CONFIRM` TODO: could unite with `Button` so we can use the same features for
+// both
 
 impl<T: AsRef<str>> HoldToConfirm<T> {
     pub fn text(pos: ButtonPos, text: T, styles: LoaderStyleSheet, duration: Duration) -> Self {
