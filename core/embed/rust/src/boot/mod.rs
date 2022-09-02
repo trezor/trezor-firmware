@@ -36,10 +36,12 @@ fn touch_eval() -> Option<TouchEvent> {
 //     fn return_to_c(&self) -> u32;
 // }
 
+const LAYOUT_MAX_TIMERS: usize = 16;
+
 pub struct RustLayout<F> {
     root: Child<F>,
     event_ctx: EventCtx,
-    timers: Vec<(TimerToken, Instant), 4>,
+    timers: Vec<(TimerToken, Instant), LAYOUT_MAX_TIMERS>,
     page_count: u16,
 }
 
@@ -117,8 +119,8 @@ impl<F> RustLayout<F>
             }
 
             let now = Instant::now();
-            let mut new_timers: Vec<(TimerToken, Instant), 4> = Vec::new();
-            let mut timer_events: Vec<TimerToken, 4> = Vec::new();
+            let mut new_timers: Vec<(TimerToken, Instant), LAYOUT_MAX_TIMERS> = Vec::new();
+            let mut timer_events: Vec<TimerToken, LAYOUT_MAX_TIMERS> = Vec::new();
 
             for t in self.timers.iter() {
                 if now > t.1 {
@@ -136,7 +138,6 @@ impl<F> RustLayout<F>
                     return;
                 }
             }
-
 
             self.paint_if_requested();
         }
