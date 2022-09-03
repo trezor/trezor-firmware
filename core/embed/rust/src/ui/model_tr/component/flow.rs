@@ -1,11 +1,14 @@
-use crate::ui::{
-    component::{Child, Component, Event, EventCtx, Pad},
-    geometry::{Point, Rect},
+use crate::{
+    micropython::buffer::StrBuffer,
+    ui::{
+        component::{Child, Component, Event, EventCtx, Pad},
+        geometry::{Point, Rect},
+    },
 };
 
 use super::{
     common, theme, ButtonAction, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos,
-    FlowPageGetter, FlowPageMaker, GetFlowPageMaker,
+    FlowPages, Page,
 };
 
 /// To be returned directly from Flow.
@@ -17,25 +20,22 @@ pub enum FlowMsg {
 // TODO: consider each FlowPage having the ability
 // to handle custom actions triggered by some btn.
 
-pub struct Flow<T, const N: usize> {
-    pages: FlowPageGetter,
-    // TODO: maybe offload that <N> to pages if possible
-    // (or completely hide current_page in pages)
-    current_page: FlowPageMaker<N>,
-    common_title: Option<T>,
+pub struct Flow<F, const M: usize> {
+    pages: FlowPages<F, M>,
+    current_page: Page<M>,
+    common_title: Option<StrBuffer>,
     content_area: Rect,
     pad: Pad,
     buttons: Child<ButtonController<&'static str>>,
     page_counter: u8,
 }
 
-impl<T, const N: usize> Flow<T, N>
+impl<F, const M: usize> Flow<F, M>
 where
-    T: AsRef<str>,
-    T: Clone,
+    F: Fn(u8) -> Page<M>,
 {
-    pub fn new(pages: FlowPageGetter) -> Self {
-        let current_page = pages.get_page(0);
+    pub fn new(pages: FlowPages<F, M>) -> Self {
+        let current_page = pages.get(0);
         Self {
             pages,
             current_page,
@@ -52,7 +52,7 @@ where
 
     /// Adding a common title to all pages. The title will not be colliding
     /// with the page content, as the content will be offset.
-    pub fn with_common_title(mut self, title: T) -> Self {
+    pub fn with_common_title(mut self, title: StrBuffer) -> Self {
         self.common_title = Some(title);
         self
     }
@@ -60,7 +60,7 @@ where
     /// Placing current page, setting current buttons and clearing.
     fn update(&mut self, ctx: &mut EventCtx, get_new_page: bool) {
         if get_new_page {
-            self.current_page = self.pages.get_page(self.page_counter);
+            self.current_page = self.pages.get(self.page_counter);
         }
         let content_area = self.content_area;
         self.current_page.place(content_area);
@@ -90,7 +90,7 @@ where
     /// Negative index means counting from the end.
     fn go_to_page_absolute(&mut self, index: i32, ctx: &mut EventCtx) {
         if index < 0 {
-            self.page_counter = (self.pages.length() as i32 + index) as u8;
+            self.page_counter = (self.pages.count() as i32 + index) as u8;
         } else {
             self.page_counter = index as u8;
         }
@@ -134,10 +134,9 @@ where
     }
 }
 
-impl<T, const N: usize> Component for Flow<T, N>
+impl<F, const M: usize> Component for Flow<F, M>
 where
-    T: AsRef<str>,
-    T: Clone,
+    F: Fn(u8) -> Page<M>,
 {
     type Msg = FlowMsg;
 
@@ -217,10 +216,9 @@ where
 use heapless::String;
 
 #[cfg(feature = "ui_debug")]
-impl<T, const N: usize> crate::trace::Trace for Flow<T, N>
+impl<F, const M: usize> crate::trace::Trace for Flow<F, M>
 where
-    T: AsRef<str>,
-    T: Clone,
+    F: Fn(u8) -> Page<M>,
 {
     /// Accounting for the possibility that button is connected with the
     /// currently paginated flow_page (only Prev or Next in that case).
@@ -242,7 +240,7 @@ where
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("Flow");
         t.kw_pair("flow_page", inttostr!(self.page_counter));
-        t.kw_pair("flow_page_count", inttostr!(self.pages.length() as u8));
+        t.kw_pair("flow_page_count", inttostr!(self.pages.count()));
 
         self.report_btn_actions(t);
 

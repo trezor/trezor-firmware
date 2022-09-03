@@ -30,9 +30,9 @@ use crate::{
 
 use super::{
     component::{
-        Bip39Entry, Bip39EntryMsg, ButtonDetails, ButtonPage, ConfirmOutputFlow, ConfirmTotalFlow,
-        Flow, FlowMsg, FlowPageGetter, Frame, PassphraseEntry, PassphraseEntryMsg,
-        PinConfirmActionFlow, PinEntry, PinEntryMsg, SimpleChoice, SimpleChoiceMsg, TutorialFlow,
+        Bip39Entry, Bip39EntryMsg, ButtonActions, ButtonDetails, ButtonLayout, ButtonPage, Flow,
+        FlowMsg, FlowPages, Frame, Page, PassphraseEntry, PassphraseEntryMsg, PinEntry,
+        PinEntryMsg, SimpleChoice, SimpleChoiceMsg,
     },
     theme,
 };
@@ -52,10 +52,9 @@ where
     }
 }
 
-impl<T, const N: usize> ComponentMsgObj for Flow<T, N>
+impl<F, const M: usize> ComponentMsgObj for Flow<F, M>
 where
-    T: AsRef<str>,
-    T: Clone,
+    F: Fn(u8) -> Page<M>,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
@@ -210,15 +209,49 @@ extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) 
         let amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_amount)?.try_into()?;
         let title: StrBuffer = "Send".into();
 
-        let obj = LayoutObj::new(
-            Flow::<StrBuffer, 15>::new(FlowPageGetter::ConfirmOutput(ConfirmOutputFlow::new(
-                address,
-                truncated_address,
-                amount,
-            )))
-            .with_common_title(title)
-            .into_child(),
-        )?;
+        let get_page = move |page_index| {
+            // Showing two screens - the recipient address and summary confirmation
+            match page_index {
+                0 => {
+                    // `icon + label + address`
+                    let btn_layout = ButtonLayout::new(
+                        Some(ButtonDetails::cancel_icon()),
+                        None,
+                        Some(ButtonDetails::text("CONTINUE")),
+                    );
+                    let btn_actions = ButtonActions::cancel_next();
+                    Page::<15>::new(btn_layout, btn_actions).icon_label_text(
+                        theme::ICON_USER,
+                        "Recipient".into(),
+                        address.clone(),
+                    )
+                }
+                1 => {
+                    // 2 pairs `icon + label + text`
+                    let btn_layout = ButtonLayout::new(
+                        Some(ButtonDetails::cancel_icon()),
+                        None,
+                        Some(
+                            ButtonDetails::text("HOLD TO CONFIRM")
+                                .with_duration(Duration::from_secs(2)),
+                        ),
+                    );
+                    let btn_actions = ButtonActions::cancel_confirm();
+                    Page::new(btn_layout, btn_actions)
+                        .icon_label_text(
+                            theme::ICON_USER,
+                            "Recipient".into(),
+                            truncated_address.clone(),
+                        )
+                        .newline()
+                        .icon_label_text(theme::ICON_AMOUNT, "Amount".into(), amount.clone())
+                }
+                _ => unreachable!(),
+            }
+        };
+        let pages = FlowPages::new(get_page, 2);
+
+        let obj = LayoutObj::new(Flow::new(pages).with_common_title(title).into_child())?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -235,17 +268,34 @@ extern "C" fn confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -
         let total_label: StrBuffer = kwargs.get(Qstr::MP_QSTR_total_label)?.try_into()?;
         let fee_label: StrBuffer = kwargs.get(Qstr::MP_QSTR_fee_label)?.try_into()?;
 
-        let obj = LayoutObj::new(
-            Flow::<StrBuffer, 25>::new(FlowPageGetter::ConfirmTotal(ConfirmTotalFlow::new(
-                total_amount,
-                fee_amount,
-                fee_rate_amount,
-                total_label,
-                fee_label,
-            )))
-            .with_common_title(title)
-            .into_child(),
-        )?;
+        let get_page = move |page_index| {
+            // One page with 2 or 3 pairs `icon + label + text`
+            assert!(page_index == 0);
+
+            let btn_layout = ButtonLayout::new(
+                Some(ButtonDetails::cancel_icon()),
+                None,
+                Some(ButtonDetails::text("HOLD TO SEND").with_duration(Duration::from_secs(2))),
+            );
+            let btn_actions = ButtonActions::cancel_confirm();
+
+            let mut flow_page = Page::<15>::new(btn_layout, btn_actions)
+                .icon_label_text(theme::ICON_PARAM, total_label.clone(), total_amount.clone())
+                .newline()
+                .icon_label_text(theme::ICON_PARAM, fee_label.clone(), fee_amount.clone());
+
+            if let Some(fee_rate_amount) = &fee_rate_amount {
+                flow_page = flow_page.newline().icon_label_text(
+                    theme::ICON_PARAM,
+                    "Fee rate".into(),
+                    fee_rate_amount.clone(),
+                )
+            }
+            flow_page
+        };
+        let pages = FlowPages::new(get_page, 1);
+
+        let obj = LayoutObj::new(Flow::new(pages).with_common_title(title).into_child())?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -253,9 +303,103 @@ extern "C" fn confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -
 
 extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], _kwargs: &Map| {
-        let obj = LayoutObj::new(
-            Flow::<StrBuffer, 10>::new(FlowPageGetter::Tutorial(TutorialFlow)).into_child(),
-        )?;
+        let get_page = |page_index| {
+            // Lazy-loaded list of screens to show, with custom content,
+            // buttons and actions triggered by these buttons.
+            // Cancelling the first screen will point to the last one,
+            // which asks for confirmation whether user wants to
+            // really cancel the tutorial.
+            let screen = match page_index {
+                // title, text, btn_layout, btn_actions
+                0 => (
+                    "Hello!",
+                    "Welcome to Trezor.\n\n\nPress right to continue.",
+                    ButtonLayout::cancel_and_arrow(),
+                    ButtonActions::last_next(),
+                ),
+                1 => (
+                    "Basics",
+                    "Use Trezor by clicking left & right.\nPress right to continue.",
+                    ButtonLayout::left_right_arrows(),
+                    ButtonActions::prev_next(),
+                ),
+                2 => (
+                    "Confirm",
+                    "Press both left & right at the same time to confirm.",
+                    ButtonLayout::new(
+                        Some(ButtonDetails::left_arrow_icon()),
+                        Some(ButtonDetails::armed_text("CONFIRM")),
+                        None,
+                    ),
+                    ButtonActions::prev_next_with_middle(),
+                ),
+                3 => (
+                    "Hold to confirm",
+                    "Press & hold right to approve important operations.",
+                    ButtonLayout::new(
+                        Some(ButtonDetails::left_arrow_icon()),
+                        None,
+                        Some(
+                            ButtonDetails::text("HOLD TO CONFIRM")
+                                .with_duration(Duration::from_millis(2000)),
+                        ),
+                    ),
+                    ButtonActions::prev_next(),
+                ),
+                // TODO: merge these two scrolls into one, with using a scrollbar
+                4 => (
+                    "Screen scroll",
+                    "Press right to scroll down to read all content when text doesn't...",
+                    ButtonLayout::new(
+                        Some(ButtonDetails::left_arrow_icon()),
+                        None,
+                        Some(ButtonDetails::down_arrow_icon_wide()),
+                    ),
+                    ButtonActions::prev_next(),
+                ),
+                5 => (
+                    "Screen scroll",
+                    "fit on one screen. Press left to scroll up.",
+                    ButtonLayout::new(
+                        Some(ButtonDetails::up_arrow_icon_wide()),
+                        None,
+                        Some(ButtonDetails::text("CONFIRM")),
+                    ),
+                    ButtonActions::prev_next(),
+                ),
+                6 => (
+                    "Congrats!",
+                    "You're ready to use Trezor.",
+                    ButtonLayout::new(
+                        Some(ButtonDetails::text("AGAIN")),
+                        None,
+                        Some(ButtonDetails::text("FINISH")),
+                    ),
+                    ButtonActions::beginning_confirm(),
+                ),
+                7 => (
+                    "Skip tutorial?",
+                    "Sure you want to skip the tutorial?",
+                    ButtonLayout::new(
+                        Some(ButtonDetails::left_arrow_icon()),
+                        None,
+                        Some(ButtonDetails::text("CONFIRM")),
+                    ),
+                    ButtonActions::beginning_cancel(),
+                ),
+                _ => unreachable!(),
+            };
+
+            Page::<15>::new(screen.2.clone(), screen.3.clone())
+                .text_bold(screen.0.into())
+                .newline()
+                .newline_half()
+                .text_normal(screen.1.into())
+        };
+
+        let pages = FlowPages::new(get_page, 8);
+
+        let obj = LayoutObj::new(Flow::new(pages).into_child())?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -264,12 +408,39 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
 extern "C" fn pin_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let action: StrBuffer = kwargs.get(Qstr::MP_QSTR_action)?.try_into()?;
-        let obj = LayoutObj::new(
-            Flow::<StrBuffer, 10>::new(FlowPageGetter::PinConfirmAction(
-                PinConfirmActionFlow::new(action),
-            ))
-            .into_child(),
-        )?;
+
+        let get_page = move |page_index| {
+            let screen = match page_index {
+                // title, text, btn_layout, btn_actions
+                // NOTE: doing the newlines manually to look exactly same
+                // as in the design.
+                0 => (
+                    "PIN settings".into(),
+                    "PIN should\ncontain at\nleast four\ndigits",
+                    ButtonLayout::cancel_and_text("GOT IT"),
+                    ButtonActions::cancel_next(),
+                ),
+                1 => (
+                    action.clone(),
+                    "You'll use\nthis PIN to\naccess this\ndevice.",
+                    ButtonLayout::cancel_and_htc_text(
+                        "HOLD TO CONFIRM",
+                        Duration::from_millis(1000),
+                    ),
+                    ButtonActions::cancel_confirm(),
+                ),
+                _ => unreachable!(),
+            };
+
+            Page::<10>::new(screen.2.clone(), screen.3.clone())
+                .text_bold(screen.0)
+                .newline()
+                .newline_half()
+                .text_normal(screen.1.into())
+        };
+        let pages = FlowPages::new(get_page, 2);
+
+        let obj = LayoutObj::new(Flow::new(pages).into_child())?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }

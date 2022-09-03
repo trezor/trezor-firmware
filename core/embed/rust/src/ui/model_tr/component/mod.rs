@@ -9,7 +9,6 @@ mod dialog;
 mod flow;
 mod flow_pages;
 mod flow_pages_poc_helpers;
-mod flow_workflows;
 mod frame;
 mod loader;
 mod page;
@@ -34,11 +33,7 @@ pub use choice::{ChoicePage, ChoicePageMsg};
 pub use choice_item::{ChoiceItem, ChoiceItems, MultilineTextChoiceItem, TextChoiceItem};
 pub use dialog::{Dialog, DialogMsg};
 pub use flow::{Flow, FlowMsg};
-pub use flow_pages::FlowPageMaker;
-pub use flow_workflows::{
-    ConfirmOutputFlow, ConfirmTotalFlow, FlowPageGetter, GetFlowPageMaker, PinConfirmActionFlow,
-    TutorialFlow,
-};
+pub use flow_pages::{FlowPages, Page};
 pub use frame::Frame;
 pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
 pub use page::ButtonPage;

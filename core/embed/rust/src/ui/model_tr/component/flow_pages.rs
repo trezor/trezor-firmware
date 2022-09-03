@@ -18,8 +18,44 @@ use super::{
     ButtonActions, ButtonDetails, ButtonLayout,
 };
 
+/// Holding specific workflows that are created in `layout.rs`.
+/// Is returning a `Page` (page/screen) on demand
+/// based on the current page in `Flow`.
+/// Before, when `layout.rs` was defining a `heapless::Vec` of `Page`s,
+/// it was a very stack-expensive operation and StackOverflow was encountered.
+/// With this "lazy-loading" approach (creating each page on demand) we can
+/// have theoretically unlimited number of pages without triggering SO.
+/// (Currently only the current page is stored on stack - in
+/// `Flow::current_page`.)
+pub struct FlowPages<F, const M: usize> {
+    /// Function/closure that will return appropriate page on demand.
+    get_page: F,
+    /// Number of pages in the flow.
+    page_count: u8,
+}
+
+impl<F, const M: usize> FlowPages<F, M>
+where
+    F: Fn(u8) -> Page<M>,
+{
+    pub fn new(get_page: F, page_count: u8) -> Self {
+        Self {
+            get_page,
+            page_count,
+        }
+    }
+
+    pub fn get(&self, page_index: u8) -> Page<M> {
+        (self.get_page)(page_index)
+    }
+
+    pub fn count(&self) -> u8 {
+        self.page_count
+    }
+}
+
 #[derive(Clone)]
-pub struct FlowPageMaker<const M: usize> {
+pub struct Page<const M: usize> {
     ops: Vec<Op, M>,
     layout: TextLayout,
     btn_layout: ButtonLayout<&'static str>,
@@ -30,7 +66,7 @@ pub struct FlowPageMaker<const M: usize> {
 }
 
 // For `layout.rs`
-impl<const M: usize> FlowPageMaker<M> {
+impl<const M: usize> Page<M> {
     pub fn new(btn_layout: ButtonLayout<&'static str>, btn_actions: ButtonActions) -> Self {
         let style = TextStyle::new(
             theme::FONT_NORMAL,
@@ -52,7 +88,7 @@ impl<const M: usize> FlowPageMaker<M> {
 }
 
 // For `flow.rs`
-impl<const M: usize> FlowPageMaker<M> {
+impl<const M: usize> Page<M> {
     pub fn paint(&mut self) {
         self.change_page(self.current_page);
         self.layout_content(&mut TextRenderer);
@@ -105,7 +141,7 @@ impl<const M: usize> FlowPageMaker<M> {
 }
 
 // For `layout.rs` - single operations
-impl<const M: usize> FlowPageMaker<M> {
+impl<const M: usize> Page<M> {
     pub fn with_new_item(mut self, item: Op) -> Self {
         self.ops
             .push(item)
@@ -147,7 +183,7 @@ impl<const M: usize> FlowPageMaker<M> {
 }
 
 // For `layout.rs` - aggregating operations
-impl<const M: usize> FlowPageMaker<M> {
+impl<const M: usize> Page<M> {
     pub fn icon_label_text(self, icon: IconAndName, label: StrBuffer, text: StrBuffer) -> Self {
         self.icon_with_offset(icon, 3)
             .text_normal(label)
@@ -169,7 +205,7 @@ impl<const M: usize> FlowPageMaker<M> {
 }
 
 // For painting and pagination
-impl<const M: usize> FlowPageMaker<M> {
+impl<const M: usize> Page<M> {
     pub fn set_char_offset(&mut self, char_offset: usize) {
         self.char_offset = char_offset;
     }
@@ -182,7 +218,7 @@ impl<const M: usize> FlowPageMaker<M> {
 }
 
 // Pagination
-impl<const M: usize> Paginate for FlowPageMaker<M> {
+impl<const M: usize> Paginate for Page<M> {
     fn page_count(&mut self) -> usize {
         let mut page_count = 1; // There's always at least one page.
         let mut char_offset = 0;
@@ -249,7 +285,7 @@ pub mod trace {
 
     use super::*;
 
-    pub struct TraceText<'a, const M: usize>(pub &'a FlowPageMaker<M>);
+    pub struct TraceText<'a, const M: usize>(pub &'a Page<M>);
 
     impl<'a, const M: usize> crate::trace::Trace for TraceText<'a, M> {
         fn trace(&self, d: &mut dyn crate::trace::Tracer) {
@@ -261,9 +297,9 @@ pub mod trace {
 }
 
 #[cfg(feature = "ui_debug")]
-impl<const M: usize> crate::trace::Trace for FlowPageMaker<M> {
+impl<const M: usize> crate::trace::Trace for Page<M> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("FlowPageMaker");
+        t.open("Page");
         t.kw_pair("active_page", inttostr!(self.current_page as u8));
         t.kw_pair("page_count", inttostr!(self.page_count as u8));
         t.field("content", &trace::TraceText(self));
