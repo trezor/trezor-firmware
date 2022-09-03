@@ -5,9 +5,8 @@ use crate::ui::{
 
 use super::{
     common, theme, ButtonAction, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos,
-    FlowPageMaker,
+    FlowPageGetter, FlowPageMaker, GetFlowPageMaker,
 };
-use heapless::Vec;
 
 /// To be returned directly from Flow.
 pub enum FlowMsg {
@@ -18,8 +17,11 @@ pub enum FlowMsg {
 // TODO: consider each FlowPage having the ability
 // to handle custom actions triggered by some btn.
 
-pub struct Flow<T, const N: usize, const M: usize> {
-    pages: Vec<FlowPageMaker<M>, N>,
+pub struct Flow<T, const N: usize> {
+    pages: FlowPageGetter,
+    // TODO: maybe offload that <N> to pages if possible
+    // (or completely hide current_page in pages)
+    current_page: FlowPageMaker<N>,
     common_title: Option<T>,
     content_area: Rect,
     pad: Pad,
@@ -27,14 +29,16 @@ pub struct Flow<T, const N: usize, const M: usize> {
     page_counter: u8,
 }
 
-impl<T, const N: usize, const M: usize> Flow<T, N, M>
+impl<T, const N: usize> Flow<T, N>
 where
     T: AsRef<str>,
     T: Clone,
 {
-    pub fn new(pages: Vec<FlowPageMaker<M>, N>) -> Self {
+    pub fn new(pages: FlowPageGetter) -> Self {
+        let current_page = pages.get_page(0);
         Self {
             pages,
+            current_page,
             common_title: None,
             content_area: Rect::zero(),
             pad: Pad::with_background(theme::BG),
@@ -54,9 +58,12 @@ where
     }
 
     /// Placing current page, setting current buttons and clearing.
-    fn update(&mut self, ctx: &mut EventCtx) {
+    fn update(&mut self, ctx: &mut EventCtx, get_new_page: bool) {
+        if get_new_page {
+            self.current_page = self.pages.get_page(self.page_counter);
+        }
         let content_area = self.content_area;
-        self.current_choice_mut().place(content_area);
+        self.current_page.place(content_area);
         self.set_buttons(ctx);
         self.clear(ctx);
     }
@@ -67,43 +74,33 @@ where
         ctx.request_paint();
     }
 
-    /// Page that is/should be currently on the screen.
-    fn current_choice(&self) -> &FlowPageMaker<M> {
-        &self.pages[self.page_counter as usize]
-    }
-
-    /// Page that is/should be currently on the screen. Mutable.
-    fn current_choice_mut(&mut self) -> &mut FlowPageMaker<M> {
-        &mut self.pages[self.page_counter as usize]
-    }
-
     /// Going to the previous page.
     fn go_to_prev_page(&mut self, ctx: &mut EventCtx) {
         self.page_counter -= 1;
-        self.update(ctx);
+        self.update(ctx, true);
     }
 
     /// Going to the next page.
     fn go_to_next_page(&mut self, ctx: &mut EventCtx) {
         self.page_counter += 1;
-        self.update(ctx);
+        self.update(ctx, true);
     }
 
     /// Going to page by its absolute index.
     /// Negative index means counting from the end.
     fn go_to_page_absolute(&mut self, index: i32, ctx: &mut EventCtx) {
         if index < 0 {
-            self.page_counter = (self.pages.len() as i32 + index) as u8;
+            self.page_counter = (self.pages.length() as i32 + index) as u8;
         } else {
             self.page_counter = index as u8;
         }
-        self.update(ctx);
+        self.update(ctx, true);
     }
 
     /// Jumping to another page relative to the current one.
     fn go_to_page_relative(&mut self, jump: i32, ctx: &mut EventCtx) {
         self.page_counter = (self.page_counter as i32 + jump) as u8;
-        self.update(ctx);
+        self.update(ctx, true);
     }
 
     /// Updating the visual state of the buttons after each event.
@@ -114,7 +111,7 @@ where
     /// NOTE: ButtonController is handling the painting, and
     /// it will not repaint the buttons unless some of them changed.
     fn set_buttons(&mut self, ctx: &mut EventCtx) {
-        let btn_layout = self.current_choice().btn_layout();
+        let btn_layout = self.current_page.btn_layout();
         self.buttons.mutate(ctx, |ctx, buttons| {
             buttons.set(ctx, btn_layout);
         });
@@ -123,13 +120,13 @@ where
     /// When current choice contains paginated content, it may use the button
     /// event to just paginate itself.
     fn event_consumed_by_current_choice(&mut self, ctx: &mut EventCtx, pos: ButtonPos) -> bool {
-        if matches!(pos, ButtonPos::Left) && self.current_choice().has_prev_page() {
-            self.current_choice_mut().go_to_prev_page();
-            self.update(ctx);
+        if matches!(pos, ButtonPos::Left) && self.current_page.has_prev_page() {
+            self.current_page.go_to_prev_page();
+            self.update(ctx, false);
             true
-        } else if matches!(pos, ButtonPos::Right) && self.current_choice().has_next_page() {
-            self.current_choice_mut().go_to_next_page();
-            self.update(ctx);
+        } else if matches!(pos, ButtonPos::Right) && self.current_page.has_next_page() {
+            self.current_page.go_to_next_page();
+            self.update(ctx, false);
             true
         } else {
             false
@@ -137,7 +134,7 @@ where
     }
 }
 
-impl<T, const N: usize, const M: usize> Component for Flow<T, N, M>
+impl<T, const N: usize> Component for Flow<T, N>
 where
     T: AsRef<str>,
     T: Clone,
@@ -155,8 +152,8 @@ where
         self.content_area = content_area;
 
         // We finally found how long is the first page, and can set its button layout.
-        self.current_choice_mut().place(content_area);
-        self.buttons = Child::new(ButtonController::new(self.current_choice().btn_layout()));
+        self.current_page.place(content_area);
+        self.buttons = Child::new(ButtonController::new(self.current_page.btn_layout()));
 
         self.pad.place(title_content_area);
         self.buttons.place(button_area);
@@ -175,7 +172,7 @@ where
                 return None;
             }
 
-            let actions = self.current_choice().btn_actions();
+            let actions = self.current_page.btn_actions();
             let action = actions.get_action(pos);
             if let Some(action) = action {
                 match action {
@@ -212,7 +209,7 @@ where
         if let Some(title) = &self.common_title {
             common::paint_header(Point::zero(), title, None);
         }
-        self.current_choice_mut().paint();
+        self.current_page.paint();
     }
 }
 
@@ -220,7 +217,7 @@ where
 use heapless::String;
 
 #[cfg(feature = "ui_debug")]
-impl<T, const N: usize, const M: usize> crate::trace::Trace for Flow<T, N, M>
+impl<T, const N: usize> crate::trace::Trace for Flow<T, N>
 where
     T: AsRef<str>,
     T: Clone,
@@ -228,12 +225,12 @@ where
     /// Accounting for the possibility that button is connected with the
     /// currently paginated flow_page (only Prev or Next in that case).
     fn get_btn_action(&self, pos: ButtonPos) -> String<25> {
-        if matches!(pos, ButtonPos::Left) && self.current_choice().has_prev_page() {
+        if matches!(pos, ButtonPos::Left) && self.current_page.has_prev_page() {
             ButtonAction::PrevPage.string()
-        } else if matches!(pos, ButtonPos::Right) && self.current_choice().has_next_page() {
+        } else if matches!(pos, ButtonPos::Right) && self.current_page.has_next_page() {
             ButtonAction::NextPage.string()
         } else {
-            let btn_actions = self.pages[self.page_counter as usize].btn_actions();
+            let btn_actions = self.current_page.btn_actions();
 
             match btn_actions.get_action(pos) {
                 Some(action) => action.string(),
@@ -245,7 +242,7 @@ where
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("Flow");
         t.kw_pair("flow_page", inttostr!(self.page_counter));
-        t.kw_pair("flow_page_count", inttostr!(N as u8));
+        t.kw_pair("flow_page_count", inttostr!(self.pages.length() as u8));
 
         self.report_btn_actions(t);
 
@@ -254,7 +251,7 @@ where
         }
         t.field("content_area", &self.content_area);
         t.field("buttons", &self.buttons);
-        t.field("flow_page", &self.pages[self.page_counter as usize]);
+        t.field("flow_page", &self.current_page);
         t.close()
     }
 }

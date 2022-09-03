@@ -17,6 +17,7 @@ use crate::{
 
 use heapless::Vec;
 
+// TODO: consider moving into T: AsRef<str> instead if StrBuffer?
 #[derive(Clone)]
 pub struct ToDisplay {
     pub text: StrBuffer,
