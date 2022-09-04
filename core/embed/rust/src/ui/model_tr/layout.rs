@@ -76,6 +76,7 @@ impl ComponentMsgObj for PinEntry {
 impl<T, const N: usize> ComponentMsgObj for SimpleChoice<T, N>
 where
     T: AsRef<str>,
+    T: Clone,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {

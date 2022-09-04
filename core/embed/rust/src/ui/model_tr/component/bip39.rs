@@ -8,8 +8,8 @@ use crate::{
 };
 
 use super::{
-    choice_item::BigCharacterChoiceItem, common, ButtonDetails, ButtonLayout, ChoiceItems,
-    ChoicePage, ChoicePageMsg, TextChoiceItem,
+    choice_item::BigCharacterChoiceItem, common, ButtonDetails, ButtonLayout, ChoiceFactory,
+    ChoiceItem, ChoicePage, ChoicePageMsg, TextChoiceItem,
 };
 use heapless::{String, Vec};
 
@@ -25,9 +25,99 @@ const MAX_CHOICE_LENGTH: usize = 26;
 /// Offer words when there will be fewer of them than this
 const OFFER_WORDS_THRESHOLD: usize = 10;
 
+struct ChoiceFactoryBIP39 {
+    // TODO: replace these Vecs by iterators somehow?
+    letter_choices: Option<Vec<char, MAX_CHOICE_LENGTH>>,
+    word_choices: Option<Vec<&'static str, OFFER_WORDS_THRESHOLD>>,
+}
+impl ChoiceFactoryBIP39 {
+    fn new(
+        letter_choices: Option<Vec<char, MAX_CHOICE_LENGTH>>,
+        word_choices: Option<Vec<&'static str, OFFER_WORDS_THRESHOLD>>,
+    ) -> Self {
+        Self {
+            letter_choices,
+            word_choices,
+        }
+    }
+
+    fn letters(letter_choices: Vec<char, MAX_CHOICE_LENGTH>) -> Self {
+        Self::new(Some(letter_choices), None)
+    }
+
+    fn words(word_choices: Vec<&'static str, OFFER_WORDS_THRESHOLD>) -> Self {
+        Self::new(None, Some(word_choices))
+    }
+
+    /// Word choice items with BIN leftmost button.
+    fn get_word_item(&self, choice_index: u8) -> ChoiceItem {
+        if let Some(word_choices) = &self.word_choices {
+            let word = word_choices[choice_index as usize];
+            let choice = TextChoiceItem::new(word, ButtonLayout::default_three_icons());
+            let mut word_item = ChoiceItem::Text(choice);
+
+            // Adding BIN leftmost button and removing the rightmost one.
+            if choice_index == 0 {
+                word_item.set_left_btn(Some(ButtonDetails::bin_icon()));
+            } else if choice_index as usize == word_choices.len() - 1 {
+                word_item.set_right_btn(None);
+            }
+
+            word_item
+        } else {
+            unreachable!()
+        }
+    }
+
+    /// Letter choice items with BIN leftmost button. Letters are BIG.
+    fn get_letter_item(&self, choice_index: u8) -> ChoiceItem {
+        // TODO: we could support carousel for letters to quicken it for users
+        // (but then the BIN would need to be an option on its own, not so
+        // user-friendly)
+        if let Some(letter_choices) = &self.letter_choices {
+            let letter = letter_choices[choice_index as usize];
+            let letter_choice =
+                BigCharacterChoiceItem::new(letter, ButtonLayout::default_three_icons());
+            let mut letter_item = ChoiceItem::BigCharacter(letter_choice);
+
+            // Adding BIN leftmost button and removing the rightmost one.
+            if choice_index == 0 {
+                letter_item.set_left_btn(Some(ButtonDetails::bin_icon()));
+            } else if choice_index as usize == letter_choices.len() - 1 {
+                letter_item.set_right_btn(None);
+            }
+
+            letter_item
+        } else {
+            unreachable!()
+        }
+    }
+}
+impl ChoiceFactory for ChoiceFactoryBIP39 {
+    fn get(&self, choice_index: u8) -> ChoiceItem {
+        if self.letter_choices.is_some() {
+            self.get_letter_item(choice_index)
+        } else if self.word_choices.is_some() {
+            self.get_word_item(choice_index)
+        } else {
+            unreachable!()
+        }
+    }
+
+    fn count(&self) -> u8 {
+        if let Some(letter_choices) = &self.letter_choices {
+            letter_choices.len() as u8
+        } else if let Some(word_choices) = &self.word_choices {
+            word_choices.len() as u8
+        } else {
+            unreachable!()
+        }
+    }
+}
+
 /// Component for entering a BIP39 mnemonic.
 pub struct Bip39Entry {
-    choice_page: ChoicePage<MAX_CHOICE_LENGTH>,
+    choice_page: ChoicePage<ChoiceFactoryBIP39>,
     letter_choices: Vec<char, MAX_CHOICE_LENGTH>,
     textbox: TextBox<MAX_LENGTH>,
     pad: Pad,
@@ -41,8 +131,7 @@ impl Bip39Entry {
     pub fn new(word_count: u8) -> Self {
         let letter_choices: Vec<char, MAX_CHOICE_LENGTH> =
             bip39::get_available_letters("").collect();
-
-        let choices = Self::get_letter_choice_page_items(&letter_choices);
+        let choices = ChoiceFactoryBIP39::letters(letter_choices.clone());
 
         Self {
             choice_page: ChoicePage::new(choices),
@@ -56,47 +145,8 @@ impl Bip39Entry {
         }
     }
 
-    /// Letter choice items with BIN leftmost button. Letters are BIG.
-    fn get_letter_choice_page_items(
-        letter_choices: &Vec<char, MAX_CHOICE_LENGTH>,
-    ) -> Vec<ChoiceItems, MAX_CHOICE_LENGTH> {
-        // TODO: we could support carousel for letters to quicken it for users
-        // (but then the BIN would need to be an option on its own, not so
-        // user-friendly)
-        let mut choices: Vec<ChoiceItems, MAX_CHOICE_LENGTH> = letter_choices
-            .iter()
-            .map(|ch| {
-                let choice = BigCharacterChoiceItem::new(*ch, ButtonLayout::default_three_icons());
-                ChoiceItems::BigCharacter(choice)
-            })
-            .collect();
-        let last_index = choices.len() - 1;
-        choices[0].set_left_btn(Some(ButtonDetails::bin_icon()));
-        choices[last_index].set_right_btn(None);
-
-        choices
-    }
-
-    /// Word choice items with BIN leftmost button.
-    fn get_word_choice_page_items(
-        bip39_words_list: &bip39::Wordlist,
-    ) -> Vec<ChoiceItems, MAX_CHOICE_LENGTH> {
-        let mut choices: Vec<ChoiceItems, MAX_CHOICE_LENGTH> = bip39_words_list
-            .iter()
-            .map(|word| {
-                let choice = TextChoiceItem::new(word, ButtonLayout::default_three_icons());
-                ChoiceItems::Text(choice)
-            })
-            .collect();
-        let last_index = choices.len() - 1;
-        choices[0].set_left_btn(Some(ButtonDetails::bin_icon()));
-        choices[last_index].set_right_btn(None);
-
-        choices
-    }
-
     /// Gets up-to-date choices for letters or words.
-    fn get_current_choices(&mut self) -> Vec<ChoiceItems, MAX_CHOICE_LENGTH> {
+    fn get_current_choices(&mut self) -> ChoiceFactoryBIP39 {
         // Narrowing the word list
         self.bip39_words_list = self.bip39_words_list.filter_prefix(self.textbox.content());
 
@@ -104,13 +154,12 @@ impl Bip39Entry {
         // Otherwise getting relevant letters
         if self.bip39_words_list.len() < OFFER_WORDS_THRESHOLD {
             self.offer_words = true;
-
-            Self::get_word_choice_page_items(&self.bip39_words_list)
+            let word_choices = self.bip39_words_list.iter().collect();
+            ChoiceFactoryBIP39::words(word_choices)
         } else {
             self.offer_words = false;
             self.letter_choices = bip39::get_available_letters(self.textbox.content()).collect();
-
-            Self::get_letter_choice_page_items(&self.letter_choices)
+            ChoiceFactoryBIP39::letters(self.letter_choices.clone())
         }
     }
 

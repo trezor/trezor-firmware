@@ -32,7 +32,7 @@ fn row_height() -> i32 {
 /// - [ ] `IconChoiceItem` - for showing icons
 /// - [ ] `JustCenterChoice` - paint_left() and paint_right() show nothing
 /// - [ ] `LongStringsChoice` - paint_left() and paint_right() show ellipsis
-pub trait ChoiceItem {
+pub trait ChoiceItemAPI {
     fn paint_center(&mut self);
     fn paint_left(&mut self);
     fn paint_right(&mut self);
@@ -46,83 +46,83 @@ pub trait ChoiceItem {
 // Tried, but it makes the code unnecessarily messy with all the <T>
 // definitions, which needs to be added to all the components using it.
 
-/// Storing all the possible implementations of `ChoiceItem`.
+/// Storing all the possible implementations of `ChoiceItemAPI`.
 /// Done like this as we want to use multiple different choice pages
 /// at the same time in `ChoicePage` - for example Multiline and BigLetters
-#[derive(Debug)]
-pub enum ChoiceItems {
+#[derive(Debug, Clone)]
+pub enum ChoiceItem {
     Text(TextChoiceItem),
     MultilineText(MultilineTextChoiceItem),
     BigCharacter(BigCharacterChoiceItem),
 }
 
-impl ChoiceItems {
+impl ChoiceItem {
     // TODO: can we somehow avoid the repetitions here?
     pub fn set_left_btn(&mut self, btn_left: Option<ButtonDetails<&'static str>>) {
         match self {
-            ChoiceItems::Text(item) => item.btn_layout.btn_left = btn_left,
-            ChoiceItems::MultilineText(item) => item.btn_layout.btn_left = btn_left,
-            ChoiceItems::BigCharacter(item) => item.btn_layout.btn_left = btn_left,
+            ChoiceItem::Text(item) => item.btn_layout.btn_left = btn_left,
+            ChoiceItem::MultilineText(item) => item.btn_layout.btn_left = btn_left,
+            ChoiceItem::BigCharacter(item) => item.btn_layout.btn_left = btn_left,
         }
     }
 
     pub fn set_middle_btn(&mut self, btn_middle: Option<ButtonDetails<&'static str>>) {
         match self {
-            ChoiceItems::Text(item) => item.btn_layout.btn_middle = btn_middle,
-            ChoiceItems::MultilineText(item) => item.btn_layout.btn_middle = btn_middle,
-            ChoiceItems::BigCharacter(item) => item.btn_layout.btn_middle = btn_middle,
+            ChoiceItem::Text(item) => item.btn_layout.btn_middle = btn_middle,
+            ChoiceItem::MultilineText(item) => item.btn_layout.btn_middle = btn_middle,
+            ChoiceItem::BigCharacter(item) => item.btn_layout.btn_middle = btn_middle,
         }
     }
 
     pub fn set_right_btn(&mut self, btn_right: Option<ButtonDetails<&'static str>>) {
         match self {
-            ChoiceItems::Text(item) => item.btn_layout.btn_right = btn_right,
-            ChoiceItems::MultilineText(item) => item.btn_layout.btn_right = btn_right,
-            ChoiceItems::BigCharacter(item) => item.btn_layout.btn_right = btn_right,
+            ChoiceItem::Text(item) => item.btn_layout.btn_right = btn_right,
+            ChoiceItem::MultilineText(item) => item.btn_layout.btn_right = btn_right,
+            ChoiceItem::BigCharacter(item) => item.btn_layout.btn_right = btn_right,
         }
     }
 
     pub fn set_text(&mut self, text: String<50>) {
         match self {
-            ChoiceItems::Text(item) => item.text = text,
-            ChoiceItems::MultilineText(item) => item.text = text,
-            ChoiceItems::BigCharacter(_) => {
+            ChoiceItem::Text(item) => item.text = text,
+            ChoiceItem::MultilineText(item) => item.text = text,
+            ChoiceItem::BigCharacter(_) => {
                 panic!("No text setting for BigCharacter")
             }
         }
     }
 }
 
-impl ChoiceItem for ChoiceItems {
+impl ChoiceItemAPI for ChoiceItem {
     fn paint_center(&mut self) {
         match self {
-            ChoiceItems::Text(item) => item.paint_center(),
-            ChoiceItems::MultilineText(item) => item.paint_center(),
-            ChoiceItems::BigCharacter(item) => item.paint_center(),
+            ChoiceItem::Text(item) => item.paint_center(),
+            ChoiceItem::MultilineText(item) => item.paint_center(),
+            ChoiceItem::BigCharacter(item) => item.paint_center(),
         }
     }
 
     fn paint_left(&mut self) {
         match self {
-            ChoiceItems::Text(item) => item.paint_left(),
-            ChoiceItems::MultilineText(item) => item.paint_left(),
-            ChoiceItems::BigCharacter(item) => item.paint_left(),
+            ChoiceItem::Text(item) => item.paint_left(),
+            ChoiceItem::MultilineText(item) => item.paint_left(),
+            ChoiceItem::BigCharacter(item) => item.paint_left(),
         }
     }
 
     fn paint_right(&mut self) {
         match self {
-            ChoiceItems::Text(item) => item.paint_right(),
-            ChoiceItems::MultilineText(item) => item.paint_right(),
-            ChoiceItems::BigCharacter(item) => item.paint_right(),
+            ChoiceItem::Text(item) => item.paint_right(),
+            ChoiceItem::MultilineText(item) => item.paint_right(),
+            ChoiceItem::BigCharacter(item) => item.paint_right(),
         }
     }
 
     fn btn_layout(&self) -> ButtonLayout<&'static str> {
         match self {
-            ChoiceItems::Text(item) => item.btn_layout(),
-            ChoiceItems::MultilineText(item) => item.btn_layout(),
-            ChoiceItems::BigCharacter(item) => item.btn_layout(),
+            ChoiceItem::Text(item) => item.btn_layout(),
+            ChoiceItem::MultilineText(item) => item.btn_layout(),
+            ChoiceItem::BigCharacter(item) => item.btn_layout(),
         }
     }
 }
@@ -146,7 +146,7 @@ impl TextChoiceItem {
     }
 }
 
-impl ChoiceItem for TextChoiceItem {
+impl ChoiceItemAPI for TextChoiceItem {
     fn paint_center(&mut self) {
         // Displaying the center choice lower than the rest,
         // to make it more clear this is the current choice
@@ -182,7 +182,7 @@ impl ChoiceItem for TextChoiceItem {
 /// Multiline string component used as a choice item.
 ///
 /// Lines are delimited by '\n' character, unless specified explicitly.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MultilineTextChoiceItem {
     // Arbitrary chosen. TODO: agree on this
     pub text: String<50>,
@@ -207,7 +207,7 @@ impl MultilineTextChoiceItem {
 }
 
 // TODO: Make all the text be centered vertically - account for amount of lines.
-impl ChoiceItem for MultilineTextChoiceItem {
+impl ChoiceItemAPI for MultilineTextChoiceItem {
     fn paint_center(&mut self) {
         // Displaying the center choice lower than the rest,
         // to make it more clear this is the current choice
@@ -261,7 +261,7 @@ impl BigCharacterChoiceItem {
     }
 }
 
-impl ChoiceItem for BigCharacterChoiceItem {
+impl ChoiceItemAPI for BigCharacterChoiceItem {
     fn paint_center(&mut self) {
         display_magnified(self.ch, 4, Point::new(MIDDLE_COL - 12, MIDDLE_ROW_BIG + 9));
     }
@@ -280,13 +280,13 @@ impl ChoiceItem for BigCharacterChoiceItem {
 }
 
 #[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for ChoiceItems {
+impl crate::trace::Trace for ChoiceItem {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("ChoiceItem");
         match self {
-            ChoiceItems::Text(item) => item.trace(t),
-            ChoiceItems::MultilineText(item) => item.trace(t),
-            ChoiceItems::BigCharacter(item) => item.trace(t),
+            ChoiceItem::Text(item) => item.trace(t),
+            ChoiceItem::MultilineText(item) => item.trace(t),
+            ChoiceItem::BigCharacter(item) => item.trace(t),
         }
         t.close();
     }

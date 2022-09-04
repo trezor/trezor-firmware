@@ -3,7 +3,7 @@ use crate::ui::{
     geometry::Rect,
 };
 
-use super::{ButtonLayout, ChoiceItems, ChoicePage, ChoicePageMsg, TextChoiceItem};
+use super::{ButtonLayout, ChoiceFactory, ChoiceItem, ChoicePage, ChoicePageMsg, TextChoiceItem};
 use heapless::{String, Vec};
 
 #[cfg(feature = "ui_debug")]
@@ -13,30 +13,61 @@ pub enum SimpleChoiceMsg {
     Result(String<50>),
 }
 
+struct ChoiceFactorySimple<T, const N: usize> {
+    choices: Vec<T, N>,
+}
+
+impl<T, const N: usize> ChoiceFactorySimple<T, N>
+where
+    T: AsRef<str>,
+{
+    fn new(choices: Vec<T, N>) -> Self {
+        Self { choices }
+    }
+}
+
+impl<T, const N: usize> ChoiceFactory for ChoiceFactorySimple<T, N>
+where
+    T: AsRef<str>,
+{
+    fn get(&self, choice_index: u8) -> ChoiceItem {
+        let text = &self.choices[choice_index as usize];
+        let text_item = TextChoiceItem::new(text, ButtonLayout::default_three_icons());
+        let mut choice_item = ChoiceItem::Text(text_item);
+
+        // Disabling prev/next buttons for the first/last choice.
+        if choice_index == 0 {
+            choice_item.set_left_btn(None);
+        } else if choice_index as usize == N - 1 {
+            choice_item.set_right_btn(None);
+        }
+
+        choice_item
+    }
+
+    fn count(&self) -> u8 {
+        N as u8
+    }
+}
+
 /// Simple wrapper around `ChoicePage` that allows for
 /// inputting a list of values and receiving the chosen one.
-pub struct SimpleChoice<T, const N: usize> {
+pub struct SimpleChoice<T, const N: usize>
+where
+    T: AsRef<str>,
+    T: Clone,
+{
     choices: Vec<T, N>,
-    choice_page: ChoicePage<N>,
+    choice_page: ChoicePage<ChoiceFactorySimple<T, N>>,
 }
 
 impl<T, const N: usize> SimpleChoice<T, N>
 where
     T: AsRef<str>,
+    T: Clone,
 {
     pub fn new(str_choices: Vec<T, N>) -> Self {
-        let mut choices: Vec<ChoiceItems, N> = str_choices
-            .iter()
-            .map(|word| {
-                let choice = TextChoiceItem::new(word, ButtonLayout::default_three_icons());
-                ChoiceItems::Text(choice)
-            })
-            .collect();
-        // Not wanting anything as leftmost and rightmost button
-        let last_index = choices.len() - 1;
-        choices[0].set_left_btn(None);
-        choices[last_index].set_right_btn(None);
-
+        let choices = ChoiceFactorySimple::new(str_choices.clone());
         Self {
             choices: str_choices,
             choice_page: ChoicePage::new(choices),
@@ -47,6 +78,7 @@ where
 impl<T, const N: usize> Component for SimpleChoice<T, N>
 where
     T: AsRef<str>,
+    T: Clone,
 {
     type Msg = SimpleChoiceMsg;
 
@@ -74,6 +106,7 @@ where
 impl<T, const N: usize> crate::trace::Trace for SimpleChoice<T, N>
 where
     T: AsRef<str>,
+    T: Clone,
 {
     fn get_btn_action(&self, pos: ButtonPos) -> String<25> {
         match pos {

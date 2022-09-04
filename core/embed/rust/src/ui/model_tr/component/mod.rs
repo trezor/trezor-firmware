@@ -29,8 +29,8 @@ pub use button::{
 pub use confirm::{HoldToConfirm, HoldToConfirmMsg};
 
 pub use button_controller::{ButtonController, ButtonControllerMsg};
-pub use choice::{ChoicePage, ChoicePageMsg};
-pub use choice_item::{ChoiceItem, ChoiceItems, MultilineTextChoiceItem, TextChoiceItem};
+pub use choice::{ChoiceFactory, ChoicePage, ChoicePageMsg};
+pub use choice_item::{ChoiceItem, ChoiceItemAPI, MultilineTextChoiceItem, TextChoiceItem};
 pub use dialog::{Dialog, DialogMsg};
 pub use flow::{Flow, FlowMsg};
 pub use flow_pages::{FlowPages, Page};

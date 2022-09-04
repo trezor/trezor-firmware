@@ -1,4 +1,5 @@
 use crate::{
+    micropython::buffer::StrBuffer,
     trezorhal::random,
     ui::{
         component::{text::common::TextBox, Component, Event, EventCtx},
@@ -9,16 +10,17 @@ use crate::{
 use super::{
     choice_item::BigCharacterChoiceItem,
     common::{display_dots_center_top, display_secret_center_top},
-    ButtonDetails, ButtonLayout, ChoiceItems, ChoicePage, ChoicePageMsg, MultilineTextChoiceItem,
+    ButtonDetails, ButtonLayout, ChoiceFactory, ChoiceItem, ChoicePage, ChoicePageMsg,
+    MultilineTextChoiceItem,
 };
-use heapless::{String, Vec};
+use heapless::String;
 
 pub enum PinEntryMsg {
     Confirmed,
     Cancelled,
 }
 
-const MAX_LENGTH: usize = 50;
+const MAX_PIN_LENGTH: usize = 50;
 const MAX_VISIBLE_DOTS: usize = 18;
 const MAX_VISIBLE_DIGITS: usize = 18;
 
@@ -44,19 +46,64 @@ const CHOICES: [&str; CHOICE_LENGTH] = [
     "9",
 ];
 
+struct ChoiceFactoryPIN {
+    prompt: StrBuffer,
+}
+
+impl ChoiceFactoryPIN {
+    fn new(prompt: StrBuffer) -> Self {
+        Self { prompt }
+    }
+}
+
+impl ChoiceFactory for ChoiceFactoryPIN {
+    fn get(&self, choice_index: u8) -> ChoiceItem {
+        let choice = CHOICES[choice_index as usize];
+
+        // Depending on whether it is a digit (one character) or a text.
+        // Digits are BIG, the rest is multiline.
+        let mut choice_item = if choice.len() == 1 {
+            let item =
+                BigCharacterChoiceItem::from_str(choice, ButtonLayout::default_three_icons());
+            ChoiceItem::BigCharacter(item)
+        } else {
+            let item = MultilineTextChoiceItem::new(
+                String::from(choice),
+                ButtonLayout::default_three_icons(),
+            )
+            .use_delimiter(' ');
+            ChoiceItem::MultilineText(item)
+        };
+
+        // Action buttons have different middle button text
+        if [EXIT_INDEX, DELETE_INDEX, SHOW_INDEX, PROMPT_INDEX].contains(&(choice_index as usize)) {
+            let confirm_btn = ButtonDetails::armed_text("CONFIRM");
+            choice_item.set_middle_btn(Some(confirm_btn));
+        }
+
+        // Changing the prompt text for the wanted one
+        if choice_index == PROMPT_INDEX as u8 {
+            choice_item.set_text(String::from(self.prompt.as_ref()));
+        }
+
+        choice_item
+    }
+
+    fn count(&self) -> u8 {
+        CHOICE_LENGTH as u8
+    }
+}
+
 /// Component for entering a PIN.
 pub struct PinEntry {
-    choice_page: ChoicePage<CHOICE_LENGTH>,
+    choice_page: ChoicePage<ChoiceFactoryPIN>,
     show_real_pin: bool,
-    textbox: TextBox<MAX_LENGTH>,
+    textbox: TextBox<MAX_PIN_LENGTH>,
 }
 
 impl PinEntry {
-    pub fn new<T>(prompt: T) -> Self
-    where
-        T: AsRef<str>,
-    {
-        let choices = Self::get_page_items(prompt);
+    pub fn new(prompt: StrBuffer) -> Self {
+        let choices = ChoiceFactoryPIN::new(prompt);
 
         Self {
             choice_page: ChoicePage::new(choices)
@@ -65,44 +112,6 @@ impl PinEntry {
             show_real_pin: false,
             textbox: TextBox::empty(),
         }
-    }
-
-    /// Constructing list of choice items for PIN entry.
-    /// Digits are BIG, the rest is multiline.
-    fn get_page_items<T>(prompt: T) -> Vec<ChoiceItems, CHOICE_LENGTH>
-    where
-        T: AsRef<str>,
-    {
-        let mut choices: Vec<ChoiceItems, CHOICE_LENGTH> = CHOICES
-            .iter()
-            .map(|choice| {
-                // Depending on whether it is a digit (one character) or a text
-                if choice.len() == 1 {
-                    let item = BigCharacterChoiceItem::from_str(
-                        *choice,
-                        ButtonLayout::default_three_icons(),
-                    );
-                    ChoiceItems::BigCharacter(item)
-                } else {
-                    let item = MultilineTextChoiceItem::new(
-                        String::from(*choice),
-                        ButtonLayout::default_three_icons(),
-                    )
-                    .use_delimiter(' ');
-                    ChoiceItems::MultilineText(item)
-                }
-            })
-            .collect();
-
-        // Action buttons have different text
-        let confirm_btn = ButtonDetails::armed_text("CONFIRM");
-        choices[EXIT_INDEX].set_middle_btn(Some(confirm_btn));
-        choices[DELETE_INDEX].set_middle_btn(Some(confirm_btn));
-        choices[SHOW_INDEX].set_middle_btn(Some(confirm_btn));
-        choices[PROMPT_INDEX].set_middle_btn(Some(confirm_btn));
-        choices[PROMPT_INDEX].set_text(String::from(prompt.as_ref()));
-
-        choices
     }
 
     fn update_situation(&mut self) {

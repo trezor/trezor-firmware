@@ -3,8 +3,7 @@ use crate::ui::{
     geometry::Rect,
 };
 
-use super::{theme, ButtonController, ButtonControllerMsg, ButtonPos, ChoiceItem, ChoiceItems};
-use heapless::Vec;
+use super::{theme, ButtonController, ButtonControllerMsg, ButtonPos, ChoiceItem, ChoiceItemAPI};
 
 pub enum ChoicePageMsg {
     Choice(u8),
@@ -14,12 +13,26 @@ pub enum ChoicePageMsg {
 
 const MIDDLE_ROW: i32 = 72;
 
+/// Interface for a specific component efficiently giving
+/// `ChoicePage` all the information it needs to render
+/// all the choice pages.
+///
+/// It avoids the need to store the whole sequence of
+/// `ChoiceItem`s in `heapless::Vec` (which caused StackOverflow),
+/// but offers a "lazy-loading" way of requesting the
+/// `ChoiceItem`s only when they are needed, one-by-one.
+/// This way, no more than one `ChoiceItem` is stored in memory at any time.
+pub trait ChoiceFactory {
+    fn get(&self, choice_index: u8) -> ChoiceItem;
+    fn count(&self) -> u8;
+}
+
 /// General component displaying a set of items on the screen
 /// and allowing the user to select one of them.
 ///
 /// To be used by other more specific components that will
-/// supply a set of `ChoiceItem`s and will receive back
-/// the index of the selected choice.
+/// supply a set of `ChoiceItem`s (through `ChoiceFactory`)
+/// and will receive back the index of the selected choice.
 ///
 /// Each `ChoiceItem` is responsible for setting the screen -
 /// choosing the button text, their duration, text displayed
@@ -27,17 +40,23 @@ const MIDDLE_ROW: i32 = 72;
 ///
 /// `is_carousel` can be used to make the choice page "infinite" -
 /// after reaching one end, users will appear at the other end.
-pub struct ChoicePage<const N: usize> {
-    choices: Vec<ChoiceItems, N>,
+pub struct ChoicePage<F>
+where
+    F: ChoiceFactory,
+{
+    choices: F,
     pad: Pad,
     buttons: Child<ButtonController<&'static str>>,
     page_counter: u8,
     is_carousel: bool,
 }
 
-impl<const N: usize> ChoicePage<N> {
-    pub fn new(choices: Vec<ChoiceItems, N>) -> Self {
-        let initial_btn_layout = choices[0].btn_layout();
+impl<F> ChoicePage<F>
+where
+    F: ChoiceFactory,
+{
+    pub fn new(choices: F) -> Self {
+        let initial_btn_layout = choices.get(0).btn_layout();
 
         Self {
             choices,
@@ -70,7 +89,7 @@ impl<const N: usize> ChoicePage<N> {
     pub fn reset(
         &mut self,
         ctx: &mut EventCtx,
-        new_choices: Vec<ChoiceItems, N>,
+        new_choices: F,
         reset_page_counter: bool,
         is_carousel: bool,
     ) {
@@ -122,7 +141,7 @@ impl<const N: usize> ChoicePage<N> {
     }
 
     fn last_page_index(&self) -> u8 {
-        self.choices.len() as u8 - 1
+        self.choices.count() as u8 - 1
     }
 
     pub fn has_previous_choice(&self) -> bool {
@@ -133,31 +152,31 @@ impl<const N: usize> ChoicePage<N> {
         self.page_counter < self.last_page_index()
     }
 
-    fn current_choice(&mut self) -> &mut ChoiceItems {
+    fn current_choice(&self) -> ChoiceItem {
         self.get_choice(self.page_counter)
     }
 
-    fn get_choice(&mut self, index: u8) -> &mut ChoiceItems {
-        &mut self.choices[index as usize]
+    fn get_choice(&self, index: u8) -> ChoiceItem {
+        self.choices.get(index)
     }
 
-    fn show_current_choice(&mut self) {
+    fn show_current_choice(&self) {
         self.current_choice().paint_center();
     }
 
-    fn show_previous_choice(&mut self) {
+    fn show_previous_choice(&self) {
         self.get_choice(self.page_counter - 1).paint_left();
     }
 
-    fn show_next_choice(&mut self) {
+    fn show_next_choice(&self) {
         self.get_choice(self.page_counter + 1).paint_right();
     }
 
-    fn show_last_choice_on_left(&mut self) {
+    fn show_last_choice_on_left(&self) {
         self.get_choice(self.last_page_index()).paint_left();
     }
 
-    fn show_first_choice_on_right(&mut self) {
+    fn show_first_choice_on_right(&self) {
         self.get_choice(0).paint_right();
     }
 
@@ -203,7 +222,10 @@ impl<const N: usize> ChoicePage<N> {
     }
 }
 
-impl<const N: usize> Component for ChoicePage<N> {
+impl<F> Component for ChoicePage<F>
+where
+    F: ChoiceFactory,
+{
     type Msg = ChoicePageMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -266,39 +288,33 @@ impl<const N: usize> Component for ChoicePage<N> {
 }
 
 #[cfg(feature = "ui_debug")]
-impl<const N: usize> crate::trace::Trace for ChoicePage<N> {
+impl<F> crate::trace::Trace for ChoicePage<F>
+where
+    F: ChoiceFactory,
+{
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("ChoicePage");
         t.kw_pair("active_page", inttostr!(self.page_counter));
-        t.kw_pair("page_count", inttostr!(self.choices.len() as u8));
+        t.kw_pair("page_count", inttostr!(self.choices.count() as u8));
         t.kw_pair("is_carousel", booltostr!(self.is_carousel));
 
         if self.has_previous_choice() {
-            t.field(
-                "prev_choice",
-                &self.choices[(self.page_counter - 1) as usize],
-            );
+            t.field("prev_choice", &self.get_choice(self.page_counter - 1));
         } else if self.is_carousel {
             // In case of carousel going to the left end.
-            t.field(
-                "prev_choice",
-                &self.choices[self.last_page_index() as usize],
-            );
+            t.field("prev_choice", &self.get_choice(self.last_page_index()));
         } else {
             t.string("prev_choice");
             t.symbol("None");
         }
 
-        t.field("current_choice", &self.choices[self.page_counter as usize]);
+        t.field("current_choice", &self.current_choice());
 
         if self.has_next_choice() {
-            t.field(
-                "next_choice",
-                &self.choices[(self.page_counter + 1) as usize],
-            );
+            t.field("next_choice", &self.get_choice(self.page_counter + 1));
         } else if self.is_carousel {
             // In case of carousel going to the very left.
-            t.field("next_choice", &self.choices[0]);
+            t.field("next_choice", &self.get_choice(0));
         } else {
             t.string("next_choice");
             t.symbol("None");
