@@ -221,7 +221,7 @@ extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) 
                         Some(ButtonDetails::text("CONTINUE")),
                     );
                     let btn_actions = ButtonActions::cancel_next();
-                    Page::<15>::new(btn_layout, btn_actions).icon_label_text(
+                    Page::<20>::new(btn_layout, btn_actions).icon_label_text(
                         theme::ICON_USER,
                         "Recipient".into(),
                         address.clone(),
@@ -238,7 +238,7 @@ extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) 
                         ),
                     );
                     let btn_actions = ButtonActions::cancel_confirm();
-                    Page::new(btn_layout, btn_actions)
+                    Page::<20>::new(btn_layout, btn_actions)
                         .icon_label_text(
                             theme::ICON_USER,
                             "Recipient".into(),
@@ -280,7 +280,7 @@ extern "C" fn confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -
             );
             let btn_actions = ButtonActions::cancel_confirm();
 
-            let mut flow_page = Page::<15>::new(btn_layout, btn_actions)
+            let mut flow_page = Page::<25>::new(btn_layout, btn_actions)
                 .icon_label_text(theme::ICON_PARAM, total_label.clone(), total_amount.clone())
                 .newline()
                 .icon_label_text(theme::ICON_PARAM, fee_label.clone(), fee_amount.clone());
