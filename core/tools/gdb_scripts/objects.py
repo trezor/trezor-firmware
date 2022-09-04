@@ -146,4 +146,30 @@ OBJECTS: list[Object] = [
             "char_offset",
         ],
     ),
+    Object(
+        name="ButtonController",
+        comment="Sizes of `ButtonController` when being painted",
+        breakpoint="src/ui/model_tr/component/button_controller.rs:492",
+        attributes=[
+            "pad",
+            "left_btn",
+            "middle_btn",
+            "right_btn",
+            "state",
+            "button_area",
+        ],
+    ),
+    Object(
+        name="ButtonContainer",
+        comment="Sizes of `ButtonContainer` when being painted",
+        breakpoint="src/ui/model_tr/component/button_controller.rs:208",
+        attributes=[
+            "button",
+            "hold_to_confirm",
+            "pos",
+            "button_type",
+            "btn_details",
+            "htc_triggered",
+        ],
+    ),
 ]

@@ -44,3 +44,4 @@ if __name__ == "__main__":
             f.write("\n")
 
         f.write(run())
+        f.write("\n")
