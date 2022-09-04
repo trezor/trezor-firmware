@@ -391,7 +391,7 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                 _ => unreachable!(),
             };
 
-            Page::<15>::new(screen.2.clone(), screen.3.clone())
+            Page::<10>::new(screen.2.clone(), screen.3.clone())
                 .text_bold(screen.0.into())
                 .newline()
                 .newline_half()

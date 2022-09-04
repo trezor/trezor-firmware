@@ -8,3 +8,4 @@ tests/trezor_monero_tests*
 .coverage.*
 htmlcov/
 mypy_report
+tools/gdb_scripts/*.log
