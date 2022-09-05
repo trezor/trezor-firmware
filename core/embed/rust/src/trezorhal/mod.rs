@@ -10,6 +10,7 @@ pub mod random;
 #[cfg(feature = "model_tr")]
 pub mod rgb_led;
 pub mod slip39;
+pub mod storage;
 pub mod uzlib;
 
 #[cfg(not(feature = "micropython"))]

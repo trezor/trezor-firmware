@@ -27,6 +27,6 @@ pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
 pub use page::{SwipeHoldPage, SwipePage};
 pub use scroll::ScrollBar;
 pub use swipe::{Swipe, SwipeDirection};
-pub use homescreen::Homescreen;
+pub use homescreen::{Homescreen, HomescreenMsg};
 
 use super::theme;

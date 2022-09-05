@@ -42,6 +42,7 @@ const HEADER_PADDING: Insets = Insets::new(
 );
 
 pub struct PinKeyboard<T> {
+    pad: Pad,
     allow_cancel: bool,
     major_prompt: Label<T>,
     minor_prompt: Label<T>,
@@ -79,7 +80,8 @@ where
         let cancel_btn =
             Maybe::new(Pad::with_background(theme::BG), cancel_btn, allow_cancel).into_child();
 
-        Self {
+        let mut instance = Self {
+            pad: Pad::with_background(theme::BG),
             allow_cancel,
             major_prompt: Label::left_aligned(major_prompt, theme::label_keyboard()),
             minor_prompt: Label::right_aligned(minor_prompt, theme::label_keyboard_minor()),
@@ -94,7 +96,9 @@ where
                 .into_child(),
             digit_btns: Self::generate_digit_buttons(),
             warning_timer: None,
-        }
+        };
+        instance.pad.clear();
+        instance
     }
 
     fn generate_digit_buttons() -> [Child<Button<&'static str>>; DIGIT_COUNT] {
@@ -156,6 +160,7 @@ where
         let grid = Grid::new(keypad, 4, 3).with_spacing(theme::KEYBOARD_SPACING);
 
         // Prompts and PIN dots display.
+        self.pad.place(bounds);
         self.textbox.place(header);
         self.major_prompt.place(major_area);
         self.minor_prompt.place(minor_area);
@@ -229,6 +234,7 @@ where
     }
 
     fn paint(&mut self) {
+        self.pad.paint();
         self.erase_btn.paint();
         if self.textbox.inner().is_empty() {
             self.textbox.inner().clear_background();

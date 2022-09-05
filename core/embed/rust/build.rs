@@ -237,6 +237,8 @@ fn generate_trezorhal_bindings() {
         .allowlist_var("FLAG_PUBLIC")
         .allowlist_var("FLAGS_WRITE")
         .allowlist_var("MAX_APPID")
+        .allowlist_var("HW_ENTROPY_DATA")
+        .allowlist_var("HW_ENTROPY_LEN")
         .allowlist_type("PIN_UI_WAIT_CALLBACK")
         .allowlist_function("storage_init")
         .allowlist_function("storage_wipe")
