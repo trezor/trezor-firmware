@@ -3,7 +3,7 @@ use core::convert::{TryFrom, TryInto};
 use crate::{
     error::Error,
     micropython::{
-        buffer::{Buffer, BufferMut},
+        buffer,
         gc::Gc,
         iter::{Iter, IterBuf},
         list::List,
@@ -36,10 +36,13 @@ pub extern "C" fn protobuf_encode(buf: Obj, obj: Obj) -> Obj {
     let block = || {
         let obj = Gc::<MsgObj>::try_from(obj)?;
 
-        // We assume there are no other refs into `buf` at this point. This specifically
-        // means that no fields of `obj` should reference `buf` memory.
-        let buf = &mut BufferMut::try_from(buf)?;
-        let stream = &mut BufferStream::new(buf.as_mut());
+        // SAFETY:
+        // We assume that:
+        //  - there are no other refs into `buf` at this point. This specifically means
+        //    that no fields of `obj` should reference `buf` memory.
+        //  - for the lifetime of `buf`, no Python code will mutate the contents.
+        let buf = unsafe { buffer::get_buffer_mut(buf)? };
+        let stream = &mut BufferStream::new(buf);
 
         Encoder.encode_message(stream, &obj.def(), &obj)?;
 
@@ -125,7 +128,8 @@ impl Encoder {
                     let mut len = 0;
                     let iter = Iter::try_from_obj_with_buf(value, &mut iter_buf)?;
                     for value in iter {
-                        let buffer = Buffer::try_from(value)?;
+                        // SAFETY: buffer is dropped immediately.
+                        let buffer = unsafe { buffer::get_buffer(value) }?;
                         len += buffer.len();
                     }
                     stream.write_uvarint(len as u64)?;
@@ -133,14 +137,16 @@ impl Encoder {
                     // Serialize the buffers one-by-one.
                     let iter = Iter::try_from_obj_with_buf(value, &mut iter_buf)?;
                     for value in iter {
-                        let buffer = Buffer::try_from(value)?;
-                        stream.write(&buffer)?;
+                        // SAFETY: buffer is dropped immediately.
+                        let buffer = unsafe { buffer::get_buffer(value) }?;
+                        stream.write(buffer)?;
                     }
                 } else {
                     // Single length-delimited field.
-                    let buffer = Buffer::try_from(value)?;
+                    // SAFETY: buffer is dropped immediately.
+                    let buffer = unsafe { buffer::get_buffer(value) }?;
                     stream.write_uvarint(buffer.len() as u64)?;
-                    stream.write(&buffer)?;
+                    stream.write(buffer)?;
                 }
             }
             FieldType::Msg(msg_type) => {
