@@ -118,7 +118,6 @@ class Coin(TypedDict):
     address: str
     address_bytes: bytes
     dup_key_nontoken: bool
-    deprecation: dict[str, str]
 
     # Special NEM fields
     ticker: str
@@ -366,6 +365,41 @@ def _load_btc_coins() -> Coins:
     return coins
 
 
+def _load_builtin_ethereum_networks() -> Coins:
+    """Load ethereum networks from `ethereum/eth_builtin_networks.json`"""
+    chains_data = load_json("ethereum", "eth_builtin_networks.json")
+    networks: Coins = []
+    for chain_data in chains_data:
+        chain_data.update(
+            chain_id=str(chain_data["chain_id"]),
+            key=f"eth:{chain_data['shortcut']}",
+        )
+        networks.append(cast(Coin, chain_data))
+
+    return networks
+
+
+def _load_builtin_erc20_tokens() -> Coins:
+    """Load ERC20 tokens from `ethereum/eth_builtin_tokens.json`."""
+    tokens_data = load_json("ethereum", "eth_builtin_tokens.json")
+    all_tokens: Coins = []
+
+    for chain_id_and_chain, tokens in tokens_data.items():
+        chain_id, chain = chain_id_and_chain.split(";", maxsplit=1)
+        for token in tokens:
+            token.update(
+                chain=chain,
+                chain_id=chain_id,
+                address=token["address"].lower(),
+                address_bytes=bytes.fromhex(token["address"][2:]),
+                symbol=token["shortcut"],
+                key=f"erc20:{chain}:{token['shortcut']}",
+            )
+            all_tokens.append(cast(Coin, token))
+
+    return all_tokens
+
+
 def _load_nem_mosaics() -> Coins:
     """Loads NEM mosaics from `nem/nem_mosaics.json`"""
     mosaics: Coins = load_json("nem/nem_mosaics.json")
@@ -491,10 +525,6 @@ def support_info(coins: Iterable[Coin] | CoinsInfo | dict[str, Coin]) -> Support
 
 WALLET_SUITE = {"Trezor Suite": "https://suite.trezor.io"}
 WALLET_NEM = {"Nano Wallet": "https://nemplatform.com/wallets/#desktop"}
-WALLETS_ETH_3RDPARTY = {
-    "MyEtherWallet": "https://www.myetherwallet.com",
-    "MyCrypto": "https://mycrypto.com",
-}
 
 
 def get_wallet_data() -> WalletInfo:
@@ -516,7 +546,6 @@ def _suite_support(coin: Coin, support: SupportInfoItem) -> bool:
 
 def wallet_info_single(
     support_data: SupportInfo,
-    eth_networks_support_data: SupportInfo,
     wallet_data: WalletInfo,
     coin: Coin,
 ) -> WalletItems:
@@ -533,26 +562,16 @@ def wallet_info_single(
     if key.startswith("bitcoin:"):
         if _suite_support(coin, support_data[key]):
             wallets.update(WALLET_SUITE)
-    elif key.startswith("eth:"):
-        if support_data[key]["suite"]:
-            wallets.update(WALLET_SUITE)
-        else:
-            wallets.update(WALLETS_ETH_3RDPARTY)
-    elif key.startswith("erc20:"):
-        if eth_networks_support_data[coin["chain"]]["suite"]:
-            wallets.update(WALLET_SUITE)
-        else:
-            wallets.update(WALLETS_ETH_3RDPARTY)
     elif key.startswith("nem:"):
         wallets.update(WALLET_NEM)
-    elif key.startswith("misc:"):
+    elif key.startswith(("eth:", "erc20:", "misc:")):
         pass  # no special logic here
     else:
         raise ValueError(f"Unknown coin category: {key}")
 
     # Add wallets from `wallets.json`
     # This must come last as it offers the ability to override existing wallets
-    # (for example with `"MyEtherWallet": null` we delete the MyEtherWallet from the coin)
+    # (for example with `"Trezor Suite": null` we delete the "Trezor Suite" from the coin)
     wallets.update(wallet_data.get(key, {}))
 
     # Removing potentially disabled wallets from the last step
@@ -581,17 +600,9 @@ def wallet_info(coins: Iterable[Coin] | CoinsInfo | dict[str, Coin]) -> WalletIn
     support_data = support_info(coins)
     wallet_data = get_wallet_data()
 
-    # Needed to find out suitable wallets for all the erc20 coins (Suite vs 3rd party)
-    eth_networks = [coin for coin in coins if coin["key"].startswith("eth:")]
-    eth_networks_support_data = {
-        n["chain"]: support_data[n["key"]] for n in eth_networks
-    }
-
     wallet: WalletInfo = {}
     for coin in coins:
-        wallet[coin["key"]] = wallet_info_single(
-            support_data, eth_networks_support_data, wallet_data, coin
-        )
+        wallet[coin["key"]] = wallet_info_single(support_data, wallet_data, coin)
 
     return wallet
 
@@ -671,8 +682,7 @@ def deduplicate_erc20(buckets: CoinBuckets, networks: Coins) -> None:
     are still considered duplicate.)
 
     2. If there is only one "main" token in the bucket, the bucket is cleared.
-    That means that all other tokens must either be on testnets, or they must be marked
-    as deprecated, with a deprecation pointing to the "main" token.
+    That means that all other tokens must be on testnets.
     """
 
     testnet_networks = {n["chain"] for n in networks if n["slip44"] == 1}
@@ -697,25 +707,8 @@ def deduplicate_erc20(buckets: CoinBuckets, networks: Coins) -> None:
 
         # protected categories:
         testnets = [coin for coin in bucket if coin["chain"] in testnet_networks]
-        deprecated_by_same = [
-            coin
-            for coin in bucket
-            if "deprecation" in coin
-            and any(
-                other["address"] == coin["deprecation"]["new_address"]
-                for other in bucket
-            )
-        ]
-        remaining = [
-            coin
-            for coin in bucket
-            if coin not in testnets and coin not in deprecated_by_same
-        ]
+        remaining = [coin for coin in bucket if coin not in testnets]
         if len(remaining) <= 1:
-            for coin in deprecated_by_same:
-                deprecated_symbol = "[deprecated] " + coin["symbol"]
-                coin["shortcut"] = coin["symbol"] = deprecated_symbol
-                coin["key"] += ":deprecated"
             clear_bucket(bucket)
 
 
@@ -766,8 +759,8 @@ def collect_coin_info() -> CoinsInfo:
     """
     all_coins = CoinsInfo(
         bitcoin=_load_btc_coins(),
-        eth=_load_ethereum_networks(),
-        erc20=_load_erc20_tokens(),
+        eth=_load_builtin_ethereum_networks(),
+        erc20=_load_builtin_erc20_tokens(),
         nem=_load_nem_mosaics(),
         misc=_load_misc(),
     )
@@ -803,7 +796,7 @@ def coin_info_with_duplicates() -> tuple[CoinsInfo, CoinBuckets]:
     coin_list = all_coins.as_list()
     # generate duplicity buckets based on shortcuts
     buckets = mark_duplicate_shortcuts(all_coins.as_list())
-    # apply further processing to ERC20 tokens, generate deprecations etc.
+    # apply further processing to ERC20 tokens
     deduplicate_erc20(buckets, all_coins.eth)
     # ensure the whole list has unique keys (taking into account changes from deduplicate_erc20)
     deduplicate_keys(coin_list)
@@ -820,9 +813,6 @@ def coin_info() -> CoinsInfo:
     Does not auto-delete duplicates. This should now be based on support info.
     """
     all_coins, _ = coin_info_with_duplicates()
-    # all_coins["erc20"] = [
-    #     coin for coin in all_coins["erc20"] if not coin.get("duplicate")
-    # ]
     return all_coins
 
 

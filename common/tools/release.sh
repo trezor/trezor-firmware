@@ -32,3 +32,5 @@ make -C $HERE/../.. gen
 diff $CHECK_OUTPUT/pre.txt $CHECK_OUTPUT/post.txt
 
 $HERE/coins_details.py
+
+$HERE/ethereum_definitions.py prepare-definitions

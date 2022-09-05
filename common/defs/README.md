@@ -33,19 +33,21 @@ Testnet is considered a separate coin, so it must have its own JSON and icon.
 
 We will not support coins that have `address_type` 0, i.e., same as Bitcoin.
 
-#### `eth`
+#### `eth` and `erc20`
 
-The file [`ethereum/networks.json`](ethereum/networks.json) has a list of descriptions
-of Ethereum networks. Each network must also have a PNG icon in `ethereum/<chain>.png`
-file.
+Definitions for Ethereum chains(networks) and tokens(erc20) are splitted in two parts:
+1. built-in definitions - some of the chain and token definitions are built into the firmware
+   image. List of built-in chains is stored in [`ethereum/eth_builtin_networks.json`](ethereum/eth_builtin_networks.json)
+   and tokens in [`ethereum/eth_builtin_tokens.json`](ethereum/eth_builtin_tokens.json).
+2. external definitions - external definitions are dynamically generated from multiple
+   sources - [`coingecko.com`](https://www.coingecko.com/), [defillama](https://defillama.com/),
+   [Ethereum Lists - chains](https://github.com/ethereum-lists/chains)
+   and [Ethereum Lists - tokens](https://github.com/ethereum-lists/tokens).
+   They are re-generated and signed on every release of the firmware. Signed
+   definitions are available at #TODO: add link!!
 
-#### `erc20`
-
-`ethereum/tokens` is a submodule linking to [Ethereum Lists](https://github.com/ethereum-lists/tokens)
-project with descriptions of ERC20 tokens. If you want to add or update a token
-definition in Trezor, you need to get your change to the `tokens` repository first.
-
-Trezor will only support tokens that have a unique symbol.
+If you want to add or update a token definition in Trezor, you need to get your change
+to the [Ethereum Lists - tokens](https://github.com/ethereum-lists/tokens) repository first.
 
 #### `nem`
 
@@ -71,18 +73,21 @@ generated from the coin's type and shortcut:
 If a token shortcut has a suffix, such as `CAT (BlockCat)`, the whole thing is part
 of the key (so the key is `erc20:eth:CAT (BlockCat)`).
 
-Sometimes coins end up with duplicate symbols, which in case of ERC20 tokens leads to
-key collisions. We do not allow duplicate symbols in the data, so this doesn't affect
-everyday use (see below). However, for validation purposes, it is sometimes useful
-to work with unfiltered data that includes the duplicates. In such cases, keys are
-deduplicated by adding a counter at end, e.g.: `erc20:eth:SMT:0`, `erc20:eth:SMT:1`.
-Note that the suffix _is not stable_, so these coins can't be reliably uniquely identified.
+Sometimes coins end up with duplicate symbols (keys), which in case of ERC20 tokens leads to
+key collisions. We do not allow duplicate symbols in the built-in data, so this doesn't affect
+everyday use (see below).
+
+External definitions are generated based on data from external APIs on which we rely to have
+the collisions solved.
 
 ## Duplicate Detection
 
 **Duplicate symbols are not allowed** in our data. Tokens that have symbol collisions
 are removed from the data set before processing. The duplicate status is mentioned
 in `support.json` (see below), but it is impossible to override from there.
+
+We try to minimize the occurence of duplicates in built-in tokens, but sometimes its
+unavoidable.
 
 Duplicate detection works as follows:
 
@@ -132,7 +137,7 @@ External contributors should not touch this file unless asked to.
 
 # Support Information
 
-We keep track of support status of each coin over our devices. That is
+We keep track of support status of each built-in coin over our devices. That is
 `trezor1` for Trezor One, `trezor2` for Trezor T, `connect` for [Connect](https://github.com/trezor/connect)
 and `suite` for [Trezor Suite](https://suite.trezor.io/). In further description, the word "device"
 applies to Connect and Suite as well.

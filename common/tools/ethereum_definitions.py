@@ -18,7 +18,15 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from coin_info import Coin, CoinBuckets, Coins, coin_info, load_json
+from coin_info import (
+    Coin,
+    CoinBuckets,
+    Coins,
+    _load_builtin_erc20_tokens,
+    _load_builtin_ethereum_networks,
+    coin_info,
+    load_json,
+)
 from trezorlib import protobuf
 from trezorlib.messages import (
     EthereumDefinitionType,
@@ -282,6 +290,29 @@ def _load_erc20_tokens_from_repo(
     return tokens
 
 
+def remove_builtin_definitions(networks: List[Dict], tokens: List[Dict]) -> None:
+    builtin_networks = _load_builtin_ethereum_networks()
+    builtin_tokens = _load_builtin_erc20_tokens()
+
+    networks_by_chain_id = defaultdict(list)
+    for n in networks:
+        networks_by_chain_id[n["chain_id"]].append(n)
+
+    tokens_by_chain_id_and_address = defaultdict(list)
+    for t in tokens:
+        tokens_by_chain_id_and_address[(t["chain_id"], t["address"])].append(t)
+
+    for bn in builtin_networks:
+        for n in networks_by_chain_id.get(int(bn["chain_id"]), []):
+            networks.remove(n)
+
+    for bt in builtin_tokens:
+        for t in tokens_by_chain_id_and_address.get(
+            (int(bt["chain_id"]), bt["address"]), []
+        ):
+            tokens.remove(t)
+
+
 def _set_definition_metadata(
     definition: Dict,
     old_definition: Dict | None = None,
@@ -437,6 +468,7 @@ def check_definitions_list(
     def_name: str,
     interactive: bool,
     force: bool,
+    top100_coingecko_ids: List[str] | None = None,
 ) -> None:
     # store already processed definitions
     deleted_definitions: List[Dict] = []
@@ -460,7 +492,7 @@ def check_definitions_list(
         hash_dict_on_keys(d, main_keys): d for d in old_defs
     }
 
-    # mark all deleted, moved or changed definitions
+    # mark all resurrected, moved, modified or deleted definitions
     for old_def in old_defs:
         old_def_hash_only_main_keys = hash_dict_on_keys(old_def, main_keys)
         old_def_hash_no_metadata = hash_dict_on_keys(old_def, exclude_keys=["metadata"])
@@ -533,18 +565,17 @@ def check_definitions_list(
         if (orig_def, new_def) in modified_definitions:
             modified_definitions.remove((orig_def, new_def))
 
-    no_of_changes = (
-        len(moved_definitions)
-        + len(modified_definitions)
-        + len(deleted_definitions)
-        + len(resurrected_definitions)
-    )
-    if no_of_changes > 0:
-        print(f"Number of changes: {no_of_changes}")
+    def any_in_top_100(*definitions) -> bool:
+        if definitions is not None:
+            for d in definitions:
+                if d is not None and d.get("coingecko_id") in top100_coingecko_ids:
+                    return True
+        return False
 
     # go through changes and ask for confirmation
     for old_def, new_def, orig_def in moved_definitions:
         accept_change = True
+        print_change = any_in_top_100(old_def, new_def, orig_def)
         # if the change contains symbol change "--force" parameter must be used to be able to accept this change
         if (
             orig_def is not None
@@ -555,14 +586,19 @@ def check_definitions_list(
                 "\nERROR: Symbol change in this definition! To be able to approve this change re-run with `--force` argument."
             )
             accept_change = False
+            print_change = True
 
-        answer = print_definition_change(
-            def_name.upper(),
-            "MOVED",
-            old_def,
-            new_def,
-            orig_def,
-            prompt=interactive and accept_change,
+        answer = (
+            print_definition_change(
+                def_name.upper(),
+                "MOVED",
+                old_def,
+                new_def,
+                orig_def,
+                prompt=interactive and accept_change,
+            )
+            if print_change
+            else None
         )
         if answer is False or answer is None and not accept_change:
             # revert change - replace "new_def" with "old_def" and "orig_def"
@@ -587,19 +623,28 @@ def check_definitions_list(
 
     for old_def, new_def in modified_definitions:
         accept_change = True
+        print_change = any_in_top_100(old_def, new_def)
         # if the change contains symbol change "--force" parameter must be used to be able to accept this change
-        if old_def.get("shortcut") != new_def.get("shortcut") and not force:
+        if (
+            old_def.get("shortcut") != new_def.get("shortcut")
+            and not force
+        ):
             print(
                 "\nERROR: Symbol change in this definition! To be able to approve this change re-run with `--force` argument."
             )
             accept_change = False
+            print_change = True
 
-        answer = print_definition_change(
-            def_name.upper(),
-            "MODIFIED",
-            old_def,
-            new_def,
-            prompt=interactive and accept_change,
+        answer = (
+            print_definition_change(
+                def_name.upper(),
+                "MODIFIED",
+                old_def,
+                new_def,
+                prompt=interactive and accept_change,
+            )
+            if print_change
+            else None
         )
         if answer is False or answer is None and not accept_change:
             # revert change - replace "new_def" with "old_def"
@@ -608,7 +653,8 @@ def check_definitions_list(
 
     for definition in deleted_definitions:
         if (
-            print_definition_change(
+            any_in_top_100(definition)
+            and print_definition_change(
                 def_name.upper(), "DELETED", definition, prompt=interactive
             )
             is False
@@ -621,26 +667,14 @@ def check_definitions_list(
 
     for definition in resurrected_definitions:
         if (
-            print_definition_change(
+            any_in_top_100(definition)
+            and print_definition_change(
                 def_name.upper(), "RESURRECTED", definition, prompt=interactive
             )
             is not False
         ):
             # clear deleted mark
             _set_definition_metadata(definition)
-
-
-def filter_top100(top100: List[Dict], definitions: List[Dict]) -> List[Dict]:
-    top100_ids = [d["id"] for d in top100]
-
-    return {
-        "networks": [
-            n for n in definitions["networks"] if n.get("coingecko_id") in top100_ids
-        ],
-        "tokens": [
-            t for t in definitions["tokens"] if t.get("coingecko_id") in top100_ids
-        ],
-    }
 
 
 def _load_prepared_definitions():
@@ -818,51 +852,57 @@ def prepare_definitions(
 
     # merge tokens
     tokens: List[Dict] = []
-    tokens_by_chain_id_and_address = defaultdict(list)
+    cg_tokens_chain_id_and_address = []
     for t in cg_tokens:
         if t not in tokens:
             # add only unique tokens
             tokens.append(t)
-            tokens_by_chain_id_and_address[(t["chain_id"], t["address"])].append(t)
+            cg_tokens_chain_id_and_address.append((t["chain_id"], t["address"]))
     for t in repo_tokens:
         if (
             t not in tokens
-            and (t["chain_id"], t["address"]) not in tokens_by_chain_id_and_address
+            and (t["chain_id"], t["address"]) not in cg_tokens_chain_id_and_address
         ):
-            # add only unique tokens and CoinGecko tokens are preffered
+            # add only unique tokens and prefer CoinGecko in case of collision of chain id and token address
             tokens.append(t)
-            tokens_by_chain_id_and_address[(t["chain_id"], t["address"])].append(t)
 
     old_defs = None
     if deffile.exists():
         # load old definitions
         old_defs = load_json(deffile)
 
+    remove_builtin_definitions(networks, tokens)
+
     check_tokens_collisions(
         tokens, old_defs["tokens"] if old_defs is not None else None
     )
 
     # map coingecko ids to tokens
+    tokens_by_chain_id_and_address = {(t["chain_id"], t["address"]): t for t in tokens}
     cg_coin_list = downloader.get_coingecko_coins_list()
     for coin in cg_coin_list:
         for platform_name, address in coin.get("platforms", dict()).items():
             key = (coingecko_id_to_chain_id.get(platform_name), address)
             if key in tokens_by_chain_id_and_address:
-                for token in tokens_by_chain_id_and_address[key]:
-                    token["coingecko_id"] = coin["id"]
+                tokens_by_chain_id_and_address[key]["coingecko_id"] = coin["id"]
 
-    # load top 100 definitions from CoinGecko
-    cg_top100 = downloader.get_coingecko_top100()
+    # load top 100 (by market cap) definitions from CoinGecko
+    cg_top100_ids = [d["id"] for d in downloader.get_coingecko_top100()]
+
+    # save cache
+    downloader.save_cache()
 
     # check changes in definitions
     if old_defs is not None:
-        # filter to top 100 based on Coingecko market cap order
-        if not show_all:
-            old_defs = filter_top100(cg_top100, old_defs)
-
         # check networks and tokens
         check_definitions_list(
-            old_defs["networks"], networks, ["chain_id"], "network", interactive, force
+            old_defs["networks"],
+            networks,
+            ["chain_id"],
+            "network",
+            interactive,
+            force,
+            cg_top100_ids if not show_all else None,
         )
         check_definitions_list(
             old_defs["tokens"],
@@ -871,6 +911,7 @@ def prepare_definitions(
             "token",
             interactive,
             force,
+            cg_top100_ids if not show_all else None,
         )
 
     # sort networks and tokens
@@ -887,9 +928,6 @@ def prepare_definitions(
             indent=1,
         )
         f.write("\n")
-
-    # save cache
-    downloader.save_cache()
 
 
 # TODO: separate function to generate built-in defs???

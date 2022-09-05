@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fetch information about coins and tokens supported by Trezor and update it in coins_details.json."""
+"""Fetch information about coins supported by Trezor and update it in coins_details.json."""
 import json
 import logging
 import os
@@ -19,14 +19,6 @@ ALLOWED_SUPPORT_STATUS = ("yes", "no")
 WALLETS = coin_info.load_json("wallets.json")
 OVERRIDES = coin_info.load_json("coins_details.override.json")
 VERSIONS = coin_info.latest_releases()
-
-# automatic wallet entries
-WALLET_SUITE = {"Trezor Suite": "https://suite.trezor.io"}
-WALLET_NEM = {"Nano Wallet": "https://nemplatform.com/wallets/#desktop"}
-WALLETS_ETH_3RDPARTY = {
-    "MyEtherWallet": "https://www.myetherwallet.com",
-    "MyCrypto": "https://mycrypto.com",
-}
 
 
 TREZOR_KNOWN_URLS = (
@@ -136,7 +128,7 @@ def update_bitcoin(coins, support_info):
         details = dict(
             name=coin["coin_label"],
             links=dict(Homepage=coin["website"], Github=coin["github"]),
-            wallet=WALLET_SUITE if _suite_support(coin, support) else {},
+            wallet=coin_info.WALLET_SUITE if _suite_support(coin, support) else {},
         )
         dict_merge(res[key], details)
 
@@ -152,30 +144,18 @@ def update_erc20(coins, networks, support_info):
         key = coin["key"]
         chain = coin["chain"]
 
-        hidden = False
-        if chain in network_testnets:
-            hidden = True
-        if "deprecation" in coin:
-            hidden = True
-
-        if network_support.get(chain, {}).get("suite"):
-            wallets = WALLET_SUITE
-        else:
-            wallets = WALLETS_ETH_3RDPARTY
-
         details = dict(
             network=chain,
             address=coin["address"],
             shortcut=coin["shortcut"],
             links={},
-            wallet=wallets,
         )
-        if hidden:
+
+        if chain in network_testnets:
             details["hidden"] = True
-        if coin.get("website"):
-            details["links"]["Homepage"] = coin["website"]
-        if coin.get("social", {}).get("github"):
-            details["links"]["Github"] = coin["social"]["github"]
+
+        if network_support.get(chain, {}).get("suite"):
+            details["wallets"] = coin_info.WALLET_SUITE
 
         dict_merge(res[key], details)
 
@@ -186,11 +166,9 @@ def update_ethereum_networks(coins, support_info):
     res = update_simple(coins, support_info, "coin")
     for coin in coins:
         key = coin["key"]
+        details = dict(links=dict(Homepage=coin.get("url")))
         if support_info[key].get("suite"):
-            wallets = WALLET_SUITE
-        else:
-            wallets = WALLETS_ETH_3RDPARTY
-        details = dict(links=dict(Homepage=coin.get("url")), wallet=wallets)
+            details["wallets"] = coin_info.WALLET_SUITE
         dict_merge(res[key], details)
 
     return res
@@ -200,7 +178,7 @@ def update_nem_mosaics(coins, support_info):
     res = update_simple(coins, support_info, "mosaic")
     for coin in coins:
         key = coin["key"]
-        details = dict(wallet=WALLET_NEM)
+        details = dict(wallet=coin_info.WALLET_NEM)
         dict_merge(res[key], details)
 
     return res

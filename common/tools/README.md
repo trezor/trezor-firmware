@@ -21,7 +21,6 @@ the following commands:
 * **`check`**: check validity of json definitions and associated data. Used in CI.
 * **`dump`**: dump coin information, including support status, in JSON format. Various
   filtering options are available, check help for details.
-* **`coindefs`**: generate signed protobuf definitions for Ethereum networks (chains) and tokens.
 
 Use `cointool.py command --help` to get more information on each command.
 
@@ -51,6 +50,19 @@ Caches market cap data so you don't have to download it every time.
 Compares generated `coins_details.json` to the released version currently served
 on https://trezor.io/coins, in a format that is nicely readable to humans and
 hard(er) to mess up by diff.
+
+### `ethereum_definitions.py`
+
+Script used to work with Ethereum definitions.
+
+Definitions for Ethereum chains(networks) and tokens(erc20) are dynamically generated
+from multiple sources - [`coingecko.com`](https://www.coingecko.com/), [defillama](https://defillama.com/),
+[Ethereum Lists - chains](https://github.com/ethereum-lists/chains)
+and [Ethereum Lists - tokens](https://github.com/ethereum-lists/tokens).
+
+The following commands are available:
+* **`prepare-definitions`**: collect and process definitions for Ethereum networks (chains) and tokens.
+* **`sign-definitions`**: generate signed protobuf definitions for Ethereum networks (chains) and tokens.
 
 ### `coin_info.py`
 
@@ -129,25 +141,11 @@ Or mark them as unsupported explicitly.
 
 ## Releasing a new firmware
 
-#### **Step 1:** update the tokens repo
+#### **Step 1:** run the release script
 
 ```sh
-pushd defs/ethereum/tokens
-git checkout master
-git pull
-popd
-git add defs/ethereum/tokens
+./tools/release.sh
 ```
-
-#### **Step 2:** run the release flow
-
-```sh
-./tools/support.py release 2
-```
-
-The number `2` indicates that you are releasing Trezor 2. The version will be
-automatically determined, based on currently released firmwares. Or you can explicitly
-specify the version with `-r 2.1.0`.
 
 All currently known unreleased ERC20 tokens are automatically set to the given version.
 
@@ -169,13 +167,7 @@ Use `-g` or `--git-tag` to automatically tag the current `HEAD` with a version, 
 XXX this should also commit the changes though, otherwise the tag will apply to the wrong
 commit.
 
-#### **Step 3:** review and commit your changes
+#### **Step 2:** review and commit your changes
 
 Use `git diff` to review changes made, commit and push. If you tagged the commit in the
 previous step, don't forget to `git push --tags` too.
-
-#### **Step 4:** update submodule in your target repository
-
-Go to `trezor-core` or `trezor-mcu` checkout and update the submodule. Checkout the
-appropriate tag if you created it. If you're in `trezor-core`, run `make templates`
-to update source files.
