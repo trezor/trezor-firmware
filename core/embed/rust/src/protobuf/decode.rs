@@ -5,7 +5,7 @@ use core::{
 
 use crate::{
     error::Error,
-    micropython::{buffer::Buffer, gc::Gc, list::List, map::Map, obj::Obj, qstr::Qstr, util},
+    micropython::{buffer, gc::Gc, list::List, map::Map, obj::Obj, qstr::Qstr, util},
 };
 
 use super::{
@@ -40,7 +40,6 @@ pub extern "C" fn protobuf_type_for_wire(wire_id: Obj) -> Obj {
 #[no_mangle]
 pub extern "C" fn protobuf_decode(buf: Obj, msg_def: Obj, enable_experimental: Obj) -> Obj {
     let block = || {
-        let buf = Buffer::try_from(buf)?;
         let def = Gc::<MsgDefObj>::try_from(msg_def)?;
         let enable_experimental = bool::try_from(enable_experimental)?;
 
@@ -52,7 +51,11 @@ pub extern "C" fn protobuf_decode(buf: Obj, msg_def: Obj, enable_experimental: O
             return Err(error::experimental_not_enabled());
         }
 
-        let stream = &mut InputStream::new(&buf);
+        // SAFETY:
+        // We assume that for the lifetime of `buf`, no MicroPython code can run that
+        // would mutate the buffer, nor pass it to another Rust function.
+        let buf = unsafe { buffer::get_buffer(buf) }?;
+        let stream = &mut InputStream::new(buf);
         let decoder = Decoder {
             enable_experimental,
         };
