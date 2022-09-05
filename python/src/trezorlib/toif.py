@@ -73,6 +73,17 @@ def _from_pil_grayscale(pixels: Sequence[int]) -> bytes:
     return bytes(data)
 
 
+def _from_pil_grayscale_alpha(pixels: Sequence[Tuple[int, int]]) -> bytes:
+    data = bytearray()
+    for i in range(0, len(pixels), 2):
+        left_w_alpha, right_w_alpha = pixels[i], pixels[i + 1]
+        left = int((left_w_alpha[0] * left_w_alpha[1]) / 255)
+        right = int((right_w_alpha[0] * right_w_alpha[1]) / 255)
+        c = (left & 0xF0) | ((right & 0xF0) >> 4)
+        data += struct.pack(">B", c)
+    return bytes(data)
+
+
 def _to_grayscale(data: bytes) -> bytes:
     res = bytearray()
     for pixel in data:
@@ -161,6 +172,11 @@ def from_image(
         if image.size[0] % 2 != 0:
             raise ValueError("Only even-width grayscale images are supported")
         toif_data = _from_pil_grayscale(image.getdata())
+    elif image.mode == "LA":
+        toif_mode = firmware.ToifMode.grayscale
+        if image.size[0] % 2 != 0:
+            raise ValueError("Only even-width grayscale images are supported")
+        toif_data = _from_pil_grayscale_alpha(image.getdata())
     elif image.mode == "RGB":
         toif_mode = firmware.ToifMode.full_color
         toif_data = _from_pil_rgb(image.getdata())
