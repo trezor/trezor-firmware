@@ -58,6 +58,10 @@ class RustLayoutContent:
         """Overall number of pages in this screen. Should always be there."""
         return self.kw_pair_int_compulsory("page_count")
 
+    def in_flow(self) -> bool:
+        """Whether we are in flow."""
+        return self.flow_page() is not None
+
     def flow_page(self) -> int | None:
         """When in flow, on which page we are. Missing when not in flow."""
         return self.kw_pair_int("flow_page")
@@ -242,51 +246,73 @@ class RustLayout(ui.Layout):
             self.layout.button_event(io.BUTTON_RELEASED, io.BUTTON_LEFT)
             return self.layout.button_event(io.BUTTON_RELEASED, io.BUTTON_RIGHT)
 
-        async def handle_swipe(self):
-            """Enales pagination through the current page/flow page.
+        def _swipe(self, direction: int) -> None:
+            """Triggers swipe in the given direction.
 
-            Waits for `swipe_signal` and carries it out.
             Only `UP` and `DOWN` directions are supported.
             """
-            from apps.debug import notify_layout_change, swipe_signal
+            from apps.debug import notify_layout_change
             from trezor.ui.components.common import (
                 SWIPE_UP,
                 SWIPE_DOWN,
             )
 
+            content_obj = self._content_obj()
+
+            if direction == SWIPE_UP:
+                btn_to_press = content_obj.get_next_button()
+            elif direction == SWIPE_DOWN:
+                btn_to_press = content_obj.get_prev_button()
+            else:
+                raise Exception(f"Unsupported direction: {direction}")
+
+            assert btn_to_press is not None
+            if btn_to_press == "right":
+                msg = self._press_right()
+            elif btn_to_press == "middle":
+                msg = self._press_middle()
+            elif btn_to_press == "left":
+                msg = self._press_left()
+            else:
+                raise Exception(f"Unknown button: {btn_to_press}")
+
+            self.layout.paint()
+            if msg is not None:
+                raise ui.Result(msg)
+
+            ui.refresh()  # so that a screenshot is taken
+            notify_layout_change(self)
+
+        async def handle_swipe(self) -> None:
+            """Enables pagination through the current page/flow page.
+
+            Waits for `swipe_signal` and carries it out.
+            """
+            from apps.debug import swipe_signal
+            from trezor.ui.components.common import SWIPE_ALL_THE_WAY_UP, SWIPE_UP
+
             while True:
                 direction = await swipe_signal()
-                content_obj = self._content_obj()
 
-                if direction == SWIPE_UP:
-                    btn_to_press = content_obj.get_next_button()
-                elif direction == SWIPE_DOWN:
-                    btn_to_press = content_obj.get_prev_button()
+                if direction == SWIPE_ALL_THE_WAY_UP:
+                    # Going as far as possible
+                    while self._content_obj().can_go_next():
+                        self._swipe(SWIPE_UP)
                 else:
-                    raise Exception(f"Unsupported direction: {direction}")
-
-                assert btn_to_press is not None
-                if btn_to_press == "right":
-                    msg = self._press_right()
-                elif btn_to_press == "middle":
-                    msg = self._press_middle()
-                elif btn_to_press == "left":
-                    msg = self._press_left()
-                else:
-                    raise Exception(f"Unknown button: {btn_to_press}")
-
-                self.layout.paint()
-                if msg is not None:
-                    raise ui.Result(msg)
-
-                ui.refresh()  # so that a screenshot is taken
-                notify_layout_change(self)
+                    self._swipe(direction)
 
         def page_count(self) -> int:
             """How many paginated pages current screen has."""
             # TODO: leave it debug-only or use always?
             self._place_layout()
             return self._content_obj().page_count()
+
+        def in_unknown_flow(self) -> bool:
+            """Whether we are in a longer flow where we cannot (easily)
+            beforehand say how much pages it will have.
+            """
+            self._place_layout()
+            return self._content_obj().in_flow()
 
     else:
 

@@ -474,6 +474,7 @@ class DebugSwipeDirection(IntEnum):
     DOWN = 1
     LEFT = 2
     RIGHT = 3
+    ALL_THE_WAY_UP = 4
 
 
 class DebugButton(IntEnum):

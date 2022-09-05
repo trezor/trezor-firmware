@@ -76,6 +76,7 @@ if __debug__:
             SWIPE_DOWN,
             SWIPE_LEFT,
             SWIPE_RIGHT,
+            SWIPE_ALL_THE_WAY_UP,
         )
 
         if UI2:
@@ -99,6 +100,8 @@ if __debug__:
                 await swipe_chan.put(SWIPE_LEFT)
             elif msg.swipe == DebugSwipeDirection.RIGHT:
                 await swipe_chan.put(SWIPE_RIGHT)
+            elif msg.swipe == DebugSwipeDirection.ALL_THE_WAY_UP:
+                await swipe_chan.put(SWIPE_ALL_THE_WAY_UP)
         if msg.input is not None:
             await input_chan.put(Result(msg.input))
 

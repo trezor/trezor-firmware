@@ -194,6 +194,9 @@ class DebugLink:
     def press_info(self) -> None:
         self.input(button=messages.DebugButton.INFO)
 
+    def swipe_all_the_way_up(self) -> None:
+        self.input(swipe=messages.DebugSwipeDirection.ALL_THE_WAY_UP, wait=True)
+
     def swipe_up(self, wait: bool = False) -> None:
         self.input(swipe=messages.DebugSwipeDirection.UP, wait=wait)
 
@@ -324,8 +327,12 @@ class DebugUI:
             else:
                 # Paginating (going as further as possible) and pressing Yes
                 if br.pages is not None:
-                    for _ in range(br.pages - 1):
-                        self.debuglink.swipe_up(wait=True)
+                    if br.pages == 0:
+                        # When we do not know how many, but want to paginate
+                        self.debuglink.swipe_all_the_way_up()
+                    else:
+                        for _ in range(br.pages - 1):
+                            self.debuglink.swipe_up(wait=True)
                 self.debuglink.press_yes()
         elif self.input_flow is self.INPUT_FLOW_DONE:
             raise AssertionError("input flow ended prematurely")
