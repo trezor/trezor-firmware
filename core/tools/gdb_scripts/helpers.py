@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from pathlib import Path
+from typing import Callable
+
 from objects import Object
 
 
@@ -24,10 +27,12 @@ def indent_list(lines: list[str], num: int = 2) -> str:
 
 
 def indent(text: str, num: int = 2) -> str:
-    return num * " " + text
+    return num * " " + text if text else ""
 
 
-def command_teardown(b_num: int, show_only_once: bool, continue_after_cmd: bool) -> str:
+def command_teardown(
+    b_num: int, show_only_once: bool, continue_after_cmd: bool
+) -> list[str]:
     delete_breakpoint = [
         "# deleting itself not to show multiple times",
         f"delete {b_num}",
@@ -37,13 +42,11 @@ def command_teardown(b_num: int, show_only_once: bool, continue_after_cmd: bool)
         "continue",
     ]
 
-    buf = ""
+    buf = []
     if show_only_once:
-        buf += "\n"
-        buf += indent_list(delete_breakpoint)
+        buf += delete_breakpoint
     if continue_after_cmd:
-        buf += "\n"
-        buf += indent_list(cont)
+        buf += cont
 
     return buf
 
@@ -58,3 +61,22 @@ def breakpoint_and_command(obj: Object, cmd_num: int, command_content: str) -> s
             "end\n",
         ]
     )
+
+
+def file_from_objects(
+    file: Path,
+    objects: list[Object],
+    get_command_content: Callable[[Object, int], str],
+    script: str,
+) -> None:
+    with open(file, "w") as f:
+        f.write(beginning(script))
+        f.write("\n")
+
+        for index, obj in enumerate(objects, start=1):
+            cmd_content = get_command_content(obj, index)
+            f.write(breakpoint_and_command(obj, index, cmd_content))
+            f.write("\n")
+
+        f.write(run())
+        f.write("\n")

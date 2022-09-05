@@ -23,7 +23,7 @@ class Object:
 OBJECTS: list[Object] = [
     Object(
         name="Flow",
-        comment="Sizes of `Flow` when being painted",
+        comment="`Flow` when being painted",
         breakpoint="src/ui/model_tr/component/flow.rs:204",
         attributes=[
             "pages",
@@ -36,7 +36,7 @@ OBJECTS: list[Object] = [
     ),
     Object(
         name="Page",
-        comment="Sizes of `Page` when being painted",
+        comment="`Page` when being painted",
         breakpoint="src/ui/model_tr/component/flow_pages.rs:92",
         attributes=[
             "ops",
@@ -50,7 +50,7 @@ OBJECTS: list[Object] = [
     ),
     Object(
         name="PinEntry",
-        comment="Sizes of `PinEntry` when being painted",
+        comment="`PinEntry` when being painted",
         breakpoint="src/ui/model_tr/component/pin.rs:194",
         attributes=[
             "show_real_pin",
@@ -60,7 +60,7 @@ OBJECTS: list[Object] = [
     ),
     Object(
         name="Bip39Entry",
-        comment="Sizes of `Bip39Entry` when being painted",
+        comment="`Bip39Entry` when being painted",
         breakpoint="src/ui/model_tr/component/bip39.rs:284",
         attributes=[
             "choice_page",
@@ -75,7 +75,7 @@ OBJECTS: list[Object] = [
     ),
     Object(
         name="PassphraseEntry",
-        comment="Sizes of `PassphraseEntry` when being painted",
+        comment="`PassphraseEntry` when being painted",
         breakpoint="src/ui/model_tr/component/passphrase.rs:287",
         attributes=[
             "choice_page",
@@ -87,7 +87,7 @@ OBJECTS: list[Object] = [
     ),
     Object(
         name="SimpleChoice",
-        comment="Sizes of `SimpleChoice` when being painted",
+        comment="`SimpleChoice` when being painted",
         breakpoint="src/ui/model_tr/component/simple_choice.rs:100",
         attributes=[
             "choices",
@@ -96,7 +96,7 @@ OBJECTS: list[Object] = [
     ),
     Object(
         name="ButtonPage",
-        comment="Sizes of `ButtonPage` when being painted",
+        comment="`ButtonPage` when being painted",
         breakpoint="src/ui/model_tr/component/page.rs:213",
         attributes=[
             "content",
@@ -111,7 +111,7 @@ OBJECTS: list[Object] = [
     ),
     Object(
         name="ChoicePage",
-        comment="Sizes of `ChoicePage` when being painted",
+        comment="`ChoicePage` when being painted",
         breakpoint="src/ui/model_tr/component/choice.rs:283",
         attributes=[
             "choices",
@@ -123,7 +123,7 @@ OBJECTS: list[Object] = [
     ),
     Object(
         name="Paragraphs",
-        comment="Sizes of `Paragraphs` when being painted",
+        comment="`Paragraphs` when being painted",
         breakpoint="src/ui/component/text/paragraphs.rs:142",
         attributes=[
             "area",
@@ -135,7 +135,7 @@ OBJECTS: list[Object] = [
     ),
     Object(
         name="FormattedText",
-        comment="Sizes of `FormattedText` when being painted",
+        comment="`FormattedText` when being painted",
         breakpoint="src/ui/component/text/formatted.rs:226",
         attributes=[
             "layout",
@@ -148,7 +148,7 @@ OBJECTS: list[Object] = [
     ),
     Object(
         name="ButtonController",
-        comment="Sizes of `ButtonController` when being painted",
+        comment="`ButtonController` when being painted",
         breakpoint="src/ui/model_tr/component/button_controller.rs:492",
         attributes=[
             "pad",
@@ -161,7 +161,7 @@ OBJECTS: list[Object] = [
     ),
     Object(
         name="ButtonContainer",
-        comment="Sizes of `ButtonContainer` when being painted",
+        comment="`ButtonContainer` when being painted",
         breakpoint="src/ui/model_tr/component/button_controller.rs:208",
         attributes=[
             "button",

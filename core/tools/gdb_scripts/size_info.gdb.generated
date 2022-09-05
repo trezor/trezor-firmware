@@ -6,10 +6,10 @@ set print pretty on
 set logging file ../tools/gdb_scripts/size_info.log
 set logging on
 
-# Sizes of `Flow` when being painted
+# `Flow` when being painted
 break src/ui/model_tr/component/flow.rs:204
 commands 1
-  printf "Sizes of `Flow` when being painted\n"
+  printf "`Flow` when being painted\n"
   printf "Flow: %d\n", sizeof(*self)
   printf "Flow.pages: %d\n", sizeof(self.pages)
   printf "Flow.page_counter: %d\n", sizeof(self.page_counter)
@@ -22,10 +22,10 @@ commands 1
   continue
 end
 
-# Sizes of `Page` when being painted
+# `Page` when being painted
 break src/ui/model_tr/component/flow_pages.rs:92
 commands 2
-  printf "Sizes of `Page` when being painted\n"
+  printf "`Page` when being painted\n"
   printf "Page: %d\n", sizeof(*self)
   printf "Page.ops: %d\n", sizeof(self.ops)
   printf "Page.layout: %d\n", sizeof(self.layout)
@@ -39,10 +39,10 @@ commands 2
   continue
 end
 
-# Sizes of `PinEntry` when being painted
+# `PinEntry` when being painted
 break src/ui/model_tr/component/pin.rs:194
 commands 3
-  printf "Sizes of `PinEntry` when being painted\n"
+  printf "`PinEntry` when being painted\n"
   printf "PinEntry: %d\n", sizeof(*self)
   printf "PinEntry.show_real_pin: %d\n", sizeof(self.show_real_pin)
   printf "PinEntry.textbox: %d\n", sizeof(self.textbox)
@@ -52,10 +52,10 @@ commands 3
   continue
 end
 
-# Sizes of `Bip39Entry` when being painted
+# `Bip39Entry` when being painted
 break src/ui/model_tr/component/bip39.rs:284
 commands 4
-  printf "Sizes of `Bip39Entry` when being painted\n"
+  printf "`Bip39Entry` when being painted\n"
   printf "Bip39Entry: %d\n", sizeof(*self)
   printf "Bip39Entry.choice_page: %d\n", sizeof(self.choice_page)
   printf "Bip39Entry.letter_choices: %d\n", sizeof(self.letter_choices)
@@ -70,10 +70,10 @@ commands 4
   continue
 end
 
-# Sizes of `PassphraseEntry` when being painted
+# `PassphraseEntry` when being painted
 break src/ui/model_tr/component/passphrase.rs:287
 commands 5
-  printf "Sizes of `PassphraseEntry` when being painted\n"
+  printf "`PassphraseEntry` when being painted\n"
   printf "PassphraseEntry: %d\n", sizeof(*self)
   printf "PassphraseEntry.choice_page: %d\n", sizeof(self.choice_page)
   printf "PassphraseEntry.show_plain_passphrase: %d\n", sizeof(self.show_plain_passphrase)
@@ -85,10 +85,10 @@ commands 5
   continue
 end
 
-# Sizes of `SimpleChoice` when being painted
+# `SimpleChoice` when being painted
 break src/ui/model_tr/component/simple_choice.rs:100
 commands 6
-  printf "Sizes of `SimpleChoice` when being painted\n"
+  printf "`SimpleChoice` when being painted\n"
   printf "SimpleChoice: %d\n", sizeof(*self)
   printf "SimpleChoice.choices: %d\n", sizeof(self.choices)
   printf "SimpleChoice.choice_page: %d\n", sizeof(self.choice_page)
@@ -97,10 +97,10 @@ commands 6
   continue
 end
 
-# Sizes of `ButtonPage` when being painted
+# `ButtonPage` when being painted
 break src/ui/model_tr/component/page.rs:213
 commands 7
-  printf "Sizes of `ButtonPage` when being painted\n"
+  printf "`ButtonPage` when being painted\n"
   printf "ButtonPage: %d\n", sizeof(*self)
   printf "ButtonPage.content: %d\n", sizeof(self.content)
   printf "ButtonPage.scrollbar: %d\n", sizeof(self.scrollbar)
@@ -115,10 +115,10 @@ commands 7
   continue
 end
 
-# Sizes of `ChoicePage` when being painted
+# `ChoicePage` when being painted
 break src/ui/model_tr/component/choice.rs:283
 commands 8
-  printf "Sizes of `ChoicePage` when being painted\n"
+  printf "`ChoicePage` when being painted\n"
   printf "ChoicePage: %d\n", sizeof(*self)
   printf "ChoicePage.choices: %d\n", sizeof(self.choices)
   printf "ChoicePage.pad: %d\n", sizeof(self.pad)
@@ -130,10 +130,10 @@ commands 8
   continue
 end
 
-# Sizes of `Paragraphs` when being painted
+# `Paragraphs` when being painted
 break src/ui/component/text/paragraphs.rs:142
 commands 9
-  printf "Sizes of `Paragraphs` when being painted\n"
+  printf "`Paragraphs` when being painted\n"
   printf "Paragraphs: %d\n", sizeof(*self)
   printf "Paragraphs.area: %d\n", sizeof(self.area)
   printf "Paragraphs.list: %d\n", sizeof(self.list)
@@ -145,10 +145,10 @@ commands 9
   continue
 end
 
-# Sizes of `FormattedText` when being painted
+# `FormattedText` when being painted
 break src/ui/component/text/formatted.rs:226
 commands 10
-  printf "Sizes of `FormattedText` when being painted\n"
+  printf "`FormattedText` when being painted\n"
   printf "FormattedText: %d\n", sizeof(*self)
   printf "FormattedText.layout: %d\n", sizeof(self.layout)
   printf "FormattedText.fonts: %d\n", sizeof(self.fonts)
@@ -161,10 +161,10 @@ commands 10
   continue
 end
 
-# Sizes of `ButtonController` when being painted
+# `ButtonController` when being painted
 break src/ui/model_tr/component/button_controller.rs:492
 commands 11
-  printf "Sizes of `ButtonController` when being painted\n"
+  printf "`ButtonController` when being painted\n"
   printf "ButtonController: %d\n", sizeof(*self)
   printf "ButtonController.pad: %d\n", sizeof(self.pad)
   printf "ButtonController.left_btn: %d\n", sizeof(self.left_btn)
@@ -177,10 +177,10 @@ commands 11
   continue
 end
 
-# Sizes of `ButtonContainer` when being painted
+# `ButtonContainer` when being painted
 break src/ui/model_tr/component/button_controller.rs:208
 commands 12
-  printf "Sizes of `ButtonContainer` when being painted\n"
+  printf "`ButtonContainer` when being painted\n"
   printf "ButtonContainer: %d\n", sizeof(*self)
   printf "ButtonContainer.button: %d\n", sizeof(self.button)
   printf "ButtonContainer.hold_to_confirm: %d\n", sizeof(self.hold_to_confirm)
