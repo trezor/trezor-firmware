@@ -96,6 +96,11 @@ int main(void) {
   // Init peripherals
   pendsv_init();
 
+#if !PRODUCTION
+  // enable BUS fault and USAGE fault handlers
+  SCB->SHCSR |= (SCB_SHCSR_USGFAULTENA_Msk | SCB_SHCSR_BUSFAULTENA_Msk);
+#endif
+
 #if defined TREZOR_MODEL_1
   display_init();
   button_init();
