@@ -223,8 +223,4 @@ class Slip39Keyboard(ui.Layout):
                 self.on_timeout()
 
     if __debug__:
-
-        def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
-            from apps.debug import input_signal
-
-            return super().create_tasks() + (input_signal(),)
+        WANT_INPUT_SIGNAL = True

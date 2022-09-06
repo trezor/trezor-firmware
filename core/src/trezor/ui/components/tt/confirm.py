@@ -168,14 +168,10 @@ class InfoConfirm(ui.Layout):
         raise ui.Result(INFO)
 
     if __debug__:
+        WANT_CONFIRM_SIGNAL = True
 
         def read_content(self) -> list[str]:
             return self.content.read_content()
-
-        def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
-            from apps.debug import confirm_signal
-
-            return super().create_tasks() + (confirm_signal(),)
 
 
 class HoldToConfirm(ui.Layout):
@@ -247,11 +243,7 @@ class HoldToConfirm(ui.Layout):
         raise ui.Result(CANCELLED)
 
     if __debug__:
+        WANT_CONFIRM_SIGNAL = True
 
         def read_content(self) -> list[str]:
             return self.content.read_content()
-
-        def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
-            from apps.debug import confirm_signal
-
-            return super().create_tasks() + (confirm_signal(),)

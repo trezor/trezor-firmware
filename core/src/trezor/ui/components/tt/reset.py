@@ -1,17 +1,10 @@
-from typing import TYPE_CHECKING
+from typing import Callable, NoReturn, Sequence
 
 from trezor import ui
 
 from .button import Button
 from .num_input import NumInput
 from .text import Text
-
-if TYPE_CHECKING:
-    from trezor import loop
-    from typing import Callable, NoReturn, Sequence
-
-if __debug__:
-    from apps import debug
 
 
 class Slip39NumInput(ui.Component):
@@ -148,9 +141,7 @@ class MnemonicWordSelect(ui.Layout):
         return fn
 
     if __debug__:
+        WANT_INPUT_SIGNAL = True
 
         def read_content(self) -> list[str]:
             return self.text.read_content() + [b.text for b in self.buttons]
-
-        def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
-            return super().create_tasks() + (debug.input_signal(),)

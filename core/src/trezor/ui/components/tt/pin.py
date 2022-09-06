@@ -1,15 +1,11 @@
 from micropython import const
-from typing import TYPE_CHECKING
+from typing import Iterable
 
 from trezor import config, res, ui
 from trezor.crypto import random
 from trezor.ui import display
 
 from .button import Button, ButtonCancel, ButtonClear, ButtonConfirm, ButtonMono
-
-if TYPE_CHECKING:
-    from trezor import loop
-    from typing import Iterable
 
 
 def digit_area(i: int) -> ui.Area:
@@ -176,8 +172,4 @@ class PinDialog(ui.Layout):
             raise ui.Result(self.input.pin)
 
     if __debug__:
-
-        def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
-            from apps.debug import input_signal
-
-            return super().create_tasks() + (input_signal(),)
+        WANT_INPUT_SIGNAL = True

@@ -1,11 +1,6 @@
-from typing import TYPE_CHECKING
-
 from trezor import ui
 
 from .button import Button
-
-if TYPE_CHECKING:
-    from trezor import loop
 
 # todo improve?
 
@@ -49,8 +44,4 @@ class WordSelector(ui.Layout):
         raise ui.Result(33)
 
     if __debug__:
-
-        def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
-            from apps.debug import input_signal
-
-            return super().create_tasks() + (input_signal(),)
+        WANT_INPUT_SIGNAL = True

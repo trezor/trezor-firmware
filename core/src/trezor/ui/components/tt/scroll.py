@@ -135,22 +135,7 @@ class Paginated(ui.Layout):
         return result
 
     def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
-        tasks: tuple[loop.AwaitableTask, ...] = (
-            self.handle_input(),
-            self.handle_rendering(),
-            self.handle_paging(),
-        )
-
-        if __debug__:
-            # XXX This isn't strictly correct, as it allows *any* Paginated layout to be
-            # shut down by a DebugLink confirm, even if used outside of a confirm() call
-            # But we don't have any such usages in the codebase, and it doesn't actually
-            # make much sense to use a Paginated without a way to confirm it.
-            from apps.debug import confirm_signal
-
-            return tasks + (confirm_signal(),)
-        else:
-            return tasks
+        return super().create_tasks() + (self.handle_paging(),)
 
     def on_change(self) -> None:
         pass
@@ -285,14 +270,10 @@ class PaginatedWithButtons(ui.Layout):
             raise ui.Result(self.page)
 
     if __debug__:
+        WANT_CONFIRM_SIGNAL = True
 
         def read_content(self) -> list[str]:
             return self.pages[self.page].read_content()
-
-        def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
-            from apps.debug import confirm_signal
-
-            return super().create_tasks() + (confirm_signal(),)
 
 
 def paginate_text(

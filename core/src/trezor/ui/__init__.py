@@ -385,7 +385,32 @@ class Layout(Component):
         returns, the others are closed and `create_tasks` is called again.
 
         Usually overridden to add another tasks to the list."""
-        return self.handle_input(), self.handle_rendering()
+        if not __debug__:
+            return self.handle_input(), self.handle_rendering()
+        else:
+            return self.handle_input(), self.handle_rendering(), self.handle_debug()
+
+    if __debug__:
+
+        WANT_CONFIRM_SIGNAL = False
+        WANT_INPUT_SIGNAL = False
+
+        def handle_debug(self) -> Awaitable[None]:
+            from apps.debug import confirm_signal, input_signal
+
+            tasks = []
+            if self.WANT_CONFIRM_SIGNAL:
+                tasks.append(confirm_signal())
+            if self.WANT_INPUT_SIGNAL:
+                tasks.append(input_signal())
+
+            if not tasks:
+                # just sleep forever
+                return loop.Syscall()
+            elif len(tasks) == 1:
+                return tasks[0]
+            else:
+                return loop.race(*tasks)
 
     if utils.MODEL in ("T",):
 

@@ -248,15 +248,7 @@ class PassphraseKeyboard(ui.Layout):
         raise ui.Result(self.input.text)
 
     def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
-        tasks: tuple[loop.Task, ...] = (
-            self.handle_input(),
-            self.handle_rendering(),
-            self.handle_paging(),
-        )
+        return super().create_tasks() + (self.handle_paging(),)
 
-        if __debug__:
-            from apps.debug import input_signal
-
-            return tasks + (input_signal(),)
-        else:
-            return tasks
+    if __debug__:
+        WANT_INPUT_SIGNAL = True
