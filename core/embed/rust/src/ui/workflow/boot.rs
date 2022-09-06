@@ -1,6 +1,7 @@
+use core::slice;
 use cstr_core::CStr;
 use heapless::String;
-use crate::trezorhal::storage::{storage_get_remaining, storage_init, storage_unlock, storage_wipe};
+use crate::trezorhal::storage::{storage_get, storage_get_length, storage_get_remaining, storage_init, storage_unlock, storage_wipe};
 use crate::ui::{constant, display, Homescreen, HomescreenMsg, PinKeyboard, PinKeyboardMsg};
 use crate::ui::constant::screen;
 use crate::ui::geometry::{Point, Rect};
@@ -82,13 +83,28 @@ pub fn boot_workflow() {
     storage_init(Some(show_pin_timeout));
 
     //todo if debug and not emulator
-    storage_wipe();
+    //storage_wipe();
 
     let mut state = BootState::NotConnected;
 
-    let device_name = "My Trezor";
+    let device_name_len_res = storage_get_length(0x8104);
 
-    let mut homescreen = RustLayout::new(Homescreen::new(device_name));
+    let device_name: String<16> = if let Ok(len) = device_name_len_res {
+        let mut data: [u8; 17] =[0;17];
+        storage_get(0x8104, &mut data).unwrap();
+        let text = unsafe {
+            CStr::from_bytes_with_nul_unchecked(&data[..=len])
+                .to_str()
+                .unwrap()
+        };
+        String::from(text)
+    } else {
+        String::from("My Trezor")
+    };
+
+
+
+    let mut homescreen = RustLayout::new(Homescreen::new(device_name.as_str()));
 
     loop {
         match state {
@@ -121,7 +137,7 @@ pub fn boot_workflow() {
                                 }
                             }
                             PinKeyboardMsg::Cancelled => {
-                                homescreen = RustLayout::new(Homescreen::new(device_name));
+                                homescreen = RustLayout::new(Homescreen::new(device_name.as_str()));
                             }
 
                         }

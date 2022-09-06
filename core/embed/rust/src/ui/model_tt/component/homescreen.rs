@@ -37,12 +37,12 @@ impl<'a> Homescreen<'a> {
     }
 
     pub fn paint_unlocked(&self) {
-        display::text_center(Point::new(screen().center().x, 35),"My Trezor",theme::FONT_BOLD, theme::GREY_LIGHT, theme::BG);
+        display::text_center(Point::new(screen().center().x, 35),self.device_name,theme::FONT_BOLD, theme::GREY_LIGHT, theme::BG);
         display::avatar(screen().center(), theme::IMAGE_HOMESCREEN, theme::WHITE, theme::BLACK);
     }
 
     pub fn paint_not_connected(&self) {
-        display::text_center(Point::new(screen().center().x, 35),"My Trezor",theme::FONT_BOLD, theme::GREY_LIGHT, theme::BG);
+        display::text_center(Point::new(screen().center().x, 35),self.device_name,theme::FONT_BOLD, theme::GREY_LIGHT, theme::BG);
         display::avatar(screen().center(), theme::IMAGE_HOMESCREEN, theme::WHITE, theme::BLACK);
 
         let bar_area = Rect::new(Point::new(40, 100), Point::new(200, 140));

@@ -119,6 +119,7 @@ int main(void) {
   display_clear();
 #endif
 
+  display_backlight(150);
   boot_firmware(0);
 
 #if !defined TREZOR_MODEL_1
