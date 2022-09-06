@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import time
+
 import pytest
 
 from trezorlib import btc, device, messages
@@ -236,6 +238,109 @@ def test_sign_tx(client: Client):
             payment_reqs=[payment_req],
             preauthorized=True,
         )
+
+
+def test_sign_tx_large(client: Client):
+    # NOTE: FAKE input tx
+
+    commitment_data = b"\x0fwww.example.com" + (1).to_bytes(ROUND_ID_LEN, "big")
+    own_input_count = 10
+    total_input_count = 400
+    own_output_count = 30
+    total_output_count = 1200
+    output_denom = 10_000  # sats
+    max_expected_delay = 250  # seconds
+
+    with client:
+        btc.authorize_coinjoin(
+            client,
+            coordinator="www.example.com",
+            max_rounds=2,
+            max_coordinator_fee_rate=50_000_000,  # 0.5 %
+            max_fee_per_kvbyte=3500,
+            n=parse_path("m/10025h/1h/0h/1h"),
+            coin_name="Testnet",
+            script_type=messages.InputScriptType.SPENDTAPROOT,
+        )
+
+    # INPUTS.
+
+    external_input = messages.TxInputType(
+        # seed "alcohol woman abuse must during monitor noble actual mixed trade anger aisle"
+        # m/10025h/1h/0h/1h/0/0
+        # tb1pkw382r3plt8vx6e22mtkejnqrxl4z7jugh3w4rjmfmgezzg0xqpsdaww8z
+        amount=output_denom * total_output_count // total_input_count,
+        prev_hash=FAKE_TXHASH_e5b7e2,
+        prev_index=0,
+        script_type=messages.InputScriptType.EXTERNAL,
+        script_pubkey=bytes.fromhex(
+            "5120b3a2750e21facec36b2a56d76cca6019bf517a5c45e2ea8e5b4ed191090f3003"
+        ),
+        ownership_proof=bytearray.fromhex(
+            "534c001901019cf1b0ad730100bd7a69e987d55348bb798e2b2096a6a5713e9517655bd2021300014052d479f48d34f1ca6872d4571413660040c3e98841ab23a2c5c1f37399b71bfa6f56364b79717ee90552076a872da68129694e1b4fb0e0651373dcf56db123c5"
+        ),
+        commitment_data=commitment_data,
+    )
+
+    internal_input = messages.TxInputType(
+        address_n=parse_path("m/10025h/1h/0h/1h/1/0"),
+        amount=output_denom * own_output_count // own_input_count,
+        prev_hash=FAKE_TXHASH_f982c0,
+        prev_index=1,
+        script_type=messages.InputScriptType.SPENDTAPROOT,
+    )
+
+    inputs = [internal_input] * own_input_count + [external_input] * (
+        total_input_count - own_input_count
+    )
+
+    # OUTPUTS.
+
+    external_output = messages.TxOutputType(
+        # seed "alcohol woman abuse must during monitor noble actual mixed trade anger aisle"
+        # m/10025h/1h/0h/1h/1/0
+        address="tb1pupzczx9cpgyqgtvycncr2mvxscl790luqd8g88qkdt2w3kn7ymhsrdueu2",
+        amount=output_denom,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+        payment_req_index=0,
+    )
+
+    internal_output = messages.TxOutputType(
+        # tb1phkcspf88hge86djxgtwx2wu7ddghsw77d6sd7txtcxncu0xpx22shcydyf
+        address_n=parse_path("m/10025h/1h/0h/1h/1/1"),
+        amount=output_denom,
+        script_type=messages.OutputScriptType.PAYTOTAPROOT,
+        payment_req_index=0,
+    )
+
+    outputs = [internal_output] * own_output_count + [external_output] * (
+        total_output_count - own_output_count
+    )
+
+    payment_req = make_payment_request(
+        client,
+        recipient_name="www.example.com",
+        outputs=outputs,
+        change_addresses=[
+            "tb1phkcspf88hge86djxgtwx2wu7ddghsw77d6sd7txtcxncu0xpx22shcydyf"
+        ]
+        * own_output_count,
+    )
+    payment_req.amount = None
+
+    start = time.time()
+    with client:
+        btc.sign_tx(
+            client,
+            "Testnet",
+            inputs,
+            outputs,
+            prev_txes=TX_CACHE_TESTNET,
+            payment_reqs=[payment_req],
+            preauthorized=True,
+        )
+    delay = time.time() - start
+    assert delay <= max_expected_delay
 
 
 def test_sign_tx_spend(client: Client):
