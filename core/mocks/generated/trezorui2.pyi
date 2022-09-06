@@ -127,11 +127,11 @@ def request_word_count(
 
 
 # rust/src/ui/model_tr/layout.rs
-def request_bip39_words(
+def request_word_bip39(
     *,
-    word_count: int,
-) -> list[str]:
-    """Get all BIP39 recovery words."""
+    prompt: str,
+) -> str:
+    """Get recovery word for BIP39."""
 
 
 # rust/src/ui/model_tr/layout.rs

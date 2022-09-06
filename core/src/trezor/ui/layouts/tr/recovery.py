@@ -36,20 +36,26 @@ async def request_word_count(ctx: wire.GenericContext, dry_run: bool) -> int:
     return int(count)
 
 
-async def request_words(
-    ctx: wire.GenericContext, word_count: int, is_slip39: bool
-) -> list[str]:
+async def request_word(
+    ctx: wire.GenericContext, word_index: int, word_count: int, is_slip39: bool
+) -> str:
+    prompt = f"Choose word {word_index + 1}/{word_count}"
+
     if is_slip39:
         raise NotImplementedError
     else:
-        words = await interact(
+        word = await interact(
             ctx,
-            RustLayout(trezorui2.request_bip39_words(word_count=word_count)),
-            br_type="request_bip39_words",
+            RustLayout(
+                trezorui2.request_word_bip39(
+                    prompt=prompt,
+                )
+            ),
+            br_type="request_word",
             br_code=ButtonRequestType.MnemonicInput,
         )
 
-    return words
+    return word
 
 
 async def show_remaining_shares(

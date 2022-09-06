@@ -1,12 +1,13 @@
 from typing import TYPE_CHECKING
 
 import storage.recovery
-from trezor import ui, utils, wire
+from trezor import ui, wire
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import confirm_action, show_success, show_warning
 from trezor.ui.layouts.common import button_request
 from trezor.ui.layouts.recovery import (  # noqa: F401
     continue_recovery,
+    request_word,
     request_word_count,
     show_group_share_success,
     show_remaining_shares,
@@ -49,41 +50,24 @@ async def request_mnemonic(
 ) -> str | None:
     await button_request(ctx, "mnemonic", code=ButtonRequestType.MnemonicInput)
 
-    # Workaround for model R HardFailure when requesting word multiple times in a row.
-    # TODO: Hopefully it does not have some security implications to store all the
-    # seed words in Rust and then send them into micropython.
-    # TODO: agree on how to do it properly and how to integrate Shamir Backup
-    # TODO: do the same for model T?
-    if utils.MODEL in ("R",):
-        from trezor.ui.layouts.recovery import request_words
-
-        words = await request_words(
-            ctx, word_count, is_slip39=backup_types.is_slip39_word_count(word_count)
+    words: list[str] = []
+    for i in range(word_count):
+        word = await request_word(
+            ctx, i, word_count, is_slip39=backup_types.is_slip39_word_count(word_count)
         )
-    else:
-        from trezor.ui.layouts.recovery import request_word
+        words.append(word)
 
-        words: list[str] = []
-        for i in range(word_count):
-            word = await request_word(
-                ctx,
-                i,
-                word_count,
-                is_slip39=backup_types.is_slip39_word_count(word_count),
-            )
-            words.append(word)
-
-            try:
-                word_validity.check(backup_type, words)
-            except word_validity.AlreadyAdded:
-                await show_share_already_added(ctx)
-                return None
-            except word_validity.IdentifierMismatch:
-                await show_identifier_mismatch(ctx)
-                return None
-            except word_validity.ThresholdReached:
-                await show_group_threshold_reached(ctx)
-                return None
+        try:
+            word_validity.check(backup_type, words)
+        except word_validity.AlreadyAdded:
+            await show_share_already_added(ctx)
+            return None
+        except word_validity.IdentifierMismatch:
+            await show_identifier_mismatch(ctx)
+            return None
+        except word_validity.ThresholdReached:
+            await show_group_threshold_reached(ctx)
+            return None
 
     return " ".join(words)
 
