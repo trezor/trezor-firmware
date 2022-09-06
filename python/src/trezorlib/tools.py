@@ -35,6 +35,8 @@ from typing import (
 
 import construct
 
+from ._ripemd160 import ripemd160
+
 if TYPE_CHECKING:
     from .client import TrezorClient
     from .protobuf import MessageType
@@ -76,9 +78,7 @@ def tx_hash(data: bytes) -> bytes:
 
 
 def hash_160(public_key: bytes) -> bytes:
-    md = hashlib.new("ripemd160")
-    md.update(hashlib.sha256(public_key).digest())
-    return md.digest()
+    return ripemd160(hashlib.sha256(public_key).digest())
 
 
 def hash_160_to_bc_address(h160: bytes, address_type: int) -> str:

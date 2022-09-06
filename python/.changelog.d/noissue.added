@@ -1,0 +1,1 @@
+Include a RIPEMD160 implementation to work around the missing impl in recent versions of OpenSSL.
