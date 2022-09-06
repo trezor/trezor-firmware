@@ -6,16 +6,6 @@ from trezorlib._internal import firmware_headers
 
 from typing import List, Tuple
 
-
-try:
-    import Pyro4
-
-    Pyro4.config.SERIALIZER = "marshal"
-except ImportError:
-    Pyro4 = None
-
-PORT = 5001
-
 # =========================== signing =========================
 
 
@@ -54,57 +44,6 @@ def parse_privkey_args(privkey_data: List[str]) -> Tuple[int, List[bytes]]:
             click.echo("Keys must be in the format: <key index>:<hex-encoded key>")
             raise click.ClickException("Unrecognized key format.")
     return sigmask, privkeys
-
-
-def process_remote_signers(fw, addrs: List[str]) -> Tuple[int, List[bytes]]:
-    if len(addrs) < fw.sigs_required:
-        raise click.ClickException(
-            f"Not enough signers (need at least {fw.sigs_required})"
-        )
-
-    digest = fw.digest()
-    name = fw.NAME
-
-    def mkproxy(addr):
-        return Pyro4.Proxy(f"PYRO:keyctl@{addr}:{PORT}")
-
-    sigmask = 0
-    pks, Rs = [], []
-    for addr in addrs:
-        click.echo(f"Connecting to {addr}...")
-        with mkproxy(addr) as proxy:
-            pk, R = proxy.get_commit(name, digest)
-        if pk not in fw.public_keys:
-            raise click.ClickException(
-                f"Signer at {addr} commits with unknown public key {pk.hex()}"
-            )
-        idx = fw.public_keys.index(pk)
-        click.echo(
-            f"Signer at {addr} commits with public key #{idx + 1}: {pk.hex()}"
-        )
-        sigmask |= 1 << idx
-        pks.append(pk)
-        Rs.append(R)
-
-    # compute global commit
-    global_pk = cosi.combine_keys(pks)
-    global_R = cosi.combine_keys(Rs)
-
-    # collect signatures
-    sigs = []
-    for addr in addrs:
-        click.echo(f"Waiting for {addr} to sign... ", nl=False)
-        with mkproxy(addr) as proxy:
-            sig = proxy.get_signature(name, digest, global_R, global_pk)
-        sigs.append(sig)
-        click.echo("OK")
-
-    for addr in addrs:
-        with mkproxy(addr) as proxy:
-            proxy.finish()
-
-    # compute global signature
-    return sigmask, cosi.combine_sig(global_R, sigs)
 
 
 # ===================== CLI actions =========================
@@ -152,13 +91,6 @@ def do_replace_vendorheader(fw, vh_file) -> None:
     is_flag=True,
     help="Only output header digest for signing and exit.",
 )
-@click.option(
-    "-r",
-    "--remote",
-    metavar="IPADDR",
-    multiple=True,
-    help="IP address of remote signer. Can be repeated.",
-)
 @click.argument("firmware_file", type=click.File("rb+"))
 def cli(
     firmware_file,
@@ -170,7 +102,6 @@ def cli(
     insert_signature,
     replace_vendor_header,
     print_digest,
-    remote,
 ):
     """Manage trezor-core firmware headers.
 
@@ -201,14 +132,6 @@ def cli(
     development keys.
 
     Signature validity is not checked in either of the two cases.
-
-    To sign with remote participants:
-
-      ./headertool.py firmware.bin -r 10.24.13.11 -r 10.24.13.190 ...
-
-    Each participant must be running keyctl-proxy configured on the same file. Signers'
-    public keys must be in the list of known signers and are matched to indexes
-    automatically.
     """
     firmware_data = firmware_file.read()
 
@@ -253,13 +176,6 @@ def cli(
         sigmask = 0
         for bit in sigmask_str.split(":"):
             sigmask |= 1 << (int(bit) - 1)
-
-    if remote:
-        if Pyro4 is None:
-            raise click.ClickException("Please install Pyro4 for remote signing.")
-        click.echo(fw)
-        click.echo(f"Signing with {len(remote)} remote participants.")
-        sigmask, signature = process_remote_signers(fw, remote)
 
     if signature:
         fw.rehash()
