@@ -33,8 +33,8 @@ fn qr_version_index(data: &str, thresholds: &[usize]) -> Option<usize> {
 }
 
 pub fn render_qrcode(
-    x: i32,
-    y: i32,
+    x: i16,
+    y: i16,
     data: &str,
     max_size: u32,
     case_sensitive: bool,
@@ -69,7 +69,7 @@ pub fn render_qrcode(
         buffer[data_len] = 0u8;
         let cstr = CStr::from_bytes_with_nul_unchecked(&buffer[..data_len + 1]);
 
-        display_qrcode(x, y, cstr.as_ptr() as _, scale as u8);
+        display_qrcode(x.into(), y.into(), cstr.as_ptr() as _, scale as u8);
         Ok(())
     }
 }

@@ -37,7 +37,7 @@ where
     type Msg = T::Msg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        const TITLE_SPACE: i32 = 4;
+        const TITLE_SPACE: i16 = 4;
 
         let (title_area, content_area) = bounds.split_top(theme::FONT_BOLD.line_height());
         let content_area = content_area.inset(Insets::top(TITLE_SPACE));

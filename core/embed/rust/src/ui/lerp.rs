@@ -65,6 +65,7 @@ macro_rules! impl_lerp_for_uint {
     };
 }
 
+impl_lerp_for_int!(i16);
 impl_lerp_for_int!(i32);
 impl_lerp_for_uint!(u8);
 impl_lerp_for_uint!(u16);

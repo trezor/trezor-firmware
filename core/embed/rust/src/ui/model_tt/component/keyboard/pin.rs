@@ -30,9 +30,9 @@ const MAX_VISIBLE_DIGITS: usize = 16;
 const DIGIT_COUNT: usize = 10; // 0..10
 const ERASE_HOLD_DURATION: Duration = Duration::from_secs(2);
 
-const HEADER_HEIGHT: i32 = 25;
-const HEADER_PADDING_SIDE: i32 = 5;
-const HEADER_PADDING_BOTTOM: i32 = 12;
+const HEADER_HEIGHT: i16 = 25;
+const HEADER_PADDING_SIDE: i16 = 5;
+const HEADER_PADDING_BOTTOM: i16 = 12;
 
 const HEADER_PADDING: Insets = Insets::new(
     theme::borders().top,
@@ -269,9 +269,9 @@ struct PinDots {
 }
 
 impl PinDots {
-    const DOT: i32 = 6;
-    const PADDING: i32 = 6;
-    const TWITCH: i32 = 4;
+    const DOT: i16 = 6;
+    const PADDING: i16 = 6;
+    const TWITCH: i16 = 4;
 
     fn new(style: LabelStyle) -> Self {
         Self {
@@ -289,8 +289,8 @@ impl PinDots {
 
     fn size(&self) -> Offset {
         let ndots = self.digits.len().min(MAX_VISIBLE_DOTS);
-        let mut width = Self::DOT * (ndots as i32);
-        width += Self::PADDING * (ndots.saturating_sub(1) as i32);
+        let mut width = Self::DOT * (ndots as i16);
+        width += Self::PADDING * (ndots.saturating_sub(1) as i16);
         Offset::new(width, Self::DOT)
     }
 
@@ -328,7 +328,7 @@ impl PinDots {
     fn paint_digits(&self, area: Rect) {
         let center = area.center() + Offset::y(theme::FONT_MONO.text_height() / 2);
         let right =
-            center + Offset::x(theme::FONT_MONO.text_width("0") * (MAX_VISIBLE_DOTS as i32) / 2);
+            center + Offset::x(theme::FONT_MONO.text_width("0") * (MAX_VISIBLE_DOTS as i16) / 2);
         let digits = self.digits.len();
 
         if digits <= MAX_VISIBLE_DOTS {

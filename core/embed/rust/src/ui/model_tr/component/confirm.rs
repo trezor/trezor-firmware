@@ -18,7 +18,7 @@ pub struct HoldToConfirm {
     pos: ButtonPos,
     loader: Loader,
     baseline: Point,
-    text_width: i32,
+    text_width: i16,
 }
 
 impl HoldToConfirm {

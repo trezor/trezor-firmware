@@ -27,7 +27,7 @@ impl<T> GridPlaced<T> {
         self
     }
 
-    pub fn with_spacing(mut self, spacing: i32) -> Self {
+    pub fn with_spacing(mut self, spacing: i16) -> Self {
         self.grid.spacing = spacing;
         self
     }
@@ -80,11 +80,11 @@ where
 
 pub struct FixedHeightBar<T> {
     inner: T,
-    height: i32,
+    height: i16,
 }
 
 impl<T> FixedHeightBar<T> {
-    pub const fn bottom(inner: T, height: i32) -> Self {
+    pub const fn bottom(inner: T, height: i16) -> Self {
         Self { inner, height }
     }
 }

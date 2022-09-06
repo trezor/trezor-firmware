@@ -1,9 +1,9 @@
 use crate::ui::geometry::{Offset, Point, Rect};
 
-pub const WIDTH: i32 = 128;
-pub const HEIGHT: i32 = 64;
-pub const LINE_SPACE: i32 = 1;
-pub const FONT_BPP: i32 = 1;
+pub const WIDTH: i16 = 128;
+pub const HEIGHT: i16 = 64;
+pub const LINE_SPACE: i16 = 1;
+pub const FONT_BPP: i16 = 1;
 
 pub const fn size() -> Offset {
     Offset::new(WIDTH, HEIGHT)

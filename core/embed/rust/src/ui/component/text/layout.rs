@@ -32,10 +32,10 @@ pub struct TextLayout {
 
     /// Additional space before beginning of text, can be negative to shift text
     /// upwards.
-    pub padding_top: i32,
+    pub padding_top: i16,
     /// Additional space between end of text and bottom of bounding box, can be
     /// negative.
-    pub padding_bottom: i32,
+    pub padding_bottom: i16,
 
     /// Fonts, colors, line/page breaking behavior.
     pub style: TextStyle,
@@ -252,7 +252,7 @@ impl TextLayout {
         }
     }
 
-    fn layout_height(&self, init_cursor: Point, end_cursor: Point) -> i32 {
+    fn layout_height(&self, init_cursor: Point, end_cursor: Point) -> i16 {
         self.padding_top
             + self.style.text_font.text_height()
             + (end_cursor.y - init_cursor.y)
@@ -262,13 +262,13 @@ impl TextLayout {
 
 pub enum LayoutFit {
     /// Entire content fits. Vertical size is returned in `height`.
-    Fitting { processed_chars: usize, height: i32 },
+    Fitting { processed_chars: usize, height: i16 },
     /// Content fits partially or not at all.
-    OutOfBounds { processed_chars: usize, height: i32 },
+    OutOfBounds { processed_chars: usize, height: i16 },
 }
 
 impl LayoutFit {
-    pub fn height(&self) -> i32 {
+    pub fn height(&self) -> i16 {
         match self {
             LayoutFit::Fitting { height, .. } => *height,
             LayoutFit::OutOfBounds { height, .. } => *height,
@@ -400,7 +400,7 @@ struct Span {
 impl Span {
     fn fit_horizontally(
         text: &str,
-        max_width: i32,
+        max_width: i16,
         text_font: impl GlyphMetrics,
         breaking: LineBreaking,
     ) -> Self {
@@ -489,16 +489,16 @@ mod tests {
     use super::*;
 
     pub struct Fixed {
-        pub width: i32,
-        pub height: i32,
+        pub width: i16,
+        pub height: i16,
     }
 
     impl GlyphMetrics for Fixed {
-        fn char_width(&self, _ch: char) -> i32 {
+        fn char_width(&self, _ch: char) -> i16 {
             self.width
         }
 
-        fn line_height(&self) -> i32 {
+        fn line_height(&self) -> i16 {
             self.height
         }
     }
@@ -555,7 +555,7 @@ mod tests {
         );
     }
 
-    fn spans_from(text: &str, max_width: i32) -> Vec<(&str, bool)> {
+    fn spans_from(text: &str, max_width: i16) -> Vec<(&str, bool)> {
         let mut spans = vec![];
         let mut remaining_text = text;
         loop {

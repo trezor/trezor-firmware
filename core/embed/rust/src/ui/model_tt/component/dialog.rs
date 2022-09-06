@@ -135,9 +135,9 @@ where
         }
     }
 
-    pub const ICON_AREA_PADDING: i32 = 2;
-    pub const ICON_AREA_HEIGHT: i32 = 60;
-    pub const VALUE_SPACE: i32 = 5;
+    pub const ICON_AREA_PADDING: i16 = 2;
+    pub const ICON_AREA_HEIGHT: i16 = 60;
+    pub const VALUE_SPACE: i16 = 5;
 }
 
 impl<T, U> Component for IconDialog<T, U>

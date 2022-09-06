@@ -44,7 +44,7 @@ where
     type Msg = T::Msg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        const TITLE_SPACE: i32 = theme::BUTTON_SPACING;
+        const TITLE_SPACE: i16 = theme::BUTTON_SPACING;
 
         let (title_area, content_area) = bounds
             .inset(self.border)
@@ -105,11 +105,11 @@ where
     T: Component,
     U: AsRef<str>,
 {
-    const HEIGHT: i32 = 42;
+    const HEIGHT: i16 = 42;
     const COLOR: Color = theme::YELLOW;
     const FONT: Font = theme::FONT_BOLD;
     const TEXT_OFFSET: Offset = Offset::new(1, -2);
-    const ICON_SPACE: i32 = 8;
+    const ICON_SPACE: i16 = 8;
 
     pub fn new(icon: &'static [u8], title: U, content: T) -> Self {
         Self {

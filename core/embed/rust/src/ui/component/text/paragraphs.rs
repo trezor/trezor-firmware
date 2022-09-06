@@ -11,13 +11,13 @@ use super::layout::{LayoutFit, TextLayout, TextStyle};
 pub const MAX_PARAGRAPHS: usize = 9;
 /// Maximum space between paragraphs. Actual result may be smaller (even 0) if
 /// it would make paragraphs overflow the bounding box.
-pub const DEFAULT_SPACING: i32 = 0;
+pub const DEFAULT_SPACING: i16 = 0;
 /// Offset of paragraph text from the top of the paragraph bounding box. Tweak
 /// these values to get nice alignment of baselines relative to the surrounding
 /// components.
-pub const PARAGRAPH_TOP_SPACE: i32 = -1;
+pub const PARAGRAPH_TOP_SPACE: i16 = -1;
 /// Offset of paragraph bounding box bottom relative to bottom of its text.
-pub const PARAGRAPH_BOTTOM_SPACE: i32 = 5;
+pub const PARAGRAPH_BOTTOM_SPACE: i16 = 5;
 
 pub struct Paragraphs<T> {
     area: Rect,
@@ -48,7 +48,7 @@ where
         self
     }
 
-    pub fn with_spacing(mut self, spacing: i32) -> Self {
+    pub fn with_spacing(mut self, spacing: i16) -> Self {
         self.placement = self.placement.with_spacing(spacing);
         self
     }
@@ -352,7 +352,7 @@ impl<T> Checklist<T>
 where
     T: AsRef<str>,
 {
-    const CHECK_WIDTH: i32 = 16;
+    const CHECK_WIDTH: i16 = 16;
     const DONE_OFFSET: Offset = Offset::new(-2, 6);
     const CURRENT_OFFSET: Offset = Offset::new(2, 3);
 
