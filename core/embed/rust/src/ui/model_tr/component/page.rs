@@ -258,6 +258,7 @@ where
         t.kw_pair("active_page", inttostr!(self.scrollbar.active_page as u8));
         t.kw_pair("page_count", inttostr!(self.scrollbar.page_count as u8));
         self.report_btn_actions(t);
+        // TODO: it seems the button text is not updated when paginating (but actions above are)
         t.field("buttons", &self.buttons);
         t.field("content", &self.content);
         t.close();

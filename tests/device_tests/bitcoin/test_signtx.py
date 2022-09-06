@@ -23,6 +23,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import H_, parse_path
 
+from ...common import get_text_from_paginated_screen
 from ...tx_cache import TxCache
 from .signtx import (
     assert_tx_matches,
@@ -1411,9 +1412,6 @@ def test_lock_time(client: Client, lock_time, sequence):
 
 @pytest.mark.skip_t1(reason="Cannot test layouts on T1")
 def test_lock_time_blockheight(client: Client):
-    if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
-
     # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5
 
     inp1 = messages.TxInputType(
@@ -1430,7 +1428,7 @@ def test_lock_time_blockheight(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    def input_flow():
+    def input_flow_tt(_):
         yield  # confirm output
         client.debug.wait_layout()
         client.debug.press_yes()
@@ -1444,8 +1442,27 @@ def test_lock_time_blockheight(client: Client):
         yield  # confirm transaction
         client.debug.press_yes()
 
+    def input_flow_tr():
+        yield  # confirm output
+        client.debug.wait_layout()
+        client.debug.swipe_up()
+        client.debug.wait_layout()
+        client.debug.press_yes()
+
+        yield  # confirm locktime
+        layout_text = get_text_from_paginated_screen(client, 2)
+        assert "blockheight" in layout_text
+        assert "499999999" in layout_text
+        client.debug.press_yes()
+
+        yield  # confirm transaction
+        client.debug.press_yes()
+
     with client:
-        client.set_input_flow(input_flow)
+        if client.debug.model == "T":
+            client.set_input_flow(input_flow_tt)
+        elif client.debug.model == "R":
+            client.set_input_flow(input_flow_tr)
         client.watch_layout(True)
 
         btc.sign_tx(
@@ -1462,10 +1479,7 @@ def test_lock_time_blockheight(client: Client):
 @pytest.mark.parametrize(
     "lock_time_str", ("1985-11-05 00:53:20", "2048-08-16 22:14:00")
 )
-def test_lock_time_datetime(client: Client, lock_time_str):
-    if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
-
+def test_lock_time_datetime(client: Client, lock_time_str: str):
     # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5
 
     inp1 = messages.TxInputType(
@@ -1482,7 +1496,7 @@ def test_lock_time_datetime(client: Client, lock_time_str):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    def input_flow():
+    def input_flow_tt():
         yield  # confirm output
         client.debug.wait_layout()
         client.debug.press_yes()
@@ -1496,12 +1510,32 @@ def test_lock_time_datetime(client: Client, lock_time_str):
         yield  # confirm transaction
         client.debug.press_yes()
 
+    def input_flow_tr():
+        yield  # confirm output
+        client.debug.wait_layout()
+        client.debug.swipe_up()
+        client.debug.wait_layout()
+        client.debug.press_yes()
+
+        yield  # confirm locktime
+        layout_text = get_text_from_paginated_screen(client, 2)
+        # It is not there as one string due to small screen, but in parts
+        for part in lock_time_str.split(" "):
+            assert part in layout_text
+        client.debug.press_yes()
+
+        yield  # confirm transaction
+        client.debug.press_yes()
+
     lock_time_naive = datetime.strptime(lock_time_str, "%Y-%m-%d %H:%M:%S")
     lock_time_utc = lock_time_naive.replace(tzinfo=timezone.utc)
     lock_time_timestamp = int(lock_time_utc.timestamp())
 
     with client:
-        client.set_input_flow(input_flow)
+        if client.debug.model == "T":
+            client.set_input_flow(input_flow_tt)
+        elif client.debug.model == "R":
+            client.set_input_flow(input_flow_tr)
         client.watch_layout(True)
 
         btc.sign_tx(

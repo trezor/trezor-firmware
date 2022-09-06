@@ -40,6 +40,7 @@ if TYPE_CHECKING:
     from trezor.enums import FailureType  # noqa: F401
     from trezor.enums import InputScriptType  # noqa: F401
     from trezor.enums import MessageType  # noqa: F401
+    from trezor.enums import ModelRButton  # noqa: F401
     from trezor.enums import MoneroNetworkType  # noqa: F401
     from trezor.enums import NEMImportanceTransferMode  # noqa: F401
     from trezor.enums import NEMModificationType  # noqa: F401
@@ -2562,6 +2563,7 @@ if TYPE_CHECKING:
         y: "int | None"
         wait: "bool | None"
         hold_ms: "int | None"
+        button_r: "ModelRButton | None"
 
         def __init__(
             self,
@@ -2573,6 +2575,7 @@ if TYPE_CHECKING:
             y: "int | None" = None,
             wait: "bool | None" = None,
             hold_ms: "int | None" = None,
+            button_r: "ModelRButton | None" = None,
         ) -> None:
             pass
 

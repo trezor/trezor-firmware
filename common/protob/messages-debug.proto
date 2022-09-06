@@ -40,10 +40,22 @@ message DebugLinkDecision {
         INFO = 2;
     }
 
+    /**
+    * Structure representing model R button presses
+    */
+    // TODO: rename to PhysicalButton
+    enum ModelRButton {
+        LEFT_BTN = 0;
+        MIDDLE_BTN = 1;
+        RIGHT_BTN = 2;
+    }
+
     optional uint32 x = 4;        // touch X coordinate
     optional uint32 y = 5;        // touch Y coordinate
     optional bool wait = 6;       // wait for layout change
     optional uint32 hold_ms = 7;  // touch hold duration
+    // todo: rename to physical_button
+    optional ModelRButton button_r = 8;  // model R button press
 }
 
 /**

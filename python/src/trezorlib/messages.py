@@ -483,6 +483,12 @@ class DebugButton(IntEnum):
     INFO = 2
 
 
+class ModelRButton(IntEnum):
+    LEFT_BTN = 0
+    MIDDLE_BTN = 1
+    RIGHT_BTN = 2
+
+
 class EthereumDataType(IntEnum):
     UINT = 1
     INT = 2
@@ -3635,6 +3641,7 @@ class DebugLinkDecision(protobuf.MessageType):
         5: protobuf.Field("y", "uint32", repeated=False, required=False),
         6: protobuf.Field("wait", "bool", repeated=False, required=False),
         7: protobuf.Field("hold_ms", "uint32", repeated=False, required=False),
+        8: protobuf.Field("button_r", "ModelRButton", repeated=False, required=False),
     }
 
     def __init__(
@@ -3647,6 +3654,7 @@ class DebugLinkDecision(protobuf.MessageType):
         y: Optional["int"] = None,
         wait: Optional["bool"] = None,
         hold_ms: Optional["int"] = None,
+        button_r: Optional["ModelRButton"] = None,
     ) -> None:
         self.button = button
         self.swipe = swipe
@@ -3655,6 +3663,7 @@ class DebugLinkDecision(protobuf.MessageType):
         self.y = y
         self.wait = wait
         self.hold_ms = hold_ms
+        self.button_r = button_r
 
 
 class DebugLinkLayout(protobuf.MessageType):

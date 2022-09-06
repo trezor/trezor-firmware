@@ -36,9 +36,11 @@ if __debug__:
     confirm_chan = loop.chan()
     swipe_chan = loop.chan()
     input_chan = loop.chan()
+    model_r_btn_chan = loop.chan()
     confirm_signal = confirm_chan.take
     swipe_signal = swipe_chan.take
     input_signal = input_chan.take
+    model_r_btn_signal = model_r_btn_chan.take
 
     debuglink_decision_chan = loop.chan()
 
@@ -85,13 +87,17 @@ if __debug__:
             from trezor.ui.components.tt import confirm
 
         if msg.button is not None:
+            # TODO: paginate before sending the message
             if msg.button == DebugButton.NO:
                 await confirm_chan.put(Result(confirm.CANCELLED))
             elif msg.button == DebugButton.YES:
                 await confirm_chan.put(Result(confirm.CONFIRMED))
             elif msg.button == DebugButton.INFO:
                 await confirm_chan.put(Result(confirm.INFO))
+        if msg.button_r is not None:
+            await model_r_btn_chan.put(msg.button_r)
         if msg.swipe is not None:
+            # TODO: why not directly passing msg.swipe into swipe_chan?
             if msg.swipe == DebugSwipeDirection.UP:
                 await swipe_chan.put(SWIPE_UP)
             elif msg.swipe == DebugSwipeDirection.DOWN:

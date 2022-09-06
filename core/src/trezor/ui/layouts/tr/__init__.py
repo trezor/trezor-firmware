@@ -193,6 +193,13 @@ class RustLayout(ui.Layout):
         self.timer.schedule(deadline, token)
 
     if __debug__:
+        from trezor.enums import ModelRButton
+
+        BTN_MAP = {
+            "left": ModelRButton.LEFT_BTN,
+            "middle": ModelRButton.MIDDLE_BTN,
+            "right": ModelRButton.RIGHT_BTN,
+        }
 
         def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:  # type: ignore [obscured-by-same-name]
             from apps.debug import confirm_signal, input_signal
@@ -201,6 +208,7 @@ class RustLayout(ui.Layout):
                 self.handle_input_and_rendering(),
                 self.handle_timers(),
                 self.handle_swipe(),
+                self.handle_button_click(),
                 confirm_signal(),
                 input_signal(),
             )
@@ -246,12 +254,31 @@ class RustLayout(ui.Layout):
             self.layout.button_event(io.BUTTON_RELEASED, io.BUTTON_LEFT)
             return self.layout.button_event(io.BUTTON_RELEASED, io.BUTTON_RIGHT)
 
+        def _press_button(self, btn_to_press: ModelRButton) -> Any:
+            from trezor.enums import ModelRButton
+            from apps.debug import notify_layout_change
+
+            if btn_to_press == ModelRButton.LEFT_BTN:
+                msg = self._press_left()
+            elif btn_to_press == ModelRButton.MIDDLE_BTN:
+                msg = self._press_middle()
+            elif btn_to_press == ModelRButton.RIGHT_BTN:
+                msg = self._press_right()
+            else:
+                raise Exception(f"Unknown button: {btn_to_press}")
+
+            self.layout.paint()
+            if msg is not None:
+                raise ui.Result(msg)
+
+            ui.refresh()  # so that a screenshot is taken
+            notify_layout_change(self)
+
         def _swipe(self, direction: int) -> None:
             """Triggers swipe in the given direction.
 
             Only `UP` and `DOWN` directions are supported.
             """
-            from apps.debug import notify_layout_change
             from trezor.ui.components.common import (
                 SWIPE_UP,
                 SWIPE_DOWN,
@@ -267,21 +294,7 @@ class RustLayout(ui.Layout):
                 raise Exception(f"Unsupported direction: {direction}")
 
             assert btn_to_press is not None
-            if btn_to_press == "right":
-                msg = self._press_right()
-            elif btn_to_press == "middle":
-                msg = self._press_middle()
-            elif btn_to_press == "left":
-                msg = self._press_left()
-            else:
-                raise Exception(f"Unknown button: {btn_to_press}")
-
-            self.layout.paint()
-            if msg is not None:
-                raise ui.Result(msg)
-
-            ui.refresh()  # so that a screenshot is taken
-            notify_layout_change(self)
+            self._press_button(self.BTN_MAP[btn_to_press])
 
         async def handle_swipe(self) -> None:
             """Enables pagination through the current page/flow page.
@@ -300,6 +313,17 @@ class RustLayout(ui.Layout):
                         self._swipe(SWIPE_UP)
                 else:
                     self._swipe(direction)
+
+        async def handle_button_click(self) -> None:
+            """Enables clicking arbitrary of the three buttons.
+
+            Waits for `model_r_btn_signal` and carries it out.
+            """
+            from apps.debug import model_r_btn_signal
+
+            while True:
+                btn = await model_r_btn_signal()
+                self._press_button(btn)
 
         def page_count(self) -> int:
             """How many paginated pages current screen has."""

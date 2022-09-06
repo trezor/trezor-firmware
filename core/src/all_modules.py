@@ -107,6 +107,8 @@ trezor.enums.InputScriptType
 import trezor.enums.InputScriptType
 trezor.enums.MessageType
 import trezor.enums.MessageType
+trezor.enums.ModelRButton
+import trezor.enums.ModelRButton
 trezor.enums.OutputScriptType
 import trezor.enums.OutputScriptType
 trezor.enums.PinMatrixRequestType

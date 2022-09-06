@@ -28,6 +28,7 @@ from ..common import (
     MNEMONIC_SLIP39_ADVANCED_20,
     MNEMONIC_SLIP39_BASIC_20_3of6,
     read_and_confirm_mnemonic,
+    read_and_confirm_mnemonic_tr,
 )
 
 
@@ -41,9 +42,6 @@ def click_info_button(debug):
 @pytest.mark.skip_t1  # TODO we want this for t1 too
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC12)
 def test_backup_bip39(client: Client):
-    if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
-
     assert client.features.needs_backup is True
     mnemonic = None
 
@@ -52,7 +50,11 @@ def test_backup_bip39(client: Client):
         yield  # Confirm Backup
         client.debug.press_yes()
         # Mnemonic phrases
-        mnemonic = yield from read_and_confirm_mnemonic(client.debug)
+        if client.debug.model == "R":
+            client.debug.watch_layout(True)
+            mnemonic = yield from read_and_confirm_mnemonic_tr(client.debug)
+        else:
+            mnemonic = yield from read_and_confirm_mnemonic(client.debug)
         yield  # Confirm success
         client.debug.press_yes()
         yield  # Backup is done
@@ -60,10 +62,10 @@ def test_backup_bip39(client: Client):
 
     with client:
         client.set_input_flow(input_flow)
+        reset_brs = 5 if client.debug.model == "R" else 2
         client.set_expected_responses(
             [
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
+                *[messages.ButtonRequest(code=B.ResetDevice) for _ in range(reset_brs)],
                 messages.ButtonRequest(code=B.Success),
                 messages.ButtonRequest(code=B.Success),
                 messages.Success,
