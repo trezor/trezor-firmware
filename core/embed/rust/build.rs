@@ -261,6 +261,7 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("display_offset")
         .allowlist_function("display_refresh")
         .allowlist_function("display_backlight")
+        .allowlist_function("display_orientation")
         .allowlist_function("display_text")
         .allowlist_function("display_text_width")
         .allowlist_function("display_text_height")

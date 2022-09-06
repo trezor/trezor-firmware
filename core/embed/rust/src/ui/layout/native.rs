@@ -2,7 +2,7 @@ use heapless::Vec;
 use crate::time::{Instant};
 use crate::trezorhal::io::{io_touch_read};
 use crate::ui::component::{Child, Component, Event, EventCtx, TimerToken};
-use crate::ui::constant;
+use crate::ui::{constant, display};
 use crate::ui::event::TouchEvent;
 
 
@@ -17,10 +17,25 @@ fn touch_eval() -> Option<TouchEvent> {
         return None;
     }
     let event_type = event >> 24;
-    let x = (event >> 12) & 0xFFF;
-    let y = (event >> 0) & 0xFFF;
+    let ex = ((event >> 12) & 0xFFF) as i32;
+    let ey = ((event >> 0) & 0xFFF) as i32;
 
-    let event = TouchEvent::new(event_type, x, y);
+    let (exr, eyr) = match display::orientation() {
+        90 => {
+            (ey, constant::WIDTH - ex)
+        }
+        180 => {
+            (constant::WIDTH - ex, constant::HEIGHT - ey)
+        }
+        270 => {
+            (constant::HEIGHT - ey, ex)
+        }
+        _ => {
+            (ex ,ey)
+        }
+    };
+
+    let event = TouchEvent::new(event_type, exr as _, eyr as _);
 
     if let Ok(event) = event {
         return Some(event);

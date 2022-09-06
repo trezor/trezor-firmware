@@ -21,6 +21,14 @@ pub fn set_backlight(val: i32) {
     display::backlight(val);
 }
 
+pub fn orientation() -> i32 {
+    display::orientation(-1)
+}
+
+pub fn set_orientation(degrees: i32)  {
+    display::orientation(degrees);
+}
+
 pub fn fade_backlight(target: i32) {
     const BACKLIGHT_DELAY: Duration = Duration::from_millis(14);
     const BACKLIGHT_STEP: usize = 15;

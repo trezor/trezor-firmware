@@ -104,7 +104,6 @@ pub fn boot_workflow() {
     };
 
     let avatar_len_res = storage_get_length(0x8106);
-    //let rotation_len_res = storage_get_length(0x810F);
 
     let avatar: &[u8] = if let Ok(len) = avatar_len_res {
         let mut data = alloc_only(len);
@@ -114,6 +113,16 @@ pub fn boot_workflow() {
         theme::IMAGE_HOMESCREEN
     };
 
+    let rotation_len_res = storage_get_length(0x810F);
+    let rotation: u16 = if let Ok(len) = rotation_len_res {
+        let mut data = [0;2];
+        storage_get(0x810F, &mut data).unwrap();
+        u16::from_be_bytes(data)
+    } else {
+        0
+    };
+
+    display::set_orientation(rotation as _);
 
 
     let mut homescreen = RustLayout::new(Homescreen::new(device_name.as_str(), avatar));
