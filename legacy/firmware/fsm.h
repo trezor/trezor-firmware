@@ -87,6 +87,7 @@ void fsm_msgSignIdentity(const SignIdentity *msg);
 void fsm_msgGetECDHSessionKey(const GetECDHSessionKey *msg);
 void fsm_msgCosiCommit(const CosiCommit *msg);
 void fsm_msgCosiSign(const CosiSign *msg);
+void fsm_clearCosiNonce(void);
 
 // debug
 #if DEBUG_LINK

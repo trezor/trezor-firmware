@@ -334,6 +334,11 @@ void fsm_msgCosiSign(const CosiSign *msg) {
   } else {
     fsm_sendFailure(FailureType_Failure_FirmwareError, NULL);
   }
-  memzero(cosi_nonce, sizeof(cosi_nonce));
+  fsm_clearCosiNonce();
   layoutHome();
+}
+
+void fsm_clearCosiNonce(void) {
+  cosi_nonce_is_set = false;
+  memzero(cosi_nonce, sizeof(cosi_nonce));
 }
