@@ -1,7 +1,7 @@
 use crate::ui::lerp::Lerp;
 use core::ops::{Add, Neg, Sub};
 
-const fn min(a: i32, b: i32) -> i32 {
+const fn min(a: i16, b: i16) -> i16 {
     if a < b {
         a
     } else {
@@ -9,7 +9,7 @@ const fn min(a: i32, b: i32) -> i32 {
     }
 }
 
-const fn max(a: i32, b: i32) -> i32 {
+const fn max(a: i16, b: i16) -> i16 {
     if a > b {
         a
     } else {
@@ -17,7 +17,7 @@ const fn max(a: i32, b: i32) -> i32 {
     }
 }
 
-const fn clamp(x: i32, min: i32, max: i32) -> i32 {
+const fn clamp(x: i16, min: i16, max: i16) -> i16 {
     if x < min {
         min
     } else if x > max {
@@ -32,16 +32,16 @@ const fn clamp(x: i32, min: i32, max: i32) -> i32 {
 /// the `Point` type.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Offset {
-    pub x: i32,
-    pub y: i32,
+    pub x: i16,
+    pub y: i16,
 }
 
 impl Offset {
-    pub const fn new(x: i32, y: i32) -> Self {
+    pub const fn new(x: i16, y: i16) -> Self {
         Self { x, y }
     }
 
-    pub const fn uniform(a: i32) -> Self {
+    pub const fn uniform(a: i16) -> Self {
         Self::new(a, a)
     }
 
@@ -49,22 +49,22 @@ impl Offset {
         Self::new(0, 0)
     }
 
-    pub const fn x(x: i32) -> Self {
+    pub const fn x(x: i16) -> Self {
         Self::new(x, 0)
     }
 
-    pub const fn y(y: i32) -> Self {
+    pub const fn y(y: i16) -> Self {
         Self::new(0, y)
     }
 
-    pub const fn on_axis(axis: Axis, a: i32) -> Self {
+    pub const fn on_axis(axis: Axis, a: i16) -> Self {
         match axis {
             Axis::Horizontal => Self::new(a, 0),
             Axis::Vertical => Self::new(0, a),
         }
     }
 
-    pub const fn axis(&self, axis: Axis) -> i32 {
+    pub const fn axis(&self, axis: Axis) -> i16 {
         match axis {
             Axis::Horizontal => self.x,
             Axis::Vertical => self.y,
@@ -132,12 +132,12 @@ impl Sub<Offset> for Offset {
 /// coordinates, vectors, and offsets are represented by the `Offset` type.
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub struct Point {
-    pub x: i32,
-    pub y: i32,
+    pub x: i16,
+    pub y: i16,
 }
 
 impl Point {
-    pub const fn new(x: i32, y: i32) -> Self {
+    pub const fn new(x: i16, y: i16) -> Self {
         Self { x, y }
     }
 
@@ -184,7 +184,7 @@ impl Sub<Point> for Point {
 
 impl Lerp for Point {
     fn lerp(a: Self, b: Self, t: f32) -> Self {
-        Point::new(i32::lerp(a.x, b.x, t), i32::lerp(a.y, b.y, t))
+        Point::new(i16::lerp(a.x, b.x, t), i16::lerp(a.y, b.y, t))
     }
 }
 
@@ -192,10 +192,10 @@ impl Lerp for Point {
 /// bottom-right point `x1`,`y1`.
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub struct Rect {
-    pub x0: i32,
-    pub y0: i32,
-    pub x1: i32,
-    pub y1: i32,
+    pub x0: i16,
+    pub y0: i16,
+    pub x1: i16,
+    pub y1: i16,
 }
 
 impl Rect {
@@ -238,19 +238,19 @@ impl Rect {
         Self::from_top_left_and_size(self.top_left(), size)
     }
 
-    pub const fn with_width(self, width: i32) -> Self {
+    pub const fn with_width(self, width: i16) -> Self {
         self.with_size(Offset::new(width, self.height()))
     }
 
-    pub const fn with_height(self, height: i32) -> Self {
+    pub const fn with_height(self, height: i16) -> Self {
         self.with_size(Offset::new(self.width(), height))
     }
 
-    pub const fn width(&self) -> i32 {
+    pub const fn width(&self) -> i16 {
         self.x1 - self.x0
     }
 
-    pub const fn height(&self) -> i32 {
+    pub const fn height(&self) -> i16 {
         self.y1 - self.y0
     }
 
@@ -304,7 +304,7 @@ impl Rect {
         }
     }
 
-    pub const fn cut_from_left(&self, width: i32) -> Self {
+    pub const fn cut_from_left(&self, width: i16) -> Self {
         Self {
             x0: self.x0,
             y0: self.y0,
@@ -313,7 +313,7 @@ impl Rect {
         }
     }
 
-    pub const fn cut_from_right(&self, width: i32) -> Self {
+    pub const fn cut_from_right(&self, width: i16) -> Self {
         Self {
             x0: self.x1 - width,
             y0: self.y0,
@@ -322,7 +322,7 @@ impl Rect {
         }
     }
 
-    pub const fn split_top(self, height: i32) -> (Self, Self) {
+    pub const fn split_top(self, height: i16) -> (Self, Self) {
         let height = clamp(height, 0, self.height());
 
         let top = Self {
@@ -336,11 +336,11 @@ impl Rect {
         (top, bottom)
     }
 
-    pub const fn split_bottom(self, height: i32) -> (Self, Self) {
+    pub const fn split_bottom(self, height: i16) -> (Self, Self) {
         self.split_top(self.height() - height)
     }
 
-    pub const fn split_left(self, width: i32) -> (Self, Self) {
+    pub const fn split_left(self, width: i16) -> (Self, Self) {
         let width = clamp(width, 0, self.width());
 
         let left = Self {
@@ -354,7 +354,7 @@ impl Rect {
         (left, right)
     }
 
-    pub const fn split_right(self, width: i32) -> (Self, Self) {
+    pub const fn split_right(self, width: i16) -> (Self, Self) {
         self.split_left(self.width() - width)
     }
 
@@ -379,14 +379,14 @@ impl Rect {
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub struct Insets {
-    pub top: i32,
-    pub right: i32,
-    pub bottom: i32,
-    pub left: i32,
+    pub top: i16,
+    pub right: i16,
+    pub bottom: i16,
+    pub left: i16,
 }
 
 impl Insets {
-    pub const fn new(top: i32, right: i32, bottom: i32, left: i32) -> Self {
+    pub const fn new(top: i16, right: i16, bottom: i16, left: i16) -> Self {
         Self {
             top,
             right,
@@ -395,27 +395,27 @@ impl Insets {
         }
     }
 
-    pub const fn uniform(d: i32) -> Self {
+    pub const fn uniform(d: i16) -> Self {
         Self::new(d, d, d, d)
     }
 
-    pub const fn top(d: i32) -> Self {
+    pub const fn top(d: i16) -> Self {
         Self::new(d, 0, 0, 0)
     }
 
-    pub const fn right(d: i32) -> Self {
+    pub const fn right(d: i16) -> Self {
         Self::new(0, d, 0, 0)
     }
 
-    pub const fn bottom(d: i32) -> Self {
+    pub const fn bottom(d: i16) -> Self {
         Self::new(0, 0, d, 0)
     }
 
-    pub const fn left(d: i32) -> Self {
+    pub const fn left(d: i16) -> Self {
         Self::new(0, 0, 0, d)
     }
 
-    pub const fn sides(d: i32) -> Self {
+    pub const fn sides(d: i16) -> Self {
         Self::new(0, d, 0, d)
     }
 }
@@ -455,7 +455,7 @@ pub struct Grid {
     /// Number of columns (cells on the x-axis) in the grid.
     pub cols: usize,
     /// Padding between cells.
-    pub spacing: i32,
+    pub spacing: i16,
     /// Total area covered by this grid.
     pub area: Rect,
 }
@@ -470,15 +470,15 @@ impl Grid {
         }
     }
 
-    pub const fn with_spacing(self, spacing: i32) -> Self {
+    pub const fn with_spacing(self, spacing: i16) -> Self {
         Self { spacing, ..self }
     }
 
     pub const fn row_col(&self, row: usize, col: usize) -> Rect {
-        let ncols = self.cols as i32;
-        let nrows = self.rows as i32;
-        let col = min(col as i32, ncols - 1);
-        let row = min(row as i32, nrows - 1);
+        let ncols = self.cols as i16;
+        let nrows = self.rows as i16;
+        let col = min(col as i16, ncols - 1);
+        let row = min(row as i16, nrows - 1);
 
         // Total number of horizontal pixels used for spacing.
         let spacing_width = self.spacing * (ncols - 1);
@@ -535,7 +535,7 @@ pub struct GridCellSpan {
 pub struct LinearPlacement {
     pub axis: Axis,
     pub align: Alignment,
-    pub spacing: i32,
+    pub spacing: i16,
 }
 
 impl LinearPlacement {
@@ -576,14 +576,14 @@ impl LinearPlacement {
         }
     }
 
-    pub const fn with_spacing(self, spacing: i32) -> Self {
+    pub const fn with_spacing(self, spacing: i16) -> Self {
         Self { spacing, ..self }
     }
 
     /// Arranges all `items` by parameters configured in `self` into `area`.
     /// Does not change the size of the items (only the position).
     pub fn arrange(&self, area: Rect, items: &mut [impl Dimensions]) {
-        let size_sum: i32 = items
+        let size_sum: i16 = items
             .iter_mut()
             .map(|i| i.area().size().axis(self.axis))
             .sum();
@@ -609,7 +609,7 @@ impl LinearPlacement {
         sink: &mut dyn FnMut(Point),
     ) {
         let item_size = size.axis(self.axis);
-        let (mut cursor, spacing) = self.compute_spacing(area, count, (count as i32) * item_size);
+        let (mut cursor, spacing) = self.compute_spacing(area, count, (count as i16) * item_size);
         let cross_coord =
             area.size().axis(self.axis.cross()) / 2 - size.axis(self.axis.cross()) / 2;
 
@@ -623,15 +623,15 @@ impl LinearPlacement {
         }
     }
 
-    const fn compute_spacing(&self, area: Rect, count: usize, size_sum: i32) -> (i32, i32) {
+    const fn compute_spacing(&self, area: Rect, count: usize, size_sum: i16) -> (i16, i16) {
         let spacing_count = count.saturating_sub(1);
-        let spacing_sum = spacing_count as i32 * self.spacing;
+        let spacing_sum = spacing_count as i16 * self.spacing;
         let naive_size = size_sum + spacing_sum;
         let available_space = area.size().axis(self.axis);
 
         // scale down spacing to fit everything into area
         let (total_size, spacing) = if naive_size > available_space {
-            let scaled_space = (available_space - size_sum) / max(spacing_count as i32, 1);
+            let scaled_space = (available_space - size_sum) / max(spacing_count as i16, 1);
             // forbid negative spacing
             (available_space, max(scaled_space, 0))
         } else {

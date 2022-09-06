@@ -15,11 +15,11 @@ pub struct ScrollBar {
 }
 
 impl ScrollBar {
-    pub const DOT_SIZE: i32 = 6;
+    pub const DOT_SIZE: i16 = 6;
     /// Edge to edge.
-    const DOT_INTERVAL: i32 = 6;
+    const DOT_INTERVAL: i16 = 6;
     /// Edge of last dot to center of arrow icon.
-    const ARROW_SPACE: i32 = 26;
+    const ARROW_SPACE: i16 = 26;
 
     const ICON_UP: &'static [u8] = include_res!("model_tt/res/scroll-up.toif");
     const ICON_DOWN: &'static [u8] = include_res!("model_tt/res/scroll-down.toif");

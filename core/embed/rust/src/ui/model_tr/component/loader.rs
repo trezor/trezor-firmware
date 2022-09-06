@@ -111,8 +111,8 @@ impl Loader {
         matches!(self.progress(now), Some(display::LOADER_MIN))
     }
 
-    pub fn paint_loader(&mut self, style: &LoaderStyle, done: i32) {
-        let invert_from = ((self.area.width() + 1) * done) / (display::LOADER_MAX as i32);
+    pub fn paint_loader(&mut self, style: &LoaderStyle, done: i16) {
+        let invert_from = ((self.area.width() + 1) * done) / (display::LOADER_MAX as i16);
 
         display::bar_with_text_and_fill(
             self.area,
@@ -169,11 +169,11 @@ impl Component for Loader {
         if let State::Initial = self.state {
             self.paint_loader(self.styles.normal, 0);
         } else if let State::Grown = self.state {
-            self.paint_loader(self.styles.normal, display::LOADER_MAX as i32);
+            self.paint_loader(self.styles.normal, display::LOADER_MAX as i16);
         } else {
             let progress = self.progress(now);
             if let Some(done) = progress {
-                self.paint_loader(self.styles.normal, done as i32);
+                self.paint_loader(self.styles.normal, done as i16);
             } else {
                 self.paint_loader(self.styles.normal, 0);
             }

@@ -194,9 +194,9 @@ pub struct PageLayout {
 }
 
 impl PageLayout {
-    const SCROLLBAR_WIDTH: i32 = 10;
-    const SCROLLBAR_SPACE: i32 = 10;
-    const HINT_OFF: i32 = 19;
+    const SCROLLBAR_WIDTH: i16 = 10;
+    const SCROLLBAR_SPACE: i16 = 10;
+    const HINT_OFF: i16 = 19;
 
     pub fn new(area: Rect) -> Self {
         let (_, hint) = area.split_bottom(Self::HINT_OFF);
@@ -339,7 +339,7 @@ mod tests {
         String::from_utf8(t).unwrap()
     }
 
-    fn swipe(component: &mut impl Component, points: &[(i32, i32)]) {
+    fn swipe(component: &mut impl Component, points: &[(i16, i16)]) {
         let last = points.len().saturating_sub(1);
         let mut first = true;
         let mut ctx = EventCtx::new();

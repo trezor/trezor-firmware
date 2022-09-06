@@ -48,7 +48,7 @@ pub const RADIUS: u8 = 2;
 pub const QR_SIDE_MAX: u32 = 140;
 
 // Size of icons in the UI (i.e. inside buttons).
-pub const ICON_SIZE: i32 = 16;
+pub const ICON_SIZE: i16 = 16;
 
 // UI icons (greyscale).
 pub const ICON_CANCEL: &[u8] = include_res!("model_tt/res/cancel.toif");
@@ -423,16 +423,16 @@ pub const FORMATTED: FormattedFonts = FormattedFonts {
     mono: FONT_MONO,
 };
 
-pub const CONTENT_BORDER: i32 = 5;
-pub const KEYBOARD_SPACING: i32 = 8;
-pub const BUTTON_HEIGHT: i32 = 38;
-pub const BUTTON_SPACING: i32 = 6;
-pub const CHECKLIST_SPACING: i32 = 10;
-pub const RECOVERY_SPACING: i32 = 18;
+pub const CONTENT_BORDER: i16 = 5;
+pub const KEYBOARD_SPACING: i16 = 8;
+pub const BUTTON_HEIGHT: i16 = 38;
+pub const BUTTON_SPACING: i16 = 6;
+pub const CHECKLIST_SPACING: i16 = 10;
+pub const RECOVERY_SPACING: i16 = 18;
 
 /// Standard button height in pixels.
-pub const fn button_rows(count: usize) -> i32 {
-    let count = count as i32;
+pub const fn button_rows(count: usize) -> i16 {
+    let count = count as i16;
     BUTTON_HEIGHT * count + BUTTON_SPACING * count.saturating_sub(1)
 }
 

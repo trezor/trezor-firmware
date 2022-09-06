@@ -66,46 +66,35 @@ pub fn rect_fill_rounded(r: Rect, fg_color: Color, bg_color: Color, radius: u8) 
 /// NOTE: Cannot start at odd x-coordinate. In this case icon is shifted 1px
 /// left.
 pub fn icon_top_left(top_left: Point, data: &[u8], fg_color: Color, bg_color: Color) {
-    let toif_info = unwrap!(display::toif_info(data), "Invalid TOIF data");
-    assert!(toif_info.grayscale);
+    let (toif_size, toif_data) = toif_info_ensure(data, true);
     display::icon(
         top_left.x,
         top_left.y,
-        toif_info.width.into(),
-        toif_info.height.into(),
-        &data[12..], // Skip TOIF header.
+        toif_size.x,
+        toif_size.y,
+        toif_data,
         fg_color.into(),
         bg_color.into(),
     );
 }
 
 pub fn icon(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
-    let toif_info = unwrap!(display::toif_info(data), "Invalid TOIF data");
-    assert!(toif_info.grayscale);
-
-    let r = Rect::from_center_and_size(
-        center,
-        Offset::new(toif_info.width.into(), toif_info.height.into()),
-    );
+    let (toif_size, toif_data) = toif_info_ensure(data, true);
+    let r = Rect::from_center_and_size(center, toif_size);
     display::icon(
         r.x0,
         r.y0,
         r.width(),
         r.height(),
-        &data[12..], // Skip TOIF header.
+        toif_data,
         fg_color.into(),
         bg_color.into(),
     );
 }
 
 pub fn icon_rust(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
-    let toif_info = unwrap!(display::toif_info(data), "Invalid TOIF data");
-    assert!(toif_info.grayscale);
-
-    let r = Rect::from_center_and_size(
-        center,
-        Offset::new(toif_info.width.into(), toif_info.height.into()),
-    );
+    let (toif_size, toif_data) = toif_info_ensure(data, true);
+    let r = Rect::from_center_and_size(center, toif_size);
 
     let area = r.translate(get_offset());
     let clamped = area.clamp(constant::screen());
@@ -116,7 +105,7 @@ pub fn icon_rust(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
     let mut dest = [0_u8; 1];
 
     let mut window = [0; UZLIB_WINDOW_SIZE];
-    let mut ctx = UzlibContext::new(&data[12..], Some(&mut window));
+    let mut ctx = UzlibContext::new(toif_data, Some(&mut window));
 
     for py in area.y0..area.y1 {
         for px in area.x0..area.x1 {
@@ -141,31 +130,37 @@ pub fn icon_rust(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
 }
 
 pub fn image(center: Point, data: &[u8]) {
-    let toif_info = unwrap!(display::toif_info(data), "Invalid TOIF data");
-    assert!(!toif_info.grayscale);
+    let (toif_size, toif_data) = toif_info_ensure(data, false);
 
-    let r = Rect::from_center_and_size(
-        center,
-        Offset::new(toif_info.width.into(), toif_info.height.into()),
-    );
-    display::image(
-        r.x0,
-        r.y0,
-        r.width(),
-        r.height(),
-        &data[12..], // Skip TOIF header.
-    );
+    let r = Rect::from_center_and_size(center, toif_size);
+    display::image(r.x0, r.y0, r.width(), r.height(), toif_data);
 }
 
 pub fn toif_info(data: &[u8]) -> Option<(Offset, bool)> {
     if let Ok(info) = display::toif_info(data) {
         Some((
-            Offset::new(info.width.into(), info.height.into()),
+            Offset::new(
+                unwrap!(info.width.try_into()),
+                unwrap!(info.height.try_into()),
+            ),
             info.grayscale,
         ))
     } else {
         None
     }
+}
+
+/// Aborts if the TOIF file does not have the correct grayscale flag, do not use
+/// with user-supplied inputs.
+fn toif_info_ensure(data: &[u8], grayscale: bool) -> (Offset, &[u8]) {
+    let info = unwrap!(display::toif_info(data), "Invalid TOIF data");
+    assert_eq!(grayscale, info.grayscale);
+    let size = Offset::new(
+        unwrap!(info.width.try_into()),
+        unwrap!(info.height.try_into()),
+    );
+    let payload = &data[12..]; // Skip TOIF header.
+    (size, payload)
 }
 
 // Used on T1 only.
@@ -243,7 +238,7 @@ impl<'a> TextOverlay<'a> {
 /// The implementation could be replaced by (cos(`angle`), sin(`angle`)),
 /// if we allow trigonometric functions.
 /// In the meantime, approximate this with predefined octagon
-fn get_vector(angle: i32) -> Point {
+fn get_vector(angle: i16) -> Point {
     //octagon vertices
     let v = [
         Point::new(0, 1000),
@@ -257,7 +252,7 @@ fn get_vector(angle: i32) -> Point {
     ];
 
     let angle = angle % 360;
-    let vertices = v.len() as i32;
+    let vertices = v.len() as i16;
     let sector_length = 360 / vertices; // only works if 360 is divisible by vertices
     let sector = angle / sector_length;
     let sector_angle = (angle % sector_length) as f32;
@@ -285,17 +280,17 @@ fn is_clockwise_or_equal_inc(n_v1: Point, v2: Point) -> bool {
 }
 
 /// Draw a rounded rectangle with corner radius 2
-/// Draws only a part (sector of a corresponding circe)
+/// Draws only a part (sector of a corresponding circle)
 /// of the rectangle according to `show_percent` argument,
 /// and optionally draw an `icon` inside
 pub fn rect_rounded2_partial(
     area: Rect,
     fg_color: Color,
     bg_color: Color,
-    show_percent: i32,
+    show_percent: i16,
     icon: Option<(&[u8], Color)>,
 ) {
-    const MAX_ICON_SIZE: u16 = 64;
+    const MAX_ICON_SIZE: i16 = 64;
 
     let r = area.translate(get_offset());
     let clamped = r.clamp(constant::screen());
@@ -313,20 +308,16 @@ pub fn rect_rounded2_partial(
     let mut icon_width = 0;
 
     if let Some((icon_bytes, icon_color)) = icon {
-        let toif_info = unwrap!(display::toif_info(icon_bytes), "Invalid TOIF data");
-        assert!(toif_info.grayscale);
+        let (toif_size, toif_data) = toif_info_ensure(icon_bytes, true);
 
-        if toif_info.width <= MAX_ICON_SIZE && toif_info.height <= MAX_ICON_SIZE {
-            icon_area = Rect::from_center_and_size(
-                center,
-                Offset::new(toif_info.width.into(), toif_info.height.into()),
-            );
+        if toif_size.x <= MAX_ICON_SIZE && toif_size.y <= MAX_ICON_SIZE {
+            icon_area = Rect::from_center_and_size(center, toif_size);
             icon_area_clamped = icon_area.clamp(constant::screen());
 
-            let mut ctx = UzlibContext::new(&icon_bytes[12..], None);
+            let mut ctx = UzlibContext::new(toif_data, None);
             unwrap!(ctx.uncompress(&mut icon_data), "Decompression failed");
             icon_colortable = get_color_table(icon_color, bg_color);
-            icon_width = toif_info.width.into();
+            icon_width = toif_size.x;
             use_icon = true;
         }
     }
@@ -409,7 +400,7 @@ fn rect_rounded2_get_pixel(
     size: Offset,
     colortable: [Color; 16],
     fill: bool,
-    line_width: i32,
+    line_width: i16,
 ) -> Color {
     let border = (p.x >= 0 && p.x < line_width)
         || ((p.x >= size.x - line_width) && p.x <= (size.x - 1))
@@ -447,8 +438,8 @@ pub fn bar_with_text_and_fill(
     overlay: Option<TextOverlay>,
     fg_color: Color,
     bg_color: Color,
-    fill_from: i32,
-    fill_to: i32,
+    fill_from: i16,
+    fill_to: i16,
 ) {
     let r = area.translate(get_offset());
     let clamped = r.clamp(constant::screen());
@@ -481,7 +472,7 @@ pub fn bar_with_text_and_fill(
 }
 
 // Used on T1 only.
-pub fn dotted_line(start: Point, width: i32, color: Color) {
+pub fn dotted_line(start: Point, width: i16, color: Color) {
     for x in (start.x..width).step_by(2) {
         display::bar(x, start.y, 1, 1, color.into());
     }
@@ -492,7 +483,7 @@ pub const LOADER_MAX: u16 = 1000;
 
 pub fn loader(
     progress: u16,
-    y_offset: i32,
+    y_offset: i16,
     fg_color: Color,
     bg_color: Color,
     icon: Option<(&[u8], Color)>,
@@ -510,7 +501,7 @@ pub fn loader(
 
 pub fn loader_indeterminate(
     progress: u16,
-    y_offset: i32,
+    y_offset: i16,
     fg_color: Color,
     bg_color: Color,
     icon: Option<(&[u8], Color)>,
@@ -599,11 +590,11 @@ pub fn get_color_table(fg_color: Color, bg_color: Color) -> [Color; 16] {
 }
 
 pub struct Glyph {
-    pub width: i32,
-    pub height: i32,
-    pub adv: i32,
-    pub bearing_x: i32,
-    pub bearing_y: i32,
+    pub width: i16,
+    pub height: i16,
+    pub adv: i16,
+    pub bearing_x: i16,
+    pub bearing_y: i16,
     data: &'static [u8],
 }
 
@@ -619,8 +610,8 @@ impl Glyph {
     /// - data must have static lifetime
     pub unsafe fn load(data: *const u8) -> Self {
         unsafe {
-            let width = *data.offset(0) as i32;
-            let height = *data.offset(1) as i32;
+            let width = *data.offset(0) as i16;
+            let height = *data.offset(1) as i16;
 
             let data_bits = constant::FONT_BPP * width * height;
 
@@ -633,15 +624,15 @@ impl Glyph {
             Glyph {
                 width,
                 height,
-                adv: *data.offset(2) as i32,
-                bearing_x: *data.offset(3) as i32,
-                bearing_y: *data.offset(4) as i32,
+                adv: *data.offset(2) as i16,
+                bearing_x: *data.offset(3) as i16,
+                bearing_y: *data.offset(4) as i16,
                 data: slice::from_raw_parts(data.offset(5), data_bytes as usize),
             }
         }
     }
 
-    pub fn print(&self, pos: Point, colortable: [Color; 16]) -> i32 {
+    pub fn print(&self, pos: Point, colortable: [Color; 16]) -> i16 {
         let bearing = Offset::new(self.bearing_x, -self.bearing_y);
         let size = Offset::new(self.width, self.height);
         let pos_adj = pos + bearing;
@@ -663,22 +654,22 @@ impl Glyph {
         self.adv
     }
 
-    pub fn unpack_bpp1(&self, a: i32) -> u8 {
+    pub fn unpack_bpp1(&self, a: i16) -> u8 {
         let c_data = self.data[(a / 8) as usize];
         ((c_data >> (7 - (a % 8))) & 0x01) * 15
     }
 
-    pub fn unpack_bpp2(&self, a: i32) -> u8 {
+    pub fn unpack_bpp2(&self, a: i16) -> u8 {
         let c_data = self.data[(a / 4) as usize];
         ((c_data >> (6 - (a % 4) * 2)) & 0x03) * 5
     }
 
-    pub fn unpack_bpp4(&self, a: i32) -> u8 {
+    pub fn unpack_bpp4(&self, a: i16) -> u8 {
         let c_data = self.data[(a / 2) as usize];
         (c_data >> (4 - (a % 2) * 4)) & 0x0F
     }
 
-    pub fn unpack_bpp8(&self, a: i32) -> u8 {
+    pub fn unpack_bpp8(&self, a: i16) -> u8 {
         let c_data = self.data[a as usize];
         c_data >> 4
     }
@@ -704,19 +695,19 @@ impl Font {
         Self(id)
     }
 
-    pub fn text_width(self, text: &str) -> i32 {
-        display::text_width(text, self.0)
+    pub fn text_width(self, text: &str) -> i16 {
+        display::text_width(text, self.0) as i16
     }
 
-    pub fn char_width(self, ch: char) -> i32 {
-        display::char_width(ch, self.0)
+    pub fn char_width(self, ch: char) -> i16 {
+        display::char_width(ch, self.0) as i16
     }
 
-    pub fn text_height(self) -> i32 {
-        display::text_height(self.0)
+    pub fn text_height(self) -> i16 {
+        display::text_height(self.0) as i16
     }
 
-    pub fn line_height(self) -> i32 {
+    pub fn line_height(self) -> i16 {
         constant::LINE_SPACE + self.text_height()
     }
 

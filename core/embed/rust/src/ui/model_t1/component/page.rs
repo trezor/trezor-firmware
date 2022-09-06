@@ -134,9 +134,9 @@ pub struct ScrollBar {
 }
 
 impl ScrollBar {
-    pub const WIDTH: i32 = 8;
+    pub const WIDTH: i16 = 8;
     pub const DOT_SIZE: Offset = Offset::new(4, 4);
-    pub const DOT_INTERVAL: i32 = 6;
+    pub const DOT_INTERVAL: i16 = 6;
 
     pub fn vertical() -> Self {
         Self {
@@ -205,7 +205,7 @@ impl Component for ScrollBar {
     }
 
     fn paint(&mut self) {
-        let count = self.page_count as i32;
+        let count = self.page_count as i16;
         let interval = {
             let available_height = self.area.height();
             let naive_height = count * Self::DOT_INTERVAL;

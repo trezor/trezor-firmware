@@ -74,7 +74,7 @@ impl Swipe {
         self.allow_up || self.allow_down || self.allow_left || self.allow_right
     }
 
-    fn ratio(&self, dist: i32) -> f32 {
+    fn ratio(&self, dist: i16) -> f32 {
         (dist as f32 / Self::DISTANCE as f32).min(1.0)
     }
 

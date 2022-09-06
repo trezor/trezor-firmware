@@ -78,7 +78,7 @@ impl ResultAnim {
         matches!(self.progress(now), Some(display::LOADER_MAX))
     }
 
-    pub fn paint_anim(&mut self, done: i32) {
+    pub fn paint_anim(&mut self, done: i16) {
         display::rect_rounded2_partial(
             self.area,
             theme::FG,
@@ -128,11 +128,11 @@ impl Component for ResultAnim {
         if let State::Initial = self.state {
             self.paint_anim(0);
         } else if let State::Grown = self.state {
-            self.paint_anim(display::LOADER_MAX as i32);
+            self.paint_anim(display::LOADER_MAX as i16);
         } else {
             let progress = self.progress(now);
             if let Some(done) = progress {
-                self.paint_anim(done as i32);
+                self.paint_anim(done as i16);
             } else {
                 self.paint_anim(0);
             }

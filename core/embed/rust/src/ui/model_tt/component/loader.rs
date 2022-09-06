@@ -23,7 +23,7 @@ enum State {
 }
 
 pub struct Loader {
-    offset_y: i32,
+    offset_y: i16,
     state: State,
     growing_duration: Duration,
     shrinking_duration: Duration,

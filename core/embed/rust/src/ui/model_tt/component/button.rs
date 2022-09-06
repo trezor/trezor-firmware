@@ -31,7 +31,7 @@ pub struct Button<T> {
 impl<T> Button<T> {
     /// Offsets the baseline of the button text either up (negative) or down
     /// (positive).
-    pub const BASELINE_OFFSET: i32 = -3;
+    pub const BASELINE_OFFSET: i16 = -3;
 
     pub fn new(content: ButtonContent<T>) -> Self {
         Self {
@@ -335,7 +335,7 @@ pub struct ButtonStyle {
     pub background_color: Color,
     pub border_color: Color,
     pub border_radius: u8,
-    pub border_width: i32,
+    pub border_width: i16,
 }
 
 impl<T> Button<T> {

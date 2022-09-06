@@ -29,12 +29,12 @@ pub struct ResultPopup {
     autoclose: bool,
 }
 
-const ANIM_SIZE: i32 = 18;
-const BUTTON_HEIGHT: i32 = 13;
-const ANIM_SPACE: i32 = 11;
-const ANIM_POS: i32 = 32;
-const ANIM_POS_ADJ_HEADLINE: i32 = 10;
-const ANIM_POS_ADJ_BUTTON: i32 = 6;
+const ANIM_SIZE: i16 = 18;
+const BUTTON_HEIGHT: i16 = 13;
+const ANIM_SPACE: i16 = 11;
+const ANIM_POS: i16 = 32;
+const ANIM_POS_ADJ_HEADLINE: i16 = 10;
+const ANIM_POS_ADJ_BUTTON: i16 = 6;
 
 impl ResultPopup {
     pub fn new(

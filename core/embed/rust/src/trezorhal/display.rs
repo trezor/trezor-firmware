@@ -12,11 +12,11 @@ pub fn backlight(val: i32) -> i32 {
     unsafe { ffi::display_backlight(val) }
 }
 
-pub fn text(baseline_x: i32, baseline_y: i32, text: &str, font: i32, fgcolor: u16, bgcolor: u16) {
+pub fn text(baseline_x: i16, baseline_y: i16, text: &str, font: i32, fgcolor: u16, bgcolor: u16) {
     unsafe {
         ffi::display_text(
-            baseline_x,
-            baseline_y,
+            baseline_x.into(),
+            baseline_y.into(),
             text.as_ptr() as _,
             text.len() as _,
             font,
@@ -26,11 +26,15 @@ pub fn text(baseline_x: i32, baseline_y: i32, text: &str, font: i32, fgcolor: u1
     }
 }
 
-pub fn text_width(text: &str, font: i32) -> i32 {
-    unsafe { ffi::display_text_width(text.as_ptr() as _, text.len() as _, font) }
+pub fn text_width(text: &str, font: i32) -> i16 {
+    unsafe {
+        ffi::display_text_width(text.as_ptr() as _, text.len() as _, font)
+            .try_into()
+            .unwrap_or(i16::MAX)
+    }
 }
 
-pub fn char_width(ch: char, font: i32) -> i32 {
+pub fn char_width(ch: char, font: i32) -> i16 {
     let mut buf = [0u8; 4];
     let encoding = ch.encode_utf8(&mut buf);
     text_width(encoding, font)
@@ -40,25 +44,39 @@ pub fn get_char_glyph(ch: u8, font: i32) -> *const u8 {
     unsafe { ffi::display_get_glyph(font, ch) }
 }
 
-pub fn text_height(font: i32) -> i32 {
-    unsafe { ffi::display_text_height(font) }
+pub fn text_height(font: i32) -> i16 {
+    unsafe {
+        ffi::display_text_height(font)
+            .try_into()
+            .unwrap_or(i16::MAX)
+    }
 }
 
-pub fn bar(x: i32, y: i32, w: i32, h: i32, fgcolor: u16) {
-    unsafe { ffi::display_bar(x, y, w, h, fgcolor) }
+pub fn bar(x: i16, y: i16, w: i16, h: i16, fgcolor: u16) {
+    unsafe { ffi::display_bar(x.into(), y.into(), w.into(), h.into(), fgcolor) }
 }
 
-pub fn bar_radius(x: i32, y: i32, w: i32, h: i32, fgcolor: u16, bgcolor: u16, radius: u8) {
-    unsafe { ffi::display_bar_radius(x, y, w, h, fgcolor, bgcolor, radius) }
+pub fn bar_radius(x: i16, y: i16, w: i16, h: i16, fgcolor: u16, bgcolor: u16, radius: u8) {
+    unsafe {
+        ffi::display_bar_radius(
+            x.into(),
+            y.into(),
+            w.into(),
+            h.into(),
+            fgcolor,
+            bgcolor,
+            radius,
+        )
+    }
 }
 
-pub fn icon(x: i32, y: i32, w: i32, h: i32, data: &[u8], fgcolor: u16, bgcolor: u16) {
+pub fn icon(x: i16, y: i16, w: i16, h: i16, data: &[u8], fgcolor: u16, bgcolor: u16) {
     unsafe {
         ffi::display_icon(
-            x,
-            y,
-            w,
-            h,
+            x.into(),
+            y.into(),
+            w.into(),
+            h.into(),
             data.as_ptr() as _,
             data.len() as _,
             fgcolor,
@@ -67,8 +85,17 @@ pub fn icon(x: i32, y: i32, w: i32, h: i32, data: &[u8], fgcolor: u16, bgcolor: 
     }
 }
 
-pub fn image(x: i32, y: i32, w: i32, h: i32, data: &[u8]) {
-    unsafe { ffi::display_image(x, y, w, h, data.as_ptr() as _, data.len() as _) }
+pub fn image(x: i16, y: i16, w: i16, h: i16, data: &[u8]) {
+    unsafe {
+        ffi::display_image(
+            x.into(),
+            y.into(),
+            w.into(),
+            h.into(),
+            data.as_ptr() as _,
+            data.len() as _,
+        )
+    }
 }
 
 pub fn toif_info(data: &[u8]) -> Result<ToifInfo, ()> {
@@ -97,7 +124,7 @@ pub fn toif_info(data: &[u8]) -> Result<ToifInfo, ()> {
 pub fn loader(
     progress: u16,
     indeterminate: bool,
-    yoffset: i32,
+    yoffset: i16,
     fgcolor: u16,
     bgcolor: u16,
     icon: Option<&[u8]>,
@@ -107,7 +134,7 @@ pub fn loader(
         ffi::display_loader(
             progress,
             indeterminate,
-            yoffset,
+            yoffset.into(),
             fgcolor,
             bgcolor,
             icon.map(|i| i.as_ptr()).unwrap_or(ptr::null()),
@@ -146,11 +173,11 @@ pub fn set_window(x0: u16, y0: u16, x1: u16, y1: u16) {
     }
 }
 
-pub fn get_offset() -> (i32, i32) {
+pub fn get_offset() -> (i16, i16) {
     unsafe {
         let mut x: c_int = 0;
         let mut y: c_int = 0;
         ffi::display_offset(ptr::null_mut(), &mut x, &mut y);
-        (x as i32, y as i32)
+        (x as i16, y as i16)
     }
 }

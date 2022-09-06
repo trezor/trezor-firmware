@@ -10,9 +10,9 @@ use crate::{
     },
 };
 
-pub const HEADER_HEIGHT: i32 = 25;
-pub const HEADER_PADDING_SIDE: i32 = 5;
-pub const HEADER_PADDING_BOTTOM: i32 = 12;
+pub const HEADER_HEIGHT: i16 = 25;
+pub const HEADER_PADDING_SIDE: i16 = 5;
+pub const HEADER_PADDING_BOTTOM: i16 = 12;
 
 /// Contains state commonly used in implementations multi-tap keyboards.
 pub struct MultiTapKeyboard {
