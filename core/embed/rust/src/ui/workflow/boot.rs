@@ -3,7 +3,7 @@ use cstr_core::CStr;
 use heapless::String;
 use crate::trezorhal::alloc::alloc_only;
 use crate::trezorhal::storage::{storage_get, storage_get_length, storage_get_remaining, storage_init, storage_unlock, storage_wipe};
-use crate::ui::{constant, display, Homescreen, HomescreenMsg, PinKeyboard, PinKeyboardMsg};
+use crate::ui::{constant, display, LockScreen, LockScreenMsg, PinKeyboard, PinKeyboardMsg};
 use crate::ui::constant::screen;
 use crate::ui::geometry::{Point, Rect};
 use crate::ui::layout::native::RustLayout;
@@ -13,8 +13,6 @@ pub enum BootState {
     NotInitialized,
     NotConnected,
     RepeatPinEntry,
-    Locked,
-    Unlocked,
 }
 
 static mut PREV_SECONDS: u32 = 0xFFFFFFFF;
@@ -114,7 +112,7 @@ pub fn boot_workflow() {
     };
 
     let rotation_len_res = storage_get_length(0x810F);
-    let rotation: u16 = if let Ok(len) = rotation_len_res {
+    let rotation: u16 = if let Ok(_) = rotation_len_res {
         let mut data = [0;2];
         storage_get(0x810F, &mut data).unwrap();
         u16::from_be_bytes(data)
@@ -124,8 +122,15 @@ pub fn boot_workflow() {
 
     display::set_orientation(rotation as _);
 
-
-    let mut homescreen = RustLayout::new(Homescreen::new(device_name.as_str(), avatar));
+    let mut homescreen = RustLayout::new(
+        LockScreen::new(
+            device_name.as_str(),
+             avatar,
+            true,
+            Some("Not connected"),
+            Some("Tap to connect")
+        )
+    );
 
     loop {
         match state {
@@ -133,10 +138,11 @@ pub fn boot_workflow() {
             BootState::NotConnected => {
                 loop {
                     let msg = homescreen.process();
-                    if let HomescreenMsg::UnlockRequested = msg {
-                        let remaining: String<16> = String::from(storage_get_remaining());
+                    if let LockScreenMsg::UnlockRequested = msg {
+                        let mut remaining: String<16> = String::from(storage_get_remaining());
+                        unwrap!(remaining.push_str(" tries left"));
                         let mut pin = RustLayout::new(PinKeyboard::new(
-                            "Enter your PIN",
+                            "Enter PIN",
                             remaining.as_str(),
                             None,
                             true,
@@ -149,27 +155,30 @@ pub fn boot_workflow() {
                                 let pin_str = pin.inner().pin();
                                 let unlocked = storage_unlock(pin_str);
                                 if unlocked {
-                                    homescreen = RustLayout::new(Homescreen::new("Unlocked", avatar));
-                                    state = BootState::Unlocked;
-                                    break;
+                                    return;
                                 } else {
                                     state = BootState::RepeatPinEntry;
                                     break;
                                 }
                             }
                             PinKeyboardMsg::Cancelled => {
-                                homescreen = RustLayout::new(Homescreen::new(device_name.as_str(), avatar));
+                                homescreen = RustLayout::new(LockScreen::new(
+                                    device_name.as_str(),
+                                    avatar,
+                                    true,
+                                    Some("Not connected"),
+                                    Some("Tap to connect")));
                             }
-
                         }
                     }
                 }
             }
             BootState::RepeatPinEntry => {
                 loop {
-                    let remaining: String<16> = String::from(storage_get_remaining());
+                    let mut remaining: String<16> = String::from(storage_get_remaining());
+                    unwrap!(remaining.push_str(" tries left"));
                     let mut pin = RustLayout::new(PinKeyboard::new(
-                        "Wrong PIN, enter again",
+                        "Wrong PIN",
                         remaining.as_str(),
                         None,
                         true
@@ -181,23 +190,18 @@ pub fn boot_workflow() {
                             let pin_str = pin.inner().pin();
                             let unlocked = storage_unlock(pin_str);
                             if unlocked {
-                                homescreen = RustLayout::new(Homescreen::new("Unlocked", avatar));
-                                state = BootState::NotConnected;
-                                break;
+                                return;
                             }
                         }
                         PinKeyboardMsg::Cancelled => {
-                            homescreen = RustLayout::new(Homescreen::new("Unlocked", avatar));
+                            homescreen = RustLayout::new(LockScreen::new(device_name.as_str(), avatar, true,
+                                                                         Some("Not connected"),
+                                                                         Some("Tap to connect")));
                             state = BootState::NotConnected;
                             break;
                         }
                     }
                 }
-            }
-            BootState::Locked => {}
-            BootState::Unlocked => {
-                homescreen.process_and_finish();
-                break;
             }
         }
     }

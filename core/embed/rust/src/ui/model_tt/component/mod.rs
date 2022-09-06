@@ -7,7 +7,7 @@ mod loader;
 mod page;
 mod scroll;
 mod swipe;
-mod homescreen;
+mod lockscreen;
 
 pub use button::{
     Button, ButtonContent, ButtonMsg, ButtonStyle, ButtonStyleSheet, CancelConfirmMsg,
@@ -27,6 +27,6 @@ pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
 pub use page::{SwipeHoldPage, SwipePage};
 pub use scroll::ScrollBar;
 pub use swipe::{Swipe, SwipeDirection};
-pub use homescreen::{Homescreen, HomescreenMsg};
+pub use lockscreen::{LockScreen, LockScreenMsg};
 
 use super::theme;
