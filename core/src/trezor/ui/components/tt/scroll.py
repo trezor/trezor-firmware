@@ -148,6 +148,22 @@ class Paginated(ui.Layout):
         def read_content(self) -> list[str]:
             return self.pages[self.page].read_content()
 
+        def page_until_end(self) -> None:
+            while self.page < len(self.pages) - 1:
+                self.page += 1
+                self._before_render()
+                self.dispatch(ui.RENDER, 0, 0)
+
+        async def handle_debug(self) -> None:
+            from apps.debug import confirm_signal
+
+            try:
+                return await confirm_signal()
+            except ui.Result as r:
+                if r.value == CONFIRMED:
+                    self.page_until_end()
+                raise
+
 
 class AskPaginated(ui.Component):
     def __init__(self, content: ui.Component, button_text: str = "Show all") -> None:

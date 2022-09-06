@@ -347,13 +347,9 @@ def input_flow_scroll_down(client: Client, cancel=False):
     client.debug.wait_layout()
     client.debug.click(SHOW_ALL)
 
-    br = yield  # paginated data
-    for i in range(br.pages):
-        client.debug.wait_layout()
-        if i < br.pages - 1:
-            client.debug.swipe_up()
-
+    yield  # paginated data
     client.debug.press_yes()
+
     yield  # confirm data
     if cancel:
         client.debug.press_no()

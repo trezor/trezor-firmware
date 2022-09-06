@@ -77,7 +77,10 @@ class ConfirmPageable(Confirm):
         else:
             swipe = await Swipe(directions)
 
-        if swipe == SWIPE_LEFT:
+        self.do_page(next=swipe == SWIPE_LEFT)
+
+    def do_page(self, next: bool) -> None:
+        if next:
             self.pageable.next()
         else:
             self.pageable.prev()
@@ -117,6 +120,26 @@ class ConfirmPageable(Confirm):
                 ui.display.icon(205, 68, icon, ui.GREY, ui.BG)
             else:
                 ui.display.icon(205, 68, icon, c, ui.BG)
+
+    if __debug__:
+
+        def page_until_end(self) -> None:
+            while not self.pageable.is_last():
+                self.do_page(next=True)
+                self.on_render()
+                ui.refresh()
+
+        async def confirm_task(self) -> Any:
+            from apps.debug import confirm_signal
+
+            signal = confirm_signal()
+            while True:
+                try:
+                    await signal
+                except ui.Result as r:
+                    if r.value == CONFIRMED:
+                        self.page_until_end()
+                    raise
 
 
 class InfoConfirm(ui.Layout):

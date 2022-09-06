@@ -171,7 +171,6 @@ def recovery_enter_shares(
             # Moving through the INFO button
             debug.press_info()
             yield
-            debug.swipe_up()
             debug.press_yes()
 
         # Finishing with current share
