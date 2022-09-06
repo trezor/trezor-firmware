@@ -1,3 +1,3 @@
 #include "common.h"
 
-void boot_firmware(uint16_t stage);
+void boot_firmware();

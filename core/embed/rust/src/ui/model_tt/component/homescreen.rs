@@ -13,6 +13,7 @@ use crate::ui::model_tt::theme;
 pub struct Homescreen<'a>{
     pad: Pad,
     device_name: &'a str,
+    avatar: &'a[u8],
 }
 
 
@@ -25,11 +26,13 @@ pub enum HomescreenMsg {
 
 impl<'a> Homescreen<'a> {
 
-    pub fn new(device_name: &'a str) -> Self {
+    pub fn new(device_name: &'a str,
+    avatar: &'a[u8]) -> Self {
 
         let mut instance = Self {
             pad: Pad::with_background(theme::BG),
             device_name,
+            avatar,
         };
 
         instance.pad.clear();
@@ -38,12 +41,12 @@ impl<'a> Homescreen<'a> {
 
     pub fn paint_unlocked(&self) {
         display::text_center(Point::new(screen().center().x, 35),self.device_name,theme::FONT_BOLD, theme::GREY_LIGHT, theme::BG);
-        display::avatar(screen().center(), theme::IMAGE_HOMESCREEN, theme::WHITE, theme::BLACK);
+        display::avatar(screen().center(), self.avatar, theme::WHITE, theme::BLACK);
     }
 
     pub fn paint_not_connected(&self) {
         display::text_center(Point::new(screen().center().x, 35),self.device_name,theme::FONT_BOLD, theme::GREY_LIGHT, theme::BG);
-        display::avatar(screen().center(), theme::IMAGE_HOMESCREEN, theme::WHITE, theme::BLACK);
+        display::avatar(screen().center(), self.avatar, theme::WHITE, theme::BLACK);
 
         let bar_area = Rect::new(Point::new(40, 100), Point::new(200, 140));
         let bar_area_in = Rect::new(Point::new(42, 102), Point::new(198, 138));

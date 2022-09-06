@@ -227,6 +227,8 @@ fn generate_trezorhal_bindings() {
 
     let bindings = prepare_bindings()
         .header("trezorhal.h")
+        .allowlist_function("alloc_only")
+        .allowlist_function("alloc_only_init")
         // secbool
         .allowlist_type("secbool")
         .must_use_type("secbool")

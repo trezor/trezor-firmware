@@ -51,6 +51,7 @@
 #include "button.h"
 #endif
 #include "rust_ui.h"
+#include "alloc_only.h"
 
 #ifdef SYSTEM_VIEW
 #include "systemview.h"
@@ -119,9 +120,6 @@ int main(void) {
   display_clear();
 #endif
 
-  display_backlight(150);
-  boot_firmware(0);
-
 #if !defined TREZOR_MODEL_1
   // jump to unprivileged mode
   // http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/CHDBIBGJ.html
@@ -133,6 +131,9 @@ int main(void) {
   ensure(sectrue * (zkp_context_init() == 0), NULL);
 #endif
 
+  display_backlight(150);
+  alloc_only_init(false);
+  boot_firmware();
 
   printf("CORE: Preparing stack\n");
   // Stack limit should be less than real stack size, so we have a chance
@@ -146,6 +147,7 @@ int main(void) {
 #endif
 
   // GC init
+  alloc_only_init(true);
   printf("CORE: Starting GC\n");
   gc_init(&_heap_start, &_heap_end);
 
@@ -158,7 +160,7 @@ int main(void) {
       mp_sys_path,
       MP_OBJ_NEW_QSTR(MP_QSTR_));  // current dir (or base dir of the script)
 
-  boot_firmware(1);
+
 
   // Execute the main script
   printf("CORE: Executing main script\n");

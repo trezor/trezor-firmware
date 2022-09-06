@@ -1,3 +1,4 @@
+pub mod alloc;
 pub mod bip39;
 #[macro_use]
 #[allow(unused_macros)]

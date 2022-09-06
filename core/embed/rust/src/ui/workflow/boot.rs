@@ -1,6 +1,7 @@
 use core::slice;
 use cstr_core::CStr;
 use heapless::String;
+use crate::trezorhal::alloc::alloc_only;
 use crate::trezorhal::storage::{storage_get, storage_get_length, storage_get_remaining, storage_init, storage_unlock, storage_wipe};
 use crate::ui::{constant, display, Homescreen, HomescreenMsg, PinKeyboard, PinKeyboardMsg};
 use crate::ui::constant::screen;
@@ -102,9 +103,20 @@ pub fn boot_workflow() {
         String::from("My Trezor")
     };
 
+    let avatar_len_res = storage_get_length(0x8106);
+    //let rotation_len_res = storage_get_length(0x810F);
+
+    let avatar: &[u8] = if let Ok(len) = avatar_len_res {
+        let mut data = alloc_only(len);
+        storage_get(0x8106, &mut data).unwrap();
+        data
+    } else {
+        theme::IMAGE_HOMESCREEN
+    };
 
 
-    let mut homescreen = RustLayout::new(Homescreen::new(device_name.as_str()));
+
+    let mut homescreen = RustLayout::new(Homescreen::new(device_name.as_str(), avatar));
 
     loop {
         match state {
@@ -128,7 +140,7 @@ pub fn boot_workflow() {
                                 let pin_str = pin.inner().pin();
                                 let unlocked = storage_unlock(pin_str);
                                 if unlocked {
-                                    homescreen = RustLayout::new(Homescreen::new("Unlocked"));
+                                    homescreen = RustLayout::new(Homescreen::new("Unlocked", avatar));
                                     state = BootState::Unlocked;
                                     break;
                                 } else {
@@ -137,7 +149,7 @@ pub fn boot_workflow() {
                                 }
                             }
                             PinKeyboardMsg::Cancelled => {
-                                homescreen = RustLayout::new(Homescreen::new(device_name.as_str()));
+                                homescreen = RustLayout::new(Homescreen::new(device_name.as_str(), avatar));
                             }
 
                         }
@@ -160,13 +172,13 @@ pub fn boot_workflow() {
                             let pin_str = pin.inner().pin();
                             let unlocked = storage_unlock(pin_str);
                             if unlocked {
-                                homescreen = RustLayout::new(Homescreen::new("Unlocked"));
+                                homescreen = RustLayout::new(Homescreen::new("Unlocked", avatar));
                                 state = BootState::NotConnected;
                                 break;
                             }
                         }
                         PinKeyboardMsg::Cancelled => {
-                            homescreen = RustLayout::new(Homescreen::new("Unlocked"));
+                            homescreen = RustLayout::new(Homescreen::new("Unlocked", avatar));
                             state = BootState::NotConnected;
                             break;
                         }
@@ -174,9 +186,10 @@ pub fn boot_workflow() {
                 }
             }
             BootState::Locked => {}
-            BootState::Unlocked => {}
+            BootState::Unlocked => {
+                homescreen.process_and_finish();
+                break;
+            }
         }
     }
-
-
 }

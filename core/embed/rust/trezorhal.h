@@ -1,3 +1,4 @@
+#include "alloc_only.h"
 #include "common.h"
 #include "display.h"
 #include "rgb_led.h"

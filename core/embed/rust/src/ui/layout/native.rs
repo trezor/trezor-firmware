@@ -143,4 +143,8 @@ impl<F> RustLayout<F>
             self.paint_if_requested();
         }
     }
+
+    pub fn process_and_finish(&mut self) {
+        self.paint_if_requested();
+    }
 }

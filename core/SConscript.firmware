@@ -350,6 +350,7 @@ SOURCE_STMHAL = [
 
 SOURCE_FIRMWARE = [
     'embed/firmware/bl_check.c',
+    'embed/firmware/alloc_only.c',
     'embed/firmware/delay.c',
     'embed/firmware/header.S',
     'embed/firmware/main.c',
