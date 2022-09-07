@@ -281,7 +281,7 @@ impl<T: Clone + AsRef<str>> ButtonContainer<T> {
     fn send_htc_event(&mut self, ctx: &mut EventCtx, event: Event) {
         if matches!(self.button_type, ButtonType::HoldToConfirm) {
             if let Some(hold_to_confirm) = &mut self.hold_to_confirm {
-                hold_to_confirm.inner_mut().event(ctx, event);
+                hold_to_confirm.event(ctx, event);
             }
         }
     }
@@ -393,7 +393,6 @@ impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
     type Msg = ButtonControllerMsg;
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        self.handle_hold_to_confirms(ctx, event);
         // State machine for the ButtonController
         match event {
             Event::Button(button) => {
@@ -488,7 +487,10 @@ impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
                 self.state = new_state;
                 event
             }
-            _ => None,
+            _ => {
+                self.handle_hold_to_confirms(ctx, event);
+                None
+            }
         }
     }
 

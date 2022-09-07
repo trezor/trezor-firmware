@@ -13,6 +13,7 @@ use super::{
     ButtonDetails, ButtonLayout, ChoiceFactory, ChoiceItem, ChoicePage, ChoicePageMsg,
     MultilineTextChoiceItem,
 };
+use crate::ui::{component::Pad, model_tr::theme};
 use heapless::String;
 
 pub enum PinEntryMsg {
@@ -97,6 +98,7 @@ impl ChoiceFactory for ChoiceFactoryPIN {
 /// Component for entering a PIN.
 pub struct PinEntry {
     choice_page: ChoicePage<ChoiceFactoryPIN>,
+    pad: Pad,
     show_real_pin: bool,
     textbox: TextBox<MAX_PIN_LENGTH>,
 }
@@ -106,6 +108,7 @@ impl PinEntry {
         let choices = ChoiceFactoryPIN::new(prompt);
 
         Self {
+            pad: Pad::with_background(theme::BG),
             choice_page: ChoicePage::new(choices)
                 .with_initial_page_counter(3)
                 .with_carousel(),
@@ -157,7 +160,10 @@ impl Component for PinEntry {
     type Msg = PinEntryMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        self.choice_page.place(bounds)
+        let split = bounds.split_top(7);
+        self.pad.place(split.0);
+        self.choice_page.place(split.1);
+        bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
@@ -168,16 +174,19 @@ impl Component for PinEntry {
                 EXIT_INDEX => return Some(PinEntryMsg::Cancelled),
                 DELETE_INDEX => {
                     self.delete_last_digit(ctx);
+                    self.pad.clear();
                     ctx.request_paint();
                 }
                 SHOW_INDEX => {
                     self.show_real_pin = true;
+                    self.pad.clear();
                     ctx.request_paint();
                 }
                 PROMPT_INDEX => return Some(PinEntryMsg::Confirmed),
                 _ => {
                     if !self.is_full() {
                         self.append_new_digit(ctx, page_counter);
+                        self.pad.clear();
                         // Choosing any random digit to be shown next
                         let new_page_counter =
                             random::uniform_between(4, (CHOICE_LENGTH - 1) as u32);
@@ -192,6 +201,7 @@ impl Component for PinEntry {
     }
 
     fn paint(&mut self) {
+        self.pad.paint();
         self.choice_page.paint();
         self.update_situation();
     }
