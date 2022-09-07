@@ -1172,6 +1172,7 @@ class SignTx(protobuf.MessageType):
         10: protobuf.Field("branch_id", "uint32", repeated=False, required=False),
         11: protobuf.Field("amount_unit", "AmountUnit", repeated=False, required=False),
         12: protobuf.Field("decred_staking_ticket", "bool", repeated=False, required=False),
+        13: protobuf.Field("serialize", "bool", repeated=False, required=False),
     }
 
     def __init__(
@@ -1189,6 +1190,7 @@ class SignTx(protobuf.MessageType):
         branch_id: Optional["int"] = None,
         amount_unit: Optional["AmountUnit"] = AmountUnit.BITCOIN,
         decred_staking_ticket: Optional["bool"] = False,
+        serialize: Optional["bool"] = True,
     ) -> None:
         self.outputs_count = outputs_count
         self.inputs_count = inputs_count
@@ -1202,6 +1204,7 @@ class SignTx(protobuf.MessageType):
         self.branch_id = branch_id
         self.amount_unit = amount_unit
         self.decred_staking_ticket = decred_staking_ticket
+        self.serialize = serialize
 
 
 class TxRequest(protobuf.MessageType):

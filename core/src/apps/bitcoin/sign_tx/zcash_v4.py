@@ -139,12 +139,13 @@ class ZcashV4(Bitcoinlike):
         return Zip243SigHasher()
 
     async def step7_finish(self) -> None:
-        self.write_tx_footer(self.serialized_tx, self.tx_info.tx)
+        if self.serialize:
+            self.write_tx_footer(self.serialized_tx, self.tx_info.tx)
 
-        write_uint64(self.serialized_tx, 0)  # valueBalance
-        write_compact_size(self.serialized_tx, 0)  # nShieldedSpend
-        write_compact_size(self.serialized_tx, 0)  # nShieldedOutput
-        write_compact_size(self.serialized_tx, 0)  # nJoinSplit
+            write_uint64(self.serialized_tx, 0)  # valueBalance
+            write_compact_size(self.serialized_tx, 0)  # nShieldedSpend
+            write_compact_size(self.serialized_tx, 0)  # nShieldedOutput
+            write_compact_size(self.serialized_tx, 0)  # nJoinSplit
 
         await helpers.request_tx_finish(self.tx_req)
 
