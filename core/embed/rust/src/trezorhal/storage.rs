@@ -52,12 +52,17 @@ pub fn storage_unlock(pin: &str) -> bool {
     }
 }
 
+pub fn storage_ensure_not_wipe_pin(pin: &str) {
+    unsafe {
+        ffi::storage_ensure_not_wipe_code(pin.as_ptr(), pin.len());
+    }
+}
+
 pub fn storage_has_pin() -> bool {
     unsafe {
         ffi::storage_has_pin() == ffi::sectrue
     }
 }
-
 pub fn storage_get_remaining() -> u32 {
     unsafe {
         ffi::storage_get_pin_rem()

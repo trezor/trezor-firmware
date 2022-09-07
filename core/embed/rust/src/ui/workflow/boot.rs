@@ -2,7 +2,7 @@ use core::slice;
 use cstr_core::CStr;
 use heapless::{String, Vec};
 use crate::trezorhal::alloc::alloc_only;
-use crate::trezorhal::storage::{storage_get, storage_get_length, storage_get_remaining, storage_has_pin, storage_init, storage_unlock, storage_wipe};
+use crate::trezorhal::storage::{storage_ensure_not_wipe_pin, storage_get, storage_get_length, storage_get_remaining, storage_has_pin, storage_init, storage_unlock, storage_wipe};
 use crate::ui::{constant, display, LockScreen, LockScreenMsg, PinKeyboard, PinKeyboardMsg};
 use crate::ui::constant::screen;
 use crate::ui::geometry::{Point, Rect};
@@ -86,6 +86,19 @@ pub fn get_flag(key: u16) -> bool {
     false
 }
 
+fn init_unlocked() {
+
+    // Check for storage version upgrade.
+    // version = device.get_version()
+    // if version == common.STORAGE_VERSION_01:
+    //     _migrate_from_version_01()
+    //
+    // // In FWs <= 2.3.1 'version' denoted whether the device is initialized or not.
+    // // In 2.3.2 we have introduced a new field 'initialized' for that.
+    // if device.is_version_stored() and not device.is_initialized():
+    //     common.set_bool(common.APP_DEVICE, device.INITIALIZED, True, public=True)
+}
+
 
 pub fn boot_workflow() {
 
@@ -146,14 +159,10 @@ pub fn boot_workflow() {
         return;
     }
 
-
-    // let initialized = get_flag(0x810F);
-
     let mut homescreen = RustLayout::new(
         LockScreen::new(
             device_name.as_str(),
              avatar,
-            true,
             Some("Not connected"),
             Some("Tap to connect"),
         )
@@ -180,8 +189,13 @@ pub fn boot_workflow() {
                         match msg {
                             PinKeyboardMsg::Confirmed => {
                                 let pin_str = pin.inner().pin();
+
+                                // todo replicating upy behavior, but unnecessary call?
+                                storage_ensure_not_wipe_pin(pin_str);
+
                                 let unlocked = storage_unlock(pin_str);
                                 if unlocked {
+                                    init_unlocked();
                                     return;
                                 } else {
                                     state = BootState::RepeatPinEntry;
@@ -192,7 +206,6 @@ pub fn boot_workflow() {
                                 homescreen = RustLayout::new(LockScreen::new(
                                     device_name.as_str(),
                                     avatar,
-                                    true,
                                     Some("Not connected"),
                                     Some("Tap to connect")));
                             }
@@ -216,12 +229,14 @@ pub fn boot_workflow() {
                         PinKeyboardMsg::Confirmed => {
                             let pin_str = pin.inner().pin();
                             let unlocked = storage_unlock(pin_str);
-                            if unlocked {
+                            if unlocked
+                            {
+                                init_unlocked();
                                 return;
                             }
                         }
                         PinKeyboardMsg::Cancelled => {
-                            homescreen = RustLayout::new(LockScreen::new(device_name.as_str(), avatar, true,
+                            homescreen = RustLayout::new(LockScreen::new(device_name.as_str(), avatar,
                                                                          Some("Not connected"),
                                                                          Some("Tap to connect")));
                             state = BootState::NotConnected;

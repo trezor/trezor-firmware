@@ -14,7 +14,6 @@ pub struct LockScreen<'a>{
     pad: Pad,
     device_name: &'a str,
     avatar: &'a[u8],
-    locked: bool,
     lock_label: Option<&'a str>,
     tap_label: Option<&'a str>,
 }
@@ -28,7 +27,6 @@ impl<'a> LockScreen<'a> {
     pub fn new(
         device_name: &'a str,
         avatar: &'a[u8],
-        locked: bool,
         lock_label: Option<&'a str>,
         tap_label: Option<&'a str>,
     ) -> Self {
@@ -36,7 +34,6 @@ impl<'a> LockScreen<'a> {
         let mut instance = Self {
             pad: Pad::with_background(theme::BG),
             device_name,
-            locked,
             lock_label,
             tap_label,
             avatar,
@@ -46,10 +43,10 @@ impl<'a> LockScreen<'a> {
         instance
     }
 
-    pub fn paint_unlocked(&self) {
-        display::avatar(screen().center(), self.avatar, theme::WHITE, theme::BLACK);
-        display::text_center(Point::new(screen().center().x, 35),self.device_name,theme::FONT_BOLD, theme::GREY_LIGHT, theme::BG);
-    }
+    // pub fn paint_unlocked(&self) {
+    //     display::avatar(screen().center(), self.avatar, theme::WHITE, theme::BLACK);
+    //     display::text_center(Point::new(screen().center().x, 35),self.device_name,theme::FONT_BOLD, theme::GREY_LIGHT, theme::BG);
+    // }
 
     pub fn paint_locked(&self) {
         display::text_center(Point::new(screen().center().x, 35),self.device_name,theme::FONT_BOLD, theme::GREY_LIGHT, theme::BG);
@@ -98,12 +95,7 @@ impl<'a> Component for LockScreen<'a> {
 
     fn paint(&mut self) {
         self.pad.paint();
-        if self.locked {
-            self.paint_locked();
-        }else {
-
-            self.paint_unlocked();
-        }
+        self.paint_locked();
     }
 
     fn bounds(&self, _sink: &mut dyn FnMut(Rect)) {

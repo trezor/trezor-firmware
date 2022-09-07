@@ -25,15 +25,9 @@ class Lockscreen(HomescreenBase):
     RENDER_SLEEP = loop.SLEEP_FOREVER
     RENDER_INDICATOR = storage.cache.LOCKSCREEN_ON
 
-    def __init__(self, bootscreen: bool = False) -> None:
-        if bootscreen:
-            self.BACKLIGHT_LEVEL = ui.BACKLIGHT_NORMAL
-            self.lock_label = "Not connected"
-            self.tap_label = "Tap to connect"
-        else:
-            self.lock_label = "Locked"
-            self.tap_label = "Tap to unlock"
-
+    def __init__(self) -> None:
+        self.lock_label = "Locked"
+        self.tap_label = "Tap to unlock"
         super().__init__()
 
     def do_render(self) -> None:

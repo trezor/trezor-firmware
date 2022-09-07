@@ -39,10 +39,7 @@ import usb
 # create an unimport manager that will be reused in the main loop
 unimport_manager = utils.unimport()
 
-# unlock the device, unload the boot module afterwards
-with unimport_manager:
-    import boot
-    del boot
+# todo set last unlock time? has to have been unlocked in RUST by now
 
 # start the USB
 import storage.device
