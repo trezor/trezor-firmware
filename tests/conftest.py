@@ -20,6 +20,7 @@ import os
 from typing import TYPE_CHECKING, Generator
 
 import pytest
+import xdist
 
 from trezorlib import debuglink, log
 from trezorlib.debuglink import TrezorClientDebugLink as Client
@@ -77,8 +78,7 @@ def emulator(request: pytest.FixtureRequest) -> Generator["Emulator", None, None
         Guarantees to be unique because each worker has a different name.
         gw0=>20000, gw1=>20003, gw2=>20006, etc.
         """
-        worker_id = os.getenv("PYTEST_XDIST_WORKER")
-        assert worker_id is not None
+        worker_id = xdist.get_xdist_worker_id(request)
         assert worker_id.startswith("gw")
         # One emulator instance occupies 3 consecutive ports:
         # 1. normal link, 2. debug link and 3. webauthn fake interface
@@ -231,9 +231,19 @@ def client(
     _raw_client.close()
 
 
+def _is_main_runner(session_or_request: pytest.Session | pytest.FixtureRequest) -> bool:
+    """Return True if the current process is the main test runner.
+
+    In case tests are run in parallel, the main runner is the xdist controller.
+    We cannot use `is_xdist_controller` directly because it is False when xdist is
+    not used.
+    """
+    return xdist.get_xdist_worker_id(session_or_request) == "master"
+
+
 def pytest_sessionstart(session: pytest.Session) -> None:
     ui_tests.read_fixtures()
-    if session.config.getoption("ui"):
+    if session.config.getoption("ui") and _is_main_runner(session):
         testreport.clear_dir()
 
 
