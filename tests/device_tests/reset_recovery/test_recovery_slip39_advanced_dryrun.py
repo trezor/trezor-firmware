@@ -40,7 +40,7 @@ EXTRA_GROUP_SHARE = [
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_ADVANCED_20, passphrase=False)
 def test_2of3_dryrun(client: Client):
     if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
+        pytest.skip("Shamir not yet supported for model R")
 
     debug = client.debug
 
@@ -73,7 +73,7 @@ def test_2of3_dryrun(client: Client):
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_ADVANCED_20)
 def test_2of3_invalid_seed_dryrun(client: Client):
     if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
+        pytest.skip("Shamir not yet supported for model R")
 
     debug = client.debug
 

@@ -466,11 +466,11 @@ extern "C" fn show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map
         let title = "Recovery seed";
 
         // Parsing the list of share words.
-        // Assume there is always just 12 words in the newly generated seed
+        // Assume there is always up to 24 words in the newly generated seed
         // (for now, later we might support SLIP39 with up to 33 words)
         let mut iter_buf = IterBuf::new();
         let iter_words = Iter::try_from_obj_with_buf(share_words_obj, &mut iter_buf)?;
-        let mut share_words: Vec<StrBuffer, 12> = Vec::new();
+        let mut share_words: Vec<StrBuffer, 24> = Vec::new();
         for word in iter_words {
             share_words.push(word.try_into()?).unwrap();
         }
@@ -484,12 +484,12 @@ extern "C" fn show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map
             " words:\n\n"
         );
 
-        let mut middle_words: String<240> = String::new();
+        let mut middle_words: String<360> = String::new();
         // Vec<StrBuffer> does not support `enumerate()`
         let mut index: u8 = 0;
         for word in share_words {
             index += 1;
-            let line = build_string!(20, inttostr!(index), ". ", word.as_ref(), "\n");
+            let line = build_string!(15, inttostr!(index), ". ", word.as_ref(), "\n");
 
             middle_words.push_str(&line).unwrap();
         }
@@ -504,7 +504,7 @@ extern "C" fn show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map
         // TODO: instead of this could create a new paragraph for the beginning,
         // each word and the end
         let text_to_show = build_string!(
-            320,
+            440,
             beginning_text.as_str(),
             middle_words.as_str(),
             end_text.as_str()

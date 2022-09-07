@@ -35,7 +35,7 @@ MOCK_OS_URANDOM = mock.Mock(return_value=EXTERNAL_ENTROPY)
 @mock.patch("os.urandom", MOCK_OS_URANDOM)
 def test_reset_recovery(client: Client):
     if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
+        pytest.skip("Shamir not yet supported for model R")
 
     mnemonics = reset(client)
     address_before = btc.get_address(client, "Bitcoin", parse_path("m/44h/0h/0h/0/0"))
@@ -52,7 +52,7 @@ def test_reset_recovery(client: Client):
 
 def reset(client: Client, strength=128):
     if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
+        pytest.skip("Shamir not yet supported for model R")
 
     all_mnemonics = []
 
@@ -134,7 +134,7 @@ def reset(client: Client, strength=128):
 
 def recover(client: Client, shares):
     if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
+        pytest.skip("Shamir not yet supported for model R")
 
     debug = client.debug
 

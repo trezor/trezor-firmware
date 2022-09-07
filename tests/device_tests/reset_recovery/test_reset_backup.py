@@ -24,7 +24,12 @@ from trezorlib import device, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.messages import BackupType, ButtonRequestType as B
 
-from ...common import EXTERNAL_ENTROPY, click_through, read_and_confirm_mnemonic
+from ...common import (
+    EXTERNAL_ENTROPY,
+    click_through,
+    read_and_confirm_mnemonic,
+    read_and_confirm_mnemonic_tr,
+)
 
 
 def backup_flow_bip39(client: Client):
@@ -37,7 +42,11 @@ def backup_flow_bip39(client: Client):
         yield from click_through(client.debug, screens=1, code=B.ResetDevice)
 
         # mnemonic phrases
-        mnemonic = yield from read_and_confirm_mnemonic(client.debug)
+        if client.debug.model == "R":
+            client.debug.watch_layout(True)
+            mnemonic = yield from read_and_confirm_mnemonic_tr(client.debug)
+        else:
+            mnemonic = yield from read_and_confirm_mnemonic(client.debug)
 
         # confirm recovery seed check
         br = yield
@@ -52,8 +61,10 @@ def backup_flow_bip39(client: Client):
     with client:
         client.set_expected_responses(
             [
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
+                *[
+                    messages.ButtonRequest(code=B.ResetDevice)
+                    for _ in range(5 if client.debug.model == "R" else 2)
+                ],
                 messages.ButtonRequest(code=B.Success),
                 messages.ButtonRequest(code=B.Success),
                 messages.Success,
@@ -67,6 +78,9 @@ def backup_flow_bip39(client: Client):
 
 
 def backup_flow_slip39_basic(client: Client):
+    if client.features.model == "R":
+        pytest.skip("Shamir not yet supported for model R")
+
     mnemonics = []
 
     def input_flow():
@@ -113,6 +127,9 @@ def backup_flow_slip39_basic(client: Client):
 
 
 def backup_flow_slip39_advanced(client: Client):
+    if client.features.model == "R":
+        pytest.skip("Shamir not yet supported for model R")
+
     mnemonics = []
 
     def input_flow():
@@ -183,9 +200,6 @@ VECTORS = [
 @pytest.mark.parametrize("backup_type, backup_flow", VECTORS)
 @pytest.mark.setup_client(uninitialized=True)
 def test_skip_backup_msg(client: Client, backup_type, backup_flow):
-    if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
-
     os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
     with mock.patch("os.urandom", os_urandom), client:
         device.reset(
@@ -221,9 +235,6 @@ def test_skip_backup_msg(client: Client, backup_type, backup_flow):
 @pytest.mark.parametrize("backup_type, backup_flow", VECTORS)
 @pytest.mark.setup_client(uninitialized=True)
 def test_skip_backup_manual(client: Client, backup_type, backup_flow):
-    if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
-
     def reset_skip_input_flow():
         yield  # Confirm Recovery
         client.debug.press_yes()

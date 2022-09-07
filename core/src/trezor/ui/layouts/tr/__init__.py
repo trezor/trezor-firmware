@@ -402,13 +402,15 @@ async def _placeholder_confirm(
     description: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Other,
 ) -> Any:
-    return await confirm_text(
-        ctx=ctx,
-        br_type=br_type,
-        title=title,
-        data=data,
-        description=description,
-        br_code=br_code,
+    return await raise_if_cancelled(
+        confirm_text(
+            ctx=ctx,
+            br_type=br_type,
+            title=title,
+            data=data,
+            description=description,
+            br_code=br_code,
+        )
     )
 
 
@@ -560,17 +562,15 @@ async def confirm_reset_device(
     if show_tutorial:
         await tutorial(ctx)
 
-    return await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type="recover_device" if recovery else "setup_device",
-            title="Recovery mode" if recovery else "Create new wallet",
-            data="By continuing you agree to trezor.io/tos",
-            description=prompt,
-            br_code=ButtonRequestType.ProtectCall
-            if recovery
-            else ButtonRequestType.ResetDevice,
-        )
+    return await _placeholder_confirm(
+        ctx=ctx,
+        br_type="recover_device" if recovery else "setup_device",
+        title="Recovery mode" if recovery else "Create new wallet",
+        data="By continuing you agree to trezor.io/tos",
+        description=prompt,
+        br_code=ButtonRequestType.ProtectCall
+        if recovery
+        else ButtonRequestType.ResetDevice,
     )
 
 
@@ -603,30 +603,26 @@ async def confirm_backup(ctx: wire.GenericContext) -> bool:
 async def confirm_path_warning(
     ctx: wire.GenericContext, path: str, path_type: str = "Path"
 ) -> None:
-    return await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type="path_warning",
-            title="Confirm path",
-            data=f"{path_type}\n{path} is unknown.\nAre you sure?",
-            description="",
-            br_code=ButtonRequestType.UnknownDerivationPath,
-        )
+    return await _placeholder_confirm(
+        ctx=ctx,
+        br_type="path_warning",
+        title="Confirm path",
+        data=f"{path_type}\n{path} is unknown.\nAre you sure?",
+        description="",
+        br_code=ButtonRequestType.UnknownDerivationPath,
     )
 
 
 async def show_xpub(
     ctx: wire.GenericContext, xpub: str, title: str, cancel: str
 ) -> None:
-    return await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type="show_xpub",
-            title=title,
-            data=xpub,
-            description="",
-            br_code=ButtonRequestType.PublicKey,
-        )
+    return await _placeholder_confirm(
+        ctx=ctx,
+        br_type="show_xpub",
+        title=title,
+        data=xpub,
+        description="",
+        br_code=ButtonRequestType.PublicKey,
     )
 
 
@@ -833,15 +829,13 @@ async def confirm_payment_request(
     memos: list[str],
 ) -> Any:
     memos_str = "\n".join(memos)
-    return await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type="confirm_payment_request",
-            title="Confirm sending",
-            data=f"{amount} to\n{recipient_name}\n{memos_str}",
-            description="",
-            br_code=ButtonRequestType.ConfirmOutput,
-        )
+    return await _placeholder_confirm(
+        ctx=ctx,
+        br_type="confirm_payment_request",
+        title="Confirm sending",
+        data=f"{amount} to\n{recipient_name}\n{memos_str}",
+        description="",
+        br_code=ButtonRequestType.ConfirmOutput,
     )
 
 
@@ -878,15 +872,13 @@ async def confirm_blob(
     icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
     ask_pagination: bool = False,
 ) -> None:
-    await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type=br_type,
-            title=title,
-            data=str(data),
-            description=description,
-            br_code=br_code,
-        )
+    await _placeholder_confirm(
+        ctx=ctx,
+        br_type=br_type,
+        title=title,
+        data=str(data),
+        description=description,
+        br_code=br_code,
     )
 
 
@@ -965,15 +957,13 @@ async def confirm_properties(
     hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
 ) -> None:
-    await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type=br_type,
-            title=title,
-            data="\n\n".join(f"{name or ''}\n{value or ''}" for name, value in props),
-            description="",
-            br_code=br_code,
-        )
+    await _placeholder_confirm(
+        ctx=ctx,
+        br_type=br_type,
+        title=title,
+        data="\n\n".join(f"{name or ''}\n{value or ''}" for name, value in props),
+        description="",
+        br_code=br_code,
     )
 
 
@@ -1011,15 +1001,13 @@ async def confirm_total(
 async def confirm_joint_total(
     ctx: wire.GenericContext, spending_amount: str, total_amount: str
 ) -> None:
-    await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type="confirm_joint_total",
-            title="Joint transaction",
-            data=f"You are contributing:\n{spending_amount}\nto the total amount:\n{total_amount}",
-            description="",
-            br_code=ButtonRequestType.SignTx,
-        )
+    await _placeholder_confirm(
+        ctx=ctx,
+        br_type="confirm_joint_total",
+        title="Joint transaction",
+        data=f"You are contributing:\n{spending_amount}\nto the total amount:\n{total_amount}",
+        description="",
+        br_code=ButtonRequestType.SignTx,
     )
 
 
@@ -1041,30 +1029,26 @@ async def confirm_metadata(
     if not hide_continue:
         text += "\n\nContinue?"
 
-    await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type=br_type,
-            title=title,
-            data=text,
-            description="",
-            br_code=br_code,
-        )
+    await _placeholder_confirm(
+        ctx=ctx,
+        br_type=br_type,
+        title=title,
+        data=text,
+        description="",
+        br_code=br_code,
     )
 
 
 async def confirm_replacement(
     ctx: wire.GenericContext, description: str, txid: str
 ) -> None:
-    await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type="confirm_replacement",
-            title=description,
-            data=f"Confirm transaction ID:\n{txid}",
-            description="",
-            br_code=ButtonRequestType.SignTx,
-        )
+    await _placeholder_confirm(
+        ctx=ctx,
+        br_type="confirm_replacement",
+        title=description,
+        data=f"Confirm transaction ID:\n{txid}",
+        description="",
+        br_code=ButtonRequestType.SignTx,
     )
 
 
@@ -1082,15 +1066,13 @@ async def confirm_modify_output(
         text += f"Increase amount by:\n{amount_change}\n\n"
     text += f"New amount:\n{amount_new}"
 
-    await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type="modify_output",
-            title="Modify amount",
-            data=text,
-            description="",
-            br_code=ButtonRequestType.ConfirmOutput,
-        )
+    await _placeholder_confirm(
+        ctx=ctx,
+        br_type="modify_output",
+        title="Modify amount",
+        data=text,
+        description="",
+        br_code=ButtonRequestType.ConfirmOutput,
     )
 
 
@@ -1114,30 +1096,26 @@ async def confirm_modify_fee(
     if fee_rate_amount is not None:
         text += "\n" + fee_rate_amount
 
-    await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type="modify_fee",
-            title="Modify fee",
-            data=text,
-            description="",
-            br_code=ButtonRequestType.SignTx,
-        )
+    await _placeholder_confirm(
+        ctx=ctx,
+        br_type="modify_fee",
+        title="Modify fee",
+        data=text,
+        description="",
+        br_code=ButtonRequestType.SignTx,
     )
 
 
 async def confirm_coinjoin(
     ctx: wire.GenericContext, coin_name: str, max_rounds: int, max_fee_per_vbyte: str
 ) -> None:
-    await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type="coinjoin_final",
-            title="Authorize CoinJoin",
-            data=f"Coin name: {coin_name}\n\nMaximum rounds: {max_rounds}\n\nMaximum mining fee:\n{max_fee_per_vbyte} sats/vbyte",
-            description="",
-            br_code=ButtonRequestType.Other,
-        )
+    await _placeholder_confirm(
+        ctx=ctx,
+        br_type="coinjoin_final",
+        title="Authorize CoinJoin",
+        data=f"Coin name: {coin_name}\n\nMaximum rounds: {max_rounds}\n\nMaximum mining fee:\n{max_fee_per_vbyte} sats/vbyte",
+        description="",
+        br_code=ButtonRequestType.Other,
     )
 
 
@@ -1150,15 +1128,13 @@ async def confirm_sign_identity(
         text += f"{challenge_visual}\n\n"
     text += identity
 
-    await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type="confirm_sign_identity",
-            title=f"Sign {proto}",
-            data=text,
-            description="",
-            br_code=ButtonRequestType.Other,
-        )
+    await _placeholder_confirm(
+        ctx=ctx,
+        br_type="confirm_sign_identity",
+        title=f"Sign {proto}",
+        data=text,
+        description="",
+        br_code=ButtonRequestType.Other,
     )
 
 
@@ -1172,26 +1148,22 @@ async def confirm_signverify(
         header = f"Sign {coin} message"
         br_type = "sign_message"
 
-    await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type=br_type,
-            title=header,
-            data=f"Confirm address:\n{address}",
-            description="",
-            br_code=ButtonRequestType.Other,
-        )
+    await _placeholder_confirm(
+        ctx=ctx,
+        br_type=br_type,
+        title=header,
+        data=f"Confirm address:\n{address}",
+        description="",
+        br_code=ButtonRequestType.Other,
     )
 
-    await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type=br_type,
-            title=header,
-            data=f"Confirm message:\n{message}",
-            description="",
-            br_code=ButtonRequestType.Other,
-        )
+    await _placeholder_confirm(
+        ctx=ctx,
+        br_type=br_type,
+        title=header,
+        data=f"Confirm message:\n{message}",
+        description="",
+        br_code=ButtonRequestType.Other,
     )
 
 

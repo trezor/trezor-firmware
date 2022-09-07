@@ -44,7 +44,7 @@ VECTORS = (
 # To allow reusing functionality for multiple tests
 def _test_secret(client: Client, shares, secret, click_info=False):
     if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
+        pytest.skip("Shamir not yet supported for model R")
 
     debug = client.debug
 
@@ -99,7 +99,7 @@ def test_extra_share_entered(client: Client):
 @pytest.mark.setup_client(uninitialized=True)
 def test_abort(client: Client):
     if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
+        pytest.skip("Shamir not yet supported for model R")
 
     debug = client.debug
 
@@ -124,7 +124,7 @@ def test_abort(client: Client):
 @pytest.mark.setup_client(uninitialized=True)
 def test_noabort(client: Client):
     if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
+        pytest.skip("Shamir not yet supported for model R")
 
     debug = client.debug
 
@@ -149,7 +149,7 @@ def test_noabort(client: Client):
 @pytest.mark.setup_client(uninitialized=True)
 def test_same_share(client: Client):
     if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
+        pytest.skip("Shamir not yet supported for model R")
 
     debug = client.debug
     # we choose the second share from the fixture because
@@ -195,7 +195,7 @@ def test_same_share(client: Client):
 @pytest.mark.setup_client(uninitialized=True)
 def test_group_threshold_reached(client: Client):
     if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
+        pytest.skip("Shamir not yet supported for model R")
 
     debug = client.debug
     # first share in the fixture is 1of1 so we choose that

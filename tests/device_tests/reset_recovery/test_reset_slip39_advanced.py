@@ -35,7 +35,7 @@ EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
 @pytest.mark.setup_client(uninitialized=True)
 def test_reset_device_slip39_advanced(client: Client):
     if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
+        pytest.skip("Shamir not yet supported for model R")
 
     strength = 128
     member_threshold = 3

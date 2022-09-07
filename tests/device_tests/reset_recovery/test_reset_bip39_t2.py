@@ -29,6 +29,7 @@ from ...common import (
     click_through,
     generate_entropy,
     read_and_confirm_mnemonic,
+    read_and_confirm_mnemonic_tr,
 )
 
 pytestmark = [pytest.mark.skip_t1]
@@ -37,9 +38,6 @@ EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
 
 
 def reset_device(client: Client, strength):
-    if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
-
     mnemonic = None
 
     def input_flow():
@@ -50,7 +48,11 @@ def reset_device(client: Client, strength):
         yield from click_through(client.debug, screens=3, code=B.ResetDevice)
 
         # mnemonic phrases
-        mnemonic = yield from read_and_confirm_mnemonic(client.debug)
+        if client.debug.model == "R":
+            client.debug.watch_layout(True)
+            mnemonic = yield from read_and_confirm_mnemonic_tr(client.debug)
+        else:
+            mnemonic = yield from read_and_confirm_mnemonic(client.debug)
 
         # confirm recovery seed check
         br = yield
@@ -69,8 +71,10 @@ def reset_device(client: Client, strength):
                 messages.ButtonRequest(code=B.ResetDevice),
                 messages.EntropyRequest(),
                 messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
+                *[
+                    messages.ButtonRequest(code=B.ResetDevice)
+                    for _ in range(5 if client.debug.model == "R" else 2)
+                ],
                 messages.ButtonRequest(code=B.Success),
                 messages.ButtonRequest(code=B.Success),
                 messages.Success,
@@ -124,9 +128,6 @@ def test_reset_device_192(client: Client):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_reset_device_pin(client: Client):
-    if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
-
     mnemonic = None
     strength = 256  # 24 words
 
@@ -162,7 +163,11 @@ def test_reset_device_pin(client: Client):
         client.debug.press_yes()
 
         # mnemonic phrases
-        mnemonic = yield from read_and_confirm_mnemonic(client.debug)
+        if client.debug.model == "R":
+            client.debug.watch_layout(True)
+            mnemonic = yield from read_and_confirm_mnemonic_tr(client.debug)
+        else:
+            mnemonic = yield from read_and_confirm_mnemonic(client.debug)
 
         # confirm recovery seed check
         br = yield
@@ -184,8 +189,10 @@ def test_reset_device_pin(client: Client):
                 messages.ButtonRequest(code=B.ResetDevice),
                 messages.EntropyRequest(),
                 messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
+                *[
+                    messages.ButtonRequest(code=B.ResetDevice)
+                    for _ in range(5 if client.debug.model == "R" else 2)
+                ],
                 messages.ButtonRequest(code=B.Success),
                 messages.ButtonRequest(code=B.Success),
                 messages.Success,
@@ -224,9 +231,6 @@ def test_reset_device_pin(client: Client):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_reset_failed_check(client: Client):
-    if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
-
     mnemonic = None
     strength = 256  # 24 words
 
@@ -238,7 +242,15 @@ def test_reset_failed_check(client: Client):
         yield from click_through(client.debug, screens=3, code=B.ResetDevice)
 
         # mnemonic phrases, wrong answer
-        mnemonic = yield from read_and_confirm_mnemonic(client.debug, choose_wrong=True)
+        if client.debug.model == "R":
+            client.debug.watch_layout(True)
+            mnemonic = yield from read_and_confirm_mnemonic_tr(
+                client.debug, choose_wrong=True
+            )
+        else:
+            mnemonic = yield from read_and_confirm_mnemonic(
+                client.debug, choose_wrong=True
+            )
 
         # warning screen
         br = yield
@@ -246,7 +258,11 @@ def test_reset_failed_check(client: Client):
         client.debug.press_yes()
 
         # mnemonic phrases
-        mnemonic = yield from read_and_confirm_mnemonic(client.debug)
+        if client.debug.model == "R":
+            client.debug.watch_layout(True)
+            mnemonic = yield from read_and_confirm_mnemonic_tr(client.debug)
+        else:
+            mnemonic = yield from read_and_confirm_mnemonic(client.debug)
 
         # confirm recovery seed check
         br = yield
@@ -267,8 +283,10 @@ def test_reset_failed_check(client: Client):
                 messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
+                *[
+                    messages.ButtonRequest(code=B.ResetDevice)
+                    for _ in range(6 if client.debug.model == "R" else 2)
+                ],
                 messages.ButtonRequest(code=B.Success),
                 messages.ButtonRequest(code=B.Success),
                 messages.Success,
@@ -308,9 +326,6 @@ def test_reset_failed_check(client: Client):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_failed_pin(client: Client):
-    if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
-
     # external_entropy = b'zlutoucky kun upel divoke ody' * 2
     strength = 128
     ret = client.call_raw(

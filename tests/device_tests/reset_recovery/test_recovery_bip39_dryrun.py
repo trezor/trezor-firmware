@@ -91,8 +91,6 @@ def do_recover_core(client: Client, mnemonic: List[str], **kwargs: Any):
 
 
 def do_recover_r(client: Client, mnemonic: List[str], **kwargs: Any):
-    pytest.fail("Input flow not ready for model R")
-
     def input_flow():
         yield
         layout = client.debug.wait_layout()
@@ -116,22 +114,20 @@ def do_recover_r(client: Client, mnemonic: List[str], **kwargs: Any):
 
         yield
         layout = client.debug.wait_layout()
-        print("layout", layout)
         assert "Enter recovery seed" in layout.text
         client.debug.press_right()
 
         yield
         yield
-        # layout = client.debug.wait_layout()
-        # print("layout", layout)
         for word in mnemonic:
             layout = client.debug.wait_layout()
-            print("layout", layout)
+            assert "Choose word" in layout.text
             client.debug.input(word)
+            yield
 
-        # yield
-        # client.debug.wait_layout()
-        # client.debug.click(buttons.OK)
+        layout = client.debug.wait_layout()
+        client.debug.press_right()
+        yield
 
     with client:
         client.watch_layout()
@@ -172,10 +168,7 @@ def test_invalid_seed_t1(client: Client):
 
 @pytest.mark.skip_t1
 def test_invalid_seed_core(client: Client):
-    if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
-
-    def input_flow():
+    def input_flow_tt():
         yield
         layout = client.debug.wait_layout()
         assert "check the recovery seed" in layout.text.replace("\n", " ")
@@ -220,9 +213,59 @@ def test_invalid_seed_core(client: Client):
         assert "abort" in layout.text
         client.debug.click(buttons.OK)
 
+    def input_flow_tr():
+        yield
+        layout = client.debug.wait_layout()
+        assert "check the recovery seed" in layout.text
+        client.debug.press_right()
+
+        yield
+        layout = client.debug.wait_layout()
+        assert "Select number of words" in layout.text
+        client.debug.press_right()
+
+        yield
+        yield
+        layout = client.debug.wait_layout()
+        assert "Number of words?" in layout.text
+        # select 12 words
+        client.debug.press_middle()
+
+        yield
+        layout = client.debug.wait_layout()
+        assert "Enter recovery seed" in layout.text
+        client.debug.press_right()
+
+        yield
+        for _ in range(12):
+            yield
+            layout = client.debug.wait_layout()
+            assert "Choose word" in layout.text
+            client.debug.input("stick")
+
+        br = yield
+        layout = client.debug.wait_layout()
+        assert br.code == messages.ButtonRequestType.Warning
+        assert "invalid recovery seed" in layout.text
+        client.debug.press_right()
+
+        yield
+        # retry screen
+        layout = client.debug.wait_layout()
+        assert "Select number of words" in layout.text
+        client.debug.press_left()
+
+        yield
+        layout = client.debug.wait_layout()
+        assert "abort" in layout.text
+        client.debug.press_right()
+
     with client:
         client.watch_layout()
-        client.set_input_flow(input_flow)
+        if client.features.model == "T":
+            client.set_input_flow(input_flow_tt)
+        elif client.features.model == "R":
+            client.set_input_flow(input_flow_tr)
         with pytest.raises(exceptions.Cancelled):
             return device.recover(client, dry_run=True, show_tutorial=False)
 

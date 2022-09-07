@@ -62,10 +62,12 @@ def test_backup_bip39(client: Client):
 
     with client:
         client.set_input_flow(input_flow)
-        reset_brs = 5 if client.debug.model == "R" else 2
         client.set_expected_responses(
             [
-                *[messages.ButtonRequest(code=B.ResetDevice) for _ in range(reset_brs)],
+                *[
+                    messages.ButtonRequest(code=B.ResetDevice)
+                    for _ in range(5 if client.debug.model == "R" else 2)
+                ],
                 messages.ButtonRequest(code=B.Success),
                 messages.ButtonRequest(code=B.Success),
                 messages.Success,
@@ -90,7 +92,7 @@ def test_backup_bip39(client: Client):
 )
 def test_backup_slip39_basic(client: Client, click_info: bool):
     if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
+        pytest.skip("Shamir not yet supported for model R")
 
     assert client.features.needs_backup is True
     mnemonics = []
@@ -161,7 +163,7 @@ def test_backup_slip39_basic(client: Client, click_info: bool):
 )
 def test_backup_slip39_advanced(client: Client, click_info: bool):
     if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
+        pytest.skip("Shamir not yet supported for model R")
 
     assert client.features.needs_backup is True
     mnemonics = []

@@ -26,13 +26,10 @@ pytestmark = pytest.mark.skip_t1
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_tt_pin_passphrase(client: Client):
-    if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
-
     layout = client.debug.wait_layout
     mnemonic = MNEMONIC12.split(" ")
 
-    def input_flow():
+    def input_flow_tt():
         yield
         assert "Do you really want to recover a wallet?" in layout().text
         client.debug.press_yes()
@@ -66,8 +63,47 @@ def test_tt_pin_passphrase(client: Client):
         assert "You have successfully recovered your wallet." in layout().text
         client.debug.press_yes()
 
+    def input_flow_tr():
+        yield
+        assert "Do you really want to recover a wallet?" in layout().text
+        client.debug.press_yes()
+
+        yield
+        assert "PIN" in layout().text
+        client.debug.input("654")
+
+        yield
+        assert "PIN" in layout().text
+        client.debug.input("654")
+
+        yield
+        assert "Select number of words" in layout().text
+        client.debug.press_yes()
+
+        yield
+        yield
+        assert "Number of words?" in layout().text
+        client.debug.input(str(len(mnemonic)))
+
+        yield
+        assert "Enter recovery seed" in layout().text
+        client.debug.press_yes()
+
+        yield
+        for word in mnemonic:
+            yield
+            assert "Choose word" in layout().text
+            client.debug.input(word)
+
+        yield
+        assert "You have successfully recovered your wallet." in layout().text
+        client.debug.press_yes()
+
     with client:
-        client.set_input_flow(input_flow)
+        if client.features.model == "T":
+            client.set_input_flow(input_flow_tt)
+        elif client.features.model == "R":
+            client.set_input_flow(input_flow_tr)
         client.watch_layout()
         device.recover(
             client,
@@ -87,13 +123,10 @@ def test_tt_pin_passphrase(client: Client):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_tt_nopin_nopassphrase(client: Client):
-    if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
-
     layout = client.debug.wait_layout
     mnemonic = MNEMONIC12.split(" ")
 
-    def input_flow():
+    def input_flow_tt():
         yield
         assert "Do you really want to recover a wallet?" in layout().text
         client.debug.press_yes()
@@ -119,8 +152,39 @@ def test_tt_nopin_nopassphrase(client: Client):
         assert "You have successfully recovered your wallet." in layout().text
         client.debug.press_yes()
 
+    def input_flow_tr():
+        yield
+        assert "Do you really want to recover a wallet?" in layout().text
+        client.debug.press_yes()
+
+        yield
+        assert "Select number of words" in layout().text
+        client.debug.press_yes()
+
+        yield
+        yield
+        assert "Number of words?" in layout().text
+        client.debug.input(str(len(mnemonic)))
+
+        yield
+        assert "Enter recovery seed" in layout().text
+        client.debug.press_yes()
+
+        yield
+        for word in mnemonic:
+            yield
+            assert "Choose word" in layout().text
+            client.debug.input(word)
+
+        yield
+        assert "You have successfully recovered your wallet." in layout().text
+        client.debug.press_yes()
+
     with client:
-        client.set_input_flow(input_flow)
+        if client.features.model == "T":
+            client.set_input_flow(input_flow_tt)
+        elif client.features.model == "R":
+            client.set_input_flow(input_flow_tr)
         client.watch_layout()
         device.recover(
             client,

@@ -50,7 +50,7 @@ VECTORS = (
 @pytest.mark.parametrize("shares, secret", VECTORS)
 def test_secret(client: Client, shares, secret):
     if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
+        pytest.skip("Shamir not yet supported for model R")
 
     debug = client.debug
 
@@ -79,7 +79,7 @@ def test_secret(client: Client, shares, secret):
 @pytest.mark.setup_client(uninitialized=True)
 def test_recover_with_pin_passphrase(client: Client):
     if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
+        pytest.skip("Shamir not yet supported for model R")
 
     debug = client.debug
 
@@ -113,7 +113,7 @@ def test_recover_with_pin_passphrase(client: Client):
 @pytest.mark.setup_client(uninitialized=True)
 def test_abort(client: Client):
     if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
+        pytest.skip("Shamir not yet supported for model R")
 
     debug = client.debug
 
@@ -138,7 +138,7 @@ def test_abort(client: Client):
 @pytest.mark.setup_client(uninitialized=True)
 def test_noabort(client: Client):
     if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
+        pytest.skip("Shamir not yet supported for model R")
 
     debug = client.debug
 
@@ -161,7 +161,7 @@ def test_noabort(client: Client):
 @pytest.mark.setup_client(uninitialized=True)
 def test_ask_word_number(client: Client):
     if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
+        pytest.skip("Shamir not yet supported for model R")
 
     debug = client.debug
 
@@ -260,7 +260,7 @@ def test_ask_word_number(client: Client):
 @pytest.mark.parametrize("nth_word", range(3))
 def test_wrong_nth_word(client: Client, nth_word):
     if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
+        pytest.skip("Shamir not yet supported for model R")
 
     debug = client.debug
     share = MNEMONIC_SLIP39_BASIC_20_3of6[0].split(" ")
@@ -304,7 +304,7 @@ def test_wrong_nth_word(client: Client, nth_word):
 @pytest.mark.setup_client(uninitialized=True)
 def test_same_share(client: Client):
     if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
+        pytest.skip("Shamir not yet supported for model R")
 
     debug = client.debug
     first_share = MNEMONIC_SLIP39_BASIC_20_3of6[0].split(" ")
@@ -346,7 +346,7 @@ def test_same_share(client: Client):
 @pytest.mark.setup_client(uninitialized=True)
 def test_1of1(client: Client):
     if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
+        pytest.skip("Shamir not yet supported for model R")
 
     debug = client.debug
 

@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from typing import List
+
 import pytest
 
 from trezorlib import btc, messages, tools
@@ -40,7 +42,12 @@ VECTORS = (  # path, script_type, address
 
 
 @pytest.mark.parametrize("path, script_type, address", VECTORS)
-def test_show(client: Client, path, script_type, address):
+def test_show(
+    client: Client, path: str, script_type: messages.InputScriptType, address: str
+):
+    if client.features.model == "R":
+        pytest.skip("QR codes are not supported on model R")
+
     def input_flow():
         yield
         client.debug.press_no()
@@ -179,10 +186,15 @@ VECTORS_MULTISIG = (  # script_type, bip48_type, address, xpubs, ignore_xpub_mag
     "script_type, bip48_type, address, xpubs, ignore_xpub_magic", VECTORS_MULTISIG
 )
 def test_show_multisig_xpubs(
-    client, script_type, bip48_type, address, xpubs, ignore_xpub_magic
+    client: Client,
+    script_type: messages.InputScriptType,
+    bip48_type: int,
+    address: str,
+    xpubs: List[str],
+    ignore_xpub_magic: bool,
 ):
     if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
+        pytest.skip("Input flow is not ready for model R")
 
     nodes = [
         btc.get_public_node(

@@ -285,15 +285,12 @@ def read_and_confirm_mnemonic_tr(
     mnemonic: List[str] = []
     br = yield
     assert br.pages is not None
-    for _ in range(br.pages - 1):
+    for _ in range(br.pages):
         layout = debug.wait_layout()
 
         words = ModelRLayout(layout).get_mnemonic_words()
         mnemonic.extend(words)
-        debug.swipe_up()
-
-    # last page is confirmation
-    debug.press_yes()
+        debug.press_right()
 
     # check share
     for _ in range(3):
@@ -312,7 +309,7 @@ def read_and_confirm_mnemonic_tr(
                     debug.input(correct_word)
                     break
                 else:
-                    debug.swipe_up()
+                    debug.press_right()
                     layout = debug.wait_layout()
             else:
                 raise RuntimeError("Correct word not found")

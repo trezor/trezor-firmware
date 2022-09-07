@@ -62,7 +62,7 @@ def test_reset_recovery(client: Client):
 
 def reset(client: Client, strength=128):
     if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
+        pytest.skip("Shamir not yet supported for model R")
 
     all_mnemonics = []
 
@@ -159,7 +159,7 @@ def reset(client: Client, strength=128):
 
 def recover(client: Client, shares):
     if client.features.model == "R":
-        pytest.fail("Input flow not ready for model R")
+        pytest.skip("Shamir not yet supported for model R")
 
     debug = client.debug
 

@@ -338,7 +338,7 @@ def input_flow_skip(client: Client, cancel=False):
         client.debug.press_yes()
 
 
-def input_flow_scroll_down(client: Client, cancel=False):
+def input_flow_scroll_down(client: Client, cancel: bool = False):
     yield  # confirm sending
     client.debug.wait_layout()
     if client.features.model == "R":
@@ -368,9 +368,9 @@ def input_flow_scroll_down(client: Client, cancel=False):
         client.debug.press_yes()
 
 
-def input_flow_go_back(client: Client, cancel=False):
+def input_flow_go_back(client: Client, cancel: bool = False):
     if client.features.model == "R":
-        pytest.fail("Go back not supported for model R")
+        pytest.skip("Go back not supported for model R")
 
     br = yield  # confirm sending
     client.debug.wait_layout()
