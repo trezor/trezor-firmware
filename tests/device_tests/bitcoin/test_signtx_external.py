@@ -699,7 +699,6 @@ def test_p2tr_with_proof(client: Client):
                 messages.ButtonRequest(code=B.ConfirmOutput),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
-                request_input(0),
                 request_input(1),
                 request_output(0),
                 request_input(1),
@@ -759,19 +758,6 @@ def test_p2wpkh_with_false_proof(client: Client):
             [
                 request_input(0),
                 request_input(1),
-                request_output(0),
-                messages.ButtonRequest(code=B.ConfirmOutput),
-                messages.ButtonRequest(code=B.SignTx),
-                request_input(0),
-                request_meta(TXHASH_70f987),
-                request_input(0, TXHASH_70f987),
-                request_output(0, TXHASH_70f987),
-                request_output(1, TXHASH_70f987),
-                request_input(1),
-                request_meta(TXHASH_65b768),
-                request_input(0, TXHASH_65b768),
-                request_output(0, TXHASH_65b768),
-                request_output(1, TXHASH_65b768),
                 messages.Failure(code=messages.FailureType.DataError),
             ]
         )
