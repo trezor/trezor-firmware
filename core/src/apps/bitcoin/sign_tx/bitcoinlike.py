@@ -30,7 +30,8 @@ class Bitcoinlike(Bitcoin):
             multisig.multisig_pubkey_index(txi.multisig, public_key)
 
         # serialize input with correct signature
-        self.write_tx_input_derived(self.serialized_tx, txi, public_key, signature)
+        if self.serialize:
+            self.write_tx_input_derived(self.serialized_tx, txi, public_key, signature)
         self.set_serialized_signature(i_sign, signature)
 
     async def sign_nonsegwit_input(self, i_sign: int) -> None:

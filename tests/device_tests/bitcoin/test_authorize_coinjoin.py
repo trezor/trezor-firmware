@@ -188,19 +188,11 @@ def test_sign_tx(client: Client):
                 request_output(2),
                 request_output(3),
                 request_output(4),
-                request_input(0),
-                request_input(0),
-                request_input(1),
-                request_output(0),
-                request_output(1),
-                request_output(2),
-                request_output(3),
-                request_output(4),
                 request_input(1),
                 request_finished(),
             ]
         )
-        _, serialized_tx = btc.sign_tx(
+        signatures, serialized_tx = btc.sign_tx(
             client,
             "Testnet",
             inputs,
@@ -208,12 +200,15 @@ def test_sign_tx(client: Client):
             prev_txes=TX_CACHE_TESTNET,
             payment_reqs=[payment_req],
             preauthorized=True,
+            serialize=False,
         )
 
-    # Transaction does not exist on the blockchain, not using assert_tx_matches()
+    assert serialized_tx == b""
+    assert len(signatures) == 2
+    assert signatures[0] is None
     assert (
-        serialized_tx.hex()
-        == "010000000001028abbd1cf69e00fbf60fa3ba475dccdbdba4a859ffa6bfd1ee820a75b1be2b7e50000000000ffffffff0ab6ad3ba09261cfb4fa1d3680cb19332a8fe4d9de9ea89aa565bd83a2c082f90100000000ffffffff0550c3000000000000225120e0458118b80a08042d84c4f0356d86863fe2bffc034e839c166ad4e8da7e26ef50c3000000000000225120bdb100a4e7ba327d364642dc653b9e6b51783bde6ea0df2ccbc1a78e3cc1329511e56d0000000000225120c5c7c63798b59dc16e97d916011e99da5799d1b3dd81c2f2e93392477417e71e72bf00000000000022512062fdf14323b9ccda6f5b03c5c2c28e35839a3909a2e14d32b595c63d53c7b88f51900000000000001976a914a579388225827d9f2fe9014add644487808c695d88ac000140c017fce789fa8db54a2ae032012d2dd6d7c76cc1c1a6f00e29b86acbf93022da8aa559009a574792c7b09b2535d288d6e03c6ed169902ed8c4c97626a83fbc1100000000"
+        signatures[1].hex()
+        == "c017fce789fa8db54a2ae032012d2dd6d7c76cc1c1a6f00e29b86acbf93022da8aa559009a574792c7b09b2535d288d6e03c6ed169902ed8c4c97626a83fbc11"
     )
 
     # Test for a second time.
@@ -249,7 +244,7 @@ def test_sign_tx_large(client: Client):
     own_output_count = 30
     total_output_count = 1200
     output_denom = 10_000  # sats
-    max_expected_delay = 250  # seconds
+    max_expected_delay = 60  # seconds
 
     with client:
         btc.authorize_coinjoin(
@@ -338,6 +333,7 @@ def test_sign_tx_large(client: Client):
             prev_txes=TX_CACHE_TESTNET,
             payment_reqs=[payment_req],
             preauthorized=True,
+            serialize=False,
         )
     delay = time.time() - start
     assert delay <= max_expected_delay

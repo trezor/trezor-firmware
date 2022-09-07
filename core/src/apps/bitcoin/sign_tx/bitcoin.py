@@ -111,6 +111,7 @@ class Bitcoin:
         # transaction and signature serialization
         _SERIALIZED_TX_BUFFER[:] = bytes()
         self.serialized_tx = _SERIALIZED_TX_BUFFER
+        self.serialize = tx.serialize
         self.tx_req = TxRequest()
         self.tx_req.details = TxRequestDetailsType()
         self.tx_req.serialized = TxRequestSerializedType()
@@ -247,18 +248,25 @@ class Bitcoin:
         await self.verify_original_txs()
 
     async def step4_serialize_inputs(self) -> None:
-        self.write_tx_header(self.serialized_tx, self.tx_info.tx, bool(self.segwit))
-        write_compact_size(self.serialized_tx, self.tx_info.tx.inputs_count)
+        if self.serialize:
+            self.write_tx_header(self.serialized_tx, self.tx_info.tx, bool(self.segwit))
+            write_compact_size(self.serialized_tx, self.tx_info.tx.inputs_count)
+
         for i in range(self.tx_info.tx.inputs_count):
             progress.advance()
             if i in self.external:
-                await self.serialize_external_input(i)
+                if self.serialize:
+                    await self.serialize_external_input(i)
             elif i in self.segwit:
-                await self.serialize_segwit_input(i)
+                if self.serialize:
+                    await self.serialize_segwit_input(i)
             else:
                 await self.sign_nonsegwit_input(i)
 
     async def step5_serialize_outputs(self) -> None:
+        if not self.serialize:
+            return
+
         write_compact_size(self.serialized_tx, self.tx_info.tx.outputs_count)
         for i in range(self.tx_info.tx.outputs_count):
             progress.advance()
@@ -273,16 +281,19 @@ class Bitcoin:
             progress.advance()
             if i in self.segwit:
                 if i in self.external:
-                    txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
-                    self.serialized_tx.extend(txi.witness or b"\0")
+                    if self.serialize:
+                        txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
+                        self.serialized_tx.extend(txi.witness or b"\0")
                 else:
                     await self.sign_segwit_input(i)
             else:
                 # add empty witness for non-segwit inputs
-                self.serialized_tx.append(0)
+                if self.serialize:
+                    self.serialized_tx.append(0)
 
     async def step7_finish(self) -> None:
-        self.write_tx_footer(self.serialized_tx, self.tx_info.tx)
+        if self.serialize:
+            self.write_tx_footer(self.serialized_tx, self.tx_info.tx)
         await helpers.request_tx_finish(self.tx_req)
 
     async def process_internal_input(self, txi: TxInput) -> None:
@@ -596,31 +607,32 @@ class Bitcoin:
 
         if txi.script_type == InputScriptType.SPENDTAPROOT:
             signature = self.sign_taproot_input(i, txi)
-            scripts.write_witness_p2tr(
-                self.serialized_tx, signature, self.get_sighash_type(txi)
-            )
+            if self.serialize:
+                scripts.write_witness_p2tr(
+                    self.serialized_tx, signature, self.get_sighash_type(txi)
+                )
         else:
             public_key, signature = self.sign_bip143_input(i, txi)
-
-            if txi.multisig:
-                # find out place of our signature based on the pubkey
-                signature_index = multisig.multisig_pubkey_index(
-                    txi.multisig, public_key
-                )
-                scripts.write_witness_multisig(
-                    self.serialized_tx,
-                    txi.multisig,
-                    signature,
-                    signature_index,
-                    self.get_sighash_type(txi),
-                )
-            else:
-                scripts.write_witness_p2wpkh(
-                    self.serialized_tx,
-                    signature,
-                    public_key,
-                    self.get_sighash_type(txi),
-                )
+            if self.serialize:
+                if txi.multisig:
+                    # find out place of our signature based on the pubkey
+                    signature_index = multisig.multisig_pubkey_index(
+                        txi.multisig, public_key
+                    )
+                    scripts.write_witness_multisig(
+                        self.serialized_tx,
+                        txi.multisig,
+                        signature,
+                        signature_index,
+                        self.get_sighash_type(txi),
+                    )
+                else:
+                    scripts.write_witness_p2wpkh(
+                        self.serialized_tx,
+                        signature,
+                        public_key,
+                        self.get_sighash_type(txi),
+                    )
 
         self.set_serialized_signature(i, signature)
 
@@ -707,10 +719,11 @@ class Bitcoin:
         # compute the signature from the tx digest
         signature = ecdsa_sign(node, tx_digest)
 
-        # serialize input with correct signature
-        self.write_tx_input_derived(
-            self.serialized_tx, txi, node.public_key(), signature
-        )
+        if self.serialize:
+            # serialize input with correct signature
+            self.write_tx_input_derived(
+                self.serialized_tx, txi, node.public_key(), signature
+            )
         self.set_serialized_signature(i, signature)
 
     async def serialize_output(self, i: int) -> None:
