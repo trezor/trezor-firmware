@@ -1428,7 +1428,7 @@ def test_lock_time_blockheight(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    def input_flow_tt(_):
+    def input_flow_tt():
         yield  # confirm output
         client.debug.wait_layout()
         client.debug.press_yes()

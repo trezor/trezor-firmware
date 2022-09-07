@@ -29,12 +29,12 @@ from typing import (
     Iterable,
     Iterator,
     List,
+    NamedTuple,
     Optional,
     Sequence,
     Tuple,
     Type,
     Union,
-    NamedTuple,
 )
 
 from mnemonic import Mnemonic
@@ -161,7 +161,7 @@ class DebugLink:
         self,
         word: Optional[str] = None,
         button: Optional[messages.DebugButton] = None,
-        button_r: Optional[messages.ModelRButton] = None,
+        physical_button: Optional[messages.DebugPhysicalButton] = None,
         swipe: Optional[messages.DebugSwipeDirection] = None,
         x: Optional[int] = None,
         y: Optional[int] = None,
@@ -171,12 +171,21 @@ class DebugLink:
         if not self.allow_interactions:
             return None
 
-        args = sum(a is not None for a in (word, button, button_r, swipe, x))
+        args = sum(a is not None for a in (word, button, physical_button, swipe, x))
         if args != 1:
-            raise ValueError("Invalid input - must use one of word, button, button_r, swipe, click(x,y)")
+            raise ValueError(
+                "Invalid input - must use one of word, button, physical_button, swipe, click(x,y)"
+            )
 
         decision = messages.DebugLinkDecision(
-            button=button, button_r=button_r, swipe=swipe, input=word, x=x, y=y, wait=wait, hold_ms=hold_ms
+            button=button,
+            physical_button=physical_button,
+            swipe=swipe,
+            input=word,
+            x=x,
+            y=y,
+            wait=wait,
+            hold_ms=hold_ms,
         )
         ret = self._call(decision, nowait=not wait)
         if ret is not None:
@@ -215,13 +224,13 @@ class DebugLink:
         self.input(swipe=messages.DebugSwipeDirection.LEFT)
 
     def press_left(self) -> None:
-        self.input(button_r=messages.ModelRButton.LEFT_BTN)
+        self.input(physical_button=messages.DebugPhysicalButton.LEFT_BTN)
 
     def press_middle(self) -> None:
-        self.input(button_r=messages.ModelRButton.MIDDLE_BTN)
+        self.input(physical_button=messages.DebugPhysicalButton.MIDDLE_BTN)
 
     def press_right(self) -> None:
-        self.input(button_r=messages.ModelRButton.RIGHT_BTN)
+        self.input(physical_button=messages.DebugPhysicalButton.RIGHT_BTN)
 
     def stop(self) -> None:
         self._call(messages.DebugLinkStop(), nowait=True)

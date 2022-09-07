@@ -193,12 +193,12 @@ class RustLayout(ui.Layout):
         self.timer.schedule(deadline, token)
 
     if __debug__:
-        from trezor.enums import ModelRButton
+        from trezor.enums import DebugPhysicalButton
 
         BTN_MAP = {
-            "left": ModelRButton.LEFT_BTN,
-            "middle": ModelRButton.MIDDLE_BTN,
-            "right": ModelRButton.RIGHT_BTN,
+            "left": DebugPhysicalButton.LEFT_BTN,
+            "middle": DebugPhysicalButton.MIDDLE_BTN,
+            "right": DebugPhysicalButton.RIGHT_BTN,
         }
 
         def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:  # type: ignore [obscured-by-same-name]
@@ -254,15 +254,15 @@ class RustLayout(ui.Layout):
             self.layout.button_event(io.BUTTON_RELEASED, io.BUTTON_LEFT)
             return self.layout.button_event(io.BUTTON_RELEASED, io.BUTTON_RIGHT)
 
-        def _press_button(self, btn_to_press: ModelRButton) -> Any:
-            from trezor.enums import ModelRButton
+        def _press_button(self, btn_to_press: DebugPhysicalButton) -> Any:
+            from trezor.enums import DebugPhysicalButton
             from apps.debug import notify_layout_change
 
-            if btn_to_press == ModelRButton.LEFT_BTN:
+            if btn_to_press == DebugPhysicalButton.LEFT_BTN:
                 msg = self._press_left()
-            elif btn_to_press == ModelRButton.MIDDLE_BTN:
+            elif btn_to_press == DebugPhysicalButton.MIDDLE_BTN:
                 msg = self._press_middle()
-            elif btn_to_press == ModelRButton.RIGHT_BTN:
+            elif btn_to_press == DebugPhysicalButton.RIGHT_BTN:
                 msg = self._press_right()
             else:
                 raise Exception(f"Unknown button: {btn_to_press}")

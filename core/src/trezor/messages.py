@@ -34,13 +34,13 @@ if TYPE_CHECKING:
     from trezor.enums import CardanoTxSigningMode  # noqa: F401
     from trezor.enums import CardanoTxWitnessType  # noqa: F401
     from trezor.enums import DebugButton  # noqa: F401
+    from trezor.enums import DebugPhysicalButton  # noqa: F401
     from trezor.enums import DebugSwipeDirection  # noqa: F401
     from trezor.enums import DecredStakingSpendType  # noqa: F401
     from trezor.enums import EthereumDataType  # noqa: F401
     from trezor.enums import FailureType  # noqa: F401
     from trezor.enums import InputScriptType  # noqa: F401
     from trezor.enums import MessageType  # noqa: F401
-    from trezor.enums import ModelRButton  # noqa: F401
     from trezor.enums import MoneroNetworkType  # noqa: F401
     from trezor.enums import NEMImportanceTransferMode  # noqa: F401
     from trezor.enums import NEMModificationType  # noqa: F401
@@ -2563,7 +2563,7 @@ if TYPE_CHECKING:
         y: "int | None"
         wait: "bool | None"
         hold_ms: "int | None"
-        button_r: "ModelRButton | None"
+        physical_button: "DebugPhysicalButton | None"
 
         def __init__(
             self,
@@ -2575,7 +2575,7 @@ if TYPE_CHECKING:
             y: "int | None" = None,
             wait: "bool | None" = None,
             hold_ms: "int | None" = None,
-            button_r: "ModelRButton | None" = None,
+            physical_button: "DebugPhysicalButton | None" = None,
         ) -> None:
             pass
 

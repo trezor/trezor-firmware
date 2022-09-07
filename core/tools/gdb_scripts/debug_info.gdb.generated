@@ -40,7 +40,7 @@ commands 3
 end
 
 # `Bip39Entry` when being painted
-break src/ui/model_tr/component/bip39.rs:284
+break src/ui/model_tr/component/bip39.rs:225
 commands 4
   printf "Bip39Entry: %d\n", sizeof(*self)
   print self
@@ -131,6 +131,50 @@ end
 break src/ui/model_tr/component/button_controller.rs:208
 commands 12
   printf "ButtonContainer: %d\n", sizeof(*self)
+  print self
+  print *self
+
+  # not stopping the debugger
+  continue
+end
+
+# `Button` when being painted
+break src/ui/model_tr/component/button.rs:204
+commands 13
+  printf "Button: %d\n", sizeof(*self)
+  print self
+  print *self
+
+  # not stopping the debugger
+  continue
+end
+
+# `HoldToConfirm` when being painted
+break src/ui/model_tr/component/confirm.rs:109
+commands 14
+  printf "HoldToConfirm: %d\n", sizeof(*self)
+  print self
+  print *self
+
+  # not stopping the debugger
+  continue
+end
+
+# `Loader` when being painted
+break src/ui/model_tr/component/loader.rs:208
+commands 15
+  printf "Loader: %d\n", sizeof(*self)
+  print self
+  print *self
+
+  # not stopping the debugger
+  continue
+end
+
+# `ButtonDetails` when being styled
+break src/ui/model_tr/component/button.rs:509
+commands 16
+  printf "ButtonDetails: %d\n", sizeof(*self)
   print self
   print *self
 

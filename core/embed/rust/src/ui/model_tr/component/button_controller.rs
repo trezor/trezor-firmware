@@ -58,11 +58,14 @@ pub struct ButtonContainer<T> {
     // However, to set all the components to "something", we would need the
     // `text` of the components, and we cannot get a default value for it
     // (the default value for T: AsRef<str>) in case it is currently missing.
+    // TODO: create enum of either Button or HTC
     button: Option<Child<Button<T>>>,
     hold_to_confirm: Option<Child<HoldToConfirm<T>>>,
     /// Stored to create the button later with correct position
     pos: ButtonPos,
     button_type: ButtonType,
+    // TODO: might get rid of storing this when we solve screen flickering
+    // and we don't need to check whether buttons changed
     btn_details: Option<ButtonDetails<T>>,
     /// We want to send the triggered event at a later time from the actual
     /// trigger (only as soon as the button is released).

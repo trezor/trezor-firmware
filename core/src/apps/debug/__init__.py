@@ -94,8 +94,8 @@ if __debug__:
                 await confirm_chan.put(Result(confirm.CONFIRMED))
             elif msg.button == DebugButton.INFO:
                 await confirm_chan.put(Result(confirm.INFO))
-        if msg.button_r is not None:
-            await model_r_btn_chan.put(msg.button_r)
+        if msg.physical_button is not None:
+            await model_r_btn_chan.put(msg.physical_button)
         if msg.swipe is not None:
             # TODO: why not directly passing msg.swipe into swipe_chan?
             if msg.swipe == DebugSwipeDirection.UP:

@@ -53,7 +53,7 @@ commands 3
 end
 
 # `Bip39Entry` when being painted
-break src/ui/model_tr/component/bip39.rs:284
+break src/ui/model_tr/component/bip39.rs:225
 commands 4
   printf "`Bip39Entry` when being painted\n"
   printf "Bip39Entry: %d\n", sizeof(*self)
@@ -188,6 +188,69 @@ commands 12
   printf "ButtonContainer.button_type: %d\n", sizeof(self.button_type)
   printf "ButtonContainer.btn_details: %d\n", sizeof(self.btn_details)
   printf "ButtonContainer.htc_triggered: %d\n", sizeof(self.htc_triggered)
+
+  # not stopping the debugger
+  continue
+end
+
+# `Button` when being painted
+break src/ui/model_tr/component/button.rs:204
+commands 13
+  printf "`Button` when being painted\n"
+  printf "Button: %d\n", sizeof(*self)
+  printf "Button.bounds: %d\n", sizeof(self.bounds)
+  printf "Button.pos: %d\n", sizeof(self.pos)
+  printf "Button.content: %d\n", sizeof(self.content)
+  printf "Button.styles: %d\n", sizeof(self.styles)
+  printf "Button.state: %d\n", sizeof(self.state)
+
+  # not stopping the debugger
+  continue
+end
+
+# `HoldToConfirm` when being painted
+break src/ui/model_tr/component/confirm.rs:109
+commands 14
+  printf "`HoldToConfirm` when being painted\n"
+  printf "HoldToConfirm: %d\n", sizeof(*self)
+  printf "HoldToConfirm.area: %d\n", sizeof(self.area)
+  printf "HoldToConfirm.pos: %d\n", sizeof(self.pos)
+  printf "HoldToConfirm.loader: %d\n", sizeof(self.loader)
+  printf "HoldToConfirm.text_width: %d\n", sizeof(self.text_width)
+
+  # not stopping the debugger
+  continue
+end
+
+# `Loader` when being painted
+break src/ui/model_tr/component/loader.rs:208
+commands 15
+  printf "`Loader` when being painted\n"
+  printf "Loader: %d\n", sizeof(*self)
+  printf "Loader.area: %d\n", sizeof(self.area)
+  printf "Loader.state: %d\n", sizeof(self.state)
+  printf "Loader.growing_duration: %d\n", sizeof(self.growing_duration)
+  printf "Loader.shrinking_duration: %d\n", sizeof(self.shrinking_duration)
+  printf "Loader.text_overlay: %d\n", sizeof(self.text_overlay)
+  printf "Loader.styles: %d\n", sizeof(self.styles)
+
+  # not stopping the debugger
+  continue
+end
+
+# `ButtonDetails` when being styled
+break src/ui/model_tr/component/button.rs:509
+commands 16
+  printf "`ButtonDetails` when being styled\n"
+  printf "ButtonDetails: %d\n", sizeof(*self)
+  printf "ButtonDetails.text: %d\n", sizeof(self.text)
+  printf "ButtonDetails.icon: %d\n", sizeof(self.icon)
+  printf "ButtonDetails.duration: %d\n", sizeof(self.duration)
+  printf "ButtonDetails.is_cancel: %d\n", sizeof(self.is_cancel)
+  printf "ButtonDetails.with_outline: %d\n", sizeof(self.with_outline)
+  printf "ButtonDetails.with_arms: %d\n", sizeof(self.with_arms)
+  printf "ButtonDetails.force_width: %d\n", sizeof(self.force_width)
+  printf "ButtonDetails.offset: %d\n", sizeof(self.offset)
 
   # not stopping the debugger
   continue

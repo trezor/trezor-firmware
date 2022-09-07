@@ -97,6 +97,8 @@ trezor.enums.Capability
 import trezor.enums.Capability
 trezor.enums.DebugButton
 import trezor.enums.DebugButton
+trezor.enums.DebugPhysicalButton
+import trezor.enums.DebugPhysicalButton
 trezor.enums.DebugSwipeDirection
 import trezor.enums.DebugSwipeDirection
 trezor.enums.DecredStakingSpendType
@@ -107,8 +109,6 @@ trezor.enums.InputScriptType
 import trezor.enums.InputScriptType
 trezor.enums.MessageType
 import trezor.enums.MessageType
-trezor.enums.ModelRButton
-import trezor.enums.ModelRButton
 trezor.enums.OutputScriptType
 import trezor.enums.OutputScriptType
 trezor.enums.PinMatrixRequestType

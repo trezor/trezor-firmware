@@ -20,6 +20,7 @@ class Object:
 # TODO: add possibility to determine the breakpoint dynamically from python,
 # , so that we do not need to change the breakpoint line-number manually
 # (like setting a function name and a path-to-file, determining linenumber automatically)
+# TODO: might analyze it in place() not paint() so it does not spam so much when HoldToConfirm repaints
 
 
 OBJECTS: list[Object] = [
@@ -63,7 +64,7 @@ OBJECTS: list[Object] = [
     Object(
         name="Bip39Entry",
         comment="`Bip39Entry` when being painted",
-        breakpoint="src/ui/model_tr/component/bip39.rs:284",
+        breakpoint="src/ui/model_tr/component/bip39.rs:225",
         attributes=[
             "choice_page",
             "letter_choices",
@@ -172,6 +173,57 @@ OBJECTS: list[Object] = [
             "button_type",
             "btn_details",
             "htc_triggered",
+        ],
+    ),
+    Object(
+        name="Button",
+        comment="`Button` when being painted",
+        breakpoint="src/ui/model_tr/component/button.rs:204",
+        attributes=[
+            "bounds",
+            "pos",
+            "content",
+            "styles",
+            "state",
+        ],
+    ),
+    Object(
+        name="HoldToConfirm",
+        comment="`HoldToConfirm` when being painted",
+        breakpoint="src/ui/model_tr/component/confirm.rs:109",
+        attributes=[
+            "area",
+            "pos",
+            "loader",
+            "text_width",
+        ],
+    ),
+    Object(
+        name="Loader",
+        comment="`Loader` when being painted",
+        breakpoint="src/ui/model_tr/component/loader.rs:208",
+        attributes=[
+            "area",
+            "state",
+            "growing_duration",
+            "shrinking_duration",
+            "text_overlay",
+            "styles",
+        ],
+    ),
+    Object(
+        name="ButtonDetails",
+        comment="`ButtonDetails` when being styled",
+        breakpoint="src/ui/model_tr/component/button.rs:509",
+        attributes=[
+            "text",
+            "icon",
+            "duration",
+            "is_cancel",
+            "with_outline",
+            "with_arms",
+            "force_width",
+            "offset",
         ],
     ),
 ]

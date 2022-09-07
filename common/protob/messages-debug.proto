@@ -43,8 +43,8 @@ message DebugLinkDecision {
     /**
     * Structure representing model R button presses
     */
-    // TODO: rename to PhysicalButton
-    enum ModelRButton {
+    // TODO: probably delete the middle_btn as it is not a physical one
+    enum DebugPhysicalButton {
         LEFT_BTN = 0;
         MIDDLE_BTN = 1;
         RIGHT_BTN = 2;
@@ -54,8 +54,7 @@ message DebugLinkDecision {
     optional uint32 y = 5;        // touch Y coordinate
     optional bool wait = 6;       // wait for layout change
     optional uint32 hold_ms = 7;  // touch hold duration
-    // todo: rename to physical_button
-    optional ModelRButton button_r = 8;  // model R button press
+    optional DebugPhysicalButton physical_button = 8;  // physical button press
 }
 
 /**
