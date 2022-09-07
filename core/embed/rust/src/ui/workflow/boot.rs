@@ -1,8 +1,8 @@
 use core::slice;
 use cstr_core::CStr;
-use heapless::String;
+use heapless::{String, Vec};
 use crate::trezorhal::alloc::alloc_only;
-use crate::trezorhal::storage::{storage_get, storage_get_length, storage_get_remaining, storage_init, storage_unlock, storage_wipe};
+use crate::trezorhal::storage::{storage_get, storage_get_length, storage_get_remaining, storage_has_pin, storage_init, storage_unlock, storage_wipe};
 use crate::ui::{constant, display, LockScreen, LockScreenMsg, PinKeyboard, PinKeyboardMsg};
 use crate::ui::constant::screen;
 use crate::ui::geometry::{Point, Rect};
@@ -76,6 +76,17 @@ unsafe extern "C" fn show_pin_timeout(seconds: u32, progress: u32, message: *con
 }
 
 
+pub fn get_flag(key: u16) -> bool {
+
+    let mut buf = [0u8];
+    let len = storage_get(key, &mut buf);
+    if matches!(len, Ok(1)) {
+        return buf[0] == 0x01;
+    }
+    false
+}
+
+
 pub fn boot_workflow() {
 
 
@@ -122,13 +133,29 @@ pub fn boot_workflow() {
 
     display::set_orientation(rotation as _);
 
+    let sd_salt_res = storage_get_length(0x810F);
+    let sd_salt_auth_key: Option<Vec<u8, 16>> = if let Ok(sd_salt_len) = sd_salt_res {
+        let mut data = [0;16];
+        storage_get(0x8112, &mut data).unwrap();
+        Some(unwrap!(Vec::from_slice(&data)))
+    } else {
+        None
+    };
+
+    if !(storage_has_pin() || sd_salt_auth_key.is_some()){
+        return;
+    }
+
+
+    // let initialized = get_flag(0x810F);
+
     let mut homescreen = RustLayout::new(
         LockScreen::new(
             device_name.as_str(),
              avatar,
             true,
             Some("Not connected"),
-            Some("Tap to connect")
+            Some("Tap to connect"),
         )
     );
 
