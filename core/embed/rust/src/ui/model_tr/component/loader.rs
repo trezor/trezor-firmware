@@ -190,9 +190,11 @@ impl<T: AsRef<str>> Component for Loader<T> {
             if self.is_animating() {
                 if self.is_completely_grown(now) {
                     self.state = State::Grown;
+                    ctx.request_paint();
                     return Some(LoaderMsg::GrownCompletely);
                 } else if self.is_completely_shrunk(now) {
                     self.state = State::Initial;
+                    ctx.request_paint();
                     return Some(LoaderMsg::ShrunkCompletely);
                 } else {
                     // There is further progress in the animation, request an animation frame event.

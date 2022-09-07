@@ -12,8 +12,8 @@ use super::{
 };
 
 pub struct ButtonPage<S, T> {
-    content: T,
-    scrollbar: ScrollBar,
+    content: Child<T>,
+    scrollbar: Child<ScrollBar>,
     pad: Pad,
     cancel_btn_details: Option<ButtonDetails<S>>,
     confirm_btn_details: Option<ButtonDetails<S>>,
@@ -30,8 +30,8 @@ where
     /// Constructor for `&'static str` button-text type.
     pub fn new_str(content: T, background: Color) -> Self {
         Self {
-            content,
-            scrollbar: ScrollBar::vertical_to_be_filled_later(),
+            content: Child::new(content),
+            scrollbar: Child::new(ScrollBar::vertical_to_be_filled_later()),
             pad: Pad::with_background(background),
             cancel_btn_details: Some(ButtonDetails::cancel_icon()),
             confirm_btn_details: Some(ButtonDetails::text("CONFIRM")),
@@ -53,8 +53,8 @@ where
     /// Constructor for `StrBuffer` button-text type.
     pub fn new_str_buf(content: T, background: Color) -> Self {
         Self {
-            content,
-            scrollbar: ScrollBar::vertical_to_be_filled_later(),
+            content: Child::new(content),
+            scrollbar: Child::new(ScrollBar::vertical_to_be_filled_later()),
             pad: Pad::with_background(background),
             cancel_btn_details: Some(ButtonDetails::cancel_icon()),
             confirm_btn_details: Some(ButtonDetails::text("CONFIRM".into())),
@@ -107,7 +107,7 @@ where
     /// Change the page in the content, clear the background under it and make
     /// sure it gets completely repainted. Also updating the buttons.
     fn change_page(&mut self, ctx: &mut EventCtx, page: usize) {
-        self.content.change_page(page);
+        self.content.inner_mut().change_page(page);
         self.content.request_complete_repaint(ctx);
         self.update_buttons(ctx);
         self.pad.clear();
@@ -116,8 +116,8 @@ where
     /// Reflecting the current page in the buttons.
     fn update_buttons(&mut self, ctx: &mut EventCtx) {
         let btn_layout = self.get_button_layout(
-            self.scrollbar.has_previous_page(),
-            self.scrollbar.has_next_page(),
+            self.scrollbar.inner().has_previous_page(),
+            self.scrollbar.inner().has_next_page(),
         );
         self.buttons.mutate(ctx, |ctx, buttons| {
             buttons.set(ctx, btn_layout);
@@ -166,8 +166,8 @@ where
         self.content.place(content_area);
         // Need to be called here, only after content is placed
         // and we can calculate the page count
-        let page_count = self.content.page_count();
-        self.scrollbar.set_page_count(page_count);
+        let page_count = self.content.inner_mut().page_count();
+        self.scrollbar.inner_mut().set_page_count(page_count);
         self.scrollbar.place(scrollbar_area);
         self.set_buttons_for_initial_page(page_count);
         self.buttons.place(button_area);
@@ -175,26 +175,26 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        ctx.set_page_count(self.scrollbar.page_count);
+        ctx.set_page_count(self.scrollbar.inner().page_count);
         let button_event = self.buttons.event(ctx, event);
 
         if let Some(ButtonControllerMsg::Triggered(pos)) = button_event {
             match pos {
                 ButtonPos::Left => {
-                    if self.scrollbar.has_previous_page() {
+                    if self.scrollbar.inner().has_previous_page() {
                         // Clicked BACK. Scroll up.
-                        self.scrollbar.go_to_previous_page();
-                        self.change_page(ctx, self.scrollbar.active_page);
+                        self.scrollbar.inner_mut().go_to_previous_page();
+                        self.change_page(ctx, self.scrollbar.inner().active_page);
                     } else {
                         // Clicked CANCEL. Send result.
                         return Some(PageMsg::Controls(false));
                     }
                 }
                 ButtonPos::Right => {
-                    if self.scrollbar.has_next_page() {
+                    if self.scrollbar.inner().has_next_page() {
                         // Clicked NEXT. Scroll down.
-                        self.scrollbar.go_to_next_page();
-                        self.change_page(ctx, self.scrollbar.active_page);
+                        self.scrollbar.inner_mut().go_to_next_page();
+                        self.change_page(ctx, self.scrollbar.inner().active_page);
                     } else {
                         // Clicked CONFIRM. Send result.
                         return Some(PageMsg::Controls(true));
@@ -232,7 +232,7 @@ where
     fn get_btn_action(&self, pos: ButtonPos) -> String<25> {
         match pos {
             ButtonPos::Left => {
-                if self.scrollbar.has_previous_page() {
+                if self.scrollbar.inner().has_previous_page() {
                     ButtonAction::PrevPage.string()
                 } else if self.cancel_btn_details.is_some() {
                     ButtonAction::Cancel.string()
@@ -241,7 +241,7 @@ where
                 }
             }
             ButtonPos::Right => {
-                if self.scrollbar.has_next_page() {
+                if self.scrollbar.inner().has_next_page() {
                     ButtonAction::NextPage.string()
                 } else if self.confirm_btn_details.is_some() {
                     ButtonAction::Confirm.string()
@@ -255,8 +255,14 @@ where
 
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("ButtonPage");
-        t.kw_pair("active_page", inttostr!(self.scrollbar.active_page as u8));
-        t.kw_pair("page_count", inttostr!(self.scrollbar.page_count as u8));
+        t.kw_pair(
+            "active_page",
+            inttostr!(self.scrollbar.inner().active_page as u8),
+        );
+        t.kw_pair(
+            "page_count",
+            inttostr!(self.scrollbar.inner().page_count as u8),
+        );
         self.report_btn_actions(t);
         // TODO: it seems the button text is not updated when paginating (but actions
         // above are)
