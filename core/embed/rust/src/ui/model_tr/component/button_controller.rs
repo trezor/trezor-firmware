@@ -1,11 +1,11 @@
 use super::{
-    theme, Button, ButtonContent, ButtonDetails, ButtonLayout, ButtonPos, HoldToConfirm,
-    HoldToConfirmMsg, LoaderStyleSheet,
+    theme, Button, ButtonDetails, ButtonLayout, ButtonPos, HoldToConfirm, HoldToConfirmMsg,
+    LoaderStyleSheet,
 };
 use crate::{
     time::Duration,
     ui::{
-        component::{base::Event, Child, Component, ComponentExt, EventCtx, Pad},
+        component::{base::Event, Component, EventCtx, Pad},
         event::{ButtonEvent, PhysicalButton},
         geometry::Rect,
     },
@@ -26,25 +26,77 @@ pub enum ButtonControllerMsg {
     Triggered(ButtonPos),
 }
 
-// TODO: could have the possibility of `Both`,
-// so that button can be single-clicked or held longer time,
-// with different behavior
-pub enum ButtonType {
+/// Defines what kind of button should be currently used.
+pub enum ButtonType<T> {
+    Button(Button<T>),
+    HoldToConfirm(HoldToConfirm<T>),
     Nothing,
-    NormalButton,
-    HoldToConfirm,
 }
 
-impl ButtonType {
-    pub fn from_button_details<T: AsRef<str>>(details: Option<ButtonDetails<T>>) -> Self {
-        if let Some(details) = details {
-            if details.duration.is_some() {
-                Self::HoldToConfirm
+impl<T> ButtonType<T>
+where
+    T: AsRef<str>,
+    T: Clone,
+{
+    pub fn from_button_details(pos: ButtonPos, btn_details: Option<ButtonDetails<T>>) -> Self {
+        if let Some(btn_details) = btn_details {
+            if btn_details.duration.is_some() {
+                Self::HoldToConfirm(Self::get_hold_to_confirm(pos, btn_details))
             } else {
-                Self::NormalButton
+                Self::Button(Self::get_button(pos, btn_details))
             }
         } else {
             Self::Nothing
+        }
+    }
+
+    /// Create `Button` component from `btn_details`.
+    fn get_button(pos: ButtonPos, btn_details: ButtonDetails<T>) -> Button<T> {
+        // Deciding between text and icon
+        if let Some(text) = btn_details.clone().text {
+            Button::with_text(pos, text, btn_details.style())
+        } else if let Some(icon) = btn_details.icon {
+            Button::with_icon(pos, icon, btn_details.style())
+        } else {
+            panic!("ButtonContainer: no text or icon provided");
+        }
+    }
+
+    /// Create `HoldToConfirm` component from `btn_details`.
+    fn get_hold_to_confirm(pos: ButtonPos, btn_details: ButtonDetails<T>) -> HoldToConfirm<T> {
+        let duration = btn_details
+            .duration
+            .unwrap_or_else(|| Duration::from_millis(1000));
+        if let Some(text) = btn_details.text {
+            HoldToConfirm::text(pos, text, LoaderStyleSheet::default(), duration)
+        } else if let Some(icon) = btn_details.icon {
+            HoldToConfirm::icon(pos, icon, LoaderStyleSheet::default(), duration)
+        } else {
+            panic!("ButtonContainer: no text or icon provided");
+        }
+    }
+
+    pub fn place(&mut self, button_area: Rect) {
+        match self {
+            Self::Button(button) => {
+                button.place(button_area);
+            }
+            Self::HoldToConfirm(htc) => {
+                htc.place(button_area);
+            }
+            Self::Nothing => {}
+        }
+    }
+
+    pub fn paint(&mut self) {
+        match self {
+            Self::Button(button) => {
+                button.paint();
+            }
+            Self::HoldToConfirm(htc) => {
+                htc.paint();
+            }
+            Self::Nothing => {}
         }
     }
 }
@@ -55,206 +107,71 @@ impl ButtonType {
 /// Users have a choice of a normal button or Hold-to-confirm button.
 /// `button_type` specified what from those two is used, if anything.
 pub struct ButtonContainer<T> {
-    // TODO: it is not great that we have to store the components as
-    // `Option`s, because their handling is then more complex
-    // (it is enough to have the `button_type` saying whether to use it or not).
-    // However, to set all the components to "something", we would need the
-    // `text` of the components, and we cannot get a default value for it
-    // (the default value for T: AsRef<str>) in case it is currently missing.
-    // TODO: create enum of either Button or HTC
-    button: Option<Child<Button<T>>>,
-    hold_to_confirm: Option<Child<HoldToConfirm<T>>>,
-    /// Stored to create the button later with correct position
     pos: ButtonPos,
-    button_type: ButtonType,
+    button_type: ButtonType<T>,
 }
 
 impl<T: Clone + AsRef<str>> ButtonContainer<T> {
     /// Supplying `None` as `btn_details`  marks the button inactive
     /// (it can be later activated in `set()`).
     pub fn new(pos: ButtonPos, btn_details: Option<ButtonDetails<T>>) -> Self {
-        let button = btn_details
-            .clone()
-            .map(|btn_details| Self::get_button(pos, btn_details));
-        let hold_to_confirm = btn_details
-            .clone()
-            .map(|btn_details| Self::get_hold_to_confirm(pos, btn_details));
-
         Self {
-            button,
-            hold_to_confirm,
             pos,
-            button_type: ButtonType::from_button_details(btn_details),
-        }
-    }
-
-    /// Create `Button` component from `btn_details`.
-    fn get_button(pos: ButtonPos, btn_details: ButtonDetails<T>) -> Child<Button<T>> {
-        // Deciding between text and icon
-        if let Some(text) = btn_details.clone().text {
-            Child::new(Button::with_text(pos, text, btn_details.style()))
-        } else if let Some(icon) = btn_details.icon {
-            Child::new(Button::with_icon(pos, icon, btn_details.style()))
-        } else {
-            panic!("ButtonContainer: no text or icon provided");
-        }
-    }
-
-    /// Create `HoldToConfirm` component from `btn_details`.
-    fn get_hold_to_confirm(
-        pos: ButtonPos,
-        btn_details: ButtonDetails<T>,
-    ) -> Child<HoldToConfirm<T>> {
-        let duration = btn_details
-            .duration
-            .unwrap_or_else(|| Duration::from_millis(1000));
-        if let Some(text) = btn_details.text {
-            Child::new(HoldToConfirm::text(
-                pos,
-                text,
-                LoaderStyleSheet::default(),
-                duration,
-            ))
-        } else if let Some(icon) = btn_details.icon {
-            Child::new(HoldToConfirm::icon(
-                pos,
-                icon,
-                LoaderStyleSheet::default(),
-                duration,
-            ))
-        } else {
-            panic!("ButtonContainer: no text or icon provided");
+            button_type: ButtonType::from_button_details(pos, btn_details),
         }
     }
 
     /// Changing the state of the button.
     ///
-    /// Setting the appropriate `button_type` and updating the
-    /// appropriate component.
-    ///
     /// Passing `None` as `btn_details` will mark the button as inactive.
-    pub fn set(
-        &mut self,
-        ctx: &mut EventCtx,
-        btn_details: Option<ButtonDetails<T>>,
-        button_area: Rect,
-    ) {
-        if let Some(btn_details) = btn_details {
-            // Choosing between Hold-to-confirm and normal button based on `duration`.
-            // Creating and placing the appropriate button if it does
-            // not exist and updating it to match the current btn_details.
-            if let Some(duration) = btn_details.duration {
-                self.button_type = ButtonType::HoldToConfirm;
-                if self.hold_to_confirm.is_none() {
-                    self.hold_to_confirm =
-                        Some(Self::get_hold_to_confirm(self.pos, btn_details.clone()));
-                    self.hold_to_confirm.place(button_area);
-                }
-
-                if let Some(hold_to_confirm) = &mut self.hold_to_confirm {
-                    hold_to_confirm.mutate(ctx, |_ctx, btn| {
-                        // Deciding between text and icon
-                        if let Some(text) = btn_details.text {
-                            btn.set_text(text, button_area);
-                        } else if let Some(_icon) = btn_details.icon {
-                            todo!("support icon for HoldToConfirm");
-                        }
-                        btn.set_duration(duration);
-                    });
-                    hold_to_confirm.request_complete_repaint(ctx);
-                }
-            } else {
-                self.button_type = ButtonType::NormalButton;
-                if self.button.is_none() {
-                    self.button = Some(Self::get_button(self.pos, btn_details.clone()));
-                    self.button.place(button_area);
-                }
-
-                if let Some(button) = &mut self.button {
-                    let style = btn_details.style();
-                    button.mutate(ctx, |_ctx, btn| {
-                        // Deciding between text and icon
-                        if let Some(text) = btn_details.text {
-                            btn.set_text(text);
-                        } else if let Some(icon) = btn_details.icon {
-                            btn.set_icon(icon);
-                        }
-                        btn.set_style(style);
-                    });
-                    button.request_complete_repaint(ctx);
-                }
-            }
-        } else {
-            self.button_type = ButtonType::Nothing;
-        }
+    pub fn set(&mut self, btn_details: Option<ButtonDetails<T>>, button_area: Rect) {
+        self.button_type = ButtonType::from_button_details(self.pos, btn_details);
+        self.button_type.place(button_area);
     }
 
-    /// Placing both possible components.
+    /// Placing the possible component.
     pub fn place(&mut self, bounds: Rect) {
-        if let Some(button) = self.button.as_mut() {
-            button.place(bounds);
-        };
-        if let Some(hold_to_confirm) = self.hold_to_confirm.as_mut() {
-            hold_to_confirm.place(bounds);
-        };
+        self.button_type.place(bounds);
     }
 
     /// Painting the component that should be currently visible, if any.
     pub fn paint(&mut self) {
-        if matches!(self.button_type, ButtonType::NormalButton) {
-            if let Some(button) = self.button.as_mut() {
-                button.paint();
-            };
-        } else if matches!(self.button_type, ButtonType::HoldToConfirm) {
-            if let Some(hold_to_confirm) = self.hold_to_confirm.as_mut() {
-                hold_to_confirm.paint();
-            };
-        }
+        self.button_type.paint();
     }
 
     /// Setting the visual state of the button - released/pressed.
     pub fn set_pressed(&mut self, ctx: &mut EventCtx, is_pressed: bool) {
-        if let Some(button) = &mut self.button {
-            button.mutate(ctx, |ctx, btn| {
-                btn.set_pressed(ctx, is_pressed);
-            });
+        if let ButtonType::Button(btn) = &mut self.button_type {
+            btn.set_pressed(ctx, is_pressed);
         }
     }
 
     /// Whether single-click should trigger action.
     pub fn reacts_to_single_click(&self) -> bool {
-        matches!(self.button_type, ButtonType::NormalButton)
+        matches!(self.button_type, ButtonType::Button(_))
     }
 
     /// Find out whether hold-to-confirm was triggered.
     pub fn htc_got_triggered(&mut self, ctx: &mut EventCtx, event: Event) -> bool {
-        if matches!(self.button_type, ButtonType::HoldToConfirm) {
-            let msg = self.hold_to_confirm.event(ctx, event);
-            if matches!(msg, Some(HoldToConfirmMsg::Confirmed)) {
-                // TODO: consider whether to reset and repaint the button or not
-                // Got deleted because of the wipe screen where it was better to not do that.
+        if let ButtonType::HoldToConfirm(htc) = &mut self.button_type {
+            if matches!(htc.event(ctx, event), Some(HoldToConfirmMsg::Confirmed)) {
                 return true;
             }
-        };
+        }
         false
     }
 
     /// Registering hold event.
     pub fn hold_started(&mut self, ctx: &mut EventCtx) {
-        self.send_htc_event(ctx, Event::Button(ButtonEvent::HoldStarted));
+        if let ButtonType::HoldToConfirm(htc) = &mut self.button_type {
+            htc.event(ctx, Event::Button(ButtonEvent::HoldStarted));
+        }
     }
 
     /// Cancelling hold event.
     pub fn hold_ended(&mut self, ctx: &mut EventCtx) {
-        self.send_htc_event(ctx, Event::Button(ButtonEvent::HoldEnded));
-    }
-
-    /// Sending hold-to-confirm event in case the current button is HTC.
-    fn send_htc_event(&mut self, ctx: &mut EventCtx, event: Event) {
-        if matches!(self.button_type, ButtonType::HoldToConfirm) {
-            if let Some(hold_to_confirm) = &mut self.hold_to_confirm {
-                hold_to_confirm.event(ctx, event);
-            }
+        if let ButtonType::HoldToConfirm(htc) = &mut self.button_type {
+            htc.event(ctx, Event::Button(ButtonEvent::HoldEnded));
         }
     }
 }
@@ -296,14 +213,11 @@ impl<T: Clone + AsRef<str>> ButtonController<T> {
     }
 
     /// Updating all the three buttons to the wanted states.
-    pub fn set(&mut self, ctx: &mut EventCtx, btn_layout: ButtonLayout<T>) {
-        self.left_btn
-            .set(ctx, btn_layout.btn_left, self.button_area);
-        self.middle_btn
-            .set(ctx, btn_layout.btn_middle, self.button_area);
-        self.right_btn
-            .set(ctx, btn_layout.btn_right, self.button_area);
+    pub fn set(&mut self, btn_layout: ButtonLayout<T>) {
         self.pad.clear();
+        self.left_btn.set(btn_layout.btn_left, self.button_area);
+        self.middle_btn.set(btn_layout.btn_middle, self.button_area);
+        self.right_btn.set(btn_layout.btn_right, self.button_area);
     }
 
     /// Setting the pressed state for all three buttons by boolean flags.
@@ -321,12 +235,12 @@ impl<T: Clone + AsRef<str>> ButtonController<T> {
         self.right_btn.hold_ended(ctx);
     }
 
-    /// Handling the HTC elements.
+    /// Handling the expiration of HTC elements.
     /// Finding out if they have been triggered and sending event
     /// for the appropriate button.
     /// Setting the state to wait for the appropriate release event
     /// from the pressed button. Also resetting visible state.
-    fn handle_hold_to_confirms(
+    fn handle_htc_expiration(
         &mut self,
         ctx: &mut EventCtx,
         event: Event,
@@ -457,7 +371,7 @@ impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
                 self.state = new_state;
                 event
             }
-            Event::Timer(_) => self.handle_hold_to_confirms(ctx, event),
+            Event::Timer(_) => self.handle_htc_expiration(ctx, event),
             _ => None,
         }
     }
@@ -484,6 +398,9 @@ impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
 }
 
 #[cfg(feature = "ui_debug")]
+use super::ButtonContent;
+
+#[cfg(feature = "ui_debug")]
 impl<T> crate::trace::Trace for ButtonContainer<T>
 where
     T: AsRef<str>,
@@ -493,8 +410,8 @@ where
 
         // Putting together text representation of the button
         let mut btn_text: String<30> = String::new();
-        if let Some(btn) = &self.button {
-            match btn.inner().content() {
+        if let ButtonType::Button(btn) = &self.button_type {
+            match btn.content() {
                 ButtonContent::Text(text) => {
                     unwrap!(btn_text.push_str(text.as_ref()));
                 }
@@ -503,10 +420,10 @@ where
                     unwrap!(btn_text.push_str(icon.text));
                 }
             }
-        } else if let Some(htc) = &self.hold_to_confirm {
-            unwrap!(btn_text.push_str(htc.inner().get_text().as_ref()));
+        } else if let ButtonType::HoldToConfirm(htc) = &self.button_type {
+            unwrap!(btn_text.push_str(htc.get_text().as_ref()));
             unwrap!(btn_text.push_str(" (HTC:"));
-            unwrap!(btn_text.push_str(inttostr!(htc.inner().get_duration().to_millis())));
+            unwrap!(btn_text.push_str(inttostr!(htc.get_duration().to_millis())));
             unwrap!(btn_text.push_str(")"));
         } else {
             unwrap!(btn_text.push_str(crate::trace::EMPTY_BTN));

@@ -119,8 +119,8 @@ where
             self.scrollbar.inner().has_previous_page(),
             self.scrollbar.inner().has_next_page(),
         );
-        self.buttons.mutate(ctx, |ctx, buttons| {
-            buttons.set(ctx, btn_layout);
+        self.buttons.mutate(ctx, |_ctx, buttons| {
+            buttons.set(btn_layout);
         });
     }
 

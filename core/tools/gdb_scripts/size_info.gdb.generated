@@ -162,7 +162,7 @@ commands 10
 end
 
 # `ButtonController` when being painted
-break src/ui/model_tr/component/button_controller.rs:492
+break src/ui/model_tr/component/button_controller.rs:383
 commands 11
   printf "`ButtonController` when being painted\n"
   printf "ButtonController: %d\n", sizeof(*self)
@@ -178,16 +178,12 @@ commands 11
 end
 
 # `ButtonContainer` when being painted
-break src/ui/model_tr/component/button_controller.rs:208
+break src/ui/model_tr/component/button_controller.rs:137
 commands 12
   printf "`ButtonContainer` when being painted\n"
   printf "ButtonContainer: %d\n", sizeof(*self)
-  printf "ButtonContainer.button: %d\n", sizeof(self.button)
-  printf "ButtonContainer.hold_to_confirm: %d\n", sizeof(self.hold_to_confirm)
   printf "ButtonContainer.pos: %d\n", sizeof(self.pos)
   printf "ButtonContainer.button_type: %d\n", sizeof(self.button_type)
-  printf "ButtonContainer.btn_details: %d\n", sizeof(self.btn_details)
-  printf "ButtonContainer.htc_triggered: %d\n", sizeof(self.htc_triggered)
 
   # not stopping the debugger
   continue

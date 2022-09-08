@@ -216,8 +216,8 @@ where
         // adjust the HTC/not.
 
         let btn_layout = self.current_choice().btn_layout();
-        self.buttons.mutate(ctx, |ctx, buttons| {
-            buttons.set(ctx, btn_layout);
+        self.buttons.mutate(ctx, |_ctx, buttons| {
+            buttons.set(btn_layout);
         });
     }
 }

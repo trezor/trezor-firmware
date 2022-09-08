@@ -117,7 +117,7 @@ commands 10
 end
 
 # `ButtonController` when being painted
-break src/ui/model_tr/component/button_controller.rs:492
+break src/ui/model_tr/component/button_controller.rs:383
 commands 11
   printf "ButtonController: %d\n", sizeof(*self)
   print self
@@ -128,7 +128,7 @@ commands 11
 end
 
 # `ButtonContainer` when being painted
-break src/ui/model_tr/component/button_controller.rs:208
+break src/ui/model_tr/component/button_controller.rs:137
 commands 12
   printf "ButtonContainer: %d\n", sizeof(*self)
   print self
