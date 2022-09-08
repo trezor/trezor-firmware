@@ -140,8 +140,12 @@ def decode_bech32_address(prefix: str, address: str) -> tuple[int, bytes]:
 
 
 def input_is_segwit(txi: TxInput) -> bool:
+    # Note that we don't investigate whether external inputs that are not presigned
+    # are SegWit or not. For practical purposes we count them as SegWit, because
+    # they behave as such, i.e. they don't use get_legacy_tx_digest().
     return txi.script_type in SEGWIT_INPUT_SCRIPT_TYPES or (
-        txi.script_type == InputScriptType.EXTERNAL and txi.witness is not None
+        txi.script_type == InputScriptType.EXTERNAL
+        and bool(txi.witness or not txi.script_sig)
     )
 
 
