@@ -17,6 +17,7 @@ enum ButtonState {
     OneDown(PhysicalButton),
     BothDown,
     OneReleased(PhysicalButton),
+    HTCNeedsRelease(PhysicalButton),
 }
 
 pub enum ButtonControllerMsg {
@@ -67,9 +68,6 @@ pub struct ButtonContainer<T> {
     // TODO: might get rid of storing this when we solve screen flickering
     // and we don't need to check whether buttons changed
     btn_details: Option<ButtonDetails<T>>,
-    /// We want to send the triggered event at a later time from the actual
-    /// trigger (only as soon as the button is released).
-    htc_triggered: bool,
 }
 
 impl<T: Clone + AsRef<str>> ButtonContainer<T> {
@@ -89,7 +87,6 @@ impl<T: Clone + AsRef<str>> ButtonContainer<T> {
             pos,
             button_type: ButtonType::from_button_details(btn_details.clone()),
             btn_details,
-            htc_triggered: false,
         }
     }
 
@@ -229,42 +226,22 @@ impl<T: Clone + AsRef<str>> ButtonContainer<T> {
         }
     }
 
-    /// Whether the button should send triggered event
-    /// when it is released.
-    pub fn send_event_on_release(&mut self) -> bool {
-        self.reacts_to_single_click() || self.hold_to_confirm_triggered()
-    }
-
     /// Whether single-click should trigger action.
     pub fn reacts_to_single_click(&self) -> bool {
         matches!(self.button_type, ButtonType::NormalButton)
     }
 
-    /// Whether there was a HTC event between the last call to this and now.
-    pub fn hold_to_confirm_triggered(&mut self) -> bool {
-        if self.htc_triggered {
-            // Resetting the flag so it does not return true again
-            self.htc_triggered = false;
-            true
-        } else {
-            false
-        }
-    }
-
     /// Find out whether hold-to-confirm was triggered.
-    /// If so, setting the flag so next call to
-    /// `hold_to_confirm_triggered` will return `true`.
-    pub fn handle_hold_to_confirm(&mut self, ctx: &mut EventCtx, event: Event) {
+    pub fn htc_got_triggered(&mut self, ctx: &mut EventCtx, event: Event) -> bool {
         if matches!(self.button_type, ButtonType::HoldToConfirm) {
             let msg = self.hold_to_confirm.event(ctx, event);
             if matches!(msg, Some(HoldToConfirmMsg::Confirmed)) {
                 // TODO: consider whether to reset and repaint the button or not
                 // Got deleted because of the wipe screen where it was better to not do that.
-                if self.hold_to_confirm.is_some() {
-                    self.htc_triggered = true;
-                }
+                return true;
             }
         };
+        false
     }
 
     /// Registering hold event.
@@ -288,6 +265,7 @@ impl<T: Clone + AsRef<str>> ButtonContainer<T> {
 
     /// Whether newly supplied button details are different from the
     /// current one.
+    /// TODO: could be removed after we resolve flickering issue.
     pub fn is_changing(&self, btn_details: Option<ButtonDetails<T>>) -> bool {
         if btn_details.is_some() && self.btn_details.is_some() {
             btn_details.as_ref().unwrap().id() != self.btn_details.as_ref().unwrap().id()
@@ -378,14 +356,30 @@ impl<T: Clone + AsRef<str>> ButtonController<T> {
     }
 
     /// Handling the HTC elements.
-    /// Just finding out if they have been triggered.
-    /// Only sending the events as soon as the appropriate
-    /// button is released, not to cause unintended events
-    /// from releasing on the next screen.
-    fn handle_hold_to_confirms(&mut self, ctx: &mut EventCtx, event: Event) {
-        self.left_btn.handle_hold_to_confirm(ctx, event);
-        self.middle_btn.handle_hold_to_confirm(ctx, event);
-        self.right_btn.handle_hold_to_confirm(ctx, event);
+    /// Finding out if they have been triggered and sending event
+    /// for the appropriate button.
+    /// Setting the state to wait for the appropriate release event
+    /// from the pressed button. Also resetting visible state.
+    fn handle_hold_to_confirms(
+        &mut self,
+        ctx: &mut EventCtx,
+        event: Event,
+    ) -> Option<ButtonControllerMsg> {
+        if self.left_btn.htc_got_triggered(ctx, event) {
+            self.state = ButtonState::HTCNeedsRelease(PhysicalButton::Left);
+            self.set_pressed(ctx, false, false, false);
+            return Some(ButtonControllerMsg::Triggered(ButtonPos::Left));
+        } else if self.middle_btn.htc_got_triggered(ctx, event) {
+            // TODO: how to handle it here? Do we even need to?
+            self.state = ButtonState::Nothing;
+            self.set_pressed(ctx, false, false, false);
+            return Some(ButtonControllerMsg::Triggered(ButtonPos::Middle));
+        } else if self.right_btn.htc_got_triggered(ctx, event) {
+            self.state = ButtonState::HTCNeedsRelease(PhysicalButton::Right);
+            self.set_pressed(ctx, false, false, false);
+            return Some(ButtonControllerMsg::Triggered(ButtonPos::Right));
+        }
+        None
     }
 }
 
@@ -394,6 +388,8 @@ impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         // State machine for the ButtonController
+        // We are matching event with `Event::Button` for a button action
+        // and `Event::Timer` for getting the expiration of HTC.
         match event {
             Event::Button(button) => {
                 let (new_state, event) = match self.state {
@@ -416,7 +412,7 @@ impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
                         ButtonEvent::ButtonReleased(b) if b == which_down => match which_down {
                             PhysicalButton::Left => (
                                 ButtonState::Nothing,
-                                if self.left_btn.send_event_on_release() {
+                                if self.left_btn.reacts_to_single_click() {
                                     Some(ButtonControllerMsg::Triggered(ButtonPos::Left))
                                 } else {
                                     self.left_btn.hold_ended(ctx);
@@ -425,7 +421,7 @@ impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
                             ),
                             PhysicalButton::Right => (
                                 ButtonState::Nothing,
-                                if self.right_btn.send_event_on_release() {
+                                if self.right_btn.reacts_to_single_click() {
                                     Some(ButtonControllerMsg::Triggered(ButtonPos::Right))
                                 } else {
                                     self.right_btn.hold_ended(ctx);
@@ -455,7 +451,7 @@ impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
                         }
                         ButtonEvent::ButtonReleased(b) if b != which_up => (
                             ButtonState::Nothing,
-                            if self.middle_btn.send_event_on_release() {
+                            if self.middle_btn.reacts_to_single_click() {
                                 Some(ButtonControllerMsg::Triggered(ButtonPos::Middle))
                             } else {
                                 None
@@ -463,11 +459,19 @@ impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
                         ),
                         _ => (self.state, None),
                     },
+                    ButtonState::HTCNeedsRelease(needs_release) => match button {
+                        // Only going out of this state if correct button was released
+                        ButtonEvent::ButtonReleased(released) if needs_release == released => {
+                            (ButtonState::Nothing, None)
+                        }
+                        _ => (self.state, None),
+                    },
                 };
 
                 // Updating the visual feedback for the buttons
                 match new_state {
-                    ButtonState::Nothing => {
+                    // Not showing anything also when we wait for a release
+                    ButtonState::Nothing | ButtonState::HTCNeedsRelease(_) => {
                         self.set_pressed(ctx, false, false, false);
                     }
                     ButtonState::OneDown(down_button) => match down_button {
@@ -487,10 +491,8 @@ impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
                 self.state = new_state;
                 event
             }
-            _ => {
-                self.handle_hold_to_confirms(ctx, event);
-                None
-            }
+            Event::Timer(_) => self.handle_hold_to_confirms(ctx, event),
+            _ => None,
         }
     }
 
