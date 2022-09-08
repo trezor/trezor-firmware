@@ -185,6 +185,7 @@ where
                         // Clicked BACK. Scroll up.
                         self.scrollbar.inner_mut().go_to_previous_page();
                         self.change_page(ctx, self.scrollbar.inner().active_page);
+                        self.scrollbar.request_complete_repaint(ctx);
                     } else {
                         // Clicked CANCEL. Send result.
                         return Some(PageMsg::Controls(false));
@@ -195,6 +196,7 @@ where
                         // Clicked NEXT. Scroll down.
                         self.scrollbar.inner_mut().go_to_next_page();
                         self.change_page(ctx, self.scrollbar.inner().active_page);
+                        self.scrollbar.request_complete_repaint(ctx);
                     } else {
                         // Clicked CONFIRM. Send result.
                         return Some(PageMsg::Controls(true));
