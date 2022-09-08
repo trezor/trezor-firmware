@@ -2,7 +2,7 @@ use core::slice;
 use cstr_core::CStr;
 use heapless::{String, Vec};
 use crate::trezorhal::alloc::alloc_only;
-use crate::trezorhal::storage::{storage_ensure_not_wipe_pin, storage_get, storage_get_length, storage_get_remaining, storage_has_pin, storage_init, storage_unlock, storage_wipe};
+use crate::trezorhal::storage::{storage_delete, storage_ensure_not_wipe_pin, storage_get, storage_get_length, storage_get_remaining, storage_has_pin, storage_init, storage_set, storage_set_counter, storage_unlock, storage_wipe};
 use crate::ui::{constant, display, LockScreen, LockScreenMsg, PinKeyboard, PinKeyboardMsg};
 use crate::ui::constant::screen;
 use crate::ui::geometry::{Point, Rect};
@@ -81,22 +81,49 @@ pub fn get_flag(key: u16) -> bool {
     let mut buf = [0u8];
     let len = storage_get(key, &mut buf);
     if matches!(len, Ok(1)) {
-        return buf[0] == 0x01;
+        return buf[0] != 0;
     }
     false
 }
 
+fn migrate_from_version_01() {
+
+    // Make the U2F counter public and writable even when storage is locked.
+    // U2F counter wasn't public, so we are intentionally not using storage.device module.
+    let mut data: [u8;4] = [0;4];
+    let counter_res = storage_get(0x109, &mut data);
+    if let Ok(_) = counter_res {
+        let counter = u32::from_be_bytes(data);
+
+        unwrap!(storage_set_counter(0xC109, counter));
+        // Delete the old, non-public U2F_COUNTER.
+        storage_delete(0x109);
+    }
+    unwrap!(storage_set(0x101, &[2;1]));
+}
+
+
 fn init_unlocked() {
 
-    // Check for storage version upgrade.
-    // version = device.get_version()
-    // if version == common.STORAGE_VERSION_01:
-    //     _migrate_from_version_01()
-    //
-    // // In FWs <= 2.3.1 'version' denoted whether the device is initialized or not.
-    // // In 2.3.2 we have introduced a new field 'initialized' for that.
-    // if device.is_version_stored() and not device.is_initialized():
-    //     common.set_bool(common.APP_DEVICE, device.INITIALIZED, True, public=True)
+    let len_res = storage_get_length(0x101);
+
+    if let Ok(_) = len_res {
+        // Check for storage version upgrade.
+        let mut data: [u8;1] = [0;1];
+        unwrap!(storage_get(0x101, &mut data));
+
+        //todo constant
+        if data[0] == 1 {
+            migrate_from_version_01();
+        }
+
+        // In FWs <= 2.3.1 'version' denoted whether the device is initialized or not.
+        // In 2.3.2 we have introduced a new field 'initialized' for that.
+        if get_flag(0x101) && !get_flag(0x8113) {
+            unwrap!(storage_set(0x8113, &[1;1]));
+        }
+    }
+
 }
 
 

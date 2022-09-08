@@ -99,3 +99,36 @@ pub fn storage_get(appkey: u16, data: &mut [u8]) -> StorageResult<usize> {
         Err(StorageError::ReadFailed)
     }
 }
+
+/// Set value for `appkey` in storage.
+/// The maximum length of the value is `u16::MAX`. Passing longer buffers will
+/// result in an error.
+/// If storage is locked and the value is not public-writable, returns an error.
+pub fn storage_set(appkey: u16, data: &[u8]) -> StorageResult<()> {
+    if data.len() > u16::MAX as usize {
+        Err(StorageError::InvalidData)
+    } else if ffi::sectrue
+        == unsafe { ffi::storage_set(appkey, data.as_ptr() as _, data.len() as u16) }
+    {
+        Ok(())
+    } else {
+        Err(StorageError::WriteFailed)
+    }
+}
+
+/// Set value for monotonic counter `appkey` in storage.
+pub fn storage_set_counter(appkey: u16, counter: u32) -> StorageResult<()> {
+    if ffi::sectrue == unsafe { ffi::storage_set_counter(appkey, counter) } {
+        Ok(())
+    } else {
+        Err(StorageError::WriteFailed)
+    }
+}
+
+/// Delete value for `appkey` from storage.
+/// Returns true if the value was successfully deleted.
+/// If the storage is locked, or the value does not exist in storage, returns
+/// false.
+pub fn storage_delete(appkey: u16) -> bool {
+    ffi::sectrue == unsafe { ffi::storage_delete(appkey) }
+}
