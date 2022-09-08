@@ -4,6 +4,7 @@ use crate::error::Error;
 use crate::micropython::map::Map;
 use crate::micropython::obj::Obj;
 use crate::micropython::util;
+use crate::micropython::ffi;
 use crate::micropython::qstr::Qstr;
 use crate::ui::constant::screen;
 use crate::ui::display;
@@ -19,8 +20,10 @@ pub unsafe extern "C" fn show_pin_timeout(seconds: u32, progress: u32, message: 
     unsafe {
 
         if let Some(callback) = KEEPALIVE_CALLBACK {
-            //todo
-            unwrap!(callback.call_with_n_args(&[]));
+
+
+            ffi::mp_call_function_0(callback);
+
             //keepalive_callback()
         };
 
@@ -74,22 +77,20 @@ pub unsafe extern "C" fn show_pin_timeout(seconds: u32, progress: u32, message: 
     0
 }
 
-
-pub extern "C" fn set_keepalive_callback(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-
-    let block = move |_args: &[Obj], kwargs: &Map| unsafe {
-        let cb = kwargs.get(Qstr::MP_QSTR_keepalive_callback)?.try_into()?;
-        KEEPALIVE_CALLBACK = Some(cb);
-        Ok(cb)
+#[no_mangle]
+pub extern "C" fn set_keepalive_callback(obj: Obj) -> Obj {
+    let block = || unsafe {
+        KEEPALIVE_CALLBACK = Some(obj);
+        Ok(Obj::const_none())
     };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-
+    unsafe { util::try_or_raise(block) }
 }
 
-// pub extern "C" fn remove_keepalive_callback()  {
-//     let block = || unsafe {
-//         KEEPALIVE_CALLBACK = None;
-//         Ok(())
-//     };
-//     unsafe { util::try_or_raise(block) }
-// }
+#[no_mangle]
+pub extern "C" fn remove_keepalive_callback() -> Obj  {
+    let block = || unsafe {
+        KEEPALIVE_CALLBACK = None;
+        Ok(Obj::const_none())
+    };
+    unsafe { util::try_or_raise(block) }
+}

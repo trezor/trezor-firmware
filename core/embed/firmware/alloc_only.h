@@ -24,7 +24,7 @@
 #include "stdbool.h"
 
 
-void * alloc_only(size_t size);
+void * alloc_only(uint16_t size);
 
 void alloc_only_init(bool clear);
 

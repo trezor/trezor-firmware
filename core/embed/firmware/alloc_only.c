@@ -26,7 +26,7 @@ extern uint32_t _heap_end;
 
 uint32_t * alloc_memory;
 
-void * alloc_only(size_t size){
+void * alloc_only(uint16_t size){
 
   void * ptr = NULL;
 

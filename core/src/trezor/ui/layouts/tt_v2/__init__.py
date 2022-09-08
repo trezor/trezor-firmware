@@ -891,3 +891,9 @@ async def request_pin_on_device(
             raise wire.PinCancelled
         assert isinstance(result, str)
         return result
+
+def set_keepalive_callback(callback):
+    trezorui2.set_keepalive_callback(callback)
+
+def remove_keepalive_callback():
+    trezorui2.remove_keepalive_callback()

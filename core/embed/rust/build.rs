@@ -143,6 +143,7 @@ fn generate_micropython_bindings() {
         .allowlist_function("mp_obj_new_tuple")
         .allowlist_function("mp_obj_get_int_maybe")
         .allowlist_function("mp_obj_is_true")
+        .allowlist_function("mp_call_function_0")
         .allowlist_function("mp_call_function_n_kw")
         .allowlist_function("trezor_obj_get_ll_checked")
         .allowlist_function("trezor_obj_get_ull_checked")
@@ -160,6 +161,7 @@ fn generate_micropython_bindings() {
         .allowlist_var("mp_type_dict")
         // fun
         .allowlist_type("mp_obj_fun_builtin_fixed_t")
+        .allowlist_var("mp_type_fun_builtin_0")
         .allowlist_var("mp_type_fun_builtin_1")
         .allowlist_var("mp_type_fun_builtin_2")
         .allowlist_var("mp_type_fun_builtin_3")

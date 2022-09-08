@@ -3,7 +3,7 @@ from typing import Any, NoReturn
 
 import storage.cache
 import storage.sd_salt
-from trezor import config, wire
+from trezor import config, wire, protobuf, ui
 
 from .sdcard import SdCardUnavailable, request_sd_salt
 
@@ -69,6 +69,17 @@ def _get_last_unlock_time() -> int:
     )
 
 
+class KeepaliveCallback2:
+    def __init__(self, cid: int, iface: int) -> None:
+        self.cid = cid
+        self.iface = iface
+
+    def __call__(self) -> None:
+        ui.display.text_center(ui.WIDTH // 2, 35, "Callback is working", ui.BOLD, ui.FG, ui.BG)
+
+
+
+
 async def verify_user_pin(
     ctx: wire.GenericContext = wire.DUMMY_CONTEXT,
     prompt: str = "Enter your PIN",
@@ -99,6 +110,11 @@ async def verify_user_pin(
         salt = await request_sd_salt(ctx)
     except SdCardUnavailable:
         raise wire.PinCancelled("SD salt is unavailable")
+
+    # from protobuf import set_keepalive_callback
+
+    from trezor.ui.layouts import set_keepalive_callback
+    set_keepalive_callback(KeepaliveCallback2(0,0))
     if config.unlock(pin, salt):
         _set_last_unlock_time()
         return
@@ -106,6 +122,8 @@ async def verify_user_pin(
         raise RuntimeError
 
     while retry:
+        from trezor.ui.layouts import remove_keepalive_callback
+        remove_keepalive_callback()
         pin = await request_pin_on_device(  # type: ignore ["request_pin_on_device" is possibly unbound]
             ctx, "Wrong PIN, enter again", config.get_pin_rem(), allow_cancel
         )
