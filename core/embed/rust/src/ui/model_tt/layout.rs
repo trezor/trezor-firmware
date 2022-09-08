@@ -25,6 +25,9 @@ use crate::{
             obj::{ComponentMsgObj, LayoutObj},
             result::{CANCELLED, CONFIRMED, INFO},
         },
+        pin::{
+            set_keepalive_callback,
+        }
     },
 };
 
@@ -732,6 +735,14 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> str:
     ///    """SLIP39 word input keyboard."""
     Qstr::MP_QSTR_request_slip39 => obj_fn_kw!(0, new_request_slip39).as_obj(),
+
+
+    /// def set_keepalive_callback(
+    ///     *,
+    ///     callback: KeepaliveCallback,
+    /// ):
+    ///    """Sets keepalive callback."""
+    Qstr::MP_QSTR_set_keepalive_callback => obj_fn_kw!(0, set_keepalive_callback).as_obj(),
 };
 
 #[cfg(test)]

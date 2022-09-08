@@ -26,10 +26,16 @@ impl<'a> LockScreen<'a> {
 
     pub fn new(
         device_name: &'a str,
-        avatar: &'a[u8],
+        avatar: Option<&'a[u8]>,
         lock_label: Option<&'a str>,
         tap_label: Option<&'a str>,
     ) -> Self {
+
+        let avatar = if let Some(avatar_data) = avatar {
+            avatar_data
+        } else {
+            theme::IMAGE_HOMESCREEN
+        };
 
         let mut instance = Self {
             pad: Pad::with_background(theme::BG),

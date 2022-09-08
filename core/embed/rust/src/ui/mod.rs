@@ -16,14 +16,14 @@ pub mod layout;
 #[cfg(feature = "model_t1")]
 pub mod model_t1;
 #[cfg(feature = "model_t1")]
-pub use model_t1::component::*;
+pub use model_t1::{component::*};
 #[cfg(feature = "model_tr")]
 pub mod model_tr;
 #[cfg(feature = "model_tr")]
-pub use model_tr::component::*;
+pub use model_tr::{component::*};
 #[cfg(feature = "model_tt")]
 pub mod model_tt;
 #[cfg(feature = "model_tt")]
-pub use model_tt::component::*;
+pub use model_tt::{component::*, pin};
 
 pub mod workflow;

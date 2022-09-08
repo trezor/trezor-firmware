@@ -1,7 +1,7 @@
 pub mod boot;
 
 use crate::ui::display::icon;
-use crate::ui::model_tt::theme::{ICON_TREZOR_EMPTY, ICON_TREZOR_FULL, BLACK, WHITE};
+use crate::ui::model_tt::theme::{ICON_TREZOR_FULL, BLACK, WHITE};
 
 use crate::ui::constant;
 use crate::ui::workflow::boot::boot_workflow;

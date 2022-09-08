@@ -33,6 +33,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_request_passphrase;
   MP_QSTR_request_bip39;
   MP_QSTR_request_slip39;
+  MP_QSTR_keepalive_callback;
+  MP_QSTR_set_keepalive_callback;
 
   MP_QSTR_attach_timer_fn;
   MP_QSTR_touch_event;

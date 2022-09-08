@@ -1,13 +1,13 @@
-use core::slice;
 use cstr_core::CStr;
 use heapless::{String, Vec};
+use crate::micropython::obj::Obj;
+use crate::micropython::util;
 use crate::trezorhal::alloc::alloc_only;
 use crate::trezorhal::storage::{storage_delete, storage_ensure_not_wipe_pin, storage_get, storage_get_length, storage_get_remaining, storage_has_pin, storage_init, storage_set, storage_set_counter, storage_unlock, storage_wipe};
-use crate::ui::{constant, display, LockScreen, LockScreenMsg, PinKeyboard, PinKeyboardMsg};
+use crate::ui::{constant, display, LockScreen, LockScreenMsg, PinKeyboard, PinKeyboardMsg, pin::show_pin_timeout};
 use crate::ui::constant::screen;
 use crate::ui::geometry::{Point, Rect};
 use crate::ui::layout::native::RustLayout;
-use crate::ui::model_tt::theme;
 
 pub enum BootState {
     NotInitialized,
@@ -15,65 +15,6 @@ pub enum BootState {
     RepeatPinEntry,
 }
 
-static mut PREV_SECONDS: u32 = 0xFFFFFFFF;
-static mut PREV_PROGRESS: u32 = 0xFFFFFFFF;
-
-
-unsafe extern "C" fn show_pin_timeout(seconds: u32, progress: u32, message: *const u8) -> u32 {
-    unsafe {
-
-        //todo
-        // if callable(keepalive_callback):
-        //     keepalive_callback()
-
-        if progress == 0 {
-            if progress != PREV_PROGRESS {
-                display::rect_fill(screen(), theme::BG);
-                PREV_SECONDS = 0xFFFFFFFF;
-            }
-
-            let msg = CStr::from_ptr(message as _).to_str().unwrap();
-            display::text_center(Point::new(screen().center().x, 37), msg, theme::FONT_BOLD, theme::FG, theme::BG);
-        }
-
-        if progress != PREV_PROGRESS {
-            display::loader(progress as _, 0, theme::FG, theme::BG, None);
-        }
-
-        let mut s : String<16> = String::new();
-
-        if seconds != PREV_SECONDS {
-            match seconds {
-                0 => {unwrap!(s.push_str("Done"))}
-                1 => {unwrap!(s.push_str("1 second left"))}
-                _ => {
-                    let sec: String<16> = String::from(seconds);
-                    unwrap!(s.push_str(sec.as_str()));
-                    unwrap!(s.push_str(" seconds left"))
-                }
-            };
-
-            display::rect_fill(Rect::new(
-                Point::new(0, constant::HEIGHT - 42),
-                Point::new(constant::WIDTH, constant::HEIGHT - 42 + 25)),
-                               theme::BG,
-            );
-            display::text_center(Point::new(screen().center().x, constant::HEIGHT - 22),
-                                 s.as_str(),
-                                 theme::FONT_BOLD,
-                                 theme::FG,
-                                 theme::BG,
-            );
-        }
-
-        display::pixeldata_dirty();
-
-        PREV_SECONDS = seconds;
-        PREV_PROGRESS = progress;
-
-    }
-    0
-}
 
 
 pub fn get_flag(key: u16) -> bool {
@@ -154,12 +95,12 @@ pub fn boot_workflow() {
 
     let avatar_len_res = storage_get_length(0x8106);
 
-    let avatar: &[u8] = if let Ok(len) = avatar_len_res {
+    let avatar: Option<&[u8]> = if let Ok(len) = avatar_len_res {
         let mut data = alloc_only(len);
         storage_get(0x8106, &mut data).unwrap();
-        data
+        Some(data)
     } else {
-        theme::IMAGE_HOMESCREEN
+        None
     };
 
     let rotation_len_res = storage_get_length(0x810F);

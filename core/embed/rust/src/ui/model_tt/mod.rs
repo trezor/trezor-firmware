@@ -5,3 +5,4 @@ pub mod theme;
 
 #[cfg(feature = "micropython")]
 pub mod layout;
+pub mod pin;
