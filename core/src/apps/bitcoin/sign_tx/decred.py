@@ -280,6 +280,9 @@ class Decred(Bitcoin):
         pass
 
     async def step7_finish(self) -> None:
+        if __debug__:
+            progress.assert_finished()
+
         await helpers.request_tx_finish(self.tx_req)
 
     def check_prevtx_output(self, txo_bin: PrevOutput) -> None:
@@ -328,6 +331,7 @@ class Decred(Bitcoin):
             raise wire.DataError("Ticket has wrong number of outputs.")
 
         # SSTX submission
+        progress.advance()
         txo = await helpers.request_tx_output(self.tx_req, 0, self.coin)
         if txo.address is None:
             raise wire.DataError("Missing address.")
@@ -338,6 +342,7 @@ class Decred(Bitcoin):
             self.write_tx_output(self.serialized_tx, txo, script_pubkey)
 
         # SSTX commitment
+        progress.advance()
         txo = await helpers.request_tx_output(self.tx_req, 1, self.coin)
         if txo.amount != self.approver.total_in:
             raise wire.DataError("Wrong sstxcommitment amount.")
@@ -348,6 +353,7 @@ class Decred(Bitcoin):
             self.write_tx_output(self.serialized_tx, txo, script_pubkey)
 
         # SSTX change
+        progress.advance()
         txo = await helpers.request_tx_output(self.tx_req, 2, self.coin)
         if txo.address is None:
             raise wire.DataError("Missing address.")
