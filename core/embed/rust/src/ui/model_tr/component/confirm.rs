@@ -63,6 +63,14 @@ impl<T: AsRef<str>> HoldToConfirm<T> {
         self.loader.set_duration(duration);
     }
 
+    pub fn get_duration(&self) -> Duration {
+        self.loader.get_duration()
+    }
+
+    pub fn get_text(&self) -> &T {
+        self.loader.get_text()
+    }
+
     fn placement(&mut self, area: Rect, pos: ButtonPos) -> Rect {
         let button_width = self.text_width + 7;
         match pos {

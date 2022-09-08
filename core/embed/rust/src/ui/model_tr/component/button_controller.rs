@@ -1,6 +1,6 @@
 use super::{
-    theme, Button, ButtonDetails, ButtonLayout, ButtonPos, HoldToConfirm, HoldToConfirmMsg,
-    LoaderStyleSheet,
+    theme, Button, ButtonContent, ButtonDetails, ButtonLayout, ButtonPos, HoldToConfirm,
+    HoldToConfirmMsg, LoaderStyleSheet,
 };
 use crate::{
     time::Duration,
@@ -10,6 +10,8 @@ use crate::{
         geometry::Rect,
     },
 };
+
+use heapless::String;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 enum ButtonState {
@@ -65,9 +67,6 @@ pub struct ButtonContainer<T> {
     /// Stored to create the button later with correct position
     pos: ButtonPos,
     button_type: ButtonType,
-    // TODO: might get rid of storing this when we solve screen flickering
-    // and we don't need to check whether buttons changed
-    btn_details: Option<ButtonDetails<T>>,
 }
 
 impl<T: Clone + AsRef<str>> ButtonContainer<T> {
@@ -85,8 +84,7 @@ impl<T: Clone + AsRef<str>> ButtonContainer<T> {
             button,
             hold_to_confirm,
             pos,
-            button_type: ButtonType::from_button_details(btn_details.clone()),
-            btn_details,
+            button_type: ButtonType::from_button_details(btn_details),
         }
     }
 
@@ -141,9 +139,6 @@ impl<T: Clone + AsRef<str>> ButtonContainer<T> {
         btn_details: Option<ButtonDetails<T>>,
         button_area: Rect,
     ) {
-        // Saving the current button details for comparison with next state.
-        self.btn_details = btn_details.clone();
-
         if let Some(btn_details) = btn_details {
             // Choosing between Hold-to-confirm and normal button based on `duration`.
             // Creating and placing the appropriate button if it does
@@ -262,17 +257,6 @@ impl<T: Clone + AsRef<str>> ButtonContainer<T> {
             }
         }
     }
-
-    /// Whether newly supplied button details are different from the
-    /// current one.
-    /// TODO: could be removed after we resolve flickering issue.
-    pub fn is_changing(&self, btn_details: Option<ButtonDetails<T>>) -> bool {
-        if btn_details.is_some() && self.btn_details.is_some() {
-            btn_details.as_ref().unwrap().id() != self.btn_details.as_ref().unwrap().id()
-        } else {
-            btn_details.is_some() != self.btn_details.is_some()
-        }
-    }
 }
 
 /// Component responsible for handling buttons.
@@ -311,33 +295,15 @@ impl<T: Clone + AsRef<str>> ButtonController<T> {
         }
     }
 
-    /// If any button changed from previous state, updating all of them,
-    /// otherwise not doing anything not to flicker the screen.
+    /// Updating all the three buttons to the wanted states.
     pub fn set(&mut self, ctx: &mut EventCtx, btn_layout: ButtonLayout<T>) {
-        // TODO: investigate how to make just one button to be repainted
-        // Tried to add pad to each and clear it on any change but not successful
-        // (I maybe forgot to paint the pad...)
-        let left = btn_layout.btn_left;
-        let middle = btn_layout.btn_middle;
-        let right = btn_layout.btn_right;
-        if self.buttons_have_changed(left.clone(), middle.clone(), right.clone()) {
-            self.left_btn.set(ctx, left, self.button_area);
-            self.middle_btn.set(ctx, middle, self.button_area);
-            self.right_btn.set(ctx, right, self.button_area);
-            self.pad.clear();
-        }
-    }
-
-    /// Find out if any of our buttons has changed.
-    fn buttons_have_changed(
-        &mut self,
-        left: Option<ButtonDetails<T>>,
-        mid: Option<ButtonDetails<T>>,
-        right: Option<ButtonDetails<T>>,
-    ) -> bool {
-        self.left_btn.is_changing(left)
-            || self.middle_btn.is_changing(mid)
-            || self.right_btn.is_changing(right)
+        self.left_btn
+            .set(ctx, btn_layout.btn_left, self.button_area);
+        self.middle_btn
+            .set(ctx, btn_layout.btn_middle, self.button_area);
+        self.right_btn
+            .set(ctx, btn_layout.btn_right, self.button_area);
+        self.pad.clear();
     }
 
     /// Setting the pressed state for all three buttons by boolean flags.
@@ -524,11 +490,29 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("ButtonContainer");
-        if let Some(btn_details) = &self.btn_details {
-            t.field("btn_details", btn_details);
+
+        // Putting together text representation of the button
+        let mut btn_text: String<30> = String::new();
+        if let Some(btn) = &self.button {
+            match btn.inner().content() {
+                ButtonContent::Text(text) => {
+                    unwrap!(btn_text.push_str(text.as_ref()));
+                }
+                ButtonContent::Icon(icon) => {
+                    unwrap!(btn_text.push_str("Icon:"));
+                    unwrap!(btn_text.push_str(icon.text));
+                }
+            }
+        } else if let Some(htc) = &self.hold_to_confirm {
+            unwrap!(btn_text.push_str(htc.inner().get_text().as_ref()));
+            unwrap!(btn_text.push_str(" (HTC:"));
+            unwrap!(btn_text.push_str(inttostr!(htc.inner().get_duration().to_millis())));
+            unwrap!(btn_text.push_str(")"));
         } else {
-            t.button(crate::trace::EMPTY_BTN);
+            unwrap!(btn_text.push_str(crate::trace::EMPTY_BTN));
         }
+        t.button(btn_text.as_ref());
+
         t.close();
     }
 }

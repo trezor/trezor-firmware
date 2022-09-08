@@ -65,6 +65,17 @@ impl<T: AsRef<str>> Loader<T> {
         self.growing_duration = growing_duration;
     }
 
+    pub fn get_duration(&self) -> Duration {
+        self.growing_duration
+    }
+
+    pub fn get_text(&self) -> &T {
+        self.text_overlay
+            .as_ref()
+            .expect("Loader does not have text")
+            .get_text()
+    }
+
     /// Change the text of the loader.
     /// When the text_overlay does not exist (as it was created by icon),
     /// create it and place it

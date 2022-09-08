@@ -225,6 +225,10 @@ impl<T: AsRef<str>> TextOverlay<T> {
         self.text = text;
     }
 
+    pub fn get_text(&self) -> &T {
+        &self.text
+    }
+
     // baseline relative to the underlying render area
     pub fn place(&mut self, baseline: Point) {
         let text_width = self.font.text_width(self.text.as_ref());

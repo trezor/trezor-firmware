@@ -523,35 +523,6 @@ impl<T: Clone + AsRef<str>> ButtonDetails<T> {
             )
         }
     }
-
-    /// Identifier of this button configuration.
-    /// To quickly compare two buttons and see if there was a change.
-    pub fn id(&self) -> String<60> {
-        // TODO: we could maybe use `Eq` or `PartialEq` for comparison,
-        // but that wold require some generic Trait changes (T: PartialEq),
-        // which was not possible for AsRef<str>?
-        let text: String<20> = if let Some(text) = self.text.clone() {
-            text.as_ref().into()
-        } else {
-            "".into()
-        };
-        // TODO: the icon should be hashed, icon size is not really good but works for
-        // now
-        let icon_size: String<10> = if let Some(icon) = &self.icon {
-            build_string!(10, inttostr!(icon.width()), "x", inttostr!(icon.height()))
-        } else {
-            "0x0".into()
-        };
-        let duration_ms = self.duration.unwrap_or(Duration::ZERO).to_millis();
-        build_string!(
-            60,
-            text.as_ref(),
-            "--",
-            icon_size.as_ref(),
-            "--",
-            String::<20>::from(duration_ms).as_ref()
-        )
-    }
 }
 
 /// Holding the button details for all three possible buttons.
@@ -785,19 +756,6 @@ impl ButtonActions {
             ButtonPos::Middle => self.middle.clone(),
             ButtonPos::Right => self.right.clone(),
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_btn_details_id() {
-        let btn = ButtonDetails::text("Test");
-        assert_eq!(btn.id(), String::<50>::from("Test--0x0--0"));
-        let btn = ButtonDetails::text("Duration").with_duration(Duration::from_secs(1));
-        assert_eq!(btn.id(), String::<50>::from("Duration--0x0--1000"));
     }
 }
 
