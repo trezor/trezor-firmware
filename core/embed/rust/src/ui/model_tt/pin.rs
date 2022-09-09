@@ -16,13 +16,8 @@ pub fn show_pin_timeout(wait: u32, progress: u32, message: &str) -> PinCallbackR
     unsafe {
 
         if let Some(callback) = KEEPALIVE_CALLBACK {
-
-
             ffi::mp_call_function_0(callback);
-
-            //keepalive_callback()
         };
-
 
         if progress == 0 {
             if progress != PREV_PROGRESS {
@@ -64,9 +59,11 @@ pub fn show_pin_timeout(wait: u32, progress: u32, message: &str) -> PinCallbackR
         }
 
         display::pixeldata_dirty();
+        display::refresh();
 
         PREV_SECONDS = wait;
         PREV_PROGRESS = progress;
+
 
     }
     PinCallbackResult::Continue
