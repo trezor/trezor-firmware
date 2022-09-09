@@ -142,10 +142,8 @@ def process_face(name, style, size, bpp=4, shave_bearingX=0, ext="ttf"):
 
             yMin = bearingY - rows
             yMax = yMin + rows
-            if yMin < font_ymin:
-                font_ymin = yMin
-            if yMax > font_ymax:
-                font_ymax = yMax
+            font_ymin = min(font_ymin, yMin)
+            font_ymax = max(font_ymax, yMax)
 
         f.write(nonprintable)
 
