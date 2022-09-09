@@ -27,15 +27,31 @@ if __debug__:
 
 class EthereumDefinitionParser:
     def __init__(self, definition_bytes: bytes) -> None:
-        if len(definition_bytes) <= (8 + 1 + 4 + 64):
-            raise wire.DataError("Received Ethereum definition is probably malformed (too few data).")
+        actual_position = 0
 
-        self.format_version: str = definition_bytes[:8].rstrip(b'\0').decode("utf-8")
-        self.definition_type: int = definition_bytes[8]
-        self.data_version: int = int.from_bytes(definition_bytes[9:13], 'big')
-        self.clean_payload = definition_bytes[13:-64]
-        self.payload = definition_bytes[:-64]
-        self.signature = definition_bytes[-64:]
+        try:
+            # prefix
+            self.format_version = definition_bytes[:8].rstrip(b'\0').decode("utf-8")
+            self.definition_type: int = definition_bytes[8]
+            self.data_version = int.from_bytes(definition_bytes[9:13], 'big')
+            self.payload_length_in_bytes = int.from_bytes(definition_bytes[13:15], 'big')
+            actual_position += 8 + 1 + 4 + 2
+
+            # payload
+            self.payload = definition_bytes[actual_position:(actual_position + self.payload_length_in_bytes)]
+            self.payload_with_prefix = definition_bytes[:(actual_position + self.payload_length_in_bytes)]
+            actual_position += self.payload_length_in_bytes
+
+            # suffix - Merkle tree proof and signed root hash
+            self.proof_length: int = definition_bytes[actual_position]
+            actual_position += 1
+            self.proof: list[bytes] = []
+            for _ in range(self.proof_length):
+                self.proof.append(definition_bytes[actual_position:(actual_position + 32)])
+                actual_position += 32
+            self.signed_tree_root = definition_bytes[actual_position:(actual_position + 64)]
+        except IndexError:
+            raise wire.DataError("Invalid Ethereum definition.")
 
 
 def decode_definition(
@@ -56,19 +72,32 @@ def decode_definition(
     if parsed_definition.data_version < MIN_DATA_VERSION:
         raise wire.DataError("Used Ethereum definition data version too low.")
 
-    # at the end verify the signature
-    if not ed25519.verify(DEFINITIONS_PUBLIC_KEY, parsed_definition.signature, parsed_definition.payload):
+    # at the end verify the signature - compute Merkle tree root hash using provided leaf data and proof
+    def compute_mt_root_hash(data: bytes, proof: list[bytes]) -> bytes:
+        from trezor.crypto.hashlib import sha256
+        hash = sha256(b"\x00" + data).digest()
+        for p in proof:
+            hash_a = min(hash, p)
+            hash_b = max(hash, p)
+            hash = sha256(b"\x01" + hash_a + hash_b).digest()
+
+        return hash
+
+    # verify Merkle proof
+    root_hash = compute_mt_root_hash(parsed_definition.payload_with_prefix, parsed_definition.proof)
+
+    if not ed25519.verify(DEFINITIONS_PUBLIC_KEY, parsed_definition.signed_tree_root, root_hash):
         error_msg = wire.DataError("Ethereum definition signature is invalid.")
         if __debug__:
             # check against dev key
-            if not ed25519.verify(DEFINITIONS_DEV_PUBLIC_KEY, parsed_definition.signature, parsed_definition.payload):
+            if not ed25519.verify(DEFINITIONS_DEV_PUBLIC_KEY, parsed_definition.signed_tree_root, root_hash):
                 raise error_msg
         else:
             raise error_msg
 
     # decode it if it's OK
     if expected_type == EthereumDefinitionType.NETWORK:
-        info = protobuf.decode(parsed_definition.clean_payload, EthereumNetworkInfo, True)
+        info = protobuf.decode(parsed_definition.payload, EthereumNetworkInfo, True)
 
         # TODO: temporarily convert to internal class
         if info is not None:
@@ -81,7 +110,7 @@ def decode_definition(
                 rskip60=info.rskip60
             )
     else:
-        info = protobuf.decode(parsed_definition.clean_payload, EthereumTokenInfo, True)
+        info = protobuf.decode(parsed_definition.payload, EthereumTokenInfo, True)
 
         # TODO: temporarily convert to internal class
         if info is not None:

@@ -10,7 +10,7 @@ import pathlib
 import re
 import shutil
 from collections import defaultdict
-from typing import Any, Dict, List, TextIO, Tuple
+from typing import Any, Dict, List, TextIO, Tuple, cast
 
 import click
 import ed25519
@@ -24,9 +24,9 @@ from coin_info import (
     Coins,
     _load_builtin_erc20_tokens,
     _load_builtin_ethereum_networks,
-    coin_info,
     load_json,
 )
+from merkle_tree import MerkleTree
 from trezorlib import protobuf
 from trezorlib.messages import (
     EthereumDefinitionType,
@@ -677,19 +677,38 @@ def check_definitions_list(
             _set_definition_metadata(definition)
 
 
-def _load_prepared_definitions():
-    # set keys for the networks and tokens
-    # networks.append(cast(Coin, network))
-    #             key=f"eth:{shortcut}",
+def _load_prepared_definitions(definitions_file: pathlib.Path) -> tuple[list[dict], list[dict]]:
+    if not definitions_file.is_file():
+        click.ClickException(f"File {definitions_file} with prepared definitions does not exists or is not a file.")
 
-    # token.update(
-    #     chain=chain,
-    #     chain_id=network["chain_id"],
-    #     address_bytes=bytes.fromhex(token["address"][2:]),
-    #     shortcut=token["symbol"],
-    #     key=f"erc20:{chain}:{token['symbol']}",
-    # )
-    pass
+    prepared_definitions_data = load_json(definitions_file)
+    try:
+        networks_data = prepared_definitions_data["networks"]
+        tokens_data = prepared_definitions_data["tokens"]
+    except KeyError:
+        click.ClickException(f"File with prepared definitions is not complete. Whole \"networks\" and/or \"tokens\" section are missing.")
+
+    networks: Coins = []
+    for network_data in networks_data:
+        network_data.update(
+            chain_id=str(network_data["chain_id"]),
+            key=f"eth:{network_data['shortcut']}",
+        )
+        networks.append(cast(Coin, network_data))
+
+    tokens: Coins = []
+
+    for token in tokens_data:
+        token.update(
+            chain_id=str(token["chain_id"]),
+            address=token["address"].lower(),
+            address_bytes=bytes.fromhex(token["address"][2:]),
+            symbol=token["shortcut"],
+            key=f"erc20:{token['chain']}:{token['shortcut']}",
+        )
+        tokens.append(cast(Coin, token))
+
+    return networks, tokens
 
 
 # ====== coindefs generators ======
@@ -723,7 +742,10 @@ def serialize_eth_info(
 
     buf = io.BytesIO()
     protobuf.dump_message(buf, info)
-    ser += buf.getvalue()
+    msg = buf.getvalue()
+    # write the length of encoded protobuf message
+    ser += len(msg).to_bytes(2, "big")
+    ser += msg
 
     return ser
 
@@ -930,9 +952,6 @@ def prepare_definitions(
         f.write("\n")
 
 
-# TODO: separate function to generate built-in defs???
-
-
 @cli.command()
 @click.option(
     "-o",
@@ -946,7 +965,14 @@ def prepare_definitions(
     type=click.File(mode="r"),
     help="Private key (text, hex formated) to use to sign data. Could be also loaded from `PRIVATE_KEY` env variable. Provided file is preffered over env variable.",
 )
-def coindefs(outdir: pathlib.Path, privatekey: TextIO) -> None:
+@click.option(
+    "-d",
+    "--deffile",
+    type=click.Path(resolve_path=True, dir_okay=False, path_type=pathlib.Path),
+    default="./definitions-latest.json",
+    help="File where the prepared definitions are saved in json format."
+)
+def sign_definitions(outdir: pathlib.Path, privatekey: TextIO, deffile: pathlib.Path) -> None:
     """Generate signed Ethereum definitions for python-trezor and others."""
     hex_key = None
     if privatekey is None:
@@ -962,68 +988,92 @@ def coindefs(outdir: pathlib.Path, privatekey: TextIO) -> None:
     sign_key = ed25519.SigningKey(ed25519.from_ascii(hex_key, encoding="hex"))
 
     def save_definition(directory: pathlib.Path, keys: list[str], data: bytes):
-        complete_filename = "_".join(keys) + ".dat"
-        with open(directory / complete_filename, mode="wb+") as f:
+        complete_file_path = directory / ("_".join(keys) + ".dat")
+
+        if complete_file_path.exists():
+            raise click.ClickException(
+                f"Definition \"{complete_file_path}\" already generated - attempt to generate another definition."
+            )
+
+        directory.mkdir(parents=True, exist_ok=True)
+        with open(complete_file_path, mode="wb+") as f:
             f.write(data)
 
-    def generate_token_defs(tokens: Coins, path: pathlib.Path):
+    def generate_token_defs(tokens: Coins):
         for token in tokens:
-            if token["address"] is None:
+            if token["address"] is None or token["chain_id"] is None:
                 continue
 
-            # generate definition of the token
-            keys = ["token", token["address"][2:].lower()]
-            ser = serialize_eth_info(
-                eth_info_from_dict(token, EthereumTokenInfo),
-                EthereumDefinitionType.TOKEN,
+            # save token definition
+            save_definition(
+                outdir / "by_chain_id" / token["chain_id"],
+                ["token", token["address"][2:].lower()],
+                token["serialized"],
             )
-            save_definition(path, keys, ser + sign_data(sign_key, ser))
 
-    def generate_network_def(net: Coin, tokens: Coins):
-        if net["chain_id"] is None:
+    def generate_network_def(network: Coin):
+        if network["chain_id"] is None:
             return
 
-        # create path for networks identified by chain ids
-        network_dir = outdir / "by_chain_id" / str(net["chain_id"])
+        # create path for networks identified by chain and slip44 ids
+        network_dir = outdir / "by_chain_id" / network["chain_id"]
+        slip44_dir = outdir / "by_slip44" / str(network["slip44"])
+        # save network definition
+        save_definition(network_dir, ["network"], network["serialized"])
+
         try:
-            network_dir.mkdir(parents=True)
-        except FileExistsError:
-            raise click.ClickException(
-                f"Network with chain ID {net['chain_id']} already exists - attempt to generate defs for network \"{net['name']}\" ({net['shortcut']})."
-            )
+            # TODO: this way only the first network with given slip is saved - save other networks??
+            save_definition(slip44_dir, ["network"], network["serialized"])
+        except click.ClickException:
+            pass
 
-        # generate definition of the network
-        keys = ["network"]
-        ser = serialize_eth_info(
-            eth_info_from_dict(net, EthereumNetworkInfo), EthereumDefinitionType.NETWORK
-        )
-        complete_data = ser + sign_data(sign_key, ser)
-        save_definition(network_dir, keys, complete_data)
-
-        # generate tokens for the network
-        generate_token_defs(tokens, network_dir)
-
-        # create path for networks identified by slip44 ids
-        slip44_dir = outdir / "by_slip44" / str(net["slip44"])
-        if not slip44_dir.exists():
-            slip44_dir.mkdir(parents=True)
-            # TODO: save only first network??
-            save_definition(slip44_dir, keys, complete_data)
+    # load prepared definitions
+    networks, tokens = _load_prepared_definitions(deffile)
 
     # clear defs directory
     if outdir.exists():
         shutil.rmtree(outdir)
     outdir.mkdir(parents=True)
 
-    all_coins = coin_info.coin_info()
+    # serialize definitions
+    definitions_by_serialization: dict[bytes, dict] = dict()
+    for network in networks:
+        ser = serialize_eth_info(
+            eth_info_from_dict(network, EthereumNetworkInfo), EthereumDefinitionType.NETWORK
+        )
+        network["serialized"] = ser
+        definitions_by_serialization[ser] = network
+    for token in tokens:
+        ser = serialize_eth_info(
+            eth_info_from_dict(token, EthereumTokenInfo), EthereumDefinitionType.TOKEN
+        )
+        token["serialized"] = ser
+        definitions_by_serialization[ser] = token
 
-    # group tokens by their chain_id
-    token_buckets: CoinBuckets = defaultdict(list)
-    for token in all_coins.erc20:
-        token_buckets[token["chain_id"]].append(token)
+    # build Merkle tree
+    mt = MerkleTree(
+        [network["serialized"] for network in networks] +
+        [token["serialized"] for token in tokens]
+    )
 
-    for network in all_coins.eth:
-        generate_network_def(network, token_buckets[network["chain_id"]])
+    # sign tree root hash
+    signed_root_hash = sign_data(sign_key, mt.get_root_hash())
+
+    # update definitions
+    for ser, proof in mt.get_proofs().items():
+        definition = definitions_by_serialization[ser]
+        # append number of hashes in proof
+        definition["serialized"] += len(proof).to_bytes(1, "big")
+        # append proof itself
+        for p in proof:
+            definition["serialized"] += p
+        # append signed tree root hash
+        definition["serialized"] += signed_root_hash
+
+    for network in networks:
+        generate_network_def(network)
+
+    generate_token_defs(tokens)
 
 
 if __name__ == "__main__":

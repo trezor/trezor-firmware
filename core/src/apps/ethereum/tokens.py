@@ -35,7 +35,6 @@ class TokenInfo:
 
 UNKNOWN_TOKEN = TokenInfo("Wei UNKN", 0, b"", 0)
 
-# TODO: delete completely
 def token_by_chain_address(chain_id: int, address: bytes) -> TokenInfo:
     for addr, symbol, decimal in _token_iterator(chain_id):
         if address == addr:

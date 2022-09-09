@@ -52,7 +52,7 @@ message EthereumAddress {
 
 /**
  * Ethereum definitions type enum.
- * Used to check the encoded EthereumNetworkInfo and/or EthereumTokenInfo message.
+ * Used to check the encoded EthereumNetworkInfo or EthereumTokenInfo message.
  */
 enum EthereumDefinitionType {
     NETWORK = 0;

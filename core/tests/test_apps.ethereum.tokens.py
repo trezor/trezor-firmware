@@ -2,10 +2,14 @@ from common import *
 
 if not utils.BITCOIN_ONLY:
     from apps.ethereum import tokens
+    from ethereum_common import builtin_token_by_chain_address
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestEthereumTokens(unittest.TestCase):
+    def setUp(self):
+        # use mockup function for built-in tokens
+        tokens.token_by_chain_address = builtin_token_by_chain_address
 
     def test_token_by_chain_address(self):
 

@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from trezor.messages import EthereumSignTx, EthereumTxAck
     from trezor.wire import Context
 
-    from .keychain import EthereumSignTxAny
+    from .keychain import MsgInKeychainChainIdDefs
     from . import tokens, definitions
 
 
@@ -100,7 +100,7 @@ async def sign_tx(
 
 
 async def handle_erc20(
-    ctx: Context, msg: EthereumSignTxAny, token_dict: dict[bytes, tokens.TokenInfo]
+    ctx: Context, msg: MsgInKeychainChainIdDefs, token_dict: dict[bytes, tokens.TokenInfo]
 ) -> tuple[tokens.TokenInfo | None, bytes, bytes, int]:
     from .layout import require_confirm_unknown_token
     from . import tokens
@@ -185,7 +185,7 @@ def _sign_digest(
     return req
 
 
-def check_common_fields(msg: EthereumSignTxAny) -> None:
+def check_common_fields(msg: MsgInKeychainChainIdDefs) -> None:
     data_length = msg.data_length  # local_cache_attribute
 
     if data_length > 0:

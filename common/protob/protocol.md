@@ -21,16 +21,24 @@ Following packets has the following structure:
 |      1 |     63 | uint8_t[63] | following bytes of message encoded in Protocol Buffers (padded with zeroes if shorter) |
 
 ## Ethereum network and token definitions
-Ethereum network and token definitions could be sent from host to device. Definitions are generated in our CI job and are provided
-on publicly accessible website - on `data.trezor.io`. To ensure, that the definitions send to device are genuine, every generated
-definition is signed and checked in FW.
-Every definition (network/token) is encoded and has special format:
+Ethereum network and token definitions could be sent from host to device. External definitions are generated from time to time
+and provided on publicly accessible website - `data.trezor.io` # TODO: update url. For more info look
+at the [definitions README.md](../defs/README.md#eth-and-erc20).
+To ensure that the definitions send to device are genuine we use Merkle tree with a combination of signed Merkle tree root hash.
+Every definition is then checked and verified at FW side on receiving.
+
+
+Definitions (network/token) are binary encoded and have a special format:
 1. prefix:
-   1. part: format version of the definition (UTF-8 string `trzd` + version number, padded with zeroes if shorter, 8 bytes)
-   2. part: type of data (unsigned integer, 1 byte)
-   3. part: data version of the definition (unsigned integer, 4 bytes)
-2. payload: serialized form of protobuf message EthereumNetworkInfo and/or EthereumTokenInfo (N bytes)
-3. suffix: signature of prefix+payload (plain bits, 64 bytes)
+   1. format version of the definition (UTF-8 string `trzd` + version number, padded with zeroes if shorter, 8 bytes)
+   2. type of data (unsigned integer, 1 byte)
+   3. data version of the definition (unsigned integer, 4 bytes)
+   4. length of the encoded protobuf message - payload length in bytes (unsigned integer, 2 bytes)
+2. payload: serialized form of protobuf message EthereumNetworkInfo or EthereumTokenInfo (N bytes)
+3. suffix:
+   1. length of the Merkle tree proof - number of hashes in the proof (unsigned integer, 1 byte)
+   2. proof - individual hashes used to compute Merkle tree root hash (plain bits, N*32 bytes)
+   3. signed Merkle tree root hash (plain bits, 64 bytes)
 
 ## Adding new message
 
