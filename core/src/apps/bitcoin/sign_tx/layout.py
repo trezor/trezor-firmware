@@ -185,9 +185,9 @@ def _get_fee_rate_str(fee_rate: float, coin: CoinInfo) -> str | None:
     if fee_rate >= 0:
         # Use format_amount to get correct thousands separator -- micropython's built-in
         # formatting doesn't add thousands sep to floating point numbers.
-        # We multiply by 10 to get a fixed-point integer with one decimal place,
+        # We multiply by 100 to get a fixed-point integer with two decimal places,
         # and add 0.5 to round to the nearest integer.
-        fee_rate_formatted = format_amount(int(fee_rate * 10 + 0.5), 1)
+        fee_rate_formatted = format_amount(int(fee_rate * 100 + 0.5), 2)
         return f"({fee_rate_formatted} sat/{'v' if coin.segwit else ''}B)"
     else:
         return None

@@ -514,13 +514,13 @@ static bool formatFeeRate(uint64_t fee, uint64_t tx_weight, char *output,
   // https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#transaction-size-calculations
   uint64_t tx_size = (tx_weight + 3) / 4;
 
-  // Compute fee rate and modify it in place for the bn_format_uint64()
-  // function. We multiply by 10, because we want bn_format_uint64() to display
-  // one decimal digit.
-  uint64_t fee_rate_multiplied = div_round(10 * fee, tx_size);
+  // Compute fee rate and modify it in place for the bn_format_amount()
+  // function. We multiply by 100, because we want bn_format_amount() to display
+  // two decimal digits.
+  uint64_t fee_rate_multiplied = div_round(100 * fee, tx_size);
 
   return bn_format_amount(fee_rate_multiplied, "(",
-                          segwit ? " sat/vB)" : " sat/B)", 1, output,
+                          segwit ? " sat/vB)" : " sat/B)", 2, output,
                           output_length) != 0;
 }
 
