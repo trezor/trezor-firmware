@@ -4,6 +4,9 @@
 #![deny(unsafe_op_in_unsafe_fn)]
 #![allow(dead_code)]
 
+#[macro_use]
+extern crate num_derive;
+
 mod error;
 // use trezorhal for its macros early
 #[macro_use]

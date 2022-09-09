@@ -1,15 +1,16 @@
 use super::ffi;
 use core::ptr;
 use cty::c_int;
+use num_traits::FromPrimitive;
 
 use crate::trezorhal::buffers::BufferText;
 
-#[derive(PartialEq, Debug, Eq)]
+#[derive(PartialEq, Debug, Eq, FromPrimitive)]
 pub enum ToifFormat {
-    FullColorBE,
-    GrayScaleOH,
-    FullColorLE,
-    GrayScaleEH,
+    FullColorBE = ffi::toif_format_t_TOIF_FULL_COLOR_BE as _,
+    GrayScaleOH = ffi::toif_format_t_TOIF_GRAYSCALE_OH as _,
+    FullColorLE = ffi::toif_format_t_TOIF_FULL_COLOR_LE as _,
+    GrayScaleEH = ffi::toif_format_t_TOIF_GRAYSCALE_EH as _,
 }
 
 pub struct ToifInfo {
@@ -114,13 +115,7 @@ pub fn toif_info(data: &[u8]) -> Result<ToifInfo, ()> {
             &mut format,
         )
     } {
-        let format = match format {
-            ffi::toif_format_t_TOIF_FULL_COLOR_BE => ToifFormat::FullColorBE,
-            ffi::toif_format_t_TOIF_FULL_COLOR_LE => ToifFormat::FullColorLE,
-            ffi::toif_format_t_TOIF_GRAYSCALE_OH => ToifFormat::GrayScaleOH,
-            ffi::toif_format_t_TOIF_GRAYSCALE_EH => ToifFormat::GrayScaleEH,
-            _ => ToifFormat::FullColorBE,
-        };
+        let format = ToifFormat::from_usize(format as usize).unwrap_or(ToifFormat::FullColorBE);
 
         Ok(ToifInfo {
             width,

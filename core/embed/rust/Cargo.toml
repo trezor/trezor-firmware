@@ -51,6 +51,13 @@ version = "0.2.2"
 version = "0.7.3"
 default_features = false
 
+[dependencies.num-traits]
+version = "0.2.15"
+default_features = false
+
+[dependencies.num-derive]
+version = "0.3.3"
+
 [dependencies.cstr_core]
 version = "0.2.4"
 default_features = false
