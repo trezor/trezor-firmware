@@ -26,7 +26,7 @@ typedef enum {
   DMA2D_LAYER_BG = 0,
 } dma2d_layer_t;
 
-DMA2D_HandleTypeDef dma2d_handle;
+DMA2D_HandleTypeDef dma2d_handle = {0};
 
 void dma2d_init(void) {
   __HAL_RCC_DMA2D_CLK_ENABLE();
