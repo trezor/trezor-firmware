@@ -843,45 +843,6 @@ pub fn loader_rust(
     dma2d_wait_for_transfer();
 }
 
-fn process_4bpp_buffer(
-    y: i32,
-    r: Rect,
-    offset: Offset,
-    ctx: &mut UzlibContext,
-    buffer: &mut [u8],
-    i: &mut i32,
-) -> bool {
-    let mut not_empty = false;
-    let mut uncomp_buffer = [0u8; (constant::WIDTH / 2) as usize];
-
-    if y >= r.y0 && y < r.y1 {
-        let line_idx = y - r.y0;
-
-        while *i < line_idx {
-            //compensate uncompressed unused lines
-            unwrap!(
-                ctx.uncompress(&mut uncomp_buffer[0..(r.width() / 2) as usize]),
-                "Decompression failed"
-            );
-
-            (*i) += 1;
-        }
-
-        // decompress whole line
-        unwrap!(
-            ctx.uncompress(&mut uncomp_buffer[0..(r.width() / 2) as usize]),
-            "Decompression failed"
-        );
-        (*i) += 1;
-
-        position_buffer(buffer, &uncomp_buffer, 4, offset.x, r.width());
-
-        not_empty = true;
-    }
-
-    not_empty
-}
-
 fn position_buffer(
     dest_buffer: &mut [u8],
     src_buffer: &[u8],
@@ -905,7 +866,7 @@ fn position_buffer(
     );
 }
 
-fn process_16bpp_buffer(
+fn process_buffer<const BUFFER_BPP: usize, const BUFFER_SIZE: usize>(
     y: i32,
     r: Rect,
     offset: Offset,
@@ -914,7 +875,7 @@ fn process_16bpp_buffer(
     i: &mut i32,
 ) -> bool {
     let mut not_empty = false;
-    let mut uncomp_buffer = [0u8; (constant::WIDTH * 2) as usize];
+    let mut uncomp_buffer = [0u8; BUFFER_SIZE];
 
     if y >= r.y0 && y < r.y1 {
         let line_idx = y - r.y0;
@@ -922,7 +883,9 @@ fn process_16bpp_buffer(
         while *i < line_idx {
             //compensate uncompressed unused lines
             unwrap!(
-                ctx.uncompress(&mut uncomp_buffer[0..(r.width() * 2) as usize]),
+                ctx.uncompress(
+                    &mut uncomp_buffer[0..((r.width() * BUFFER_BPP as i32) / 8) as usize]
+                ),
                 "Decompression failed"
             );
 
@@ -930,13 +893,13 @@ fn process_16bpp_buffer(
         }
         // decompress whole line
         unwrap!(
-            ctx.uncompress(&mut uncomp_buffer[0..(r.width() * 2) as usize]),
+            ctx.uncompress(&mut uncomp_buffer[0..((r.width() * BUFFER_BPP as i32) / 8) as usize]),
             "Decompression failed"
         );
 
         (*i) += 1;
 
-        position_buffer(buffer, &uncomp_buffer, 16, offset.x, r.width());
+        position_buffer(buffer, &uncomp_buffer, BUFFER_BPP, offset.x, r.width());
 
         not_empty = true;
     }
@@ -1034,8 +997,12 @@ pub fn text_over_image(
             img_buffer_used = &mut *img2;
         }
 
-        let using_img =
-            process_16bpp_buffer(y, r_img, offset_img, &mut ctx, img_buffer_used, &mut i);
+        const BUFFER_BPP: usize = 16;
+
+        let using_img = process_buffer::<
+            BUFFER_BPP,
+            { ((constant::WIDTH as usize) * BUFFER_BPP) / 8 },
+        >(y, r_img, offset_img, &mut ctx, img_buffer_used, &mut i);
 
         if y >= text_area.y0 && y < text_area.y1 {
             let y_pos = y - text_area.y0;
@@ -1138,10 +1105,24 @@ pub fn icon_over_icon(
             bg_buffer_used = &mut *bg2;
         }
 
-        let using_fg =
-            process_4bpp_buffer(y, r_fg, offset_fg, &mut ctx_fg, fg_buffer_used, &mut fg_i);
-        let using_bg =
-            process_4bpp_buffer(y, r_bg, offset_bg, &mut ctx_bg, bg_buffer_used, &mut bg_i);
+        const BUFFER_BPP: usize = 4;
+
+        let using_fg = process_buffer::<BUFFER_BPP, { (constant::WIDTH as usize * BUFFER_BPP) / 8 }>(
+            y,
+            r_fg,
+            offset_fg,
+            &mut ctx_fg,
+            fg_buffer_used,
+            &mut fg_i,
+        );
+        let using_bg = process_buffer::<BUFFER_BPP, { (constant::WIDTH as usize * BUFFER_BPP) / 8 }>(
+            y,
+            r_bg,
+            offset_bg,
+            &mut ctx_bg,
+            bg_buffer_used,
+            &mut bg_i,
+        );
 
         if using_fg {
             fg_buffer = fg_buffer_used;
