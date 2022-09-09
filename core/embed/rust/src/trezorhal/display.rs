@@ -36,13 +36,7 @@ pub fn text(baseline_x: i32, baseline_y: i32, text: &str, font: i32, fgcolor: u1
     }
 }
 
-pub fn text_into_buffer(
-    text: &str,
-    font: i32,
-    buffer: &mut BufferText,
-    x_offset: i32,
-    line_width: i32,
-) {
+pub fn text_into_buffer(text: &str, font: i32, buffer: &mut BufferText, x_offset: i32) {
     unsafe {
         ffi::display_text_render_buffer(
             text.as_ptr() as _,
@@ -50,7 +44,6 @@ pub fn text_into_buffer(
             font,
             buffer.as_ptr() as _,
             x_offset,
-            line_width,
         )
     }
 }

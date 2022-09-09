@@ -544,7 +544,7 @@ pub fn text_over_image(
         Point::new(text_right, text_bottom),
     );
 
-    display::text_into_buffer(text, font.0, text_buffer, text_area.x0, constant::WIDTH);
+    display::text_into_buffer(text, font.0, text_buffer, text_area.x0);
 
     set_window(clamped);
 

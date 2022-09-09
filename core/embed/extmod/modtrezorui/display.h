@@ -91,8 +91,7 @@ int display_text_width(const char *text, int textlen, int font);
 int display_text_split(const char *text, int textlen, int font,
                        int requested_width);
 void display_text_render_buffer(const char *text, int textlen, int font,
-                                buffer_text_t *buffer, int text_offset,
-                                int line_width);
+                                buffer_text_t *buffer, int text_offset);
 
 void display_qrcode(int x, int y, const char *data, uint8_t scale);
 

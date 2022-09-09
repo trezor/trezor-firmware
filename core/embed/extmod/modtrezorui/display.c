@@ -165,8 +165,7 @@ static void uzlib_prepare(struct uzlib_uncomp *decomp, uint8_t *window,
 }
 
 void display_text_render_buffer(const char *text, int textlen, int font,
-                                buffer_text_t *buffer, int text_offset,
-                                int line_width) {
+                                buffer_text_t *buffer, int text_offset) {
   // determine text length if not provided
   if (textlen < 0) {
     textlen = strlen(text);
@@ -207,11 +206,11 @@ void display_text_render_buffer(const char *text, int textlen, int font,
 
           if (y_pos < 0) continue;
 
-          if (x_pos >= line_width || x_pos < 0) {
+          if (x_pos >= BUFFER_PIXELS || x_pos < 0) {
             continue;
           }
 
-          int buffer_pos = x_pos + y_pos * line_width;
+          int buffer_pos = x_pos + y_pos * BUFFER_PIXELS;
 
           if (buffer_pos < (sizeof(buffer_text_t) * 2)) {
             int b = buffer_pos / 2;
