@@ -37,38 +37,38 @@
 const int32_t text_buffer_height = FONT_MAX_HEIGHT;
 const int32_t buffer_width = DISPLAY_RESX;
 
-BUFFER_SECTION uint32_t line_buffer_16bpp[BUFFERS_16BPP][LINE_BUFFER_16BPP_SIZE / 4];
-BUFFER_SECTION uint32_t line_buffer_4bpp[BUFFERS_4BPP][LINE_BUFFER_4BPP_SIZE / 4];
-BUFFER_SECTION uint32_t text_buffer[BUFFERS_TEXT][TEXT_BUFFER_SIZE / 4];
+BUFFER_SECTION line_buffer_16bpp_t line_buffers_16bpp[BUFFERS_16BPP];
+BUFFER_SECTION line_buffer_4bpp_t line_buffers_4bpp[BUFFERS_4BPP];
+BUFFER_SECTION buffer_text_t text_buffers[BUFFERS_TEXT];
 
-uint8_t* buffers_get_line_buffer_16bpp(uint16_t idx, bool clear) {
+line_buffer_16bpp_t* buffers_get_line_buffer_16bpp(uint16_t idx, bool clear) {
   if (idx >= BUFFERS_16BPP) {
     return NULL;
   }
   if (clear) {
-    memzero(line_buffer_16bpp[idx], sizeof(line_buffer_16bpp[idx]));
+    memzero(&line_buffers_16bpp[idx], sizeof(line_buffers_16bpp[idx]));
   }
-  return (uint8_t*)line_buffer_16bpp[idx];
+  return &line_buffers_16bpp[idx];
 }
 
-uint8_t* buffers_get_line_buffer_4bpp(uint16_t idx, bool clear) {
+line_buffer_4bpp_t* buffers_get_line_buffer_4bpp(uint16_t idx, bool clear) {
   if (idx >= BUFFERS_4BPP) {
     return NULL;
   }
   if (clear) {
-    memzero(line_buffer_4bpp[idx], sizeof(line_buffer_4bpp[idx]));
+    memzero(&line_buffers_4bpp[idx], sizeof(line_buffers_4bpp[idx]));
   }
-  return (uint8_t*)line_buffer_4bpp[idx];
+  return &line_buffers_4bpp[idx];
 }
 
-uint8_t* buffers_get_text_buffer(uint16_t idx, bool clear) {
+buffer_text_t* buffers_get_text_buffer(uint16_t idx, bool clear) {
   if (idx >= BUFFERS_TEXT) {
     return NULL;
   }
   if (clear) {
-    memzero(text_buffer[idx], sizeof(text_buffer[idx]));
+    memzero(&text_buffers[idx], sizeof(text_buffers[idx]));
   }
-  return (uint8_t*)text_buffer[idx];
+  return &text_buffers[idx];
 }
 
 #endif

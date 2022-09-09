@@ -16,9 +16,11 @@ use core::{
 
 #[cfg(feature = "dma2d")]
 use crate::trezorhal::dma2d::{
-    dma2d_setup_4bpp_over_4bpp, dma2d_start_blend, dma2d_wait_for_transfer, get_buffer_16bpp,
-    get_buffer_4bpp,
+    dma2d_setup_4bpp_over_4bpp, dma2d_start_blend, dma2d_wait_for_transfer,
 };
+
+use crate::trezorhal::buffers::{get_buffer_16bpp, get_buffer_4bpp};
+
 use crate::ui::constant::LOADER_OUTER;
 
 pub const LOADER_MIN: u16 = 0;

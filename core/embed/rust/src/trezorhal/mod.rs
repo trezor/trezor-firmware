@@ -14,7 +14,9 @@ pub mod rgb_led;
 pub mod slip39;
 pub mod uzlib;
 
+pub mod buffers;
 #[cfg(not(feature = "micropython"))]
 pub mod time;
+
 #[cfg(feature = "micropython")]
 pub use crate::micropython::time;

@@ -2,6 +2,8 @@ use super::ffi;
 use core::ptr;
 use cty::c_int;
 
+use crate::trezorhal::buffers::BufferText;
+
 #[derive(PartialEq, Debug, Eq)]
 pub enum ToifFormat {
     FullColorBE,
@@ -34,14 +36,19 @@ pub fn text(baseline_x: i32, baseline_y: i32, text: &str, font: i32, fgcolor: u1
     }
 }
 
-pub fn text_into_buffer(text: &str, font: i32, buffer: &[u8], x_offset: i32, line_width: i32) {
+pub fn text_into_buffer(
+    text: &str,
+    font: i32,
+    buffer: &mut BufferText,
+    x_offset: i32,
+    line_width: i32,
+) {
     unsafe {
         ffi::display_text_render_buffer(
             text.as_ptr() as _,
             text.len() as _,
             font,
             buffer.as_ptr() as _,
-            buffer.len() as _,
             x_offset,
             line_width,
         )
