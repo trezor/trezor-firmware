@@ -95,7 +95,7 @@ bech32_encoding bech32_decode(char* hrp, uint8_t *data, size_t *data_len, const 
     size_t input_len = strlen(input);
     size_t hrp_len = 0;
     int have_lower = 0, have_upper = 0;
-    if (input_len < 8 || input_len > 90) {
+    if (input_len < 8) {
         return BECH32_ENCODING_NONE;
     }
     *data_len = 0;
@@ -103,7 +103,7 @@ bech32_encoding bech32_decode(char* hrp, uint8_t *data, size_t *data_len, const 
         ++(*data_len);
     }
     hrp_len = input_len - (1 + *data_len);
-    if (1 + *data_len >= input_len || *data_len < 6) {
+    if (1 + *data_len >= input_len || *data_len < 6 || hrp_len > BECH32_MAX_HRP_LEN) {
         return BECH32_ENCODING_NONE;
     }
     *(data_len) -= 6;
@@ -192,6 +192,7 @@ int segwit_addr_decode(int* witver, uint8_t* witdata, size_t* witdata_len, const
     uint8_t data[84] = {0};
     char hrp_actual[84] = {0};
     size_t data_len = 0;
+    if (strlen(addr) > 90) return 0;
     bech32_encoding enc = bech32_decode(hrp_actual, data, &data_len, addr);
     if (enc == BECH32_ENCODING_NONE) return 0;
     if (data_len == 0 || data_len > 65) return 0;

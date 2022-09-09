@@ -153,10 +153,8 @@ class TestCryptoBech32(unittest.TestCase):
     def test_invalid_checksum(self):
         """Test validation of invalid checksums."""
         for test in INVALID_CHECKSUM:
-            hrp, data, spec = bech32.bech32_decode(test)
-            self.assertIsNone(hrp)
-            self.assertIsNone(data)
-            self.assertIsNone(spec)
+            with self.assertRaises(ValueError):
+                bech32.bech32_decode(test)
 
     def test_valid_address(self):
         """Test whether valid addresses decode to the correct output."""
