@@ -79,8 +79,6 @@ void display_pixeldata(uint16_t c) {
 
   DISPLAY_STATE.RAM[DISPLAY_STATE.row / 8][DISPLAY_STATE.col] = data;
 
-  DATA(data);
-
   DISPLAY_STATE.col++;
 
   if (DISPLAY_STATE.col > DISPLAY_STATE.window_x1) {
@@ -349,7 +347,14 @@ void display_init(void) {
   display_init_seq();
 }
 
-void display_refresh(void) {}
+void display_refresh(void) {
+  for (int y = 0; y < (DISPLAY_RESY / 8); y++) {
+    display_set_page_and_col(y, 0);
+    for (int x = 0; x < DISPLAY_RESX; x++) {
+      DATA(DISPLAY_STATE.RAM[y][x]);
+    }
+  }
+}
 
 const char *display_save(const char *prefix) { return NULL; }
 
