@@ -93,34 +93,35 @@ impl Component for Intro {
     }
 
     fn paint(&mut self) {
-        self.host.paint();
-        // init_ticks();
-        // // display::icon(Point::new(0,0), ICON_BG, theme::GREEN,
+        //self.host.paint();
+        init_ticks();
+        // display::icon(Point::new(0,0), ICON_BG, theme::GREEN,
         // theme::BLUE); // display::icon(screen().center(), ICON_BG,
         // theme::GREEN, theme::BLUE); // display::icon_rust(screen().
         // center(), ICON_BG, theme::GREEN, theme::BLUE); // display::icon_over_icon(
-        // //     Some(Rect::new(Point::new(0,0), Point::new(240, 240))),
-        // //     (ICON_BG, Offset::new(-10, -10), theme::GREEN),
-        // //     (ICON_RECEIVE, Offset::new(30, 30), theme::BLUE),
-        // //     theme::RED, );
-        //
-        // // display::text_over_image(
-        // //     Some((Rect::new(Point::new(0,0), Point::new(240, 240)),
-        // theme::GREEN)), //     IMAGE_HS,
-        // //     "MY TREZOR WITH REALLY LONG TEXT",
-        // //         FONT_NORMAL,
-        // //     Offset::new(-30,-30),
-        // //     Offset::new(50,50),
-        // //     theme::WHITE,
-        // // );
-        //
-        // // display::rect_fill(Rect::new(Point::new(0,0), Point::new(240,
+        //     Some(Rect::new(Point::new(0,0), Point::new(240, 240))),
+        //     (ICON_BG, Offset::new(-10, -10), theme::GREEN),
+        //     (ICON_RECEIVE, Offset::new(30, 30), theme::BLUE),
+        //     theme::RED, );
+
+        display::text_over_image(
+            Some((Rect::new(Point::new(0,0), Point::new(240, 240)),
+            theme::GREEN)),
+            IMAGE_HS,
+            "MY TREZOR WITH REALLY LONG TEXT",
+                FONT_NORMAL,
+            Offset::new(-30,-30),
+            Offset::new(50,50),
+            theme::WHITE,
+        );
+
+        // display::rect_fill(Rect::new(Point::new(0,0), Point::new(240,
         // 240)), // theme::GREEN);
-        //
-        // //display::image(screen().center(), IMAGE_HS);
-        //
-        // get_ticks();
-        // clear_acc();
+
+        //display::image(screen().center(), IMAGE_HS);
+
+        get_ticks();
+        clear_acc();
 
         // display::text(
         //     screen().bottom_center(),
