@@ -924,8 +924,8 @@ pub fn text_over_image(
     let r_img;
     let area;
     if let Some((a, color)) = bg_area {
-        let hi = (color.to_u16() >> 8) as u8;
-        let lo = (color.to_u16() & 0xFF) as u8;
+        let hi = color.hi_byte();
+        let lo = color.lo_byte();
         //prefill image/bg buffers with the bg color
         for i in 0..(constant::WIDTH) as usize {
             img1[2 * i] = lo;
@@ -1505,6 +1505,14 @@ impl Color {
 
     pub fn to_u16(self) -> u16 {
         self.0
+    }
+
+    pub fn hi_byte(self) -> u8 {
+        (self.to_u16() >> 8) as u8
+    }
+
+    pub fn lo_byte(self) -> u8 {
+        (self.to_u16() & 0xFF) as u8
     }
 
     pub fn negate(self) -> Self {
