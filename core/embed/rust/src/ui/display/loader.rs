@@ -37,7 +37,6 @@ const INNER_OUTER_ANTI: i32 = ((INNER + 2.5) * (INNER + 2.5)) as i32;
 const OUTER_OUT_ANTI: i32 = ((OUTER - 1.5) * (OUTER - 1.5)) as i32;
 const OUTER_MAX: i32 = ((OUTER - 0.5) * (OUTER - 0.5)) as i32;
 
-#[cfg(any(feature = "model_tt", feature = "model_tr"))]
 fn loader_uncompress(
     r: Rect,
     fg_color: Color,
@@ -66,7 +65,6 @@ fn loader_uncompress(
     }
 }
 
-#[cfg(any(feature = "model_tt", feature = "model_tr"))]
 #[no_mangle]
 pub extern "C" fn loader_uncompress_r(
     x: cty::uint16_t,
@@ -96,7 +94,6 @@ pub extern "C" fn loader_uncompress_r(
     loader_uncompress(r, fg, bg, progress, indeterminate != 0, i);
 }
 
-#[cfg(any(feature = "model_tt", feature = "model_tr"))]
 #[inline(always)]
 fn get_loader_vectors(indeterminate: bool, progress: i32) -> (Point, Point) {
     let (start_progress, end_progress) = if indeterminate {
@@ -197,10 +194,7 @@ fn loader_get_pixel_color_idx(
     }
 }
 
-#[cfg(all(
-    any(feature = "model_tt", feature = "model_tr"),
-    not(feature = "dma2d")
-))]
+#[cfg(not(feature = "dma2d"))]
 pub fn loader_rust(
     r: Rect,
     fg_color: Color,
@@ -278,7 +272,7 @@ pub fn loader_rust(
     display::pixeldata_dirty();
 }
 
-#[cfg(all(any(feature = "model_tt", feature = "model_tr"), feature = "dma2d"))]
+#[cfg(feature = "dma2d")]
 pub fn loader_rust(
     r: Rect,
     fg_color: Color,

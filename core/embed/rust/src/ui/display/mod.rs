@@ -1,3 +1,4 @@
+#[cfg(any(feature = "model_tt", feature = "model_tr"))]
 pub mod loader;
 
 use super::constant;
@@ -20,6 +21,7 @@ use crate::trezorhal::{
     uzlib::{UzlibContext, UZLIB_WINDOW_SIZE},
 };
 
+#[cfg(any(feature = "model_tt", feature = "model_tr"))]
 pub use loader::{loader, loader_indeterminate, LOADER_MAX, LOADER_MIN};
 
 pub fn backlight() -> i32 {
