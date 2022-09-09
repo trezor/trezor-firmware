@@ -6,10 +6,11 @@ use crate::{
             LabelStyle, Pad,
         },
         constant::screen,
+        display::Font,
         geometry::{Alignment, Insets, LinearPlacement, Point, Rect},
         model_tr::{
             component::{Button, ButtonMsg, ButtonPos, ResultAnim, ResultAnimMsg},
-            theme::{self, FONT_BOLD},
+            theme,
         },
     },
 };
@@ -58,7 +59,7 @@ impl ResultPopup {
         let headline_style = LabelStyle {
             background_color: theme::BG,
             text_color: theme::FG,
-            font: FONT_BOLD,
+            font: Font::BOLD,
         };
 
         let mut pad = Pad::with_background(theme::BG);

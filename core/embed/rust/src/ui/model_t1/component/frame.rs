@@ -1,7 +1,7 @@
 use super::theme;
 use crate::ui::{
     component::{Child, Component, Event, EventCtx},
-    display,
+    display::{self, Font},
     geometry::{Insets, Offset, Rect},
 };
 
@@ -39,7 +39,7 @@ where
     fn place(&mut self, bounds: Rect) -> Rect {
         const TITLE_SPACE: i16 = 4;
 
-        let (title_area, content_area) = bounds.split_top(theme::FONT_BOLD.line_height());
+        let (title_area, content_area) = bounds.split_top(Font::BOLD.line_height());
         let content_area = content_area.inset(Insets::top(TITLE_SPACE));
 
         self.area = title_area;
@@ -55,7 +55,7 @@ where
         display::text(
             self.area.bottom_left() - Offset::y(2),
             self.title.as_ref(),
-            theme::FONT_BOLD,
+            Font::BOLD,
             theme::FG,
             theme::BG,
         );

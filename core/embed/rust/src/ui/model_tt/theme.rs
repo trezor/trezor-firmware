@@ -10,12 +10,6 @@ use crate::ui::{
 
 use super::component::{ButtonStyle, ButtonStyleSheet, LoaderStyle, LoaderStyleSheet};
 
-// Font constants.
-pub const FONT_NORMAL: Font = Font::new(-1);
-pub const FONT_MEDIUM: Font = Font::new(-5);
-pub const FONT_BOLD: Font = Font::new(-2);
-pub const FONT_MONO: Font = Font::new(-3);
-
 // Typical backlight values.
 pub const BACKLIGHT_NORMAL: i32 = 150;
 pub const BACKLIGHT_LOW: i32 = 45;
@@ -74,7 +68,7 @@ pub const DOT_SMALL: &[u8] = include_res!("model_tt/res/scroll-small.toif");
 
 pub fn label_default() -> LabelStyle {
     LabelStyle {
-        font: FONT_NORMAL,
+        font: Font::NORMAL,
         text_color: FG,
         background_color: BG,
     }
@@ -82,7 +76,7 @@ pub fn label_default() -> LabelStyle {
 
 pub fn label_checklist_default() -> LabelStyle {
     LabelStyle {
-        font: FONT_NORMAL,
+        font: Font::NORMAL,
         text_color: GREY_LIGHT,
         background_color: BG,
     }
@@ -90,7 +84,7 @@ pub fn label_checklist_default() -> LabelStyle {
 
 pub fn label_checklist_selected() -> LabelStyle {
     LabelStyle {
-        font: FONT_NORMAL,
+        font: Font::NORMAL,
         text_color: FG,
         background_color: BG,
     }
@@ -98,7 +92,7 @@ pub fn label_checklist_selected() -> LabelStyle {
 
 pub fn label_checklist_done() -> LabelStyle {
     LabelStyle {
-        font: FONT_NORMAL,
+        font: Font::NORMAL,
         text_color: GREEN_DARK,
         background_color: BG,
     }
@@ -106,7 +100,7 @@ pub fn label_checklist_done() -> LabelStyle {
 
 pub fn label_keyboard() -> LabelStyle {
     LabelStyle {
-        font: FONT_MEDIUM,
+        font: Font::MEDIUM,
         text_color: OFF_WHITE,
         background_color: BG,
     }
@@ -114,7 +108,7 @@ pub fn label_keyboard() -> LabelStyle {
 
 pub fn label_keyboard_warning() -> LabelStyle {
     LabelStyle {
-        font: FONT_MEDIUM,
+        font: Font::MEDIUM,
         text_color: RED,
         background_color: BG,
     }
@@ -122,7 +116,7 @@ pub fn label_keyboard_warning() -> LabelStyle {
 
 pub fn label_keyboard_minor() -> LabelStyle {
     LabelStyle {
-        font: FONT_NORMAL,
+        font: Font::NORMAL,
         text_color: OFF_WHITE,
         background_color: BG,
     }
@@ -130,7 +124,7 @@ pub fn label_keyboard_minor() -> LabelStyle {
 
 pub fn label_page_hint() -> LabelStyle {
     LabelStyle {
-        font: FONT_BOLD,
+        font: Font::BOLD,
         text_color: GREY_LIGHT,
         background_color: BG,
     }
@@ -138,7 +132,7 @@ pub fn label_page_hint() -> LabelStyle {
 
 pub fn label_warning() -> LabelStyle {
     LabelStyle {
-        font: FONT_MEDIUM,
+        font: Font::MEDIUM,
         text_color: FG,
         background_color: BG,
     }
@@ -146,7 +140,7 @@ pub fn label_warning() -> LabelStyle {
 
 pub fn label_warning_value() -> LabelStyle {
     LabelStyle {
-        font: FONT_NORMAL,
+        font: Font::NORMAL,
         text_color: OFF_WHITE,
         background_color: BG,
     }
@@ -154,7 +148,7 @@ pub fn label_warning_value() -> LabelStyle {
 
 pub fn label_recovery_title() -> LabelStyle {
     LabelStyle {
-        font: FONT_BOLD,
+        font: Font::BOLD,
         text_color: FG,
         background_color: BG,
     }
@@ -162,7 +156,7 @@ pub fn label_recovery_title() -> LabelStyle {
 
 pub fn label_recovery_description() -> LabelStyle {
     LabelStyle {
-        font: FONT_NORMAL,
+        font: Font::NORMAL,
         text_color: OFF_WHITE,
         background_color: BG,
     }
@@ -171,7 +165,7 @@ pub fn label_recovery_description() -> LabelStyle {
 pub fn button_default() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: FONT_BOLD,
+            font: Font::BOLD,
             text_color: FG,
             button_color: GREY_DARK,
             background_color: BG,
@@ -180,7 +174,7 @@ pub fn button_default() -> ButtonStyleSheet {
             border_width: 0,
         },
         active: &ButtonStyle {
-            font: FONT_BOLD,
+            font: Font::BOLD,
             text_color: FG,
             button_color: GREY_MEDIUM,
             background_color: BG,
@@ -189,7 +183,7 @@ pub fn button_default() -> ButtonStyleSheet {
             border_width: 0,
         },
         disabled: &ButtonStyle {
-            font: FONT_BOLD,
+            font: Font::BOLD,
             text_color: GREY_LIGHT,
             button_color: GREY_DARK,
             background_color: BG,
@@ -203,7 +197,7 @@ pub fn button_default() -> ButtonStyleSheet {
 pub fn button_confirm() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: FONT_BOLD,
+            font: Font::BOLD,
             text_color: FG,
             button_color: GREEN,
             background_color: BG,
@@ -212,7 +206,7 @@ pub fn button_confirm() -> ButtonStyleSheet {
             border_width: 0,
         },
         active: &ButtonStyle {
-            font: FONT_BOLD,
+            font: Font::BOLD,
             text_color: FG,
             button_color: GREEN_DARK,
             background_color: BG,
@@ -221,7 +215,7 @@ pub fn button_confirm() -> ButtonStyleSheet {
             border_width: 0,
         },
         disabled: &ButtonStyle {
-            font: FONT_BOLD,
+            font: Font::BOLD,
             text_color: FG,
             button_color: GREEN,
             background_color: BG,
@@ -235,7 +229,7 @@ pub fn button_confirm() -> ButtonStyleSheet {
 pub fn button_cancel() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: FONT_BOLD,
+            font: Font::BOLD,
             text_color: FG,
             button_color: RED,
             background_color: BG,
@@ -244,7 +238,7 @@ pub fn button_cancel() -> ButtonStyleSheet {
             border_width: 0,
         },
         active: &ButtonStyle {
-            font: FONT_BOLD,
+            font: Font::BOLD,
             text_color: FG,
             button_color: RED_DARK,
             background_color: BG,
@@ -253,7 +247,7 @@ pub fn button_cancel() -> ButtonStyleSheet {
             border_width: 0,
         },
         disabled: &ButtonStyle {
-            font: FONT_BOLD,
+            font: Font::BOLD,
             text_color: GREY_LIGHT,
             button_color: RED,
             background_color: BG,
@@ -267,7 +261,7 @@ pub fn button_cancel() -> ButtonStyleSheet {
 pub fn button_reset() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: FONT_BOLD,
+            font: Font::BOLD,
             text_color: FG,
             button_color: YELLOW,
             background_color: BG,
@@ -276,7 +270,7 @@ pub fn button_reset() -> ButtonStyleSheet {
             border_width: 0,
         },
         active: &ButtonStyle {
-            font: FONT_BOLD,
+            font: Font::BOLD,
             text_color: FG,
             button_color: YELLOW_DARK,
             background_color: BG,
@@ -285,7 +279,7 @@ pub fn button_reset() -> ButtonStyleSheet {
             border_width: 0,
         },
         disabled: &ButtonStyle {
-            font: FONT_BOLD,
+            font: Font::BOLD,
             text_color: GREY_LIGHT,
             button_color: YELLOW,
             background_color: BG,
@@ -299,7 +293,7 @@ pub fn button_reset() -> ButtonStyleSheet {
 pub fn button_info() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: FONT_BOLD,
+            font: Font::BOLD,
             text_color: FG,
             button_color: BLUE,
             background_color: BG,
@@ -308,7 +302,7 @@ pub fn button_info() -> ButtonStyleSheet {
             border_width: 0,
         },
         active: &ButtonStyle {
-            font: FONT_BOLD,
+            font: Font::BOLD,
             text_color: FG,
             button_color: BLUE_DARK,
             background_color: BG,
@@ -317,7 +311,7 @@ pub fn button_info() -> ButtonStyleSheet {
             border_width: 0,
         },
         disabled: &ButtonStyle {
-            font: FONT_BOLD,
+            font: Font::BOLD,
             text_color: GREY_LIGHT,
             button_color: BLUE,
             background_color: BG,
@@ -331,7 +325,7 @@ pub fn button_info() -> ButtonStyleSheet {
 pub fn button_pin() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: FONT_MONO,
+            font: Font::MONO,
             text_color: FG,
             button_color: GREY_DARK,
             background_color: BG,
@@ -340,7 +334,7 @@ pub fn button_pin() -> ButtonStyleSheet {
             border_width: 0,
         },
         active: &ButtonStyle {
-            font: FONT_MONO,
+            font: Font::MONO,
             text_color: FG,
             button_color: GREY_MEDIUM,
             background_color: BG,
@@ -349,7 +343,7 @@ pub fn button_pin() -> ButtonStyleSheet {
             border_width: 0,
         },
         disabled: &ButtonStyle {
-            font: FONT_MONO,
+            font: Font::MONO,
             text_color: GREY_LIGHT,
             button_color: GREY_DARK,
             background_color: BG,
@@ -363,7 +357,7 @@ pub fn button_pin() -> ButtonStyleSheet {
 pub fn button_counter() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: FONT_MEDIUM,
+            font: Font::MEDIUM,
             text_color: FG,
             button_color: GREY_DARK,
             background_color: BG,
@@ -372,7 +366,7 @@ pub fn button_counter() -> ButtonStyleSheet {
             border_width: 0,
         },
         active: &ButtonStyle {
-            font: FONT_MEDIUM,
+            font: Font::MEDIUM,
             text_color: FG,
             button_color: GREY_MEDIUM,
             background_color: BG,
@@ -381,7 +375,7 @@ pub fn button_counter() -> ButtonStyleSheet {
             border_width: 0,
         },
         disabled: &ButtonStyle {
-            font: FONT_MEDIUM,
+            font: Font::MEDIUM,
             text_color: GREY_LIGHT,
             button_color: GREY_DARK,
             background_color: BG,
@@ -411,16 +405,16 @@ pub fn loader_default() -> LoaderStyleSheet {
     }
 }
 
-pub const TEXT_NORMAL: TextStyle = TextStyle::new(FONT_NORMAL, FG, BG, GREY_LIGHT, GREY_LIGHT);
-pub const TEXT_MEDIUM: TextStyle = TextStyle::new(FONT_MEDIUM, FG, BG, GREY_LIGHT, GREY_LIGHT);
-pub const TEXT_BOLD: TextStyle = TextStyle::new(FONT_BOLD, FG, BG, GREY_LIGHT, GREY_LIGHT);
-pub const TEXT_MONO: TextStyle = TextStyle::new(FONT_MONO, FG, BG, GREY_LIGHT, GREY_LIGHT);
+pub const TEXT_NORMAL: TextStyle = TextStyle::new(Font::NORMAL, FG, BG, GREY_LIGHT, GREY_LIGHT);
+pub const TEXT_MEDIUM: TextStyle = TextStyle::new(Font::MEDIUM, FG, BG, GREY_LIGHT, GREY_LIGHT);
+pub const TEXT_BOLD: TextStyle = TextStyle::new(Font::BOLD, FG, BG, GREY_LIGHT, GREY_LIGHT);
+pub const TEXT_MONO: TextStyle = TextStyle::new(Font::MONO, FG, BG, GREY_LIGHT, GREY_LIGHT);
 
 pub const FORMATTED: FormattedFonts = FormattedFonts {
-    normal: FONT_NORMAL,
-    medium: FONT_MEDIUM,
-    bold: FONT_BOLD,
-    mono: FONT_MONO,
+    normal: Font::NORMAL,
+    medium: Font::MEDIUM,
+    bold: Font::BOLD,
+    mono: Font::MONO,
 };
 
 pub const CONTENT_BORDER: i16 = 5;
