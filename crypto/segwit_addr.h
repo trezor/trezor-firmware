@@ -24,6 +24,9 @@
 
 #include <stdint.h>
 
+// The maximum length of the Bech32 human-readable part according to BIP-173.
+#define BECH32_MAX_HRP_LEN 83
+
 
 /** Encode a SegWit address
  *
@@ -92,7 +95,7 @@ int bech32_encode(
 
 /** Decode a Bech32 or Bech32m string
  *
- *  Out: hrp:      Pointer to a buffer of size strlen(input) - 6. Will be
+ *  Out: hrp:      Pointer to a buffer of size BECH32_MAX_HRP_LEN + 1. Will be
  *                 updated to contain the null-terminated human readable part.
  *       data:     Pointer to a buffer of size strlen(input) - 8 that will
  *                 hold the encoded 5-bit data values.

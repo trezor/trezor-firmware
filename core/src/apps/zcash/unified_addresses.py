@@ -83,8 +83,9 @@ def encode(receivers: dict[Typecode, bytes], coin: CoinInfo) -> str:
 
 
 def decode(addr_str: str, coin: CoinInfo) -> dict[int, bytes]:
-    (hrp, data, encoding) = bech32_decode(addr_str, max_bech_len=1000)
-    if (hrp, data, encoding) == (None, None, None):
+    try:
+        hrp, data, encoding = bech32_decode(addr_str, 1000)
+    except ValueError:
         raise DataError("Bech32m decoding failed.")
     assert hrp is not None  # to satisfy typecheckers
     assert data is not None  # to satisfy typecheckers

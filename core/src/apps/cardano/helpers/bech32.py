@@ -35,8 +35,6 @@ def get_hrp(bech: str) -> str:
 
 def decode(hrp: str, bech: str) -> bytes:
     decoded_hrp, data, spec = bech32.bech32_decode(bech, 130)
-    if data is None:
-        raise ValueError
     if decoded_hrp != hrp:
         raise ValueError
     if spec != bech32.Encoding.BECH32:
