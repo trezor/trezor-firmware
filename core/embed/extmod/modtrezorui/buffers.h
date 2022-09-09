@@ -27,15 +27,27 @@
 
 #define BUFFER_PIXELS DISPLAY_RESX
 
+#define TEXT_BUFFER_HEIGHT 24
+
+#if TEXT_BUFFER_HEIGHT < FONT_MAX_HEIGHT
+#error Text buffer height is too small, please adjust to match used fonts
+#endif
+
 #define LINE_BUFFER_16BPP_SIZE BUFFER_PIXELS * 2
 #define LINE_BUFFER_4BPP_SIZE BUFFER_PIXELS / 2
-#define TEXT_BUFFER_SIZE (BUFFER_PIXELS * FONT_MAX_HEIGHT) / 2
+#define TEXT_BUFFER_SIZE (BUFFER_PIXELS * TEXT_BUFFER_HEIGHT) / 2
+
+typedef __attribute__((aligned(4)))
+uint8_t line_buffer_16bpp_t[LINE_BUFFER_16BPP_SIZE];
+typedef __attribute__((aligned(4)))
+uint8_t line_buffer_4bpp_t[LINE_BUFFER_4BPP_SIZE];
+typedef __attribute__((aligned(4))) uint8_t buffer_text_t[TEXT_BUFFER_SIZE];
 
 extern const int32_t text_buffer_height;
 extern const int32_t buffer_width;
 
-uint8_t* buffers_get_line_buffer_16bpp(uint16_t idx, bool clear);
-uint8_t* buffers_get_line_buffer_4bpp(uint16_t idx, bool clear);
-uint8_t* buffers_get_text_buffer(uint16_t idx, bool clear);
+line_buffer_16bpp_t* buffers_get_line_buffer_16bpp(uint16_t idx, bool clear);
+line_buffer_4bpp_t* buffers_get_line_buffer_4bpp(uint16_t idx, bool clear);
+buffer_text_t* buffers_get_text_buffer(uint16_t idx, bool clear);
 
 #endif  //_BUFFERS_H

@@ -24,6 +24,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "buffers.h"
 #include "colors.h"
 #include "display_defs.h"
 #include "display_interface.h"
@@ -90,8 +91,8 @@ int display_text_width(const char *text, int textlen, int font);
 int display_text_split(const char *text, int textlen, int font,
                        int requested_width);
 void display_text_render_buffer(const char *text, int textlen, int font,
-                                uint8_t *buffer, int buffer_len,
-                                int text_offset, int line_width);
+                                buffer_text_t *buffer, int text_offset,
+                                int line_width);
 
 void display_qrcode(int x, int y, const char *data, uint8_t scale);
 

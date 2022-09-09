@@ -165,8 +165,8 @@ static void uzlib_prepare(struct uzlib_uncomp *decomp, uint8_t *window,
 }
 
 void display_text_render_buffer(const char *text, int textlen, int font,
-                                uint8_t *buffer, int buffer_len,
-                                int text_offset, int line_width) {
+                                buffer_text_t *buffer, int text_offset,
+                                int line_width) {
   // determine text length if not provided
   if (textlen < 0) {
     textlen = strlen(text);
@@ -213,12 +213,12 @@ void display_text_render_buffer(const char *text, int textlen, int font,
 
           int buffer_pos = x_pos + y_pos * line_width;
 
-          if (buffer_pos < (buffer_len * 2)) {
+          if (buffer_pos < (sizeof(buffer_text_t) * 2)) {
             int b = buffer_pos / 2;
             if (buffer_pos % 2) {
-              buffer[b] |= c << 4;
+              ((uint8_t *)buffer)[b] |= c << 4;
             } else {
-              buffer[b] |= (c);
+              ((uint8_t *)buffer)[b] |= (c);
             }
           }
         }
@@ -278,8 +278,8 @@ void display_image(int x, int y, int w, int h, const void *data,
   struct uzlib_uncomp decomp = {0};
   uint8_t decomp_window[UZLIB_WINDOW_SIZE] = {0};
 
-  uint8_t *b1 = buffers_get_line_buffer_16bpp(0, false);
-  uint8_t *b2 = buffers_get_line_buffer_16bpp(1, false);
+  line_buffer_16bpp_t *b1 = buffers_get_line_buffer_16bpp(0, false);
+  line_buffer_16bpp_t *b2 = buffers_get_line_buffer_16bpp(1, false);
 
   uzlib_prepare(&decomp, decomp_window, data, datalen, b1, w * 2);
 
@@ -287,13 +287,13 @@ void display_image(int x, int y, int w, int h, const void *data,
 
   for (int32_t pos = 0; pos < h; pos++) {
     int32_t pixels = w;
-    uint8_t *next_buf = (pos % 2 == 1) ? b1 : b2;
+    line_buffer_16bpp_t *next_buf = (pos % 2 == 1) ? b1 : b2;
     decomp.dest = (uint8_t *)next_buf;
-    decomp.dest_limit = next_buf + w * 2;
+    decomp.dest_limit = (uint8_t *)next_buf + w * 2;
     int st = uzlib_uncompress(&decomp);
     if (st < 0) break;  // error
     dma2d_wait_for_transfer();
-    dma2d_start(next_buf, (uint8_t *)DISPLAY_DATA_ADDRESS, pixels);
+    dma2d_start((uint8_t *)next_buf, (uint8_t *)DISPLAY_DATA_ADDRESS, pixels);
   }
   dma2d_wait_for_transfer();
 }
@@ -418,8 +418,8 @@ void display_icon(int x, int y, int w, int h, const void *data,
   int width = x1 - x0 + 1;
 
   uint8_t b[DISPLAY_RESX / 2];
-  uint8_t *b1 = buffers_get_line_buffer_4bpp(0, false);
-  uint8_t *b2 = buffers_get_line_buffer_4bpp(1, false);
+  line_buffer_4bpp_t *b1 = buffers_get_line_buffer_4bpp(0, false);
+  line_buffer_4bpp_t *b2 = buffers_get_line_buffer_4bpp(1, false);
 
   struct uzlib_uncomp decomp = {0};
   uint8_t decomp_window[UZLIB_WINDOW_SIZE] = {0};
@@ -431,7 +431,7 @@ void display_icon(int x, int y, int w, int h, const void *data,
   int off_x = x < 0 ? -x : 0;
 
   for (uint32_t pos = 0; pos < h; pos++) {
-    uint8_t *next_buf = (pos % 2 == 0) ? b1 : b2;
+    line_buffer_4bpp_t *next_buf = (pos % 2 == 0) ? b1 : b2;
     decomp.dest = b;
     decomp.dest_limit = b + w / 2;
     int st = uzlib_uncompress(&decomp);
@@ -439,7 +439,7 @@ void display_icon(int x, int y, int w, int h, const void *data,
     if (pos >= y0 && pos <= y1) {
       memcpy(next_buf, &b[off_x / 2], width / 2);
       dma2d_wait_for_transfer();
-      dma2d_start(next_buf, (uint8_t *)DISPLAY_DATA_ADDRESS, width);
+      dma2d_start((uint8_t *)next_buf, (uint8_t *)DISPLAY_DATA_ADDRESS, width);
     }
   }
   dma2d_wait_for_transfer();
