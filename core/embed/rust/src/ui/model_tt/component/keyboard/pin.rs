@@ -9,7 +9,7 @@ use crate::{
             base::ComponentExt, Child, Component, Event, EventCtx, Label, LabelStyle, Maybe, Never,
             Pad, TimerToken,
         },
-        display,
+        display::{self, Font},
         event::TouchEvent,
         geometry::{Alignment, Grid, Insets, Offset, Rect},
         model_tt::component::{
@@ -326,16 +326,15 @@ impl PinDots {
     }
 
     fn paint_digits(&self, area: Rect) {
-        let center = area.center() + Offset::y(theme::FONT_MONO.text_height() / 2);
-        let right =
-            center + Offset::x(theme::FONT_MONO.text_width("0") * (MAX_VISIBLE_DOTS as i16) / 2);
+        let center = area.center() + Offset::y(Font::MONO.text_height() / 2);
+        let right = center + Offset::x(Font::MONO.text_width("0") * (MAX_VISIBLE_DOTS as i16) / 2);
         let digits = self.digits.len();
 
         if digits <= MAX_VISIBLE_DOTS {
             display::text_center(
                 center,
                 &self.digits,
-                theme::FONT_MONO,
+                Font::MONO,
                 self.style.text_color,
                 self.style.background_color,
             );
@@ -344,7 +343,7 @@ impl PinDots {
             display::text_right(
                 right,
                 &self.digits[offset..],
-                theme::FONT_MONO,
+                Font::MONO,
                 self.style.text_color,
                 self.style.background_color,
             );

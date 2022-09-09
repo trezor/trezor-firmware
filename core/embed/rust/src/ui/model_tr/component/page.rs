@@ -1,6 +1,6 @@
 use crate::ui::{
     component::{Component, ComponentExt, Event, EventCtx, Never, Pad, PageMsg, Paginate},
-    display::{self, Color},
+    display::{self, Color, Font},
     geometry::{Insets, Offset, Point, Rect},
 };
 
@@ -50,7 +50,7 @@ where
     type Msg = PageMsg<T::Msg, bool>;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let button_height = theme::FONT_BOLD.line_height() + 2;
+        let button_height = Font::BOLD.line_height() + 2;
         let (content_area, button_area) = bounds.split_bottom(button_height);
         let (content_area, scrollbar_area) = content_area.split_right(ScrollBar::WIDTH);
         let content_area = content_area.inset(Insets::top(1));

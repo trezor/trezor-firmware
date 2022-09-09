@@ -526,7 +526,7 @@ pub fn text(baseline: Point, text: &str, font: Font, fg_color: Color, bg_color: 
         baseline.x,
         baseline.y,
         text,
-        font.0,
+        font.into(),
         fg_color.into(),
         bg_color.into(),
     );
@@ -538,7 +538,7 @@ pub fn text_center(baseline: Point, text: &str, font: Font, fg_color: Color, bg_
         baseline.x - w / 2,
         baseline.y,
         text,
-        font.0,
+        font.into(),
         fg_color.into(),
         bg_color.into(),
     );
@@ -550,7 +550,7 @@ pub fn text_right(baseline: Point, text: &str, font: Font, fg_color: Color, bg_c
         baseline.x - w,
         baseline.y,
         text,
-        font.0,
+        font.into(),
         fg_color.into(),
         bg_color.into(),
     );
@@ -687,24 +687,34 @@ impl Glyph {
     }
 }
 
+/// Font constants. Keep in sync with FONT_ definitions in
+/// `extmod/modtrezorui/display.h`.
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub struct Font(i32);
+#[repr(u8)]
+pub enum Font {
+    NORMAL = 1,
+    BOLD = 2,
+    MONO = 3,
+    MEDIUM = 5,
+}
+
+impl From<Font> for i32 {
+    fn from(font: Font) -> i32 {
+        -(font as i32)
+    }
+}
 
 impl Font {
-    pub const fn new(id: i32) -> Self {
-        Self(id)
-    }
-
     pub fn text_width(self, text: &str) -> i16 {
-        display::text_width(text, self.0) as i16
+        display::text_width(text, self.into()) as i16
     }
 
     pub fn char_width(self, ch: char) -> i16 {
-        display::char_width(ch, self.0) as i16
+        display::char_width(ch, self.into()) as i16
     }
 
     pub fn text_height(self) -> i16 {
-        display::text_height(self.0) as i16
+        display::text_height(self.into()) as i16
     }
 
     pub fn line_height(self) -> i16 {
@@ -712,7 +722,7 @@ impl Font {
     }
 
     pub fn get_glyph(self, char_byte: u8) -> Option<Glyph> {
-        let gl_data = display::get_char_glyph(char_byte, self.0);
+        let gl_data = display::get_char_glyph(char_byte, self.into());
 
         if gl_data.is_null() {
             return None;

@@ -1,9 +1,7 @@
-use super::{
-    button::{Button, ButtonMsg::Clicked},
-    theme,
-};
+use super::button::{Button, ButtonMsg::Clicked};
 use crate::ui::{
     component::{Child, Component, Event, EventCtx},
+    display::Font,
     geometry::Rect,
 };
 
@@ -45,7 +43,7 @@ where
     type Msg = DialogMsg<T::Msg>;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let button_height = theme::FONT_BOLD.line_height() + 2;
+        let button_height = Font::BOLD.line_height() + 2;
         let (content_area, button_area) = bounds.split_bottom(button_height);
         self.content.place(content_area);
         self.left_btn.as_mut().map(|b| b.place(button_area));

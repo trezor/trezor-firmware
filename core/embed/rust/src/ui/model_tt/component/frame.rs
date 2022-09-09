@@ -48,7 +48,7 @@ where
 
         let (title_area, content_area) = bounds
             .inset(self.border)
-            .split_top(theme::FONT_BOLD.text_height());
+            .split_top(Font::BOLD.text_height());
         let title_area = title_area.inset(Insets::left(theme::CONTENT_BORDER));
         let content_area = content_area.inset(Insets::top(TITLE_SPACE));
 
@@ -65,7 +65,7 @@ where
         display::text(
             self.area.bottom_left(),
             self.title.as_ref(),
-            theme::FONT_BOLD,
+            Font::BOLD,
             theme::GREY_LIGHT,
             theme::BG,
         );
@@ -107,7 +107,7 @@ where
 {
     const HEIGHT: i16 = 42;
     const COLOR: Color = theme::YELLOW;
-    const FONT: Font = theme::FONT_BOLD;
+    const FONT: Font = Font::BOLD;
     const TEXT_OFFSET: Offset = Offset::new(1, -2);
     const ICON_SPACE: i16 = 8;
 
