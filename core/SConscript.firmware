@@ -2,6 +2,7 @@
 # fmt: off
 
 import os
+import tools
 
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
 EVERYTHING = BITCOIN_ONLY != '1'
@@ -434,20 +435,10 @@ if FEATURE_FLAGS["SYSTEM_VIEW"]:
     CCFLAGS_MOD += '-DSYSTEM_VIEW '
 
 # fonts
-def add_font(font_name, font, defines, sources):
-    if font is not None:
-        defines += [
-            'TREZOR_FONT_' + font_name + '_ENABLE=' + font,
-            'TREZOR_FONT_' + font_name + '_INCLUDE=\\"' + font.lower() + '.h\\"',
-        ]
-        sourcefile = 'embed/extmod/modtrezorui/fonts/' + font.lower() + '.c'
-        if sourcefile not in sources:
-            sources.append(sourcefile)
-
-add_font('NORMAL', FONT_NORMAL, CPPDEFINES_MOD, SOURCE_MOD)
-add_font('BOLD', FONT_BOLD, CPPDEFINES_MOD, SOURCE_MOD)
-add_font('MEDIUM', FONT_MEDIUM, CPPDEFINES_MOD, SOURCE_MOD)
-add_font('MONO', FONT_MONO, CPPDEFINES_MOD, SOURCE_MOD)
+tools.add_font('NORMAL', FONT_NORMAL, CPPDEFINES_MOD, SOURCE_MOD)
+tools.add_font('BOLD', FONT_BOLD, CPPDEFINES_MOD, SOURCE_MOD)
+tools.add_font('MEDIUM', FONT_MEDIUM, CPPDEFINES_MOD, SOURCE_MOD)
+tools.add_font('MONO', FONT_MONO, CPPDEFINES_MOD, SOURCE_MOD)
 
 SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_MICROPYTHON_SPEED
 

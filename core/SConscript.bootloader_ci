@@ -1,6 +1,7 @@
 # pylint: disable=E0602
 
 import os
+import tools
 
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 
@@ -130,20 +131,10 @@ SOURCE_TREZORHAL = [
 ]
 
 # fonts
-def add_font(font_name, font, defines, sources):
-    if font is not None:
-        defines += [
-            'TREZOR_FONT_' + font_name + '_ENABLE=' + font,
-            'TREZOR_FONT_' + font_name + '_INCLUDE=\\"' + font.lower() + '.h\\"',
-        ]
-        sourcefile = 'embed/extmod/modtrezorui/fonts/' + font.lower() + '.c'
-        if sourcefile not in sources:
-            sources.append(sourcefile)
-
-add_font('NORMAL', FONT_NORMAL, CPPDEFINES_MOD, SOURCE_MOD)
-add_font('BOLD', FONT_BOLD, CPPDEFINES_MOD, SOURCE_MOD)
-add_font('MEDIUM', FONT_MEDIUM, CPPDEFINES_MOD, SOURCE_MOD)
-add_font('MONO', FONT_MONO, CPPDEFINES_MOD, SOURCE_MOD)
+tools.add_font('NORMAL', FONT_NORMAL, CPPDEFINES_MOD, SOURCE_MOD)
+tools.add_font('BOLD', FONT_BOLD, CPPDEFINES_MOD, SOURCE_MOD)
+tools.add_font('MEDIUM', FONT_MEDIUM, CPPDEFINES_MOD, SOURCE_MOD)
+tools.add_font('MONO', FONT_MONO, CPPDEFINES_MOD, SOURCE_MOD)
 
 env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')))
 
