@@ -1,5 +1,5 @@
 use core::ptr;
-use cstr_core::cstr;
+use cstr_core::{cstr, CStr};
 use crate::error::Error;
 use super::ffi;
 
@@ -32,10 +32,49 @@ impl From<StorageError> for Error {
 }
 pub type StorageResult<T> = Result<T, StorageError>;
 
+/// Result of PIN delay callback.
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum PinCallbackResult {
+    /// Continue waiting for PIN unlock.
+    Continue,
+    /// Abort the unlock attempt before time is up.
+    Abort,
+}
 
-pub fn storage_init(callback: Option<unsafe extern "C" fn(u32, u32, *const u8) -> u32>) {
+/// PIN delay callback function type.
+/// The storage layer will call this function while the PIN timeout is in
+/// progress. This is useful for showing UI progress bar.
+/// `wait` is the total number of seconds waiting.
+/// `progress` is a value between 0 and 1000, where 1000 indicates 100%.
+/// `message` is a message to show to the user.
+pub type PinDelayCallback = fn(wait: u32, progress: u32, message: &str) -> PinCallbackResult;
+
+/// Static reference to the currently set PIN callback function.
+static mut PIN_UI_CALLBACK: Option<PinDelayCallback> = None;
+
+/// C-compatible wrapper for the Rust callback.
+unsafe extern "C" fn callback_wrapper(
+    wait: u32,
+    progress: u32,
+    message: *const cty::c_char,
+) -> ffi::secbool {
+    let message = unsafe { CStr::from_ptr(message as _) };
+    let result = unsafe {
+        PIN_UI_CALLBACK
+            .map(|c| c(wait, progress, message.to_str().unwrap_or("")))
+            .unwrap_or(PinCallbackResult::Continue)
+    };
+    if matches!(result, PinCallbackResult::Abort) {
+        ffi::sectrue
+    } else {
+        ffi::secfalse
+    }
+}
+
+pub fn storage_init(callback: PinDelayCallback) {
     unsafe {
-        ffi::storage_init(callback, (&ffi::HW_ENTROPY_DATA) as _, ffi::HW_ENTROPY_LEN as _);
+        PIN_UI_CALLBACK = Some(callback);
+        ffi::storage_init(Some(callback_wrapper), (&ffi::HW_ENTROPY_DATA) as _, ffi::HW_ENTROPY_LEN as _);
     }
 }
 

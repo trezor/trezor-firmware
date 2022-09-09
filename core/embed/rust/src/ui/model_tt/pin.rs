@@ -1,11 +1,7 @@
-use cstr_core::CStr;
 use heapless::String;
-use crate::error::Error;
-use crate::micropython::map::Map;
 use crate::micropython::obj::Obj;
-use crate::micropython::util;
-use crate::micropython::ffi;
-use crate::micropython::qstr::Qstr;
+use crate::micropython::{ffi, util};
+use crate::trezorhal::storage::PinCallbackResult;
 use crate::ui::constant::screen;
 use crate::ui::display;
 use crate::ui::geometry::{Point, Rect};
@@ -16,7 +12,7 @@ static mut PREV_PROGRESS: u32 = 0xFFFFFFFF;
 static mut KEEPALIVE_CALLBACK: Option<Obj> = None;
 
 
-pub unsafe extern "C" fn show_pin_timeout(seconds: u32, progress: u32, message: *const u8) -> u32 {
+pub fn show_pin_timeout(wait: u32, progress: u32, message: &str) -> PinCallbackResult {
     unsafe {
 
         if let Some(callback) = KEEPALIVE_CALLBACK {
@@ -34,8 +30,7 @@ pub unsafe extern "C" fn show_pin_timeout(seconds: u32, progress: u32, message: 
                 PREV_SECONDS = 0xFFFFFFFF;
             }
 
-            let msg = CStr::from_ptr(message as _).to_str().unwrap();
-            display::text_center(Point::new(screen().center().x, 37), msg, theme::FONT_BOLD, theme::FG, theme::BG);
+            display::text_center(Point::new(screen().center().x, 37), message, theme::FONT_BOLD, theme::FG, theme::BG);
         }
 
         if progress != PREV_PROGRESS {
@@ -44,12 +39,12 @@ pub unsafe extern "C" fn show_pin_timeout(seconds: u32, progress: u32, message: 
 
         let mut s : String<16> = String::new();
 
-        if seconds != PREV_SECONDS {
-            match seconds {
+        if wait != PREV_SECONDS {
+            match wait {
                 0 => {unwrap!(s.push_str("Done"))}
                 1 => {unwrap!(s.push_str("1 second left"))}
                 _ => {
-                    let sec: String<16> = String::from(seconds);
+                    let sec: String<16> = String::from(wait);
                     unwrap!(s.push_str(sec.as_str()));
                     unwrap!(s.push_str(" seconds left"))
                 }
@@ -70,11 +65,11 @@ pub unsafe extern "C" fn show_pin_timeout(seconds: u32, progress: u32, message: 
 
         display::pixeldata_dirty();
 
-        PREV_SECONDS = seconds;
+        PREV_SECONDS = wait;
         PREV_PROGRESS = progress;
 
     }
-    0
+    PinCallbackResult::Continue
 }
 
 #[no_mangle]

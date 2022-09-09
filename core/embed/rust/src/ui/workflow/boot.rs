@@ -1,12 +1,8 @@
 use cstr_core::CStr;
 use heapless::{String, Vec};
-use crate::micropython::obj::Obj;
-use crate::micropython::util;
 use crate::trezorhal::alloc::alloc_only;
-use crate::trezorhal::storage::{storage_delete, storage_ensure_not_wipe_pin, storage_get, storage_get_length, storage_get_remaining, storage_has_pin, storage_init, storage_set, storage_set_counter, storage_unlock, storage_wipe};
-use crate::ui::{constant, display, LockScreen, LockScreenMsg, PinKeyboard, PinKeyboardMsg, pin::show_pin_timeout};
-use crate::ui::constant::screen;
-use crate::ui::geometry::{Point, Rect};
+use crate::trezorhal::storage::{storage_delete, storage_ensure_not_wipe_pin, storage_get, storage_get_length, storage_get_remaining, storage_has_pin, storage_init, storage_set, storage_set_counter, storage_unlock};
+use crate::ui::{display, LockScreen, LockScreenMsg, PinKeyboard, PinKeyboardMsg, pin::show_pin_timeout};
 use crate::ui::layout::native::RustLayout;
 
 pub enum BootState {
@@ -71,7 +67,7 @@ fn init_unlocked() {
 pub fn boot_workflow() {
 
 
-    storage_init(Some(show_pin_timeout));
+    storage_init(show_pin_timeout);
 
     //todo if debug and not emulator
     //storage_wipe();
