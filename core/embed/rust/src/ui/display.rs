@@ -13,6 +13,10 @@ use crate::{
 };
 use core::slice;
 
+pub fn refresh() {
+    display::refresh();
+}
+
 pub fn backlight() -> i32 {
     display::backlight(-1)
 }

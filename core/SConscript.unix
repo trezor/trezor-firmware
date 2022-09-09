@@ -335,6 +335,7 @@ SOURCE_MICROPYTHON = [
 ]
 
 SOURCE_UNIX = [
+    'embed/unix/alloc_only.c',
     'embed/unix/common.c',
     'embed/unix/flash.c',
     'embed/unix/main.c',

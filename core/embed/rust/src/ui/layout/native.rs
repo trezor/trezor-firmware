@@ -156,6 +156,7 @@ impl<F> RustLayout<F>
             }
 
             self.paint_if_requested();
+            display::refresh();
         }
     }
 

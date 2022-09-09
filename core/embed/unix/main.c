@@ -51,6 +51,9 @@
 #include "py/repl.h"
 #include "py/runtime.h"
 #include "py/stackctrl.h"
+#include "display.h"
+#include "alloc_only.h"
+#include "rust_ui.h"
 
 #include "common.h"
 
@@ -421,6 +424,10 @@ void main_clean_exit(int status) {
 #define PATHLIST_SEP_CHAR ':'
 #endif
 
+void rust_eh_personality() {
+
+}
+
 static int do_import_module(const char *modname) {
   mp_obj_t import_args[4];
   import_args[0] = mp_obj_new_str(modname, strlen(modname));
@@ -482,6 +489,13 @@ MP_NOINLINE int main_(int argc, char **argv) {
 
   // Map trezor.flash to memory.
   flash_init();
+
+  display_init();
+  display_backlight(150);
+  display_refresh();
+  alloc_only_init(false);
+  boot_firmware();
+
 
 #if MICROPY_ENABLE_GC
   char *heap = malloc(heap_size);
