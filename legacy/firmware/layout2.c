@@ -380,8 +380,11 @@ static size_t format_coin_amount(uint64_t amount, const char *prefix,
   switch (amount_unit) {
     case AmountUnit_SATOSHI:
       decimals = 0;
-      strlcpy(suffix + 1, "sat ", sizeof(suffix) - 1);
-      strlcpy(suffix + 5, coin->coin_shortcut, sizeof(suffix) - 5);
+      strlcpy(suffix + 1, "sat", sizeof(suffix) - 1);
+      if (strcmp(coin->coin_shortcut, "BTC") != 0) {
+        strlcpy(suffix + 4, " ", sizeof(suffix) - 4);
+        strlcpy(suffix + 5, coin->coin_shortcut, sizeof(suffix) - 5);
+      }
       break;
     case AmountUnit_MILLIBITCOIN:
       if (decimals >= 6) {
