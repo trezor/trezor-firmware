@@ -29,6 +29,10 @@
 ///     FONT_MONO: int  # id of monospace font
 ///     FONT_NORMAL: int  # id of normal-width font
 ///     FONT_BOLD: int  # id of bold-width font
+///     TOIF_FULL_COLOR_BE: int  # full color big endian TOI image
+///     TOIF_FULL_COLOR_LE: int  # full color little endian TOI image
+///     TOIF_GRAYSCALE_EH: int  # grayscale even high TOI image
+///     TOIF_FULL_COLOR_BE: int  # grayscale odd high TOI image
 ///
 typedef struct _mp_obj_Display_t {
   mp_obj_base_t base;
@@ -641,6 +645,10 @@ STATIC const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_FONT_NORMAL), MP_ROM_INT(FONT_NORMAL)},
     {MP_ROM_QSTR(MP_QSTR_FONT_BOLD), MP_ROM_INT(FONT_BOLD)},
     {MP_ROM_QSTR(MP_QSTR_FONT_MONO), MP_ROM_INT(FONT_MONO)},
+    {MP_ROM_QSTR(MP_QSTR_TOIF_FULL_COLOR_BE), MP_ROM_INT(TOIF_FULL_COLOR_BE)},
+    {MP_ROM_QSTR(MP_QSTR_TOIF_FULL_COLOR_LE), MP_ROM_INT(TOIF_FULL_COLOR_LE)},
+    {MP_ROM_QSTR(MP_QSTR_TOIF_GRAYSCALE_EH), MP_ROM_INT(TOIF_GRAYSCALE_EH)},
+    {MP_ROM_QSTR(MP_QSTR_TOIF_GRAYSCALE_OH), MP_ROM_INT(TOIF_GRAYSCALE_OH)},
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorui_Display_locals_dict,
                             mod_trezorui_Display_locals_dict_table);

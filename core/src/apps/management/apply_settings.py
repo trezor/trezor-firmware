@@ -29,7 +29,7 @@ def validate_homescreen(homescreen: bytes) -> None:
         raise wire.DataError("Invalid homescreen")
     if w != 144 or h != 144:
         raise wire.DataError("Homescreen must be 144x144 pixel large")
-    if toif_format != 0:
+    if toif_format != ui.display.TOIF_FULL_COLOR_BE:
         raise wire.DataError("Homescreen must be full-color TOIF image")
 
 
