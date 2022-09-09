@@ -1,16 +1,14 @@
 use crate::{
     time::Duration,
     ui::{
-        component::{text::common::TextBox, Component, Event, EventCtx},
+        component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
         geometry::Rect,
     },
 };
 
 use super::{
-    choice_item::BigCharacterChoiceItem,
-    common::{display_dots_center_top, display_secret_center_top},
-    ButtonDetails, ButtonLayout, ChoiceFactory, ChoiceItem, ChoicePage, ChoicePageMsg,
-    MultilineTextChoiceItem, TextChoiceItem,
+    choice_item::BigCharacterChoiceItem, ButtonDetails, ButtonLayout, ChangingTextLine,
+    ChoiceFactory, ChoiceItem, ChoicePage, ChoicePageMsg, MultilineTextChoiceItem, TextChoiceItem,
 };
 use heapless::String;
 
@@ -29,10 +27,7 @@ enum ChoiceCategory {
     SpecialSymbol,
 }
 
-const PIN_ROW_DOTS: i32 = 8;
-const PIN_ROW_DIGITS: i32 = 10;
-
-const MAX_LENGTH: usize = 50;
+const MAX_PASSPHRASE_LENGTH: usize = 50;
 const HOLD_DURATION: Duration = Duration::from_secs(1);
 
 const DIGITS: [char; 10] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
@@ -165,8 +160,9 @@ impl ChoiceFactory for ChoiceFactoryPassphrase {
 /// Component for entering a passphrase.
 pub struct PassphraseEntry {
     choice_page: ChoicePage<ChoiceFactoryPassphrase>,
+    passphrase_dots: Child<ChangingTextLine<String<MAX_PASSPHRASE_LENGTH>>>,
     show_plain_passphrase: bool,
-    textbox: TextBox<MAX_LENGTH>,
+    textbox: TextBox<MAX_PASSPHRASE_LENGTH>,
     current_category: ChoiceCategory,
     menu_position: u8, // position in the menu so we can return back
 }
@@ -176,6 +172,7 @@ impl PassphraseEntry {
         let menu_choices = ChoiceFactoryPassphrase::new(ChoiceCategory::Menu);
         Self {
             choice_page: ChoicePage::new(menu_choices),
+            passphrase_dots: Child::new(ChangingTextLine::center_mono(String::new())),
             show_plain_passphrase: false,
             textbox: TextBox::empty(),
             current_category: ChoiceCategory::Menu,
@@ -183,20 +180,20 @@ impl PassphraseEntry {
         }
     }
 
-    fn update_situation(&mut self) {
+    fn update_passphrase_dots(&mut self, ctx: &mut EventCtx) {
+        // TODO: when the passphrase is longer than fits the screen, we might show
+        // ellipsis
         if self.show_plain_passphrase {
-            self.reveal_current_passphrase();
+            let passphrase = String::from(self.passphrase());
+            self.passphrase_dots.inner_mut().update_text(passphrase);
         } else {
-            self.show_passphrase_length();
+            let mut dots: String<MAX_PASSPHRASE_LENGTH> = String::new();
+            for _ in 0..self.textbox.len() {
+                unwrap!(dots.push_str("*"));
+            }
+            self.passphrase_dots.inner_mut().update_text(dots);
         }
-    }
-
-    fn show_passphrase_length(&self) {
-        display_dots_center_top(self.textbox.len(), 21);
-    }
-
-    fn reveal_current_passphrase(&self) {
-        display_secret_center_top(self.passphrase(), 21);
+        self.passphrase_dots.request_complete_repaint(ctx);
     }
 
     fn append_char(&mut self, ctx: &mut EventCtx, ch: char) {
@@ -234,12 +231,19 @@ impl Component for PassphraseEntry {
     type Msg = PassphraseEntryMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        self.choice_page.place(bounds)
+        let passphrase_area_height = self.passphrase_dots.inner().needed_height();
+        let (passphrase_area, choice_area) = bounds.split_top(passphrase_area_height);
+        self.passphrase_dots.place(passphrase_area);
+        self.choice_page.place(choice_area);
+        bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        // Any event should hide the shown passphrase if there
-        self.show_plain_passphrase = false;
+        // Any event when showing real passphrase should hide it
+        if self.show_plain_passphrase {
+            self.show_plain_passphrase = false;
+            self.update_passphrase_dots(ctx);
+        }
 
         let msg = self.choice_page.event(ctx, event);
 
@@ -249,10 +253,12 @@ impl Component for PassphraseEntry {
                 Some(ChoicePageMsg::Choice(page_counter)) => match page_counter as usize {
                     DEL_INDEX => {
                         self.delete_last_digit(ctx);
+                        self.update_passphrase_dots(ctx);
                         ctx.request_paint();
                     }
                     SHOW_INDEX => {
                         self.show_plain_passphrase = true;
+                        self.update_passphrase_dots(ctx);
                         ctx.request_paint();
                     }
                     _ => {
@@ -276,6 +282,7 @@ impl Component for PassphraseEntry {
                 } else if !self.is_full() {
                     let new_char = get_char(&self.current_category, page_counter);
                     self.append_char(ctx, new_char);
+                    self.update_passphrase_dots(ctx);
                     ctx.request_paint();
                 }
             }
@@ -285,8 +292,8 @@ impl Component for PassphraseEntry {
     }
 
     fn paint(&mut self) {
+        self.passphrase_dots.paint();
         self.choice_page.paint();
-        self.update_situation();
     }
 }
 

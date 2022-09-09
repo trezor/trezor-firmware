@@ -213,21 +213,21 @@ impl ChoiceItemAPI for MultilineTextChoiceItem {
         // to make it more clear this is the current choice
         for (index, line) in self.text.split(self.delimiter).enumerate() {
             let offset = MIDDLE_ROW + index as i32 * row_height() + row_height();
-            display_center(Point::new(MIDDLE_COL, offset), line, theme::FONT_NORMAL);
+            display_center(Point::new(MIDDLE_COL, offset), &line, theme::FONT_NORMAL);
         }
     }
 
     fn paint_left(&mut self) {
         for (index, line) in self.text.split(self.delimiter).enumerate() {
             let offset = MIDDLE_ROW + index as i32 * row_height();
-            display(Point::new(LEFT_COL, offset), line, theme::FONT_NORMAL);
+            display(Point::new(LEFT_COL, offset), &line, theme::FONT_NORMAL);
         }
     }
 
     fn paint_right(&mut self) {
         for (index, line) in self.text.split(self.delimiter).enumerate() {
             let offset = MIDDLE_ROW + index as i32 * row_height();
-            display_right(Point::new(RIGHT_COL, offset), line, theme::FONT_NORMAL);
+            display_right(Point::new(RIGHT_COL, offset), &line, theme::FONT_NORMAL);
         }
     }
 

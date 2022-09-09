@@ -1,15 +1,14 @@
 use crate::{
     trezorhal::bip39,
     ui::{
-        component::{text::common::TextBox, Component, Event, EventCtx},
-        geometry::{Point, Rect},
-        model_tr::theme,
+        component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
+        geometry::Rect,
     },
 };
 
 use super::{
-    choice_item::BigCharacterChoiceItem, common, ButtonDetails, ButtonLayout, ChoiceFactory,
-    ChoiceItem, ChoicePage, ChoicePageMsg, TextChoiceItem,
+    choice_item::BigCharacterChoiceItem, ButtonDetails, ButtonLayout, ChangingTextLine,
+    ChoiceFactory, ChoiceItem, ChoicePage, ChoicePageMsg, TextChoiceItem,
 };
 use heapless::{String, Vec};
 
@@ -19,7 +18,7 @@ pub enum Bip39EntryMsg {
 
 const CURRENT_LETTERS_ROW: i32 = 25;
 
-const MAX_LENGTH: usize = 20;
+const MAX_LENGTH: usize = 10;
 const MAX_CHOICE_LENGTH: usize = 26;
 
 /// Offer words when there will be fewer of them than this
@@ -118,6 +117,7 @@ impl ChoiceFactory for ChoiceFactoryBIP39 {
 /// Component for entering a BIP39 mnemonic.
 pub struct Bip39Entry {
     choice_page: ChoicePage<ChoiceFactoryBIP39>,
+    chosen_letters: Child<ChangingTextLine<String<{ MAX_LENGTH + 1 }>>>,
     letter_choices: Vec<char, MAX_CHOICE_LENGTH>,
     textbox: TextBox<MAX_LENGTH>,
     offer_words: bool,
@@ -132,6 +132,7 @@ impl Bip39Entry {
 
         Self {
             choice_page: ChoicePage::new(choices),
+            chosen_letters: Child::new(ChangingTextLine::center_mono(String::new())),
             letter_choices,
             textbox: TextBox::empty(),
             offer_words: false,
@@ -157,13 +158,10 @@ impl Bip39Entry {
         }
     }
 
-    fn update_situation(&mut self) {
-        self.show_current_letters();
-    }
-
-    fn show_current_letters(&self) {
+    fn update_chosen_letters(&mut self, ctx: &mut EventCtx) {
         let text = build_string!({ MAX_LENGTH + 1 }, self.textbox.content(), "_");
-        common::display_center(Point::new(64, CURRENT_LETTERS_ROW), text, theme::FONT_MONO);
+        self.chosen_letters.inner_mut().update_text(text);
+        self.chosen_letters.request_complete_repaint(ctx);
     }
 
     fn append_letter(&mut self, ctx: &mut EventCtx, letter: char) {
@@ -183,7 +181,11 @@ impl Component for Bip39Entry {
     type Msg = Bip39EntryMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        self.choice_page.place(bounds)
+        let letters_area_height = self.chosen_letters.inner().needed_height();
+        let (letters_area, choice_area) = bounds.split_top(letters_area_height);
+        self.chosen_letters.place(letters_area);
+        self.choice_page.place(choice_area);
+        bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
@@ -203,6 +205,7 @@ impl Component for Bip39Entry {
                 } else {
                     let new_letter = self.letter_choices[page_counter as usize];
                     self.append_letter(ctx, new_letter);
+                    self.update_chosen_letters(ctx);
                     let new_choices = self.get_current_choices();
                     self.choice_page.reset(ctx, new_choices, true, false);
                     ctx.request_paint();
@@ -211,6 +214,7 @@ impl Component for Bip39Entry {
             Some(ChoicePageMsg::LeftMost) => {
                 // Clicked BIN. Deleting last letter, updating wordlist and updating choices
                 self.delete_last_letter(ctx);
+                self.update_chosen_letters(ctx);
                 self.reset_wordlist();
                 let new_choices = self.get_current_choices();
                 self.choice_page.reset(ctx, new_choices, true, false);
@@ -223,8 +227,8 @@ impl Component for Bip39Entry {
     }
 
     fn paint(&mut self) {
+        self.chosen_letters.paint();
         self.choice_page.paint();
-        self.update_situation();
     }
 }
 

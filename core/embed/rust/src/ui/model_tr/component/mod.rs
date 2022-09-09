@@ -1,6 +1,7 @@
 mod bip39;
 mod button;
 mod button_controller;
+mod changing_text;
 mod choice;
 mod choice_item;
 mod common;
@@ -29,6 +30,7 @@ pub use button::{
 pub use confirm::{HoldToConfirm, HoldToConfirmMsg};
 
 pub use button_controller::{ButtonController, ButtonControllerMsg};
+pub use changing_text::ChangingTextLine;
 pub use choice::{ChoiceFactory, ChoicePage, ChoicePageMsg};
 pub use choice_item::{ChoiceItem, ChoiceItemAPI, MultilineTextChoiceItem, TextChoiceItem};
 pub use dialog::{Dialog, DialogMsg};

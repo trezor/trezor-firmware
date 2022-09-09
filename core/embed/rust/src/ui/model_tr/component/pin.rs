@@ -2,18 +2,15 @@ use crate::{
     micropython::buffer::StrBuffer,
     trezorhal::random,
     ui::{
-        component::{text::common::TextBox, Component, Event, EventCtx},
+        component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
         geometry::Rect,
     },
 };
 
 use super::{
-    choice_item::BigCharacterChoiceItem,
-    common::{display_dots_center_top, display_secret_center_top},
-    ButtonDetails, ButtonLayout, ChoiceFactory, ChoiceItem, ChoicePage, ChoicePageMsg,
-    MultilineTextChoiceItem,
+    choice_item::BigCharacterChoiceItem, ButtonDetails, ButtonLayout, ChangingTextLine,
+    ChoiceFactory, ChoiceItem, ChoicePage, ChoicePageMsg, MultilineTextChoiceItem,
 };
-use crate::ui::{component::Pad, model_tr::theme};
 use heapless::String;
 
 pub enum PinEntryMsg {
@@ -98,7 +95,7 @@ impl ChoiceFactory for ChoiceFactoryPIN {
 /// Component for entering a PIN.
 pub struct PinEntry {
     choice_page: ChoicePage<ChoiceFactoryPIN>,
-    pad: Pad,
+    pin_dots: Child<ChangingTextLine<String<MAX_PIN_LENGTH>>>,
     show_real_pin: bool,
     textbox: TextBox<MAX_PIN_LENGTH>,
 }
@@ -108,30 +105,13 @@ impl PinEntry {
         let choices = ChoiceFactoryPIN::new(prompt);
 
         Self {
-            pad: Pad::with_background(theme::BG),
             choice_page: ChoicePage::new(choices)
                 .with_initial_page_counter(3)
                 .with_carousel(),
+            pin_dots: Child::new(ChangingTextLine::center_mono(String::new())),
             show_real_pin: false,
             textbox: TextBox::empty(),
         }
-    }
-
-    fn update_situation(&mut self) {
-        if self.show_real_pin {
-            self.reveal_current_pin();
-            self.show_real_pin = false;
-        } else {
-            self.show_pin_length();
-        }
-    }
-
-    fn show_pin_length(&self) {
-        display_dots_center_top(self.textbox.len(), 0);
-    }
-
-    fn reveal_current_pin(&self) {
-        display_secret_center_top(self.pin(), 0);
     }
 
     fn append_new_digit(&mut self, ctx: &mut EventCtx, page_counter: u8) {
@@ -141,6 +121,25 @@ impl PinEntry {
 
     fn delete_last_digit(&mut self, ctx: &mut EventCtx) {
         self.textbox.delete_last(ctx);
+    }
+
+    fn update_pin_dots(&mut self, ctx: &mut EventCtx) {
+        // TODO: this is the same action as for the passphrase entry,
+        // might do a common component that will handle this part,
+        // (something like `SecretTextLine`)
+        // also with things like shifting the dots when too many etc.
+        // TODO: when the PIN is longer than fits the screen, we might show ellipsis
+        if self.show_real_pin {
+            let pin = String::from(self.pin());
+            self.pin_dots.inner_mut().update_text(pin);
+        } else {
+            let mut dots: String<MAX_PIN_LENGTH> = String::new();
+            for _ in 0..self.textbox.len() {
+                unwrap!(dots.push_str("*"));
+            }
+            self.pin_dots.inner_mut().update_text(dots);
+        }
+        self.pin_dots.request_complete_repaint(ctx);
     }
 
     pub fn pin(&self) -> &str {
@@ -160,13 +159,20 @@ impl Component for PinEntry {
     type Msg = PinEntryMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let split = bounds.split_top(7);
-        self.pad.place(split.0);
-        self.choice_page.place(split.1);
+        let pin_area_height = self.pin_dots.inner().needed_height();
+        let (pin_area, choice_area) = bounds.split_top(pin_area_height);
+        self.pin_dots.place(pin_area);
+        self.choice_page.place(choice_area);
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        // Any event when showing real PIN should hide it
+        if self.show_real_pin {
+            self.show_real_pin = false;
+            self.update_pin_dots(ctx);
+        }
+
         let msg = self.choice_page.event(ctx, event);
         if let Some(ChoicePageMsg::Choice(page_counter)) = msg {
             // Performing action under specific index or appending new digit
@@ -174,19 +180,19 @@ impl Component for PinEntry {
                 EXIT_INDEX => return Some(PinEntryMsg::Cancelled),
                 DELETE_INDEX => {
                     self.delete_last_digit(ctx);
-                    self.pad.clear();
+                    self.update_pin_dots(ctx);
                     ctx.request_paint();
                 }
                 SHOW_INDEX => {
                     self.show_real_pin = true;
-                    self.pad.clear();
+                    self.update_pin_dots(ctx);
                     ctx.request_paint();
                 }
                 PROMPT_INDEX => return Some(PinEntryMsg::Confirmed),
                 _ => {
                     if !self.is_full() {
                         self.append_new_digit(ctx, page_counter);
-                        self.pad.clear();
+                        self.update_pin_dots(ctx);
                         // Choosing any random digit to be shown next
                         let new_page_counter =
                             random::uniform_between(4, (CHOICE_LENGTH - 1) as u32);
@@ -201,9 +207,8 @@ impl Component for PinEntry {
     }
 
     fn paint(&mut self) {
-        self.pad.paint();
+        self.pin_dots.paint();
         self.choice_page.paint();
-        self.update_situation();
     }
 }
 

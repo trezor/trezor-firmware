@@ -106,9 +106,11 @@ where
     /// Called when user pressed "BACK" or "NEXT".
     /// Change the page in the content, clear the background under it and make
     /// sure it gets completely repainted. Also updating the buttons.
-    fn change_page(&mut self, ctx: &mut EventCtx, page: usize) {
-        self.content.inner_mut().change_page(page);
+    fn change_page(&mut self, ctx: &mut EventCtx) {
+        let active_page = self.scrollbar.inner().active_page;
+        self.content.inner_mut().change_page(active_page);
         self.content.request_complete_repaint(ctx);
+        self.scrollbar.request_complete_repaint(ctx);
         self.update_buttons(ctx);
         self.pad.clear();
     }
@@ -161,8 +163,8 @@ where
         let (content_area, scrollbar_area) =
             content_and_scrollbar_area.split_right(ScrollBar::WIDTH);
         let content_area = content_area.inset(Insets::top(1));
-        // Do not pad the button area, leave it to `ButtonController`
-        self.pad.place(content_and_scrollbar_area);
+        // Do not pad the button area nor the scrollbar, leave it to them
+        self.pad.place(content_area);
         self.content.place(content_area);
         // Need to be called here, only after content is placed
         // and we can calculate the page count
@@ -184,8 +186,7 @@ where
                     if self.scrollbar.inner().has_previous_page() {
                         // Clicked BACK. Scroll up.
                         self.scrollbar.inner_mut().go_to_previous_page();
-                        self.change_page(ctx, self.scrollbar.inner().active_page);
-                        self.scrollbar.request_complete_repaint(ctx);
+                        self.change_page(ctx);
                     } else {
                         // Clicked CANCEL. Send result.
                         return Some(PageMsg::Controls(false));
@@ -195,8 +196,7 @@ where
                     if self.scrollbar.inner().has_next_page() {
                         // Clicked NEXT. Scroll down.
                         self.scrollbar.inner_mut().go_to_next_page();
-                        self.change_page(ctx, self.scrollbar.inner().active_page);
-                        self.scrollbar.request_complete_repaint(ctx);
+                        self.change_page(ctx);
                     } else {
                         // Clicked CONFIRM. Send result.
                         return Some(PageMsg::Controls(true));

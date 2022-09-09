@@ -1,5 +1,5 @@
 use crate::ui::{
-    component::{Component, Event, EventCtx, Never},
+    component::{Component, Event, EventCtx, Never, Pad},
     display,
     geometry::{Offset, Point, Rect},
     model_tr::theme,
@@ -13,6 +13,7 @@ pub enum ScrollbarOrientation {
 
 pub struct ScrollBar {
     area: Rect,
+    pad: Pad,
     pub page_count: usize,
     pub active_page: usize,
     pub orientation: ScrollbarOrientation,
@@ -26,6 +27,7 @@ impl ScrollBar {
     pub fn new(page_count: usize, orientation: ScrollbarOrientation) -> Self {
         Self {
             area: Rect::zero(),
+            pad: Pad::with_background(theme::BG),
             page_count,
             active_page: 0,
             orientation,
@@ -137,7 +139,8 @@ impl Component for ScrollBar {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
-        self.area
+        self.pad.place(bounds);
+        bounds
     }
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
@@ -151,6 +154,8 @@ impl Component for ScrollBar {
             return;
         }
 
+        self.pad.clear();
+        self.pad.paint();
         if matches!(self.orientation, ScrollbarOrientation::Vertical) {
             self.paint_vertical()
         } else {
