@@ -283,11 +283,9 @@ void display_image(int x, int y, int w, int h, const void *data,
 
   uzlib_prepare(&decomp, decomp_window, data, datalen, b1, w * 2);
 
-  int iter_num = (w * h) / (w);
-
   dma2d_setup_16bpp();
 
-  for (int32_t pos = 0; pos < iter_num; pos++) {
+  for (int32_t pos = 0; pos < h; pos++) {
     int32_t pixels = w;
     uint8_t *next_buf = (pos % 2 == 1) ? b1 : b2;
     decomp.dest = (uint8_t *)next_buf;
