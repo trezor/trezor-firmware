@@ -37,10 +37,9 @@
 const int32_t text_buffer_height = FONT_MAX_HEIGHT;
 const int32_t buffer_width = DISPLAY_RESX;
 
-BUFFER_SECTION uint32_t line_buffer_16bpp[BUFFERS_16BPP][BUFFER_PIXELS / 2];
-BUFFER_SECTION uint32_t line_buffer_4bpp[BUFFERS_4BPP][BUFFER_PIXELS / 8];
-BUFFER_SECTION uint32_t
-    text_buffer[BUFFERS_TEXT][(FONT_MAX_HEIGHT * DISPLAY_RESX) / 8];
+BUFFER_SECTION uint32_t line_buffer_16bpp[BUFFERS_16BPP][LINE_BUFFER_16BPP_SIZE / 4];
+BUFFER_SECTION uint32_t line_buffer_4bpp[BUFFERS_4BPP][LINE_BUFFER_4BPP_SIZE / 4];
+BUFFER_SECTION uint32_t text_buffer[BUFFERS_TEXT][TEXT_BUFFER_SIZE / 4];
 
 uint8_t* buffers_get_line_buffer_16bpp(uint16_t idx, bool clear) {
   if (idx >= BUFFERS_16BPP) {
