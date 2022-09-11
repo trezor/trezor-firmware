@@ -92,7 +92,7 @@ trezorctl debug show-text "Line one. @@BR @@BR Line two. @@BR @@BR_HALF Line thr
 
 ### Text colors
 
-To switch to one of the [available colors](../../core/src/trezor/ui/style.py#L14-L47),
+To switch to one of the [available colors](https://github.com/trezor/trezor-firmware/blob/master/core/src/trezor/ui/style.py#L15-L44),
 use the color name prefixed with `%%`: e.g., `%%RED`, `%%LIGHT_BLUE`...
 
 To switch back to the default color, you can use `%%FG`:
@@ -114,13 +114,13 @@ To change the text, use `-h` option:
 trezorctl debug show-text -h "Hello world" "My hovercraft is full."
 ```
 
-To change the icon, you can pick [an icon name from here](../../core/src/trezor/ui/style.py#L50-L70) and specify it with the `-i` option:
+To change the icon, you can pick [an icon name from here](https://github.com/trezor/trezor-firmware/blob/master/core/src/trezor/ui/style.py#L51-L71) and specify it with the `-i` option:
 
 ```sh
 trezorctl debug show-text -i RECEIVE "My hovercraft is full."
 ```
 
-The icons are defined as shapes, and you can specify a custom color [from the list](../../core/src/trezor/ui/style.py#L14-L47) with the `-c` option:
+The icons are defined as shapes, and you can specify a custom color [from the list](https://github.com/trezor/trezor-firmware/blob/master/core/src/trezor/ui/style.py#L15-L44) with the `-c` option:
 
 ```sh
 trezorctl debug show-text -c RED "My hovercraft is full."

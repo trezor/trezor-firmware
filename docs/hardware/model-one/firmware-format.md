@@ -32,7 +32,7 @@ Total length of legacy header is always 256 bytes.
 Signature verification:
 
 * Calculate SHA256 digest of firmware without this header.
-* Verify signature `sig1` of the digest against public key with index `sigindex1` in [`V1_BOOTLOADER_KEYS`](../../../python/src/trezorlib/firmware.py).
+* Verify signature `sig1` of the digest against public key with index `sigindex1` in [`V1_BOOTLOADER_KEYS`](https://github.com/trezor/trezor-firmware/blob/master/python/src/trezorlib/firmware.py).
 * Repeat for `sig2` and `sig3`. Indexes must be distinct.
 
 ## V2 Header
@@ -75,5 +75,5 @@ Signature verification:
 
 * Calculate SHA256 digest of the entire header with `sig1`-`sig3` and `sigindex1`-`sigindex3` zeroed
   out.
-* Verify signature `sig1` of the digest against public key with index `sigindex1` in [`V1_BOOTLOADER_KEYS`](../../../python/src/trezorlib/firmware.py).
+* Verify signature `sig1` of the digest against public key with index `sigindex1` in [`V1_BOOTLOADER_KEYS`](https://github.com/trezor/trezor-firmware/blob/master/python/src/trezorlib/firmware.py).
 * Repeat for `sig2` and `sig3`. Indexes must be distinct.

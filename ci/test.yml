@@ -60,7 +60,7 @@ core unit t1 test:
 # Device tests for Core. Running device tests and also comparing screens
 # with the expected UI result.
 # See artifacts for a comprehensive report of UI.
-# See [docs/tests/ui-tests](../docs/tests/ui-tests.md) for more info.
+# See [docs/tests/ui-tests](../tests/ui-tests.md) for more info.
 core device test:
   stage: test
   <<: *gitlab_caching
@@ -304,7 +304,7 @@ core fido2 asan test:
     when: always
 
 # Click tests.
-# See [docs/tests/click-tests](../docs/tests/click-tests.md) for more info.
+# See [docs/tests/click-tests](../tests/click-tests.md) for more info.
 core click test:
   stage: test
   <<: *gitlab_caching
@@ -342,7 +342,7 @@ core click asan test:
     when: always
 
 # Upgrade tests.
-# See [docs/tests/upgrade-tests](../docs/tests/upgrade-tests.md) for more info.
+# See [docs/tests/upgrade-tests](../tests/upgrade-tests.md) for more info.
 core upgrade test:
   stage: test
   <<: *gitlab_caching

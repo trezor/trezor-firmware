@@ -9,7 +9,7 @@ image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/trezor-firmware-en
 
 # Hardware
 
-# [Device tests](../docs/tests/device-tests.md) that run against an actual physical Trezor T.
+# [Device tests](../tests/device-tests.md) that run against an actual physical Trezor T.
 # The device needs to have special bootloader, found in `core/embed/bootloader_ci`, that
 # makes it possible to flash firmware without confirmation on the touchscreen.
 #
@@ -107,7 +107,7 @@ hardware core monero test:
     expire_in: 2 days
     when: always
 
-# [Device tests](../docs/tests/device-tests.md) executed on physical Trezor 1.
+# [Device tests](../tests/device-tests.md) executed on physical Trezor 1.
 # This works thanks to [tpmb](https://github.com/mmahut/tpmb), which is a small arduino
 # device capable of pushing an actual buttons on the device.
 hardware legacy regular device test:

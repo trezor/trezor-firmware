@@ -29,7 +29,7 @@ We currently have two vendors:
 As the names suggest, the first one is the official SatoshiLabs vendor header and all
 public firmwares are signed with that. The second one is meant for generic audience; if
 you build firmware this vendor header is automatically applied and the firmware is signed
-with it (see `tools/headertool.py`).
+with it (see `core/tools/headertool.py`).
 
 The device gets **wiped**:
 - If the firmware to be installed is from different vendor than the present firmware [2].
