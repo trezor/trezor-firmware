@@ -97,8 +97,9 @@ sources, so your changes are immediately effective.
 
 The included `trezorctl` python script can perform various tasks such as
 changing setting in the Trezor, signing transactions, retrieving account
-info and addresses. See the [docs/](docs/) sub folder for detailed
-examples and options.
+info and addresses. See the
+[python/docs/](https://github.com/trezor/trezor-firmware/tree/master/python/docs)
+sub folder for detailed examples and options.
 
 NOTE: An older version of the `trezorctl` command is [available for
 Debian Stretch](https://packages.debian.org/en/stretch/python-trezor)
@@ -107,7 +108,9 @@ Debian Stretch](https://packages.debian.org/en/stretch/python-trezor)
 ## Python Library
 
 You can use this python library to interact with a Trezor and use its capabilities in
-your application. See examples here in the [tools/](tools/) sub folder.
+your application. See examples here in the
+[tools/](https://github.com/trezor/trezor-firmware/tree/master/python/docs/tools)
+sub folder.
 
 ## PIN Entering
 

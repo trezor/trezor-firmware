@@ -5,7 +5,7 @@
 ## Overview
 This document shows the creation of a custom functionality (feature, application) on TT. It explains how to build both the Trezor (device, core) logic, as well as the client (computer, host, trezorlib) logic needed to speak with Trezor. For most new features, also the communication layer between Trezor and computer (protobuf) needs to be modified, to set up the messages they will exchange.
 
-Intermediate knowledge of `python` and `linux` environment is assumed here to easily follow along. For steps how to set up the Trezor dev environment, refer to other docs - [build](core/build/index.md) or [emulator](core/emulator/index.md). The most important part is being in the `poetry shell` of this project, so all dependencies are installed.
+Intermediate knowledge of `python` and `linux` environment is assumed here to easily follow along. For steps how to set up the Trezor dev environment, refer to other docs - [build](../core/build/index.md) or [emulator](../core/emulator/index.md). The most important part is being in the `poetry shell` of this project, so all dependencies are installed.
 
 ## Feature description
 We will implement a simple hello-world feature where Trezor gets some information from the host, will do something with it (optionally shows something on the screen), and returns some information back to the host, where we want to display them. (Note that there are no cryptographic operations involved in this example, it focuses only on basic communication between Trezor and host.)
@@ -17,7 +17,7 @@ As already mentioned, to get something useful from Trezor, writing device logic 
 ### TLDR: [implementation in a single commit](https://github.com/trezor/trezor-firmware/commit/8a855b38e69bea64ba79ca704876cf4862a9ff79)
 
 ### 1. Communication part (protobuf)
-Communication between Trezor and the computer is handled by a protocol called `protobuf`. It allows for the creation of specific messages (containing clearly defined data) that will be exchanged. More details about this can be seen in [docs](common/communication/index.md).
+Communication between Trezor and the computer is handled by a protocol called `protobuf`. It allows for the creation of specific messages (containing clearly defined data) that will be exchanged. More details about this can be seen in [docs](../common/communication/index.md).
 
 Trezor on its own cannot send data to the computer, it can only react to a "request" message it recognizes and send a "response" message.
 Both of these messages will need to be specified, and both parts of communication will need to understand them.
@@ -119,7 +119,7 @@ Even though the code in `core` is run by a `micropython` interpreter, almost all
 
 As we want to also write unittests for this module, we define a helper function `_get_text_from_msg`, even though it could easily be inlined in this case.
 
-To see the details about code style and conventions, refer to [codestyle.md](core/misc/codestyle.md).
+To see the details about code style and conventions, refer to [codestyle.md](../core/misc/codestyle.md).
 
 We have defined all the logic, but it is not being called anywhere. We need to register the function to be called as a response to the appropriate message - in our case `HelloWorldRequest`. Registration is done in `core/src/apps/workflow_handlers.py` and the following two lines need to be added there (ideally under the `misc` section):
 
@@ -228,7 +228,7 @@ The example command on its own will however not work without listening Trezor wh
 ### 4. Putting it together
 Looks like all the code changes have been done, the final part is to build a Trezor image - `emulator` - so that we can actually run and test all the logic we created.
 
-Detailed information about the emulator can be found in its [docs](core/emulator/index.md), but we only need two most important commands, that will build and spawn the emulator:
+Detailed information about the emulator can be found in its [docs](../core/emulator/index.md), but we only need two most important commands, that will build and spawn the emulator:
 
 ```sh
 cd core
@@ -246,13 +246,13 @@ Hello George!
 Hello George!
 ```
 
-For building the new feature into a physical Trezor, refer to [embedded](core/build/embedded.md).
+For building the new feature into a physical Trezor, refer to [embedded](../core/build/embedded.md).
 
 ## Testing
 It is always good to include some tests exercising the created functionality, so when we break it later, it will be noticed. Trezor model T supports both `unit tests` and `integration tests` (which are called `device tests`).
 
 ### Unit tests
-[docs](core/tests/index.md)
+[docs](../core/tests/index.md)
 
 Unit tests can verify individual (mostly helper) functions that have clearly defined inputs and outputs.
 
@@ -283,13 +283,13 @@ Code above is using the `unittest` testing framework, however not directly from 
 Current code checks one usage of `_get_text_from_msg`, the only deterministic helper function we use in our feature. One could create many test vectors trying different inputs and expecting different outputs.
 
 ### Device tests
-[docs](tests/device-tests.md)
+[docs](../tests/device-tests.md)
 
 Device tests (our name for integration tests) should test the whole workflow from sending the first request into Trezor to Trezor sending the final response.
 
 `trezorlib` is used extensively in these tests as a way to request something from Trezor and then assert the expected response (it actually uses the code we created in Part 3).
 
-They are closely connected with [ui tests](tests/ui-tests.md), which assert Trezor's screens have a known and expected content during the device tests.
+They are closely connected with [ui tests](../tests/ui-tests.md), which assert Trezor's screens have a known and expected content during the device tests.
 
 Device tests are stored in `tests/device_tests` and they can be run by `make test_emu` in `core`. Running the specific file we will create can be done by `make test_emu TESTOPTS="-k test_hello_world.py"`.
 

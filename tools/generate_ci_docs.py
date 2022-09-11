@@ -163,7 +163,7 @@ Latest CI pipeline of master branch can be seen at [${latest_master}](${latest_m
     header_3 = "###"
 %>
 % for file, file_info in all_jobs_items:
-${header_2} ${file.stem.upper()} stage - [${file.name}](../../${file})
+${header_2} ${file.stem.upper()} stage - [${file.name}](https://github.com/trezor/trezor-firmware/blob/master/${file})
     % if file_info["overall_description"]:
         % for stage_overall_description_line in file_info["overall_description"]:
 ${stage_overall_description_line}

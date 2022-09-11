@@ -42,7 +42,7 @@ Make sure you have Python 3.6 or later and [Poetry](https://python-poetry.org/)
 installed.
 
 If you want to build device firmware, also make sure that you have the [GNU ARM Embedded toolchain](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads) installed.
-See [Dockerfile](../../ci/Dockerfile#L72-L76) for up-to-date version of the toolchain.
+See [Dockerfile](https://github.com/trezor/trezor-firmware/blob/master/ci/Dockerfile) for up-to-date version of the toolchain.
 
 The build process is configured via environment variables:
 
