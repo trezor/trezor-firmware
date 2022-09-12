@@ -52,20 +52,15 @@ def _validate_hash(auxiliary_data_hash: bytes) -> None:
 
 
 def _validate_catalyst_registration_parameters(
-    catalyst_registration_parameters: messages.CardanoCatalystRegistrationParametersType,
+    parameters: messages.CardanoCatalystRegistrationParametersType,
 ) -> None:
-    if (
-        len(catalyst_registration_parameters.voting_public_key)
-        != CATALYST_VOTING_PUBLIC_KEY_LENGTH
-    ):
+    if len(parameters.voting_public_key) != CATALYST_VOTING_PUBLIC_KEY_LENGTH:
         raise wire.ProcessError("Invalid auxiliary data")
 
-    if not SCHEMA_STAKING_ANY_ACCOUNT.match(
-        catalyst_registration_parameters.staking_path
-    ):
+    if not SCHEMA_STAKING_ANY_ACCOUNT.match(parameters.staking_path):
         raise wire.ProcessError("Invalid auxiliary data")
 
-    address_parameters = catalyst_registration_parameters.reward_address_parameters
+    address_parameters = parameters.reward_address_parameters
     if address_parameters.address_type == CardanoAddressType.BYRON:
         raise wire.ProcessError("Invalid auxiliary data")
 
@@ -76,17 +71,16 @@ async def show(
     ctx: wire.Context,
     keychain: seed.Keychain,
     auxiliary_data_hash: bytes,
-    catalyst_registration_parameters: messages.CardanoCatalystRegistrationParametersType
-    | None,
+    parameters: messages.CardanoCatalystRegistrationParametersType | None,
     protocol_magic: int,
     network_id: int,
     should_show_details: bool,
 ) -> None:
-    if catalyst_registration_parameters:
+    if parameters:
         await _show_catalyst_registration(
             ctx,
             keychain,
-            catalyst_registration_parameters,
+            parameters,
             protocol_magic,
             network_id,
         )
@@ -98,23 +92,25 @@ async def show(
 async def _show_catalyst_registration(
     ctx: wire.Context,
     keychain: seed.Keychain,
-    catalyst_registration_parameters: messages.CardanoCatalystRegistrationParametersType,
+    parameters: messages.CardanoCatalystRegistrationParametersType,
     protocol_magic: int,
     network_id: int,
 ) -> None:
-    public_key = catalyst_registration_parameters.voting_public_key
+    public_key = parameters.voting_public_key
     encoded_public_key = bech32.encode(bech32.HRP_JORMUN_PUBLIC_KEY, public_key)
-    staking_path = catalyst_registration_parameters.staking_path
     reward_address = addresses.derive_human_readable(
         keychain,
-        catalyst_registration_parameters.reward_address_parameters,
+        parameters.reward_address_parameters,
         protocol_magic,
         network_id,
     )
-    nonce = catalyst_registration_parameters.nonce
 
     await confirm_catalyst_registration(
-        ctx, encoded_public_key, staking_path, reward_address, nonce
+        ctx,
+        encoded_public_key,
+        parameters.staking_path,
+        reward_address,
+        parameters.nonce,
     )
 
 
@@ -172,30 +168,28 @@ def _cborize_catalyst_registration(
 
 def _get_signed_catalyst_registration_payload(
     keychain: seed.Keychain,
-    catalyst_registration_parameters: messages.CardanoCatalystRegistrationParametersType,
+    parameters: messages.CardanoCatalystRegistrationParametersType,
     protocol_magic: int,
     network_id: int,
 ) -> SignedCatalystRegistrationPayload:
-    staking_key = derive_public_key(
-        keychain, catalyst_registration_parameters.staking_path
-    )
+    staking_key = derive_public_key(keychain, parameters.staking_path)
 
     payload: CatalystRegistrationPayload = {
-        1: catalyst_registration_parameters.voting_public_key,
+        1: parameters.voting_public_key,
         2: staking_key,
         3: addresses.derive_bytes(
             keychain,
-            catalyst_registration_parameters.reward_address_parameters,
+            parameters.reward_address_parameters,
             protocol_magic,
             network_id,
         ),
-        4: catalyst_registration_parameters.nonce,
+        4: parameters.nonce,
     }
 
     signature = _create_catalyst_registration_payload_signature(
         keychain,
         payload,
-        catalyst_registration_parameters.staking_path,
+        parameters.staking_path,
     )
 
     return payload, signature
