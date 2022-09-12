@@ -64,7 +64,7 @@ def _to_rgb(data: bytes, little_endian: bool) -> bytes:
         else:
             (c,) = struct.unpack(">H", data[i : i + 2])
         r = (c & 0xF800) >> 8
-        g = (c & 0x07C0) >> 3
+        g = (c & 0x07E0) >> 3
         b = (c & 0x001F) << 3
         res += bytes((r, g, b))
     return bytes(res)
