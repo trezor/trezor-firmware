@@ -216,9 +216,9 @@ void display_text_render_buffer(const char *text, int textlen, int font,
           if (buffer_pos < (sizeof(buffer_text_t) * 2)) {
             int b = buffer_pos / 2;
             if (buffer_pos % 2) {
-              ((uint8_t *)buffer)[b] |= c << 4;
+              buffer->buffer[b] |= c << 4;
             } else {
-              ((uint8_t *)buffer)[b] |= (c);
+              buffer->buffer[b] |= (c);
             }
           }
         }
@@ -288,12 +288,12 @@ void display_image(int x, int y, int w, int h, const void *data,
   for (int32_t pos = 0; pos < h; pos++) {
     int32_t pixels = w;
     line_buffer_16bpp_t *next_buf = (pos % 2 == 1) ? b1 : b2;
-    decomp.dest = (uint8_t *)next_buf;
-    decomp.dest_limit = (uint8_t *)next_buf + w * 2;
+    decomp.dest = next_buf->buffer;
+    decomp.dest_limit = next_buf->buffer + w * 2;
     int st = uzlib_uncompress(&decomp);
     if (st < 0) break;  // error
     dma2d_wait_for_transfer();
-    dma2d_start((uint8_t *)next_buf, (uint8_t *)DISPLAY_DATA_ADDRESS, pixels);
+    dma2d_start(next_buf->buffer, (uint8_t *)DISPLAY_DATA_ADDRESS, pixels);
   }
   dma2d_wait_for_transfer();
 }
@@ -437,9 +437,9 @@ void display_icon(int x, int y, int w, int h, const void *data,
     int st = uzlib_uncompress(&decomp);
     if (st < 0) break;  // error
     if (pos >= y0 && pos <= y1) {
-      memcpy(next_buf, &b[off_x / 2], width / 2);
+      memcpy(next_buf->buffer, &b[off_x / 2], width / 2);
       dma2d_wait_for_transfer();
-      dma2d_start((uint8_t *)next_buf, (uint8_t *)DISPLAY_DATA_ADDRESS, width);
+      dma2d_start(next_buf->buffer, (uint8_t *)DISPLAY_DATA_ADDRESS, width);
     }
   }
   dma2d_wait_for_transfer();

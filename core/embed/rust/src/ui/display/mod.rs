@@ -516,12 +516,12 @@ pub fn text_over_image(
         let lo = color.lo_byte();
         //prefill image/bg buffers with the bg color
         for i in 0..(constant::WIDTH) as usize {
-            img1[2 * i] = lo;
-            img1[2 * i + 1] = hi;
-            img2[2 * i] = lo;
-            img2[2 * i + 1] = hi;
-            empty_img[2 * i] = lo;
-            empty_img[2 * i + 1] = hi;
+            img1.buffer[2 * i] = lo;
+            img1.buffer[2 * i + 1] = hi;
+            img2.buffer[2 * i] = lo;
+            img2.buffer[2 * i + 1] = hi;
+            empty_img.buffer[2 * i] = lo;
+            empty_img.buffer[2 * i + 1] = hi;
         }
         area = a;
         r_img = Rect::from_top_left_and_size(
@@ -579,16 +579,21 @@ pub fn text_over_image(
 
         const BUFFER_BPP: usize = 16;
 
-        let using_img = process_buffer::<
-            BUFFER_BPP,
-            { ((constant::WIDTH as usize) * BUFFER_BPP) / 8 },
-        >(y, r_img, offset_img, &mut ctx, img_buffer_used, &mut i);
+        let using_img =
+            process_buffer::<BUFFER_BPP, { ((constant::WIDTH as usize) * BUFFER_BPP) / 8 }>(
+                y,
+                r_img,
+                offset_img,
+                &mut ctx,
+                &mut img_buffer_used.buffer,
+                &mut i,
+            );
 
         if y >= text_area.y0 && y < text_area.y1 {
             let y_pos = y - text_area.y0;
             position_buffer(
-                t_buffer_used,
-                &text_buffer[(y_pos * constant::WIDTH / 2) as usize
+                &mut t_buffer_used.buffer,
+                &text_buffer.buffer[(y_pos * constant::WIDTH / 2) as usize
                     ..((y_pos + 1) * constant::WIDTH / 2) as usize],
                 4,
                 0,
@@ -602,7 +607,7 @@ pub fn text_over_image(
         }
 
         dma2d_wait_for_transfer();
-        dma2d_start_blend(t_buffer, img_buffer, clamped.width());
+        dma2d_start_blend(&t_buffer.buffer, &img_buffer.buffer, clamped.width());
     }
 
     dma2d_wait_for_transfer();
@@ -692,7 +697,7 @@ pub fn icon_over_icon(
             r_fg,
             offset_fg,
             &mut ctx_fg,
-            fg_buffer_used,
+            &mut fg_buffer_used.buffer,
             &mut fg_i,
         );
         let using_bg = process_buffer::<BUFFER_BPP, { (constant::WIDTH as usize * BUFFER_BPP) / 8 }>(
@@ -700,7 +705,7 @@ pub fn icon_over_icon(
             r_bg,
             offset_bg,
             &mut ctx_bg,
-            bg_buffer_used,
+            &mut bg_buffer_used.buffer,
             &mut bg_i,
         );
 
@@ -712,7 +717,7 @@ pub fn icon_over_icon(
         }
 
         dma2d_wait_for_transfer();
-        dma2d_start_blend(fg_buffer, bg_buffer, clamped.width());
+        dma2d_start_blend(&fg_buffer.buffer, &bg_buffer.buffer, clamped.width());
     }
 
     dma2d_wait_for_transfer();

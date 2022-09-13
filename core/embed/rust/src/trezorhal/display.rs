@@ -55,7 +55,7 @@ pub fn text_into_buffer(
             text.as_ptr() as _,
             text.len() as _,
             font,
-            buffer.as_ptr() as _,
+            buffer.buffer.as_ptr() as _,
             x_offset,
             line_width,
         )
