@@ -38,7 +38,7 @@ void dma2d_init(void) {
 
 static void dma2d_init_clut(uint16_t fg, uint16_t bg, dma2d_layer_t layer) {
   volatile uint32_t* table = NULL;
-  if (layer == 0) {
+  if (layer == DMA2D_LAYER_BG) {
     table = dma2d_handle.Instance->BGCLUT;
   } else {
     table = dma2d_handle.Instance->FGCLUT;

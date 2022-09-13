@@ -45,7 +45,7 @@ void dma2d_init(void) {
 
 void dma2d_init_clut(uint16_t fg, uint16_t bg, dma2d_layer_t layer) {
   uint16_t* table;
-  if (layer == 0) {
+  if (layer == DMA2D_LAYER_BG) {
     table = clut_bg;
   } else {
     table = clut_fg;
