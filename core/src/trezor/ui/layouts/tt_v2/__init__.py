@@ -495,34 +495,24 @@ async def confirm_output(
     if title.startswith("CONFIRM "):
         title = title[len("CONFIRM ") :]
 
-    await raise_if_not_confirmed(
-        interact(
-            ctx,
-            _RustLayout(
-                trezorui2.confirm_output(
-                    title=title,
-                    description="To:",
-                    value=address,
-                )
-            ),
-            "confirm_output",
-            br_code,
-        )
+    await confirm_value(
+        ctx,
+        title,
+        address,
+        "To:",
+        "confirm_output",
+        br_code,
+        verb="NEXT",
     )
 
-    await raise_if_not_confirmed(
-        interact(
-            ctx,
-            _RustLayout(
-                trezorui2.confirm_output(
-                    title=title,
-                    description="Amount:",
-                    value=amount,
-                )
-            ),
-            "confirm_output",
-            br_code,
-        )
+    await confirm_value(
+        ctx,
+        title,
+        amount,
+        "Amount:",
+        "confirm_output",
+        br_code,
+        verb="NEXT",
     )
 
 
@@ -645,7 +635,15 @@ def confirm_address(
     icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
     icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
 ) -> Awaitable[None]:
-    raise NotImplementedError
+    return confirm_value(
+        ctx,
+        title,
+        address,
+        description or "",
+        br_type,
+        br_code,
+        verb="NEXT",
+    )
 
 
 async def confirm_text(
@@ -658,7 +656,15 @@ async def confirm_text(
     icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
     icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
 ) -> None:
-    raise NotImplementedError
+    return await confirm_value(
+        ctx,
+        title,
+        data,
+        description or "",
+        br_type,
+        br_code,
+        verb="CONFIRM",
+    )
 
 
 def confirm_amount(
@@ -671,7 +677,49 @@ def confirm_amount(
     icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
     icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
 ) -> Awaitable[None]:
-    raise NotImplementedError
+    return confirm_value(
+        ctx,
+        title,
+        amount,
+        description,
+        br_type,
+        br_code,
+        verb="NEXT",
+    )
+
+
+def confirm_value(
+    ctx: wire.GenericContext,
+    title: str,
+    value: str,
+    description: str,
+    br_type: str,
+    br_code: ButtonRequestType = ButtonRequestType.Other,
+    *,
+    verb: str | None = None,
+    hold: bool = False,
+) -> Awaitable[None]:
+    """General confirmation dialog, used by many other confirm_* functions."""
+
+    if not verb and not hold:
+        raise ValueError("Either verb or hold=True must be set")
+
+    return raise_if_not_confirmed(
+        interact(
+            ctx,
+            _RustLayout(
+                trezorui2.confirm_value(
+                    title=title.upper(),
+                    description=description,
+                    value=value,
+                    verb=verb,
+                    hold=hold,
+                )
+            ),
+            br_type,
+            br_code,
+        )
+    )
 
 
 async def confirm_properties(
@@ -712,40 +760,30 @@ async def confirm_total(
     fee_amount: str,
     fee_rate_amount: str | None = None,
     title: str = "SENDING",
-    total_label: str = "Total amount:\n",
-    fee_label: str = "\nincluding fee:\n",
+    total_label: str = "Total amount:",
+    fee_label: str = "Fee:",
     icon_color: int = ui.GREEN,
     br_type: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> None:
-    await raise_if_not_confirmed(
-        interact(
-            ctx,
-            _RustLayout(
-                trezorui2.confirm_output(
-                    title=title.upper(),
-                    description="Fee:",
-                    value=fee_amount,
-                )
-            ),
-            "confirm_total",
-            br_code,
-        )
+    await confirm_value(
+        ctx,
+        title,
+        fee_amount,
+        fee_label,
+        br_type,
+        br_code,
+        verb="NEXT",
     )
 
-    await raise_if_not_confirmed(
-        interact(
-            ctx,
-            _RustLayout(
-                trezorui2.confirm_total(
-                    title=title.upper(),
-                    description="Total amount:",
-                    value=total_amount,
-                )
-            ),
-            "confirm_total",
-            br_code,
-        )
+    await confirm_value(
+        ctx,
+        title,
+        total_amount,
+        total_label,
+        br_type,
+        br_code,
+        hold=True,
     )
 
 
@@ -802,6 +840,7 @@ async def confirm_metadata(
 
         layout = trezorui2.confirm_action(
             title=title.upper(),
+            action="",
             verb="NEXT",
             description=content,
             hold=hold,
@@ -820,19 +859,13 @@ async def confirm_metadata(
 async def confirm_replacement(
     ctx: wire.GenericContext, description: str, txid: str
 ) -> None:
-    await raise_if_not_confirmed(
-        interact(
-            ctx,
-            _RustLayout(
-                trezorui2.confirm_blob(
-                    title=description.upper(),
-                    description="Confirm transaction ID:",
-                    data=txid,
-                )
-            ),
-            "confirm_replacement",
-            ButtonRequestType.SignTx,
-        )
+    await confirm_blob(
+        ctx,
+        title=description.upper(),
+        data=txid,
+        description="Confirm transaction ID:",
+        br_type="confirm_replacement",
+        br_code=ButtonRequestType.SignTx,
     )
 
 
@@ -906,7 +939,14 @@ async def confirm_coinjoin(
 async def confirm_sign_identity(
     ctx: wire.GenericContext, proto: str, identity: str, challenge_visual: str | None
 ) -> None:
-    raise NotImplementedError
+    await confirm_blob(
+        ctx,
+        title=f"Sign {proto}",
+        data=identity,
+        description=challenge_visual + "\n" if challenge_visual else "",
+        br_type="sign_identity",
+        br_code=ButtonRequestType.Other,
+    )
 
 
 async def confirm_signverify(
@@ -919,34 +959,22 @@ async def confirm_signverify(
         title = f"SIGN {coin} MESSAGE"
         br_type = "sign_message"
 
-    await raise_if_not_confirmed(
-        interact(
-            ctx,
-            _RustLayout(
-                trezorui2.confirm_blob(
-                    title=title,
-                    description="Confirm address:",
-                    data=address,
-                )
-            ),
-            br_type,
-            ButtonRequestType.Other,
-        )
+    await confirm_blob(
+        ctx,
+        title=title,
+        data=address,
+        description="Confirm address:",
+        br_type=br_type,
+        br_code=ButtonRequestType.Other,
     )
 
-    await raise_if_not_confirmed(
-        interact(
-            ctx,
-            _RustLayout(
-                trezorui2.confirm_blob(
-                    title=title,
-                    description="Confirm message:",
-                    data=message,
-                )
-            ),
-            br_type,
-            ButtonRequestType.Other,
-        )
+    await confirm_blob(
+        ctx,
+        title=title,
+        data=message,
+        description="Confirm message:",
+        br_type=br_type,
+        br_code=ButtonRequestType.Other,
     )
 
 

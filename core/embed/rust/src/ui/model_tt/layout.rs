@@ -1,5 +1,7 @@
 use core::{cmp::Ordering, convert::TryInto, ops::Deref};
 
+use heapless::Vec;
+
 use crate::{
     error::Error,
     micropython::{
@@ -308,6 +310,40 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+fn _confirm_blob(
+    title: StrBuffer,
+    data: Option<StrBuffer>,
+    description: Option<StrBuffer>,
+    extra: Option<StrBuffer>,
+    verb: Option<StrBuffer>,
+    verb_cancel: Option<StrBuffer>,
+    hold: bool,
+) -> Result<Obj, Error> {
+    let mut par_source: Vec<Paragraph<StrBuffer>, 3> = Vec::new();
+    if let Some(description) = description {
+        unwrap!(par_source.push(Paragraph::new(&theme::TEXT_NORMAL, description)));
+    }
+    if let Some(extra) = extra {
+        unwrap!(par_source.push(Paragraph::new(&theme::TEXT_BOLD, extra)));
+    }
+    if let Some(data) = data {
+        unwrap!(par_source.push(Paragraph::new(&theme::TEXT_MONO, data)));
+    }
+    let paragraphs = Paragraphs::new(par_source);
+
+    let obj = if hold {
+        LayoutObj::new(Frame::new(title, SwipeHoldPage::new(paragraphs, theme::BG)).into_child())?
+    } else if let Some(verb) = verb {
+        let buttons = Button::cancel_confirm_text(verb_cancel, verb);
+        LayoutObj::new(
+            Frame::new(title, SwipePage::new(paragraphs, buttons, theme::BG)).into_child(),
+        )?
+    } else {
+        panic!("Either `hold=true` or `verb=Some(StrBuffer)` must be specified");
+    };
+    Ok(obj.into())
+}
+
 extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -322,23 +358,17 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
         let _ask_pagination: bool = kwargs.get_or(Qstr::MP_QSTR_ask_pagination, false)?;
         let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
 
-        let paragraphs = Paragraphs::new([
-            Paragraph::new(&theme::TEXT_NORMAL, description),
-            Paragraph::new(&theme::TEXT_BOLD, extra),
-            Paragraph::new(&theme::TEXT_MONO, data),
-        ]);
+        let verb: StrBuffer = "CONFIRM".into();
 
-        let obj = if hold {
-            LayoutObj::new(
-                Frame::new(title, SwipeHoldPage::new(paragraphs, theme::BG)).into_child(),
-            )?
-        } else {
-            let buttons = Button::cancel_confirm_text(verb_cancel, "CONFIRM".into());
-            LayoutObj::new(
-                Frame::new(title, SwipePage::new(paragraphs, buttons, theme::BG)).into_child(),
-            )?
-        };
-        Ok(obj.into())
+        _confirm_blob(
+            title,
+            Some(data),
+            Some(description),
+            Some(extra),
+            Some(verb),
+            verb_cancel,
+            hold,
+        )
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -448,47 +478,27 @@ extern "C" fn new_show_qr(n_args: usize, args: *const Obj, kwargs: *mut Map) -> 
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
-        let value: StrBuffer = kwargs.get(Qstr::MP_QSTR_value)?.try_into()?;
-        let verb = "NEXT";
-
-        let paragraphs = Paragraphs::new([
-            Paragraph::new(&theme::TEXT_NORMAL, description),
-            Paragraph::new(&theme::TEXT_MONO, value),
-        ]);
-
-        let buttons = Button::cancel_confirm(
-            Button::with_icon(theme::ICON_CANCEL),
-            Button::with_text(verb).styled(theme::button_confirm()),
-            2,
-        );
-
-        let obj = LayoutObj::new(
-            Frame::new(title, SwipePage::new(paragraphs, buttons, theme::BG)).into_child(),
-        )?;
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
-extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let value: StrBuffer = kwargs.get(Qstr::MP_QSTR_value)?.try_into()?;
 
-        let paragraphs = Paragraphs::new([
-            Paragraph::new(&theme::TEXT_NORMAL, description),
-            Paragraph::new(&theme::TEXT_MONO, value),
-        ]);
+        let verb: Option<StrBuffer> = kwargs
+            .get(Qstr::MP_QSTR_verb)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+        let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
 
-        let obj = LayoutObj::new(
-            Frame::new(title, SwipeHoldPage::new(paragraphs, theme::BG)).into_child(),
-        )?;
-        Ok(obj.into())
+        _confirm_blob(
+            title,
+            Some(value),
+            Some(description),
+            None,
+            verb,
+            None,
+            hold,
+        )
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -1150,24 +1160,16 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Show QR code."""
     Qstr::MP_QSTR_show_qr => obj_fn_kw!(0, new_show_qr).as_obj(),
 
-    /// def confirm_output(
+    /// def confirm_value(
     ///     *,
     ///     title: str,
     ///     description: str,
     ///     value: str,
-    ///     verb: str = "NEXT",
+    ///     verb: str | None = None,
+    ///     hold: bool = False,
     /// ) -> object:
-    ///     """Confirm output."""
-    Qstr::MP_QSTR_confirm_output => obj_fn_kw!(0, new_confirm_output).as_obj(),
-
-    /// def confirm_total(
-    ///     *,
-    ///     title: str,
-    ///     description: str,
-    ///     value: str,
-    /// ) -> object:
-    ///     """Confirm total."""
-    Qstr::MP_QSTR_confirm_total => obj_fn_kw!(0, new_confirm_total).as_obj(),
+    ///     """Confirm value. Merge of confirm_total and confirm_output."""
+    Qstr::MP_QSTR_confirm_value => obj_fn_kw!(0, new_confirm_value).as_obj(),
 
     /// def confirm_joint_total(
     ///     *,
