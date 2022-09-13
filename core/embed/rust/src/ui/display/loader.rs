@@ -315,11 +315,11 @@ pub fn loader_rust(
 
     let n_start = Point::new(-start_vector.y, start_vector.x);
 
-    let b1 = get_buffer_16bpp(0, false);
-    let b2 = get_buffer_16bpp(1, false);
-    let ib1 = get_buffer_4bpp(0, true);
-    let ib2 = get_buffer_4bpp(1, true);
-    let empty_line = get_buffer_4bpp(2, true);
+    let b1 = unsafe { get_buffer_16bpp(0, false) };
+    let b2 = unsafe { get_buffer_16bpp(1, false) };
+    let ib1 = unsafe { get_buffer_4bpp(0, true) };
+    let ib2 = unsafe { get_buffer_4bpp(1, true) };
+    let empty_line = unsafe { get_buffer_4bpp(2, true) };
 
     dma2d_setup_4bpp_over_4bpp(fg_color.into(), bg_color.into(), icon_color.into());
 

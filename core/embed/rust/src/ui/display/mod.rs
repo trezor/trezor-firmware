@@ -497,13 +497,13 @@ pub fn text_over_image(
     offset_text: Offset,
     text_color: Color,
 ) {
-    let text_buffer = get_text_buffer(0, true);
-    let img1 = get_buffer_16bpp(0, true);
-    let img2 = get_buffer_16bpp(1, true);
-    let empty_img = get_buffer_16bpp(2, true);
-    let t1 = get_buffer_4bpp(0, true);
-    let t2 = get_buffer_4bpp(1, true);
-    let empty_t = get_buffer_4bpp(2, true);
+    let text_buffer = unsafe { get_text_buffer(0, true) };
+    let img1 = unsafe { get_buffer_16bpp(0, true) };
+    let img2 = unsafe { get_buffer_16bpp(1, true) };
+    let empty_img = unsafe { get_buffer_16bpp(2, true) };
+    let t1 = unsafe { get_buffer_4bpp(0, true) };
+    let t2 = unsafe { get_buffer_4bpp(1, true) };
+    let empty_t = unsafe { get_buffer_4bpp(2, true) };
 
     let toif_info = unwrap!(display::toif_info(data), "Invalid TOIF data");
     assert_eq!(toif_info.format, ToifFormat::FullColorLE);
@@ -620,12 +620,12 @@ pub fn icon_over_icon(
     fg: (&[u8], Offset, Color),
     bg_color: Color,
 ) {
-    let bg1 = get_buffer_16bpp(0, true);
-    let bg2 = get_buffer_16bpp(1, true);
-    let empty1 = get_buffer_16bpp(2, true);
-    let fg1 = get_buffer_4bpp(0, true);
-    let fg2 = get_buffer_4bpp(1, true);
-    let empty2 = get_buffer_4bpp(2, true);
+    let bg1 = unsafe { get_buffer_16bpp(0, true) };
+    let bg2 = unsafe { get_buffer_16bpp(1, true) };
+    let empty1 = unsafe { get_buffer_16bpp(2, true) };
+    let fg1 = unsafe { get_buffer_4bpp(0, true) };
+    let fg2 = unsafe { get_buffer_4bpp(1, true) };
+    let empty2 = unsafe { get_buffer_4bpp(2, true) };
 
     let (data_bg, offset_bg, color_icon_bg) = bg;
     let (data_fg, offset_fg, color_icon_fg) = fg;
