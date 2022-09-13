@@ -1,2 +1,29 @@
 [
+    {
+       "chain": "eth",
+       "chain_id": 1,
+       "name": "Ethereum",
+       "rskip60": false,
+       "shortcut": "ETH",
+       "slip44": 60,
+       "url": "https://ethereum.org"
+    },
+    {
+       "chain": "rop",
+       "chain_id": 3,
+       "name": "Ropsten",
+       "rskip60": false,
+       "shortcut": "tROP",
+       "slip44": 1,
+       "url": "https://github.com/ethereum/ropsten"
+    },
+    {
+       "chain": "tubq",
+       "chain_id": 9,
+       "name": "Ubiq Network Testnet",
+       "rskip60": false,
+       "shortcut": "TUBQ",
+       "slip44": 1,
+       "url": "https://ethersocial.org"
+    }
 ]

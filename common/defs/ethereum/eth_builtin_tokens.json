@@ -1,2 +1,30 @@
 {
+    "1;eth": [
+        {
+            "address": "0x00000000000045166c45af0fc6e4cf31d9e14b9a",
+            "decimals": 18,
+            "name": "TopBidder",
+            "shortcut": "BID"
+        },
+        {
+            "address": "0x0000000000085d4780b73119b644ae5ecd22b376",
+            "decimals": 18,
+            "name": "TrueUSD",
+            "shortcut": "TUSD"
+        }
+    ],
+    "56;bnb": [
+        {
+            "address": "0xfe19f0b51438fd612f6fd59c1dbb3ea319f433ba",
+            "decimals": 18,
+            "name": "Magic Internet Money",
+            "shortcut": "MIM"
+        },
+        {
+            "address": "0xfe1d7f7a8f0bda6e415593a2e4f82c64b446d404",
+            "decimals": 18,
+            "name": "BullPerks",
+            "shortcut": "BLP"
+        }
+    ]
 }

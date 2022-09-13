@@ -53,8 +53,6 @@ def token_by_chain_address(chain_id: int, address: bytes) -> TokenInfo:
 
 def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int]]:
 % for token_chain_id, tokens in group_tokens(supported_on("trezor2", erc20)).items():
-    return UNKNOWN_TOKEN
-
     if chain_id == ${token_chain_id}:
         % for t in tokens:
         yield (  # address, symbol, decimals

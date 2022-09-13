@@ -160,8 +160,8 @@ def download_from_url(url: str, error_msg: str = "") -> bytes:
 
 
 def download_network_definition(chain_id: Optional[int] = None, slip44_hardened: Optional[int] = None) -> Optional[bytes]:
-    if chain_id is None != slip44_hardened is None: # XOR
-        raise RuntimeError(f"Both/or neither of chain_id and slip44_hardened parameters are needed to download network definition.")
+    if not ((chain_id is None) != (slip44_hardened is None)): # not XOR
+        raise RuntimeError(f"Exactly one of chain_id or slip44_hardened parameters are needed to load network definition from directory.")
 
     if chain_id is not None:
         url = DEFS_BASE_URL.format(
@@ -195,8 +195,8 @@ def download_token_definition(chain_id: Optional[int] = None, token_address: Opt
 
 
 def network_definition_from_dir(path: pathlib.Path, chain_id: Optional[int] = None, slip44_hardened: Optional[int] = None) -> Optional[bytes]:
-    if chain_id is None != slip44_hardened is None: # XOR
-        raise RuntimeError(f"Both/or neither of chain_id and slip44_hardened parameters are needed to load network definition from directory.")
+    if not ((chain_id is None) != (slip44_hardened is None)): # not XOR
+        raise RuntimeError(f"Exactly one of chain_id or slip44_hardened parameters are needed to load network definition from directory.")
 
     def read_definition(path: pathlib.Path) -> Optional[bytes]:
         if not path.exists() or not path.is_file():
