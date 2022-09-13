@@ -43,7 +43,7 @@ pub fn text_into_buffer(text: &str, font: i32, buffer: &mut BufferText, x_offset
             text.as_ptr() as _,
             text.len() as _,
             font,
-            buffer.buffer.as_ptr() as _,
+            buffer as _,
             x_offset,
         )
     }
