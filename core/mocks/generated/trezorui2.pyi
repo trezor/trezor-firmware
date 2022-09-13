@@ -117,24 +117,15 @@ def show_qr(
 
 
 # rust/src/ui/model_tt/layout.rs
-def confirm_output(
+def confirm_value(
     *,
     title: str,
     description: str,
     value: str,
-    verb: str = "NEXT",
+    verb: str | None = None,
+    hold: bool = False,
 ) -> object:
-    """Confirm output."""
-
-
-# rust/src/ui/model_tt/layout.rs
-def confirm_total(
-    *,
-    title: str,
-    description: str,
-    value: str,
-) -> object:
-    """Confirm total."""
+    """Confirm value. Merge of confirm_total and confirm_output."""
 
 
 # rust/src/ui/model_tt/layout.rs
