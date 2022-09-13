@@ -37,11 +37,17 @@
 #define LINE_BUFFER_4BPP_SIZE BUFFER_PIXELS / 2
 #define TEXT_BUFFER_SIZE (BUFFER_PIXELS * TEXT_BUFFER_HEIGHT) / 2
 
-typedef __attribute__((aligned(4)))
-uint8_t line_buffer_16bpp_t[LINE_BUFFER_16BPP_SIZE];
-typedef __attribute__((aligned(4)))
-uint8_t line_buffer_4bpp_t[LINE_BUFFER_4BPP_SIZE];
-typedef __attribute__((aligned(4))) uint8_t buffer_text_t[TEXT_BUFFER_SIZE];
+typedef __attribute__((aligned(4))) struct {
+  uint8_t buffer[LINE_BUFFER_16BPP_SIZE];
+} line_buffer_16bpp_t;
+
+typedef __attribute__((aligned(4))) struct {
+  uint8_t buffer[LINE_BUFFER_4BPP_SIZE];
+} line_buffer_4bpp_t;
+
+typedef __attribute__((aligned(4))) struct {
+  uint8_t buffer[TEXT_BUFFER_SIZE];
+} buffer_text_t;
 
 extern const int32_t text_buffer_height;
 extern const int32_t buffer_width;

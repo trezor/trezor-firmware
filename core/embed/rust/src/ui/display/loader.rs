@@ -346,7 +346,7 @@ pub fn loader_rust(
             // drawing, special care needs to be taken to ensure that the icons
             // have transparent corners.
 
-            icon_buffer_used[icon_offset as usize..(icon_offset + icon_width / 2) as usize]
+            icon_buffer_used.buffer[icon_offset as usize..(icon_offset + icon_width / 2) as usize]
                 .copy_from_slice(
                     &icon_data[(y_i * (icon_width / 2)) as usize
                         ..((y_i + 1) * (icon_width / 2)) as usize],
@@ -371,12 +371,12 @@ pub fn loader_rust(
             if x % 2 == 0 {
                 pix_c_idx_prev = pix_c_idx;
             } else {
-                loader_buffer[(x >> 1) as usize] = pix_c_idx_prev | pix_c_idx << 4;
+                loader_buffer.buffer[(x >> 1) as usize] = pix_c_idx_prev | pix_c_idx << 4;
             }
         }
 
         dma2d_wait_for_transfer();
-        dma2d_start_blend(icon_buffer, loader_buffer, r.width());
+        dma2d_start_blend(&icon_buffer.buffer, &loader_buffer.buffer, r.width());
     }
 
     dma2d_wait_for_transfer();
