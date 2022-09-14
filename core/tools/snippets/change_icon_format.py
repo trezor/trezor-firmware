@@ -134,27 +134,27 @@ def reformat_toif_icons(p):
 
 def change_icon_format():
     # bootloader icons
-    reformat_c_icons("../embed/bootloader")
+    reformat_c_icons("../../embed/bootloader")
 
     # bootloader_ci icons
-    reformat_c_icons("../embed/bootloader_ci")
+    reformat_c_icons("../../embed/bootloader_ci")
 
     # rust icons
-    reformat_toif_icons("../embed/rust/src/ui/model_tr/res")
-    reformat_toif_icons("../embed/rust/src/ui/model_tt/res")
+    reformat_toif_icons("../../embed/rust/src/ui/model_tr/res")
+    reformat_toif_icons("../../embed/rust/src/ui/model_tt/res")
 
     # python icons
-    reformat_toif_icons("../src/trezor/res")
-    reformat_toif_icons("../src/trezor/res/header_icons")
+    reformat_toif_icons("../../src/trezor/res")
+    reformat_toif_icons("../../src/trezor/res/header_icons")
 
     # vendor header icons
-    reformat_toif_icon("../embed/vendorheader/vendor_satoshilabs.toif")
-    reformat_toif_icon("../embed/vendorheader/vendor_unsafe.toif")
+    reformat_toif_icon("../../embed/vendorheader/vendor_satoshilabs.toif")
+    reformat_toif_icon("../../embed/vendorheader/vendor_unsafe.toif")
 
     # additional python icons
     # reformat_toif_icon("../src/apps/homescreen/res/bg.toif") - unchanged - using as avatar
-    reformat_toif_icon("../src/apps/management/res/small-arrow.toif")
-    reformat_toif_icon("../src/apps/webauthn/res/icon_webauthn.toif")
+    reformat_toif_icon("../../src/apps/management/res/small-arrow.toif")
+    reformat_toif_icon("../../src/apps/webauthn/res/icon_webauthn.toif")
 
 
 if __name__ == "__main__":
