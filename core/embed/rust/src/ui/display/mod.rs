@@ -464,16 +464,18 @@ fn position_buffer(
 /// keep track of how many need to be skipped.
 ///
 /// Signals to the caller whether some data should be drawn on this line.
-fn process_buffer<const BUFFER_BPP: usize, const BUFFER_SIZE: usize>(
+fn process_buffer(
     display_area_y: i32,
     img_area: Rect,
     offset: Offset,
     ctx: &mut UzlibContext,
     buffer: &mut [u8],
     decompressed_lines: &mut i32,
+    buffer_bpp: usize,
 ) -> bool {
     let mut not_empty = false;
-    let mut uncomp_buffer = [0u8; BUFFER_SIZE];
+    let uncomp_buffer =
+        &mut [0u8; (constant::WIDTH * 2) as usize][..((constant::WIDTH as usize) * buffer_bpp) / 8];
 
     if display_area_y >= img_area.y0 && display_area_y < img_area.y1 {
         let img_line_idx = display_area_y - img_area.y0;
@@ -482,7 +484,7 @@ fn process_buffer<const BUFFER_BPP: usize, const BUFFER_SIZE: usize>(
             //compensate uncompressed unused lines
             unwrap!(
                 ctx.uncompress(
-                    &mut uncomp_buffer[0..((img_area.width() * BUFFER_BPP as i32) / 8) as usize]
+                    &mut uncomp_buffer[0..((img_area.width() * buffer_bpp as i32) / 8) as usize]
                 ),
                 "Decompression failed"
             );
@@ -492,7 +494,7 @@ fn process_buffer<const BUFFER_BPP: usize, const BUFFER_SIZE: usize>(
         // decompress whole line
         unwrap!(
             ctx.uncompress(
-                &mut uncomp_buffer[0..((img_area.width() * BUFFER_BPP as i32) / 8) as usize]
+                &mut uncomp_buffer[0..((img_area.width() * buffer_bpp as i32) / 8) as usize]
             ),
             "Decompression failed"
         );
@@ -501,8 +503,8 @@ fn process_buffer<const BUFFER_BPP: usize, const BUFFER_SIZE: usize>(
 
         position_buffer(
             buffer,
-            &uncomp_buffer,
-            BUFFER_BPP,
+            uncomp_buffer,
+            buffer_bpp,
             offset.x,
             img_area.width(),
         );
@@ -602,17 +604,15 @@ pub fn text_over_image(
             img_buffer_used = &mut *img2;
         }
 
-        const BUFFER_BPP: usize = 16;
-
-        let using_img =
-            process_buffer::<BUFFER_BPP, { ((constant::WIDTH as usize) * BUFFER_BPP) / 8 }>(
-                y,
-                r_img,
-                offset_img,
-                &mut ctx,
-                &mut img_buffer_used.buffer,
-                &mut i,
-            );
+        let using_img = process_buffer(
+            y,
+            r_img,
+            offset_img,
+            &mut ctx,
+            &mut img_buffer_used.buffer,
+            &mut i,
+            16,
+        );
 
         if y >= text_area.y0 && y < text_area.y1 {
             let y_pos = y - text_area.y0;
@@ -717,21 +717,23 @@ pub fn icon_over_icon(
 
         const BUFFER_BPP: usize = 4;
 
-        let using_fg = process_buffer::<BUFFER_BPP, { (constant::WIDTH as usize * BUFFER_BPP) / 8 }>(
+        let using_fg = process_buffer(
             y,
             r_fg,
             offset_fg,
             &mut ctx_fg,
             &mut fg_buffer_used.buffer,
             &mut fg_i,
+            4,
         );
-        let using_bg = process_buffer::<BUFFER_BPP, { (constant::WIDTH as usize * BUFFER_BPP) / 8 }>(
+        let using_bg = process_buffer(
             y,
             r_bg,
             offset_bg,
             &mut ctx_bg,
             &mut bg_buffer_used.buffer,
             &mut bg_i,
+            4,
         );
 
         if using_fg {
