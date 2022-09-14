@@ -101,7 +101,7 @@ def reformat_c_icon(path):
         toi = toif.from_bytes(f.read())
         im = toi.to_image()
     with open("tmp_c.toif", "wb") as f:
-        toi = toif.from_image(im, format=1)
+        toi = toif.from_image(im)
         f.write(toi.to_bytes())
     toif_to_header(path, name)
 
@@ -121,7 +121,7 @@ def reformat_toif_icon(p):
         toi = toif.from_bytes(f.read())
         im = toi.to_image()
     with open(p, "wb") as f:
-        toi = toif.from_image(im, format=1)
+        toi = toif.from_image(im)
         f.write(toi.to_bytes())
 
 
