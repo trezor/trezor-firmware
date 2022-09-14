@@ -322,7 +322,10 @@ mod tests {
     use crate::{
         trace::Trace,
         ui::{
-            component::{text::paragraphs::Paragraphs, Empty},
+            component::{
+                text::paragraphs::{Paragraph, Paragraphs},
+                Empty,
+            },
             event::TouchEvent,
             geometry::Point,
             model_tt::{component::Button, constant, theme},
@@ -368,7 +371,11 @@ mod tests {
 
     #[test]
     fn paragraphs_empty() {
-        let mut page = SwipePage::new(Paragraphs::<&str>::new(), Empty, theme::BG);
+        let mut page = SwipePage::new(
+            Paragraphs::<[Paragraph<&'static str>; 0]>::new([]),
+            Empty,
+            theme::BG,
+        );
         page.place(SCREEN);
 
         let expected =
@@ -384,15 +391,16 @@ mod tests {
     #[test]
     fn paragraphs_single() {
         let mut page = SwipePage::new(
-            Paragraphs::new()
-                .add(
-                    theme::TEXT_NORMAL,
+            Paragraphs::new([
+                Paragraph::new(
+                    &theme::TEXT_NORMAL,
                     "This is the first paragraph and it should fit on the screen entirely.",
-                )
-                .add(
-                    theme::TEXT_BOLD,
+                ),
+                Paragraph::new(
+                    &theme::TEXT_BOLD,
                     "Second, bold, paragraph should also fit on the screen whole I think.",
                 ),
+            ]),
             Empty,
             theme::BG,
         );
@@ -410,11 +418,12 @@ mod tests {
     #[test]
     fn paragraphs_one_long() {
         let mut page = SwipePage::new(
-            Paragraphs::new()
-                .add(
-                    theme::TEXT_BOLD,
+            Paragraphs::new(
+                Paragraph::new(
+                    &theme::TEXT_BOLD,
                     "This is somewhat long paragraph that goes on and on and on and on and on and will definitely not fit on just a single screen. You have to swipe a bit to see all the text it contains I guess. There's just so much letters in it.",
-                ),
+                )
+            ),
             theme::button_bar(Button::with_text("NO")),
             theme::BG,
         );
@@ -437,19 +446,20 @@ mod tests {
     #[test]
     fn paragraphs_three_long() {
         let mut page = SwipePage::new(
-            Paragraphs::new()
-                .add(
-                    theme::TEXT_BOLD,
+            Paragraphs::new([
+                Paragraph::new(
+                    &theme::TEXT_BOLD,
                     "This paragraph is using a bold font. It doesn't need to be all that long.",
-                )
-                .add(
-                    theme::TEXT_MONO,
+                ),
+                Paragraph::new(
+                    &theme::TEXT_MONO,
                     "And this one is using MONO. Monospace is nice for numbers, they have the same width and can be scanned quickly. Even if they span several pages or something.",
-                )
-                .add(
-                    theme::TEXT_BOLD,
+                ),
+                Paragraph::new(
+                    &theme::TEXT_BOLD,
                     "Let's add another one for a good measure. This one should overflow all the way to the third page with a bit of luck.",
                 ),
+            ]),
             theme::button_bar(Button::with_text("IDK")),
             theme::BG,
         );
@@ -479,13 +489,11 @@ mod tests {
     #[test]
     fn paragraphs_hard_break() {
         let mut page = SwipePage::new(
-            Paragraphs::new()
-                .add(theme::TEXT_NORMAL, "Short one.")
-                .add_break()
-                .add(theme::TEXT_NORMAL, "Short two.")
-                .add_break()
-                .add(theme::TEXT_NORMAL, "Short three.")
-                .add_break(),
+            Paragraphs::new([
+                Paragraph::new(&theme::TEXT_NORMAL, "Short one.").break_after(),
+                Paragraph::new(&theme::TEXT_NORMAL, "Short two.").break_after(),
+                Paragraph::new(&theme::TEXT_NORMAL, "Short three.").break_after(),
+            ]),
             theme::button_bar(Empty),
             theme::BG,
         );

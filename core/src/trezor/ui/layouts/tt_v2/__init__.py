@@ -672,7 +672,26 @@ async def confirm_properties(
     hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
 ) -> None:
-    raise NotImplementedError
+    def handle_bytes(prop):
+        if isinstance(prop[1], bytes):
+            return (prop[0], hexlify(prop[1]).decode(), True)
+        else:
+            return (prop[0], prop[1], False)
+
+    result = await interact(
+        ctx,
+        _RustLayout(
+            trezorui2.confirm_properties(
+                title=title.upper(),
+                items=map(handle_bytes, props),
+                hold=hold,
+            )
+        ),
+        br_type,
+        br_code,
+    )
+    if result is not trezorui2.CONFIRMED:
+        raise wire.ActionCancelled
 
 
 async def confirm_total(

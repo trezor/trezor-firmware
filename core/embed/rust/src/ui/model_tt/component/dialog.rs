@@ -1,5 +1,8 @@
 use crate::ui::{
-    component::{text::paragraphs::Paragraphs, Child, Component, Event, EventCtx, Image, Never},
+    component::{
+        text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
+        Child, Component, Event, EventCtx, Image, Never,
+    },
     geometry::{Insets, LinearPlacement, Rect},
 };
 
@@ -83,7 +86,7 @@ where
 
 pub struct IconDialog<T, U> {
     image: Child<Image>,
-    paragraphs: Paragraphs<T>,
+    paragraphs: Paragraphs<ParagraphVecShort<T>>,
     controls: Child<U>,
 }
 
@@ -95,24 +98,24 @@ where
     pub fn new(icon: &'static [u8], title: T, controls: U) -> Self {
         Self {
             image: Child::new(Image::new(icon)),
-            paragraphs: Paragraphs::new()
-                .with_placement(
-                    LinearPlacement::vertical()
-                        .align_at_center()
-                        .with_spacing(Self::VALUE_SPACE),
-                )
-                .add(theme::TEXT_MEDIUM, title)
-                .centered(),
+            paragraphs: ParagraphVecShort::from_iter([
+                Paragraph::new(&theme::TEXT_MEDIUM, title).centered()
+            ])
+            .into_paragraphs()
+            .with_placement(
+                LinearPlacement::vertical()
+                    .align_at_center()
+                    .with_spacing(Self::VALUE_SPACE),
+            ),
             controls: Child::new(controls),
         }
     }
 
     pub fn with_description(mut self, description: T) -> Self {
         if !description.as_ref().is_empty() {
-            self.paragraphs = self
-                .paragraphs
-                .add_color(theme::TEXT_NORMAL, theme::OFF_WHITE, description)
-                .centered();
+            self.paragraphs
+                .inner_mut()
+                .add(Paragraph::new(&theme::TEXT_NORMAL_OFF_WHITE, description).centered());
         }
         self
     }
@@ -121,16 +124,14 @@ where
         let [l0, l1, l2, l3] = lines;
         Self {
             image: Child::new(Image::new(theme::IMAGE_SUCCESS)),
-            paragraphs: Paragraphs::new()
-                .with_placement(LinearPlacement::vertical().align_at_center())
-                .add_color(theme::TEXT_NORMAL, theme::OFF_WHITE, l0)
-                .centered()
-                .add(theme::TEXT_MEDIUM, l1)
-                .centered()
-                .add_color(theme::TEXT_NORMAL, theme::OFF_WHITE, l2)
-                .centered()
-                .add(theme::TEXT_MEDIUM, l3)
-                .centered(),
+            paragraphs: ParagraphVecShort::from_iter([
+                Paragraph::new(&theme::TEXT_NORMAL_OFF_WHITE, l0).centered(),
+                Paragraph::new(&theme::TEXT_MEDIUM, l1).centered(),
+                Paragraph::new(&theme::TEXT_NORMAL_OFF_WHITE, l2).centered(),
+                Paragraph::new(&theme::TEXT_MEDIUM, l3).centered(),
+            ])
+            .into_paragraphs()
+            .with_placement(LinearPlacement::vertical().align_at_center()),
             controls: Child::new(controls),
         }
     }
