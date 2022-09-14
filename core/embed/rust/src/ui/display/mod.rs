@@ -415,6 +415,16 @@ pub fn rect_rounded2_partial(
     pixeldata_dirty();
 }
 
+/// Shifts position of pixel data in `src_buffer` horizontally by `offset_x`
+/// pixels and places the result into `dest_buffer`. Or in another words,
+/// `src_buffer[n]` is copied into `dest_buffer[n+offset_x]`, if it fits the
+/// `dest_buffer`.
+///
+/// Buffers hold one line of pixels on the screen, the copying is limited to
+/// respect the size of screen.
+///
+/// `buffer_bpp` determines size of pixel data
+/// `data_width` sets the width of valid data in the `src_buffer`
 fn position_buffer(
     dest_buffer: &mut [u8],
     src_buffer: &[u8],
@@ -422,8 +432,6 @@ fn position_buffer(
     offset_x: i32,
     data_width: i32,
 ) {
-    // sets the pixel position inside dest buffer
-    // end of data will be cut in the DMA transfer
     let start: usize = (offset_x).clamp(0, constant::WIDTH) as usize;
     let end: usize = (offset_x + data_width).clamp(0, constant::WIDTH) as usize;
     let width = end - start;
@@ -438,40 +446,58 @@ fn position_buffer(
     );
 }
 
+/// Performs decompression of one line of pixels,
+/// vertically positions the line against the display area (current position of
+/// which is described by `display_area_y`) by skipping relevant number of lines
+/// and finally horizontally positions the line against the display area
+/// by calling `position_buffer`.
+///
+/// Number of already decompressed lines is stored in `decompressed_lines` to
+/// keep track of how many need to be skipped.
+///
+/// Signals to the caller whether some data should be drawn on this line.
 fn process_buffer<const BUFFER_BPP: usize, const BUFFER_SIZE: usize>(
-    y: i32,
-    r: Rect,
+    display_area_y: i32,
+    img_area: Rect,
     offset: Offset,
     ctx: &mut UzlibContext,
     buffer: &mut [u8],
-    i: &mut i32,
+    decompressed_lines: &mut i32,
 ) -> bool {
     let mut not_empty = false;
     let mut uncomp_buffer = [0u8; BUFFER_SIZE];
 
-    if y >= r.y0 && y < r.y1 {
-        let line_idx = y - r.y0;
+    if display_area_y >= img_area.y0 && display_area_y < img_area.y1 {
+        let img_line_idx = display_area_y - img_area.y0;
 
-        while *i < line_idx {
+        while *decompressed_lines < img_line_idx {
             //compensate uncompressed unused lines
             unwrap!(
                 ctx.uncompress(
-                    &mut uncomp_buffer[0..((r.width() * BUFFER_BPP as i32) / 8) as usize]
+                    &mut uncomp_buffer[0..((img_area.width() * BUFFER_BPP as i32) / 8) as usize]
                 ),
                 "Decompression failed"
             );
 
-            (*i) += 1;
+            (*decompressed_lines) += 1;
         }
         // decompress whole line
         unwrap!(
-            ctx.uncompress(&mut uncomp_buffer[0..((r.width() * BUFFER_BPP as i32) / 8) as usize]),
+            ctx.uncompress(
+                &mut uncomp_buffer[0..((img_area.width() * BUFFER_BPP as i32) / 8) as usize]
+            ),
             "Decompression failed"
         );
 
-        (*i) += 1;
+        (*decompressed_lines) += 1;
 
-        position_buffer(buffer, &uncomp_buffer, BUFFER_BPP, offset.x, r.width());
+        position_buffer(
+            buffer,
+            &uncomp_buffer,
+            BUFFER_BPP,
+            offset.x,
+            img_area.width(),
+        );
 
         not_empty = true;
     }
