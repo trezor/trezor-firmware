@@ -518,11 +518,10 @@ pub fn text_over_image(
         for i in 0..(constant::WIDTH) as usize {
             img1.buffer[2 * i] = lo;
             img1.buffer[2 * i + 1] = hi;
-            img2.buffer[2 * i] = lo;
-            img2.buffer[2 * i + 1] = hi;
-            empty_img.buffer[2 * i] = lo;
-            empty_img.buffer[2 * i + 1] = hi;
         }
+        img2.buffer.copy_from_slice(&img1.buffer);
+        empty_img.buffer.copy_from_slice(&img1.buffer);
+
         area = a;
         r_img = Rect::from_top_left_and_size(
             a.top_left() + offset_img,
