@@ -165,7 +165,7 @@ def load(filename: str) -> Toif:
 def from_image(
     image: "Image.Image",
     background: Tuple[int, int, int, int] = (0, 0, 0, 255),
-    format: int = 0,
+    legacy_format: bool = False,
 ) -> Toif:
     if not PIL_AVAILABLE:
         raise RuntimeError(
@@ -183,14 +183,14 @@ def from_image(
     if image.mode == "L":
         if image.size[0] % 2 != 0:
             raise ValueError("Only even-width grayscale images are supported")
-        if format == 1:
+        if not legacy_format:
             toif_mode = firmware.ToifMode.grayscale_eh
             toif_data = _from_pil_grayscale(image.getdata(), right_hi=True)
         else:
             toif_mode = firmware.ToifMode.grayscale
             toif_data = _from_pil_grayscale(image.getdata(), right_hi=False)
     elif image.mode == "RGB":
-        if format == 1:
+        if not legacy_format:
             toif_mode = firmware.ToifMode.full_color_le
             toif_data = _from_pil_rgb(image.getdata(), little_endian=True)
         else:
