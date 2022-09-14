@@ -2,8 +2,8 @@ use crate::{
     time::Instant,
     ui::{
         component::{
-            text::paragraphs::Paragraphs, Child, Component, ComponentExt, Event, EventCtx, Label,
-            LabelStyle, Pad,
+            text::paragraphs::{Paragraph, Paragraphs},
+            Child, Component, ComponentExt, Event, EventCtx, Label, LabelStyle, Pad,
         },
         constant::screen,
         display::Font,
@@ -25,7 +25,7 @@ pub struct ResultPopup {
     result_anim: Child<ResultAnim>,
     headline_baseline: Point,
     headline: Option<Label<&'static str>>,
-    text: Child<Paragraphs<&'static str>>,
+    text: Child<Paragraphs<Paragraph<&'static str>>>,
     button: Option<Child<Button<&'static str>>>,
     autoclose: bool,
 }
@@ -44,8 +44,7 @@ impl ResultPopup {
         headline: Option<&'static str>,
         button_text: Option<&'static str>,
     ) -> Self {
-        let p1 = Paragraphs::new()
-            .add(theme::TEXT_MEDIUM, text)
+        let p1 = Paragraphs::new(Paragraph::new(&theme::TEXT_MEDIUM, text))
             .with_placement(LinearPlacement::vertical().align_at_center());
 
         let button = button_text.map(|t| {

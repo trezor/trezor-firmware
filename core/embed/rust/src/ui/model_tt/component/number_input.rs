@@ -1,6 +1,9 @@
 use crate::ui::{
     component::{
-        base::ComponentExt, text::paragraphs::Paragraphs, Child, Component, Event, EventCtx, Pad,
+        base::ComponentExt,
+        paginated::Paginate,
+        text::paragraphs::{Paragraph, Paragraphs},
+        Child, Component, Event, EventCtx, Pad,
     },
     display::{self, Font},
     geometry::{Grid, Insets, Offset, Rect},
@@ -21,7 +24,7 @@ where
     area: Rect,
     description_func: F,
     input: Child<NumberInput>,
-    paragraphs: Child<Paragraphs<T>>,
+    paragraphs: Child<Paragraphs<Paragraph<T>>>,
     paragraphs_pad: Pad,
     info_button: Child<Button<&'static str>>,
     confirm_button: Child<Button<&'static str>>,
@@ -38,7 +41,7 @@ where
             area: Rect::zero(),
             description_func,
             input: NumberInput::new(min, max, init_value).into_child(),
-            paragraphs: Paragraphs::new().add(theme::TEXT_NORMAL, text).into_child(),
+            paragraphs: Paragraphs::new(Paragraph::new(&theme::TEXT_NORMAL, text)).into_child(),
             paragraphs_pad: Pad::with_background(theme::BG),
             info_button: Button::with_text("INFO").into_child(),
             confirm_button: Button::with_text("CONTINUE")
@@ -50,7 +53,9 @@ where
     fn update_text(&mut self, ctx: &mut EventCtx, value: u32) {
         let text = (self.description_func)(value);
         self.paragraphs.mutate(ctx, move |ctx, para| {
-            para.update(0, text);
+            para.inner_mut().update(text);
+            // Recompute bounding box.
+            para.change_page(0);
             ctx.request_paint()
         });
         self.paragraphs_pad.clear();

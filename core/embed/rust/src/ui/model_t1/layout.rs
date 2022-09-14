@@ -7,7 +7,7 @@ use crate::{
         component::{
             base::Component,
             paginated::{PageMsg, Paginate},
-            text::paragraphs::Paragraphs,
+            text::paragraphs::{Paragraph, Paragraphs},
             FormattedText,
         },
         layout::{
@@ -93,9 +93,10 @@ extern "C" fn new_confirm_text(n_args: usize, args: *const Obj, kwargs: *mut Map
         let obj = LayoutObj::new(Frame::new(
             title,
             ButtonPage::new(
-                Paragraphs::new()
-                    .add(theme::TEXT_NORMAL, description.unwrap_or_default())
-                    .add(theme::TEXT_BOLD, data),
+                Paragraphs::new([
+                    Paragraph::new(&theme::TEXT_NORMAL, description.unwrap_or_default()),
+                    Paragraph::new(&theme::TEXT_BOLD, data),
+                ]),
                 theme::BG,
             ),
         ))?;

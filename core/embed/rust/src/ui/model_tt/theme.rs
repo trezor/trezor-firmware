@@ -74,30 +74,6 @@ pub fn label_default() -> LabelStyle {
     }
 }
 
-pub fn label_checklist_default() -> LabelStyle {
-    LabelStyle {
-        font: Font::NORMAL,
-        text_color: GREY_LIGHT,
-        background_color: BG,
-    }
-}
-
-pub fn label_checklist_selected() -> LabelStyle {
-    LabelStyle {
-        font: Font::NORMAL,
-        text_color: FG,
-        background_color: BG,
-    }
-}
-
-pub fn label_checklist_done() -> LabelStyle {
-    LabelStyle {
-        font: Font::NORMAL,
-        text_color: GREEN_DARK,
-        background_color: BG,
-    }
-}
-
 pub fn label_keyboard() -> LabelStyle {
     LabelStyle {
         font: Font::MEDIUM,
@@ -409,6 +385,15 @@ pub const TEXT_NORMAL: TextStyle = TextStyle::new(Font::NORMAL, FG, BG, GREY_LIG
 pub const TEXT_MEDIUM: TextStyle = TextStyle::new(Font::MEDIUM, FG, BG, GREY_LIGHT, GREY_LIGHT);
 pub const TEXT_BOLD: TextStyle = TextStyle::new(Font::BOLD, FG, BG, GREY_LIGHT, GREY_LIGHT);
 pub const TEXT_MONO: TextStyle = TextStyle::new(Font::MONO, FG, BG, GREY_LIGHT, GREY_LIGHT);
+
+pub const TEXT_NORMAL_OFF_WHITE: TextStyle =
+    TextStyle::new(Font::NORMAL, OFF_WHITE, BG, GREY_LIGHT, GREY_LIGHT);
+pub const TEXT_CHECKLIST_DEFAULT: TextStyle =
+    TextStyle::new(Font::NORMAL, GREY_LIGHT, BG, GREY_LIGHT, GREY_LIGHT);
+pub const TEXT_CHECKLIST_SELECTED: TextStyle =
+    TextStyle::new(Font::NORMAL, FG, BG, GREY_LIGHT, GREY_LIGHT);
+pub const TEXT_CHECKLIST_DONE: TextStyle =
+    TextStyle::new(Font::NORMAL, GREEN_DARK, BG, GREY_LIGHT, GREY_LIGHT);
 
 pub const FORMATTED: FormattedFonts = FormattedFonts {
     normal: Font::NORMAL,

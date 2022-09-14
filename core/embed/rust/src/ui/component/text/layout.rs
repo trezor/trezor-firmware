@@ -2,7 +2,7 @@ use super::iter::GlyphMetrics;
 use crate::ui::{
     display,
     display::{Color, Font},
-    geometry::{Alignment, Offset, Point, Rect},
+    geometry::{Alignment, Dimensions, Offset, Point, Rect},
 };
 
 #[derive(Copy, Clone)]
@@ -257,6 +257,16 @@ impl TextLayout {
             + self.style.text_font.text_height()
             + (end_cursor.y - init_cursor.y)
             + self.padding_bottom
+    }
+}
+
+impl Dimensions for TextLayout {
+    fn fit(&mut self, area: Rect) {
+        self.bounds = area;
+    }
+
+    fn area(&self) -> Rect {
+        self.bounds
     }
 }
 

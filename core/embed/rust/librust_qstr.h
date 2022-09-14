@@ -18,6 +18,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_INFO;
   MP_QSTR_confirm_action;
   MP_QSTR_confirm_blob;
+  MP_QSTR_confirm_properties;
   MP_QSTR_confirm_coinjoin;
   MP_QSTR_confirm_joint_total;
   MP_QSTR_confirm_modify_fee;

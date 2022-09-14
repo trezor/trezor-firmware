@@ -16,14 +16,17 @@ use crate::{
             base::ComponentExt,
             paginated::{PageMsg, Paginate},
             painter,
-            text::paragraphs::{Checklist, Paragraphs},
+            text::paragraphs::{
+                Checklist, Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort,
+                Paragraphs, VecExt,
+            },
             Border, Component, Timeout, TimeoutMsg,
         },
         geometry,
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
             result::{CANCELLED, CONFIRMED, INFO},
-            util::iter_into_array,
+            util::{iter_into_array, iter_into_objs},
         },
     },
 };
@@ -220,7 +223,7 @@ where
 
 impl<T> ComponentMsgObj for Paragraphs<T>
 where
-    T: AsRef<str>,
+    T: ParagraphSource,
 {
     fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         unreachable!()
@@ -229,7 +232,7 @@ where
 
 impl<T> ComponentMsgObj for Checklist<T>
 where
-    T: AsRef<str>,
+    T: ParagraphSource,
 {
     fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         unreachable!()
@@ -276,17 +279,17 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
         let paragraphs = {
             let action = action.unwrap_or_default();
             let description = description.unwrap_or_default();
-            let mut paragraphs = Paragraphs::new();
+            let mut paragraphs = ParagraphVecShort::new();
             if !reverse {
-                paragraphs = paragraphs
-                    .add(theme::TEXT_BOLD, action)
-                    .add(theme::TEXT_NORMAL, description);
+                paragraphs
+                    .add(Paragraph::new(&theme::TEXT_BOLD, action))
+                    .add(Paragraph::new(&theme::TEXT_NORMAL, description));
             } else {
-                paragraphs = paragraphs
-                    .add(theme::TEXT_NORMAL, description)
-                    .add(theme::TEXT_BOLD, action);
+                paragraphs
+                    .add(Paragraph::new(&theme::TEXT_NORMAL, description))
+                    .add(Paragraph::new(&theme::TEXT_BOLD, action));
             }
-            paragraphs
+            paragraphs.into_paragraphs()
         };
 
         let obj = if hold {
@@ -318,10 +321,11 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
         let _ask_pagination: bool = kwargs.get_or(Qstr::MP_QSTR_ask_pagination, false)?;
         let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
 
-        let paragraphs = Paragraphs::new()
-            .add(theme::TEXT_NORMAL, description)
-            .add(theme::TEXT_BOLD, extra)
-            .add(theme::TEXT_MONO, data);
+        let paragraphs = Paragraphs::new([
+            Paragraph::new(&theme::TEXT_NORMAL, description),
+            Paragraph::new(&theme::TEXT_BOLD, extra),
+            Paragraph::new(&theme::TEXT_MONO, data),
+        ]);
 
         let obj = if hold {
             LayoutObj::new(
@@ -338,6 +342,60 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
+        let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
+
+        let mut paragraphs = ParagraphVecLong::new();
+
+        let mut iter_buf = IterBuf::new();
+        let iter = Iter::try_from_obj_with_buf(items, &mut iter_buf)?;
+        for para in iter {
+            let [key, value, is_mono]: [Obj; 3] = iter_into_objs(para)?;
+            let key = key.try_into_option::<StrBuffer>()?;
+            let value = value.try_into_option::<StrBuffer>()?;
+
+            if let Some(key) = key {
+                if value.is_some() {
+                    paragraphs.add(Paragraph::new(&theme::TEXT_BOLD, key).no_break());
+                } else {
+                    paragraphs.add(Paragraph::new(&theme::TEXT_BOLD, key));
+                }
+            }
+            if let Some(value) = value {
+                if is_mono.try_into()? {
+                    paragraphs.add(Paragraph::new(&theme::TEXT_MONO, value));
+                } else {
+                    paragraphs.add(Paragraph::new(&theme::TEXT_NORMAL, value));
+                }
+            }
+        }
+
+        let obj = if hold {
+            LayoutObj::new(
+                Frame::new(
+                    title,
+                    SwipeHoldPage::new(paragraphs.into_paragraphs(), theme::BG),
+                )
+                .into_child(),
+            )?
+        } else {
+            let buttons = Button::cancel_confirm_text(None, "CONFIRM");
+            LayoutObj::new(
+                Frame::new(
+                    title,
+                    SwipePage::new(paragraphs.into_paragraphs(), buttons, theme::BG),
+                )
+                .into_child(),
+            )?
+        };
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_confirm_reset_device(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -345,10 +403,11 @@ extern "C" fn new_confirm_reset_device(n_args: usize, args: *const Obj, kwargs: 
         let description: StrBuffer = "\nBy continuing you agree to".into();
         let url: StrBuffer = "https://trezor.io/tos".into();
 
-        let paragraphs = Paragraphs::new()
-            .add(theme::TEXT_BOLD, prompt)
-            .add(theme::TEXT_NORMAL, description)
-            .add(theme::TEXT_BOLD, url);
+        let paragraphs = Paragraphs::new([
+            Paragraph::new(&theme::TEXT_BOLD, prompt),
+            Paragraph::new(&theme::TEXT_NORMAL, description),
+            Paragraph::new(&theme::TEXT_BOLD, url),
+        ]);
 
         let buttons = Button::cancel_confirm_text(None, "CONTINUE");
         let obj = LayoutObj::new(
@@ -395,9 +454,10 @@ extern "C" fn new_confirm_output(n_args: usize, args: *const Obj, kwargs: *mut M
         let value: StrBuffer = kwargs.get(Qstr::MP_QSTR_value)?.try_into()?;
         let verb = "NEXT";
 
-        let paragraphs = Paragraphs::new()
-            .add(theme::TEXT_NORMAL, description)
-            .add(theme::TEXT_MONO, value);
+        let paragraphs = Paragraphs::new([
+            Paragraph::new(&theme::TEXT_NORMAL, description),
+            Paragraph::new(&theme::TEXT_MONO, value),
+        ]);
 
         let buttons = Button::cancel_confirm(
             Button::with_icon(theme::ICON_CANCEL),
@@ -419,9 +479,10 @@ extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Ma
         let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let value: StrBuffer = kwargs.get(Qstr::MP_QSTR_value)?.try_into()?;
 
-        let paragraphs = Paragraphs::new()
-            .add(theme::TEXT_NORMAL, description)
-            .add(theme::TEXT_MONO, value);
+        let paragraphs = Paragraphs::new([
+            Paragraph::new(&theme::TEXT_NORMAL, description),
+            Paragraph::new(&theme::TEXT_MONO, value),
+        ]);
 
         let obj = LayoutObj::new(
             Frame::new(title, SwipeHoldPage::new(paragraphs, theme::BG)).into_child(),
@@ -436,11 +497,12 @@ extern "C" fn new_confirm_joint_total(n_args: usize, args: *const Obj, kwargs: *
         let spending_amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_spending_amount)?.try_into()?;
         let total_amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_total_amount)?.try_into()?;
 
-        let paragraphs = Paragraphs::new()
-            .add(theme::TEXT_NORMAL, "You are contributing:".into())
-            .add(theme::TEXT_MONO, spending_amount)
-            .add(theme::TEXT_NORMAL, "To the total amount:".into())
-            .add(theme::TEXT_MONO, total_amount);
+        let paragraphs = Paragraphs::new([
+            Paragraph::new(&theme::TEXT_NORMAL, "You are contributing:".into()),
+            Paragraph::new(&theme::TEXT_MONO, spending_amount),
+            Paragraph::new(&theme::TEXT_NORMAL, "To the total amount:".into()),
+            Paragraph::new(&theme::TEXT_MONO, total_amount),
+        ]);
 
         let obj = LayoutObj::new(
             Frame::new(
@@ -467,14 +529,14 @@ extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs:
             "Increase amount by:"
         };
 
-        let paragraphs = Paragraphs::new()
-            .add(theme::TEXT_NORMAL, "Address:".into())
-            .add(theme::TEXT_MONO, address)
-            .add_break()
-            .add(theme::TEXT_NORMAL, description.into())
-            .add(theme::TEXT_MONO, amount_change)
-            .add(theme::TEXT_NORMAL, "New amount:".into())
-            .add(theme::TEXT_MONO, amount_new);
+        let paragraphs = Paragraphs::new([
+            Paragraph::new(&theme::TEXT_NORMAL, "Address:".into()),
+            Paragraph::new(&theme::TEXT_MONO, address).break_after(),
+            Paragraph::new(&theme::TEXT_NORMAL, description.into()),
+            Paragraph::new(&theme::TEXT_MONO, amount_change),
+            Paragraph::new(&theme::TEXT_NORMAL, "New amount:".into()),
+            Paragraph::new(&theme::TEXT_MONO, amount_new),
+        ]);
 
         let buttons = Button::cancel_confirm(
             Button::with_icon(theme::ICON_CANCEL),
@@ -506,11 +568,12 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
             _ => ("Your fee did not change.", StrBuffer::empty()),
         };
 
-        let paragraphs = Paragraphs::new()
-            .add(theme::TEXT_NORMAL, description.into())
-            .add(theme::TEXT_MONO, change)
-            .add(theme::TEXT_NORMAL, "\nTransaction fee:".into())
-            .add(theme::TEXT_MONO, total_fee_new);
+        let paragraphs = Paragraphs::new([
+            Paragraph::new(&theme::TEXT_NORMAL, description.into()),
+            Paragraph::new(&theme::TEXT_MONO, change),
+            Paragraph::new(&theme::TEXT_NORMAL, "\nTransaction fee:".into()),
+            Paragraph::new(&theme::TEXT_MONO, total_fee_new),
+        ]);
 
         let buttons = Button::cancel_confirm(
             Button::with_icon(theme::ICON_CANCEL),
@@ -617,7 +680,7 @@ extern "C" fn new_show_simple(n_args: usize, args: *const Obj, kwargs: *mut Map)
             LayoutObj::new(Frame::new(
                 t,
                 Dialog::new(
-                    Paragraphs::new().add(theme::TEXT_NORMAL, description),
+                    Paragraphs::new([Paragraph::new(&theme::TEXT_NORMAL, description)]),
                     theme::button_bar(Button::with_text(button).map(|msg| {
                         (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
                     })),
@@ -628,7 +691,7 @@ extern "C" fn new_show_simple(n_args: usize, args: *const Obj, kwargs: *mut Map)
             LayoutObj::new(Border::new(
                 theme::borders(),
                 Dialog::new(
-                    Paragraphs::new().add(theme::TEXT_NORMAL, description),
+                    Paragraphs::new([Paragraph::new(&theme::TEXT_NORMAL, description)]),
                     theme::button_bar(Button::with_text(button).map(|msg| {
                         (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
                     })),
@@ -649,19 +712,23 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
         let info_button: StrBuffer = kwargs.get(Qstr::MP_QSTR_info_button)?.try_into()?;
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
 
-        let mut paragraphs = Paragraphs::new();
+        let mut paragraphs = ParagraphVecLong::new();
 
         let mut iter_buf = IterBuf::new();
         let iter = Iter::try_from_obj_with_buf(items, &mut iter_buf)?;
         for text in iter {
             let text: StrBuffer = text.try_into()?;
-            paragraphs = paragraphs.add(theme::TEXT_NORMAL, text);
+            paragraphs.add(Paragraph::new(&theme::TEXT_NORMAL, text));
         }
 
         let buttons = Button::cancel_info_confirm(button, info_button);
 
         let obj = LayoutObj::new(
-            Frame::new(title, SwipePage::new(paragraphs, buttons, theme::BG)).into_child(),
+            Frame::new(
+                title,
+                SwipePage::new(paragraphs.into_paragraphs(), buttons, theme::BG),
+            )
+            .into_child(),
         )?;
         Ok(obj.into())
     };
@@ -674,13 +741,14 @@ extern "C" fn new_confirm_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut
         let max_rounds: StrBuffer = kwargs.get(Qstr::MP_QSTR_max_rounds)?.try_into()?;
         let max_feerate: StrBuffer = kwargs.get(Qstr::MP_QSTR_max_feerate)?.try_into()?;
 
-        let paragraphs = Paragraphs::new()
-            .add(theme::TEXT_NORMAL, "Coin name:".into())
-            .add(theme::TEXT_BOLD, coin_name)
-            .add(theme::TEXT_NORMAL, "Maximum rounds:".into())
-            .add(theme::TEXT_BOLD, max_rounds)
-            .add(theme::TEXT_NORMAL, "Maximum mining fee:".into())
-            .add(theme::TEXT_BOLD, max_feerate);
+        let paragraphs = Paragraphs::new([
+            Paragraph::new(&theme::TEXT_NORMAL, "Coin name:".into()),
+            Paragraph::new(&theme::TEXT_BOLD, coin_name),
+            Paragraph::new(&theme::TEXT_NORMAL, "Maximum rounds:".into()),
+            Paragraph::new(&theme::TEXT_BOLD, max_rounds),
+            Paragraph::new(&theme::TEXT_NORMAL, "Maximum mining fee:".into()),
+            Paragraph::new(&theme::TEXT_BOLD, max_feerate),
+        ]);
 
         let obj = LayoutObj::new(
             Frame::new(
@@ -743,7 +811,7 @@ extern "C" fn new_select_word(n_args: usize, args: *const Obj, kwargs: *mut Map)
         let words_iterable: Obj = kwargs.get(Qstr::MP_QSTR_words)?;
         let words: [StrBuffer; 3] = iter_into_array(words_iterable)?;
 
-        let paragraphs = Paragraphs::new().add(theme::TEXT_NORMAL, description);
+        let paragraphs = Paragraphs::new([Paragraph::new(&theme::TEXT_NORMAL, description)]);
         let buttons = Button::select_word(words);
 
         let obj = LayoutObj::new(
@@ -759,16 +827,20 @@ extern "C" fn new_show_share_words(n_args: usize, args: *const Obj, kwargs: *mut
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let pages: Obj = kwargs.get(Qstr::MP_QSTR_pages)?;
 
-        let mut paragraphs = Paragraphs::new();
+        let mut paragraphs = ParagraphVecLong::new();
         let mut iter_buf = IterBuf::new();
         let iter = Iter::try_from_obj_with_buf(pages, &mut iter_buf)?;
         for page in iter {
             let text: StrBuffer = page.try_into()?;
-            paragraphs = paragraphs.add(theme::TEXT_MONO, text).add_break();
+            paragraphs.add(Paragraph::new(&theme::TEXT_MONO, text).break_after());
         }
 
         let obj = LayoutObj::new(
-            Frame::new(title, SwipeHoldPage::without_cancel(paragraphs, theme::BG)).into_child(),
+            Frame::new(
+                title,
+                SwipeHoldPage::without_cancel(paragraphs.into_paragraphs(), theme::BG),
+            )
+            .into_child(),
         )?;
         Ok(obj.into())
     };
@@ -813,16 +885,16 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
 
         let mut iter_buf = IterBuf::new();
-        let mut paragraphs = Paragraphs::new().with_spacing(theme::CHECKLIST_SPACING);
+        let mut paragraphs = ParagraphVecLong::new();
         let iter = Iter::try_from_obj_with_buf(items, &mut iter_buf)?;
         for (i, item) in iter.enumerate() {
-            let color = match i.cmp(&active) {
-                Ordering::Less => theme::GREEN_DARK,
-                Ordering::Equal => theme::FG,
-                Ordering::Greater => theme::GREY_LIGHT,
+            let style = match i.cmp(&active) {
+                Ordering::Less => &theme::TEXT_CHECKLIST_DONE,
+                Ordering::Equal => &theme::TEXT_CHECKLIST_SELECTED,
+                Ordering::Greater => &theme::TEXT_CHECKLIST_DEFAULT,
             };
             let text: StrBuffer = item.try_into()?;
-            paragraphs = paragraphs.add_color(theme::TEXT_NORMAL, color, text);
+            paragraphs.add(Paragraph::new(style, text));
         }
 
         let obj = LayoutObj::new(
@@ -833,7 +905,9 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
                         theme::ICON_LIST_CURRENT,
                         theme::ICON_LIST_CHECK,
                         active,
-                        paragraphs,
+                        paragraphs
+                            .into_paragraphs()
+                            .with_spacing(theme::CHECKLIST_SPACING),
                     ),
                     theme::button_bar(Button::with_text(button).map(|msg| {
                         (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
@@ -868,12 +942,11 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
             .unwrap();
         let info_button: bool = kwargs.get_or(Qstr::MP_QSTR_info_button, false).unwrap();
 
-        let paragraphs = Paragraphs::new()
-            .with_spacing(theme::RECOVERY_SPACING)
-            .add(theme::TEXT_BOLD, title)
-            .centered()
-            .add_color(theme::TEXT_NORMAL, theme::OFF_WHITE, description)
-            .centered();
+        let paragraphs = Paragraphs::new([
+            Paragraph::new(&theme::TEXT_BOLD, title).centered(),
+            Paragraph::new(&theme::TEXT_NORMAL_OFF_WHITE, description).centered(),
+        ])
+        .with_spacing(theme::RECOVERY_SPACING);
 
         let notification = if dry_run {
             "SEED CHECK"
@@ -918,9 +991,8 @@ extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mu
             "RECOVERY MODE"
         };
 
-        let paragraphs = Paragraphs::new()
-            .add(theme::TEXT_BOLD, "Number of words?")
-            .centered();
+        let paragraphs =
+            Paragraphs::new([Paragraph::new(&theme::TEXT_BOLD, "Number of words?").centered()]);
 
         let obj = LayoutObj::new(
             Frame::new(title, Dialog::new(paragraphs, SelectWordCount::new()))
@@ -956,21 +1028,20 @@ extern "C" fn new_show_remaining_shares(n_args: usize, args: *const Obj, kwargs:
     let block = move |_args: &[Obj], kwargs: &Map| {
         let pages_iterable: Obj = kwargs.get(Qstr::MP_QSTR_pages)?;
 
-        let mut paragraphs = Paragraphs::new();
+        let mut paragraphs = ParagraphVecLong::new();
         let mut iter_buf = IterBuf::new();
         let iter = Iter::try_from_obj_with_buf(pages_iterable, &mut iter_buf)?;
         for page in iter {
             let [title, description]: [StrBuffer; 2] = iter_into_array(page)?;
-            paragraphs = paragraphs
-                .add(theme::TEXT_BOLD, title)
-                .add(theme::TEXT_NORMAL, description)
-                .add_break();
+            paragraphs
+                .add(Paragraph::new(&theme::TEXT_BOLD, title))
+                .add(Paragraph::new(&theme::TEXT_NORMAL, description).break_after());
         }
 
         let obj = LayoutObj::new(Frame::new(
             "REMAINING SHARES",
             SwipePage::new(
-                paragraphs,
+                paragraphs.into_paragraphs(),
                 theme::button_bar(Button::with_text("CONTINUE").map(|msg| {
                     (matches!(msg, ButtonMsg::Clicked)).then(|| CancelConfirmMsg::Confirmed)
                 })),
@@ -1020,6 +1091,17 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> object:
     ///     """Confirm byte sequence data."""
     Qstr::MP_QSTR_confirm_blob => obj_fn_kw!(0, new_confirm_blob).as_obj(),
+
+    /// def confirm_properties(
+    ///     *,
+    ///     title: str,
+    ///     items: Iterable[Tuple[str | None, str | None, bool]],
+    ///     hold: bool = False,
+    /// ) -> object:
+    ///     """Confirm list of key-value pairs. The third component in the tuple should be True if
+    ///     the value is to be rendered as binary with monospace font, False otherwise.
+    ///     This only concerns the text style, you need to decode the value to UTF-8 in python."""
+    Qstr::MP_QSTR_confirm_properties => obj_fn_kw!(0, new_confirm_properties).as_obj(),
 
     /// def confirm_reset_device(
     ///     *,
@@ -1278,7 +1360,7 @@ mod tests {
     const SCREEN: Rect = constant::screen().inset(theme::borders());
 
     fn trace(val: &impl Trace) -> String {
-        let mut t = Vec::new();
+        let mut t = std::vec::Vec::new();
         val.trace(&mut t);
         String::from_utf8(t).unwrap()
     }
