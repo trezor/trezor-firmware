@@ -529,7 +529,7 @@ pub fn text_over_image(
         );
     } else {
         area = Rect::from_top_left_and_size(
-            Point::new(offset_img.x, offset_img.y),
+            offset_img.into(),
             Offset::new(toif_info.width.into(), toif_info.height.into()),
         );
         r_img = area;
