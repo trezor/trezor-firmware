@@ -507,10 +507,20 @@ fn process_buffer(
     not_empty
 }
 
+
+/// Renders text over image background
+/// If `bg_area` is given, it is filled with its color in places where there are neither text or image
+/// Positioning also depends on whether `bg_area` is provided:
+/// - if it is, text and image are positioned relative to the `bg_area` top left corner,
+///     using respective offsets. Nothing is drawn outside the `bg_area`.
+/// - if it is not, text is positioned relative to the images top left corner using `offset_text` and image is positioned
+///     on the screen using `offset_img`. Nothing is drawn outside the image.
+/// `offset_text` is interpreted as baseline, so using (0,0) will position most of the text outside
+/// the drawing area in either case.
 #[cfg(feature = "dma2d")]
 pub fn text_over_image(
     bg_area: Option<(Rect, Color)>,
-    data: &[u8],
+    image_data: &[u8],
     text: &str,
     font: Font,
     offset_img: Offset,
@@ -525,12 +535,13 @@ pub fn text_over_image(
     let t2 = unsafe { get_buffer_4bpp(1, true) };
     let empty_t = unsafe { get_buffer_4bpp(2, true) };
 
-    let toif_info = unwrap!(display::toif_info(data), "Invalid TOIF data");
+    let toif_info = unwrap!(display::toif_info(image_data), "Invalid TOIF data");
     assert_eq!(toif_info.format, ToifFormat::FullColorLE);
     assert!(toif_info.width <= constant::WIDTH as u16);
 
     let r_img;
     let area;
+    let offset_img_final;
     if let Some((a, color)) = bg_area {
         let hi = color.hi_byte();
         let lo = color.lo_byte();
@@ -547,12 +558,14 @@ pub fn text_over_image(
             a.top_left() + offset_img,
             Offset::new(toif_info.width.into(), toif_info.height.into()),
         );
+        offset_img_final = offset_img;
     } else {
         area = Rect::from_top_left_and_size(
             offset_img.into(),
             Offset::new(toif_info.width.into(), toif_info.height.into()),
         );
         r_img = area;
+        offset_img_final = Offset::zero();
     }
     let clamped = area.clamp(constant::screen());
 
@@ -561,22 +574,22 @@ pub fn text_over_image(
     let font_baseline = display::text_baseline(font.0);
     let text_width_clamped = text_width.clamp(0, clamped.width());
 
-    let text_top = offset_text.y - font_max_height + font_baseline;
-    let text_bottom = offset_text.y + font_baseline;
-    let text_left = offset_text.x;
-    let text_right = offset_text.x + text_width_clamped;
+    let text_top = area.y0 + offset_text.y - font_max_height + font_baseline;
+    let text_bottom = area.y0 + offset_text.y + font_baseline;
+    let text_left = area.x0 + offset_text.x;
+    let text_right = area.x0 + offset_text.x + text_width_clamped;
 
     let text_area = Rect::new(
         Point::new(text_left, text_top),
         Point::new(text_right, text_bottom),
     );
 
-    display::text_into_buffer(text, font.0, text_buffer, text_area.x0);
+    display::text_into_buffer(text, font.0, text_buffer, 0);
 
     set_window(clamped);
 
     let mut window = [0; UZLIB_WINDOW_SIZE];
-    let mut ctx = UzlibContext::new(&data[12..], Some(&mut window));
+    let mut ctx = UzlibContext::new(&image_data[12..], Some(&mut window));
 
     dma2d_setup_4bpp_over_16bpp(text_color.into());
 
@@ -599,7 +612,7 @@ pub fn text_over_image(
         let using_img = process_buffer(
             y,
             r_img,
-            offset_img,
+            offset_img_final,
             &mut ctx,
             &mut img_buffer_used.buffer,
             &mut i,
@@ -613,7 +626,7 @@ pub fn text_over_image(
                 &text_buffer.buffer[(y_pos * constant::WIDTH / 2) as usize
                     ..((y_pos + 1) * constant::WIDTH / 2) as usize],
                 4,
-                0,
+                offset_text.x,
                 text_width,
             );
             t_buffer = t_buffer_used;
@@ -630,6 +643,14 @@ pub fn text_over_image(
     dma2d_wait_for_transfer();
 }
 
+
+/// Renders text over image background
+/// If `bg_area` is given, it is filled with its color in places where there is neither icon.
+/// Positioning also depends on whether `bg_area` is provided:
+/// - if it is, icons are positioned relative to the `bg_area` top left corner,
+///     using respective offsets. Nothing is drawn outside the `bg_area`.
+/// - if it is not, `fg` icon is positioned relative to the `bg` icons top left corner using its offset and `fg` icon is positioned
+///     on the screen using its offset. Nothing is drawn outside the `bg` icon.
 #[cfg(feature = "dma2d")]
 pub fn icon_over_icon(
     bg_area: Option<Rect>,
@@ -659,18 +680,21 @@ pub fn icon_over_icon(
 
     let area;
     let r_bg;
+    let final_offset_bg;
     if let Some(a) = bg_area {
         area = a;
         r_bg = Rect::from_top_left_and_size(
             a.top_left() + offset_bg,
             Offset::new(toif_info_bg.width.into(), toif_info_bg.height.into()),
         );
+        final_offset_bg = offset_bg;
     } else {
         r_bg = Rect::from_top_left_and_size(
             Point::new(offset_bg.x, offset_bg.y),
             Offset::new(toif_info_bg.width.into(), toif_info_bg.height.into()),
         );
         area = r_bg;
+        final_offset_bg = Offset::zero();
     }
 
     let r_fg = Rect::from_top_left_and_size(
@@ -721,7 +745,7 @@ pub fn icon_over_icon(
         let using_bg = process_buffer(
             y,
             r_bg,
-            offset_bg,
+            final_offset_bg,
             &mut ctx_bg,
             &mut bg_buffer_used.buffer,
             &mut bg_i,
