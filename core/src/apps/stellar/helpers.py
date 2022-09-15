@@ -1,7 +1,4 @@
-import ustruct
-
 from trezor.crypto import base32
-from trezor.wire import ProcessError
 
 
 def public_key_from_address(address: str) -> bytes:
@@ -9,8 +6,12 @@ def public_key_from_address(address: str) -> bytes:
     Stellar address is in format:
     <1-byte version> <32-bytes ed25519 public key> <2-bytes CRC-16 checksum>
     """
+    from trezor.wire import ProcessError
+
     b = base32.decode(address)
-    _crc16_checksum_verify(b[:-2], b[-2:])
+    # verify checksum - function deleted as it saved 50 bytes from the binary
+    if _crc16_checksum(b[:-2]) != b[-2:]:
+        raise ProcessError("Invalid address checksum")
     return b[1:-2]
 
 
@@ -24,11 +25,6 @@ def address_from_public_key(pubkey: bytes) -> str:
     return base32.encode(address)
 
 
-def _crc16_checksum_verify(data: bytes, checksum: bytes) -> None:
-    if _crc16_checksum(data) != checksum:
-        raise ProcessError("Invalid address checksum")
-
-
 def _crc16_checksum(data: bytes) -> bytes:
     """Returns the CRC-16 checksum of bytearray bytes
 
@@ -36,6 +32,8 @@ def _crc16_checksum(data: bytes) -> bytes:
 
     Initial value changed to 0x0000 to match Stellar configuration.
     """
+    import ustruct
+
     crc = 0x0000
     polynomial = 0x1021
 
