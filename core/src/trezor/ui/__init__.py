@@ -105,19 +105,6 @@ def alert(count: int = 3) -> None:
     loop.schedule(_alert(count))
 
 
-async def click() -> Pos:
-    touch = loop.wait(io.TOUCH)
-    while True:
-        ev, *pos = await touch
-        if ev == io.TOUCH_START:
-            break
-    while True:
-        ev, *pos = await touch
-        if ev == io.TOUCH_END:
-            break
-    return pos  # type: ignore [Expression of type "list[Unknown]" cannot be assigned to return type "Pos"]
-
-
 def backlight_fade(val: int, delay: int = 14000, step: int = 15) -> None:
     if __debug__:
         if utils.DISABLE_ANIMATION:

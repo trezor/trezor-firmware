@@ -21,10 +21,12 @@ def format_amount(amount: int, decimals: int) -> str:
     return s
 
 
-def format_ordinal(number: int) -> str:
-    return str(number) + {1: "st", 2: "nd", 3: "rd"}.get(
-        4 if 10 <= number % 100 < 20 else number % 10, "th"
-    )
+if False:
+
+    def format_ordinal(number: int) -> str:
+        return str(number) + {1: "st", 2: "nd", 3: "rd"}.get(
+            4 if 10 <= number % 100 < 20 else number % 10, "th"
+        )
 
 
 def format_plural(string: str, count: int, plural: str) -> str:

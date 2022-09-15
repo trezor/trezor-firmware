@@ -271,38 +271,6 @@ def encode_streamed(value: Value) -> Iterator[bytes]:
     return _cbor_encode(value)
 
 
-def encode_chunked(value: Value, max_chunk_size: int) -> Iterator[bytes]:
-    """
-    Returns the encoded value as an iterable of chunks of a given size,
-    removing the need to reserve a continuous chunk of memory for the
-    full serialized representation of the value.
-    """
-    if max_chunk_size <= 0:
-        raise ValueError
-
-    chunks = encode_streamed(value)
-
-    chunk_buffer = utils.empty_bytearray(max_chunk_size)
-    try:
-        current_chunk_view = utils.BufferReader(next(chunks))
-        while True:
-            num_bytes_to_write = min(
-                current_chunk_view.remaining_count(),
-                max_chunk_size - len(chunk_buffer),
-            )
-            chunk_buffer.extend(current_chunk_view.read(num_bytes_to_write))
-
-            if len(chunk_buffer) >= max_chunk_size:
-                yield chunk_buffer
-                chunk_buffer[:] = bytes()
-
-            if current_chunk_view.remaining_count() == 0:
-                current_chunk_view = utils.BufferReader(next(chunks))
-    except StopIteration:
-        if len(chunk_buffer) > 0:
-            yield chunk_buffer
-
-
 def decode(cbor: bytes, offset: int = 0) -> Value:
     r = utils.BufferReader(cbor)
     r.seek(offset)

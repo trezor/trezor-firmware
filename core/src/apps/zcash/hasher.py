@@ -51,23 +51,6 @@ class ZcashHasher:
         write_uint32(tx_hash_person, tx.branch_id)
         self.tx_hash_person = bytes(tx_hash_person)
 
-    # The `txid_digest` method is currently a dead code,
-    # but we keep it for future use cases.
-    def txid_digest(self) -> bytes:
-        """
-        Returns the transaction identifier.
-
-        see: https://zips.z.cash/zip-0244#id4
-        """
-        h = HashWriter(blake2b(outlen=32, personal=self.tx_hash_person))
-
-        write_hash(h, self.header.digest())  # T.1
-        write_hash(h, self.transparent.digest())  # T.2
-        write_hash(h, self.sapling.digest())  # T.3
-        write_hash(h, self.orchard.digest())  # T.4
-
-        return h.get_digest()
-
     def signature_digest(
         self, txi: TxInput | None, script_pubkey: bytes | None
     ) -> bytes:

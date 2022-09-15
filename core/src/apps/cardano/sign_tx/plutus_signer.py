@@ -45,12 +45,6 @@ class PlutusSigner(Signer):
             tx_hash,
         )
 
-    def _should_show_tx_hash(self) -> bool:
-        # super() omitted intentionally
-        # Plutus txs tend to contain a lot of opaque data, some users might
-        # want to verify only the tx hash.
-        return True
-
     async def _show_input(self, input: messages.CardanoTxInput) -> None:
         # super() omitted intentionally
         # The inputs are not interchangeable (because of datums), so we must show them.

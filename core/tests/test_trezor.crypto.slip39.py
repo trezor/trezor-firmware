@@ -2,6 +2,39 @@ from common import *
 from trezor.crypto import slip39, random
 from slip39_vectors import vectors
 
+
+# NOTE: moved into tests not to occupy flash space
+# in firmware binary, when it is not used in production
+def _rs1024_error_index(data: tuple[int, ...]) -> int | None:
+    """
+    Returns the index where an error possibly occurred.
+    """
+    GEN = (
+        0x91F_9F87,
+        0x122F_1F07,
+        0x244E_1E07,
+        0x81C_1C07,
+        0x1028_1C0E,
+        0x2040_1C1C,
+        0x10_3838,
+        0x20_7070,
+        0x40_E0E0,
+        0x81_C1C0,
+    )
+    chk = slip39._rs1024_polymod(tuple(slip39._CUSTOMIZATION_STRING) + data) ^ 1
+    if chk == 0:
+        return None
+
+    for i in reversed(range(len(data))):
+        b = chk & 0x3FF
+        chk >>= 10
+        if chk == 0:
+            return i
+        for j in range(10):
+            chk ^= GEN[j] if ((b >> j) & 1) else 0
+    return None
+
+
 def combinations(iterable, r):
     # Taken from https://docs.python.org/3.7/library/itertools.html#itertools.combinations
     pool = tuple(iterable)
@@ -160,11 +193,11 @@ class TestCryptoSlip39(unittest.TestCase):
         ]
         for mnemonic in mnemonics:
             data = tuple(slip39._mnemonic_to_indices(mnemonic))
-            self.assertEqual(slip39._rs1024_error_index(data), None)
+            self.assertEqual(_rs1024_error_index(data), None)
             for i in range(len(data)):
                 for _ in range(50):
                     error_data = error_data = data[:i] + (data[i] ^ (random.uniform(1023) + 1), ) + data[i + 1:]
-                    self.assertEqual(slip39._rs1024_error_index(error_data), i)
+                    self.assertEqual(_rs1024_error_index(error_data), i)
 
 
 if __name__ == '__main__':

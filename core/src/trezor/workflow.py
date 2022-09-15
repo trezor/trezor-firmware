@@ -97,20 +97,22 @@ def set_default(constructor: Callable[[], loop.Task]) -> None:
     default_constructor = constructor
 
 
-def kill_default() -> None:
-    """Forcefully shut down default task.
+if False:
 
-    The purpose of the call is to prevent the default task from interfering with
-    a synchronous layout-less workflow (e.g., the progress bar in `mnemonic.get_seed`).
+    def kill_default() -> None:
+        """Forcefully shut down default task.
 
-    This function should only be called from a workflow registered with `on_start`.
-    Otherwise the default will be restarted immediately.
-    """
-    if default_task:
-        if __debug__:
-            log.debug(__name__, "close default")
-        # We let the `_finalize_default` reset the global.
-        default_task.close()
+        The purpose of the call is to prevent the default task from interfering with
+        a synchronous layout-less workflow (e.g., the progress bar in `mnemonic.get_seed`).
+
+        This function should only be called from a workflow registered with `on_start`.
+        Otherwise the default will be restarted immediately.
+        """
+        if default_task:
+            if __debug__:
+                log.debug(__name__, "close default")
+            # We let the `_finalize_default` reset the global.
+            default_task.close()
 
 
 def close_others() -> None:
