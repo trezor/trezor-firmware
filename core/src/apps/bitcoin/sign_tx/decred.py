@@ -17,10 +17,10 @@ from .approvers import BasicApprover
 from .bitcoin import Bitcoin
 from .progress import progress
 
-DECRED_SERIALIZE_FULL = const(0 << 16)
-DECRED_SERIALIZE_NO_WITNESS = const(1 << 16)
-DECRED_SERIALIZE_WITNESS_SIGNING = const(3 << 16)
-DECRED_SCRIPT_VERSION = const(0)
+_DECRED_SERIALIZE_FULL = const(0 << 16)
+_DECRED_SERIALIZE_NO_WITNESS = const(1 << 16)
+_DECRED_SERIALIZE_WITNESS_SIGNING = const(3 << 16)
+_DECRED_SCRIPT_VERSION = const(0)
 OUTPUT_SCRIPT_NULL_SSTXCHANGE = (
     b"\xBD\x76\xA9\x14\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x88\xAC"
 )
@@ -158,7 +158,7 @@ class Decred(Bitcoin):
             write_compact_size(self.serialized_tx, self.tx_info.tx.inputs_count)
 
         writers.write_uint32(
-            self.h_prefix, self.tx_info.tx.version | DECRED_SERIALIZE_NO_WITNESS
+            self.h_prefix, self.tx_info.tx.version | _DECRED_SERIALIZE_NO_WITNESS
         )
         write_compact_size(self.h_prefix, self.tx_info.tx.inputs_count)
 
@@ -223,7 +223,7 @@ class Decred(Bitcoin):
 
             h_witness = self.create_hash_writer()
             writers.write_uint32(
-                h_witness, self.tx_info.tx.version | DECRED_SERIALIZE_WITNESS_SIGNING
+                h_witness, self.tx_info.tx.version | _DECRED_SERIALIZE_WITNESS_SIGNING
             )
             write_compact_size(h_witness, self.tx_info.tx.inputs_count)
 
@@ -314,7 +314,7 @@ class Decred(Bitcoin):
                 raise wire.DataError("Script version must be provided")
             writers.write_uint16(w, txo.decred_script_version)
         else:
-            writers.write_uint16(w, DECRED_SCRIPT_VERSION)
+            writers.write_uint16(w, _DECRED_SCRIPT_VERSION)
         writers.write_bytes_prefixed(w, script_pubkey)
 
     def process_sstx_commitment_owned(self, txo: TxOutput) -> bytearray:
@@ -381,9 +381,9 @@ class Decred(Bitcoin):
         # The upper 16 bits of the transaction version specify the serialization
         # format and the lower 16 bits specify the version number.
         if witness_marker:
-            version = tx.version | DECRED_SERIALIZE_FULL
+            version = tx.version | _DECRED_SERIALIZE_FULL
         else:
-            version = tx.version | DECRED_SERIALIZE_NO_WITNESS
+            version = tx.version | _DECRED_SERIALIZE_NO_WITNESS
 
         writers.write_uint32(w, version)
 

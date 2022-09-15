@@ -62,14 +62,14 @@ PROPOSAL_HASH_SIZE = const(32)
 PUBLIC_KEY_HASH_SIZE = const(20)
 TAGGED_PUBKEY_HASH_SIZE = 1 + PUBLIC_KEY_HASH_SIZE
 CONTRACT_ID_SIZE = const(22)
-ED25519_PUBLIC_KEY_SIZE = const(32)
-SECP256K1_PUBLIC_KEY_SIZE = const(33)
-P256_PUBLIC_KEY_SIZE = const(33)
+_ED25519_PUBLIC_KEY_SIZE = const(32)
+_SECP256K1_PUBLIC_KEY_SIZE = const(33)
+_P256_PUBLIC_KEY_SIZE = const(33)
 
 PUBLIC_KEY_TAG_TO_SIZE = {
-    0: ED25519_PUBLIC_KEY_SIZE,
-    1: SECP256K1_PUBLIC_KEY_SIZE,
-    2: P256_PUBLIC_KEY_SIZE,
+    0: _ED25519_PUBLIC_KEY_SIZE,
+    1: _SECP256K1_PUBLIC_KEY_SIZE,
+    2: _P256_PUBLIC_KEY_SIZE,
 }
 
 OP_TAG_ENDORSEMENT = const(0)
@@ -84,7 +84,7 @@ OP_TAG_TRANSACTION = const(108)
 OP_TAG_ORIGINATION = const(109)
 OP_TAG_DELEGATION = const(110)
 
-EP_TAG_NAMED = const(255)
+_EP_TAG_NAMED = const(255)
 
 
 def base58_encode_check(payload: bytes, prefix: str | None = None) -> str:
@@ -127,7 +127,7 @@ def check_tx_params_size(params: bytes) -> None:
     try:
         r = BufferReader(params)
         tag = r.get()
-        if tag == EP_TAG_NAMED:
+        if tag == _EP_TAG_NAMED:
             n = r.get()
             r.read(n)
         elif tag > 4:

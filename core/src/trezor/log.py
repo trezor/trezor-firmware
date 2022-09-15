@@ -3,22 +3,21 @@ import utime
 from micropython import const
 from typing import Any
 
-NOTSET = const(0)
-DEBUG = const(10)
-INFO = const(20)
-WARNING = const(30)
-ERROR = const(40)
-CRITICAL = const(50)
+_DEBUG = const(10)
+_INFO = const(20)
+_WARNING = const(30)
+_ERROR = const(40)
+_CRITICAL = const(50)
 
 _leveldict = {
-    DEBUG: ("DEBUG", "32"),
-    INFO: ("INFO", "36"),
-    WARNING: ("WARNING", "33"),
-    ERROR: ("ERROR", "31"),
-    CRITICAL: ("CRITICAL", "1;31"),
+    _DEBUG: ("DEBUG", "32"),
+    _INFO: ("INFO", "36"),
+    _WARNING: ("WARNING", "33"),
+    _ERROR: ("ERROR", "31"),
+    _CRITICAL: ("CRITICAL", "1;31"),
 }
 
-level = DEBUG
+level = _DEBUG
 color = True
 
 
@@ -37,23 +36,23 @@ def _log(name: str, mlevel: int, msg: str, *args: Any) -> None:
 
 
 def debug(name: str, msg: str, *args: Any) -> None:
-    _log(name, DEBUG, msg, *args)
+    _log(name, _DEBUG, msg, *args)
 
 
 def info(name: str, msg: str, *args: Any) -> None:
-    _log(name, INFO, msg, *args)
+    _log(name, _INFO, msg, *args)
 
 
 def warning(name: str, msg: str, *args: Any) -> None:
-    _log(name, WARNING, msg, *args)
+    _log(name, _WARNING, msg, *args)
 
 
 def error(name: str, msg: str, *args: Any) -> None:
-    _log(name, ERROR, msg, *args)
+    _log(name, _ERROR, msg, *args)
 
 
 def critical(name: str, msg: str, *args: Any) -> None:
-    _log(name, CRITICAL, msg, *args)
+    _log(name, _CRITICAL, msg, *args)
 
 
 def exception(name: str, exc: BaseException) -> None:
@@ -63,13 +62,13 @@ def exception(name: str, exc: BaseException) -> None:
     if exc.__class__.__name__ == "Result":
         _log(
             name,
-            DEBUG,
+            _DEBUG,
             "ui.Result: %s",
             exc.value,  # type: ignore[Cannot access member "value" for type "BaseException"]
         )
     elif exc.__class__.__name__ == "Cancelled":
-        _log(name, DEBUG, "ui.Cancelled")
+        _log(name, _DEBUG, "ui.Cancelled")
     else:
-        _log(name, ERROR, "exception:")
+        _log(name, _ERROR, "exception:")
         # since mypy 0.770 we cannot override sys, so print_exception is unknown
         sys.print_exception(exc)  # type: ignore ["print_exception" is not a known member of module]

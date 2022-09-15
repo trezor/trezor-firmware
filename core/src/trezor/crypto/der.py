@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from trezor.utils import Writer
 
 # Maximum length of a DER-encoded secp256k1 or secp256p1 signature.
-MAX_DER_SIGNATURE_LENGTH = const(72)
+_MAX_DER_SIGNATURE_LENGTH = const(72)
 
 
 def encode_length(l: int) -> bytes:
@@ -82,7 +82,7 @@ def read_int(r: BufferReader) -> memoryview:
 
 def encode_seq(seq: tuple[bytes, ...]) -> bytes:
     # Preallocate space for a signature, which is all that this function ever encodes.
-    buffer = empty_bytearray(MAX_DER_SIGNATURE_LENGTH)
+    buffer = empty_bytearray(_MAX_DER_SIGNATURE_LENGTH)
     buffer.append(0x30)
     for i in seq:
         write_int(buffer, i)

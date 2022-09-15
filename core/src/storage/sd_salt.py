@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 SD_CARD_HOT_SWAPPABLE = False
 SD_SALT_LEN_BYTES = const(32)
-SD_SALT_AUTH_TAG_LEN_BYTES = const(16)
+_SD_SALT_AUTH_TAG_LEN_BYTES = const(16)
 
 
 class WrongSdCard(Exception):
@@ -28,7 +28,7 @@ def compute_auth_tag(salt: bytes, auth_key: bytes) -> bytes:
     from trezor.crypto import hmac
 
     digest = hmac(hmac.SHA256, auth_key, salt).digest()
-    return digest[:SD_SALT_AUTH_TAG_LEN_BYTES]
+    return digest[:_SD_SALT_AUTH_TAG_LEN_BYTES]
 
 
 def _get_device_dir() -> str:
@@ -46,7 +46,7 @@ def _load_salt(auth_key: bytes, path: str) -> bytearray | None:
     try:
         with io.fatfs.open(path, "r") as f:
             salt = bytearray(SD_SALT_LEN_BYTES)
-            stored_tag = bytearray(SD_SALT_AUTH_TAG_LEN_BYTES)
+            stored_tag = bytearray(_SD_SALT_AUTH_TAG_LEN_BYTES)
             f.read(salt)
             f.read(stored_tag)
     except io.fatfs.FatFSError:

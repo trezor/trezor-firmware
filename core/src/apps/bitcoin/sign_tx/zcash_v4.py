@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from ..common import SigHashType
     from ..writers import Writer
 
-OVERWINTERED = const(0x8000_0000)
+_OVERWINTERED = const(0x8000_0000)
 
 
 class Zip243SigHasher:
@@ -70,7 +70,7 @@ class Zip243SigHasher:
         zero_hash = b"\x00" * TX_HASH_SIZE
 
         # 1. nVersion | fOverwintered
-        write_uint32(h_preimage, tx.version | OVERWINTERED)
+        write_uint32(h_preimage, tx.version | _OVERWINTERED)
         # 2. nVersionGroupId
         write_uint32(h_preimage, tx.version_group_id)
         # 3. hashPrevouts
@@ -181,7 +181,7 @@ class ZcashV4(Bitcoinlike):
             if tx.version_group_id is None:
                 raise wire.DataError("Version group ID is missing")
             # nVersion | fOverwintered
-            write_uint32(w, tx.version | OVERWINTERED)
+            write_uint32(w, tx.version | _OVERWINTERED)
             write_uint32(w, tx.version_group_id)  # nVersionGroupId
 
     def write_tx_footer(self, w: Writer, tx: SignTx | PrevTx) -> None:
