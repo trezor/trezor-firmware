@@ -112,8 +112,7 @@ void dma2d_setup_4bpp_over_4bpp(uint16_t fg_color, uint16_t bg_color,
   dma2d_handle.LayerCfg[1].InputColorMode = DMA2D_INPUT_A4;
   dma2d_handle.LayerCfg[1].InputOffset = 0;
   dma2d_handle.LayerCfg[1].AlphaMode = 0;
-  dma2d_handle.LayerCfg[1].InputAlpha =
-      0000000 | rgb565_to_rgb888(overlay_color);
+  dma2d_handle.LayerCfg[1].InputAlpha = rgb565_to_rgb888(overlay_color);
 
   dma2d_handle.LayerCfg[0].InputColorMode = DMA2D_INPUT_L4;
   dma2d_handle.LayerCfg[0].InputOffset = 0;
