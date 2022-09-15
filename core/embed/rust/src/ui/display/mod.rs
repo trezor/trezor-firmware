@@ -639,17 +639,17 @@ pub fn text_over_image(
     let font_baseline = display::text_baseline(font.0);
     let text_width_clamped = text_width.clamp(0, clamped.width());
 
-    let text_top = offset_text.y - font_max_height + font_baseline;
-    let text_bottom = offset_text.y + font_baseline;
-    let text_left = offset_text.x;
-    let text_right = offset_text.x + text_width_clamped;
+    let text_top = area.y0 + offset_text.y - font_max_height + font_baseline;
+    let text_bottom = area.y0 + offset_text.y + font_baseline;
+    let text_left = area.x0 + offset_text.x;
+    let text_right = area.x0 + offset_text.x + text_width_clamped;
 
     let text_area = Rect::new(
         Point::new(text_left, text_top),
         Point::new(text_right, text_bottom),
     );
 
-    display::text_into_buffer(text, font.0, text_buffer, text_area.x0, constant::WIDTH);
+    display::text_into_buffer(text, font.0, text_buffer, 0, constant::WIDTH);
 
     set_window(clamped);
 
@@ -691,7 +691,7 @@ pub fn text_over_image(
                 &text_buffer.buffer[(y_pos * constant::WIDTH / 2) as usize
                     ..((y_pos + 1) * constant::WIDTH / 2) as usize],
                 4,
-                0,
+                offset_text.x,
                 text_width,
             );
             t_buffer = t_buffer_used;
