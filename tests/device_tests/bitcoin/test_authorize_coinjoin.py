@@ -392,13 +392,14 @@ def test_cancel_authorization(client: Client):
 
 def test_get_public_key(client: Client):
     ACCOUNT_PATH = parse_path("m/10025h/1h/0h/1h")
-    EXPECTED_XPUB = "xpub6DyhEpXMikKQgH2S1UcRwjYhxHVVLK8ffaABC5E1M1juvdik9t8VsucEnM585ZpiJjiu5uFnpuq21WnkvAH2h8LDMw6jubfX5J2ZggQX1hP"
+    EXPECTED_XPUB = "tpubDEMKm4M3S2Grx5DHTfbX9et5HQb9KhdjDCkUYdH9gvVofvPTE6yb2MH52P9uc4mx6eFohUmfN1f4hhHNK28GaZnWRXr3b8KkfFcySo1SmXU"
 
     # Ensure that user cannot access SLIP-25 path without UnlockPath.
     with pytest.raises(TrezorFailure, match="Forbidden key path"):
         resp = btc.get_public_node(
             client,
             ACCOUNT_PATH,
+            coin_name="Testnet",
             script_type=messages.InputScriptType.SPENDTAPROOT,
         )
 
@@ -419,6 +420,7 @@ def test_get_public_key(client: Client):
         resp = btc.get_public_node(
             client,
             ACCOUNT_PATH,
+            coin_name="Testnet",
             script_type=messages.InputScriptType.SPENDTAPROOT,
             unlock_path=SLIP25_PATH,
             unlock_path_mac=invalid_unlock_path_mac,
@@ -435,6 +437,7 @@ def test_get_public_key(client: Client):
         resp = btc.get_public_node(
             client,
             ACCOUNT_PATH,
+            coin_name="Testnet",
             script_type=messages.InputScriptType.SPENDTAPROOT,
             unlock_path=SLIP25_PATH,
             unlock_path_mac=unlock_path_mac,
