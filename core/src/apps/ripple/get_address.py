@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from trezor.messages import RippleAddress, RippleGetAddress
+from trezor.messages import RippleAddress
 from trezor.ui.layouts import show_address
 
 from apps.common import paths
@@ -9,6 +9,7 @@ from apps.common.keychain import auto_keychain
 from .helpers import address_from_public_key
 
 if TYPE_CHECKING:
+    from trezor.messages import RippleGetAddress
     from apps.common.keychain import Keychain
     from trezor.wire import Context
 

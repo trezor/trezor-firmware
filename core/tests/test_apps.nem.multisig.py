@@ -6,11 +6,7 @@ if not utils.BITCOIN_ONLY:
     from apps.nem.multisig.serialize import *
     from apps.nem.namespace import *
     from apps.nem.namespace.serialize import *
-    from trezor.messages import NEMSignTx
-    from trezor.messages import NEMAggregateModification
-    from trezor.messages import NEMProvisionNamespace
-    from trezor.messages import NEMCosignatoryModification
-
+    from trezor.messages import NEMSignTx, NEMAggregateModification, NEMProvisionNamespace, NEMCosignatoryModification, NEMTransactionCommon
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestNemMultisig(unittest.TestCase):

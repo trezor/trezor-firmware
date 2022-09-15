@@ -1,10 +1,13 @@
 from typing import TYPE_CHECKING
 
-from trezor.messages import NEMAggregateModification, NEMSignTx, NEMTransactionCommon
-
 from . import layout, serialize
 
 if TYPE_CHECKING:
+    from trezor.messages import (
+        NEMAggregateModification,
+        NEMSignTx,
+        NEMTransactionCommon,
+    )
     from trezor.wire import Context
 
 

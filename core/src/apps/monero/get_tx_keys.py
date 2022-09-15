@@ -18,7 +18,7 @@ from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor import utils, wire
-from trezor.messages import MoneroGetTxKeyAck, MoneroGetTxKeyRequest
+from trezor.messages import MoneroGetTxKeyAck
 
 from apps.common import paths
 from apps.common.keychain import auto_keychain
@@ -28,6 +28,7 @@ from apps.monero.xmr import chacha_poly, crypto, crypto_helpers
 _GET_TX_KEY_REASON_TX_DERIVATION = const(1)
 
 if TYPE_CHECKING:
+    from trezor.messages import MoneroGetTxKeyRequest
     from apps.common.keychain import Keychain
 
 

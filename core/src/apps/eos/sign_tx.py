@@ -1,7 +1,9 @@
+from typing import TYPE_CHECKING
+
 from trezor import wire
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha256
-from trezor.messages import EosSignedTx, EosSignTx, EosTxActionAck, EosTxActionRequest
+from trezor.messages import EosSignedTx, EosTxActionAck, EosTxActionRequest
 from trezor.utils import HashWriter
 
 from apps.common import paths
@@ -11,6 +13,9 @@ from . import writers
 from .actions import process_action
 from .helpers import base58_encode
 from .layout import require_sign_tx
+
+if TYPE_CHECKING:
+    from trezor.messages import EosSignTx
 
 
 @auto_keychain(__name__)

@@ -2,13 +2,12 @@ from typing import TYPE_CHECKING
 
 import storage.device
 from trezor import io, loop, utils, wire
-from trezor.messages import RebootToBootloader, Success
+from trezor.messages import Success
 from trezor.ui.layouts import confirm_action
 
 if TYPE_CHECKING:
+    from trezor.messages import RebootToBootloader
     from typing import NoReturn
-
-    pass
 
 
 async def reboot_to_bootloader(ctx: wire.Context, msg: RebootToBootloader) -> NoReturn:

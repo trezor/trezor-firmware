@@ -3,10 +3,6 @@ from typing import TYPE_CHECKING
 from trezor import utils, wire
 from trezor.enums import InputScriptType, OutputScriptType, RequestType
 from trezor.messages import (
-    PrevInput,
-    PrevOutput,
-    PrevTx,
-    SignTx,
     TxAckInput,
     TxAckOutput,
     TxAckPaymentRequest,
@@ -14,9 +10,6 @@ from trezor.messages import (
     TxAckPrevInput,
     TxAckPrevMeta,
     TxAckPrevOutput,
-    TxInput,
-    TxOutput,
-    TxRequest,
 )
 
 from apps.common import paths
@@ -30,6 +23,15 @@ if TYPE_CHECKING:
     from typing import Any, Awaitable
     from trezor.enums import AmountUnit
 
+    from trezor.messages import (
+        PrevInput,
+        PrevOutput,
+        PrevTx,
+        SignTx,
+        TxInput,
+        TxOutput,
+        TxRequest,
+    )
 
 # Machine instructions
 # ===

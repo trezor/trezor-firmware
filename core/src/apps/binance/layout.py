@@ -1,12 +1,6 @@
 from typing import TYPE_CHECKING
 
 from trezor.enums import BinanceOrderSide, ButtonRequestType
-from trezor.messages import (
-    BinanceCancelMsg,
-    BinanceInputOutput,
-    BinanceOrderMsg,
-    BinanceTransferMsg,
-)
 from trezor.strings import format_amount
 from trezor.ui.layouts import confirm_properties
 from trezor.ui.layouts.altcoin import confirm_transfer_binance
@@ -14,6 +8,12 @@ from trezor.ui.layouts.altcoin import confirm_transfer_binance
 from . import helpers
 
 if TYPE_CHECKING:
+    from trezor.messages import (
+        BinanceCancelMsg,
+        BinanceInputOutput,
+        BinanceOrderMsg,
+        BinanceTransferMsg,
+    )
     from trezor.wire import Context
 
 

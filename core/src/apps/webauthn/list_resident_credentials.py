@@ -1,12 +1,13 @@
+from typing import TYPE_CHECKING
+
 from trezor import wire
-from trezor.messages import (
-    WebAuthnCredential,
-    WebAuthnCredentials,
-    WebAuthnListResidentCredentials,
-)
+from trezor.messages import WebAuthnCredential, WebAuthnCredentials
 from trezor.ui.layouts import confirm_action
 
 from . import resident_credentials
+
+if TYPE_CHECKING:
+    from trezor.messages import WebAuthnListResidentCredentials
 
 
 async def list_resident_credentials(

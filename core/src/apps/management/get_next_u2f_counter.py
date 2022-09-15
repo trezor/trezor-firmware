@@ -1,8 +1,13 @@
+from typing import TYPE_CHECKING
+
 import storage.device
 from trezor import ui, wire
 from trezor.enums import ButtonRequestType
-from trezor.messages import GetNextU2FCounter, NextU2FCounter
+from trezor.messages import NextU2FCounter
 from trezor.ui.layouts import confirm_action
+
+if TYPE_CHECKING:
+    from trezor.messages import GetNextU2FCounter
 
 
 async def get_next_u2f_counter(

@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from trezor.messages import TezosGetPublicKey, TezosPublicKey
+from trezor.messages import TezosPublicKey
 from trezor.ui.layouts import show_pubkey
 
 from apps.common import paths, seed
@@ -9,6 +9,7 @@ from apps.common.keychain import with_slip44_keychain
 from . import CURVE, PATTERNS, SLIP44_ID, helpers
 
 if TYPE_CHECKING:
+    from trezor.messages import TezosGetPublicKey
     from apps.common.keychain import Keychain
     from trezor.wire import Context
 

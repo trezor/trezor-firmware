@@ -1,12 +1,17 @@
+from typing import TYPE_CHECKING
+
 import storage
 import storage.device
 from trezor import config, wire
 from trezor.crypto import bip39, slip39
 from trezor.enums import BackupType
-from trezor.messages import LoadDevice, Success
+from trezor.messages import Success
 from trezor.ui.layouts import confirm_action
 
 from apps.management import backup_types
+
+if TYPE_CHECKING:
+    from trezor.messages import LoadDevice
 
 
 async def load_device(ctx: wire.Context, msg: LoadDevice) -> Success:

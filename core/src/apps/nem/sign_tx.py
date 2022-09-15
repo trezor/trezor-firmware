@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from trezor import wire
 from trezor.crypto.curve import ed25519
-from trezor.messages import NEMSignedTx, NEMSignTx
+from trezor.messages import NEMSignedTx
 
 from apps.common import seed
 from apps.common.keychain import with_slip44_keychain
@@ -13,6 +13,7 @@ from .helpers import NEM_HASH_ALG, check_path
 from .validators import validate
 
 if TYPE_CHECKING:
+    from trezor.messages import NEMSignTx
     from apps.common.keychain import Keychain
 
 

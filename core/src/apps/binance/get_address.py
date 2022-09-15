@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from trezor.messages import BinanceAddress, BinanceGetAddress
+from trezor.messages import BinanceAddress
 from trezor.ui.layouts import show_address
 
 from apps.common import paths
@@ -9,6 +9,7 @@ from apps.common.keychain import Keychain, auto_keychain
 from .helpers import address_from_public_key
 
 if TYPE_CHECKING:
+    from trezor.messages import BinanceGetAddress
     from trezor.wire import Context
 
 

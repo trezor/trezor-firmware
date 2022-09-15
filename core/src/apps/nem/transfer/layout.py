@@ -2,12 +2,6 @@ from typing import TYPE_CHECKING
 
 from trezor import ui
 from trezor.enums import ButtonRequestType, NEMImportanceTransferMode, NEMMosaicLevy
-from trezor.messages import (
-    NEMImportanceTransfer,
-    NEMMosaic,
-    NEMTransactionCommon,
-    NEMTransfer,
-)
 from trezor.strings import format_amount
 from trezor.ui.layouts import (
     confirm_action,
@@ -25,6 +19,12 @@ from ..layout import require_confirm_final, require_confirm_text
 from ..mosaic.helpers import get_mosaic_definition, is_nem_xem_mosaic
 
 if TYPE_CHECKING:
+    from trezor.messages import (
+        NEMImportanceTransfer,
+        NEMMosaic,
+        NEMTransactionCommon,
+        NEMTransfer,
+    )
     from trezor.wire import Context
     from ..mosaic.nem_mosaics import MosaicLevy
 

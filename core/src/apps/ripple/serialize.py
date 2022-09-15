@@ -11,11 +11,10 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
-from trezor.messages import RippleSignTx
-
 from . import helpers
 
 if TYPE_CHECKING:
+    from trezor.messages import RippleSignTx
     from trezor.utils import Writer
 
 

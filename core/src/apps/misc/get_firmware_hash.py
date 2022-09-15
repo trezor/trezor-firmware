@@ -1,11 +1,12 @@
 from typing import TYPE_CHECKING
 
 from trezor import ui, wire, workflow
-from trezor.messages import FirmwareHash, GetFirmwareHash
+from trezor.messages import FirmwareHash
 from trezor.ui.layouts import draw_simple_text
 from trezor.utils import DISABLE_ANIMATION, firmware_hash
 
 if TYPE_CHECKING:
+    from trezor.messages import GetFirmwareHash
     from trezor.wire import Context
 
 

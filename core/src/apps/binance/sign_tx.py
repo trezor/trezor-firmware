@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import wire
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha256
@@ -6,7 +8,6 @@ from trezor.messages import (
     BinanceCancelMsg,
     BinanceOrderMsg,
     BinanceSignedTx,
-    BinanceSignTx,
     BinanceTransferMsg,
     BinanceTxRequest,
 )
@@ -15,6 +16,9 @@ from apps.common import paths
 from apps.common.keychain import Keychain, auto_keychain
 
 from . import helpers, layout
+
+if TYPE_CHECKING:
+    from trezor.messages import BinanceSignTx
 
 
 @auto_keychain(__name__)

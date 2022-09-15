@@ -4,7 +4,7 @@ from trezor import wire
 from trezor.crypto import rlp
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha3_256
-from trezor.messages import EthereumSignTx, EthereumTxAck, EthereumTxRequest
+from trezor.messages import EthereumTxAck, EthereumTxRequest
 from trezor.utils import HashWriter
 
 from apps.common import paths
@@ -21,6 +21,7 @@ from .layout import (
 
 if TYPE_CHECKING:
     from apps.common.keychain import Keychain
+    from trezor.messages import EthereumSignTx
 
     from .keychain import EthereumSignTxAny
 

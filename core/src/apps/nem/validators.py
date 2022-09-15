@@ -1,15 +1,7 @@
+from typing import TYPE_CHECKING
+
 from trezor.crypto import nem
 from trezor.enums import NEMModificationType
-from trezor.messages import (
-    NEMAggregateModification,
-    NEMImportanceTransfer,
-    NEMMosaicCreation,
-    NEMMosaicSupplyChange,
-    NEMProvisionNamespace,
-    NEMSignTx,
-    NEMTransactionCommon,
-    NEMTransfer,
-)
 from trezor.wire import ProcessError
 
 from .helpers import (
@@ -22,6 +14,18 @@ from .helpers import (
     NEM_NETWORK_TESTNET,
     NEM_PUBLIC_KEY_SIZE,
 )
+
+if TYPE_CHECKING:
+    from trezor.messages import (
+        NEMAggregateModification,
+        NEMImportanceTransfer,
+        NEMMosaicCreation,
+        NEMMosaicSupplyChange,
+        NEMProvisionNamespace,
+        NEMSignTx,
+        NEMTransactionCommon,
+        NEMTransfer,
+    )
 
 
 def validate(msg: NEMSignTx) -> None:
