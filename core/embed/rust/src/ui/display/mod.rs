@@ -515,6 +515,76 @@ fn process_buffer(
     not_empty
 }
 
+
+#[cfg(feature = "dma2d")]
+pub fn text_on_bg(
+    area: Rect,
+    text: &str,
+    font: Font,
+    offset_text: Offset,
+    text_color: Color,
+    bg_color: Color,
+) {
+    let text_buffer = unsafe { get_text_buffer(0, true) };
+    let bg1 = unsafe { get_buffer_16bpp(0, true) };
+    let t1 = unsafe { get_buffer_4bpp(0, true) };
+    let t2 = unsafe { get_buffer_4bpp(1, true) };
+    let empty_t = unsafe { get_buffer_4bpp(2, true) };
+
+    let clamped = area.clamp(constant::screen());
+
+    let text_width = display::text_width(text, font.0);
+    let font_max_height = display::text_max_height(font.0);
+    let font_baseline = display::text_baseline(font.0);
+    let text_width_clamped = text_width.clamp(0, clamped.width());
+
+    let text_top = area.y0 + offset_text.y - font_max_height + font_baseline;
+    let text_bottom = area.y0 + offset_text.y + font_baseline;
+    let text_left = area.x0 + offset_text.x;
+    let text_right = area.x0 + offset_text.x + text_width_clamped;
+
+    let text_area = Rect::new(
+        Point::new(text_left, text_top),
+        Point::new(text_right, text_bottom),
+    );
+
+    display::text_into_buffer(text, font.0, text_buffer, 0, constant::WIDTH);
+
+    set_window(clamped);
+
+    dma2d_setup_4bpp_over_4bpp(text_color.into(), bg_color.into(), text_color.into());
+
+    for y in clamped.y0..clamped.y1 {
+        let mut t_buffer = &mut *empty_t;
+        let t_buffer_used;
+
+        if y % 2 == 0 {
+            t_buffer_used = &mut *t1;
+        } else {
+            t_buffer_used = &mut *t2;
+        }
+
+        if y >= text_area.y0 && y < text_area.y1 {
+            let y_pos = y - text_area.y0;
+            position_buffer(
+                &mut t_buffer_used.buffer,
+                &text_buffer.buffer[(y_pos * constant::WIDTH / 2) as usize
+                    ..((y_pos + 1) * constant::WIDTH / 2) as usize],
+                4,
+                offset_text.x,
+                text_width,
+            );
+            t_buffer = t_buffer_used;
+        }
+
+        dma2d_wait_for_transfer();
+        dma2d_start_blend(&t_buffer.buffer, &bg1.buffer, clamped.width());
+    }
+
+    dma2d_wait_for_transfer();
+}
+
+
 #[cfg(feature = "dma2d")]
 pub fn text_over_image(
     bg_area: Option<(Rect, Color)>,
