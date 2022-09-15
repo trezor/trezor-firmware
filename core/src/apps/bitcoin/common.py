@@ -37,6 +37,8 @@ class SigHashType(IntEnum):
 
     # Signature hash type with the same semantics as SIGHASH_ALL. Used in some
     # Bitcoin-like altcoins for replay protection.
+    # NOTE: this seems to be unused, but when deleted, it breaks some tests
+    # (test_send_bch_external_presigned and test_send_btg_external_presigned)
     SIGHASH_ALL_FORKID = 0x41
 
     @classmethod

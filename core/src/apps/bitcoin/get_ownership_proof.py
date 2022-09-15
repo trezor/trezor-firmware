@@ -16,9 +16,6 @@ if TYPE_CHECKING:
     from apps.common.keychain import Keychain
     from .authorization import CoinJoinAuthorization
 
-# Maximum number of characters per line in monospace font.
-_MAX_MONO_LINE = 18
-
 
 @with_keychain
 async def get_ownership_proof(
