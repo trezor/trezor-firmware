@@ -387,7 +387,7 @@ impl ButtonStyleSheet {
 }
 
 /// Describing the button in the choice item.
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct ButtonDetails<T> {
     pub text: Option<T>,
     pub icon: Option<Icon>,
@@ -526,7 +526,7 @@ impl<T: Clone + AsRef<str>> ButtonDetails<T> {
 }
 
 /// Holding the button details for all three possible buttons.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct ButtonLayout<T> {
     pub btn_left: Option<ButtonDetails<T>>,
     pub btn_middle: Option<ButtonDetails<T>>,
@@ -608,7 +608,7 @@ impl ButtonLayout<&'static str> {
 /// What happens when a button is triggered.
 /// Theoretically any action can be connected
 /// with any button.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub enum ButtonAction {
     /// Go to the next page of this flow
     NextPage,
@@ -666,7 +666,7 @@ impl ButtonAction {
 // and only storing ButtonAction instead of Option<ButtonAction>...
 
 /// Storing actions for all three possible buttons.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct ButtonActions {
     pub left: Option<ButtonAction>,
     pub middle: Option<ButtonAction>,

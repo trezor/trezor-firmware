@@ -49,7 +49,7 @@ pub trait ChoiceItemAPI {
 /// Storing all the possible implementations of `ChoiceItemAPI`.
 /// Done like this as we want to use multiple different choice pages
 /// at the same time in `ChoicePage` - for example Multiline and BigLetters
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub enum ChoiceItem {
     Text(TextChoiceItem),
     MultilineText(MultilineTextChoiceItem),
@@ -128,7 +128,7 @@ impl ChoiceItemAPI for ChoiceItem {
 }
 
 /// Simple string component used as a choice item.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct TextChoiceItem {
     pub text: String<50>,
     pub btn_layout: ButtonLayout<&'static str>,
@@ -182,7 +182,7 @@ impl ChoiceItemAPI for TextChoiceItem {
 /// Multiline string component used as a choice item.
 ///
 /// Lines are delimited by '\n' character, unless specified explicitly.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct MultilineTextChoiceItem {
     // Arbitrary chosen. TODO: agree on this
     pub text: String<50>,
@@ -238,7 +238,7 @@ impl ChoiceItemAPI for MultilineTextChoiceItem {
 
 /// Choice item displaying single characters in BIG font.
 /// Middle choice is magnified 4 times, left and right 2 times.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct BigCharacterChoiceItem {
     pub ch: char,
     pub btn_layout: ButtonLayout<&'static str>,
