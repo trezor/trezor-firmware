@@ -114,7 +114,6 @@ def get_public_node(
     coin_name: Optional[str] = None,
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
     ignore_xpub_magic: bool = False,
-    preauthorized: bool = False,
     unlock_path: Optional[List[int]] = None,
     unlock_path_mac: Optional[bytes] = None,
 ) -> "MessageType":
@@ -123,10 +122,6 @@ def get_public_node(
             messages.UnlockPath(address_n=unlock_path, mac=unlock_path_mac)
         )
         if not isinstance(res, messages.UnlockedPathRequest):
-            raise exceptions.TrezorException("Unexpected message")
-    elif preauthorized:
-        res = client.call(messages.DoPreauthorized())
-        if not isinstance(res, messages.PreauthorizedRequest):
             raise exceptions.TrezorException("Unexpected message")
 
     return client.call(
@@ -155,7 +150,6 @@ def get_authenticated_address(
     multisig: Optional[messages.MultisigRedeemScriptType] = None,
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
     ignore_xpub_magic: bool = False,
-    preauthorized: bool = False,
     unlock_path: Optional[List[int]] = None,
     unlock_path_mac: Optional[bytes] = None,
 ) -> "MessageType":
@@ -164,10 +158,6 @@ def get_authenticated_address(
             messages.UnlockPath(address_n=unlock_path, mac=unlock_path_mac)
         )
         if not isinstance(res, messages.UnlockedPathRequest):
-            raise exceptions.TrezorException("Unexpected message")
-    elif preauthorized:
-        res = client.call(messages.DoPreauthorized())
-        if not isinstance(res, messages.PreauthorizedRequest):
             raise exceptions.TrezorException("Unexpected message")
 
     return client.call(
