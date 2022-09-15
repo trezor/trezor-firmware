@@ -54,6 +54,7 @@ BIP_PURPOSE_TO_SCRIPT_TYPE = {
     tools.H_(49): messages.InputScriptType.SPENDP2SHWITNESS,
     tools.H_(84): messages.InputScriptType.SPENDWITNESS,
     tools.H_(86): messages.InputScriptType.SPENDTAPROOT,
+    tools.H_(10025): messages.InputScriptType.SPENDTAPROOT,
 }
 
 BIP48_SCRIPT_TYPES = {
@@ -112,6 +113,12 @@ def guess_script_type_from_path(address_n: List[int]) -> messages.InputScriptTyp
             return BIP48_SCRIPT_TYPES[script_type_field]
 
     return messages.InputScriptType.SPENDADDRESS
+
+
+def get_unlock_path(address_n: List[int]) -> Optional[List[int]]:
+    if address_n and address_n[0] == tools.H_(10025):
+        return address_n[:1]
+    return None
 
 
 @click.group(name="btc")
@@ -195,6 +202,7 @@ def get_address(
         show_display,
         script_type=script_type,
         multisig=multisig,
+        unlock_path=get_unlock_path(address_n),
     )
 
 
@@ -224,6 +232,7 @@ def get_public_node(
         show_display=show_display,
         coin_name=coin,
         script_type=script_type,
+        unlock_path=get_unlock_path(address_n),
     )
     return {
         "node": {
