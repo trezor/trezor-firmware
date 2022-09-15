@@ -75,10 +75,6 @@ def format_coin_amount(amount: int, network_id: int) -> str:
     return f"{format_amount(amount, 6)} {currency}"
 
 
-def is_printable_ascii_bytestring(bytestr: bytes) -> bool:
-    return all((32 < b < 127) for b in bytestr)
-
-
 async def show_native_script(
     ctx: wire.Context,
     script: messages.CardanoNativeScript,

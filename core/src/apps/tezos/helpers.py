@@ -94,13 +94,6 @@ def base58_encode_check(payload: bytes, prefix: str | None = None) -> str:
     return base58.encode_check(result)
 
 
-def base58_decode_check(enc: str, prefix: str | None = None) -> bytes:
-    decoded = base58.decode_check(enc)
-    if prefix is not None:
-        decoded = decoded[len(TEZOS_PREFIX_BYTES[prefix]) :]
-    return decoded
-
-
 def write_bool(w: Writer, boolean: bool) -> None:
     if boolean:
         write_uint8(w, 255)

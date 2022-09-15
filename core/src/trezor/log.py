@@ -51,10 +51,6 @@ def error(name: str, msg: str, *args: Any) -> None:
     _log(name, _ERROR, msg, *args)
 
 
-def critical(name: str, msg: str, *args: Any) -> None:
-    _log(name, _CRITICAL, msg, *args)
-
-
 def exception(name: str, exc: BaseException) -> None:
     # we are using `__class__.__name__` to avoid importing ui module
     # we also need to instruct typechecker to ignore the missing argument

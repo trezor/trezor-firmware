@@ -19,13 +19,6 @@ def write_uint16_le(w: Writer, n: int) -> int:
     return 2
 
 
-def write_uint16_be(w: Writer, n: int) -> int:
-    ensure(0 <= n <= 0xFFFF)
-    w.append((n >> 8) & 0xFF)
-    w.append(n & 0xFF)
-    return 2
-
-
 def write_uint32_le(w: Writer, n: int) -> int:
     ensure(0 <= n <= 0xFFFF_FFFF)
     w.append(n & 0xFF)

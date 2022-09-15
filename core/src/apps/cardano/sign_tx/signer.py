@@ -253,10 +253,6 @@ class Signer:
         # Final signing confirmation is handled separately in each signing mode.
         raise NotImplementedError
 
-    def _should_show_tx_hash(self) -> bool:
-        # By default we display tx hash only if showing details
-        return self.should_show_details
-
     # inputs
 
     async def _process_inputs(

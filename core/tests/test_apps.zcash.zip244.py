@@ -1,12 +1,29 @@
 from common import *
 from trezor.messages import TxInput, SignTx, PrevOutput
 from trezor.enums import InputScriptType
-from apps.zcash.hasher import ZcashHasher
-from apps.bitcoin.common import SigHashType
+from apps.zcash.hasher import ZcashHasher, HashWriter, blake2b, write_hash
 from apps.common.coininfo import by_name
 
 
 ZCASH_COININFO = by_name("Zcash")
+
+
+# NOTE: moved into tests not to occupy flash space
+# in firmware binary, when it is not used in production
+def txid_digest(hasher: "ZcashHasher") -> bytes:
+    """
+    Returns the transaction identifier.
+
+    see: https://zips.z.cash/zip-0244#id4
+    """
+    h = HashWriter(blake2b(outlen=32, personal=hasher.tx_hash_person))
+
+    write_hash(h, hasher.header.digest())  # T.1
+    write_hash(h, hasher.transparent.digest())  # T.2
+    write_hash(h, hasher.sapling.digest())  # T.3
+    write_hash(h, hasher.orchard.digest())  # T.4
+
+    return h.get_digest()
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
@@ -86,7 +103,7 @@ class TestZcashSigHasher(unittest.TestCase):
             hasher.add_output(txo, txo.script_pubkey)
 
         # test ZcashSigHasher.txid_digest
-        computed_txid = hasher.txid_digest()
+        computed_txid = txid_digest(hasher)
         self.assertEqual(computed_txid, expected_txid)
 
         # test ZcashSigHasher.signature_digest

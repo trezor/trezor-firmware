@@ -89,18 +89,6 @@ async def show_dry_run_result(
         await show_warning(ctx, "warning_dry_recovery", text, button="Continue")
 
 
-async def show_dry_run_different_type(ctx: wire.GenericContext) -> None:
-    await show_warning(
-        ctx,
-        "warning_dry_recovery",
-        header="Dry run failure",
-        content="Seed in the device was\ncreated using another\nbackup mechanism.",
-        icon=ui.ICON_CANCEL,
-        icon_color=ui.ORANGE_ICON,
-        br_code=ButtonRequestType.ProtectCall,
-    )
-
-
 async def show_invalid_mnemonic(ctx: wire.GenericContext, word_count: int) -> None:
     if backup_types.is_slip39_word_count(word_count):
         await show_warning(

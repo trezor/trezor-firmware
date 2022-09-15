@@ -411,37 +411,6 @@ def _rs1024_verify_checksum(data: Indices) -> bool:
     return _rs1024_polymod(tuple(_CUSTOMIZATION_STRING) + data) == 1
 
 
-def _rs1024_error_index(data: Indices) -> int | None:
-    """
-    Returns the index where an error possibly occurred.
-    Currently unused.
-    """
-    GEN = (
-        0x91F_9F87,
-        0x122F_1F07,
-        0x244E_1E07,
-        0x81C_1C07,
-        0x1028_1C0E,
-        0x2040_1C1C,
-        0x10_3838,
-        0x20_7070,
-        0x40_E0E0,
-        0x81_C1C0,
-    )
-    chk = _rs1024_polymod(tuple(_CUSTOMIZATION_STRING) + data) ^ 1
-    if chk == 0:
-        return None
-
-    for i in reversed(range(len(data))):
-        b = chk & 0x3FF
-        chk >>= 10
-        if chk == 0:
-            return i
-        for j in range(10):
-            chk ^= GEN[j] if ((b >> j) & 1) else 0
-    return None
-
-
 # === Internal functions ===
 
 

@@ -192,36 +192,6 @@ if TYPE_CHECKING:
     BufferType = bytearray | memoryview
 
 
-class BufferWriter:
-    """Seekable and writeable view into a buffer."""
-
-    def __init__(self, buffer: BufferType) -> None:
-        self.buffer = buffer
-        self.offset = 0
-
-    def seek(self, offset: int) -> None:
-        """Set current offset to `offset`.
-
-        If negative, set to zero. If longer than the buffer, set to end of buffer.
-        """
-        offset = min(offset, len(self.buffer))
-        offset = max(offset, 0)
-        self.offset = offset
-
-    def write(self, src: bytes) -> int:
-        """Write exactly `len(src)` bytes into buffer, or raise EOFError.
-
-        Returns number of bytes written.
-        """
-        buffer = self.buffer
-        offset = self.offset
-        if len(src) > len(buffer) - offset:
-            raise EOFError
-        nwrite = memcpy(buffer, offset, src, 0)
-        self.offset += nwrite
-        return nwrite
-
-
 class BufferReader:
     """Seekable and readable view into a buffer."""
 

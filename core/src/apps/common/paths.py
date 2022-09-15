@@ -326,12 +326,6 @@ class AlwaysMatchingSchema:
         return True
 
 
-class NeverMatchingSchema:
-    @staticmethod
-    def match(path: Bip32Path) -> bool:
-        return False
-
-
 # BIP-44 for basic (legacy) Bitcoin accounts, and widely used for other currencies:
 # https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki
 PATTERN_BIP44 = "m/44'/coin_type'/account'/change/address_index"

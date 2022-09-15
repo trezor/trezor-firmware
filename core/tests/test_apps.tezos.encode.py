@@ -3,7 +3,7 @@ from common import *
 if not utils.BITCOIN_ONLY:
     from trezor.enums import TezosContractType
     from trezor.messages import TezosContractID
-    from apps.tezos.helpers import base58_decode_check, base58_encode_check, write_bool
+    from apps.tezos.helpers import base58_encode_check, write_bool
     from apps.tezos.sign_tx import (
         _encode_contract_id,
         _encode_data_with_bool_prefix,
@@ -79,21 +79,6 @@ class TestTezosEncoding(unittest.TestCase):
             "tz3Mo3gHekQhCmykfnC58ecqJLXrjMKzkF2Q",
         )
         self.assertEqual(base58_encode_check(pkh), "2U14dJ6ED97bBHDZTQWA6umVL8SAVefXj")
-
-    def test_tezos_base58_decode_check(self):
-        pkh = unhexlify("101368afffeb1dc3c089facbbe23f5c30b787ce9")
-
-        address = "tz1M72kkAJrntPtayM4yU4CCwQPLSdpEgRrn"
-        self.assertEqual(base58_decode_check(address, prefix="tz1"), pkh)
-
-        address = "tz29nEixktH9p9XTFX7p8hATUyeLxXEz96KR"
-        self.assertEqual(base58_decode_check(address, prefix="tz2"), pkh)
-
-        address = "tz3Mo3gHekQhCmykfnC58ecqJLXrjMKzkF2Q"
-        self.assertEqual(base58_decode_check(address, prefix="tz3"), pkh)
-
-        address = "2U14dJ6ED97bBHDZTQWA6umVL8SAVefXj"
-        self.assertEqual(base58_decode_check(address), pkh)
 
     def test_tezos_encode_natural(self):
         inputs = [200000000000, 2000000, 159066, 200, 60000, 157000000, 0]
