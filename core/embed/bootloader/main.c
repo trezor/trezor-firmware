@@ -43,6 +43,7 @@
 #include "bootui.h"
 #include "messages.h"
 #include "screens_rust.h"
+#include "adc.h"
 
 const uint8_t BOOTLOADER_KEY_M = 2;
 const uint8_t BOOTLOADER_KEY_N = 3;
@@ -260,6 +261,7 @@ int main(void) {
 #ifdef USE_DMA2D
   dma2d_init();
 #endif
+  adc_init();
 
 #if defined TREZOR_MODEL_T
   display_set_little_endian();

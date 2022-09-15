@@ -239,6 +239,10 @@ fn generate_trezorhal_bindings() {
 
     let bindings = prepare_bindings()
         .header("trezorhal.h")
+        // adc
+        .allowlist_function("adc_get_vrefint")
+        .allowlist_function("adc_get_vbat")
+        .allowlist_function("adc_get_temp")
         // secbool
         .allowlist_type("secbool")
         .must_use_type("secbool")

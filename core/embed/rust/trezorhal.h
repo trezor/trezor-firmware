@@ -1,3 +1,4 @@
+#include "adc.h"
 #include "buffers.h"
 #include "common.h"
 #include "display.h"

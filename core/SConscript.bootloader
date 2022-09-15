@@ -85,6 +85,7 @@ if UI2:
 
 SOURCE_STMHAL = [
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_adc.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash.c',
@@ -121,6 +122,7 @@ SOURCE_BOOTLOADER = [
 ]
 
 SOURCE_TREZORHAL = [
+    'embed/trezorhal/adc.c',
     'embed/trezorhal/common.c',
     'embed/trezorhal/time_measurement.c',
     'embed/trezorhal/image.c',
