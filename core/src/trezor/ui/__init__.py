@@ -25,7 +25,7 @@ HEIGHT = Display.HEIGHT
 
 # viewport margins
 VIEWX = const(6)
-VIEWY = const(9)
+_VIEWY = const(9)
 
 # channel used to cancel layouts, see `Cancelled` exception
 layout_chan = loop.chan()
@@ -193,9 +193,9 @@ def grid(
     n_x: int = 3,  # number of rows in the table
     n_y: int = 5,  # number of columns in the table
     start_x: int = VIEWX,  # where the table starts on x-axis
-    start_y: int = VIEWY,  # where the table starts on y-axis
+    start_y: int = _VIEWY,  # where the table starts on y-axis
     end_x: int = (WIDTH - VIEWX),  # where the table ends on x-axis
-    end_y: int = (HEIGHT - VIEWY),  # where the table ends on y-axis
+    end_y: int = (HEIGHT - _VIEWY),  # where the table ends on y-axis
     cells_x: int = 1,  # number of cells to be merged into one in the direction of x-axis
     cells_y: int = 1,  # number of cells to be merged into one in the direction of y-axis
     spacing: int = 0,  # spacing size between cells

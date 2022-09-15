@@ -50,37 +50,37 @@ if TYPE_CHECKING:
         messages.CardanoTxItemAck | messages.CardanoTxWitnessResponse
     )
 
-MINTING_POLICY_ID_LENGTH = 28
-MAX_ASSET_NAME_LENGTH = 32
+_MINTING_POLICY_ID_LENGTH = const(28)
+_MAX_ASSET_NAME_LENGTH = const(32)
 
-TX_BODY_KEY_INPUTS = const(0)
-TX_BODY_KEY_OUTPUTS = const(1)
-TX_BODY_KEY_FEE = const(2)
-TX_BODY_KEY_TTL = const(3)
-TX_BODY_KEY_CERTIFICATES = const(4)
-TX_BODY_KEY_WITHDRAWALS = const(5)
-TX_BODY_KEY_AUXILIARY_DATA = const(7)
-TX_BODY_KEY_VALIDITY_INTERVAL_START = const(8)
-TX_BODY_KEY_MINT = const(9)
-TX_BODY_KEY_SCRIPT_DATA_HASH = const(11)
-TX_BODY_KEY_COLLATERAL_INPUTS = const(13)
-TX_BODY_KEY_REQUIRED_SIGNERS = const(14)
-TX_BODY_KEY_NETWORK_ID = const(15)
-TX_BODY_KEY_COLLATERAL_RETURN = const(16)
-TX_BODY_KEY_TOTAL_COLLATERAL = const(17)
-TX_BODY_KEY_REFERENCE_INPUTS = const(18)
+_TX_BODY_KEY_INPUTS = const(0)
+_TX_BODY_KEY_OUTPUTS = const(1)
+_TX_BODY_KEY_FEE = const(2)
+_TX_BODY_KEY_TTL = const(3)
+_TX_BODY_KEY_CERTIFICATES = const(4)
+_TX_BODY_KEY_WITHDRAWALS = const(5)
+_TX_BODY_KEY_AUXILIARY_DATA = const(7)
+_TX_BODY_KEY_VALIDITY_INTERVAL_START = const(8)
+_TX_BODY_KEY_MINT = const(9)
+_TX_BODY_KEY_SCRIPT_DATA_HASH = const(11)
+_TX_BODY_KEY_COLLATERAL_INPUTS = const(13)
+_TX_BODY_KEY_REQUIRED_SIGNERS = const(14)
+_TX_BODY_KEY_NETWORK_ID = const(15)
+_TX_BODY_KEY_COLLATERAL_RETURN = const(16)
+_TX_BODY_KEY_TOTAL_COLLATERAL = const(17)
+_TX_BODY_KEY_REFERENCE_INPUTS = const(18)
 
-BABBAGE_OUTPUT_KEY_ADDRESS = const(0)
-BABBAGE_OUTPUT_KEY_AMOUNT = const(1)
-BABBAGE_OUTPUT_KEY_DATUM_OPTION = const(2)
-BABBAGE_OUTPUT_KEY_REFERENCE_SCRIPT = const(3)
+_BABBAGE_OUTPUT_KEY_ADDRESS = const(0)
+_BABBAGE_OUTPUT_KEY_AMOUNT = const(1)
+_BABBAGE_OUTPUT_KEY_DATUM_OPTION = const(2)
+_BABBAGE_OUTPUT_KEY_REFERENCE_SCRIPT = const(3)
 
-DATUM_OPTION_KEY_HASH = const(0)
-DATUM_OPTION_KEY_INLINE = const(1)
+_DATUM_OPTION_KEY_HASH = const(0)
+_DATUM_OPTION_KEY_INLINE = const(1)
 
-POOL_REGISTRATION_CERTIFICATE_ITEMS_COUNT = 10
+_POOL_REGISTRATION_CERTIFICATE_ITEMS_COUNT = const(10)
 
-MAX_CHUNK_SIZE = 1024
+_MAX_CHUNK_SIZE = const(1024)
 
 
 class Signer:
@@ -154,30 +154,30 @@ class Signer:
         inputs_list: HashBuilderList[tuple[bytes, int]] = HashBuilderList(
             self.msg.inputs_count
         )
-        with self.tx_dict.add(TX_BODY_KEY_INPUTS, inputs_list):
+        with self.tx_dict.add(_TX_BODY_KEY_INPUTS, inputs_list):
             await self._process_inputs(inputs_list)
 
         outputs_list: HashBuilderList = HashBuilderList(self.msg.outputs_count)
-        with self.tx_dict.add(TX_BODY_KEY_OUTPUTS, outputs_list):
+        with self.tx_dict.add(_TX_BODY_KEY_OUTPUTS, outputs_list):
             await self._process_outputs(outputs_list)
 
-        self.tx_dict.add(TX_BODY_KEY_FEE, self.msg.fee)
+        self.tx_dict.add(_TX_BODY_KEY_FEE, self.msg.fee)
 
         if self.msg.ttl is not None:
-            self.tx_dict.add(TX_BODY_KEY_TTL, self.msg.ttl)
+            self.tx_dict.add(_TX_BODY_KEY_TTL, self.msg.ttl)
 
         if self.msg.certificates_count > 0:
             certificates_list: HashBuilderList = HashBuilderList(
                 self.msg.certificates_count
             )
-            with self.tx_dict.add(TX_BODY_KEY_CERTIFICATES, certificates_list):
+            with self.tx_dict.add(_TX_BODY_KEY_CERTIFICATES, certificates_list):
                 await self._process_certificates(certificates_list)
 
         if self.msg.withdrawals_count > 0:
             withdrawals_dict: HashBuilderDict[bytes, int] = HashBuilderDict(
                 self.msg.withdrawals_count, wire.ProcessError("Invalid withdrawal")
             )
-            with self.tx_dict.add(TX_BODY_KEY_WITHDRAWALS, withdrawals_dict):
+            with self.tx_dict.add(_TX_BODY_KEY_WITHDRAWALS, withdrawals_dict):
                 await self._process_withdrawals(withdrawals_dict)
 
         if self.msg.has_auxiliary_data:
@@ -185,7 +185,7 @@ class Signer:
 
         if self.msg.validity_interval_start is not None:
             self.tx_dict.add(
-                TX_BODY_KEY_VALIDITY_INTERVAL_START, self.msg.validity_interval_start
+                _TX_BODY_KEY_VALIDITY_INTERVAL_START, self.msg.validity_interval_start
             )
 
         if self.msg.minting_asset_groups_count > 0:
@@ -193,7 +193,7 @@ class Signer:
                 self.msg.minting_asset_groups_count,
                 wire.ProcessError("Invalid mint token bundle"),
             )
-            with self.tx_dict.add(TX_BODY_KEY_MINT, minting_dict):
+            with self.tx_dict.add(_TX_BODY_KEY_MINT, minting_dict):
                 await self._process_minting(minting_dict)
 
         if self.msg.script_data_hash is not None:
@@ -204,7 +204,7 @@ class Signer:
                 tuple[bytes, int]
             ] = HashBuilderList(self.msg.collateral_inputs_count)
             with self.tx_dict.add(
-                TX_BODY_KEY_COLLATERAL_INPUTS, collateral_inputs_list
+                _TX_BODY_KEY_COLLATERAL_INPUTS, collateral_inputs_list
             ):
                 await self._process_collateral_inputs(collateral_inputs_list)
 
@@ -212,23 +212,23 @@ class Signer:
             required_signers_list: HashBuilderList[bytes] = HashBuilderList(
                 self.msg.required_signers_count
             )
-            with self.tx_dict.add(TX_BODY_KEY_REQUIRED_SIGNERS, required_signers_list):
+            with self.tx_dict.add(_TX_BODY_KEY_REQUIRED_SIGNERS, required_signers_list):
                 await self._process_required_signers(required_signers_list)
 
         if self.msg.include_network_id:
-            self.tx_dict.add(TX_BODY_KEY_NETWORK_ID, self.msg.network_id)
+            self.tx_dict.add(_TX_BODY_KEY_NETWORK_ID, self.msg.network_id)
 
         if self.msg.has_collateral_return:
             await self._process_collateral_return()
 
         if self.msg.total_collateral is not None:
-            self.tx_dict.add(TX_BODY_KEY_TOTAL_COLLATERAL, self.msg.total_collateral)
+            self.tx_dict.add(_TX_BODY_KEY_TOTAL_COLLATERAL, self.msg.total_collateral)
 
         if self.msg.reference_inputs_count > 0:
             reference_inputs_list: HashBuilderList[tuple[bytes, int]] = HashBuilderList(
                 self.msg.reference_inputs_count
             )
-            with self.tx_dict.add(TX_BODY_KEY_REFERENCE_INPUTS, reference_inputs_list):
+            with self.tx_dict.add(_TX_BODY_KEY_REFERENCE_INPUTS, reference_inputs_list):
                 await self._process_reference_inputs(reference_inputs_list)
 
     def _validate_tx_init(self) -> None:
@@ -469,15 +469,15 @@ class Signer:
         Note that it is to be used also for outputs with no Plutus elements.
         """
         address = self._get_output_address(output)
-        output_dict.add(BABBAGE_OUTPUT_KEY_ADDRESS, address)
+        output_dict.add(_BABBAGE_OUTPUT_KEY_ADDRESS, address)
 
         if output.asset_groups_count == 0:
             # Only amount is added to the dict.
-            output_dict.add(BABBAGE_OUTPUT_KEY_AMOUNT, output.amount)
+            output_dict.add(_BABBAGE_OUTPUT_KEY_AMOUNT, output.amount)
         else:
             # [amount, asset_groups] is added to the dict.
             output_value_list: HashBuilderList = HashBuilderList(2)
-            with output_dict.add(BABBAGE_OUTPUT_KEY_AMOUNT, output_value_list):
+            with output_dict.add(_BABBAGE_OUTPUT_KEY_AMOUNT, output_value_list):
                 await self._process_output_value(output_value_list, output, should_show)
 
         if output.datum_hash is not None:
@@ -486,13 +486,13 @@ class Signer:
                     layout.confirm_datum_hash(self.ctx, output.datum_hash)
                 )
             output_dict.add(
-                BABBAGE_OUTPUT_KEY_DATUM_OPTION,
-                (DATUM_OPTION_KEY_HASH, output.datum_hash),
+                _BABBAGE_OUTPUT_KEY_DATUM_OPTION,
+                (_DATUM_OPTION_KEY_HASH, output.datum_hash),
             )
         elif output.inline_datum_size > 0:
             inline_datum_list: HashBuilderList = HashBuilderList(2)
-            with output_dict.add(BABBAGE_OUTPUT_KEY_DATUM_OPTION, inline_datum_list):
-                inline_datum_list.append(DATUM_OPTION_KEY_INLINE)
+            with output_dict.add(_BABBAGE_OUTPUT_KEY_DATUM_OPTION, inline_datum_list):
+                inline_datum_list.append(_DATUM_OPTION_KEY_INLINE)
                 inline_datum_cbor: HashBuilderEmbeddedCBOR = HashBuilderEmbeddedCBOR(
                     output.inline_datum_size
                 )
@@ -506,7 +506,7 @@ class Signer:
                 output.reference_script_size
             )
             with output_dict.add(
-                BABBAGE_OUTPUT_KEY_REFERENCE_SCRIPT, reference_script_cbor
+                _BABBAGE_OUTPUT_KEY_REFERENCE_SCRIPT, reference_script_cbor
             ):
                 await self._process_reference_script(
                     reference_script_cbor, output.reference_script_size, should_show
@@ -571,7 +571,7 @@ class Signer:
             else wire.ProcessError("Invalid token bundle in output")
         )
 
-        if len(asset_group.policy_id) != MINTING_POLICY_ID_LENGTH:
+        if len(asset_group.policy_id) != _MINTING_POLICY_ID_LENGTH:
             raise INVALID_TOKEN_BUNDLE
         if asset_group.tokens_count == 0:
             raise INVALID_TOKEN_BUNDLE
@@ -612,7 +612,7 @@ class Signer:
             if token.amount is None or token.mint_amount is not None:
                 raise INVALID_TOKEN_BUNDLE
 
-        if len(token.asset_name_bytes) > MAX_ASSET_NAME_LENGTH:
+        if len(token.asset_name_bytes) > _MAX_ASSET_NAME_LENGTH:
             raise INVALID_TOKEN_BUNDLE
 
     # inline datum
@@ -686,7 +686,7 @@ class Signer:
                 assert pool_parameters is not None  # _validate_certificate
 
                 pool_items_list: HashBuilderList = HashBuilderList(
-                    POOL_REGISTRATION_CERTIFICATE_ITEMS_COUNT
+                    _POOL_REGISTRATION_CERTIFICATE_ITEMS_COUNT
                 )
                 with certificates_list.append(pool_items_list):
                     for item in certificates.cborize_pool_registration_init(
@@ -844,7 +844,7 @@ class Signer:
             self.msg.network_id,
             self.should_show_details,
         )
-        self.tx_dict.add(TX_BODY_KEY_AUXILIARY_DATA, auxiliary_data_hash)
+        self.tx_dict.add(_TX_BODY_KEY_AUXILIARY_DATA, auxiliary_data_hash)
 
         await self.ctx.call(auxiliary_data_supplement, messages.CardanoTxHostAck)
 
@@ -901,7 +901,7 @@ class Signer:
         await self._show_if_showing_details(
             layout.confirm_script_data_hash(self.ctx, self.msg.script_data_hash)
         )
-        self.tx_dict.add(TX_BODY_KEY_SCRIPT_DATA_HASH, self.msg.script_data_hash)
+        self.tx_dict.add(_TX_BODY_KEY_SCRIPT_DATA_HASH, self.msg.script_data_hash)
 
     def _validate_script_data_hash(self) -> None:
         assert self.msg.script_data_hash is not None
@@ -993,7 +993,7 @@ class Signer:
         output_items_count = 2
         if output.format == CardanoTxOutputSerializationFormat.ARRAY_LEGACY:
             output_list: HashBuilderList = HashBuilderList(output_items_count)
-            with self.tx_dict.add(TX_BODY_KEY_COLLATERAL_RETURN, output_list):
+            with self.tx_dict.add(_TX_BODY_KEY_COLLATERAL_RETURN, output_list):
                 await self._process_legacy_output(
                     output_list, output, should_show_tokens
                 )
@@ -1001,7 +1001,7 @@ class Signer:
             output_dict: HashBuilderDict[int, Any] = HashBuilderDict(
                 output_items_count, wire.ProcessError("Invalid collateral return")
             )
-            with self.tx_dict.add(TX_BODY_KEY_COLLATERAL_RETURN, output_dict):
+            with self.tx_dict.add(_TX_BODY_KEY_COLLATERAL_RETURN, output_dict):
                 await self._process_babbage_output(
                     output_dict, output, should_show_tokens
                 )
@@ -1190,7 +1190,7 @@ class Signer:
 
     def _get_chunks_count(self, data_size: int) -> int:
         assert data_size > 0
-        return (data_size - 1) // MAX_CHUNK_SIZE + 1
+        return (data_size - 1) // _MAX_CHUNK_SIZE + 1
 
     def _validate_chunk(
         self,
@@ -1199,9 +1199,9 @@ class Signer:
         chunks_count: int,
         error: wire.ProcessError,
     ) -> None:
-        if chunk_number < chunks_count - 1 and len(chunk_data) != MAX_CHUNK_SIZE:
+        if chunk_number < chunks_count - 1 and len(chunk_data) != _MAX_CHUNK_SIZE:
             raise error
-        if chunk_number == chunks_count - 1 and len(chunk_data) > MAX_CHUNK_SIZE:
+        if chunk_number == chunks_count - 1 and len(chunk_data) > _MAX_CHUNK_SIZE:
             raise error
 
     def _get_byron_witness(

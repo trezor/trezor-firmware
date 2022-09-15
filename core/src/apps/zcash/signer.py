@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     )
     from apps.bitcoin.keychain import Keychain
 
-OVERWINTERED = const(0x8000_0000)
+_OVERWINTERED = const(0x8000_0000)
 
 
 class Zcash(Bitcoinlike):
@@ -103,7 +103,7 @@ class Zcash(Bitcoinlike):
         assert tx.branch_id is not None  # checked in sanitize_*
         assert tx.expiry is not None
 
-        write_uint32_le(w, tx.version | OVERWINTERED)  # nVersion | fOverwintered
+        write_uint32_le(w, tx.version | _OVERWINTERED)  # nVersion | fOverwintered
         write_uint32_le(w, tx.version_group_id)  # nVersionGroupId
         write_uint32_le(w, tx.branch_id)  # nConsensusBranchId
         write_uint32_le(w, tx.lock_time)  # lock_time
