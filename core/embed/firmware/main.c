@@ -61,6 +61,13 @@
 #include "sdcard.h"
 #include "supervise.h"
 #include "touch.h"
+#include "adc.h"
+#include "screens_rust.h"
+#include "bip39.h"
+
+#include "icon_logo.h"
+#include "uzlib.h"
+
 #ifdef USE_SECP256K1_ZKP
 #include "zkp_context.h"
 #endif
@@ -109,6 +116,8 @@ int main(void) {
   button_init();
 #endif
 
+  adc_init();
+
 #if defined TREZOR_MODEL_R
   button_init();
   display_clear();
@@ -121,6 +130,10 @@ int main(void) {
   sdcard_init();
   display_clear();
 #endif
+
+  display_fadein();
+
+
 
 #if !defined TREZOR_MODEL_1
   // jump to unprivileged mode

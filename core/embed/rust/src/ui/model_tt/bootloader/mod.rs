@@ -192,9 +192,11 @@ extern "C" fn screen_intro(
     };
     let version = unsafe { CStr::from_ptr(version).to_str().unwrap() };
     let bld_version = unsafe { CStr::from_ptr(bld_version).to_str().unwrap() };
-    display::fadein();
     let mut layout = BootloaderLayout::new(Intro::new(bld_version, vendor, version));
-    return layout.process();
+    layout.frame.place(constant::screen());
+    layout.frame.paint();
+    0
+    //return layout.process();
 }
 
 #[no_mangle]

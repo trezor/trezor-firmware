@@ -29,6 +29,7 @@
 #include "display_defs.h"
 #include "display_interface.h"
 #include "fonts/fonts.h"
+#include "uzlib.h"
 
 #define AVATAR_IMAGE_SIZE 144
 #if defined TREZOR_MODEL_T || defined TREZOR_MODEL_1
@@ -105,7 +106,13 @@ void display_fadeout(void);
 void display_utf8_substr(const char *buf_start, size_t buf_len, int char_off,
                          int char_len, const char **out_start, int *out_len);
 
+void uzlib_prepare(struct uzlib_uncomp *decomp, uint8_t *window,
+                   const void *src, uint32_t srcsize, void *dest,
+                   uint32_t destsize);
+
 // pixeldata accessor
 void display_pixeldata_dirty();
+
+void display_test();
 
 #endif

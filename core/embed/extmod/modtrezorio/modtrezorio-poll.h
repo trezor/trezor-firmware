@@ -69,6 +69,9 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
   mp_obj_iter_buf_t iterbuf = {0};
 
   for (;;) {
+
+    display_test();
+
     mp_obj_t iter = mp_getiter(ifaces, &iterbuf);
     mp_obj_t item = 0;
     while ((item = mp_iternext(iter)) != MP_OBJ_STOP_ITERATION) {

@@ -149,7 +149,7 @@ void display_bar_radius(int x, int y, int w, int h, uint16_t c, uint16_t b,
 
 #define UZLIB_WINDOW_SIZE (1 << 10)
 
-static void uzlib_prepare(struct uzlib_uncomp *decomp, uint8_t *window,
+void uzlib_prepare(struct uzlib_uncomp *decomp, uint8_t *window,
                           const void *src, uint32_t srcsize, void *dest,
                           uint32_t destsize) {
   memzero(decomp, sizeof(struct uzlib_uncomp));
@@ -687,6 +687,8 @@ void display_print(const char *text, int textlen) {
 #include <stdio.h>
 #else
 #include "mini_printf.h"
+#include "bip39.h"
+
 #endif
 
 // variadic display_print
@@ -936,3 +938,54 @@ void display_fadeout(void) {
 }
 
 void display_pixeldata_dirty(void) { PIXELDATA_DIRTY(); }
+
+#include "icon_logo.h"
+#include "screens_rust.h"
+
+void display_refresh(void) {
+//  uint32_t id = display_identify();
+//  if (id && (id != DISPLAY_ID_GC9307)) {
+//    // synchronize with the panel synchronization signal
+//    // in order to avoid visual tearing effects
+//    while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12)) {
+//    }
+//    while (GPIO_PIN_SET == HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12)) {
+//    }
+//  }
+}
+
+void display_test(){
+
+  static int p = 0;
+
+  p+=1;
+
+
+  uint8_t seed[512 / 8];
+
+  mnemonic_to_seed("mnemonic", "passphrase", seed, NULL);
+
+
+  for (int i = 0; i < 10; i++) {
+#define UZLIB_WINDOW_SIZE (1 << 10)
+    struct uzlib_uncomp decomp = {0};
+    uint8_t decomp_window[UZLIB_WINDOW_SIZE] = {0};
+    uint8_t decomp_out = 0;
+    uzlib_prepare(&decomp, decomp_window, toi_icon_logo + 12, sizeof(toi_icon_logo) - 12, &decomp_out,
+                  sizeof(decomp_out));
+
+    while (true) {
+      int st = uzlib_uncompress(&decomp);
+      if (st == TINF_DONE) break;  // all OK
+      if (st < 0) break;           // error
+
+      decomp.dest = (uint8_t *) &decomp_out;
+    }
+  }
+
+  screen_intro("", "", 0, "");
+  display_icon(p%240 - 120, 90, 240, 120, toi_icon_logo + 12, sizeof(toi_icon_logo) - 12,
+               0xF100, 0);
+
+
+}

@@ -308,6 +308,12 @@ int main(void) {
   }
 #endif
 
+//  ui_fadein();
+//
+//  while(true) {
+//    screen_intro("", "", 0, "");
+//  }
+
   vendor_header vhdr;
   image_header hdr;
   // detect whether the devices contains a valid firmware

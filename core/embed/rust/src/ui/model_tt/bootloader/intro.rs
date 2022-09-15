@@ -1,5 +1,5 @@
 use crate::{
-    trezorhal::time::{clear_acc, get_ticks, init_ticks},
+    //trezorhal::time::{clear_acc, get_ticks, init_ticks},
     ui::{
         component::{
             text::{paragraphs::Paragraphs, TextStyle},
@@ -19,6 +19,8 @@ use crate::{
         },
     },
 };
+use crate::trezorhal::adc::{get_temp, get_vbat, get_vrefint};
+use crate::ui::constant;
 
 use crate::ui::model_tt::{
     bootloader::{theme::IMAGE_HS, title::TitleMsg},
@@ -27,6 +29,7 @@ use crate::ui::model_tt::{
     theme,
     theme::ICON_RECEIVE,
 };
+use crate::ui::model_tt::theme::IMAGE_ERROR;
 
 #[repr(u32)]
 #[derive(Copy, Clone)]
@@ -94,40 +97,67 @@ impl Component for Intro {
 
     fn paint(&mut self) {
         //self.host.paint();
-        init_ticks();
-        // display::icon(Point::new(0,0), ICON_BG, theme::GREEN,
-        // theme::BLUE); // display::icon(screen().center(), ICON_BG,
-        // theme::GREEN, theme::BLUE); // display::icon_rust(screen().
-        // center(), ICON_BG, theme::GREEN, theme::BLUE); // display::icon_over_icon(
+        //init_ticks();
+        // display::rect_fill(screen(), theme::RED);
+        // display::icon(Point::new(100,100), ICON_BG, theme::GREEN,
+        // theme::RED);
+        // display::icon(screen().center(), ICON_BG,
+        //theme::GREEN, theme::BLUE);
+
+        // display::icon_rust(screen().
+        // center(), ICON_BG, theme::GREEN, theme::BLUE);
+        // display::icon_over_icon(
         //     Some(Rect::new(Point::new(0,0), Point::new(240, 240))),
         //     (ICON_BG, Offset::new(-10, -10), theme::GREEN),
         //     (ICON_RECEIVE, Offset::new(30, 30), theme::BLUE),
         //     theme::RED, );
 
-        display::text_over_image(
-            Some((Rect::new(Point::new(0,0), Point::new(240, 240)),
-            theme::GREEN)),
-            IMAGE_HS,
-            "MY TREZOR WITH REALLY LONG TEXT",
-                FONT_NORMAL,
-            Offset::new(-30,-30),
-            Offset::new(50,50),
-            theme::WHITE,
-        );
+        // let mut buffer = [0_u8;32];
+
+        let s1 = get_vbat();
+        let s2 = get_vrefint();
+        let s3 = get_temp();
+
+        let a = screen().split_top(30);
+
+        display::text_on_bg(a.0, s1.as_str(), FONT_NORMAL, Offset::new(10, 25), theme::FG, theme::GREY_MEDIUM);
+        //display::text(Point::new(10, 30), s1.as_str(), FONT_NORMAL, theme::FG, theme::BG);
+
+        let a = a.1.split_top(30);
+
+        display::text_on_bg(a.0, s2.as_str(), FONT_NORMAL, Offset::new(10, 25), theme::FG, theme::GREY_DARK);
+
+        let a = a.1.split_top(30);
+        display::text_on_bg(a.0, s3.as_str(), FONT_NORMAL, Offset::new(10, 25), theme::FG, theme::GREY_MEDIUM);
+
+
+        //display::text(Point::new(10, 60), s2.as_str(), FONT_NORMAL, theme::FG, theme::BG);
+
+
+        // display::text_over_image(
+        //     Some((Rect::new(Point::new(0,30), Point::new(240, 60)),
+        //     theme::BG)),
+        //     IMAGE_ERROR,
+        //     s2.as_str(),
+        //         FONT_NORMAL,
+        //     Offset::new(0,0),
+        //     Offset::new(10,30),
+        //     theme::WHITE,
+        // );
 
         // display::rect_fill(Rect::new(Point::new(0,0), Point::new(240,
         // 240)), // theme::GREEN);
 
         //display::image(screen().center(), IMAGE_HS);
 
-        get_ticks();
-        clear_acc();
+        //get_ticks();
+        //clear_acc();
 
         // display::text(
-        //     screen().bottom_center(),
-        //     "MY TREZOR",
+        //     screen().bottom_center() + Offset::new(0,-10),
+        //     "VrefInt",
         //     FONT_NORMAL,
-        //     Color::rgb(0xff, 0xff, 0xff),
+        //     theme::BLUE,
         //     Color::rgb(0, 0, 0),
         // )
     }

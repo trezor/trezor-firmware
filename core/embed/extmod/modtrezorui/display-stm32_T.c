@@ -601,17 +601,7 @@ void display_init(void) {
   display_set_little_endian();
 }
 
-void display_refresh(void) {
-  uint32_t id = display_identify();
-  if (id && (id != DISPLAY_ID_GC9307)) {
-    // synchronize with the panel synchronization signal
-    // in order to avoid visual tearing effects
-    while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12)) {
-    }
-    while (GPIO_PIN_SET == HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12)) {
-    }
-  }
-}
+
 
 void display_set_little_endian(void) {
   uint32_t id = display_identify();

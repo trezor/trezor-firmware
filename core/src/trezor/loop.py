@@ -117,6 +117,7 @@ def run() -> None:
     """
     task_entry = [0, 0, 0]  # deadline, task, value
     msg_entry = [0, 0]  # iface | flags, value
+    i = 0
     while _queue or _paused:
         if __debug__:
             # process synthetic events
@@ -150,6 +151,8 @@ def run() -> None:
                 _step(task_entry[1], task_entry[2])  # type: ignore [Argument of type "int" cannot be assigned to parameter "task" of type "Task" in function "_step"]
                 # error: Argument 1 to "_step" has incompatible type "int"; expected "Coroutine[Any, Any, Any]"
                 # rationale: We use untyped lists here, because that is what the C API supports.
+        log.debug("__name__", f"{i}")
+        i+=1
 
 
 def clear() -> None:
