@@ -3,6 +3,7 @@ APPVER = 1.0.0
 NAME  = demo
 
 OBJS += demo.o
+OBJS += startup.o
 
 OBJS += ../vendor/trezor-crypto/bignum.o
 OBJS += ../vendor/trezor-crypto/bip32.o
