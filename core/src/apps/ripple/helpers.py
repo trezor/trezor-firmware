@@ -19,7 +19,7 @@ MAX_FEE = const(1_000_000)  # equals 1 XRP
 # the value in docs is in XRP, we declare it here in drops
 MAX_ALLOWED_AMOUNT = const(100_000_000_000_000_000)
 
-FLAG_FULLY_CANONICAL = 0x8000_0000
+FLAG_FULLY_CANONICAL = const(0x8000_0000)
 
 
 def address_from_public_key(pubkey: bytes) -> str:

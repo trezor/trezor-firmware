@@ -1,3 +1,4 @@
+from micropython import const
 from typing import Sequence
 
 from trezor import ui, utils, wire
@@ -18,7 +19,7 @@ from trezor.ui.layouts.reset import (  # noqa: F401
 if __debug__:
     from apps import debug
 
-NUM_OF_CHOICES = 3
+_NUM_OF_CHOICES = const(3)
 
 
 async def show_internal_entropy(ctx: wire.GenericContext, entropy: bytes) -> None:
@@ -45,8 +46,8 @@ async def _confirm_word(
     non_duplicates = list(set(share_words))
     # shuffle list
     random.shuffle(non_duplicates)
-    # take top NUM_OF_CHOICES words
-    choices = non_duplicates[:NUM_OF_CHOICES]
+    # take top _NUM_OF_CHOICES words
+    choices = non_duplicates[:_NUM_OF_CHOICES]
     # select first of them
     checked_word = choices[0]
     # find its index

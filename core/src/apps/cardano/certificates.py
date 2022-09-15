@@ -1,3 +1,4 @@
+from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor import wire
@@ -19,14 +20,14 @@ if TYPE_CHECKING:
     from . import seed
     from .helpers.account_path_check import AccountPathChecker
 
-POOL_HASH_SIZE = 28
-VRF_KEY_HASH_SIZE = 32
-POOL_METADATA_HASH_SIZE = 32
-IPV4_ADDRESS_SIZE = 4
-IPV6_ADDRESS_SIZE = 16
+_POOL_HASH_SIZE = const(28)
+_VRF_KEY_HASH_SIZE = const(32)
+_POOL_METADATA_HASH_SIZE = const(32)
+_IPV4_ADDRESS_SIZE = const(4)
+_IPV6_ADDRESS_SIZE = const(16)
 
-MAX_URL_LENGTH = 64
-MAX_PORT_NUMBER = 65535
+_MAX_URL_LENGTH = const(64)
+_MAX_PORT_NUMBER = const(65535)
 
 
 def validate(
@@ -50,7 +51,7 @@ def validate(
         )
 
     if certificate.type == CardanoCertificateType.STAKE_DELEGATION:
-        if not certificate.pool or len(certificate.pool) != POOL_HASH_SIZE:
+        if not certificate.pool or len(certificate.pool) != _POOL_HASH_SIZE:
             raise wire.ProcessError("Invalid certificate")
 
     if certificate.type == CardanoCertificateType.STAKE_POOL_REGISTRATION:
@@ -169,8 +170,8 @@ def _validate_pool_parameters(
     protocol_magic: int,
     network_id: int,
 ) -> None:
-    assert_cond(len(pool_parameters.pool_id) == POOL_HASH_SIZE)
-    assert_cond(len(pool_parameters.vrf_key_hash) == VRF_KEY_HASH_SIZE)
+    assert_cond(len(pool_parameters.pool_id) == _POOL_HASH_SIZE)
+    assert_cond(len(pool_parameters.vrf_key_hash) == _VRF_KEY_HASH_SIZE)
     assert_cond(0 <= pool_parameters.pledge <= LOVELACE_MAX_SUPPLY)
     assert_cond(0 <= pool_parameters.cost <= LOVELACE_MAX_SUPPLY)
     assert_cond(pool_parameters.margin_numerator >= 0)
@@ -206,32 +207,32 @@ def validate_pool_relay(pool_relay: messages.CardanoPoolRelayParameters) -> None
             pool_relay.ipv4_address is not None or pool_relay.ipv6_address is not None
         )
         if pool_relay.ipv4_address is not None:
-            assert_cond(len(pool_relay.ipv4_address) == IPV4_ADDRESS_SIZE)
+            assert_cond(len(pool_relay.ipv4_address) == _IPV4_ADDRESS_SIZE)
         if pool_relay.ipv6_address is not None:
-            assert_cond(len(pool_relay.ipv6_address) == IPV6_ADDRESS_SIZE)
+            assert_cond(len(pool_relay.ipv6_address) == _IPV6_ADDRESS_SIZE)
         assert_cond(
-            pool_relay.port is not None and 0 <= pool_relay.port <= MAX_PORT_NUMBER
+            pool_relay.port is not None and 0 <= pool_relay.port <= _MAX_PORT_NUMBER
         )
     elif pool_relay.type == CardanoPoolRelayType.SINGLE_HOST_NAME:
         assert_cond(
             pool_relay.host_name is not None
-            and len(pool_relay.host_name) <= MAX_URL_LENGTH
+            and len(pool_relay.host_name) <= _MAX_URL_LENGTH
         )
         assert_cond(
-            pool_relay.port is not None and 0 <= pool_relay.port <= MAX_PORT_NUMBER
+            pool_relay.port is not None and 0 <= pool_relay.port <= _MAX_PORT_NUMBER
         )
     elif pool_relay.type == CardanoPoolRelayType.MULTIPLE_HOST_NAME:
         assert_cond(
             pool_relay.host_name is not None
-            and len(pool_relay.host_name) <= MAX_URL_LENGTH
+            and len(pool_relay.host_name) <= _MAX_URL_LENGTH
         )
     else:
         raise RuntimeError  # should be unreachable
 
 
 def _validate_pool_metadata(pool_metadata: messages.CardanoPoolMetadataType) -> None:
-    assert_cond(len(pool_metadata.url) <= MAX_URL_LENGTH)
-    assert_cond(len(pool_metadata.hash) == POOL_METADATA_HASH_SIZE)
+    assert_cond(len(pool_metadata.url) <= _MAX_URL_LENGTH)
+    assert_cond(len(pool_metadata.hash) == _POOL_METADATA_HASH_SIZE)
     assert_cond(all((32 <= ord(c) < 127) for c in pool_metadata.url))
 
 
@@ -251,7 +252,7 @@ def _cborize_ipv6_address(ipv6_address: bytes | None) -> bytes | None:
         return None
 
     # ipv6 addresses are serialized to CBOR as uint_32[4] little endian
-    assert len(ipv6_address) == IPV6_ADDRESS_SIZE
+    assert len(ipv6_address) == _IPV6_ADDRESS_SIZE
 
     result = b""
     for i in range(0, 4):

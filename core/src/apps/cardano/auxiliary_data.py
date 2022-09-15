@@ -1,3 +1,4 @@
+from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor import messages, wire
@@ -27,15 +28,15 @@ if TYPE_CHECKING:
 
     from . import seed
 
-AUXILIARY_DATA_HASH_SIZE = 32
-GOVERNANCE_VOTING_PUBLIC_KEY_LENGTH = 32
-GOVERNANCE_REGISTRATION_HASH_SIZE = 32
+_AUXILIARY_DATA_HASH_SIZE = const(32)
+_GOVERNANCE_VOTING_PUBLIC_KEY_LENGTH = const(32)
+_GOVERNANCE_REGISTRATION_HASH_SIZE = const(32)
 
-METADATA_KEY_GOVERNANCE_REGISTRATION = 61284
-METADATA_KEY_GOVERNANCE_REGISTRATION_SIGNATURE = 61285
+_METADATA_KEY_GOVERNANCE_REGISTRATION = const(61284)
+_METADATA_KEY_GOVERNANCE_REGISTRATION_SIGNATURE = const(61285)
 
-MAX_DELEGATION_COUNT = 32
-DEFAULT_VOTING_PURPOSE = 0
+_MAX_DELEGATION_COUNT = const(32)
+_DEFAULT_VOTING_PURPOSE = const(0)
 
 
 def assert_cond(condition: bool) -> None:
@@ -57,7 +58,7 @@ def validate(auxiliary_data: messages.CardanoTxAuxiliaryData) -> None:
 
 
 def _validate_hash(auxiliary_data_hash: bytes) -> None:
-    assert_cond(len(auxiliary_data_hash) == AUXILIARY_DATA_HASH_SIZE)
+    assert_cond(len(auxiliary_data_hash) == _AUXILIARY_DATA_HASH_SIZE)
 
 
 def _validate_governance_registration_parameters(
@@ -84,13 +85,13 @@ def _validate_governance_registration_parameters(
 
 
 def _validate_voting_public_key(key: bytes) -> None:
-    assert_cond(len(key) == GOVERNANCE_VOTING_PUBLIC_KEY_LENGTH)
+    assert_cond(len(key) == _GOVERNANCE_VOTING_PUBLIC_KEY_LENGTH)
 
 
 def _validate_delegations(
     delegations: list[messages.CardanoGovernanceDelegation],
 ) -> None:
-    assert_cond(len(delegations) <= MAX_DELEGATION_COUNT)
+    assert_cond(len(delegations) <= _MAX_DELEGATION_COUNT)
     for delegation in delegations:
         _validate_voting_public_key(delegation.voting_public_key)
 
@@ -101,7 +102,7 @@ def _get_voting_purpose_to_serialize(
     if parameters.format == CardanoGovernanceRegistrationFormat.CIP15:
         return None
     if parameters.voting_purpose is None:
-        return DEFAULT_VOTING_PURPOSE
+        return _DEFAULT_VOTING_PURPOSE
     return parameters.voting_purpose
 
 
@@ -218,8 +219,8 @@ def _cborize_governance_registration(
     governance_registration_signature = {1: governance_registration_payload_signature}
 
     return {
-        METADATA_KEY_GOVERNANCE_REGISTRATION: governance_registration_payload,
-        METADATA_KEY_GOVERNANCE_REGISTRATION_SIGNATURE: governance_registration_signature,
+        _METADATA_KEY_GOVERNANCE_REGISTRATION: governance_registration_payload,
+        _METADATA_KEY_GOVERNANCE_REGISTRATION_SIGNATURE: governance_registration_signature,
     }
 
 
@@ -277,12 +278,12 @@ def _create_governance_registration_payload_signature(
     node = keychain.derive(path)
 
     encoded_governance_registration = cbor.encode(
-        {METADATA_KEY_GOVERNANCE_REGISTRATION: governance_registration_payload}
+        {_METADATA_KEY_GOVERNANCE_REGISTRATION: governance_registration_payload}
     )
 
     governance_registration_hash = hashlib.blake2b(
         data=encoded_governance_registration,
-        outlen=GOVERNANCE_REGISTRATION_HASH_SIZE,
+        outlen=_GOVERNANCE_REGISTRATION_HASH_SIZE,
     ).digest()
 
     return ed25519.sign_ext(
@@ -304,5 +305,5 @@ def _wrap_metadata(metadata: dict) -> tuple[dict, tuple]:
 
 def _get_hash(auxiliary_data: bytes) -> bytes:
     return hashlib.blake2b(
-        data=auxiliary_data, outlen=AUXILIARY_DATA_HASH_SIZE
+        data=auxiliary_data, outlen=_AUXILIARY_DATA_HASH_SIZE
     ).digest()

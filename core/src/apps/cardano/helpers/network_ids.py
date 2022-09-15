@@ -1,5 +1,7 @@
-MAINNET = 1
-TESTNET = 0
+from micropython import const
+
+MAINNET = const(1)
+TESTNET = const(0)
 
 
 def is_mainnet(network_id: int) -> bool:

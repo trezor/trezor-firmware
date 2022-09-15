@@ -1,3 +1,4 @@
+from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor import wire
@@ -34,7 +35,7 @@ if TYPE_CHECKING:
 
 
 # Maximum data size we support
-MAX_VALUE_BYTE_SIZE = 1024
+_MAX_VALUE_BYTE_SIZE = const(1024)
 
 
 @with_keychain_from_path(*PATTERNS_ADDRESS)
@@ -423,8 +424,8 @@ def validate_value(field: EthereumFieldType, value: bytes) -> None:
         if len(value) != field.size:
             raise wire.DataError("Invalid length")
     else:
-        if len(value) > MAX_VALUE_BYTE_SIZE:
-            raise wire.DataError(f"Invalid length, bigger than {MAX_VALUE_BYTE_SIZE}")
+        if len(value) > _MAX_VALUE_BYTE_SIZE:
+            raise wire.DataError(f"Invalid length, bigger than {_MAX_VALUE_BYTE_SIZE}")
 
     # Specific tests for some data types
     if field.data_type == EthereumDataType.BOOL:

@@ -35,6 +35,7 @@ reads the message's header. When the message type is known the first handler is 
 
 """
 
+from micropython import const
 from typing import TYPE_CHECKING
 
 from storage.cache import InvalidSessionError
@@ -132,9 +133,9 @@ class DummyContext:
 
 DUMMY_CONTEXT = DummyContext()
 
-PROTOBUF_BUFFER_SIZE = 8192
+_PROTOBUF_BUFFER_SIZE = const(8192)
 
-WIRE_BUFFER = bytearray(PROTOBUF_BUFFER_SIZE)
+WIRE_BUFFER = bytearray(_PROTOBUF_BUFFER_SIZE)
 
 if __debug__:
     PROTOBUF_BUFFER_SIZE_DEBUG = 1024
