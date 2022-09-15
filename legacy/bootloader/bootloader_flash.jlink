@@ -1,0 +1,7 @@
+device stm32f205rg
+if swd
+speed auto
+loadbin bootloader/bootloader.bin 0x8000000
+r
+g
+exit

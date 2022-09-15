@@ -1,0 +1,7 @@
+device stm32f205rg
+if swd
+speed auto
+loadbin firmware/trezor.bin 0x08010000
+r
+g
+exit
