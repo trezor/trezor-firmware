@@ -1,3 +1,4 @@
+from micropython import const
 from typing import Any
 
 from trezor import messages, wire
@@ -37,8 +38,8 @@ ADDRESS_TYPES_PAYMENT_SCRIPT = (
     CardanoAddressType.ENTERPRISE_SCRIPT,
 )
 
-MIN_ADDRESS_BYTES_LENGTH = 29
-MAX_ADDRESS_BYTES_LENGTH = 65
+_MIN_ADDRESS_BYTES_LENGTH = const(29)
+_MAX_ADDRESS_BYTES_LENGTH = const(65)
 
 
 def assert_params_cond(condition: bool) -> None:
@@ -282,7 +283,7 @@ def _validate_shelley_address(
 
 def _validate_size(address_bytes: bytes) -> None:
     assert_cond(
-        MIN_ADDRESS_BYTES_LENGTH <= len(address_bytes) <= MAX_ADDRESS_BYTES_LENGTH
+        _MIN_ADDRESS_BYTES_LENGTH <= len(address_bytes) <= _MAX_ADDRESS_BYTES_LENGTH
     )
 
 

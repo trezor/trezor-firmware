@@ -1,3 +1,4 @@
+from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor import wire
@@ -23,7 +24,7 @@ if TYPE_CHECKING:
 
     from apps.common.keychain import Keychain
 
-TX_TYPE = 2
+_TX_TYPE = const(2)
 
 
 def access_list_item_length(item: EthereumAccessList) -> int:
@@ -86,7 +87,7 @@ async def sign_tx_eip1559(
 
     sha = HashWriter(sha3_256(keccak=True))
 
-    rlp.write(sha, TX_TYPE)
+    rlp.write(sha, _TX_TYPE)
 
     rlp.write_header(sha, total_length, rlp.LIST_HEADER_BYTE)
 

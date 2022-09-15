@@ -1,8 +1,10 @@
+from micropython import const
+
 # https://book.world.dev.cardano.org/environments.html
-MAINNET = 764824073
-TESTNET_PREPROD = 1
-TESTNET_PREVIEW = 2
-TESTNET_LEGACY = 1097911063
+MAINNET = const(764824073)
+TESTNET_PREPROD = const(1)
+TESTNET_PREVIEW = const(2)
+TESTNET_LEGACY = const(1097911063)
 
 NAMES = {
     MAINNET: "Mainnet",

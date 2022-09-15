@@ -53,7 +53,7 @@ _TXSIZE_DECRED_SCRIPT_VERSION = const(2)
 _TXSIZE_DECRED_EXPIRY = const(4)
 
 # Decred witness size (without script): 8 byte amount, 4 byte block height, 4 byte block index
-_TXSIZE_DECRED_WITNESS = 16
+_TXSIZE_DECRED_WITNESS = const(16)
 
 
 class DecredTxWeightCalculator(TxWeightCalculator):

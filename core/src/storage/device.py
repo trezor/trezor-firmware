@@ -45,16 +45,16 @@ if TYPE_CHECKING:
     StorageSafetyCheckLevel = Literal[0, 1]
 # fmt: on
 
-HOMESCREEN_MAXSIZE = 16384
-LABEL_MAXLENGTH = 32
+HOMESCREEN_MAXSIZE = const(16384)
+LABEL_MAXLENGTH = const(32)
 
 if __debug__:
     AUTOLOCK_DELAY_MINIMUM = 10 * 1000  # 10 seconds
 else:
     AUTOLOCK_DELAY_MINIMUM = 60 * 1000  # 1 minute
-AUTOLOCK_DELAY_DEFAULT = 10 * 60 * 1000  # 10 minutes
+AUTOLOCK_DELAY_DEFAULT = const(10 * 60 * 1000)  # 10 minutes
 # autolock intervals larger than AUTOLOCK_DELAY_MAXIMUM cause issues in the scheduler
-AUTOLOCK_DELAY_MAXIMUM = 0x2000_0000  # ~6 days
+AUTOLOCK_DELAY_MAXIMUM = const(0x2000_0000)  # ~6 days
 
 # Length of SD salt auth tag.
 # Other SD-salt-related constants are in sd_salt.py

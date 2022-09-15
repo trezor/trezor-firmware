@@ -1,3 +1,4 @@
+from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor import utils, wire
@@ -28,8 +29,8 @@ if TYPE_CHECKING:
 
 
 _VERSION_MAGIC = b"SL\x00\x19"
-_FLAG_USER_CONFIRMED = 0x01
-_OWNERSHIP_ID_LEN = 32
+_FLAG_USER_CONFIRMED = const(0x01)
+_OWNERSHIP_ID_LEN = const(32)
 _OWNERSHIP_ID_KEY_PATH = [b"SLIP-0019", b"Ownership identification key"]
 
 

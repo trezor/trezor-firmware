@@ -8,6 +8,7 @@
 # the actual data follow. This currently only supports the Payment
 # transaction type and the fields that are required for it.
 
+from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor.messages import RippleSignTx
@@ -24,24 +25,24 @@ class RippleField:
         self.key: int = key
 
 
-FIELD_TYPE_INT16 = 1
-FIELD_TYPE_INT32 = 2
-FIELD_TYPE_AMOUNT = 6
-FIELD_TYPE_VL = 7
-FIELD_TYPE_ACCOUNT = 8
+_FIELD_TYPE_INT16 = const(1)
+_FIELD_TYPE_INT32 = const(2)
+_FIELD_TYPE_AMOUNT = const(6)
+_FIELD_TYPE_VL = const(7)
+_FIELD_TYPE_ACCOUNT = const(8)
 
 FIELDS_MAP: dict[str, RippleField] = {
-    "account": RippleField(type=FIELD_TYPE_ACCOUNT, key=1),
-    "amount": RippleField(type=FIELD_TYPE_AMOUNT, key=1),
-    "destination": RippleField(type=FIELD_TYPE_ACCOUNT, key=3),
-    "fee": RippleField(type=FIELD_TYPE_AMOUNT, key=8),
-    "sequence": RippleField(type=FIELD_TYPE_INT32, key=4),
-    "type": RippleField(type=FIELD_TYPE_INT16, key=2),
-    "signingPubKey": RippleField(type=FIELD_TYPE_VL, key=3),
-    "flags": RippleField(type=FIELD_TYPE_INT32, key=2),
-    "txnSignature": RippleField(type=FIELD_TYPE_VL, key=4),
-    "lastLedgerSequence": RippleField(type=FIELD_TYPE_INT32, key=27),
-    "destinationTag": RippleField(type=FIELD_TYPE_INT32, key=14),
+    "account": RippleField(type=_FIELD_TYPE_ACCOUNT, key=1),
+    "amount": RippleField(type=_FIELD_TYPE_AMOUNT, key=1),
+    "destination": RippleField(type=_FIELD_TYPE_ACCOUNT, key=3),
+    "fee": RippleField(type=_FIELD_TYPE_AMOUNT, key=8),
+    "sequence": RippleField(type=_FIELD_TYPE_INT32, key=4),
+    "type": RippleField(type=_FIELD_TYPE_INT16, key=2),
+    "signingPubKey": RippleField(type=_FIELD_TYPE_VL, key=3),
+    "flags": RippleField(type=_FIELD_TYPE_INT32, key=2),
+    "txnSignature": RippleField(type=_FIELD_TYPE_VL, key=4),
+    "lastLedgerSequence": RippleField(type=_FIELD_TYPE_INT32, key=27),
+    "destinationTag": RippleField(type=_FIELD_TYPE_INT32, key=14),
 }
 
 TRANSACTION_TYPES = {"Payment": 0}
@@ -73,19 +74,19 @@ def write(w: Writer, field: RippleField, value: int | bytes | str | None) -> Non
     if value is None:
         return
     write_type(w, field)
-    if field.type == FIELD_TYPE_INT16:
+    if field.type == _FIELD_TYPE_INT16:
         assert isinstance(value, int)
         w.extend(value.to_bytes(2, "big"))
-    elif field.type == FIELD_TYPE_INT32:
+    elif field.type == _FIELD_TYPE_INT32:
         assert isinstance(value, int)
         w.extend(value.to_bytes(4, "big"))
-    elif field.type == FIELD_TYPE_AMOUNT:
+    elif field.type == _FIELD_TYPE_AMOUNT:
         assert isinstance(value, int)
         w.extend(serialize_amount(value))
-    elif field.type == FIELD_TYPE_ACCOUNT:
+    elif field.type == _FIELD_TYPE_ACCOUNT:
         assert isinstance(value, str)
         write_bytes_varint(w, helpers.decode_address(value))
-    elif field.type == FIELD_TYPE_VL:
+    elif field.type == _FIELD_TYPE_VL:
         assert isinstance(value, (bytes, bytearray))
         write_bytes_varint(w, value)
     else:

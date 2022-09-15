@@ -1,3 +1,4 @@
+from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor import log, wire
@@ -11,7 +12,7 @@ from .helpers.utils import derive_public_key
 if TYPE_CHECKING:
     from . import seed
 
-PROTOCOL_MAGIC_KEY = 2
+_PROTOCOL_MAGIC_KEY = const(2)
 
 
 """
@@ -44,7 +45,7 @@ def get_address_attributes(protocol_magic: int) -> dict:
     if protocol_magics.is_mainnet(protocol_magic):
         address_attributes = {}
     else:
-        address_attributes = {PROTOCOL_MAGIC_KEY: cbor.encode(protocol_magic)}
+        address_attributes = {_PROTOCOL_MAGIC_KEY: cbor.encode(protocol_magic)}
 
     return address_attributes
 
@@ -91,13 +92,13 @@ def _validate_protocol_magic(address_data_encoded: bytes, protocol_magic: int) -
 
     attributes = address_data[1]
     if protocol_magics.is_mainnet(protocol_magic):
-        if PROTOCOL_MAGIC_KEY in attributes:
+        if _PROTOCOL_MAGIC_KEY in attributes:
             raise wire.ProcessError("Output address network mismatch")
     else:  # testnet
-        if len(attributes) == 0 or PROTOCOL_MAGIC_KEY not in attributes:
+        if len(attributes) == 0 or _PROTOCOL_MAGIC_KEY not in attributes:
             raise wire.ProcessError("Output address network mismatch")
 
-        protocol_magic_cbor = attributes[PROTOCOL_MAGIC_KEY]
+        protocol_magic_cbor = attributes[_PROTOCOL_MAGIC_KEY]
         address_protocol_magic = cbor.decode(protocol_magic_cbor)
 
         if not isinstance(address_protocol_magic, int):

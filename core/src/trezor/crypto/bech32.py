@@ -20,10 +20,9 @@
 
 """Reference implementation for Bech32/Bech32m and segwit addresses."""
 
-from trezorcrypto import bech32
 from typing import TYPE_CHECKING
 
-bech32_decode = bech32.decode
+from micropython import const
 
 
 if TYPE_CHECKING:
@@ -43,12 +42,12 @@ else:
 class Encoding(IntEnum):
     """Enumeration type to list the various supported encodings."""
 
-    BECH32 = 1
-    BECH32M = 2
+    BECH32 = const(1)
+    BECH32M = const(2)
 
 
 CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
-BECH32M_CONST = 0x2BC830A3
+_BECH32M_CONST = const(0x2BC830A3)
 
 
 def bech32_polymod(values: list[int]) -> int:
@@ -71,7 +70,7 @@ def bech32_hrp_expand(hrp: str) -> list[int]:
 def bech32_create_checksum(hrp: str, data: list[int], spec: Encoding) -> list[int]:
     """Compute the checksum values given HRP and data."""
     values = bech32_hrp_expand(hrp) + data
-    const = BECH32M_CONST if spec == Encoding.BECH32M else 1
+    const = _BECH32M_CONST if spec == Encoding.BECH32M else 1
     polymod = bech32_polymod(values + [0, 0, 0, 0, 0, 0]) ^ const
     return [(polymod >> 5 * (5 - i)) & 31 for i in range(6)]
 
@@ -127,8 +126,10 @@ def convertbits(
 
 def decode(hrp: str, addr: str) -> OptionalTuple2[int, bytes]:
     """Decode a segwit address."""
+    from trezorcrypto import bech32
+
     try:
-        hrpgot, data, spec = bech32_decode(addr)
+        hrpgot, data, spec = bech32.decode(addr)
         decoded = bytes(convertbits(data[1:], 5, 8, False))
     except ValueError:
         return (None, None)

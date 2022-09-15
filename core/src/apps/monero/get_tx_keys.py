@@ -14,6 +14,7 @@ encrypted using the private spend key. Here the host sends it back
 in `MoneroGetTxKeyRequest.tx_enc_keys` to be decrypted and yet again encrypted
 using the view key, which the host possess.
 """
+from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor import utils, wire
@@ -24,7 +25,7 @@ from apps.common.keychain import auto_keychain
 from apps.monero import layout, misc
 from apps.monero.xmr import chacha_poly, crypto, crypto_helpers
 
-_GET_TX_KEY_REASON_TX_DERIVATION = 1
+_GET_TX_KEY_REASON_TX_DERIVATION = const(1)
 
 if TYPE_CHECKING:
     from apps.common.keychain import Keychain
