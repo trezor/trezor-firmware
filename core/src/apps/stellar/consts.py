@@ -59,21 +59,6 @@ op_codes: dict[int, int] = {
     MessageType.StellarSetOptionsOp: 5,
 }
 
-op_wire_types = [
-    MessageType.StellarAccountMergeOp,
-    MessageType.StellarAllowTrustOp,
-    MessageType.StellarBumpSequenceOp,
-    MessageType.StellarChangeTrustOp,
-    MessageType.StellarCreateAccountOp,
-    MessageType.StellarCreatePassiveSellOfferOp,
-    MessageType.StellarManageDataOp,
-    MessageType.StellarManageBuyOfferOp,
-    MessageType.StellarManageSellOfferOp,
-    MessageType.StellarPathPaymentStrictReceiveOp,
-    MessageType.StellarPathPaymentStrictSendOp,
-    MessageType.StellarPaymentOp,
-    MessageType.StellarSetOptionsOp,
-]
 
 # https://www.stellar.org/developers/guides/concepts/accounts.html#balance
 # https://github.com/stellar/go/blob/3d2c1defe73dbfed00146ebe0e8d7e07ce4bb1b6/amount/main.go#L23

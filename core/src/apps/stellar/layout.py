@@ -1,20 +1,14 @@
 from typing import TYPE_CHECKING
 
+import trezor.ui.layouts as layouts
 from trezor import strings, ui
-from trezor.enums import ButtonRequestType, StellarAssetType, StellarMemoType
-from trezor.ui.layouts import (
-    confirm_action,
-    confirm_address,
-    confirm_blob,
-    confirm_metadata,
-    confirm_properties,
-)
-from trezor.wire import DataError
+from trezor.enums import ButtonRequestType
 
 from . import consts
 
 if TYPE_CHECKING:
     from trezor.wire import Context
+    from trezor.enums import StellarMemoType
 
     from trezor.messages import StellarAsset
 
@@ -25,39 +19,43 @@ async def require_confirm_init(
     network_passphrase: str,
     accounts_match: bool,
 ) -> None:
-    if accounts_match:
-        description = "Initialize signing with your account"
-    else:
-        description = "Initialize signing with"
-    await confirm_address(
+    description = "Initialize signing with" + " your account" if accounts_match else ""
+    await layouts.confirm_address(
         ctx,
-        title="Confirm Stellar",
-        address=address,
-        br_type="confirm_init",
-        description=description,
+        "Confirm Stellar",
+        address,
+        description,
+        "confirm_init",
         icon=ui.ICON_SEND,
     )
 
-    network = get_network_warning(network_passphrase)
+    # get_network_warning
+    if network_passphrase == consts.NETWORK_PASSPHRASE_PUBLIC:
+        network = None
+    elif network_passphrase == consts.NETWORK_PASSPHRASE_TESTNET:
+        network = "testnet network"
+    else:
+        network = "private network"
+
     if network:
-        await confirm_metadata(
+        await layouts.confirm_metadata(
             ctx,
             "confirm_init_network",
-            title="Confirm network",
-            content="Transaction is on {}",
-            param=network,
+            "Confirm network",
+            "Transaction is on {}",
+            network,
+            ButtonRequestType.ConfirmOutput,
             icon=ui.ICON_CONFIRM,
-            br_code=ButtonRequestType.ConfirmOutput,
             hide_continue=True,
         )
 
 
 async def require_confirm_timebounds(ctx: Context, start: int, end: int) -> None:
-    await confirm_properties(
+    await layouts.confirm_properties(
         ctx,
         "confirm_timebounds",
-        title="Confirm timebounds",
-        props=(
+        "Confirm timebounds",
+        (
             (
                 "Valid from (UTC)",
                 strings.format_timestamp(start) if start > 0 else "[no restriction]",
@@ -73,6 +71,8 @@ async def require_confirm_timebounds(ctx: Context, start: int, end: int) -> None
 async def require_confirm_memo(
     ctx: Context, memo_type: StellarMemoType, memo_text: str
 ) -> None:
+    from trezor.enums import StellarMemoType
+
     if memo_type == StellarMemoType.TEXT:
         description = "Memo (TEXT)"
     elif memo_type == StellarMemoType.ID:
@@ -82,40 +82,43 @@ async def require_confirm_memo(
     elif memo_type == StellarMemoType.RETURN:
         description = "Memo (RETURN)"
     else:
-        return await confirm_action(
+        return await layouts.confirm_action(
             ctx,
             "confirm_memo",
-            title="Confirm memo",
-            action="No memo set!",
-            description="Important: Many exchanges require a memo when depositing",
+            "Confirm memo",
+            "No memo set!",
+            "Important: Many exchanges require a memo when depositing",
             icon=ui.ICON_CONFIRM,
             icon_color=ui.GREEN,
             br_code=ButtonRequestType.ConfirmOutput,
         )
 
-    await confirm_blob(
+    await layouts.confirm_blob(
         ctx,
         "confirm_memo",
-        title="Confirm memo",
-        description=description,
-        data=memo_text,
+        "Confirm memo",
+        memo_text,
+        description,
     )
 
 
 async def require_confirm_final(ctx: Context, fee: int, num_operations: int) -> None:
     op_str = strings.format_plural("{count} {plural}", num_operations, "operation")
-    await confirm_metadata(
+    await layouts.confirm_metadata(
         ctx,
         "confirm_final",
-        title="Final confirm",
-        content="Sign this transaction made up of " + op_str + " and pay {}\nfor fee?",
-        param=format_amount(fee),
+        "Final confirm",
+        "Sign this transaction made up of " + op_str + " and pay {}\nfor fee?",
+        format_amount(fee),
         hide_continue=True,
         hold=True,
     )
 
 
 def format_asset(asset: StellarAsset | None) -> str:
+    from trezor.enums import StellarAssetType
+    from trezor.wire import DataError
+
     if asset is None or asset.type == StellarAssetType.NATIVE:
         return "XLM"
     else:
@@ -130,11 +133,3 @@ def format_amount(amount: int, asset: StellarAsset | None = None) -> str:
         + " "
         + format_asset(asset)
     )
-
-
-def get_network_warning(network_passphrase: str) -> str | None:
-    if network_passphrase == consts.NETWORK_PASSPHRASE_PUBLIC:
-        return None
-    if network_passphrase == consts.NETWORK_PASSPHRASE_TESTNET:
-        return "testnet network"
-    return "private network"
