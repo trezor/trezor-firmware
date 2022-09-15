@@ -3,7 +3,6 @@ from ubinascii import hexlify
 
 from trezor import ui
 from trezor.enums import ButtonRequestType, EthereumDataType
-from trezor.messages import EthereumFieldType, EthereumStructMember
 from trezor.strings import format_amount, format_plural
 from trezor.ui.layouts import (
     confirm_action,
@@ -23,6 +22,7 @@ from .helpers import address_from_bytes, decode_typed_data, get_type_name
 if TYPE_CHECKING:
     from typing import Awaitable, Iterable
 
+    from trezor.messages import EthereumFieldType, EthereumStructMember
     from trezor.wire import Context
 
 

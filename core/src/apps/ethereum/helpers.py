@@ -3,9 +3,9 @@ from ubinascii import hexlify, unhexlify
 
 from trezor import wire
 from trezor.enums import EthereumDataType
-from trezor.messages import EthereumFieldType
 
 if TYPE_CHECKING:
+    from trezor.messages import EthereumFieldType
     from .networks import NetworkInfo
 
 

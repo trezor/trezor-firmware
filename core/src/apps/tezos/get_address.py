@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from trezor.crypto import hashlib
-from trezor.messages import TezosAddress, TezosGetAddress
+from trezor.messages import TezosAddress
 from trezor.ui.layouts import show_address
 
 from apps.common import paths, seed
@@ -10,6 +10,7 @@ from apps.common.keychain import with_slip44_keychain
 from . import CURVE, PATTERNS, SLIP44_ID, helpers
 
 if TYPE_CHECKING:
+    from trezor.messages import TezosGetAddress
     from apps.common.keychain import Keychain
     from trezor.wire import Context
 

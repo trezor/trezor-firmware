@@ -1,11 +1,5 @@
 from typing import TYPE_CHECKING
 
-from trezor.messages import (
-    NEMMosaicCreation,
-    NEMMosaicSupplyChange,
-    NEMTransactionCommon,
-)
-
 from ..helpers import (
     NEM_TRANSACTION_TYPE_MOSAIC_CREATION,
     NEM_TRANSACTION_TYPE_MOSAIC_SUPPLY_CHANGE,
@@ -18,6 +12,11 @@ from ..writers import (
 )
 
 if TYPE_CHECKING:
+    from trezor.messages import (
+        NEMMosaicCreation,
+        NEMMosaicSupplyChange,
+        NEMTransactionCommon,
+    )
     from trezor.utils import Writer
 
 

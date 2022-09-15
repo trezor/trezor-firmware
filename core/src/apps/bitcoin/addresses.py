@@ -5,7 +5,6 @@ from trezor.crypto import base58, cashaddr
 from trezor.crypto.curve import bip340
 from trezor.crypto.hashlib import sha256
 from trezor.enums import InputScriptType
-from trezor.messages import MultisigRedeemScriptType
 from trezor.utils import HashWriter
 
 from apps.common import address_type
@@ -16,6 +15,7 @@ from .multisig import multisig_get_pubkeys, multisig_pubkey_index
 from .scripts import output_script_native_segwit, write_output_script_multisig
 
 if TYPE_CHECKING:
+    from trezor.messages import MultisigRedeemScriptType
     from trezor.crypto import bip32
 
 

@@ -1,13 +1,14 @@
 from typing import TYPE_CHECKING
 from ubinascii import hexlify
 
-from trezor.messages import BinanceGetPublicKey, BinancePublicKey
+from trezor.messages import BinancePublicKey
 from trezor.ui.layouts import show_pubkey
 
 from apps.common import paths
 from apps.common.keychain import Keychain, auto_keychain
 
 if TYPE_CHECKING:
+    from trezor.messages import BinanceGetPublicKey
     from trezor.wire import Context
 
 

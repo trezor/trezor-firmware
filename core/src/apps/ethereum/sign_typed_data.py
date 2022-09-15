@@ -7,7 +7,6 @@ from trezor.crypto.hashlib import sha3_256
 from trezor.enums import EthereumDataType
 from trezor.messages import (
     EthereumFieldType,
-    EthereumSignTypedData,
     EthereumTypedDataSignature,
     EthereumTypedDataStructAck,
     EthereumTypedDataStructRequest,
@@ -32,6 +31,8 @@ from .layout import (
 if TYPE_CHECKING:
     from apps.common.keychain import Keychain
     from trezor.wire import Context
+
+    from trezor.messages import EthereumSignTypedData
 
 
 # Maximum data size we support

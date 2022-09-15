@@ -6,7 +6,7 @@ if not utils.BITCOIN_ONLY:
     from apps.nem.helpers import *
     from apps.nem.namespace import *
     from apps.nem.namespace.serialize import *
-    from trezor.messages import NEMProvisionNamespace
+    from trezor.messages import NEMProvisionNamespace, NEMTransactionCommon
     from trezor.messages import NEMSignTx
 
 

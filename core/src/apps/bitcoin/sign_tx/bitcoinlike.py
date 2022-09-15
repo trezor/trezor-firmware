@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
 from trezor import wire
-from trezor.messages import PrevTx, SignTx, TxInput
 
 from apps.common.writers import write_compact_size
 
@@ -12,6 +11,7 @@ from .bitcoin import Bitcoin
 
 if TYPE_CHECKING:
     from typing import Sequence
+    from trezor.messages import PrevTx, SignTx, TxInput
     from .tx_info import OriginalTxInfo, TxInfo
 
 

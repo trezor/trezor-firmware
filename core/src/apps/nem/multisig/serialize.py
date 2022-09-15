@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
 from trezor.crypto import hashlib, nem
-from trezor.messages import NEMAggregateModification, NEMTransactionCommon
 
 from ..helpers import (
     NEM_TRANSACTION_TYPE_AGGREGATE_MODIFICATION,
@@ -11,6 +10,7 @@ from ..helpers import (
 from ..writers import serialize_tx_common, write_bytes_with_len, write_uint32_le
 
 if TYPE_CHECKING:
+    from trezor.messages import NEMAggregateModification, NEMTransactionCommon
     from trezor.utils import Writer
 
 

@@ -3,24 +3,12 @@ from common import *
 if not utils.BITCOIN_ONLY:
     from trezor.messages import RipplePayment
     from trezor.messages import RippleSignTx
-    from apps.ripple.serialize import serialize, serialize_amount
-    from apps.ripple.sign_tx import get_network_prefix
+    from apps.ripple.serialize import serialize
+    from apps.ripple import helpers
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestRippleSerializer(unittest.TestCase):
-    def test_amount(self):
-        # https://github.com/ripple/ripple-binary-codec/blob/4581f1b41e712f545ba08be15e188a557c731ecf/test/fixtures/data-driven-tests.json#L2494
-        self.assertEqual(serialize_amount(0), unhexlify("4000000000000000"))
-        self.assertEqual(serialize_amount(1), unhexlify("4000000000000001"))
-        self.assertEqual(serialize_amount(93493429243), unhexlify("40000015c4a483fb"))
-        with self.assertRaises(ValueError):
-            serialize_amount(1000000000000000000)  # too large
-        with self.assertRaises(ValueError):
-            serialize_amount(-1)  # negative not supported
-        with self.assertRaises(Exception):
-            serialize_amount(1.1)  # float numbers not supported
-
     def test_transactions(self):
         # from https://github.com/miracle2k/ripple-python
         source_address = "r3P9vH81KBayazSTrQj6S25jW6kDb779Gi"
@@ -146,7 +134,8 @@ class TestRippleSerializer(unittest.TestCase):
                 "ed5f5ac8b98974a3ca843326d9b88cebd0560177b973ee0b149f782cfaa06dc66a"
             ),
         )
-        tx = get_network_prefix() + tx
+        network_prefix = helpers.HASH_TX_SIGN.to_bytes(4, "big")
+        tx = network_prefix + tx
 
         self.assertEqual(tx[0:4], unhexlify("53545800"))  # signing prefix
         self.assertEqual(tx[4:7], unhexlify("120000"))  # transaction type

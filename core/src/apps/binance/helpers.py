@@ -4,15 +4,10 @@ from typing import TYPE_CHECKING
 from trezor import wire
 from trezor.crypto import bech32
 from trezor.crypto.scripts import sha256_ripemd160
-from trezor.messages import (
-    BinanceCancelMsg,
-    BinanceInputOutput,
-    BinanceOrderMsg,
-    BinanceSignTx,
-    BinanceTransferMsg,
-)
+from trezor.messages import BinanceCancelMsg, BinanceOrderMsg, BinanceTransferMsg
 
 if TYPE_CHECKING:
+    from trezor.messages import BinanceInputOutput, BinanceSignTx
     from trezor.protobuf import MessageType
 
 ENVELOPE_BLUEPRINT = '{{"account_number":"{account_number}","chain_id":"{chain_id}","data":null,"memo":"{memo}","msgs":[{msgs}],"sequence":"{sequence}","source":"{source}"}}'

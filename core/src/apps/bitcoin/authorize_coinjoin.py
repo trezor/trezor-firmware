@@ -1,22 +1,14 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
-from trezor import wire
-from trezor.enums import ButtonRequestType
-from trezor.messages import AuthorizeCoinJoin, Success
-from trezor.ui.layouts import confirm_coinjoin, confirm_metadata
-
-from apps.common import authorization, safety_checks
-from apps.common.keychain import FORBIDDEN_KEY_PATH
-from apps.common.paths import SLIP25_PURPOSE, validate_path
-
 from .authorization import FEE_RATE_DECIMALS
-from .common import BIP32_WALLET_DEPTH, format_fee_rate
-from .keychain import validate_path_against_script_type, with_keychain
+from .keychain import with_keychain
 
 if TYPE_CHECKING:
+    from trezor.messages import AuthorizeCoinJoin, Success
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
+    from trezor import wire
 
 _MAX_COORDINATOR_LEN = const(36)
 _MAX_ROUNDS = const(500)
@@ -27,6 +19,18 @@ _MAX_COORDINATOR_FEE_RATE = 5 * pow(10, FEE_RATE_DECIMALS)  # 5 %
 async def authorize_coinjoin(
     ctx: wire.Context, msg: AuthorizeCoinJoin, keychain: Keychain, coin: CoinInfo
 ) -> Success:
+    from trezor import wire
+    from trezor.enums import ButtonRequestType
+    from trezor.messages import Success
+    from trezor.ui.layouts import confirm_coinjoin, confirm_metadata
+
+    from apps.common import authorization, safety_checks
+    from apps.common.keychain import FORBIDDEN_KEY_PATH
+    from apps.common.paths import SLIP25_PURPOSE, validate_path
+
+    from .keychain import validate_path_against_script_type
+    from .common import BIP32_WALLET_DEPTH, format_fee_rate
+
     if len(msg.coordinator) > _MAX_COORDINATOR_LEN or not all(
         32 <= ord(x) <= 126 for x in msg.coordinator
     ):

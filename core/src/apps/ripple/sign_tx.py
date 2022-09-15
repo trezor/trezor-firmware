@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from trezor.crypto import der
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha512
-from trezor.messages import RippleSignedTx, RippleSignTx
+from trezor.messages import RippleSignedTx
 from trezor.wire import ProcessError
 
 from apps.common import paths
@@ -13,6 +13,7 @@ from . import helpers, layout
 from .serialize import serialize
 
 if TYPE_CHECKING:
+    from trezor.messages import RippleSignTx
     from apps.common.keychain import Keychain
     from trezor.wire import Context
 

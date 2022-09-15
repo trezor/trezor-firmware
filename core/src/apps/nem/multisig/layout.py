@@ -3,12 +3,16 @@ from typing import TYPE_CHECKING
 from trezor import ui
 from trezor.crypto import nem
 from trezor.enums import ButtonRequestType, NEMModificationType
-from trezor.messages import NEMAggregateModification, NEMSignTx, NEMTransactionCommon
 from trezor.ui.layouts import confirm_address
 
 from ..layout import require_confirm_fee, require_confirm_final, require_confirm_text
 
 if TYPE_CHECKING:
+    from trezor.messages import (
+        NEMAggregateModification,
+        NEMSignTx,
+        NEMTransactionCommon,
+    )
     from trezor.wire import Context
 
 

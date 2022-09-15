@@ -2,12 +2,6 @@ from typing import TYPE_CHECKING
 
 from trezor import ui
 from trezor.enums import NEMMosaicLevy, NEMSupplyChangeType
-from trezor.messages import (
-    NEMMosaicCreation,
-    NEMMosaicDefinition,
-    NEMMosaicSupplyChange,
-    NEMTransactionCommon,
-)
 from trezor.ui.layouts import confirm_properties
 
 from ..layout import (
@@ -18,6 +12,12 @@ from ..layout import (
 )
 
 if TYPE_CHECKING:
+    from trezor.messages import (
+        NEMMosaicCreation,
+        NEMMosaicDefinition,
+        NEMMosaicSupplyChange,
+        NEMTransactionCommon,
+    )
     from trezor.wire import Context
 
 

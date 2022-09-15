@@ -1,4 +1,4 @@
-from trezor.messages import NEMProvisionNamespace, NEMTransactionCommon
+from typing import TYPE_CHECKING
 
 from ..helpers import NEM_TRANSACTION_TYPE_PROVISION_NAMESPACE
 from ..writers import (
@@ -7,6 +7,9 @@ from ..writers import (
     write_uint32_le,
     write_uint64_le,
 )
+
+if TYPE_CHECKING:
+    from trezor.messages import NEMProvisionNamespace, NEMTransactionCommon
 
 
 def serialize_provision_namespace(

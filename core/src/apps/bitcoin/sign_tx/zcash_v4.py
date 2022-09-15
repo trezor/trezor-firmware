@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 
 from trezor import wire
 from trezor.crypto.hashlib import blake2b
-from trezor.messages import PrevTx, SignTx, TxInput, TxOutput
 from trezor.utils import HashWriter, ensure
 
 from apps.common.coininfo import CoinInfo
@@ -25,6 +24,7 @@ from . import approvers, helpers
 from .bitcoinlike import Bitcoinlike
 
 if TYPE_CHECKING:
+    from trezor.messages import PrevTx, SignTx, TxInput, TxOutput
     from typing import Sequence
     from apps.common import coininfo
     from .sig_hasher import SigHasher
