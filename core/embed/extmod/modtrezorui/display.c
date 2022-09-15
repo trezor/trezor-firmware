@@ -406,6 +406,7 @@ void display_icon(int x, int y, int w, int h, const void *data,
   x += DISPLAY_OFFSET.x;
   y += DISPLAY_OFFSET.y;
   x &= ~1;  // cannot draw at odd coordinate
+  w &= ~1;  // cannot draw odd-wide icons
   int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
   clamp_coords(x, y, w, h, &x0, &y0, &x1, &y1);
   display_set_window(x0, y0, x1, y1);

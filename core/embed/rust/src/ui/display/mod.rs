@@ -507,16 +507,20 @@ fn process_buffer(
     not_empty
 }
 
-
 /// Renders text over image background
-/// If `bg_area` is given, it is filled with its color in places where there are neither text or image
-/// Positioning also depends on whether `bg_area` is provided:
-/// - if it is, text and image are positioned relative to the `bg_area` top left corner,
-///     using respective offsets. Nothing is drawn outside the `bg_area`.
-/// - if it is not, text is positioned relative to the images top left corner using `offset_text` and image is positioned
-///     on the screen using `offset_img`. Nothing is drawn outside the image.
-/// `offset_text` is interpreted as baseline, so using (0,0) will position most of the text outside
-/// the drawing area in either case.
+/// If `bg_area` is given, it is filled with its color in places where there are
+/// neither text or image Positioning also depends on whether `bg_area` is
+/// provided:
+/// - if it is, text and image are positioned relative to the `bg_area` top left
+///   corner, using respective offsets. Nothing is drawn outside the `bg_area`.
+/// - if it is not, text is positioned relative to the images top left corner
+///   using `offset_text` and image is positioned on the screen using
+///   `offset_img`. Nothing is drawn outside the image.
+/// `offset_text` is interpreted as baseline, so using (0,0) will position most
+/// of the text outside the drawing area in either case.
+///
+/// The drawing area is coerced to even width, which is due to dma2d limitation
+/// when using 4bpp
 #[cfg(feature = "dma2d")]
 pub fn text_over_image(
     bg_area: Option<(Rect, Color)>,
@@ -567,7 +571,7 @@ pub fn text_over_image(
         r_img = area;
         offset_img_final = Offset::zero();
     }
-    let clamped = area.clamp(constant::screen());
+    let clamped = area.clamp(constant::screen()).ensure_even_width();
 
     let text_width = display::text_width(text, font.0);
     let font_max_height = display::text_max_height(font.0);
@@ -643,14 +647,17 @@ pub fn text_over_image(
     dma2d_wait_for_transfer();
 }
 
-
 /// Renders text over image background
-/// If `bg_area` is given, it is filled with its color in places where there is neither icon.
-/// Positioning also depends on whether `bg_area` is provided:
+/// If `bg_area` is given, it is filled with its color in places where there is
+/// neither icon. Positioning also depends on whether `bg_area` is provided:
 /// - if it is, icons are positioned relative to the `bg_area` top left corner,
-///     using respective offsets. Nothing is drawn outside the `bg_area`.
-/// - if it is not, `fg` icon is positioned relative to the `bg` icons top left corner using its offset and `fg` icon is positioned
-///     on the screen using its offset. Nothing is drawn outside the `bg` icon.
+///   using respective offsets. Nothing is drawn outside the `bg_area`.
+/// - if it is not, `fg` icon is positioned relative to the `bg` icons top left
+///   corner using its offset and `fg` icon is positioned on the screen using
+///   its offset. Nothing is drawn outside the `bg` icon.
+///
+/// The drawing area is coerced to even width, which is due to dma2d limitation
+/// when using 4bpp
 #[cfg(feature = "dma2d")]
 pub fn icon_over_icon(
     bg_area: Option<Rect>,
@@ -702,7 +709,7 @@ pub fn icon_over_icon(
         Offset::new(toif_info_fg.width.into(), toif_info_fg.height.into()),
     );
 
-    let clamped = area.clamp(constant::screen());
+    let clamped = area.clamp(constant::screen()).ensure_even_width();
 
     set_window(clamped);
 

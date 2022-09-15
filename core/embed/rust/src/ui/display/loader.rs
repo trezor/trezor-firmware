@@ -284,7 +284,7 @@ pub fn loader_rust(
     icon: Option<(&[u8], Color, Offset)>,
 ) {
     //let r = area.translate(get_offset());
-    let clamped = r.clamp(constant::screen());
+    let clamped = r.clamp(constant::screen()).ensure_even_width();
     display::set_window(clamped);
 
     let center = r.center();
@@ -376,7 +376,7 @@ pub fn loader_rust(
         }
 
         dma2d_wait_for_transfer();
-        dma2d_start_blend(&icon_buffer.buffer, &loader_buffer.buffer, r.width());
+        dma2d_start_blend(&icon_buffer.buffer, &loader_buffer.buffer, clamped.width());
     }
 
     dma2d_wait_for_transfer();

@@ -379,6 +379,14 @@ impl Rect {
         }
     }
 
+    pub const fn ensure_even_width(self) -> Self {
+        if self.width() % 2 == 0 {
+            self
+        } else {
+            self.with_size(Offset::new(self.size().x - 1, self.size().y))
+        }
+    }
+
     pub const fn translate(&self, offset: Offset) -> Self {
         Self {
             x0: self.x0 + offset.x,
