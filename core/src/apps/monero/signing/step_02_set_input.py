@@ -79,7 +79,7 @@ async def set_input(
     if src_entr.rct:
         vini.amount = 0
 
-    # Serialize `vini` with variant code for TxinToKey (prefix = TxinToKey.VARIANT_CODE).
+    # Serialize `vini` with variant code for TxinToKey (prefix = 2).
     # The binary `vini_bin` is later sent to step 4 and 9 with its hmac,
     # where it is checked and directly used.
     vini_bin = serialize.dump_msg(vini, preallocate=64, prefix=b"\x02")

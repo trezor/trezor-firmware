@@ -16,7 +16,6 @@ _REP_INIT_DATA = const(9)  # offset of data in the initial report
 _REP_CONT_DATA = const(1)  # offset of data in the continuation report
 
 SESSION_ID = const(0)
-INVALID_TYPE = const(-1)
 
 
 class CodecError(Exception):
