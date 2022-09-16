@@ -1,11 +1,10 @@
 from typing import TYPE_CHECKING
 
-from trezor.enums import BinanceOrderSide, ButtonRequestType
+from trezor.enums import ButtonRequestType
 from trezor.strings import format_amount
 from trezor.ui.layouts import confirm_properties
-from trezor.ui.layouts.altcoin import confirm_transfer_binance
 
-from . import helpers
+from .helpers import DECIMALS
 
 if TYPE_CHECKING:
     from trezor.messages import (
@@ -18,14 +17,16 @@ if TYPE_CHECKING:
 
 
 async def require_confirm_transfer(ctx: Context, msg: BinanceTransferMsg) -> None:
-    items = []
+    from trezor.ui.layouts.altcoin import confirm_transfer_binance
+
+    items: list[tuple[str, str, str]] = []
 
     def make_input_output_pages(msg: BinanceInputOutput, direction: str) -> None:
         for coin in msg.coins:
             items.append(
                 (
                     direction,
-                    format_amount(coin.amount, helpers.DECIMALS) + " " + coin.denom,
+                    format_amount(coin.amount, DECIMALS) + " " + coin.denom,
                     msg.address,
                 )
             )
@@ -43,18 +44,20 @@ async def require_confirm_cancel(ctx: Context, msg: BinanceCancelMsg) -> None:
     await confirm_properties(
         ctx,
         "confirm_cancel",
-        title="Confirm cancel",
-        props=[
+        "Confirm cancel",
+        (
             ("Sender address:", str(msg.sender)),
             ("Pair:", str(msg.symbol)),
             ("Order ID:", str(msg.refid)),
-        ],
+        ),
         hold=True,
         br_code=ButtonRequestType.SignTx,
     )
 
 
 async def require_confirm_order(ctx: Context, msg: BinanceOrderMsg) -> None:
+    from trezor.enums import BinanceOrderSide
+
     if msg.side == BinanceOrderSide.BUY:
         side = "Buy"
     elif msg.side == BinanceOrderSide.SELL:
@@ -65,14 +68,14 @@ async def require_confirm_order(ctx: Context, msg: BinanceOrderMsg) -> None:
     await confirm_properties(
         ctx,
         "confirm_order",
-        title="Confirm order",
-        props=[
+        "Confirm order",
+        (
             ("Sender address:", str(msg.sender)),
             ("Pair:", str(msg.symbol)),
             ("Side:", side),
-            ("Quantity:", format_amount(msg.quantity, helpers.DECIMALS)),
-            ("Price:", format_amount(msg.price, helpers.DECIMALS)),
-        ],
+            ("Quantity:", format_amount(msg.quantity, DECIMALS)),
+            ("Price:", format_amount(msg.price, DECIMALS)),
+        ),
         hold=True,
         br_code=ButtonRequestType.SignTx,
     )
