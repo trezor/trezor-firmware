@@ -11,17 +11,9 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
-from . import helpers
-
 if TYPE_CHECKING:
     from trezor.messages import RippleSignTx
     from trezor.utils import Writer
-
-
-class RippleField:
-    def __init__(self, type: int, key: int) -> None:
-        self.type: int = type
-        self.key: int = key
 
 
 _FIELD_TYPE_INT16 = const(1)
@@ -30,22 +22,6 @@ _FIELD_TYPE_AMOUNT = const(6)
 _FIELD_TYPE_VL = const(7)
 _FIELD_TYPE_ACCOUNT = const(8)
 
-FIELDS_MAP: dict[str, RippleField] = {
-    "account": RippleField(type=_FIELD_TYPE_ACCOUNT, key=1),
-    "amount": RippleField(type=_FIELD_TYPE_AMOUNT, key=1),
-    "destination": RippleField(type=_FIELD_TYPE_ACCOUNT, key=3),
-    "fee": RippleField(type=_FIELD_TYPE_AMOUNT, key=8),
-    "sequence": RippleField(type=_FIELD_TYPE_INT32, key=4),
-    "type": RippleField(type=_FIELD_TYPE_INT16, key=2),
-    "signingPubKey": RippleField(type=_FIELD_TYPE_VL, key=3),
-    "flags": RippleField(type=_FIELD_TYPE_INT32, key=2),
-    "txnSignature": RippleField(type=_FIELD_TYPE_VL, key=4),
-    "lastLedgerSequence": RippleField(type=_FIELD_TYPE_INT32, key=27),
-    "destinationTag": RippleField(type=_FIELD_TYPE_INT32, key=14),
-}
-
-TRANSACTION_TYPES = {"Payment": 0}
-
 
 def serialize(
     msg: RippleSignTx,
@@ -53,92 +29,97 @@ def serialize(
     pubkey: bytes,
     signature: bytes | None = None,
 ) -> bytearray:
-    w = bytearray()
     # must be sorted numerically first by type and then by name
-    write(w, FIELDS_MAP["type"], TRANSACTION_TYPES["Payment"])
-    write(w, FIELDS_MAP["flags"], msg.flags)
-    write(w, FIELDS_MAP["sequence"], msg.sequence)
-    write(w, FIELDS_MAP["destinationTag"], msg.payment.destination_tag)
-    write(w, FIELDS_MAP["lastLedgerSequence"], msg.last_ledger_sequence)
-    write(w, FIELDS_MAP["amount"], msg.payment.amount)
-    write(w, FIELDS_MAP["fee"], msg.fee)
-    write(w, FIELDS_MAP["signingPubKey"], pubkey)
-    write(w, FIELDS_MAP["txnSignature"], signature)
-    write(w, FIELDS_MAP["account"], source_address)
-    write(w, FIELDS_MAP["destination"], msg.payment.destination)
+    fields_to_write = (  # field_type, field_key, value
+        (_FIELD_TYPE_INT16, 2, 0),  # payment type is 0
+        (_FIELD_TYPE_INT32, 2, msg.flags),  # flags
+        (_FIELD_TYPE_INT32, 4, msg.sequence),  # sequence
+        (_FIELD_TYPE_INT32, 14, msg.payment.destination_tag),  # destinationTag
+        (_FIELD_TYPE_INT32, 27, msg.last_ledger_sequence),  # lastLedgerSequence
+        (_FIELD_TYPE_AMOUNT, 1, msg.payment.amount),  # amount
+        (_FIELD_TYPE_AMOUNT, 8, msg.fee),  # fee
+        (_FIELD_TYPE_VL, 3, pubkey),  # signingPubKey
+        (_FIELD_TYPE_VL, 4, signature),  # txnSignature
+        (_FIELD_TYPE_ACCOUNT, 1, source_address),  # account
+        (_FIELD_TYPE_ACCOUNT, 3, msg.payment.destination),  # destination
+    )
+
+    w = bytearray()
+    for field_type, field_key, value in fields_to_write:
+        _write(w, field_type, field_key, value)
     return w
 
 
-def write(w: Writer, field: RippleField, value: int | bytes | str | None) -> None:
+def _write(
+    w: Writer, field_type: int, field_key: int, value: int | bytes | str | None
+) -> None:
+    from . import helpers
+
     if value is None:
         return
-    write_type(w, field)
-    if field.type == _FIELD_TYPE_INT16:
+
+    # write_type
+    if field_key <= 0xF:
+        w.append((field_type << 4) | field_key)
+    else:
+        # this concerns two-bytes fields such as lastLedgerSequence
+        w.append(field_type << 4)
+        w.append(field_key)
+
+    if field_type == _FIELD_TYPE_INT16:
         assert isinstance(value, int)
         w.extend(value.to_bytes(2, "big"))
-    elif field.type == _FIELD_TYPE_INT32:
+    elif field_type == _FIELD_TYPE_INT32:
         assert isinstance(value, int)
         w.extend(value.to_bytes(4, "big"))
-    elif field.type == _FIELD_TYPE_AMOUNT:
+    elif field_type == _FIELD_TYPE_AMOUNT:
         assert isinstance(value, int)
-        w.extend(serialize_amount(value))
-    elif field.type == _FIELD_TYPE_ACCOUNT:
+
+        # serialize_amount
+        if value < 0:
+            raise ValueError("Only non-negative integers are supported")
+        if value > helpers.MAX_ALLOWED_AMOUNT:
+            raise ValueError("Value is too large")
+        serialized_amount = bytearray(value.to_bytes(8, "big"))
+        serialized_amount[0] &= 0x7F  # clear first bit to indicate XRP
+        serialized_amount[0] |= 0x40  # set second bit to indicate positive number
+
+        w.extend(serialized_amount)
+    elif field_type == _FIELD_TYPE_ACCOUNT:
         assert isinstance(value, str)
         write_bytes_varint(w, helpers.decode_address(value))
-    elif field.type == _FIELD_TYPE_VL:
+    elif field_type == _FIELD_TYPE_VL:
         assert isinstance(value, (bytes, bytearray))
         write_bytes_varint(w, value)
     else:
         raise ValueError("Unknown field type")
 
 
-def write_type(w: Writer, field: RippleField) -> None:
-    if field.key <= 0xF:
-        w.append((field.type << 4) | field.key)
-    else:
-        # this concerns two-bytes fields such as lastLedgerSequence
-        w.append(field.type << 4)
-        w.append(field.key)
-
-
-def serialize_amount(value: int) -> bytearray:
-    if value < 0:
-        raise ValueError("Only non-negative integers are supported")
-    if value > helpers.MAX_ALLOWED_AMOUNT:
-        raise ValueError("Value is too large")
-
-    b = bytearray(value.to_bytes(8, "big"))
-    b[0] &= 0x7F  # clear first bit to indicate XRP
-    b[0] |= 0x40  # set second bit to indicate positive number
-    return b
-
-
 def write_bytes_varint(w: Writer, value: bytes) -> None:
     """Serialize a variable length bytes."""
-    write_varint(w, len(value))
-    w.extend(value)
+    append = w.append  # local_cache_attribute
 
-
-def write_varint(w: Writer, val: int) -> None:
-    """
-    Implements variable-length int encoding from Ripple.
-    See: https://ripple.com/wiki/Binary_Format#Variable_Length_Data_Encoding
-    """
+    # write_varint
+    # Implements variable-length int encoding from Ripple.
+    # See: https://ripple.com/wiki/Binary_Format#Variable_Length_Data_Encoding
+    val = len(value)
     if val < 0:
         raise ValueError("Only non-negative integers are supported")
     elif val < 192:
-        w.append(val)
+        append(val)
     elif val <= 12480:
         val -= 193
-        w.append(193 + rshift(val, 8))
-        w.append(val & 0xFF)
+        append(193 + rshift(val, 8))
+        append(val & 0xFF)
     elif val <= 918744:
         val -= 12481
-        w.append(241 + rshift(val, 16))
-        w.append(rshift(val, 8) & 0xFF)
-        w.append(val & 0xFF)
+        append(241 + rshift(val, 16))
+        append(rshift(val, 8) & 0xFF)
+        append(val & 0xFF)
     else:
         raise ValueError("Value is too large")
+
+    w.extend(value)
 
 
 def rshift(val: int, n: int) -> int:

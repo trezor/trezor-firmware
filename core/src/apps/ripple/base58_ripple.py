@@ -6,18 +6,18 @@ from trezor.crypto import base58
 _ripple_alphabet = "rpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65jkm8oFqi1tuvAxyz"
 
 
-def encode(data: bytes) -> str:
+def _encode(data: bytes) -> str:
     """
     Convert bytes to base58 encoded string.
     """
-    return base58.encode(data, alphabet=_ripple_alphabet)
+    return base58.encode(data, _ripple_alphabet)
 
 
-def decode(string: str) -> bytes:
+def _decode(string: str) -> bytes:
     """
     Convert base58 encoded string to bytes.
     """
-    return base58.decode(string, alphabet=_ripple_alphabet)
+    return base58.decode(string, _ripple_alphabet)
 
 
 def encode_check(
@@ -26,7 +26,7 @@ def encode_check(
     """
     Convert bytes to base58 encoded string, append checksum.
     """
-    return encode(data + digestfunc(data))
+    return _encode(data + digestfunc(data))
 
 
 def decode_check(
@@ -35,5 +35,5 @@ def decode_check(
     """
     Convert base58 encoded string to bytes and verify checksum.
     """
-    data = decode(string)
+    data = _decode(string)
     return base58.verify_checksum(data, digestfunc)
