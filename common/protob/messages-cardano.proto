@@ -69,6 +69,11 @@ enum CardanoTxAuxiliaryDataSupplementType {
     CATALYST_REGISTRATION_SIGNATURE = 1;
 }
 
+enum CardanoCatalystRegistrationFormat {
+    CIP15 = 0;
+    CIP36 = 1;
+}
+
 enum CardanoTxSigningMode {
     ORDINARY_TRANSACTION = 0;
     POOL_REGISTRATION_AS_OWNER = 1;
@@ -332,7 +337,7 @@ message CardanoPoolParametersType {
  * Request: Transaction certificate data
  * @next CardanoTxItemAck
  */
- message CardanoTxCertificate {
+message CardanoTxCertificate {
     required CardanoCertificateType type = 1;                 // certificate type
     repeated uint32 path = 2;                                 // stake credential key path
     optional bytes pool = 3;                                  // pool hash
@@ -355,11 +360,22 @@ message CardanoTxWithdrawal {
 /**
  * @embed
  */
-message CardanoCatalystRegistrationParametersType {
+message CardanoCatalystRegistrationDelegation {
     required bytes voting_public_key = 1;
+    required uint32 weight = 2;
+}
+
+/**
+ * @embed
+ */
+message CardanoCatalystRegistrationParametersType {
+    optional bytes voting_public_key = 1;
     repeated uint32 staking_path = 2;
     required CardanoAddressParametersType reward_address_parameters = 3;
     required uint64 nonce = 4;
+    optional CardanoCatalystRegistrationFormat format = 5 [default=CIP15];
+    repeated CardanoCatalystRegistrationDelegation delegations = 6;  // mutually exclusive with voting_public_key; max 32 delegations
+    optional uint64 voting_purpose = 7;
 }
 
 /**

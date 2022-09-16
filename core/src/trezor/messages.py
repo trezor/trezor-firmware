@@ -24,6 +24,7 @@ if TYPE_CHECKING:
     from trezor.enums import ButtonRequestType  # noqa: F401
     from trezor.enums import Capability  # noqa: F401
     from trezor.enums import CardanoAddressType  # noqa: F401
+    from trezor.enums import CardanoCatalystRegistrationFormat  # noqa: F401
     from trezor.enums import CardanoCertificateType  # noqa: F401
     from trezor.enums import CardanoDerivationType  # noqa: F401
     from trezor.enums import CardanoNativeScriptHashDisplayFormat  # noqa: F401
@@ -1610,19 +1611,41 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["CardanoTxWithdrawal"]:
             return isinstance(msg, cls)
 
-    class CardanoCatalystRegistrationParametersType(protobuf.MessageType):
+    class CardanoCatalystRegistrationDelegation(protobuf.MessageType):
         voting_public_key: "bytes"
-        staking_path: "list[int]"
-        reward_address_parameters: "CardanoAddressParametersType"
-        nonce: "int"
+        weight: "int"
 
         def __init__(
             self,
             *,
             voting_public_key: "bytes",
+            weight: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CardanoCatalystRegistrationDelegation"]:
+            return isinstance(msg, cls)
+
+    class CardanoCatalystRegistrationParametersType(protobuf.MessageType):
+        voting_public_key: "bytes | None"
+        staking_path: "list[int]"
+        reward_address_parameters: "CardanoAddressParametersType"
+        nonce: "int"
+        format: "CardanoCatalystRegistrationFormat"
+        delegations: "list[CardanoCatalystRegistrationDelegation]"
+        voting_purpose: "int | None"
+
+        def __init__(
+            self,
+            *,
             reward_address_parameters: "CardanoAddressParametersType",
             nonce: "int",
             staking_path: "list[int] | None" = None,
+            delegations: "list[CardanoCatalystRegistrationDelegation] | None" = None,
+            voting_public_key: "bytes | None" = None,
+            format: "CardanoCatalystRegistrationFormat | None" = None,
+            voting_purpose: "int | None" = None,
         ) -> None:
             pass
 

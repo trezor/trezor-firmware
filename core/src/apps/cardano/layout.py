@@ -750,27 +750,61 @@ def _format_stake_credential(
         raise ValueError
 
 
-async def confirm_catalyst_registration(
+async def confirm_catalyst_registration_delegation(
     ctx: wire.Context,
     public_key: str,
+    weight: int,
+) -> None:
+    props: list[PropertyType] = [
+        ("Catalyst voting key registration", None),
+        ("Delegating to:", public_key),
+    ]
+    if weight is not None:
+        props.append(("Weight:", str(weight)))
+
+    await confirm_properties(
+        ctx,
+        "confirm_catalyst_registration_delegation",
+        title="Confirm transaction",
+        props=props,
+        br_code=ButtonRequestType.Other,
+    )
+
+
+async def confirm_catalyst_registration(
+    ctx: wire.Context,
+    public_key: str | None,
     staking_path: list[int],
     reward_address: str,
     nonce: int,
+    voting_purpose: int | None,
 ) -> None:
-    await confirm_properties(
-        ctx,
-        "confirm_catalyst_registration",
-        title="Confirm transaction",
-        props=[
-            ("Catalyst voting key registration", None),
-            ("Voting public key:", public_key),
+    props: list[PropertyType] = [("Catalyst voting key registration", None)]
+    if public_key is not None:
+        props.append(("Voting public key:", public_key))
+    props.extend(
+        [
             (
                 f"Staking key for account {format_account_number(staking_path)}:",
                 address_n_to_str(staking_path),
             ),
             ("Rewards go to:", reward_address),
             ("Nonce:", str(nonce)),
-        ],
+        ]
+    )
+    if voting_purpose is not None:
+        props.append(
+            (
+                "Voting purpose:",
+                "Catalyst" if voting_purpose == 0 else f"{voting_purpose} (other)",
+            )
+        )
+
+    await confirm_properties(
+        ctx,
+        "confirm_catalyst_registration",
+        title="Confirm transaction",
+        props=props,
         br_code=ButtonRequestType.Other,
     )
 
