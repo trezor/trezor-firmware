@@ -154,14 +154,11 @@ def run() -> None:
                 # rationale: We use untyped lists here, because that is what the C API supports.
 
         from trezor.ui import display
-        f = display.get_adc(0)
-        log.debug("", f"VrefInt: {f} V")
-        f = display.get_adc(1)
-        log.debug("", f"Vbat: {f} V")
-        f = display.get_adc(2)
-        log.debug("", f"Temp: {f} °C")
+        f0 = display.get_adc(0)
+        f1 = display.get_adc(1)
+        f2 = display.get_adc(2)
         t = time.ticks_ms() / 1000
-        log.debug("", f"Time from powerup: {t} s")
+        log.debug("", f"Time: {t} s, VrefInt: {f0}, Vbat: {f1}, Temp: {f2}")
         i+=1
 
 
