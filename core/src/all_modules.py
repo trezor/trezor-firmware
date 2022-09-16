@@ -419,6 +419,8 @@ if not utils.BITCOIN_ONLY:
     import trezor.enums.BinanceTimeInForce
     trezor.enums.CardanoAddressType
     import trezor.enums.CardanoAddressType
+    trezor.enums.CardanoCatalystRegistrationFormat
+    import trezor.enums.CardanoCatalystRegistrationFormat
     trezor.enums.CardanoCertificateType
     import trezor.enums.CardanoCertificateType
     trezor.enums.CardanoDerivationType

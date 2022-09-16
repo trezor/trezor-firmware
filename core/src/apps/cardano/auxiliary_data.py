@@ -3,18 +3,22 @@ from typing import TYPE_CHECKING
 from trezor import messages, wire
 from trezor.crypto import hashlib
 from trezor.crypto.curve import ed25519
-from trezor.enums import CardanoAddressType, CardanoTxAuxiliaryDataSupplementType
+from trezor.enums import (
+    CardanoAddressType,
+    CardanoCatalystRegistrationFormat,
+    CardanoTxAuxiliaryDataSupplementType,
+)
 
 from apps.common import cbor
 
-from . import addresses
+from . import addresses, layout
 from .helpers import bech32
 from .helpers.paths import SCHEMA_STAKING_ANY_ACCOUNT
 from .helpers.utils import derive_public_key
-from .layout import confirm_catalyst_registration, show_auxiliary_data_hash
 
 if TYPE_CHECKING:
-    CatalystRegistrationPayload = dict[int, bytes | int]
+    Delegations = list[tuple[bytes, int]]
+    CatalystRegistrationPayload = dict[int, Delegations | bytes | int]
     SignedCatalystRegistrationPayload = tuple[CatalystRegistrationPayload, bytes]
     CatalystRegistrationSignature = dict[int, bytes]
     CatalystRegistration = dict[
@@ -30,6 +34,14 @@ CATALYST_REGISTRATION_HASH_SIZE = 32
 METADATA_KEY_CATALYST_REGISTRATION = 61284
 METADATA_KEY_CATALYST_REGISTRATION_SIGNATURE = 61285
 
+MAX_DELEGATION_COUNT = 32
+DEFAULT_VOTING_PURPOSE = 0
+
+
+def assert_cond(condition: bool) -> None:
+    if not condition:
+        raise wire.ProcessError("Invalid auxiliary data")
+
 
 def validate(auxiliary_data: messages.CardanoTxAuxiliaryData) -> None:
     fields_provided = 0
@@ -41,30 +53,56 @@ def validate(auxiliary_data: messages.CardanoTxAuxiliaryData) -> None:
         _validate_catalyst_registration_parameters(
             auxiliary_data.catalyst_registration_parameters
         )
-
-    if fields_provided != 1:
-        raise wire.ProcessError("Invalid auxiliary data")
+    assert_cond(fields_provided == 1)
 
 
 def _validate_hash(auxiliary_data_hash: bytes) -> None:
-    if len(auxiliary_data_hash) != AUXILIARY_DATA_HASH_SIZE:
-        raise wire.ProcessError("Invalid auxiliary data")
+    assert_cond(len(auxiliary_data_hash) == AUXILIARY_DATA_HASH_SIZE)
 
 
 def _validate_catalyst_registration_parameters(
     parameters: messages.CardanoCatalystRegistrationParametersType,
 ) -> None:
-    if len(parameters.voting_public_key) != CATALYST_VOTING_PUBLIC_KEY_LENGTH:
-        raise wire.ProcessError("Invalid auxiliary data")
+    voting_key_fields_provided = 0
+    if parameters.voting_public_key is not None:
+        voting_key_fields_provided += 1
+        _validate_voting_public_key(parameters.voting_public_key)
+    if parameters.delegations:
+        voting_key_fields_provided += 1
+        assert_cond(parameters.format == CardanoCatalystRegistrationFormat.CIP36)
+        _validate_delegations(parameters.delegations)
+    assert_cond(voting_key_fields_provided == 1)
 
-    if not SCHEMA_STAKING_ANY_ACCOUNT.match(parameters.staking_path):
-        raise wire.ProcessError("Invalid auxiliary data")
+    assert_cond(SCHEMA_STAKING_ANY_ACCOUNT.match(parameters.staking_path))
 
     address_parameters = parameters.reward_address_parameters
-    if address_parameters.address_type == CardanoAddressType.BYRON:
-        raise wire.ProcessError("Invalid auxiliary data")
-
+    assert_cond(address_parameters.address_type != CardanoAddressType.BYRON)
     addresses.validate_address_parameters(address_parameters)
+
+    if parameters.voting_purpose is not None:
+        assert_cond(parameters.format == CardanoCatalystRegistrationFormat.CIP36)
+
+
+def _validate_voting_public_key(key: bytes) -> None:
+    assert_cond(len(key) == CATALYST_VOTING_PUBLIC_KEY_LENGTH)
+
+
+def _validate_delegations(
+    delegations: list[messages.CardanoCatalystDelegation],
+) -> None:
+    assert_cond(len(delegations) <= MAX_DELEGATION_COUNT)
+    for delegation in delegations:
+        _validate_voting_public_key(delegation.voting_public_key)
+
+
+def _get_voting_purpose_to_serialize(
+    parameters: messages.CardanoCatalystRegistrationParametersType,
+) -> int | None:
+    if parameters.format == CardanoCatalystRegistrationFormat.CIP15:
+        return None
+    if parameters.voting_purpose is None:
+        return DEFAULT_VOTING_PURPOSE
+    return parameters.voting_purpose
 
 
 async def show(
@@ -83,10 +121,11 @@ async def show(
             parameters,
             protocol_magic,
             network_id,
+            should_show_details,
         )
 
     if should_show_details:
-        await show_auxiliary_data_hash(ctx, auxiliary_data_hash)
+        await layout.show_auxiliary_data_hash(ctx, auxiliary_data_hash)
 
 
 async def _show_catalyst_registration(
@@ -95,9 +134,22 @@ async def _show_catalyst_registration(
     parameters: messages.CardanoCatalystRegistrationParametersType,
     protocol_magic: int,
     network_id: int,
+    should_show_details: bool,
 ) -> None:
-    public_key = parameters.voting_public_key
-    encoded_public_key = bech32.encode(bech32.HRP_JORMUN_PUBLIC_KEY, public_key)
+    for delegation in parameters.delegations:
+        encoded_public_key = bech32.encode(
+            bech32.HRP_JORMUN_PUBLIC_KEY, delegation.voting_public_key
+        )
+        await layout.confirm_catalyst_registration_delegation(
+            ctx, encoded_public_key, delegation.weight
+        )
+
+    encoded_public_key: str | None = None
+    if parameters.voting_public_key:
+        encoded_public_key = bech32.encode(
+            bech32.HRP_JORMUN_PUBLIC_KEY, parameters.voting_public_key
+        )
+
     reward_address = addresses.derive_human_readable(
         keychain,
         parameters.reward_address_parameters,
@@ -105,12 +157,17 @@ async def _show_catalyst_registration(
         network_id,
     )
 
-    await confirm_catalyst_registration(
+    voting_purpose: int | None = (
+        _get_voting_purpose_to_serialize(parameters) if should_show_details else None
+    )
+
+    await layout.confirm_catalyst_registration(
         ctx,
         encoded_public_key,
         parameters.staking_path,
         reward_address,
         parameters.nonce,
+        voting_purpose,
     )
 
 
@@ -172,19 +229,36 @@ def _get_signed_catalyst_registration_payload(
     protocol_magic: int,
     network_id: int,
 ) -> SignedCatalystRegistrationPayload:
+    delegations_or_key: Delegations | bytes
+    if len(parameters.delegations) > 0:
+        delegations_or_key = [
+            (delegation.voting_public_key, delegation.weight)
+            for delegation in parameters.delegations
+        ]
+    elif parameters.voting_public_key:
+        delegations_or_key = parameters.voting_public_key
+    else:
+        raise RuntimeError  # should not be reached - _validate_governance_registration_parameters
+
     staking_key = derive_public_key(keychain, parameters.staking_path)
 
+    reward_address = addresses.derive_bytes(
+        keychain,
+        parameters.reward_address_parameters,
+        protocol_magic,
+        network_id,
+    )
+
+    voting_purpose = _get_voting_purpose_to_serialize(parameters)
+
     payload: CatalystRegistrationPayload = {
-        1: parameters.voting_public_key,
+        1: delegations_or_key,
         2: staking_key,
-        3: addresses.derive_bytes(
-            keychain,
-            parameters.reward_address_parameters,
-            protocol_magic,
-            network_id,
-        ),
+        3: reward_address,
         4: parameters.nonce,
     }
+    if voting_purpose is not None:
+        payload[5] = voting_purpose
 
     signature = _create_catalyst_registration_payload_signature(
         keychain,
