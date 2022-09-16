@@ -1,18 +1,25 @@
-from trezor import ui, wire
-from trezor.enums import ButtonRequestType
-from trezor.strings import format_plural
-from trezor.ui.layouts import confirm_action, show_pubkey
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from trezor.wire import Context
 
 
-async def require_get_public_key(ctx: wire.Context, public_key: str) -> None:
+async def require_get_public_key(ctx: Context, public_key: str) -> None:
+    from trezor.ui.layouts import show_pubkey
+
     await show_pubkey(ctx, public_key)
 
 
-async def require_sign_tx(ctx: wire.Context, num_actions: int) -> None:
+async def require_sign_tx(ctx: Context, num_actions: int) -> None:
+    from trezor import ui
+    from trezor.enums import ButtonRequestType
+    from trezor.strings import format_plural
+    from trezor.ui.layouts import confirm_action
+
     await confirm_action(
         ctx,
         "confirm_tx",
-        title="Sign transaction",
+        "Sign transaction",
         description="You are about to sign {}.",
         description_param=format_plural("{count} {plural}", num_actions, "action"),
         icon=ui.ICON_SEND,

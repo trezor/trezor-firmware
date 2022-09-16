@@ -1,12 +1,14 @@
 from typing import TYPE_CHECKING
 
-from trezor import ui, wire
+from trezor import ui
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import confirm_properties
 
-from .. import helpers
+from ..helpers import eos_asset_to_string, eos_name_to_string
 
 if TYPE_CHECKING:
+    from typing import Iterable
+    from trezor.wire import Context
     from trezor.messages import (
         EosActionBuyRam,
         EosActionBuyRamBytes,
@@ -27,313 +29,294 @@ if TYPE_CHECKING:
     from trezor.ui.layouts import PropertyType
 
 
-async def confirm_action_buyram(ctx: wire.Context, msg: EosActionBuyRam) -> None:
+# Because icon and br_code are almost always the same
+# (and also calling with positional arguments takes less space)
+async def _confirm_properties(
+    ctx: Context,
+    br_type: str,
+    title: str,
+    props: Iterable[PropertyType],
+) -> None:
     await confirm_properties(
+        ctx,
+        br_type,
+        title,
+        props,
+        icon=ui.ICON_CONFIRM,
+        br_code=ButtonRequestType.ConfirmOutput,
+    )
+
+
+async def confirm_action_buyram(ctx: Context, msg: EosActionBuyRam) -> None:
+    await _confirm_properties(
         ctx,
         "confirm_buyram",
-        title="Buy RAM",
-        props=[
-            ("Payer:", helpers.eos_name_to_string(msg.payer)),
-            ("Receiver:", helpers.eos_name_to_string(msg.receiver)),
-            ("Amount:", helpers.eos_asset_to_string(msg.quantity)),
-        ],
-        icon=ui.ICON_CONFIRM,
-        br_code=ButtonRequestType.ConfirmOutput,
+        "Buy RAM",
+        (
+            ("Payer:", eos_name_to_string(msg.payer)),
+            ("Receiver:", eos_name_to_string(msg.receiver)),
+            ("Amount:", eos_asset_to_string(msg.quantity)),
+        ),
     )
 
 
-async def confirm_action_buyrambytes(
-    ctx: wire.Context, msg: EosActionBuyRamBytes
-) -> None:
-    await confirm_properties(
+async def confirm_action_buyrambytes(ctx: Context, msg: EosActionBuyRamBytes) -> None:
+    await _confirm_properties(
         ctx,
         "confirm_buyrambytes",
-        title="Buy RAM",
-        props=[
-            ("Payer:", helpers.eos_name_to_string(msg.payer)),
-            ("Receiver:", helpers.eos_name_to_string(msg.receiver)),
+        "Buy RAM",
+        (
+            ("Payer:", eos_name_to_string(msg.payer)),
+            ("Receiver:", eos_name_to_string(msg.receiver)),
             ("Bytes:", str(msg.bytes)),
-        ],
-        icon=ui.ICON_CONFIRM,
-        br_code=ButtonRequestType.ConfirmOutput,
+        ),
     )
 
 
-async def confirm_action_delegate(ctx: wire.Context, msg: EosActionDelegate) -> None:
+async def confirm_action_delegate(ctx: Context, msg: EosActionDelegate) -> None:
     props = [
-        ("Sender:", helpers.eos_name_to_string(msg.sender)),
-        ("Receiver:", helpers.eos_name_to_string(msg.receiver)),
-        ("CPU:", helpers.eos_asset_to_string(msg.cpu_quantity)),
-        ("NET:", helpers.eos_asset_to_string(msg.net_quantity)),
+        ("Sender:", eos_name_to_string(msg.sender)),
+        ("Receiver:", eos_name_to_string(msg.receiver)),
+        ("CPU:", eos_asset_to_string(msg.cpu_quantity)),
+        ("NET:", eos_asset_to_string(msg.net_quantity)),
     ]
+    append = props.append  # local_cache_attribute
     if msg.transfer:
-        props.append(("Transfer:", "Yes"))
-        props.append(("Receiver:", helpers.eos_name_to_string(msg.receiver)))
+        append(("Transfer:", "Yes"))
+        append(("Receiver:", eos_name_to_string(msg.receiver)))
     else:
-        props.append(("Transfer:", "No"))
+        append(("Transfer:", "No"))
 
-    await confirm_properties(
+    await _confirm_properties(
         ctx,
         "confirm_delegate",
-        title="Delegate",
-        props=props,
-        icon=ui.ICON_CONFIRM,
-        br_code=ButtonRequestType.ConfirmOutput,
+        "Delegate",
+        props,
     )
 
 
-async def confirm_action_sellram(ctx: wire.Context, msg: EosActionSellRam) -> None:
-    await confirm_properties(
+async def confirm_action_sellram(ctx: Context, msg: EosActionSellRam) -> None:
+    await _confirm_properties(
         ctx,
         "confirm_sellram",
-        title="Sell RAM",
-        props=[
-            ("Receiver:", helpers.eos_name_to_string(msg.account)),
+        "Sell RAM",
+        (
+            ("Receiver:", eos_name_to_string(msg.account)),
             ("Bytes:", str(msg.bytes)),
-        ],
-        icon=ui.ICON_CONFIRM,
-        br_code=ButtonRequestType.ConfirmOutput,
+        ),
     )
 
 
-async def confirm_action_undelegate(
-    ctx: wire.Context, msg: EosActionUndelegate
-) -> None:
-    await confirm_properties(
+async def confirm_action_undelegate(ctx: Context, msg: EosActionUndelegate) -> None:
+    await _confirm_properties(
         ctx,
         "confirm_undelegate",
-        title="Undelegate",
-        props=[
-            ("Sender:", helpers.eos_name_to_string(msg.sender)),
-            ("Receiver:", helpers.eos_name_to_string(msg.receiver)),
-            ("CPU:", helpers.eos_asset_to_string(msg.cpu_quantity)),
-            ("NET:", helpers.eos_asset_to_string(msg.net_quantity)),
-        ],
-        icon=ui.ICON_CONFIRM,
-        br_code=ButtonRequestType.ConfirmOutput,
+        "Undelegate",
+        (
+            ("Sender:", eos_name_to_string(msg.sender)),
+            ("Receiver:", eos_name_to_string(msg.receiver)),
+            ("CPU:", eos_asset_to_string(msg.cpu_quantity)),
+            ("NET:", eos_asset_to_string(msg.net_quantity)),
+        ),
     )
 
 
-async def confirm_action_refund(ctx: wire.Context, msg: EosActionRefund) -> None:
-    await confirm_properties(
+async def confirm_action_refund(ctx: Context, msg: EosActionRefund) -> None:
+    await _confirm_properties(
         ctx,
         "confirm_refund",
-        title="Refund",
-        props=[
-            ("Owner:", helpers.eos_name_to_string(msg.owner)),
-        ],
-        icon=ui.ICON_CONFIRM,
-        br_code=ButtonRequestType.ConfirmOutput,
+        "Refund",
+        (("Owner:", eos_name_to_string(msg.owner)),),
     )
 
 
-async def confirm_action_voteproducer(
-    ctx: wire.Context, msg: EosActionVoteProducer
-) -> None:
-    if msg.proxy and not msg.producers:
+async def confirm_action_voteproducer(ctx: Context, msg: EosActionVoteProducer) -> None:
+    producers = msg.producers  # local_cache_attribute
+
+    if msg.proxy and not producers:
         # PROXY
-        await confirm_properties(
+        await _confirm_properties(
             ctx,
             "confirm_voteproducer",
-            title="Vote for proxy",
-            props=[
-                ("Voter:", helpers.eos_name_to_string(msg.voter)),
-                ("Proxy:", helpers.eos_name_to_string(msg.proxy)),
-            ],
-            icon=ui.ICON_CONFIRM,
-            br_code=ButtonRequestType.ConfirmOutput,
+            "Vote for proxy",
+            (
+                ("Voter:", eos_name_to_string(msg.voter)),
+                ("Proxy:", eos_name_to_string(msg.proxy)),
+            ),
         )
 
-    elif msg.producers:
+    elif producers:
         # PRODUCERS
-        await confirm_properties(
+        await _confirm_properties(
             ctx,
             "confirm_voteproducer",
-            title="Vote for producers",
-            props=(
-                (f"{wi:2d}. {helpers.eos_name_to_string(producer)}", None)
-                for wi, producer in enumerate(msg.producers, 1)
+            "Vote for producers",
+            (
+                (f"{wi:2d}. {eos_name_to_string(producer)}", None)
+                for wi, producer in enumerate(producers, 1)
             ),
-            icon=ui.ICON_CONFIRM,
-            br_code=ButtonRequestType.ConfirmOutput,
         )
 
     else:
         # Cancel vote
-        await confirm_properties(
+        await _confirm_properties(
             ctx,
             "confirm_voteproducer",
-            title="Cancel vote",
-            props=[
-                ("Voter:", helpers.eos_name_to_string(msg.voter)),
-            ],
-            icon=ui.ICON_CONFIRM,
-            br_code=ButtonRequestType.ConfirmOutput,
+            "Cancel vote",
+            (("Voter:", eos_name_to_string(msg.voter)),),
         )
 
 
 async def confirm_action_transfer(
-    ctx: wire.Context, msg: EosActionTransfer, account: str
+    ctx: Context, msg: EosActionTransfer, account: str
 ) -> None:
     props = [
-        ("From:", helpers.eos_name_to_string(msg.sender)),
-        ("To:", helpers.eos_name_to_string(msg.receiver)),
-        ("Amount:", helpers.eos_asset_to_string(msg.quantity)),
+        ("From:", eos_name_to_string(msg.sender)),
+        ("To:", eos_name_to_string(msg.receiver)),
+        ("Amount:", eos_asset_to_string(msg.quantity)),
         ("Contract:", account),
     ]
     if msg.memo is not None:
         props.append(("Memo", msg.memo[:512]))
-    await confirm_properties(
+    await _confirm_properties(
         ctx,
         "confirm_transfer",
-        title="Transfer",
-        props=props,
-        icon=ui.ICON_CONFIRM,
-        br_code=ButtonRequestType.ConfirmOutput,
+        "Transfer",
+        props,
     )
 
 
-async def confirm_action_updateauth(
-    ctx: wire.Context, msg: EosActionUpdateAuth
-) -> None:
+async def confirm_action_updateauth(ctx: Context, msg: EosActionUpdateAuth) -> None:
     props: list[PropertyType] = [
-        ("Account:", helpers.eos_name_to_string(msg.account)),
-        ("Permission:", helpers.eos_name_to_string(msg.permission)),
-        ("Parent:", helpers.eos_name_to_string(msg.parent)),
+        ("Account:", eos_name_to_string(msg.account)),
+        ("Permission:", eos_name_to_string(msg.permission)),
+        ("Parent:", eos_name_to_string(msg.parent)),
     ]
     props.extend(authorization_fields(msg.auth))
-    await confirm_properties(
+    await _confirm_properties(
         ctx,
         "confirm_updateauth",
-        title="Update Auth",
-        props=props,
-        icon=ui.ICON_CONFIRM,
-        br_code=ButtonRequestType.ConfirmOutput,
+        "Update Auth",
+        props,
     )
 
 
-async def confirm_action_deleteauth(
-    ctx: wire.Context, msg: EosActionDeleteAuth
-) -> None:
-    await confirm_properties(
+async def confirm_action_deleteauth(ctx: Context, msg: EosActionDeleteAuth) -> None:
+    await _confirm_properties(
         ctx,
         "confirm_deleteauth",
-        title="Delete Auth",
-        props=[
-            ("Account:", helpers.eos_name_to_string(msg.account)),
-            ("Permission:", helpers.eos_name_to_string(msg.permission)),
-        ],
-        icon=ui.ICON_CONFIRM,
-        br_code=ButtonRequestType.ConfirmOutput,
+        "Delete Auth",
+        (
+            ("Account:", eos_name_to_string(msg.account)),
+            ("Permission:", eos_name_to_string(msg.permission)),
+        ),
     )
 
 
-async def confirm_action_linkauth(ctx: wire.Context, msg: EosActionLinkAuth) -> None:
-    await confirm_properties(
+async def confirm_action_linkauth(ctx: Context, msg: EosActionLinkAuth) -> None:
+    await _confirm_properties(
         ctx,
         "confirm_linkauth",
-        title="Link Auth",
-        props=[
-            ("Account:", helpers.eos_name_to_string(msg.account)),
-            ("Code:", helpers.eos_name_to_string(msg.code)),
-            ("Type:", helpers.eos_name_to_string(msg.type)),
-            ("Requirement:", helpers.eos_name_to_string(msg.requirement)),
-        ],
-        icon=ui.ICON_CONFIRM,
-        br_code=ButtonRequestType.ConfirmOutput,
+        "Link Auth",
+        (
+            ("Account:", eos_name_to_string(msg.account)),
+            ("Code:", eos_name_to_string(msg.code)),
+            ("Type:", eos_name_to_string(msg.type)),
+            ("Requirement:", eos_name_to_string(msg.requirement)),
+        ),
     )
 
 
-async def confirm_action_unlinkauth(
-    ctx: wire.Context, msg: EosActionUnlinkAuth
-) -> None:
-    await confirm_properties(
+async def confirm_action_unlinkauth(ctx: Context, msg: EosActionUnlinkAuth) -> None:
+    await _confirm_properties(
         ctx,
         "confirm_unlinkauth",
-        title="Unlink Auth",
-        props=[
-            ("Account:", helpers.eos_name_to_string(msg.account)),
-            ("Code:", helpers.eos_name_to_string(msg.code)),
-            ("Type:", helpers.eos_name_to_string(msg.type)),
-        ],
-        icon=ui.ICON_CONFIRM,
-        br_code=ButtonRequestType.ConfirmOutput,
+        "Unlink Auth",
+        (
+            ("Account:", eos_name_to_string(msg.account)),
+            ("Code:", eos_name_to_string(msg.code)),
+            ("Type:", eos_name_to_string(msg.type)),
+        ),
     )
 
 
-async def confirm_action_newaccount(
-    ctx: wire.Context, msg: EosActionNewAccount
-) -> None:
+async def confirm_action_newaccount(ctx: Context, msg: EosActionNewAccount) -> None:
     props: list[PropertyType] = [
-        ("Creator:", helpers.eos_name_to_string(msg.creator)),
-        ("Name:", helpers.eos_name_to_string(msg.name)),
+        ("Creator:", eos_name_to_string(msg.creator)),
+        ("Name:", eos_name_to_string(msg.name)),
     ]
     props.extend(authorization_fields(msg.owner))
     props.extend(authorization_fields(msg.active))
-    await confirm_properties(
+    await _confirm_properties(
         ctx,
         "confirm_newaccount",
-        title="New Account",
-        props=props,
-        icon=ui.ICON_CONFIRM,
-        br_code=ButtonRequestType.ConfirmOutput,
+        "New Account",
+        props,
     )
 
 
 async def confirm_action_unknown(
-    ctx: wire.Context, action: EosActionCommon, checksum: bytes
+    ctx: Context, action: EosActionCommon, checksum: bytes
 ) -> None:
     await confirm_properties(
         ctx,
         "confirm_unknown",
-        title="Arbitrary data",
-        props=[
-            ("Contract:", helpers.eos_name_to_string(action.account)),
-            ("Action Name:", helpers.eos_name_to_string(action.name)),
+        "Arbitrary data",
+        (
+            ("Contract:", eos_name_to_string(action.account)),
+            ("Action Name:", eos_name_to_string(action.name)),
             ("Checksum:", checksum),
-        ],
-        icon=ui.ICON_WIPE,
-        icon_color=ui.RED,
+        ),
+        ui.ICON_WIPE,
+        ui.RED,
         br_code=ButtonRequestType.ConfirmOutput,
     )
 
 
 def authorization_fields(auth: EosAuthorization) -> list[PropertyType]:
+    from trezor.wire import DataError
+    from ..helpers import public_key_to_wif
+
     fields: list[PropertyType] = []
-    fields.append(("Threshold:", str(auth.threshold)))
+    append = fields.append  # local_cache_attribute
+
+    append(("Threshold:", str(auth.threshold)))
+
+    # NOTE: getting rid of f-strings saved almost 100 bytes
 
     for i, key in enumerate(auth.keys, 1):
         if key.key is None:
-            raise wire.DataError("Key must be provided explicitly.")
+            raise DataError("Key must be provided explicitly.")
 
-        _key = helpers.public_key_to_wif(bytes(key.key))
+        _key = public_key_to_wif(bytes(key.key))
         _weight = str(key.weight)
 
-        header = f"Key #{i}:"
-        w_header = f"Key #{i} Weight:"
+        header = "Key #" + str(i) + ":"
+        w_header = "Key #" + str(i) + " Weight:"
 
-        fields.append((header, _key))
-        fields.append((w_header, _weight))
+        append((header, _key))
+        append((w_header, _weight))
 
     for i, account in enumerate(auth.accounts, 1):
-        _account = helpers.eos_name_to_string(account.account.actor)
-        _permission = helpers.eos_name_to_string(account.account.permission)
+        _account = eos_name_to_string(account.account.actor)
+        _permission = eos_name_to_string(account.account.permission)
 
-        a_header = f"Account #{i}:"
-        p_header = f"Acc Permission #{i}:"
-        w_header = f"Account #{i} weight:"
+        i = str(i)
+        a_header = "Account #" + i + ":"
+        p_header = "Acc Permission #" + i + ":"
+        w_header = "Account #" + i + " weight:"
 
-        fields.append((a_header, _account))
-        fields.append((p_header, _permission))
-        fields.append((w_header, str(account.weight)))
+        append((a_header, _account))
+        append((p_header, _permission))
+        append((w_header, str(account.weight)))
 
     for i, wait in enumerate(auth.waits, 1):
         _wait = str(wait.wait_sec)
         _weight = str(wait.weight)
 
-        header = f"Delay #{i}"
-        w_header = f"Delay #{i} weight:"
-        fields.append((header, f"{_wait} sec"))
-        fields.append((w_header, _weight))
+        header = "Delay #" + str(i)
+        w_header = header + " weight:"
+        append((header, _wait + " sec"))
+        append((w_header, _weight))
 
     return fields
