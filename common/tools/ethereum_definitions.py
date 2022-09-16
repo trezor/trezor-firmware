@@ -20,7 +20,6 @@ from urllib3.util.retry import Retry
 
 from coin_info import (
     Coin,
-    CoinBuckets,
     Coins,
     _load_builtin_erc20_tokens,
     _load_builtin_ethereum_networks,
@@ -389,7 +388,8 @@ def print_definitions_collision(
     Returns a tuple composed from the prompt result if prompted otherwise None and the default value."""
     if old_definitions:
         old_defs_hash_no_metadata = [
-            hash_dict_on_keys(d, exclude_keys=["metadata"]) for d in old_definitions
+            hash_dict_on_keys(d, exclude_keys=["metadata", "coingecko_id"])
+            for d in old_definitions
         ]
 
     default_index = None
@@ -399,7 +399,7 @@ def print_definitions_collision(
         found = ""
         if (
             old_definitions
-            and hash_dict_on_keys(definition, exclude_keys=["metadata"])
+            and hash_dict_on_keys(definition, exclude_keys=["metadata", "coingecko_id"])
             in old_defs_hash_no_metadata
         ):
             found = " (found in old definitions)"
@@ -566,6 +566,8 @@ def check_definitions_list(
             modified_definitions.remove((orig_def, new_def))
 
     def any_in_top_100(*definitions) -> bool:
+        if top100_coingecko_ids is None:
+            return True
         if definitions is not None:
             for d in definitions:
                 if d is not None and d.get("coingecko_id") in top100_coingecko_ids:
@@ -625,10 +627,7 @@ def check_definitions_list(
         accept_change = True
         print_change = any_in_top_100(old_def, new_def)
         # if the change contains symbol change "--force" parameter must be used to be able to accept this change
-        if (
-            old_def.get("shortcut") != new_def.get("shortcut")
-            and not force
-        ):
+        if old_def.get("shortcut") != new_def.get("shortcut") and not force:
             print(
                 "\nERROR: Symbol change in this definition! To be able to approve this change re-run with `--force` argument."
             )
@@ -677,16 +676,22 @@ def check_definitions_list(
             _set_definition_metadata(definition)
 
 
-def _load_prepared_definitions(definitions_file: pathlib.Path) -> tuple[list[dict], list[dict]]:
+def _load_prepared_definitions(
+    definitions_file: pathlib.Path,
+) -> tuple[list[dict], list[dict]]:
     if not definitions_file.is_file():
-        click.ClickException(f"File {definitions_file} with prepared definitions does not exists or is not a file.")
+        click.ClickException(
+            f"File {definitions_file} with prepared definitions does not exists or is not a file."
+        )
 
     prepared_definitions_data = load_json(definitions_file)
     try:
         networks_data = prepared_definitions_data["networks"]
         tokens_data = prepared_definitions_data["tokens"]
     except KeyError:
-        click.ClickException(f"File with prepared definitions is not complete. Whole \"networks\" and/or \"tokens\" section are missing.")
+        click.ClickException(
+            'File with prepared definitions is not complete. Whole "networks" and/or "tokens" section are missing.'
+        )
 
     networks: Coins = []
     for network_data in networks_data:
@@ -872,6 +877,15 @@ def prepare_definitions(
     cg_tokens = _load_erc20_tokens_from_coingecko(downloader, networks)
     repo_tokens = _load_erc20_tokens_from_repo(tokens_dir, networks)
 
+    # get data used in further processing now to be able to save cache before we do any
+    # token collision process and others
+    # get CoinGecko coin list
+    cg_coin_list = downloader.get_coingecko_coins_list()
+    # get top 100 coins
+    cg_top100 = downloader.get_coingecko_top100()
+    # save cache
+    downloader.save_cache()
+
     # merge tokens
     tokens: List[Dict] = []
     cg_tokens_chain_id_and_address = []
@@ -901,7 +915,6 @@ def prepare_definitions(
 
     # map coingecko ids to tokens
     tokens_by_chain_id_and_address = {(t["chain_id"], t["address"]): t for t in tokens}
-    cg_coin_list = downloader.get_coingecko_coins_list()
     for coin in cg_coin_list:
         for platform_name, address in coin.get("platforms", dict()).items():
             key = (coingecko_id_to_chain_id.get(platform_name), address)
@@ -909,10 +922,7 @@ def prepare_definitions(
                 tokens_by_chain_id_and_address[key]["coingecko_id"] = coin["id"]
 
     # load top 100 (by market cap) definitions from CoinGecko
-    cg_top100_ids = [d["id"] for d in downloader.get_coingecko_top100()]
-
-    # save cache
-    downloader.save_cache()
+    cg_top100_ids = [d["id"] for d in cg_top100]
 
     # check changes in definitions
     if old_defs is not None:
@@ -970,9 +980,11 @@ def prepare_definitions(
     "--deffile",
     type=click.Path(resolve_path=True, dir_okay=False, path_type=pathlib.Path),
     default="./definitions-latest.json",
-    help="File where the prepared definitions are saved in json format."
+    help="File where the prepared definitions are saved in json format.",
 )
-def sign_definitions(outdir: pathlib.Path, privatekey: TextIO, deffile: pathlib.Path) -> None:
+def sign_definitions(
+    outdir: pathlib.Path, privatekey: TextIO, deffile: pathlib.Path
+) -> None:
     """Generate signed Ethereum definitions for python-trezor and others."""
     hex_key = None
     if privatekey is None:
@@ -992,7 +1004,7 @@ def sign_definitions(outdir: pathlib.Path, privatekey: TextIO, deffile: pathlib.
 
         if complete_file_path.exists():
             raise click.ClickException(
-                f"Definition \"{complete_file_path}\" already generated - attempt to generate another definition."
+                f'Definition "{complete_file_path}" already generated - attempt to generate another definition.'
             )
 
         directory.mkdir(parents=True, exist_ok=True)
@@ -1039,7 +1051,8 @@ def sign_definitions(outdir: pathlib.Path, privatekey: TextIO, deffile: pathlib.
     definitions_by_serialization: dict[bytes, dict] = dict()
     for network in networks:
         ser = serialize_eth_info(
-            eth_info_from_dict(network, EthereumNetworkInfo), EthereumDefinitionType.NETWORK
+            eth_info_from_dict(network, EthereumNetworkInfo),
+            EthereumDefinitionType.NETWORK,
         )
         network["serialized"] = ser
         definitions_by_serialization[ser] = network
@@ -1052,8 +1065,8 @@ def sign_definitions(outdir: pathlib.Path, privatekey: TextIO, deffile: pathlib.
 
     # build Merkle tree
     mt = MerkleTree(
-        [network["serialized"] for network in networks] +
-        [token["serialized"] for token in tokens]
+        [network["serialized"] for network in networks]
+        + [token["serialized"] for token in tokens]
     )
 
     # sign tree root hash

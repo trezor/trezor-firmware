@@ -5,11 +5,14 @@ from ubinascii import hexlify  # noqa: F401
 if not utils.BITCOIN_ONLY:
     import apps.ethereum.definitions as dfs
 
+    from apps.ethereum import networks
     from ethereum_common import *
     from trezor import protobuf
     from trezor.enums import EthereumDefinitionType
     from trezor.messages import (
         EthereumEncodedDefinitions,
+        EthereumNetworkInfo,
+        EthereumTokenInfo,
         EthereumGetAddress,
         EthereumGetPublicKey,
         EthereumSignMessage,
@@ -59,10 +62,6 @@ class TestEthereumDefinitionParser(unittest.TestCase):
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestDecodeDefinition(unittest.TestCase):
-    def setUp(self):
-        self.addTypeEqualityFunc(networks.NetworkInfo, equalNetworkInfo)
-        self.addTypeEqualityFunc(tokens.TokenInfo, equalTokenInfo)
-
     # successful decode network
     def test_network_definition(self):
         rinkeby_network = get_ethereum_network_info_with_definition(chain_id=4)
@@ -112,7 +111,6 @@ class TestDecodeDefinition(unittest.TestCase):
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestGetNetworkDefiniton(unittest.TestCase):
     def setUp(self):
-        self.addTypeEqualityFunc(networks.NetworkInfo, equalNetworkInfo)
         # use mockup function for built-in networks
         networks._networks_iterator = builtin_networks_iterator
 
@@ -153,7 +151,6 @@ class TestGetNetworkDefiniton(unittest.TestCase):
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestGetTokenDefiniton(unittest.TestCase):
     def setUp(self):
-        self.addTypeEqualityFunc(tokens.TokenInfo, equalTokenInfo)
         # use mockup function for built-in tokens
         tokens.token_by_chain_address = builtin_token_by_chain_address
 
@@ -200,8 +197,6 @@ class TestGetTokenDefiniton(unittest.TestCase):
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestEthereumDefinitions(unittest.TestCase):
     def setUp(self):
-        self.addTypeEqualityFunc(networks.NetworkInfo, equalNetworkInfo)
-        self.addTypeEqualityFunc(tokens.TokenInfo, equalTokenInfo)
         # use mockup functions for built-in definitions
         networks._networks_iterator = builtin_networks_iterator
         tokens.token_by_chain_address = builtin_token_by_chain_address
@@ -212,8 +207,8 @@ class TestEthereumDefinitions(unittest.TestCase):
         token_definition: bytes | None,
         ref_chain_id: int | None,
         ref_token_address: bytes | None,
-        network_info: networks.NetworkInfo | None,
-        token_info: tokens.TokenInfo | None,
+        network_info: EthereumNetworkInfo | None,
+        token_info: EthereumTokenInfo | None,
     ):
         # get
         definitions = dfs.EthereumDefinitions(network_definition, token_definition, ref_chain_id, ref_token_address)
@@ -267,8 +262,6 @@ class TestEthereumDefinitions(unittest.TestCase):
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestGetDefinitonsFromMsg(unittest.TestCase):
     def setUp(self):
-        self.addTypeEqualityFunc(networks.NetworkInfo, equalNetworkInfo)
-        self.addTypeEqualityFunc(tokens.TokenInfo, equalTokenInfo)
         # use mockup functions for built-in definitions
         networks._networks_iterator = builtin_networks_iterator
         tokens.token_by_chain_address = builtin_token_by_chain_address
@@ -276,8 +269,8 @@ class TestGetDefinitonsFromMsg(unittest.TestCase):
     def get_and_compare_ethereum_definitions(
         self,
         msg: protobuf.MessageType,
-        network_info: networks.NetworkInfo | None,
-        token_info: tokens.TokenInfo | None,
+        network_info: EthereumNetworkInfo | None,
+        token_info: EthereumTokenInfo | None,
     ):
         # get
         definitions = dfs.get_definitions_from_msg(msg)

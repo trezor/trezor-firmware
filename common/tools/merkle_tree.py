@@ -6,12 +6,15 @@ except ImportError:
     from hashlib import sha256
 
 
-class Node():
+class Node:
     """
     Single node of Merkle tree.
     """
-    def __init__(self: "Node", left: Union[bytes, "Node"], right: Optional["Node"] = None) -> None:
-        self.is_leaf = (left is None) != (right is None) # XOR
+
+    def __init__(
+        self: "Node", left: Union[bytes, "Node"], right: Optional["Node"] = None
+    ) -> None:
+        self.is_leaf = (left is None) != (right is None)  # XOR
         if self.is_leaf:
             self.raw_value = left
         self.hash = None
@@ -43,11 +46,12 @@ class Node():
             self.right_child.add_to_proof(proof)
 
 
-class MerkleTree():
+class MerkleTree:
     """
     Simple Merkle tree that implements the building of Merkle tree itself and generate proofs
     for leaf nodes.
     """
+
     def __init__(self, values: list[bytes]) -> None:
         self.leaves = [Node(v) for v in values]
 

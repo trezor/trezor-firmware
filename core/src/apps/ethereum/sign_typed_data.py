@@ -29,7 +29,10 @@ _MAX_VALUE_BYTE_SIZE = const(1024)
 
 @with_keychain_from_path_and_defs(*PATTERNS_ADDRESS)
 async def sign_typed_data(
-    ctx: Context, msg: EthereumSignTypedData, keychain: Keychain, defs: definitions.EthereumDefinitions
+    ctx: Context,
+    msg: EthereumSignTypedData,
+    keychain: Keychain,
+    defs: definitions.EthereumDefinitions,
 ) -> EthereumTypedDataSignature:
     from trezor.crypto.curve import secp256k1
     from apps.common import paths

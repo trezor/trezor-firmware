@@ -3,7 +3,7 @@ from apps.common.paths import HARDENED
 
 if not utils.BITCOIN_ONLY:
     from apps.ethereum.helpers import address_from_bytes
-    from apps.ethereum.networks import NetworkInfo
+    from trezor.messages import EthereumNetworkInfo
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
@@ -40,7 +40,7 @@ class TestEthereumGetAddress(unittest.TestCase):
             '0xdbF03B407C01E7cd3cbEa99509D93f8dDDc8C6fB',
             '0xd1220a0CF47c7B9Be7A2E6Ba89f429762E7b9adB'
         ]
-        n = NetworkInfo(chain_id=30, slip44=1, shortcut='T', name='T', rskip60=True)
+        n = EthereumNetworkInfo(chain_id=30, slip44=1, shortcut='T', name='T', rskip60=True)
         for s in rskip60_chain_30:
             b = unhexlify(s[2:])
             h = address_from_bytes(b, n)

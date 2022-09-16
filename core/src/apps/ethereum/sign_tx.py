@@ -9,7 +9,7 @@ from .keychain import with_keychain_from_chain_id_and_defs
 
 if TYPE_CHECKING:
     from apps.common.keychain import Keychain
-    from trezor.messages import EthereumSignTx, EthereumTxAck
+    from trezor.messages import EthereumSignTx, EthereumTxAck, EthereumTokenInfo
     from trezor.wire import Context
 
     from .keychain import MsgInKeychainChainIdDefs
@@ -45,7 +45,9 @@ async def sign_tx(
     await paths.validate_path(ctx, keychain, msg.address_n)
 
     # Handle ERC20s
-    token, address_bytes, recipient, value = await handle_erc20(ctx, msg, defs.token_dict)
+    token, address_bytes, recipient, value = await handle_erc20(
+        ctx, msg, defs.token_dict
+    )
 
     data_total = msg.data_length
 
@@ -100,13 +102,14 @@ async def sign_tx(
 
 
 async def handle_erc20(
-    ctx: Context, msg: MsgInKeychainChainIdDefs, token_dict: dict[bytes, tokens.TokenInfo]
-) -> tuple[tokens.TokenInfo | None, bytes, bytes, int]:
+    ctx: Context,
+    msg: MsgInKeychainChainIdDefs,  # type: ignore [TypeVar "MsgInKeychainChainIdDefs" appears only once in generic function signature]
+    token_dict: dict[bytes, EthereumTokenInfo],
+) -> tuple[EthereumTokenInfo | None, bytes, bytes, int]:
     from .layout import require_confirm_unknown_token
     from . import tokens
 
     data_initial_chunk = msg.data_initial_chunk  # local_cache_attribute
-
     token = None
     address_bytes = recipient = bytes_from_address(msg.to)
     value = int.from_bytes(msg.value, "big")
@@ -185,7 +188,7 @@ def _sign_digest(
     return req
 
 
-def check_common_fields(msg: MsgInKeychainChainIdDefs) -> None:
+def check_common_fields(msg: MsgInKeychainChainIdDefs) -> None:  # type: ignore [TypeVar "MsgInKeychainChainIdDefs" appears only once in generic function signature]
     data_length = msg.data_length  # local_cache_attribute
 
     if data_length > 0:

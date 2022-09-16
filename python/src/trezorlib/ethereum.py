@@ -14,12 +14,14 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from itertools import chain
-import pathlib, re, requests
-from typing import TYPE_CHECKING, Any, AnyStr, Dict, List, Optional, TextIO, Tuple
+import pathlib
+import re
+from typing import TYPE_CHECKING, Any, AnyStr, Dict, List, Optional, Tuple
+
+import requests
 
 from . import exceptions, messages
-from .tools import expect, UH_, prepare_message_bytes, session
+from .tools import UH_, expect, prepare_message_bytes, session
 
 if TYPE_CHECKING:
     from .client import TrezorClient
@@ -28,11 +30,11 @@ if TYPE_CHECKING:
 
 
 # TODO: change once we know the urls
-DEFS_BASE_URL="https://data.trezor.io/eth_definitions/{lookup_type}/{id}/{name}.dat"
-DEFS_NETWORK_BY_CHAINID_LOOKUP_TYPE="by_chain_id"
-DEFS_NETWORK_BY_SLIP44_LOOKUP_TYPE="by_slip44"
-DEFS_NETWORK_URI_NAME="network"
-DEFS_TOKEN_URI_NAME="token_{hex_address}"
+DEFS_BASE_URL = "https://data.trezor.io/eth_definitions/{lookup_type}/{id}/{name}.dat"
+DEFS_NETWORK_BY_CHAINID_LOOKUP_TYPE = "by_chain_id"
+DEFS_NETWORK_BY_SLIP44_LOOKUP_TYPE = "by_slip44"
+DEFS_NETWORK_URI_NAME = "network"
+DEFS_TOKEN_URI_NAME = "token_{hex_address}"
 
 
 def int_to_big_endian(value: int) -> bytes:
@@ -159,9 +161,13 @@ def download_from_url(url: str, error_msg: str = "") -> bytes:
         raise RuntimeError(f"{error_msg}{err}")
 
 
-def download_network_definition(chain_id: Optional[int] = None, slip44_hardened: Optional[int] = None) -> Optional[bytes]:
-    if not ((chain_id is None) != (slip44_hardened is None)): # not XOR
-        raise RuntimeError(f"Exactly one of chain_id or slip44_hardened parameters are needed to load network definition from directory.")
+def download_network_definition(
+    chain_id: Optional[int] = None, slip44_hardened: Optional[int] = None
+) -> Optional[bytes]:
+    if not ((chain_id is None) != (slip44_hardened is None)):  # not XOR
+        raise RuntimeError(
+            "Exactly one of chain_id or slip44_hardened parameters are needed to load network definition from directory."
+        )
 
     if chain_id is not None:
         url = DEFS_BASE_URL.format(
@@ -172,17 +178,21 @@ def download_network_definition(chain_id: Optional[int] = None, slip44_hardened:
     else:
         url = DEFS_BASE_URL.format(
             lookup_type=DEFS_NETWORK_BY_SLIP44_LOOKUP_TYPE,
-            id=UH_(slip44_hardened),
+            id=UH_(slip44_hardened),  # type: ignore [Argument of type "int | None" cannot be assigned to parameter "x" of type "int" in function "UH_"]
             name=DEFS_NETWORK_URI_NAME,
         )
 
-    error_msg = f"While downloading network definition from \"{url}\" following HTTP error occured: "
+    error_msg = f'While downloading network definition from "{url}" following HTTP error occured: '
     return download_from_url(url, error_msg)
 
 
-def download_token_definition(chain_id: Optional[int] = None, token_address: Optional[str] = None) -> Optional[bytes]:
+def download_token_definition(
+    chain_id: Optional[int] = None, token_address: Optional[str] = None
+) -> Optional[bytes]:
     if chain_id is None or token_address is None:
-        raise RuntimeError(f"Both chain_id and token_address parameters are needed to download token definition.")
+        raise RuntimeError(
+            "Both chain_id and token_address parameters are needed to download token definition."
+        )
 
     url = DEFS_BASE_URL.format(
         lookup_type=DEFS_NETWORK_BY_CHAINID_LOOKUP_TYPE,
@@ -190,37 +200,64 @@ def download_token_definition(chain_id: Optional[int] = None, token_address: Opt
         name=DEFS_TOKEN_URI_NAME.format(hex_address=token_address),
     )
 
-    error_msg = f"While downloading token definition from \"{url}\" following HTTP error occured: "
+    error_msg = f'While downloading token definition from "{url}" following HTTP error occured: '
     return download_from_url(url, error_msg)
 
 
-def network_definition_from_dir(path: pathlib.Path, chain_id: Optional[int] = None, slip44_hardened: Optional[int] = None) -> Optional[bytes]:
-    if not ((chain_id is None) != (slip44_hardened is None)): # not XOR
-        raise RuntimeError(f"Exactly one of chain_id or slip44_hardened parameters are needed to load network definition from directory.")
+def network_definition_from_dir(
+    path: pathlib.Path,
+    chain_id: Optional[int] = None,
+    slip44_hardened: Optional[int] = None,
+) -> Optional[bytes]:
+    if not ((chain_id is None) != (slip44_hardened is None)):  # not XOR
+        raise RuntimeError(
+            "Exactly one of chain_id or slip44_hardened parameters are needed to load network definition from directory."
+        )
 
     def read_definition(path: pathlib.Path) -> Optional[bytes]:
         if not path.exists() or not path.is_file():
             return None
 
         with open(path, mode="rb") as f:
-                return f.read()
+            return f.read()
 
     if chain_id is not None:
-        return read_definition(path / DEFS_NETWORK_BY_CHAINID_LOOKUP_TYPE / str(chain_id) / (DEFS_NETWORK_URI_NAME + ".dat"))
+        return read_definition(
+            path
+            / DEFS_NETWORK_BY_CHAINID_LOOKUP_TYPE
+            / str(chain_id)
+            / (DEFS_NETWORK_URI_NAME + ".dat")
+        )
     else:
-        return read_definition(path / DEFS_NETWORK_BY_SLIP44_LOOKUP_TYPE / str(UH_(slip44_hardened)) / (DEFS_NETWORK_URI_NAME + ".dat"))
+        return read_definition(
+            path
+            / DEFS_NETWORK_BY_SLIP44_LOOKUP_TYPE
+            / str(UH_(slip44_hardened))  # type: ignore [Argument of type "int | None" cannot be assigned to parameter "x" of type "int" in function "UH_"]
+            / (DEFS_NETWORK_URI_NAME + ".dat")
+        )
 
 
-def token_definition_from_dir(path: pathlib.Path, chain_id: Optional[int] = None, token_address: Optional[str] = None) -> Optional[bytes]:
+def token_definition_from_dir(
+    path: pathlib.Path,
+    chain_id: Optional[int] = None,
+    token_address: Optional[str] = None,
+) -> Optional[bytes]:
     if chain_id is None or token_address is None:
-        raise RuntimeError(f"Both chain_id and token_address parameters are needed to load token definition from directory.")
+        raise RuntimeError(
+            "Both chain_id and token_address parameters are needed to load token definition from directory."
+        )
 
-    path = path / DEFS_NETWORK_BY_CHAINID_LOOKUP_TYPE / str(chain_id) / (DEFS_TOKEN_URI_NAME.format(hex_address=token_address) + ".dat")
+    path = (
+        path
+        / DEFS_NETWORK_BY_CHAINID_LOOKUP_TYPE
+        / str(chain_id)
+        / (DEFS_TOKEN_URI_NAME.format(hex_address=token_address) + ".dat")
+    )
     if not path.exists() or not path.is_file():
         return None
 
     with open(path, mode="rb") as f:
-            return f.read()
+        return f.read()
 
 
 # ====== Client functions ====== #
@@ -228,7 +265,10 @@ def token_definition_from_dir(path: pathlib.Path, chain_id: Optional[int] = None
 
 @expect(messages.EthereumAddress, field="address", ret_type=str)
 def get_address(
-    client: "TrezorClient", n: "Address", show_display: bool = False, encoded_network: bytes = None
+    client: "TrezorClient",
+    n: "Address",
+    show_display: bool = False,
+    encoded_network: bytes = None,
 ) -> "MessageType":
     return client.call(
         messages.EthereumGetAddress(
@@ -241,7 +281,10 @@ def get_address(
 
 @expect(messages.EthereumPublicKey)
 def get_public_node(
-    client: "TrezorClient", n: "Address", show_display: bool = False, encoded_network: bytes = None
+    client: "TrezorClient",
+    n: "Address",
+    show_display: bool = False,
+    encoded_network: bytes = None,
 ) -> "MessageType":
     return client.call(
         messages.EthereumGetPublicKey(
@@ -446,7 +489,12 @@ def sign_typed_data(
 
 
 def verify_message(
-    client: "TrezorClient", address: str, signature: bytes, message: AnyStr, chain_id: int = 1, encoded_network: bytes = None
+    client: "TrezorClient",
+    address: str,
+    signature: bytes,
+    message: AnyStr,
+    chain_id: int = 1,
+    encoded_network: bytes = None,
 ) -> bool:
     try:
         resp = client.call(

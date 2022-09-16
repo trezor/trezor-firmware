@@ -57,7 +57,9 @@ async def sign_tx_eip1559(
     await paths.validate_path(ctx, keychain, msg.address_n)
 
     # Handle ERC20s
-    token, address_bytes, recipient, value = await handle_erc20(ctx, msg, defs.token_dict)
+    token, address_bytes, recipient, value = await handle_erc20(
+        ctx, msg, defs.token_dict
+    )
 
     data_total = msg.data_length
 

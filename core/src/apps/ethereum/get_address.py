@@ -20,7 +20,10 @@ if TYPE_CHECKING:
 
 @with_keychain_from_path_and_defs(*PATTERNS_ADDRESS)
 async def get_address(
-    ctx: Context, msg: EthereumGetAddress, keychain: Keychain, defs: definitions.EthereumDefinitions
+    ctx: Context,
+    msg: EthereumGetAddress,
+    keychain: Keychain,
+    defs: definitions.EthereumDefinitions,
 ) -> EthereumAddress:
     from trezor.messages import EthereumAddress
     from trezor.ui.layouts import show_address
@@ -36,7 +39,7 @@ async def get_address(
 
     if len(msg.address_n) > 1:  # path has slip44 network identifier
         slip44 = msg.address_n[1] & 0x7FFF_FFFF
-        if slip44 == defs.network.slip44:
+        if defs.network is not None and slip44 == defs.network.slip44:
             network = defs.network
         else:
             network = networks.by_slip44(slip44)

@@ -8,6 +8,7 @@
 from typing import TYPE_CHECKING
 
 from apps.common.paths import HARDENED
+from trezor.messages import EthereumNetworkInfo
 
 if TYPE_CHECKING:
     from typing import Iterator
@@ -25,11 +26,11 @@ if TYPE_CHECKING:
 UNKNOWN_NETWORK_SHORTCUT = "UNKN"
 
 
-def by_chain_id(chain_id: int) -> "NetworkInfo" | None:
+def by_chain_id(chain_id: int) -> EthereumNetworkInfo | None:
     for n in _networks_iterator():
         n_chain_id = n[0]
         if n_chain_id == chain_id:
-            return NetworkInfo(
+            return EthereumNetworkInfo(
                 chain_id=n[0],
                 slip44=n[1],
                 shortcut=n[2],
@@ -39,11 +40,11 @@ def by_chain_id(chain_id: int) -> "NetworkInfo" | None:
     return None
 
 
-def by_slip44(slip44: int) -> "NetworkInfo" | None:
+def by_slip44(slip44: int) -> EthereumNetworkInfo | None:
     for n in _networks_iterator():
         n_slip44 = n[1]
         if n_slip44 == slip44:
-            return NetworkInfo(
+            return EthereumNetworkInfo(
                 chain_id=n[0],
                 slip44=n[1],
                 shortcut=n[2],
@@ -57,17 +58,6 @@ def all_slip44_ids_hardened() -> Iterator[int]:
     for n in _networks_iterator():
         # n_slip_44 is the second element
         yield n[1] | HARDENED
-
-
-class NetworkInfo:
-    def __init__(
-        self, chain_id: int, slip44: int, shortcut: str, name: str, rskip60: bool
-    ) -> None:
-        self.chain_id = chain_id
-        self.slip44 = slip44
-        self.shortcut = shortcut
-        self.name = name
-        self.rskip60 = rskip60
 
 
 # fmt: off

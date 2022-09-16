@@ -1,28 +1,23 @@
+from typing import Any
 from ubinascii import unhexlify
-from typing import TYPE_CHECKING
-
-from apps.ethereum import tokens
 
 from trezor import protobuf, wire
 from trezor.crypto.curve import ed25519
 from trezor.enums import EthereumDefinitionType
 from trezor.messages import EthereumNetworkInfo, EthereumTokenInfo
 
+from apps.ethereum import tokens
+
 from . import helpers, networks
-
-if TYPE_CHECKING:
-    from trezor.protobuf import MessageType
-
-    from .networks import NetworkInfo
-    from .tokens import TokenInfo
-
 
 DEFINITIONS_PUBLIC_KEY = b""
 MIN_DATA_VERSION = 1
 FORMAT_VERSION = "trzd1"
 
 if __debug__:
-    DEFINITIONS_DEV_PUBLIC_KEY = unhexlify("db995fe25169d141cab9bbba92baa01f9f2e1ece7df4cb2ac05190f37fcc1f9d")
+    DEFINITIONS_DEV_PUBLIC_KEY = unhexlify(
+        "db995fe25169d141cab9bbba92baa01f9f2e1ece7df4cb2ac05190f37fcc1f9d"
+    )
 
 
 class EthereumDefinitionParser:
@@ -31,15 +26,21 @@ class EthereumDefinitionParser:
 
         try:
             # prefix
-            self.format_version = definition_bytes[:8].rstrip(b'\0').decode("utf-8")
+            self.format_version = definition_bytes[:8].rstrip(b"\0").decode("utf-8")
             self.definition_type: int = definition_bytes[8]
-            self.data_version = int.from_bytes(definition_bytes[9:13], 'big')
-            self.payload_length_in_bytes = int.from_bytes(definition_bytes[13:15], 'big')
+            self.data_version = int.from_bytes(definition_bytes[9:13], "big")
+            self.payload_length_in_bytes = int.from_bytes(
+                definition_bytes[13:15], "big"
+            )
             actual_position += 8 + 1 + 4 + 2
 
             # payload
-            self.payload = definition_bytes[actual_position:(actual_position + self.payload_length_in_bytes)]
-            self.payload_with_prefix = definition_bytes[:(actual_position + self.payload_length_in_bytes)]
+            self.payload = definition_bytes[
+                actual_position : (actual_position + self.payload_length_in_bytes)
+            ]
+            self.payload_with_prefix = definition_bytes[
+                : (actual_position + self.payload_length_in_bytes)
+            ]
             actual_position += self.payload_length_in_bytes
 
             # suffix - Merkle tree proof and signed root hash
@@ -47,16 +48,20 @@ class EthereumDefinitionParser:
             actual_position += 1
             self.proof: list[bytes] = []
             for _ in range(self.proof_length):
-                self.proof.append(definition_bytes[actual_position:(actual_position + 32)])
+                self.proof.append(
+                    definition_bytes[actual_position : (actual_position + 32)]
+                )
                 actual_position += 32
-            self.signed_tree_root = definition_bytes[actual_position:(actual_position + 64)]
+            self.signed_tree_root = definition_bytes[
+                actual_position : (actual_position + 64)
+            ]
         except IndexError:
             raise wire.DataError("Invalid Ethereum definition.")
 
 
 def decode_definition(
     definition: bytes, expected_type: EthereumDefinitionType
-) -> NetworkInfo | TokenInfo:
+) -> EthereumNetworkInfo | EthereumTokenInfo:
     # check network definition
     parsed_definition = EthereumDefinitionParser(definition)
 
@@ -75,6 +80,7 @@ def decode_definition(
     # at the end verify the signature - compute Merkle tree root hash using provided leaf data and proof
     def compute_mt_root_hash(data: bytes, proof: list[bytes]) -> bytes:
         from trezor.crypto.hashlib import sha256
+
         hash = sha256(b"\x00" + data).digest()
         for p in proof:
             hash_a = min(hash, p)
@@ -84,13 +90,21 @@ def decode_definition(
         return hash
 
     # verify Merkle proof
-    root_hash = compute_mt_root_hash(parsed_definition.payload_with_prefix, parsed_definition.proof)
+    root_hash = compute_mt_root_hash(
+        parsed_definition.payload_with_prefix, parsed_definition.proof
+    )
 
-    if not ed25519.verify(DEFINITIONS_PUBLIC_KEY, parsed_definition.signed_tree_root, root_hash):
+    if not ed25519.verify(
+        DEFINITIONS_PUBLIC_KEY, parsed_definition.signed_tree_root, root_hash
+    ):
         error_msg = wire.DataError("Ethereum definition signature is invalid.")
         if __debug__:
             # check against dev key
-            if not ed25519.verify(DEFINITIONS_DEV_PUBLIC_KEY, parsed_definition.signed_tree_root, root_hash):
+            if not ed25519.verify(
+                DEFINITIONS_DEV_PUBLIC_KEY,
+                parsed_definition.signed_tree_root,
+                root_hash,
+            ):
                 raise error_msg
         else:
             raise error_msg
@@ -98,35 +112,15 @@ def decode_definition(
     # decode it if it's OK
     if expected_type == EthereumDefinitionType.NETWORK:
         info = protobuf.decode(parsed_definition.payload, EthereumNetworkInfo, True)
-
-        # TODO: temporarily convert to internal class
-        if info is not None:
-            from .networks import NetworkInfo
-            info = NetworkInfo(
-                chain_id=info.chain_id,
-                slip44=info.slip44,
-                shortcut=info.shortcut,
-                name=info.name,
-                rskip60=info.rskip60
-            )
     else:
         info = protobuf.decode(parsed_definition.payload, EthereumTokenInfo, True)
-
-        # TODO: temporarily convert to internal class
-        if info is not None:
-            from .tokens import TokenInfo
-            info = TokenInfo(
-                symbol=info.symbol,
-                decimals=info.decimals,
-                address=info.address,
-                chain_id=info.chain_id,
-                name=info.name,
-            )
 
     return info
 
 
-def _get_network_definiton(encoded_network_definition: bytes | None, ref_chain_id: int | None = None) -> NetworkInfo | None:
+def _get_network_definiton(
+    encoded_network_definition: bytes | None, ref_chain_id: int | None = None
+) -> EthereumNetworkInfo | None:
     if encoded_network_definition is None and ref_chain_id is None:
         return None
 
@@ -134,23 +128,31 @@ def _get_network_definiton(encoded_network_definition: bytes | None, ref_chain_i
         # if we have a built-in definition, use it
         network = networks.by_chain_id(ref_chain_id)
         if network is not None:
-            return network
+            return network  # type: EthereumNetworkInfo
 
     if encoded_network_definition is not None:
         # get definition if it was send
-        network = decode_definition(encoded_network_definition, EthereumDefinitionType.NETWORK)
+        network = decode_definition(
+            encoded_network_definition, EthereumDefinitionType.NETWORK
+        )
 
         # check referential chain_id with encoded chain_id
         if ref_chain_id is not None and network.chain_id != ref_chain_id:
             raise wire.DataError("Invalid network definition - chain IDs not equal.")
 
-        return network
+        return network  # type: ignore [Expression of type "EthereumNetworkInfo | EthereumTokenInfo" cannot be assigned to return type "EthereumNetworkInfo | None"]
 
     return None
 
 
-def _get_token_definiton(encoded_token_definition: bytes | None, ref_chain_id: int | None = None, ref_address: bytes | None = None) -> TokenInfo:
-    if encoded_token_definition is None and (ref_chain_id is None or ref_address is None):
+def _get_token_definiton(
+    encoded_token_definition: bytes | None,
+    ref_chain_id: int | None = None,
+    ref_address: bytes | None = None,
+) -> EthereumTokenInfo:
+    if encoded_token_definition is None and (
+        ref_chain_id is None or ref_address is None
+    ):
         return tokens.UNKNOWN_TOKEN
 
     # if we have a built-in definition, use it
@@ -161,12 +163,13 @@ def _get_token_definiton(encoded_token_definition: bytes | None, ref_chain_id: i
 
     if encoded_token_definition is not None:
         # get definition if it was send
-        token = decode_definition(encoded_token_definition, EthereumDefinitionType.TOKEN)
+        token: EthereumTokenInfo = decode_definition(  # type: ignore [Expression of type "EthereumNetworkInfo | EthereumTokenInfo" cannot be assigned to declared type "EthereumTokenInfo"]
+            encoded_token_definition, EthereumDefinitionType.TOKEN
+        )
 
         # check token against ref_chain_id and ref_address
-        if (
-            (ref_chain_id is None or token.chain_id == ref_chain_id)
-            and (ref_address is None or token.address == ref_address)
+        if (ref_chain_id is None or token.chain_id == ref_chain_id) and (
+            ref_address is None or token.address == ref_address
         ):
             return token
 
@@ -175,6 +178,7 @@ def _get_token_definiton(encoded_token_definition: bytes | None, ref_chain_id: i
 
 class EthereumDefinitions:
     """Class that holds Ethereum definitions - network and tokens. Prefers built-in definitions over encoded ones."""
+
     def __init__(
         self,
         encoded_network_definition: bytes | None = None,
@@ -183,20 +187,22 @@ class EthereumDefinitions:
         ref_token_address: bytes | None = None,
     ) -> None:
         self.network = _get_network_definiton(encoded_network_definition, ref_chain_id)
-        self.token_dict: dict[bytes, TokenInfo] = dict()
+        self.token_dict: dict[bytes, EthereumTokenInfo] = dict()
 
         # if we have some network, we can try to get token
         if self.network is not None:
-            token = _get_token_definiton(encoded_token_definition, self.network.chain_id, ref_token_address)
+            token = _get_token_definiton(
+                encoded_token_definition, self.network.chain_id, ref_token_address
+            )
             if token is not tokens.UNKNOWN_TOKEN:
                 self.token_dict[token.address] = token
 
 
-def get_definitions_from_msg(msg: MessageType) -> EthereumDefinitions:
+def get_definitions_from_msg(msg: Any) -> EthereumDefinitions:
     encoded_network_definition: bytes | None = None
     encoded_token_definition: bytes | None = None
     chain_id: int | None = None
-    token_address: str | None = None
+    token_address: bytes | None = None
 
     # first try to get both definitions
     try:
@@ -225,4 +231,6 @@ def get_definitions_from_msg(msg: MessageType) -> EthereumDefinitions:
     except AttributeError:
         pass
 
-    return EthereumDefinitions(encoded_network_definition, encoded_token_definition, chain_id, token_address)
+    return EthereumDefinitions(
+        encoded_network_definition, encoded_token_definition, chain_id, token_address
+    )
