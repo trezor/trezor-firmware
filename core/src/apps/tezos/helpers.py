@@ -1,12 +1,10 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
-from trezor import wire
-from trezor.crypto import base58
 from trezor.utils import BufferReader, ensure
+from trezor.wire import DataError
 
 from apps.common.readers import read_uint32_be
-from apps.common.writers import write_bytes_unchecked, write_uint8
 
 if TYPE_CHECKING:
     from trezor.utils import Writer
@@ -83,6 +81,8 @@ _EP_TAG_NAMED = const(255)
 
 
 def base58_encode_check(payload: bytes, prefix: str | None = None) -> str:
+    from trezor.crypto import base58
+
     result = payload
     if prefix is not None:
         result = TEZOS_PREFIX_BYTES[prefix] + payload
@@ -90,13 +90,14 @@ def base58_encode_check(payload: bytes, prefix: str | None = None) -> str:
 
 
 def write_bool(w: Writer, boolean: bool) -> None:
-    if boolean:
-        write_uint8(w, 255)
-    else:
-        write_uint8(w, 0)
+    from apps.common.writers import write_uint8
+
+    write_uint8(w, 255 if boolean else 0)
 
 
 def write_instruction(w: Writer, instruction: str) -> None:
+    from apps.common.writers import write_bytes_unchecked
+
     write_bytes_unchecked(w, MICHELSON_INSTRUCTION_BYTES[instruction])
 
 
@@ -108,7 +109,7 @@ def check_script_size(script: bytes) -> None:
         n = read_uint32_be(r)
         ensure(r.remaining_count() == n)
     except (AssertionError, EOFError):
-        raise wire.DataError("Invalid script")
+        raise DataError("Invalid script")
 
 
 def check_tx_params_size(params: bytes) -> None:
@@ -119,8 +120,8 @@ def check_tx_params_size(params: bytes) -> None:
             n = r.get()
             r.read(n)
         elif tag > 4:
-            raise wire.DataError("Unknown entrypoint tag")
+            raise DataError("Unknown entrypoint tag")
         n = read_uint32_be(r)
         ensure(r.remaining_count() == n)
     except (AssertionError, EOFError):
-        raise wire.DataError("Invalid transaction parameters")
+        raise DataError("Invalid transaction parameters")
