@@ -455,6 +455,79 @@
           }
         ]
       }
+    },
+    {
+      "description": "transaction with CIP36 catalyst registration and voting purpose not specified",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "validity_interval_start": null,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": {
+          "catalyst_registration_parameters": {
+            "staking_path": "m/1852'/1815'/0'/2/0",
+            "reward_address_parameters": {
+              "addressType": 0,
+              "path": "m/1852'/1815'/0'/0/0",
+              "stakingPath": "m/1852'/1815'/0'/2/0"
+            },
+            "nonce": 22634813,
+            "format": 1,
+            "delegations": [
+              {
+                "voting_public_key": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+                "weight": 1
+              },
+              {
+                "voting_public_key": "2af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+                "weight": 2
+              }
+            ]
+          }
+        },
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "collateral_return": null,
+        "total_collateral": null,
+        "reference_inputs": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "15e4e382d913a743776b93d730fee3ca39bfa3ee203801205333bc9aad249612",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
+            "signature": "c984c65a5d6ee16c9cdd9fd332a5f64907f25438ef2d1e6d625bdd5c76d15acdf3e5700338b6b5c0ca30d25dd604e1b33ab5ee3459ff8ce3ca5a11e774a18605",
+            "chain_code": null
+          }
+        ],
+        "auxiliary_data_supplement": {
+          "type": 1,
+          "auxiliary_data_hash": "9d4c00f5b5b67760931fd7ed9850ff8e14dcdf957685191ab4bc755c52f0ed56",
+          "catalyst_signature": "2671b8e668ffce235647ac89deda6cc222e7b31a3d44606c2723fcf711b29f9af1e30b0c6b4f87ba37ddf9f6adf0226c39c09e655255890644a3dc4e64c3a001"
+        }
+      }
     }
   ]
 }

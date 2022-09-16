@@ -383,6 +383,10 @@ if TYPE_CHECKING:
         NONE = 0
         CATALYST_REGISTRATION_SIGNATURE = 1
 
+    class CardanoCatalystRegistrationFormat(IntEnum):
+        CIP15 = 0
+        CIP36 = 1
+
     class CardanoTxSigningMode(IntEnum):
         ORDINARY_TRANSACTION = 0
         POOL_REGISTRATION_AS_OWNER = 1
