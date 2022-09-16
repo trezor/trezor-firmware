@@ -1,30 +1,33 @@
 from typing import TYPE_CHECKING
 
-from trezor import wire
-from trezor.crypto.curve import secp256k1
-from trezor.crypto.hashlib import sha256
-from trezor.enums import MessageType
-from trezor.messages import (
-    BinanceCancelMsg,
-    BinanceOrderMsg,
-    BinanceSignedTx,
-    BinanceTransferMsg,
-    BinanceTxRequest,
-)
-
-from apps.common import paths
-from apps.common.keychain import Keychain, auto_keychain
-
-from . import helpers, layout
+from apps.common.keychain import auto_keychain
 
 if TYPE_CHECKING:
-    from trezor.messages import BinanceSignTx
+    from trezor.messages import BinanceSignTx, BinanceSignedTx
+    from apps.common.keychain import Keychain
+    from trezor.wire import Context
 
 
 @auto_keychain(__name__)
 async def sign_tx(
-    ctx: wire.Context, envelope: BinanceSignTx, keychain: Keychain
+    ctx: Context, envelope: BinanceSignTx, keychain: Keychain
 ) -> BinanceSignedTx:
+    from trezor import wire
+    from trezor.crypto.curve import secp256k1
+    from trezor.crypto.hashlib import sha256
+    from trezor.enums import MessageType
+    from trezor.messages import (
+        BinanceCancelMsg,
+        BinanceOrderMsg,
+        BinanceSignedTx,
+        BinanceTransferMsg,
+        BinanceTxRequest,
+    )
+
+    from apps.common import paths
+
+    from . import helpers, layout
+
     # create transaction message -> sign it -> create signature/pubkey message -> serialize all
     if envelope.msg_count > 1:
         raise wire.DataError("Multiple messages not supported.")
@@ -55,11 +58,8 @@ async def sign_tx(
     else:
         raise wire.ProcessError("input message unrecognized")
 
-    signature_bytes = generate_content_signature(msg_json.encode(), node.private_key())
+    # generate_content_signature
+    msghash = sha256(msg_json.encode()).digest()
+    signature_bytes = secp256k1.sign(node.private_key(), msghash)[1:65]
 
     return BinanceSignedTx(signature=signature_bytes, public_key=node.public_key())
-
-
-def generate_content_signature(json: bytes, private_key: bytes) -> bytes:
-    msghash = sha256(json).digest()
-    return secp256k1.sign(private_key, msghash)[1:65]
