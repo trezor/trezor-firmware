@@ -1,11 +1,18 @@
 from common import *
 
 from trezor.crypto import bip32, bip39
-from apps.common.paths import HARDENED
+from trezor.crypto.curve import secp256k1
 
 if not utils.BITCOIN_ONLY:
-    from apps.eos.get_public_key import _get_public_key
     from apps.eos.helpers import public_key_to_wif
+
+
+# NOTE: copy-pasted from apps.eos.get_public_key
+def _get_public_key(node: bip32.HDNode) -> tuple[str, bytes]:
+    seckey = node.private_key()
+    public_key = secp256k1.publickey(seckey, True)
+    wif = public_key_to_wif(public_key)
+    return wif, public_key
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
