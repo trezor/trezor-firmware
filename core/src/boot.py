@@ -10,11 +10,12 @@ from apps.homescreen.lockscreen import Lockscreen
 async def bootscreen() -> None:
     lockscreen = Lockscreen(bootscreen=True)
     ui.display.orientation(storage.device.get_rotation())
+
     while True:
         try:
-            if can_lock_device():
-                await lockscreen
-            await verify_user_pin()
+            #if can_lock_device():
+            #    await lockscreen
+            #await verify_user_pin()
             storage.init_unlocked()
             return
         except wire.PinCancelled:
@@ -33,8 +34,8 @@ ui.display.backlight(ui.BACKLIGHT_NONE)
 ui.backlight_fade(ui.BACKLIGHT_NORMAL)
 config.init(show_pin_timeout)
 
-# if __debug__ and not utils.EMULATOR:
-#     config.wipe()
-
+if __debug__ and not utils.EMULATOR:
+    config.wipe()
+ui.display.clear()
 loop.schedule(bootscreen())
 loop.run()

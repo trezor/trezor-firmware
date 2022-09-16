@@ -41,7 +41,7 @@ if __debug__:
 
         if not screenshot():
             side = Display.WIDTH // 30
-            display.bar(Display.WIDTH - side, 0, side, side, 0xF800)
+            # display.bar(Display.WIDTH - side, 0, side, side, 0xF800)
         display.refresh()
 
 else:
@@ -417,11 +417,11 @@ class Layout(Component):
 
     def _before_render(self) -> None:
         # Before the first render, we dim the display.
-        backlight_fade(style.BACKLIGHT_DIM)
+        #backlight_fade(style.BACKLIGHT_DIM)
         # Clear the screen of any leftovers, make sure everything is marked for
         # repaint (we can be running the same layout instance multiple times)
         # and paint it.
-        display.clear()
+        #display.clear()
         self.dispatch(REPAINT, 0, 0)
         self.dispatch(RENDER, 0, 0)
 
@@ -438,7 +438,7 @@ class Layout(Component):
         # rendering everything synchronously, so refresh it manually and turn
         # the brightness on again.
         refresh()
-        backlight_fade(self.BACKLIGHT_LEVEL)
+        #backlight_fade(self.BACKLIGHT_LEVEL)
 
     def handle_rendering(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
         """Task that is rendering the layout in a busy loop."""

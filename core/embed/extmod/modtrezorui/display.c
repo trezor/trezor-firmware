@@ -984,7 +984,7 @@ void display_test(){
   }
 
   screen_intro("", "", 0, "");
-  display_icon(p%240 - 120, 90, 240, 120, toi_icon_logo + 12, sizeof(toi_icon_logo) - 12,
+  display_icon(p%300 - 120, 90, 240, 120, toi_icon_logo + 12, sizeof(toi_icon_logo) - 12,
                0xF100, 0);
 
 

@@ -9,6 +9,7 @@ See `schedule`, `run`, and syscalls `sleep`, `wait`, `signal` and `race`.
 
 import utime
 import utimeq
+import time
 from typing import TYPE_CHECKING
 
 from trezor import io, log
@@ -151,7 +152,16 @@ def run() -> None:
                 _step(task_entry[1], task_entry[2])  # type: ignore [Argument of type "int" cannot be assigned to parameter "task" of type "Task" in function "_step"]
                 # error: Argument 1 to "_step" has incompatible type "int"; expected "Coroutine[Any, Any, Any]"
                 # rationale: We use untyped lists here, because that is what the C API supports.
-        log.debug("__name__", f"{i}")
+
+        from trezor.ui import display
+        f = display.get_adc(0)
+        log.debug("", f"VrefInt: {f} V")
+        f = display.get_adc(1)
+        log.debug("", f"Vbat: {f} V")
+        f = display.get_adc(2)
+        log.debug("", f"Temp: {f} °C")
+        t = time.ticks_ms() / 1000
+        log.debug("", f"Time from powerup: {t} s")
         i+=1
 
 

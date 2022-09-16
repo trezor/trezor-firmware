@@ -87,8 +87,8 @@ class _RustLayout(ui.Layout):
 
     def _before_render(self) -> None:
         # Clear the screen of any leftovers.
-        ui.backlight_fade(ui.style.BACKLIGHT_DIM)
-        ui.display.clear()
+        #ui.backlight_fade(ui.style.BACKLIGHT_DIM)
+        #ui.display.clear()
 
         if __debug__ and self.should_notify_layout_change:
             from apps.debug import notify_layout_change
@@ -100,7 +100,7 @@ class _RustLayout(ui.Layout):
             notify_layout_change(self)
 
         # Turn the brightness on again.
-        ui.backlight_fade(self.BACKLIGHT_LEVEL)
+        # ui.backlight_fade(self.BACKLIGHT_LEVEL)
 
     def handle_input_and_rendering(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
         touch = loop.wait(io.TOUCH)

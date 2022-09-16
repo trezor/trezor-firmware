@@ -18,6 +18,7 @@
  */
 
 #include "display.h"
+#include "adc.h"
 
 /// class Display:
 ///     """
@@ -549,6 +550,29 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_backlight_obj,
                                            1, 2,
                                            mod_trezorui_Display_backlight);
 
+
+/// def get_adc(self, val: int = 0) -> float:
+///     """
+///     Gets adc value
+///     """
+STATIC mp_obj_t mod_trezorui_Display_get_adc(size_t n_args,
+                                               const mp_obj_t *args) {
+  mp_float_t val;
+  if (n_args > 1) {
+    val = mp_obj_get_int(args[1]);
+    val = adc_get_last(val);
+  } else {
+    val = adc_get_last(0);
+  }
+
+  mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_float(val));
+  return MP_OBJ_FROM_PTR(tuple);
+}
+
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_get_adc_obj,
+                                           1, 2,
+                                           mod_trezorui_Display_get_adc);
+
 /// def offset(self, xy: tuple[int, int] | None = None) -> tuple[int, int]:
 ///     """
 ///     Sets offset (x, y) for all subsequent drawing calls.
@@ -636,6 +660,8 @@ STATIC const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
      MP_ROM_PTR(&mod_trezorui_Display_orientation_obj)},
     {MP_ROM_QSTR(MP_QSTR_backlight),
      MP_ROM_PTR(&mod_trezorui_Display_backlight_obj)},
+    {MP_ROM_QSTR(MP_QSTR_get_adc),
+     MP_ROM_PTR(&mod_trezorui_Display_get_adc_obj)},
     {MP_ROM_QSTR(MP_QSTR_offset), MP_ROM_PTR(&mod_trezorui_Display_offset_obj)},
     {MP_ROM_QSTR(MP_QSTR_save), MP_ROM_PTR(&mod_trezorui_Display_save_obj)},
     {MP_ROM_QSTR(MP_QSTR_clear_save),

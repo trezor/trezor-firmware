@@ -10,6 +10,8 @@
 
 ADC_HandleTypeDef adc;
 
+static float last_values[3];
+
 void adc_init(void){
   __HAL_RCC_ADC1_CLK_ENABLE();
 
@@ -91,6 +93,8 @@ size_t adc_get_vrefint(char * buffer, size_t buffer_len){
   adc_set_vrefint();
   float val = adc_read();
 
+  last_values[0] = val;
+
   adc_format(val, buffer, buffer_len, "VrefInt", "V");
 
   return strlen(buffer);
@@ -101,6 +105,7 @@ size_t adc_get_vrefint(char * buffer, size_t buffer_len){
 size_t adc_get_vbat(char * buffer, size_t buffer_len){
   adc_set_vbat();
   float val = adc_read() * 4.0;
+  last_values[1] = val;
 
   adc_format(val, buffer, buffer_len, "Vbat", "V");
 
@@ -110,8 +115,14 @@ size_t adc_get_vbat(char * buffer, size_t buffer_len){
 size_t adc_get_temp(char * buffer, size_t buffer_len){
   adc_set_temp();
   float val = ((adc_read() - 0.76) / 0.0025) + 25;
+  last_values[2] = val;
 
   adc_format(val, buffer, buffer_len, "Temp", "°C");
 
   return strlen(buffer);
+}
+
+
+float adc_get_last(int idx){
+  return last_values[idx];
 }
