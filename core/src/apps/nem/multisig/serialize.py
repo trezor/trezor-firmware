@@ -1,12 +1,5 @@
 from typing import TYPE_CHECKING
 
-from trezor.crypto import hashlib, nem
-
-from ..helpers import (
-    NEM_TRANSACTION_TYPE_AGGREGATE_MODIFICATION,
-    NEM_TRANSACTION_TYPE_MULTISIG,
-    NEM_TRANSACTION_TYPE_MULTISIG_SIGNATURE,
-)
 from ..writers import serialize_tx_common, write_bytes_with_len, write_uint32_le
 
 if TYPE_CHECKING:
@@ -17,6 +10,8 @@ if TYPE_CHECKING:
 def serialize_multisig(
     common: NEMTransactionCommon, public_key: bytes, inner: bytes
 ) -> bytes:
+    from ..helpers import NEM_TRANSACTION_TYPE_MULTISIG
+
     w = serialize_tx_common(common, public_key, NEM_TRANSACTION_TYPE_MULTISIG)
     write_bytes_with_len(w, inner)
     return w
@@ -28,6 +23,9 @@ def serialize_multisig_signature(
     inner: bytes,
     address_public_key: bytes,
 ) -> bytes:
+    from trezor.crypto import hashlib, nem
+    from ..helpers import NEM_TRANSACTION_TYPE_MULTISIG_SIGNATURE
+
     w = serialize_tx_common(common, public_key, NEM_TRANSACTION_TYPE_MULTISIG_SIGNATURE)
     digest = hashlib.sha3_256(inner, keccak=True).digest()
     address = nem.compute_address(address_public_key, common.network)
@@ -41,6 +39,8 @@ def serialize_multisig_signature(
 def serialize_aggregate_modification(
     common: NEMTransactionCommon, mod: NEMAggregateModification, public_key: bytes
 ) -> bytearray:
+    from ..helpers import NEM_TRANSACTION_TYPE_AGGREGATE_MODIFICATION
+
     version = common.network << 24 | 1
     if mod.relative_change:
         version = common.network << 24 | 2
