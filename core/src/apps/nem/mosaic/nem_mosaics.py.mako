@@ -2,6 +2,9 @@
 # (by running `make templates` in `core`)
 # do not edit manually!
 
+# NOTE: not supplying the kwargs saves 120 bytes of code size
+# `networks` needs kwarg as `levy` above is optional
+
 from typing import Iterator
 
 from trezor.enums import NEMMosaicLevy
@@ -44,21 +47,23 @@ class Mosaic:
 def mosaics_iterator() -> Iterator[Mosaic]:
 % for m in supported_on("trezor2", nem):
     yield Mosaic(
-        name="${m.name}",
-        ticker=" ${m.ticker}",
-        namespace="${m.namespace}",
-        mosaic="${m.mosaic}",
-        divisibility=${m.divisibility},
+        "${m.name}",  # name
+        " ${m.ticker}",  # ticker
+        "${m.namespace}",  # namespace
+        "${m.mosaic}",  # mosaic
+        ${m.divisibility},  # divisibility
 % if "levy" in m:
-        levy=MosaicLevy(
-            type=NEMMosaicLevy.${m.levy},
-            fee=${m.fee},
-            namespace="${m.levy_namespace}",
-            mosaic="${m.levy_mosaic}",
+        MosaicLevy(  # levy
+            NEMMosaicLevy.${m.levy},  # type
+            ${m.fee},  # fee
+            "${m.levy_namespace}",  # namespace
+            "${m.levy_mosaic}",  # mosaic
         ),
+% else:
+        None,  # levy
 % endif
 % if "networks" in m:
-        networks=${tuple(m.networks)},
+        ${tuple(m.networks)},  # networks
 % endif
     )
 % endfor

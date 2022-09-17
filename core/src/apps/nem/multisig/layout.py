@@ -1,11 +1,6 @@
 from typing import TYPE_CHECKING
 
-from trezor import ui
 from trezor.crypto import nem
-from trezor.enums import ButtonRequestType, NEMModificationType
-from trezor.ui.layouts import confirm_address
-
-from ..layout import require_confirm_fee, require_confirm_final, require_confirm_text
 
 if TYPE_CHECKING:
     from trezor.messages import (
@@ -17,6 +12,8 @@ if TYPE_CHECKING:
 
 
 async def ask_multisig(ctx: Context, msg: NEMSignTx) -> None:
+    from ..layout import require_confirm_fee
+
     assert msg.multisig is not None  # sign_tx
     assert msg.multisig.signer is not None  # sign_tx
     address = nem.compute_address(msg.multisig.signer, msg.transaction.network)
@@ -33,6 +30,9 @@ async def ask_aggregate_modification(
     mod: NEMAggregateModification,
     multisig: bool,
 ) -> None:
+    from trezor.enums import NEMModificationType
+    from ..layout import require_confirm_final, require_confirm_text
+
     if not multisig:
         await require_confirm_text(ctx, "Convert account to multisig account?")
 
@@ -55,12 +55,14 @@ async def ask_aggregate_modification(
 
 
 async def _require_confirm_address(ctx: Context, action: str, address: str) -> None:
+    from trezor.enums import ButtonRequestType
+    from trezor.ui.layouts import confirm_address
+
     await confirm_address(
         ctx,
-        br_type="confirm_multisig",
-        title="Confirm address",
-        description=action,
-        address=address,
-        br_code=ButtonRequestType.ConfirmOutput,
-        icon=ui.ICON_SEND,
+        "Confirm address",
+        address,
+        action,
+        "confirm_multisig",
+        ButtonRequestType.ConfirmOutput,
     )
