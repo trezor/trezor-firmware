@@ -8,7 +8,7 @@ from micropython import const
 
 from trezor.crypto.hashlib import blake2b
 
-HASH_LENGTH = const(64)
+_HASH_LENGTH = const(64)
 
 
 def xor(target: memoryview, mask: bytes) -> None:
@@ -17,12 +17,12 @@ def xor(target: memoryview, mask: bytes) -> None:
 
 
 def G_round(i: int, left: memoryview, right: memoryview) -> None:
-    for j in range((len(right) + HASH_LENGTH - 1) // HASH_LENGTH):
+    for j in range((len(right) + _HASH_LENGTH - 1) // _HASH_LENGTH):
         mask = blake2b(
             personal=b"UA_F4Jumble_G" + bytes([i]) + j.to_bytes(2, "little"),
             data=bytes(left),
         ).digest()
-        xor(right[j * HASH_LENGTH : (j + 1) * HASH_LENGTH], mask)
+        xor(right[j * _HASH_LENGTH : (j + 1) * _HASH_LENGTH], mask)
 
 
 def H_round(i: int, left: memoryview, right: memoryview) -> None:
@@ -36,7 +36,7 @@ def H_round(i: int, left: memoryview, right: memoryview) -> None:
 
 def f4jumble(message: memoryview) -> None:
     assert 48 <= len(message) <= 4194368
-    left_length = min(HASH_LENGTH, len(message) // 2)
+    left_length = min(_HASH_LENGTH, len(message) // 2)
 
     left = message[:left_length]
     right = message[left_length:]
@@ -48,7 +48,7 @@ def f4jumble(message: memoryview) -> None:
 
 def f4unjumble(message: memoryview) -> None:
     assert 48 <= len(message) <= 4194368
-    left_length = min(HASH_LENGTH, len(message) // 2)
+    left_length = min(_HASH_LENGTH, len(message) // 2)
 
     left = message[:left_length]
     right = message[left_length:]
