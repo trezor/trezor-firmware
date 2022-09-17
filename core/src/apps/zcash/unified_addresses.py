@@ -6,20 +6,21 @@ see: https://zips.z.cash/zip-0316
 
 from typing import TYPE_CHECKING
 
-from trezor.crypto.bech32 import Encoding, bech32_decode, bech32_encode, convertbits
-from trezor.utils import BufferReader, empty_bytearray
-from trezor.wire import DataError
-
-from apps.common.coininfo import CoinInfo
-from apps.common.readers import read_compact_size
-from apps.common.writers import write_bytes_fixed, write_compact_size
-
-from .f4jumble import f4jumble, f4unjumble
+from trezor.crypto.bech32 import Encoding, convertbits
 
 if TYPE_CHECKING:
     from enum import IntEnum
+    from apps.common.coininfo import CoinInfo
 else:
     IntEnum = object
+
+
+# Saves 50 bytes over `def prefix(coin: CoinInfo) -> str`
+# (throws KeyError instead of ValueError but it should not matter)
+PREFIXES = {
+    "Zcash": "u",
+    "Zcash Testnet": "utest",
+}
 
 
 class Typecode(IntEnum):
@@ -29,22 +30,14 @@ class Typecode(IntEnum):
     ORCHARD = 0x03
 
 
-def receiver_length(typecode: int) -> int | None:
-    """Byte length of a receiver."""
-    if typecode in (Typecode.P2PKH, Typecode.P2SH):
-        return 20
-    if typecode in (Typecode.SAPLING, Typecode.ORCHARD):
-        return 43
-    return None
-
-
-def prefix(coin: CoinInfo) -> str:
-    """Prefix for a unified address."""
-    if coin.coin_name == "Zcash":
-        return "u"
-    if coin.coin_name == "Zcash Testnet":
-        return "utest"
-    raise ValueError
+# Byte length of a receiver.
+# Saves 30 bytes over `def receiver_length(typecode: Typecode) -> int`
+RECEIVER_LENGTHS = {
+    Typecode.P2PKH: 20,
+    Typecode.P2SH: 20,
+    Typecode.SAPLING: 43,
+    Typecode.ORCHARD: 43,
+}
 
 
 def padding(hrp: str) -> bytes:
@@ -53,6 +46,11 @@ def padding(hrp: str) -> bytes:
 
 
 def encode(receivers: dict[Typecode, bytes], coin: CoinInfo) -> str:
+    from trezor.crypto.bech32 import bech32_encode
+    from trezor.utils import empty_bytearray
+    from .f4jumble import f4jumble
+    from apps.common.writers import write_bytes_fixed, write_compact_size
+
     # multiple transparent receivers forbidden
     assert not (Typecode.P2PKH in receivers and Typecode.P2SH in receivers)
     # at least one shielded address must be present
@@ -70,12 +68,12 @@ def encode(receivers: dict[Typecode, bytes], coin: CoinInfo) -> str:
     receivers_list.sort()
 
     for (typecode, raw_bytes) in receivers_list:
-        length = receiver_length(typecode) or len(raw_bytes)
+        length = RECEIVER_LENGTHS.get(typecode) or len(raw_bytes)
         write_compact_size(w, typecode)
         write_compact_size(w, length)
         write_bytes_fixed(w, raw_bytes, length)
 
-    hrp = prefix(coin)
+    hrp = PREFIXES[coin.coin_name]
     write_bytes_fixed(w, padding(hrp), 16)
     f4jumble(memoryview(w))
     converted = convertbits(w, 8, 5)
@@ -83,6 +81,12 @@ def encode(receivers: dict[Typecode, bytes], coin: CoinInfo) -> str:
 
 
 def decode(addr_str: str, coin: CoinInfo) -> dict[int, bytes]:
+    from trezor.crypto.bech32 import bech32_decode
+    from trezor.utils import BufferReader
+    from trezor.wire import DataError
+    from apps.common.readers import read_compact_size
+    from .f4jumble import f4unjumble
+
     try:
         hrp, data, encoding = bech32_decode(addr_str, 1000)
     except ValueError:
@@ -90,7 +94,7 @@ def decode(addr_str: str, coin: CoinInfo) -> dict[int, bytes]:
     assert hrp is not None  # to satisfy typecheckers
     assert data is not None  # to satisfy typecheckers
     assert encoding is not None  # to satisfy typecheckers
-    if hrp != prefix(coin):
+    if hrp != PREFIXES[coin.coin_name]:
         raise DataError("Unexpected address prefix.")
     if encoding != Encoding.BECH32M:
         raise DataError("Bech32m encoding required.")
@@ -118,7 +122,7 @@ def decode(addr_str: str, coin: CoinInfo) -> dict[int, bytes]:
 
         length = read_compact_size(r)
         # if the typecode of the receiver is known, then verify receiver length
-        expected_length = receiver_length(typecode)
+        expected_length = RECEIVER_LENGTHS.get(Typecode(typecode))
         if expected_length is not None and length != expected_length:
             raise DataError("Unexpected receiver length")
 
