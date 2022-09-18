@@ -1,29 +1,31 @@
 from typing import TYPE_CHECKING
 
-from storage.device import is_initialized
 from trezor import config, wire
-from trezor.messages import Success
-from trezor.ui.layouts import confirm_action, show_success
-
-from apps.common.request_pin import (
-    error_pin_invalid,
-    error_pin_matches_wipe_code,
-    request_pin_and_sd_salt,
-    request_pin_confirm,
-)
 
 if TYPE_CHECKING:
     from typing import Awaitable
 
-    from trezor.messages import ChangePin
+    from trezor.messages import ChangePin, Success
+    from trezor.wire import Context
 
 
-async def change_pin(ctx: wire.Context, msg: ChangePin) -> Success:
+async def change_pin(ctx: Context, msg: ChangePin) -> Success:
+    from storage.device import is_initialized
+    from trezor.messages import Success
+    from trezor.ui.layouts import show_success
+
+    from apps.common.request_pin import (
+        error_pin_invalid,
+        error_pin_matches_wipe_code,
+        request_pin_and_sd_salt,
+        request_pin_confirm,
+    )
+
     if not is_initialized():
         raise wire.NotInitialized("Device is not initialized")
 
     # confirm that user wants to change the pin
-    await require_confirm_change_pin(ctx, msg)
+    await _require_confirm_change_pin(ctx, msg)
 
     # get old pin
     curpin, salt = await request_pin_and_sd_salt(ctx, "Enter old PIN")
@@ -61,7 +63,9 @@ async def change_pin(ctx: wire.Context, msg: ChangePin) -> Success:
     return Success(message=msg_wire)
 
 
-def require_confirm_change_pin(ctx: wire.Context, msg: ChangePin) -> Awaitable[None]:
+def _require_confirm_change_pin(ctx: Context, msg: ChangePin) -> Awaitable[None]:
+    from trezor.ui.layouts import confirm_action
+
     has_pin = config.has_pin()
 
     if msg.remove and has_pin:  # removing pin
@@ -69,8 +73,8 @@ def require_confirm_change_pin(ctx: wire.Context, msg: ChangePin) -> Awaitable[N
             ctx,
             "set_pin",
             "Remove PIN",
-            description="Do you really want to",
-            action="disable PIN protection?",
+            "disable PIN protection?",
+            "Do you really want to",
             reverse=True,
         )
 
@@ -79,8 +83,8 @@ def require_confirm_change_pin(ctx: wire.Context, msg: ChangePin) -> Awaitable[N
             ctx,
             "set_pin",
             "Change PIN",
-            description="Do you really want to",
-            action="change your PIN?",
+            "change your PIN?",
+            "Do you really want to",
             reverse=True,
         )
 
@@ -89,8 +93,8 @@ def require_confirm_change_pin(ctx: wire.Context, msg: ChangePin) -> Awaitable[N
             ctx,
             "set_pin",
             "Enable PIN",
-            description="Do you really want to",
-            action="enable PIN protection?",
+            "enable PIN protection?",
+            "Do you really want to",
             reverse=True,
         )
 

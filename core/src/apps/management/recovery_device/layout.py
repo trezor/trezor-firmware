@@ -1,28 +1,25 @@
 from typing import TYPE_CHECKING
 
-import storage.recovery
-from trezor import ui, wire
 from trezor.enums import ButtonRequestType
-from trezor.ui.layouts import confirm_action, show_success, show_warning
-from trezor.ui.layouts.common import button_request
+from trezor.ui.layouts import show_warning
 from trezor.ui.layouts.recovery import (  # noqa: F401
-    continue_recovery,
-    request_word,
     request_word_count,
     show_group_share_success,
     show_remaining_shares,
 )
 
 from .. import backup_types
-from . import word_validity
-from .recover import RecoveryAborted
 
 if TYPE_CHECKING:
     from typing import Callable
     from trezor.enums import BackupType
+    from trezor.wire import GenericContext
 
 
-async def confirm_abort(ctx: wire.GenericContext, dry_run: bool = False) -> None:
+async def _confirm_abort(ctx: GenericContext, dry_run: bool = False) -> None:
+    from trezor import ui
+    from trezor.ui.layouts import confirm_action
+
     if dry_run:
         await confirm_action(
             ctx,
@@ -37,8 +34,8 @@ async def confirm_abort(ctx: wire.GenericContext, dry_run: bool = False) -> None
             ctx,
             "abort_recovery",
             "Abort recovery",
-            description="Do you really want to abort the recovery process?",
-            action="All progress will be lost.",
+            "All progress will be lost.",
+            "Do you really want to abort the recovery process?",
             reverse=True,
             icon=ui.ICON_WIPE,
             br_code=ButtonRequestType.ProtectCall,
@@ -46,9 +43,13 @@ async def confirm_abort(ctx: wire.GenericContext, dry_run: bool = False) -> None
 
 
 async def request_mnemonic(
-    ctx: wire.GenericContext, word_count: int, backup_type: BackupType | None
+    ctx: GenericContext, word_count: int, backup_type: BackupType | None
 ) -> str | None:
-    await button_request(ctx, "mnemonic", code=ButtonRequestType.MnemonicInput)
+    from . import word_validity
+    from trezor.ui.layouts.common import button_request
+    from trezor.ui.layouts.recovery import request_word
+
+    await button_request(ctx, "mnemonic", ButtonRequestType.MnemonicInput)
 
     words: list[str] = []
     for i in range(word_count):
@@ -60,21 +61,38 @@ async def request_mnemonic(
         try:
             word_validity.check(backup_type, words)
         except word_validity.AlreadyAdded:
-            await show_share_already_added(ctx)
+            # show_share_already_added
+            await show_warning(
+                ctx,
+                "warning_known_share",
+                "Share already entered,\nplease enter\na different share.",
+            )
             return None
         except word_validity.IdentifierMismatch:
-            await show_identifier_mismatch(ctx)
+            # show_identifier_mismatch
+            await show_warning(
+                ctx,
+                "warning_mismatched_share",
+                "You have entered\na share from another\nShamir Backup.",
+            )
             return None
         except word_validity.ThresholdReached:
-            await show_group_threshold_reached(ctx)
+            # show_group_threshold_reached
+            await show_warning(
+                ctx,
+                "warning_group_threshold",
+                "Threshold of this\ngroup has been reached.\nInput share from\ndifferent group.",
+            )
             return None
 
     return " ".join(words)
 
 
 async def show_dry_run_result(
-    ctx: wire.GenericContext, result: bool, is_slip39: bool
+    ctx: GenericContext, result: bool, is_slip39: bool
 ) -> None:
+    from trezor.ui.layouts import show_success
+
     if result:
         if is_slip39:
             text = "The entered recovery\nshares are valid and\nmatch what is currently\nin the device."
@@ -89,7 +107,7 @@ async def show_dry_run_result(
         await show_warning(ctx, "warning_dry_recovery", text, button="Continue")
 
 
-async def show_invalid_mnemonic(ctx: wire.GenericContext, word_count: int) -> None:
+async def show_invalid_mnemonic(ctx: GenericContext, word_count: int) -> None:
     if backup_types.is_slip39_word_count(word_count):
         await show_warning(
             ctx,
@@ -104,39 +122,20 @@ async def show_invalid_mnemonic(ctx: wire.GenericContext, word_count: int) -> No
         )
 
 
-async def show_share_already_added(ctx: wire.GenericContext) -> None:
-    await show_warning(
-        ctx,
-        "warning_known_share",
-        "Share already entered,\nplease enter\na different share.",
-    )
-
-
-async def show_identifier_mismatch(ctx: wire.GenericContext) -> None:
-    await show_warning(
-        ctx,
-        "warning_mismatched_share",
-        "You have entered\na share from another\nShamir Backup.",
-    )
-
-
-async def show_group_threshold_reached(ctx: wire.GenericContext) -> None:
-    await show_warning(
-        ctx,
-        "warning_group_threshold",
-        "Threshold of this\ngroup has been reached.\nInput share from\ndifferent group.",
-    )
-
-
 async def homescreen_dialog(
-    ctx: wire.GenericContext,
+    ctx: GenericContext,
     button_label: str,
     text: str,
     subtext: str | None = None,
     info_func: Callable | None = None,
 ) -> None:
+    from .recover import RecoveryAborted
+    import storage.recovery as storage_recovery
+    from trezor.wire import ActionCancelled
+    from trezor.ui.layouts.recovery import continue_recovery
+
     while True:
-        dry_run = storage.recovery.is_dry_run()
+        dry_run = storage_recovery.is_dry_run()
         if await continue_recovery(
             ctx, button_label, text, subtext, info_func, dry_run
         ):
@@ -144,8 +143,8 @@ async def homescreen_dialog(
             break
         # user has chosen to abort, confirm the choice
         try:
-            await confirm_abort(ctx, dry_run)
-        except wire.ActionCancelled:
+            await _confirm_abort(ctx, dry_run)
+        except ActionCancelled:
             pass
         else:
             raise RecoveryAborted

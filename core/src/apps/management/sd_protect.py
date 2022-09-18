@@ -1,60 +1,65 @@
 from typing import TYPE_CHECKING
 
-import storage.device
-import storage.sd_salt
-from trezor import config, wire
-from trezor.crypto import random
+import storage.device as storage_device
+import storage.sd_salt as storage_sd_salt
+from trezor import config
 from trezor.enums import SdProtectOperationType
 from trezor.messages import Success
-from trezor.ui.layouts import confirm_action, show_success
+from trezor.ui.layouts import show_success
+from trezor.wire import ProcessError
 
-from apps.common.request_pin import (
-    error_pin_invalid,
-    request_pin,
-    request_pin_and_sd_salt,
-)
-from apps.common.sdcard import confirm_retry_sd, ensure_sdcard
+from apps.common.request_pin import error_pin_invalid, request_pin_and_sd_salt
+from apps.common.sdcard import ensure_sdcard
 
 if TYPE_CHECKING:
     from typing import Awaitable
     from trezor.messages import SdProtect
+    from trezor.wire import Context
 
 
 def _make_salt() -> tuple[bytes, bytes, bytes]:
-    salt = random.bytes(storage.sd_salt.SD_SALT_LEN_BYTES)
-    auth_key = random.bytes(storage.device.SD_SALT_AUTH_KEY_LEN_BYTES)
-    tag = storage.sd_salt.compute_auth_tag(salt, auth_key)
+    from trezor.crypto import random
+
+    salt = random.bytes(storage_sd_salt.SD_SALT_LEN_BYTES)
+    auth_key = random.bytes(storage_device.SD_SALT_AUTH_KEY_LEN_BYTES)
+    tag = storage_sd_salt.compute_auth_tag(salt, auth_key)
     return salt, auth_key, tag
 
 
 async def _set_salt(
-    ctx: wire.Context, salt: bytes, salt_tag: bytes, stage: bool = False
+    ctx: Context, salt: bytes, salt_tag: bytes, stage: bool = False
 ) -> None:
+    from apps.common.sdcard import confirm_retry_sd
+
     while True:
         await ensure_sdcard(ctx)
         try:
-            return storage.sd_salt.set_sd_salt(salt, salt_tag, stage)
+            return storage_sd_salt.set_sd_salt(salt, salt_tag, stage)
         except OSError:
-            await confirm_retry_sd(ctx, exc=wire.ProcessError("SD card I/O error."))
+            await confirm_retry_sd(ctx, ProcessError("SD card I/O error."))
 
 
-async def sd_protect(ctx: wire.Context, msg: SdProtect) -> Success:
-    if not storage.device.is_initialized():
-        raise wire.NotInitialized("Device is not initialized")
+async def sd_protect(ctx: Context, msg: SdProtect) -> Success:
+    from trezor.wire import NotInitialized
+
+    if not storage_device.is_initialized():
+        raise NotInitialized("Device is not initialized")
 
     if msg.operation == SdProtectOperationType.ENABLE:
-        return await sd_protect_enable(ctx, msg)
+        return await _sd_protect_enable(ctx, msg)
     elif msg.operation == SdProtectOperationType.DISABLE:
-        return await sd_protect_disable(ctx, msg)
+        return await _sd_protect_disable(ctx, msg)
     elif msg.operation == SdProtectOperationType.REFRESH:
-        return await sd_protect_refresh(ctx, msg)
+        return await _sd_protect_refresh(ctx, msg)
     else:
-        raise wire.ProcessError("Unknown operation")
+        raise ProcessError("Unknown operation")
 
 
-async def sd_protect_enable(ctx: wire.Context, msg: SdProtect) -> Success:
-    if storage.sd_salt.is_enabled():
-        raise wire.ProcessError("SD card protection already enabled")
+async def _sd_protect_enable(ctx: Context, msg: SdProtect) -> Success:
+    from apps.common.request_pin import request_pin
+
+    if storage_sd_salt.is_enabled():
+        raise ProcessError("SD card protection already enabled")
 
     # Confirm that user wants to proceed with the operation.
     await require_confirm_sd_protect(ctx, msg)
@@ -75,7 +80,7 @@ async def sd_protect_enable(ctx: wire.Context, msg: SdProtect) -> Success:
     if not config.change_pin(pin, pin, None, salt):
         # Wrong PIN. Clean up the prepared salt file.
         try:
-            storage.sd_salt.remove_sd_salt()
+            storage_sd_salt.remove_sd_salt()
         except Exception:
             # The cleanup is not necessary for the correct functioning of
             # SD-protection. If it fails for any reason, we suppress the
@@ -83,7 +88,7 @@ async def sd_protect_enable(ctx: wire.Context, msg: SdProtect) -> Success:
             pass
         await error_pin_invalid(ctx)
 
-    storage.device.set_sd_salt_auth_key(salt_auth_key)
+    storage_device.set_sd_salt_auth_key(salt_auth_key)
 
     await show_success(
         ctx, "success_sd", "You have successfully enabled SD protection."
@@ -91,9 +96,9 @@ async def sd_protect_enable(ctx: wire.Context, msg: SdProtect) -> Success:
     return Success(message="SD card protection enabled")
 
 
-async def sd_protect_disable(ctx: wire.Context, msg: SdProtect) -> Success:
-    if not storage.sd_salt.is_enabled():
-        raise wire.ProcessError("SD card protection not enabled")
+async def _sd_protect_disable(ctx: Context, msg: SdProtect) -> Success:
+    if not storage_sd_salt.is_enabled():
+        raise ProcessError("SD card protection not enabled")
 
     # Note that the SD card doesn't need to be present in order to disable SD
     # protection. The cleanup will not happen in such case, but that does not matter.
@@ -108,11 +113,11 @@ async def sd_protect_disable(ctx: wire.Context, msg: SdProtect) -> Success:
     if not config.change_pin(pin, pin, salt, None):
         await error_pin_invalid(ctx)
 
-    storage.device.set_sd_salt_auth_key(None)
+    storage_device.set_sd_salt_auth_key(None)
 
     try:
         # Clean up.
-        storage.sd_salt.remove_sd_salt()
+        storage_sd_salt.remove_sd_salt()
     except Exception:
         # The cleanup is not necessary for the correct functioning of
         # SD-protection. If it fails for any reason, we suppress the exception,
@@ -125,9 +130,9 @@ async def sd_protect_disable(ctx: wire.Context, msg: SdProtect) -> Success:
     return Success(message="SD card protection disabled")
 
 
-async def sd_protect_refresh(ctx: wire.Context, msg: SdProtect) -> Success:
-    if not storage.sd_salt.is_enabled():
-        raise wire.ProcessError("SD card protection not enabled")
+async def _sd_protect_refresh(ctx: Context, msg: SdProtect) -> Success:
+    if not storage_sd_salt.is_enabled():
+        raise ProcessError("SD card protection not enabled")
 
     # Confirm that user wants to proceed with the operation.
     await require_confirm_sd_protect(ctx, msg)
@@ -145,11 +150,11 @@ async def sd_protect_refresh(ctx: wire.Context, msg: SdProtect) -> Success:
     if not config.change_pin(pin, pin, old_salt, new_salt):
         await error_pin_invalid(ctx)
 
-    storage.device.set_sd_salt_auth_key(new_auth_key)
+    storage_device.set_sd_salt_auth_key(new_auth_key)
 
     try:
         # Clean up.
-        storage.sd_salt.commit_sd_salt()
+        storage_sd_salt.commit_sd_salt()
     except Exception:
         # If the cleanup fails, then request_sd_salt() will bring the SD card
         # into a consistent state. We suppress the exception, because overall
@@ -162,7 +167,9 @@ async def sd_protect_refresh(ctx: wire.Context, msg: SdProtect) -> Success:
     return Success(message="SD card protection refreshed")
 
 
-def require_confirm_sd_protect(ctx: wire.Context, msg: SdProtect) -> Awaitable[None]:
+def require_confirm_sd_protect(ctx: Context, msg: SdProtect) -> Awaitable[None]:
+    from trezor.ui.layouts import confirm_action
+
     if msg.operation == SdProtectOperationType.ENABLE:
         text = "Do you really want to secure your device with SD card protection?"
     elif msg.operation == SdProtectOperationType.DISABLE:
@@ -170,6 +177,6 @@ def require_confirm_sd_protect(ctx: wire.Context, msg: SdProtect) -> Awaitable[N
     elif msg.operation == SdProtectOperationType.REFRESH:
         text = "Do you really want to replace the current\nSD card secret with a newly generated one?"
     else:
-        raise wire.ProcessError("Unknown operation")
+        raise ProcessError("Unknown operation")
 
     return confirm_action(ctx, "set_sd", "SD card protection", description=text)

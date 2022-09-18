@@ -1,24 +1,23 @@
-import storage
-import storage.device
-import storage.recovery
-import storage.recovery_shares
-from trezor import strings, utils, wire, workflow
-from trezor.crypto import slip39
-from trezor.crypto.hashlib import sha256
-from trezor.enums import BackupType, MessageType
-from trezor.errors import MnemonicError
-from trezor.messages import Success
-from trezor.ui.layouts import show_success
+from typing import TYPE_CHECKING
 
-from apps.common import mnemonic
-from apps.homescreen.homescreen import homescreen
+import storage.device as storage_device
+import storage.recovery as storage_recovery
+from trezor import wire
+from trezor.messages import Success
 
 from .. import backup_types
 from . import layout, recover
 
+if TYPE_CHECKING:
+    from trezor.wire import GenericContext
+    from trezor.enums import BackupType
+
 
 async def recovery_homescreen() -> None:
-    if not storage.recovery.is_in_progress():
+    from trezor import workflow
+    from apps.homescreen.homescreen import homescreen
+
+    if not storage_recovery.is_in_progress():
         workflow.set_default(homescreen)
         return
 
@@ -27,22 +26,27 @@ async def recovery_homescreen() -> None:
     await recovery_process(ctx)
 
 
-async def recovery_process(ctx: wire.GenericContext) -> Success:
+async def recovery_process(ctx: GenericContext) -> Success:
+    from trezor.enums import MessageType
+    import storage
+
     wire.AVOID_RESTARTING_FOR = (MessageType.Initialize, MessageType.GetFeatures)
     try:
         return await _continue_recovery_process(ctx)
     except recover.RecoveryAborted:
-        dry_run = storage.recovery.is_dry_run()
+        dry_run = storage_recovery.is_dry_run()
         if dry_run:
-            storage.recovery.end_progress()
+            storage_recovery.end_progress()
         else:
             storage.wipe()
         raise wire.ActionCancelled
 
 
-async def _continue_recovery_process(ctx: wire.GenericContext) -> Success:
+async def _continue_recovery_process(ctx: GenericContext) -> Success:
+    from trezor.errors import MnemonicError
+
     # gather the current recovery state from storage
-    dry_run = storage.recovery.is_dry_run()
+    dry_run = storage_recovery.is_dry_run()
     word_count, backup_type = recover.load_slip39_state()
 
     # Both word_count and backup_type are derived from the same data. Both will be
@@ -60,7 +64,10 @@ async def _continue_recovery_process(ctx: wire.GenericContext) -> Success:
     while secret is None:
         if is_first_step:
             # If we are starting recovery, ask for word count first...
-            word_count = await _request_word_count(ctx, dry_run)
+            # _request_word_count
+            await layout.homescreen_dialog(ctx, "Select", "Select number of words")
+            # ask for the number of words
+            word_count = await layout.request_word_count(ctx, dry_run)
             # ...and only then show the starting screen with word count.
             await _request_share_first_screen(ctx, word_count)
         assert word_count is not None
@@ -91,8 +98,12 @@ async def _continue_recovery_process(ctx: wire.GenericContext) -> Success:
 
 
 async def _finish_recovery_dry_run(
-    ctx: wire.GenericContext, secret: bytes, backup_type: BackupType
+    ctx: GenericContext, secret: bytes, backup_type: BackupType
 ) -> Success:
+    from trezor.crypto.hashlib import sha256
+    from trezor import utils
+    from apps.common import mnemonic
+
     if backup_type is None:
         raise RuntimeError
 
@@ -105,15 +116,15 @@ async def _finish_recovery_dry_run(
     # Check that the identifier and iteration exponent match as well
     if is_slip39:
         result &= (
-            storage.device.get_slip39_identifier()
-            == storage.recovery.get_slip39_identifier()
+            storage_device.get_slip39_identifier()
+            == storage_recovery.get_slip39_identifier()
         )
         result &= (
-            storage.device.get_slip39_iteration_exponent()
-            == storage.recovery.get_slip39_iteration_exponent()
+            storage_device.get_slip39_iteration_exponent()
+            == storage_recovery.get_slip39_iteration_exponent()
         )
 
-    storage.recovery.end_progress()
+    storage_recovery.end_progress()
 
     await layout.show_dry_run_result(ctx, result, is_slip39)
 
@@ -124,24 +135,27 @@ async def _finish_recovery_dry_run(
 
 
 async def _finish_recovery(
-    ctx: wire.GenericContext, secret: bytes, backup_type: BackupType
+    ctx: GenericContext, secret: bytes, backup_type: BackupType
 ) -> Success:
+    from trezor.ui.layouts import show_success
+    from trezor.enums import BackupType
+
     if backup_type is None:
         raise RuntimeError
 
-    storage.device.store_mnemonic_secret(
+    storage_device.store_mnemonic_secret(
         secret, backup_type, needs_backup=False, no_backup=False
     )
     if backup_type in (BackupType.Slip39_Basic, BackupType.Slip39_Advanced):
-        identifier = storage.recovery.get_slip39_identifier()
-        exponent = storage.recovery.get_slip39_iteration_exponent()
+        identifier = storage_recovery.get_slip39_identifier()
+        exponent = storage_recovery.get_slip39_iteration_exponent()
         if identifier is None or exponent is None:
             # Identifier and exponent need to be stored in storage at this point
             raise RuntimeError
-        storage.device.set_slip39_identifier(identifier)
-        storage.device.set_slip39_iteration_exponent(exponent)
+        storage_device.set_slip39_identifier(identifier)
+        storage_device.set_slip39_iteration_exponent(exponent)
 
-    storage.recovery.end_progress()
+    storage_recovery.end_progress()
 
     await show_success(
         ctx, "success_recovery", "You have successfully recovered your wallet."
@@ -149,15 +163,8 @@ async def _finish_recovery(
     return Success(message="Device recovered")
 
 
-async def _request_word_count(ctx: wire.GenericContext, dry_run: bool) -> int:
-    await layout.homescreen_dialog(ctx, "Select", "Select number of words")
-
-    # ask for the number of words
-    return await layout.request_word_count(ctx, dry_run)
-
-
 async def _process_words(
-    ctx: wire.GenericContext, words: str
+    ctx: GenericContext, words: str
 ) -> tuple[bytes | None, BackupType]:
     word_count = len(words.split(" "))
     is_slip39 = backup_types.is_slip39_word_count(word_count)
@@ -178,11 +185,9 @@ async def _process_words(
     return secret, backup_type
 
 
-async def _request_share_first_screen(
-    ctx: wire.GenericContext, word_count: int
-) -> None:
+async def _request_share_first_screen(ctx: GenericContext, word_count: int) -> None:
     if backup_types.is_slip39_word_count(word_count):
-        remaining = storage.recovery.fetch_slip39_remaining_shares()
+        remaining = storage_recovery.fetch_slip39_remaining_shares()
         if remaining:
             await _request_share_next_screen(ctx)
         else:
@@ -195,9 +200,11 @@ async def _request_share_first_screen(
         )
 
 
-async def _request_share_next_screen(ctx: wire.GenericContext) -> None:
-    remaining = storage.recovery.fetch_slip39_remaining_shares()
-    group_count = storage.recovery.get_slip39_group_count()
+async def _request_share_next_screen(ctx: GenericContext) -> None:
+    from trezor import strings
+
+    remaining = storage_recovery.fetch_slip39_remaining_shares()
+    group_count = storage_recovery.get_slip39_group_count()
     if not remaining:
         # 'remaining' should be stored at this point
         raise RuntimeError
@@ -214,11 +221,14 @@ async def _request_share_next_screen(ctx: wire.GenericContext) -> None:
         await layout.homescreen_dialog(ctx, "Enter share", text, "needed to enter")
 
 
-async def _show_remaining_groups_and_shares(ctx: wire.GenericContext) -> None:
+async def _show_remaining_groups_and_shares(ctx: GenericContext) -> None:
     """
     Show info dialog for Slip39 Advanced - what shares are to be entered.
     """
-    shares_remaining = storage.recovery.fetch_slip39_remaining_shares()
+    from trezor.crypto import slip39
+    import storage.recovery_shares as storage_recovery_shares
+
+    shares_remaining = storage_recovery.fetch_slip39_remaining_shares()
     # should be stored at this point
     assert shares_remaining
 
@@ -231,13 +241,13 @@ async def _show_remaining_groups_and_shares(ctx: wire.GenericContext) -> None:
     share = None
     for index, remaining in enumerate(shares_remaining):
         if 0 <= remaining < slip39.MAX_SHARE_COUNT:
-            m = storage.recovery_shares.fetch_group(index)[0]
+            m = storage_recovery_shares.fetch_group(index)[0]
             if not share:
                 share = slip39.decode_mnemonic(m)
             identifier = m.split(" ")[0:3]
             groups.add((remaining, tuple(identifier)))
         elif remaining == slip39.MAX_SHARE_COUNT:  # no shares yet
-            identifier = storage.recovery_shares.fetch_group(first_entered_index)[
+            identifier = storage_recovery_shares.fetch_group(first_entered_index)[
                 0
             ].split(" ")[0:2]
             groups.add((remaining, tuple(identifier)))
