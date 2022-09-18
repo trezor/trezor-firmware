@@ -68,7 +68,7 @@ if __debug__:
         if storage.watch_layout_changes or layout_change_chan.takers:
             layout_change_chan.publish(storage.current_content)
 
-    async def dispatch_debuglink_decision(msg: DebugLinkDecision) -> None:
+    async def _dispatch_debuglink_decision(msg: DebugLinkDecision) -> None:
         from trezor.enums import DebugButton, DebugSwipeDirection
         from trezor.ui import Result
         from trezor.ui.components.common import (
@@ -82,22 +82,24 @@ if __debug__:
             confirm = trezorui2
         else:
             from trezor.ui.components.tt import confirm
+        button = msg.button  # local_cache_attribute
+        swipe = msg.swipe  # local_cache_attribute
 
-        if msg.button is not None:
-            if msg.button == DebugButton.NO:
+        if button is not None:
+            if button == DebugButton.NO:
                 await confirm_chan.put(Result(confirm.CANCELLED))
-            elif msg.button == DebugButton.YES:
+            elif button == DebugButton.YES:
                 await confirm_chan.put(Result(confirm.CONFIRMED))
-            elif msg.button == DebugButton.INFO:
+            elif button == DebugButton.INFO:
                 await confirm_chan.put(Result(confirm.INFO))
-        if msg.swipe is not None:
-            if msg.swipe == DebugSwipeDirection.UP:
+        if swipe is not None:
+            if swipe == DebugSwipeDirection.UP:
                 await swipe_chan.put(SWIPE_UP)
-            elif msg.swipe == DebugSwipeDirection.DOWN:
+            elif swipe == DebugSwipeDirection.DOWN:
                 await swipe_chan.put(SWIPE_DOWN)
-            elif msg.swipe == DebugSwipeDirection.LEFT:
+            elif swipe == DebugSwipeDirection.LEFT:
                 await swipe_chan.put(SWIPE_LEFT)
-            elif msg.swipe == DebugSwipeDirection.RIGHT:
+            elif swipe == DebugSwipeDirection.RIGHT:
                 await swipe_chan.put(SWIPE_RIGHT)
         if msg.input is not None:
             await input_chan.put(Result(msg.input))
@@ -105,7 +107,7 @@ if __debug__:
     async def debuglink_decision_dispatcher() -> None:
         while True:
             msg = await debuglink_decision_chan.take()
-            await dispatch_debuglink_decision(msg)
+            await _dispatch_debuglink_decision(msg)
 
     async def return_layout_change() -> None:
         content = await layout_change_chan.take()
@@ -143,13 +145,15 @@ if __debug__:
 
         if debuglink_decision_chan.putters:
             log.warning(__name__, "DebugLinkDecision queue is not empty")
+        x = msg.x  # local_cache_attribute
+        y = msg.y  # local_cache_attribute
 
-        if msg.x is not None and msg.y is not None:
-            evt_down = io.TOUCH_START, msg.x, msg.y
-            evt_up = io.TOUCH_END, msg.x, msg.y
+        if x is not None and y is not None:
+            evt_down = io.TOUCH_START, x, y
+            evt_up = io.TOUCH_END, x, y
             loop.synthetic_events.append((io.TOUCH, evt_down))
             if msg.hold_ms is not None:
-                loop.schedule(touch_hold(msg.x, msg.y, msg.hold_ms))
+                loop.schedule(touch_hold(x, y, msg.hold_ms))
             else:
                 loop.synthetic_events.append((io.TOUCH, evt_up))
         else:
@@ -212,38 +216,34 @@ if __debug__:
     ) -> Success:
         from trezor import io
 
+        sdcard = io.sdcard  # local_cache_attribute
+
         try:
-            io.sdcard.power_on()
+            sdcard.power_on()
             if msg.format:
                 io.fatfs.mkfs()
             else:
                 # trash first 1 MB of data to destroy the FAT filesystem
-                assert io.sdcard.capacity() >= 1024 * 1024
-                empty_block = bytes([0xFF] * io.sdcard.BLOCK_SIZE)
-                for i in range(1024 * 1024 // io.sdcard.BLOCK_SIZE):
-                    io.sdcard.write(i, empty_block)
+                assert sdcard.capacity() >= 1024 * 1024
+                empty_block = bytes([0xFF] * sdcard.BLOCK_SIZE)
+                for i in range(1024 * 1024 // sdcard.BLOCK_SIZE):
+                    sdcard.write(i, empty_block)
 
         except OSError:
             raise wire.ProcessError("SD card operation failed")
         finally:
-            io.sdcard.power_off()
+            sdcard.power_off()
         return Success()
 
     def boot() -> None:
-        workflow_handlers.register(MessageType.DebugLinkDecision, dispatch_DebugLinkDecision)  # type: ignore [Argument of type "(ctx: Context, msg: DebugLinkDecision) -> Coroutine[Any, Any, None]" cannot be assigned to parameter "handler" of type "Handler[Msg@register]" in function "register"]
-        workflow_handlers.register(MessageType.DebugLinkGetState, dispatch_DebugLinkGetState)  # type: ignore [Argument of type "(ctx: Context, msg: DebugLinkGetState) -> Coroutine[Any, Any, DebugLinkState | None]" cannot be assigned to parameter "handler" of type "Handler[Msg@register]" in function "register"]
-        workflow_handlers.register(
-            MessageType.DebugLinkReseedRandom, dispatch_DebugLinkReseedRandom
-        )
-        workflow_handlers.register(
-            MessageType.DebugLinkRecordScreen, dispatch_DebugLinkRecordScreen
-        )
-        workflow_handlers.register(
-            MessageType.DebugLinkEraseSdCard, dispatch_DebugLinkEraseSdCard
-        )
-        workflow_handlers.register(
-            MessageType.DebugLinkWatchLayout, dispatch_DebugLinkWatchLayout
-        )
+        register = workflow_handlers.register  # local_cache_attribute
+
+        register(MessageType.DebugLinkDecision, dispatch_DebugLinkDecision)  # type: ignore [Argument of type "(ctx: Context, msg: DebugLinkDecision) -> Coroutine[Any, Any, None]" cannot be assigned to parameter "handler" of type "Handler[Msg@register]" in function "register"]
+        register(MessageType.DebugLinkGetState, dispatch_DebugLinkGetState)  # type: ignore [Argument of type "(ctx: Context, msg: DebugLinkGetState) -> Coroutine[Any, Any, DebugLinkState | None]" cannot be assigned to parameter "handler" of type "Handler[Msg@register]" in function "register"]
+        register(MessageType.DebugLinkReseedRandom, dispatch_DebugLinkReseedRandom)
+        register(MessageType.DebugLinkRecordScreen, dispatch_DebugLinkRecordScreen)
+        register(MessageType.DebugLinkEraseSdCard, dispatch_DebugLinkEraseSdCard)
+        register(MessageType.DebugLinkWatchLayout, dispatch_DebugLinkWatchLayout)
 
         loop.schedule(debuglink_decision_dispatcher())
         if storage.layout_watcher is not LAYOUT_WATCHER_NONE:
