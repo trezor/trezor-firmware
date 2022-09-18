@@ -1,25 +1,25 @@
 from typing import TYPE_CHECKING
 
-from storage.device import is_initialized
-from trezor import config, ui, wire
-from trezor.messages import Success
-from trezor.ui.layouts import confirm_action, show_popup, show_success
-
-from apps.common.request_pin import (
-    error_pin_invalid,
-    request_pin,
-    request_pin_and_sd_salt,
-)
-
 if TYPE_CHECKING:
     from typing import Awaitable
+    from trezor.wire import Context
 
-    from trezor.messages import ChangeWipeCode
+    from trezor.messages import ChangeWipeCode, Success
 
 
-async def change_wipe_code(ctx: wire.Context, msg: ChangeWipeCode) -> Success:
+async def change_wipe_code(ctx: Context, msg: ChangeWipeCode) -> Success:
+    from storage.device import is_initialized
+    from trezor.wire import NotInitialized
+    from trezor.ui.layouts import show_success
+    from trezor.messages import Success
+    from trezor import config
+    from apps.common.request_pin import (
+        error_pin_invalid,
+        request_pin_and_sd_salt,
+    )
+
     if not is_initialized():
-        raise wire.NotInitialized("Device is not initialized")
+        raise NotInitialized("Device is not initialized")
 
     # Confirm that user wants to set or remove the wipe code.
     has_wipe_code = config.has_wipe_code()
@@ -58,15 +58,19 @@ async def change_wipe_code(ctx: wire.Context, msg: ChangeWipeCode) -> Success:
 
 
 def _require_confirm_action(
-    ctx: wire.Context, msg: ChangeWipeCode, has_wipe_code: bool
+    ctx: Context, msg: ChangeWipeCode, has_wipe_code: bool
 ) -> Awaitable[None]:
+    from trezor import ui
+    from trezor.wire import ProcessError
+    from trezor.ui.layouts import confirm_action
+
     if msg.remove and has_wipe_code:
         return confirm_action(
             ctx,
             "disable_wipe_code",
-            title="Disable wipe code",
-            description="Do you really want to",
-            action="disable wipe code protection?",
+            "Disable wipe code",
+            "disable wipe code protection?",
+            "Do you really want to",
             reverse=True,
             icon=ui.ICON_CONFIG,
         )
@@ -75,9 +79,9 @@ def _require_confirm_action(
         return confirm_action(
             ctx,
             "change_wipe_code",
-            title="Change wipe code",
-            description="Do you really want to",
-            action="change the wipe code?",
+            "Change wipe code",
+            "change the wipe code?",
+            "Do you really want to",
             reverse=True,
             icon=ui.ICON_CONFIG,
         )
@@ -86,39 +90,36 @@ def _require_confirm_action(
         return confirm_action(
             ctx,
             "set_wipe_code",
-            title="Set wipe code",
-            description="Do you really want to",
-            action="set the wipe code?",
+            "Set wipe code",
+            "set the wipe code?",
+            "Do you really want to",
             reverse=True,
             icon=ui.ICON_CONFIG,
         )
 
     # Removing non-existing wipe code.
-    raise wire.ProcessError("Wipe code protection is already disabled")
+    raise ProcessError("Wipe code protection is already disabled")
 
 
-async def _request_wipe_code_confirm(ctx: wire.Context, pin: str) -> str:
+async def _request_wipe_code_confirm(ctx: Context, pin: str) -> str:
+    from trezor.ui.layouts import show_popup
+    from apps.common.request_pin import request_pin
+
     while True:
         code1 = await request_pin(ctx, "Enter new wipe code")
         if code1 == pin:
-            await _wipe_code_invalid()
+            # _wipe_code_invalid
+            await show_popup(
+                "Invalid wipe code",
+                "The wipe code must be\ndifferent from your PIN.\n\nPlease try again.",
+            )
             continue
 
         code2 = await request_pin(ctx, "Re-enter new wipe code")
         if code1 == code2:
             return code1
-        await _wipe_code_mismatch()
-
-
-async def _wipe_code_invalid() -> None:
-    await show_popup(
-        title="Invalid wipe code",
-        description="The wipe code must be\ndifferent from your PIN.\n\nPlease try again.",
-    )
-
-
-async def _wipe_code_mismatch() -> None:
-    await show_popup(
-        title="Code mismatch",
-        description="The wipe codes you\nentered do not match.\n\nPlease try again.",
-    )
+        # _wipe_code_mismatch
+        await show_popup(
+            "Code mismatch",
+            "The wipe codes you\nentered do not match.\n\nPlease try again.",
+        )

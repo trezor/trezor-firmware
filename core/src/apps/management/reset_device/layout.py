@@ -1,14 +1,10 @@
 from micropython import const
-from typing import Sequence
+from typing import TYPE_CHECKING
 
-from trezor import ui, utils, wire
-from trezor.crypto import random
 from trezor.enums import ButtonRequestType
-from trezor.ui.layouts import confirm_blob, show_success, show_warning
+from trezor.ui.layouts import show_success
 from trezor.ui.layouts.reset import (  # noqa: F401
-    select_word,
     show_share_words,
-    show_warning_backup,
     slip39_advanced_prompt_group_threshold,
     slip39_advanced_prompt_number_of_groups,
     slip39_prompt_number_of_shares,
@@ -16,18 +12,25 @@ from trezor.ui.layouts.reset import (  # noqa: F401
     slip39_show_checklist,
 )
 
+if TYPE_CHECKING:
+    from typing import Sequence
+    from trezor.wire import GenericContext
+
 if __debug__:
     from apps import debug
 
 _NUM_OF_CHOICES = const(3)
 
 
-async def show_internal_entropy(ctx: wire.GenericContext, entropy: bytes) -> None:
+async def show_internal_entropy(ctx: GenericContext, entropy: bytes) -> None:
+    from trezor import ui
+    from trezor.ui.layouts import confirm_blob
+
     await confirm_blob(
         ctx,
         "entropy",
         "Internal entropy",
-        data=entropy,
+        entropy,
         icon=ui.ICON_RESET,
         icon_color=ui.ORANGE_ICON,
         br_code=ButtonRequestType.ResetDevice,
@@ -35,13 +38,16 @@ async def show_internal_entropy(ctx: wire.GenericContext, entropy: bytes) -> Non
 
 
 async def _confirm_word(
-    ctx: wire.GenericContext,
+    ctx: GenericContext,
     share_index: int | None,
     share_words: Sequence[str],
     offset: int,
     count: int,
     group_index: int | None = None,
 ) -> bool:
+    from trezor.crypto import random
+    from trezor.ui.layouts.reset import select_word
+
     # remove duplicates
     non_duplicates = list(set(share_words))
     # shuffle list
@@ -67,11 +73,13 @@ async def _confirm_word(
 
 
 async def _confirm_share_words(
-    ctx: wire.GenericContext,
+    ctx: GenericContext,
     share_index: int | None,
     share_words: Sequence[str],
     group_index: int | None = None,
 ) -> bool:
+    from trezor import utils
+
     # divide list into thirds, rounding up, so that chunking by `third` always yields
     # three parts (the last one might be shorter)
     third = (len(share_words) + 2) // 3
@@ -87,7 +95,7 @@ async def _confirm_share_words(
 
 
 async def _show_confirmation_success(
-    ctx: wire.GenericContext,
+    ctx: GenericContext,
     share_index: int | None = None,
     num_of_shares: int | None = None,
     group_index: int | None = None,
@@ -111,12 +119,14 @@ async def _show_confirmation_success(
             subheader = f"Group {group_index + 1} - Share {share_index + 1}\nchecked successfully."
             text = "Continue with the next\nshare."
 
-    return await show_success(ctx, "success_recovery", text, subheader=subheader)
+    return await show_success(ctx, "success_recovery", text, subheader)
 
 
 async def _show_confirmation_failure(
-    ctx: wire.GenericContext, share_index: int | None
+    ctx: GenericContext, share_index: int | None
 ) -> None:
+    from trezor.ui.layouts import show_warning
+
     if share_index is None:
         header = "Recovery seed"
     else:
@@ -124,30 +134,30 @@ async def _show_confirmation_failure(
     await show_warning(
         ctx,
         "warning_backup_check",
-        header=header,
-        subheader="That is the wrong word.",
-        content="Please check again.",
-        button="Check again",
-        br_code=ButtonRequestType.ResetDevice,
+        "Please check again.",
+        header,
+        "That is the wrong word.",
+        "Check again",
+        ButtonRequestType.ResetDevice,
     )
 
 
-async def show_backup_warning(ctx: wire.GenericContext, slip39: bool = False) -> None:
+async def show_backup_warning(ctx: GenericContext, slip39: bool = False) -> None:
+    from trezor.ui.layouts.reset import show_warning_backup
+
     await show_warning_backup(ctx, slip39)
 
 
-async def show_backup_success(ctx: wire.GenericContext) -> None:
+async def show_backup_success(ctx: GenericContext) -> None:
     text = "Use your backup\nwhen you need to\nrecover your wallet."
-    await show_success(ctx, "success_backup", text, subheader="Your backup is done.")
+    await show_success(ctx, "success_backup", text, "Your backup is done.")
 
 
 # BIP39
 # ===
 
 
-async def bip39_show_and_confirm_mnemonic(
-    ctx: wire.GenericContext, mnemonic: str
-) -> None:
+async def bip39_show_and_confirm_mnemonic(ctx: GenericContext, mnemonic: str) -> None:
     # warn user about mnemonic safety
     await show_backup_warning(ctx)
 
@@ -155,7 +165,7 @@ async def bip39_show_and_confirm_mnemonic(
 
     while True:
         # display paginated mnemonic on the screen
-        await show_share_words(ctx, share_words=words)
+        await show_share_words(ctx, words)
 
         # make the user confirm some words from the mnemonic
         if await _confirm_share_words(ctx, None, words):
@@ -170,10 +180,10 @@ async def bip39_show_and_confirm_mnemonic(
 
 
 async def slip39_basic_show_and_confirm_shares(
-    ctx: wire.GenericContext, shares: Sequence[str]
+    ctx: GenericContext, shares: Sequence[str]
 ) -> None:
     # warn user about mnemonic safety
-    await show_backup_warning(ctx, slip39=True)
+    await show_backup_warning(ctx, True)
 
     for index, share in enumerate(shares):
         share_words = share.split(" ")
@@ -183,19 +193,17 @@ async def slip39_basic_show_and_confirm_shares(
 
             # make the user confirm words from the share
             if await _confirm_share_words(ctx, index, share_words):
-                await _show_confirmation_success(
-                    ctx, share_index=index, num_of_shares=len(shares)
-                )
+                await _show_confirmation_success(ctx, index, len(shares))
                 break  # this share is confirmed, go to next one
             else:
                 await _show_confirmation_failure(ctx, index)
 
 
 async def slip39_advanced_show_and_confirm_shares(
-    ctx: wire.GenericContext, shares: Sequence[Sequence[str]]
+    ctx: GenericContext, shares: Sequence[Sequence[str]]
 ) -> None:
     # warn user about mnemonic safety
-    await show_backup_warning(ctx, slip39=True)
+    await show_backup_warning(ctx, True)
 
     for group_index, group in enumerate(shares):
         for share_index, share in enumerate(group):
@@ -210,9 +218,9 @@ async def slip39_advanced_show_and_confirm_shares(
                 ):
                     await _show_confirmation_success(
                         ctx,
-                        share_index=share_index,
-                        num_of_shares=len(group),
-                        group_index=group_index,
+                        share_index,
+                        len(group),
+                        group_index,
                     )
                     break  # this share is confirmed, go to next one
                 else:
