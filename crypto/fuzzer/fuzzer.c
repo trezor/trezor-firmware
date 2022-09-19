@@ -134,9 +134,14 @@ void check_msan(void *pointer, size_t length) {
   // check `address` for memory info leakage
   __msan_check_mem_is_initialized(pointer, length);
 #else
+  // ignore if MSan is not enabled
   (void)pointer;
   (void)length;
 #endif
+#else
+  // ignore if the compiler does not know __has_feature()
+  (void)pointer;
+  (void)length;
 #endif
 }
 
@@ -185,7 +190,7 @@ int fuzz_bn_format(void) {
   suffixlen = (fuzzer_input(1)[0] & 127) + 1;
 
   // check for the second half of the data
-  if (fuzzer_length < prefixlen + suffixlen + 4 + 4 + 1 - 2) {
+  if (fuzzer_length < (size_t)(prefixlen + suffixlen + 4 + 4 + 1 - 2)) {
     return -1;
   }
   memcpy(&decimals, fuzzer_input(4), 4);
