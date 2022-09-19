@@ -141,9 +141,10 @@ void check_msan(void *pointer, size_t length) {
 }
 
 // simplify the pointer check after a var_pointer = malloc()
+// return -1 to mark fuzz input as uninteresting for the fuzz engine
 #define RETURN_IF_NULL(var_pointer) \
   if (var_pointer == NULL) {        \
-    return 0;                       \
+    return -1;                       \
   }
 
 void zkp_initialize_context_or_crash(void) {
@@ -192,9 +193,9 @@ int fuzz_bn_format(void) {
 
   // IDEA allow prefix == NULL
   char *prefix = malloc(prefixlen);
+  RETURN_IF_NULL(prefix);
   // IDEA allow suffix == NULL
   char *suffix = malloc(suffixlen);
-  RETURN_IF_NULL(prefix);
   RETURN_IF_NULL(suffix);
 
   memset(prefix, 0, prefixlen);
@@ -228,9 +229,9 @@ int fuzz_base32_decode(void) {
   }
 
   char *in_buffer = malloc(fuzzer_length);
+  RETURN_IF_NULL(in_buffer);
   // basic heuristic: the decoded output will always fit in less or equal space
   uint8_t *out_buffer = malloc(fuzzer_length);
-  RETURN_IF_NULL(in_buffer);
   RETURN_IF_NULL(out_buffer);
 
   size_t outlen = fuzzer_length;
@@ -260,10 +261,10 @@ int fuzz_base32_encode(void) {
   }
 
   uint8_t *in_buffer = malloc(fuzzer_length);
+  RETURN_IF_NULL(in_buffer);
   // TODO: find a better heuristic for output buffer size
   size_t outlen = 2 * fuzzer_length;
   char *out_buffer = malloc(outlen);
-  RETURN_IF_NULL(in_buffer);
   RETURN_IF_NULL(out_buffer);
 
   // mutate in_buffer
@@ -293,10 +294,10 @@ int fuzz_base58_encode_check(void) {
   }
 
   uint8_t *in_buffer = malloc(fuzzer_length);
+  RETURN_IF_NULL(in_buffer);
   // TODO: find a better heuristic for output buffer size
   size_t outlen = 2 * fuzzer_length;
   char *out_buffer = malloc(outlen);
-  RETURN_IF_NULL(in_buffer);
   RETURN_IF_NULL(out_buffer);
 
   // mutate in_buffer
@@ -369,8 +370,8 @@ int fuzz_xmr_base58_addr_decode_check(void) {
   // TODO use better size heuristic
   size_t outlen = fuzzer_length;
   char *in_buffer = malloc(fuzzer_length);
-  uint8_t *out_buffer = malloc(outlen);
   RETURN_IF_NULL(in_buffer);
+  uint8_t *out_buffer = malloc(outlen);
   RETURN_IF_NULL(out_buffer);
 
   // tag is only written to
@@ -405,8 +406,8 @@ int fuzz_xmr_base58_decode(void) {
   // TODO better size heuristic
   size_t outlen = fuzzer_length;
   char *in_buffer = malloc(fuzzer_length);
-  uint8_t *out_buffer = malloc(outlen);
   RETURN_IF_NULL(in_buffer);
+  uint8_t *out_buffer = malloc(outlen);
   RETURN_IF_NULL(out_buffer);
 
   memset(out_buffer, 0, outlen);
@@ -441,8 +442,8 @@ int fuzz_xmr_base58_addr_encode_check(void) {
   // TODO better size heuristic
   size_t outlen = fuzzer_length * 2;
   uint8_t *in_buffer = malloc(fuzzer_length);
-  char *out_buffer = malloc(outlen);
   RETURN_IF_NULL(in_buffer);
+  char *out_buffer = malloc(outlen);
   RETURN_IF_NULL(out_buffer);
 
   memset(out_buffer, 0, outlen);
@@ -486,8 +487,8 @@ int fuzz_xmr_base58_encode(void) {
   // TODO better size heuristic
   size_t outlen = fuzzer_length * 2;
   uint8_t *in_buffer = malloc(fuzzer_length);
-  char *out_buffer = malloc(outlen);
   RETURN_IF_NULL(in_buffer);
+  char *out_buffer = malloc(outlen);
   RETURN_IF_NULL(out_buffer);
 
   memset(out_buffer, 0, outlen);
