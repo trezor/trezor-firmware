@@ -142,6 +142,7 @@ void check_msan(void *pointer, size_t length) {
 
 // simplify the pointer check after a var_pointer = malloc()
 // return -1 to mark fuzz input as uninteresting for the fuzz engine
+// warning: use only if no manual memory cleanup is needed
 #define RETURN_IF_NULL(var_pointer) \
   if (var_pointer == NULL) {        \
     return -1;                       \
@@ -196,7 +197,10 @@ int fuzz_bn_format(void) {
   RETURN_IF_NULL(prefix);
   // IDEA allow suffix == NULL
   char *suffix = malloc(suffixlen);
-  RETURN_IF_NULL(suffix);
+  if (suffix == NULL) {
+    free(prefix);
+    return -1;
+  }
 
   memset(prefix, 0, prefixlen);
   memset(suffix, 0, suffixlen);
@@ -232,7 +236,10 @@ int fuzz_base32_decode(void) {
   RETURN_IF_NULL(in_buffer);
   // basic heuristic: the decoded output will always fit in less or equal space
   uint8_t *out_buffer = malloc(fuzzer_length);
-  RETURN_IF_NULL(out_buffer);
+  if (out_buffer == NULL) {
+    free(in_buffer);
+    return -1;
+  }
 
   size_t outlen = fuzzer_length;
   size_t raw_inlen = fuzzer_length;
@@ -265,7 +272,10 @@ int fuzz_base32_encode(void) {
   // TODO: find a better heuristic for output buffer size
   size_t outlen = 2 * fuzzer_length;
   char *out_buffer = malloc(outlen);
-  RETURN_IF_NULL(out_buffer);
+  if (out_buffer == NULL) {
+    free(in_buffer);
+    return -1;
+  }
 
   // mutate in_buffer
   size_t raw_inlen = fuzzer_length;
@@ -298,7 +308,10 @@ int fuzz_base58_encode_check(void) {
   // TODO: find a better heuristic for output buffer size
   size_t outlen = 2 * fuzzer_length;
   char *out_buffer = malloc(outlen);
-  RETURN_IF_NULL(out_buffer);
+  if (out_buffer == NULL) {
+    free(in_buffer);
+    return -1;
+  }
 
   // mutate in_buffer
   size_t raw_inlen = fuzzer_length;
@@ -306,11 +319,11 @@ int fuzz_base58_encode_check(void) {
 
   int ret = 0;
   // run multiple hasher variants for the same input
-  ret = base58_encode_check(in_buffer, raw_inlen, HASHER_SHA2D, out_buffer,
+  base58_encode_check(in_buffer, raw_inlen, HASHER_SHA2D, out_buffer,
                             outlen);
-  ret = base58_encode_check(in_buffer, raw_inlen, HASHER_BLAKED, out_buffer,
+  base58_encode_check(in_buffer, raw_inlen, HASHER_BLAKED, out_buffer,
                             outlen);
-  ret = base58_encode_check(in_buffer, raw_inlen, HASHER_GROESTLD_TRUNC,
+  base58_encode_check(in_buffer, raw_inlen, HASHER_GROESTLD_TRUNC,
                             out_buffer, outlen);
   ret = base58_encode_check(in_buffer, raw_inlen, HASHER_SHA3K, out_buffer,
                             outlen);
@@ -372,7 +385,10 @@ int fuzz_xmr_base58_addr_decode_check(void) {
   char *in_buffer = malloc(fuzzer_length);
   RETURN_IF_NULL(in_buffer);
   uint8_t *out_buffer = malloc(outlen);
-  RETURN_IF_NULL(out_buffer);
+  if (out_buffer == NULL) {
+    free(in_buffer);
+    return -1;
+  }
 
   // tag is only written to
   uint64_t tag = 0;
@@ -408,7 +424,10 @@ int fuzz_xmr_base58_decode(void) {
   char *in_buffer = malloc(fuzzer_length);
   RETURN_IF_NULL(in_buffer);
   uint8_t *out_buffer = malloc(outlen);
-  RETURN_IF_NULL(out_buffer);
+  if (out_buffer == NULL) {
+    free(in_buffer);
+    return -1;
+  }
 
   memset(out_buffer, 0, outlen);
 
@@ -444,7 +463,10 @@ int fuzz_xmr_base58_addr_encode_check(void) {
   uint8_t *in_buffer = malloc(fuzzer_length);
   RETURN_IF_NULL(in_buffer);
   char *out_buffer = malloc(outlen);
-  RETURN_IF_NULL(out_buffer);
+  if (out_buffer == NULL) {
+    free(in_buffer);
+    return -1;
+  }
 
   memset(out_buffer, 0, outlen);
 
@@ -489,7 +511,10 @@ int fuzz_xmr_base58_encode(void) {
   uint8_t *in_buffer = malloc(fuzzer_length);
   RETURN_IF_NULL(in_buffer);
   char *out_buffer = malloc(outlen);
-  RETURN_IF_NULL(out_buffer);
+  if (out_buffer == NULL) {
+    free(in_buffer);
+    return -1;
+  }
 
   memset(out_buffer, 0, outlen);
 
@@ -1111,7 +1136,6 @@ int fuzz_zkp_bip340_verify_digest(void) {
 }
 
 int fuzz_zkp_bip340_tweak_keys(void) {
-  int res = 0;
   uint8_t internal_priv[32] = {0};
   uint8_t root_hash[32] = {0};
   uint8_t internal_pub[32] = {0};
@@ -1127,9 +1151,9 @@ int fuzz_zkp_bip340_tweak_keys(void) {
   memcpy(internal_pub, fuzzer_input(sizeof(internal_pub)),
          sizeof(internal_pub));
 
-  res = zkp_bip340_tweak_private_key(internal_priv, root_hash, result);
-  res = zkp_bip340_tweak_public_key(internal_pub, root_hash, result);
-  (void)res;
+  // IDEA act on return values
+  zkp_bip340_tweak_private_key(internal_priv, root_hash, result);
+  zkp_bip340_tweak_public_key(internal_pub, root_hash, result);
 
   return 0;
 }
@@ -1199,9 +1223,6 @@ int fuzz_ecdsa_recover_pub_from_sig_functions(void) {
 
   int res1 = zkp_ecdsa_recover_pub_from_sig(curve, pubkey1, sig, digest, recid);
   int res2 = ecdsa_recover_pub_from_sig(curve, pubkey2, sig, digest, recid);
-
-  uint8_t zero_pubkey[65] = {0};
-  zero_pubkey[0] = 0x04;
 
   if ((res1 == 0 && res2 != 0) || (res1 != 0 && res2 == 0)) {
     // result mismatch
