@@ -1,20 +1,25 @@
 import utime
-from typing import Any, NoReturn
+from typing import TYPE_CHECKING
 
-import storage.cache
-import storage.sd_salt
+import storage.cache as storage_cache
 from trezor import config, wire
 
-from .sdcard import SdCardUnavailable, request_sd_salt
+from .sdcard import request_sd_salt
+
+if TYPE_CHECKING:
+    from typing import Any, NoReturn
+    from trezor.wire import Context, GenericContext
 
 
 def can_lock_device() -> bool:
     """Return True if the device has a PIN set or SD-protect enabled."""
+    import storage.sd_salt
+
     return config.has_pin() or storage.sd_salt.is_enabled()
 
 
 async def request_pin(
-    ctx: wire.GenericContext,
+    ctx: GenericContext,
     prompt: str = "Enter your PIN",
     attempts_remaining: int | None = None,
     allow_cancel: bool = True,
@@ -24,26 +29,26 @@ async def request_pin(
     return await request_pin_on_device(ctx, prompt, attempts_remaining, allow_cancel)
 
 
-async def request_pin_confirm(ctx: wire.Context, *args: Any, **kwargs: Any) -> str:
+async def request_pin_confirm(ctx: Context, *args: Any, **kwargs: Any) -> str:
     while True:
         pin1 = await request_pin(ctx, "Enter new PIN", *args, **kwargs)
         pin2 = await request_pin(ctx, "Re-enter new PIN", *args, **kwargs)
         if pin1 == pin2:
             return pin1
-        await pin_mismatch()
+        await _pin_mismatch()
 
 
-async def pin_mismatch() -> None:
+async def _pin_mismatch() -> None:
     from trezor.ui.layouts import show_popup
 
     await show_popup(
-        title="PIN mismatch",
-        description="The PINs you entered\ndo not match.\n\nPlease try again.",
+        "PIN mismatch",
+        "The PINs you entered\ndo not match.\n\nPlease try again.",
     )
 
 
 async def request_pin_and_sd_salt(
-    ctx: wire.Context, prompt: str = "Enter your PIN", allow_cancel: bool = True
+    ctx: Context, prompt: str = "Enter your PIN", allow_cancel: bool = True
 ) -> tuple[str, bytearray | None]:
     if config.has_pin():
         pin = await request_pin(ctx, prompt, config.get_pin_rem(), allow_cancel)
@@ -58,21 +63,23 @@ async def request_pin_and_sd_salt(
 
 def _set_last_unlock_time() -> None:
     now = utime.ticks_ms()
-    storage.cache.set_int(storage.cache.APP_COMMON_REQUEST_PIN_LAST_UNLOCK, now)
-
-
-def _get_last_unlock_time() -> int:
-    return storage.cache.get_int(storage.cache.APP_COMMON_REQUEST_PIN_LAST_UNLOCK) or 0
+    storage_cache.set_int(storage_cache.APP_COMMON_REQUEST_PIN_LAST_UNLOCK, now)
 
 
 async def verify_user_pin(
-    ctx: wire.GenericContext = wire.DUMMY_CONTEXT,
+    ctx: GenericContext = wire.DUMMY_CONTEXT,
     prompt: str = "Enter your PIN",
     allow_cancel: bool = True,
     retry: bool = True,
     cache_time_ms: int = 0,
 ) -> None:
-    last_unlock = _get_last_unlock_time()
+    from .sdcard import SdCardUnavailable
+
+    # _get_last_unlock_time
+    last_unlock = int.from_bytes(
+        storage_cache.get(storage_cache.APP_COMMON_REQUEST_PIN_LAST_UNLOCK, b""), "big"
+    )
+
     if (
         cache_time_ms
         and last_unlock
@@ -112,28 +119,28 @@ async def verify_user_pin(
     raise wire.PinInvalid
 
 
-async def error_pin_invalid(ctx: wire.Context) -> NoReturn:
+async def error_pin_invalid(ctx: Context) -> NoReturn:
     from trezor.ui.layouts import show_error_and_raise
 
     await show_error_and_raise(
         ctx,
         "warning_wrong_pin",
-        header="Wrong PIN",
-        content="The PIN you entered is invalid.",
+        "The PIN you entered is invalid.",
+        "Wrong PIN",  # header
         red=True,
         exc=wire.PinInvalid,
     )
     assert False
 
 
-async def error_pin_matches_wipe_code(ctx: wire.Context) -> NoReturn:
+async def error_pin_matches_wipe_code(ctx: Context) -> NoReturn:
     from trezor.ui.layouts import show_error_and_raise
 
     await show_error_and_raise(
         ctx,
         "warning_invalid_new_pin",
-        header="Invalid PIN",
-        content="The new PIN must be different from your\nwipe code.",
+        "The new PIN must be different from your\nwipe code.",
+        "Invalid PIN",  # header
         red=True,
         exc=wire.PinInvalid,
     )

@@ -197,23 +197,24 @@ class PathSchema:
 
             # optionally replace a keyword
             component = cls.REPLACEMENTS.get(component, component)
+            append = schema.append  # local_cache_attribute
 
             if "-" in component:
                 # parse as a range
                 a, b = [parse(s) for s in component.split("-", 1)]
-                schema.append(Interval(a, b))
+                append(Interval(a, b))
 
             elif "," in component:
                 # parse as a list of values
-                schema.append(set(parse(s) for s in component.split(",")))
+                append(set(parse(s) for s in component.split(",")))
 
             elif component == "coin_type":
                 # substitute SLIP-44 ids
-                schema.append(set(parse(s) for s in slip44_id))
+                append(set(parse(s) for s in slip44_id))
 
             else:
                 # plain constant
-                schema.append((parse(component),))
+                append((parse(component),))
 
         return cls(schema, trailing_components, compact=True)
 
@@ -258,18 +259,19 @@ class PathSchema:
         path. If the restriction results in a never-matching schema, then False
         is returned.
         """
+        schema = self.schema  # local_cache_attribute
 
         for i, value in enumerate(path):
-            if i < len(self.schema):
+            if i < len(schema):
                 # Ensure that the path is a prefix of the schema.
-                if value not in self.schema[i]:
+                if value not in schema[i]:
                     self.set_never_matching()
                     return False
 
                 # Restrict the schema component if there are multiple choices.
-                component = self.schema[i]
+                component = schema[i]
                 if not isinstance(component, tuple) or len(component) != 1:
-                    self.schema[i] = (value,)
+                    schema[i] = (value,)
             else:
                 # The path is longer than the schema. We need to restrict the
                 # trailing components.
@@ -278,7 +280,7 @@ class PathSchema:
                     self.set_never_matching()
                     return False
 
-                self.schema.append((value,))
+                schema.append((value,))
 
         return True
 
@@ -286,6 +288,7 @@ class PathSchema:
 
         def __repr__(self) -> str:
             components = ["m"]
+            append = components.append  # local_cache_attribute
 
             def unharden(item: int) -> int:
                 return item ^ (item & HARDENED)
@@ -294,7 +297,7 @@ class PathSchema:
                 if isinstance(component, Interval):
                     a, b = component.min, component.max
                     prime = "'" if a & HARDENED else ""
-                    components.append(f"[{unharden(a)}-{unharden(b)}]{prime}")
+                    append(f"[{unharden(a)}-{unharden(b)}]{prime}")
                 else:
                     # typechecker thinks component is a Contanier but we're using it
                     # as a Collection.
@@ -307,15 +310,15 @@ class PathSchema:
                         component_str = "[" + component_str + "]"
                     if next(iter(collection)) & HARDENED:
                         component_str += "'"
-                    components.append(component_str)
+                    append(component_str)
 
             if self.trailing_components:
                 for key, val in self.WILDCARD_RANGES.items():
                     if self.trailing_components is val:
-                        components.append(key)
+                        append(key)
                         break
                 else:
-                    components.append("???")
+                    append("???")
 
             return "<schema:" + "/".join(components) + ">"
 
@@ -362,7 +365,7 @@ def path_is_hardened(address_n: Bip32Path) -> bool:
 
 
 def address_n_to_str(address_n: Iterable[int]) -> str:
-    def path_item(i: int) -> str:
+    def _path_item(i: int) -> str:
         if i & HARDENED:
             return str(i ^ HARDENED) + "'"
         else:
@@ -371,4 +374,4 @@ def address_n_to_str(address_n: Iterable[int]) -> str:
     if not address_n:
         return "m"
 
-    return "m/" + "/".join(path_item(i) for i in address_n)
+    return "m/" + "/".join(_path_item(i) for i in address_n)

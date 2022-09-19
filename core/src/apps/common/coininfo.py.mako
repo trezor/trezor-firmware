@@ -1,6 +1,9 @@
 # generated from coininfo.py.mako
 # (by running `make templates` in `core`)
 # do not edit manually!
+
+# NOTE: using positional arguments saves 4500 bytes of flash size
+
 from typing import Any
 
 from trezor import utils
@@ -142,7 +145,7 @@ def by_name(name: str) -> CoinInfo:
     if name == ${black_repr(coin["coin_name"])}:
         return CoinInfo(
             % for attr, func in ATTRIBUTES:
-            ${attr}=${func(coin[attr])},
+            ${func(coin[attr])},  # ${attr}
             % endfor
         )
 % endfor
@@ -151,7 +154,7 @@ def by_name(name: str) -> CoinInfo:
         if name == ${black_repr(coin["coin_name"])}:
             return CoinInfo(
                 % for attr, func in ATTRIBUTES:
-                ${attr}=${func(coin[attr])},
+                ${func(coin[attr])},  # ${attr}
                 % endfor
             )
 % endfor
