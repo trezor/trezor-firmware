@@ -51,7 +51,7 @@ int secp256k1_context_writable_randomize(secp256k1_context *context_writable) {
 bool zkp_context_is_initialized(void) { return context != NULL; }
 
 // returns 0 on success
-int zkp_context_init() {
+int zkp_context_init(void) {
   assert(context == NULL);
 
   const unsigned int context_flags =
@@ -78,7 +78,7 @@ int zkp_context_init() {
   return 0;
 }
 
-void zkp_context_destroy() {
+void zkp_context_destroy(void) {
   assert(context != NULL);
 
   secp256k1_context_preallocated_destroy(context);
@@ -87,14 +87,14 @@ void zkp_context_destroy() {
   context = NULL;
 }
 
-const secp256k1_context *zkp_context_get_read_only() {
+const secp256k1_context *zkp_context_get_read_only(void) {
   assert(context != NULL);
 
   return context;
 }
 
 // returns NULL if context cannot be acquired
-secp256k1_context *zkp_context_acquire_writable() {
+secp256k1_context *zkp_context_acquire_writable(void) {
   assert(context != NULL);
 
   // We don't expect the context to be used by multiple threads
@@ -105,7 +105,7 @@ secp256k1_context *zkp_context_acquire_writable() {
   return context;
 }
 
-void zkp_context_release_writable() {
+void zkp_context_release_writable(void) {
   assert(context != NULL);
 
   atomic_flag_clear(&locked);
