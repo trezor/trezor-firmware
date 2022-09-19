@@ -1,38 +1,24 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
-from trezor import wire
-from trezor.crypto.curve import secp256k1
-from trezor.crypto.hashlib import sha3_256
 from trezor.enums import EthereumDataType
-from trezor.messages import (
-    EthereumFieldType,
-    EthereumTypedDataSignature,
-    EthereumTypedDataStructAck,
-    EthereumTypedDataStructRequest,
-    EthereumTypedDataValueAck,
-    EthereumTypedDataValueRequest,
-)
-from trezor.utils import HashWriter
+from trezor.wire import DataError
 
-from apps.common import paths
-
-from .helpers import address_from_bytes, get_type_name
+from .helpers import get_type_name
 from .keychain import PATTERNS_ADDRESS, with_keychain_from_path
-from .layout import (
-    confirm_empty_typed_message,
-    confirm_typed_data_final,
-    confirm_typed_value,
-    should_show_array,
-    should_show_domain,
-    should_show_struct,
-)
+from .layout import should_show_struct
 
 if TYPE_CHECKING:
     from apps.common.keychain import Keychain
     from trezor.wire import Context
+    from trezor.utils import HashWriter
 
-    from trezor.messages import EthereumSignTypedData
+    from trezor.messages import (
+        EthereumSignTypedData,
+        EthereumFieldType,
+        EthereumTypedDataSignature,
+        EthereumTypedDataStructAck,
+    )
 
 
 # Maximum data size we support
@@ -43,9 +29,14 @@ _MAX_VALUE_BYTE_SIZE = const(1024)
 async def sign_typed_data(
     ctx: Context, msg: EthereumSignTypedData, keychain: Keychain
 ) -> EthereumTypedDataSignature:
+    from trezor.crypto.curve import secp256k1
+    from apps.common import paths
+    from .helpers import address_from_bytes
+    from trezor.messages import EthereumTypedDataSignature
+
     await paths.validate_path(ctx, keychain, msg.address_n)
 
-    data_hash = await generate_typed_data_hash(
+    data_hash = await _generate_typed_data_hash(
         ctx, msg.primary_type, msg.metamask_v4_compat
     )
 
@@ -60,7 +51,7 @@ async def sign_typed_data(
     )
 
 
-async def generate_typed_data_hash(
+async def _generate_typed_data_hash(
     ctx: Context, primary_type: str, metamask_v4_compat: bool = True
 ) -> bytes:
     """
@@ -69,20 +60,26 @@ async def generate_typed_data_hash(
 
     metamask_v4_compat - a flag that enables compatibility with MetaMask's signTypedData_v4 method
     """
+    from .layout import (
+        confirm_empty_typed_message,
+        confirm_typed_data_final,
+        should_show_domain,
+    )
+
     typed_data_envelope = TypedDataEnvelope(
-        ctx=ctx,
-        primary_type=primary_type,
-        metamask_v4_compat=metamask_v4_compat,
+        ctx,
+        primary_type,
+        metamask_v4_compat,
     )
     await typed_data_envelope.collect_types()
 
-    name, version = await get_name_and_version_for_domain(ctx, typed_data_envelope)
+    name, version = await _get_name_and_version_for_domain(ctx, typed_data_envelope)
     show_domain = await should_show_domain(ctx, name, version)
     domain_separator = await typed_data_envelope.hash_struct(
-        primary_type="EIP712Domain",
-        member_path=[0],
-        show_data=show_domain,
-        parent_objects=["EIP712Domain"],
+        "EIP712Domain",
+        [0],
+        show_domain,
+        ["EIP712Domain"],
     )
 
     # Setting the primary_type to "EIP712Domain" is technically in spec
@@ -94,16 +91,16 @@ async def generate_typed_data_hash(
     else:
         show_message = await should_show_struct(
             ctx,
-            description=primary_type,
-            data_members=typed_data_envelope.types[primary_type].members,
-            title="Confirm message",
-            button_text="Show full message",
+            primary_type,
+            typed_data_envelope.types[primary_type].members,
+            "Confirm message",
+            "Show full message",
         )
         message_hash = await typed_data_envelope.hash_struct(
-            primary_type=primary_type,
-            member_path=[1],
-            show_data=show_message,
-            parent_objects=[primary_type],
+            primary_type,
+            [1],
+            show_message,
+            [primary_type],
         )
 
     await confirm_typed_data_final(ctx)
@@ -112,6 +109,9 @@ async def generate_typed_data_hash(
 
 
 def get_hash_writer() -> HashWriter:
+    from trezor.crypto.hashlib import sha3_256
+    from trezor.utils import HashWriter
+
     return HashWriter(sha3_256(keccak=True))
 
 
@@ -142,6 +142,11 @@ class TypedDataEnvelope:
 
     async def _collect_types(self, type_name: str) -> None:
         """Recursively collect types from the client."""
+        from trezor.messages import (
+            EthereumTypedDataStructRequest,
+            EthereumTypedDataStructAck,
+        )
+
         req = EthereumTypedDataStructRequest(name=type_name)
         current_type = await self.ctx.call(req, EthereumTypedDataStructAck)
         self.types[type_name] = current_type
@@ -169,11 +174,11 @@ class TypedDataEnvelope:
         w = get_hash_writer()
         self.hash_type(w, primary_type)
         await self.get_and_encode_data(
-            w=w,
-            primary_type=primary_type,
-            member_path=member_path,
-            show_data=show_data,
-            parent_objects=parent_objects,
+            w,
+            primary_type,
+            member_path,
+            show_data,
+            parent_objects,
         )
         return w.get_digest()
 
@@ -242,6 +247,10 @@ class TypedDataEnvelope:
         i.e. the concatenation of the encoded member values in the order that they appear in the type.
         Each encoded member value is exactly 32-byte long.
         """
+        from .layout import confirm_typed_value, should_show_array
+
+        ctx = self.ctx  # local_cache_attribute
+
         type_members = self.types[primary_type].members
         member_value_path = member_path + [0]
         current_parent_objects = parent_objects + [""]
@@ -258,25 +267,25 @@ class TypedDataEnvelope:
 
                 if show_data:
                     show_struct = await should_show_struct(
-                        ctx=self.ctx,
-                        description=struct_name,
-                        data_members=self.types[struct_name].members,
-                        title=".".join(current_parent_objects),
+                        ctx,
+                        struct_name,  # description
+                        self.types[struct_name].members,  # data_members
+                        ".".join(current_parent_objects),  # title
                     )
                 else:
                     show_struct = False
 
                 res = await self.hash_struct(
-                    primary_type=struct_name,
-                    member_path=member_value_path,
-                    show_data=show_struct,
-                    parent_objects=current_parent_objects,
+                    struct_name,
+                    member_value_path,
+                    show_struct,
+                    current_parent_objects,
                 )
                 w.extend(res)
             elif field_type.data_type == EthereumDataType.ARRAY:
                 # Getting the length of the array first, if not fixed
                 if field_type.size is None:
-                    array_size = await get_array_size(self.ctx, member_value_path)
+                    array_size = await _get_array_size(ctx, member_value_path)
                 else:
                     array_size = field_type.size
 
@@ -286,10 +295,10 @@ class TypedDataEnvelope:
 
                 if show_data:
                     show_array = await should_show_array(
-                        ctx=self.ctx,
-                        parent_objects=current_parent_objects,
-                        data_type=get_type_name(entry_type),
-                        size=array_size,
+                        ctx,
+                        current_parent_objects,
+                        get_type_name(entry_type),
+                        array_size,
                     )
                 else:
                     show_array = False
@@ -309,43 +318,43 @@ class TypedDataEnvelope:
                         # Metamask V4 is using hash_struct() even in this case
                         if self.metamask_v4_compat:
                             res = await self.hash_struct(
-                                primary_type=struct_name,
-                                member_path=el_member_path,
-                                show_data=show_array,
-                                parent_objects=current_parent_objects,
+                                struct_name,
+                                el_member_path,
+                                show_array,
+                                current_parent_objects,
                             )
                             arr_w.extend(res)
                         else:
                             await self.get_and_encode_data(
-                                w=arr_w,
-                                primary_type=struct_name,
-                                member_path=el_member_path,
-                                show_data=show_array,
-                                parent_objects=current_parent_objects,
+                                arr_w,
+                                struct_name,
+                                el_member_path,
+                                show_array,
+                                current_parent_objects,
                             )
                     else:
-                        value = await get_value(self.ctx, entry_type, el_member_path)
+                        value = await get_value(ctx, entry_type, el_member_path)
                         encode_field(arr_w, entry_type, value)
                         if show_array:
                             await confirm_typed_value(
-                                ctx=self.ctx,
-                                name=field_name,
-                                value=value,
-                                parent_objects=parent_objects,
-                                field=entry_type,
-                                array_index=i,
+                                ctx,
+                                field_name,
+                                value,
+                                parent_objects,
+                                entry_type,
+                                i,
                             )
                 w.extend(arr_w.get_digest())
             else:
-                value = await get_value(self.ctx, field_type, member_value_path)
+                value = await get_value(ctx, field_type, member_value_path)
                 encode_field(w, field_type, value)
                 if show_data:
                     await confirm_typed_value(
-                        ctx=self.ctx,
-                        name=field_name,
-                        value=value,
-                        parent_objects=parent_objects,
-                        field=field_type,
+                        ctx,
+                        field_name,
+                        value,
+                        parent_objects,
+                        field_type,
                     )
 
 
@@ -370,21 +379,27 @@ def encode_field(
       encodeData of their contents
     - Struct values are encoded recursively as hashStruct(value)
     """
+    EDT = EthereumDataType  # local_cache_global
+
     data_type = field.data_type
 
-    if data_type == EthereumDataType.BYTES:
+    if data_type == EDT.BYTES:
         if field.size is None:
             w.extend(keccak256(value))
         else:
-            write_rightpad32(w, value)
-    elif data_type == EthereumDataType.STRING:
+            # write_rightpad32
+            assert len(value) <= 32
+            w.extend(value)
+            for _ in range(32 - len(value)):
+                w.append(0x00)
+    elif data_type == EDT.STRING:
         w.extend(keccak256(value))
-    elif data_type == EthereumDataType.INT:
+    elif data_type == EDT.INT:
         write_leftpad32(w, value, signed=True)
     elif data_type in (
-        EthereumDataType.UINT,
-        EthereumDataType.BOOL,
-        EthereumDataType.ADDRESS,
+        EDT.UINT,
+        EDT.BOOL,
+        EDT.ADDRESS,
     ):
         write_leftpad32(w, value)
     else:
@@ -405,93 +420,90 @@ def write_leftpad32(w: HashWriter, value: bytes, signed: bool = False) -> None:
     w.extend(value)
 
 
-def write_rightpad32(w: HashWriter, value: bytes) -> None:
-    assert len(value) <= 32
-
-    w.extend(value)
-    for _ in range(32 - len(value)):
-        w.append(0x00)
-
-
-def validate_value(field: EthereumFieldType, value: bytes) -> None:
+def _validate_value(field: EthereumFieldType, value: bytes) -> None:
     """
     Make sure the byte data we receive are not corrupted or incorrect.
 
-    Raise wire.DataError if encountering a problem, so clients are notified.
+    Raise DataError if encountering a problem, so clients are notified.
     """
     # Checking if the size corresponds to what is defined in types,
     # and also setting our maximum supported size in bytes
     if field.size is not None:
         if len(value) != field.size:
-            raise wire.DataError("Invalid length")
+            raise DataError("Invalid length")
     else:
         if len(value) > _MAX_VALUE_BYTE_SIZE:
-            raise wire.DataError(f"Invalid length, bigger than {_MAX_VALUE_BYTE_SIZE}")
+            raise DataError(f"Invalid length, bigger than {_MAX_VALUE_BYTE_SIZE}")
 
     # Specific tests for some data types
     if field.data_type == EthereumDataType.BOOL:
         if value not in (b"\x00", b"\x01"):
-            raise wire.DataError("Invalid boolean value")
+            raise DataError("Invalid boolean value")
     elif field.data_type == EthereumDataType.ADDRESS:
         if len(value) != 20:
-            raise wire.DataError("Invalid address")
+            raise DataError("Invalid address")
     elif field.data_type == EthereumDataType.STRING:
         try:
             value.decode()
         except UnicodeError:
-            raise wire.DataError("Invalid UTF-8")
+            raise DataError("Invalid UTF-8")
 
 
 def validate_field_type(field: EthereumFieldType) -> None:
     """
     Make sure the field type is consistent with our expectation.
 
-    Raise wire.DataError if encountering a problem, so clients are notified.
+    Raise DataError if encountering a problem, so clients are notified.
     """
+    EDT = EthereumDataType  # local_cache_global
+
     data_type = field.data_type
 
     # entry_type is only for arrays
-    if data_type == EthereumDataType.ARRAY:
+    if data_type == EDT.ARRAY:
         if field.entry_type is None:
-            raise wire.DataError("Missing entry_type in array")
+            raise DataError("Missing entry_type in array")
         # We also need to validate it recursively
         validate_field_type(field.entry_type)
     else:
         if field.entry_type is not None:
-            raise wire.DataError("Unexpected entry_type in nonarray")
+            raise DataError("Unexpected entry_type in nonarray")
 
     # struct_name is only for structs
-    if data_type == EthereumDataType.STRUCT:
+    if data_type == EDT.STRUCT:
         if field.struct_name is None:
-            raise wire.DataError("Missing struct_name in struct")
+            raise DataError("Missing struct_name in struct")
     else:
         if field.struct_name is not None:
-            raise wire.DataError("Unexpected struct_name in nonstruct")
+            raise DataError("Unexpected struct_name in nonstruct")
+    size = field.size  # local_cache_attribute
 
     # size is special for each type
-    if data_type == EthereumDataType.STRUCT:
-        if field.size is None:
-            raise wire.DataError("Missing size in struct")
-    elif data_type == EthereumDataType.BYTES:
-        if field.size is not None and not 1 <= field.size <= 32:
-            raise wire.DataError("Invalid size in bytes")
+    if data_type == EDT.STRUCT:
+        if size is None:
+            raise DataError("Missing size in struct")
+    elif data_type == EDT.BYTES:
+        if size is not None and not 1 <= size <= 32:
+            raise DataError("Invalid size in bytes")
     elif data_type in (
-        EthereumDataType.UINT,
-        EthereumDataType.INT,
+        EDT.UINT,
+        EDT.INT,
     ):
-        if field.size is None or not 1 <= field.size <= 32:
-            raise wire.DataError("Invalid size in int/uint")
+        if size is None or not 1 <= size <= 32:
+            raise DataError("Invalid size in int/uint")
     elif data_type in (
-        EthereumDataType.STRING,
-        EthereumDataType.BOOL,
-        EthereumDataType.ADDRESS,
+        EDT.STRING,
+        EDT.BOOL,
+        EDT.ADDRESS,
     ):
-        if field.size is not None:
-            raise wire.DataError("Unexpected size in str/bool/addr")
+        if size is not None:
+            raise DataError("Unexpected size in str/bool/addr")
 
 
-async def get_array_size(ctx: Context, member_path: list[int]) -> int:
+async def _get_array_size(ctx: Context, member_path: list[int]) -> int:
     """Get the length of an array at specific `member_path` from the client."""
+    from trezor.messages import EthereumFieldType
+
     # Field type for getting the array length from client, so we can check the return value
     ARRAY_LENGTH_TYPE = EthereumFieldType(data_type=EthereumDataType.UINT, size=2)
     length_value = await get_value(ctx, ARRAY_LENGTH_TYPE, member_path)
@@ -504,18 +516,20 @@ async def get_value(
     member_value_path: list[int],
 ) -> bytes:
     """Get a single value from the client and perform its validation."""
+    from trezor.messages import EthereumTypedDataValueAck, EthereumTypedDataValueRequest
+
     req = EthereumTypedDataValueRequest(
         member_path=member_value_path,
     )
     res = await ctx.call(req, EthereumTypedDataValueAck)
     value = res.value
 
-    validate_value(field=field, value=value)
+    _validate_value(field=field, value=value)
 
     return value
 
 
-async def get_name_and_version_for_domain(
+async def _get_name_and_version_for_domain(
     ctx: Context, typed_data_envelope: TypedDataEnvelope
 ) -> tuple[bytes, bytes]:
     domain_name = b"unknown"

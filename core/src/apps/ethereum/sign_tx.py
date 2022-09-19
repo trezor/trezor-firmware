@@ -1,29 +1,19 @@
 from typing import TYPE_CHECKING
 
-from trezor import wire
 from trezor.crypto import rlp
-from trezor.crypto.curve import secp256k1
-from trezor.crypto.hashlib import sha3_256
-from trezor.messages import EthereumTxAck, EthereumTxRequest
-from trezor.utils import HashWriter
+from trezor.messages import EthereumTxRequest
+from trezor.wire import DataError
 
-from apps.common import paths
-
-from . import tokens
 from .helpers import bytes_from_address
 from .keychain import with_keychain_from_chain_id
-from .layout import (
-    require_confirm_data,
-    require_confirm_fee,
-    require_confirm_tx,
-    require_confirm_unknown_token,
-)
 
 if TYPE_CHECKING:
     from apps.common.keychain import Keychain
-    from trezor.messages import EthereumSignTx
+    from trezor.messages import EthereumSignTx, EthereumTxAck
+    from trezor.wire import Context
 
     from .keychain import EthereumSignTxAny
+    from . import tokens
 
 
 # Maximum chain_id which returns the full signature_v (which must fit into an uint32).
@@ -34,9 +24,24 @@ MAX_CHAIN_ID = (0xFFFF_FFFF - 36) // 2
 
 @with_keychain_from_chain_id
 async def sign_tx(
-    ctx: wire.Context, msg: EthereumSignTx, keychain: Keychain
+    ctx: Context, msg: EthereumSignTx, keychain: Keychain
 ) -> EthereumTxRequest:
-    check(msg)
+    from trezor.utils import HashWriter
+    from trezor.crypto.hashlib import sha3_256
+    from apps.common import paths
+    from .layout import (
+        require_confirm_data,
+        require_confirm_fee,
+        require_confirm_tx,
+    )
+
+    # check
+    if msg.tx_type not in [1, 6, None]:
+        raise DataError("tx_type out of bounds")
+    if len(msg.gas_price) + len(msg.gas_limit) > 30:
+        raise DataError("Fee overflow")
+    check_common_fields(msg)
+
     await paths.validate_path(ctx, keychain, msg.address_n)
 
     # Handle ERC20s
@@ -61,7 +66,7 @@ async def sign_tx(
     data += msg.data_initial_chunk
     data_left = data_total - len(msg.data_initial_chunk)
 
-    total_length = get_total_length(msg, data_total)
+    total_length = _get_total_length(msg, data_total)
 
     sha = HashWriter(sha3_256(keccak=True))
     rlp.write_header(sha, total_length, rlp.LIST_HEADER_BYTE)
@@ -89,14 +94,19 @@ async def sign_tx(
     rlp.write(sha, 0)
 
     digest = sha.get_digest()
-    result = sign_digest(msg, keychain, digest)
+    result = _sign_digest(msg, keychain, digest)
 
     return result
 
 
 async def handle_erc20(
-    ctx: wire.Context, msg: EthereumSignTxAny
+    ctx: Context, msg: EthereumSignTxAny
 ) -> tuple[tokens.TokenInfo | None, bytes, bytes, int]:
+    from .layout import require_confirm_unknown_token
+    from . import tokens
+
+    data_initial_chunk = msg.data_initial_chunk  # local_cache_attribute
+
     token = None
     address_bytes = recipient = bytes_from_address(msg.to)
     value = int.from_bytes(msg.value, "big")
@@ -104,13 +114,13 @@ async def handle_erc20(
         len(msg.to) in (40, 42)
         and len(msg.value) == 0
         and msg.data_length == 68
-        and len(msg.data_initial_chunk) == 68
-        and msg.data_initial_chunk[:16]
+        and len(data_initial_chunk) == 68
+        and data_initial_chunk[:16]
         == b"\xa9\x05\x9c\xbb\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     ):
         token = tokens.token_by_chain_address(msg.chain_id, address_bytes)
-        recipient = msg.data_initial_chunk[16:36]
-        value = int.from_bytes(msg.data_initial_chunk[36:68], "big")
+        recipient = data_initial_chunk[16:36]
+        value = int.from_bytes(data_initial_chunk[36:68], "big")
 
         if token is tokens.UNKNOWN_TOKEN:
             await require_confirm_unknown_token(ctx, address_bytes)
@@ -118,7 +128,7 @@ async def handle_erc20(
     return token, address_bytes, recipient, value
 
 
-def get_total_length(msg: EthereumSignTx, data_total: int) -> int:
+def _get_total_length(msg: EthereumSignTx, data_total: int) -> int:
     length = 0
     if msg.tx_type is not None:
         length += rlp.length(msg.tx_type)
@@ -143,20 +153,20 @@ def get_total_length(msg: EthereumSignTx, data_total: int) -> int:
     return length
 
 
-async def send_request_chunk(ctx: wire.Context, data_left: int) -> EthereumTxAck:
+async def send_request_chunk(ctx: Context, data_left: int) -> EthereumTxAck:
+    from trezor.messages import EthereumTxAck
+
     # TODO: layoutProgress ?
     req = EthereumTxRequest()
-    if data_left <= 1024:
-        req.data_length = data_left
-    else:
-        req.data_length = 1024
-
+    req.data_length = min(data_left, 1024)
     return await ctx.call(req, EthereumTxAck)
 
 
-def sign_digest(
+def _sign_digest(
     msg: EthereumSignTx, keychain: Keychain, digest: bytes
 ) -> EthereumTxRequest:
+    from trezor.crypto.curve import secp256k1
+
     node = keychain.derive(msg.address_n)
     signature = secp256k1.sign(
         node.private_key(), digest, False, secp256k1.CANONICAL_SIG_ETHEREUM
@@ -175,33 +185,25 @@ def sign_digest(
     return req
 
 
-def check(msg: EthereumSignTx) -> None:
-    if msg.tx_type not in [1, 6, None]:
-        raise wire.DataError("tx_type out of bounds")
-
-    if len(msg.gas_price) + len(msg.gas_limit) > 30:
-        raise wire.DataError("Fee overflow")
-
-    check_common_fields(msg)
-
-
 def check_common_fields(msg: EthereumSignTxAny) -> None:
-    if msg.data_length > 0:
+    data_length = msg.data_length  # local_cache_attribute
+
+    if data_length > 0:
         if not msg.data_initial_chunk:
-            raise wire.DataError("Data length provided, but no initial chunk")
+            raise DataError("Data length provided, but no initial chunk")
         # Our encoding only supports transactions up to 2^24 bytes. To
         # prevent exceeding the limit we use a stricter limit on data length.
-        if msg.data_length > 16_000_000:
-            raise wire.DataError("Data length exceeds limit")
-        if len(msg.data_initial_chunk) > msg.data_length:
-            raise wire.DataError("Invalid size of initial chunk")
+        if data_length > 16_000_000:
+            raise DataError("Data length exceeds limit")
+        if len(msg.data_initial_chunk) > data_length:
+            raise DataError("Invalid size of initial chunk")
 
     if len(msg.to) not in (0, 40, 42):
-        raise wire.DataError("Invalid recipient address")
+        raise DataError("Invalid recipient address")
 
-    if not msg.to and msg.data_length == 0:
+    if not msg.to and data_length == 0:
         # sending transaction to address 0 (contract creation) without a data field
-        raise wire.DataError("Contract creation without data")
+        raise DataError("Contract creation without data")
 
     if msg.chain_id == 0:
-        raise wire.DataError("Chain ID out of bounds")
+        raise DataError("Chain ID out of bounds")
