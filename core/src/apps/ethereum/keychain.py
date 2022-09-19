@@ -1,7 +1,5 @@
 from typing import TYPE_CHECKING
 
-from trezor import wire
-
 from apps.common import paths
 from apps.common.keychain import get_keychain
 
@@ -9,6 +7,8 @@ from . import CURVE, networks
 
 if TYPE_CHECKING:
     from typing import Callable, Iterable, TypeVar
+
+    from trezor.wire import Context
 
     from trezor.messages import (
         EthereumGetAddress,
@@ -64,7 +64,7 @@ def with_keychain_from_path(
     *patterns: str,
 ) -> Callable[[HandlerWithKeychain[MsgIn, MsgOut]], Handler[MsgIn, MsgOut]]:
     def decorator(func: HandlerWithKeychain[MsgIn, MsgOut]) -> Handler[MsgIn, MsgOut]:
-        async def wrapper(ctx: wire.Context, msg: MsgIn) -> MsgOut:
+        async def wrapper(ctx: Context, msg: MsgIn) -> MsgOut:
             schemas = _schemas_from_address_n(patterns, msg.address_n)
             keychain = await get_keychain(ctx, CURVE, schemas)
             with keychain:
@@ -97,7 +97,7 @@ def with_keychain_from_chain_id(
     func: HandlerWithKeychain[MsgInChainId, MsgOut]
 ) -> Handler[MsgInChainId, MsgOut]:
     # this is only for SignTx, and only PATTERN_ADDRESS is allowed
-    async def wrapper(ctx: wire.Context, msg: MsgInChainId) -> MsgOut:
+    async def wrapper(ctx: Context, msg: MsgInChainId) -> MsgOut:
         schemas = _schemas_from_chain_id(msg)
         keychain = await get_keychain(ctx, CURVE, schemas)
         with keychain:

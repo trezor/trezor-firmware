@@ -1,15 +1,11 @@
 from typing import TYPE_CHECKING
-from ubinascii import hexlify
 
-from trezor.messages import EthereumPublicKey, HDNodeType
-from trezor.ui.layouts import show_pubkey
-
-from apps.common import coins, paths
+from apps.common import paths
 
 from .keychain import with_keychain_from_path
 
 if TYPE_CHECKING:
-    from trezor.messages import EthereumGetPublicKey
+    from trezor.messages import EthereumGetPublicKey, EthereumPublicKey
     from trezor.wire import Context
 
     from apps.common.keychain import Keychain
@@ -19,6 +15,11 @@ if TYPE_CHECKING:
 async def get_public_key(
     ctx: Context, msg: EthereumGetPublicKey, keychain: Keychain
 ) -> EthereumPublicKey:
+    from ubinascii import hexlify
+    from trezor.messages import EthereumPublicKey, HDNodeType
+    from trezor.ui.layouts import show_pubkey
+    from apps.common import coins
+
     await paths.validate_path(ctx, keychain, msg.address_n)
     node = keychain.derive(msg.address_n)
 

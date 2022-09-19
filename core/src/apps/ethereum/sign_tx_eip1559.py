@@ -1,28 +1,21 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
-from trezor import wire
 from trezor.crypto import rlp
-from trezor.crypto.curve import secp256k1
-from trezor.crypto.hashlib import sha3_256
-from trezor.messages import EthereumAccessList, EthereumTxRequest
-from trezor.utils import HashWriter
-
-from apps.common import paths
 
 from .helpers import bytes_from_address
 from .keychain import with_keychain_from_chain_id
-from .layout import (
-    require_confirm_data,
-    require_confirm_eip1559_fee,
-    require_confirm_tx,
-)
-from .sign_tx import check_common_fields, handle_erc20, send_request_chunk
 
 if TYPE_CHECKING:
-    from trezor.messages import EthereumSignTxEIP1559
+    from trezor.messages import (
+        EthereumSignTxEIP1559,
+        EthereumAccessList,
+        EthereumTxRequest,
+    )
 
     from apps.common.keychain import Keychain
+    from trezor.wire import Context
+
 
 _TX_TYPE = const(2)
 
@@ -35,28 +28,30 @@ def access_list_item_length(item: EthereumAccessList) -> int:
     )
 
 
-def access_list_length(access_list: list[EthereumAccessList]) -> int:
-    payload_length = sum(access_list_item_length(i) for i in access_list)
-    return rlp.header_length(payload_length) + payload_length
-
-
-def write_access_list(w: HashWriter, access_list: list[EthereumAccessList]) -> None:
-    payload_length = sum(access_list_item_length(i) for i in access_list)
-    rlp.write_header(w, payload_length, rlp.LIST_HEADER_BYTE)
-    for item in access_list:
-        address_bytes = bytes_from_address(item.address)
-        address_length = rlp.length(address_bytes)
-        keys_length = rlp.length(item.storage_keys)
-        rlp.write_header(w, address_length + keys_length, rlp.LIST_HEADER_BYTE)
-        rlp.write(w, address_bytes)
-        rlp.write(w, item.storage_keys)
-
-
 @with_keychain_from_chain_id
 async def sign_tx_eip1559(
-    ctx: wire.Context, msg: EthereumSignTxEIP1559, keychain: Keychain
+    ctx: Context, msg: EthereumSignTxEIP1559, keychain: Keychain
 ) -> EthereumTxRequest:
-    check(msg)
+    from trezor.crypto.hashlib import sha3_256
+    from trezor.utils import HashWriter
+    from trezor import wire
+    from trezor.crypto import rlp  # local_cache_global
+    from apps.common import paths
+    from .layout import (
+        require_confirm_data,
+        require_confirm_eip1559_fee,
+        require_confirm_tx,
+    )
+    from .sign_tx import handle_erc20, send_request_chunk, check_common_fields
+
+    gas_limit = msg.gas_limit  # local_cache_attribute
+
+    # check
+    if len(msg.max_gas_fee) + len(gas_limit) > 30:
+        raise wire.DataError("Fee overflow")
+    if len(msg.max_priority_fee) + len(gas_limit) > 30:
+        raise wire.DataError("Fee overflow")
+    check_common_fields(msg)
 
     await paths.validate_path(ctx, keychain, msg.address_n)
 
@@ -74,7 +69,7 @@ async def sign_tx_eip1559(
         value,
         int.from_bytes(msg.max_priority_fee, "big"),
         int.from_bytes(msg.max_gas_fee, "big"),
-        int.from_bytes(msg.gas_limit, "big"),
+        int.from_bytes(gas_limit, "big"),
         msg.chain_id,
         token,
     )
@@ -83,7 +78,7 @@ async def sign_tx_eip1559(
     data += msg.data_initial_chunk
     data_left = data_total - len(msg.data_initial_chunk)
 
-    total_length = get_total_length(msg, data_total)
+    total_length = _get_total_length(msg, data_total)
 
     sha = HashWriter(sha3_256(keccak=True))
 
@@ -96,7 +91,7 @@ async def sign_tx_eip1559(
         msg.nonce,
         msg.max_priority_fee,
         msg.max_gas_fee,
-        msg.gas_limit,
+        gas_limit,
         address_bytes,
         msg.value,
     )
@@ -114,15 +109,24 @@ async def sign_tx_eip1559(
         data_left -= len(resp.data_chunk)
         sha.extend(resp.data_chunk)
 
-    write_access_list(sha, msg.access_list)
+    # write_access_list
+    payload_length = sum(access_list_item_length(i) for i in msg.access_list)
+    rlp.write_header(sha, payload_length, rlp.LIST_HEADER_BYTE)
+    for item in msg.access_list:
+        address_bytes = bytes_from_address(item.address)
+        address_length = rlp.length(address_bytes)
+        keys_length = rlp.length(item.storage_keys)
+        rlp.write_header(sha, address_length + keys_length, rlp.LIST_HEADER_BYTE)
+        rlp.write(sha, address_bytes)
+        rlp.write(sha, item.storage_keys)
 
     digest = sha.get_digest()
-    result = sign_digest(msg, keychain, digest)
+    result = _sign_digest(msg, keychain, digest)
 
     return result
 
 
-def get_total_length(msg: EthereumSignTxEIP1559, data_total: int) -> int:
+def _get_total_length(msg: EthereumSignTxEIP1559, data_total: int) -> int:
     length = 0
 
     fields: tuple[rlp.RLPItem, ...] = (
@@ -140,14 +144,21 @@ def get_total_length(msg: EthereumSignTxEIP1559, data_total: int) -> int:
     length += rlp.header_length(data_total, msg.data_initial_chunk)
     length += data_total
 
-    length += access_list_length(msg.access_list)
+    # access_list_length
+    payload_length = sum(access_list_item_length(i) for i in msg.access_list)
+    access_list_length = rlp.header_length(payload_length) + payload_length
+
+    length += access_list_length
 
     return length
 
 
-def sign_digest(
+def _sign_digest(
     msg: EthereumSignTxEIP1559, keychain: Keychain, digest: bytes
 ) -> EthereumTxRequest:
+    from trezor.messages import EthereumTxRequest
+    from trezor.crypto.curve import secp256k1
+
     node = keychain.derive(msg.address_n)
     signature = secp256k1.sign(
         node.private_key(), digest, False, secp256k1.CANONICAL_SIG_ETHEREUM
@@ -159,12 +170,3 @@ def sign_digest(
     req.signature_s = signature[33:]
 
     return req
-
-
-def check(msg: EthereumSignTxEIP1559) -> None:
-    if len(msg.max_gas_fee) + len(msg.gas_limit) > 30:
-        raise wire.DataError("Fee overflow")
-    if len(msg.max_priority_fee) + len(msg.gas_limit) > 30:
-        raise wire.DataError("Fee overflow")
-
-    check_common_fields(msg)
