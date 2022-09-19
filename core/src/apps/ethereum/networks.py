@@ -23,6 +23,7 @@ if TYPE_CHECKING:
         bool  # rskip60
     ]
     # fmt: on
+
 UNKNOWN_NETWORK_SHORTCUT = "UNKN"
 
 

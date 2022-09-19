@@ -37,6 +37,7 @@ from typing import (
 import click
 
 from .. import ethereum, tools
+from ..tools import UH_
 from . import with_client
 
 if TYPE_CHECKING:
@@ -194,7 +195,7 @@ def _get_ethereum_definitions(
     if definitions_dir is not None:
         if chain_id is not None or slip44_hardened is not None:
             defs.encoded_network = ethereum.network_definition_from_dir(
-                definitions_dir, chain_id, slip44_hardened
+                definitions_dir, chain_id, UH_(slip44_hardened)  # type: ignore [Argument of type "int | None" cannot be assigned to parameter "x" of type "int" in function "UH_"]
             )
         if chain_id is not None and token_address is not None:
             defs.encoded_token = ethereum.token_definition_from_dir(
@@ -210,7 +211,7 @@ def _get_ethereum_definitions(
     elif download_definitions:
         if chain_id is not None or slip44_hardened is not None:
             defs.encoded_network = ethereum.download_network_definition(
-                chain_id, slip44_hardened
+                chain_id, UH_(slip44_hardened)  # type: ignore [Argument of type "int | None" cannot be assigned to parameter "x" of type "int" in function "UH_"]
             )
         if chain_id is not None and token_address is not None:
             defs.encoded_token = ethereum.download_token_definition(

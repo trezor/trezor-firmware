@@ -73,7 +73,8 @@
                 "gas_limit": "0x14",
                 "max_gas_fee": "0x14",
                 "max_priority_fee": "0x1",
-                "value": "0x0"
+                "value": "0x0",
+                "builtin_token": false
             },
             "result": {
                 "sig_v": 1,
@@ -113,7 +114,8 @@
                 "gas_limit": "0x14",
                 "max_gas_fee": "0x14",
                 "max_priority_fee": "0x1",
-                "value": "0xa"
+                "value": "0xa",
+                "builtin_network": false
             },
             "result": {
                 "sig_v": 0,

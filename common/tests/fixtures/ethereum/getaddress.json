@@ -39,6 +39,8 @@
         {
             "name": "ETC",
             "parameters": {
+                "builtin_network": false,
+                "slip44": 61,
                 "path": "m/44'/61'/0'/0/0"
             },
             "result": {
@@ -48,6 +50,8 @@
         {
             "name": "GoChain",
             "parameters": {
+                "builtin_network": false,
+                "slip44": 6060,
                 "path": "m/44'/6060'/0'/0/0"
             },
             "result": {
@@ -57,6 +61,8 @@
         {
             "name": "Wanchain",
             "parameters": {
+                "builtin_network": false,
+                "slip44": 5718350,
                 "path": "m/44'/5718350'/0'/0/0"
             },
             "result": {

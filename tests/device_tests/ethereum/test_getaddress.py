@@ -20,12 +20,21 @@ from trezorlib import ethereum
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
-from ...common import parametrize_using_common_fixtures
+from ...common import COMMON_FIXTURES_DIR, parametrize_using_common_fixtures
 
 pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
 
 
 @parametrize_using_common_fixtures("ethereum/getaddress.json")
 def test_getaddress(client: Client, parameters, result):
+    encoded_network = None
+    if not parameters.get("builtin_network", True):
+        encoded_network = ethereum.network_definition_from_dir(
+            path=COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
+            slip44=parameters["slip44"],
+        )
     address_n = parse_path(parameters["path"])
-    assert ethereum.get_address(client, address_n) == result["address"]
+    assert (
+        ethereum.get_address(client, address_n, encoded_network=encoded_network)
+        == result["address"]
+    )

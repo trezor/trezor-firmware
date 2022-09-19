@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING, Any, AnyStr, Dict, List, Optional, Tuple
 import requests
 
 from . import exceptions, messages
-from .tools import UH_, expect, prepare_message_bytes, session
+from .tools import expect, prepare_message_bytes, session
 
 if TYPE_CHECKING:
     from .client import TrezorClient
@@ -162,11 +162,11 @@ def download_from_url(url: str, error_msg: str = "") -> bytes:
 
 
 def download_network_definition(
-    chain_id: Optional[int] = None, slip44_hardened: Optional[int] = None
+    chain_id: Optional[int] = None, slip44: Optional[int] = None
 ) -> Optional[bytes]:
-    if not ((chain_id is None) != (slip44_hardened is None)):  # not XOR
+    if not ((chain_id is None) != (slip44 is None)):  # not XOR
         raise RuntimeError(
-            "Exactly one of chain_id or slip44_hardened parameters are needed to load network definition from directory."
+            "Exactly one of chain_id or slip44 parameters are needed to load network definition from directory."
         )
 
     if chain_id is not None:
@@ -178,7 +178,7 @@ def download_network_definition(
     else:
         url = DEFS_BASE_URL.format(
             lookup_type=DEFS_NETWORK_BY_SLIP44_LOOKUP_TYPE,
-            id=UH_(slip44_hardened),  # type: ignore [Argument of type "int | None" cannot be assigned to parameter "x" of type "int" in function "UH_"]
+            id=slip44,
             name=DEFS_NETWORK_URI_NAME,
         )
 
@@ -207,11 +207,11 @@ def download_token_definition(
 def network_definition_from_dir(
     path: pathlib.Path,
     chain_id: Optional[int] = None,
-    slip44_hardened: Optional[int] = None,
+    slip44: Optional[int] = None,
 ) -> Optional[bytes]:
-    if not ((chain_id is None) != (slip44_hardened is None)):  # not XOR
+    if not ((chain_id is None) != (slip44 is None)):  # not XOR
         raise RuntimeError(
-            "Exactly one of chain_id or slip44_hardened parameters are needed to load network definition from directory."
+            "Exactly one of chain_id or slip44 parameters are needed to load network definition from directory."
         )
 
     def read_definition(path: pathlib.Path) -> Optional[bytes]:
@@ -232,7 +232,7 @@ def network_definition_from_dir(
         return read_definition(
             path
             / DEFS_NETWORK_BY_SLIP44_LOOKUP_TYPE
-            / str(UH_(slip44_hardened))  # type: ignore [Argument of type "int | None" cannot be assigned to parameter "x" of type "int" in function "UH_"]
+            / str(slip44)
             / (DEFS_NETWORK_URI_NAME + ".dat")
         )
 
@@ -246,6 +246,9 @@ def token_definition_from_dir(
         raise RuntimeError(
             "Both chain_id and token_address parameters are needed to load token definition from directory."
         )
+
+    if token_address is not None and token_address.startswith("0x"):
+        token_address = token_address[2:]
 
     path = (
         path

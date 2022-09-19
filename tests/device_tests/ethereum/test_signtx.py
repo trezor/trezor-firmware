@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from typing import Optional
+
 import pytest
 
 from trezorlib import ethereum, exceptions, messages
@@ -21,13 +23,38 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client, message_filters
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
-from ...common import parametrize_using_common_fixtures
+from ...common import COMMON_FIXTURES_DIR, parametrize_using_common_fixtures
 
 TO_ADDR = "0x1d1c328764a41bda0492b66baa30c4a339ff85ef"
 SHOW_ALL = (143, 167)
 GO_BACK = (16, 220)
 
 pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
+
+
+def get_EthereumEncodedDefinitions(
+    parameters: dict,
+) -> Optional[messages.EthereumEncodedDefinitions]:
+    encoded_network = None
+    encoded_token = None
+    if not parameters.get("builtin_network", True):
+        encoded_network = ethereum.network_definition_from_dir(
+            path=COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
+            chain_id=parameters["chain_id"],
+        )
+    if not parameters.get("builtin_token", True):
+        encoded_token = ethereum.token_definition_from_dir(
+            path=COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
+            chain_id=parameters["chain_id"],
+            token_address=parameters["to_address"],
+        )
+
+    if encoded_network is not None or encoded_token is not None:
+        return messages.EthereumEncodedDefinitions(
+            encoded_network=encoded_network, encoded_token=encoded_token
+        )
+
+    return None
 
 
 @parametrize_using_common_fixtures(
@@ -47,6 +74,7 @@ def test_signtx(client: Client, parameters, result):
             value=int(parameters["value"], 16),
             tx_type=parameters["tx_type"],
             data=bytes.fromhex(parameters["data"]),
+            definitions=get_EthereumEncodedDefinitions(parameters),
         )
 
     expected_v = 2 * parameters["chain_id"] + 35
@@ -70,6 +98,7 @@ def test_signtx_eip1559(client: Client, parameters, result):
             chain_id=parameters["chain_id"],
             value=int(parameters["value"], 16),
             data=bytes.fromhex(parameters["data"]),
+            definitions=get_EthereumEncodedDefinitions(parameters),
         )
 
     assert sig_r.hex() == result["sig_r"]

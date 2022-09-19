@@ -53,7 +53,8 @@
                 "value": "0x2540be400",
                 "to_address": "0x8eA7a3fccC211ED48b763b4164884DDbcF3b0A98",
                 "tx_type": null,
-                "data": ""
+                "data": "",
+                "builtin_network": false
             },
             "result": {
                 "sig_v": 43,
@@ -72,7 +73,8 @@
                 "value": "0x2540be400",
                 "to_address": "0x8eA7a3fccC211ED48b763b4164884DDbcF3b0A98",
                 "tx_type": null,
-                "data": ""
+                "data": "",
+                "builtin_network": false
             },
             "result": {
                 "sig_v": 158,
@@ -91,7 +93,8 @@
                 "value": "0x2540be400",
                 "to_address": "0x8eA7a3fccC211ED48b763b4164884DDbcF3b0A98",
                 "tx_type": null,
-                "data": ""
+                "data": "",
+                "builtin_network": false
             },
             "result": {
                 "sig_v": 57891008,
@@ -110,7 +113,8 @@
                 "value": "0x2540be400",
                 "to_address": "0x8eA7a3fccC211ED48b763b4164884DDbcF3b0A98",
                 "tx_type": null,
-                "data": ""
+                "data": "",
+                "builtin_network": false
             },
             "result": {
                 "sig_v": 6251318340,
@@ -167,7 +171,8 @@
                 "value": "0x2540be400",
                 "to_address": "0x8eA7a3fccC211ED48b763b4164884DDbcF3b0A98",
                 "tx_type": null,
-                "data": ""
+                "data": "",
+                "builtin_network": false
             },
             "result": {
                 "sig_v": 22594216254,
