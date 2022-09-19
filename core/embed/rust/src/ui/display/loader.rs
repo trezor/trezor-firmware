@@ -21,7 +21,7 @@ use crate::trezorhal::dma2d::{
 
 use crate::trezorhal::buffers::{get_buffer_16bpp, get_buffer_4bpp};
 
-use crate::ui::constant::LOADER_OUTER;
+use crate::ui::constant::{screen, LOADER_OUTER};
 
 pub const LOADER_MIN: u16 = 0;
 pub const LOADER_MAX: u16 = 1000;
@@ -39,8 +39,8 @@ const INNER_OUTER_ANTI: i32 = ((INNER + 2.5) * (INNER + 2.5)) as i32;
 const OUTER_OUT_ANTI: i32 = ((OUTER - 1.5) * (OUTER - 1.5)) as i32;
 const OUTER_MAX: i32 = ((OUTER - 0.5) * (OUTER - 0.5)) as i32;
 
-fn loader_uncompress(
-    r: Rect,
+pub fn loader_uncompress(
+    y_offset: i32,
     fg_color: Color,
     bg_color: Color,
     progress: i32,
@@ -58,21 +58,18 @@ fn loader_uncompress(
             let mut ctx = UzlibContext::new(&data[12..], None);
             unwrap!(ctx.uncompress(&mut icon_data), "Decompression failed");
             let i = Some((icon_data.as_ref(), color, icon_size));
-            loader_rust(r, fg_color, bg_color, progress, indeterminate, i);
+            loader_rust(y_offset, fg_color, bg_color, progress, indeterminate, i);
         } else {
-            loader_rust(r, fg_color, bg_color, progress, indeterminate, None);
+            loader_rust(y_offset, fg_color, bg_color, progress, indeterminate, None);
         }
     } else {
-        loader_rust(r, fg_color, bg_color, progress, indeterminate, None);
+        loader_rust(y_offset, fg_color, bg_color, progress, indeterminate, None);
     }
 }
 
 #[no_mangle]
 pub extern "C" fn loader_uncompress_r(
-    x: cty::uint16_t,
-    y: cty::uint16_t,
-    w: cty::uint16_t,
-    h: cty::uint16_t,
+    y_offset: cty::int32_t,
     fg_color: cty::uint16_t,
     bg_color: cty::uint16_t,
     icon_color: cty::uint16_t,
@@ -81,7 +78,6 @@ pub extern "C" fn loader_uncompress_r(
     icon_data: cty::uintptr_t,
     icon_data_size: cty::uint32_t,
 ) {
-    let r = Rect::from_top_left_and_size(Point::new(x as _, y as _), Offset::new(w as _, h as _));
     let fg = Color::from_u16(fg_color);
     let bg = Color::from_u16(bg_color);
     let ic_color = Color::from_u16(icon_color);
@@ -93,7 +89,7 @@ pub extern "C" fn loader_uncompress_r(
         None
     };
 
-    loader_uncompress(r, fg, bg, progress, indeterminate != 0, i);
+    loader_uncompress(y_offset, fg, bg, progress, indeterminate != 0, i);
 }
 
 #[inline(always)]
@@ -198,7 +194,7 @@ fn loader_get_pixel_color_idx(
 
 #[cfg(not(feature = "dma2d"))]
 pub fn loader_rust(
-    r: Rect,
+    y_offset: i32,
     fg_color: Color,
     bg_color: Color,
     progress: i32,
@@ -206,6 +202,10 @@ pub fn loader_rust(
     icon: Option<(&[u8], Color, Offset)>,
 ) {
     //let r = area.translate(get_offset());
+    let r = Rect::from_center_and_size(
+        screen().center() + Offset::new(0, y_offset),
+        Offset::new(LOADER_OUTER as i32 * 2, LOADER_OUTER as i32 * 2),
+    );
     let clamped = r.clamp(constant::screen());
     display::set_window(clamped);
 
@@ -276,7 +276,7 @@ pub fn loader_rust(
 
 #[cfg(feature = "dma2d")]
 pub fn loader_rust(
-    r: Rect,
+    y_offset: i32,
     fg_color: Color,
     bg_color: Color,
     progress: i32,
@@ -284,7 +284,12 @@ pub fn loader_rust(
     icon: Option<(&[u8], Color, Offset)>,
 ) {
     //let r = area.translate(get_offset());
-    let clamped = r.clamp(constant::screen()).ensure_even_width();
+
+    let r = Rect::from_center_and_size(
+        screen().center() + Offset::new(0, y_offset),
+        Offset::new(LOADER_OUTER as i32 * 2, LOADER_OUTER as i32 * 2),
+    );
+    let clamped = r.clamp(constant::screen());
     display::set_window(clamped);
 
     let center = r.center();
@@ -389,14 +394,7 @@ pub fn loader(
     bg_color: Color,
     icon: Option<(&[u8], Color)>,
 ) {
-    let x = (constant::WIDTH - LOADER_SIZE) / 2;
-    let y = ((constant::HEIGHT - LOADER_SIZE) / 2) + y_offset;
-    let w = LOADER_SIZE;
-    let h = LOADER_SIZE;
-
-    let area = Rect::from_top_left_and_size(Point::new(x, y), Offset::new(w, h));
-
-    loader_uncompress(area, fg_color, bg_color, progress as _, false, icon);
+    loader_uncompress(y_offset, fg_color, bg_color, progress as _, false, icon);
 }
 
 pub fn loader_indeterminate(
@@ -406,12 +404,5 @@ pub fn loader_indeterminate(
     bg_color: Color,
     icon: Option<(&[u8], Color)>,
 ) {
-    let x = (constant::WIDTH - LOADER_SIZE) / 2;
-    let y = ((constant::HEIGHT - LOADER_SIZE) / 2) + y_offset;
-    let w = LOADER_SIZE;
-    let h = LOADER_SIZE;
-
-    let area = Rect::from_top_left_and_size(Point::new(x, y), Offset::new(w, h));
-
-    loader_uncompress(area, fg_color, bg_color, progress as _, true, icon);
+    loader_uncompress(y_offset, fg_color, bg_color, progress as _, true, icon);
 }

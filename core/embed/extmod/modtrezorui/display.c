@@ -584,16 +584,7 @@ void display_loader(uint16_t progress, bool indeterminate, int yoffset,
                     uint16_t fgcolor, uint16_t bgcolor, const uint8_t *icon,
                     uint32_t iconlen, uint16_t iconfgcolor) {
 #if defined TREZOR_MODEL_T || defined TREZOR_MODEL_R
-#ifdef TREZOR_MODEL_T
-#define LOADER_SIZE 120
-#else
-#define LOADER_SIZE 40
-#endif
-  uint16_t x = (DISPLAY_RESX - LOADER_SIZE) / 2;
-  uint16_t y = ((DISPLAY_RESY - LOADER_SIZE) / 2) + yoffset;
-  uint16_t w = LOADER_SIZE;
-  uint16_t h = LOADER_SIZE;
-  loader_uncompress_r(x, y, w, h, fgcolor, bgcolor, iconfgcolor, progress,
+  loader_uncompress_r(yoffset, fgcolor, bgcolor, iconfgcolor, progress,
                       indeterminate, icon, iconlen);
 #endif
 }
