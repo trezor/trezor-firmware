@@ -1,5 +1,3 @@
-import math
-
 from common import *
 
 from apps.common.cbor import (
@@ -12,42 +10,7 @@ from apps.common.cbor import (
     decode,
     encode,
     encode_streamed,
-    utils
 )
-
-# NOTE: moved into tests not to occupy flash space
-# in firmware binary, when it is not used in production
-def encode_chunked(value: "Value", max_chunk_size: int) -> "Iterator[bytes]":
-    """
-    Returns the encoded value as an iterable of chunks of a given size,
-    removing the need to reserve a continuous chunk of memory for the
-    full serialized representation of the value.
-    """
-    if max_chunk_size <= 0:
-        raise ValueError
-
-    chunks = encode_streamed(value)
-
-    chunk_buffer = utils.empty_bytearray(max_chunk_size)
-    try:
-        current_chunk_view = utils.BufferReader(next(chunks))
-        while True:
-            num_bytes_to_write = min(
-                current_chunk_view.remaining_count(),
-                max_chunk_size - len(chunk_buffer),
-            )
-            chunk_buffer.extend(current_chunk_view.read(num_bytes_to_write))
-
-            if len(chunk_buffer) >= max_chunk_size:
-                yield chunk_buffer
-                chunk_buffer[:] = bytes()
-
-            if current_chunk_view.remaining_count() == 0:
-                current_chunk_view = utils.BufferReader(next(chunks))
-    except StopIteration:
-        if len(chunk_buffer) > 0:
-            yield chunk_buffer
-
 
 
 class TestCardanoCbor(unittest.TestCase):
@@ -210,43 +173,6 @@ class TestCardanoCbor(unittest.TestCase):
         ]
 
         self.assertEqual(b''.join(encoded_streamed), encoded)
-
-    def test_encode_chunked(self):
-        large_dict = {i: i for i in range(100)}
-        encoded = encode(large_dict)
-
-        encoded_len = len(encoded)
-        assert encoded_len == 354
-
-        arbitrary_encoded_len_factor = 59
-        arbitrary_power_of_two = 64
-        larger_than_encoded_len = encoded_len + 1
-
-        for max_chunk_size in [
-            1,
-            10,
-            arbitrary_encoded_len_factor,
-            arbitrary_power_of_two,
-            encoded_len,
-            larger_than_encoded_len
-        ]:
-            encoded_chunks = [
-                bytes(chunk) for chunk in encode_chunked(large_dict, max_chunk_size)
-            ]
-
-            expected_number_of_chunks = math.ceil(len(encoded) / max_chunk_size)
-            self.assertEqual(len(encoded_chunks), expected_number_of_chunks)
-
-            # all chunks except the last should be of chunk_size
-            for i in range(len(encoded_chunks) - 1):
-                self.assertEqual(len(encoded_chunks[i]), max_chunk_size)
-
-            # last chunk should contain the remaining bytes or the whole chunk
-            remaining_bytes = len(encoded) % max_chunk_size
-            expected_last_chunk_size = remaining_bytes if remaining_bytes > 0 else max_chunk_size
-            self.assertEqual(len(encoded_chunks[-1]), expected_last_chunk_size)
-
-            self.assertEqual(b''.join(encoded_chunks), encoded)
 
 
 if __name__ == '__main__':

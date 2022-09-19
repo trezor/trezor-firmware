@@ -1,14 +1,17 @@
 from typing import TYPE_CHECKING
 
-from storage import cache, device
-from trezor import utils, wire
-from trezor.crypto import bip32, hmac
+import storage.cache as storage_cache
+import storage.device as storage_device
+from trezor import utils
+from trezor.crypto import hmac
 
 from . import mnemonic
 from .passphrase import get as get_passphrase
 
 if TYPE_CHECKING:
     from .paths import Bip32Path, Slip21Path
+    from trezor.wire import Context
+    from trezor.crypto import bip32
 
 
 class Slip21Node:
@@ -47,14 +50,16 @@ if not utils.BITCOIN_ONLY:
     # We want to derive both the normal seed and the Cardano seed together, AND
     # expose a method for Cardano to do the same
 
-    async def derive_and_store_roots(ctx: wire.Context) -> None:
-        if not device.is_initialized():
+    async def derive_and_store_roots(ctx: Context) -> None:
+        from trezor import wire
+
+        if not storage_device.is_initialized():
             raise wire.NotInitialized("Device is not initialized")
 
-        need_seed = not cache.is_set(cache.APP_COMMON_SEED)
-        need_cardano_secret = cache.get(
-            cache.APP_COMMON_DERIVE_CARDANO
-        ) and not cache.is_set(cache.APP_CARDANO_ICARUS_SECRET)
+        need_seed = not storage_cache.is_set(storage_cache.APP_COMMON_SEED)
+        need_cardano_secret = storage_cache.get(
+            storage_cache.APP_COMMON_DERIVE_CARDANO
+        ) and not storage_cache.is_set(storage_cache.APP_CARDANO_ICARUS_SECRET)
 
         if not need_seed and not need_cardano_secret:
             return
@@ -63,17 +68,17 @@ if not utils.BITCOIN_ONLY:
 
         if need_seed:
             common_seed = mnemonic.get_seed(passphrase)
-            cache.set(cache.APP_COMMON_SEED, common_seed)
+            storage_cache.set(storage_cache.APP_COMMON_SEED, common_seed)
 
         if need_cardano_secret:
             from apps.cardano.seed import derive_and_store_secrets
 
             derive_and_store_secrets(passphrase)
 
-    @cache.stored_async(cache.APP_COMMON_SEED)
-    async def get_seed(ctx: wire.Context) -> bytes:
+    @storage_cache.stored_async(storage_cache.APP_COMMON_SEED)
+    async def get_seed(ctx: Context) -> bytes:
         await derive_and_store_roots(ctx)
-        common_seed = cache.get(cache.APP_COMMON_SEED)
+        common_seed = storage_cache.get(storage_cache.APP_COMMON_SEED)
         assert common_seed is not None
         return common_seed
 
@@ -81,15 +86,15 @@ else:
     # === Bitcoin-only variant ===
     # We use the simple version of `get_seed` that never needs to derive anything else.
 
-    @cache.stored_async(cache.APP_COMMON_SEED)
-    async def get_seed(ctx: wire.Context) -> bytes:
+    @storage_cache.stored_async(storage_cache.APP_COMMON_SEED)
+    async def get_seed(ctx: Context) -> bytes:
         passphrase = await get_passphrase(ctx)
         return mnemonic.get_seed(passphrase)
 
 
-@cache.stored(cache.APP_COMMON_SEED_WITHOUT_PASSPHRASE)
+@storage_cache.stored(storage_cache.APP_COMMON_SEED_WITHOUT_PASSPHRASE)
 def _get_seed_without_passphrase() -> bytes:
-    if not device.is_initialized():
+    if not storage_device.is_initialized():
         raise Exception("Device is not initialized")
     return mnemonic.get_seed(progress_bar=False)
 
@@ -97,6 +102,8 @@ def _get_seed_without_passphrase() -> bytes:
 def derive_node_without_passphrase(
     path: Bip32Path, curve_name: str = "secp256k1"
 ) -> bip32.HDNode:
+    from trezor.crypto import bip32
+
     seed = _get_seed_without_passphrase()
     node = bip32.from_seed(seed, curve_name)
     node.derive_path(path)

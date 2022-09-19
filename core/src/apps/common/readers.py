@@ -1,27 +1,32 @@
-from trezor.utils import BufferReader
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from trezor.utils import BufferReader
 
 
 def read_compact_size(r: BufferReader) -> int:
-    prefix = r.get()
+    get = r.get  # local_cache_attribute
+
+    prefix = get()
     if prefix < 253:
         n = prefix
     elif prefix == 253:
-        n = r.get()
-        n += r.get() << 8
+        n = get()
+        n += get() << 8
     elif prefix == 254:
-        n = r.get()
-        n += r.get() << 8
-        n += r.get() << 16
-        n += r.get() << 24
+        n = get()
+        n += get() << 8
+        n += get() << 16
+        n += get() << 24
     elif prefix == 255:
-        n = r.get()
-        n += r.get() << 8
-        n += r.get() << 16
-        n += r.get() << 24
-        n += r.get() << 32
-        n += r.get() << 40
-        n += r.get() << 48
-        n += r.get() << 56
+        n = get()
+        n += get() << 8
+        n += get() << 16
+        n += get() << 24
+        n += get() << 32
+        n += get() << 40
+        n += get() << 48
+        n += get() << 56
     else:
         raise ValueError
     return n

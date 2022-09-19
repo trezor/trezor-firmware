@@ -2,16 +2,14 @@
 Minimalistic CBOR implementation, supports only what we need in cardano.
 """
 
-import ustruct as struct
 from micropython import const
 from typing import TYPE_CHECKING
 
-from trezor import log, utils
-
-from . import readers
+from trezor import log
 
 if TYPE_CHECKING:
     from typing import Any, Generic, Iterator, TypeVar
+    from trezor.utils import BufferReader
 
     K = TypeVar("K")
     V = TypeVar("V")
@@ -48,16 +46,18 @@ _CBOR_RAW_TAG = const(0x18)
 
 
 def _header(typ: int, l: int) -> bytes:
+    from ustruct import pack
+
     if l < 24:
-        return struct.pack(">B", typ + l)
+        return pack(">B", typ + l)
     elif l < 2**8:
-        return struct.pack(">BB", typ + 24, l)
+        return pack(">BB", typ + 24, l)
     elif l < 2**16:
-        return struct.pack(">BH", typ + 25, l)
+        return pack(">BH", typ + 25, l)
     elif l < 2**32:
-        return struct.pack(">BI", typ + 26, l)
+        return pack(">BI", typ + 26, l)
     elif l < 2**64:
-        return struct.pack(">BQ", typ + 27, l)
+        return pack(">BQ", typ + 27, l)
     else:
         raise NotImplementedError  # Length not supported
 
@@ -117,7 +117,9 @@ def _cbor_encode(value: Value) -> Iterator[bytes]:
         raise NotImplementedError
 
 
-def _read_length(r: utils.BufferReader, aux: int) -> int:
+def _read_length(r: BufferReader, aux: int) -> int:
+    from . import readers
+
     if aux < _CBOR_UINT8_FOLLOWS:
         return aux
     elif aux == _CBOR_UINT8_FOLLOWS:
@@ -132,7 +134,7 @@ def _read_length(r: utils.BufferReader, aux: int) -> int:
         raise NotImplementedError  # Length not supported
 
 
-def _cbor_decode(r: utils.BufferReader) -> Value:
+def _cbor_decode(r: BufferReader) -> Value:
     fb = r.get()
     fb_type = fb & _CBOR_TYPE_MASK
     fb_aux = fb & _CBOR_INFO_BITS
@@ -220,6 +222,7 @@ class Tagged:
         )
 
 
+# TODO: this seems to be unused - is checked against, but is never created???
 class Raw:
     def __init__(self, value: Value):
         self.value = value
@@ -272,7 +275,9 @@ def encode_streamed(value: Value) -> Iterator[bytes]:
 
 
 def decode(cbor: bytes, offset: int = 0) -> Value:
-    r = utils.BufferReader(cbor)
+    from trezor.utils import BufferReader
+
+    r = BufferReader(cbor)
     r.seek(offset)
     res = _cbor_decode(r)
     if r.remaining_count():

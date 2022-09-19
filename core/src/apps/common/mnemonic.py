@@ -1,6 +1,10 @@
-import storage.device
-from trezor import ui, utils, workflow
-from trezor.enums import BackupType
+from typing import TYPE_CHECKING
+
+import storage.device as storage_device
+from trezor import utils
+
+if TYPE_CHECKING:
+    from trezor.enums import BackupType
 
 
 def get() -> tuple[bytes | None, BackupType]:
@@ -8,11 +12,11 @@ def get() -> tuple[bytes | None, BackupType]:
 
 
 def get_secret() -> bytes | None:
-    return storage.device.get_mnemonic_secret()
+    return storage_device.get_mnemonic_secret()
 
 
 def get_type() -> BackupType:
-    return storage.device.get_backup_type()
+    return storage_device.get_backup_type()
 
 
 def is_bip39() -> bool:
@@ -20,6 +24,8 @@ def is_bip39() -> bool:
     If False then SLIP-39 (either Basic or Advanced).
     Other invalid values are checked directly in storage.
     """
+    from trezor.enums import BackupType
+
     return get_type() == BackupType.Bip39
 
 
@@ -41,8 +47,8 @@ def get_seed(passphrase: str = "", progress_bar: bool = True) -> bytes:
     else:  # SLIP-39
         from trezor.crypto import slip39
 
-        identifier = storage.device.get_slip39_identifier()
-        iteration_exponent = storage.device.get_slip39_iteration_exponent()
+        identifier = storage_device.get_slip39_identifier()
+        iteration_exponent = storage_device.get_slip39_iteration_exponent()
         if identifier is None or iteration_exponent is None:
             # Identifier or exponent expected but not found
             raise RuntimeError
@@ -84,6 +90,7 @@ if not utils.BITCOIN_ONLY:
 
 
 def _start_progress() -> None:
+    from trezor import workflow
     from trezor.ui.layouts import draw_simple_text
 
     # Because we are drawing to the screen manually, without a layout, we
@@ -93,6 +100,8 @@ def _start_progress() -> None:
 
 
 def _render_progress(progress: int, total: int) -> None:
+    from trezor import ui
+
     p = 1000 * progress // total
     ui.display.loader(p, False, 18, ui.WHITE, ui.BG)
     ui.refresh()
