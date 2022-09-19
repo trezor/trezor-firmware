@@ -1,17 +1,11 @@
 from typing import TYPE_CHECKING
 
-import storage.device
-from trezor import wire
-from trezor.messages import Success
 from trezor.ui.components.common.webauthn import ConfirmInfo
-from trezor.ui.layouts import show_error_and_raise
-from trezor.ui.layouts.webauthn import confirm_webauthn
-
-from .credential import Fido2Credential
-from .resident_credentials import store_resident_credential
 
 if TYPE_CHECKING:
-    from trezor.messages import WebAuthnAddResidentCredential
+    from trezor.messages import WebAuthnAddResidentCredential, Success
+    from trezor.wire import Context
+    from .credential import Fido2Credential
 
 
 class ConfirmAddCredential(ConfirmInfo):
@@ -31,9 +25,17 @@ class ConfirmAddCredential(ConfirmInfo):
 
 
 async def add_resident_credential(
-    ctx: wire.Context, msg: WebAuthnAddResidentCredential
+    ctx: Context, msg: WebAuthnAddResidentCredential
 ) -> Success:
-    if not storage.device.is_initialized():
+    import storage.device as storage_device
+    from trezor import wire
+    from trezor.ui.layouts import show_error_and_raise
+    from trezor.ui.layouts.webauthn import confirm_webauthn
+    from trezor.messages import Success
+    from .credential import Fido2Credential
+    from .resident_credentials import store_resident_credential
+
+    if not storage_device.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
     if not msg.credential_id:
         raise wire.ProcessError("Missing credential ID parameter.")
@@ -44,9 +46,9 @@ async def add_resident_credential(
         await show_error_and_raise(
             ctx,
             "warning_credential",
-            header="Import credential",
+            "The credential you are trying to import does\nnot belong to this authenticator.",
+            "Import credential",
             button="Close",
-            content="The credential you are trying to import does\nnot belong to this authenticator.",
             red=True,
         )
 

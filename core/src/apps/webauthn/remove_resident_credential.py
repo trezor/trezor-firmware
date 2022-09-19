@@ -1,17 +1,11 @@
 from typing import TYPE_CHECKING
 
-import storage.device
-import storage.resident_credentials
-from trezor import wire
-from trezor.messages import Success
 from trezor.ui.components.common.webauthn import ConfirmInfo
-from trezor.ui.layouts.webauthn import confirm_webauthn
-
-from .credential import Fido2Credential
-from .resident_credentials import get_resident_credential
 
 if TYPE_CHECKING:
-    from trezor.messages import WebAuthnRemoveResidentCredential
+    from trezor.messages import WebAuthnRemoveResidentCredential, Success
+    from .credential import Fido2Credential
+    from trezor.wire import Context
 
 
 class ConfirmRemoveCredential(ConfirmInfo):
@@ -31,8 +25,15 @@ class ConfirmRemoveCredential(ConfirmInfo):
 
 
 async def remove_resident_credential(
-    ctx: wire.Context, msg: WebAuthnRemoveResidentCredential
+    ctx: Context, msg: WebAuthnRemoveResidentCredential
 ) -> Success:
+    import storage.device
+    import storage.resident_credentials
+    from trezor import wire
+    from trezor.messages import Success
+    from trezor.ui.layouts.webauthn import confirm_webauthn
+    from .resident_credentials import get_resident_credential
+
     if not storage.device.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
     if msg.index is None:

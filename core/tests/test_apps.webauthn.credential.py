@@ -2,9 +2,8 @@ from common import *
 import storage
 import storage.device
 from apps.common import mnemonic
-from apps.webauthn.credential import Fido2Credential, U2fCredential, NAME_MAX_LENGTH
-from apps.webauthn.fido2 import distinguishable_cred_list
-from trezor.crypto.curve import nist256p1
+from apps.webauthn.credential import Fido2Credential, U2fCredential, _NAME_MAX_LENGTH
+from apps.webauthn.fido2 import _distinguishable_cred_list
 from trezor.crypto.hashlib import sha256
 
 
@@ -68,13 +67,13 @@ class TestCredential(unittest.TestCase):
         self.assertIsNone(cred.user_name)
         self.assertIsNone(cred.user_display_name)
 
-        cred.rp_name = "a" * (NAME_MAX_LENGTH - 2) + "\u0123"
-        cred.user_name = "a" * (NAME_MAX_LENGTH - 1) + "\u0123"
-        cred.user_display_name = "a" * NAME_MAX_LENGTH + "\u0123"
+        cred.rp_name = "a" * (_NAME_MAX_LENGTH - 2) + "\u0123"
+        cred.user_name = "a" * (_NAME_MAX_LENGTH - 1) + "\u0123"
+        cred.user_display_name = "a" * _NAME_MAX_LENGTH + "\u0123"
         cred.truncate_names()
-        self.assertEqual(cred.rp_name, "a" * (NAME_MAX_LENGTH - 2) + "\u0123")
-        self.assertEqual(cred.user_name, "a" * (NAME_MAX_LENGTH - 1))
-        self.assertEqual(cred.user_display_name, "a" * NAME_MAX_LENGTH)
+        self.assertEqual(cred.rp_name, "a" * (_NAME_MAX_LENGTH - 2) + "\u0123")
+        self.assertEqual(cred.user_name, "a" * (_NAME_MAX_LENGTH - 1))
+        self.assertEqual(cred.user_display_name, "a" * _NAME_MAX_LENGTH)
 
     def test_allow_list_processing(self):
         a1 = Fido2Credential()
@@ -108,17 +107,17 @@ class TestCredential(unittest.TestCase):
 
         c2 = U2fCredential()
 
-        self.assertEqual(sorted(distinguishable_cred_list([a1, a2, a3, b1, b2, c1, c2])), [b2, a3, a1, c1])
-        self.assertEqual(sorted(distinguishable_cred_list([c2, c1, b2, b1, a3, a2, a1])), [b2, a3, a1, c2])
+        self.assertEqual(sorted(_distinguishable_cred_list([a1, a2, a3, b1, b2, c1, c2])), [b2, a3, a1, c1])
+        self.assertEqual(sorted(_distinguishable_cred_list([c2, c1, b2, b1, a3, a2, a1])), [b2, a3, a1, c2])
 
         # Test input by creation time.
-        self.assertEqual(sorted(distinguishable_cred_list([b2, a3, c1, a2, b1, a1, c2])), [b2, a3, a1, c1])
-        self.assertEqual(sorted(distinguishable_cred_list([c2, a1, b1, a2, c1, a3, b2])), [b2, a3, a1, c2])
+        self.assertEqual(sorted(_distinguishable_cred_list([b2, a3, c1, a2, b1, a1, c2])), [b2, a3, a1, c1])
+        self.assertEqual(sorted(_distinguishable_cred_list([c2, a1, b1, a2, c1, a3, b2])), [b2, a3, a1, c2])
 
         # Test duplicities.
-        self.assertEqual(sorted(distinguishable_cred_list([c1, a1, a1, c2, c1])), [a1, c1])
-        self.assertEqual(sorted(distinguishable_cred_list([b2, b3])), [b2])
-        self.assertEqual(sorted(distinguishable_cred_list([b3, b2])), [b3])
+        self.assertEqual(sorted(_distinguishable_cred_list([c1, a1, a1, c2, c1])), [a1, c1])
+        self.assertEqual(sorted(_distinguishable_cred_list([b2, b3])), [b2])
+        self.assertEqual(sorted(_distinguishable_cred_list([b3, b2])), [b3])
 
 
 if __name__ == '__main__':
