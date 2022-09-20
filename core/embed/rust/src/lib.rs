@@ -3,6 +3,7 @@
 #![allow(clippy::new_without_default)]
 #![deny(unsafe_op_in_unsafe_fn)]
 #![allow(dead_code)]
+#![feature(lang_items)]
 
 #[macro_use]
 extern crate num_derive;
@@ -55,3 +56,10 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
     // Otherwise, use `unwrap!` macro from trezorhal.
     trezorhal::common::__fatal_error("", "rs", "", 0, "");
 }
+
+#[cfg(not(target_arch = "arm"))]
+#[cfg(not(test))]
+#[cfg(any(not(feature = "test"), feature = "clippy"))]
+#[lang = "eh_personality"]
+/// Needed by full debuginfo `opt-level = 0` builds for some reason.
+extern "C" fn eh_personality() {}
