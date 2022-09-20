@@ -23,7 +23,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-extern const uint32_t FIRMWARE_MAGIC_OLD;  // TRZR
 extern const uint32_t FIRMWARE_MAGIC_NEW;  // TRZF
 
 #define SIG_OK 0x5A3CA5C3
@@ -59,11 +58,80 @@ typedef struct {
 
 #define FW_CHUNK_SIZE 65536
 
+/**
+ * Check if firmware with FIRMWARE_MAGIC_NEW is installed
+ * @return true if magic present with some size checks
+ */
 bool firmware_present_new(void);
+
+/**
+ * Compute fingerprint for given header. Fingerprint is done
+ * from header that has signature and sigindex fields zeroed.
+ *
+ * The "v2" scheme is used. This is what is shown as firmware
+ * fingerprint on device.
+ *
+ * @param hdr header
+ * @param hash store resulting hash here
+ */
 void compute_firmware_fingerprint(const image_header *hdr, uint8_t hash[32]);
-int signatures_new_ok(const image_header *hdr, uint8_t store_fingerprint[32]);
+
+/**
+ * Compute fingerprint for given header. Fingerprint is done
+ * from header that has signature and sigindex fields zeroed.
+ *
+ * Then it's prefixed using the SignMessage/VerifyMessage method
+ * as described here:
+ *
+ * https://github.com/trezor/trezor-firmware/issues/2513
+ *
+ * @param hdr header
+ * @param hash store resulting hash here
+ */
+void compute_firmware_fingerprint_for_verifymessage(const image_header *hdr,
+                                                    uint8_t hash[32]);
+
+/**
+ * Check if header is signed by v2 or v3 scheme based on `use_verifymessage`.
+ *
+ * Both are 3-of-5 scheme, where 3 signatures specified by sigindex fields
+ * must match corresponding secp256k1 pubkey.
+ *
+ * @param hdr header to check
+ * @param store_fingerprint if non-NULL, store hash computed with chosen method
+ * here
+ * @param use_verifymessage false - use v2 signature scheme, true - use v3
+ * SignMessage/VerifyMessage scheme
+ * @return SIG_OK or SIG_FAIL
+ */
+int signatures_ok(const image_header *hdr, uint8_t store_fingerprint[32],
+                  bool use_verifymessage);
+/**
+ * Check is either v2 or v3 signature of header is valid.
+ *
+ * Stored fingerprint is the "of v2 scheme" which we still display as hash
+ * and use as "firmware hash".
+ *
+ * @param hdr header to check
+ * @param store_fingerprint if non-NULL, store v2 fingerprint here (not v3)
+ * @return SIG_OK or SIG_FAIL
+ */
+int signatures_match(const image_header *hdr, uint8_t store_fingerprint[32]);
+
+/**
+ * Check hashes of FW chunks according to what header says they should be.
+ * @param hdr header with chunk hashes
+ * @return SIG_OK or SIG_FAIL
+ */
 int check_firmware_hashes(const image_header *hdr);
 
+/**
+ * Check that block of memory is zeroed. Not constant-time.
+ *
+ * @param src start pointer
+ * @param len length in bytes
+ * @return 0 for false or 1 for true
+ */
 int mem_is_empty(const uint8_t *src, uint32_t len);
 
 #endif

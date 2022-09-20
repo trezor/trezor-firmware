@@ -8,6 +8,7 @@ MAXSIZE = TOTALSIZE - 32
 infile = sys.argv[1]
 outfile = sys.argv[2]
 fs = os.stat(infile).st_size
+print(f"Current bootloader size before align is {fs} bytes")
 if fs > MAXSIZE:
     raise Exception(
         f"bootloader has to be smaller than {MAXSIZE} bytes (current size is {fs})"
