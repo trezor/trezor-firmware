@@ -1,24 +1,19 @@
-import gc
 from typing import TYPE_CHECKING
 
-from trezor import log, wire
-from trezor.crypto import random
-from trezor.messages import (
-    MoneroExportedKeyImage,
-    MoneroKeyImageExportInitAck,
-    MoneroKeyImageSyncFinalAck,
-    MoneroKeyImageSyncFinalRequest,
-    MoneroKeyImageSyncStepAck,
-    MoneroKeyImageSyncStepRequest,
-)
+from trezor.wire import DataError
 
-from apps.common import paths
 from apps.common.keychain import auto_keychain
-from apps.monero import layout, misc
-from apps.monero.xmr import chacha_poly, crypto, crypto_helpers, key_image, monero
+from apps.monero import layout
 
 if TYPE_CHECKING:
-    from trezor.messages import MoneroKeyImageExportInitRequest
+    from trezor.messages import (
+        MoneroKeyImageExportInitRequest,
+        MoneroKeyImageSyncFinalAck,
+        MoneroKeyImageExportInitAck,
+        MoneroKeyImageSyncStepAck,
+        MoneroKeyImageSyncStepRequest,
+    )
+    from trezor.wire import Context
 
     from apps.common.keychain import Keychain
 
@@ -27,8 +22,15 @@ if TYPE_CHECKING:
 
 @auto_keychain(__name__)
 async def key_image_sync(
-    ctx: wire.Context, msg: MoneroKeyImageExportInitRequest, keychain: Keychain
+    ctx: Context, msg: MoneroKeyImageExportInitRequest, keychain: Keychain
 ) -> MoneroKeyImageSyncFinalAck:
+    import gc
+    from trezor.messages import (
+        MoneroKeyImageSyncFinalAck,
+        MoneroKeyImageSyncFinalRequest,
+        MoneroKeyImageSyncStepRequest,
+    )
+
     state = KeyImageSync()
 
     res = await _init_step(state, ctx, msg, keychain)
@@ -37,13 +39,20 @@ async def key_image_sync(
         res = await _sync_step(state, ctx, step)
         gc.collect()
     await ctx.call(res, MoneroKeyImageSyncFinalRequest)
-    res = await _final_step(state, ctx)
 
-    return res
+    # _final_step
+    if state.current_output + 1 != state.num_outputs:
+        raise DataError("Invalid number of outputs")
+    final_hash = state.hasher.digest()
+    if final_hash != state.expected_hash:
+        raise DataError("Invalid number of outputs")
+    return MoneroKeyImageSyncFinalAck(enc_key=state.enc_key)
 
 
 class KeyImageSync:
     def __init__(self):
+        from apps.monero.xmr import crypto_helpers
+
         self.current_output = -1
         self.num_outputs = 0
         self.expected_hash = b""
@@ -55,10 +64,16 @@ class KeyImageSync:
 
 async def _init_step(
     s: KeyImageSync,
-    ctx: wire.Context,
+    ctx: Context,
     msg: MoneroKeyImageExportInitRequest,
     keychain: Keychain,
 ) -> MoneroKeyImageExportInitAck:
+    from trezor.messages import MoneroKeyImageExportInitAck
+    from trezor.crypto import random
+    from apps.common import paths
+    from apps.monero.xmr import monero
+    from apps.monero import misc
+
     await paths.validate_path(ctx, keychain, msg.address_n)
 
     s.creds = misc.get_creds(keychain, msg.address_n, msg.network_type)
@@ -78,12 +93,19 @@ async def _init_step(
 
 
 async def _sync_step(
-    s: KeyImageSync, ctx: wire.Context, tds: MoneroKeyImageSyncStepRequest
+    s: KeyImageSync, ctx: Context, tds: MoneroKeyImageSyncStepRequest
 ) -> MoneroKeyImageSyncStepAck:
+    from trezor import log
+    from trezor.messages import (
+        MoneroExportedKeyImage,
+        MoneroKeyImageSyncStepAck,
+    )
+    from apps.monero.xmr import chacha_poly, crypto, key_image
+
     assert s.creds is not None
 
     if not tds.tdis:
-        raise wire.DataError("Empty")
+        raise DataError("Empty")
 
     kis = []
     buff = bytearray(32 * 3)
@@ -94,7 +116,7 @@ async def _sync_step(
     for td in tds.tdis:
         s.current_output += 1
         if s.current_output >= s.num_outputs:
-            raise wire.DataError("Too many outputs")
+            raise DataError("Too many outputs")
 
         if __debug__:
             log.debug(__name__, "ki_sync, step i: %d", s.current_output)
@@ -116,14 +138,3 @@ async def _sync_step(
         kis.append(MoneroExportedKeyImage(iv=nonce, blob=ciph))
 
     return MoneroKeyImageSyncStepAck(kis=kis)
-
-
-async def _final_step(s, ctx: wire.Context) -> MoneroKeyImageSyncFinalAck:
-    if s.current_output + 1 != s.num_outputs:
-        raise wire.DataError("Invalid number of outputs")
-
-    final_hash = s.hasher.digest()
-    if final_hash != s.expected_hash:
-        raise wire.DataError("Invalid number of outputs")
-
-    return MoneroKeyImageSyncFinalAck(enc_key=s.enc_key)

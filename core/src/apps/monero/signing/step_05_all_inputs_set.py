@@ -5,21 +5,19 @@ If in the applicable offloading mode, generate commitment masks.
 
 from typing import TYPE_CHECKING
 
-from apps.monero import layout
-from apps.monero.xmr import crypto
-
-from .state import State
-
 if TYPE_CHECKING:
     from trezor.messages import MoneroTransactionAllInputsSetAck
+    from .state import State
 
 
 async def all_inputs_set(state: State) -> MoneroTransactionAllInputsSetAck:
+    from apps.monero import layout
+    from apps.monero.xmr import crypto
+    from trezor.messages import MoneroTransactionAllInputsSetAck
+
     state.mem_trace(0)
 
     await layout.transaction_step(state, state.STEP_ALL_IN)
-
-    from trezor.messages import MoneroTransactionAllInputsSetAck
 
     if state.last_step != state.STEP_VINI:
         raise ValueError("Invalid state transition")

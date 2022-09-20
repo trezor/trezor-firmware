@@ -11,7 +11,7 @@ Author: Dusan Klinec, ph4r05, 2018
 import gc
 from typing import TYPE_CHECKING
 
-from apps.monero.xmr import crypto, crypto_helpers
+from apps.monero.xmr import crypto
 
 if TYPE_CHECKING:
     from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import (
@@ -40,6 +40,7 @@ def verify_bp(
 ) -> bool:
     """Verifies Bulletproof"""
     from apps.monero.xmr import bulletproof as bp
+    from apps.monero.xmr import crypto_helpers
 
     if amounts:
         bp_proof.V = []

@@ -1,8 +1,5 @@
 from typing import TYPE_CHECKING
 
-from apps.monero.xmr import crypto_helpers
-from apps.monero.xmr.keccak_hasher import KeccakXmrArchive
-
 if TYPE_CHECKING:
     from trezor.utils import HashContext
     from .serialize_messages.tx_rsig_bulletproof import BulletproofPlus
@@ -14,6 +11,9 @@ class PreMlsagHasher:
     """
 
     def __init__(self) -> None:
+        from apps.monero.xmr import crypto_helpers
+        from apps.monero.xmr.keccak_hasher import KeccakXmrArchive
+
         self.state = 0
         self.kc_master: HashContext = crypto_helpers.get_keccak()
         self.rsig_hasher: HashContext = crypto_helpers.get_keccak()
@@ -61,6 +61,7 @@ class PreMlsagHasher:
     ) -> None:
         if self.state == 8:
             raise ValueError("State error")
+        update = self.rsig_hasher.update  # local_cache_attribute
 
         if raw:
             # Avoiding problem with the memory fragmentation.
@@ -69,22 +70,22 @@ class PreMlsagHasher:
             # preserving the byte ordering
             if isinstance(p, list):
                 for x in p:
-                    self.rsig_hasher.update(x)
+                    update(x)
             else:
                 assert isinstance(p, bytes)
-                self.rsig_hasher.update(p)
+                update(p)
             return
 
         # Hash Bulletproof
         fields = (p.A, p.A1, p.B, p.r1, p.s1, p.d1)
         for fld in fields:
-            self.rsig_hasher.update(fld)
+            update(fld)
 
         del (fields,)
         for i in range(len(p.L)):
-            self.rsig_hasher.update(p.L[i])
+            update(p.L[i])
         for i in range(len(p.R)):
-            self.rsig_hasher.update(p.R[i])
+            update(p.R[i])
 
     def get_digest(self) -> bytes:
         if self.state != 6:

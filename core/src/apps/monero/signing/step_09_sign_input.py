@@ -13,16 +13,10 @@ on output masks as pseudo outputs have to remain same.
 import gc
 from typing import TYPE_CHECKING
 
-from trezor import utils
-
-from apps.monero import layout
-from apps.monero.xmr import crypto, crypto_helpers
-
-from .state import State
-
 if TYPE_CHECKING:
     from trezor.messages import MoneroTransactionSourceEntry
     from trezor.messages import MoneroTransactionSignInputAck
+    from .state import State
 
 
 async def sign_input(
@@ -49,12 +43,22 @@ async def sign_input(
     :param orig_idx: original index of the src_entr before sorting (HMAC check)
     :return: Generated signature MGs[i]
     """
+    from trezor import utils
+    from apps.monero import layout
+    from apps.monero.xmr import crypto_helpers
+    from apps.monero.xmr import crypto
+
+    ensure = utils.ensure  # local_cache_attribute
+    mem_trace = state.mem_trace  # local_cache_attribute
+    input_count = state.input_count  # local_cache_attribute
+    outputs = src_entr.outputs  # local_cache_attribute
+
     await layout.transaction_step(state, state.STEP_SIGN, state.current_input_index + 1)
 
     state.current_input_index += 1
     if state.last_step not in (state.STEP_ALL_OUT, state.STEP_SIGN):
         raise ValueError("Invalid state transition")
-    if state.current_input_index >= state.input_count:
+    if state.current_input_index >= input_count:
         raise ValueError("Invalid inputs count")
     if pseudo_out is None:
         raise ValueError("SimpleRCT requires pseudo_out but none provided")
@@ -78,11 +82,11 @@ async def sign_input(
     if state.current_input_index > 0 and state.last_ki <= cur_ki:
         raise ValueError("Key image order invalid")
 
-    state.last_ki = cur_ki if state.current_input_index < state.input_count else None
+    state.last_ki = cur_ki if state.current_input_index < input_count else None
     del (cur_ki, vini_bin, vini_hmac, vini_hmac_comp)
 
     gc.collect()
-    state.mem_trace(1, True)
+    mem_trace(1, True)
 
     from apps.monero.xmr import chacha_poly
 
@@ -94,9 +98,9 @@ async def sign_input(
     )
 
     # Last pseudo_out is recomputed so mask sums hold
-    if input_position + 1 == state.input_count:
+    if input_position + 1 == input_count:
         # Recompute the lash alpha so the sum holds
-        state.mem_trace("Correcting alpha")
+        mem_trace("Correcting alpha")
         alpha_diff = crypto.sc_sub_into(None, state.sumout, state.sumpouts_alphas)
         crypto.sc_add_into(pseudo_out_alpha, pseudo_out_alpha, alpha_diff)
         pseudo_out_c = crypto.gen_commitment_into(
@@ -104,8 +108,8 @@ async def sign_input(
         )
 
     else:
-        if input_position + 1 == state.input_count:
-            utils.ensure(
+        if input_position + 1 == input_count:
+            ensure(
                 crypto.sc_eq(state.sumpouts_alphas, state.sumout) != 0, "Sum eq error"
             )
 
@@ -120,7 +124,7 @@ async def sign_input(
 
         pseudo_out_c = crypto_helpers.decodepoint(pseudo_out)
 
-    state.mem_trace(2, True)
+    mem_trace(2, True)
 
     # Spending secret
     spend_key = crypto_helpers.decodeint(
@@ -139,7 +143,7 @@ async def sign_input(
         spend_enc,
     )
     utils.unimport_end(mods)
-    state.mem_trace(3, True)
+    mem_trace(3, True)
 
     # Basic setup, sanity check
     from apps.monero.xmr.serialize_messages.tx_ct_key import CtKey
@@ -148,14 +152,14 @@ async def sign_input(
     input_secret_key = CtKey(spend_key, crypto_helpers.decodeint(src_entr.mask))
 
     # Private key correctness test
-    utils.ensure(
+    ensure(
         crypto.point_eq(
             crypto_helpers.decodepoint(src_entr.outputs[src_entr.real_output].key.dest),
             crypto.scalarmult_base_into(None, input_secret_key.dest),
         ),
         "Real source entry's destination does not equal spend key's",
     )
-    utils.ensure(
+    ensure(
         crypto.point_eq(
             crypto_helpers.decodepoint(
                 src_entr.outputs[src_entr.real_output].key.commitment
@@ -165,19 +169,19 @@ async def sign_input(
         "Real source entry's mask does not equal spend key's",
     )
 
-    state.mem_trace(4, True)
+    mem_trace(4, True)
 
     from apps.monero.xmr import clsag
 
     mg_buffer = []
-    ring_pubkeys = [x.key for x in src_entr.outputs if x]
-    utils.ensure(len(ring_pubkeys) == len(src_entr.outputs), "Invalid ring")
+    ring_pubkeys = [x.key for x in outputs if x]
+    ensure(len(ring_pubkeys) == len(outputs), "Invalid ring")
     del src_entr
 
-    state.mem_trace(5, True)
+    mem_trace(5, True)
 
     assert state.full_message is not None
-    state.mem_trace("CLSAG")
+    mem_trace("CLSAG")
     clsag.generate_clsag_simple(
         state.full_message,
         ring_pubkeys,
@@ -189,16 +193,16 @@ async def sign_input(
     )
 
     del (CtKey, input_secret_key, pseudo_out_alpha, clsag, ring_pubkeys)
-    state.mem_trace(6, True)
+    mem_trace(6, True)
 
     from trezor.messages import MoneroTransactionSignInputAck
 
     # Encrypt signature, reveal once protocol finishes OK
     utils.unimport_end(mods)
-    state.mem_trace(7, True)
+    mem_trace(7, True)
     mg_buffer = _protect_signature(state, mg_buffer)
 
-    state.mem_trace(8, True)
+    mem_trace(8, True)
     state.last_step = state.STEP_SIGN
     return MoneroTransactionSignInputAck(
         signature=mg_buffer, pseudo_out=crypto_helpers.encodepoint(pseudo_out_c)

@@ -1,21 +1,22 @@
-import gc
 from typing import TYPE_CHECKING
 
-from trezor import log, utils, wire
-from trezor.enums import MessageType
-
 from apps.common.keychain import auto_keychain
-from apps.monero.signing.state import State
 
 if TYPE_CHECKING:
     from trezor.messages import MoneroTransactionFinalAck
     from apps.common.keychain import Keychain
+    from apps.monero.signing.state import State
+    from trezor.wire import Context
 
 
 @auto_keychain(__name__)
 async def sign_tx(
-    ctx: wire.Context, received_msg, keychain: Keychain
+    ctx: Context, received_msg, keychain: Keychain
 ) -> MoneroTransactionFinalAck:
+    import gc
+    from trezor import log, utils
+    from apps.monero.signing.state import State
+
     state = State(ctx)
     mods = utils.unimport_begin()
 
@@ -27,7 +28,7 @@ async def sign_tx(
         gc.collect()
         gc.threshold(gc.mem_free() // 4 + gc.mem_alloc())
 
-        result_msg, accept_msgs = await sign_tx_dispatch(state, received_msg, keychain)
+        result_msg, accept_msgs = await _sign_tx_dispatch(state, received_msg, keychain)
         if accept_msgs is None:
             break
 
@@ -41,8 +42,13 @@ async def sign_tx(
     return result_msg
 
 
-async def sign_tx_dispatch(state: State, msg, keychain: Keychain) -> tuple:
-    if msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionInitRequest:
+async def _sign_tx_dispatch(state: State, msg, keychain: Keychain) -> tuple:
+    from trezor.enums import MessageType
+    from trezor import wire
+
+    MESSAGE_WIRE_TYPE = msg.MESSAGE_WIRE_TYPE  # local_cache_attribute
+
+    if MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionInitRequest:
         from apps.monero.signing import step_01_init_transaction
 
         return (
@@ -52,7 +58,7 @@ async def sign_tx_dispatch(state: State, msg, keychain: Keychain) -> tuple:
             (MessageType.MoneroTransactionSetInputRequest,),
         )
 
-    elif msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionSetInputRequest:
+    elif MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionSetInputRequest:
         from apps.monero.signing import step_02_set_input
 
         return (
@@ -63,7 +69,7 @@ async def sign_tx_dispatch(state: State, msg, keychain: Keychain) -> tuple:
             ),
         )
 
-    elif msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionInputViniRequest:
+    elif MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionInputViniRequest:
         from apps.monero.signing import step_04_input_vini
 
         return (
@@ -76,7 +82,7 @@ async def sign_tx_dispatch(state: State, msg, keychain: Keychain) -> tuple:
             ),
         )
 
-    elif msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionAllInputsSetRequest:
+    elif MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionAllInputsSetRequest:
         from apps.monero.signing import step_05_all_inputs_set
 
         return (
@@ -84,7 +90,7 @@ async def sign_tx_dispatch(state: State, msg, keychain: Keychain) -> tuple:
             (MessageType.MoneroTransactionSetOutputRequest,),
         )
 
-    elif msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionSetOutputRequest:
+    elif MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionSetOutputRequest:
         from apps.monero.signing import step_06_set_output
 
         is_offloaded_bp = bool(msg.is_offloaded_bp)
@@ -101,7 +107,7 @@ async def sign_tx_dispatch(state: State, msg, keychain: Keychain) -> tuple:
             ),
         )
 
-    elif msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionAllOutSetRequest:
+    elif MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionAllOutSetRequest:
         from apps.monero.signing import step_07_all_outputs_set
 
         return (
@@ -109,7 +115,7 @@ async def sign_tx_dispatch(state: State, msg, keychain: Keychain) -> tuple:
             (MessageType.MoneroTransactionSignInputRequest,),
         )
 
-    elif msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionSignInputRequest:
+    elif MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionSignInputRequest:
         from apps.monero.signing import step_09_sign_input
 
         return (
@@ -130,7 +136,7 @@ async def sign_tx_dispatch(state: State, msg, keychain: Keychain) -> tuple:
             ),
         )
 
-    elif msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionFinalRequest:
+    elif MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionFinalRequest:
         from apps.monero.signing import step_10_sign_final
 
         return step_10_sign_final.final_msg(state), None

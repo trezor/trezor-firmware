@@ -1,4 +1,3 @@
-from micropython import const
 from typing import TYPE_CHECKING
 
 from apps.monero.xmr.serialize.message_types import ContainerType, MessageType
@@ -9,7 +8,7 @@ if TYPE_CHECKING:
 
 
 class _KeyV(ContainerType):
-    FIX_SIZE = const(0)
+    FIX_SIZE = 0
     ELEM_TYPE: XmrType[bytes] = ECKey
 
 

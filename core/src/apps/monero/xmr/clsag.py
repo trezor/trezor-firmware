@@ -45,18 +45,16 @@ Author: Dusan Klinec, ph4r05, 2018
 import gc
 from typing import TYPE_CHECKING
 
-from apps.monero.xmr import crypto, crypto_helpers
-from apps.monero.xmr.serialize import int_serialize
-
 if TYPE_CHECKING:
     from typing import Any, TypeGuard, TypeVar
 
     from .serialize_messages.tx_ct_key import CtKey
     from trezor.messages import MoneroRctKeyPublic
+    from apps.monero.xmr import crypto
 
     T = TypeVar("T")
 
-    def list_of_type(lst: list[Any], typ: type[T]) -> TypeGuard[list[T]]:
+    def _list_of_type(lst: list[Any], typ: type[T]) -> TypeGuard[list[T]]:
         ...
 
 
@@ -88,6 +86,8 @@ def generate_clsag_simple(
     :param index: specifies corresponding public key to the `in_sk` in the pubs array
     :param mg_buff: buffer to store the signature to
     """
+    from apps.monero.xmr import crypto
+
     cols = len(pubs)
     if cols == 0:
         raise ValueError("Empty pubs")
@@ -118,23 +118,32 @@ def _generate_clsag(
     index: int,
     mg_buff: list[bytearray],
 ) -> list[bytes]:
-    sI = crypto.Point()  # sig.I
-    sD = crypto.Point()  # sig.D
-    sc1 = crypto.Scalar()  # sig.c1
+    from apps.monero.xmr import crypto, crypto_helpers
+    from apps.monero.xmr.serialize import int_serialize
+
+    Point = crypto.Point  # local_cache_attribute
+    Scalar = crypto.Scalar  # local_cache_attribute
+    encodepoint_into = crypto.encodepoint_into  # local_cache_attribute
+    sc_mul_into = crypto.sc_mul_into  # local_cache_attribute
+    scalarmult_into = crypto.scalarmult_into  # local_cache_attribute
+
+    sI = Point()  # sig.I
+    sD = Point()  # sig.D
+    sc1 = Scalar()  # sig.c1
     a = crypto.random_scalar()
-    H = crypto.Point()
-    D = crypto.Point()
+    H = Point()
+    D = Point()
     Cout_bf = crypto_helpers.encodepoint(Cout)
 
-    tmp_sc = crypto.Scalar()
-    tmp = crypto.Point()
+    tmp_sc = Scalar()
+    tmp = Point()
     tmp_bf = bytearray(32)
 
     crypto.hash_to_point_into(H, P[index])
-    crypto.scalarmult_into(sI, H, p)  # I = p*H
-    crypto.scalarmult_into(D, H, z)  # D = z*H
-    crypto.sc_mul_into(tmp_sc, z, crypto_helpers.INV_EIGHT_SC)  # 1/8*z
-    crypto.scalarmult_into(sD, H, tmp_sc)  # sig.D = 1/8*z*H
+    scalarmult_into(sI, H, p)  # I = p*H
+    scalarmult_into(D, H, z)  # D = z*H
+    sc_mul_into(tmp_sc, z, crypto_helpers.INV_EIGHT_SC)  # 1/8*z
+    scalarmult_into(sD, H, tmp_sc)  # sig.D = 1/8*z*H
     sD = crypto_helpers.encodepoint(sD)
 
     hsh_P = crypto_helpers.get_keccak()  # domain, I, D, P, C, C_offset
@@ -153,7 +162,7 @@ def _generate_clsag(
     for x in C_nonzero:
         hsh_PC(x)
 
-    hsh_PC(crypto.encodepoint_into(tmp_bf, sI))
+    hsh_PC(encodepoint_into(tmp_bf, sI))
     hsh_PC(sD)
     hsh_PC(Cout_bf)
     mu_P = crypto_helpers.decodeint(hsh_P.digest())
@@ -161,26 +170,27 @@ def _generate_clsag(
 
     del (hsh_PC, hsh_P, hsh_C)
     c_to_hash = crypto_helpers.get_keccak()  # domain, P, C, C_offset, message, aG, aH
-    c_to_hash.update(_HASH_KEY_CLSAG_ROUND)
+    update = c_to_hash.update  # local_cache_attribute
+    update(_HASH_KEY_CLSAG_ROUND)
     for i in range(len(P)):
-        c_to_hash.update(P[i])
+        update(P[i])
     for i in range(len(P)):
-        c_to_hash.update(C_nonzero[i])
-    c_to_hash.update(Cout_bf)
-    c_to_hash.update(message)
+        update(C_nonzero[i])
+    update(Cout_bf)
+    update(message)
 
     chasher = c_to_hash.copy()
     crypto.scalarmult_base_into(tmp, a)
-    chasher.update(crypto.encodepoint_into(tmp_bf, tmp))  # aG
-    crypto.scalarmult_into(tmp, H, a)
-    chasher.update(crypto.encodepoint_into(tmp_bf, tmp))  # aH
+    chasher.update(encodepoint_into(tmp_bf, tmp))  # aG
+    scalarmult_into(tmp, H, a)
+    chasher.update(encodepoint_into(tmp_bf, tmp))  # aH
     c = crypto_helpers.decodeint(chasher.digest())
     del (chasher, H)
 
-    L = crypto.Point()
-    R = crypto.Point()
-    c_p = crypto.Scalar()
-    c_c = crypto.Scalar()
+    L = Point()
+    R = Point()
+    c_p = Scalar()
+    c_c = Scalar()
     i = (index + 1) % len(P)
     if i == 0:
         crypto.sc_copy(sc1, c)
@@ -193,24 +203,24 @@ def _generate_clsag(
         crypto.random_scalar(tmp_sc)
         crypto.encodeint_into(mg_buff[i + 1], tmp_sc)
 
-        crypto.sc_mul_into(c_p, mu_P, c)
-        crypto.sc_mul_into(c_c, mu_C, c)
+        sc_mul_into(c_p, mu_P, c)
+        sc_mul_into(c_c, mu_C, c)
 
         # L = tmp_sc * G + c_P * P[i] + c_c * C[i]
         crypto.add_keys2_into(L, tmp_sc, c_p, crypto.decodepoint_into(tmp, P[i]))
         crypto.decodepoint_into(tmp, C_nonzero[i])  # C = C_nonzero - Cout
         crypto.point_sub_into(tmp, tmp, Cout)
-        crypto.scalarmult_into(tmp, tmp, c_c)
+        scalarmult_into(tmp, tmp, c_c)
         crypto.point_add_into(L, L, tmp)
 
         # R = tmp_sc * HP + c_p * I + c_c * D
         crypto.hash_to_point_into(tmp, P[i])
         crypto.add_keys3_into(R, tmp_sc, tmp, c_p, sI)
-        crypto.point_add_into(R, R, crypto.scalarmult_into(tmp, D, c_c))
+        crypto.point_add_into(R, R, scalarmult_into(tmp, D, c_c))
 
         chasher = c_to_hash.copy()
-        chasher.update(crypto.encodepoint_into(tmp_bf, L))
-        chasher.update(crypto.encodepoint_into(tmp_bf, R))
+        chasher.update(encodepoint_into(tmp_bf, L))
+        chasher.update(encodepoint_into(tmp_bf, R))
         crypto.decodeint_into(c, chasher.digest())
 
         P[i] = None  # type: ignore
@@ -224,13 +234,13 @@ def _generate_clsag(
             gc.collect()
 
     # Final scalar = a - c * (mu_P * p + mu_c * Z)
-    crypto.sc_mul_into(tmp_sc, mu_P, p)
+    sc_mul_into(tmp_sc, mu_P, p)
     crypto.sc_muladd_into(tmp_sc, mu_C, z, tmp_sc)
     crypto.sc_mulsub_into(tmp_sc, c, tmp_sc, a)
     crypto.encodeint_into(mg_buff[index + 1], tmp_sc)
 
     if TYPE_CHECKING:
-        assert list_of_type(mg_buff, bytes)
+        assert _list_of_type(mg_buff, bytes)
 
     mg_buff.append(crypto_helpers.encodeint(sc1))
     mg_buff.append(sD)

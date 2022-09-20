@@ -7,13 +7,20 @@
 # https://tools.ietf.org/html/draft-josefsson-eddsa-ed25519-00#section-4
 # https://github.com/monero-project/research-lab
 
+from typing import TYPE_CHECKING
+
 from trezor.crypto import monero as tcry
-from trezor.crypto.hashlib import sha3_256
+
+if TYPE_CHECKING:
+    from trezor.crypto.hashlib import sha3_256
+
 
 NULL_KEY_ENC = b"\x00" * 32
 
 
 def get_keccak(data: bytes | None = None) -> sha3_256:
+    from trezor.crypto.hashlib import sha3_256
+
     return sha3_256(data=data, keccak=True)
 
 

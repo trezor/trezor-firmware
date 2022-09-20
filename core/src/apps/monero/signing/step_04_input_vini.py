@@ -5,17 +5,12 @@ after the sorting on tx.vin[i].ki. The sorting order was received in the previou
 
 from typing import TYPE_CHECKING
 
-from apps.monero import layout
-from apps.monero.signing import offloading_keys
-from apps.monero.xmr import crypto
-
-from .state import State
-
 if TYPE_CHECKING:
     from trezor.messages import (
         MoneroTransactionInputViniAck,
         MoneroTransactionSourceEntry,
     )
+    from .state import State
 
 
 async def input_vini(
@@ -25,15 +20,21 @@ async def input_vini(
     vini_hmac: bytes,
     orig_idx: int,
 ) -> MoneroTransactionInputViniAck:
+    from apps.monero import layout
+    from apps.monero.signing import offloading_keys
+    from apps.monero.xmr import crypto
+
     from trezor.messages import MoneroTransactionInputViniAck
 
-    await layout.transaction_step(state, state.STEP_VINI, state.current_input_index + 1)
-    if state.last_step not in (state.STEP_INP, state.STEP_VINI):
+    STEP_VINI = state.STEP_VINI  # local_cache_attribute
+
+    await layout.transaction_step(state, STEP_VINI, state.current_input_index + 1)
+    if state.last_step not in (state.STEP_INP, STEP_VINI):
         raise ValueError("Invalid state transition")
     if state.current_input_index >= state.input_count:
         raise ValueError("Too many inputs")
 
-    if state.last_step < state.STEP_VINI:
+    if state.last_step < STEP_VINI:
         state.current_input_index = -1
         state.last_ki = None
 
@@ -56,6 +57,6 @@ async def input_vini(
 
     # Incremental hasing of tx.vin[i]
     state.tx_prefix_hasher.buffer(vini_bin)
-    state.last_step = state.STEP_VINI
+    state.last_step = STEP_VINI
     state.last_ki = cur_ki if state.current_input_index < state.input_count else None
     return MoneroTransactionInputViniAck()

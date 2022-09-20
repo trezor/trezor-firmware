@@ -1,10 +1,12 @@
-from trezor.crypto import chacha20poly1305 as ChaCha20Poly1305, monero, random
+from trezor.crypto import chacha20poly1305 as ChaCha20Poly1305
 
 
 def encrypt(key: bytes, plaintext: bytes, associated_data: bytes | None = None):
     """
     Uses ChaCha20Poly1305 for encryption
     """
+    from trezor.crypto import random
+
     nonce = random.bytes(12)
     cipher = ChaCha20Poly1305(key, nonce)
     if associated_data:
@@ -14,7 +16,7 @@ def encrypt(key: bytes, plaintext: bytes, associated_data: bytes | None = None):
     return nonce, ciphertext + tag, b""
 
 
-def decrypt(
+def _decrypt(
     key: bytes,
     iv: bytes,
     ciphertext: bytes,
@@ -24,6 +26,8 @@ def decrypt(
     """
     ChaCha20Poly1305 decryption
     """
+    from trezor.crypto import monero
+
     cipher = ChaCha20Poly1305(key, iv)
     if associated_data:
         cipher.auth(associated_data)
@@ -43,4 +47,4 @@ def encrypt_pack(key: bytes, plaintext: bytes, associated_data: bytes | None = N
 
 def decrypt_pack(key: bytes, ciphertext: bytes):
     cp = memoryview(ciphertext)
-    return decrypt(key, cp[:12], cp[12:], None)
+    return _decrypt(key, cp[:12], cp[12:], None)

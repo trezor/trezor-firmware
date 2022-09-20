@@ -1,15 +1,15 @@
-from trezor import wire
+from trezor.wire import DataError
 
 
-class Error(wire.DataError):
+class Error(DataError):
     pass
 
 
-class ChangeAddressError(wire.DataError):
+class ChangeAddressError(DataError):
     pass
 
 
-class NotEnoughOutputsError(wire.DataError):
+class NotEnoughOutputsError(DataError):
     pass
 
 
