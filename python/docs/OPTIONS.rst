@@ -255,6 +255,7 @@ Ethereum commands.
     --help  Show this message and exit.
 
   Commands:
+    download-definitions  Download all Ethereum network and token definitions and save them.
     get-address           Get Ethereum address in hex encoding.
     get-public-node       Get Ethereum public node of given path.
     sign-message          Sign message with Ethereum address.
