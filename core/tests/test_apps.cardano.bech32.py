@@ -18,7 +18,7 @@ class TestCardanoBech32(unittest.TestCase):
         ]
 
         for expected_human_readable_part, expected_bech in expected_bechs:
-            decoded = bech32.decode(expected_human_readable_part, expected_bech)
+            decoded = bech32._decode(expected_human_readable_part, expected_bech)
             actual_bech = bech32.encode(expected_human_readable_part, decoded)
 
             self.assertEqual(actual_bech, expected_bech)

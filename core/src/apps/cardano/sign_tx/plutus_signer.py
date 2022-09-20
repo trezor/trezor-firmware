@@ -1,10 +1,12 @@
-from trezor import messages, wire
-from trezor.enums import CardanoCertificateType
+from typing import TYPE_CHECKING
 
-from .. import layout, seed
-from ..helpers.credential import Credential, should_show_credentials
-from ..helpers.paths import SCHEMA_MINT
+from trezor import wire
+
+from .. import layout
 from .signer import Signer
+
+if TYPE_CHECKING:
+    from trezor import messages
 
 
 class PlutusSigner(Signer):
@@ -28,6 +30,8 @@ class PlutusSigner(Signer):
             await layout.warn_unknown_total_collateral(self.ctx)
 
     async def _confirm_tx(self, tx_hash: bytes) -> None:
+        msg = self.msg  # local_cache_attribute
+
         # super() omitted intentionally
         # We display tx hash so that experienced users can compare it to the tx hash
         # computed by a trusted device (in case the tx contains many items which are
@@ -35,12 +39,12 @@ class PlutusSigner(Signer):
         is_network_id_verifiable = self._is_network_id_verifiable()
         await layout.confirm_tx(
             self.ctx,
-            self.msg.fee,
-            self.msg.network_id,
-            self.msg.protocol_magic,
-            self.msg.ttl,
-            self.msg.validity_interval_start,
-            self.msg.total_collateral,
+            msg.fee,
+            msg.network_id,
+            msg.protocol_magic,
+            msg.ttl,
+            msg.validity_interval_start,
+            msg.total_collateral,
             is_network_id_verifiable,
             tx_hash,
         )
@@ -53,6 +57,8 @@ class PlutusSigner(Signer):
     async def _show_output_credentials(
         self, address_parameters: messages.CardanoAddressParametersType
     ) -> None:
+        from ..helpers.credential import Credential, should_show_credentials
+
         # In ordinary txs, change outputs with matching payment and staking paths can be
         # hidden, but we need to show them in Plutus txs because of the script
         # evaluation. We at least hide the staking path if it matches the payment path.
@@ -80,6 +86,8 @@ class PlutusSigner(Signer):
         return False
 
     def _validate_certificate(self, certificate: messages.CardanoTxCertificate) -> None:
+        from trezor.enums import CardanoCertificateType
+
         super()._validate_certificate(certificate)
         if certificate.type == CardanoCertificateType.STAKE_POOL_REGISTRATION:
             raise wire.ProcessError("Invalid certificate")
@@ -87,6 +95,9 @@ class PlutusSigner(Signer):
     def _validate_witness_request(
         self, witness_request: messages.CardanoTxWitnessRequest
     ) -> None:
+        from .. import seed
+        from ..helpers.paths import SCHEMA_MINT
+
         super()._validate_witness_request(witness_request)
         is_minting = SCHEMA_MINT.match(witness_request.path)
 

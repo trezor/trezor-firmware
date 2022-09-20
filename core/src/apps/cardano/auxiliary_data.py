@@ -1,19 +1,12 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
-from trezor import messages, wire
 from trezor.crypto import hashlib
-from trezor.crypto.curve import ed25519
-from trezor.enums import (
-    CardanoAddressType,
-    CardanoGovernanceRegistrationFormat,
-    CardanoTxAuxiliaryDataSupplementType,
-)
+from trezor.enums import CardanoAddressType, CardanoGovernanceRegistrationFormat
 
 from apps.common import cbor
 
 from . import addresses, layout
-from .helpers import bech32
 from .helpers.paths import SCHEMA_STAKING_ANY_ACCOUNT
 from .helpers.utils import derive_public_key
 
@@ -25,6 +18,9 @@ if TYPE_CHECKING:
     GovernanceRegistration = dict[
         int, GovernanceRegistrationPayload | GovernanceRegistrationSignature
     ]
+
+    from trezor import messages
+    from trezor.wire import Context
 
     from . import seed
 
@@ -40,6 +36,8 @@ _DEFAULT_VOTING_PURPOSE = const(0)
 
 
 def assert_cond(condition: bool) -> None:
+    from trezor import wire
+
     if not condition:
         raise wire.ProcessError("Invalid auxiliary data")
 
@@ -48,17 +46,14 @@ def validate(auxiliary_data: messages.CardanoTxAuxiliaryData) -> None:
     fields_provided = 0
     if auxiliary_data.hash:
         fields_provided += 1
-        _validate_hash(auxiliary_data.hash)
+        # _validate_hash
+        assert_cond(len(auxiliary_data.hash) == _AUXILIARY_DATA_HASH_SIZE)
     if auxiliary_data.governance_registration_parameters:
         fields_provided += 1
         _validate_governance_registration_parameters(
             auxiliary_data.governance_registration_parameters
         )
     assert_cond(fields_provided == 1)
-
-
-def _validate_hash(auxiliary_data_hash: bytes) -> None:
-    assert_cond(len(auxiliary_data_hash) == _AUXILIARY_DATA_HASH_SIZE)
 
 
 def _validate_governance_registration_parameters(
@@ -107,7 +102,7 @@ def _get_voting_purpose_to_serialize(
 
 
 async def show(
-    ctx: wire.Context,
+    ctx: Context,
     keychain: seed.Keychain,
     auxiliary_data_hash: bytes,
     parameters: messages.CardanoGovernanceRegistrationParametersType | None,
@@ -130,13 +125,15 @@ async def show(
 
 
 async def _show_governance_registration(
-    ctx: wire.Context,
+    ctx: Context,
     keychain: seed.Keychain,
     parameters: messages.CardanoGovernanceRegistrationParametersType,
     protocol_magic: int,
     network_id: int,
     should_show_details: bool,
 ) -> None:
+    from .helpers import bech32
+
     for delegation in parameters.delegations:
         encoded_public_key = bech32.encode(
             bech32.HRP_GOVERNANCE_PUBLIC_KEY, delegation.voting_public_key
@@ -178,6 +175,9 @@ def get_hash_and_supplement(
     protocol_magic: int,
     network_id: int,
 ) -> tuple[bytes, messages.CardanoTxAuxiliaryDataSupplement]:
+    from trezor.enums import CardanoTxAuxiliaryDataSupplementType
+    from trezor import messages
+
     if parameters := auxiliary_data.governance_registration_parameters:
         (
             governance_registration_payload,
@@ -205,23 +205,25 @@ def _get_governance_registration_hash(
     governance_registration_payload: GovernanceRegistrationPayload,
     governance_registration_payload_signature: bytes,
 ) -> bytes:
-    cborized_governance_registration = _cborize_governance_registration(
-        governance_registration_payload,
-        governance_registration_payload_signature,
-    )
-    return _get_hash(cbor.encode(_wrap_metadata(cborized_governance_registration)))
-
-
-def _cborize_governance_registration(
-    governance_registration_payload: GovernanceRegistrationPayload,
-    governance_registration_payload_signature: bytes,
-) -> GovernanceRegistration:
+    # _cborize_catalyst_registration
     governance_registration_signature = {1: governance_registration_payload_signature}
-
-    return {
+    cborized_catalyst_registration = {
         _METADATA_KEY_GOVERNANCE_REGISTRATION: governance_registration_payload,
         _METADATA_KEY_GOVERNANCE_REGISTRATION_SIGNATURE: governance_registration_signature,
     }
+
+    # _get_hash
+    # _wrap_metadata
+    # A new structure of metadata is used after Cardano Mary era. The metadata
+    # is wrapped in a tuple and auxiliary_scripts may follow it. Cardano
+    # tooling uses this new format of "wrapped" metadata even if no
+    # auxiliary_scripts are included. So we do the same here.
+    # https://github.com/input-output-hk/cardano-ledger-specs/blob/f7deb22be14d31b535f56edc3ca542c548244c67/shelley-ma/shelley-ma-test/cddl-files/shelley-ma.cddl#L212
+    metadata = (cborized_catalyst_registration, ())
+    auxiliary_data = cbor.encode(metadata)
+    return hashlib.blake2b(
+        data=auxiliary_data, outlen=_AUXILIARY_DATA_HASH_SIZE
+    ).digest()
 
 
 def _get_signed_governance_registration_payload(
@@ -275,6 +277,8 @@ def _create_governance_registration_payload_signature(
     governance_registration_payload: GovernanceRegistrationPayload,
     path: list[int],
 ) -> bytes:
+    from trezor.crypto.curve import ed25519
+
     node = keychain.derive(path)
 
     encoded_governance_registration = cbor.encode(
@@ -289,21 +293,3 @@ def _create_governance_registration_payload_signature(
     return ed25519.sign_ext(
         node.private_key(), node.private_key_ext(), governance_registration_hash
     )
-
-
-def _wrap_metadata(metadata: dict) -> tuple[dict, tuple]:
-    """
-    A new structure of metadata is used after Cardano Mary era. The metadata
-    is wrapped in a tuple and auxiliary_scripts may follow it. Cardano
-    tooling uses this new format of "wrapped" metadata even if no
-    auxiliary_scripts are included. So we do the same here.
-
-    https://github.com/input-output-hk/cardano-ledger-specs/blob/f7deb22be14d31b535f56edc3ca542c548244c67/shelley-ma/shelley-ma-test/cddl-files/shelley-ma.cddl#L212
-    """
-    return metadata, ()
-
-
-def _get_hash(auxiliary_data: bytes) -> bytes:
-    return hashlib.blake2b(
-        data=auxiliary_data, outlen=_AUXILIARY_DATA_HASH_SIZE
-    ).digest()

@@ -1,14 +1,20 @@
 from micropython import const
-from typing import Any
+from typing import TYPE_CHECKING
 
-from trezor import messages, wire
 from trezor.crypto import base58
 from trezor.enums import CardanoAddressType
+from trezor.wire import ProcessError
 
-from . import byron_addresses, seed
-from .helpers import ADDRESS_KEY_HASH_SIZE, SCRIPT_HASH_SIZE, bech32, network_ids
+from . import byron_addresses
+from .helpers import bech32
 from .helpers.paths import SCHEMA_STAKING_ANY_ACCOUNT
-from .helpers.utils import get_public_key_hash, variable_length_encode
+from .helpers.utils import get_public_key_hash
+
+if TYPE_CHECKING:
+    from typing import Any
+    from trezor import messages
+    from .seed import Keychain
+
 
 ADDRESS_TYPES_SHELLEY = (
     CardanoAddressType.BASE,
@@ -44,58 +50,64 @@ _MAX_ADDRESS_BYTES_LENGTH = const(65)
 
 def assert_params_cond(condition: bool) -> None:
     if not condition:
-        raise wire.ProcessError("Invalid address parameters")
+        raise ProcessError("Invalid address parameters")
 
 
 def validate_address_parameters(
     parameters: messages.CardanoAddressParametersType,
 ) -> None:
+    from . import seed
+
     _validate_address_parameters_structure(parameters)
+    address_type = parameters.address_type  # local_cache_attribute
+    address_n = parameters.address_n  # local_cache_attribute
+    address_n_staking = parameters.address_n_staking  # local_cache_attribute
+    script_payment_hash = parameters.script_payment_hash  # local_cache_attribute
+    is_shelley_path = seed.is_shelley_path  # local_cache_attribute
+    CAT = CardanoAddressType  # local_cache_global
 
-    if parameters.address_type == CardanoAddressType.BYRON:
-        assert_params_cond(seed.is_byron_path(parameters.address_n))
+    if address_type == CAT.BYRON:
+        assert_params_cond(seed.is_byron_path(address_n))
 
-    elif parameters.address_type == CardanoAddressType.BASE:
-        assert_params_cond(seed.is_shelley_path(parameters.address_n))
+    elif address_type == CAT.BASE:
+        assert_params_cond(is_shelley_path(address_n))
         _validate_base_address_staking_info(
-            parameters.address_n_staking, parameters.staking_key_hash
+            address_n_staking, parameters.staking_key_hash
         )
 
-    elif parameters.address_type == CardanoAddressType.BASE_SCRIPT_KEY:
-        _validate_script_hash(parameters.script_payment_hash)
+    elif address_type == CAT.BASE_SCRIPT_KEY:
+        _validate_script_hash(script_payment_hash)
         _validate_base_address_staking_info(
-            parameters.address_n_staking, parameters.staking_key_hash
+            address_n_staking, parameters.staking_key_hash
         )
 
-    elif parameters.address_type == CardanoAddressType.BASE_KEY_SCRIPT:
-        assert_params_cond(seed.is_shelley_path(parameters.address_n))
+    elif address_type == CAT.BASE_KEY_SCRIPT:
+        assert_params_cond(is_shelley_path(address_n))
         _validate_script_hash(parameters.script_staking_hash)
 
-    elif parameters.address_type == CardanoAddressType.BASE_SCRIPT_SCRIPT:
-        _validate_script_hash(parameters.script_payment_hash)
+    elif address_type == CAT.BASE_SCRIPT_SCRIPT:
+        _validate_script_hash(script_payment_hash)
         _validate_script_hash(parameters.script_staking_hash)
 
-    elif parameters.address_type == CardanoAddressType.POINTER:
-        assert_params_cond(seed.is_shelley_path(parameters.address_n))
+    elif address_type == CAT.POINTER:
+        assert_params_cond(is_shelley_path(address_n))
         assert_params_cond(parameters.certificate_pointer is not None)
 
-    elif parameters.address_type == CardanoAddressType.POINTER_SCRIPT:
-        _validate_script_hash(parameters.script_payment_hash)
+    elif address_type == CAT.POINTER_SCRIPT:
+        _validate_script_hash(script_payment_hash)
         assert_params_cond(parameters.certificate_pointer is not None)
 
-    elif parameters.address_type == CardanoAddressType.ENTERPRISE:
-        assert_params_cond(seed.is_shelley_path(parameters.address_n))
+    elif address_type == CAT.ENTERPRISE:
+        assert_params_cond(is_shelley_path(address_n))
 
-    elif parameters.address_type == CardanoAddressType.ENTERPRISE_SCRIPT:
-        _validate_script_hash(parameters.script_payment_hash)
+    elif address_type == CAT.ENTERPRISE_SCRIPT:
+        _validate_script_hash(script_payment_hash)
 
-    elif parameters.address_type == CardanoAddressType.REWARD:
-        assert_params_cond(seed.is_shelley_path(parameters.address_n_staking))
-        assert_params_cond(
-            SCHEMA_STAKING_ANY_ACCOUNT.match(parameters.address_n_staking)
-        )
+    elif address_type == CAT.REWARD:
+        assert_params_cond(is_shelley_path(address_n_staking))
+        assert_params_cond(SCHEMA_STAKING_ANY_ACCOUNT.match(address_n_staking))
 
-    elif parameters.address_type == CardanoAddressType.REWARD_SCRIPT:
+    elif address_type == CAT.REWARD_SCRIPT:
         _validate_script_hash(parameters.script_staking_hash)
 
     else:
@@ -105,75 +117,76 @@ def validate_address_parameters(
 def _validate_address_parameters_structure(
     parameters: messages.CardanoAddressParametersType,
 ) -> None:
-    address_n = parameters.address_n
-    address_n_staking = parameters.address_n_staking
-    staking_key_hash = parameters.staking_key_hash
-    certificate_pointer = parameters.certificate_pointer
-    script_payment_hash = parameters.script_payment_hash
-    script_staking_hash = parameters.script_staking_hash
+    address_n = parameters.address_n  # local_cache_attribute
+    address_n_staking = parameters.address_n_staking  # local_cache_attribute
+    staking_key_hash = parameters.staking_key_hash  # local_cache_attribute
+    certificate_pointer = parameters.certificate_pointer  # local_cache_attribute
+    script_payment_hash = parameters.script_payment_hash  # local_cache_attribute
+    script_staking_hash = parameters.script_staking_hash  # local_cache_attribute
+    CAT = CardanoAddressType  # local_cache_global
 
-    fields_to_be_empty: dict[CardanoAddressType, tuple[Any, ...]] = {
-        CardanoAddressType.BASE: (
+    fields_to_be_empty: dict[CAT, tuple[Any, ...]] = {
+        CAT.BASE: (
             certificate_pointer,
             script_payment_hash,
             script_staking_hash,
         ),
-        CardanoAddressType.BASE_KEY_SCRIPT: (
+        CAT.BASE_KEY_SCRIPT: (
             address_n_staking,
             certificate_pointer,
             script_payment_hash,
         ),
-        CardanoAddressType.BASE_SCRIPT_KEY: (
+        CAT.BASE_SCRIPT_KEY: (
             address_n,
             certificate_pointer,
             script_staking_hash,
         ),
-        CardanoAddressType.BASE_SCRIPT_SCRIPT: (
+        CAT.BASE_SCRIPT_SCRIPT: (
             address_n,
             address_n_staking,
             certificate_pointer,
         ),
-        CardanoAddressType.POINTER: (
+        CAT.POINTER: (
             address_n_staking,
             staking_key_hash,
             script_payment_hash,
             script_staking_hash,
         ),
-        CardanoAddressType.POINTER_SCRIPT: (
+        CAT.POINTER_SCRIPT: (
             address_n,
             address_n_staking,
             staking_key_hash,
             script_staking_hash,
         ),
-        CardanoAddressType.ENTERPRISE: (
-            address_n_staking,
-            staking_key_hash,
-            certificate_pointer,
-            script_payment_hash,
-            script_staking_hash,
-        ),
-        CardanoAddressType.ENTERPRISE_SCRIPT: (
-            address_n,
-            address_n_staking,
-            staking_key_hash,
-            certificate_pointer,
-            script_staking_hash,
-        ),
-        CardanoAddressType.BYRON: (
+        CAT.ENTERPRISE: (
             address_n_staking,
             staking_key_hash,
             certificate_pointer,
             script_payment_hash,
             script_staking_hash,
         ),
-        CardanoAddressType.REWARD: (
+        CAT.ENTERPRISE_SCRIPT: (
+            address_n,
+            address_n_staking,
+            staking_key_hash,
+            certificate_pointer,
+            script_staking_hash,
+        ),
+        CAT.BYRON: (
+            address_n_staking,
+            staking_key_hash,
+            certificate_pointer,
+            script_payment_hash,
+            script_staking_hash,
+        ),
+        CAT.REWARD: (
             address_n,
             staking_key_hash,
             certificate_pointer,
             script_payment_hash,
             script_staking_hash,
         ),
-        CardanoAddressType.REWARD_SCRIPT: (
+        CAT.REWARD_SCRIPT: (
             address_n,
             address_n_staking,
             staking_key_hash,
@@ -190,6 +203,8 @@ def _validate_base_address_staking_info(
     staking_path: list[int],
     staking_key_hash: bytes | None,
 ) -> None:
+    from .helpers import ADDRESS_KEY_HASH_SIZE
+
     assert_params_cond(not (staking_key_hash and staking_path))
 
     if staking_key_hash:
@@ -197,10 +212,12 @@ def _validate_base_address_staking_info(
     elif staking_path:
         assert_params_cond(SCHEMA_STAKING_ANY_ACCOUNT.match(staking_path))
     else:
-        raise wire.ProcessError("Invalid address parameters")
+        raise ProcessError("Invalid address parameters")
 
 
 def _validate_script_hash(script_hash: bytes | None) -> None:
+    from .helpers import SCRIPT_HASH_SIZE
+
     assert_params_cond(script_hash is not None and len(script_hash) == SCRIPT_HASH_SIZE)
 
 
@@ -216,7 +233,7 @@ def validate_output_address_parameters(
 
 def assert_cond(condition: bool) -> None:
     if not condition:
-        raise wire.ProcessError("Invalid address")
+        raise ProcessError("Invalid address")
 
 
 def _validate_and_get_type(address: str, protocol_magic: int, network_id: int) -> int:
@@ -233,9 +250,24 @@ def _validate_and_get_type(address: str, protocol_magic: int, network_id: int) -
     if address_type == CardanoAddressType.BYRON:
         byron_addresses.validate(address_bytes, protocol_magic)
     elif address_type in ADDRESS_TYPES_SHELLEY:
-        _validate_shelley_address(address, address_bytes, network_id)
+        # _validate_shelley_address
+
+        # _validate_size
+        assert_cond(
+            _MIN_ADDRESS_BYTES_LENGTH <= len(address_bytes) <= _MAX_ADDRESS_BYTES_LENGTH
+        )
+
+        # _validate_bech32_hrp
+        valid_hrp = _get_bech32_hrp(address_type, network_id)
+        # get_hrp
+        bech32_hrp = address.rsplit(bech32.HRP_SEPARATOR, 1)[0]
+        assert_cond(valid_hrp == bech32_hrp)
+
+        # _validate_network_id
+        if _get_network_id(address_bytes) != network_id:
+            raise ProcessError("Output address network mismatch")
     else:
-        raise wire.ProcessError("Invalid address")
+        raise ProcessError("Invalid address")
 
     return address_type
 
@@ -262,7 +294,7 @@ def get_bytes_unsafe(address: str) -> bytes:
         try:
             address_bytes = base58.decode(address)
         except ValueError:
-            raise wire.ProcessError("Invalid address")
+            raise ProcessError("Invalid address")
 
     return address_bytes
 
@@ -271,32 +303,9 @@ def get_type(address: bytes) -> CardanoAddressType:
     return address[0] >> 4  # type: ignore [int-into-enum]
 
 
-def _validate_shelley_address(
-    address_str: str, address_bytes: bytes, network_id: int
-) -> None:
-    address_type = get_type(address_bytes)
-
-    _validate_size(address_bytes)
-    _validate_bech32_hrp(address_str, address_type, network_id)
-    _validate_network_id(address_bytes, network_id)
-
-
-def _validate_size(address_bytes: bytes) -> None:
-    assert_cond(
-        _MIN_ADDRESS_BYTES_LENGTH <= len(address_bytes) <= _MAX_ADDRESS_BYTES_LENGTH
-    )
-
-
-def _validate_bech32_hrp(
-    address_str: str, address_type: CardanoAddressType, network_id: int
-) -> None:
-    valid_hrp = _get_bech32_hrp(address_type, network_id)
-    bech32_hrp = bech32.get_hrp(address_str)
-
-    assert_cond(valid_hrp == bech32_hrp)
-
-
 def _get_bech32_hrp(address_type: CardanoAddressType, network_id: int) -> str:
+    from .helpers import bech32, network_ids
+
     if address_type == CardanoAddressType.BYRON:
         # Byron address uses base58 encoding
         raise ValueError
@@ -313,17 +322,12 @@ def _get_bech32_hrp(address_type: CardanoAddressType, network_id: int) -> str:
             return bech32.HRP_TESTNET_ADDRESS
 
 
-def _validate_network_id(address: bytes, network_id: int) -> None:
-    if _get_network_id(address) != network_id:
-        raise wire.ProcessError("Output address network mismatch")
-
-
 def _get_network_id(address: bytes) -> int:
     return address[0] & 0x0F
 
 
 def derive_human_readable(
-    keychain: seed.Keychain,
+    keychain: Keychain,
     parameters: messages.CardanoAddressParametersType,
     protocol_magic: int,
     network_id: int,
@@ -344,7 +348,7 @@ def encode_human_readable(address_bytes: bytes) -> str:
 
 
 def derive_bytes(
-    keychain: seed.Keychain,
+    keychain: Keychain,
     parameters: messages.CardanoAddressParametersType,
     protocol_magic: int,
     network_id: int,
@@ -360,11 +364,13 @@ def derive_bytes(
 
 
 def _derive_shelley_address(
-    keychain: seed.Keychain,
+    keychain: Keychain,
     parameters: messages.CardanoAddressParametersType,
     network_id: int,
 ) -> bytes:
-    header = _create_header(parameters.address_type, network_id)
+    # _create_header
+    header_int = parameters.address_type << 4 | network_id
+    header = header_int.to_bytes(1, "little")
 
     payment_part = _get_payment_part(keychain, parameters)
     staking_part = _get_staking_part(keychain, parameters)
@@ -372,13 +378,8 @@ def _derive_shelley_address(
     return header + payment_part + staking_part
 
 
-def _create_header(address_type: CardanoAddressType, network_id: int) -> bytes:
-    header: int = address_type << 4 | network_id
-    return header.to_bytes(1, "little")
-
-
 def _get_payment_part(
-    keychain: seed.Keychain, parameters: messages.CardanoAddressParametersType
+    keychain: Keychain, parameters: messages.CardanoAddressParametersType
 ) -> bytes:
     if parameters.address_n:
         return get_public_key_hash(keychain, parameters.address_n)
@@ -389,8 +390,10 @@ def _get_payment_part(
 
 
 def _get_staking_part(
-    keychain: seed.Keychain, parameters: messages.CardanoAddressParametersType
+    keychain: Keychain, parameters: messages.CardanoAddressParametersType
 ) -> bytes:
+    from .helpers.utils import variable_length_encode
+
     if parameters.staking_key_hash:
         return parameters.staking_key_hash
     elif parameters.address_n_staking:
@@ -398,16 +401,11 @@ def _get_staking_part(
     elif parameters.script_staking_hash:
         return parameters.script_staking_hash
     elif parameters.certificate_pointer:
-        return _encode_certificate_pointer(parameters.certificate_pointer)
+        # _encode_certificate_pointer
+        pointer = parameters.certificate_pointer
+        block_index_encoded = variable_length_encode(pointer.block_index)
+        tx_index_encoded = variable_length_encode(pointer.tx_index)
+        certificate_index_encoded = variable_length_encode(pointer.certificate_index)
+        return bytes(block_index_encoded + tx_index_encoded + certificate_index_encoded)
     else:
         return bytes()
-
-
-def _encode_certificate_pointer(
-    pointer: messages.CardanoBlockchainPointerType,
-) -> bytes:
-    block_index_encoded = variable_length_encode(pointer.block_index)
-    tx_index_encoded = variable_length_encode(pointer.tx_index)
-    certificate_index_encoded = variable_length_encode(pointer.certificate_index)
-
-    return bytes(block_index_encoded + tx_index_encoded + certificate_index_encoded)

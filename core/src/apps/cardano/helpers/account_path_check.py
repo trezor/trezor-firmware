@@ -1,11 +1,8 @@
 from typing import TYPE_CHECKING
 
-from trezor import wire
+from trezor.wire import ProcessError
 
-from ...common.paths import HARDENED
 from .. import seed
-from .paths import ACCOUNT_PATH_INDEX, ACCOUNT_PATH_LENGTH
-from .utils import to_account_path
 
 if TYPE_CHECKING:
     from trezor.messages import (
@@ -29,7 +26,9 @@ class AccountPathChecker:
     def __init__(self) -> None:
         self.account_path: object | list[int] = self.UNDEFINED
 
-    def _add(self, path: list[int], error: wire.ProcessError) -> None:
+    def _add(self, path: list[int], error: ProcessError) -> None:
+        from .utils import to_account_path
+
         # multi-sig and minting paths are always shown and thus don't need to be checked
         if seed.is_multisig_path(path) or seed.is_minting_path(path):
             return
@@ -51,10 +50,15 @@ class AccountPathChecker:
         from the user. This way the user can be sure that the funds are being moved between the user's
         accounts without being bothered by more screens.
         """
-        assert isinstance(self.account_path, list)
+        from ...common.paths import HARDENED
+        from .paths import ACCOUNT_PATH_INDEX, ACCOUNT_PATH_LENGTH
+
+        self_account_path = self.account_path  # local_cache_attribute
+
+        assert isinstance(self_account_path, list)
         is_control_path_byron_or_shelley = seed.is_byron_path(
-            self.account_path
-        ) or seed.is_shelley_path(self.account_path)
+            self_account_path
+        ) or seed.is_shelley_path(self_account_path)
 
         is_new_path_byron_or_shelley = seed.is_byron_path(
             account_path
@@ -63,9 +67,9 @@ class AccountPathChecker:
         return (
             is_control_path_byron_or_shelley
             and is_new_path_byron_or_shelley
-            and len(self.account_path) == ACCOUNT_PATH_LENGTH
+            and len(self_account_path) == ACCOUNT_PATH_LENGTH
             and len(account_path) == ACCOUNT_PATH_LENGTH
-            and self.account_path[ACCOUNT_PATH_INDEX] == 0 | HARDENED
+            and self_account_path[ACCOUNT_PATH_INDEX] == 0 | HARDENED
             and account_path[ACCOUNT_PATH_INDEX] == 0 | HARDENED
         )
 
@@ -76,27 +80,25 @@ class AccountPathChecker:
         if not output.address_parameters.address_n:
             return
 
-        self._add(
-            output.address_parameters.address_n, wire.ProcessError("Invalid output")
-        )
+        self._add(output.address_parameters.address_n, ProcessError("Invalid output"))
 
     def add_certificate(self, certificate: CardanoTxCertificate) -> None:
         if not certificate.path:
             return
 
-        self._add(certificate.path, wire.ProcessError("Invalid certificate"))
+        self._add(certificate.path, ProcessError("Invalid certificate"))
 
     def add_pool_owner(self, pool_owner: CardanoPoolOwner) -> None:
         if not pool_owner.staking_key_path:
             return
 
-        self._add(pool_owner.staking_key_path, wire.ProcessError("Invalid certificate"))
+        self._add(pool_owner.staking_key_path, ProcessError("Invalid certificate"))
 
     def add_withdrawal(self, withdrawal: CardanoTxWithdrawal) -> None:
         if not withdrawal.path:
             return
 
-        self._add(withdrawal.path, wire.ProcessError("Invalid withdrawal"))
+        self._add(withdrawal.path, ProcessError("Invalid withdrawal"))
 
     def add_witness_request(self, witness_request: CardanoTxWitnessRequest) -> None:
-        self._add(witness_request.path, wire.ProcessError("Invalid witness request"))
+        self._add(witness_request.path, ProcessError("Invalid witness request"))
