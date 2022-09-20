@@ -65,6 +65,12 @@ void show_unplug(const char *line1, const char *line2) {
 }
 
 static void show_unofficial_warning(const uint8_t *hash) {
+// On production bootloader, show warning and wait for user
+// to accept or reject it
+// On non-production we only use unofficial firmwares,
+// so just show hash for a while to see bootloader started
+// but continue
+#if PRODUCTION
   layoutDialog(&bmp_icon_warning, "Abort", "I'll take the risk", NULL,
                "WARNING!", NULL, "Unofficial firmware", "detected.", NULL,
                NULL);
@@ -82,6 +88,10 @@ static void show_unofficial_warning(const uint8_t *hash) {
   }
 
   // everything is OK, user pressed 2x Continue -> continue program
+#else
+  layoutFirmwareFingerprint(hash);
+  delay(100000000);
+#endif
 }
 
 static void __attribute__((noreturn)) load_app(int signed_firmware) {
@@ -147,7 +157,7 @@ int main(void) {
         (const image_header *)FLASH_PTR(FLASH_FWHEADER_START);
 
     uint8_t fingerprint[32] = {0};
-    int signed_firmware = signatures_new_ok(hdr, fingerprint);
+    int signed_firmware = signatures_match(hdr, fingerprint);
     if (SIG_OK != signed_firmware) {
       show_unofficial_warning(fingerprint);
     }

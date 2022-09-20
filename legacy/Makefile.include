@@ -162,6 +162,12 @@ else
 CFLAGS += -DDEBUG_RNG=0
 endif
 
+ifeq ($(DEBUG_T1_SIGNATURES), 1)
+CFLAGS += -DDEBUG_T1_SIGNATURES=1
+else
+CFLAGS += -DDEBUG_T1_SIGNATURES=0
+endif
+
 all: $(NAME).bin
 
 openocd:

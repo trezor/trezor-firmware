@@ -26,18 +26,85 @@
 #include "secp256k1.h"
 #include "sha2.h"
 
-const uint32_t FIRMWARE_MAGIC_OLD = 0x525a5254;  // TRZR
 const uint32_t FIRMWARE_MAGIC_NEW = 0x465a5254;  // TRZF
 
+/*
+ * There are 3 schemes in history of T1, for clarity naming:
+ *
+ * - v1 - previously called "old" with TRZR magic header (no longer here)
+ * - v2 - previously called "new" with TRZF magic header
+ * - v3 - the latest scheme using Trezor's SignMessage and VerifyMessage
+ *   style signatures
+ *
+ * See `debug_signing/README.md` and the scripts there for signatures debug.
+ *
+ * Latest scheme v3 ref: https://github.com/trezor/trezor-firmware/issues/2513
+ */
 #define PUBKEYS 5
 
-static const uint8_t * const pubkey[PUBKEYS] = {
+#if DEBUG_T1_SIGNATURES
+
+// Make build explode if combining debug sigs with production
+#if PRODUCTION
+#error "Can't have production device with debug keys! Build aborted"
+#endif
+
+// These are **only** for debugging signatures with SignMessage
+// Use this mnemonic for testing signing:
+// "table table table table table table table table table table table advance"
+// the "SignMessage"-style public keys, third signing scheme
+// See legacy/debug_signing/README.md
+static const uint8_t * const pubkey_v3[PUBKEYS] = {
+        (const uint8_t *)"\x03\x73\x08\xe1\x40\x77\x16\x1c\x36\x5d\xea\x0f\x5c\x80\xaa\x6c\x5d\xba\x34\x71\x9e\x82\x5b\xd2\x3a\xe5\xf7\xe7\xd2\x98\x8a\xdb\x0f",
+        (const uint8_t *)"\x03\x9c\x1b\x24\x60\xe3\x43\x71\x2e\x98\x2e\x07\x32\xe7\xed\x17\xf6\x0d\xe4\xc9\x33\x06\x5b\x71\x70\xd9\x9c\x6e\x7f\xe7\xcc\x7f\x4b",
+        (const uint8_t *)"\x03\x15\x2b\x37\xfd\xf1\x26\x11\x12\x74\xc8\x94\xc3\x48\xdc\xc9\x75\xb5\x7c\x11\x5e\xe2\x4c\xeb\x19\xb5\x19\x0a\xc7\xf7\xb6\x51\x73",
+        (const uint8_t *)"\x02\x83\x91\x8a\xbf\x1b\x6e\x1d\x2a\x1d\x08\xea\x29\xc9\xd2\xae\x2e\x97\xe3\xc0\x1f\x4e\xa8\x59\x2b\x08\x8d\x28\x03\x5b\x44\x4e\xd0",
+        (const uint8_t *)"\x03\xc6\x83\x63\x85\x07\x8a\x18\xe8\x1d\x74\x77\x68\x1e\x0d\x30\x86\x66\xf3\x99\x59\x4b\xe9\xe8\xab\xcb\x45\x58\xa6\xe2\x47\x32\xfc"
+};
+
+// the "new", or second signing scheme keys
+
+/*
+ Debug private keys for v2 (previously called "new") scheme
+ corresponding to pubkeys below as python hexstring array:
+
+ ['ba7994923c91771ad77c483f7d2b41f5506b82aa900e6f12edeae96c5c9f8f66',
+  '81a825d359da7ec9534e6cf7dd190bdbad62e134265764a5ec3e63317b060a51',
+  '37107a021e50ca3571102691606083f6a8d9cd600e35cd2c8e8f7b87796a045b',
+  '5518381d95e93e8eb68a294354989906e3828f36b4556a2ad85d8333294eb1b7',
+  '1d1d34168760dec092c9ff89377d8659076d2dfd95e0281719c15f90d067e211']
+ */
+static const uint8_t * const pubkey_v2[PUBKEYS] = {
+        (const uint8_t *)"\x03\x91\xcd\xaf\x3c\xac\x08\xc2\x71\x2e\xe1\xe8\x8c\xd6\xd3\x46\xeb\x2c\x79\x8f\xda\xf9\x5c\x0e\xb6\xef\xee\xa0\xd7\x01\x4d\xac\x87",
+        (const uint8_t *)"\x02\x18\x6f\xf4\xe2\xb0\x8b\xc5\xae\x0e\x21\xa5\x08\xf1\xce\xd4\x8f\xf4\x51\xea\xb7\xd7\x94\xde\xb0\xb7\xcb\xe8\xef\xd7\x29\xab\xa7",
+        (const uint8_t *)"\x03\x24\x00\x9f\x0b\x39\x8c\xa1\xc3\x35\xfb\x17\xa1\x02\x1c\x3f\x7f\xb0\x83\x1d\xdb\x28\x34\x8a\x4f\x05\x8b\x14\x9e\xa4\xc5\x89\xa0",
+        (const uint8_t *)"\x03\x66\x63\x5d\x99\x94\x17\xb6\x55\x66\x86\x6c\x65\x63\x0d\x97\x7a\x7a\xe7\x23\xfe\x5f\x6c\x4c\xd1\x7f\xa0\x0f\x08\x8b\xa1\x84\xc1",
+        (const uint8_t *)"\x03\xf3\x6c\x7d\x0f\xb6\x15\xad\xa4\x3d\x71\x88\x58\x0f\x15\xeb\xda\x22\xd6\xf6\xb9\xb1\xa9\x2b\xff\x16\xc6\x93\x77\x99\xdc\xbc\x66"
+};
+#else
+
+// These public keys are production keys
+// - used in production devices
+// - used in debug non-production builds for QA testing
+
+// the "SignMessage"-style public keys, third signing scheme
+static const uint8_t * const pubkey_v3[PUBKEYS] = {
         (const uint8_t *)"\x02\xd5\x71\xb7\xf1\x48\xc5\xe4\x23\x2c\x38\x14\xf7\x77\xd8\xfa\xea\xf1\xa8\x42\x16\xc7\x8d\x56\x9b\x71\x04\x1f\xfc\x76\x8a\x5b\x2d",
         (const uint8_t *)"\x03\x63\x27\x9c\x0c\x08\x66\xe5\x0c\x05\xc7\x99\xd3\x2b\xd6\xba\xb0\x18\x8b\x6d\xe0\x65\x36\xd1\x10\x9d\x2e\xd9\xce\x76\xcb\x33\x5c",
         (const uint8_t *)"\x02\x43\xae\xdb\xb6\xf7\xe7\x1c\x56\x3f\x8e\xd2\xef\x64\xec\x99\x81\x48\x25\x19\xe7\xef\x4f\x4a\xa9\x8b\x27\x85\x4e\x8c\x49\x12\x6d",
         (const uint8_t *)"\x02\x87\x7c\x39\xfd\x7c\x62\x23\x7e\x03\x82\x35\xe9\xc0\x75\xda\xb2\x61\x63\x0f\x78\xee\xb8\xed\xb9\x24\x87\x15\x9f\xff\xed\xfd\xf6",
         (const uint8_t *)"\x03\x73\x84\xc5\x1a\xe8\x1a\xdd\x0a\x52\x3a\xdb\xb1\x86\xc9\x1b\x90\x6f\xfb\x64\xc2\xc7\x65\x80\x2b\xf2\x6d\xbd\x13\xbd\xf1\x2c\x31"
 };
+
+// the "new", or second signing scheme keys
+static const uint8_t * const pubkey_v2[PUBKEYS] = {
+        (const uint8_t *)"\x02\xd5\x71\xb7\xf1\x48\xc5\xe4\x23\x2c\x38\x14\xf7\x77\xd8\xfa\xea\xf1\xa8\x42\x16\xc7\x8d\x56\x9b\x71\x04\x1f\xfc\x76\x8a\x5b\x2d",
+        (const uint8_t *)"\x03\x63\x27\x9c\x0c\x08\x66\xe5\x0c\x05\xc7\x99\xd3\x2b\xd6\xba\xb0\x18\x8b\x6d\xe0\x65\x36\xd1\x10\x9d\x2e\xd9\xce\x76\xcb\x33\x5c",
+        (const uint8_t *)"\x02\x43\xae\xdb\xb6\xf7\xe7\x1c\x56\x3f\x8e\xd2\xef\x64\xec\x99\x81\x48\x25\x19\xe7\xef\x4f\x4a\xa9\x8b\x27\x85\x4e\x8c\x49\x12\x6d",
+        (const uint8_t *)"\x02\x87\x7c\x39\xfd\x7c\x62\x23\x7e\x03\x82\x35\xe9\xc0\x75\xda\xb2\x61\x63\x0f\x78\xee\xb8\xed\xb9\x24\x87\x15\x9f\xff\xed\xfd\xf6",
+        (const uint8_t *)"\x03\x73\x84\xc5\x1a\xe8\x1a\xdd\x0a\x52\x3a\xdb\xb1\x86\xc9\x1b\x90\x6f\xfb\x64\xc2\xc7\x65\x80\x2b\xf2\x6d\xbd\x13\xbd\xf1\x2c\x31"
+};
+#endif
 
 #define SIGNATURES 3
 
@@ -51,62 +118,16 @@ static const uint8_t * const pubkey[PUBKEYS] = {
 #define FLASH_META_SIG2 (FLASH_META_START + 0x0080)
 #define FLASH_META_SIG3 (FLASH_META_START + 0x00C0)
 
-bool firmware_present_old(void) {
-  if (memcmp(FLASH_PTR(FLASH_META_START), &FIRMWARE_MAGIC_OLD,
-             4)) {  // magic does not match
-    return false;
-  }
-  if (*((const uint32_t *)FLASH_PTR(FLASH_META_CODELEN)) <
-      8192) {  // firmware reports smaller size than 8192
-    return false;
-  }
-  if (*((const uint32_t *)FLASH_PTR(FLASH_META_CODELEN)) >
-      FLASH_APP_LEN) {  // firmware reports bigger size than flash size
-    return false;
-  }
-
-  return true;
-}
-
-int signatures_old_ok(void) {
-  const uint32_t codelen = *((const uint32_t *)FLASH_META_CODELEN);
-  const uint8_t sigindex1 = *((const uint8_t *)FLASH_META_SIGINDEX1);
-  const uint8_t sigindex2 = *((const uint8_t *)FLASH_META_SIGINDEX2);
-  const uint8_t sigindex3 = *((const uint8_t *)FLASH_META_SIGINDEX3);
-
-  if (codelen > FLASH_APP_LEN) {
-    return false;
-  }
-
-  uint8_t hash[32] = {0};
-  sha256_Raw(FLASH_PTR(FLASH_OLD_APP_START), codelen, hash);
-
-  if (sigindex1 < 1 || sigindex1 > PUBKEYS) return SIG_FAIL;  // invalid index
-  if (sigindex2 < 1 || sigindex2 > PUBKEYS) return SIG_FAIL;  // invalid index
-  if (sigindex3 < 1 || sigindex3 > PUBKEYS) return SIG_FAIL;  // invalid index
-
-  if (sigindex1 == sigindex2) return SIG_FAIL;  // duplicate use
-  if (sigindex1 == sigindex3) return SIG_FAIL;  // duplicate use
-  if (sigindex2 == sigindex3) return SIG_FAIL;  // duplicate use
-
-  if (0 != ecdsa_verify_digest(&secp256k1, pubkey[sigindex1 - 1],
-                               (const uint8_t *)FLASH_META_SIG1,
-                               hash)) {  // failure
-    return SIG_FAIL;
-  }
-  if (0 != ecdsa_verify_digest(&secp256k1, pubkey[sigindex2 - 1],
-                               (const uint8_t *)FLASH_META_SIG2,
-                               hash)) {  // failure
-    return SIG_FAIL;
-  }
-  if (0 != ecdsa_verify_digest(&secp256k1, pubkey[sigindex3 - 1],
-                               (const uint8_t *)FLASH_META_SIG3,
-                               hash)) {  // failure
-    return SIG_FAIL;
-  }
-
-  return SIG_OK;
-}
+/*
+ * 0x18 in message prefix is coin info, 0x20 is the length of hash
+ * that follows.
+ * See `core/src/apps/bitcoin/sign_message.py`.
+ */
+#define VERIFYMESSAGE_PREFIX \
+  ("\x18"                    \
+   "Bitcoin Signed Message:\n\x20")
+#define PREFIX_LENGTH (sizeof(VERIFYMESSAGE_PREFIX) - 1)
+#define SIGNED_LENGTH (PREFIX_LENGTH + 32)
 
 void compute_firmware_fingerprint(const image_header *hdr, uint8_t hash[32]) {
   image_header copy = {0};
@@ -118,6 +139,21 @@ void compute_firmware_fingerprint(const image_header *hdr, uint8_t hash[32]) {
   copy.sigindex2 = 0;
   copy.sigindex3 = 0;
   sha256_Raw((const uint8_t *)&copy, sizeof(image_header), hash);
+}
+
+void compute_firmware_fingerprint_for_verifymessage(const image_header *hdr,
+                                                    uint8_t hash[32]) {
+  uint8_t prefixed_header[SIGNED_LENGTH] = VERIFYMESSAGE_PREFIX;
+  uint8_t header_hash[32];
+  uint8_t hash_before_double_hashing[32];
+  compute_firmware_fingerprint(hdr, header_hash);
+  memcpy(prefixed_header + PREFIX_LENGTH, header_hash, sizeof(header_hash));
+  sha256_Raw(prefixed_header, sizeof(prefixed_header),
+             hash_before_double_hashing);
+  // We need to do hash the previous result again because SignMessage
+  // computes it this way, see `core/src/apps/bitcoin/sign_message.py`
+  sha256_Raw(hash_before_double_hashing, sizeof(hash_before_double_hashing),
+             hash);
 }
 
 bool firmware_present_new(void) {
@@ -135,9 +171,18 @@ bool firmware_present_new(void) {
   return true;
 }
 
-int signatures_new_ok(const image_header *hdr, uint8_t store_fingerprint[32]) {
+int signatures_ok(const image_header *hdr, uint8_t store_fingerprint[32],
+                  bool use_verifymessage) {
   uint8_t hash[32] = {0};
-  compute_firmware_fingerprint(hdr, hash);
+  // which set of public keys depend on scheme
+  const uint8_t *const *pubkey_ptr = NULL;
+  if (use_verifymessage) {
+    pubkey_ptr = pubkey_v3;
+    compute_firmware_fingerprint_for_verifymessage(hdr, hash);
+  } else {
+    pubkey_ptr = pubkey_v2;
+    compute_firmware_fingerprint(hdr, hash);
+  }
 
   if (store_fingerprint) {
     memcpy(store_fingerprint, hash, 32);
@@ -154,19 +199,34 @@ int signatures_new_ok(const image_header *hdr, uint8_t store_fingerprint[32]) {
   if (hdr->sigindex1 == hdr->sigindex3) return SIG_FAIL;  // duplicate use
   if (hdr->sigindex2 == hdr->sigindex3) return SIG_FAIL;  // duplicate use
 
-  if (0 != ecdsa_verify_digest(&secp256k1, pubkey[hdr->sigindex1 - 1],
+  if (0 != ecdsa_verify_digest(&secp256k1, pubkey_ptr[hdr->sigindex1 - 1],
                                hdr->sig1, hash)) {  // failure
     return SIG_FAIL;
   }
-  if (0 != ecdsa_verify_digest(&secp256k1, pubkey[hdr->sigindex2 - 1],
+  if (0 != ecdsa_verify_digest(&secp256k1, pubkey_ptr[hdr->sigindex2 - 1],
                                hdr->sig2, hash)) {  // failure
     return SIG_FAIL;
   }
-  if (0 != ecdsa_verify_digest(&secp256k1, pubkey[hdr->sigindex3 - 1],
+  if (0 != ecdsa_verify_digest(&secp256k1, pubkey_ptr[hdr->sigindex3 - 1],
                                hdr->sig3, hash)) {  // failure
     return SIG_FAIL;
   }
 
+  return SIG_OK;
+}
+
+int signatures_match(const image_header *hdr, uint8_t store_fingerprint[32]) {
+  int result = 0;
+  // Return success if v3 ("verify message") or the v2 ("new") style matches.
+  // Use XOR to always force computing both signatures to avoid potential
+  // timing side channels.
+  // Return only the hash for the v2 computation so that it is
+  // the same shown in previous bootloader.
+  result ^= signatures_ok(hdr, store_fingerprint, false);
+  result ^= signatures_ok(hdr, NULL, true);
+  if (result != SIG_OK) {
+    return SIG_FAIL;
+  }
   return SIG_OK;
 }
 
