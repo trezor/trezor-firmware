@@ -184,3 +184,12 @@ void collect_hw_entropy(void) {
                         FLASH_OTP_BLOCK_SIZE),
          NULL);
 }
+
+// this function resets settings changed in one layer (bootloader/firmware),
+// which might be incompatible with the other layers older versions,
+// where this setting might be unknown
+void ensure_compatible_settings(void) {
+#ifdef TREZOR_MODEL_T
+  display_set_big_endian();
+#endif
+}

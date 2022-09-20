@@ -243,15 +243,6 @@ static void check_bootloader_version(void) {
 
 #endif
 
-// this function resets settings changed in bootloader, which might be
-// incompatible with older firmware versions, where this setting might be
-// unknown
-void set_fw_compatible_settings(void) {
-#ifdef TREZOR_MODEL_T
-  display_set_big_endian();
-#endif
-}
-
 int main(void) {
   // grab "stay in bootloader" flag as soon as possible
   register uint32_t r11 __asm__("r11");
@@ -428,7 +419,7 @@ int main(void) {
     ui_fadeout();
   }
 
-  set_fw_compatible_settings();
+  ensure_compatible_settings();
 
   // mpu_config_firmware();
   // jump_to_unprivileged(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE);

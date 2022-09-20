@@ -68,15 +68,6 @@
 // from util.s
 extern void shutdown_privileged(void);
 
-// this function resets settings changed in firmware, which might be
-// incompatible with older bootloader versions, where this setting might be
-// unknown
-void set_fw_compatible_settings(void) {
-#ifdef TREZOR_MODEL_T
-  display_set_big_endian();
-#endif
-}
-
 int main(void) {
   random_delays_init();
 
@@ -242,7 +233,7 @@ void SVC_C_Handler(uint32_t *stack) {
         ;
       break;
     case SVC_REBOOT_TO_BOOTLOADER:
-      set_fw_compatible_settings();
+      ensure_compatible_settings();
       mpu_config_bootloader();
       __asm__ volatile("msr control, %0" ::"r"(0x0));
       __asm__ volatile("isb");
