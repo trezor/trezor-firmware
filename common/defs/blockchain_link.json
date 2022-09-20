@@ -36,6 +36,12 @@
       "https://btg5.trezor.io"
     ]
   },
+  "bitcoin:BLK": {
+    "type": "blockbook",
+    "url": [
+      ""
+    ]
+  },
   "bitcoin:CPU": {
     "type": "blockbook",
     "url": [
