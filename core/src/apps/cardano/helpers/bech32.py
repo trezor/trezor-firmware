@@ -23,15 +23,11 @@ def encode(hrp: str, data: bytes) -> str:
 
 
 def decode_unsafe(bech: str) -> bytes:
-    hrp = get_hrp(bech)
-    return decode(hrp, bech)
+    hrp = bech.rsplit(HRP_SEPARATOR, 1)[0]
+    return _decode(hrp, bech)
 
 
-def get_hrp(bech: str) -> str:
-    return bech.rsplit(HRP_SEPARATOR, 1)[0]
-
-
-def decode(hrp: str, bech: str) -> bytes:
+def _decode(hrp: str, bech: str) -> bytes:
     decoded_hrp, data, spec = bech32.bech32_decode(bech, 130)
     if decoded_hrp != hrp:
         raise ValueError

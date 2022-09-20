@@ -2,10 +2,7 @@ from typing import TYPE_CHECKING
 
 from trezor.enums import CardanoAddressType
 
-from ...common.paths import address_n_to_str
-from . import bech32
-from .paths import CHAIN_STAKING_KEY, SCHEMA_PAYMENT, SCHEMA_STAKING
-from .utils import to_account_path
+from .paths import SCHEMA_PAYMENT
 
 if TYPE_CHECKING:
     from trezor import messages
@@ -56,7 +53,9 @@ class Credential:
     def payment_credential(
         cls, address_params: messages.CardanoAddressParametersType
     ) -> "Credential":
-        address_type = address_params.address_type
+        address_type = address_params.address_type  # local_cache_attribute
+        CAT = CardanoAddressType  # local_cache_global
+
         credential = cls(
             type_name=CREDENTIAL_TYPE_PAYMENT,
             address_type=address_type,
@@ -67,26 +66,26 @@ class Credential:
         )
 
         if address_type in (
-            CardanoAddressType.BASE,
-            CardanoAddressType.BASE_KEY_SCRIPT,
-            CardanoAddressType.POINTER,
-            CardanoAddressType.ENTERPRISE,
-            CardanoAddressType.BYRON,
+            CAT.BASE,
+            CAT.BASE_KEY_SCRIPT,
+            CAT.POINTER,
+            CAT.ENTERPRISE,
+            CAT.BYRON,
         ):
             if not SCHEMA_PAYMENT.match(address_params.address_n):
                 credential.is_unusual_path = True
 
         elif address_type in (
-            CardanoAddressType.BASE_SCRIPT_KEY,
-            CardanoAddressType.BASE_SCRIPT_SCRIPT,
-            CardanoAddressType.POINTER_SCRIPT,
-            CardanoAddressType.ENTERPRISE_SCRIPT,
+            CAT.BASE_SCRIPT_KEY,
+            CAT.BASE_SCRIPT_SCRIPT,
+            CAT.POINTER_SCRIPT,
+            CAT.ENTERPRISE_SCRIPT,
         ):
             credential.is_other_warning = True
 
         elif address_type in (
-            CardanoAddressType.REWARD,
-            CardanoAddressType.REWARD_SCRIPT,
+            CAT.REWARD,
+            CAT.REWARD_SCRIPT,
         ):
             credential.is_reward = True
 
@@ -99,55 +98,58 @@ class Credential:
     def stake_credential(
         cls, address_params: messages.CardanoAddressParametersType
     ) -> "Credential":
-        address_type = address_params.address_type
+        from .paths import SCHEMA_STAKING
+
+        address_n_staking = address_params.address_n_staking  # local_cache_attribute
+        address_type = address_params.address_type  # local_cache_attribute
+        CAT = CardanoAddressType  # local_cache_global
+
         credential = cls(
             type_name=CREDENTIAL_TYPE_STAKE,
             address_type=address_type,
-            path=address_params.address_n_staking,
+            path=address_n_staking,
             key_hash=address_params.staking_key_hash,
             script_hash=address_params.script_staking_hash,
             pointer=address_params.certificate_pointer,
         )
 
-        if address_type == CardanoAddressType.BASE:
+        if address_type == CAT.BASE:
             if address_params.staking_key_hash:
                 credential.is_other_warning = True
             else:
-                if not SCHEMA_STAKING.match(address_params.address_n_staking):
+                if not SCHEMA_STAKING.match(address_n_staking):
                     credential.is_unusual_path = True
                 if not _do_base_address_credentials_match(
                     address_params.address_n,
-                    address_params.address_n_staking,
+                    address_n_staking,
                 ):
                     credential.is_mismatch = True
 
-        elif address_type == CardanoAddressType.BASE_SCRIPT_KEY:
-            if address_params.address_n_staking and not SCHEMA_STAKING.match(
-                address_params.address_n_staking
-            ):
+        elif address_type == CAT.BASE_SCRIPT_KEY:
+            if address_n_staking and not SCHEMA_STAKING.match(address_n_staking):
                 credential.is_unusual_path = True
 
         elif address_type in (
-            CardanoAddressType.POINTER,
-            CardanoAddressType.POINTER_SCRIPT,
+            CAT.POINTER,
+            CAT.POINTER_SCRIPT,
         ):
             credential.is_other_warning = True
 
-        elif address_type == CardanoAddressType.REWARD:
-            if not SCHEMA_STAKING.match(address_params.address_n_staking):
+        elif address_type == CAT.REWARD:
+            if not SCHEMA_STAKING.match(address_n_staking):
                 credential.is_unusual_path = True
 
         elif address_type in (
-            CardanoAddressType.BASE_KEY_SCRIPT,
-            CardanoAddressType.BASE_SCRIPT_SCRIPT,
-            CardanoAddressType.REWARD_SCRIPT,
+            CAT.BASE_KEY_SCRIPT,
+            CAT.BASE_SCRIPT_SCRIPT,
+            CAT.REWARD_SCRIPT,
         ):
             credential.is_other_warning = True
 
         elif address_type in (
-            CardanoAddressType.ENTERPRISE,
-            CardanoAddressType.ENTERPRISE_SCRIPT,
-            CardanoAddressType.BYRON,
+            CAT.ENTERPRISE,
+            CAT.ENTERPRISE_SCRIPT,
+            CAT.BYRON,
         ):
             credential.is_no_staking = True
 
@@ -183,6 +185,11 @@ class Credential:
             return ""
 
     def format(self) -> list[PropertyType]:
+        from ...common.paths import address_n_to_str
+        from . import bech32
+
+        pointer = self.pointer  # local_cache_attribute
+
         if self.path:
             return [(None, address_n_to_str(self.path))]
         elif self.key_hash:
@@ -194,11 +201,11 @@ class Credential:
             return [(None, bech32.encode(hrp, self.key_hash))]
         elif self.script_hash:
             return [(None, bech32.encode(bech32.HRP_SCRIPT_HASH, self.script_hash))]
-        elif self.pointer:
+        elif pointer:
             return [
-                (f"Block: {self.pointer.block_index}", None),
-                (f"Transaction: {self.pointer.tx_index}", None),
-                (f"Certificate: {self.pointer.certificate_index}", None),
+                (f"Block: {pointer.block_index}", None),
+                (f"Transaction: {pointer.tx_index}", None),
+                (f"Certificate: {pointer.certificate_index}", None),
             ]
         else:
             return []
@@ -221,8 +228,8 @@ def _do_base_address_credentials_match(
     address_n: list[int],
     address_n_staking: list[int],
 ) -> bool:
-    return address_n_staking == _path_to_staking_path(address_n)
+    from .paths import CHAIN_STAKING_KEY
+    from .utils import to_account_path
 
-
-def _path_to_staking_path(path: list[int]) -> list[int]:
-    return to_account_path(path) + [CHAIN_STAKING_KEY, 0]
+    path_to_staking_path = to_account_path(address_n) + [CHAIN_STAKING_KEY, 0]
+    return address_n_staking == path_to_staking_path
