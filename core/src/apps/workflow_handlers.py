@@ -1,8 +1,5 @@
 from typing import TYPE_CHECKING
 
-from trezor import utils
-from trezor.enums import MessageType
-
 if TYPE_CHECKING:
     from trezor.wire import Handler, Msg
     from trezorio import WireInterface
@@ -16,7 +13,7 @@ def register(wire_type: int, handler: Handler[Msg]) -> None:
     workflow_handlers[wire_type] = handler
 
 
-def find_message_handler_module(msg_type: int) -> str:
+def _find_message_handler_module(msg_type: int) -> str:
     """Statically find the appropriate workflow handler.
 
     For now, new messages must be registered by hand in the if-elif manner below.
@@ -26,6 +23,9 @@ def find_message_handler_module(msg_type: int) -> str:
     - collecting everything as strings instead of importing directly means that we don't
       need to load any of the modules into memory until we actually need them
     """
+    from trezor.enums import MessageType
+    from trezor import utils
+
     # debug
     if __debug__ and msg_type == MessageType.LoadDevice:
         return "apps.debug.load_device"
@@ -190,7 +190,7 @@ def find_registered_handler(iface: WireInterface, msg_type: int) -> Handler | No
         return workflow_handlers[msg_type]
 
     try:
-        modname = find_message_handler_module(msg_type)
+        modname = _find_message_handler_module(msg_type)
         handler_name = modname[modname.rfind(".") + 1 :]
         module = __import__(modname, None, None, (handler_name,), 0)
         return getattr(module, handler_name)
