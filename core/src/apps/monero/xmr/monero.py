@@ -38,7 +38,7 @@ def get_subaddress_spend_public_key(
     if major == 0 and minor == 0:
         return spend_public
 
-    m = get_subaddress_secret_key(view_private, major=major, minor=minor)
+    m = get_subaddress_secret_key(view_private, major, minor)
     M = crypto.scalarmult_base_into(None, m)
     D = crypto.point_add_into(None, spend_public, M)
     return D
@@ -66,7 +66,7 @@ def generate_key_image(public_key: bytes, secret_key: crypto.Scalar) -> crypto.P
     return point2
 
 
-def is_out_to_account(
+def _is_out_to_account(
     subaddresses: Subaddresses,
     out_key: crypto.Point,
     derivation: crypto.Point,
@@ -157,7 +157,7 @@ def generate_tx_spend_and_key_image(
         scalar_step2 = scalar_step1
     else:
         subaddr_sk = get_subaddress_secret_key(
-            ack.view_key_private, major=received_index[0], minor=received_index[1]
+            ack.view_key_private, received_index[0], received_index[1]
         )
         scalar_step2 = crypto.sc_add_into(None, scalar_step1, subaddr_sk)
 
@@ -223,7 +223,7 @@ def generate_tx_spend_and_key_image_and_derivation(
         else None
     )
 
-    subaddr_recv_info = is_out_to_account(
+    subaddr_recv_info = _is_out_to_account(
         subaddresses,
         out_key,
         recv_derivation,
@@ -266,7 +266,7 @@ def compute_subaddresses(
             continue
 
         pub = get_subaddress_spend_public_key(
-            creds.view_key_private, creds.spend_key_public, major=account, minor=idx
+            creds.view_key_private, creds.spend_key_public, account, idx
         )
         pub = crypto_helpers.encodepoint(pub)
         subaddresses[pub] = (account, idx)
@@ -299,7 +299,7 @@ def generate_sub_address_keys(
     if major == 0 and minor == 0:  # special case, Monero-defined
         return spend_pub, crypto.scalarmult_base_into(None, view_sec)
 
-    m = get_subaddress_secret_key(view_sec, major=major, minor=minor)
+    m = get_subaddress_secret_key(view_sec, major, minor)
     M = crypto.scalarmult_base_into(None, m)
     D = crypto.point_add_into(None, spend_pub, M)
     C = crypto.scalarmult_into(None, D, view_sec)

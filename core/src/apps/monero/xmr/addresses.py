@@ -1,17 +1,8 @@
 from typing import TYPE_CHECKING
 
-from trezor.crypto import monero as tcry
-
 if TYPE_CHECKING:
     from trezor.messages import MoneroAccountPublicAddress
     from trezor.messages import MoneroTransactionDestinationEntry
-
-
-def addr_to_hash(addr: MoneroAccountPublicAddress) -> bytes:
-    """
-    Creates hashable address representation
-    """
-    return bytes(addr.spend_public_key + addr.view_public_key)
 
 
 def encode_addr(
@@ -20,6 +11,8 @@ def encode_addr(
     """
     Builds Monero address from public keys
     """
+    from trezor.crypto import monero as tcry
+
     buf = spend_pub + view_pub
     if payment_id:
         buf += bytes(payment_id)
@@ -38,15 +31,18 @@ def classify_subaddresses(
     single_dest_subaddress: MoneroAccountPublicAddress | None = None
     addr_set = set()
     for tx in tx_dests:
-        if change_addr and addr_eq(change_addr, tx.addr):
+        addr = tx.addr  # local_cache_attribute
+        if change_addr and addr_eq(change_addr, addr):
             continue
-        addr_hashed = addr_to_hash(tx.addr)
+        # addr_to_hash
+        # Creates hashable address representation
+        addr_hashed = bytes(addr.spend_public_key + addr.view_public_key)
         if addr_hashed in addr_set:
             continue
         addr_set.add(addr_hashed)
         if tx.is_subaddress:
             num_subaddresses += 1
-            single_dest_subaddress = tx.addr
+            single_dest_subaddress = addr
         else:
             num_stdaddresses += 1
     return num_stdaddresses, num_subaddresses, single_dest_subaddress

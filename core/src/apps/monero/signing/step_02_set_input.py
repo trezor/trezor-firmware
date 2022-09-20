@@ -13,38 +13,43 @@ key derived for exactly this purpose.
 """
 from typing import TYPE_CHECKING
 
-from apps.monero import layout
-from apps.monero.xmr import crypto, crypto_helpers, monero, serialize
-
-from .state import State
+from apps.monero.xmr import crypto_helpers
 
 if TYPE_CHECKING:
-    from trezor.messages import MoneroTransactionSourceEntry
-    from trezor.messages import MoneroTransactionSetInputAck
+    from .state import State
+    from trezor.messages import (
+        MoneroTransactionSourceEntry,
+        MoneroTransactionSetInputAck,
+    )
+    from apps.monero.xmr import crypto
 
 
 async def set_input(
     state: State, src_entr: MoneroTransactionSourceEntry
 ) -> MoneroTransactionSetInputAck:
     from trezor.messages import MoneroTransactionSetInputAck
-    from apps.monero.xmr import chacha_poly
     from apps.monero.xmr.serialize_messages.tx_prefix import TxinToKey
+    from apps.monero.xmr import chacha_poly, monero, serialize
     from apps.monero.signing import offloading_keys
+    from apps.monero import layout
 
     state.current_input_index += 1
+    current_input_index = state.current_input_index  # local_cache_attribute
+    amount = src_entr.amount  # local_cache_attribute
+    outputs = src_entr.outputs  # local_cache_attribute
 
-    await layout.transaction_step(state, state.STEP_INP, state.current_input_index)
+    await layout.transaction_step(state, state.STEP_INP, current_input_index)
 
     if state.last_step > state.STEP_INP:
         raise ValueError("Invalid state transition")
-    if state.current_input_index >= state.input_count:
+    if current_input_index >= state.input_count:
         raise ValueError("Too many inputs")
     # real_output denotes which output in outputs is the real one (ours)
-    if src_entr.real_output >= len(src_entr.outputs):
+    if src_entr.real_output >= len(outputs):
         raise ValueError(
-            f"real_output index {src_entr.real_output} bigger than output_keys.size() {len(src_entr.outputs)}"
+            f"real_output index {src_entr.real_output} bigger than output_keys.size() {len(outputs)}"
         )
-    state.summary_inputs_money += src_entr.amount
+    state.summary_inputs_money += amount
 
     # Secrets derivation
     # the UTXO's one-time address P
@@ -71,10 +76,8 @@ async def set_input(
 
     # Construct tx.vin
     # If multisig is used then ki in vini should be src_entr.multisig_kLRki.ki
-    vini = TxinToKey(amount=src_entr.amount, k_image=crypto_helpers.encodepoint(ki))
-    vini.key_offsets = _absolute_output_offsets_to_relative(
-        [x.idx for x in src_entr.outputs]
-    )
+    vini = TxinToKey(amount=amount, k_image=crypto_helpers.encodepoint(ki))
+    vini.key_offsets = _absolute_output_offsets_to_relative([x.idx for x in outputs])
 
     if src_entr.rct:
         vini.amount = 0
@@ -87,36 +90,36 @@ async def set_input(
 
     # HMAC(T_in,i || vin_i)
     hmac_vini = offloading_keys.gen_hmac_vini(
-        state.key_hmac, src_entr, vini_bin, state.current_input_index
+        state.key_hmac, src_entr, vini_bin, current_input_index
     )
     state.mem_trace(3, True)
 
     # PseudoOuts commitment, alphas stored to state
-    alpha, pseudo_out = _gen_commitment(state, src_entr.amount)
+    alpha, pseudo_out = _gen_commitment(state, amount)
     pseudo_out = crypto_helpers.encodepoint(pseudo_out)
 
     # The alpha is encrypted and passed back for storage
     pseudo_out_hmac = crypto_helpers.compute_hmac(
-        offloading_keys.hmac_key_txin_comm(state.key_hmac, state.current_input_index),
+        offloading_keys.hmac_key_txin_comm(state.key_hmac, current_input_index),
         pseudo_out,
     )
 
     alpha_enc = chacha_poly.encrypt_pack(
-        offloading_keys.enc_key_txin_alpha(state.key_enc, state.current_input_index),
+        offloading_keys.enc_key_txin_alpha(state.key_enc, current_input_index),
         crypto_helpers.encodeint(alpha),
     )
 
     spend_enc = chacha_poly.encrypt_pack(
-        offloading_keys.enc_key_spend(state.key_enc, state.current_input_index),
+        offloading_keys.enc_key_spend(state.key_enc, current_input_index),
         crypto_helpers.encodeint(xi),
     )
 
     state.last_step = state.STEP_INP
-    if state.current_input_index + 1 == state.input_count:
+    if current_input_index + 1 == state.input_count:
         # When we finish the inputs processing, we no longer need
         # the precomputed subaddresses so we clear them to save memory.
         state.subaddresses = None
-        state.input_last_amount = src_entr.amount
+        state.input_last_amount = amount
 
     return MoneroTransactionSetInputAck(
         vini=vini_bin,
@@ -139,6 +142,8 @@ def _gen_commitment(state: State, in_amount: int) -> tuple[crypto.Scalar, crypto
     and the last A mask is computed in this special way.
     Returns pseudo_out
     """
+    from apps.monero.xmr import crypto
+
     alpha = crypto.random_scalar()
     state.sumpouts_alphas = crypto.sc_add_into(None, state.sumpouts_alphas, alpha)
     return alpha, crypto.gen_commitment_into(None, alpha, in_amount)
@@ -163,17 +168,15 @@ def _absolute_output_offsets_to_relative(off: list[int]) -> list[int]:
 def _get_additional_public_key(
     src_entr: MoneroTransactionSourceEntry,
 ) -> crypto.Point | None:
+    additional_tx_keys = src_entr.real_out_additional_tx_keys  # local_cache_attribute
+
     additional_tx_pub_key = None
-    if len(src_entr.real_out_additional_tx_keys) == 1:  # compression
-        additional_tx_pub_key = crypto_helpers.decodepoint(
-            src_entr.real_out_additional_tx_keys[0]
-        )
-    elif src_entr.real_out_additional_tx_keys:
-        if src_entr.real_output_in_tx_index >= len(
-            src_entr.real_out_additional_tx_keys
-        ):
+    if len(additional_tx_keys) == 1:  # compression
+        additional_tx_pub_key = crypto_helpers.decodepoint(additional_tx_keys[0])
+    elif additional_tx_keys:
+        if src_entr.real_output_in_tx_index >= len(additional_tx_keys):
             raise ValueError("Wrong number of additional derivations")
         additional_tx_pub_key = crypto_helpers.decodepoint(
-            src_entr.real_out_additional_tx_keys[src_entr.real_output_in_tx_index]
+            additional_tx_keys[src_entr.real_output_in_tx_index]
         )
     return additional_tx_pub_key

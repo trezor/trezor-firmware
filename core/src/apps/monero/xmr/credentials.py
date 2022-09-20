@@ -1,8 +1,8 @@
-from trezor.enums import MoneroNetworkType
+from typing import TYPE_CHECKING
 
-from apps.monero.xmr import crypto, crypto_helpers
-from apps.monero.xmr.addresses import encode_addr
-from apps.monero.xmr.networks import net_version
+if TYPE_CHECKING:
+    from trezor.enums import MoneroNetworkType
+    from apps.monero.xmr import crypto
 
 
 class AccountCreds:
@@ -31,8 +31,16 @@ class AccountCreds:
         cls,
         priv_view_key: crypto.Scalar,
         priv_spend_key: crypto.Scalar,
-        network_type: MoneroNetworkType = MoneroNetworkType.MAINNET,
+        network_type: MoneroNetworkType | None = None,
     ) -> "AccountCreds":
+        from apps.monero.xmr import crypto, crypto_helpers
+        from apps.monero.xmr.addresses import encode_addr
+        from apps.monero.xmr.networks import net_version
+        from trezor.enums import MoneroNetworkType
+
+        if network_type is None:
+            network_type = MoneroNetworkType.MAINNET
+
         pub_view_key = crypto.scalarmult_base_into(None, priv_view_key)
         pub_spend_key = crypto.scalarmult_base_into(None, priv_spend_key)
         addr = encode_addr(
@@ -41,10 +49,10 @@ class AccountCreds:
             crypto_helpers.encodepoint(pub_view_key),
         )
         return cls(
-            view_key_private=priv_view_key,
-            spend_key_private=priv_spend_key,
-            view_key_public=pub_view_key,
-            spend_key_public=pub_spend_key,
-            address=addr,
-            network_type=network_type,
+            priv_view_key,
+            priv_spend_key,
+            pub_view_key,
+            pub_spend_key,
+            addr,
+            network_type,
         )

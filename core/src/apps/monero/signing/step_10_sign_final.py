@@ -8,23 +8,31 @@ so we can recover it just from the transaction and the spend key.
 The private tx keys are used in other numerous Monero features.
 """
 
-from trezor.crypto import random
-from trezor.messages import MoneroTransactionFinalAck
+from typing import TYPE_CHECKING
 
-from apps.monero import misc
-from apps.monero.xmr import chacha_poly, crypto, crypto_helpers
-
-from .state import State
+if TYPE_CHECKING:
+    from trezor.messages import MoneroTransactionFinalAck
+    from .state import State
 
 
 def final_msg(state: State) -> MoneroTransactionFinalAck:
+    from trezor.messages import MoneroTransactionFinalAck
+    from apps.monero.xmr import chacha_poly
+    from trezor.crypto import random
+    from apps.monero import misc
+    from apps.monero.xmr import crypto, crypto_helpers
+
     if state.last_step != state.STEP_SIGN:
         raise ValueError("Invalid state transition")
     if state.current_input_index != state.input_count - 1:
         raise ValueError("Invalid input count")
 
-    tx_key, salt, rand_mult = _compute_tx_key(
-        state.creds.spend_key_private, state.tx_prefix_hash
+    # _compute_tx_key
+    salt = random.bytes(32)
+    rand_mult_num = crypto.random_scalar()
+    rand_mult = crypto_helpers.encodeint(rand_mult_num)
+    tx_key = misc.compute_tx_key(
+        state.creds.spend_key_private, state.tx_prefix_hash, salt, rand_mult_num
     )
 
     key_buff = crypto_helpers.encodeint(state.tx_priv) + b"".join(
@@ -40,15 +48,3 @@ def final_msg(state: State) -> MoneroTransactionFinalAck:
         tx_enc_keys=tx_enc_keys,
         opening_key=state.opening_key,
     )
-
-
-def _compute_tx_key(
-    spend_key_private: crypto.Scalar, tx_prefix_hash: bytes
-) -> tuple[bytes, bytes, bytes]:
-    salt = random.bytes(32)
-
-    rand_mult_num = crypto.random_scalar()
-    rand_mult = crypto_helpers.encodeint(rand_mult_num)
-
-    tx_key = misc.compute_tx_key(spend_key_private, tx_prefix_hash, salt, rand_mult_num)
-    return tx_key, salt, rand_mult

@@ -2,16 +2,12 @@
 Output destinations are streamed one by one.
 Computes destination one-time address, amount key, range proof + HMAC, out_pk, ecdh_info.
 """
-import gc
 from typing import TYPE_CHECKING
 
 from trezor import utils
 
-from apps.monero import layout, signing
 from apps.monero.signing import offloading_keys
-from apps.monero.xmr import crypto, crypto_helpers, serialize
-
-from .state import State
+from apps.monero.xmr import crypto, crypto_helpers
 
 if TYPE_CHECKING:
     from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhTuple
@@ -21,6 +17,7 @@ if TYPE_CHECKING:
         MoneroTransactionSetOutputAck,
         MoneroTransactionRsigData,
     )
+    from .state import State
 
 
 async def set_output(
@@ -30,7 +27,11 @@ async def set_output(
     rsig_data: MoneroTransactionRsigData,
     is_offloaded_bp=False,
 ) -> MoneroTransactionSetOutputAck:
-    state.mem_trace(0, True)
+    from apps.monero import layout
+
+    mem_trace = state.mem_trace  # local_cache_attribute
+
+    mem_trace(0, True)
     mods = utils.unimport_begin()
 
     # Progress update only for master message (skip for offloaded BP msg)
@@ -39,32 +40,32 @@ async def set_output(
             state, state.STEP_OUT, state.current_output_index + 1
         )
 
-    state.mem_trace(1, True)
+    mem_trace(1, True)
 
     dst_entr = _validate(state, dst_entr, dst_entr_hmac, is_offloaded_bp)
-    state.mem_trace(2, True)
+    mem_trace(2, True)
 
     if not state.is_processing_offloaded:
         # First output - we include the size of the container into the tx prefix hasher
         if state.current_output_index == 0:
             state.tx_prefix_hasher.uvarint(state.output_count)
 
-        state.mem_trace(4, True)
+        mem_trace(4, True)
         state.output_amounts.append(dst_entr.amount)
         state.summary_outs_money += dst_entr.amount
 
     utils.unimport_end(mods)
-    state.mem_trace(5, True)
+    mem_trace(5, True)
 
     # Compute tx keys and masks if applicable
     tx_out_key, amount_key, derivation = _compute_tx_keys(state, dst_entr)
     utils.unimport_end(mods)
-    state.mem_trace(6, True)
+    mem_trace(6, True)
 
     # Range proof first, memory intensive (fragmentation)
     rsig_data_new, mask = _range_proof(state, rsig_data)
     utils.unimport_end(mods)
-    state.mem_trace(7, True)
+    mem_trace(7, True)
 
     # If det masks & offloading, return as we are handling offloaded BP.
     if state.is_processing_offloaded:
@@ -80,29 +81,29 @@ async def set_output(
         derivation,
     )
     del (derivation,)
-    state.mem_trace(11, True)
+    mem_trace(11, True)
 
     out_pk_dest, out_pk_commitment, ecdh_info_bin = _get_ecdh_info_and_out_pk(
-        state=state,
-        tx_out_key=tx_out_key,
-        amount=dst_entr.amount,
-        mask=mask,
-        amount_key=amount_key,
+        state,
+        tx_out_key,
+        dst_entr.amount,
+        mask,
+        amount_key,
     )
     del (dst_entr, mask, amount_key, tx_out_key)
-    state.mem_trace(12, True)
+    mem_trace(12, True)
 
     # Incremental hashing of the ECDH info.
     # RctSigBase allows to hash only one of the (ecdh, out_pk) as they are serialized
     # as whole vectors. We choose to hash ECDH first, because it saves state space.
     state.full_message_hasher.set_ecdh(ecdh_info_bin)
-    state.mem_trace(13, True)
+    mem_trace(13, True)
 
     # output_pk_commitment is stored to the state as it is used during the signature and hashed to the
     # RctSigBase later. No need to store amount, it was already stored.
     state.output_pk_commitments.append(out_pk_commitment)
     state.last_step = state.STEP_OUT
-    state.mem_trace(14, True)
+    mem_trace(14, True)
 
     from trezor.messages import MoneroTransactionSetOutputAck
 
@@ -125,6 +126,8 @@ def _validate(
     dst_entr_hmac: bytes,
     is_offloaded_bp: bool,
 ) -> MoneroTransactionDestinationEntry:
+    ensure = utils.ensure  # local_cache_attribute
+
     if state.last_step not in (state.STEP_ALL_IN, state.STEP_OUT):
         raise ValueError("Invalid state transition")
     if is_offloaded_bp and (not state.rsig_offload):
@@ -134,7 +137,7 @@ def _validate(
         bidx = _get_rsig_batch(state, state.current_output_index)
         last_in_batch = _is_last_in_batch(state, state.current_output_index, bidx)
 
-        utils.ensure(
+        ensure(
             not last_in_batch or state.is_processing_offloaded != is_offloaded_bp,
             "Offloaded BP out of order",
         )
@@ -143,15 +146,11 @@ def _validate(
     if not state.is_processing_offloaded:
         state.current_output_index += 1
 
-    utils.ensure(
-        not dst_entr or dst_entr.amount >= 0, "Destination with negative amount"
-    )
-    utils.ensure(
+    ensure(not dst_entr or dst_entr.amount >= 0, "Destination with negative amount")
+    ensure(
         state.current_input_index + 1 == state.input_count, "Invalid number of inputs"
     )
-    utils.ensure(
-        state.current_output_index < state.output_count, "Invalid output index"
-    )
+    ensure(state.current_output_index < state.output_count, "Invalid output index")
 
     if not state.is_processing_offloaded:
         # HMAC check of the destination
@@ -159,9 +158,7 @@ def _validate(
             state.key_hmac, dst_entr, state.current_output_index
         )
 
-        utils.ensure(
-            crypto.ct_equals(dst_entr_hmac, dst_entr_hmac_computed), "HMAC failed"
-        )
+        ensure(crypto.ct_equals(dst_entr_hmac, dst_entr_hmac_computed), "HMAC failed")
         del dst_entr_hmac_computed
 
     else:
@@ -247,29 +244,29 @@ def _range_proof(
     Since HF10 the commitments are deterministic.
     The range proof is incrementally hashed to the final_message.
     """
+    from apps.monero.signing import Error
+
+    rsig_offload = state.rsig_offload  # local_cache_attribute
+    is_processing_offloaded = state.is_processing_offloaded  # local_cache_attribute
+
     provided_rsig = None
     if rsig_data and rsig_data.rsig and len(rsig_data.rsig) > 0:
         provided_rsig = rsig_data.rsig
-    if not state.rsig_offload and provided_rsig:
-        raise signing.Error("Provided unexpected rsig")
+    if not rsig_offload and provided_rsig:
+        raise Error("Provided unexpected rsig")
 
     # Batching & validation
     bidx = _get_rsig_batch(state, state.current_output_index)
     last_in_batch = _is_last_in_batch(state, state.current_output_index, bidx)
-    if state.rsig_offload and provided_rsig and not last_in_batch:
-        raise signing.Error("Provided rsig too early")
+    if rsig_offload and provided_rsig and not last_in_batch:
+        raise Error("Provided rsig too early")
 
-    if (
-        state.rsig_offload
-        and last_in_batch
-        and not provided_rsig
-        and state.is_processing_offloaded
-    ):
-        raise signing.Error("Rsig expected, not provided")
+    if rsig_offload and last_in_batch and not provided_rsig and is_processing_offloaded:
+        raise Error("Rsig expected, not provided")
 
     # Batch not finished, skip range sig generation now
-    mask = state.output_masks[-1] if not state.is_processing_offloaded else None
-    offload_mask = mask and state.rsig_offload
+    mask = state.output_masks[-1] if not is_processing_offloaded else None
+    offload_mask = mask and rsig_offload
 
     # If not last, do not proceed to the BP processing.
     if not last_in_batch:
@@ -285,11 +282,11 @@ def _range_proof(
     rsig = None
 
     state.mem_trace("pre-rproof" if __debug__ else None, collect=True)
-    if not state.rsig_offload:
+    if not rsig_offload:
         # Bulletproof calculation in Trezor
         rsig = _rsig_bp(state)
 
-    elif not state.is_processing_offloaded:
+    elif not is_processing_offloaded:
         # Bulletproof offloaded to the host, deterministic masks. Nothing here, waiting for offloaded BP.
         pass
 
@@ -305,7 +302,7 @@ def _range_proof(
     )
 
     if state.current_output_index + 1 == state.output_count and (
-        not state.rsig_offload or state.is_processing_offloaded
+        not rsig_offload or is_processing_offloaded
     ):
         # output masks and amounts are not needed anymore
         state.output_amounts = None
@@ -344,6 +341,7 @@ def _rsig_bp(state: State) -> bytes:
 def _rsig_process_bp(state: State, rsig_data: MoneroTransactionRsigData):
     from apps.monero.xmr import range_signatures
     from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import BulletproofPlus
+    from apps.monero.xmr import serialize
 
     bp_obj = serialize.parse_msg(rsig_data.rsig, BulletproofPlus)
     rsig_data.rsig = None
@@ -375,12 +373,17 @@ def _dump_rsig_bp_plus(rsig: BulletproofPlus) -> bytes:
     buff_size = 32 * (6 + 2 * (len(rsig.L))) + 2
     buff = bytearray(buff_size)
 
-    utils.memcpy(buff, 0, rsig.A, 0, 32)
-    utils.memcpy(buff, 32, rsig.A1, 0, 32)
-    utils.memcpy(buff, 32 * 2, rsig.B, 0, 32)
-    utils.memcpy(buff, 32 * 3, rsig.r1, 0, 32)
-    utils.memcpy(buff, 32 * 4, rsig.s1, 0, 32)
-    utils.memcpy(buff, 32 * 5, rsig.d1, 0, 32)
+    for i, var in enumerate(
+        (
+            rsig.A,
+            rsig.A1,
+            rsig.B,
+            rsig.r1,
+            rsig.s1,
+            rsig.d1,
+        )
+    ):
+        utils.memcpy(buff, 32 * i, var, 0, 32)
 
     _dump_rsig_lr(buff, 32 * 6, rsig)
     return buff
@@ -434,6 +437,8 @@ def _get_ecdh_info_and_out_pk(
     Also encodes the two items - `mask` and `amount` - into ecdh info,
     so the recipient is able to reconstruct the commitment.
     """
+    import gc
+
     out_pk_dest = crypto_helpers.encodepoint(tx_out_key)
     out_pk_commitment = crypto.gen_commitment_into(None, mask, amount)
 
@@ -442,31 +447,14 @@ def _get_ecdh_info_and_out_pk(
     ecdh_info = _ecdh_encode(amount, crypto_helpers.encodeint(amount_key))
 
     # Manual ECDH info serialization
-    ecdh_info_bin = _serialize_ecdh(ecdh_info)
+    # Since HF10 the amount is serialized to 8B and mask is deterministic
+    # Serializes ECDH according to the current format defined by the hard fork version
+    # or the signature format respectively.
+    ecdh_info_bin = bytearray(8)
+    ecdh_info_bin[:] = ecdh_info.amount[0:8]
     gc.collect()
 
     return out_pk_dest, out_pk_commitment, ecdh_info_bin
-
-
-def _serialize_ecdh(ecdh_info: EcdhTuple) -> bytes:
-    """
-    Serializes ECDH according to the current format defined by the hard fork version
-    or the signature format respectively.
-    """
-    # Since HF10 the amount is serialized to 8B and mask is deterministic
-    ecdh_info_bin = bytearray(8)
-    ecdh_info_bin[:] = ecdh_info.amount[0:8]
-    return ecdh_info_bin
-
-
-def _ecdh_hash(shared_sec: bytes) -> bytes:
-    """
-    Generates ECDH hash for amount masking for Bulletproof2
-    """
-    data = bytearray(38)
-    data[0:6] = b"amount"
-    data[6:] = shared_sec
-    return crypto.fast_hash_into(None, data)
 
 
 def _ecdh_encode(amount: int, amount_key: bytes) -> EcdhTuple:
@@ -478,7 +466,15 @@ def _ecdh_encode(amount: int, amount_key: bytes) -> EcdhTuple:
     ecdh_info = EcdhTuple(mask=crypto_helpers.NULL_KEY_ENC, amount=bytearray(32))
     amnt = crypto.Scalar(amount)
     crypto.encodeint_into(ecdh_info.amount, amnt)
-    crypto_helpers.xor8(ecdh_info.amount, _ecdh_hash(amount_key))
+
+    # _ecdh_hash
+    # Generates ECDH hash for amount masking for Bulletproof2
+    data = bytearray(38)
+    data[0:6] = b"amount"
+    data[6:] = amount_key
+    ecdh_hash = crypto.fast_hash_into(None, data)
+
+    crypto_helpers.xor8(ecdh_info.amount, ecdh_hash)
     return ecdh_info
 
 
