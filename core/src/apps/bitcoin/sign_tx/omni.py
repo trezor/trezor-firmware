@@ -1,7 +1,4 @@
 from micropython import const
-from ustruct import unpack
-
-from trezor.strings import format_amount
 
 _OMNI_DECIMALS = const(8)
 
@@ -18,6 +15,9 @@ def is_valid(data: bytes) -> bool:
 
 
 def parse(data: bytes) -> str:
+    from ustruct import unpack
+    from trezor.strings import format_amount
+
     if not is_valid(data):
         raise ValueError  # tried to parse data that fails validation
     tx_version, tx_type = unpack(">HH", data[4:8])

@@ -1,30 +1,20 @@
 from typing import TYPE_CHECKING
 
-from trezor import utils, wire
-from trezor.crypto import base58
-from trezor.crypto.curve import secp256k1
-from trezor.enums import InputScriptType
-from trezor.messages import Success
-from trezor.ui.layouts import confirm_signverify, show_success
-
-from apps.common import address_type, coins
-from apps.common.signverify import decode_message, message_digest
-
-from . import common
-from .addresses import (
-    address_p2wpkh,
-    address_p2wpkh_in_p2sh,
-    address_pkh,
-    address_short,
-    address_to_cashaddr,
-)
-
 if TYPE_CHECKING:
     from apps.common.coininfo import CoinInfo
-    from trezor.messages import VerifyMessage
+    from trezor.messages import VerifyMessage, Success
+    from trezor.wire import Context
+    from trezor.enums import InputScriptType
 
 
-def address_to_script_type(address: str, coin: CoinInfo) -> InputScriptType:
+def _address_to_script_type(address: str, coin: CoinInfo) -> InputScriptType:
+    from trezor.crypto import base58
+    from trezor.wire import DataError
+    from trezor.enums import InputScriptType
+    from trezor import utils
+    from apps.common import address_type
+    from . import common
+
     # Determines the script type from a non-multisig address.
 
     if coin.bech32_prefix and address.startswith(coin.bech32_prefix):
@@ -34,7 +24,7 @@ def address_to_script_type(address: str, coin: CoinInfo) -> InputScriptType:
         elif witver == 1:
             return InputScriptType.SPENDTAPROOT
         else:
-            raise wire.DataError("Invalid address")
+            raise DataError("Invalid address")
 
     if (
         not utils.BITCOIN_ONLY
@@ -46,7 +36,7 @@ def address_to_script_type(address: str, coin: CoinInfo) -> InputScriptType:
     try:
         raw_address = base58.decode_check(address, coin.b58_hash)
     except ValueError:
-        raise wire.DataError("Invalid address")
+        raise DataError("Invalid address")
 
     if address_type.check(coin.address_type, raw_address):
         # p2pkh
@@ -55,10 +45,28 @@ def address_to_script_type(address: str, coin: CoinInfo) -> InputScriptType:
         # p2sh
         return InputScriptType.SPENDP2SHWITNESS
 
-    raise wire.DataError("Invalid address")
+    raise DataError("Invalid address")
 
 
-async def verify_message(ctx: wire.Context, msg: VerifyMessage) -> Success:
+async def verify_message(ctx: Context, msg: VerifyMessage) -> Success:
+    from trezor import utils
+    from trezor.wire import ProcessError
+    from trezor.crypto.curve import secp256k1
+    from trezor.enums import InputScriptType
+    from trezor.messages import Success
+    from trezor.ui.layouts import confirm_signverify, show_success
+
+    from apps.common import coins
+    from apps.common.signverify import decode_message, message_digest
+
+    from .addresses import (
+        address_p2wpkh,
+        address_p2wpkh_in_p2sh,
+        address_pkh,
+        address_short,
+        address_to_cashaddr,
+    )
+
     message = msg.message
     address = msg.address
     signature = msg.signature
@@ -67,7 +75,7 @@ async def verify_message(ctx: wire.Context, msg: VerifyMessage) -> Success:
 
     digest = message_digest(coin, message)
 
-    script_type = address_to_script_type(address, coin)
+    script_type = _address_to_script_type(address, coin)
     recid = signature[0]
     if 27 <= recid <= 34:
         # p2pkh or no script type provided
@@ -79,12 +87,12 @@ async def verify_message(ctx: wire.Context, msg: VerifyMessage) -> Success:
         # native segwit
         signature = bytes([signature[0] - 8]) + signature[1:]
     else:
-        raise wire.ProcessError("Invalid signature")
+        raise ProcessError("Invalid signature")
 
     pubkey = secp256k1.verify_recover(signature, digest)
 
     if not pubkey:
-        raise wire.ProcessError("Invalid signature")
+        raise ProcessError("Invalid signature")
 
     if script_type == InputScriptType.SPENDADDRESS:
         addr = address_pkh(pubkey, coin)
@@ -95,16 +103,16 @@ async def verify_message(ctx: wire.Context, msg: VerifyMessage) -> Success:
     elif script_type == InputScriptType.SPENDWITNESS:
         addr = address_p2wpkh(pubkey, coin)
     else:
-        raise wire.ProcessError("Invalid signature")
+        raise ProcessError("Invalid signature")
 
     if addr != address:
-        raise wire.ProcessError("Invalid signature")
+        raise ProcessError("Invalid signature")
 
     await confirm_signverify(
         ctx,
         coin.coin_shortcut,
         decode_message(message),
-        address=address_short(coin, address),
+        address_short(coin, address),
         verify=True,
     )
 

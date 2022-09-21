@@ -1,12 +1,8 @@
 from typing import TYPE_CHECKING
 
-from trezor import utils, wire
-from trezor.enums import RequestType
-from trezor.messages import TxRequest
+from trezor import utils
 
-from ..common import BITCOIN_NAMES
 from ..keychain import with_keychain
-from . import approvers, bitcoin, helpers, progress
 
 if not utils.BITCOIN_ONLY:
     from . import bitcoinlike, decred, zcash_v4
@@ -15,6 +11,7 @@ if not utils.BITCOIN_ONLY:
 if TYPE_CHECKING:
     from typing import Protocol
 
+    from trezor.wire import Context
     from trezor.messages import (
         SignTx,
         TxAckInput,
@@ -23,11 +20,13 @@ if TYPE_CHECKING:
         TxAckPrevInput,
         TxAckPrevOutput,
         TxAckPrevExtraData,
+        TxRequest,
     )
 
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
 
+    from . import approvers
     from ..authorization import CoinJoinAuthorization
 
     TxAckType = (
@@ -55,12 +54,18 @@ if TYPE_CHECKING:
 
 @with_keychain
 async def sign_tx(
-    ctx: wire.Context,
+    ctx: Context,
     msg: SignTx,
     keychain: Keychain,
     coin: CoinInfo,
     authorization: CoinJoinAuthorization | None = None,
 ) -> TxRequest:
+    from trezor.enums import RequestType
+    from trezor.messages import TxRequest
+
+    from ..common import BITCOIN_NAMES
+    from . import approvers, bitcoin, helpers, progress
+
     approver: approvers.Approver | None = None
     if authorization:
         approver = approvers.CoinJoinApprover(msg, coin, authorization)

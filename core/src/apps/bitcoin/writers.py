@@ -1,7 +1,6 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
-from trezor.crypto.hashlib import sha256
 from trezor.utils import ensure
 
 from apps.common.writers import (  # noqa: F401
@@ -72,22 +71,24 @@ def write_tx_output(w: Writer, o: TxOutput | PrevOutput, script_pubkey: bytes) -
 
 
 def write_op_push(w: Writer, n: int) -> None:
+    append = w.append  # local_cache_attribute
+
     ensure(0 <= n <= 0xFFFF_FFFF)
     if n < 0x4C:
-        w.append(n & 0xFF)
+        append(n & 0xFF)
     elif n < 0x100:
-        w.append(0x4C)
-        w.append(n & 0xFF)
+        append(0x4C)
+        append(n & 0xFF)
     elif n < 0x1_0000:
-        w.append(0x4D)
-        w.append(n & 0xFF)
-        w.append((n >> 8) & 0xFF)
+        append(0x4D)
+        append(n & 0xFF)
+        append((n >> 8) & 0xFF)
     else:
-        w.append(0x4E)
-        w.append(n & 0xFF)
-        w.append((n >> 8) & 0xFF)
-        w.append((n >> 16) & 0xFF)
-        w.append((n >> 24) & 0xFF)
+        append(0x4E)
+        append(n & 0xFF)
+        append((n >> 8) & 0xFF)
+        append((n >> 16) & 0xFF)
+        append((n >> 24) & 0xFF)
 
 
 def op_push_length(n: int) -> int:
@@ -103,6 +104,8 @@ def op_push_length(n: int) -> int:
 
 
 def get_tx_hash(w: HashWriter, double: bool = False, reverse: bool = False) -> bytes:
+    from trezor.crypto.hashlib import sha256
+
     d = w.get_digest()
     if double:
         d = sha256(d).digest()

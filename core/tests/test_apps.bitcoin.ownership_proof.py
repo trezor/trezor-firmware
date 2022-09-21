@@ -8,7 +8,7 @@ from apps.common import coins
 from apps.common.keychain import Keychain
 from apps.common.paths import HARDENED, AlwaysMatchingSchema
 from apps.bitcoin import ownership, scripts
-from apps.bitcoin.addresses import address_p2tr, address_p2wpkh, address_p2wpkh_in_p2sh, address_multisig_p2wsh, address_multisig_p2wsh_in_p2sh, address_multisig_p2sh
+from apps.bitcoin.addresses import _address_p2tr, address_p2wpkh, address_p2wpkh_in_p2sh, _address_multisig_p2wsh, _address_multisig_p2wsh_in_p2sh, _address_multisig_p2sh
 from apps.bitcoin.multisig import multisig_get_pubkeys
 
 
@@ -77,7 +77,7 @@ class TestOwnershipProof(unittest.TestCase):
         commitment_data = b""
 
         node = keychain.derive([86 | HARDENED, 0 | HARDENED, 0 | HARDENED, 1, 0])
-        address = address_p2tr(node.public_key(), coin)
+        address = _address_p2tr(node.public_key(), coin)
         script_pubkey = scripts.output_derive_script(address, coin)
         ownership_id = ownership.get_identifier(script_pubkey, keychain)
         self.assertEqual(ownership_id, unhexlify("dc18066224b9e30e306303436dc18ab881c7266c13790350a3fe415e438135ec"))
@@ -177,7 +177,7 @@ class TestOwnershipProof(unittest.TestCase):
         )
 
         pubkeys = multisig_get_pubkeys(multisig)
-        address = address_multisig_p2wsh(pubkeys, multisig.m, coin.bech32_prefix)
+        address = _address_multisig_p2wsh(pubkeys, multisig.m, coin.bech32_prefix)
         script_pubkey = scripts.output_derive_script(address, coin)
         ownership_ids = [ownership.get_identifier(script_pubkey, keychain) for keychain in keychains]
         self.assertEqual(ownership_ids[0], unhexlify("309c4ffec5c228cc836b51d572c0a730dbabd39df9f01862502ac9eabcdeb94a"))
@@ -238,7 +238,7 @@ class TestOwnershipProof(unittest.TestCase):
         )
 
         pubkeys = multisig_get_pubkeys(multisig)
-        address = address_multisig_p2wsh_in_p2sh(pubkeys, multisig.m, coin)
+        address = _address_multisig_p2wsh_in_p2sh(pubkeys, multisig.m, coin)
         script_pubkey = scripts.output_derive_script(address, coin)
         ownership_id = ownership.get_identifier(script_pubkey, keychain)
         ownership_ids = [b'\x00' * 32, b'\x01' * 32, b'\x02' * 32, ownership_id]
@@ -312,7 +312,7 @@ class TestOwnershipProof(unittest.TestCase):
         )
 
         pubkeys = multisig_get_pubkeys(multisig)
-        address = address_multisig_p2sh(pubkeys, multisig.m, coin)
+        address = _address_multisig_p2sh(pubkeys, multisig.m, coin)
         script_pubkey = scripts.output_derive_script(address, coin)
         ownership_id = ownership.get_identifier(script_pubkey, keychain)
         ownership_ids = [b'\x00' * 32, ownership_id]

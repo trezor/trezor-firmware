@@ -1,32 +1,19 @@
-import ustruct as struct
 from micropython import const
 from typing import TYPE_CHECKING
 
-from trezor import wire
 from trezor.crypto.hashlib import blake2b
-from trezor.utils import HashWriter, ensure
+from trezor.utils import HashWriter
+from trezor.wire import DataError
 
-from apps.common.coininfo import CoinInfo
-from apps.common.keychain import Keychain
-from apps.common.writers import write_compact_size
-
-from ..scripts import write_bip143_script_code_prefixed
-from ..writers import (
-    TX_HASH_SIZE,
-    get_tx_hash,
-    write_bytes_fixed,
-    write_bytes_reversed,
-    write_tx_output,
-    write_uint32,
-    write_uint64,
-)
-from . import approvers, helpers
+from ..writers import TX_HASH_SIZE, write_bytes_reversed, write_uint32, write_uint64
 from .bitcoinlike import Bitcoinlike
 
 if TYPE_CHECKING:
     from trezor.messages import PrevTx, SignTx, TxInput, TxOutput
+    from apps.common.coininfo import CoinInfo
+    from apps.common.keychain import Keychain
+    from . import approvers
     from typing import Sequence
-    from apps.common import coininfo
     from .sig_hasher import SigHasher
     from .tx_info import OriginalTxInfo, TxInfo
     from ..common import SigHashType
@@ -47,6 +34,8 @@ class Zip243SigHasher:
         write_uint32(self.h_sequence, txi.sequence)
 
     def add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
+        from ..writers import write_tx_output
+
         write_tx_output(self.h_outputs, txo, script_pubkey)
 
     def hash143(
@@ -55,9 +44,13 @@ class Zip243SigHasher:
         public_keys: Sequence[bytes | memoryview],
         threshold: int,
         tx: SignTx | PrevTx,
-        coin: coininfo.CoinInfo,
+        coin: CoinInfo,
         hash_type: int,
     ) -> bytes:
+        import ustruct as struct
+        from ..scripts import write_bip143_script_code_prefixed
+        from ..writers import get_tx_hash, write_bytes_fixed
+
         h_preimage = HashWriter(
             blake2b(
                 outlen=32,
@@ -129,23 +122,30 @@ class ZcashV4(Bitcoinlike):
         coin: CoinInfo,
         approver: approvers.Approver | None,
     ) -> None:
+        from trezor.utils import ensure
+
         ensure(coin.overwintered)
         super().__init__(tx, keychain, coin, approver)
 
         if tx.version != 4:
-            raise wire.DataError("Unsupported transaction version.")
+            raise DataError("Unsupported transaction version.")
 
     def create_sig_hasher(self, tx: SignTx | PrevTx) -> SigHasher:
         return Zip243SigHasher()
 
     async def step7_finish(self) -> None:
-        if self.serialize:
-            self.write_tx_footer(self.serialized_tx, self.tx_info.tx)
+        from apps.common.writers import write_compact_size
+        from . import helpers
 
-            write_uint64(self.serialized_tx, 0)  # valueBalance
-            write_compact_size(self.serialized_tx, 0)  # nShieldedSpend
-            write_compact_size(self.serialized_tx, 0)  # nShieldedOutput
-            write_compact_size(self.serialized_tx, 0)  # nJoinSplit
+        serialized_tx = self.serialized_tx  # local_cache_attribute
+
+        if self.serialize:
+            self.write_tx_footer(serialized_tx, self.tx_info.tx)
+
+            write_uint64(serialized_tx, 0)  # valueBalance
+            write_compact_size(serialized_tx, 0)  # nShieldedSpend
+            write_compact_size(serialized_tx, 0)  # nShieldedOutput
+            write_compact_size(serialized_tx, 0)  # nJoinSplit
 
         await helpers.request_tx_finish(self.tx_req)
 
@@ -179,7 +179,7 @@ class ZcashV4(Bitcoinlike):
             write_uint32(w, tx.version)
         else:
             if tx.version_group_id is None:
-                raise wire.DataError("Version group ID is missing")
+                raise DataError("Version group ID is missing")
             # nVersion | fOverwintered
             write_uint32(w, tx.version | _OVERWINTERED)
             write_uint32(w, tx.version_group_id)  # nVersionGroupId

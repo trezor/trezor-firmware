@@ -1,27 +1,32 @@
-from trezor.utils import BufferReader
+from typing import TYPE_CHECKING
 
-from apps.common.readers import read_compact_size
+if TYPE_CHECKING:
+    from trezor.utils import BufferReader
 
 
 def read_memoryview_prefixed(r: BufferReader) -> memoryview:
+    from apps.common.readers import read_compact_size
+
     n = read_compact_size(r)
     return r.read_memoryview(n)
 
 
 def read_op_push(r: BufferReader) -> int:
-    prefix = r.get()
+    get = r.get  # local_cache_attribute
+
+    prefix = get()
     if prefix < 0x4C:
         n = prefix
     elif prefix == 0x4C:
-        n = r.get()
+        n = get()
     elif prefix == 0x4D:
-        n = r.get()
-        n += r.get() << 8
+        n = get()
+        n += get() << 8
     elif prefix == 0x4E:
-        n = r.get()
-        n += r.get() << 8
-        n += r.get() << 16
-        n += r.get() << 24
+        n = get()
+        n += get() << 8
+        n += get() << 16
+        n += get() << 24
     else:
         raise ValueError
     return n

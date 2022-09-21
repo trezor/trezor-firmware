@@ -26,7 +26,7 @@ from trezor.enums import OutputScriptType
 
 from apps.common import coins
 from apps.common.keychain import Keychain
-from apps.bitcoin.keychain import get_schemas_for_coin
+from apps.bitcoin.keychain import _get_schemas_for_coin
 from apps.bitcoin.sign_tx import bitcoin, helpers
 
 
@@ -212,7 +212,7 @@ class TestSignTx(unittest.TestCase):
             " ".join(["all"] * 12),
             "",
         )
-        ns = get_schemas_for_coin(coin_bitcoin)
+        ns = _get_schemas_for_coin(coin_bitcoin)
         keychain = Keychain(seed, coin_bitcoin.curve_name, ns)
         signer = bitcoin.Bitcoin(tx, keychain, coin_bitcoin, None).signer()
 

@@ -1,19 +1,10 @@
 from typing import TYPE_CHECKING
 
-from trezor import wire
-from trezor.crypto.curve import secp256k1
-from trezor.enums import InputScriptType
-from trezor.messages import MessageSignature
-from trezor.ui.layouts import confirm_signverify
-
-from apps.common.paths import validate_path
-from apps.common.signverify import decode_message, message_digest
-
-from .addresses import address_short, get_address
-from .keychain import validate_path_against_script_type, with_keychain
+from .keychain import with_keychain
 
 if TYPE_CHECKING:
-    from trezor.messages import SignMessage
+    from trezor.messages import SignMessage, MessageSignature
+    from trezor.wire import Context
 
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
@@ -21,8 +12,20 @@ if TYPE_CHECKING:
 
 @with_keychain
 async def sign_message(
-    ctx: wire.Context, msg: SignMessage, keychain: Keychain, coin: CoinInfo
+    ctx: Context, msg: SignMessage, keychain: Keychain, coin: CoinInfo
 ) -> MessageSignature:
+    from trezor import wire
+    from trezor.crypto.curve import secp256k1
+    from trezor.enums import InputScriptType
+    from trezor.messages import MessageSignature
+    from trezor.ui.layouts import confirm_signverify
+
+    from apps.common.paths import validate_path
+    from apps.common.signverify import decode_message, message_digest
+
+    from .addresses import address_short, get_address
+    from .keychain import validate_path_against_script_type
+
     message = msg.message
     address_n = msg.address_n
     script_type = msg.script_type or InputScriptType.SPENDADDRESS
