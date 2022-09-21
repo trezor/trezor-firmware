@@ -17,7 +17,7 @@ pub enum HoldToConfirmMsg<T> {
 pub struct HoldToConfirm<T> {
     loader: Loader,
     content: Child<T>,
-    buttons: FixedHeightBar<CancelHold>,
+    buttons: Child<FixedHeightBar<CancelHold>>,
     pad: Pad,
 }
 
@@ -29,7 +29,7 @@ where
         Self {
             loader: Loader::new(),
             content: Child::new(content),
-            buttons: CancelHold::new(),
+            buttons: Child::new(CancelHold::new()),
             pad: Pad::with_background(theme::BG),
         }
     }
@@ -113,8 +113,8 @@ where
 }
 
 pub struct CancelHold {
-    cancel: Option<Button<&'static str>>,
-    hold: Button<&'static str>,
+    cancel: Option<Child<Button<&'static str>>>,
+    hold: Child<Button<&'static str>>,
 }
 
 pub enum CancelHoldMsg {
@@ -125,15 +125,19 @@ pub enum CancelHoldMsg {
 impl CancelHold {
     pub fn new() -> FixedHeightBar<Self> {
         theme::button_bar(Self {
-            cancel: Some(Button::with_icon(theme::ICON_CANCEL)),
-            hold: Button::with_text("HOLD TO CONFIRM").styled(theme::button_confirm()),
+            cancel: Some(Button::with_icon(theme::ICON_CANCEL).into_child()),
+            hold: Button::with_text("HOLD TO CONFIRM")
+                .styled(theme::button_confirm())
+                .into_child(),
         })
     }
 
     pub fn without_cancel() -> FixedHeightBar<Self> {
         theme::button_bar(Self {
             cancel: None,
-            hold: Button::with_text("HOLD TO CONFIRM").styled(theme::button_confirm()),
+            hold: Button::with_text("HOLD TO CONFIRM")
+                .styled(theme::button_confirm())
+                .into_child(),
         })
     }
 }
