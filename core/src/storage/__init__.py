@@ -1,12 +1,10 @@
-from storage import cache, common, device
-from trezor import config
-
-
-def set_current_version() -> None:
-    device.set_version(common.STORAGE_VERSION_CURRENT)
+from storage import common, device
 
 
 def wipe() -> None:
+    from trezor import config
+    from storage import cache
+
     config.wipe()
     cache.clear_all()
 
@@ -40,4 +38,5 @@ def _migrate_from_version_01() -> None:
         device.set_u2f_counter(int.from_bytes(counter, "big"))
         # Delete the old, non-public U2F_COUNTER.
         common.delete(common.APP_DEVICE, device.U2F_COUNTER)
-    set_current_version()
+    # set_current_version
+    device.set_version(common.STORAGE_VERSION_CURRENT)

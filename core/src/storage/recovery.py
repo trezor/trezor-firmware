@@ -126,11 +126,15 @@ def end_progress() -> None:
     from . import recovery_shares
 
     _require_progress()
-    common.delete(_NAMESPACE, _IN_PROGRESS)
-    common.delete(_NAMESPACE, _DRY_RUN)
-    common.delete(_NAMESPACE, _SLIP39_IDENTIFIER)
-    common.delete(_NAMESPACE, _SLIP39_THRESHOLD)
-    common.delete(_NAMESPACE, _REMAINING)
-    common.delete(_NAMESPACE, _SLIP39_ITERATION_EXPONENT)
-    common.delete(_NAMESPACE, _SLIP39_GROUP_COUNT)
+    for key in (
+        _IN_PROGRESS,
+        _DRY_RUN,
+        _SLIP39_IDENTIFIER,
+        _SLIP39_THRESHOLD,
+        _REMAINING,
+        _SLIP39_ITERATION_EXPONENT,
+        _SLIP39_GROUP_COUNT,
+    ):
+        common.delete(_NAMESPACE, key)
+
     recovery_shares.delete()

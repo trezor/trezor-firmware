@@ -1,10 +1,8 @@
 from micropython import const
 from typing import TYPE_CHECKING
-from ubinascii import hexlify
 
-import storage.cache
+import storage.cache as storage_cache
 from storage import common
-from trezor import utils
 
 if TYPE_CHECKING:
     from trezor.enums import BackupType
@@ -18,7 +16,6 @@ _NAMESPACE = common.APP_DEVICE
 DEVICE_ID                  = const(0x00)  # bytes
 _VERSION                   = const(0x01)  # int
 _MNEMONIC_SECRET           = const(0x02)  # bytes
-_LANGUAGE                  = const(0x03)  # str
 _LABEL                     = const(0x04)  # str
 _USE_PASSPHRASE            = const(0x05)  # bool (0x01 or empty)
 _HOMESCREEN                = const(0x06)  # bytes
@@ -77,16 +74,15 @@ def is_initialized() -> bool:
     return common.get_bool(_NAMESPACE, INITIALIZED, public=True)
 
 
-def _new_device_id() -> str:
+def get_device_id() -> str:
+    from ubinascii import hexlify
     from trezorcrypto import random  # avoid pulling in trezor.crypto
 
-    return hexlify(random.bytes(12)).decode().upper()
-
-
-def get_device_id() -> str:
     dev_id = common.get(_NAMESPACE, DEVICE_ID, public=True)
     if not dev_id:
-        dev_id = _new_device_id().encode()
+        # _new_device_id
+        new_dev_id_str = hexlify(random.bytes(12)).decode().upper()
+        dev_id = new_dev_id_str.encode()
         common.set(_NAMESPACE, DEVICE_ID, dev_id, public=True)
     return dev_id.decode()
 
@@ -200,6 +196,8 @@ def get_passphrase_always_on_device() -> bool:
     - If DEVICE(1) => returns True, the check against b"\x01" in get_bool succeeds.
     - If HOST(2) => returns False, the check against b"\x01" in get_bool fails.
     """
+    from trezor import utils
+
     # Some models do not support passphrase input on device
     if utils.MODEL in ("1", "R"):
         return False
@@ -324,7 +322,7 @@ def set_safety_check_level(level: StorageSafetyCheckLevel) -> None:
     common.set_uint8(_NAMESPACE, _SAFETY_CHECK_LEVEL, level)
 
 
-@storage.cache.stored(storage.cache.STORAGE_DEVICE_EXPERIMENTAL_FEATURES)
+@storage_cache.stored(storage_cache.STORAGE_DEVICE_EXPERIMENTAL_FEATURES)
 def _get_experimental_features() -> bytes:
     if common.get_bool(_NAMESPACE, _EXPERIMENTAL_FEATURES):
         return b"\x01"
@@ -338,5 +336,5 @@ def get_experimental_features() -> bool:
 
 def set_experimental_features(enabled: bool) -> None:
     cached_bytes = b"\x01" if enabled else b""
-    storage.cache.set(storage.cache.STORAGE_DEVICE_EXPERIMENTAL_FEATURES, cached_bytes)
+    storage_cache.set(storage_cache.STORAGE_DEVICE_EXPERIMENTAL_FEATURES, cached_bytes)
     common.set_true_or_delete(_NAMESPACE, _EXPERIMENTAL_FEATURES, enabled)
