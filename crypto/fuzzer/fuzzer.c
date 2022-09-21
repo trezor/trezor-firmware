@@ -150,7 +150,7 @@ void check_msan(void *pointer, size_t length) {
 // warning: use only if no manual memory cleanup is needed
 #define RETURN_IF_NULL(var_pointer) \
   if (var_pointer == NULL) {        \
-    return -1;                       \
+    return -1;                      \
   }
 
 void zkp_initialize_context_or_crash(void) {
@@ -324,12 +324,10 @@ int fuzz_base58_encode_check(void) {
 
   int ret = 0;
   // run multiple hasher variants for the same input
-  base58_encode_check(in_buffer, raw_inlen, HASHER_SHA2D, out_buffer,
-                            outlen);
-  base58_encode_check(in_buffer, raw_inlen, HASHER_BLAKED, out_buffer,
-                            outlen);
-  base58_encode_check(in_buffer, raw_inlen, HASHER_GROESTLD_TRUNC,
-                            out_buffer, outlen);
+  base58_encode_check(in_buffer, raw_inlen, HASHER_SHA2D, out_buffer, outlen);
+  base58_encode_check(in_buffer, raw_inlen, HASHER_BLAKED, out_buffer, outlen);
+  base58_encode_check(in_buffer, raw_inlen, HASHER_GROESTLD_TRUNC, out_buffer,
+                      outlen);
   ret = base58_encode_check(in_buffer, raw_inlen, HASHER_SHA3K, out_buffer,
                             outlen);
 
