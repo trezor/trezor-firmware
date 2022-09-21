@@ -2,17 +2,16 @@ from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor import wire
-from trezor.crypto import bech32, bip32, der
-from trezor.crypto.curve import bip340, secp256k1
-from trezor.crypto.hashlib import sha256
+from trezor.crypto import bech32
+from trezor.crypto.curve import bip340
 from trezor.enums import InputScriptType, OutputScriptType
-from trezor.strings import format_amount
-from trezor.utils import HashWriter, ensure
 
 if TYPE_CHECKING:
     from enum import IntEnum
     from apps.common.coininfo import CoinInfo
     from trezor.messages import TxInput
+    from trezor.utils import HashWriter
+    from trezor.crypto import bip32
 else:
     IntEnum = object
 
@@ -21,7 +20,11 @@ BITCOIN_NAMES = ("Bitcoin", "Regtest", "Testnet")
 
 
 class SigHashType(IntEnum):
-    """Enumeration type listing the supported signature hash types."""
+    """Enumeration type listing the supported signature hash types.
+
+    Class constants defined below don't need to be used in the code.
+    They are a list of all allowed incoming sighash types.
+    """
 
     # Signature hash type with the same semantics as SIGHASH_ALL, but instead
     # of having to include the byte in the signature, it is implied.
@@ -37,8 +40,6 @@ class SigHashType(IntEnum):
 
     # Signature hash type with the same semantics as SIGHASH_ALL. Used in some
     # Bitcoin-like altcoins for replay protection.
-    # NOTE: this seems to be unused, but when deleted, it breaks some tests
-    # (test_send_bch_external_presigned and test_send_btg_external_presigned)
     SIGHASH_ALL_FORKID = 0x41
 
     @classmethod
@@ -100,6 +101,9 @@ NONSEGWIT_INPUT_SCRIPT_TYPES = (
 
 
 def ecdsa_sign(node: bip32.HDNode, digest: bytes) -> bytes:
+    from trezor.crypto import der
+    from trezor.crypto.curve import secp256k1
+
     sig = secp256k1.sign(node.private_key(), digest)
     sigder = der.encode_seq((sig[1:33], sig[33:65]))
     return sigder
@@ -112,6 +116,8 @@ def bip340_sign(node: bip32.HDNode, digest: bytes) -> bytes:
 
 
 def ecdsa_hash_pubkey(pubkey: bytes, coin: CoinInfo) -> bytes:
+    from trezor.utils import ensure
+
     if pubkey[0] == 0x04:
         ensure(len(pubkey) == 65)  # uncompressed format
     elif pubkey[0] == 0x00:
@@ -178,6 +184,9 @@ def input_is_external_unverified(txi: TxInput) -> bool:
 
 
 def tagged_hashwriter(tag: bytes) -> HashWriter:
+    from trezor.crypto.hashlib import sha256
+    from trezor.utils import HashWriter
+
     tag_digest = sha256(tag).digest()
     ctx = sha256(tag_digest)
     ctx.update(tag_digest)
@@ -187,6 +196,8 @@ def tagged_hashwriter(tag: bytes) -> HashWriter:
 def format_fee_rate(
     fee_rate: float, coin: CoinInfo, include_shortcut: bool = False
 ) -> str:
+    from trezor.strings import format_amount
+
     # Use format_amount to get correct thousands separator -- micropython's built-in
     # formatting doesn't add thousands sep to floating point numbers.
     # We multiply by 100 to get a fixed-point integer with two decimal places,

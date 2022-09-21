@@ -1,13 +1,8 @@
-import gc
 from micropython import const
 from typing import TYPE_CHECKING
 
-from trezor import wire
-from trezor.enums import InputScriptType
-from trezor.messages import AuthorizeCoinJoin, GetOwnershipProof, SignTx, UnlockPath
+from trezor.messages import AuthorizeCoinJoin
 
-from apps.common import coininfo
-from apps.common.keychain import get_keychain
 from apps.common.paths import PATTERN_BIP44, PathSchema
 
 from . import authorization
@@ -18,17 +13,22 @@ if TYPE_CHECKING:
     from typing_extensions import Protocol
 
     from trezor.protobuf import MessageType
+    from trezor.wire import Context
 
+    from trezor.enums import InputScriptType
     from trezor.messages import (
         GetAddress,
         GetOwnershipId,
         GetPublicKey,
         SignMessage,
         VerifyMessage,
+        GetOwnershipProof,
+        SignTx,
     )
 
     from apps.common.keychain import Keychain, MsgOut, Handler
     from apps.common.paths import Bip32Path
+    from apps.common import coininfo
 
     BitcoinMessage = (
         AuthorizeCoinJoin
@@ -99,7 +99,11 @@ def validate_path_against_script_type(
     script_type: InputScriptType | None = None,
     multisig: bool = False,
 ) -> bool:
+    from trezor.enums import InputScriptType
+
     patterns = []
+    append = patterns.append  # local_cache_attribute
+    slip44 = coin.slip44  # local_cache_attribute
 
     if msg is not None:
         assert address_n is None and script_type is None
@@ -111,58 +115,60 @@ def validate_path_against_script_type(
         assert address_n is not None and script_type is not None
 
     if script_type == InputScriptType.SPENDADDRESS and not multisig:
-        patterns.append(PATTERN_BIP44)
-        if coin.slip44 == _SLIP44_BITCOIN:
-            patterns.append(PATTERN_GREENADDRESS_A)
-            patterns.append(PATTERN_GREENADDRESS_B)
+        append(PATTERN_BIP44)
+        if slip44 == _SLIP44_BITCOIN:
+            append(PATTERN_GREENADDRESS_A)
+            append(PATTERN_GREENADDRESS_B)
 
     elif (
         script_type in (InputScriptType.SPENDADDRESS, InputScriptType.SPENDMULTISIG)
         and multisig
     ):
-        patterns.append(PATTERN_BIP48_RAW)
-        if coin.slip44 == _SLIP44_BITCOIN or (
-            coin.fork_id is not None and coin.slip44 != _SLIP44_TESTNET
+        append(PATTERN_BIP48_RAW)
+        if slip44 == _SLIP44_BITCOIN or (
+            coin.fork_id is not None and slip44 != _SLIP44_TESTNET
         ):
-            patterns.append(PATTERN_BIP45)
-        if coin.slip44 == _SLIP44_BITCOIN:
-            patterns.append(PATTERN_GREENADDRESS_A)
-            patterns.append(PATTERN_GREENADDRESS_B)
+            append(PATTERN_BIP45)
+        if slip44 == _SLIP44_BITCOIN:
+            append(PATTERN_GREENADDRESS_A)
+            append(PATTERN_GREENADDRESS_B)
         if coin.coin_name in BITCOIN_NAMES:
-            patterns.append(PATTERN_UNCHAINED_HARDENED)
-            patterns.append(PATTERN_UNCHAINED_UNHARDENED)
-            patterns.append(PATTERN_UNCHAINED_DEPRECATED)
+            append(PATTERN_UNCHAINED_HARDENED)
+            append(PATTERN_UNCHAINED_UNHARDENED)
+            append(PATTERN_UNCHAINED_DEPRECATED)
 
     elif coin.segwit and script_type == InputScriptType.SPENDP2SHWITNESS:
-        patterns.append(PATTERN_BIP49)
+        append(PATTERN_BIP49)
         if multisig:
-            patterns.append(PATTERN_BIP48_P2SHSEGWIT)
-        if coin.slip44 == _SLIP44_BITCOIN:
-            patterns.append(PATTERN_GREENADDRESS_A)
-            patterns.append(PATTERN_GREENADDRESS_B)
+            append(PATTERN_BIP48_P2SHSEGWIT)
+        if slip44 == _SLIP44_BITCOIN:
+            append(PATTERN_GREENADDRESS_A)
+            append(PATTERN_GREENADDRESS_B)
         if coin.coin_name in BITCOIN_NAMES:
-            patterns.append(PATTERN_CASA)
+            append(PATTERN_CASA)
 
     elif coin.segwit and script_type == InputScriptType.SPENDWITNESS:
-        patterns.append(PATTERN_BIP84)
+        append(PATTERN_BIP84)
         if multisig:
-            patterns.append(PATTERN_BIP48_SEGWIT)
-        if coin.slip44 == _SLIP44_BITCOIN:
-            patterns.append(PATTERN_GREENADDRESS_A)
-            patterns.append(PATTERN_GREENADDRESS_B)
+            append(PATTERN_BIP48_SEGWIT)
+        if slip44 == _SLIP44_BITCOIN:
+            append(PATTERN_GREENADDRESS_A)
+            append(PATTERN_GREENADDRESS_B)
 
     elif coin.taproot and script_type == InputScriptType.SPENDTAPROOT:
-        patterns.append(PATTERN_BIP86)
-        patterns.append(PATTERN_SLIP25_TAPROOT)
+        append(PATTERN_BIP86)
+        append(PATTERN_SLIP25_TAPROOT)
 
     return any(
         PathSchema.parse(pattern, coin.slip44).match(address_n) for pattern in patterns
     )
 
 
-def get_schemas_for_coin(
+def _get_schemas_for_coin(
     coin: coininfo.CoinInfo, unlock_schemas: Iterable[PathSchema] = ()
 ) -> Iterable[PathSchema]:
+    import gc
+
     # basic patterns
     patterns = [
         PATTERN_BIP44,
@@ -237,7 +243,10 @@ def get_schemas_from_patterns(
     return schemas
 
 
-def get_coin_by_name(coin_name: str | None) -> coininfo.CoinInfo:
+def _get_coin_by_name(coin_name: str | None) -> coininfo.CoinInfo:
+    from apps.common import coininfo
+    from trezor import wire
+
     if coin_name is None:
         coin_name = "Bitcoin"
 
@@ -247,12 +256,14 @@ def get_coin_by_name(coin_name: str | None) -> coininfo.CoinInfo:
         raise wire.DataError("Unsupported coin type")
 
 
-async def get_keychain_for_coin(
-    ctx: wire.Context,
+async def _get_keychain_for_coin(
+    ctx: Context,
     coin: coininfo.CoinInfo,
     unlock_schemas: Iterable[PathSchema] = (),
 ) -> Keychain:
-    schemas = get_schemas_for_coin(coin, unlock_schemas)
+    from apps.common.keychain import get_keychain
+
+    schemas = _get_schemas_for_coin(coin, unlock_schemas)
     slip21_namespaces = [[b"SLIP-0019"], [b"SLIP-0024"]]
     keychain = await get_keychain(ctx, coin.curve_name, schemas, slip21_namespaces)
     return keychain
@@ -265,6 +276,7 @@ def _get_unlock_schemas(
     Provides additional keychain schemas that are unlocked by the particular
     combination of `msg` and `auth_msg`.
     """
+    from trezor.messages import GetOwnershipProof, SignTx, UnlockPath
 
     if AuthorizeCoinJoin.is_type_of(msg):
         # When processing the AuthorizeCoinJoin message, validate_path() always
@@ -298,13 +310,13 @@ def _get_unlock_schemas(
 
 def with_keychain(func: HandlerWithCoinInfo[MsgOut]) -> Handler[MsgIn, MsgOut]:
     async def wrapper(
-        ctx: wire.Context,
+        ctx: Context,
         msg: MsgIn,
         auth_msg: MessageType | None = None,
     ) -> MsgOut:
-        coin = get_coin_by_name(msg.coin_name)
+        coin = _get_coin_by_name(msg.coin_name)
         unlock_schemas = _get_unlock_schemas(msg, auth_msg, coin)
-        keychain = await get_keychain_for_coin(ctx, coin, unlock_schemas)
+        keychain = await _get_keychain_for_coin(ctx, coin, unlock_schemas)
         if AuthorizeCoinJoin.is_type_of(auth_msg):
             auth_obj = authorization.from_cached_message(auth_msg)
             return await func(ctx, msg, keychain, coin, auth_obj)

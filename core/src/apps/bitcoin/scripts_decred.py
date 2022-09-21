@@ -1,27 +1,25 @@
 from typing import TYPE_CHECKING
 
-from trezor import utils, wire
+from trezor import utils
 from trezor.crypto import base58
 from trezor.crypto.base58 import blake256d_32
-from trezor.enums import InputScriptType
-
-from apps.common.writers import write_bytes_fixed, write_uint64_le
+from trezor.wire import DataError
 
 from . import scripts
-from .common import SigHashType
-from .multisig import multisig_get_pubkeys, multisig_pubkey_index
 from .scripts import (  # noqa: F401
     output_script_paytoopreturn,
     write_output_script_multisig,
     write_output_script_p2pkh,
 )
-from .writers import op_push_length, write_compact_size, write_op_push
+from .writers import write_compact_size
 
 if TYPE_CHECKING:
     from trezor.messages import MultisigRedeemScriptType
+    from trezor.enums import InputScriptType
 
     from apps.common.coininfo import CoinInfo
 
+    from .common import SigHashType
     from .writers import Writer
 
 
@@ -34,6 +32,10 @@ def write_input_script_prefixed(
     pubkey: bytes,
     signature: bytes,
 ) -> None:
+    from trezor import wire
+    from trezor.enums import InputScriptType
+    from .multisig import multisig_pubkey_index
+
     if script_type == InputScriptType.SPENDADDRESS:
         # p2pkh or p2sh
         scripts.write_input_script_p2pkh_or_p2sh_prefixed(
@@ -41,16 +43,16 @@ def write_input_script_prefixed(
         )
     elif script_type == InputScriptType.SPENDMULTISIG:
         # p2sh multisig
-        assert multisig is not None  # checked in sanitize_tx_input
+        assert multisig is not None  # checked in _sanitize_tx_input
         signature_index = multisig_pubkey_index(multisig, pubkey)
-        write_input_script_multisig_prefixed(
+        _write_input_script_multisig_prefixed(
             w, multisig, signature, signature_index, sighash_type, coin
         )
     else:
         raise wire.ProcessError("Invalid script type")
 
 
-def write_input_script_multisig_prefixed(
+def _write_input_script_multisig_prefixed(
     w: Writer,
     multisig: MultisigRedeemScriptType,
     signature: bytes,
@@ -58,9 +60,12 @@ def write_input_script_multisig_prefixed(
     sighash_type: SigHashType,
     coin: CoinInfo,
 ) -> None:
+    from .multisig import multisig_get_pubkeys
+    from .writers import op_push_length, write_op_push
+
     signatures = multisig.signatures  # other signatures
     if len(signatures[signature_index]) > 0:
-        raise wire.DataError("Invalid multisig parameters")
+        raise DataError("Invalid multisig parameters")
     signatures[signature_index] = signature  # our signature
 
     # length of the redeem script
@@ -89,7 +94,7 @@ def output_script_sstxsubmissionpkh(addr: str) -> bytearray:
     try:
         raw_address = base58.decode_check(addr, blake256d_32)
     except ValueError:
-        raise wire.DataError("Invalid address")
+        raise DataError("Invalid address")
 
     w = utils.empty_bytearray(26)
     w.append(0xBA)  # OP_SSTX
@@ -102,7 +107,7 @@ def output_script_sstxchange(addr: str) -> bytearray:
     try:
         raw_address = base58.decode_check(addr, blake256d_32)
     except ValueError:
-        raise wire.DataError("Invalid address")
+        raise DataError("Invalid address")
 
     w = utils.empty_bytearray(26)
     w.append(0xBD)  # OP_SSTXCHANGE
@@ -128,6 +133,8 @@ def write_output_script_ssgen_prefixed(w: Writer, pkh: bytes) -> None:
 
 # Stake commitment OPRETURN.
 def sstxcommitment_pkh(pkh: bytes, amount: int) -> bytes:
+    from apps.common.writers import write_bytes_fixed, write_uint64_le
+
     w = utils.empty_bytearray(30)
     write_bytes_fixed(w, pkh, 20)
     write_uint64_le(w, amount)

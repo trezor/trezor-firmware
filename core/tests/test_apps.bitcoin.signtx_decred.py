@@ -26,7 +26,7 @@ from trezor.enums import OutputScriptType
 
 from apps.common import coins
 from apps.common.keychain import Keychain
-from apps.bitcoin.keychain import get_schemas_for_coin
+from apps.bitcoin.keychain import _get_schemas_for_coin
 from apps.bitcoin.sign_tx import decred, helpers
 
 
@@ -194,7 +194,7 @@ class TestSignTxDecred(unittest.TestCase):
             " ".join(["all"] * 12),
             "",
         )
-        ns = get_schemas_for_coin(coin_decred)
+        ns = _get_schemas_for_coin(coin_decred)
         keychain = Keychain(seed, coin_decred.curve_name, ns)
         signer = decred.Decred(tx, keychain, coin_decred, None).signer()
 
@@ -376,7 +376,7 @@ class TestSignTxDecred(unittest.TestCase):
             " ".join(["all"] * 12),
             "",
         )
-        ns = get_schemas_for_coin(coin_decred)
+        ns = _get_schemas_for_coin(coin_decred)
         keychain = Keychain(seed, coin_decred.curve_name, ns)
         signer = decred.Decred(tx, keychain, coin_decred, None).signer()
 

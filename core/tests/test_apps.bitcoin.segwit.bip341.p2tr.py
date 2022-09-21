@@ -1,15 +1,12 @@
 from common import *
 
 from apps.bitcoin.common import SigHashType
-from apps.bitcoin.scripts import output_derive_script
-from apps.bitcoin.sign_tx.bitcoin import BitcoinSigHasher
+from apps.bitcoin.sign_tx.sig_hasher import BitcoinSigHasher
 from apps.bitcoin.writers import get_tx_hash
 from trezor.messages import SignTx
 from trezor.messages import TxInput
-from trezor.messages import TxOutput
 from trezor.messages import PrevOutput
 from trezor.enums import InputScriptType
-from trezor.enums import OutputScriptType
 
 
 VECTORS = [

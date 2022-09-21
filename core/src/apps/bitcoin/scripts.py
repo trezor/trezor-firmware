@@ -1,24 +1,18 @@
 from typing import TYPE_CHECKING
 
-from trezor import utils, wire
-from trezor.crypto import base58, cashaddr
-from trezor.crypto.hashlib import sha256
+from trezor import utils
 from trezor.enums import InputScriptType
+from trezor.utils import BufferReader, empty_bytearray
+from trezor.wire import DataError
 
-from apps.common import address_type
 from apps.common.readers import read_compact_size
 from apps.common.writers import write_compact_size
 
 from . import common
 from .common import SigHashType
-from .multisig import (
-    multisig_get_pubkey_count,
-    multisig_get_pubkeys,
-    multisig_pubkey_index,
-)
+from .multisig import multisig_get_pubkeys, multisig_pubkey_index
 from .readers import read_memoryview_prefixed, read_op_push
 from .writers import (
-    op_push_length,
     write_bytes_fixed,
     write_bytes_prefixed,
     write_bytes_unchecked,
@@ -44,10 +38,15 @@ def write_input_script_prefixed(
     pubkey: bytes,
     signature: bytes,
 ) -> None:
-    if script_type == InputScriptType.SPENDADDRESS:
+    from trezor.crypto.hashlib import sha256
+    from trezor import wire
+
+    IST = InputScriptType  # local_cache_global
+
+    if script_type == IST.SPENDADDRESS:
         # p2pkh or p2sh
         write_input_script_p2pkh_or_p2sh_prefixed(w, pubkey, signature, sighash_type)
-    elif script_type == InputScriptType.SPENDP2SHWITNESS:
+    elif script_type == IST.SPENDP2SHWITNESS:
         # p2wpkh or p2wsh using p2sh
 
         if multisig is not None:
@@ -63,15 +62,15 @@ def write_input_script_prefixed(
             write_input_script_p2wpkh_in_p2sh(
                 w, common.ecdsa_hash_pubkey(pubkey, coin), prefixed=True
             )
-    elif script_type in (InputScriptType.SPENDWITNESS, InputScriptType.SPENDTAPROOT):
+    elif script_type in (IST.SPENDWITNESS, IST.SPENDTAPROOT):
         # native p2wpkh or p2wsh or p2tr
-        script_sig = input_script_native_segwit()
+        script_sig = _input_script_native_segwit()
         write_bytes_prefixed(w, script_sig)
-    elif script_type == InputScriptType.SPENDMULTISIG:
+    elif script_type == IST.SPENDMULTISIG:
         # p2sh multisig
-        assert multisig is not None  # checked in sanitize_tx_input
+        assert multisig is not None  # checked in _sanitize_tx_input
         signature_index = multisig_pubkey_index(multisig, pubkey)
-        write_input_script_multisig_prefixed(
+        _write_input_script_multisig_prefixed(
             w, multisig, signature, signature_index, sighash_type, coin
         )
     else:
@@ -79,6 +78,9 @@ def write_input_script_prefixed(
 
 
 def output_derive_script(address: str, coin: CoinInfo) -> bytes:
+    from trezor.crypto import base58, cashaddr
+    from apps.common import address_type
+
     if coin.bech32_prefix and address.startswith(coin.bech32_prefix):
         # p2wpkh or p2wsh or p2tr
         witver, witprog = common.decode_bech32_address(coin.bech32_prefix, address)
@@ -96,13 +98,13 @@ def output_derive_script(address: str, coin: CoinInfo) -> bytes:
         elif version == cashaddr.ADDRESS_TYPE_P2SH:
             version = coin.address_type_p2sh
         else:
-            raise wire.DataError("Unknown cashaddr address type")
+            raise DataError("Unknown cashaddr address type")
         raw_address = bytes([version]) + data
     else:
         try:
             raw_address = base58.decode_check(address, coin.b58_hash)
         except ValueError:
-            raise wire.DataError("Invalid address")
+            raise DataError("Invalid address")
 
     if address_type.check(coin.address_type, raw_address):
         # p2pkh
@@ -115,7 +117,7 @@ def output_derive_script(address: str, coin: CoinInfo) -> bytes:
         script = output_script_p2sh(scripthash)
         return script
 
-    raise wire.DataError("Invalid address type")
+    raise DataError("Invalid address type")
 
 
 # see https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki#specification
@@ -144,7 +146,7 @@ def write_bip143_script_code_prefixed(
             w, common.ecdsa_hash_pubkey(public_keys[0], coin), prefixed=True
         )
     else:
-        raise wire.DataError("Unknown input script type for bip143 script code")
+        raise DataError("Unknown input script type for bip143 script code")
 
 
 # P2PKH, P2SH
@@ -164,7 +166,7 @@ def parse_input_script_p2pkh(
     script_sig: bytes,
 ) -> tuple[memoryview, memoryview, SigHashType]:
     try:
-        r = utils.BufferReader(script_sig)
+        r = BufferReader(script_sig)
         n = read_op_push(r)
         signature = r.read_memoryview(n - 1)
         sighash_type = SigHashType.from_int(r.get())
@@ -174,7 +176,7 @@ def parse_input_script_p2pkh(
         if len(pubkey) != n:
             raise ValueError
     except (ValueError, EOFError):
-        raise wire.DataError("Invalid scriptSig.")
+        raise DataError("Invalid scriptSig.")
 
     return pubkey, signature, sighash_type
 
@@ -182,18 +184,20 @@ def parse_input_script_p2pkh(
 def write_output_script_p2pkh(
     w: Writer, pubkeyhash: bytes, prefixed: bool = False
 ) -> None:
+    append = w.append  # local_cache_attribute
+
     if prefixed:
         write_compact_size(w, 25)
-    w.append(0x76)  # OP_DUP
-    w.append(0xA9)  # OP_HASH160
-    w.append(0x14)  # OP_DATA_20
+    append(0x76)  # OP_DUP
+    append(0xA9)  # OP_HASH160
+    append(0x14)  # OP_DATA_20
     write_bytes_fixed(w, pubkeyhash, 20)
-    w.append(0x88)  # OP_EQUALVERIFY
-    w.append(0xAC)  # OP_CHECKSIG
+    append(0x88)  # OP_EQUALVERIFY
+    append(0xAC)  # OP_CHECKSIG
 
 
 def output_script_p2pkh(pubkeyhash: bytes) -> bytearray:
-    s = utils.empty_bytearray(25)
+    s = empty_bytearray(25)
     write_output_script_p2pkh(s, pubkeyhash)
     return s
 
@@ -225,7 +229,7 @@ def output_script_p2sh(scripthash: bytes) -> bytearray:
 # https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki#script-validation-rules
 
 
-def input_script_native_segwit() -> bytearray:
+def _input_script_native_segwit() -> bytearray:
     # Completely replaced by the witness and therefore empty.
     return bytearray(0)
 
@@ -238,7 +242,7 @@ def output_script_native_segwit(witver: int, witprog: bytes) -> bytearray:
     length = len(witprog)
     utils.ensure((length == 20 and witver == 0) or length == 32)
 
-    w = utils.empty_bytearray(2 + length)
+    w = empty_bytearray(2 + length)
     w.append(witver + 0x50 if witver else 0)  # witness version byte (OP_witver)
     w.append(length)  # witness program length is 20 (P2WPKH) or 32 (P2WSH, P2TR) bytes
     write_bytes_fixed(w, witprog, length)
@@ -248,7 +252,7 @@ def output_script_native_segwit(witver: int, witprog: bytes) -> bytearray:
 def parse_output_script_p2tr(script_pubkey: bytes) -> memoryview:
     # 51 20 <32-byte-taproot-output-key>
     try:
-        r = utils.BufferReader(script_pubkey)
+        r = BufferReader(script_pubkey)
 
         if r.get() != common.OP_1:
             # P2TR should be SegWit version 1
@@ -262,7 +266,7 @@ def parse_output_script_p2tr(script_pubkey: bytes) -> memoryview:
         if r.remaining_count():
             raise ValueError
     except (ValueError, EOFError):
-        raise wire.DataError("Invalid scriptPubKey.")
+        raise DataError("Invalid scriptPubKey.")
 
     return pubkey
 
@@ -325,7 +329,7 @@ def write_witness_p2wpkh(
 
 def parse_witness_p2wpkh(witness: bytes) -> tuple[memoryview, memoryview, SigHashType]:
     try:
-        r = utils.BufferReader(witness)
+        r = BufferReader(witness)
 
         if r.get() != 2:
             # num of stack items, in P2WPKH it's always 2
@@ -339,7 +343,7 @@ def parse_witness_p2wpkh(witness: bytes) -> tuple[memoryview, memoryview, SigHas
         if r.remaining_count():
             raise ValueError
     except (ValueError, EOFError):
-        raise wire.DataError("Invalid witness.")
+        raise DataError("Invalid witness.")
 
     return pubkey, signature, sighash_type
 
@@ -351,6 +355,8 @@ def write_witness_multisig(
     signature_index: int,
     sighash_type: SigHashType,
 ) -> None:
+    from .multisig import multisig_get_pubkey_count
+
     # get other signatures, stretch with empty bytes to the number of the pubkeys
     signatures = multisig.signatures + [b""] * (
         multisig_get_pubkey_count(multisig) - len(multisig.signatures)
@@ -358,7 +364,7 @@ def write_witness_multisig(
 
     # fill in our signature
     if signatures[signature_index]:
-        raise wire.DataError("Invalid multisig parameters")
+        raise DataError("Invalid multisig parameters")
     signatures[signature_index] = signature
 
     # witness program + signatures + redeem script
@@ -383,7 +389,7 @@ def parse_witness_multisig(
     witness: bytes,
 ) -> tuple[memoryview, list[tuple[memoryview, SigHashType]]]:
     try:
-        r = utils.BufferReader(witness)
+        r = BufferReader(witness)
 
         # Get number of witness stack items.
         item_count = read_compact_size(r)
@@ -403,7 +409,7 @@ def parse_witness_multisig(
         if r.remaining_count():
             raise ValueError
     except (ValueError, EOFError):
-        raise wire.DataError("Invalid witness.")
+        raise DataError("Invalid witness.")
 
     return script, signatures
 
@@ -420,7 +426,7 @@ def write_witness_p2tr(w: Writer, signature: bytes, sighash_type: SigHashType) -
 
 def parse_witness_p2tr(witness: bytes) -> tuple[memoryview, SigHashType]:
     try:
-        r = utils.BufferReader(witness)
+        r = BufferReader(witness)
 
         if r.get() != 1:  # Number of stack items.
             # Only Taproot key path spending without annex is supported.
@@ -439,7 +445,7 @@ def parse_witness_p2tr(witness: bytes) -> tuple[memoryview, SigHashType]:
         if r.remaining_count():
             raise ValueError
     except (ValueError, EOFError):
-        raise wire.DataError("Invalid witness.")
+        raise DataError("Invalid witness.")
 
     return signature, sighash_type
 
@@ -450,7 +456,7 @@ def parse_witness_p2tr(witness: bytes) -> tuple[memoryview, SigHashType]:
 # Used either as P2SH, P2WSH, or P2WSH nested in P2SH.
 
 
-def write_input_script_multisig_prefixed(
+def _write_input_script_multisig_prefixed(
     w: Writer,
     multisig: MultisigRedeemScriptType,
     signature: bytes,
@@ -458,9 +464,11 @@ def write_input_script_multisig_prefixed(
     sighash_type: SigHashType,
     coin: CoinInfo,
 ) -> None:
+    from .writers import op_push_length
+
     signatures = multisig.signatures  # other signatures
     if len(signatures[signature_index]) > 0:
-        raise wire.DataError("Invalid multisig parameters")
+        raise DataError("Invalid multisig parameters")
     signatures[signature_index] = signature  # our signature
 
     # length of the redeem script
@@ -493,7 +501,7 @@ def parse_input_script_multisig(
     script_sig: bytes,
 ) -> tuple[memoryview, list[tuple[memoryview, SigHashType]]]:
     try:
-        r = utils.BufferReader(script_sig)
+        r = BufferReader(script_sig)
 
         # Skip over OP_FALSE, which is due to the old OP_CHECKMULTISIG bug.
         if r.get() != 0:
@@ -511,13 +519,13 @@ def parse_input_script_multisig(
         if len(script) != n:
             raise ValueError
     except (ValueError, EOFError):
-        raise wire.DataError("Invalid scriptSig.")
+        raise DataError("Invalid scriptSig.")
 
     return script, signatures
 
 
 def output_script_multisig(pubkeys: list[bytes], m: int) -> bytearray:
-    w = utils.empty_bytearray(output_script_multisig_length(pubkeys, m))
+    w = empty_bytearray(output_script_multisig_length(pubkeys, m))
     write_output_script_multisig(w, pubkeys, m)
     return w
 
@@ -530,10 +538,10 @@ def write_output_script_multisig(
 ) -> None:
     n = len(pubkeys)
     if n < 1 or n > 15 or m < 1 or m > 15 or m > n:
-        raise wire.DataError("Invalid multisig parameters")
+        raise DataError("Invalid multisig parameters")
     for pubkey in pubkeys:
         if len(pubkey) != 33:
-            raise wire.DataError("Invalid multisig parameters")
+            raise DataError("Invalid multisig parameters")
 
     if prefixed:
         write_compact_size(w, output_script_multisig_length(pubkeys, m))
@@ -551,7 +559,7 @@ def output_script_multisig_length(pubkeys: Sequence[bytes | memoryview], m: int)
 
 def parse_output_script_multisig(script: bytes) -> tuple[list[memoryview], int]:
     try:
-        r = utils.BufferReader(script)
+        r = BufferReader(script)
 
         threshold = r.get() - 0x50
         pubkey_count = script[-2] - 0x50
@@ -577,7 +585,7 @@ def parse_output_script_multisig(script: bytes) -> tuple[list[memoryview], int]:
             raise ValueError
 
     except (ValueError, IndexError, EOFError):
-        raise wire.DataError("Invalid multisig script")
+        raise DataError("Invalid multisig script")
 
     return public_keys, threshold
 
@@ -587,7 +595,7 @@ def parse_output_script_multisig(script: bytes) -> tuple[list[memoryview], int]:
 
 
 def output_script_paytoopreturn(data: bytes) -> bytearray:
-    w = utils.empty_bytearray(1 + 5 + len(data))
+    w = empty_bytearray(1 + 5 + len(data))
     w.append(0x6A)  # OP_RETURN
     write_op_push(w, len(data))
     w.extend(data)
@@ -627,7 +635,7 @@ def write_bip322_signature_proof(
         w.append(0x00)
 
 
-def read_bip322_signature_proof(r: utils.BufferReader) -> tuple[memoryview, memoryview]:
+def read_bip322_signature_proof(r: BufferReader) -> tuple[memoryview, memoryview]:
     script_sig = read_memoryview_prefixed(r)
     witness = r.read_memoryview()
     return script_sig, witness

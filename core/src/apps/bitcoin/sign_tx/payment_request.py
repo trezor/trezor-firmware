@@ -1,20 +1,14 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
-from storage import cache
-from trezor import wire
-from trezor.crypto.curve import secp256k1
-from trezor.crypto.hashlib import sha256
-from trezor.utils import HashWriter
-
-from apps.common import coininfo
-from apps.common.address_mac import check_address_mac
-from apps.common.keychain import Keychain
+from trezor.wire import DataError
 
 from .. import writers
 
 if TYPE_CHECKING:
     from trezor.messages import TxAckPaymentRequest, TxOutput
+    from apps.common import coininfo
+    from apps.common.keychain import Keychain
 
 _MEMO_TYPE_TEXT = const(1)
 _MEMO_TYPE_REFUND = const(2)
@@ -31,6 +25,12 @@ class PaymentRequestVerifier:
     def __init__(
         self, msg: TxAckPaymentRequest, coin: coininfo.CoinInfo, keychain: Keychain
     ) -> None:
+        from storage import cache
+        from trezor.crypto.hashlib import sha256
+        from trezor.utils import HashWriter
+        from apps.common.address_mac import check_address_mac
+        from .. import writers  # pylint: disable=import-outside-toplevel
+
         self.h_outputs = HashWriter(sha256())
         self.amount = 0
         self.expected_amount = msg.amount
@@ -40,12 +40,12 @@ class PaymentRequestVerifier:
         if msg.nonce:
             nonce = bytes(msg.nonce)
             if cache.get(cache.APP_COMMON_NONCE) != nonce:
-                raise wire.DataError("Invalid nonce in payment request.")
+                raise DataError("Invalid nonce in payment request.")
             cache.delete(cache.APP_COMMON_NONCE)
         else:
             nonce = b""
             if msg.memos:
-                wire.DataError("Missing nonce in payment request.")
+                DataError("Missing nonce in payment request.")
 
         writers.write_bytes_fixed(self.h_pr, b"SL\x00\x24", 4)
         writers.write_bytes_prefixed(self.h_pr, nonce)
@@ -73,8 +73,10 @@ class PaymentRequestVerifier:
         writers.write_uint32(self.h_pr, coin.slip44)
 
     def verify(self) -> None:
+        from trezor.crypto.curve import secp256k1
+
         if self.expected_amount is not None and self.amount != self.expected_amount:
-            raise wire.DataError("Invalid amount in payment request.")
+            raise DataError("Invalid amount in payment request.")
 
         hash_outputs = writers.get_tx_hash(self.h_outputs)
         writers.write_bytes_fixed(self.h_pr, hash_outputs, 32)
@@ -82,7 +84,7 @@ class PaymentRequestVerifier:
         if not secp256k1.verify(
             self.PUBLIC_KEY, self.signature, self.h_pr.get_digest()
         ):
-            raise wire.DataError("Invalid signature in payment request.")
+            raise DataError("Invalid signature in payment request.")
 
     def _add_output(self, txo: TxOutput) -> None:
         # For change outputs txo.address filled in by output_derive_script().
