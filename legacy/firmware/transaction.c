@@ -210,8 +210,7 @@ bool compute_address(const CoinInfo *coin, InputScriptType script_type,
     ecdsa_get_address_segwit_p2sh(
         node->public_key, coin->address_type_p2sh, coin->curve->hasher_pubkey,
         coin->curve->hasher_base58, address, MAX_ADDR_SIZE);
-  } else if (script_type == InputScriptType_SPENDADDRESS ||
-             script_type == InputScriptType_SPENDMULTISIG) {
+  } else if (script_type == InputScriptType_SPENDADDRESS) {
 #if !BITCOIN_ONLY
     if (coin->cashaddr_prefix) {
       ecdsa_get_address_raw(node->public_key, CASHADDR_P2KH | CASHADDR_160,

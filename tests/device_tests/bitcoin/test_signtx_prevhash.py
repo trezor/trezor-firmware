@@ -63,14 +63,11 @@ def hash_tx(data: bytes) -> bytes:
 
 
 def _check_error_message(value: bytes, model: str, message: str):
-    if model != "1":
-        assert message == "Provided prev_hash is invalid."
-
     # T1 has several possible errors
-    elif len(value) > 32:
+    if model == "1" and len(value) > 32:
         assert message.endswith("bytes overflow")
     else:
-        assert message.endswith("Encountered invalid prevhash")
+        assert message.endswith("Provided prev_hash is invalid.")
 
 
 with_bad_prevhashes = pytest.mark.parametrize(
