@@ -1,22 +1,24 @@
 from typing import TYPE_CHECKING
 
-from trezor import strings, wire
-from trezor.crypto.slip39 import MAX_SHARE_COUNT
 from trezor.enums import ButtonRequestType
+from trezor.wire import ActionCancelled
 
 import trezorui2
 
-from ..common import button_request, interact
+from ..common import interact
 from . import _RustLayout
 
 if TYPE_CHECKING:
     from typing import Iterable, Callable, Any
+    from trezor.wire import GenericContext
 
-    pass
+
+CONFIRMED = trezorui2.CONFIRMED  # global_import_cache
+INFO = trezorui2.INFO  # global_import_cache
 
 
 async def _is_confirmed_info(
-    ctx: wire.GenericContext,
+    ctx: GenericContext,
     dialog: _RustLayout,
     info_func: Callable,
 ) -> bool:
@@ -26,10 +28,10 @@ async def _is_confirmed_info(
         if result is trezorui2.INFO:
             await info_func(ctx)
         else:
-            return result is trezorui2.CONFIRMED
+            return result is CONFIRMED
 
 
-async def request_word_count(ctx: wire.GenericContext, dry_run: bool) -> int:
+async def request_word_count(ctx: GenericContext, dry_run: bool) -> int:
     selector = _RustLayout(trezorui2.select_word_count(dry_run=dry_run))
     count = await interact(
         ctx, selector, "word_count", ButtonRequestType.MnemonicWordCount
@@ -38,7 +40,7 @@ async def request_word_count(ctx: wire.GenericContext, dry_run: bool) -> int:
 
 
 async def request_word(
-    ctx: wire.GenericContext, word_index: int, word_count: int, is_slip39: bool
+    ctx: GenericContext, word_index: int, word_count: int, is_slip39: bool
 ) -> str:
     if is_slip39:
         keyboard: Any = _RustLayout(
@@ -58,11 +60,14 @@ async def request_word(
 
 
 async def show_remaining_shares(
-    ctx: wire.GenericContext,
+    ctx: GenericContext,
     groups: Iterable[tuple[int, tuple[str, ...]]],  # remaining + list 3 words
     shares_remaining: list[int],
     group_threshold: int,
 ) -> None:
+    from trezor import strings
+    from trezor.crypto.slip39 import MAX_SHARE_COUNT
+
     pages: list[tuple[str, str]] = []
     for remaining, group in groups:
         if 0 < remaining < MAX_SHARE_COUNT:
@@ -87,12 +92,12 @@ async def show_remaining_shares(
         "show_shares",
         ButtonRequestType.Other,
     )
-    if result is not trezorui2.CONFIRMED:
-        raise wire.ActionCancelled
+    if result is not CONFIRMED:
+        raise ActionCancelled
 
 
 async def show_group_share_success(
-    ctx: wire.GenericContext, share_index: int, group_index: int
+    ctx: GenericContext, share_index: int, group_index: int
 ) -> None:
     result = await interact(
         ctx,
@@ -109,18 +114,20 @@ async def show_group_share_success(
         "share_success",
         ButtonRequestType.Other,
     )
-    if result is not trezorui2.CONFIRMED:
-        raise wire.ActionCancelled
+    if result is not CONFIRMED:
+        raise ActionCancelled
 
 
 async def continue_recovery(
-    ctx: wire.GenericContext,
+    ctx: GenericContext,
     button_label: str,
     text: str,
     subtext: str | None,
     info_func: Callable | None,
     dry_run: bool,
 ) -> bool:
+    from ..common import button_request
+
     title = text
     if subtext:
         title += "\n"
@@ -156,4 +163,4 @@ async def continue_recovery(
             "recovery",
             ButtonRequestType.RecoveryHomepage,
         )
-        return result is trezorui2.CONFIRMED
+        return result is CONFIRMED

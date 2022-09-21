@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING
 
-from trezor import wire
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import (
     confirm_amount,
@@ -11,12 +10,13 @@ from trezor.ui.layouts import (
 
 if TYPE_CHECKING:
     from typing import Sequence
+    from trezor.wire import GenericContext
 
     pass
 
 
 async def confirm_total_ethereum(
-    ctx: wire.GenericContext, total_amount: str, gas_price: str, fee_max: str
+    ctx: GenericContext, total_amount: str, gas_price: str, fee_max: str
 ) -> None:
     await confirm_amount(
         ctx,
@@ -34,7 +34,7 @@ async def confirm_total_ethereum(
 
 
 async def confirm_total_ripple(
-    ctx: wire.GenericContext,
+    ctx: GenericContext,
     address: str,
     amount: str,
 ) -> None:
@@ -42,7 +42,7 @@ async def confirm_total_ripple(
 
 
 async def confirm_transfer_binance(
-    ctx: wire.GenericContext, inputs_outputs: Sequence[tuple[str, str, str]]
+    ctx: GenericContext, inputs_outputs: Sequence[tuple[str, str, str]]
 ) -> None:
     for title, amount, address in inputs_outputs:
         await confirm_blob(
@@ -55,7 +55,7 @@ async def confirm_transfer_binance(
 
 
 async def confirm_decred_sstx_submission(
-    ctx: wire.GenericContext,
+    ctx: GenericContext,
     address: str,
     amount: str,
 ) -> None:
