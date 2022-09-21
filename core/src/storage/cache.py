@@ -1,6 +1,5 @@
 import gc
 from micropython import const
-from trezorcrypto import random  # avoid pulling in trezor.crypto
 from typing import TYPE_CHECKING
 
 from trezor import utils
@@ -116,6 +115,8 @@ class SessionCache(DataCache):
         super().__init__()
 
     def export_session_id(self) -> bytes:
+        from trezorcrypto import random  # avoid pulling in trezor.crypto
+
         # generate a new session id if we don't have it yet
         if not self.session_id:
             self.session_id[:] = random.bytes(_SESSION_ID_LENGTH)
