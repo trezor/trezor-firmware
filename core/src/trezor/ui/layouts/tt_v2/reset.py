@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
-from trezor import wire
-from trezor.enums import BackupType, ButtonRequestType
+from trezor.enums import ButtonRequestType
+from trezor.wire import ActionCancelled
 
 import trezorui2
 
@@ -10,8 +10,11 @@ from . import _RustLayout
 
 if TYPE_CHECKING:
     from typing import Callable, Sequence, List
+    from trezor.enums import BackupType
+    from trezor.wire import GenericContext
 
-    pass
+
+CONFIRMED = trezorui2.CONFIRMED  # global_import_cache
 
 
 def _split_share_into_pages(share_words: Sequence[str], per_page: int = 4) -> List[str]:
@@ -34,7 +37,7 @@ def _split_share_into_pages(share_words: Sequence[str], per_page: int = 4) -> Li
 
 
 async def show_share_words(
-    ctx: wire.GenericContext,
+    ctx: GenericContext,
     share_words: Sequence[str],
     share_index: int | None = None,
     group_index: int | None = None,
@@ -58,8 +61,8 @@ async def show_share_words(
     #     "confirm_backup_words",
     #     ButtonRequestType.ResetDevice,
     # )
-    # if result != trezorui2.CONFIRMED:
-    #     raise wire.ActionCancelled
+    # if result != CONFIRMED:
+    #     raise ActionCancelled
 
     pages = _split_share_into_pages(share_words)
 
@@ -75,12 +78,12 @@ async def show_share_words(
         "backup_words",
         ButtonRequestType.ResetDevice,
     )
-    if result != trezorui2.CONFIRMED:
-        raise wire.ActionCancelled
+    if result != CONFIRMED:
+        raise ActionCancelled
 
 
 async def select_word(
-    ctx: wire.GenericContext,
+    ctx: GenericContext,
     words: Sequence[str],
     share_index: int | None,
     checked_index: int,
@@ -111,17 +114,25 @@ async def select_word(
 
 
 async def slip39_show_checklist(
-    ctx: wire.GenericContext, step: int, backup_type: BackupType
+    ctx: GenericContext, step: int, backup_type: BackupType
 ) -> None:
-    items = []
-    if backup_type is BackupType.Slip39_Basic:
-        items.append("Set number of shares")
-        items.append("Set threshold")
-        items.append("Write down and check all recovery shares")
-    elif backup_type is BackupType.Slip39_Advanced:
-        items.append("Set number of groups")
-        items.append("Set group threshold")
-        items.append("Set size and threshold for each group")
+    from trezor.enums import BackupType
+
+    assert backup_type in (BackupType.Slip39_Basic, BackupType.Slip39_Advanced)
+
+    items = (
+        (
+            "Set number of shares",
+            "Set threshold",
+            "Write down and check all recovery shares",
+        )
+        if backup_type == BackupType.Slip39_Basic
+        else (
+            "Set number of groups",
+            "Set number of shares",
+            "Set size and threshold for each group",
+        )
+    )
 
     result = await interact(
         ctx,
@@ -136,12 +147,12 @@ async def slip39_show_checklist(
         "slip39_checklist",
         ButtonRequestType.ResetDevice,
     )
-    if result != trezorui2.CONFIRMED:
-        raise wire.ActionCancelled
+    if result != CONFIRMED:
+        raise ActionCancelled
 
 
 async def _prompt_number(
-    ctx: wire.GenericContext,
+    ctx: GenericContext,
     title: str,
     description: Callable[[int], str],
     info: Callable[[int], str],
@@ -174,7 +185,7 @@ async def _prompt_number(
                 result = (result, count)
         status, value = result
 
-        if status == trezorui2.CONFIRMED:
+        if status == CONFIRMED:
             assert isinstance(value, int)
             return value
 
@@ -189,7 +200,7 @@ async def _prompt_number(
 
 
 async def slip39_prompt_threshold(
-    ctx: wire.GenericContext, num_of_shares: int, group_id: int | None = None
+    ctx: GenericContext, num_of_shares: int, group_id: int | None = None
 ) -> int:
     count = num_of_shares // 2 + 1
     # min value of share threshold is 2 unless the number of shares is 1
@@ -197,7 +208,7 @@ async def slip39_prompt_threshold(
     min_count = min(2, num_of_shares)
     max_count = num_of_shares
 
-    def description(count: int):
+    def description(count: int) -> str:
         if group_id is None:
             if count == 1:
                 return "For recovery you need 1 share."
@@ -208,7 +219,7 @@ async def slip39_prompt_threshold(
         else:
             return f"The required number of shares to form Group {group_id + 1}."
 
-    def info(count: int):
+    def info(count: int) -> str:
         text = "The threshold sets the number of shares "
         if group_id is None:
             text += "needed to recover your wallet. "
@@ -233,18 +244,18 @@ async def slip39_prompt_threshold(
 
     return await _prompt_number(
         ctx,
-        title="SET THRESHOLD",
-        description=description,
-        info=info,
-        count=count,
-        min_count=min_count,
-        max_count=max_count,
-        br_name="slip39_threshold",
+        "SET THRESHOLD",
+        description,
+        info,
+        count,
+        min_count,
+        max_count,
+        "slip39_threshold",
     )
 
 
 async def slip39_prompt_number_of_shares(
-    ctx: wire.GenericContext, group_id: int | None = None
+    ctx: GenericContext, group_id: int | None = None
 ) -> int:
     count = 5
     min_count = 1
@@ -266,17 +277,17 @@ async def slip39_prompt_number_of_shares(
 
     return await _prompt_number(
         ctx,
-        title="SET NUMBER OF SHARES",
-        description=description,
-        info=lambda i: info,
-        count=count,
-        min_count=min_count,
-        max_count=max_count,
-        br_name="slip39_shares",
+        "SET NUMBER OF SHARES",
+        description,
+        lambda i: info,
+        count,
+        min_count,
+        max_count,
+        "slip39_shares",
     )
 
 
-async def slip39_advanced_prompt_number_of_groups(ctx: wire.GenericContext) -> int:
+async def slip39_advanced_prompt_number_of_groups(ctx: GenericContext) -> int:
     count = 5
     min_count = 2
     max_count = 16
@@ -285,18 +296,18 @@ async def slip39_advanced_prompt_number_of_groups(ctx: wire.GenericContext) -> i
 
     return await _prompt_number(
         ctx,
-        title="SET NUMBER OF GROUPS",
-        description=lambda i: description,
-        info=lambda i: info,
-        count=count,
-        min_count=min_count,
-        max_count=max_count,
-        br_name="slip39_groups",
+        "SET NUMBER OF GROUPS",
+        lambda i: description,
+        lambda i: info,
+        count,
+        min_count,
+        max_count,
+        "slip39_groups",
     )
 
 
 async def slip39_advanced_prompt_group_threshold(
-    ctx: wire.GenericContext, num_of_groups: int
+    ctx: GenericContext, num_of_groups: int
 ) -> int:
     count = num_of_groups // 2 + 1
     min_count = 1
@@ -306,17 +317,17 @@ async def slip39_advanced_prompt_group_threshold(
 
     return await _prompt_number(
         ctx,
-        title="SET GROUP THRESHOLD",
-        description=lambda i: description,
-        info=lambda i: info,
-        count=count,
-        min_count=min_count,
-        max_count=max_count,
-        br_name="slip39_group_threshold",
+        "SET GROUP THRESHOLD",
+        lambda i: description,
+        lambda i: info,
+        count,
+        min_count,
+        max_count,
+        "slip39_group_threshold",
     )
 
 
-async def show_warning_backup(ctx: wire.GenericContext, slip39: bool) -> None:
+async def show_warning_backup(ctx: GenericContext, slip39: bool) -> None:
     if slip39:
         description = (
             "Never make a digital copy of your shares and never upload them online."
@@ -337,5 +348,5 @@ async def show_warning_backup(ctx: wire.GenericContext, slip39: bool) -> None:
         "backup_warning",
         ButtonRequestType.ResetDevice,
     )
-    if result != trezorui2.CONFIRMED:
-        raise wire.ActionCancelled
+    if result != CONFIRMED:
+        raise ActionCancelled

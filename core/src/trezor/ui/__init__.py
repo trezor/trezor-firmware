@@ -17,11 +17,11 @@ if TYPE_CHECKING:
 display = Display()
 
 # re-export constants from modtrezorui
-NORMAL = Display.FONT_NORMAL
-BOLD = Display.FONT_BOLD
-MONO = Display.FONT_MONO
-WIDTH = Display.WIDTH
-HEIGHT = Display.HEIGHT
+NORMAL: int = Display.FONT_NORMAL
+BOLD: int = Display.FONT_BOLD
+MONO: int = Display.FONT_MONO
+WIDTH: int = Display.WIDTH
+HEIGHT: int = Display.HEIGHT
 
 # viewport margins
 VIEWX = const(6)
