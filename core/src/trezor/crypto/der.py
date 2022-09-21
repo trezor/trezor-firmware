@@ -1,10 +1,9 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
-from trezor.utils import BufferReader, empty_bytearray
-
 if TYPE_CHECKING:
     from trezor.utils import Writer
+    from trezor.utils import BufferReader
 
 # Maximum length of a DER-encoded secp256k1 or secp256p1 signature.
 _MAX_DER_SIGNATURE_LENGTH = const(72)
@@ -41,7 +40,7 @@ def read_length(r: BufferReader) -> int:
     return n
 
 
-def write_int(w: Writer, number: bytes) -> None:
+def _write_int(w: Writer, number: bytes) -> None:
     i = 0
     while i < len(number) and number[i] == 0:
         i += 1
@@ -57,7 +56,9 @@ def write_int(w: Writer, number: bytes) -> None:
     w.extend(memoryview(number)[i:])
 
 
-def read_int(r: BufferReader) -> memoryview:
+def _read_int(r: BufferReader) -> memoryview:
+    peek = r.peek  # local_cache_attribute
+
     if r.get() != 0x02:
         raise ValueError
 
@@ -65,32 +66,36 @@ def read_int(r: BufferReader) -> memoryview:
     if n == 0:
         raise ValueError
 
-    if r.peek() & 0x80:
+    if peek() & 0x80:
         raise ValueError  # negative integer
 
-    if r.peek() == 0x00 and n > 1:
+    if peek() == 0x00 and n > 1:
         r.get()
         n -= 1
-        if r.peek() & 0x80 == 0x00:
+        if peek() & 0x80 == 0x00:
             raise ValueError  # excessive zero-padding
 
-        if r.peek() == 0x00:
+        if peek() == 0x00:
             raise ValueError  # excessive zero-padding
 
     return r.read_memoryview(n)
 
 
 def encode_seq(seq: tuple[bytes, ...]) -> bytes:
+    from trezor.utils import empty_bytearray
+
     # Preallocate space for a signature, which is all that this function ever encodes.
     buffer = empty_bytearray(_MAX_DER_SIGNATURE_LENGTH)
     buffer.append(0x30)
     for i in seq:
-        write_int(buffer, i)
+        _write_int(buffer, i)
     buffer[1:1] = encode_length(len(buffer) - 1)
     return buffer
 
 
 def decode_seq(data: memoryview) -> list[memoryview]:
+    from trezor.utils import BufferReader
+
     r = BufferReader(data)
 
     if r.get() != 0x30:
@@ -100,7 +105,7 @@ def decode_seq(data: memoryview) -> list[memoryview]:
     seq = []
     end = r.offset + n
     while r.offset < end:
-        i = read_int(r)
+        i = _read_int(r)
         seq.append(i)
 
     if r.offset != end or r.remaining_count():

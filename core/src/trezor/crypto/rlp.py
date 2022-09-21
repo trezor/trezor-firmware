@@ -80,12 +80,12 @@ def length(item: RLPItem) -> int:
     return header_length(item_length, data) + item_length
 
 
-def write_string(w: Writer, string: bytes) -> None:
+def _write_string(w: Writer, string: bytes) -> None:
     write_header(w, len(string), STRING_HEADER_BYTE, string)
     w.extend(string)
 
 
-def write_list(w: Writer, lst: RLPList) -> None:
+def _write_list(w: Writer, lst: RLPList) -> None:
     payload_length = sum(length(item) for item in lst)
     write_header(w, payload_length, LIST_HEADER_BYTE)
     for item in lst:
@@ -94,10 +94,10 @@ def write_list(w: Writer, lst: RLPList) -> None:
 
 def write(w: Writer, item: RLPItem) -> None:
     if isinstance(item, int):
-        write_string(w, int_to_bytes(item))
+        _write_string(w, int_to_bytes(item))
     elif isinstance(item, (bytes, bytearray)):
-        write_string(w, item)
+        _write_string(w, item)
     elif isinstance(item, list):
-        write_list(w, item)
+        _write_list(w, item)
     else:
         raise TypeError

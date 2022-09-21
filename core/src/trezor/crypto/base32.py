@@ -2,8 +2,6 @@
 # https://github.com/micropython/micropython-lib/blob/master/base64/base64.py
 #
 
-from ubinascii import unhexlify
-from ustruct import unpack
 
 _b32alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
 
@@ -12,6 +10,8 @@ _b32rev = {ord(v): k for k, v in enumerate(_b32alphabet)}
 
 
 def encode(s: bytes) -> str:
+    from ustruct import unpack
+
     quanta, leftover = divmod(len(s), 5)
     # Pad the last quantum with zero bits if necessary
     if leftover:
@@ -53,6 +53,8 @@ def encode(s: bytes) -> str:
 
 
 def decode(s: str) -> bytes:
+    from ubinascii import unhexlify
+
     data = s.encode()
     _, leftover = divmod(len(data), 8)
     if leftover:

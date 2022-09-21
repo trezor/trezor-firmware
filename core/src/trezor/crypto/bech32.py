@@ -20,9 +20,11 @@
 
 """Reference implementation for Bech32/Bech32m and segwit addresses."""
 
+from micropython import const
+from trezorcrypto import bech32
 from typing import TYPE_CHECKING
 
-from micropython import const
+bech32_decode = bech32.decode  # reexported
 
 
 if TYPE_CHECKING:
@@ -67,7 +69,7 @@ def bech32_hrp_expand(hrp: str) -> list[int]:
     return [ord(x) >> 5 for x in hrp] + [0] + [ord(x) & 31 for x in hrp]
 
 
-def bech32_create_checksum(hrp: str, data: list[int], spec: Encoding) -> list[int]:
+def _bech32_create_checksum(hrp: str, data: list[int], spec: Encoding) -> list[int]:
     """Compute the checksum values given HRP and data."""
     values = bech32_hrp_expand(hrp) + data
     const = _BECH32M_CONST if spec == Encoding.BECH32M else 1
@@ -77,7 +79,7 @@ def bech32_create_checksum(hrp: str, data: list[int], spec: Encoding) -> list[in
 
 def bech32_encode(hrp: str, data: list[int], spec: Encoding) -> str:
     """Compute a Bech32 string given HRP and data values."""
-    combined = data + bech32_create_checksum(hrp, data, spec)
+    combined = data + _bech32_create_checksum(hrp, data, spec)
     return hrp + "1" + "".join([CHARSET[d] for d in combined])
 
 
