@@ -58,13 +58,20 @@ class TxInfoBase:
     def __init__(self, signer: Signer, tx: SignTx | PrevTx) -> None:
         from trezor.crypto.hashlib import sha256
         from trezor.utils import HashWriter
-        from .matchcheck import MultisigFingerprintChecker, WalletPathChecker
+        from .matchcheck import (
+            MultisigFingerprintChecker,
+            WalletPathChecker,
+            ScriptTypeChecker,
+        )
 
         # Checksum of multisig inputs, used to validate change-output.
         self.multisig_fingerprint = MultisigFingerprintChecker()
 
         # Common prefix of input paths, used to validate change-output.
         self.wallet_path = WalletPathChecker()
+
+        # Common script type, used to validate change-output.
+        self.script_type = ScriptTypeChecker()
 
         # h_tx_check is used to make sure that the inputs and outputs streamed in
         # different steps are the same every time, e.g. the ones streamed for approval
@@ -90,6 +97,7 @@ class TxInfoBase:
 
         if not common.input_is_external(txi):
             self.wallet_path.add_input(txi)
+            self.script_type.add_input(txi)
             self.multisig_fingerprint.add_input(txi)
 
     def add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
@@ -98,6 +106,7 @@ class TxInfoBase:
 
     def check_input(self, txi: TxInput) -> None:
         self.wallet_path.check_input(txi)
+        self.script_type.check_input(txi)
         self.multisig_fingerprint.check_input(txi)
 
     def output_is_change(self, txo: TxOutput) -> bool:
@@ -107,6 +116,7 @@ class TxInfoBase:
             return False
         return (
             self.wallet_path.output_matches(txo)
+            and self.script_type.output_matches(txo)
             and len(txo.address_n) >= common.BIP32_WALLET_DEPTH
             and txo.address_n[-2] <= _BIP32_CHANGE_CHAIN
             and txo.address_n[-1] <= _BIP32_MAX_LAST_ELEMENT
