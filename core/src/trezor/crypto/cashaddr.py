@@ -50,7 +50,7 @@ def prefix_expand(prefix: str) -> list[int]:
     return [ord(x) & 0x1F for x in prefix] + [0]
 
 
-def calculate_checksum(prefix: str, payload: list[int]) -> list[int]:
+def _calculate_checksum(prefix: str, payload: list[int]) -> list[int]:
     poly = cashaddr_polymod(prefix_expand(prefix) + payload + [0, 0, 0, 0, 0, 0, 0, 0])
     out = []
     for i in range(8):
@@ -58,18 +58,14 @@ def calculate_checksum(prefix: str, payload: list[int]) -> list[int]:
     return out
 
 
-def verify_checksum(prefix: str, payload: list[int]) -> bool:
-    return cashaddr_polymod(prefix_expand(prefix) + payload) == 0
-
-
-def b32decode(inputs: str) -> list[int]:
+def _b32decode(inputs: str) -> list[int]:
     out = []
     for letter in inputs:
         out.append(CHARSET.find(letter))
     return out
 
 
-def b32encode(inputs: list[int]) -> str:
+def _b32encode(inputs: list[int]) -> str:
     out = ""
     for char_code in inputs:
         out += CHARSET[char_code]
@@ -79,14 +75,18 @@ def b32encode(inputs: list[int]) -> str:
 def encode(prefix: str, version: int, payload_bytes: bytes) -> str:
     payload_bytes = bytes([version]) + payload_bytes
     payload = convertbits(payload_bytes, 8, 5)
-    checksum = calculate_checksum(prefix, payload)
-    return prefix + ":" + b32encode(payload + checksum)
+    checksum = _calculate_checksum(prefix, payload)
+    return prefix + ":" + _b32encode(payload + checksum)
 
 
 def decode(prefix: str, addr: str) -> tuple[int, bytes]:
     addr = addr.lower()
-    decoded = b32decode(addr)
-    if not verify_checksum(prefix, decoded):
+    decoded = _b32decode(addr)
+
+    # verify_checksum
+    checksum_verified = cashaddr_polymod(prefix_expand(prefix) + decoded) == 0
+    if not checksum_verified:
         raise ValueError("Bad cashaddr checksum")
+
     data = bytes(convertbits(decoded, 5, 8))
     return data[0], data[1:-6]

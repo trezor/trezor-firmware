@@ -34,7 +34,7 @@ from micropython import const
 from trezorcrypto import shamir, slip39
 from typing import TYPE_CHECKING
 
-from trezor.crypto import hmac, pbkdf2, random
+from trezor.crypto import random
 from trezor.errors import MnemonicError
 
 if TYPE_CHECKING:
@@ -416,6 +416,8 @@ def _rs1024_verify_checksum(data: Indices) -> bool:
 
 def _round_function(i: int, passphrase: bytes, e: int, salt: bytes, r: bytes) -> bytes:
     """The round function used internally by the Feistel cipher."""
+    from trezor.crypto import pbkdf2
+
     return pbkdf2(
         pbkdf2.HMAC_SHA256,
         bytes([i]) + passphrase,
@@ -431,6 +433,8 @@ def _get_salt(identifier: int) -> bytes:
 
 
 def _create_digest(random_data: bytes, shared_secret: bytes) -> bytes:
+    from trezor.crypto import hmac
+
     return hmac(hmac.SHA256, random_data, shared_secret).digest()[:_DIGEST_LENGTH_BYTES]
 
 
