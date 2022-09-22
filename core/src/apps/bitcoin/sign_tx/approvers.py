@@ -83,7 +83,7 @@ class Approver:
             if txi.orig_hash:
                 self.orig_external_in += txi.amount
 
-    def _add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
+    async def _add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         self.weight.add_output(script_pubkey)
         self.total_out += txo.amount
 
@@ -101,8 +101,8 @@ class Approver:
         self.payment_req_verifier = None
         self.show_payment_req_details = False
 
-    def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
-        self._add_output(txo, script_pubkey)
+    async def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
+        await self._add_output(txo, script_pubkey)
         self.change_out += txo.amount
         if self.payment_req_verifier:
             self.payment_req_verifier.add_change_output(txo)
@@ -117,7 +117,7 @@ class Approver:
         script_pubkey: bytes,
         orig_txo: TxOutput | None = None,
     ) -> None:
-        self._add_output(txo, script_pubkey)
+        await self._add_output(txo, script_pubkey)
         if self.payment_req_verifier:
             self.payment_req_verifier.add_external_output(txo)
 
@@ -160,8 +160,21 @@ class BasicApprover(Approver):
         ):
             raise ProcessError("Transaction has changed during signing")
 
-    def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
-        super().add_change_output(txo, script_pubkey)
+    async def _add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
+        from ..common import CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES
+
+        if txo.address_n and not validate_path_against_script_type(
+            self.coin,
+            address_n=txo.address_n,
+            script_type=CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES[txo.script_type],
+            multisig=bool(txo.multisig),
+        ):
+            await helpers.confirm_foreign_address(txo.address_n)
+
+        await super()._add_output(txo, script_pubkey)
+
+    async def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
+        await super().add_change_output(txo, script_pubkey)
         self.change_count += 1
 
     async def add_external_output(
@@ -389,7 +402,7 @@ class CoinJoinApprover(Approver):
 
     async def add_internal_input(self, txi: TxInput, node: bip32.HDNode) -> None:
         self.our_weight.add_input(txi)
-        if not self.authorization.check_sign_tx_input(txi, self.coin):
+        if not self.authorization.check_internal_input(txi):
             raise ProcessError("Unauthorized path")
 
         # Compute the masking bit for the signable bit in coinjoin flags.
@@ -421,7 +434,7 @@ class CoinJoinApprover(Approver):
         # The main reason for this is that we are not comfortable with using the same private key
         # in multiple signatures schemes (ECDSA and Schnorr) and we want to be sure that the user
         # went through a warning screen before we sign the input.
-        if not self.authorization.check_sign_tx_input(txi, self.coin):
+        if not self.authorization.check_internal_input(txi):
             raise ProcessError("Unauthorized path")
 
     def add_external_input(self, txi: TxInput) -> None:
@@ -433,8 +446,8 @@ class CoinJoinApprover(Approver):
         if input_is_external_unverified(txi):
             raise ProcessError("Unverifiable external input.")
 
-    def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
-        super().add_change_output(txo, script_pubkey)
+    async def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
+        await super().add_change_output(txo, script_pubkey)
         self.our_weight.add_output(script_pubkey)
 
     async def approve_orig_txids(
@@ -525,8 +538,11 @@ class CoinJoinApprover(Approver):
         if not self.authorization.approve_sign_tx(tx_info.tx):
             raise ProcessError("Exceeded number of coinjoin rounds.")
 
-    def _add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
-        super()._add_output(txo, script_pubkey)
+    async def _add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
+        await super()._add_output(txo, script_pubkey)
+
+        if txo.address_n and not self.authorization.check_internal_output(txo):
+            raise ProcessError("Unauthorized path")
 
         if txo.payment_req_index:
             raise DataError("Unexpected payment request.")

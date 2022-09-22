@@ -112,8 +112,16 @@ class TxInfoBase:
     def output_is_change(self, txo: TxOutput) -> bool:
         if txo.script_type not in common.CHANGE_OUTPUT_SCRIPT_TYPES:
             return False
+
+        # Check the multisig fingerprint only for multisig outputs. This means
+        # that a transfer from a multisig account to a singlesig account is
+        # treated as a change-output as long as all other change-output
+        # conditions are satisfied. This goes a bit against the concept of a
+        # multisig account but the other cosigners will notice that they are
+        # relinquishing control of the funds, so there is no security risk.
         if txo.multisig and not self.multisig_fingerprint.output_matches(txo):
             return False
+
         return (
             self.wallet_path.output_matches(txo)
             and self.script_type.output_matches(txo)
