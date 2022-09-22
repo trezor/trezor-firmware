@@ -112,6 +112,12 @@ static const char *progress_label;
 static uint32_t tx_weight, tx_base_weight, our_weight, our_inputs_len;
 PathSchema unlocked_schema;
 
+typedef enum _MatchState {
+  MatchState_UNDEFINED = 0,
+  MatchState_MATCH = 1,
+  MatchState_MISMATCH = 2,
+} MatchState;
+
 typedef struct {
   uint32_t inputs_count;
   uint32_t outputs_count;
@@ -123,6 +129,8 @@ typedef struct {
   uint8_t multisig_fp[32];
   uint32_t in_address_n[8];
   size_t in_address_n_count;
+  InputScriptType in_script_type;
+  MatchState in_script_type_state;
   uint32_t version;
   uint32_t lock_time;
   uint32_t expiry;
@@ -982,6 +990,47 @@ bool check_change_multisig_fp(const TxInfo *tx_info,
          memcmp(tx_info->multisig_fp, h, 32) == 0;
 }
 
+static InputScriptType simple_script_type(InputScriptType script_type) {
+  // SPENDMULTISIG is used only for non-SegWit and is effectively the same as
+  // SPENDADDRESS. For SegWit inputs and outputs multisig is indicated by the
+  // presence of the multisig structure. for both SegWit and non-SegWit we can
+  // rely on multisig_fp to check the multisig structure.
+  if (script_type == InputScriptType_SPENDMULTISIG) {
+    script_type = InputScriptType_SPENDADDRESS;
+  }
+
+  return script_type;
+}
+
+void extract_input_script_type(TxInfo *tx_info, const TxInputType *tinput) {
+  switch (tx_info->in_script_type_state) {
+    case MatchState_UNDEFINED:
+      // initialize in_script_type on first input seen
+      tx_info->in_script_type = simple_script_type(tinput->script_type);
+      tx_info->in_script_type_state = MatchState_MATCH;
+      break;
+    case MatchState_MATCH:
+      // check that all input script types are the same
+      if (tx_info->in_script_type != simple_script_type(tinput->script_type)) {
+        tx_info->in_script_type_state = MatchState_MISMATCH;
+      }
+      break;
+    default:
+      break;
+  }
+}
+
+bool check_change_script_type(const TxInfo *tx_info,
+                              const TxOutputType *toutput) {
+  InputScriptType input_script_type = 0;
+  if (!change_output_to_input_script_type(toutput->script_type,
+                                          &input_script_type)) {
+    return false;
+  }
+  return tx_info->in_script_type_state == MatchState_MATCH &&
+         tx_info->in_script_type == simple_script_type(input_script_type);
+}
+
 void extract_input_bip32_path(TxInfo *tx_info, const TxInputType *tinput) {
   if (tx_info->in_address_n_count == BIP32_NOCHANGEALLOWED) {
     return;
@@ -1201,6 +1250,8 @@ static bool tx_info_init(TxInfo *tx_info, uint32_t inputs_count,
   tx_info->multisig_fp_set = false;
   tx_info->multisig_fp_mismatch = false;
   tx_info->in_address_n_count = 0;
+  tx_info->in_script_type = 0;
+  tx_info->in_script_type_state = MatchState_UNDEFINED;
   tx_info->version = version;
   tx_info->lock_time = lock_time;
 
@@ -1683,6 +1734,10 @@ static bool tx_info_add_input(TxInfo *tx_info, const TxInputType *txinput) {
       return false;
     }
 
+    // Remember the input's script type. Change-outputs must use the same script
+    // type as all inputs.
+    extract_input_script_type(tx_info, txinput);
+
     // Remember the input's BIP-32 path. Change-outputs must use the same path
     // as all inputs.
     extract_input_bip32_path(tx_info, txinput);
@@ -1708,31 +1763,41 @@ static bool tx_info_add_input(TxInfo *tx_info, const TxInputType *txinput) {
 }
 
 static bool tx_info_check_input(TxInfo *tx_info, TxInputType *tinput) {
+  bool result = true;
+
   if (!tx_info->multisig_fp_mismatch) {
     // check that this is still multisig
     uint8_t h[32] = {0};
     if (!tinput->has_multisig ||
         cryptoMultisigFingerprint(&(tinput->multisig), h) == 0 ||
         memcmp(tx_info->multisig_fp, h, 32) != 0) {
-      fsm_sendFailure(FailureType_Failure_ProcessError,
-                      _("Transaction has changed during signing"));
-      signing_abort();
-      return false;
+      result = false;
     }
   }
+
+  if (tx_info->in_script_type_state == MatchState_MATCH) {
+    // check that input script type didn't change
+    if (simple_script_type(tinput->script_type) != tx_info->in_script_type) {
+      result = false;
+    }
+  }
+
   if (tx_info->in_address_n_count != BIP32_NOCHANGEALLOWED) {
     // check that input address didn't change
     size_t count = tinput->address_n_count;
     if (count < 2 || count != tx_info->in_address_n_count ||
         0 != memcmp(tx_info->in_address_n, tinput->address_n,
                     (count - 2) * sizeof(uint32_t))) {
-      fsm_sendFailure(FailureType_Failure_ProcessError,
-                      _("Transaction has changed during signing"));
-      signing_abort();
-      return false;
+      result = false;
     }
   }
-  return true;
+
+  if (result == false) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Transaction has changed during signing"));
+    signing_abort();
+  }
+  return result;
 }
 
 static bool tx_info_add_output(TxInfo *tx_info,
@@ -2065,6 +2130,10 @@ static bool is_change_output(const TxInfo *tx_info,
    * For multisig check that all inputs are multisig
    */
   if (txoutput->has_multisig && !check_change_multisig_fp(tx_info, txoutput)) {
+    return false;
+  }
+
+  if (!check_change_script_type(tx_info, txoutput)) {
     return false;
   }
 
