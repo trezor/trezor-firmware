@@ -2127,7 +2127,12 @@ static bool is_change_output(const TxInfo *tx_info,
   }
 
   /*
-   * For multisig check that all inputs are multisig
+   * Check the multisig fingerprint only for multisig outputs. This means that
+   * a transfer from a multisig account to a singlesig account is treated as a
+   * change-output as long as all other change-output conditions are satisfied.
+   * This goes a bit against the concept of a multisig account, but the other
+   * cosigners will notice that they are relinquishing control of the funds, so
+   * there is no security risk.
    */
   if (txoutput->has_multisig && !check_change_multisig_fp(tx_info, txoutput)) {
     return false;
@@ -2180,6 +2185,23 @@ static bool signing_add_output(TxOutputType *txoutput) {
     if (change_count <= 0) {
       fsm_sendFailure(FailureType_Failure_DataError, _("Value overflow"));
       signing_abort();
+      return false;
+    }
+  }
+
+  // If address_n is specified, then check that the script type matches.
+  if (txoutput->address_n_count != 0) {
+    InputScriptType script_type = 0;
+    if (!change_output_to_input_script_type(txoutput->script_type,
+                                            &script_type)) {
+      fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Unsupported script type."));
+      signing_abort();
+      return false;
+    }
+
+    if (!validate_path(script_type, txoutput->address_n_count,
+                       txoutput->address_n, txoutput->has_multisig)) {
       return false;
     }
   }
