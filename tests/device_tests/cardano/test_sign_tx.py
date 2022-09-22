@@ -159,8 +159,8 @@ def _transform_expected_result(result):
             "type": supplement["type"],
             "auxiliary_data_hash": bytes.fromhex(supplement["auxiliary_data_hash"]),
         }
-        if catalyst_signature := supplement.get("catalyst_signature"):
+        if governance_signature := supplement.get("governance_signature"):
             transformed_result["auxiliary_data_supplement"][
-                "catalyst_signature"
-            ] = bytes.fromhex(catalyst_signature)
+                "governance_signature"
+            ] = bytes.fromhex(governance_signature)
     return transformed_result

@@ -156,9 +156,11 @@ def sign_tx(
         auxiliary_data_supplement["auxiliary_data_hash"] = auxiliary_data_supplement[
             "auxiliary_data_hash"
         ].hex()
-        catalyst_signature = auxiliary_data_supplement.get("catalyst_signature")
-        if catalyst_signature:
-            auxiliary_data_supplement["catalyst_signature"] = catalyst_signature.hex()
+        governance_signature = auxiliary_data_supplement.get("governance_signature")
+        if governance_signature:
+            auxiliary_data_supplement[
+                "governance_signature"
+            ] = governance_signature.hex()
         sign_tx_response["auxiliary_data_supplement"] = auxiliary_data_supplement
     return sign_tx_response
 
