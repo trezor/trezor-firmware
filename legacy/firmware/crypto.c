@@ -818,6 +818,7 @@ bool is_segwit_output_script_type(OutputScriptType script_type) {
   }
   return false;
 }
+
 bool change_output_to_input_script_type(OutputScriptType output_script_type,
                                         InputScriptType *input_script_type) {
   switch (output_script_type) {
