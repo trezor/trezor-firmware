@@ -515,7 +515,7 @@ class Bitcoin:
 
         if self.tx_info.output_is_change(txo):
             # Output is change and does not need approval.
-            approver.add_change_output(txo, script_pubkey)
+            await approver.add_change_output(txo, script_pubkey)
         else:
             await approver.add_external_output(txo, script_pubkey, orig_txo)
 

@@ -368,7 +368,7 @@ class Decred(Bitcoin):
         if txo.amount != approver.total_in:
             raise DataError("Wrong sstxcommitment amount.")
         script_pubkey = self.process_sstx_commitment_owned(txo)
-        approver.add_change_output(txo, script_pubkey)
+        await approver.add_change_output(txo, script_pubkey)
         tx_info.add_output(txo, script_pubkey)
         if self.serialize:
             self.write_tx_output(self.serialized_tx, txo, script_pubkey)
@@ -386,7 +386,8 @@ class Decred(Bitcoin):
             raise DataError("Only value of 0 allowed for sstx change.")
         if script_pubkey != OUTPUT_SCRIPT_NULL_SSTXCHANGE:
             raise DataError("Only zeroed addresses accepted for sstx change.")
-        approver.add_change_output(txo, script_pubkey)
+        # nothing to approve, just add to tx_weight
+        await approver._add_output(txo, script_pubkey)
         tx_info.add_output(txo, script_pubkey)
         if self.serialize:
             self.write_tx_output(self.serialized_tx, txo, script_pubkey)

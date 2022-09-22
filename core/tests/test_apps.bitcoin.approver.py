@@ -127,7 +127,7 @@ class TestApprover(unittest.TestCase):
             TxOutput(
                 address="",
                 amount=denomination-fees,
-                script_type=OutputScriptType.PAYTOWITNESS,
+                script_type=OutputScriptType.PAYTOTAPROOT,
                 payment_req_index=0,
             ) for i in range(99)
         ]
@@ -139,7 +139,7 @@ class TestApprover(unittest.TestCase):
                 address="",
                 address_n=[H_(10025), H_(0), H_(0), H_(1), 0, 2],
                 amount=denomination-fees,
-                script_type=OutputScriptType.PAYTOWITNESS,
+                script_type=OutputScriptType.PAYTOTAPROOT,
                 payment_req_index=0,
             )
         )
@@ -149,7 +149,7 @@ class TestApprover(unittest.TestCase):
             TxOutput(
                 address="",
                 amount=coordinator_fee * len(outputs),
-                script_type=OutputScriptType.PAYTOWITNESS,
+                script_type=OutputScriptType.PAYTOTAPROOT,
                 payment_req_index=0,
             )
         )
@@ -168,7 +168,7 @@ class TestApprover(unittest.TestCase):
 
         for txo in outputs:
             if txo.address_n:
-                approver.add_change_output(txo, script_pubkey=bytes(22))
+                await_result(approver.add_change_output(txo, script_pubkey=bytes(22)))
             else:
                 await_result(approver.add_external_output(txo, script_pubkey=bytes(22)))
 
