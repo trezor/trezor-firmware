@@ -839,7 +839,7 @@ class Signer:
             self.ctx,
             self.keychain,
             auxiliary_data_hash,
-            data.catalyst_registration_parameters,
+            data.governance_registration_parameters,
             self.msg.protocol_magic,
             self.msg.network_id,
             self.should_show_details,
