@@ -750,13 +750,13 @@ def _format_stake_credential(
         raise ValueError
 
 
-async def confirm_catalyst_registration_voting_public_key(
+async def confirm_governance_registration_voting_public_key(
     ctx: wire.Context,
     public_key: str,
     proportion: int,
 ) -> None:
     props: list[PropertyType] = [
-        ("Catalyst voting key registration", None),
+        ("Governance voting key registration", None),
         ("Voting public key:", public_key),
     ]
     if proportion is not None:
@@ -764,14 +764,14 @@ async def confirm_catalyst_registration_voting_public_key(
 
     await confirm_properties(
         ctx,
-        "confirm_catalyst_registration",
+        "confirm_governance_registration",
         title="Confirm transaction",
         props=props,
         br_code=ButtonRequestType.Other,
     )
 
 
-async def confirm_catalyst_registration(
+async def confirm_governance_registration(
     ctx: wire.Context,
     public_key: str | None,
     staking_path: list[int],
@@ -779,7 +779,7 @@ async def confirm_catalyst_registration(
     nonce: int,
     voting_purpose: int | None,
 ) -> None:
-    props: list[PropertyType] = [("Catalyst voting key registration", None)]
+    props: list[PropertyType] = [("Governance voting key registration", None)]
     if public_key is not None:
         props.append(("Voting public key:", public_key))
     props.extend(
@@ -797,7 +797,7 @@ async def confirm_catalyst_registration(
 
     await confirm_properties(
         ctx,
-        "confirm_catalyst_registration",
+        "confirm_governance_registration",
         title="Confirm transaction",
         props=props,
         br_code=ButtonRequestType.Other,

@@ -66,10 +66,10 @@ enum CardanoPoolRelayType {
 
 enum CardanoTxAuxiliaryDataSupplementType {
     NONE = 0;
-    CATALYST_REGISTRATION_SIGNATURE = 1;
+    GOVERNANCE_REGISTRATION_SIGNATURE = 1;
 }
 
-enum CardanoCatalystRegistrationFormat {
+enum CardanoGovernanceRegistrationFormat {
     CIP15 = 0;
     CIP36 = 1;
 }
@@ -360,7 +360,7 @@ message CardanoTxWithdrawal {
 /**
  * @embed
  */
-message CardanoCatalystRegistrationDelegation {
+message CardanoGovernanceRegistrationDelegation {
     required bytes voting_public_key = 1;
     required uint32 proportion = 2;
 }
@@ -368,13 +368,13 @@ message CardanoCatalystRegistrationDelegation {
 /**
  * @embed
  */
-message CardanoCatalystRegistrationParametersType {
+message CardanoGovernanceRegistrationParametersType {
     optional bytes voting_public_key = 1;
     repeated uint32 staking_path = 2;
     required CardanoAddressParametersType reward_address_parameters = 3;
     required uint64 nonce = 4;
-    optional CardanoCatalystRegistrationFormat format = 5 [default=CIP15];
-    repeated CardanoCatalystRegistrationDelegation delegations = 6;  // mutually exclusive with voting_public_key; max 32 delegations
+    optional CardanoGovernanceRegistrationFormat format = 5 [default=CIP15];
+    repeated CardanoGovernanceRegistrationDelegation delegations = 6;  // mutually exclusive with voting_public_key; max 32 delegations
     optional uint64 voting_purpose = 7;
 }
 
@@ -384,7 +384,7 @@ message CardanoCatalystRegistrationParametersType {
  * @next CardanoTxAuxiliaryDataSupplement
  */
 message CardanoTxAuxiliaryData {
-    optional CardanoCatalystRegistrationParametersType catalyst_registration_parameters = 1;
+    optional CardanoGovernanceRegistrationParametersType governance_registration_parameters = 1;
     optional bytes hash = 2;
 }
 
@@ -452,7 +452,7 @@ message CardanoTxItemAck {
 message CardanoTxAuxiliaryDataSupplement {
     required CardanoTxAuxiliaryDataSupplementType type = 1;
     optional bytes auxiliary_data_hash = 2;
-    optional bytes catalyst_signature = 3;
+    optional bytes governance_signature = 3;
 }
 
 /**
