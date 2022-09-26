@@ -139,6 +139,25 @@
                 "sig_r": "3a5e8fa47bfdb758837643485b2951f6c54894996f124dce6282662289ebcf79",
                 "sig_s": "5b5b9e0f9af273466cc1e991cb86fadb2abedeb4de150163a8dbf348422b5fe2"
             }
+        },
+        {
+            "name": "long_fees",
+            "parameters": {
+                "data": "",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0x1d1c328764a41bda0492b66baa30c4a339ff85ef",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_limit": "0x141414141414141414",
+                "max_gas_fee": "0x14141414141414141414",
+                "max_priority_fee": "0x11111111111111111",
+                "value": "0xa"
+            },
+            "result": {
+                "sig_v": 0,
+                "sig_r": "3f3bfa6762b33819f268a98744803e1876aa440a6fd2ebef90cfd606bb893429",
+                "sig_s": "241e1128a715a5386c3b6d0998f9f42c21ee080568fbf2c642a05916c30737e2"
+            }
         }
     ]
 }

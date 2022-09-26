@@ -477,9 +477,8 @@ static void layoutEthereumFeeEIP1559(const char *description,
 
   ethereumFormatAmount(&amount_val, NULL, amount_str, sizeof(amount_str));
 
-  layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
-                    _("Confirm fee"), description, amount_str, NULL, NULL,
-                    NULL);
+  layoutDialogSwipeWrapping(&bmp_icon_question, _("Cancel"), _("Confirm"),
+                            _("Confirm fee"), description, amount_str);
 }
 
 /*

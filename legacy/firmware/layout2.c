@@ -260,6 +260,16 @@ const char **split_message_hex(const uint8_t *msg, uint32_t len) {
 
 void *layoutLast = NULL;
 
+void layoutDialogSwipeWrapping(const BITMAP *icon, const char *btnNo,
+                               const char *btnYes, const char *heading,
+                               const char *description, const char *wrap_text) {
+  const uint32_t row_len = 20;
+  const char **str =
+      split_message((const uint8_t *)wrap_text, strlen(wrap_text), row_len);
+  layoutDialogSwipe(icon, btnNo, btnYes, NULL, heading, description, str[0],
+                    str[1], str[2], str[3]);
+}
+
 void layoutDialogSwipe(const BITMAP *icon, const char *btnNo,
                        const char *btnYes, const char *desc, const char *line1,
                        const char *line2, const char *line3, const char *line4,
