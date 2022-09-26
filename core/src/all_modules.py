@@ -153,6 +153,8 @@ trezor.ui.layouts.common
 import trezor.ui.layouts.common
 trezor.ui.layouts.fido
 import trezor.ui.layouts.fido
+trezor.ui.layouts.homescreen
+import trezor.ui.layouts.homescreen
 trezor.ui.layouts.recovery
 import trezor.ui.layouts.recovery
 trezor.ui.layouts.reset
@@ -163,6 +165,8 @@ trezor.ui.layouts.tt_v2
 import trezor.ui.layouts.tt_v2
 trezor.ui.layouts.tt_v2.fido
 import trezor.ui.layouts.tt_v2.fido
+trezor.ui.layouts.tt_v2.homescreen
+import trezor.ui.layouts.tt_v2.homescreen
 trezor.ui.layouts.tt_v2.recovery
 import trezor.ui.layouts.tt_v2.recovery
 trezor.ui.layouts.tt_v2.reset
@@ -293,12 +297,6 @@ apps.debug.load_device
 import apps.debug.load_device
 apps.homescreen
 import apps.homescreen
-apps.homescreen.busyscreen
-import apps.homescreen.busyscreen
-apps.homescreen.homescreen
-import apps.homescreen.homescreen
-apps.homescreen.lockscreen
-import apps.homescreen.lockscreen
 apps.management.apply_flags
 import apps.management.apply_flags
 apps.management.apply_settings

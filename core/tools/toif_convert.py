@@ -17,6 +17,7 @@ def toif_convert(infile, outfile):
       toif_convert.py somefile.jpg outfile.toif
       toif_convert.py infile.toif outfile.png
 
+    \b
       # ensure gray-scale output TOIF
       mogrify -colorspace gray icon.png
       toif_convert.py icon.png icon.toif

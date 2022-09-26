@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 async def recovery_homescreen() -> None:
     from trezor import workflow
-    from apps.homescreen.homescreen import homescreen
+    from apps.homescreen import homescreen
 
     if not storage_recovery.is_in_progress():
         workflow.set_default(homescreen)
