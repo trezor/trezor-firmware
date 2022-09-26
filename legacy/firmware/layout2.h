@@ -48,6 +48,9 @@ void layoutDialogSwipeEx(const BITMAP *icon, const char *btnNo,
                          const char *line1, const char *line2,
                          const char *line3, const char *line4,
                          const char *line5, const char *line6, uint8_t font);
+void layoutDialogSwipeWrapping(const BITMAP *icon, const char *btnNo,
+                               const char *btnYes, const char *heading,
+                               const char *description, const char *wrap_text);
 void layoutProgressSwipe(const char *desc, int permil);
 
 void layoutScreensaver(void);
