@@ -85,4 +85,4 @@ def enter_shares(debug: "DebugLink", shares: list[str]) -> None:
 
 def finalize(debug: "DebugLink") -> None:
     layout = debug.click(buttons.OK, wait=True)
-    assert layout.text == "Homescreen"
+    assert layout.text.startswith("< Homescreen ")

@@ -4,6 +4,7 @@ mod fido;
 mod fido_icons;
 mod frame;
 mod hold_to_confirm;
+mod homescreen;
 mod keyboard;
 mod loader;
 mod number_input;
@@ -20,6 +21,7 @@ pub use dialog::{Dialog, DialogMsg, IconDialog};
 pub use fido::{FidoConfirm, FidoMsg};
 pub use frame::{Frame, NotificationFrame};
 pub use hold_to_confirm::{HoldToConfirm, HoldToConfirmMsg};
+pub use homescreen::{Homescreen, HomescreenMsg, Lockscreen};
 pub use keyboard::{
     bip39::Bip39Input,
     mnemonic::{MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg},

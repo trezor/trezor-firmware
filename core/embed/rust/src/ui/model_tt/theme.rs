@@ -40,6 +40,7 @@ pub const OFF_WHITE: Color = Color::rgb(0xDE, 0xDE, 0xDE); // very light grey
 pub const GREY_LIGHT: Color = Color::rgb(0xA8, 0xA8, 0xA8); // greyish
 pub const GREY_MEDIUM: Color = Color::rgb(0x64, 0x64, 0x64);
 pub const GREY_DARK: Color = Color::rgb(0x33, 0x33, 0x33); // greyer
+pub const VIOLET: Color = Color::rgb(0x9E, 0x27, 0xD6);
 
 // Commonly used corner radius (i.e. for buttons).
 pub const RADIUS: u8 = 2;
@@ -58,8 +59,10 @@ pub const ICON_BACK: &[u8] = include_res!("model_tt/res/back.toif");
 pub const ICON_CLICK: &[u8] = include_res!("model_tt/res/click.toif");
 pub const ICON_NEXT: &[u8] = include_res!("model_tt/res/next.toif");
 pub const ICON_WARN: &[u8] = include_res!("model_tt/res/warn-icon.toif");
+pub const ICON_MAGIC: &[u8] = include_res!("model_tt/res/magic.toif");
 pub const ICON_LIST_CURRENT: &[u8] = include_res!("model_tt/res/current.toif");
 pub const ICON_LIST_CHECK: &[u8] = include_res!("model_tt/res/check.toif");
+pub const ICON_LOCK: &[u8] = include_res!("model_tt/res/lock.toif");
 
 // Large, three-color icons.
 pub const WARN_COLOR: Color = YELLOW;
@@ -440,5 +443,5 @@ pub const fn borders_scroll() -> Insets {
 }
 
 pub const fn borders_notification() -> Insets {
-    Insets::new(6, 10, 14, 10)
+    Insets::new(48, 10, 14, 10)
 }

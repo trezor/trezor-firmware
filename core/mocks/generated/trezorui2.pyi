@@ -371,7 +371,7 @@ def confirm_recovery(
 def select_word_count(
     *,
     dry_run: bool,
-) -> int | trezorui2.CANCELLED:
+) -> int | CANCELLED:
    """Select mnemonic word count from (12, 18, 20, 24, 33)."""
 
 
@@ -401,3 +401,36 @@ def show_progress(
    """Show progress loader. Please note that the number of lines reserved on screen for
    description is determined at construction time. If you want multiline descriptions
    make sure the initial desciption has at least that amount of lines."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def show_homescreen(
+    *,
+    label: str,
+    hold: bool,
+    notification: str | None,
+    notification_level: int = 0,
+    skip_first_paint: bool,
+) -> CANCELLED:
+    """Idle homescreen."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def show_lockscreen(
+    *,
+    label: str,
+    bootscreen: bool,
+    skip_first_paint: bool,
+) -> CANCELLED:
+    """Homescreen for locked device."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def show_busyscreen(
+    *,
+    title: str,
+    description: str,
+    time_ms: int,
+    skip_first_paint: bool,
+) -> CANCELLED:
+    """Homescreen used for indicating coinjoin in progress."""

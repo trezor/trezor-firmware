@@ -290,6 +290,10 @@ impl Rect {
         self.top_left().center(self.bottom_right())
     }
 
+    pub const fn top_center(&self) -> Point {
+        self.top_left().center(self.top_right())
+    }
+
     pub const fn bottom_center(&self) -> Point {
         self.bottom_left().center(self.bottom_right())
     }
