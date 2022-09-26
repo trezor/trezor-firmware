@@ -11,7 +11,7 @@ from trezor.messages import Success
 from trezor.ui.layouts import show_success
 
 from apps.common import mnemonic
-from apps.homescreen.homescreen import homescreen
+from apps.homescreen import homescreen
 
 from .. import backup_types
 from . import layout, recover

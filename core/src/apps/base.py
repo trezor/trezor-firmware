@@ -291,12 +291,12 @@ def set_homescreen() -> None:
     import storage  # workaround for https://github.com/microsoft/pyright/issues/2685
 
     if storage.cache.is_set(storage.cache.APP_COMMON_BUSY_DEADLINE_MS):
-        from apps.homescreen.busyscreen import busyscreen
+        from apps.homescreen import busyscreen
 
         workflow.set_default(busyscreen)
 
     elif not config.is_unlocked():
-        from apps.homescreen.lockscreen import lockscreen
+        from apps.homescreen import lockscreen
 
         workflow.set_default(lockscreen)
 
@@ -306,7 +306,7 @@ def set_homescreen() -> None:
         workflow.set_default(recovery_homescreen)
 
     else:
-        from apps.homescreen.homescreen import homescreen
+        from apps.homescreen import homescreen
 
         workflow.set_default(homescreen)
 

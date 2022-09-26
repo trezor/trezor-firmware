@@ -348,3 +348,33 @@ def show_remaining_shares(
     pages: Iterable[tuple[str, str]],
 ) -> int:
    """Shows SLIP39 state after info button is pressed on `confirm_recovery`."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def show_homescreen(
+    *,
+    label: str,
+    hold: bool,
+    notification: str | None,
+    notification_level: int = 0,
+) -> trezorui2.CANCELLED:
+    """Idle homescreen."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def show_lockscreen(
+    *,
+    label: str,
+    bootscreen: bool,
+) -> trezorui2.CANCELLED:
+    """Homescreen for locked device."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def show_busyscreen(
+    *,
+    title: str,
+    description: str,
+    time_ms: int,
+) -> trezorui2.CANCELLED:
+    """Homescreen used for indicating coinjoin in progress."""

@@ -1,3 +1,9 @@
+use crate::ui::{
+    component::text::TextStyle,
+    display,
+    geometry::{Offset, Point},
+};
+
 pub trait ResultExt {
     fn assert_if_debugging_ui(self, message: &str);
 }
@@ -29,6 +35,32 @@ pub fn u32_to_str(num: u32, buffer: &mut [u8]) -> Option<&str> {
             Some(core::str::from_utf8(result).unwrap())
         }
     }
+}
+
+/// Display an icon and a text centered relative to given `Point`.
+pub fn icon_text_center(
+    baseline: Point,
+    icon: &'static [u8],
+    space: i16,
+    text: &str,
+    style: TextStyle,
+    text_offset: Offset,
+) {
+    let toif_info = unwrap!(display::toif_info(icon), "Invalid TOIF data");
+    let icon_width = toif_info.0.y;
+    let text_width = style.text_font.text_width(text);
+    let text_height = style.text_font.text_height();
+    let text_center = baseline + Offset::new((icon_width + space) / 2, text_height / 2);
+    let icon_center = baseline - Offset::x((text_width + space) / 2);
+
+    display::text_center(
+        text_center + text_offset,
+        text,
+        style.text_font,
+        style.text_color,
+        style.background_color,
+    );
+    display::icon(icon_center, icon, style.text_color, style.background_color);
 }
 
 #[cfg(test)]

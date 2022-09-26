@@ -42,13 +42,17 @@ static void _librust_qstrs(void) {
   MP_QSTR_request_slip39;
   MP_QSTR_select_word;
   MP_QSTR_select_word_count;
+  MP_QSTR_show_busyscreen;
   MP_QSTR_show_group_share_success;
+  MP_QSTR_show_homescreen;
+  MP_QSTR_show_lockscreen;
   MP_QSTR_show_remaining_shares;
   MP_QSTR_show_share_words;
 
   MP_QSTR_attach_timer_fn;
   MP_QSTR_touch_event;
   MP_QSTR_button_event;
+  MP_QSTR_usb_event;
   MP_QSTR_timer;
   MP_QSTR_paint;
   MP_QSTR_request_complete_repaint;
@@ -90,4 +94,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_active;
   MP_QSTR_info_button;
   MP_QSTR_time_ms;
+  MP_QSTR_notification;
+  MP_QSTR_notification_level;
+  MP_QSTR_bootscreen;
 }
