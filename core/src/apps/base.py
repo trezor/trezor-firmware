@@ -291,12 +291,12 @@ def set_homescreen() -> None:
     set_default = workflow.set_default  # local_cache_attribute
 
     if storage_cache.is_set(storage_cache.APP_COMMON_BUSY_DEADLINE_MS):
-        from apps.homescreen.busyscreen import busyscreen
+        from apps.homescreen import busyscreen
 
         set_default(busyscreen)
 
     elif not config.is_unlocked():
-        from apps.homescreen.lockscreen import lockscreen
+        from apps.homescreen import lockscreen
 
         set_default(lockscreen)
 
@@ -306,7 +306,7 @@ def set_homescreen() -> None:
         set_default(recovery_homescreen)
 
     else:
-        from apps.homescreen.homescreen import homescreen
+        from apps.homescreen import homescreen
 
         set_default(homescreen)
 

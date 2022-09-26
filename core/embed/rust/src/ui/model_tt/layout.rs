@@ -43,10 +43,10 @@ use super::{
     component::{
         Bip39Input, Button, ButtonMsg, ButtonStyleSheet, CancelConfirmMsg, CancelInfoConfirmMsg,
         Dialog, DialogMsg, FidoConfirm, FidoMsg, Frame, HoldToConfirm, HoldToConfirmMsg,
-        IconDialog, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, NotificationFrame,
-        NumberInputDialog, NumberInputDialogMsg, PassphraseKeyboard, PassphraseKeyboardMsg,
-        PinKeyboard, PinKeyboardMsg, Progress, SelectWordCount, SelectWordCountMsg, SelectWordMsg,
-        Slip39Input, SwipeHoldPage, SwipePage,
+        Homescreen, HomescreenMsg, IconDialog, Lockscreen, MnemonicInput, MnemonicKeyboard,
+        MnemonicKeyboardMsg, NotificationFrame, NumberInputDialog, NumberInputDialogMsg,
+        PassphraseKeyboard, PassphraseKeyboardMsg, PinKeyboard, PinKeyboardMsg, Progress,
+        SelectWordCount, SelectWordCountMsg, SelectWordMsg, Slip39Input, SwipeHoldPage, SwipePage,
     },
     theme,
 };
@@ -292,6 +292,28 @@ where
 {
     fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         unreachable!()
+    }
+}
+
+impl<T> ComponentMsgObj for Homescreen<T>
+where
+    T: AsRef<str>,
+{
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            HomescreenMsg::Dismissed => Ok(CANCELLED.as_obj()),
+        }
+    }
+}
+
+impl<T> ComponentMsgObj for Lockscreen<T>
+where
+    T: AsRef<str>,
+{
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            HomescreenMsg::Dismissed => Ok(CANCELLED.as_obj()),
+        }
     }
 }
 
@@ -1164,6 +1186,52 @@ extern "C" fn new_show_progress(n_args: usize, args: *const Obj, kwargs: *mut Ma
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let label: StrBuffer = kwargs.get(Qstr::MP_QSTR_label)?.try_into()?;
+        let notification: Option<StrBuffer> =
+            kwargs.get(Qstr::MP_QSTR_notification)?.try_into_option()?;
+        let notification_level: u8 = kwargs.get_or(Qstr::MP_QSTR_notification_level, 0)?;
+        let hold: bool = kwargs.get(Qstr::MP_QSTR_hold)?.try_into()?;
+
+        let notification = notification.map(|w| (w, notification_level));
+        let obj = LayoutObj::new(Homescreen::new(label, notification, hold))?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_show_lockscreen(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let label: StrBuffer = kwargs.get(Qstr::MP_QSTR_label)?.try_into()?;
+        let bootscreen: bool = kwargs.get(Qstr::MP_QSTR_bootscreen)?.try_into()?;
+
+        let obj = LayoutObj::new(Lockscreen::new(label, bootscreen))?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_show_busyscreen(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
+        let time_ms: u32 = kwargs.get(Qstr::MP_QSTR_time_ms)?.try_into()?;
+
+        let obj = LayoutObj::new(Frame::new(
+            title,
+            Dialog::new(
+                Paragraphs::new(Paragraph::new(&theme::TEXT_NORMAL, description).centered()),
+                Timeout::new(time_ms).map(|msg| {
+                    (matches!(msg, TimeoutMsg::TimedOut)).then(|| CancelConfirmMsg::Cancelled)
+                }),
+            ),
+        ))?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 #[no_mangle]
 pub static mp_module_trezorui2: Module = obj_module! {
     Qstr::MP_QSTR___name__ => Qstr::MP_QSTR_trezorui2.to_obj(),
@@ -1454,7 +1522,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def select_word_count(
     ///     *,
     ///     dry_run: bool,
-    /// ) -> int | trezorui2.CANCELLED:
+    /// ) -> int | CANCELLED:
     ///    """Select mnemonic word count from (12, 18, 20, 24, 33)."""
     Qstr::MP_QSTR_select_word_count => obj_fn_kw!(0, new_select_word_count).as_obj(),
 
@@ -1482,6 +1550,36 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///    description is determined at construction time. If you want multiline descriptions
     ///    make sure the initial desciption has at least that amount of lines."""
     Qstr::MP_QSTR_show_progress => obj_fn_kw!(0, new_show_progress).as_obj(),
+
+    /// def show_homescreen(
+    ///     *,
+    ///     label: str,
+    ///     hold: bool,
+    ///     notification: str | None,
+    ///     notification_level: int = 0,
+    ///     skip_first_paint: bool,
+    /// ) -> CANCELLED:
+    ///     """Idle homescreen."""
+    Qstr::MP_QSTR_show_homescreen => obj_fn_kw!(0, new_show_homescreen).as_obj(),
+
+    /// def show_lockscreen(
+    ///     *,
+    ///     label: str,
+    ///     bootscreen: bool,
+    ///     skip_first_paint: bool,
+    /// ) -> CANCELLED:
+    ///     """Homescreen for locked device."""
+    Qstr::MP_QSTR_show_lockscreen => obj_fn_kw!(0, new_show_lockscreen).as_obj(),
+
+    /// def show_busyscreen(
+    ///     *,
+    ///     title: str,
+    ///     description: str,
+    ///     time_ms: int,
+    ///     skip_first_paint: bool,
+    /// ) -> CANCELLED:
+    ///     """Homescreen used for indicating coinjoin in progress."""
+    Qstr::MP_QSTR_show_busyscreen => obj_fn_kw!(0, new_show_busyscreen).as_obj(),
 };
 
 #[cfg(test)]

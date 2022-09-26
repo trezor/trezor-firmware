@@ -26,6 +26,7 @@ use crate::{
 use crate::ui::event::ButtonEvent;
 #[cfg(feature = "touch")]
 use crate::ui::event::TouchEvent;
+use crate::ui::event::USBEvent;
 
 /// Conversion trait implemented by components that know how to convert their
 /// message values into MicroPython `Obj`s.
@@ -273,6 +274,7 @@ impl LayoutObj {
                 Qstr::MP_QSTR_touch_event => obj_fn_var!(4, 4, ui_layout_touch_event).as_obj(),
                 Qstr::MP_QSTR_button_event => obj_fn_var!(3, 3, ui_layout_button_event).as_obj(),
                 Qstr::MP_QSTR_progress_event => obj_fn_var!(3, 3, ui_layout_progress_event).as_obj(),
+                Qstr::MP_QSTR_usb_event => obj_fn_var!(2, 2, ui_layout_usb_event).as_obj(),
                 Qstr::MP_QSTR_timer => obj_fn_2!(ui_layout_timer).as_obj(),
                 Qstr::MP_QSTR_paint => obj_fn_1!(ui_layout_paint).as_obj(),
                 Qstr::MP_QSTR_request_complete_repaint => obj_fn_1!(ui_layout_request_complete_repaint).as_obj(),
@@ -407,6 +409,19 @@ extern "C" fn ui_layout_progress_event(n_args: usize, args: *const Obj) -> Obj {
         let value: u16 = args[1].try_into()?;
         let description: StrBuffer = args[2].try_into()?;
         let msg = this.obj_event(Event::Progress(value, description.as_ref()))?;
+        Ok(msg)
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
+}
+
+extern "C" fn ui_layout_usb_event(n_args: usize, args: *const Obj) -> Obj {
+    let block = |args: &[Obj], _kwargs: &Map| {
+        if args.len() != 2 {
+            return Err(Error::TypeError);
+        }
+        let this: Gc<LayoutObj> = args[0].try_into()?;
+        let event = USBEvent::Connected(args[1].try_into()?);
+        let msg = this.obj_event(Event::USB(event))?;
         Ok(msg)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }

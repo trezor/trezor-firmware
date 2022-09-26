@@ -44,6 +44,16 @@ impl Loader {
         }
     }
 
+    pub fn with_durations(
+        mut self,
+        growing_duration: Duration,
+        shrinking_duration: Duration,
+    ) -> Self {
+        self.growing_duration = growing_duration;
+        self.shrinking_duration = shrinking_duration;
+        self
+    }
+
     pub fn start_growing(&mut self, ctx: &mut EventCtx, now: Instant) {
         let mut anim = Animation::new(
             display::LOADER_MIN,

@@ -15,6 +15,7 @@ use crate::{
 use crate::ui::event::ButtonEvent;
 #[cfg(feature = "touch")]
 use crate::ui::event::TouchEvent;
+use crate::ui::event::USBEvent;
 
 /// Type used by components that do not return any messages.
 ///
@@ -335,6 +336,7 @@ pub enum Event<'a> {
     Button(ButtonEvent),
     #[cfg(feature = "touch")]
     Touch(TouchEvent),
+    USB(USBEvent),
     /// Previously requested timer was triggered. This invalidates the timer
     /// token (another timer has to be requested).
     Timer(TimerToken),
