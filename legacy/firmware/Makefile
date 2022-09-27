@@ -60,6 +60,7 @@ OBJS += crypto.o
 ifneq ($(BITCOIN_ONLY),1)
 OBJS += u2f.o
 OBJS += ethereum.o
+OBJS += ethereum_networks.o
 OBJS += ethereum_tokens.o
 OBJS += nem2.o
 OBJS += nem_mosaics.o

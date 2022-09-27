@@ -329,7 +329,7 @@ static void ethereumFormatAmount(const bignum256 *amnt, const TokenType *token,
     suffix = " Wei";
     decimals = 0;
   } else {
-    ASSIGN_ETHEREUM_SUFFIX(suffix, chain_id);
+    suffix = get_ethereum_suffix(chain_id);
   }
   bn_format(amnt, NULL, suffix, decimals, 0, false, ',', buf, buflen);
 }
