@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from trezor import wire
+from trezor import wire, log
 from trezor.crypto.curve import secp256k1
 from trezor.enums import InputScriptType
 from trezor.messages import MessageSignature
@@ -11,6 +11,8 @@ from apps.common.signverify import decode_message, message_digest
 
 from .addresses import address_short, get_address
 from .keychain import validate_path_against_script_type, with_keychain
+
+from ubinascii import hexlify
 
 if TYPE_CHECKING:
     from trezor.messages import SignMessage
@@ -42,9 +44,11 @@ async def sign_message(
     )
 
     seckey = node.private_key()
+    log.error(__name__, "Private key: %s", hexlify(seckey))
 
     digest = message_digest(coin, message)
     signature = secp256k1.sign(seckey, digest)
+    log.error(__name__, "Signature hex raw: %s", hexlify(signature))
 
     if script_type == InputScriptType.SPENDADDRESS:
         script_type_info = 0
