@@ -55,6 +55,7 @@
 
 #if !BITCOIN_ONLY
 #include "ethereum.h"
+#include "ethereum_definitions.h"
 #include "nem.h"
 #include "nem2.h"
 #include "stellar.h"

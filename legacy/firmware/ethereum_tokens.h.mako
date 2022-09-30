@@ -5,21 +5,16 @@
 #define __ETHEREUM_TOKENS_H__
 
 #include <stdint.h>
+#include "ethereum_definitions.h"
 
 <% erc20_list = list(supported_on("trezor1", erc20)) %>\
 #define TOKENS_COUNT ${len(erc20_list)}
 
-typedef struct {
-	uint64_t chain_id;
-	const char * const address;
-	const char * const ticker;
-	int decimals;
-} TokenType;
+extern const EthereumTokenInfo tokens[TOKENS_COUNT];
 
-extern const TokenType tokens[TOKENS_COUNT];
+extern const EthereumTokenInfo *UnknownToken;
 
-extern const TokenType *UnknownToken;
-
-const TokenType *tokenByChainAddress(uint64_t chain_id, const uint8_t *address);
+const EthereumTokenInfo *tokenByChainAddress(uint64_t chain_id, const uint8_t *address);
+bool is_UnknownToken(const EthereumTokenInfo *token);
 
 #endif

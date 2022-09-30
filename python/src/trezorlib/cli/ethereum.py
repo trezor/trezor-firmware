@@ -710,9 +710,15 @@ def verify_message(
 @click.option("-n", "--address", required=True, help=PATH_HELP)
 @click.argument("domain_hash_hex")
 @click.argument("message_hash_hex")
+@definitions_dir_option
+@network_def_option
+@download_definitions_option
 @with_client
 def sign_typed_data_hash(
-    client: "TrezorClient", address: str, domain_hash_hex: str, message_hash_hex: str
+    client: "TrezorClient", address: str, domain_hash_hex: str, message_hash_hex: str,
+    definitions_dir: pathlib.Path,
+    network_def: BinaryIO,
+    download_definitions: bool,
 ) -> Dict[str, str]:
     """
     Sign hash of typed data (EIP-712) with Ethereum address.
@@ -724,7 +730,13 @@ def sign_typed_data_hash(
     address_n = tools.parse_path(address)
     domain_hash = ethereum.decode_hex(domain_hash_hex)
     message_hash = ethereum.decode_hex(message_hash_hex) if message_hash_hex else None
-    ret = ethereum.sign_typed_data_hash(client, address_n, domain_hash, message_hash)
+    defs = _get_ethereum_definitions(
+        definitions_dir=definitions_dir,
+        network_def_file=network_def,
+        download_definitions=download_definitions,
+        slip44_hardened=address_n[1],
+    )
+    ret = ethereum.sign_typed_data_hash(client, address_n, domain_hash, message_hash, defs.encoded_network)
     output = {
         "domain_hash": domain_hash_hex,
         "message_hash": message_hash_hex,

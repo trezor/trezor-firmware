@@ -34,6 +34,7 @@ const char *get_ethereum_suffix(uint64_t chain_id) {
   }
 }
 
+// TODO: do we need this functions?
 bool is_ethereum_slip44(uint32_t slip44) {
   switch (slip44) {
 % for slip44 in sorted(set(n.slip44 for n in networks)):

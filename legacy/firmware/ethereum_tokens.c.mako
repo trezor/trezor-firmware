@@ -4,22 +4,42 @@
 #include <string.h>
 #include "ethereum_tokens.h"
 
-const TokenType tokens[TOKENS_COUNT] = {
-% for t in supported_on("trezor1", erc20):
-	{${"{:>2}".format(t.chain_id)}, ${c_str(t.address_bytes)}, " ${ascii(t.symbol)}", ${t.decimals}}, // ${t.chain} / ${t.name}
+#define format_token_init(ch, sym, addr, dec) { ${"\\"}
+  .symbol = (sym),   ${"\\"}
+  .decimals = (dec), ${"\\"}
+  .address = {       ${"\\"}
+    .size = 20,      ${"\\"}
+    .bytes = (addr)  ${"\\"}
+  },                 ${"\\"}
+  .chain_id = (ch),  ${"\\"}
+  .name = ""         ${"\\"}
+}
+
+const EthereumTokenInfo tokens[TOKENS_COUNT] = {
+  // TODO: test symbol length 10
+% for t in sorted(supported_on("trezor1", erc20), key=lambda token: (token.chain_id, token.name)):
+  format_token_init(${"{:>2}".format(t.chain_id)}, " ${ascii(t.symbol)}", ${c_str(t.address_bytes)}, ${t.decimals}), // ${t.chain} / ${t.name}
 % endfor
 };
 
-static const TokenType _UnknownToken = { 0, "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff", " UNKN", 0 };
-const TokenType *UnknownToken = &_UnknownToken;
+static const EthereumTokenInfo _UnknownToken = format_token_init(0, " UNKN", "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff", 0);
+const EthereumTokenInfo *UnknownToken = &_UnknownToken;
 
-const TokenType *tokenByChainAddress(uint64_t chain_id, const uint8_t *address)
+const EthereumTokenInfo *tokenByChainAddress(uint64_t chain_id, const uint8_t *address)
 {
-	if (!address) return 0;
-	for (int i = 0; i < TOKENS_COUNT; i++) {
-		if (chain_id == tokens[i].chain_id && memcmp(address, tokens[i].address, 20) == 0) {
-			return &(tokens[i]);
-		}
-	}
-	return UnknownToken;
+  if (!address) return 0;
+  for (int i = 0; i < TOKENS_COUNT; i++) {
+    if (chain_id == tokens[i].chain_id && memcmp(address, tokens[i].address.bytes, sizeof(tokens[i].address.bytes)) == 0) {
+      return &(tokens[i]);
+    }
+  }
+  return UnknownToken;
+}
+
+bool is_UnknownToken(const EthereumTokenInfo *token) {
+  if (!token) return false;
+  if (token->chain_id == _UnknownToken.chain_id && token->address.size == _UnknownToken.address.size && memcmp(token->address.bytes, _UnknownToken.address.bytes, sizeof(_UnknownToken.address.bytes)) == 0) {
+    return true;
+  }
+  return false;
 }

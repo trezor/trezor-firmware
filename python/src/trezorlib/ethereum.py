@@ -519,11 +519,13 @@ def sign_typed_data_hash(
     n: "Address",
     domain_hash: bytes,
     message_hash: Optional[bytes],
+    encoded_network: bytes = None,
 ) -> "MessageType":
     return client.call(
         messages.EthereumSignTypedHash(
             address_n=n,
             domain_separator_hash=domain_hash,
             message_hash=message_hash,
+            encoded_network=encoded_network,
         )
     )
