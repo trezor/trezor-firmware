@@ -254,7 +254,7 @@ def token_definition_from_dir(
         path
         / DEFS_NETWORK_BY_CHAINID_LOOKUP_TYPE
         / str(chain_id)
-        / (DEFS_TOKEN_URI_NAME.format(hex_address=token_address) + ".dat")
+        / (DEFS_TOKEN_URI_NAME.format(hex_address=token_address.lower()) + ".dat")
     )
     if not path.exists() or not path.is_file():
         return None
