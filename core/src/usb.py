@@ -29,6 +29,23 @@ ENABLE_IFACE_DEBUG = __debug__
 ENABLE_IFACE_WEBAUTHN = not utils.BITCOIN_ONLY
 ENABLE_IFACE_VCP = __debug__
 
+
+def add_interfaces() -> None:
+    """Add all relevant interfaces to the USB bus.
+
+    We do not add interfaces at the import time,
+    as we want to open empty USB connection.
+    """
+    bus.add(iface_wire)
+
+    if __debug__ and ENABLE_IFACE_DEBUG:
+        bus.add(iface_debug)
+    if not utils.BITCOIN_ONLY and ENABLE_IFACE_WEBAUTHN:
+        bus.add(iface_webauthn)
+    if __debug__ and ENABLE_IFACE_VCP:
+        bus.add(iface_vcp)
+
+
 # interface used for trezor wire protocol
 id_wire = next(_iface_iter)
 iface_wire = io.WebUSB(
@@ -37,7 +54,6 @@ iface_wire = io.WebUSB(
     ep_out=0x01 + id_wire,
     emu_port=UDP_PORT + WIRE_PORT_OFFSET,
 )
-bus.add(iface_wire)
 
 # XXXXXXXXXXXXXXXXXXX
 #
@@ -59,7 +75,6 @@ if __debug__ and ENABLE_IFACE_DEBUG:
         ep_out=0x01 + id_debug,
         emu_port=UDP_PORT + DEBUGLINK_PORT_OFFSET,
     )
-    bus.add(iface_debug)
 
 if not utils.BITCOIN_ONLY and ENABLE_IFACE_WEBAUTHN:
     # interface used for FIDO/U2F and FIDO2/WebAuthn HID transport
@@ -90,7 +105,6 @@ if not utils.BITCOIN_ONLY and ENABLE_IFACE_WEBAUTHN:
         ]),
         # fmt: on
     )
-    bus.add(iface_webauthn)
 
 if __debug__ and ENABLE_IFACE_VCP:
     # interface used for cdc/vcp console emulation (debug messages)
@@ -104,4 +118,3 @@ if __debug__ and ENABLE_IFACE_VCP:
         ep_cmd=0x81 + id_vcp_data,
         emu_port=UDP_PORT + VCP_PORT_OFFSET,
     )
-    bus.add(iface_vcp)

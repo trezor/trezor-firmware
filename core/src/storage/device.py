@@ -84,9 +84,12 @@ def _new_device_id() -> str:
 
 
 def get_device_id() -> str:
+    import trezorconfig
+
     dev_id = common.get(_NAMESPACE, DEVICE_ID, public=True)
     if not dev_id:
         dev_id = _new_device_id().encode()
+        trezorconfig.unlock("", None)
         common.set(_NAMESPACE, DEVICE_ID, dev_id, public=True)
     return dev_id.decode()
 
