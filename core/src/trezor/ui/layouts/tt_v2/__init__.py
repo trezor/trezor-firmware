@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 from ubinascii import hexlify
 
+import storage.cache
 from trezor import io, log, loop, ui, wire, workflow
 from trezor.enums import ButtonRequestType
 
@@ -31,6 +32,11 @@ class _RustLayout(ui.Layout):
     def request_complete_repaint(self) -> None:
         msg = self.layout.request_complete_repaint()
         assert msg is None
+
+    def _paint(self) -> None:
+        painted = self.layout.paint()
+        if storage.cache.homescreen_shown is not None and painted:
+            storage.cache.homescreen_shown = None
 
     if __debug__:
 
@@ -81,7 +87,7 @@ class _RustLayout(ui.Layout):
                     (io.TOUCH_END, orig_x + 2 * off_x, orig_y + 2 * off_y),
                 ):
                     msg = self.layout.touch_event(event, x, y)
-                    self.layout.paint()
+                    self._paint()
                     if msg is not None:
                         raise ui.Result(msg)
 
@@ -111,7 +117,7 @@ class _RustLayout(ui.Layout):
         def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
             return self.handle_timers(), self.handle_input_and_rendering()
 
-    def _before_render(self) -> None:
+    def _first_paint(self) -> None:
         # Clear the screen of any leftovers.
         ui.backlight_fade(ui.style.BACKLIGHT_DIM)
         ui.display.clear()
@@ -127,11 +133,11 @@ class _RustLayout(ui.Layout):
 
         # Turn the brightness on again.
         ui.backlight_fade(self.BACKLIGHT_LEVEL)
+        self._paint()
 
     def handle_input_and_rendering(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
         touch = loop.wait(io.TOUCH)
-        self._before_render()
-        self.layout.paint()
+        self._first_paint()
         # self.layout.bounds()
         while True:
             # Using `yield` instead of `await` to avoid allocations.
@@ -140,7 +146,7 @@ class _RustLayout(ui.Layout):
             msg = None
             if event in (io.TOUCH_START, io.TOUCH_MOVE, io.TOUCH_END):
                 msg = self.layout.touch_event(event, x, y)
-            self.layout.paint()
+            self._paint()
             # self.layout.bounds()
             if msg is not None:
                 raise ui.Result(msg)
@@ -150,7 +156,7 @@ class _RustLayout(ui.Layout):
             # Using `yield` instead of `await` to avoid allocations.
             token = yield self.timer
             msg = self.layout.timer(token)
-            self.layout.paint()
+            self._paint()
             if msg is not None:
                 raise ui.Result(msg)
 

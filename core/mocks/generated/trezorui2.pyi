@@ -357,6 +357,7 @@ def show_homescreen(
     hold: bool,
     notification: str | None,
     notification_level: int = 0,
+    skip_first_paint: bool,
 ) -> trezorui2.CANCELLED:
     """Idle homescreen."""
 
@@ -366,6 +367,7 @@ def show_lockscreen(
     *,
     label: str,
     bootscreen: bool,
+    skip_first_paint: bool,
 ) -> trezorui2.CANCELLED:
     """Homescreen for locked device."""
 
@@ -376,5 +378,6 @@ def show_busyscreen(
     title: str,
     description: str,
     time_ms: int,
+    skip_first_paint: bool,
 ) -> trezorui2.CANCELLED:
     """Homescreen used for indicating coinjoin in progress."""
