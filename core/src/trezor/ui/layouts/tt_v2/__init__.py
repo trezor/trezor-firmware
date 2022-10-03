@@ -48,6 +48,13 @@ class _RustLayout(ui.Layout):
         msg = self.layout.request_complete_repaint()
         assert msg is None
 
+    def _paint(self) -> None:
+        import storage.cache as storage_cache
+
+        painted = self.layout.paint()
+        if storage_cache.homescreen_shown is not None and painted:
+            storage_cache.homescreen_shown = None
+
     if __debug__:
 
         def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
@@ -97,7 +104,7 @@ class _RustLayout(ui.Layout):
                     (io.TOUCH_END, orig_x + 2 * off_x, orig_y + 2 * off_y),
                 ):
                     msg = self.layout.touch_event(event, x, y)
-                    self.layout.paint()
+                    self._paint()
                     if msg is not None:
                         raise ui.Result(msg)
 
@@ -127,11 +134,11 @@ class _RustLayout(ui.Layout):
         def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
             return self.handle_timers(), self.handle_input_and_rendering()
 
-    def _before_render(self) -> None:
+    def _first_paint(self) -> None:
         # Clear the screen of any leftovers.
         ui.backlight_fade(ui.style.BACKLIGHT_DIM)
         ui.display.clear()
-        self.layout.paint()
+        self._paint()
 
         if __debug__ and self.should_notify_layout_change:
             from apps.debug import notify_layout_change
@@ -149,7 +156,7 @@ class _RustLayout(ui.Layout):
         from trezor import workflow
 
         touch = loop.wait(io.TOUCH)
-        self._before_render()
+        self._first_paint()
         # self.layout.bounds()
         while True:
             # Using `yield` instead of `await` to avoid allocations.
@@ -160,7 +167,7 @@ class _RustLayout(ui.Layout):
                 msg = self.layout.touch_event(event, x, y)
             if msg is not None:
                 raise ui.Result(msg)
-            self.layout.paint()
+            self._paint()
             # self.layout.bounds()
 
     def handle_timers(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
@@ -170,7 +177,7 @@ class _RustLayout(ui.Layout):
             msg = self.layout.timer(token)
             if msg is not None:
                 raise ui.Result(msg)
-            self.layout.paint()
+            self._paint()
 
     def page_count(self) -> int:
         return self.layout.page_count()
