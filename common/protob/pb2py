@@ -638,7 +638,7 @@ class RustBlobRenderer:
             return DEFAULT_VARINT_ENTRY.build((field.number, int(default)))
 
         elif field.type == FieldDescriptor.TYPE_BOOL:
-            return DEFAULT_VARINT_ENTRY.build((field.number, int(default == "True")))
+            return DEFAULT_VARINT_ENTRY.build((field.number, int(default == "true")))
 
         elif field.type == FieldDescriptor.TYPE_BYTES:
             if default != "":
