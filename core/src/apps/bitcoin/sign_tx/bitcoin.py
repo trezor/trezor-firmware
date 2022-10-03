@@ -69,8 +69,8 @@ class Bitcoin:
         progress.init_signing(
             len(self.external),
             len(self.segwit),
+            len(self.presigned),
             self.taproot_only,
-            self.has_presigned,
             self.serialize,
             self.coin,
             self.tx_info.tx,
@@ -118,11 +118,11 @@ class Bitcoin:
         # set of indices of inputs which are external
         self.external: set[int] = set()
 
+        # set of indices of inputs which are presigned
+        self.presigned: set[int] = set()
+
         # indicates whether all internal inputs are Taproot
         self.taproot_only = True
-
-        # indicates whether any external inputs are presigned
-        self.has_presigned = False
 
         # transaction and signature serialization
         _SERIALIZED_TX_BUFFER[:] = bytes()
@@ -139,10 +139,10 @@ class Bitcoin:
         # stable device tests.
         self.orig_txs: list[OriginalTxInfo] = []
 
-        # The digests of the external inputs streamed for approval in Step 1. These are used
-        # to ensure that the inputs streamed for verification in Step 3 are the same as
+        # The digest of the presigned external inputs streamed for approval in Step 1. This is
+        # used to ensure that the inputs streamed for verification in Step 3 are the same as
         # those in Step 1.
-        self.h_external_inputs: bytes | None = None
+        self.h_presigned_inputs: bytes | None = None
 
         # The index of the payment request being processed.
         self.payment_req_index: int | None = None
@@ -154,7 +154,7 @@ class Bitcoin:
         return BitcoinSigHasher()
 
     async def step1_process_inputs(self) -> None:
-        h_external_inputs_check = HashWriter(sha256())
+        h_presigned_inputs_check = HashWriter(sha256())
 
         for i in range(self.tx_info.tx.inputs_count):
             # STAGE_REQUEST_1_INPUT in legacy
@@ -173,7 +173,9 @@ class Bitcoin:
 
             if input_is_external(txi):
                 self.external.add(i)
-                writers.write_tx_input_check(h_external_inputs_check, txi)
+                if txi.witness or txi.script_sig:
+                    self.presigned.add(i)
+                    writers.write_tx_input_check(h_presigned_inputs_check, txi)
                 await self.process_external_input(txi, script_pubkey)
             else:
                 await self.process_internal_input(txi)
@@ -182,7 +184,7 @@ class Bitcoin:
                 await self.process_original_input(txi, script_pubkey)
 
         self.tx_info.h_inputs_check = self.tx_info.get_tx_check_digest()
-        self.h_external_inputs = h_external_inputs_check.get_digest()
+        self.h_presigned_inputs = h_presigned_inputs_check.get_digest()
 
         # Finalize original inputs.
         for orig in self.orig_txs:
@@ -214,25 +216,23 @@ class Bitcoin:
     async def step3_verify_inputs(self) -> None:
         # should come out the same as h_inputs_check, checked before continuing
         h_check = HashWriter(sha256())
-        expected_digest = None
 
         if self.taproot_only:
             # All internal inputs are Taproot. We only need to verify presigned external inputs.
             # We can trust the amounts and scriptPubKeys, because if an invalid value is provided
             # then all issued signatures will be invalid.
-            if self.has_presigned:
-                expected_digest = self.h_external_inputs
-                for i in range(self.tx_info.tx.inputs_count):
-                    if i in self.external:
-                        progress.advance()
-                        txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
-                        writers.write_tx_input_check(h_check, txi)
-                        if txi.witness or txi.script_sig:
-                            # txi.script_pubkey checked in sanitize_tx_input
-                            assert txi.script_pubkey is not None
-                            await self.verify_presigned_external_input(
-                                i, txi, txi.script_pubkey
-                            )
+            expected_digest = self.h_presigned_inputs
+            for i in range(self.tx_info.tx.inputs_count):
+                if i in self.presigned:
+                    progress.advance()
+                    txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
+                    writers.write_tx_input_check(h_check, txi)
+
+                    # txi.script_pubkey checked in sanitize_tx_input
+                    assert txi.script_pubkey is not None
+                    await self.verify_presigned_external_input(
+                        i, txi, txi.script_pubkey
+                    )
         else:
             # There are internal non-Taproot inputs. We need to verify all inputs, because we can't
             # trust any amounts or scriptPubKeys. If we did, then an attacker who provides invalid
@@ -256,11 +256,11 @@ class Bitcoin:
                 if script_pubkey != self.input_derive_script(txi):
                     raise wire.DataError("Input does not match scriptPubKey")
 
-                if i in self.external and (txi.witness or txi.script_sig):
+                if i in self.presigned:
                     await self.verify_presigned_external_input(i, txi, script_pubkey)
 
         # check that the inputs were the same as those streamed for approval
-        if expected_digest and h_check.get_digest() != expected_digest:
+        if h_check.get_digest() != expected_digest:
             raise wire.ProcessError("Transaction has changed during signing")
 
         # verify the signature of one SIGHASH_ALL input in each original transaction
@@ -301,9 +301,14 @@ class Bitcoin:
             if i in self.segwit:
                 if i in self.external:
                     if self.serialize:
-                        progress.advance()
-                        txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
-                        self.serialized_tx.extend(txi.witness or b"\0")
+                        if i in self.presigned:
+                            progress.advance()
+                            txi = await helpers.request_tx_input(
+                                self.tx_req, i, self.coin
+                            )
+                            self.serialized_tx.extend(txi.witness or b"\0")
+                        else:
+                            self.serialized_tx.append(0)
                 else:
                     progress.advance()
                     await self.sign_segwit_input(i)
@@ -327,8 +332,6 @@ class Bitcoin:
 
     async def process_external_input(self, txi: TxInput, script_pubkey: bytes) -> None:
         self.approver.add_external_input(txi)
-        if txi.witness or txi.script_sig:
-            self.has_presigned = True
 
         if txi.ownership_proof:
             if not verify_nonownership(
