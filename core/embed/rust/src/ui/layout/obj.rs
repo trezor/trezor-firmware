@@ -62,8 +62,9 @@ use maybe_trace::MaybeTrace;
 pub trait ObjComponent: MaybeTrace {
     fn obj_place(&mut self, bounds: Rect) -> Rect;
     fn obj_event(&mut self, ctx: &mut EventCtx, event: Event) -> Result<Obj, Error>;
-    fn obj_paint(&mut self);
+    fn obj_paint(&mut self) -> bool;
     fn obj_bounds(&self, sink: &mut dyn FnMut(Rect));
+    fn obj_skip_paint(&mut self) {}
 }
 
 impl<T> ObjComponent for Child<T>
@@ -82,12 +83,18 @@ where
         }
     }
 
-    fn obj_paint(&mut self) {
+    fn obj_paint(&mut self) -> bool {
+        let will_paint = self.will_paint();
         self.paint();
+        will_paint
     }
 
     fn obj_bounds(&self, sink: &mut dyn FnMut(Rect)) {
         self.bounds(sink)
+    }
+
+    fn obj_skip_paint(&mut self) {
+        self.skip_paint()
     }
 }
 
@@ -126,6 +133,13 @@ impl LayoutObj {
                 page_count: 1,
             }),
         })
+    }
+
+    pub fn skip_first_paint(&self) {
+        let mut inner = self.inner.borrow_mut();
+
+        // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
+        unsafe { Gc::as_mut(&mut inner.root) }.obj_skip_paint();
     }
 
     /// Timer callback is expected to be a callable object of the following
@@ -175,8 +189,9 @@ impl LayoutObj {
         Ok(msg)
     }
 
-    /// Run a paint pass over the component tree.
-    fn obj_paint_if_requested(&self) {
+    /// Run a paint pass over the component tree. Returns true if any component
+    /// actually requested painting since last invocation of the function.
+    fn obj_paint_if_requested(&self) -> bool {
         let mut inner = self.inner.borrow_mut();
 
         // Place the root component on the screen in case it was previously requested.
@@ -186,7 +201,7 @@ impl LayoutObj {
         }
 
         // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
-        unsafe { Gc::as_mut(&mut inner.root) }.obj_paint();
+        unsafe { Gc::as_mut(&mut inner.root) }.obj_paint()
     }
 
     /// Run a tracing pass over the component tree. Passed `callback` is called
@@ -440,8 +455,8 @@ extern "C" fn ui_layout_timer(this: Obj, token: Obj) -> Obj {
 extern "C" fn ui_layout_paint(this: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
-        this.obj_paint_if_requested();
-        Ok(Obj::const_true())
+        let painted = this.obj_paint_if_requested().into();
+        Ok(painted)
     };
     unsafe { util::try_or_raise(block) }
 }

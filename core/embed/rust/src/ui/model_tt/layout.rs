@@ -1193,9 +1193,13 @@ extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut 
             kwargs.get(Qstr::MP_QSTR_notification)?.try_into_option()?;
         let notification_level: u8 = kwargs.get_or(Qstr::MP_QSTR_notification_level, 0)?;
         let hold: bool = kwargs.get(Qstr::MP_QSTR_hold)?.try_into()?;
+        let skip_first_paint: bool = kwargs.get(Qstr::MP_QSTR_skip_first_paint)?.try_into()?;
 
         let notification = notification.map(|w| (w, notification_level));
         let obj = LayoutObj::new(Homescreen::new(label, notification, hold))?;
+        if skip_first_paint {
+            obj.skip_first_paint();
+        }
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1205,8 +1209,12 @@ extern "C" fn new_show_lockscreen(n_args: usize, args: *const Obj, kwargs: *mut 
     let block = move |_args: &[Obj], kwargs: &Map| {
         let label: StrBuffer = kwargs.get(Qstr::MP_QSTR_label)?.try_into()?;
         let bootscreen: bool = kwargs.get(Qstr::MP_QSTR_bootscreen)?.try_into()?;
+        let skip_first_paint: bool = kwargs.get(Qstr::MP_QSTR_skip_first_paint)?.try_into()?;
 
         let obj = LayoutObj::new(Lockscreen::new(label, bootscreen))?;
+        if skip_first_paint {
+            obj.skip_first_paint();
+        }
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1217,6 +1225,7 @@ extern "C" fn new_show_busyscreen(n_args: usize, args: *const Obj, kwargs: *mut 
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let time_ms: u32 = kwargs.get(Qstr::MP_QSTR_time_ms)?.try_into()?;
+        let skip_first_paint: bool = kwargs.get(Qstr::MP_QSTR_skip_first_paint)?.try_into()?;
 
         let obj = LayoutObj::new(Frame::new(
             title,
@@ -1227,6 +1236,9 @@ extern "C" fn new_show_busyscreen(n_args: usize, args: *const Obj, kwargs: *mut 
                 }),
             ),
         ))?;
+        if skip_first_paint {
+            obj.skip_first_paint();
+        }
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
