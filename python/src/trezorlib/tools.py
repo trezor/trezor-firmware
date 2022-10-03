@@ -33,6 +33,8 @@ from typing import (
     overload,
 )
 
+import construct
+
 if TYPE_CHECKING:
     from .client import TrezorClient
     from .protobuf import MessageType
@@ -372,3 +374,18 @@ def descriptor_checksum(desc: str) -> str:
     for j in range(0, 8):
         ret[j] = CHECKSUM_CHARSET[(c >> (5 * (7 - j))) & 31]
     return "".join(ret)
+
+
+class EnumAdapter(construct.Adapter):
+    def __init__(self, subcon: Any, enum: Any) -> None:
+        self.enum = enum
+        super().__init__(subcon)
+
+    def _encode(self, obj: Any, ctx: Any, path: Any):
+        return obj.value
+
+    def _decode(self, obj: Any, ctx: Any, path: Any):
+        try:
+            return self.enum(obj)
+        except ValueError:
+            return obj
