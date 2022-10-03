@@ -624,7 +624,6 @@ def test_p2wpkh_with_proof(client: Client):
                 request_input(1),
                 request_output(0),
                 request_output(1),
-                request_input(0),
                 request_input(1),
                 request_finished(),
             ]
@@ -702,7 +701,6 @@ def test_p2tr_with_proof(client: Client):
                 request_input(0),
                 request_input(1),
                 request_output(0),
-                request_input(0),
                 request_input(1),
                 request_finished(),
             ]

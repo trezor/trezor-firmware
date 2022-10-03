@@ -40,8 +40,8 @@ class Progress:
         self,
         external: int,
         segwit: int,
+        presigned: int,
         taproot_only: bool,
-        has_presigned: bool,
         serialize: bool,
         coin: CoinInfo,
         tx: SignTx,
@@ -56,8 +56,7 @@ class Progress:
 
         # Step 3 - verify inputs
         if taproot_only or (coin.overwintered and tx.version == 5):
-            if has_presigned:
-                self.steps += external
+            self.steps += presigned
         else:
             self.steps = tx.inputs_count * _PREV_TX_MULTIPLIER
 
@@ -82,8 +81,14 @@ class Progress:
 
         # Steps 4 and 6 - serialize and sign inputs
         if serialize:
-            self.steps += tx.inputs_count + segwit
+            # Step 4 - serialize all inputs.
+            self.steps += tx.inputs_count
+
+            # Step 6 - serialize witnesses for all segwit inputs except for the
+            # external ones that are not presigned.
+            self.steps += segwit - (external - presigned)
         else:
+            # Add the number of inputs to be signed.
             self.steps += tx.inputs_count - external
 
         # Step 5 - serialize outputs
