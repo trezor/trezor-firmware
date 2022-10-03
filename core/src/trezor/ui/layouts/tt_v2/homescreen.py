@@ -8,7 +8,7 @@ import trezorui2
 from . import _RustLayout
 
 if TYPE_CHECKING:
-    from trezor import io
+    from trezor import loop
     from typing import Any, Tuple
 
 
@@ -27,6 +27,23 @@ class HomescreenBase(_RustLayout):
         except ui.Cancelled:
             storage_cache.homescreen_shown = None
             raise
+
+    def _first_paint(self) -> None:
+        from trezor import utils
+
+        if storage_cache.homescreen_shown is not self.RENDER_INDICATOR:
+            super()._first_paint()
+            storage_cache.homescreen_shown = self.RENDER_INDICATOR
+
+        # - RENDER_INDICATOR is set -> USB warning is not displayed
+        # - RENDER_INDICATOR is not set -> initially homescreen does not display warning
+        # - usb_checker_task only handles state changes
+        # Here we need to handle the case when homescreen is started with USB disconnected.
+        if not utils.usb_data_connected():
+            msg = self.layout.usb_event(False)
+            self._paint()
+            if msg is not None:
+                raise ui.Result(msg)
 
 
 class Homescreen(HomescreenBase):
@@ -47,12 +64,14 @@ class Homescreen(HomescreenBase):
             elif notification_is_error:
                 level = 0
 
+        skip = storage_cache.homescreen_shown is self.RENDER_INDICATOR
         super().__init__(
             layout=trezorui2.show_homescreen(
                 label=label or "My Trezor",
                 notification=notification,
                 notification_level=level,
                 hold=hold_to_lock,
+                skip_first_paint=skip,
             ),
         )
 
@@ -85,10 +104,14 @@ class Lockscreen(HomescreenBase):
         if bootscreen:
             self.BACKLIGHT_LEVEL = ui.BACKLIGHT_NORMAL
 
+        skip = (
+            not bootscreen and storage_cache.homescreen_shown is self.RENDER_INDICATOR
+        )
         super().__init__(
             layout=trezorui2.show_lockscreen(
                 label=label or "My Trezor",
                 bootscreen=bootscreen,
+                skip_first_paint=skip,
             ),
         )
 
@@ -103,11 +126,13 @@ class Busyscreen(HomescreenBase):
     RENDER_INDICATOR = storage_cache.BUSYSCREEN_ON
 
     def __init__(self, delay_ms: int) -> None:
+        skip = storage_cache.homescreen_shown is self.RENDER_INDICATOR
         super().__init__(
             layout=trezorui2.show_busyscreen(
                 title="PLEASE WAIT",
                 description="CoinJoin in progress.\n\nDo not disconnect your\nTrezor.",
                 time_ms=delay_ms,
+                skip_first_paint=skip,
             )
         )
 
