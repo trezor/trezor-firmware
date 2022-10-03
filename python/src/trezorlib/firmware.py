@@ -23,7 +23,8 @@ import construct as c
 import ecdsa
 
 from . import cosi, messages
-from .tools import expect, session
+from .toif import ToifStruct
+from .tools import expect, session, EnumAdapter
 
 if TYPE_CHECKING:
     from .client import TrezorClient
@@ -98,43 +99,12 @@ class Unsigned(FirmwareIntegrityError):
     pass
 
 
-class ToifMode(Enum):
-    full_color = b"f"  # big endian
-    grayscale = b"g"  # odd hi
-    full_color_le = b"F"  # little endian
-    grayscale_eh = b"G"  # even hi
-
-
 class HeaderType(Enum):
     FIRMWARE = b"TRZF"
     BOOTLOADER = b"TRZB"
 
 
-class EnumAdapter(c.Adapter):
-    def __init__(self, subcon: Any, enum: Any) -> None:
-        self.enum = enum
-        super().__init__(subcon)
-
-    def _encode(self, obj: Any, ctx: Any, path: Any):
-        return obj.value
-
-    def _decode(self, obj: Any, ctx: Any, path: Any):
-        try:
-            return self.enum(obj)
-        except ValueError:
-            return obj
-
-
 # fmt: off
-Toif = c.Struct(
-    "magic" / c.Const(b"TOI"),
-    "format" / EnumAdapter(c.Bytes(1), ToifMode),
-    "width" / c.Int16ul,
-    "height" / c.Int16ul,
-    "data" / c.Prefixed(c.Int32ul, c.GreedyBytes),
-)
-
-
 VendorTrust = c.Transformed(c.BitStruct(
     "_reserved" / c.Default(c.BitsInteger(9), 0),
     "show_vendor_string" / c.Flag,
@@ -159,7 +129,7 @@ VendorHeader = c.Struct(
     "_reserved" / c.Padding(14),
     "pubkeys" / c.Bytes(32)[c.this.sig_n],
     "text" / c.Aligned(4, c.PascalString(c.Int8ul, "utf-8")),
-    "image" / Toif,
+    "image" / ToifStruct,
     "_end_offset" / c.Tell,
 
     "_min_header_len" / c.Check(c.this.header_len > (c.this._end_offset - c.this._start_offset) + 65),
