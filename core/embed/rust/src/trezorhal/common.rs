@@ -25,8 +25,8 @@ impl StackCStr {
     }
 
     pub fn set_truncated(&mut self, s: &str) {
-        let len = s.len().max(NULL_TERMINATED_MAXLEN - 1);
-        self.0[..len].copy_from_slice(s.as_bytes());
+        let len = s.len().min(NULL_TERMINATED_MAXLEN - 1);
+        self.0[..len].copy_from_slice(&s.as_bytes()[..len]);
         self.0[len] = 0;
     }
 
