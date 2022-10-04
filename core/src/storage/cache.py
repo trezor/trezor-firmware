@@ -133,8 +133,8 @@ class SessionlessCache(DataCache):
             64,  # APP_COMMON_SEED_WITHOUT_PASSPHRASE
             1,  # APP_COMMON_SAFETY_CHECKS_TEMPORARY
             1,  # STORAGE_DEVICE_EXPERIMENTAL_FEATURES
-            4,  # APP_COMMON_REQUEST_PIN_LAST_UNLOCK
-            4,  # APP_COMMON_BUSY_DEADLINE_MS
+            8,  # APP_COMMON_REQUEST_PIN_LAST_UNLOCK
+            8,  # APP_COMMON_BUSY_DEADLINE_MS
         )
         super().__init__()
 
