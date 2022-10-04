@@ -29,13 +29,12 @@ def busy_expiry_ms() -> int:
     Returns the time left until the busy state expires or 0 if the device is not in the busy state.
     """
 
-    busy_deadline_bytes = storage.cache.get(storage.cache.APP_COMMON_BUSY_DEADLINE_MS)
-    if busy_deadline_bytes is None:
+    busy_deadline_ms = storage.cache.get_int(storage.cache.APP_COMMON_BUSY_DEADLINE_MS)
+    if busy_deadline_ms is None:
         return 0
 
     import utime
 
-    busy_deadline_ms = int.from_bytes(busy_deadline_bytes, "big")
     expiry_ms = utime.ticks_diff(busy_deadline_ms, utime.ticks_ms())
     return expiry_ms if expiry_ms > 0 else 0
 
@@ -171,9 +170,7 @@ async def handle_SetBusy(ctx: wire.Context, msg: SetBusy) -> Success:
         import utime
 
         deadline = utime.ticks_add(utime.ticks_ms(), msg.expiry_ms)
-        storage.cache.set(
-            storage.cache.APP_COMMON_BUSY_DEADLINE_MS, deadline.to_bytes(4, "big")
-        )
+        storage.cache.set_int(storage.cache.APP_COMMON_BUSY_DEADLINE_MS, deadline)
     else:
         storage.cache.delete(storage.cache.APP_COMMON_BUSY_DEADLINE_MS)
     set_homescreen()

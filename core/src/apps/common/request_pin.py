@@ -58,15 +58,11 @@ async def request_pin_and_sd_salt(
 
 def _set_last_unlock_time() -> None:
     now = utime.ticks_ms()
-    storage.cache.set(
-        storage.cache.APP_COMMON_REQUEST_PIN_LAST_UNLOCK, now.to_bytes(4, "big")
-    )
+    storage.cache.set_int(storage.cache.APP_COMMON_REQUEST_PIN_LAST_UNLOCK, now)
 
 
 def _get_last_unlock_time() -> int:
-    return int.from_bytes(
-        storage.cache.get(storage.cache.APP_COMMON_REQUEST_PIN_LAST_UNLOCK, b""), "big"
-    )
+    return storage.cache.get_int(storage.cache.APP_COMMON_REQUEST_PIN_LAST_UNLOCK) or 0
 
 
 async def verify_user_pin(
