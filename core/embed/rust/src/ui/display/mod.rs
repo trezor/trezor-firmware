@@ -46,10 +46,9 @@ pub fn fade_backlight_duration(target: u16, duration_ms: u32) {
     let target = target as i32;
     let duration_ms = duration_ms as i32;
     let current = backlight() as i32;
-    let step = (target - current) / duration_ms;
 
     for i in 0..duration_ms {
-        set_backlight((current + i * step) as u16);
+        set_backlight((current + (i * (target - current)) / duration_ms) as u16);
         time::sleep(Duration::from_millis(1));
     }
     // account for imprecise rounding
@@ -1134,6 +1133,10 @@ impl Color {
         let g = (g & 0xFC) << 3;
         let b = (b & 0xF8) >> 3;
         Self(r | g | b)
+    }
+
+    pub const fn alpha(bg: Color, alpha: u16) -> Self {
+        Self::rgba(bg, 0xFF, 0xFF, 0xFF, alpha)
     }
 
     pub const fn r(self) -> u8 {
