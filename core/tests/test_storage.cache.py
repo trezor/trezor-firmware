@@ -83,6 +83,24 @@ class TestStorageCache(unittest.TestCase):
         with self.assertRaises(cache.InvalidSessionError):
             cache.get(KEY)
 
+    def test_get_set_int(self):
+        session_id1 = cache.start_session()
+        cache.set_int(KEY, 1234)
+        self.assertEqual(cache.get_int(KEY), 1234)
+
+        session_id2 = cache.start_session()
+        cache.set_int(KEY, 5678)
+        self.assertEqual(cache.get_int(KEY), 5678)
+
+        cache.start_session(session_id2)
+        self.assertEqual(cache.get_int(KEY), 5678)
+        cache.start_session(session_id1)
+        self.assertEqual(cache.get_int(KEY), 1234)
+
+        cache.clear_all()
+        with self.assertRaises(cache.InvalidSessionError):
+            cache.get_int(KEY)
+
     def test_delete(self):
         session_id1 = cache.start_session()
         self.assertIsNone(cache.get(KEY))
