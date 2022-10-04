@@ -57,6 +57,7 @@ setup(
     + (CWD / "CHANGELOG.md").read_text(),
     long_description_content_type="text/markdown",
     url="https://github.com/trezor/trezor-firmware/tree/master/python",
+    package_data={"trezorlib": ["py.typed"]},
     packages=find_packages("src"),
     package_dir={"": "src"},
     entry_points={"console_scripts": ["trezorctl=trezorlib.cli.trezorctl:cli"]},
