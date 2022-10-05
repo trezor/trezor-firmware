@@ -477,7 +477,9 @@ def sign_tx(
     )
 
     address_n = tools.parse_path(address)
-    from_address = ethereum.get_address(client, address_n, encoded_network=defs.encoded_network)
+    from_address = ethereum.get_address(
+        client, address_n, encoded_network=defs.encoded_network
+    )
 
     if token:
         data = _erc20_contract(token, to_address, amount)
@@ -715,7 +717,10 @@ def verify_message(
 @download_definitions_option
 @with_client
 def sign_typed_data_hash(
-    client: "TrezorClient", address: str, domain_hash_hex: str, message_hash_hex: str,
+    client: "TrezorClient",
+    address: str,
+    domain_hash_hex: str,
+    message_hash_hex: str,
     definitions_dir: pathlib.Path,
     network_def: BinaryIO,
     download_definitions: bool,
@@ -736,7 +741,9 @@ def sign_typed_data_hash(
         download_definitions=download_definitions,
         slip44_hardened=address_n[1],
     )
-    ret = ethereum.sign_typed_data_hash(client, address_n, domain_hash, message_hash, defs.encoded_network)
+    ret = ethereum.sign_typed_data_hash(
+        client, address_n, domain_hash, message_hash, defs.encoded_network
+    )
     output = {
         "domain_hash": domain_hash_hex,
         "message_hash": message_hash_hex,

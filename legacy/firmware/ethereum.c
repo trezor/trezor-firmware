@@ -315,8 +315,9 @@ static void send_signature(void) {
  * using standard ethereum units.
  * The buffer must be at least 25 bytes.
  */
-static void ethereumFormatAmount(const bignum256 *amnt, const EthereumTokenInfo *token,
-                                 char *buf, int buflen) {
+static void ethereumFormatAmount(const bignum256 *amnt,
+                                 const EthereumTokenInfo *token, char *buf,
+                                 int buflen) {
   bignum256 bn1e9 = {0};
   bn_read_uint32(1000000000, &bn1e9);
   const char *suffix = NULL;
@@ -554,7 +555,8 @@ static bool ethereum_signing_init_common(struct signing_params *params) {
   return true;
 }
 
-static void ethereum_signing_handle_erc20(struct signing_params *params, const EthereumDefinitions *defs) {
+static void ethereum_signing_handle_erc20(struct signing_params *params,
+                                          const EthereumDefinitions *defs) {
   if (params->has_to && ethereum_parse(params->to, params->pubkeyhash)) {
     params->pubkeyhash_set = true;
   } else {
@@ -568,7 +570,7 @@ static void ethereum_signing_handle_erc20(struct signing_params *params, const E
       memcmp(params->data_initial_chunk_bytes,
              "\xa9\x05\x9c\xbb\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00",
              16) == 0) {
-      params->token = defs ? &defs->token : UnknownToken;
+    params->token = defs ? &defs->token : UnknownToken;
   }
 }
 
@@ -598,19 +600,21 @@ static bool ethereum_signing_confirm_common(
   return true;
 }
 
-void ethereum_signing_init(const EthereumSignTx *msg, const HDNode *node, const EthereumDefinitions *defs) {
+void ethereum_signing_init(const EthereumSignTx *msg, const HDNode *node,
+                           const EthereumDefinitions *defs) {
   struct signing_params params = {
-    .chain_id = defs ? defs->network.chain_id : msg->chain_id,
-    .chain_suffix = defs ? defs->network.shortcut : get_ethereum_suffix(msg->chain_id),
-    .data_length = msg->data_length,
-    .data_initial_chunk_size = msg->data_initial_chunk.size,
-    .data_initial_chunk_bytes = msg->data_initial_chunk.bytes,
+      .chain_id = defs ? defs->network.chain_id : msg->chain_id,
+      .chain_suffix =
+          defs ? defs->network.shortcut : get_ethereum_suffix(msg->chain_id),
+      .data_length = msg->data_length,
+      .data_initial_chunk_size = msg->data_initial_chunk.size,
+      .data_initial_chunk_bytes = msg->data_initial_chunk.bytes,
 
-    .has_to = msg->has_to,
-    .to = msg->to,
+      .has_to = msg->has_to,
+      .to = msg->to,
 
-    .value_size = msg->value.size,
-    .value_bytes = msg->value.bytes,
+      .value_size = msg->value.size,
+      .value_bytes = msg->value.bytes,
   };
 
   eip1559 = false;
@@ -704,20 +708,22 @@ void ethereum_signing_init(const EthereumSignTx *msg, const HDNode *node, const 
 }
 
 void ethereum_signing_init_eip1559(const EthereumSignTxEIP1559 *msg,
-                                   const HDNode *node, const EthereumDefinitions *defs) {
+                                   const HDNode *node,
+                                   const EthereumDefinitions *defs) {
   struct signing_params params = {
-    .chain_id = defs ? defs->network.chain_id : msg->chain_id,
-    .chain_suffix = defs ? defs->network.shortcut : get_ethereum_suffix(msg->chain_id),
+      .chain_id = defs ? defs->network.chain_id : msg->chain_id,
+      .chain_suffix =
+          defs ? defs->network.shortcut : get_ethereum_suffix(msg->chain_id),
 
-    .data_length = msg->data_length,
-    .data_initial_chunk_size = msg->data_initial_chunk.size,
-    .data_initial_chunk_bytes = msg->data_initial_chunk.bytes,
+      .data_length = msg->data_length,
+      .data_initial_chunk_size = msg->data_initial_chunk.size,
+      .data_initial_chunk_bytes = msg->data_initial_chunk.bytes,
 
-    .has_to = msg->has_to,
-    .to = msg->to,
+      .has_to = msg->has_to,
+      .to = msg->to,
 
-    .value_size = msg->value.size,
-    .value_bytes = msg->value.bytes,
+      .value_size = msg->value.size,
+      .value_bytes = msg->value.bytes,
   };
 
   eip1559 = true;
@@ -1062,7 +1068,8 @@ bool ethereum_path_check(uint32_t address_n_count, const uint32_t *address_n,
       valid = valid && (path_slip44 == 60 || path_slip44 == 1);
     } else if (defs->network.slip44 != 60 && defs->network.slip44 != 1) {
       // Allow cross-signing with Ethereum unless it's testnet.
-      valid = valid && (path_slip44 == defs->network.slip44 || path_slip44 == 60);
+      valid =
+          valid && (path_slip44 == defs->network.slip44 || path_slip44 == 60);
     } else {
       valid = valid && (path_slip44 == defs->network.slip44);
     }

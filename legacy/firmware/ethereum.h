@@ -28,9 +28,11 @@
 
 #define CHAIN_ID_UNKNOWN UINT64_MAX
 
-void ethereum_signing_init(const EthereumSignTx *msg, const HDNode *node, const EthereumDefinitions *defs);
+void ethereum_signing_init(const EthereumSignTx *msg, const HDNode *node,
+                           const EthereumDefinitions *defs);
 void ethereum_signing_init_eip1559(const EthereumSignTxEIP1559 *msg,
-                                   const HDNode *node, const EthereumDefinitions *defs);
+                                   const HDNode *node,
+                                   const EthereumDefinitions *defs);
 void ethereum_signing_abort(void);
 void ethereum_signing_txack(const EthereumTxAck *msg);
 
