@@ -85,19 +85,42 @@ impl PassphraseKeyboard {
         // Clear the pending state.
         self.input
             .mutate(ctx, |ctx, i| i.multi_tap.clear_pending_state(ctx));
-        // Make sure to completely repaint the buttons.
+        // Make sure to completely repaint the new buttons.
         for btn in &mut self.keys[key_page] {
             btn.request_complete_repaint(ctx);
         }
         // Reset backlight to normal level on next paint.
         self.fade = true;
+        // So that swipe does not visually enable the input buttons when max length
+        // reached
+        self.update_input_btns_state(ctx);
     }
 
+    /// Possibly changing the buttons' state after change of the input.
     fn after_edit(&mut self, ctx: &mut EventCtx) {
+        self.update_back_btn_state(ctx);
+        self.update_input_btns_state(ctx);
+    }
+
+    /// When the input is empty, disable the back button.
+    fn update_back_btn_state(&mut self, ctx: &mut EventCtx) {
         if self.input.inner().textbox.is_empty() {
             self.back.mutate(ctx, |ctx, b| b.disable(ctx));
         } else {
             self.back.mutate(ctx, |ctx, b| b.enable(ctx));
+        }
+    }
+
+    /// When the input has reached max length, disable all the input buttons.
+    fn update_input_btns_state(&mut self, ctx: &mut EventCtx) {
+        for btn in self.keys[self.scrollbar.active_page].iter_mut() {
+            btn.mutate(ctx, |ctx, b| {
+                if self.input.inner().textbox.is_full() {
+                    b.disable(ctx);
+                } else {
+                    b.enable(ctx);
+                }
+            });
         }
     }
 
@@ -131,18 +154,23 @@ impl Component for PassphraseKeyboard {
         self.scrollbar.place(scroll_area);
         self.scrollbar
             .set_count_and_active_page(PAGE_COUNT, STARTING_PAGE);
-        for (key, btn) in self.keys[self.scrollbar.active_page].iter_mut().enumerate() {
-            // Assign the keys in each page to buttons on a 5x3 grid, starting from the
-            // second row.
-            let area = key_grid.cell(if key < 9 {
-                // The grid has 3 columns, and we skip the first row.
-                key + 3
-            } else {
-                // For the last key (the "0" position) we skip one cell.
-                key + 1 + 3
-            });
-            btn.place(area);
+
+        // Place all the possible character buttons on all swipe-separated screens.
+        for swipe_screen in &mut self.keys {
+            for (key, btn) in swipe_screen.iter_mut().enumerate() {
+                // Assign the keys in each page to buttons on a 5x3 grid, starting
+                // from the second row.
+                let area = key_grid.cell(if key < 9 {
+                    // The grid has 3 columns, and we skip the first row.
+                    key + 3
+                } else {
+                    // For the last key (the "0" position) we skip one cell.
+                    key + 1 + 3
+                });
+                btn.place(area);
+            }
         }
+
         bounds
     }
 
@@ -175,17 +203,23 @@ impl Component for PassphraseKeyboard {
                 None
             };
         }
-        for (key, btn) in self.keys[self.scrollbar.active_page].iter_mut().enumerate() {
-            if let Some(Clicked) = btn.event(ctx, event) {
-                // Key button was clicked. If this button is pending, let's cycle the pending
-                // character in textbox. If not, let's just append the first character.
-                let text = Self::key_text(btn.inner().content());
-                self.input.mutate(ctx, |ctx, i| {
-                    let edit = i.multi_tap.click_key(ctx, key, text);
-                    i.textbox.apply(ctx, edit);
-                });
-                self.after_edit(ctx);
-                return None;
+
+        // Process key button events in case we did not reach maximum passphrase length.
+        // (All input buttons should be disallowed in that case, this is just a safety
+        // measure.)
+        if !self.input.inner().textbox.is_full() {
+            for (key, btn) in self.keys[self.scrollbar.active_page].iter_mut().enumerate() {
+                if let Some(Clicked) = btn.event(ctx, event) {
+                    // Key button was clicked. If this button is pending, let's cycle the pending
+                    // character in textbox. If not, let's just append the first character.
+                    let text = Self::key_text(btn.inner().content());
+                    self.input.mutate(ctx, |ctx, i| {
+                        let edit = i.multi_tap.click_key(ctx, key, text);
+                        i.textbox.apply(ctx, edit);
+                    });
+                    self.after_edit(ctx);
+                    return None;
+                }
             }
         }
         None
@@ -249,23 +283,55 @@ impl Component for Input {
         const TEXT_OFFSET: Offset = Offset::y(8);
 
         let style = theme::label_default();
-        let text_baseline = self.area.bottom_left() - TEXT_OFFSET;
+        let mut text_baseline = self.area.bottom_left() - TEXT_OFFSET;
         let text = self.textbox.content();
 
+        // Preparing the new text to be displayed.
         // Possible optimization is to redraw the background only when pending character
         // is replaced, or only draw rectangle over the pending character and
         // marker.
         display::rect_fill(self.area, theme::BG);
+
+        // Find out how much text can fit into the textbox.
+        // Accounting for the pending marker, which draws itself one pixel longer than
+        // the last character
+        let available_area_width = self.area.width() - 1;
+        let text_to_display = if style.font.text_width(text) <= available_area_width {
+            text // whole text can fit
+        } else {
+            // Text is longer, showing its right end with ellipsis at the beginning.
+            let ellipsis = "...";
+            let ellipsis_width = style.font.text_width(ellipsis);
+
+            // Drawing the ellipsis and moving the baseline for the rest of the text.
+            display::text(
+                text_baseline,
+                ellipsis,
+                style.font,
+                style.text_color,
+                style.background_color,
+            );
+            text_baseline = text_baseline + Offset::x(ellipsis_width);
+
+            // Finding out how many additional text characters will fit in,
+            // starting from the right end.
+            let remaining_available_width = available_area_width - ellipsis_width;
+            let chars_from_right = style.font.longest_suffix(remaining_available_width, text);
+
+            &text[text.len() - chars_from_right..]
+        };
+
         display::text(
             text_baseline,
-            text,
+            text_to_display,
             style.font,
             style.text_color,
             style.background_color,
         );
+
         // Paint the pending marker.
         if self.multi_tap.pending_key().is_some() {
-            paint_pending_marker(text_baseline, text, style.font, style.text_color);
+            paint_pending_marker(text_baseline, text_to_display, style.font, style.text_color);
         }
     }
 
