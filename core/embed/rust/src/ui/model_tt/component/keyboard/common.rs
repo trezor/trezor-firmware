@@ -155,6 +155,10 @@ impl<const L: usize> TextBox<L> {
         self.text.is_empty()
     }
 
+    pub fn is_full(&self) -> bool {
+        self.text.len() == self.text.capacity()
+    }
+
     /// Delete the last character of content, if any.
     pub fn delete_last(&mut self, ctx: &mut EventCtx) {
         let changed = self.text.pop().is_some();
@@ -207,6 +211,7 @@ impl<const L: usize> TextBox<L> {
     }
 }
 
+/// Create a visible "underscoring" of the last letter of a text.
 pub fn paint_pending_marker(text_baseline: Point, text: &str, font: Font, color: Color) {
     // Measure the width of the last character of input.
     if let Some(last) = text.chars().last() {

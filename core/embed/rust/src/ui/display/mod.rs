@@ -1057,6 +1057,22 @@ impl Font {
             }
         }
     }
+
+    /// Get the length of the longest suffix from a given `text`
+    /// that will fit into the area `width` pixels wide.
+    pub fn longest_suffix(self, width: i16, text: &str) -> usize {
+        let mut text_width = 0;
+        for (chars_from_right, c) in text.chars().rev().enumerate() {
+            let c_width = self.char_width(c);
+            if text_width + c_width > width {
+                // Another character cannot be fitted, we're done.
+                return chars_from_right;
+            }
+            text_width += c_width;
+        }
+
+        text.len() // it fits in its entirety
+    }
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
