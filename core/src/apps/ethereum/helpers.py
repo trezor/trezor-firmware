@@ -108,7 +108,7 @@ def decode_typed_data(data: bytes, type_name: str) -> str:
     elif type_name == "string":
         return data.decode()
     elif type_name == "address":
-        return address_from_bytes(data)
+        return address_from_bytes(data, None)
     elif type_name == "bool":
         return "true" if data == b"\x01" else "false"
     elif type_name.startswith("uint"):
