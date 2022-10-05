@@ -14,11 +14,8 @@ async def verify_message(ctx: Context, msg: EthereumVerifyMessage) -> Success:
 
     from apps.common.signverify import decode_message
 
-    from . import definitions
     from .helpers import address_from_bytes, bytes_from_address
     from .sign_message import message_digest
-
-    defs = definitions.get_definitions_from_msg(msg)
 
     digest = message_digest(msg.message)
     if len(msg.signature) != 65:
@@ -36,7 +33,7 @@ async def verify_message(ctx: Context, msg: EthereumVerifyMessage) -> Success:
     if address_bytes != pkh:
         raise DataError("Invalid signature")
 
-    address = address_from_bytes(address_bytes, defs.network)
+    address = address_from_bytes(address_bytes)
 
     await confirm_signverify(
         ctx, "ETH", decode_message(msg.message), address, verify=True

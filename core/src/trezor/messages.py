@@ -3744,7 +3744,6 @@ if TYPE_CHECKING:
         signature: "bytes"
         message: "bytes"
         address: "str"
-        encoded_network: "bytes | None"
 
         def __init__(
             self,
@@ -3752,7 +3751,6 @@ if TYPE_CHECKING:
             signature: "bytes",
             message: "bytes",
             address: "str",
-            encoded_network: "bytes | None" = None,
         ) -> None:
             pass
 

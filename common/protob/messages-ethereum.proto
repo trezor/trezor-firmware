@@ -195,7 +195,6 @@ message EthereumVerifyMessage {
     required bytes signature = 2;       // signature to verify
     required bytes message = 3;         // message to verify
     required string address = 4;        // address to verify
-    optional bytes encoded_network = 5; // encoded Ethereum network, see protocol.md for details
 }
 
 /**

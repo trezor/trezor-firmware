@@ -496,8 +496,6 @@ def verify_message(
     address: str,
     signature: bytes,
     message: AnyStr,
-    chain_id: int = 1,
-    encoded_network: bytes = None,
 ) -> bool:
     try:
         resp = client.call(
@@ -505,7 +503,6 @@ def verify_message(
                 address=address,
                 signature=signature,
                 message=prepare_message_bytes(message),
-                encoded_network=encoded_network,
             )
         )
     except exceptions.TrezorFailure:

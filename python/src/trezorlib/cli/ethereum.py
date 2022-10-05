@@ -681,31 +681,16 @@ def sign_typed_data(
 @click.argument("address")
 @click.argument("signature")
 @click.argument("message")
-@definitions_dir_option
-@network_def_option
-@download_definitions_option
 @with_client
 def verify_message(
     client: "TrezorClient",
     address: str,
     signature: str,
     message: str,
-    definitions_dir: pathlib.Path,
-    network_def: BinaryIO,
-    download_definitions: bool,
 ) -> bool:
     """Verify message signed with Ethereum address."""
-    chain_id = 1
     signature_bytes = ethereum.decode_hex(signature)
-    defs = _get_ethereum_definitions(
-        definitions_dir=definitions_dir,
-        network_def_file=network_def,
-        download_definitions=download_definitions,
-        chain_id=chain_id,
-    )
-    return ethereum.verify_message(
-        client, address, signature_bytes, message, chain_id, defs.encoded_network
-    )
+    return ethereum.verify_message(client, address, signature_bytes, message)
 
 
 @cli.command()

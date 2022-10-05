@@ -31,7 +31,6 @@ EthereumSignMessage.encoded_network     max_size:1024
 EthereumVerifyMessage.address           max_size:43
 EthereumVerifyMessage.signature         max_size:65
 EthereumVerifyMessage.message           max_size:1024
-EthereumVerifyMessage.encoded_network   max_size:1024
 
 EthereumMessageSignature.address        max_size:43
 EthereumMessageSignature.signature      max_size:65

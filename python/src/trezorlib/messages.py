@@ -4976,7 +4976,6 @@ class EthereumVerifyMessage(protobuf.MessageType):
         2: protobuf.Field("signature", "bytes", repeated=False, required=True),
         3: protobuf.Field("message", "bytes", repeated=False, required=True),
         4: protobuf.Field("address", "string", repeated=False, required=True),
-        5: protobuf.Field("encoded_network", "bytes", repeated=False, required=False),
     }
 
     def __init__(
@@ -4985,12 +4984,10 @@ class EthereumVerifyMessage(protobuf.MessageType):
         signature: "bytes",
         message: "bytes",
         address: "str",
-        encoded_network: Optional["bytes"] = None,
     ) -> None:
         self.signature = signature
         self.message = message
         self.address = address
-        self.encoded_network = encoded_network
 
 
 class EthereumSignTypedHash(protobuf.MessageType):
