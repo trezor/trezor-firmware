@@ -289,29 +289,6 @@ def _load_erc20_tokens_from_repo(
     return tokens
 
 
-def remove_builtin_definitions(networks: List[Dict], tokens: List[Dict]) -> None:
-    builtin_networks = _load_builtin_ethereum_networks()
-    builtin_tokens = _load_builtin_erc20_tokens()
-
-    networks_by_chain_id = defaultdict(list)
-    for n in networks:
-        networks_by_chain_id[n["chain_id"]].append(n)
-
-    tokens_by_chain_id_and_address = defaultdict(list)
-    for t in tokens:
-        tokens_by_chain_id_and_address[(t["chain_id"], t["address"])].append(t)
-
-    for bn in builtin_networks:
-        for n in networks_by_chain_id.get(int(bn["chain_id"]), []):
-            networks.remove(n)
-
-    for bt in builtin_tokens:
-        for t in tokens_by_chain_id_and_address.get(
-            (int(bt["chain_id"]), bt["address"]), []
-        ):
-            tokens.remove(t)
-
-
 def _set_definition_metadata(
     definition: Dict,
     old_definition: Dict | None = None,
@@ -907,8 +884,6 @@ def prepare_definitions(
         # load old definitions
         old_defs = load_json(deffile)
 
-    remove_builtin_definitions(networks, tokens)
-
     check_tokens_collisions(
         tokens, old_defs["tokens"] if old_defs is not None else None
     )
@@ -1034,8 +1009,9 @@ def sign_definitions(
         save_definition(network_dir, ["network"], network["serialized"])
 
         try:
-            # TODO: this way only the first network with given slip is saved - save other networks??
-            save_definition(slip44_dir, ["network"], network["serialized"])
+            # for slip44 == 60 save only Ethereum
+            if network["slip44"] != 60 or int(network["chain_id"]) == 1:
+                save_definition(slip44_dir, ["network"], network["serialized"])
         except click.ClickException:
             pass
 
