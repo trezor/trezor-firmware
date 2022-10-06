@@ -1,0 +1,1 @@
+Fixed issue where type declarations were not visible to consumer packages.
