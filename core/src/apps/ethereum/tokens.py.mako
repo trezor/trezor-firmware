@@ -14,8 +14,9 @@
 # of it has enough collision-resistance.)
 # (In the if-tree approach the address length did not have any effect whatsoever.)
 
-from trezor.messages import EthereumTokenInfo
 from typing import Iterator
+
+from trezor.messages import EthereumTokenInfo
 
 <%
 from collections import defaultdict
@@ -36,7 +37,6 @@ UNKNOWN_TOKEN = EthereumTokenInfo(
 )
 
 
-
 def token_by_chain_address(chain_id: int, address: bytes) -> EthereumTokenInfo:
     for addr, symbol, decimal, name in _token_iterator(chain_id):
         if address == addr:
@@ -50,7 +50,7 @@ def token_by_chain_address(chain_id: int, address: bytes) -> EthereumTokenInfo:
     return UNKNOWN_TOKEN
 
 
-def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int]]:
+def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int, str]]:
 % for token_chain_id, tokens in group_tokens(supported_on("trezor2", erc20)).items():
     if chain_id == ${token_chain_id}:  # ${tokens[0].chain}
         % for t in tokens:

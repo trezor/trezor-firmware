@@ -799,7 +799,7 @@ def cli() -> None:
     type=click.Path(resolve_path=True, dir_okay=False, path_type=pathlib.Path),
     default="./definitions-latest.json",
     help="File where the definitions will be saved in json format. If file already exists, it is used to check "
-    "the changes in definitions.",
+    "the changes in definitions. Default is \"./definitions-latest.json\".",
 )
 @click.option(
     "-n",
@@ -921,7 +921,7 @@ def prepare_definitions(
             if key in tokens_by_chain_id_and_address:
                 tokens_by_chain_id_and_address[key]["coingecko_id"] = coin["id"]
 
-    # load top 100 (by market cap) definitions from CoinGecko
+    # get top 100 ids
     cg_top100_ids = [d["id"] for d in cg_top100]
 
     # check changes in definitions

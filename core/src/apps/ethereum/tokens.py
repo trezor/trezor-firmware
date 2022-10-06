@@ -16,34 +16,32 @@
 
 from typing import Iterator
 
-
-class TokenInfo:
-    def __init__(
-        self,
-        symbol: str,
-        decimals: int,
-        address: bytes,
-        chain_id: int,
-        name: str = None,
-    ) -> None:
-        self.symbol = symbol
-        self.decimals = decimals
-        self.address = address
-        self.chain_id = chain_id
-        self.name = name
+from trezor.messages import EthereumTokenInfo
 
 
-UNKNOWN_TOKEN = TokenInfo("Wei UNKN", 0, b"", 0)
+UNKNOWN_TOKEN = EthereumTokenInfo(
+    symbol="Wei UNKN",
+    decimals=0,
+    address=b"",
+    chain_id=0,
+    name="Unknown token",
+)
 
-# TODO: delete completely
-def token_by_chain_address(chain_id: int, address: bytes) -> TokenInfo:
-    for addr, symbol, decimal in _token_iterator(chain_id):
+
+def token_by_chain_address(chain_id: int, address: bytes) -> EthereumTokenInfo:
+    for addr, symbol, decimal, name in _token_iterator(chain_id):
         if address == addr:
-            return TokenInfo(symbol, decimal)
+            return EthereumTokenInfo(
+                symbol=symbol,
+                decimals=decimal,
+                address=address,
+                chain_id=chain_id,
+                name=name,
+            )
     return UNKNOWN_TOKEN
 
 
-def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int]]:
+def _token_iterator(chain_id: int) -> Iterator[tuple[bytes, str, int, str]]:
     if chain_id == 1:
         yield (  # address, symbol, decimals
             b"\x4e\x84\xe9\xe5\xfb\x0a\x97\x26\x28\xcf\x45\x68\xc4\x03\x16\x7e\xf1\xd4\x04\x31",

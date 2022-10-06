@@ -16,7 +16,6 @@
 }
 
 const EthereumTokenInfo tokens[TOKENS_COUNT] = {
-  // TODO: test symbol length 10
 % for t in sorted(supported_on("trezor1", erc20), key=lambda token: (token.chain_id, token.name)):
   format_token_init(${"{:>2}".format(t.chain_id)}, " ${ascii(t.symbol)}", ${c_str(t.address_bytes)}, ${t.decimals}), // ${t.chain} / ${t.name}
 % endfor

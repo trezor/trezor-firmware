@@ -62,7 +62,7 @@ def all_slip44_ids_hardened() -> Iterator[int]:
 
 # fmt: off
 def _networks_iterator() -> Iterator[NetworkInfoTuple]:
-% for n in supported_on("trezor2", eth):
+% for n in sorted(supported_on("trezor2", eth), key=lambda network: (int(network.chain_id), network.name)):
     yield (
         ${n.chain_id},  # chain_id
         ${n.slip44},  # slip44
