@@ -138,7 +138,7 @@ async def _show_governance_registration(
 ) -> None:
     for delegation in parameters.delegations:
         encoded_public_key = bech32.encode(
-            bech32.HRP_JORMUN_PUBLIC_KEY, delegation.voting_public_key
+            bech32.HRP_GOVERNANCE_PUBLIC_KEY, delegation.voting_public_key
         )
         await layout.confirm_governance_registration_delegation(
             ctx, encoded_public_key, delegation.weight
@@ -147,7 +147,7 @@ async def _show_governance_registration(
     encoded_public_key: str | None = None
     if parameters.voting_public_key:
         encoded_public_key = bech32.encode(
-            bech32.HRP_JORMUN_PUBLIC_KEY, parameters.voting_public_key
+            bech32.HRP_GOVERNANCE_PUBLIC_KEY, parameters.voting_public_key
         )
 
     reward_address = addresses.derive_human_readable(
