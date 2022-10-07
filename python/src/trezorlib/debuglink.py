@@ -18,6 +18,7 @@ import logging
 import textwrap
 from collections import namedtuple
 from copy import deepcopy
+from datetime import datetime
 from enum import IntEnum
 from itertools import zip_longest
 from pathlib import Path
@@ -779,3 +780,51 @@ def self_test(client: "TrezorClient") -> protobuf.MessageType:
             payload=b"\x00\xFF\x55\xAA\x66\x99\x33\xCCABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\x00\xFF\x55\xAA\x66\x99\x33\xCC"
         )
     )
+
+
+def record_screen(
+    debug_client: "TrezorClientDebugLink",
+    directory: Union[str, None],
+    report_func: Union[Callable[[str], None], None] = None,
+) -> None:
+    """Record screen changes into a specified directory.
+
+    Passing `None` as `directory` stops the recording.
+
+    Creates subdirectories inside a specified directory, one for each session
+    (for each new call of this function).
+    (So that older screenshots are not overwritten by new ones.)
+
+    Is available only for emulators, hardware devices are not capable of that.
+    """
+
+    def get_session_screenshot_dir(directory: Path) -> Path:
+        """Create and return screenshot dir for the current session, according to datetime."""
+        session_dir = directory / datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        session_dir.mkdir(parents=True, exist_ok=True)
+        return session_dir
+
+    if not _is_emulator(debug_client):
+        raise RuntimeError("Recording is only supported on emulator.")
+
+    if directory is None:
+        debug_client.debug.stop_recording()
+        if report_func is not None:
+            report_func("Recording stopped.")
+    else:
+        # Transforming the directory into an absolute path,
+        # because emulator demands it
+        abs_directory = Path(directory).resolve()
+        # Creating the dir when it does not exist yet
+        if not abs_directory.exists():
+            abs_directory.mkdir(parents=True, exist_ok=True)
+        # Getting a new screenshot dir for the current session
+        current_session_dir = get_session_screenshot_dir(abs_directory)
+        debug_client.debug.start_recording(str(current_session_dir))
+        if report_func is not None:
+            report_func(f"Recording started into {current_session_dir}.")
+
+
+def _is_emulator(debug_client: "TrezorClientDebugLink") -> bool:
+    """Check if we are connected to emulator, in contrast to hardware device."""
+    return debug_client.features.fw_vendor == "EMULATOR"

@@ -186,6 +186,11 @@ def configure_logging(verbose: int) -> None:
     help="Resume given session ID.",
     default=os.environ.get("TREZOR_SESSION_ID"),
 )
+@click.option(
+    "-r",
+    "--record",
+    help="Record screen changes into a specified directory.",
+)
 @click.version_option(version=__version__)
 @click.pass_context
 def cli_main(
@@ -196,6 +201,7 @@ def cli_main(
     passphrase_on_host: bool,
     script: bool,
     session_id: Optional[str],
+    record: Optional[str],
 ) -> None:
     configure_logging(verbose)
 
@@ -207,6 +213,10 @@ def cli_main(
             raise click.ClickException(f"Not a valid session id: {session_id}")
 
     ctx.obj = TrezorConnection(path, bytes_session_id, passphrase_on_host, script)
+
+    # Optionally record the screen into a specified directory.
+    if record:
+        debug.record_screen_from_connection(ctx.obj, record)
 
 
 # Creating a cli function that has the right types for future usage
@@ -239,6 +249,19 @@ def print_result(res: Any, is_json: bool, script: bool, **kwargs: Any) -> None:
             click.echo(protobuf.format_message(res))
         elif res is not None:
             click.echo(res)
+
+
+@cli.set_result_callback()
+@click.pass_obj
+def stop_recording_action(obj: TrezorConnection, *args: Any, **kwargs: Any) -> None:
+    """Stop recording screen changes when the recording was started by `cli_main`.
+
+    (When user used the `-r / --record` option of `trezorctl` command.)
+
+    It allows for isolating screen directories only for specific actions/commands.
+    """
+    if kwargs.get("record"):
+        debug.record_screen_from_connection(obj, None)
 
 
 def format_device_name(features: messages.Features) -> str:
