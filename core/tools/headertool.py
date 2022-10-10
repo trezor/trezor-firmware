@@ -4,12 +4,12 @@ import click
 from trezorlib import cosi, firmware
 from trezorlib._internal import firmware_headers
 
-from typing import List, Tuple
+from typing import List, Sequence, Tuple
 
 # =========================== signing =========================
 
 
-def sign_with_privkeys(digest: bytes, privkeys: List[bytes]) -> bytes:
+def sign_with_privkeys(digest: bytes, privkeys: Sequence[bytes]) -> bytes:
     """Locally produce a CoSi signature."""
     pubkeys = [cosi.pubkey_from_privkey(sk) for sk in privkeys]
     nonces = [cosi.get_nonce(sk, digest, i) for i, sk in enumerate(privkeys)]
@@ -46,18 +46,27 @@ def parse_privkey_args(privkey_data: List[str]) -> Tuple[int, List[bytes]]:
     return sigmask, privkeys
 
 
+def do_rehash(fw: firmware_headers.SignableImageProto) -> None:
+    """Recalculate the code hashes inside the header."""
+    if isinstance(fw, firmware.FirmwareImage):
+        fw.header.hashes = fw.code_hashes()
+    elif isinstance(fw, firmware_headers.VendorFirmware):
+        fw.firmware.header.hashes = fw.firmware.code_hashes()
+    # else: do nothing, other kinds of images do not need rehashing
+
+
 # ===================== CLI actions =========================
 
 
 def do_replace_vendorheader(fw, vh_file) -> None:
-    if not isinstance(fw, firmware_headers.FirmwareImage):
+    if not isinstance(fw, firmware_headers.VendorFirmware):
         raise click.ClickException("Invalid image type (must be firmware).")
 
     vh = firmware.VendorHeader.parse(vh_file.read())
-    if vh.header_len != fw.fw.vendor_header.header_len:
+    if vh.header_len != fw.vendor_header.header_len:
         raise click.ClickException("New vendor header must have the same size.")
 
-    fw.fw.vendor_header = vh
+    fw.vendor_header = vh
 
 
 @click.command()
@@ -103,7 +112,7 @@ def cli(
     replace_vendor_header,
     print_digest,
 ):
-    """Manage trezor-core firmware headers.
+    """Manage firmware headers.
 
     This tool supports three types of files: raw vendor headers (TRZV), bootloader
     images (TRZB), and firmware images which are prefixed with a vendor header
@@ -155,11 +164,13 @@ def cli(
         do_replace_vendorheader(fw, replace_vendor_header)
 
     if rehash:
-        fw.rehash()
+        do_rehash(fw)
 
     if sign_dev_keys:
+        if not isinstance(fw, firmware_headers.CosiSignedImage):
+            raise click.ClickException("Can't use development keys on this image type.")
         privkeys = fw.DEV_KEYS
-        sigmask = fw.DEV_KEY_SIGMASK
+        sigmask = (1 << len(privkeys)) - 1
     else:
         sigmask, privkeys = parse_privkey_args(privkey_data)
 
@@ -178,12 +189,14 @@ def cli(
             sigmask |= 1 << (int(bit) - 1)
 
     if signature:
-        fw.rehash()
+        if not isinstance(fw, firmware_headers.CosiSignedImage):
+            raise click.ClickException("Can't sign this image type.")
         fw.insert_signature(signature, sigmask)
 
+    click.echo(f"Detected image type: {fw.NAME}")
     click.echo(fw.format(verbose))
 
-    updated_data = fw.dump()
+    updated_data = fw.build()
     if updated_data == firmware_data:
         click.echo("No changes made", err=True)
     elif dry_run:
