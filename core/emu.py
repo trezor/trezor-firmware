@@ -9,7 +9,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from typing import TextIO
+from typing import Optional, TextIO
 
 import click
 
@@ -108,6 +108,7 @@ def _from_env(name: str) -> bool:
 @click.option("-p", "--profile", metavar="NAME", help="Profile name or path")
 @click.option("-P", "--port", metavar="PORT", type=int, default=int(os.environ.get("TREZOR_UDP_PORT", 0)) or None, help="UDP port number")
 @click.option("-q", "--quiet", is_flag=True, help="Silence emulator output")
+@click.option("-r", "--record-dir", help="Directory where to record screen changes")
 @click.option("-s", "--slip0014", is_flag=True, help="Initialize device with SLIP-14 seed (all all all...)")
 @click.option("-t", "--temporary-profile", is_flag=True, help="Create an empty temporary profile")
 @click.option("-w", "--watch", is_flag=True, help="Restart emulator if sources change")
@@ -132,6 +133,7 @@ def cli(
     port: int,
     output: TextIO | None,
     quiet: bool,
+    record_dir: Optional[str],
     slip0014: bool,
     temporary_profile: bool,
     watch: bool,
@@ -272,6 +274,12 @@ def cli(
             pin=None,
             passphrase_protection=False,
             label=label,
+        )
+
+    if record_dir:
+        assert emulator.client is not None
+        trezorlib.debuglink.record_screen(
+            emulator.client, record_dir, report_func=print
         )
 
     if run_command:
