@@ -27,18 +27,18 @@ RASPI = os.getenv('TREZOR_EMULATOR_RASPI') == '1'
 
 if TREZOR_MODEL in ('1', 'R'):
     FONT_NORMAL='Font_PixelOperator_Regular_8'
-    FONT_MEDIUM='Font_PixelOperator_Regular_8'
+    FONT_DEMIBOLD='Font_PixelOperator_Regular_8'
     FONT_BOLD='Font_PixelOperator_Bold_8'
     FONT_MONO='Font_PixelOperatorMono_Regular_8'
 if TREZOR_MODEL in ('T', ):
     if UI2:
         FONT_NORMAL='Font_TTHoves_Regular_18'
-        FONT_MEDIUM='Font_TTHoves_Medium_20'
+        FONT_DEMIBOLD='Font_TTHoves_DemiBold_18'
         FONT_BOLD='Font_TTHoves_Bold_16'
         FONT_MONO='Font_RobotoMono_Regular_20'
     else:
         FONT_NORMAL='Font_Roboto_Regular_20'
-        FONT_MEDIUM=None
+        FONT_DEMIBOLD=None
         FONT_BOLD='Font_Roboto_Bold_20'
         FONT_MONO='Font_RobotoMono_Regular_20'
 
@@ -376,7 +376,7 @@ if DMA2D:
 # fonts
 tools.add_font('NORMAL', FONT_NORMAL, CPPDEFINES_MOD, SOURCE_MOD)
 tools.add_font('BOLD', FONT_BOLD, CPPDEFINES_MOD, SOURCE_MOD)
-tools.add_font('MEDIUM', FONT_MEDIUM, CPPDEFINES_MOD, SOURCE_MOD)
+tools.add_font('DEMIBOLD', FONT_DEMIBOLD, CPPDEFINES_MOD, SOURCE_MOD)
 tools.add_font('MONO', FONT_MONO, CPPDEFINES_MOD, SOURCE_MOD)
 
 

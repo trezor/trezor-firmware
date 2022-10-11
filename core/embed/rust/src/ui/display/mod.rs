@@ -1004,14 +1004,14 @@ impl Glyph {
 }
 
 /// Font constants. Keep in sync with FONT_ definitions in
-/// `extmod/modtrezorui/display.h`.
+/// `extmod/modtrezorui/fonts/fonts.h`.
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[repr(u8)]
 pub enum Font {
     NORMAL = 1,
     BOLD = 2,
     MONO = 3,
-    MEDIUM = 5,
+    DEMIBOLD = 5,
 }
 
 impl From<Font> for i32 {
