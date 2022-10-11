@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import binascii
-from trezorlib import ed25519raw
+from trezorlib import _ed25519
 
 
 def hex_to_c(s):
@@ -14,7 +14,7 @@ for c in "ABCDEFGHI":
     seckey_hex = binascii.hexlify(seckey).decode()
     print("seckey", seckey_hex)
     print("      ", hex_to_c(seckey_hex))
-    pubkey = ed25519raw.publickey(seckey)
+    pubkey = _ed25519.publickey_unsafe(seckey)
     pubkey_hex = binascii.hexlify(pubkey).decode()
     print("pubkey", pubkey_hex)
     print("      ", hex_to_c(pubkey_hex))
