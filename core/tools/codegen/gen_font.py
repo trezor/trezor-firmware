@@ -178,7 +178,7 @@ process_face("Roboto", "Regular", 20)
 process_face("Roboto", "Bold", 20)
 
 process_face("TTHoves", "Regular", 18, ext="otf")
-process_face("TTHoves", "Medium", 20, ext="otf")
+process_face("TTHoves", "DemiBold", 18, ext="otf")
 process_face("TTHoves", "Bold", 16, ext="otf")
 process_face("RobotoMono", "Regular", 20)
 

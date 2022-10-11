@@ -44,7 +44,7 @@ impl ResultPopup {
         headline: Option<&'static str>,
         button_text: Option<&'static str>,
     ) -> Self {
-        let p1 = Paragraphs::new(Paragraph::new(&theme::TEXT_MEDIUM, text))
+        let p1 = Paragraphs::new(Paragraph::new(&theme::TEXT_NORMAL, text))
             .with_placement(LinearPlacement::vertical().align_at_center());
 
         let button = button_text.map(|t| {

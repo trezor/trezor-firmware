@@ -98,9 +98,11 @@ where
     pub fn new(icon: &'static [u8], title: T, controls: U) -> Self {
         Self {
             image: Child::new(Image::new(icon)),
-            paragraphs: ParagraphVecShort::from_iter([
-                Paragraph::new(&theme::TEXT_MEDIUM, title).centered()
-            ])
+            paragraphs: ParagraphVecShort::from_iter([Paragraph::new(
+                &theme::TEXT_DEMIBOLD,
+                title,
+            )
+            .centered()])
             .into_paragraphs()
             .with_placement(
                 LinearPlacement::vertical()
@@ -126,9 +128,9 @@ where
             image: Child::new(Image::new(theme::IMAGE_SUCCESS)),
             paragraphs: ParagraphVecShort::from_iter([
                 Paragraph::new(&theme::TEXT_NORMAL_OFF_WHITE, l0).centered(),
-                Paragraph::new(&theme::TEXT_MEDIUM, l1).centered(),
+                Paragraph::new(&theme::TEXT_DEMIBOLD, l1).centered(),
                 Paragraph::new(&theme::TEXT_NORMAL_OFF_WHITE, l2).centered(),
-                Paragraph::new(&theme::TEXT_MEDIUM, l3).centered(),
+                Paragraph::new(&theme::TEXT_DEMIBOLD, l3).centered(),
             ])
             .into_paragraphs()
             .with_placement(LinearPlacement::vertical().align_at_center()),

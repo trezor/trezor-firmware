@@ -57,9 +57,9 @@ int font_height(int font) {
     case FONT_NORMAL:
       return FONT_NORMAL_HEIGHT;
 #endif
-#ifdef TREZOR_FONT_MEDIUM_ENABLE
-    case FONT_MEDIUM:
-      return FONT_MEDIUM_HEIGHT;
+#ifdef TREZOR_FONT_DEMIBOLD_ENABLE
+    case FONT_DEMIBOLD:
+      return FONT_DEMIBOLD_HEIGHT;
 #endif
 #ifdef TREZOR_FONT_BOLD_ENABLE
     case FONT_BOLD:
@@ -79,9 +79,9 @@ int font_max_height(int font) {
     case FONT_NORMAL:
       return FONT_NORMAL_MAX_HEIGHT;
 #endif
-#ifdef TREZOR_FONT_MEDIUM_ENABLE
-    case FONT_MEDIUM:
-      return FONT_MEDIUM_MAX_HEIGHT;
+#ifdef TREZOR_FONT_DEMIBOLD_ENABLE
+    case FONT_DEMIBOLD:
+      return FONT_DEMIBOLD_MAX_HEIGHT;
 #endif
 #ifdef TREZOR_FONT_BOLD_ENABLE
     case FONT_BOLD:
@@ -101,9 +101,9 @@ int font_baseline(int font) {
     case FONT_NORMAL:
       return FONT_NORMAL_BASELINE;
 #endif
-#ifdef TREZOR_FONT_MEDIUM_ENABLE
-    case FONT_MEDIUM:
-      return FONT_MEDIUM_BASELINE;
+#ifdef TREZOR_FONT_DEMIBOLD_ENABLE
+    case FONT_DEMIBOLD:
+      return FONT_DEMIBOLD_BASELINE;
 #endif
 #ifdef TREZOR_FONT_BOLD_ENABLE
     case FONT_BOLD:
@@ -128,9 +128,9 @@ const uint8_t *font_get_glyph(int font, uint8_t c) {
       case FONT_NORMAL:
         return FONT_NORMAL_DATA[c - ' '];
 #endif
-#ifdef TREZOR_FONT_MEDIUM_ENABLE
-      case FONT_MEDIUM:
-        return FONT_MEDIUM_DATA[c - ' '];
+#ifdef TREZOR_FONT_DEMIBOLD_ENABLE
+      case FONT_DEMIBOLD:
+        return FONT_DEMIBOLD_DATA[c - ' '];
 #endif
 #ifdef TREZOR_FONT_BOLD_ENABLE
       case FONT_BOLD:
@@ -153,9 +153,9 @@ const uint8_t *font_get_glyph(int font, uint8_t c) {
     case FONT_NORMAL:
       return NONPRINTABLE_GLYPH(FONT_NORMAL_DATA);
 #endif
-#ifdef TREZOR_FONT_MEDIUM_ENABLE
-    case FONT_MEDIUM:
-      return NONPRINTABLE_GLYPH(FONT_MEDIUM_DATA);
+#ifdef TREZOR_FONT_DEMIBOLD_ENABLE
+    case FONT_DEMIBOLD:
+      return NONPRINTABLE_GLYPH(FONT_DEMIBOLD_DATA);
 #endif
 #ifdef TREZOR_FONT_BOLD_ENABLE
     case FONT_BOLD:

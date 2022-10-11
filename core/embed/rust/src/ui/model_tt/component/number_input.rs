@@ -212,7 +212,7 @@ impl Component for NumberInput {
     fn paint(&mut self) {
         let mut buf = [0u8; 10];
         if let Some(text) = util::u32_to_str(self.value, &mut buf) {
-            let digit_font = Font::MEDIUM;
+            let digit_font = Font::DEMIBOLD;
             let y_offset = digit_font.text_height() / 2 + Button::<&str>::BASELINE_OFFSET;
             display::rect_fill(self.area, theme::BG);
             display::text_center(
