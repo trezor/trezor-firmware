@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-from binascii import hexlify
 
 import copy
 import datetime
@@ -10,6 +9,7 @@ import os
 import pathlib
 import re
 import shutil
+from binascii import hexlify
 from collections import defaultdict
 from typing import Any, Dict, List, TextIO, Tuple, cast
 
@@ -72,7 +72,9 @@ class Cache:
 
     def __init__(self, cache_filepath: pathlib.Path) -> None:
         if cache_filepath.exists() and not cache_filepath.is_file():
-            raise ValueError(f"Path for storing cache \"{cache_filepath}\" exists and is not a file.")
+            raise ValueError(
+                f'Path for storing cache "{cache_filepath}" exists and is not a file.'
+            )
         self.cache_filepath = cache_filepath
         self.cached_data: Any = dict()
 
@@ -80,7 +82,13 @@ class Cache:
         mtime = (
             self.cache_filepath.stat().st_mtime if self.cache_filepath.exists() else 0
         )
-        return mtime <= (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=1)).timestamp()
+        return (
+            mtime
+            <= (
+                datetime.datetime.now(datetime.timezone.utc)
+                - datetime.timedelta(hours=1)
+            ).timestamp()
+        )
 
     def load(self) -> None:
         self.cached_data = load_json(self.cache_filepath)
@@ -254,9 +262,7 @@ def _load_erc20_tokens_from_coingecko(
     tokens: List[Dict] = []
     for network in networks:
         if (coingecko_id := network.get("coingecko_id")) is not None:
-            all_tokens = downloader.get_coingecko_tokens_for_network(
-                coingecko_id
-            )
+            all_tokens = downloader.get_coingecko_tokens_for_network(coingecko_id)
 
             for token in all_tokens:
                 t = _create_cropped_token_dict(
@@ -760,7 +766,9 @@ def _load_prepared_definitions(
 
     prepared_definitions_data = load_json(definitions_file)
     try:
-        timestamp = datetime.datetime.strptime(prepared_definitions_data["timestamp"], TIMESTAMP_FORMAT)
+        timestamp = datetime.datetime.strptime(
+            prepared_definitions_data["timestamp"], TIMESTAMP_FORMAT
+        )
         networks_data = prepared_definitions_data["networks"]
         tokens_data = prepared_definitions_data["tokens"]
     except KeyError:
@@ -814,7 +822,9 @@ def eth_info_from_dict(
 
 
 def serialize_eth_info(
-    info: EthereumNetworkInfo | EthereumTokenInfo, data_type_num: EthereumDefinitionType, timestamp: datetime.datetime
+    info: EthereumNetworkInfo | EthereumTokenInfo,
+    data_type_num: EthereumDefinitionType,
+    timestamp: datetime.datetime,
 ) -> bytes:
     ser = FORMAT_VERSION_BYTES
     ser += data_type_num.to_bytes(1, "big")
@@ -1053,7 +1063,7 @@ def prepare_definitions(
     "--outdir",
     type=click.Path(resolve_path=True, file_okay=False, path_type=pathlib.Path),
     default="./definitions-latest",
-    help="Path where the generated definitions will be saved. Path will be erased!"
+    help="Path where the generated definitions will be saved. Path will be erased!",
 )
 @click.option(
     "-k",
@@ -1075,7 +1085,9 @@ def sign_definitions(
     """
 
     if (publickey is None) != (signedroot is None):
-        raise click.ClickException("Options `--publickey` and `--signedroot` must be used together.")
+        raise click.ClickException(
+            "Options `--publickey` and `--signedroot` must be used together."
+        )
 
     def save_definition(directory: pathlib.Path, keys: list[str], data: bytes):
         complete_file_path = directory / ("_".join(keys) + ".dat")
@@ -1148,11 +1160,15 @@ def sign_definitions(
         print(f"Merkle tree root hash: {hexlify(mt.get_root_hash())}")
         return
 
-    verify_key = ed25519.VerifyingKey(ed25519.from_ascii(publickey.readline(), encoding="hex"))
+    verify_key = ed25519.VerifyingKey(
+        ed25519.from_ascii(publickey.readline(), encoding="hex")
+    )
     try:
-         verify_key.verify(signedroot, mt.get_root_hash(), encoding="hex")
+        verify_key.verify(signedroot, mt.get_root_hash(), encoding="hex")
     except ed25519.BadSignatureError:
-        raise click.ClickException(f"Provided `--signedroot` value is not valid for computed Merkle tree root hash ({hexlify(mt.get_root_hash())}).")
+        raise click.ClickException(
+            f"Provided `--signedroot` value is not valid for computed Merkle tree root hash ({hexlify(mt.get_root_hash())})."
+        )
 
     # update definitions
     signedroot_bytes = bytes.fromhex(signedroot)

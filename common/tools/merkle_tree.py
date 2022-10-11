@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional
 
 try:
     from trezor.crypto.hashlib import sha256
@@ -12,14 +12,19 @@ class Node:
     """
 
     def __init__(
-        self: "Node", *, left: Optional["Node"] = None, right: Optional["Node"] = None,
+        self: "Node",
+        *,
+        left: Optional["Node"] = None,
+        right: Optional["Node"] = None,
         raw_value: Optional[bytes] = None,
     ) -> None:
         self.is_leaf = raw_value is not None
         self.raw_value = raw_value
 
         if self.is_leaf and (left is not None or right is not None):
-            raise ValueError("Cannot use `raw_value` together with `left` and/or `right` value.")
+            raise ValueError(
+                "Cannot use `raw_value` together with `left` and/or `right` value."
+            )
 
         self.hash = None
         self.left_child = left
