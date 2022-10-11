@@ -1,0 +1,336 @@
+{
+    "setup": {
+        "mnemonic": "all all all all all all all all all all all all",
+        "passphrase": ""
+    },
+    "tests": [
+        {
+            "name": "builtin_Ethereum_builtin_Tether_send_network_token",
+            "parameters": {
+                "chain_id": 1,
+                "path": "m/44'/60'/0'/0/0",
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "value": "0x0",
+                "to_address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+                "tx_type": null,
+                "data": "a9059cbb00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            "result": {
+                "sig_v": 38,
+                "sig_r": "a82c902c3c4d82e9a3d3894bf1298b14217c0d6149faaff26e254b7753063158",
+                "sig_s": "2200f34790df5a71f7349eb941f11c294e480dadcf15e323851ae43845ee9a80"
+            }
+        },
+        {
+            "name": "builtin_Ethereum_builtin_Tether_send_network",
+            "parameters": {
+                "chain_id": 1,
+                "path": "m/44'/60'/0'/0/0",
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "value": "0x0",
+                "to_address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+                "tx_type": null,
+                "data": "a9059cbb00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                "definitions": {
+                    "to_address": ""
+                }
+            },
+            "result": {
+                "sig_v": 38,
+                "sig_r": "a82c902c3c4d82e9a3d3894bf1298b14217c0d6149faaff26e254b7753063158",
+                "sig_s": "2200f34790df5a71f7349eb941f11c294e480dadcf15e323851ae43845ee9a80"
+            }
+        },
+        {
+            "name": "builtin_Ethereum_builtin_Tether_send_token",
+            "parameters": {
+                "chain_id": 1,
+                "path": "m/44'/60'/0'/0/0",
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "value": "0x0",
+                "to_address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+                "tx_type": null,
+                "data": "a9059cbb00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                "definitions": {
+                    "chain_id": -1
+                }
+            },
+            "result": {
+                "sig_v": 38,
+                "sig_r": "a82c902c3c4d82e9a3d3894bf1298b14217c0d6149faaff26e254b7753063158",
+                "sig_s": "2200f34790df5a71f7349eb941f11c294e480dadcf15e323851ae43845ee9a80"
+            }
+        },
+        {
+            "name": "builtin_Ethereum_builtin_Tether_send_nothing",
+            "parameters": {
+                "chain_id": 1,
+                "path": "m/44'/60'/0'/0/0",
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "value": "0x0",
+                "to_address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+                "tx_type": null,
+                "data": "a9059cbb00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                "definitions": {
+                    "chain_id": -1,
+                    "to_address": ""
+                }
+            },
+            "result": {
+                "sig_v": 38,
+                "sig_r": "a82c902c3c4d82e9a3d3894bf1298b14217c0d6149faaff26e254b7753063158",
+                "sig_s": "2200f34790df5a71f7349eb941f11c294e480dadcf15e323851ae43845ee9a80"
+            }
+        },
+        {
+            "name": "builtin_Ethereum_builtin_Tether_wrong_network_token",
+            "parameters": {
+                "chain_id": 1,
+                "path": "m/44'/60'/0'/0/0",
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "value": "0x0",
+                "to_address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+                "tx_type": null,
+                "data": "a9059cbb00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                "definitions": {
+                    "chain_id": 8,
+                    "token_chain_id": 8,
+                    "to_address": "0x20e3dd746ddf519b23ffbbb6da7a5d33ea6349d6"
+                }
+            },
+            "result": {
+                "sig_v": 38,
+                "sig_r": "a82c902c3c4d82e9a3d3894bf1298b14217c0d6149faaff26e254b7753063158",
+                "sig_s": "2200f34790df5a71f7349eb941f11c294e480dadcf15e323851ae43845ee9a80"
+            }
+        },
+        {
+            "name": "builtin_Ethereum_builtin_Tether_wrong_network",
+            "parameters": {
+                "chain_id": 1,
+                "path": "m/44'/60'/0'/0/0",
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "value": "0x0",
+                "to_address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+                "tx_type": null,
+                "data": "a9059cbb00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                "definitions": {
+                    "chain_id": 8
+                }
+            },
+            "result": {
+                "sig_v": 38,
+                "sig_r": "a82c902c3c4d82e9a3d3894bf1298b14217c0d6149faaff26e254b7753063158",
+                "sig_s": "2200f34790df5a71f7349eb941f11c294e480dadcf15e323851ae43845ee9a80"
+            }
+        },
+        {
+            "name": "builtin_Ethereum_builtin_Tether_wrong_token",
+            "parameters": {
+                "chain_id": 1,
+                "path": "m/44'/60'/0'/0/0",
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "value": "0x0",
+                "to_address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+                "tx_type": null,
+                "data": "a9059cbb00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                "definitions": {
+                    "token_chain_id": 8,
+                    "to_address": "0x20e3dd746ddf519b23ffbbb6da7a5d33ea6349d6"
+                }
+            },
+            "result": {
+                "sig_v": 38,
+                "sig_r": "a82c902c3c4d82e9a3d3894bf1298b14217c0d6149faaff26e254b7753063158",
+                "sig_s": "2200f34790df5a71f7349eb941f11c294e480dadcf15e323851ae43845ee9a80"
+            }
+        },
+        {
+            "name": "builtin_Ethereum_extern_adChain_send_network_token",
+            "parameters": {
+                "chain_id": 1,
+                "path": "m/44'/60'/0'/0/0",
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "value": "0x0",
+                "to_address": "0xd0d6d6c5fe4a677d343cc433536bb717bae167dd",
+                "tx_type": null,
+                "data": "a9059cbb00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            "result": {
+                "sig_v": 38,
+                "sig_r": "78e9bab4abda13d3cdc2e6dee69e96a7215ff4254b2b9a2321f970941925250c",
+                "sig_s": "2c08ebde47552e7d407767710c4fd48d8c66e71f28004d87170a430ecf7d56a6"
+            }
+        },
+        {
+            "name": "builtin_Ethereum_extern_adChain_send_network",
+            "parameters": {
+                "chain_id": 1,
+                "path": "m/44'/60'/0'/0/0",
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "value": "0x0",
+                "to_address": "0xd0d6d6c5fe4a677d343cc433536bb717bae167dd",
+                "tx_type": null,
+                "data": "a9059cbb00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                "definitions": {
+                    "to_address": ""
+                }
+            },
+            "result": {
+                "sig_v": 38,
+                "sig_r": "78e9bab4abda13d3cdc2e6dee69e96a7215ff4254b2b9a2321f970941925250c",
+                "sig_s": "2c08ebde47552e7d407767710c4fd48d8c66e71f28004d87170a430ecf7d56a6"
+            }
+        },
+        {
+            "name": "builtin_Ethereum_extern_adChain_send_token",
+            "parameters": {
+                "chain_id": 1,
+                "path": "m/44'/60'/0'/0/0",
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "value": "0x0",
+                "to_address": "0xd0d6d6c5fe4a677d343cc433536bb717bae167dd",
+                "tx_type": null,
+                "data": "a9059cbb00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                "definitions": {
+                    "chain_id": -1
+                }
+            },
+            "result": {
+                "sig_v": 38,
+                "sig_r": "78e9bab4abda13d3cdc2e6dee69e96a7215ff4254b2b9a2321f970941925250c",
+                "sig_s": "2c08ebde47552e7d407767710c4fd48d8c66e71f28004d87170a430ecf7d56a6"
+            }
+        },
+        {
+            "name": "builtin_Ethereum_extern_adChain_send_nothing",
+            "parameters": {
+                "chain_id": 1,
+                "path": "m/44'/60'/0'/0/0",
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "value": "0x0",
+                "to_address": "0xd0d6d6c5fe4a677d343cc433536bb717bae167dd",
+                "tx_type": null,
+                "data": "a9059cbb00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                "definitions": {
+                    "chain_id": -1,
+                    "to_address": ""
+                }
+            },
+            "result": {
+                "sig_v": 38,
+                "sig_r": "78e9bab4abda13d3cdc2e6dee69e96a7215ff4254b2b9a2321f970941925250c",
+                "sig_s": "2c08ebde47552e7d407767710c4fd48d8c66e71f28004d87170a430ecf7d56a6"
+            }
+        },
+        {
+            "name": "builtin_Ethereum_extern_adChain_wrong_token",
+            "parameters": {
+                "chain_id": 1,
+                "path": "m/44'/60'/0'/0/0",
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "value": "0x0",
+                "to_address": "0xd0d6d6c5fe4a677d343cc433536bb717bae167dd",
+                "tx_type": null,
+                "data": "a9059cbb00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                "definitions": {
+                    "token_chain_id": 8,
+                    "to_address": "0x20e3dd746ddf519b23ffbbb6da7a5d33ea6349d6"
+                }
+            },
+            "result": {
+                "sig_v": 38,
+                "sig_r": "78e9bab4abda13d3cdc2e6dee69e96a7215ff4254b2b9a2321f970941925250c",
+                "sig_s": "2c08ebde47552e7d407767710c4fd48d8c66e71f28004d87170a430ecf7d56a6"
+            }
+        },
+        {
+            "name": "extern_Ubiq_extern_Sphere_send_network_token",
+            "parameters": {
+                "chain_id": 8,
+                "path": "m/44'/108'/0'/0/0",
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "value": "0x0",
+                "to_address": "0x20e3dd746ddf519b23ffbbb6da7a5d33ea6349d6",
+                "tx_type": null,
+                "data": "a9059cbb00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            },
+            "result": {
+                "sig_v": 52,
+                "sig_r": "1db04aa641665618467a2e40f840da081601c266050f951c8bb8688efd43a7d9",
+                "sig_s": "5f4bb9b86814cb8647b7aad6e23c73ffbfb284109068d5d1061583bff252ec82"
+            }
+        },
+        {
+            "name": "extern_Ubiq_extern_Sphere_send_network",
+            "parameters": {
+                "chain_id": 8,
+                "path": "m/44'/108'/0'/0/0",
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "value": "0x0",
+                "to_address": "0x20e3dd746ddf519b23ffbbb6da7a5d33ea6349d6",
+                "tx_type": null,
+                "data": "a9059cbb00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                "definitions": {
+                    "to_address": ""
+                }
+            },
+            "result": {
+                "sig_v": 52,
+                "sig_r": "1db04aa641665618467a2e40f840da081601c266050f951c8bb8688efd43a7d9",
+                "sig_s": "5f4bb9b86814cb8647b7aad6e23c73ffbfb284109068d5d1061583bff252ec82"
+            }
+        },
+        {
+            "name": "extern_Ubiq_extern_Sphere_wrong_token",
+            "parameters": {
+                "chain_id": 8,
+                "path": "m/44'/108'/0'/0/0",
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "value": "0x0",
+                "to_address": "0x20e3dd746ddf519b23ffbbb6da7a5d33ea6349d6",
+                "tx_type": null,
+                "data": "a9059cbb00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                "definitions": {
+                    "token_chain_id": 1,
+                    "to_address": "0xd0d6d6c5fe4a677d343cc433536bb717bae167dd"
+                }
+            },
+            "result": {
+                "sig_v": 52,
+                "sig_r": "1db04aa641665618467a2e40f840da081601c266050f951c8bb8688efd43a7d9",
+                "sig_s": "5f4bb9b86814cb8647b7aad6e23c73ffbfb284109068d5d1061583bff252ec82"
+            }
+        }
+    ]
+}

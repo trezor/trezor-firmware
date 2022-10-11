@@ -27,6 +27,78 @@
             }
         },
         {
+            "name": "builtin_Ethereum_do_not_send_network",
+            "comment": "Bare minimum EIP-712 message (domain only)",
+            "parameters": {
+                "path": "m/44'/60'/0'/0/0",
+                "metamask_v4_compat": true,
+                "data": {
+                    "types": {
+                        "EIP712Domain": []
+                    },
+                    "primaryType": "EIP712Domain",
+                    "message": {},
+                    "domain": {}
+                },
+                "message_hash": null,
+                "domain_separator_hash": "0x6192106f129ce05c9075d319c1fa6ea9b3ae37cbd0c1ef92e2be7137bb07baa1",
+                "definitions": {
+                    "slip44": -1
+                }
+            },
+            "result": {
+                "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
+                "sig": "0x18aaea9abed7cd88d3763a9a420e2e7b71a9f991685fbc62d74da86326cffa680644862d459d1973e422777a3933bc74190b1cae9a5418ddaea645a7d7630dd91c"
+            }
+        },
+        {
+            "name": "builtin_Ethereum_send_wrong_network",
+            "comment": "Bare minimum EIP-712 message (domain only)",
+            "parameters": {
+                "path": "m/44'/60'/0'/0/0",
+                "metamask_v4_compat": true,
+                "data": {
+                    "types": {
+                        "EIP712Domain": []
+                    },
+                    "primaryType": "EIP712Domain",
+                    "message": {},
+                    "domain": {}
+                },
+                "message_hash": null,
+                "domain_separator_hash": "0x6192106f129ce05c9075d319c1fa6ea9b3ae37cbd0c1ef92e2be7137bb07baa1",
+                "definitions": {
+                    "slip44": 6060
+                }
+            },
+            "result": {
+                "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
+                "sig": "0x18aaea9abed7cd88d3763a9a420e2e7b71a9f991685fbc62d74da86326cffa680644862d459d1973e422777a3933bc74190b1cae9a5418ddaea645a7d7630dd91c"
+            }
+        },
+        {
+            "name": "extern_GoChain_send_network",
+            "comment": "Bare minimum EIP-712 message (domain only)",
+            "parameters": {
+                "path": "m/44'/6060'/0'/0/0",
+                "metamask_v4_compat": true,
+                "data": {
+                    "types": {
+                        "EIP712Domain": []
+                    },
+                    "primaryType": "EIP712Domain",
+                    "message": {},
+                    "domain": {}
+                },
+                "message_hash": null,
+                "domain_separator_hash": "0x6192106f129ce05c9075d319c1fa6ea9b3ae37cbd0c1ef92e2be7137bb07baa1"
+            },
+            "result": {
+                "address": "0xA26a450ef46a5f11a510eBA2119A3236fa0Aca92",
+                "sig": "0x0d7be57dfc60b5ec97383761a3404846fcbb71f8c4b317d178ffbc09a0e71b8639ffcedcb3774cf362b50e1c95938d245778c5e3d9679ed4ae63bedafb935b601b"
+            }
+        },
+        {
             "name": "full_domain_empty_message",
             "comment": "Domain only EIP-712 message",
             "parameters": {

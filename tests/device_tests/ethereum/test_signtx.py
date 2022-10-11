@@ -14,7 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from typing import Optional
+from functools import partial
 
 import pytest
 
@@ -34,32 +34,35 @@ pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
 
 def get_EthereumEncodedDefinitions(
     parameters: dict,
-) -> Optional[messages.EthereumEncodedDefinitions]:
-    encoded_network = None
-    encoded_token = None
-    if not parameters.get("builtin_network", True):
-        encoded_network = ethereum.network_definition_from_dir(
-            path=COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
-            chain_id=parameters["chain_id"],
-        )
-    if not parameters.get("builtin_token", True):
-        encoded_token = ethereum.token_definition_from_dir(
-            path=COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
-            chain_id=parameters["chain_id"],
-            token_address=parameters["to_address"],
-        )
+) -> messages.EthereumEncodedDefinitions:
+    chain_id = parameters["chain_id"]
+    token_chain_id = parameters["chain_id"]
+    token_address = parameters["to_address"]
 
-    if encoded_network is not None or encoded_token is not None:
-        return messages.EthereumEncodedDefinitions(
-            encoded_network=encoded_network, encoded_token=encoded_token
-        )
+    if "definitions" in parameters:
+        chain_id = parameters["definitions"].get("chain_id", chain_id)
+        token_chain_id = parameters["definitions"].get("token_chain_id", token_chain_id)
+        token_address = parameters["definitions"].get("to_address", token_address)
 
-    return None
+    encoded_network = ethereum.network_definition_from_dir(
+        path=COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
+        chain_id=chain_id,
+    )
+    encoded_token = ethereum.token_definition_from_dir(
+        path=COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
+        chain_id=token_chain_id,
+        token_address=token_address,
+    )
+
+    return messages.EthereumEncodedDefinitions(
+        encoded_network=encoded_network, encoded_token=encoded_token
+    )
 
 
 @parametrize_using_common_fixtures(
     "ethereum/sign_tx.json",
     "ethereum/sign_tx_eip155.json",
+    "ethereum/sign_tx_definitions.json",
 )
 def test_signtx(client: Client, parameters, result):
     with client:
@@ -84,7 +87,93 @@ def test_signtx(client: Client, parameters, result):
     assert sig_v == result["sig_v"]
 
 
-@parametrize_using_common_fixtures("ethereum/sign_tx_eip1559.json")
+def test_signtx_missing_extern_definitions(client: Client):
+    chain_id = 8  # Ubiq
+    to_address = "0x20e3dd746ddf519b23ffbbb6da7a5d33ea6349d6"  # Sphere
+
+    sign_tx_call = partial(
+        ethereum.sign_tx,
+        client,
+        n=parse_path("m/44'/108'/0'/0/0"),
+        nonce=0,
+        gas_price=20,
+        gas_limit=20,
+        to=to_address,
+        chain_id=chain_id,
+        value=0,
+        data=b"a9059cbb00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    )
+
+    definitions_vector = [
+        get_EthereumEncodedDefinitions(
+            {
+                "chain_id": chain_id,
+                "to_address": to_address,
+                "definitions": {
+                    "chain_id": -1,
+                },
+            }
+        ),  # missing network
+        get_EthereumEncodedDefinitions(
+            {
+                "chain_id": -1,
+                "to_address": "",
+            }
+        ),  # missing network and token
+    ]
+
+    for definitions in definitions_vector:
+        with pytest.raises(TrezorFailure, match=r"DataError:.*Forbidden key path"):
+            sign_tx_call(definitions=definitions)
+
+
+def test_signtx_wrong_extern_definitions(client: Client):
+    chain_id = 8  # Ubiq
+    to_address = "0x20e3dd746ddf519b23ffbbb6da7a5d33ea6349d6"  # Sphere
+
+    sign_tx_call = partial(
+        ethereum.sign_tx,
+        client,
+        n=parse_path("m/44'/108'/0'/0/0"),
+        nonce=0,
+        gas_price=20,
+        gas_limit=20,
+        to=to_address,
+        chain_id=chain_id,
+        value=0,
+        data=b"a9059cbb00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    )
+
+    definitions_vector = [
+        get_EthereumEncodedDefinitions(
+            {
+                "chain_id": chain_id,
+                "to_address": to_address,
+                "definitions": {
+                    "chain_id": 1,
+                },
+            }
+        ),  # wrong network
+        get_EthereumEncodedDefinitions(
+            {
+                "chain_id": 1,
+                "to_address": "0xd0d6d6c5fe4a677d343cc433536bb717bae167dd",
+            }
+        ),  # wrong network and token
+    ]
+
+    for definitions in definitions_vector:
+        with pytest.raises(
+            TrezorFailure,
+            match=r"DataError:.*Invalid network definition - chain IDs not equal.",
+        ):
+            sign_tx_call(definitions=definitions)
+
+
+@parametrize_using_common_fixtures(
+    "ethereum/sign_tx_eip1559.json",
+    "ethereum/sign_tx_eip1559_definitions.json",
+)
 def test_signtx_eip1559(client: Client, parameters, result):
     with client:
         sig_v, sig_r, sig_s = ethereum.sign_tx_eip1559(
@@ -104,6 +193,91 @@ def test_signtx_eip1559(client: Client, parameters, result):
     assert sig_r.hex() == result["sig_r"]
     assert sig_s.hex() == result["sig_s"]
     assert sig_v == result["sig_v"]
+
+
+def test_signtx_eip1559_missing_extern_definitions(client: Client):
+    chain_id = 8  # Ubiq
+    to_address = "0x20e3dd746ddf519b23ffbbb6da7a5d33ea6349d6"  # Sphere
+
+    sign_tx_eip1559_call = partial(
+        ethereum.sign_tx_eip1559,
+        client,
+        n=parse_path("m/44'/108'/0'/0/0"),
+        nonce=0,
+        gas_limit=20,
+        max_gas_fee=20,
+        max_priority_fee=1,
+        to=to_address,
+        chain_id=chain_id,
+        value=0,
+        data=b"a9059cbb00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    )
+
+    definitions_vector = [
+        get_EthereumEncodedDefinitions(
+            {
+                "chain_id": chain_id,
+                "to_address": to_address,
+                "definitions": {
+                    "chain_id": -1,
+                },
+            }
+        ),  # missing network
+        get_EthereumEncodedDefinitions(
+            {
+                "chain_id": -1,
+                "to_address": "",
+            }
+        ),  # missing network and token
+    ]
+
+    for definitions in definitions_vector:
+        with pytest.raises(TrezorFailure, match=r"DataError:.*Forbidden key path"):
+            sign_tx_eip1559_call(definitions=definitions)
+
+
+def test_signtx_eip1559_wrong_extern_definitions(client: Client):
+    chain_id = 8  # Ubiq
+    to_address = "0x20e3dd746ddf519b23ffbbb6da7a5d33ea6349d6"  # Sphere
+
+    sign_tx_eip1559_call = partial(
+        ethereum.sign_tx_eip1559,
+        client,
+        n=parse_path("m/44'/108'/0'/0/0"),
+        nonce=0,
+        gas_limit=20,
+        max_gas_fee=20,
+        max_priority_fee=1,
+        to=to_address,
+        chain_id=chain_id,
+        value=0,
+        data=b"a9059cbb00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    )
+
+    definitions_vector = [
+        get_EthereumEncodedDefinitions(
+            {
+                "chain_id": chain_id,
+                "to_address": to_address,
+                "definitions": {
+                    "chain_id": 1,
+                },
+            }
+        ),  # wrong network
+        get_EthereumEncodedDefinitions(
+            {
+                "chain_id": 1,
+                "to_address": "0xd0d6d6c5fe4a677d343cc433536bb717bae167dd",
+            }
+        ),  # wrong network and token
+    ]
+
+    for definitions in definitions_vector:
+        with pytest.raises(
+            TrezorFailure,
+            match=r"DataError:.*Invalid network definition - chain IDs not equal.",
+        ):
+            sign_tx_eip1559_call(definitions=definitions)
 
 
 def test_sanity_checks(client: Client):

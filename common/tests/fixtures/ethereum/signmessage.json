@@ -15,6 +15,45 @@
             }
         },
         {
+            "name": "builtin_Ethereum_do_not_send_network",
+            "parameters": {
+                "msg": "This is an example of a signed message.",
+                "path": "m/44'/60'/0'/0/0",
+                "definitions": {
+                    "slip44": -1
+                }
+            },
+            "result": {
+                "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
+                "sig": "af4eac50f21acc6daeb0ab036f616f5d19fccade46e47100642b3dfc798c9b740d5873887bdc2f02502c90777a082d10dca113bd1ec29d08108396401421c8cc1b"
+            }
+        },
+        {
+            "name": "builtin_Ethereum_send_wrong_network",
+            "parameters": {
+                "msg": "This is an example of a signed message.",
+                "path": "m/44'/60'/0'/0/0",
+                "definitions": {
+                    "slip44": 6060
+                }
+            },
+            "result": {
+                "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
+                "sig": "af4eac50f21acc6daeb0ab036f616f5d19fccade46e47100642b3dfc798c9b740d5873887bdc2f02502c90777a082d10dca113bd1ec29d08108396401421c8cc1b"
+            }
+        },
+        {
+            "name": "extern_GoChain_send_network",
+            "parameters": {
+                "msg": "This is an example of a signed message.",
+                "path": "m/44'/6060'/0'/0/0"
+            },
+            "result": {
+                "address": "0xA26a450ef46a5f11a510eBA2119A3236fa0Aca92",
+                "sig": "e642dd21fd87ead65b380f5cc6a9159b8a83e024c3fac13e261ad07dc344b6ef2e8e5ef476a908aeb37aece2afe2e248f029634979fd68b57635fb9e083c91a91c"
+            }
+        },
+        {
             "parameters": {
                 "msg": "VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!",
                 "path": "m/44'/60'/0'/0/0"

@@ -16,8 +16,7 @@
                 "gas_price": "0x14",
                 "gas_limit": "0x14",
                 "tx_type": null,
-                "value": "0x0",
-                "builtin_token": false
+                "value": "0x0"
             },
             "result": {
                 "sig_v": 37,
@@ -56,8 +55,7 @@
                 "gas_price": "0x14",
                 "gas_limit": "0x14",
                 "tx_type": 1,
-                "value": "0x64",
-                "builtin_network": false
+                "value": "0x64"
             },
             "result": {
                 "sig_v": 1811,

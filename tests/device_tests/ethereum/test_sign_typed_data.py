@@ -18,9 +18,10 @@ import pytest
 
 from trezorlib import ethereum, exceptions
 from trezorlib.debuglink import TrezorClientDebugLink as Client
-from trezorlib.tools import parse_path
+from trezorlib.exceptions import TrezorFailure
+from trezorlib.tools import UH_, parse_path
 
-from ...common import parametrize_using_common_fixtures
+from ...common import COMMON_FIXTURES_DIR, parametrize_using_common_fixtures
 
 SHOW_MORE = (143, 167)
 
@@ -32,14 +33,44 @@ pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
 def test_ethereum_sign_typed_data(client: Client, parameters, result):
     with client:
         address_n = parse_path(parameters["path"])
+        encoded_network_slip44 = UH_(address_n[1])
+        if "definitions" in parameters:
+            encoded_network_slip44 = parameters["definitions"].get(
+                "slip44", encoded_network_slip44
+            )
+
+        encoded_network = ethereum.network_definition_from_dir(
+            path=COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
+            slip44=encoded_network_slip44,
+        )
         ret = ethereum.sign_typed_data(
             client,
             address_n,
             parameters["data"],
             metamask_v4_compat=parameters["metamask_v4_compat"],
+            encoded_network=encoded_network,
         )
         assert ret.address == result["address"]
         assert f"0x{ret.signature.hex()}" == result["sig"]
+
+
+@pytest.mark.skip_t1
+def test_ethereum_sign_typed_data_missing_extern_definitions(client: Client):
+    path = "m/44'/6060'/0'/0/0"  # GoChain
+
+    with pytest.raises(TrezorFailure, match=r"DataError: Forbidden key path"):
+        ethereum.sign_typed_data(
+            client,
+            parse_path(path),
+            {
+                "types": {"EIP712Domain": []},
+                "primaryType": "EIP712Domain",
+                "message": {},
+                "domain": {},
+            },
+            metamask_v4_compat=True,
+            encoded_network=None,
+        )
 
 
 @pytest.mark.skip_t2
@@ -47,6 +78,16 @@ def test_ethereum_sign_typed_data(client: Client, parameters, result):
 def test_ethereum_sign_typed_data_blind(client: Client, parameters, result):
     with client:
         address_n = parse_path(parameters["path"])
+        encoded_network_slip44 = UH_(address_n[1])
+        if "definitions" in parameters:
+            encoded_network_slip44 = parameters["definitions"].get(
+                "slip44", encoded_network_slip44
+            )
+
+        encoded_network = ethereum.network_definition_from_dir(
+            path=COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
+            slip44=encoded_network_slip44,
+        )
         ret = ethereum.sign_typed_data_hash(
             client,
             address_n,
@@ -55,9 +96,26 @@ def test_ethereum_sign_typed_data_blind(client: Client, parameters, result):
             ethereum.decode_hex(parameters["message_hash"])
             if parameters["message_hash"]
             else None,
+            encoded_network=encoded_network,
         )
         assert ret.address == result["address"]
         assert f"0x{ret.signature.hex()}" == result["sig"]
+
+
+@pytest.mark.skip_t2
+def test_ethereum_sign_typed_data_blind_missing_extern_definitions(client: Client):
+    path = "m/44'/6060'/0'/0/0"  # GoChain
+
+    with pytest.raises(TrezorFailure, match=r"DataError:.*Forbidden key path"):
+        ethereum.sign_typed_data_hash(
+            client,
+            parse_path(path),
+            ethereum.decode_hex(
+                "0x6192106f129ce05c9075d319c1fa6ea9b3ae37cbd0c1ef92e2be7137bb07baa1"
+            ),
+            None,
+            encoded_network=None,
+        )
 
 
 # Being the same as the first object in ethereum/sign_typed_data.json

@@ -18,20 +18,39 @@ import pytest
 
 from trezorlib import ethereum
 from trezorlib.debuglink import TrezorClientDebugLink as Client
-from trezorlib.tools import parse_path
+from trezorlib.exceptions import TrezorFailure
+from trezorlib.tools import UH_, parse_path
 
-from ...common import parametrize_using_common_fixtures
+from ...common import COMMON_FIXTURES_DIR, parametrize_using_common_fixtures
 
 pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
 
 
 @parametrize_using_common_fixtures("ethereum/signmessage.json")
 def test_signmessage(client: Client, parameters, result):
-    res = ethereum.sign_message(
-        client, parse_path(parameters["path"]), parameters["msg"]
+    address_n = parse_path(parameters["path"])
+    encoded_network_slip44 = UH_(address_n[1])
+    if "definitions" in parameters:
+        encoded_network_slip44 = parameters["definitions"].get(
+            "slip44", encoded_network_slip44
+        )
+
+    encoded_network = ethereum.network_definition_from_dir(
+        path=COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
+        slip44=encoded_network_slip44,
     )
+    res = ethereum.sign_message(client, address_n, parameters["msg"], encoded_network)
     assert res.address == result["address"]
     assert res.signature.hex() == result["sig"]
+
+
+def test_signmessage_missing_extern_definitions(client: Client):
+    path = "m/44'/6060'/0'/0/0"  # GoChain
+    address_n = parse_path(path)
+    msg = "This is an example of a signed message."
+
+    with pytest.raises(TrezorFailure, match=r"DataError:.*Forbidden key path"):
+        ethereum.sign_message(client, address_n, msg, encoded_network=None)
 
 
 @parametrize_using_common_fixtures("ethereum/verifymessage.json")
