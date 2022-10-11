@@ -12,11 +12,15 @@ class Node:
     """
 
     def __init__(
-        self: "Node", left: Union[bytes, "Node"], right: Optional["Node"] = None
+        self: "Node", *, left: Optional["Node"] = None, right: Optional["Node"] = None,
+        raw_value: Optional[bytes] = None,
     ) -> None:
-        self.is_leaf = (left is None) != (right is None)  # XOR
-        if self.is_leaf:
-            self.raw_value = left
+        self.is_leaf = raw_value is not None
+        self.raw_value = raw_value
+
+        if self.is_leaf and (left is not None or right is not None):
+            raise ValueError("Cannot use `raw_value` together with `left` and/or `right` value.")
+
         self.hash = None
         self.left_child = left
         self.right_child = right
@@ -25,7 +29,7 @@ class Node:
     def compute_hash(self) -> bytes:
         if not self.hash:
             if self.is_leaf:
-                self.hash = sha256(b"\x00" + self.left_child).digest()
+                self.hash = sha256(b"\x00" + self.raw_value).digest()
             else:
                 left_hash = self.left_child.compute_hash()
                 right_hash = self.right_child.compute_hash()
@@ -53,7 +57,7 @@ class MerkleTree:
     """
 
     def __init__(self, values: list[bytes]) -> None:
-        self.leaves = [Node(v) for v in values]
+        self.leaves = [Node(raw_value=v) for v in values]
 
         # build the tree
         actual_level = [n for n in self.leaves]
@@ -63,7 +67,7 @@ class MerkleTree:
             while len(actual_level) // 2:
                 left_node = actual_level.pop(0)
                 right_node = actual_level.pop(0)
-                next_level.append(Node(left_node, right_node))
+                next_level.append(Node(left=left_node, right=right_node))
 
             if len(actual_level) == 1:
                 # odd number of nodes on actual level so last node will be "joined" on another level

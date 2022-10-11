@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
+from binascii import hexlify
 
 import copy
 import datetime
@@ -29,9 +30,9 @@ from trezorlib.messages import (
 
 FORMAT_VERSION = "trzd1"
 FORMAT_VERSION_BYTES = FORMAT_VERSION.encode("utf-8").ljust(8, b"\0")
-ACTUAL_TIME = datetime.datetime.now(datetime.timezone.utc)
-ACTUAL_TIMESTAMP_STR = ACTUAL_TIME.strftime("%d.%m.%Y %X%z")
-DATA_VERSION_BYTES = int(ACTUAL_TIME.timestamp()).to_bytes(4, "big")
+CURRENT_TIME = datetime.datetime.now(datetime.timezone.utc)
+TIMESTAMP_FORMAT = "%d.%m.%Y %X%z"
+CURRENT_TIMESTAMP_STR = CURRENT_TIME.strftime(TIMESTAMP_FORMAT)
 
 
 if os.environ.get("DEFS_DIR"):
@@ -70,14 +71,16 @@ class Cache:
     """Generic cache object that caches to json."""
 
     def __init__(self, cache_filepath: pathlib.Path) -> None:
+        if cache_filepath.exists() and not cache_filepath.is_file():
+            raise ValueError(f"Path for storing cache \"{cache_filepath}\" exists and is not a file.")
         self.cache_filepath = cache_filepath
         self.cached_data: Any = dict()
 
     def is_expired(self) -> bool:
         mtime = (
-            self.cache_filepath.stat().st_mtime if self.cache_filepath.is_file() else 0
+            self.cache_filepath.stat().st_mtime if self.cache_filepath.exists() else 0
         )
-        return mtime <= (ACTUAL_TIME - datetime.timedelta(hours=1)).timestamp()
+        return mtime <= (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=1)).timestamp()
 
     def load(self) -> None:
         self.cached_data = load_json(self.cache_filepath)
@@ -250,9 +253,9 @@ def _load_erc20_tokens_from_coingecko(
 ) -> List[Dict]:
     tokens: List[Dict] = []
     for network in networks:
-        if network.get("coingecko_id") is not None:
+        if (coingecko_id := network.get("coingecko_id")) is not None:
             all_tokens = downloader.get_coingecko_tokens_for_network(
-                network.get("coingecko_id")
+                coingecko_id
             )
 
             for token in all_tokens:
@@ -293,7 +296,7 @@ def _set_definition_metadata(
         definition["metadata"] = dict()
 
     if deleted:
-        definition["metadata"]["deleted"] = ACTUAL_TIMESTAMP_STR
+        definition["metadata"]["deleted"] = CURRENT_TIMESTAMP_STR
     else:
         definition["metadata"].pop("deleted", None)
 
@@ -749,7 +752,7 @@ def check_definitions_list(
 
 def _load_prepared_definitions(
     definitions_file: pathlib.Path,
-) -> tuple[list[dict], list[dict]]:
+) -> tuple[datetime.datetime, list[dict], list[dict]]:
     if not definitions_file.is_file():
         click.ClickException(
             f"File {definitions_file} with prepared definitions does not exists or is not a file."
@@ -757,6 +760,7 @@ def _load_prepared_definitions(
 
     prepared_definitions_data = load_json(definitions_file)
     try:
+        timestamp = datetime.datetime.strptime(prepared_definitions_data["timestamp"], TIMESTAMP_FORMAT)
         networks_data = prepared_definitions_data["networks"]
         tokens_data = prepared_definitions_data["tokens"]
     except KeyError:
@@ -784,7 +788,7 @@ def _load_prepared_definitions(
         )
         tokens.append(cast(Coin, token))
 
-    return networks, tokens
+    return timestamp, networks, tokens
 
 
 # ====== coindefs generators ======
@@ -810,11 +814,11 @@ def eth_info_from_dict(
 
 
 def serialize_eth_info(
-    info: EthereumNetworkInfo | EthereumTokenInfo, data_type_num: EthereumDefinitionType
+    info: EthereumNetworkInfo | EthereumTokenInfo, data_type_num: EthereumDefinitionType, timestamp: datetime.datetime
 ) -> bytes:
     ser = FORMAT_VERSION_BYTES
     ser += data_type_num.to_bytes(1, "big")
-    ser += DATA_VERSION_BYTES
+    ser += int(timestamp.timestamp()).to_bytes(4, "big")
 
     buf = io.BytesIO()
     protobuf.dump_message(buf, info)
@@ -1027,7 +1031,7 @@ def prepare_definitions(
     # save results
     with open(deffile, "w+") as f:
         json.dump(
-            obj=dict(networks=networks, tokens=tokens),
+            obj=dict(timestamp=CURRENT_TIMESTAMP_STR, networks=networks, tokens=tokens),
             fp=f,
             ensure_ascii=False,
             sort_keys=True,
@@ -1038,40 +1042,40 @@ def prepare_definitions(
 
 @cli.command()
 @click.option(
-    "-o",
-    "--outdir",
-    type=click.Path(resolve_path=True, file_okay=False, path_type=pathlib.Path),
-    default="./definitions-latest",
-)
-@click.option(
-    "-k",
-    "--privatekey",
-    type=click.File(mode="r"),
-    help="Private key (text, hex formated) to use to sign data. Could be also loaded from `PRIVATE_KEY` env variable. Provided file is preffered over env variable.",
-)
-@click.option(
     "-d",
     "--deffile",
     type=click.Path(resolve_path=True, dir_okay=False, path_type=pathlib.Path),
     default="./definitions-latest.json",
     help="File where the prepared definitions are saved in json format.",
 )
+@click.option(
+    "-o",
+    "--outdir",
+    type=click.Path(resolve_path=True, file_okay=False, path_type=pathlib.Path),
+    default="./definitions-latest",
+    help="Path where the generated definitions will be saved. Path will be erased!"
+)
+@click.option(
+    "-k",
+    "--publickey",
+    type=click.File(mode="r"),
+    help="File with public key (text, hex formated) used to check the signed Merkle tree root hash. Must be used with `--signedroot` option.",
+)
+@click.option(
+    "-s",
+    "--signedroot",
+    help="Signed Merkle tree root hash to be added",
+)
 def sign_definitions(
-    outdir: pathlib.Path, privatekey: TextIO, deffile: pathlib.Path
+    deffile: pathlib.Path, outdir: pathlib.Path, publickey: TextIO, signedroot: str
 ) -> None:
-    """Generate signed Ethereum definitions for python-trezor and others."""
-    hex_key = None
-    if privatekey is None:
-        # load from env variable
-        hex_key = os.getenv("PRIVATE_KEY", default=None)
-    else:
-        with privatekey:
-            hex_key = privatekey.readline()
+    """Generate signed Ethereum definitions for python-trezor and others.
+    If ran without `--publickey` and/or `--signedroot` it prints the computed Merkle tree root hash.
+    If ran with `--publickey` and `--signedroot` it checks the signed root with generated one and saves the definitions.
+    """
 
-    if hex_key is None:
-        raise click.ClickException("No private key for signing was provided.")
-
-    sign_key = ed25519.SigningKey(ed25519.from_ascii(hex_key, encoding="hex"))
+    if (publickey is None) != (signedroot is None):
+        raise click.ClickException("Options `--publickey` and `--signedroot` must be used together.")
 
     def save_definition(directory: pathlib.Path, keys: list[str], data: bytes):
         complete_file_path = directory / ("_".join(keys) + ".dat")
@@ -1112,12 +1116,7 @@ def sign_definitions(
             pass
 
     # load prepared definitions
-    networks, tokens = _load_prepared_definitions(deffile)
-
-    # clear defs directory
-    if outdir.exists():
-        shutil.rmtree(outdir)
-    outdir.mkdir(parents=True)
+    timestamp, networks, tokens = _load_prepared_definitions(deffile)
 
     # serialize definitions
     definitions_by_serialization: dict[bytes, dict] = dict()
@@ -1125,12 +1124,15 @@ def sign_definitions(
         ser = serialize_eth_info(
             eth_info_from_dict(network, EthereumNetworkInfo),
             EthereumDefinitionType.NETWORK,
+            timestamp,
         )
         network["serialized"] = ser
         definitions_by_serialization[ser] = network
     for token in tokens:
         ser = serialize_eth_info(
-            eth_info_from_dict(token, EthereumTokenInfo), EthereumDefinitionType.TOKEN
+            eth_info_from_dict(token, EthereumTokenInfo),
+            EthereumDefinitionType.TOKEN,
+            timestamp,
         )
         token["serialized"] = ser
         definitions_by_serialization[ser] = token
@@ -1141,10 +1143,19 @@ def sign_definitions(
         + [token["serialized"] for token in tokens]
     )
 
-    # sign tree root hash
-    signed_root_hash = sign_data(sign_key, mt.get_root_hash())
+    # print or check tree root hash
+    if publickey is None:
+        print(f"Merkle tree root hash: {hexlify(mt.get_root_hash())}")
+        return
+
+    verify_key = ed25519.VerifyingKey(ed25519.from_ascii(publickey.readline(), encoding="hex"))
+    try:
+         verify_key.verify(signedroot, mt.get_root_hash(), encoding="hex")
+    except ed25519.BadSignatureError:
+        raise click.ClickException(f"Provided `--signedroot` value is not valid for computed Merkle tree root hash ({hexlify(mt.get_root_hash())}).")
 
     # update definitions
+    signedroot_bytes = bytes.fromhex(signedroot)
     for ser, proof in mt.get_proofs().items():
         definition = definitions_by_serialization[ser]
         # append number of hashes in proof
@@ -1153,7 +1164,12 @@ def sign_definitions(
         for p in proof:
             definition["serialized"] += p
         # append signed tree root hash
-        definition["serialized"] += signed_root_hash
+        definition["serialized"] += signedroot_bytes
+
+    # clear defs directory
+    if outdir.exists():
+        shutil.rmtree(outdir)
+    outdir.mkdir(parents=True)
 
     # check serialized size of the definitions and generate a file for it
     for network in networks:
