@@ -22,7 +22,7 @@ use crate::{
         geometry,
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
-            result::{CANCELLED, CONFIRMED, INFO},
+            result::{CANCELLED, CONFIRMED, FORGOTTEN, INFO},
             util::iter_into_array,
         },
     },
@@ -132,6 +132,7 @@ where
         match msg {
             PinKeyboardMsg::Confirmed => self.pin().try_into(),
             PinKeyboardMsg::Cancelled => Ok(CANCELLED.as_obj()),
+            PinKeyboardMsg::Forgotten => Ok(FORGOTTEN.as_obj()),
         }
     }
 }
@@ -141,6 +142,7 @@ impl ComponentMsgObj for PassphraseKeyboard {
         match msg {
             PassphraseKeyboardMsg::Confirmed => self.passphrase().try_into(),
             PassphraseKeyboardMsg::Cancelled => Ok(CANCELLED.as_obj()),
+            PassphraseKeyboardMsg::Forgotten => Ok(FORGOTTEN.as_obj()),
         }
     }
 }
@@ -159,6 +161,7 @@ where
                     panic!("invalid mnemonic")
                 }
             }
+            MnemonicKeyboardMsg::Forgotten => Ok(FORGOTTEN.as_obj()),
         }
     }
 }

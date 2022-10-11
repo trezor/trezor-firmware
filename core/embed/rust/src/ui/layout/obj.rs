@@ -18,6 +18,7 @@ use crate::{
         component::{Child, Component, Event, EventCtx, Never, TimerToken},
         constant,
         geometry::Rect,
+        layout::result::FORGOTTEN,
     },
 };
 
@@ -283,6 +284,7 @@ impl LayoutObj {
                 Qstr::MP_QSTR_timer => obj_fn_2!(ui_layout_timer).as_obj(),
                 Qstr::MP_QSTR_paint => obj_fn_1!(ui_layout_paint).as_obj(),
                 Qstr::MP_QSTR_request_complete_repaint => obj_fn_1!(ui_layout_request_complete_repaint).as_obj(),
+                Qstr::MP_QSTR_forget => obj_fn_1!(ui_layout_forget).as_obj(),
                 Qstr::MP_QSTR_trace => obj_fn_2!(ui_layout_trace).as_obj(),
                 Qstr::MP_QSTR_bounds => obj_fn_1!(ui_layout_bounds).as_obj(),
                 Qstr::MP_QSTR_page_count => obj_fn_1!(ui_layout_page_count).as_obj(),
@@ -433,6 +435,19 @@ extern "C" fn ui_layout_request_complete_repaint(this: Obj) -> Obj {
             #[cfg(feature = "ui_debug")]
             panic!("cannot raise messages during RequestPaint");
         };
+        Ok(Obj::const_none())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn ui_layout_forget(this: Obj) -> Obj {
+    let block = || {
+        let this: Gc<LayoutObj> = this.try_into()?;
+        let msg = this.obj_event(Event::Forget)?;
+        // Make sure message was delivered.
+        if msg != FORGOTTEN.as_obj() {
+            panic!("failed to clear sensitive data")
+        }
         Ok(Obj::const_none())
     };
     unsafe { util::try_or_raise(block) }

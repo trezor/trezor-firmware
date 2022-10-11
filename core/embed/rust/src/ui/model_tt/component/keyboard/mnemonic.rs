@@ -13,6 +13,7 @@ pub const MNEMONIC_KEY_COUNT: usize = 9;
 
 pub enum MnemonicKeyboardMsg {
     Confirmed,
+    Forgotten,
 }
 
 pub struct MnemonicKeyboard<T, U> {
@@ -109,6 +110,10 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        if let Event::Forget = event {
+            self.input.mutate(ctx, |_ctx, i| i.inner_mut().forget());
+            return Some(MnemonicKeyboardMsg::Forgotten);
+        }
         match self.input.event(ctx, event) {
             Some(MnemonicInputMsg::Confirmed) => {
                 // Confirmed, bubble up.
@@ -162,6 +167,7 @@ pub trait MnemonicInput: Component<Msg = MnemonicInputMsg> {
     fn on_backspace_click(&mut self, ctx: &mut EventCtx);
     fn is_empty(&self) -> bool;
     fn mnemonic(&self) -> Option<&'static str>;
+    fn forget(&mut self);
 }
 
 pub enum MnemonicInputMsg {

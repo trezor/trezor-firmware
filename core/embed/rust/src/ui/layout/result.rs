@@ -26,6 +26,7 @@ unsafe impl Sync for ResultObj {}
 static CONFIRMED_TYPE: Type = obj_type! { name: Qstr::MP_QSTR_CONFIRMED, };
 static CANCELLED_TYPE: Type = obj_type! { name: Qstr::MP_QSTR_CANCELLED, };
 static INFO_TYPE: Type = obj_type! { name: Qstr::MP_QSTR_INFO, };
+static FORGOTTEN_TYPE: Type = obj_type! { name: Qstr::MP_QSTR_FORGOTTEN, };
 
 pub static CONFIRMED: ResultObj = ResultObj {
     base: CONFIRMED_TYPE.as_base(),
@@ -35,4 +36,7 @@ pub static CANCELLED: ResultObj = ResultObj {
 };
 pub static INFO: ResultObj = ResultObj {
     base: INFO_TYPE.as_base(),
+};
+pub static FORGOTTEN: ResultObj = ResultObj {
+    base: FORGOTTEN_TYPE.as_base(),
 };

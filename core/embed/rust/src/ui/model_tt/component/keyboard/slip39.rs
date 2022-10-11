@@ -85,6 +85,10 @@ impl MnemonicInput for Slip39Input {
     fn mnemonic(&self) -> Option<&'static str> {
         self.final_word
     }
+
+    fn forget(&mut self) {
+        self.final_word = None;
+    }
 }
 
 impl Component for Slip39Input {

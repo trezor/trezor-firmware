@@ -68,6 +68,10 @@ impl MnemonicInput for Bip39Input {
     fn mnemonic(&self) -> Option<&'static str> {
         self.suggested_word
     }
+
+    fn forget(&mut self) {
+        self.suggested_word = None;
+    }
 }
 
 impl Component for Bip39Input {

@@ -16,12 +16,14 @@ use crate::{
             button::{Button, ButtonContent, ButtonMsg, ButtonMsg::Clicked},
             theme,
         },
+        util::zeroize_string,
     },
 };
 
 pub enum PinKeyboardMsg {
     Confirmed,
     Cancelled,
+    Forgotten,
 }
 
 const MAX_LENGTH: usize = 50;
@@ -193,6 +195,10 @@ where
                 self.major_warning = None;
                 ctx.request_paint();
             }
+            Event::Forget => {
+                self.textbox.mutate(ctx, |_ctx, t| t.forget());
+                return Some(PinKeyboardMsg::Forgotten);
+            }
             _ => {}
         }
 
@@ -323,6 +329,10 @@ impl PinDots {
 
     fn pin(&self) -> &str {
         &self.digits
+    }
+
+    fn forget(&mut self) {
+        zeroize_string(&mut self.digits)
     }
 
     fn paint_digits(&self, area: Rect) {
