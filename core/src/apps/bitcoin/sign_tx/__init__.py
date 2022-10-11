@@ -91,6 +91,6 @@ async def sign_tx(
             res = await ctx.call(req, request_class)
         elif isinstance(req, helpers.UiConfirm):
             res = await req.confirm_dialog(ctx)
-            progress.report_init()
+            progress.progress.report_init()
         else:
             raise TypeError("Invalid signing instruction")
