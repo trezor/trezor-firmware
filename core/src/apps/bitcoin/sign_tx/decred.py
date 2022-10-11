@@ -12,9 +12,10 @@ from apps.common.writers import write_compact_size
 
 from .. import multisig, scripts_decred, writers
 from ..common import SigHashType, ecdsa_hash_pubkey, ecdsa_sign
-from . import approvers, helpers, progress
+from . import approvers, helpers
 from .approvers import BasicApprover
 from .bitcoin import Bitcoin
+from .progress import progress
 
 DECRED_SERIALIZE_FULL = const(0 << 16)
 DECRED_SERIALIZE_NO_WITNESS = const(1 << 16)

@@ -19,7 +19,8 @@ from ..common import (
 )
 from ..ownership import verify_nonownership
 from ..verification import SignatureVerifier
-from . import approvers, helpers, progress
+from . import approvers, helpers
+from .progress import progress
 from .sig_hasher import BitcoinSigHasher
 from .tx_info import OriginalTxInfo, TxInfo
 
