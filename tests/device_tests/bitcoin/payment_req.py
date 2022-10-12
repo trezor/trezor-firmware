@@ -1,9 +1,11 @@
 from collections import namedtuple
 from hashlib import sha256
 
-from ecdsa import SECP256k1, SigningKey
+from ecdsa import ECDH, SECP256k1, SigningKey
 
 from trezorlib import btc, messages
+
+SLIP44 = 1  # Testnet
 
 TextMemo = namedtuple("TextMemo", "text")
 RefundMemo = namedtuple("RefundMemo", "address_n")
@@ -18,15 +20,19 @@ payment_req_signer = SigningKey.from_string(
 
 
 def hash_bytes_prefixed(hasher, data):
-    hasher.update(len(data).to_bytes(1, "little"))
+    n = len(data)
+    if n < 253:
+        hasher.update(n.to_bytes(1, "little"))
+    elif n < 0x1_0000:
+        hasher.update(bytes([253]))
+        hasher.update(n.to_bytes(2, "little"))
+
     hasher.update(data)
 
 
 def make_payment_request(
     client, recipient_name, outputs, change_addresses=None, memos=None, nonce=None
 ):
-    slip44 = 1  # Testnet
-
     h_pr = sha256(b"SL\x00\x24")
 
     if nonce:
@@ -79,7 +85,7 @@ def make_payment_request(
         else:
             raise ValueError
 
-    h_pr.update(slip44.to_bytes(4, "little"))
+    h_pr.update(SLIP44.to_bytes(4, "little"))
 
     change_address = iter(change_addresses or [])
     h_outputs = sha256()
@@ -97,4 +103,74 @@ def make_payment_request(
         memos=msg_memos,
         nonce=nonce,
         signature=payment_req_signer.sign_digest_deterministic(h_pr.digest()),
+    )
+
+
+def make_coinjoin_request(
+    coordinator_name,
+    inputs,
+    input_script_pubkeys,
+    outputs,
+    output_script_pubkeys,
+    no_fee_indices,
+    fee_rate=50_000_000,  # 0.5 %
+    no_fee_threshold=1_000_000,
+    min_registrable_amount=5_000,
+):
+    # Reuse the signing key as the masking key to ensure deterministic behavior.
+    # Note that in production the masking key should be generated randomly.
+    ecdh = ECDH(curve=SECP256k1)
+    ecdh.load_private_key(payment_req_signer)
+    mask_public_key = ecdh.get_public_key().to_string("compressed")
+
+    # Process inputs.
+    h_prevouts = sha256()
+    coinjoin_flags = bytearray()
+    for i, (txi, script_pubkey) in enumerate(zip(inputs, input_script_pubkeys)):
+        # Add input to prevouts hash.
+        h_prevouts.update(bytes(reversed(txi.prev_hash)))
+        h_prevouts.update(txi.prev_index.to_bytes(4, "little"))
+
+        # Set signable flag in coinjoin_flags.
+        if len(script_pubkey) == 34 and script_pubkey.startswith(b"\x51\x20"):
+            ecdh.load_received_public_key_bytes(b"\x02" + script_pubkey[2:])
+            shared_secret = ecdh.generate_sharedsecret_bytes()
+            h_mask = sha256(shared_secret)
+            h_mask.update(bytes(reversed(txi.prev_hash)))
+            h_mask.update(txi.prev_index.to_bytes(4, "little"))
+            mask = h_mask.digest()[0] & 1
+            signable = bool(txi.address_n)
+            txi.coinjoin_flags = signable ^ mask
+        else:
+            txi.coinjoin_flags = 0
+
+        # Set no_fee flag in coinjoin_flags.
+        txi.coinjoin_flags |= (i in no_fee_indices) << 1
+
+        coinjoin_flags.append(txi.coinjoin_flags)
+
+    # Process outputs.
+    h_outputs = sha256()
+    for txo, script_pubkey in zip(outputs, output_script_pubkeys):
+        h_outputs.update(txo.amount.to_bytes(8, "little"))
+        hash_bytes_prefixed(h_outputs, script_pubkey)
+
+    # Hash the CoinJoin request.
+    h_request = sha256(b"CJR1")
+    hash_bytes_prefixed(h_request, coordinator_name.encode())
+    h_request.update(SLIP44.to_bytes(4, "little"))
+    h_request.update(fee_rate.to_bytes(4, "little"))
+    h_request.update(no_fee_threshold.to_bytes(8, "little"))
+    h_request.update(min_registrable_amount.to_bytes(8, "little"))
+    h_request.update(mask_public_key)
+    hash_bytes_prefixed(h_request, coinjoin_flags)
+    h_request.update(h_prevouts.digest())
+    h_request.update(h_outputs.digest())
+
+    return messages.CoinJoinRequest(
+        fee_rate=fee_rate,
+        no_fee_threshold=no_fee_threshold,
+        min_registrable_amount=min_registrable_amount,
+        mask_public_key=mask_public_key,
+        signature=payment_req_signer.sign_digest_deterministic(h_request.digest()),
     )
