@@ -9,12 +9,12 @@ class FIDOApp:
     def __init__(
         self,
         label: str,
-        icon: str | None,
+        icon_name: str | None,
         use_sign_count: bool | None,
         use_self_attestation: bool | None,
     ) -> None:
         self.label = label
-        self.icon = icon
+        self.icon_name = icon_name
         self.use_sign_count = use_sign_count
         self.use_self_attestation = use_self_attestation
 
@@ -30,9 +30,9 @@ for app in fido:
         rp_id_hash = sha256(origin.encode()).digest()
         fido_entries.append((origin, rp_id_hash, "WebAuthn", app))
     if app.icon is not None:
-        app.icon_res = f"apps/webauthn/res/icon_{app.key}.toif"
+        app.icon_name = app.key
     else:
-        app.icon_res = None
+        app.icon_name = None
 %>\
 # fmt: off
 def by_rp_id_hash(rp_id_hash: bytes) -> FIDOApp | None:
@@ -41,7 +41,7 @@ def by_rp_id_hash(rp_id_hash: bytes) -> FIDOApp | None:
         # ${type} key for ${app.name}
         return FIDOApp(
             ${black_repr(label)},  # label
-            ${black_repr(app.icon_res)},  # icon
+            ${black_repr(app.icon_name)},  # icon_name
             ${black_repr(app.use_sign_count)},  # use_sign_count
             ${black_repr(app.use_self_attestation)},  # use_self_attestation
         )

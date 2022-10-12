@@ -1,5 +1,7 @@
 mod button;
 mod dialog;
+mod fido;
+mod fido_icons;
 mod frame;
 mod hold_to_confirm;
 mod keyboard;
@@ -14,6 +16,7 @@ pub use button::{
     CancelInfoConfirmMsg, SelectWordMsg,
 };
 pub use dialog::{Dialog, DialogMsg, IconDialog};
+pub use fido::{FidoConfirm, FidoMsg};
 pub use frame::{Frame, NotificationFrame};
 pub use hold_to_confirm::{HoldToConfirm, HoldToConfirmMsg};
 pub use keyboard::{

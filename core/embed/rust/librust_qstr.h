@@ -20,6 +20,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_blob;
   MP_QSTR_confirm_properties;
   MP_QSTR_confirm_coinjoin;
+  MP_QSTR_confirm_fido;
   MP_QSTR_confirm_joint_total;
   MP_QSTR_confirm_modify_fee;
   MP_QSTR_confirm_modify_output;
@@ -91,4 +92,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_active;
   MP_QSTR_info_button;
   MP_QSTR_time_ms;
+  MP_QSTR_app_name;
+  MP_QSTR_icon_name;
+  MP_QSTR_accounts;
 }

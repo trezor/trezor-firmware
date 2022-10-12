@@ -1667,7 +1667,7 @@
 "TT_tezos-test_sign_tx.py::test_tezos_smart_contract_delegation": "683a47bb078a50bf08a16446c90fab70a68a3cec8689abca494fd99b31da2ea6",
 "TT_tezos-test_sign_tx.py::test_tezos_smart_contract_transfer": "295eac0f3667c0af660575fedefa98cae89ec0882892dc8769adf61751dc12fb",
 "TT_tezos-test_sign_tx.py::test_tezos_smart_contract_transfer_to_contract": "3e781bd83c0019ba51b9034b8bc53c5a09ea9c5c6fe73570004d46a061ba43ea",
-"TT_webauthn-test_msg_webauthn.py::test_add_remove": "7ac75b93373119b69a38c4bacfa51579d7052abc8b10f74f937a78e9a4afb5d9",
+"TT_webauthn-test_msg_webauthn.py::test_add_remove": "943e29255d6738cc6824c2565001c05906c2cd032aa2eb09993782564e890a16",
 "TT_webauthn-test_u2f_counter.py::test_u2f_counter": "c6a8e270ce726c7693e2ff88f9af57c56f2d3d8b1cc9c04b6f1dc71e13fcb88e",
 "TT_zcash-test_sign_tx.py::test_external_presigned": "8781b601169bd64c90ee4dd9c517af905e2cf5fe10bdb474116d17f3d633e06a",
 "TT_zcash-test_sign_tx.py::test_one_two": "003f12c0ff194bde070fdeb6c8663bf322efca094e9787b2304231c25938b715",

@@ -5,13 +5,10 @@ from micropython import const
 from typing import TYPE_CHECKING
 
 import storage.device as storage_device
-from trezor import config, io, log, loop, utils, workflow
+from trezor import config, io, log, loop, utils, wire, workflow
 from trezor.crypto import hashlib
 from trezor.crypto.curve import nist256p1
-from trezor.ui.components.common.confirm import Pageable
-from trezor.ui.components.common.webauthn import ConfirmInfo
 from trezor.ui.layouts import show_popup
-from trezor.ui.layouts.webauthn import confirm_webauthn
 
 from apps.base import set_homescreen
 from apps.common import cbor
@@ -20,7 +17,7 @@ from . import common
 from .credential import Credential, Fido2Credential
 
 if TYPE_CHECKING:
-    from typing import Any, Callable, Coroutine, Iterable, Iterator
+    from typing import Any, Awaitable, Callable, Coroutine, Iterable, Iterator
     from .credential import U2fCredential
 
     HID = io.HID
@@ -587,6 +584,33 @@ async def verify_user(keepalive_callback: KeepaliveCallback) -> bool:
     return ret
 
 
+def _confirm_fido_choose(title: str, credentials: list[Credential]) -> Awaitable[int]:
+    from trezor.ui.layouts.fido import confirm_fido
+    from . import knownapps
+
+    assert len(credentials) > 0
+    repr_credential = credentials[0]
+
+    if __debug__:
+        for cred in credentials:
+            assert cred.rp_id_hash == repr_credential.rp_id_hash
+
+    app_name = repr_credential.app_name()
+    app = knownapps.by_rp_id_hash(repr_credential.rp_id_hash)
+    icon_name = None if app is None else app.icon_name
+    return confirm_fido(
+        None, title, app_name, icon_name, [c.account_name() for c in credentials]
+    )
+
+
+async def _confirm_fido(title: str, credential: Credential) -> bool:
+    try:
+        await _confirm_fido_choose(title, [credential])
+        return True
+    except wire.ActionCancelled:
+        return False
+
+
 class State:
     def __init__(self, cid: int, iface: HID) -> None:
         self.cid = cid
@@ -616,13 +640,11 @@ class State:
         pass
 
 
-class U2fState(State, ConfirmInfo):
+class U2fState(State):
     def __init__(self, cid: int, iface: HID, req_data: bytes, cred: Credential) -> None:
         State.__init__(self, cid, iface)
-        ConfirmInfo.__init__(self)
         self._cred = cred
         self._req_data = req_data
-        self.load_icon(self._cred.rp_id_hash)
 
     def timeout_ms(self) -> int:
         return _U2F_CONFIRM_TIMEOUT_MS
@@ -658,10 +680,7 @@ class U2fConfirmRegister(U2fState):
                 )
             return False
         else:
-            return await confirm_webauthn(None, self)
-
-    def get_header(self) -> str:
-        return "U2F Register"
+            return await _confirm_fido("U2F Register", self._cred)
 
     def __eq__(self, other: object) -> bool:
         return (
@@ -675,11 +694,8 @@ class U2fConfirmAuthenticate(U2fState):
     def __init__(self, cid: int, iface: HID, req_data: bytes, cred: Credential) -> None:
         super().__init__(cid, iface, req_data, cred)
 
-    def get_header(self) -> str:
-        return "U2F Authenticate"
-
     async def confirm_dialog(self) -> bool:
-        return await confirm_webauthn(None, self)
+        return await _confirm_fido("U2F Authenticate", self._cred)
 
     def __eq__(self, other: object) -> bool:
         return (
@@ -767,7 +783,7 @@ class Fido2Unlock(Fido2State):
             await send_cmd(self.resp, self.iface)
 
 
-class Fido2ConfirmMakeCredential(Fido2State, ConfirmInfo):
+class Fido2ConfirmMakeCredential(Fido2State):
     def __init__(
         self,
         cid: int,
@@ -778,24 +794,13 @@ class Fido2ConfirmMakeCredential(Fido2State, ConfirmInfo):
         user_verification: bool,
     ) -> None:
         Fido2State.__init__(self, cid, iface)
-        ConfirmInfo.__init__(self)
         self._client_data_hash = client_data_hash
         self._cred = cred
         self._resident = resident
         self._user_verification = user_verification
-        self.load_icon(cred.rp_id_hash)
-
-    def get_header(self) -> str:
-        return "FIDO2 Register"
-
-    def app_name(self) -> str:
-        return self._cred.app_name()
-
-    def account_name(self) -> str | None:
-        return self._cred.account_name()
 
     async def confirm_dialog(self) -> bool:
-        if not await confirm_webauthn(None, self):
+        if not await _confirm_fido("FIDO2 Register", self._cred):
             return False
         if self._user_verification:
             return await verify_user(KeepaliveCallback(self.cid, self.iface))
@@ -839,7 +844,7 @@ class Fido2ConfirmExcluded(Fido2ConfirmMakeCredential):
         )
 
 
-class Fido2ConfirmGetAssertion(Fido2State, ConfirmInfo, Pageable):
+class Fido2ConfirmGetAssertion(Fido2State):
     def __init__(
         self,
         cid: int,
@@ -851,30 +856,21 @@ class Fido2ConfirmGetAssertion(Fido2State, ConfirmInfo, Pageable):
         user_verification: bool,
     ) -> None:
         Fido2State.__init__(self, cid, iface)
-        ConfirmInfo.__init__(self)
-        Pageable.__init__(self)
         self._client_data_hash = client_data_hash
         self._creds = creds
         self._hmac_secret = hmac_secret
         self._resident = resident
         self._user_verification = user_verification
-        self.load_icon(self._creds[0].rp_id_hash)
-
-    def get_header(self) -> str:
-        return "FIDO2 Authenticate"
-
-    def app_name(self) -> str:
-        return self._creds[self.page()].app_name()
-
-    def account_name(self) -> str | None:
-        return self._creds[self.page()].account_name()
-
-    def page_count(self) -> int:
-        return len(self._creds)
+        self._selected_cred: Credential | None = None
 
     async def confirm_dialog(self) -> bool:
-        if not await confirm_webauthn(None, self, pageable=self):
+        # There is a choice from more than one credential.
+        try:
+            index = await _confirm_fido_choose("FIDO2 Authenticate", self._creds)
+        except wire.ActionCancelled:
             return False
+
+        self._selected_cred = self._creds[index]
         if self._user_verification:
             return await verify_user(KeepaliveCallback(self.cid, self.iface))
         return True
@@ -882,13 +878,13 @@ class Fido2ConfirmGetAssertion(Fido2State, ConfirmInfo, Pageable):
     async def on_confirm(self) -> None:
         cid = self.cid  # local_cache_attribute
 
-        cred = self._creds[self.page()]
+        assert self._selected_cred is not None
         try:
             send_cmd_sync(cmd_keepalive(cid, _KEEPALIVE_STATUS_PROCESSING), self.iface)
             response_data = cbor_get_assertion_sign(
                 self._client_data_hash,
-                cred.rp_id_hash,
-                cred,
+                self._selected_cred.rp_id_hash,
+                self._selected_cred,
                 self._hmac_secret,
                 self._resident,
                 True,
@@ -954,9 +950,9 @@ class Fido2ConfirmReset(Fido2State):
         super().__init__(cid, iface)
 
     async def confirm_dialog(self) -> bool:
-        from trezor.ui.layouts.webauthn import confirm_webauthn_reset
+        from trezor.ui.layouts.fido import confirm_fido_reset
 
-        return await confirm_webauthn_reset()
+        return await confirm_fido_reset()
 
     async def on_confirm(self) -> None:
         import storage.resident_credentials

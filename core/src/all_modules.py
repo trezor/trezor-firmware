@@ -155,6 +155,8 @@ trezor.ui.layouts
 import trezor.ui.layouts
 trezor.ui.layouts.common
 import trezor.ui.layouts.common
+trezor.ui.layouts.fido
+import trezor.ui.layouts.fido
 trezor.ui.layouts.recovery
 import trezor.ui.layouts.recovery
 trezor.ui.layouts.reset
@@ -165,6 +167,8 @@ trezor.ui.layouts.tr
 import trezor.ui.layouts.tr
 trezor.ui.layouts.tt_v2
 import trezor.ui.layouts.tt_v2
+trezor.ui.layouts.tt_v2.fido
+import trezor.ui.layouts.tt_v2.fido
 trezor.ui.layouts.tt_v2.recovery
 import trezor.ui.layouts.tt_v2.recovery
 trezor.ui.layouts.tt_v2.reset
@@ -405,12 +409,6 @@ if not utils.BITCOIN_ONLY:
     import trezor.enums.TezosBallotType
     trezor.enums.TezosContractType
     import trezor.enums.TezosContractType
-    trezor.ui.components.common.webauthn
-    import trezor.ui.components.common.webauthn
-    trezor.ui.layouts.tt_v2.webauthn
-    import trezor.ui.layouts.tt_v2.webauthn
-    trezor.ui.layouts.webauthn
-    import trezor.ui.layouts.webauthn
     apps.binance
     import apps.binance
     apps.binance.get_address
