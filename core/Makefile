@@ -58,6 +58,7 @@ EMU_TEST = $(EMU) $(EMU_TEST_ARGS) -c
 JUNIT_XML ?= $(TESTPATH)/junit.xml
 PYTEST = pytest --junitxml=$(JUNIT_XML)
 TREZOR_FIDO2_UDP_PORT = 21326
+RUST_TARGET=$(shell rustc -vV | sed -n 's/host: //p')
 
 ## help commands:
 
@@ -83,7 +84,7 @@ test: ## run unit tests
 	cd tests ; ./run_tests.sh $(TESTOPTS)
 
 test_rust: ## run rs unit tests
-	cd embed/rust ; cargo test --no-default-features --features model_t$(shell echo $(TREZOR_MODEL) | tr "TR" "tr"),test -- --test-threads=1
+	cd embed/rust ; cargo test  --target=$(RUST_TARGET) --no-default-features --features model_t$(shell echo $(TREZOR_MODEL) | tr "TR" "tr"),test -- --test-threads=1
 
 test_emu: ## run selected device tests from python-trezor
 	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests $(TESTOPTS)
@@ -130,7 +131,7 @@ pyright:
 	python ../tools/pyright_tool.py
 
 clippy:
-	cd embed/rust ; cargo clippy --all-features
+	cd embed/rust ; cargo clippy --all-features --target=$(RUST_TARGET)
 
 ## code generation:
 
