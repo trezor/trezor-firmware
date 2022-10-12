@@ -331,6 +331,10 @@ class CoinJoinApprover(Approver):
     # Minimum registrable output amount in a CoinJoin.
     MIN_REGISTRABLE_OUTPUT_AMOUNT = 5000
 
+    # Trezor will tolerate a slightly larger fee to account for rounding errors.
+    # Does not apply to Testnet, so that we don't overlook bugs.
+    FEE_TOLERANCE = 200
+
     # Largest possible weight of an output supported by Trezor (P2TR or P2WSH).
     MAX_OUTPUT_WEIGHT = 4 * (8 + 1 + 1 + 1 + 32)
 
@@ -431,10 +435,14 @@ class CoinJoinApprover(Approver):
             + max_fee_per_weight_unit * self.MAX_OUTPUT_WEIGHT
         )
 
+        # Tolerate a small fee difference on Mainnet.
+        tolerance = self.FEE_TOLERANCE if self.coin.slip44 != SLIP44_TESTNET else 0
+
         if our_fees > (
             our_max_coordinator_fee
             + our_max_mining_fee
             + min_allowed_output_amount_plus_fee
+            + tolerance
         ):
             raise wire.ProcessError("Total fee over threshold.")
 
