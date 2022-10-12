@@ -22,8 +22,8 @@ from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
 from ...tx_cache import TxCache
-from .payment_req import make_payment_request
-from .signtx import request_finished, request_input, request_output, request_payment_req
+from .payment_req import make_coinjoin_request
+from .signtx import request_finished, request_input, request_output
 
 B = messages.ButtonRequestType
 
@@ -127,7 +127,6 @@ def test_sign_tx(client: Client):
             address="tb1pupzczx9cpgyqgtvycncr2mvxscl790luqd8g88qkdt2w3kn7ymhsrdueu2",
             amount=50_000,
             script_type=messages.OutputScriptType.PAYTOADDRESS,
-            payment_req_index=0,
         ),
         # Our coinjoined output.
         messages.TxOutputType(
@@ -135,7 +134,6 @@ def test_sign_tx(client: Client):
             address_n=parse_path("m/10025h/1h/0h/1h/1/1"),
             amount=50_000,
             script_type=messages.OutputScriptType.PAYTOTAPROOT,
-            payment_req_index=0,
         ),
         # Our change output.
         messages.TxOutputType(
@@ -143,7 +141,6 @@ def test_sign_tx(client: Client):
             address_n=parse_path("m/10025h/1h/0h/1h/1/2"),
             amount=7_289_000 - 50_000 - 36_445 - 490,
             script_type=messages.OutputScriptType.PAYTOTAPROOT,
-            payment_req_index=0,
         ),
         # Other's change output.
         messages.TxOutputType(
@@ -152,27 +149,44 @@ def test_sign_tx(client: Client):
             address="tb1pvt7lzserh8xd5m6mq0zu9s5wxkpe5wgf5ts56v44jhrr6578hz8saxup5m",
             amount=100_000 - 50_000 - 500 - 490,
             script_type=messages.OutputScriptType.PAYTOADDRESS,
-            payment_req_index=0,
         ),
         # Coordinator's output.
         messages.TxOutputType(
             address="mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q",
             amount=36_945,
             script_type=messages.OutputScriptType.PAYTOADDRESS,
-            payment_req_index=0,
         ),
     ]
 
-    payment_req = make_payment_request(
-        client,
-        recipient_name="www.example.com",
-        outputs=outputs,
-        change_addresses=[
-            "tb1phkcspf88hge86djxgtwx2wu7ddghsw77d6sd7txtcxncu0xpx22shcydyf",
-            "tb1pchruvduckkwuzm5hmytqz85emften5dnmkqu9uhfxwfywaqhuu0qjggqyp",
+    coinjoin_req = make_coinjoin_request(
+        coordinator_name="www.example.com",
+        inputs=inputs,
+        input_script_pubkeys=[
+            bytes.fromhex(
+                "5120b3a2750e21facec36b2a56d76cca6019bf517a5c45e2ea8e5b4ed191090f3003"
+            ),
+            bytes.fromhex(
+                "51202f436892d90fb2665519efa3d9f0f5182859124f179486862c2cd7a78ea9ac19"
+            ),
         ],
+        outputs=outputs,
+        output_script_pubkeys=[
+            bytes.fromhex(
+                "5120e0458118b80a08042d84c4f0356d86863fe2bffc034e839c166ad4e8da7e26ef"
+            ),
+            bytes.fromhex(
+                "5120bdb100a4e7ba327d364642dc653b9e6b51783bde6ea0df2ccbc1a78e3cc13295"
+            ),
+            bytes.fromhex(
+                "5120c5c7c63798b59dc16e97d916011e99da5799d1b3dd81c2f2e93392477417e71e"
+            ),
+            bytes.fromhex(
+                "512062fdf14323b9ccda6f5b03c5c2c28e35839a3909a2e14d32b595c63d53c7b88f"
+            ),
+            bytes.fromhex("76a914a579388225827d9f2fe9014add644487808c695d88ac"),
+        ],
+        remix_indices=[],
     )
-    payment_req.amount = None
 
     with client:
         client.set_expected_responses(
@@ -181,7 +195,6 @@ def test_sign_tx(client: Client):
                 request_input(0),
                 request_input(1),
                 request_output(0),
-                request_payment_req(0),
                 request_output(1),
                 request_output(2),
                 request_output(3),
@@ -204,7 +217,7 @@ def test_sign_tx(client: Client):
             inputs,
             outputs,
             prev_txes=TX_CACHE_TESTNET,
-            payment_reqs=[payment_req],
+            coinjoin_request=coinjoin_req,
             preauthorized=True,
         )
 
@@ -221,7 +234,7 @@ def test_sign_tx(client: Client):
         inputs,
         outputs,
         prev_txes=TX_CACHE_TESTNET,
-        payment_reqs=[payment_req],
+        coinjoin_request=coinjoin_req,
         preauthorized=True,
     )
 
@@ -233,7 +246,7 @@ def test_sign_tx(client: Client):
             inputs,
             outputs,
             prev_txes=TX_CACHE_TESTNET,
-            payment_reqs=[payment_req],
+            coinjoin_request=coinjoin_req,
             preauthorized=True,
         )
 

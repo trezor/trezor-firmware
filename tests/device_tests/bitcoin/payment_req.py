@@ -1,7 +1,7 @@
 from collections import namedtuple
 from hashlib import sha256
 
-from ecdsa import SECP256k1, SigningKey
+from ecdsa import ECDH, SECP256k1, SigningKey
 
 from trezorlib import btc, messages
 
@@ -97,4 +97,74 @@ def make_payment_request(
         memos=msg_memos,
         nonce=nonce,
         signature=payment_req_signer.sign_digest_deterministic(h_pr.digest()),
+    )
+
+
+def make_coinjoin_request(
+    coordinator_name,
+    inputs,
+    input_script_pubkeys,
+    outputs,
+    output_script_pubkeys,
+    remix_indices,
+    fee_rate=50_000_000,  # 0.5 %
+    plebs_dont_pay_threshold=1_000_000,
+    min_registrable_amount=5_000,
+):
+    # Generate the masking key.
+    ecdh = ECDH(curve=SECP256k1)
+    ecdh.generate_private_key()
+    mask_public_key = ecdh.get_public_key().to_string("compressed")
+
+    # Process inputs.
+    h_prevouts = sha256()
+    signable_inputs_int = 0
+    for i, (txi, script_pubkey) in enumerate(zip(inputs, input_script_pubkeys)):
+        h_prevouts.update(bytes(reversed(txi.prev_hash)))
+        h_prevouts.update(txi.prev_index.to_bytes(4, "little"))
+
+        if len(script_pubkey) == 34 and script_pubkey.startswith(b"\x51\x20"):
+            ecdh.load_received_public_key_bytes(b"\x02" + script_pubkey[2:])
+            shared_secret = ecdh.generate_sharedsecret_bytes()
+            h_mask = sha256(shared_secret)
+            h_mask.update(bytes(reversed(txi.prev_hash)))
+            h_mask.update(txi.prev_index.to_bytes(4, "little"))
+            mask = h_mask.digest()[0] & 1
+            signable_inputs_int |= (bool(txi.address_n) ^ mask) << i
+
+    remixed_inputs_int = 0
+    for i in remix_indices:
+        remixed_inputs_int |= 1 << i
+
+    # Convert bitfields from int to bytes.
+    bitfield_len = (len(inputs) + 7) // 8
+    signable_inputs = signable_inputs_int.to_bytes(bitfield_len, "little")
+    remixed_inputs = remixed_inputs_int.to_bytes(bitfield_len, "little")
+
+    # Process outputs.
+    h_outputs = sha256()
+    for txo, script_pubkey in zip(outputs, output_script_pubkeys):
+        h_outputs.update(txo.amount.to_bytes(8, "little"))
+        hash_bytes_prefixed(h_outputs, script_pubkey)
+
+    # Hash the CoinJoin request.
+    h_request = sha256(b"CJR1")
+    hash_bytes_prefixed(h_request, coordinator_name.encode())
+    h_request.update(fee_rate.to_bytes(4, "little"))
+    h_request.update(plebs_dont_pay_threshold.to_bytes(8, "little"))
+    h_request.update(min_registrable_amount.to_bytes(8, "little"))
+    h_request.update(mask_public_key)
+    hash_bytes_prefixed(h_request, signable_inputs)
+    hash_bytes_prefixed(h_request, remixed_inputs)
+    h_request.update(h_prevouts.digest())
+    h_request.update(h_outputs.digest())
+
+    return messages.CoinJoinRequest(
+        fee_rate=fee_rate,
+        plebs_dont_pay_threshold=plebs_dont_pay_threshold,
+        min_registrable_amount=min_registrable_amount,
+        mask_public_key=mask_public_key,
+        signable_inputs=signable_inputs,
+        remixed_inputs=remixed_inputs,
+        signature=payment_req_signer.sign_digest_deterministic(h_request.digest()),
     )
