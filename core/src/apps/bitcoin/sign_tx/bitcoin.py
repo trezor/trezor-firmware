@@ -144,8 +144,6 @@ class Bitcoin:
         for i in range(self.tx_info.tx.inputs_count):
             # STAGE_REQUEST_1_INPUT in legacy
             txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
-            script_pubkey = self.input_derive_script(txi)
-            self.tx_info.add_input(txi, script_pubkey)
             if txi.script_type not in (
                 InputScriptType.SPENDTAPROOT,
                 InputScriptType.EXTERNAL,
@@ -156,11 +154,16 @@ class Bitcoin:
                 self.segwit.add(i)
 
             if input_is_external(txi):
+                node = None
                 self.external.add(i)
                 writers.write_tx_input_check(h_external_inputs_check, txi)
                 await self.process_external_input(txi)
             else:
-                await self.process_internal_input(txi)
+                node = self.keychain.derive(txi.address_n)
+                await self.process_internal_input(txi, node)
+
+            script_pubkey = self.input_derive_script(txi, node)
+            self.tx_info.add_input(txi, script_pubkey)
 
             if txi.orig_hash:
                 await self.process_original_input(txi, script_pubkey)
@@ -285,7 +288,7 @@ class Bitcoin:
         self.write_tx_footer(self.serialized_tx, self.tx_info.tx)
         await helpers.request_tx_finish(self.tx_req)
 
-    async def process_internal_input(self, txi: TxInput) -> None:
+    async def process_internal_input(self, txi: TxInput, node: bip32.HDNode) -> None:
         if txi.script_type not in common.INTERNAL_INPUT_SCRIPT_TYPES:
             raise wire.DataError("Wrong input script type")
 
@@ -856,12 +859,16 @@ class Bitcoin:
     # scriptPubKey derivation
     # ===
 
-    def input_derive_script(self, txi: TxInput) -> bytes:
+    def input_derive_script(
+        self, txi: TxInput, node: bip32.HDNode | None = None
+    ) -> bytes:
         if input_is_external(txi):
             assert txi.script_pubkey is not None  # checked in sanitize_tx_input
             return txi.script_pubkey
 
-        node = self.keychain.derive(txi.address_n)
+        if node is None:
+            node = self.keychain.derive(txi.address_n)
+
         address = addresses.get_address(txi.script_type, self.coin, node, txi.multisig)
         return scripts.output_derive_script(address, self.coin)
 
