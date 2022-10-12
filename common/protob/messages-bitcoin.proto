@@ -198,6 +198,18 @@ message SignTx {
     optional AmountUnit amount_unit = 11 [default=BITCOIN];    // show amounts in
     optional bool decred_staking_ticket = 12 [default=false];  // only for Decred, this is signing a ticket purchase
     optional bool serialize = 13 [default=true];               // serialize the full transaction, as opposed to only outputting the signatures
+    optional CoinJoinRequest coinjoin_request = 14;            // only for preauthorized CoinJoins
+
+    /**
+     * Signing request for a CoinJoin transaction.
+     */
+    message CoinJoinRequest {
+        required uint32 fee_rate = 1;                // coordination fee rate in units of 10^-8 percent
+        required uint64 no_fee_threshold = 2;        // PlebsDontPayThreshold in Wasabi, the input amount above which the fee rate applies
+        required uint64 min_registrable_amount = 3;  // minimum registrable output amount
+        required bytes mask_public_key = 4;          // ephemeral secp256k1 public key used for masking coinjoin_flags, 33 bytes in compressed form
+        required bytes signature = 5;                // the trusted party's signature of the CoinJoin request digest
+    }
 }
 
 /**
@@ -306,6 +318,7 @@ message TxAck {
             optional uint32 orig_index = 17;                                    // index of the input in the original transaction (used when creating a replacement transaction)
             optional DecredStakingSpendType decred_staking_spend = 18;          // if not None this holds the type of stake spend: revocation or stake generation
             optional bytes script_pubkey = 19;                                  // scriptPubKey of the previous output spent by this input, only set of EXTERNAL inputs
+            optional uint32 coinjoin_flags = 20 [default=0];                    // bit field of CoinJoin-specific flags
         }
         /**
         * Structure representing compiled transaction output
@@ -359,6 +372,7 @@ message TxInput {
     optional uint32 orig_index = 17;                                    // index of the input in the original transaction (used when creating a replacement transaction)
     optional DecredStakingSpendType decred_staking_spend = 18; 	        // if not None this holds the type of stake spend: revocation or stake generation
     optional bytes script_pubkey = 19;                                  // scriptPubKey of the previous output spent by this input, only set of EXTERNAL inputs
+    optional uint32 coinjoin_flags = 20 [default=0];                    // bit field of CoinJoin-specific flags
 }
 
 /** Data type for transaction output to be signed.
@@ -427,7 +441,7 @@ message TxAckPaymentRequest {
     option (unstable) = true;
 
     optional bytes nonce = 1;              // the nonce used in the signature computation
-    required string recipient_name = 2;    // merchant's name or coordinator's name in case of CoinJoin
+    required string recipient_name = 2;    // merchant's name
     repeated PaymentRequestMemo memos = 3; // any memos that were signed as part of the request
     optional uint64 amount = 4;            // the sum of the external output amounts requested, required for non-CoinJoin
     required bytes signature = 5;          // the trusted party's signature of the paymentRequestDigest

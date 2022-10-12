@@ -11,6 +11,7 @@ Address.address                                             max_size:130
 Address.mac                                                 type:FT_IGNORE
 
 SignTx.coin_name                                            max_size:21
+SignTx.coinjoin_request                                     type:FT_IGNORE
 
 SignMessage.address_n                                       max_count:8
 SignMessage.message                                         max_size:1024
@@ -86,3 +87,4 @@ GetOwnershipProof                                           skip_message:true
 OwnershipProof                                              skip_message:true
 TxAckPaymentRequest                                         skip_message:true
 PaymentRequestMemo                                          skip_message:true
+CoinJoinRequest                                             skip_message:true

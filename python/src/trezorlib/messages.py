@@ -1173,6 +1173,7 @@ class SignTx(protobuf.MessageType):
         11: protobuf.Field("amount_unit", "AmountUnit", repeated=False, required=False),
         12: protobuf.Field("decred_staking_ticket", "bool", repeated=False, required=False),
         13: protobuf.Field("serialize", "bool", repeated=False, required=False),
+        14: protobuf.Field("coinjoin_request", "CoinJoinRequest", repeated=False, required=False),
     }
 
     def __init__(
@@ -1191,6 +1192,7 @@ class SignTx(protobuf.MessageType):
         amount_unit: Optional["AmountUnit"] = AmountUnit.BITCOIN,
         decred_staking_ticket: Optional["bool"] = False,
         serialize: Optional["bool"] = True,
+        coinjoin_request: Optional["CoinJoinRequest"] = None,
     ) -> None:
         self.outputs_count = outputs_count
         self.inputs_count = inputs_count
@@ -1205,6 +1207,7 @@ class SignTx(protobuf.MessageType):
         self.amount_unit = amount_unit
         self.decred_staking_ticket = decred_staking_ticket
         self.serialize = serialize
+        self.coinjoin_request = coinjoin_request
 
 
 class TxRequest(protobuf.MessageType):
@@ -1260,6 +1263,7 @@ class TxInput(protobuf.MessageType):
         17: protobuf.Field("orig_index", "uint32", repeated=False, required=False),
         18: protobuf.Field("decred_staking_spend", "DecredStakingSpendType", repeated=False, required=False),
         19: protobuf.Field("script_pubkey", "bytes", repeated=False, required=False),
+        20: protobuf.Field("coinjoin_flags", "uint32", repeated=False, required=False),
     }
 
     def __init__(
@@ -1281,6 +1285,7 @@ class TxInput(protobuf.MessageType):
         orig_index: Optional["int"] = None,
         decred_staking_spend: Optional["DecredStakingSpendType"] = None,
         script_pubkey: Optional["bytes"] = None,
+        coinjoin_flags: Optional["int"] = 0,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.prev_hash = prev_hash
@@ -1298,6 +1303,7 @@ class TxInput(protobuf.MessageType):
         self.orig_index = orig_index
         self.decred_staking_spend = decred_staking_spend
         self.script_pubkey = script_pubkey
+        self.coinjoin_flags = coinjoin_flags
 
 
 class TxOutput(protobuf.MessageType):
@@ -1633,6 +1639,32 @@ class HDNodePathType(protobuf.MessageType):
         self.node = node
 
 
+class CoinJoinRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("fee_rate", "uint32", repeated=False, required=True),
+        2: protobuf.Field("no_fee_threshold", "uint64", repeated=False, required=True),
+        3: protobuf.Field("min_registrable_amount", "uint64", repeated=False, required=True),
+        4: protobuf.Field("mask_public_key", "bytes", repeated=False, required=True),
+        5: protobuf.Field("signature", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        fee_rate: "int",
+        no_fee_threshold: "int",
+        min_registrable_amount: "int",
+        mask_public_key: "bytes",
+        signature: "bytes",
+    ) -> None:
+        self.fee_rate = fee_rate
+        self.no_fee_threshold = no_fee_threshold
+        self.min_registrable_amount = min_registrable_amount
+        self.mask_public_key = mask_public_key
+        self.signature = signature
+
+
 class TxRequestDetailsType(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
@@ -1748,6 +1780,7 @@ class TxInputType(protobuf.MessageType):
         17: protobuf.Field("orig_index", "uint32", repeated=False, required=False),
         18: protobuf.Field("decred_staking_spend", "DecredStakingSpendType", repeated=False, required=False),
         19: protobuf.Field("script_pubkey", "bytes", repeated=False, required=False),
+        20: protobuf.Field("coinjoin_flags", "uint32", repeated=False, required=False),
     }
 
     def __init__(
@@ -1769,6 +1802,7 @@ class TxInputType(protobuf.MessageType):
         orig_index: Optional["int"] = None,
         decred_staking_spend: Optional["DecredStakingSpendType"] = None,
         script_pubkey: Optional["bytes"] = None,
+        coinjoin_flags: Optional["int"] = 0,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.prev_hash = prev_hash
@@ -1786,6 +1820,7 @@ class TxInputType(protobuf.MessageType):
         self.orig_index = orig_index
         self.decred_staking_spend = decred_staking_spend
         self.script_pubkey = script_pubkey
+        self.coinjoin_flags = coinjoin_flags
 
 
 class TxOutputBinType(protobuf.MessageType):
