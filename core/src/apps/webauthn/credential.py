@@ -71,6 +71,12 @@ class Credential:
     def app_name(self) -> str:
         raise NotImplementedError
 
+    def icon_name(self) -> str | None:
+        from . import knownapps
+
+        fido_app = knownapps.by_rp_id_hash(self.rp_id_hash)
+        return None if fido_app is None else fido_app.icon_name
+
     def account_name(self) -> str | None:
         return None
 

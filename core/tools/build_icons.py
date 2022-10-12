@@ -12,7 +12,9 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 
 ICON_SIZE = (64, 64)
-DESTINATION = ROOT / "core" / "src" / "apps" / "webauthn" / "res"
+DESTINATION = (
+    ROOT / "core" / "embed" / "rust" / "src" / "ui" / "model_tt" / "res" / "fido"
+)
 EXCLUDE = {"icon_webauthn"}
 
 # insert ../../common/tools to sys.path, so that we can import coin_info

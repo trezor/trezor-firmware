@@ -160,6 +160,19 @@ def confirm_modify_fee(
 
 
 # rust/src/ui/model_tt/layout.rs
+def confirm_fido(
+    *,
+    title: str,
+    app_name: str,
+    icon_name: str | None,
+    accounts: list[str | None],
+) -> int | object:
+    """FIDO confirmation.
+    Returns page index in case of confirmation and CANCELLED otherwise.
+    """
+
+
+# rust/src/ui/model_tt/layout.rs
 def show_error(
     *,
     title: str,
