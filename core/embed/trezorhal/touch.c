@@ -287,7 +287,8 @@ uint32_t check_timeout(uint32_t prev, uint32_t timeout) {
 }
 
 uint32_t touch_read(void) {
-  static uint8_t touch_data[TOUCH_PACKET_SIZE];
+  static uint8_t touch_data[TOUCH_PACKET_SIZE],
+      previous_touch_data[TOUCH_PACKET_SIZE];
   static uint32_t xy;
   static uint32_t last_check_time = 0;
   static uint32_t last_event_time = 0;
@@ -332,6 +333,12 @@ uint32_t touch_read(void) {
   }
 
   last_event_time = hal_ticks_ms();
+
+  if (0 == memcmp(previous_touch_data, touch_data, TOUCH_PACKET_SIZE)) {
+    return 0;  // same data, filter it out
+  } else {
+    memcpy(previous_touch_data, touch_data, TOUCH_PACKET_SIZE);
+  }
 
   const uint32_t number_of_touch_points =
       touch_data[2] & 0x0F;  // valid values are 0, 1, 2 (invalid 0xF before
