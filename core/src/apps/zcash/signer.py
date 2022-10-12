@@ -71,10 +71,10 @@ class Zcash(Bitcoinlike):
         await self.sign_nonsegwit_bip143_input(i_sign)
 
     def sign_bip143_input(self, i: int, txi: TxInput) -> tuple[bytes, bytes]:
-        signature_digest = self.tx_info.sig_hasher.hash_zip244(
-            txi, self.input_derive_script(txi)
-        )
         node = self.keychain.derive(txi.address_n)
+        signature_digest = self.tx_info.sig_hasher.hash_zip244(
+            txi, self.input_derive_script(txi, node)
+        )
         signature = ecdsa_sign(node, signature_digest)
         return node.public_key(), signature
 

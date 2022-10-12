@@ -28,6 +28,7 @@ OUTPUT_SCRIPT_NULL_SSTXCHANGE = (
 if TYPE_CHECKING:
     from typing import Sequence
 
+    from trezor.crypto import bip32
     from trezor.messages import (
         SignTx,
         TxInput,
@@ -181,8 +182,8 @@ class Decred(Bitcoin):
         if self.serialize:
             self.write_tx_footer(self.serialized_tx, self.tx_info.tx)
 
-    async def process_internal_input(self, txi: TxInput) -> None:
-        await super().process_internal_input(txi)
+    async def process_internal_input(self, txi: TxInput, node: bip32.HDNode) -> None:
+        await super().process_internal_input(txi, node)
 
         # Decred serializes inputs early.
         if self.serialize:
