@@ -63,7 +63,11 @@ async def sign_tx(
 ) -> TxRequest:
     approver: approvers.Approver | None = None
     if authorization:
-        approver = approvers.CoinJoinApprover(msg, coin, authorization)
+        if not msg.coinjoin_request:
+            raise wire.DataError("Missing CoinJoin request.")
+        approver = approvers.CoinJoinApprover(
+            msg, coin, authorization, msg.coinjoin_request
+        )
 
     if utils.BITCOIN_ONLY or coin.coin_name in BITCOIN_NAMES:
         signer_class: type[SignerClass] = bitcoin.Bitcoin
