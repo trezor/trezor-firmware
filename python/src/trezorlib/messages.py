@@ -1172,6 +1172,7 @@ class SignTx(protobuf.MessageType):
         10: protobuf.Field("branch_id", "uint32", repeated=False, required=False),
         11: protobuf.Field("amount_unit", "AmountUnit", repeated=False, required=False),
         12: protobuf.Field("decred_staking_ticket", "bool", repeated=False, required=False),
+        13: protobuf.Field("coinjoin_request", "CoinJoinRequest", repeated=False, required=False),
     }
 
     def __init__(
@@ -1189,6 +1190,7 @@ class SignTx(protobuf.MessageType):
         branch_id: Optional["int"] = None,
         amount_unit: Optional["AmountUnit"] = AmountUnit.BITCOIN,
         decred_staking_ticket: Optional["bool"] = False,
+        coinjoin_request: Optional["CoinJoinRequest"] = None,
     ) -> None:
         self.outputs_count = outputs_count
         self.inputs_count = inputs_count
@@ -1202,6 +1204,7 @@ class SignTx(protobuf.MessageType):
         self.branch_id = branch_id
         self.amount_unit = amount_unit
         self.decred_staking_ticket = decred_staking_ticket
+        self.coinjoin_request = coinjoin_request
 
 
 class TxRequest(protobuf.MessageType):
@@ -1628,6 +1631,38 @@ class HDNodePathType(protobuf.MessageType):
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.node = node
+
+
+class CoinJoinRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("fee_rate", "uint32", repeated=False, required=True),
+        2: protobuf.Field("plebs_dont_pay_threshold", "uint64", repeated=False, required=True),
+        3: protobuf.Field("min_registrable_amount", "uint64", repeated=False, required=True),
+        4: protobuf.Field("mask_public_key", "bytes", repeated=False, required=True),
+        5: protobuf.Field("signable_inputs", "bytes", repeated=False, required=True),
+        6: protobuf.Field("remixed_inputs", "bytes", repeated=False, required=True),
+        7: protobuf.Field("signature", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        fee_rate: "int",
+        plebs_dont_pay_threshold: "int",
+        min_registrable_amount: "int",
+        mask_public_key: "bytes",
+        signable_inputs: "bytes",
+        remixed_inputs: "bytes",
+        signature: "bytes",
+    ) -> None:
+        self.fee_rate = fee_rate
+        self.plebs_dont_pay_threshold = plebs_dont_pay_threshold
+        self.min_registrable_amount = min_registrable_amount
+        self.mask_public_key = mask_public_key
+        self.signable_inputs = signable_inputs
+        self.remixed_inputs = remixed_inputs
+        self.signature = signature
 
 
 class TxRequestDetailsType(protobuf.MessageType):

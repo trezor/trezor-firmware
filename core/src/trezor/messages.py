@@ -594,6 +594,7 @@ if TYPE_CHECKING:
         branch_id: "int | None"
         amount_unit: "AmountUnit"
         decred_staking_ticket: "bool"
+        coinjoin_request: "CoinJoinRequest | None"
 
         def __init__(
             self,
@@ -609,6 +610,7 @@ if TYPE_CHECKING:
             branch_id: "int | None" = None,
             amount_unit: "AmountUnit | None" = None,
             decred_staking_ticket: "bool | None" = None,
+            coinjoin_request: "CoinJoinRequest | None" = None,
         ) -> None:
             pass
 
@@ -968,6 +970,32 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["HDNodePathType"]:
+            return isinstance(msg, cls)
+
+    class CoinJoinRequest(protobuf.MessageType):
+        fee_rate: "int"
+        plebs_dont_pay_threshold: "int"
+        min_registrable_amount: "int"
+        mask_public_key: "bytes"
+        signable_inputs: "bytes"
+        remixed_inputs: "bytes"
+        signature: "bytes"
+
+        def __init__(
+            self,
+            *,
+            fee_rate: "int",
+            plebs_dont_pay_threshold: "int",
+            min_registrable_amount: "int",
+            mask_public_key: "bytes",
+            signable_inputs: "bytes",
+            remixed_inputs: "bytes",
+            signature: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CoinJoinRequest"]:
             return isinstance(msg, cls)
 
     class TxRequestDetailsType(protobuf.MessageType):

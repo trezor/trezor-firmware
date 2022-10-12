@@ -197,6 +197,21 @@ message SignTx {
     optional uint32 branch_id = 10;                            // only for Zcash, BRANCH_ID
     optional AmountUnit amount_unit = 11 [default=BITCOIN];    // show amounts in
     optional bool decred_staking_ticket = 12 [default=false];  // only for Decred, this is signing a ticket purchase
+    optional CoinJoinRequest coinjoin_request = 13;            // only for preauthorized CoinJoins
+
+    /**
+     * Signing request for a CoinJoin transaction.
+     */
+    message CoinJoinRequest {
+        option (unstable) = true;
+        required uint32 fee_rate = 1;                  // coordination fee rate in units of 10^-8 percent
+        required uint64 plebs_dont_pay_threshold = 2;  // input amount above which the fee rate applies
+        required uint64 min_registrable_amount = 3;    // minimum registrable output amount
+        required bytes mask_public_key = 4;            // ephemeral secp256k1 public key used for masking signable_inputs, 33 bytes in compressed form
+        required bytes signable_inputs = 5;            // masked bit field indicating which transaction inputs can be signed.
+        required bytes remixed_inputs = 6;             // bit field indicating which transaction inputs are remixes
+        required bytes signature = 7;                  // the trusted party's signature of the request digest
+    }
 }
 
 /**
@@ -426,7 +441,7 @@ message TxAckPaymentRequest {
     option (unstable) = true;
 
     optional bytes nonce = 1;              // the nonce used in the signature computation
-    required string recipient_name = 2;    // merchant's name or coordinator's name in case of CoinJoin
+    required string recipient_name = 2;    // merchant's name
     repeated PaymentRequestMemo memos = 3; // any memos that were signed as part of the request
     optional uint64 amount = 4;            // the sum of the external output amounts requested, required for non-CoinJoin
     required bytes signature = 5;          // the trusted party's signature of the paymentRequestDigest
