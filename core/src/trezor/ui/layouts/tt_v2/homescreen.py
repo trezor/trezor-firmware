@@ -17,33 +17,16 @@ class HomescreenBase(RustLayout):
 
     def __init__(self, layout: Any) -> None:
         super().__init__(layout=layout)
-        self.is_connected = True
 
-    async def __iter__(self) -> Any:
-        # We need to catch the ui.Cancelled exception that kills us, because that means
-        # that we will need to draw on screen again after restart.
-        try:
-            return await super().__iter__()
-        except ui.Cancelled:
-            storage_cache.homescreen_shown = None
-            raise
+    def _paint(self) -> None:
+        self.layout.paint()
 
     def _first_paint(self) -> None:
-        from trezor import utils
-
         if storage_cache.homescreen_shown is not self.RENDER_INDICATOR:
             super()._first_paint()
             storage_cache.homescreen_shown = self.RENDER_INDICATOR
-
-        # - RENDER_INDICATOR is set -> USB warning is not displayed
-        # - RENDER_INDICATOR is not set -> initially homescreen does not display warning
-        # - usb_checker_task only handles state changes
-        # Here we need to handle the case when homescreen is started with USB disconnected.
-        if not utils.usb_data_connected():
-            msg = self.layout.usb_event(False)
+        else:
             self._paint()
-            if msg is not None:
-                raise ui.Result(msg)
 
     # In __debug__ mode, ignore {confirm,swipe,input}_signal.
     def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
@@ -85,11 +68,8 @@ class Homescreen(HomescreenBase):
         usbcheck = loop.wait(io.USB_CHECK)
         while True:
             is_connected = await usbcheck
-            if is_connected != self.is_connected:
-                self.is_connected = is_connected
-                self.layout.usb_event(is_connected)
-                self.layout.paint()
-                storage_cache.homescreen_shown = None
+            self.layout.usb_event(is_connected)
+            self.layout.paint()
 
     def create_tasks(self) -> Tuple[loop.AwaitableTask, ...]:
         return super().create_tasks() + (self.usb_checker_task(),)
