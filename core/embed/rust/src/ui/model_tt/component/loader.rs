@@ -118,6 +118,8 @@ impl Component for Loader {
     fn place(&mut self, bounds: Rect) -> Rect {
         // Current loader API only takes Y-offset relative to screen center, which we
         // compute from the bounds center point.
+        // NOTE: SwipeHoldPage relies on Loader being X-centered regardless of bounds.
+        // If this changes then SwipeHoldPage needs to be changed too.
         let screen_center = constant::screen().center();
         self.offset_y = bounds.center().y - screen_center.y;
         Rect::from_center_and_size(screen_center + Offset::y(self.offset_y), Self::SIZE)

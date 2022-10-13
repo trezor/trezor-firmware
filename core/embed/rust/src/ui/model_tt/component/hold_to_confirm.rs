@@ -221,7 +221,6 @@ where
         }
         Some(ButtonMsg::Clicked) => {
             if loader.is_completely_grown(now) {
-                loader.reset();
                 return true;
             } else {
                 loader.start_shrinking(ctx, now);
