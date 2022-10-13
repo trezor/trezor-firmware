@@ -17,6 +17,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_CANCELLED;
   MP_QSTR_INFO;
   MP_QSTR_disable_animation;
+  MP_QSTR_jpeg_info;
+  MP_QSTR_jpeg_test;
   MP_QSTR_confirm_action;
   MP_QSTR_confirm_blob;
   MP_QSTR_confirm_properties;

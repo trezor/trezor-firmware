@@ -1,22 +1,29 @@
+mod render;
+
 use crate::{
+    micropython::gc::Gc,
+    storage::{get_avatar, get_avatar_len},
     time::{Duration, Instant},
     trezorhal::usb::usb_configured,
     ui::{
-        component::{Component, Empty, Event, EventCtx, Pad, TimerToken},
-        display::{self, Color, Font},
+        component::{Component, Event, EventCtx, Pad, TimerToken},
+        display::{self, tjpgd::jpeg_info, Color, Font},
         event::{TouchEvent, USBEvent},
         geometry::{Offset, Point, Rect},
-        model_tt::constant,
-        util::icon_text_center,
+        model_tt::{constant, theme::IMAGE_HOMESCREEN},
     },
 };
 
-use super::{theme, Loader, LoaderMsg, NotificationFrame};
+use render::{
+    homescreen, homescreen_blurred, HomescreenNotification, HomescreenText, HOMESCREEN_IMAGE_SIZE,
+};
+
+use super::{theme, Loader, LoaderMsg};
 
 const AREA: Rect = constant::screen();
 const TOP_CENTER: Point = AREA.top_center();
 const LABEL_Y: i16 = 216;
-const LOCKED_Y: i16 = 101;
+const LOCKED_Y: i16 = 107;
 const TAP_Y: i16 = 134;
 const HOLD_Y: i16 = 35;
 const LOADER_OFFSET: Offset = Offset::y(-10);
@@ -27,9 +34,9 @@ pub struct Homescreen<T> {
     label: T,
     notification: Option<(T, u8)>,
     hold_to_lock: bool,
-    usb_connected: bool,
     loader: Loader,
     pad: Pad,
+    paint_notification_only: bool,
     delay: Option<TimerToken>,
 }
 
@@ -48,6 +55,7 @@ where
             hold_to_lock,
             loader: Loader::new().with_durations(LOADER_DURATION, LOADER_DURATION / 3),
             pad: Pad::with_background(theme::BG),
+            paint_notification_only: false,
             delay: None,
         }
     }
@@ -60,23 +68,23 @@ where
         }
     }
 
-    fn paint_notification(&self) {
+    fn get_notification(&self) -> Option<HomescreenNotification> {
         if !usb_configured() {
             let (color, icon) = Self::level_to_style(0);
-            NotificationFrame::<Empty, T>::paint_notification(
-                AREA,
+            Some(HomescreenNotification {
+                text: "NO USB CONNECTION",
                 icon,
-                "NO USB CONNECTION",
                 color,
-            );
+            })
         } else if let Some((notification, level)) = &self.notification {
             let (color, icon) = Self::level_to_style(*level);
-            NotificationFrame::<Empty, T>::paint_notification(
-                AREA,
+            Some(HomescreenNotification {
+                text: notification.as_ref(),
                 icon,
-                notification.as_ref(),
                 color,
-            );
+            })
+        } else {
+            None
         }
     }
 
@@ -97,6 +105,7 @@ where
 
     fn event_usb(&mut self, ctx: &mut EventCtx, event: Event) {
         if let Event::USB(USBEvent::Connected(_)) = event {
+            self.paint_notification_only = true;
             ctx.request_paint();
         }
     }
@@ -136,6 +145,7 @@ where
             Some(LoaderMsg::ShrunkCompletely) => {
                 self.loader.reset();
                 self.pad.clear();
+                self.paint_notification_only = false;
                 ctx.request_paint()
             }
             None => {}
@@ -171,8 +181,34 @@ where
         if self.loader.is_animating() || self.loader.is_completely_grown(Instant::now()) {
             self.paint_loader();
         } else {
-            self.paint_notification();
-            paint_label(self.label.as_ref(), false);
+            let mut label_style = theme::TEXT_BOLD;
+            label_style.text_color = theme::FG;
+
+            let text = HomescreenText {
+                text: self.label.as_ref(),
+                style: label_style,
+                offset: Offset::new(10, LABEL_Y),
+                icon: None,
+            };
+
+            let notification = self.get_notification();
+
+            let res = get_image();
+            if let Ok(data) = res {
+                homescreen(
+                    data.as_ref(),
+                    &[text],
+                    notification,
+                    self.paint_notification_only,
+                );
+            } else {
+                homescreen(
+                    IMAGE_HOMESCREEN,
+                    &[text],
+                    notification,
+                    self.paint_notification_only,
+                );
+            }
         }
     }
 
@@ -225,23 +261,62 @@ where
         } else {
             ("LOCKED", "Tap to unlock")
         };
-        icon_text_center(
-            TOP_CENTER + Offset::y(LOCKED_Y),
-            theme::ICON_LOCK,
-            2,
-            locked,
-            theme::TEXT_BOLD,
-            Offset::zero(),
-        );
-        display::text_center(
-            TOP_CENTER + Offset::y(TAP_Y),
-            tap,
-            Font::NORMAL,
-            theme::OFF_WHITE,
-            theme::BG,
-        );
-        paint_label(self.label.as_ref(), true);
+
+        let mut tap_style = theme::TEXT_NORMAL;
+        tap_style.text_color = theme::OFF_WHITE;
+
+        let mut label_style = theme::TEXT_BOLD;
+        label_style.text_color = theme::GREY_LIGHT;
+
+        let texts: [HomescreenText; 3] = [
+            HomescreenText {
+                text: locked,
+                style: theme::TEXT_BOLD,
+                offset: Offset::new(10, LOCKED_Y),
+                icon: Some(theme::ICON_LOCK),
+            },
+            HomescreenText {
+                text: tap,
+                style: tap_style,
+                offset: Offset::new(10, TAP_Y),
+                icon: None,
+            },
+            HomescreenText {
+                text: self.label.as_ref(),
+                style: label_style,
+                offset: Offset::new(10, LABEL_Y),
+                icon: None,
+            },
+        ];
+
+        let res = get_image();
+        if let Ok(data) = res {
+            homescreen_blurred(data.as_ref(), &texts);
+        } else {
+            homescreen_blurred(IMAGE_HOMESCREEN, &texts);
+        }
     }
+}
+
+fn get_image() -> Result<Gc<[u8]>, ()> {
+    if let Ok(len) = get_avatar_len() {
+        let result = Gc::<[u8]>::new_slice(len);
+        if let Ok(mut buffer) = result {
+            let buf = unsafe { Gc::<[u8]>::as_mut(&mut buffer) };
+            if get_avatar(buf).is_ok() {
+                let jpeg = jpeg_info(buffer.as_ref());
+                if let Some((size, mcu_height)) = jpeg {
+                    if size.x == HOMESCREEN_IMAGE_SIZE
+                        && size.y == HOMESCREEN_IMAGE_SIZE
+                        && mcu_height <= 16
+                    {
+                        return Ok(buffer);
+                    }
+                }
+            }
+        }
+    };
+    Err(())
 }
 
 #[cfg(feature = "ui_debug")]
@@ -250,19 +325,4 @@ impl<T> crate::trace::Trace for Lockscreen<T> {
         d.open("Lockscreen");
         d.close();
     }
-}
-
-fn paint_label(label: &str, lockscreen: bool) {
-    let label_color = if lockscreen {
-        theme::GREY_MEDIUM
-    } else {
-        theme::FG
-    };
-    display::text_center(
-        TOP_CENTER + Offset::y(LABEL_Y),
-        label,
-        Font::BOLD,
-        label_color,
-        theme::BG,
-    );
 }

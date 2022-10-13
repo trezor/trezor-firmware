@@ -103,6 +103,8 @@ trezor.enums.DecredStakingSpendType
 import trezor.enums.DecredStakingSpendType
 trezor.enums.FailureType
 import trezor.enums.FailureType
+trezor.enums.HomescreenFormat
+import trezor.enums.HomescreenFormat
 trezor.enums.InputScriptType
 import trezor.enums.InputScriptType
 trezor.enums.MessageType

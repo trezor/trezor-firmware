@@ -332,7 +332,7 @@ class Layout(Component):
 
     def _before_render(self) -> None:
         # Before the first render, we dim the display.
-        backlight_fade(style.BACKLIGHT_DIM)
+        backlight_fade(style.BACKLIGHT_NONE)
         # Clear the screen of any leftovers, make sure everything is marked for
         # repaint (we can be running the same layout instance multiple times)
         # and paint it.

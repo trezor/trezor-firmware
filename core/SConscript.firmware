@@ -183,6 +183,7 @@ SOURCE_MOD += [
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
 ]
+
 CPPDEFINES_MOD += [
     'TREZOR_UI2',
     'USE_RUST_LOADER'
@@ -478,7 +479,7 @@ env.Replace(
     '-fstack-protector-all '
     + CPU_CCFLAGS + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LINKFLAGS='-T embed/firmware/memory_${TREZOR_MODEL}%s.ld -Wl,--gc-sections -Wl,-Map=build/firmware/firmware.map -Wl,--warn-common' % LD_VARIANT,
+    LINKFLAGS='-T embed/firmware/memory_${TREZOR_MODEL}%s.ld -Wl,--gc-sections  -Wl,--print-memory-usage -Wl,-Map=build/firmware/firmware.map -Wl,--warn-common' % LD_VARIANT,
     CPPPATH=[
         '.',
         'embed/rust',

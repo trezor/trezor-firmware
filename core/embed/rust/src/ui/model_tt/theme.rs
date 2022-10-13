@@ -78,6 +78,9 @@ pub const IMAGE_BG_TRIANGLE: &[u8] = include_res!("model_tt/res/triangle.toif");
 pub const IMAGE_BG_BACK_BTN: &[u8] = include_res!("model_tt/res/back_btn.toif");
 pub const IMAGE_BG_BACK_BTN_TALL: &[u8] = include_res!("model_tt/res/back_btn_tall.toif");
 
+// Default homescreen
+pub const IMAGE_HOMESCREEN: &[u8] = include_res!("model_tt/res/bg.jpg");
+
 // Scrollbar/PIN dots.
 pub const DOT_ACTIVE: &[u8] = include_res!("model_tt/res/scroll-active.toif");
 pub const DOT_INACTIVE: &[u8] = include_res!("model_tt/res/scroll-inactive.toif");

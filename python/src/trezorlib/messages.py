@@ -437,6 +437,11 @@ class SafetyCheckLevel(IntEnum):
     PromptTemporarily = 2
 
 
+class HomescreenFormat(IntEnum):
+    Toif144x144 = 1
+    Jpeg240x240 = 2
+
+
 class Capability(IntEnum):
     Bitcoin = 1
     Bitcoin_like = 2
@@ -3137,6 +3142,7 @@ class Features(protobuf.MessageType):
         39: protobuf.Field("display_rotation", "uint32", repeated=False, required=False, default=None),
         40: protobuf.Field("experimental_features", "bool", repeated=False, required=False, default=None),
         41: protobuf.Field("busy", "bool", repeated=False, required=False, default=None),
+        42: protobuf.Field("homescreen_format", "HomescreenFormat", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -3181,6 +3187,7 @@ class Features(protobuf.MessageType):
         display_rotation: Optional["int"] = None,
         experimental_features: Optional["bool"] = None,
         busy: Optional["bool"] = None,
+        homescreen_format: Optional["HomescreenFormat"] = None,
     ) -> None:
         self.capabilities: Sequence["Capability"] = capabilities if capabilities is not None else []
         self.major_version = major_version
@@ -3221,6 +3228,7 @@ class Features(protobuf.MessageType):
         self.display_rotation = display_rotation
         self.experimental_features = experimental_features
         self.busy = busy
+        self.homescreen_format = homescreen_format
 
 
 class LockDevice(protobuf.MessageType):

@@ -133,7 +133,7 @@ env.Replace(
     '-fstack-protector-all '
     + CPU_CCFLAGS + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LINKFLAGS='-T embed/boardloader/memory.ld -Wl,--gc-sections -Wl,-Map=build/boardloader/boardloader.map -Wl,--warn-common',
+    LINKFLAGS='-T embed/boardloader/memory.ld -Wl,--gc-sections -Wl,-Map=build/boardloader/boardloader.map -Wl,--warn-common  -Wl,--print-memory-usage',
     CPPPATH=[
         'embed/boardloader',
         'embed/trezorhal',

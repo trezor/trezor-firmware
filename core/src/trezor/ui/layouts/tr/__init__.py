@@ -36,6 +36,7 @@ class RustLayout(ui.Layout):
         button = loop.wait(io.BUTTON)
         ui.display.clear()
         self.layout.paint()
+        ui.refresh()
         while True:
             # Using `yield` instead of `await` to avoid allocations.
             event, button_num = yield button
@@ -46,6 +47,7 @@ class RustLayout(ui.Layout):
             if msg is not None:
                 raise ui.Result(msg)
             self.layout.paint()
+            ui.refresh()
 
     def handle_timers(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
         while True:
@@ -55,6 +57,7 @@ class RustLayout(ui.Layout):
             if msg is not None:
                 raise ui.Result(msg)
             self.layout.paint()
+            ui.refresh()
 
 
 async def confirm_action(
