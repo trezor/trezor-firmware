@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 
 if __debug__:
-    from trezor import io
+    from trezor import io, ui
     from ... import Result
 
     class _RustFidoLayoutImpl(RustLayout):
@@ -42,6 +42,7 @@ if __debug__:
             ):
                 msg = self.layout.touch_event(event, x, y)
                 self.layout.paint()
+                ui.refresh()
                 if msg is not None:
                     raise Result(msg)
 

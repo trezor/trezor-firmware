@@ -287,6 +287,7 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("display_text_width")
         .allowlist_function("display_bar")
         .allowlist_function("display_bar_radius")
+        .allowlist_function("display_bar_radius_buffer")
         .allowlist_function("display_icon")
         .allowlist_function("display_image")
         .allowlist_function("display_toif_info")
@@ -328,6 +329,9 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("buffers_get_line_buffer_16bpp")
         .allowlist_function("buffers_get_line_buffer_4bpp")
         .allowlist_function("buffers_get_text_buffer")
+        .allowlist_function("buffers_get_jpeg_buffer")
+        .allowlist_function("buffers_get_jpeg_work_buffer")
+        .allowlist_function("buffers_get_blurring_buffer")
         .allowlist_var("text_buffer_height")
         .allowlist_var("buffer_width")
         //usb

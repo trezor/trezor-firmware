@@ -18,6 +18,7 @@ mod trezorhal;
 mod micropython;
 #[cfg(feature = "protobuf")]
 mod protobuf;
+mod storage;
 mod time;
 #[cfg(feature = "ui_debug")]
 mod trace;

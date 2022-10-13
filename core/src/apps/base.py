@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 import storage.cache as storage_cache
 import storage.device as storage_device
 from trezor import config, utils, wire, workflow
-from trezor.enums import MessageType
+from trezor.enums import HomescreenFormat, MessageType
 from trezor.messages import Success, UnlockPath
 
 from . import workflow_handlers
@@ -75,6 +75,7 @@ def get_features() -> Features:
         pin_protection=config.has_pin(),
         unlocked=config.is_unlocked(),
         busy=busy_expiry_ms() > 0,
+        homescreen_format=HomescreenFormat.Jpeg240x240,
     )
 
     if utils.BITCOIN_ONLY:

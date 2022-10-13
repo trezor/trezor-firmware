@@ -52,6 +52,8 @@ class RustLayout(ui.Layout):
         import storage.cache as storage_cache
 
         painted = self.layout.paint()
+
+        ui.refresh()
         if storage_cache.homescreen_shown is not None and painted:
             storage_cache.homescreen_shown = None
 
