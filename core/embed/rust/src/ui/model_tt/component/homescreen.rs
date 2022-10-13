@@ -1,5 +1,6 @@
 use crate::{
     time::{Duration, Instant},
+    trezorhal::usb::usb_configured,
     ui::{
         component::{Component, Empty, Event, EventCtx, Pad, TimerToken},
         display::{self, Color, Font},
@@ -45,7 +46,6 @@ where
             label,
             notification,
             hold_to_lock,
-            usb_connected: true,
             loader: Loader::new().with_durations(LOADER_DURATION, LOADER_DURATION / 3),
             pad: Pad::with_background(theme::BG),
             delay: None,
@@ -61,7 +61,7 @@ where
     }
 
     fn paint_notification(&self) {
-        if !self.usb_connected {
+        if !usb_configured() {
             let (color, icon) = Self::level_to_style(0);
             NotificationFrame::<Empty, T>::paint_notification(
                 AREA,
@@ -91,12 +91,13 @@ where
         self.loader.paint()
     }
 
+    pub fn set_paint_notification(&mut self) {
+        self.paint_notification_only = true;
+    }
+
     fn event_usb(&mut self, ctx: &mut EventCtx, event: Event) {
-        if let Event::USB(USBEvent::Connected(is_connected)) = event {
-            if self.usb_connected != is_connected {
-                self.usb_connected = is_connected;
-                ctx.request_paint();
-            }
+        if let Event::USB(USBEvent::Connected(_)) = event {
+            ctx.request_paint();
         }
     }
 
@@ -122,6 +123,7 @@ where
             Event::Timer(token) if Some(token) == self.delay => {
                 self.delay = None;
                 self.pad.clear();
+                self.paint_notification_only = false;
                 self.loader.start_growing(ctx, Instant::now());
             }
             _ => {}

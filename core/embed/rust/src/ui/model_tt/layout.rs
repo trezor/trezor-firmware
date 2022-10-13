@@ -1014,10 +1014,12 @@ extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut 
         let skip_first_paint: bool = kwargs.get(Qstr::MP_QSTR_skip_first_paint)?.try_into()?;
 
         let notification = notification.map(|w| (w, notification_level));
-        let obj = LayoutObj::new(Homescreen::new(label, notification, hold))?;
+        let mut hs = Homescreen::new(label, notification, hold);
         if skip_first_paint {
-            obj.skip_first_paint();
+            hs.set_paint_notification();
         }
+        let obj = LayoutObj::new(hs)?;
+
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }

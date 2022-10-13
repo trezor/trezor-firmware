@@ -310,7 +310,9 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("buffers_get_line_buffer_4bpp")
         .allowlist_function("buffers_get_text_buffer")
         .allowlist_var("text_buffer_height")
-        .allowlist_var("buffer_width");
+        .allowlist_var("buffer_width")
+        //usb
+        .allowlist_function("usb_configured");
     // Write the bindings to a file in the OUR_DIR.
     bindings
         .generate()
