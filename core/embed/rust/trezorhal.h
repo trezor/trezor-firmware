@@ -9,6 +9,7 @@
 #include "rgb_led.h"
 #include "secbool.h"
 #include "storage.h"
+#include "usb.h"
 
 #include "bip39.h"
 #include "rand.h"
