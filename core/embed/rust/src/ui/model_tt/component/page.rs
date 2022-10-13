@@ -59,38 +59,25 @@ where
         // paint.
         self.fade = Some(theme::BACKLIGHT_NORMAL);
     }
-}
 
-impl<T, U> Component for SwipePage<T, U>
-where
-    T: Paginate,
-    T: Component,
-    U: Component,
-{
-    type Msg = PageMsg<T::Msg, U::Msg>;
-
-    fn place(&mut self, bounds: Rect) -> Rect {
-        let layout = PageLayout::new(bounds);
+    /// Like `place()` but returns area for loader (content + scrollbar) to be
+    /// used in SwipeHoldPage.
+    fn place_get_content_area(&mut self, bounds: Rect) -> Rect {
+        let mut layout = PageLayout::new(bounds);
         self.pad.place(bounds);
         self.swipe.place(bounds);
         self.hint.place(layout.hint);
         let buttons_area = self.buttons.place(layout.buttons);
-        let buttons_height = buttons_area.height() + theme::BUTTON_SPACING;
-        self.scrollbar
-            .place(layout.scrollbar.inset(Insets::bottom(buttons_height)));
+        layout.set_buttons_height(buttons_area.height());
+        self.scrollbar.place(layout.scrollbar);
 
         // Layout the content. Try to fit it on a single page first, and reduce the area
         // to make space for a scrollbar if it doesn't fit.
-        self.content.place(
-            layout
-                .content_single_page
-                .inset(Insets::bottom(buttons_height)),
-        );
+        self.content.place(layout.content_single_page);
         let page_count = {
             let count = self.content.page_count();
             if count > 1 {
-                self.content
-                    .place(layout.content.inset(Insets::bottom(buttons_height)));
+                self.content.place(layout.content);
                 self.content.page_count() // Make sure to re-count it with the
                                           // new size.
             } else {
@@ -103,6 +90,20 @@ where
         self.scrollbar.set_count_and_active_page(page_count, 0);
         self.setup_swipe();
 
+        layout.content_single_page.union(layout.scrollbar)
+    }
+}
+
+impl<T, U> Component for SwipePage<T, U>
+where
+    T: Paginate,
+    T: Component,
+    U: Component,
+{
+    type Msg = PageMsg<T::Msg, U::Msg>;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        self.place_get_content_area(bounds);
         bounds
     }
 
@@ -215,11 +216,19 @@ impl PageLayout {
             hint,
         }
     }
+
+    pub fn set_buttons_height(&mut self, height: i16) {
+        let buttons_inset = Insets::bottom(height + theme::BUTTON_SPACING);
+        self.content_single_page = self.content_single_page.inset(buttons_inset);
+        self.content = self.content.inset(buttons_inset);
+        self.scrollbar = self.scrollbar.inset(buttons_inset);
+    }
 }
 
 pub struct SwipeHoldPage<T> {
     inner: SwipePage<T, FixedHeightBar<CancelHold>>,
     loader: Loader,
+    pad: Pad,
 }
 
 impl<T> SwipeHoldPage<T>
@@ -232,6 +241,7 @@ where
         Self {
             inner: SwipePage::new(content, buttons, background),
             loader: Loader::new(),
+            pad: Pad::with_background(background),
         }
     }
 
@@ -240,6 +250,7 @@ where
         Self {
             inner: SwipePage::new(content, buttons, background),
             loader: Loader::new(),
+            pad: Pad::with_background(background),
         }
     }
 }
@@ -252,8 +263,9 @@ where
     type Msg = PageMsg<T::Msg, CancelConfirmMsg>;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        self.inner.place(bounds);
-        self.loader.place(self.inner.pad.area);
+        let content_area = self.inner.place_get_content_area(bounds);
+        self.loader.place(content_area);
+        self.pad.place(content_area);
         bounds
     }
 
@@ -272,23 +284,27 @@ where
             event,
             button_msg,
             &mut self.loader,
-            &mut self.inner.pad,
+            &mut self.pad,
             &mut self.inner.content,
         ) {
             return Some(PageMsg::Controls(CancelConfirmMsg::Confirmed));
+        }
+        if self.inner.pad.will_paint().is_some() {
+            self.inner.buttons.request_complete_repaint(ctx);
         }
         None
     }
 
     fn paint(&mut self) {
+        self.pad.paint();
         self.inner.pad.paint();
         if self.loader.is_animating() {
             self.loader.paint()
         } else {
             self.inner.content.paint();
-        }
-        if self.inner.scrollbar.has_pages() {
-            self.inner.scrollbar.paint();
+            if self.inner.scrollbar.has_pages() {
+                self.inner.scrollbar.paint();
+            }
         }
         if self.inner.scrollbar.has_next_page() {
             self.inner.hint.paint();
