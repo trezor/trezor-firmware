@@ -268,6 +268,7 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("display_text_width")
         .allowlist_function("display_bar")
         .allowlist_function("display_bar_radius")
+        .allowlist_function("display_bar_radius_buffer")
         .allowlist_function("display_icon")
         .allowlist_function("display_image")
         .allowlist_function("display_toif_info")

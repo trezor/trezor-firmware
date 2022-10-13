@@ -61,6 +61,8 @@ void display_clear(void);
 void display_bar(int x, int y, int w, int h, uint16_t c);
 void display_bar_radius(int x, int y, int w, int h, uint16_t c, uint16_t b,
                         uint8_t r);
+void display_bar_radius_buffer(int x, int y, int w, int h, uint8_t r,
+                               buffer_text_t *buffer);
 
 bool display_toif_info(const uint8_t *buf, uint32_t len, uint16_t *out_w,
                        uint16_t *out_h, toif_format_t *out_format);

@@ -168,7 +168,7 @@ pub fn toif_info(data: &[u8]) -> Option<(Offset, ToifFormat)> {
 
 /// Aborts if the TOIF file does not have the correct grayscale flag, do not use
 /// with user-supplied inputs.
-fn toif_info_ensure(data: &[u8], format: ToifFormat) -> (Offset, &[u8]) {
+pub(crate) fn toif_info_ensure(data: &[u8], format: ToifFormat) -> (Offset, &[u8]) {
     let info = unwrap!(display::toif_info(data), "Invalid TOIF data");
     assert_eq!(info.format, format);
     let size = Offset::new(
@@ -419,16 +419,29 @@ pub fn rect_rounded2_partial(
 ///
 /// `buffer_bpp` determines size of pixel data
 /// `data_width` sets the width of valid data in the `src_buffer`
-fn position_buffer(
+pub(crate) fn position_buffer(
     dest_buffer: &mut [u8],
     src_buffer: &[u8],
     buffer_bpp: usize,
     offset_x: i16,
     data_width: i16,
 ) {
-    let start: usize = (offset_x).clamp(0, constant::WIDTH) as usize;
-    let end: usize = (offset_x + data_width).clamp(0, constant::WIDTH) as usize;
+    let data_width_even = if buffer_bpp == 4 && data_width % 2 != 0 {
+        data_width + 1
+    } else {
+        data_width
+    };
+
+    let mut start: usize = (offset_x).clamp(0, constant::WIDTH) as usize;
+    let mut end: usize = (offset_x + data_width_even).clamp(0, constant::WIDTH) as usize;
+
+    if buffer_bpp == 4 {
+        start &= !0x01;
+        end &= !0x01;
+    }
+
     let width = end - start;
+
     // if the offset is negative, need to skip beginning of uncompressed data
     let x_sh = if offset_x < 0 {
         (-offset_x).clamp(0, constant::WIDTH - width as i16) as usize

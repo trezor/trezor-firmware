@@ -3,6 +3,7 @@ mod dialog;
 mod frame;
 mod hold_to_confirm;
 mod homescreen;
+mod hs_render;
 mod keyboard;
 mod loader;
 mod number_input;

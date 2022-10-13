@@ -64,6 +64,9 @@ pub const IMAGE_SUCCESS: &[u8] = include_res!("model_tt/res/success.toif");
 pub const IMAGE_ERROR: &[u8] = include_res!("model_tt/res/error.toif");
 pub const IMAGE_INFO: &[u8] = include_res!("model_tt/res/info.toif");
 
+// Default homescreen
+pub const IMAGE_HOMESCREEN: &[u8] = include_res!("model_tt/res/bg.toif");
+
 // Scrollbar/PIN dots.
 pub const DOT_ACTIVE: &[u8] = include_res!("model_tt/res/scroll-active.toif");
 pub const DOT_INACTIVE: &[u8] = include_res!("model_tt/res/scroll-inactive.toif");

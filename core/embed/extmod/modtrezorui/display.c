@@ -147,6 +147,45 @@ void display_bar_radius(int x, int y, int w, int h, uint16_t c, uint16_t b,
   PIXELDATA_DIRTY();
 }
 
+void display_bar_radius_buffer(int x, int y, int w, int h, uint8_t r,
+                               buffer_text_t *buffer) {
+  if (h > 32) {
+    return;
+  }
+  if (r != 2 && r != 4 && r != 8 && r != 16) {
+    return;
+  } else {
+    r = 16 / r;
+  }
+  int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+  clamp_coords(x, y, w, h, &x0, &y0, &x1, &y1);
+  for (int j = y0; j <= y1; j++) {
+    for (int i = x0; i <= x1; i++) {
+      int rx = i - x;
+      int ry = j - y;
+      int p = j * DISPLAY_RESX + i;
+      uint8_t c = 0;
+      if (rx < CORNER_RADIUS / r && ry < CORNER_RADIUS / r) {
+        c = cornertable[rx * r + ry * r * CORNER_RADIUS];
+      } else if (rx < CORNER_RADIUS / r && ry >= h - CORNER_RADIUS / r) {
+        c = cornertable[rx * r + (h - 1 - ry) * r * CORNER_RADIUS];
+      } else if (rx >= w - CORNER_RADIUS / r && ry < CORNER_RADIUS / r) {
+        c = cornertable[(w - 1 - rx) * r + ry * r * CORNER_RADIUS];
+      } else if (rx >= w - CORNER_RADIUS / r && ry >= h - CORNER_RADIUS / r) {
+        c = cornertable[(w - 1 - rx) * r + (h - 1 - ry) * r * CORNER_RADIUS];
+      } else {
+        c = 15;
+      }
+      int b = p / 2;
+      if (p % 2) {
+        buffer->buffer[b] |= c << 4;
+      } else {
+        buffer->buffer[b] |= (c);
+      }
+    }
+  }
+}
+
 #define UZLIB_WINDOW_SIZE (1 << 10)
 
 static void uzlib_prepare(struct uzlib_uncomp *decomp, uint8_t *window,
