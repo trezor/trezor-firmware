@@ -242,7 +242,8 @@ bool _get_EthereumNetworkInfo(
         // chain_id mismatch - error and reset definition
         fsm_sendFailure(FailureType_Failure_DataError,
                         _("Invalid network definition - chain IDs not equal."));
-        _set_EthereumNetworkInfo_to_builtin(ref_chain_id, network);
+        _set_EthereumNetworkInfo_to_builtin(CHAIN_ID_UNKNOWN, network);
+        return false;
       } else {
         // chain_id does match the reference one (if provided) so prepend one
         // space character to symbol, terminate it (encoded definitions does not
@@ -251,15 +252,14 @@ bool _get_EthereumNetworkInfo(
                 sizeof(network->shortcut) - 2);
         network->shortcut[0] = ' ';
         network->shortcut[sizeof(network->shortcut) - 1] = 0;
-        return true;
       }
     } else {
       // decoding failed - reset network definition
-      _set_EthereumNetworkInfo_to_builtin(ref_chain_id, network);
+      _set_EthereumNetworkInfo_to_builtin(CHAIN_ID_UNKNOWN, network);
     }
   }
 
-  return network->chain_id == CHAIN_ID_UNKNOWN ? false : true;
+  return true;
 }
 
 void _get_EthereumTokenInfo(
@@ -322,7 +322,13 @@ const EthereumDefinitions *get_EthereumDefinitions(
     const uint64_t ref_chain_id, const char *ref_address) {
   static EthereumDefinitions defs;
 
-  if (_get_EthereumNetworkInfo(encoded_network, ref_chain_id, &defs.network)) {
+  if (!_get_EthereumNetworkInfo(encoded_network, ref_chain_id, &defs.network)) {
+    // error while decoding - chain IDs mismatch
+    return NULL;
+  }
+
+  if (strncmp(defs.network.shortcut, UNKNOWN_NETWORK_SHORTCUT,
+              sizeof(defs.network.shortcut)) != 0) {
     // we have found network definition, we can try to load token definition
     _get_EthereumTokenInfo(encoded_token, ref_chain_id, ref_address,
                            &defs.token);

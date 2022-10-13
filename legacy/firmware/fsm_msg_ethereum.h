@@ -47,6 +47,10 @@ void fsm_msgEthereumGetPublicKey(const EthereumGetPublicKey *msg) {
 
   const EthereumDefinitions *defs =
       get_EthereumDefinitions(encoded_network, NULL, CHAIN_ID_UNKNOWN, NULL);
+  if (!defs) {
+    layoutHome();
+    return;
+  }
 
   // we use Bitcoin-like format for ETH
   const CoinInfo *coin = fsm_getCoin(true, "Bitcoin");
@@ -119,8 +123,8 @@ void fsm_msgEthereumSignTx(const EthereumSignTx *msg) {
       get_EthereumDefinitions(encoded_network, encoded_token, msg->chain_id,
                               msg->has_to ? msg->to : NULL);
 
-  if (!fsm_ethereumCheckPath(msg->address_n_count, msg->address_n, false,
-                             defs)) {
+  if (!defs || !fsm_ethereumCheckPath(msg->address_n_count, msg->address_n,
+                                      false, defs)) {
     layoutHome();
     return;
   }
@@ -155,8 +159,8 @@ void fsm_msgEthereumSignTxEIP1559(const EthereumSignTxEIP1559 *msg) {
       get_EthereumDefinitions(encoded_network, encoded_token, msg->chain_id,
                               msg->has_to ? msg->to : NULL);
 
-  if (!fsm_ethereumCheckPath(msg->address_n_count, msg->address_n, false,
-                             defs)) {
+  if (!defs || !fsm_ethereumCheckPath(msg->address_n_count, msg->address_n,
+                                      false, defs)) {
     layoutHome();
     return;
   }
@@ -190,8 +194,8 @@ void fsm_msgEthereumGetAddress(const EthereumGetAddress *msg) {
   const EthereumDefinitions *defs =
       get_EthereumDefinitions(encoded_network, NULL, CHAIN_ID_UNKNOWN, NULL);
 
-  if (!fsm_ethereumCheckPath(msg->address_n_count, msg->address_n, false,
-                             defs)) {
+  if (!defs || !fsm_ethereumCheckPath(msg->address_n_count, msg->address_n,
+                                      false, defs)) {
     layoutHome();
     return;
   }
@@ -263,8 +267,8 @@ void fsm_msgEthereumSignMessage(const EthereumSignMessage *msg) {
   const EthereumDefinitions *defs =
       get_EthereumDefinitions(encoded_network, NULL, CHAIN_ID_UNKNOWN, NULL);
 
-  if (!fsm_ethereumCheckPath(msg->address_n_count, msg->address_n, false,
-                             defs)) {
+  if (!defs || !fsm_ethereumCheckPath(msg->address_n_count, msg->address_n,
+                                      false, defs)) {
     layoutHome();
     return;
   }
@@ -359,8 +363,8 @@ void fsm_msgEthereumSignTypedHash(const EthereumSignTypedHash *msg) {
   const EthereumDefinitions *defs =
       get_EthereumDefinitions(encoded_network, NULL, CHAIN_ID_UNKNOWN, NULL);
 
-  if (!fsm_ethereumCheckPath(msg->address_n_count, msg->address_n, false,
-                             defs)) {
+  if (!defs || !fsm_ethereumCheckPath(msg->address_n_count, msg->address_n,
+                                      false, defs)) {
     layoutHome();
     return;
   }
