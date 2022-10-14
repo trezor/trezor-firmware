@@ -28,7 +28,7 @@ async def sign_message(
     ctx: Context,
     msg: EthereumSignMessage,
     keychain: Keychain,
-    defs: definitions.EthereumDefinitions,
+    defs: definitions.Definitions,
 ) -> EthereumMessageSignature:
     from trezor.crypto.curve import secp256k1
     from trezor.messages import EthereumMessageSignature

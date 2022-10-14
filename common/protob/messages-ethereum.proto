@@ -86,7 +86,7 @@ message EthereumTokenInfo {
  * Contains an encoded Ethereum network and/or token definition. See protocol.md for details.
  * @embed
  */
-message EthereumEncodedDefinitions {
+message EthereumDefinitions {
     optional bytes encoded_network = 1; // encoded Ethereum network
     optional bytes encoded_token = 2;   // encoded Ethereum token
 }
@@ -111,7 +111,7 @@ message EthereumSignTx {
     optional uint32 data_length = 8 [default=0];          // Length of transaction payload
     required uint64 chain_id = 9;                         // Chain Id for EIP 155
     optional uint32 tx_type = 10;                         // Used for Wanchain
-    optional EthereumEncodedDefinitions definitions = 12; // network and/or token definitions for tx
+    optional EthereumDefinitions definitions = 12;        // network and/or token definitions for tx
 }
 
 /**
@@ -133,7 +133,7 @@ message EthereumSignTxEIP1559 {
     required uint32 data_length = 9;                      // Length of transaction payload
     required uint64 chain_id = 10;                        // Chain Id for EIP 155
     repeated EthereumAccessList access_list = 11;         // Access List
-    optional EthereumEncodedDefinitions definitions = 12; // network and/or token definitions for tx
+    optional EthereumDefinitions definitions = 12;        // network and/or token definitions for tx
 
     message EthereumAccessList {
         required string address = 1;

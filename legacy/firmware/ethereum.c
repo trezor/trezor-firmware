@@ -556,7 +556,7 @@ static bool ethereum_signing_init_common(struct signing_params *params) {
 }
 
 static void ethereum_signing_handle_erc20(struct signing_params *params,
-                                          const EthereumDefinitions *defs) {
+                                          const EthereumDefinitionsDecoded *defs) {
   if (params->has_to && ethereum_parse(params->to, params->pubkeyhash)) {
     params->pubkeyhash_set = true;
   } else {
@@ -601,7 +601,7 @@ static bool ethereum_signing_confirm_common(
 }
 
 void ethereum_signing_init(const EthereumSignTx *msg, const HDNode *node,
-                           const EthereumDefinitions *defs) {
+                           const EthereumDefinitionsDecoded *defs) {
   struct signing_params params = {
       .chain_id = defs ? defs->network.chain_id : msg->chain_id,
       .chain_suffix =
@@ -709,7 +709,7 @@ void ethereum_signing_init(const EthereumSignTx *msg, const HDNode *node,
 
 void ethereum_signing_init_eip1559(const EthereumSignTxEIP1559 *msg,
                                    const HDNode *node,
-                                   const EthereumDefinitions *defs) {
+                                   const EthereumDefinitionsDecoded *defs) {
   struct signing_params params = {
       .chain_id = defs ? defs->network.chain_id : msg->chain_id,
       .chain_suffix =
@@ -1052,7 +1052,7 @@ bool ethereum_parse(const char *address, uint8_t pubkeyhash[20]) {
 }
 
 bool ethereum_path_check(uint32_t address_n_count, const uint32_t *address_n,
-                         bool pubkey_export, const EthereumDefinitions *defs) {
+                         bool pubkey_export, const EthereumDefinitionsDecoded *defs) {
   bool valid = (address_n_count >= 3);
   valid = valid && (address_n[0] == (PATH_HARDENED | 44));
   valid = valid && (address_n[1] & PATH_HARDENED);

@@ -65,24 +65,24 @@ class MerkleTree:
         self.leaves = [Node(raw_value=v) for v in values]
 
         # build the tree
-        actual_level = [n for n in self.leaves]
-        while len(actual_level) > 1:
+        current_level = [n for n in self.leaves]
+        while len(current_level) > 1:
             # build one level of the tree
             next_level = []
-            while len(actual_level) // 2:
-                left_node = actual_level.pop(0)
-                right_node = actual_level.pop(0)
+            while len(current_level) // 2:
+                left_node = current_level.pop(0)
+                right_node = current_level.pop(0)
                 next_level.append(Node(left=left_node, right=right_node))
 
-            if len(actual_level) == 1:
-                # odd number of nodes on actual level so last node will be "joined" on another level
-                next_level.append(actual_level.pop(0))
+            if len(current_level) == 1:
+                # odd number of nodes on current level so last node will be "joined" on another level
+                next_level.append(current_level.pop(0))
 
             # switch levels and continue
-            actual_level = next_level
+            current_level = next_level
 
         # set root and compute hash
-        self.root_node = actual_level[0]
+        self.root_node = current_level[0]
         self.root_node.compute_hash()
 
     def get_proofs(self) -> dict[bytes, list[bytes]]:

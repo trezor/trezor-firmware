@@ -32,7 +32,7 @@ async def sign_typed_data(
     ctx: Context,
     msg: EthereumSignTypedData,
     keychain: Keychain,
-    defs: definitions.EthereumDefinitions,
+    defs: definitions.Definitions,
 ) -> EthereumTypedDataSignature:
     from trezor.crypto.curve import secp256k1
     from apps.common import paths

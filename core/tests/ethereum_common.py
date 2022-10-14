@@ -168,8 +168,8 @@ def get_ethereum_encoded_network_definition(chain_id: int | None = None, slip44:
     return network_info.definition if network_info is not None else None
 
 
-def get_ethereum_encoded_definition(chain_id: int | None = None, slip44: int | None = None, token_address: str | None = None) -> messages.EthereumEncodedDefinitions:
-    return messages.EthereumEncodedDefinitions(
+def get_ethereum_encoded_definition(chain_id: int | None = None, slip44: int | None = None) -> messages.EthereumDefinitions:
+    return messages.EthereumDefinitions(
         encoded_network=get_ethereum_encoded_network_definition(chain_id, slip44),
         encoded_token=None, # TODO
     )

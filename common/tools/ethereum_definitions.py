@@ -11,12 +11,13 @@ import re
 import shutil
 from binascii import hexlify
 from collections import defaultdict
-from typing import Any, Dict, List, TextIO, Tuple, cast
+from typing import Any, TextIO, cast
 
 import click
 import ed25519
 import requests
 from requests.adapters import HTTPAdapter
+from urllib.parse import urlencode
 from urllib3.util.retry import Retry
 
 from coin_info import Coin, Coins, load_json
@@ -40,22 +41,22 @@ if os.environ.get("DEFS_DIR"):
 else:
     DEFS_DIR = pathlib.Path(__file__).resolve().parent.parent / "defs"
 
-DEFINITIONS_CACHE_FILEPATH = pathlib.Path().absolute() / "definitions-cache.json"
+DEFINITIONS_CACHE_FILEPATH = pathlib.Path("definitions-cache.json")
 
 # ====== utils ======
 
 
 def hash_dict_on_keys(
-    d: Dict,
-    include_keys: List[str] | None = None,
-    exclude_keys: List[str] | None = None,
+    d: dict,
+    include_keys: list[str] | None = None,
+    exclude_keys: list[str] | None = None,
 ) -> int:
     """Get the hash of a dict on selected keys.
     Options `include_keys` and `exclude_keys` are exclusive."""
     if include_keys is not None and exclude_keys is not None:
         raise TypeError("Options `include_keys` and `exclude_keys` are exclusive")
 
-    tmp_dict = dict()
+    tmp_dict = {}
     for k, v in d.items():
         if include_keys is not None and k in include_keys:
             tmp_dict[k] = v
@@ -76,7 +77,7 @@ class Cache:
                 f'Path for storing cache "{cache_filepath}" exists and is not a file.'
             )
         self.cache_filepath = cache_filepath
-        self.cached_data: Any = dict()
+        self.cached_data: Any = {}
 
     def is_expired(self) -> bool:
         mtime = (
@@ -116,35 +117,38 @@ class EthereumDefinitionsCachedDownloader:
     def __init__(self, refresh: bool | None = None) -> None:
         force_refresh = refresh is True
         disable_refresh = refresh is False
-        self.use_cache = False
+        self.running_from_cache = False
         self.cache = Cache(DEFINITIONS_CACHE_FILEPATH)
 
         if disable_refresh or (not self.cache.is_expired() and not force_refresh):
             print("Loading cached Ethereum definitions data")
             self.cache.load()
-            self.use_cache = True
+            self.running_from_cache = True
         else:
             self._init_requests_session()
 
     def save_cache(self):
-        if not self.use_cache:
+        if not self.running_from_cache:
             self.cache.save()
 
-    def _download_as_json_from_url(
-        self, url: str, url_params: dict[str, Any] | None = None
-    ) -> Any:
-        # convert params to strings
-        params = dict()
+    def _download_json(self, url: str, **url_params: Any) -> Any:
+        params = None
+        encoded_params = None
+        key = url
+
+        # convert params to lower-case strings (especially for boolean values
+        # because for CoinGecko API "True" != "true")
         if url_params:
             params = {key: str(value).lower() for key, value in url_params.items()}
+            encoded_params = urlencode(sorted(params.items()))
+            key += "?" + encoded_params
 
-        key = url + str(params)
-        if self.use_cache:
+        if self.running_from_cache:
             return self.cache.get(key)
 
         print(f"Fetching data from {url}")
 
-        r = self.session.get(url, params=params, timeout=60)
+        r = self.session.get(url, params=encoded_params, timeout=60)
         r.raise_for_status()
         data = r.json()
         self.cache.set(key, data)
@@ -157,17 +161,17 @@ class EthereumDefinitionsCachedDownloader:
 
     def get_coingecko_asset_platforms(self) -> Any:
         url = "https://api.coingecko.com/api/v3/asset_platforms"
-        return self._download_as_json_from_url(url)
+        return self._download_json(url)
 
     def get_defillama_chains(self) -> Any:
         url = "https://api.llama.fi/chains"
-        return self._download_as_json_from_url(url)
+        return self._download_json(url)
 
     def get_coingecko_tokens_for_network(self, coingecko_network_id: str) -> Any:
         url = f"https://tokens.coingecko.com/{coingecko_network_id}/all.json"
         data = None
         try:
-            data = self._download_as_json_from_url(url)
+            data = self._download_json(url)
         except requests.exceptions.HTTPError as err:
             # "Forbidden" is raised by Coingecko if no tokens are available under specified id
             if err.response.status_code != requests.codes.forbidden:
@@ -177,23 +181,21 @@ class EthereumDefinitionsCachedDownloader:
 
     def get_coingecko_coins_list(self) -> Any:
         url = "https://api.coingecko.com/api/v3/coins/list"
-        return self._download_as_json_from_url(url, {"include_platform": "true"})
+        return self._download_json(url, include_platform=True)
 
     def get_coingecko_top100(self) -> Any:
         url = "https://api.coingecko.com/api/v3/coins/markets"
-        return self._download_as_json_from_url(
+        return self._download_json(
             url,
-            {
-                "vs_currency": "usd",
-                "order": "market_cap_desc",
-                "per_page": 100,
-                "page": 1,
-                "sparkline": "false",
-            },
+            vs_currency="usd",
+            order="market_cap_desc",
+            per_page=100,
+            page=1,
+            sparkline=False,
         )
 
 
-def _load_ethereum_networks_from_repo(repo_dir: pathlib.Path) -> List[Dict]:
+def _load_ethereum_networks_from_repo(repo_dir: pathlib.Path) -> list[dict]:
     """Load ethereum networks from submodule."""
     chains_path = repo_dir / "_data" / "chains"
     networks = []
@@ -254,9 +256,9 @@ def _create_cropped_token_dict(
 
 
 def _load_erc20_tokens_from_coingecko(
-    downloader: EthereumDefinitionsCachedDownloader, networks: List[Dict]
-) -> List[Dict]:
-    tokens: List[Dict] = []
+    downloader: EthereumDefinitionsCachedDownloader, networks: list[dict]
+) -> list[dict]:
+    tokens: list[dict] = []
     for network in networks:
         if (coingecko_id := network.get("coingecko_id")) is not None:
             all_tokens = downloader.get_coingecko_tokens_for_network(coingecko_id)
@@ -272,10 +274,10 @@ def _load_erc20_tokens_from_coingecko(
 
 
 def _load_erc20_tokens_from_repo(
-    repo_dir: pathlib.Path, networks: List[Dict]
-) -> List[Dict]:
+    repo_dir: pathlib.Path, networks: list[dict]
+) -> list[dict]:
     """Load ERC20 tokens from submodule."""
-    tokens: List[Dict] = []
+    tokens: list[dict] = []
     for network in networks:
         chain = network["chain"]
 
@@ -290,13 +292,13 @@ def _load_erc20_tokens_from_repo(
 
 
 def _set_definition_metadata(
-    definition: Dict,
-    old_definition: Dict | None = None,
+    definition: dict,
+    old_definition: dict | None = None,
     keys: str | None = None,
     deleted: bool = False,
 ) -> None:
     if "metadata" not in definition:
-        definition["metadata"] = dict()
+        definition["metadata"] = {}
 
     if deleted:
         definition["metadata"]["deleted"] = CURRENT_TIMESTAMP_STR
@@ -315,9 +317,9 @@ def _set_definition_metadata(
 def print_definition_change(
     name: str,
     status: str,
-    old: Dict,
-    new: Dict | None = None,
-    original: Dict | None = None,
+    old: dict,
+    new: dict | None = None,
+    original: dict | None = None,
     prompt: bool = False,
     use_default: bool = True,
 ) -> bool | None:
@@ -357,8 +359,8 @@ def print_definition_change(
 
 def print_definitions_collision(
     name: str,
-    definitions: List[Dict],
-    old_definitions: List[Dict] | None = None,
+    definitions: list[dict],
+    old_definitions: list[dict] | None = None,
 ) -> int | None:
     """Print colliding definitions and ask which one to keep if requested.
     Returns an index of selected definition from the prompt result (if prompted) or the default value."""
@@ -394,7 +396,7 @@ def print_definitions_collision(
     return answer
 
 
-def get_definition_deleted_status(definition: Dict) -> str:
+def get_definition_deleted_status(definition: dict) -> str:
     return (
         "PREVIOUSLY DELETED"
         if definition.get("metadata", {}).get("deleted") is not None
@@ -402,7 +404,7 @@ def get_definition_deleted_status(definition: Dict) -> str:
     )
 
 
-def check_tokens_collisions(tokens: List[Dict], old_tokens: List[Dict] | None) -> None:
+def check_tokens_collisions(tokens: list[dict], old_tokens: list[dict] | None) -> None:
     collisions: defaultdict = defaultdict(list)
     for idx, nd in enumerate(tokens):
         collisions[hash_dict_on_keys(nd, ["chain_id", "address"])].append(idx)
@@ -433,7 +435,7 @@ def check_tokens_collisions(tokens: List[Dict], old_tokens: List[Dict] | None) -
 
 def check_bytes_size(
     value: bytes, max_size: int, label: str, prompt: bool = True
-) -> Tuple[bool, bool]:
+) -> tuple[bool, bool]:
     """Check value (of type bytes) size and return tuple - size check and user response"""
     encoded_size = len(value)
     if encoded_size > max_size:
@@ -539,24 +541,24 @@ def check_tokens_fields_sizes(tokens: list[dict], interactive: bool) -> bool:
 
 
 def check_definitions_list(
-    old_defs: List[Dict],
-    new_defs: List[Dict],
-    main_keys: List[str],
+    old_defs: list[dict],
+    new_defs: list[dict],
+    main_keys: list[str],
     def_name: str,
     interactive: bool,
     force: bool,
-    top100_coingecko_ids: List[str] | None = None,
+    top100_coingecko_ids: list[str] | None = None,
 ) -> None:
     # store already processed definitions
-    deleted_definitions: List[Dict] = []
-    modified_definitions: List[Dict] = []
-    moved_definitions: List[Tuple] = []
-    resurrected_definitions: List[Tuple] = []
+    deleted_definitions: list[dict] = []
+    modified_definitions: list[dict] = []
+    moved_definitions: list[tuple] = []
+    resurrected_definitions: list[tuple] = []
 
     # dicts of new definitions
-    defs_hash_no_metadata = dict()
-    defs_hash_no_main_keys_and_metadata = dict()
-    defs_hash_only_main_keys = dict()
+    defs_hash_no_metadata = {}
+    defs_hash_no_main_keys_and_metadata = {}
+    defs_hash_only_main_keys = {}
     for nd in new_defs:
         defs_hash_no_metadata[hash_dict_on_keys(nd, exclude_keys=["metadata"])] = nd
         defs_hash_no_main_keys_and_metadata[
@@ -802,7 +804,7 @@ def _load_prepared_definitions(
 def eth_info_from_dict(
     coin: Coin, msg_type: EthereumNetworkInfo | EthereumTokenInfo
 ) -> EthereumNetworkInfo | EthereumTokenInfo:
-    attributes: Dict[str, Any] = dict()
+    attributes: dict[str, Any] = {}
     for field in msg_type.FIELDS.values():
         val = coin.get(field.name)
 
@@ -918,7 +920,7 @@ def prepare_definitions(
 
     # coingecko API
     cg_platforms = downloader.get_coingecko_asset_platforms()
-    cg_platforms_by_chain_id: dict[int, Any] = dict()
+    cg_platforms_by_chain_id: dict[int, Any] = {}
     for chain in cg_platforms:
         # We want only informations about chains, that have both chain id and coingecko id,
         # otherwise we could not link local and coingecko networks.
@@ -927,7 +929,7 @@ def prepare_definitions(
 
     # defillama API
     dl_chains = downloader.get_defillama_chains()
-    dl_chains_by_chain_id: dict[int, Any] = dict()
+    dl_chains_by_chain_id: dict[int, Any] = {}
     for chain in dl_chains:
         # We want only informations about chains, that have both chain id and coingecko id,
         # otherwise we could not link local and coingecko networks.
@@ -937,7 +939,7 @@ def prepare_definitions(
     # We will try to get as many "coingecko_id"s as possible to be able to use them afterwards
     # to load tokens from coingecko. We won't use coingecko networks, because we don't know which
     # ones are EVM based.
-    coingecko_id_to_chain_id = dict()
+    coingecko_id_to_chain_id = {}
     for network in networks:
         if network.get("coingecko_id") is None:
             # first try to assign coingecko_id to local networks from coingecko via chain_id
@@ -965,7 +967,7 @@ def prepare_definitions(
     downloader.save_cache()
 
     # merge tokens
-    tokens: List[Dict] = []
+    tokens: list[dict] = []
     cg_tokens_chain_id_and_address = []
     for t in cg_tokens:
         if t not in tokens:
@@ -997,7 +999,7 @@ def prepare_definitions(
     # map coingecko ids to tokens
     tokens_by_chain_id_and_address = {(t["chain_id"], t["address"]): t for t in tokens}
     for coin in cg_coin_list:
-        for platform_name, address in coin.get("platforms", dict()).items():
+        for platform_name, address in coin.get("platforms", {}).items():
             key = (coingecko_id_to_chain_id.get(platform_name), address)
             if key in tokens_by_chain_id_and_address:
                 tokens_by_chain_id_and_address[key]["coingecko_id"] = coin["id"]
@@ -1124,7 +1126,7 @@ def sign_definitions(
     timestamp, networks, tokens = _load_prepared_definitions(deffile)
 
     # serialize definitions
-    definitions_by_serialization: dict[bytes, dict] = dict()
+    definitions_by_serialization: dict[bytes, dict] = {}
     for network in networks:
         ser = serialize_eth_info(
             eth_info_from_dict(network, EthereumNetworkInfo),

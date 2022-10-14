@@ -23,7 +23,7 @@ async def get_address(
     ctx: Context,
     msg: EthereumGetAddress,
     keychain: Keychain,
-    defs: definitions.EthereumDefinitions,
+    defs: definitions.Definitions,
 ) -> EthereumAddress:
     from trezor.messages import EthereumAddress
     from trezor.ui.layouts import show_address

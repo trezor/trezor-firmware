@@ -165,7 +165,7 @@ def download_network_definition(
     chain_id: Optional[int] = None, slip44: Optional[int] = None
 ) -> Optional[bytes]:
     if not ((chain_id is None) != (slip44 is None)):  # not XOR
-        raise RuntimeError(
+        raise ValueError(
             "Exactly one of chain_id or slip44 parameters are needed to load network definition from directory."
         )
 
@@ -187,7 +187,7 @@ def download_network_definition(
 
 
 def download_token_definition(
-    chain_id: Optional[int] = None, token_address: Optional[str] = None
+    chain_id: int = None, token_address: str = None
 ) -> Optional[bytes]:
     if chain_id is None or token_address is None:
         raise RuntimeError(
@@ -239,15 +239,15 @@ def network_definition_from_dir(
 
 def token_definition_from_dir(
     path: pathlib.Path,
-    chain_id: Optional[int] = None,
-    token_address: Optional[str] = None,
+    chain_id: int = None,
+    token_address: str = None,
 ) -> Optional[bytes]:
     if chain_id is None or token_address is None:
         raise RuntimeError(
             "Both chain_id and token_address parameters are needed to load token definition from directory."
         )
 
-    if token_address is not None and token_address.startswith("0x"):
+    if token_address.startswith("0x"):
         token_address = token_address[2:]
 
     path = (
@@ -271,7 +271,7 @@ def get_address(
     client: "TrezorClient",
     n: "Address",
     show_display: bool = False,
-    encoded_network: bytes = None,
+    encoded_network: Optional[bytes] = None,
 ) -> "MessageType":
     return client.call(
         messages.EthereumGetAddress(
@@ -287,7 +287,7 @@ def get_public_node(
     client: "TrezorClient",
     n: "Address",
     show_display: bool = False,
-    encoded_network: bytes = None,
+    encoded_network: Optional[bytes] = None,
 ) -> "MessageType":
     return client.call(
         messages.EthereumGetPublicKey(
@@ -310,7 +310,7 @@ def sign_tx(
     data: Optional[bytes] = None,
     chain_id: Optional[int] = None,
     tx_type: Optional[int] = None,
-    definitions: Optional[messages.EthereumEncodedDefinitions] = None,
+    definitions: Optional[messages.EthereumDefinitions] = None,
 ) -> Tuple[int, bytes, bytes]:
     if chain_id is None:
         raise exceptions.TrezorException("Chain ID cannot be undefined")
@@ -369,7 +369,7 @@ def sign_tx_eip1559(
     max_gas_fee: int,
     max_priority_fee: int,
     access_list: Optional[List[messages.EthereumAccessList]] = None,
-    definitions: Optional[messages.EthereumEncodedDefinitions] = None,
+    definitions: Optional[messages.EthereumDefinitions] = None,
 ) -> Tuple[int, bytes, bytes]:
     length = len(data)
     data, chunk = data[1024:], data[:1024]
@@ -405,7 +405,7 @@ def sign_tx_eip1559(
 
 @expect(messages.EthereumMessageSignature)
 def sign_message(
-    client: "TrezorClient", n: "Address", message: AnyStr, encoded_network: bytes = None
+    client: "TrezorClient", n: "Address", message: AnyStr, encoded_network: Optional[bytes] = None
 ) -> "MessageType":
     return client.call(
         messages.EthereumSignMessage(
@@ -423,7 +423,7 @@ def sign_typed_data(
     data: Dict[str, Any],
     *,
     metamask_v4_compat: bool = True,
-    encoded_network: bytes = None,
+    encoded_network: Optional[bytes] = None,
 ) -> "MessageType":
     data = sanitize_typed_data(data)
     types = data["types"]
@@ -516,7 +516,7 @@ def sign_typed_data_hash(
     n: "Address",
     domain_hash: bytes,
     message_hash: Optional[bytes],
-    encoded_network: bytes = None,
+    encoded_network: Optional[bytes] = None,
 ) -> "MessageType":
     return client.call(
         messages.EthereumSignTypedHash(

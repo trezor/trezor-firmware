@@ -60,5 +60,5 @@ EthereumTokenInfo.symbol                max_size:256
 EthereumNetworkInfo.name                max_size:256
 EthereumNetworkInfo.shortcut            max_size:256
 
-EthereumEncodedDefinitions.encoded_network max_size:1024
-EthereumEncodedDefinitions.encoded_token   max_size:1024
+EthereumDefinitions.encoded_network max_size:1024
+EthereumDefinitions.encoded_token   max_size:1024

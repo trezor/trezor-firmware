@@ -32,9 +32,9 @@ GO_BACK = (16, 220)
 pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
 
 
-def get_EthereumEncodedDefinitions(
+def get_definitions(
     parameters: dict,
-) -> messages.EthereumEncodedDefinitions:
+) -> messages.EthereumDefinitions:
     chain_id = parameters["chain_id"]
     token_chain_id = parameters["chain_id"]
     token_address = parameters["to_address"]
@@ -54,7 +54,7 @@ def get_EthereumEncodedDefinitions(
         token_address=token_address,
     )
 
-    return messages.EthereumEncodedDefinitions(
+    return messages.EthereumDefinitions(
         encoded_network=encoded_network, encoded_token=encoded_token
     )
 
@@ -77,7 +77,7 @@ def test_signtx(client: Client, parameters, result):
             value=int(parameters["value"], 16),
             tx_type=parameters["tx_type"],
             data=bytes.fromhex(parameters["data"]),
-            definitions=get_EthereumEncodedDefinitions(parameters),
+            definitions=get_definitions(parameters),
         )
 
     expected_v = 2 * parameters["chain_id"] + 35
@@ -105,7 +105,7 @@ def test_signtx_missing_extern_definitions(client: Client):
     )
 
     definitions_vector = [
-        get_EthereumEncodedDefinitions(
+        get_definitions(
             {
                 "chain_id": chain_id,
                 "to_address": to_address,
@@ -114,7 +114,7 @@ def test_signtx_missing_extern_definitions(client: Client):
                 },
             }
         ),  # missing network
-        get_EthereumEncodedDefinitions(
+        get_definitions(
             {
                 "chain_id": -1,
                 "to_address": "",
@@ -145,7 +145,7 @@ def test_signtx_wrong_extern_definitions(client: Client):
     )
 
     definitions_vector = [
-        get_EthereumEncodedDefinitions(
+        get_definitions(
             {
                 "chain_id": chain_id,
                 "to_address": to_address,
@@ -154,7 +154,7 @@ def test_signtx_wrong_extern_definitions(client: Client):
                 },
             }
         ),  # wrong network
-        get_EthereumEncodedDefinitions(
+        get_definitions(
             {
                 "chain_id": 1,
                 "to_address": "0xd0d6d6c5fe4a677d343cc433536bb717bae167dd",
@@ -165,7 +165,7 @@ def test_signtx_wrong_extern_definitions(client: Client):
     for definitions in definitions_vector:
         with pytest.raises(
             TrezorFailure,
-            match=r"DataError:.*Invalid network definition - chain IDs not equal.",
+            match=r"DataError:.*Network definition mismatch",
         ):
             sign_tx_call(definitions=definitions)
 
@@ -187,7 +187,7 @@ def test_signtx_eip1559(client: Client, parameters, result):
             chain_id=parameters["chain_id"],
             value=int(parameters["value"], 16),
             data=bytes.fromhex(parameters["data"]),
-            definitions=get_EthereumEncodedDefinitions(parameters),
+            definitions=get_definitions(parameters),
         )
 
     assert sig_r.hex() == result["sig_r"]
@@ -214,7 +214,7 @@ def test_signtx_eip1559_missing_extern_definitions(client: Client):
     )
 
     definitions_vector = [
-        get_EthereumEncodedDefinitions(
+        get_definitions(
             {
                 "chain_id": chain_id,
                 "to_address": to_address,
@@ -223,7 +223,7 @@ def test_signtx_eip1559_missing_extern_definitions(client: Client):
                 },
             }
         ),  # missing network
-        get_EthereumEncodedDefinitions(
+        get_definitions(
             {
                 "chain_id": -1,
                 "to_address": "",
@@ -255,7 +255,7 @@ def test_signtx_eip1559_wrong_extern_definitions(client: Client):
     )
 
     definitions_vector = [
-        get_EthereumEncodedDefinitions(
+        get_definitions(
             {
                 "chain_id": chain_id,
                 "to_address": to_address,
@@ -264,7 +264,7 @@ def test_signtx_eip1559_wrong_extern_definitions(client: Client):
                 },
             }
         ),  # wrong network
-        get_EthereumEncodedDefinitions(
+        get_definitions(
             {
                 "chain_id": 1,
                 "to_address": "0xd0d6d6c5fe4a677d343cc433536bb717bae167dd",
@@ -275,7 +275,7 @@ def test_signtx_eip1559_wrong_extern_definitions(client: Client):
     for definitions in definitions_vector:
         with pytest.raises(
             TrezorFailure,
-            match=r"DataError:.*Invalid network definition - chain IDs not equal.",
+            match=r"DataError:.*Network definition mismatch",
         ):
             sign_tx_eip1559_call(definitions=definitions)
 

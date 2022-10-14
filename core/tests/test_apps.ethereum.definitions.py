@@ -10,7 +10,7 @@ if not utils.BITCOIN_ONLY:
     from trezor import protobuf
     from trezor.enums import EthereumDefinitionType
     from trezor.messages import (
-        EthereumEncodedDefinitions,
+        EthereumDefinitions,
         EthereumNetworkInfo,
         EthereumTokenInfo,
         EthereumGetAddress,
@@ -211,7 +211,7 @@ class TestEthereumDefinitions(unittest.TestCase):
         token_info: EthereumTokenInfo | None,
     ):
         # get
-        definitions = dfs.EthereumDefinitions(network_definition, token_definition, ref_chain_id, ref_token_address)
+        definitions = dfs.Definitions(network_definition, token_definition, ref_chain_id, ref_token_address)
 
         ref_token_dict = dict()
         if token_info is not None:
@@ -219,7 +219,7 @@ class TestEthereumDefinitions(unittest.TestCase):
 
         # compare
         self.assertEqual(definitions.network, network_info)
-        self.assertDictEqual(definitions.token_dict, ref_token_dict)
+        self.assertDictEqual(definitions.tokens, ref_token_dict)
 
     def test_get_definitions(self):
         # built-in
@@ -281,7 +281,7 @@ class TestGetDefinitonsFromMsg(unittest.TestCase):
 
         # compare
         self.assertEqual(definitions.network, network_info)
-        self.assertDictEqual(definitions.token_dict, ref_token_dict)
+        self.assertDictEqual(definitions.tokens, ref_token_dict)
 
     def test_get_definitions_SignTx_messages(self):
         # built-in
@@ -315,7 +315,7 @@ class TestGetDefinitonsFromMsg(unittest.TestCase):
                 create_EthereumSignTx_msg(
                     chain_id=rinkeby_network.info.chain_id,
                     to=hexlify(kc_token.info.address),
-                    definitions=EthereumEncodedDefinitions(
+                    definitions=EthereumDefinitions(
                         encoded_network=rinkeby_network.definition,
                         encoded_token=kc_token.definition,
                     ),
@@ -335,7 +335,7 @@ class TestGetDefinitonsFromMsg(unittest.TestCase):
                 create_EthereumSignTxEIP1559_msg(
                     chain_id=rinkeby_network.info.chain_id,
                     to=hexlify(kc_token.info.address),
-                    definitions=EthereumEncodedDefinitions(
+                    definitions=EthereumDefinitions(
                         encoded_network=rinkeby_network.definition,
                         encoded_token=kc_token.definition,
                     ),
@@ -360,7 +360,7 @@ class TestGetDefinitonsFromMsg(unittest.TestCase):
             (
                 create_EthereumSignTx_msg(
                     chain_id=rinkeby_network.info.chain_id,
-                    definitions=EthereumEncodedDefinitions(
+                    definitions=EthereumDefinitions(
                         encoded_network=rinkeby_network.definition,
                         encoded_token=None,
                     ),
@@ -378,7 +378,7 @@ class TestGetDefinitonsFromMsg(unittest.TestCase):
             (
                 create_EthereumSignTxEIP1559_msg(
                     chain_id=rinkeby_network.info.chain_id,
-                    definitions=EthereumEncodedDefinitions(
+                    definitions=EthereumDefinitions(
                         encoded_network=rinkeby_network.definition,
                         encoded_token=None
                     ),

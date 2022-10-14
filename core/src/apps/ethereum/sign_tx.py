@@ -24,7 +24,10 @@ MAX_CHAIN_ID = (0xFFFF_FFFF - 36) // 2
 
 @with_keychain_from_chain_id_and_defs
 async def sign_tx(
-    ctx: Context, msg: EthereumSignTx, keychain: Keychain, defs: definitions.EthereumDefinitions
+    ctx: Context,
+    msg: EthereumSignTx,
+    keychain: Keychain,
+    defs: definitions.Definitions,
 ) -> EthereumTxRequest:
     from trezor.utils import HashWriter
     from trezor.crypto.hashlib import sha3_256
@@ -46,7 +49,7 @@ async def sign_tx(
 
     # Handle ERC20s
     token, address_bytes, recipient, value = await handle_erc20(
-        ctx, msg, defs.token_dict
+        ctx, msg, defs.tokens
     )
 
     data_total = msg.data_length

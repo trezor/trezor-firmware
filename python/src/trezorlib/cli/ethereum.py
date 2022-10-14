@@ -157,7 +157,7 @@ def _erc20_contract(token_address: str, to_address: str, amount: int) -> str:
             "outputs": [{"name": "", "type": "bool"}],
         }
     ]
-    contract = _get_web3().eth.contract(address=token_address, abi=min_abi)
+    contract = _get_web3().eth.contract(address=token_address, abi=min_abi)  # type: ignore [Argument of type "str" cannot be assigned to parameter "address" of type "Address | ChecksumAddress | ENS" in function "contract"]
     return contract.encodeABI("transfer", [to_address, amount])
 
 
@@ -170,14 +170,14 @@ def _format_access_list(
 
 
 def _get_ethereum_definitions(
-    definitions_dir: pathlib.Path = None,
-    network_def_file: BinaryIO = None,
-    token_def_file: BinaryIO = None,
+    definitions_dir: Optional[pathlib.Path] = None,
+    network_def_file: Optional[BinaryIO] = None,
+    token_def_file: Optional[BinaryIO] = None,
     download_definitions: bool = False,
     chain_id: Optional[int] = None,
     slip44_hardened: Optional[int] = None,
     token_address: Optional[str] = None,
-) -> ethereum.messages.EthereumEncodedDefinitions:
+) -> ethereum.messages.EthereumDefinitions:
     count_of_options_used = sum(
         bool(o)
         for o in (
@@ -193,9 +193,9 @@ def _get_ethereum_definitions(
 
     slip44 = None
     if slip44_hardened is not None:
-        slip44 = UH_(slip44_hardened)  # type: ignore [Argument of type "int | None" cannot be assigned to parameter "x" of type "int" in function "UH_"]
+        slip44 = UH_(slip44_hardened)
 
-    defs = ethereum.messages.EthereumEncodedDefinitions()
+    defs = ethereum.messages.EthereumDefinitions()
     if definitions_dir is not None:
         if chain_id is not None or slip44 is not None:
             defs.encoded_network = ethereum.network_definition_from_dir(
@@ -235,9 +235,9 @@ definitions_dir_option = click.option(
     type=click.Path(
         exists=True, file_okay=False, resolve_path=True, path_type=pathlib.Path
     ),
-    help="Directory with stored definitions. Directory structure should be the same as it is in downloaded archive from "
-    r"`https:\\data.trezor.io\definitions\???`. Mutually exclusive with `--network-def`, `--token-def` and "
-    "`--download-definitions`.",  # TODO: add link?, replace this ur with function used to download defs
+    help="Directory with stored definitions. Directory structure must be the same as the command "
+    "`trezorctl ethereum download-definitions` outputs.it is when. Mutually exclusive with `--network-def`, `--token-def` "
+    "and `--download-definitions`.",
 )
 network_def_option = click.option(
     "--network-def",
@@ -252,8 +252,8 @@ token_def_options = click.option(
 download_definitions_option = click.option(
     "--download-definitions",
     is_flag=True,
-    help=r"Automatically download required definitions from `data.trezor.io\definitions` and use them. "
-    "Mutually exclusive with `--definitions-dir`, `--network-def` and `--token-def`.",
+    help="Automatically download required definitions from `data.trezor.io/definitions/???` and use them. "
+    "Mutually exclusive with `--definitions-dir`, `--network-def` and `--token-def`.",  # TODO: add link?, replace this ur with function used to download defs
 )
 
 

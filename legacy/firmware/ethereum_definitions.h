@@ -25,11 +25,11 @@
 typedef struct {
   EthereumNetworkInfo network;
   EthereumTokenInfo token;
-} EthereumDefinitions;
+} EthereumDefinitionsDecoded;
 
-const EthereumDefinitions *get_EthereumDefinitions(
-    const EthereumEncodedDefinitions_encoded_network_t *encoded_network,
-    const EthereumEncodedDefinitions_encoded_token_t *encoded_token,
+const EthereumDefinitionsDecoded *get_EthereumDefinitionsDecoded(
+    const EthereumDefinitions_encoded_network_t *encoded_network,
+    const EthereumDefinitions_encoded_token_t *encoded_token,
     const uint64_t ref_chain_id, const char *ref_address);
 
 #endif

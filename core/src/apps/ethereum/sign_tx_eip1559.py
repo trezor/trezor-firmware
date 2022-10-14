@@ -31,7 +31,10 @@ def access_list_item_length(item: EthereumAccessList) -> int:
 
 @with_keychain_from_chain_id_and_defs
 async def sign_tx_eip1559(
-    ctx: Context, msg: EthereumSignTxEIP1559, keychain: Keychain, defs: definitions.EthereumDefinitions
+    ctx: Context,
+    msg: EthereumSignTxEIP1559,
+    keychain: Keychain,
+    defs: definitions.Definitions,
 ) -> EthereumTxRequest:
     from trezor.crypto.hashlib import sha3_256
     from trezor.utils import HashWriter
@@ -58,7 +61,7 @@ async def sign_tx_eip1559(
 
     # Handle ERC20s
     token, address_bytes, recipient, value = await handle_erc20(
-        ctx, msg, defs.token_dict
+        ctx, msg, defs.tokens
     )
 
     data_total = msg.data_length

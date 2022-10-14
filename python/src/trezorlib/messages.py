@@ -4785,7 +4785,7 @@ class EthereumTokenInfo(protobuf.MessageType):
         self.name = name
 
 
-class EthereumEncodedDefinitions(protobuf.MessageType):
+class EthereumDefinitions(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
         1: protobuf.Field("encoded_network", "bytes", repeated=False, required=False),
@@ -4815,7 +4815,7 @@ class EthereumSignTx(protobuf.MessageType):
         8: protobuf.Field("data_length", "uint32", repeated=False, required=False, default=0),
         9: protobuf.Field("chain_id", "uint64", repeated=False, required=True),
         10: protobuf.Field("tx_type", "uint32", repeated=False, required=False, default=None),
-        12: protobuf.Field("definitions", "EthereumEncodedDefinitions", repeated=False, required=False),
+        12: protobuf.Field("definitions", "EthereumDefinitions", repeated=False, required=False),
     }
 
     def __init__(
@@ -4831,7 +4831,7 @@ class EthereumSignTx(protobuf.MessageType):
         data_initial_chunk: Optional["bytes"] = b'',
         data_length: Optional["int"] = 0,
         tx_type: Optional["int"] = None,
-        definitions: Optional["EthereumEncodedDefinitions"] = None,
+        definitions: Optional["EthereumDefinitions"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.gas_price = gas_price
@@ -4860,7 +4860,7 @@ class EthereumSignTxEIP1559(protobuf.MessageType):
         9: protobuf.Field("data_length", "uint32", repeated=False, required=True),
         10: protobuf.Field("chain_id", "uint64", repeated=False, required=True),
         11: protobuf.Field("access_list", "EthereumAccessList", repeated=True, required=False, default=None),
-        12: protobuf.Field("definitions", "EthereumEncodedDefinitions", repeated=False, required=False),
+        12: protobuf.Field("definitions", "EthereumDefinitions", repeated=False, required=False),
     }
 
     def __init__(
@@ -4877,7 +4877,7 @@ class EthereumSignTxEIP1559(protobuf.MessageType):
         access_list: Optional[Sequence["EthereumAccessList"]] = None,
         to: Optional["str"] = '',
         data_initial_chunk: Optional["bytes"] = b'',
-        definitions: Optional["EthereumEncodedDefinitions"] = None,
+        definitions: Optional["EthereumDefinitions"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.access_list: Sequence["EthereumAccessList"] = access_list if access_list is not None else []
