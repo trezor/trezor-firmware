@@ -178,7 +178,6 @@ SOURCE_MOD += [
     'embed/extmod/modtrezorui/buffers.c',
     'embed/extmod/modtrezorui/colors.c',
     'embed/extmod/modtrezorui/display.c',
-    'embed/extmod/modtrezorui/display-unix.c',
     'embed/extmod/modtrezorui/fonts/fonts.c',
     'embed/extmod/modtrezorui/fonts/font_bitmap.c',
     'embed/extmod/modtrezorui/modtrezorui.c',
@@ -348,6 +347,7 @@ SOURCE_MICROPYTHON = [
 
 SOURCE_UNIX = [
     'embed/unix/common.c',
+    'embed/unix/display-unix.c',
     'embed/unix/flash.c',
     'embed/unix/main.c',
     'embed/unix/main_main.c',
@@ -460,6 +460,7 @@ env.Replace(
     CPPDEFINES=[
         'TREZOR_EMULATOR',
         'TREZOR_MODEL_'+TREZOR_MODEL,
+        'TREZOR_BOARD=\\"board-unix.h\\"',
         ('MP_CONFIGFILE', '\\"embed/unix/mpconfigport.h\\"'),
     ] + CPPDEFINES_MOD,
     ASPPFLAGS='$CFLAGS $CCFLAGS', )
@@ -725,6 +726,8 @@ def cargo_build():
             features.append('debug')
     if DMA2D:
         features.append('dma2d')
+
+    env.get('ENV')['TREZOR_MODEL'] = TREZOR_MODEL
 
     return f'cd embed/rust; cargo build --profile {RUST_PROFILE} --target-dir=../../build/unix/rust --no-default-features --features "{" ".join(features)}"  --target {TARGET}'
 

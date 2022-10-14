@@ -115,6 +115,7 @@ int main(void) {
 #endif
 
 #if defined TREZOR_MODEL_R
+  display_init();
   button_init();
   display_clear();
   rgb_led_init();

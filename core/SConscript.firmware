@@ -182,7 +182,6 @@ SOURCE_MOD += [
     'embed/extmod/modtrezorui/buffers.c',
     'embed/extmod/modtrezorui/colors.c',
     'embed/extmod/modtrezorui/display.c',
-    f'embed/extmod/modtrezorui/display-stm32_{TREZOR_MODEL}.c',
     'embed/extmod/modtrezorui/fonts/fonts.c',
     'embed/extmod/modtrezorui/fonts/font_bitmap.c',
     'embed/extmod/modtrezorui/modtrezorui.c',
@@ -449,6 +448,8 @@ SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_MICROPYTHON_SPEED
 
 env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s -DPYOPT=%s -DBITCOIN_ONLY=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0'), PYOPT, BITCOIN_ONLY))
 
+tools.configure_board(TREZOR_MODEL, env, CPPDEFINES_MOD, SOURCE_TREZORHAL)
+
 env.Tool('micropython')
 
 env.Replace(
@@ -464,7 +465,7 @@ env.Replace(
     OBJCOPY='arm-none-eabi-objcopy', )
 
 env.Replace(
-    TREZOR_MODEL=TREZOR_MODEL, )
+    TREZOR_MODEL=TREZOR_MODEL,)
 
 if TREZOR_MODEL in ('T', 'R'):
     CPU_ASFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16'
@@ -780,6 +781,8 @@ def cargo_build():
         '-Z build-std=core',
         '-Z build-std-features=panic_immediate_abort',
     ]
+
+    env.get('ENV')['TREZOR_MODEL'] = TREZOR_MODEL
 
     return f'cd embed/rust; cargo build {profile} ' + ' '.join(cargo_opts)
 

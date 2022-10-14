@@ -26,7 +26,7 @@
 
 #include "buffers.h"
 #include "colors.h"
-#include "display_defs.h"
+#include TREZOR_BOARD
 #include "display_interface.h"
 #include "fonts/fonts.h"
 
