@@ -275,6 +275,14 @@ def by_rp_id_hash(rp_id_hash: bytes) -> FIDOApp | None:
             use_sign_count=None,
             use_self_attestation=None,
         )
+    if rp_id_hash == b"\xa2\x59\xc2\xb5\x0d\x78\x50\x80\xf8\xbe\x7f\x17\xca\xf8\x15\x6c\x8d\x18\xf4\x7e\xdb\xaf\x51\x8f\xa6\xf5\x9f\x29\xcd\x28\xf1\x5c":
+        # WebAuthn key for Proton
+        return FIDOApp(
+            label="proton.me",
+            icon="apps/webauthn/res/icon_proton.toif",
+            use_sign_count=None,
+            use_self_attestation=None,
+        )
     if rp_id_hash == b"\x08\xb2\xa3\xd4\x19\x39\xaa\x31\x66\x84\x93\xcb\x36\xcd\xcc\x4f\x16\xc4\xd9\xb4\xc8\x23\x8b\x73\xc2\xf6\x72\xc0\x33\x00\x71\x97":
         # U2F key for Slush Pool
         return FIDOApp(
