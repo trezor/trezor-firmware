@@ -19,6 +19,19 @@ fn model() -> String {
     }
 }
 
+fn board() -> String {
+    if !is_firmware() {
+        return String::from("board-unix.h");
+    }
+
+    match env::var("TREZOR_BOARD") {
+        Ok(board) => {
+            format!("boards/{}", board)
+        }
+        Err(_) => String::from("boards/trezor_t.h"),
+    }
+}
+
 /// Generates Rust module that exports QSTR constants used in firmware.
 #[cfg(feature = "micropython")]
 fn generate_qstr_bindings() {
@@ -64,6 +77,7 @@ fn prepare_bindings() -> bindgen::Builder {
         "-I../../vendor/micropython/lib/uzlib",
         "-I../extmod/modtrezorui", // for display.h
         format!("-DTREZOR_MODEL_{}", model()).as_str(),
+        format!("-DTREZOR_BOARD=\"{}\"", board()).as_str(),
     ]);
 
     // Pass in correct include paths and defines.

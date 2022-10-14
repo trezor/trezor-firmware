@@ -19,7 +19,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "display_defs.h"
+#include TREZOR_BOARD
 #include "display_interface.h"
 #include STM32_HAL_H
 
@@ -49,13 +49,6 @@
 #define OLED_SEGREMAP 0xA0
 #define OLED_CHARGEPUMP 0x8D
 
-#define OLED_DC_PORT GPIOB
-#define OLED_DC_PIN GPIO_PIN_0  // PB0 | Data/Command
-#define OLED_CS_PORT GPIOA
-#define OLED_CS_PIN GPIO_PIN_4  // PA4 | SPI Select
-#define OLED_RST_PORT GPIOB
-#define OLED_RST_PIN GPIO_PIN_1  // PB1 | Reset display
-
 static int DISPLAY_BACKLIGHT = -1;
 static int DISPLAY_ORIENTATION = -1;
 static uint8_t OLED_BUFFER[OLED_BUFSIZE];
@@ -72,7 +65,7 @@ static struct {
   } pos;
 } PIXELWINDOW;
 
-static bool pixeldata_dirty = true;
+static bool pixeldata_dirty_flag = true;
 
 void display_pixeldata(uint16_t c) {
   if (PIXELWINDOW.pos.x <= PIXELWINDOW.end.x &&
@@ -99,7 +92,7 @@ void display_pixeldata(uint16_t c) {
 
 void display_reset_state() {}
 
-void PIXELDATA_DIRTY() { pixeldata_dirty = true; }
+void pixeldata_dirty(void) { pixeldata_dirty_flag = true; }
 
 void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
   PIXELWINDOW.start.x = x0;
@@ -140,9 +133,12 @@ static inline void spi_send(const uint8_t *data, int len) {
 }
 
 void display_init(void) {
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
-  __HAL_RCC_SPI1_CLK_ENABLE();
+  OLED_DC_CLK_ENA();
+  OLED_CS_CLK_ENA();
+  OLED_RST_CLK_ENA();
+  OLED_SPI_SCK_CLK_ENA();
+  OLED_SPI_MOSI_CLK_ENA();
+  OLED_SPI_CLK_ENA();
 
   GPIO_InitTypeDef GPIO_InitStructure;
 
@@ -151,22 +147,27 @@ void display_init(void) {
   GPIO_InitStructure.Pull = GPIO_NOPULL;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   GPIO_InitStructure.Alternate = 0;
-  GPIO_InitStructure.Pin = GPIO_PIN_4;
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
-  GPIO_InitStructure.Pin = GPIO_PIN_0 | GPIO_PIN_4;
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0 | GPIO_PIN_4, GPIO_PIN_RESET);
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = OLED_CS_PIN;
+  HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_RESET);
+  HAL_GPIO_Init(OLED_CS_PORT, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = OLED_DC_PIN;
+  HAL_GPIO_WritePin(OLED_DC_PORT, OLED_DC_PIN, GPIO_PIN_RESET);
+  HAL_GPIO_Init(OLED_DC_PORT, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = OLED_RST_PIN;
+  HAL_GPIO_WritePin(OLED_RST_PORT, OLED_RST_PIN, GPIO_PIN_RESET);
+  HAL_GPIO_Init(OLED_RST_PORT, &GPIO_InitStructure);
 
   // enable SPI 1 for OLED display
   GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStructure.Pull = GPIO_NOPULL;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStructure.Alternate = GPIO_AF5_SPI1;
-  GPIO_InitStructure.Pin = GPIO_PIN_5 | GPIO_PIN_7;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
+  GPIO_InitStructure.Alternate = OLED_SPI_AF;
+  GPIO_InitStructure.Pin = OLED_SPI_SCK_PIN;
+  HAL_GPIO_Init(OLED_SPI_SCK_PORT, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = OLED_SPI_MOSI_PIN;
+  HAL_GPIO_Init(OLED_SPI_MOSI_PORT, &GPIO_InitStructure);
 
-  spi_handle.Instance = SPI1;
+  spi_handle.Instance = OLED_SPI;
   spi_handle.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
   spi_handle.Init.Direction = SPI_DIRECTION_2LINES;
   spi_handle.Init.CLKPhase = SPI_PHASE_1EDGE;
@@ -229,6 +230,8 @@ void display_init(void) {
   display_refresh();
 }
 
+void display_reinit(void) { display_init(); }
+
 static inline uint8_t reverse_byte(uint8_t b) {
   b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
   b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
@@ -249,10 +252,10 @@ void display_refresh(void) {
                                OLED_SETHIGHCOLUMN | 0x00,
                                OLED_SETSTARTLINE | 0x00};
 
-  if (!pixeldata_dirty) {
+  if (!pixeldata_dirty_flag) {
     return;
   }
-  pixeldata_dirty = false;
+  pixeldata_dirty_flag = false;
 
   HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_RESET);  // SPI select
   spi_send(s, 3);

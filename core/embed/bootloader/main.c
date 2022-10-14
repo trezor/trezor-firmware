@@ -255,6 +255,8 @@ int main(void) {
   dma2d_init();
 #endif
 
+  display_reinit();
+
 #if defined TREZOR_MODEL_T
   set_core_clock(CLOCK_180_MHZ);
   display_set_little_endian();

@@ -1,6 +1,7 @@
 # pylint: disable=E0602
 
 import os
+import tools
 
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 
@@ -51,7 +52,6 @@ CPPPATH_MOD += [
 SOURCE_MOD += [
     'embed/extmod/modtrezorui/display.c',
     'embed/extmod/modtrezorui/colors.c',
-    f'embed/extmod/modtrezorui/display-stm32_{TREZOR_MODEL}.c',
     'embed/extmod/modtrezorui/fonts/fonts.c',
     'embed/extmod/modtrezorui/fonts/font_bitmap.c',
 ]
@@ -100,6 +100,8 @@ SOURCE_TREZORHAL = [
 ]
 
 env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')))
+
+tools.configure_board(TREZOR_MODEL, env, CPPDEFINES_MOD, SOURCE_TREZORHAL)
 
 env.Replace(
     AS='arm-none-eabi-as',

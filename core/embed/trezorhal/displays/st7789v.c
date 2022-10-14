@@ -18,7 +18,7 @@
  */
 
 #include <stdint.h>
-#include "display_defs.h"
+#include TREZOR_BOARD
 #include "display_interface.h"
 #include "memzero.h"
 #include STM32_HAL_H
@@ -598,6 +598,11 @@ void display_init(void) {
 
   display_init_seq();
 
+  display_set_little_endian();
+}
+
+void display_reinit(void) {
+  // important for model T as this is not set in boardloader
   display_set_little_endian();
 }
 

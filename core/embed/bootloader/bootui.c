@@ -119,6 +119,9 @@ void ui_screen_boot(const vendor_header *const vhdr,
     display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 5 - 25, ver_str, -1,
                         FONT_NORMAL, COLOR_BL_BG, boot_background);
   }
+
+  PIXELDATA_DIRTY();
+  display_refresh();
 }
 
 void ui_screen_boot_wait(int wait_seconds) {
@@ -127,6 +130,8 @@ void ui_screen_boot_wait(int wait_seconds) {
   display_bar(0, DISPLAY_RESY - 5 - 20, DISPLAY_RESX, 5 + 20, boot_background);
   display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 5, wait_str, -1,
                       FONT_NORMAL, COLOR_BL_BG, boot_background);
+  PIXELDATA_DIRTY();
+  display_refresh();
 }
 
 void ui_screen_boot_click(void) {
@@ -134,6 +139,8 @@ void ui_screen_boot_click(void) {
   display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 5,
                       "click to continue ...", -1, FONT_NORMAL, COLOR_BL_BG,
                       boot_background);
+  PIXELDATA_DIRTY();
+  display_refresh();
 }
 
 // welcome UI
@@ -141,6 +148,8 @@ void ui_screen_boot_click(void) {
 void ui_screen_welcome_first(void) {
   display_icon(0, 0, 240, 240, toi_icon_logo + 12, sizeof(toi_icon_logo) - 12,
                COLOR_WELCOME_FG, COLOR_WELCOME_BG);
+  PIXELDATA_DIRTY();
+  display_refresh();
 }
 
 void ui_screen_welcome_second(void) {
@@ -148,6 +157,8 @@ void ui_screen_welcome_second(void) {
   display_icon((DISPLAY_RESX - 200) / 2, (DISPLAY_RESY - 60) / 2, 200, 60,
                toi_icon_safeplace + 12, sizeof(toi_icon_safeplace) - 12,
                COLOR_WELCOME_FG, COLOR_WELCOME_BG);
+  PIXELDATA_DIRTY();
+  display_refresh();
 }
 
 void ui_screen_welcome_third(void) {
@@ -157,6 +168,8 @@ void ui_screen_welcome_third(void) {
                COLOR_WELCOME_FG, COLOR_WELCOME_BG);
   display_text_center(120, 220, "Go to trezor.io/start", -1, FONT_NORMAL,
                       COLOR_WELCOME_FG, COLOR_WELCOME_BG);
+  PIXELDATA_DIRTY();
+  display_refresh();
 }
 
 // info UI
@@ -176,6 +189,8 @@ static int display_vendor_string(const char *text, int textlen,
                  COLOR_BL_BG);
     return 145;
   }
+  PIXELDATA_DIRTY();
+  display_refresh();
 }
 
 void ui_screen_firmware_info(const vendor_header *const vhdr,
@@ -196,6 +211,8 @@ void ui_screen_firmware_info(const vendor_header *const vhdr,
   }
   display_text_center(120, 220, "Go to trezor.io/start", -1, FONT_NORMAL,
                       COLOR_BL_FG, COLOR_BL_BG);
+  PIXELDATA_DIRTY();
+  display_refresh();
 }
 
 void ui_screen_firmware_fingerprint(const image_header *const hdr) {
@@ -219,6 +236,8 @@ void ui_screen_firmware_fingerprint(const image_header *const hdr) {
   display_icon(9 + (222 - 19) / 2, 184 + (50 - 16) / 2, 20, 16,
                toi_icon_confirm + 12, sizeof(toi_icon_confirm) - 12,
                COLOR_BL_BG, COLOR_BL_DONE);
+  PIXELDATA_DIRTY();
+  display_refresh();
 }
 
 // install UI
@@ -237,6 +256,8 @@ void ui_screen_install_confirm_upgrade(const vendor_header *const vhdr,
   const char *ver_str = format_ver("to version %d.%d.%d?", hdr->version);
   display_text(55, next_y, ver_str, -1, FONT_NORMAL, COLOR_BL_FG, COLOR_BL_BG);
   ui_confirm_cancel_buttons();
+  PIXELDATA_DIRTY();
+  display_refresh();
 }
 
 void ui_screen_install_confirm_newvendor_or_downgrade_wipe(
@@ -258,6 +279,8 @@ void ui_screen_install_confirm_newvendor_or_downgrade_wipe(
   display_text_center(120, 170, "Seed will be erased!", -1, FONT_NORMAL,
                       COLOR_BL_FAIL, COLOR_BL_BG);
   ui_confirm_cancel_buttons();
+  PIXELDATA_DIRTY();
+  display_refresh();
 }
 
 void ui_screen_install_start(void) {
@@ -267,16 +290,24 @@ void ui_screen_install_start(void) {
   display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 24,
                       "Installing firmware", -1, FONT_NORMAL, COLOR_BL_FG,
                       COLOR_BL_BG);
+  PIXELDATA_DIRTY();
+  display_refresh();
 }
 
 void ui_screen_install_progress_erase(int pos, int len) {
   display_loader(250 * pos / len, false, -20, COLOR_BL_PROCESS, COLOR_BL_BG,
                  toi_icon_install, sizeof(toi_icon_install), COLOR_BL_FG);
+
+  PIXELDATA_DIRTY();
+  display_refresh();
 }
 
 void ui_screen_install_progress_upload(int pos) {
   display_loader(pos, false, -20, COLOR_BL_PROCESS, COLOR_BL_BG,
                  toi_icon_install, sizeof(toi_icon_install), COLOR_BL_FG);
+
+  PIXELDATA_DIRTY();
+  display_refresh();
 }
 
 // wipe UI
@@ -296,6 +327,8 @@ void ui_screen_wipe_confirm(void) {
   display_text_center(120, 170, "Seed will be erased!", -1, FONT_NORMAL,
                       COLOR_BL_FAIL, COLOR_BL_BG);
   ui_confirm_cancel_buttons();
+  PIXELDATA_DIRTY();
+  display_refresh();
 }
 
 void ui_screen_wipe(void) {
@@ -304,11 +337,16 @@ void ui_screen_wipe(void) {
                  sizeof(toi_icon_wipe), COLOR_BL_FG);
   display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 24, "Wiping device", -1,
                       FONT_NORMAL, COLOR_BL_FG, COLOR_BL_BG);
+  PIXELDATA_DIRTY();
+  display_refresh();
 }
 
 void ui_screen_wipe_progress(int pos, int len) {
   display_loader(1000 * pos / len, false, -20, COLOR_BL_PROCESS, COLOR_BL_BG,
                  toi_icon_wipe, sizeof(toi_icon_wipe), COLOR_BL_FG);
+
+  PIXELDATA_DIRTY();
+  display_refresh();
 }
 
 // done UI
@@ -333,6 +371,9 @@ void ui_screen_done(int restart_seconds, secbool full_redraw) {
   }
   display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 24, str, -1, FONT_NORMAL,
                       COLOR_BL_FG, COLOR_BL_BG);
+
+  PIXELDATA_DIRTY();
+  display_refresh();
 }
 
 // error UI
@@ -344,6 +385,9 @@ void ui_screen_fail(void) {
   display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 24,
                       "Failed! Please, reconnect.", -1, FONT_NORMAL,
                       COLOR_BL_FG, COLOR_BL_BG);
+
+  PIXELDATA_DIRTY();
+  display_refresh();
 }
 
 // general functions

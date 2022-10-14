@@ -1,23 +1,6 @@
 #include STM32_HAL_H
 #include "button.h"
-
-#if defined TREZOR_MODEL_1
-#define BTN_LEFT_PIN GPIO_PIN_5
-#define BTN_LEFT_PORT GPIOC
-#define BTN_LEFT_CLK_ENA __HAL_RCC_GPIOC_CLK_ENABLE
-#define BTN_RIGHT_PIN GPIO_PIN_2
-#define BTN_RIGHT_PORT GPIOC
-#define BTN_RIGHT_CLK_ENA __HAL_RCC_GPIOC_CLK_ENABLE
-#elif defined TREZOR_MODEL_R
-#define BTN_LEFT_PIN GPIO_PIN_0
-#define BTN_LEFT_PORT GPIOA
-#define BTN_LEFT_CLK_ENA __HAL_RCC_GPIOA_CLK_ENABLE
-#define BTN_RIGHT_PIN GPIO_PIN_15
-#define BTN_RIGHT_PORT GPIOE
-#define BTN_RIGHT_CLK_ENA __HAL_RCC_GPIOE_CLK_ENABLE
-#else
-#error Unknown Trezor model
-#endif
+#include TREZOR_BOARD
 
 static char last_left = 0, last_right = 0;
 

@@ -29,7 +29,7 @@
 #include <string.h>
 
 #include "common.h"
-#include "display_defs.h"
+#include "display-unix.h"
 #include "display_interface.h"
 #include "profile.h"
 
