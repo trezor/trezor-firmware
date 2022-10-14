@@ -68,7 +68,6 @@ message EthereumNetworkInfo {
     required uint32 slip44 = 2;
     required string shortcut = 3;
     required string name = 4;
-    required bool rskip60 = 5;
 }
 
 /**

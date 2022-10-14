@@ -20,7 +20,6 @@ if TYPE_CHECKING:
         int,  # slip44
         str,  # shortcut
         str,  # name
-        bool  # rskip60
     ]
     # fmt: on
 UNKNOWN_NETWORK_SHORTCUT = "UNKN"
@@ -35,7 +34,6 @@ def by_chain_id(chain_id: int) -> EthereumNetworkInfo | None:
                 slip44=n[1],
                 shortcut=n[2],
                 name=n[3],
-                rskip60=n[4],
             )
     return None
 
@@ -49,7 +47,6 @@ def by_slip44(slip44: int) -> EthereumNetworkInfo | None:
                 slip44=n[1],
                 shortcut=n[2],
                 name=n[3],
-                rskip60=n[4],
             )
     return None
 
@@ -68,6 +65,5 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
         ${n.slip44},  # slip44
         "${n.shortcut}",  # shortcut
         "${n.name}",  # name
-        ${n.rskip60},  # rskip60
     )
 % endfor

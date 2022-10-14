@@ -220,8 +220,6 @@ void _set_EthereumNetworkInfo_to_builtin(const uint64_t ref_chain_id,
   const char *sc = get_ethereum_suffix(ref_chain_id);
   strncpy(network->shortcut, sc, sizeof(network->shortcut) - 1);
   memzero(network->name, sizeof(network->name));
-  // network->rskip60 is skipped, it is resolved where it is needed (using
-  // switch with hardcoded values)
 }
 
 bool _get_EthereumNetworkInfo(

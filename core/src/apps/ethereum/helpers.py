@@ -17,7 +17,7 @@ def address_from_bytes(
     """
     from trezor.crypto.hashlib import sha3_256
 
-    if network is not None and network.rskip60:
+    if network is not None and network.shortcut in ("RBTC", "tRBTC"):
         prefix = str(network.chain_id) + "0x"
     else:
         prefix = ""

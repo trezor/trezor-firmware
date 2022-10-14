@@ -4743,7 +4743,6 @@ class EthereumNetworkInfo(protobuf.MessageType):
         2: protobuf.Field("slip44", "uint32", repeated=False, required=True),
         3: protobuf.Field("shortcut", "string", repeated=False, required=True),
         4: protobuf.Field("name", "string", repeated=False, required=True),
-        5: protobuf.Field("rskip60", "bool", repeated=False, required=True),
     }
 
     def __init__(
@@ -4753,13 +4752,11 @@ class EthereumNetworkInfo(protobuf.MessageType):
         slip44: "int",
         shortcut: "str",
         name: "str",
-        rskip60: "bool",
     ) -> None:
         self.chain_id = chain_id
         self.slip44 = slip44
         self.shortcut = shortcut
         self.name = name
-        self.rskip60 = rskip60
 
 
 class EthereumTokenInfo(protobuf.MessageType):

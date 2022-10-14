@@ -26,7 +26,6 @@ NETWORKS = {
             slip44=60,
             shortcut="ETH",
             name="Ethereum",
-            rskip60=False,
         ),
     ),
     # Rinkeby
@@ -37,7 +36,6 @@ NETWORKS = {
             slip44=1,
             shortcut="tRIN",
             name="Rinkeby",
-            rskip60=False,
         ),
     ),
     # Ubiq
@@ -48,7 +46,6 @@ NETWORKS = {
             slip44=108,
             shortcut="UBQ",
             name="Ubiq",
-            rskip60=False,
         ),
     ),
     # Ethereum Classic
@@ -59,7 +56,6 @@ NETWORKS = {
             slip44=61,
             shortcut="ETC",
             name="Ethereum Classic",
-            rskip60=False,
         ),
     ),
 }
@@ -116,13 +112,12 @@ TOKENS = {
 }
 
 
-def construct_network_info(chain_id: int = 0, slip44: int = 0, shortcut: str = "", name: str = "", rskip60: bool = False) -> messages.EthereumNetworkInfo:
+def construct_network_info(chain_id: int = 0, slip44: int = 0, shortcut: str = "", name: str = "") -> messages.EthereumNetworkInfo:
     return messages.EthereumNetworkInfo(
         chain_id=chain_id,
         slip44=slip44,
         shortcut=shortcut,
         name=name,
-        rskip60=rskip60,
     )
 
 

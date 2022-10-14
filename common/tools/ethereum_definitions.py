@@ -214,8 +214,6 @@ def _load_ethereum_networks_from_repo(repo_dir: pathlib.Path) -> List[Dict]:
         if is_testnet and not shortcut.lower().startswith("t"):
             shortcut = "t" + shortcut
 
-        rskip60 = shortcut in ("RBTC", "TRBTC")
-
         # strip out bullcrap in network naming
         if "mainnet" in name.lower():
             name = re.sub(r" mainnet.*$", "", name, flags=re.IGNORECASE)
@@ -227,7 +225,6 @@ def _load_ethereum_networks_from_repo(repo_dir: pathlib.Path) -> List[Dict]:
                 slip44=slip44,
                 shortcut=shortcut,
                 name=name,
-                rskip60=rskip60,
                 url=chain_data["infoURL"],
             )
         )
@@ -838,10 +835,6 @@ def serialize_eth_info(
     ser += msg
 
     return ser
-
-
-def sign_data(sign_key: ed25519.SigningKey, data: bytes) -> bytes:
-    return sign_key.sign(data)
 
 
 # ====== click command handlers ======

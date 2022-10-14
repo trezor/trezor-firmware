@@ -110,7 +110,6 @@ class Coin(TypedDict):
     coingecko_id: str
     chain: str
     chain_id: str
-    rskip60: bool
     url: str
 
     # Special erc20 fields
