@@ -18,7 +18,7 @@
  */
 
 #include <stdint.h>
-#include "display_defs.h"
+#include TREZOR_BOARD
 #include "display_interface.h"
 #include "memzero.h"
 #include STM32_HAL_H
@@ -355,6 +355,8 @@ void display_refresh(void) {
     }
   }
 }
+
+void display_reinit(void) {}
 
 const char *display_save(const char *prefix) { return NULL; }
 

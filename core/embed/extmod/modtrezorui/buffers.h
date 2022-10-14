@@ -23,7 +23,7 @@
 #include <stdbool.h>
 
 #include "common.h"
-#include "display_defs.h"
+#include TREZOR_BOARD
 
 #define BUFFER_PIXELS DISPLAY_RESX
 
@@ -56,4 +56,4 @@ line_buffer_16bpp_t* buffers_get_line_buffer_16bpp(uint16_t idx, bool clear);
 line_buffer_4bpp_t* buffers_get_line_buffer_4bpp(uint16_t idx, bool clear);
 buffer_text_t* buffers_get_text_buffer(uint16_t idx, bool clear);
 
-#endif  //_BUFFERS_H
+#endif  // _BUFFERS_H

@@ -22,36 +22,15 @@
 
 #include <stdint.h>
 #include "common.h"
+#include TREZOR_BOARD
 
-#if !defined TREZOR_EMULATOR
-#include STM32_HAL_H
-#endif
-
-#if (defined TREZOR_MODEL_T) && !(defined TREZOR_EMULATOR)
-
-extern __IO uint8_t *const DISPLAY_CMD_ADDRESS;
-extern __IO uint8_t *const DISPLAY_DATA_ADDRESS;
-
-#define CMD(X) (*DISPLAY_CMD_ADDRESS = (X))
-#define DATA(X) (*DISPLAY_DATA_ADDRESS = (X))
-#define PIXELDATA(X) \
-  DATA((X)&0xFF);    \
-  DATA((X) >> 8)
-
-#else
+#ifndef PIXELDATA
 #define PIXELDATA(c) display_pixeldata(c)
-#endif
-
-#ifdef TREZOR_EMULATOR
-extern uint8_t *const DISPLAY_DATA_ADDRESS;
 #endif
 
 void display_pixeldata(uint16_t c);
 
-#if (defined TREZOR_MODEL_1) && !(defined TREZOR_EMULATOR)
-void PIXELDATA_DIRTY();
-#else
-// noop
+#ifndef PIXELDATA_DIRTY
 #define PIXELDATA_DIRTY()
 #endif
 
@@ -63,13 +42,9 @@ int display_get_orientation(void);
 int display_backlight(int val);
 
 void display_init(void);
+void display_reinit(void);
 void display_refresh(void);
 const char *display_save(const char *prefix);
 void display_clear_save(void);
-
-#ifdef TREZOR_MODEL_T
-void display_set_little_endian(void);
-void display_set_big_endian(void);
-#endif
 
 #endif  //_DISPLAY_INTERFACE_H
