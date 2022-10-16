@@ -43,10 +43,11 @@ const HEADER_PADDING: Insets = Insets::new(
 
 pub struct PinKeyboard<T> {
     allow_cancel: bool,
-    major_prompt: Label<T>,
-    minor_prompt: Label<T>,
-    major_warning: Option<Label<T>>,
+    major_prompt: Child<Label<T>>,
+    minor_prompt: Child<Label<T>>,
+    major_warning: Option<Child<Label<T>>>,
     textbox: Child<PinDots>,
+    textbox_pad: Pad,
     erase_btn: Child<Maybe<Button<&'static str>>>,
     cancel_btn: Child<Maybe<Button<&'static str>>>,
     confirm_btn: Child<Button<&'static str>>,
@@ -81,11 +82,14 @@ where
 
         Self {
             allow_cancel,
-            major_prompt: Label::left_aligned(major_prompt, theme::label_keyboard()),
-            minor_prompt: Label::right_aligned(minor_prompt, theme::label_keyboard_minor()),
-            major_warning: major_warning
-                .map(|text| Label::left_aligned(text, theme::label_keyboard_warning())),
+            major_prompt: Label::left_aligned(major_prompt, theme::label_keyboard()).into_child(),
+            minor_prompt: Label::right_aligned(minor_prompt, theme::label_keyboard_minor())
+                .into_child(),
+            major_warning: major_warning.map(|text| {
+                Label::left_aligned(text, theme::label_keyboard_warning()).into_child()
+            }),
             textbox: PinDots::new(theme::label_default()).into_child(),
+            textbox_pad: Pad::with_background(theme::label_default().background_color),
             erase_btn,
             cancel_btn,
             confirm_btn: Button::with_icon(theme::ICON_CONFIRM)
@@ -110,6 +114,16 @@ where
     fn pin_modified(&mut self, ctx: &mut EventCtx) {
         let is_full = self.textbox.inner().is_full();
         let is_empty = self.textbox.inner().is_empty();
+
+        self.textbox_pad.clear();
+        self.textbox.request_complete_repaint(ctx);
+
+        if is_empty {
+            self.major_prompt.request_complete_repaint(ctx);
+            self.minor_prompt.request_complete_repaint(ctx);
+            self.major_warning.request_complete_repaint(ctx);
+        }
+
         let cancel_enabled = is_empty && self.allow_cancel;
         for btn in &mut self.digit_btns {
             btn.mutate(ctx, |ctx, btn| btn.enable_if(ctx, !is_full));
@@ -156,6 +170,7 @@ where
         let grid = Grid::new(keypad, 4, 3).with_spacing(theme::KEYBOARD_SPACING);
 
         // Prompts and PIN dots display.
+        self.textbox_pad.place(header);
         self.textbox.place(header);
         self.major_prompt.place(major_area);
         self.minor_prompt.place(minor_area);
@@ -230,8 +245,8 @@ where
 
     fn paint(&mut self) {
         self.erase_btn.paint();
+        self.textbox_pad.paint();
         if self.textbox.inner().is_empty() {
-            self.textbox.inner().clear_background();
             if let Some(ref mut w) = self.major_warning {
                 w.paint();
             } else {
@@ -263,6 +278,7 @@ where
 
 struct PinDots {
     area: Rect,
+    pad: Pad,
     style: LabelStyle,
     digits: String<MAX_LENGTH>,
     display_digits: bool,
@@ -276,15 +292,11 @@ impl PinDots {
     fn new(style: LabelStyle) -> Self {
         Self {
             area: Rect::zero(),
+            pad: Pad::with_background(style.background_color),
             style,
             digits: String::new(),
             display_digits: false,
         }
-    }
-
-    /// Clear the area with the background color.
-    fn clear_background(&self) {
-        display::rect_fill(self.area, self.style.background_color);
     }
 
     fn size(&self) -> Offset {
@@ -401,6 +413,7 @@ impl Component for PinDots {
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
+        self.pad.place(bounds);
         self.area = bounds;
         self.area
     }
@@ -410,12 +423,14 @@ impl Component for PinDots {
             Event::Touch(TouchEvent::TouchStart(pos)) => {
                 if self.area.contains(pos) {
                     self.display_digits = true;
+                    self.pad.clear();
                     ctx.request_paint();
                 };
                 None
             }
             Event::Touch(TouchEvent::TouchEnd(_)) => {
                 if mem::replace(&mut self.display_digits, false) {
+                    self.pad.clear();
                     ctx.request_paint();
                 };
                 None
@@ -425,9 +440,8 @@ impl Component for PinDots {
     }
 
     fn paint(&mut self) {
-        self.clear_background();
         let dot_area = self.area.inset(HEADER_PADDING);
-
+        self.pad.paint();
         if self.display_digits {
             self.paint_digits(dot_area)
         } else {
