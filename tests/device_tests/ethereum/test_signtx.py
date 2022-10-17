@@ -330,27 +330,34 @@ def test_sanity_checks_eip1559(client: Client):
 
 
 def input_flow_skip(client: Client, cancel: bool = False):
-    pytest.skip("Skip not supported")
-
-    yield  # confirm sending
+    yield  # confirm address
     client.debug.press_yes()
-
+    yield  # confirm amount
+    client.debug.wait_layout()
+    client.debug.press_yes()
     yield  # confirm data
     if cancel:
         client.debug.press_no()
     else:
         client.debug.press_yes()
-        yield
+        yield  # gas price
+        client.debug.press_yes()
+        yield  # maximum fee
+        client.debug.press_yes()
+        yield  # hold to confirm
         client.debug.press_yes()
 
 
 def input_flow_scroll_down(client: Client, cancel: bool = False):
-    yield  # confirm sending
+    yield  # confirm address
     client.debug.wait_layout()
     client.debug.press_yes()
-    yield
+    yield  # confirm amount
     client.debug.wait_layout()
     client.debug.press_yes()
+    yield  # confirm data
+    client.debug.wait_layout()
+    client.debug.click(SHOW_ALL)
 
     br = yield  # paginated data
     for i in range(br.pages):
@@ -359,10 +366,12 @@ def input_flow_scroll_down(client: Client, cancel: bool = False):
             client.debug.swipe_up()
 
     client.debug.press_yes()
-    yield  # confirm fee
+    yield  # confirm data
     if cancel:
         client.debug.press_no()
     else:
+        client.debug.press_yes()
+        yield  # gas price
         client.debug.press_yes()
         yield  # maximum fee
         client.debug.press_yes()
@@ -371,12 +380,12 @@ def input_flow_scroll_down(client: Client, cancel: bool = False):
 
 
 def input_flow_go_back(client: Client, cancel: bool = False):
-    pytest.skip("Go back not supported")
-
-    br = yield  # confirm sending
+    br = yield  # confirm address
     client.debug.wait_layout()
     client.debug.press_yes()
-
+    br = yield  # confirm amount
+    client.debug.wait_layout()
+    client.debug.press_yes()
     br = yield  # confirm data
     client.debug.wait_layout()
     client.debug.click(SHOW_ALL)
@@ -391,6 +400,12 @@ def input_flow_go_back(client: Client, cancel: bool = False):
             if cancel:
                 client.debug.press_no()
             else:
+                client.debug.press_yes()
+                yield  # confirm address
+                client.debug.wait_layout()
+                client.debug.press_yes()
+                yield  # confirm amount
+                client.debug.wait_layout()
                 client.debug.press_yes()
                 yield  # hold to confirm
                 client.debug.wait_layout()

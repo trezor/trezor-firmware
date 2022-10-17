@@ -527,7 +527,8 @@ async def confirm_payment_request(
         _RustLayout(
             trezorui2.confirm_with_info(
                 title="SENDING",
-                items=[f"{amount} to\n{recipient_name}"] + memos,
+                items=[(ui.NORMAL, f"{amount} to\n{recipient_name}")]
+                + [(ui.NORMAL, memo) for memo in memos],
                 button="CONFIRM",
                 info_button="DETAILS",
             )
@@ -560,16 +561,12 @@ async def should_show_more(
     if confirm is None or not isinstance(confirm, str):
         confirm = "CONFIRM"
 
-    items = []
-    for _font, text in para:
-        items.append(text)
-
     result = await interact(
         ctx,
         _RustLayout(
             trezorui2.confirm_with_info(
                 title=title.upper(),
-                items=items,
+                items=para,
                 button=confirm.upper(),
                 info_button=button_text.upper(),
             )
@@ -587,6 +584,47 @@ async def should_show_more(
         raise ActionCancelled
 
 
+async def _confirm_ask_pagination(
+    ctx: GenericContext,
+    br_type: str,
+    title: str,
+    data: bytes | str,
+    description: str,
+    br_code: ButtonRequestType,
+) -> None:
+    paginated: ui.Layout | None = None
+    # TODO: make should_show_more/confirm_more accept bytes directly
+    if isinstance(data, bytes):
+        from ubinascii import hexlify
+
+        data = hexlify(data).decode()
+    while True:
+        if not await should_show_more(
+            ctx,
+            title,
+            para=[(ui.NORMAL, description), (ui.MONO, data)],
+            br_type=br_type,
+            br_code=br_code,
+        ):
+            return
+
+        if paginated is None:
+            paginated = _RustLayout(
+                trezorui2.confirm_more(
+                    title=title,
+                    button="CLOSE",
+                    items=[(ui.MONO, data)],
+                )
+            )
+        else:
+            paginated.request_complete_repaint()
+
+        result = await interact(ctx, paginated, br_type, br_code)
+        assert result in (trezorui2.CONFIRMED, trezorui2.CANCELLED)
+
+    assert False
+
+
 async def confirm_blob(
     ctx: GenericContext,
     br_type: str,
@@ -597,23 +635,31 @@ async def confirm_blob(
     br_code: ButtonRequestType = BR_TYPE_OTHER,
     ask_pagination: bool = False,
 ) -> None:
-    await raise_if_not_confirmed(
-        interact(
-            ctx,
-            _RustLayout(
-                trezorui2.confirm_blob(
-                    title=title.upper(),
-                    description=description or "",
-                    data=data,
-                    extra=None,
-                    ask_pagination=ask_pagination,
-                    hold=hold,
-                )
-            ),
-            br_type,
-            br_code,
+    title = title.upper()
+    description = description or ""
+    layout = _RustLayout(
+        trezorui2.confirm_blob(
+            title=title,
+            description=description,
+            data=data,
+            extra=None,
+            hold=hold,
         )
     )
+
+    if ask_pagination and layout.page_count() > 1:
+        assert not hold
+        await _confirm_ask_pagination(ctx, br_type, title, data, description, br_code)
+
+    else:
+        await raise_if_not_confirmed(
+            interact(
+                ctx,
+                layout,
+                br_type,
+                br_code,
+            )
+        )
 
 
 async def confirm_address(

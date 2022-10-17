@@ -5,6 +5,7 @@ use crate::ui::{
     },
     display::{self, Color},
     geometry::{Insets, Rect},
+    model_tt::component::{Button, ButtonMsg},
 };
 
 use super::{
@@ -19,6 +20,7 @@ pub struct SwipePage<T, U> {
     swipe: Swipe,
     scrollbar: ScrollBar,
     hint: Label<&'static str>,
+    button_back: Option<Button<&'static str>>,
     fade: Option<i32>,
 }
 
@@ -36,8 +38,14 @@ where
             swipe: Swipe::new(),
             pad: Pad::with_background(background),
             hint: Label::centered("SWIPE TO CONTINUE", theme::label_page_hint()),
+            button_back: None,
             fade: None,
         }
+    }
+
+    pub fn with_back_button(mut self) -> Self {
+        self.button_back = Some(Button::with_icon(theme::ICON_BACK));
+        self
     }
 
     fn setup_swipe(&mut self) {
@@ -66,7 +74,14 @@ where
         let mut layout = PageLayout::new(bounds);
         self.pad.place(bounds);
         self.swipe.place(bounds);
-        self.hint.place(layout.hint);
+
+        if self.button_back.is_some() {
+            self.button_back.place(layout.hint_button);
+            self.hint.place(layout.hint_button_hint);
+        } else {
+            self.hint.place(layout.hint);
+        }
+
         let buttons_area = self.buttons.place(layout.buttons);
         layout.set_buttons_height(buttons_area.height());
         self.scrollbar.place(layout.scrollbar);
@@ -136,6 +151,9 @@ where
                 return Some(PageMsg::Controls(msg));
             }
         } else {
+            if let Some(ButtonMsg::Clicked) = self.button_back.event(ctx, event) {
+                return Some(PageMsg::GoBack);
+            }
             self.hint.event(ctx, event);
         }
         None
@@ -148,6 +166,7 @@ where
             self.scrollbar.paint();
         }
         if self.scrollbar.has_next_page() {
+            self.button_back.paint();
             self.hint.paint();
         } else {
             self.buttons.paint();
@@ -165,6 +184,7 @@ where
         if !self.scrollbar.has_next_page() {
             self.buttons.bounds(sink);
         } else {
+            self.button_back.bounds(sink);
             self.hint.bounds(sink);
         }
     }
@@ -187,11 +207,20 @@ where
 }
 
 pub struct PageLayout {
+    /// Content when it fits on single page (no scrollbar).
     pub content_single_page: Rect,
+    /// Content when multiple pages.
     pub content: Rect,
+    /// Scroll bar when multiple pages.
     pub scrollbar: Rect,
+    /// Controls displayed on last page.
     pub buttons: Rect,
+    /// Swipe to continue (unless back button enabled).
     pub hint: Rect,
+    /// Optional back button on every page.
+    pub hint_button: Rect,
+    /// Hint area when back button is enabled.
+    pub hint_button_hint: Rect,
 }
 
 impl PageLayout {
@@ -208,12 +237,20 @@ impl PageLayout {
             content.split_right(Self::SCROLLBAR_SPACE + Self::SCROLLBAR_WIDTH);
         let (_space, scrollbar) = scrollbar.split_left(Self::SCROLLBAR_SPACE);
 
+        let (_, one_row_buttons) = area.split_bottom(theme::button_rows(1));
+        let (hint_button, hint_button_hint) = one_row_buttons.split_left(one_row_buttons.height());
+        let vertical_inset = (hint_button_hint.height() - Self::HINT_OFF) / 2;
+        let hint_button_hint =
+            hint_button_hint.inset(Insets::new(vertical_inset, 0, vertical_inset, 0));
+
         Self {
             content_single_page,
             content,
             scrollbar,
             buttons,
             hint,
+            hint_button,
+            hint_button_hint,
         }
     }
 
