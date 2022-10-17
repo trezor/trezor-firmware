@@ -44,14 +44,18 @@ def get_definitions(
         token_chain_id = parameters["definitions"].get("token_chain_id", token_chain_id)
         token_address = parameters["definitions"].get("to_address", token_address)
 
-    encoded_network = ethereum.network_definition_from_dir(
-        path=COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
-        chain_id=chain_id,
+    encoded_network = ethereum.get_definition_from_path(
+        ethereum.get_network_definition_path(
+            COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
+            chain_id,
+        )
     )
-    encoded_token = ethereum.token_definition_from_dir(
-        path=COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
-        chain_id=token_chain_id,
-        token_address=token_address,
+    encoded_token = ethereum.get_definition_from_path(
+        ethereum.get_token_definition_path(
+            COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
+            token_chain_id,
+            token_address,
+        )
     )
 
     return messages.EthereumDefinitions(

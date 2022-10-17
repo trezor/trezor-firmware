@@ -39,9 +39,11 @@ def test_ethereum_sign_typed_data(client: Client, parameters, result):
                 "slip44", encoded_network_slip44
             )
 
-        encoded_network = ethereum.network_definition_from_dir(
-            path=COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
-            slip44=encoded_network_slip44,
+        encoded_network = ethereum.get_definition_from_path(
+            ethereum.get_network_definition_path(
+                path=COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
+                slip44=encoded_network_slip44,
+            )
         )
         ret = ethereum.sign_typed_data(
             client,
@@ -84,9 +86,11 @@ def test_ethereum_sign_typed_data_blind(client: Client, parameters, result):
                 "slip44", encoded_network_slip44
             )
 
-        encoded_network = ethereum.network_definition_from_dir(
-            path=COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
-            slip44=encoded_network_slip44,
+        encoded_network = ethereum.get_definition_from_path(
+            ethereum.get_network_definition_path(
+                path=COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
+                slip44=encoded_network_slip44,
+            )
         )
         ret = ethereum.sign_typed_data_hash(
             client,

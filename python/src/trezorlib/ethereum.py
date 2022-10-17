@@ -30,11 +30,11 @@ if TYPE_CHECKING:
 
 
 # TODO: change once we know the urls
-DEFS_BASE_URL = "https://data.trezor.io/eth_definitions/{lookup_type}/{id}/{name}.dat"
+DEFS_BASE_URL = "https://data.trezor.io/eth_definitions/{lookup_type}/{id}/{name}"
 DEFS_NETWORK_BY_CHAINID_LOOKUP_TYPE = "by_chain_id"
 DEFS_NETWORK_BY_SLIP44_LOOKUP_TYPE = "by_slip44"
-DEFS_NETWORK_URI_NAME = "network"
-DEFS_TOKEN_URI_NAME = "token_{hex_address}"
+DEFS_NETWORK_URI_NAME = "network.dat"
+DEFS_TOKEN_URI_NAME = "token_{hex_address}.dat"
 
 
 def int_to_big_endian(value: int) -> bytes:
@@ -152,110 +152,92 @@ def encode_data(value: Any, type_name: str) -> bytes:
     raise ValueError(f"Unsupported data type for direct field encoding: {type_name}")
 
 
-def download_from_url(url: str, error_msg: str = "") -> bytes:
+def download_from_url(url: str) -> bytes:
     try:
         r = requests.get(url)
         r.raise_for_status()
         return r.content
     except requests.exceptions.HTTPError as err:
-        raise RuntimeError(f"{error_msg}{err}")
+        raise RuntimeError(err.response)
 
 
-def download_network_definition(
+def get_network_definition_url(
     chain_id: Optional[int] = None, slip44: Optional[int] = None
-) -> Optional[bytes]:
+) -> str:
     if not ((chain_id is None) != (slip44 is None)):  # not XOR
         raise ValueError(
-            "Exactly one of chain_id or slip44 parameters are needed to load network definition from directory."
+            "Exactly one of chain_id or slip44 parameters are needed to construct network definition url."
         )
 
     if chain_id is not None:
-        url = DEFS_BASE_URL.format(
+        return DEFS_BASE_URL.format(
             lookup_type=DEFS_NETWORK_BY_CHAINID_LOOKUP_TYPE,
             id=chain_id,
             name=DEFS_NETWORK_URI_NAME,
         )
     else:
-        url = DEFS_BASE_URL.format(
+        return DEFS_BASE_URL.format(
             lookup_type=DEFS_NETWORK_BY_SLIP44_LOOKUP_TYPE,
             id=slip44,
             name=DEFS_NETWORK_URI_NAME,
         )
 
-    error_msg = f'While downloading network definition from "{url}" following HTTP error occured: '
-    return download_from_url(url, error_msg)
 
-
-def download_token_definition(
+def get_token_definition_url(
     chain_id: int = None, token_address: str = None
-) -> Optional[bytes]:
+) -> str:
     if chain_id is None or token_address is None:
-        raise RuntimeError(
-            "Both chain_id and token_address parameters are needed to download token definition."
+        raise ValueError(
+            "Both chain_id and token_address parameters are needed to construct token definition url."
         )
 
-    url = DEFS_BASE_URL.format(
+    addr = token_address.lower()
+    if addr.startswith("0x"):
+        addr = addr[2:]
+
+    return DEFS_BASE_URL.format(
         lookup_type=DEFS_NETWORK_BY_CHAINID_LOOKUP_TYPE,
         id=chain_id,
-        name=DEFS_TOKEN_URI_NAME.format(hex_address=token_address),
+        name=DEFS_TOKEN_URI_NAME.format(hex_address=addr),
     )
 
-    error_msg = f'While downloading token definition from "{url}" following HTTP error occured: '
-    return download_from_url(url, error_msg)
 
-
-def network_definition_from_dir(
-    path: pathlib.Path,
+def get_network_definition_path(
+    base_path: pathlib.Path,
     chain_id: Optional[int] = None,
     slip44: Optional[int] = None,
-) -> Optional[bytes]:
+) -> pathlib.Path:
     if not ((chain_id is None) != (slip44 is None)):  # not XOR
-        raise RuntimeError(
-            "Exactly one of chain_id or slip44 parameters are needed to load network definition from directory."
+        raise ValueError(
+            "Exactly one of chain_id or slip44 parameters are needed to construct network definition path."
         )
-
-    def read_definition(path: pathlib.Path) -> Optional[bytes]:
-        if not path.exists() or not path.is_file():
-            return None
-
-        with open(path, mode="rb") as f:
-            return f.read()
 
     if chain_id is not None:
-        return read_definition(
-            path
-            / DEFS_NETWORK_BY_CHAINID_LOOKUP_TYPE
-            / str(chain_id)
-            / (DEFS_NETWORK_URI_NAME + ".dat")
-        )
+        return base_path / DEFS_NETWORK_BY_CHAINID_LOOKUP_TYPE / str(chain_id) / DEFS_NETWORK_URI_NAME
     else:
-        return read_definition(
-            path
-            / DEFS_NETWORK_BY_SLIP44_LOOKUP_TYPE
-            / str(slip44)
-            / (DEFS_NETWORK_URI_NAME + ".dat")
-        )
+        return base_path / DEFS_NETWORK_BY_SLIP44_LOOKUP_TYPE / str(slip44) / DEFS_NETWORK_URI_NAME
 
 
-def token_definition_from_dir(
-    path: pathlib.Path,
+def get_token_definition_path(
+    base_path: pathlib.Path,
     chain_id: int = None,
     token_address: str = None,
-) -> Optional[bytes]:
+) -> pathlib.Path:
     if chain_id is None or token_address is None:
-        raise RuntimeError(
-            "Both chain_id and token_address parameters are needed to load token definition from directory."
+        raise ValueError(
+            "Both chain_id and token_address parameters are needed to construct token definition path."
         )
 
-    if token_address.startswith("0x"):
-        token_address = token_address[2:]
+    addr = token_address.lower()
+    if addr.startswith("0x"):
+        addr = addr[2:]
 
-    path = (
-        path
-        / DEFS_NETWORK_BY_CHAINID_LOOKUP_TYPE
-        / str(chain_id)
-        / (DEFS_TOKEN_URI_NAME.format(hex_address=token_address.lower()) + ".dat")
-    )
+    return base_path / DEFS_NETWORK_BY_CHAINID_LOOKUP_TYPE / str(chain_id) / DEFS_TOKEN_URI_NAME.format(hex_address=addr)
+
+
+def get_definition_from_path(
+    path: pathlib.Path,
+) -> Optional[bytes]:
     if not path.exists() or not path.is_file():
         return None
 

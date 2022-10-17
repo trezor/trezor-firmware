@@ -35,9 +35,11 @@ def test_getaddress(client: Client, parameters, result):
             "slip44", encoded_network_slip44
         )
 
-    encoded_network = ethereum.network_definition_from_dir(
-        path=COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
-        slip44=encoded_network_slip44,
+    encoded_network = ethereum.get_definition_from_path(
+        ethereum.get_network_definition_path(
+            path=COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
+            slip44=encoded_network_slip44,
+        )
     )
     assert (
         ethereum.get_address(client, address_n, encoded_network=encoded_network)

@@ -35,9 +35,11 @@ def test_signmessage(client: Client, parameters, result):
             "slip44", encoded_network_slip44
         )
 
-    encoded_network = ethereum.network_definition_from_dir(
-        path=COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
-        slip44=encoded_network_slip44,
+    encoded_network = ethereum.get_definition_from_path(
+        ethereum.get_network_definition_path(
+            path=COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
+            slip44=encoded_network_slip44,
+        )
     )
     res = ethereum.sign_message(client, address_n, parameters["msg"], encoded_network)
     assert res.address == result["address"]

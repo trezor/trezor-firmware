@@ -198,12 +198,12 @@ def _get_ethereum_definitions(
     defs = ethereum.messages.EthereumDefinitions()
     if definitions_dir is not None:
         if chain_id is not None or slip44 is not None:
-            defs.encoded_network = ethereum.network_definition_from_dir(
-                definitions_dir, chain_id, slip44
+            defs.encoded_network = ethereum.get_definition_from_path(
+                ethereum.get_network_definition_path(definitions_dir, chain_id, slip44)
             )
         if chain_id is not None and token_address is not None:
-            defs.encoded_token = ethereum.token_definition_from_dir(
-                definitions_dir, chain_id, token_address
+            defs.encoded_token = ethereum.get_definition_from_path(
+                ethereum.get_token_definition_path(definitions_dir, chain_id, token_address)
             )
     elif network_def_file is not None or token_def_file is not None:
         if network_def_file is not None:
@@ -214,12 +214,12 @@ def _get_ethereum_definitions(
                 defs.encoded_token = token_def_file.read()
     elif download_definitions:
         if chain_id is not None or slip44 is not None:
-            defs.encoded_network = ethereum.download_network_definition(
-                chain_id, slip44
+            defs.encoded_network = ethereum.download_from_url(
+                ethereum.get_network_definition_url(chain_id, slip44)
             )
         if chain_id is not None and token_address is not None:
-            defs.encoded_token = ethereum.download_token_definition(
-                chain_id, token_address
+            defs.encoded_network = ethereum.download_from_url(
+                ethereum.get_token_definition_url(chain_id, token_address)
             )
 
     return defs
