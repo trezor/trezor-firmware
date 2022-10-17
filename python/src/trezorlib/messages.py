@@ -1260,6 +1260,7 @@ class TxInput(protobuf.MessageType):
         17: protobuf.Field("orig_index", "uint32", repeated=False, required=False),
         18: protobuf.Field("decred_staking_spend", "DecredStakingSpendType", repeated=False, required=False),
         19: protobuf.Field("script_pubkey", "bytes", repeated=False, required=False),
+        20: protobuf.Field("coinjoin_flags", "uint32", repeated=False, required=False),
     }
 
     def __init__(
@@ -1281,6 +1282,7 @@ class TxInput(protobuf.MessageType):
         orig_index: Optional["int"] = None,
         decred_staking_spend: Optional["DecredStakingSpendType"] = None,
         script_pubkey: Optional["bytes"] = None,
+        coinjoin_flags: Optional["int"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.prev_hash = prev_hash
@@ -1298,6 +1300,7 @@ class TxInput(protobuf.MessageType):
         self.orig_index = orig_index
         self.decred_staking_spend = decred_staking_spend
         self.script_pubkey = script_pubkey
+        self.coinjoin_flags = coinjoin_flags
 
 
 class TxOutput(protobuf.MessageType):
@@ -1640,9 +1643,7 @@ class CoinJoinRequest(protobuf.MessageType):
         2: protobuf.Field("plebs_dont_pay_threshold", "uint64", repeated=False, required=True),
         3: protobuf.Field("min_registrable_amount", "uint64", repeated=False, required=True),
         4: protobuf.Field("mask_public_key", "bytes", repeated=False, required=True),
-        5: protobuf.Field("signable_inputs", "bytes", repeated=False, required=True),
-        6: protobuf.Field("remixed_inputs", "bytes", repeated=False, required=True),
-        7: protobuf.Field("signature", "bytes", repeated=False, required=True),
+        5: protobuf.Field("signature", "bytes", repeated=False, required=True),
     }
 
     def __init__(
@@ -1652,16 +1653,12 @@ class CoinJoinRequest(protobuf.MessageType):
         plebs_dont_pay_threshold: "int",
         min_registrable_amount: "int",
         mask_public_key: "bytes",
-        signable_inputs: "bytes",
-        remixed_inputs: "bytes",
         signature: "bytes",
     ) -> None:
         self.fee_rate = fee_rate
         self.plebs_dont_pay_threshold = plebs_dont_pay_threshold
         self.min_registrable_amount = min_registrable_amount
         self.mask_public_key = mask_public_key
-        self.signable_inputs = signable_inputs
-        self.remixed_inputs = remixed_inputs
         self.signature = signature
 
 

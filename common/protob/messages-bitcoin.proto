@@ -208,9 +208,7 @@ message SignTx {
         required uint64 plebs_dont_pay_threshold = 2;  // input amount above which the fee rate applies
         required uint64 min_registrable_amount = 3;    // minimum registrable output amount
         required bytes mask_public_key = 4;            // ephemeral secp256k1 public key used for masking signable_inputs, 33 bytes in compressed form
-        required bytes signable_inputs = 5;            // masked bit field indicating which transaction inputs can be signed.
-        required bytes remixed_inputs = 6;             // bit field indicating which transaction inputs are remixes
-        required bytes signature = 7;                  // the trusted party's signature of the request digest
+        required bytes signature = 5;                  // the trusted party's signature of the request digest
     }
 }
 
@@ -373,6 +371,7 @@ message TxInput {
     optional uint32 orig_index = 17;                                    // index of the input in the original transaction (used when creating a replacement transaction)
     optional DecredStakingSpendType decred_staking_spend = 18; 	        // if not None this holds the type of stake spend: revocation or stake generation
     optional bytes script_pubkey = 19;                                  // scriptPubKey of the previous output spent by this input, only set of EXTERNAL inputs
+    optional uint32 coinjoin_flags = 20;                                // bit field of CoinJoin-specific flags
 }
 
 /** Data type for transaction output to be signed.

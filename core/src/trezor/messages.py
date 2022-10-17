@@ -653,6 +653,7 @@ if TYPE_CHECKING:
         orig_index: "int | None"
         decred_staking_spend: "DecredStakingSpendType | None"
         script_pubkey: "bytes | None"
+        coinjoin_flags: "int | None"
 
         def __init__(
             self,
@@ -673,6 +674,7 @@ if TYPE_CHECKING:
             orig_index: "int | None" = None,
             decred_staking_spend: "DecredStakingSpendType | None" = None,
             script_pubkey: "bytes | None" = None,
+            coinjoin_flags: "int | None" = None,
         ) -> None:
             pass
 
@@ -977,8 +979,6 @@ if TYPE_CHECKING:
         plebs_dont_pay_threshold: "int"
         min_registrable_amount: "int"
         mask_public_key: "bytes"
-        signable_inputs: "bytes"
-        remixed_inputs: "bytes"
         signature: "bytes"
 
         def __init__(
@@ -988,8 +988,6 @@ if TYPE_CHECKING:
             plebs_dont_pay_threshold: "int",
             min_registrable_amount: "int",
             mask_public_key: "bytes",
-            signable_inputs: "bytes",
-            remixed_inputs: "bytes",
             signature: "bytes",
         ) -> None:
             pass
