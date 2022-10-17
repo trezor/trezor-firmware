@@ -79,7 +79,6 @@ def confirm_blob(
     description: str | None,
     extra: str | None,
     verb_cancel: str | None = None,
-    ask_pagination: bool = False,
     hold: bool = False,
 ) -> object:
     """Confirm byte sequence data."""
@@ -235,9 +234,21 @@ def confirm_with_info(
     title: str,
     button: str,
     info_button: str,
-    items: Iterable[str],
+    items: Iterable[Tuple[int, str]],
 ) -> object:
-    """Confirm action but with third button."""
+    """Confirm given items but with third button. Always single page
+    without scrolling."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def confirm_more(
+    *,
+    title: str,
+    button: str,
+    items: Iterable[Tuple[int, str]],
+) -> object:
+    """Confirm long content with the possibility to go back from any page.
+    Meant to be used with confirm_with_info."""
 
 
 # rust/src/ui/model_tt/layout.rs

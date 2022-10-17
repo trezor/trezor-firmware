@@ -11,6 +11,10 @@ pub enum PageMsg<T, U> {
     /// Messages from page controls outside the paged component, like
     /// "OK" and "Cancel" buttons.
     Controls(U),
+
+    /// Page component was instantiated with BACK button on every page and it
+    /// was pressed.
+    GoBack,
 }
 
 pub trait Paginate {

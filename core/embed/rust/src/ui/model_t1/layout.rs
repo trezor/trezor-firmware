@@ -31,6 +31,7 @@ where
             PageMsg::Content(_) => Err(Error::TypeError),
             PageMsg::Controls(true) => Ok(CONFIRMED.as_obj()),
             PageMsg::Controls(false) => Ok(CANCELLED.as_obj()),
+            PageMsg::GoBack => unreachable!(),
         }
     }
 }
