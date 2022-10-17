@@ -347,6 +347,9 @@ class CoinJoinApprover(Approver):
     # Largest possible weight of an output supported by Trezor (P2TR or P2WSH).
     MAX_OUTPUT_WEIGHT = 4 * (8 + 1 + 1 + 1 + 32)
 
+    _COINJOIN_FLAGS_REMIX = const(0x01)
+    _COINJOIN_FLAGS_SIGNABLE = const(0x02)
+
     if __debug__:
         # secp256k1 public key of m/0h for "all all ... all" seed.
         COINJOIN_REQUEST_PUBLIC_KEY = b"\x03\x0f\xdf^(\x9bZ\xefSb\x90\x95:\xe8\x1c\xe6\x0e\x84\x1f\xf9V\xf3f\xac\x12?\xa6\x9d\xb3\xc7\x9f!\xb0"
@@ -370,17 +373,20 @@ class CoinJoinApprover(Approver):
         if authorization.params.coin_name != tx.coin_name:
             raise wire.DataError("Coin name does not match authorization.")
 
+        # SHA-256 hash of all input coinjoin_flags.
+        self.h_coinjoin_flags = HashWriter(sha256())
+
         # Upper bound on the user's contribution to the weight of the transaction.
         self.our_weight = tx_weight.TxWeightCalculator()
-
-    # Returns the value of the bit in a bitfield, which corresponds to the current input.
-    def _get_bit(self, bitfield: bytes) -> int:
-        return (bitfield[self.index // 8] >> (self.index % 8)) & 1
 
     async def add_internal_input(self, txi: TxInput, node: bip32.HDNode) -> None:
         self.our_weight.add_input(txi)
         if not self.authorization.check_sign_tx_input(txi, self.coin):
             raise wire.ProcessError("Unauthorized path")
+
+        if txi.coinjoin_flags is None:
+            raise wire.DataError("Missing CoinJoin flags.")
+        self.h_coinjoin_flags.append(txi.coinjoin_flags & 0xFF)
 
         # Compute the masking bit for the current input in the signable_inputs bitfield.
         internal_private_key = node.private_key()
@@ -395,12 +401,12 @@ class CoinJoinApprover(Approver):
         mask = h_mask.get_digest()[0] & 1
 
         # Ensure that the input can be signed.
-        if (self._get_bit(self.request.signable_inputs)) ^ mask == 0:
+        if bool(txi.coinjoin_flags & self._COINJOIN_FLAGS_SIGNABLE) ^ mask == 0:
             raise wire.ProcessError("Unauthorized input")
 
         # Add to coordination_fee_base, except for remixes and small inputs which are
         # not charged a coordination fee.
-        is_remix = self._get_bit(self.request.remixed_inputs)
+        is_remix = bool(txi.coinjoin_flags & self._COINJOIN_FLAGS_REMIX)
         if txi.amount > self.request.plebs_dont_pay_threshold and not is_remix:
             self.coordination_fee_base += txi.amount
 
@@ -450,8 +456,7 @@ class CoinJoinApprover(Approver):
         writers.write_uint64(h_request, self.request.plebs_dont_pay_threshold)
         writers.write_uint64(h_request, self.request.min_registrable_amount)
         writers.write_bytes_fixed(h_request, self.request.mask_public_key, 33)
-        writers.write_bytes_prefixed(h_request, self.request.signable_inputs)
-        writers.write_bytes_prefixed(h_request, self.request.remixed_inputs)
+        writers.write_bytes_fixed(h_request, self.h_coinjoin_flags.get_digest(), 32)
         writers.write_bytes_fixed(
             h_request, tx_info.sig_hasher.h_prevouts.get_digest(), 32
         )
