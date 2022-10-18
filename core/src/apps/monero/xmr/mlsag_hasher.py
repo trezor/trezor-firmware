@@ -5,7 +5,7 @@ from apps.monero.xmr.keccak_hasher import KeccakXmrArchive
 
 if TYPE_CHECKING:
     from trezor.utils import HashContext
-    from .serialize_messages.tx_rsig_bulletproof import Bulletproof, BulletproofPlus
+    from .serialize_messages.tx_rsig_bulletproof import BulletproofPlus
 
 
 class PreMlsagHasher:
@@ -57,7 +57,7 @@ class PreMlsagHasher:
         self.rtcsig_hasher = None  # type: ignore
 
     def rsig_val(
-        self, p: bytes | list[bytes] | Bulletproof | BulletproofPlus, raw: bool = False
+        self, p: bytes | list[bytes] | BulletproofPlus, raw: bool = False
     ) -> None:
         if self.state == 8:
             raise ValueError("State error")
@@ -75,17 +75,8 @@ class PreMlsagHasher:
                 self.rsig_hasher.update(p)
             return
 
-        from .serialize_messages.tx_rsig_bulletproof import Bulletproof, BulletproofPlus
-
-        is_plus = isinstance(p, BulletproofPlus)
-        assert isinstance(p, Bulletproof) or is_plus
-
         # Hash Bulletproof
-        fields = (
-            (p.A, p.A1, p.B, p.r1, p.s1, p.d1)
-            if is_plus
-            else (p.A, p.S, p.T1, p.T2, p.taux, p.mu)
-        )
+        fields = (p.A, p.A1, p.B, p.r1, p.s1, p.d1)
         for fld in fields:
             self.rsig_hasher.update(fld)
 
@@ -94,11 +85,6 @@ class PreMlsagHasher:
             self.rsig_hasher.update(p.L[i])
         for i in range(len(p.R)):
             self.rsig_hasher.update(p.R[i])
-
-        if not is_plus:
-            self.rsig_hasher.update(p.a)
-            self.rsig_hasher.update(p.b)
-            self.rsig_hasher.update(p.t)
 
     def get_digest(self) -> bytes:
         if self.state != 6:

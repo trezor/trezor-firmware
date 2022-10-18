@@ -374,7 +374,5 @@ def ct_equals(a: bytes, b: bytes) -> bool:
     """
     Constant time buffer comparison
     """
-BP_GI_PRE: bytes
-BP_HI_PRE: bytes
 BP_GI_PLUS_PRE: bytes
 BP_HI_PLUS_PRE: bytes

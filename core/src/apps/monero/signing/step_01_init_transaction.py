@@ -207,10 +207,9 @@ def _check_rsig_data(state: State, rsig_data: MoneroTransactionRsigData) -> None
     elif rsig_data.rsig_type not in (1, 2, 3):
         raise ValueError("Unknown rsig type")
 
-    state.tx_type = signing.RctType.CLSAG
-    if rsig_data.bp_version == 4:
-        state.rsig_is_bp_plus = True
-        state.tx_type = signing.RctType.RCTTypeBulletproofPlus
+    state.tx_type = signing.RctType.RCTTypeBulletproofPlus
+    if rsig_data.bp_version != 4:
+        raise ValueError("Unknown BP version")
 
     if state.output_count > 2:
         state.rsig_offload = True
