@@ -20,26 +20,6 @@ Following packets has the following structure:
 |      0 |      1 | char[1]     | '?' magic constant                                                                     |
 |      1 |     63 | uint8_t[63] | following bytes of message encoded in Protocol Buffers (padded with zeroes if shorter) |
 
-## Ethereum network and token definitions
-Ethereum network and token definitions could be sent from host to device. External definitions are generated from time to time
-and provided on publicly accessible website - `data.trezor.io` # TODO: update url. For more info look
-at the [definitions README.md](../defs/README.md#eth-and-erc20).
-To ensure that the definitions send to device are genuine we use Merkle tree with a combination of signed Merkle tree root hash.
-Every definition is then checked and verified at FW side on receiving.
-
-
-Definitions (network/token) are binary encoded and have a special format:
-1. prefix:
-   1. format version of the definition (UTF-8 string `trzd` + version number, padded with zeroes if shorter, 8 bytes)
-   2. type of data (unsigned integer, 1 byte)
-   3. data version of the definition (unsigned integer, 4 bytes)
-   4. length of the encoded protobuf message - payload length in bytes (unsigned integer, 2 bytes)
-2. payload: serialized form of protobuf message EthereumNetworkInfo or EthereumTokenInfo (N bytes)
-3. suffix:
-   1. length of the Merkle tree proof - number of hashes in the proof (unsigned integer, 1 byte)
-   2. proof - individual hashes used to compute Merkle tree root hash (plain bits, N*32 bytes)
-   3. signed Merkle tree root hash (plain bits, 64 bytes)
-
 ## Adding new message
 
 To add new message to Trezor protocol follow these steps:
@@ -75,11 +55,13 @@ where:
   - in case that the message is embedded in another message we don't state the message type
 - `MSG_FLOW_TAG` denotes the flow of the messages in a session (use case). Possible tags are:
   - `@start` means that this message is first
-  - `@end`means that this message is last
+  - `@end` means that this message is last
   - `@next` denotes messages that could follow after this message
   - `@embed` denotes messages that are embedded into other message(s)
-  - `@auxstart` - ?? diamond start
-  - `@auxend` - ?? diamond end
+  - `@auxstart` - denotes message for sub-flow start; this message might appear at any time
+during any other flow. When the corresponding @auxend message is processed, the original
+flow resumes.
+  - `@auxend` - see `@auxstart`
 
 Messages flow is checked at the compile time.
 

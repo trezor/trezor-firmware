@@ -39,30 +39,20 @@ The following commands are available:
 
 Use `support.py command --help` to get more information on each command.
 
-### `coins_details.py`
-
-Generates `coins_details.json`, source file for https://trezor.io/coins.
-Collects data on coins, downloads market caps and puts everything into a single file.
-Caches market cap data so you don't have to download it every time.
-
-### `diffize_coins_details.py`
-
-Compares generated `coins_details.json` to the released version currently served
-on https://trezor.io/coins, in a format that is nicely readable to humans and
-hard(er) to mess up by diff.
-
 ### `ethereum_definitions.py`
 
 Script used to work with Ethereum definitions.
 
-Definitions for Ethereum chains(networks) and tokens(erc20) are dynamically generated
-from multiple sources - [`coingecko.com`](https://www.coingecko.com/), [defillama](https://defillama.com/),
-[Ethereum Lists - chains](https://github.com/ethereum-lists/chains)
-and [Ethereum Lists - tokens](https://github.com/ethereum-lists/tokens).
+Dynamically generate and/or sign definitions for Ethereum chains(networks) and tokens(erc20).
+For more info see the
+[document](https://docs.trezor.io/trezor-firmware/common/communication/ethereum-definitions-binary-format.html)
+describing Ethereum definitions.
 
 The following commands are available:
 * **`prepare-definitions`**: collect and process definitions for Ethereum networks (chains) and tokens.
 * **`sign-definitions`**: generate signed protobuf definitions for Ethereum networks (chains) and tokens.
+
+Use `ethereum_definitions.py command --help` to get more information on each command.
 
 ### `coin_info.py`
 
@@ -96,7 +86,7 @@ from the outside.
 
 ### `marketcap.py`
 
-Module for obtaining market cap and price data used by `coins_details.py` and `maxfee.py`.
+Module for obtaining market cap and price data used by `maxfee.py`.
 
 ### `maxfee.py`
 
@@ -149,10 +139,12 @@ Or mark them as unsupported explicitly.
 
 All currently known unreleased ERC20 tokens are automatically set to the given version.
 
-All coins marked _soon_ are set to the current version. This is automatic - coins that
+**_Note that "soon" feature was already removed and following paragraph is deprecated._**
+
+_All coins marked _soon_ are set to the current version. This is automatic - coins that
 were marked _soon_ were used in code generation and so should be released. If you want
 to avoid this, you will have to manually revert each coin to _soon_ status, either with
-`support.py set`, or by manually editing `support.json`.
+`support.py set`, or by manually editing `support.json`._
 
 Coins in state _unknown_, i.e., coins that are known in the definitions but not listed
 in support files, will be also added. But you will be interactively asked to confirm

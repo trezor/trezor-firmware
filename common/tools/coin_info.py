@@ -365,8 +365,8 @@ def _load_btc_coins() -> Coins:
 
 
 def _load_builtin_ethereum_networks() -> Coins:
-    """Load ethereum networks from `ethereum/eth_builtin_networks.json`"""
-    chains_data = load_json("ethereum", "eth_builtin_networks.json")
+    """Load ethereum networks from `ethereum/networks.json`"""
+    chains_data = load_json("ethereum", "networks.json")
     networks: Coins = []
     for chain_data in chains_data:
         chain_data.update(
@@ -379,8 +379,8 @@ def _load_builtin_ethereum_networks() -> Coins:
 
 
 def _load_builtin_erc20_tokens() -> Coins:
-    """Load ERC20 tokens from `ethereum/eth_builtin_tokens.json`."""
-    tokens_data = load_json("ethereum", "eth_builtin_tokens.json")
+    """Load ERC20 tokens from `ethereum/tokens.json`."""
+    tokens_data = load_json("ethereum", "tokens.json")
     all_tokens: Coins = []
 
     for chain_id_and_chain, tokens in tokens_data.items():
@@ -662,55 +662,6 @@ def apply_duplicity_overrides(coins: Coins) -> Coins:
     return override_bucket
 
 
-def deduplicate_erc20(buckets: CoinBuckets, networks: Coins) -> None:
-    """Apply further processing to ERC20 duplicate buckets.
-
-    This function works on results of `mark_duplicate_shortcuts`.
-
-    Buckets that contain at least one non-token are ignored - symbol collisions
-    with non-tokens always apply.
-
-    Otherwise the following rules are applied:
-
-    1. If _all tokens_ in the bucket have shortcuts with distinct suffixes, e.g.,
-    `CAT (BitClave)` and `CAT (Blockcat)`, the bucket is cleared - all are considered
-    non-duplicate.
-
-    (If even one token in the bucket _does not_ have a distinct suffix, e.g.,
-    `MIT` and `MIT (Mychatcoin)`, this rule does not apply and ALL tokens in the bucket
-    are still considered duplicate.)
-
-    2. If there is only one "main" token in the bucket, the bucket is cleared.
-    That means that all other tokens must be on testnets.
-    """
-
-    testnet_networks = {n["chain"] for n in networks if n["slip44"] == 1}
-
-    def clear_bucket(bucket: Coins) -> None:
-        # allow all coins, except those that are explicitly marked through overrides
-        for coin in bucket:
-            coin["duplicate"] = False
-
-    for bucket in buckets.values():
-        # Only check buckets that contain purely ERC20 tokens. Collision with
-        # a non-token is always forbidden.
-        if not all(is_token(c) for c in bucket):
-            continue
-
-        splits = (symbol_from_shortcut(coin["shortcut"]) for coin in bucket)
-        suffixes = {suffix for _, suffix in splits}
-        # if 1. all suffixes are distinct and 2. none of them are empty
-        if len(suffixes) == len(bucket) and all(suffixes):
-            clear_bucket(bucket)
-            continue
-
-        # protected categories:
-        testnets = [coin for coin in bucket if coin["chain"] in testnet_networks]
-        remaining = [coin for coin in bucket if coin not in testnets]
-        if len(remaining) <= 1:
-            clear_bucket(bucket)
-
-
 def deduplicate_keys(all_coins: Coins) -> None:
     dups: CoinBuckets = defaultdict(list)
     for coin in all_coins:
@@ -795,9 +746,7 @@ def coin_info_with_duplicates() -> tuple[CoinsInfo, CoinBuckets]:
     coin_list = all_coins.as_list()
     # generate duplicity buckets based on shortcuts
     buckets = mark_duplicate_shortcuts(all_coins.as_list())
-    # apply further processing to ERC20 tokens
-    deduplicate_erc20(buckets, all_coins.eth)
-    # ensure the whole list has unique keys (taking into account changes from deduplicate_erc20)
+    # ensure the whole list has unique keys
     deduplicate_keys(coin_list)
     # apply duplicity overrides
     buckets["_override"] = apply_duplicity_overrides(coin_list)

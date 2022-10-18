@@ -35,19 +35,18 @@ We will not support coins that have `address_type` 0, i.e., same as Bitcoin.
 
 #### `eth` and `erc20`
 
-Definitions for Ethereum chains(networks) and tokens(erc20) are splitted in two parts:
+Definitions for Ethereum chains(networks) and tokens(erc20) are split in two parts:
 1. built-in definitions - some of the chain and token definitions are built into the firmware
-   image. List of built-in chains is stored in [`ethereum/eth_builtin_networks.json`](ethereum/eth_builtin_networks.json)
-   and tokens in [`ethereum/eth_builtin_tokens.json`](ethereum/eth_builtin_tokens.json).
+   image. List of built-in chains is stored in [`ethereum/networks.json`](ethereum/networks.json)
+   and tokens in [`ethereum/tokens.json`](ethereum/tokens.json).
 2. external definitions - external definitions are dynamically generated from multiple
-   sources - [`coingecko.com`](https://www.coingecko.com/), [defillama](https://defillama.com/),
-   [Ethereum Lists - chains](https://github.com/ethereum-lists/chains)
-   and [Ethereum Lists - tokens](https://github.com/ethereum-lists/tokens).
-   They are re-generated and signed on every release of the firmware. Signed
-   definitions are available at #TODO: add link!!
+   sources. Whole process is described in separate [document](Ethereum_definitions.md).
 
 If you want to add or update a token definition in Trezor, you need to get your change
 to the [Ethereum Lists - tokens](https://github.com/ethereum-lists/tokens) repository first.
+
+For more details see [document](https://docs.trezor.io/trezor-firmware/common/communication/ethereum-definitions-binary-format.html)
+about Ethereum definitions.
 
 #### `nem`
 
@@ -64,21 +63,23 @@ an icon in `misc/<short>.png`, where `short` is lowercased `shortcut` field from
 Throughout the system, coins are identified by a _key_ - a colon-separated string
 generated from the coin's type and shortcut:
 
-* for Bitcoin-likes, key is `bitcoin:XYZ`
-* for Ethereum networks, key is `eth:XYZ`
-* for ERC20 tokens, key is `erc20:<chain>:XYZ`
-* for NEM mosaic, key is `nem:XYZ`
-* for others, key is `misc:XYZ`
+* for Bitcoin-likes, key is `bitcoin:<shortcut>`
+* for Ethereum networks, key is `eth:<shortcut>`
+* for ERC20 tokens, key is `erc20:<chain_symbol>:<token_shortcut>`
+* for NEM mosaic, key is `nem:<shortcut>`
+* for others, key is `misc:<shortcut>`
 
 If a token shortcut has a suffix, such as `CAT (BlockCat)`, the whole thing is part
 of the key (so the key is `erc20:eth:CAT (BlockCat)`).
 
-Sometimes coins end up with duplicate symbols (keys), which in case of ERC20 tokens leads to
-key collisions. We do not allow duplicate symbols in the built-in data, so this doesn't affect
-everyday use (see below).
+Sometimes coins end up with duplicate keys. We do not allow duplicate symbols
+in the built-in data. In such cases, keys are deduplicated by adding:
+* first 4 characters of a token address in case of ERC20 tokens, e.g. `erc20:eth:BID:1da0`, or
+* a counter at end, e.g.: `erc20:eth:SMT:0`, `erc20:eth:SMT:1`.
+Note that the suffix _is not stable_, so these coins can't be reliably uniquely identified.
 
-External definitions are generated based on data from external APIs on which we rely to have
-the collisions solved.
+For Ethereum networks and ERC20 tokens we have a small and stable set of definitions, so key
+collisions should not happen.
 
 ## Duplicate Detection
 
@@ -87,7 +88,8 @@ are removed from the data set before processing. The duplicate status is mention
 in `support.json` (see below), but it is impossible to override from there.
 
 We try to minimize the occurence of duplicates in built-in tokens, but sometimes its
-unavoidable.
+unavoidable. For Ethereum networks and ERC20 tokens we have a small and stable set
+of definitions, so symbol collisions should not happen.
 
 Duplicate detection works as follows:
 
@@ -115,25 +117,9 @@ asked to.
 You can use `./tools/cointool.py check -d all` to inspect duplicate detection in detail.
 
 
-# Coins Details
-
-The file [`coins_details.json`](coins_details.json) is a list of all known coins
-with support status, market cap information and relevant links. This is the source
-file for https://trezor.io/coins.
-
-You should never make changes to `coins_details.json` directly. Use `./tools/coins_details.py`
-to regenerate it from known data.
-
-If you need to change information in this file, modify the source information instead -
-one of the JSON files in the groups listed above, support info in `support.json`, or
-make a pull request to the tokens repository.
+# Wallet URLs
 
 If you want to add a **wallet link**, modify the file [`wallets.json`](wallets.json).
-
-If this is not viable for some reason, or if there is no source information ,
-you can also edit [`coins_details.override.json`](coins_details.override.json).
-External contributors should not touch this file unless asked to.
-
 
 # Support Information
 

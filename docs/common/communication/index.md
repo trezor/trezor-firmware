@@ -8,6 +8,10 @@ We use [Protobuf v2](https://developers.google.com/protocol-buffers/) for host-d
 
 Protobuf messages are defined in the [Common](https://github.com/trezor/trezor-firmware/tree/master/common) project, which is part of this monorepo. This repository is also exported to [trezor/trezor-common](https://github.com/trezor/trezor-common) to be used by third parties, which prefer not to include the whole monorepo. That copy is read-only mirror and all changes are happening in this monorepo.
 
+## Ethereum definitions binary format
+
+Ethereum definition binary format is described in [short document](ethereum-definitions-binary-format.md).
+
 ## Notable topics
 
 - [Sessions](sessions.md)
