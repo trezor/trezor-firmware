@@ -1,9 +1,6 @@
 from typing import TYPE_CHECKING
 
 from trezor.crypto import monero as tcry
-from trezor.enums import MoneroNetworkType
-
-from apps.monero.xmr.networks import net_version
 
 if TYPE_CHECKING:
     from trezor.messages import MoneroAccountPublicAddress
@@ -27,28 +24,6 @@ def encode_addr(
     if payment_id:
         buf += bytes(payment_id)
     return tcry.xmr_base58_addr_encode_check(ord(version), bytes(buf))
-
-
-def decode_addr(addr: bytes) -> tuple[int, bytes, bytes]:
-    """
-    Given address, get version and public spend and view keys.
-    """
-    d, version = tcry.xmr_base58_addr_decode_check(bytes(addr))
-    pub_spend_key = d[0:32]
-    pub_view_key = d[32:64]
-    return version, pub_spend_key, pub_view_key
-
-
-def public_addr_encode(
-    pub_addr: MoneroAccountPublicAddress,
-    is_sub: bool = False,
-    net: MoneroNetworkType = MoneroNetworkType.MAINNET,
-) -> str:
-    """
-    Encodes public address to Monero address
-    """
-    net_ver = net_version(net, is_sub)
-    return encode_addr(net_ver, pub_addr.spend_public_key, pub_addr.view_public_key)
 
 
 def classify_subaddresses(

@@ -17,24 +17,6 @@ else:
     T = 0
 
 
-class UnicodeType:
-    """
-    Unicode data in UTF-8 encoding.
-    """
-
-    @staticmethod
-    def dump(writer: Writer, s: str) -> None:
-        dump_uvarint(writer, len(s))
-        writer.write(s.encode())
-
-    @staticmethod
-    def load(reader: Reader) -> str:
-        ivalue = load_uvarint(reader)
-        fvalue = bytearray(ivalue)
-        reader.readinto(fvalue)
-        return str(fvalue)
-
-
 class BlobType:
     """
     Binary data, represented as bytearray.  BlobType is only a scheme

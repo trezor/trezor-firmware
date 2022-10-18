@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 from trezor import utils
 
-from apps.monero.xmr import crypto, crypto_helpers
+from apps.monero.xmr import crypto_helpers
 
 if TYPE_CHECKING:
     from trezor.messages import (
@@ -81,13 +81,6 @@ def hmac_key_txout(key_hmac: bytes, idx: int) -> bytes:
     return _build_key(key_hmac, b"txout", idx)
 
 
-def hmac_key_txout_asig(key_hmac: bytes, idx: int) -> bytes:
-    """
-    rsig[i] hmac key. Range signature HMAC
-    """
-    return _build_key(key_hmac, b"txout-asig", idx)
-
-
 def enc_key_txin_alpha(key_enc: bytes, idx: int) -> bytes:
     """
     Chacha20Poly1305 encryption key for alpha[i] used in Pedersen commitment in pseudo_outs[i]
@@ -102,25 +95,11 @@ def enc_key_spend(key_enc: bytes, idx: int) -> bytes:
     return _build_key(key_enc, b"txin-spend", idx)
 
 
-def enc_key_cout(key_enc: bytes, idx: int | None = None) -> bytes:
-    """
-    Chacha20Poly1305 encryption key for multisig C values from MLASG.
-    """
-    return _build_key(key_enc, b"cout", idx)
-
-
 def key_signature(master: bytes, idx: int, is_iv: bool = False) -> bytes:
     """
     Generates signature offloading related offloading keys
     """
     return _build_key(master, b"sig-iv" if is_iv else b"sig-key", idx)
-
-
-def det_comm_masks(key_enc: bytes, idx: int) -> crypto.Scalar:
-    """
-    Deterministic output commitment masks
-    """
-    return crypto_helpers.decodeint(_build_key(key_enc, b"out-mask", idx))
 
 
 def gen_hmac_vini(

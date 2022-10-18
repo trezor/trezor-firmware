@@ -1,11 +1,9 @@
 from common import *
-from trezor import log, loop, utils
+from trezor import utils
 
 if not utils.BITCOIN_ONLY:
     from apps.monero.xmr.serialize.int_serialize import (
-        dump_uint,
         dump_uvarint,
-        load_uint,
         load_uvarint,
     )
     from apps.monero.xmr.serialize.readwriter import MemoryReaderWriter
@@ -56,7 +54,7 @@ class TestMoneroSerializer(unittest.TestCase):
         :return:
         """
         msg = TxinToKey(
-            amount=123, key_offsets=[1, 2, 3, 2 ** 76], k_image=bytearray(range(32))
+            amount=123, key_offsets=[1, 2, 3, 2**76], k_image=bytearray(range(32))
         )
 
         writer = MemoryReaderWriter()

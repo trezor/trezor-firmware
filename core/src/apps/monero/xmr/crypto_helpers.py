@@ -119,43 +119,6 @@ def get_subaddress_secret_key(
     return tcry.xmr_get_subaddress_secret_key(None, major, minor, secret_key)
 
 
-def generate_signature(
-    data: bytes, priv: tcry.Scalar
-) -> tuple[tcry.Scalar, tcry.Scalar, tcry.Point]:
-    """
-    Generate EC signature
-    crypto_ops::generate_signature(const hash &prefix_hash, const public_key &pub, const secret_key &sec, signature &sig)
-    """
-    pub = tcry.scalarmult_base_into(None, priv)
-
-    k = tcry.random_scalar()
-    comm = tcry.scalarmult_base_into(None, k)
-
-    buff = data + encodepoint(pub) + encodepoint(comm)
-    c = tcry.hash_to_scalar_into(None, buff)
-    r = tcry.sc_mulsub_into(None, priv, c, k)
-    return c, r, pub
-
-
-def check_signature(
-    data: bytes, c: tcry.Scalar, r: tcry.Scalar, pub: tcry.Point
-) -> bool:
-    """
-    EC signature verification
-    """
-    tcry.ge25519_check(pub)
-    if tcry.sc_check(c) != 0 or tcry.sc_check(r) != 0:
-        raise ValueError("Signature error")
-
-    tmp2 = tcry.point_add_into(
-        None, tcry.scalarmult_into(None, pub, c), tcry.scalarmult_base_into(None, r)
-    )
-    buff = data + encodepoint(pub) + encodepoint(tmp2)
-    tmp_c = tcry.hash_to_scalar_into(None, buff)
-    res = tcry.sc_sub_into(None, tmp_c, c)
-    return tcry.sc_iszero(res)
-
-
 def xor8(buff: bytearray, key: bytes) -> bytes:
     for i in range(8):
         buff[i] ^= key[i]
