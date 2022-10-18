@@ -16,9 +16,7 @@ class NotEnoughOutputsError(wire.DataError):
 class RctType:
     """
     There are several types of monero Ring Confidential Transactions
-    like RCTTypeFull and RCTTypeSimple but currently we use only CLSAG
-    and RCTTypeBulletproofPlus
+    like RCTTypeFull and RCTTypeSimple, but currently we use only RCTTypeBulletproofPlus
     """
 
-    CLSAG = 5
     RCTTypeBulletproofPlus = 6

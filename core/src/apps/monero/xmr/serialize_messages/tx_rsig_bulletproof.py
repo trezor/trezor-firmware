@@ -13,26 +13,6 @@ class _KeyV(ContainerType):
     ELEM_TYPE: XmrType[bytes] = ECKey
 
 
-class Bulletproof(MessageType):
-    __slots__ = ("A", "S", "T1", "T2", "taux", "mu", "L", "R", "a", "b", "t", "V")
-
-    @classmethod
-    def f_specs(cls) -> tuple:
-        return (
-            ("A", ECKey),
-            ("S", ECKey),
-            ("T1", ECKey),
-            ("T2", ECKey),
-            ("taux", ECKey),
-            ("mu", ECKey),
-            ("L", _KeyV),
-            ("R", _KeyV),
-            ("a", ECKey),
-            ("b", ECKey),
-            ("t", ECKey),
-        )
-
-
 class BulletproofPlus(MessageType):
     __slots__ = ("A", "A1", "B", "r1", "s1", "d1", "V", "L", "R")
 
