@@ -1,4 +1,5 @@
 use crate::{
+    storage::get_avatar,
     time::{Duration, Instant},
     trezorhal::usb::usb_configured,
     ui::{
@@ -188,7 +189,7 @@ where
             let notification = self.get_notification();
 
             homescreen(
-                IMAGE_HOMESCREEN,
+                get_image(),
                 texts,
                 notification,
                 self.paint_notification_only,
@@ -269,7 +270,15 @@ where
             None,
         ],));
 
-        homescreen(IMAGE_HOMESCREEN, texts, None, false);
+        homescreen(get_image(), texts, None, false);
+    }
+}
+
+fn get_image() -> &'static [u8] {
+    if let Ok(data) = get_avatar() {
+        data
+    } else {
+        IMAGE_HOMESCREEN
     }
 }
 
