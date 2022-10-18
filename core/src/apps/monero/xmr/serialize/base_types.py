@@ -1,11 +1,6 @@
 from typing import TYPE_CHECKING
 
-from apps.monero.xmr.serialize.int_serialize import (
-    dump_uint,
-    dump_uvarint,
-    load_uint,
-    load_uvarint,
-)
+from apps.monero.xmr.serialize.int_serialize import dump_uvarint, load_uvarint
 
 if TYPE_CHECKING:
     from typing import Protocol, TypeVar, Union
@@ -50,19 +45,3 @@ class UVarintType:
     @staticmethod
     def dump(writer: Writer, n: int) -> None:
         return dump_uvarint(writer, n)
-
-
-class IntType:
-    WIDTH = 0
-
-    @classmethod
-    def load(cls, reader: Reader) -> int:
-        return load_uint(reader, cls.WIDTH)
-
-    @classmethod
-    def dump(cls, writer: Writer, n: int):
-        return dump_uint(writer, n, cls.WIDTH)
-
-
-class UInt8(IntType):
-    WIDTH = 1

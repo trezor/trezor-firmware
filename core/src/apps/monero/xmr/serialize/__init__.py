@@ -1,4 +1,3 @@
-import gc
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -28,12 +27,3 @@ def dump_msg(
     msg_type.dump(writer, msg)
 
     return writer.get_buffer()
-
-
-def dump_msg_gc(
-    msg: MessageType, preallocate: int | None = None, prefix: bytes | None = None
-) -> bytes:
-    buf = dump_msg(msg, preallocate, prefix)
-    del msg
-    gc.collect()
-    return buf

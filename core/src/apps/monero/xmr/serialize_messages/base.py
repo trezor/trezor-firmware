@@ -26,5 +26,4 @@ class ECKey(BlobType):
 
 
 ECPoint = Hash
-ECPublicKey = ECPoint
 KeyImage = ECPoint

@@ -54,8 +54,6 @@ if TYPE_CHECKING:
     from .serialize_messages.tx_ct_key import CtKey
     from trezor.messages import MoneroRctKeyPublic
 
-    KeyM = list[list[bytes]]
-
     T = TypeVar("T")
 
     def list_of_type(lst: list[Any], typ: type[T]) -> TypeGuard[list[T]]:
