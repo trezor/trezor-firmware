@@ -206,6 +206,8 @@ where
             // Hide warning, show major prompt.
             Event::Timer(token) if Some(token) == self.warning_timer => {
                 self.major_warning = None;
+                self.textbox_pad.clear();
+                self.minor_prompt.request_complete_repaint(ctx);
                 ctx.request_paint();
             }
             _ => {}
