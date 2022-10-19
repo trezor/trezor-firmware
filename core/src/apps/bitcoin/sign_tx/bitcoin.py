@@ -175,7 +175,7 @@ class Bitcoin:
                 if txi.witness or txi.script_sig:
                     self.presigned.add(i)
                     writers.write_tx_input_check(h_presigned_inputs_check, txi)
-                await self.process_external_input(txi, script_pubkey)
+                await self.process_external_input(txi)
             else:
                 node = self.keychain.derive(txi.address_n)
                 await self.process_internal_input(txi, node)
@@ -333,13 +333,15 @@ class Bitcoin:
 
         await self.approver.add_internal_input(txi)
 
-    async def process_external_input(self, txi: TxInput, script_pubkey: bytes) -> None:
+    async def process_external_input(self, txi: TxInput) -> None:
+        assert txi.script_pubkey is not None  # checked in sanitize_tx_input
+
         self.approver.add_external_input(txi)
 
         if txi.ownership_proof:
             if not verify_nonownership(
                 txi.ownership_proof,
-                script_pubkey,
+                txi.script_pubkey,
                 txi.commitment_data,
                 self.keychain,
                 self.coin,
