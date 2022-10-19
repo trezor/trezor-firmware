@@ -2,6 +2,8 @@ mod button;
 mod button_controller;
 mod changing_text;
 mod common;
+mod confirm;
+mod dialog;
 mod flow;
 mod flow_pages;
 mod flow_pages_helpers;
@@ -12,6 +14,7 @@ mod input_methods;
 mod loader;
 mod no_btn_dialog;
 mod page;
+mod result;
 mod progress;
 mod result_anim;
 mod result_popup;
@@ -26,6 +29,8 @@ pub use button::{
     Button, ButtonAction, ButtonActions, ButtonContent, ButtonDetails, ButtonLayout, ButtonMsg,
     ButtonPos, ButtonStyle, ButtonStyleSheet,
 };
+pub use confirm::{HoldToConfirm, HoldToConfirmMsg};
+pub use dialog::{Dialog, DialogMsg};
 pub use hold_to_confirm::{HoldToConfirm, HoldToConfirmMsg};
 
 pub use button_controller::{ButtonController, ButtonControllerMsg};
@@ -47,6 +52,7 @@ pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
 pub use no_btn_dialog::{NoBtnDialog, NoBtnDialogMsg};
 pub use page::ButtonPage;
 pub use progress::Progress;
+pub use result::ResultScreen;
 pub use result_anim::{ResultAnim, ResultAnimMsg};
 pub use result_popup::{ResultPopup, ResultPopupMsg};
 pub use scrollbar::ScrollBar;
