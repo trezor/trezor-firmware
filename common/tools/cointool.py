@@ -203,7 +203,7 @@ def check_btc(coins: Coins) -> bool:
         for coin in bucket:
             name = coin["name"]
             prefix = ""
-            if name.endswith("Testnet") or name.endswith("Regtest"):
+            if coin["is_testnet"]:
                 color = "green"
             elif name == "Bitcoin":
                 color = "red"
@@ -234,8 +234,7 @@ def check_btc(coins: Coins) -> bool:
             mainnets = [
                 c
                 for c in bucket
-                if not c["name"].endswith("Testnet")
-                and not c["name"].endswith("Regtest")
+                if not c["is_testnet"]
             ]
 
             have_bitcoin = any(coin["name"] == "Bitcoin" for coin in mainnets)

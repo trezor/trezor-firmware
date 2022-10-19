@@ -35,6 +35,8 @@ CURRENT_TIME = datetime.datetime.now(datetime.timezone.utc)
 TIMESTAMP_FORMAT = "%d.%m.%Y %X%z"
 CURRENT_TIMESTAMP_STR = CURRENT_TIME.strftime(TIMESTAMP_FORMAT)
 
+ETHEREUM_TESTNETS_REGEXES = (".*testnet.*", ".*devnet.*")
+
 
 if os.environ.get("DEFS_DIR"):
     DEFS_DIR = pathlib.Path(os.environ.get("DEFS_DIR")).resolve()
@@ -196,6 +198,18 @@ class EthereumDefinitionsCachedDownloader:
         )
 
 
+def get_testnet_status(*strings: str | None) -> bool:
+    if strings is None:
+        return False
+
+    for r in ETHEREUM_TESTNETS_REGEXES:
+        for s in strings:
+            if re.search(r, s.lower(), re.IGNORECASE):
+                return True
+
+    return False
+
+
 def _load_ethereum_networks_from_repo(repo_dir: pathlib.Path) -> list[dict]:
     """Load ethereum networks from submodule."""
     chains_path = repo_dir / "_data" / "chains"
@@ -208,7 +222,7 @@ def _load_ethereum_networks_from_repo(repo_dir: pathlib.Path) -> list[dict]:
         shortcut = chain_data["nativeCurrency"]["symbol"]
         name = chain_data["name"]
         title = chain_data.get("title", "")
-        is_testnet = "testnet" in name.lower() or "testnet" in title.lower()
+        is_testnet = get_testnet_status(name, title)
         if is_testnet:
             slip44 = 1
         else:
@@ -225,6 +239,7 @@ def _load_ethereum_networks_from_repo(repo_dir: pathlib.Path) -> list[dict]:
             dict(
                 chain=chain_data["shortName"],
                 chain_id=chain_data["chainId"],
+                is_testnet=is_testnet,
                 slip44=slip44,
                 shortcut=shortcut,
                 name=name,
@@ -549,7 +564,8 @@ def check_definitions_list(
     interactive: bool,
     force: bool,
     top100_coingecko_ids: list[str] | None = None,
-) -> None:
+) -> bool:
+    save_results = True
     # store already processed definitions
     deleted_definitions: list[dict] = []
     modified_definitions: list[dict] = []
@@ -667,7 +683,7 @@ def check_definitions_list(
             print(
                 "\nERROR: Symbol change in this definition! To be able to approve this change re-run with `--force` argument."
             )
-            accept_change = False
+            accept_change = save_results = False
             print_change = True
 
         answer = (
@@ -711,7 +727,7 @@ def check_definitions_list(
             print(
                 "\nERROR: Symbol change in this definition! To be able to approve this change re-run with `--force` argument."
             )
-            accept_change = False
+            accept_change = save_results = False
             print_change = True
 
         answer = (
@@ -754,6 +770,8 @@ def check_definitions_list(
         ):
             # clear deleted mark
             _set_definition_metadata(definition)
+
+    return save_results
 
 
 def _load_prepared_definitions(
@@ -1009,9 +1027,10 @@ def prepare_definitions(
     cg_top100_ids = [d["id"] for d in cg_top100]
 
     # check changes in definitions
+    save_results = True
     if old_defs is not None:
         # check networks and tokens
-        check_definitions_list(
+        save_results &= check_definitions_list(
             old_defs["networks"],
             networks,
             ["chain_id"],
@@ -1020,7 +1039,7 @@ def prepare_definitions(
             force,
             cg_top100_ids if not show_all else None,
         )
-        check_definitions_list(
+        save_results &= check_definitions_list(
             old_defs["tokens"],
             tokens,
             ["chain_id", "address"],
@@ -1030,20 +1049,21 @@ def prepare_definitions(
             cg_top100_ids if not show_all else None,
         )
 
-    # sort networks and tokens
-    networks.sort(key=lambda x: x["chain_id"])
-    tokens.sort(key=lambda x: (x["chain_id"], x["address"]))
+    if save_results:
+        # sort networks and tokens
+        networks.sort(key=lambda x: x["chain_id"])
+        tokens.sort(key=lambda x: (x["chain_id"], x["address"]))
 
-    # save results
-    with open(deffile, "w+") as f:
-        json.dump(
-            obj=dict(timestamp=CURRENT_TIMESTAMP_STR, networks=networks, tokens=tokens),
-            fp=f,
-            ensure_ascii=False,
-            sort_keys=True,
-            indent=1,
-        )
-        f.write("\n")
+        # save results
+        with open(deffile, "w+") as f:
+            json.dump(
+                obj=dict(timestamp=CURRENT_TIMESTAMP_STR, networks=networks, tokens=tokens),
+                fp=f,
+                ensure_ascii=False,
+                sort_keys=True,
+                indent=1,
+            )
+            f.write("\n")
 
 
 @cli.command()

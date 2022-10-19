@@ -125,6 +125,7 @@ class Coin(TypedDict):
     unsupported: bool
     duplicate: bool
     support: SupportInfoItem
+    is_testnet: bool
 
     # Backend-oriented fields
     blockchain_link: dict[str, Any]
@@ -159,6 +160,13 @@ def load_json(*path: str | Path) -> Any:
         file = Path(DEFS_DIR, *path)
 
     return json.loads(file.read_text(), object_pairs_hook=OrderedDict)
+
+
+def get_btc_testnet_status(name: str) -> bool:
+    if any((mark in name.lower()) for mark in ("testnet", "regtest")):
+        return True
+    else:
+        return False
 
 
 # ====== CoinsInfo ======
@@ -324,7 +332,7 @@ def validate_btc(coin: Coin) -> list[str]:
     if not coin["max_address_length"] >= coin["min_address_length"]:
         errors.append("max address length must not be smaller than min address length")
 
-    if "testnet" in coin["coin_name"].lower() and coin["slip44"] != 1:
+    if coin["is_testnet"] and coin["slip44"] != 1:
         errors.append("testnet coins must use slip44 coin type 1")
 
     if coin["segwit"]:
@@ -358,6 +366,7 @@ def _load_btc_coins() -> Coins:
             shortcut=coin["coin_shortcut"],
             key=f"bitcoin:{coin['coin_shortcut']}",
             icon=str(file.with_suffix(".png")),
+            is_testnet=get_btc_testnet_status(coin["coin_label"]),
         )
         coins.append(coin)
 
@@ -372,6 +381,7 @@ def _load_builtin_ethereum_networks() -> Coins:
         chain_data.update(
             chain_id=str(chain_data["chain_id"]),
             key=f"eth:{chain_data['shortcut']}",
+            # is_testnet is present in the JSON
         )
         networks.append(cast(Coin, chain_data))
 
@@ -393,6 +403,7 @@ def _load_builtin_erc20_tokens() -> Coins:
                 address_bytes=bytes.fromhex(token["address"][2:]),
                 symbol=token["shortcut"],
                 key=f"erc20:{chain}:{token['shortcut']}",
+                is_testnet=False,
             )
             all_tokens.append(cast(Coin, token))
 
@@ -404,7 +415,11 @@ def _load_nem_mosaics() -> Coins:
     mosaics: Coins = load_json("nem/nem_mosaics.json")
     for mosaic in mosaics:
         shortcut = mosaic["ticker"].strip()
-        mosaic.update(shortcut=shortcut, key=f"nem:{shortcut}")
+        mosaic.update(
+            shortcut=shortcut,
+            key=f"nem:{shortcut}",
+            is_testnet=False,
+        )
     return mosaics
 
 
@@ -412,7 +427,10 @@ def _load_misc() -> Coins:
     """Loads miscellaneous networks from `misc/misc.json`"""
     others: Coins = load_json("misc/misc.json")
     for other in others:
-        other.update(key=f"misc:{other['shortcut']}")
+        other.update(
+            key=f"misc:{other['shortcut']}",
+            is_testnet=False,
+        )
     return others
 
 

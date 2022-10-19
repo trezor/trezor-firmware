@@ -402,7 +402,7 @@ def release(
             support_setdefault(device, key, version)
 
     for coin in nontokens:
-        if skip_testnets and "testnet" in coin["name"].lower():
+        if skip_testnets and coin["is_testnet"]:
             for device, version in versions.items():
                 support_setdefault(device, coin["key"], False, "(AUTO) exclude testnet")
         else:

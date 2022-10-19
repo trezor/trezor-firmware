@@ -4,6 +4,7 @@
    "chain": "eth",
    "chain_id": 1,
    "coingecko_id": "ethereum",
+   "is_testnet": false,
    "name": "Ethereum",
    "shortcut": "ETH",
    "slip44": 60,
@@ -12,6 +13,7 @@
   {
    "chain": "exp",
    "chain_id": 2,
+   "is_testnet": false,
    "name": "Expanse Network",
    "shortcut": "EXP",
    "slip44": 40,
@@ -20,6 +22,7 @@
   {
    "chain": "rop",
    "chain_id": 3,
+   "is_testnet": true,
    "name": "Ropsten",
    "shortcut": "tROP",
    "slip44": 1,
@@ -28,6 +31,7 @@
   {
    "chain": "rin",
    "chain_id": 4,
+   "is_testnet": true,
    "name": "Rinkeby",
    "shortcut": "tRIN",
    "slip44": 1,
@@ -36,6 +40,7 @@
   {
    "chain": "gor",
    "chain_id": 5,
+   "is_testnet": true,
    "name": "Görli",
    "shortcut": "tGOR",
    "slip44": 1,
@@ -44,6 +49,7 @@
   {
    "chain": "kot",
    "chain_id": 6,
+   "is_testnet": true,
    "name": "Ethereum Classic Testnet Kotti",
    "shortcut": "tKOT",
    "slip44": 1,
@@ -52,6 +58,7 @@
   {
    "chain": "tch",
    "chain_id": 7,
+   "is_testnet": false,
    "name": "ThaiChain",
    "shortcut": "TCH",
    "slip44": 60,
@@ -61,6 +68,7 @@
    "chain": "ubq",
    "chain_id": 8,
    "coingecko_id": "ubiq",
+   "is_testnet": false,
    "name": "Ubiq",
    "shortcut": "UBQ",
    "slip44": 108,
@@ -69,6 +77,7 @@
   {
    "chain": "tubq",
    "chain_id": 9,
+   "is_testnet": true,
    "name": "Ubiq Network Testnet",
    "shortcut": "TUBQ",
    "slip44": 1,
@@ -78,6 +87,7 @@
    "chain": "oeth",
    "chain_id": 10,
    "coingecko_id": "optimistic-ethereum",
+   "is_testnet": false,
    "name": "Optimism",
    "shortcut": "ETH",
    "slip44": 60,
@@ -86,6 +96,7 @@
   {
    "chain": "meta",
    "chain_id": 11,
+   "is_testnet": false,
    "name": "Metadium",
    "shortcut": "META",
    "slip44": 916,
@@ -94,6 +105,7 @@
   {
    "chain": "kal",
    "chain_id": 12,
+   "is_testnet": true,
    "name": "Metadium Testnet",
    "shortcut": "tKAL",
    "slip44": 1,
@@ -102,6 +114,7 @@
   {
    "chain": "dstg",
    "chain_id": 13,
+   "is_testnet": true,
    "name": "Diode Testnet Staging",
    "shortcut": "tsDIODE",
    "slip44": 1,
@@ -110,6 +123,7 @@
   {
    "chain": "flr",
    "chain_id": 14,
+   "is_testnet": false,
    "name": "Flare",
    "shortcut": "FLR",
    "slip44": 60,
@@ -118,6 +132,7 @@
   {
    "chain": "diode",
    "chain_id": 15,
+   "is_testnet": false,
    "name": "Diode Prenet",
    "shortcut": "DIODE",
    "slip44": 60,
@@ -126,6 +141,7 @@
   {
    "chain": "cflr",
    "chain_id": 16,
+   "is_testnet": true,
    "name": "Flare Testnet Coston",
    "shortcut": "tCFLR",
    "slip44": 1,
@@ -134,6 +150,7 @@
   {
    "chain": "tfi",
    "chain_id": 17,
+   "is_testnet": false,
    "name": "ThaiChain 2.0 ThaiFi",
    "shortcut": "TFI",
    "slip44": 60,
@@ -142,6 +159,7 @@
   {
    "chain": "TST",
    "chain_id": 18,
+   "is_testnet": true,
    "name": "ThunderCore Testnet",
    "shortcut": "TST",
    "slip44": 1,
@@ -151,6 +169,7 @@
    "chain": "sgb",
    "chain_id": 19,
    "coingecko_id": "songbird",
+   "is_testnet": false,
    "name": "Songbird Canary-Network",
    "shortcut": "SGB",
    "slip44": 60,
@@ -160,6 +179,7 @@
    "chain": "elaeth",
    "chain_id": 20,
    "coingecko_id": "elastos",
+   "is_testnet": false,
    "name": "Elastos Smart Chain",
    "shortcut": "ELA",
    "slip44": 60,
@@ -168,6 +188,7 @@
   {
    "chain": "elaetht",
    "chain_id": 21,
+   "is_testnet": true,
    "name": "ELA-ETH-Sidechain Testnet",
    "shortcut": "tELA",
    "slip44": 1,
@@ -176,6 +197,7 @@
   {
    "chain": "eladid",
    "chain_id": 22,
+   "is_testnet": false,
    "name": "ELA-DID-Sidechain",
    "shortcut": "ELA",
    "slip44": 60,
@@ -184,6 +206,7 @@
   {
    "chain": "eladidt",
    "chain_id": 23,
+   "is_testnet": true,
    "name": "ELA-DID-Sidechain Testnet",
    "shortcut": "tELA",
    "slip44": 1,
@@ -192,6 +215,7 @@
   {
    "chain": "dthmainnet",
    "chain_id": 24,
+   "is_testnet": false,
    "name": "Dithereum",
    "shortcut": "DTH",
    "slip44": 60,
@@ -201,6 +225,7 @@
    "chain": "cro",
    "chain_id": 25,
    "coingecko_id": "cronos",
+   "is_testnet": false,
    "name": "Cronos",
    "shortcut": "CRO",
    "slip44": 60,
@@ -209,6 +234,7 @@
   {
    "chain": "L1test",
    "chain_id": 26,
+   "is_testnet": true,
    "name": "Genesis L1 testnet",
    "shortcut": "tL1test",
    "slip44": 1,
@@ -217,6 +243,7 @@
   {
    "chain": "shib",
    "chain_id": 27,
+   "is_testnet": false,
    "name": "ShibaChain",
    "shortcut": "SHIB",
    "slip44": 60,
@@ -225,6 +252,7 @@
   {
    "chain": "Boba Rinkeby",
    "chain_id": 28,
+   "is_testnet": true,
    "name": "Boba Network Rinkeby Testnet",
    "shortcut": "tETH",
    "slip44": 1,
@@ -233,6 +261,7 @@
   {
    "chain": "L1",
    "chain_id": 29,
+   "is_testnet": false,
    "name": "Genesis L1",
    "shortcut": "L1",
    "slip44": 60,
@@ -242,6 +271,7 @@
    "chain": "rsk",
    "chain_id": 30,
    "coingecko_id": "rootstock",
+   "is_testnet": false,
    "name": "RSK",
    "shortcut": "RBTC",
    "slip44": 137,
@@ -250,6 +280,7 @@
   {
    "chain": "trsk",
    "chain_id": 31,
+   "is_testnet": true,
    "name": "RSK Testnet",
    "shortcut": "tRBTC",
    "slip44": 1,
@@ -258,6 +289,7 @@
   {
    "chain": "GooDT",
    "chain_id": 32,
+   "is_testnet": true,
    "name": "GoodData Testnet",
    "shortcut": "tGooD",
    "slip44": 1,
@@ -266,6 +298,7 @@
   {
    "chain": "GooD",
    "chain_id": 33,
+   "is_testnet": false,
    "name": "GoodData",
    "shortcut": "GooD",
    "slip44": 60,
@@ -274,6 +307,7 @@
   {
    "chain": "dth",
    "chain_id": 34,
+   "is_testnet": true,
    "name": "Dithereum Testnet",
    "shortcut": "tDTH",
    "slip44": 1,
@@ -282,6 +316,7 @@
   {
    "chain": "tbwg",
    "chain_id": 35,
+   "is_testnet": false,
    "name": "TBWG Chain",
    "shortcut": "TBG",
    "slip44": 60,
@@ -290,6 +325,7 @@
   {
    "chain": "val",
    "chain_id": 38,
+   "is_testnet": false,
    "name": "Valorbit",
    "shortcut": "VAL",
    "slip44": 538,
@@ -299,6 +335,7 @@
    "chain": "Telos EVM",
    "chain_id": 40,
    "coingecko_id": "telos",
+   "is_testnet": false,
    "name": "Telos EVM",
    "shortcut": "TLOS",
    "slip44": 60,
@@ -307,6 +344,7 @@
   {
    "chain": "Telos EVM Testnet",
    "chain_id": 41,
+   "is_testnet": true,
    "name": "Telos EVM Testnet",
    "shortcut": "TLOS",
    "slip44": 1,
@@ -315,6 +353,7 @@
   {
    "chain": "kov",
    "chain_id": 42,
+   "is_testnet": true,
    "name": "Kovan",
    "shortcut": "tKOV",
    "slip44": 1,
@@ -323,6 +362,7 @@
   {
    "chain": "pangolin",
    "chain_id": 43,
+   "is_testnet": true,
    "name": "Darwinia Pangolin Testnet",
    "shortcut": "tPRING",
    "slip44": 1,
@@ -332,6 +372,7 @@
    "chain": "crab",
    "chain_id": 44,
    "coingecko_id": "darwinia-crab-network",
+   "is_testnet": false,
    "name": "Darwinia Crab Network",
    "shortcut": "CRAB",
    "slip44": 60,
@@ -340,6 +381,7 @@
   {
    "chain": "pangoro",
    "chain_id": 45,
+   "is_testnet": true,
    "name": "Darwinia Pangoro Testnet",
    "shortcut": "tORING",
    "slip44": 1,
@@ -349,6 +391,7 @@
    "chain": "xdc",
    "chain_id": 50,
    "coingecko_id": "xdc-network",
+   "is_testnet": false,
    "name": "XinFin Network",
    "shortcut": "XDC",
    "slip44": 60,
@@ -357,6 +400,7 @@
   {
    "chain": "TXDC",
    "chain_id": 51,
+   "is_testnet": true,
    "name": "XinFin Apothem Testnet",
    "shortcut": "TXDC",
    "slip44": 1,
@@ -366,6 +410,7 @@
    "chain": "cet",
    "chain_id": 52,
    "coingecko_id": "coinex-smart-chain",
+   "is_testnet": false,
    "name": "CoinEx Smart Chain",
    "shortcut": "cet",
    "slip44": 60,
@@ -374,6 +419,7 @@
   {
    "chain": "tcet",
    "chain_id": 53,
+   "is_testnet": true,
    "name": "CoinEx Smart Chain Testnet",
    "shortcut": "tcett",
    "slip44": 1,
@@ -383,6 +429,7 @@
    "chain": "ZYX",
    "chain_id": 55,
    "coingecko_id": "zyx",
+   "is_testnet": false,
    "name": "Zyx",
    "shortcut": "ZYX",
    "slip44": 60,
@@ -392,6 +439,7 @@
    "chain": "bnb",
    "chain_id": 56,
    "coingecko_id": "binance-smart-chain",
+   "is_testnet": false,
    "name": "Binance Smart Chain",
    "shortcut": "BNB",
    "slip44": 714,
@@ -401,6 +449,7 @@
    "chain": "sys",
    "chain_id": 57,
    "coingecko_id": "syscoin",
+   "is_testnet": false,
    "name": "Syscoin",
    "shortcut": "SYS",
    "slip44": 60,
@@ -410,6 +459,7 @@
    "chain": "Ontology Mainnet",
    "chain_id": 58,
    "coingecko_id": "ong",
+   "is_testnet": false,
    "name": "Ontology",
    "shortcut": "ONG",
    "slip44": 60,
@@ -418,6 +468,7 @@
   {
    "chain": "EOS Mainnet",
    "chain_id": 59,
+   "is_testnet": false,
    "name": "EOS",
    "shortcut": "EOS",
    "slip44": 60,
@@ -427,6 +478,7 @@
    "chain": "go",
    "chain_id": 60,
    "coingecko_id": "gochain",
+   "is_testnet": false,
    "name": "GoChain",
    "shortcut": "GO",
    "slip44": 6060,
@@ -436,6 +488,7 @@
    "chain": "etc",
    "chain_id": 61,
    "coingecko_id": "ethereum-classic",
+   "is_testnet": false,
    "name": "Ethereum Classic",
    "shortcut": "ETC",
    "slip44": 61,
@@ -444,6 +497,7 @@
   {
    "chain": "tetc",
    "chain_id": 62,
+   "is_testnet": true,
    "name": "Ethereum Classic Testnet Morden",
    "shortcut": "TETC",
    "slip44": 1,
@@ -452,6 +506,7 @@
   {
    "chain": "metc",
    "chain_id": 63,
+   "is_testnet": true,
    "name": "Ethereum Classic Testnet Mordor",
    "shortcut": "tMETC",
    "slip44": 1,
@@ -460,6 +515,7 @@
   {
    "chain": "ella",
    "chain_id": 64,
+   "is_testnet": false,
    "name": "Ellaism",
    "shortcut": "ELLA",
    "slip44": 163,
@@ -468,6 +524,7 @@
   {
    "chain": "tokt",
    "chain_id": 65,
+   "is_testnet": true,
    "name": "OKExChain Testnet",
    "shortcut": "tOKT",
    "slip44": 1,
@@ -477,6 +534,7 @@
    "chain": "okt",
    "chain_id": 66,
    "coingecko_id": "okex-chain",
+   "is_testnet": false,
    "name": "OKXChain",
    "shortcut": "OKT",
    "slip44": 60,
@@ -485,6 +543,7 @@
   {
    "chain": "dbm",
    "chain_id": 67,
+   "is_testnet": true,
    "name": "DBChain Testnet",
    "shortcut": "tDBM",
    "slip44": 1,
@@ -493,6 +552,7 @@
   {
    "chain": "SO1",
    "chain_id": 68,
+   "is_testnet": false,
    "name": "SoterOne",
    "shortcut": "SOTER",
    "slip44": 60,
@@ -501,6 +561,7 @@
   {
    "chain": "okov",
    "chain_id": 69,
+   "is_testnet": true,
    "name": "Optimism Kovan",
    "shortcut": "tKOR",
    "slip44": 1,
@@ -509,6 +570,7 @@
   {
    "chain": "cfxtest",
    "chain_id": 71,
+   "is_testnet": true,
    "name": "Conflux eSpace (Testnet)",
    "shortcut": "tCFX",
    "slip44": 1,
@@ -517,6 +579,7 @@
   {
    "chain": "idchain",
    "chain_id": 74,
+   "is_testnet": false,
    "name": "IDChain",
    "shortcut": "EIDI",
    "slip44": 60,
@@ -525,6 +588,7 @@
   {
    "chain": "mix",
    "chain_id": 76,
+   "is_testnet": false,
    "name": "Mix",
    "shortcut": "MIX",
    "slip44": 76,
@@ -533,6 +597,7 @@
   {
    "chain": "spoa",
    "chain_id": 77,
+   "is_testnet": false,
    "name": "POA Network Sokol",
    "shortcut": "SPOA",
    "slip44": 60,
@@ -541,6 +606,7 @@
   {
    "chain": "primuschain",
    "chain_id": 78,
+   "is_testnet": false,
    "name": "PrimusChain",
    "shortcut": "PETH",
    "slip44": 60,
@@ -549,6 +615,7 @@
   {
    "chain": "GeneChain",
    "chain_id": 80,
+   "is_testnet": false,
    "name": "GeneChain",
    "shortcut": "RNA",
    "slip44": 60,
@@ -558,6 +625,7 @@
    "chain": "Meter",
    "chain_id": 82,
    "coingecko_id": "meter",
+   "is_testnet": false,
    "name": "Meter",
    "shortcut": "MTR",
    "slip44": 60,
@@ -566,6 +634,7 @@
   {
    "chain": "MeterTest",
    "chain_id": 83,
+   "is_testnet": true,
    "name": "Meter Testnet",
    "shortcut": "tMTR",
    "slip44": 1,
@@ -574,6 +643,7 @@
   {
    "chain": "gttest",
    "chain_id": 85,
+   "is_testnet": true,
    "name": "GateChain Testnet",
    "shortcut": "tGT",
    "slip44": 1,
@@ -582,6 +652,7 @@
   {
    "chain": "gt",
    "chain_id": 86,
+   "is_testnet": false,
    "name": "GateChain",
    "shortcut": "GT",
    "slip44": 60,
@@ -591,6 +662,7 @@
    "chain": "nnw",
    "chain_id": 87,
    "coingecko_id": "supernova",
+   "is_testnet": false,
    "name": "Nova Network",
    "shortcut": "SNT",
    "slip44": 60,
@@ -600,6 +672,7 @@
    "chain": "tomo",
    "chain_id": 88,
    "coingecko_id": "tomochain",
+   "is_testnet": false,
    "name": "TomoChain",
    "shortcut": "TOMO",
    "slip44": 889,
@@ -608,6 +681,7 @@
   {
    "chain": "tomot",
    "chain_id": 89,
+   "is_testnet": true,
    "name": "TomoChain Testnet",
    "shortcut": "TOMO",
    "slip44": 1,
@@ -616,6 +690,7 @@
   {
    "chain": "gar-s0",
    "chain_id": 90,
+   "is_testnet": false,
    "name": "Garizon Stage0",
    "shortcut": "GAR",
    "slip44": 60,
@@ -624,6 +699,7 @@
   {
    "chain": "gar-s1",
    "chain_id": 91,
+   "is_testnet": false,
    "name": "Garizon Stage1",
    "shortcut": "GAR",
    "slip44": 60,
@@ -632,6 +708,7 @@
   {
    "chain": "gar-s2",
    "chain_id": 92,
+   "is_testnet": false,
    "name": "Garizon Stage2",
    "shortcut": "GAR",
    "slip44": 60,
@@ -640,6 +717,7 @@
   {
    "chain": "gar-s3",
    "chain_id": 93,
+   "is_testnet": false,
    "name": "Garizon Stage3",
    "shortcut": "GAR",
    "slip44": 60,
@@ -648,6 +726,7 @@
   {
    "chain": "Kylin Testnet",
    "chain_id": 95,
+   "is_testnet": true,
    "name": "CryptoKylin Testnet",
    "shortcut": "tEOS",
    "slip44": 1,
@@ -656,6 +735,7 @@
   {
    "chain": "nsc",
    "chain_id": 96,
+   "is_testnet": false,
    "name": "NEXT Smart Chain",
    "shortcut": "NEXT",
    "slip44": 60,
@@ -664,6 +744,7 @@
   {
    "chain": "bnbt",
    "chain_id": 97,
+   "is_testnet": true,
    "name": "Binance Smart Chain Testnet",
    "shortcut": "tBNB",
    "slip44": 1,
@@ -672,6 +753,7 @@
   {
    "chain": "poa",
    "chain_id": 99,
+   "is_testnet": false,
    "name": "POA Network Core",
    "shortcut": "POA",
    "slip44": 178,
@@ -681,6 +763,7 @@
    "chain": "gno",
    "chain_id": 100,
    "coingecko_id": "xdai",
+   "is_testnet": false,
    "name": "Gnosis Chain (formerly xDai)",
    "shortcut": "xDAI",
    "slip44": 700,
@@ -689,6 +772,7 @@
   {
    "chain": "eti",
    "chain_id": 101,
+   "is_testnet": false,
    "name": "EtherInc",
    "shortcut": "ETI",
    "slip44": 464,
@@ -697,6 +781,7 @@
   {
    "chain": "tw3g",
    "chain_id": 102,
+   "is_testnet": true,
    "name": "Web3Games Testnet",
    "shortcut": "tW3G",
    "slip44": 1,
@@ -705,15 +790,17 @@
   {
    "chain": "dw3g",
    "chain_id": 105,
+   "is_testnet": true,
    "name": "Web3Games Devnet",
-   "shortcut": "W3G",
-   "slip44": 60,
+   "shortcut": "tW3G",
+   "slip44": 1,
    "url": "https://web3games.org/"
   },
   {
    "chain": "vlx",
    "chain_id": 106,
    "coingecko_id": "velas",
+   "is_testnet": false,
    "name": "Velas EVM",
    "shortcut": "VLX",
    "slip44": 60,
@@ -722,6 +809,7 @@
   {
    "chain": "ntn",
    "chain_id": 107,
+   "is_testnet": true,
    "name": "Nebula Testnet",
    "shortcut": "tNBX",
    "slip44": 1,
@@ -731,6 +819,7 @@
    "chain": "TT",
    "chain_id": 108,
    "coingecko_id": "thundercore",
+   "is_testnet": false,
    "name": "ThunderCore",
    "shortcut": "TT",
    "slip44": 1001,
@@ -739,6 +828,7 @@
   {
    "chain": "xpr",
    "chain_id": 110,
+   "is_testnet": true,
    "name": "Proton Testnet",
    "shortcut": "tXPR",
    "slip44": 1,
@@ -747,6 +837,7 @@
   {
    "chain": "ETL",
    "chain_id": 111,
+   "is_testnet": false,
    "name": "EtherLite Chain",
    "shortcut": "ETL",
    "slip44": 60,
@@ -756,6 +847,7 @@
    "chain": "fuse",
    "chain_id": 122,
    "coingecko_id": "fuse",
+   "is_testnet": false,
    "name": "Fuse",
    "shortcut": "FUSE",
    "slip44": 60,
@@ -764,6 +856,7 @@
   {
    "chain": "spark",
    "chain_id": 123,
+   "is_testnet": false,
    "name": "Fuse Sparknet",
    "shortcut": "SPARK",
    "slip44": 60,
@@ -772,6 +865,7 @@
   {
    "chain": "dwu",
    "chain_id": 124,
+   "is_testnet": false,
    "name": "Decentralized Web",
    "shortcut": "DWU",
    "slip44": 60,
@@ -780,6 +874,7 @@
   {
    "chain": "oychain testnet",
    "chain_id": 125,
+   "is_testnet": true,
    "name": "OYchain Testnet",
    "shortcut": "tOY",
    "slip44": 1,
@@ -788,6 +883,7 @@
   {
    "chain": "oychain mainnet",
    "chain_id": 126,
+   "is_testnet": false,
    "name": "OYchain",
    "shortcut": "OY",
    "slip44": 126,
@@ -796,6 +892,7 @@
   {
    "chain": "feth",
    "chain_id": 127,
+   "is_testnet": false,
    "name": "Factory 127",
    "shortcut": "FETH",
    "slip44": 127,
@@ -805,6 +902,7 @@
    "chain": "heco",
    "chain_id": 128,
    "coingecko_id": "huobi-token",
+   "is_testnet": false,
    "name": "Huobi ECO Chain",
    "shortcut": "HT",
    "slip44": 1010,
@@ -814,6 +912,7 @@
    "chain": "MATIC",
    "chain_id": 137,
    "coingecko_id": "polygon-pos",
+   "is_testnet": false,
    "name": "Polygon",
    "shortcut": "MATIC",
    "slip44": 966,
@@ -822,6 +921,7 @@
   {
    "chain": "dax",
    "chain_id": 142,
+   "is_testnet": false,
    "name": "DAX CHAIN",
    "shortcut": "DAX",
    "slip44": 60,
@@ -830,6 +930,7 @@
   {
    "chain": "tpht",
    "chain_id": 162,
+   "is_testnet": true,
    "name": "Lightstreams Testnet",
    "shortcut": "tPHT",
    "slip44": 1,
@@ -838,6 +939,7 @@
   {
    "chain": "pht",
    "chain_id": 163,
+   "is_testnet": false,
    "name": "Lightstreams",
    "shortcut": "PHT",
    "slip44": 60,
@@ -846,6 +948,7 @@
   {
    "chain": "hoosmartchain",
    "chain_id": 170,
+   "is_testnet": true,
    "name": "HOO Smart Chain Testnet",
    "shortcut": "tHOO",
    "slip44": 1,
@@ -854,6 +957,7 @@
   {
    "chain": "resil",
    "chain_id": 172,
+   "is_testnet": true,
    "name": "Latam-Blockchain Resil Testnet",
    "shortcut": "tusd",
    "slip44": 1,
@@ -862,6 +966,7 @@
   {
    "chain": "Seele",
    "chain_id": 186,
+   "is_testnet": false,
    "name": "Seele",
    "shortcut": "Seele",
    "slip44": 60,
@@ -870,6 +975,7 @@
   {
    "chain": "BMC",
    "chain_id": 188,
+   "is_testnet": false,
    "name": "BMC",
    "shortcut": "BTM",
    "slip44": 60,
@@ -878,6 +984,7 @@
   {
    "chain": "BMCT",
    "chain_id": 189,
+   "is_testnet": true,
    "name": "BMC Testnet",
    "shortcut": "tBTM",
    "slip44": 1,
@@ -887,6 +994,7 @@
    "chain": "BTT",
    "chain_id": 199,
    "coingecko_id": "bittorrent",
+   "is_testnet": false,
    "name": "BitTorrent Chain",
    "shortcut": "BTT",
    "slip44": 60,
@@ -895,6 +1003,7 @@
   {
    "chain": "aox",
    "chain_id": 200,
+   "is_testnet": false,
    "name": "Arbitrum on xDai",
    "shortcut": "xDAI",
    "slip44": 60,
@@ -903,6 +1012,7 @@
   {
    "chain": "EDI",
    "chain_id": 211,
+   "is_testnet": false,
    "name": "Freight Trust Network",
    "shortcut": "0xF",
    "slip44": 60,
@@ -911,6 +1021,7 @@
   {
    "chain": "ASK",
    "chain_id": 222,
+   "is_testnet": false,
    "name": "Permission",
    "shortcut": "ASK",
    "slip44": 2221,
@@ -920,6 +1031,7 @@
    "chain": "LA",
    "chain_id": 225,
    "coingecko_id": "latoken",
+   "is_testnet": false,
    "name": "LACHAIN",
    "shortcut": "LA",
    "slip44": 60,
@@ -928,6 +1040,7 @@
   {
    "chain": "TLA",
    "chain_id": 226,
+   "is_testnet": true,
    "name": "LACHAIN Testnet",
    "shortcut": "TLA",
    "slip44": 1,
@@ -937,6 +1050,7 @@
    "chain": "ewt",
    "chain_id": 246,
    "coingecko_id": "energy-web-token",
+   "is_testnet": false,
    "name": "Energy Web Chain",
    "shortcut": "EWT",
    "slip44": 246,
@@ -946,6 +1060,7 @@
    "chain": "ftm",
    "chain_id": 250,
    "coingecko_id": "fantom",
+   "is_testnet": false,
    "name": "Fantom Opera",
    "shortcut": "FTM",
    "slip44": 60,
@@ -954,6 +1069,7 @@
   {
    "chain": "hecot",
    "chain_id": 256,
+   "is_testnet": true,
    "name": "Huobi ECO Chain Testnet",
    "shortcut": "thtt",
    "slip44": 1,
@@ -962,6 +1078,7 @@
   {
    "chain": "setm",
    "chain_id": 258,
+   "is_testnet": false,
    "name": "Setheum",
    "shortcut": "SETM",
    "slip44": 60,
@@ -970,6 +1087,7 @@
   {
    "chain": "SUR",
    "chain_id": 262,
+   "is_testnet": false,
    "name": "SUR Blockchain Network",
    "shortcut": "SRN",
    "slip44": 60,
@@ -979,6 +1097,7 @@
    "chain": "hpb",
    "chain_id": 269,
    "coingecko_id": "high-performance-blockchain",
+   "is_testnet": false,
    "name": "High Performance Blockchain",
    "shortcut": "HPB",
    "slip44": 269,
@@ -988,6 +1107,7 @@
    "chain": "Boba",
    "chain_id": 288,
    "coingecko_id": "boba",
+   "is_testnet": false,
    "name": "Boba Network",
    "shortcut": "ETH",
    "slip44": 60,
@@ -997,6 +1117,7 @@
    "chain": "kcs",
    "chain_id": 321,
    "coingecko_id": "kucoin-community-chain",
+   "is_testnet": false,
    "name": "KCC",
    "shortcut": "KCS",
    "slip44": 60,
@@ -1005,6 +1126,7 @@
   {
    "chain": "kcst",
    "chain_id": 322,
+   "is_testnet": true,
    "name": "KCC Testnet",
    "shortcut": "tKCS",
    "slip44": 1,
@@ -1013,6 +1135,7 @@
   {
    "chain": "w3q",
    "chain_id": 333,
+   "is_testnet": false,
    "name": "Web3Q",
    "shortcut": "W3Q",
    "slip44": 60,
@@ -1021,6 +1144,7 @@
   {
    "chain": "DFKTEST",
    "chain_id": 335,
+   "is_testnet": false,
    "name": "DFK Chain Test",
    "shortcut": "JEWEL",
    "slip44": 60,
@@ -1030,6 +1154,7 @@
    "chain": "sdn",
    "chain_id": 336,
    "coingecko_id": "shiden",
+   "is_testnet": false,
    "name": "Shiden",
    "shortcut": "SDN",
    "slip44": 60,
@@ -1038,6 +1163,7 @@
   {
    "chain": "tcro",
    "chain_id": 338,
+   "is_testnet": true,
    "name": "Cronos Testnet",
    "shortcut": "TCRO",
    "slip44": 1,
@@ -1047,6 +1173,7 @@
    "chain": "theta-mainnet",
    "chain_id": 361,
    "coingecko_id": "theta",
+   "is_testnet": false,
    "name": "Theta",
    "shortcut": "TFUEL",
    "slip44": 60,
@@ -1055,6 +1182,7 @@
   {
    "chain": "theta-sapphire",
    "chain_id": 363,
+   "is_testnet": true,
    "name": "Theta Sapphire Testnet",
    "shortcut": "TFUEL",
    "slip44": 1,
@@ -1063,6 +1191,7 @@
   {
    "chain": "theta-amber",
    "chain_id": 364,
+   "is_testnet": true,
    "name": "Theta Amber Testnet",
    "shortcut": "TFUEL",
    "slip44": 1,
@@ -1071,6 +1200,7 @@
   {
    "chain": "theta-testnet",
    "chain_id": 365,
+   "is_testnet": true,
    "name": "Theta Testnet",
    "shortcut": "TFUEL",
    "slip44": 1,
@@ -1079,6 +1209,7 @@
   {
    "chain": "pls",
    "chain_id": 369,
+   "is_testnet": false,
    "name": "PulseChain",
    "shortcut": "PLS",
    "slip44": 60,
@@ -1087,6 +1218,7 @@
   {
    "chain": "lisinski",
    "chain_id": 385,
+   "is_testnet": false,
    "name": "Lisinski",
    "shortcut": "LISINSKI",
    "slip44": 60,
@@ -1095,6 +1227,7 @@
   {
    "chain": "ogor",
    "chain_id": 420,
+   "is_testnet": true,
    "name": "Optimistic Ethereum Testnet Goerli",
    "shortcut": "tGOR",
    "slip44": 1,
@@ -1103,6 +1236,7 @@
   {
    "chain": "rupx",
    "chain_id": 499,
+   "is_testnet": false,
    "name": "Rupaya",
    "shortcut": "RUPX",
    "slip44": 499,
@@ -1111,6 +1245,7 @@
   {
    "chain": "aac",
    "chain_id": 512,
+   "is_testnet": false,
    "name": "Double-A Chain",
    "shortcut": "AAC",
    "slip44": 1512,
@@ -1119,6 +1254,7 @@
   {
    "chain": "aact",
    "chain_id": 513,
+   "is_testnet": true,
    "name": "Double-A Chain Testnet",
    "shortcut": "tAAC",
    "slip44": 1,
@@ -1127,6 +1263,7 @@
   {
    "chain": "CLASS",
    "chain_id": 555,
+   "is_testnet": false,
    "name": "Vela1 Chain",
    "shortcut": "CLASS",
    "slip44": 60,
@@ -1135,6 +1272,7 @@
   {
    "chain": "tao",
    "chain_id": 558,
+   "is_testnet": false,
    "name": "Tao Network",
    "shortcut": "TAO",
    "slip44": 60,
@@ -1143,6 +1281,7 @@
   {
    "chain": "metis-stardust",
    "chain_id": 588,
+   "is_testnet": true,
    "name": "Metis Stardust Testnet",
    "shortcut": "tMETIS",
    "slip44": 1,
@@ -1151,6 +1290,7 @@
   {
    "chain": "maca",
    "chain_id": 595,
+   "is_testnet": true,
    "name": "Acala Mandala Testnet",
    "shortcut": "tmACA",
    "slip44": 1,
@@ -1159,6 +1299,7 @@
   {
    "chain": "mesh-chain-testnet",
    "chain_id": 600,
+   "is_testnet": true,
    "name": "Meshnyan testnet",
    "shortcut": "tMESHT",
    "slip44": 1,
@@ -1167,6 +1308,7 @@
   {
    "chain": "pixie-chain-testnet",
    "chain_id": 666,
+   "is_testnet": true,
    "name": "Pixie Chain Testnet",
    "shortcut": "tPCTT",
    "slip44": 1,
@@ -1175,6 +1317,7 @@
   {
    "chain": "kar",
    "chain_id": 686,
+   "is_testnet": false,
    "name": "Karura Network",
    "shortcut": "KAR",
    "slip44": 686,
@@ -1183,6 +1326,7 @@
   {
    "chain": "bcs",
    "chain_id": 707,
+   "is_testnet": false,
    "name": "BlockChain Station",
    "shortcut": "BCS",
    "slip44": 60,
@@ -1191,6 +1335,7 @@
   {
    "chain": "tbcs",
    "chain_id": 708,
+   "is_testnet": true,
    "name": "BlockChain Station Testnet",
    "shortcut": "tBCS",
    "slip44": 1,
@@ -1199,6 +1344,7 @@
   {
    "chain": "tfeth",
    "chain_id": 721,
+   "is_testnet": true,
    "name": "Factory 127 Testnet",
    "shortcut": "tFETH",
    "slip44": 1,
@@ -1207,6 +1353,7 @@
   {
    "chain": "cth",
    "chain_id": 777,
+   "is_testnet": false,
    "name": "cheapETH",
    "shortcut": "cTH",
    "slip44": 60,
@@ -1215,6 +1362,7 @@
   {
    "chain": "aca",
    "chain_id": 787,
+   "is_testnet": false,
    "name": "Acala Network",
    "shortcut": "ACA",
    "slip44": 787,
@@ -1223,6 +1371,7 @@
   {
    "chain": "haic",
    "chain_id": 803,
+   "is_testnet": false,
    "name": "Haic",
    "shortcut": "HAIC",
    "slip44": 60,
@@ -1232,6 +1381,7 @@
    "chain": "clo",
    "chain_id": 820,
    "coingecko_id": "callisto",
+   "is_testnet": false,
    "name": "Callisto",
    "shortcut": "CLO",
    "slip44": 820,
@@ -1240,6 +1390,7 @@
   {
    "chain": "tclo",
    "chain_id": 821,
+   "is_testnet": true,
    "name": "Callisto Testnet",
    "shortcut": "TCLO",
    "slip44": 1,
@@ -1248,6 +1399,7 @@
   {
    "chain": "ambros",
    "chain_id": 880,
+   "is_testnet": false,
    "name": "Ambros Chain",
    "shortcut": "AMBR",
    "slip44": 60,
@@ -1257,6 +1409,7 @@
    "chain": "wan",
    "chain_id": 888,
    "coingecko_id": "wanchain",
+   "is_testnet": false,
    "name": "Wanchain",
    "shortcut": "WAN",
    "slip44": 5718350,
@@ -1265,6 +1418,7 @@
   {
    "chain": "gar-test-s0",
    "chain_id": 900,
+   "is_testnet": true,
    "name": "Garizon Testnet Stage0",
    "shortcut": "tGAR",
    "slip44": 1,
@@ -1273,6 +1427,7 @@
   {
    "chain": "gar-test-s1",
    "chain_id": 901,
+   "is_testnet": true,
    "name": "Garizon Testnet Stage1",
    "shortcut": "tGAR",
    "slip44": 1,
@@ -1281,6 +1436,7 @@
   {
    "chain": "gar-test-s2",
    "chain_id": 902,
+   "is_testnet": true,
    "name": "Garizon Testnet Stage2",
    "shortcut": "tGAR",
    "slip44": 1,
@@ -1289,6 +1445,7 @@
   {
    "chain": "gar-test-s3",
    "chain_id": 903,
+   "is_testnet": true,
    "name": "Garizon Testnet Stage3",
    "shortcut": "tGAR",
    "slip44": 1,
@@ -1297,6 +1454,7 @@
   {
    "chain": "tpls",
    "chain_id": 940,
+   "is_testnet": true,
    "name": "PulseChain Testnet",
    "shortcut": "tPLS",
    "slip44": 1,
@@ -1305,6 +1463,7 @@
   {
    "chain": "t2bpls",
    "chain_id": 941,
+   "is_testnet": true,
    "name": "PulseChain Testnet v2b",
    "shortcut": "tPLS",
    "slip44": 1,
@@ -1313,6 +1472,7 @@
   {
    "chain": "t3pls",
    "chain_id": 942,
+   "is_testnet": true,
    "name": "PulseChain Testnet v3",
    "shortcut": "tPLS",
    "slip44": 1,
@@ -1321,6 +1481,7 @@
   {
    "chain": "yeti",
    "chain_id": 977,
+   "is_testnet": false,
    "name": "Nepal Blockchain Network",
    "shortcut": "YETI",
    "slip44": 60,
@@ -1329,6 +1490,7 @@
   {
    "chain": "ln",
    "chain_id": 998,
+   "is_testnet": false,
    "name": "Lucky Network",
    "shortcut": "L99",
    "slip44": 60,
@@ -1337,6 +1499,7 @@
   {
    "chain": "twan",
    "chain_id": 999,
+   "is_testnet": true,
    "name": "Wanchain Testnet",
    "shortcut": "tWAN",
    "slip44": 1,
@@ -1345,6 +1508,7 @@
   {
    "chain": "Baobab",
    "chain_id": 1001,
+   "is_testnet": true,
    "name": "Klaytn Testnet Baobab",
    "shortcut": "tKLAY",
    "slip44": 1,
@@ -1353,6 +1517,7 @@
   {
    "chain": "tnew",
    "chain_id": 1007,
+   "is_testnet": true,
    "name": "Newton Testnet",
    "shortcut": "tNEW",
    "slip44": 1,
@@ -1361,6 +1526,7 @@
   {
    "chain": "EVC",
    "chain_id": 1010,
+   "is_testnet": false,
    "name": "Evrice Network",
    "shortcut": "EVC",
    "slip44": 1020,
@@ -1369,6 +1535,7 @@
   {
    "chain": "new",
    "chain_id": 1012,
+   "is_testnet": false,
    "name": "Newton",
    "shortcut": "NEW",
    "slip44": 60,
@@ -1377,6 +1544,7 @@
   {
    "chain": "sku",
    "chain_id": 1022,
+   "is_testnet": false,
    "name": "Sakura",
    "shortcut": "SKU",
    "slip44": 60,
@@ -1385,6 +1553,7 @@
   {
    "chain": "tclv",
    "chain_id": 1023,
+   "is_testnet": true,
    "name": "Clover Testnet",
    "shortcut": "tCLV",
    "slip44": 1,
@@ -1394,6 +1563,7 @@
    "chain": "clv",
    "chain_id": 1024,
    "coingecko_id": "clover-finance",
+   "is_testnet": false,
    "name": "Clover",
    "shortcut": "CLV",
    "slip44": 60,
@@ -1402,6 +1572,7 @@
   {
    "chain": "tbtt",
    "chain_id": 1028,
+   "is_testnet": true,
    "name": "BitTorrent Chain Testnet",
    "shortcut": "tBTT",
    "slip44": 1,
@@ -1410,6 +1581,7 @@
   {
    "chain": "cfx",
    "chain_id": 1030,
+   "is_testnet": false,
    "name": "Conflux eSpace",
    "shortcut": "CFX",
    "slip44": 60,
@@ -1419,6 +1591,7 @@
    "chain": "metis-andromeda",
    "chain_id": 1088,
    "coingecko_id": "metis-andromeda",
+   "is_testnet": false,
    "name": "Metis Andromeda",
    "shortcut": "METIS",
    "slip44": 60,
@@ -1427,6 +1600,7 @@
   {
    "chain": "MATH",
    "chain_id": 1139,
+   "is_testnet": false,
    "name": "MathChain",
    "shortcut": "MATH",
    "slip44": 60,
@@ -1435,6 +1609,7 @@
   {
    "chain": "tMATH",
    "chain_id": 1140,
+   "is_testnet": true,
    "name": "MathChain Testnet",
    "shortcut": "tMATH",
    "slip44": 1,
@@ -1443,6 +1618,7 @@
   {
    "chain": "iora",
    "chain_id": 1197,
+   "is_testnet": false,
    "name": "Iora Chain",
    "shortcut": "IORA",
    "slip44": 60,
@@ -1451,6 +1627,7 @@
   {
    "chain": "avis",
    "chain_id": 1201,
+   "is_testnet": true,
    "name": "Evanesco Testnet",
    "shortcut": "tAVIS",
    "slip44": 1,
@@ -1459,6 +1636,7 @@
   {
    "chain": "wtt",
    "chain_id": 1202,
+   "is_testnet": false,
    "name": "World Trade Technical Chain",
    "shortcut": "WTT",
    "slip44": 60,
@@ -1467,6 +1645,7 @@
   {
    "chain": "popcat",
    "chain_id": 1213,
+   "is_testnet": false,
    "name": "Popcateum",
    "shortcut": "POP",
    "slip44": 60,
@@ -1475,6 +1654,7 @@
   {
    "chain": "enter",
    "chain_id": 1214,
+   "is_testnet": false,
    "name": "EnterChain",
    "shortcut": "ENTER",
    "slip44": 60,
@@ -1483,6 +1663,7 @@
   {
    "chain": "HO",
    "chain_id": 1280,
+   "is_testnet": false,
    "name": "HALO",
    "shortcut": "HO",
    "slip44": 60,
@@ -1492,6 +1673,7 @@
    "chain": "mbeam",
    "chain_id": 1284,
    "coingecko_id": "moonbeam",
+   "is_testnet": false,
    "name": "Moonbeam",
    "shortcut": "GLMR",
    "slip44": 60,
@@ -1501,6 +1683,7 @@
    "chain": "mriver",
    "chain_id": 1285,
    "coingecko_id": "moonriver",
+   "is_testnet": false,
    "name": "Moonriver",
    "shortcut": "MOVR",
    "slip44": 60,
@@ -1509,6 +1692,7 @@
   {
    "chain": "mbase",
    "chain_id": 1287,
+   "is_testnet": false,
    "name": "Moonbase Alpha",
    "shortcut": "DEV",
    "slip44": 60,
@@ -1517,6 +1701,7 @@
   {
    "chain": "mrock",
    "chain_id": 1288,
+   "is_testnet": false,
    "name": "Moonrock",
    "shortcut": "ROC",
    "slip44": 60,
@@ -1525,6 +1710,7 @@
   {
    "chain": "cate",
    "chain_id": 1618,
+   "is_testnet": false,
    "name": "Catecoin Chain",
    "shortcut": "CATE",
    "slip44": 60,
@@ -1533,6 +1719,7 @@
   {
    "chain": "ath",
    "chain_id": 1620,
+   "is_testnet": false,
    "name": "Atheios",
    "shortcut": "ATH",
    "slip44": 1620,
@@ -1541,6 +1728,7 @@
   {
    "chain": "bta",
    "chain_id": 1657,
+   "is_testnet": false,
    "name": "Btachain",
    "shortcut": "BTA",
    "slip44": 60,
@@ -1549,6 +1737,7 @@
   {
    "chain": "tsf",
    "chain_id": 1856,
+   "is_testnet": false,
    "name": "Teslafunds",
    "shortcut": "TSF",
    "slip44": 60,
@@ -1557,6 +1746,7 @@
   {
    "chain": "boya",
    "chain_id": 1898,
+   "is_testnet": false,
    "name": "BON Network",
    "shortcut": "BOY",
    "slip44": 60,
@@ -1565,6 +1755,7 @@
   {
    "chain": "egem",
    "chain_id": 1987,
+   "is_testnet": false,
    "name": "EtherGem",
    "shortcut": "EGEM",
    "slip44": 1987,
@@ -1573,6 +1764,7 @@
   {
    "chain": "420",
    "chain_id": 2020,
+   "is_testnet": false,
    "name": "420coin",
    "shortcut": "420",
    "slip44": 60,
@@ -1581,6 +1773,7 @@
   {
    "chain": "edg",
    "chain_id": 2021,
+   "is_testnet": false,
    "name": "Edgeware",
    "shortcut": "EDG",
    "slip44": 60,
@@ -1589,6 +1782,7 @@
   {
    "chain": "edgt",
    "chain_id": 2022,
+   "is_testnet": true,
    "name": "Beresheet Testnet",
    "shortcut": "tEDG",
    "slip44": 1,
@@ -1597,6 +1791,7 @@
   {
    "chain": "rpg",
    "chain_id": 2025,
+   "is_testnet": false,
    "name": "Rangers Protocol",
    "shortcut": "RPG",
    "slip44": 1008,
@@ -1605,6 +1800,7 @@
   {
    "chain": "eco",
    "chain_id": 2100,
+   "is_testnet": false,
    "name": "Ecoball",
    "shortcut": "ECO",
    "slip44": 60,
@@ -1613,6 +1809,7 @@
   {
    "chain": "esp",
    "chain_id": 2101,
+   "is_testnet": true,
    "name": "Ecoball Testnet Espuma",
    "shortcut": "tECO",
    "slip44": 1,
@@ -1621,6 +1818,7 @@
   {
    "chain": "evanesco",
    "chain_id": 2213,
+   "is_testnet": false,
    "name": "Evanesco",
    "shortcut": "EVA",
    "slip44": 60,
@@ -1629,6 +1827,7 @@
   {
    "chain": "ktoc",
    "chain_id": 2559,
+   "is_testnet": false,
    "name": "Kortho",
    "shortcut": "KTO",
    "slip44": 60,
@@ -1637,6 +1836,7 @@
   {
    "chain": "zcrbeach",
    "chain_id": 3331,
+   "is_testnet": true,
    "name": "ZCore Testnet",
    "shortcut": "tZCR",
    "slip44": 1,
@@ -1645,6 +1845,7 @@
   {
    "chain": "w3q-t",
    "chain_id": 3333,
+   "is_testnet": true,
    "name": "Web3Q Testnet",
    "shortcut": "tW3Q",
    "slip44": 1,
@@ -1653,6 +1854,7 @@
   {
    "chain": "w3q-g",
    "chain_id": 3334,
+   "is_testnet": false,
    "name": "Web3Q Galileo",
    "shortcut": "W3Q",
    "slip44": 60,
@@ -1661,6 +1863,7 @@
   {
    "chain": "prb",
    "chain_id": 3400,
+   "is_testnet": false,
    "name": "Paribu Net",
    "shortcut": "PRB",
    "slip44": 60,
@@ -1669,6 +1872,7 @@
   {
    "chain": "prbtestnet",
    "chain_id": 3500,
+   "is_testnet": true,
    "name": "Paribu Net Testnet",
    "shortcut": "tPRB",
    "slip44": 1,
@@ -1677,6 +1881,7 @@
   {
    "chain": "btx",
    "chain_id": 3690,
+   "is_testnet": false,
    "name": "Bittex",
    "shortcut": "BTX",
    "slip44": 60,
@@ -1685,6 +1890,7 @@
   {
    "chain": "dyno",
    "chain_id": 3966,
+   "is_testnet": false,
    "name": "DYNO",
    "shortcut": "DYNO",
    "slip44": 60,
@@ -1693,6 +1899,7 @@
   {
    "chain": "tdyno",
    "chain_id": 3967,
+   "is_testnet": true,
    "name": "DYNO Testnet",
    "shortcut": "tDYNO",
    "slip44": 1,
@@ -1701,6 +1908,7 @@
   {
    "chain": "tftm",
    "chain_id": 4002,
+   "is_testnet": true,
    "name": "Fantom Testnet",
    "shortcut": "tFTM",
    "slip44": 1,
@@ -1710,6 +1918,7 @@
    "chain": "iotex-mainnet",
    "chain_id": 4689,
    "coingecko_id": "iotex",
+   "is_testnet": false,
    "name": "IoTeX Network",
    "shortcut": "IOTX",
    "slip44": 60,
@@ -1718,6 +1927,7 @@
   {
    "chain": "iotex-testnet",
    "chain_id": 4690,
+   "is_testnet": true,
    "name": "IoTeX Network Testnet",
    "shortcut": "tIOTX",
    "slip44": 1,
@@ -1726,6 +1936,7 @@
   {
    "chain": "xvm",
    "chain_id": 4918,
+   "is_testnet": true,
    "name": "Venidium Testnet",
    "shortcut": "tXVM",
    "slip44": 1,
@@ -1734,6 +1945,7 @@
   {
    "chain": "es",
    "chain_id": 5197,
+   "is_testnet": false,
    "name": "EraSwap",
    "shortcut": "ES",
    "slip44": 60,
@@ -1742,6 +1954,7 @@
   {
    "chain": "UZMI",
    "chain_id": 5315,
+   "is_testnet": false,
    "name": "Uzmi Network",
    "shortcut": "UZMI",
    "slip44": 60,
@@ -1750,6 +1963,7 @@
   {
    "chain": "tsys",
    "chain_id": 5700,
+   "is_testnet": true,
    "name": "Syscoin Tanenbaum Testnet",
    "shortcut": "tSYS",
    "slip44": 1,
@@ -1758,6 +1972,7 @@
   {
    "chain": "Ontology Testnet",
    "chain_id": 5851,
+   "is_testnet": true,
    "name": "Ontology Testnet",
    "shortcut": "tONG",
    "slip44": 1,
@@ -1766,6 +1981,7 @@
   {
    "chain": "rbd",
    "chain_id": 5869,
+   "is_testnet": false,
    "name": "Wegochain Rubidium",
    "shortcut": "RBD",
    "slip44": 60,
@@ -1774,6 +1990,7 @@
   {
    "chain": "pixie-chain",
    "chain_id": 6626,
+   "is_testnet": false,
    "name": "Pixie Chain",
    "shortcut": "PIX",
    "slip44": 60,
@@ -1782,6 +1999,7 @@
   {
    "chain": "shyft",
    "chain_id": 7341,
+   "is_testnet": false,
    "name": "Shyft",
    "shortcut": "SHYFT",
    "slip44": 2147490989,
@@ -1790,6 +2008,7 @@
   {
    "chain": "tscas",
    "chain_id": 7878,
+   "is_testnet": true,
    "name": "Hazlor Testnet",
    "shortcut": "TSCAS",
    "slip44": 1,
@@ -1798,6 +2017,7 @@
   {
    "chain": "teleport",
    "chain_id": 8000,
+   "is_testnet": false,
    "name": "Teleport",
    "shortcut": "TELE",
    "slip44": 60,
@@ -1806,6 +2026,7 @@
   {
    "chain": "teleport-testnet",
    "chain_id": 8001,
+   "is_testnet": true,
    "name": "Teleport Testnet",
    "shortcut": "TELE",
    "slip44": 1,
@@ -1814,6 +2035,7 @@
   {
    "chain": "mdgl",
    "chain_id": 8029,
+   "is_testnet": true,
    "name": "MDGL Testnet",
    "shortcut": "tMDGLT",
    "slip44": 1,
@@ -1822,6 +2044,7 @@
   {
    "chain": "GeneChainAdn",
    "chain_id": 8080,
+   "is_testnet": true,
    "name": "GeneChain Adenine Testnet",
    "shortcut": "tRNA",
    "slip44": 1,
@@ -1831,6 +2054,7 @@
    "chain": "Cypress",
    "chain_id": 8217,
    "coingecko_id": "klay-token",
+   "is_testnet": false,
    "name": "Klaytn",
    "shortcut": "KLAY",
    "slip44": 8217,
@@ -1839,6 +2063,7 @@
   {
    "chain": "Kortho",
    "chain_id": 8285,
+   "is_testnet": false,
    "name": "KorthoTest",
    "shortcut": "KTO",
    "slip44": 60,
@@ -1847,6 +2072,7 @@
   {
    "chain": "olo",
    "chain_id": 8723,
+   "is_testnet": false,
    "name": "TOOL Global",
    "shortcut": "OLO",
    "slip44": 479,
@@ -1855,6 +2081,7 @@
   {
    "chain": "tolo",
    "chain_id": 8724,
+   "is_testnet": true,
    "name": "TOOL Global Testnet",
    "shortcut": "tOLO",
    "slip44": 1,
@@ -1863,6 +2090,7 @@
   {
    "chain": "ambrostestnet",
    "chain_id": 8888,
+   "is_testnet": true,
    "name": "Ambros Chain Testnet",
    "shortcut": "tAMBR",
    "slip44": 1,
@@ -1871,6 +2099,7 @@
   {
    "chain": "berg",
    "chain_id": 8995,
+   "is_testnet": false,
    "name": "bloxberg",
    "shortcut": "U+25B3",
    "slip44": 60,
@@ -1879,6 +2108,7 @@
   {
    "chain": "evmos-testnet",
    "chain_id": 9000,
+   "is_testnet": true,
    "name": "Evmos Testnet",
    "shortcut": "tEVMOS",
    "slip44": 1,
@@ -1888,6 +2118,7 @@
    "chain": "evmos",
    "chain_id": 9001,
    "coingecko_id": "evmos",
+   "is_testnet": false,
    "name": "Evmos",
    "shortcut": "EVMOS",
    "slip44": 60,
@@ -1896,6 +2127,7 @@
   {
    "chain": "GENEC",
    "chain_id": 9100,
+   "is_testnet": false,
    "name": "Genesis Coin",
    "shortcut": "GNC",
    "slip44": 60,
@@ -1904,6 +2136,7 @@
   {
    "chain": "trpg",
    "chain_id": 9527,
+   "is_testnet": true,
    "name": "Rangers Protocol Testnet Robin",
    "shortcut": "tRPG",
    "slip44": 1,
@@ -1912,6 +2145,7 @@
   {
    "chain": "myn",
    "chain_id": 9999,
+   "is_testnet": true,
    "name": "myOwn Testnet",
    "shortcut": "tMYN",
    "slip44": 1,
@@ -1921,6 +2155,7 @@
    "chain": "smartbch",
    "chain_id": 10000,
    "coingecko_id": "smartbch",
+   "is_testnet": false,
    "name": "Smart Bitcoin Cash",
    "shortcut": "BCH",
    "slip44": 60,
@@ -1929,6 +2164,7 @@
   {
    "chain": "smartbchtest",
    "chain_id": 10001,
+   "is_testnet": true,
    "name": "Smart Bitcoin Cash Testnet",
    "shortcut": "tBCHT",
    "slip44": 1,
@@ -1937,6 +2173,7 @@
   {
    "chain": "GEN",
    "chain_id": 10101,
+   "is_testnet": false,
    "name": "Blockchain Genesis",
    "shortcut": "GEN",
    "slip44": 60,
@@ -1945,6 +2182,7 @@
   {
    "chain": "CCP",
    "chain_id": 10823,
+   "is_testnet": false,
    "name": "CryptoCoinPay",
    "shortcut": "CCP",
    "slip44": 60,
@@ -1953,6 +2191,7 @@
   {
    "chain": "WAGMI",
    "chain_id": 11111,
+   "is_testnet": false,
    "name": "WAGMI",
    "shortcut": "WGM",
    "slip44": 60,
@@ -1961,6 +2200,7 @@
   {
    "chain": "shyftt",
    "chain_id": 11437,
+   "is_testnet": true,
    "name": "Shyft Testnet",
    "shortcut": "tSHYFTT",
    "slip44": 1,
@@ -1969,6 +2209,7 @@
   {
    "chain": "tZERO",
    "chain_id": 12051,
+   "is_testnet": true,
    "name": "Singularity ZERO Testnet",
    "shortcut": "tZERO",
    "slip44": 1,
@@ -1977,6 +2218,7 @@
   {
    "chain": "ZERO",
    "chain_id": 12052,
+   "is_testnet": false,
    "name": "Singularity ZERO",
    "shortcut": "ZERO",
    "slip44": 621,
@@ -1985,6 +2227,7 @@
   {
    "chain": "Phoenix",
    "chain_id": 13381,
+   "is_testnet": false,
    "name": "Phoenix",
    "shortcut": "PHX",
    "slip44": 60,
@@ -1993,6 +2236,7 @@
   {
    "chain": "mtt",
    "chain_id": 16000,
+   "is_testnet": false,
    "name": "MetaDot",
    "shortcut": "MTT",
    "slip44": 60,
@@ -2001,6 +2245,7 @@
   {
    "chain": "mtttest",
    "chain_id": 16001,
+   "is_testnet": true,
    "name": "MetaDot Testnet",
    "shortcut": "tMTT-test",
    "slip44": 1,
@@ -2009,6 +2254,7 @@
   {
    "chain": "btcix",
    "chain_id": 19845,
+   "is_testnet": false,
    "name": "BTCIX Network",
    "shortcut": "BTCIX",
    "slip44": 60,
@@ -2017,6 +2263,7 @@
   {
    "chain": "oml",
    "chain_id": 21816,
+   "is_testnet": false,
    "name": "omChain",
    "shortcut": "OML",
    "slip44": 60,
@@ -2025,6 +2272,7 @@
   {
    "chain": "web",
    "chain_id": 24484,
+   "is_testnet": false,
    "name": "Webchain",
    "shortcut": "WEB",
    "slip44": 227,
@@ -2033,6 +2281,7 @@
   {
    "chain": "mintme",
    "chain_id": 24734,
+   "is_testnet": false,
    "name": "MintMe.com Coin",
    "shortcut": "MINTME",
    "slip44": 60,
@@ -2041,6 +2290,7 @@
   {
    "chain": "esn",
    "chain_id": 31102,
+   "is_testnet": false,
    "name": "Ethersocial Network",
    "shortcut": "ESN",
    "slip44": 31102,
@@ -2049,6 +2299,7 @@
   {
    "chain": "got",
    "chain_id": 31337,
+   "is_testnet": true,
    "name": "GoChain Testnet",
    "shortcut": "tGO",
    "slip44": 1,
@@ -2058,6 +2309,7 @@
    "chain": "fsn",
    "chain_id": 32659,
    "coingecko_id": "fsn",
+   "is_testnet": false,
    "name": "Fusion",
    "shortcut": "FSN",
    "slip44": 60,
@@ -2067,6 +2319,7 @@
    "chain": "nrg",
    "chain_id": 39797,
    "coingecko_id": "energi",
+   "is_testnet": false,
    "name": "Energi",
    "shortcut": "NRG",
    "slip44": 39797,
@@ -2075,6 +2328,7 @@
   {
    "chain": "PC",
    "chain_id": 42069,
+   "is_testnet": false,
    "name": "pegglecoin",
    "shortcut": "peggle",
    "slip44": 60,
@@ -2084,6 +2338,7 @@
    "chain": "arb1",
    "chain_id": 42161,
    "coingecko_id": "arbitrum-one",
+   "is_testnet": false,
    "name": "Arbitrum One",
    "shortcut": "ETH",
    "slip44": 60,
@@ -2093,6 +2348,7 @@
    "chain": "CELO",
    "chain_id": 42220,
    "coingecko_id": "celo",
+   "is_testnet": false,
    "name": "Celo",
    "shortcut": "CELO",
    "slip44": 60,
@@ -2101,6 +2357,7 @@
   {
    "chain": "emerald",
    "chain_id": 42261,
+   "is_testnet": true,
    "name": "Emerald Paratime Testnet",
    "shortcut": "tROSE",
    "slip44": 1,
@@ -2110,6 +2367,7 @@
    "chain": "oasis",
    "chain_id": 42262,
    "coingecko_id": "oasis",
+   "is_testnet": false,
    "name": "Emerald Paratime",
    "shortcut": "ROSE",
    "slip44": 60,
@@ -2118,6 +2376,7 @@
   {
    "chain": "avaeth",
    "chain_id": 43110,
+   "is_testnet": false,
    "name": "Athereum",
    "shortcut": "ATH",
    "slip44": 60,
@@ -2126,6 +2385,7 @@
   {
    "chain": "Fuji",
    "chain_id": 43113,
+   "is_testnet": true,
    "name": "Avalanche Fuji Testnet",
    "shortcut": "tAVAX",
    "slip44": 1,
@@ -2135,6 +2395,7 @@
    "chain": "Avalanche",
    "chain_id": 43114,
    "coingecko_id": "avalanche",
+   "is_testnet": false,
    "name": "Avalanche C-Chain",
    "shortcut": "AVAX",
    "slip44": 9005,
@@ -2143,6 +2404,7 @@
   {
    "chain": "ALFA",
    "chain_id": 44787,
+   "is_testnet": true,
    "name": "Celo Alfajores Testnet",
    "shortcut": "tCELO",
    "slip44": 1,
@@ -2152,6 +2414,7 @@
    "chain": "REI",
    "chain_id": 47805,
    "coingecko_id": "rei-network",
+   "is_testnet": false,
    "name": "REI Network",
    "shortcut": "REI",
    "slip44": 60,
@@ -2160,6 +2423,7 @@
   {
    "chain": "tnrg",
    "chain_id": 49797,
+   "is_testnet": true,
    "name": "Energi Testnet",
    "shortcut": "tNRG",
    "slip44": 1,
@@ -2169,6 +2433,7 @@
    "chain": "DFK",
    "chain_id": 53935,
    "coingecko_id": "defi-kingdoms",
+   "is_testnet": false,
    "name": "DFK Chain",
    "shortcut": "JEWEL",
    "slip44": 60,
@@ -2177,6 +2442,7 @@
   {
    "chain": "rei",
    "chain_id": 55555,
+   "is_testnet": false,
    "name": "REI Chain",
    "shortcut": "REI",
    "slip44": 60,
@@ -2185,6 +2451,7 @@
   {
    "chain": "trei",
    "chain_id": 55556,
+   "is_testnet": true,
    "name": "REI Chain Testnet",
    "shortcut": "tREI",
    "slip44": 1,
@@ -2193,6 +2460,7 @@
   {
    "chain": "TKM-test0",
    "chain_id": 60000,
+   "is_testnet": true,
    "name": "Thinkium Testnet Chain 0",
    "shortcut": "TKM",
    "slip44": 1,
@@ -2201,6 +2469,7 @@
   {
    "chain": "TKM-test1",
    "chain_id": 60001,
+   "is_testnet": true,
    "name": "Thinkium Testnet Chain 1",
    "shortcut": "TKM",
    "slip44": 1,
@@ -2209,6 +2478,7 @@
   {
    "chain": "TKM-test2",
    "chain_id": 60002,
+   "is_testnet": true,
    "name": "Thinkium Testnet Chain 2",
    "shortcut": "TKM",
    "slip44": 1,
@@ -2217,6 +2487,7 @@
   {
    "chain": "TKM-test103",
    "chain_id": 60103,
+   "is_testnet": true,
    "name": "Thinkium Testnet Chain 103",
    "shortcut": "TKM",
    "slip44": 1,
@@ -2225,6 +2496,7 @@
   {
    "chain": "BKLV",
    "chain_id": 62320,
+   "is_testnet": true,
    "name": "Celo Baklava Testnet",
    "shortcut": "tCELO",
    "slip44": 1,
@@ -2233,6 +2505,7 @@
   {
    "chain": "ecs",
    "chain_id": 63000,
+   "is_testnet": false,
    "name": "eCredits",
    "shortcut": "ECS",
    "slip44": 60,
@@ -2241,6 +2514,7 @@
   {
    "chain": "ecs-testnet",
    "chain_id": 63001,
+   "is_testnet": true,
    "name": "eCredits Testnet",
    "shortcut": "tECS",
    "slip44": 1,
@@ -2249,6 +2523,7 @@
   {
    "chain": "TKM0",
    "chain_id": 70000,
+   "is_testnet": false,
    "name": "Thinkium",
    "shortcut": "TKM",
    "slip44": 60,
@@ -2257,6 +2532,7 @@
   {
    "chain": "TKM1",
    "chain_id": 70001,
+   "is_testnet": false,
    "name": "Thinkium",
    "shortcut": "TKM",
    "slip44": 60,
@@ -2265,6 +2541,7 @@
   {
    "chain": "TKM2",
    "chain_id": 70002,
+   "is_testnet": false,
    "name": "Thinkium",
    "shortcut": "TKM",
    "slip44": 60,
@@ -2273,6 +2550,7 @@
   {
    "chain": "TKM103",
    "chain_id": 70103,
+   "is_testnet": false,
    "name": "Thinkium",
    "shortcut": "TKM",
    "slip44": 60,
@@ -2281,6 +2559,7 @@
   {
    "chain": "ckb",
    "chain_id": 71393,
+   "is_testnet": true,
    "name": "Polyjuice Testnet",
    "shortcut": "tCKB",
    "slip44": 1,
@@ -2289,6 +2568,7 @@
   {
    "chain": "vt",
    "chain_id": 73799,
+   "is_testnet": true,
    "name": "Energy Web Volta Testnet",
    "shortcut": "tVT",
    "slip44": 1,
@@ -2297,6 +2577,7 @@
   {
    "chain": "firenze",
    "chain_id": 78110,
+   "is_testnet": false,
    "name": "Firenze test network",
    "shortcut": "FIN",
    "slip44": 60,
@@ -2305,6 +2586,7 @@
   {
    "chain": "maticmum",
    "chain_id": 80001,
+   "is_testnet": true,
    "name": "Mumbai",
    "shortcut": "tMATIC",
    "slip44": 1,
@@ -2313,6 +2595,7 @@
   {
    "chain": "usctest",
    "chain_id": 99998,
+   "is_testnet": true,
    "name": "UB Smart Chain(testnet)",
    "shortcut": "tUBC",
    "slip44": 1,
@@ -2321,6 +2604,7 @@
   {
    "chain": "usc",
    "chain_id": 99999,
+   "is_testnet": false,
    "name": "UB Smart Chain",
    "shortcut": "UBC",
    "slip44": 60,
@@ -2329,6 +2613,7 @@
   {
    "chain": "qkc-r",
    "chain_id": 100000,
+   "is_testnet": false,
    "name": "QuarkChain",
    "shortcut": "QKC",
    "slip44": 60,
@@ -2337,6 +2622,7 @@
   {
    "chain": "qkc-s0",
    "chain_id": 100001,
+   "is_testnet": false,
    "name": "QuarkChain",
    "shortcut": "QKC",
    "slip44": 60,
@@ -2345,6 +2631,7 @@
   {
    "chain": "qkc-s1",
    "chain_id": 100002,
+   "is_testnet": false,
    "name": "QuarkChain",
    "shortcut": "QKC",
    "slip44": 60,
@@ -2353,6 +2640,7 @@
   {
    "chain": "qkc-s2",
    "chain_id": 100003,
+   "is_testnet": false,
    "name": "QuarkChain",
    "shortcut": "QKC",
    "slip44": 60,
@@ -2361,6 +2649,7 @@
   {
    "chain": "qkc-s3",
    "chain_id": 100004,
+   "is_testnet": false,
    "name": "QuarkChain",
    "shortcut": "QKC",
    "slip44": 60,
@@ -2369,6 +2658,7 @@
   {
    "chain": "qkc-s4",
    "chain_id": 100005,
+   "is_testnet": false,
    "name": "QuarkChain",
    "shortcut": "QKC",
    "slip44": 60,
@@ -2377,6 +2667,7 @@
   {
    "chain": "qkc-s5",
    "chain_id": 100006,
+   "is_testnet": false,
    "name": "QuarkChain",
    "shortcut": "QKC",
    "slip44": 60,
@@ -2385,6 +2676,7 @@
   {
    "chain": "qkc-s6",
    "chain_id": 100007,
+   "is_testnet": false,
    "name": "QuarkChain",
    "shortcut": "QKC",
    "slip44": 60,
@@ -2393,6 +2685,7 @@
   {
    "chain": "qkc-s7",
    "chain_id": 100008,
+   "is_testnet": false,
    "name": "QuarkChain",
    "shortcut": "QKC",
    "slip44": 60,
@@ -2401,6 +2694,7 @@
   {
    "chain": "bro",
    "chain_id": 108801,
+   "is_testnet": false,
    "name": "BROChain",
    "shortcut": "BRO",
    "slip44": 60,
@@ -2409,78 +2703,88 @@
   {
    "chain": "qkc-d-r",
    "chain_id": 110000,
+   "is_testnet": true,
    "name": "QuarkChain Devnet Root",
-   "shortcut": "QKC",
-   "slip44": 60,
+   "shortcut": "tQKC",
+   "slip44": 1,
    "url": "https://www.quarkchain.io/"
   },
   {
    "chain": "qkc-d-s0",
    "chain_id": 110001,
+   "is_testnet": true,
    "name": "QuarkChain Devnet Shard 0",
-   "shortcut": "QKC",
-   "slip44": 60,
+   "shortcut": "tQKC",
+   "slip44": 1,
    "url": "https://www.quarkchain.io/"
   },
   {
    "chain": "qkc-d-s1",
    "chain_id": 110002,
+   "is_testnet": true,
    "name": "QuarkChain Devnet Shard 1",
-   "shortcut": "QKC",
-   "slip44": 60,
+   "shortcut": "tQKC",
+   "slip44": 1,
    "url": "https://www.quarkchain.io/"
   },
   {
    "chain": "qkc-d-s2",
    "chain_id": 110003,
+   "is_testnet": true,
    "name": "QuarkChain Devnet Shard 2",
-   "shortcut": "QKC",
-   "slip44": 60,
+   "shortcut": "tQKC",
+   "slip44": 1,
    "url": "https://www.quarkchain.io/"
   },
   {
    "chain": "qkc-d-s3",
    "chain_id": 110004,
+   "is_testnet": true,
    "name": "QuarkChain Devnet Shard 3",
-   "shortcut": "QKC",
-   "slip44": 60,
+   "shortcut": "tQKC",
+   "slip44": 1,
    "url": "https://www.quarkchain.io/"
   },
   {
    "chain": "qkc-d-s4",
    "chain_id": 110005,
+   "is_testnet": true,
    "name": "QuarkChain Devnet Shard 4",
-   "shortcut": "QKC",
-   "slip44": 60,
+   "shortcut": "tQKC",
+   "slip44": 1,
    "url": "https://www.quarkchain.io/"
   },
   {
    "chain": "qkc-d-s5",
    "chain_id": 110006,
+   "is_testnet": true,
    "name": "QuarkChain Devnet Shard 5",
-   "shortcut": "QKC",
-   "slip44": 60,
+   "shortcut": "tQKC",
+   "slip44": 1,
    "url": "https://www.quarkchain.io/"
   },
   {
    "chain": "qkc-d-s6",
    "chain_id": 110007,
+   "is_testnet": true,
    "name": "QuarkChain Devnet Shard 6",
-   "shortcut": "QKC",
-   "slip44": 60,
+   "shortcut": "tQKC",
+   "slip44": 1,
    "url": "https://www.quarkchain.io/"
   },
   {
    "chain": "qkc-d-s7",
    "chain_id": 110008,
+   "is_testnet": true,
    "name": "QuarkChain Devnet Shard 7",
-   "shortcut": "QKC",
-   "slip44": 60,
+   "shortcut": "tQKC",
+   "slip44": 1,
    "url": "https://www.quarkchain.io/"
   },
   {
    "chain": "aka",
    "chain_id": 200625,
+   "is_testnet": false,
    "name": "Akroma",
    "shortcut": "AKA",
    "slip44": 200625,
@@ -2489,6 +2793,7 @@
   {
    "chain": "alaya",
    "chain_id": 201018,
+   "is_testnet": false,
    "name": "Alaya",
    "shortcut": "atp",
    "slip44": 60,
@@ -2497,6 +2802,7 @@
   {
    "chain": "alayadev",
    "chain_id": 201030,
+   "is_testnet": true,
    "name": "Alaya Dev Testnet",
    "shortcut": "tatp",
    "slip44": 1,
@@ -2505,6 +2811,7 @@
   {
    "chain": "platondev",
    "chain_id": 210309,
+   "is_testnet": true,
    "name": "PlatON Dev Testnet",
    "shortcut": "tlat",
    "slip44": 1,
@@ -2513,6 +2820,7 @@
   {
    "chain": "platon",
    "chain_id": 210425,
+   "is_testnet": false,
    "name": "PlatON",
    "shortcut": "lat",
    "slip44": 60,
@@ -2521,6 +2829,7 @@
   {
    "chain": "hym",
    "chain_id": 234666,
+   "is_testnet": true,
    "name": "Haymo Testnet",
    "shortcut": "tHYM",
    "slip44": 1,
@@ -2529,6 +2838,7 @@
   {
    "chain": "ats",
    "chain_id": 246529,
+   "is_testnet": false,
    "name": "ARTIS sigma1",
    "shortcut": "ATS",
    "slip44": 246529,
@@ -2537,6 +2847,7 @@
   {
    "chain": "atstau",
    "chain_id": 246785,
+   "is_testnet": true,
    "name": "ARTIS Testnet tau1",
    "shortcut": "tATS",
    "slip44": 1,
@@ -2545,6 +2856,7 @@
   {
    "chain": "SoChain",
    "chain_id": 281121,
+   "is_testnet": false,
    "name": "Social Smart Chain",
    "shortcut": "$OC",
    "slip44": 60,
@@ -2553,6 +2865,7 @@
   {
    "chain": "sparta",
    "chain_id": 333888,
+   "is_testnet": true,
    "name": "Polis Testnet",
    "shortcut": "tPOLIS",
    "slip44": 1,
@@ -2562,6 +2875,7 @@
    "chain": "olympus",
    "chain_id": 333999,
    "coingecko_id": "polis-chain",
+   "is_testnet": false,
    "name": "Polis",
    "shortcut": "POLIS",
    "slip44": 60,
@@ -2570,6 +2884,7 @@
   {
    "chain": "arb-rinkeby",
    "chain_id": 421611,
+   "is_testnet": true,
    "name": "Arbitrum Rinkeby",
    "shortcut": "tARETH",
    "slip44": 1,
@@ -2578,6 +2893,7 @@
   {
    "chain": "wlkt",
    "chain_id": 444900,
+   "is_testnet": true,
    "name": "Weelink Testnet",
    "shortcut": "tWLK",
    "slip44": 1,
@@ -2586,6 +2902,7 @@
   {
    "chain": "vpioneer",
    "chain_id": 666666,
+   "is_testnet": false,
    "name": "Vision - Vpioneer Test Chain",
    "shortcut": "VS",
    "slip44": 60,
@@ -2594,6 +2911,7 @@
   {
    "chain": "vision",
    "chain_id": 888888,
+   "is_testnet": false,
    "name": "Vision -",
    "shortcut": "VS",
    "slip44": 60,
@@ -2602,6 +2920,7 @@
   {
    "chain": "elv",
    "chain_id": 955305,
+   "is_testnet": false,
    "name": "Eluvio Content Fabric",
    "shortcut": "ELV",
    "slip44": 1011,
@@ -2610,6 +2929,7 @@
   {
    "chain": "etho",
    "chain_id": 1313114,
+   "is_testnet": false,
    "name": "Etho Protocol",
    "shortcut": "ETHO",
    "slip44": 1313114,
@@ -2618,6 +2938,7 @@
   {
    "chain": "xero",
    "chain_id": 1313500,
+   "is_testnet": false,
    "name": "Xerom",
    "shortcut": "XERO",
    "slip44": 60,
@@ -2626,6 +2947,7 @@
   {
    "chain": "kintsugi",
    "chain_id": 1337702,
+   "is_testnet": true,
    "name": "Kintsugi",
    "shortcut": "tkiETH",
    "slip44": 1,
@@ -2634,6 +2956,7 @@
   {
    "chain": "music",
    "chain_id": 7762959,
+   "is_testnet": false,
    "name": "Musicoin",
    "shortcut": "MUSIC",
    "slip44": 184,
@@ -2642,6 +2965,7 @@
   {
    "chain": "sep",
    "chain_id": 11155111,
+   "is_testnet": true,
    "name": "Sepolia",
    "shortcut": "tSEP",
    "slip44": 1,
@@ -2650,6 +2974,7 @@
   {
    "chain": "tpep",
    "chain_id": 13371337,
+   "is_testnet": false,
    "name": "PepChain Churchill",
    "shortcut": "TPEP",
    "slip44": 60,
@@ -2658,6 +2983,7 @@
   {
    "chain": "ilt",
    "chain_id": 18289463,
+   "is_testnet": false,
    "name": "IOLite",
    "shortcut": "ILT",
    "slip44": 60,
@@ -2666,6 +2992,7 @@
   {
    "chain": "qki",
    "chain_id": 20181205,
+   "is_testnet": false,
    "name": "quarkblockchain",
    "shortcut": "QKI",
    "slip44": 60,
@@ -2674,6 +3001,7 @@
   {
    "chain": "auxi",
    "chain_id": 28945486,
+   "is_testnet": false,
    "name": "Auxilium Network",
    "shortcut": "AUX",
    "slip44": 344,
@@ -2682,6 +3010,7 @@
   {
    "chain": "JOYS",
    "chain_id": 35855456,
+   "is_testnet": false,
    "name": "Joys Digital",
    "shortcut": "JOYS",
    "slip44": 60,
@@ -2690,6 +3019,7 @@
   {
    "chain": "aqua",
    "chain_id": 61717561,
+   "is_testnet": false,
    "name": "Aquachain",
    "shortcut": "AQUA",
    "slip44": 61717561,
@@ -2698,6 +3028,7 @@
   {
    "chain": "TOYS",
    "chain_id": 99415706,
+   "is_testnet": true,
    "name": "Joys Digital TestNet",
    "shortcut": "TOYS",
    "slip44": 1,
@@ -2706,6 +3037,7 @@
   {
    "chain": "GTH",
    "chain_id": 192837465,
+   "is_testnet": false,
    "name": "Gather",
    "shortcut": "GTH",
    "slip44": 60,
@@ -2714,14 +3046,16 @@
   {
    "chain": "neonevm-devnet",
    "chain_id": 245022926,
+   "is_testnet": true,
    "name": "Neon EVM DevNet",
-   "shortcut": "NEON",
-   "slip44": 60,
+   "shortcut": "tNEON",
+   "slip44": 1,
    "url": "https://neon-labs.org/"
   },
   {
    "chain": "neonevm-mainnet",
    "chain_id": 245022934,
+   "is_testnet": false,
    "name": "Neon EVM",
    "shortcut": "NEON",
    "slip44": 60,
@@ -2730,6 +3064,7 @@
   {
    "chain": "neonevm-testnet",
    "chain_id": 245022940,
+   "is_testnet": true,
    "name": "Neon EVM TestNet",
    "shortcut": "tNEON",
    "slip44": 1,
@@ -2738,6 +3073,7 @@
   {
    "chain": "oneledger",
    "chain_id": 311752642,
+   "is_testnet": false,
    "name": "OneLedger",
    "shortcut": "OLT",
    "slip44": 60,
@@ -2746,6 +3082,7 @@
   {
    "chain": "tGTH",
    "chain_id": 356256156,
+   "is_testnet": false,
    "name": "Gather Tesnet Network",
    "shortcut": "GTH",
    "slip44": 60,
@@ -2754,14 +3091,16 @@
   {
    "chain": "dGTH",
    "chain_id": 486217935,
+   "is_testnet": true,
    "name": "Gather Devnet Network",
-   "shortcut": "GTH",
-   "slip44": 60,
+   "shortcut": "tGTH",
+   "slip44": 1,
    "url": "https://gather.network"
   },
   {
    "chain": "ipos",
    "chain_id": 1122334455,
+   "is_testnet": false,
    "name": "IPOS Network",
    "shortcut": "IPOS",
    "slip44": 60,
@@ -2771,6 +3110,7 @@
    "chain": "aurora",
    "chain_id": 1313161554,
    "coingecko_id": "aurora",
+   "is_testnet": false,
    "name": "Aurora",
    "shortcut": "ETH",
    "slip44": 60,
@@ -2779,6 +3119,7 @@
   {
    "chain": "aurora-testnet",
    "chain_id": 1313161555,
+   "is_testnet": true,
    "name": "Aurora Testnet",
    "shortcut": "tETH",
    "slip44": 1,
@@ -2787,6 +3128,7 @@
   {
    "chain": "aurora-betanet",
    "chain_id": 1313161556,
+   "is_testnet": false,
    "name": "Aurora Betanet",
    "shortcut": "ETH",
    "slip44": 60,
@@ -2796,6 +3138,7 @@
    "chain": "hmy-s0",
    "chain_id": 1666600000,
    "coingecko_id": "harmony-shard-0",
+   "is_testnet": false,
    "name": "Harmony",
    "shortcut": "ONE",
    "slip44": 60,
@@ -2804,6 +3147,7 @@
   {
    "chain": "hmy-s1",
    "chain_id": 1666600001,
+   "is_testnet": false,
    "name": "Harmony",
    "shortcut": "ONE",
    "slip44": 60,
@@ -2812,6 +3156,7 @@
   {
    "chain": "hmy-s2",
    "chain_id": 1666600002,
+   "is_testnet": false,
    "name": "Harmony",
    "shortcut": "ONE",
    "slip44": 60,
@@ -2820,6 +3165,7 @@
   {
    "chain": "hmy-s3",
    "chain_id": 1666600003,
+   "is_testnet": false,
    "name": "Harmony",
    "shortcut": "ONE",
    "slip44": 60,
@@ -2828,6 +3174,7 @@
   {
    "chain": "hmy-b-s0",
    "chain_id": 1666700000,
+   "is_testnet": true,
    "name": "Harmony Testnet Shard 0",
    "shortcut": "tONE",
    "slip44": 1,
@@ -2836,6 +3183,7 @@
   {
    "chain": "hmy-b-s1",
    "chain_id": 1666700001,
+   "is_testnet": true,
    "name": "Harmony Testnet Shard 1",
    "shortcut": "tONE",
    "slip44": 1,
@@ -2844,6 +3192,7 @@
   {
    "chain": "hmy-b-s2",
    "chain_id": 1666700002,
+   "is_testnet": true,
    "name": "Harmony Testnet Shard 2",
    "shortcut": "tONE",
    "slip44": 1,
@@ -2852,6 +3201,7 @@
   {
    "chain": "hmy-b-s3",
    "chain_id": 1666700003,
+   "is_testnet": true,
    "name": "Harmony Testnet Shard 3",
    "shortcut": "tONE",
    "slip44": 1,
@@ -2860,6 +3210,7 @@
   {
    "chain": "hop",
    "chain_id": 2021121117,
+   "is_testnet": false,
    "name": "DataHopper",
    "shortcut": "HOP",
    "slip44": 60,
@@ -2868,6 +3219,7 @@
   {
    "chain": "pirl",
    "chain_id": 3125659152,
+   "is_testnet": false,
    "name": "Pirl",
    "shortcut": "PIRL",
    "slip44": 164,
@@ -2876,6 +3228,7 @@
   {
    "chain": "frankenstein",
    "chain_id": 4216137055,
+   "is_testnet": true,
    "name": "OneLedger Testnet Frankenstein",
    "shortcut": "tOLT",
    "slip44": 1,
@@ -2884,6 +3237,7 @@
   {
    "chain": "tpalm",
    "chain_id": 11297108099,
+   "is_testnet": true,
    "name": "Palm Testnet",
    "shortcut": "tPALM",
    "slip44": 1,
@@ -2892,6 +3246,7 @@
   {
    "chain": "palm",
    "chain_id": 11297108109,
+   "is_testnet": false,
    "name": "Palm",
    "shortcut": "PALM",
    "slip44": 60,
@@ -2900,6 +3255,7 @@
   {
    "chain": "ntt",
    "chain_id": 197710212030,
+   "is_testnet": false,
    "name": "Ntity",
    "shortcut": "NTT",
    "slip44": 60,
@@ -2908,6 +3264,7 @@
   {
    "chain": "ntt-haradev",
    "chain_id": 197710212031,
+   "is_testnet": true,
    "name": "Haradev Testnet",
    "shortcut": "tNTTH",
    "slip44": 1,
@@ -2916,6 +3273,7 @@
   {
    "chain": "mole",
    "chain_id": 6022140761023,
+   "is_testnet": false,
    "name": "Molereum Network",
    "shortcut": "MOLE",
    "slip44": 60,
@@ -2924,13 +3282,14 @@
   {
    "chain": "gw-testnet-v1",
    "chain_id": 868455272153094,
+   "is_testnet": true,
    "name": "Godwoken Testnet (V1)",
    "shortcut": "tCKB",
    "slip44": 1,
    "url": "https://www.nervos.org"
   }
  ],
- "timestamp": "14.10.2022 14:11:56+0000",
+ "timestamp": "19.10.2022 13:02:55+0000",
  "tokens": [
   {
    "address": "0x00000000000045166c45af0fc6e4cf31d9e14b9a",
