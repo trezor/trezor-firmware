@@ -1,10 +1,10 @@
 use core::{convert::Infallible, num::TryFromIntError};
+use cstr_core::CStr;
 
 #[cfg(feature = "micropython")]
 use {
     crate::micropython::{ffi, obj::Obj, qstr::Qstr},
     core::convert::TryInto,
-    cstr_core::CStr,
 };
 
 #[allow(clippy::enum_variant_names)] // We mimic the Python exception classnames here.
@@ -20,7 +20,6 @@ pub enum Error {
     KeyError(Obj),
     #[cfg(feature = "micropython")]
     AttributeError(Qstr),
-    #[cfg(feature = "micropython")]
     ValueError(&'static CStr),
     #[cfg(feature = "micropython")]
     ValueErrorParam(&'static CStr, Obj),
