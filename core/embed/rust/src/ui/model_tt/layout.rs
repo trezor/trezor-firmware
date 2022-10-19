@@ -1,7 +1,5 @@
 use core::{cmp::Ordering, convert::TryInto, ops::Deref};
 
-use heapless::Vec;
-
 use crate::{
     error::Error,
     micropython::{
@@ -31,7 +29,7 @@ use crate::{
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
             result::{CANCELLED, CONFIRMED, INFO},
-            util::{iter_into_array, iter_into_objs},
+            util::{iter_into_array, ConfirmBlob, PropsList},
         },
     },
 };
@@ -331,26 +329,24 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-fn _confirm_blob(
+fn confirm_blob(
     title: StrBuffer,
-    data: Option<StrBuffer>,
+    data: Obj,
     description: Option<StrBuffer>,
     extra: Option<StrBuffer>,
     verb: Option<StrBuffer>,
     verb_cancel: Option<StrBuffer>,
     hold: bool,
 ) -> Result<Obj, Error> {
-    let mut par_source: Vec<Paragraph<StrBuffer>, 3> = Vec::new();
-    if let Some(description) = description {
-        unwrap!(par_source.push(Paragraph::new(&theme::TEXT_NORMAL, description)));
+    let paragraphs = ConfirmBlob {
+        description: description.unwrap_or_else(StrBuffer::empty),
+        extra: extra.unwrap_or_else(StrBuffer::empty),
+        data: data.try_into()?,
+        description_font: &theme::TEXT_NORMAL,
+        extra_font: &theme::TEXT_BOLD,
+        data_font: &theme::TEXT_MONO,
     }
-    if let Some(extra) = extra {
-        unwrap!(par_source.push(Paragraph::new(&theme::TEXT_BOLD, extra)));
-    }
-    if let Some(data) = data {
-        unwrap!(par_source.push(Paragraph::new(&theme::TEXT_MONO, data)));
-    }
-    let paragraphs = Paragraphs::new(par_source);
+    .into_paragraphs();
 
     let obj = if hold {
         LayoutObj::new(Frame::new(title, SwipeHoldPage::new(paragraphs, theme::BG)))?
@@ -369,10 +365,10 @@ fn _confirm_blob(
 extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let data: StrBuffer = kwargs.get(Qstr::MP_QSTR_data)?.try_into()?;
-        let description: StrBuffer =
-            kwargs.get_or(Qstr::MP_QSTR_description, StrBuffer::empty())?;
-        let extra: StrBuffer = kwargs.get_or(Qstr::MP_QSTR_extra, StrBuffer::empty())?;
+        let data: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
+        let description: Option<StrBuffer> =
+            kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
+        let extra: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_extra)?.try_into_option()?;
         let verb_cancel: Option<StrBuffer> = kwargs
             .get(Qstr::MP_QSTR_verb_cancel)
             .unwrap_or_else(|_| Obj::const_none())
@@ -382,11 +378,11 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
 
         let verb: StrBuffer = "CONFIRM".into();
 
-        _confirm_blob(
+        confirm_blob(
             title,
-            Some(data),
-            Some(description),
-            Some(extra),
+            data,
+            description,
+            extra,
             Some(verb),
             verb_cancel,
             hold,
@@ -401,31 +397,12 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
         let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
 
-        let mut paragraphs = ParagraphVecLong::new();
-
-        let mut iter_buf = IterBuf::new();
-        let iter = Iter::try_from_obj_with_buf(items, &mut iter_buf)?;
-        for para in iter {
-            let [key, value, is_mono]: [Obj; 3] = iter_into_objs(para)?;
-            let key = key.try_into_option::<StrBuffer>()?;
-            let value = value.try_into_option::<StrBuffer>()?;
-
-            if let Some(key) = key {
-                if value.is_some() {
-                    paragraphs.add(Paragraph::new(&theme::TEXT_BOLD, key).no_break());
-                } else {
-                    paragraphs.add(Paragraph::new(&theme::TEXT_BOLD, key));
-                }
-            }
-            if let Some(value) = value {
-                if is_mono.try_into()? {
-                    paragraphs.add(Paragraph::new(&theme::TEXT_MONO, value));
-                } else {
-                    paragraphs.add(Paragraph::new(&theme::TEXT_NORMAL, value));
-                }
-            }
-        }
-
+        let paragraphs = PropsList::new(
+            items,
+            &theme::TEXT_BOLD,
+            &theme::TEXT_NORMAL,
+            &theme::TEXT_MONO,
+        )?;
         let obj = if hold {
             LayoutObj::new(Frame::new(
                 title,
@@ -497,8 +474,9 @@ extern "C" fn new_show_qr(n_args: usize, args: *const Obj, kwargs: *mut Map) -> 
 extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
-        let value: StrBuffer = kwargs.get(Qstr::MP_QSTR_value)?.try_into()?;
+        let description: Option<StrBuffer> =
+            kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
+        let value: Obj = kwargs.get(Qstr::MP_QSTR_value)?;
 
         let verb: Option<StrBuffer> = kwargs
             .get(Qstr::MP_QSTR_verb)
@@ -506,15 +484,7 @@ extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Ma
             .try_into_option()?;
         let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
 
-        _confirm_blob(
-            title,
-            Some(value),
-            Some(description),
-            None,
-            verb,
-            None,
-            hold,
-        )
+        confirm_blob(title, value, description, None, verb, None, hold)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -1142,9 +1112,9 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def confirm_blob(
     ///     *,
     ///     title: str,
-    ///     data: str,
-    ///     description: str = "",
-    ///     extra: str = "",
+    ///     data: str | bytes,
+    ///     description: str | None,
+    ///     extra: str | None,
     ///     verb_cancel: str | None = None,
     ///     ask_pagination: bool = False,
     ///     hold: bool = False,
@@ -1155,12 +1125,11 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def confirm_properties(
     ///     *,
     ///     title: str,
-    ///     items: Iterable[Tuple[str | None, str | None, bool]],
+    ///     items: list[tuple[str | None, str | bytes | None, bool]],
     ///     hold: bool = False,
     /// ) -> object:
     ///     """Confirm list of key-value pairs. The third component in the tuple should be True if
-    ///     the value is to be rendered as binary with monospace font, False otherwise.
-    ///     This only concerns the text style, you need to decode the value to UTF-8 in python."""
+    ///     the value is to be rendered as binary with monospace font, False otherwise."""
     Qstr::MP_QSTR_confirm_properties => obj_fn_kw!(0, new_confirm_properties).as_obj(),
 
     /// def confirm_reset_device(

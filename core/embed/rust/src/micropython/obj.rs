@@ -410,3 +410,18 @@ impl Obj {
         }
     }
 }
+
+impl Obj {
+    pub fn is_bytes(self) -> bool {
+        unsafe {
+            ffi::mp_type_bytes.is_type_of(self)
+                || ffi::mp_type_bytearray.is_type_of(self)
+                || ffi::mp_type_memoryview.is_type_of(self)
+        }
+    }
+
+    pub fn is_str(self) -> bool {
+        let is_type_str = unsafe { ffi::mp_type_str.is_type_of(self) };
+        is_type_str || self.is_qstr()
+    }
+}

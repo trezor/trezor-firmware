@@ -75,9 +75,9 @@ def confirm_action(
 def confirm_blob(
     *,
     title: str,
-    data: str,
-    description: str = "",
-    extra: str = "",
+    data: str | bytes,
+    description: str | None,
+    extra: str | None,
     verb_cancel: str | None = None,
     ask_pagination: bool = False,
     hold: bool = False,
@@ -89,12 +89,11 @@ def confirm_blob(
 def confirm_properties(
     *,
     title: str,
-    items: Iterable[Tuple[str | None, str | None, bool]],
+    items: list[tuple[str | None, str | bytes | None, bool]],
     hold: bool = False,
 ) -> object:
     """Confirm list of key-value pairs. The third component in the tuple should be True if
-    the value is to be rendered as binary with monospace font, False otherwise.
-    This only concerns the text style, you need to decode the value to UTF-8 in python."""
+    the value is to be rendered as binary with monospace font, False otherwise."""
 
 
 # rust/src/ui/model_tt/layout.rs
