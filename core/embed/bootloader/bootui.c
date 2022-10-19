@@ -21,16 +21,6 @@
 
 #include "bootui.h"
 #include "display.h"
-#include "icon_cancel.h"
-#include "icon_confirm.h"
-#include "icon_done.h"
-#include "icon_fail.h"
-#include "icon_info.h"
-#include "icon_install.h"
-#include "icon_logo.h"
-#include "icon_safeplace.h"
-#include "icon_welcome.h"
-#include "icon_wipe.h"
 #include "mini_printf.h"
 #include "version.h"
 
@@ -137,32 +127,14 @@ void ui_screen_boot_click(void) {
 
 // welcome UI
 
-void ui_screen_welcome_first(void) {
-  display_icon(0, 0, 240, 240, toi_icon_logo + 12, sizeof(toi_icon_logo) - 12,
-               COLOR_WELCOME_FG, COLOR_WELCOME_BG);
-}
-
-void ui_screen_welcome_second(void) {
-  display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WELCOME_BG);
-  display_icon((DISPLAY_RESX - 200) / 2, (DISPLAY_RESY - 60) / 2, 200, 60,
-               toi_icon_safeplace + 12, sizeof(toi_icon_safeplace) - 12,
-               COLOR_WELCOME_FG, COLOR_WELCOME_BG);
-}
-
-void ui_screen_welcome_third(void) {
-  display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WELCOME_BG);
-  display_icon((DISPLAY_RESX - 180) / 2, (DISPLAY_RESY - 30) / 2 - 5, 180, 30,
-               toi_icon_welcome + 12, sizeof(toi_icon_welcome) - 12,
-               COLOR_WELCOME_FG, COLOR_WELCOME_BG);
-  display_text_center(120, 220, "Go to trezor.io/start", -1, FONT_NORMAL,
-                      COLOR_WELCOME_FG, COLOR_WELCOME_BG);
-}
+void ui_screen_welcome(void) { screen_welcome(); }
 
 uint32_t ui_screen_intro(const vendor_header *const vhdr,
                          const image_header *const hdr) {
   char bld_ver[32];
   format_ver_bfr("%d.%d.%d", VERSION_UINT32, bld_ver, sizeof(bld_ver));
   const char *ver_str = format_ver("Firmware %d.%d.%d by", hdr->version);
+
   return screen_intro(bld_ver, vhdr->vstr, vhdr->vstr_len, ver_str);
 }
 
@@ -243,8 +215,8 @@ void ui_screen_done(int restart_seconds, secbool full_redraw) {
   screen_install_success(str, initial_setup, full_redraw);
 }
 
-void ui_screen_boot_empty() {
-  screen_boot_empty();
+void ui_screen_boot_empty(bool firmware_present) {
+  screen_boot_empty(firmware_present);
   display_refresh();
   display_backlight(BACKLIGHT_NORMAL);
 }

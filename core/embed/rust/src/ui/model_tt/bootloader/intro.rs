@@ -51,7 +51,7 @@ impl Intro {
                     .styled(button_bld_menu())
                     .with_expanded_touch_area(Insets::uniform(13)),
             ),
-            host: Child::new(Button::with_text("CONNECT TO HOST").styled(button_bld_menu_item())),
+            host: Child::new(Button::with_text("INSTALL FIRMWARE").styled(button_bld_menu_item())),
             text: Child::new(p1),
         };
 

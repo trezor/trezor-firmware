@@ -5,7 +5,7 @@ use crate::{
         display::{Color, Font},
         model_tt::{
             component::{ButtonStyle, ButtonStyleSheet},
-            theme::{FG, GREY_DARK, GREY_LIGHT, WHITE},
+            theme::{BG, FG, GREY_DARK, GREY_LIGHT, GREY_MEDIUM, WHITE},
         },
     },
 };
@@ -13,8 +13,15 @@ use crate::{
 pub const BLD_BG: Color = Color::rgb(0x00, 0x17, 0xA3);
 pub const BLD_FG: Color = WHITE;
 pub const BLD_WIPE_COLOR: Color = Color::rgb(0xAD, 0x2B, 0x2B);
+
 pub const BLD_WIPE_BTN_COLOR: Color = Color::alpha(BLD_WIPE_COLOR, alpha!(0.3));
-pub const BLD_WIPE_BTN_COLOR_ACTIVE: Color = Color::alpha(BLD_WIPE_COLOR, alpha!(0.15));
+pub const BLD_WIPE_BTN_COLOR_ACTIVE: Color = Color::rgb(0xB9, 0x4B, 0x4B);
+pub const BLD_WIPE_CANCEL_BTN_COLOR_ACTIVE: Color = Color::rgb(0xF3, 0xDF, 0xDF);
+
+pub const BLD_INSTALL_BTN_COLOR: Color = Color::alpha(BLD_BG, alpha!(0.3));
+pub const BLD_INSTALL_BTN_COLOR_ACTIVE: Color = Color::rgb(0xD9, 0xDC, 0xF1);
+pub const BLD_INSTALL_CANCEL_BTN_COLOR_ACTIVE: Color = Color::rgb(0x26, 0x3A, 0xB1);
+
 pub const BLD_COLOR_SUBMSG: Color = Color::rgb(0x80, 0x8B, 0xD1);
 pub const BLD_COLOR_INITIAL_INSTALL_SUCCESS: Color = Color::rgb(0x39, 0xA8, 0x14);
 pub const BLD_COLOR_INITIAL_INSTALL_BG: Color = Color::rgb(0xDE, 0xDE, 0xDE);
@@ -43,7 +50,7 @@ pub const ERASE_BIG: &[u8] = include_res!("model_tt/res/erase_big.toif");
 pub const REBOOT: &[u8] = include_res!("model_tt/res/reboot.toif");
 pub const MENU: &[u8] = include_res!("model_tt/res/menu.toif");
 pub const RECEIVE: &[u8] = include_res!("model_tt/res/receive.toif");
-pub const LOGO_EMPTY: &[u8] = include_res!("model_tt/res/trezor_empty.toif");
+pub const LOGO_EMPTY: &[u8] = include_res!("model_tt/res/trezor_empty_white.toif");
 
 pub fn button_install_cancel() -> ButtonStyleSheet {
     ButtonStyleSheet {
@@ -59,7 +66,7 @@ pub fn button_install_cancel() -> ButtonStyleSheet {
         active: &ButtonStyle {
             font: Font::BOLD,
             text_color: WHITE,
-            button_color: BLD_BTN_MENU_COLOR_ACTIVE,
+            button_color: BLD_INSTALL_CANCEL_BTN_COLOR_ACTIVE,
             background_color: BLD_BG,
             border_color: BLD_BG,
             border_radius: RADIUS,
@@ -90,8 +97,8 @@ pub fn button_install_confirm() -> ButtonStyleSheet {
         },
         active: &ButtonStyle {
             font: Font::BOLD,
-            text_color: WHITE,
-            button_color: BLD_BTN_MENU_COLOR_ACTIVE,
+            text_color: BLD_BG,
+            button_color: BLD_INSTALL_BTN_COLOR_ACTIVE,
             background_color: BLD_BG,
             border_color: BLD_BG,
             border_radius: RADIUS,
@@ -122,8 +129,8 @@ pub fn button_wipe_cancel() -> ButtonStyleSheet {
         },
         active: &ButtonStyle {
             font: Font::BOLD,
-            text_color: WHITE,
-            button_color: BLD_WIPE_BTN_COLOR,
+            text_color: BLD_WIPE_COLOR,
+            button_color: BLD_WIPE_CANCEL_BTN_COLOR_ACTIVE,
             background_color: BLD_WIPE_COLOR,
             border_color: BLD_WIPE_COLOR,
             border_radius: RADIUS,
@@ -236,6 +243,9 @@ pub fn button_bld_menu_item() -> ButtonStyleSheet {
         },
     }
 }
+pub const TEXT_WELCOME: TextStyle =
+    TextStyle::new(Font::NORMAL, GREY_MEDIUM, BG, GREY_MEDIUM, GREY_MEDIUM);
+pub const TEXT_WELCOME_BOLD: TextStyle = TextStyle::new(Font::BOLD, FG, BG, FG, FG);
 
 pub const TEXT_NORMAL: TextStyle = TextStyle::new(Font::NORMAL, BLD_FG, BLD_BG, BLD_FG, BLD_FG);
 pub const TEXT_BOLD: TextStyle = TextStyle::new(Font::BOLD, BLD_FG, BLD_BG, BLD_FG, BLD_FG);
@@ -246,10 +256,5 @@ pub const TEXT_SUBMSG: TextStyle = TextStyle::new(
     BLD_COLOR_SUBMSG,
     BLD_COLOR_SUBMSG,
 );
-pub const TEXT_INITIAL_INSTALL_SUCCESS: TextStyle = TextStyle::new(
-    Font::BOLD,
-    BLD_COLOR_INITIAL_INSTALL_SUCCESS,
-    BLD_COLOR_INITIAL_INSTALL_BG,
-    BLD_COLOR_INITIAL_INSTALL_SUCCESS,
-    BLD_COLOR_INITIAL_INSTALL_SUCCESS,
-);
+pub const TEXT_SUBMSG_INITIAL: TextStyle =
+    TextStyle::new(Font::BOLD, GREY_MEDIUM, BG, GREY_MEDIUM, GREY_MEDIUM);

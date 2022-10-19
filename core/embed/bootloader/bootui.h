@@ -37,9 +37,7 @@ void ui_screen_boot(const vendor_header* const vhdr,
 void ui_screen_boot_wait(int wait_seconds);
 void ui_screen_boot_click(void);
 
-void ui_screen_welcome_first(void);
-void ui_screen_welcome_second(void);
-void ui_screen_welcome_third(void);
+void ui_screen_welcome(void);
 
 uint32_t ui_screen_intro(const vendor_header* const vhdr,
                          const image_header* const hdr);
@@ -69,7 +67,7 @@ void ui_fadein(void);
 void ui_fadeout(void);
 void ui_set_initial_setup(bool initial);
 
-void ui_screen_boot_empty();
+void ui_screen_boot_empty(bool firmware_present);
 
 // clang-format off
 #define INPUT_CANCEL 0x01        // Cancel button
