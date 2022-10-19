@@ -14,7 +14,7 @@ mod connect;
 mod fwinfo;
 pub mod intro;
 pub mod menu;
-mod theme;
+pub mod theme;
 mod title;
 
 use crate::ui::{
