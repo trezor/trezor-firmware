@@ -1,7 +1,8 @@
 use crate::ui::{
     component::{
+        image::BlendedImage,
         text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
-        Child, Component, Event, EventCtx, Image, Never,
+        Child, Component, Event, EventCtx, Never,
     },
     geometry::{Insets, LinearPlacement, Rect},
 };
@@ -85,7 +86,7 @@ where
 }
 
 pub struct IconDialog<T, U> {
-    image: Child<Image>,
+    image: Child<BlendedImage>,
     paragraphs: Paragraphs<ParagraphVecShort<T>>,
     controls: Child<U>,
 }
@@ -95,9 +96,9 @@ where
     T: AsRef<str>,
     U: Component,
 {
-    pub fn new(icon: &'static [u8], title: T, controls: U) -> Self {
+    pub fn new(icon: BlendedImage, title: T, controls: U) -> Self {
         Self {
-            image: Child::new(Image::new(icon)),
+            image: Child::new(icon),
             paragraphs: ParagraphVecShort::from_iter([Paragraph::new(
                 &theme::TEXT_DEMIBOLD,
                 title,
@@ -125,7 +126,13 @@ where
     pub fn new_shares(lines: [T; 4], controls: U) -> Self {
         let [l0, l1, l2, l3] = lines;
         Self {
-            image: Child::new(Image::new(theme::IMAGE_SUCCESS)),
+            image: Child::new(BlendedImage::new(
+                theme::IMAGE_BG_CIRCLE,
+                theme::IMAGE_FG_SUCCESS,
+                theme::SUCCESS_COLOR,
+                theme::FG,
+                theme::BG,
+            )),
             paragraphs: ParagraphVecShort::from_iter([
                 Paragraph::new(&theme::TEXT_NORMAL_OFF_WHITE, l0).centered(),
                 Paragraph::new(&theme::TEXT_DEMIBOLD, l1).centered(),
@@ -192,6 +199,7 @@ where
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("IconDialog");
         t.field("content", &self.paragraphs);
+        t.field("image", &self.image);
         t.field("controls", &self.controls);
         t.close();
     }

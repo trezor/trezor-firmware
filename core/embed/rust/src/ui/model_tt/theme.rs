@@ -18,22 +18,22 @@ pub const BACKLIGHT_NONE: i32 = 2;
 pub const BACKLIGHT_MAX: i32 = 255;
 
 // Color palette.
-pub const WHITE: Color = Color::rgb(255, 255, 255);
+pub const WHITE: Color = Color::rgb(0xFF, 0xFF, 0xFF);
 pub const BLACK: Color = Color::rgb(0, 0, 0);
 pub const FG: Color = WHITE; // Default foreground (text & icon) color.
 pub const BG: Color = BLACK; // Default background color.
-pub const RED: Color = Color::rgb(205, 73, 73); // dark-coral
-pub const RED_DARK: Color = Color::rgb(166, 45, 45);
-pub const YELLOW: Color = Color::rgb(193, 144, 9); // ochre
-pub const YELLOW_DARK: Color = Color::rgb(154, 115, 6); // FIXME
-pub const GREEN: Color = Color::rgb(57, 168, 20); // grass-green
-pub const GREEN_DARK: Color = Color::rgb(16, 171, 87);
-pub const BLUE: Color = Color::rgb(0, 86, 190); // blue
-pub const BLUE_DARK: Color = Color::rgb(0, 68, 152); // FIXME
-pub const OFF_WHITE: Color = Color::rgb(222, 222, 222); // very light grey
-pub const GREY_LIGHT: Color = Color::rgb(168, 168, 168); // greyish
-pub const GREY_MEDIUM: Color = Color::rgb(100, 100, 100);
-pub const GREY_DARK: Color = Color::rgb(51, 51, 51); // greyer
+pub const RED: Color = Color::rgb(0xCD, 0x49, 0x49); // dark-coral
+pub const RED_DARK: Color = Color::rgb(0xA6, 0x2D, 0x2D);
+pub const YELLOW: Color = Color::rgb(0xC1, 0x90, 0x09); // ochre
+pub const YELLOW_DARK: Color = Color::rgb(0x9A, 0x73, 0x06); // FIXME
+pub const GREEN: Color = Color::rgb(0x39, 0xA8, 0x14); // grass-green
+pub const GREEN_DARK: Color = Color::rgb(0x10, 0xAB, 0x57);
+pub const BLUE: Color = Color::rgb(0, 0x56, 0xBE); // blue
+pub const BLUE_DARK: Color = Color::rgb(0, 0x44, 0x98); // FIXME
+pub const OFF_WHITE: Color = Color::rgb(0xDE, 0xDE, 0xDE); // very light grey
+pub const GREY_LIGHT: Color = Color::rgb(0xA8, 0xA8, 0xA8); // greyish
+pub const GREY_MEDIUM: Color = Color::rgb(0x64, 0x64, 0x64);
+pub const GREY_DARK: Color = Color::rgb(0x33, 0x33, 0x33); // greyer
 
 // Commonly used corner radius (i.e. for buttons).
 pub const RADIUS: u8 = 2;
@@ -55,11 +55,17 @@ pub const ICON_WARN: &[u8] = include_res!("model_tt/res/warn-icon.toif");
 pub const ICON_LIST_CURRENT: &[u8] = include_res!("model_tt/res/current.toif");
 pub const ICON_LIST_CHECK: &[u8] = include_res!("model_tt/res/check.toif");
 
-// Large, color icons.
-pub const IMAGE_WARN: &[u8] = include_res!("model_tt/res/warn.toif");
-pub const IMAGE_SUCCESS: &[u8] = include_res!("model_tt/res/success.toif");
-pub const IMAGE_ERROR: &[u8] = include_res!("model_tt/res/error.toif");
-pub const IMAGE_INFO: &[u8] = include_res!("model_tt/res/info.toif");
+// Large, three-color icons.
+pub const WARN_COLOR: Color = YELLOW;
+pub const INFO_COLOR: Color = BLUE;
+pub const SUCCESS_COLOR: Color = GREEN;
+pub const ERROR_COLOR: Color = RED;
+pub const IMAGE_FG_WARN: &[u8] = include_res!("model_tt/res/warn_fg.toif");
+pub const IMAGE_FG_SUCCESS: &[u8] = include_res!("model_tt/res/success_fg.toif");
+pub const IMAGE_FG_ERROR: &[u8] = include_res!("model_tt/res/error_fg.toif");
+pub const IMAGE_FG_INFO: &[u8] = include_res!("model_tt/res/info_fg.toif");
+pub const IMAGE_BG_CIRCLE: &[u8] = include_res!("model_tt/res/circle.toif");
+pub const IMAGE_BG_TRIANGLE: &[u8] = include_res!("model_tt/res/triangle.toif");
 
 // Scrollbar/PIN dots.
 pub const DOT_ACTIVE: &[u8] = include_res!("model_tt/res/scroll-active.toif");
