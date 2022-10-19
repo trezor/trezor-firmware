@@ -66,7 +66,7 @@ impl TryFrom<Obj> for StrBuffer {
     type Error = Error;
 
     fn try_from(obj: Obj) -> Result<Self, Self::Error> {
-        if obj.is_qstr() || unsafe { ffi::mp_type_str.is_type_of(obj) } {
+        if obj.is_str() {
             let bufinfo = get_buffer_info(obj, ffi::MP_BUFFER_READ)?;
             let new = Self {
                 ptr: bufinfo.buf as _,
@@ -188,4 +188,26 @@ impl crate::trace::Trace for StrBuffer {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         self.as_ref().trace(t)
     }
+}
+
+/// Version of `get_buffer` for strings that ties the string lifetime with
+/// another object that is expected to be placed on stack or in micropython heap
+/// and be the beginning of a chain of references that lead to the `obj`.
+///
+/// SAFETY:
+/// The caller must ensure that:
+/// (a) the `_owner` is an object visible to the micropython GC,
+/// (b) the `_owner` contains a reference that leads to `obj`, possibly through
+///     other objects,
+/// (c) that path is not broken as long as the returned reference lives.
+pub unsafe fn get_str_owner<T: ?Sized>(_owner: &T, obj: Obj) -> Result<&str, Error> {
+    if !obj.is_str() {
+        return Err(Error::TypeError);
+    }
+    // SAFETY:
+    // (a) only immutable references are taken.
+    // (b) micropython guarantees immutability and the buffer is not freed/moved as
+    //     long as _owner satisfies precondition.
+    let buffer = unsafe { get_buffer(obj)? };
+    str::from_utf8(buffer).map_err(|_| Error::TypeError)
 }

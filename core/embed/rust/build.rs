@@ -168,6 +168,9 @@ fn generate_micropython_bindings() {
         .allowlist_var("MP_BUFFER_WRITE")
         .allowlist_var("MP_BUFFER_RW")
         .allowlist_var("mp_type_str")
+        .allowlist_var("mp_type_bytes")
+        .allowlist_var("mp_type_bytearray")
+        .allowlist_var("mp_type_memoryview")
         // dict
         .allowlist_type("mp_obj_dict_t")
         .allowlist_function("mp_obj_new_dict")

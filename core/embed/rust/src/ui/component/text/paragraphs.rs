@@ -24,8 +24,23 @@ pub const PARAGRAPH_BOTTOM_SPACE: i16 = 5;
 pub type ParagraphVecLong<T> = Vec<Paragraph<T>, 32>;
 pub type ParagraphVecShort<T> = Vec<Paragraph<T>, 8>;
 
+/// Maximum number of characters that can be displayed on screen at once. Used
+/// for on-the-fly conversion of binary data to hexadecimal representation.
+/// NOTE: can be fine-tuned for particular model screen to decrease memory
+/// consumption and conversion time.
+pub const SCRATCH_BUFFER_LEN: usize = 256;
+
 pub trait ParagraphSource {
-    fn at(&self, i: usize) -> Paragraph<&str>;
+    /// Return text and associated style for given paragraph index and character
+    /// offset within the paragraph.
+    ///
+    /// Implementations can use the provided buffer to perform some kind of
+    /// conversion (currently used for displaying binary data in
+    /// hexadecimal) and return a reference to this buffer. Caller needs to
+    /// make sure the buffer is large enough to fit screenfull of characters.
+    fn at<'a>(&'a self, index: usize, offset: usize, buffer: &'a mut [u8]) -> Paragraph<&'a str>;
+
+    /// Number of paragraphs.
     fn size(&self) -> usize;
 
     fn into_paragraphs(self) -> Paragraphs<Self>
@@ -40,8 +55,8 @@ impl<T, const N: usize> ParagraphSource for Vec<Paragraph<T>, N>
 where
     T: AsRef<str>,
 {
-    fn at(&self, i: usize) -> Paragraph<&str> {
-        self[i].to_ref()
+    fn at<'a>(&'a self, index: usize, offset: usize, _buffer: &'a mut [u8]) -> Paragraph<&'a str> {
+        self[index].offset_as_ref(offset)
     }
 
     fn size(&self) -> usize {
@@ -53,8 +68,8 @@ impl<T, const N: usize> ParagraphSource for [Paragraph<T>; N]
 where
     T: AsRef<str>,
 {
-    fn at(&self, i: usize) -> Paragraph<&str> {
-        self[i].to_ref()
+    fn at<'a>(&'a self, index: usize, offset: usize, _buffer: &'a mut [u8]) -> Paragraph<&'a str> {
+        self[index].offset_as_ref(offset)
     }
 
     fn size(&self) -> usize {
@@ -66,9 +81,9 @@ impl<T> ParagraphSource for Paragraph<T>
 where
     T: AsRef<str>,
 {
-    fn at(&self, i: usize) -> Paragraph<&str> {
-        assert_eq!(i, 0);
-        self.to_ref()
+    fn at<'a>(&'a self, index: usize, offset: usize, _buffer: &'a mut [u8]) -> Paragraph<&'a str> {
+        assert_eq!(index, 0);
+        self.offset_as_ref(offset)
     }
 
     fn size(&self) -> usize {
@@ -157,26 +172,31 @@ where
         }
     }
 
-    /// Returns iterator over visible layouts (bounding box, style) together
+    /// Iterate over visible layouts (bounding box, style) together
     /// with corresponding string content. Should not get monomorphized.
-    fn visible_content<'a>(
-        content: &'a dyn ParagraphSource,
+    fn foreach_visible<'a, 'b>(
+        source: &'a dyn ParagraphSource,
         visible: &'a [TextLayout],
         offset: PageOffset,
-    ) -> impl Iterator<Item = (&'a TextLayout, &'a str)> {
-        visible.iter().zip(
-            (offset.par..content.size())
-                .map(|i| content.at(i))
-                .filter(|p| !p.content.is_empty())
-                .enumerate()
-                .map(move |(i, p): (usize, Paragraph<&str>)| {
-                    if i == 0 {
-                        &p.content[offset.chr..]
-                    } else {
-                        p.content
-                    }
-                }),
-        )
+        func: &'b mut dyn FnMut(&TextLayout, &str),
+    ) {
+        let mut buffer = [0; SCRATCH_BUFFER_LEN];
+        let mut vis_iter = visible.iter();
+        let mut chr = offset.chr;
+
+        for par in offset.par..source.size() {
+            let s = source.at(par, chr, &mut buffer).content;
+            if s.is_empty() {
+                chr = 0;
+                continue;
+            }
+            if let Some(layout) = vis_iter.next() {
+                func(layout, s);
+            } else {
+                break;
+            }
+            chr = 0;
+        }
     }
 }
 
@@ -197,9 +217,14 @@ where
     }
 
     fn paint(&mut self) {
-        for (layout, content) in Self::visible_content(&self.source, &self.visible, self.offset) {
-            layout.render_text(content);
-        }
+        Self::foreach_visible(
+            &self.source,
+            &self.visible,
+            self.offset,
+            &mut |layout, content| {
+                layout.render_text(content);
+            },
+        )
     }
 
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
@@ -239,11 +264,15 @@ pub mod trace {
     impl<T: ParagraphSource> crate::trace::Trace for Paragraphs<T> {
         fn trace(&self, t: &mut dyn crate::trace::Tracer) {
             t.open("Paragraphs");
-            for (layout, content) in Self::visible_content(&self.source, &self.visible, self.offset)
-            {
-                layout.layout_text(content, &mut layout.initial_cursor(), &mut TraceSink(t));
-                t.string("\n");
-            }
+            Self::foreach_visible(
+                &self.source,
+                &self.visible,
+                self.offset,
+                &mut |layout, content| {
+                    layout.layout_text(content, &mut layout.initial_cursor(), &mut TraceSink(t));
+                    t.string("\n");
+                },
+            );
             t.close();
         }
     }
@@ -290,21 +319,30 @@ impl<T> Paragraph<T> {
         self
     }
 
+    pub fn content(&self) -> &T {
+        &self.content
+    }
+
     pub fn update(&mut self, content: T) {
         self.content = content
     }
 
-    fn to_ref(&self) -> Paragraph<&str>
-    where
-        T: AsRef<str>,
-    {
+    /// Copy style and replace content.
+    pub fn with_content<U>(&self, content: U) -> Paragraph<U> {
         Paragraph {
-            content: self.content.as_ref(),
+            content,
             style: self.style,
             align: self.align,
             break_after: self.break_after,
             no_break: self.no_break,
         }
+    }
+
+    pub fn offset_as_ref(&self, offset: usize) -> Paragraph<&str>
+    where
+        T: AsRef<str>,
+    {
+        self.with_content(&self.content.as_ref()[offset..])
     }
 
     fn layout(&self, area: Rect) -> TextLayout {
@@ -344,7 +382,8 @@ impl PageOffset {
         source: &dyn ParagraphSource,
         full_height: i16,
     ) -> (PageOffset, Option<Rect>, Option<TextLayout>) {
-        let paragraph = source.at(self.par);
+        let mut buffer = [0; SCRATCH_BUFFER_LEN];
+        let paragraph = source.at(self.par, self.chr, &mut buffer);
 
         // Skip empty paragraphs.
         if paragraph.content.is_empty() {
@@ -355,8 +394,9 @@ impl PageOffset {
 
         // Handle the `no_break` flag used to keep key-value pair on the same page.
         if paragraph.no_break && self.chr == 0 {
+            let mut next_buffer = [0; SCRATCH_BUFFER_LEN];
             if let Some(next_paragraph) =
-                (self.par + 1 < source.size()).then(|| source.at(self.par + 1))
+                (self.par + 1 < source.size()).then(|| source.at(self.par + 1, 0, &mut next_buffer))
             {
                 if Self::should_place_pair_on_next_page(
                     &paragraph,
@@ -371,7 +411,7 @@ impl PageOffset {
 
         // Find out the dimensions of the paragraph at given char offset.
         let mut layout = paragraph.layout(area);
-        let fit = layout.fit_text(&paragraph.content[self.chr..]);
+        let fit = layout.fit_text(paragraph.content);
         let (used, remaining_area) = area.split_top(fit.height());
         layout.bounds = used;
 
