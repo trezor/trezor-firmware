@@ -14,6 +14,7 @@ use crate::{
     ui::{
         component::{
             base::ComponentExt,
+            image::BlendedImage,
             paginated::{PageMsg, Paginate},
             painter,
             text::paragraphs::{
@@ -591,7 +592,7 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
 
 fn new_show_modal(
     kwargs: &Map,
-    icon: &'static [u8],
+    icon: BlendedImage,
     button_style: ButtonStyleSheet,
 ) -> Result<Obj, Error> {
     let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -643,28 +644,56 @@ fn new_show_modal(
 
 extern "C" fn new_show_error(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        new_show_modal(kwargs, theme::IMAGE_ERROR, theme::button_default())
+        let icon = BlendedImage::new(
+            theme::IMAGE_BG_CIRCLE,
+            theme::IMAGE_FG_ERROR,
+            theme::ERROR_COLOR,
+            theme::FG,
+            theme::BG,
+        );
+        new_show_modal(kwargs, icon, theme::button_default())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
 extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        new_show_modal(kwargs, theme::IMAGE_WARN, theme::button_reset())
+        let icon = BlendedImage::new(
+            theme::IMAGE_BG_TRIANGLE,
+            theme::IMAGE_FG_WARN,
+            theme::WARN_COLOR,
+            theme::FG,
+            theme::BG,
+        );
+        new_show_modal(kwargs, icon, theme::button_reset())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
 extern "C" fn new_show_success(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        new_show_modal(kwargs, theme::IMAGE_SUCCESS, theme::button_confirm())
+        let icon = BlendedImage::new(
+            theme::IMAGE_BG_CIRCLE,
+            theme::IMAGE_FG_SUCCESS,
+            theme::SUCCESS_COLOR,
+            theme::FG,
+            theme::BG,
+        );
+        new_show_modal(kwargs, icon, theme::button_confirm())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
 extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        new_show_modal(kwargs, theme::IMAGE_INFO, theme::button_info())
+        let icon = BlendedImage::new(
+            theme::IMAGE_BG_CIRCLE,
+            theme::IMAGE_FG_INFO,
+            theme::INFO_COLOR,
+            theme::FG,
+            theme::BG,
+        );
+        new_show_modal(kwargs, icon, theme::button_info())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
