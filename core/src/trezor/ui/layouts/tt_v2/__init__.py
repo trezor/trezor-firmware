@@ -157,6 +157,9 @@ class _RustLayout(ui.Layout):
     def page_count(self) -> int:
         return self.layout.page_count()
 
+    def forget(self) -> None:
+        self.layout.forget()
+
 
 async def confirm_action(
     ctx: wire.GenericContext,
@@ -950,7 +953,11 @@ async def request_passphrase_on_device(ctx: wire.GenericContext, max_len: int) -
     keyboard = _RustLayout(
         trezorui2.request_passphrase(prompt="Enter passphrase", max_len=max_len)
     )
-    result = await ctx.wait(keyboard)
+    try:
+        result = await ctx.wait(keyboard)
+    finally:
+        keyboard.forget()
+
     if result is trezorui2.CANCELLED:
         raise wire.ActionCancelled("Passphrase entry cancelled")
 
@@ -985,9 +992,12 @@ async def request_pin_on_device(
             warning=warning,
         )
     )
-    while True:
-        result = await ctx.wait(dialog)
-        if result is trezorui2.CANCELLED:
-            raise wire.PinCancelled
-        assert isinstance(result, str)
-        return result
+    try:
+        while True:
+            result = await ctx.wait(dialog)
+            if result is trezorui2.CANCELLED:
+                raise wire.PinCancelled
+            assert isinstance(result, str)
+            return result
+    finally:
+        dialog.forget()

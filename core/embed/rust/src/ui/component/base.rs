@@ -341,6 +341,9 @@ pub enum Event {
     /// Component has been attached to component tree. This event is sent once
     /// before any other events.
     Attach,
+    /// Component will not be used anymore, zero out all sensitive data like PIN
+    /// and passphrase so that they are not present in memory afterwards.
+    Forget,
     /// Internally-handled event to inform all `Child` wrappers in a sub-tree to
     /// get scheduled for painting.
     RequestPaint,

@@ -62,6 +62,10 @@ version = "0.3.3"
 version = "0.2.4"
 default_features = false
 
+[dependencies.zeroize]
+version = "1.5.7"
+default_features = false
+
 # Build dependencies
 
 [build-dependencies.bindgen]

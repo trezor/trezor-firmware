@@ -13,6 +13,7 @@ use crate::ui::{
 pub enum PassphraseKeyboardMsg {
     Confirmed,
     Cancelled,
+    Forgotten,
 }
 
 pub struct PassphraseKeyboard {
@@ -147,6 +148,10 @@ impl Component for PassphraseKeyboard {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        if let Event::Forget = event {
+            self.input.mutate(ctx, |_ctx, i| i.textbox.forget());
+            return Some(PassphraseKeyboardMsg::Forgotten);
+        }
         if self.input.inner().multi_tap.is_timeout_event(event) {
             self.input
                 .mutate(ctx, |ctx, i| i.multi_tap.clear_pending_state(ctx));

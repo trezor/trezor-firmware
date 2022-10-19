@@ -6,7 +6,7 @@ use crate::{
         component::{Event, EventCtx, TimerToken},
         display::{self, Color, Font},
         geometry::{Offset, Point, Rect},
-        util::ResultExt,
+        util::{zeroize_string, ResultExt},
     },
 };
 
@@ -204,6 +204,10 @@ impl<const L: usize> TextBox<L> {
             TextEdit::ReplaceLast(char) => self.replace_last(ctx, char),
             TextEdit::Append(char) => self.append(ctx, char),
         }
+    }
+
+    pub fn forget(&mut self) {
+        zeroize_string(&mut self.text)
     }
 }
 

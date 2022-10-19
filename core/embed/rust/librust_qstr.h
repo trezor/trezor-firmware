@@ -16,6 +16,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_CONFIRMED;
   MP_QSTR_CANCELLED;
   MP_QSTR_INFO;
+  MP_QSTR_FORGOTTEN;
   MP_QSTR_confirm_action;
   MP_QSTR_confirm_blob;
   MP_QSTR_confirm_coinjoin;
@@ -55,6 +56,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_trace;
   MP_QSTR_bounds;
   MP_QSTR_page_count;
+  MP_QSTR_forget;
 
   MP_QSTR_title;
   MP_QSTR_subtitle;

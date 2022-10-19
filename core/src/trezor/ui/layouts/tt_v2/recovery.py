@@ -53,7 +53,11 @@ async def request_word(
             )
         )
 
-    word: str = await ctx.wait(keyboard)
+    try:
+        word: str = await ctx.wait(keyboard)
+    finally:
+        keyboard.forget()
+
     return word
 
 

@@ -1,3 +1,6 @@
+use heapless::{String, Vec};
+use zeroize::{DefaultIsZeroes, Zeroize};
+
 pub trait ResultExt {
     fn assert_if_debugging_ui(self, message: &str);
 }
@@ -29,6 +32,20 @@ pub fn u32_to_str(num: u32, buffer: &mut [u8]) -> Option<&str> {
             Some(core::str::from_utf8(result).unwrap())
         }
     }
+}
+
+pub fn zeroize_vec<T, const N: usize>(val: &mut Vec<T, N>)
+where
+    T: DefaultIsZeroes,
+{
+    let slice: &mut [T] = val.as_mut();
+    slice.zeroize();
+    val.clear();
+}
+
+pub fn zeroize_string<const N: usize>(val: &mut String<N>) {
+    // SAFETY: afterwards the underlying vec will be empty, which is valid UTF-8.
+    zeroize_vec(unsafe { val.as_mut_vec() })
 }
 
 #[cfg(test)]
