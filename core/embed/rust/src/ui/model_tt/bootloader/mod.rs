@@ -26,15 +26,14 @@ use crate::ui::{
             connect::Connect,
             theme::{
                 button_install_cancel, button_install_confirm, button_wipe_cancel,
-                button_wipe_confirm, BLD_BG, BLD_COLOR_INITIAL_INSTALL_BG,
-                BLD_COLOR_INITIAL_INSTALL_SUCCESS, BLD_FG, BLD_WIPE_COLOR, ERASE_BIG, LOGO_EMPTY,
+                button_wipe_confirm, BLD_BG, BLD_FG, BLD_WIPE_COLOR, ERASE_BIG, LOGO_EMPTY,
                 RECEIVE,
             },
         },
         component::{Button, ResultScreen},
         theme::{
-            BACKLIGHT_DIM, BACKLIGHT_NORMAL, BLACK, ICON_SUCCESS_SMALL, ICON_WARN_SMALL,
-            TEXT_ERROR_BOLD, TEXT_ERROR_NORMAL, WHITE,
+            BACKLIGHT_DIM, BACKLIGHT_NORMAL, BG, BLACK, FG, GREY_DARK, ICON_SUCCESS_SMALL,
+            ICON_WARN_SMALL, TEXT_ERROR_BOLD, TEXT_ERROR_NORMAL, WHITE,
         },
     },
     util::{from_c_array, from_c_str},
@@ -215,13 +214,8 @@ const INITIAL_INSTALL_LOADER_COLOR: Color = Color::rgb(0x4A, 0x90, 0xE2);
 
 #[no_mangle]
 extern "C" fn screen_install_progress(progress: u16, initialize: bool, initial_setup: bool) -> u32 {
-    let bg_color = if initial_setup { WHITE } else { BLD_BG };
-    let icon_color = if initial_setup { BLACK } else { BLD_FG };
-    let fg_color = if initial_setup {
-        INITIAL_INSTALL_LOADER_COLOR
-    } else {
-        BLD_FG
-    };
+    let bg_color = if initial_setup { BG } else { BLD_BG };
+    let fg_color = if initial_setup { FG } else { BLD_FG };
 
     screen_progress(
         "Installing firmware...",
@@ -229,7 +223,7 @@ extern "C" fn screen_install_progress(progress: u16, initialize: bool, initial_s
         initialize,
         fg_color,
         bg_color,
-        Some((theme::RECEIVE, icon_color)),
+        Some((theme::RECEIVE, fg_color)),
     )
 }
 
@@ -328,8 +322,9 @@ extern "C" fn screen_wipe_fail() -> u32 {
 }
 
 #[no_mangle]
-extern "C" fn screen_boot_empty() {
-    display::icon(constant::screen().center(), LOGO_EMPTY, WHITE, BLACK);
+extern "C" fn screen_boot_empty(firmware_present: bool) {
+    let fg = if firmware_present { GREY_DARK } else { WHITE };
+    display::icon(constant::screen().center(), LOGO_EMPTY, fg, BLACK);
 }
 
 #[no_mangle]
@@ -382,25 +377,18 @@ fn screen_install_success_bld(msg: &'static str, complete_draw: bool) -> u32 {
 
 fn screen_install_success_initial(msg: &'static str, complete_draw: bool) -> u32 {
     let m_top = Paragraphs::new()
-        .add(theme::TEXT_INITIAL_INSTALL_SUCCESS, "Firmware installed")
+        .add(theme::TEXT_WELCOME_BOLD, "Firmware installed")
         .centered()
-        .add(theme::TEXT_INITIAL_INSTALL_SUCCESS, "successfully.")
+        .add(theme::TEXT_WELCOME_BOLD, "successfully.")
         .centered()
         .with_placement(LinearPlacement::vertical().align_at_center());
 
     let m_bottom = Paragraphs::new()
-        .add(theme::TEXT_INITIAL_INSTALL_SUCCESS, msg)
+        .add(theme::TEXT_SUBMSG_INITIAL, msg)
         .centered()
         .with_placement(LinearPlacement::vertical().align_at_center());
 
-    let mut frame = ResultScreen::new(
-        BLD_COLOR_INITIAL_INSTALL_SUCCESS,
-        BLD_COLOR_INITIAL_INSTALL_BG,
-        ICON_SUCCESS_SMALL,
-        m_top,
-        m_bottom,
-        complete_draw,
-    );
+    let mut frame = ResultScreen::new(FG, BG, ICON_SUCCESS_SMALL, m_top, m_bottom, complete_draw);
     frame.place(constant::screen());
     frame.paint();
     0
@@ -418,4 +406,20 @@ extern "C" fn screen_install_success(
     } else {
         screen_install_success_bld(msg, complete_draw)
     }
+}
+
+#[no_mangle]
+extern "C" fn screen_welcome() -> u32 {
+    let mut frame = Paragraphs::new()
+        .add(theme::TEXT_WELCOME, "Get started with")
+        .centered()
+        .add(theme::TEXT_WELCOME, "your trezor at")
+        .centered()
+        .add(theme::TEXT_WELCOME_BOLD, "trezor.io/start")
+        .centered()
+        .with_placement(LinearPlacement::vertical().align_at_center());
+
+    frame.place(constant::screen());
+    frame.paint();
+    0
 }

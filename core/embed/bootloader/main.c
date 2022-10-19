@@ -176,7 +176,7 @@ secbool bootloader_usb_loop(const vendor_header *const vhdr,
           usb_stop();
           usb_deinit();
           ui_fadeout();
-          ui_screen_boot_empty();
+          ui_screen_boot_empty(true);
           return sectrue;  // jump to firmware
         }
         break;
@@ -256,7 +256,27 @@ int main(void) {
   display_set_little_endian();
 #endif
 
-  ui_screen_boot_empty();
+  vendor_header vhdr;
+  image_header hdr;
+  // detect whether the device contains a valid firmware
+
+  secbool firmware_present =
+      load_vendor_header_keys((const uint8_t *)FIRMWARE_START, &vhdr);
+  if (sectrue == firmware_present) {
+    firmware_present = check_vendor_header_lock(&vhdr);
+  }
+  if (sectrue == firmware_present) {
+    firmware_present = load_image_header(
+        (const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), FIRMWARE_IMAGE_MAGIC,
+        FIRMWARE_IMAGE_MAXSIZE, vhdr.vsig_m, vhdr.vsig_n, vhdr.vpub, &hdr);
+  }
+  if (sectrue == firmware_present) {
+    firmware_present =
+        check_image_contents(&hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen,
+                             FIRMWARE_SECTORS, FIRMWARE_SECTORS_COUNT);
+  }
+
+  ui_screen_boot_empty(firmware_present);
 
 #if defined TREZOR_MODEL_T
   touch_power_on();
@@ -300,49 +320,18 @@ int main(void) {
   }
 #endif
 
-  vendor_header vhdr;
-  image_header hdr;
-  // detect whether the device contains a valid firmware
-
-  secbool firmware_present =
-      load_vendor_header_keys((const uint8_t *)FIRMWARE_START, &vhdr);
-  if (sectrue == firmware_present) {
-    firmware_present = check_vendor_header_lock(&vhdr);
-  }
-  if (sectrue == firmware_present) {
-    firmware_present = load_image_header(
-        (const uint8_t *)(FIRMWARE_START + vhdr.hdrlen), FIRMWARE_IMAGE_MAGIC,
-        FIRMWARE_IMAGE_MAXSIZE, vhdr.vsig_m, vhdr.vsig_n, vhdr.vpub, &hdr);
-  }
-  if (sectrue == firmware_present) {
-    firmware_present =
-        check_image_contents(&hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen,
-                             FIRMWARE_SECTORS, FIRMWARE_SECTORS_COUNT);
-  }
-
   // start the bootloader if no or broken firmware found ...
   if (firmware_present != sectrue) {
     // ignore stay in bootloader
     stay_in_bootloader = secfalse;
+    touched = false;
 
     // show intro animation
 
     ui_set_initial_setup(true);
 
     ui_fadeout();
-    ui_screen_welcome_first();
-    ui_fadein();
-
-    hal_delay(1000);
-
-    ui_fadeout();
-    ui_screen_welcome_second();
-    ui_fadein();
-
-    hal_delay(1000);
-
-    ui_fadeout();
-    ui_screen_welcome_third();
+    ui_screen_welcome();
     ui_fadein();
 
     // erase storage
@@ -390,7 +379,7 @@ int main(void) {
           }
           if (ui_result == 2) {  // reboot
             ui_fadeout();
-            ui_screen_boot_empty();
+            ui_screen_boot_empty(true);
             continue_to_firmware = true;
           }
           if (ui_result == 3) {  // wipe
