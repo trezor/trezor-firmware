@@ -16,6 +16,9 @@ pub const BG: Color = BLACK; // Default background color.
 pub const ICON_SUCCESS: &[u8] = include_res!("model_tr/res/success.toif");
 pub const ICON_FAIL: &[u8] = include_res!("model_tr/res/fail.toif");
 
+// BLD icons
+pub const LOGO_EMPTY: &[u8] = include_res!("model_tr/res/trezor_empty.toif");
+
 pub fn button_default() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
