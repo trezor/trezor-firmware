@@ -2,19 +2,26 @@ from micropython import const
 from typing import TYPE_CHECKING
 
 from trezor import wire
+from trezor.crypto.curve import bip340, secp256k1
+from trezor.crypto.hashlib import sha256
 from trezor.enums import OutputScriptType
 from trezor.ui.components.common.confirm import INFO
+from trezor.utils import HashWriter
 
 from apps.common import safety_checks
 
+from .. import writers
 from ..authorization import FEE_RATE_DECIMALS
 from ..common import input_is_external_unverified
 from ..keychain import validate_path_against_script_type
 from . import helpers, tx_weight
 from .payment_request import PaymentRequestVerifier
+from .sig_hasher import BitcoinSigHasher
 from .tx_info import OriginalTxInfo, TxInfo
 
 if TYPE_CHECKING:
+    from trezor.crypto import bip32
+
     from trezor.messages import SignTx
     from trezor.messages import TxInput
     from trezor.messages import TxOutput
@@ -58,20 +65,20 @@ class Approver:
         # the original, so the condition below is equivalent to external_in > orig_external_in.
         return self.external_in != self.orig_external_in
 
-    async def add_internal_input(self, txi: TxInput) -> None:
+    def _add_input(self, txi: TxInput) -> None:
         self.weight.add_input(txi)
         self.total_in += txi.amount
         if txi.orig_hash:
             self.orig_total_in += txi.amount
+
+    async def add_internal_input(self, txi: TxInput, node: bip32.HDNode) -> None:
+        self._add_input(txi)
 
     def check_internal_input(self, txi: TxInput) -> None:
         pass
 
     def add_external_input(self, txi: TxInput) -> None:
-        self.weight.add_input(txi)
-        self.total_in += txi.amount
-        if txi.orig_hash:
-            self.orig_total_in += txi.amount
+        self._add_input(txi)
 
         if input_is_external_unverified(txi):
             self.has_unverified_external_input = True
@@ -139,12 +146,12 @@ class BasicApprover(Approver):
         self.change_count = 0  # the number of change-outputs
         self.foreign_address_confirmed = False
 
-    async def add_internal_input(self, txi: TxInput) -> None:
+    async def add_internal_input(self, txi: TxInput, node: bip32.HDNode) -> None:
         if not validate_path_against_script_type(self.coin, txi):
             await helpers.confirm_foreign_address(txi.address_n)
             self.foreign_address_confirmed = True
 
-        await super().add_internal_input(txi)
+        await super().add_internal_input(txi, node)
 
     def check_internal_input(self, txi: TxInput) -> None:
         # Sanity check not critical for security.
@@ -328,30 +335,84 @@ class BasicApprover(Approver):
 
 
 class CoinJoinApprover(Approver):
-    # Minimum registrable output amount in a CoinJoin.
-    MIN_REGISTRABLE_OUTPUT_AMOUNT = 5000
+    # Minimum registrable output amount accepted by the CoinJoin coordinator.
+    # The CoinJoin request may specify an even lower amount.
+    MIN_REGISTRABLE_OUTPUT_AMOUNT = const(5000)
 
     # Largest possible weight of an output supported by Trezor (P2TR or P2WSH).
-    MAX_OUTPUT_WEIGHT = 4 * (8 + 1 + 1 + 1 + 32)
+    MAX_OUTPUT_WEIGHT = const(4 * (8 + 1 + 1 + 1 + 32))
+
+    # Masks for the signable and no_fee bits in coinjoin_flags.
+    COINJOIN_FLAGS_SIGNABLE = const(0x01)
+    COINJOIN_FLAGS_NO_FEE = const(0x02)
+
+    COINJOIN_REQ_PUBKEY = b""
+    if __debug__:
+        # secp256k1 public key of m/0h for "all all ... all" seed.
+        COINJOIN_REQ_PUBKEY_DEBUG = b"\x03\x0f\xdf^(\x9bZ\xefSb\x90\x95:\xe8\x1c\xe6\x0e\x84\x1f\xf9V\xf3f\xac\x12?\xa6\x9d\xb3\xc7\x9f!\xb0"
 
     def __init__(
-        self, tx: SignTx, coin: CoinInfo, authorization: CoinJoinAuthorization
+        self,
+        tx: SignTx,
+        coin: CoinInfo,
+        authorization: CoinJoinAuthorization,
     ) -> None:
         super().__init__(tx, coin)
-        self.authorization = authorization
 
-        if authorization.params.coin_name != tx.coin_name:
-            raise wire.DataError("Coin name does not match authorization.")
+        if not tx.coinjoin_request:
+            raise wire.DataError("Missing CoinJoin request.")
+
+        self.request = tx.coinjoin_request
+        self.authorization = authorization
+        self.coordination_fee_base = 0
+
+        # Begin hashing the CoinJoin request.
+        self.h_request = HashWriter(sha256(b"CJR1"))  # "CJR1" = CoinJoin Request v1.
+        writers.write_bytes_prefixed(
+            self.h_request, authorization.params.coordinator.encode()
+        )
+        writers.write_uint32(self.h_request, coin.slip44)
+        writers.write_uint32(self.h_request, self.request.fee_rate)
+        writers.write_uint64(self.h_request, self.request.no_fee_threshold)
+        writers.write_uint64(self.h_request, self.request.min_registrable_amount)
+        writers.write_bytes_fixed(self.h_request, self.request.mask_public_key, 33)
+        writers.write_compact_size(self.h_request, tx.inputs_count)
 
         # Upper bound on the user's contribution to the weight of the transaction.
         self.our_weight = tx_weight.TxWeightCalculator()
 
-    async def add_internal_input(self, txi: TxInput) -> None:
+    def _add_input(self, txi: TxInput) -> None:
+        super()._add_input(txi)
+        writers.write_uint8(self.h_request, txi.coinjoin_flags)
+
+    async def add_internal_input(self, txi: TxInput, node: bip32.HDNode) -> None:
         self.our_weight.add_input(txi)
         if not self.authorization.check_sign_tx_input(txi, self.coin):
             raise wire.ProcessError("Unauthorized path")
 
-        await super().add_internal_input(txi)
+        # Compute the masking bit for the signable bit in coinjoin flags.
+        internal_private_key = node.private_key()
+        output_private_key = bip340.tweak_secret_key(internal_private_key)
+        shared_secret = secp256k1.multiply(
+            output_private_key, self.request.mask_public_key
+        )
+        h_mask = HashWriter(sha256())
+        writers.write_bytes_fixed(h_mask, shared_secret[1:33], 32)
+        writers.write_bytes_reversed(h_mask, txi.prev_hash, writers.TX_HASH_SIZE)
+        writers.write_uint32(h_mask, txi.prev_index)
+        mask = h_mask.get_digest()[0] & 1
+
+        # Ensure that the input can be signed.
+        if bool(txi.coinjoin_flags & self.COINJOIN_FLAGS_SIGNABLE) ^ mask != 1:
+            raise wire.ProcessError("Unauthorized input")
+
+        # Add to coordination_fee_base, except for remixes and small inputs which are
+        # not charged a coordination fee.
+        no_fee = bool(txi.coinjoin_flags & self.COINJOIN_FLAGS_NO_FEE)
+        if txi.amount > self.request.no_fee_threshold and not no_fee:
+            self.coordination_fee_base += txi.amount
+
+        await super().add_internal_input(txi, node)
 
     def check_internal_input(self, txi: TxInput) -> None:
         # Sanity check not critical for security.
@@ -374,30 +435,48 @@ class CoinJoinApprover(Approver):
         super().add_change_output(txo, script_pubkey)
         self.our_weight.add_output(script_pubkey)
 
-    async def add_payment_request(
-        self, msg: TxAckPaymentRequest, keychain: Keychain
-    ) -> None:
-        await super().add_payment_request(msg, keychain)
-
-        if msg.recipient_name != self.authorization.params.coordinator:
-            raise wire.DataError("CoinJoin coordinator mismatch in payment request.")
-
-        if msg.memos:
-            raise wire.DataError("Memos not allowed in CoinJoin payment request.")
-
     async def approve_orig_txids(
         self, tx_info: TxInfo, orig_txs: list[OriginalTxInfo]
     ) -> None:
         pass
 
+    def _verify_coinjoin_request(self, tx_info: TxInfo):
+        if not isinstance(tx_info.sig_hasher, BitcoinSigHasher):
+            raise wire.ProcessError("Unexpected signature hasher.")
+
+        # Finish hashing the CoinJoin request.
+        writers.write_bytes_fixed(
+            self.h_request, tx_info.sig_hasher.h_prevouts.get_digest(), 32
+        )
+        writers.write_bytes_fixed(
+            self.h_request, tx_info.sig_hasher.h_outputs.get_digest(), 32
+        )
+
+        # Verify the CoinJoin request signature.
+        if __debug__:
+            if secp256k1.verify(
+                self.COINJOIN_REQ_PUBKEY_DEBUG,
+                self.request.signature,
+                self.h_request.get_digest(),
+            ):
+                return True
+
+        return secp256k1.verify(
+            self.COINJOIN_REQ_PUBKEY,
+            self.request.signature,
+            self.h_request.get_digest(),
+        )
+
     async def approve_tx(self, tx_info: TxInfo, orig_txs: list[OriginalTxInfo]) -> None:
         await super().approve_tx(tx_info, orig_txs)
 
+        if not self._verify_coinjoin_request(tx_info):
+            raise wire.DataError("Invalid signature in CoinJoin request.")
+
         max_fee_per_vbyte = self.authorization.params.max_fee_per_kvbyte / 1000
-        max_coordinator_fee_rate = (
-            self.authorization.params.max_coordinator_fee_rate
-            / pow(10, FEE_RATE_DECIMALS + 2)
-        )
+        coordination_fee_rate = min(
+            self.request.fee_rate, self.authorization.params.max_coordinator_fee_rate
+        ) / pow(10, FEE_RATE_DECIMALS + 2)
 
         # The mining fee of the transaction as a whole.
         mining_fee = self.total_in - self.total_out
@@ -408,10 +487,8 @@ class CoinJoinApprover(Approver):
         # The maximum mining fee that the user should be paying.
         our_max_mining_fee = max_fee_per_vbyte * self.our_weight.get_virtual_size()
 
-        # The maximum coordination fee for the user's inputs.
-        our_max_coordinator_fee = max_coordinator_fee_rate * (
-            self.total_in - self.external_in
-        )
+        # The coordination fee for the user's inputs.
+        our_coordination_fee = coordination_fee_rate * self.coordination_fee_base
 
         # Total fees that the user is paying.
         our_fees = self.total_in - self.external_in - self.change_out
@@ -427,12 +504,12 @@ class CoinJoinApprover(Approver):
         # would cost to register. Amounts below this value are left to the coordinator or miners
         # and effectively constitute an extra fee for the user.
         min_allowed_output_amount_plus_fee = (
-            self.MIN_REGISTRABLE_OUTPUT_AMOUNT
+            min(self.request.min_registrable_amount, self.MIN_REGISTRABLE_OUTPUT_AMOUNT)
             + max_fee_per_weight_unit * self.MAX_OUTPUT_WEIGHT
         )
 
         if our_fees > (
-            our_max_coordinator_fee
+            our_coordination_fee
             + our_max_mining_fee
             + min_allowed_output_amount_plus_fee
         ):
@@ -444,6 +521,5 @@ class CoinJoinApprover(Approver):
     def _add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         super()._add_output(txo, script_pubkey)
 
-        # All CoinJoin outputs must be accompanied by a signed payment request.
-        if txo.payment_req_index is None:
-            raise wire.DataError("Missing payment request.")
+        if txo.payment_req_index:
+            raise wire.DataError("Unexpected payment request.")

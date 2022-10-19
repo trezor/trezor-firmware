@@ -331,7 +331,7 @@ class Bitcoin:
         if txi.script_type not in common.INTERNAL_INPUT_SCRIPT_TYPES:
             raise wire.DataError("Wrong input script type")
 
-        await self.approver.add_internal_input(txi)
+        await self.approver.add_internal_input(txi, node)
 
     async def process_external_input(self, txi: TxInput) -> None:
         assert txi.script_pubkey is not None  # checked in sanitize_tx_input
@@ -499,7 +499,6 @@ class Bitcoin:
     ) -> None:
         if txo.payment_req_index != self.payment_req_index:
             if txo.payment_req_index is None:
-                # TODO not needed
                 self.approver.finish_payment_request()
             else:
                 tx_ack_payment_req = await helpers.request_payment_req(
