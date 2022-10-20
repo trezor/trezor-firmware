@@ -1,5 +1,5 @@
 use crate::{
-    trezorhal::io::{io_touch_read, io_touch_unpack_x, io_touch_unpack_y},
+    trezorhal::io::io_touch_read,
     ui::{
         component::{Component, Event, EventCtx, Never},
         display::{self, Font},
@@ -82,10 +82,10 @@ where
             let mut ctx = EventCtx::new();
             let msg = frame.event(&mut ctx, Event::Touch(e));
 
-            frame.paint();
             if let Some(message) = msg {
                 return message.return_to_c();
             }
+            frame.paint();
         }
     }
 }
@@ -96,9 +96,15 @@ fn touch_eval() -> Option<TouchEvent> {
         return None;
     }
     let event_type = event >> 24;
-    let x = io_touch_unpack_x(event) as u32;
-    let y = io_touch_unpack_y(event) as u32;
-    TouchEvent::new(event_type, x, y).ok()
+    let ex = ((event >> 12) & 0xFFF) as i16;
+    let ey = (event & 0xFFF) as i16;
+
+    let event = TouchEvent::new(event_type, ex as _, ey as _);
+
+    if let Ok(event) = event {
+        return Some(event);
+    }
+    None
 }
 
 #[no_mangle]
@@ -245,7 +251,6 @@ extern "C" fn screen_connect() -> u32 {
 
     frame.place(constant::screen());
     frame.paint();
-    fadein();
     0
 }
 

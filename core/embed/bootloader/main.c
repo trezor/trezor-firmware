@@ -127,6 +127,7 @@ secbool bootloader_usb_loop(const vendor_header *const vhdr,
         if (INPUT_CANCEL == response) {
           ui_fadeout();
           screen_connect();
+          ui_fadein();
           send_user_abort(USB_IFACE_NUM, "Wipe cancelled");
           break;
         }
@@ -412,6 +413,7 @@ int main(void) {
           break;
         case SCREEN_WAIT_FOR_HOST:
           screen_connect();
+          ui_fadein();
           if (sectrue == bootloader_usb_loop(&vhdr, &hdr)) {
             continue_to_firmware = true;
           } else {
