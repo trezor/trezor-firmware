@@ -43,8 +43,8 @@ static const uint8_t DEFINITIONS_DEV_PUBLIC_KEY[] =
 #endif
 
 #define MIN_DATA_VERSION 1
-#define FORMAT_VERSION_LENGTH 8
-#define FORMAT_VERSION (const pb_byte_t *)"trzd1\x00\x00\x00"
+#define FORMAT_VERSION_LENGTH 5
+#define FORMAT_VERSION (const pb_byte_t *)"trzd1"
 #define MERKLE_TREE_SIGNED_ROOT_SIZE 64
 
 #define HASH_DATA_BUFFER_SIZE \

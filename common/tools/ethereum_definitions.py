@@ -12,12 +12,12 @@ import shutil
 from binascii import hexlify
 from collections import defaultdict
 from typing import Any, TextIO, cast
+from urllib.parse import urlencode
 
 import click
 import ed25519
 import requests
 from requests.adapters import HTTPAdapter
-from urllib.parse import urlencode
 from urllib3.util.retry import Retry
 
 from coin_info import Coin, Coins, load_json
@@ -29,8 +29,7 @@ from trezorlib.messages import (
     EthereumTokenInfo,
 )
 
-FORMAT_VERSION = "trzd1"
-FORMAT_VERSION_BYTES = FORMAT_VERSION.encode("utf-8").ljust(8, b"\0")
+FORMAT_VERSION_BYTES = b"trzd1"
 CURRENT_TIME = datetime.datetime.now(datetime.timezone.utc)
 TIMESTAMP_FORMAT = "%d.%m.%Y %X%z"
 CURRENT_TIMESTAMP_STR = CURRENT_TIME.strftime(TIMESTAMP_FORMAT)
@@ -565,7 +564,7 @@ def check_definitions_list(
     force: bool,
     top100_coingecko_ids: list[str] | None = None,
 ) -> bool:
-    save_results = True
+    check_ok = True
     # store already processed definitions
     deleted_definitions: list[dict] = []
     modified_definitions: list[dict] = []
@@ -683,7 +682,7 @@ def check_definitions_list(
             print(
                 "\nERROR: Symbol change in this definition! To be able to approve this change re-run with `--force` argument."
             )
-            accept_change = save_results = False
+            accept_change = check_ok = False
             print_change = True
 
         answer = (
@@ -727,7 +726,7 @@ def check_definitions_list(
             print(
                 "\nERROR: Symbol change in this definition! To be able to approve this change re-run with `--force` argument."
             )
-            accept_change = save_results = False
+            accept_change = check_ok = False
             print_change = True
 
         answer = (
@@ -771,7 +770,7 @@ def check_definitions_list(
             # clear deleted mark
             _set_definition_metadata(definition)
 
-    return save_results
+    return check_ok
 
 
 def _load_prepared_definitions(
@@ -1057,13 +1056,17 @@ def prepare_definitions(
         # save results
         with open(deffile, "w+") as f:
             json.dump(
-                obj=dict(timestamp=CURRENT_TIMESTAMP_STR, networks=networks, tokens=tokens),
+                obj=dict(
+                    timestamp=CURRENT_TIMESTAMP_STR, networks=networks, tokens=tokens
+                ),
                 fp=f,
                 ensure_ascii=False,
                 sort_keys=True,
                 indent=1,
             )
             f.write("\n")
+    else:
+        print("Error occured - results not saved.")
 
 
 @cli.command()

@@ -2,7 +2,7 @@
 
 Definitions are binary encoded and have a special format:
 1. prefix:
-   1. format version of the definition (UTF-8 string `trzd` + version number, padded with zeroes if shorter, 8 bytes)
+   1. format version of the definition (ASCII string `trzdX`, where `X` is version number, 5 bytes)
    2. type of data (unsigned integer, 1 byte)
    3. data version of the definition (unsigned integer, 4 bytes)
    4. length of the encoded protobuf message - payload length in bytes (unsigned integer, 2 bytes)

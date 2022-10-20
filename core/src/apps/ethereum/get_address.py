@@ -42,9 +42,9 @@ async def get_address(
         if defs.network is not None and slip44 == defs.network.slip44:
             network = defs.network
         else:
-            network = networks.by_slip44(slip44)
+            network = networks.by_slip44(slip44) or networks.UNKNOWN_NETWORK
     else:
-        network = None
+        network = networks.UNKNOWN_NETWORK
     address = address_from_bytes(node.ethereum_pubkeyhash(), network)
 
     if msg.show_display:

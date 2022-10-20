@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 from ubinascii import hexlify
 
-from .networks import by_chain_id
+from . import networks
 
 if TYPE_CHECKING:
     from trezor.messages import EthereumFieldType
@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 
 def address_from_bytes(
-    address_bytes: bytes, network: EthereumNetworkInfo | None = by_chain_id(1)
+    address_bytes: bytes, network: EthereumNetworkInfo = networks.UNKNOWN_NETWORK
 ) -> str:
     """
     Converts address in bytes to a checksummed string as defined
@@ -17,7 +17,7 @@ def address_from_bytes(
     """
     from trezor.crypto.hashlib import sha3_256
 
-    if network is not None and network.shortcut in ("RBTC", "tRBTC"):
+    if network.shortcut in ("RBTC", "tRBTC"):
         prefix = str(network.chain_id) + "0x"
     else:
         prefix = ""
@@ -108,7 +108,7 @@ def decode_typed_data(data: bytes, type_name: str) -> str:
     elif type_name == "string":
         return data.decode()
     elif type_name == "address":
-        return address_from_bytes(data, None)
+        return address_from_bytes(data)
     elif type_name == "bool":
         return "true" if data == b"\x01" else "false"
     elif type_name.startswith("uint"):

@@ -22,7 +22,13 @@ if TYPE_CHECKING:
         str,  # name
     ]
     # fmt: on
-UNKNOWN_NETWORK_SHORTCUT = "UNKN"
+
+UNKNOWN_NETWORK = EthereumNetworkInfo(
+    chain_id=0,
+    slip44=0,
+    shortcut="UNKN",
+    name="Unknown network",
+)
 
 
 def by_chain_id(chain_id: int) -> EthereumNetworkInfo | None:
