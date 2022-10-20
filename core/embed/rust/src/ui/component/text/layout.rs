@@ -13,6 +13,8 @@ pub enum LineBreaking {
     /// Break words, adding a hyphen before the line-break. Does not use any
     /// smart algorithm, just char-by-char.
     BreakWordsAndInsertHyphen,
+    /// Break words char-by-char, don't insert hyphens.
+    BreakWordsNoHyphen,
 }
 
 #[derive(Copy, Clone)]
@@ -80,6 +82,16 @@ impl TextStyle {
             line_breaking: LineBreaking::BreakAtWhitespace,
             page_breaking: PageBreaking::CutAndInsertEllipsis,
         }
+    }
+
+    pub const fn with_line_breaking(mut self, line_breaking: LineBreaking) -> Self {
+        self.line_breaking = line_breaking;
+        self
+    }
+
+    pub const fn with_page_breaking(mut self, page_breaking: PageBreaking) -> Self {
+        self.page_breaking = page_breaking;
+        self
     }
 }
 
@@ -423,7 +435,12 @@ impl Span {
             ch == ASCII_SPACE || ch == ASCII_LF || ch == ASCII_CR
         }
 
-        let hyphen_width = text_font.char_width(ASCII_HYPHEN);
+        let use_hyphens = !matches!(breaking, LineBreaking::BreakWordsNoHyphen);
+        let hyphen_width = if use_hyphens {
+            text_font.char_width(ASCII_HYPHEN)
+        } else {
+            0
+        };
 
         // The span we return in case the line has to break. We mutate it in the
         // possible break points, and its initial value is returned in case no text
@@ -467,8 +484,8 @@ impl Span {
                 return line;
             } else {
                 let have_space_for_break = span_width + char_width + hyphen_width <= max_width;
-                let can_break_word = matches!(breaking, LineBreaking::BreakWordsAndInsertHyphen)
-                    || !found_any_whitespace;
+                let can_break_word =
+                    !matches!(breaking, LineBreaking::BreakAtWhitespace) || !found_any_whitespace;
                 if have_space_for_break && can_break_word {
                     // Break after this character, append hyphen.
                     line.length = match char_indices_iter.peek() {
@@ -476,7 +493,7 @@ impl Span {
                         None => text.len(),
                     };
                     line.advance.x = span_width + char_width;
-                    line.insert_hyphen_before_line_break = true;
+                    line.insert_hyphen_before_line_break = use_hyphens;
                     line.skip_next_chars = 0;
                 }
             }
