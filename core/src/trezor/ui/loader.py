@@ -20,14 +20,6 @@ class LoaderDefault:
         icon_fg_color: int | None = ui.WHITE
 
 
-class LoaderDanger(LoaderDefault):
-    class normal(LoaderDefault.normal):
-        fg_color = ui.RED
-
-    class active(LoaderDefault.active):
-        fg_color = ui.RED
-
-
 class LoaderNeutral(LoaderDefault):
     class normal(LoaderDefault.normal):
         fg_color = ui.FG

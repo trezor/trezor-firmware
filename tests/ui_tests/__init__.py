@@ -1,6 +1,5 @@
 import hashlib
 import json
-import os
 import re
 import shutil
 from contextlib import contextmanager
@@ -123,8 +122,6 @@ def screen_recording(
     # Making the model global for other functions
     global MODEL
     MODEL = f"T{client.features.model}"
-    if os.getenv("UI2") == "1":
-        MODEL += "ui2"
 
     test_name = f"{MODEL}_{test_name}"
 
