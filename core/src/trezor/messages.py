@@ -1992,14 +1992,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class CosiCommitment(protobuf.MessageType):
-        commitment: "bytes | None"
-        pubkey: "bytes | None"
+        commitment: "bytes"
+        pubkey: "bytes"
 
         def __init__(
             self,
             *,
-            commitment: "bytes | None" = None,
-            pubkey: "bytes | None" = None,
+            commitment: "bytes",
+            pubkey: "bytes",
         ) -> None:
             pass
 
@@ -2009,17 +2009,17 @@ if TYPE_CHECKING:
 
     class CosiSign(protobuf.MessageType):
         address_n: "list[int]"
-        data: "bytes | None"
-        global_commitment: "bytes | None"
-        global_pubkey: "bytes | None"
+        data: "bytes"
+        global_commitment: "bytes"
+        global_pubkey: "bytes"
 
         def __init__(
             self,
             *,
+            data: "bytes",
+            global_commitment: "bytes",
+            global_pubkey: "bytes",
             address_n: "list[int] | None" = None,
-            data: "bytes | None" = None,
-            global_commitment: "bytes | None" = None,
-            global_pubkey: "bytes | None" = None,
         ) -> None:
             pass
 

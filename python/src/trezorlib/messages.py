@@ -3020,15 +3020,15 @@ class CosiCommit(protobuf.MessageType):
 class CosiCommitment(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 72
     FIELDS = {
-        1: protobuf.Field("commitment", "bytes", repeated=False, required=False, default=None),
-        2: protobuf.Field("pubkey", "bytes", repeated=False, required=False, default=None),
+        1: protobuf.Field("commitment", "bytes", repeated=False, required=True),
+        2: protobuf.Field("pubkey", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        commitment: Optional["bytes"] = None,
-        pubkey: Optional["bytes"] = None,
+        commitment: "bytes",
+        pubkey: "bytes",
     ) -> None:
         self.commitment = commitment
         self.pubkey = pubkey
@@ -3038,18 +3038,18 @@ class CosiSign(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 73
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
-        2: protobuf.Field("data", "bytes", repeated=False, required=False, default=None),
-        3: protobuf.Field("global_commitment", "bytes", repeated=False, required=False, default=None),
-        4: protobuf.Field("global_pubkey", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("data", "bytes", repeated=False, required=True),
+        3: protobuf.Field("global_commitment", "bytes", repeated=False, required=True),
+        4: protobuf.Field("global_pubkey", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
+        data: "bytes",
+        global_commitment: "bytes",
+        global_pubkey: "bytes",
         address_n: Optional[Sequence["int"]] = None,
-        data: Optional["bytes"] = None,
-        global_commitment: Optional["bytes"] = None,
-        global_pubkey: Optional["bytes"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.data = data
