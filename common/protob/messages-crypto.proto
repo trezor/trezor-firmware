@@ -106,8 +106,8 @@ message CosiCommit {
  * @end
  */
 message CosiCommitment {
-    optional bytes commitment = 1;  // Commitment
-    optional bytes pubkey = 2;      // Public key
+    required bytes commitment = 1;  // Commitment
+    required bytes pubkey = 2;      // Public key
 }
 
 /**
@@ -118,9 +118,9 @@ message CosiCommitment {
  */
 message CosiSign {
     repeated uint32 address_n = 1;          // BIP-32 path to derive the key from master node
-    optional bytes data = 2;                // Data to be signed
-    optional bytes global_commitment = 3;   // Aggregated commitment
-    optional bytes global_pubkey = 4;       // Aggregated public key
+    required bytes data = 2;                // Data to be signed
+    required bytes global_commitment = 3;   // Aggregated commitment
+    required bytes global_pubkey = 4;       // Aggregated public key
 }
 
 /**
