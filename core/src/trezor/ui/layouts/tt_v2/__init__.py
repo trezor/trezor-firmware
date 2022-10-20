@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING
+from ubinascii import hexlify
 
 from trezor import io, log, loop, ui
 from trezor.enums import ButtonRequestType
@@ -6,6 +7,7 @@ from trezor.wire import ActionCancelled
 
 import trezorui2
 
+from ...components.common.confirm import CANCELLED, CONFIRMED, INFO
 from ..common import button_request, interact
 
 if TYPE_CHECKING:
@@ -17,9 +19,6 @@ if TYPE_CHECKING:
     T = TypeVar("T")
 
 
-CONFIRMED = trezorui2.CONFIRMED  # global_import_cache
-CANCELLED = trezorui2.CANCELLED  # global_import_cache
-INFO = trezorui2.INFO  # global_import_cache
 BR_TYPE_OTHER = ButtonRequestType.Other  # global_import_cache
 
 
@@ -188,10 +187,7 @@ async def confirm_action(
     verb_cancel: str | bytes | None = None,
     hold: bool = False,
     hold_danger: bool = False,
-    icon: str | None = None,
-    icon_color: int | None = None,
     reverse: bool = False,
-    larger_vspace: bool = False,
     exc: ExceptionType = ActionCancelled,
     br_code: ButtonRequestType = BR_TYPE_OTHER,
 ) -> None:
@@ -218,6 +214,7 @@ async def confirm_action(
                     verb=verb,
                     verb_cancel=verb_cancel,
                     hold=hold,
+                    hold_danger=hold_danger,
                     reverse=reverse,
                 )
             ),
@@ -290,14 +287,18 @@ async def confirm_backup(ctx: GenericContext) -> bool:
 
 
 async def confirm_path_warning(
-    ctx: GenericContext, path: str, path_type: str = "Path"
+    ctx: GenericContext,
+    path: str,
+    path_type: str | None = None,
 ) -> None:
     await raise_if_not_confirmed(
         interact(
             ctx,
             _RustLayout(
                 trezorui2.show_warning(
-                    title="Unknown path",
+                    title="Unknown path"
+                    if not path_type
+                    else f"Unknown {path_type.lower()}",
                     description=path,
                 )
             ),
@@ -397,11 +398,10 @@ def show_pubkey(
 ) -> Awaitable[None]:
     return confirm_blob(
         ctx,
-        br_type="show_pubkey",
-        title="Confirm public key",
-        data=pubkey,
+        "show_pubkey",
+        title,
+        pubkey,
         br_code=ButtonRequestType.PublicKey,
-        icon=ui.ICON_RECEIVE,
     )
 
 
@@ -409,10 +409,8 @@ async def show_error_and_raise(
     ctx: GenericContext,
     br_type: str,
     content: str,
-    header: str = "Error",
     subheader: str | None = None,
     button: str = "CLOSE",
-    red: bool = False,
     exc: ExceptionType = ActionCancelled,
 ) -> NoReturn:
     await interact(
@@ -435,12 +433,9 @@ async def show_warning(
     ctx: GenericContext,
     br_type: str,
     content: str,
-    header: str = "Warning",
     subheader: str | None = None,
     button: str = "TRY AGAIN",
     br_code: ButtonRequestType = ButtonRequestType.Warning,
-    icon: str = ui.ICON_WRONG,
-    icon_color: int = ui.RED,
 ) -> None:
     await raise_if_not_confirmed(
         interact(
@@ -487,16 +482,8 @@ async def confirm_output(
     ctx: GenericContext,
     address: str,
     amount: str,
-    font_amount: int = ui.NORMAL,  # TODO cleanup @ redesign
     title: str = "SENDING",
-    subtitle: str | None = None,  # TODO cleanup @ redesign
-    color_to: int = ui.FG,  # TODO cleanup @ redesign
-    to_str: str = " to\n",  # TODO cleanup @ redesign
-    to_paginated: bool = False,  # TODO cleanup @ redesign
-    width: int = 0,  # TODO cleanup @ redesign
-    width_paginated: int = 0,  # TODO cleanup @ redesign
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
-    icon: str = ui.ICON_SEND,
 ) -> None:
     title = title.upper()
     if title.startswith("CONFIRM "):
@@ -559,10 +546,7 @@ async def should_show_more(
     button_text: str = "Show all",
     br_type: str = "should_show_more",
     br_code: ButtonRequestType = BR_TYPE_OTHER,
-    icon: str = ui.ICON_DEFAULT,
-    icon_color: int = ui.ORANGE_ICON,
     confirm: str | bytes | None = None,
-    major_confirm: bool = False,
 ) -> bool:
     """Return True if the user wants to show more (they click a special button)
     and False when the user wants to continue without showing details.
@@ -607,12 +591,8 @@ async def confirm_blob(
     description: str | None = None,
     hold: bool = False,
     br_code: ButtonRequestType = BR_TYPE_OTHER,
-    icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
-    icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
     ask_pagination: bool = False,
 ) -> None:
-    from ubinascii import hexlify
-
     if isinstance(data, bytes):
         data = hexlify(data).decode()
 
@@ -641,8 +621,6 @@ def confirm_address(
     description: str | None = "Address:",
     br_type: str = "confirm_address",
     br_code: ButtonRequestType = BR_TYPE_OTHER,
-    icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
-    icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
 ) -> Awaitable[None]:
     return confirm_value(
         ctx,
@@ -662,8 +640,6 @@ async def confirm_text(
     data: str,
     description: str | None = None,
     br_code: ButtonRequestType = BR_TYPE_OTHER,
-    icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
-    icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
 ) -> None:
     return await confirm_value(
         ctx,
@@ -683,8 +659,6 @@ def confirm_amount(
     description: str = "Amount:",
     br_type: str = "confirm_amount",
     br_code: ButtonRequestType = BR_TYPE_OTHER,
-    icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
-    icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
 ) -> Awaitable[None]:
     return confirm_value(
         ctx,
@@ -736,33 +710,29 @@ async def confirm_properties(
     br_type: str,
     title: str,
     props: Iterable[PropertyType],
-    icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
-    icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
     hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
 ) -> None:
-    def handle_bytes(prop):
-        from ubinascii import hexlify
-
+    def handle_bytes(prop: PropertyType) -> tuple[str | None, str | None, bool]:
         if isinstance(prop[1], bytes):
             return (prop[0], hexlify(prop[1]).decode(), True)
         else:
             return (prop[0], prop[1], False)
 
-    result = await interact(
-        ctx,
-        _RustLayout(
-            trezorui2.confirm_properties(
-                title=title.upper(),
-                items=map(handle_bytes, props),
-                hold=hold,
-            )
-        ),
-        br_type,
-        br_code,
+    await raise_if_not_confirmed(
+        interact(
+            ctx,
+            _RustLayout(
+                trezorui2.confirm_properties(
+                    title=title.upper(),
+                    items=map(handle_bytes, props),
+                    hold=hold,
+                )
+            ),
+            br_type,
+            br_code,
+        )
     )
-    if result is not trezorui2.CONFIRMED:
-        raise ActionCancelled
 
 
 async def confirm_total(
@@ -773,10 +743,10 @@ async def confirm_total(
     title: str = "SENDING",
     total_label: str = "Total amount:",
     fee_label: str = "Fee:",
-    icon_color: int = ui.GREEN,
     br_type: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> None:
+    # TODO: include fee_rate_amount
     await confirm_value(
         ctx,
         title,
@@ -824,12 +794,7 @@ async def confirm_metadata(
     content: str,
     param: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
-    hide_continue: bool = False,
     hold: bool = False,
-    param_font: int = ui.BOLD,
-    icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
-    icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
-    larger_vspace: bool = False,  # TODO cleanup @ redesign
 ) -> None:
     if param:
         content = content.format(param)
@@ -909,6 +874,7 @@ async def confirm_modify_fee(
     total_fee_new: str,
     fee_rate_amount: str | None = None,
 ) -> None:
+    # TODO: include fee_rate_amount
     await raise_if_not_confirmed(
         interact(
             ctx,

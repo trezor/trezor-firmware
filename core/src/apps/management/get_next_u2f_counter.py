@@ -7,7 +7,6 @@ if TYPE_CHECKING:
 
 async def get_next_u2f_counter(ctx: Context, msg: GetNextU2FCounter) -> NextU2FCounter:
     import storage.device as storage_device
-    from trezor import ui
     from trezor.wire import NotInitialized
     from trezor.enums import ButtonRequestType
     from trezor.messages import NextU2FCounter
@@ -21,7 +20,6 @@ async def get_next_u2f_counter(ctx: Context, msg: GetNextU2FCounter) -> NextU2FC
         "get_u2f_counter",
         "Get next U2F counter",
         description="Do you really want to increase and retrieve\nthe U2F counter?",
-        icon=ui.ICON_CONFIG,
         br_code=ButtonRequestType.ProtectCall,
     )
 

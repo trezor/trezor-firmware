@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING
 
-from trezor import ui
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import confirm_address, confirm_metadata, confirm_properties
 
@@ -9,7 +8,6 @@ if TYPE_CHECKING:
 
 
 BR_SIGN_TX = ButtonRequestType.SignTx  # global_import_cache
-BLUE = ui.BLUE  # global_import_cache
 
 
 async def require_confirm_tx(ctx: Context, to: str, value: int) -> None:
@@ -19,9 +17,6 @@ async def require_confirm_tx(ctx: Context, to: str, value: int) -> None:
         ctx,
         to,
         format_tezos_amount(value),
-        ui.BOLD,
-        to_str="\nto\n",
-        width=18,
         br_code=BR_SIGN_TX,
     )
 
@@ -33,8 +28,7 @@ async def require_confirm_fee(ctx: Context, value: int, fee: int) -> None:
         ctx,
         format_tezos_amount(value),
         format_tezos_amount(fee),
-        total_label="Amount:\n",
-        fee_label="\nFee:\n",
+        total_label="Amount:",
     )
 
 
@@ -46,7 +40,6 @@ async def require_confirm_origination(ctx: Context, address: str) -> None:
         "Address:",
         "confirm_origination",
         BR_SIGN_TX,
-        icon_color=ui.ORANGE,
     )
 
 
@@ -59,7 +52,6 @@ async def require_confirm_origination_fee(ctx: Context, balance: int, fee: int) 
             ("Balance:", format_tezos_amount(balance)),
             ("Fee:", format_tezos_amount(fee)),
         ),
-        icon_color=ui.ORANGE,
         hold=True,
     )
 
@@ -72,7 +64,6 @@ async def require_confirm_delegation_baker(ctx: Context, baker: str) -> None:
         "Baker address:",
         "confirm_delegation",
         BR_SIGN_TX,
-        icon_color=BLUE,
     )
 
 
@@ -84,9 +75,7 @@ async def require_confirm_set_delegate(ctx: Context, fee: int) -> None:
         "Fee:\n{}",
         format_tezos_amount(fee),
         BR_SIGN_TX,
-        hide_continue=True,
         hold=True,
-        icon_color=BLUE,
     )
 
 
@@ -101,7 +90,6 @@ async def require_confirm_register_delegate(
             ("Fee:", format_tezos_amount(fee)),
             ("Address:", address),
         ),
-        icon_color=BLUE,
         br_code=BR_SIGN_TX,
     )
 
@@ -123,7 +111,6 @@ async def require_confirm_ballot(ctx: Context, proposal: str, ballot: str) -> No
             ("Ballot:", ballot),
             ("Proposal:", proposal),
         ),
-        icon_color=ui.PURPLE,
         br_code=BR_SIGN_TX,
     )
 
@@ -134,7 +121,6 @@ async def require_confirm_proposals(ctx: Context, proposals: list[str]) -> None:
         "confirm_proposals",
         "Submit proposals" if len(proposals) > 1 else "Submit proposal",
         [("Proposal " + str(i), proposal) for i, proposal in enumerate(proposals, 1)],
-        icon_color=ui.PURPLE,
         br_code=BR_SIGN_TX,
     )
 
@@ -149,8 +135,6 @@ async def require_confirm_delegation_manager_withdraw(
         "Delegator:",
         "confirm_undelegation",
         BR_SIGN_TX,
-        icon=ui.ICON_RECEIVE,
-        icon_color=ui.RED,
     )
 
 
@@ -162,8 +146,5 @@ async def require_confirm_manager_remove_delegate(ctx: Context, fee: int) -> Non
         "Fee:\n{}",
         format_tezos_amount(fee),
         BR_SIGN_TX,
-        hide_continue=True,
         hold=True,
-        icon=ui.ICON_RECEIVE,
-        icon_color=ui.RED,
     )

@@ -47,9 +47,6 @@ async def add_resident_credential(
             ctx,
             "warning_credential",
             "The credential you are trying to import does\nnot belong to this authenticator.",
-            "Import credential",
-            button="Close",
-            red=True,
         )
 
     if not await confirm_webauthn(ctx, ConfirmAddCredential(cred)):

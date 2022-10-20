@@ -23,7 +23,6 @@ _NUM_OF_CHOICES = const(3)
 
 
 async def show_internal_entropy(ctx: GenericContext, entropy: bytes) -> None:
-    from trezor import ui
     from trezor.ui.layouts import confirm_blob
 
     await confirm_blob(
@@ -31,8 +30,6 @@ async def show_internal_entropy(ctx: GenericContext, entropy: bytes) -> None:
         "entropy",
         "Internal entropy",
         entropy,
-        icon=ui.ICON_RESET,
-        icon_color=ui.ORANGE_ICON,
         br_code=ButtonRequestType.ResetDevice,
     )
 
@@ -127,15 +124,10 @@ async def _show_confirmation_failure(
 ) -> None:
     from trezor.ui.layouts import show_warning
 
-    if share_index is None:
-        header = "Recovery seed"
-    else:
-        header = f"Recovery share #{share_index + 1}"
     await show_warning(
         ctx,
         "warning_backup_check",
         "Please check again.",
-        header,
         "That is the wrong word.",
         "Check again",
         ButtonRequestType.ResetDevice,

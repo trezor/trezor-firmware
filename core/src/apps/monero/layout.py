@@ -34,8 +34,6 @@ async def require_confirm_watchkey(ctx: Context) -> None:
         "get_watchkey",
         "Confirm export",
         description="Do you really want to export watch-only credentials?",
-        icon=ui.ICON_SEND,
-        icon_color=ui.GREEN,
         br_code=BRT_SignTx,
     )
 
@@ -46,8 +44,6 @@ async def require_confirm_keyimage_sync(ctx: Context) -> None:
         "key_image_sync",
         "Confirm ki sync",
         description="Do you really want to\nsync key images?",
-        icon=ui.ICON_SEND,
-        icon_color=ui.GREEN,
         br_code=BRT_SignTx,
     )
 
@@ -58,8 +54,6 @@ async def require_confirm_live_refresh(ctx: Context) -> None:
         "live_refresh",
         "Confirm refresh",
         description="Do you really want to\nstart refresh?",
-        icon=ui.ICON_SEND,
-        icon_color=ui.GREEN,
         br_code=BRT_SignTx,
     )
 
@@ -75,8 +69,6 @@ async def require_confirm_tx_key(ctx: Context, export_key: bool = False) -> None
         "export_tx_key",
         "Confirm export",
         description=description,
-        icon=ui.ICON_SEND,
-        icon_color=ui.GREEN,
         br_code=BRT_SignTx,
     )
 
@@ -145,7 +137,6 @@ async def _require_confirm_output(
         ctx,
         addr,
         _format_amount(dst.amount),
-        ui.BOLD,
         br_code=BRT_SignTx,
     )
 
@@ -169,7 +160,6 @@ async def _require_confirm_fee(ctx: Context, fee: int) -> None:
         "Confirm fee",
         "{}",
         _format_amount(fee),
-        hide_continue=True,
         hold=True,
     )
 

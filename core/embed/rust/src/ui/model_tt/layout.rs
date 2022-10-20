@@ -278,6 +278,7 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
             .try_into_option()?;
         let reverse: bool = kwargs.get_or(Qstr::MP_QSTR_reverse, false)?;
         let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
+        let hold_danger: bool = kwargs.get_or(Qstr::MP_QSTR_hold_danger, false)?;
 
         let paragraphs = {
             let action = action.unwrap_or_default();
@@ -296,7 +297,12 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
         };
 
         let obj = if hold {
-            LayoutObj::new(Frame::new(title, SwipeHoldPage::new(paragraphs, theme::BG)))?
+            let page = if hold_danger {
+                SwipeHoldPage::with_danger(paragraphs, theme::BG)
+            } else {
+                SwipeHoldPage::new(paragraphs, theme::BG)
+            };
+            LayoutObj::new(Frame::new(title, page))?
         } else {
             let buttons = Button::cancel_confirm_text(verb_cancel, verb);
             LayoutObj::new(Frame::new(
@@ -1080,6 +1086,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     verb: str | None = None,
     ///     verb_cancel: str | None = None,
     ///     hold: bool = False,
+    ///     hold_danger: bool = False,
     ///     reverse: bool = False,
     /// ) -> object:
     ///     """Confirm action."""

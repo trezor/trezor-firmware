@@ -18,7 +18,6 @@ async def get_ownership_proof(
     coin: CoinInfo,
     authorization: CoinJoinAuthorization | None = None,
 ) -> OwnershipProof:
-    from trezor import ui
     from trezor.wire import DataError, ProcessError
     from trezor.enums import InputScriptType
     from trezor.messages import OwnershipProof
@@ -84,8 +83,6 @@ async def get_ownership_proof(
                 "Proof of ownership",
                 msg.commitment_data,
                 "Commitment data:",
-                icon=ui.ICON_CONFIG,
-                icon_color=ui.ORANGE_ICON,
             )
 
     ownership_proof, signature = generate_proof(

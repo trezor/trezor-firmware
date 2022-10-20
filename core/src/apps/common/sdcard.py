@@ -1,5 +1,5 @@
 from storage.sd_salt import SD_CARD_HOT_SWAPPABLE
-from trezor import io, ui, wire
+from trezor import io, wire
 from trezor.ui.layouts import confirm_action, show_error_and_raise
 
 
@@ -17,8 +17,6 @@ async def _confirm_retry_wrong_card(ctx: wire.GenericContext) -> None:
             "Please insert the correct SD card for this device.",
             verb="Retry",
             verb_cancel="Abort",
-            icon=ui.ICON_WRONG,
-            larger_vspace=True,
             exc=SdCardUnavailable("Wrong SD card."),
         )
     else:
@@ -26,7 +24,6 @@ async def _confirm_retry_wrong_card(ctx: wire.GenericContext) -> None:
             ctx,
             "warning_wrong_sd",
             "Please unplug the\ndevice and insert the correct SD card.",
-            "SD card protection",
             "Wrong SD card.",
             exc=SdCardUnavailable("Wrong SD card."),
         )
@@ -42,8 +39,6 @@ async def _confirm_retry_insert_card(ctx: wire.GenericContext) -> None:
             "Please insert your SD card.",
             verb="Retry",
             verb_cancel="Abort",
-            icon=ui.ICON_WRONG,
-            larger_vspace=True,
             exc=SdCardUnavailable("SD card required."),
         )
     else:
@@ -51,7 +46,6 @@ async def _confirm_retry_insert_card(ctx: wire.GenericContext) -> None:
             ctx,
             "warning_no_sd",
             "Please unplug the\ndevice and insert your SD card.",
-            "SD card protection",
             "SD card required.",
             exc=SdCardUnavailable("SD card required."),
         )
@@ -65,11 +59,8 @@ async def _confirm_format_card(ctx: wire.GenericContext) -> None:
         "SD card error",
         "Unknown filesystem.",
         "Use a different card or format the SD card to the FAT32 filesystem.",
-        icon=ui.ICON_WRONG,
-        icon_color=ui.RED,
         verb="Format",
         verb_cancel="Cancel",
-        larger_vspace=True,
         exc=SdCardUnavailable("SD card not formatted."),
     )
 
@@ -82,10 +73,7 @@ async def _confirm_format_card(ctx: wire.GenericContext) -> None:
         "Do you really want to format the SD card?",
         reverse=True,
         verb="Format SD card",
-        icon=ui.ICON_WIPE,
-        icon_color=ui.RED,
         hold=True,
-        larger_vspace=True,
         exc=SdCardUnavailable("SD card not formatted."),
     )
 
@@ -100,8 +88,6 @@ async def confirm_retry_sd(
         "SD card problem",
         None,
         "There was a problem accessing the SD card.",
-        icon=ui.ICON_WRONG,
-        icon_color=ui.RED,
         verb="Retry",
         verb_cancel="Abort",
         exc=exc,

@@ -6,7 +6,7 @@ use crate::{
     },
 };
 
-use super::{theme, Button, ButtonMsg, Loader, LoaderMsg};
+use super::{theme, Button, ButtonMsg, ButtonStyleSheet, Loader, LoaderMsg};
 
 pub enum HoldToConfirmMsg<T> {
     Content(T),
@@ -29,7 +29,7 @@ where
         Self {
             loader: Loader::new(),
             content: Child::new(content),
-            buttons: Child::new(CancelHold::new()),
+            buttons: Child::new(CancelHold::new(theme::button_confirm())),
             pad: Pad::with_background(theme::BG),
         }
     }
@@ -123,11 +123,11 @@ pub enum CancelHoldMsg {
 }
 
 impl CancelHold {
-    pub fn new() -> FixedHeightBar<Self> {
+    pub fn new(button_style: ButtonStyleSheet) -> FixedHeightBar<Self> {
         theme::button_bar(Self {
             cancel: Some(Button::with_icon(theme::ICON_CANCEL).into_child()),
             hold: Button::with_text("HOLD TO CONFIRM")
-                .styled(theme::button_confirm())
+                .styled(button_style)
                 .into_child(),
         })
     }

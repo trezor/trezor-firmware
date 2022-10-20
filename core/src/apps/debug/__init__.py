@@ -6,6 +6,8 @@ if not __debug__:
 if __debug__:
     from storage import debug as storage
 
+    import trezorui2
+
     from trezor import log, loop, wire
     from trezor.ui import display
     from trezor.enums import MessageType
@@ -50,13 +52,6 @@ if __debug__:
     LAYOUT_WATCHER_STATE = 1
     LAYOUT_WATCHER_LAYOUT = 2
 
-    try:
-        import trezorui2
-
-        UI2 = True
-    except ImportError:
-        UI2 = False
-
     def screenshot() -> bool:
         if storage.save_screen:
             display.save(storage.save_screen_directory + "/refresh-")
@@ -78,20 +73,16 @@ if __debug__:
             SWIPE_RIGHT,
         )
 
-        if UI2:
-            confirm = trezorui2
-        else:
-            from trezor.ui.components.tt import confirm
         button = msg.button  # local_cache_attribute
         swipe = msg.swipe  # local_cache_attribute
 
         if button is not None:
             if button == DebugButton.NO:
-                await confirm_chan.put(Result(confirm.CANCELLED))
+                await confirm_chan.put(Result(trezorui2.CANCELLED))
             elif button == DebugButton.YES:
-                await confirm_chan.put(Result(confirm.CONFIRMED))
+                await confirm_chan.put(Result(trezorui2.CONFIRMED))
             elif button == DebugButton.INFO:
-                await confirm_chan.put(Result(confirm.INFO))
+                await confirm_chan.put(Result(trezorui2.INFO))
         if swipe is not None:
             if swipe == DebugSwipeDirection.UP:
                 await swipe_chan.put(SWIPE_UP)

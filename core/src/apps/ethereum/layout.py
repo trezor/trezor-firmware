@@ -34,8 +34,6 @@ def require_confirm_tx(
         ctx,
         to_str,
         format_ethereum_amount(value, token, chain_id),
-        ui.BOLD,
-        color_to=ui.GREY,
         br_code=ButtonRequestType.SignTx,
     )
 
@@ -85,8 +83,8 @@ async def require_confirm_eip1559_fee(
         ctx,
         format_ethereum_amount(spending, token, chain_id),
         format_ethereum_amount(max_gas_fee * gas_limit, None, chain_id),
-        total_label="Amount sent:\n",
-        fee_label="\nMaximum fee:\n",
+        total_label="Amount sent:",
+        fee_label="Maximum fee:",
     )
 
 
@@ -103,7 +101,6 @@ def require_confirm_unknown_token(
         contract_address_hex,
         "Contract:",
         "unknown_token",
-        icon_color=ui.ORANGE,
         br_code=ButtonRequestType.SignTx,
     )
 

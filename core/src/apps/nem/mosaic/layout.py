@@ -54,7 +54,6 @@ async def _require_confirm_properties(
     ctx: Context, definition: NEMMosaicDefinition
 ) -> None:
     from trezor.enums import NEMMosaicLevy
-    from trezor import ui
     from trezor.ui.layouts import confirm_properties
 
     properties = []
@@ -102,5 +101,4 @@ async def _require_confirm_properties(
         "confirm_properties",
         "Confirm properties",
         properties,
-        icon_color=ui.ORANGE_ICON,
     )

@@ -64,6 +64,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_verb;
   MP_QSTR_verb_cancel;
   MP_QSTR_hold;
+  MP_QSTR_hold_danger;
   MP_QSTR_reverse;
   MP_QSTR_prompt;
   MP_QSTR_subprompt;

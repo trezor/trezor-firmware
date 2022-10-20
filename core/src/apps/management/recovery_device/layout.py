@@ -17,7 +17,6 @@ if TYPE_CHECKING:
 
 
 async def _confirm_abort(ctx: GenericContext, dry_run: bool = False) -> None:
-    from trezor import ui
     from trezor.ui.layouts import confirm_action
 
     if dry_run:
@@ -26,7 +25,6 @@ async def _confirm_abort(ctx: GenericContext, dry_run: bool = False) -> None:
             "abort_recovery",
             "Abort seed check",
             description="Do you really want to abort the seed check?",
-            icon=ui.ICON_WIPE,
             br_code=ButtonRequestType.ProtectCall,
         )
     else:
@@ -37,7 +35,6 @@ async def _confirm_abort(ctx: GenericContext, dry_run: bool = False) -> None:
             "All progress will be lost.",
             "Do you really want to abort the recovery process?",
             reverse=True,
-            icon=ui.ICON_WIPE,
             br_code=ButtonRequestType.ProtectCall,
         )
 

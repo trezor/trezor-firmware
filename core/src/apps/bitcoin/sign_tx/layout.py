@@ -49,7 +49,6 @@ def format_coin_amount(amount: int, coin: CoinInfo, amount_unit: AmountUnit) -> 
 async def confirm_output(
     ctx: Context, output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit
 ) -> None:
-    from trezor import ui
     from . import omni
     from trezor.enums import OutputScriptType
 
@@ -79,17 +78,14 @@ async def confirm_output(
         address_short = addresses.address_short(coin, output.address)
         if output.payment_req_index is not None:
             title = "Confirm details"
-            icon = ui.ICON_CONFIRM
         else:
             title = "Confirm sending"
-            icon = ui.ICON_SEND
 
         layout = layouts.confirm_output(
             ctx,
             address_short,
             format_coin_amount(output.amount, coin, amount_unit),
             title=title,
-            icon=icon,
         )
 
     await layout

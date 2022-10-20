@@ -21,7 +21,7 @@ async def recovery_device(ctx: Context, msg: RecoveryDevice) -> Success:
     import storage
     import storage.device as storage_device
     import storage.recovery as storage_recovery
-    from trezor import config, ui, wire, workflow
+    from trezor import config, wire, workflow
     from trezor.enums import ButtonRequestType
     from trezor.ui.layouts import confirm_action, confirm_reset_device
     from apps.common.request_pin import (
@@ -66,7 +66,6 @@ async def recovery_device(ctx: Context, msg: RecoveryDevice) -> Success:
             "confirm_seedcheck",
             "Seed check",
             description="Do you really want to check the recovery seed?",
-            icon=ui.ICON_RECOVERY,
             br_code=ButtonRequestType.ProtectCall,
         )
     # END _continue_dialog

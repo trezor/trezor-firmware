@@ -60,7 +60,6 @@ async def change_wipe_code(ctx: Context, msg: ChangeWipeCode) -> Success:
 def _require_confirm_action(
     ctx: Context, msg: ChangeWipeCode, has_wipe_code: bool
 ) -> Awaitable[None]:
-    from trezor import ui
     from trezor.wire import ProcessError
     from trezor.ui.layouts import confirm_action
 
@@ -72,7 +71,6 @@ def _require_confirm_action(
             "disable wipe code protection?",
             "Do you really want to",
             reverse=True,
-            icon=ui.ICON_CONFIG,
         )
 
     if not msg.remove and has_wipe_code:
@@ -83,7 +81,6 @@ def _require_confirm_action(
             "change the wipe code?",
             "Do you really want to",
             reverse=True,
-            icon=ui.ICON_CONFIG,
         )
 
     if not msg.remove and not has_wipe_code:
@@ -94,7 +91,6 @@ def _require_confirm_action(
             "set the wipe code?",
             "Do you really want to",
             reverse=True,
-            icon=ui.ICON_CONFIG,
         )
 
     # Removing non-existing wipe code.

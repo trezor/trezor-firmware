@@ -60,7 +60,6 @@ async def _request_on_host(ctx: Context) -> str:
 
     # non-empty passphrase
     if passphrase:
-        from trezor import ui
         from trezor.ui.layouts import confirm_action, confirm_blob
 
         await confirm_action(
@@ -68,7 +67,6 @@ async def _request_on_host(ctx: Context) -> str:
             "passphrase_host1",
             "Hidden wallet",
             description="Access hidden wallet?\n\nNext screen will show\nthe passphrase!",
-            icon=ui.ICON_CONFIG,
         )
 
         await confirm_blob(
@@ -77,8 +75,6 @@ async def _request_on_host(ctx: Context) -> str:
             "Hidden wallet",
             passphrase,
             "Use this passphrase?\n",
-            icon=ui.ICON_CONFIG,
-            icon_color=ui.ORANGE_ICON,
         )
 
     return passphrase

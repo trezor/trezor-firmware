@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING
 
-from trezor import ui
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import confirm_properties
 
@@ -42,7 +41,6 @@ async def _confirm_properties(
         br_type,
         title,
         props,
-        icon=ui.ICON_CONFIRM,
         br_code=ButtonRequestType.ConfirmOutput,
     )
 
@@ -267,8 +265,6 @@ async def confirm_action_unknown(
             ("Action Name:", eos_name_to_string(action.name)),
             ("Checksum:", checksum),
         ),
-        ui.ICON_WIPE,
-        ui.RED,
         br_code=ButtonRequestType.ConfirmOutput,
     )
 
