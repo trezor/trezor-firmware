@@ -170,7 +170,7 @@ class _RustLayout(ui.Layout):
 
 async def raise_if_not_confirmed(a: Awaitable[T], exc: Any = ActionCancelled) -> T:
     result = await a
-    if result is not trezorui2.CONFIRMED:
+    if result is not CONFIRMED:
         raise exc
     return result
 
@@ -614,15 +614,15 @@ async def confirm_blob(
     )
 
 
-def confirm_address(
+async def confirm_address(
     ctx: GenericContext,
     title: str,
     address: str,
     description: str | None = "Address:",
     br_type: str = "confirm_address",
     br_code: ButtonRequestType = BR_TYPE_OTHER,
-) -> Awaitable[None]:
-    return confirm_value(
+) -> None:
+    return await confirm_value(
         ctx,
         title,
         address,
