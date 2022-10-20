@@ -1,4 +1,5 @@
 #include "buffers.h"
+#include "button.h"
 #include "common.h"
 #include "display.h"
 #include "display_interface.h"
@@ -8,6 +9,7 @@
 #include "rgb_led.h"
 #include "secbool.h"
 #include "storage.h"
+#include "touch.h"
 
 #include "bip39.h"
 #include "rand.h"
