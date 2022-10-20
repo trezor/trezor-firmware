@@ -5,6 +5,7 @@ from trezor.enums import ButtonRequestType
 
 import trezorui2
 
+from ...components.common.confirm import is_confirmed
 from ..common import button_request, interact
 
 if TYPE_CHECKING:
@@ -62,11 +63,7 @@ async def confirm_action(
     verb: str | bytes | None = "OK",
     verb_cancel: str | bytes | None = "cancel",
     hold: bool = False,
-    hold_danger: bool = False,
-    icon: str | None = None,
-    icon_color: int | None = None,
     reverse: bool = False,
-    larger_vspace: bool = False,
     exc: ExceptionType = wire.ActionCancelled,
     br_code: ButtonRequestType = ButtonRequestType.Other,
 ) -> None:
@@ -97,7 +94,7 @@ async def confirm_action(
         br_type,
         br_code,
     )
-    if result is not trezorui2.CONFIRMED:
+    if not is_confirmed(result):
         raise exc
 
 
@@ -108,8 +105,6 @@ async def confirm_text(
     data: str,
     description: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Other,
-    icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
-    icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
 ) -> None:
     result = await interact(
         ctx,
@@ -123,7 +118,7 @@ async def confirm_text(
         br_type,
         br_code,
     )
-    if result is not trezorui2.CONFIRMED:
+    if not is_confirmed(result):
         raise wire.ActionCancelled
 
 
@@ -144,7 +139,7 @@ async def show_success(
         br_type,
         br_code=ButtonRequestType.Other,
     )
-    if result is not trezorui2.CONFIRMED:
+    if not is_confirmed(result):
         raise wire.ActionCancelled
 
 
@@ -173,7 +168,7 @@ async def show_address(
         "show_address",
         ButtonRequestType.Address,
     )
-    if result is not trezorui2.CONFIRMED:
+    if not is_confirmed(result):
         raise wire.ActionCancelled
 
 
@@ -181,9 +176,8 @@ async def confirm_output(
     ctx: wire.GenericContext,
     address: str,
     amount: str,
-    font_amount: int = ui.NORMAL,  # TODO cleanup @ redesign
     title: str = "Confirm sending",
-    icon: str = ui.ICON_SEND,
+    br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
 ) -> None:
     result = await interact(
         ctx,
@@ -195,9 +189,9 @@ async def confirm_output(
             )
         ),
         "confirm_output",
-        ButtonRequestType.Other,
+        br_code,
     )
-    if result is not trezorui2.CONFIRMED:
+    if not is_confirmed(result):
         raise wire.ActionCancelled
 
 
@@ -205,10 +199,10 @@ async def confirm_total(
     ctx: wire.GenericContext,
     total_amount: str,
     fee_amount: str,
+    fee_rate_amount: str | None = None,
     title: str = "Confirm transaction",
     total_label: str = "Total amount:\n",
     fee_label: str = "\nincluding fee:\n",
-    icon_color: int = ui.GREEN,
     br_type: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> None:
@@ -224,7 +218,7 @@ async def confirm_total(
         br_type,
         br_code,
     )
-    if result is not trezorui2.CONFIRMED:
+    if not is_confirmed(result):
         raise wire.ActionCancelled
 
 
@@ -236,8 +230,6 @@ async def confirm_blob(
     description: str | None = None,
     hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.Other,
-    icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
-    icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
     ask_pagination: bool = False,
 ) -> None:
     result = await interact(
@@ -252,7 +244,7 @@ async def confirm_blob(
         br_type,
         br_code,
     )
-    if result is not trezorui2.CONFIRMED:
+    if not is_confirmed(result):
         raise wire.ActionCancelled
 
 
@@ -276,10 +268,8 @@ async def show_error_and_raise(
     ctx: wire.GenericContext,
     br_type: str,
     content: str,
-    header: str = "Error",
     subheader: str | None = None,
     button: str = "Close",
-    red: bool = False,
     exc: ExceptionType = wire.ActionCancelled,
 ) -> NoReturn:
     raise NotImplementedError

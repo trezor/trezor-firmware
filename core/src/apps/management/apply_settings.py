@@ -238,7 +238,6 @@ async def _require_confirm_safety_checks(
             hold=True,
             verb="Hold to confirm",
             reverse=True,
-            larger_vspace=level == SafetyCheckLevel.PromptAlways,
             br_code=BRT_PROTECT_CALL,
         )
     else:

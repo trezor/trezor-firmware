@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 import trezor.ui.layouts as layouts
-from trezor import strings, ui
+from trezor import strings
 from trezor.enums import ButtonRequestType
 
 from . import consts
@@ -26,7 +26,6 @@ async def require_confirm_init(
         address,
         description,
         "confirm_init",
-        icon=ui.ICON_SEND,
     )
 
     # get_network_warning
@@ -45,8 +44,6 @@ async def require_confirm_init(
             "Transaction is on {}",
             network,
             ButtonRequestType.ConfirmOutput,
-            icon=ui.ICON_CONFIRM,
-            hide_continue=True,
         )
 
 
@@ -88,8 +85,6 @@ async def require_confirm_memo(
             "Confirm memo",
             "No memo set!",
             "Important: Many exchanges require a memo when depositing",
-            icon=ui.ICON_CONFIRM,
-            icon_color=ui.GREEN,
             br_code=ButtonRequestType.ConfirmOutput,
         )
 
@@ -110,7 +105,6 @@ async def require_confirm_final(ctx: Context, fee: int, num_operations: int) -> 
         "Final confirm",
         "Sign this transaction made up of " + op_str + " and pay {}\nfor fee?",
         format_amount(fee),
-        hide_continue=True,
         hold=True,
     )
 

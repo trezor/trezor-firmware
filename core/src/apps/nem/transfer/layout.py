@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING
 
-from trezor import ui
 from trezor.enums import ButtonRequestType
 from trezor.strings import format_amount
 
@@ -36,7 +35,6 @@ async def ask_transfer(
             bytes(transfer.payload).decode(),
             "Encrypted:" if encrypted else "Unencrypted:",
             ButtonRequestType.ConfirmOutput,
-            icon_color=ui.GREEN if encrypted else ui.RED,
         )
 
     for mosaic in transfer.mosaics:
@@ -47,9 +45,7 @@ async def ask_transfer(
         ctx,
         transfer.recipient,
         f"Send {format_amount(_get_xem_amount(transfer), NEM_MAX_DIVISIBILITY)} XEM",
-        ui.BOLD,
         "Confirm transfer",
-        to_str="\nto\n",
     )
 
     await require_confirm_final(ctx, common.fee)
@@ -111,8 +107,6 @@ async def _ask_transfer_mosaic(
             "Confirm mosaic",
             "Unknown mosaic!",
             "Divisibility and levy cannot be shown for unknown mosaics",
-            icon=ui.ICON_SEND,
-            icon_color=ui.RED,
             br_code=ButtonRequestType.ConfirmOutput,
         )
 

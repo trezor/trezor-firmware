@@ -15,7 +15,6 @@ async def get_ecdh_session_key(ctx: Context, msg: GetECDHSessionKey) -> ECDHSess
         serialize_identity_without_proto,
         serialize_identity,
     )
-    from trezor import ui
     from trezor.wire import DataError
     from trezor.messages import ECDHSessionKey
     from apps.common.keychain import get_keychain
@@ -35,8 +34,6 @@ async def get_ecdh_session_key(ctx: Context, msg: GetECDHSessionKey) -> ECDHSess
         f"Decrypt {proto}",
         serialize_identity_without_proto(msg_identity),
         None,
-        icon=ui.ICON_DEFAULT,
-        icon_color=ui.ORANGE_ICON,
     )
     # END require_confirm_ecdh_session_key
 

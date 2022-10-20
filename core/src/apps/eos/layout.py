@@ -11,7 +11,6 @@ async def require_get_public_key(ctx: Context, public_key: str) -> None:
 
 
 async def require_sign_tx(ctx: Context, num_actions: int) -> None:
-    from trezor import ui
     from trezor.enums import ButtonRequestType
     from trezor.strings import format_plural
     from trezor.ui.layouts import confirm_action
@@ -22,7 +21,5 @@ async def require_sign_tx(ctx: Context, num_actions: int) -> None:
         "Sign transaction",
         description="You are about to sign {}.",
         description_param=format_plural("{count} {plural}", num_actions, "action"),
-        icon=ui.ICON_SEND,
-        icon_color=ui.GREEN,
         br_code=ButtonRequestType.SignTx,
     )

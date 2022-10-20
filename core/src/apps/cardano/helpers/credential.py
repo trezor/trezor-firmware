@@ -158,17 +158,6 @@ class Credential:
 
         return credential
 
-    def should_warn(self) -> bool:
-        return any(
-            (
-                self.is_reward,
-                self.is_no_staking,
-                self.is_mismatch,
-                self.is_unusual_path,
-                self.is_other_warning,
-            )
-        )
-
     def is_set(self) -> bool:
         return any((self.path, self.key_hash, self.script_hash, self.pointer))
 

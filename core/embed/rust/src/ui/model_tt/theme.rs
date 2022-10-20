@@ -240,6 +240,10 @@ pub fn button_cancel() -> ButtonStyleSheet {
     }
 }
 
+pub fn button_danger() -> ButtonStyleSheet {
+    button_cancel()
+}
+
 pub fn button_reset() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {

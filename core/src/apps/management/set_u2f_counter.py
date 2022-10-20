@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 async def set_u2f_counter(ctx: Context, msg: SetU2FCounter) -> Success:
     import storage.device as storage_device
-    from trezor import ui, wire
+    from trezor import wire
     from trezor.enums import ButtonRequestType
     from trezor.messages import Success
     from trezor.ui.layouts import confirm_action
@@ -23,7 +23,6 @@ async def set_u2f_counter(ctx: Context, msg: SetU2FCounter) -> Success:
         "Set U2F counter",
         description="Do you really want to\nset the U2F counter\nto {}?",
         description_param=str(msg.u2f_counter),
-        icon=ui.ICON_CONFIG,
         br_code=ButtonRequestType.ProtectCall,
     )
 
