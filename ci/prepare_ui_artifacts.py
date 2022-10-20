@@ -1,4 +1,3 @@
-import os
 import shutil
 import sys
 from pathlib import Path
@@ -18,8 +17,6 @@ if len(sys.argv) > 1 and sys.argv[1].upper() == "T1":
     model = "T1"
 else:
     model = "TT"
-if os.getenv("UI2") == "1":
-    model += "ui2"
 model_file_hashes = {k: v for k, v in FILE_HASHES.items() if k.startswith(f"{model}_")}
 
 for test_case, expected_hash in model_file_hashes.items():

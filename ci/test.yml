@@ -11,8 +11,8 @@ image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/trezor-firmware-en
 
 # Core
 
-# Python and rust unit tests, checking TT functionality.
-core unit test:
+# Python unit tests, checking core functionality.
+core unit python test:
   stage: test
   <<: *gitlab_caching
   needs:
@@ -20,14 +20,15 @@ core unit test:
   script:
     - nix-shell --run "poetry run make -C core test | ts -s"
 
-core unit ui2 test:
+# Rust unit tests.
+core unit rust test:
   stage: test
   <<: *gitlab_caching
   needs:
-    - core unix frozen ui2 debug build
+    - core unix frozen debug build
   script:
     - nix-shell --run "poetry run make -C core clippy | ts -s"
-    - nix-shell --run "poetry run make -C core test_rust UI2=1 | ts -s"
+    - nix-shell --run "poetry run make -C core test_rust | ts -s"
 
 core unit asan test:
   stage: test
@@ -43,8 +44,8 @@ core unit asan test:
     LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
   script:
     - nix-shell --run "poetry run make -C core test | ts -s"
-    - nix-shell --run "poetry run make -C core clean build_unix UI2=1 | ts -s"
-    - nix-shell --run "poetry run make -C core test_rust UI2=1 | ts -s"
+    - nix-shell --run "poetry run make -C core clean build_unix | ts -s"
+    - nix-shell --run "poetry run make -C core test_rust | ts -s"
 
 core unit t1 test:
   stage: test
@@ -85,40 +86,6 @@ core device test:
       - tests/junit.xml
       - tests/trezor.log
       - core/.coverage.*
-    when: always
-    expire_in: 1 week
-    reports:
-      junit: tests/junit.xml
-
-core device ui2 test:
-  stage: test
-  <<: *gitlab_caching
-  when: manual
-  needs:
-    - core unix frozen ui2 debug build
-  variables:
-    TREZOR_PROFILING: "1"
-    UI2: "1"
-  script:
-    - nix-shell --run "poetry run make -C core test_emu_ui | ts -s"
-    # - mv core/src/.coverage core/.coverage.test_emu
-  after_script:
-    - mv tests/ui_tests/reporting/reports/test/ test_ui_report
-    - nix-shell --run "poetry run python ci/prepare_ui_artifacts.py TTui2 | ts -s"
-    - diff tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json
-    - nix-shell --run "cd tests/ui_tests ; poetry run python reporting/report_master_diff.py TTui2_"
-    - mv tests/ui_tests/reporting/reports/master_diff/ .
-  artifacts:
-    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
-    paths:
-      - ci/ui_test_records/
-      - test_ui_report
-      - tests/ui_tests/screens/
-      - tests/ui_tests/fixtures.suggestion.json
-      - tests/junit.xml
-      - tests/trezor.log
-      # - core/.coverage.*
-      - master_diff
     when: always
     expire_in: 1 week
     reports:

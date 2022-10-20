@@ -7,7 +7,6 @@ import tools
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
 EVERYTHING = BITCOIN_ONLY != '1'
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
-UI2 = ARGUMENTS.get('UI2', '0') == '1' or TREZOR_MODEL in ('1', 'R')
 DMA2D = TREZOR_MODEL in ('T', )
 
 FEATURE_FLAGS = {
@@ -30,16 +29,10 @@ if TREZOR_MODEL in ('1', 'R'):
     FONT_BOLD='Font_PixelOperator_Bold_8'
     FONT_MONO='Font_PixelOperatorMono_Regular_8'
 if TREZOR_MODEL in ('T', ):
-    if UI2:
-        FONT_NORMAL='Font_TTHoves_Regular_18'
-        FONT_DEMIBOLD='Font_TTHoves_DemiBold_18'
-        FONT_BOLD='Font_TTHoves_Bold_16'
-        FONT_MONO='Font_RobotoMono_Regular_20'
-    else:
-        FONT_NORMAL='Font_Roboto_Regular_20'
-        FONT_DEMIBOLD=None
-        FONT_BOLD='Font_Roboto_Bold_20'
-        FONT_MONO='Font_RobotoMono_Regular_20'
+    FONT_NORMAL='Font_TTHoves_Regular_18'
+    FONT_DEMIBOLD='Font_TTHoves_DemiBold_18'
+    FONT_BOLD='Font_TTHoves_Bold_16'
+    FONT_MONO='Font_RobotoMono_Regular_20'
 
 # modtrezorconfig
 CPPPATH_MOD += [
@@ -191,11 +184,10 @@ SOURCE_MOD += [
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
 ]
-if UI2:
-    CPPDEFINES_MOD += [
-        'TREZOR_UI2',
-        'USE_RUST_LOADER'
-    ]
+CPPDEFINES_MOD += [
+    'TREZOR_UI2',
+    'USE_RUST_LOADER'
+]
 
 # modtrezorutils
 SOURCE_MOD += [
@@ -205,11 +197,8 @@ SOURCE_MOD += [
 # rust mods
 SOURCE_MOD += [
     'embed/extmod/rustmods/modtrezorproto.c',
+    'embed/extmod/rustmods/modtrezorui2.c',
 ]
-if UI2:
-    SOURCE_MOD += [
-        'embed/extmod/rustmods/modtrezorui2.c',
-    ]
 
 # modutime
 SOURCE_MOD += [
@@ -584,7 +573,6 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/components/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/components/common/*.py'))
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/constants/__init__.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/__init__.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/common.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/reset.py'))
@@ -592,28 +580,16 @@ if FROZEN:
     if EVERYTHING:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/altcoin.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/webauthn.py'))
-    if TREZOR_MODEL in ('T',) and UI2:
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/constants/tt.py'))
+    if TREZOR_MODEL in ('T',):
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/__init__.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/reset.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/recovery.py'))
         if EVERYTHING:
             SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/altcoin.py'))
             SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt_v2/webauthn.py'))
-    elif TREZOR_MODEL in ('T',):
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/components/tt/*.py'))
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/constants/tt.py'))
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt/__init__.py'))
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt/reset.py'))
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt/recovery.py'))
-        if EVERYTHING:
-            SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt/altcoin.py'))
-            SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt/webauthn.py'))
     elif TREZOR_MODEL in ('1',):
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/constants/t1.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/t1.py'))
     elif TREZOR_MODEL in ('R',):
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/constants/tr.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tr/__init__.py'))
     else:
         raise ValueError('Unknown Trezor model')
@@ -742,10 +718,9 @@ def cargo_build():
     features = ['micropython', 'protobuf', f'model_t{TREZOR_MODEL.lower()}']
     if BITCOIN_ONLY == '1':
         features.append('bitcoin_only')
-    if UI2:
-        features.append('ui')
-        if PYOPT == '0':
-            features.append('ui_debug')
+    features.append('ui')
+    if PYOPT == '0':
+        features.append('ui_debug')
     if DMA2D:
         features.append('dma2d')
 

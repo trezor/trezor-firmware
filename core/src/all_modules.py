@@ -151,48 +151,6 @@ trezor.ui.components.common
 import trezor.ui.components.common
 trezor.ui.components.common.confirm
 import trezor.ui.components.common.confirm
-trezor.ui.components.common.text
-import trezor.ui.components.common.text
-trezor.ui.components.tt.button
-import trezor.ui.components.tt.button
-trezor.ui.components.tt.checklist
-import trezor.ui.components.tt.checklist
-trezor.ui.components.tt.confirm
-import trezor.ui.components.tt.confirm
-trezor.ui.components.tt.info
-import trezor.ui.components.tt.info
-trezor.ui.components.tt.keyboard_bip39
-import trezor.ui.components.tt.keyboard_bip39
-trezor.ui.components.tt.keyboard_slip39
-import trezor.ui.components.tt.keyboard_slip39
-trezor.ui.components.tt.num_input
-import trezor.ui.components.tt.num_input
-trezor.ui.components.tt.passphrase
-import trezor.ui.components.tt.passphrase
-trezor.ui.components.tt.pin
-import trezor.ui.components.tt.pin
-trezor.ui.components.tt.recovery
-import trezor.ui.components.tt.recovery
-trezor.ui.components.tt.reset
-import trezor.ui.components.tt.reset
-trezor.ui.components.tt.scroll
-import trezor.ui.components.tt.scroll
-trezor.ui.components.tt.swipe
-import trezor.ui.components.tt.swipe
-trezor.ui.components.tt.text
-import trezor.ui.components.tt.text
-trezor.ui.components.tt.word_select
-import trezor.ui.components.tt.word_select
-trezor.ui.constants
-import trezor.ui.constants
-trezor.ui.constants.t1
-import trezor.ui.constants.t1
-trezor.ui.constants.tr
-import trezor.ui.constants.tr
-trezor.ui.constants.tt
-import trezor.ui.constants.tt
-trezor.ui.container
-import trezor.ui.container
 trezor.ui.layouts
 import trezor.ui.layouts
 trezor.ui.layouts.altcoin
@@ -207,14 +165,6 @@ trezor.ui.layouts.t1
 import trezor.ui.layouts.t1
 trezor.ui.layouts.tr
 import trezor.ui.layouts.tr
-trezor.ui.layouts.tt
-import trezor.ui.layouts.tt
-trezor.ui.layouts.tt.altcoin
-import trezor.ui.layouts.tt.altcoin
-trezor.ui.layouts.tt.recovery
-import trezor.ui.layouts.tt.recovery
-trezor.ui.layouts.tt.reset
-import trezor.ui.layouts.tt.reset
 trezor.ui.layouts.tt_v2
 import trezor.ui.layouts.tt_v2
 trezor.ui.layouts.tt_v2.altcoin
@@ -227,8 +177,6 @@ trezor.ui.loader
 import trezor.ui.loader
 trezor.ui.popup
 import trezor.ui.popup
-trezor.ui.qr
-import trezor.ui.qr
 trezor.ui.style
 import trezor.ui.style
 trezor.utils
@@ -463,10 +411,6 @@ if not utils.BITCOIN_ONLY:
     import trezor.enums.TezosContractType
     trezor.ui.components.common.webauthn
     import trezor.ui.components.common.webauthn
-    trezor.ui.components.tt.webauthn
-    import trezor.ui.components.tt.webauthn
-    trezor.ui.layouts.tt.webauthn
-    import trezor.ui.layouts.tt.webauthn
     trezor.ui.layouts.tt_v2.webauthn
     import trezor.ui.layouts.tt_v2.webauthn
     trezor.ui.layouts.webauthn
