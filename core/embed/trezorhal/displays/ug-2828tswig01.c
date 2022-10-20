@@ -244,6 +244,13 @@ static void send_init_seq_SH1107(void) {
   // Vpp stabilization period
   HAL_Delay(100);
 
+  display_set_window(0, 0, MAX_DISPLAY_RESX - 1, MAX_DISPLAY_RESY - 1);
+  for (int i = 0; i < DISPLAY_RESY; i++) {
+    for (int j = 0; j < DISPLAY_RESX; j++) {
+      display_pixeldata(0);
+    }
+  }
+
   // Display ON
   CMD(0xAF);
 }
