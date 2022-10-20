@@ -324,7 +324,10 @@ def test_signmessage_pagination(client: Client, message: str):
         )
 
     # We cannot differentiate between a newline and space in the message read from Trezor.
-    expected_message = "Confirm message: " + message.replace("\n", " ").rstrip()
+    expected_message = (
+        ("Confirm message: " + message).replace("\n", "").replace(" ", "")
+    )
+    message_read = message_read.replace(" ", "")
     assert expected_message == message_read
 
 

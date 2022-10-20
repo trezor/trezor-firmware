@@ -1,6 +1,6 @@
 use crate::ui::{
     component::{
-        text::{formatted::FormattedFonts, TextStyle},
+        text::{formatted::FormattedFonts, LineBreaking, PageBreaking, TextStyle},
         FixedHeightBar,
     },
     display::{Color, Font},
@@ -357,7 +357,9 @@ pub fn loader_default() -> LoaderStyleSheet {
 pub const TEXT_NORMAL: TextStyle = TextStyle::new(Font::NORMAL, FG, BG, GREY_LIGHT, GREY_LIGHT);
 pub const TEXT_DEMIBOLD: TextStyle = TextStyle::new(Font::DEMIBOLD, FG, BG, GREY_LIGHT, GREY_LIGHT);
 pub const TEXT_BOLD: TextStyle = TextStyle::new(Font::BOLD, FG, BG, GREY_LIGHT, GREY_LIGHT);
-pub const TEXT_MONO: TextStyle = TextStyle::new(Font::MONO, FG, BG, GREY_LIGHT, GREY_LIGHT);
+pub const TEXT_MONO: TextStyle = TextStyle::new(Font::MONO, FG, BG, GREY_LIGHT, GREY_LIGHT)
+    .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
+    .with_page_breaking(PageBreaking::Cut);
 
 pub const TEXT_NORMAL_OFF_WHITE: TextStyle =
     TextStyle::new(Font::NORMAL, OFF_WHITE, BG, GREY_LIGHT, GREY_LIGHT);

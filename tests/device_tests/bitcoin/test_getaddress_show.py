@@ -214,7 +214,7 @@ def test_show_multisig_xpubs(
             yield  # show address
             layout = client.debug.wait_layout()  # TODO: do not need to *wait* now?
             assert layout.get_title() == "MULTISIG 2 OF 3"
-            assert layout.get_content() == address
+            assert layout.get_content().replace(" ", "") == address
 
             client.debug.press_no()
             yield  # show QR code
@@ -234,7 +234,10 @@ def test_show_multisig_xpubs(
 
                 layout2 = client.debug.wait_layout()
                 assert layout2.get_title() == expected_title
-                assert layout1.get_content() + layout2.get_content() == xpubs[xpub_num]
+                content = (layout1.get_content() + layout2.get_content()).replace(
+                    " ", ""
+                )
+                assert content == xpubs[xpub_num]
 
             client.debug.press_yes()
 
