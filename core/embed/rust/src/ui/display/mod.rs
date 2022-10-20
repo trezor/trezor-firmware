@@ -103,12 +103,21 @@ pub struct TextOverlay<'a> {
     area: Rect,
     text: &'a str,
     font: Font,
+    max_height: i16,
+    baseline: i16,
 }
 
 impl<'a> TextOverlay<'a> {
     pub fn new(text: &'a str, font: Font) -> Self {
         let area = Rect::zero();
-        Self { area, text, font }
+
+        Self {
+            area,
+            text,
+            font,
+            max_height: font.max_height(),
+            baseline: font.baseline(),
+        }
     }
 
     pub fn place(&mut self, baseline: Point) {
@@ -132,9 +141,10 @@ impl<'a> TextOverlay<'a> {
         let p_rel = Point::new(p.x - self.area.x0, p.y - self.area.y0);
 
         for g in self.text.bytes().filter_map(|c| self.font.get_glyph(c)) {
+            let top = self.max_height - self.baseline - g.bearing_y;
             let char_area = Rect::new(
-                Point::new(tot_adv + g.bearing_x, g.height - g.bearing_y),
-                Point::new(tot_adv + g.bearing_x + g.width, g.bearing_y),
+                Point::new(tot_adv + g.bearing_x, top),
+                Point::new(tot_adv + g.bearing_x + g.width, top + g.height),
             );
 
             tot_adv += g.adv;
@@ -1023,6 +1033,14 @@ impl Font {
 
     pub fn text_baseline(self) -> i16 {
         display::text_baseline(self.into())
+    }
+
+    pub fn max_height(self) -> i16 {
+        display::text_max_height(self.into()) as i16
+    }
+
+    pub fn baseline(self) -> i16 {
+        display::text_baseline(self.into()) as i16
     }
 
     pub fn line_height(self) -> i16 {
