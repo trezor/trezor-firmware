@@ -47,7 +47,6 @@ EthereumGetAddress.address_n            max_count:8
 EthereumGetAddress.encoded_network      max_size:1024
 
 EthereumGetPublicKey.address_n          max_count:8
-EthereumGetPublicKey.encoded_network    max_size:1024
 
 EthereumAddress._old_address            max_size:20
 EthereumAddress.address                 max_size:43

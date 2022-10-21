@@ -4667,7 +4667,6 @@ class EthereumGetPublicKey(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
         2: protobuf.Field("show_display", "bool", repeated=False, required=False, default=None),
-        3: protobuf.Field("encoded_network", "bytes", repeated=False, required=False),
     }
 
     def __init__(
@@ -4675,11 +4674,9 @@ class EthereumGetPublicKey(protobuf.MessageType):
         *,
         address_n: Optional[Sequence["int"]] = None,
         show_display: Optional["bool"] = None,
-        encoded_network: Optional["bytes"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.show_display = show_display
-        self.encoded_network = encoded_network
 
 
 class EthereumPublicKey(protobuf.MessageType):

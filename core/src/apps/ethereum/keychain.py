@@ -14,7 +14,6 @@ if TYPE_CHECKING:
 
     from trezor.messages import (
         EthereumGetAddress,
-        EthereumGetPublicKey,
         EthereumNetworkInfo,
         EthereumSignMessage,
         EthereumSignTx,
@@ -26,23 +25,22 @@ if TYPE_CHECKING:
         MsgIn as MsgInGeneric,
         MsgOut,
         Handler,
-        HandlerWithKeychain,
     )
 
     # messages for "with_keychain_from_path" decorator
-    MsgInKeychainPath = TypeVar("MsgInKeychainPath", bound=EthereumGetPublicKey)
-    # messages for "with_keychain_from_path_and_defs" decorator
-    MsgInKeychainPathDefs = TypeVar(
-        "MsgInKeychainPathDefs",
-        bound=EthereumGetAddress | EthereumSignMessage | EthereumSignTypedData,
+    MsgInKeychainPath = TypeVar(
+        "MsgInKeychainPath",
+        EthereumGetAddress,
+        EthereumSignMessage,
+        EthereumSignTypedData,
     )
-    # messages for "with_keychain_from_chain_id_and_defs" decorator
-    MsgInKeychainChainIdDefs = TypeVar(
-        "MsgInKeychainChainIdDefs", bound=EthereumSignTx | EthereumSignTxEIP1559
+    # messages for "with_keychain_from_chain_id" decorator
+    MsgInKeychainChainId = TypeVar(
+        "MsgInKeychainChainId", EthereumSignTx, EthereumSignTxEIP1559
     )
 
     # TODO: check the types of messages
-    HandlerWithKeychainAndDefinitions = Callable[
+    HandlerWithKeychainAndDefs = Callable[
         [Context, MsgInGeneric, Keychain, definitions.Definitions],
         Awaitable[MsgOut],
     ]
@@ -64,7 +62,7 @@ PATTERNS_ADDRESS = (
 def _schemas_from_address_n(
     patterns: Iterable[str],
     address_n: paths.Bip32Path,
-    network_info: EthereumNetworkInfo | None,
+    network_info: EthereumNetworkInfo,
 ) -> Iterable[paths.PathSchema]:
     if len(address_n) < 2:
         return ()
@@ -72,11 +70,11 @@ def _schemas_from_address_n(
     slip44_hardened = address_n[1]
 
     def _get_hardened_slip44_networks():
-        if network_info is not None:
+        if network_info is not networks.UNKNOWN_NETWORK:
             yield network_info.slip44 | paths.HARDENED
         yield from networks.all_slip44_ids_hardened()
 
-    # check with network from definitions and if that is None then with built-in ones
+    # check with networks
     if slip44_hardened not in _get_hardened_slip44_networks():
         return ()
 
@@ -90,25 +88,14 @@ def _schemas_from_address_n(
 
 def with_keychain_from_path(
     *patterns: str,
-) -> Callable[[HandlerWithKeychain[MsgInKeychainPath, MsgOut]], Handler[MsgInKeychainPath, MsgOut]]:
-    def decorator(func: HandlerWithKeychain[MsgInKeychainPath, MsgOut]) -> Handler[MsgInKeychainPath, MsgOut]:
+) -> Callable[
+    [HandlerWithKeychainAndDefs[MsgInKeychainPath, MsgOut]],
+    Handler[MsgInKeychainPath, MsgOut],
+]:
+    def decorator(
+        func: HandlerWithKeychainAndDefs[MsgInKeychainPath, MsgOut]
+    ) -> Handler[MsgInKeychainPath, MsgOut]:
         async def wrapper(ctx: Context, msg: MsgInKeychainPath) -> MsgOut:
-            defs = definitions.get_definitions_from_msg(msg)
-            schemas = _schemas_from_address_n(patterns, msg.address_n, defs.network)
-            keychain = await get_keychain(ctx, CURVE, schemas)
-            with keychain:
-                return await func(ctx, msg, keychain)
-
-        return wrapper
-
-    return decorator
-
-
-def with_keychain_from_path_and_defs(
-    *patterns: str,
-) -> Callable[[HandlerWithKeychainAndDefinitions[MsgInKeychainPathDefs, MsgOut]], Handler[MsgInKeychainPathDefs, MsgOut]]:
-    def decorator(func: HandlerWithKeychainAndDefinitions[MsgInKeychainPathDefs, MsgOut]) -> Handler[MsgInKeychainPathDefs, MsgOut]:
-        async def wrapper(ctx: Context, msg: MsgInKeychainPathDefs) -> MsgOut:
             defs = definitions.get_definitions_from_msg(msg)
             schemas = _schemas_from_address_n(patterns, msg.address_n, defs.network)
             keychain = await get_keychain(ctx, CURVE, schemas)
@@ -121,10 +108,10 @@ def with_keychain_from_path_and_defs(
 
 
 def _schemas_from_network(
-    network_info: EthereumNetworkInfo | None,
+    network_info: EthereumNetworkInfo,
 ) -> Iterable[paths.PathSchema]:
     slip44_id: tuple[int, ...]
-    if network_info is None:
+    if network_info is networks.UNKNOWN_NETWORK:
         # allow Ethereum or testnet paths for unknown networks
         slip44_id = (60, 1)
     elif network_info.slip44 not in (60, 1):
@@ -139,11 +126,11 @@ def _schemas_from_network(
     return [s.copy() for s in schemas]
 
 
-def with_keychain_from_chain_id_and_defs(
-    func: HandlerWithKeychainAndDefinitions[MsgInKeychainChainIdDefs, MsgOut]
-) -> Handler[MsgInKeychainChainIdDefs, MsgOut]:
+def with_keychain_from_chain_id(
+    func: HandlerWithKeychainAndDefs[MsgInKeychainChainId, MsgOut]
+) -> Handler[MsgInKeychainChainId, MsgOut]:
     # this is only for SignTx, and only PATTERN_ADDRESS is allowed
-    async def wrapper(ctx: Context, msg: MsgInKeychainChainIdDefs) -> MsgOut:
+    async def wrapper(ctx: Context, msg: MsgInKeychainChainId) -> MsgOut:
         defs = definitions.get_definitions_from_msg(msg)
         schemas = _schemas_from_network(defs.network)
         keychain = await get_keychain(ctx, CURVE, schemas)

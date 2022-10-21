@@ -269,13 +269,11 @@ def get_public_node(
     client: "TrezorClient",
     n: "Address",
     show_display: bool = False,
-    encoded_network: Optional[bytes] = None,
 ) -> "MessageType":
     return client.call(
         messages.EthereumGetPublicKey(
             address_n=n,
             show_display=show_display,
-            encoded_network=encoded_network,
         )
     )
 

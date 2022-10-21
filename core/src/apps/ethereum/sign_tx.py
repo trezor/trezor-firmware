@@ -5,7 +5,7 @@ from trezor.messages import EthereumTxRequest
 from trezor.wire import DataError
 
 from .helpers import bytes_from_address
-from .keychain import with_keychain_from_chain_id_and_defs
+from .keychain import with_keychain_from_chain_id
 
 if TYPE_CHECKING:
     from apps.common.keychain import Keychain
@@ -13,8 +13,7 @@ if TYPE_CHECKING:
     from trezor.wire import Context
 
     from .definitions import Definitions
-    from .keychain import MsgInKeychainChainIdDefs
-    from . import tokens, definitions
+    from .keychain import MsgInKeychainChainId
 
 
 # Maximum chain_id which returns the full signature_v (which must fit into an uint32).
@@ -23,7 +22,7 @@ if TYPE_CHECKING:
 MAX_CHAIN_ID = (0xFFFF_FFFF - 36) // 2
 
 
-@with_keychain_from_chain_id_and_defs
+@with_keychain_from_chain_id
 async def sign_tx(
     ctx: Context,
     msg: EthereumSignTx,
@@ -105,7 +104,7 @@ async def sign_tx(
 
 async def handle_erc20(
     ctx: Context,
-    msg: MsgInKeychainChainIdDefs,  # type: ignore [TypeVar "MsgInKeychainChainIdDefs" appears only once in generic function signature]
+    msg: MsgInKeychainChainId,
     definitions: Definitions,
 ) -> tuple[EthereumTokenInfo | None, bytes, bytes, int]:
     from .layout import require_confirm_unknown_token
@@ -190,7 +189,7 @@ def _sign_digest(
     return req
 
 
-def check_common_fields(msg: MsgInKeychainChainIdDefs) -> None:  # type: ignore [TypeVar "MsgInKeychainChainIdDefs" appears only once in generic function signature]
+def check_common_fields(msg: MsgInKeychainChainId) -> None:
     data_length = msg.data_length  # local_cache_attribute
 
     if data_length > 0:

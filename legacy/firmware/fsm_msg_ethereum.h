@@ -39,25 +39,12 @@ void fsm_msgEthereumGetPublicKey(const EthereumGetPublicKey *msg) {
 
   CHECK_PIN
 
-  const EthereumDefinitions_encoded_network_t *encoded_network = NULL;
-  if (msg->has_encoded_network) {
-    encoded_network = (const EthereumDefinitions_encoded_network_t *)&msg
-                          ->encoded_network;
-  }
-
-  const EthereumDefinitionsDecoded *defs =
-      get_EthereumDefinitionsDecoded(encoded_network, NULL, CHAIN_ID_UNKNOWN, NULL);
-  if (!defs) {
-    layoutHome();
-    return;
-  }
-
   // we use Bitcoin-like format for ETH
   const CoinInfo *coin = fsm_getCoin(true, "Bitcoin");
   if (!coin) return;
 
   if (!fsm_ethereumCheckPath(msg->address_n_count, msg->address_n, true,
-                             defs)) {
+                             NULL)) {
     layoutHome();
     return;
   }

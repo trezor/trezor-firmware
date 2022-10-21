@@ -319,31 +319,18 @@ def get_address(
 @cli.command()
 @click.option("-n", "--address", required=True, help=PATH_HELP)
 @click.option("-d", "--show-display", is_flag=True)
-@definitions_dir_option
-@network_def_option
-@download_definitions_option
 @with_client
 def get_public_node(
     client: "TrezorClient",
     address: str,
     show_display: bool,
-    definitions_dir: pathlib.Path,
-    network_def: BinaryIO,
-    download_definitions: bool,
 ) -> dict:
     """Get Ethereum public node of given path."""
     address_n = tools.parse_path(address)
-    defs = _get_ethereum_definitions(
-        definitions_dir=definitions_dir,
-        network_def_file=network_def,
-        download_definitions=download_definitions,
-        slip44_hardened=address_n[1],
-    )
     result = ethereum.get_public_node(
         client,
         address_n,
         show_display=show_display,
-        encoded_network=defs.encoded_network,
     )
     return {
         "node": {

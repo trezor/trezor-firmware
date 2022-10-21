@@ -5,7 +5,7 @@ from trezor.enums import EthereumDataType
 from trezor.wire import DataError
 
 from .helpers import get_type_name
-from .keychain import PATTERNS_ADDRESS, with_keychain_from_path_and_defs
+from .keychain import PATTERNS_ADDRESS, with_keychain_from_path
 from .layout import should_show_struct
 
 if TYPE_CHECKING:
@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 _MAX_VALUE_BYTE_SIZE = const(1024)
 
 
-@with_keychain_from_path_and_defs(*PATTERNS_ADDRESS)
+@with_keychain_from_path(*PATTERNS_ADDRESS)
 async def sign_typed_data(
     ctx: Context,
     msg: EthereumSignTypedData,
