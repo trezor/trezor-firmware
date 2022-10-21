@@ -607,13 +607,6 @@ python test:
   variables:
     LC_ALL: "C.UTF-8"
     LANG: "C.UTF-8"
-  only:
-    changes:
-      - poetry.lock
-      - .gitlab-ci.yml
-      - ci/**
-      - common/**
-      - python/**
   script:
     # Workaround for nixpkgs+tox integration failure which results in:
     #     ModuleNotFoundError: No module named '_sysconfigdata__linux_x86_64-linux-gnu'

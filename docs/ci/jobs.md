@@ -219,13 +219,13 @@ Persistence tests.
 
 ### [python test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L603)
 
-### [python support test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L629)
+### [python support test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L622)
 
-### [storage test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L639)
+### [storage test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L632)
 
-### [core unix memory profiler](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L663)
+### [core unix memory profiler](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L656)
 
-### [connect test core](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L687)
+### [connect test core](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L680)
 
 ---
 ## TEST-HW stage - [test-hw.yml](https://github.com/trezor/trezor-firmware/blob/master/ci/test-hw.yml)
