@@ -86,7 +86,7 @@ def decode_definition(definition: bytes, expected_type: type[DefType]) -> DefTyp
     return info
 
 
-def _get_and_check_definiton(
+def get_and_check_definiton(
     encoded_definition: bytes,
     expected_type: type[DefType],
     ref_chain_id: int | None = None,
@@ -127,13 +127,13 @@ class Definitions:
             self.network is networks.UNKNOWN_NETWORK
             and encoded_network_definition is not None
         ):
-            self.network = _get_and_check_definiton(
+            self.network = get_and_check_definiton(
                 encoded_network_definition, EthereumNetworkInfo, ref_chain_id
             )
 
         # get token definition
         if encoded_token_definition is not None:
-            token = _get_and_check_definiton(
+            token = get_and_check_definiton(
                 encoded_token_definition, EthereumTokenInfo, self.network.chain_id
             )
             self._tokens[token.address] = token

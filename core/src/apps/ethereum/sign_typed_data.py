@@ -20,8 +20,6 @@ if TYPE_CHECKING:
         EthereumTypedDataStructAck,
     )
 
-    from . import definitions
-
 
 # Maximum data size we support
 _MAX_VALUE_BYTE_SIZE = const(1024)
@@ -32,7 +30,7 @@ async def sign_typed_data(
     ctx: Context,
     msg: EthereumSignTypedData,
     keychain: Keychain,
-    defs: definitions.Definitions,
+    network: EthereumNetworkInfo,
 ) -> EthereumTypedDataSignature:
     from trezor.crypto.curve import secp256k1
     from apps.common import paths
@@ -51,7 +49,7 @@ async def sign_typed_data(
     )
 
     return EthereumTypedDataSignature(
-        address=address_from_bytes(node.ethereum_pubkeyhash(), defs.network),
+        address=address_from_bytes(node.ethereum_pubkeyhash(), network),
         signature=signature[1:] + signature[0:1],
     )
 

@@ -22,7 +22,6 @@ if TYPE_CHECKING:
     )
 
     from apps.common.keychain import (
-        MsgIn as MsgInGeneric,
         MsgOut,
         Handler,
     )
@@ -34,14 +33,19 @@ if TYPE_CHECKING:
         EthereumSignMessage,
         EthereumSignTypedData,
     )
+
+    HandlerWithKeychainAndNetwork = Callable[
+        [Context, MsgInKeychainPath, Keychain, EthereumNetworkInfo],
+        Awaitable[MsgOut],
+    ]
+
     # messages for "with_keychain_from_chain_id" decorator
     MsgInKeychainChainId = TypeVar(
         "MsgInKeychainChainId", EthereumSignTx, EthereumSignTxEIP1559
     )
 
-    # TODO: check the types of messages
     HandlerWithKeychainAndDefs = Callable[
-        [Context, MsgInGeneric, Keychain, definitions.Definitions],
+        [Context, MsgInKeychainChainId, Keychain, definitions.Definitions],
         Awaitable[MsgOut],
     ]
 
@@ -89,18 +93,23 @@ def _schemas_from_address_n(
 def with_keychain_from_path(
     *patterns: str,
 ) -> Callable[
-    [HandlerWithKeychainAndDefs[MsgInKeychainPath, MsgOut]],
+    [HandlerWithKeychainAndNetwork[MsgInKeychainPath, MsgOut]],
     Handler[MsgInKeychainPath, MsgOut],
 ]:
     def decorator(
-        func: HandlerWithKeychainAndDefs[MsgInKeychainPath, MsgOut]
+        func: HandlerWithKeychainAndNetwork[MsgInKeychainPath, MsgOut]
     ) -> Handler[MsgInKeychainPath, MsgOut]:
         async def wrapper(ctx: Context, msg: MsgInKeychainPath) -> MsgOut:
-            defs = definitions.get_definitions_from_msg(msg)
-            schemas = _schemas_from_address_n(patterns, msg.address_n, defs.network)
+            if msg.encoded_network:
+                network = definitions.get_and_check_definiton(
+                    msg.encoded_network, EthereumNetworkInfo
+                )
+            else:
+                network = networks.UNKNOWN_NETWORK
+            schemas = _schemas_from_address_n(patterns, msg.address_n, network)
             keychain = await get_keychain(ctx, CURVE, schemas)
             with keychain:
-                return await func(ctx, msg, keychain, defs)
+                return await func(ctx, msg, keychain, network)
 
         return wrapper
 
