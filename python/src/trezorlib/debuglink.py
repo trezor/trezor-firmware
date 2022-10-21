@@ -15,8 +15,8 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import logging
+import re
 import textwrap
-from collections import namedtuple
 from copy import deepcopy
 from datetime import datetime
 from enum import IntEnum
@@ -56,13 +56,129 @@ if TYPE_CHECKING:
 
 EXPECTED_RESPONSES_CONTEXT_LINES = 3
 
-LayoutLines = namedtuple("LayoutLines", "lines text")
-
 LOG = logging.getLogger(__name__)
 
 
-def layout_lines(lines: Sequence[str]) -> LayoutLines:
-    return LayoutLines(lines, " ".join(lines))
+class LayoutContent:
+    """Stores content of a layout as returned from Trezor.
+
+    Contains helper functions to extract specific parts of the layout.
+    """
+
+    def __init__(self, lines: Sequence[str]) -> None:
+        self.lines = list(lines)
+        self.text = " ".join(self.lines)
+
+    def get_title(self) -> str:
+        """Get title of the layout.
+
+        Title is located between "title" and "content" identifiers.
+        Example: "< Frame title :  RECOVERY SHARE #1 content :  < SwipePage"
+          -> "RECOVERY SHARE #1"
+        """
+        match = re.search(r"title : (.*?) content :", self.text)
+        if not match:
+            return ""
+        return match.group(1).strip()
+
+    def get_content(self, tag_name: str = "Paragraphs", raw: bool = False) -> str:
+        """Get text of the main screen content of the layout."""
+        content = "".join(self._get_content_lines(tag_name, raw))
+        if not raw and content.endswith(" "):
+            # Stripping possible space at the end
+            content = content[:-1]
+        return content
+
+    def get_button_texts(self) -> List[str]:
+        """Get text of all buttons in the layout.
+
+        Example button: "< Button text :  LADYBUG >"
+          -> ["LADYBUG"]
+        """
+        return re.findall(r"< Button text : +(.*?) >", self.text)
+
+    def get_seed_words(self) -> List[str]:
+        """Get all the seed words on the screen in order.
+
+        Example content: "1. ladybug 2. acid 3. academic 4. afraid"
+          -> ["ladybug", "acid", "academic", "afraid"]
+        """
+        return re.findall(r"\d+\. (\w+)\b", self.get_content())
+
+    def get_page_count(self) -> int:
+        """Get number of pages for the layout."""
+        return self._get_number("page_count")
+
+    def get_active_page(self) -> int:
+        """Get current page index of the layout."""
+        return self._get_number("active_page")
+
+    def _get_number(self, key: str) -> int:
+        """Get number connected with a specific key."""
+        match = re.search(rf"{key} : +(\d+)", self.text)
+        if not match:
+            return 0
+        return int(match.group(1))
+
+    def _get_content_lines(
+        self, tag_name: str = "Paragraphs", raw: bool = False
+    ) -> List[str]:
+        """Get lines of the main screen content of the layout."""
+
+        # First line should have content after the tag, last line does not store content
+        tag = f"< {tag_name}"
+        if tag in self.lines[0]:
+            first_line = self.lines[0].split(tag)[1]
+            all_lines = [first_line] + self.lines[1:-1]
+        else:
+            all_lines = self.lines[1:-1]
+
+        if raw:
+            return all_lines
+        else:
+            return [_clean_line(line) for line in all_lines]
+
+
+def _clean_line(line: str) -> str:
+    """Cleaning the layout line for extra spaces, hyphens and ellipsis.
+
+    Line usually comes in the form of " <content> ", with trailing spaces
+    at both ends. It may end with a hyphen (" - ") or ellipsis (" ... ").
+
+    Hyphen means the word was split to the next line, ellipsis signals
+    the text continuing on the next page.
+    """
+    # Deleting space at the beginning
+    if line.startswith(" "):
+        line = line[1:]
+
+    # Deleting a hyphen at the end, together with the space
+    # before it, so it will be tightly connected with the next line
+    if line.endswith(" - "):
+        line = line[:-3]
+
+    # Deleting the ellipsis at the end (but preserving the space there)
+    if line.endswith(" ... "):
+        line = line[:-4]
+
+    return line
+
+
+def multipage_content(layouts: List[LayoutContent]) -> str:
+    """Get overall content from multiple-page layout."""
+    final_text = ""
+    for layout in layouts:
+        final_text += layout.get_content()
+        # When the raw content of the page ends with ellipsis,
+        # we need to add a space to separate it with the next page
+        if layout.get_content(raw=True).endswith("... "):
+            final_text += " "
+
+    # Stripping possible space at the end of last page
+    if final_text.endswith(" "):
+        final_text = final_text[:-1]
+
+    return final_text
 
 
 class DebugLink:
@@ -114,14 +230,14 @@ class DebugLink:
     def state(self) -> messages.DebugLinkState:
         return self._call(messages.DebugLinkGetState())
 
-    def read_layout(self) -> LayoutLines:
-        return layout_lines(self.state().layout_lines)
+    def read_layout(self) -> LayoutContent:
+        return LayoutContent(self.state().layout_lines)
 
-    def wait_layout(self) -> LayoutLines:
+    def wait_layout(self) -> LayoutContent:
         obj = self._call(messages.DebugLinkGetState(wait_layout=True))
         if isinstance(obj, messages.Failure):
             raise TrezorFailure(obj)
-        return layout_lines(obj.layout_lines)
+        return LayoutContent(obj.layout_lines)
 
     def watch_layout(self, watch: bool) -> None:
         """Enable or disable watching layouts.
@@ -163,7 +279,7 @@ class DebugLink:
         y: Optional[int] = None,
         wait: Optional[bool] = None,
         hold_ms: Optional[int] = None,
-    ) -> Optional[LayoutLines]:
+    ) -> Optional[LayoutContent]:
         if not self.allow_interactions:
             return None
 
@@ -176,13 +292,13 @@ class DebugLink:
         )
         ret = self._call(decision, nowait=not wait)
         if ret is not None:
-            return layout_lines(ret.lines)
+            return LayoutContent(ret.lines)
 
         return None
 
     def click(
         self, click: Tuple[int, int], wait: bool = False
-    ) -> Optional[LayoutLines]:
+    ) -> Optional[LayoutContent]:
         x, y = click
         return self.input(x=x, y=y, wait=wait)
 
