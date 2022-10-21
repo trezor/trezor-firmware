@@ -19,12 +19,13 @@
 import glob
 import os
 import sys
+from datetime import date
 from typing import List, TextIO
 
 LICENSE_NOTICE = """\
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2022 SatoshiLabs and contributors
+# Copyright (C) 2012-{year} SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -38,15 +39,21 @@ LICENSE_NOTICE = """\
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-"""
+""".format(
+    year=date.today().year
+)
 
 SHEBANG_HEADER = """\
 #!/usr/bin/env python3
 
 """
 
-EXCLUDE_FILES = ["src/trezorlib/__init__.py", "src/trezorlib/_ed25519.py"]
-EXCLUDE_DIRS = ["src/trezorlib/messages"]
+EXCLUDE_FILES = [
+    "src/trezorlib/__init__.py",
+    "src/trezorlib/_ed25519.py",
+    "src/trezorlib/messages.py",
+]
+EXCLUDE_DIRS = []
 
 
 def one_file(fp: TextIO) -> None:
