@@ -27,6 +27,12 @@ if TYPE_CHECKING:
 
 PATH_HELP = "BIP-32 path to key, e.g. m/44'/1815'/0'/0/0"
 
+TESTNET_CHOICES = {
+    "preprod": "testnet_preprod",
+    "preview": "testnet_preview",
+    "legacy": "testnet_legacy",
+}
+
 
 @click.group(name="cardano")
 def cli() -> None:
@@ -46,7 +52,7 @@ def cli() -> None:
     "-p", "--protocol-magic", type=int, default=cardano.PROTOCOL_MAGICS["mainnet"]
 )
 @click.option("-N", "--network-id", type=int, default=cardano.NETWORK_IDS["mainnet"])
-@click.option("-t", "--testnet", is_flag=True)
+@click.option("-t", "--testnet", type=ChoiceType(TESTNET_CHOICES))
 @click.option(
     "-D",
     "--derivation-type",
@@ -61,7 +67,7 @@ def sign_tx(
     signing_mode: messages.CardanoTxSigningMode,
     protocol_magic: int,
     network_id: int,
-    testnet: bool,
+    testnet: str,
     derivation_type: messages.CardanoDerivationType,
     include_network_id: bool,
 ) -> cardano.SignTxResponse:
@@ -69,7 +75,7 @@ def sign_tx(
     transaction = json.load(file)
 
     if testnet:
-        protocol_magic = cardano.PROTOCOL_MAGICS["testnet"]
+        protocol_magic = cardano.PROTOCOL_MAGICS[testnet]
         network_id = cardano.NETWORK_IDS["testnet"]
 
     inputs = [cardano.parse_input(input) for input in transaction["inputs"]]
@@ -185,7 +191,7 @@ def sign_tx(
     "-p", "--protocol-magic", type=int, default=cardano.PROTOCOL_MAGICS["mainnet"]
 )
 @click.option("-N", "--network-id", type=int, default=cardano.NETWORK_IDS["mainnet"])
-@click.option("-e", "--testnet", is_flag=True)
+@click.option("-e", "--testnet", type=ChoiceType(TESTNET_CHOICES))
 @click.option(
     "-D",
     "--derivation-type",
@@ -207,7 +213,7 @@ def get_address(
     protocol_magic: int,
     network_id: int,
     show_display: bool,
-    testnet: bool,
+    testnet: str,
     derivation_type: messages.CardanoDerivationType,
 ) -> str:
     """
@@ -225,7 +231,7 @@ def get_address(
     Byron, enterprise and reward addresses only require the general parameters.
     """
     if testnet:
-        protocol_magic = cardano.PROTOCOL_MAGICS["testnet"]
+        protocol_magic = cardano.PROTOCOL_MAGICS[testnet]
         network_id = cardano.NETWORK_IDS["testnet"]
 
     staking_key_hash_bytes = cardano.parse_optional_bytes(staking_key_hash)

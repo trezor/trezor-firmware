@@ -290,7 +290,7 @@ class TestCardanoAddress(unittest.TestCase):
                 address_type=CardanoAddressType.BYRON,
                 address_n=[0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i],
             )
-            address = derive_human_readable(self.keychain, address_parameters, protocol_magics.TESTNET, 0)
+            address = derive_human_readable(self.keychain, address_parameters, protocol_magics.TESTNET_LEGACY, 0)
             self.assertEqual(expected, address)
 
     def test_derive_address(self):
