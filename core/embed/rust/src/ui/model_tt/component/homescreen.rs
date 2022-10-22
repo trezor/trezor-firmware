@@ -8,7 +8,9 @@ use crate::{
         event::{TouchEvent, USBEvent},
         geometry::{Offset, Point, Rect},
         model_tt::{
-            component::hs_render::{homescreen, HomescreenNotification, HomescreenText},
+            component::hs_render::{
+                homescreen, homescreen_blurred, HomescreenNotification, HomescreenText,
+            },
             constant,
             theme::IMAGE_HOMESCREEN,
         },
@@ -269,8 +271,7 @@ where
             )),
             None,
         ],));
-
-        homescreen(get_image(), texts, None, false);
+        homescreen_blurred(get_image(), texts);
     }
 }
 

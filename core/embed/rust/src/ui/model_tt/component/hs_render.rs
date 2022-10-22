@@ -42,6 +42,16 @@ const HOMESCREEN_DIM_HIEGHT: i16 = 95;
 const HOMESCREEN_DIM_START: i16 = HEIGHT - HOMESCREEN_DIM_HIEGHT;
 const HOMESCREEN_DIM: f32 = 0.63;
 
+const BLUR_SIZE: usize = 7;
+const BLUR_DIV: u16 = (BLUR_SIZE * BLUR_SIZE) as u16;
+const DECOMP_LINES: usize = BLUR_SIZE + 1;
+const BLUR_RADIUS: i16 = (BLUR_SIZE / 2) as i16;
+
+const COLORS: usize = 3;
+const RED_IDX: usize = 0;
+const GREEN_IDX: usize = 1;
+const BLUE_IDX: usize = 2;
+
 fn homescreen_get_fg_text(
     y_tmp: i16,
     text_info: HomescreenTextInfo,
@@ -98,12 +108,10 @@ fn homescreen_position_text(
 
     let icon_size = if let Some(icon) = icon {
         let (icon_size, icon_data) = toif_info_ensure(icon, ToifFormat::GrayScaleEH);
-
         assert!(icon_size.x < HOMESCREEN_MAX_ICON_SIZE);
         assert!(icon_size.y < HOMESCREEN_MAX_ICON_SIZE);
         let mut ctx = UzlibContext::new(icon_data, None);
         unwrap!(ctx.uncompress(icon_buffer), "Decompression failed");
-
         icon_size
     } else {
         Offset::zero()
@@ -134,7 +142,41 @@ fn homescreen_position_text(
     (text_area, text_width, text_style.text_color, icon_area)
 }
 
-fn homscreen_line(
+fn homescreen_line_blurred(
+    icon_data: &mut [u8],
+    text_buffer: &mut BufferText,
+    text_info: HomescreenTextInfo,
+    totals: [[u16; HOMESCREEN_IMAGE_SIZE as usize]; COLORS],
+    y_tmp: i16,
+) -> bool {
+    let t_buffer = unsafe { get_buffer_4bpp((y_tmp % 2) as u16, true) };
+    let mut img_buffer = unsafe { get_buffer_16bpp((y_tmp % 2) as u16, false) };
+
+    for x in 0..HOMESCREEN_IMAGE_SIZE as usize {
+        let r = (totals[RED_IDX][x] / BLUR_DIV) as u8;
+        let g = (totals[GREEN_IDX][x] / BLUR_DIV) as u8;
+        let b = (totals[BLUE_IDX][x] / BLUR_DIV) as u8;
+
+        let c0 = Color::rgb(r, g, b);
+
+        for i in 0..HOMESCREEN_IMAGE_SCALE as usize {
+            let idx = (HOMESCREEN_IMAGE_SCALE as usize * x + i) as usize;
+            img_buffer.buffer[2 * idx + 1] = c0.hi_byte();
+            img_buffer.buffer[2 * idx] = c0.lo_byte();
+        }
+    }
+
+    let done = homescreen_get_fg_text(y_tmp, text_info, text_buffer, t_buffer);
+    homescreen_get_fg_icon(y_tmp, text_info, icon_data, t_buffer);
+
+    dma2d_wait_for_transfer();
+    dma2d_setup_4bpp_over_16bpp(text_info.2.into());
+    dma2d_start_blend(&t_buffer.buffer, &img_buffer.buffer, WIDTH);
+
+    done
+}
+
+fn homescreen_line(
     icon_data: &mut [u8],
     text_buffer: &mut BufferText,
     text_info: HomescreenTextInfo,
@@ -198,6 +240,190 @@ fn homescreen_next_text(
     (next_text_info, next_text_idx)
 }
 
+#[inline(always)]
+fn update_accs_add(
+    data: &mut [u8; (HOMESCREEN_IMAGE_SIZE * 2) as usize],
+    idx: usize,
+    acc_r: &mut u16,
+    acc_g: &mut u16,
+    acc_b: &mut u16,
+) {
+    let lo = data[2_usize * idx];
+    let hi = data[2_usize * idx + 1];
+    let r = hi & 0xF8;
+    let g = ((hi & 0x07) << 5) | ((lo & 0xE0) >> 3);
+    let b = (lo & 0x1F) << 3;
+    *acc_r += r as u16;
+    *acc_g += g as u16;
+    *acc_b += b as u16;
+}
+
+#[inline(always)]
+fn update_accs_sub(
+    data: &mut [u8; (HOMESCREEN_IMAGE_SIZE * 2) as usize],
+    idx: usize,
+    acc_r: &mut u16,
+    acc_g: &mut u16,
+    acc_b: &mut u16,
+) {
+    let lo = data[2_usize * idx];
+    let hi = data[2_usize * idx + 1];
+    let r = hi & 0xF8;
+    let g = ((hi & 0x07) << 5) | ((lo & 0xE0) >> 3);
+    let b = (lo & 0x1F) << 3;
+    *acc_r -= r as u16;
+    *acc_g -= g as u16;
+    *acc_b -= b as u16;
+}
+
+fn compute_line_avgs(
+    data: &mut [u8; (HOMESCREEN_IMAGE_SIZE * 2) as usize],
+    avg_dest: &mut [[u16; HOMESCREEN_IMAGE_SIZE as usize]; COLORS],
+) {
+    let mut acc_r = 0;
+    let mut acc_g = 0;
+    let mut acc_b = 0;
+    for i in -BLUR_RADIUS..=BLUR_RADIUS {
+        let ic = i.clamp(0, HOMESCREEN_IMAGE_SIZE as i16 - 1) as usize;
+        update_accs_add(data, ic, &mut acc_r, &mut acc_g, &mut acc_b);
+    }
+
+    for i in 0..HOMESCREEN_IMAGE_SIZE {
+        avg_dest[RED_IDX][i as usize] = acc_r;
+        avg_dest[GREEN_IDX][i as usize] = acc_g;
+        avg_dest[BLUE_IDX][i as usize] = acc_b;
+
+        let ic = (i - BLUR_RADIUS).clamp(0, HOMESCREEN_IMAGE_SIZE as i16 - 1) as usize;
+        let ic2 = (i + BLUR_SIZE as i16 - BLUR_RADIUS).clamp(0, HOMESCREEN_IMAGE_SIZE as i16 - 1)
+            as usize;
+        update_accs_add(data, ic2, &mut acc_r, &mut acc_g, &mut acc_b);
+        update_accs_sub(data, ic, &mut acc_r, &mut acc_g, &mut acc_b);
+    }
+}
+
+fn vertical_avg_add(
+    totals: &mut [[u16; HOMESCREEN_IMAGE_SIZE as usize]; COLORS],
+    lines: &mut [[u16; HOMESCREEN_IMAGE_SIZE as usize]; COLORS],
+) {
+    for i in 0..HOMESCREEN_IMAGE_SIZE as usize {
+        totals[RED_IDX][i] += lines[RED_IDX][i];
+        totals[GREEN_IDX][i] += lines[GREEN_IDX][i];
+        totals[BLUE_IDX][i] += lines[BLUE_IDX][i];
+    }
+}
+
+fn vertical_avg(
+    totals: &mut [[u16; HOMESCREEN_IMAGE_SIZE as usize]; COLORS],
+    lines: &mut [[[u16; HOMESCREEN_IMAGE_SIZE as usize]; COLORS]; DECOMP_LINES],
+    add_idx: usize,
+    rem_idx: usize,
+) {
+    for i in 0..HOMESCREEN_IMAGE_SIZE as usize {
+        totals[RED_IDX][i] += lines[add_idx][RED_IDX][i] - lines[rem_idx][RED_IDX][i];
+        totals[GREEN_IDX][i] += lines[add_idx][GREEN_IDX][i] - lines[rem_idx][GREEN_IDX][i];
+        totals[BLUE_IDX][i] += lines[add_idx][BLUE_IDX][i] - lines[rem_idx][BLUE_IDX][i];
+    }
+}
+
+pub fn homescreen_blurred(data: &[u8], texts: Vec<Option<HomescreenText>, 4>) {
+    let mut icon_data = [0_u8; (HOMESCREEN_MAX_ICON_SIZE * HOMESCREEN_MAX_ICON_SIZE / 2) as usize];
+
+    let text_buffer = unsafe { get_text_buffer(0, true) };
+
+    let mut next_text_idx = 1;
+    let mut text_info = homescreen_position_text(unwrap!(texts[0]), text_buffer, &mut icon_data);
+
+    let toif = toif_info(data);
+
+    if let Some((size, format)) = toif {
+        set_window(screen());
+
+        let mut dest = [0_u8; (HOMESCREEN_IMAGE_SIZE * 2) as usize];
+        let mut avgs = [[[0_u16; HOMESCREEN_IMAGE_SIZE as usize]; COLORS]; DECOMP_LINES];
+        let mut avgs_totals = [[0_u16; HOMESCREEN_IMAGE_SIZE as usize]; COLORS];
+
+        let mut dest_idx = 0;
+        let mut rem_idx = 0;
+        let mut window = [0; UZLIB_WINDOW_SIZE];
+        let mut ctx = UzlibContext::new(&data[12..], Some(&mut window));
+
+        ctx.uncompress(&mut dest).unwrap();
+        compute_line_avgs(&mut dest, &mut avgs[dest_idx]);
+        for _ in 0..=BLUR_RADIUS {
+            vertical_avg_add(&mut avgs_totals, &mut avgs[dest_idx]);
+        }
+        dest_idx += 1;
+
+        for _ in 0..BLUR_RADIUS {
+            ctx.uncompress(&mut dest).unwrap();
+            compute_line_avgs(&mut dest, &mut avgs[dest_idx]);
+            vertical_avg_add(&mut avgs_totals, &mut avgs[dest_idx]);
+            dest_idx += 1;
+        }
+
+        for y in 0..HOMESCREEN_IMAGE_SIZE {
+            let clear_bg = if size.x == HOMESCREEN_IMAGE_SIZE
+                && size.y == HOMESCREEN_IMAGE_SIZE
+                && format == ToifFormat::FullColorLE
+            {
+                if y < HOMESCREEN_IMAGE_SIZE - (BLUR_RADIUS + 1) {
+                    ctx.uncompress(&mut dest).unwrap_or(true)
+                } else {
+                    false
+                }
+            } else {
+                true
+            };
+
+            if clear_bg {
+                for i in &mut dest {
+                    *i = 0;
+                }
+            }
+
+            for i in 0..HOMESCREEN_IMAGE_SCALE {
+                let done = homescreen_line_blurred(
+                    &mut icon_data,
+                    text_buffer,
+                    text_info,
+                    avgs_totals,
+                    HOMESCREEN_IMAGE_SCALE * y + i,
+                );
+
+                if done {
+                    (text_info, next_text_idx) = homescreen_next_text(
+                        &texts,
+                        text_buffer,
+                        &mut icon_data,
+                        text_info,
+                        next_text_idx,
+                    );
+                }
+            }
+
+            if y < HOMESCREEN_IMAGE_SIZE - (BLUR_RADIUS + 1) as i16 {
+                compute_line_avgs(&mut dest, &mut avgs[dest_idx]);
+            }
+
+            vertical_avg(&mut avgs_totals, &mut avgs, dest_idx, rem_idx);
+
+            if y < HOMESCREEN_IMAGE_SIZE - (BLUR_RADIUS + 1) as i16 {
+                dest_idx += 1;
+                if dest_idx >= DECOMP_LINES {
+                    dest_idx = 0;
+                }
+            }
+            if y >= (BLUR_RADIUS) as i16 {
+                rem_idx += 1;
+                if rem_idx >= DECOMP_LINES {
+                    rem_idx = 0;
+                }
+            }
+        }
+    }
+    dma2d_wait_for_transfer();
+}
+
 pub fn homescreen(
     data: &[u8],
     texts: Vec<Option<HomescreenText>, 4>,
@@ -257,7 +483,7 @@ pub fn homescreen(
             }
 
             for i in 0..HOMESCREEN_IMAGE_SCALE {
-                let done = homscreen_line(
+                let done = homescreen_line(
                     &mut icon_data,
                     text_buffer,
                     text_info,
