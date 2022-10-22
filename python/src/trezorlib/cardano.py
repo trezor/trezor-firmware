@@ -38,7 +38,12 @@ if TYPE_CHECKING:
     from .client import TrezorClient
     from .protobuf import MessageType
 
-PROTOCOL_MAGICS = {"mainnet": 764824073, "testnet": 1097911063}
+PROTOCOL_MAGICS = {
+    "mainnet": 764824073,
+    "testnet_preprod": 1,
+    "testnet_preview": 2,
+    "testnet_legacy": 1097911063,
+}
 NETWORK_IDS = {"mainnet": 1, "testnet": 0}
 
 MAX_CHUNK_SIZE = 1024
