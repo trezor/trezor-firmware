@@ -481,9 +481,6 @@ class CoinJoinApprover(Approver):
         # The mining fee of the transaction as a whole.
         mining_fee = self.total_in - self.total_out
 
-        if mining_fee > max_fee_per_vbyte * self.weight.get_virtual_size():
-            raise wire.ProcessError("Mining fee over threshold")
-
         # The maximum mining fee that the user should be paying.
         our_max_mining_fee = max_fee_per_vbyte * self.our_weight.get_virtual_size()
 
