@@ -13,7 +13,6 @@ use crate::{
         constant::screen,
         display::{position_buffer, set_window, toif_info, toif_info_ensure, Color},
         geometry::{Offset, Point, Rect},
-        lerp::Lerp,
     },
 };
 use heapless::Vec;
@@ -21,7 +20,7 @@ use heapless::Vec;
 use crate::ui::{
     component::text::TextStyle,
     constant::{HEIGHT, WIDTH},
-    model_tt::{theme, theme::BLACK},
+    model_tt::theme,
     util::icon_text_center,
 };
 
@@ -212,21 +211,28 @@ fn homescreen_line(
         let x1 = (2 * x + 1) as usize;
         let hi = image_data[x1];
         let lo = image_data[x0];
-        let mut c0 = Color::from_u16((hi as u16) << 8 | lo as u16);
 
-        if y_tmp > HOMESCREEN_DIM_START {
-            c0 = Color::lerp(
-                c0,
-                BLACK,
-                ((y_tmp - HOMESCREEN_DIM_START) as f32 / HOMESCREEN_DIM_HIEGHT as f32)
-                    * HOMESCREEN_DIM,
-            );
-        }
+        let c = if y_tmp > HOMESCREEN_DIM_START {
+            let coef = 65536
+                - (((y_tmp - HOMESCREEN_DIM_START) as u32)
+                    * ((65536_f32 * HOMESCREEN_DIM) as u32 / HOMESCREEN_DIM_HIEGHT as u32));
+
+            let r = hi & 0xF8;
+            let g = ((hi & 0x07) << 5) | ((lo & 0xE0) >> 3);
+            let b = (lo & 0x1F) << 3;
+
+            let r = (((coef * r as u32) >> 8) & 0xF800) as u16;
+            let g = (((coef * g as u32) >> 13) & 0x07E0) as u16;
+            let b = (((coef * b as u32) >> 19) & 0x001F) as u16;
+            r | g | b
+        } else {
+            (hi as u16) << 8 | lo as u16
+        };
 
         for i in 0..HOMESCREEN_IMAGE_SCALE {
             let idx = (HOMESCREEN_IMAGE_SCALE * x + i) as usize;
-            img_buffer.buffer[2 * idx + 1] = c0.hi_byte();
-            img_buffer.buffer[2 * idx] = c0.lo_byte();
+            img_buffer.buffer[2 * idx + 1] = (c >> 8) as u8;
+            img_buffer.buffer[2 * idx] = (c & 0xFF) as u8;
         }
     }
 
