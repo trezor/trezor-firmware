@@ -5,7 +5,7 @@ from trezor.messages import EthereumTxRequest
 from trezor.wire import DataError
 
 from .helpers import bytes_from_address
-from .keychain import with_keychain_from_chain_id
+from .keychain import with_keychain_and_defs_from_chain_id
 
 if TYPE_CHECKING:
     from apps.common.keychain import Keychain
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 MAX_CHAIN_ID = (0xFFFF_FFFF - 36) // 2
 
 
-@with_keychain_from_chain_id
+@with_keychain_and_defs_from_chain_id
 async def sign_tx(
     ctx: Context,
     msg: EthereumSignTx,

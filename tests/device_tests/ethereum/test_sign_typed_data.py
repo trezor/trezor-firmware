@@ -39,18 +39,21 @@ def test_ethereum_sign_typed_data(client: Client, parameters, result):
                 "slip44", encoded_network_slip44
             )
 
-        encoded_network = ethereum.get_definition_from_path(
-            ethereum.get_network_definition_path(
-                path=COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
-                slip44=encoded_network_slip44,
+        defs = ethereum.messages.EthereumDefinitions(
+            encoded_network=ethereum.get_definition_from_path(
+                ethereum.get_network_definition_path(
+                    path=COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
+                    slip44=encoded_network_slip44,
+                )
             )
         )
+
         ret = ethereum.sign_typed_data(
             client,
             address_n,
             parameters["data"],
             metamask_v4_compat=parameters["metamask_v4_compat"],
-            encoded_network=encoded_network,
+            definitions=defs,
         )
         assert ret.address == result["address"]
         assert f"0x{ret.signature.hex()}" == result["sig"]
@@ -71,7 +74,6 @@ def test_ethereum_sign_typed_data_missing_extern_definitions(client: Client):
                 "domain": {},
             },
             metamask_v4_compat=True,
-            encoded_network=None,
         )
 
 
@@ -204,6 +206,15 @@ def input_flow_cancel(client: Client):
 
 @pytest.mark.skip_t1
 def test_ethereum_sign_typed_data_show_more_button(client: Client):
+    defs = ethereum.messages.EthereumDefinitions(
+        encoded_network=ethereum.get_definition_from_path(
+            ethereum.get_network_definition_path(
+                path=COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
+                slip44=60,
+            )
+        )
+    )
+
     with client:
         client.watch_layout()
         client.set_input_flow(input_flow_show_more(client))
@@ -212,11 +223,21 @@ def test_ethereum_sign_typed_data_show_more_button(client: Client):
             parse_path("m/44h/60h/0h/0/0"),
             DATA,
             metamask_v4_compat=True,
+            definitions=defs,
         )
 
 
 @pytest.mark.skip_t1
 def test_ethereum_sign_typed_data_cancel(client: Client):
+    defs = ethereum.messages.EthereumDefinitions(
+        encoded_network=ethereum.get_definition_from_path(
+            ethereum.get_network_definition_path(
+                path=COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
+                slip44=60,
+            )
+        )
+    )
+
     with client, pytest.raises(exceptions.Cancelled):
         client.watch_layout()
         client.set_input_flow(input_flow_cancel(client))
@@ -225,4 +246,5 @@ def test_ethereum_sign_typed_data_cancel(client: Client):
             parse_path("m/44h/60h/0h/0/0"),
             DATA,
             metamask_v4_compat=True,
+            definitions=defs,
         )

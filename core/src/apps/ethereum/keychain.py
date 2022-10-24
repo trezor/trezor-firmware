@@ -26,25 +26,29 @@ if TYPE_CHECKING:
         Handler,
     )
 
-    # messages for "with_keychain_from_path" decorator
-    MsgInKeychainPath = TypeVar(
-        "MsgInKeychainPath",
+    # messages for "with_keychain_and_network_from_path" decorator
+    MsgInKeychainNetworkPath = TypeVar(
+        "MsgInKeychainNetworkPath",
         EthereumGetAddress,
         EthereumSignMessage,
-        EthereumSignTypedData,
     )
 
-    HandlerWithKeychainAndNetwork = Callable[
-        [Context, MsgInKeychainPath, Keychain, EthereumNetworkInfo],
+    HandlerWithKeychainAndNetworkFromPath = Callable[
+        [Context, MsgInKeychainNetworkPath, Keychain, EthereumNetworkInfo],
         Awaitable[MsgOut],
     ]
 
-    # messages for "with_keychain_from_chain_id" decorator
+    HandlerWithKeychainAndDefsFromPath = Callable[
+        [Context, EthereumSignTypedData, Keychain, definitions.Definitions],
+        Awaitable[MsgOut],
+    ]
+
+    # messages for "with_keychain_and_defs_from_chain_id" decorator
     MsgInKeychainChainId = TypeVar(
         "MsgInKeychainChainId", EthereumSignTx, EthereumSignTxEIP1559
     )
 
-    HandlerWithKeychainAndDefs = Callable[
+    HandlerWithKeychainAndDefsFromChainId = Callable[
         [Context, MsgInKeychainChainId, Keychain, definitions.Definitions],
         Awaitable[MsgOut],
     ]
@@ -90,16 +94,16 @@ def _schemas_from_address_n(
     return [s.copy() for s in schemas]
 
 
-def with_keychain_from_path(
+def with_keychain_and_network_from_path(
     *patterns: str,
 ) -> Callable[
-    [HandlerWithKeychainAndNetwork[MsgInKeychainPath, MsgOut]],
-    Handler[MsgInKeychainPath, MsgOut],
+    [HandlerWithKeychainAndNetworkFromPath[MsgInKeychainNetworkPath, MsgOut]],
+    Handler[MsgInKeychainNetworkPath, MsgOut],
 ]:
     def decorator(
-        func: HandlerWithKeychainAndNetwork[MsgInKeychainPath, MsgOut]
-    ) -> Handler[MsgInKeychainPath, MsgOut]:
-        async def wrapper(ctx: Context, msg: MsgInKeychainPath) -> MsgOut:
+        func: HandlerWithKeychainAndNetworkFromPath[MsgInKeychainNetworkPath, MsgOut]
+    ) -> Handler[MsgInKeychainNetworkPath, MsgOut]:
+        async def wrapper(ctx: Context, msg: MsgInKeychainNetworkPath) -> MsgOut:
             if msg.encoded_network:
                 network = definitions.get_and_check_definiton(
                     msg.encoded_network, EthereumNetworkInfo
@@ -110,6 +114,27 @@ def with_keychain_from_path(
             keychain = await get_keychain(ctx, CURVE, schemas)
             with keychain:
                 return await func(ctx, msg, keychain, network)
+
+        return wrapper
+
+    return decorator
+
+
+def with_keychain_and_defs_from_path(
+    *patterns: str,
+) -> Callable[
+    [HandlerWithKeychainAndDefsFromPath[MsgOut]],
+    Handler[EthereumSignTypedData, MsgOut],
+]:
+    def decorator(
+        func: HandlerWithKeychainAndDefsFromPath[MsgOut],
+    ) -> Handler[EthereumSignTypedData, MsgOut]:
+        async def wrapper(ctx: wire.Context, msg: EthereumSignTypedData) -> MsgOut:
+            defs = definitions.get_definitions_from_msg(msg)
+            schemas = _schemas_from_address_n(patterns, msg.address_n, defs.network)
+            keychain = await get_keychain(ctx, CURVE, schemas)
+            with keychain:
+                return await func(ctx, msg, keychain, defs)
 
         return wrapper
 
@@ -135,8 +160,8 @@ def _schemas_from_network(
     return [s.copy() for s in schemas]
 
 
-def with_keychain_from_chain_id(
-    func: HandlerWithKeychainAndDefs[MsgInKeychainChainId, MsgOut]
+def with_keychain_and_defs_from_chain_id(
+    func: HandlerWithKeychainAndDefsFromChainId[MsgInKeychainChainId, MsgOut]
 ) -> Handler[MsgInKeychainChainId, MsgOut]:
     # this is only for SignTx, and only PATTERN_ADDRESS is allowed
     async def wrapper(ctx: Context, msg: MsgInKeychainChainId) -> MsgOut:

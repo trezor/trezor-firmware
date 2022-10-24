@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from trezor.crypto import rlp
 
 from .helpers import bytes_from_address
-from .keychain import with_keychain_from_chain_id
+from .keychain import with_keychain_and_defs_from_chain_id
 
 if TYPE_CHECKING:
     from trezor.messages import (
@@ -29,7 +29,7 @@ def access_list_item_length(item: EthereumAccessList) -> int:
     )
 
 
-@with_keychain_from_chain_id
+@with_keychain_and_defs_from_chain_id
 async def sign_tx_eip1559(
     ctx: Context,
     msg: EthereumSignTxEIP1559,

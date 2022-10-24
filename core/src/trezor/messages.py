@@ -3364,11 +3364,69 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["EosActionUnknown"]:
             return isinstance(msg, cls)
 
+    class EthereumNetworkInfo(protobuf.MessageType):
+        chain_id: "int"
+        slip44: "int"
+        shortcut: "str"
+        name: "str"
+
+        def __init__(
+            self,
+            *,
+            chain_id: "int",
+            slip44: "int",
+            shortcut: "str",
+            name: "str",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumNetworkInfo"]:
+            return isinstance(msg, cls)
+
+    class EthereumTokenInfo(protobuf.MessageType):
+        symbol: "str"
+        decimals: "int"
+        address: "bytes"
+        chain_id: "int"
+        name: "str"
+
+        def __init__(
+            self,
+            *,
+            symbol: "str",
+            decimals: "int",
+            address: "bytes",
+            chain_id: "int",
+            name: "str",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumTokenInfo"]:
+            return isinstance(msg, cls)
+
+    class EthereumDefinitions(protobuf.MessageType):
+        encoded_network: "bytes | None"
+        encoded_token: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            encoded_network: "bytes | None" = None,
+            encoded_token: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumDefinitions"]:
+            return isinstance(msg, cls)
+
     class EthereumSignTypedData(protobuf.MessageType):
         address_n: "list[int]"
         primary_type: "str"
         metamask_v4_compat: "bool"
-        encoded_network: "bytes | None"
+        definitions: "EthereumDefinitions | None"
 
         def __init__(
             self,
@@ -3376,7 +3434,7 @@ if TYPE_CHECKING:
             primary_type: "str",
             address_n: "list[int] | None" = None,
             metamask_v4_compat: "bool | None" = None,
-            encoded_network: "bytes | None" = None,
+            definitions: "EthereumDefinitions | None" = None,
         ) -> None:
             pass
 
@@ -3538,64 +3596,6 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["EthereumAddress"]:
-            return isinstance(msg, cls)
-
-    class EthereumNetworkInfo(protobuf.MessageType):
-        chain_id: "int"
-        slip44: "int"
-        shortcut: "str"
-        name: "str"
-
-        def __init__(
-            self,
-            *,
-            chain_id: "int",
-            slip44: "int",
-            shortcut: "str",
-            name: "str",
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumNetworkInfo"]:
-            return isinstance(msg, cls)
-
-    class EthereumTokenInfo(protobuf.MessageType):
-        symbol: "str"
-        decimals: "int"
-        address: "bytes"
-        chain_id: "int"
-        name: "str"
-
-        def __init__(
-            self,
-            *,
-            symbol: "str",
-            decimals: "int",
-            address: "bytes",
-            chain_id: "int",
-            name: "str",
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumTokenInfo"]:
-            return isinstance(msg, cls)
-
-    class EthereumDefinitions(protobuf.MessageType):
-        encoded_network: "bytes | None"
-        encoded_token: "bytes | None"
-
-        def __init__(
-            self,
-            *,
-            encoded_network: "bytes | None" = None,
-            encoded_token: "bytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumDefinitions"]:
             return isinstance(msg, cls)
 
     class EthereumSignTx(protobuf.MessageType):

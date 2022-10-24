@@ -203,7 +203,9 @@ def _get_ethereum_definitions(
             )
         if chain_id is not None and token_address is not None:
             defs.encoded_token = ethereum.get_definition_from_path(
-                ethereum.get_token_definition_path(definitions_dir, chain_id, token_address)
+                ethereum.get_token_definition_path(
+                    definitions_dir, chain_id, token_address
+                )
             )
     elif network_def_file is not None or token_def_file is not None:
         if network_def_file is not None:
@@ -625,6 +627,7 @@ def sign_message(
 @click.argument("file", type=click.File("r"))
 @definitions_dir_option
 @network_def_option
+@token_def_options
 @download_definitions_option
 @with_client
 def sign_typed_data(
@@ -634,6 +637,7 @@ def sign_typed_data(
     file: TextIO,
     definitions_dir: pathlib.Path,
     network_def: BinaryIO,
+    token_def: BinaryIO,
     download_definitions: bool,
 ) -> Dict[str, str]:
     """Sign typed data (EIP-712) with Ethereum address.
@@ -647,6 +651,7 @@ def sign_typed_data(
     defs = _get_ethereum_definitions(
         definitions_dir=definitions_dir,
         network_def_file=network_def,
+        token_def_file=token_def,
         download_definitions=download_definitions,
         slip44_hardened=address_n[1],
     )
@@ -655,7 +660,7 @@ def sign_typed_data(
         address_n,
         data,
         metamask_v4_compat=metamask_v4_compat,
-        encoded_network=defs.encoded_network,
+        definitions=defs,
     )
     output = {
         "address": ret.address,

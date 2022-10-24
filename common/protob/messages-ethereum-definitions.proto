@@ -1,0 +1,48 @@
+syntax = "proto2";
+package hw.trezor.messages.ethereum_definitions;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageEthereumDefinitions";
+
+
+/**
+ * Ethereum definitions type enum.
+ * Used to check the encoded EthereumNetworkInfo or EthereumTokenInfo message.
+ */
+ enum EthereumDefinitionType {
+    NETWORK = 0;
+    TOKEN = 1;
+}
+
+/**
+ * Ethereum network definition. Used to (de)serialize the definition.
+ * @embed
+ */
+message EthereumNetworkInfo {
+    required uint64 chain_id = 1;
+    required uint32 slip44 = 2;
+    required string shortcut = 3;
+    required string name = 4;
+}
+
+/**
+ * Ethereum token definition. Used to (de)serialize the definition.
+ * @embed
+ */
+message EthereumTokenInfo {
+    required string symbol = 1;
+    required uint32 decimals = 2;
+    required bytes address = 3;
+    required uint64 chain_id = 4;
+    required string name = 5;
+}
+
+/**
+ * Contains an encoded Ethereum network and/or token definition. See protocol.md for details.
+ * @embed
+ */
+message EthereumDefinitions {
+    optional bytes encoded_network = 1; // encoded Ethereum network
+    optional bytes encoded_token = 2;   // encoded Ethereum token
+}

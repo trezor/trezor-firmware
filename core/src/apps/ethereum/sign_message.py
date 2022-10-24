@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from .keychain import PATTERNS_ADDRESS, with_keychain_from_path
+from .keychain import PATTERNS_ADDRESS, with_keychain_and_network_from_path
 
 if TYPE_CHECKING:
     from trezor.messages import EthereumSignMessage, EthereumMessageSignature, EthereumNetworkInfo
@@ -21,7 +21,7 @@ def message_digest(message: bytes) -> bytes:
     return h.get_digest()
 
 
-@with_keychain_from_path(*PATTERNS_ADDRESS)
+@with_keychain_and_network_from_path(*PATTERNS_ADDRESS)
 async def sign_message(
     ctx: Context,
     msg: EthereumSignMessage,

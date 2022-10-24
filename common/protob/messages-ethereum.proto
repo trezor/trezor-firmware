@@ -6,6 +6,7 @@ option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageEthereum";
 
 import "messages-common.proto";
+import "messages-ethereum-definitions.proto";
 
 
 /**
@@ -50,47 +51,6 @@ message EthereumAddress {
 }
 
 /**
- * Ethereum definitions type enum.
- * Used to check the encoded EthereumNetworkInfo or EthereumTokenInfo message.
- */
-enum EthereumDefinitionType {
-    NETWORK = 0;
-    TOKEN = 1;
-}
-
-/**
- * Ethereum network definition. Used to (de)serialize the definition.
- * @embed
- */
-message EthereumNetworkInfo {
-    required uint64 chain_id = 1;
-    required uint32 slip44 = 2;
-    required string shortcut = 3;
-    required string name = 4;
-}
-
-/**
- * Ethereum token definition. Used to (de)serialize the definition.
- * @embed
- */
-message EthereumTokenInfo {
-    required string symbol = 1;
-    required uint32 decimals = 2;
-    required bytes address = 3;
-    required uint64 chain_id = 4;
-    required string name = 5;
-}
-
-/**
- * Contains an encoded Ethereum network and/or token definition. See protocol.md for details.
- * @embed
- */
-message EthereumDefinitions {
-    optional bytes encoded_network = 1; // encoded Ethereum network
-    optional bytes encoded_token = 2;   // encoded Ethereum token
-}
-
-/**
  * Request: Ask device to sign transaction
  * gas_price, gas_limit and chain_id must be provided and non-zero.
  * All other fields are optional and default to value `0` if missing.
@@ -100,17 +60,17 @@ message EthereumDefinitions {
  * @next Failure
  */
 message EthereumSignTx {
-    repeated uint32 address_n = 1;                        // BIP-32 path to derive the key from master node
-    optional bytes nonce = 2 [default=''];                // <=256 bit unsigned big endian
-    required bytes gas_price = 3;                         // <=256 bit unsigned big endian (in wei)
-    required bytes gas_limit = 4;                         // <=256 bit unsigned big endian
-    optional string to = 11 [default=''];                 // recipient address
-    optional bytes value = 6 [default=''];                // <=256 bit unsigned big endian (in wei)
-    optional bytes data_initial_chunk = 7 [default=''];   // The initial data chunk (<= 1024 bytes)
-    optional uint32 data_length = 8 [default=0];          // Length of transaction payload
-    required uint64 chain_id = 9;                         // Chain Id for EIP 155
-    optional uint32 tx_type = 10;                         // Used for Wanchain
-    optional EthereumDefinitions definitions = 12;        // network and/or token definitions for tx
+    repeated uint32 address_n = 1;                                       // BIP-32 path to derive the key from master node
+    optional bytes nonce = 2 [default=''];                               // <=256 bit unsigned big endian
+    required bytes gas_price = 3;                                        // <=256 bit unsigned big endian (in wei)
+    required bytes gas_limit = 4;                                        // <=256 bit unsigned big endian
+    optional string to = 11 [default=''];                                // recipient address
+    optional bytes value = 6 [default=''];                               // <=256 bit unsigned big endian (in wei)
+    optional bytes data_initial_chunk = 7 [default=''];                  // The initial data chunk (<= 1024 bytes)
+    optional uint32 data_length = 8 [default=0];                         // Length of transaction payload
+    required uint64 chain_id = 9;                                        // Chain Id for EIP 155
+    optional uint32 tx_type = 10;                                        // Used for Wanchain
+    optional ethereum_definitions.EthereumDefinitions definitions = 12;  // network and/or token definitions for tx
 }
 
 /**
@@ -121,18 +81,18 @@ message EthereumSignTx {
  * @next Failure
  */
 message EthereumSignTxEIP1559 {
-    repeated uint32 address_n = 1;                        // BIP-32 path to derive the key from master node
-    required bytes nonce = 2;                             // <=256 bit unsigned big endian
-    required bytes max_gas_fee = 3;                       // <=256 bit unsigned big endian (in wei)
-    required bytes max_priority_fee = 4;                  // <=256 bit unsigned big endian (in wei)
-    required bytes gas_limit = 5;                         // <=256 bit unsigned big endian
-    optional string to = 6 [default=''];                  // recipient address
-    required bytes value = 7;                             // <=256 bit unsigned big endian (in wei)
-    optional bytes data_initial_chunk = 8 [default=''];   // The initial data chunk (<= 1024 bytes)
-    required uint32 data_length = 9;                      // Length of transaction payload
-    required uint64 chain_id = 10;                        // Chain Id for EIP 155
-    repeated EthereumAccessList access_list = 11;         // Access List
-    optional EthereumDefinitions definitions = 12;        // network and/or token definitions for tx
+    repeated uint32 address_n = 1;                                             // BIP-32 path to derive the key from master node
+    required bytes nonce = 2;                                                  // <=256 bit unsigned big endian
+    required bytes max_gas_fee = 3;                                            // <=256 bit unsigned big endian (in wei)
+    required bytes max_priority_fee = 4;                                       // <=256 bit unsigned big endian (in wei)
+    required bytes gas_limit = 5;                                              // <=256 bit unsigned big endian
+    optional string to = 6 [default=''];                                       // recipient address
+    required bytes value = 7;                                                  // <=256 bit unsigned big endian (in wei)
+    optional bytes data_initial_chunk = 8 [default=''];                        // The initial data chunk (<= 1024 bytes)
+    required uint32 data_length = 9;                                           // Length of transaction payload
+    required uint64 chain_id = 10;                                             // Chain Id for EIP 155
+    repeated EthereumAccessList access_list = 11;                              // Access List
+    optional ethereum_definitions.EthereumDefinitions definitions = 12;        // network and/or token definitions for tx
 
     message EthereumAccessList {
         required string address = 1;

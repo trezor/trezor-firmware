@@ -183,9 +183,7 @@ def get_network_definition_url(
         )
 
 
-def get_token_definition_url(
-    chain_id: int = None, token_address: str = None
-) -> str:
+def get_token_definition_url(chain_id: int = None, token_address: str = None) -> str:
     if chain_id is None or token_address is None:
         raise ValueError(
             "Both chain_id and token_address parameters are needed to construct token definition url."
@@ -213,9 +211,19 @@ def get_network_definition_path(
         )
 
     if chain_id is not None:
-        return base_path / DEFS_NETWORK_BY_CHAINID_LOOKUP_TYPE / str(chain_id) / DEFS_NETWORK_URI_NAME
+        return (
+            base_path
+            / DEFS_NETWORK_BY_CHAINID_LOOKUP_TYPE
+            / str(chain_id)
+            / DEFS_NETWORK_URI_NAME
+        )
     else:
-        return base_path / DEFS_NETWORK_BY_SLIP44_LOOKUP_TYPE / str(slip44) / DEFS_NETWORK_URI_NAME
+        return (
+            base_path
+            / DEFS_NETWORK_BY_SLIP44_LOOKUP_TYPE
+            / str(slip44)
+            / DEFS_NETWORK_URI_NAME
+        )
 
 
 def get_token_definition_path(
@@ -232,7 +240,12 @@ def get_token_definition_path(
     if addr.startswith("0x"):
         addr = addr[2:]
 
-    return base_path / DEFS_NETWORK_BY_CHAINID_LOOKUP_TYPE / str(chain_id) / DEFS_TOKEN_URI_NAME.format(hex_address=addr)
+    return (
+        base_path
+        / DEFS_NETWORK_BY_CHAINID_LOOKUP_TYPE
+        / str(chain_id)
+        / DEFS_TOKEN_URI_NAME.format(hex_address=addr)
+    )
 
 
 def get_definition_from_path(
@@ -385,7 +398,10 @@ def sign_tx_eip1559(
 
 @expect(messages.EthereumMessageSignature)
 def sign_message(
-    client: "TrezorClient", n: "Address", message: AnyStr, encoded_network: Optional[bytes] = None
+    client: "TrezorClient",
+    n: "Address",
+    message: AnyStr,
+    encoded_network: Optional[bytes] = None,
 ) -> "MessageType":
     return client.call(
         messages.EthereumSignMessage(
@@ -403,7 +419,7 @@ def sign_typed_data(
     data: Dict[str, Any],
     *,
     metamask_v4_compat: bool = True,
-    encoded_network: Optional[bytes] = None,
+    definitions: Optional[messages.EthereumDefinitions] = None,
 ) -> "MessageType":
     data = sanitize_typed_data(data)
     types = data["types"]
@@ -412,7 +428,7 @@ def sign_typed_data(
         address_n=n,
         primary_type=data["primaryType"],
         metamask_v4_compat=metamask_v4_compat,
-        encoded_network=encoded_network,
+        definitions=definitions,
     )
     response = client.call(request)
 
