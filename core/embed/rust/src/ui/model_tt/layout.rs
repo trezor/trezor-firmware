@@ -296,14 +296,13 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
         };
 
         let obj = if hold {
-            LayoutObj::new(
-                Frame::new(title, SwipeHoldPage::new(paragraphs, theme::BG)).into_child(),
-            )?
+            LayoutObj::new(Frame::new(title, SwipeHoldPage::new(paragraphs, theme::BG)))?
         } else {
             let buttons = Button::cancel_confirm_text(verb_cancel, verb);
-            LayoutObj::new(
-                Frame::new(title, SwipePage::new(paragraphs, buttons, theme::BG)).into_child(),
-            )?
+            LayoutObj::new(Frame::new(
+                title,
+                SwipePage::new(paragraphs, buttons, theme::BG),
+            ))?
         };
         Ok(obj.into())
     };
@@ -332,12 +331,13 @@ fn _confirm_blob(
     let paragraphs = Paragraphs::new(par_source);
 
     let obj = if hold {
-        LayoutObj::new(Frame::new(title, SwipeHoldPage::new(paragraphs, theme::BG)).into_child())?
+        LayoutObj::new(Frame::new(title, SwipeHoldPage::new(paragraphs, theme::BG)))?
     } else if let Some(verb) = verb {
         let buttons = Button::cancel_confirm_text(verb_cancel, verb);
-        LayoutObj::new(
-            Frame::new(title, SwipePage::new(paragraphs, buttons, theme::BG)).into_child(),
-        )?
+        LayoutObj::new(Frame::new(
+            title,
+            SwipePage::new(paragraphs, buttons, theme::BG),
+        ))?
     } else {
         panic!("Either `hold=true` or `verb=Some(StrBuffer)` must be specified");
     };
@@ -405,22 +405,16 @@ extern "C" fn new_confirm_properties(n_args: usize, args: *const Obj, kwargs: *m
         }
 
         let obj = if hold {
-            LayoutObj::new(
-                Frame::new(
-                    title,
-                    SwipeHoldPage::new(paragraphs.into_paragraphs(), theme::BG),
-                )
-                .into_child(),
-            )?
+            LayoutObj::new(Frame::new(
+                title,
+                SwipeHoldPage::new(paragraphs.into_paragraphs(), theme::BG),
+            ))?
         } else {
             let buttons = Button::cancel_confirm_text(None, "CONFIRM");
-            LayoutObj::new(
-                Frame::new(
-                    title,
-                    SwipePage::new(paragraphs.into_paragraphs(), buttons, theme::BG),
-                )
-                .into_child(),
-            )?
+            LayoutObj::new(Frame::new(
+                title,
+                SwipePage::new(paragraphs.into_paragraphs(), buttons, theme::BG),
+            ))?
         };
         Ok(obj.into())
     };
@@ -441,9 +435,10 @@ extern "C" fn new_confirm_reset_device(n_args: usize, args: *const Obj, kwargs: 
         ]);
 
         let buttons = Button::cancel_confirm_text(None, "CONTINUE");
-        let obj = LayoutObj::new(
-            Frame::new(title, SwipePage::new(paragraphs, buttons, theme::BG)).into_child(),
-        )?;
+        let obj = LayoutObj::new(Frame::new(
+            title,
+            SwipePage::new(paragraphs, buttons, theme::BG),
+        ))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -470,8 +465,7 @@ extern "C" fn new_show_qr(n_args: usize, args: *const Obj, kwargs: *mut Map) -> 
                     buttons,
                 ),
             )
-            .with_border(theme::borders())
-            .into_child(),
+            .with_border(theme::borders()),
         )?;
         Ok(obj.into())
     };
@@ -515,13 +509,10 @@ extern "C" fn new_confirm_joint_total(n_args: usize, args: *const Obj, kwargs: *
             Paragraph::new(&theme::TEXT_MONO, total_amount),
         ]);
 
-        let obj = LayoutObj::new(
-            Frame::new(
-                "JOINT TRANSACTION",
-                SwipeHoldPage::new(paragraphs, theme::BG),
-            )
-            .into_child(),
-        )?;
+        let obj = LayoutObj::new(Frame::new(
+            "JOINT TRANSACTION",
+            SwipeHoldPage::new(paragraphs, theme::BG),
+        ))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -555,13 +546,10 @@ extern "C" fn new_confirm_modify_output(n_args: usize, args: *const Obj, kwargs:
             2,
         );
 
-        let obj = LayoutObj::new(
-            Frame::new(
-                "MODIFY AMOUNT",
-                SwipePage::new(paragraphs, buttons, theme::BG),
-            )
-            .into_child(),
-        )?;
+        let obj = LayoutObj::new(Frame::new(
+            "MODIFY AMOUNT",
+            SwipePage::new(paragraphs, buttons, theme::BG),
+        ))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -592,9 +580,10 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
             2,
         );
 
-        let obj = LayoutObj::new(
-            Frame::new("MODIFY FEE", SwipePage::new(paragraphs, buttons, theme::BG)).into_child(),
-        )?;
+        let obj = LayoutObj::new(Frame::new(
+            "MODIFY FEE",
+            SwipePage::new(paragraphs, buttons, theme::BG),
+        ))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -762,13 +751,10 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
 
         let buttons = Button::cancel_info_confirm(button, info_button);
 
-        let obj = LayoutObj::new(
-            Frame::new(
-                title,
-                SwipePage::new(paragraphs.into_paragraphs(), buttons, theme::BG),
-            )
-            .into_child(),
-        )?;
+        let obj = LayoutObj::new(Frame::new(
+            title,
+            SwipePage::new(paragraphs.into_paragraphs(), buttons, theme::BG),
+        ))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -786,13 +772,10 @@ extern "C" fn new_confirm_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut
             Paragraph::new(&theme::TEXT_BOLD, max_feerate),
         ]);
 
-        let obj = LayoutObj::new(
-            Frame::new(
-                "AUTHORIZE COINJOIN",
-                SwipeHoldPage::new(paragraphs, theme::BG),
-            )
-            .into_child(),
-        )?;
+        let obj = LayoutObj::new(Frame::new(
+            "AUTHORIZE COINJOIN",
+            SwipeHoldPage::new(paragraphs, theme::BG),
+        ))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -804,9 +787,7 @@ extern "C" fn new_request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map)
         let subprompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_subprompt)?.try_into()?;
         let allow_cancel: bool = kwargs.get_or(Qstr::MP_QSTR_allow_cancel, true)?;
         let warning: Option<StrBuffer> = kwargs.get(Qstr::MP_QSTR_warning)?.try_into_option()?;
-        let obj = LayoutObj::new(
-            PinKeyboard::new(prompt, subprompt, warning, allow_cancel).into_child(),
-        )?;
+        let obj = LayoutObj::new(PinKeyboard::new(prompt, subprompt, warning, allow_cancel))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -816,7 +797,7 @@ extern "C" fn new_request_passphrase(n_args: usize, args: *const Obj, kwargs: *m
     let block = move |_args: &[Obj], kwargs: &Map| {
         let _prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
         let _max_len: u32 = kwargs.get(Qstr::MP_QSTR_max_len)?.try_into()?;
-        let obj = LayoutObj::new(PassphraseKeyboard::new().into_child())?;
+        let obj = LayoutObj::new(PassphraseKeyboard::new())?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -825,7 +806,7 @@ extern "C" fn new_request_passphrase(n_args: usize, args: *const Obj, kwargs: *m
 extern "C" fn new_request_bip39(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
-        let obj = LayoutObj::new(MnemonicKeyboard::new(Bip39Input::new(), prompt).into_child())?;
+        let obj = LayoutObj::new(MnemonicKeyboard::new(Bip39Input::new(), prompt))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -834,7 +815,7 @@ extern "C" fn new_request_bip39(n_args: usize, args: *const Obj, kwargs: *mut Ma
 extern "C" fn new_request_slip39(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
-        let obj = LayoutObj::new(MnemonicKeyboard::new(Slip39Input::new(), prompt).into_child())?;
+        let obj = LayoutObj::new(MnemonicKeyboard::new(Slip39Input::new(), prompt))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -850,9 +831,10 @@ extern "C" fn new_select_word(n_args: usize, args: *const Obj, kwargs: *mut Map)
         let paragraphs = Paragraphs::new([Paragraph::new(&theme::TEXT_NORMAL, description)]);
         let buttons = Button::select_word(words);
 
-        let obj = LayoutObj::new(
-            Frame::new(title, SwipePage::new(paragraphs, buttons, theme::BG)).into_child(),
-        )?;
+        let obj = LayoutObj::new(Frame::new(
+            title,
+            SwipePage::new(paragraphs, buttons, theme::BG),
+        ))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -871,13 +853,10 @@ extern "C" fn new_show_share_words(n_args: usize, args: *const Obj, kwargs: *mut
             paragraphs.add(Paragraph::new(&theme::TEXT_MONO, text).break_after());
         }
 
-        let obj = LayoutObj::new(
-            Frame::new(
-                title,
-                SwipeHoldPage::without_cancel(paragraphs.into_paragraphs(), theme::BG),
-            )
-            .into_child(),
-        )?;
+        let obj = LayoutObj::new(Frame::new(
+            title,
+            SwipeHoldPage::without_cancel(paragraphs.into_paragraphs(), theme::BG),
+        ))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -905,8 +884,7 @@ extern "C" fn new_request_number(n_args: usize, args: *const Obj, kwargs: *mut M
                 title,
                 NumberInputDialog::new(min_count, max_count, count, callback),
             )
-            .with_border(theme::borders())
-            .into_child(),
+            .with_border(theme::borders()),
         )?;
         Ok(obj.into())
     };
@@ -950,8 +928,7 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
                     })),
                 ),
             )
-            .with_border(theme::borders())
-            .into_child(),
+            .with_border(theme::borders()),
         )?;
         Ok(obj.into())
     };
@@ -991,23 +968,17 @@ extern "C" fn new_confirm_recovery(n_args: usize, args: *const Obj, kwargs: *mut
         };
 
         let obj = if info_button {
-            LayoutObj::new(
-                NotificationFrame::new(
-                    theme::ICON_WARN,
-                    notification,
-                    Dialog::new(paragraphs, Button::<&'static str>::abort_info_enter()),
-                )
-                .into_child(),
-            )?
+            LayoutObj::new(NotificationFrame::new(
+                theme::ICON_WARN,
+                notification,
+                Dialog::new(paragraphs, Button::<&'static str>::abort_info_enter()),
+            ))?
         } else {
-            LayoutObj::new(
-                NotificationFrame::new(
-                    theme::ICON_WARN,
-                    notification,
-                    Dialog::new(paragraphs, Button::cancel_confirm_text(None, button)),
-                )
-                .into_child(),
-            )?
+            LayoutObj::new(NotificationFrame::new(
+                theme::ICON_WARN,
+                notification,
+                Dialog::new(paragraphs, Button::cancel_confirm_text(None, button)),
+            ))?
         };
         Ok(obj.into())
     };
@@ -1032,8 +1003,7 @@ extern "C" fn new_select_word_count(n_args: usize, args: *const Obj, kwargs: *mu
 
         let obj = LayoutObj::new(
             Frame::new(title, Dialog::new(paragraphs, SelectWordCount::new()))
-                .with_border(theme::borders())
-                .into_child(),
+                .with_border(theme::borders()),
         )?;
         Ok(obj.into())
     };
