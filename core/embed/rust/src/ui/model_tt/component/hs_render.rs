@@ -42,8 +42,14 @@ const HOMESCREEN_DIM_HIEGHT: i16 = 95;
 const HOMESCREEN_DIM_START: i16 = HEIGHT - HOMESCREEN_DIM_HIEGHT;
 const HOMESCREEN_DIM: f32 = 0.63;
 
+const LOCKSCREEN_DIM_HIEGHT: i16 = 95;
+const LOCKSCREEN_DIM_START: i16 = HEIGHT - LOCKSCREEN_DIM_HIEGHT;
+const LOCKSCREEN_DIM: f32 = 0.63;
+const LOCKSCREEN_DIM_BG: f32 = 0.33;
+
 const BLUR_SIZE: usize = 7;
-const BLUR_DIV: u16 = (BLUR_SIZE * BLUR_SIZE) as u16;
+const BLUR_DIV: u32 =
+    ((65536_f32 * (1_f32 - LOCKSCREEN_DIM_BG)) as u32) / ((BLUR_SIZE * BLUR_SIZE) as u32);
 const DECOMP_LINES: usize = BLUR_SIZE + 1;
 const BLUR_RADIUS: i16 = (BLUR_SIZE / 2) as i16;
 
@@ -153,16 +159,31 @@ fn homescreen_line_blurred(
     let mut img_buffer = unsafe { get_buffer_16bpp((y_tmp % 2) as u16, false) };
 
     for x in 0..HOMESCREEN_IMAGE_SIZE as usize {
-        let r = (totals[RED_IDX][x] / BLUR_DIV) as u8;
-        let g = (totals[GREEN_IDX][x] / BLUR_DIV) as u8;
-        let b = (totals[BLUE_IDX][x] / BLUR_DIV) as u8;
+        let c0 = if y_tmp > LOCKSCREEN_DIM_START {
+            let coef = 65536
+                - (((y_tmp - LOCKSCREEN_DIM_START) as u32)
+                    * ((65536_f32 * LOCKSCREEN_DIM) as u32 / LOCKSCREEN_DIM_HIEGHT as u32));
 
-        let c0 = Color::rgb(r, g, b);
+            let r = (totals[RED_IDX][x] as u32 * BLUR_DIV) >> 16;
+            let g = (totals[GREEN_IDX][x] as u32 * BLUR_DIV) >> 16;
+            let b = (totals[BLUE_IDX][x] as u32 * BLUR_DIV) >> 16;
+
+            let r = (((coef * r) >> 8) & 0xF800) as u16;
+            let g = (((coef * g) >> 13) & 0x07E0) as u16;
+            let b = (((coef * b) >> 19) & 0x001F) as u16;
+
+            r | g | b
+        } else {
+            let r = (((totals[RED_IDX][x] as u32 * BLUR_DIV) >> 8) & 0xF800) as u16;
+            let g = (((totals[GREEN_IDX][x] as u32 * BLUR_DIV) >> 13) & 0x07E0) as u16;
+            let b = (((totals[BLUE_IDX][x] as u32 * BLUR_DIV) >> 19) & 0x001F) as u16;
+            r | g | b
+        };
 
         for i in 0..HOMESCREEN_IMAGE_SCALE as usize {
             let idx = (HOMESCREEN_IMAGE_SCALE as usize * x + i) as usize;
-            img_buffer.buffer[2 * idx + 1] = c0.hi_byte();
-            img_buffer.buffer[2 * idx] = c0.lo_byte();
+            img_buffer.buffer[2 * idx + 1] = (c0 >> 8) as u8;
+            img_buffer.buffer[2 * idx] = (c0 & 0xFF) as u8;
         }
     }
 
