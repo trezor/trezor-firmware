@@ -71,6 +71,7 @@ __all__ = (
     "confirm_modify_output",
     "confirm_modify_fee",
     "confirm_coinjoin",
+    "show_coinjoin",
     "show_popup",
     "draw_simple_text",
     "request_passphrase_on_device",
@@ -1019,6 +1020,14 @@ async def confirm_coinjoin(
     await raise_if_cancelled(
         interact(ctx, HoldToConfirm(text), "coinjoin_final", ButtonRequestType.Other)
     )
+
+
+def show_coinjoin() -> None:
+    text = Text("Please wait", ui.ICON_CONFIG, ui.RED)
+    text.normal("CoinJoin in progress.")
+    text.br()
+    text.bold("Do not disconnect your Trezor.")
+    ui.draw_simple(text)
 
 
 # TODO cleanup @ redesign

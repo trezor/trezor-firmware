@@ -1,6 +1,6 @@
 import storage.cache
 from trezor import loop, ui
-from trezor.ui.layouts import draw_simple_text
+from trezor.ui.layouts import show_coinjoin
 
 from apps.base import busy_expiry_ms, set_homescreen
 
@@ -24,6 +24,4 @@ class Busyscreen(HomescreenBase):
         raise ui.Result(None)
 
     def do_render(self) -> None:
-        draw_simple_text(
-            "Please wait", "CoinJoin in progress.\n\nDo not disconnect your\nTrezor."
-        )
+        show_coinjoin()
