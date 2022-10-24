@@ -1006,12 +1006,9 @@ async def confirm_modify_fee(
 
 
 async def confirm_coinjoin(
-    ctx: wire.GenericContext, coin_name: str, max_rounds: int, max_fee_per_vbyte: str
+    ctx: wire.GenericContext, max_rounds: int, max_fee_per_vbyte: str
 ) -> None:
     text = Text("Authorize CoinJoin", ui.ICON_RECOVERY, new_lines=False)
-    text.normal("Coin name: ")
-    text.bold(f"{coin_name}\n")
-    text.br_half()
     text.normal("Maximum rounds: ")
     text.bold(f"{max_rounds}\n")
     text.br_half()

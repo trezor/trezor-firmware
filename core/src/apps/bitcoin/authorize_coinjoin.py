@@ -84,7 +84,7 @@ async def authorize_coinjoin(
             ButtonRequestType.FeeOverThreshold,
         )
 
-    await confirm_coinjoin(ctx, coin.coin_name, msg.max_rounds, max_fee_per_vbyte)
+    await confirm_coinjoin(ctx, msg.max_rounds, max_fee_per_vbyte)
 
     authorization.set(msg)
 

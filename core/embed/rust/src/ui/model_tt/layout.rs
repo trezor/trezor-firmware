@@ -776,13 +776,10 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
 
 extern "C" fn new_confirm_coinjoin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let coin_name: StrBuffer = kwargs.get(Qstr::MP_QSTR_coin_name)?.try_into()?;
         let max_rounds: StrBuffer = kwargs.get(Qstr::MP_QSTR_max_rounds)?.try_into()?;
         let max_feerate: StrBuffer = kwargs.get(Qstr::MP_QSTR_max_feerate)?.try_into()?;
 
         let paragraphs = Paragraphs::new([
-            Paragraph::new(&theme::TEXT_NORMAL, "Coin name:".into()),
-            Paragraph::new(&theme::TEXT_BOLD, coin_name),
             Paragraph::new(&theme::TEXT_NORMAL, "Maximum rounds:".into()),
             Paragraph::new(&theme::TEXT_BOLD, max_rounds),
             Paragraph::new(&theme::TEXT_NORMAL, "Maximum mining fee:".into()),
@@ -1263,7 +1260,6 @@ pub static mp_module_trezorui2: Module = obj_module! {
 
     /// def confirm_coinjoin(
     ///     *,
-    ///     coin_name: str,
     ///     max_rounds: str,
     ///     max_feerate: str,
     /// ) -> object:
