@@ -935,6 +935,10 @@ async def confirm_coinjoin(
     )
 
 
+def show_coinjoin() -> None:
+    log.error(__name__, "show_coinjoin not implemented")
+
+
 # TODO cleanup @ redesign
 async def confirm_sign_identity(
     ctx: wire.GenericContext, proto: str, identity: str, challenge_visual: str | None
