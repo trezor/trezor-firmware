@@ -917,14 +917,13 @@ async def confirm_modify_fee(
 
 
 async def confirm_coinjoin(
-    ctx: wire.GenericContext, coin_name: str, max_rounds: int, max_fee_per_vbyte: str
+    ctx: wire.GenericContext, max_rounds: int, max_fee_per_vbyte: str
 ) -> None:
     await raise_if_not_confirmed(
         interact(
             ctx,
             _RustLayout(
                 trezorui2.confirm_coinjoin(
-                    coin_name=coin_name,
                     max_rounds=str(max_rounds),
                     max_feerate=f"{max_fee_per_vbyte} sats/vbyte",
                 )

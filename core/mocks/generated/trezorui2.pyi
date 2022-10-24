@@ -230,7 +230,6 @@ def confirm_with_info(
 # rust/src/ui/model_tt/layout.rs
 def confirm_coinjoin(
     *,
-    coin_name: str,
     max_rounds: str,
     max_feerate: str,
 ) -> object:
