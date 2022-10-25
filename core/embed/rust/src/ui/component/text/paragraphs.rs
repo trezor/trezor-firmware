@@ -264,6 +264,8 @@ pub struct Paragraph<T> {
     /// Try to keep this and the next paragraph on the same page. NOTE: doesn't
     /// work if two or more subsequent paragraphs have this flag.
     no_break: bool,
+    padding_top: i16,
+    padding_bottom: i16,
 }
 
 impl<T> Paragraph<T> {
@@ -274,6 +276,8 @@ impl<T> Paragraph<T> {
             align: Alignment::Start,
             break_after: false,
             no_break: false,
+            padding_top: PARAGRAPH_TOP_SPACE,
+            padding_bottom: PARAGRAPH_BOTTOM_SPACE,
         }
     }
 
@@ -292,6 +296,16 @@ impl<T> Paragraph<T> {
         self
     }
 
+    pub const fn with_top_padding(mut self, padding: i16) -> Self {
+        self.padding_top = padding;
+        self
+    }
+
+    pub const fn with_bottom_padding(mut self, padding: i16) -> Self {
+        self.padding_bottom = padding;
+        self
+    }
+
     pub fn update(&mut self, content: T) {
         self.content = content
     }
@@ -306,13 +320,15 @@ impl<T> Paragraph<T> {
             align: self.align,
             break_after: self.break_after,
             no_break: self.no_break,
+            padding_top: self.padding_top,
+            padding_bottom: self.padding_bottom,
         }
     }
 
     fn layout(&self, area: Rect) -> TextLayout {
         TextLayout {
-            padding_top: PARAGRAPH_TOP_SPACE,
-            padding_bottom: PARAGRAPH_BOTTOM_SPACE,
+            padding_top: self.padding_top,
+            padding_bottom: self.padding_bottom,
             ..TextLayout::new(*self.style)
                 .with_align(self.align)
                 .with_bounds(area)
