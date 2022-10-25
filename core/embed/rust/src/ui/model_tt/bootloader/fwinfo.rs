@@ -70,7 +70,7 @@ impl Component for FwInfo {
             let ypos = (60 + i * 20) as i16;
             let idx = i * 16;
             let part = self.fingerprint.get(idx..idx + 16).unwrap_or("");
-            display::text_top_left(Point::new(15, ypos), part, Font::MEDIUM, BLD_FG, BLD_BG);
+            display::text_top_left(Point::new(15, ypos), part, Font::DEMIBOLD, BLD_FG, BLD_BG);
         }
     }
 

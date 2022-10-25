@@ -1,5 +1,8 @@
 use crate::ui::{
-    component::{text::paragraphs::Paragraphs, Child, Component, Event, EventCtx, Pad},
+    component::{
+        text::paragraphs::{Paragraph, ParagraphVecShort, Paragraphs, VecExt},
+        Child, Component, Event, EventCtx, Pad,
+    },
     geometry::{Insets, LinearPlacement, Point, Rect},
     model_tt::{
         bootloader::{
@@ -33,15 +36,18 @@ pub struct Intro {
     title: Child<Title>,
     menu: Child<Button<&'static str>>,
     host: Child<Button<&'static str>>,
-    text: Child<Paragraphs<&'static str>>,
+    text: Child<Paragraphs<ParagraphVecShort<&'static str>>>,
 }
 
 impl Intro {
     pub fn new(bld_version: &'static str, vendor: &'static str, version: &'static str) -> Self {
-        let p1 = Paragraphs::new()
-            .add(TEXT_NORMAL, version)
-            .add(TEXT_NORMAL, vendor)
-            .with_placement(LinearPlacement::vertical().align_at_start());
+        let mut messages = ParagraphVecShort::new();
+
+        messages.add(Paragraph::new(&TEXT_NORMAL, version));
+        messages.add(Paragraph::new(&TEXT_NORMAL, vendor));
+
+        let p =
+            Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_start());
 
         let mut instance = Self {
             bg: Pad::with_background(BLD_BG),
@@ -52,7 +58,7 @@ impl Intro {
                     .with_expanded_touch_area(Insets::uniform(13)),
             ),
             host: Child::new(Button::with_text("INSTALL FIRMWARE").styled(button_bld_menu_item())),
-            text: Child::new(p1),
+            text: Child::new(p),
         };
 
         instance.bg.clear();

@@ -18,7 +18,7 @@ pub mod theme;
 mod title;
 
 use crate::ui::{
-    component::text::paragraphs::Paragraphs,
+    component::text::paragraphs::{Paragraph, ParagraphVecShort, Paragraphs, VecExt},
     display::Color,
     geometry::LinearPlacement,
     model_tt::{
@@ -42,6 +42,8 @@ use confirm::Confirm;
 use fwinfo::FwInfo;
 use intro::Intro;
 use menu::Menu;
+use crate::ui::constant::screen;
+use crate::ui::model_tt::bootloader::theme::WELCOME_COLOR;
 
 pub trait ReturnToC {
     fn return_to_c(self) -> u32;
@@ -128,21 +130,18 @@ extern "C" fn screen_install_confirm(
         "Update firmware by"
     };
 
-    let mut message = Paragraphs::new()
-        .add(theme::TEXT_NORMAL, msg)
-        .centered()
-        .add(theme::TEXT_NORMAL, text)
-        .centered()
-        .add(theme::TEXT_NORMAL, version)
-        .centered();
+    let mut messages = ParagraphVecShort::new();
+
+    messages.add(Paragraph::new(&theme::TEXT_NORMAL, msg));
+    messages.add(Paragraph::new(&theme::TEXT_NORMAL, text));
+    messages.add(Paragraph::new(&theme::TEXT_NORMAL, version));
 
     if vendor || downgrade {
-        message = message
-            .add(theme::TEXT_BOLD, "Seed will be erased!")
-            .centered();
+        messages.add(Paragraph::new(&theme::TEXT_BOLD, "Seed will be erased!").centered());
     }
 
-    message = message.with_placement(LinearPlacement::vertical().align_at_center());
+    let message =
+        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
     let left = Button::with_text("CANCEL").styled(button_install_cancel());
     let right = Button::with_text("INSTALL").styled(button_install_confirm());
@@ -156,12 +155,15 @@ extern "C" fn screen_install_confirm(
 extern "C" fn screen_wipe_confirm() -> u32 {
     const ICON: Option<&'static [u8]> = Some(ERASE_BIG);
 
-    let message = Paragraphs::new()
-        .add(TEXT_ERROR_NORMAL, "Do you really want to wipe the device?")
-        .centered()
-        .add(TEXT_ERROR_BOLD, "Seed will be erased!")
-        .centered()
-        .with_placement(LinearPlacement::vertical().align_at_center());
+    let mut messages = ParagraphVecShort::new();
+
+    messages.add(
+        Paragraph::new(&TEXT_ERROR_NORMAL, "Do you really want to wipe the device?").centered(),
+    );
+    messages.add(Paragraph::new(&TEXT_ERROR_BOLD, "Seed will be erased!").centered());
+
+    let message =
+        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
     let left = Button::with_text("WIPE").styled(button_wipe_confirm());
     let right = Button::with_text("CANCEL").styled(button_wipe_cancel());
@@ -216,11 +218,9 @@ fn screen_progress(
     0
 }
 
-const INITIAL_INSTALL_LOADER_COLOR: Color = Color::rgb(0x4A, 0x90, 0xE2);
-
 #[no_mangle]
 extern "C" fn screen_install_progress(progress: u16, initialize: bool, initial_setup: bool) -> u32 {
-    let bg_color = if initial_setup { BG } else { BLD_BG };
+    let bg_color = if initial_setup { WELCOME_COLOR } else { BG };
     let fg_color = if initial_setup { FG } else { BLD_FG };
 
     screen_progress(
@@ -284,19 +284,20 @@ extern "C" fn screen_fwinfo(fingerprint: *const cty::c_char) -> u32 {
 
 #[no_mangle]
 extern "C" fn screen_wipe_success() -> u32 {
-    let m_top = Paragraphs::new()
-        .add(theme::TEXT_BOLD, "Device wiped")
-        .centered()
-        .add(theme::TEXT_BOLD, "successfully.")
-        .centered()
-        .with_placement(LinearPlacement::vertical().align_at_center());
+    let mut messages = ParagraphVecShort::new();
 
-    let m_bottom = Paragraphs::new()
-        .add(theme::TEXT_SUBMSG, "PLEASE RECONNECT")
-        .centered()
-        .add(theme::TEXT_SUBMSG, "THE DEVICE")
-        .centered()
-        .with_placement(LinearPlacement::vertical().align_at_center());
+    messages.add(Paragraph::new(&theme::TEXT_BOLD, "Device wiped").centered());
+    messages.add(Paragraph::new(&theme::TEXT_BOLD, "successfully.").centered());
+
+    let m_top =
+        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
+
+    let mut messages = ParagraphVecShort::new();
+    messages.add(Paragraph::new(&theme::TEXT_SUBMSG, "PLEASE RECONNECT").centered());
+    messages.add(Paragraph::new(&theme::TEXT_SUBMSG, "THE DEVICE").centered());
+
+    let m_bottom =
+        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
     let mut frame = ResultScreen::new(WHITE, BLD_BG, ICON_SUCCESS_SMALL, m_top, m_bottom, true);
     frame.place(constant::screen());
@@ -306,19 +307,19 @@ extern "C" fn screen_wipe_success() -> u32 {
 
 #[no_mangle]
 extern "C" fn screen_wipe_fail() -> u32 {
-    let m_top = Paragraphs::new()
-        .add(theme::TEXT_BOLD, "Device wipe was")
-        .centered()
-        .add(theme::TEXT_BOLD, "not successful.")
-        .centered()
-        .with_placement(LinearPlacement::vertical().align_at_center());
+    let mut messages = ParagraphVecShort::new();
 
-    let m_bottom = Paragraphs::new()
-        .add(theme::TEXT_SUBMSG, "PLEASE RECONNECT")
-        .centered()
-        .add(theme::TEXT_SUBMSG, "THE DEVICE")
-        .centered()
-        .with_placement(LinearPlacement::vertical().align_at_center());
+    messages.add(Paragraph::new(&theme::TEXT_BOLD, "Device wipe was").centered());
+    messages.add(Paragraph::new(&theme::TEXT_BOLD, "not successful.").centered());
+    let m_top =
+        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
+
+    let mut messages = ParagraphVecShort::new();
+
+    messages.add(Paragraph::new(&theme::TEXT_SUBMSG, "PLEASE RECONNECT").centered());
+    messages.add(Paragraph::new(&theme::TEXT_SUBMSG, "THE DEVICE").centered());
+    let m_bottom =
+        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
     let mut frame = ResultScreen::new(WHITE, BLD_BG, ICON_WARN_SMALL, m_top, m_bottom, true);
     frame.place(constant::screen());
@@ -329,24 +330,25 @@ extern "C" fn screen_wipe_fail() -> u32 {
 #[no_mangle]
 extern "C" fn screen_boot_empty(firmware_present: bool) {
     let fg = if firmware_present { GREY_DARK } else { WHITE };
-    display::icon(constant::screen().center(), LOGO_EMPTY, fg, BLACK);
+    let bg = if firmware_present {BLACK} else {WELCOME_COLOR};
+    display::rect_fill(constant::screen(), bg);
+    display::icon(constant::screen().center(), LOGO_EMPTY, fg, bg);
 }
 
 #[no_mangle]
 extern "C" fn screen_install_fail() -> u32 {
-    let m_top = Paragraphs::new()
-        .add(theme::TEXT_BOLD, "Firmware installation was")
-        .centered()
-        .add(theme::TEXT_BOLD, "not successful.")
-        .centered()
-        .with_placement(LinearPlacement::vertical().align_at_center());
+    let mut messages = ParagraphVecShort::new();
+    messages.add(Paragraph::new(&theme::TEXT_BOLD, "Firmware installation was").centered());
+    messages.add(Paragraph::new(&theme::TEXT_BOLD, "not successful.").centered());
 
-    let m_bottom = Paragraphs::new()
-        .add(theme::TEXT_SUBMSG, "PLEASE RECONNECT")
-        .centered()
-        .add(theme::TEXT_SUBMSG, "THE DEVICE")
-        .centered()
-        .with_placement(LinearPlacement::vertical().align_at_center());
+    let m_top =
+        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
+
+    let mut messages = ParagraphVecShort::new();
+    messages.add(Paragraph::new(&theme::TEXT_SUBMSG, "PLEASE RECONNECT").centered());
+    messages.add(Paragraph::new(&theme::TEXT_SUBMSG, "THE DEVICE").centered());
+    let m_bottom =
+        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
     let mut frame = ResultScreen::new(WHITE, BLD_BG, ICON_WARN_SMALL, m_top, m_bottom, true);
     frame.place(constant::screen());
@@ -355,17 +357,16 @@ extern "C" fn screen_install_fail() -> u32 {
 }
 
 fn screen_install_success_bld(msg: &'static str, complete_draw: bool) -> u32 {
-    let m_top = Paragraphs::new()
-        .add(theme::TEXT_BOLD, "Firmware installed")
-        .centered()
-        .add(theme::TEXT_BOLD, "successfully.")
-        .centered()
-        .with_placement(LinearPlacement::vertical().align_at_center());
+    let mut messages = ParagraphVecShort::new();
+    messages.add(Paragraph::new(&theme::TEXT_BOLD, "Firmware installed").centered());
+    messages.add(Paragraph::new(&theme::TEXT_BOLD, "successfully.").centered());
+    let m_top =
+        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
-    let m_bottom = Paragraphs::new()
-        .add(theme::TEXT_SUBMSG, msg)
-        .centered()
-        .with_placement(LinearPlacement::vertical().align_at_center());
+    let mut messages = ParagraphVecShort::new();
+    messages.add(Paragraph::new(&theme::TEXT_SUBMSG, msg).centered());
+    let m_bottom =
+        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
     let mut frame = ResultScreen::new(
         WHITE,
@@ -381,19 +382,20 @@ fn screen_install_success_bld(msg: &'static str, complete_draw: bool) -> u32 {
 }
 
 fn screen_install_success_initial(msg: &'static str, complete_draw: bool) -> u32 {
-    let m_top = Paragraphs::new()
-        .add(theme::TEXT_WELCOME_BOLD, "Firmware installed")
-        .centered()
-        .add(theme::TEXT_WELCOME_BOLD, "successfully.")
-        .centered()
-        .with_placement(LinearPlacement::vertical().align_at_center());
+    let mut messages = ParagraphVecShort::new();
+    messages.add(Paragraph::new(&theme::TEXT_WELCOME_BOLD, "Firmware installed").centered());
+    messages.add(Paragraph::new(&theme::TEXT_WELCOME_BOLD, "successfully.").centered());
 
-    let m_bottom = Paragraphs::new()
-        .add(theme::TEXT_SUBMSG_INITIAL, msg)
-        .centered()
-        .with_placement(LinearPlacement::vertical().align_at_center());
+    let m_top =
+        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
-    let mut frame = ResultScreen::new(FG, BG, ICON_SUCCESS_SMALL, m_top, m_bottom, complete_draw);
+    let mut messages = ParagraphVecShort::new();
+    messages.add(Paragraph::new(&theme::TEXT_SUBMSG_INITIAL, msg).centered());
+
+    let m_bottom =
+        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
+
+    let mut frame = ResultScreen::new(FG, WELCOME_COLOR, ICON_SUCCESS_SMALL, m_top, m_bottom, complete_draw);
     frame.place(constant::screen());
     frame.paint();
     0
@@ -415,14 +417,13 @@ extern "C" fn screen_install_success(
 
 #[no_mangle]
 extern "C" fn screen_welcome() -> u32 {
-    let mut frame = Paragraphs::new()
-        .add(theme::TEXT_WELCOME, "Get started with")
-        .centered()
-        .add(theme::TEXT_WELCOME, "your trezor at")
-        .centered()
-        .add(theme::TEXT_WELCOME_BOLD, "trezor.io/start")
-        .centered()
-        .with_placement(LinearPlacement::vertical().align_at_center());
+    let mut messages = ParagraphVecShort::new();
+    display::rect_fill(screen(), WELCOME_COLOR);
+    messages.add(Paragraph::new(&theme::TEXT_WELCOME, "Get started with").centered());
+    messages.add(Paragraph::new(&theme::TEXT_WELCOME, "your trezor at").centered());
+    messages.add(Paragraph::new(&theme::TEXT_WELCOME_BOLD, "trezor.io/start").centered());
+    let mut frame =
+        Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
     frame.place(constant::screen());
     frame.paint();
