@@ -886,7 +886,7 @@ async def confirm_total(
     text.bold(fee_amount)
 
     if fee_rate_amount is not None:
-        text.normal("\n" + fee_rate_amount)
+        text.normal(f"\n({fee_rate_amount})")
 
     await raise_if_cancelled(interact(ctx, HoldToConfirm(text), br_type, br_code))
 
@@ -999,7 +999,7 @@ async def confirm_modify_fee(
     text.normal("Transaction fee:\n")
     text.bold(total_fee_new)
     if fee_rate_amount is not None:
-        text.normal("\n" + fee_rate_amount)
+        text.normal(f"\n({fee_rate_amount})")
     await raise_if_cancelled(
         interact(ctx, HoldToConfirm(text), "modify_fee", ButtonRequestType.SignTx)
     )

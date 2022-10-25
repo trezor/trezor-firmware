@@ -8,6 +8,7 @@ from trezor.strings import format_amount, format_timestamp
 from trezor.ui import layouts
 
 from .. import addresses
+from ..common import format_fee_rate
 from . import omni
 
 if not utils.BITCOIN_ONLY:
@@ -165,7 +166,7 @@ async def confirm_modify_fee(
         user_fee_change,
         format_coin_amount(abs(user_fee_change), coin, amount_unit),
         format_coin_amount(total_fee_new, coin, amount_unit),
-        fee_rate_amount=_get_fee_rate_str(fee_rate, coin),
+        fee_rate_amount=format_fee_rate(fee_rate, coin) if fee_rate >= 0 else None,
     )
 
 
@@ -183,18 +184,6 @@ async def confirm_joint_total(
     )
 
 
-def _get_fee_rate_str(fee_rate: float, coin: CoinInfo) -> str | None:
-    if fee_rate >= 0:
-        # Use format_amount to get correct thousands separator -- micropython's built-in
-        # formatting doesn't add thousands sep to floating point numbers.
-        # We multiply by 100 to get a fixed-point integer with two decimal places,
-        # and add 0.5 to round to the nearest integer.
-        fee_rate_formatted = format_amount(int(fee_rate * 100 + 0.5), 2)
-        return f"({fee_rate_formatted} sat/{'v' if coin.segwit else ''}B)"
-    else:
-        return None
-
-
 async def confirm_total(
     ctx: wire.Context,
     spending: int,
@@ -207,7 +196,7 @@ async def confirm_total(
         ctx,
         total_amount=format_coin_amount(spending, coin, amount_unit),
         fee_amount=format_coin_amount(fee, coin, amount_unit),
-        fee_rate_amount=_get_fee_rate_str(fee_rate, coin),
+        fee_rate_amount=format_fee_rate(fee_rate, coin) if fee_rate >= 0 else None,
     )
 
 
