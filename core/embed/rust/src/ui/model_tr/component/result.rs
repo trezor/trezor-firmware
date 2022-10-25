@@ -1,5 +1,8 @@
 use crate::ui::{
-    component::{text::paragraphs::Paragraphs, Child, Component, Event, EventCtx, Never, Pad},
+    component::{
+        text::paragraphs::{ParagraphVecShort, Paragraphs},
+        Child, Component, Event, EventCtx, Never, Pad,
+    },
     constant::{HEIGHT, WIDTH},
     display::Color,
     geometry::{Point, Rect},
@@ -10,16 +13,16 @@ pub struct ResultScreen {
     small_pad: Pad,
     fg_color: Color,
     bg_color: Color,
-    message_top: Child<Paragraphs<&'static str>>,
-    message_bottom: Child<Paragraphs<&'static str>>,
+    message_top: Child<Paragraphs<ParagraphVecShort<&'static str>>>,
+    message_bottom: Child<Paragraphs<ParagraphVecShort<&'static str>>>,
 }
 
 impl ResultScreen {
     pub fn new(
         fg_color: Color,
         bg_color: Color,
-        message_top: Paragraphs<&'static str>,
-        message_bottom: Paragraphs<&'static str>,
+        message_top: Paragraphs<ParagraphVecShort<&'static str>>,
+        message_bottom: Paragraphs<ParagraphVecShort<&'static str>>,
         complete_draw: bool,
     ) -> Self {
         let mut instance = Self {
