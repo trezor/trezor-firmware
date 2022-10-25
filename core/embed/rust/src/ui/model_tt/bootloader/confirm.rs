@@ -1,5 +1,8 @@
 use crate::ui::{
-    component::{text::paragraphs::Paragraphs, Child, Component, Event, EventCtx, Pad},
+    component::{
+        text::paragraphs::{ParagraphVecShort, Paragraphs},
+        Child, Component, Event, EventCtx, Pad,
+    },
     constant::screen,
     display,
     display::Color,
@@ -29,7 +32,7 @@ pub struct Confirm {
     bg: Pad,
     bg_color: Color,
     icon: Option<&'static [u8]>,
-    message: Child<Paragraphs<&'static str>>,
+    message: Child<Paragraphs<ParagraphVecShort<&'static str>>>,
     left: Child<Button<&'static str>>,
     right: Child<Button<&'static str>>,
     confirm_left: bool,
@@ -39,7 +42,7 @@ impl Confirm {
     pub fn new(
         bg_color: Color,
         icon: Option<&'static [u8]>,
-        message: Paragraphs<&'static str>,
+        message: Paragraphs<ParagraphVecShort<&'static str>>,
         left: Button<&'static str>,
         right: Button<&'static str>,
         confirm_left: bool,

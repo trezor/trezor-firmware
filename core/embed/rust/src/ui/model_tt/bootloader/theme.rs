@@ -5,10 +5,11 @@ use crate::{
         display::{Color, Font},
         model_tt::{
             component::{ButtonStyle, ButtonStyleSheet},
-            theme::{BG, FG, GREY_DARK, GREY_LIGHT, GREY_MEDIUM, WHITE},
+            theme::{FG, GREY_DARK, GREY_LIGHT, GREY_MEDIUM, WHITE},
         },
     },
 };
+use crate::ui::model_tt::theme::BLACK;
 
 pub const BLD_BG: Color = Color::rgb(0x00, 0x17, 0xA3);
 pub const BLD_FG: Color = WHITE;
@@ -23,8 +24,6 @@ pub const BLD_INSTALL_BTN_COLOR_ACTIVE: Color = Color::rgb(0xD9, 0xDC, 0xF1);
 pub const BLD_INSTALL_CANCEL_BTN_COLOR_ACTIVE: Color = Color::rgb(0x26, 0x3A, 0xB1);
 
 pub const BLD_COLOR_SUBMSG: Color = Color::rgb(0x80, 0x8B, 0xD1);
-pub const BLD_COLOR_INITIAL_INSTALL_SUCCESS: Color = Color::rgb(0x39, 0xA8, 0x14);
-pub const BLD_COLOR_INITIAL_INSTALL_BG: Color = Color::rgb(0xDE, 0xDE, 0xDE);
 
 pub const BLD_BTN_MENU_COLOR: Color = Color::alpha(BLD_BG, alpha!(0.22));
 pub const BLD_BTN_MENU_COLOR_ACTIVE: Color = Color::alpha(BLD_BG, alpha!(0.11));
@@ -33,11 +32,10 @@ pub const BLD_BTN_MENUITEM_COLOR_ACTIVE: Color =
     Color::rgba(BLD_BG, 0xFF, 0xFF, 0xFF, alpha!(0.11));
 pub const BLD_TITLE_COLOR: Color = Color::rgba(BLD_BG, 0xFF, 0xFF, 0xFF, alpha!(0.75));
 
+pub const WELCOME_COLOR: Color = BLACK;
+
 // Commonly used corner radius (i.e. for buttons).
 pub const RADIUS: u8 = 2;
-
-// Size of icons in the UI (i.e. inside buttons).
-pub const ICON_SIZE: i32 = 16;
 
 // UI icons.
 pub const ICON_CANCEL: &[u8] = include_res!("model_tt/res/cancel.toif");
@@ -244,8 +242,10 @@ pub fn button_bld_menu_item() -> ButtonStyleSheet {
     }
 }
 pub const TEXT_WELCOME: TextStyle =
-    TextStyle::new(Font::NORMAL, GREY_MEDIUM, BG, GREY_MEDIUM, GREY_MEDIUM);
-pub const TEXT_WELCOME_BOLD: TextStyle = TextStyle::new(Font::BOLD, FG, BG, FG, FG);
+    TextStyle::new(Font::NORMAL, GREY_MEDIUM, WELCOME_COLOR, GREY_MEDIUM, GREY_MEDIUM);
+pub const TEXT_WELCOME_BOLD: TextStyle = TextStyle::new(Font::BOLD, FG, WELCOME_COLOR, FG, FG);
+pub const TEXT_SUBMSG_INITIAL: TextStyle =
+    TextStyle::new(Font::BOLD, GREY_MEDIUM, WELCOME_COLOR, GREY_MEDIUM, GREY_MEDIUM);
 
 pub const TEXT_NORMAL: TextStyle = TextStyle::new(Font::NORMAL, BLD_FG, BLD_BG, BLD_FG, BLD_FG);
 pub const TEXT_BOLD: TextStyle = TextStyle::new(Font::BOLD, BLD_FG, BLD_BG, BLD_FG, BLD_FG);
@@ -256,5 +256,3 @@ pub const TEXT_SUBMSG: TextStyle = TextStyle::new(
     BLD_COLOR_SUBMSG,
     BLD_COLOR_SUBMSG,
 );
-pub const TEXT_SUBMSG_INITIAL: TextStyle =
-    TextStyle::new(Font::BOLD, GREY_MEDIUM, BG, GREY_MEDIUM, GREY_MEDIUM);
