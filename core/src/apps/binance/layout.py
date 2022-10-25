@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Sequence
 
 from trezor.enums import ButtonRequestType
 from trezor.strings import format_amount
@@ -17,8 +17,6 @@ if TYPE_CHECKING:
 
 
 async def require_confirm_transfer(ctx: Context, msg: BinanceTransferMsg) -> None:
-    from trezor.ui.layouts.altcoin import confirm_transfer_binance
-
     items: list[tuple[str, str, str]] = []
 
     def make_input_output_pages(msg: BinanceInputOutput, direction: str) -> None:
@@ -37,7 +35,21 @@ async def require_confirm_transfer(ctx: Context, msg: BinanceTransferMsg) -> Non
     for txoutput in msg.outputs:
         make_input_output_pages(txoutput, "Confirm output")
 
-    await confirm_transfer_binance(ctx, items)
+    await confirm_transfer(ctx, items)
+
+
+async def confirm_transfer(
+    ctx: Context, inputs_outputs: Sequence[tuple[str, str, str]]
+) -> None:
+    from trezor.ui.layouts import confirm_output
+
+    for title, amount, address in inputs_outputs:
+        await confirm_output(
+            ctx,
+            address,
+            amount,
+            title,
+        )
 
 
 async def require_confirm_cancel(ctx: Context, msg: BinanceCancelMsg) -> None:

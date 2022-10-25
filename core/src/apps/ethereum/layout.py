@@ -3,7 +3,13 @@ from typing import TYPE_CHECKING
 from trezor import ui
 from trezor.enums import ButtonRequestType
 from trezor.strings import format_plural
-from trezor.ui.layouts import confirm_blob, confirm_text, should_show_more
+from trezor.ui.layouts import (
+    confirm_amount,
+    confirm_blob,
+    confirm_text,
+    confirm_total,
+    should_show_more,
+)
 
 from . import networks
 from .helpers import decode_typed_data
@@ -38,21 +44,26 @@ def require_confirm_tx(
     )
 
 
-def require_confirm_fee(
+async def require_confirm_fee(
     ctx: Context,
     spending: int,
     gas_price: int,
     gas_limit: int,
     chain_id: int,
     token: tokens.TokenInfo | None = None,
-) -> Awaitable[None]:
-    from trezor.ui.layouts.altcoin import confirm_total_ethereum
-
-    return confirm_total_ethereum(
+) -> None:
+    await confirm_amount(
         ctx,
-        format_ethereum_amount(spending, token, chain_id),
-        format_ethereum_amount(gas_price, None, chain_id),
-        format_ethereum_amount(gas_price * gas_limit, None, chain_id),
+        title="Confirm fee",
+        description="Gas price:",
+        amount=format_ethereum_amount(gas_price, None, chain_id),
+    )
+    await confirm_total(
+        ctx,
+        total_amount=format_ethereum_amount(spending, token, chain_id),
+        fee_amount=format_ethereum_amount(gas_price * gas_limit, None, chain_id),
+        total_label="Amount sent:",
+        fee_label="Maximum fee:",
     )
 
 
@@ -65,8 +76,6 @@ async def require_confirm_eip1559_fee(
     chain_id: int,
     token: tokens.TokenInfo | None = None,
 ) -> None:
-    from trezor.ui.layouts import confirm_amount, confirm_total
-
     await confirm_amount(
         ctx,
         "Confirm fee",

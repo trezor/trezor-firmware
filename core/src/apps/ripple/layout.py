@@ -33,7 +33,6 @@ async def require_confirm_destination_tag(ctx: Context, tag: int) -> None:
 
 
 async def require_confirm_tx(ctx: Context, to: str, value: int) -> None:
-    # NOTE: local imports here saves 4 bytes
-    from trezor.ui.layouts.altcoin import confirm_total_ripple
+    from trezor.ui.layouts import confirm_output
 
-    await confirm_total_ripple(ctx, to, format_amount(value, DECIMALS))
+    await confirm_output(ctx, to, format_amount(value, DECIMALS) + " XRP")

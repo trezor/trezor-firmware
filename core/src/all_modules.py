@@ -153,8 +153,6 @@ trezor.ui.components.common.confirm
 import trezor.ui.components.common.confirm
 trezor.ui.layouts
 import trezor.ui.layouts
-trezor.ui.layouts.altcoin
-import trezor.ui.layouts.altcoin
 trezor.ui.layouts.common
 import trezor.ui.layouts.common
 trezor.ui.layouts.recovery
@@ -167,8 +165,6 @@ trezor.ui.layouts.tr
 import trezor.ui.layouts.tr
 trezor.ui.layouts.tt_v2
 import trezor.ui.layouts.tt_v2
-trezor.ui.layouts.tt_v2.altcoin
-import trezor.ui.layouts.tt_v2.altcoin
 trezor.ui.layouts.tt_v2.recovery
 import trezor.ui.layouts.tt_v2.recovery
 trezor.ui.layouts.tt_v2.reset

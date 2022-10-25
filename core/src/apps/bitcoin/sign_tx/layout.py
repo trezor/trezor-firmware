@@ -1,7 +1,6 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
-from trezor import utils
 from trezor.enums import ButtonRequestType
 from trezor.strings import format_amount
 from trezor.ui import layouts
@@ -9,10 +8,6 @@ from trezor.ui.layouts import confirm_metadata
 
 from .. import addresses
 from ..common import format_fee_rate
-
-if not utils.BITCOIN_ONLY:
-    from trezor.ui.layouts import altcoin
-
 
 if TYPE_CHECKING:
     from typing import Any
@@ -96,9 +91,26 @@ async def confirm_decred_sstx_submission(
 ) -> None:
     assert output.address is not None
     address_short = addresses.address_short(coin, output.address)
+    amount = format_coin_amount(output.amount, coin, amount_unit)
 
-    await altcoin.confirm_decred_sstx_submission(
-        ctx, address_short, format_coin_amount(output.amount, coin, amount_unit)
+    await layouts.confirm_value(
+        ctx,
+        "Purchase ticket",
+        amount,
+        "Ticket amount:",
+        "confirm_decred_sstx_submission",
+        ButtonRequestType.ConfirmOutput,
+        verb="CONFIRM",
+    )
+
+    await layouts.confirm_value(
+        ctx,
+        "Purchase ticket",
+        address_short,
+        "Voting rights to:",
+        "confirm_decred_sstx_submission",
+        ButtonRequestType.ConfirmOutput,
+        verb="PURCHASE",
     )
 
 
