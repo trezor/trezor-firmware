@@ -50,7 +50,6 @@ def setup_device_core(client: Client, pin: str, wipe_code: str) -> None:
 @core_only
 def test_wipe_code_activate_core():
     with EmulatorWrapper("core") as emu:
-        assert emu.client is not None
         # set up device
         setup_device_core(emu.client, PIN, WIPE_CODE)
 
@@ -82,7 +81,6 @@ def test_wipe_code_activate_core():
 @legacy_only
 def test_wipe_code_activate_legacy():
     with EmulatorWrapper("legacy") as emu:
-        assert emu.client is not None
         # set up device
         setup_device_legacy(emu.client, PIN, WIPE_CODE)
 

@@ -14,6 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from typing import TYPE_CHECKING
 from unittest import mock
 
 import pytest
@@ -24,6 +25,10 @@ from .. import buttons
 from ..common import generate_entropy
 from . import reset
 
+if TYPE_CHECKING:
+    from ..device_handler import BackgroundDeviceHandler
+
+
 EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
 
 with_mock_urandom = mock.patch("os.urandom", mock.Mock(return_value=EXTERNAL_ENTROPY))
@@ -32,7 +37,9 @@ with_mock_urandom = mock.patch("os.urandom", mock.Mock(return_value=EXTERNAL_ENT
 @pytest.mark.skip_t1
 @pytest.mark.setup_client(uninitialized=True)
 @with_mock_urandom
-def test_reset_slip39_advanced_2of2groups_2of2shares(device_handler):
+def test_reset_slip39_advanced_2of2groups_2of2shares(
+    device_handler: "BackgroundDeviceHandler",
+):
     features = device_handler.features()
     debug = device_handler.debuglink()
 
@@ -76,7 +83,7 @@ def test_reset_slip39_advanced_2of2groups_2of2shares(device_handler):
     # confirm backup warning
     reset.confirm_read(debug, "Caution")
 
-    all_words = []
+    all_words: list[str] = []
     for _ in range(2):
         for _ in range(2):
             # read words
@@ -95,6 +102,7 @@ def test_reset_slip39_advanced_2of2groups_2of2shares(device_handler):
 
     # generate secret locally
     internal_entropy = debug.state().reset_entropy
+    assert internal_entropy is not None
     secret = generate_entropy(128, internal_entropy, EXTERNAL_ENTROPY)
 
     # validate that all combinations will result in the correct master secret
@@ -114,7 +122,9 @@ def test_reset_slip39_advanced_2of2groups_2of2shares(device_handler):
 @pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.slow
 @with_mock_urandom
-def test_reset_slip39_advanced_16of16groups_16of16shares(device_handler):
+def test_reset_slip39_advanced_16of16groups_16of16shares(
+    device_handler: "BackgroundDeviceHandler",
+):
     features = device_handler.features()
     debug = device_handler.debuglink()
 
@@ -158,7 +168,7 @@ def test_reset_slip39_advanced_16of16groups_16of16shares(device_handler):
     # confirm backup warning
     reset.confirm_read(debug, "Caution")
 
-    all_words = []
+    all_words: list[str] = []
     for _ in range(16):
         for _ in range(16):
             # read words
@@ -177,6 +187,7 @@ def test_reset_slip39_advanced_16of16groups_16of16shares(device_handler):
 
     # generate secret locally
     internal_entropy = debug.state().reset_entropy
+    assert internal_entropy is not None
     secret = generate_entropy(128, internal_entropy, EXTERNAL_ENTROPY)
 
     # validate that all combinations will result in the correct master secret

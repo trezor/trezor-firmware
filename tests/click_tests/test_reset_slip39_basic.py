@@ -14,6 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from typing import TYPE_CHECKING
 from unittest import mock
 
 import pytest
@@ -24,12 +25,16 @@ from .. import buttons
 from ..common import generate_entropy
 from . import reset
 
+if TYPE_CHECKING:
+    from ..device_handler import BackgroundDeviceHandler
+
+
 EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
 
 
 @pytest.mark.skip_t1
 @pytest.mark.setup_client(uninitialized=True)
-def test_reset_slip39_basic_1of1(device_handler):
+def test_reset_slip39_basic_1of1(device_handler: "BackgroundDeviceHandler"):
     features = device_handler.features()
     debug = device_handler.debuglink()
 
@@ -84,6 +89,7 @@ def test_reset_slip39_basic_1of1(device_handler):
 
         # generate secret locally
         internal_entropy = debug.state().reset_entropy
+        assert internal_entropy is not None
         secret = generate_entropy(128, internal_entropy, EXTERNAL_ENTROPY)
 
         # validate that all combinations will result in the correct master secret
@@ -101,7 +107,7 @@ def test_reset_slip39_basic_1of1(device_handler):
 
 @pytest.mark.skip_t1
 @pytest.mark.setup_client(uninitialized=True)
-def test_reset_slip39_basic_16of16(device_handler):
+def test_reset_slip39_basic_16of16(device_handler: "BackgroundDeviceHandler"):
     features = device_handler.features()
     debug = device_handler.debuglink()
 
@@ -142,7 +148,7 @@ def test_reset_slip39_basic_16of16(device_handler):
         # confirm backup warning
         reset.confirm_read(debug, "Caution")
 
-        all_words = []
+        all_words: list[str] = []
         for _ in range(16):
             # read words
             words = reset.read_words(debug)
@@ -160,6 +166,7 @@ def test_reset_slip39_basic_16of16(device_handler):
 
         # generate secret locally
         internal_entropy = debug.state().reset_entropy
+        assert internal_entropy is not None
         secret = generate_entropy(128, internal_entropy, EXTERNAL_ENTROPY)
 
         # validate that all combinations will result in the correct master secret

@@ -47,7 +47,7 @@ core_only = pytest.mark.skipif(
 
 
 def for_all(
-    *args,
+    *args: str,
     legacy_minimum_version: Tuple[int, int, int] = (1, 0, 0),
     core_minimum_version: Tuple[int, int, int] = (2, 0, 0)
 ) -> "MarkDecorator":
@@ -71,7 +71,7 @@ def for_all(
     # If any gens were selected, use them. If none, select all.
     enabled_gens = SELECTED_GENS or args
 
-    all_params = []
+    all_params: list[tuple[str, str | None]] = []
     for gen in args:
         if gen == "legacy":
             minimum_version = legacy_minimum_version

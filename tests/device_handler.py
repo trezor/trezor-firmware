@@ -23,7 +23,7 @@ class NullUI:
         raise NotImplementedError("NullUI should not be used with T1")
 
     @staticmethod
-    def get_passphrase(available_on_device=False):
+    def get_passphrase(available_on_device: bool = False):
         if available_on_device:
             return PASSPHRASE_ON_DEVICE
         else:
@@ -42,7 +42,7 @@ class BackgroundDeviceHandler:
         self.client.ui = NullUI  # type: ignore [NullUI is OK UI]
         self.client.watch_layout(True)
 
-    def run(self, function, *args, **kwargs):
+    def run(self, function, *args, **kwargs) -> None:
         if self.task is not None:
             raise RuntimeError("Wait for previous task first")
         self.task = self._pool.submit(function, self.client, *args, **kwargs)
@@ -60,7 +60,7 @@ class BackgroundDeviceHandler:
                 pass
         self.task = None
 
-    def restart(self, emulator: "Emulator"):
+    def restart(self, emulator: "Emulator") -> None:
         # TODO handle actual restart as well
         self.kill_task()
         emulator.restart()

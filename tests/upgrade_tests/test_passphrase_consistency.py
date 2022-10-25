@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from typing import Iterator
+
 import pytest
 
 from trezorlib import btc, device, mapping, messages, models, protobuf
@@ -41,9 +43,8 @@ mapping.DEFAULT_MAPPING.register(ApplySettingsCompat)
 
 
 @pytest.fixture
-def emulator(gen: str, tag: str) -> Emulator:
+def emulator(gen: str, tag: str) -> Iterator[Emulator]:
     with EmulatorWrapper(gen, tag) as emu:
-        assert emu.client is not None
         # set up a passphrase-protected device
         device.reset(
             emu.client,
@@ -64,7 +65,6 @@ def emulator(gen: str, tag: str) -> Emulator:
 )
 def test_passphrase_works(emulator: Emulator):
     """Check that passphrase handling in trezorlib works correctly in all versions."""
-    assert emulator.client is not None
     if emulator.client.features.model == "T" and emulator.client.version < (2, 3, 0):
         expected_responses = [
             messages.PassphraseRequest,
@@ -102,7 +102,6 @@ def test_init_device(emulator: Emulator):
     """Check that passphrase caching and session_id retaining works correctly across
     supported versions.
     """
-    assert emulator.client is not None
     if emulator.client.features.model == "T" and emulator.client.version < (2, 3, 0):
         expected_responses = [
             messages.PassphraseRequest,

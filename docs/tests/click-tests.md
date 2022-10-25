@@ -17,7 +17,7 @@ In the `trezor-firmware` checkout, in the root of the monorepo, install the envi
 poetry install
 ```
 
-Switch to a shell inside theenvironment:
+Switch to a shell inside the environment:
 
 ```sh
 poetry shell

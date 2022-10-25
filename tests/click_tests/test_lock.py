@@ -15,19 +15,24 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import time
+from typing import TYPE_CHECKING
 
 import pytest
 
 from .. import buttons, common
 
+if TYPE_CHECKING:
+    from ..device_handler import BackgroundDeviceHandler
+
+
 PIN4 = "1234"
 
 
 @pytest.mark.setup_client(pin=PIN4)
-def test_hold_to_lock(device_handler):
+def test_hold_to_lock(device_handler: "BackgroundDeviceHandler"):
     debug = device_handler.debuglink()
 
-    def hold(duration, wait=True):
+    def hold(duration: int, wait: bool = True) -> None:
         debug.input(x=13, y=37, hold_ms=duration, wait=wait)
         time.sleep(duration / 1000 + 0.5)
 
@@ -36,7 +41,7 @@ def test_hold_to_lock(device_handler):
     # unlock with message
     device_handler.run(common.get_test_address)
     layout = debug.wait_layout()
-    assert layout.text == "PinDialog"
+    assert layout.text == "< PinKeyboard >"
     debug.input("1234", wait=True)
     assert device_handler.result()
 
@@ -52,7 +57,7 @@ def test_hold_to_lock(device_handler):
 
     # unlock by touching
     layout = debug.click(buttons.INFO, wait=True)
-    assert layout.text == "PinDialog"
+    assert layout.text == "< PinKeyboard >"
     debug.input("1234", wait=True)
 
     assert device_handler.features().unlocked is True

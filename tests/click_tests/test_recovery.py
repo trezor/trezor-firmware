@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from typing import TYPE_CHECKING
+
 import pytest
 
 from trezorlib import device, messages
@@ -21,10 +23,13 @@ from trezorlib import device, messages
 from ..common import MNEMONIC_SLIP39_BASIC_20_3of6
 from . import recovery
 
+if TYPE_CHECKING:
+    from ..device_handler import BackgroundDeviceHandler
+
 
 @pytest.mark.skip_t1
 @pytest.mark.setup_client(uninitialized=True)
-def test_recovery(device_handler):
+def test_recovery(device_handler: "BackgroundDeviceHandler"):
     features = device_handler.features()
     debug = device_handler.debuglink()
 
