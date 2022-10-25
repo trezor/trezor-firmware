@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 from trezor import ui, wire
 from trezor.enums import ButtonRequestType
 from trezor.messages import AuthorizeCoinJoin, Success
-from trezor.strings import format_amount
 from trezor.ui.layouts import confirm_action, confirm_coinjoin, confirm_metadata
 
 from apps.common import authorization, safety_checks
@@ -12,7 +11,7 @@ from apps.common.keychain import FORBIDDEN_KEY_PATH
 from apps.common.paths import SLIP25_PURPOSE, validate_path
 
 from .authorization import FEE_RATE_DECIMALS
-from .common import BIP32_WALLET_DEPTH
+from .common import BIP32_WALLET_DEPTH, format_fee_rate
 from .keychain import validate_path_against_script_type, with_keychain
 
 if TYPE_CHECKING:
@@ -72,14 +71,16 @@ async def authorize_coinjoin(
         ),
     )
 
-    max_fee_per_vbyte = format_amount(msg.max_fee_per_kvbyte, 3)
+    max_fee_per_vbyte = format_fee_rate(
+        msg.max_fee_per_kvbyte / 1000, coin, include_shortcut=True
+    )
 
     if msg.max_fee_per_kvbyte > coin.maxfee_kb:
         await confirm_metadata(
             ctx,
             "fee_over_threshold",
             "High mining fee",
-            "The mining fee of\n{} sats/vbyte\nis unexpectedly high.",
+            "The mining fee of\n{}\nis unexpectedly high.",
             max_fee_per_vbyte,
             ButtonRequestType.FeeOverThreshold,
         )

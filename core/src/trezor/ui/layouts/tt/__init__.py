@@ -1013,7 +1013,7 @@ async def confirm_coinjoin(
     text.bold(f"{max_rounds}\n")
     text.br_half()
     text.normal("Maximum mining fee:\n")
-    text.bold(f"{max_fee_per_vbyte} sats/vbyte")
+    text.bold(max_fee_per_vbyte)
     await raise_if_cancelled(
         interact(ctx, HoldToConfirm(text), "coinjoin_final", ButtonRequestType.Other)
     )

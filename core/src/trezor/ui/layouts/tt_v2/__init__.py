@@ -925,7 +925,7 @@ async def confirm_coinjoin(
             _RustLayout(
                 trezorui2.confirm_coinjoin(
                     max_rounds=str(max_rounds),
-                    max_feerate=f"{max_fee_per_vbyte} sats/vbyte",
+                    max_feerate=max_fee_per_vbyte,
                 )
             ),
             "coinjoin_final",
