@@ -427,14 +427,18 @@ extern "C" fn screen_install_success(
 
 #[no_mangle]
 extern "C" fn screen_welcome() -> u32 {
-    let mut messages = ParagraphVecShort::new();
     display::rect_fill(screen(), WELCOME_COLOR);
+
+    let mut messages = ParagraphVecShort::new();
     messages.add(Paragraph::new(&theme::TEXT_WELCOME, "Get started with").centered());
     messages.add(Paragraph::new(&theme::TEXT_WELCOME, "your trezor at").centered());
-    messages.add(Paragraph::new(&theme::TEXT_WELCOME_BOLD, "trezor.io/start").centered());
+    messages.add(
+        Paragraph::new(&theme::TEXT_WELCOME_BOLD, "trezor.io/start")
+            .centered()
+            .with_top_padding(2),
+    );
     let mut frame =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
-
     frame.place(constant::screen());
     frame.paint();
     0
