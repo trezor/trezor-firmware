@@ -6,6 +6,7 @@ from trezor.crypto import bech32, bip32, der
 from trezor.crypto.curve import bip340, secp256k1
 from trezor.crypto.hashlib import sha256
 from trezor.enums import InputScriptType, OutputScriptType
+from trezor.strings import format_amount
 from trezor.utils import HashWriter, ensure
 
 if TYPE_CHECKING:
@@ -179,3 +180,20 @@ def tagged_hashwriter(tag: bytes) -> HashWriter:
     ctx = sha256(tag_digest)
     ctx.update(tag_digest)
     return HashWriter(ctx)
+
+
+def format_fee_rate(
+    fee_rate: float, coin: CoinInfo, include_shortcut: bool = False
+) -> str:
+    # Use format_amount to get correct thousands separator -- micropython's built-in
+    # formatting doesn't add thousands sep to floating point numbers.
+    # We multiply by 100 to get a fixed-point integer with two decimal places,
+    # and add 0.5 to round to the nearest integer.
+    fee_rate_formatted = format_amount(int(fee_rate * 100 + 0.5), 2)
+
+    if include_shortcut and coin.coin_shortcut != "BTC":
+        shortcut = " " + coin.coin_shortcut
+    else:
+        shortcut = ""
+
+    return f"{fee_rate_formatted} sat{shortcut}/{'v' if coin.segwit else ''}B"
