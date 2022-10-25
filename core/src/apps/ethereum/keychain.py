@@ -104,12 +104,17 @@ def with_keychain_and_network_from_path(
         func: HandlerWithKeychainAndNetworkFromPath[MsgInKeychainNetworkPath, MsgOut]
     ) -> Handler[MsgInKeychainNetworkPath, MsgOut]:
         async def wrapper(ctx: Context, msg: MsgInKeychainNetworkPath) -> MsgOut:
-            if msg.encoded_network:
-                network = definitions.get_and_check_definiton(
+            # make sure that "network"'s slip44 is equal to the one present in "address_n"
+            slip44 = (msg.address_n[1] & 0x7FFF_FFFF) if len(msg.address_n) > 2 else 0
+            network = networks.by_slip44(slip44) or networks.UNKNOWN_NETWORK
+
+            if network is networks.UNKNOWN_NETWORK and msg.encoded_network:
+                network = definitions.get_and_check_definition(
                     msg.encoded_network, EthereumNetworkInfo
                 )
-            else:
-                network = networks.UNKNOWN_NETWORK
+                if network.slip44 != slip44:
+                    network = networks.UNKNOWN_NETWORK
+
             schemas = _schemas_from_address_n(patterns, msg.address_n, network)
             keychain = await get_keychain(ctx, CURVE, schemas)
             with keychain:
