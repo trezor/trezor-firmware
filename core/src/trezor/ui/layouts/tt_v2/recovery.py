@@ -9,7 +9,7 @@ from ..common import interact
 from . import _RustLayout
 
 if TYPE_CHECKING:
-    from typing import Iterable, Callable, Any
+    from typing import Iterable, Callable
     from trezor.wire import GenericContext
 
 
@@ -42,18 +42,11 @@ async def request_word_count(ctx: GenericContext, dry_run: bool) -> int:
 async def request_word(
     ctx: GenericContext, word_index: int, word_count: int, is_slip39: bool
 ) -> str:
+    prompt = f"Type word {word_index + 1} of {word_count}:"
     if is_slip39:
-        keyboard: Any = _RustLayout(
-            trezorui2.request_bip39(
-                prompt=f"Type word {word_index + 1} of {word_count}:"
-            )
-        )
+        keyboard = _RustLayout(trezorui2.request_slip39(prompt=prompt))
     else:
-        keyboard = _RustLayout(
-            trezorui2.request_slip39(
-                prompt=f"Type word {word_index + 1} of {word_count}:"
-            )
-        )
+        keyboard = _RustLayout(trezorui2.request_bip39(prompt=prompt))
 
     word: str = await ctx.wait(keyboard)
     return word

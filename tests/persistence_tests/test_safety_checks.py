@@ -1,3 +1,5 @@
+from typing import Iterator
+
 import pytest
 
 from trezorlib import debuglink, device
@@ -9,7 +11,7 @@ from ..upgrade_tests import core_only
 
 
 @pytest.fixture
-def emulator() -> Emulator:
+def emulator() -> Iterator[Emulator]:
     with EmulatorWrapper("core") as emu:
         yield emu
 
@@ -26,7 +28,6 @@ def emulator() -> Emulator:
 def test_safety_checks_level_after_reboot(
     emulator: Emulator, set_level: SafetyCheckLevel, after_level: SafetyCheckLevel
 ):
-    assert emulator.client is not None
     device.wipe(emulator.client)
     debuglink.load_device(
         emulator.client,
