@@ -82,11 +82,14 @@ def test_2_of_3(client: Client):
     )
 
     # Expected responses are the same for both two signings
+    tt = client.features.model == "T"
     expected_responses = [
         request_input(0),
         request_output(0),
         messages.ButtonRequest(code=B.ConfirmOutput),
+        (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
         messages.ButtonRequest(code=B.SignTx),
+        (tt, messages.ButtonRequest(code=B.SignTx)),
         request_input(0),
         request_meta(TXHASH_6b07c1),
         request_input(0, TXHASH_6b07c1),

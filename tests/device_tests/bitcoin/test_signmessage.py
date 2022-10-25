@@ -18,7 +18,12 @@
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import TrezorClientDebugLink as Client, message_filters
+from trezorlib.debuglink import (
+    LayoutContent,
+    TrezorClientDebugLink as Client,
+    message_filters,
+    multipage_content,
+)
 from trezorlib.tools import parse_path
 
 S = messages.InputScriptType
@@ -282,38 +287,29 @@ MESSAGE_LENGTHS = (
 
 @pytest.mark.skip_t1
 @pytest.mark.parametrize("message", MESSAGE_LENGTHS)
-def test_signmessage_pagination(client: Client, message):
+def test_signmessage_pagination(client: Client, message: str):
     message_read = ""
 
     def input_flow():
         # collect screen contents into `message_read`.
-        # Join lines that are separated by a single "-" string, space-separate lines otherwise.
+        # Using a helper debuglink function to assemble the final text.
         nonlocal message_read
+        layouts: list[LayoutContent] = []
 
         # confirm address
         br = yield
-        layout = client.debug.wait_layout()
+        client.debug.wait_layout()
         client.debug.press_yes()
 
-        # start assuming there was a word break; this avoids prepending space at start
-        word_break = True
         br = yield
         for i in range(br.pages):
             layout = client.debug.wait_layout()
-            for line in layout.lines[1:]:
-                if line == "-":
-                    # next line will be attached without space
-                    word_break = True
-                elif word_break:
-                    # attach without space, reset word_break
-                    message_read += line
-                    word_break = False
-                else:
-                    # attach with space
-                    message_read += " " + line
+            layouts.append(layout)
 
             if i < br.pages - 1:
                 client.debug.swipe_up()
+
+        message_read = multipage_content(layouts)
 
         client.debug.press_yes()
 
@@ -326,7 +322,10 @@ def test_signmessage_pagination(client: Client, message):
             n=parse_path("m/44h/0h/0h/0/0"),
             message=message,
         )
-    assert "Confirm message:   " + message.replace("\n", " ") == message_read
+
+    # We cannot differentiate between a newline and space in the message read from Trezor.
+    expected_message = "Confirm message: " + message.replace("\n", " ").rstrip()
+    assert expected_message == message_read
 
 
 @pytest.mark.skip_t1
