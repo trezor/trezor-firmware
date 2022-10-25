@@ -5,12 +5,14 @@ import copy
 import datetime
 import io
 import json
+import logging
 import os
 import pathlib
 import re
 import shutil
 from binascii import hexlify
 from collections import defaultdict
+import sys
 from typing import Any, TextIO, cast
 from urllib.parse import urlencode
 
@@ -46,6 +48,15 @@ DEFINITIONS_CACHE_FILEPATH = pathlib.Path("definitions-cache.json")
 
 
 # ====== utils ======
+
+
+def setup_logging(verbose: bool):
+    log_level = logging.DEBUG if verbose else logging.WARNING
+    root = logging.getLogger()
+    root.setLevel(log_level)
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(log_level)
+    root.addHandler(handler)
 
 
 def hash_dict_on_keys(
@@ -123,7 +134,7 @@ class EthereumDefinitionsCachedDownloader:
         self.cache = Cache(DEFINITIONS_CACHE_FILEPATH)
 
         if disable_refresh or (not self.cache.is_expired() and not force_refresh):
-            print("Loading cached Ethereum definitions data")
+            logging.info("Loading cached Ethereum definitions data")
             self.cache.load()
             self.running_from_cache = True
         else:
@@ -148,7 +159,7 @@ class EthereumDefinitionsCachedDownloader:
         if self.running_from_cache:
             return self.cache.get(key)
 
-        print(f"Fetching data from {url}")
+        logging.info(f"Fetching data from {url}")
 
         r = self.session.get(url, params=encoded_params, timeout=60)
         r.raise_for_status()
@@ -430,7 +441,7 @@ def check_tokens_collisions(tokens: list[dict], old_tokens: list[dict] | None) -
             no_of_collisions += 1
 
     if no_of_collisions > 0:
-        print(f"\nNumber of collisions: {no_of_collisions}")
+        logging.info(f"\nNumber of collisions: {no_of_collisions}")
 
     # solve collisions
     delete_indexes: list[int] = []
@@ -438,7 +449,7 @@ def check_tokens_collisions(tokens: list[dict], old_tokens: list[dict] | None) -
         if len(v) > 1:
             coliding_networks = [tokens[i] for i in v]
             index = print_definitions_collision("TOKEN", coliding_networks, old_tokens)
-            print(f"Keeping the definition with index {index}.")
+            logging.info(f"Keeping the definition with index {index}.")
             v.pop(index)
             delete_indexes.extend(v)
 
@@ -679,7 +690,7 @@ def check_definitions_list(
             and orig_def.get("shortcut") != new_def.get("shortcut")
             and not force
         ):
-            print(
+            logging.error(
                 "\nERROR: Symbol change in this definition! To be able to approve this change re-run with `--force` argument."
             )
             accept_change = check_ok = False
@@ -723,7 +734,7 @@ def check_definitions_list(
         print_change = any_in_top_100(old_def, new_def)
         # if the change contains symbol change "--force" parameter must be used to be able to accept this change
         if old_def.get("shortcut") != new_def.get("shortcut") and not force:
-            print(
+            logging.error(
                 "\nERROR: Symbol change in this definition! To be able to approve this change re-run with `--force` argument."
             )
             accept_change = check_ok = False
@@ -921,6 +932,7 @@ def cli() -> None:
     "Defaults to `$(DEFS_DIR)/ethereum/tokens` if env variable `DEFS_DIR` is set, otherwise to "
     '`"this script location"/../defs/ethereum/tokens`',
 )
+@click.option("-v", "--verbose", is_flag=True, help="Display more info")
 def prepare_definitions(
     refresh: bool | None,
     interactive: bool,
@@ -929,8 +941,11 @@ def prepare_definitions(
     deffile: pathlib.Path,
     networks_dir: pathlib.Path,
     tokens_dir: pathlib.Path,
+    verbose: bool,
 ) -> None:
     """Prepare Ethereum definitions."""
+    setup_logging(verbose)
+
     # init Ethereum definitions downloader
     downloader = EthereumDefinitionsCachedDownloader(refresh)
 
@@ -1066,7 +1081,7 @@ def prepare_definitions(
             )
             f.write("\n")
     else:
-        print("Error occured - results not saved.")
+        logging.error("Error occured - results not saved.")
 
 
 @cli.command()
@@ -1095,13 +1110,15 @@ def prepare_definitions(
     "--signedroot",
     help="Signed Merkle tree root hash to be added",
 )
+@click.option("-v", "--verbose", is_flag=True, help="Display more info")
 def sign_definitions(
-    deffile: pathlib.Path, outdir: pathlib.Path, publickey: TextIO, signedroot: str
+    deffile: pathlib.Path, outdir: pathlib.Path, publickey: TextIO, signedroot: str, verbose: bool
 ) -> None:
     """Generate signed Ethereum definitions for python-trezor and others.
     If ran without `--publickey` and/or `--signedroot` it prints the computed Merkle tree root hash.
     If ran with `--publickey` and `--signedroot` it checks the signed root with generated one and saves the definitions.
     """
+    setup_logging(verbose)
 
     if (publickey is None) != (signedroot is None):
         raise click.ClickException(
