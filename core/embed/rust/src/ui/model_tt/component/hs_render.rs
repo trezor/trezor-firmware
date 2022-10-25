@@ -201,20 +201,20 @@ fn homescreen_line(
     text_buffer: &mut BufferText,
     text_info: HomescreenTextInfo,
     image_data: &mut [u8; (HOMESCREEN_IMAGE_SIZE * 2) as usize],
-    y_tmp: i16,
+    y: i16,
 ) -> bool {
-    let t_buffer = unsafe { get_buffer_4bpp((y_tmp % 2) as u16, true) };
-    let mut img_buffer = unsafe { get_buffer_16bpp((y_tmp % 2) as u16, false) };
+    let t_buffer = unsafe { get_buffer_4bpp((y & 0x1) as u16, true) };
+    let mut img_buffer = unsafe { get_buffer_16bpp((y & 0x1) as u16, false) };
 
     for x in 0..HOMESCREEN_IMAGE_SIZE {
         let x0 = (2 * x) as usize;
-        let x1 = (2 * x + 1) as usize;
+        let x1 = x0 + 1;
         let hi = image_data[x1];
         let lo = image_data[x0];
 
-        let c = if y_tmp > HOMESCREEN_DIM_START {
+        let c = if y > HOMESCREEN_DIM_START {
             let coef = 65536
-                - (((y_tmp - HOMESCREEN_DIM_START) as u32)
+                - (((y - HOMESCREEN_DIM_START) as u32)
                     * ((65536_f32 * HOMESCREEN_DIM) as u32 / HOMESCREEN_DIM_HIEGHT as u32));
 
             let r = hi & 0xF8;
@@ -230,14 +230,14 @@ fn homescreen_line(
         };
 
         for i in 0..HOMESCREEN_IMAGE_SCALE {
-            let idx = (HOMESCREEN_IMAGE_SCALE * x + i) as usize;
-            img_buffer.buffer[2 * idx + 1] = (c >> 8) as u8;
-            img_buffer.buffer[2 * idx] = (c & 0xFF) as u8;
+            let j = 2 * (HOMESCREEN_IMAGE_SCALE * x + i) as usize;
+            img_buffer.buffer[j + 1] = (c >> 8) as u8;
+            img_buffer.buffer[j] = (c & 0xFF) as u8;
         }
     }
 
-    let done = homescreen_get_fg_text(y_tmp, text_info, text_buffer, t_buffer);
-    homescreen_get_fg_icon(y_tmp, text_info, icon_data, t_buffer);
+    let done = homescreen_get_fg_text(y, text_info, text_buffer, t_buffer);
+    homescreen_get_fg_icon(y, text_info, icon_data, t_buffer);
 
     dma2d_wait_for_transfer();
     dma2d_setup_4bpp_over_16bpp(text_info.2.into());
