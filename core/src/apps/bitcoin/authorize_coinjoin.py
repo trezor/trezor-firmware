@@ -55,7 +55,7 @@ async def authorize_coinjoin(
         ctx,
         "coinjoin_coordinator",
         title="Authorize CoinJoin",
-        description="Do you really want to take part in a CoinJoin transaction at:\n{}",
+        description="Do you want to take\npart in a series of\nCoinJoin rounds at:\n{}",
         description_param=msg.coordinator,
         description_param_font=ui.MONO,
         icon=ui.ICON_RECOVERY,
