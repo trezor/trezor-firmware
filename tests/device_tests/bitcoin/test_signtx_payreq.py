@@ -200,12 +200,20 @@ def test_payment_request_details(client: Client):
         layout = client.debug.wait_layout()
         assert outputs[0].address[:16] in layout.text
         client.debug.press_yes()
+        yield  # confirm first output
+        client.debug.wait_layout()
+        client.debug.press_yes()
 
         yield  # confirm second output
         layout = client.debug.wait_layout()
         assert outputs[1].address[:16] in layout.text
         client.debug.press_yes()
+        yield  # confirm second output
+        client.debug.wait_layout()
+        client.debug.press_yes()
 
+        yield  # confirm transaction
+        client.debug.press_yes()
         yield  # confirm transaction
         client.debug.press_yes()
 

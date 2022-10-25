@@ -72,13 +72,16 @@ def test_send_decred(client: Client):
     )
 
     with client:
+        tt = client.features.model == "T"
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.FeeOverThreshold),
                 messages.ButtonRequest(code=B.SignTx),
+                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(FAKE_TXHASH_4d8acd),
                 request_input(0, FAKE_TXHASH_4d8acd),
@@ -133,8 +136,10 @@ def test_purchase_ticket_decred(client: Client):
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.ConfirmOutput),
                 request_output(1),
                 request_output(2),
+                messages.ButtonRequest(code=B.SignTx),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(FAKE_TXHASH_4d8acd),
@@ -191,13 +196,16 @@ def test_spend_from_stake_generation_and_revocation_decred(client: Client):
     )
 
     with client:
+        tt = client.features.model == "T"
         client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
+                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(FAKE_TXHASH_f8e2f2),
                 request_input(0, FAKE_TXHASH_f8e2f2),
@@ -271,6 +279,7 @@ def test_send_decred_change(client: Client):
     )
 
     with client:
+        tt = client.features.model == "T"
         client.set_expected_responses(
             [
                 request_input(0),
@@ -278,8 +287,10 @@ def test_send_decred_change(client: Client):
                 request_input(2),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.SignTx),
+                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(FAKE_TXHASH_4d8acd),
                 request_input(0, FAKE_TXHASH_4d8acd),
@@ -376,6 +387,7 @@ def test_decred_multisig_change(client: Client):
         )
 
         with client:
+            tt = client.features.model == "T"
             client.set_expected_responses(
                 [
                     request_input(0),
@@ -383,7 +395,9 @@ def test_decred_multisig_change(client: Client):
                     request_output(0),
                     request_output(1),
                     messages.ButtonRequest(code=B.ConfirmOutput),
+                    (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                     messages.ButtonRequest(code=B.SignTx),
+                    (tt, messages.ButtonRequest(code=B.SignTx)),
                     request_input(0),
                     request_meta(FAKE_TXHASH_9ac7d2),
                     request_input(0, FAKE_TXHASH_9ac7d2),

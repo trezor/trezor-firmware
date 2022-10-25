@@ -49,21 +49,23 @@ def test_sd_no_format(client: Client):
 @pytest.mark.sd_card
 @pytest.mark.setup_client(pin="1234")
 def test_sd_protect_unlock(client: Client):
+    layout = client.debug.wait_layout
+
     def input_flow_enable_sd_protect():
         yield  # Enter PIN to unlock device
-        assert "PinDialog" == client.debug.wait_layout().text
+        assert "< PinKeyboard >" == layout().text
         client.debug.input("1234")
 
         yield  # do you really want to enable SD protection
-        assert "SD card protection" in client.debug.wait_layout().text
+        assert "SD card protection" in layout().get_content()
         client.debug.press_yes()
 
         yield  # enter current PIN
-        assert "PinDialog" == client.debug.wait_layout().text
+        assert "< PinKeyboard >" == layout().text
         client.debug.input("1234")
 
         yield  # you have successfully enabled SD protection
-        assert "Success" in client.debug.wait_layout().text
+        assert "You have successfully enabled SD protection." in layout().get_content()
         client.debug.press_yes()
 
     with client:
@@ -73,23 +75,23 @@ def test_sd_protect_unlock(client: Client):
 
     def input_flow_change_pin():
         yield  # do you really want to change PIN?
-        assert "Change PIN" in client.debug.wait_layout().text
+        assert "CHANGE PIN" == layout().get_title()
         client.debug.press_yes()
 
         yield  # enter current PIN
-        assert "PinDialog" == client.debug.wait_layout().text
+        assert "< PinKeyboard >" == layout().text
         client.debug.input("1234")
 
         yield  # enter new PIN
-        assert "PinDialog" == client.debug.wait_layout().text
+        assert "< PinKeyboard >" == layout().text
         client.debug.input("1234")
 
         yield  # enter new PIN again
-        assert "PinDialog" == client.debug.wait_layout().text
+        assert "< PinKeyboard >" == layout().text
         client.debug.input("1234")
 
         yield  # Pin change successful
-        assert "Success" in client.debug.wait_layout().text
+        assert "You have successfully changed your PIN." in layout().get_content()
         client.debug.press_yes()
 
     with client:
@@ -101,15 +103,15 @@ def test_sd_protect_unlock(client: Client):
 
     def input_flow_change_pin_format():
         yield  # do you really want to change PIN?
-        assert "Change PIN" in client.debug.wait_layout().text
+        assert "CHANGE PIN" == layout().get_title()
         client.debug.press_yes()
 
         yield  # enter current PIN
-        assert "PinDialog" == client.debug.wait_layout().text
+        assert "< PinKeyboard >" == layout().text
         client.debug.input("1234")
 
         yield  # SD card problem
-        assert "Wrong SD card" in client.debug.wait_layout().text
+        assert "Wrong SD card" in layout().get_content()
         client.debug.press_no()  # close
 
     with client, pytest.raises(TrezorFailure) as e:

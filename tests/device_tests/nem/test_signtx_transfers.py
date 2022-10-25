@@ -31,6 +31,7 @@ pytestmark = [
 
 # assertion data from T1
 def test_nem_signtx_simple(client: Client):
+    tt = client.features.model == "T"
     with client:
         client.set_expected_responses(
             [
@@ -38,6 +39,12 @@ def test_nem_signtx_simple(client: Client):
                 messages.ButtonRequest(code=messages.ButtonRequestType.ConfirmOutput),
                 # Unencrypted message
                 messages.ButtonRequest(code=messages.ButtonRequestType.ConfirmOutput),
+                (
+                    tt,
+                    messages.ButtonRequest(
+                        code=messages.ButtonRequestType.ConfirmOutput
+                    ),
+                ),
                 # Confirm recipient
                 messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
                 messages.NEMSignedTx,
@@ -75,12 +82,19 @@ def test_nem_signtx_simple(client: Client):
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
 def test_nem_signtx_encrypted_payload(client: Client):
     with client:
+        tt = client.features.model == "T"
         client.set_expected_responses(
             [
                 # Confirm transfer and network fee
                 messages.ButtonRequest(code=messages.ButtonRequestType.ConfirmOutput),
                 # Ask for encryption
                 messages.ButtonRequest(code=messages.ButtonRequestType.ConfirmOutput),
+                (
+                    tt,
+                    messages.ButtonRequest(
+                        code=messages.ButtonRequestType.ConfirmOutput
+                    ),
+                ),
                 # Confirm recipient
                 messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
                 messages.NEMSignedTx,

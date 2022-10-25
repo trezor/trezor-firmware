@@ -47,20 +47,19 @@ def do_recover_legacy(client: Client, mnemonic, **kwargs):
 
 
 def do_recover_core(client: Client, mnemonic, **kwargs):
+    layout = client.debug.wait_layout
+
     def input_flow():
         yield
-        layout = client.debug.wait_layout()
-        assert "check the recovery seed" in layout.text.replace("\n", " ")
+        assert "check the recovery seed" in layout().get_content()
         client.debug.click(buttons.OK)
 
         yield
-        layout = client.debug.wait_layout()
-        assert "Select number of words" in layout.text
+        assert "Select number of words" in layout().get_content()
         client.debug.click(buttons.OK)
 
         yield
-        layout = client.debug.wait_layout()
-        assert layout.text == "WordSelector"
+        assert "SelectWordCount" in layout().text
         # click the number
         word_option_offset = 6
         word_options = (12, 18, 20, 24, 33)
@@ -68,8 +67,7 @@ def do_recover_core(client: Client, mnemonic, **kwargs):
         client.debug.click(buttons.grid34(index % 3, index // 3))
 
         yield
-        layout = client.debug.wait_layout()
-        assert "Enter recovery seed" in layout.text
+        assert "Enter recovery seed" in layout().get_content()
         client.debug.click(buttons.OK)
 
         yield
@@ -116,49 +114,43 @@ def test_invalid_seed_t1(client: Client):
 
 @pytest.mark.skip_t1
 def test_invalid_seed_core(client: Client):
+    layout = client.debug.wait_layout
+
     def input_flow():
         yield
-        layout = client.debug.wait_layout()
-        assert "check the recovery seed" in layout.text.replace("\n", " ")
+        assert "check the recovery seed" in layout().get_content()
         client.debug.click(buttons.OK)
 
         yield
-        layout = client.debug.wait_layout()
-        assert "Select number of words" in layout.text
+        assert "Select number of words" in layout().get_content()
         client.debug.click(buttons.OK)
 
         yield
-        layout = client.debug.wait_layout()
-        assert layout.text == "WordSelector"
+        assert "SelectWordCount" in layout().text
         # select 12 words
         client.debug.click(buttons.grid34(0, 2))
 
         yield
-        layout = client.debug.wait_layout()
-        assert "Enter recovery seed" in layout.text
+        assert "Enter recovery seed" in layout().get_content()
         client.debug.click(buttons.OK)
 
         yield
         for _ in range(12):
-            layout = client.debug.wait_layout()
-            assert layout.text == "Bip39Keyboard"
+            assert layout().text == "< MnemonicKeyboard >"
             client.debug.input("stick")
 
         br = yield
-        layout = client.debug.wait_layout()
         assert br.code == messages.ButtonRequestType.Warning
-        assert "invalid recovery seed" in layout.text
+        assert "invalid recovery seed" in layout().get_content()
         client.debug.click(buttons.OK)
 
         yield
         # retry screen
-        layout = client.debug.wait_layout()
-        assert "Select number of words" in layout.text
+        assert "Select number of words" in layout().get_content()
         client.debug.click(buttons.CANCEL)
 
         yield
-        layout = client.debug.wait_layout()
-        assert "abort" in layout.text
+        assert "ABORT SEED CHECK" == layout().get_title()
         client.debug.click(buttons.OK)
 
     with client:

@@ -104,12 +104,15 @@ def test_one_one_fee(client: Client):
     )
 
     with client:
+        tt = client.features.model == "T"
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
+                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_0dac36),
                 request_input(0, TXHASH_0dac36),
@@ -156,13 +159,16 @@ def test_testnet_one_two_fee(client: Client):
     )
 
     with client:
+        tt = client.features.model == "T"
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.SignTx),
+                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_e5040e),
                 request_input(0, TXHASH_e5040e),
@@ -205,13 +211,16 @@ def test_testnet_fee_high_warning(client: Client):
     )
 
     with client:
+        tt = client.features.model == "T"
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.FeeOverThreshold),
                 messages.ButtonRequest(code=B.SignTx),
+                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_25fee5),
                 request_input(0, TXHASH_25fee5),
@@ -256,13 +265,16 @@ def test_one_two_fee(client: Client):
     )
 
     with client:
+        tt = client.features.model == "T"
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 request_output(1),
                 messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
+                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_50f6f1),
                 request_input(0, TXHASH_50f6f1),
@@ -316,15 +328,19 @@ def test_one_three_fee(client: Client):
     )
 
     with client:
+        tt = client.features.model == "T"
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(2),
                 messages.ButtonRequest(code=B.SignTx),
+                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_bb5169),
                 request_input(0, TXHASH_bb5169),
@@ -384,6 +400,7 @@ def test_two_two(client: Client):
     )
 
     with client:
+        tt = client.features.model == "T"
         client.set_expected_responses(
             [
                 request_input(0),
@@ -391,7 +408,9 @@ def test_two_two(client: Client):
                 request_output(0),
                 request_output(1),
                 messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
+                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_ac4ca0),
                 request_input(0, TXHASH_ac4ca0),
@@ -527,16 +546,19 @@ def test_lots_of_change(client: Client):
     request_change_outputs = [request_output(i + 1) for i in range(cnt)]
 
     with client:
+        tt = client.features.model == "T"
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
             ]
             + request_change_outputs
             + [
                 messages.ButtonRequest(code=B.SignTx),
                 messages.ButtonRequest(code=B.SignTx),
+                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_892d06),
                 request_input(0, TXHASH_892d06),
@@ -577,13 +599,16 @@ def test_fee_high_warning(client: Client):
     )
 
     with client:
+        tt = client.features.model == "T"
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.FeeOverThreshold),
                 messages.ButtonRequest(code=B.SignTx),
+                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_1f326f),
                 request_input(0, TXHASH_1f326f),
@@ -636,7 +661,13 @@ def test_fee_high_hardfail(client: Client):
 
         def input_flow():
             nonlocal finished
-            for expected in (B.ConfirmOutput, B.FeeOverThreshold, B.SignTx):
+            for expected in (
+                B.ConfirmOutput,
+                B.ConfirmOutput,
+                B.FeeOverThreshold,
+                B.SignTx,
+                B.SignTx,
+            ):
                 br = yield
                 assert br.code == expected
                 client.debug.press_yes()
@@ -673,11 +704,13 @@ def test_not_enough_funds(client: Client):
     )
 
     with client:
+        tt = client.features.model == "T"
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.Failure(code=messages.FailureType.NotEnoughFunds),
             ]
         )
@@ -702,12 +735,15 @@ def test_p2sh(client: Client):
     )
 
     with client:
+        tt = client.features.model == "T"
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
+                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_58d56a),
                 request_input(0, TXHASH_58d56a),
@@ -788,6 +824,7 @@ def test_attack_change_outputs(client: Client):
 
     # Test if the transaction can be signed normally
     with client:
+        tt = client.features.model == "T"
         client.set_expected_responses(
             [
                 request_input(0),
@@ -795,7 +832,9 @@ def test_attack_change_outputs(client: Client):
                 request_output(0),
                 request_output(1),
                 messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
+                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_ac4ca0),
                 request_input(0, TXHASH_ac4ca0),
@@ -954,14 +993,17 @@ def test_attack_change_input_address(client: Client):
 
     # Now run the attack, must trigger the exception
     with client:
+        tt = client.features.model == "T"
         client.set_filter(messages.TxAck, attack_processor)
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.SignTx),
+                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_d2dcda),
                 request_input(0, TXHASH_d2dcda),
@@ -1004,12 +1046,15 @@ def test_spend_coinbase(client: Client):
     )
 
     with client:
+        tt = client.features.model == "T"
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
+                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(FAKE_TXHASH_005f6f),
                 request_input(0, FAKE_TXHASH_005f6f),
@@ -1061,14 +1106,17 @@ def test_two_changes(client: Client):
     )
 
     with client:
+        tt = client.features.model == "T"
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 request_output(2),
                 messages.ButtonRequest(code=B.SignTx),
+                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_e5040e),
                 request_input(0, TXHASH_e5040e),
@@ -1119,13 +1167,16 @@ def test_change_on_main_chain_allowed(client: Client):
     )
 
     with client:
+        tt = client.features.model == "T"
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.SignTx),
+                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_e5040e),
                 request_input(0, TXHASH_e5040e),
@@ -1380,13 +1431,16 @@ def test_lock_time(client: Client, lock_time, sequence):
     )
 
     with client:
+        tt = client.features.model == "T"
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 messages.ButtonRequest(code=B.SignTx),
+                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_0dac36),
                 request_input(0, TXHASH_0dac36),
@@ -1431,6 +1485,9 @@ def test_lock_time_blockheight(client: Client):
         yield  # confirm output
         client.debug.wait_layout()
         client.debug.press_yes()
+        yield  # confirm output
+        client.debug.wait_layout()
+        client.debug.press_yes()
 
         yield  # confirm locktime
         layout = client.debug.wait_layout()
@@ -1438,6 +1495,8 @@ def test_lock_time_blockheight(client: Client):
         assert "499999999" in layout.text
         client.debug.press_yes()
 
+        yield  # confirm transaction
+        client.debug.press_yes()
         yield  # confirm transaction
         client.debug.press_yes()
 
@@ -1480,6 +1539,9 @@ def test_lock_time_datetime(client: Client, lock_time_str):
         yield  # confirm output
         client.debug.wait_layout()
         client.debug.press_yes()
+        yield  # confirm output
+        client.debug.wait_layout()
+        client.debug.press_yes()
 
         yield  # confirm locktime
         layout = client.debug.wait_layout()
@@ -1487,6 +1549,8 @@ def test_lock_time_datetime(client: Client, lock_time_str):
 
         client.debug.press_yes()
 
+        yield  # confirm transaction
+        client.debug.press_yes()
         yield  # confirm transaction
         client.debug.press_yes()
 

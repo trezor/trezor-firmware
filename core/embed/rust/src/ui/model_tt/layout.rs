@@ -1081,8 +1081,8 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def confirm_action(
     ///     *,
     ///     title: str,
-    ///     action: str | None = None,
-    ///     description: str | None = None,
+    ///     action: str | None,
+    ///     description: str | None,
     ///     verb: str | None = None,
     ///     verb_cancel: str | None = None,
     ///     hold: bool = False,

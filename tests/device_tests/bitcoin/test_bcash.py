@@ -72,13 +72,16 @@ def test_send_bch_change(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:
+        tt = client.features.model == "T"
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 request_output(1),
                 messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
+                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_bc37c2),
                 request_input(0, TXHASH_bc37c2),
@@ -123,13 +126,16 @@ def test_send_bch_nochange(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:
+        tt = client.features.model == "T"
         client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
+                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_502e85),
                 request_input(0, TXHASH_502e85),
@@ -180,13 +186,16 @@ def test_send_bch_oldaddr(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:
+        tt = client.features.model == "T"
         client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
+                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_502e85),
                 request_input(0, TXHASH_502e85),
@@ -249,6 +258,7 @@ def test_attack_change_input(client: Client):
         return msg
 
     with client:
+        tt = client.features.model == "T"
         client.set_filter(messages.TxAck, attack_processor)
         client.set_expected_responses(
             [
@@ -256,7 +266,9 @@ def test_attack_change_input(client: Client):
                 request_output(0),
                 request_output(1),
                 messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
+                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(FAKE_TXHASH_bd32ff),
                 request_input(0, FAKE_TXHASH_bd32ff),
@@ -323,12 +335,15 @@ def test_send_bch_multisig_wrongchange(client: Client):
         amount=23_000,
     )
     with client:
+        tt = client.features.model == "T"
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
+                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(FAKE_TXHASH_062fbd),
                 request_input(0, FAKE_TXHASH_062fbd),
@@ -390,13 +405,16 @@ def test_send_bch_multisig_change(client: Client):
         amount=24_000,
     )
     with client:
+        tt = client.features.model == "T"
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.SignTx),
+                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(FAKE_TXHASH_203416),
                 request_input(0, FAKE_TXHASH_203416),
@@ -433,8 +451,10 @@ def test_send_bch_multisig_change(client: Client):
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.SignTx),
+                (tt, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(FAKE_TXHASH_203416),
                 request_input(0, FAKE_TXHASH_203416),
@@ -489,12 +509,14 @@ def test_send_bch_external_presigned(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:
+        tt = client.features.model == "T"
         client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
+                (tt, messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_502e85),
