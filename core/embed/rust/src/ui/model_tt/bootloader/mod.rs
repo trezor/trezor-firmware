@@ -19,6 +19,7 @@ mod title;
 
 use crate::ui::{
     component::text::paragraphs::{Paragraph, ParagraphVecShort, Paragraphs, VecExt},
+    constant::screen,
     display::Color,
     geometry::LinearPlacement,
     model_tt::{
@@ -27,7 +28,7 @@ use crate::ui::{
             theme::{
                 button_install_cancel, button_install_confirm, button_wipe_cancel,
                 button_wipe_confirm, BLD_BG, BLD_FG, BLD_WIPE_COLOR, ERASE_BIG, LOGO_EMPTY,
-                RECEIVE,
+                RECEIVE, WELCOME_COLOR,
             },
         },
         component::{Button, ResultScreen},
@@ -42,8 +43,6 @@ use confirm::Confirm;
 use fwinfo::FwInfo;
 use intro::Intro;
 use menu::Menu;
-use crate::ui::constant::screen;
-use crate::ui::model_tt::bootloader::theme::WELCOME_COLOR;
 
 pub trait ReturnToC {
     fn return_to_c(self) -> u32;
@@ -330,7 +329,11 @@ extern "C" fn screen_wipe_fail() -> u32 {
 #[no_mangle]
 extern "C" fn screen_boot_empty(firmware_present: bool) {
     let fg = if firmware_present { GREY_DARK } else { WHITE };
-    let bg = if firmware_present {BLACK} else {WELCOME_COLOR};
+    let bg = if firmware_present {
+        BLACK
+    } else {
+        WELCOME_COLOR
+    };
     display::rect_fill(constant::screen(), bg);
     display::icon(constant::screen().center(), LOGO_EMPTY, fg, bg);
 }
@@ -395,7 +398,14 @@ fn screen_install_success_initial(msg: &'static str, complete_draw: bool) -> u32
     let m_bottom =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
-    let mut frame = ResultScreen::new(FG, WELCOME_COLOR, ICON_SUCCESS_SMALL, m_top, m_bottom, complete_draw);
+    let mut frame = ResultScreen::new(
+        FG,
+        WELCOME_COLOR,
+        ICON_SUCCESS_SMALL,
+        m_top,
+        m_bottom,
+        complete_draw,
+    );
     frame.place(constant::screen());
     frame.paint();
     0

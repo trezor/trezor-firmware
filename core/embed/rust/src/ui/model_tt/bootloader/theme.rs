@@ -5,11 +5,10 @@ use crate::{
         display::{Color, Font},
         model_tt::{
             component::{ButtonStyle, ButtonStyleSheet},
-            theme::{FG, GREY_DARK, GREY_LIGHT, GREY_MEDIUM, WHITE},
+            theme::{BLACK, FG, GREY_DARK, GREY_LIGHT, GREY_MEDIUM, WHITE},
         },
     },
 };
-use crate::ui::model_tt::theme::BLACK;
 
 pub const BLD_BG: Color = Color::rgb(0x00, 0x17, 0xA3);
 pub const BLD_FG: Color = WHITE;
@@ -241,11 +240,21 @@ pub fn button_bld_menu_item() -> ButtonStyleSheet {
         },
     }
 }
-pub const TEXT_WELCOME: TextStyle =
-    TextStyle::new(Font::NORMAL, GREY_MEDIUM, WELCOME_COLOR, GREY_MEDIUM, GREY_MEDIUM);
+pub const TEXT_WELCOME: TextStyle = TextStyle::new(
+    Font::NORMAL,
+    GREY_MEDIUM,
+    WELCOME_COLOR,
+    GREY_MEDIUM,
+    GREY_MEDIUM,
+);
 pub const TEXT_WELCOME_BOLD: TextStyle = TextStyle::new(Font::BOLD, FG, WELCOME_COLOR, FG, FG);
-pub const TEXT_SUBMSG_INITIAL: TextStyle =
-    TextStyle::new(Font::BOLD, GREY_MEDIUM, WELCOME_COLOR, GREY_MEDIUM, GREY_MEDIUM);
+pub const TEXT_SUBMSG_INITIAL: TextStyle = TextStyle::new(
+    Font::BOLD,
+    GREY_MEDIUM,
+    WELCOME_COLOR,
+    GREY_MEDIUM,
+    GREY_MEDIUM,
+);
 
 pub const TEXT_NORMAL: TextStyle = TextStyle::new(Font::NORMAL, BLD_FG, BLD_BG, BLD_FG, BLD_FG);
 pub const TEXT_BOLD: TextStyle = TextStyle::new(Font::BOLD, BLD_FG, BLD_BG, BLD_FG, BLD_FG);
