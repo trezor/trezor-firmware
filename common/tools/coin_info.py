@@ -109,7 +109,7 @@ class Coin(TypedDict):
     # Special ETH fields
     coingecko_id: str
     chain: str
-    chain_id: str
+    chain_id: int
     url: str
 
     # Special erc20 fields
@@ -163,10 +163,7 @@ def load_json(*path: str | Path) -> Any:
 
 
 def get_btc_testnet_status(name: str) -> bool:
-    if any((mark in name.lower()) for mark in ("testnet", "regtest")):
-        return True
-    else:
-        return False
+    return any((mark in name.lower()) for mark in ("testnet", "regtest"))
 
 
 # ====== CoinsInfo ======
@@ -379,7 +376,7 @@ def _load_builtin_ethereum_networks() -> Coins:
     networks: Coins = []
     for chain_data in chains_data:
         chain_data.update(
-            chain_id=str(chain_data["chain_id"]),
+            chain_id=chain_data["chain_id"],
             key=f"eth:{chain_data['shortcut']}",
             # is_testnet is present in the JSON
         )
@@ -398,7 +395,7 @@ def _load_builtin_erc20_tokens() -> Coins:
         for token in tokens:
             token.update(
                 chain=chain,
-                chain_id=chain_id,
+                chain_id=int(chain_id),
                 address=token["address"].lower(),
                 address_bytes=bytes.fromhex(token["address"][2:]),
                 symbol=token["shortcut"],

@@ -231,11 +231,7 @@ def check_btc(coins: Coins) -> bool:
         """
         failed = False
         for key, bucket in buckets.items():
-            mainnets = [
-                c
-                for c in bucket
-                if not c["is_testnet"]
-            ]
+            mainnets = [c for c in bucket if not c["is_testnet"]]
 
             have_bitcoin = any(coin["name"] == "Bitcoin" for coin in mainnets)
             supported_mainnets = [c for c in mainnets if not c["unsupported"]]
@@ -400,7 +396,7 @@ def check_icons(coins: Coins) -> bool:
     return check_passed
 
 
-IGNORE_NONUNIFORM_KEYS = frozenset(("unsupported", "duplicate"))
+IGNORE_NONUNIFORM_KEYS = frozenset(("unsupported", "duplicate", "coingecko_id"))
 
 
 def check_key_uniformity(coins: Coins) -> bool:

@@ -10,9 +10,9 @@ import os
 import pathlib
 import re
 import shutil
+import sys
 from binascii import hexlify
 from collections import defaultdict
-import sys
 from typing import Any, TextIO, cast
 from urllib.parse import urlencode
 
@@ -253,7 +253,6 @@ def _load_ethereum_networks_from_repo(repo_dir: pathlib.Path) -> list[dict]:
                 slip44=slip44,
                 shortcut=shortcut,
                 name=name,
-                url=chain_data["infoURL"],
             )
         )
 
@@ -261,7 +260,7 @@ def _load_ethereum_networks_from_repo(repo_dir: pathlib.Path) -> list[dict]:
 
 
 def _create_cropped_token_dict(
-    complex_token: dict, chain_id: str, chain: str
+    complex_token: dict, chain_id: int, chain: str
 ) -> dict | None:
     # simple validation
     if complex_token["address"][:2] != "0x" or int(complex_token["decimals"]) < 0:
@@ -807,7 +806,7 @@ def _load_prepared_definitions(
     networks: Coins = []
     for network_data in networks_data:
         network_data.update(
-            chain_id=str(network_data["chain_id"]),
+            chain_id=network_data["chain_id"],
             key=f"eth:{network_data['shortcut']}",
         )
         networks.append(cast(Coin, network_data))
@@ -816,7 +815,7 @@ def _load_prepared_definitions(
 
     for token in tokens_data:
         token.update(
-            chain_id=str(token["chain_id"]),
+            chain_id=token["chain_id"],
             address=token["address"].lower(),
             address_bytes=bytes.fromhex(token["address"][2:]),
             symbol=token["shortcut"],
@@ -1112,7 +1111,11 @@ def prepare_definitions(
 )
 @click.option("-v", "--verbose", is_flag=True, help="Display more info")
 def sign_definitions(
-    deffile: pathlib.Path, outdir: pathlib.Path, publickey: TextIO, signedroot: str, verbose: bool
+    deffile: pathlib.Path,
+    outdir: pathlib.Path,
+    publickey: TextIO,
+    signedroot: str,
+    verbose: bool,
 ) -> None:
     """Generate signed Ethereum definitions for python-trezor and others.
     If ran without `--publickey` and/or `--signedroot` it prints the computed Merkle tree root hash.
@@ -1141,7 +1144,7 @@ def sign_definitions(
         if token["address"] is not None and token["chain_id"] is not None:
             # save token definition
             save_definition(
-                outdir / "by_chain_id" / token["chain_id"],
+                outdir / "by_chain_id" / str(token["chain_id"]),
                 ["token", token["address"][2:].lower()],
                 token["serialized"],
             )
@@ -1151,14 +1154,14 @@ def sign_definitions(
             return
 
         # create path for networks identified by chain and slip44 ids
-        network_dir = outdir / "by_chain_id" / network["chain_id"]
+        network_dir = outdir / "by_chain_id" / str(network["chain_id"])
         slip44_dir = outdir / "by_slip44" / str(network["slip44"])
         # save network definition
         save_definition(network_dir, ["network"], network["serialized"])
 
         try:
             # for slip44 == 60 save only Ethereum
-            if network["slip44"] != 60 or int(network["chain_id"]) == 1:
+            if network["slip44"] != 60 or network["chain_id"] == 1:
                 save_definition(slip44_dir, ["network"], network["serialized"])
         except click.ClickException:
             pass
