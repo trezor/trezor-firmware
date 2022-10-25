@@ -473,19 +473,25 @@ class CoinJoinApprover(Approver):
         if not self._verify_coinjoin_request(tx_info):
             raise wire.DataError("Invalid signature in CoinJoin request.")
 
-        max_fee_per_vbyte = self.authorization.params.max_fee_per_kvbyte / 1000
-        coordination_fee_rate = min(
-            self.request.fee_rate, self.authorization.params.max_coordinator_fee_rate
-        ) / pow(10, FEE_RATE_DECIMALS + 2)
-
         # The mining fee of the transaction as a whole.
         mining_fee = self.total_in - self.total_out
 
         # The maximum mining fee that the user should be paying.
-        our_max_mining_fee = max_fee_per_vbyte * self.our_weight.get_virtual_size()
+        our_max_mining_fee = (
+            self.authorization.params.max_fee_per_kvbyte
+            * self.our_weight.get_virtual_size()
+            / 1000
+        )
 
         # The coordination fee for the user's inputs.
-        our_coordination_fee = coordination_fee_rate * self.coordination_fee_base
+        our_coordination_fee = (
+            min(
+                self.request.fee_rate,
+                self.authorization.params.max_coordinator_fee_rate,
+            )
+            * self.coordination_fee_base
+            / pow(10, FEE_RATE_DECIMALS + 2)
+        )
 
         # Total fees that the user is paying.
         our_fees = self.total_in - self.external_in - self.change_out
