@@ -1,5 +1,8 @@
 use crate::ui::{
-    component::{text::paragraphs::Paragraphs, Child, Component, Event, EventCtx, Pad},
+    component::{
+        text::paragraphs::{Paragraph, ParagraphVecShort, Paragraphs, VecExt},
+        Child, Component, Event, EventCtx, Pad,
+    },
     geometry::{LinearPlacement, Point, Rect},
     model_tr::{
         bootloader::{
@@ -34,15 +37,18 @@ pub struct Intro {
     title: Child<Title>,
     host: Child<Button<&'static str>>,
     menu: Child<Button<&'static str>>,
-    text: Child<Paragraphs<&'static str>>,
+    text: Child<Paragraphs<ParagraphVecShort<&'static str>>>,
 }
 
 impl Intro {
     pub fn new(bld_version: &'static str, vendor: &'static str, version: &'static str) -> Self {
-        let p1 = Paragraphs::new()
-            .add(TEXT_NORMAL, version)
-            .add(TEXT_NORMAL, vendor)
-            .with_placement(LinearPlacement::vertical().align_at_start());
+        let mut messages = ParagraphVecShort::new();
+
+        messages.add(Paragraph::new(&TEXT_NORMAL, version));
+        messages.add(Paragraph::new(&TEXT_NORMAL, vendor));
+
+        let p1 =
+            Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_start());
 
         let mut instance = Self {
             bg: Pad::with_background(BLD_BG),
