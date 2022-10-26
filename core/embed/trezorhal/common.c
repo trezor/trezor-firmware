@@ -37,6 +37,8 @@
 
 // from util.s
 extern void shutdown_privileged(void);
+// from stm32.c
+extern void set_core_clock(uint16_t use_max_freq);
 
 void shutdown(void) {
 #ifdef USE_SVC_SHUTDOWN
@@ -191,5 +193,6 @@ void collect_hw_entropy(void) {
 void ensure_compatible_settings(void) {
 #ifdef TREZOR_MODEL_T
   display_set_big_endian();
+  set_core_clock(0);
 #endif
 }

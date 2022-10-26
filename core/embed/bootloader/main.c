@@ -243,6 +243,8 @@ static void check_bootloader_version(void) {
 
 #endif
 
+extern void set_core_clock(uint16_t use_max_freq);
+
 int main(void) {
   // grab "stay in bootloader" flag as soon as possible
   register uint32_t r11 __asm__("r11");
@@ -255,6 +257,7 @@ int main(void) {
 #endif
 
 #if defined TREZOR_MODEL_T
+  set_core_clock(1);
   display_set_little_endian();
   touch_power_on();
   touch_init();

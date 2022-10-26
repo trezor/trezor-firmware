@@ -68,6 +68,8 @@
 // from util.s
 extern void shutdown_privileged(void);
 
+extern void set_core_clock(uint16_t use_max_freq);
+
 int main(void) {
   random_delays_init();
 
@@ -121,6 +123,7 @@ int main(void) {
 #endif
 
 #if defined TREZOR_MODEL_T
+  set_core_clock(1);
   touch_init();
   display_set_little_endian();
   sdcard_init();
