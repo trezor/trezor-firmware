@@ -25,6 +25,7 @@
 #include "display.h"
 #include "flash.h"
 #include "rand.h"
+#include "stm32.h"
 #include "supervise.h"
 
 #include "stm32f4xx_ll_utils.h"
@@ -191,5 +192,6 @@ void collect_hw_entropy(void) {
 void ensure_compatible_settings(void) {
 #ifdef TREZOR_MODEL_T
   display_set_big_endian();
+  set_core_clock(CLOCK_168_MHZ);
 #endif
 }

@@ -29,6 +29,7 @@
 #include "mpu.h"
 #include "random_delays.h"
 #include "secbool.h"
+#include "stm32.h"
 #ifdef TREZOR_MODEL_T
 #include "dma2d.h"
 #include "touch.h"
@@ -255,6 +256,7 @@ int main(void) {
 #endif
 
 #if defined TREZOR_MODEL_T
+  set_core_clock(CLOCK_180_MHZ);
   display_set_little_endian();
   touch_power_on();
   touch_init();
