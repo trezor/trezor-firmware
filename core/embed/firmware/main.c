@@ -59,6 +59,7 @@
 #endif
 #include "rng.h"
 #include "sdcard.h"
+#include "stm32.h"
 #include "supervise.h"
 #include "touch.h"
 #ifdef USE_SECP256K1_ZKP
@@ -121,6 +122,7 @@ int main(void) {
 #endif
 
 #if defined TREZOR_MODEL_T
+  set_core_clock(CLOCK_180_MHZ);
   touch_init();
   display_set_little_endian();
   sdcard_init();
