@@ -51,13 +51,3 @@ EthereumGetPublicKey.address_n          max_count:8
 EthereumAddress._old_address            max_size:20
 EthereumAddress.address                 max_size:43
 EthereumPublicKey.xpub                  max_size:113
-
-EthereumTokenInfo.name                  max_size:256
-EthereumTokenInfo.address               max_size:20
-EthereumTokenInfo.symbol                max_size:256
-
-EthereumNetworkInfo.name                max_size:256
-EthereumNetworkInfo.shortcut            max_size:256
-
-EthereumDefinitions.encoded_network max_size:1024
-EthereumDefinitions.encoded_token   max_size:1024

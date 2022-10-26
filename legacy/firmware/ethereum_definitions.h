@@ -20,7 +20,7 @@
 #ifndef __ETHEREUM_DEFINITIONS_H__
 #define __ETHEREUM_DEFINITIONS_H__
 
-#include "messages-ethereum.pb.h"
+#include "messages-ethereum-definitions.pb.h"
 
 typedef struct {
   EthereumNetworkInfo network;

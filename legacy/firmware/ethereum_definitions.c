@@ -146,8 +146,7 @@ bool _decode_definition(const pb_size_t size, const pb_byte_t *bytes,
   }
 
   if (MIN_DATA_VERSION > parsed_def->data_version) {
-    fsm_sendFailure(FailureType_Failure_DataError,
-                    _("Definition is outdated"));
+    fsm_sendFailure(FailureType_Failure_DataError, _("Definition is outdated"));
     return false;
   }
 

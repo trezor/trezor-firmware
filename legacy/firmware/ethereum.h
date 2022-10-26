@@ -45,5 +45,6 @@ void ethereum_typed_hash_sign(const EthereumSignTypedHash *msg,
 bool ethereum_parse(const char *address, uint8_t pubkeyhash[20]);
 
 bool ethereum_path_check(uint32_t address_n_count, const uint32_t *address_n,
-                         bool pubkey_export, const EthereumDefinitionsDecoded *defs);
+                         bool pubkey_export,
+                         const EthereumDefinitionsDecoded *defs);
 #endif

@@ -555,8 +555,8 @@ static bool ethereum_signing_init_common(struct signing_params *params) {
   return true;
 }
 
-static void ethereum_signing_handle_erc20(struct signing_params *params,
-                                          const EthereumDefinitionsDecoded *defs) {
+static void ethereum_signing_handle_erc20(
+    struct signing_params *params, const EthereumDefinitionsDecoded *defs) {
   if (params->has_to && ethereum_parse(params->to, params->pubkeyhash)) {
     params->pubkeyhash_set = true;
   } else {
@@ -1052,7 +1052,8 @@ bool ethereum_parse(const char *address, uint8_t pubkeyhash[20]) {
 }
 
 bool ethereum_path_check(uint32_t address_n_count, const uint32_t *address_n,
-                         bool pubkey_export, const EthereumDefinitionsDecoded *defs) {
+                         bool pubkey_export,
+                         const EthereumDefinitionsDecoded *defs) {
   bool valid = (address_n_count >= 3);
   valid = valid && (address_n[0] == (PATH_HARDENED | 44));
   valid = valid && (address_n[1] & PATH_HARDENED);
