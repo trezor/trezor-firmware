@@ -33,7 +33,7 @@ if [[ ! -f "$TREZOR_MONERO_TESTS_PATH" ]]; then
   echo "Downloading Trezor monero tests binary ($TREZOR_MONERO_TESTS_SHA256SUM) to ${TREZOR_MONERO_TESTS_PATH}"
   wget -O "$TREZOR_MONERO_TESTS_PATH" "$TREZOR_MONERO_TESTS_URL" \
     && chmod +x "$TREZOR_MONERO_TESTS_PATH" \
-    && echo "${TREZOR_MONERO_TESTS_SHA256SUM} ${TREZOR_MONERO_TESTS_PATH}" | shasum -a 256 -c
+    && echo "${TREZOR_MONERO_TESTS_SHA256SUM}  ${TREZOR_MONERO_TESTS_PATH}" | shasum -a 256 -c
 else
   echo "Trezor monero binary already present at $TREZOR_MONERO_TESTS_PATH - not downloading again."
 fi
@@ -50,7 +50,7 @@ elif [[ "$OSTYPE" == "darwin"* || "$FORCE_DOCKER_USE" == 1 ]]; then
   docker exec $DOCKER_ID apt-get install --no-install-recommends --no-upgrade -qq net-tools socat 2>/dev/null >/dev/null
   docker exec -d $DOCKER_ID socat UDP-LISTEN:21324,reuseaddr,reuseport,fork UDP4-SENDTO:host.docker.internal:21324
   docker exec -d $DOCKER_ID socat UDP-LISTEN:21325,reuseaddr,reuseport,fork UDP4-SENDTO:host.docker.internal:21325
-  docker exec -e TEST_MAX_HF=15 -e TEST_MIN_HF=15 $DOCKER_ID - "$TREZOR_MONERO_TESTS_PATH" 2>&1 > "$TREZOR_MONERO_TESTS_LOG"
+  docker exec -e TEST_MAX_HF=15 -e TEST_MIN_HF=15 $DOCKER_ID "$TREZOR_MONERO_TESTS_PATH" 2>&1 > "$TREZOR_MONERO_TESTS_LOG"
   error=$?
 
 else
