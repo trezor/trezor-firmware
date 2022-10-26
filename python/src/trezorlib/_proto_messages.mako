@@ -27,7 +27,11 @@ class ${message.name}(protobuf.MessageType):
 % if message.fields:
     FIELDS = {
 % for field in message.fields:
+% if not field.required:
+        ${field.number}: protobuf.Field("${field.name}", "${field.type_name}", repeated=${field.repeated}, required=${field.required}, default=${field.default_value_repr}),
+% else:
         ${field.number}: protobuf.Field("${field.name}", "${field.type_name}", repeated=${field.repeated}, required=${field.required}),
+% endif
 % endfor
     }
 
