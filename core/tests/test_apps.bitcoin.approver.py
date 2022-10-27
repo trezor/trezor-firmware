@@ -14,7 +14,7 @@ from trezor.enums import InputScriptType, OutputScriptType
 from trezor.utils import HashWriter
 
 from apps.common import coins
-from apps.bitcoin.authorization import CoinJoinAuthorization
+from apps.bitcoin.authorization import FEE_RATE_DECIMALS, CoinJoinAuthorization
 from apps.bitcoin.sign_tx.approvers import CoinJoinApprover
 from apps.bitcoin.sign_tx.bitcoin import Bitcoin
 from apps.bitcoin.sign_tx.tx_info import TxInfo
@@ -47,7 +47,7 @@ class TestApprover(unittest.TestCase):
         self.msg_auth = AuthorizeCoinJoin(
             coordinator=self.coordinator_name,
             max_rounds=10,
-            max_coordinator_fee_rate=int(self.fee_rate_percent * 10**8),
+            max_coordinator_fee_rate=int(self.fee_rate_percent * 10**FEE_RATE_DECIMALS),
             max_fee_per_kvbyte=7000,
             address_n=[H_(10025), H_(0), H_(0), H_(1)],
             coin_name=self.coin.coin_name,
@@ -75,7 +75,7 @@ class TestApprover(unittest.TestCase):
             h_request, self.coordinator_name.encode()
         )
         writers.write_uint32(h_request, self.coin.slip44)
-        writers.write_uint32(h_request, int(self.fee_rate_percent * 10**8))
+        writers.write_uint32(h_request, int(self.fee_rate_percent * 10**FEE_RATE_DECIMALS))
         writers.write_uint64(h_request, self.no_fee_threshold)
         writers.write_uint64(h_request, self.min_registrable_amount)
         writers.write_bytes_fixed(h_request, mask_public_key, 33)
@@ -85,7 +85,7 @@ class TestApprover(unittest.TestCase):
         signature = secp256k1.sign(self.private_key, h_request.get_digest())
 
         return CoinJoinRequest(
-            fee_rate=int(self.fee_rate_percent * 10**8),
+            fee_rate=int(self.fee_rate_percent * 10**FEE_RATE_DECIMALS),
             no_fee_threshold=self.no_fee_threshold,
             min_registrable_amount=self.min_registrable_amount,
             mask_public_key=mask_public_key,
