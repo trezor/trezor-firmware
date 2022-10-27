@@ -6064,7 +6064,7 @@ class NEMTransfer(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("recipient", "string", repeated=False, required=True),
         2: protobuf.Field("amount", "uint64", repeated=False, required=True),
-        3: protobuf.Field("payload", "bytes", repeated=False, required=False, default=b''),
+        3: protobuf.Field("payload", "bytes", repeated=False, required=False, default=None),
         4: protobuf.Field("public_key", "bytes", repeated=False, required=False, default=None),
         5: protobuf.Field("mosaics", "NEMMosaic", repeated=True, required=False, default=None),
     }
@@ -6075,7 +6075,7 @@ class NEMTransfer(protobuf.MessageType):
         recipient: "str",
         amount: "int",
         mosaics: Optional[Sequence["NEMMosaic"]] = None,
-        payload: Optional["bytes"] = b'',
+        payload: Optional["bytes"] = None,
         public_key: Optional["bytes"] = None,
     ) -> None:
         self.mosaics: Sequence["NEMMosaic"] = mosaics if mosaics is not None else []

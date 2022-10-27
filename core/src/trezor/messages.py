@@ -4722,7 +4722,7 @@ if TYPE_CHECKING:
     class NEMTransfer(protobuf.MessageType):
         recipient: "str"
         amount: "int"
-        payload: "bytes"
+        payload: "bytes | None"
         public_key: "bytes | None"
         mosaics: "list[NEMMosaic]"
 
