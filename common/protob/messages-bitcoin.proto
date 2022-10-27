@@ -204,7 +204,7 @@ message SignTx {
      * Signing request for a CoinJoin transaction.
      */
     message CoinJoinRequest {
-        required uint32 fee_rate = 1;                // coordination fee rate in units of 10^-8 percent
+        required uint32 fee_rate = 1;                // coordination fee rate in units of 10^-6 percent
         required uint64 no_fee_threshold = 2;        // PlebsDontPayThreshold in Wasabi, the input amount above which the fee rate applies
         required uint64 min_registrable_amount = 3;  // minimum registrable output amount
         required bytes mask_public_key = 4;          // ephemeral secp256k1 public key used for masking coinjoin_flags, 33 bytes in compressed form
@@ -615,7 +615,7 @@ message AuthorizeCoinJoin {
 
     required string coordinator = 1;                                    // coordinator identifier to approve as a prefix in commitment data (max. 36 ASCII characters)
     required uint64 max_rounds = 2;                                     // maximum number of rounds that Trezor is authorized to take part in
-    required uint32 max_coordinator_fee_rate = 3;                       // maximum coordination fee rate in units of 10^-8 percent
+    required uint32 max_coordinator_fee_rate = 3;                       // maximum coordination fee rate in units of 10^-6 percent
     required uint32 max_fee_per_kvbyte = 4;                             // maximum mining fee rate in units of satoshis per 1000 vbytes
     repeated uint32 address_n = 5;                                      // prefix of the BIP-32 path leading to the account (m / purpose' / coin_type' / account')
     optional string coin_name = 6 [default='Bitcoin'];                  // coin to use
