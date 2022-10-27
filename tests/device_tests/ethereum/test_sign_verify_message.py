@@ -37,7 +37,7 @@ def test_signmessage(client: Client, parameters, result):
 
     encoded_network = ethereum.get_definition_from_path(
         ethereum.get_network_definition_path(
-            path=COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
+            base_path=COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
             slip44=encoded_network_slip44,
         )
     )

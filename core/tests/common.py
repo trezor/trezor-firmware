@@ -9,6 +9,7 @@ import unittest  # noqa: F401
 from trezor import utils  # noqa: F401
 from apps.common.paths import HARDENED
 
+COMMON_FIXTURES_DIR='/'.join(__file__.split('/')[0:-1])+"/../../common/tests/fixtures"
 
 def H_(x: int) -> int:
     """

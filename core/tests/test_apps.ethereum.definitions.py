@@ -5,10 +5,9 @@ from ubinascii import hexlify  # noqa: F401
 if not utils.BITCOIN_ONLY:
     import apps.ethereum.definitions as dfs
 
-    from apps.ethereum import tokens
+    from apps.ethereum import networks, tokens
     from ethereum_common import *
     from trezor import protobuf
-    from trezor.enums import EthereumDefinitionType
     from trezor.messages import (
         EthereumDefinitions,
         EthereumNetworkInfo,
@@ -32,42 +31,44 @@ class TestDecodeDefinition(unittest.TestCase):
 
     # successful decode network
     def test_network_definition(self):
-        rinkeby_network = get_ethereum_network_info_with_definition(chain_id=4)
-        self.assertEqual(dfs.decode_definition(rinkeby_network.definition, EthereumNetworkInfo), rinkeby_network.info)
+        ubiq_network_encoded = get_encoded_network_definition(8)
+        ubiq_network = get_reference_ethereum_network_info(8)
+        self.assertEqual(dfs.decode_definition(ubiq_network_encoded, EthereumNetworkInfo), ubiq_network)
 
     # successful decode token
     def test_token_definition(self):
-        # Karma Token
-        kc_token = get_ethereum_token_info_with_definition(chain_id=4)
-        self.assertEqual(dfs.decode_definition(kc_token.definition, EthereumTokenInfo), kc_token.info)
+        # Sphere Token
+        sphr_token_encoded = get_encoded_token_definition(8, "20e3dd746ddf519b23ffbbb6da7a5d33ea6349d6")
+        sphr_token = get_reference_ethereum_token_info(8, "20e3dd746ddf519b23ffbbb6da7a5d33ea6349d6")
+        self.assertEqual(dfs.decode_definition(sphr_token_encoded, EthereumTokenInfo), sphr_token)
 
     def test_invalid_data(self):
-        rinkeby_network = get_ethereum_network_info_with_definition(chain_id=4)
+        ubiq_network_encoded = get_encoded_network_definition(8)
 
         invalid_dataset = []
 
         # mangle Merkle tree proof
-        invalid_dataset.append(bytearray(rinkeby_network.definition))
+        invalid_dataset.append(bytearray(ubiq_network_encoded))
         invalid_dataset[-1][-65] += 1
 
         # mangle signature
-        invalid_dataset.append(bytearray(rinkeby_network.definition))
+        invalid_dataset.append(bytearray(ubiq_network_encoded))
         invalid_dataset[-1][-1] += 1
 
         # mangle payload
-        invalid_dataset.append(bytearray(rinkeby_network.definition))
+        invalid_dataset.append(bytearray(ubiq_network_encoded))
         invalid_dataset[-1][16] += 1
 
         # wrong format version
-        invalid_dataset.append(bytearray(rinkeby_network.definition))
+        invalid_dataset.append(bytearray(ubiq_network_encoded))
         invalid_dataset[-1][:5] = b'trzd2' # change "trzd1" to "trzd2"
 
         # wrong definition type
-        invalid_dataset.append(bytearray(rinkeby_network.definition))
+        invalid_dataset.append(bytearray(ubiq_network_encoded))
         invalid_dataset[-1][8] += 1
 
         # wrong data format version
-        invalid_dataset.append(bytearray(rinkeby_network.definition))
+        invalid_dataset.append(bytearray(ubiq_network_encoded))
         invalid_dataset[-1][13] += 1
 
         for data in invalid_dataset:
@@ -75,87 +76,50 @@ class TestDecodeDefinition(unittest.TestCase):
                 dfs.decode_definition(bytes(data), EthereumNetworkInfo)
 
     def test_wrong_requested_type(self):
-        rinkeby_network = get_ethereum_network_info_with_definition(chain_id=4)
+        ubiq_network_encoded = get_encoded_network_definition(8)
         with self.assertRaises(wire.DataError):
-            dfs.decode_definition(rinkeby_network.definition, EthereumTokenInfo)
+            dfs.decode_definition(ubiq_network_encoded, EthereumTokenInfo)
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
-class TestGetNetworkDefiniton(unittest.TestCase):
+class TestGetAndCheckDefinition(unittest.TestCase):
     def test_get_network_definition(self):
-        eth_network = get_ethereum_network_info_with_definition(chain_id=1)
-        self.assertEqual(dfs._get_network_definiton(1, None), eth_network.info)
+        eth_network_encoded = get_encoded_network_definition(1)
+        eth_network = get_reference_ethereum_network_info(1)
+        self.assertEqual(dfs.get_and_check_definition(eth_network_encoded, EthereumNetworkInfo, 1), eth_network)
+        self.assertEqual(dfs.get_and_check_definition(eth_network_encoded, EthereumNetworkInfo), eth_network)
 
-    def test_built_in_preference(self):
-        eth_network = get_ethereum_network_info_with_definition(chain_id=1)
-        ubiq_network = get_ethereum_network_info_with_definition(chain_id=8)
-        self.assertEqual(dfs._get_network_definiton(1, ubiq_network.definition), eth_network.info)
-
-    def test_no_built_in(self):
-        ubiq_network = get_ethereum_network_info_with_definition(chain_id=8)
-
-        # use provided (encoded) definition
-        self.assertEqual(dfs._get_network_definiton(8, ubiq_network.definition), ubiq_network.info)
-        # here the result should be the same as above
-        self.assertEqual(dfs._get_network_definiton(None, ubiq_network.definition), ubiq_network.info)
-        # nothing should be found
-        self.assertIsNone(dfs._get_network_definiton(8, None))
-        self.assertIsNone(dfs._get_network_definiton(None, None))
-
-        # reference chain_id is used to check the encoded network chain_id - so in case they do not equal
-        # error is raised
-        with self.assertRaises(wire.DataError):
-            dfs._get_network_definiton(ubiq_network.info.chain_id + 9999, ubiq_network.definition)
-
-    def test_invalid_encoded_definition(self):
-        rinkeby_network = get_ethereum_network_info_with_definition(chain_id=4)
-        definition = bytearray(rinkeby_network.definition)
-        # mangle signature - this should have the same effect as it has in "decode_definition" function
-        definition[-1] += 1
-        with self.assertRaises(wire.DataError):
-            dfs._get_network_definiton(None, bytes(definition))
-
-
-@unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
-class TestGetTokenDefiniton(unittest.TestCase):
     def test_get_token_definition(self):
-        aave_token = get_ethereum_token_info_with_definition(chain_id=1, token_address="7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9")
-        self.assertEqual(dfs._get_token_definiton(aave_token.info.chain_id, aave_token.info.address, None), aave_token.info)
+        aave_token_encoded = get_encoded_token_definition(1, "7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9")
+        aave_token = get_reference_ethereum_token_info(1, "7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9")
+        self.assertEqual(dfs.get_and_check_definition(aave_token_encoded, EthereumTokenInfo, 1), aave_token)
+        self.assertEqual(dfs.get_and_check_definition(aave_token_encoded, EthereumTokenInfo), aave_token)
 
-    def test_built_in_preference(self):
-        aave_token = get_ethereum_token_info_with_definition(chain_id=1, token_address="7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9")
-        adchain_token = get_ethereum_token_info_with_definition(chain_id=1, token_address="d0d6d6c5fe4a677d343cc433536bb717bae167dd")
-        self.assertEqual(dfs._get_token_definiton(aave_token.info.chain_id, aave_token.info.address, adchain_token.definition), aave_token.info)
+    def test_invalid_expected_type(self):
+        ubiq_network_encoded = get_encoded_network_definition(8)
+        with self.assertRaises(wire.DataError):
+            dfs.get_and_check_definition(ubiq_network_encoded, EthereumTokenInfo, 8)
 
-    def test_no_built_in(self):
-        kc_token = get_ethereum_token_info_with_definition(chain_id=4)
+        sphr_token_encoded = get_encoded_token_definition(8, "20e3dd746ddf519b23ffbbb6da7a5d33ea6349d6")
+        with self.assertRaises(wire.DataError):
+            dfs.get_and_check_definition(sphr_token_encoded, EthereumNetworkInfo, 8)
 
-        # use provided (encoded) definition
-        self.assertEqual(dfs._get_token_definiton(kc_token.info.chain_id, kc_token.info.address, kc_token.definition), kc_token.info)
-        # here the results should be the same as above
-        self.assertEqual(dfs._get_token_definiton(None, kc_token.info.address, kc_token.definition), kc_token.info)
-        self.assertEqual(dfs._get_token_definiton(kc_token.info.chain_id, None, kc_token.definition), kc_token.info)
-        self.assertEqual(dfs._get_token_definiton(None, None, kc_token.definition), kc_token.info)
-        # nothing should be found
-        self.assertEqual(dfs._get_token_definiton(kc_token.info.chain_id, kc_token.info.address, None), tokens.UNKNOWN_TOKEN)
-        self.assertEqual(dfs._get_token_definiton(None, kc_token.info.address, None), tokens.UNKNOWN_TOKEN)
-        self.assertEqual(dfs._get_token_definiton(kc_token.info.chain_id, None, None), tokens.UNKNOWN_TOKEN)
+    def test_fail_check_chain_id(self):
+        ubiq_network_encoded = get_encoded_network_definition(8)
+        with self.assertRaises(wire.DataError):
+            dfs.get_and_check_definition(ubiq_network_encoded, EthereumNetworkInfo, 1)
 
-        # reference chain_id and/or token address is used to check the encoded token chain_id/address - so in case they do not equal
-        # tokens.UNKNOWN_TOKEN is returned
-        self.assertEqual(dfs._get_token_definiton(kc_token.info.chain_id + 1, kc_token.info.address + b"\x00", kc_token.definition), tokens.UNKNOWN_TOKEN)
-        self.assertEqual(dfs._get_token_definiton(kc_token.info.chain_id, kc_token.info.address + b"\x00", kc_token.definition), tokens.UNKNOWN_TOKEN)
-        self.assertEqual(dfs._get_token_definiton(kc_token.info.chain_id + 1, kc_token.info.address, kc_token.definition), tokens.UNKNOWN_TOKEN)
-        self.assertEqual(dfs._get_token_definiton(None, kc_token.info.address + b"\x00", kc_token.definition), tokens.UNKNOWN_TOKEN)
-        self.assertEqual(dfs._get_token_definiton(kc_token.info.chain_id + 1, None, kc_token.definition), tokens.UNKNOWN_TOKEN)
+        sphr_token_encoded = get_encoded_token_definition(8, "20e3dd746ddf519b23ffbbb6da7a5d33ea6349d6")
+        with self.assertRaises(wire.DataError):
+            dfs.get_and_check_definition(sphr_token_encoded, EthereumTokenInfo, 1)
 
     def test_invalid_encoded_definition(self):
-        kc_token = get_ethereum_token_info_with_definition(chain_id=4)
-        definition = bytearray(kc_token.definition)
+        ubiq_network_encoded = get_encoded_network_definition(8)
+        definition = bytearray(ubiq_network_encoded)
         # mangle signature - this should have the same effect as it has in "decode_definition" function
         definition[-1] += 1
         with self.assertRaises(wire.DataError):
-            dfs._get_token_definiton(None, None, bytes(definition))
+            dfs.get_and_check_definition(bytes(definition), EthereumNetworkInfo, 8)
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
@@ -165,57 +129,80 @@ class TestEthereumDefinitions(unittest.TestCase):
         network_definition: bytes | None,
         token_definition: bytes | None,
         ref_chain_id: int | None,
-        ref_token_address: bytes | None,
-        network_info: EthereumNetworkInfo | None,
-        token_info: EthereumTokenInfo | None,
+        ref_token_address: bytes,
+        network_info: EthereumNetworkInfo,
+        token_info: EthereumTokenInfo,
     ):
         # get
-        definitions = dfs.Definitions(network_definition, token_definition, ref_chain_id, ref_token_address)
-
-        ref_token_dict = dict()
-        if token_info is not None:
-            ref_token_dict[token_info.address] = token_info
+        definitions = dfs.Definitions(network_definition, token_definition, ref_chain_id)
 
         # compare
         self.assertEqual(definitions.network, network_info)
-        self.assertDictEqual(definitions.get_token(ref_token_address), ref_token_dict)
+        self.assertEqual(definitions.get_token(ref_token_address), token_info)
 
     def test_get_definitions(self):
         # built-in
-        eth_network = get_ethereum_network_info_with_definition(chain_id=1)
-        aave_token = get_ethereum_token_info_with_definition(chain_id=1, token_address="7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9")
+        eth_network = get_reference_ethereum_network_info(1)
+        aave_token = get_reference_ethereum_token_info(1, "7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9")
         # not built-in
-        rinkeby_network = get_ethereum_network_info_with_definition(chain_id=4)
-        kc_token = get_ethereum_token_info_with_definition(chain_id=4)
+        ubiq_network_encoded = get_encoded_network_definition(8)
+        ubiq_network = get_reference_ethereum_network_info(8)
+        sphr_token_encoded = get_encoded_token_definition(8, "20e3dd746ddf519b23ffbbb6da7a5d33ea6349d6")
+        sphr_token = get_reference_ethereum_token_info(8, "20e3dd746ddf519b23ffbbb6da7a5d33ea6349d6")
 
-        # these variations should have the same result - successfully load built-in or encoded network/token
         calls_params = [
-            (None, None, eth_network.info.chain_id, aave_token.info.address, eth_network.info, aave_token.info),
-            (rinkeby_network.definition, None, eth_network.info.chain_id, aave_token.info.address, eth_network.info, aave_token.info),
-            (None, kc_token.definition, eth_network.info.chain_id, aave_token.info.address, eth_network.info, aave_token.info),
-            (rinkeby_network.definition, kc_token.definition, eth_network.info.chain_id, aave_token.info.address, eth_network.info, aave_token.info),
-            (rinkeby_network.definition, kc_token.definition, None, kc_token.info.address, rinkeby_network.info, kc_token.info),
-            (rinkeby_network.definition, kc_token.definition, rinkeby_network.info.chain_id, None, rinkeby_network.info, None),
-            (rinkeby_network.definition, kc_token.definition, None, None, rinkeby_network.info, None),
+            # no network
+            (None, None, None, aave_token.address, networks.UNKNOWN_NETWORK, tokens.UNKNOWN_TOKEN),
+
+            # no encoded definitions
+            (None, None, eth_network.chain_id, aave_token.address, eth_network, aave_token),
+
+            # no encoded definitions - token address from other chain
+            (None, None, eth_network.chain_id, sphr_token.address, eth_network, tokens.UNKNOWN_TOKEN),
+
+            # with encoded network definition
+            (ubiq_network_encoded, None, None, aave_token.address, ubiq_network, tokens.UNKNOWN_TOKEN),
+            (ubiq_network_encoded, None, None, sphr_token.address, ubiq_network, tokens.UNKNOWN_TOKEN),
+            (ubiq_network_encoded, None, eth_network.chain_id, aave_token.address, eth_network, aave_token),
+            (ubiq_network_encoded, None, ubiq_network.chain_id, sphr_token.address, ubiq_network, tokens.UNKNOWN_TOKEN),
+
+            # with encoded network definition - token address from other chain
+            (ubiq_network_encoded, None, eth_network.chain_id, sphr_token.address, eth_network, tokens.UNKNOWN_TOKEN),
+
+            # with encoded network and token definition
+            (ubiq_network_encoded, sphr_token_encoded, None, sphr_token.address, ubiq_network, sphr_token),
+            (ubiq_network_encoded, sphr_token_encoded, ubiq_network.chain_id, sphr_token.address, ubiq_network, sphr_token),
+
+            # with encoded network and token definition - token address from other chain
+            (ubiq_network_encoded, sphr_token_encoded, None, aave_token.address, ubiq_network, tokens.UNKNOWN_TOKEN),
+            (ubiq_network_encoded, sphr_token_encoded, ubiq_network.chain_id, aave_token.address, ubiq_network, tokens.UNKNOWN_TOKEN),
         ]
         for params in calls_params:
             self.get_and_compare_ethereum_definitions(*params)
 
-    def test_no_network_or_token(self):
-        rinkeby_network = get_ethereum_network_info_with_definition(chain_id=4)
-        kc_token = get_ethereum_token_info_with_definition(chain_id=4)
+    def test_get_definitions_chain_id_mismatch(self):
+        # built-in
+        eth_network_encoded = get_encoded_network_definition(1)
+        eth_network = get_reference_ethereum_network_info(1)
+        aave_token_encoded = get_encoded_token_definition(1, "7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9")
+        # not built-in
+        ubiq_network_encoded = get_encoded_network_definition(8)
+        ubiq_network = get_reference_ethereum_network_info(8)
+        sphr_token_encoded = get_encoded_token_definition(8, "20e3dd746ddf519b23ffbbb6da7a5d33ea6349d6")
 
+        # these variations should have the same result - error on chain id check in encoded definition
         calls_params = [
-            # without network there should be no token loaded
-            (None, kc_token.definition, None, kc_token.info.address, None, None),
-            (None, kc_token.definition, 0, kc_token.info.address, None, None), # non-existing chain_id
-
-            # also without token there should be no token loaded
-            (rinkeby_network.definition, None, rinkeby_network.info.chain_id, None, rinkeby_network.info, None),
-            (rinkeby_network.definition, None, rinkeby_network.info.chain_id, kc_token.info.address + b"\x00", rinkeby_network.info, None), # non-existing token address
+            (None, sphr_token_encoded, None),
+            (None, aave_token_encoded, None),
+            (None, sphr_token_encoded, eth_network.chain_id),
+            (None, aave_token_encoded, ubiq_network.chain_id),
+            (eth_network_encoded, None, ubiq_network.chain_id),
+            (ubiq_network_encoded, sphr_token_encoded, eth_network.chain_id),
+            (eth_network_encoded, aave_token_encoded, ubiq_network.chain_id),
         ]
         for params in calls_params:
-            self.get_and_compare_ethereum_definitions(*params)
+            with self.assertRaises(wire.DataError):
+                dfs.Definitions(*params)
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
@@ -223,29 +210,26 @@ class TestGetDefinitonsFromMsg(unittest.TestCase):
     def get_and_compare_ethereum_definitions(
         self,
         msg: protobuf.MessageType,
-        network_info: EthereumNetworkInfo | None,
-        token_info: EthereumTokenInfo | None,
+        network_info: EthereumNetworkInfo,
+        token_info: EthereumTokenInfo,
+        ref_token_address: bytes,
     ):
         # get
         definitions = dfs.get_definitions_from_msg(msg)
 
-        ref_token_dict = dict()
-        ref_token_addr = b""
-        if token_info is not None:
-            ref_token_dict[token_info.address] = token_info
-            ref_token_addr = token_info.address
-
         # compare
         self.assertEqual(definitions.network, network_info)
-        self.assertDictEqual(definitions.get_token(ref_token_addr), ref_token_dict)
+        self.assertEqual(definitions.get_token(ref_token_address), token_info)
 
     def test_get_definitions_SignTx_messages(self):
         # built-in
-        eth_network = get_ethereum_network_info_with_definition(chain_id=1)
-        aave_token = get_ethereum_token_info_with_definition(chain_id=1, token_address="7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9")
+        eth_network = get_reference_ethereum_network_info(1)
+        aave_token = get_reference_ethereum_token_info(1, "7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9")
         # not built-in
-        rinkeby_network = get_ethereum_network_info_with_definition(chain_id=4)
-        kc_token = get_ethereum_token_info_with_definition(chain_id=4)
+        ubiq_network_encoded = get_encoded_network_definition(8)
+        ubiq_network = get_reference_ethereum_network_info(8)
+        sphr_token_encoded = get_encoded_token_definition(8, "20e3dd746ddf519b23ffbbb6da7a5d33ea6349d6")
+        sphr_token = get_reference_ethereum_token_info(8, "20e3dd746ddf519b23ffbbb6da7a5d33ea6349d6")
 
         def create_EthereumSignTx_msg(**kwargs):
             return EthereumSignTx(
@@ -269,121 +253,79 @@ class TestGetDefinitonsFromMsg(unittest.TestCase):
         params_set = [
             (
                 create_EthereumSignTx_msg(
-                    chain_id=rinkeby_network.info.chain_id,
-                    to=hexlify(kc_token.info.address),
+                    chain_id=ubiq_network.chain_id,
+                    to=hexlify(sphr_token.address),
                     definitions=EthereumDefinitions(
-                        encoded_network=rinkeby_network.definition,
-                        encoded_token=kc_token.definition,
+                        encoded_network=ubiq_network_encoded,
+                        encoded_token=sphr_token_encoded,
                     ),
                 ),
-                rinkeby_network.info,
-                kc_token.info,
+                ubiq_network,
+                sphr_token,
+                sphr_token.address,
             ),
             (
                 create_EthereumSignTx_msg(
-                    chain_id=eth_network.info.chain_id,
-                    to=hexlify(aave_token.info.address),
+                    chain_id=eth_network.chain_id,
+                    to=hexlify(aave_token.address),
                 ),
-                eth_network.info,
-                aave_token.info,
+                eth_network,
+                aave_token,
+                aave_token.address,
             ),
             (
                 create_EthereumSignTxEIP1559_msg(
-                    chain_id=rinkeby_network.info.chain_id,
-                    to=hexlify(kc_token.info.address),
+                    chain_id=ubiq_network.chain_id,
+                    to=hexlify(sphr_token.address),
                     definitions=EthereumDefinitions(
-                        encoded_network=rinkeby_network.definition,
-                        encoded_token=kc_token.definition,
+                        encoded_network=ubiq_network_encoded,
+                        encoded_token=sphr_token_encoded,
                     ),
                 ),
-                rinkeby_network.info,
-                kc_token.info,
+                ubiq_network,
+                sphr_token,
+                sphr_token.address,
             ),
             (
                 create_EthereumSignTxEIP1559_msg(
-                    chain_id=eth_network.info.chain_id,
-                    to=hexlify(aave_token.info.address),
+                    chain_id=eth_network.chain_id,
+                    to=hexlify(aave_token.address),
                 ),
-                eth_network.info,
-                aave_token.info,
+                eth_network,
+                aave_token,
+                aave_token.address,
             ),
         ]
         for params in params_set:
             self.get_and_compare_ethereum_definitions(*params)
 
-        # missing "to" parameter in messages should lead to no token is loaded if none was provided
-        params_set = [
-            (
-                create_EthereumSignTx_msg(
-                    chain_id=rinkeby_network.info.chain_id,
-                    definitions=EthereumDefinitions(
-                        encoded_network=rinkeby_network.definition,
-                        encoded_token=None,
-                    ),
-                ),
-                rinkeby_network.info,
-                None,
-            ),
-            (
-                create_EthereumSignTx_msg(
-                    chain_id=eth_network.info.chain_id,
-                ),
-                eth_network.info,
-                None,
-            ),
-            (
-                create_EthereumSignTxEIP1559_msg(
-                    chain_id=rinkeby_network.info.chain_id,
-                    definitions=EthereumDefinitions(
-                        encoded_network=rinkeby_network.definition,
-                        encoded_token=None
-                    ),
-                ),
-                rinkeby_network.info,
-                None,
-            ),
-            (
-                create_EthereumSignTxEIP1559_msg(
-                    chain_id=eth_network.info.chain_id,
-                ),
-                eth_network.info,
-                None,
-            ),
-        ]
-        for params in params_set:
-            self.get_and_compare_ethereum_definitions(*params)
+    def test_EthereumSignTypedData_message(self):
+        ubiq_network_encoded = get_encoded_network_definition(8)
+        ubiq_network = get_reference_ethereum_network_info(8)
+        sphr_token = get_reference_ethereum_token_info(8, "20e3dd746ddf519b23ffbbb6da7a5d33ea6349d6")
 
-    def test_other_messages(self):
-        rinkeby_network = get_ethereum_network_info_with_definition(chain_id=4)
+        msg = EthereumSignTypedData(
+            primary_type="",
+            definitions=EthereumDefinitions(
+                encoded_network=ubiq_network_encoded,
+                encoded_token=None,
+            )
+        )
 
-        # only network should be loaded
-        messages = [
-            EthereumGetAddress(encoded_network=rinkeby_network.definition),
-            EthereumGetPublicKey(encoded_network=rinkeby_network.definition),
-            EthereumSignMessage(message=b'', encoded_network=rinkeby_network.definition),
-            EthereumSignTypedData(primary_type="", encoded_network=rinkeby_network.definition),
-            EthereumVerifyMessage(signature=b'', message=b'', address="", encoded_network=rinkeby_network.definition),
-        ]
-        for msg in messages:
-            self.get_and_compare_ethereum_definitions(msg, rinkeby_network.info, None)
+        self.get_and_compare_ethereum_definitions(msg, ubiq_network, tokens.UNKNOWN_TOKEN, sphr_token.address)
 
         # neither network nor token should be loaded
-        messages = [
-            EthereumGetAddress(),
-            EthereumGetPublicKey(),
-            EthereumSignMessage(message=b''),
-            EthereumSignTypedData(primary_type=""),
-            EthereumVerifyMessage(signature=b'', message=b'', address=""),
-        ]
-        for msg in messages:
-            self.get_and_compare_ethereum_definitions(msg, None, None)
+        msg = EthereumSignTypedData(primary_type="")
+        self.get_and_compare_ethereum_definitions(msg, networks.UNKNOWN_NETWORK, tokens.UNKNOWN_TOKEN, sphr_token.address)
 
     def test_invalid_message(self):
-        # msg without any of the required fields - chain_id, to, definitions, encoded_network
+        sphr_token = get_reference_ethereum_token_info(8, "20e3dd746ddf519b23ffbbb6da7a5d33ea6349d6")
+
+        # msg without any of the required fields - chain_id, definitions, encoded_network
         class InvalidMsg():
             pass
 
-        self.get_and_compare_ethereum_definitions(InvalidMsg(), None, None)
+        self.get_and_compare_ethereum_definitions(InvalidMsg(), networks.UNKNOWN_NETWORK, tokens.UNKNOWN_TOKEN, sphr_token.address)
 
 
 if __name__ == "__main__":
