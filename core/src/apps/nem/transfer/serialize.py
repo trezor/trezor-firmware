@@ -93,7 +93,7 @@ def get_transfer_payload(
         encrypted_payload = _encrypt(node, transfer.public_key, transfer.payload)
         return encrypted_payload, True
     else:
-        return transfer.payload, False
+        return transfer.payload or b"", False
 
 
 def _encrypt(node: bip32.HDNode, public_key: bytes, payload: bytes) -> bytes:
