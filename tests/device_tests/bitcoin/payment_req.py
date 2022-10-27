@@ -113,7 +113,7 @@ def make_coinjoin_request(
     outputs,
     output_script_pubkeys,
     no_fee_indices,
-    fee_rate=50_000_000,  # 0.5 %
+    fee_rate=500_000,  # 0.5 %
     no_fee_threshold=1_000_000,
     min_registrable_amount=5_000,
 ):

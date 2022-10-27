@@ -58,7 +58,7 @@ def test_sign_tx(client: Client):
             client,
             coordinator="www.example.com",
             max_rounds=2,
-            max_coordinator_fee_rate=50_000_000,  # 0.5 %
+            max_coordinator_fee_rate=500_000,  # 0.5 %
             max_fee_per_kvbyte=3500,
             n=parse_path("m/10025h/1h/0h/1h"),
             coin_name="Testnet",
@@ -268,7 +268,7 @@ def test_sign_tx_large(client: Client):
             client,
             coordinator="www.example.com",
             max_rounds=2,
-            max_coordinator_fee_rate=50_000_000,  # 0.5 %
+            max_coordinator_fee_rate=500_000,  # 0.5 %
             max_fee_per_kvbyte=3500,
             n=parse_path("m/10025h/1h/0h/1h"),
             coin_name="Testnet",
@@ -478,7 +478,7 @@ def test_wrong_coordinator(client: Client):
         client,
         coordinator="www.example.com",
         max_rounds=10,
-        max_coordinator_fee_rate=50_000_000,  # 0.5 %
+        max_coordinator_fee_rate=500_000,  # 0.5 %
         max_fee_per_kvbyte=3500,
         n=parse_path("m/10025h/1h/0h/1h"),
         coin_name="Testnet",
@@ -502,7 +502,7 @@ def test_wrong_account_type(client: Client):
         "client": client,
         "coordinator": "www.example.com",
         "max_rounds": 10,
-        "max_coordinator_fee_rate": 50_000_000,  # 0.5 %
+        "max_coordinator_fee_rate": 500_000,  # 0.5 %
         "max_fee_per_kvbyte": 3500,
         "coin_name": "Testnet",
     }
@@ -530,7 +530,7 @@ def test_cancel_authorization(client: Client):
         client,
         coordinator="www.example.com",
         max_rounds=10,
-        max_coordinator_fee_rate=50_000_000,  # 0.5 %
+        max_coordinator_fee_rate=500_000,  # 0.5 %
         max_fee_per_kvbyte=3500,
         n=parse_path("m/10025h/1h/0h/1h"),
         coin_name="Testnet",
@@ -693,7 +693,7 @@ def test_multisession_authorization(client: Client):
         client,
         coordinator="www.example1.com",
         max_rounds=10,
-        max_coordinator_fee_rate=50_000_000,  # 0.5 %
+        max_coordinator_fee_rate=500_000,  # 0.5 %
         max_fee_per_kvbyte=3500,
         n=parse_path("m/10025h/1h/0h/1h"),
         coin_name="Testnet",
@@ -709,7 +709,7 @@ def test_multisession_authorization(client: Client):
         client,
         coordinator="www.example2.com",
         max_rounds=10,
-        max_coordinator_fee_rate=50_000_000,  # 0.5 %
+        max_coordinator_fee_rate=500_000,  # 0.5 %
         max_fee_per_kvbyte=3500,
         n=parse_path("m/10025h/1h/0h/1h"),
         coin_name="Testnet",
