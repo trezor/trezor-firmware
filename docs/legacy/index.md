@@ -125,3 +125,10 @@ This table shows the result for bootloader 1.8.0+ and 1.9.1+:
 
 The other three possibilities with signed firmware and `PRODUCTION!=0` for bootloader/firmware don't exist.
 
+## Parsing existing T1 binary images with ImHex
+
+There is multi-platform hex editor [ImHex](https://github.com/WerWolv/ImHex) ([another link](https://imhex.werwolv.net/))
+that allows for parsing firmware images we distribute such as those from https://github.com/trezor/data/tree/master/firmware
+
+See `legacy/imhex/` directory in repo and `README.md` there how to use it to parse headers from existing images.
+
