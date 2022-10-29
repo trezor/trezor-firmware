@@ -1,5 +1,3 @@
-use core::ops::Deref;
-
 use crate::ui::{
     component::{maybe::paint_overlapping, Child, Component, Event, EventCtx, Label, Maybe},
     geometry::{Alignment, Grid, Offset, Rect},
@@ -29,7 +27,7 @@ pub struct MnemonicKeyboard<T, U> {
 impl<T, U> MnemonicKeyboard<T, U>
 where
     T: MnemonicInput,
-    U: Deref<Target = str>,
+    U: AsRef<str>,
 {
     pub fn new(input: T, prompt: U) -> Self {
         Self {
@@ -90,7 +88,7 @@ where
 impl<T, U> Component for MnemonicKeyboard<T, U>
 where
     T: MnemonicInput,
-    U: Deref<Target = str>,
+    U: AsRef<str>,
 {
     type Msg = MnemonicKeyboardMsg;
 
