@@ -1,5 +1,3 @@
-use core::ops::Deref;
-
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
     display::Font,
@@ -15,7 +13,7 @@ pub struct Label<T> {
 
 impl<T> Label<T>
 where
-    T: Deref<Target = str>,
+    T: AsRef<str>,
 {
     pub fn new(text: T, align: Alignment, style: TextStyle) -> Self {
         Self {
@@ -54,13 +52,13 @@ where
 
     pub fn max_size(&self) -> Offset {
         let font = self.font();
-        Offset::new(font.text_width(&self.text), font.text_max_height())
+        Offset::new(font.text_width(self.text.as_ref()), font.text_max_height())
     }
 }
 
 impl<T> Component for Label<T>
 where
-    T: Deref<Target = str>,
+    T: AsRef<str>,
 {
     type Msg = Never;
 
@@ -75,7 +73,7 @@ where
     }
 
     fn paint(&mut self) {
-        self.layout.render_text(&self.text);
+        self.layout.render_text(self.text.as_ref());
     }
 
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
@@ -86,9 +84,9 @@ where
 #[cfg(feature = "ui_debug")]
 impl<T> crate::trace::Trace for Label<T>
 where
-    T: Deref<Target = str>,
+    T: AsRef<str>,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.string(&self.text)
+        t.string(self.text.as_ref())
     }
 }

@@ -1,4 +1,4 @@
-use core::{mem, ops::Deref};
+use core::mem;
 use heapless::String;
 
 use crate::{
@@ -56,7 +56,7 @@ pub struct PinKeyboard<T> {
 
 impl<T> PinKeyboard<T>
 where
-    T: Deref<Target = str>,
+    T: AsRef<str>,
 {
     // Label position fine-tuning.
     const MAJOR_OFF: Offset = Offset::y(-2);
@@ -150,7 +150,7 @@ where
 
 impl<T> Component for PinKeyboard<T>
 where
-    T: Deref<Target = str>,
+    T: AsRef<str>,
 {
     type Msg = PinKeyboardMsg;
 
@@ -464,7 +464,7 @@ impl Component for PinDots {
 #[cfg(feature = "ui_debug")]
 impl<T> crate::trace::Trace for PinKeyboard<T>
 where
-    T: Deref<Target = str>,
+    T: AsRef<str>,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("PinKeyboard");

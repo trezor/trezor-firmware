@@ -1,4 +1,4 @@
-use core::{cmp::Ordering, convert::TryInto, ops::Deref};
+use core::{cmp::Ordering, convert::TryInto};
 
 use crate::{
     error::Error,
@@ -95,7 +95,7 @@ impl TryFrom<SelectWordCountMsg> for Obj {
 impl<F, T, U> ComponentMsgObj for FidoConfirm<F, T, U>
 where
     F: Fn(usize) -> T,
-    T: Deref<Target = str> + From<&'static str>,
+    T: ParagraphStrType + From<&'static str>,
     U: Component<Msg = CancelConfirmMsg>,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
@@ -149,7 +149,7 @@ where
 
 impl<T> ComponentMsgObj for PinKeyboard<T>
 where
-    T: Deref<Target = str>,
+    T: AsRef<str>,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
@@ -171,7 +171,7 @@ impl ComponentMsgObj for PassphraseKeyboard {
 impl<T, U> ComponentMsgObj for MnemonicKeyboard<T, U>
 where
     T: MnemonicInput,
-    U: Deref<Target = str>,
+    U: AsRef<str>,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
