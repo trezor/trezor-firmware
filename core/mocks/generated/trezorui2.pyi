@@ -179,7 +179,7 @@ def show_error(
     allow_cancel: bool = False,
     time_ms: int = 0,
 ) -> object:
-    """Error modal."""
+    """Error modal. No buttons shown when `button` is empty string."""
 
 
 # rust/src/ui/model_tt/layout.rs
@@ -191,7 +191,7 @@ def show_warning(
     allow_cancel: bool = False,
     time_ms: int = 0,
 ) -> object:
-    """Warning modal."""
+    """Warning modal. No buttons shown when `button` is empty string."""
 
 
 # rust/src/ui/model_tt/layout.rs
@@ -203,7 +203,7 @@ def show_success(
     allow_cancel: bool = False,
     time_ms: int = 0,
 ) -> object:
-    """Success modal."""
+    """Success modal. No buttons shown when `button` is empty string."""
 
 
 # rust/src/ui/model_tt/layout.rs
@@ -215,7 +215,7 @@ def show_info(
     allow_cancel: bool = False,
     time_ms: int = 0,
 ) -> object:
-    """Info modal."""
+    """Info modal. No buttons shown when `button` is empty string."""
 
 
 # rust/src/ui/model_tt/layout.rs
@@ -374,3 +374,15 @@ def show_remaining_shares(
     pages: Iterable[tuple[str, str]],
 ) -> int:
    """Shows SLIP39 state after info button is pressed on `confirm_recovery`."""
+
+
+# rust/src/ui/model_tt/layout.rs
+def show_progress(
+    *,
+    title: str,
+    indeterminate: bool = False,
+    description: str | None = None,
+) -> object:
+   """Show progress loader. Please note that the number of lines reserved on screen for
+   description is determined at construction time. If you want multiline descriptions
+   make sure the initial desciption has at least that amount of lines."""

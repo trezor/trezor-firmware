@@ -78,3 +78,9 @@ async def _request_on_host(ctx: Context) -> str:
         )
 
     return passphrase
+
+
+def _entry_dialog() -> None:
+    from trezor.ui.layouts import request_passphrase_on_host
+
+    request_passphrase_on_host()

@@ -330,7 +330,7 @@ where
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub enum Event {
+pub enum Event<'a> {
     #[cfg(feature = "buttons")]
     Button(ButtonEvent),
     #[cfg(feature = "touch")]
@@ -338,6 +338,8 @@ pub enum Event {
     /// Previously requested timer was triggered. This invalidates the timer
     /// token (another timer has to be requested).
     Timer(TimerToken),
+    /// Advance progress bar. Progress screens only.
+    Progress(u16, &'a str),
     /// Component has been attached to component tree. This event is sent once
     /// before any other events.
     Attach,

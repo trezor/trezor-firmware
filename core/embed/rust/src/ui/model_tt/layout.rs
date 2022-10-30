@@ -26,7 +26,7 @@ use crate::{
                 },
                 TextStyle,
             },
-            Border, Component, Timeout, TimeoutMsg,
+            Border, Component, Empty, Timeout, TimeoutMsg,
         },
         geometry,
         layout::{
@@ -43,7 +43,7 @@ use super::{
         Dialog, DialogMsg, FidoConfirm, FidoMsg, Frame, HoldToConfirm, HoldToConfirmMsg,
         IconDialog, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, NotificationFrame,
         NumberInputDialog, NumberInputDialogMsg, PassphraseKeyboard, PassphraseKeyboardMsg,
-        PinKeyboard, PinKeyboardMsg, SelectWordCount, SelectWordCountMsg, SelectWordMsg,
+        PinKeyboard, PinKeyboardMsg, Progress, SelectWordCount, SelectWordCountMsg, SelectWordMsg,
         Slip39Input, SwipeHoldPage, SwipePage,
     },
     theme,
@@ -281,6 +281,15 @@ where
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         self.inner().msg_try_into_obj(msg)
+    }
+}
+
+impl<T> ComponentMsgObj for Progress<T>
+where
+    T: ParagraphStrType,
+{
+    fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
+        unreachable!()
     }
 }
 
@@ -596,8 +605,27 @@ fn new_show_modal(
     let allow_cancel: bool = kwargs.get_or(Qstr::MP_QSTR_allow_cancel, true)?;
     let time_ms: u32 = kwargs.get_or(Qstr::MP_QSTR_time_ms, 0)?;
 
-    let obj = match (allow_cancel, time_ms) {
-        (true, 0) => LayoutObj::new(
+    let no_buttons = button.as_ref().is_empty();
+    let obj = if no_buttons && time_ms == 0 {
+        // No buttons and no timer, used when we only want to draw the dialog once and
+        // then throw away the layout object.
+        LayoutObj::new(IconDialog::new(icon, title, Empty).with_description(description))?.into()
+    } else if no_buttons && time_ms > 0 {
+        // Timeout, no buttons.
+        LayoutObj::new(
+            IconDialog::new(
+                icon,
+                title,
+                Timeout::new(time_ms).map(|msg| {
+                    (matches!(msg, TimeoutMsg::TimedOut)).then(|| CancelConfirmMsg::Confirmed)
+                }),
+            )
+            .with_description(description),
+        )?
+        .into()
+    } else if allow_cancel {
+        // Two buttons.
+        LayoutObj::new(
             IconDialog::new(
                 icon,
                 title,
@@ -609,8 +637,10 @@ fn new_show_modal(
             )
             .with_description(description),
         )?
-        .into(),
-        (false, 0) => LayoutObj::new(
+        .into()
+    } else {
+        // Single button.
+        LayoutObj::new(
             IconDialog::new(
                 icon,
                 title,
@@ -620,18 +650,7 @@ fn new_show_modal(
             )
             .with_description(description),
         )?
-        .into(),
-        (_, time_ms) => LayoutObj::new(
-            IconDialog::new(
-                icon,
-                title,
-                Timeout::new(time_ms).map(|msg| {
-                    (matches!(msg, TimeoutMsg::TimedOut)).then(|| CancelConfirmMsg::Confirmed)
-                }),
-            )
-            .with_description(description),
-        )?
-        .into(),
+        .into()
     };
 
     Ok(obj)
@@ -1123,6 +1142,26 @@ extern "C" fn new_show_remaining_shares(n_args: usize, args: *const Obj, kwargs:
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_show_progress(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let indeterminate: bool = kwargs.get_or(Qstr::MP_QSTR_indeterminate, false)?;
+        let description: StrBuffer =
+            kwargs.get_or(Qstr::MP_QSTR_description, StrBuffer::empty())?;
+
+        // Description updates are received as &str and we need to provide a way to
+        // convert them to StrBuffer.
+        let obj = LayoutObj::new(Progress::new(
+            title,
+            indeterminate,
+            description,
+            StrBuffer::alloc,
+        ))?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 #[no_mangle]
 pub static mp_module_trezorui2: Module = obj_module! {
     Qstr::MP_QSTR___name__ => Qstr::MP_QSTR_trezorui2.to_obj(),
@@ -1249,7 +1288,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     allow_cancel: bool = False,
     ///     time_ms: int = 0,
     /// ) -> object:
-    ///     """Error modal."""
+    ///     """Error modal. No buttons shown when `button` is empty string."""
     Qstr::MP_QSTR_show_error => obj_fn_kw!(0, new_show_error).as_obj(),
 
     /// def show_warning(
@@ -1260,7 +1299,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     allow_cancel: bool = False,
     ///     time_ms: int = 0,
     /// ) -> object:
-    ///     """Warning modal."""
+    ///     """Warning modal. No buttons shown when `button` is empty string."""
     Qstr::MP_QSTR_show_warning => obj_fn_kw!(0, new_show_warning).as_obj(),
 
     /// def show_success(
@@ -1271,7 +1310,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     allow_cancel: bool = False,
     ///     time_ms: int = 0,
     /// ) -> object:
-    ///     """Success modal."""
+    ///     """Success modal. No buttons shown when `button` is empty string."""
     Qstr::MP_QSTR_show_success => obj_fn_kw!(0, new_show_success).as_obj(),
 
     /// def show_info(
@@ -1282,7 +1321,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     allow_cancel: bool = False,
     ///     time_ms: int = 0,
     /// ) -> object:
-    ///     """Info modal."""
+    ///     """Info modal. No buttons shown when `button` is empty string."""
     Qstr::MP_QSTR_show_info => obj_fn_kw!(0, new_show_info).as_obj(),
 
     /// def show_simple(
@@ -1426,6 +1465,17 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> int:
     ///    """Shows SLIP39 state after info button is pressed on `confirm_recovery`."""
     Qstr::MP_QSTR_show_remaining_shares => obj_fn_kw!(0, new_show_remaining_shares).as_obj(),
+
+    /// def show_progress(
+    ///     *,
+    ///     title: str,
+    ///     indeterminate: bool = False,
+    ///     description: str | None = None,
+    /// ) -> object:
+    ///    """Show progress loader. Please note that the number of lines reserved on screen for
+    ///    description is determined at construction time. If you want multiline descriptions
+    ///    make sure the initial desciption has at least that amount of lines."""
+    Qstr::MP_QSTR_show_progress => obj_fn_kw!(0, new_show_progress).as_obj(),
 };
 
 #[cfg(test)]

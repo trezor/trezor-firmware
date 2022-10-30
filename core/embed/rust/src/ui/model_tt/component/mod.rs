@@ -8,6 +8,7 @@ mod keyboard;
 mod loader;
 mod number_input;
 mod page;
+mod progress;
 mod scroll;
 mod swipe;
 
@@ -30,6 +31,7 @@ pub use keyboard::{
 pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
 pub use number_input::{NumberInputDialog, NumberInputDialogMsg};
 pub use page::{SwipeHoldPage, SwipePage};
+pub use progress::Progress;
 pub use scroll::ScrollBar;
 pub use swipe::{Swipe, SwipeDirection};
 

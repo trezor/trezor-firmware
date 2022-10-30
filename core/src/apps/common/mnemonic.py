@@ -5,6 +5,7 @@ from trezor import utils
 
 if TYPE_CHECKING:
     from trezor.enums import BackupType
+    from trezor.ui.layouts.common import ProgressLayout
 
 
 def get() -> tuple[bytes | None, BackupType]:
@@ -84,24 +85,34 @@ if not utils.BITCOIN_ONLY:
 
         from trezor.crypto import cardano
 
-        return cardano.derive_icarus(
+        seed = cardano.derive_icarus(
             mnemonic_secret.decode(), passphrase, trezor_derivation, render_func
         )
+        _finish_progress()
+        return seed
+
+
+_progress_obj: ProgressLayout | None = None
 
 
 def _start_progress() -> None:
     from trezor import workflow
-    from trezor.ui.layouts import draw_simple_text
+    from trezor.ui.layouts import progress
+
+    global _progress_obj
 
     # Because we are drawing to the screen manually, without a layout, we
     # should make sure that no other layout is running.
     workflow.close_others()
-    draw_simple_text("Please wait")
+    _progress_obj = progress()
 
 
 def _render_progress(progress: int, total: int) -> None:
-    from trezor import ui
+    global _progress_obj
+    if _progress_obj is not None:
+        _progress_obj.report(1000 * progress // total)
 
-    p = 1000 * progress // total
-    ui.display.loader(p, False, 18, ui.WHITE, ui.BG)
-    ui.refresh()
+
+def _finish_progress() -> None:
+    global _progress_obj
+    _progress_obj = None

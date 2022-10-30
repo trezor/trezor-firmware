@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from typing import Any, Awaitable, Iterable, NoReturn, Sequence, TypeVar
 
     from trezor.wire import GenericContext, Context
-    from ..common import PropertyType, ExceptionType
+    from ..common import PropertyType, ExceptionType, ProgressLayout
 
     T = TypeVar("T")
 
@@ -168,6 +168,19 @@ class _RustLayout(ui.Layout):
 
     def page_count(self) -> int:
         return self.layout.page_count()
+
+
+def draw_simple(layout: Any) -> None:
+    # Simple drawing not supported for layouts that set timers.
+    def dummy_set_timer(token: int, deadline: int) -> None:
+        raise RuntimeError
+
+    layout.attach_timer_fn(dummy_set_timer)
+    ui.backlight_fade(ui.style.BACKLIGHT_DIM)
+    ui.display.clear()
+    layout.paint()
+    ui.refresh()
+    ui.backlight_fade(ui.style.BACKLIGHT_NORMAL)
 
 
 async def raise_if_not_confirmed(a: Awaitable[T], exc: Any = ActionCancelled) -> T:
@@ -956,7 +969,13 @@ async def confirm_coinjoin(
 
 
 def show_coinjoin() -> None:
-    log.error(__name__, "show_coinjoin not implemented")
+    draw_simple(
+        trezorui2.show_info(
+            title="CoinJoin in progress.",
+            description="Do not disconnect your Trezor.",
+            button="",
+        )
+    )
 
 
 # TODO cleanup @ redesign
@@ -1025,6 +1044,15 @@ def draw_simple_text(title: str, description: str = "") -> None:
     log.error(__name__, "draw_simple_text not implemented")
 
 
+def request_passphrase_on_host() -> None:
+    draw_simple(
+        trezorui2.show_info(
+            title="Please type your passphrase on the connected host.",
+            button="",
+        )
+    )
+
+
 async def request_passphrase_on_device(ctx: GenericContext, max_len: int) -> str:
     await button_request(
         ctx, "passphrase_device", code=ButtonRequestType.PassphraseEntry
@@ -1076,3 +1104,43 @@ async def request_pin_on_device(
             raise PinCancelled
         assert isinstance(result, str)
         return result
+
+
+class RustProgress:
+    def __init__(
+        self,
+        title: str,
+        description: str | None = None,
+        indeterminate: bool = False,
+    ):
+        self.layout: Any = trezorui2.show_progress(
+            title=title.upper(),
+            indeterminate=indeterminate,
+            description=description or "",
+        )
+        ui.backlight_fade(ui.style.BACKLIGHT_DIM)
+        ui.display.clear()
+        self.layout.attach_timer_fn(self.set_timer)
+        self.layout.paint()
+        ui.backlight_fade(ui.style.BACKLIGHT_NORMAL)
+
+    def set_timer(self, token: int, deadline: int) -> None:
+        raise RuntimeError  # progress layouts should not set timers
+
+    def report(self, value: int, description: str | None = None):
+        msg = self.layout.progress_event(value, description or "")
+        assert msg is None
+        self.layout.paint()
+        ui.refresh()
+
+
+def progress(message: str = "PLEASE WAIT") -> ProgressLayout:
+    return RustProgress(message.upper())
+
+
+def bitcoin_progress(message: str) -> ProgressLayout:
+    return RustProgress(message.upper())
+
+
+def pin_progress(message: str, description: str) -> ProgressLayout:
+    return RustProgress(message.upper(), description=description)

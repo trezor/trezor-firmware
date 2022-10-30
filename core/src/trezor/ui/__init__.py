@@ -91,7 +91,10 @@ def backlight_fade(val: int, delay: int = 14000, step: int = 15) -> None:
             display.backlight(val)
             return
     current = display.backlight()
-    if current > val:
+    if current < 0:
+        display.backlight(val)
+        return
+    elif current > val:
         step = -step
     for i in range(current, val, step):
         display.backlight(i)
