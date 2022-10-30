@@ -14,12 +14,13 @@ import gc
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from apps.monero.layout import MoneroTransactionProgress
     from trezor.messages import MoneroTransactionSourceEntry
     from trezor.messages import MoneroTransactionSignInputAck
     from .state import State
 
 
-async def sign_input(
+def sign_input(
     state: State,
     src_entr: MoneroTransactionSourceEntry,
     vini_bin: bytes,
@@ -29,6 +30,7 @@ async def sign_input(
     pseudo_out_alpha_enc: bytes,
     spend_enc: bytes,
     orig_idx: int,
+    progress: MoneroTransactionProgress,
 ) -> MoneroTransactionSignInputAck:
     """
     :param state: transaction state
@@ -44,7 +46,6 @@ async def sign_input(
     :return: Generated signature MGs[i]
     """
     from trezor import utils
-    from apps.monero import layout
     from apps.monero.xmr import crypto_helpers
     from apps.monero.xmr import crypto
 
@@ -53,7 +54,7 @@ async def sign_input(
     input_count = state.input_count  # local_cache_attribute
     outputs = src_entr.outputs  # local_cache_attribute
 
-    await layout.transaction_step(state, state.STEP_SIGN, state.current_input_index + 1)
+    progress.step(state, state.STEP_SIGN, state.current_input_index + 1)
 
     state.current_input_index += 1
     if state.last_step not in (state.STEP_ALL_OUT, state.STEP_SIGN):

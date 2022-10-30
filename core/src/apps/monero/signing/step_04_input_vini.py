@@ -11,16 +11,17 @@ if TYPE_CHECKING:
         MoneroTransactionSourceEntry,
     )
     from .state import State
+    from apps.monero.layout import MoneroTransactionProgress
 
 
-async def input_vini(
+def input_vini(
     state: State,
     src_entr: MoneroTransactionSourceEntry,
     vini_bin: bytes,
     vini_hmac: bytes,
     orig_idx: int,
+    progress: MoneroTransactionProgress,
 ) -> MoneroTransactionInputViniAck:
-    from apps.monero import layout
     from apps.monero.signing import offloading_keys
     from apps.monero.xmr import crypto
 
@@ -28,7 +29,7 @@ async def input_vini(
 
     STEP_VINI = state.STEP_VINI  # local_cache_attribute
 
-    await layout.transaction_step(state, STEP_VINI, state.current_input_index + 1)
+    progress.step(state, STEP_VINI, state.current_input_index + 1)
     if state.last_step not in (state.STEP_INP, STEP_VINI):
         raise ValueError("Invalid state transition")
     if state.current_input_index >= state.input_count:

@@ -1,9 +1,13 @@
 from typing import TYPE_CHECKING
 
-from trezor import ui
 from trezor.enums import ButtonRequestType
-from trezor.ui.layouts import confirm_action, confirm_metadata
-from trezor.ui.popup import Popup
+from trezor.ui.layouts import (  # noqa: F401
+    confirm_action,
+    confirm_metadata,
+    monero_keyimage_sync_progress,
+    monero_live_refresh_progress,
+    monero_transaction_progress_inner,
+)
 
 DUMMY_PAYMENT_ID = b"\x00\x00\x00\x00\x00\x00\x00\x00"
 
@@ -20,6 +24,35 @@ if TYPE_CHECKING:
 
 
 BRT_SignTx = ButtonRequestType.SignTx  # global_import_cache
+
+
+class MoneroTransactionProgress:
+    def __init__(self) -> None:
+        self.inner = None
+
+    def step(self, state: State, step: int, sub_step: int = 0) -> None:
+        if step == 0 or self.inner is None:
+            self.inner = monero_transaction_progress_inner()
+            info = "Signing..."
+        elif step == state.STEP_INP:
+            info = f"Processing inputs\n{sub_step + 1}/{state.input_count}"
+        elif step == state.STEP_VINI:
+            info = f"Hashing inputs\n{sub_step + 1}/{state.input_count}"
+        elif step == state.STEP_ALL_IN:
+            info = "Processing..."
+        elif step == state.STEP_OUT:
+            info = f"Processing outputs\n{sub_step + 1}/{state.output_count}"
+        elif step == state.STEP_ALL_OUT:
+            info = "Postprocessing..."
+        elif step == state.STEP_SIGN:
+            info = f"Signing inputs\n{sub_step + 1}/{state.input_count}"
+        else:
+            info = "Processing..."
+
+        state.progress_cur += 1
+
+        p = 1000 * state.progress_cur // state.progress_total
+        self.inner.report(p, info)
 
 
 def _format_amount(value: int) -> str:
@@ -78,6 +111,7 @@ async def require_confirm_transaction(
     state: State,
     tsx_data: MoneroTransactionData,
     network_type: MoneroNetworkType,
+    progress: MoneroTransactionProgress,
 ) -> None:
     """
     Ask for confirmation from user.
@@ -112,7 +146,7 @@ async def require_confirm_transaction(
         await _require_confirm_payment_id(ctx, payment_id)
 
     await _require_confirm_fee(ctx, tsx_data.fee)
-    await transaction_step(state, 0)
+    progress.step(state, 0)
 
 
 async def _require_confirm_output(
@@ -173,87 +207,3 @@ async def _require_confirm_unlock_time(ctx: Context, unlock_time: int) -> None:
         str(unlock_time),
         BRT_SignTx,
     )
-
-
-class TransactionStep(ui.Component):
-    def __init__(self, state: State, info: list[str]) -> None:
-        super().__init__()
-        self.state = state
-        self.info = info
-
-    def on_render(self) -> None:
-        from trezor import ui  # local_cache_global
-
-        state = self.state
-        info = self.info
-        ui.header("Signing transaction", ui.ICON_SEND, ui.TITLE_GREY, ui.BG, ui.BLUE)
-        p = 1000 * state.progress_cur // state.progress_total
-        ui.display.loader(p, False, -4, ui.WHITE, ui.BG)
-        ui.display.text_center(ui.WIDTH // 2, 210, info[0], ui.NORMAL, ui.FG, ui.BG)
-        if len(info) > 1:
-            ui.display.text_center(ui.WIDTH // 2, 235, info[1], ui.NORMAL, ui.FG, ui.BG)
-
-
-class KeyImageSyncStep(ui.Component):
-    def __init__(self, current: int, total_num: int) -> None:
-        super().__init__()
-        self.current = current
-        self.total_num = total_num
-
-    def on_render(self) -> None:
-        current = self.current
-        total_num = self.total_num
-        ui.header("Syncing", ui.ICON_SEND, ui.TITLE_GREY, ui.BG, ui.BLUE)
-        p = (1000 * (current + 1) // total_num) if total_num > 0 else 0
-        ui.display.loader(p, False, 18, ui.WHITE, ui.BG)
-
-
-class LiveRefreshStep(ui.Component):
-    def __init__(self, current: int) -> None:
-        super().__init__()
-        self.current = current
-
-    def on_render(self) -> None:
-        from trezor import ui  # local_cache_global
-
-        current = self.current
-        ui.header("Refreshing", ui.ICON_SEND, ui.TITLE_GREY, ui.BG, ui.BLUE)
-        p = (1000 * current // 8) % 1000
-        ui.display.loader(p, True, 18, ui.WHITE, ui.BG)
-        ui.display.text_center(
-            ui.WIDTH // 2, 145, str(current), ui.NORMAL, ui.FG, ui.BG
-        )
-
-
-async def transaction_step(state: State, step: int, sub_step: int = 0) -> None:
-    if step == 0:
-        info = ["Signing..."]
-    elif step == state.STEP_INP:
-        info = ["Processing inputs", f"{sub_step + 1}/{state.input_count}"]
-    elif step == state.STEP_VINI:
-        info = ["Hashing inputs", f"{sub_step + 1}/{state.input_count}"]
-    elif step == state.STEP_ALL_IN:
-        info = ["Processing..."]
-    elif step == state.STEP_OUT:
-        info = ["Processing outputs", f"{sub_step + 1}/{state.output_count}"]
-    elif step == state.STEP_ALL_OUT:
-        info = ["Postprocessing..."]
-    elif step == state.STEP_SIGN:
-        info = ["Signing inputs", f"{sub_step + 1}/{state.input_count}"]
-    else:
-        info = ["Processing..."]
-
-    state.progress_cur += 1
-    await Popup(TransactionStep(state, info))
-
-
-async def keyimage_sync_step(ctx: Context, current: int | None, total_num: int) -> None:
-    if current is None:
-        return
-    await Popup(KeyImageSyncStep(current, total_num))
-
-
-async def live_refresh_step(ctx: Context, current: int | None) -> None:
-    if current is None:
-        return
-    await Popup(LiveRefreshStep(current))

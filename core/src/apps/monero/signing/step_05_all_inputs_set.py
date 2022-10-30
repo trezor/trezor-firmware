@@ -8,16 +8,18 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from trezor.messages import MoneroTransactionAllInputsSetAck
     from .state import State
+    from apps.monero.layout import MoneroTransactionProgress
 
 
-async def all_inputs_set(state: State) -> MoneroTransactionAllInputsSetAck:
-    from apps.monero import layout
+def all_inputs_set(
+    state: State, progress: MoneroTransactionProgress
+) -> MoneroTransactionAllInputsSetAck:
     from apps.monero.xmr import crypto
     from trezor.messages import MoneroTransactionAllInputsSetAck
 
     state.mem_trace(0)
 
-    await layout.transaction_step(state, state.STEP_ALL_IN)
+    progress.step(state, state.STEP_ALL_IN)
 
     if state.last_step != state.STEP_VINI:
         raise ValueError("Invalid state transition")

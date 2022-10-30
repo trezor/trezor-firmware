@@ -1144,3 +1144,15 @@ def bitcoin_progress(message: str) -> ProgressLayout:
 
 def pin_progress(message: str, description: str) -> ProgressLayout:
     return RustProgress(message.upper(), description=description)
+
+
+def monero_keyimage_sync_progress() -> ProgressLayout:
+    return RustProgress("SYNCING")
+
+
+def monero_live_refresh_progress() -> ProgressLayout:
+    return RustProgress("REFRESHING", description="", indeterminate=True)
+
+
+def monero_transaction_progress_inner() -> ProgressLayout:
+    return RustProgress("SIGNING TRANSACTION", description="")
