@@ -118,6 +118,10 @@ pub const fn label_recovery_description() -> TextStyle {
     TEXT_NORMAL_OFF_WHITE
 }
 
+pub const fn label_progress() -> TextStyle {
+    TEXT_BOLD
+}
+
 pub fn button_default() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {

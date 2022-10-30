@@ -6,6 +6,7 @@ use core::{
 use crate::{
     error::Error,
     micropython::{
+        buffer::StrBuffer,
         gc::Gc,
         map::Map,
         obj::{Obj, ObjBase},
@@ -271,6 +272,7 @@ impl LayoutObj {
                 Qstr::MP_QSTR_attach_timer_fn => obj_fn_2!(ui_layout_attach_timer_fn).as_obj(),
                 Qstr::MP_QSTR_touch_event => obj_fn_var!(4, 4, ui_layout_touch_event).as_obj(),
                 Qstr::MP_QSTR_button_event => obj_fn_var!(3, 3, ui_layout_button_event).as_obj(),
+                Qstr::MP_QSTR_progress_event => obj_fn_var!(3, 3, ui_layout_progress_event).as_obj(),
                 Qstr::MP_QSTR_timer => obj_fn_2!(ui_layout_timer).as_obj(),
                 Qstr::MP_QSTR_paint => obj_fn_1!(ui_layout_paint).as_obj(),
                 Qstr::MP_QSTR_request_complete_repaint => obj_fn_1!(ui_layout_request_complete_repaint).as_obj(),
@@ -335,8 +337,10 @@ impl TryFrom<Duration> for Obj {
     }
 }
 
-impl From<Never> for Obj {
-    fn from(_: Never) -> Self {
+impl TryFrom<Never> for Obj {
+    type Error = Error;
+
+    fn try_from(_: Never) -> Result<Self, Self::Error> {
         unreachable!()
     }
 }
@@ -392,6 +396,20 @@ extern "C" fn ui_layout_button_event(n_args: usize, args: *const Obj) -> Obj {
 #[cfg(not(feature = "buttons"))]
 extern "C" fn ui_layout_button_event(_n_args: usize, _args: *const Obj) -> Obj {
     Obj::const_none()
+}
+
+extern "C" fn ui_layout_progress_event(n_args: usize, args: *const Obj) -> Obj {
+    let block = |args: &[Obj], _kwargs: &Map| {
+        if args.len() != 3 {
+            return Err(Error::TypeError);
+        }
+        let this: Gc<LayoutObj> = args[0].try_into()?;
+        let value: u16 = args[1].try_into()?;
+        let description: StrBuffer = args[2].try_into()?;
+        let msg = this.obj_event(Event::Progress(value, description.as_ref()))?;
+        Ok(msg)
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
 }
 
 extern "C" fn ui_layout_timer(this: Obj, token: Obj) -> Obj {

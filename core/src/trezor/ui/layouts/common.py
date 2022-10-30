@@ -5,11 +5,15 @@ from trezor.enums import ButtonRequestType
 from trezor.messages import ButtonAck, ButtonRequest
 
 if TYPE_CHECKING:
-    from typing import Any, Awaitable
+    from typing import Any, Awaitable, Protocol
 
     LayoutType = Awaitable[Any]
     PropertyType = tuple[str | None, str | bytes | None]
     ExceptionType = BaseException | type[BaseException]
+
+    class ProgressLayout(Protocol):
+        def report(self, value: int, description: str | None = None) -> None:
+            ...
 
 
 async def button_request(

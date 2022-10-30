@@ -1,7 +1,5 @@
 from typing import TYPE_CHECKING
 
-from trezor import ui
-
 if TYPE_CHECKING:
     from trezor.messages import SignTx
     from apps.common.coininfo import CoinInfo
@@ -111,13 +109,13 @@ class Progress:
 
     def report_init(self) -> None:
         from trezor import workflow
+        from trezor.ui.layouts import bitcoin_progress
 
         workflow.close_others()
-        ui.display.clear()
         if self.signing:
-            ui.header("Signing transaction")
+            self.progress_layout = bitcoin_progress("Signing transaction")
         else:
-            ui.header("Loading transaction")
+            self.progress_layout = bitcoin_progress("Loading transaction")
 
     def report(self) -> None:
         from trezor import utils
@@ -125,7 +123,7 @@ class Progress:
         if utils.DISABLE_ANIMATION:
             return
         p = int(1000 * self.progress / self.steps)
-        ui.display.loader(p, False, 18, ui.WHITE, ui.BG)
+        self.progress_layout.report(p)
 
     if __debug__:
 
