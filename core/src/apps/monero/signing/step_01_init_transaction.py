@@ -17,6 +17,7 @@ if TYPE_CHECKING:
         MoneroTransactionRsigData,
     )
 
+    from apps.monero.layout import MoneroTransactionProgress
     from apps.monero.signing.state import State
 
 
@@ -26,6 +27,7 @@ async def init_transaction(
     network_type: int,
     tsx_data: MoneroTransactionData,
     keychain,
+    progress: MoneroTransactionProgress,
 ) -> MoneroTransactionInitAck:
     import gc
     from apps.monero.signing import offloading_keys
@@ -55,7 +57,11 @@ async def init_transaction(
 
     # Ask for confirmation
     await layout.require_confirm_transaction(
-        state.ctx, state, tsx_data, state.creds.network_type
+        state.ctx,
+        state,
+        tsx_data,
+        state.creds.network_type,
+        progress,
     )
     state.creds.address = None
     state.creds.network_type = None

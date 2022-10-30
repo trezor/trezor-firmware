@@ -11,6 +11,7 @@ if TYPE_CHECKING:
         MoneroLiveRefreshFinalAck,
         MoneroLiveRefreshStartAck,
     )
+    from trezor.ui.layouts.common import ProgressLayout
     from trezor.wire import Context
     from apps.common.keychain import Keychain
 
@@ -28,6 +29,7 @@ async def live_refresh(
     state = LiveRefreshState()
 
     res = await _init_step(state, ctx, msg, keychain)
+    progress = layout.monero_live_refresh_progress()
     while True:
         step = await ctx.call_any(
             res,
@@ -36,7 +38,7 @@ async def live_refresh(
         )
         del res
         if MoneroLiveRefreshStepRequest.is_type_of(step):
-            res = await _refresh_step(state, ctx, step)
+            res = _refresh_step(state, ctx, step, progress)
         else:
             return MoneroLiveRefreshFinalAck()
         gc.collect()
@@ -69,8 +71,11 @@ async def _init_step(
     return MoneroLiveRefreshStartAck()
 
 
-async def _refresh_step(
-    s: LiveRefreshState, ctx: Context, msg: MoneroLiveRefreshStepRequest
+def _refresh_step(
+    s: LiveRefreshState,
+    ctx: Context,
+    msg: MoneroLiveRefreshStepRequest,
+    progress: ProgressLayout,
 ) -> MoneroLiveRefreshStepAck:
     from trezor.messages import MoneroLiveRefreshStepAck
     from trezor import log
@@ -81,7 +86,7 @@ async def _refresh_step(
     buff = bytearray(32 * 3)
     buff_mv = memoryview(buff)
 
-    await layout.live_refresh_step(ctx, s.current_output)
+    progress.report((1000 * s.current_output // 8) % 1000, str(s.current_output))
     s.current_output += 1
 
     if __debug__:
