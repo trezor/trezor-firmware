@@ -29,6 +29,7 @@ from ...common import (
     click_through,
     generate_entropy,
     read_and_confirm_mnemonic,
+    read_and_confirm_mnemonic_tr,
 )
 
 pytestmark = [pytest.mark.skip_t1]
@@ -47,7 +48,11 @@ def reset_device(client: Client, strength):
         yield from click_through(client.debug, screens=3, code=B.ResetDevice)
 
         # mnemonic phrases
-        mnemonic = yield from read_and_confirm_mnemonic(client.debug)
+        if client.debug.model == "R":
+            client.debug.watch_layout(True)
+            mnemonic = yield from read_and_confirm_mnemonic_tr(client.debug)
+        else:
+            mnemonic = yield from read_and_confirm_mnemonic(client.debug)
 
         # confirm recovery seed check
         br = yield
@@ -66,8 +71,10 @@ def reset_device(client: Client, strength):
                 messages.ButtonRequest(code=B.ResetDevice),
                 messages.EntropyRequest(),
                 messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
+                *[
+                    messages.ButtonRequest(code=B.ResetDevice)
+                    for _ in range(5 if client.debug.model == "R" else 2)
+                ],
                 messages.ButtonRequest(code=B.Success),
                 messages.ButtonRequest(code=B.Success),
                 messages.Success,
@@ -85,6 +92,7 @@ def reset_device(client: Client, strength):
             pin_protection=False,
             label="test",
             language="en-US",
+            show_tutorial=False,
         )
 
     # generate mnemonic locally
@@ -155,7 +163,11 @@ def test_reset_device_pin(client: Client):
         client.debug.press_yes()
 
         # mnemonic phrases
-        mnemonic = yield from read_and_confirm_mnemonic(client.debug)
+        if client.debug.model == "R":
+            client.debug.watch_layout(True)
+            mnemonic = yield from read_and_confirm_mnemonic_tr(client.debug)
+        else:
+            mnemonic = yield from read_and_confirm_mnemonic(client.debug)
 
         # confirm recovery seed check
         br = yield
@@ -177,8 +189,10 @@ def test_reset_device_pin(client: Client):
                 messages.ButtonRequest(code=B.ResetDevice),
                 messages.EntropyRequest(),
                 messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
+                *[
+                    messages.ButtonRequest(code=B.ResetDevice)
+                    for _ in range(5 if client.debug.model == "R" else 2)
+                ],
                 messages.ButtonRequest(code=B.Success),
                 messages.ButtonRequest(code=B.Success),
                 messages.Success,
@@ -196,6 +210,7 @@ def test_reset_device_pin(client: Client):
             pin_protection=True,
             label="test",
             language="en-US",
+            show_tutorial=False,
         )
 
     # generate mnemonic locally
@@ -227,7 +242,15 @@ def test_reset_failed_check(client: Client):
         yield from click_through(client.debug, screens=3, code=B.ResetDevice)
 
         # mnemonic phrases, wrong answer
-        mnemonic = yield from read_and_confirm_mnemonic(client.debug, choose_wrong=True)
+        if client.debug.model == "R":
+            client.debug.watch_layout(True)
+            mnemonic = yield from read_and_confirm_mnemonic_tr(
+                client.debug, choose_wrong=True
+            )
+        else:
+            mnemonic = yield from read_and_confirm_mnemonic(
+                client.debug, choose_wrong=True
+            )
 
         # warning screen
         br = yield
@@ -235,7 +258,11 @@ def test_reset_failed_check(client: Client):
         client.debug.press_yes()
 
         # mnemonic phrases
-        mnemonic = yield from read_and_confirm_mnemonic(client.debug)
+        if client.debug.model == "R":
+            client.debug.watch_layout(True)
+            mnemonic = yield from read_and_confirm_mnemonic_tr(client.debug)
+        else:
+            mnemonic = yield from read_and_confirm_mnemonic(client.debug)
 
         # confirm recovery seed check
         br = yield
@@ -256,8 +283,10 @@ def test_reset_failed_check(client: Client):
                 messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
+                *[
+                    messages.ButtonRequest(code=B.ResetDevice)
+                    for _ in range(6 if client.debug.model == "R" else 2)
+                ],
                 messages.ButtonRequest(code=B.Success),
                 messages.ButtonRequest(code=B.Success),
                 messages.Success,
@@ -275,6 +304,7 @@ def test_reset_failed_check(client: Client):
             pin_protection=False,
             label="test",
             language="en-US",
+            show_tutorial=False,
         )
 
     # generate mnemonic locally
@@ -323,4 +353,6 @@ def test_failed_pin(client: Client):
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
 def test_already_initialized(client: Client):
     with pytest.raises(Exception):
-        device.reset(client, False, 128, True, True, "label", "en-US")
+        device.reset(
+            client, False, 128, True, True, "label", "en-US", show_tutorial=False
+        )

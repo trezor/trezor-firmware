@@ -354,10 +354,16 @@ def input_flow_scroll_down(client: Client, cancel: bool = False):
     client.debug.press_yes()
     yield  # confirm amount
     client.debug.wait_layout()
+    if client.features.model == "R":
+        client.debug.swipe_up()  # extra confirmation screen for model R
     client.debug.press_yes()
-    yield  # confirm data
-    client.debug.wait_layout()
-    client.debug.click(SHOW_ALL)
+
+    # TODO: For model R, we do not have the "Show all" button, so users
+    # do not have the possibility to skip scrolling.
+    if client.features.model == "T":
+        yield  # confirm data
+        client.debug.wait_layout()
+        client.debug.click(SHOW_ALL)
 
     br = yield  # paginated data
     for i in range(br.pages):
@@ -380,10 +386,14 @@ def input_flow_scroll_down(client: Client, cancel: bool = False):
 
 
 def input_flow_go_back(client: Client, cancel: bool = False):
+    if client.features.model == "R":
+        pytest.skip("Go back not supported for model R")
+
     br = yield  # confirm address
     client.debug.wait_layout()
     client.debug.press_yes()
     br = yield  # confirm amount
+
     client.debug.wait_layout()
     client.debug.press_yes()
     br = yield  # confirm data
@@ -424,37 +434,26 @@ HEXDATA = "0123456789abcd000023456789abcd010003456789abcd020000456789abcd0300000
 )
 @pytest.mark.skip_t1
 def test_signtx_data_pagination(client: Client, flow):
-    if client.features.model == "R":
-        pytest.fail("causes freeze on the pagination screen")
+    def _sign_tx_call():
+        ethereum.sign_tx(
+            client,
+            n=parse_path("m/44h/60h/0h/0/0"),
+            nonce=0x0,
+            gas_price=0x14,
+            gas_limit=0x14,
+            to="0x1d1c328764a41bda0492b66baa30c4a339ff85ef",
+            chain_id=1,
+            value=0xA,
+            tx_type=None,
+            data=bytes.fromhex(HEXDATA),
+        )
 
     with client:
         client.watch_layout()
         client.set_input_flow(flow(client))
-        ethereum.sign_tx(
-            client,
-            n=parse_path("m/44h/60h/0h/0/0"),
-            nonce=0x0,
-            gas_price=0x14,
-            gas_limit=0x14,
-            to="0x1d1c328764a41bda0492b66baa30c4a339ff85ef",
-            chain_id=1,
-            value=0xA,
-            tx_type=None,
-            data=bytes.fromhex(HEXDATA),
-        )
+        _sign_tx_call()
 
     with client, pytest.raises(exceptions.Cancelled):
         client.watch_layout()
         client.set_input_flow(flow(client, cancel=True))
-        ethereum.sign_tx(
-            client,
-            n=parse_path("m/44h/60h/0h/0/0"),
-            nonce=0x0,
-            gas_price=0x14,
-            gas_limit=0x14,
-            to="0x1d1c328764a41bda0492b66baa30c4a339ff85ef",
-            chain_id=1,
-            value=0xA,
-            tx_type=None,
-            data=bytes.fromhex(HEXDATA),
-        )
+        _sign_tx_call()

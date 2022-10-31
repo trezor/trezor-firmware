@@ -17,6 +17,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_CANCELLED;
   MP_QSTR_INFO;
   MP_QSTR_disable_animation;
+  MP_QSTR_checked_index;
+  MP_QSTR_choices;
   MP_QSTR_confirm_action;
   MP_QSTR_confirm_blob;
   MP_QSTR_confirm_properties;
@@ -25,8 +27,14 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_joint_total;
   MP_QSTR_confirm_modify_fee;
   MP_QSTR_confirm_modify_output;
+  MP_QSTR_confirm_output;
+  MP_QSTR_confirm_output_r;
+  MP_QSTR_confirm_payment_request;
   MP_QSTR_confirm_reset_device;
+  MP_QSTR_confirm_recovery;
   MP_QSTR_confirm_text;
+  MP_QSTR_confirm_total;
+  MP_QSTR_confirm_total_r;
   MP_QSTR_confirm_value;
   MP_QSTR_confirm_with_info;
   MP_QSTR_confirm_more;
@@ -41,7 +49,12 @@ static void _librust_qstrs(void) {
   MP_QSTR_request_number;
   MP_QSTR_request_pin;
   MP_QSTR_request_passphrase;
+  MP_QSTR_confirm_word;
+  MP_QSTR_pin_confirm_action;
   MP_QSTR_request_bip39;
+  MP_QSTR_request_number;
+  MP_QSTR_request_passphrase;
+  MP_QSTR_request_pin;
   MP_QSTR_request_slip39;
   MP_QSTR_select_word;
   MP_QSTR_select_word_count;
@@ -49,7 +62,16 @@ static void _librust_qstrs(void) {
   MP_QSTR_show_group_share_success;
   MP_QSTR_show_homescreen;
   MP_QSTR_show_lockscreen;
+  MP_QSTR_share_words;
+  MP_QSTR_show_checklist;
+  MP_QSTR_show_error;
+  MP_QSTR_show_group_share_success;
+  MP_QSTR_show_info;
+  MP_QSTR_show_qr;
   MP_QSTR_show_remaining_shares;
+  MP_QSTR_show_success;
+  MP_QSTR_show_simple;
+  MP_QSTR_show_warning;
   MP_QSTR_show_share_words;
   MP_QSTR_show_progress;
 
@@ -62,8 +84,20 @@ static void _librust_qstrs(void) {
   MP_QSTR_paint;
   MP_QSTR_request_complete_repaint;
   MP_QSTR_trace;
+  MP_QSTR_request_word_count;
+  MP_QSTR_request_word_bip39;
+  MP_QSTR_tutorial;
+
+  MP_QSTR_attach_timer_fn;
   MP_QSTR_bounds;
+  MP_QSTR_button_event;
   MP_QSTR_page_count;
+  MP_QSTR_paint;
+  MP_QSTR_place;
+  MP_QSTR_request_complete_repaint;
+  MP_QSTR_touch_event;
+  MP_QSTR_timer;
+  MP_QSTR_trace;
 
   MP_QSTR_title;
   MP_QSTR_subtitle;
@@ -109,4 +143,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_bootscreen;
   MP_QSTR_skip_first_paint;
   MP_QSTR_wrong_pin;
+  MP_QSTR_fee_amount;
+  MP_QSTR_fee_rate_amount;
+  MP_QSTR_total_label;
+  MP_QSTR_fee_label;
+  MP_QSTR_truncated_address;
 }

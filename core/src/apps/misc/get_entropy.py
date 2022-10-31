@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING
 
+from apps.management import text_r
+
 if TYPE_CHECKING:
     from trezor.wire import Context
     from trezor.messages import GetEntropy, Entropy
@@ -15,8 +17,8 @@ async def get_entropy(ctx: Context, msg: GetEntropy) -> Entropy:
         ctx,
         "get_entropy",
         "Confirm entropy",
-        "Do you really want\nto send entropy?",
-        "Continue only if you\nknow what you are doing!",
+        text_r("Do you really want\nto send entropy?"),
+        text_r("Continue only if you\nknow what you are doing!"),
         br_code=ButtonRequestType.ProtectCall,
     )
 

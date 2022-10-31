@@ -4,11 +4,12 @@ pub mod macros;
 pub mod animation;
 pub mod component;
 pub mod constant;
+pub mod debug;
 pub mod display;
 pub mod event;
 pub mod geometry;
 pub mod lerp;
-mod util;
+pub mod util;
 
 #[cfg(feature = "micropython")]
 pub mod layout;

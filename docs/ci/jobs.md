@@ -54,7 +54,7 @@ or contain `[no changelog]` in the commit message.
 ## BUILD stage - [build.yml](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml)
 All builds are published as artifacts so they can be downloaded and used.
 
-Consists of **29 jobs** below:
+Consists of **33 jobs** below:
 
 ### [core fw regular build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L20)
 Build of Core into firmware. Regular version.
@@ -76,64 +76,77 @@ Build of Core into firmware. Bitcoin-only version.
 
 ### [core fw btconly t1 build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L136)
 
-### [core unix regular build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L154)
+### [core fw R btconly debug build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L152)
+
+### [core fw R btconly build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L169)
+
+### [core unix regular build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L187)
 Non-frozen emulator build. This means you still need Python files
 present which get interpreted.
 
-### [core unix regular asan build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L166)
+### [core unix regular asan build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L199)
 
-### [core unix frozen regular build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L185)
+### [core unix frozen regular build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L218)
 Build of Core into UNIX emulator. Something you can run on your laptop.
 Frozen version. That means you do not need any other files to run it,
 it is just a single binary file that you can execute directly.
 
-### [core unix frozen btconly debug build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L202)
+### [core unix frozen btconly debug build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L235)
 Build of Core into UNIX emulator. Something you can run on your laptop.
 Frozen version. That means you do not need any other files to run it,
 it is just a single binary file that you can execute directly.
 See [Emulator](../core/emulator/index.md) for more info.
 Debug mode enabled, Bitcoin-only version.
 
-### [core unix frozen btconly debug asan build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L218)
+### [core unix frozen btconly debug asan build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L251)
 
-### [core unix frozen debug build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L241)
+### [core unix frozen debug build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L274)
 Build of Core into UNIX emulator. Something you can run on your laptop.
 Frozen version. That means you do not need any other files to run it,
 it is just a single binary file that you can execute directly.
 **Are you looking for a Trezor T emulator? This is most likely it.**
 
-### [core unix frozen debug asan build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L254)
+### [core unix frozen ui2 debug build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L288)
 
-### [core unix frozen R debug build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L269)
+### [core unix frozen R debug build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L302)
 
-### [core unix frozen debug asan build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L283)
+### [core unix frozen R debug build arm](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L316)
 
-### [core unix frozen debug build arm](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L299)
+### [core unix R debugger build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L335)
+Debugger build for gdb/lldb.
 
-### [crypto build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L333)
+### [core unix frozen debug asan build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L350)
+
+### [core unix frozen debug build arm](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L366)
+
+### [core unix frozen btconly debug t1 build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L388)
+
+### [core macos frozen regular build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L404)
+
+### [crypto build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L429)
 Build of our cryptographic library, which is then incorporated into the other builds.
 
-### [legacy fw regular build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L362)
+### [legacy fw regular build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L458)
 
-### [legacy fw regular debug build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L378)
+### [legacy fw regular debug build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L474)
 
-### [legacy fw btconly build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L395)
+### [legacy fw btconly build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L491)
 
-### [legacy fw btconly debug build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L414)
+### [legacy fw btconly debug build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L510)
 
-### [legacy emu regular debug build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L435)
+### [legacy emu regular debug build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L531)
 Regular version (not only Bitcoin) of above.
 **Are you looking for a Trezor One emulator? This is most likely it.**
 
-### [legacy emu regular debug asan build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L450)
+### [legacy emu regular debug asan build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L546)
 
-### [legacy emu regular debug build arm](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L468)
+### [legacy emu regular debug build arm](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L564)
 
-### [legacy emu btconly debug build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L494)
+### [legacy emu btconly debug build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L590)
 Build of Legacy into UNIX emulator. Use keyboard arrows to emulate button presses.
 Bitcoin-only version.
 
-### [legacy emu btconly debug asan build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L511)
+### [legacy emu btconly debug asan build](https://github.com/trezor/trezor-firmware/blob/master/ci/build.yml#L607)
 
 ---
 ## TEST stage - [test.yml](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml)
@@ -163,70 +176,70 @@ See [docs/tests/ui-tests](../tests/ui-tests.md) for more info.
 
 ### [core device asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L159)
 
-### [core btconly device test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L176)
+### [core btconly device test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L178)
 Device tests excluding altcoins, only for BTC.
 
-### [core btconly device asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L196)
+### [core btconly device asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L198)
 
-### [core monero test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L216)
+### [core monero test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L219)
 Monero tests.
 
-### [core monero asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L235)
+### [core monero asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L238)
 
-### [core u2f test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L257)
+### [core u2f test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L260)
 Tests for U2F and HID.
 
-### [core u2f asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L276)
+### [core u2f asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L279)
 
-### [core fido2 test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L294)
+### [core fido2 test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L297)
 FIDO2 device tests.
 
-### [core fido2 asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L317)
+### [core fido2 asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L320)
 
-### [core click test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L337)
+### [core click test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L340)
 Click tests.
 See [docs/tests/click-tests](../tests/click-tests.md) for more info.
 
-### [core click asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L354)
+### [core click asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L357)
 
-### [core upgrade test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L375)
+### [core upgrade test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L378)
 Upgrade tests.
 See [docs/tests/upgrade-tests](../tests/upgrade-tests.md) for more info.
 
-### [core upgrade asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L394)
+### [core upgrade asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L397)
 
-### [core persistence test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L416)
+### [core persistence test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L419)
 Persistence tests.
 
-### [core persistence asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L432)
+### [core persistence asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L435)
 
-### [core hwi test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L450)
+### [core hwi test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L453)
 
-### [crypto test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L468)
+### [crypto test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L471)
 
-### [legacy device test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L499)
+### [legacy device test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L502)
 
-### [legacy asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L526)
+### [legacy asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L529)
 
-### [legacy btconly test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L538)
+### [legacy btconly test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L541)
 
-### [legacy btconly asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L558)
+### [legacy btconly asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L561)
 
-### [legacy upgrade test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L573)
+### [legacy upgrade test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L576)
 
-### [legacy upgrade asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L592)
+### [legacy upgrade asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L595)
 
-### [legacy hwi test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L613)
+### [legacy hwi test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L616)
 
-### [python test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L632)
+### [python test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L635)
 
-### [python support test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L589)
+### [python support test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L654)
 
-### [storage test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L599)
+### [storage test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L664)
 
-### [core unix memory profiler](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L623)
+### [core unix memory profiler](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L688)
 
-### [connect test core](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L647)
+### [connect test core](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L712)
 
 ---
 ## TEST-HW stage - [test-hw.yml](https://github.com/trezor/trezor-firmware/blob/master/ci/test-hw.yml)
@@ -273,7 +286,7 @@ Consists of **2 jobs** below:
 ---
 ## DEPLOY stage - [deploy.yml](https://github.com/trezor/trezor-firmware/blob/master/ci/deploy.yml)
 
-Consists of **13 jobs** below:
+Consists of **15 jobs** below:
 
 ### [release core fw regular deploy](https://github.com/trezor/trezor-firmware/blob/master/ci/deploy.yml#L5)
 
@@ -299,6 +312,10 @@ Consists of **13 jobs** below:
 
 ### [sync emulators to aws](https://github.com/trezor/trezor-firmware/blob/master/ci/deploy.yml#L251)
 
-### [common sync](https://github.com/trezor/trezor-firmware/blob/master/ci/deploy.yml#L276)
+### [ui tests R fixtures deploy](https://github.com/trezor/trezor-firmware/blob/master/ci/deploy.yml#L268)
+
+### [sync emulators to aws](https://github.com/trezor/trezor-firmware/blob/master/ci/deploy.yml#L289)
+
+### [common sync](https://github.com/trezor/trezor-firmware/blob/master/ci/deploy.yml#L314)
 
 ---
