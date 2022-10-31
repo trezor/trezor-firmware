@@ -27,7 +27,7 @@
 // only in 1-byte when the flag changes.
 // using #define leads compiler to over-optimize the code leading to bigger
 // differencies in the resulting binaries.
-const volatile uint8_t DISPLAY_ST7789V_INVERT_COLORS = 0;
+const volatile uint8_t DISPLAY_ST7789V_INVERT_COLORS = 1;
 
 // FSMC/FMC Bank 1 - NOR/PSRAM 1
 #define DISPLAY_MEMORY_BASE 0x60000000
@@ -507,7 +507,7 @@ void display_init(void) {
   TIM1_Handle.Init.Period = LED_PWM_TIM_PERIOD - 1;
   // TIM1/APB2 source frequency equals to SystemCoreClock in our configuration,
   // we want 1 MHz
-  TIM1_Handle.Init.Prescaler = SystemCoreClock / 1000000 - 1;
+  TIM1_Handle.Init.Prescaler = 18000000 / 1000000 - 1;
   TIM1_Handle.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   TIM1_Handle.Init.CounterMode = TIM_COUNTERMODE_UP;
   TIM1_Handle.Init.RepetitionCounter = 0;

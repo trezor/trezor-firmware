@@ -27,21 +27,21 @@ const uint8_t APBPrescTable[8] = {0, 0, 0, 0, 1, 2, 3, 4};
 
 #ifdef STM32F427xx
 #ifdef TREZOR_MODEL_T
-#define CORE_CLOCK_SLOW_MHZ 168U
-// clk = ((8MHz / 4) * 168) / 2 = 168 MHz
-// usb = ((8MHz / 4) * 168) / 7 = 48 MHz
-#define PLLQ_SLOW 7U
-#define PLLP_SLOW 0U  // P = 2 (two bits, 00 means PLLP = 2)
-#define PLLM_SLOW 4U
-#define PLLN_SLOW CORE_CLOCK_SLOW_MHZ
-#endif
-#define CORE_CLOCK_MHZ 180U
+#define CORE_CLOCK_SLOW_MHZ 180U
 // clk = ((8MHz / 2) * 180) / 4 = 180 MHz
 // usb = ((8MHz / 2) * 180) / 15 = 48 MHz
-#define PLLQ 15U
-#define PLLP 1U  // P = 4 (two bits, 01 means PLLP = 4)
-#define PLLM 2U
-#define PLLN CORE_CLOCK_MHZ
+#define PLLQ_SLOW 15U
+#define PLLP_SLOW 1U  // P = 4 (two bits, 01 means PLLP = 4)
+#define PLLM_SLOW 2U
+#define PLLN_SLOW CORE_CLOCK_SLOW_MHZ
+#endif
+#define CORE_CLOCK_MHZ 18U
+// clk = ((8MHz / 2) * 180) / 4 = 180 MHz
+// usb = ((8MHz / 2) * 180) / 15 = 48 MHz
+#define PLLQ 3U
+#define PLLP 3U  // P = 8 (two bits, 11 means PLLP = 8)
+#define PLLM 4U
+#define PLLN 72U
 #elif STM32F405xx
 #define CORE_CLOCK_MHZ 120U
 // clk = ((8MHz / 8) * 240) / 2 = 120 MHz
