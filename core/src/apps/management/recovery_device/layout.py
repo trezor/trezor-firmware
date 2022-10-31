@@ -8,7 +8,7 @@ from trezor.ui.layouts.recovery import (  # noqa: F401
     show_remaining_shares,
 )
 
-from .. import backup_types
+from .. import backup_types, text_r
 
 if TYPE_CHECKING:
     from typing import Callable
@@ -92,15 +92,23 @@ async def show_dry_run_result(
 
     if result:
         if is_slip39:
-            text = "The entered recovery\nshares are valid and\nmatch what is currently\nin the device."
+            text = text_r(
+                "The entered recovery\nshares are valid and\nmatch what is currently\nin the device."
+            )
         else:
-            text = "The entered recovery\nseed is valid and\nmatches the one\nin the device."
+            text = text_r(
+                "The entered recovery\nseed is valid and\nmatches the one\nin the device."
+            )
         await show_success(ctx, "success_dry_recovery", text, button="Continue")
     else:
         if is_slip39:
-            text = "The entered recovery\nshares are valid but\ndo not match what is\ncurrently in the device."
+            text = text_r(
+                "The entered recovery\nshares are valid but\ndo not match what is\ncurrently in the device."
+            )
         else:
-            text = "The entered recovery\nseed is valid but does\nnot match the one\nin the device."
+            text = text_r(
+                "The entered recovery\nseed is valid but does\nnot match the one\nin the device."
+            )
         await show_warning(ctx, "warning_dry_recovery", text, button="Continue")
 
 
@@ -109,13 +117,13 @@ async def show_invalid_mnemonic(ctx: GenericContext, word_count: int) -> None:
         await show_warning(
             ctx,
             "warning_invalid_share",
-            "You have entered\nan invalid recovery\nshare.",
+            text_r("You have entered\nan invalid recovery\nshare."),
         )
     else:
         await show_warning(
             ctx,
             "warning_invalid_seed",
-            "You have entered\nan invalid recovery\nseed.",
+            text_r("You have entered\nan invalid recovery\nseed."),
         )
 
 

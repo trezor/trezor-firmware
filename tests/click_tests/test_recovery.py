@@ -34,7 +34,7 @@ def test_recovery(device_handler: "BackgroundDeviceHandler"):
     debug = device_handler.debuglink()
 
     assert features.initialized is False
-    device_handler.run(device.recover, pin_protection=False)
+    device_handler.run(device.recover, pin_protection=False, show_tutorial=False)
 
     recovery.confirm_recovery(debug)
 

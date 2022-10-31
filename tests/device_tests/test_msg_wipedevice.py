@@ -54,7 +54,7 @@ def test_autolock_not_retained(client: Client):
 
     with client:
         client.use_pin_sequence([PIN4, PIN4])
-        device.reset(client, skip_backup=True, pin_protection=True)
+        device.reset(client, skip_backup=True, pin_protection=True, show_tutorial=False)
 
     time.sleep(10.5)
     with client:

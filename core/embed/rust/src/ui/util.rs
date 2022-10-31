@@ -4,6 +4,8 @@ use crate::ui::{
     geometry::{Offset, Point},
 };
 
+use heapless::String;
+
 pub trait ResultExt {
     fn assert_if_debugging_ui(self, message: &str);
 }
@@ -58,6 +60,7 @@ pub fn set_animation_disabled(disabled: bool) {
 pub fn animation_disabled() -> bool {
     false
 }
+
 #[cfg(not(feature = "ui_debug"))]
 pub fn set_animation_disabled(_disabled: bool) {}
 
@@ -113,4 +116,11 @@ mod tests {
             assert_eq!(converted, None)
         }
     }
+}
+
+/// Convert char to a String of chosen length.
+pub fn char_to_string<const L: usize>(ch: char) -> String<L> {
+    let mut s = String::new();
+    s.push(ch).unwrap();
+    s
 }

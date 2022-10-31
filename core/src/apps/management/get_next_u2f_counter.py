@@ -4,6 +4,8 @@ if TYPE_CHECKING:
     from trezor.messages import GetNextU2FCounter, NextU2FCounter
     from trezor.wire import Context
 
+from . import text_r
+
 
 async def get_next_u2f_counter(ctx: Context, msg: GetNextU2FCounter) -> NextU2FCounter:
     import storage.device as storage_device
@@ -19,7 +21,9 @@ async def get_next_u2f_counter(ctx: Context, msg: GetNextU2FCounter) -> NextU2FC
         ctx,
         "get_u2f_counter",
         "Get next U2F counter",
-        description="Do you really want to increase and retrieve\nthe U2F counter?",
+        description=text_r(
+            "Do you really want to increase and retrieve\nthe U2F counter?"
+        ),
         br_code=ButtonRequestType.ProtectCall,
     )
 

@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING
 
+from .. import text_r
+
 if TYPE_CHECKING:
     from trezor.messages import RecoveryDevice
     from trezor.wire import Context
@@ -8,7 +10,13 @@ if TYPE_CHECKING:
 # List of RecoveryDevice fields that can be set when doing dry-run recovery.
 # All except `dry_run` are allowed for T1 compatibility, but their values are ignored.
 # If set, `enforce_wordlist` must be True, because we do not support non-enforcing.
-DRY_RUN_ALLOWED_FIELDS = ("dry_run", "word_count", "enforce_wordlist", "type")
+DRY_RUN_ALLOWED_FIELDS = (
+    "dry_run",
+    "word_count",
+    "enforce_wordlist",
+    "type",
+    "show_tutorial",
+)
 
 
 async def recovery_device(ctx: Context, msg: RecoveryDevice) -> Success:
@@ -58,7 +66,10 @@ async def recovery_device(ctx: Context, msg: RecoveryDevice) -> Success:
     # _continue_dialog
     if not dry_run:
         await confirm_reset_device(
-            ctx, "Do you really want to\nrecover a wallet?", recovery=True
+            ctx,
+            text_r("Do you really want to\nrecover a wallet?"),
+            recovery=True,
+            show_tutorial=bool(msg.show_tutorial),
         )
     else:
         await confirm_action(

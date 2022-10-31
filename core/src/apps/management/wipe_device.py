@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING
 
+from . import text_r
+
 if TYPE_CHECKING:
     from trezor.wire import GenericContext
     from trezor.messages import WipeDevice, Success
@@ -18,7 +20,7 @@ async def wipe_device(ctx: GenericContext, msg: WipeDevice) -> Success:
         "confirm_wipe",
         "Wipe device",
         "All data will be erased.",
-        "Do you really want to\nwipe the device?\n",
+        text_r("Do you really want to\nwipe the device?\n"),
         reverse=True,
         verb="Hold to confirm",
         hold=True,

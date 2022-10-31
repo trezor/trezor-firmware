@@ -34,7 +34,11 @@ def show_details_input_flow(client: Client):
 
     yield
     client.debug.wait_layout()
-    client.debug.click(SHOW_ALL_BUTTON_POSITION)
+    # Clicking for model T, pressing right for model R
+    if client.features.model == "T":
+        client.debug.click(SHOW_ALL_BUTTON_POSITION)
+    elif client.features.model == "R":
+        client.debug.press_yes()
     # reset ui flow to continue "automatically"
     client.ui.input_flow = None
     yield

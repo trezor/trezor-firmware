@@ -14,6 +14,8 @@ use crate::{
     },
 };
 
+use super::ButtonStyleSheet;
+
 pub enum ResultPopupMsg {
     Confirmed,
 }
@@ -47,10 +49,11 @@ impl<S: ParagraphStrType> ResultPopup<S> {
             .with_placement(LinearPlacement::vertical().align_at_center());
 
         let button = button_text.map(|t| {
+            // TODO: use `ButtonController` for this
             Child::new(Button::with_text(
                 ButtonPos::Right,
                 t,
-                theme::button_default(),
+                ButtonStyleSheet::default(true, false, None, None),
             ))
         });
 

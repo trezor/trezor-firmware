@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING
 
+from apps.management import text_r
+
 if TYPE_CHECKING:
     from trezor.messages import LoadDevice, Success
     from trezor.wire import Context
@@ -41,8 +43,8 @@ async def load_device(ctx: Context, msg: LoadDevice) -> Success:
         ctx,
         "warn_loading_seed",
         "Loading seed",
-        "Loading private seed\nis not recommended.",
-        "Continue only if you\nknow what you are doing!",
+        text_r("Loading private seed\nis not recommended."),
+        text_r("Continue only if you\nknow what you are doing!"),
     )
     # END _warn
 

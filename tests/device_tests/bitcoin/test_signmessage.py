@@ -303,7 +303,7 @@ MESSAGE_LENGTHS = (
 def test_signmessage_pagination(client: Client, message: str):
     message_read = ""
 
-    def input_flow():
+    def input_flow_model_t():
         # collect screen contents into `message_read`.
         # Using a helper debuglink function to assemble the final text.
         nonlocal message_read
@@ -326,8 +326,23 @@ def test_signmessage_pagination(client: Client, message: str):
 
         client.debug.press_yes()
 
+    def input_flow_model_r():
+        # confirm address
+        yield
+        client.debug.press_yes()
+
+        br = yield
+        # TODO: try load the message_read the same way as in model T
+        for i in range(br.pages):
+            if i < br.pages - 1:
+                client.debug.swipe_up()
+        client.debug.press_yes()
+
     with client:
-        client.set_input_flow(input_flow)
+        if client.features.model == "T":
+            client.set_input_flow(input_flow_model_t)
+        elif client.features.model == "R":
+            client.set_input_flow(input_flow_model_r)
         client.debug.watch_layout(True)
         btc.sign_message(
             client,
@@ -337,14 +352,17 @@ def test_signmessage_pagination(client: Client, message: str):
         )
 
     # We cannot differentiate between a newline and space in the message read from Trezor.
-    expected_message = (
-        ("Confirm message: " + message).replace("\n", "").replace(" ", "")
-    )
-    message_read = message_read.replace(" ", "")
-    assert expected_message == message_read
+    # TODO: do the check also for model R
+    if client.features.model == "T":
+        expected_message = (
+            ("Confirm message: " + message).replace("\n", "").replace(" ", "")
+        )
+        message_read = message_read.replace(" ", "")
+        assert expected_message == message_read
 
 
 @pytest.mark.skip_t1
+@pytest.mark.skip_tr(reason="Different screen size")
 def test_signmessage_pagination_trailing_newline(client: Client):
     message = "THIS\nMUST NOT\nBE\nPAGINATED\n"
     # The trailing newline must not cause a new paginated screen to appear.

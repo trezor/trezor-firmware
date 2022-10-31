@@ -38,6 +38,9 @@ INVALID_SHARES_20_2of3 = [
 
 @pytest.mark.setup_client(mnemonic=SHARES_20_2of3[0:2])
 def test_2of3_dryrun(client: Client):
+    if client.features.model == "R":
+        pytest.skip("Shamir not yet supported for model R")
+
     debug = client.debug
 
     def input_flow():
@@ -55,6 +58,7 @@ def test_2of3_dryrun(client: Client):
             label="label",
             language="en-US",
             dry_run=True,
+            show_tutorial=False,
         )
 
     # Dry run was successful
@@ -65,6 +69,9 @@ def test_2of3_dryrun(client: Client):
 
 @pytest.mark.setup_client(mnemonic=SHARES_20_2of3[0:2])
 def test_2of3_invalid_seed_dryrun(client: Client):
+    if client.features.model == "R":
+        pytest.skip("Shamir not yet supported for model R")
+
     debug = client.debug
 
     def input_flow():
@@ -85,4 +92,5 @@ def test_2of3_invalid_seed_dryrun(client: Client):
             label="label",
             language="en-US",
             dry_run=True,
+            show_tutorial=False,
         )

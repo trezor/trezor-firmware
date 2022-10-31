@@ -24,6 +24,7 @@ from trezorlib import btc, tools
 from trezorlib.messages import ButtonRequestType
 
 if TYPE_CHECKING:
+    from trezorlib.debuglink import LayoutLines
     from trezorlib.debuglink import DebugLink, TrezorClientDebugLink as Client
     from trezorlib.messages import ButtonRequest
     from _pytest.mark.structures import MarkDecorator
@@ -214,7 +215,7 @@ def read_and_confirm_mnemonic(
 
         mnemonic = yield from read_and_confirm_mnemonic(client.debug)
     """
-    mnemonic = []
+    mnemonic: List[str] = []
     br = yield
     assert br.pages is not None
     for _ in range(br.pages - 1):
@@ -237,7 +238,96 @@ def read_and_confirm_mnemonic(
     return " ".join(mnemonic)
 
 
+class ModelRLayout:
+    """Layout shortcuts for Model R."""
+
+    def __init__(self, layout: "LayoutLines") -> None:
+        self.layout = layout
+
+    def get_mnemonic_words(self) -> List[str]:
+        """Extract mnemonic words from the layout lines.
+
+        Example input: [..., '3. abuse', '4. must', '5. during', '6. monitor', '7. noble ', ...]
+        Example output: ['abuse', 'must', 'during', 'monitor', 'noble']
+        """
+        words: List[str] = []
+        for line in self.layout.lines:
+            if "." in line:
+                number, word = line.split(".", 1)
+                if all(c.isdigit() for c in number):
+                    words.append(word.strip())
+
+        return words
+
+    def get_word_index(self) -> int:
+        """Extract currently asked mnemonic index.
+
+        Example input: "Select word 3/12"
+        Example output: 2
+        """
+        prompt = self.layout.lines[0]
+        human_index = prompt.split(" ")[-1].split("/")[0]
+        return int(human_index) - 1
+
+    def get_current_word(self) -> str:
+        """Extract currently selected word.
+
+        Example input: "SELECT [Select(monitor)]"
+        Example output: "monitor"
+        """
+        buttons = self.layout.lines[-1]
+        return buttons.split("[Select(")[1].split(")]")[0]
+
+
+def read_and_confirm_mnemonic_tr(
+    debug: "DebugLink", choose_wrong: bool = False
+) -> Generator[None, "ButtonRequest", Optional[str]]:
+    mnemonic: List[str] = []
+    br = yield
+    assert br.pages is not None
+    for _ in range(br.pages):
+        layout = debug.wait_layout()
+
+        words = ModelRLayout(layout).get_mnemonic_words()
+        mnemonic.extend(words)
+        debug.press_right()
+
+    # check share
+    for _ in range(3):
+        yield
+        layout = debug.wait_layout()
+        index = ModelRLayout(layout).get_word_index()
+        if choose_wrong:
+            debug.input(mnemonic[(index + 1) % len(mnemonic)])
+            return None
+        else:
+            correct_word = mnemonic[index]
+            # Navigating to the correct word before confirming (for UI purposes)
+            for _ in range(3):
+                get_current_word = ModelRLayout(layout).get_current_word()
+                if correct_word == get_current_word:
+                    debug.input(correct_word)
+                    break
+                else:
+                    debug.press_right()
+                    layout = debug.wait_layout()
+            else:
+                raise RuntimeError("Correct word not found")
+
+    return " ".join(mnemonic)
+
+
 def get_test_address(client: "Client") -> str:
     """Fetch a testnet address on a fixed path. Useful to make a pin/passphrase
     protected call, or to identify the root secret (seed+passphrase)"""
     return btc.get_address(client, "Testnet", TEST_ADDRESS_N)
+
+
+def get_text_from_paginated_screen(client: "Client", screen_count: int) -> str:
+    """Aggregating screen text from more pages into one string."""
+    text: str = client.debug.wait_layout().text
+    for _ in range(screen_count - 1):
+        client.debug.swipe_up()
+        text += client.debug.wait_layout().text
+
+    return text

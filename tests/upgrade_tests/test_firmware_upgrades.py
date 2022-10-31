@@ -307,7 +307,7 @@ def test_upgrade_shamir_recovery(gen: str, tag: Optional[str]):
         emu.client.watch_layout(True)
         debug = device_handler.debuglink()
 
-        device_handler.run(device.recover, pin_protection=False)
+        device_handler.run(device.recover, pin_protection=False, show_tutorial=False)
 
         # Flow is different for old UI and new UI
         legacy_ui = emu.client.version < (2, 5, 4)

@@ -316,6 +316,7 @@ message ResetDevice {
     optional bool skip_backup = 8;                          // postpone seed backup to BackupDevice workflow
     optional bool no_backup = 9;                            // indicate that no backup is going to be made
     optional BackupType backup_type = 10 [default=Bip39];   // type of the mnemonic backup
+    optional bool show_tutorial = 11 [default=true];        // whether to show device tutorial
 }
 
 /**
@@ -358,6 +359,7 @@ message RecoveryDevice {
     optional RecoveryDeviceType type = 8;               // supported recovery type
     optional uint32 u2f_counter = 9;                    // U2F counter
     optional bool dry_run = 10;                         // perform dry-run recovery workflow (for safe mnemonic validation)
+    optional bool show_tutorial = 11 [default=true];    // whether to show device tutorial
     /**
      * Type of recovery procedure. These should be used as bitmask, e.g.,
      * `RecoveryDeviceType_ScrambledWords | RecoveryDeviceType_Matrix`

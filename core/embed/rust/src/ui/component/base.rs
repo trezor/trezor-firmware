@@ -84,6 +84,10 @@ impl<T> Child<T> {
         self.component
     }
 
+    pub fn inner_mut(&mut self) -> &mut T {
+        &mut self.component
+    }
+
     /// Access inner component mutably, track whether a paint call has been
     /// requested, and propagate the flag upwards the component tree.
     pub fn mutate<F, U>(&mut self, ctx: &mut EventCtx, component_func: F) -> U

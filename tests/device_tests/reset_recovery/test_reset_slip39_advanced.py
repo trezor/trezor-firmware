@@ -34,6 +34,9 @@ EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
 # TODO: test with different options
 @pytest.mark.setup_client(uninitialized=True)
 def test_reset_device_slip39_advanced(client: Client):
+    if client.features.model == "R":
+        pytest.skip("Shamir not yet supported for model R")
+
     strength = 128
     member_threshold = 3
     all_mnemonics = []
@@ -117,6 +120,7 @@ def test_reset_device_slip39_advanced(client: Client):
             label="test",
             language="en-US",
             backup_type=BackupType.Slip39_Advanced,
+            show_tutorial=False,
         )
 
     # generate secret locally

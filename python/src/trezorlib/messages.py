@@ -484,12 +484,19 @@ class DebugSwipeDirection(IntEnum):
     DOWN = 1
     LEFT = 2
     RIGHT = 3
+    ALL_THE_WAY_UP = 4
 
 
 class DebugButton(IntEnum):
     NO = 0
     YES = 1
     INFO = 2
+
+
+class DebugPhysicalButton(IntEnum):
+    LEFT_BTN = 0
+    MIDDLE_BTN = 1
+    RIGHT_BTN = 2
 
 
 class EthereumDataType(IntEnum):
@@ -3482,6 +3489,7 @@ class ResetDevice(protobuf.MessageType):
         8: protobuf.Field("skip_backup", "bool", repeated=False, required=False, default=None),
         9: protobuf.Field("no_backup", "bool", repeated=False, required=False, default=None),
         10: protobuf.Field("backup_type", "BackupType", repeated=False, required=False, default=BackupType.Bip39),
+        11: protobuf.Field("show_tutorial", "bool", repeated=False, required=False, default=True),
     }
 
     def __init__(
@@ -3497,6 +3505,7 @@ class ResetDevice(protobuf.MessageType):
         skip_backup: Optional["bool"] = None,
         no_backup: Optional["bool"] = None,
         backup_type: Optional["BackupType"] = BackupType.Bip39,
+        show_tutorial: Optional["bool"] = True,
     ) -> None:
         self.display_random = display_random
         self.strength = strength
@@ -3508,6 +3517,7 @@ class ResetDevice(protobuf.MessageType):
         self.skip_backup = skip_backup
         self.no_backup = no_backup
         self.backup_type = backup_type
+        self.show_tutorial = show_tutorial
 
 
 class BackupDevice(protobuf.MessageType):
@@ -3544,6 +3554,7 @@ class RecoveryDevice(protobuf.MessageType):
         8: protobuf.Field("type", "RecoveryDeviceType", repeated=False, required=False, default=None),
         9: protobuf.Field("u2f_counter", "uint32", repeated=False, required=False, default=None),
         10: protobuf.Field("dry_run", "bool", repeated=False, required=False, default=None),
+        11: protobuf.Field("show_tutorial", "bool", repeated=False, required=False, default=True),
     }
 
     def __init__(
@@ -3558,6 +3569,7 @@ class RecoveryDevice(protobuf.MessageType):
         type: Optional["RecoveryDeviceType"] = None,
         u2f_counter: Optional["int"] = None,
         dry_run: Optional["bool"] = None,
+        show_tutorial: Optional["bool"] = True,
     ) -> None:
         self.word_count = word_count
         self.passphrase_protection = passphrase_protection
@@ -3568,6 +3580,7 @@ class RecoveryDevice(protobuf.MessageType):
         self.type = type
         self.u2f_counter = u2f_counter
         self.dry_run = dry_run
+        self.show_tutorial = show_tutorial
 
 
 class WordRequest(protobuf.MessageType):
@@ -3705,6 +3718,7 @@ class DebugLinkDecision(protobuf.MessageType):
         5: protobuf.Field("y", "uint32", repeated=False, required=False, default=None),
         6: protobuf.Field("wait", "bool", repeated=False, required=False, default=None),
         7: protobuf.Field("hold_ms", "uint32", repeated=False, required=False, default=None),
+        8: protobuf.Field("physical_button", "DebugPhysicalButton", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -3717,6 +3731,7 @@ class DebugLinkDecision(protobuf.MessageType):
         y: Optional["int"] = None,
         wait: Optional["bool"] = None,
         hold_ms: Optional["int"] = None,
+        physical_button: Optional["DebugPhysicalButton"] = None,
     ) -> None:
         self.button = button
         self.swipe = swipe
@@ -3725,6 +3740,7 @@ class DebugLinkDecision(protobuf.MessageType):
         self.y = y
         self.wait = wait
         self.hold_ms = hold_ms
+        self.physical_button = physical_button
 
 
 class DebugLinkLayout(protobuf.MessageType):

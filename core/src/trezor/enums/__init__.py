@@ -449,11 +449,17 @@ if TYPE_CHECKING:
         DOWN = 1
         LEFT = 2
         RIGHT = 3
+        ALL_THE_WAY_UP = 4
 
     class DebugButton(IntEnum):
         NO = 0
         YES = 1
         INFO = 2
+
+    class DebugPhysicalButton(IntEnum):
+        LEFT_BTN = 0
+        MIDDLE_BTN = 1
+        RIGHT_BTN = 2
 
     class EthereumDataType(IntEnum):
         UINT = 1

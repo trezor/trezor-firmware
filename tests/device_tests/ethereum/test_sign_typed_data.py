@@ -95,11 +95,19 @@ DATA = {
 }
 
 
+def _confirm_show_more(client: Client) -> None:
+    """Model-specific, either clicks a screen or presses a button."""
+    if client.features.model == "T":
+        client.debug.click(SHOW_MORE)
+    elif client.features.model == "R":
+        client.debug.press_yes()
+
+
 def input_flow_show_more(client: Client):
     """Clicks show_more button wherever possible"""
     yield  # confirm domain
     client.debug.wait_layout()
-    client.debug.click(SHOW_MORE)
+    _confirm_show_more(client)
 
     # confirm domain properties
     for _ in range(4):
@@ -108,11 +116,11 @@ def input_flow_show_more(client: Client):
 
     yield  # confirm message
     client.debug.wait_layout()
-    client.debug.click(SHOW_MORE)
+    _confirm_show_more(client)
 
     yield  # confirm message.from
     client.debug.wait_layout()
-    client.debug.click(SHOW_MORE)
+    _confirm_show_more(client)
 
     # confirm message.from properties
     for _ in range(2):
@@ -121,7 +129,7 @@ def input_flow_show_more(client: Client):
 
     yield  # confirm message.to
     client.debug.wait_layout()
-    client.debug.click(SHOW_MORE)
+    _confirm_show_more(client)
 
     # confirm message.to properties
     for _ in range(2):
@@ -143,9 +151,6 @@ def input_flow_cancel(client: Client):
 
 @pytest.mark.skip_t1
 def test_ethereum_sign_typed_data_show_more_button(client: Client):
-    if client.features.model == "R":
-        pytest.fail("would freeze at Show more dialogue")
-
     with client:
         client.watch_layout()
         client.set_input_flow(input_flow_show_more(client))
@@ -159,6 +164,9 @@ def test_ethereum_sign_typed_data_show_more_button(client: Client):
 
 @pytest.mark.skip_t1
 def test_ethereum_sign_typed_data_cancel(client: Client):
+    if client.features.model == "R":
+        pytest.skip("Cancelling is not supported on model R")
+
     with client, pytest.raises(exceptions.Cancelled):
         client.watch_layout()
         client.set_input_flow(input_flow_cancel(client))

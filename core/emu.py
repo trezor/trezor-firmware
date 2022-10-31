@@ -67,7 +67,7 @@ def watch_emulator(emulator: CoreEmulator) -> int:
     return 0
 
 
-def run_debugger(emulator: CoreEmulator) -> None:
+def run_debugger(emulator: CoreEmulator, gdb_script_file: str | Path | None) -> None:
     os.chdir(emulator.workdir)
     env = emulator.make_env()
     if platform.system() == "Darwin":
@@ -78,8 +78,15 @@ def run_debugger(emulator: CoreEmulator) -> None:
             env,
         )
     else:
+        # Optionally run a gdb script from a file
+        if gdb_script_file is None:
+            gdb = ["gdb"]
+        else:
+            gdb = ["gdb", "-x", str(HERE / gdb_script_file)]
         os.execvpe(
-            "gdb", ["gdb", "--args", str(emulator.executable)] + emulator.make_args(), env
+            "gdb",
+            gdb + ["--args", str(emulator.executable)] + emulator.make_args(),
+            env,
         )
 
 
@@ -110,6 +117,7 @@ def _from_env(name: str) -> bool:
 @click.option("-q", "--quiet", is_flag=True, help="Silence emulator output")
 @click.option("-r", "--record-dir", help="Directory where to record screen changes")
 @click.option("-s", "--slip0014", is_flag=True, help="Initialize device with SLIP-14 seed (all all all...)")
+@click.option("-S", "--script-gdb-file", type=click.Path(exists=True, dir_okay=False), help="Run gdb with an init file")
 @click.option("-t", "--temporary-profile", is_flag=True, help="Create an empty temporary profile")
 @click.option("-w", "--watch", is_flag=True, help="Restart emulator if sources change")
 @click.option("-X", "--extra-arg", "extra_args", multiple=True, help="Extra argument to pass to micropython")
@@ -135,6 +143,7 @@ def cli(
     quiet: bool,
     record_dir: Optional[str],
     slip0014: bool,
+    script_gdb_file: str | Path | None,
     temporary_profile: bool,
     watch: bool,
     extra_args: list[str],
@@ -253,7 +262,7 @@ def cli(
         os.environ["TREZOR_MEMPERF"] = "1"
 
     if debugger:
-        run_debugger(emulator)
+        run_debugger(emulator, script_gdb_file)
         raise RuntimeError("run_debugger should not return")
 
     emulator.start()
