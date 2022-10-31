@@ -28,6 +28,7 @@ from ..common import (
     MNEMONIC_SLIP39_ADVANCED_20,
     MNEMONIC_SLIP39_BASIC_20_3of6,
     read_and_confirm_mnemonic,
+    read_and_confirm_mnemonic_tr,
 )
 
 
@@ -49,7 +50,11 @@ def test_backup_bip39(client: Client):
         yield  # Confirm Backup
         client.debug.press_yes()
         # Mnemonic phrases
-        mnemonic = yield from read_and_confirm_mnemonic(client.debug)
+        if client.debug.model == "R":
+            client.debug.watch_layout(True)
+            mnemonic = yield from read_and_confirm_mnemonic_tr(client.debug)
+        else:
+            mnemonic = yield from read_and_confirm_mnemonic(client.debug)
         yield  # Confirm success
         client.debug.press_yes()
         yield  # Backup is done
@@ -59,8 +64,10 @@ def test_backup_bip39(client: Client):
         client.set_input_flow(input_flow)
         client.set_expected_responses(
             [
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
+                *[
+                    messages.ButtonRequest(code=B.ResetDevice)
+                    for _ in range(5 if client.debug.model == "R" else 2)
+                ],
                 messages.ButtonRequest(code=B.Success),
                 messages.ButtonRequest(code=B.Success),
                 messages.Success,
@@ -84,6 +91,9 @@ def test_backup_bip39(client: Client):
     "click_info", [True, False], ids=["click_info", "no_click_info"]
 )
 def test_backup_slip39_basic(client: Client, click_info: bool):
+    if client.features.model == "R":
+        pytest.skip("Shamir not yet supported for model R")
+
     assert client.features.needs_backup is True
     mnemonics = []
 
@@ -152,6 +162,9 @@ def test_backup_slip39_basic(client: Client, click_info: bool):
     "click_info", [True, False], ids=["click_info", "no_click_info"]
 )
 def test_backup_slip39_advanced(client: Client, click_info: bool):
+    if client.features.model == "R":
+        pytest.skip("Shamir not yet supported for model R")
+
     assert client.features.needs_backup is True
     mnemonics = []
 
@@ -287,4 +300,5 @@ def test_no_backup_show_entropy_fails(client: Client):
             label="test",
             language="en-US",
             no_backup=True,
+            show_tutorial=False,
         )

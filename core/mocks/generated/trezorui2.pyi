@@ -38,10 +38,53 @@ def confirm_action(
     description: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = None,
-    hold: bool | None = None,
+    hold: bool = False,
     reverse: bool = False,
 ) -> object:
     """Confirm action."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def confirm_output_r(
+    *,
+    address: str,
+    truncated_address: str,
+    amount: str,
+) -> object:
+    """Confirm output. Specific for model R."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def confirm_total_r(
+    *,
+    title: str,
+    total_amount: str,
+    fee_amount: str,
+    fee_rate_amount: str | None = None,
+    total_label: str,
+    fee_label: str,
+) -> object:
+    """Confirm summary of a transaction. Specific for model R."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def tutorial() -> object:
+    """Show user how to interact with the device."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def pin_confirm_action(*, action: str) -> object:
+    """Confirm PIN action and informing user about it."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def request_pin(
+    *,
+    prompt: str,
+    subprompt: str | None = None,
+    allow_cancel: bool | None = None,
+) -> str | object:
+    """Request pin on device."""
 
 
 # rust/src/ui/model_tr/layout.rs
@@ -52,6 +95,51 @@ def confirm_text(
     description: str | None,
 ) -> object:
     """Confirm text."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def show_share_words(
+    *,
+    share_words: Iterable[str],
+) -> None:
+    """Shows a backup seed."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def select_word(
+    *,
+    title: str,
+    description: str,
+    words: Iterable[str],
+) -> int:
+   """Select mnemonic word from three possibilities - seed check after backup. The
+   iterable must be of exact size. Returns index in range `0..3`."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def request_word_count(
+    *,
+    title: str,
+    text: str,
+) -> str:  # TODO: make it return int
+    """Get word count for recovery."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def request_word_bip39(
+    *,
+    prompt: str,
+) -> str:
+    """Get recovery word for BIP39."""
+
+
+# rust/src/ui/model_tr/layout.rs
+def request_passphrase(
+    *,
+    prompt: str,
+    max_len: int,
+) -> str:
+    """Get passphrase."""
 CONFIRMED: object
 CANCELLED: object
 INFO: object

@@ -5,32 +5,13 @@ from trezor.enums import BackupType, ButtonRequestType
 
 import trezorui2
 
-from ..common import interact
+from ..common import interact, split_share_into_pages
 from . import _RustLayout
 
 if TYPE_CHECKING:
-    from typing import Callable, Sequence, List
+    from typing import Callable, Sequence
 
     pass
-
-
-def _split_share_into_pages(share_words: Sequence[str], per_page: int = 4) -> List[str]:
-    pages = []
-    current = ""
-
-    for i, word in enumerate(share_words):
-        if i % per_page == 0:
-            if i != 0:
-                pages.append(current)
-            current = ""
-        else:
-            current += "\n"
-        current += f"{i + 1}. {word}"
-
-    if current:
-        pages.append(current)
-
-    return pages
 
 
 async def show_share_words(
@@ -61,7 +42,7 @@ async def show_share_words(
     # if result != trezorui2.CONFIRMED:
     #     raise wire.ActionCancelled
 
-    pages = _split_share_into_pages(share_words)
+    pages = split_share_into_pages(share_words)
 
     result = await interact(
         ctx,

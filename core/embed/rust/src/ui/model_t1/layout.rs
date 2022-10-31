@@ -57,10 +57,10 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
         let reverse: bool = kwargs.get(Qstr::MP_QSTR_reverse)?.try_into()?;
 
         let format = match (&action, &description, reverse) {
-            (Some(_), Some(_), false) => "{bold}{action}\n\r{normal}{description}",
-            (Some(_), Some(_), true) => "{normal}{description}\n\r{bold}{action}",
-            (Some(_), None, _) => "{bold}{action}",
-            (None, Some(_), _) => "{normal}{description}",
+            (Some(_), Some(_), false) => "{Font::bold}{action}\n\r{Font::normal}{description}",
+            (Some(_), Some(_), true) => "{Font::normal}{description}\n\r{Font::bold}{action}",
+            (Some(_), None, _) => "{Font::bold}{action}",
+            (None, Some(_), _) => "{Font::normal}{description}",
             _ => "",
         };
 

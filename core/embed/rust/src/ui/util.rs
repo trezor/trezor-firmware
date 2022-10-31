@@ -1,3 +1,5 @@
+use heapless::String;
+
 pub trait ResultExt {
     fn assert_if_debugging_ui(self, message: &str);
 }
@@ -57,4 +59,11 @@ mod tests {
             assert_eq!(converted, None)
         }
     }
+}
+
+/// Convert char to a String of chosen length.
+pub fn char_to_string<const L: usize>(ch: char) -> String<L> {
+    let mut s = String::new();
+    s.push(ch).unwrap();
+    s
 }

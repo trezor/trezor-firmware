@@ -304,7 +304,7 @@ def test_upgrade_shamir_recovery(gen: str, tag: str):
         emu.client.watch_layout(True)
         debug = device_handler.debuglink()
 
-        device_handler.run(device.recover, pin_protection=False)
+        device_handler.run(device.recover, pin_protection=False, show_tutorial=False)
 
         recovery.confirm_recovery(debug)
         recovery.select_number_of_words(debug)

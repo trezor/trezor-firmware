@@ -271,13 +271,13 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: pytest.ExitCode) -
         if missing and ui_tests.list_missing():
             session.exitstatus = pytest.ExitCode.TESTS_FAILED
         ui_tests.write_fixtures_suggestion(missing)
-        testreport.index()
+        testreport.generate_reports()
     elif test_ui == "record":
         if exitstatus == pytest.ExitCode.OK:
             ui_tests.write_fixtures(missing)
         else:
             ui_tests.write_fixtures_suggestion(missing, only_passed_tests=True)
-        testreport.index()
+        testreport.generate_reports()
 
 
 def pytest_terminal_summary(
@@ -395,8 +395,9 @@ def pytest_runtest_teardown(item: pytest.Item) -> None:
 
     Dumps the current UI test report HTML.
     """
-    if item.session.config.getoption("ui"):
-        testreport.index()
+    # Not generating any reports to make tests quicker.
+    # All the final reports will be generated in `pytest_sessionfinish`.
+    pass
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)

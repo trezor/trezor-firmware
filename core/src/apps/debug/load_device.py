@@ -6,7 +6,7 @@ from trezor.enums import BackupType
 from trezor.messages import LoadDevice, Success
 from trezor.ui.layouts import confirm_action
 
-from apps.management import backup_types
+from apps.management import backup_types, text_r
 
 
 async def load_device(ctx: wire.Context, msg: LoadDevice) -> Success:
@@ -72,6 +72,6 @@ async def _warn(ctx: wire.Context) -> None:
         ctx,
         "warn_loading_seed",
         "Loading seed",
-        "Loading private seed\nis not recommended.",
-        "Continue only if you\nknow what you are doing!",
+        text_r("Loading private seed\nis not recommended."),
+        text_r("Continue only if you\nknow what you are doing!"),
     )

@@ -46,7 +46,7 @@ def test_abort(emulator: Emulator):
 
     assert features.recovery_mode is False
 
-    device_handler.run(device.recover, pin_protection=False)
+    device_handler.run(device.recover, pin_protection=False, show_tutorial=False)
     layout = debug.wait_layout()
     assert layout.text.startswith("Recovery mode")
 
@@ -81,7 +81,7 @@ def test_recovery_single_reset(emulator: Emulator):
     assert features.initialized is False
     assert features.recovery_mode is False
 
-    device_handler.run(device.recover, pin_protection=False)
+    device_handler.run(device.recover, pin_protection=False, show_tutorial=False)
     recovery.confirm_recovery(debug)
 
     recovery.select_number_of_words(debug)
@@ -118,7 +118,7 @@ def test_recovery_on_old_wallet(emulator: Emulator):
     assert features.recovery_mode is False
 
     # enter recovery mode
-    device_handler.run(device.recover, pin_protection=False)
+    device_handler.run(device.recover, pin_protection=False, show_tutorial=False)
     recovery.confirm_recovery(debug)
 
     # restart to get into stand-alone recovery
@@ -192,7 +192,7 @@ def test_recovery_multiple_resets(emulator: Emulator):
     assert features.recovery_mode is False
 
     # start device and recovery
-    device_handler.run(device.recover, pin_protection=False)
+    device_handler.run(device.recover, pin_protection=False, show_tutorial=False)
     recovery.confirm_recovery(debug)
 
     # set number of words

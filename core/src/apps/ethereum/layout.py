@@ -17,6 +17,7 @@ from trezor.ui.layouts import (
 )
 from trezor.ui.layouts.altcoin import confirm_total_ethereum
 
+from ..management import text_r
 from . import networks, tokens
 from .helpers import address_from_bytes, decode_typed_data, get_type_name
 
@@ -88,8 +89,8 @@ async def require_confirm_eip1559_fee(
         ctx,
         total_amount=format_ethereum_amount(spending, token, chain_id),
         fee_amount=format_ethereum_amount(max_gas_fee * gas_limit, None, chain_id),
-        total_label="Amount sent:\n",
-        fee_label="\nMaximum fee:\n",
+        total_label=text_r("Amount sent:\n"),
+        fee_label=text_r("\nMaximum fee:\n"),
     )
 
 

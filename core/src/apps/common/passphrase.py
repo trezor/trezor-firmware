@@ -3,6 +3,8 @@ from micropython import const
 import storage.device
 from trezor import wire, workflow
 
+from apps.management import text_r
+
 _MAX_PASSPHRASE_LEN = const(50)
 
 
@@ -61,7 +63,9 @@ async def _request_on_host(ctx: wire.Context) -> str:
             ctx,
             "passphrase_host1",
             title="Hidden wallet",
-            description="Access hidden wallet?\n\nNext screen will show\nthe passphrase!",
+            description=text_r(
+                "Access hidden wallet?\n\nNext screen will show\nthe passphrase!"
+            ),
             icon=ui.ICON_CONFIG,
         )
 
@@ -69,7 +73,7 @@ async def _request_on_host(ctx: wire.Context) -> str:
             ctx,
             "passphrase_host2",
             title="Hidden wallet",
-            description="Use this passphrase?\n",
+            description=text_r("Use this passphrase?\n"),
             data=ack.passphrase,
             icon=ui.ICON_CONFIG,
             icon_color=ui.ORANGE_ICON,
@@ -82,5 +86,6 @@ def _entry_dialog() -> None:
     from trezor.ui.layouts import draw_simple_text
 
     draw_simple_text(
-        "Passphrase entry", "Please type your\npassphrase on the\nconnected host."
+        "Passphrase entry",
+        text_r("Please type your\npassphrase on the\nconnected host."),
     )

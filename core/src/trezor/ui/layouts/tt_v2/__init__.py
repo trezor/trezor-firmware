@@ -220,7 +220,10 @@ async def confirm_action(
 
 
 async def confirm_reset_device(
-    ctx: wire.GenericContext, prompt: str, recovery: bool = False
+    ctx: wire.GenericContext,
+    prompt: str,
+    recovery: bool = False,
+    show_tutorial: bool = True,
 ) -> None:
     if recovery:
         title = "RECOVERY MODE"
@@ -987,6 +990,7 @@ async def show_popup(
     subtitle: str | None = None,
     description_param: str = "",
     timeout_ms: int = 3000,
+    icon: str = ui.ICON_WRONG,
 ) -> None:
     if subtitle:
         title += f"\n{subtitle}"
@@ -1000,7 +1004,9 @@ async def show_popup(
     )
 
 
-def draw_simple_text(title: str, description: str = "") -> None:
+def draw_simple_text(
+    title: str, description: str = "", icon: str = ui.ICON_CONFIG
+) -> None:
     log.error(__name__, "draw_simple_text not implemented")
 
 

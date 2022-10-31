@@ -6,6 +6,7 @@ from trezor.enums import ButtonRequestType
 from trezor.messages import Success
 from trezor.ui.layouts import confirm_action
 
+from . import text_r
 from .apply_settings import reload_settings_from_storage
 
 if TYPE_CHECKING:
@@ -18,7 +19,7 @@ async def wipe_device(ctx: wire.GenericContext, msg: WipeDevice) -> Success:
         ctx,
         "confirm_wipe",
         title="Wipe device",
-        description="Do you really want to\nwipe the device?\n",
+        description=text_r("Do you really want to\nwipe the device?\n"),
         action="All data will be lost.",
         reverse=True,
         verb="Hold to confirm",

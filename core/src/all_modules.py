@@ -97,6 +97,8 @@ trezor.enums.Capability
 import trezor.enums.Capability
 trezor.enums.DebugButton
 import trezor.enums.DebugButton
+trezor.enums.DebugPhysicalButton
+import trezor.enums.DebugPhysicalButton
 trezor.enums.DebugSwipeDirection
 import trezor.enums.DebugSwipeDirection
 trezor.enums.DecredStakingSpendType
@@ -153,6 +155,8 @@ trezor.ui.components.common.confirm
 import trezor.ui.components.common.confirm
 trezor.ui.components.common.text
 import trezor.ui.components.common.text
+trezor.ui.components.tr.text
+import trezor.ui.components.tr.text
 trezor.ui.components.tt.button
 import trezor.ui.components.tt.button
 trezor.ui.components.tt.checklist
@@ -363,6 +367,14 @@ apps.homescreen.homescreen
 import apps.homescreen.homescreen
 apps.homescreen.lockscreen
 import apps.homescreen.lockscreen
+apps.homescreen.t1
+import apps.homescreen.t1
+apps.homescreen.tr
+import apps.homescreen.tr
+apps.homescreen.tt
+import apps.homescreen.tt
+apps.management
+import apps.management
 apps.management.apply_flags
 import apps.management.apply_flags
 apps.management.apply_settings

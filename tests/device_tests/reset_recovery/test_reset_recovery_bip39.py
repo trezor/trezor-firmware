@@ -24,7 +24,12 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.messages import BackupType, ButtonRequestType as B
 from trezorlib.tools import parse_path
 
-from ...common import EXTERNAL_ENTROPY, click_through, read_and_confirm_mnemonic
+from ...common import (
+    EXTERNAL_ENTROPY,
+    click_through,
+    read_and_confirm_mnemonic,
+    read_and_confirm_mnemonic_tr,
+)
 
 
 @pytest.mark.skip_t1
@@ -39,7 +44,7 @@ def test_reset_recovery(client: Client):
     assert address_before == address_after
 
 
-def reset(client: Client, strength=128, skip_backup=False):
+def reset(client: Client, strength: int = 128, skip_backup: bool = False) -> str:
     mnemonic = None
 
     def input_flow():
@@ -51,7 +56,11 @@ def reset(client: Client, strength=128, skip_backup=False):
         yield from click_through(client.debug, screens=3, code=B.ResetDevice)
 
         # mnemonic phrases
-        mnemonic = yield from read_and_confirm_mnemonic(client.debug)
+        if client.debug.model == "R":
+            client.debug.watch_layout(True)
+            mnemonic = yield from read_and_confirm_mnemonic_tr(client.debug)
+        else:
+            mnemonic = yield from read_and_confirm_mnemonic(client.debug)
 
         # confirm recovery seed check
         br = yield
@@ -70,8 +79,10 @@ def reset(client: Client, strength=128, skip_backup=False):
                 messages.ButtonRequest(code=B.ResetDevice),
                 messages.EntropyRequest(),
                 messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
+                *[
+                    messages.ButtonRequest(code=B.ResetDevice)
+                    for _ in range(5 if client.debug.model == "R" else 2)
+                ],
                 messages.ButtonRequest(code=B.Success),
                 messages.ButtonRequest(code=B.Success),
                 messages.Success,
@@ -90,6 +101,7 @@ def reset(client: Client, strength=128, skip_backup=False):
             label="test",
             language="en-US",
             backup_type=BackupType.Bip39,
+            show_tutorial=False,
         )
 
     # Check if device is properly initialized
@@ -101,11 +113,11 @@ def reset(client: Client, strength=128, skip_backup=False):
     return mnemonic
 
 
-def recover(client: Client, mnemonic):
+def recover(client: Client, mnemonic: str):
     debug = client.debug
     words = mnemonic.split(" ")
 
-    def input_flow():
+    def input_flow_tt():
         yield  # Confirm recovery
         debug.press_yes()
         yield  # Homescreen
@@ -123,21 +135,52 @@ def recover(client: Client, mnemonic):
         yield  # confirm success
         debug.press_yes()
 
+    def input_flow_tr():
+        yield  # Confirm recovery
+        debug.press_yes()
+        yield  # Homescreen
+        debug.press_yes()
+
+        yield  # Enter word count
+        yield  # Enter word count
+        debug.input(str(len(words)))
+
+        yield  # Homescreen
+        debug.press_yes()
+        yield  # Enter words
+        for word in words:
+            yield
+            debug.input(word)
+
+        yield  # confirm success
+        debug.press_yes()
+
     with client:
-        client.set_input_flow(input_flow)
+        if client.debug.model == "R":
+            client.set_input_flow(input_flow_tr)
+        elif client.debug.model == "T":
+            client.set_input_flow(input_flow_tt)
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=B.ProtectCall),
                 messages.ButtonRequest(code=B.RecoveryHomepage),
-                messages.ButtonRequest(code=B.MnemonicWordCount),
+                *[
+                    messages.ButtonRequest(code=B.MnemonicWordCount)
+                    for _ in range(2 if client.debug.model == "R" else 1)
+                ],
                 messages.ButtonRequest(code=B.RecoveryHomepage),
-                messages.ButtonRequest(code=B.MnemonicInput),
+                *[
+                    messages.ButtonRequest(code=B.MnemonicInput)
+                    for _ in range(13 if client.debug.model == "R" else 1)
+                ],
                 messages.ButtonRequest(code=B.Success),
                 messages.Success,
                 messages.Features,
             ]
         )
-        ret = device.recover(client, pin_protection=False, label="label")
+        ret = device.recover(
+            client, pin_protection=False, label="label", show_tutorial=False
+        )
 
     # Workflow successfully ended
     assert ret == messages.Success(message="Device recovered")

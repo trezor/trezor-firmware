@@ -151,7 +151,10 @@ async def confirm_action(
 
 
 async def confirm_reset_device(
-    ctx: wire.GenericContext, prompt: str, recovery: bool = False
+    ctx: wire.GenericContext,
+    prompt: str,
+    recovery: bool = False,
+    show_tutorial: bool = True,
 ) -> None:
     if recovery:
         text = Text("Recovery mode", ui.ICON_RECOVERY, new_lines=False)
@@ -1069,8 +1072,9 @@ async def show_popup(
     subtitle: str | None = None,
     description_param: str = "",
     timeout_ms: int = 3000,
+    icon: str = ui.ICON_WRONG,
 ) -> None:
-    text = Text(title, ui.ICON_WRONG, ui.RED)
+    text = Text(title, icon, ui.RED)
     if subtitle is not None:
         text.bold(subtitle)
         text.br_half()
@@ -1078,8 +1082,10 @@ async def show_popup(
     await Popup(text, timeout_ms)
 
 
-def draw_simple_text(title: str, description: str = "") -> None:
-    text = Text(title, ui.ICON_CONFIG, new_lines=False)
+def draw_simple_text(
+    title: str, description: str = "", icon: str = ui.ICON_CONFIG
+) -> None:
+    text = Text(title, icon, new_lines=False)
     text.normal(description)
     ui.draw_simple(text)
 

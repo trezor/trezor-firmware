@@ -35,6 +35,7 @@ if TYPE_CHECKING:
     from trezor.enums import CardanoTxSigningMode  # noqa: F401
     from trezor.enums import CardanoTxWitnessType  # noqa: F401
     from trezor.enums import DebugButton  # noqa: F401
+    from trezor.enums import DebugPhysicalButton  # noqa: F401
     from trezor.enums import DebugSwipeDirection  # noqa: F401
     from trezor.enums import DecredStakingSpendType  # noqa: F401
     from trezor.enums import EthereumDataType  # noqa: F401
@@ -2388,6 +2389,7 @@ if TYPE_CHECKING:
         skip_backup: "bool | None"
         no_backup: "bool | None"
         backup_type: "BackupType"
+        show_tutorial: "bool"
 
         def __init__(
             self,
@@ -2402,6 +2404,7 @@ if TYPE_CHECKING:
             skip_backup: "bool | None" = None,
             no_backup: "bool | None" = None,
             backup_type: "BackupType | None" = None,
+            show_tutorial: "bool | None" = None,
         ) -> None:
             pass
 
@@ -2445,6 +2448,7 @@ if TYPE_CHECKING:
         type: "RecoveryDeviceType | None"
         u2f_counter: "int | None"
         dry_run: "bool | None"
+        show_tutorial: "bool"
 
         def __init__(
             self,
@@ -2458,6 +2462,7 @@ if TYPE_CHECKING:
             type: "RecoveryDeviceType | None" = None,
             u2f_counter: "int | None" = None,
             dry_run: "bool | None" = None,
+            show_tutorial: "bool | None" = None,
         ) -> None:
             pass
 
@@ -2609,6 +2614,7 @@ if TYPE_CHECKING:
         y: "int | None"
         wait: "bool | None"
         hold_ms: "int | None"
+        physical_button: "DebugPhysicalButton | None"
 
         def __init__(
             self,
@@ -2620,6 +2626,7 @@ if TYPE_CHECKING:
             y: "int | None" = None,
             wait: "bool | None" = None,
             hold_ms: "int | None" = None,
+            physical_button: "DebugPhysicalButton | None" = None,
         ) -> None:
             pass
 

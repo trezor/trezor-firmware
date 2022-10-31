@@ -5,13 +5,16 @@ use heapless::String;
 use crate::{
     trezorhal::slip39,
     ui::{
-        component::{Component, Event, EventCtx},
+        component::{
+            text::common::{TextBox, TextEdit},
+            Component, Event, EventCtx,
+        },
         display,
         geometry::{Offset, Rect},
         model_tt::{
             component::{
                 keyboard::{
-                    common::{paint_pending_marker, MultiTapKeyboard, TextBox, TextEdit},
+                    common::{paint_pending_marker, MultiTapKeyboard},
                     mnemonic::{MnemonicInput, MnemonicInputMsg, MNEMONIC_KEY_COUNT},
                 },
                 Button, ButtonContent, ButtonMsg,

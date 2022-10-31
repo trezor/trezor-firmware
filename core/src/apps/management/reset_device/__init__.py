@@ -9,7 +9,7 @@ from trezor.messages import EntropyAck, EntropyRequest, Success
 from trezor.ui.layouts import confirm_backup, confirm_reset_device
 from trezor.ui.loader import LoadingAnimation
 
-from .. import backup_types
+from .. import backup_types, text_r
 from ..change_pin import request_pin_confirm
 from . import layout
 
@@ -28,12 +28,12 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
 
     # make sure user knows they're setting up a new wallet
     if msg.backup_type == BackupType.Slip39_Basic:
-        prompt = "Create a new wallet\nwith Shamir Backup?"
+        prompt = text_r("Create a new wallet\nwith Shamir Backup?")
     elif msg.backup_type == BackupType.Slip39_Advanced:
-        prompt = "Create a new wallet\nwith Super Shamir?"
+        prompt = text_r("Create a new wallet\nwith Super Shamir?")
     else:
-        prompt = "Do you want to create\na new wallet?"
-    await confirm_reset_device(ctx, prompt)
+        prompt = text_r("Do you want to create\na new wallet?")
+    await confirm_reset_device(ctx, prompt, show_tutorial=bool(msg.show_tutorial))
     await LoadingAnimation()
 
     # wipe storage to make sure the device is in a clear state

@@ -16,6 +16,7 @@ use super::ffi;
 ///
 /// Given the above assumptions about MicroPython strings, working with
 /// StrBuffers in Rust is safe.
+#[derive(Debug, Clone)]
 pub struct StrBuffer {
     ptr: *const u8,
     len: usize,

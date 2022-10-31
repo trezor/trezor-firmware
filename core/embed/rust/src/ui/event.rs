@@ -2,15 +2,20 @@ use crate::{error, ui::geometry::Point};
 use core::convert::TryInto;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
+// TODO: delete Both and all its usage
+// ButtonPos.hit() should not be used anymore
 pub enum PhysicalButton {
     Left,
     Right,
+    Both,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ButtonEvent {
     ButtonPressed(PhysicalButton),
     ButtonReleased(PhysicalButton),
+    HoldStarted,
+    HoldEnded,
 }
 
 impl ButtonEvent {
@@ -18,6 +23,7 @@ impl ButtonEvent {
         let button = match button {
             0 => PhysicalButton::Left,
             1 => PhysicalButton::Right,
+            2 => PhysicalButton::Both,
             _ => return Err(error::Error::OutOfRange),
         };
         let result = match event {

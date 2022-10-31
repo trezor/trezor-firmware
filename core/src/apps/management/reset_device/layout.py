@@ -3,7 +3,7 @@ from typing import Sequence
 from trezor import ui, utils, wire
 from trezor.crypto import random
 from trezor.enums import ButtonRequestType
-from trezor.ui.layouts import confirm_blob, show_success, show_warning
+from trezor.ui.layouts import confirm_action, confirm_blob, show_success, show_warning
 from trezor.ui.layouts.reset import (  # noqa: F401
     select_word,
     show_share_words,
@@ -14,6 +14,8 @@ from trezor.ui.layouts.reset import (  # noqa: F401
     slip39_prompt_threshold,
     slip39_show_checklist,
 )
+
+from .. import text_r
 
 if __debug__:
     from apps import debug
@@ -136,7 +138,7 @@ async def show_backup_warning(ctx: wire.GenericContext, slip39: bool = False) ->
 
 
 async def show_backup_success(ctx: wire.GenericContext) -> None:
-    text = "Use your backup\nwhen you need to\nrecover your wallet."
+    text = text_r("Use your backup\nwhen you need to\nrecover your wallet.")
     await show_success(ctx, "success_backup", text, subheader="Your backup is done.")
 
 

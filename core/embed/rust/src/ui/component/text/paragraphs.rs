@@ -239,11 +239,13 @@ pub mod trace {
     impl<T: ParagraphSource> crate::trace::Trace for Paragraphs<T> {
         fn trace(&self, t: &mut dyn crate::trace::Tracer) {
             t.open("Paragraphs");
+            t.content_flag();
             for (layout, content) in Self::visible_content(&self.source, &self.visible, self.offset)
             {
                 layout.layout_text(content, &mut layout.initial_cursor(), &mut TraceSink(t));
                 t.string("\n");
             }
+            t.content_flag();
             t.close();
         }
     }

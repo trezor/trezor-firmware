@@ -5,6 +5,8 @@ from trezor.enums import ButtonRequestType
 from trezor.messages import Entropy
 from trezor.ui.layouts import confirm_action
 
+from apps.management import text_r
+
 if TYPE_CHECKING:
     from trezor.wire import Context
     from trezor.messages import GetEntropy
@@ -15,8 +17,8 @@ async def get_entropy(ctx: Context, msg: GetEntropy) -> Entropy:
         ctx,
         "get_entropy",
         "Confirm entropy",
-        action="Do you really want\nto send entropy?",
-        description="Continue only if you\nknow what you are doing!",
+        action=text_r("Do you really want\nto send entropy?"),
+        description=text_r("Continue only if you\nknow what you are doing!"),
         br_code=ButtonRequestType.ProtectCall,
     )
 

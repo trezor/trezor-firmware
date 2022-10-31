@@ -113,7 +113,7 @@ def test_dryrun_locks_at_number_of_words(device_handler):
     set_autolock_delay(device_handler, 10_000)
     debug = device_handler.debuglink()
 
-    device_handler.run(device.recover, dry_run=True)
+    device_handler.run(device.recover, dry_run=True, show_tutorial=False)
 
     # unlock
     layout = debug.wait_layout()
@@ -144,7 +144,7 @@ def test_dryrun_locks_at_word_entry(device_handler):
     set_autolock_delay(device_handler, 10_000)
     debug = device_handler.debuglink()
 
-    device_handler.run(device.recover, dry_run=True)
+    device_handler.run(device.recover, dry_run=True, show_tutorial=False)
 
     # unlock
     layout = debug.wait_layout()
@@ -171,7 +171,7 @@ def test_dryrun_enter_word_slowly(device_handler):
     set_autolock_delay(device_handler, 10_000)
     debug = device_handler.debuglink()
 
-    device_handler.run(device.recover, dry_run=True)
+    device_handler.run(device.recover, dry_run=True, show_tutorial=False)
 
     # unlock
     layout = debug.wait_layout()

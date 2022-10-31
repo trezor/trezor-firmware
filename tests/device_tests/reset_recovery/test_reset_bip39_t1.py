@@ -239,4 +239,6 @@ def test_failed_pin(client: Client):
 
 def test_already_initialized(client: Client):
     with pytest.raises(Exception):
-        device.reset(client, False, 128, True, True, "label", "en-US")
+        device.reset(
+            client, False, 128, True, True, "label", "en-US", show_tutorial=False
+        )

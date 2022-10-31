@@ -8,23 +8,27 @@ use heapless::LinearMap;
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
     display::{Color, Font},
-    geometry::Rect,
+    geometry::{Rect},
 };
 
 use super::layout::{
-    LayoutFit, LayoutSink, LineBreaking, Op, PageBreaking, TextLayout, TextRenderer, TextStyle,
+    LayoutFit, LayoutSink, LineBreaking, Op, TextLayout, TextRenderer, TextStyle,
 };
 
 pub const MAX_ARGUMENTS: usize = 6;
 
+#[derive(Clone)]
 pub struct FormattedText<F, T> {
     layout: TextLayout,
     fonts: FormattedFonts,
     format: F,
     args: LinearMap<&'static str, T, MAX_ARGUMENTS>,
+    /// Keeps track of "cursor" position, so that we can paginate
+    /// by skipping this amount of characters from the beginning.
     char_offset: usize,
 }
 
+#[derive(Clone)]
 pub struct FormattedFonts {
     /// Font used to format `{normal}`.
     pub normal: Font,
@@ -75,11 +79,8 @@ impl<F, T> FormattedText<F, T> {
         self
     }
 
-    pub fn with_page_breaking(mut self, page_breaking: PageBreaking) -> Self {
-        self.layout.style.page_breaking = page_breaking;
-        self
-    }
-
+    /// Equals to changing the page so that we know what
+    /// content to render next.
     pub fn set_char_offset(&mut self, char_offset: usize) {
         self.char_offset = char_offset;
     }
@@ -98,15 +99,26 @@ where
     F: AsRef<str>,
     T: AsRef<str>,
 {
+    /// Tokenizing `self.format` and turning it into the list of `Op`s
+    /// which will be sent to `LayoutSink`.
+    /// It equals to painting the content when `sink` is `TextRenderer`.
     pub fn layout_content(&self, sink: &mut dyn LayoutSink) -> LayoutFit {
+        // Accounting for pagination by skipping the `char_offset` characters from the
+        // beginning.
         let mut cursor = self.layout.initial_cursor();
         let mut ops = Op::skip_n_text_bytes(
             Tokenizer::new(self.format.as_ref()).flat_map(|arg| match arg {
+                // Normal text encountered
                 Token::Literal(literal) => Some(Op::Text(literal)),
+                // Changing currently used font
                 Token::Argument("mono") => Some(Op::Font(self.fonts.mono)),
                 Token::Argument("bold") => Some(Op::Font(self.fonts.bold)),
                 Token::Argument("normal") => Some(Op::Font(self.fonts.normal)),
                 Token::Argument("demibold") => Some(Op::Font(self.fonts.demibold)),
+                // Text with argument
+                // e.g. `{address}`, .with("address", "abcd...")
+                // TODO: when arg is not found, we just do not display it,
+                // shouldn't we trigger some exception?
                 Token::Argument(argument) => self
                     .args
                     .get(argument)
@@ -157,7 +169,9 @@ pub mod trace {
         T: AsRef<str>,
     {
         fn trace(&self, d: &mut dyn crate::trace::Tracer) {
+            d.content_flag();
             self.0.layout_content(&mut TraceSink(d));
+            d.content_flag();
         }
     }
 }

@@ -1,13 +1,15 @@
-use super::theme;
+use super::{common, theme};
 use crate::ui::{
     component::{Child, Component, Event, EventCtx},
-    display::{self, Font},
-    geometry::{Insets, Offset, Rect},
+    geometry::{Insets, Rect},
 };
 
+/// Component for holding another component and displaying
+/// a title and optionally a subtitle describing that child component.
 pub struct Frame<T, U> {
     area: Rect,
     title: U,
+    subtitle: Option<U>,
     content: Child<T>,
 }
 
@@ -16,9 +18,10 @@ where
     T: Component,
     U: AsRef<str>,
 {
-    pub fn new(title: U, content: T) -> Self {
+    pub fn new(title: U, subtitle: Option<U>, content: T) -> Self {
         Self {
             title,
+            subtitle,
             area: Rect::zero(),
             content: Child::new(content),
         }
@@ -37,10 +40,11 @@ where
     type Msg = T::Msg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        const TITLE_SPACE: i16 = 4;
+        // Depending on whether there is subtitle or not
+        let title_space = if self.subtitle.is_some() { 12 } else { 4 };
 
-        let (title_area, content_area) = bounds.split_top(Font::BOLD.line_height());
-        let content_area = content_area.inset(Insets::top(TITLE_SPACE));
+        let (title_area, content_area) = bounds.split_top(theme::FONT_HEADER.line_height());
+        let content_area = content_area.inset(Insets::top(title_space));
 
         self.area = title_area;
         self.content.place(content_area);
@@ -52,14 +56,7 @@ where
     }
 
     fn paint(&mut self) {
-        display::text(
-            self.area.bottom_left() - Offset::y(2),
-            self.title.as_ref(),
-            Font::BOLD,
-            theme::FG,
-            theme::BG,
-        );
-        display::dotted_line(self.area.bottom_left(), self.area.width(), theme::FG);
+        common::paint_header(self.area.top_left(), &self.title, self.subtitle.as_ref());
         self.content.paint();
     }
 }
@@ -72,7 +69,10 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("Frame");
-        t.field("title", &self.title);
+        t.title(self.title.as_ref());
+        if let Some(ref subtitle) = self.subtitle {
+            t.title(subtitle.as_ref());
+        }
         t.field("content", &self.content);
         t.close();
     }

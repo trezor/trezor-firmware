@@ -14,6 +14,7 @@ from apps.common.request_pin import (
     request_pin_confirm,
 )
 
+from .. import text_r
 from .homescreen import recovery_homescreen, recovery_process
 
 if TYPE_CHECKING:
@@ -23,7 +24,13 @@ if TYPE_CHECKING:
 # List of RecoveryDevice fields that can be set when doing dry-run recovery.
 # All except `dry_run` are allowed for T1 compatibility, but their values are ignored.
 # If set, `enforce_wordlist` must be True, because we do not support non-enforcing.
-DRY_RUN_ALLOWED_FIELDS = ("dry_run", "word_count", "enforce_wordlist", "type")
+DRY_RUN_ALLOWED_FIELDS = (
+    "dry_run",
+    "word_count",
+    "enforce_wordlist",
+    "type",
+    "show_tutorial",
+)
 
 
 async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
@@ -90,7 +97,10 @@ def _validate(msg: RecoveryDevice) -> None:
 async def _continue_dialog(ctx: wire.Context, msg: RecoveryDevice) -> None:
     if not msg.dry_run:
         await confirm_reset_device(
-            ctx, "Do you really want to\nrecover a wallet?", recovery=True
+            ctx,
+            text_r("Do you really want to\nrecover a wallet?"),
+            recovery=True,
+            show_tutorial=bool(msg.show_tutorial),
         )
     else:
         await confirm_action(

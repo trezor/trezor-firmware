@@ -16,7 +16,6 @@
 
 import logging
 import textwrap
-from collections import namedtuple
 from copy import deepcopy
 from datetime import datetime
 from enum import IntEnum
@@ -31,6 +30,7 @@ from typing import (
     Iterable,
     Iterator,
     List,
+    NamedTuple,
     Optional,
     Sequence,
     Tuple,
@@ -56,13 +56,17 @@ if TYPE_CHECKING:
 
 EXPECTED_RESPONSES_CONTEXT_LINES = 3
 
-LayoutLines = namedtuple("LayoutLines", "lines text")
 
 LOG = logging.getLogger(__name__)
 
 
+class LayoutLines(NamedTuple):
+    lines: List[str]
+    text: str
+
+
 def layout_lines(lines: Sequence[str]) -> LayoutLines:
-    return LayoutLines(lines, " ".join(lines))
+    return LayoutLines(list(lines), " ".join(lines))
 
 
 class DebugLink:
@@ -158,6 +162,7 @@ class DebugLink:
         self,
         word: Optional[str] = None,
         button: Optional[messages.DebugButton] = None,
+        physical_button: Optional[messages.DebugPhysicalButton] = None,
         swipe: Optional[messages.DebugSwipeDirection] = None,
         x: Optional[int] = None,
         y: Optional[int] = None,
@@ -167,12 +172,21 @@ class DebugLink:
         if not self.allow_interactions:
             return None
 
-        args = sum(a is not None for a in (word, button, swipe, x))
+        args = sum(a is not None for a in (word, button, physical_button, swipe, x))
         if args != 1:
-            raise ValueError("Invalid input - must use one of word, button, swipe")
+            raise ValueError(
+                "Invalid input - must use one of word, button, physical_button, swipe, click(x,y)"
+            )
 
         decision = messages.DebugLinkDecision(
-            button=button, swipe=swipe, input=word, x=x, y=y, wait=wait, hold_ms=hold_ms
+            button=button,
+            physical_button=physical_button,
+            swipe=swipe,
+            input=word,
+            x=x,
+            y=y,
+            wait=wait,
+            hold_ms=hold_ms,
         )
         ret = self._call(decision, nowait=not wait)
         if ret is not None:
@@ -195,6 +209,9 @@ class DebugLink:
     def press_info(self) -> None:
         self.input(button=messages.DebugButton.INFO)
 
+    def swipe_all_the_way_up(self) -> None:
+        self.input(swipe=messages.DebugSwipeDirection.ALL_THE_WAY_UP, wait=True)
+
     def swipe_up(self, wait: bool = False) -> None:
         self.input(swipe=messages.DebugSwipeDirection.UP, wait=wait)
 
@@ -206,6 +223,15 @@ class DebugLink:
 
     def swipe_left(self) -> None:
         self.input(swipe=messages.DebugSwipeDirection.LEFT)
+
+    def press_left(self) -> None:
+        self.input(physical_button=messages.DebugPhysicalButton.LEFT_BTN)
+
+    def press_middle(self) -> None:
+        self.input(physical_button=messages.DebugPhysicalButton.MIDDLE_BTN)
+
+    def press_right(self) -> None:
+        self.input(physical_button=messages.DebugPhysicalButton.RIGHT_BTN)
 
     def stop(self) -> None:
         self._call(messages.DebugLinkStop(), nowait=True)
@@ -323,9 +349,14 @@ class DebugUI:
             if br.code == messages.ButtonRequestType.PinEntry:
                 self.debuglink.input(self.get_pin())
             else:
+                # Paginating (going as further as possible) and pressing Yes
                 if br.pages is not None:
-                    for _ in range(br.pages - 1):
-                        self.debuglink.swipe_up(wait=True)
+                    if br.pages == 0:
+                        # When we do not know how many, but want to paginate
+                        self.debuglink.swipe_all_the_way_up()
+                    else:
+                        for _ in range(br.pages - 1):
+                            self.debuglink.swipe_up(wait=True)
                 self.debuglink.press_yes()
         elif self.input_flow is self.INPUT_FLOW_DONE:
             raise AssertionError("input flow ended prematurely")

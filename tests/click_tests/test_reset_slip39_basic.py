@@ -42,6 +42,7 @@ def test_reset_slip39_basic_1of1(device_handler):
             strength=128,
             backup_type=messages.BackupType.Slip39_Basic,
             pin_protection=False,
+            show_tutorial=False,
         )
 
         # confirm new wallet
@@ -114,6 +115,7 @@ def test_reset_slip39_basic_16of16(device_handler):
             strength=128,
             backup_type=messages.BackupType.Slip39_Basic,
             pin_protection=False,
+            show_tutorial=False,
         )
 
         # confirm new wallet

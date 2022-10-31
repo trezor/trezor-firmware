@@ -11,6 +11,8 @@ from apps.common.request_pin import (
     request_pin_and_sd_salt,
 )
 
+from . import text_r
+
 if TYPE_CHECKING:
     from typing import Awaitable
 
@@ -113,12 +115,16 @@ async def _request_wipe_code_confirm(ctx: wire.Context, pin: str) -> str:
 async def _wipe_code_invalid() -> None:
     await show_popup(
         title="Invalid wipe code",
-        description="The wipe code must be\ndifferent from your PIN.\n\nPlease try again.",
+        description=text_r(
+            "The wipe code must be\ndifferent from your PIN.\n\nPlease try again."
+        ),
     )
 
 
 async def _wipe_code_mismatch() -> None:
     await show_popup(
         title="Code mismatch",
-        description="The wipe codes you\nentered do not match.\n\nPlease try again.",
+        description=text_r(
+            "The wipe codes you\nentered do not match.\n\nPlease try again."
+        ),
     )

@@ -2,9 +2,11 @@ from typing import TYPE_CHECKING, Sequence
 
 from trezor import io, log, loop, ui, wire, workflow
 from trezor.enums import ButtonRequestType
+from trezor.ui.popup import Popup
 
 import trezorui2
 
+from ...components.tr.text import Text
 from ..common import button_request, interact
 
 if TYPE_CHECKING:
@@ -17,17 +19,187 @@ if TYPE_CHECKING:
     ExceptionType = BaseException | Type[BaseException]
 
 
-class _RustLayout(ui.Layout):
+# TODO: could create object holding all the data - text, title, btn_actions...
+
+
+class RustLayoutContent:
+    """Providing shortcuts to the data returned by layouts.
+
+    Used only in debug mode.
+    """
+
+    # How will some information be identified in the content
+    TITLE_TAG = " **TITLE** "
+    CONTENT_TAG = " **CONTENT** "
+    BTN_TAG = " **BTN** "
+    EMPTY_BTN = "---"
+    NEXT_BTN = "Next"
+    PREV_BTN = "Prev"
+
+    def __init__(self, raw_content: list[str]) -> None:
+        self.raw_content = raw_content
+        self.str_content = " ".join(raw_content).replace("  ", " ")
+        print("str_content", self.str_content)
+        print(60 * "-")
+        print("active_page:", self.active_page())
+        print("page_count:", self.page_count())
+        print("flow_page:", self.flow_page())
+        print("flow_page_count:", self.flow_page_count())
+        print("can_go_next:", self.can_go_next())
+        print("get_next_button:", self.get_next_button())
+        print(30 * "/")
+        print(self.visible_screen())
+
+    def active_page(self) -> int:
+        """Current index of the active page. Should always be there."""
+        return self.kw_pair_int_compulsory("active_page")
+
+    def page_count(self) -> int:
+        """Overall number of pages in this screen. Should always be there."""
+        return self.kw_pair_int_compulsory("page_count")
+
+    def in_flow(self) -> bool:
+        """Whether we are in flow."""
+        return self.flow_page() is not None
+
+    def flow_page(self) -> int | None:
+        """When in flow, on which page we are. Missing when not in flow."""
+        return self.kw_pair_int("flow_page")
+
+    def flow_page_count(self) -> int | None:
+        """When in flow, how many unique pages it has. Missing when not in flow."""
+        return self.kw_pair_int("flow_page_count")
+
+    def can_go_next(self) -> bool:
+        """Checking if there is a next page."""
+        return self.get_next_button() is not None
+
+    def get_next_button(self) -> str | None:
+        """Position of the next button, if any."""
+        return self._get_btn_by_action(self.NEXT_BTN)
+
+    def get_prev_button(self) -> str | None:
+        """Position of the previous button, if any."""
+        return self._get_btn_by_action(self.PREV_BTN)
+
+    def _get_btn_by_action(self, btn_action: str) -> str | None:
+        """Position of button described by some action. None if not found."""
+        btn_names = ("left", "middle", "right")
+        for index, action in enumerate(self.button_actions()):
+            if action == btn_action:
+                return btn_names[index]
+
+        return None
+
+    def visible_screen(self) -> str:
+        """Getting all the visible screen content - header, content, buttons."""
+        title_separator = f"\n{20*'-'}\n"
+        btn_separator = f"\n{20*'*'}\n"
+
+        visible = ""
+        if self.title():
+            visible += self.title()
+            visible += title_separator
+        visible += self.content()
+        visible += btn_separator
+        visible += ", ".join(self.buttons())
+
+        return visible
+
+    def title(self) -> str:
+        """Getting text that is displayed as a title."""
+        # there could be multiple of those - title and subtitle for example
+        title_strings = self._get_strings_inside_tag(self.str_content, self.TITLE_TAG)
+        return "\n".join(title_strings)
+
+    def content(self) -> str:
+        """Getting text that is displayed in the main part of the screen."""
+        content_strings = self._get_strings_inside_tag(
+            self.str_content, self.CONTENT_TAG
+        )
+        # there are some unwanted spaces
+        strings = [
+            s.replace(" \n ", "\n").replace("\n ", "\n").lstrip()
+            for s in content_strings
+        ]
+        return "\n".join(strings)
+
+    def buttons(self) -> tuple[str, str, str]:
+        """Getting content and actions for all three buttons."""
+        contents = self.buttons_content()
+        actions = self.button_actions()
+        return tuple(f"{contents[i]} [{actions[i]}]" for i in range(3))
+
+    def buttons_content(self) -> tuple[str, str, str]:
+        """Getting visual details for all three buttons. They should always be there."""
+        btns = self._get_strings_inside_tag(self.str_content, self.BTN_TAG)
+        assert len(btns) == 3
+        return btns[0], btns[1], btns[2]
+
+    def button_actions(self) -> tuple[str, str, str]:
+        """Getting actions for all three buttons. They should always be there."""
+        action_ids = ("left_action", "middle_action", "right_action")
+        assert len(action_ids) == 3
+        return tuple(self.kw_pair_compulsory(action) for action in action_ids)
+
+    def kw_pair_int_compulsory(self, key: str) -> int:
+        """Getting integer that cannot be missing."""
+        val = self.kw_pair_int(key)
+        assert val is not None
+        return val
+
+    def kw_pair_int(self, key: str) -> int | None:
+        """Getting the value of a key-value pair as an integer. None if missing."""
+        val = self.kw_pair(key)
+        if val is None:
+            return None
+        return int(val)
+
+    def kw_pair_compulsory(self, key: str) -> str:
+        """Getting value of a key that cannot be missing."""
+        val = self.kw_pair(key)
+        assert val is not None
+        return val
+
+    def kw_pair(self, key: str) -> str | None:
+        """Getting the value of a key-value pair. None if missing."""
+        # Pairs are sent in this format in the list:
+        # [..., "key", "::", "value", ...]
+        for key_index, item in enumerate(self.raw_content):
+            if item == key:
+                if self.raw_content[key_index + 1] == "::":
+                    return self.raw_content[key_index + 2]
+
+        return None
+
+    @staticmethod
+    def _get_strings_inside_tag(string: str, tag: str) -> list[str]:
+        """Getting all strings that are inside two same tags."""
+        parts = string.split(tag)
+        if len(parts) == 1:
+            return []
+        else:
+            # returning all odd indexes in the list
+            return parts[1::2]
+
+
+class RustLayout(ui.Layout):
     # pylint: disable=super-init-not-called
     def __init__(self, layout: Any):
         self.layout = layout
         self.timer = loop.Timer()
-        self.layout.attach_timer_fn(self.set_timer)
 
     def set_timer(self, token: int, deadline: int) -> None:
         self.timer.schedule(deadline, token)
 
     if __debug__:
+        from trezor.enums import DebugPhysicalButton
+
+        BTN_MAP = {
+            "left": DebugPhysicalButton.LEFT_BTN,
+            "middle": DebugPhysicalButton.MIDDLE_BTN,
+            "right": DebugPhysicalButton.RIGHT_BTN,
+        }
 
         def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:  # type: ignore [obscured-by-same-name]
             from apps.debug import confirm_signal, input_signal
@@ -35,20 +207,136 @@ class _RustLayout(ui.Layout):
             return (
                 self.handle_input_and_rendering(),
                 self.handle_timers(),
+                self.handle_swipe(),
+                self.handle_button_click(),
                 confirm_signal(),
                 input_signal(),
             )
 
         def read_content(self) -> list[str]:
-            result = []
+            """Gets the visible content of the screen."""
+            self._place_layout()
+            return self._content_obj().visible_screen().split("\n")
 
-            def callback(*args):
+        def _place_layout(self) -> None:
+            """It is necessary to place the layout to get data about its screen content."""
+            self.layout.place()
+
+        def _read_content_raw(self) -> list[str]:
+            """Reads raw trace content from Rust layout."""
+            result: list[str] = []
+
+            def callback(*args: str):
                 for arg in args:
                     result.append(str(arg))
 
             self.layout.trace(callback)
-            result = " ".join(result).split("\n")
             return result
+
+        def _content_obj(self) -> RustLayoutContent:
+            """Gets object with user-friendly methods on Rust layout content."""
+            return RustLayoutContent(self._read_content_raw())
+
+        def _press_left(self) -> Any:
+            """Triggers left button press."""
+            self.layout.button_event(io.BUTTON_PRESSED, io.BUTTON_LEFT)
+            return self.layout.button_event(io.BUTTON_RELEASED, io.BUTTON_LEFT)
+
+        def _press_right(self) -> Any:
+            """Triggers right button press."""
+            self.layout.button_event(io.BUTTON_PRESSED, io.BUTTON_RIGHT)
+            return self.layout.button_event(io.BUTTON_RELEASED, io.BUTTON_RIGHT)
+
+        def _press_middle(self) -> Any:
+            """Triggers middle button press."""
+            self.layout.button_event(io.BUTTON_PRESSED, io.BUTTON_LEFT)
+            self.layout.button_event(io.BUTTON_PRESSED, io.BUTTON_RIGHT)
+            self.layout.button_event(io.BUTTON_RELEASED, io.BUTTON_LEFT)
+            return self.layout.button_event(io.BUTTON_RELEASED, io.BUTTON_RIGHT)
+
+        def _press_button(self, btn_to_press: DebugPhysicalButton) -> Any:
+            from trezor.enums import DebugPhysicalButton
+            from apps.debug import notify_layout_change
+
+            if btn_to_press == DebugPhysicalButton.LEFT_BTN:
+                msg = self._press_left()
+            elif btn_to_press == DebugPhysicalButton.MIDDLE_BTN:
+                msg = self._press_middle()
+            elif btn_to_press == DebugPhysicalButton.RIGHT_BTN:
+                msg = self._press_right()
+            else:
+                raise Exception(f"Unknown button: {btn_to_press}")
+
+            self.layout.paint()
+            if msg is not None:
+                raise ui.Result(msg)
+
+            ui.refresh()  # so that a screenshot is taken
+            notify_layout_change(self)
+
+        def _swipe(self, direction: int) -> None:
+            """Triggers swipe in the given direction.
+
+            Only `UP` and `DOWN` directions are supported.
+            """
+            from trezor.ui.components.common import (
+                SWIPE_UP,
+                SWIPE_DOWN,
+            )
+
+            content_obj = self._content_obj()
+
+            if direction == SWIPE_UP:
+                btn_to_press = content_obj.get_next_button()
+            elif direction == SWIPE_DOWN:
+                btn_to_press = content_obj.get_prev_button()
+            else:
+                raise Exception(f"Unsupported direction: {direction}")
+
+            assert btn_to_press is not None
+            self._press_button(self.BTN_MAP[btn_to_press])
+
+        async def handle_swipe(self) -> None:
+            """Enables pagination through the current page/flow page.
+
+            Waits for `swipe_signal` and carries it out.
+            """
+            from apps.debug import swipe_signal
+            from trezor.ui.components.common import SWIPE_ALL_THE_WAY_UP, SWIPE_UP
+
+            while True:
+                direction = await swipe_signal()
+
+                if direction == SWIPE_ALL_THE_WAY_UP:
+                    # Going as far as possible
+                    while self._content_obj().can_go_next():
+                        self._swipe(SWIPE_UP)
+                else:
+                    self._swipe(direction)
+
+        async def handle_button_click(self) -> None:
+            """Enables clicking arbitrary of the three buttons.
+
+            Waits for `model_r_btn_signal` and carries it out.
+            """
+            from apps.debug import model_r_btn_signal
+
+            while True:
+                btn = await model_r_btn_signal()
+                self._press_button(btn)
+
+        def page_count(self) -> int:
+            """How many paginated pages current screen has."""
+            # TODO: leave it debug-only or use always?
+            self._place_layout()
+            return self._content_obj().page_count()
+
+        def in_unknown_flow(self) -> bool:
+            """Whether we are in a longer flow where we cannot (easily)
+            beforehand say how much pages it will have.
+            """
+            self._place_layout()
+            return self._content_obj().in_flow()
 
     else:
 
@@ -56,6 +344,10 @@ class _RustLayout(ui.Layout):
             return self.handle_timers(), self.handle_input_and_rendering()
 
     def _before_render(self) -> None:
+        # Clear the screen of any leftovers.
+        ui.backlight_fade(ui.style.BACKLIGHT_DIM)
+        ui.display.clear()
+
         if __debug__ and self.should_notify_layout_change:
             from apps.debug import notify_layout_change
 
@@ -65,12 +357,19 @@ class _RustLayout(ui.Layout):
             self.should_notify_layout_change = False
             notify_layout_change(self)
 
+        # Turn the brightness on again.
+        ui.backlight_fade(self.BACKLIGHT_LEVEL)
+
     def handle_input_and_rendering(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
         button = loop.wait(io.BUTTON)
         self._before_render()
         ui.display.clear()
+        self.layout.attach_timer_fn(self.set_timer)
         self.layout.paint()
         while True:
+            if __debug__:
+                # Printing debugging info, just temporary
+                RustLayoutContent(self._read_content_raw())
             # Using `yield` instead of `await` to avoid allocations.
             event, button_num = yield button
             workflow.idle_timer.touch()
@@ -103,13 +402,15 @@ async def _placeholder_confirm(
     description: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Other,
 ) -> Any:
-    return await confirm_text(
-        ctx=ctx,
-        br_type=br_type,
-        title=title,
-        data=data,
-        description=description,
-        br_code=br_code,
+    return await raise_if_cancelled(
+        confirm_text(
+            ctx=ctx,
+            br_type=br_type,
+            title=title,
+            data=data,
+            description=description,
+            br_code=br_code,
+        )
     )
 
 
@@ -119,19 +420,26 @@ async def get_bool(
     title: str,
     data: str,
     description: str | None = None,
+    verb: str | None = "CONFIRM",
+    verb_cancel: str | None = "CANCEL",
+    hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.Other,
 ) -> bool:
     result = await interact(
         ctx,
-        _RustLayout(
-            trezorui2.confirm_text(
+        RustLayout(
+            trezorui2.confirm_action(
                 title=title,
-                data=data,
+                action=data,
                 description=description,
+                verb=verb,
+                verb_cancel=verb_cancel,
+                hold=hold,
+                reverse=False,
             )
         ),
-        br_type=br_type,
-        br_code=br_code,
+        br_type,
+        br_code,
     )
 
     return result is trezorui2.CONFIRMED
@@ -147,6 +455,9 @@ async def raise_if_cancelled(a: Awaitable[T], exc: Any = wire.ActionCancelled) -
 # BELOW ARE THE SAME AS IN tt/__init__.py
 
 
+# TODO: probably make special version of some `action` and
+# `description` strings for model R, as those for model T
+# have newlines at random places (suitable for T).
 async def confirm_action(
     ctx: wire.GenericContext,
     br_type: str,
@@ -155,8 +466,8 @@ async def confirm_action(
     description: str | None = None,
     description_param: str | None = None,
     description_param_font: int = ui.BOLD,
-    verb: str | bytes | None = "OK",
-    verb_cancel: str | bytes | None = "cancel",
+    verb: str | bytes | None = "CONFIRM",
+    verb_cancel: str | bytes | None = "CANCEL",
     hold: bool = False,
     hold_danger: bool = False,
     icon: str | None = None,
@@ -166,6 +477,11 @@ async def confirm_action(
     exc: ExceptionType = wire.ActionCancelled,
     br_code: ButtonRequestType = ButtonRequestType.Other,
 ) -> None:
+    # TEMPORARY: when the action targets PIN, it gets handled differently
+    if br_type == "set_pin":
+        assert action is not None
+        return await pin_confirm_action(ctx, br_type, action)
+
     if isinstance(verb, bytes) or isinstance(verb_cancel, bytes):
         raise NotImplementedError
 
@@ -174,13 +490,16 @@ async def confirm_action(
             log.error(__name__, "confirm_action description_param_font not implemented")
         description = description.format(description_param)
 
-    if hold:
-        log.error(__name__, "confirm_action hold not implemented")
+    # Making the button text UPPERCASE, so it is better readable
+    if isinstance(verb, str):
+        verb = verb.upper()
+    if isinstance(verb_cancel, str):
+        verb_cancel = verb_cancel.upper()
 
     await raise_if_cancelled(
         interact(
             ctx,
-            _RustLayout(
+            RustLayout(
                 trezorui2.confirm_action(
                     title=title,
                     action=action,
@@ -198,20 +517,60 @@ async def confirm_action(
     )
 
 
-async def confirm_reset_device(
-    ctx: wire.GenericContext, prompt: str, recovery: bool = False
+async def pin_confirm_action(
+    ctx: wire.GenericContext,
+    br_type: str,
+    action: str,
+    exc: ExceptionType = wire.ActionCancelled,
+    br_code: ButtonRequestType = ButtonRequestType.Other,
 ) -> None:
-    return await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type="recover_device" if recovery else "setup_device",
-            title="Recovery mode" if recovery else "Create new wallet",
-            data=f"{prompt}\n\nBy continuing you agree to\nhttps://trezor.io/tos",
-            description="",
-            br_code=ButtonRequestType.ProtectCall
-            if recovery
-            else ButtonRequestType.ResetDevice,
-        )
+    """Custom layout for PIN confirmation.
+
+    Contains some additional information about PIN,
+    divided into two screens with different buttons.
+    """
+    # Making the first letter in action upper
+    # There is no capitalize() method in micropython
+    action = action[0].upper() + action[1:]
+    await raise_if_cancelled(
+        interact(
+            ctx,
+            RustLayout(
+                trezorui2.pin_confirm_action(
+                    action=action,
+                )
+            ),
+            br_type,
+            br_code,
+        ),
+        exc,
+    )
+
+
+async def confirm_reset_device(
+    ctx: wire.GenericContext,
+    prompt: str,
+    recovery: bool = False,
+    show_tutorial: bool = True,
+) -> None:
+    # Showing the tutorial, as this is the entry point of
+    # both the creation of new wallet and recovery of existing seed
+    # - the first user interactions with Trezor.
+    # (it is also special for model R, so not having to clutter the
+    # common code)
+
+    if show_tutorial:
+        await tutorial(ctx)
+
+    return await _placeholder_confirm(
+        ctx=ctx,
+        br_type="recover_device" if recovery else "setup_device",
+        title="Recovery mode" if recovery else "Create new wallet",
+        data="By continuing you agree to trezor.io/tos",
+        description=prompt,
+        br_code=ButtonRequestType.ProtectCall
+        if recovery
+        else ButtonRequestType.ResetDevice,
     )
 
 
@@ -220,7 +579,9 @@ async def confirm_backup(ctx: wire.GenericContext) -> bool:
     if await get_bool(
         ctx=ctx,
         title="Success",
-        data="New wallet created successfully!\n\nYou should back up your new wallet right now.",
+        data="\nNew wallet created successfully!\n\n\nYou should back up your new wallet right now.",
+        verb="Back up",
+        verb_cancel="Skip",
         br_type="backup_device",
         br_code=ButtonRequestType.ResetDevice,
     ):
@@ -229,7 +590,10 @@ async def confirm_backup(ctx: wire.GenericContext) -> bool:
     confirmed = await get_bool(
         ctx=ctx,
         title="Warning",
-        data="Are you sure you want to skip the backup?\n\nYou can back up your Trezor once, at any time.",
+        data="Are you sure you want to skip the backup?\n\n",
+        description="You can back up your Trezor once, at any time.",
+        verb="Back up",
+        verb_cancel="Skip",
         br_type="backup_device",
         br_code=ButtonRequestType.ResetDevice,
     )
@@ -239,30 +603,26 @@ async def confirm_backup(ctx: wire.GenericContext) -> bool:
 async def confirm_path_warning(
     ctx: wire.GenericContext, path: str, path_type: str = "Path"
 ) -> None:
-    return await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type="path_warning",
-            title="Confirm path",
-            data=f"{path_type}\n{path} is unknown.\nAre you sure?",
-            description="",
-            br_code=ButtonRequestType.UnknownDerivationPath,
-        )
+    return await _placeholder_confirm(
+        ctx=ctx,
+        br_type="path_warning",
+        title="Confirm path",
+        data=f"{path_type}\n{path} is unknown.\nAre you sure?",
+        description="",
+        br_code=ButtonRequestType.UnknownDerivationPath,
     )
 
 
 async def show_xpub(
     ctx: wire.GenericContext, xpub: str, title: str, cancel: str
 ) -> None:
-    return await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type="show_xpub",
-            title=title,
-            data=xpub,
-            description="",
-            br_code=ButtonRequestType.PublicKey,
-        )
+    return await _placeholder_confirm(
+        ctx=ctx,
+        br_type="show_xpub",
+        title=title,
+        data=xpub,
+        description="",
+        br_code=ButtonRequestType.PublicKey,
     )
 
 
@@ -320,15 +680,16 @@ async def _show_modal(
     icon_color: int,
     exc: ExceptionType = wire.ActionCancelled,
 ) -> None:
-    await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type=br_type,
-            title=header,
-            data=content,
-            description=subheader,
-            br_code=br_code,
-        )
+    await confirm_action(
+        ctx=ctx,
+        br_type=br_type,
+        br_code=br_code,
+        title=header,
+        action=subheader,
+        description=content,
+        verb=button_confirm,
+        verb_cancel=button_cancel,
+        exc=exc,
     )
 
 
@@ -419,15 +780,45 @@ async def confirm_output(
     color_to: str = "",
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
 ) -> None:
+    # Creating the truncated address here, not having to do it in Rust
+    chars_to_take = 4
+    ellipsis = " ... "
+    truncated_address = address[:chars_to_take] + ellipsis + address[-chars_to_take:]
+
+    # Also splitting the address into chunks delimited by whitespace
+    chunk_length = 4
+    delimiter = " "
+    address_chunks: list[str] = []
+    for i in range(0, len(address), chunk_length):
+        address_chunks.append(address[i : i + chunk_length])
+    address_str = delimiter.join(address_chunks)
+
     await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type="confirm_output",
-            title=title,
-            data=f"{amount} to\n{address}",
-            description=subtitle,
-            br_code=br_code,
+        interact(
+            ctx,
+            RustLayout(
+                trezorui2.confirm_output_r(
+                    address=address_str,
+                    truncated_address=truncated_address,
+                    amount=amount,
+                )
+            ),
+            "confirm_output",
+            br_code,
         )
+    )
+
+
+async def tutorial(
+    ctx: wire.GenericContext,
+    br_code: ButtonRequestType = ButtonRequestType.Other,
+) -> None:
+    """Showing users how to interact with the device."""
+    await interact(
+        ctx,
+        RustLayout(trezorui2.tutorial()),
+        "tutorial",
+        br_code,
     )
 
 
@@ -438,15 +829,13 @@ async def confirm_payment_request(
     memos: list[str],
 ) -> Any:
     memos_str = "\n".join(memos)
-    return await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type="confirm_payment_request",
-            title="Confirm sending",
-            data=f"{amount} to\n{recipient_name}\n{memos_str}",
-            description="",
-            br_code=ButtonRequestType.ConfirmOutput,
-        )
+    return await _placeholder_confirm(
+        ctx=ctx,
+        br_type="confirm_payment_request",
+        title="Confirm sending",
+        data=f"{amount} to\n{recipient_name}\n{memos_str}",
+        description="",
+        br_code=ButtonRequestType.ConfirmOutput,
     )
 
 
@@ -455,7 +844,9 @@ async def should_show_more(
     title: str,
     para: Iterable[tuple[int, str]],
     button_text: str = "Show all",
+    confirm: str = "Show all",
     br_type: str = "should_show_more",
+    major_confirm: bool = True,
     br_code: ButtonRequestType = ButtonRequestType.Other,
     icon: str = ui.ICON_DEFAULT,
     icon_color: int = ui.ORANGE_ICON,
@@ -463,7 +854,7 @@ async def should_show_more(
     return await get_bool(
         ctx=ctx,
         title=title,
-        data="Should show more?",
+        data=button_text,
         br_type=br_type,
         br_code=br_code,
     )
@@ -481,15 +872,13 @@ async def confirm_blob(
     icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
     ask_pagination: bool = False,
 ) -> None:
-    await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type=br_type,
-            title=title,
-            data=str(data),
-            description=description,
-            br_code=br_code,
-        )
+    await _placeholder_confirm(
+        ctx=ctx,
+        br_type=br_type,
+        title=title,
+        data=str(data),
+        description=description,
+        br_code=br_code,
     )
 
 
@@ -525,7 +914,7 @@ async def confirm_text(
 ) -> Any:
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_text(
                 title=title,
                 data=data,
@@ -568,15 +957,13 @@ async def confirm_properties(
     hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
 ) -> None:
-    await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type=br_type,
-            title=title,
-            data="\n\n".join(f"{name or ''}\n{value or ''}" for name, value in props),
-            description="",
-            br_code=br_code,
-        )
+    await _placeholder_confirm(
+        ctx=ctx,
+        br_type=br_type,
+        title=title,
+        data="\n\n".join(f"{name or ''}\n{value or ''}" for name, value in props),
+        description="",
+        br_code=br_code,
     )
 
 
@@ -584,21 +971,29 @@ async def confirm_total(
     ctx: wire.GenericContext,
     total_amount: str,
     fee_amount: str,
-    title: str = "Confirm transaction",
-    total_label: str = "Total amount:\n",
-    fee_label: str = "\nincluding fee:\n",
+    fee_rate_amount: str | None = None,
+    title: str = "Send transaction?",
+    total_label: str = "Total amount:",
+    fee_label: str = "Including fee:",
     icon_color: int = ui.GREEN,
     br_type: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> None:
     await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type=br_type,
-            title=title,
-            data=f"{total_label}{total_amount}{fee_label}{fee_amount}",
-            description="",
-            br_code=br_code,
+        interact(
+            ctx,
+            RustLayout(
+                trezorui2.confirm_total_r(
+                    title=title,
+                    total_amount=total_amount,
+                    fee_amount=fee_amount,
+                    fee_rate_amount=fee_rate_amount,
+                    total_label=total_label,
+                    fee_label=fee_label,
+                )
+            ),
+            br_type,
+            br_code,
         )
     )
 
@@ -606,15 +1001,13 @@ async def confirm_total(
 async def confirm_joint_total(
     ctx: wire.GenericContext, spending_amount: str, total_amount: str
 ) -> None:
-    await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type="confirm_joint_total",
-            title="Joint transaction",
-            data=f"You are contributing:\n{spending_amount}\nto the total amount:\n{total_amount}",
-            description="",
-            br_code=ButtonRequestType.SignTx,
-        )
+    await _placeholder_confirm(
+        ctx=ctx,
+        br_type="confirm_joint_total",
+        title="Joint transaction",
+        data=f"You are contributing:\n{spending_amount}\nto the total amount:\n{total_amount}",
+        description="",
+        br_code=ButtonRequestType.SignTx,
     )
 
 
@@ -636,30 +1029,26 @@ async def confirm_metadata(
     if not hide_continue:
         text += "\n\nContinue?"
 
-    await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type=br_type,
-            title=title,
-            data=text,
-            description="",
-            br_code=br_code,
-        )
+    await _placeholder_confirm(
+        ctx=ctx,
+        br_type=br_type,
+        title=title,
+        data=text,
+        description="",
+        br_code=br_code,
     )
 
 
 async def confirm_replacement(
     ctx: wire.GenericContext, description: str, txid: str
 ) -> None:
-    await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type="confirm_replacement",
-            title=description,
-            data=f"Confirm transaction ID:\n{txid}",
-            description="",
-            br_code=ButtonRequestType.SignTx,
-        )
+    await _placeholder_confirm(
+        ctx=ctx,
+        br_type="confirm_replacement",
+        title=description,
+        data=f"Confirm transaction ID:\n{txid}",
+        description="",
+        br_code=ButtonRequestType.SignTx,
     )
 
 
@@ -670,22 +1059,20 @@ async def confirm_modify_output(
     amount_change: str,
     amount_new: str,
 ) -> None:
-    text = "Address:\n{address}\n\n"
+    text = f"Address:\n{address}\n\n"
     if sign < 0:
-        text += "Decrease amount by:\n{amount_change}\n\n"
+        text += f"Decrease amount by:\n{amount_change}\n\n"
     else:
-        text += "Increase amount by:\n{amount_change}\n\n"
-    text += "New amount:\n{amount_new}"
+        text += f"Increase amount by:\n{amount_change}\n\n"
+    text += f"New amount:\n{amount_new}"
 
-    await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type="modify_output",
-            title="Modify amount",
-            data=text,
-            description="",
-            br_code=ButtonRequestType.ConfirmOutput,
-        )
+    await _placeholder_confirm(
+        ctx=ctx,
+        br_type="modify_output",
+        title="Modify amount",
+        data=text,
+        description="",
+        br_code=ButtonRequestType.ConfirmOutput,
     )
 
 
@@ -694,6 +1081,7 @@ async def confirm_modify_fee(
     sign: int,
     user_fee_change: str,
     total_fee_new: str,
+    fee_rate_amount: str | None = None,
 ) -> None:
     text = ""
     if sign == 0:
@@ -705,31 +1093,29 @@ async def confirm_modify_fee(
             text += "Increase your fee by:\n"
         text += f"{user_fee_change}\n"
     text += f"Transaction fee:\n{total_fee_new}"
+    if fee_rate_amount is not None:
+        text += "\n" + fee_rate_amount
 
-    await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type="modify_fee",
-            title="Modify fee",
-            data=text,
-            description="",
-            br_code=ButtonRequestType.SignTx,
-        )
+    await _placeholder_confirm(
+        ctx=ctx,
+        br_type="modify_fee",
+        title="Modify fee",
+        data=text,
+        description="",
+        br_code=ButtonRequestType.SignTx,
     )
 
 
 async def confirm_coinjoin(
-    ctx: wire.GenericContext, coin_name: str, max_rounds: int, max_fee_per_vbyte: str
+    ctx: wire.GenericContext, max_rounds: int, max_fee_per_vbyte: str
 ) -> None:
-    await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type="coinjoin_final",
-            title="Authorize CoinJoin",
-            data=f"Coin name: {coin_name}\n\nMaximum rounds: {max_rounds}\n\nMaximum mining fee:\n{max_fee_per_vbyte} sats/vbyte",
-            description="",
-            br_code=ButtonRequestType.Other,
-        )
+    await _placeholder_confirm(
+        ctx=ctx,
+        br_type="coinjoin_final",
+        title="Authorize CoinJoin",
+        data=f"Maximum rounds: {max_rounds}\n\nMaximum mining fee:\n{max_fee_per_vbyte} sats/vbyte",
+        description="",
+        br_code=ButtonRequestType.Other,
     )
 
 
@@ -742,15 +1128,13 @@ async def confirm_sign_identity(
         text += f"{challenge_visual}\n\n"
     text += identity
 
-    await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type="confirm_sign_identity",
-            title=f"Sign {proto}",
-            data=text,
-            description="",
-            br_code=ButtonRequestType.Other,
-        )
+    await _placeholder_confirm(
+        ctx=ctx,
+        br_type="confirm_sign_identity",
+        title=f"Sign {proto}",
+        data=text,
+        description="",
+        br_code=ButtonRequestType.Other,
     )
 
 
@@ -764,26 +1148,22 @@ async def confirm_signverify(
         header = f"Sign {coin} message"
         br_type = "sign_message"
 
-    await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type=br_type,
-            title=header,
-            data=f"Confirm address:\n{address}",
-            description="",
-            br_code=ButtonRequestType.Other,
-        )
+    await _placeholder_confirm(
+        ctx=ctx,
+        br_type=br_type,
+        title=header,
+        data=f"Confirm address:\n{address}",
+        description="",
+        br_code=ButtonRequestType.Other,
     )
 
-    await raise_if_cancelled(
-        _placeholder_confirm(
-            ctx=ctx,
-            br_type=br_type,
-            title=header,
-            data=f"Confirm message:\n{message}",
-            description="",
-            br_code=ButtonRequestType.Other,
-        )
+    await _placeholder_confirm(
+        ctx=ctx,
+        br_type=br_type,
+        title=header,
+        data=f"Confirm message:\n{message}",
+        description="",
+        br_code=ButtonRequestType.Other,
     )
 
 
@@ -793,16 +1173,50 @@ async def show_popup(
     subtitle: str | None = None,
     description_param: str = "",
     timeout_ms: int = 3000,
+    icon: str = ui.ICON_WRONG,
 ) -> None:
-    raise NotImplementedError
+    text = Text(title, icon)
+    # Need to add two newlines at the beginning of the text,
+    # so it is not colliding with the icon
+    if subtitle is not None:
+        subtitle = f"\n\n{subtitle}"
+        text.bold(subtitle)
+        text.br_half()
+    else:
+        description = f"\n\n{description}"
+    text.format_parametrized(description, description_param)
+    await Popup(text, timeout_ms)
 
 
-def draw_simple_text(title: str, description: str = "") -> None:
-    log.error(__name__, "draw_simple_text not implemented")
+def draw_simple_text(
+    title: str, description: str = "", icon: str = ui.ICON_CONFIG
+) -> None:
+    text = Text(title, icon, new_lines=False)
+    # Need to add two newlines at the beginning of the text,
+    # so it is not colliding with the icon
+    description = f"\n\n{description}"
+    text.normal(description)
+    ui.draw_simple(text)
 
 
 async def request_passphrase_on_device(ctx: wire.GenericContext, max_len: int) -> str:
-    return NotImplementedError  # type: ignore [Expression of type "Type[NotImplementedError]" cannot be assigned to return type "str"]
+    await button_request(
+        ctx, "passphrase_device", code=ButtonRequestType.PassphraseEntry
+    )
+
+    result = await ctx.wait(
+        RustLayout(
+            trezorui2.request_passphrase(
+                prompt="Enter passphrase",
+                max_len=max_len,
+            )
+        )
+    )
+    if result is trezorui2.CANCELLED:
+        raise wire.ActionCancelled("Passphrase entry cancelled")
+
+    assert isinstance(result, str)
+    return result
 
 
 async def request_pin_on_device(
@@ -810,8 +1224,32 @@ async def request_pin_on_device(
     prompt: str,
     attempts_remaining: int | None,
     allow_cancel: bool,
+    shuffle: bool = False,
 ) -> str:
     await button_request(ctx, "pin_device", code=ButtonRequestType.PinEntry)
 
-    # Temporary workaround to be able to run UI tests, until we have proper PIN dialog
-    return "1234"
+    if attempts_remaining is None:
+        subprompt = ""
+    elif attempts_remaining == 1:
+        subprompt = "Last attempt"
+    else:
+        subprompt = f"{attempts_remaining} tries left"
+
+    dialog = RustLayout(
+        trezorui2.request_pin(
+            prompt=prompt,
+            subprompt=subprompt,
+            allow_cancel=allow_cancel,
+            shuffle=shuffle,  # type: ignore [No parameter named "shuffle"]
+        )
+    )
+
+    while True:
+        result = await ctx.wait(dialog)
+        if result is trezorui2.CANCELLED:
+            raise wire.PinCancelled
+        # TODO: strangely sometimes in UI tests, the result is `CONFIRMED`
+        # For example in `test_set_remove_wipe_code`, `test_set_pin_to_wipe_code` or
+        # `test_change_pin`
+        assert isinstance(result, str)
+        return result
