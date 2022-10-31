@@ -23,6 +23,7 @@ PYOPT      ?= 1
 BITCOIN_ONLY ?= 0
 TREZOR_MODEL ?= T
 TREZOR_MEMPERF ?= 0
+TREZOR_EMULATOR_FROZEN ?= 0
 ADDRESS_SANITIZER ?= 0
 
 # OpenOCD interface default. Alternative: ftdi/olimex-arm-usb-tiny-h
@@ -83,7 +84,7 @@ test: ## run unit tests
 	cd tests ; ./run_tests.sh $(TESTOPTS)
 
 test_rust: ## run rs unit tests
-	cd embed/rust ; cargo test  --target=$(RUST_TARGET) --no-default-features --features model_t$(shell echo $(TREZOR_MODEL) | tr "TR" "tr"),test -- --test-threads=1
+	cd embed/rust ; cargo test $(TESTOPTS) --target=$(RUST_TARGET) --no-default-features --features model_t$(shell echo $(TREZOR_MODEL) | tr "TR" "tr"),test -- --test-threads=1 --nocapture
 
 test_emu: ## run selected device tests from python-trezor
 	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests $(TESTOPTS)
@@ -173,7 +174,7 @@ build_unix_frozen: templates build_cross ## build unix port with frozen modules
 	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) TREZOR_MODEL="$(TREZOR_MODEL)" PYOPT="$(PYOPT)" BITCOIN_ONLY="$(BITCOIN_ONLY)" TREZOR_EMULATOR_ASAN="$(ADDRESS_SANITIZER)" TREZOR_MEMPERF="$(TREZOR_MEMPERF)" TREZOR_EMULATOR_FROZEN=1
 
 build_unix_debug: templates ## build unix port
-	$(SCONS) --max-drift=1 CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) TREZOR_MODEL="$(TREZOR_MODEL)" BITCOIN_ONLY="$(BITCOIN_ONLY)" TREZOR_EMULATOR_ASAN=1 TREZOR_EMULATOR_DEBUGGABLE=1
+	$(SCONS) --max-drift=1 CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) TREZOR_MODEL="$(TREZOR_MODEL)" PYOPT="0" BITCOIN_ONLY="$(BITCOIN_ONLY)" TREZOR_EMULATOR_ASAN=1 TREZOR_EMULATOR_DEBUGGABLE=1
 
 build_cross: ## build mpy-cross port
 	$(MAKE) -C vendor/micropython/mpy-cross $(CROSS_PORT_OPTS)

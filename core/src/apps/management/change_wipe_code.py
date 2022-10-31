@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING
 
+from . import text_r
+
 if TYPE_CHECKING:
     from typing import Awaitable
     from trezor.wire import Context
@@ -117,5 +119,7 @@ async def _request_wipe_code_confirm(ctx: Context, pin: str) -> str:
         # _wipe_code_mismatch
         await show_popup(
             "Code mismatch",
-            "The wipe codes you\nentered do not match.\n\nPlease try again.",
+            text_r(
+                "The wipe code must be\ndifferent from your PIN.\n\nPlease try again."
+            ),
         )

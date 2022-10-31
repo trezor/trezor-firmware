@@ -22,6 +22,7 @@ if __debug__:
     SWIPE_DOWN = const(0x02)
     SWIPE_LEFT = const(0x04)
     SWIPE_RIGHT = const(0x08)
+    SWIPE_ALL_THE_WAY_UP = const(0x10)
 
 
 # channel used to cancel layouts, see `Cancelled` exception
@@ -118,31 +119,54 @@ def header(
             display.icon(55, 25, res.load(icon), ifg, bg)
 
 
-# Common for both header functions
-MODEL_HEADER_HEIGHTS = {"1": 12, "R": 15, "T": 30}
-MODEL_Y_BASELINES = {"1": 10, "R": 11, "T": 22}
-
-
-def header_warning(message: str) -> None:
-    height = MODEL_HEADER_HEIGHTS[utils.MODEL]
-    y_baseline = MODEL_Y_BASELINES[utils.MODEL]
-
-    display.bar(0, 0, WIDTH, height, style.YELLOW)
-    display.text_center(
-        WIDTH // 2, y_baseline, message, BOLD, style.BLACK, style.YELLOW
+def header_warning(message: str, clear: bool = True) -> None:
+    header_message(
+        message, text_colour=style.BLACK, text_background=style.YELLOW, clear=clear
     )
 
 
-def header_error(message: str) -> None:
-    height = MODEL_HEADER_HEIGHTS[utils.MODEL]
-    y_baseline = MODEL_Y_BASELINES[utils.MODEL]
-
-    display.bar(0, 0, WIDTH, height, style.RED)
-    display.text_center(WIDTH // 2, y_baseline, message, BOLD, style.WHITE, style.RED)
+def header_error(message: str, clear: bool = True) -> None:
+    header_message(
+        message, text_colour=style.WHITE, text_background=style.RED, clear=clear
+    )
 
 
-def get_header_height() -> int:
-    return MODEL_HEADER_HEIGHTS[utils.MODEL]
+# TODO: might split into model-specific functions
+def header_message(
+    message: str, text_colour: int, text_background: int, clear: bool = True
+) -> None:
+    height = {"1": 12, "R": 11, "T": 30}[utils.MODEL]
+    y_baseline = {"1": 10, "R": 9, "T": 22}[utils.MODEL]
+
+    # Black-white models can have only white text on black background
+    if utils.MODEL in ("1", "R"):
+        text_colour = style.WHITE
+        text_background = style.BLACK
+
+    display.bar(0, 0, WIDTH, height, text_background)
+
+    # Including the warning icons in both corners for model R.
+    # (Left and right are different icons because of TOIF limitations
+    # to display the icon starting on odd x-coordinate.)
+    # Also removing the exclamation mark (from the end)
+    # (the warning icons are enough and it was causing some
+    # issues with centering the text).
+    # Resolving one special case with `EXPERIMENTAL MODE` - it cannot
+    # fit the screen width, so shortening it a little.
+    if utils.MODEL in ("R",):
+        warning_icon_left = res.load("trezor/res/model_r/warning_left.toif")
+        warning_icon_right = res.load("trezor/res/model_r/warning_right.toif")
+        display.icon(0, 0, warning_icon_left, style.FG, style.BG)
+        display.icon(117, 0, warning_icon_right, style.FG, style.BG)
+        message = message.replace("!", "")
+        message = message.replace("EXPERIMENTAL", "EXPRMNTL")
+
+    font = BOLD if utils.MODEL in ("T",) else MONO
+    display.text_center(
+        WIDTH // 2, y_baseline, message, font, text_colour, text_background
+    )
+    if clear:
+        display.bar(0, height, WIDTH, HEIGHT - height, style.BG)
 
 
 # Component events.  Should be different from `io.TOUCH_*` events.

@@ -10,11 +10,11 @@ from tests.ui_tests import read_fixtures  # isort:skip
 read_fixtures()
 from tests.ui_tests import _hash_files, FILE_HASHES, SCREENS_DIR  # isort:skip
 
-# As in CI we are running T1 and TT tests separately, there will
-# always be the other model missing.
+# As in CI we are running tests for more models separately,
+# there will always be the other models missing.
 # Therefore, choosing just the cases for our model.
-if len(sys.argv) > 1 and sys.argv[1].upper() == "T1":
-    model = "T1"
+if len(sys.argv) > 1:
+    model = sys.argv[1].upper()
 else:
     model = "TT"
 model_file_hashes = {k: v for k, v in FILE_HASHES.items() if k.startswith(f"{model}_")}

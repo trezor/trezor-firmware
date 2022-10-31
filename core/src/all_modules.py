@@ -97,6 +97,8 @@ trezor.enums.Capability
 import trezor.enums.Capability
 trezor.enums.DebugButton
 import trezor.enums.DebugButton
+trezor.enums.DebugPhysicalButton
+import trezor.enums.DebugPhysicalButton
 trezor.enums.DebugSwipeDirection
 import trezor.enums.DebugSwipeDirection
 trezor.enums.DecredStakingSpendType
@@ -147,6 +149,50 @@ trezor.ui
 import trezor.ui
 trezor.ui.components.common.confirm
 import trezor.ui.components.common.confirm
+trezor.ui.components.common.text
+import trezor.ui.components.common.text
+trezor.ui.components.tr.text
+import trezor.ui.components.tr.text
+trezor.ui.components.tt.button
+import trezor.ui.components.tt.button
+trezor.ui.components.tt.checklist
+import trezor.ui.components.tt.checklist
+trezor.ui.components.tt.confirm
+import trezor.ui.components.tt.confirm
+trezor.ui.components.tt.info
+import trezor.ui.components.tt.info
+trezor.ui.components.tt.keyboard_bip39
+import trezor.ui.components.tt.keyboard_bip39
+trezor.ui.components.tt.keyboard_slip39
+import trezor.ui.components.tt.keyboard_slip39
+trezor.ui.components.tt.num_input
+import trezor.ui.components.tt.num_input
+trezor.ui.components.tt.passphrase
+import trezor.ui.components.tt.passphrase
+trezor.ui.components.tt.pin
+import trezor.ui.components.tt.pin
+trezor.ui.components.tt.recovery
+import trezor.ui.components.tt.recovery
+trezor.ui.components.tt.reset
+import trezor.ui.components.tt.reset
+trezor.ui.components.tt.scroll
+import trezor.ui.components.tt.scroll
+trezor.ui.components.tt.swipe
+import trezor.ui.components.tt.swipe
+trezor.ui.components.tt.text
+import trezor.ui.components.tt.text
+trezor.ui.components.tt.word_select
+import trezor.ui.components.tt.word_select
+trezor.ui.constants
+import trezor.ui.constants
+trezor.ui.constants.t1
+import trezor.ui.constants.t1
+trezor.ui.constants.tr
+import trezor.ui.constants.tr
+trezor.ui.constants.tt
+import trezor.ui.constants.tt
+trezor.ui.container
+import trezor.ui.container
 trezor.ui.layouts
 import trezor.ui.layouts
 trezor.ui.layouts.common
@@ -311,6 +357,20 @@ apps.debug.load_device
 import apps.debug.load_device
 apps.homescreen
 import apps.homescreen
+apps.homescreen.busyscreen
+import apps.homescreen.busyscreen
+apps.homescreen.homescreen
+import apps.homescreen.homescreen
+apps.homescreen.lockscreen
+import apps.homescreen.lockscreen
+apps.homescreen.t1
+import apps.homescreen.t1
+apps.homescreen.tr
+import apps.homescreen.tr
+apps.homescreen.tt
+import apps.homescreen.tt
+apps.management
+import apps.management
 apps.management.apply_flags
 import apps.management.apply_flags
 apps.management.apply_settings

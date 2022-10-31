@@ -7,6 +7,7 @@ from trezor.enums import BackupType
 from trezor.wire import ProcessError
 
 from . import layout
+from .. import text_r
 
 if __debug__:
     import storage.debug
@@ -38,12 +39,12 @@ async def reset_device(ctx: Context, msg: ResetDevice) -> Success:
 
     # make sure user knows they're setting up a new wallet
     if backup_type == BAK_T_SLIP39_BASIC:
-        prompt = "Create a new wallet\nwith Shamir Backup?"
+        prompt = text_r("Create a new wallet\nwith Shamir Backup?")
     elif backup_type == BAK_T_SLIP39_ADVANCED:
-        prompt = "Create a new wallet\nwith Super Shamir?"
+        prompt = text_r("Create a new wallet\nwith Super Shamir?")
     else:
-        prompt = "Do you want to create\na new wallet?"
-    await confirm_reset_device(ctx, prompt)
+        prompt = text_r("Do you want to create\na new wallet?")
+    await confirm_reset_device(ctx, prompt, show_tutorial=bool(msg.show_tutorial))
     await LoadingAnimation()
 
     # wipe storage to make sure the device is in a clear state

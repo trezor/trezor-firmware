@@ -36,6 +36,9 @@ pytestmark = [pytest.mark.skip_t1]
 
 
 def reset_device(client: Client, strength):
+    if client.features.model == "R":
+        pytest.skip("Shamir not yet supported for model R")
+
     member_threshold = 3
     all_mnemonics = []
 
@@ -104,6 +107,7 @@ def reset_device(client: Client, strength):
             label="test",
             language="en-US",
             backup_type=BackupType.Slip39_Basic,
+            show_tutorial=False,
         )
 
     # generate secret locally

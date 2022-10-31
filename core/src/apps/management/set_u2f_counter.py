@@ -4,6 +4,8 @@ if TYPE_CHECKING:
     from trezor.messages import SetU2FCounter, Success
     from trezor.wire import Context
 
+from . import text_r
+
 
 async def set_u2f_counter(ctx: Context, msg: SetU2FCounter) -> Success:
     import storage.device as storage_device
@@ -21,7 +23,7 @@ async def set_u2f_counter(ctx: Context, msg: SetU2FCounter) -> Success:
         ctx,
         "set_u2f_counter",
         "Set U2F counter",
-        description="Do you really want to\nset the U2F counter\nto {}?",
+        description=text_r("Do you really want to\nset the U2F counter\nto {}?"),
         description_param=str(msg.u2f_counter),
         br_code=ButtonRequestType.ProtectCall,
     )

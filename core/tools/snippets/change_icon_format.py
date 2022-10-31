@@ -1,9 +1,16 @@
+from __future__ import annotations
+
 import os
+from pathlib import Path
+from typing import BinaryIO, TextIO
 
 from trezorlib import toif
 
+HERE = Path(__file__).parent
+CORE_DIR = HERE.parent.parent
 
-def process_line(infile, outfile):
+
+def process_line(infile: TextIO, outfile: BinaryIO) -> None:
     line = infile.readline()
     data = [x.strip().lower() for x in line.split(',')]
     for c in data:
@@ -11,7 +18,7 @@ def process_line(infile, outfile):
             outfile.write(bytes((int(c, 16),)))
 
 
-def header_to_toif(path) -> bool:
+def header_to_toif(path: str | Path) -> str:
     with open(path, "r") as infile, open('tmp.toif', "wb") as outfile:
         infile.readline()
         name_line = infile.readline()
@@ -44,7 +51,7 @@ def header_to_toif(path) -> bool:
     return name
 
 
-def toif_to_header(path, name):
+def toif_to_header(path: str | Path, name: str) -> None:
     with open('tmp_c.toif', "rb") as infile, open(path, "w") as outfile:
         b = infile.read(4)
         outfile.write("// clang-format off\n")
@@ -60,7 +67,6 @@ def toif_to_header(path, name):
             outfile.write("    'T', 'O', 'I', 'G',\n",)
         else:
             raise Exception("Unknown format")
-
 
         outfile.write("    // width (16-bit), height (16-bit)\n",)
         outfile.write("    ")
@@ -95,7 +101,7 @@ def toif_to_header(path, name):
         byte = infile.read(1)
 
 
-def reformat_c_icon(path):
+def reformat_c_icon(path: str | Path) -> None:
     name = header_to_toif(path)
     with open("tmp.toif", "rb") as f:
         toi = toif.from_bytes(f.read())
@@ -109,14 +115,14 @@ def reformat_c_icon(path):
     os.remove("tmp_c.toif")
 
 
-def reformat_c_icons(p):
+def reformat_c_icons(p: str | Path) -> None:
     files = os.listdir(p)
     for file in files:
         if file.startswith("icon_") and file.endswith(".h"):
             reformat_c_icon(os.path.join(p, file))
 
 
-def reformat_toif_icon(p):
+def reformat_toif_icon(p: str | Path) -> None:
     with open(p, "rb") as f:
         toi = toif.from_bytes(f.read())
         im = toi.to_image()
@@ -125,7 +131,7 @@ def reformat_toif_icon(p):
         f.write(toi.to_bytes())
 
 
-def reformat_toif_icons(p):
+def reformat_toif_icons(p: str | Path) -> None:
     files = os.listdir(p)
     for file in files:
         if file.endswith(".toif"):
@@ -134,27 +140,27 @@ def reformat_toif_icons(p):
 
 def change_icon_format():
     # bootloader icons
-    reformat_c_icons("../../embed/bootloader")
+    reformat_c_icons(CORE_DIR / "embed/bootloader")
 
     # bootloader_ci icons
-    reformat_c_icons("../../embed/bootloader_ci")
+    reformat_c_icons(CORE_DIR / "embed/bootloader_ci")
 
     # rust icons
-    reformat_toif_icons("../../embed/rust/src/ui/model_tr/res")
-    reformat_toif_icons("../../embed/rust/src/ui/model_tt/res")
+    reformat_toif_icons(CORE_DIR / "embed/rust/src/ui/model_tr/res")
+    reformat_toif_icons(CORE_DIR / "embed/rust/src/ui/model_tt/res")
 
     # python icons
-    reformat_toif_icons("../../src/trezor/res")
-    reformat_toif_icons("../../src/trezor/res/header_icons")
+    reformat_toif_icons(CORE_DIR / "src/trezor/res")
+    reformat_toif_icons(CORE_DIR / "src/trezor/res/header_icons")
 
     # vendor header icons
-    reformat_toif_icon("../../embed/vendorheader/vendor_satoshilabs.toif")
-    reformat_toif_icon("../../embed/vendorheader/vendor_unsafe.toif")
+    reformat_toif_icon(CORE_DIR / "embed/vendorheader/vendor_satoshilabs.toif")
+    reformat_toif_icon(CORE_DIR / "embed/vendorheader/vendor_unsafe.toif")
 
     # additional python icons
-    # reformat_toif_icon("../src/apps/homescreen/res/bg.toif") - unchanged - using as avatar
-    reformat_toif_icon("../../src/apps/management/res/small-arrow.toif")
-    reformat_toif_icon("../../src/apps/webauthn/res/icon_webauthn.toif")
+    # reformat_toif_icon(CORE_DIR / "src/apps/homescreen/res/bg.toif") - unchanged - using as avatar
+    reformat_toif_icon(CORE_DIR / "src/apps/management/res/small-arrow.toif")
+    reformat_toif_icon(CORE_DIR / "src/apps/webauthn/res/icon_webauthn.toif")
 
 
 if __name__ == "__main__":

@@ -115,6 +115,7 @@ def recover(
     type: messages.RecoveryDeviceType = messages.RecoveryDeviceType.ScrambledWords,
     dry_run: bool = False,
     u2f_counter: Optional[int] = None,
+    show_tutorial: bool = True,
 ) -> "MessageType":
     if client.features.model == "1" and input_callback is None:
         raise RuntimeError("Input callback required for Trezor One")
@@ -131,7 +132,11 @@ def recover(
         u2f_counter = int(time.time())
 
     msg = messages.RecoveryDevice(
-        word_count=word_count, enforce_wordlist=True, type=type, dry_run=dry_run
+        word_count=word_count,
+        enforce_wordlist=True,
+        type=type,
+        dry_run=dry_run,
+        show_tutorial=show_tutorial,
     )
 
     if not dry_run:
@@ -170,6 +175,7 @@ def reset(
     skip_backup: bool = False,
     no_backup: bool = False,
     backup_type: messages.BackupType = messages.BackupType.Bip39,
+    show_tutorial: bool = True,
 ) -> "MessageType":
     if client.features.initialized:
         raise RuntimeError(
@@ -194,6 +200,7 @@ def reset(
         skip_backup=bool(skip_backup),
         no_backup=bool(no_backup),
         backup_type=backup_type,
+        show_tutorial=show_tutorial,
     )
 
     resp = client.call(msg)

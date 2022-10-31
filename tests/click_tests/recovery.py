@@ -85,4 +85,5 @@ def enter_shares(debug: "DebugLink", shares: list[str]) -> None:
 
 def finalize(debug: "DebugLink") -> None:
     layout = debug.click(buttons.OK, wait=True)
+    # TODO: should we also run Click/Persistence tests for model R?
     assert layout.text.startswith("< Homescreen ")

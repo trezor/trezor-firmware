@@ -9,3 +9,22 @@ pub fn shuffle<T>(slice: &mut [T]) {
         slice.swap(i, j);
     }
 }
+
+pub fn uniform_between(min: u32, max: u32) -> u32 {
+    assert!(max > min);
+    uniform(max - min + 1) + min
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn uniform_between_test() {
+        for _ in 0..10 {
+            assert!((10..=11).contains(&uniform_between(10, 11)));
+            assert!((10..=12).contains(&uniform_between(10, 12)));
+            assert!((256..=512).contains(&uniform_between(256, 512)));
+        }
+    }
+}

@@ -398,8 +398,10 @@ def pytest_runtest_teardown(item: pytest.Item) -> None:
     # Not calling `testreport.generate_reports()` not to generate
     # the `all_screens` report, as would take a lot of time.
     # That will be generated in `pytest_sessionfinish`.
-    if item.session.config.getoption("ui"):
-        testreport.index()
+    pass
+    # TODO: uncomment the below (temporary to speed up tests, until we have a pytest flag for this)
+    # if item.session.config.getoption("ui"):
+    #     testreport.index()
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)

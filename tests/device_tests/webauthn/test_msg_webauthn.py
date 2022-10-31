@@ -30,6 +30,9 @@ RK_CAPACITY = 100
 @pytest.mark.altcoin
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
 def test_add_remove(client: Client):
+    if client.features.model == "R":
+        pytest.skip("Webauthn is not supported on model R")
+
     # Remove index 0 should fail.
     with pytest.raises(TrezorFailure):
         fido.remove_credential(client, 0)

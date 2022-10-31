@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from typing import Any, List
+
 import pytest
 
 from trezorlib import device, exceptions, messages
@@ -23,10 +25,10 @@ from ... import buttons
 from ...common import MNEMONIC12
 
 
-def do_recover_legacy(client: Client, mnemonic, **kwargs):
+def do_recover_legacy(client: Client, mnemonic: List[str], **kwargs: Any):
     def input_callback(_):
         word, pos = client.debug.read_recovery_word()
-        if pos != 0:
+        if pos != 0 and pos is not None:
             word = mnemonic[pos - 1]
             mnemonic[pos - 1] = None
             assert word is not None
@@ -39,6 +41,7 @@ def do_recover_legacy(client: Client, mnemonic, **kwargs):
         word_count=len(mnemonic),
         type=messages.RecoveryDeviceType.ScrambledWords,
         input_callback=input_callback,
+        show_tutorial=False,
         **kwargs
     )
     # if the call succeeded, check that all words have been used
@@ -46,7 +49,7 @@ def do_recover_legacy(client: Client, mnemonic, **kwargs):
     return ret
 
 
-def do_recover_core(client: Client, mnemonic, **kwargs):
+def do_recover_core(client: Client, mnemonic: List[str], **kwargs: Any):
     layout = client.debug.wait_layout
 
     def input_flow():
@@ -82,12 +85,57 @@ def do_recover_core(client: Client, mnemonic, **kwargs):
     with client:
         client.watch_layout()
         client.set_input_flow(input_flow)
-        return device.recover(client, dry_run=True, **kwargs)
+        return device.recover(client, dry_run=True, show_tutorial=False, **kwargs)
 
 
-def do_recover(client: Client, mnemonic):
+def do_recover_r(client: Client, mnemonic: List[str], **kwargs: Any):
+    layout = client.debug.wait_layout
+
+    def input_flow():
+        yield
+        assert "check the recovery seed" in layout().text
+        client.debug.press_right()
+
+        yield
+        assert "Select number of words" in layout().text
+        client.debug.press_right()
+
+        yield
+        yield
+        assert "Number of words?" in layout().text
+        word_options = (12, 18, 20, 24, 33)
+        index = word_options.index(len(mnemonic))
+        for _ in range(index):
+            client.debug.press_right()
+        client.debug.input(str(len(mnemonic)))
+
+        yield
+        assert "Enter recovery seed" in layout().text
+        client.debug.press_right()
+
+        yield
+        yield
+        for word in mnemonic:
+            assert "Choose word" in layout().text
+            client.debug.input(word)
+            yield
+
+        client.debug.wait_layout()
+        client.debug.press_right()
+        yield
+
+    with client:
+        client.watch_layout()
+        client.set_input_flow(input_flow)
+        return device.recover(client, dry_run=True, show_tutorial=False, **kwargs)
+
+
+def do_recover(client: Client, mnemonic: List[str]):
+
     if client.features.model == "1":
         return do_recover_legacy(client, mnemonic)
+    elif client.features.model == "R":
+        return do_recover_r(client, mnemonic)
     else:
         return do_recover_core(client, mnemonic)
 
@@ -117,7 +165,7 @@ def test_invalid_seed_t1(client: Client):
 def test_invalid_seed_core(client: Client):
     layout = client.debug.wait_layout
 
-    def input_flow():
+    def input_flow_tt():
         yield
         assert "check the recovery seed" in layout().get_content()
         client.debug.click(buttons.OK)
@@ -154,11 +202,53 @@ def test_invalid_seed_core(client: Client):
         assert "ABORT SEED CHECK" == layout().get_title()
         client.debug.click(buttons.OK)
 
+    def input_flow_tr():
+        yield
+        assert "check the recovery seed" in layout().text
+        client.debug.press_right()
+
+        yield
+        assert "Select number of words" in layout().text
+        client.debug.press_right()
+
+        yield
+        yield
+        assert "Number of words?" in layout().text
+        # select 12 words
+        client.debug.press_middle()
+
+        yield
+        assert "Enter recovery seed" in layout().text
+        client.debug.press_right()
+
+        yield
+        for _ in range(12):
+            yield
+            assert "Choose word" in layout().text
+            client.debug.input("stick")
+
+        br = yield
+        assert br.code == messages.ButtonRequestType.Warning
+        assert "invalid recovery seed" in layout().text
+        client.debug.press_right()
+
+        yield
+        # retry screen
+        assert "Select number of words" in layout().text
+        client.debug.press_left()
+
+        yield
+        assert "abort" in layout().text
+        client.debug.press_right()
+
     with client:
         client.watch_layout()
-        client.set_input_flow(input_flow)
+        if client.features.model == "T":
+            client.set_input_flow(input_flow_tt)
+        elif client.features.model == "R":
+            client.set_input_flow(input_flow_tr)
         with pytest.raises(exceptions.Cancelled):
-            return device.recover(client, dry_run=True)
+            return device.recover(client, dry_run=True, show_tutorial=False)
 
 
 @pytest.mark.setup_client(uninitialized=True)
@@ -167,7 +257,13 @@ def test_uninitialized(client: Client):
         do_recover(client, ["all"] * 12)
 
 
-DRY_RUN_ALLOWED_FIELDS = ("dry_run", "word_count", "enforce_wordlist", "type")
+DRY_RUN_ALLOWED_FIELDS = (
+    "dry_run",
+    "word_count",
+    "enforce_wordlist",
+    "type",
+    "show_tutorial",
+)
 
 
 def _make_bad_params():
@@ -191,7 +287,7 @@ def _make_bad_params():
 
 
 @pytest.mark.parametrize("field_name, field_value", _make_bad_params())
-def test_bad_parameters(client: Client, field_name, field_value):
+def test_bad_parameters(client: Client, field_name: str, field_value: Any):
     msg = messages.RecoveryDevice(
         dry_run=True,
         word_count=12,
