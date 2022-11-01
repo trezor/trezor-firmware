@@ -39,7 +39,10 @@ __IO uint8_t *const DISPLAY_DATA_ADDRESS =
     (__IO uint8_t *const)((uint32_t)DISPLAY_MEMORY_BASE |
                           (1 << DISPLAY_MEMORY_PIN));
 
-#define LED_PWM_TIM_PERIOD (10000)
+#define LED_PWM_TIM_PERIOD \
+  (255)  // little less than 4kHz with PSC = (SystemCoreClock / 1000000) - 1)
+#define LED_PWM_SLOW_TIM_PERIOD \
+  (10000)  // about 10Hz (with PSC = (SystemCoreClock / 1000000) - 1)
 
 // section "9.1.3 RDDID (04h): Read Display ID"
 // of ST7789V datasheet
@@ -55,6 +58,7 @@ __IO uint8_t *const DISPLAY_DATA_ADDRESS =
 
 static int DISPLAY_BACKLIGHT = -1;
 static int DISPLAY_ORIENTATION = -1;
+static int pwm_period = LED_PWM_TIM_PERIOD;
 
 void display_pixeldata(uint16_t c) { PIXELDATA(c); }
 
@@ -198,7 +202,7 @@ int display_get_orientation(void) { return DISPLAY_ORIENTATION; }
 int display_backlight(int val) {
   if (DISPLAY_BACKLIGHT != val && val >= 0 && val <= 255) {
     DISPLAY_BACKLIGHT = val;
-    TIM1->CCR1 = LED_PWM_TIM_PERIOD * val / 255;
+    TIM1->CCR1 = pwm_period * val / 255;
   }
   return DISPLAY_BACKLIGHT;
 }
@@ -512,6 +516,7 @@ void display_init(void) {
   TIM1_Handle.Init.CounterMode = TIM_COUNTERMODE_UP;
   TIM1_Handle.Init.RepetitionCounter = 0;
   HAL_TIM_PWM_Init(&TIM1_Handle);
+  pwm_period = LED_PWM_TIM_PERIOD;
 
   TIM_OC_InitTypeDef TIM_OC_InitStructure;
   TIM_OC_InitStructure.Pulse = 0;
@@ -604,6 +609,21 @@ void display_init(void) {
 void display_reinit(void) {
   // important for model T as this is not set in boardloader
   display_set_little_endian();
+
+  // enable PWM timer
+  TIM_HandleTypeDef TIM1_Handle;
+  TIM1_Handle.Instance = TIM1;
+  TIM1_Handle.Init.Period = LED_PWM_TIM_PERIOD - 1;
+  // TIM1/APB2 source frequency equals to SystemCoreClock in our configuration,
+  // we want 1 MHz
+  TIM1_Handle.Init.Prescaler = SystemCoreClock / 1000000 - 1;
+  TIM1_Handle.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  TIM1_Handle.Init.CounterMode = TIM_COUNTERMODE_UP;
+  TIM1_Handle.Init.RepetitionCounter = 0;
+  HAL_TIM_PWM_Init(&TIM1_Handle);
+
+  pwm_period = LED_PWM_TIM_PERIOD;
+  display_backlight(DISPLAY_BACKLIGHT);
 }
 
 void display_refresh(void) {
@@ -616,6 +636,23 @@ void display_refresh(void) {
     while (GPIO_PIN_SET == HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12)) {
     }
   }
+}
+
+void display_set_slow_pwm(void) {
+  // enable PWM timer
+  TIM_HandleTypeDef TIM1_Handle;
+  TIM1_Handle.Instance = TIM1;
+  TIM1_Handle.Init.Period = LED_PWM_SLOW_TIM_PERIOD - 1;
+  // TIM1/APB2 source frequency equals to SystemCoreClock in our configuration,
+  // we want 1 MHz
+  TIM1_Handle.Init.Prescaler = SystemCoreClock / 1000000 - 1;
+  TIM1_Handle.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  TIM1_Handle.Init.CounterMode = TIM_COUNTERMODE_UP;
+  TIM1_Handle.Init.RepetitionCounter = 0;
+  HAL_TIM_PWM_Init(&TIM1_Handle);
+
+  pwm_period = LED_PWM_SLOW_TIM_PERIOD;
+  display_backlight(DISPLAY_BACKLIGHT);
 }
 
 void display_set_little_endian(void) {

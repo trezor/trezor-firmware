@@ -193,5 +193,6 @@ void ensure_compatible_settings(void) {
 #ifdef TREZOR_MODEL_T
   display_set_big_endian();
   set_core_clock(CLOCK_168_MHZ);
+  display_set_slow_pwm();
 #endif
 }

@@ -21,5 +21,6 @@ extern __IO uint8_t *const DISPLAY_DATA_ADDRESS;
 
 void display_set_little_endian(void);
 void display_set_big_endian(void);
+void display_set_slow_pwm(void);
 
 #endif  //_ST7789V_H
