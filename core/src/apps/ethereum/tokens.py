@@ -18,6 +18,8 @@ def token_by_chain_address(chain_id: int, address: bytes) -> TokenInfo:
             return TokenInfo("$FFC", 18)  # eth / $Fluzcoin
         if address == b"\x7d\xd7\xf5\x6d\x69\x7c\xc0\xf2\xb5\x2b\xd5\x5c\x05\x7f\x37\x8f\x1f\xe6\xab\x4b":
             return TokenInfo("$TEAK", 18)  # eth / $TEAK
+        if address == b"\x88\x1b\xa0\x5d\xe1\xe7\x8f\x54\x9c\xc6\x3a\x8f\x6c\xab\xb1\xd4\xad\x32\x25\x0d":
+            return TokenInfo("00", 18)  # eth / 00 Token
         if address == b"\xb6\xed\x76\x44\xc6\x94\x16\xd6\x7b\x52\x2e\x20\xbc\x29\x4a\x9a\x9b\x40\x5b\x31":
             return TokenInfo("0xBTC", 8)  # eth / 0xBitcoin
         if address == b"\x0f\x72\x71\x4b\x35\xa3\x66\x28\x5d\xf8\x58\x86\xa2\xee\x17\x46\x01\x29\x2a\x17":
@@ -500,8 +502,6 @@ def token_by_chain_address(chain_id: int, address: bytes) -> TokenInfo:
             return TokenInfo("cDAI", 8)  # eth / Compound Dai
         if address == b"\x8a\x95\xca\x44\x8a\x52\xc0\xad\xf0\x05\x4b\xb3\x40\x2d\xc5\xe0\x9c\xd6\xb2\x32":
             return TokenInfo("CDL", 18)  # eth / Confideal
-        if address == b"\x17\x7d\x39\xac\x67\x6e\xd1\xc6\x7a\x2b\x26\x8a\xd7\xf1\xe5\x88\x26\xe5\xb0\xaf":
-            return TokenInfo("CDT", 18)  # eth / CoinDash
         if address == b"\xb0\x56\xc3\x8f\x6b\x7d\xc4\x06\x43\x67\x40\x3e\x26\x42\x4c\xd2\xc6\x06\x55\xe1":
             return TokenInfo("CEEK", 18)  # eth / CEEK VR Token
         if address == b"\x4f\x92\x54\xc8\x3e\xb5\x25\xf9\xfc\xf3\x46\x49\x0b\xbb\x3e\xd2\x8a\x81\xc6\x67":
@@ -1904,6 +1904,8 @@ def token_by_chain_address(chain_id: int, address: bytes) -> TokenInfo:
             return TokenInfo("OGK", 10)  # eth / Organik
         if address == b"\x82\x07\xc1\xff\xc5\xb6\x80\x4f\x60\x24\x32\x2c\xcf\x34\xf2\x9c\x35\x41\xae\x26":
             return TokenInfo("OGN", 18)  # eth / OriginToken
+        if address == b"\x9c\x35\x45\x03\xc3\x84\x81\xa7\xa7\xa5\x16\x29\x14\x29\x63\xf9\x8e\xcc\x12\xd0":
+            return TokenInfo("OGV", 18)  # eth / Origin Dollar Governance
         if address == b"\x21\xe1\x3c\xb3\xf3\xf2\x6f\x92\xa6\x2a\xc7\xad\xab\x40\x93\xe8\x99\x7d\x1f\xb1":
             return TokenInfo("OIKOS", 2)  # eth / OIKOS
         if address == b"\xbe\xef\x54\x6a\xc8\xa4\xe0\xa8\x0d\xc1\xe2\xd6\x96\x96\x8e\xf5\x41\x38\xf1\xd4":
@@ -3328,6 +3330,8 @@ def token_by_chain_address(chain_id: int, address: bytes) -> TokenInfo:
             return TokenInfo("VEGAN", 8)  # eth / Vegan
         if address == b"\xeb\xed\x4f\xf9\xfe\x34\x41\x3d\xb8\xfc\x82\x94\x55\x6b\xbd\x15\x28\xa4\xda\xca":
             return TokenInfo("VENUS", 3)  # eth / VENUS
+        if address == b"\x0c\x45\x76\xca\x1c\x36\x58\x68\xe1\x62\x55\x4a\xf8\xe3\x85\xdc\x3e\x7c\x66\xd9":
+            return TokenInfo("veOGV", 18)  # eth / Vote Escrowed Origin Dollar Governance
         if address == b"\x8f\x34\x70\xa7\x38\x8c\x05\xee\x4e\x7a\xf3\xd0\x1d\x8c\x72\x2b\x0f\xf5\x23\x74":
             return TokenInfo("VERI", 18)  # eth / Veritaseum
         if address == b"\x1b\x87\x9d\x38\x12\xf2\xad\xe1\x21\x42\x64\x65\x5b\x47\x39\x10\xe0\xca\xf1\xe6":
@@ -3438,6 +3442,8 @@ def token_by_chain_address(chain_id: int, address: bytes) -> TokenInfo:
             return TokenInfo("WNK", 18)  # eth / Woonk
         if address == b"\xf9\xd9\x70\x2d\x03\x14\x07\xf4\x25\xa4\x41\x26\x82\xfd\xc5\x6b\x07\xd0\x52\x62":
             return TokenInfo("WOC", 0)  # eth / WallOfChain
+        if address == b"\xd2\xaf\x83\x0e\x8c\xbd\xfe\xd6\xcc\x11\xba\xb6\x97\xbb\x25\x49\x6e\xd6\xfa\x62":
+            return TokenInfo("WOUSD", 18)  # eth / Wrapped OUSD
         if address == b"\x62\x08\x72\x45\x08\x71\x25\xd3\xdb\x5b\x9a\x3d\x71\x3d\x78\xe7\xbb\xc3\x1e\x54":
             return TokenInfo("WPC", 18)  # eth / WorldPeaceCoin
         if address == b"\x4c\xf4\x88\x38\x7f\x03\x5f\xf0\x8c\x37\x15\x15\x56\x2c\xba\x71\x2f\x90\x15\xd4":
@@ -3782,9 +3788,6 @@ def token_by_chain_address(chain_id: int, address: bytes) -> TokenInfo:
             return TokenInfo("UVC", 5)  # etc / UniversalCoin
         if address == b"\xd6\xdf\x0c\x57\x9f\x2a\x65\x04\x9a\x89\x3f\xda\xec\x9f\xce\x09\x8c\xc1\x9f\x87":
             return TokenInfo("UVCX", 18)  # etc / UniversalCoin X
-    if chain_id == 64:
-        if address == b"\x99\x1e\x7f\xe4\xb0\x5f\x2b\x3d\xb1\xd7\x88\xe7\x05\x96\x3f\x5d\x64\x7b\x00\x44":
-            return TokenInfo("MINING", 18)  # ella / Ella Mining Tokens
     if chain_id == 31102:
         if address == b"\x72\xea\x35\x08\xd9\xd8\x17\xa9\x14\x65\xab\xb5\x9b\xe1\x0f\xef\x98\x57\xa0\x55":
             return TokenInfo("DGT", 0)  # esn / DGT
