@@ -108,25 +108,23 @@ int main(void) {
   SCB->SHCSR |= (SCB_SHCSR_USGFAULTENA_Msk | SCB_SHCSR_BUSFAULTENA_Msk);
 #endif
 
+  display_reinit();
+
 #if defined TREZOR_MODEL_1
-  display_init();
-  display_clear();
   button_init();
 #endif
 
 #if defined TREZOR_MODEL_R
-  display_init();
   button_init();
-  display_clear();
   rgb_led_init();
 #endif
 
 #if defined TREZOR_MODEL_T
   touch_init();
-  display_set_little_endian();
   sdcard_init();
-  display_clear();
 #endif
+
+  display_clear();
 
 #if !defined TREZOR_MODEL_1
   // jump to unprivileged mode

@@ -356,6 +356,8 @@ void display_init(void) {
   display_init_seq();
 }
 
+void display_reinit(void) {}
+
 void display_refresh(void) {}
 
 const char *display_save(const char *prefix) { return NULL; }

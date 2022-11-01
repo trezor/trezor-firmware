@@ -253,6 +253,8 @@ int main(void) {
   dma2d_init();
 #endif
 
+  display_reinit();
+
 #if defined TREZOR_MODEL_T
   display_set_little_endian();
 #endif
@@ -285,7 +287,6 @@ int main(void) {
 #endif
 
 #if defined TREZOR_MODEL_R
-  display_init();
   button_init();
   rgb_led_init();
 #endif
@@ -295,6 +296,8 @@ int main(void) {
 #if PRODUCTION
   check_bootloader_version();
 #endif
+
+  display_clear();
 
   // was there reboot with request to stay in bootloader?
   secbool stay_in_bootloader = secfalse;

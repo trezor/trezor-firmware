@@ -10,7 +10,7 @@ def add_font(font_name, font, defines, sources):
 
 
 def configure_board(model, env, defines, sources):
-    model_r_version = 3
+    model_r_version = 4
 
     if model in ('1',):
         board = 'trezor_1.h'

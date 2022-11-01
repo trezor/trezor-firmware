@@ -601,6 +601,11 @@ void display_init(void) {
   display_set_little_endian();
 }
 
+void display_reinit(void) {
+  // important for model T as this is not set in boardloader
+  display_set_little_endian();
+}
+
 void display_refresh(void) {
   uint32_t id = display_identify();
   if (id && (id != DISPLAY_ID_GC9307)) {
