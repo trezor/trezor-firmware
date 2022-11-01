@@ -230,9 +230,7 @@ void display_init(void) {
   display_refresh();
 }
 
-void display_reinit(void){
-  display_init();
-}
+void display_reinit(void) { display_init(); }
 
 static inline uint8_t reverse_byte(uint8_t b) {
   b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
