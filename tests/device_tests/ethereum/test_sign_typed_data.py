@@ -25,6 +25,8 @@ from ...common import COMMON_FIXTURES_DIR, parametrize_using_common_fixtures
 
 SHOW_MORE = (143, 167)
 
+DEFS_ZIP_FILE_PATH = COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest.zip"
+
 pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
 
 
@@ -40,11 +42,11 @@ def test_ethereum_sign_typed_data(client: Client, parameters, result):
             )
 
         defs = ethereum.messages.EthereumDefinitions(
-            encoded_network=ethereum.get_definition_from_path(
+            encoded_network=ethereum.get_definition_from_zip(
+                DEFS_ZIP_FILE_PATH,
                 ethereum.get_network_definition_path(
-                    base_path=COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
                     slip44=encoded_network_slip44,
-                )
+                ),
             )
         )
 
@@ -88,11 +90,11 @@ def test_ethereum_sign_typed_data_blind(client: Client, parameters, result):
                 "slip44", encoded_network_slip44
             )
 
-        encoded_network = ethereum.get_definition_from_path(
+        encoded_network = ethereum.get_definition_from_zip(
+            DEFS_ZIP_FILE_PATH,
             ethereum.get_network_definition_path(
-                base_path=COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
                 slip44=encoded_network_slip44,
-            )
+            ),
         )
         ret = ethereum.sign_typed_data_hash(
             client,
@@ -207,11 +209,11 @@ def input_flow_cancel(client: Client):
 @pytest.mark.skip_t1
 def test_ethereum_sign_typed_data_show_more_button(client: Client):
     defs = ethereum.messages.EthereumDefinitions(
-        encoded_network=ethereum.get_definition_from_path(
+        encoded_network=ethereum.get_definition_from_zip(
+            DEFS_ZIP_FILE_PATH,
             ethereum.get_network_definition_path(
-                base_path=COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
                 slip44=60,
-            )
+            ),
         )
     )
 
@@ -230,11 +232,11 @@ def test_ethereum_sign_typed_data_show_more_button(client: Client):
 @pytest.mark.skip_t1
 def test_ethereum_sign_typed_data_cancel(client: Client):
     defs = ethereum.messages.EthereumDefinitions(
-        encoded_network=ethereum.get_definition_from_path(
+        encoded_network=ethereum.get_definition_from_zip(
+            DEFS_ZIP_FILE_PATH,
             ethereum.get_network_definition_path(
-                base_path=COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
                 slip44=60,
-            )
+            ),
         )
     )
 

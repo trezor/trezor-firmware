@@ -99,7 +99,7 @@ def get_reference_ethereum_network_info(chain_id: int | None = None, slip44: int
             if cid is not None:
                 return NETWORKS.get(cid[0])
 
-    return network if network else etworks.UNKNOWN_NETWORK
+    return network if network else networks.UNKNOWN_NETWORK
 
 
 def get_reference_ethereum_token_info(chain_id: int, token_address: str) -> messages.EthereumTokenInfo:

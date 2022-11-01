@@ -12,17 +12,28 @@ Location of these definitions is for:
 * networks - [`networks.json`](https://github.com/trezor/trezor-firmware/blob/master/common/defs/ethereum/networks.json)
 * tokens - [`tokens.json`](https://github.com/trezor/trezor-firmware/blob/master/common/defs/ethereum/tokens.json)
 
-Built-in definitions are written by hand and are not subject to any generation described
-below.
+Sources for built-in definitions (namely files `../../common/defs/ethereum/networks.json`,
+`../../common/defs/ethereum/tokens.json`) are written by hand and are not subject
+to any generation described below.
 
 ## External definitions
 
 Generated binary blobs are first saved locally (by the script that generates them)
-and then published online. By "external" is meant definitions not hardcoded in firmware.
+and then published online. By "external" is meant all the definitions for which the binary
+blobs are generated - so basically all definitions, because blobs are generated
+also for built-in definitions.
 
-#### File structure
-Saved definitions (binary blobs) are stored in directory (e.g. `definitions-latest/`)
-with specific file structure:
+Generated blobs are saved as a zip file. To save some space, zipped definitions
+does not contain the Merkle tree "proof part" (proof length and the proof itself -
+see [definition binary format](communication/ethereum-definitions-binary-format.md)
+for more details). Merkle tree proof is the most repetitive part of the definitions
+and it can be easily computed when needed. Using this script
+[`python/tools/eth_defs_unpack.py`](https://github.com/trezor/trezor-firmware/blob/master/python/tools/eth_defs_unpack.py)
+the zip with definitions will be unpacked and all the definitions will be completed.
+
+#### Zip/directory file structure
+Saved definitions (binary blobs) are stored in zip file with specific file
+structure (same as the structure of completed unpacked definitions):
 ````
 definitions-latest/
 ├── by_chain_id/
@@ -57,7 +68,7 @@ Notice that token definitions are only accessible by `CHAIN_ID` and `TOKEN_ADDRE
 Generated binary definitions are available online at [publicly accessible website](https://data.trezor.io/eth_definitions) # TODO: update url.
 
 To get the desired definition (one at a time), URL can be composed in multiple ways
-and the structure is the same as it is described in the [file structure](#file-structure)
+and the structure is the same as it is described in the [Zip/directory file structure](#zipdirectory-file-structure)
 section. Base URL format is `https://data.trezor.io/eth_definitions/LOOKUP_TYPE/ID/NAME`
 where:
 * `LOOKUP_TYPE` is one of `by_chain_id` or `by_slip44`
@@ -65,7 +76,7 @@ where:
 * `NAME` is either:
   *  `network.dat` for network definition at given chain ID or SLIP44 ID or
   *  `token_"TOKEN_ADDRESS".dat` for token definition at given chain ID and token address
-(see [file structure](#file-structure) section on how to format the token address)
+(see [Zip/directory file structure](#zipdirectory-file-structure) section on how to format the token address)
 
 Definitions could be also downloaded by one request in a ZIP file at https://data.trezor.io/eth_definitions/definitions.zip # TODO: update url.
 
@@ -73,7 +84,7 @@ Definitions could be also downloaded by one request in a ZIP file at https://dat
 
 Automatic manipulation with the definitions is implemented in `trezorctl` tool.
 All Ethereum commands that do work with definitions contains contains options
-to automatically download online definitions or use locally stored definitions.
+to automatically download online definition(s) or use locally stored definition(s).
 For more info look at the `trezorctl` [documentation]
 (https://github.com/trezor/trezor-firmware/blob/master/python/docs/README.rst).
 
@@ -125,8 +136,9 @@ and the root hash is computed.
 and the root hash is computed again. Then this hash is verified against signed hash
 from previous step using public key to ensure that nothing has changed. If everything
 is ok the binary encoded (see
-[definition binary format](communication/ethereum-definitions-binary-format.md) section)
-definitions are generated to directory with specific [file structure](#file-structure).
+[definition binary format](communication/ethereum-definitions-binary-format.md) document)
+definitions are generated to zip file with specific file structure
+(see [Zip/directory file structure](#zipdirectory-file-structure) section).
 
 ### 3. Publish the definitions
 

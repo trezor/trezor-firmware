@@ -29,6 +29,8 @@ TO_ADDR = "0x1d1c328764a41bda0492b66baa30c4a339ff85ef"
 SHOW_ALL = (143, 167)
 GO_BACK = (16, 220)
 
+DEFS_ZIP_FILE_PATH = COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest.zip"
+
 pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
 
 
@@ -37,25 +39,25 @@ def get_definitions(
 ) -> messages.EthereumDefinitions:
     chain_id = parameters["chain_id"]
     token_chain_id = parameters["chain_id"]
-    token_address = parameters["to_address"]
+    token_address = parameters.get("to_address")
 
     if "definitions" in parameters:
         chain_id = parameters["definitions"].get("chain_id", chain_id)
         token_chain_id = parameters["definitions"].get("token_chain_id", token_chain_id)
         token_address = parameters["definitions"].get("to_address", token_address)
 
-    encoded_network = ethereum.get_definition_from_path(
+    encoded_network = ethereum.get_definition_from_zip(
+        DEFS_ZIP_FILE_PATH,
         ethereum.get_network_definition_path(
-            COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
             chain_id,
-        )
+        ),
     )
-    encoded_token = ethereum.get_definition_from_path(
+    encoded_token = ethereum.get_definition_from_zip(
+        DEFS_ZIP_FILE_PATH,
         ethereum.get_token_definition_path(
-            COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest",
             token_chain_id,
             token_address,
-        )
+        ),
     )
 
     return messages.EthereumDefinitions(
@@ -91,7 +93,7 @@ def test_signtx(client: Client, parameters, result):
     assert sig_v == result["sig_v"]
 
 
-def test_signtx_missing_extern_definitions(client: Client):
+def test_signtx_missing_or_wrong_extern_definitions(client: Client):
     chain_id = 8  # Ubiq
     to_address = "0x20e3dd746ddf519b23ffbbb6da7a5d33ea6349d6"  # Sphere
 
@@ -124,31 +126,6 @@ def test_signtx_missing_extern_definitions(client: Client):
                 "to_address": "",
             }
         ),  # missing network and token
-    ]
-
-    for definitions in definitions_vector:
-        with pytest.raises(TrezorFailure, match=r"DataError:.*Forbidden key path"):
-            sign_tx_call(definitions=definitions)
-
-
-def test_signtx_wrong_extern_definitions(client: Client):
-    chain_id = 8  # Ubiq
-    to_address = "0x20e3dd746ddf519b23ffbbb6da7a5d33ea6349d6"  # Sphere
-
-    sign_tx_call = partial(
-        ethereum.sign_tx,
-        client,
-        n=parse_path("m/44'/108'/0'/0/0"),
-        nonce=0,
-        gas_price=20,
-        gas_limit=20,
-        to=to_address,
-        chain_id=chain_id,
-        value=0,
-        data=b"a9059cbb00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-    )
-
-    definitions_vector = [
         get_definitions(
             {
                 "chain_id": chain_id,
@@ -164,13 +141,19 @@ def test_signtx_wrong_extern_definitions(client: Client):
                 "to_address": "0xd0d6d6c5fe4a677d343cc433536bb717bae167dd",
             }
         ),  # wrong network and token
+        get_definitions(
+            {
+                "chain_id": chain_id,
+                "definitions": {
+                    "token_chain_id": 1,
+                    "to_address": "0xd0d6d6c5fe4a677d343cc433536bb717bae167dd",
+                },
+            }
+        ),  # wrong token
     ]
 
     for definitions in definitions_vector:
-        with pytest.raises(
-            TrezorFailure,
-            match=r"DataError:.*Network definition mismatch",
-        ):
+        with pytest.raises(TrezorFailure, match=r"DataError"):
             sign_tx_call(definitions=definitions)
 
 
@@ -199,7 +182,7 @@ def test_signtx_eip1559(client: Client, parameters, result):
     assert sig_v == result["sig_v"]
 
 
-def test_signtx_eip1559_missing_extern_definitions(client: Client):
+def test_signtx_eip1559_missing_or_wrong_extern_definitions(client: Client):
     chain_id = 8  # Ubiq
     to_address = "0x20e3dd746ddf519b23ffbbb6da7a5d33ea6349d6"  # Sphere
 
@@ -233,32 +216,6 @@ def test_signtx_eip1559_missing_extern_definitions(client: Client):
                 "to_address": "",
             }
         ),  # missing network and token
-    ]
-
-    for definitions in definitions_vector:
-        with pytest.raises(TrezorFailure, match=r"DataError:.*Forbidden key path"):
-            sign_tx_eip1559_call(definitions=definitions)
-
-
-def test_signtx_eip1559_wrong_extern_definitions(client: Client):
-    chain_id = 8  # Ubiq
-    to_address = "0x20e3dd746ddf519b23ffbbb6da7a5d33ea6349d6"  # Sphere
-
-    sign_tx_eip1559_call = partial(
-        ethereum.sign_tx_eip1559,
-        client,
-        n=parse_path("m/44'/108'/0'/0/0"),
-        nonce=0,
-        gas_limit=20,
-        max_gas_fee=20,
-        max_priority_fee=1,
-        to=to_address,
-        chain_id=chain_id,
-        value=0,
-        data=b"a9059cbb00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-    )
-
-    definitions_vector = [
         get_definitions(
             {
                 "chain_id": chain_id,
@@ -274,13 +231,19 @@ def test_signtx_eip1559_wrong_extern_definitions(client: Client):
                 "to_address": "0xd0d6d6c5fe4a677d343cc433536bb717bae167dd",
             }
         ),  # wrong network and token
+        get_definitions(
+            {
+                "chain_id": chain_id,
+                "definitions": {
+                    "token_chain_id": 1,
+                    "to_address": "0xd0d6d6c5fe4a677d343cc433536bb717bae167dd",
+                },
+            }
+        ),  # wrong token
     ]
 
     for definitions in definitions_vector:
-        with pytest.raises(
-            TrezorFailure,
-            match=r"DataError:.*Network definition mismatch",
-        ):
+        with pytest.raises(TrezorFailure, match=r"DataError"):
             sign_tx_eip1559_call(definitions=definitions)
 
 

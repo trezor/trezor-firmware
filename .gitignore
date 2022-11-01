@@ -12,4 +12,5 @@ proto.gv*
 .DS_Store
 crypto/tests/libtrezor-crypto.so.dSYM/
 /definitions-latest
+/definitions-latest.zip
 definitions-cache.json

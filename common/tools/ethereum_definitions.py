@@ -9,8 +9,8 @@ import logging
 import os
 import pathlib
 import re
-import shutil
 import sys
+import zipfile
 from binascii import hexlify
 from collections import defaultdict
 from typing import Any, TextIO, cast
@@ -23,8 +23,8 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 from coin_info import Coin, Coins, load_json
-from merkle_tree import MerkleTree
 from trezorlib import protobuf
+from trezorlib.merkle_tree import MerkleTree
 from trezorlib.messages import (
     EthereumDefinitionType,
     EthereumNetworkInfo,
@@ -459,12 +459,11 @@ def check_tokens_collisions(tokens: list[dict], old_tokens: list[dict] | None) -
 
 
 def check_bytes_size(
-    value: bytes, max_size: int, label: str, prompt: bool = True
+    actual_size: int, max_size: int, label: str, prompt: bool = True
 ) -> tuple[bool, bool]:
-    """Check value (of type bytes) size and return tuple - size check and user response"""
-    encoded_size = len(value)
-    if encoded_size > max_size:
-        title = f"Bytes in {label} definition is too long ({encoded_size} > {max_size})"
+    """Check the actual size and return tuple - size check result and user response"""
+    if actual_size > max_size:
+        title = f"Bytes in {label} definition is too long ({actual_size} > {max_size})"
         title += " and will be removed from the results" if not prompt else ""
         print(f"== {title} ==")
 
@@ -1093,10 +1092,12 @@ def prepare_definitions(
 )
 @click.option(
     "-o",
-    "--outdir",
-    type=click.Path(resolve_path=True, file_okay=False, path_type=pathlib.Path),
-    default="./definitions-latest",
-    help="Path where the generated definitions will be saved. Path will be erased!",
+    "--outfile",
+    type=click.Path(
+        resolve_path=True, dir_okay=False, writable=True, path_type=pathlib.Path
+    ),
+    default="./definitions-latest.zip",
+    help="File where the generated definitions will be saved in zip format. Any existing file will be overwritten!",
 )
 @click.option(
     "-k",
@@ -1107,15 +1108,22 @@ def prepare_definitions(
 @click.option(
     "-s",
     "--signedroot",
-    help="Signed Merkle tree root hash to be added",
+    help="Signed Merkle tree root hash to be added.",
 )
-@click.option("-v", "--verbose", is_flag=True, help="Display more info")
+@click.option("-v", "--verbose", is_flag=True, help="Display more info.")
+@click.option(
+    "-p",
+    "--include-proof",
+    is_flag=True,
+    help="Include Merkle tree proofs into binary blobs.",
+)
 def sign_definitions(
     deffile: pathlib.Path,
-    outdir: pathlib.Path,
+    outfile: pathlib.Path,
     publickey: TextIO,
     signedroot: str,
     verbose: bool,
+    include_proof: bool,
 ) -> None:
     """Generate signed Ethereum definitions for python-trezor and others.
     If ran without `--publickey` and/or `--signedroot` it prints the computed Merkle tree root hash.
@@ -1128,49 +1136,10 @@ def sign_definitions(
             "Options `--publickey` and `--signedroot` must be used together."
         )
 
-    def save_definition(directory: pathlib.Path, keys: list[str], data: bytes):
-        complete_file_path = directory / ("_".join(keys) + ".dat")
-
-        if complete_file_path.exists():
-            raise click.ClickException(
-                f'Definition "{complete_file_path}" already generated - attempt to generate another definition.'
-            )
-
-        directory.mkdir(parents=True, exist_ok=True)
-        with open(complete_file_path, mode="wb+") as f:
-            f.write(data)
-
-    def generate_token_def(token: Coin):
-        if token["address"] is not None and token["chain_id"] is not None:
-            # save token definition
-            save_definition(
-                outdir / "by_chain_id" / str(token["chain_id"]),
-                ["token", token["address"][2:].lower()],
-                token["serialized"],
-            )
-
-    def generate_network_def(network: Coin):
-        if network["chain_id"] is None:
-            return
-
-        # create path for networks identified by chain and slip44 ids
-        network_dir = outdir / "by_chain_id" / str(network["chain_id"])
-        slip44_dir = outdir / "by_slip44" / str(network["slip44"])
-        # save network definition
-        save_definition(network_dir, ["network"], network["serialized"])
-
-        try:
-            # for slip44 == 60 save only Ethereum
-            if network["slip44"] != 60 or network["chain_id"] == 1:
-                save_definition(slip44_dir, ["network"], network["serialized"])
-        except click.ClickException:
-            pass
-
     # load prepared definitions
     timestamp, networks, tokens = _load_prepared_definitions(deffile)
 
     # serialize definitions
-    definitions_by_serialization: dict[bytes, dict] = {}
     for network in networks:
         ser = serialize_eth_info(
             eth_info_from_dict(network, EthereumNetworkInfo),
@@ -1178,7 +1147,6 @@ def sign_definitions(
             timestamp,
         )
         network["serialized"] = ser
-        definitions_by_serialization[ser] = network
     for token in tokens:
         ser = serialize_eth_info(
             eth_info_from_dict(token, EthereumTokenInfo),
@@ -1186,13 +1154,15 @@ def sign_definitions(
             timestamp,
         )
         token["serialized"] = ser
-        definitions_by_serialization[ser] = token
+
+    # sort encoded definitions
+    sorted_defs = [network["serialized"] for network in networks] + [
+        token["serialized"] for token in tokens
+    ]
+    sorted_defs.sort()
 
     # build Merkle tree
-    mt = MerkleTree(
-        [network["serialized"] for network in networks]
-        + [token["serialized"] for token in tokens]
-    )
+    mt = MerkleTree(sorted_defs)
 
     # print or check tree root hash
     if publickey is None:
@@ -1209,43 +1179,104 @@ def sign_definitions(
             f"Provided `--signedroot` value is not valid for computed Merkle tree root hash ({hexlify(mt.get_root_hash())})."
         )
 
-    # update definitions
-    signedroot_bytes = bytes.fromhex(signedroot)
-    for ser, proof in mt.get_proofs().items():
-        definition = definitions_by_serialization[ser]
+    def save_definition(
+        path: pathlib.PurePath, keys: list[str], data: bytes, zip_file: zipfile.ZipFile
+    ):
+        complete_path = path / ("_".join(keys) + ".dat")
+
+        try:
+            if zip_file.getinfo(str(complete_path)):
+                logging.warning(
+                    f'Definition "{complete_path}" already generated - attempt to generate another definition.'
+                )
+        except KeyError:
+            pass
+
+        zip_file.writestr(str(complete_path), data)
+
+    def generate_token_def(
+        token: Coin, base_path: pathlib.PurePath, zip_file: zipfile.ZipFile
+    ):
+        if token["address"] is not None and token["chain_id"] is not None:
+            # save token definition
+            save_definition(
+                base_path / "by_chain_id" / str(token["chain_id"]),
+                ["token", token["address"][2:].lower()],
+                token["serialized"],
+                zip_file,
+            )
+
+    def generate_network_def(
+        network: Coin, base_path: pathlib.PurePath, zip_file: zipfile.ZipFile
+    ):
+        if network["chain_id"] is None:
+            return
+
+        # create path for networks identified by chain and slip44 ids
+        network_dir = base_path / "by_chain_id" / str(network["chain_id"])
+        slip44_dir = base_path / "by_slip44" / str(network["slip44"])
+        # save network definition
+        save_definition(network_dir, ["network"], network["serialized"], zip_file)
+
+        # for slip44 == 60 save only Ethereum and for slip44 == 1 save only Goerli
+        if network["slip44"] not in (60, 1) or network["chain_id"] in (1, 420):
+            save_definition(slip44_dir, ["network"], network["serialized"], zip_file)
+
+    def add_proof_to_def(definition: dict) -> None:
+        proof = proofs_dict[definition["serialized"]]
         # append number of hashes in proof
         definition["serialized"] += len(proof).to_bytes(1, "big")
         # append proof itself
         for p in proof:
             definition["serialized"] += p
-        # append signed tree root hash
-        definition["serialized"] += signedroot_bytes
 
-    # clear defs directory
-    if outdir.exists():
-        shutil.rmtree(outdir)
-    outdir.mkdir(parents=True)
+    # add proofs (if requested) and signed tree root hash, check serialized size of the definitions and add it to a zip
+    signed_root_bytes = bytes.fromhex(signedroot)
 
-    # check serialized size of the definitions and generate a file for it
-    for network in networks:
-        check, _ = check_bytes_size(
-            network["serialized"],
-            1024,
-            f"network {network['name']} (chain_id={network['chain_id']})",
-            False,
-        )
-        if check:
-            generate_network_def(network)
+    # update definitions
+    proofs_dict = mt.get_proofs()
 
-    for token in tokens:
-        check, _ = check_bytes_size(
-            token["serialized"],
-            1024,
-            f"token {token['name']} (chain_id={token['chain_id']}, address={token['address']})",
-            False,
-        )
-        if check:
-            generate_token_def(token)
+    base_path = pathlib.PurePath("definitions-latest")
+    with zipfile.ZipFile(outfile, mode="w") as zip_file:
+        for network in networks:
+            if include_proof:
+                add_proof_to_def(network)
+            # append signed tree root hash
+            network["serialized"] += signed_root_bytes
+
+            network_serialized_length = len(network["serialized"])
+            if not include_proof:
+                # consider size of the proofs that will be added later by user before sending to the device
+                network_serialized_length += mt.get_tree_height() * 32
+
+            check, _ = check_bytes_size(
+                network_serialized_length,
+                1024,
+                f"network {network['name']} (chain_id={network['chain_id']})",
+                False,
+            )
+            if check:
+                generate_network_def(network, base_path, zip_file)
+
+        for token in tokens:
+            if include_proof:
+                add_proof_to_def(token)
+            # append signed tree root hash
+            token["serialized"] += signed_root_bytes
+
+            token_serialized_length = len(token["serialized"])
+            if not include_proof:
+                # consider size of the proofs that will be added later by user before sending to the device
+                token_serialized_length += mt.get_tree_height() * 32
+
+            check, _ = check_bytes_size(
+                token_serialized_length,
+                1024,
+                f"token {token['name']} (chain_id={token['chain_id']}, address={token['address']})",
+                False,
+            )
+            if check:
+                generate_token_def(token, base_path, zip_file)
 
 
 if __name__ == "__main__":

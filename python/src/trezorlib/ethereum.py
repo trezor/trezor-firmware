@@ -16,11 +16,12 @@
 
 import pathlib
 import re
+import zipfile
 from typing import TYPE_CHECKING, Any, AnyStr, Dict, List, Optional, Tuple
 
 import requests
 
-from . import exceptions, messages
+from . import exceptions, merkle_tree, messages
 from .tools import expect, prepare_message_bytes, session
 
 if TYPE_CHECKING:
@@ -31,6 +32,7 @@ if TYPE_CHECKING:
 
 # TODO: change once we know the urls
 DEFS_BASE_URL = "https://data.trezor.io/eth_definitions/{lookup_type}/{id}/{name}"
+DEFS_ZIP_TOPLEVEL_DIR = pathlib.PurePath("definitions-latest")
 DEFS_NETWORK_BY_CHAINID_LOOKUP_TYPE = "by_chain_id"
 DEFS_NETWORK_BY_SLIP44_LOOKUP_TYPE = "by_slip44"
 DEFS_NETWORK_URI_NAME = "network.dat"
@@ -201,10 +203,9 @@ def get_token_definition_url(chain_id: int = None, token_address: str = None) ->
 
 
 def get_network_definition_path(
-    base_path: pathlib.Path,
     chain_id: Optional[int] = None,
     slip44: Optional[int] = None,
-) -> pathlib.Path:
+) -> pathlib.PurePath:
     if not ((chain_id is None) != (slip44 is None)):  # not XOR
         raise ValueError(
             "Exactly one of chain_id or slip44 parameters are needed to construct network definition path."
@@ -212,14 +213,14 @@ def get_network_definition_path(
 
     if chain_id is not None:
         return (
-            base_path
+            DEFS_ZIP_TOPLEVEL_DIR
             / DEFS_NETWORK_BY_CHAINID_LOOKUP_TYPE
             / str(chain_id)
             / DEFS_NETWORK_URI_NAME
         )
     else:
         return (
-            base_path
+            DEFS_ZIP_TOPLEVEL_DIR
             / DEFS_NETWORK_BY_SLIP44_LOOKUP_TYPE
             / str(slip44)
             / DEFS_NETWORK_URI_NAME
@@ -227,10 +228,9 @@ def get_network_definition_path(
 
 
 def get_token_definition_path(
-    base_path: pathlib.Path,
     chain_id: int = None,
     token_address: str = None,
-) -> pathlib.Path:
+) -> pathlib.PurePath:
     if chain_id is None or token_address is None:
         raise ValueError(
             "Both chain_id and token_address parameters are needed to construct token definition path."
@@ -241,21 +241,62 @@ def get_token_definition_path(
         addr = addr[2:]
 
     return (
-        base_path
+        DEFS_ZIP_TOPLEVEL_DIR
         / DEFS_NETWORK_BY_CHAINID_LOOKUP_TYPE
         / str(chain_id)
         / DEFS_TOKEN_URI_NAME.format(hex_address=addr)
     )
 
 
-def get_definition_from_path(
-    path: pathlib.Path,
-) -> Optional[bytes]:
-    if not path.exists() or not path.is_file():
-        return None
+def get_all_completed_definitions_from_zip(
+    zip_file: pathlib.Path,
+) -> Dict[str, Optional[bytes]]:
+    if not zip_file.exists() or not zip_file.is_file():
+        return {}
 
-    with open(path, mode="rb") as f:
-        return f.read()
+    all_definitions_dict = {}
+    mt_leaves = []
+    signature = None
+
+    with zipfile.ZipFile(zip_file) as zf:
+        names = zf.namelist()
+        signature = zf.read(names[0])[-64:]
+
+        for name in names:
+            all_definitions_dict[name] = zf.read(name)[:-64]
+            if name.startswith(
+                str(DEFS_ZIP_TOPLEVEL_DIR / DEFS_NETWORK_BY_CHAINID_LOOKUP_TYPE)
+            ):
+                mt_leaves.append(all_definitions_dict[name])
+
+    # sort encoded definitions
+    mt_leaves.sort()
+
+    # build Merkle tree
+    mt = merkle_tree.MerkleTree(mt_leaves)
+    proofs = mt.get_proofs()
+
+    # complete definitions
+    for path, definition in all_definitions_dict.items():
+        proof = proofs[definition]
+        # append number of hashes in proof
+        all_definitions_dict[path] += len(proof).to_bytes(1, "big")
+        # append proof itself
+        for p in proof:
+            all_definitions_dict[path] += p
+        # append signed tree root hash
+        all_definitions_dict[path] += signature
+
+    return all_definitions_dict
+
+
+def get_definition_from_zip(
+    zip_file: pathlib.Path,
+    path_inside_zip: pathlib.PurePath,
+) -> Optional[bytes]:
+    all_defs = get_all_completed_definitions_from_zip(zip_file)
+
+    return all_defs.get(str(path_inside_zip))
 
 
 # ====== Client functions ====== #
