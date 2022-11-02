@@ -87,7 +87,7 @@ if TYPE_CHECKING:
             ...
 
 
-# If set to False protobuf messages marked with "unstable" option are rejected.
+# If set to False protobuf messages marked with "experimental_message" option are rejected.
 experimental_enabled = False
 
 
