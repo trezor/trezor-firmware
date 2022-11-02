@@ -54,13 +54,13 @@ extend google.protobuf.EnumOptions {
 
 /** Options for tagging message types */
 extend google.protobuf.MessageOptions {
-    optional bool unstable = 52001;   // indicate that a message is experimental, intended for development and beta testing only and its definition may change at any time
+    optional bool experimental_message = 52001;   // indicate that a message is intended for development and beta testing only and its definition may change at any time
     optional uint32 wire_type = 52002;   // override wire type specified in the MessageType enum
 }
 
 /** Options for tagging field types */
 extend google.protobuf.FieldOptions {
-    optional bool experimental = 53001;   // indicate that a field is intended for development and beta testing only
+    optional bool experimental_field = 53001;   // indicate that a field is intended for development and beta testing only
 }
 
 /** Options for tagging files with protobuf definitions */

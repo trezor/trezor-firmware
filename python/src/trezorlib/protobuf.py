@@ -188,7 +188,6 @@ class _MessageTypeMeta(type):
 
 class MessageType(metaclass=_MessageTypeMeta):
     MESSAGE_WIRE_TYPE: Optional[int] = None
-    UNSTABLE: bool = False
 
     FIELDS: Dict[int, Field] = {}
 
