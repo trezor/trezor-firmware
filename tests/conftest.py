@@ -151,6 +151,10 @@ def client(
     To receive a client instance that was not initialized:
 
     @pytest.mark.setup_client(uninitialized=True)
+
+    To enable experimental features:
+
+    @pytest.mark.experimental
     """
     if request.node.get_closest_marker("skip_t2") and _raw_client.features.model == "T":
         pytest.skip("Test excluded on Trezor T")
@@ -214,7 +218,7 @@ def client(
             no_backup=setup_params["no_backup"],
         )
 
-        if _raw_client.features.model == "T":
+        if request.node.get_closest_marker("experimental"):
             apply_settings(_raw_client, experimental_features=True)
 
         if use_passphrase and isinstance(setup_params["passphrase"], str):
@@ -341,6 +345,9 @@ def pytest_configure(config: "Config") -> None:
     # register known markers
     config.addinivalue_line("markers", "skip_t1: skip the test on Trezor One")
     config.addinivalue_line("markers", "skip_t2: skip the test on Trezor T")
+    config.addinivalue_line(
+        "markers", "experimental: enable experimental features on Trezor"
+    )
     config.addinivalue_line(
         "markers",
         'setup_client(mnemonic="all all all...", pin=None, passphrase=False, uninitialized=False): configure the client instance',

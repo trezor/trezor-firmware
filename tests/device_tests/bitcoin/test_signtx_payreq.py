@@ -32,7 +32,7 @@ PREV_HASH, PREV_TX = forge_prevtx([(INPUT_ADDRESS, 12_300_000)], network="testne
 PREV_TXES = {PREV_HASH: PREV_TX}
 
 
-pytestmark = pytest.mark.skip_t1
+pytestmark = [pytest.mark.skip_t1, pytest.mark.experimental]
 
 
 def case(id, *args, altcoin=False):
