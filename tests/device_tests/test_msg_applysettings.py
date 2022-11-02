@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import btc, device, exceptions, messages
+from trezorlib import btc, device, exceptions, messages, misc
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
@@ -226,16 +226,7 @@ def test_safety_checks(client: Client):
 @pytest.mark.skip_t1
 def test_experimental_features(client: Client):
     def experimental_call():
-        btc.authorize_coinjoin(
-            client,
-            coordinator="www.example.com",
-            max_rounds=10,
-            max_coordinator_fee_rate=500_000,  # 0.5 %
-            max_fee_per_kvbyte=3500,
-            n=parse_path("m/10025h/1h/0h/1h"),
-            coin_name="Testnet",
-            script_type=messages.InputScriptType.SPENDTAPROOT,
-        )
+        misc.get_nonce(client)
 
     assert client.features.experimental_features is None
 
@@ -244,37 +235,30 @@ def test_experimental_features(client: Client):
         _set_expected_responses(client)
         device.apply_settings(client, label="new label")
 
+    assert not client.features.experimental_features
+
+    with pytest.raises(exceptions.TrezorFailure, match="DataError"), client:
+        client.set_expected_responses([messages.Failure])
+        experimental_call()
+
+    # enable experimental features
+    with client:
+        client.set_expected_responses(
+            [messages.ButtonRequest, messages.Success, messages.Features]
+        )
+        device.apply_settings(client, experimental_features=True)
+
     assert client.features.experimental_features
 
     with client:
-        client.set_expected_responses(
-            [messages.ButtonRequest, messages.ButtonRequest, messages.Success]
-        )
+        client.set_expected_responses([messages.Nonce])
         experimental_call()
 
     # relock and try again
     client.lock()
     with client:
         client.use_pin_sequence([PIN4])
-        client.set_expected_responses(
-            [
-                messages.ButtonRequest,
-                messages.ButtonRequest,
-                messages.ButtonRequest,
-                messages.Success,
-            ]
-        )
-        experimental_call()
-
-    # unset experimental features
-    with client:
-        client.set_expected_responses([messages.Success, messages.Features])
-        device.apply_settings(client, experimental_features=False)
-
-    assert not client.features.experimental_features
-
-    with pytest.raises(exceptions.TrezorFailure, match="DataError"), client:
-        client.set_expected_responses([messages.Failure])
+        client.set_expected_responses([messages.ButtonRequest, messages.Nonce])
         experimental_call()
 
 
