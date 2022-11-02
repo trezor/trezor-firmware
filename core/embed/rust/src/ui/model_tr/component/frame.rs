@@ -4,12 +4,10 @@ use crate::ui::{
     geometry::{Insets, Rect},
 };
 
-/// Component for holding another component and displaying
-/// a title and optionally a subtitle describing that child component.
+/// Component for holding another component and displaying a title.
 pub struct Frame<T, U> {
     area: Rect,
     title: U,
-    subtitle: Option<U>,
     content: Child<T>,
 }
 
@@ -18,10 +16,9 @@ where
     T: Component,
     U: AsRef<str>,
 {
-    pub fn new(title: U, subtitle: Option<U>, content: T) -> Self {
+    pub fn new(title: U, content: T) -> Self {
         Self {
             title,
-            subtitle,
             area: Rect::zero(),
             content: Child::new(content),
         }
@@ -40,11 +37,10 @@ where
     type Msg = T::Msg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        // Depending on whether there is subtitle or not
-        let title_space = if self.subtitle.is_some() { 12 } else { 4 };
+        const TITLE_SPACE: i16 = 4;
 
         let (title_area, content_area) = bounds.split_top(theme::FONT_HEADER.line_height());
-        let content_area = content_area.inset(Insets::top(title_space));
+        let content_area = content_area.inset(Insets::top(TITLE_SPACE));
 
         self.area = title_area;
         self.content.place(content_area);
@@ -56,7 +52,7 @@ where
     }
 
     fn paint(&mut self) {
-        common::paint_header(self.area.top_left(), &self.title, self.subtitle.as_ref());
+        common::paint_header_centered(&self.title, self.area);
         self.content.paint();
     }
 }
@@ -70,9 +66,6 @@ where
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("Frame");
         t.title(self.title.as_ref());
-        if let Some(ref subtitle) = self.subtitle {
-            t.title(subtitle.as_ref());
-        }
         t.field("content", &self.content);
         t.close();
     }

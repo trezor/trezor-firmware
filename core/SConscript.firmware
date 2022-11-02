@@ -24,8 +24,8 @@ PYOPT = ARGUMENTS.get('PYOPT', '1')
 FROZEN = True
 
 if TREZOR_MODEL in ('1', 'R'):
-    FONT_NORMAL='Font_PixelOperator_Regular_8'
-    FONT_DEMIBOLD=None
+    FONT_NORMAL='Font_Unifont_Regular_16'
+    FONT_DEMIBOLD='Font_Unifont_Bold_16'
     FONT_BOLD='Font_PixelOperator_Bold_8'
     FONT_MONO='Font_PixelOperatorMono_Regular_8'
 if TREZOR_MODEL in ('T', ):

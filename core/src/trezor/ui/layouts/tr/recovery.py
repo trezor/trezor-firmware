@@ -14,19 +14,11 @@ if TYPE_CHECKING:
 
 async def request_word_count(ctx: wire.GenericContext, dry_run: bool) -> int:
     await button_request(ctx, "word_count", code=ButtonRequestType.MnemonicWordCount)
-
-    if dry_run:
-        title = "Seed check"
-    else:
-        title = "Recovery mode"
-    text = "Number of words?"
-
     count = await interact(
         ctx,
         RustLayout(
             trezorui2.request_word_count(
-                title=title,
-                text=text,
+                title="NUMBER OF WORDS",
             )
         ),
         br_type="request_word_count",
@@ -39,7 +31,7 @@ async def request_word_count(ctx: wire.GenericContext, dry_run: bool) -> int:
 async def request_word(
     ctx: wire.GenericContext, word_index: int, word_count: int, is_slip39: bool
 ) -> str:
-    prompt = f"Choose word {word_index + 1}/{word_count}"
+    prompt = f"WORD {word_index + 1} OF {word_count}"
 
     if is_slip39:
         raise NotImplementedError
@@ -79,11 +71,13 @@ async def continue_recovery(
     text: str,
     subtext: str | None,
     info_func: Callable | None,
+    dry_run: bool,
 ) -> bool:
     return await get_bool(
         ctx=ctx,
-        title="Recovery",
+        title="START RECOVERY",
         data=f"{text}\n\n{subtext or ''}",
+        verb="START",
         br_type="recovery",
         br_code=ButtonRequestType.RecoveryHomepage,
     )

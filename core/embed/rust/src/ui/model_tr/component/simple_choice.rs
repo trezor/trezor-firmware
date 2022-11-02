@@ -3,7 +3,7 @@ use crate::ui::{
     geometry::Rect,
 };
 
-use super::{ButtonLayout, ChoiceFactory, ChoiceItem, ChoicePage, ChoicePageMsg, TextChoiceItem};
+use super::{ButtonLayout, ChoiceFactory, ChoiceItem, ChoicePage, ChoicePageMsg};
 use heapless::{String, Vec};
 
 #[cfg(feature = "ui_debug")]
@@ -32,8 +32,7 @@ where
 {
     fn get(&self, choice_index: u8) -> ChoiceItem {
         let text = &self.choices[choice_index as usize];
-        let text_item = TextChoiceItem::new(text, ButtonLayout::default_three_icons());
-        let mut choice_item = ChoiceItem::Text(text_item);
+        let mut choice_item = ChoiceItem::new(text, ButtonLayout::default_three_icons());
 
         // Disabling prev/next buttons for the first/last choice.
         if choice_index == 0 {

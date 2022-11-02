@@ -1,11 +1,11 @@
 use crate::{
-    micropython::{buffer::StrBuffer},
+    micropython::buffer::StrBuffer,
     ui::{
         component::Paginate,
         display::{Font, Icon, IconAndName},
         geometry::{Offset, Rect},
         model_tr::theme,
-        util::ResultExt
+        util::ResultExt,
     },
 };
 
@@ -68,9 +68,13 @@ pub struct Page<const M: usize> {
 
 // For `layout.rs`
 impl<const M: usize> Page<M> {
-    pub fn new(btn_layout: ButtonLayout<&'static str>, btn_actions: ButtonActions) -> Self {
+    pub fn new(
+        btn_layout: ButtonLayout<&'static str>,
+        btn_actions: ButtonActions,
+        initial_text_font: Font,
+    ) -> Self {
         let style = TextStyle::new(
-            Font::NORMAL,
+            initial_text_font,
             theme::FG,
             theme::BG,
             theme::FG,
@@ -198,6 +202,10 @@ impl<const M: usize> Page<M> {
 
     pub fn text_normal(self, text: StrBuffer) -> Self {
         self.font(Font::NORMAL).text(text)
+    }
+
+    pub fn text_mono(self, text: StrBuffer) -> Self {
+        self.font(Font::MONO).text(text)
     }
 
     pub fn text_bold(self, text: StrBuffer) -> Self {

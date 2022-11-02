@@ -2,13 +2,16 @@ use crate::{
     time::Duration,
     ui::{
         component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
+        display::Icon,
         geometry::Rect,
+        model_tr::theme,
+        util::char_to_string,
     },
 };
 
 use super::{
-    choice_item::BigCharacterChoiceItem, ButtonDetails, ButtonLayout, ChangingTextLine,
-    ChoiceFactory, ChoiceItem, ChoicePage, ChoicePageMsg, MultilineTextChoiceItem, TextChoiceItem,
+    ButtonDetails, ButtonLayout, ChangingTextLine, ChoiceFactory, ChoiceItem, ChoicePage,
+    ChoicePageMsg,
 };
 use heapless::String;
 
@@ -44,9 +47,9 @@ const SPECIAL_SYMBOLS: [char; 30] = [
     '{', '}', ',', '\'', '`', ';', '"', '~', '$', '^', '=',
 ];
 const MENU_LENGTH: usize = 6;
-const DEL_INDEX: usize = MENU_LENGTH - 1;
+const DELETE_INDEX: usize = MENU_LENGTH - 1;
 const SHOW_INDEX: usize = MENU_LENGTH - 2;
-const MENU: [&str; MENU_LENGTH] = ["abc", "ABC", "123", "*#_", "SHOW PASS", "DEL LAST CHAR"];
+const MENU: [&str; MENU_LENGTH] = ["abc", "ABC", "123", "*#_", "SHOW", "DELETE"];
 
 /// Get a character at a specified index for a specified category.
 fn get_char(current_category: &ChoiceCategory, index: u8) -> char {
@@ -104,10 +107,10 @@ impl ChoiceFactoryPassphrase {
     /// MENU choices with accept and cancel hold-to-confirm side buttons.
     fn get_menu_item(&self, choice_index: u8) -> ChoiceItem {
         let choice = MENU[choice_index as usize];
-        let item =
-            MultilineTextChoiceItem::new(String::from(choice), ButtonLayout::default_three_icons())
-                .use_delimiter(' ');
-        let mut menu_item = ChoiceItem::MultilineText(item);
+        let mut menu_item = ChoiceItem::new(
+            String::<50>::from(choice),
+            ButtonLayout::default_three_icons(),
+        );
 
         // Including accept button on the left and cancel on the very right
         // TODO: could have some icons instead of the shortcut text
@@ -121,6 +124,13 @@ impl ChoiceFactoryPassphrase {
             ));
         }
 
+        // Including icons for some items.
+        if choice_index == DELETE_INDEX as u8 {
+            menu_item = menu_item.with_icon(Icon::new(theme::ICON_DELETE));
+        } else if choice_index == SHOW_INDEX as u8 {
+            menu_item = menu_item.with_icon(Icon::new(theme::ICON_EYE));
+        }
+
         menu_item
     }
 
@@ -128,13 +138,10 @@ impl ChoiceFactoryPassphrase {
     /// return back
     fn get_character_item(&self, choice_index: u8) -> ChoiceItem {
         if is_menu_choice(&self.current_category, choice_index) {
-            let menu_choice =
-                TextChoiceItem::new("MENU", ButtonLayout::three_icons_middle_text("RETURN"));
-            ChoiceItem::Text(menu_choice)
+            ChoiceItem::new("MENU", ButtonLayout::three_icons_middle_text("RETURN"))
         } else {
             let ch = get_char(&self.current_category, choice_index);
-            let char_choice = BigCharacterChoiceItem::new(ch, ButtonLayout::default_three_icons());
-            ChoiceItem::BigCharacter(char_choice)
+            ChoiceItem::new(char_to_string::<1>(ch), ButtonLayout::default_three_icons())
         }
     }
 }
@@ -251,7 +258,7 @@ impl Component for PassphraseEntry {
             match msg {
                 // Going to new category, applying some action or returning the result
                 Some(ChoicePageMsg::Choice(page_counter)) => match page_counter as usize {
-                    DEL_INDEX => {
+                    DELETE_INDEX => {
                         self.delete_last_digit(ctx);
                         self.update_passphrase_dots(ctx);
                         ctx.request_paint();
@@ -324,7 +331,7 @@ impl crate::trace::Trace for PassphraseEntry {
                 let current_index = self.choice_page.page_index() as usize;
                 match &self.current_category {
                     ChoiceCategory::Menu => match current_index {
-                        DEL_INDEX => ButtonAction::Action("Del last char").string(),
+                        DELETE_INDEX => ButtonAction::Action("Del last char").string(),
                         SHOW_INDEX => ButtonAction::Action("Show pass").string(),
                         _ => ButtonAction::select_item(MENU[current_index]),
                     },

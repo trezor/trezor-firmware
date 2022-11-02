@@ -155,7 +155,6 @@ def process_face(
                 )
                 nonprintable += " };\n"
 
-
             yMin = bearingY - rows
             yMax = yMin + rows
             font_ymin = min(font_ymin, yMin)
@@ -178,7 +177,10 @@ def process_face(
         f.write("#endif\n")
 
         f.write("#define Font_%s_%s_%d_HEIGHT %d\n" % (name, style, size, size))
-        f.write("#define Font_%s_%s_%d_MAX_HEIGHT %d\n" % (name, style, size, font_ymax - font_ymin))
+        f.write(
+            "#define Font_%s_%s_%d_MAX_HEIGHT %d\n"
+            % (name, style, size, font_ymax - font_ymin)
+        )
         f.write("#define Font_%s_%s_%d_BASELINE %d\n" % (name, style, size, -font_ymin))
         f.write(
             "extern const uint8_t* const Font_%s_%s_%d[%d + 1 - %d];\n"

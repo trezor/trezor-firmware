@@ -6,7 +6,7 @@
 // - the third, fourth and fifth bytes are advance, bearingX and bearingY of the horizontal metrics of the glyph
 // - the rest is packed 1-bit glyph data
 
-/*   */ static const uint8_t Font_Unifont_Bold_16_glyph_32[] = { 0, 0, 7, 0, 0 };  // hand-changed to 7 to have 9px space between words
+/*   */ static const uint8_t Font_Unifont_Bold_16_glyph_32[] = { 0, 0, 8, 0, 0 };
 /* ! */ static const uint8_t Font_Unifont_Bold_16_glyph_33[] = { 2, 10, 7, 2, 10, 255, 252, 240 };
 /* " */ static const uint8_t Font_Unifont_Bold_16_glyph_34[] = { 6, 4, 7, 0, 12, 207, 60, 209, 0 };
 /* # */ static const uint8_t Font_Unifont_Bold_16_glyph_35[] = { 7, 10, 8, 0, 10, 54, 108, 223, 246, 205, 191, 236, 217, 176 };
