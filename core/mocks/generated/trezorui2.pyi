@@ -109,7 +109,6 @@ def show_share_words(
 def select_word(
     *,
     title: str,
-    description: str,
     words: Iterable[str],
 ) -> int:
    """Select mnemonic word from three possibilities - seed check after backup. The
@@ -120,7 +119,6 @@ def select_word(
 def request_word_count(
     *,
     title: str,
-    text: str,
 ) -> str:  # TODO: make it return int
     """Get word count for recovery."""
 

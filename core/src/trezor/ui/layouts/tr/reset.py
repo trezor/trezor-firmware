@@ -39,19 +39,14 @@ async def select_word(
     count: int,
     group_index: int | None = None,
 ) -> str:
+    # TODO: it might not always be 3 words, it can happen it will be only two,
+    # but the probability is very small - 4 words containing two items two times
+    # (or one in "all all" seed)
     assert len(words) == 3
-    if share_index is None:
-        title: str = "CHECK SEED"
-    elif group_index is None:
-        title = f"CHECK SHARE #{share_index + 1}"
-    else:
-        title = f"CHECK G{group_index + 1} - SHARE {share_index + 1}"
-
     result = await ctx.wait(
         RustLayout(
             trezorui2.select_word(
-                title=title,
-                description=f"Select word {checked_index + 1}/{count}",
+                title=f"SELECT WORD {checked_index + 1}",
                 words=(words[0].upper(), words[1].upper(), words[2].upper()),
             )
         )
@@ -91,19 +86,11 @@ async def slip39_advanced_prompt_group_threshold(
 
 
 async def show_warning_backup(ctx: wire.GenericContext, slip39: bool) -> None:
-    if slip39:
-        description = (
-            "Never make a digital copy of your shares and never upload them online."
-        )
-    else:
-        description = (
-            "Never make a digital copy of your seed and never upload it online."
-        )
     await confirm_action(
         ctx,
         "backup_warning",
         "Caution",
-        description=description,
+        description="Never make a digital copy and never upload it online.",
         verb="I understand",
         verb_cancel=None,
         br_code=ButtonRequestType.ResetDevice,

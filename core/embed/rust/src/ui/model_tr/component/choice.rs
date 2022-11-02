@@ -3,7 +3,7 @@ use crate::ui::{
     geometry::Rect,
 };
 
-use super::{theme, ButtonController, ButtonControllerMsg, ButtonPos, ChoiceItem, ChoiceItemAPI};
+use super::{theme, ButtonController, ButtonControllerMsg, ButtonPos, ChoiceItem};
 
 pub enum ChoicePageMsg {
     Choice(u8),
@@ -11,7 +11,8 @@ pub enum ChoicePageMsg {
     RightMost,
 }
 
-const MIDDLE_ROW: i32 = 72;
+const DEFAULT_ITEMS_DISTANCE: i16 = 10;
+const DEFAULT_Y_BASELINE: i16 = 20;
 
 /// Interface for a specific component efficiently giving
 /// `ChoicePage` all the information it needs to render
@@ -48,7 +49,18 @@ where
     pad: Pad,
     buttons: Child<ButtonController<&'static str>>,
     page_counter: u8,
+    /// How many pixels from top should we render the items.
+    y_baseline: i16,
+    /// How many pixels are between the items.
+    items_distance: i16,
+    /// Whether the choice page is "infinite" (carousel).
     is_carousel: bool,
+    /// Whether we should show items on left/right even when they cannot
+    /// be painted entirely (they would be cut off).
+    show_incomplete: bool,
+    /// Whether the middle selected item should be painted with
+    /// inverse colors - black on white.
+    inverse_selected_item: bool,
 }
 
 impl<F> ChoicePage<F>
@@ -63,7 +75,11 @@ where
             pad: Pad::with_background(theme::BG),
             buttons: Child::new(ButtonController::new(initial_btn_layout)),
             page_counter: 0,
+            y_baseline: DEFAULT_Y_BASELINE,
+            items_distance: DEFAULT_ITEMS_DISTANCE,
             is_carousel: false,
+            show_incomplete: false,
+            inverse_selected_item: false,
         }
     }
 
@@ -79,8 +95,29 @@ where
         self
     }
 
+    /// Show incomplete items, even when they cannot render in their entirety.
+    pub fn with_incomplete(mut self) -> Self {
+        self.show_incomplete = true;
+        self
+    }
+
+    /// Adjust the horizontal baseline from the top of placement.
+    pub fn with_y_baseline(mut self, y_baseline: i16) -> Self {
+        self.y_baseline = y_baseline;
+        self
+    }
+
+    /// Adjust the distance between the items.
+    pub fn with_items_distance(mut self, items_distance: i16) -> Self {
+        self.items_distance = items_distance;
+        self
+    }
+
     /// Resetting the component, which enables reusing the same instance
     /// for multiple choice categories.
+    ///
+    /// Used for example in passphrase, where there are multiple categories of
+    /// characters.
     ///
     /// NOTE: from the client point of view, it would also be an option to
     /// always create a new instance with fresh setup, but I could not manage to
@@ -97,8 +134,8 @@ where
         if reset_page_counter {
             self.page_counter = 0;
         }
-        self.update(ctx);
         self.is_carousel = is_carousel;
+        self.update(ctx);
     }
 
     /// Navigating to the chosen page index.
@@ -107,24 +144,26 @@ where
         self.update(ctx);
     }
 
-    /// Display current, previous and next choice according to
+    /// Display current, previous and next choices according to
     /// the current ChoiceItem.
     fn paint_choices(&mut self) {
-        // Performing the appropriate `paint_XXX()` for the main choice
-        // and two adjacent choices when present
-        // In case of carousel mode, also showing the ones from other end.
-        self.show_current_choice();
+        let available_area = self.pad.area.split_top(self.y_baseline).0;
 
-        if self.has_previous_choice() {
-            self.show_previous_choice();
-        } else if self.is_carousel {
-            self.show_last_choice_on_left();
+        // Drawing the current item in the middle.
+        self.show_current_choice(available_area);
+
+        // Getting the remaining left and right areas.
+        let (left_area, _center_area, right_area) =
+            available_area.split_center(self.current_choice().width_center());
+
+        // Possibly drawing on the left side.
+        if self.has_previous_choice() || self.is_carousel {
+            self.show_left_choices(left_area);
         }
 
-        if self.has_next_choice() {
-            self.show_next_choice();
-        } else if self.is_carousel {
-            self.show_first_choice_on_right();
+        // Possibly drawing on the right side.
+        if self.has_next_choice() || self.is_carousel {
+            self.show_right_choices(right_area);
         }
     }
 
@@ -140,62 +179,139 @@ where
         ctx.request_paint();
     }
 
+    /// Index of the last page.
     fn last_page_index(&self) -> u8 {
         self.choices.count() as u8 - 1
     }
 
+    /// Whether there is a previous choice (on the left).
     pub fn has_previous_choice(&self) -> bool {
         self.page_counter > 0
     }
 
+    /// Whether there is a next choice (on the right).
     pub fn has_next_choice(&self) -> bool {
         self.page_counter < self.last_page_index()
     }
 
+    /// Gets choice at the current page index.
     fn current_choice(&self) -> ChoiceItem {
         self.get_choice(self.page_counter)
     }
 
+    /// Gets choice at the given page index.
     fn get_choice(&self, index: u8) -> ChoiceItem {
         self.choices.get(index)
     }
 
-    fn show_current_choice(&self) {
-        self.current_choice().paint_center();
+    /// Display the current choice in the middle.
+    fn show_current_choice(&mut self, area: Rect) {
+        self.current_choice()
+            .paint_center(area, self.inverse_selected_item);
+
+        // Color inversion is just one-time thing.
+        if self.inverse_selected_item {
+            self.inverse_selected_item = false;
+        }
     }
 
-    fn show_previous_choice(&self) {
-        self.get_choice(self.page_counter - 1).paint_left();
+    /// Display all the choices fitting on the left side.
+    /// Going as far as possible.
+    fn show_left_choices(&self, area: Rect) {
+        let mut page_index = self.page_counter as i16 - 1;
+        let mut x_offset = 0;
+        loop {
+            // Breaking out of the loop if we exhausted left items
+            // and the carousel mode is not enabled.
+            if page_index < 0 {
+                if self.is_carousel {
+                    // Moving to the last page.
+                    page_index = self.last_page_index() as i16;
+                } else {
+                    break;
+                }
+            }
+
+            let current_choice = self.get_choice(page_index as u8);
+            let current_area = area.split_right(x_offset + self.items_distance).0;
+
+            // When the item does not fit, we stop.
+            // Rendering the item anyway if the incomplete items are allowed.
+            if !current_choice.fits(current_area) {
+                if self.show_incomplete {
+                    current_choice.paint_left(current_area);
+                }
+                break;
+            }
+
+            // Rendering the item.
+            current_choice.paint_left(current_area);
+
+            // Updating loop variables.
+            x_offset += current_choice.width_side() + self.items_distance;
+            page_index -= 1;
+        }
     }
 
-    fn show_next_choice(&self) {
-        self.get_choice(self.page_counter + 1).paint_right();
+    /// Display all the choices fitting on the right side.
+    /// Going as far as possible.
+    fn show_right_choices(&self, area: Rect) {
+        let mut page_index = self.page_counter + 1;
+        let mut x_offset = 3; // starts with a little offset to account for the middle highlight
+        loop {
+            // Breaking out of the loop if we exhausted right items
+            // and the carousel mode is not enabled.
+            if page_index > self.last_page_index() {
+                if self.is_carousel {
+                    // Moving to the first page.
+                    page_index = 0;
+                } else {
+                    break;
+                }
+            }
+
+            let current_choice = self.get_choice(page_index);
+            let current_area = area.split_left(x_offset + self.items_distance).1;
+
+            // When the item does not fit, we stop.
+            // Rendering the item anyway if the incomplete items are allowed.
+            if !current_choice.fits(current_area) {
+                if self.show_incomplete {
+                    current_choice.paint_right(current_area);
+                }
+                break;
+            }
+
+            // Rendering the item.
+            current_choice.paint_right(current_area);
+
+            // Updating loop variables.
+            x_offset += current_choice.width_side() + self.items_distance;
+            page_index += 1;
+        }
     }
 
-    fn show_last_choice_on_left(&self) {
-        self.get_choice(self.last_page_index()).paint_left();
-    }
-
-    fn show_first_choice_on_right(&self) {
-        self.get_choice(0).paint_right();
-    }
-
+    /// Decrease the page counter to the previous page.
     fn decrease_page_counter(&mut self) {
         self.page_counter -= 1;
     }
 
+    /// Advance page counter to the next page.
     fn increase_page_counter(&mut self) {
         self.page_counter += 1;
     }
 
+    /// Set page to the first one.
     fn page_counter_to_zero(&mut self) {
         self.page_counter = 0;
     }
 
+    /// Set page to the last one.
     fn page_counter_to_max(&mut self) {
         self.page_counter = self.last_page_index();
     }
 
+    /// Get current page counter.
     pub fn page_index(&self) -> u8 {
         self.page_counter
     }
@@ -238,6 +354,7 @@ where
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         let button_event = self.buttons.event(ctx, event);
 
+        // Button was "triggered" - released. Doing the appropriate action.
         if let Some(ButtonControllerMsg::Triggered(pos)) = button_event {
             match pos {
                 ButtonPos::Left => {
@@ -276,6 +393,12 @@ where
                     return Some(ChoicePageMsg::Choice(self.page_counter));
                 }
             }
+        };
+        // The middle button was "pressed", highlighting the current choice by color
+        // inversion.
+        if let Some(ButtonControllerMsg::Pressed(ButtonPos::Middle)) = button_event {
+            self.inverse_selected_item = true;
+            self.clear(ctx);
         };
         None
     }

@@ -3,12 +3,13 @@ use crate::{
     ui::{
         component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
         geometry::Rect,
+        util::char_to_string,
     },
 };
 
 use super::{
-    choice_item::BigCharacterChoiceItem, ButtonDetails, ButtonLayout, ChangingTextLine,
-    ChoiceFactory, ChoiceItem, ChoicePage, ChoicePageMsg, TextChoiceItem,
+    ButtonDetails, ButtonLayout, ChangingTextLine, ChoiceFactory, ChoiceItem, ChoicePage,
+    ChoicePageMsg,
 };
 use heapless::{String, Vec};
 
@@ -16,13 +17,13 @@ pub enum Bip39EntryMsg {
     ResultWord(String<15>),
 }
 
-const CURRENT_LETTERS_ROW: i32 = 25;
-
 const MAX_LENGTH: usize = 10;
 const MAX_CHOICE_LENGTH: usize = 26;
 
 /// Offer words when there will be fewer of them than this
 const OFFER_WORDS_THRESHOLD: usize = 10;
+
+const PROMPT: &str = "_";
 
 struct ChoiceFactoryBIP39 {
     // TODO: replace these Vecs by iterators somehow?
@@ -52,13 +53,14 @@ impl ChoiceFactoryBIP39 {
     fn get_word_item(&self, choice_index: u8) -> ChoiceItem {
         if let Some(word_choices) = &self.word_choices {
             let word = word_choices[choice_index as usize];
-            let choice = TextChoiceItem::new(word, ButtonLayout::default_three_icons());
-            let mut word_item = ChoiceItem::Text(choice);
+            let mut word_item = ChoiceItem::new(word, ButtonLayout::default_three_icons());
 
-            // Adding BIN leftmost button and removing the rightmost one.
+            // Adding BIN leftmost button.
             if choice_index == 0 {
                 word_item.set_left_btn(Some(ButtonDetails::bin_icon()));
-            } else if choice_index as usize == word_choices.len() - 1 {
+            }
+            // Removing the rightmost button.
+            if choice_index as usize == word_choices.len() - 1 {
                 word_item.set_right_btn(None);
             }
 
@@ -75,14 +77,17 @@ impl ChoiceFactoryBIP39 {
         // user-friendly)
         if let Some(letter_choices) = &self.letter_choices {
             let letter = letter_choices[choice_index as usize];
-            let letter_choice =
-                BigCharacterChoiceItem::new(letter, ButtonLayout::default_three_icons());
-            let mut letter_item = ChoiceItem::BigCharacter(letter_choice);
+            let mut letter_item = ChoiceItem::new(
+                char_to_string::<1>(letter),
+                ButtonLayout::default_three_icons(),
+            );
 
-            // Adding BIN leftmost button and removing the rightmost one.
+            // Adding BIN leftmost button.
             if choice_index == 0 {
                 letter_item.set_left_btn(Some(ButtonDetails::bin_icon()));
-            } else if choice_index as usize == letter_choices.len() - 1 {
+            }
+            // Removing the rightmost button.
+            if choice_index as usize == letter_choices.len() - 1 {
                 letter_item.set_right_btn(None);
             }
 
@@ -131,8 +136,8 @@ impl Bip39Entry {
         let choices = ChoiceFactoryBIP39::letters(letter_choices.clone());
 
         Self {
-            choice_page: ChoicePage::new(choices),
-            chosen_letters: Child::new(ChangingTextLine::center_mono(String::new())),
+            choice_page: ChoicePage::new(choices).with_incomplete(),
+            chosen_letters: Child::new(ChangingTextLine::center_mono(String::from(PROMPT))),
             letter_choices,
             textbox: TextBox::empty(),
             offer_words: false,
@@ -159,7 +164,7 @@ impl Bip39Entry {
     }
 
     fn update_chosen_letters(&mut self, ctx: &mut EventCtx) {
-        let text = build_string!({ MAX_LENGTH + 1 }, self.textbox.content(), "_");
+        let text = build_string!({ MAX_LENGTH + 1 }, self.textbox.content(), PROMPT);
         self.chosen_letters.inner_mut().update_text(text);
         self.chosen_letters.request_complete_repaint(ctx);
     }

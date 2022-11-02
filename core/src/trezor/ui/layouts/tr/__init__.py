@@ -406,7 +406,7 @@ async def _placeholder_confirm(
         confirm_text(
             ctx=ctx,
             br_type=br_type,
-            title=title,
+            title=title.upper(),
             data=data,
             description=description,
             br_code=br_code,
@@ -429,7 +429,7 @@ async def get_bool(
         ctx,
         RustLayout(
             trezorui2.confirm_action(
-                title=title,
+                title=title.upper(),
                 action=data,
                 description=description,
                 verb=verb,
@@ -501,7 +501,7 @@ async def confirm_action(
             ctx,
             RustLayout(
                 trezorui2.confirm_action(
-                    title=title,
+                    title=title.upper(),
                     action=action,
                     description=description,
                     verb=verb,
@@ -565,7 +565,7 @@ async def confirm_reset_device(
     return await _placeholder_confirm(
         ctx=ctx,
         br_type="recover_device" if recovery else "setup_device",
-        title="Recovery mode" if recovery else "Create new wallet",
+        title="RECOVERY MODE" if recovery else "CREATE NEW WALLET",
         data="By continuing you agree to trezor.io/tos",
         description=prompt,
         br_code=ButtonRequestType.ProtectCall
@@ -578,10 +578,10 @@ async def confirm_reset_device(
 async def confirm_backup(ctx: wire.GenericContext) -> bool:
     if await get_bool(
         ctx=ctx,
-        title="Success",
-        data="\nNew wallet created successfully!\n\n\nYou should back up your new wallet right now.",
-        verb="Back up",
-        verb_cancel="Skip",
+        title="SUCCESS",
+        data="New wallet created successfully!\nYou should back up your new wallet right now.",
+        verb="BACK UP",
+        verb_cancel="SKIP",
         br_type="backup_device",
         br_code=ButtonRequestType.ResetDevice,
     ):
@@ -589,11 +589,11 @@ async def confirm_backup(ctx: wire.GenericContext) -> bool:
 
     confirmed = await get_bool(
         ctx=ctx,
-        title="Warning",
+        title="WARNING",
         data="Are you sure you want to skip the backup?\n\n",
         description="You can back up your Trezor once, at any time.",
-        verb="Back up",
-        verb_cancel="Skip",
+        verb="BACK UP",
+        verb_cancel="SKIP",
         br_type="backup_device",
         br_code=ButtonRequestType.ResetDevice,
     )
@@ -606,7 +606,7 @@ async def confirm_path_warning(
     return await _placeholder_confirm(
         ctx=ctx,
         br_type="path_warning",
-        title="Confirm path",
+        title="CONFIRM PATH",
         data=f"{path_type}\n{path} is unknown.\nAre you sure?",
         description="",
         br_code=ButtonRequestType.UnknownDerivationPath,
@@ -619,7 +619,7 @@ async def show_xpub(
     return await _placeholder_confirm(
         ctx=ctx,
         br_type="show_xpub",
-        title=title,
+        title=title.upper(),
         data=xpub,
         description="",
         br_code=ButtonRequestType.PublicKey,
@@ -648,7 +648,7 @@ async def show_address(
     return await _placeholder_confirm(
         ctx=ctx,
         br_type="show_address",
-        title=title,
+        title=title.upper(),
         data=text,
         description="",
         br_code=ButtonRequestType.Address,
@@ -661,7 +661,7 @@ def show_pubkey(
     return confirm_blob(
         ctx,
         br_type="show_pubkey",
-        title=title,
+        title=title.upper(),
         data=pubkey,
         br_code=ButtonRequestType.PublicKey,
     )
@@ -684,7 +684,7 @@ async def _show_modal(
         ctx=ctx,
         br_type=br_type,
         br_code=br_code,
-        title=header,
+        title=header.upper(),
         action=subheader,
         description=content,
         verb=button_confirm,
@@ -832,7 +832,7 @@ async def confirm_payment_request(
     return await _placeholder_confirm(
         ctx=ctx,
         br_type="confirm_payment_request",
-        title="Confirm sending",
+        title="CONFIRM SENDING",
         data=f"{amount} to\n{recipient_name}\n{memos_str}",
         description="",
         br_code=ButtonRequestType.ConfirmOutput,
@@ -853,7 +853,7 @@ async def should_show_more(
 ) -> bool:
     return await get_bool(
         ctx=ctx,
-        title=title,
+        title=title.upper(),
         data=button_text,
         br_type=br_type,
         br_code=br_code,
@@ -875,7 +875,7 @@ async def confirm_blob(
     await _placeholder_confirm(
         ctx=ctx,
         br_type=br_type,
-        title=title,
+        title=title.upper(),
         data=str(data),
         description=description,
         br_code=br_code,
@@ -895,7 +895,7 @@ async def confirm_address(
     return confirm_blob(
         ctx=ctx,
         br_type=br_type,
-        title=title,
+        title=title.upper(),
         data=address,
         description=description,
         br_code=br_code,
@@ -916,7 +916,7 @@ async def confirm_text(
         ctx,
         RustLayout(
             trezorui2.confirm_text(
-                title=title,
+                title=title.upper(),
                 data=data,
                 description=description,
             )
@@ -940,7 +940,7 @@ def confirm_amount(
     return _placeholder_confirm(
         ctx=ctx,
         br_type=br_type,
-        title=title,
+        title=title.upper(),
         data=amount,
         description=description,
         br_code=br_code,
@@ -960,7 +960,7 @@ async def confirm_properties(
     await _placeholder_confirm(
         ctx=ctx,
         br_type=br_type,
-        title=title,
+        title=title.upper(),
         data="\n\n".join(f"{name or ''}\n{value or ''}" for name, value in props),
         description="",
         br_code=br_code,
@@ -984,7 +984,7 @@ async def confirm_total(
             ctx,
             RustLayout(
                 trezorui2.confirm_total_r(
-                    title=title,
+                    title=title.upper(),
                     total_amount=total_amount,
                     fee_amount=fee_amount,
                     fee_rate_amount=fee_rate_amount,
@@ -1004,7 +1004,7 @@ async def confirm_joint_total(
     await _placeholder_confirm(
         ctx=ctx,
         br_type="confirm_joint_total",
-        title="Joint transaction",
+        title="JOINT TRANSACTION",
         data=f"You are contributing:\n{spending_amount}\nto the total amount:\n{total_amount}",
         description="",
         br_code=ButtonRequestType.SignTx,
@@ -1032,7 +1032,7 @@ async def confirm_metadata(
     await _placeholder_confirm(
         ctx=ctx,
         br_type=br_type,
-        title=title,
+        title=title.upper(),
         data=text,
         description="",
         br_code=br_code,
@@ -1045,7 +1045,7 @@ async def confirm_replacement(
     await _placeholder_confirm(
         ctx=ctx,
         br_type="confirm_replacement",
-        title=description,
+        title=description.upper(),
         data=f"Confirm transaction ID:\n{txid}",
         description="",
         br_code=ButtonRequestType.SignTx,
@@ -1069,7 +1069,7 @@ async def confirm_modify_output(
     await _placeholder_confirm(
         ctx=ctx,
         br_type="modify_output",
-        title="Modify amount",
+        title="MODIFY AMOUNT",
         data=text,
         description="",
         br_code=ButtonRequestType.ConfirmOutput,
@@ -1099,7 +1099,7 @@ async def confirm_modify_fee(
     await _placeholder_confirm(
         ctx=ctx,
         br_type="modify_fee",
-        title="Modify fee",
+        title="MODIFY FEE",
         data=text,
         description="",
         br_code=ButtonRequestType.SignTx,
@@ -1112,7 +1112,7 @@ async def confirm_coinjoin(
     await _placeholder_confirm(
         ctx=ctx,
         br_type="coinjoin_final",
-        title="Authorize CoinJoin",
+        title="AUTHORIZE COINJOIN",
         data=f"Maximum rounds: {max_rounds}\n\nMaximum mining fee:\n{max_fee_per_vbyte} sats/vbyte",
         description="",
         br_code=ButtonRequestType.Other,
@@ -1131,7 +1131,7 @@ async def confirm_sign_identity(
     await _placeholder_confirm(
         ctx=ctx,
         br_type="confirm_sign_identity",
-        title=f"Sign {proto}",
+        title=f"Sign {proto}".upper(),
         data=text,
         description="",
         br_code=ButtonRequestType.Other,
@@ -1151,7 +1151,7 @@ async def confirm_signverify(
     await _placeholder_confirm(
         ctx=ctx,
         br_type=br_type,
-        title=header,
+        title=header.upper(),
         data=f"Confirm address:\n{address}",
         description="",
         br_code=ButtonRequestType.Other,
@@ -1160,7 +1160,7 @@ async def confirm_signverify(
     await _placeholder_confirm(
         ctx=ctx,
         br_type=br_type,
-        title=header,
+        title=header.upper(),
         data=f"Confirm message:\n{message}",
         description="",
         br_code=ButtonRequestType.Other,

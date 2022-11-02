@@ -29,20 +29,12 @@
 #define DISPLAY_RESY 240
 #define TREZOR_FONT_BPP 4
 
-#elif defined TREZOR_MODEL_1
+#elif defined TREZOR_MODEL_1 ||  defined TREZOR_MODEL_R
 
 #define MAX_DISPLAY_RESX 128
 #define MAX_DISPLAY_RESY 64
 #define DISPLAY_RESX 128
 #define DISPLAY_RESY 64
-#define TREZOR_FONT_BPP 1
-
-#elif defined TREZOR_MODEL_R
-
-#define MAX_DISPLAY_RESX 128
-#define MAX_DISPLAY_RESY 128
-#define DISPLAY_RESX 128
-#define DISPLAY_RESY 128
 #define TREZOR_FONT_BPP 1
 
 #else
