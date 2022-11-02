@@ -54,7 +54,7 @@ extend google.protobuf.EnumOptions {
 
 /** Options for tagging message types */
 extend google.protobuf.MessageOptions {
-    optional bool unstable = 52001;   // indicate that a message definition might change at any time
+    optional bool unstable = 52001;   // indicate that a message is experimental, intended for development and beta testing only and its definition may change at any time
     optional uint32 wire_type = 52002;   // override wire type specified in the MessageType enum
 }
 
