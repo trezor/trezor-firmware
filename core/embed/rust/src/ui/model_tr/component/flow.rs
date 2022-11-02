@@ -2,7 +2,7 @@ use crate::{
     micropython::buffer::StrBuffer,
     ui::{
         component::{Child, Component, Event, EventCtx, Pad},
-        geometry::{Point, Rect},
+        geometry::Rect,
     },
 };
 
@@ -62,8 +62,7 @@ where
         if get_new_page {
             self.current_page = self.pages.get(self.page_counter);
         }
-        let content_area = self.content_area;
-        self.current_page.place(content_area);
+        self.current_page.place(self.content_area);
         self.set_buttons(ctx);
         self.clear(ctx);
     }
@@ -203,12 +202,13 @@ where
 
     fn paint(&mut self) {
         // TODO: might put horizontal scrollbar at the top right
+        // (not compatible with longer/centered titles)
         self.pad.paint();
-        self.buttons.paint();
         if let Some(title) = &self.common_title {
-            common::paint_header(Point::zero(), title, None);
+            common::paint_header_centered(title, self.content_area);
         }
         self.current_page.paint();
+        self.buttons.paint();
     }
 }
 

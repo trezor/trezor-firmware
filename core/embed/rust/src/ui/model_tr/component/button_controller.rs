@@ -23,6 +23,7 @@ enum ButtonState {
 }
 
 pub enum ButtonControllerMsg {
+    Pressed(ButtonPos),
     Triggered(ButtonPos),
 }
 
@@ -275,16 +276,18 @@ impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
                 let (new_state, event) = match self.state {
                     ButtonState::Nothing => match button {
                         ButtonEvent::ButtonPressed(which) => {
-                            match which {
+                            let event = match which {
                                 PhysicalButton::Left => {
                                     self.left_btn.hold_started(ctx);
+                                    Some(ButtonControllerMsg::Pressed(ButtonPos::Left))
                                 }
                                 PhysicalButton::Right => {
                                     self.right_btn.hold_started(ctx);
+                                    Some(ButtonControllerMsg::Pressed(ButtonPos::Right))
                                 }
-                                _ => {}
-                            }
-                            (ButtonState::OneDown(which), None)
+                                _ => None,
+                            };
+                            (ButtonState::OneDown(which), event)
                         }
                         _ => (self.state, None),
                     },
@@ -313,7 +316,10 @@ impl<T: Clone + AsRef<str>> Component for ButtonController<T> {
 
                         ButtonEvent::ButtonPressed(b) if b != which_down => {
                             self.middle_hold_started(ctx);
-                            (ButtonState::BothDown, None)
+                            (
+                                ButtonState::BothDown,
+                                Some(ButtonControllerMsg::Pressed(ButtonPos::Middle)),
+                            )
                         }
                         _ => (self.state, None),
                     },

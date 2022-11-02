@@ -21,9 +21,11 @@ use crate::{
             text::paragraphs::{Paragraph, Paragraphs},
             FormattedText,
         },
+        display::Font,
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
-            result::{CANCELLED, CONFIRMED, INFO}, util::iter_into_vec,
+            result::{CANCELLED, CONFIRMED, INFO},
+            util::iter_into_vec,
             util::upy_disable_animation,
         },
     },
@@ -162,9 +164,8 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
 
         let obj = LayoutObj::new(Frame::new(
             title,
-            None,
             ButtonPage::new_str_buf(
-                FormattedText::new(theme::TEXT_NORMAL, theme::FORMATTED, format)
+                FormattedText::new(theme::TEXT_MONO, theme::FORMATTED, format)
                     .with("action", action.unwrap_or_default())
                     .with("description", description.unwrap_or_default()),
                 theme::BG,
@@ -188,10 +189,9 @@ extern "C" fn new_confirm_text(n_args: usize, args: *const Obj, kwargs: *mut Map
 
         let obj = LayoutObj::new(Frame::new(
             title,
-            None,
             ButtonPage::new_str(
                 Paragraphs::new([
-                    Paragraph::new(&theme::TEXT_NORMAL, description.unwrap_or_default()),
+                    Paragraph::new(&theme::TEXT_MONO, description.unwrap_or_default()),
                     Paragraph::new(&theme::TEXT_BOLD, data),
                 ]),
                 theme::BG,
@@ -224,7 +224,7 @@ extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) 
                         Some(ButtonDetails::text("CONTINUE")),
                     );
                     let btn_actions = ButtonActions::cancel_next();
-                    Page::<20>::new(btn_layout, btn_actions).icon_label_text(
+                    Page::<20>::new(btn_layout, btn_actions, Font::NORMAL).icon_label_text(
                         theme::ICON_USER,
                         "Recipient".into(),
                         address.clone(),
@@ -241,7 +241,7 @@ extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) 
                         ),
                     );
                     let btn_actions = ButtonActions::cancel_confirm();
-                    Page::<20>::new(btn_layout, btn_actions)
+                    Page::<20>::new(btn_layout, btn_actions, Font::NORMAL)
                         .icon_label_text(
                             theme::ICON_USER,
                             "Recipient".into(),
@@ -283,7 +283,7 @@ extern "C" fn confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -
             );
             let btn_actions = ButtonActions::cancel_confirm();
 
-            let mut flow_page = Page::<25>::new(btn_layout, btn_actions)
+            let mut flow_page = Page::<25>::new(btn_layout, btn_actions, Font::NORMAL)
                 .icon_label_text(theme::ICON_PARAM, total_label.clone(), total_amount.clone())
                 .newline()
                 .icon_label_text(theme::ICON_PARAM, fee_label.clone(), fee_amount.clone());
@@ -307,6 +307,8 @@ extern "C" fn confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -
 
 extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], _kwargs: &Map| {
+        const PAGE_COUNT: u8 = 7;
+
         let get_page = |page_index| {
             // Lazy-loaded list of screens to show, with custom content,
             // buttons and actions triggered by these buttons.
@@ -316,29 +318,19 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
             let screen = match page_index {
                 // title, text, btn_layout, btn_actions
                 0 => (
-                    "Hello!",
-                    "Welcome to Trezor.\n\n\nPress right to continue.",
+                    "HELLO",
+                    "Welcome to Trezor.\nPress right to continue.",
                     ButtonLayout::cancel_and_arrow(),
                     ButtonActions::last_next(),
                 ),
                 1 => (
-                    "Basics",
-                    "Use Trezor by clicking left & right.\nPress right to continue.",
+                    "",
+                    "Use Trezor by clicking left & right.\n\nContinue right.",
                     ButtonLayout::left_right_arrows(),
                     ButtonActions::prev_next(),
                 ),
                 2 => (
-                    "Confirm",
-                    "Press both left & right at the same time to confirm.",
-                    ButtonLayout::new(
-                        Some(ButtonDetails::left_arrow_icon()),
-                        Some(ButtonDetails::armed_text("CONFIRM")),
-                        None,
-                    ),
-                    ButtonActions::prev_next_with_middle(),
-                ),
-                3 => (
-                    "Hold to confirm",
+                    "HOLD TO CONFIRM",
                     "Press & hold right to approve important operations.",
                     ButtonLayout::new(
                         Some(ButtonDetails::left_arrow_icon()),
@@ -350,29 +342,27 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                     ),
                     ButtonActions::prev_next(),
                 ),
-                // TODO: merge these two scrolls into one, with using a scrollbar
-                4 => (
-                    "Screen scroll",
-                    "Press right to scroll down to read all content when text doesn't...",
+                3 => (
+                    "SCREEN SCROLL",
+                    "Press right to scroll down to read all content when text\ndoesn't fit on one screen. Press left to scroll up.",
                     ButtonLayout::new(
                         Some(ButtonDetails::left_arrow_icon()),
                         None,
-                        Some(ButtonDetails::down_arrow_icon_wide()),
-                    ),
+                        Some(ButtonDetails::text("GOT IT")),                    ),
                     ButtonActions::prev_next(),
+                ),
+                4 => (
+                    "CONFIRM",
+                    "Press both left & right at the same time to confirm.",
+                    ButtonLayout::new(
+                        Some(ButtonDetails::left_arrow_icon()),
+                        Some(ButtonDetails::armed_text("CONFIRM")),
+                        None,
+                    ),
+                    ButtonActions::prev_next_with_middle(),
                 ),
                 5 => (
-                    "Screen scroll",
-                    "fit on one screen. Press left to scroll up.",
-                    ButtonLayout::new(
-                        Some(ButtonDetails::up_arrow_icon_wide()),
-                        None,
-                        Some(ButtonDetails::text("CONFIRM")),
-                    ),
-                    ButtonActions::prev_next(),
-                ),
-                6 => (
-                    "Congrats!",
+                    "CONGRATS!",
                     "You're ready to use Trezor.",
                     ButtonLayout::new(
                         Some(ButtonDetails::text("AGAIN")),
@@ -381,27 +371,30 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
                     ),
                     ButtonActions::beginning_confirm(),
                 ),
-                7 => (
-                    "Skip tutorial?",
+                6 => (
+                    "SKIP TUTORIAL",
                     "Sure you want to skip the tutorial?",
                     ButtonLayout::new(
                         Some(ButtonDetails::left_arrow_icon()),
                         None,
-                        Some(ButtonDetails::text("CONFIRM")),
+                        Some(ButtonDetails::text("SKIP")),
                     ),
                     ButtonActions::beginning_cancel(),
                 ),
                 _ => unreachable!(),
             };
 
-            Page::<10>::new(screen.2.clone(), screen.3.clone())
-                .text_bold(screen.0.into())
-                .newline()
-                .newline_half()
-                .text_normal(screen.1.into())
+            let mut page = Page::<10>::new(screen.2.clone(), screen.3.clone(), Font::BOLD);
+
+            // Add title if present
+            if !screen.0.is_empty() {
+                page = page.text_bold(screen.0.into()).newline().newline_half()
+            }
+            page = page.text_mono(screen.1.into());
+            page
         };
 
-        let pages = FlowPages::new(get_page, 8);
+        let pages = FlowPages::new(get_page, PAGE_COUNT);
 
         let obj = LayoutObj::new(Flow::new(pages).into_child())?;
         Ok(obj.into())
@@ -420,7 +413,7 @@ extern "C" fn pin_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
                 // as in the design.
                 0 => (
                     "PIN settings".into(),
-                    "PIN should\ncontain at\nleast four\ndigits",
+                    "PIN should contain at least 6 digits",
                     ButtonLayout::cancel_and_text("GOT IT"),
                     ButtonActions::cancel_next(),
                 ),
@@ -436,11 +429,11 @@ extern "C" fn pin_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
                 _ => unreachable!(),
             };
 
-            Page::<10>::new(screen.2.clone(), screen.3.clone())
+            Page::<10>::new(screen.2.clone(), screen.3.clone(), Font::BOLD)
                 .text_bold(screen.0)
                 .newline()
                 .newline_half()
-                .text_normal(screen.1.into())
+                .text_mono(screen.1.into())
         };
         let pages = FlowPages::new(get_page, 2);
 
@@ -466,7 +459,7 @@ extern "C" fn request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> 
 extern "C" fn show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let share_words_obj: Obj = kwargs.get(Qstr::MP_QSTR_share_words)?;
-        let title = "Recovery seed";
+        let title = "RECOVERY SEED";
 
         // Parsing the list of share words.
         // Assume there is always up to 24 words in the newly generated seed
@@ -521,13 +514,8 @@ extern "C" fn show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map
 
         let obj = LayoutObj::new(Frame::new(
             title,
-            None,
             ButtonPage::new_str(
-                Paragraphs::new(
-                    [
-                        Paragraph::new(&theme::TEXT_BOLD, text_to_show)
-                    ]
-                ),
+                Paragraphs::new([Paragraph::new(&theme::TEXT_BOLD, text_to_show)]),
                 theme::BG,
             )
             .with_cancel_btn(cancel_btn)
@@ -541,15 +529,10 @@ extern "C" fn show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map
 extern "C" fn select_word(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let description: StrBuffer = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let words_iterable: Obj = kwargs.get(Qstr::MP_QSTR_words)?;
         let words: Vec<StrBuffer, 3> = iter_into_vec(words_iterable)?;
 
-        let obj = LayoutObj::new(Frame::new(
-            title,
-            Some(description),
-            SimpleChoice::new(words).into_child(),
-        ))?;
+        let obj = LayoutObj::new(Frame::new(title, SimpleChoice::new(words).into_child()))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -558,15 +541,10 @@ extern "C" fn select_word(n_args: usize, args: *const Obj, kwargs: *mut Map) -> 
 extern "C" fn request_word_count(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let text: StrBuffer = kwargs.get(Qstr::MP_QSTR_text)?.try_into()?;
 
         let choices: Vec<&str, 5> = ["12", "18", "20", "24", "33"].into_iter().collect();
 
-        let obj = LayoutObj::new(Frame::new(
-            title,
-            Some(text),
-            SimpleChoice::new(choices).into_child(),
-        ))?;
+        let obj = LayoutObj::new(Frame::new(title, SimpleChoice::new(choices).into_child()))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -576,7 +554,7 @@ extern "C" fn request_word_bip39(n_args: usize, args: *const Obj, kwargs: *mut M
     let block = |_args: &[Obj], kwargs: &Map| {
         let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
 
-        let obj = LayoutObj::new(Frame::new(prompt, None, Bip39Entry::new().into_child()))?;
+        let obj = LayoutObj::new(Frame::new(prompt, Bip39Entry::new().into_child()))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -587,11 +565,7 @@ extern "C" fn request_passphrase(n_args: usize, args: *const Obj, kwargs: *mut M
         let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
         let _max_len: u8 = kwargs.get(Qstr::MP_QSTR_max_len)?.try_into()?;
 
-        let obj = LayoutObj::new(Frame::new(
-            prompt,
-            None,
-            PassphraseEntry::new().into_child(),
-        ))?;
+        let obj = LayoutObj::new(Frame::new(prompt, PassphraseEntry::new().into_child()))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -685,7 +659,6 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def select_word(
     ///     *,
     ///     title: str,
-    ///     description: str,
     ///     words: Iterable[str],
     /// ) -> int:
     ///    """Select mnemonic word from three possibilities - seed check after backup. The
@@ -695,7 +668,6 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def request_word_count(
     ///     *,
     ///     title: str,
-    ///     text: str,
     /// ) -> str:  # TODO: make it return int
     ///     """Get word count for recovery."""
     Qstr::MP_QSTR_request_word_count => obj_fn_kw!(0, request_word_count).as_obj(),
