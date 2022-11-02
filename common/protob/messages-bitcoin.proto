@@ -611,8 +611,6 @@ message OwnershipProof {
  * @next Failure
  */
 message AuthorizeCoinJoin {
-    option (unstable) = true;
-
     required string coordinator = 1;                                    // coordinator identifier to approve as a prefix in commitment data (max. 36 ASCII characters)
     required uint64 max_rounds = 2;                                     // maximum number of rounds that Trezor is authorized to take part in
     required uint32 max_coordinator_fee_rate = 3;                       // maximum coordination fee rate in units of 10^-6 percent
