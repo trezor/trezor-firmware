@@ -1,10 +1,10 @@
+pub mod color;
+pub mod font;
+pub mod icon;
 #[cfg(any(feature = "model_tt", feature = "model_tr"))]
 pub mod loader;
 #[cfg(feature = "jpeg")]
 pub mod tjpgd;
-pub mod icon;
-pub mod font;
-pub mod color;
 
 use super::{
     constant,
@@ -31,11 +31,11 @@ use crate::{
 };
 
 // Reexports
+pub use color::Color;
+pub use font::{Font, Glyph};
+pub use icon::{Icon, IconAndName};
 #[cfg(any(feature = "model_tt", feature = "model_tr"))]
 pub use loader::{loader, loader_indeterminate, LOADER_MAX, LOADER_MIN};
-pub use icon::{Icon, IconAndName};
-pub use font::{Font, Glyph};
-pub use color::Color;
 
 pub fn backlight() -> i32 {
     display::backlight(-1)
@@ -115,7 +115,8 @@ pub fn icon(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
     icon_rect(r, toif_data, fg_color, bg_color);
 }
 
-/// Display icon at a specified Rectangle, expects already sliced data without header.
+/// Display icon at a specified Rectangle, expects already sliced data without
+/// header.
 pub fn icon_rect(r: Rect, toif_data: &[u8], fg_color: Color, bg_color: Color) {
     display::icon(
         r.x0,
@@ -213,6 +214,7 @@ pub fn rect_outline_rounded(r: Rect, fg_color: Color, bg_color: Color, radius: u
     if radius == 1 {
         rect_fill_rounded(r, fg_color, bg_color, 1);
         rect_fill(inner_r, bg_color);
+        rect_fill_corners(inner_r, fg_color);
     } else if radius == 2 {
         rect_fill_rounded(r, fg_color, bg_color, 2);
         rect_fill_rounded(inner_r, bg_color, fg_color, 1);

@@ -233,10 +233,18 @@ where
                 text_color,
                 background_color,
             );
+            display::rect_fill_corners(area_to_fill, theme::BG);
         } else if style.with_outline {
-            display::rect_outline_rounded(area, text_color, background_color, 2);
+            if background_color == theme::BG {
+                display::rect_outline_rounded(area, text_color, background_color, 2);
+            } else {
+                // With inverse colors having just radius of one, `rect_outline_rounded`
+                // is not suitable for inverse colors.
+                display::rect_fill(area, background_color);
+                display::rect_fill_corners(area, theme::BG);
+            }
         } else {
-            display::rect_fill(area, background_color)
+            display::rect_fill(area, background_color);
         }
 
         match &self.content {

@@ -1,11 +1,6 @@
 //! Mostly copy-pasted stuff from ui/component/text,
 //! but with small modifications.
-//! It is really mostly changing Op::Text(&'a str) to Op::Text(String<100>),
-//! having self.ops as Vec<Op, 30> and changes revolving around it.
-//! Even if some stuff could be reused now, I copy-pasted it anyway, as this
-//! extension for Icons, Offsets, etc. should no longer live in
-//! ui/component/text, and so they can be freely removed (as they are here as
-//! well).
+//! (support for more Ops like icon drawing or arbitrary offsets)
 
 use crate::{
     micropython::buffer::StrBuffer,
@@ -33,7 +28,7 @@ impl ToDisplay {
     }
 }
 
-/// Operations that can be done on FormattedText.
+/// Operations that can be done on the screen.
 #[derive(Clone)]
 pub enum Op {
     /// Render text with current color and font.
@@ -151,24 +146,9 @@ impl TextLayout {
         }
     }
 
-    pub fn with_bounds(mut self, bounds: Rect) -> Self {
-        self.bounds = bounds;
-        self
-    }
-
     /// Baseline `Point` where we are starting to draw the text.
     pub fn initial_cursor(&self) -> Point {
         self.bounds.top_left() + Offset::y(self.style.text_font.text_height() + self.padding_top)
-    }
-
-    /// Trying to fit the content on the current screen.
-    pub fn fit_text(&self, text: &str) -> LayoutFit {
-        self.layout_text(text, &mut self.initial_cursor(), &mut TextNoOp)
-    }
-
-    /// Draw as much text as possible on the current screen.
-    pub fn render_text(&self, text: &str) {
-        self.layout_text(text, &mut self.initial_cursor(), &mut TextRenderer);
     }
 
     /// Y coordinate of the bottom of the available space/bounds
@@ -433,7 +413,6 @@ impl TextLayout {
 
         cursor.x += icon.width() as i16;
         LayoutFit::Fitting {
-            // TODO: how to handle this? It could collide with "skip_first_n_bytes"
             processed_chars: 1,
             height: 0, // it should just draw on one line
         }
@@ -466,9 +445,6 @@ impl LayoutFit {
         }
     }
 }
-
-// TODO: LayoutSink could support even things like drawing icons
-// or making custom x or y offsets from any position
 
 /// Visitor for text segment operations.
 /// Defines responses for certain kind of events encountered

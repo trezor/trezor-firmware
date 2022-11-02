@@ -1,28 +1,20 @@
 use crate::ui::{
     display::{self, Font, Icon},
-    geometry::{Offset, Point},
-    model_tr::constant,
+    geometry::{Offset, Point, Rect},
 };
 
 use heapless::String;
 
 use super::theme;
 
-/// Display header text.
-pub fn display_header<T: AsRef<str>>(baseline: Point, text: T) {
-    // TODO: make this centered?
-    display::text(
-        baseline,
-        text.as_ref(),
-        theme::FONT_HEADER,
-        theme::FG,
-        theme::BG,
-    );
-}
-
-/// Display bold white text on black background
+/// Display white text on black background
 pub fn display<T: AsRef<str>>(baseline: Point, text: &T, font: Font) {
     display::text(baseline, text.as_ref(), font, theme::FG, theme::BG);
+}
+
+/// Display black text on white background
+pub fn display_inverse<T: AsRef<str>>(baseline: Point, text: &T, font: Font) {
+    display::text(baseline, text.as_ref(), font, theme::BG, theme::FG);
 }
 
 /// Display white text on black background,
@@ -76,23 +68,19 @@ pub fn display_secret_center_top<T: AsRef<str>>(secret: T, offset_from_top: i16)
     }
 }
 
-/// Display title and possible subtitle together with a dotted line spanning
-/// the entire width.
+/// Display title/header centered at the top of the given area.
 /// Returning the painted height of the whole header.
-pub fn paint_header<T: AsRef<str>>(top_left: Point, title: T, subtitle: Option<T>) -> i16 {
+pub fn paint_header_centered<T: AsRef<str>>(title: T, area: Rect) -> i16 {
     let text_heigth = theme::FONT_HEADER.text_height();
-    let title_baseline = top_left + Offset::y(text_heigth);
-    display_header(title_baseline, title);
-    // Optionally painting the subtitle as well
-    // (and offsetting the dotted line in that case)
-    let mut dotted_line_offset = text_heigth + 2;
-    if let Some(subtitle) = subtitle {
-        dotted_line_offset += text_heigth;
-        display_header(title_baseline + Offset::y(text_heigth), subtitle);
-    }
-    let line_start = top_left + Offset::y(dotted_line_offset);
-    display::dotted_line_horizontal(line_start, constant::WIDTH, theme::FG, 2);
-    dotted_line_offset
+    let title_baseline = area.top_center() + Offset::y(text_heigth);
+    display::text_center(
+        title_baseline,
+        title.as_ref(),
+        theme::FONT_HEADER,
+        theme::FG,
+        theme::BG,
+    );
+    text_heigth
 }
 
 /// Draws icon and text on the same line - icon on the left.

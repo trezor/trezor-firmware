@@ -3,13 +3,15 @@ use crate::{
     trezorhal::random,
     ui::{
         component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
+        display::Icon,
         geometry::Rect,
+        model_tr::theme,
     },
 };
 
 use super::{
-    choice_item::BigCharacterChoiceItem, ButtonDetails, ButtonLayout, ChangingTextLine,
-    ChoiceFactory, ChoiceItem, ChoicePage, ChoicePageMsg, MultilineTextChoiceItem,
+    ButtonDetails, ButtonLayout, ChangingTextLine, ChoiceFactory, ChoiceItem, ChoicePage,
+    ChoicePageMsg,
 };
 use heapless::String;
 
@@ -22,16 +24,14 @@ const MAX_PIN_LENGTH: usize = 50;
 const MAX_VISIBLE_DOTS: usize = 18;
 const MAX_VISIBLE_DIGITS: usize = 18;
 
-const CHOICE_LENGTH: usize = 14;
-const EXIT_INDEX: usize = 0;
-const DELETE_INDEX: usize = 1;
-const SHOW_INDEX: usize = 2;
-const PROMPT_INDEX: usize = 3;
+const CHOICE_LENGTH: usize = 13;
+const DELETE_INDEX: usize = 0;
+const SHOW_INDEX: usize = 1;
+const PROMPT_INDEX: usize = 2;
 const CHOICES: [&str; CHOICE_LENGTH] = [
-    "EXIT",
     "DELETE",
-    "SHOW PIN",
-    "PLACEHOLDER FOR THE PROMPT",
+    "SHOW",
+    "ENTER PIN",
     "0",
     "1",
     "2",
@@ -56,32 +56,23 @@ impl ChoiceFactoryPIN {
 
 impl ChoiceFactory for ChoiceFactoryPIN {
     fn get(&self, choice_index: u8) -> ChoiceItem {
-        let choice = CHOICES[choice_index as usize];
+        let choice_str = CHOICES[choice_index as usize];
 
-        // Depending on whether it is a digit (one character) or a text.
-        // Digits are BIG, the rest is multiline.
-        let mut choice_item = if choice.len() == 1 {
-            let item =
-                BigCharacterChoiceItem::from_str(choice, ButtonLayout::default_three_icons());
-            ChoiceItem::BigCharacter(item)
-        } else {
-            let item = MultilineTextChoiceItem::new(
-                String::from(choice),
-                ButtonLayout::default_three_icons(),
-            )
-            .use_delimiter(' ');
-            ChoiceItem::MultilineText(item)
-        };
+        let mut choice_item = ChoiceItem::new(choice_str, ButtonLayout::default_three_icons());
 
         // Action buttons have different middle button text
-        if [EXIT_INDEX, DELETE_INDEX, SHOW_INDEX, PROMPT_INDEX].contains(&(choice_index as usize)) {
+        if [DELETE_INDEX, SHOW_INDEX, PROMPT_INDEX].contains(&(choice_index as usize)) {
             let confirm_btn = ButtonDetails::armed_text("CONFIRM");
             choice_item.set_middle_btn(Some(confirm_btn));
         }
 
-        // Changing the prompt text for the wanted one
-        if choice_index == PROMPT_INDEX as u8 {
-            choice_item.set_text(String::from(self.prompt.as_ref()));
+        // Adding icons for appropriate items
+        if choice_index == DELETE_INDEX as u8 {
+            choice_item = choice_item.with_icon(Icon::new(theme::ICON_DELETE));
+        } else if choice_index == SHOW_INDEX as u8 {
+            choice_item = choice_item.with_icon(Icon::new(theme::ICON_EYE));
+        } else if choice_index == PROMPT_INDEX as u8 {
+            choice_item = choice_item.with_icon(Icon::new(theme::ICON_TICK));
         }
 
         choice_item
@@ -106,7 +97,7 @@ impl PinEntry {
 
         Self {
             choice_page: ChoicePage::new(choices)
-                .with_initial_page_counter(3)
+                .with_initial_page_counter(PROMPT_INDEX as u8)
                 .with_carousel(),
             pin_dots: Child::new(ChangingTextLine::center_mono(String::new())),
             show_real_pin: false,
@@ -177,7 +168,6 @@ impl Component for PinEntry {
         if let Some(ChoicePageMsg::Choice(page_counter)) = msg {
             // Performing action under specific index or appending new digit
             match page_counter as usize {
-                EXIT_INDEX => return Some(PinEntryMsg::Cancelled),
                 DELETE_INDEX => {
                     self.delete_last_digit(ctx);
                     self.update_pin_dots(ctx);
@@ -194,8 +184,10 @@ impl Component for PinEntry {
                         self.append_new_digit(ctx, page_counter);
                         self.update_pin_dots(ctx);
                         // Choosing any random digit to be shown next
-                        let new_page_counter =
-                            random::uniform_between(4, (CHOICE_LENGTH - 1) as u32);
+                        let new_page_counter = random::uniform_between(
+                            PROMPT_INDEX as u32 + 1,
+                            (CHOICE_LENGTH - 1) as u32,
+                        );
                         self.choice_page
                             .set_page_counter(ctx, new_page_counter as u8);
                         ctx.request_paint();
@@ -224,7 +216,6 @@ impl crate::trace::Trace for PinEntry {
             ButtonPos::Middle => {
                 let current_index = self.choice_page.page_index() as usize;
                 match current_index {
-                    EXIT_INDEX => ButtonAction::Cancel.string(),
                     DELETE_INDEX => ButtonAction::Action("Delete last digit").string(),
                     SHOW_INDEX => ButtonAction::Action("Show PIN").string(),
                     PROMPT_INDEX => ButtonAction::Confirm.string(),
