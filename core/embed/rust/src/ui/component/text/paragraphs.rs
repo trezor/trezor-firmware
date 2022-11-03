@@ -89,6 +89,10 @@ where
         self
     }
 
+    pub fn inner(&self) -> &T {
+        &self.source
+    }
+
     pub fn inner_mut(&mut self) -> &mut T {
         &mut self.source
     }

@@ -31,6 +31,30 @@ pub fn u32_to_str(num: u32, buffer: &mut [u8]) -> Option<&str> {
     }
 }
 
+#[cfg(feature = "ui_debug")]
+static mut DISABLE_ANIMATION: bool = false;
+
+#[cfg(feature = "ui_debug")]
+pub fn animation_disabled() -> bool {
+    // SAFETY: single-threaded access
+    unsafe { DISABLE_ANIMATION }
+}
+
+#[cfg(feature = "ui_debug")]
+pub fn set_animation_disabled(disabled: bool) {
+    // SAFETY: single-threaded access
+    unsafe {
+        DISABLE_ANIMATION = disabled;
+    }
+}
+
+#[cfg(not(feature = "ui_debug"))]
+pub fn animation_disabled() -> bool {
+    false
+}
+#[cfg(not(feature = "ui_debug"))]
+pub fn set_animation_disabled(_disabled: bool) {}
+
 #[cfg(test)]
 mod tests {
     use super::*;
