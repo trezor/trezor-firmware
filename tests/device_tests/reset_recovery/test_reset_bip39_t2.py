@@ -118,16 +118,19 @@ def reset_device(client: Client, strength):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_reset_device(client: Client):
+    pytest.fail("Freezes")
     reset_device(client, 128)  # 12 words
 
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_reset_device_192(client: Client):
+    pytest.fail("Freezes")
     reset_device(client, 192)  # 18 words
 
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_reset_device_pin(client: Client):
+    pytest.fail("Freezes")
     mnemonic = None
     strength = 256  # 24 words
 
@@ -231,6 +234,7 @@ def test_reset_device_pin(client: Client):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_reset_failed_check(client: Client):
+    pytest.fail("Freezes")
     mnemonic = None
     strength = 256  # 24 words
 
