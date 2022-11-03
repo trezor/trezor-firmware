@@ -82,7 +82,7 @@ def test_tt_pin_passphrase(client: Client):
 
         yield
         yield
-        assert "Number of words?" in layout().text
+        assert "NUMBER OF WORDS" in layout().text
         client.debug.input(str(len(mnemonic)))
 
         yield
@@ -92,7 +92,7 @@ def test_tt_pin_passphrase(client: Client):
         yield
         for word in mnemonic:
             yield
-            assert "Choose word" in layout().text
+            assert "WORD" in layout().text
             client.debug.input(word)
 
         yield
@@ -163,7 +163,7 @@ def test_tt_nopin_nopassphrase(client: Client):
 
         yield
         yield
-        assert "Number of words?" in layout().text
+        assert "NUMBER OF WORDS" in layout().text
         client.debug.input(str(len(mnemonic)))
 
         yield
@@ -173,7 +173,7 @@ def test_tt_nopin_nopassphrase(client: Client):
         yield
         for word in mnemonic:
             yield
-            assert "Choose word" in layout().text
+            assert "WORD" in layout().text
             client.debug.input(word)
 
         yield

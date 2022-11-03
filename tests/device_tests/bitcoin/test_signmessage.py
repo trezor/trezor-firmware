@@ -285,7 +285,7 @@ MESSAGE_LENGTHS = (
 def test_signmessage_pagination(client: Client, message: str):
     message_read = ""
 
-    def input_flow_model_t():
+    def input_flow_tt():
         # collect screen contents into `message_read`.
         # Join lines that are separated by a single "-" string, space-separate lines otherwise.
         nonlocal message_read
@@ -317,7 +317,7 @@ def test_signmessage_pagination(client: Client, message: str):
 
         client.debug.press_yes()
 
-    def input_flow_model_r():
+    def input_flow_tr():
         # confirm address
         yield
         client.debug.press_yes()
@@ -331,9 +331,9 @@ def test_signmessage_pagination(client: Client, message: str):
 
     with client:
         if client.features.model == "T":
-            client.set_input_flow(input_flow_model_t)
+            client.set_input_flow(input_flow_tt)
         elif client.features.model == "R":
-            client.set_input_flow(input_flow_model_r)
+            client.set_input_flow(input_flow_tr)
         client.debug.watch_layout(True)
         btc.sign_message(
             client,
