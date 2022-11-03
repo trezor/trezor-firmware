@@ -4,6 +4,11 @@ CANCELLED: object
 
 
 # rust/src/ui/model_t1/layout.rs
+def disable_animation(disable: bool) -> None:
+    """Disable animations, debug builds only."""
+
+
+# rust/src/ui/model_t1/layout.rs
 def confirm_action(
     *,
     title: str,
@@ -27,6 +32,11 @@ def confirm_text(
     """Confirm text."""
 CONFIRMED: object
 CANCELLED: object
+
+
+# rust/src/ui/model_tr/layout.rs
+def disable_animation(disable: bool) -> None:
+    """Disable animations, debug builds only."""
 
 
 # rust/src/ui/model_tr/layout.rs
@@ -54,6 +64,11 @@ def confirm_text(
 CONFIRMED: object
 CANCELLED: object
 INFO: object
+
+
+# rust/src/ui/model_tt/layout.rs
+def disable_animation(disable: bool) -> None:
+    """Disable animations, debug builds only."""
 
 
 # rust/src/ui/model_tt/layout.rs

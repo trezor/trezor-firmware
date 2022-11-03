@@ -13,6 +13,7 @@ use crate::{
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
             result::{CANCELLED, CONFIRMED},
+            util::upy_disable_animation,
         },
     },
 };
@@ -115,6 +116,10 @@ pub static mp_module_trezorui2: Module = obj_module! {
 
     /// CANCELLED: object
     Qstr::MP_QSTR_CANCELLED => CANCELLED.as_obj(),
+
+    /// def disable_animation(disable: bool) -> None:
+    ///     """Disable animations, debug builds only."""
+    Qstr::MP_QSTR_disable_animation => obj_fn_1!(upy_disable_animation).as_obj(),
 
     /// def confirm_action(
     ///     *,

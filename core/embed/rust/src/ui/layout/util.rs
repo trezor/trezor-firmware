@@ -6,10 +6,14 @@ use crate::{
         iter::{Iter, IterBuf},
         list::List,
         obj::Obj,
+        util::try_or_raise,
     },
-    ui::component::text::{
-        paragraphs::{Paragraph, ParagraphSource, ParagraphStrType},
-        TextStyle,
+    ui::{
+        component::text::{
+            paragraphs::{Paragraph, ParagraphSource, ParagraphStrType},
+            TextStyle,
+        },
+        util::set_animation_disabled,
     },
 };
 use cstr_core::cstr;
@@ -227,4 +231,12 @@ impl ParagraphStrType for StrBuffer {
     fn skip_prefix(&self, chars: usize) -> Self {
         self.offset(chars)
     }
+}
+
+pub extern "C" fn upy_disable_animation(disable: Obj) -> Obj {
+    let block = || {
+        set_animation_disabled(disable.try_into()?);
+        Ok(Obj::const_none())
+    };
+    unsafe { try_or_raise(block) }
 }

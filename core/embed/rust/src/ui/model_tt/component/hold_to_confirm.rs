@@ -3,6 +3,7 @@ use crate::{
     ui::{
         component::{Child, Component, ComponentExt, Event, EventCtx, FixedHeightBar, Pad},
         geometry::{Grid, Insets, Rect},
+        util::animation_disabled,
     },
 };
 
@@ -220,7 +221,7 @@ where
             loader.start_shrinking(ctx, now);
         }
         Some(ButtonMsg::Clicked) => {
-            if loader.is_completely_grown(now) {
+            if loader.is_completely_grown(now) || animation_disabled() {
                 return true;
             } else {
                 loader.start_shrinking(ctx, now);

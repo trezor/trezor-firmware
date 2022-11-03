@@ -24,6 +24,12 @@ CANCELLED = trezorui2.CANCELLED
 INFO = trezorui2.INFO
 
 
+if __debug__:
+    from trezor.utils import DISABLE_ANIMATION
+
+    trezorui2.disable_animation(bool(DISABLE_ANIMATION))
+
+
 class _RustLayout(ui.Layout):
     # pylint: disable=super-init-not-called
     def __init__(self, layout: Any, is_backup: bool = False):
