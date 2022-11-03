@@ -45,12 +45,6 @@ VHASH_DEVEL = bytes.fromhex(
 )
 
 
-class ImageType(Enum):
-    VENDOR_HEADER = 0
-    BOOTLOADER = 1
-    FIRMWARE = 2
-
-
 def _make_dev_keys(*key_bytes: bytes) -> t.Sequence[bytes]:
     return [k * 32 for k in key_bytes]
 
@@ -359,7 +353,7 @@ class LegacyFirmware(firmware.LegacyFirmware):
     def insert_signature(self, slot: int, key_index: int, signature: bytes) -> None:
         if not 0 <= slot < firmware.V1_SIGNATURE_SLOTS:
             raise ValueError("Invalid slot number")
-        if not 0 <= key_index < len(firmware.V1_BOOTLOADER_KEYS):
+        if not 0 < key_index <= len(firmware.V1_BOOTLOADER_KEYS):
             raise ValueError("Invalid key index")
         self.key_indexes[slot] = key_index
         self.signatures[slot] = signature
@@ -396,7 +390,7 @@ class LegacyV2Firmware(firmware.LegacyV2Firmware):
     def insert_signature(self, slot: int, key_index: int, signature: bytes) -> None:
         if not 0 <= slot < firmware.V1_SIGNATURE_SLOTS:
             raise ValueError("Invalid slot number")
-        if not 0 <= key_index < len(firmware.V1_BOOTLOADER_KEYS):
+        if not 0 < key_index <= len(firmware.V1_BOOTLOADER_KEYS):
             raise ValueError("Invalid key index")
         if not isinstance(self.header.v1_key_indexes, list):
             self.header.v1_key_indexes = list(self.header.v1_key_indexes)
