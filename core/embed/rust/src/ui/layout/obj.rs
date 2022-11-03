@@ -32,15 +32,6 @@ pub trait ComponentMsgObj: Component {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error>;
 }
 
-impl<T> ComponentMsgObj for Child<T>
-where
-    T: ComponentMsgObj,
-{
-    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
-        self.inner().msg_try_into_obj(msg)
-    }
-}
-
 #[cfg(feature = "ui_debug")]
 mod maybe_trace {
     pub trait MaybeTrace: crate::trace::Trace {}
