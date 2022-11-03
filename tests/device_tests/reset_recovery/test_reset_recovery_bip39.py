@@ -35,6 +35,7 @@ from ...common import (
 @pytest.mark.skip_t1
 @pytest.mark.setup_client(uninitialized=True)
 def test_reset_recovery(client: Client):
+    pytest.fail("Freezes")
     mnemonic = reset(client)
     address_before = btc.get_address(client, "Bitcoin", parse_path("m/44h/0h/0h/0/0"))
 

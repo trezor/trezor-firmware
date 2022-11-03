@@ -200,6 +200,7 @@ VECTORS = [
 @pytest.mark.parametrize("backup_type, backup_flow", VECTORS)
 @pytest.mark.setup_client(uninitialized=True)
 def test_skip_backup_msg(client: Client, backup_type, backup_flow):
+    pytest.fail("Freezes")
     os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
     with mock.patch("os.urandom", os_urandom), client:
         device.reset(
@@ -235,6 +236,8 @@ def test_skip_backup_msg(client: Client, backup_type, backup_flow):
 @pytest.mark.parametrize("backup_type, backup_flow", VECTORS)
 @pytest.mark.setup_client(uninitialized=True)
 def test_skip_backup_manual(client: Client, backup_type, backup_flow):
+    pytest.fail("Freezes")
+
     def reset_skip_input_flow():
         yield  # Confirm Recovery
         client.debug.press_yes()
