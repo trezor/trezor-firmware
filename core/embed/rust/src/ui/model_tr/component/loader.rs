@@ -167,7 +167,8 @@ impl<T: AsRef<str>> Loader<T> {
         // TODO: support painting icons
         if let Some(text_overlay) = &mut self.text_overlay {
             // NOTE: need to calculate this in `i32`, it would overflow using `i16`
-            let invert_from = ((self.area.width() as i32 + 1) * done) / (display::LOADER_MAX as i32);
+            let invert_from =
+                ((self.area.width() as i32 + 1) * done) / (display::LOADER_MAX as i32);
 
             // TODO: the text should be moved one pixel to the top so it is centered in the
             // loader

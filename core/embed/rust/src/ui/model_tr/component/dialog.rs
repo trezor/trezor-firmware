@@ -1,7 +1,8 @@
 use super::button::{Button, ButtonMsg::Clicked};
 use crate::ui::{
     component::{Child, Component, Event, EventCtx},
-    geometry::Rect, model_tr::theme,
+    geometry::Rect,
+    model_tr::theme,
 };
 
 pub enum DialogMsg<T> {
