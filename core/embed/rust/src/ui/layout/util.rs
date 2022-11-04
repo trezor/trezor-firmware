@@ -24,7 +24,7 @@ where
     T: TryFrom<Obj, Error = Error>,
 {
     let err = Error::ValueError(cstr!("Invalid iterable length"));
-    let vec: Vec<T, N>  = iter_into_vec(iterable)?;
+    let vec: Vec<T, N> = iter_into_vec(iterable)?;
     // Returns error if array.len() != N
     vec.into_array().map_err(|_| err)
 }

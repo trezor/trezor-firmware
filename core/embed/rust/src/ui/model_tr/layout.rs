@@ -27,6 +27,7 @@ use crate::{
             result::{CANCELLED, CONFIRMED, INFO},
             util::iter_into_vec,
         },
+        model_tr::component::LineAlignment,
     },
 };
 
@@ -303,6 +304,34 @@ extern "C" fn confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+/// General pattern of most tutorial screens.
+/// (title, text, btn_layout, btn_actions)
+fn tutorial_screen(
+    data: (
+        StrBuffer,
+        StrBuffer,
+        ButtonLayout<&'static str>,
+        ButtonActions,
+    ),
+) -> Page<10> {
+    let (title, text, btn_layout, btn_actions) = data;
+    let mut page = Page::<10>::new(
+        btn_layout,
+        btn_actions,
+        if !title.is_empty() {
+            Font::BOLD
+        } else {
+            Font::MONO
+        },
+    );
+    // Add title if present
+    if !title.is_empty() {
+        page = page.text_bold(title).newline().newline_half()
+    }
+    page = page.text_mono(text);
+    page
+}
+
 extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], _kwargs: &Map| {
         const PAGE_COUNT: u8 = 7;
@@ -313,83 +342,72 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
             // Cancelling the first screen will point to the last one,
             // which asks for confirmation whether user wants to
             // really cancel the tutorial.
-            let screen = match page_index {
+            match page_index {
                 // title, text, btn_layout, btn_actions
-                0 => (
-                    "HELLO",
-                    "Welcome to Trezor.\nPress right to continue.",
-                    ButtonLayout::cancel_and_arrow(),
-                    ButtonActions::last_next(),
-                ),
-                1 => (
-                    "",
-                    "Use Trezor by clicking left & right.\n\nContinue right.",
-                    ButtonLayout::left_right_arrows(),
-                    ButtonActions::prev_next(),
-                ),
-                2 => (
-                    "HOLD TO CONFIRM",
-                    "Press & hold right to approve important operations.",
-                    ButtonLayout::new(
-                        Some(ButtonDetails::left_arrow_icon()),
-                        None,
-                        Some(
-                            ButtonDetails::text("HOLD TO CONFIRM")
-                                .with_duration(Duration::from_millis(2000)),
-                        ),
-                    ),
-                    ButtonActions::prev_next(),
-                ),
-                3 => (
-                    "SCREEN SCROLL",
-                    "Press right to scroll down to read all content when text\ndoesn't fit on one screen. Press left to scroll up.",
-                    ButtonLayout::new(
-                        Some(ButtonDetails::left_arrow_icon()),
-                        None,
-                        Some(ButtonDetails::text("GOT IT")),                    ),
-                    ButtonActions::prev_next(),
-                ),
-                4 => (
-                    "CONFIRM",
-                    "Press both left & right at the same time to confirm.",
-                    ButtonLayout::new(
-                        Some(ButtonDetails::left_arrow_icon()),
-                        Some(ButtonDetails::armed_text("CONFIRM")),
-                        None,
-                    ),
-                    ButtonActions::prev_next_with_middle(),
-                ),
-                5 => (
-                    "CONGRATS!",
-                    "You're ready to use Trezor.",
-                    ButtonLayout::new(
-                        Some(ButtonDetails::text("AGAIN")),
-                        None,
-                        Some(ButtonDetails::text("FINISH")),
-                    ),
-                    ButtonActions::beginning_confirm(),
-                ),
-                6 => (
-                    "SKIP TUTORIAL",
-                    "Sure you want to skip the tutorial?",
-                    ButtonLayout::new(
-                        Some(ButtonDetails::left_arrow_icon()),
-                        None,
-                        Some(ButtonDetails::text("SKIP")),
-                    ),
-                    ButtonActions::beginning_cancel(),
-                ),
+                0 => {
+                    tutorial_screen((
+                        "HELLO".into(),
+                        "Welcome to Trezor.\nPress right to continue.".into(),
+                        ButtonLayout::cancel_and_arrow(),
+                        ButtonActions::last_next(),
+                    ))
+                },
+                1 => {
+                    tutorial_screen((
+                        "".into(),
+                        "Use Trezor by clicking left and right.\n\nContinue right.".into(),
+                        ButtonLayout::left_right_arrows(),
+                        ButtonActions::prev_next(),
+                    ))
+                },
+                2 => {
+                    tutorial_screen((
+                        "HOLD TO CONFIRM".into(),
+                        "Press and hold right to approve important operations.".into(),
+                        ButtonLayout::back_and_htc_text("HOLD TO CONFIRM", Duration::from_millis(1000)),
+                        ButtonActions::prev_next(),
+                    ))
+                },
+                3 => {
+                    tutorial_screen((
+                        "SCREEN SCROLL".into(),
+                        "Press right to scroll down to read all content when text\ndoesn't fit on one screen. Press left to scroll up.".into(),
+                        ButtonLayout::back_and_text("GOT IT"),
+                        ButtonActions::prev_next(),
+                    ))
+                },
+                4 => {
+                    tutorial_screen((
+                        "CONFIRM".into(),
+                        "Press both left and right at the same time to confirm.".into(),
+                        ButtonLayout::middle_armed_text("CONFIRM"),
+                        ButtonActions::prev_next_with_middle(),
+                    ))
+                },
+                // This page is special
+                5 => {
+                    Page::<10>::new(
+                        ButtonLayout::left_right_text("AGAIN", "FINISH"),
+                        ButtonActions::beginning_confirm(),
+                        Font::MONO,
+                    )
+                        .newline()
+                        .text_mono("Tutorial complete.".into())
+                        .newline()
+                        .newline()
+                        .alignment(LineAlignment::Center)
+                        .text_bold("You're ready to\nuse Trezor.".into())
+                },
+                6 => {
+                    tutorial_screen((
+                        "SKIP TUTORIAL".into(),
+                        "Are you sure you want to skip the tutorial?".into(),
+                        ButtonLayout::cancel_and_text("SKIP"),
+                        ButtonActions::beginning_cancel(),
+                    ))
+                },
                 _ => unreachable!(),
-            };
-
-            let mut page = Page::<10>::new(screen.2.clone(), screen.3.clone(), Font::BOLD);
-
-            // Add title if present
-            if !screen.0.is_empty() {
-                page = page.text_bold(screen.0.into()).newline().newline_half()
             }
-            page = page.text_mono(screen.1.into());
-            page
         };
 
         let pages = FlowPages::new(get_page, PAGE_COUNT);
@@ -530,6 +548,7 @@ extern "C" fn select_word(n_args: usize, args: *const Obj, kwargs: *mut Map) -> 
         let words_iterable: Obj = kwargs.get(Qstr::MP_QSTR_words)?;
         let words: Vec<StrBuffer, 3> = iter_into_vec(words_iterable)?;
 
+        // TODO: should return int, to be consistent with TT's select_word
         let obj = LayoutObj::new(Frame::new(title, SimpleChoice::new(words).into_child()))?;
         Ok(obj.into())
     };
@@ -653,9 +672,8 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     *,
     ///     title: str,
     ///     words: Iterable[str],
-    /// ) -> int:
-    ///    """Select mnemonic word from three possibilities - seed check after backup. The
-    ///    iterable must be of exact size. Returns index in range `0..3`."""
+    /// ) -> str:
+    ///    """Select a word from a list. TODO: should return int, to be consistent with TT's select_word"""
     Qstr::MP_QSTR_select_word => obj_fn_kw!(0, select_word).as_obj(),
 
     /// def request_word_count(
