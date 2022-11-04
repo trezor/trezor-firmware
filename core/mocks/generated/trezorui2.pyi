@@ -120,9 +120,8 @@ def select_word(
     *,
     title: str,
     words: Iterable[str],
-) -> int:
-   """Select mnemonic word from three possibilities - seed check after backup. The
-   iterable must be of exact size. Returns index in range `0..3`."""
+) -> str:
+   """Select a word from a list. TODO: should return int, to be consistent with TT's select_word"""
 
 
 # rust/src/ui/model_tr/layout.rs

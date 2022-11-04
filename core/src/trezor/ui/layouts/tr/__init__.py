@@ -558,8 +558,8 @@ async def confirm_reset_device(
     return await _placeholder_confirm(
         ctx=ctx,
         br_type="recover_device" if recovery else "setup_device",
-        title="RECOVERY MODE" if recovery else "CREATE NEW WALLET",
-        data="By continuing you agree to trezor.io/tos",
+        title="START RECOVERY" if recovery else "CREATE NEW WALLET",
+        data="By continuing you agree to our terms and conditions.\nSee trezor.io/tos.",
         description=prompt,
         br_code=ButtonRequestType.ProtectCall
         if recovery

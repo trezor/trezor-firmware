@@ -1,8 +1,13 @@
-use crate::{ui::{constant, geometry::{Point, Offset, Rect}}, trezorhal::display};
+use crate::{
+    trezorhal::display,
+    ui::{
+        constant,
+        geometry::{Offset, Point, Rect},
+    },
+};
 use core::slice;
 
-use super::{Color, get_color_table, pixeldata, set_window, get_offset};
-
+use super::{get_color_table, get_offset, pixeldata, set_window, Color};
 
 pub struct Glyph {
     pub width: i16,
