@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.4] (2022-11-04)
+[0.13.4]: https://github.com/trezor/trezor-firmware/compare/python/v0.13.3...python/v0.13.4
+
+### Added
+- Add UnlockPath message.  [#2289]
+- Added new TOI formats - little endian full-color and even-high grayscale  [#2414]
+- Add device set-busy command to trezorctl.  [#2445]
+- Support SLIP-25 accounts in get-public-node and get-address.  [#2517]
+- Add possibility to save emulator screenshots.  [#2547]
+- Support for Cardano CIP-36 governance registration format  [#2561]
+
+### Removed
+- Remove DATA parameter from trezorctl cosi commit.
+- Remove firmware dumping capability.  [#2433]
+
+### Fixed
+- Fixed issue where type declarations were not visible to consumer packages.  [#2542]
+
+### Incompatible changes
+- Refactored firmware parsing and validation to a more object oriented approach.  [#2576]
+
+
 ## [0.13.3] (2022-07-13)
 [0.13.3]: https://github.com/trezor/trezor-firmware/compare/python/v0.13.2...python/v0.13.3
 
@@ -669,5 +691,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#2230]: https://github.com/trezor/trezor-firmware/pull/2230
 [#2239]: https://github.com/trezor/trezor-firmware/pull/2239
 [#2284]: https://github.com/trezor/trezor-firmware/pull/2284
+[#2289]: https://github.com/trezor/trezor-firmware/pull/2289
 [#2354]: https://github.com/trezor/trezor-firmware/pull/2354
 [#2364]: https://github.com/trezor/trezor-firmware/pull/2364
+[#2414]: https://github.com/trezor/trezor-firmware/pull/2414
+[#2433]: https://github.com/trezor/trezor-firmware/pull/2433
+[#2445]: https://github.com/trezor/trezor-firmware/pull/2445
+[#2517]: https://github.com/trezor/trezor-firmware/pull/2517
+[#2542]: https://github.com/trezor/trezor-firmware/pull/2542
+[#2547]: https://github.com/trezor/trezor-firmware/pull/2547
+[#2561]: https://github.com/trezor/trezor-firmware/pull/2561
+[#2576]: https://github.com/trezor/trezor-firmware/pull/2576

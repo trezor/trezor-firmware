@@ -32,6 +32,7 @@ on one page here.
     -P, --passphrase-on-host  Enter passphrase on host.
     -S, --script              Use UI for usage in scripts.
     -s, --session-id HEX      Resume given session ID.
+    -r, --record TEXT         Record screen changes into a specified directory.
     --version                 Show the version and exit.
     --help                    Show this message and exit.
 
@@ -187,6 +188,7 @@ Miscellaneous debug features.
     --help  Show this message and exit.
 
   Commands:
+    record      Record screen changes into a specified directory.
     send-bytes  Send raw bytes to Trezor.
 
 Device management commands - setup, recover seed, wipe, etc.
@@ -212,6 +214,7 @@ Device management commands - setup, recover seed, wipe, etc.
     recover               Start safe recovery workflow.
     sd-protect            Secure the device with SD card protection.
     self-test             Perform a factory self-test.
+    set-busy              Show a "Do not disconnect" dialog.
     setup                 Perform device setup and generate new seed.
     wipe                  Reset device to factory defaults and remove all private data.
 
@@ -298,7 +301,6 @@ Firmware commands.
 
   Commands:
     download  Download and save the firmware image.
-    extract   Extract the firmware from the device.
     get-hash  Get a hash of the installed firmware combined with the optional challenge.
     update    Upload new firmware to device.
     verify    Verify the integrity of the firmware data stored in a file.
