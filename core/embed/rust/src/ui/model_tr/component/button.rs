@@ -603,6 +603,15 @@ impl ButtonLayout<&'static str> {
         )
     }
 
+    /// Cancel cross on left and right arrow facing down.
+    pub fn cancel_and_arrow_down() -> Self {
+        Self::new(
+            Some(ButtonDetails::cancel_icon()),
+            None,
+            Some(ButtonDetails::down_arrow_icon_wide()),
+        )
+    }
+
     /// Cancel cross on left and text on the right.
     pub fn cancel_and_text(text: &'static str) -> Self {
         Self::new(
@@ -642,6 +651,15 @@ impl ButtonLayout<&'static str> {
     /// Only armed text in the middle.
     pub fn middle_armed_text(text: &'static str) -> Self {
         Self::new(None, Some(ButtonDetails::armed_text(text)), None)
+    }
+
+    /// Only hold-to-confirm with text on the right.
+    pub fn htc_only(text: &'static str, duration: Duration) -> Self {
+        Self::new(
+            None,
+            None,
+            Some(ButtonDetails::text(text).with_duration(duration)),
+        )
     }
 }
 
@@ -741,6 +759,15 @@ impl ButtonActions {
             Some(ButtonAction::PrevPage),
             Some(ButtonAction::NextPage),
             None,
+        )
+    }
+
+    /// Previous with left, confirming with right
+    pub fn prev_confirm() -> Self {
+        Self::new(
+            Some(ButtonAction::PrevPage),
+            None,
+            Some(ButtonAction::Confirm),
         )
     }
 

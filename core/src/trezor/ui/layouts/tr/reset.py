@@ -19,11 +19,14 @@ async def show_share_words(
     share_index: int | None = None,
     group_index: int | None = None,
 ) -> None:
+    share_word_str = ""
+    for i, word in enumerate(share_words):
+        share_word_str += f"{i + 1}  {word}\n"
     await interact(
         ctx,
         RustLayout(
             trezorui2.show_share_words(
-                share_words=share_words,
+                share_words=share_word_str.rstrip(),
             )
         ),
         br_type="backup_words",
