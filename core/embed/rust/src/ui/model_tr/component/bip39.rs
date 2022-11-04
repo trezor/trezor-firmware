@@ -136,7 +136,7 @@ impl Bip39Entry {
         let choices = ChoiceFactoryBIP39::letters(letter_choices.clone());
 
         Self {
-            choice_page: ChoicePage::new(choices).with_incomplete(),
+            choice_page: ChoicePage::new(choices).with_incomplete(true),
             chosen_letters: Child::new(ChangingTextLine::center_mono(String::from(PROMPT))),
             letter_choices,
             textbox: TextBox::empty(),

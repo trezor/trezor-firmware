@@ -661,6 +661,11 @@ impl ButtonLayout<&'static str> {
             Some(ButtonDetails::text(text).with_duration(duration)),
         )
     }
+
+    /// Only right arrow facing down.
+    pub fn only_arrow_down() -> Self {
+        Self::new(None, None, Some(ButtonDetails::down_arrow_icon_wide()))
+    }
 }
 
 /// What happens when a button is triggered.
@@ -787,6 +792,11 @@ impl ButtonActions {
             None,
             Some(ButtonAction::NextPage),
         )
+    }
+
+    /// Only going to the next page with right
+    pub fn only_next() -> Self {
+        Self::new(None, None, Some(ButtonAction::NextPage))
     }
 
     /// Cancelling with left, confirming with right
