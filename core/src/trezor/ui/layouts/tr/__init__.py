@@ -590,7 +590,7 @@ async def confirm_backup(ctx: wire.GenericContext) -> bool:
     confirmed = await get_bool(
         ctx=ctx,
         title="WARNING",
-        data="Are you sure you want to skip the backup?\n\n",
+        data="Are you sure you want to skip the backup?\n",
         description="You can back up your Trezor once, at any time.",
         verb="BACK UP",
         verb_cancel="SKIP",

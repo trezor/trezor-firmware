@@ -473,11 +473,11 @@ extern "C" fn show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map
             )
             .text_bold("Write all words in order on recovery seed card.".into())
             .newline()
-            .newline()
+            .newline_half()
             .text_mono("Do NOT make digital copies.".into()),
             1 => Page::<10>::new(
-                ButtonLayout::cancel_and_arrow_down(),
-                ButtonActions::cancel_next(),
+                ButtonLayout::only_arrow_down(),
+                ButtonActions::only_next(),
                 Font::NORMAL,
             )
             .text_normal(share_words.clone()),
@@ -506,7 +506,10 @@ extern "C" fn select_word(n_args: usize, args: *const Obj, kwargs: *mut Map) -> 
         let words: Vec<StrBuffer, 3> = iter_into_vec(words_iterable)?;
 
         // TODO: should return int, to be consistent with TT's select_word
-        let obj = LayoutObj::new(Frame::new(title, SimpleChoice::new(words).into_child()))?;
+        let obj = LayoutObj::new(Frame::new(
+            title,
+            SimpleChoice::new(words, true, true).into_child(),
+        ))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -518,7 +521,10 @@ extern "C" fn request_word_count(n_args: usize, args: *const Obj, kwargs: *mut M
 
         let choices: Vec<&str, 5> = ["12", "18", "20", "24", "33"].into_iter().collect();
 
-        let obj = LayoutObj::new(Frame::new(title, SimpleChoice::new(choices).into_child()))?;
+        let obj = LayoutObj::new(Frame::new(
+            title,
+            SimpleChoice::new(choices, true, false).into_child(),
+        ))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }

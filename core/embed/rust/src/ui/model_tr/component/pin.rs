@@ -99,7 +99,7 @@ impl PinEntry {
             // Starting at the digit 0
             choice_page: ChoicePage::new(choices)
                 .with_initial_page_counter(PROMPT_INDEX as u8 + 1)
-                .with_carousel(),
+                .with_carousel(true),
             pin_dots: Child::new(ChangingTextLine::center_mono(String::new())),
             show_real_pin: false,
             textbox: TextBox::empty(),
