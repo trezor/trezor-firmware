@@ -8,12 +8,10 @@ use heapless::LinearMap;
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
     display::{Color, Font},
-    geometry::{Rect},
+    geometry::Rect,
 };
 
-use super::layout::{
-    LayoutFit, LayoutSink, LineBreaking, Op, TextLayout, TextRenderer, TextStyle,
-};
+use super::layout::{LayoutFit, LayoutSink, LineBreaking, Op, TextLayout, TextRenderer, TextStyle};
 
 pub const MAX_ARGUMENTS: usize = 6;
 

@@ -576,6 +576,15 @@ impl ButtonLayout<&'static str> {
         )
     }
 
+    /// Left and right texts.
+    pub fn left_right_text(text_left: &'static str, text_right: &'static str) -> Self {
+        Self::new(
+            Some(ButtonDetails::text(text_left)),
+            None,
+            Some(ButtonDetails::text(text_right)),
+        )
+    }
+
     /// Left and right arrow icons for navigation.
     pub fn left_right_arrows() -> Self {
         Self::new(
@@ -610,6 +619,29 @@ impl ButtonLayout<&'static str> {
             None,
             Some(ButtonDetails::text(text).with_duration(duration)),
         )
+    }
+
+    /// Arrow back on left and hold-to-confirm text on the right.
+    pub fn back_and_htc_text(text: &'static str, duration: Duration) -> Self {
+        Self::new(
+            Some(ButtonDetails::left_arrow_icon()),
+            None,
+            Some(ButtonDetails::text(text).with_duration(duration)),
+        )
+    }
+
+    /// Arrow back on left and text on the right.
+    pub fn back_and_text(text: &'static str) -> Self {
+        Self::new(
+            Some(ButtonDetails::left_arrow_icon()),
+            None,
+            Some(ButtonDetails::text(text)),
+        )
+    }
+
+    /// Only armed text in the middle.
+    pub fn middle_armed_text(text: &'static str) -> Self {
+        Self::new(None, Some(ButtonDetails::armed_text(text)), None)
     }
 }
 

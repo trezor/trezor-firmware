@@ -51,10 +51,10 @@ async def select_word(
             )
         )
     )
-    if __debug__ and isinstance(result, str):
-        return result
-    assert isinstance(result, int) and 0 <= result <= 2
-    return words[result]
+    for word in words:
+        if word.upper() == result:
+            return word
+    raise ValueError("Invalid word")
 
 
 async def slip39_show_checklist(

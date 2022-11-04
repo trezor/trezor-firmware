@@ -36,6 +36,7 @@ pub use choice_item::ChoiceItem;
 pub use dialog::{Dialog, DialogMsg};
 pub use flow::{Flow, FlowMsg};
 pub use flow_pages::{FlowPages, Page};
+pub use flow_pages_poc_helpers::LineAlignment;
 pub use frame::Frame;
 pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
 pub use page::ButtonPage;
