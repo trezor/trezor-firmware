@@ -1,10 +1,10 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
-from trezor import ui, wire
+from trezor import wire
 from trezor.enums import ButtonRequestType
 from trezor.messages import AuthorizeCoinJoin, Success
-from trezor.ui.layouts import confirm_action, confirm_coinjoin, confirm_metadata
+from trezor.ui.layouts import confirm_coinjoin, confirm_metadata
 
 from apps.common import authorization, safety_checks
 from apps.common.keychain import FORBIDDEN_KEY_PATH
@@ -50,15 +50,11 @@ async def authorize_coinjoin(
     if msg.address_n[0] != SLIP25_PURPOSE and safety_checks.is_strict():
         raise FORBIDDEN_KEY_PATH
 
-    await confirm_action(
-        ctx,
-        "coinjoin_coordinator",
-        title="Authorize CoinJoin",
-        description="Do you want to take\npart in a series of\nCoinJoin rounds at:\n{}",
-        description_param=msg.coordinator,
-        description_param_font=ui.MONO,
-        icon=ui.ICON_RECOVERY,
+    max_fee_per_vbyte = format_fee_rate(
+        msg.max_fee_per_kvbyte / 1000, coin, include_shortcut=True
     )
+
+    await confirm_coinjoin(ctx, msg.max_rounds, max_fee_per_vbyte)
 
     validation_path = msg.address_n + [0] * BIP32_WALLET_DEPTH
     await validate_path(
@@ -71,10 +67,6 @@ async def authorize_coinjoin(
         ),
     )
 
-    max_fee_per_vbyte = format_fee_rate(
-        msg.max_fee_per_kvbyte / 1000, coin, include_shortcut=True
-    )
-
     if msg.max_fee_per_kvbyte > coin.maxfee_kb:
         await confirm_metadata(
             ctx,
@@ -84,8 +76,6 @@ async def authorize_coinjoin(
             max_fee_per_vbyte,
             ButtonRequestType.FeeOverThreshold,
         )
-
-    await confirm_coinjoin(ctx, msg.max_rounds, max_fee_per_vbyte)
 
     authorization.set(msg)
 
