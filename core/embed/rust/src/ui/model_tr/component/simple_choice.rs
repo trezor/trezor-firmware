@@ -15,14 +15,15 @@ pub enum SimpleChoiceMsg {
 
 struct ChoiceFactorySimple<T, const N: usize> {
     choices: Vec<T, N>,
+    carousel: bool,
 }
 
 impl<T, const N: usize> ChoiceFactorySimple<T, N>
 where
     T: AsRef<str>,
 {
-    fn new(choices: Vec<T, N>) -> Self {
-        Self { choices }
+    fn new(choices: Vec<T, N>, carousel: bool) -> Self {
+        Self { choices, carousel }
     }
 }
 
@@ -34,11 +35,13 @@ where
         let text = &self.choices[choice_index as usize];
         let mut choice_item = ChoiceItem::new(text, ButtonLayout::default_three_icons());
 
-        // Disabling prev/next buttons for the first/last choice.
-        if choice_index == 0 {
-            choice_item.set_left_btn(None);
-        } else if choice_index as usize == N - 1 {
-            choice_item.set_right_btn(None);
+        // Disabling prev/next buttons for the first/last choice when not in carousel.
+        if !self.carousel {
+            if choice_index == 0 {
+                choice_item.set_left_btn(None);
+            } else if choice_index as usize == N - 1 {
+                choice_item.set_right_btn(None);
+            }
         }
 
         choice_item
@@ -65,11 +68,13 @@ where
     T: AsRef<str>,
     T: Clone,
 {
-    pub fn new(str_choices: Vec<T, N>) -> Self {
-        let choices = ChoiceFactorySimple::new(str_choices.clone());
+    pub fn new(str_choices: Vec<T, N>, carousel: bool, show_incomplete: bool) -> Self {
+        let choices = ChoiceFactorySimple::new(str_choices.clone(), carousel);
         Self {
             choices: str_choices,
-            choice_page: ChoicePage::new(choices),
+            choice_page: ChoicePage::new(choices)
+                .with_carousel(carousel)
+                .with_incomplete(show_incomplete),
         }
     }
 }

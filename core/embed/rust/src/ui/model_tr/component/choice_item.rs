@@ -84,7 +84,7 @@ impl ChoiceItem {
             area.bottom_center() + Offset::new(-self.width_center() / 2 - bound, bound + 1);
         let outline_size = Offset::new(
             self.width_center() + 2 * bound,
-            self.font.text_height() + 2 * bound - 3, // -3 because font is actually smaller
+            self.font.text_height() + 2 * bound,
         );
         let outline = Rect::from_bottom_left_and_size(left_bottom, outline_size);
         if inverse {

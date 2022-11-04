@@ -58,6 +58,8 @@ where
     /// Whether we should show items on left/right even when they cannot
     /// be painted entirely (they would be cut off).
     show_incomplete: bool,
+    /// Whether to show only the currently selected item, nothing left/right.
+    show_only_one_item: bool,
     /// Whether the middle selected item should be painted with
     /// inverse colors - black on white.
     inverse_selected_item: bool,
@@ -79,6 +81,7 @@ where
             items_distance: DEFAULT_ITEMS_DISTANCE,
             is_carousel: false,
             show_incomplete: false,
+            show_only_one_item: false,
             inverse_selected_item: false,
         }
     }
@@ -90,14 +93,20 @@ where
     }
 
     /// Enabling the carousel mode.
-    pub fn with_carousel(mut self) -> Self {
-        self.is_carousel = true;
+    pub fn with_carousel(mut self, carousel: bool) -> Self {
+        self.is_carousel = carousel;
         self
     }
 
     /// Show incomplete items, even when they cannot render in their entirety.
-    pub fn with_incomplete(mut self) -> Self {
-        self.show_incomplete = true;
+    pub fn with_incomplete(mut self, show_incomplete: bool) -> Self {
+        self.show_incomplete = show_incomplete;
+        self
+    }
+
+    /// Show only the currently selected item, nothing left/right.
+    pub fn with_only_one_item(mut self, only_one_item: bool) -> Self {
+        self.show_only_one_item = only_one_item;
         self
     }
 
@@ -151,6 +160,11 @@ where
 
         // Drawing the current item in the middle.
         self.show_current_choice(available_area);
+
+        // Not drawing the rest when not wanted
+        if self.show_only_one_item {
+            return;
+        }
 
         // Getting the remaining left and right areas.
         let (left_area, _center_area, right_area) =
