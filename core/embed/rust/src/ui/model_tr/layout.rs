@@ -1,18 +1,10 @@
 use core::convert::TryInto;
 
-use heapless::{String, Vec};
+use heapless::Vec;
 
 use crate::{
     error::Error,
-    micropython::{
-        buffer::StrBuffer,
-        iter::{Iter, IterBuf},
-        map::Map,
-        module::Module,
-        obj::Obj,
-        qstr::Qstr,
-        util,
-    },
+    micropython::{buffer::StrBuffer, map::Map, module::Module, obj::Obj, qstr::Qstr, util},
     time::Duration,
     ui::{
         component::{
@@ -157,9 +149,6 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
             // TODO: clients might want to set the duration
             confirm_btn = confirm_btn.map(|btn| btn.with_duration(Duration::from_secs(2)));
         }
-
-        // TODO: make sure the text will not be colliding with the buttons
-        // - make there some space on the bottom of the text
 
         let obj = LayoutObj::new(Frame::new(
             title,
@@ -474,69 +463,37 @@ extern "C" fn request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> 
 
 extern "C" fn show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
-        let share_words_obj: Obj = kwargs.get(Qstr::MP_QSTR_share_words)?;
-        let title = "RECOVERY SEED";
+        let share_words: StrBuffer = kwargs.get(Qstr::MP_QSTR_share_words)?.try_into()?;
 
-        // Parsing the list of share words.
-        // Assume there is always up to 24 words in the newly generated seed
-        // (for now, later we might support SLIP39 with up to 33 words)
-        let mut iter_buf = IterBuf::new();
-        let iter_words = Iter::try_from_obj_with_buf(share_words_obj, &mut iter_buf)?;
-        let mut share_words: Vec<StrBuffer, 24> = Vec::new();
-        for word in iter_words {
-            share_words.push(word.try_into()?).unwrap();
-        }
-
-        let share_words_len = share_words.len() as u8;
-
-        let beginning_text = build_string!(
-            40,
-            "Write down these ",
-            inttostr!(share_words_len),
-            " words:\n\n"
-        );
-
-        let mut middle_words: String<360> = String::new();
-        // Vec<StrBuffer> does not support `enumerate()`
-        let mut index: u8 = 0;
-        for word in share_words {
-            index += 1;
-            let line = build_string!(15, inttostr!(index), ". ", word.as_ref(), "\n");
-
-            middle_words.push_str(&line).unwrap();
-        }
-
-        let end_text = build_string!(
-            40,
-            "I wrote down all ",
-            inttostr!(share_words_len),
-            " words in order."
-        );
-
-        // TODO: instead of this could create a new paragraph for the beginning,
-        // each word and the end
-        let text_to_show = build_string!(
-            440,
-            beginning_text.as_str(),
-            middle_words.as_str(),
-            end_text.as_str()
-        );
-
-        // Adding hold-to-confirm button at the end
-        // Also no possibility of cancelling
-        let cancel_btn = None;
-        let confirm_btn =
-            Some(ButtonDetails::text("CONFIRM").with_duration(Duration::from_secs(2)));
-
-        let obj = LayoutObj::new(Frame::new(
-            title,
-            ButtonPage::new_str(
-                Paragraphs::new([Paragraph::new(&theme::TEXT_BOLD, text_to_show)]),
-                theme::BG,
+        let get_page = move |page_index| match page_index {
+            0 => Page::<10>::new(
+                ButtonLayout::cancel_and_arrow_down(),
+                ButtonActions::cancel_next(),
+                Font::BOLD,
             )
-            .with_cancel_btn(cancel_btn)
-            .with_confirm_btn(confirm_btn),
-        ))?;
+            .text_bold("Write all words in order on recovery seed card.".into())
+            .newline()
+            .newline()
+            .text_mono("Do NOT make digital copies.".into()),
+            1 => Page::<10>::new(
+                ButtonLayout::cancel_and_arrow_down(),
+                ButtonActions::cancel_next(),
+                Font::NORMAL,
+            )
+            .text_normal(share_words.clone()),
+            2 => Page::<10>::new(
+                ButtonLayout::back_and_htc_text("HOLD TO CONFIRM", Duration::from_millis(1000)),
+                ButtonActions::prev_confirm(),
+                Font::MONO,
+            )
+            .newline()
+            .newline()
+            .text_mono("I wrote down all words in order.".into()),
+            _ => unreachable!(),
+        };
+        let pages = FlowPages::new(get_page, 1);
+
+        let obj = LayoutObj::new(Flow::new(pages).into_child())?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
