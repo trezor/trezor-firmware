@@ -8,7 +8,7 @@ use super::{icon_rect, toif_info_ensure, Color};
 /// Storing the icon together with its name
 /// Needs to be a tuple-struct, so it can be made `const`
 #[derive(Debug, Clone, Copy)]
-pub struct IconAndName(&'static [u8], &'static str);
+pub struct IconAndName(pub &'static [u8], pub &'static str);
 
 impl IconAndName {
     pub const fn new(icon: &'static [u8], name: &'static str) -> Self {
