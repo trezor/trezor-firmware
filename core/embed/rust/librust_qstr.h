@@ -36,7 +36,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_value;
   MP_QSTR_confirm_with_info;
   MP_QSTR_confirm_word;
-  MP_QSTR_pin_confirm_action;
   MP_QSTR_request_bip39;
   MP_QSTR_request_number;
   MP_QSTR_request_passphrase;
