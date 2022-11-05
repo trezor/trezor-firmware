@@ -201,7 +201,7 @@ extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) 
         let truncated_address: StrBuffer =
             kwargs.get(Qstr::MP_QSTR_truncated_address)?.try_into()?;
         let amount: StrBuffer = kwargs.get(Qstr::MP_QSTR_amount)?.try_into()?;
-        let title: StrBuffer = "Send".into();
+        let title: StrBuffer = "SEND".into();
 
         let get_page = move |page_index| {
             // Showing two screens - the recipient address and summary confirmation
@@ -214,7 +214,7 @@ extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) 
                         Some(ButtonDetails::text("CONTINUE")),
                     );
                     let btn_actions = ButtonActions::cancel_next();
-                    Page::<20>::new(btn_layout, btn_actions, Font::NORMAL).icon_label_text(
+                    Page::<20>::new(btn_layout, btn_actions, Font::MONO).icon_label_text(
                         theme::ICON_USER,
                         "Recipient".into(),
                         address.clone(),
@@ -231,7 +231,7 @@ extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) 
                         ),
                     );
                     let btn_actions = ButtonActions::cancel_confirm();
-                    Page::<20>::new(btn_layout, btn_actions, Font::NORMAL)
+                    Page::<20>::new(btn_layout, btn_actions, Font::MONO)
                         .icon_label_text(
                             theme::ICON_USER,
                             "Recipient".into(),
@@ -273,7 +273,7 @@ extern "C" fn confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -
             );
             let btn_actions = ButtonActions::cancel_confirm();
 
-            let mut flow_page = Page::<25>::new(btn_layout, btn_actions, Font::NORMAL)
+            let mut flow_page = Page::<25>::new(btn_layout, btn_actions, Font::MONO)
                 .icon_label_text(theme::ICON_PARAM, total_label.clone(), total_amount.clone())
                 .newline()
                 .icon_label_text(theme::ICON_PARAM, fee_label.clone(), fee_amount.clone());
