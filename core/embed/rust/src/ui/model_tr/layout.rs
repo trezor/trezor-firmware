@@ -27,7 +27,7 @@ use super::{
     component::{
         Bip39Entry, Bip39EntryMsg, ButtonActions, ButtonDetails, ButtonLayout, ButtonPage, Flow,
         FlowMsg, FlowPages, Frame, Page, PassphraseEntry, PassphraseEntryMsg, PinEntry,
-        PinEntryMsg, SimpleChoice, SimpleChoiceMsg,
+        PinEntryMsg, ShareWords, SimpleChoice, SimpleChoiceMsg,
     },
     theme,
 };
@@ -463,37 +463,18 @@ extern "C" fn request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> 
 
 extern "C" fn show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
-        let share_words: StrBuffer = kwargs.get(Qstr::MP_QSTR_share_words)?.try_into()?;
+        let share_words_obj: Obj = kwargs.get(Qstr::MP_QSTR_share_words)?;
+        let share_words: Vec<StrBuffer, 24> = iter_into_vec(share_words_obj)?;
 
-        let get_page = move |page_index| match page_index {
-            0 => Page::<10>::new(
-                ButtonLayout::cancel_and_arrow_down(),
-                ButtonActions::cancel_next(),
-                Font::BOLD,
-            )
-            .text_bold("Write all words in order on recovery seed card.".into())
-            .newline()
-            .newline_half()
-            .text_mono("Do NOT make digital copies.".into()),
-            1 => Page::<10>::new(
-                ButtonLayout::only_arrow_down(),
-                ButtonActions::only_next(),
-                Font::NORMAL,
-            )
-            .text_normal(share_words.clone()),
-            2 => Page::<10>::new(
-                ButtonLayout::back_and_htc_text("HOLD TO CONFIRM", Duration::from_millis(1000)),
-                ButtonActions::prev_confirm(),
-                Font::MONO,
-            )
-            .newline()
-            .newline()
-            .text_mono("I wrote down all words in order.".into()),
-            _ => unreachable!(),
-        };
-        let pages = FlowPages::new(get_page, 1);
+        let confirm_btn =
+            Some(ButtonDetails::text("CONFIRM").with_duration(Duration::from_secs(1)));
 
-        let obj = LayoutObj::new(Flow::new(pages).into_child())?;
+        let obj = LayoutObj::new(
+            ButtonPage::new_str(ShareWords::new(share_words), theme::FG)
+                .with_cancel_btn(None)
+                .with_confirm_btn(confirm_btn)
+                .with_scrollbar(false),
+        )?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -519,7 +500,7 @@ extern "C" fn request_word_count(n_args: usize, args: *const Obj, kwargs: *mut M
     let block = |_args: &[Obj], kwargs: &Map| {
         let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
 
-        let choices: Vec<&str, 5> = ["12", "18", "20", "24", "33"].into_iter().collect();
+        let choices: Vec<&str, 3> = ["12", "18", "24"].into_iter().collect();
 
         let obj = LayoutObj::new(Frame::new(
             title,
