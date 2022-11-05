@@ -20,6 +20,8 @@ pub struct ButtonPage<S, T> {
     back_btn_details: Option<ButtonDetails<S>>,
     next_btn_details: Option<ButtonDetails<S>>,
     buttons: Child<ButtonController<S>>,
+    /// Scrollbar may or may not be shown (but will be counting pages anyway).
+    show_scrollbar: bool,
 }
 
 impl<T> ButtonPage<&'static str, T>
@@ -32,7 +34,7 @@ where
         Self {
             content: Child::new(content),
             scrollbar: Child::new(ScrollBar::vertical_to_be_filled_later()),
-            pad: Pad::with_background(background),
+            pad: Pad::with_background(background).with_clear(),
             cancel_btn_details: Some(ButtonDetails::cancel_icon()),
             confirm_btn_details: Some(ButtonDetails::text("CONFIRM")),
             back_btn_details: Some(ButtonDetails::up_arrow_icon_wide()),
@@ -41,6 +43,7 @@ where
             // Initial button layout will be set in `place()` after we can call
             // `content.page_count()`.
             buttons: Child::new(ButtonController::new(ButtonLayout::empty())),
+            show_scrollbar: true,
         }
     }
 }
@@ -55,7 +58,7 @@ where
         Self {
             content: Child::new(content),
             scrollbar: Child::new(ScrollBar::vertical_to_be_filled_later()),
-            pad: Pad::with_background(background),
+            pad: Pad::with_background(background).with_clear(),
             cancel_btn_details: Some(ButtonDetails::cancel_icon()),
             confirm_btn_details: Some(ButtonDetails::text("CONFIRM".into())),
             back_btn_details: Some(ButtonDetails::up_arrow_icon_wide()),
@@ -64,6 +67,7 @@ where
             // Initial button layout will be set in `place()` after we can call
             // `content.page_count()`.
             buttons: Child::new(ButtonController::new(ButtonLayout::empty())),
+            show_scrollbar: true,
         }
     }
 }
@@ -92,6 +96,11 @@ where
 
     pub fn with_next_btn(mut self, btn_details: Option<ButtonDetails<S>>) -> Self {
         self.next_btn_details = btn_details;
+        self
+    }
+
+    pub fn with_scrollbar(mut self, show: bool) -> Self {
+        self.show_scrollbar = show;
         self
     }
 
@@ -160,8 +169,13 @@ where
 
     fn place(&mut self, bounds: Rect) -> Rect {
         let (content_and_scrollbar_area, button_area) = bounds.split_bottom(theme::BUTTON_HEIGHT);
-        let (content_area, scrollbar_area) =
-            content_and_scrollbar_area.split_right(ScrollBar::WIDTH);
+        let (content_area, scrollbar_area) = {
+            if self.show_scrollbar {
+                content_and_scrollbar_area.split_right(ScrollBar::WIDTH)
+            } else {
+                (content_and_scrollbar_area, Rect::zero())
+            }
+        };
         let content_area = content_area.inset(Insets::top(1));
         // Do not pad the button area nor the scrollbar, leave it to them
         self.pad.place(content_area);
@@ -170,7 +184,9 @@ where
         // and we can calculate the page count
         let page_count = self.content.inner_mut().page_count();
         self.scrollbar.inner_mut().set_page_count(page_count);
-        self.scrollbar.place(scrollbar_area);
+        if self.show_scrollbar {
+            self.scrollbar.place(scrollbar_area);
+        }
         self.set_buttons_for_initial_page(page_count);
         self.buttons.place(button_area);
         bounds
@@ -215,7 +231,9 @@ where
     fn paint(&mut self) {
         self.pad.paint();
         self.content.paint();
-        self.scrollbar.paint();
+        if self.show_scrollbar {
+            self.scrollbar.paint();
+        }
         self.buttons.paint();
     }
 }
