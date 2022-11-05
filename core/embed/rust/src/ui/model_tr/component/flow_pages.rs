@@ -79,7 +79,8 @@ impl<const M: usize> Page<M> {
             theme::BG,
             theme::FG,
             theme::FG,
-        );
+        )
+        .with_ellipsis_icon(theme::ICON_NEXT_PAGE.0);
         Self {
             ops: Vec::new(),
             layout: TextLayout::new(style),
