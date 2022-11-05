@@ -227,7 +227,7 @@ async def confirm_feeoverthreshold(
         ctx,
         "fee_over_threshold",
         "High fee",
-        "The fee of\n{}is unexpectedly high.",
+        "The fee of\n{}\nis unexpectedly high.",
         fee_amount,
         ButtonRequestType.FeeOverThreshold,
     )
