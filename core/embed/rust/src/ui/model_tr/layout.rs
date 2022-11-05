@@ -510,7 +510,7 @@ extern "C" fn request_word_count(n_args: usize, args: *const Obj, kwargs: *mut M
 
         let obj = LayoutObj::new(Frame::new(
             title,
-            SimpleChoice::new(choices, true, false).into_child(),
+            SimpleChoice::new(choices, false, false).into_child(),
         ))?;
         Ok(obj.into())
     };
