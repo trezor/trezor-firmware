@@ -93,6 +93,7 @@ pub fn rect_fill_rounded(r: Rect, fg_color: Color, bg_color: Color, radius: u8) 
     }
 }
 
+/// Draws icon given its top left corner.
 /// NOTE: Cannot start at odd x-coordinate. In this case icon is shifted 1px
 /// left.
 pub fn icon_top_left(top_left: Point, data: &[u8], fg_color: Color, bg_color: Color) {
@@ -105,6 +106,20 @@ pub fn icon_top_left(top_left: Point, data: &[u8], fg_color: Color, bg_color: Co
         toif_data,
         fg_color.into(),
         bg_color.into(),
+    );
+}
+
+/// Draws icon given its bottom left corner.
+pub fn icon_bottom_left(bottom_left: Point, data: &[u8], fg_color: Color, bg_color: Color) {
+    let (toif_size, _toif_data) = toif_info_ensure(data, ToifFormat::GrayScaleEH);
+    icon_top_left(
+        Point {
+            x: bottom_left.x,
+            y: bottom_left.y - toif_size.y,
+        },
+        data,
+        fg_color,
+        bg_color,
     );
 }
 

@@ -59,6 +59,11 @@ pub struct TextStyle {
     /// Foreground color used for drawing the ellipsis.
     pub ellipsis_color: Color,
 
+    /// Optional icon shown as ellipsis.
+    pub ellipsis_icon: Option<&'static [u8]>,
+    /// Optional icon to signal content continues from previous page.
+    pub prev_page_icon: Option<&'static [u8]>,
+
     /// Specifies which line-breaking strategy to use.
     pub line_breaking: LineBreaking,
     /// Specifies what to do at the end of the page.
@@ -81,6 +86,8 @@ impl TextStyle {
             ellipsis_color,
             line_breaking: LineBreaking::BreakAtWhitespace,
             page_breaking: PageBreaking::CutAndInsertEllipsis,
+            ellipsis_icon: None,
+            prev_page_icon: None,
         }
     }
 
@@ -91,6 +98,18 @@ impl TextStyle {
 
     pub const fn with_page_breaking(mut self, page_breaking: PageBreaking) -> Self {
         self.page_breaking = page_breaking;
+        self
+    }
+
+    /// Adding optional icon shown instead of "..." ellipsis.
+    pub const fn with_ellipsis_icon(mut self, icon: &'static [u8]) -> Self {
+        self.ellipsis_icon = Some(icon);
+        self
+    }
+
+    /// Adding optional icon signalling content continues from previous page.
+    pub const fn with_prev_page_icon(mut self, icon: &'static [u8]) -> Self {
+        self.prev_page_icon = Some(icon);
         self
     }
 }
@@ -374,13 +393,24 @@ impl LayoutSink for TextRenderer {
     }
 
     fn ellipsis(&mut self, cursor: Point, layout: &TextLayout) {
-        display::text(
-            cursor,
-            "...",
-            layout.style.text_font,
-            layout.style.ellipsis_color,
-            layout.style.background_color,
-        );
+        if let Some(icon) = layout.style.ellipsis_icon {
+            // Icon should end little below the cursor's baseline
+            let bottom_left = cursor + Offset::y(2);
+            display::icon_bottom_left(
+                bottom_left,
+                icon,
+                layout.style.ellipsis_color,
+                layout.style.background_color,
+            );
+        } else {
+            display::text(
+                cursor,
+                "...",
+                layout.style.text_font,
+                layout.style.ellipsis_color,
+                layout.style.background_color,
+            );
+        }
     }
 }
 

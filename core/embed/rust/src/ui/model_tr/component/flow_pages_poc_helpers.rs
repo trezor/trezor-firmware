@@ -104,6 +104,11 @@ pub struct TextStyle {
     /// Foreground color used for drawing the ellipsis.
     pub ellipsis_color: Color,
 
+    /// Optional icon shown as ellipsis.
+    pub ellipsis_icon: Option<&'static [u8]>,
+    /// Optional icon to signal content continues from previous page.
+    pub prev_page_icon: Option<&'static [u8]>,
+
     /// Specifies which line-breaking strategy to use.
     pub line_breaking: LineBreaking,
     /// Specifies what to do at the end of the page.
@@ -130,7 +135,21 @@ impl TextStyle {
             line_breaking: LineBreaking::BreakAtWhitespace,
             page_breaking: PageBreaking::CutAndInsertEllipsis,
             line_alignment: LineAlignment::Left,
+            ellipsis_icon: None,
+            prev_page_icon: None,
         }
+    }
+
+    /// Adding optional icon shown instead of "..." ellipsis.
+    pub const fn with_ellipsis_icon(mut self, icon: &'static [u8]) -> Self {
+        self.ellipsis_icon = Some(icon);
+        self
+    }
+
+    /// Adding optional icon signalling content continues from previous page.
+    pub const fn with_prev_page_icon(mut self, icon: &'static [u8]) -> Self {
+        self.prev_page_icon = Some(icon);
+        self
     }
 }
 
@@ -248,7 +267,6 @@ impl TextLayout {
                             let text_len = to_display.length;
                             let start = text.len() - text_len;
                             let to_really_display = &text[start..];
-                            // let to_really_display = text.text[text.start..text.end].to_string();
                             self.layout_text(to_really_display, cursor, sink)
                         } else if let Op::Icon(icon) = op {
                             self.layout_icon(icon, cursor, sink)
@@ -524,13 +542,24 @@ impl LayoutSink for TextRenderer {
     }
 
     fn ellipsis(&mut self, cursor: Point, layout: &TextLayout) {
-        display::text(
-            cursor,
-            "...",
-            layout.style.text_font,
-            layout.style.ellipsis_color,
-            layout.style.background_color,
-        );
+        if let Some(icon) = layout.style.ellipsis_icon {
+            // Icon should end little below the cursor's baseline
+            let bottom_left = cursor + Offset::y(2);
+            display::icon_bottom_left(
+                bottom_left,
+                icon,
+                layout.style.ellipsis_color,
+                layout.style.background_color,
+            );
+        } else {
+            display::text(
+                cursor,
+                "...",
+                layout.style.text_font,
+                layout.style.ellipsis_color,
+                layout.style.background_color,
+            );
+        }
     }
 
     fn icon(&mut self, cursor: Point, layout: &TextLayout, icon: Icon) {
