@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING, Sequence
+from ubinascii import hexlify
 
 from trezor import io, log, loop, ui, wire, workflow
 from trezor.enums import ButtonRequestType
@@ -913,13 +914,25 @@ async def confirm_properties(
     hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
 ) -> None:
-    await _placeholder_confirm(
-        ctx=ctx,
-        br_type=br_type,
-        title=title.upper(),
-        data="\n\n".join(f"{name or ''}\n{value or ''}" for name, value in props),
-        description="",
-        br_code=br_code,
+    def handle_bytes(prop: PropertyType):
+        if isinstance(prop[1], bytes):
+            return (prop[0], hexlify(prop[1]).decode(), True)
+        else:
+            return (prop[0], prop[1], False)
+
+    await raise_if_cancelled(
+        interact(
+            ctx,
+            RustLayout(
+                trezorui2.confirm_properties(
+                    title=title.upper(),
+                    items=map(handle_bytes, props),
+                    hold=hold,
+                )
+            ),
+            br_type,
+            br_code,
+        )
     )
 
 
