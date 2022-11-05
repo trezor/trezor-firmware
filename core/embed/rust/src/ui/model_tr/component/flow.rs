@@ -143,7 +143,9 @@ where
         let (title_content_area, button_area) = bounds.split_bottom(theme::BUTTON_HEIGHT);
         // Accounting for possible title
         let content_area = if self.common_title.is_some() {
-            title_content_area.split_top(10).1
+            title_content_area
+                .split_top(theme::FONT_HEADER.line_height())
+                .1
         } else {
             title_content_area
         };
