@@ -25,6 +25,7 @@ pub struct Flow<F, const M: usize> {
     current_page: Page<M>,
     common_title: Option<StrBuffer>,
     content_area: Rect,
+    title_area: Rect,
     pad: Pad,
     buttons: Child<ButtonController<&'static str>>,
     page_counter: u8,
@@ -41,6 +42,7 @@ where
             current_page,
             common_title: None,
             content_area: Rect::zero(),
+            title_area: Rect::zero(),
             pad: Pad::with_background(theme::BG),
             // Setting empty layout for now, we do not yet know how many sub-pages the first page
             // has. Initial button layout will be set in `place()` after we can call
@@ -142,13 +144,12 @@ where
     fn place(&mut self, bounds: Rect) -> Rect {
         let (title_content_area, button_area) = bounds.split_bottom(theme::BUTTON_HEIGHT);
         // Accounting for possible title
-        let content_area = if self.common_title.is_some() {
-            title_content_area
-                .split_top(theme::FONT_HEADER.line_height())
-                .1
+        let (title_area, content_area) = if self.common_title.is_some() {
+            title_content_area.split_top(theme::FONT_HEADER.line_height())
         } else {
-            title_content_area
+            (Rect::zero(), title_content_area)
         };
+        self.title_area = title_area;
         self.content_area = content_area;
 
         // We finally found how long is the first page, and can set its button layout.
@@ -207,7 +208,7 @@ where
         // (not compatible with longer/centered titles)
         self.pad.paint();
         if let Some(title) = &self.common_title {
-            common::paint_header_centered(title, self.content_area);
+            common::paint_header_centered(title, self.title_area);
         }
         self.current_page.paint();
         self.buttons.paint();
