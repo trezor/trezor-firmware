@@ -191,7 +191,7 @@ impl<const M: usize> Page<M> {
 impl<const M: usize> Page<M> {
     pub fn icon_label_text(self, icon: IconAndName, label: StrBuffer, text: StrBuffer) -> Self {
         self.icon_with_offset(icon, 3)
-            .text_normal(label)
+            .text_mono(label)
             .newline()
             .text_bold(text)
     }
