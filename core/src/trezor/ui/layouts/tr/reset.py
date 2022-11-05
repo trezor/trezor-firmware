@@ -5,7 +5,7 @@ from trezor.enums import ButtonRequestType
 import trezorui2
 
 from ..common import interact
-from . import RustLayout, confirm_action
+from . import RustLayout, _placeholder_confirm, confirm_action, get_bool
 
 if TYPE_CHECKING:
     from trezor import wire
@@ -19,19 +19,55 @@ async def show_share_words(
     share_index: int | None = None,
     group_index: int | None = None,
 ) -> None:
-    share_word_str = ""
-    for i, word in enumerate(share_words):
-        share_word_str += f"{i + 1}  {word}\n"
-    await interact(
-        ctx,
-        RustLayout(
-            trezorui2.show_share_words(
-                share_words=share_word_str.rstrip(),
-            )
-        ),
+    await _placeholder_confirm(
+        ctx=ctx,
         br_type="backup_words",
+        title="SHARE WORDS",
+        description=f"Write all {len(share_words)} words in order on recovery seed card.",
+        data="Do NOT make digital copies.",
         br_code=ButtonRequestType.ResetDevice,
     )
+
+    # Showing words, asking for write down confirmation and preparing for check
+    # until user accepts everything.
+    while True:
+        await interact(
+            ctx,
+            RustLayout(
+                trezorui2.show_share_words(
+                    share_words=share_words,
+                )
+            ),
+            br_type="backup_words",
+            br_code=ButtonRequestType.ResetDevice,
+        )
+
+        wrote_down = await get_bool(
+            ctx=ctx,
+            title="SHARE WORDS",
+            data=f"I wrote down all {len(share_words)} words in order.",
+            verb="I WROTE DOWN",
+            hold=True,
+            br_type="backup_words",
+            br_code=ButtonRequestType.ResetDevice,
+        )
+        if not wrote_down:
+            continue
+
+        ready_to_check = await get_bool(
+            ctx=ctx,
+            title="CHECK PHRASE",
+            data="Select correct words in correct positions.",
+            verb_cancel="SEE AGAIN",
+            verb="BEGIN",
+            br_type="backup_words",
+            br_code=ButtonRequestType.ResetDevice,
+        )
+        if not ready_to_check:
+            continue
+
+        # All went well, we can break the loop.
+        break
 
 
 async def select_word(
@@ -49,7 +85,7 @@ async def select_word(
     result = await ctx.wait(
         RustLayout(
             trezorui2.select_word(
-                title=f"SELECT WORD {checked_index + 1}",
+                title=f"SELECT WORD {checked_index + 1}/{count}",
                 words=(words[0].upper(), words[1].upper(), words[2].upper()),
             )
         )

@@ -18,6 +18,7 @@ mod pin;
 mod result_anim;
 mod result_popup;
 mod scrollbar;
+mod share_words;
 mod simple_choice;
 
 use super::theme;
@@ -45,4 +46,5 @@ pub use pin::{PinEntry, PinEntryMsg};
 pub use result_anim::{ResultAnim, ResultAnimMsg};
 pub use result_popup::{ResultPopup, ResultPopupMsg};
 pub use scrollbar::ScrollBar;
+pub use share_words::ShareWords;
 pub use simple_choice::{SimpleChoice, SimpleChoiceMsg};
