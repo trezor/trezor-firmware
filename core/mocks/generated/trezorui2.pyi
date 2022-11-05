@@ -45,6 +45,18 @@ def confirm_action(
 
 
 # rust/src/ui/model_tr/layout.rs
+def confirm_properties(
+    *,
+    title: str,
+    items: Iterable[Tuple[str | None, str | None, bool]],
+    hold: bool = False,
+) -> object:
+    """Confirm list of key-value pairs. The third component in the tuple should be True if
+    the value is to be rendered as binary with monospace font, False otherwise.
+    This only concerns the text style, you need to decode the value to UTF-8 in python."""
+
+
+# rust/src/ui/model_tr/layout.rs
 def confirm_output_r(
     *,
     address: str,

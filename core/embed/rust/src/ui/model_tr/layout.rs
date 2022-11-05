@@ -4,20 +4,28 @@ use heapless::Vec;
 
 use crate::{
     error::Error,
-    micropython::{buffer::StrBuffer, map::Map, module::Module, obj::Obj, qstr::Qstr, util},
+    micropython::{
+        buffer::StrBuffer,
+        iter::{Iter, IterBuf},
+        map::Map,
+        module::Module,
+        obj::Obj,
+        qstr::Qstr,
+        util,
+    },
     time::Duration,
     ui::{
         component::{
             base::{Component, ComponentExt},
             paginated::{PageMsg, Paginate},
-            text::paragraphs::{Paragraph, Paragraphs},
+            text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecLong, Paragraphs, VecExt},
             FormattedText,
         },
         display::Font,
         layout::{
             obj::{ComponentMsgObj, LayoutObj},
             result::{CANCELLED, CONFIRMED, INFO},
-            util::iter_into_vec,
+            util::{iter_into_objs, iter_into_vec},
         },
         model_tr::component::LineAlignment,
     },
@@ -185,6 +193,45 @@ extern "C" fn new_confirm_text(n_args: usize, args: *const Obj, kwargs: *mut Map
                 theme::BG,
             ),
         ))?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn confirm_properties(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
+        let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
+
+        let mut paragraphs = ParagraphVecLong::new();
+
+        let mut iter_buf = IterBuf::new();
+        let iter = Iter::try_from_obj_with_buf(items, &mut iter_buf)?;
+        for para in iter {
+            let [key, value, _is_mono]: [Obj; 3] = iter_into_objs(para)?;
+            let key = key.try_into_option::<StrBuffer>()?;
+            let value = value.try_into_option::<StrBuffer>()?;
+
+            if let Some(key) = key {
+                if value.is_some() {
+                    paragraphs.add(Paragraph::new(&theme::TEXT_BOLD, key).no_break());
+                } else {
+                    paragraphs.add(Paragraph::new(&theme::TEXT_BOLD, key));
+                }
+            }
+            if let Some(value) = value {
+                paragraphs.add(Paragraph::new(&theme::TEXT_MONO, value));
+            }
+        }
+
+        let mut content = ButtonPage::new_str(paragraphs.into_paragraphs(), theme::BG);
+        if hold {
+            let confirm_btn =
+                Some(ButtonDetails::text("CONFIRM").with_duration(Duration::from_secs(1)));
+            content = content.with_confirm_btn(confirm_btn);
+        }
+        let obj = LayoutObj::new(Frame::new(title, content))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -516,6 +563,17 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> object:
     ///     """Confirm action."""
     Qstr::MP_QSTR_confirm_action => obj_fn_kw!(0, new_confirm_action).as_obj(),
+
+    /// def confirm_properties(
+    ///     *,
+    ///     title: str,
+    ///     items: Iterable[Tuple[str | None, str | None, bool]],
+    ///     hold: bool = False,
+    /// ) -> object:
+    ///     """Confirm list of key-value pairs. The third component in the tuple should be True if
+    ///     the value is to be rendered as binary with monospace font, False otherwise.
+    ///     This only concerns the text style, you need to decode the value to UTF-8 in python."""
+    Qstr::MP_QSTR_confirm_properties => obj_fn_kw!(0, confirm_properties).as_obj(),
 
     /// def confirm_output_r(
     ///     *,
