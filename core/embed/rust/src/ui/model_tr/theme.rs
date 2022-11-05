@@ -54,8 +54,12 @@ pub const ICON_DELETE: IconAndName =
 pub const ICON_EYE: IconAndName = IconAndName::new(include_res!("model_tr/res/eye.toif"), "eye"); // 12*6
 pub const ICON_FAIL: IconAndName = IconAndName::new(include_res!("model_tr/res/fail.toif"), "fail");
 pub const ICON_LOCK: IconAndName = IconAndName::new(include_res!("model_tr/res/lock.toif"), "lock"); // 10*10
+pub const ICON_NEXT_PAGE: IconAndName =
+    IconAndName::new(include_res!("model_tr/res/next_page.toif"), "next_page"); // 10*8
 pub const ICON_PARAM: IconAndName =
     IconAndName::new(include_res!("model_tr/res/param.toif"), "param"); // 10*10
+pub const ICON_PREV_PAGE: IconAndName =
+    IconAndName::new(include_res!("model_tr/res/prev_page.toif"), "prev_page"); // 8*10
 pub const ICON_SUCCESS: IconAndName =
     IconAndName::new(include_res!("model_tr/res/success.toif"), "success");
 pub const ICON_TICK: IconAndName = IconAndName::new(include_res!("model_tr/res/tick.toif"), "tick"); // 10*10
