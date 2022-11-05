@@ -409,47 +409,6 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn pin_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = |_args: &[Obj], kwargs: &Map| {
-        let action: StrBuffer = kwargs.get(Qstr::MP_QSTR_action)?.try_into()?;
-
-        let get_page = move |page_index| {
-            let screen = match page_index {
-                // title, text, btn_layout, btn_actions
-                // NOTE: doing the newlines manually to look exactly same
-                // as in the design.
-                0 => (
-                    "PIN settings".into(),
-                    "PIN should contain at least 6 digits",
-                    ButtonLayout::cancel_and_text("GOT IT"),
-                    ButtonActions::cancel_next(),
-                ),
-                1 => (
-                    action.clone(),
-                    "You'll use\nthis PIN to\naccess this\ndevice.",
-                    ButtonLayout::cancel_and_htc_text(
-                        "HOLD TO CONFIRM",
-                        Duration::from_millis(1000),
-                    ),
-                    ButtonActions::cancel_confirm(),
-                ),
-                _ => unreachable!(),
-            };
-
-            Page::<10>::new(screen.2.clone(), screen.3.clone(), Font::BOLD)
-                .text_bold(screen.0)
-                .newline()
-                .newline_half()
-                .text_mono(screen.1.into())
-        };
-        let pages = FlowPages::new(get_page, 2);
-
-        let obj = LayoutObj::new(Flow::new(pages).into_child())?;
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
 extern "C" fn request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
@@ -588,10 +547,6 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def tutorial() -> object:
     ///     """Show user how to interact with the device."""
     Qstr::MP_QSTR_tutorial => obj_fn_kw!(0, tutorial).as_obj(),
-
-    /// def pin_confirm_action(*, action: str) -> object:
-    ///     """Confirm PIN action and informing user about it."""
-    Qstr::MP_QSTR_pin_confirm_action => obj_fn_kw!(0, pin_confirm_action).as_obj(),
 
     /// def request_pin(
     ///     *,
