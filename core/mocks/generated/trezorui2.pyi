@@ -84,11 +84,6 @@ def tutorial() -> object:
 
 
 # rust/src/ui/model_tr/layout.rs
-def pin_confirm_action(*, action: str) -> object:
-    """Confirm PIN action and informing user about it."""
-
-
-# rust/src/ui/model_tr/layout.rs
 def request_pin(
     *,
     prompt: str,

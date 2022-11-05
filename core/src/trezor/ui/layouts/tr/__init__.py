@@ -513,36 +513,6 @@ async def confirm_action(
     )
 
 
-async def pin_confirm_action(
-    ctx: wire.GenericContext,
-    br_type: str,
-    action: str,
-    exc: ExceptionType = wire.ActionCancelled,
-    br_code: ButtonRequestType = ButtonRequestType.Other,
-) -> None:
-    """Custom layout for PIN confirmation.
-
-    Contains some additional information about PIN,
-    divided into two screens with different buttons.
-    """
-    # Making the first letter in action upper
-    # There is no capitalize() method in micropython
-    action = action[0].upper() + action[1:]
-    await raise_if_cancelled(
-        interact(
-            ctx,
-            RustLayout(
-                trezorui2.pin_confirm_action(
-                    action=action,
-                )
-            ),
-            br_type,
-            br_code,
-        ),
-        exc,
-    )
-
-
 async def confirm_reset_device(
     ctx: wire.GenericContext,
     prompt: str,
