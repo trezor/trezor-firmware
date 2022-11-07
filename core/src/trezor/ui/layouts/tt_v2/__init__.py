@@ -117,6 +117,7 @@ class _RustLayout(ui.Layout):
         # Clear the screen of any leftovers.
         ui.backlight_fade(ui.style.BACKLIGHT_DIM)
         ui.display.clear()
+        self.layout.paint()
 
         if __debug__ and self.should_notify_layout_change:
             from apps.debug import notify_layout_change
@@ -133,7 +134,6 @@ class _RustLayout(ui.Layout):
     def handle_input_and_rendering(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
         touch = loop.wait(io.TOUCH)
         self._before_render()
-        self.layout.paint()
         # self.layout.bounds()
         while True:
             # Using `yield` instead of `await` to avoid allocations.
@@ -142,19 +142,19 @@ class _RustLayout(ui.Layout):
             msg = None
             if event in (io.TOUCH_START, io.TOUCH_MOVE, io.TOUCH_END):
                 msg = self.layout.touch_event(event, x, y)
-            self.layout.paint()
-            # self.layout.bounds()
             if msg is not None:
                 raise ui.Result(msg)
+            self.layout.paint()
+            # self.layout.bounds()
 
     def handle_timers(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
         while True:
             # Using `yield` instead of `await` to avoid allocations.
             token = yield self.timer
             msg = self.layout.timer(token)
-            self.layout.paint()
             if msg is not None:
                 raise ui.Result(msg)
+            self.layout.paint()
 
     def page_count(self) -> int:
         return self.layout.page_count()

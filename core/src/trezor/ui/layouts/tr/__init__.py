@@ -37,18 +37,18 @@ class _RustLayout(ui.Layout):
             msg = None
             if event in (io.BUTTON_PRESSED, io.BUTTON_RELEASED):
                 msg = self.layout.button_event(event, button_num)
-            self.layout.paint()
             if msg is not None:
                 raise ui.Result(msg)
+            self.layout.paint()
 
     def handle_timers(self) -> loop.Task:  # type: ignore [awaitable-is-generator]
         while True:
             # Using `yield` instead of `await` to avoid allocations.
             token = yield self.timer
             msg = self.layout.timer(token)
-            self.layout.paint()
             if msg is not None:
                 raise ui.Result(msg)
+            self.layout.paint()
 
 
 async def confirm_action(
