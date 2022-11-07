@@ -40,6 +40,7 @@
 #include "common.h"
 
 #include STM32_HAL_H
+#include "rng.h"
 
 #define RESET_DATA_LEN 18  // >80us no pulse before sending data
 #define DATA_LEN 25        // 24 RGB bits and a final zero
@@ -86,6 +87,12 @@ void rgb_led_set_color(uint32_t color) {
   DMA2_Stream1->PAR = (uint32_t)&TIM8->CCR1;
   DMA2_Stream1->NDTR = RESET_DATA_LEN + DATA_LEN;
   DMA2_Stream1->CR |= DMA_SxCR_EN;
+}
+
+void rgb_led_random() {
+  for (int i = 0; i < RESET_DATA_LEN + DATA_LEN; i++) {
+    rgb_led_data[i] = rng_get() % TIMER_PERIOD;
+  }
 }
 
 void rgb_led_init(void) {
@@ -141,7 +148,7 @@ void rgb_led_init(void) {
   DMA_InitStructure.Init.MemBurst = DMA_MBURST_SINGLE;
   DMA_InitStructure.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
   DMA_InitStructure.Init.MemInc = DMA_MINC_ENABLE;
-  DMA_InitStructure.Init.Mode = DMA_NORMAL;
+  DMA_InitStructure.Init.Mode = DMA_CIRCULAR;
   DMA_InitStructure.Init.PeriphBurst = DMA_PBURST_SINGLE;
   DMA_InitStructure.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
   DMA_InitStructure.Init.PeriphInc = DMA_PINC_DISABLE;
@@ -163,6 +170,18 @@ void rgb_led_init(void) {
   HAL_TIM_Base_Start(&TIM8_Handle);
   HAL_TIM_PWM_Start(&TIM8_Handle, TIM_CHANNEL_1);
 
+  HAL_Delay(1);
+
   // turns off the LED
-  rgb_led_set_color(0x000000);
+  rgb_led_set_color(0x00FF00);
+
+  rng_init();
+
+  rgb_led_random();
+
+  //  DMA2->LIFCR |= 0xFC0;
+  //  DMA2_Stream1->M0AR = (uint32_t)rgb_led_data;
+  //  DMA2_Stream1->PAR = (uint32_t)&TIM8->CCR1;
+  //  DMA2_Stream1->NDTR = RESET_DATA_LEN + DATA_LEN;
+  //  DMA2_Stream1->CR |= DMA_SxCR_EN;
 }
