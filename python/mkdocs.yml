@@ -1,0 +1,29 @@
+site_name: Trezorlib
+repo_url: https://github.com/trezor/trezor-firmware
+edit_uri: 'tree/master/python/docs'
+site_description: Documentation for trezorlib and trezorctl command
+site_author: Trezor/Satoshilabs
+
+theme:
+  name: "readthedocs"
+  highlightjs: true
+
+plugins:
+- mkdocstrings:
+    handlers:
+      python:
+        paths: [..]  # so it works from the monorepo root (on readthedocs)
+- search
+
+nav:
+  - Trezorlib and Trezorctl: index.md
+  - Trezorctl examples: EXAMPLES.md
+  - Trezorctl commands: OPTIONS.md
+  - Transaction Format: transaction-format.md
+  - API Reference:
+    - Client: API/client.md
+    - Bitcoin: API/btc.md
+    - Debuglink: API/debuglink.md
+
+watch:
+  - src
