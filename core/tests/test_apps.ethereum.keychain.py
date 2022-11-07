@@ -18,6 +18,7 @@ if not utils.BITCOIN_ONLY:
     from ethereum_common import (
         construct_network_info,
         get_encoded_network_definition,
+        get_reference_ethereum_network_info,
     )
 
     from trezor.messages import (
@@ -106,7 +107,7 @@ class TestEthereumKeychain(unittest.TestCase):
                 wire.DUMMY_CONTEXT,
                 EthereumGetAddress(
                     address_n=[44 | HARDENED, 60 | HARDENED, 0 | HARDENED],
-                    encoded_network=get_encoded_network_definition(slip44=60),
+                    encoded_network=get_encoded_network_definition(get_reference_ethereum_network_info(slip44=60)),
                 ),
             )
         )
@@ -115,7 +116,7 @@ class TestEthereumKeychain(unittest.TestCase):
                 wire.DUMMY_CONTEXT,
                 EthereumGetAddress(
                     address_n=[44 | HARDENED, 108 | HARDENED, 0 | HARDENED],
-                    encoded_network=get_encoded_network_definition(slip44=108),
+                    encoded_network=get_encoded_network_definition(get_reference_ethereum_network_info(slip44=108)),
                 ),
             )
         )
@@ -142,7 +143,7 @@ class TestEthereumKeychain(unittest.TestCase):
                 EthereumSignTypedData(
                     primary_type="",
                     address_n=[44 | HARDENED, 60 | HARDENED, 0 | HARDENED],
-                    encoded_network=get_encoded_network_definition(slip44=60),
+                    encoded_network=get_encoded_network_definition(get_reference_ethereum_network_info(slip44=60)),
                 ),
             )
         )
@@ -162,7 +163,7 @@ class TestEthereumKeychain(unittest.TestCase):
                 EthereumSignTypedData(
                     primary_type="",
                     address_n=[44 | HARDENED, 108 | HARDENED, 0 | HARDENED],
-                    encoded_network=get_encoded_network_definition(slip44=108),
+                    encoded_network=get_encoded_network_definition(get_reference_ethereum_network_info(slip44=108)),
                 ),
             )
         )
@@ -197,7 +198,7 @@ class TestEthereumKeychain(unittest.TestCase):
                     gas_price=b"",
                     gas_limit=b"",
                     definitions=EthereumDefinitions(
-                        encoded_network=get_encoded_network_definition(chain_id=1),
+                        encoded_network=get_encoded_network_definition(get_reference_ethereum_network_info(chain_id=1)),
                         encoded_token=None,
                     ),
                 ),
@@ -225,7 +226,7 @@ class TestEthereumKeychain(unittest.TestCase):
                     gas_price=b"",
                     gas_limit=b"",
                     definitions=EthereumDefinitions(
-                        encoded_network=get_encoded_network_definition(chain_id=61),
+                        encoded_network=get_encoded_network_definition(get_reference_ethereum_network_info(chain_id=61)),
                         encoded_token=None,
                     ),
                 ),
@@ -243,7 +244,7 @@ class TestEthereumKeychain(unittest.TestCase):
                     gas_price=b"",
                     gas_limit=b"",
                     definitions=EthereumDefinitions(
-                        encoded_network=get_encoded_network_definition(chain_id=61),
+                        encoded_network=get_encoded_network_definition(get_reference_ethereum_network_info(chain_id=61)),
                         encoded_token=None,
                     ),
                 ),
@@ -260,7 +261,7 @@ class TestEthereumKeychain(unittest.TestCase):
                         gas_price=b"",
                         gas_limit=b"",
                         definitions=EthereumDefinitions(
-                            encoded_network=get_encoded_network_definition(chain_id=2),
+                            encoded_network=get_encoded_network_definition(get_reference_ethereum_network_info(chain_id=2)),
                             encoded_token=None,
                         ),
                     ),

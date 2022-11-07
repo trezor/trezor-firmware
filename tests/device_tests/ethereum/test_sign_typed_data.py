@@ -21,11 +21,10 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import UH_, parse_path
 
-from ...common import COMMON_FIXTURES_DIR, parametrize_using_common_fixtures
+from ...common import parametrize_using_common_fixtures
+from .ethereum_common import get_encoded_network_definition
 
 SHOW_MORE = (143, 167)
-
-DEFS_ZIP_FILE_PATH = COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest.zip"
 
 pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
 
@@ -42,11 +41,8 @@ def test_ethereum_sign_typed_data(client: Client, parameters, result):
             )
 
         defs = ethereum.messages.EthereumDefinitions(
-            encoded_network=ethereum.get_definition_from_zip(
-                DEFS_ZIP_FILE_PATH,
-                ethereum.get_network_definition_path(
-                    slip44=encoded_network_slip44,
-                ),
+            encoded_network=get_encoded_network_definition(
+                slip44=encoded_network_slip44,
             )
         )
 
@@ -62,20 +58,28 @@ def test_ethereum_sign_typed_data(client: Client, parameters, result):
 
 
 @pytest.mark.skip_t1
-def test_ethereum_sign_typed_data_missing_extern_definitions(client: Client):
-    path = "m/44'/6060'/0'/0/0"  # GoChain
+@parametrize_using_common_fixtures("ethereum/sign_typed_data.failed.json")
+def test_ethereum_sign_typed_data_failed(client: Client, parameters, result):
+    address_n = parse_path(parameters["path"])
+    encoded_network_slip44 = UH_(address_n[1])
+    if "definitions" in parameters:
+        encoded_network_slip44 = parameters["definitions"].get(
+            "slip44", encoded_network_slip44
+        )
 
-    with pytest.raises(TrezorFailure, match=r"DataError: Forbidden key path"):
+    defs = ethereum.messages.EthereumDefinitions(
+        encoded_network=get_encoded_network_definition(
+            slip44=encoded_network_slip44,
+        )
+    )
+
+    with pytest.raises(TrezorFailure, match=result["error"]):
         ethereum.sign_typed_data(
             client,
-            parse_path(path),
-            {
-                "types": {"EIP712Domain": []},
-                "primaryType": "EIP712Domain",
-                "message": {},
-                "domain": {},
-            },
-            metamask_v4_compat=True,
+            address_n,
+            parameters["data"],
+            metamask_v4_compat=parameters["metamask_v4_compat"],
+            definitions=defs,
         )
 
 
@@ -90,11 +94,8 @@ def test_ethereum_sign_typed_data_blind(client: Client, parameters, result):
                 "slip44", encoded_network_slip44
             )
 
-        encoded_network = ethereum.get_definition_from_zip(
-            DEFS_ZIP_FILE_PATH,
-            ethereum.get_network_definition_path(
-                slip44=encoded_network_slip44,
-            ),
+        encoded_network = get_encoded_network_definition(
+            slip44=encoded_network_slip44,
         )
         ret = ethereum.sign_typed_data_hash(
             client,
@@ -111,18 +112,29 @@ def test_ethereum_sign_typed_data_blind(client: Client, parameters, result):
 
 
 @pytest.mark.skip_t2
-def test_ethereum_sign_typed_data_blind_missing_extern_definitions(client: Client):
-    path = "m/44'/6060'/0'/0/0"  # GoChain
+@parametrize_using_common_fixtures("ethereum/sign_typed_data.failed.json")
+def test_ethereum_sign_typed_data_blind_failed(client: Client, parameters, result):
+    address_n = parse_path(parameters["path"])
+    encoded_network_slip44 = UH_(address_n[1])
+    if "definitions" in parameters:
+        encoded_network_slip44 = parameters["definitions"].get(
+            "slip44", encoded_network_slip44
+        )
 
-    with pytest.raises(TrezorFailure, match=r"DataError:.*Forbidden key path"):
+    encoded_network = get_encoded_network_definition(
+        slip44=encoded_network_slip44,
+    )
+
+    with pytest.raises(TrezorFailure, match=result["error"]):
         ethereum.sign_typed_data_hash(
             client,
-            parse_path(path),
-            ethereum.decode_hex(
-                "0x6192106f129ce05c9075d319c1fa6ea9b3ae37cbd0c1ef92e2be7137bb07baa1"
-            ),
-            None,
-            encoded_network=None,
+            address_n,
+            ethereum.decode_hex(parameters["domain_separator_hash"]),
+            # message hash is empty for domain-only hashes
+            ethereum.decode_hex(parameters["message_hash"])
+            if parameters["message_hash"]
+            else None,
+            encoded_network=encoded_network,
         )
 
 
@@ -209,11 +221,8 @@ def input_flow_cancel(client: Client):
 @pytest.mark.skip_t1
 def test_ethereum_sign_typed_data_show_more_button(client: Client):
     defs = ethereum.messages.EthereumDefinitions(
-        encoded_network=ethereum.get_definition_from_zip(
-            DEFS_ZIP_FILE_PATH,
-            ethereum.get_network_definition_path(
-                slip44=60,
-            ),
+        encoded_network=get_encoded_network_definition(
+            slip44=60,
         )
     )
 
@@ -232,11 +241,8 @@ def test_ethereum_sign_typed_data_show_more_button(client: Client):
 @pytest.mark.skip_t1
 def test_ethereum_sign_typed_data_cancel(client: Client):
     defs = ethereum.messages.EthereumDefinitions(
-        encoded_network=ethereum.get_definition_from_zip(
-            DEFS_ZIP_FILE_PATH,
-            ethereum.get_network_definition_path(
-                slip44=60,
-            ),
+        encoded_network=get_encoded_network_definition(
+            slip44=60,
         )
     )
 

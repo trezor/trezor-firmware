@@ -20,7 +20,6 @@ import pathlib
 import click
 
 from trezorlib import ethereum
-from trezorlib.cli import ethereum as ethereum_cli
 
 
 @click.command()
@@ -29,7 +28,7 @@ from trezorlib.cli import ethereum as ethereum_cli
     type=click.Path(
         exists=True, dir_okay=False, resolve_path=True, path_type=pathlib.Path
     ),
-    default=f"./{ethereum_cli.DEFS_ZIP_FILENAME}",
+    default=f"./{ethereum.DEFS_ZIP_FILENAME}",
     help="Zip file with stored definitions. Zip file could be obtained using command"
     "`trezorctl ethereum download-definitions`.",
 )

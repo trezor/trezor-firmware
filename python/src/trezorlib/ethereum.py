@@ -31,7 +31,10 @@ if TYPE_CHECKING:
 
 
 # TODO: change once we know the urls
-DEFS_BASE_URL = "https://data.trezor.io/eth_definitions/{lookup_type}/{id}/{name}"
+DEFS_BASE_URL = "https://data.trezor.io/eth_definitions/"
+DEFS_URL_LOOKUP_TEMPLATE = DEFS_BASE_URL + "{lookup_type}/{id}/{name}"
+
+DEFS_ZIP_FILENAME = "definitions-latest.zip"
 DEFS_ZIP_TOPLEVEL_DIR = pathlib.PurePath("definitions-latest")
 DEFS_NETWORK_BY_CHAINID_LOOKUP_TYPE = "by_chain_id"
 DEFS_NETWORK_BY_SLIP44_LOOKUP_TYPE = "by_slip44"
@@ -172,13 +175,13 @@ def get_network_definition_url(
         )
 
     if chain_id is not None:
-        return DEFS_BASE_URL.format(
+        return DEFS_URL_LOOKUP_TEMPLATE.format(
             lookup_type=DEFS_NETWORK_BY_CHAINID_LOOKUP_TYPE,
             id=chain_id,
             name=DEFS_NETWORK_URI_NAME,
         )
     else:
-        return DEFS_BASE_URL.format(
+        return DEFS_URL_LOOKUP_TEMPLATE.format(
             lookup_type=DEFS_NETWORK_BY_SLIP44_LOOKUP_TYPE,
             id=slip44,
             name=DEFS_NETWORK_URI_NAME,
@@ -195,7 +198,7 @@ def get_token_definition_url(chain_id: int = None, token_address: str = None) ->
     if addr.startswith("0x"):
         addr = addr[2:]
 
-    return DEFS_BASE_URL.format(
+    return DEFS_URL_LOOKUP_TEMPLATE.format(
         lookup_type=DEFS_NETWORK_BY_CHAINID_LOOKUP_TYPE,
         id=chain_id,
         name=DEFS_TOKEN_URI_NAME.format(hex_address=addr),

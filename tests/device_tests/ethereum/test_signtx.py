@@ -14,7 +14,9 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from functools import partial
+import pathlib
+import tempfile
+from typing import Optional
 
 import pytest
 
@@ -23,42 +25,69 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client, message_filters
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
-from ...common import COMMON_FIXTURES_DIR, parametrize_using_common_fixtures
+from ...common import parametrize_using_common_fixtures
+from .ethereum_common import (
+    get_encoded_network_definition,
+    get_encoded_token_definition,
+)
 
 TO_ADDR = "0x1d1c328764a41bda0492b66baa30c4a339ff85ef"
 SHOW_ALL = (143, 167)
 GO_BACK = (16, 220)
 
-DEFS_ZIP_FILE_PATH = COMMON_FIXTURES_DIR / "ethereum" / "definitions-latest.zip"
-
 pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
+
+ONLINE_DEFS_ZIP_FILE = tempfile.NamedTemporaryFile()
+with open(ONLINE_DEFS_ZIP_FILE.name, mode="w+b") as tf:
+    try:
+        tf.write(
+            ethereum.download_from_url(
+                ethereum.DEFS_BASE_URL + ethereum.DEFS_ZIP_FILENAME
+            )
+        )
+    except RuntimeError:
+        pass
 
 
 def get_definitions(
     parameters: dict,
+    zip_file: Optional[pathlib.Path] = None,
 ) -> messages.EthereumDefinitions:
     chain_id = parameters["chain_id"]
     token_chain_id = parameters["chain_id"]
     token_address = parameters.get("to_address")
+    timestamp = None
 
     if "definitions" in parameters:
         chain_id = parameters["definitions"].get("chain_id", chain_id)
         token_chain_id = parameters["definitions"].get("token_chain_id", token_chain_id)
         token_address = parameters["definitions"].get("to_address", token_address)
+        timestamp = parameters["definitions"].get("timestamp")
 
-    encoded_network = ethereum.get_definition_from_zip(
-        DEFS_ZIP_FILE_PATH,
-        ethereum.get_network_definition_path(
-            chain_id,
-        ),
-    )
-    encoded_token = ethereum.get_definition_from_zip(
-        DEFS_ZIP_FILE_PATH,
-        ethereum.get_token_definition_path(
-            token_chain_id,
-            token_address,
-        ),
-    )
+    if zip_file:
+        encoded_network = ethereum.get_definition_from_zip(
+            zip_file=zip_file,
+            path_inside_zip=ethereum.get_network_definition_path(
+                chain_id=chain_id,
+            ),
+        )
+        encoded_token = ethereum.get_definition_from_zip(
+            zip_file=zip_file,
+            path_inside_zip=ethereum.get_token_definition_path(
+                chain_id=token_chain_id,
+                token_address=token_address,
+            ),
+        )
+    else:
+        encoded_network = get_encoded_network_definition(
+            chain_id=chain_id,
+            timestamp=timestamp,
+        )
+        encoded_token = get_encoded_token_definition(
+            chain_id=token_chain_id,
+            token_address=token_address,
+            timestamp=timestamp,
+        )
 
     return messages.EthereumDefinitions(
         encoded_network=encoded_network, encoded_token=encoded_token
@@ -93,68 +122,54 @@ def test_signtx(client: Client, parameters, result):
     assert sig_v == result["sig_v"]
 
 
-def test_signtx_missing_or_wrong_extern_definitions(client: Client):
-    chain_id = 8  # Ubiq
-    to_address = "0x20e3dd746ddf519b23ffbbb6da7a5d33ea6349d6"  # Sphere
+# TODO: remove xfail when definitions becomes available online
+@pytest.mark.xfail(reason="Temporary until definitions becomes available online.")
+@parametrize_using_common_fixtures(
+    "ethereum/sign_tx.json",
+    "ethereum/sign_tx_eip155.json",
+    "ethereum/sign_tx_definitions.json",
+)
+def test_signtx_online_definitions(client: Client, parameters, result):
+    with client:
+        sig_v, sig_r, sig_s = ethereum.sign_tx(
+            client,
+            n=parse_path(parameters["path"]),
+            nonce=int(parameters["nonce"], 16),
+            gas_price=int(parameters["gas_price"], 16),
+            gas_limit=int(parameters["gas_limit"], 16),
+            to=parameters["to_address"],
+            chain_id=parameters["chain_id"],
+            value=int(parameters["value"], 16),
+            tx_type=parameters["tx_type"],
+            data=bytes.fromhex(parameters["data"]),
+            definitions=get_definitions(
+                parameters, pathlib.Path(ONLINE_DEFS_ZIP_FILE.name)
+            ),
+        )
 
-    sign_tx_call = partial(
-        ethereum.sign_tx,
-        client,
-        n=parse_path("m/44'/108'/0'/0/0"),
-        nonce=0,
-        gas_price=20,
-        gas_limit=20,
-        to=to_address,
-        chain_id=chain_id,
-        value=0,
-        data=b"a9059cbb00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-    )
+    expected_v = 2 * parameters["chain_id"] + 35
+    assert sig_v in (expected_v, expected_v + 1)
+    assert sig_r.hex() == result["sig_r"]
+    assert sig_s.hex() == result["sig_s"]
+    assert sig_v == result["sig_v"]
 
-    definitions_vector = [
-        get_definitions(
-            {
-                "chain_id": chain_id,
-                "to_address": to_address,
-                "definitions": {
-                    "chain_id": -1,
-                },
-            }
-        ),  # missing network
-        get_definitions(
-            {
-                "chain_id": -1,
-                "to_address": "",
-            }
-        ),  # missing network and token
-        get_definitions(
-            {
-                "chain_id": chain_id,
-                "to_address": to_address,
-                "definitions": {
-                    "chain_id": 1,
-                },
-            }
-        ),  # wrong network
-        get_definitions(
-            {
-                "chain_id": 1,
-                "to_address": "0xd0d6d6c5fe4a677d343cc433536bb717bae167dd",
-            }
-        ),  # wrong network and token
-        get_definitions(
-            {
-                "chain_id": chain_id,
-                "definitions": {
-                    "token_chain_id": 1,
-                    "to_address": "0xd0d6d6c5fe4a677d343cc433536bb717bae167dd",
-                },
-            }
-        ),  # wrong token
-    ]
 
-    for definitions in definitions_vector:
-        with pytest.raises(TrezorFailure, match=r"DataError"):
-            sign_tx_call(definitions=definitions)
+@parametrize_using_common_fixtures("ethereum/sign_tx_definitions.failed.json")
+def test_signtx_failed(client: Client, parameters, result):
+    with pytest.raises(TrezorFailure, match=result["error"]):
+        ethereum.sign_tx(
+            client,
+            n=parse_path(parameters["path"]),
+            nonce=int(parameters["nonce"], 16),
+            gas_price=int(parameters["gas_price"], 16),
+            gas_limit=int(parameters["gas_limit"], 16),
+            to=parameters["to_address"],
+            chain_id=parameters["chain_id"],
+            value=int(parameters["value"], 16),
+            tx_type=parameters["tx_type"],
+            data=bytes.fromhex(parameters["data"]),
+            definitions=get_definitions(parameters),
+        )
 
 
 @parametrize_using_common_fixtures(
@@ -182,69 +197,22 @@ def test_signtx_eip1559(client: Client, parameters, result):
     assert sig_v == result["sig_v"]
 
 
-def test_signtx_eip1559_missing_or_wrong_extern_definitions(client: Client):
-    chain_id = 8  # Ubiq
-    to_address = "0x20e3dd746ddf519b23ffbbb6da7a5d33ea6349d6"  # Sphere
-
-    sign_tx_eip1559_call = partial(
-        ethereum.sign_tx_eip1559,
-        client,
-        n=parse_path("m/44'/108'/0'/0/0"),
-        nonce=0,
-        gas_limit=20,
-        max_gas_fee=20,
-        max_priority_fee=1,
-        to=to_address,
-        chain_id=chain_id,
-        value=0,
-        data=b"a9059cbb00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-    )
-
-    definitions_vector = [
-        get_definitions(
-            {
-                "chain_id": chain_id,
-                "to_address": to_address,
-                "definitions": {
-                    "chain_id": -1,
-                },
-            }
-        ),  # missing network
-        get_definitions(
-            {
-                "chain_id": -1,
-                "to_address": "",
-            }
-        ),  # missing network and token
-        get_definitions(
-            {
-                "chain_id": chain_id,
-                "to_address": to_address,
-                "definitions": {
-                    "chain_id": 1,
-                },
-            }
-        ),  # wrong network
-        get_definitions(
-            {
-                "chain_id": 1,
-                "to_address": "0xd0d6d6c5fe4a677d343cc433536bb717bae167dd",
-            }
-        ),  # wrong network and token
-        get_definitions(
-            {
-                "chain_id": chain_id,
-                "definitions": {
-                    "token_chain_id": 1,
-                    "to_address": "0xd0d6d6c5fe4a677d343cc433536bb717bae167dd",
-                },
-            }
-        ),  # wrong token
-    ]
-
-    for definitions in definitions_vector:
-        with pytest.raises(TrezorFailure, match=r"DataError"):
-            sign_tx_eip1559_call(definitions=definitions)
+@parametrize_using_common_fixtures("ethereum/sign_tx_eip1559_definitions.failed.json")
+def test_signtx_eip1559_failed(client: Client, parameters, result):
+    with pytest.raises(TrezorFailure, match=result["error"]):
+        ethereum.sign_tx_eip1559(
+            client,
+            n=parse_path(parameters["path"]),
+            nonce=int(parameters["nonce"], 16),
+            gas_limit=int(parameters["gas_limit"], 16),
+            max_gas_fee=int(parameters["max_gas_fee"], 16),
+            max_priority_fee=int(parameters["max_priority_fee"], 16),
+            to=parameters["to_address"],
+            chain_id=parameters["chain_id"],
+            value=int(parameters["value"], 16),
+            data=bytes.fromhex(parameters["data"]),
+            definitions=get_definitions(parameters),
+        )
 
 
 def test_sanity_checks(client: Client):

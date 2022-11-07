@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     DefType = TypeVar("DefType", EthereumNetworkInfo, EthereumTokenInfo)
 
 DEFINITIONS_PUBLIC_KEY = b""
-MIN_DATA_VERSION = 1 # TODO: update
+MIN_DATA_VERSION = 1  # TODO: update
 FORMAT_VERSION = b"trzd1"
 
 if __debug__:

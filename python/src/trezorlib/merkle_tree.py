@@ -42,7 +42,7 @@ class Node:
                 "`left` and `right` value must not be None when not using `raw_value`."
             )
 
-        self.hash = None
+        self.hash: Optional[bytes] = None
         self.left_child = left
         self.right_child = right
         self.proof_list: List[bytes] = []
@@ -59,16 +59,24 @@ class Node:
                 self.hash = sha256(b"\x01" + hash_a + hash_b).digest()
 
                 # distribute proof
-                self.left_child.add_to_proof(right_hash)  # type: ignore ["add_to_proof" is not a known member of "None"]
-                self.right_child.add_to_proof(left_hash)  # type: ignore ["add_to_proof" is not a known member of "None"]
+                self.left_child.add_to_proof_list(right_hash)  # type: ignore ["add_to_proof_list" is not a known member of "None"]
+                self.right_child.add_to_proof_list(left_hash)  # type: ignore ["add_to_proof_list" is not a known member of "None"]
 
         return self.hash
 
-    def add_to_proof(self, proof: bytes) -> None:
+    def add_to_proof_list(self, proof: bytes) -> None:
         self.proof_list.append(proof)
         if not self.raw_value:
-            self.left_child.add_to_proof(proof)  # type: ignore ["add_to_proof" is not a known member of "None"]
-            self.right_child.add_to_proof(proof)  # type: ignore ["add_to_proof" is not a known member of "None"]
+            self.left_child.add_to_proof_list(proof)  # type: ignore ["add_to_proof_list" is not a known member of "None"]
+            self.right_child.add_to_proof_list(proof)  # type: ignore ["add_to_proof_list" is not a known member of "None"]
+
+    def get_proof_list(self) -> List[bytes]:
+        return self.proof_list
+
+    def get_hash(self) -> Optional[bytes]:
+        if self.hash is None:
+            self.compute_hash()
+        return self.hash
 
 
 class MerkleTree:
@@ -78,6 +86,11 @@ class MerkleTree:
     """
 
     def __init__(self, values: List[bytes]) -> None:
+        if values is None or len(values) < 1:
+            raise ValueError(
+                "`left` and `right` value must not be None when not using `raw_value`."
+            )
+
         self.leaves = [Node(raw_value=v) for v in values]
         self.height = 0
 
@@ -105,11 +118,13 @@ class MerkleTree:
 
     def get_proofs(self) -> Dict[bytes, List[bytes]]:
         return {
-            n.raw_value: n.proof_list for n in self.leaves if n.raw_value is not None
+            n.raw_value: n.get_proof_list()
+            for n in self.leaves
+            if n.raw_value is not None
         }
 
     def get_tree_height(self) -> int:
         return self.height
 
     def get_root_hash(self) -> bytes:
-        return self.root_node.hash  # type: ignore [Expression of type "bytes | None" cannot be assigned to return type "bytes"]
+        return self.root_node.get_hash()  # type: ignore [Expression of type "bytes | None" cannot be assigned to return type "bytes"]

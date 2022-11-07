@@ -71,8 +71,6 @@ ETHER_UNITS = {
 # So that we can import the web3 library only when really used and reuse the instance
 _WEB3_INSTANCE: Optional["web3.Web3"] = None
 
-DEFS_ZIP_FILENAME = "definitions-latest.zip"
-
 
 def _print_eth_dependencies_and_die() -> NoReturn:
     click.echo("Ethereum requirements not installed.")
@@ -271,7 +269,7 @@ def cli() -> None:
     type=click.Path(
         resolve_path=True, dir_okay=False, writable=True, path_type=pathlib.Path
     ),
-    default=f"./{DEFS_ZIP_FILENAME}",
+    default=f"./{ethereum.DEFS_ZIP_FILENAME}",
     help="File path to use to save downloaded definitions. Existing file will be overwritten!",
 )
 def download_definitions(outfile: pathlib.Path) -> None:
@@ -281,7 +279,7 @@ def download_definitions(outfile: pathlib.Path) -> None:
 
     # TODO: change once we know the urls
     archived_definitions = ethereum.download_from_url(
-        "https://data.trezor.io/eth_definitions/" + DEFS_ZIP_FILENAME
+        ethereum.DEFS_BASE_URL + ethereum.DEFS_ZIP_FILENAME
     )
 
     # save
