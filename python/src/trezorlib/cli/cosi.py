@@ -14,6 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import warnings
 from typing import TYPE_CHECKING, Optional
 
 import click
@@ -33,14 +34,6 @@ def cli() -> None:
     """CoSi (Cothority / collective signing) commands."""
 
 
-def cosi_warn(client: "TrezorClient") -> None:
-    if client.features.model == "1" and client.version < (1, 11, 2):
-        click.echo("WARNING: CoSi signing on your Trezor is insecure.")
-        click.echo("Please update your Trezor to firmware version 1.11.2 or newer.")
-        click.echo("If you used CoSi in the past, consider rotating your keys.")
-        raise click.Abort()
-
-
 @cli.command()
 @click.option("-n", "--address", required=True, help=PATH_HELP)
 @click.argument("data_deprecated", required=False)
@@ -49,9 +42,8 @@ def commit(
     client: "TrezorClient", address: str, data_deprecated: Optional[str]
 ) -> "messages.CosiCommitment":
     """Ask device to commit to CoSi signing."""
-    cosi_warn(client)
     if data_deprecated is not None:
-        click.echo("Warning: data argument is deprecated", err=True)
+        warnings.warn("'data' argument is deprecated")
 
     address_n = tools.parse_path(address)
     return cosi.commit(client, address_n)
@@ -71,7 +63,6 @@ def sign(
     global_pubkey: str,
 ) -> "messages.CosiSignature":
     """Ask device to sign using CoSi."""
-    cosi_warn(client)
     address_n = tools.parse_path(address)
     return cosi.sign(
         client,
