@@ -17,13 +17,11 @@
 import struct
 import zlib
 from dataclasses import dataclass
-from enum import Enum
 from typing import Sequence, Tuple
 
-import construct as c
 from typing_extensions import Literal
 
-from .tools import EnumAdapter
+from . import firmware
 
 try:
     # Explanation of having to use "Image.Image" in typing:
@@ -36,22 +34,6 @@ except ImportError:
 
 
 RGBPixel = Tuple[int, int, int]
-
-
-class ToifMode(Enum):
-    full_color = b"f"  # big endian
-    grayscale = b"g"  # odd hi
-    full_color_le = b"F"  # little endian
-    grayscale_eh = b"G"  # even hi
-
-
-ToifStruct = c.Struct(
-    "magic" / c.Const(b"TOI"),
-    "format" / EnumAdapter(c.Bytes(1), ToifMode),
-    "width" / c.Int16ul,
-    "height" / c.Int16ul,
-    "data" / c.Prefixed(c.Int32ul, c.GreedyBytes),
-)
 
 
 def _compress(data: bytes) -> bytes:
@@ -131,14 +113,17 @@ def _to_grayscale(data: bytes, right_hi: bool) -> bytes:
 
 @dataclass
 class Toif:
-    mode: ToifMode
+    mode: firmware.ToifMode
     size: Tuple[int, int]
     data: bytes
 
     def __post_init__(self) -> None:
         # checking the data size
         width, height = self.size
-        if self.mode is ToifMode.grayscale or self.mode is ToifMode.grayscale_eh:
+        if (
+            self.mode is firmware.ToifMode.grayscale
+            or self.mode is firmware.ToifMode.grayscale_eh
+        ):
             expected_size = width * height // 2
         else:
             expected_size = width * height * 2
@@ -157,16 +142,16 @@ class Toif:
         uncompressed = _decompress(self.data)
 
         pil_mode: Literal["L", "RGB"]
-        if self.mode is ToifMode.grayscale:
+        if self.mode is firmware.ToifMode.grayscale:
             pil_mode = "L"
             raw_data = _to_grayscale(uncompressed, right_hi=False)
-        elif self.mode is ToifMode.grayscale_eh:
+        elif self.mode is firmware.ToifMode.grayscale_eh:
             pil_mode = "L"
             raw_data = _to_grayscale(uncompressed, right_hi=True)
-        elif self.mode is ToifMode.full_color:
+        elif self.mode is firmware.ToifMode.full_color:
             pil_mode = "RGB"
             raw_data = _to_rgb(uncompressed, little_endian=False)
-        else:  # self.mode is ToifMode.full_color_le:
+        else:  # self.mode is firmware.ToifMode.full_color_le:
             pil_mode = "RGB"
             raw_data = _to_rgb(uncompressed, little_endian=True)
 
@@ -174,7 +159,7 @@ class Toif:
 
     def to_bytes(self) -> bytes:
         width, height = self.size
-        return ToifStruct.build(
+        return firmware.Toif.build(
             dict(format=self.mode, width=width, height=height, data=self.data)
         )
 
@@ -184,10 +169,7 @@ class Toif:
 
 
 def from_bytes(data: bytes) -> Toif:
-    return from_struct(ToifStruct.parse(data))
-
-
-def from_struct(parsed: c.Container) -> Toif:
+    parsed = firmware.Toif.parse(data)
     return Toif(parsed.format, (parsed.width, parsed.height), parsed.data)
 
 
@@ -218,27 +200,27 @@ def from_image(
         if image.size[0] % 2 != 0:
             raise ValueError("Only even-width grayscale images are supported")
         if not legacy_format:
-            toif_mode = ToifMode.grayscale_eh
+            toif_mode = firmware.ToifMode.grayscale_eh
             toif_data = _from_pil_grayscale(image.getdata(), right_hi=True)
         else:
-            toif_mode = ToifMode.grayscale
+            toif_mode = firmware.ToifMode.grayscale
             toif_data = _from_pil_grayscale(image.getdata(), right_hi=False)
     elif image.mode == "LA":
-        toif_mode = ToifMode.grayscale
+        toif_mode = firmware.ToifMode.grayscale
         if image.size[0] % 2 != 0:
             raise ValueError("Only even-width grayscale images are supported")
         if not legacy_format:
-            toif_mode = ToifMode.grayscale_eh
+            toif_mode = firmware.ToifMode.grayscale_eh
             toif_data = _from_pil_grayscale_alpha(image.getdata(), right_hi=True)
         else:
-            toif_mode = ToifMode.grayscale
+            toif_mode = firmware.ToifMode.grayscale
             toif_data = _from_pil_grayscale_alpha(image.getdata(), right_hi=False)
     elif image.mode == "RGB":
         if not legacy_format:
-            toif_mode = ToifMode.full_color_le
+            toif_mode = firmware.ToifMode.full_color_le
             toif_data = _from_pil_rgb(image.getdata(), little_endian=True)
         else:
-            toif_mode = ToifMode.full_color
+            toif_mode = firmware.ToifMode.full_color
             toif_data = _from_pil_rgb(image.getdata(), little_endian=False)
     else:
         raise ValueError(f"Unsupported image mode: {image.mode}")

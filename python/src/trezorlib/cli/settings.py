@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, Optional, cast
 
 import click
 
-from .. import device, messages, toif
+from .. import device, firmware, messages, toif
 from . import AliasedGroup, ChoiceType, with_client
 
 if TYPE_CHECKING:
@@ -83,7 +83,7 @@ def image_to_tt(filename: str) -> bytes:
     if toif_image.size != (144, 144):
         raise click.ClickException("Wrong size of image - should be 144x144")
 
-    if toif_image.mode != toif.ToifMode.full_color:
+    if toif_image.mode != firmware.ToifMode.full_color:
         raise click.ClickException("Wrong image mode - should be full_color")
 
     return toif_image.to_bytes()
