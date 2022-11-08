@@ -22,6 +22,7 @@ from typing import BinaryIO, TextIO
 import click
 
 from trezorlib import firmware
+from trezorlib._internal import firmware_headers
 
 
 @click.command()
@@ -32,10 +33,19 @@ def firmware_fingerprint(filename: BinaryIO, output: TextIO) -> None:
     data = filename.read()
 
     try:
-        click.echo(firmware.parse(data).digest().hex(), file=output)
+        version, fw = firmware.parse(data)
+
+        # Unsigned production builds for Trezor T do not have valid code hashes.
+        # Use the internal module which recomputes them first.
+        if version == firmware.FirmwareFormat.TREZOR_T:
+            fingerprint = firmware_headers.FirmwareImage(fw).digest()
+        else:
+            fingerprint = firmware.digest(version, fw)
     except Exception as e:
         click.echo(e, err=True)
         sys.exit(2)
+
+    click.echo(fingerprint.hex(), file=output)
 
 
 if __name__ == "__main__":

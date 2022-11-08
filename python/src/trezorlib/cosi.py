@@ -16,7 +16,7 @@
 
 import warnings
 from functools import reduce
-from typing import TYPE_CHECKING, Iterable, Optional, Sequence, Tuple
+from typing import TYPE_CHECKING, Iterable, List, Optional, Tuple
 
 from . import _ed25519, messages
 from .tools import expect
@@ -90,7 +90,7 @@ def verify(
     signature: Ed25519Signature,
     digest: bytes,
     sigs_required: int,
-    keys: Sequence[Ed25519PublicPoint],
+    keys: List[Ed25519PublicPoint],
     mask: int,
 ) -> None:
     """Verify a CoSi multi-signature. Raise exception if the signature is invalid.

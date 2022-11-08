@@ -389,14 +389,3 @@ class EnumAdapter(construct.Adapter):
             return self.enum(obj)
         except ValueError:
             return obj
-
-
-class TupleAdapter(construct.Adapter):
-    def __init__(self, *subcons: Any) -> None:
-        super().__init__(construct.Sequence(*subcons))
-
-    def _encode(self, obj: Any, ctx: Any, path: Any):
-        return obj
-
-    def _decode(self, obj: Any, ctx: Any, path: Any):
-        return tuple(obj)
