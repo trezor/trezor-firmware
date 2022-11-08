@@ -38,6 +38,8 @@ pub fn zeroize_vec<T, const N: usize>(val: &mut Vec<T, N>)
 where
     T: DefaultIsZeroes,
 {
+    // Fill vector to capacity to avoid leftovers.
+    while val.push(T::default()).is_ok() {}
     let slice: &mut [T] = val.as_mut();
     slice.zeroize();
     val.clear();
