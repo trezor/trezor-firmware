@@ -33,10 +33,20 @@ pub mod ui;
 fn panic_debug(panic_info: &core::panic::PanicInfo) -> ! {
     // Filling at least the file and line information, if available.
     // TODO: find out how to display message from panic_info.message()
+
+    use crate::trezorhal::common::StackCStr;
+    use cstr_core::cstr;
     if let Some(location) = panic_info.location() {
-        trezorhal::common::__fatal_error("", "rs", location.file(), location.line(), "");
+        let file = StackCStr::new(location.file());
+        trezorhal::common::__fatal_error(
+            cstr!(""),
+            cstr!("rs"),
+            file.cstr(),
+            location.line(),
+            cstr!(""),
+        );
     } else {
-        trezorhal::common::__fatal_error("", "rs", "", 0, "");
+        trezorhal::common::__fatal_error(cstr!(""), cstr!("rs"), cstr!(""), 0, cstr!(""));
     }
 }
 
@@ -54,7 +64,7 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
     // raises a Hard Fault on hardware.
     //
     // Otherwise, use `unwrap!` macro from trezorhal.
-    trezorhal::common::__fatal_error("", "rs", "", 0, "");
+    fatal_error!("", "rs");
 }
 
 #[cfg(not(target_arch = "arm"))]

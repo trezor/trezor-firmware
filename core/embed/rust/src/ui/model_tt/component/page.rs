@@ -19,7 +19,7 @@ pub struct SwipePage<T, U> {
     swipe: Swipe,
     scrollbar: ScrollBar,
     hint: Label<&'static str>,
-    fade: Option<i32>,
+    fade: Option<u16>,
 }
 
 impl<T, U> SwipePage<T, U>

@@ -138,6 +138,14 @@ impl Font {
         display::text_height(self.into()) as i16
     }
 
+    pub fn max_height(self) -> i16 {
+        display::text_max_height(self.into()) as i16
+    }
+
+    pub fn baseline(self) -> i16 {
+        display::text_baseline(self.into()) as i16
+    }
+
     pub fn line_height(self) -> i16 {
         constant::LINE_SPACE + self.text_height()
     }
