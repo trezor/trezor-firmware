@@ -64,38 +64,39 @@ async def change_pin(ctx: Context, msg: ChangePin) -> Success:
 
 
 def _require_confirm_change_pin(ctx: Context, msg: ChangePin) -> Awaitable[None]:
-    from trezor.ui.layouts import confirm_action
+    from trezor.ui.layouts import confirm_pin_action, confirm_set_new_pin
 
     has_pin = config.has_pin()
 
     if msg.remove and has_pin:  # removing pin
-        return confirm_action(
+        return confirm_pin_action(
             ctx,
             "set_pin",
             "Remove PIN",
             "disable PIN protection?",
             "Do you really want to",
-            reverse=True,
         )
 
     if not msg.remove and has_pin:  # changing pin
-        return confirm_action(
+        return confirm_pin_action(
             ctx,
             "set_pin",
             "Change PIN",
             "change your PIN?",
             "Do you really want to",
-            reverse=True,
         )
 
     if not msg.remove and not has_pin:  # setting new pin
-        return confirm_action(
+        return confirm_set_new_pin(
             ctx,
             "set_pin",
             "Enable PIN",
-            "enable PIN protection?",
             "Do you really want to",
-            reverse=True,
+            "enable PIN protection?",
+            [
+                "PIN will be used to access this device.",
+                "It should contain at least 4 digits.",
+            ],
         )
 
     # removing non-existing PIN

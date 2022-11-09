@@ -1118,6 +1118,85 @@ async def request_pin_on_device(
         return result
 
 
+async def confirm_pin_action(
+    ctx: wire.GenericContext,
+    br_type: str,
+    title: str,
+    action: str | None,
+    description: str | None,
+    br_code: ButtonRequestType = ButtonRequestType.Other,
+) -> None:
+    return await confirm_action(
+        ctx,
+        br_type,
+        title,
+        action,
+        description,
+        reverse=True,
+        br_code=br_code,
+    )
+
+
+async def confirm_reenter_pin(
+    ctx: wire.GenericContext,
+    br_type: str = "set_pin",
+    br_code: ButtonRequestType = ButtonRequestType.Other,
+) -> None:
+    return await confirm_action(
+        ctx,
+        br_type,
+        "CHECK PIN",
+        action="Please re-enter to confirm.",
+        verb="BEGIN",
+        br_code=br_code,
+    )
+
+
+async def pin_mismatch(
+    ctx: wire.GenericContext,
+    br_type: str = "set_pin",
+    br_code: ButtonRequestType = ButtonRequestType.Other,
+) -> None:
+    return await confirm_action(
+        ctx,
+        br_type,
+        "PIN MISMATCH",
+        action="The PINs you entered do not match.\n\nPlease try again.",
+        verb="TRY AGAIN",
+        verb_cancel=None,
+        br_code=br_code,
+    )
+
+
+async def confirm_set_new_pin(
+    ctx: wire.GenericContext,
+    br_type: str,
+    title: str,
+    action: str,
+    description: str,
+    information: list[str],
+    br_code: ButtonRequestType = ButtonRequestType.Other,
+) -> None:
+    await confirm_action(
+        ctx,
+        br_type,
+        title,
+        action=action,
+        description=description,
+        verb="ENABLE",
+        reverse=True,
+        br_code=br_code,
+    )
+
+    return await confirm_action(
+        ctx,
+        br_type,
+        title="PIN INFO",
+        description="\n\n".join(information),
+        br_code=br_code,
+    )
+
+
 class RustProgress:
     def __init__(
         self,
