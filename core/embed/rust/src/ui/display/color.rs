@@ -1,6 +1,5 @@
 use crate::ui::lerp::Lerp;
 
-
 #[macro_export]
 macro_rules! alpha {
     ($n: expr) => {
@@ -11,7 +10,6 @@ macro_rules! alpha {
         }
     };
 }
-
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub struct Color(u16);
