@@ -529,12 +529,17 @@ async def confirm_reset_device(
     if show_tutorial:
         await tutorial(ctx)
 
+    to_show = "By continuing you agree to our terms and conditions.\n\nMore info at trezor.io/tos"
+    if not recovery:
+        to_show += "\n\nUse you backup to recover you wallet."
+
     return await _placeholder_confirm(
         ctx=ctx,
         br_type="recover_device" if recovery else "setup_device",
-        title="START RECOVERY" if recovery else "CREATE NEW WALLET",
-        data="By continuing you agree to our terms and conditions.\nSee trezor.io/tos.",
-        description=prompt,
+        title="WALLET RECOVERY" if recovery else "WALLET BACKUP",
+        # data=f"{common_data}\n\n{special_data}",
+        data="",
+        description=to_show,
         br_code=ButtonRequestType.ProtectCall
         if recovery
         else ButtonRequestType.ResetDevice,
@@ -1205,6 +1210,18 @@ async def request_pin_on_device(
     else:
         subprompt = f"{attempts_remaining} tries left"
 
+    if attempts_remaining is not None:
+        await confirm_action(
+            ctx,
+            "pin_device",
+            "PIN entry",
+            action=prompt,
+            description=subprompt,
+            verb="BEGIN",
+            verb_cancel=None,
+            br_code=ButtonRequestType.PinEntry,
+        )
+
     dialog = RustLayout(
         trezorui2.request_pin(
             prompt=prompt,
@@ -1223,3 +1240,81 @@ async def request_pin_on_device(
         # `test_change_pin`
         assert isinstance(result, str)
         return result
+
+
+async def confirm_reenter_pin(
+    ctx: wire.GenericContext,
+    br_type: str = "set_pin",
+    br_code: ButtonRequestType = ButtonRequestType.Other,
+) -> None:
+    return await confirm_action(
+        ctx,
+        br_type,
+        "CHECK PIN",
+        action="Please re-enter to confirm.",
+        verb="BEGIN",
+        br_code=br_code,
+    )
+
+
+async def pin_mismatch(
+    ctx: wire.GenericContext,
+    br_type: str = "set_pin",
+    br_code: ButtonRequestType = ButtonRequestType.Other,
+) -> None:
+    return await confirm_action(
+        ctx,
+        br_type,
+        "PIN MISMATCH",
+        action="The PINs you entered do not match.\nPlease try again.",
+        verb="TRY AGAIN",
+        verb_cancel=None,
+        br_code=br_code,
+    )
+
+
+async def confirm_pin_action(
+    ctx: wire.GenericContext,
+    br_type: str,
+    title: str,
+    action: str | None,
+    description: str | None,
+    br_code: ButtonRequestType = ButtonRequestType.Other,
+) -> None:
+    return await confirm_action(
+        ctx,
+        br_type,
+        title,
+        action=f"{description} {action}",
+        br_code=br_code,
+    )
+
+
+async def confirm_set_new_pin(
+    ctx: wire.GenericContext,
+    br_type: str,
+    title: str,
+    action: str,
+    description: str,
+    information: list[str],
+    br_code: ButtonRequestType = ButtonRequestType.Other,
+) -> None:
+    await confirm_action(
+        ctx,
+        br_type,
+        title,
+        action=f"{description} {action}",
+        verb="ENABLE",
+        br_code=br_code,
+    )
+
+    information.append(
+        "Position of individual numbers will change between entries for enhanced security."
+    )
+    return await confirm_action(
+        ctx,
+        br_type,
+        title="",
+        description="\n\n".join(information),
+        br_code=br_code,
+    )

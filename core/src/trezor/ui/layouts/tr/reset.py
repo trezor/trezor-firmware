@@ -23,7 +23,7 @@ async def show_share_words(
         ctx=ctx,
         br_type="backup_words",
         title="SHARE WORDS",
-        description=f"Write all {len(share_words)} words in order on recovery seed card.",
+        description="Write all words in order on recovery seed card.",
         data="Do NOT make digital copies.",
         br_code=ButtonRequestType.ResetDevice,
     )
