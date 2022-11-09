@@ -127,6 +127,7 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
             kwargs.get(Qstr::MP_QSTR_verb_cancel)?.try_into_option()?;
         let reverse: bool = kwargs.get(Qstr::MP_QSTR_reverse)?.try_into()?;
         let hold: bool = kwargs.get(Qstr::MP_QSTR_hold)?.try_into()?;
+        // TODO: centered_title: bool, show_scrollbar: bool, show_arrows: bool
 
         // TODO: could be replaced by Flow with one element after it supports pagination
 
@@ -159,17 +160,21 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
             confirm_btn = confirm_btn.map(|btn| btn.with_duration(Duration::from_secs(2)));
         }
 
-        let obj = LayoutObj::new(Frame::new(
-            title,
-            ButtonPage::new_str_buf(
-                FormattedText::new(theme::TEXT_MONO, theme::FORMATTED, format)
-                    .with("action", action.unwrap_or_default())
-                    .with("description", description.unwrap_or_default()),
-                theme::BG,
-            )
-            .with_cancel_btn(cancel_btn)
-            .with_confirm_btn(confirm_btn),
-        ))?;
+        let content = ButtonPage::new_str_buf(
+            FormattedText::new(theme::TEXT_MONO, theme::FORMATTED, format)
+                .with("action", action.unwrap_or_default())
+                .with("description", description.unwrap_or_default()),
+            theme::BG,
+        )
+        .with_cancel_btn(cancel_btn)
+        .with_confirm_btn(confirm_btn);
+
+        let obj = if title.as_ref().is_empty() {
+            LayoutObj::new(content)?
+        } else {
+            LayoutObj::new(Frame::new(title, content))?
+        };
+
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -184,16 +189,20 @@ extern "C" fn new_confirm_text(n_args: usize, args: *const Obj, kwargs: *mut Map
 
         // TODO: could be replaced by Flow with one element after it supports pagination
 
-        let obj = LayoutObj::new(Frame::new(
-            title,
-            ButtonPage::new_str(
-                Paragraphs::new([
-                    Paragraph::new(&theme::TEXT_MONO, description.unwrap_or_default()),
-                    Paragraph::new(&theme::TEXT_BOLD, data),
-                ]),
-                theme::BG,
-            ),
-        ))?;
+        let content = ButtonPage::new_str(
+            Paragraphs::new([
+                Paragraph::new(&theme::TEXT_MONO, description.unwrap_or_default()),
+                Paragraph::new(&theme::TEXT_BOLD, data),
+            ]),
+            theme::BG,
+        );
+
+        let obj = if title.as_ref().is_empty() {
+            LayoutObj::new(content)?
+        } else {
+            LayoutObj::new(Frame::new(title, content))?
+        };
+
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
