@@ -2,15 +2,14 @@ use crate::{
     trezorhal::bip39,
     ui::{
         component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
+        display::Icon,
         geometry::Rect,
+        model_tr::theme,
         util::char_to_string,
     },
 };
 
-use super::{
-    ButtonDetails, ButtonLayout, ChangingTextLine, ChoiceFactory, ChoiceItem, ChoicePage,
-    ChoicePageMsg,
-};
+use super::{ButtonLayout, ChangingTextLine, ChoiceFactory, ChoiceItem, ChoicePage, ChoicePageMsg};
 use heapless::{String, Vec};
 
 pub enum Bip39EntryMsg {
@@ -49,49 +48,34 @@ impl ChoiceFactoryBIP39 {
         Self::new(None, Some(word_choices))
     }
 
-    /// Word choice items with BIN leftmost button.
+    /// Word choice items with DELETE last option.
     fn get_word_item(&self, choice_index: u8) -> ChoiceItem {
         if let Some(word_choices) = &self.word_choices {
-            let word = word_choices[choice_index as usize];
-            let mut word_item = ChoiceItem::new(word, ButtonLayout::default_three_icons());
-
-            // Adding BIN leftmost button.
-            if choice_index == 0 {
-                word_item.set_left_btn(Some(ButtonDetails::bin_icon()));
+            if choice_index >= word_choices.len() as u8 {
+                ChoiceItem::new("DELETE", ButtonLayout::default_three_icons())
+                    .with_icon(Icon::new(theme::ICON_DELETE))
+            } else {
+                let word = word_choices[choice_index as usize];
+                ChoiceItem::new(word, ButtonLayout::default_three_icons())
             }
-            // Removing the rightmost button.
-            if choice_index as usize == word_choices.len() - 1 {
-                word_item.set_right_btn(None);
-            }
-
-            word_item
         } else {
             unreachable!()
         }
     }
 
-    /// Letter choice items with BIN leftmost button. Letters are BIG.
+    /// Letter choice items with BIN leftmost button.
     fn get_letter_item(&self, choice_index: u8) -> ChoiceItem {
-        // TODO: we could support carousel for letters to quicken it for users
-        // (but then the BIN would need to be an option on its own, not so
-        // user-friendly)
         if let Some(letter_choices) = &self.letter_choices {
-            let letter = letter_choices[choice_index as usize];
-            let mut letter_item = ChoiceItem::new(
-                char_to_string::<1>(letter),
-                ButtonLayout::default_three_icons(),
-            );
-
-            // Adding BIN leftmost button.
-            if choice_index == 0 {
-                letter_item.set_left_btn(Some(ButtonDetails::bin_icon()));
+            if choice_index >= letter_choices.len() as u8 {
+                ChoiceItem::new("DELETE", ButtonLayout::default_three_icons())
+                    .with_icon(Icon::new(theme::ICON_DELETE))
+            } else {
+                let letter = letter_choices[choice_index as usize];
+                ChoiceItem::new(
+                    char_to_string::<1>(letter),
+                    ButtonLayout::default_three_icons(),
+                )
             }
-            // Removing the rightmost button.
-            if choice_index as usize == letter_choices.len() - 1 {
-                letter_item.set_right_btn(None);
-            }
-
-            letter_item
         } else {
             unreachable!()
         }
@@ -109,10 +93,11 @@ impl ChoiceFactory for ChoiceFactoryBIP39 {
     }
 
     fn count(&self) -> u8 {
+        // Accounting for the DELETE option
         if let Some(letter_choices) = &self.letter_choices {
-            letter_choices.len() as u8
+            letter_choices.len() as u8 + 1
         } else if let Some(word_choices) = &self.word_choices {
-            word_choices.len() as u8
+            word_choices.len() as u8 + 1
         } else {
             unreachable!()
         }
@@ -136,7 +121,9 @@ impl Bip39Entry {
         let choices = ChoiceFactoryBIP39::letters(letter_choices.clone());
 
         Self {
-            choice_page: ChoicePage::new(choices).with_incomplete(true),
+            choice_page: ChoicePage::new(choices)
+                .with_incomplete(true)
+                .with_carousel(true),
             chosen_letters: Child::new(ChangingTextLine::center_mono(String::from(PROMPT))),
             letter_choices,
             textbox: TextBox::empty(),
@@ -180,6 +167,15 @@ impl Bip39Entry {
     fn reset_wordlist(&mut self) {
         self.words_list = bip39::Wordlist::all();
     }
+
+    /// Get the index of DELETE item, which is always at the end.
+    fn delete_index(&self) -> usize {
+        if self.offer_words {
+            self.words_list.len()
+        } else {
+            self.letter_choices.len()
+        }
+    }
 }
 
 impl Component for Bip39Entry {
@@ -195,37 +191,33 @@ impl Component for Bip39Entry {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         let msg = self.choice_page.event(ctx, event);
-        match msg {
-            Some(ChoicePageMsg::Choice(page_counter)) => {
-                // Clicked SELECT.
-                // When we already offer words, return the word at the given index.
-                // Otherwise, appending the new letter and resetting the choice page
-                // with up-to-date choices.
-                if self.offer_words {
-                    let word = self
-                        .words_list
-                        .get(page_counter as usize)
-                        .unwrap_or_default();
-                    return Some(Bip39EntryMsg::ResultWord(String::from(word)));
-                } else {
-                    let new_letter = self.letter_choices[page_counter as usize];
-                    self.append_letter(ctx, new_letter);
-                    self.update_chosen_letters(ctx);
-                    let new_choices = self.get_current_choices();
-                    self.choice_page.reset(ctx, new_choices, true, false);
-                    ctx.request_paint();
-                }
-            }
-            Some(ChoicePageMsg::LeftMost) => {
-                // Clicked BIN. Deleting last letter, updating wordlist and updating choices
+        if let Some(ChoicePageMsg::Choice(page_counter)) = msg {
+            // Clicked SELECT.
+            // When we already offer words, return the word at the given index.
+            // Otherwise, appending the new letter and resetting the choice page
+            // with up-to-date choices.
+            if page_counter as usize == self.delete_index() {
+                // Clicked DELETE. Deleting last letter, updating wordlist and updating choices
                 self.delete_last_letter(ctx);
                 self.update_chosen_letters(ctx);
                 self.reset_wordlist();
                 let new_choices = self.get_current_choices();
-                self.choice_page.reset(ctx, new_choices, true, false);
+                self.choice_page.reset(ctx, new_choices, true, true);
+                ctx.request_paint();
+            } else if self.offer_words {
+                let word = self
+                    .words_list
+                    .get(page_counter as usize)
+                    .unwrap_or_default();
+                return Some(Bip39EntryMsg::ResultWord(String::from(word)));
+            } else {
+                let new_letter = self.letter_choices[page_counter as usize];
+                self.append_letter(ctx, new_letter);
+                self.update_chosen_letters(ctx);
+                let new_choices = self.get_current_choices();
+                self.choice_page.reset(ctx, new_choices, true, true);
                 ctx.request_paint();
             }
-            _ => {}
         }
 
         None
@@ -246,17 +238,13 @@ use crate::ui::util;
 impl crate::trace::Trace for Bip39Entry {
     fn get_btn_action(&self, pos: ButtonPos) -> String<25> {
         match pos {
-            ButtonPos::Left => match self.choice_page.has_previous_choice() {
-                true => ButtonAction::PrevPage.string(),
-                false => ButtonAction::Action("Delete last char").string(),
-            },
-            ButtonPos::Right => match self.choice_page.has_next_choice() {
-                true => ButtonAction::NextPage.string(),
-                false => ButtonAction::empty(),
-            },
+            ButtonPos::Left => ButtonAction::PrevPage.string(),
+            ButtonPos::Right => ButtonAction::NextPage.string(),
             ButtonPos::Middle => {
                 let current_index = self.choice_page.page_index() as usize;
-                let choice: String<10> = if self.offer_words {
+                let choice: String<10> = if current_index == self.delete_index() {
+                    String::from("DELETE")
+                } else if self.offer_words {
                     self.words_list
                         .get(current_index)
                         .unwrap_or_default()
