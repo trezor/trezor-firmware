@@ -48,6 +48,16 @@ async def confirm_abort(ctx: wire.GenericContext, dry_run: bool = False) -> None
 async def request_mnemonic(
     ctx: wire.GenericContext, word_count: int, backup_type: BackupType | None
 ) -> str | None:
+    await confirm_action(
+        ctx,
+        "request_word",
+        "WORD ENTERING",
+        description="You'll only have to select first 2-3 letters.",
+        verb="CONTINUE",
+        verb_cancel=None,
+        br_code=ButtonRequestType.MnemonicInput,
+    )
+
     await button_request(ctx, "mnemonic", code=ButtonRequestType.MnemonicInput)
 
     words: list[str] = []

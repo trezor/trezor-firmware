@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from storage.device import is_initialized
 from trezor import config, wire
 from trezor.messages import Success
-from trezor.ui.layouts import confirm_action, show_success
+from trezor.ui.layouts import confirm_pin_action, confirm_set_new_pin, show_success
 
 from apps.common.request_pin import (
     error_pin_invalid,
@@ -65,33 +65,34 @@ def require_confirm_change_pin(ctx: wire.Context, msg: ChangePin) -> Awaitable[N
     has_pin = config.has_pin()
 
     if msg.remove and has_pin:  # removing pin
-        return confirm_action(
+        return confirm_pin_action(
             ctx,
             "set_pin",
             "Remove PIN",
             description="Do you really want to",
             action="disable PIN protection?",
-            reverse=True,
         )
 
     if not msg.remove and has_pin:  # changing pin
-        return confirm_action(
+        return confirm_pin_action(
             ctx,
             "set_pin",
             "Change PIN",
             description="Do you really want to",
             action="change your PIN?",
-            reverse=True,
         )
 
     if not msg.remove and not has_pin:  # setting new pin
-        return confirm_action(
+        return confirm_set_new_pin(
             ctx,
             "set_pin",
             "Enable PIN",
             description="Do you really want to",
             action="enable PIN protection?",
-            reverse=True,
+            information=[
+                "PIN will be used to access this device.",
+                "It should contain at least 4 digits.",
+            ],
         )
 
     # removing non-existing PIN

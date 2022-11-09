@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from storage.device import is_initialized
 from trezor import config, ui, wire
 from trezor.messages import Success
-from trezor.ui.layouts import confirm_action, show_popup, show_success
+from trezor.ui.layouts import show_popup, show_success
 
 from apps.common.request_pin import (
     error_pin_invalid,
@@ -62,37 +62,33 @@ async def change_wipe_code(ctx: wire.Context, msg: ChangeWipeCode) -> Success:
 def _require_confirm_action(
     ctx: wire.Context, msg: ChangeWipeCode, has_wipe_code: bool
 ) -> Awaitable[None]:
+    from trezor.ui.layouts import confirm_pin_action
+
     if msg.remove and has_wipe_code:
-        return confirm_action(
+        return confirm_pin_action(
             ctx,
             "disable_wipe_code",
             title="Disable wipe code",
             description="Do you really want to",
             action="disable wipe code protection?",
-            reverse=True,
-            icon=ui.ICON_CONFIG,
         )
 
     if not msg.remove and has_wipe_code:
-        return confirm_action(
+        return confirm_pin_action(
             ctx,
             "change_wipe_code",
             title="Change wipe code",
             description="Do you really want to",
             action="change the wipe code?",
-            reverse=True,
-            icon=ui.ICON_CONFIG,
         )
 
     if not msg.remove and not has_wipe_code:
-        return confirm_action(
+        return confirm_pin_action(
             ctx,
             "set_wipe_code",
             title="Set wipe code",
             description="Do you really want to",
             action="set the wipe code?",
-            reverse=True,
-            icon=ui.ICON_CONFIG,
         )
 
     # Removing non-existing wipe code.
