@@ -1,7 +1,7 @@
 use crate::ui::{
     display::{rect_fill, rect_fill_corners, rect_outline_rounded, Font, Icon},
     geometry::{Offset, Rect},
-    model_tr::theme,
+    model_tr::{component::choice::Choice, theme},
 };
 use heapless::String;
 
@@ -49,17 +49,6 @@ impl ChoiceItem {
         self.font.text_width(&self.text)
     }
 
-    /// Getting the overall width in pixels when displayed in center.
-    /// That means both the icon and text will be shown.
-    pub fn width_center(&self) -> i16 {
-        let icon_width = if let Some(icon) = self.icon {
-            icon.width() + 2
-        } else {
-            0
-        };
-        self.text_width() + icon_width
-    }
-
     /// Getting the non-central width in pixels.
     /// It will show an icon if defined, otherwise the text, not both.
     pub fn width_side(&self) -> i16 {
@@ -95,25 +84,6 @@ impl ChoiceItem {
         }
     }
 
-    /// Painting the item as the main choice in the middle.
-    /// Showing both the icon and text, if the icon is available.
-    pub fn paint_center(&self, area: Rect, inverse: bool) {
-        self.paint_rounded_highlight(area, inverse);
-
-        let mut baseline = area.bottom_center() + Offset::new(-self.width_center() / 2, 0);
-        if let Some(icon) = self.icon {
-            let fg_color = if inverse { theme::BG } else { theme::FG };
-            let bg_color = if inverse { theme::FG } else { theme::BG };
-            icon.draw_bottom_left(baseline, fg_color, bg_color);
-            baseline = baseline + Offset::new(icon.width() + 2, 0);
-        }
-        if inverse {
-            display_inverse(baseline, &self.text, self.font);
-        } else {
-            display(baseline, &self.text, self.font);
-        }
-    }
-
     /// Painting the item as a choice on the left side from center.
     /// Showing only the icon, if available, otherwise the text.
     pub fn render_left(&self, area: Rect) {
@@ -124,24 +94,6 @@ impl ChoiceItem {
         }
     }
 
-    /// Painting item on the side if it fits, otherwise paint incomplete if
-    /// allowed
-    pub fn paint_left(&self, area: Rect, show_incomplete: bool) -> Option<i16> {
-        // When the item does not fit, we stop.
-        // Rendering the item anyway if the incomplete items are allowed.
-        if !self.fits(area) {
-            if show_incomplete {
-                self.render_left(area);
-            }
-            return None;
-        }
-
-        // Rendering the item.
-        self.render_left(area);
-
-        Some(self.width_side())
-    }
-
     /// Painting the item as a choice on the right side from center.
     /// Showing only the icon, if available, otherwise the text.
     pub fn render_right(&self, area: Rect) {
@@ -150,29 +102,6 @@ impl ChoiceItem {
         } else {
             display(area.bottom_left(), &self.text, self.font);
         }
-    }
-
-    /// Painting item on the side if it fits, otherwise paint incomplete if
-    /// allowed
-    pub fn paint_right(&self, area: Rect, show_incomplete: bool) -> Option<i16> {
-        // When the item does not fit, we stop.
-        // Rendering the item anyway if the incomplete items are allowed.
-        if !self.fits(area) {
-            if show_incomplete {
-                self.render_right(area);
-            }
-            return None;
-        }
-
-        // Rendering the item.
-        self.render_right(area);
-
-        Some(self.width_side())
-    }
-
-    /// Getting current button layout.
-    pub fn btn_layout(&self) -> ButtonLayout<&'static str> {
-        self.btn_layout.clone()
     }
 
     /// Setting left button.
@@ -193,6 +122,78 @@ impl ChoiceItem {
     /// Changing the text.
     pub fn set_text(&mut self, text: String<50>) {
         self.text = text;
+    }
+}
+
+impl Choice for ChoiceItem {
+    /// Painting the item as the main choice in the middle.
+    /// Showing both the icon and text, if the icon is available.
+    fn paint_center(&self, area: Rect, inverse: bool) {
+        self.paint_rounded_highlight(area, inverse);
+
+        let mut baseline = area.bottom_center() + Offset::new(-self.width_center() / 2, 0);
+        if let Some(icon) = self.icon {
+            let fg_color = if inverse { theme::BG } else { theme::FG };
+            let bg_color = if inverse { theme::FG } else { theme::BG };
+            icon.draw_bottom_left(baseline, fg_color, bg_color);
+            baseline = baseline + Offset::new(icon.width() + 2, 0);
+        }
+        if inverse {
+            display_inverse(baseline, &self.text, self.font);
+        } else {
+            display(baseline, &self.text, self.font);
+        }
+    }
+
+    /// Getting the overall width in pixels when displayed in center.
+    /// That means both the icon and text will be shown.
+    fn width_center(&self) -> i16 {
+        let icon_width = if let Some(icon) = self.icon {
+            icon.width() + 2
+        } else {
+            0
+        };
+        self.text_width() + icon_width
+    }
+
+    /// Painting item on the side if it fits, otherwise paint incomplete if
+    /// allowed
+    fn paint_left(&self, area: Rect, show_incomplete: bool) -> Option<i16> {
+        // When the item does not fit, we stop.
+        // Rendering the item anyway if the incomplete items are allowed.
+        if !self.fits(area) {
+            if show_incomplete {
+                self.render_left(area);
+            }
+            return None;
+        }
+
+        // Rendering the item.
+        self.render_left(area);
+
+        Some(self.width_side())
+    }
+    /// Painting item on the side if it fits, otherwise paint incomplete if
+    /// allowed
+    fn paint_right(&self, area: Rect, show_incomplete: bool) -> Option<i16> {
+        // When the item does not fit, we stop.
+        // Rendering the item anyway if the incomplete items are allowed.
+        if !self.fits(area) {
+            if show_incomplete {
+                self.render_right(area);
+            }
+            return None;
+        }
+
+        // Rendering the item.
+        self.render_right(area);
+
+        Some(self.width_side())
+    }
+
+    /// Getting current button layout.
+    fn btn_layout(&self) -> ButtonLayout<&'static str> {
+        self.btn_layout.clone()
     }
 }
 

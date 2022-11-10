@@ -44,7 +44,7 @@ pub use confirm::{HoldToConfirm, HoldToConfirmMsg};
 pub use button_controller::{ButtonController, ButtonControllerMsg};
 #[cfg(feature = "micropython")]
 pub use changing_text::ChangingTextLine;
-pub use choice::{ChoiceFactory, ChoicePage, ChoicePageMsg};
+pub use choice::{Choice, ChoiceFactory, ChoicePage, ChoicePageMsg};
 pub use choice_item::ChoiceItem;
 pub use dialog::{Dialog, DialogMsg};
 #[cfg(feature = "micropython")]

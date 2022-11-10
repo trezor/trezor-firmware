@@ -13,9 +13,6 @@ use super::{
 };
 use heapless::{String, Vec};
 
-#[cfg(feature = "ui_debug")]
-use crate::trace::Tracer;
-
 pub enum Bip39EntryMsg {
     ResultWord(String<15>),
 }
@@ -99,19 +96,11 @@ impl ChoiceFactoryBIP39 {
             unreachable!()
         }
     }
-
-    fn get(&self, choice_index: u8) -> ChoiceItem {
-        if self.letter_choices.is_some() {
-            self.get_letter_item(choice_index)
-        } else if self.word_choices.is_some() {
-            self.get_word_item(choice_index)
-        } else {
-            unreachable!()
-        }
-    }
 }
 
 impl ChoiceFactory for ChoiceFactoryBIP39 {
+    type Item = ChoiceItem;
+
     fn count(&self) -> u8 {
         if let Some(letter_choices) = &self.letter_choices {
             letter_choices.len() as u8
@@ -122,29 +111,14 @@ impl ChoiceFactory for ChoiceFactoryBIP39 {
         }
     }
 
-    fn paint_center(&self, choice_index: u8, area: Rect, inverse: bool) {
-        self.get(choice_index).paint_center(area, inverse);
-    }
-
-    fn width_center(&self, choice_index: u8) -> i16 {
-        self.get(choice_index).width_center()
-    }
-
-    fn paint_left(&self, choice_index: u8, area: Rect, show_incomplete: bool) -> Option<i16> {
-        self.get(choice_index).paint_left(area, show_incomplete)
-    }
-
-    fn paint_right(&self, choice_index: u8, area: Rect, show_incomplete: bool) -> Option<i16> {
-        self.get(choice_index).paint_right(area, show_incomplete)
-    }
-
-    fn btn_layout(&self, choice_index: u8) -> ButtonLayout<&'static str> {
-        self.get(choice_index).btn_layout()
-    }
-
-    #[cfg(feature = "ui_debug")]
-    fn trace(&self, t: &mut dyn Tracer, name: &str, choice_index: u8) {
-        t.field(name, &self.get(choice_index));
+    fn get(&self, choice_index: u8) -> ChoiceItem {
+        if self.letter_choices.is_some() {
+            self.get_letter_item(choice_index)
+        } else if self.word_choices.is_some() {
+            self.get_word_item(choice_index)
+        } else {
+            unreachable!()
+        }
     }
 }
 

@@ -1,5 +1,3 @@
-#[cfg(feature = "ui_debug")]
-use crate::trace::Tracer;
 use crate::{
     time::Duration,
     ui::{
@@ -146,15 +144,10 @@ impl ChoiceFactoryPassphrase {
             ChoiceItem::new(char_to_string::<1>(ch), ButtonLayout::default_three_icons())
         }
     }
-    fn get(&self, choice_index: u8) -> ChoiceItem {
-        match self.current_category {
-            ChoiceCategory::Menu => self.get_menu_item(choice_index),
-            _ => self.get_character_item(choice_index),
-        }
-    }
 }
 
 impl ChoiceFactory for ChoiceFactoryPassphrase {
+    type Item = ChoiceItem;
     fn count(&self) -> u8 {
         let length = get_category_length(&self.current_category);
         // All non-MENU categories have an extra item for returning back to MENU
@@ -163,29 +156,11 @@ impl ChoiceFactory for ChoiceFactoryPassphrase {
             _ => length + 1,
         }
     }
-    fn paint_center(&self, choice_index: u8, area: Rect, inverse: bool) {
-        self.get(choice_index).paint_center(area, inverse);
-    }
-
-    fn width_center(&self, choice_index: u8) -> i16 {
-        self.get(choice_index).width_center()
-    }
-
-    fn paint_left(&self, choice_index: u8, area: Rect, show_incomplete: bool) -> Option<i16> {
-        self.get(choice_index).paint_left(area, show_incomplete)
-    }
-
-    fn paint_right(&self, choice_index: u8, area: Rect, show_incomplete: bool) -> Option<i16> {
-        self.get(choice_index).paint_right(area, show_incomplete)
-    }
-
-    fn btn_layout(&self, choice_index: u8) -> ButtonLayout<&'static str> {
-        self.get(choice_index).btn_layout()
-    }
-
-    #[cfg(feature = "ui_debug")]
-    fn trace(&self, t: &mut dyn Tracer, name: &str, choice_index: u8) {
-        t.field(name, &self.get(choice_index));
+    fn get(&self, choice_index: u8) -> ChoiceItem {
+        match self.current_category {
+            ChoiceCategory::Menu => self.get_menu_item(choice_index),
+            _ => self.get_character_item(choice_index),
+        }
     }
 }
 

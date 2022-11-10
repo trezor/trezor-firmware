@@ -1,3 +1,5 @@
+#[cfg(feature = "ui_debug")]
+use crate::trace::Trace;
 use crate::ui::{
     component::{Child, Component, Event, EventCtx, Pad},
     geometry::Rect,
@@ -15,6 +17,22 @@ pub enum ChoicePageMsg {
 const DEFAULT_ITEMS_DISTANCE: i16 = 10;
 const DEFAULT_Y_BASELINE: i16 = 20;
 
+pub trait Choice {
+    fn paint_center(&self, area: Rect, inverse: bool);
+    fn width_center(&self) -> i16 {
+        0
+    }
+    fn paint_left(&self, _area: Rect, _show_incomplete: bool) -> Option<i16> {
+        None
+    }
+    fn paint_right(&self, _area: Rect, _show_incomplete: bool) -> Option<i16> {
+        None
+    }
+    fn btn_layout(&self) -> ButtonLayout<&'static str> {
+        ButtonLayout::default_three_icons()
+    }
+}
+
 /// Interface for a specific component efficiently giving
 /// `ChoicePage` all the information it needs to render
 /// all the choice pages.
@@ -25,23 +43,12 @@ const DEFAULT_Y_BASELINE: i16 = 20;
 /// items only when they are needed, one-by-one.
 /// This way, no more than one item is stored in memory at any time.
 pub trait ChoiceFactory {
-    fn count(&self) -> u8;
-    fn paint_center(&self, choice_index: u8, area: Rect, inverse: bool);
-    fn width_center(&self, _choice_index: u8) -> i16 {
-        0
-    }
-    fn paint_left(&self, _choice_index: u8, _area: Rect, _show_incomplete: bool) -> Option<i16> {
-        None
-    }
-    fn paint_right(&self, _choice_index: u8, _area: Rect, _show_incomplete: bool) -> Option<i16> {
-        None
-    }
-    fn btn_layout(&self, _choice_index: u8) -> ButtonLayout<&'static str> {
-        ButtonLayout::default_three_icons()
-    }
-
     #[cfg(feature = "ui_debug")]
-    fn trace(&self, t: &mut dyn crate::trace::Tracer, name: &str, choice_index: u8);
+    type Item: Choice + Trace;
+    #[cfg(not(feature = "ui_debug"))]
+    type Item: Choice;
+    fn count(&self) -> u8;
+    fn get(&self, index: u8) -> Self::Item;
 }
 
 /// General component displaying a set of items on the screen
@@ -86,7 +93,7 @@ where
     F: ChoiceFactory,
 {
     pub fn new(choices: F) -> Self {
-        let initial_btn_layout = choices.btn_layout(0);
+        let initial_btn_layout = choices.get(0).btn_layout();
 
         Self {
             choices,
@@ -184,7 +191,7 @@ where
 
         // Getting the remaining left and right areas.
         let (left_area, _center_area, right_area) =
-            available_area.split_center(self.choices.width_center(self.page_counter as u8));
+            available_area.split_center(self.choices.get(self.page_counter as u8).width_center());
 
         // Possibly drawing on the left side.
         if self.has_previous_choice() || self.is_carousel {
@@ -227,7 +234,8 @@ where
     /// Display the current choice in the middle.
     fn show_current_choice(&mut self, area: Rect) {
         self.choices
-            .paint_center(self.page_counter, area, self.inverse_selected_item);
+            .get(self.page_counter)
+            .paint_center(area, self.inverse_selected_item);
 
         // Color inversion is just one-time thing.
         if self.inverse_selected_item {
@@ -254,9 +262,10 @@ where
 
             let current_area = area.split_right(x_offset + self.items_distance).0;
 
-            if let Some(width) =
-                self.choices
-                    .paint_left(page_index as u8, current_area, self.show_incomplete)
+            if let Some(width) = self
+                .choices
+                .get(page_index as u8)
+                .paint_left(current_area, self.show_incomplete)
             {
                 // Updating loop variables.
                 x_offset += width + self.items_distance;
@@ -285,13 +294,14 @@ where
             }
             let current_area = area.split_left(x_offset + self.items_distance).1;
 
-            if let Some(width) =
-                self.choices
-                    .paint_right(page_index as u8, current_area, self.show_incomplete)
+            if let Some(width) = self
+                .choices
+                .get(page_index as u8)
+                .paint_right(current_area, self.show_incomplete)
             {
                 // Updating loop variables.
                 x_offset += width + self.items_distance;
-                page_index -= 1;
+                page_index += 1;
             } else {
                 break;
             }
@@ -338,7 +348,7 @@ where
         // and Cancel as HTC. PIN client would check if the PIN is empty/not and
         // adjust the HTC/not.
 
-        let btn_layout = self.choices.btn_layout(self.page_counter);
+        let btn_layout = self.choices.get(self.page_counter).btn_layout();
         self.buttons.mutate(ctx, |_ctx, buttons| {
             buttons.set(btn_layout);
         });
@@ -429,21 +439,21 @@ where
         t.kw_pair("is_carousel", booltostr!(self.is_carousel));
 
         if self.has_previous_choice() {
-            self.choices.trace(t, "prev_choice", self.page_counter - 1);
+            t.field("prev_choice", &self.choices.get(self.page_counter - 1));
         } else if self.is_carousel {
             // In case of carousel going to the left end.
-            self.choices.trace(t, "prev_choice", self.last_page_index());
+            t.field("prev_choice", &self.choices.get(self.last_page_index()));
         } else {
             t.string("prev_choice");
             t.symbol("None");
         }
-        self.choices.trace(t, "current_choice", self.page_counter);
+        t.field("current_choice", &self.choices.get(self.page_counter));
 
         if self.has_next_choice() {
-            self.choices.trace(t, "next_choice", self.page_counter + 1);
+            t.field("next_choice", &self.choices.get(self.page_counter + 1));
         } else if self.is_carousel {
             // In case of carousel going to the very left.
-            self.choices.trace(t, "next_choice", 0);
+            t.field("next_choice", &self.choices.get(0));
         } else {
             t.string("next_choice");
             t.symbol("None");
