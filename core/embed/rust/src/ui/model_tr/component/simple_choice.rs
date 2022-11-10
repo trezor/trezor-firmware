@@ -31,6 +31,12 @@ impl<T, const N: usize> ChoiceFactory for ChoiceFactorySimple<T, N>
 where
     T: AsRef<str>,
 {
+    type Item = ChoiceItem;
+
+    fn count(&self) -> u8 {
+        N as u8
+    }
+
     fn get(&self, choice_index: u8) -> ChoiceItem {
         let text = &self.choices[choice_index as usize];
         let mut choice_item = ChoiceItem::new(text, ButtonLayout::default_three_icons());
@@ -45,10 +51,6 @@ where
         }
 
         choice_item
-    }
-
-    fn count(&self) -> u8 {
-        N as u8
     }
 }
 
