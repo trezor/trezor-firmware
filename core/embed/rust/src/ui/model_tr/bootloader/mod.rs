@@ -19,7 +19,7 @@ use crate::ui::{
         text::paragraphs::{Paragraph, ParagraphVecShort, Paragraphs, VecExt},
         Event, EventCtx,
     },
-    constant::{screen, BACKLIGHT_NORMAL, WIDTH},
+    constant::{screen, BACKLIGHT_NORMAL, HEIGHT, WIDTH},
     display::{fade_backlight_duration, Color, TextOverlay},
     event::ButtonEvent,
     geometry::{LinearPlacement, Offset, Rect},
@@ -31,6 +31,7 @@ use crate::ui::{
             theme::{BLD_BG, BLD_FG, LOGO_EMPTY},
         },
         component::ResultScreen,
+        theme::{ICON_BIN, ICON_FAIL, ICON_SUCCESS},
     },
     util::{from_c_array, from_c_str},
 };
@@ -186,18 +187,22 @@ fn screen_progress(
     initialize: bool,
     fg_color: Color,
     bg_color: Color,
-    _icon: Option<(&[u8], Color)>,
+    icon: Option<(&[u8], Color)>,
 ) -> u32 {
     if initialize {
         display::rect_fill(constant::screen(), bg_color);
     }
 
-    let loader_area = Rect::new(Point::new(5, 24), Point::new(WIDTH - 5, 24 + 16));
+    let loader_area = Rect::new(Point::new(5, HEIGHT - 16), Point::new(WIDTH - 5, HEIGHT));
 
     let mut text = TextOverlay::new(text, Font::NORMAL);
     text.place(loader_area.center() + Offset::y(Font::NORMAL.text_height() / 2));
 
     let fill_to = (loader_area.width() as u32 * progress as u32) / 1000;
+
+    if let Some(icon) = icon {
+        display::icon(screen().center(), icon.0, icon.1, BLD_BG);
+    }
 
     display::bar_with_text_and_fill(
         loader_area,
@@ -233,7 +238,7 @@ extern "C" fn screen_install_progress(
         initialize,
         BLD_FG,
         BLD_BG,
-        None, //Some((theme::RECEIVE, fg_color)),
+        Some((ICON_BIN.0, BLD_FG)),
     )
 }
 
@@ -243,9 +248,9 @@ extern "C" fn screen_wipe_progress(progress: u16, initialize: bool) -> u32 {
         "WIPING DEVICE",
         progress,
         initialize,
-        theme::BLD_FG,
+        BLD_FG,
         BLD_BG,
-        None, //Some((theme::ERASE_BIG, theme::BLD_FG)),
+        Some((ICON_BIN.0, BLD_FG)),
     )
 }
 
@@ -266,8 +271,7 @@ extern "C" fn screen_connect() -> u32 {
 #[no_mangle]
 extern "C" fn screen_wipe_success() -> u32 {
     let mut messages = ParagraphVecShort::new();
-    messages.add(Paragraph::new(&theme::TEXT_NORMAL, "Device wiped").centered());
-    messages.add(Paragraph::new(&theme::TEXT_NORMAL, "successfully.").centered());
+    messages.add(Paragraph::new(&theme::TEXT_BOLD, "Device wiped").centered());
 
     let m_top =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
@@ -279,7 +283,7 @@ extern "C" fn screen_wipe_success() -> u32 {
     let m_bottom =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
-    let mut frame = ResultScreen::new(BLD_FG, BLD_BG, m_top, m_bottom, true);
+    let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_SUCCESS.0, m_top, m_bottom, true);
     frame.place(SCREEN_ADJ);
     frame.paint();
     0
@@ -288,8 +292,7 @@ extern "C" fn screen_wipe_success() -> u32 {
 #[no_mangle]
 extern "C" fn screen_wipe_fail() -> u32 {
     let mut messages = ParagraphVecShort::new();
-    messages.add(Paragraph::new(&theme::TEXT_NORMAL, "Device wipe was").centered());
-    messages.add(Paragraph::new(&theme::TEXT_NORMAL, "not successful.").centered());
+    messages.add(Paragraph::new(&theme::TEXT_BOLD, "Wipe failed").centered());
 
     let m_top =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
@@ -301,7 +304,7 @@ extern "C" fn screen_wipe_fail() -> u32 {
     let m_bottom =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
-    let mut frame = ResultScreen::new(BLD_FG, BLD_BG, m_top, m_bottom, true);
+    let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_FAIL.0, m_top, m_bottom, true);
     frame.place(SCREEN_ADJ);
     frame.paint();
     0
@@ -315,8 +318,7 @@ extern "C" fn screen_boot_empty(_firmware_present: bool) {
 #[no_mangle]
 extern "C" fn screen_install_fail() -> u32 {
     let mut messages = ParagraphVecShort::new();
-    messages.add(Paragraph::new(&theme::TEXT_NORMAL, "Firmware installation was").centered());
-    messages.add(Paragraph::new(&theme::TEXT_NORMAL, "not successful.").centered());
+    messages.add(Paragraph::new(&theme::TEXT_BOLD, "Install failed").centered());
     let m_top =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
@@ -327,7 +329,7 @@ extern "C" fn screen_install_fail() -> u32 {
     let m_bottom =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
-    let mut frame = ResultScreen::new(BLD_FG, BLD_BG, m_top, m_bottom, true);
+    let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_FAIL.0, m_top, m_bottom, true);
     frame.place(SCREEN_ADJ);
     frame.paint();
     0
@@ -335,8 +337,7 @@ extern "C" fn screen_install_fail() -> u32 {
 
 fn screen_install_success_bld(msg: &'static str, complete_draw: bool) -> u32 {
     let mut messages = ParagraphVecShort::new();
-    messages.add(Paragraph::new(&theme::TEXT_NORMAL, "Firmware installed").centered());
-    messages.add(Paragraph::new(&theme::TEXT_NORMAL, "successfully.").centered());
+    messages.add(Paragraph::new(&theme::TEXT_BOLD, "Installed").centered());
 
     let m_top =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
@@ -347,7 +348,14 @@ fn screen_install_success_bld(msg: &'static str, complete_draw: bool) -> u32 {
     let m_bottom =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
-    let mut frame = ResultScreen::new(BLD_FG, BLD_BG, m_top, m_bottom, complete_draw);
+    let mut frame = ResultScreen::new(
+        BLD_FG,
+        BLD_BG,
+        ICON_SUCCESS.0,
+        m_top,
+        m_bottom,
+        complete_draw,
+    );
     frame.place(SCREEN_ADJ);
     frame.paint();
     0
@@ -355,8 +363,7 @@ fn screen_install_success_bld(msg: &'static str, complete_draw: bool) -> u32 {
 
 fn screen_install_success_initial(msg: &'static str, complete_draw: bool) -> u32 {
     let mut messages = ParagraphVecShort::new();
-    messages.add(Paragraph::new(&theme::TEXT_NORMAL, "Firmware installed").centered());
-    messages.add(Paragraph::new(&theme::TEXT_NORMAL, "successfully.").centered());
+    messages.add(Paragraph::new(&theme::TEXT_BOLD, "Installed").centered());
 
     let m_top =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
@@ -367,7 +374,14 @@ fn screen_install_success_initial(msg: &'static str, complete_draw: bool) -> u32
     let m_bottom =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
-    let mut frame = ResultScreen::new(BLD_FG, BLD_BG, m_top, m_bottom, complete_draw);
+    let mut frame = ResultScreen::new(
+        BLD_FG,
+        BLD_BG,
+        ICON_SUCCESS.0,
+        m_top,
+        m_bottom,
+        complete_draw,
+    );
     frame.place(SCREEN_ADJ);
     frame.paint();
     0

@@ -8,7 +8,7 @@ use crate::ui::{
     model_tr::{
         component::ResultScreen,
         constant,
-        theme::{TEXT_BOLD, TEXT_NORMAL},
+        theme::{ICON_FAIL, TEXT_BOLD, TEXT_NORMAL},
     },
     util::from_c_str,
 };
@@ -41,7 +41,14 @@ extern "C" fn screen_fatal_error(msg: *const cty::c_char, file: *const cty::c_ch
     let m_bottom =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
-    let mut frame = ResultScreen::new(Color::white(), Color::black(), m_top, m_bottom, true);
+    let mut frame = ResultScreen::new(
+        Color::white(),
+        Color::black(),
+        ICON_FAIL.0,
+        m_top,
+        m_bottom,
+        true,
+    );
     frame.place(constant::screen());
     frame.paint();
     0
@@ -73,7 +80,14 @@ extern "C" fn screen_error_shutdown(label: *const cty::c_char, msg: *const cty::
     let m_bottom =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
-    let mut frame = ResultScreen::new(Color::white(), Color::black(), m_top, m_bottom, true);
+    let mut frame = ResultScreen::new(
+        Color::white(),
+        Color::black(),
+        ICON_FAIL.0,
+        m_top,
+        m_bottom,
+        true,
+    );
     frame.place(constant::screen());
     frame.paint();
     0

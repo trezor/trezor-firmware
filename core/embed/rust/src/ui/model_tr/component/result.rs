@@ -3,9 +3,10 @@ use crate::ui::{
         text::paragraphs::{ParagraphVecShort, Paragraphs},
         Child, Component, Event, EventCtx, Never, Pad,
     },
-    constant::{HEIGHT, WIDTH},
+    constant::{screen, HEIGHT, WIDTH},
+    display,
     display::Color,
-    geometry::{Point, Rect},
+    geometry::{Offset, Point, Rect},
 };
 
 pub struct ResultScreen {
@@ -13,6 +14,7 @@ pub struct ResultScreen {
     small_pad: Pad,
     fg_color: Color,
     bg_color: Color,
+    icon: &'static [u8],
     message_top: Child<Paragraphs<ParagraphVecShort<&'static str>>>,
     message_bottom: Child<Paragraphs<ParagraphVecShort<&'static str>>>,
 }
@@ -21,6 +23,7 @@ impl ResultScreen {
     pub fn new(
         fg_color: Color,
         bg_color: Color,
+        icon: &'static [u8],
         message_top: Paragraphs<ParagraphVecShort<&'static str>>,
         message_bottom: Paragraphs<ParagraphVecShort<&'static str>>,
         complete_draw: bool,
@@ -30,6 +33,7 @@ impl ResultScreen {
             small_pad: Pad::with_background(bg_color),
             fg_color,
             bg_color,
+            icon,
             message_top: Child::new(message_top),
             message_bottom: Child::new(message_bottom),
         };
@@ -51,7 +55,7 @@ impl Component for ResultScreen {
             .place(Rect::new(Point::new(0, 0), Point::new(WIDTH, HEIGHT)));
 
         self.message_top
-            .place(Rect::new(Point::new(0, 0), Point::new(WIDTH, 30)));
+            .place(Rect::new(Point::new(0, 26), Point::new(WIDTH, 40)));
 
         let bottom_area = Rect::new(Point::new(0, 40), Point::new(WIDTH, HEIGHT));
 
@@ -69,16 +73,12 @@ impl Component for ResultScreen {
         self.bg.paint();
         self.small_pad.paint();
 
-        // display::icon(
-        //     Point::new(screen().center().x, 45),
-        //     self.icon,
-        //     self.fg_color,
-        //     self.bg_color,
-        // );
-        // display::rect_fill(
-        //     Rect::from_top_left_and_size(Point::new(12, 149), Offset::new(216, 1)),
-        //     self.fg_color,
-        // );
+        display::icon(
+            screen().center() + Offset::y(-24),
+            self.icon,
+            self.fg_color,
+            self.bg_color,
+        );
         self.message_top.paint();
         self.message_bottom.paint();
     }
