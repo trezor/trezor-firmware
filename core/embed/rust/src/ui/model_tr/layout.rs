@@ -18,6 +18,7 @@ use crate::{
         component::{
             base::{Component, ComponentExt},
             paginated::{PageMsg, Paginate},
+            painter,
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecLong, Paragraphs, VecExt},
             FormattedText,
         },
@@ -35,7 +36,7 @@ use super::{
     component::{
         Bip39Entry, Bip39EntryMsg, ButtonActions, ButtonDetails, ButtonLayout, ButtonPage, Flow,
         FlowMsg, FlowPages, Frame, Page, PassphraseEntry, PassphraseEntryMsg, PinEntry,
-        PinEntryMsg, ShareWords, SimpleChoice, SimpleChoiceMsg,
+        PinEntryMsg, QRCodePage, QRCodePageMessage, ShareWords, SimpleChoice, SimpleChoiceMsg,
     },
     theme,
 };
@@ -64,6 +65,19 @@ where
         match msg {
             FlowMsg::Confirmed => Ok(CONFIRMED.as_obj()),
             FlowMsg::Cancelled => Ok(CANCELLED.as_obj()),
+        }
+    }
+}
+
+impl<F, T> ComponentMsgObj for QRCodePage<F, T>
+where
+    T: AsRef<str> + Clone,
+    F: Component,
+{
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            QRCodePageMessage::Confirmed => Ok(CONFIRMED.as_obj()),
+            QRCodePageMessage::Cancelled => Ok(CANCELLED.as_obj()),
         }
     }
 }
@@ -132,22 +146,26 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
         // TODO: could be replaced by Flow with one element after it supports pagination
 
         let format = match (&action, &description, reverse) {
-            (Some(_), Some(_), false) => "{Font::bold}{action}\n\r{Font::normal}{description}",
-            (Some(_), Some(_), true) => "{Font::normal}{description}\n\r{Font::bold}{action}",
-            (Some(_), None, _) => "{Font::bold}{action}",
-            (None, Some(_), _) => "{Font::normal}{description}",
+            (Some(_), Some(_), false) => "{bold}{action}\n\r{mono}{description}",
+            (Some(_), Some(_), true) => "{mono}{description}\n\r{bold}{action}",
+            (Some(_), None, _) => "{bold}{action}",
+            (None, Some(_), _) => "{mono}{description}",
             _ => "",
         };
 
-        let verb_cancel = verb_cancel.unwrap_or_default();
-        let verb = verb.unwrap_or_default();
-
-        let cancel_btn = if verb_cancel.len() > 0 {
-            Some(ButtonDetails::cancel_icon())
+        // Left button - icon, text or nothing.
+        let cancel_btn = if let Some(verb_cancel) = verb_cancel {
+            if verb_cancel.len() > 0 {
+                Some(ButtonDetails::text(verb_cancel))
+            } else {
+                Some(ButtonDetails::cancel_icon())
+            }
         } else {
             None
         };
 
+        // Right button - text or nothing.
+        let verb = verb.unwrap_or_default();
         let mut confirm_btn = if verb.len() > 0 {
             Some(ButtonDetails::text(verb))
         } else {
@@ -345,6 +363,29 @@ extern "C" fn confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -
         let pages = FlowPages::new(get_page, 1);
 
         let obj = LayoutObj::new(Flow::new(pages).with_common_title(title).into_child())?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn show_qr(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: StrBuffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let address: StrBuffer = kwargs.get(Qstr::MP_QSTR_address)?.try_into()?;
+        let verb_cancel: StrBuffer = kwargs.get(Qstr::MP_QSTR_verb_cancel)?.try_into()?;
+        let case_sensitive: bool = kwargs.get(Qstr::MP_QSTR_case_sensitive)?.try_into()?;
+
+        let verb: StrBuffer = "CONFIRM".into();
+
+        let qr_code = painter::qrcode_painter(address, theme::QR_SIDE_MAX as u32, case_sensitive);
+
+        let btn_layout = ButtonLayout::new(
+            Some(ButtonDetails::text(verb_cancel)),
+            None,
+            Some(ButtonDetails::text(verb)),
+        );
+
+        let obj = LayoutObj::new(QRCodePage::new(title, qr_code, btn_layout))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -610,6 +651,16 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> object:
     ///     """Confirm summary of a transaction. Specific for model R."""
     Qstr::MP_QSTR_confirm_total_r => obj_fn_kw!(0, confirm_total).as_obj(),
+
+    /// def show_qr(
+    ///     *,
+    ///     title: str,
+    ///     address: str,
+    ///     verb_cancel: str,
+    ///     case_sensitive: bool,
+    /// ) -> object:
+    ///     """Show QR code."""
+    Qstr::MP_QSTR_show_qr => obj_fn_kw!(0, show_qr).as_obj(),
 
     /// def tutorial() -> object:
     ///     """Show user how to interact with the device."""

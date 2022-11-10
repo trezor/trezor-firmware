@@ -249,7 +249,7 @@ where
 
         match &self.content {
             ButtonContent::Text(text) => {
-                display::text(
+                display::text_left(
                     self.get_text_baseline(&style),
                     text.as_ref(),
                     style.font,

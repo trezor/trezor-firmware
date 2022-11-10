@@ -189,7 +189,7 @@ impl<T> Button<T> {
                 let start_of_baseline = self.area.center()
                     + Offset::new(-width / 2, height / 2)
                     + Offset::y(Self::BASELINE_OFFSET);
-                display::text(
+                display::text_left(
                     start_of_baseline,
                     text,
                     style.font,

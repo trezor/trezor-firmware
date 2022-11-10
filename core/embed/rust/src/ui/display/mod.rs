@@ -4,6 +4,8 @@ pub mod icon;
 #[cfg(any(feature = "model_tt", feature = "model_tr"))]
 pub mod loader;
 
+use heapless::String;
+
 use super::{
     constant,
     geometry::{Offset, Point, Rect},
@@ -933,11 +935,62 @@ pub fn paint_point(point: &Point, color: Color) {
     display::bar(point.x, point.y, 1, 1, color.into());
 }
 
+/// Display QR code
 pub fn qrcode(center: Point, data: &str, max_size: u32, case_sensitive: bool) -> Result<(), Error> {
     qr::render_qrcode(center.x, center.y, data, max_size, case_sensitive)
 }
 
-pub fn text(baseline: Point, text: &str, font: Font, fg_color: Color, bg_color: Color) {
+/// Draws longer multiline texts inside an area.
+/// Does not add any characters on the line boundaries.
+///
+/// If it fits, returns the rest of the area.
+/// If it does not fit, returns `None`.
+pub fn text_multiline(
+    area: Rect,
+    text: &str,
+    font: Font,
+    fg_color: Color,
+    bg_color: Color,
+) -> Option<Rect> {
+    let line_height = font.line_height();
+    let characters_overall = text.chars().count();
+    let mut taken_from_top = 0;
+    let mut characters_drawn = 0;
+    'lines: loop {
+        let baseline = area.top_left() + Offset::y(line_height + taken_from_top);
+        if !area.contains(baseline) {
+            // The whole area was consumed.
+            return None;
+        }
+        let mut line_text: String<50> = String::new();
+        'characters: loop {
+            if let Some(character) = text.chars().nth(characters_drawn) {
+                unwrap!(line_text.push(character));
+                characters_drawn += 1;
+            } else {
+                // No more characters to draw.
+                break 'characters;
+            }
+            if font.text_width(&line_text) > area.width() {
+                // Cannot fit on the line anymore.
+                line_text.pop();
+                characters_drawn -= 1;
+                break 'characters;
+            }
+        }
+        text_left(baseline, &line_text, font, fg_color, bg_color);
+        if characters_drawn == characters_overall {
+            // No more lines to draw.
+            break 'lines;
+        }
+        taken_from_top += line_height;
+    }
+    // Some of the area was unused and is free to draw some further text.
+    Some(area.split_top(taken_from_top).1)
+}
+
+/// Display text left-alligned to a certain Point
+pub fn text_left(baseline: Point, text: &str, font: Font, fg_color: Color, bg_color: Color) {
     display::text(
         baseline.x,
         baseline.y,
@@ -948,6 +1001,7 @@ pub fn text(baseline: Point, text: &str, font: Font, fg_color: Color, bg_color: 
     );
 }
 
+/// Display text centered around a certain Point
 pub fn text_center(baseline: Point, text: &str, font: Font, fg_color: Color, bg_color: Color) {
     let w = font.text_width(text);
     display::text(
@@ -960,6 +1014,7 @@ pub fn text_center(baseline: Point, text: &str, font: Font, fg_color: Color, bg_
     );
 }
 
+/// Display text right-alligned to a certain Point
 pub fn text_right(baseline: Point, text: &str, font: Font, fg_color: Color, bg_color: Color) {
     let w = font.text_width(text);
     display::text(
