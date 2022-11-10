@@ -2,7 +2,6 @@ use core::mem;
 
 use crate::{
     error::Error,
-    micropython::buffer::StrBuffer,
     ui::{
         component::{
             base::ComponentExt,
@@ -15,6 +14,7 @@ use crate::{
         model_tr::constant,
         util::animation_disabled,
     },
+    StrBuffer,
 };
 
 use super::theme;

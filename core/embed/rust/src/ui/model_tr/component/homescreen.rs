@@ -1,5 +1,4 @@
 use crate::{
-    micropython::buffer::StrBuffer,
     ui::{
         component::{Component, Event, EventCtx, Pad},
         display::Font,
@@ -7,6 +6,7 @@ use crate::{
         geometry::{Offset, Point, Rect},
         model_tr::constant,
     },
+    StrBuffer,
 };
 
 use super::{common::display_center, theme};

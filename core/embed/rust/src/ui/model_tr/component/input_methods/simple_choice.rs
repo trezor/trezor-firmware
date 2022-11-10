@@ -1,9 +1,9 @@
 use crate::{
-    micropython::buffer::StrBuffer,
     ui::{
         component::{Component, Event, EventCtx},
         geometry::Rect,
     },
+    StrBuffer,
 };
 
 use super::super::{ButtonLayout, ChoiceFactory, ChoiceItem, ChoicePage, ChoicePageMsg};

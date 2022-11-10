@@ -195,14 +195,16 @@ def process_face(
 process_face("Roboto", "Regular", 20)
 process_face("Roboto", "Bold", 20)
 
-process_face("TTHoves", "Regular", 18, ext="otf")
-process_face("TTHoves", "DemiBold", 18, ext="otf")
-process_face("TTHoves", "Bold", 16, ext="otf")
+# process_face("TTHoves", "Regular", 18, ext="otf")
+# process_face("TTHoves", "DemiBold", 18, ext="otf")
+# process_face("TTHoves", "Bold", 16, ext="otf")
 process_face("RobotoMono", "Regular", 20)
 
 process_face("PixelOperator", "Regular", 8, bpp=1, shave_bearingX=1)
 process_face("PixelOperator", "Bold", 8, bpp=1, shave_bearingX=1)
+process_face("PixelOperator8", "Bold", 8, bpp=1, shave_bearingX=1)
 process_face("PixelOperatorMono", "Regular", 8, bpp=1, shave_bearingX=1)
+process_face("PixelOperatorMono8", "Bold", 8, bpp=1, shave_bearingX=1)
 
 # For model R
 process_face("Unifont", "Regular", 16, bpp=1, shave_bearingX=1, ext="otf")

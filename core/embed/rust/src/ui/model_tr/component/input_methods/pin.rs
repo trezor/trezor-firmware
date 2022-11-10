@@ -1,5 +1,4 @@
 use crate::{
-    micropython::buffer::StrBuffer,
     trezorhal::random,
     ui::{
         component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
@@ -7,6 +6,7 @@ use crate::{
         geometry::Rect,
         model_tr::theme,
     },
+    StrBuffer,
 };
 
 use super::super::{

@@ -26,8 +26,8 @@ SOURCE_MOD = []
 if TREZOR_MODEL in ('1', 'R'):
     FONT_NORMAL='Font_PixelOperator_Regular_8'
     FONT_DEMIBOLD=None
-    FONT_BOLD=None
-    FONT_MONO='Font_PixelOperatorMono_Regular_8'
+    FONT_BOLD='Font_PixelOperator8_Bold_8'
+    FONT_MONO='Font_PixelOperator_Regular_8'
 if TREZOR_MODEL in ('T', ):
     FONT_NORMAL='Font_TTHoves_Regular_18'
     FONT_DEMIBOLD=None

@@ -1,11 +1,11 @@
 use super::{theme, ScrollBar};
 use crate::{
-    micropython::buffer::StrBuffer,
     ui::{
         component::{Child, Component, ComponentExt, Event, EventCtx},
         geometry::{Insets, Rect},
         model_tr::component::{scrollbar::SCROLLBAR_SPACE, title::Title},
     },
+    StrBuffer,
 };
 
 /// Component for holding another component and displaying a title.

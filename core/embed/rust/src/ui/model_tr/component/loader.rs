@@ -1,5 +1,4 @@
 use crate::{
-    micropython::buffer::StrBuffer,
     time::{Duration, Instant},
     ui::{
         animation::Animation,
@@ -9,6 +8,7 @@ use crate::{
         model_tr::theme,
         util::animation_disabled,
     },
+    StrBuffer,
 };
 
 pub enum LoaderMsg {

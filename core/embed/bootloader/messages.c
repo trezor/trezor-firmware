@@ -550,7 +550,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
             FIRMWARE_IMAGE_MAGIC, FIRMWARE_IMAGE_MAXSIZE);
 
         if (current_hdr !=
-            (const image_header *)FIRMWARE_START + current_vhdr.hdrlen) {
+            (const image_header *)(FIRMWARE_START + current_vhdr.hdrlen)) {
           is_new = sectrue;
         }
       }

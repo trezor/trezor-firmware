@@ -1,5 +1,4 @@
 use crate::{
-    micropython::buffer::StrBuffer,
     time::Duration,
     ui::{
         component::{Component, Event, EventCtx},
@@ -7,6 +6,7 @@ use crate::{
         display::{self, Color, Font, Icon},
         geometry::{Offset, Point, Rect},
     },
+    StrBuffer,
 };
 
 use super::theme;
@@ -637,6 +637,15 @@ impl ButtonLayout {
             Some(ButtonDetails::left_arrow_icon()),
             None,
             Some(ButtonDetails::text(text).with_default_duration()),
+        )
+    }
+
+    /// Arrow up on left and text on the right.
+    pub fn up_and_text(text: StrBuffer) -> Self {
+        Self::new(
+            Some(ButtonDetails::up_arrow_icon()),
+            None,
+            Some(ButtonDetails::text(text)),
         )
     }
 

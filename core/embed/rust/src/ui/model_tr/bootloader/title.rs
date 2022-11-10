@@ -1,8 +1,9 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
+    constant::WIDTH,
     display::{self, Font},
-    geometry::{Point, Rect},
-    model_tr::bootloader::theme::{BLD_BG, BLD_FG},
+    geometry::{Offset, Point, Rect},
+    model_tr::bootloader::theme::{BLD_BG, BLD_FG, ICON_WARN_TITLE},
 };
 
 pub struct Title {
@@ -32,20 +33,30 @@ impl Component for Title {
     }
 
     fn paint(&mut self) {
-        display::text_top_left(
-            self.area.top_left(),
+        display::icon_rust_top_left(Point::new(-1, 0), ICON_WARN_TITLE, BLD_FG, BLD_BG);
+
+        let font = Font::BOLD;
+        display::text_center(
+            self.area.top_center() + Offset::y(font.text_height()) - Offset::y(font.baseline())
+                + Offset::y(2),
             "BOOTLOADER",
-            Font::NORMAL,
+            font,
             BLD_FG,
             BLD_BG,
         );
-        display::text_top_left(
-            Point::new(self.area.top_left().x + 65, self.area.top_left().y),
+
+        display::icon_rust_top_right(Point::new(WIDTH, 0), ICON_WARN_TITLE, BLD_FG, BLD_BG);
+
+        display::text_center(
+            self.area.top_center() + Offset::y(font.text_height()) - Offset::y(font.baseline())
+                + Offset::y(11),
             self.version,
-            Font::NORMAL,
+            font,
             BLD_FG,
             BLD_BG,
         );
+
+        display::icon_rust_top_left(Point::new(-1, 0), ICON_WARN_TITLE, BLD_FG, BLD_BG);
     }
 
     fn bounds(&self, _sink: &mut dyn FnMut(Rect)) {}

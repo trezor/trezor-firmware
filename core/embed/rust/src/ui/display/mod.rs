@@ -40,6 +40,10 @@ pub use icon::{Icon, IconAndName};
 #[cfg(any(feature = "model_tt", feature = "model_tr"))]
 pub use loader::{loader, loader_indeterminate, LOADER_MAX, LOADER_MIN};
 
+pub fn refresh() {
+    display::refresh();
+}
+
 pub fn backlight() -> u16 {
     display::backlight(-1) as u16
 }
@@ -147,9 +151,26 @@ pub fn icon_rect(r: Rect, toif_data: &[u8], fg_color: Color, bg_color: Color) {
     );
 }
 
+pub fn icon_rust_top_left(top_left: Point, data: &[u8], fg_color: Color, bg_color: Color) {
+    let (toif_size, _) = toif_info_ensure(data, ToifFormat::GrayScaleEH);
+    let r = Rect::from_top_left_and_size(top_left, toif_size);
+    icon_rust_rect(r, data, fg_color, bg_color);
+}
+
+pub fn icon_rust_top_right(top_left: Point, data: &[u8], fg_color: Color, bg_color: Color) {
+    let (toif_size, _) = toif_info_ensure(data, ToifFormat::GrayScaleEH);
+    let r = Rect::from_top_right_and_size(top_left, toif_size);
+    icon_rust_rect(r, data, fg_color, bg_color);
+}
+
 pub fn icon_rust(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
-    let (toif_size, toif_data) = toif_info_ensure(data, ToifFormat::GrayScaleEH);
+    let (toif_size, _) = toif_info_ensure(data, ToifFormat::GrayScaleEH);
     let r = Rect::from_center_and_size(center, toif_size);
+    icon_rust_rect(r, data, fg_color, bg_color);
+}
+
+pub fn icon_rust_rect(r: Rect, data: &[u8], fg_color: Color, bg_color: Color) {
+    let (_, toif_data) = toif_info_ensure(data, ToifFormat::GrayScaleEH);
 
     let area = r.translate(get_offset());
     let clamped = area.clamp(constant::screen());
@@ -301,7 +322,12 @@ impl<T: AsRef<str>> TextOverlay<T> {
 
         let p_rel = Point::new(p.x - self.area.x0, p.y - self.area.y0);
 
-        for g in self.text.as_ref().bytes().filter_map(|c| self.font.get_glyph(c)) {
+        for g in self
+            .text
+            .as_ref()
+            .bytes()
+            .filter_map(|c| self.font.get_glyph(c))
+        {
             let top = self.max_height - self.baseline - g.bearing_y;
             let char_area = Rect::new(
                 Point::new(tot_adv + g.bearing_x, top),

@@ -1,5 +1,4 @@
 use crate::{
-    micropython::buffer::StrBuffer,
     time::{Duration, Instant},
     ui::{
         animation::Animation,
@@ -9,6 +8,7 @@ use crate::{
         geometry::Rect,
         util::animation_disabled,
     },
+    StrBuffer,
 };
 
 enum State {

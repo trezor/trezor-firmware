@@ -19,6 +19,12 @@ pub struct ToifInfo {
     pub format: ToifFormat,
 }
 
+pub fn refresh() {
+    unsafe {
+        ffi::display_refresh();
+    }
+}
+
 pub fn backlight(val: i32) -> i32 {
     unsafe { ffi::display_backlight(val) }
 }

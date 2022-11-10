@@ -1,5 +1,4 @@
 use crate::{
-    micropython::buffer::StrBuffer,
     time::Instant,
     ui::{
         component::{Component, Event, EventCtx, Marquee, Never},
@@ -7,6 +6,7 @@ use crate::{
         geometry::{Offset, Rect},
         model_tr::theme,
     },
+    StrBuffer,
 };
 
 pub struct Title {

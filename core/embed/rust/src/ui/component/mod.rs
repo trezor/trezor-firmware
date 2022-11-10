@@ -6,7 +6,6 @@ pub mod empty;
 pub mod image;
 pub mod label;
 pub mod map;
-#[cfg(feature = "micropython")]
 pub mod marquee;
 pub mod maybe;
 pub mod pad;
@@ -22,7 +21,6 @@ pub use empty::Empty;
 pub use image::Image;
 pub use label::Label;
 pub use map::Map;
-#[cfg(feature = "micropython")]
 pub use marquee::Marquee;
 pub use maybe::Maybe;
 pub use pad::Pad;

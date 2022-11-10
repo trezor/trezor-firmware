@@ -1,5 +1,4 @@
 use crate::{
-    micropython::buffer::StrBuffer,
     time::Instant,
     ui::{
         component::{
@@ -13,6 +12,7 @@ use crate::{
             theme,
         },
     },
+    StrBuffer,
 };
 
 use super::{ButtonController, ButtonControllerMsg, ButtonLayout};

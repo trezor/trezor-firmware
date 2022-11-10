@@ -1,5 +1,4 @@
 use crate::{
-    micropython::buffer::StrBuffer,
     time::{Duration, Instant},
     ui::{
         component::{Component, Event, EventCtx},
@@ -7,6 +6,7 @@ use crate::{
         geometry::Rect,
         model_tr::component::{loader::Loader, ButtonPos, LoaderMsg, LoaderStyleSheet},
     },
+    StrBuffer,
 };
 
 pub enum HoldToConfirmMsg {

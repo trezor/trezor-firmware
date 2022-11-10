@@ -26,6 +26,14 @@ mod trace;
 #[cfg(feature = "ui")]
 #[macro_use]
 pub mod ui;
+#[cfg(not(feature = "micropython"))]
+pub mod strbuffer;
+
+#[cfg(not(feature = "micropython"))]
+pub use strbuffer::StrBuffer;
+
+#[cfg(feature = "micropython")]
+pub use micropython::buffer::StrBuffer;
 
 #[cfg(feature = "debug")]
 #[panic_handler]
