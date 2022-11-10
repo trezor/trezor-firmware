@@ -43,6 +43,12 @@ CONTAINER_FS_URL=${CONTAINER_FS_URL:-"$ALPINE_CDN/v$ALPINE_RELEASE/releases/$ALP
 VARIANTS_core=(0 1)
 VARIANTS_legacy=(0 1)
 
+if [ "$1" == "--skip-bitcoinonly" ]; then
+  VARIANTS_core=(0)
+  VARIANTS_legacy=(0)
+  shift
+fi
+
 if [ "$1" == "--skip-core" ]; then
   VARIANTS_core=()
   shift
@@ -50,12 +56,6 @@ fi
 
 if [ "$1" == "--skip-legacy" ]; then
   VARIANTS_legacy=()
-  shift
-fi
-
-if [ "$1" == "--skip-bitcoinonly" ]; then
-  VARIANTS_core=(0)
-  VARIANTS_legacy=(0)
   shift
 fi
 
