@@ -13,6 +13,7 @@ use super::{
     ButtonDetails, ButtonLayout, ChangingTextLine, ChoiceFactory, ChoiceItem, ChoicePage,
     ChoicePageMsg,
 };
+use crate::trace::Tracer;
 use heapless::String;
 
 pub enum PinEntryMsg {
@@ -52,9 +53,7 @@ impl ChoiceFactoryPIN {
     fn new(prompt: StrBuffer) -> Self {
         Self { prompt }
     }
-}
 
-impl ChoiceFactory for ChoiceFactoryPIN {
     fn get(&self, choice_index: u8) -> ChoiceItem {
         let choice_str = CHOICES[choice_index as usize];
 
@@ -77,9 +76,36 @@ impl ChoiceFactory for ChoiceFactoryPIN {
 
         choice_item
     }
+}
 
+impl ChoiceFactory for ChoiceFactoryPIN {
     fn count(&self) -> u8 {
         CHOICE_LENGTH as u8
+    }
+
+    fn paint_center(&self, choice_index: u8, area: Rect, inverse: bool) {
+        self.get(choice_index).paint_center(area, inverse);
+    }
+
+    fn width_center(&self, choice_index: u8) -> i16 {
+        self.get(choice_index).width_center()
+    }
+
+    fn paint_left(&self, choice_index: u8, area: Rect, show_incomplete: bool) -> Option<i16> {
+        self.get(choice_index).paint_left(area, show_incomplete)
+    }
+
+    fn paint_right(&self, choice_index: u8, area: Rect, show_incomplete: bool) -> Option<i16> {
+        self.get(choice_index).paint_right(area, show_incomplete)
+    }
+
+    fn btn_layout(&self, choice_index: u8) -> ButtonLayout<&'static str> {
+        self.get(choice_index).btn_layout()
+    }
+
+    #[cfg(feature = "ui_debug")]
+    fn trace(&self, t: &mut dyn Tracer, name: &str, choice_index: u8) {
+        t.field(name, &self.get(choice_index));
     }
 }
 

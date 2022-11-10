@@ -7,6 +7,9 @@ use super::{ButtonLayout, ChoiceFactory, ChoiceItem, ChoicePage, ChoicePageMsg};
 use heapless::{String, Vec};
 
 #[cfg(feature = "ui_debug")]
+use crate::trace::Tracer;
+
+#[cfg(feature = "ui_debug")]
 use super::{ButtonAction, ButtonPos};
 
 pub enum SimpleChoiceMsg {
@@ -25,12 +28,7 @@ where
     fn new(choices: Vec<T, N>, carousel: bool) -> Self {
         Self { choices, carousel }
     }
-}
 
-impl<T, const N: usize> ChoiceFactory for ChoiceFactorySimple<T, N>
-where
-    T: AsRef<str>,
-{
     fn get(&self, choice_index: u8) -> ChoiceItem {
         let text = &self.choices[choice_index as usize];
         let mut choice_item = ChoiceItem::new(text, ButtonLayout::default_three_icons());
@@ -46,9 +44,39 @@ where
 
         choice_item
     }
+}
 
+impl<T, const N: usize> ChoiceFactory for ChoiceFactorySimple<T, N>
+where
+    T: AsRef<str>,
+{
     fn count(&self) -> u8 {
         N as u8
+    }
+
+    fn paint_center(&self, choice_index: u8, area: Rect, inverse: bool) {
+        self.get(choice_index).paint_center(area, inverse);
+    }
+
+    fn width_center(&self, choice_index: u8) -> i16 {
+        self.get(choice_index).width_center()
+    }
+
+    fn paint_left(&self, choice_index: u8, area: Rect, show_incomplete: bool) -> Option<i16> {
+        self.get(choice_index).paint_left(area, show_incomplete)
+    }
+
+    fn paint_right(&self, choice_index: u8, area: Rect, show_incomplete: bool) -> Option<i16> {
+        self.get(choice_index).paint_right(area, show_incomplete)
+    }
+
+    fn btn_layout(&self, choice_index: u8) -> ButtonLayout<&'static str> {
+        self.get(choice_index).btn_layout()
+    }
+
+    #[cfg(feature = "ui_debug")]
+    fn trace(&self, t: &mut dyn Tracer, name: &str, choice_index: u8) {
+        t.field(name, &self.get(choice_index));
     }
 }
 

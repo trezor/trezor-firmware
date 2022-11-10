@@ -116,7 +116,7 @@ impl ChoiceItem {
 
     /// Painting the item as a choice on the left side from center.
     /// Showing only the icon, if available, otherwise the text.
-    pub fn paint_left(&self, area: Rect) {
+    pub fn render_left(&self, area: Rect) {
         if let Some(icon) = self.icon {
             icon.draw_bottom_right(area.bottom_right(), theme::FG, theme::BG);
         } else {
@@ -124,14 +124,50 @@ impl ChoiceItem {
         }
     }
 
+    /// Painting item on the side if it fits, otherwise paint incomplete if
+    /// allowed
+    pub fn paint_left(&self, area: Rect, show_incomplete: bool) -> Option<i16> {
+        // When the item does not fit, we stop.
+        // Rendering the item anyway if the incomplete items are allowed.
+        if !self.fits(area) {
+            if show_incomplete {
+                self.render_left(area);
+            }
+            return None;
+        }
+
+        // Rendering the item.
+        self.render_left(area);
+
+        Some(self.width_side())
+    }
+
     /// Painting the item as a choice on the right side from center.
     /// Showing only the icon, if available, otherwise the text.
-    pub fn paint_right(&self, area: Rect) {
+    pub fn render_right(&self, area: Rect) {
         if let Some(icon) = self.icon {
             icon.draw_bottom_left(area.bottom_left(), theme::FG, theme::BG);
         } else {
             display(area.bottom_left(), &self.text, self.font);
         }
+    }
+
+    /// Painting item on the side if it fits, otherwise paint incomplete if
+    /// allowed
+    pub fn paint_right(&self, area: Rect, show_incomplete: bool) -> Option<i16> {
+        // When the item does not fit, we stop.
+        // Rendering the item anyway if the incomplete items are allowed.
+        if !self.fits(area) {
+            if show_incomplete {
+                self.render_right(area);
+            }
+            return None;
+        }
+
+        // Rendering the item.
+        self.render_right(area);
+
+        Some(self.width_side())
     }
 
     /// Getting current button layout.
