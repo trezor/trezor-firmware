@@ -11,7 +11,7 @@ use crate::ui::{
             theme::{BLD_BG, BLD_FG},
             ReturnToC,
         },
-        component::{ChoiceFactory, ChoicePage, ChoicePageMsg},
+        component::{Choice, ChoiceFactory, ChoicePage, ChoicePageMsg},
         theme::ICON_BIN,
     },
 };
@@ -43,43 +43,58 @@ impl MenuChoiceFactory {
     pub fn new() -> Self {
         Self {}
     }
-    fn get(&self, choice_index: u8) -> (&'static str, &'static str, &'static [u8]) {
-        MenuChoiceFactory::CHOICES[choice_index as usize]
+}
+
+pub struct MenuChoice {
+    text1: &'static str,
+    text2: &'static str,
+    icon: &'static [u8],
+}
+
+impl MenuChoice {
+    pub fn new(text1: &'static str, text2: &'static str, icon: &'static [u8]) -> Self {
+        Self { text1, text2, icon }
     }
 }
 
-impl ChoiceFactory for MenuChoiceFactory {
-    fn count(&self) -> u8 {
-        CHOICE_LENGTH as u8
-    }
-
-    fn paint_center(&self, choice_index: u8, _area: Rect, _inverse: bool) {
-        let content = self.get(choice_index);
-
-        let text_1 = content.0;
-        let text_2 = content.1;
-        let icon = content.2;
-
-        display::icon(screen().center() + Offset::y(-20), icon, BLD_FG, BLD_BG);
+impl Choice for MenuChoice {
+    fn paint_center(&self, _area: Rect, _inverse: bool) {
+        display::icon(
+            screen().center() + Offset::y(-20),
+            self.icon,
+            BLD_FG,
+            BLD_BG,
+        );
         display::text_center(
             screen().center() + Offset::y(0),
-            text_1,
+            self.text1,
             Font::NORMAL,
             BLD_FG,
             BLD_BG,
         );
         display::text_center(
             screen().center() + Offset::y(10),
-            text_2,
+            self.text2,
             Font::NORMAL,
             BLD_FG,
             BLD_BG,
         );
     }
+}
 
-    #[cfg(feature = "ui_debug")]
-    fn trace(&self, t: &mut dyn Tracer, name: &str, choice_index: u8) {
-        t.field(name, &self.get(choice_index));
+impl ChoiceFactory for MenuChoiceFactory {
+    type Item = MenuChoice;
+
+    fn count(&self) -> u8 {
+        CHOICE_LENGTH as u8
+    }
+
+    fn get(&self, choice_index: u8) -> MenuChoice {
+        MenuChoice::new(
+            MenuChoiceFactory::CHOICES[choice_index as usize].0,
+            MenuChoiceFactory::CHOICES[choice_index as usize].1,
+            MenuChoiceFactory::CHOICES[choice_index as usize].2,
+        )
     }
 }
 
