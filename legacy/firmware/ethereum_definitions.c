@@ -259,7 +259,25 @@ bool _get_EthereumNetworkInfo(
   return true;
 }
 
-void _get_EthereumTokenInfo(
+void _set_EthereumTokenInfo(const EthereumTokenInfo *ref_token, EthereumTokenInfo *token) {
+  // reset
+  memzero(token->symbol, sizeof(token->symbol));
+  token->decimals = 0;
+  memzero(token->address.bytes, sizeof(token->address.bytes));
+  token->address.size = 0;
+  token->chain_id = CHAIN_ID_UNKNOWN;
+  memzero(token->name, sizeof(token->name));
+
+  // copy data to token definition
+  strncpy(token->symbol, ref_token->symbol, sizeof(token->symbol) - 1);
+  token->decimals = ref_token->decimals;
+  memcpy(token->address.bytes, ref_token->address.bytes,
+         sizeof(token->address.bytes));
+  token->address.size = sizeof(token->address.bytes);
+  token->chain_id = ref_token->chain_id;
+}
+
+bool _get_EthereumTokenInfo(
     const EthereumDefinitions_encoded_token_t *encoded_token,
     const uint64_t ref_chain_id, const char *ref_address,
     EthereumTokenInfo *token) {
@@ -290,27 +308,22 @@ void _get_EthereumTokenInfo(
         memmove(&token->symbol[1], &token->symbol, sizeof(token->symbol) - 2);
         token->symbol[0] = ' ';
         token->symbol[sizeof(token->symbol) - 1] = 0;
-        return;
+        return true;
+      } else {
+        fsm_sendFailure(FailureType_Failure_DataError,
+                        _("Token definition mismatch"));
       }
     }
+
+    // decoding failed or token definition has different
+    // chain_id and/or address
+    _set_EthereumTokenInfo(UnknownToken, token);
+    return false;
   }
 
-  // decoding did not happen or failed, so we have to copy the data to the
-  // result reset token definition
-  memzero(token->symbol, sizeof(token->symbol));
-  token->decimals = 0;
-  memzero(token->address.bytes, sizeof(token->address.bytes));
-  token->address.size = 0;
-  token->chain_id = CHAIN_ID_UNKNOWN;
-  memzero(token->name, sizeof(token->name));
-
-  // copy data to token definition
-  strncpy(token->symbol, builtin->symbol, sizeof(token->symbol) - 1);
-  token->decimals = builtin->decimals;
-  memcpy(token->address.bytes, builtin->address.bytes,
-         sizeof(token->address.bytes));
-  token->address.size = sizeof(token->address.bytes);
-  token->chain_id = builtin->chain_id;
+  // copy result
+  _set_EthereumTokenInfo(builtin, token);
+  return true;
 }
 
 const EthereumDefinitionsDecoded *get_EthereumDefinitionsDecoded(
@@ -327,12 +340,14 @@ const EthereumDefinitionsDecoded *get_EthereumDefinitionsDecoded(
   if (strncmp(defs.network.shortcut, UNKNOWN_NETWORK_SHORTCUT,
               sizeof(defs.network.shortcut)) != 0) {
     // we have found network definition, we can try to load token definition
-    _get_EthereumTokenInfo(encoded_token, ref_chain_id, ref_address,
-                           &defs.token);
+    if (!_get_EthereumTokenInfo(encoded_token, ref_chain_id, ref_address,
+                           &defs.token)) {
+                            return NULL;
+                           }
   } else {
     // if we did not find any network definition, set token definition to
     // unknown token
-    _get_EthereumTokenInfo(NULL, CHAIN_ID_UNKNOWN, NULL, &defs.token);
+    _set_EthereumTokenInfo(UnknownToken, &defs.token);
   }
   return &defs;
 }
