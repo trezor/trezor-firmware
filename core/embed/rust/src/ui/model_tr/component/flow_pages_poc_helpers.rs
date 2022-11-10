@@ -500,7 +500,7 @@ impl LayoutSink for TextRenderer {
 
         match layout.style.line_alignment {
             LineAlignment::Left => {
-                display::text(
+                display::text_left(
                     cursor,
                     text,
                     layout.style.text_font,
@@ -532,7 +532,7 @@ impl LayoutSink for TextRenderer {
     }
 
     fn hyphen(&mut self, cursor: Point, layout: &TextLayout) {
-        display::text(
+        display::text_left(
             cursor,
             "-",
             layout.style.text_font,
@@ -552,7 +552,7 @@ impl LayoutSink for TextRenderer {
                 layout.style.background_color,
             );
         } else {
-            display::text(
+            display::text_left(
                 cursor,
                 "...",
                 layout.style.text_font,

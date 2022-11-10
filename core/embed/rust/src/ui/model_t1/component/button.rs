@@ -137,7 +137,7 @@ where
                     display::rect_fill(self.area, background_color)
                 }
 
-                display::text(
+                display::text_left(
                     self.baseline,
                     text.as_ref(),
                     style.font,

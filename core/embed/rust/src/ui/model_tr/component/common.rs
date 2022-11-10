@@ -9,12 +9,12 @@ use super::theme;
 
 /// Display white text on black background
 pub fn display<T: AsRef<str>>(baseline: Point, text: &T, font: Font) {
-    display::text(baseline, text.as_ref(), font, theme::FG, theme::BG);
+    display::text_left(baseline, text.as_ref(), font, theme::FG, theme::BG);
 }
 
 /// Display black text on white background
 pub fn display_inverse<T: AsRef<str>>(baseline: Point, text: &T, font: Font) {
-    display::text(baseline, text.as_ref(), font, theme::BG, theme::FG);
+    display::text_left(baseline, text.as_ref(), font, theme::BG, theme::FG);
 }
 
 /// Display white text on black background,
