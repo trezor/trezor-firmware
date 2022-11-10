@@ -361,7 +361,7 @@ pub struct TextRenderer;
 
 impl LayoutSink for TextRenderer {
     fn text(&mut self, cursor: Point, layout: &TextLayout, text: &str) {
-        display::text(
+        display::text_left(
             cursor,
             text,
             layout.style.text_font,
@@ -371,7 +371,7 @@ impl LayoutSink for TextRenderer {
     }
 
     fn hyphen(&mut self, cursor: Point, layout: &TextLayout) {
-        display::text(
+        display::text_left(
             cursor,
             "-",
             layout.style.text_font,
@@ -391,7 +391,7 @@ impl LayoutSink for TextRenderer {
                 layout.style.background_color,
             );
         } else {
-            display::text(
+            display::text_left(
                 cursor,
                 "...",
                 layout.style.text_font,

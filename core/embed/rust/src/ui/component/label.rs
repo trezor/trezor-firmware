@@ -79,7 +79,7 @@ where
     }
 
     fn paint(&mut self) {
-        display::text(
+        display::text_left(
             self.area.bottom_left(),
             &self.text,
             self.style.font,

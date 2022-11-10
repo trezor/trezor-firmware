@@ -306,7 +306,7 @@ impl Component for Input {
             let ellipsis_width = style.font.text_width(ellipsis);
 
             // Drawing the ellipsis and moving the baseline for the rest of the text.
-            display::text(
+            display::text_left(
                 text_baseline,
                 ellipsis,
                 style.font,
@@ -323,7 +323,7 @@ impl Component for Input {
             &text[text.len() - chars_from_right..]
         };
 
-        display::text(
+        display::text_left(
             text_baseline,
             text_to_display,
             style.font,
