@@ -31,20 +31,6 @@ impl ReturnToC for MenuMsg {
 
 const CHOICE_LENGTH: usize = 3;
 
-pub struct MenuChoiceFactory;
-
-impl MenuChoiceFactory {
-    const CHOICES: [(&'static str, &'static str, &'static [u8]); CHOICE_LENGTH] = [
-        ("WIPE", "DEVICE", ICON_BIN.0),
-        ("REBOOT", "TREZOR", ICON_BIN.0),
-        ("EXIT", "MENU", ICON_BIN.0),
-    ];
-
-    pub fn new() -> Self {
-        Self {}
-    }
-}
-
 pub struct MenuChoice {
     text1: &'static str,
     text2: &'static str,
@@ -82,6 +68,20 @@ impl Choice for MenuChoice {
     }
 }
 
+pub struct MenuChoiceFactory;
+
+impl MenuChoiceFactory {
+    const CHOICES: [(&'static str, &'static str, &'static [u8]); CHOICE_LENGTH] = [
+        ("WIPE", "DEVICE", ICON_BIN.0),
+        ("REBOOT", "TREZOR", ICON_BIN.0),
+        ("EXIT", "MENU", ICON_BIN.0),
+    ];
+
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
 impl ChoiceFactory for MenuChoiceFactory {
     type Item = MenuChoice;
 
@@ -99,19 +99,18 @@ impl ChoiceFactory for MenuChoiceFactory {
 }
 
 pub struct Menu {
-    bg: Pad,
     pg: Child<ChoicePage<MenuChoiceFactory>>,
 }
 
 impl Menu {
     pub fn new() -> Self {
         let choices = MenuChoiceFactory::new();
-        let mut instance = Self {
-            bg: Pad::with_background(BLD_BG),
-            pg: ChoicePage::new(choices).with_carousel(true).into_child(),
-        };
-        instance.bg.clear();
-        instance
+        Self {
+            pg: ChoicePage::new(choices)
+                .with_carousel(true)
+                .with_only_one_item(true)
+                .into_child(),
+        }
     }
 }
 
@@ -119,7 +118,6 @@ impl Component for Menu {
     type Msg = MenuMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        self.bg.place(bounds);
         self.pg.place(bounds);
         bounds
     }
@@ -134,7 +132,6 @@ impl Component for Menu {
     }
 
     fn paint(&mut self) {
-        self.bg.paint();
         self.pg.paint();
     }
 
