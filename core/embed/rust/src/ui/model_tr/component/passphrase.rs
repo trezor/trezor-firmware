@@ -147,19 +147,19 @@ impl ChoiceFactoryPassphrase {
 }
 
 impl ChoiceFactory for ChoiceFactoryPassphrase {
-    fn get(&self, choice_index: u8) -> ChoiceItem {
-        match self.current_category {
-            ChoiceCategory::Menu => self.get_menu_item(choice_index),
-            _ => self.get_character_item(choice_index),
-        }
-    }
-
+    type Item = ChoiceItem;
     fn count(&self) -> u8 {
         let length = get_category_length(&self.current_category);
         // All non-MENU categories have an extra item for returning back to MENU
         match self.current_category {
             ChoiceCategory::Menu => length,
             _ => length + 1,
+        }
+    }
+    fn get(&self, choice_index: u8) -> ChoiceItem {
+        match self.current_category {
+            ChoiceCategory::Menu => self.get_menu_item(choice_index),
+            _ => self.get_character_item(choice_index),
         }
     }
 }

@@ -55,6 +55,8 @@ impl ChoiceFactoryPIN {
 }
 
 impl ChoiceFactory for ChoiceFactoryPIN {
+    type Item = ChoiceItem;
+
     fn get(&self, choice_index: u8) -> ChoiceItem {
         let choice_str = CHOICES[choice_index as usize];
 
