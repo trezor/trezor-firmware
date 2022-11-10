@@ -1,9 +1,18 @@
+#[cfg(feature = "ui_debug")]
+use crate::trace::Tracer;
 use crate::ui::{
-    component::{Child, Component, Event, EventCtx, Pad},
-    geometry::{Point, Rect},
+    component::{Child, Component, ComponentExt, Event, EventCtx, Pad},
+    constant::screen,
+    display,
+    display::Font,
+    geometry::{Offset, Rect},
     model_tr::{
-        bootloader::{theme::BLD_BG, title::Title, ReturnToC},
-        constant::{HEIGHT, WIDTH},
+        bootloader::{
+            theme::{BLD_BG, BLD_FG},
+            ReturnToC,
+        },
+        component::{ChoiceFactory, ChoicePage, ChoicePageMsg},
+        theme::ICON_BIN,
     },
 };
 
@@ -20,33 +29,71 @@ impl ReturnToC for MenuMsg {
     }
 }
 
+const CHOICE_LENGTH: usize = 3;
+
+pub struct MenuChoiceFactory;
+
+impl MenuChoiceFactory {
+    const CHOICES: [(&'static str, &'static str, &'static [u8]); CHOICE_LENGTH] = [
+        ("WIPE", "DEVICE", ICON_BIN.0),
+        ("REBOOT", "TREZOR", ICON_BIN.0),
+        ("EXIT", "MENU", ICON_BIN.0),
+    ];
+
+    pub fn new() -> Self {
+        Self {}
+    }
+    fn get(&self, choice_index: u8) -> (&'static str, &'static str, &'static [u8]) {
+        MenuChoiceFactory::CHOICES[choice_index as usize]
+    }
+}
+
+impl ChoiceFactory for MenuChoiceFactory {
+    fn count(&self) -> u8 {
+        CHOICE_LENGTH as u8
+    }
+
+    fn paint_center(&self, choice_index: u8, _area: Rect, _inverse: bool) {
+        let content = self.get(choice_index);
+
+        let text_1 = content.0;
+        let text_2 = content.1;
+        let icon = content.2;
+
+        display::icon(screen().center() + Offset::y(-20), icon, BLD_FG, BLD_BG);
+        display::text_center(
+            screen().center() + Offset::y(0),
+            text_1,
+            Font::NORMAL,
+            BLD_FG,
+            BLD_BG,
+        );
+        display::text_center(
+            screen().center() + Offset::y(10),
+            text_2,
+            Font::NORMAL,
+            BLD_FG,
+            BLD_BG,
+        );
+    }
+
+    #[cfg(feature = "ui_debug")]
+    fn trace(&self, t: &mut dyn Tracer, name: &str, choice_index: u8) {
+        t.field(name, &self.get(choice_index));
+    }
+}
+
 pub struct Menu {
     bg: Pad,
-    title: Child<Title>,
-    // close: Child<Button<&'static str>>,
-    // reboot: Child<Button<&'static str>>,
-    // reset: Child<Button<&'static str>>,
+    pg: Child<ChoicePage<MenuChoiceFactory>>,
 }
 
 impl Menu {
-    pub fn new(bld_version: &'static str) -> Self {
-        // let content_reboot = IconText::new("REBOOT", REBOOT);
-        // let content_reset = IconText::new("FACTORY RESET", ERASE);
-
+    pub fn new() -> Self {
+        let choices = MenuChoiceFactory::new();
         let mut instance = Self {
             bg: Pad::with_background(BLD_BG),
-            title: Child::new(Title::new(bld_version)),
-            // close: Child::new(
-            //     Button::with_icon(CLOSE)
-            //         .styled(button_bld_menu())
-            //         .with_expanded_touch_area(Insets::uniform(13)),
-            // ),
-            // reboot: Child::new(
-            //     Button::with_icon_and_text(content_reboot).styled(button_bld_menu_item()),
-            // ),
-            // reset: Child::new(
-            //     Button::with_icon_and_text(content_reset).styled(button_bld_menu_item()),
-            // ),
+            pg: ChoicePage::new(choices).with_carousel(true).into_child(),
         };
         instance.bg.clear();
         instance
@@ -57,48 +104,26 @@ impl Component for Menu {
     type Msg = MenuMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        self.bg
-            .place(Rect::new(Point::new(0, 0), Point::new(WIDTH, HEIGHT)));
-        self.title
-            .place(Rect::new(Point::new(10, 0), Point::new(128, 8)));
-        // self.close.place(Rect::new(
-        //     Point::new(187, 15),
-        //     Point::new(187 + 38, 15 + 38),
-        // ));
-        // self.reboot
-        //     .place(Rect::new(Point::new(16, 66), Point::new(16 + 209, 66 + 48)));
-        // self.reset.place(Rect::new(
-        //     Point::new(16, 122),
-        //     Point::new(16 + 209, 122 + 48),
-        // ));
+        self.bg.place(bounds);
+        self.pg.place(bounds);
         bounds
     }
 
-    fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
-        // if let Some(Clicked) = self.close.event(ctx, event) {
-        //     return Some(Self::Msg::Close);
-        // }
-        // if let Some(Clicked) = self.reboot.event(ctx, event) {
-        //     return Some(Self::Msg::Reboot);
-        // }
-        // if let Some(Clicked) = self.reset.event(ctx, event) {
-        //     return Some(Self::Msg::FactoryReset);
-        // }
-
-        None
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        match self.pg.event(ctx, event) {
+            Some(ChoicePageMsg::Choice(0)) => Some(MenuMsg::FactoryReset),
+            Some(ChoicePageMsg::Choice(1)) => Some(MenuMsg::Reboot),
+            Some(ChoicePageMsg::Choice(2)) => Some(MenuMsg::Close),
+            _ => None,
+        }
     }
 
     fn paint(&mut self) {
         self.bg.paint();
-        self.title.paint();
-        // self.close.paint();
-        // self.reboot.paint();
-        // self.reset.paint();
+        self.pg.paint();
     }
 
-    fn bounds(&self, _sink: &mut dyn FnMut(Rect)) {
-        // self.close.bounds(sink);
-        // self.reboot.bounds(sink);
-        // self.reset.bounds(sink);
+    fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
+        self.pg.bounds(sink)
     }
 }

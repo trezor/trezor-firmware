@@ -28,10 +28,9 @@ use crate::ui::{
             confirm::Confirm,
             intro::Intro,
             menu::Menu,
-            theme::{bld_button_cancel, bld_button_default, BLD_BG, BLD_FG},
+            theme::{BLD_BG, BLD_FG, LOGO_EMPTY},
         },
-        component::{Button, ButtonPos, ResultScreen},
-        theme::LOGO_EMPTY,
+        component::ResultScreen,
     },
     util::{from_c_array, from_c_str},
 };
@@ -128,15 +127,11 @@ extern "C" fn screen_install_confirm(
         message.add(Paragraph::new(&theme::TEXT_BOLD, "Seed will be erased!").centered());
     }
 
-    let left = Button::with_text(ButtonPos::Left, "CANCEL", bld_button_cancel());
-    let right = Button::with_text(ButtonPos::Right, "INSTALL", bld_button_default());
-
     let mut frame = Confirm::new(
         BLD_BG,
         ICON,
         Paragraphs::new(message).with_placement(LinearPlacement::vertical().align_at_center()),
-        left,
-        right,
+        "INSTALL",
         false,
     );
 
@@ -161,19 +156,14 @@ extern "C" fn screen_wipe_confirm() -> u32 {
     let message =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
-    let left = Button::with_text(ButtonPos::Left, "WIPE", bld_button_default());
-    let right = Button::with_text(ButtonPos::Right, "CANCEL", bld_button_cancel());
-
-    let mut frame = Confirm::new(BLD_BG, ICON, message, left, right, true);
+    let mut frame = Confirm::new(BLD_BG, ICON, message, "WIPE", true);
 
     run(&mut frame)
 }
 
 #[no_mangle]
-extern "C" fn screen_menu(bld_version: *const cty::c_char) -> u32 {
-    let bld_version = unwrap!(unsafe { from_c_str(bld_version) });
-
-    run(&mut Menu::new(bld_version))
+extern "C" fn screen_menu(_bld_version: *const cty::c_char) -> u32 {
+    run(&mut Menu::new())
 }
 
 #[no_mangle]
@@ -209,7 +199,14 @@ fn screen_progress(
 
     let fill_to = (loader_area.width() as u32 * progress as u32) / 1000;
 
-    display::bar_with_text_and_fill(loader_area, Some(text), fg_color, bg_color, 0, fill_to as _);
+    display::bar_with_text_and_fill(
+        loader_area,
+        Some(&text),
+        fg_color,
+        bg_color,
+        0,
+        fill_to as _,
+    );
 
     // display::text_center(
     //     Point::new(constant::WIDTH / 2, 100),

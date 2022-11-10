@@ -15,8 +15,7 @@ use crate::ui::{
 };
 
 use crate::ui::model_tr::{
-    bootloader::theme::bld_button_default,
-    component::{Button, ButtonPos},
+    component::{Button, ButtonPos, ButtonStyleSheet},
     constant::{HEIGHT, WIDTH},
 };
 
@@ -55,13 +54,13 @@ impl Intro {
             title: Child::new(Title::new(bld_version)),
             host: Child::new(Button::with_text(
                 ButtonPos::Left,
-                "INSTALL FIRMWARE",
-                bld_button_default(),
+                "INSTALL FW",
+                ButtonStyleSheet::default(true, false, None, None),
             )),
             menu: Child::new(Button::with_text(
                 ButtonPos::Right,
                 "MENU",
-                bld_button_default(),
+                ButtonStyleSheet::default(true, false, None, None),
             )),
             text: Child::new(p1),
         };

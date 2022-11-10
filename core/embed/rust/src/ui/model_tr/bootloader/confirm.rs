@@ -8,9 +8,9 @@ use crate::ui::{
     display::Color,
     geometry::{Point, Rect},
     model_tr::{
-        component::{Button, ButtonMsg::Clicked},
+        bootloader::theme::WHITE,
+        component::{ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos},
         constant::{HEIGHT, WIDTH},
-        theme::WHITE,
     },
 };
 
@@ -33,8 +33,7 @@ pub struct Confirm {
     bg_color: Color,
     icon: Option<&'static [u8]>,
     message: Child<Paragraphs<ParagraphVecShort<&'static str>>>,
-    left: Child<Button<&'static str>>,
-    right: Child<Button<&'static str>>,
+    buttons: ButtonController<&'static str>,
     confirm_left: bool,
 }
 
@@ -43,8 +42,7 @@ impl Confirm {
         bg_color: Color,
         icon: Option<&'static [u8]>,
         message: Paragraphs<ParagraphVecShort<&'static str>>,
-        left: Button<&'static str>,
-        right: Button<&'static str>,
+        text: &'static str,
         confirm_left: bool,
     ) -> Self {
         let mut instance = Self {
@@ -52,8 +50,7 @@ impl Confirm {
             bg_color,
             icon,
             message: Child::new(message),
-            left: Child::new(left),
-            right: Child::new(right),
+            buttons: ButtonController::new(ButtonLayout::cancel_and_text(text)),
             confirm_left,
         };
         instance.bg.clear();
@@ -71,28 +68,32 @@ impl Component for Confirm {
             .place(Rect::new(Point::new(10, 0), Point::new(118, 50)));
 
         let button_area = bounds.split_bottom(12).1;
-        self.left.place(button_area);
-        self.right.place(button_area);
+        self.buttons.place(button_area);
 
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if let Some(Clicked) = self.left.event(ctx, event) {
-            return if self.confirm_left {
-                Some(Self::Msg::Confirm)
-            } else {
-                Some(Self::Msg::Cancel)
-            };
-        };
-        if let Some(Clicked) = self.right.event(ctx, event) {
-            return if self.confirm_left {
-                Some(Self::Msg::Cancel)
-            } else {
-                Some(Self::Msg::Confirm)
-            };
-        };
-        None
+        match self.buttons.event(ctx, event) {
+            Some(ButtonControllerMsg::Triggered(ButtonPos::Left)) => Some(ConfirmMsg::Cancel),
+            Some(ButtonControllerMsg::Triggered(ButtonPos::Right)) => Some(ConfirmMsg::Confirm),
+            _ => None,
+        }
+        // if let Some(Clicked) = self.left.event(ctx, event) {
+        //     return if self.confirm_left {
+        //         Some(Self::Msg::Confirm)
+        //     } else {
+        //         Some(Self::Msg::Cancel)
+        //     };
+        // };
+        // if let Some(Clicked) = self.right.event(ctx, event) {
+        //     return if self.confirm_left {
+        //         Some(Self::Msg::Cancel)
+        //     } else {
+        //         Some(Self::Msg::Confirm)
+        //     };
+        // };
+        //None
     }
 
     fn paint(&mut self) {
@@ -108,12 +109,10 @@ impl Component for Confirm {
         }
 
         self.message.paint();
-        self.left.paint();
-        self.right.paint();
+        self.buttons.paint();
     }
 
     fn bounds(&self, sink: &mut dyn FnMut(Rect)) {
-        self.left.bounds(sink);
-        self.right.bounds(sink);
+        self.buttons.bounds(sink);
     }
 }
