@@ -1,7 +1,7 @@
 #[cfg(feature = "ui_debug")]
-use crate::trace::Tracer;
+use crate::trace::{Trace, Tracer};
 use crate::ui::{
-    component::{Child, Component, ComponentExt, Event, EventCtx, Pad},
+    component::{Child, Component, ComponentExt, Event, EventCtx},
     constant::screen,
     display,
     display::Font,
@@ -65,6 +65,14 @@ impl Choice for MenuChoice {
             BLD_FG,
             BLD_BG,
         );
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl Trace for MenuChoice {
+    fn trace(&self, t: &mut dyn Tracer) {
+        t.open("MenuChoice");
+        t.close();
     }
 }
 
