@@ -33,7 +33,7 @@ pub use confirm::{HoldToConfirm, HoldToConfirmMsg};
 
 pub use button_controller::{ButtonController, ButtonControllerMsg};
 pub use changing_text::ChangingTextLine;
-pub use choice::{ChoiceFactory, ChoicePage, ChoicePageMsg};
+pub use choice::{Choice, ChoiceFactory, ChoicePage, ChoicePageMsg};
 pub use choice_item::ChoiceItem;
 pub use dialog::{Dialog, DialogMsg};
 pub use flow::{Flow, FlowMsg};

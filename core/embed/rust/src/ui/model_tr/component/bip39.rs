@@ -81,16 +81,9 @@ impl ChoiceFactoryBIP39 {
         }
     }
 }
+
 impl ChoiceFactory for ChoiceFactoryBIP39 {
-    fn get(&self, choice_index: u8) -> ChoiceItem {
-        if self.letter_choices.is_some() {
-            self.get_letter_item(choice_index)
-        } else if self.word_choices.is_some() {
-            self.get_word_item(choice_index)
-        } else {
-            unreachable!()
-        }
-    }
+    type Item = ChoiceItem;
 
     fn count(&self) -> u8 {
         // Accounting for the DELETE option
@@ -98,6 +91,16 @@ impl ChoiceFactory for ChoiceFactoryBIP39 {
             letter_choices.len() as u8 + 1
         } else if let Some(word_choices) = &self.word_choices {
             word_choices.len() as u8 + 1
+        } else {
+            unreachable!()
+        }
+    }
+
+    fn get(&self, choice_index: u8) -> ChoiceItem {
+        if self.letter_choices.is_some() {
+            self.get_letter_item(choice_index)
+        } else if self.word_choices.is_some() {
+            self.get_word_item(choice_index)
         } else {
             unreachable!()
         }
