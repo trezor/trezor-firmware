@@ -52,7 +52,7 @@ where
     }
 
     fn paint(&mut self) {
-        display::text(
+        display::text_left(
             self.area.bottom_left() - Offset::y(2),
             self.title.as_ref(),
             Font::BOLD,

@@ -422,7 +422,7 @@ async def get_bool(
     data: str,
     description: str | None = None,
     verb: str | None = "CONFIRM",
-    verb_cancel: str | None = "CANCEL",
+    verb_cancel: str | None = "",
     hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.Other,
 ) -> bool:
@@ -465,7 +465,7 @@ async def confirm_action(
     description_param: str | None = None,
     description_param_font: int = ui.BOLD,
     verb: str | bytes | None = "CONFIRM",
-    verb_cancel: str | bytes | None = "CANCEL",
+    verb_cancel: str | bytes | None = "",
     hold: bool = False,
     reverse: bool = False,
     exc: ExceptionType = wire.ActionCancelled,
@@ -577,16 +577,27 @@ async def confirm_path_warning(
     )
 
 
+def _show_xpub(xpub: str, title: str, cancel: str) -> ui.Layout:
+    content = RustLayout(
+        trezorui2.confirm_text(
+            title=title.upper(),
+            data=xpub,
+            # verb_cancel=cancel,
+        )
+    )
+    return content
+
+
 async def show_xpub(
     ctx: wire.GenericContext, xpub: str, title: str, cancel: str
 ) -> None:
-    return await _placeholder_confirm(
-        ctx=ctx,
-        br_type="show_xpub",
-        title=title.upper(),
-        data=xpub,
-        description="",
-        br_code=ButtonRequestType.PublicKey,
+    await raise_if_cancelled(
+        interact(
+            ctx,
+            _show_xpub(xpub, title, cancel),
+            "show_xpub",
+            ButtonRequestType.PublicKey,
+        )
     )
 
 
@@ -603,20 +614,62 @@ async def show_address(
     address_extra: str | None = None,
     title_qr: str | None = None,
 ) -> None:
-    text = ""
+    is_multisig = len(xpubs) > 0
+    # TODO: replace with confirm_blob
+    data = address
     if network:
-        text += f"{network} network\n"
+        data += f"\n\n{network}"
     if address_extra:
-        text += f"{address_extra}\n"
-    text += address
-    return await _placeholder_confirm(
-        ctx=ctx,
-        br_type="show_address",
-        title=title.upper(),
-        data=text,
-        description="",
-        br_code=ButtonRequestType.Address,
-    )
+        data += f"\n\n{address_extra}"
+    while True:
+        result = await interact(
+            ctx,
+            RustLayout(
+                trezorui2.confirm_action(
+                    title=title.upper(),
+                    action=data,
+                    description=None,
+                    verb="CONFIRM",
+                    verb_cancel="QR",
+                    reverse=False,
+                    hold=False,
+                )
+            ),
+            "show_address",
+            ButtonRequestType.Address,
+        )
+        if result is trezorui2.CONFIRMED:
+            break
+
+        result = await interact(
+            ctx,
+            RustLayout(
+                trezorui2.show_qr(
+                    address=address if address_qr is None else address_qr,
+                    case_sensitive=case_sensitive,
+                    title=title.upper() if title_qr is None else title_qr.upper(),
+                    verb_cancel="XPUBs" if is_multisig else "ADDRESS",
+                )
+            ),
+            "show_qr",
+            ButtonRequestType.Address,
+        )
+        if result is trezorui2.CONFIRMED:
+            break
+
+        if is_multisig:
+            for i, xpub in enumerate(xpubs):
+                cancel = "NEXT" if i < len(xpubs) - 1 else "ADDRESS"
+                title_xpub = f"XPUB #{i + 1}"
+                title_xpub += " (yours)" if i == multisig_index else " (cosigner)"
+                result = await interact(
+                    ctx,
+                    _show_xpub(xpub, title=title_xpub, cancel=cancel),
+                    "show_xpub",
+                    ButtonRequestType.PublicKey,
+                )
+                if result is trezorui2.CONFIRMED:
+                    return
 
 
 def show_pubkey(

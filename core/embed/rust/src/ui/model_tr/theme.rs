@@ -80,3 +80,6 @@ pub const ICON_WARNING: IconAndName =
 pub const BUTTON_CONTENT_HEIGHT: i16 = 7;
 pub const BUTTON_OUTLINE: i16 = 3;
 pub const BUTTON_HEIGHT: i16 = BUTTON_CONTENT_HEIGHT + 2 * BUTTON_OUTLINE;
+
+// Full-size QR code.
+pub const QR_SIDE_MAX: i16 = 64 - BUTTON_HEIGHT;
