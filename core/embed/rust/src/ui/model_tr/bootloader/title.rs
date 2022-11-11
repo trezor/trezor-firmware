@@ -40,7 +40,7 @@ impl Component for Title {
             BLD_BG,
         );
         display::text_top_left(
-            Point::new(self.area.top_left().x + 65, self.area.top_left().y),
+            Point::new(self.area.top_left().x + 75, self.area.top_left().y),
             self.version,
             Font::NORMAL,
             BLD_FG,

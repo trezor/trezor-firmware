@@ -8,7 +8,7 @@ use crate::ui::{
     geometry::{Offset, Rect},
     model_tr::{
         bootloader::{
-            theme::{BLD_BG, BLD_FG},
+            theme::{BLD_BG, BLD_FG, ICON_DOWNLOAD, ICON_REDO, ICON_TRASH},
             ReturnToC,
         },
         component::{Choice, ChoiceFactory, ChoicePage, ChoicePageMsg},
@@ -80,9 +80,9 @@ pub struct MenuChoiceFactory;
 
 impl MenuChoiceFactory {
     const CHOICES: [(&'static str, &'static str, &'static [u8]); CHOICE_LENGTH] = [
-        ("WIPE", "DEVICE", ICON_BIN.0),
-        ("REBOOT", "TREZOR", ICON_BIN.0),
-        ("EXIT", "MENU", ICON_BIN.0),
+        ("Wipe", "Trezor", ICON_TRASH),
+        ("Reboot", "Trezor", ICON_REDO),
+        ("Exit", "Menu", ICON_DOWNLOAD),
     ];
 
     pub fn new() -> Self {

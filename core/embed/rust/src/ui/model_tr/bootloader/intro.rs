@@ -77,14 +77,14 @@ impl Component for Intro {
         self.bg
             .place(Rect::new(Point::new(0, 0), Point::new(WIDTH, HEIGHT)));
         self.title
-            .place(Rect::new(Point::new(10, 0), Point::new(128, 8)));
+            .place(Rect::new(Point::new(0, 0), Point::new(128, 8)));
 
         let button_area = bounds.split_bottom(12).1;
         self.host.place(button_area);
         self.menu.place(button_area);
 
         self.text
-            .place(Rect::new(Point::new(10, 20), Point::new(118, 50)));
+            .place(Rect::new(Point::new(0, 20), Point::new(128, 50)));
         bounds
     }
 

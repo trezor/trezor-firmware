@@ -74,11 +74,12 @@ impl Component for ResultScreen {
         self.small_pad.paint();
 
         display::icon(
-            screen().center() + Offset::y(-24),
+            screen().top_center() + Offset::y(12),
             self.icon,
             self.fg_color,
             self.bg_color,
         );
+
         self.message_top.paint();
         self.message_bottom.paint();
     }

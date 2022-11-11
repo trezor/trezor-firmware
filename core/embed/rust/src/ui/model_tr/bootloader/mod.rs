@@ -28,7 +28,7 @@ use crate::ui::{
             confirm::Confirm,
             intro::Intro,
             menu::Menu,
-            theme::{BLD_BG, BLD_FG, LOGO_EMPTY},
+            theme::{BLD_BG, BLD_FG, ICON_ALERT, ICON_SPINNER, LOGO_EMPTY},
         },
         component::ResultScreen,
         theme::{ICON_BIN, ICON_CANCEL, ICON_FAIL, ICON_SUCCESS},
@@ -108,8 +108,6 @@ extern "C" fn screen_install_confirm(
     let text = unwrap!(unsafe { from_c_array(vendor_str, vendor_str_len as usize) });
     let version = unwrap!(unsafe { from_c_str(version) });
 
-    const ICON: Option<&'static [u8]> = None; //Some(RECEIVE);
-
     let msg = if downgrade {
         "Downgrade firmware by"
     } else if vendor {
@@ -130,7 +128,7 @@ extern "C" fn screen_install_confirm(
 
     let mut frame = Confirm::new(
         BLD_BG,
-        ICON,
+        None,
         "INSTALL FIRMWARE",
         Paragraphs::new(message).with_placement(LinearPlacement::vertical().align_at_center()),
         "INSTALL",
@@ -142,8 +140,6 @@ extern "C" fn screen_install_confirm(
 
 #[no_mangle]
 extern "C" fn screen_wipe_confirm() -> u32 {
-    const ICON: Option<&'static [u8]> = None; //Some(ERASE_BIG);
-
     let mut messages = ParagraphVecShort::new();
 
     messages.add(Paragraph::new(
@@ -155,7 +151,7 @@ extern "C" fn screen_wipe_confirm() -> u32 {
     let message =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
-    let mut frame = Confirm::new(BLD_BG, ICON, "WIPE TREZOR", message, "WIPE", true);
+    let mut frame = Confirm::new(BLD_BG, None, "WIPE TREZOR", message, "WIPE", true);
 
     run(&mut frame)
 }
@@ -194,8 +190,8 @@ fn screen_progress(
 
     display::rect_rounded2_partial(
         Rect::new(
-            Point::new(screen().center().x - 9, 0),
-            Point::new(screen().center().x + 9, 18),
+            screen().top_center() + Offset::new(-9, 3),
+            screen().top_center() + Offset::new(9, 18 + 3),
         ),
         fg_color,
         bg_color,
@@ -301,7 +297,7 @@ extern "C" fn screen_wipe_success() -> u32 {
     let m_bottom =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
-    let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_SUCCESS.0, m_top, m_bottom, true);
+    let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_SPINNER, m_top, m_bottom, true);
     frame.place(SCREEN_ADJ);
     frame.paint();
     0
@@ -322,7 +318,7 @@ extern "C" fn screen_wipe_fail() -> u32 {
     let m_bottom =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
-    let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_FAIL.0, m_top, m_bottom, true);
+    let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_ALERT, m_top, m_bottom, true);
     frame.place(SCREEN_ADJ);
     frame.paint();
     0
@@ -347,7 +343,7 @@ extern "C" fn screen_install_fail() -> u32 {
     let m_bottom =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
-    let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_FAIL.0, m_top, m_bottom, true);
+    let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_ALERT, m_top, m_bottom, true);
     frame.place(SCREEN_ADJ);
     frame.paint();
     0
@@ -366,14 +362,7 @@ fn screen_install_success_bld(msg: &'static str, complete_draw: bool) -> u32 {
     let m_bottom =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
-    let mut frame = ResultScreen::new(
-        BLD_FG,
-        BLD_BG,
-        ICON_SUCCESS.0,
-        m_top,
-        m_bottom,
-        complete_draw,
-    );
+    let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_SPINNER, m_top, m_bottom, complete_draw);
     frame.place(SCREEN_ADJ);
     frame.paint();
     0
@@ -392,14 +381,7 @@ fn screen_install_success_initial(msg: &'static str, complete_draw: bool) -> u32
     let m_bottom =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
-    let mut frame = ResultScreen::new(
-        BLD_FG,
-        BLD_BG,
-        ICON_SUCCESS.0,
-        m_top,
-        m_bottom,
-        complete_draw,
-    );
+    let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_SPINNER, m_top, m_bottom, complete_draw);
     frame.place(SCREEN_ADJ);
     frame.paint();
     0
