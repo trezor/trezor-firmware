@@ -339,7 +339,7 @@ pub fn rect_rounded2_partial(
     }
 
     let start = 0;
-    let end = (start + ((360 * show_percent) / 100)) % 360;
+    let end = (start + (360 * show_percent as u32) / 100) % 360;
 
     let start_vector;
     let end_vector;
@@ -353,11 +353,11 @@ pub fn rect_rounded2_partial(
         end_vector = Point::zero();
     } else if show_percent > 50 {
         inverted = true;
-        start_vector = get_vector(end);
-        end_vector = get_vector(start);
+        start_vector = get_vector(end as _);
+        end_vector = get_vector(start as _);
     } else {
-        start_vector = get_vector(start);
-        end_vector = get_vector(end);
+        start_vector = get_vector(start as _);
+        end_vector = get_vector(end as _);
     }
 
     let n_start = Point::new(-start_vector.y, start_vector.x);
@@ -375,7 +375,7 @@ pub fn rect_rounded2_partial(
                 if (x_i & 0x01) == 0 {
                     pixeldata(icon_colortable[(data & 0xF) as usize]);
                 } else {
-                    pixeldata(icon_colortable[(data > 4) as usize]);
+                    pixeldata(icon_colortable[(data >> 4) as usize]);
                 }
                 icon_pixel = true;
             }
