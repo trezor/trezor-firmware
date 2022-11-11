@@ -78,6 +78,7 @@ where
 {
     frame.place(SCREEN_ADJ);
     frame.paint();
+    display::refresh();
     fade_backlight_duration(BACKLIGHT_NORMAL as _, 500);
 
     while button_eval().is_some() {}
@@ -93,6 +94,7 @@ where
             }
 
             frame.paint();
+            display::refresh();
         }
     }
 }
@@ -233,6 +235,8 @@ fn screen_progress(
     //     0,
     //     fill_to as _,
     // );
+
+    display::refresh();
     0
 }
 
@@ -279,6 +283,7 @@ extern "C" fn screen_connect() -> u32 {
 
     frame.place(SCREEN_ADJ);
     frame.paint();
+    display::refresh();
     0
 }
 
@@ -300,6 +305,7 @@ extern "C" fn screen_wipe_success() -> u32 {
     let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_SPINNER, m_top, m_bottom, true);
     frame.place(SCREEN_ADJ);
     frame.paint();
+    display::refresh();
     0
 }
 
@@ -321,6 +327,7 @@ extern "C" fn screen_wipe_fail() -> u32 {
     let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_ALERT, m_top, m_bottom, true);
     frame.place(SCREEN_ADJ);
     frame.paint();
+    display::refresh();
     0
 }
 
@@ -346,6 +353,7 @@ extern "C" fn screen_install_fail() -> u32 {
     let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_ALERT, m_top, m_bottom, true);
     frame.place(SCREEN_ADJ);
     frame.paint();
+    display::refresh();
     0
 }
 
@@ -365,6 +373,7 @@ fn screen_install_success_bld(msg: &'static str, complete_draw: bool) -> u32 {
     let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_SPINNER, m_top, m_bottom, complete_draw);
     frame.place(SCREEN_ADJ);
     frame.paint();
+    display::refresh();
     0
 }
 
@@ -384,6 +393,7 @@ fn screen_install_success_initial(msg: &'static str, complete_draw: bool) -> u32
     let mut frame = ResultScreen::new(BLD_FG, BLD_BG, ICON_SPINNER, m_top, m_bottom, complete_draw);
     frame.place(SCREEN_ADJ);
     frame.paint();
+    display::refresh();
     0
 }
 
@@ -412,5 +422,6 @@ extern "C" fn screen_welcome() -> u32 {
 
     frame.place(SCREEN_ADJ);
     frame.paint();
+    display::refresh();
     0
 }

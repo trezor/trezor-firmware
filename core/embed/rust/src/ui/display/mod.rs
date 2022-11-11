@@ -35,6 +35,8 @@ pub use icon::{Icon, IconAndName};
 #[cfg(any(feature = "model_tt", feature = "model_tr"))]
 pub use loader::{loader, loader_indeterminate, LOADER_MAX, LOADER_MIN};
 
+pub fn refresh() { display::refresh(); }
+
 pub fn backlight() -> u16 {
     display::backlight(-1) as u16
 }

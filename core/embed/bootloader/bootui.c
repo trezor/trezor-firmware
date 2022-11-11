@@ -108,6 +108,8 @@ void ui_screen_boot(const vendor_header *const vhdr,
     display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 5 - 25, ver_str, -1,
                         FONT_NORMAL, COLOR_BL_BG, boot_background);
   }
+
+  display_refresh();
 }
 
 void ui_screen_boot_wait(int wait_seconds) {
@@ -116,6 +118,7 @@ void ui_screen_boot_wait(int wait_seconds) {
   display_bar(0, DISPLAY_RESY - 5 - 20, DISPLAY_RESX, 5 + 20, boot_background);
   display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 5, wait_str, -1,
                       FONT_NORMAL, COLOR_BL_BG, boot_background);
+  display_refresh();
 }
 
 void ui_screen_boot_click(void) {
@@ -123,6 +126,7 @@ void ui_screen_boot_click(void) {
   display_text_center(DISPLAY_RESX / 2, DISPLAY_RESY - 5,
                       "click to continue ...", -1, FONT_NORMAL, COLOR_BL_BG,
                       boot_background);
+  display_refresh();
 }
 
 // welcome UI
