@@ -30,7 +30,7 @@ if __debug__:
     trezorui2.disable_animation(bool(DISABLE_ANIMATION))
 
 
-class _RustLayout(ui.Layout):
+class RustLayout(ui.Layout):
     # pylint: disable=super-init-not-called
     def __init__(self, layout: Any, is_backup: bool = False):
         self.layout = layout
@@ -234,7 +234,7 @@ async def confirm_action(
     await raise_if_not_confirmed(
         interact(
             ctx,
-            _RustLayout(
+            RustLayout(
                 trezorui2.confirm_action(
                     title=title.upper(),
                     action=action,
@@ -264,7 +264,7 @@ async def confirm_reset_device(
     await raise_if_not_confirmed(
         interact(
             ctx,
-            _RustLayout(
+            RustLayout(
                 trezorui2.confirm_reset_device(
                     title=title.upper(),
                     prompt=prompt.replace("\n", " "),
@@ -282,7 +282,7 @@ async def confirm_reset_device(
 async def confirm_backup(ctx: GenericContext) -> bool:
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_action(
                 title="SUCCESS",
                 action="New wallet created successfully.",
@@ -299,7 +299,7 @@ async def confirm_backup(ctx: GenericContext) -> bool:
 
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_action(
                 title="WARNING",
                 action="Are you sure you want to skip the backup?",
@@ -322,7 +322,7 @@ async def confirm_path_warning(
     await raise_if_not_confirmed(
         interact(
             ctx,
-            _RustLayout(
+            RustLayout(
                 trezorui2.show_warning(
                     title="Unknown path"
                     if not path_type
@@ -337,7 +337,7 @@ async def confirm_path_warning(
 
 
 def _show_xpub(xpub: str, title: str, cancel: str) -> ui.Layout:
-    content = _RustLayout(
+    content = RustLayout(
         trezorui2.confirm_blob(
             title=title,
             data=xpub,
@@ -377,7 +377,7 @@ async def show_address(
     while True:
         result = await interact(
             ctx,
-            _RustLayout(
+            RustLayout(
                 trezorui2.confirm_blob(
                     title=title.upper(),
                     data=address,
@@ -394,7 +394,7 @@ async def show_address(
 
         result = await interact(
             ctx,
-            _RustLayout(
+            RustLayout(
                 trezorui2.show_qr(
                     address=address if address_qr is None else address_qr,
                     case_sensitive=case_sensitive,
@@ -445,7 +445,7 @@ async def show_error_and_raise(
 ) -> NoReturn:
     await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.show_error(
                 title=content.replace("\n", " "),
                 description=subheader or "",
@@ -470,7 +470,7 @@ async def show_warning(
     await raise_if_not_confirmed(
         interact(
             ctx,
-            _RustLayout(
+            RustLayout(
                 trezorui2.show_warning(
                     title=content.replace("\n", " "),
                     description=subheader or "",
@@ -494,7 +494,7 @@ async def show_success(
     await raise_if_not_confirmed(
         interact(
             ctx,
-            _RustLayout(
+            RustLayout(
                 trezorui2.show_success(
                     title=content.replace("\n", " "),
                     description=subheader or "",
@@ -550,7 +550,7 @@ async def confirm_payment_request(
 
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_with_info(
                 title="SENDING",
                 items=[(ui.NORMAL, f"{amount} to\n{recipient_name}")]
@@ -589,7 +589,7 @@ async def should_show_more(
 
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_with_info(
                 title=title.upper(),
                 items=para,
@@ -635,7 +635,7 @@ async def _confirm_ask_pagination(
             return
 
         if paginated is None:
-            paginated = _RustLayout(
+            paginated = RustLayout(
                 trezorui2.confirm_more(
                     title=title,
                     button="CLOSE",
@@ -663,7 +663,7 @@ async def confirm_blob(
 ) -> None:
     title = title.upper()
     description = description or ""
-    layout = _RustLayout(
+    layout = RustLayout(
         trezorui2.confirm_blob(
             title=title,
             description=description,
@@ -764,7 +764,7 @@ def confirm_value(
     return raise_if_not_confirmed(
         interact(
             ctx,
-            _RustLayout(
+            RustLayout(
                 trezorui2.confirm_value(
                     title=title.upper(),
                     description=description,
@@ -793,7 +793,7 @@ async def confirm_properties(
     await raise_if_not_confirmed(
         interact(
             ctx,
-            _RustLayout(
+            RustLayout(
                 trezorui2.confirm_properties(
                     title=title.upper(),
                     items=items,
@@ -847,7 +847,7 @@ async def confirm_joint_total(
     await raise_if_not_confirmed(
         interact(
             ctx,
-            _RustLayout(
+            RustLayout(
                 trezorui2.confirm_joint_total(
                     spending_amount=spending_amount,
                     total_amount=total_amount,
@@ -897,7 +897,7 @@ async def confirm_metadata(
     await raise_if_not_confirmed(
         interact(
             ctx,
-            _RustLayout(layout),
+            RustLayout(layout),
             br_type,
             br_code,
         )
@@ -925,7 +925,7 @@ async def confirm_modify_output(
     await raise_if_not_confirmed(
         interact(
             ctx,
-            _RustLayout(
+            RustLayout(
                 trezorui2.confirm_modify_output(
                     address=address,
                     sign=sign,
@@ -950,7 +950,7 @@ async def confirm_modify_fee(
     await raise_if_not_confirmed(
         interact(
             ctx,
-            _RustLayout(
+            RustLayout(
                 trezorui2.confirm_modify_fee(
                     sign=sign,
                     user_fee_change=user_fee_change,
@@ -969,7 +969,7 @@ async def confirm_coinjoin(
     await raise_if_not_confirmed(
         interact(
             ctx,
-            _RustLayout(
+            RustLayout(
                 trezorui2.confirm_coinjoin(
                     max_rounds=str(max_rounds),
                     max_feerate=max_fee_per_vbyte,
@@ -1043,7 +1043,7 @@ async def show_popup(
 ) -> None:
     if subtitle:
         title += f"\n{subtitle}"
-    await _RustLayout(
+    await RustLayout(
         trezorui2.show_error(
             title=title,
             description=description.format(description_param),
@@ -1071,7 +1071,7 @@ async def request_passphrase_on_device(ctx: GenericContext, max_len: int) -> str
         ctx, "passphrase_device", code=ButtonRequestType.PassphraseEntry
     )
 
-    keyboard = _RustLayout(
+    keyboard = RustLayout(
         trezorui2.request_passphrase(prompt="Enter passphrase", max_len=max_len)
     )
     result = await ctx.wait(keyboard)
@@ -1103,7 +1103,7 @@ async def request_pin_on_device(
         prompt = "Enter PIN"
         subprompt = f"{attempts_remaining} tries left"
 
-    dialog = _RustLayout(
+    dialog = RustLayout(
         trezorui2.request_pin(
             prompt=prompt,
             subprompt=subprompt,
