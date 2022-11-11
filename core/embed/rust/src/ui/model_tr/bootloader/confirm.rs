@@ -13,6 +13,7 @@ use crate::ui::{
         constant::{HEIGHT, WIDTH},
     },
 };
+use crate::ui::display::Font;
 
 use super::ReturnToC;
 
@@ -32,6 +33,7 @@ pub struct Confirm {
     bg: Pad,
     bg_color: Color,
     icon: Option<&'static [u8]>,
+    label: &'static str,
     message: Child<Paragraphs<ParagraphVecShort<&'static str>>>,
     buttons: ButtonController<&'static str>,
     confirm_left: bool,
@@ -41,6 +43,7 @@ impl Confirm {
     pub fn new(
         bg_color: Color,
         icon: Option<&'static [u8]>,
+        label: &'static str,
         message: Paragraphs<ParagraphVecShort<&'static str>>,
         text: &'static str,
         confirm_left: bool,
@@ -49,6 +52,7 @@ impl Confirm {
             bg: Pad::with_background(bg_color),
             bg_color,
             icon,
+            label,
             message: Child::new(message),
             buttons: ButtonController::new(ButtonLayout::cancel_and_text(text)),
             confirm_left,
@@ -65,7 +69,7 @@ impl Component for Confirm {
         self.bg
             .place(Rect::new(Point::new(0, 0), Point::new(WIDTH, HEIGHT)));
         self.message
-            .place(Rect::new(Point::new(10, 0), Point::new(118, 50)));
+            .place(Rect::new(Point::new(0, 10), Point::new(128, 54)));
 
         let button_area = bounds.split_bottom(12).1;
         self.buttons.place(button_area);
@@ -98,6 +102,8 @@ impl Component for Confirm {
 
     fn paint(&mut self) {
         self.bg.paint();
+
+        display::text_top_left(Point::zero(), self.label, Font::BOLD, WHITE, self.bg_color);
 
         if let Some(icon) = self.icon {
             display::icon(

@@ -31,7 +31,7 @@ use crate::ui::{
             theme::{BLD_BG, BLD_FG, LOGO_EMPTY},
         },
         component::ResultScreen,
-        theme::{ICON_BIN, ICON_FAIL, ICON_SUCCESS},
+        theme::{ICON_BIN, ICON_CANCEL, ICON_FAIL, ICON_SUCCESS},
     },
     util::{from_c_array, from_c_str},
 };
@@ -120,9 +120,9 @@ extern "C" fn screen_install_confirm(
 
     let mut message = ParagraphVecShort::new();
 
-    message.add(Paragraph::new(&theme::TEXT_NORMAL, msg).centered());
-    message.add(Paragraph::new(&theme::TEXT_NORMAL, text).centered());
-    message.add(Paragraph::new(&theme::TEXT_NORMAL, version).centered());
+    message.add(Paragraph::new(&theme::TEXT_NORMAL, msg));
+    message.add(Paragraph::new(&theme::TEXT_NORMAL, text));
+    message.add(Paragraph::new(&theme::TEXT_NORMAL, version));
 
     if vendor || downgrade {
         message.add(Paragraph::new(&theme::TEXT_BOLD, "Seed will be erased!").centered());
@@ -131,6 +131,7 @@ extern "C" fn screen_install_confirm(
     let mut frame = Confirm::new(
         BLD_BG,
         ICON,
+        "INSTALL FIRMWARE",
         Paragraphs::new(message).with_placement(LinearPlacement::vertical().align_at_center()),
         "INSTALL",
         false,
@@ -150,14 +151,15 @@ extern "C" fn screen_wipe_confirm() -> u32 {
             &theme::TEXT_NORMAL,
             "Do you really want to wipe the device?",
         )
-        .centered(),
     );
-    messages.add(Paragraph::new(&theme::TEXT_BOLD, "Seed will be erased!").centered());
+    messages.add(Paragraph::new(&theme::TEXT_BOLD, "Seed will be erased!"));
 
     let message =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
-    let mut frame = Confirm::new(BLD_BG, ICON, message, "WIPE", true);
+    let mut frame = Confirm::new(BLD_BG, ICON,
+                                 "WIPE TREZOR",
+                                 message, "WIPE", true);
 
     run(&mut frame)
 }
@@ -183,6 +185,7 @@ extern "C" fn screen_intro(
 
 fn screen_progress(
     text: &str,
+    text2: &str,
     progress: u16,
     initialize: bool,
     fg_color: Color,
@@ -193,34 +196,49 @@ fn screen_progress(
         display::rect_fill(constant::screen(), bg_color);
     }
 
-    let loader_area = Rect::new(Point::new(5, HEIGHT - 16), Point::new(WIDTH - 5, HEIGHT));
-
-    let mut text = TextOverlay::new(text, Font::NORMAL);
-    text.place(loader_area.center() + Offset::y(Font::NORMAL.text_height() / 2));
-
-    let fill_to = (loader_area.width() as u32 * progress as u32) / 1000;
-
-    if let Some(icon) = icon {
-        display::icon(screen().center(), icon.0, icon.1, BLD_BG);
-    }
-
-    display::bar_with_text_and_fill(
-        loader_area,
-        Some(&text),
+    display::rect_rounded2_partial(
+        Rect::new(
+            Point::new(screen().center().x - 9, 0),
+            Point::new(screen().center().x + 9, 18),
+        ),
         fg_color,
         bg_color,
-        0,
-        fill_to as _,
+        ((100_u32 * progress as u32) / 1000) as _,
+        icon,
+    );
+    display::text_center(screen().center() + Offset::y(8),
+                         text,
+                         Font::BOLD,
+                         fg_color,
+                         bg_color
+    );
+    display::text_center(screen().center() + Offset::y(20),
+                         text2,
+                         Font::BOLD,
+                         fg_color,
+                         bg_color
     );
 
-    // display::text_center(
-    //     Point::new(constant::WIDTH / 2, 100),
-    //     text,
-    //     Font::NORMAL,
+    // let loader_area = Rect::new(Point::new(5, HEIGHT - 16), Point::new(WIDTH - 5,
+    // HEIGHT));
+    //
+    // let mut text = TextOverlay::new(text, Font::NORMAL);
+    // text.place(loader_area.center() + Offset::y(Font::NORMAL.text_height() / 2));
+    //
+    // let fill_to = (loader_area.width() as u32 * progress as u32) / 1000;
+    //
+    // if let Some(icon) = icon {
+    //     display::icon(screen().center(), icon.0, icon.1, BLD_BG);
+    // }
+    //
+    // display::bar_with_text_and_fill(
+    //     loader_area,
+    //     Some(&text),
     //     fg_color,
     //     bg_color,
+    //     0,
+    //     fill_to as _,
     // );
-    // display::loader(progress, -20, fg_color, bg_color, icon);
     0
 }
 
@@ -233,24 +251,26 @@ extern "C" fn screen_install_progress(
     _initial_setup: bool,
 ) -> u32 {
     screen_progress(
-        "INSTALLING FIRMWARE",
+        "Installing",
+        "Firmware",
         progress,
         initialize,
         BLD_FG,
         BLD_BG,
-        Some((ICON_BIN.0, BLD_FG)),
+        Some((ICON_SUCCESS.0, BLD_FG)),
     )
 }
 
 #[no_mangle]
 extern "C" fn screen_wipe_progress(progress: u16, initialize: bool) -> u32 {
     screen_progress(
-        "WIPING DEVICE",
+        "Wiping",
+        "Trezor",
         progress,
         initialize,
         BLD_FG,
         BLD_BG,
-        Some((ICON_BIN.0, BLD_FG)),
+        Some((ICON_SUCCESS.0, BLD_FG)),
     )
 }
 
@@ -404,8 +424,8 @@ extern "C" fn screen_install_success(
 #[no_mangle]
 extern "C" fn screen_welcome() -> u32 {
     let mut messages = ParagraphVecShort::new();
-    messages.add(Paragraph::new(&theme::TEXT_BOLD, "Get started with").centered());
-    messages.add(Paragraph::new(&theme::TEXT_BOLD, "your trezor at").centered());
+    messages.add(Paragraph::new(&theme::TEXT_NORMAL, "Get started with").centered());
+    messages.add(Paragraph::new(&theme::TEXT_NORMAL, "your trezor at").centered());
     messages.add(Paragraph::new(&theme::TEXT_BOLD, "trezor.io/start").centered());
     let mut frame =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
