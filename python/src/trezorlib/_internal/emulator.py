@@ -72,7 +72,8 @@ class Emulator:
         else:
             self.logfile = self.profile_dir / "trezor.log"
 
-        self.client: Optional[TrezorClientDebugLink] = None
+        # Using `client` property instead to assert `not None`
+        self._client: Optional[TrezorClientDebugLink] = None
         self.process: Optional[subprocess.Popen] = None
 
         self.port = 21324
@@ -80,6 +81,16 @@ class Emulator:
         self.debug = debug
         self.auto_interact = auto_interact
         self.extra_args = list(extra_args)
+
+    @property
+    def client(self) -> TrezorClientDebugLink:
+        """So that type-checkers do not see `client` as `Optional`.
+
+        (it is not None between `start()` and `stop()` calls)
+        """
+        if self._client is None:
+            raise RuntimeError
+        return self._client
 
     def make_args(self) -> List[str]:
         return []
@@ -162,14 +173,15 @@ class Emulator:
         (self.profile_dir / "trezor.port").write_text(str(self.port) + "\n")
 
         transport = self._get_transport()
-        self.client = TrezorClientDebugLink(transport, auto_interact=self.auto_interact)
-
-        self.client.open()
+        self._client = TrezorClientDebugLink(
+            transport, auto_interact=self.auto_interact
+        )
+        self._client.open()
 
     def stop(self) -> None:
-        if self.client:
-            self.client.close()
-        self.client = None
+        if self._client:
+            self._client.close()
+        self._client = None
 
         if self.process:
             LOG.info("Terminating emulator...")
