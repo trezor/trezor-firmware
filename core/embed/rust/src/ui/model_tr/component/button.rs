@@ -163,12 +163,19 @@ impl<T: AsRef<str>> Button<T> {
     /// Determine baseline point for the text.
     fn get_text_baseline(&self, style: &ButtonStyle) -> Point {
         // Arms and outline require the text to be elevated.
-        if style.with_arms || style.with_outline {
-            let offset = theme::BUTTON_OUTLINE;
-            self.get_current_area().bottom_left() + Offset::new(offset, -offset)
+        let offset_y = if style.with_arms || style.with_outline {
+            theme::BUTTON_OUTLINE
         } else {
-            self.get_current_area().bottom_left()
-        }
+            0
+        };
+
+        let offset_x = if style.with_outline {
+            theme::BUTTON_OUTLINE
+        } else {
+            0
+        };
+
+        self.get_current_area().bottom_left() + Offset::new(offset_x, -offset_y)
     }
 }
 
@@ -216,20 +223,19 @@ where
         if style.with_arms {
             // Prepare space for both the arms and content with BG color.
             // Arms are icons 10*6 pixels.
-            let area_to_fill = area.extend_left(10).extend_right(15);
+            let area_to_fill = area.extend_left(15).extend_right(15);
             display::rect_fill(area_to_fill, background_color);
 
             // Paint both arms.
-            // Baselines need to be shifted little bit right to fit properly with the text
-            // TODO: for "CONFIRM" there is one space at the right, but for "SELECT" there
-            // are two
+            // Baselines are adjusted to give space between text and icon.
+            // 2 px because 1px might lead to odd coordinate which can't be render
             Icon::new(theme::ICON_ARM_LEFT).draw_top_right(
-                area.left_center() + Offset::x(2),
+                area.left_center() + Offset::x(-2),
                 text_color,
                 background_color,
             );
             Icon::new(theme::ICON_ARM_RIGHT).draw_top_left(
-                area.right_center() + Offset::x(4),
+                area.right_center() + Offset::x(2),
                 text_color,
                 background_color,
             );
