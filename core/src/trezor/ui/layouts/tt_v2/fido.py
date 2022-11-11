@@ -5,7 +5,7 @@ from trezor.enums import ButtonRequestType
 import trezorui2
 
 from ..common import interact
-from . import _RustLayout
+from . import RustLayout
 
 if TYPE_CHECKING:
     from trezor.loop import AwaitableTask
@@ -16,7 +16,7 @@ if __debug__:
     from trezor import io
     from ... import Result
 
-    class _RustFidoLayoutImpl(_RustLayout):
+    class _RustFidoLayoutImpl(RustLayout):
         def create_tasks(self) -> tuple[AwaitableTask, ...]:
             return (
                 self.handle_timers(),
@@ -48,7 +48,7 @@ if __debug__:
     _RustFidoLayout = _RustFidoLayoutImpl
 
 else:
-    _RustFidoLayout = _RustLayout
+    _RustFidoLayout = RustLayout
 
 
 async def confirm_fido(
@@ -85,7 +85,7 @@ async def confirm_fido(
 
 
 async def confirm_fido_reset() -> bool:
-    confirm = _RustLayout(
+    confirm = RustLayout(
         trezorui2.confirm_action(
             title="FIDO2 RESET",
             action="erase all credentials?",
