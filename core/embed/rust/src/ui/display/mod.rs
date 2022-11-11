@@ -449,11 +449,11 @@ pub fn rect_rounded2_partial(
                 let x_i = p.x - icon_area.x0;
                 let y_i = p.y - icon_area.y0;
 
-                let data = icon_data[(((x_i & 0xFE) + (y_i * icon_width)) / 2) as usize];
+                let data = icon_data[(((x_i) + (y_i * icon_width)) / 2) as usize];
                 if (x_i & 0x01) == 0 {
-                    pixeldata(icon_colortable[(data & 0xF) as usize]);
+                    pixeldata(icon_colortable[(data >> 4) as usize]);
                 } else {
-                    pixeldata(icon_colortable[(data > 4) as usize]);
+                    pixeldata(icon_colortable[(data & 0xF) as usize]);
                 }
                 icon_pixel = true;
             }
