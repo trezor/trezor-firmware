@@ -5,7 +5,7 @@ use crate::ui::{
     },
     constant::screen,
     display,
-    display::Color,
+    display::{Color, Font},
     geometry::{Point, Rect},
     model_tr::{
         bootloader::theme::WHITE,
@@ -13,7 +13,6 @@ use crate::ui::{
         constant::{HEIGHT, WIDTH},
     },
 };
-use crate::ui::display::Font;
 
 use super::ReturnToC;
 

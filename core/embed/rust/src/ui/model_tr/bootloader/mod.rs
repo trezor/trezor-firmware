@@ -146,20 +146,16 @@ extern "C" fn screen_wipe_confirm() -> u32 {
 
     let mut messages = ParagraphVecShort::new();
 
-    messages.add(
-        Paragraph::new(
-            &theme::TEXT_NORMAL,
-            "Do you really want to wipe the device?",
-        )
-    );
+    messages.add(Paragraph::new(
+        &theme::TEXT_NORMAL,
+        "Do you really want to wipe the device?",
+    ));
     messages.add(Paragraph::new(&theme::TEXT_BOLD, "Seed will be erased!"));
 
     let message =
         Paragraphs::new(messages).with_placement(LinearPlacement::vertical().align_at_center());
 
-    let mut frame = Confirm::new(BLD_BG, ICON,
-                                 "WIPE TREZOR",
-                                 message, "WIPE", true);
+    let mut frame = Confirm::new(BLD_BG, ICON, "WIPE TREZOR", message, "WIPE", true);
 
     run(&mut frame)
 }
@@ -206,17 +202,19 @@ fn screen_progress(
         ((100_u32 * progress as u32) / 1000) as _,
         icon,
     );
-    display::text_center(screen().center() + Offset::y(8),
-                         text,
-                         Font::BOLD,
-                         fg_color,
-                         bg_color
+    display::text_center(
+        screen().center() + Offset::y(8),
+        text,
+        Font::BOLD,
+        fg_color,
+        bg_color,
     );
-    display::text_center(screen().center() + Offset::y(20),
-                         text2,
-                         Font::BOLD,
-                         fg_color,
-                         bg_color
+    display::text_center(
+        screen().center() + Offset::y(20),
+        text2,
+        Font::BOLD,
+        fg_color,
+        bg_color,
     );
 
     // let loader_area = Rect::new(Point::new(5, HEIGHT - 16), Point::new(WIDTH - 5,
