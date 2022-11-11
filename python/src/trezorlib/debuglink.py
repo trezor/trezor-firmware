@@ -36,9 +36,11 @@ from typing import (
     Tuple,
     Type,
     Union,
+    overload,
 )
 
 from mnemonic import Mnemonic
+from typing_extensions import Literal
 
 from . import mapping, messages, protobuf
 from .client import TrezorClient
@@ -295,6 +297,17 @@ class DebugLink:
             return LayoutContent(ret.lines)
 
         return None
+
+    # Type overloads make sure that when we supply `wait=True` into `click()`,
+    # it will always return `LayoutContent` and we do not need to assert `is not None`.
+
+    @overload
+    def click(self, click: Tuple[int, int]) -> None:
+        ...
+
+    @overload
+    def click(self, click: Tuple[int, int], wait: Literal[True]) -> LayoutContent:
+        ...
 
     def click(
         self, click: Tuple[int, int], wait: bool = False
