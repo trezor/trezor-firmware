@@ -19,7 +19,7 @@ if __debug__:
     trezorui2.disable_animation(bool(DISABLE_ANIMATION))
 
 
-class _RustLayout(ui.Layout):
+class RustLayout(ui.Layout):
     # pylint: disable=super-init-not-called
     def __init__(self, layout: Any):
         self.layout = layout
@@ -85,7 +85,7 @@ async def confirm_action(
 
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_action(
                 title=title.upper(),
                 action=action,
@@ -113,7 +113,7 @@ async def confirm_text(
 ) -> None:
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_text(
                 title=title.upper(),
                 data=data,
@@ -134,7 +134,7 @@ async def show_success(
 ) -> None:
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_text(
                 title="Success",
                 data=content,
@@ -163,7 +163,7 @@ async def show_address(
 ) -> None:
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_text(
                 title="ADDRESS",
                 data=address,
@@ -186,7 +186,7 @@ async def confirm_output(
 ) -> None:
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_text(
                 title=title,
                 data=f"Send {amount} to {address}?",
@@ -213,7 +213,7 @@ async def confirm_total(
 ) -> None:
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_text(
                 title=title,
                 data=f"{total_label}{total_amount}\n{fee_label}{fee_amount}",
@@ -239,7 +239,7 @@ async def confirm_blob(
 ) -> None:
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.confirm_text(
                 title=title,
                 data=str(data),

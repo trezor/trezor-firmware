@@ -5,14 +5,14 @@ from trezor import ui
 
 import trezorui2
 
-from . import _RustLayout
+from . import RustLayout
 
 if TYPE_CHECKING:
     from trezor import loop
     from typing import Any, Tuple
 
 
-class HomescreenBase(_RustLayout):
+class HomescreenBase(RustLayout):
     RENDER_INDICATOR: object | None = None
 
     def __init__(self, layout: Any) -> None:

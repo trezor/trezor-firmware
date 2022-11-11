@@ -6,7 +6,7 @@ from trezor.wire import ActionCancelled
 import trezorui2
 
 from ..common import interact
-from . import _RustLayout
+from . import RustLayout
 
 if TYPE_CHECKING:
     from typing import Iterable, Callable
@@ -19,7 +19,7 @@ INFO = trezorui2.INFO  # global_import_cache
 
 async def _is_confirmed_info(
     ctx: GenericContext,
-    dialog: _RustLayout,
+    dialog: RustLayout,
     info_func: Callable,
 ) -> bool:
     while True:
@@ -32,7 +32,7 @@ async def _is_confirmed_info(
 
 
 async def request_word_count(ctx: GenericContext, dry_run: bool) -> int:
-    selector = _RustLayout(trezorui2.select_word_count(dry_run=dry_run))
+    selector = RustLayout(trezorui2.select_word_count(dry_run=dry_run))
     count = await interact(
         ctx, selector, "word_count", ButtonRequestType.MnemonicWordCount
     )
@@ -44,9 +44,9 @@ async def request_word(
 ) -> str:
     prompt = f"Type word {word_index + 1} of {word_count}:"
     if is_slip39:
-        keyboard = _RustLayout(trezorui2.request_slip39(prompt=prompt))
+        keyboard = RustLayout(trezorui2.request_slip39(prompt=prompt))
     else:
-        keyboard = _RustLayout(trezorui2.request_bip39(prompt=prompt))
+        keyboard = RustLayout(trezorui2.request_bip39(prompt=prompt))
 
     word: str = await ctx.wait(keyboard)
     return word
@@ -81,7 +81,7 @@ async def show_remaining_shares(
 
     result = await interact(
         ctx,
-        _RustLayout(trezorui2.show_remaining_shares(pages=pages)),
+        RustLayout(trezorui2.show_remaining_shares(pages=pages)),
         "show_shares",
         ButtonRequestType.Other,
     )
@@ -94,7 +94,7 @@ async def show_group_share_success(
 ) -> None:
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.show_group_share_success(
                 lines=[
                     "You have entered",
@@ -129,7 +129,7 @@ async def continue_recovery(
     description = "It is safe to eject Trezor\nand continue later"
 
     if info_func is not None:
-        homepage = _RustLayout(
+        homepage = RustLayout(
             trezorui2.confirm_recovery(
                 title=title,
                 description=description,
@@ -141,7 +141,7 @@ async def continue_recovery(
         await button_request(ctx, "recovery", ButtonRequestType.RecoveryHomepage)
         return await _is_confirmed_info(ctx, homepage, info_func)
     else:
-        homepage = _RustLayout(
+        homepage = RustLayout(
             trezorui2.confirm_recovery(
                 title=text,
                 description=description,

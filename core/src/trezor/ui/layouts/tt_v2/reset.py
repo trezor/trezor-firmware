@@ -6,7 +6,7 @@ from trezor.wire import ActionCancelled
 import trezorui2
 
 from ..common import interact
-from . import _RustLayout
+from . import RustLayout
 
 if TYPE_CHECKING:
     from typing import Callable, Sequence, List
@@ -51,7 +51,7 @@ async def show_share_words(
 
     # result = await interact(
     #     ctx,
-    #     _RustLayout(
+    #     RustLayout(
     #         trezorui2.show_simple(
     #             title=title,
     #             description=f"Write down these {len(share_words)} words in the exact order:",
@@ -68,7 +68,7 @@ async def show_share_words(
 
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.show_share_words(
                 title=title,
                 pages=pages,
@@ -99,7 +99,7 @@ async def select_word(
         title = f"CHECK G{group_index + 1} - SHARE {share_index + 1}"
 
     result = await ctx.wait(
-        _RustLayout(
+        RustLayout(
             trezorui2.select_word(
                 title=title,
                 description=f"Select word {checked_index + 1} of {count}:",
@@ -136,7 +136,7 @@ async def slip39_show_checklist(
 
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.show_checklist(
                 title="BACKUP CHECKLIST",
                 button="CONTINUE",
@@ -161,7 +161,7 @@ async def _prompt_number(
     max_count: int,
     br_name: str,
 ) -> int:
-    num_input = _RustLayout(
+    num_input = RustLayout(
         trezorui2.request_number(
             title=title.upper(),
             description=description,
@@ -190,7 +190,7 @@ async def _prompt_number(
             return value
 
         await ctx.wait(
-            _RustLayout(
+            RustLayout(
                 trezorui2.show_simple(
                     title=None, description=info(value), button="OK, I UNDERSTAND"
                 )
@@ -338,7 +338,7 @@ async def show_warning_backup(ctx: GenericContext, slip39: bool) -> None:
         )
     result = await interact(
         ctx,
-        _RustLayout(
+        RustLayout(
             trezorui2.show_info(
                 title=description,
                 button="OK, I UNDERSTAND",
