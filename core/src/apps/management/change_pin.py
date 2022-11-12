@@ -95,7 +95,7 @@ def _require_confirm_change_pin(ctx: Context, msg: ChangePin) -> Awaitable[None]
             "enable PIN protection?",
             [
                 "PIN will be used to access this device.",
-                "It should contain at least 4 digits.",
+                "It must contain at least 4 digits.",
             ],
         )
 

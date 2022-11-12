@@ -5,46 +5,40 @@ use crate::ui::{
     model_tr::theme,
 };
 
-/// In which direction should the scrollbar be positioned
-pub enum ScrollbarOrientation {
-    Vertical,
-    Horizontal,
-}
-
+/// Scrollbar to be painted horizontally at the top right of the screen.
 pub struct ScrollBar {
     area: Rect,
     pad: Pad,
     pub page_count: usize,
     pub active_page: usize,
-    pub orientation: ScrollbarOrientation,
 }
 
 impl ScrollBar {
-    pub const WIDTH: i16 = 8;
-    pub const DOT_SIZE: Offset = Offset::new(4, 4);
-    pub const DOT_INTERVAL: i16 = 6;
+    /// How many dots at most will there be
+    pub const MAX_DOTS: i16 = 5;
+    /// Maximum size (width/height) of a dot
+    pub const MAX_DOT_SIZE: i16 = 5;
+    /// Distance between two dots
+    pub const DOTS_DISTANCE: i16 = 2;
+    pub const DOTS_INTERVAL: i16 = Self::MAX_DOT_SIZE + Self::DOTS_DISTANCE;
+    pub const MAX_WIDTH: i16 = Self::DOTS_INTERVAL * Self::MAX_DOTS - Self::DOTS_DISTANCE;
 
-    pub fn new(page_count: usize, orientation: ScrollbarOrientation) -> Self {
+    pub fn new(page_count: usize) -> Self {
         Self {
             area: Rect::zero(),
             pad: Pad::with_background(theme::BG),
             page_count,
             active_page: 0,
-            orientation,
         }
     }
 
     /// Page count will be given later as it is not available yet.
-    pub fn vertical_to_be_filled_later() -> Self {
-        Self::vertical(0)
+    pub fn to_be_filled_later() -> Self {
+        Self::new(0)
     }
 
-    pub fn vertical(page_count: usize) -> Self {
-        Self::new(page_count, ScrollbarOrientation::Vertical)
-    }
-
-    pub fn horizontal(page_count: usize) -> Self {
-        Self::new(page_count, ScrollbarOrientation::Horizontal)
+    pub fn overall_width(&self) -> i16 {
+        Self::DOTS_INTERVAL * self.page_count as i16 - Self::DOTS_DISTANCE
     }
 
     pub fn set_page_count(&mut self, page_count: usize) {
@@ -74,8 +68,9 @@ impl ScrollBar {
     /// Create a (seemingly circular) dot given its top left point.
     /// Make it full when it is active, otherwise paint just the perimeter and
     /// leave center empty.
-    fn paint_dot(&self, active: bool, top_left: Point) {
-        let full_square = Rect::from_top_left_and_size(top_left, ScrollBar::DOT_SIZE);
+    fn paint_dot(&self, active: bool, top_right: Point) {
+        let full_square =
+            Rect::from_top_right_and_size(top_right, Offset::uniform(Self::MAX_DOT_SIZE));
 
         // FG - painting the full square
         display::rect_fill(full_square, theme::FG);
@@ -91,45 +86,15 @@ impl ScrollBar {
         }
     }
 
-    fn paint_vertical(&mut self) {
-        let count = self.page_count as i16;
-        let interval = {
-            let available_space = self.area.height();
-            let naive_space = count * Self::DOT_INTERVAL;
-            if naive_space > available_space {
-                available_space / count
-            } else {
-                Self::DOT_INTERVAL
-            }
-        };
-        let mut top_left = Point::new(
-            self.area.center().x - Self::DOT_SIZE.x / 2,
-            self.area.center().y - (count / 2) * interval,
-        );
-        for i in 0..self.page_count {
-            self.paint_dot(i == self.active_page, top_left);
-            top_left.y += interval;
-        }
-    }
-
+    /// Drawing the dots horizontally and aligning to the right
     fn paint_horizontal(&mut self) {
-        let count = self.page_count as i16;
-        let interval = {
-            let available_space = self.area.width();
-            let naive_space = count * Self::DOT_INTERVAL;
-            if naive_space > available_space {
-                available_space / count
-            } else {
-                Self::DOT_INTERVAL
-            }
-        };
-        let mut top_left = Point::new(
-            self.area.center().x - (count / 2) * interval,
-            self.area.center().y - Self::DOT_SIZE.y / 2,
-        );
-        for i in 0..self.page_count {
-            self.paint_dot(i == self.active_page, top_left);
-            top_left.x += interval;
+        let mut top_right = self.area.top_right();
+        // TODO: implement smaller dots - two more sizes
+        // TODO: implement showing at most MAX_DIGITS
+        for i in (0..self.page_count).rev() {
+            self.paint_dot(i == self.active_page, top_right);
+            top_right.x -= Self::DOTS_INTERVAL;
+            top_right.print();
         }
     }
 }
@@ -156,10 +121,6 @@ impl Component for ScrollBar {
 
         self.pad.clear();
         self.pad.paint();
-        if matches!(self.orientation, ScrollbarOrientation::Vertical) {
-            self.paint_vertical()
-        } else {
-            self.paint_horizontal()
-        }
+        self.paint_horizontal();
     }
 }

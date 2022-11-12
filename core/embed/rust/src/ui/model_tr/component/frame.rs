@@ -1,4 +1,4 @@
-use super::{common, theme};
+use super::{common, theme, ScrollBar};
 use crate::ui::{
     component::{Child, Component, Event, EventCtx},
     geometry::{Insets, Rect},
@@ -39,8 +39,14 @@ where
     fn place(&mut self, bounds: Rect) -> Rect {
         const TITLE_SPACE: i16 = 4;
 
-        let (title_area, content_area) = bounds.split_top(theme::FONT_HEADER.line_height());
+        let (title_and_scrollbar_area, content_area) =
+            bounds.split_top(theme::FONT_HEADER.line_height());
         let content_area = content_area.inset(Insets::top(TITLE_SPACE));
+
+        let (title_area, scrollbar_area) =
+            title_and_scrollbar_area.split_right(ScrollBar::MAX_WIDTH);
+
+        self.content.set_scrollbar_area(scrollbar_area);
 
         self.area = title_area;
         self.content.place(content_area);
@@ -52,7 +58,7 @@ where
     }
 
     fn paint(&mut self) {
-        common::paint_header_centered(&self.title, self.area);
+        common::paint_header_left(&self.title, self.area);
         self.content.paint();
     }
 }
