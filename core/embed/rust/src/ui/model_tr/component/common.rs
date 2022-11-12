@@ -68,12 +68,12 @@ pub fn display_secret_center_top<T: AsRef<str>>(secret: T, offset_from_top: i16)
     }
 }
 
-/// Display title/header centered at the top of the given area.
+/// Display title/header at the top left of the given area.
 /// Returning the painted height of the whole header.
-pub fn paint_header_centered<T: AsRef<str>>(title: T, area: Rect) -> i16 {
+pub fn paint_header_left<T: AsRef<str>>(title: T, area: Rect) -> i16 {
     let text_heigth = theme::FONT_HEADER.text_height();
-    let title_baseline = area.top_center() + Offset::y(text_heigth);
-    display::text_center(
+    let title_baseline = area.top_left() + Offset::y(text_heigth);
+    display::text_left(
         title_baseline,
         title.as_ref(),
         theme::FONT_HEADER,

@@ -3,7 +3,7 @@ use crate::{
     ui::{
         component::{Child, Component, ComponentExt, Event, EventCtx, Pad, PageMsg, Paginate},
         display::Color,
-        geometry::{Insets, Rect},
+        geometry::{Insets, Offset, Rect},
     },
 };
 
@@ -14,10 +14,18 @@ use super::{
 pub struct ButtonPage<S, T> {
     content: Child<T>,
     scrollbar: Child<ScrollBar>,
+    /// Optional available area for scrollbar defined by parent component.
+    parent_scrollbar_area: Option<Rect>,
     pad: Pad,
+    /// Left button of the first screen
     cancel_btn_details: Option<ButtonDetails<S>>,
+    /// Right button of the last screen
     confirm_btn_details: Option<ButtonDetails<S>>,
+    /// Left button of the last page
+    last_back_btn_details: Option<ButtonDetails<S>>,
+    /// Left button of every screen in the middle
     back_btn_details: Option<ButtonDetails<S>>,
+    /// Right button of every screen apart the last one
     next_btn_details: Option<ButtonDetails<S>>,
     buttons: Child<ButtonController<S>>,
     /// Scrollbar may or may not be shown (but will be counting pages anyway).
@@ -33,11 +41,13 @@ where
     pub fn new_str(content: T, background: Color) -> Self {
         Self {
             content: Child::new(content),
-            scrollbar: Child::new(ScrollBar::vertical_to_be_filled_later()),
+            scrollbar: Child::new(ScrollBar::to_be_filled_later()),
+            parent_scrollbar_area: None,
             pad: Pad::with_background(background).with_clear(),
             cancel_btn_details: Some(ButtonDetails::cancel_icon()),
             confirm_btn_details: Some(ButtonDetails::text("CONFIRM")),
             back_btn_details: Some(ButtonDetails::up_arrow_icon_wide()),
+            last_back_btn_details: Some(ButtonDetails::up_arrow_icon()),
             next_btn_details: Some(ButtonDetails::down_arrow_icon_wide()),
             // Setting empty layout for now, we do not yet know the page count.
             // Initial button layout will be set in `place()` after we can call
@@ -57,11 +67,13 @@ where
     pub fn new_str_buf(content: T, background: Color) -> Self {
         Self {
             content: Child::new(content),
-            scrollbar: Child::new(ScrollBar::vertical_to_be_filled_later()),
+            scrollbar: Child::new(ScrollBar::to_be_filled_later()),
+            parent_scrollbar_area: None,
             pad: Pad::with_background(background).with_clear(),
             cancel_btn_details: Some(ButtonDetails::cancel_icon()),
             confirm_btn_details: Some(ButtonDetails::text("CONFIRM".into())),
             back_btn_details: Some(ButtonDetails::up_arrow_icon_wide()),
+            last_back_btn_details: Some(ButtonDetails::up_arrow_icon()),
             next_btn_details: Some(ButtonDetails::down_arrow_icon_wide()),
             // Setting empty layout for now, we do not yet know the page count.
             // Initial button layout will be set in `place()` after we can call
@@ -136,19 +148,25 @@ where
     }
 
     fn get_button_layout(&self, has_prev: bool, has_next: bool) -> ButtonLayout<S> {
-        let btn_left = self.get_left_button_details(has_prev);
+        let btn_left = self.get_left_button_details(!has_prev, !has_next);
         let btn_right = self.get_right_button_details(has_next);
         ButtonLayout::new(btn_left, None, btn_right)
     }
 
-    fn get_left_button_details(&self, has_prev_page: bool) -> Option<ButtonDetails<S>> {
-        if has_prev_page {
-            self.back_btn_details.clone()
-        } else {
+    /// Get the let button details, depending whether the page is first, last,
+    /// or in the middle.
+    fn get_left_button_details(&self, is_first: bool, is_last: bool) -> Option<ButtonDetails<S>> {
+        if is_first {
             self.cancel_btn_details.clone()
+        } else if is_last {
+            self.last_back_btn_details.clone()
+        } else {
+            self.back_btn_details.clone()
         }
     }
 
+    /// Get the right button details, depending on whether there is a next
+    /// page.
     fn get_right_button_details(&self, has_next_page: bool) -> Option<ButtonDetails<S>> {
         if has_next_page {
             self.next_btn_details.clone()
@@ -168,14 +186,7 @@ where
     type Msg = PageMsg<T::Msg, bool>;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let (content_and_scrollbar_area, button_area) = bounds.split_bottom(theme::BUTTON_HEIGHT);
-        let (content_area, scrollbar_area) = {
-            if self.show_scrollbar {
-                content_and_scrollbar_area.split_right(ScrollBar::WIDTH)
-            } else {
-                (content_and_scrollbar_area, Rect::zero())
-            }
-        };
+        let (content_area, button_area) = bounds.split_bottom(theme::BUTTON_HEIGHT);
         let content_area = content_area.inset(Insets::top(1));
         // Do not pad the button area nor the scrollbar, leave it to them
         self.pad.place(content_area);
@@ -184,12 +195,32 @@ where
         // and we can calculate the page count
         let page_count = self.content.inner_mut().page_count();
         self.scrollbar.inner_mut().set_page_count(page_count);
+        self.set_buttons_for_initial_page(page_count);
+
+        // Placing the scrollbar when requested.
+        // Put it into its dedicated area when parent component already chose it,
+        // otherwise place it into the right top of the content.
         if self.show_scrollbar {
+            let scrollbar_area = if let Some(scrollbar_area) = self.parent_scrollbar_area {
+                scrollbar_area
+            } else {
+                Rect::from_top_right_and_size(
+                    content_area.top_right(),
+                    Offset::new(
+                        -self.scrollbar.inner().overall_width(),
+                        ScrollBar::MAX_DOT_SIZE,
+                    ),
+                )
+            };
             self.scrollbar.place(scrollbar_area);
         }
-        self.set_buttons_for_initial_page(page_count);
+
         self.buttons.place(button_area);
         bounds
+    }
+
+    fn set_scrollbar_area(&mut self, area: Rect) {
+        self.parent_scrollbar_area = Some(area);
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {

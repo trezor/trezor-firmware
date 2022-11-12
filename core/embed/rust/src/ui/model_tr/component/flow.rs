@@ -208,7 +208,7 @@ where
         // (not compatible with longer/centered titles)
         self.pad.paint();
         if let Some(title) = &self.common_title {
-            common::paint_header_centered(title, self.title_area);
+            common::paint_header_left(title, self.title_area);
         }
         self.current_page.paint();
         self.buttons.paint();
