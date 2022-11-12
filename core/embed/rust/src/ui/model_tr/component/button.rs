@@ -454,14 +454,22 @@ impl<T: Clone + AsRef<str>> ButtonDetails<T> {
             .with_offset(Offset::new(2, -2))
     }
 
-    /// Left arrow to signal going back.
+    /// Left arrow to signal going back. No outline.
     pub fn left_arrow_icon() -> Self {
         Self::icon(Icon::new(theme::ICON_ARROW_LEFT)).with_no_outline()
     }
 
-    /// Right arrow to signal going forward.
+    /// Right arrow to signal going forward. No outline.
     pub fn right_arrow_icon() -> Self {
         Self::icon(Icon::new(theme::ICON_ARROW_RIGHT)).with_no_outline()
+    }
+
+    /// Up arrow to signal paginating back. No outline. Offsetted little right
+    /// to not be on the boundary.
+    pub fn up_arrow_icon() -> Self {
+        Self::icon(Icon::new(theme::ICON_ARROW_UP))
+            .with_no_outline()
+            .with_offset(Offset::new(2, -3))
     }
 
     /// Down arrow to signal paginating forward. Takes half the screen's width

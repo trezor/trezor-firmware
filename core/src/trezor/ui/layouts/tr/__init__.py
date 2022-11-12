@@ -1359,12 +1359,14 @@ async def confirm_set_new_pin(
     )
 
     information.append(
-        "Position of individual numbers will change between entries for enhanced security."
+        "Position of individual numbers will change between entries for more security."
     )
     return await confirm_action(
         ctx,
         br_type,
         title="",
-        description="\n\n".join(information),
+        description="\n".join(information),
+        verb="HOLD TO BEGIN",
+        hold=True,
         br_code=br_code,
     )
