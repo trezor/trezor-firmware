@@ -112,13 +112,14 @@ impl ChoiceFactoryPassphrase {
             ButtonLayout::default_three_icons(),
         );
 
-        // Including accept button on the left and cancel on the very right
+        // Including accept button on the left and cancel on the very right.
         // TODO: could have some icons instead of the shortcut text
         if choice_index == 0 {
             menu_item.set_left_btn(Some(
                 ButtonDetails::text("ACC").with_duration(HOLD_DURATION),
             ));
-        } else if choice_index == MENU.len() as u8 - 1 {
+        }
+        if choice_index == MENU.len() as u8 - 1 {
             menu_item.set_right_btn(Some(
                 ButtonDetails::text("CAN").with_duration(HOLD_DURATION),
             ));
