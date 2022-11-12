@@ -42,10 +42,12 @@ where
         let mut choice_item = ChoiceItem::new(text, ButtonLayout::default_three_icons());
 
         // Disabling prev/next buttons for the first/last choice when not in carousel.
+        // (could be done to the same button if there is only one)
         if !self.carousel {
             if choice_index == 0 {
                 choice_item.set_left_btn(None);
-            } else if choice_index as usize == N - 1 {
+            }
+            if choice_index as usize == N - 1 {
                 choice_item.set_right_btn(None);
             }
         }

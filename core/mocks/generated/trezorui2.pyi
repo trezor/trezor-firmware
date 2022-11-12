@@ -90,6 +90,17 @@ def confirm_total_r(
 
 
 # rust/src/ui/model_tr/layout.rs
+def show_qr(
+    *,
+    title: str,
+    address: str,
+    verb_cancel: str,
+    case_sensitive: bool,
+) -> object:
+    """Show QR code."""
+
+
+# rust/src/ui/model_tr/layout.rs
 def tutorial() -> object:
     """Show user how to interact with the device."""
 

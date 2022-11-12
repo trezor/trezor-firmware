@@ -16,7 +16,7 @@ pub enum Bip39EntryMsg {
     ResultWord(String<15>),
 }
 
-const MAX_LENGTH: usize = 10;
+const MAX_WORD_LENGTH: usize = 10;
 const MAX_CHOICE_LENGTH: usize = 26;
 
 /// Offer words when there will be fewer of them than this
@@ -110,9 +110,9 @@ impl ChoiceFactory for ChoiceFactoryBIP39 {
 /// Component for entering a BIP39 mnemonic.
 pub struct Bip39Entry {
     choice_page: ChoicePage<ChoiceFactoryBIP39>,
-    chosen_letters: Child<ChangingTextLine<String<{ MAX_LENGTH + 1 }>>>,
+    chosen_letters: Child<ChangingTextLine<String<{ MAX_WORD_LENGTH + 1 }>>>,
     letter_choices: Vec<char, MAX_CHOICE_LENGTH>,
-    textbox: TextBox<MAX_LENGTH>,
+    textbox: TextBox<MAX_WORD_LENGTH>,
     offer_words: bool,
     words_list: bip39::Wordlist,
 }
@@ -154,7 +154,7 @@ impl Bip39Entry {
     }
 
     fn update_chosen_letters(&mut self, ctx: &mut EventCtx) {
-        let text = build_string!({ MAX_LENGTH + 1 }, self.textbox.content(), PROMPT);
+        let text = build_string!({ MAX_WORD_LENGTH + 1 }, self.textbox.content(), PROMPT);
         self.chosen_letters.inner_mut().update_text(text);
         self.chosen_letters.request_complete_repaint(ctx);
     }
