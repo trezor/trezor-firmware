@@ -28,6 +28,7 @@ const CHOICE_LENGTH: usize = 13;
 const DELETE_INDEX: usize = 0;
 const SHOW_INDEX: usize = 1;
 const PROMPT_INDEX: usize = 2;
+const NUMBER_START_INDEX: usize = 3;
 const CHOICES: [&str; CHOICE_LENGTH] = [
     "DELETE",
     "SHOW",
@@ -100,7 +101,7 @@ impl PinEntry {
         Self {
             // Starting at the digit 0
             choice_page: ChoicePage::new(choices)
-                .with_initial_page_counter(PROMPT_INDEX as u8 + 1)
+                .with_initial_page_counter(NUMBER_START_INDEX as u8)
                 .with_carousel(true),
             pin_dots: Child::new(ChangingTextLine::center_mono(String::new())),
             show_real_pin: false,
@@ -188,7 +189,7 @@ impl Component for PinEntry {
                         self.update_pin_dots(ctx);
                         // Choosing any random digit to be shown next
                         let new_page_counter = random::uniform_between(
-                            PROMPT_INDEX as u32 + 1,
+                            NUMBER_START_INDEX as u32,
                             (CHOICE_LENGTH - 1) as u32,
                         );
                         self.choice_page

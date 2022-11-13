@@ -188,11 +188,11 @@ where
     fn place(&mut self, bounds: Rect) -> Rect {
         let (content_area, button_area) = bounds.split_bottom(theme::BUTTON_HEIGHT);
         let content_area = content_area.inset(Insets::top(1));
-        // Do not pad the button area nor the scrollbar, leave it to them
+        // Do not pad the button area nor the scrollbar, leave it to them.
         self.pad.place(content_area);
         self.content.place(content_area);
         // Need to be called here, only after content is placed
-        // and we can calculate the page count
+        // and we can calculate the page count.
         let page_count = self.content.inner_mut().page_count();
         self.scrollbar.inner_mut().set_page_count(page_count);
         self.set_buttons_for_initial_page(page_count);
@@ -201,18 +201,21 @@ where
         // Put it into its dedicated area when parent component already chose it,
         // otherwise place it into the right top of the content.
         if self.show_scrollbar {
-            let scrollbar_area = if let Some(scrollbar_area) = self.parent_scrollbar_area {
+            let max_scrollbar_area = if let Some(scrollbar_area) = self.parent_scrollbar_area {
                 scrollbar_area
             } else {
-                Rect::from_top_right_and_size(
-                    content_area.top_right(),
-                    Offset::new(
-                        -self.scrollbar.inner().overall_width(),
-                        ScrollBar::MAX_DOT_SIZE,
-                    ),
-                )
+                content_area
             };
-            self.scrollbar.place(scrollbar_area);
+            // Occupying as little space as possible (according to the number of pages),
+            // aligning to the right.
+            let min_scrollbar_area = Rect::from_top_right_and_size(
+                max_scrollbar_area.top_right(),
+                Offset::new(
+                    self.scrollbar.inner().overall_width(),
+                    ScrollBar::MAX_DOT_SIZE,
+                ),
+            );
+            self.scrollbar.place(min_scrollbar_area);
         }
 
         self.buttons.place(button_area);
