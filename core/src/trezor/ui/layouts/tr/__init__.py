@@ -1129,7 +1129,7 @@ async def confirm_coinjoin(
         ctx=ctx,
         br_type="coinjoin_final",
         title="AUTHORIZE COINJOIN",
-        data=f"Maximum rounds: {max_rounds}\n\nMaximum mining fee:\n{max_fee_per_vbyte} sats/vbyte",
+        data=f"Maximum rounds: {max_rounds}\n\nMaximum mining fee:\n{max_fee_per_vbyte}",
         description="",
         br_code=ButtonRequestType.Other,
     )

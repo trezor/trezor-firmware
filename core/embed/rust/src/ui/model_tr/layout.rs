@@ -16,7 +16,7 @@ use crate::{
     time::Duration,
     ui::{
         component::{
-            base::{Component, ComponentExt},
+            base::Component,
             paginated::{PageMsg, Paginate},
             painter,
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecLong, Paragraphs, VecExt},
@@ -318,7 +318,7 @@ extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) 
         };
         let pages = FlowPages::new(get_page, 2);
 
-        let obj = LayoutObj::new(Flow::new(pages).with_common_title(title).into_child())?;
+        let obj = LayoutObj::new(Flow::new(pages).with_common_title(title))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -362,7 +362,7 @@ extern "C" fn confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -
         };
         let pages = FlowPages::new(get_page, 1);
 
-        let obj = LayoutObj::new(Flow::new(pages).with_common_title(title).into_child())?;
+        let obj = LayoutObj::new(Flow::new(pages).with_common_title(title))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -499,7 +499,7 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
 
         let pages = FlowPages::new(get_page, PAGE_COUNT);
 
-        let obj = LayoutObj::new(Flow::new(pages).into_child())?;
+        let obj = LayoutObj::new(Flow::new(pages))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -512,7 +512,7 @@ extern "C" fn request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> 
         let _allow_cancel: Option<bool> =
             kwargs.get(Qstr::MP_QSTR_allow_cancel)?.try_into_option()?;
 
-        let obj = LayoutObj::new(PinEntry::new(prompt).into_child())?;
+        let obj = LayoutObj::new(PinEntry::new(prompt))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -544,10 +544,7 @@ extern "C" fn select_word(n_args: usize, args: *const Obj, kwargs: *mut Map) -> 
         let words: Vec<StrBuffer, 3> = iter_into_vec(words_iterable)?;
 
         // TODO: should return int, to be consistent with TT's select_word
-        let obj = LayoutObj::new(Frame::new(
-            title,
-            SimpleChoice::new(words, true, true).into_child(),
-        ))?;
+        let obj = LayoutObj::new(Frame::new(title, SimpleChoice::new(words, true, true)))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -559,10 +556,7 @@ extern "C" fn request_word_count(n_args: usize, args: *const Obj, kwargs: *mut M
 
         let choices: Vec<&str, 3> = ["12", "18", "24"].into_iter().collect();
 
-        let obj = LayoutObj::new(Frame::new(
-            title,
-            SimpleChoice::new(choices, false, false).into_child(),
-        ))?;
+        let obj = LayoutObj::new(Frame::new(title, SimpleChoice::new(choices, false, false)))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -572,7 +566,7 @@ extern "C" fn request_word_bip39(n_args: usize, args: *const Obj, kwargs: *mut M
     let block = |_args: &[Obj], kwargs: &Map| {
         let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
 
-        let obj = LayoutObj::new(Frame::new(prompt, Bip39Entry::new().into_child()))?;
+        let obj = LayoutObj::new(Frame::new(prompt, Bip39Entry::new()))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -583,7 +577,7 @@ extern "C" fn request_passphrase(n_args: usize, args: *const Obj, kwargs: *mut M
         let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
         let _max_len: u8 = kwargs.get(Qstr::MP_QSTR_max_len)?.try_into()?;
 
-        let obj = LayoutObj::new(Frame::new(prompt, PassphraseEntry::new().into_child()))?;
+        let obj = LayoutObj::new(Frame::new(prompt, PassphraseEntry::new()))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }

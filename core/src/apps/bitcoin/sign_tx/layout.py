@@ -6,6 +6,8 @@ from trezor.strings import format_amount
 from trezor.ui import layouts
 from trezor.ui.layouts import confirm_metadata
 
+from apps.management import text_r
+
 from .. import addresses
 from ..common import format_fee_rate
 
@@ -261,15 +263,15 @@ async def confirm_nondefault_locktime(
 
     if lock_time_disabled:
         title = "Warning"
-        text = "Locktime is set but will\nhave no effect.\n"
+        text = text_r("Locktime is set but will\nhave no effect.\n")
         param: str | None = None
     elif lock_time < _LOCKTIME_TIMESTAMP_MIN_VALUE:
         title = "Confirm locktime"
-        text = "Locktime for this\ntransaction is set to\nblockheight:\n{}"
+        text = text_r("Locktime for this\ntransaction is set to\nblockheight:\n{}")
         param = str(lock_time)
     else:
         title = "Confirm locktime"
-        text = "Locktime for this\ntransaction is set to:\n{}"
+        text = text_r("Locktime for this\ntransaction is set to:\n{}")
         param = format_timestamp(lock_time)
 
     await confirm_metadata(

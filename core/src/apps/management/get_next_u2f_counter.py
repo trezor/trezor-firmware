@@ -1,10 +1,10 @@
 from typing import TYPE_CHECKING
 
+from . import text_r
+
 if TYPE_CHECKING:
     from trezor.messages import GetNextU2FCounter, NextU2FCounter
     from trezor.wire import Context
-
-from . import text_r
 
 
 async def get_next_u2f_counter(ctx: Context, msg: GetNextU2FCounter) -> NextU2FCounter:
