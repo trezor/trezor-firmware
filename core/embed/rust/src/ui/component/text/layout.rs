@@ -246,9 +246,11 @@ impl TextLayout {
             // Not doing it when the span length is 0, as that
             // means we encountered a newline/line-break, which we do not draw.
             // Line-breaks are reported later.
+            let text_to_display = &remaining_text[..span.length];
             if span.length > 0 {
-                sink.text(*cursor, self, &remaining_text[..span.length]);
+                sink.text(*cursor, self, text_to_display);
             }
+            let last_displayed_char = text_to_display.chars().last().unwrap_or('\n');
 
             // Continue with the rest of the remaining_text.
             remaining_text = &remaining_text[span.length + span.skip_next_chars..];
@@ -265,12 +267,15 @@ impl TextLayout {
                 }
                 // Check the amount of vertical space we have left.
                 if cursor.y + span.advance.y > self.bottom_y() {
+                    // Not enough space on this page.
                     if !remaining_text.is_empty() {
                         // Append ellipsis to indicate more content is available, but only if we
-                        // haven't already appended a hyphen.
+                        // haven't already appended a hyphen. Also not doing it if the last
+                        // character is a dot (signalling end of one sentence).
                         let should_append_ellipsis =
                             matches!(self.style.page_breaking, PageBreaking::CutAndInsertEllipsis)
-                                && !span.insert_hyphen_before_line_break;
+                                && !span.insert_hyphen_before_line_break
+                                && last_displayed_char != '.';
                         if should_append_ellipsis {
                             sink.ellipsis(*cursor, self);
                         }
