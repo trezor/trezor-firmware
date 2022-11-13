@@ -33,11 +33,13 @@ def _check_wipe_code(client: Client, pin: str, wipe_code: str):
     client.init_device()
     assert client.features.wipe_code_protection is True
 
+    tr = client.features.model == "R"
+
     # Try to change the PIN to the current wipe code value. The operation should fail.
     with client, pytest.raises(TrezorFailure):
         client.use_pin_sequence([pin, wipe_code, wipe_code])
         client.set_expected_responses(
-            [messages.ButtonRequest()] * 5
+            [messages.ButtonRequest()] * (7 if tr else 5)
             + [messages.Failure(code=messages.FailureType.PinInvalid)]
         )
         device.change_pin(client)
@@ -56,12 +58,15 @@ def test_set_remove_wipe_code(client: Client):
     # Test set wipe code.
     assert client.features.wipe_code_protection is None
 
+    tr = client.features.model == "R"
+
     _ensure_unlocked(client, PIN4)
     assert client.features.wipe_code_protection is False
 
     with client:
         client.set_expected_responses(
-            [messages.ButtonRequest()] * 5 + [messages.Success, messages.Features]
+            [messages.ButtonRequest()] * (6 if tr else 5)
+            + [messages.Success, messages.Features]
         )
         client.use_pin_sequence([PIN4, WIPE_CODE_MAX, WIPE_CODE_MAX])
         device.change_wipe_code(client)
@@ -73,7 +78,8 @@ def test_set_remove_wipe_code(client: Client):
     # Test change wipe code.
     with client:
         client.set_expected_responses(
-            [messages.ButtonRequest()] * 5 + [messages.Success, messages.Features]
+            [messages.ButtonRequest()] * (6 if tr else 5)
+            + [messages.Success, messages.Features]
         )
         client.use_pin_sequence([PIN4, WIPE_CODE6, WIPE_CODE6])
         device.change_wipe_code(client)
@@ -85,7 +91,8 @@ def test_set_remove_wipe_code(client: Client):
     # Test remove wipe code.
     with client:
         client.set_expected_responses(
-            [messages.ButtonRequest()] * 3 + [messages.Success, messages.Features]
+            [messages.ButtonRequest()] * (4 if tr else 3)
+            + [messages.Success, messages.Features]
         )
         client.use_pin_sequence([PIN4])
         device.change_wipe_code(client, remove=True)
@@ -125,9 +132,12 @@ def test_set_wipe_code_mismatch(client: Client):
 def test_set_wipe_code_to_pin(client: Client):
     _ensure_unlocked(client, PIN4)
 
+    tr = client.features.model == "R"
+
     with client:
         client.set_expected_responses(
-            [messages.ButtonRequest()] * 6 + [messages.Success, messages.Features]
+            [messages.ButtonRequest()] * (7 if tr else 6)
+            + [messages.Success, messages.Features]
         )
         client.use_pin_sequence([PIN4, PIN4, WIPE_CODE4, WIPE_CODE4])
         device.change_wipe_code(client)
@@ -138,6 +148,8 @@ def test_set_wipe_code_to_pin(client: Client):
 
 
 def test_set_pin_to_wipe_code(client: Client):
+    tr = client.features.model == "R"
+
     # Set wipe code.
     with client:
         client.set_expected_responses(
@@ -149,7 +161,7 @@ def test_set_pin_to_wipe_code(client: Client):
     # Try to set the PIN to the current wipe code value.
     with client, pytest.raises(TrezorFailure):
         client.set_expected_responses(
-            [messages.ButtonRequest()] * 4
+            [messages.ButtonRequest()] * (6 if tr else 4)
             + [messages.Failure(code=messages.FailureType.PinInvalid)]
         )
         client.use_pin_sequence([WIPE_CODE4, WIPE_CODE4])

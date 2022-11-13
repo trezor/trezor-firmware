@@ -35,6 +35,7 @@ def test_clear_session(client: Client):
     is_trezor1 = client.features.model == "1"
     init_responses = [
         messages.PinMatrixRequest if is_trezor1 else messages.ButtonRequest,
+        (client.features.model == "R", messages.ButtonRequest),
         messages.PassphraseRequest,
     ]
 
