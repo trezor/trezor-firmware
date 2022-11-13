@@ -27,22 +27,10 @@ const MAX_VISIBLE_DIGITS: usize = 18;
 const CHOICE_LENGTH: usize = 13;
 const DELETE_INDEX: usize = 0;
 const SHOW_INDEX: usize = 1;
-const PROMPT_INDEX: usize = 2;
+const ENTER_INDEX: usize = 2;
 const NUMBER_START_INDEX: usize = 3;
 const CHOICES: [&str; CHOICE_LENGTH] = [
-    "DELETE",
-    "SHOW",
-    "ENTER PIN",
-    "0",
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
+    "DELETE", "SHOW", "ENTER", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
 ];
 
 struct ChoiceFactoryPIN {
@@ -64,7 +52,7 @@ impl ChoiceFactory for ChoiceFactoryPIN {
         let mut choice_item = ChoiceItem::new(choice_str, ButtonLayout::default_three_icons());
 
         // Action buttons have different middle button text
-        if [DELETE_INDEX, SHOW_INDEX, PROMPT_INDEX].contains(&(choice_index as usize)) {
+        if [DELETE_INDEX, SHOW_INDEX, ENTER_INDEX].contains(&(choice_index as usize)) {
             let confirm_btn = ButtonDetails::armed_text("CONFIRM");
             choice_item.set_middle_btn(Some(confirm_btn));
         }
@@ -74,7 +62,7 @@ impl ChoiceFactory for ChoiceFactoryPIN {
             choice_item = choice_item.with_icon(Icon::new(theme::ICON_DELETE));
         } else if choice_index == SHOW_INDEX as u8 {
             choice_item = choice_item.with_icon(Icon::new(theme::ICON_EYE));
-        } else if choice_index == PROMPT_INDEX as u8 {
+        } else if choice_index == ENTER_INDEX as u8 {
             choice_item = choice_item.with_icon(Icon::new(theme::ICON_TICK));
         }
 
@@ -182,7 +170,7 @@ impl Component for PinEntry {
                     self.update_pin_dots(ctx);
                     ctx.request_paint();
                 }
-                PROMPT_INDEX => return Some(PinEntryMsg::Confirmed),
+                ENTER_INDEX => return Some(PinEntryMsg::Confirmed),
                 _ => {
                     if !self.is_full() {
                         self.append_new_digit(ctx, page_counter);
@@ -222,7 +210,7 @@ impl crate::trace::Trace for PinEntry {
                 match current_index {
                     DELETE_INDEX => ButtonAction::Action("Delete last digit").string(),
                     SHOW_INDEX => ButtonAction::Action("Show PIN").string(),
-                    PROMPT_INDEX => ButtonAction::Confirm.string(),
+                    ENTER_INDEX => ButtonAction::Confirm.string(),
                     _ => ButtonAction::select_item(CHOICES[current_index]),
                 }
             }
