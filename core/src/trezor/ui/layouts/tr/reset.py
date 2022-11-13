@@ -34,8 +34,8 @@ async def show_share_words(
         await interact(
             ctx,
             RustLayout(
-                trezorui2.show_share_words(
-                    share_words=share_words,
+                trezorui2.show_share_words(  # type: ignore [Arguments missing for parameters "title", "pages"]
+                    share_words=share_words,  # type: ignore [No parameter named "share_words"]
                 )
             ),
             br_type="backup_words",
@@ -84,7 +84,7 @@ async def select_word(
     assert len(words) == 3
     result = await ctx.wait(
         RustLayout(
-            trezorui2.select_word(
+            trezorui2.select_word(  # type: ignore [Argument missing for parameter "description"]
                 title=f"SELECT WORD {checked_index + 1}/{count}",
                 words=(words[0].upper(), words[1].upper(), words[2].upper()),
             )
