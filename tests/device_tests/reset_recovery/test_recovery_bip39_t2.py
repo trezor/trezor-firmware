@@ -65,15 +65,21 @@ def test_tt_pin_passphrase(client: Client):
 
     def input_flow_tr():
         yield
-        assert "Do you really want to recover a wallet?" in layout().text
+        assert "By continuing you agree" in layout().text
+        client.debug.press_right()
+        assert "trezor.io/tos" in layout().text
         client.debug.press_yes()
 
         yield
-        assert "PIN" in layout().text
+        assert "ENTER" in layout().text
         client.debug.input("654")
 
         yield
-        assert "PIN" in layout().text
+        assert "re-enter to confirm" in layout().text
+        client.debug.press_right()
+
+        yield
+        assert "ENTER" in layout().text
         client.debug.input("654")
 
         yield
@@ -88,6 +94,10 @@ def test_tt_pin_passphrase(client: Client):
         yield
         assert "Enter recovery seed" in layout().text
         client.debug.press_yes()
+
+        yield
+        assert "WORD ENTERING" in layout().text
+        client.debug.press_right()
 
         yield
         for word in mnemonic:
@@ -154,7 +164,9 @@ def test_tt_nopin_nopassphrase(client: Client):
 
     def input_flow_tr():
         yield
-        assert "Do you really want to recover a wallet?" in layout().text
+        assert "By continuing you agree" in layout().text
+        client.debug.press_right()
+        assert "trezor.io/tos" in layout().text
         client.debug.press_yes()
 
         yield
@@ -169,6 +181,10 @@ def test_tt_nopin_nopassphrase(client: Client):
         yield
         assert "Enter recovery seed" in layout().text
         client.debug.press_yes()
+
+        yield
+        assert "WORD ENTERING" in layout().text
+        client.debug.press_right()
 
         yield
         for word in mnemonic:

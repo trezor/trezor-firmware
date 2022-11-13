@@ -587,6 +587,7 @@ def _show_xpub(xpub: str, title: str, cancel: str) -> ui.Layout:
         trezorui2.confirm_text(
             title=title.upper(),
             data=xpub,
+            description="",
             # verb_cancel=cancel,
         )
     )
@@ -1251,8 +1252,6 @@ async def request_pin_on_device(
     allow_cancel: bool,
     shuffle: bool = False,
 ) -> str:
-    await button_request(ctx, "pin_device", code=ButtonRequestType.PinEntry)
-
     if attempts_remaining is None:
         subprompt = ""
     elif attempts_remaining == 1:
@@ -1263,14 +1262,16 @@ async def request_pin_on_device(
     if attempts_remaining is not None:
         await confirm_action(
             ctx,
-            "pin_device",
+            "pin_device_info",
             "PIN entry",
             action=prompt,
             description=subprompt,
             verb="BEGIN",
             verb_cancel=None,
-            br_code=ButtonRequestType.PinEntry,
+            br_code=ButtonRequestType.Other,  # cannot use BRT.PinEntry, as debuglink would be sending PIN to this screen
         )
+
+    await button_request(ctx, "pin_device", code=ButtonRequestType.PinEntry)
 
     dialog = RustLayout(
         trezorui2.request_pin(

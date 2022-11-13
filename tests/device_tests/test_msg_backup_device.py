@@ -42,7 +42,8 @@ def click_info_button(debug):
 @pytest.mark.skip_t1  # TODO we want this for t1 too
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC12)
 def test_backup_bip39(client: Client):
-    pytest.fail("Freezes")
+    if client.features.model == "R":
+        pytest.skip("Freezes")
     assert client.features.needs_backup is True
     mnemonic = None
 
