@@ -6,8 +6,8 @@ from trezor.crypto import slip39
 from trezor.enums import BackupType
 from trezor.wire import ProcessError
 
-from . import layout
 from .. import text_r
+from . import layout
 
 if __debug__:
     import storage.debug
