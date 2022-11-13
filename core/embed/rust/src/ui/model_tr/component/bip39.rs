@@ -49,14 +49,22 @@ impl ChoiceFactoryBIP39 {
     }
 
     /// Word choice items with DELETE last option.
+    /// NOT using carousel.
     fn get_word_item(&self, choice_index: u8) -> ChoiceItem {
         if let Some(word_choices) = &self.word_choices {
             if choice_index >= word_choices.len() as u8 {
-                ChoiceItem::new("DELETE", ButtonLayout::default_three_icons())
-                    .with_icon(Icon::new(theme::ICON_DELETE))
+                let mut item =
+                    ChoiceItem::new("DELETE", ButtonLayout::three_icons_middle_text("CONFIRM"))
+                        .with_icon(Icon::new(theme::ICON_DELETE));
+                item.set_right_btn(None);
+                item
             } else {
                 let word = word_choices[choice_index as usize];
-                ChoiceItem::new(word, ButtonLayout::default_three_icons())
+                let mut item = ChoiceItem::new(word, ButtonLayout::default_three_icons());
+                if choice_index == 0 {
+                    item.set_left_btn(None);
+                }
+                item
             }
         } else {
             unreachable!()
@@ -64,10 +72,11 @@ impl ChoiceFactoryBIP39 {
     }
 
     /// Letter choice items with BIN leftmost button.
+    /// Accounting for carousel.
     fn get_letter_item(&self, choice_index: u8) -> ChoiceItem {
         if let Some(letter_choices) = &self.letter_choices {
             if choice_index >= letter_choices.len() as u8 {
-                ChoiceItem::new("DELETE", ButtonLayout::default_three_icons())
+                ChoiceItem::new("DELETE", ButtonLayout::three_icons_middle_text("CONFIRM"))
                     .with_icon(Icon::new(theme::ICON_DELETE))
             } else {
                 let letter = letter_choices[choice_index as usize];
@@ -153,6 +162,18 @@ impl Bip39Entry {
         }
     }
 
+    /// Updates the whole page.
+    fn update(&mut self, ctx: &mut EventCtx) {
+        self.update_chosen_letters(ctx);
+        let new_choices = self.get_current_choices();
+        // Not using carousel in case of words, as that looks weird in case
+        // there is only one word to choose from.
+        self.choice_page
+            .reset(ctx, new_choices, true, !self.offer_words);
+        ctx.request_paint();
+    }
+
+    /// Reflects currently chosen letters in the textbox.
     fn update_chosen_letters(&mut self, ctx: &mut EventCtx) {
         let text = build_string!({ MAX_WORD_LENGTH + 1 }, self.textbox.content(), PROMPT);
         self.chosen_letters.inner_mut().update_text(text);
@@ -197,16 +218,12 @@ impl Component for Bip39Entry {
         if let Some(ChoicePageMsg::Choice(page_counter)) = msg {
             // Clicked SELECT.
             // When we already offer words, return the word at the given index.
-            // Otherwise, appending the new letter and resetting the choice page
-            // with up-to-date choices.
+            // Otherwise, resetting the choice page with up-to-date choices.
             if page_counter as usize == self.delete_index() {
                 // Clicked DELETE. Deleting last letter, updating wordlist and updating choices
                 self.delete_last_letter(ctx);
-                self.update_chosen_letters(ctx);
                 self.reset_wordlist();
-                let new_choices = self.get_current_choices();
-                self.choice_page.reset(ctx, new_choices, true, true);
-                ctx.request_paint();
+                self.update(ctx);
             } else if self.offer_words {
                 let word = self
                     .words_list
@@ -216,10 +233,7 @@ impl Component for Bip39Entry {
             } else {
                 let new_letter = self.letter_choices[page_counter as usize];
                 self.append_letter(ctx, new_letter);
-                self.update_chosen_letters(ctx);
-                let new_choices = self.get_current_choices();
-                self.choice_page.reset(ctx, new_choices, true, true);
-                ctx.request_paint();
+                self.update(ctx);
             }
         }
 
