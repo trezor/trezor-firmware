@@ -29,7 +29,7 @@ WIPE_CODE_MAX = "".join(chr((i % 10) + ord("0")) for i in range(MAX_PIN_LENGTH))
 pytestmark = pytest.mark.skip_t1
 
 
-def _check_wipe_code(client: Client, pin, wipe_code):
+def _check_wipe_code(client: Client, pin: str, wipe_code: str):
     client.init_device()
     assert client.features.wipe_code_protection is True
 
@@ -43,7 +43,7 @@ def _check_wipe_code(client: Client, pin, wipe_code):
         device.change_pin(client)
 
 
-def _ensure_unlocked(client: Client, pin):
+def _ensure_unlocked(client: Client, pin: str):
     with client:
         client.use_pin_sequence([pin])
         btc.get_address(client, "Testnet", PASSPHRASE_TEST_PATH)
