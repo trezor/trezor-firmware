@@ -356,7 +356,8 @@ impl TextLayout {
                 if cursor.y + span.advance.y > self.bottom_y() {
                     if !remaining_text.is_empty() {
                         // Append ellipsis to indicate more content is available, but only if we
-                        // haven't already appended a hyphen.
+                        // haven't already appended a hyphen. Also not doing it if the last
+                        // character is a dot (signalling end of one sentence).
                         let should_append_ellipsis =
                             matches!(self.style.page_breaking, PageBreaking::CutAndInsertEllipsis)
                                 && !span.insert_hyphen_before_line_break;
