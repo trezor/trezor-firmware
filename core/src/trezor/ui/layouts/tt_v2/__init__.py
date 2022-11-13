@@ -1130,7 +1130,7 @@ async def request_pin_on_device(
 
 
 async def confirm_pin_action(
-    ctx: wire.GenericContext,
+    ctx: GenericContext,
     br_type: str,
     title: str,
     action: str | None,
@@ -1149,7 +1149,7 @@ async def confirm_pin_action(
 
 
 async def confirm_reenter_pin(
-    ctx: wire.GenericContext,
+    ctx: GenericContext,
     br_type: str = "set_pin",
     br_code: ButtonRequestType = ButtonRequestType.Other,
 ) -> None:
@@ -1164,7 +1164,7 @@ async def confirm_reenter_pin(
 
 
 async def pin_mismatch(
-    ctx: wire.GenericContext,
+    ctx: GenericContext,
     br_type: str = "set_pin",
     br_code: ButtonRequestType = ButtonRequestType.Other,
 ) -> None:
@@ -1180,7 +1180,7 @@ async def pin_mismatch(
 
 
 async def confirm_set_new_pin(
-    ctx: wire.GenericContext,
+    ctx: GenericContext,
     br_type: str,
     title: str,
     action: str,

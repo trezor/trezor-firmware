@@ -102,14 +102,19 @@ impl<const M: usize> Page<M> {
 
     pub fn btn_layout(&self) -> ButtonLayout<&'static str> {
         // When we are in pagination inside this flow,
-        // show the up and down arrows on appropriate sides
+        // show the up and down arrows on appropriate sides.
         let current = self.btn_layout.clone();
 
-        let btn_left = if self.has_prev_page() {
+        // On the last page showing only the narrow arrow, so the right
+        // button with possibly long text has enough space.
+        let btn_left = if self.has_prev_page() && !self.has_next_page() {
+            Some(ButtonDetails::up_arrow_icon())
+        } else if self.has_prev_page() {
             Some(ButtonDetails::up_arrow_icon_wide())
         } else {
             current.btn_left
         };
+
         let btn_right = if self.has_next_page() {
             Some(ButtonDetails::down_arrow_icon_wide())
         } else {
