@@ -110,8 +110,11 @@ where
     }
 
     /// Set the page counter at the very beginning.
+    /// Need to update the initial button layout.
     pub fn with_initial_page_counter(mut self, page_counter: u8) -> Self {
         self.page_counter = page_counter;
+        let initial_btn_layout = self.choices.get(page_counter).btn_layout();
+        self.buttons = Child::new(ButtonController::new(initial_btn_layout));
         self
     }
 
