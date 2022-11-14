@@ -524,13 +524,11 @@ extern "C" fn show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map
         let share_words: Vec<StrBuffer, 24> = iter_into_vec(share_words_obj)?;
 
         let confirm_btn =
-            Some(ButtonDetails::text("CONFIRM").with_duration(Duration::from_secs(1)));
+            Some(ButtonDetails::text("HOLD TO CONFIRM").with_duration(Duration::from_secs(1)));
 
         let obj = LayoutObj::new(
-            ButtonPage::new_str(ShareWords::new(share_words), theme::FG)
-                .with_cancel_btn(None)
-                .with_confirm_btn(confirm_btn)
-                .with_scrollbar(false),
+            ButtonPage::new_str(ShareWords::new(share_words), theme::BG)
+                .with_confirm_btn(confirm_btn),
         )?;
         Ok(obj.into())
     };
