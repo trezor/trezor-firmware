@@ -14,6 +14,8 @@ pub struct ChangingTextLine<T> {
     pad: Pad,
     text: T,
     font: Font,
+    /// Whether to show the text. Can be disabled.
+    show_content: bool,
     line_alignment: LineAlignment,
 }
 
@@ -27,6 +29,7 @@ where
             pad: Pad::with_background(theme::BG),
             text,
             font,
+            show_content: true,
             line_alignment,
         }
     }
@@ -35,9 +38,20 @@ where
         Self::new(text, Font::MONO, LineAlignment::Center)
     }
 
+    pub fn center_bold(text: T) -> Self {
+        Self::new(text, Font::BOLD, LineAlignment::Center)
+    }
+
+    // Update the text to be displayed in the line.
     pub fn update_text(&mut self, text: T) {
         self.text = text;
-        self.pad.clear();
+    }
+
+    // Whether we should display the text content.
+    // If not, the whole area (Pad) will still be cleared.
+    // Is valid until this function is called again.
+    pub fn show_or_not(&mut self, show: bool) {
+        self.show_content = show;
     }
 
     /// Gets the height that is needed for this line to fit perfectly
@@ -85,11 +99,17 @@ where
     }
 
     fn paint(&mut self) {
+        // Always re-painting from scratch.
+        // Effectively clearing the line completely
+        // when `self.show_content` is set to `false`.
+        self.pad.clear();
         self.pad.paint();
-        match self.line_alignment {
-            LineAlignment::Left => self.paint_left(),
-            LineAlignment::Center => self.paint_center(),
-            LineAlignment::Right => self.paint_right(),
+        if self.show_content {
+            match self.line_alignment {
+                LineAlignment::Left => self.paint_left(),
+                LineAlignment::Center => self.paint_center(),
+                LineAlignment::Right => self.paint_right(),
+            }
         }
     }
 }

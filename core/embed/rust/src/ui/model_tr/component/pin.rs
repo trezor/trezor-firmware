@@ -1,5 +1,4 @@
 use crate::{
-    micropython::buffer::StrBuffer,
     trezorhal::random,
     ui::{
         component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
@@ -21,8 +20,6 @@ pub enum PinEntryMsg {
 }
 
 const MAX_PIN_LENGTH: usize = 50;
-const MAX_VISIBLE_DOTS: usize = 18;
-const MAX_VISIBLE_DIGITS: usize = 18;
 
 const CHOICE_LENGTH: usize = 13;
 const DELETE_INDEX: usize = 0;
@@ -33,13 +30,11 @@ const CHOICES: [&str; CHOICE_LENGTH] = [
     "DELETE", "SHOW", "ENTER", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
 ];
 
-struct ChoiceFactoryPIN {
-    prompt: StrBuffer,
-}
+struct ChoiceFactoryPIN {}
 
 impl ChoiceFactoryPIN {
-    fn new(prompt: StrBuffer) -> Self {
-        Self { prompt }
+    fn new() -> Self {
+        Self {}
     }
 }
 
@@ -75,23 +70,32 @@ impl ChoiceFactory for ChoiceFactoryPIN {
 }
 
 /// Component for entering a PIN.
-pub struct PinEntry {
+pub struct PinEntry<T> {
     choice_page: ChoicePage<ChoiceFactoryPIN>,
-    pin_dots: Child<ChangingTextLine<String<MAX_PIN_LENGTH>>>,
+    pin_line: Child<ChangingTextLine<String<MAX_PIN_LENGTH>>>,
+    subprompt_line: Child<ChangingTextLine<T>>,
+    prompt: T,
     show_real_pin: bool,
     textbox: TextBox<MAX_PIN_LENGTH>,
 }
 
-impl PinEntry {
-    pub fn new(prompt: StrBuffer) -> Self {
-        let choices = ChoiceFactoryPIN::new(prompt);
+impl<T> PinEntry<T>
+where
+    T: AsRef<str> + Clone,
+{
+    pub fn new(prompt: T, subprompt: T) -> Self {
+        let choices = ChoiceFactoryPIN::new();
 
         Self {
             // Starting at the digit 0
             choice_page: ChoicePage::new(choices)
                 .with_initial_page_counter(NUMBER_START_INDEX as u8)
                 .with_carousel(true),
-            pin_dots: Child::new(ChangingTextLine::center_mono(String::new())),
+            pin_line: Child::new(ChangingTextLine::center_bold(String::from(
+                prompt.clone().as_ref(),
+            ))),
+            subprompt_line: Child::new(ChangingTextLine::center_mono(subprompt)),
+            prompt,
             show_real_pin: false,
             textbox: TextBox::empty(),
         }
@@ -106,23 +110,39 @@ impl PinEntry {
         self.textbox.delete_last(ctx);
     }
 
-    fn update_pin_dots(&mut self, ctx: &mut EventCtx) {
-        // TODO: this is the same action as for the passphrase entry,
-        // might do a common component that will handle this part,
-        // (something like `SecretTextLine`)
-        // also with things like shifting the dots when too many etc.
-        // TODO: when the PIN is longer than fits the screen, we might show ellipsis
-        if self.show_real_pin {
-            let pin = String::from(self.pin());
-            self.pin_dots.inner_mut().update_text(pin);
+    /// Performs overall update of the screen.
+    fn update(&mut self, ctx: &mut EventCtx) {
+        self.update_header_info(ctx);
+        ctx.request_paint();
+    }
+
+    /// Update the header information - (sub)prompt and visible PIN.
+    /// If PIN is empty, showing prompt in `pin_line` and sub-prompt in the
+    /// `subprompt_line`. Otherwise disabling the `subprompt_line` and showing
+    /// the PIN - either in real numbers or masked in asterisks.
+    fn update_header_info(&mut self, ctx: &mut EventCtx) {
+        let show_prompts = self.is_empty();
+
+        let text = if show_prompts {
+            String::from(self.prompt.as_ref())
+        } else if self.show_real_pin {
+            String::from(self.pin())
         } else {
             let mut dots: String<MAX_PIN_LENGTH> = String::new();
             for _ in 0..self.textbox.len() {
                 unwrap!(dots.push_str("*"));
             }
-            self.pin_dots.inner_mut().update_text(dots);
-        }
-        self.pin_dots.request_complete_repaint(ctx);
+            dots
+        };
+
+        // Putting the current text into the PIN line.
+        self.pin_line.inner_mut().update_text(text);
+        // Showing subprompt only conditionally.
+        self.subprompt_line.inner_mut().show_or_not(show_prompts);
+
+        // Force repaint of the whole header.
+        self.pin_line.request_complete_repaint(ctx);
+        self.subprompt_line.request_complete_repaint(ctx);
     }
 
     pub fn pin(&self) -> &str {
@@ -138,13 +158,19 @@ impl PinEntry {
     }
 }
 
-impl Component for PinEntry {
+impl<T> Component for PinEntry<T>
+where
+    T: AsRef<str> + Clone,
+{
     type Msg = PinEntryMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let pin_area_height = self.pin_dots.inner().needed_height();
-        let (pin_area, choice_area) = bounds.split_top(pin_area_height);
-        self.pin_dots.place(pin_area);
+        let pin_height = self.pin_line.inner().needed_height();
+        let subtitle_height = self.subprompt_line.inner().needed_height();
+        let (title_area, subtitle_and_choice_area) = bounds.split_top(pin_height);
+        let (subtitle_area, choice_area) = subtitle_and_choice_area.split_top(subtitle_height);
+        self.pin_line.place(title_area);
+        self.subprompt_line.place(subtitle_area);
         self.choice_page.place(choice_area);
         bounds
     }
@@ -153,7 +179,7 @@ impl Component for PinEntry {
         // Any event when showing real PIN should hide it
         if self.show_real_pin {
             self.show_real_pin = false;
-            self.update_pin_dots(ctx);
+            self.update(ctx)
         }
 
         let msg = self.choice_page.event(ctx, event);
@@ -162,19 +188,16 @@ impl Component for PinEntry {
             match page_counter as usize {
                 DELETE_INDEX => {
                     self.delete_last_digit(ctx);
-                    self.update_pin_dots(ctx);
-                    ctx.request_paint();
+                    self.update(ctx);
                 }
                 SHOW_INDEX => {
                     self.show_real_pin = true;
-                    self.update_pin_dots(ctx);
-                    ctx.request_paint();
+                    self.update(ctx);
                 }
                 ENTER_INDEX => return Some(PinEntryMsg::Confirmed),
                 _ => {
                     if !self.is_full() {
                         self.append_new_digit(ctx, page_counter);
-                        self.update_pin_dots(ctx);
                         // Choosing any random digit to be shown next
                         let new_page_counter = random::uniform_between(
                             NUMBER_START_INDEX as u32,
@@ -182,7 +205,7 @@ impl Component for PinEntry {
                         );
                         self.choice_page
                             .set_page_counter(ctx, new_page_counter as u8);
-                        ctx.request_paint();
+                        self.update(ctx);
                     }
                 }
             }
@@ -191,7 +214,8 @@ impl Component for PinEntry {
     }
 
     fn paint(&mut self) {
-        self.pin_dots.paint();
+        self.pin_line.paint();
+        self.subprompt_line.paint();
         self.choice_page.paint();
     }
 }
@@ -200,7 +224,10 @@ impl Component for PinEntry {
 use super::{ButtonAction, ButtonPos};
 
 #[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for PinEntry {
+impl<T> crate::trace::Trace for PinEntry<T>
+where
+    T: AsRef<str> + Clone,
+{
     fn get_btn_action(&self, pos: ButtonPos) -> String<25> {
         match pos {
             ButtonPos::Left => ButtonAction::PrevPage.string(),
