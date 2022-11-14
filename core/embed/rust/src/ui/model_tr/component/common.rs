@@ -83,6 +83,21 @@ pub fn paint_header_left<T: AsRef<str>>(title: T, area: Rect) -> i16 {
     text_heigth
 }
 
+/// Display title/header centered at the top of the given area.
+/// Returning the painted height of the whole header.
+pub fn paint_header_centered<T: AsRef<str>>(title: T, area: Rect) -> i16 {
+    let text_heigth = theme::FONT_HEADER.text_height();
+    let title_baseline = area.top_center() + Offset::y(text_heigth);
+    display::text_center(
+        title_baseline,
+        title.as_ref(),
+        theme::FONT_HEADER,
+        theme::FG,
+        theme::BG,
+    );
+    text_heigth
+}
+
 /// Draws icon and text on the same line - icon on the left.
 pub fn icon_with_text<T: AsRef<str>>(baseline: Point, icon: Icon, text: T, font: Font) {
     icon.draw_bottom_left(baseline, theme::FG, theme::BG);

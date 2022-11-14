@@ -66,7 +66,7 @@ async def _continue_recovery_process(ctx: GenericContext) -> Success:
             # If we are starting recovery, ask for word count first...
             # _request_word_count
             await layout.homescreen_dialog(
-                ctx, "Select", "Select the number of words in your recovery seed"
+                ctx, "Select", "Select the number of words in your recovery seed."
             )
             # ask for the number of words
             word_count = await layout.request_word_count(ctx, dry_run)
