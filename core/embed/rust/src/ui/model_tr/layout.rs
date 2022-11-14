@@ -537,7 +537,9 @@ extern "C" fn select_word(n_args: usize, args: *const Obj, kwargs: *mut Map) -> 
         let words: Vec<StrBuffer, 3> = iter_into_vec(words_iterable)?;
 
         // TODO: should return int, to be consistent with TT's select_word
-        let obj = LayoutObj::new(Frame::new(title, SimpleChoice::new(words, true, true)))?;
+        let obj = LayoutObj::new(
+            Frame::new(title, SimpleChoice::new(words, true, true)).with_title_center(true),
+        )?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }

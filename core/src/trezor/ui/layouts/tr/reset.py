@@ -34,12 +34,13 @@ async def show_share_words(
         )
 
         ready_to_check = await get_bool(
-            ctx=ctx,
-            title="CHECK PHRASE",
-            data="Select correct words in correct positions.",
+            ctx,
+            "backup_words",
+            "CHECK BACKUP",
+            None,
+            "Select correct words in correct positions.",
             verb_cancel="SEE AGAIN",
             verb="BEGIN",
-            br_type="backup_words",
             br_code=ButtonRequestType.ResetDevice,
         )
         if not ready_to_check:
