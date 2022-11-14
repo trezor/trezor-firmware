@@ -1,7 +1,7 @@
 use crate::ui::{
     component::{Child, Component, Event, EventCtx},
     display::{self, Font},
-    geometry::{Rect},
+    geometry::Rect,
 };
 
 use super::{theme, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos};
