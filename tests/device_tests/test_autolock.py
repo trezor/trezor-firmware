@@ -44,7 +44,6 @@ def set_autolock_delay(client: Client, delay):
             [
                 pin_request(client),
                 messages.ButtonRequest,
-                (client.features.model == "R", messages.ButtonRequest),
                 messages.Success,
                 messages.Features,
             ]
@@ -64,13 +63,7 @@ def test_apply_auto_lock_delay(client: Client):
     time.sleep(10.5)  # sleep more than auto-lock delay
     with client:
         client.use_pin_sequence([PIN4])
-        client.set_expected_responses(
-            [
-                pin_request(client),
-                (client.features.model == "R", messages.ButtonRequest),
-                messages.Address,
-            ]
-        )
+        client.set_expected_responses([pin_request(client), messages.Address])
         get_test_address(client)
 
 
@@ -109,7 +102,6 @@ def test_apply_auto_lock_delay_out_of_range(client: Client, seconds):
         client.set_expected_responses(
             [
                 pin_request(client),
-                (client.features.model == "R", messages.ButtonRequest),
                 messages.Failure(code=messages.FailureType.ProcessError),
             ]
         )

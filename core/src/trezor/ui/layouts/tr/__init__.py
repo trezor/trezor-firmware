@@ -1316,7 +1316,7 @@ async def confirm_pin_action(
     br_type: str,
     title: str,
     action: str | None,
-    description: str | None,
+    description: str | None = "Do you really want to",
     br_code: ButtonRequestType = ButtonRequestType.Other,
 ) -> None:
     return await confirm_action(
