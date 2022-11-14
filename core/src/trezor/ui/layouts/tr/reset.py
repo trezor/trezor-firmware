@@ -5,7 +5,7 @@ from trezor.enums import ButtonRequestType
 import trezorui2
 
 from ..common import interact
-from . import RustLayout, _placeholder_confirm, confirm_action, get_bool
+from . import RustLayout, confirm_action, get_bool
 
 if TYPE_CHECKING:
     from trezor import wire
@@ -19,15 +19,6 @@ async def show_share_words(
     share_index: int | None = None,
     group_index: int | None = None,
 ) -> None:
-    await _placeholder_confirm(
-        ctx=ctx,
-        br_type="backup_words",
-        title="SHARE WORDS",
-        description="Write all words in order on recovery seed card.",
-        data="Do NOT make digital copies.",
-        br_code=ButtonRequestType.ResetDevice,
-    )
-
     # Showing words, asking for write down confirmation and preparing for check
     # until user accepts everything.
     while True:
@@ -41,18 +32,6 @@ async def show_share_words(
             br_type="backup_words",
             br_code=ButtonRequestType.ResetDevice,
         )
-
-        wrote_down = await get_bool(
-            ctx=ctx,
-            title="SHARE WORDS",
-            data=f"I wrote down all {len(share_words)} words in order.",
-            verb="I WROTE DOWN",
-            hold=True,
-            br_type="backup_words",
-            br_code=ButtonRequestType.ResetDevice,
-        )
-        if not wrote_down:
-            continue
 
         ready_to_check = await get_bool(
             ctx=ctx,
