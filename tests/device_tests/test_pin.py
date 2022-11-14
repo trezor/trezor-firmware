@@ -42,21 +42,17 @@ def test_correct_pin(client: Client):
         client.use_pin_sequence([PIN4])
         # Expected responses differ between T1 and TT
         is_t1 = client.features.model == "1"
-        is_tr = client.features.model == "R"
         client.set_expected_responses(
             [
                 (is_t1, messages.PinMatrixRequest),
                 (
-                    is_tr,
-                    messages.ButtonRequest(code=messages.ButtonRequestType.Other),
-                ),
-                (
-                    not is_t1 or is_tr,
+                    not is_t1,
                     messages.ButtonRequest(code=messages.ButtonRequestType.PinEntry),
                 ),
                 messages.Address,
             ]
         )
+        # client.set_expected_responses([messages.ButtonRequest, messages.Address])
         get_test_address(client)
 
 
@@ -72,13 +68,10 @@ def test_incorrect_pin_t1(client: Client):
 def test_incorrect_pin_t2(client: Client):
     with client:
         # After first incorrect attempt, TT will not raise an error, but instead ask for another attempt
-        is_tr = client.features.model == "R"
         client.use_pin_sequence([BAD_PIN, PIN4])
         client.set_expected_responses(
             [
-                (is_tr, messages.ButtonRequest(code=messages.ButtonRequestType.Other)),
                 messages.ButtonRequest(code=messages.ButtonRequestType.PinEntry),
-                (is_tr, messages.ButtonRequest(code=messages.ButtonRequestType.Other)),
                 messages.ButtonRequest(code=messages.ButtonRequestType.PinEntry),
                 messages.Address,
             ]
@@ -106,31 +99,16 @@ def test_exponential_backoff_t1(client: Client):
 
 @pytest.mark.skip_t1
 def test_exponential_backoff_t2(client: Client):
-    def input_flow_tt():
+    def input_flow():
         """Inputting some bad PINs and finally the correct one"""
         yield  # PIN entry
         for attempt in range(3):
             start = time.time()
             client.debug.input(BAD_PIN)
             yield  # PIN entry
-            _check_backoff_time(attempt, start)
-        client.debug.input(PIN4)
-
-    def input_flow_tr():
-        """Inputting some bad PINs and finally the correct one"""
-        yield  # Enter your PIN
-        client.debug.press_yes()
-        yield  # PIN entry
-        for attempt in range(3):
-            start = time.time()
-            client.debug.input(BAD_PIN)
-            yield  # PIN entry
-            client.debug.press_yes()
-            yield  # Wrong PIN, enter again
             _check_backoff_time(attempt, start)
         client.debug.input(PIN4)
 
     with client:
-        tr = client.features.model == "R"
-        client.set_input_flow(input_flow_tr if tr else input_flow_tt)
+        client.set_input_flow(input_flow)
         get_test_address(client)

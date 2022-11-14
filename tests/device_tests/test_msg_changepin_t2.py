@@ -33,13 +33,9 @@ def _check_pin(client: Client, pin):
     assert client.features.pin_protection is True
     assert client.features.unlocked is False
 
-    tr = client.features.model == "R"
-
     with client:
         client.use_pin_sequence([pin])
-        client.set_expected_responses(
-            [messages.ButtonRequest, (tr, messages.ButtonRequest), messages.Address]
-        )
+        client.set_expected_responses([messages.ButtonRequest, messages.Address])
         btc.get_address(client, "Testnet", PASSPHRASE_TEST_PATH)
 
 
@@ -55,8 +51,6 @@ def _check_no_pin(client: Client):
 def test_set_pin(client: Client):
     assert client.features.pin_protection is False
 
-    tr = client.features.model == "R"
-
     # Check that there's no PIN protection
     _check_no_pin(client)
 
@@ -64,8 +58,7 @@ def test_set_pin(client: Client):
     with client:
         client.use_pin_sequence([PIN_MAX, PIN_MAX])
         client.set_expected_responses(
-            [messages.ButtonRequest] * (6 if tr else 4)
-            + [messages.Success, messages.Features]
+            [messages.ButtonRequest] * 6 + [messages.Success, messages.Features]
         )
         device.change_pin(client)
 
@@ -78,8 +71,6 @@ def test_set_pin(client: Client):
 def test_change_pin(client: Client):
     assert client.features.pin_protection is True
 
-    tr = client.features.model == "R"
-
     # Check current PIN value
     _check_pin(client, PIN4)
 
@@ -87,8 +78,7 @@ def test_change_pin(client: Client):
     with client:
         client.use_pin_sequence([PIN4, PIN_MAX, PIN_MAX])
         client.set_expected_responses(
-            [messages.ButtonRequest] * (7 if tr else 5)
-            + [messages.Success, messages.Features]
+            [messages.ButtonRequest] * 6 + [messages.Success, messages.Features]
         )
         device.change_pin(client)
 
@@ -103,8 +93,6 @@ def test_change_pin(client: Client):
 def test_remove_pin(client: Client):
     assert client.features.pin_protection is True
 
-    tr = client.features.model == "R"
-
     # Check current PIN value
     _check_pin(client, PIN4)
 
@@ -112,8 +100,7 @@ def test_remove_pin(client: Client):
     with client:
         client.use_pin_sequence([PIN4])
         client.set_expected_responses(
-            [messages.ButtonRequest] * (4 if tr else 3)
-            + [messages.Success, messages.Features]
+            [messages.ButtonRequest] * 3 + [messages.Success, messages.Features]
         )
         device.change_pin(client, remove=True)
 
@@ -158,31 +145,12 @@ def test_set_failed(client: Client):
 def test_change_failed(client: Client):
     assert client.features.pin_protection is True
 
-    tr = client.features.model == "R"
-
     # Check current PIN value
     _check_pin(client, PIN4)
 
     # Let's set new PIN
-    def input_flow_tt():
+    def input_flow():
         yield  # do you want to change pin?
-        client.debug.press_yes()
-        yield  # enter current pin
-        client.debug.input(PIN4)
-        yield  # enter new pin
-        client.debug.input("457891")
-        yield  # enter new pin again (but different)
-        client.debug.input("381847")
-
-        # failed retry
-        yield  # enter current pin again
-        client.cancel()
-
-    # Let's set new PIN
-    def input_flow_tr():
-        yield  # do you want to change pin?
-        client.debug.press_yes()
-        yield  # Enter old PIN?
         client.debug.press_yes()
         yield  # enter current pin
         client.debug.input(PIN4)
@@ -196,10 +164,8 @@ def test_change_failed(client: Client):
         client.cancel()
 
     with client, pytest.raises(Cancelled):
-        client.set_expected_responses(
-            [messages.ButtonRequest] * (6 if tr else 5) + [messages.Failure]
-        )
-        client.set_input_flow(input_flow_tr if tr else input_flow_tt)
+        client.set_expected_responses([messages.ButtonRequest] * 5 + [messages.Failure])
+        client.set_input_flow(input_flow)
 
         device.change_pin(client)
 
