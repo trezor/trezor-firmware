@@ -53,7 +53,7 @@ def test_abort(emulator: Emulator):
     assert layout.get_title() == "RECOVERY MODE"
 
     layout = debug.click(buttons.OK, wait=True)
-    assert "Select number of words" in layout.text
+    assert "Select the number of words" in layout.text
 
     device_handler.restart(emulator)
     debug = device_handler.debuglink()
@@ -63,7 +63,7 @@ def test_abort(emulator: Emulator):
 
     # no waiting for layout because layout doesn't change
     layout = debug.read_layout()
-    assert "Select number of words" in layout.text
+    assert "Select the number of words" in layout.text
     layout = debug.click(buttons.CANCEL, wait=True)
 
     assert layout.get_title() == "ABORT RECOVERY"
