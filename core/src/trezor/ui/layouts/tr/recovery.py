@@ -73,11 +73,20 @@ async def continue_recovery(
     info_func: Callable | None,
     dry_run: bool,
 ) -> bool:
+    # NOTE: no need to implement `info_func`, as it is used only in
+    # Shamir backup, which is not implemented for TR.
+
+    description = text
+    if subtext:
+        description += f"\n\n{subtext}"
     return await get_bool(
-        ctx=ctx,
-        title="START RECOVERY",
-        data=f"{text}\n\n{subtext or ''}",
-        verb="START",
-        br_type="recovery",
+        ctx,
+        "recovery",
+        "START RECOVERY",
+        None,
+        description,
+        verb="HOLD TO BEGIN",
+        hold=True,
+        reverse=True,
         br_code=ButtonRequestType.RecoveryHomepage,
     )
