@@ -1251,7 +1251,6 @@ async def request_pin_on_device(
     prompt: str,
     attempts_remaining: int | None,
     allow_cancel: bool,
-    shuffle: bool = False,
 ) -> str:
     if attempts_remaining is None:
         subprompt = ""
@@ -1260,18 +1259,6 @@ async def request_pin_on_device(
     else:
         subprompt = f"{attempts_remaining} tries left"
 
-    if attempts_remaining is not None:
-        await confirm_action(
-            ctx,
-            "pin_device_info",
-            "PIN entry",
-            action=prompt,
-            description=subprompt,
-            verb="BEGIN",
-            verb_cancel=None,
-            br_code=ButtonRequestType.Other,  # cannot use BRT.PinEntry, as debuglink would be sending PIN to this screen
-        )
-
     await button_request(ctx, "pin_device", code=ButtonRequestType.PinEntry)
 
     dialog = RustLayout(
@@ -1279,7 +1266,6 @@ async def request_pin_on_device(
             prompt=prompt,
             subprompt=subprompt,
             allow_cancel=allow_cancel,
-            shuffle=shuffle,  # type: ignore [No parameter named "shuffle"]
         )
     )
 
@@ -1287,9 +1273,6 @@ async def request_pin_on_device(
         result = await ctx.wait(dialog)
         if result is trezorui2.CANCELLED:
             raise wire.PinCancelled
-        # TODO: strangely sometimes in UI tests, the result is `CONFIRMED`
-        # For example in `test_set_remove_wipe_code`, `test_set_pin_to_wipe_code` or
-        # `test_change_pin`
         assert isinstance(result, str)
         return result
 
@@ -1347,18 +1330,24 @@ async def confirm_set_new_pin(
     br_type: str,
     title: str,
     action: str,
-    description: str,
     information: list[str],
+    description: str = "Do you want to",
     br_code: ButtonRequestType = ButtonRequestType.Other,
 ) -> None:
     await confirm_action(
         ctx,
         br_type,
         title,
-        action=f"{description} {action}",
+        description=f"{description} {action}",
         verb="ENABLE",
         br_code=br_code,
     )
+
+    # TODO: this is a hack to put the next info on new screen in case of wipe code
+    # TODO: there should be a possibility to give a list of strings and each of them
+    # would be rendered on a new screen
+    if len(information) == 1:
+        information.append("\n")
 
     information.append(
         "Position of individual numbers will change between entries for more security."

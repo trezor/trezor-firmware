@@ -50,13 +50,13 @@ async def change_pin(ctx: Context, msg: ChangePin) -> Success:
 
     if newpin:
         if curpin:
-            msg_screen = "You have successfully changed your PIN."
+            msg_screen = "PIN changed."
             msg_wire = "PIN changed"
         else:
-            msg_screen = "You have successfully enabled PIN protection."
+            msg_screen = "PIN protection enabled."
             msg_wire = "PIN enabled"
     else:
-        msg_screen = "You have successfully disabled PIN protection."
+        msg_screen = "PIN protection disabled."
         msg_wire = "PIN removed"
 
     await show_success(ctx, "success_pin", msg_screen)
@@ -68,30 +68,30 @@ def _require_confirm_change_pin(ctx: Context, msg: ChangePin) -> Awaitable[None]
 
     has_pin = config.has_pin()
 
+    title = "PIN settings"
+    br_code = "set_pin"
+
     if msg.remove and has_pin:  # removing pin
         return confirm_pin_action(
             ctx,
-            "set_pin",
-            "Remove PIN",
+            br_code,
+            title,
             "disable PIN protection?",
-            "Do you really want to",
         )
 
     if not msg.remove and has_pin:  # changing pin
         return confirm_pin_action(
             ctx,
-            "set_pin",
-            "Change PIN",
+            br_code,
+            title,
             "change your PIN?",
-            "Do you really want to",
         )
 
     if not msg.remove and not has_pin:  # setting new pin
         return confirm_set_new_pin(
             ctx,
-            "set_pin",
-            "Enable PIN",
-            "Do you really want to",
+            br_code,
+            title,
             "enable PIN protection?",
             [
                 "PIN will be used to access this device.",

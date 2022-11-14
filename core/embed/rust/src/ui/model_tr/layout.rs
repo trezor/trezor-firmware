@@ -82,7 +82,10 @@ where
     }
 }
 
-impl ComponentMsgObj for PinEntry {
+impl<T> ComponentMsgObj for PinEntry<T>
+where
+    T: AsRef<str> + Clone,
+{
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
             PinEntryMsg::Confirmed => self.pin().try_into(),
@@ -504,11 +507,11 @@ extern "C" fn tutorial(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj
 extern "C" fn request_pin(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
         let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
-        let _subprompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_subprompt)?.try_into()?;
+        let subprompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_subprompt)?.try_into()?;
         let _allow_cancel: Option<bool> =
             kwargs.get(Qstr::MP_QSTR_allow_cancel)?.try_into_option()?;
 
-        let obj = LayoutObj::new(PinEntry::new(prompt))?;
+        let obj = LayoutObj::new(PinEntry::new(prompt, subprompt))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
