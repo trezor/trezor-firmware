@@ -26,10 +26,6 @@ EXPECTED_RESPONSES_NOPIN = [
     messages.Features,
 ]
 EXPECTED_RESPONSES_PIN_T1 = [messages.PinMatrixRequest()] + EXPECTED_RESPONSES_NOPIN
-EXPECTED_RESPONSES_PIN_TR = [
-    messages.ButtonRequest(),
-    messages.ButtonRequest(),
-] + EXPECTED_RESPONSES_NOPIN
 EXPECTED_RESPONSES_PIN_TT = [messages.ButtonRequest()] + EXPECTED_RESPONSES_NOPIN
 
 PIN4 = "1234"
@@ -41,8 +37,6 @@ def _set_expected_responses(client: Client):
     client.use_pin_sequence([PIN4])
     if client.features.model == "1":
         client.set_expected_responses(EXPECTED_RESPONSES_PIN_T1)
-    elif client.features.model == "R":
-        client.set_expected_responses(EXPECTED_RESPONSES_PIN_TR)
     else:
         client.set_expected_responses(EXPECTED_RESPONSES_PIN_TT)
 
@@ -266,10 +260,7 @@ def test_experimental_features(client: Client):
     client.lock()
     with client:
         client.use_pin_sequence([PIN4])
-        tr = client.features.model == "R"
-        client.set_expected_responses(
-            [messages.ButtonRequest, (tr, messages.ButtonRequest), messages.Nonce]
-        )
+        client.set_expected_responses([messages.ButtonRequest, messages.Nonce])
         experimental_call()
 
 

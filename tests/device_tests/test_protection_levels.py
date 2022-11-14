@@ -44,17 +44,12 @@ PIN4 = "1234"
 pytestmark = pytest.mark.setup_client(pin=PIN4, passphrase=True)
 
 
-def _pin_requests(client: Client) -> list:
-    """Get appropriate PIN requests for each model"""
+def _pin_request(client: Client):
+    """Get appropriate PIN request for each model"""
     if client.features.model == "1":
-        return [messages.PinMatrixRequest]
-    elif client.features.model == "R":
-        return [
-            messages.ButtonRequest(code=B.Other),
-            messages.ButtonRequest(code=B.PinEntry),
-        ]
+        return messages.PinMatrixRequest
     else:
-        return [messages.ButtonRequest(code=B.PinEntry)]
+        return messages.ButtonRequest(code=B.PinEntry)
 
 
 def _assert_protection(
@@ -108,7 +103,7 @@ def test_apply_settings(client: Client):
         client.use_pin_sequence([PIN4])
         client.set_expected_responses(
             [
-                *_pin_requests(client),
+                _pin_request(client),
                 messages.ButtonRequest,
                 messages.Success,
                 messages.Features,
@@ -126,9 +121,9 @@ def test_change_pin_t1(client: Client):
         client.set_expected_responses(
             [
                 messages.ButtonRequest,
-                *_pin_requests(client),
-                *_pin_requests(client),
-                *_pin_requests(client),
+                _pin_request(client),
+                _pin_request(client),
+                _pin_request(client),
                 messages.Success,
                 messages.Features,
             ]
@@ -143,11 +138,12 @@ def test_change_pin_t2(client: Client):
         client.use_pin_sequence([PIN4, PIN4, PIN4, PIN4])
         client.set_expected_responses(
             [
-                *_pin_requests(client),
+                _pin_request(client),
                 messages.ButtonRequest,
-                *_pin_requests(client),
-                messages.ButtonRequest(code=B.PinEntry),
-                *_pin_requests(client),
+                _pin_request(client),
+                _pin_request(client),
+                messages.ButtonRequest,
+                _pin_request(client),
                 messages.ButtonRequest,
                 messages.Success,
                 messages.Features,
@@ -170,7 +166,7 @@ def test_get_entropy(client: Client):
         client.use_pin_sequence([PIN4])
         client.set_expected_responses(
             [
-                *_pin_requests(client),
+                _pin_request(client),
                 messages.ButtonRequest(code=B.ProtectCall),
                 messages.Entropy,
             ]
@@ -184,7 +180,7 @@ def test_get_public_key(client: Client):
         client.use_pin_sequence([PIN4])
         client.set_expected_responses(
             [
-                *_pin_requests(client),
+                _pin_request(client),
                 messages.PassphraseRequest,
                 messages.PublicKey,
             ]
@@ -198,7 +194,7 @@ def test_get_address(client: Client):
         client.use_pin_sequence([PIN4])
         client.set_expected_responses(
             [
-                *_pin_requests(client),
+                _pin_request(client),
                 messages.PassphraseRequest,
                 messages.Address,
             ]
@@ -293,7 +289,7 @@ def test_sign_message(client: Client):
         client.use_pin_sequence([PIN4])
         client.set_expected_responses(
             [
-                *_pin_requests(client),
+                _pin_request(client),
                 messages.PassphraseRequest,
                 messages.ButtonRequest,
                 messages.ButtonRequest,
@@ -336,7 +332,7 @@ def test_verify_message_t2(client: Client):
         client.use_pin_sequence([PIN4])
         client.set_expected_responses(
             [
-                *_pin_requests(client),
+                _pin_request(client),
                 messages.ButtonRequest,
                 messages.ButtonRequest,
                 messages.ButtonRequest,
@@ -376,7 +372,7 @@ def test_signtx(client: Client):
         client.use_pin_sequence([PIN4])
         client.set_expected_responses(
             [
-                *_pin_requests(client),
+                _pin_request(client),
                 messages.PassphraseRequest,
                 request_input(0),
                 request_output(0),
@@ -412,7 +408,7 @@ def test_unlocked(client: Client):
     _assert_protection(client, passphrase=False)
     with client:
         client.use_pin_sequence([PIN4])
-        client.set_expected_responses([*_pin_requests(client), messages.Address])
+        client.set_expected_responses([_pin_request(client), messages.Address])
         get_test_address(client)
 
     client.init_device()
