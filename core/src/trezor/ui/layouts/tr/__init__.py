@@ -526,9 +526,9 @@ async def confirm_reset_device(
     if show_tutorial:
         await tutorial(ctx)
 
-    to_show = "By continuing you agree to our terms and conditions.\n\nMore info at trezor.io/tos"
+    to_show = "By continuing you agree to our terms and conditions.\n\nMore info at trezor.io/tos."
     if not recovery:
-        to_show += "\n\nUse you backup to recover you wallet."
+        to_show += "\nUse you backup to recover your wallet."
 
     return await _placeholder_confirm(
         ctx=ctx,
