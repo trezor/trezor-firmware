@@ -515,7 +515,13 @@ impl<T: Clone + AsRef<str>> ButtonDetails<T> {
         self
     }
 
-    /// Duration of the hold-to-confirm.
+    /// Default duration of the hold-to-confirm.
+    pub fn with_default_duration(mut self) -> Self {
+        self.duration = Some(Duration::from_millis(1000));
+        self
+    }
+
+    /// Specific duration of the hold-to-confirm.
     pub fn with_duration(mut self, duration: Duration) -> Self {
         self.duration = Some(duration);
         self

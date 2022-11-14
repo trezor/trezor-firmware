@@ -175,7 +175,7 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
         // Optional HoldToConfirm
         if hold {
             // TODO: clients might want to set the duration
-            confirm_btn = confirm_btn.map(|btn| btn.with_duration(Duration::from_secs(2)));
+            confirm_btn = confirm_btn.map(|btn| btn.with_default_duration());
         }
 
         let content = ButtonPage::new_str_buf(
@@ -255,8 +255,7 @@ extern "C" fn confirm_properties(n_args: usize, args: *const Obj, kwargs: *mut M
 
         let mut content = ButtonPage::new_str(paragraphs.into_paragraphs(), theme::BG);
         if hold {
-            let confirm_btn =
-                Some(ButtonDetails::text("CONFIRM").with_duration(Duration::from_secs(1)));
+            let confirm_btn = Some(ButtonDetails::text("CONFIRM").with_default_duration());
             content = content.with_confirm_btn(confirm_btn);
         }
         let obj = LayoutObj::new(Frame::new(title, content))?;
@@ -298,10 +297,7 @@ extern "C" fn confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) 
                     let btn_layout = ButtonLayout::new(
                         Some(ButtonDetails::cancel_icon()),
                         None,
-                        Some(
-                            ButtonDetails::text("HOLD TO CONFIRM")
-                                .with_duration(Duration::from_secs(2)),
-                        ),
+                        Some(ButtonDetails::text("HOLD TO CONFIRM").with_default_duration()),
                     );
                     let btn_actions = ButtonActions::cancel_confirm();
                     Page::<20>::new(btn_layout, btn_actions, Font::MONO)
@@ -342,7 +338,7 @@ extern "C" fn confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -
             let btn_layout = ButtonLayout::new(
                 Some(ButtonDetails::cancel_icon()),
                 None,
-                Some(ButtonDetails::text("HOLD TO SEND").with_duration(Duration::from_secs(2))),
+                Some(ButtonDetails::text("HOLD TO SEND").with_default_duration()),
             );
             let btn_actions = ButtonActions::cancel_confirm();
 
@@ -523,8 +519,7 @@ extern "C" fn show_share_words(n_args: usize, args: *const Obj, kwargs: *mut Map
         let share_words_obj: Obj = kwargs.get(Qstr::MP_QSTR_share_words)?;
         let share_words: Vec<StrBuffer, 24> = iter_into_vec(share_words_obj)?;
 
-        let confirm_btn =
-            Some(ButtonDetails::text("HOLD TO CONFIRM").with_duration(Duration::from_secs(1)));
+        let confirm_btn = Some(ButtonDetails::text("HOLD TO CONFIRM").with_default_duration());
 
         let obj = LayoutObj::new(
             ButtonPage::new_str(ShareWords::new(share_words), theme::BG)
@@ -564,7 +559,7 @@ extern "C" fn request_word_bip39(n_args: usize, args: *const Obj, kwargs: *mut M
     let block = |_args: &[Obj], kwargs: &Map| {
         let prompt: StrBuffer = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
 
-        let obj = LayoutObj::new(Frame::new(prompt, Bip39Entry::new()))?;
+        let obj = LayoutObj::new(Frame::new(prompt, Bip39Entry::new()).with_title_center(true))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }

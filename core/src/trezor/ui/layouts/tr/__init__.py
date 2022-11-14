@@ -419,11 +419,12 @@ async def get_bool(
     ctx: wire.GenericContext,
     br_type: str,
     title: str,
-    data: str,
+    data: str | None = None,
     description: str | None = None,
     verb: str | None = "CONFIRM",
     verb_cancel: str | None = "",
     hold: bool = False,
+    reverse: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.Other,
 ) -> bool:
     result = await interact(
@@ -436,7 +437,7 @@ async def get_bool(
                 verb=verb,
                 verb_cancel=verb_cancel,
                 hold=hold,
-                reverse=False,
+                reverse=reverse,
             )
         ),
         br_type,
@@ -526,7 +527,7 @@ async def confirm_reset_device(
     if show_tutorial:
         await tutorial(ctx)
 
-    to_show = "By continuing you agree to our terms and conditions.\n\nMore info at trezor.io/tos."
+    to_show = "By continuing you agree to our terms and conditions.\nMore info at trezor.io/tos."
     if not recovery:
         to_show += "\nUse you backup to recover your wallet."
 

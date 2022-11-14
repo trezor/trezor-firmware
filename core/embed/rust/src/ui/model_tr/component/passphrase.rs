@@ -1,12 +1,9 @@
-use crate::{
-    time::Duration,
-    ui::{
-        component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
-        display::Icon,
-        geometry::Rect,
-        model_tr::theme,
-        util::char_to_string,
-    },
+use crate::ui::{
+    component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
+    display::Icon,
+    geometry::Rect,
+    model_tr::theme,
+    util::char_to_string,
 };
 
 use super::{
@@ -31,7 +28,6 @@ enum ChoiceCategory {
 }
 
 const MAX_PASSPHRASE_LENGTH: usize = 50;
-const HOLD_DURATION: Duration = Duration::from_secs(1);
 
 const DIGITS: [char; 10] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 const LOWERCASE_LETTERS: [char; 26] = [
@@ -115,14 +111,10 @@ impl ChoiceFactoryPassphrase {
         // Including accept button on the left and cancel on the very right.
         // TODO: could have some icons instead of the shortcut text
         if choice_index == 0 {
-            menu_item.set_left_btn(Some(
-                ButtonDetails::text("ACC").with_duration(HOLD_DURATION),
-            ));
+            menu_item.set_left_btn(Some(ButtonDetails::text("ACC").with_default_duration()));
         }
         if choice_index == MENU.len() as u8 - 1 {
-            menu_item.set_right_btn(Some(
-                ButtonDetails::text("CAN").with_duration(HOLD_DURATION),
-            ));
+            menu_item.set_right_btn(Some(ButtonDetails::text("CAN").with_default_duration()));
         }
 
         // Including icons for some items.
