@@ -980,8 +980,12 @@ pub fn text_multiline(
         let mut line_text: String<50> = String::new();
         'characters: loop {
             if let Some(character) = text.chars().nth(characters_drawn) {
-                unwrap!(line_text.push(character));
                 characters_drawn += 1;
+                if character == '\n' {
+                    // The line is forced to end.
+                    break 'characters;
+                }
+                unwrap!(line_text.push(character));
             } else {
                 // No more characters to draw.
                 break 'characters;
@@ -994,11 +998,11 @@ pub fn text_multiline(
             }
         }
         text_left(baseline, &line_text, font, fg_color, bg_color);
+        taken_from_top += line_height;
         if characters_drawn == characters_overall {
             // No more lines to draw.
             break 'lines;
         }
-        taken_from_top += line_height;
     }
     // Some of the area was unused and is free to draw some further text.
     Some(area.split_top(taken_from_top).1)
