@@ -3,7 +3,7 @@
   "coin_shortcut": "TBCH",
   "coin_label": "Bitcoin Cash Testnet",
   "website": "https://www.bitcoincash.org",
-  "github": "https://github.com/Bitcoin-ABC/bitcoin-abc",
+  "github": "https://github.com/bitcoin-cash-node/bitcoin-cash-node",
   "maintainer": "Jochen Hoenicke <hoenicke@gmail.com>",
   "curve_name": "secp256k1",
   "decimals": 8,

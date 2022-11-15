@@ -38,7 +38,7 @@
         },
         "bitcoin:BCH": {
             "links": {
-                "Github": "https://github.com/Bitcoin-ABC/bitcoin-abc",
+                "Github": "https://github.com/bitcoin-cash-node/bitcoin-cash-node",
                 "Homepage": "https://www.bitcoincash.org"
             },
             "marketcap_usd": 2214931259,
