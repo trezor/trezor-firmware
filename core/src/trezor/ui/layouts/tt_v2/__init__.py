@@ -746,11 +746,12 @@ async def confirm_total(
     br_type: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> None:
-    # TODO: include fee_rate_amount
     await confirm_value(
         ctx,
         title,
-        fee_amount,
+        f"{fee_amount}\n({fee_rate_amount})"
+        if fee_rate_amount is not None
+        else fee_amount,
         fee_label,
         br_type,
         br_code,
