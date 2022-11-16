@@ -1046,7 +1046,7 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
         1246,  # chain_id
         60,  # slip44
         "OM",  # shortcut
-        "OM Chain",  # name
+        "OM Platform",  # name
         False,  # rskip60
     )
     yield (
@@ -1652,13 +1652,6 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
         False,  # rskip60
     )
     yield (
-        73927,  # chain_id
-        60,  # slip44
-        "XIN",  # shortcut
-        "Mixin Virtual Machine",  # name
-        False,  # rskip60
-    )
-    yield (
         78110,  # chain_id
         60,  # slip44
         "FIN",  # shortcut
@@ -1824,6 +1817,13 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
         60,  # slip44
         "OPC",  # shortcut
         "OpenChain",  # name
+        False,  # rskip60
+    )
+    yield (
+        846000,  # chain_id
+        60,  # slip44
+        "APTA",  # shortcut
+        "4GoodNetwork",  # name
         False,  # rskip60
     )
     yield (
