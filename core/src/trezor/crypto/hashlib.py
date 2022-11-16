@@ -10,3 +10,8 @@ from trezorcrypto import (  # noqa: F401
     sha256,
     sha512,
 )
+
+from trezor import utils
+
+if utils.ZCASH_SHIELDED:
+    from trezorposeidon import poseidon  # noqa: F401

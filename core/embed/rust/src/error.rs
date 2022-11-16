@@ -1,4 +1,5 @@
 use core::{
+    array::TryFromSliceError,
     convert::{Infallible, TryInto},
     num::TryFromIntError,
 };
@@ -81,5 +82,11 @@ impl From<Infallible> for Error {
 impl From<TryFromIntError> for Error {
     fn from(_: TryFromIntError) -> Self {
         Self::OutOfRange
+    }
+}
+
+impl From<TryFromSliceError> for Error {
+    fn from(_e: TryFromSliceError) -> Error {
+        Error::OutOfRange
     }
 }

@@ -17,6 +17,9 @@ mod time;
 #[cfg(feature = "ui_debug")]
 mod trace;
 
+#[cfg(feature = "zcash_shielded")]
+mod zcash_primitives;
+
 #[cfg(feature = "ui")]
 #[macro_use]
 pub mod ui;

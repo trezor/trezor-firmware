@@ -2,7 +2,7 @@ use core::convert::{TryFrom, TryInto};
 
 use cstr_core::CStr;
 
-use crate::error::Error;
+use crate::{error::Error, micropython::buffer::Buffer};
 
 use super::{ffi, runtime::catch_exception};
 
@@ -379,6 +379,23 @@ impl TryFrom<Obj> for usize {
         let val = i64::try_from(obj)?;
         let this = Self::try_from(val)?;
         Ok(this)
+    }
+}
+
+impl<const N: usize> TryFrom<[u8; N]> for Obj {
+    type Error = Error;
+
+    fn try_from(array: [u8; N]) -> Result<Obj, Error> {
+        Ok((&array[..]).try_into()?)
+    }
+}
+
+impl<const N: usize> TryFrom<Obj> for [u8; N] {
+    type Error = Error;
+
+    fn try_from(obj: Obj) -> Result<[u8; N], Error> {
+        let buffer: Buffer = obj.try_into()?;
+        Ok(buffer.as_ref().try_into()?)
     }
 }
 

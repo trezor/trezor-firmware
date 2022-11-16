@@ -1,4 +1,6 @@
 pub mod bip39;
+#[cfg(all(test, feature = "zcash_shielded"))]
+mod blake2b_tests;
 #[macro_use]
 #[allow(unused_macros)]
 pub mod common;

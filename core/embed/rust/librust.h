@@ -17,3 +17,8 @@ extern mp_obj_module_t mp_module_trezorui2;
 #ifdef TREZOR_EMULATOR
 mp_obj_t ui_debug_layout_type();
 #endif
+
+#ifdef ZCASH_SHIELDED
+extern mp_obj_module_t mp_module_trezorpallas;
+extern mp_obj_module_t mp_module_trezorposeidon;
+#endif

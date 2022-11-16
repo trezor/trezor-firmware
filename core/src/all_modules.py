@@ -81,6 +81,8 @@ trezor.crypto.der
 import trezor.crypto.der
 trezor.crypto.hashlib
 import trezor.crypto.hashlib
+trezor.crypto.pallas
+import trezor.crypto.pallas
 trezor.crypto.rlp
 import trezor.crypto.rlp
 trezor.crypto.scripts

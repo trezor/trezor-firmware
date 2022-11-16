@@ -26,9 +26,12 @@ def generate(env):
         # replace "utils.BITCOIN_ONLY" with literal constant (True/False)
         # so the compiler can optimize out the things we don't want
         btc_only = env['bitcoin_only'] == '1'
+        zcash_shielded = env['zcash_shielded'] == '1'
         interim = f"{target[:-4]}.i"  # replace .mpy with .i
         sed_scripts = " ".join([
             rf"-e 's/utils\.BITCOIN_ONLY/{btc_only}/g'",
+            rf"-e 's/utils\.ZCASH_SHIELDED/{zcash_shielded}/g'",
+            rf"-e 's/^\s+ZCASH_SHIELDED/# \0/'",
             r"-e 's/if TYPE_CHECKING/if False/'",
             r"-e 's/import typing/# \0/'",
             r"-e '/from typing import (/,/^\s*)/ {s/^/# /}'",

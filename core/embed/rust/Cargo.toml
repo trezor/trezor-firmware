@@ -8,6 +8,9 @@ build = "build.rs"
 [features]
 default = ["model_tt"]
 bitcoin_only = []
+zcash_shielded = [
+    "micropython", "pasta_curves", "blake2b_simd",
+]
 model_tt = ["touch"]
 model_t1 = ["buttons"]
 model_tr = ["buttons"]
@@ -19,7 +22,7 @@ buttons = []
 touch = []
 clippy = []
 debug = ["ui_debug"]
-test = ["cc", "glob", "micropython", "protobuf", "ui", "ui_debug"]
+test = ["cc", "glob", "micropython", "protobuf", "ui", "ui_debug", "zcash_shielded"]
 
 [lib]
 crate-type = ["staticlib"]
@@ -53,6 +56,16 @@ default_features = false
 version = "0.2.4"
 default_features = false
 
+[dependencies.blake2b_simd]
+optional = true
+version = "1"
+default_features = false
+
+[dependencies.pasta_curves]
+optional = true
+version = "0.4.0"
+default-features = false
+
 # Build dependencies
 
 [build-dependencies.bindgen]
@@ -69,3 +82,10 @@ version = "1.0.69"
 [build-dependencies.glob]
 optional = true
 version = "0.3.0"
+
+[patch.crates-io.blake2b_simd]
+path = "./blake2b_hal"
+
+[patch.crates-io.pasta_curves]
+git = "https://github.com/jarys/pasta_curves"
+rev = "a4f755013aad344982383c9f5af362697d928325"

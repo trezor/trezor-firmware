@@ -68,4 +68,30 @@ static void _librust_qstrs(void) {
   MP_QSTR_total_amount;
   MP_QSTR_total_fee_new;
   MP_QSTR_user_fee_change;
+
+  // pallas
+  MP_QSTR_trezorpallas;
+  MP_QSTR_Fp;
+  MP_QSTR_Scalar;
+  MP_QSTR_Point;
+  MP_QSTR_to_bytes;
+  MP_QSTR_extract;
+  MP_QSTR_is_identity;
+  MP_QSTR_to_base;
+  MP_QSTR_to_scalar;
+  MP_QSTR_group_hash;
+  MP_QSTR_scalar_from_i64;
+  MP_QSTR_generators;
+  MP_QSTR_SPENDING_KEY_BASE;
+  MP_QSTR_NULLIFIER_K_BASE;
+  MP_QSTR_VALUE_COMMITMENT_VALUE_BASE;
+  MP_QSTR_VALUE_COMMITMENT_RANDOMNESS_BASE;
+  MP_QSTR_NOTE_COMMITMENT_BASE;
+  MP_QSTR_NOTE_COMMITMENT_Q;
+  MP_QSTR_IVK_COMMITMENT_BASE;
+  MP_QSTR_IVK_COMMITMENT_Q;
+
+  // poseidon
+  MP_QSTR_trezorposeidon;
+  MP_QSTR_poseidon;
 }

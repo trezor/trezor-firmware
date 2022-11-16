@@ -22,6 +22,15 @@ impl Type {
     pub const fn as_base(&'static self) -> ObjBase {
         ObjBase { type_: self }
     }
+
+    /// Convert a "static const" Type to a MicroPython object.
+    pub const fn as_obj(&'static self) -> Obj {
+        // SAFETY:
+        //  - We are an object struct with a base and a type.
+        //  - 'static lifetime holds us in place.
+        //  - MicroPython is smart enough not to mutate `mp_obj_type_t` objects.
+        unsafe { Obj::from_ptr(self as *const _ as *mut _) }
+    }
 }
 
 // SAFETY: We are in a single-threaded environment.

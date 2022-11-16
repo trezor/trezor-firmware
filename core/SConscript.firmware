@@ -12,6 +12,7 @@ FEATURE_FLAGS = {
     "RDI": True,
     "SECP256K1_ZKP": True,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot)
     "SYSTEM_VIEW": False,
+    "ZCASH_SHIELDED": False,
 }
 
 CCFLAGS_MOD = ''
@@ -201,6 +202,10 @@ SOURCE_MOD += [
 if UI2:
     SOURCE_MOD += [
         'embed/extmod/rustmods/modtrezorui2.c',
+    ]
+if FEATURE_FLAGS["ZCASH_SHIELDED"]:
+    SOURCE_MOD += [
+        'embed/extmod/rustmods/modtrezorzcashprimitives.c'
     ]
 
 # modutime
@@ -678,7 +683,7 @@ if FROZEN:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/zcash_v4.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Zcash*.py'))
 
-    source_mpy = env.FrozenModule(source=SOURCE_PY, source_dir=SOURCE_PY_DIR, bitcoin_only=BITCOIN_ONLY)
+    source_mpy = env.FrozenModule(source=SOURCE_PY, source_dir=SOURCE_PY_DIR, bitcoin_only=BITCOIN_ONLY, zcash_shielded=FEATURE_FLAGS['ZCASH_SHIELDED'])
 
     source_mpyc = env.FrozenCFile(
         target='frozen_mpy.c', source=source_mpy, qstr_header=qstr_preprocessed)
@@ -720,6 +725,8 @@ def cargo_build():
         features.append('ui')
         if PYOPT == '0':
             features.append('ui_debug')
+    if FEATURE_FLAGS["ZCASH_SHIELDED"]:
+        features.append("zcash_shielded")
 
     cargo_opts = [
         f'--target={RUST_TARGET}',
