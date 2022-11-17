@@ -35,21 +35,6 @@ FLAGS = const(0b0000_0011)  # spends enbled and output enabled
 MAX_SILENT_ORCHARD_INPUTS = const(8)
 
 
-def skip_if_empty(func):
-    """
-    A function decorated by this will not be evaluated,
-    if the Orchard bundle is impty.
-    """
-
-    async def wrapper(self):
-        if self.actions_count == 0:
-            return
-        else:
-            await func(self)
-
-    return wrapper
-
-
 class OrchardSigner:
     def __init__(
         self,
@@ -59,26 +44,13 @@ class OrchardSigner:
         coin: CoinInfo,
         tx_req: TxRequest,
     ) -> None:
-        assert tx_req.serialized is not None  # typing
         params = tx_info.tx.orchard_params
-        if params is None:
-            self.inputs_count = 0
-            self.outputs_count = 0
-        else:
-            self.inputs_count = params.inputs_count
-            self.outputs_count = params.outputs_count
-
-        if self.inputs_count + self.outputs_count > 0:
-            self.actions_count = max(
-                2,  # minimal required amount of actions
-                self.inputs_count,
-                self.outputs_count,
-            )
-        else:
-            self.actions_count = 0
-
-        if self.actions_count == 0:
-            return  # no need to initialize other attributes
+        assert params is not None  # checked in sanitize_sign_tx
+        self.actions_count = max(
+            2,  # minimal required amount of actions
+            self.inputs_count,
+            self.outputs_count,
+        )
 
         self.tx_info = tx_info
         self.keychain = OrchardKeychain.from_seed_and_coin(seed, coin)
@@ -87,7 +59,6 @@ class OrchardSigner:
         self.tx_req = tx_req
         assert isinstance(tx_info.sig_hasher, ZcashHasher)
         self.sig_hasher: ZcashHasher = tx_info.sig_hasher
-        assert params is not None
         self.anchor = params.anchor
         self.key_node = self.keychain.derive(params.address_n)
 
@@ -99,7 +70,6 @@ class OrchardSigner:
 
         self.rng = None
 
-    @skip_if_empty
     async def process_inputs(self) -> None:
         await self.check_orchard_inputs_count()
         for i in range(self.inputs_count):
@@ -111,7 +81,6 @@ class OrchardSigner:
         if self.inputs_count > MAX_SILENT_ORCHARD_INPUTS:
             yield ConfirmOrchardInputsCountOverThreshold(self.inputs_count)
 
-    @skip_if_empty
     async def approve_outputs(self) -> None:
         for i in range(self.outputs_count):
             txo = await self.get_output(i)
@@ -121,7 +90,6 @@ class OrchardSigner:
             else:
                 await self.approver.add_orchard_external_output(txo)
 
-    @skip_if_empty
     async def compute_digest(self) -> None:
         # derive shielding seed
         shielding_seed = self.derive_shielding_seed()
@@ -233,7 +201,6 @@ class OrchardSigner:
         ovk = fvk.outgoing_viewing_key()
         return builder.OutputInfo(ovk, address, txo.amount, txo.memo)
 
-    @skip_if_empty
     @watch_gc_async
     async def sign_inputs(self) -> None:
         sighash = self.sig_hasher.signature_digest()

@@ -402,6 +402,15 @@ def sanitize_sign_tx(tx: SignTx, coin: CoinInfo) -> SignTx:
         if tx.branch_id is not None:
             raise wire.DataError("Branch ID not enabled on this coin.")
 
+    if tx.orchard_params is not None:
+        if not utils.ZCASH_SHIELDED:
+            raise wire.DataError("Shielded transaction disabled.")
+        elif tx.orchard_params.inputs_count + tx.orchard_params.outputs_count == 0:
+            raise wire.DataError("Orchard bundle must not be empty.")
+        elif tx.orchard_params.inputs_count > 0 and tx.inputs_count > 0:
+            raise wire.DataError(
+                "Spending transparent and Orchard inputs simultaneously is not supported."
+            )
     return tx
 
 

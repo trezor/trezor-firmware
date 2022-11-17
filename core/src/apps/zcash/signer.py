@@ -55,7 +55,7 @@ class Zcash(Bitcoinlike):
 
         super().__init__(tx, keychain, coin, approver)
 
-        if ZCASH_SHIELDED:
+        if ZCASH_SHIELDED and tx.orchard_params is not None:
             self.orchard = OrchardSigner(
                 self.tx_info,
                 keychain.seed,
@@ -63,10 +63,8 @@ class Zcash(Bitcoinlike):
                 coin,
                 self.tx_req,
             )
-            if self.orchard.inputs_count > 0 and tx.inputs_count > 0:
-                raise DataError(
-                    "Cannot spending transparent and Orchard inputs simultaneously is not supported."
-                )
+        else:
+            self.orchard = None
 
     def create_sig_hasher(self, tx: SignTx | PrevTx) -> ZcashHasher:
         return ZcashHasher(tx)
@@ -78,12 +76,12 @@ class Zcash(Bitcoinlike):
 
     async def step1_process_inputs(self):
         await super().step1_process_inputs()
-        if ZCASH_SHIELDED:
+        if ZCASH_SHIELDED and self.orchard is not None:
             await self.orchard.process_inputs()
 
     async def step2_approve_outputs(self):
         await super().step2_approve_outputs()
-        if ZCASH_SHIELDED:
+        if ZCASH_SHIELDED and self.orchard is not None:
             await self.orchard.approve_outputs()
 
     async def step3_verify_inputs(self) -> None:
@@ -97,7 +95,7 @@ class Zcash(Bitcoinlike):
         self.taproot_only = False  # turn off taproot behavior
 
     async def step4_serialize_inputs(self):
-        if ZCASH_SHIELDED:
+        if ZCASH_SHIELDED and self.orchard is not None:
             # shield actions first to get a sighash
             await self.orchard.compute_digest()
         await super().step4_serialize_inputs()
@@ -111,14 +109,14 @@ class Zcash(Bitcoinlike):
         write_compact_size(self.serialized_tx, 0)  # nOutputsSapling
 
         # nActionsOrchard
-        if ZCASH_SHIELDED:
+        if ZCASH_SHIELDED and self.orchard is not None::
             write_compact_size(self.serialized_tx, self.orchard.actions_count)
         else:
             write_compact_size(self.serialized_tx, 0)
 
     async def step6_sign_segwit_inputs(self):
         # transparent inputs were signed in step 4
-        if ZCASH_SHIELDED:
+        if ZCASH_SHIELDED and self.orchard is not None:
             await self.orchard.sign_inputs()
 
     async def sign_nonsegwit_input(self, i_sign: int) -> None:
@@ -186,5 +184,5 @@ class Zcash(Bitcoinlike):
     def set_serialized_signature(self, i: int, signature: bytes) -> None:
         super().set_serialized_signature(i, signature)
         assert self.tx_req.serialized is not None
-        if ZCASH_SHIELDED:
+        if ZCASH_SHIELDED and self.orchard is not None:
             self.tx_req.serialized.signature_type = ZcashSignatureType.TRANSPARENT
