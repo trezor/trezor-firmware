@@ -1021,6 +1021,29 @@ class ZcashAddress(protobuf.MessageType):
         self.address = address
 
 
+class ZcashOrchardParams(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("inputs_count", "uint32", repeated=False, required=True),
+        2: protobuf.Field("outputs_count", "uint32", repeated=False, required=True),
+        3: protobuf.Field("anchor", "bytes", repeated=False, required=True),
+        4: protobuf.Field("address_n", "uint32", repeated=True, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        inputs_count: "int",
+        outputs_count: "int",
+        anchor: "bytes",
+        address_n: Optional[Sequence["int"]] = None,
+    ) -> None:
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.inputs_count = inputs_count
+        self.outputs_count = outputs_count
+        self.anchor = anchor
+
+
 class ZcashOrchardInput(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 906
     FIELDS = {
@@ -1307,10 +1330,7 @@ class SignTx(protobuf.MessageType):
         10: protobuf.Field("branch_id", "uint32", repeated=False, required=False),
         11: protobuf.Field("amount_unit", "AmountUnit", repeated=False, required=False),
         12: protobuf.Field("decred_staking_ticket", "bool", repeated=False, required=False),
-        13: protobuf.Field("orchard_inputs_count", "uint32", repeated=False, required=False),
-        14: protobuf.Field("orchard_outputs_count", "uint32", repeated=False, required=False),
-        15: protobuf.Field("orchard_anchor", "bytes", repeated=False, required=False),
-        16: protobuf.Field("account", "uint32", repeated=False, required=False),
+        13: protobuf.Field("orchard_params", "ZcashOrchardParams", repeated=False, required=False),
     }
 
     def __init__(
@@ -1328,10 +1348,7 @@ class SignTx(protobuf.MessageType):
         branch_id: Optional["int"] = None,
         amount_unit: Optional["AmountUnit"] = AmountUnit.BITCOIN,
         decred_staking_ticket: Optional["bool"] = False,
-        orchard_inputs_count: Optional["int"] = 0,
-        orchard_outputs_count: Optional["int"] = 0,
-        orchard_anchor: Optional["bytes"] = None,
-        account: Optional["int"] = 0,
+        orchard_params: Optional["ZcashOrchardParams"] = None,
     ) -> None:
         self.outputs_count = outputs_count
         self.inputs_count = inputs_count
@@ -1345,10 +1362,7 @@ class SignTx(protobuf.MessageType):
         self.branch_id = branch_id
         self.amount_unit = amount_unit
         self.decred_staking_ticket = decred_staking_ticket
-        self.orchard_inputs_count = orchard_inputs_count
-        self.orchard_outputs_count = orchard_outputs_count
-        self.orchard_anchor = orchard_anchor
-        self.account = account
+        self.orchard_params = orchard_params
 
 
 class TxRequest(protobuf.MessageType):

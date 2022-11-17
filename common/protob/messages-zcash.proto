@@ -63,6 +63,17 @@ message ZcashAddress {
 }
 
 /**
+ * Orchard signing params
+ * @embed
+ */
+message ZcashOrchardParams {
+    required uint32 inputs_count = 1;
+    required uint32 outputs_count = 2;
+    required bytes anchor = 3;
+    repeated uint32 address_n = 4;
+}
+
+/**
  * Request: Specify transaction Orchard input.
  * @next TxRequest
  */

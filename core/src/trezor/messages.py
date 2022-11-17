@@ -455,6 +455,26 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["ZcashAddress"]:
             return isinstance(msg, cls)
 
+    class ZcashOrchardParams(protobuf.MessageType):
+        inputs_count: "int"
+        outputs_count: "int"
+        anchor: "bytes"
+        address_n: "list[int]"
+
+        def __init__(
+            self,
+            *,
+            inputs_count: "int",
+            outputs_count: "int",
+            anchor: "bytes",
+            address_n: "list[int] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ZcashOrchardParams"]:
+            return isinstance(msg, cls)
+
     class ZcashOrchardInput(protobuf.MessageType):
         recipient: "bytes"
         value: "int"
@@ -707,10 +727,7 @@ if TYPE_CHECKING:
         branch_id: "int | None"
         amount_unit: "AmountUnit"
         decred_staking_ticket: "bool"
-        orchard_inputs_count: "int"
-        orchard_outputs_count: "int"
-        orchard_anchor: "bytes | None"
-        account: "int"
+        orchard_params: "ZcashOrchardParams | None"
 
         def __init__(
             self,
@@ -726,10 +743,7 @@ if TYPE_CHECKING:
             branch_id: "int | None" = None,
             amount_unit: "AmountUnit | None" = None,
             decred_staking_ticket: "bool | None" = None,
-            orchard_inputs_count: "int | None" = None,
-            orchard_outputs_count: "int | None" = None,
-            orchard_anchor: "bytes | None" = None,
-            account: "int | None" = None,
+            orchard_params: "ZcashOrchardParams | None" = None,
         ) -> None:
             pass
 

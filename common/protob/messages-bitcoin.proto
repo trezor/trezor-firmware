@@ -198,11 +198,7 @@ message SignTx {
     optional uint32 branch_id = 10;                            // only for Zcash, BRANCH_ID
     optional AmountUnit amount_unit = 11 [default=BITCOIN];    // show amounts in
     optional bool decred_staking_ticket = 12 [default=false];  // only for Decred, this is signing a ticket purchase
-
-    optional uint32 orchard_inputs_count = 13 [default = 0];    // only for Zcash, number of Orchard inputs
-    optional uint32 orchard_outputs_count = 14 [default = 0];   // only for Zcash, number of Orchard outputs
-    optional bytes orchard_anchor = 15;                         // only for Zcash, a root of Orchard Merkle tree
-    optional uint32 account = 16 [default = 0];                 // only for Zcash
+    optional zcash.ZcashOrchardParams orchard_params = 13;     // only for Zcash
 }
 
 /**

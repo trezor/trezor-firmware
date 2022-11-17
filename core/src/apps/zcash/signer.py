@@ -63,11 +63,10 @@ class Zcash(Bitcoinlike):
                 coin,
                 self.tx_req,
             )
-            self.tx_info.wallet_path.attribute = [
-                44 | HARDENED,  # BIP-44 constant
-                coin.slip44 | HARDENED,
-                tx.account | HARDENED,
-            ]
+            if self.orchard.inputs_count > 0 and tx.inputs_count > 0:
+                raise DataError(
+                    "Cannot spending transparent and Orchard inputs simultaneously is not supported."
+                )
 
     def create_sig_hasher(self, tx: SignTx | PrevTx) -> ZcashHasher:
         return ZcashHasher(tx)

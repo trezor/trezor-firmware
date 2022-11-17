@@ -9,7 +9,6 @@ from trezor.messages import TxRequest, ZcashAck, ZcashOrchardInput, ZcashOrchard
 from trezor.wire import DataError
 
 from apps.bitcoin.sign_tx import helpers
-from apps.common.paths import HARDENED
 
 from .. import unified
 from ..hasher import ZcashHasher
@@ -61,9 +60,13 @@ class OrchardSigner:
         tx_req: TxRequest,
     ) -> None:
         assert tx_req.serialized is not None  # typing
-
-        self.inputs_count = tx_info.tx.orchard_inputs_count
-        self.outputs_count = tx_info.tx.orchard_outputs_count
+        params = tx_info.tx.orchard_params
+        if params is None:
+            self.inputs_count = 0
+            self.outputs_count = 0
+        else:
+            self.inputs_count = params.inputs_count
+            self.outputs_count = params.outputs_count
 
         if self.inputs_count + self.outputs_count > 0:
             self.actions_count = max(
@@ -84,15 +87,9 @@ class OrchardSigner:
         self.tx_req = tx_req
         assert isinstance(tx_info.sig_hasher, ZcashHasher)
         self.sig_hasher: ZcashHasher = tx_info.sig_hasher
-
-        account = tx_info.tx.account
-        assert account is not None  # typing
-        key_path = [
-            32 | HARDENED,  # ZIP-32 constant
-            coin.slip44 | HARDENED,  # purpose
-            account | HARDENED,  # account
-        ]
-        self.key_node = self.keychain.derive(key_path)
+        assert params is not None
+        self.anchor = params.anchor
+        self.key_node = self.keychain.derive(params.address_n)
 
         self.msg_acc = MessageAccumulator(
             self.keychain.derive_slip21(
@@ -175,15 +172,13 @@ class OrchardSigner:
         self.msg_acc.check()
 
         # hash orchard footer
-        assert self.tx_info.tx.orchard_anchor is not None  # typing
         self.sig_hasher.orchard.finalize(
             flags=FLAGS,
             value_balance=self.approver.orchard_balance,
-            anchor=self.tx_info.tx.orchard_anchor,
+            anchor=self.anchor,
         )
 
     def derive_shielding_seed(self) -> bytes:
-        assert self.tx_info.tx.orchard_anchor is not None  # typing
         ss_slip21 = self.keychain.derive_slip21(
             [b"Zcash Orchard", b"bundle_shielding_seed"],
         ).key()
@@ -191,7 +186,7 @@ class OrchardSigner:
         ss_hasher.update(self.sig_hasher.header.digest())
         ss_hasher.update(self.sig_hasher.transparent.digest())
         ss_hasher.update(self.msg_acc.state)
-        ss_hasher.update(self.tx_info.tx.orchard_anchor)
+        ss_hasher.update(self.anchor)
         ss_hasher.update(ss_slip21)
         return ss_hasher.digest()
 
