@@ -107,11 +107,7 @@ def encode(receivers: dict[Typecode, bytes], hrp: str) -> str:
 
     w = empty_bytearray(length)
 
-    # receivers in ascending order
-    receivers_list = list(receivers.items())
-    receivers_list.sort()
-
-    for (typecode, raw_bytes) in receivers_list:
+    for typecode, raw_bytes in sorted(receivers.items()):
         length = len(raw_bytes)
         write_compact_size(w, typecode)
         write_compact_size(w, length)
