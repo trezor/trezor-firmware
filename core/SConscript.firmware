@@ -9,8 +9,8 @@ TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 UI2 = ARGUMENTS.get('UI2', '0') == '1' or TREZOR_MODEL in ('1', 'R')
 
 FEATURE_FLAGS = {
-    "RDI": True,
-    "SECP256K1_ZKP": True,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot)
+    "RDI": False,
+    "SECP256K1_ZKP": False,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot)
     "SYSTEM_VIEW": False,
     "ZCASH_SHIELDED": False,
 }
@@ -674,7 +674,12 @@ if FROZEN:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/tezos/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Tezos*.py'))
 
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/zcash/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/zcash/*.py',
+            exclude=[
+                SOURCE_PY_DIR + 'apps/zcash/get_address.py',
+                SOURCE_PY_DIR + 'apps/zcash/get_viewing_key.py',
+            ])
+        )
 
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/webauthn/*.py'))
 
@@ -683,7 +688,13 @@ if FROZEN:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/zcash_v4.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Zcash*.py'))
 
-    source_mpy = env.FrozenModule(source=SOURCE_PY, source_dir=SOURCE_PY_DIR, bitcoin_only=BITCOIN_ONLY, zcash_shielded=FEATURE_FLAGS['ZCASH_SHIELDED'])
+    if FEATURE_FLAGS["ZCASH_SHIELDED"]:
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/zcash/orchard/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/zcash/orchard/*/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/zcash/get_address.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/zcash/get_viewing_key.py'))
+
+    source_mpy = env.FrozenModule(source=SOURCE_PY, source_dir=SOURCE_PY_DIR, bitcoin_only=BITCOIN_ONLY)
 
     source_mpyc = env.FrozenCFile(
         target='frozen_mpy.c', source=source_mpy, qstr_header=qstr_preprocessed)

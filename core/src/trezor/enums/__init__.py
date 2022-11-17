@@ -249,6 +249,12 @@ if TYPE_CHECKING:
         WebAuthnCredentials = 801
         WebAuthnAddResidentCredential = 802
         WebAuthnRemoveResidentCredential = 803
+        ZcashGetAddress = 900
+        ZcashAddress = 901
+        ZcashGetViewingKey = 902
+        ZcashViewingKey = 903
+        ZcashOrchardInput = 906
+        ZcashOrchardOutput = 907
 
     class FailureType(IntEnum):
         UnexpectedMessage = 1
@@ -296,6 +302,10 @@ if TYPE_CHECKING:
         WipeCodeFirst = 4
         WipeCodeSecond = 5
 
+    class ZcashSignatureType(IntEnum):
+        TRANSPARENT = 0
+        ORCHARD_SPEND_AUTH = 3
+
     class InputScriptType(IntEnum):
         SPENDADDRESS = 0
         SPENDMULTISIG = 1
@@ -332,6 +342,9 @@ if TYPE_CHECKING:
         TXORIGINPUT = 5
         TXORIGOUTPUT = 6
         TXPAYMENTREQ = 7
+        TXORCHARDOUTPUT = 8
+        TXORCHARDINPUT = 9
+        NO_OP = 10
 
     class CardanoDerivationType(IntEnum):
         LEDGER = 0

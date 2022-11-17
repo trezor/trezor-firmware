@@ -202,7 +202,10 @@ class BasicApprover(Approver):
         elif txo.payment_req_index is None or self.show_payment_req_details:
             # Ask user to confirm output, unless it is part of a payment
             # request, which gets confirmed separately.
-            await helpers.confirm_output(txo, self.coin, self.amount_unit)
+            await self.confirm_output(txo)
+
+    async def confirm_output(self, txo: TxOutput) -> None:
+        await helpers.confirm_output(txo, self.coin, self.amount_unit)
 
     async def add_payment_request(
         self, msg: TxAckPaymentRequest, keychain: Keychain

@@ -1,22 +1,19 @@
 from typing import *
-# https://zips.z.cash/protocol/protocol.pdf#orchardkeycomponents
 
 
 # rust/src/zcash_primitives/pallas/mod.rs
 def to_base(x: bytes) -> Fp:
-    ...
-# https://zips.z.cash/protocol/protocol.pdf#orchardkeycomponents
+    """https://zips.z.cash/protocol/protocol.pdf#orchardkeycomponents"""
 
 
 # rust/src/zcash_primitives/pallas/mod.rs
 def to_scalar(x: bytes) -> Scalar:
-    ...
-# https://zips.z.cash/protocol/protocol.pdf#concretegrouphashpallasandvesta
+    """https://zips.z.cash/protocol/protocol.pdf#orchardkeycomponents"""
 
 
 # rust/src/zcash_primitives/pallas/mod.rs
 def group_hash(domain: str, message: bytes) -> Point:
-    ...
+    """https://zips.z.cash/protocol/protocol.pdf#concretegrouphashpallasandvesta"""
 
 
 # rust/src/zcash_primitives/pallas/mod.rs
@@ -40,13 +37,13 @@ class Scalar:
         ...
     def to_bytes(self) -> bytes:
         ...
-    def is_not_zero(self) -> bool:
-        ...
     def __mul__(self, other: Point) -> Point:
         ...
     def __add__(self, other: Scalar) -> Scalar:
         ...
     def __neg__(self) -> Point:
+        ...
+    def __bool__(self) -> bool:
         ...
 
 

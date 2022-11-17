@@ -50,7 +50,6 @@ SECTIONS {
     build/firmware/vendor/secp256k1-zkp/src/precomputed_ecmult_gen.o(.rodata*);
     . = ALIGN(512);
   } >FLASH2 AT>FLASH2
-
   .flash : ALIGN(512) {
     KEEP(*(.vector_table));
     . = ALIGN(4);

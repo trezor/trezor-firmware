@@ -63,8 +63,9 @@ default_features = false
 
 [dependencies.pasta_curves]
 optional = true
-version = "0.4.0"
+version = "0.4.1"
 default-features = false
+features = ["uninline-portable"]
 
 # Build dependencies
 
@@ -88,4 +89,4 @@ path = "./blake2b_hal"
 
 [patch.crates-io.pasta_curves]
 git = "https://github.com/jarys/pasta_curves"
-rev = "a4f755013aad344982383c9f5af362697d928325"
+rev = "e11dfe4089d0da24483094a99cceb89f32974c17"

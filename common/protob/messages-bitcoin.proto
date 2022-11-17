@@ -9,6 +9,7 @@ option (include_in_bitcoin_only) = true;
 
 import "messages.proto";
 import "messages-common.proto";
+import "messages-zcash.proto";
 
 /**
  * Type of script which will be used for transaction input
@@ -197,6 +198,11 @@ message SignTx {
     optional uint32 branch_id = 10;                            // only for Zcash, BRANCH_ID
     optional AmountUnit amount_unit = 11 [default=BITCOIN];    // show amounts in
     optional bool decred_staking_ticket = 12 [default=false];  // only for Decred, this is signing a ticket purchase
+
+    optional uint32 orchard_inputs_count = 13 [default = 0];    // only for Zcash, number of Orchard inputs
+    optional uint32 orchard_outputs_count = 14 [default = 0];   // only for Zcash, number of Orchard outputs
+    optional bytes orchard_anchor = 15;                         // only for Zcash, a root of Orchard Merkle tree
+    optional uint32 account = 16 [default = 0];                 // only for Zcash
 }
 
 /**
@@ -211,6 +217,8 @@ message SignTx {
  * @next TxAckPrevOutput
  * @next TxAckPrevExtraData
  * @next TxAckPaymentRequest
+ * @next ZcashOrchardInput
+ * @next ZcashOrchardOutput
  */
 message TxRequest {
     optional RequestType request_type = 1;              // what should be filled in TxAck message?
@@ -228,6 +236,9 @@ message TxRequest {
         TXORIGINPUT = 5;
         TXORIGOUTPUT = 6;
         TXPAYMENTREQ = 7;
+        TXORCHARDOUTPUT = 8;
+        TXORCHARDINPUT = 9;
+        NO_OP = 10;
     }
     /**
     * Structure representing request details
@@ -245,6 +256,10 @@ message TxRequest {
         optional uint32 signature_index = 1;    // 'signature' field contains signed input of this index
         optional bytes signature = 2;           // signature of the signature_index input
         optional bytes serialized_tx = 3;       // part of serialized and signed transaction
+
+        optional zcash.ZcashSignatureType signature_type = 4;  // for Zcash only
+        optional bytes zcash_shielding_seed = 5;  // for Zcash only
+        optional bytes tx_sighash = 6;            // for Zcash only
     }
 }
 
@@ -607,4 +622,3 @@ message AuthorizeCoinJoin {
     optional InputScriptType script_type = 7 [default=SPENDADDRESS];    // used to distinguish between various address formats (non-segwit, segwit, etc.)
     optional AmountUnit amount_unit = 8 [default=BITCOIN];              // show amounts in
 }
-

@@ -4,6 +4,7 @@ unified addresses according to the ZIP-316.
 see: https://zips.z.cash/zip-0316
 """
 
+import gc
 from typing import TYPE_CHECKING
 
 from trezor.crypto.bech32 import Encoding, bech32_decode, bech32_encode, convertbits
@@ -29,7 +30,7 @@ class Typecode(IntEnum):
     ORCHARD = 0x03
 
 
-def receiver_length(typecode: int) -> int | None:
+def address_receiver_length(typecode: int) -> int | None:
     """Byte length of a receiver."""
     if typecode in (Typecode.P2PKH, Typecode.P2SH):
         return 20
@@ -38,21 +39,62 @@ def receiver_length(typecode: int) -> int | None:
     return None
 
 
-def prefix(coin: CoinInfo) -> str:
-    """Prefix for a unified address."""
+def fvk_prefix(coin: CoinInfo) -> str:
+    """Prefix for a unified Full Viewing Key."""
     if coin.coin_name == "Zcash":
-        return "u"
+        return "uview"
     if coin.coin_name == "Zcash Testnet":
-        return "utest"
+        return "uviewtest"
     raise ValueError
 
 
-def padding(hrp: str) -> bytes:
+def ivk_prefix(coin: CoinInfo) -> str:
+    """Prefix for a unified Incoming Viewing Key."""
+    if coin.coin_name == "Zcash":
+        return "uivk"
+    if coin.coin_name == "Zcash Testnet":
+        return "uivktest"
+    raise ValueError
+
+
+def padded(hrp: str) -> bytes:
     assert len(hrp) <= 16
     return hrp.encode() + bytes(16 - len(hrp))
 
 
-def encode(receivers: dict[Typecode, bytes], coin: CoinInfo) -> str:
+def encode_address(receivers: dict[Typecode, bytes], coin: CoinInfo) -> str:
+    if coin.coin_name == "Zcash":
+        hrp = "u"
+    elif coin.coin_name == "Zcash Testnet":
+        hrp = "utest"
+    else:
+        raise ValueError
+    for code, receiver in receivers.items():
+        assert len(receiver) == address_receiver_length(code)
+    return encode(receivers, hrp)
+
+
+def encode_fvk(receivers: dict[Typecode, bytes], coin: CoinInfo) -> str:
+    if coin.coin_name == "Zcash":
+        hrp = "uview"
+    elif coin.coin_name == "Zcash Testnet":
+        hrp = "uviewtest"
+    else:
+        raise ValueError
+    return encode(receivers, hrp)
+
+
+def encode_ivk(receivers: dict[Typecode, bytes], coin: CoinInfo) -> str:
+    if coin.coin_name == "Zcash":
+        hrp = "uivk"
+    elif coin.coin_name == "Zcash Testnet":
+        hrp = "uivktest"
+    else:
+        raise ValueError
+    return encode(receivers, hrp)
+
+
+def encode(receivers: dict[Typecode, bytes], hrp: str) -> str:
     # multiple transparent receivers forbidden
     assert not (Typecode.P2PKH in receivers and Typecode.P2SH in receivers)
     # at least one shielded address must be present
@@ -70,35 +112,43 @@ def encode(receivers: dict[Typecode, bytes], coin: CoinInfo) -> str:
     receivers_list.sort()
 
     for (typecode, raw_bytes) in receivers_list:
-        length = receiver_length(typecode) or len(raw_bytes)
+        length = len(raw_bytes)
         write_compact_size(w, typecode)
         write_compact_size(w, length)
         write_bytes_fixed(w, raw_bytes, length)
 
-    hrp = prefix(coin)
-    write_bytes_fixed(w, padding(hrp), 16)
+    write_bytes_fixed(w, padded(hrp), 16)
     f4jumble(memoryview(w))
     converted = convertbits(w, 8, 5)
     return bech32_encode(hrp, converted, Encoding.BECH32M)
 
 
-def decode(addr_str: str, coin: CoinInfo) -> dict[int, bytes]:
+def decode_address(addr_str: str, coin: CoinInfo) -> dict[int, bytes]:
+    if coin.coin_name == "Zcash":
+        expected_hrp = "u"
+    elif coin.coin_name == "Zcash Testnet":
+        expected_hrp = "utest"
+    else:
+        raise ValueError
+
     (hrp, data, encoding) = bech32_decode(addr_str, max_bech_len=1000)
     if (hrp, data, encoding) == (None, None, None):
         raise DataError("Bech32m decoding failed.")
     assert hrp is not None  # to satisfy typecheckers
     assert data is not None  # to satisfy typecheckers
     assert encoding is not None  # to satisfy typecheckers
-    if hrp != prefix(coin):
+    if hrp != expected_hrp:
         raise DataError("Unexpected address prefix.")
     if encoding != Encoding.BECH32M:
         raise DataError("Bech32m encoding required.")
 
+    gc.collect()
     decoded = bytearray(convertbits(data, 5, 8, False))
+    gc.collect()
     f4unjumble(memoryview(decoded))
 
     # check trailing padding bytes
-    if decoded[-16:] != padding(hrp):
+    if decoded[-16:] != padded(hrp):
         raise DataError("Invalid padding bytes")
 
     r = BufferReader(decoded[:-16])
@@ -117,7 +167,7 @@ def decode(addr_str: str, coin: CoinInfo) -> dict[int, bytes]:
 
         length = read_compact_size(r)
         # if the typecode of the receiver is known, then verify receiver length
-        expected_length = receiver_length(typecode)
+        expected_length = address_receiver_length(typecode)
         if expected_length is not None and length != expected_length:
             raise DataError("Unexpected receiver length")
 

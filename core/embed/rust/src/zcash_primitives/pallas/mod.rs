@@ -9,17 +9,14 @@ mod scalar;
 #[no_mangle]
 pub static mp_module_trezorpallas: Module = obj_module! {
     Qstr::MP_QSTR___name__ => Qstr::MP_QSTR_trezorpallas.to_obj(),
-    /// # https://zips.z.cash/protocol/protocol.pdf#orchardkeycomponents
     /// def to_base(x: bytes) -> Fp:
-    ///     ...
+    ///     """https://zips.z.cash/protocol/protocol.pdf#orchardkeycomponents"""
     Qstr::MP_QSTR_to_base => obj_fn_1!(fp::to_base).as_obj(),
-    /// # https://zips.z.cash/protocol/protocol.pdf#orchardkeycomponents
     /// def to_scalar(x: bytes) -> Scalar:
-    ///     ...
+    ///     """https://zips.z.cash/protocol/protocol.pdf#orchardkeycomponents"""
     Qstr::MP_QSTR_to_scalar => obj_fn_1!(scalar::to_scalar).as_obj(),
-    /// # https://zips.z.cash/protocol/protocol.pdf#concretegrouphashpallasandvesta
     /// def group_hash(domain: str, message: bytes) -> Point:
-    ///     ...
+    ///     """https://zips.z.cash/protocol/protocol.pdf#concretegrouphashpallasandvesta"""
     Qstr::MP_QSTR_group_hash => obj_fn_2!(point::group_hash).as_obj(),
     /// def scalar_from_i64(x: int) -> Scalar:
     ///     """Converts integer to Scalar."""

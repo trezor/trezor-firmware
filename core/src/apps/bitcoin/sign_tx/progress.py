@@ -27,5 +27,8 @@ def report_init() -> None:
 def report() -> None:
     if utils.DISABLE_ANIMATION:
         return
-    p = 1000 * _progress // _steps
+    if _steps == 0:  # Zcash transaction without transparent inputs and outputs
+        p = 1000
+    else:
+        p = 1000 * _progress // _steps
     ui.display.loader(p, False, 18, ui.WHITE, ui.BG)

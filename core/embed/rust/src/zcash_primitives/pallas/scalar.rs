@@ -39,9 +39,16 @@ unsafe extern "C" fn scalar_binary_op(op: ffi::mp_binary_op_t, this: Obj, other:
         let this = this.deref().inner();
         match op {
             ffi::mp_binary_op_t_MP_BINARY_OP_MULTIPLY => {
-                let other = Gc::<Wrapped<Point>>::try_from(other)?;
-                let other = other.deref().inner();
-                (other * this).wrap()
+                let point = Gc::<Wrapped<Point>>::try_from(other);
+                if point.is_ok() {
+                    let point = point.unwrap();
+                    let point = point.deref().inner();
+                    (point * this).wrap()
+                } else {
+                    let scalar = Gc::<Wrapped<Scalar>>::try_from(other)?;
+                    let scalar = scalar.deref().inner();
+                    (this * scalar).wrap()
+                }
             }
             ffi::mp_binary_op_t_MP_BINARY_OP_ADD => {
                 let other = Gc::<Wrapped<Scalar>>::try_from(other)?;
