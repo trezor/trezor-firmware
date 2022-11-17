@@ -135,25 +135,24 @@ def decode_address(addr_str: str, coin: CoinInfo) -> dict[int, bytes]:
     last_typecode = None
     receivers: dict[int, bytes] = dict()
     while r.remaining_count() > 0:
-        typecode = read_compact_size(r)
-        if typecode in receivers:
-            raise DataError("Duplicated typecode")
-        if typecode > 0x02000000:
-            raise DataError("Invalid typecode")
-        if last_typecode is not None and typecode < last_typecode:
-            raise DataError("Invalid receivers order")
-        last_typecode = typecode
+        try:
+            typecode = read_compact_size(r)
+            if typecode in receivers:
+                raise DataError("Duplicated typecode")
+            if typecode > 0x02000000:
+                raise DataError("Invalid typecode")
+            if last_typecode is not None and typecode < last_typecode:
+                raise DataError("Invalid receivers order")
+            last_typecode = typecode
 
-        length = read_compact_size(r)
-        # if the typecode of the receiver is known, then verify receiver length
-        expected_length = address_receiver_length(typecode)
-        if expected_length is not None and length != expected_length:
-            raise DataError("Unexpected receiver length")
-
-        if r.remaining_count() < length:
+            length = read_compact_size(r)
+            # if the typecode of the receiver is known then verify receiver length
+            expected_length = address_receiver_length(typecode)
+            if expected_length is not None and length != expected_length:
+                raise DataError("Unexpected receiver length")
+            receivers[typecode] = r.read(length)
+        except EOFError:
             raise DataError("Invalid receiver length")
-
-        receivers[typecode] = r.read(length)
 
     if Typecode.P2PKH in receivers and Typecode.P2SH in receivers:
         raise DataError("Multiple transparent receivers")
