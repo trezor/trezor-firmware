@@ -249,12 +249,12 @@ if TYPE_CHECKING:
         WebAuthnCredentials = 801
         WebAuthnAddResidentCredential = 802
         WebAuthnRemoveResidentCredential = 803
-        ZcashGetAddress = 900
-        ZcashAddress = 901
-        ZcashGetViewingKey = 902
-        ZcashViewingKey = 903
-        ZcashOrchardInput = 906
-        ZcashOrchardOutput = 907
+        ZcashOrchardInput = 900
+        ZcashOrchardOutput = 901
+        ZcashGetAddress = 902
+        ZcashAddress = 903
+        ZcashGetViewingKey = 904
+        ZcashViewingKey = 905
 
     class FailureType(IntEnum):
         UnexpectedMessage = 1

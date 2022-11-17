@@ -257,12 +257,12 @@ class MessageType(IntEnum):
     WebAuthnCredentials = 801
     WebAuthnAddResidentCredential = 802
     WebAuthnRemoveResidentCredential = 803
-    ZcashGetAddress = 900
-    ZcashAddress = 901
-    ZcashGetViewingKey = 902
-    ZcashViewingKey = 903
-    ZcashOrchardInput = 906
-    ZcashOrchardOutput = 907
+    ZcashOrchardInput = 900
+    ZcashOrchardOutput = 901
+    ZcashGetAddress = 902
+    ZcashAddress = 903
+    ZcashGetViewingKey = 904
+    ZcashViewingKey = 905
 
 
 class FailureType(IntEnum):
@@ -948,7 +948,7 @@ class HDNodeType(protobuf.MessageType):
 
 
 class ZcashGetViewingKey(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 902
+    MESSAGE_WIRE_TYPE = 904
     FIELDS = {
         1: protobuf.Field("coin_name", "string", repeated=False, required=False),
         2: protobuf.Field("z_address_n", "uint32", repeated=True, required=False),
@@ -968,7 +968,7 @@ class ZcashGetViewingKey(protobuf.MessageType):
 
 
 class ZcashViewingKey(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 903
+    MESSAGE_WIRE_TYPE = 905
     FIELDS = {
         1: protobuf.Field("key", "string", repeated=False, required=True),
     }
@@ -982,7 +982,7 @@ class ZcashViewingKey(protobuf.MessageType):
 
 
 class ZcashGetAddress(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 900
+    MESSAGE_WIRE_TYPE = 902
     FIELDS = {
         1: protobuf.Field("coin_name", "string", repeated=False, required=False),
         2: protobuf.Field("t_address_n", "uint32", repeated=True, required=False),
@@ -1008,7 +1008,7 @@ class ZcashGetAddress(protobuf.MessageType):
 
 
 class ZcashAddress(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 901
+    MESSAGE_WIRE_TYPE = 903
     FIELDS = {
         1: protobuf.Field("address", "string", repeated=False, required=False),
     }
@@ -1045,7 +1045,7 @@ class ZcashOrchardParams(protobuf.MessageType):
 
 
 class ZcashOrchardInput(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 906
+    MESSAGE_WIRE_TYPE = 900
     FIELDS = {
         1: protobuf.Field("recipient", "bytes", repeated=False, required=True),
         2: protobuf.Field("value", "uint64", repeated=False, required=True),
@@ -1068,7 +1068,7 @@ class ZcashOrchardInput(protobuf.MessageType):
 
 
 class ZcashOrchardOutput(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 907
+    MESSAGE_WIRE_TYPE = 901
     FIELDS = {
         1: protobuf.Field("address", "string", repeated=False, required=False),
         2: protobuf.Field("amount", "uint64", repeated=False, required=True),
