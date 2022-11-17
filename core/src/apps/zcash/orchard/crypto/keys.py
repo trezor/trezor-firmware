@@ -1,11 +1,10 @@
 # https://zips.z.cash/protocol/protocol.pdf#orchardkeycomponents
 
-from trezor.crypto.pallas import Fp, Scalar, to_base, to_scalar
+from trezor.crypto.pallas import Fp, Scalar, generators as gen, to_base, to_scalar
 from trezor.utils import ensure
 
 from . import ff1
 from .address import Address
-from .generators import IVK_COMMITMENT_BASE, IVK_COMMITMENT_Q, SPENDING_KEY_BASE
 from .sinsemilla import Sinsemilla
 from .utils import i2lebsp, prf_expand
 
@@ -13,7 +12,7 @@ from .utils import i2lebsp, prf_expand
 def sk_to_ask(sk: bytes) -> Scalar:
     """Derives Spend Authorizing Key from Spending Key."""
     ask = to_scalar(prf_expand(sk, b"\x06"))
-    akP = ask * SPENDING_KEY_BASE
+    akP = ask * gen.SPENDING_KEY_BASE
     if akP.to_bytes()[-1] & 0x80 != 0:
         ask = -ask
     ensure(ask)  # ask != 0
@@ -57,7 +56,7 @@ class FullViewingKey:
         nk = to_base(prf_expand(sk, b"\x07"))
         rivk = to_scalar(prf_expand(sk, b"\x08"))
         ensure(ask)  # ask != 0
-        ak = (ask * SPENDING_KEY_BASE).extract()
+        ak = (ask * gen.SPENDING_KEY_BASE).extract()
         return FullViewingKey(ak, nk, rivk)
 
     # https://zips.z.cash/protocol/protocol.pdf#orchardfullviewingkeyencoding
@@ -107,8 +106,8 @@ class FullViewingKey:
 
 # https://zips.z.cash/protocol/nu5.pdf#concreteNotecommit
 def commit_ivk(rivk: Scalar, ak: Fp, nk: Fp) -> Fp:
-    h = Sinsemilla(IVK_COMMITMENT_Q)
+    h = Sinsemilla(gen.IVK_COMMITMENT_Q)
     h.update(i2lebsp(255, ak))
     h.update(i2lebsp(255, nk))
-    commitment = h.finalize() + rivk * IVK_COMMITMENT_BASE
+    commitment = h.finalize() + rivk * gen.IVK_COMMITMENT_BASE
     return commitment.extract()

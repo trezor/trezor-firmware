@@ -1,13 +1,8 @@
 import gc
 from typing import TYPE_CHECKING
 
-from trezor.crypto.pallas import Point, Scalar, scalar_from_i64
+from trezor.crypto.pallas import Point, Scalar, generators as gen, scalar_from_i64
 
-from .generators import (
-    SPENDING_KEY_BASE,
-    VALUE_COMMITMENT_RANDOMNESS_BASE,
-    VALUE_COMMITMENT_VALUE_BASE,
-)
 from .keys import FullViewingKey, sk_to_ask
 from .note import Note
 from .note_encryption import encrypt_note
@@ -19,8 +14,8 @@ if TYPE_CHECKING:
 
 # https://zips.z.cash/protocol/nu5.pdf#concretehomomorphiccommit
 def commit_value(rcv: Scalar, v: int):
-    V = scalar_from_i64(v) * VALUE_COMMITMENT_VALUE_BASE
-    R = rcv * VALUE_COMMITMENT_RANDOMNESS_BASE
+    V = scalar_from_i64(v) * gen.VALUE_COMMITMENT_VALUE_BASE
+    R = rcv * gen.VALUE_COMMITMENT_RANDOMNESS_BASE
     return V + R
 
 
@@ -87,7 +82,7 @@ def build_action(
     # verification key
     alpha = rng.alpha()
     akP = Point(input.fvk.ak.to_bytes())
-    rk = akP + alpha * SPENDING_KEY_BASE
+    rk = akP + alpha * gen.SPENDING_KEY_BASE
 
     # note commitment
     note = Note(

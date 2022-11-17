@@ -3,9 +3,8 @@
 from typing import TYPE_CHECKING
 
 from trezor.crypto.hashlib import blake2b
-from trezor.crypto.pallas import to_scalar
+from trezor.crypto.pallas import generators as gen, to_scalar
 
-from .generators import SPENDING_KEY_BASE
 from .utils import xor
 
 if TYPE_CHECKING:
@@ -32,9 +31,9 @@ def sign_spend_auth(sk: Scalar, message: bytes, rng: ActionShieldingRng) -> byte
     # - `rng.spend_auth_T()` randomizes the signature
     # - xoring with bytes of `sk` makes `T` unpredictable for outside
 
-    vk: bytes = (sk * SPENDING_KEY_BASE).to_bytes()
+    vk: bytes = (sk * gen.SPENDING_KEY_BASE).to_bytes()
     r: Scalar = H_star(T + vk + message)
-    R: bytes = (r * SPENDING_KEY_BASE).to_bytes()
+    R: bytes = (r * gen.SPENDING_KEY_BASE).to_bytes()
     e: Scalar = H_star(R + vk + message)
     S: bytes = (r + e * sk).to_bytes()
     return R + S

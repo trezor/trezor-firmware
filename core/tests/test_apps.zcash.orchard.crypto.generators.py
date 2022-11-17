@@ -1,6 +1,5 @@
 from common import *
-from trezor.crypto.pallas import group_hash, Point
-from apps.zcash.orchard.crypto import generators as gen
+from trezor.crypto.pallas import group_hash, Point, generators as gen
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")

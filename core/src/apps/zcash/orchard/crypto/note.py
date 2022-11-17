@@ -1,7 +1,14 @@
 from typing import TYPE_CHECKING
 
 from trezor.crypto.hashlib import poseidon
-from trezor.crypto.pallas import Fp, Point, Scalar, to_base, to_scalar
+from trezor.crypto.pallas import (
+    Fp,
+    Point,
+    Scalar,
+    generators as gen,
+    to_base,
+    to_scalar,
+)
 from trezor.messages import ZcashOrchardInput
 
 from apps.common.writers import (
@@ -12,7 +19,6 @@ from apps.common.writers import (
 )
 
 from .address import Address
-from .generators import NOTE_COMMITMENT_BASE, NOTE_COMMITMENT_Q, NULLIFIER_K_BASE
 from .sinsemilla import Sinsemilla
 from .utils import i2lebsp, leos2bsp, prf_expand
 
@@ -52,19 +58,19 @@ class Note:
 
     # https://zips.z.cash/protocol/nu5.pdf#concreteNotecommit
     def commitment(self) -> Point:
-        h = Sinsemilla(NOTE_COMMITMENT_Q)
+        h = Sinsemilla(gen.NOTE_COMMITMENT_Q)
         h.update(leos2bsp(self.recipient.g_d().to_bytes()))
         h.update(leos2bsp(self.recipient.pk_d.to_bytes()))
         h.update(i2lebsp(64, self.value))
         h.update(i2lebsp(255, self.rho))
         h.update(i2lebsp(255, self.psi()))
-        return h.finalize() + self.rcm() * NOTE_COMMITMENT_BASE
+        return h.finalize() + self.rcm() * gen.NOTE_COMMITMENT_BASE
 
     # https://zips.z.cash/protocol/protocol.pdf#commitmentsandnullifiers
     def nullifier(self, nk: Fp) -> Fp:
         base = poseidon(nk, self.rho) + self.psi()
         scalar = Scalar(base.to_bytes())
-        point = scalar * NULLIFIER_K_BASE + self.commitment()
+        point = scalar * gen.NULLIFIER_K_BASE + self.commitment()
         return point.extract()
 
     # https://zips.z.cash/protocol/nu5.pdf#notept
