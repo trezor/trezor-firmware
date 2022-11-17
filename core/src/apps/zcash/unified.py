@@ -13,7 +13,11 @@ from trezor.wire import DataError
 
 from apps.common.coininfo import CoinInfo
 from apps.common.readers import read_compact_size
-from apps.common.writers import write_bytes_fixed, write_compact_size
+from apps.common.writers import (
+    write_bytes_fixed,
+    write_bytes_unchecked,
+    write_compact_size,
+)
 
 from .f4jumble import f4jumble, f4unjumble
 
@@ -111,7 +115,7 @@ def encode(receivers: dict[Typecode, bytes], hrp: str) -> str:
         length = len(raw_bytes)
         write_compact_size(w, typecode)
         write_compact_size(w, length)
-        write_bytes_fixed(w, raw_bytes, length)
+        write_bytes_unchecked(w, raw_bytes)
 
     write_bytes_fixed(w, padded(hrp), 16)
     f4jumble(memoryview(w))
