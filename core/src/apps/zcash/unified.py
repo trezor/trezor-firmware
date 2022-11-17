@@ -43,24 +43,6 @@ def address_receiver_length(typecode: int) -> int | None:
     return None
 
 
-def fvk_prefix(coin: CoinInfo) -> str:
-    """Prefix for a unified Full Viewing Key."""
-    if coin.coin_name == "Zcash":
-        return "uview"
-    if coin.coin_name == "Zcash Testnet":
-        return "uviewtest"
-    raise ValueError
-
-
-def ivk_prefix(coin: CoinInfo) -> str:
-    """Prefix for a unified Incoming Viewing Key."""
-    if coin.coin_name == "Zcash":
-        return "uivk"
-    if coin.coin_name == "Zcash Testnet":
-        return "uivktest"
-    raise ValueError
-
-
 def padded(hrp: str) -> bytes:
     assert len(hrp) <= 16
     return hrp.encode() + bytes(16 - len(hrp))
