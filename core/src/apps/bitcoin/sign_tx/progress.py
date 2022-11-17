@@ -29,6 +29,8 @@ def report() -> None:
         return
     if _steps == 0:  # Zcash transaction without transparent inputs and outputs
         p = 1000
+        indeterminate = True
     else:
         p = 1000 * _progress // _steps
-    ui.display.loader(p, False, 18, ui.WHITE, ui.BG)
+        indeterminate = False
+    ui.display.loader(p, indeterminate, 18, ui.WHITE, ui.BG)
