@@ -114,11 +114,8 @@ def decode_address(addr_str: str, coin: CoinInfo) -> dict[int, bytes]:
         raise ValueError
 
     (hrp, data, encoding) = bech32_decode(addr_str, max_bech_len=1000)
-    if (hrp, data, encoding) == (None, None, None):
+    if data is None:
         raise DataError("Bech32m decoding failed.")
-    assert hrp is not None  # to satisfy typecheckers
-    assert data is not None  # to satisfy typecheckers
-    assert encoding is not None  # to satisfy typecheckers
     if hrp != expected_hrp:
         raise DataError("Unexpected address prefix.")
     if encoding != Encoding.BECH32M:
