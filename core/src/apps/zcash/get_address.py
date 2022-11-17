@@ -11,7 +11,7 @@ from apps.common import address_type
 from apps.common.coininfo import CoinInfo, by_name
 from apps.common.paths import HARDENED, address_n_to_str
 
-from .orchard import keychain as z_keychain
+from .orchard.keychain import OrchardKeychain
 from .unified import Typecode, encode_address
 
 if TYPE_CHECKING:
@@ -31,7 +31,7 @@ async def get_address(ctx: Context, msg: ZcashGetAddress) -> ZcashAddress:
 
     if msg.z_address_n:
         receivers = {}
-        receivers[Typecode.ORCHARD] = await get_raw_orchard_address(ctx, msg)
+        receivers[Typecode.ORCHARD] = await get_raw_orchard_address(ctx, coin, msg)
 
         if msg.t_address_n:
             if msg.t_address_n[2] != msg.z_address_n[2]:
@@ -70,10 +70,10 @@ async def get_raw_transparent_address(
     return sha256_ripemd160(node.public_key()).digest()
 
 
-@z_keychain.with_keychain
 async def get_raw_orchard_address(
-    ctx: Context, msg: ZcashGetAddress, keychain: z_keychain.OrchardKeychain
+    ctx: Context, coin: CoinInfo, msg: ZcashGetAddress
 ) -> bytes:
     """Returns raw Zcash Orchard address."""
+    keychain = await OrchardKeychain.for_coin(ctx, coin)
     fvk = keychain.derive(msg.z_address_n).full_viewing_key()
     return fvk.address(msg.diversifier_index).to_bytes()
