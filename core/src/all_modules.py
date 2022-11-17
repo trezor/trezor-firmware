@@ -805,8 +805,6 @@ if not utils.BITCOIN_ONLY:
     import apps.zcash.orchard.crypto.builder
     apps.zcash.orchard.crypto.ff1
     import apps.zcash.orchard.crypto.ff1
-    apps.zcash.orchard.crypto.generators
-    import apps.zcash.orchard.crypto.generators
     apps.zcash.orchard.crypto.keys
     import apps.zcash.orchard.crypto.keys
     apps.zcash.orchard.crypto.note
