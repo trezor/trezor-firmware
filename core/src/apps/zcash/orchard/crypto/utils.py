@@ -37,7 +37,7 @@ def i2lebsp(l: int, x: Fp | Scalar | int) -> Iterable[int]:
 
 
 # integer to little-endian bytes
-def i2leosp(l, x):
+def i2leosp(l: int, x: int) -> bytes:
     return x.to_bytes(cldiv(l, 8), "little")
 
 
