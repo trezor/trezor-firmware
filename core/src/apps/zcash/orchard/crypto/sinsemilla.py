@@ -50,7 +50,7 @@ class Sinsemilla:
         S = group_hash("z.cash:SinsemillaS", i2leosp(32, index))
         acc = self.acc
         self.acc = iadd(iadd(acc, S), acc)
-        self.buffer = []
+        self.buffer.clear()
 
     def finalize(self):
         if len(self.buffer) > 0:
