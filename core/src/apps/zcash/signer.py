@@ -9,6 +9,7 @@ from trezor.wire import DataError, ProcessError
 from apps.bitcoin import scripts
 from apps.bitcoin.common import ecdsa_sign
 from apps.bitcoin.sign_tx.bitcoinlike import Bitcoinlike
+from apps.bitcoin.sign_tx.matchcheck import MatchChecker
 from apps.common.writers import write_compact_size, write_uint32_le
 
 from . import unified
@@ -62,6 +63,8 @@ class Zcash(Bitcoinlike):
                 coin,
                 self.tx_req,
             )
+            # forbid silent transparent outputs
+            self.tx_info.wallet_path.attribute = MatchChecker.MISMATCH
         else:
             self.orchard = None
 
