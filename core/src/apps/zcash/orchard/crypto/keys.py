@@ -78,7 +78,6 @@ class FullViewingKey:
 
     def _derive_ivk(self) -> None:
         ivk_base = commit_ivk(self.rivk, self.ak, self.nk)
-        assert ivk_base is not None
         # Now convert Fp to Scalar.
         # This requires no modular reduction because
         # Pallas' base field is smaller than its scalar field.
