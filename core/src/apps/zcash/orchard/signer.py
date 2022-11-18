@@ -53,7 +53,7 @@ class OrchardSigner:
         )
 
         self.tx_info = tx_info
-        self.keychain = OrchardKeychain.from_seed_and_coin(seed, coin)
+        self.keychain = OrchardKeychain(seed, coin)
         self.approver = approver
         self.coin = coin
         self.tx_req = tx_req

@@ -82,10 +82,6 @@ class OrchardKeychain(Keychain):
         seed = await get_seed(ctx)
         return cls(seed, coin)
 
-    @classmethod
-    def from_seed_and_coin(cls, seed: bytes, coin: CoinInfo) -> Self:
-        return cls(seed, coin)
-
     def derive(self, path: Bip32Path) -> ExtendedSpendingKey:
         self.verify_path(path)
         return self._derive_with_cache(
