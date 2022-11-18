@@ -101,14 +101,12 @@ class OrchardSigner:
 
         # shuffle inputs
         inputs: list[int | None] = list(range(self.params.inputs_count))
-        assert inputs is not None  # typing
         pad(inputs, self.actions_count)
         self.rng.shuffle_inputs(inputs)
         self.shuffled_inputs = inputs
 
         # shuffle_outputs
         outputs: list[int | None] = list(range(self.params.outputs_count))
-        assert outputs is not None  # typing
         pad(outputs, self.actions_count)
         self.rng.shuffle_outputs(outputs)
         self.shuffled_outputs = outputs
