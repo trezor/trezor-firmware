@@ -21,15 +21,20 @@ from .messages import ZcashSignatureType as SigType
 from .tools import expect
 
 if TYPE_CHECKING:
-    from typing import Generator
+    from typing import Generator, List
     from .client import TrezorClient
 
 
 LOG = logging.getLogger(__name__)
 
 
-@expect(messages.ZcashViewingKey, field="key")
-def get_viewing_key(client: "TrezorClient", z_address_n: list[int], coin_name: str = "Zcash", full: bool = True) -> str:
+@expect(messages.ZcashViewingKey, field="key", ret_type=str)
+def get_viewing_key(
+    client: "TrezorClient",
+    z_address_n: List[int],
+    coin_name: str = "Zcash",
+    full: bool = True
+) -> str:
     """Returns Zcash Unified Full Viewing Key."""
     return client.call(
         messages.ZcashGetViewingKey(
@@ -40,15 +45,15 @@ def get_viewing_key(client: "TrezorClient", z_address_n: list[int], coin_name: s
     )
 
 
-@expect(messages.ZcashAddress, field="address")
+@expect(messages.ZcashAddress, field="address", ret_type=str)
 def get_address(
     client: "TrezorClient",
-    t_address_n: list[int] | None = None,
-    z_address_n: list[int] | None = None,
+    t_address_n: List[int] | None = None,
+    z_address_n: List[int] | None = None,
     diversifier_index: int = 0,
     show_display: bool = False,
     coin_name: str = "Zcash",
-):
+) -> str:
     """
     Returns a Zcash address.
     """
@@ -68,8 +73,8 @@ EMPTY_ANCHOR = bytes.fromhex("ae2935f1dfd8a24aed7c70df7de3a668eb7a49b1319880dde2
 
 def sign_tx(
     client: "TrezorClient",
-    inputs: list[messages.TxInput | messages.ZcashOrchardInput],
-    outputs: list[messages.TxOutput | messages.ZcashOrchardOutput],
+    inputs: List[messages.TxInput | messages.ZcashOrchardInput],
+    outputs: List[messages.TxOutput | messages.ZcashOrchardOutput],
     coin_name: str = "Zcash",
     version_group_id: int = 0x26A7270A,  # protocol spec §7.1.2
     branch_id: int = 0xC2D6D0B4,  # https://zips.z.cash/zip-0252
