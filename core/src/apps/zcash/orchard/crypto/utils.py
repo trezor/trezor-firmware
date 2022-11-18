@@ -31,11 +31,9 @@ def i2lebsp(l: int, x: Fp | Scalar | int) -> Iterator[int]:
         gen = leos2bsp(x.to_bytes())
         for _ in range(l):
             yield next(gen)
-        return
     elif isinstance(x, int):
         for i in range(l):
             yield (x >> i) & 1
-        return
     else:
         raise ValueError()
 
@@ -58,7 +56,6 @@ def leos2bsp(buf: bytes) -> Iterator[int]:
     for byte in buf:
         for i in range(8):
             yield (byte >> i) & 1
-    return
 
 
 def take(i: int, gen: Iterator[A] | list[A]) -> Iterator[A]:
@@ -68,11 +65,9 @@ def take(i: int, gen: Iterator[A] | list[A]) -> Iterator[A]:
         gen = iter(gen)
     for _ in range(i):
         yield next(gen)
-    return
 
 
 def chain(gen_a: Iterable[A], gen_b: Iterable[A]) -> Iterable[A]:
     """Chains two generators into one."""
     yield from gen_a
     yield from gen_b
-    return
