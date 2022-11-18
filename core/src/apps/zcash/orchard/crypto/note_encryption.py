@@ -43,14 +43,14 @@ def prf_ock_orchard(
     return digest.digest()
 
 
-def chunks(size: int, length: int) -> Iterable[tuple[int, int]]:
+def chunks(size: int, buffer: bytes) -> Iterable[memoryview]:
     offset = 0
+    m = memoryview(buffer)
     while offset + size <= length:
-        yield offset, offset + size
+        yield m[offset : offset + size]
         offset += size
     if offset < length:
-        yield offset, length
-    return
+        yield m[offset : length]
 
 
 # https://zips.z.cash/protocol/nu5.pdf#concretesym
