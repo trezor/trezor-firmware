@@ -40,7 +40,7 @@ def i2bebsp(l: int, x: int) -> Iterable[int]:
     return
 
 
-def ff1_aes256_encrypt(key: bytes, tweak: bytes, x: Iterable[int]):
+def ff1_aes256_encrypt(key: bytes, tweak: bytes, x: Iterable[int]) -> Iterable[int]:
     n = 88  # n = len(x)
     t = len(tweak)
     assert t <= 255
