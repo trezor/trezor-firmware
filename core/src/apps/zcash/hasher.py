@@ -12,8 +12,7 @@ from trezor import utils
 from trezor.utils import HashWriter, empty_bytearray
 
 from apps.bitcoin.common import SigHashType
-from apps.bitcoin.writers import write_uint32  # TODO: import from apps.common.writers
-from apps.bitcoin.writers import write_uint64  # TODO: import from apps.common.writers
+from apps.common.writers import write_uint32_le, write_uint64_le
 from apps.bitcoin.writers import (
     TX_HASH_SIZE,
     write_bytes_fixed,
@@ -40,14 +39,14 @@ def write_hash(w: Writer, hash: bytes) -> None:
 
 def write_prevout(w: Writer, txi: TxInput) -> None:
     write_bytes_reversed(w, txi.prev_hash, TX_HASH_SIZE)
-    write_uint32(w, txi.prev_index)
+    write_uint32_le(w, txi.prev_index)
 
 
 def write_sint64_le(w: Writer, x: int) -> None:
     assert -0x8000_0000_0000_0000 < x <= 0x7FFF_FFFF_FFFF_FFFF
     if x < 0:
         x += 0x1_0000_0000_0000_0000  # 2**64
-    write_uint64(w, x)
+    write_uint64_le(w, x)
 
 
 class ZcashHasher:
@@ -60,7 +59,7 @@ class ZcashHasher:
         assert tx.branch_id is not None  # checked in sanitize_sign_tx
         tx_hash_person = empty_bytearray(16)
         write_bytes_fixed(tx_hash_person, b"ZcashTxHash_", 12)
-        write_uint32(tx_hash_person, tx.branch_id)
+        write_uint32_le(tx_hash_person, tx.branch_id)
         self.tx_hash_person = bytes(tx_hash_person)
 
     # The `txid_digest` method is currently a dead code,
@@ -138,11 +137,11 @@ class HeaderHasher:
         assert tx.branch_id is not None  # checked in sanitize_*
         assert tx.expiry is not None
 
-        write_uint32(h, tx.version | (1 << 31))  # T.1a
-        write_uint32(h, tx.version_group_id)  # T.1b
-        write_uint32(h, tx.branch_id)  # T.1c
-        write_uint32(h, tx.lock_time)  # T.1d
-        write_uint32(h, tx.expiry)  # T.1e
+        write_uint32_le(h, tx.version | (1 << 31))  # T.1a
+        write_uint32_le(h, tx.version_group_id)  # T.1b
+        write_uint32_le(h, tx.branch_id)  # T.1c
+        write_uint32_le(h, tx.lock_time)  # T.1d
+        write_uint32_le(h, tx.expiry)  # T.1e
 
         self._digest = h.get_digest()
 
@@ -182,9 +181,9 @@ class TransparentHasher:
     def add_input(self, txi: TxInput, script_pubkey: bytes) -> None:
         self.has_inputs = True
         write_prevout(self.prevouts, txi)
-        write_uint64(self.amounts, txi.amount)
+        write_uint64_le(self.amounts, txi.amount)
         write_bytes_prefixed(self.scriptpubkeys, script_pubkey)
-        write_uint32(self.sequence, txi.sequence)
+        write_uint32_le(self.sequence, txi.sequence)
 
     def add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         self.has_outputs = True
@@ -249,9 +248,9 @@ def _txin_sig_digest(
         assert script_pubkey is not None
 
         write_prevout(h, txi)  # 2.Sg.i
-        write_uint64(h, txi.amount)  # 2.Sg.ii
+        write_uint64_le(h, txi.amount)  # 2.Sg.ii
         write_bytes_prefixed(h, script_pubkey)  # 2.Sg.iii
-        write_uint32(h, txi.sequence)  # 2.Sg.iv
+        write_uint32_le(h, txi.sequence)  # 2.Sg.iv
 
     return h.get_digest()
 
