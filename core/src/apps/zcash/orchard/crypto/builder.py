@@ -8,6 +8,7 @@ from .note import Note
 from .note_encryption import encrypt_note
 
 if TYPE_CHECKING:
+    from typing import Self
     from .note_encryption import TransmittedNoteCiphertext
     from ..random import ActionShieldingRng
 

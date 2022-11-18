@@ -12,6 +12,7 @@ from trezor.utils import ensure
 from .utils import i2leosp, lebs2ip
 
 if TYPE_CHECKING:
+    from typing import Self
     from trezor.crypto.pallas import Point
 
     pass  # sinsemilla.i

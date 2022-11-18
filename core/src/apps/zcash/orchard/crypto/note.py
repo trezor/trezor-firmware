@@ -23,6 +23,7 @@ from .sinsemilla import Sinsemilla
 from .utils import i2lebsp, leos2bsp, prf_expand
 
 if TYPE_CHECKING:
+    from typing import Self
     from trezor.utils import Writer
 
 

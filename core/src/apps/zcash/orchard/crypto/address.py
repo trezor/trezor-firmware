@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 from trezor.crypto.pallas import Point, group_hash
 
 if TYPE_CHECKING:
+    from typing import Self
     from trezor.crypto.pallas import Scalar
 
 

@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from apps.common.paths import Bip32Path
     from trezor.wire import Context
     from trezor.crypto.pallas import Scalar
-    from typing import Callable, TypeVar, Awaitable
+    from typing import Callable, TypeVar, Awaitable, Self
     from typing_extensions import Protocol
 
     class MsgWithCoinNameType(Protocol):
