@@ -65,7 +65,10 @@ def get_address(client, t_address, z_address, diversifier_index, show_display, n
     $ trezorctl zcash get-address -d -t m/44h/133h/0h/0/0 -z m/32h/133h/0h -j 0
     """
     if not t_address and not z_address:
-        return """Specify address path using -t (transparent) and -z (shielded) arguments.\nYou can use both to get Zcash unified address."""
+        raise click.ClickException((
+            "Specify address path using -t (transparent) and -z (shielded) arguments.\n"
+            "You can use both to get Zcash unified address."
+        ))
 
     kwargs = dict()
     kwargs["show_display"] = show_display
