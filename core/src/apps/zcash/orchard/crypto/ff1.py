@@ -60,7 +60,7 @@ def ff1_aes256_encrypt(key: bytes, tweak: bytes, x: Iterable[int]):
     return chain(i2bebsp(u, A), i2bebsp(v, B))
 
 
-def aes_cbcmac(key, input):
+def aes_cbcmac(key: bytes, input: bytes) -> bytes:
     cipher = aes(aes.CBC, key, b"\x00" * 16)
     mac = cipher.encrypt(input)[-16:]
     del cipher
