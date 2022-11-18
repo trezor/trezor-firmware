@@ -22,7 +22,7 @@ from .keychain import OrchardKeychain
 from .random import BundleShieldingRng
 
 if TYPE_CHECKING:
-    from typing import Awaitable, List
+    from typing import Awaitable
     from apps.common.coininfo import CoinInfo
     from apps.bitcoin.sign_tx.tx_info import TxInfo
     from .crypto.keys import FullViewingKey
@@ -101,14 +101,14 @@ class OrchardSigner:
         await self.release_serialized()
 
         # shuffle inputs
-        inputs: List[int | None] = list(range(self.inputs_count))
+        inputs: list[int | None] = list(range(self.inputs_count))
         assert inputs is not None  # typing
         pad(inputs, self.actions_count)
         self.rng.shuffle_inputs(inputs)
         self.shuffled_inputs = inputs
 
         # shuffle_outputs
-        outputs: List[int | None] = list(range(self.outputs_count))
+        outputs: list[int | None] = list(range(self.outputs_count))
         assert outputs is not None  # typing
         pad(outputs, self.actions_count)
         self.rng.shuffle_outputs(outputs)
