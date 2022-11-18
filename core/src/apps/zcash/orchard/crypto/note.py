@@ -33,9 +33,9 @@ class Note:
         self.rho = rho
         self.rseed = rseed
 
-    @staticmethod
-    def from_message(msg: ZcashOrchardInput) -> "Note":
-        return Note(
+    @classmethod
+    def from_message(cls, msg: ZcashOrchardInput) -> Self:
+        return cls(
             Address.from_bytes(msg.recipient),
             msg.value,
             Fp(msg.rho),

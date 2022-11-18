@@ -43,8 +43,8 @@ class InputInfo:
         self.fvk = fvk
         self.dummy_ask = dummy_ask  # for dummy notes
 
-    @staticmethod
-    def dummy(rng: ActionShieldingRng) -> "InputInfo":
+    @classmethod
+    def dummy(cls, rng: ActionShieldingRng) -> Self:
         dummy_sk = rng.dummy_sk()
         fvk = FullViewingKey.from_spending_key(dummy_sk)
         note = Note(
@@ -54,7 +54,7 @@ class InputInfo:
             rseed=rng.rseed_old(),
         )
         dummy_ask = sk_to_ask(dummy_sk)
-        return InputInfo(note, fvk, dummy_ask)
+        return cls(note, fvk, dummy_ask)
 
 
 class OutputInfo:
@@ -64,9 +64,9 @@ class OutputInfo:
         self.value = value
         self.memo = memo
 
-    @staticmethod
-    def dummy(rng: ActionShieldingRng) -> "OutputInfo":
-        return OutputInfo(None, rng.recipient(), 0, None)
+    @classmethod
+    def dummy(cls, rng: ActionShieldingRng) -> Self:
+        return cls(None, rng.recipient(), 0, None)
 
 
 def build_action(

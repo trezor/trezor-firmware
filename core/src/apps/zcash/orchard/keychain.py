@@ -49,11 +49,11 @@ class ExtendedSpendingKey:
     def spend_authorizing_key(self) -> Scalar:
         return sk_to_ask(self.sk)
 
-    @staticmethod
-    def get_master(seed: bytes) -> "ExtendedSpendingKey":
+    @classmethod
+    def get_master(cls, seed: bytes) -> Self:
         """Generates the Orchard master ExtendedSpendingKey from `seed`."""
         I = blake2b(personal=b"ZcashIP32Orchard", data=seed).digest()
-        return ExtendedSpendingKey(sk=I[:32], c=I[32:])
+        return cls(sk=I[:32], c=I[32:])
 
     # apps.common.keychain.NodeProtocol methods:
 
@@ -77,14 +77,14 @@ class OrchardKeychain(Keychain):
         schema = PathSchema.parse(PATTERN_ZIP32, (coin.slip44,))
         super().__init__(seed, "pallas", [schema], [[b"Zcash Orchard"]])
 
-    @staticmethod
-    async def for_coin(ctx: Context, coin: CoinInfo) -> "OrchardKeychain":
+    @classmethod
+    async def for_coin(cls, ctx: Context, coin: CoinInfo) -> Self:
         seed = await get_seed(ctx)
-        return OrchardKeychain(seed, coin)
+        return cls(seed, coin)
 
-    @staticmethod
-    def from_seed_and_coin(seed: bytes, coin: CoinInfo) -> "OrchardKeychain":
-        return OrchardKeychain(seed, coin)
+    @classmethod
+    def from_seed_and_coin(cls, seed: bytes, coin: CoinInfo) -> Self:
+        return cls(seed, coin)
 
     def derive(self, path: Bip32Path) -> ExtendedSpendingKey:
         self.verify_path(path)

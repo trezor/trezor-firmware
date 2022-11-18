@@ -50,14 +50,14 @@ class FullViewingKey:
         assert self._ovk is not None  # typing
         return self._ovk
 
-    @staticmethod
-    def from_spending_key(sk: bytes) -> "FullViewingKey":
+    @classmethod
+    def from_spending_key(cls, sk: bytes) -> Self:
         ask = to_scalar(prf_expand(sk, b"\x06"))
         nk = to_base(prf_expand(sk, b"\x07"))
         rivk = to_scalar(prf_expand(sk, b"\x08"))
         ensure(ask)  # ask != 0
         ak = (ask * gen.SPENDING_KEY_BASE).extract()
-        return FullViewingKey(ak, nk, rivk)
+        return cls(ak, nk, rivk)
 
     # https://zips.z.cash/protocol/protocol.pdf#orchardfullviewingkeyencoding
     def to_bytes(self) -> bytes:

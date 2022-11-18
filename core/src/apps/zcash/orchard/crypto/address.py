@@ -20,16 +20,16 @@ class Address:
         self.d = d
         self.pk_d = pk_d
 
-    @staticmethod
-    def from_bytes(data: bytes) -> "Address":
+    @classmethod
+    def from_bytes(cls, data: bytes) -> Self:
         assert len(data) == 43
-        return Address(data[:11], Point(data[11:]))
+        return cls(data[:11], Point(data[11:]))
 
-    @staticmethod
-    def from_ivk(d: bytes, ivk: Scalar):
+    @classmethod
+    def from_ivk(cls, d: bytes, ivk: Scalar) -> Self:
         g_d = diversify_hash(d)
         pk_d = ivk * g_d
-        return Address(d, pk_d)
+        return cls(d, pk_d)
 
     # https://zips.z.cash/protocol/nu5.pdf#orchardpaymentaddrencoding
     def to_bytes(self) -> bytes:

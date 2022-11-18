@@ -34,10 +34,10 @@ class Sinsemilla:
         self.buffer = []
         self.acc = acc
 
-    @staticmethod
-    def personalized_by(personal: bytes):
+    @classmethod
+    def personalized_by(cls, personal: bytes) -> Self:
         Q = group_hash("z.cash:SinsemillaQ", personal)
-        return Sinsemilla(Q)
+        return cls(Q)
 
     def update(self, bits):
         for bit in bits:
