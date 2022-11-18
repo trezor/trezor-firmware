@@ -10,17 +10,11 @@ Input message length is fixed to 88 bits.
 Radix is fixed to 2.
 """
 
-
-from typing import TYPE_CHECKING
+from typing import Iterable
 
 from trezor.crypto import aes
 
 from .utils import chain, lebs2ip, take
-
-if TYPE_CHECKING:
-    from typing import Iterable
-
-    pass  # ff1.i
 
 
 # big-endian bits to integer
