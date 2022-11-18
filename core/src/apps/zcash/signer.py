@@ -109,7 +109,7 @@ class Zcash(Bitcoinlike):
         write_compact_size(self.serialized_tx, 0)  # nOutputsSapling
 
         # nActionsOrchard
-        if ZCASH_SHIELDED and self.orchard is not None::
+        if ZCASH_SHIELDED and self.orchard is not None:
             write_compact_size(self.serialized_tx, self.orchard.actions_count)
         else:
             write_compact_size(self.serialized_tx, 0)
