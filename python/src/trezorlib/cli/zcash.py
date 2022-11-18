@@ -70,17 +70,11 @@ def get_address(client, t_address, z_address, diversifier_index, show_display, n
             "You can use both to get Zcash unified address."
         ))
 
-    kwargs = {}
-    kwargs["show_display"] = show_display
-    if t_address:
-        kwargs["t_address_n"] = tools.parse_path(t_address)
-    if z_address:
-        kwargs["z_address_n"] = tools.parse_path(z_address)
-        kwargs["diversifier_index"] = diversifier_index
-
-    kwargs["coin_name"] = network
-
-    try:
-        return zcash.get_address(client, **kwargs)
-    except ValueError as e:
-        return str(e)
+    return zcash.get_address(
+        client,
+        t_address_n=t_address and tools.parse_path(t_address),
+        z_address_n=z_address and tools.parse_path(z_address),
+        diversifier_index=diversifier_index,
+        show_display=show_display,
+        coin_name=network,
+    )
