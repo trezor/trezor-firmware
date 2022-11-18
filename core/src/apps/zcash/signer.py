@@ -3,13 +3,12 @@ from typing import TYPE_CHECKING
 
 from trezor.enums import OutputScriptType, ZcashSignatureType
 from trezor.messages import SignTx
-from trezor.utils import ZCASH_SHIELDED, ensure
+from trezor import utils
 from trezor.wire import DataError, ProcessError
 
 from apps.bitcoin import scripts
 from apps.bitcoin.common import ecdsa_sign
 from apps.bitcoin.sign_tx.bitcoinlike import Bitcoinlike
-from apps.common.paths import HARDENED
 from apps.common.writers import write_compact_size, write_uint32_le
 
 from . import unified
@@ -17,7 +16,7 @@ from .approver import ZcashApprover
 from .hasher import ZcashHasher
 from .unified import Typecode
 
-if ZCASH_SHIELDED:
+if utils.ZCASH_SHIELDED:
     from .orchard.signer import OrchardSigner
 
 if TYPE_CHECKING:
@@ -46,7 +45,7 @@ class Zcash(Bitcoinlike):
         coin: CoinInfo,
         approver: Approver | None,
     ) -> None:
-        ensure(coin.overwintered)
+        utils.ensure(coin.overwintered)
         if tx.version != 5:
             raise DataError("Expected transaction version 5.")
 
@@ -55,7 +54,7 @@ class Zcash(Bitcoinlike):
 
         super().__init__(tx, keychain, coin, approver)
 
-        if ZCASH_SHIELDED and tx.orchard_params is not None:
+        if utils.ZCASH_SHIELDED and tx.orchard_params is not None:
             self.orchard = OrchardSigner(
                 self.tx_info,
                 keychain.seed,
@@ -76,12 +75,12 @@ class Zcash(Bitcoinlike):
 
     async def step1_process_inputs(self):
         await super().step1_process_inputs()
-        if ZCASH_SHIELDED and self.orchard is not None:
+        if utils.ZCASH_SHIELDED and self.orchard is not None:
             await self.orchard.process_inputs()
 
     async def step2_approve_outputs(self):
         await super().step2_approve_outputs()
-        if ZCASH_SHIELDED and self.orchard is not None:
+        if utils.ZCASH_SHIELDED and self.orchard is not None:
             await self.orchard.approve_outputs()
 
     async def step3_verify_inputs(self) -> None:
@@ -95,7 +94,7 @@ class Zcash(Bitcoinlike):
         self.taproot_only = False  # turn off taproot behavior
 
     async def step4_serialize_inputs(self):
-        if ZCASH_SHIELDED and self.orchard is not None:
+        if utils.ZCASH_SHIELDED and self.orchard is not None:
             # shield actions first to get a sighash
             await self.orchard.compute_digest()
         await super().step4_serialize_inputs()
@@ -109,14 +108,14 @@ class Zcash(Bitcoinlike):
         write_compact_size(self.serialized_tx, 0)  # nOutputsSapling
 
         # nActionsOrchard
-        if ZCASH_SHIELDED and self.orchard is not None:
+        if utils.ZCASH_SHIELDED and self.orchard is not None:
             write_compact_size(self.serialized_tx, self.orchard.actions_count)
         else:
             write_compact_size(self.serialized_tx, 0)
 
     async def step6_sign_segwit_inputs(self):
         # transparent inputs were signed in step 4
-        if ZCASH_SHIELDED and self.orchard is not None:
+        if utils.ZCASH_SHIELDED and self.orchard is not None:
             await self.orchard.sign_inputs()
 
     async def sign_nonsegwit_input(self, i_sign: int) -> None:
@@ -169,11 +168,11 @@ class Zcash(Bitcoinlike):
         if txo.address is not None and txo.address[0] == "u":
             receivers = unified.decode_address(txo.address, self.coin)
             if Typecode.P2PKH in receivers:
-                ensure(txo.script_type is OutputScriptType.PAYTOADDRESS)
+                utils.ensure(txo.script_type is OutputScriptType.PAYTOADDRESS)
                 pubkeyhash = receivers[Typecode.P2PKH]
                 return scripts.output_script_p2pkh(pubkeyhash)
             if Typecode.P2SH in receivers:
-                ensure(txo.script_type is OutputScriptType.PAYTOSCRIPTHASH)
+                utils.ensure(txo.script_type is OutputScriptType.PAYTOSCRIPTHASH)
                 scripthash = receivers[Typecode.P2SH]
                 return scripts.output_script_p2sh(scripthash)
             raise DataError("Unified address does not include a transparent receiver.")
@@ -184,5 +183,5 @@ class Zcash(Bitcoinlike):
     def set_serialized_signature(self, i: int, signature: bytes) -> None:
         super().set_serialized_signature(i, signature)
         assert self.tx_req.serialized is not None
-        if ZCASH_SHIELDED and self.orchard is not None:
+        if utils.ZCASH_SHIELDED and self.orchard is not None:
             self.tx_req.serialized.signature_type = ZcashSignatureType.TRANSPARENT

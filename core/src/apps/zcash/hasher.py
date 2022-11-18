@@ -8,7 +8,8 @@ specification: https://zips.z.cash/zip-0244
 from typing import TYPE_CHECKING
 
 from trezor.crypto.hashlib import blake2b
-from trezor.utils import ZCASH_SHIELDED, HashWriter, empty_bytearray
+from trezor import utils
+from trezor.utils import HashWriter, empty_bytearray
 
 from apps.bitcoin.common import SigHashType
 from apps.bitcoin.writers import write_uint32  # TODO: import from apps.common.writers
@@ -280,7 +281,7 @@ class OrchardHasher:
         self.nh = HashWriter(blake2b(outlen=32, personal=b"ZTxIdOrcActNHash"))
         self.state = OrchardHasherState.EMPTY
 
-    if ZCASH_SHIELDED:
+    if utils.ZCASH_SHIELDED:
 
         def add_action(self, action: Action) -> None:
             assert self.state in (
