@@ -34,7 +34,7 @@ def bebs2ip(bits: Iterable[int]) -> int:
 
 # integer to big endian bits
 def i2bebsp(l: int, x: int) -> Iterable[int]:
-    assert 0 <= x and x < (1 << l)
+    assert 0 <= x < (1 << l)
     for i in range(l):
         yield (x >> (l - 1 - i)) & 1
     return
