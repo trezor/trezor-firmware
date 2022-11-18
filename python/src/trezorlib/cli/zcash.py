@@ -70,7 +70,7 @@ def get_address(client, t_address, z_address, diversifier_index, show_display, n
             "You can use both to get Zcash unified address."
         ))
 
-    kwargs = dict()
+    kwargs = {}
     kwargs["show_display"] = show_display
     if t_address:
         kwargs["t_address_n"] = tools.parse_path(t_address)
