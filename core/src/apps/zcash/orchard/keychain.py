@@ -64,7 +64,7 @@ class ExtendedSpendingKey:
             I = prf_expand(self.c, bytes([0x81]) + self.sk + i2leosp(32, i))
             self.sk, self.c = I[:32], I[32:]
 
-    def clone(self) -> "ExtendedSpendingKey":
+    def clone(self) -> Self:
         return ExtendedSpendingKey(self.sk, self.c)
 
     def __del__(self):
