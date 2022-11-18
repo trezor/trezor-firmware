@@ -99,4 +99,5 @@ def write_memo(w: Writer, memo: str | bytes | None) -> None:
         write_bytes_fixed(w, memo, 512)
         padding_length = 0
 
-    write_bytes_unchecked(w, padding_length * b"\x00")
+    for _ in range(padding_length):
+        write_uint8(w, 0x00)
