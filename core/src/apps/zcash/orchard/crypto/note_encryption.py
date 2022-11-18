@@ -18,6 +18,7 @@ if TYPE_CHECKING:
 BLOCK_SIZE = const(64)
 ENC_CIPHERTEXT_SIZE = const(580)
 OUT_CIPHERTEXT_SIZE = const(80)
+# pre-allocated static buffers for encrypt_note function
 _NP = empty_bytearray(ENC_CIPHERTEXT_SIZE)
 _OP = empty_bytearray(OUT_CIPHERTEXT_SIZE)
 
@@ -85,8 +86,6 @@ def encrypt_note(
     ovk: bytes | None,
     rng: ActionShieldingRng,
 ) -> TransmittedNoteCiphertext:
-    global _NP
-    global _OP
     _NP[:] = bytes()
     _OP[:] = bytes()
     note.write_plaintext(_NP, memo)
