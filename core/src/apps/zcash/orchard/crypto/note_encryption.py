@@ -18,6 +18,8 @@ if TYPE_CHECKING:
 BLOCK_SIZE = const(64)
 ENC_CIPHERTEXT_SIZE = const(580)
 OUT_CIPHERTEXT_SIZE = const(80)
+_NP = empty_bytearray(ENC_CIPHERTEXT_SIZE)
+_OP = empty_bytearray(OUT_CIPHERTEXT_SIZE)
 
 
 # https://zips.z.cash/protocol/nu5.pdf#concreteorchardkdf
@@ -83,8 +85,11 @@ def encrypt_note(
     ovk: bytes | None,
     rng: ActionShieldingRng,
 ) -> TransmittedNoteCiphertext:
-    np = empty_bytearray(ENC_CIPHERTEXT_SIZE)
-    note.write_plaintext(np, memo)
+    global _NP
+    global _OP
+    _NP[:] = bytes()
+    _OP[:] = bytes()
+    note.write_plaintext(_NP, memo)
 
     esk = note.esk()
     ensure(esk)  # esk != 0
@@ -97,24 +102,23 @@ def encrypt_note(
 
     ephemeral_key = epk.to_bytes()
     k_enc = kdf_orchard(shared_secret, ephemeral_key)
-    sym_encrypt(k_enc, np)
+    sym_encrypt(k_enc, _NP)
 
-    op = empty_bytearray(OUT_CIPHERTEXT_SIZE)
     if ovk is None:
         ock = rng.ock()
-        write_bytes_fixed(op, rng.op(), 64)
+        write_bytes_fixed(_OP, rng.op(), 64)
     else:
         cv = cv_new.to_bytes()
         cmx = cm_new.extract().to_bytes()
         ock = prf_ock_orchard(ovk, cv, cmx, ephemeral_key)
-        write_bytes_fixed(op, pk_d.to_bytes(), 32)
-        write_bytes_fixed(op, esk.to_bytes(), 32)
+        write_bytes_fixed(_OP, pk_d.to_bytes(), 32)
+        write_bytes_fixed(_OP, esk.to_bytes(), 32)
 
-    sym_encrypt(ock, op)
+    sym_encrypt(ock, _OP)
 
     gc.collect()
     return TransmittedNoteCiphertext(
         epk_bytes=ephemeral_key,
-        enc_ciphertext=bytes(np),
-        out_ciphertext=bytes(op),
+        enc_ciphertext=bytes(_NP),
+        out_ciphertext=bytes(_OP),
     )
