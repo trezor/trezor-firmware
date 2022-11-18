@@ -9,7 +9,7 @@ from .crypto.address import Address
 from .crypto.keys import sk_to_ask
 
 if TYPE_CHECKING:
-    from typing import Any, Iterable
+    from typing import Any, Iterator
     from trezor.crypto.pallas import Scalar, Fp
 
 
@@ -31,7 +31,7 @@ class BundleShieldingRng:
         rng = self._blake2b_ctr_mode_rng(personal=b"Outs_Permutation")
         _shuffle(outputs, rng)
 
-    def _blake2b_ctr_mode_rng(self, personal: bytes) -> Iterable[int]:
+    def _blake2b_ctr_mode_rng(self, personal: bytes) -> Iterator[int]:
         i = 0
         while True:
             h = blake2b(personal=personal, outlen=64)
@@ -46,7 +46,7 @@ class BundleShieldingRng:
 MAX = const(0xFFFF_FFFF)
 
 
-def _sample_uniform(n, rng):
+def _sample_uniform(n: int, rng: Iterator[int]) -> int:
     """Samples unifomly an element of `range(n)`."""
     while True:
         wide = next(rng) * n
@@ -56,7 +56,7 @@ def _sample_uniform(n, rng):
             return high
 
 
-def _shuffle(x: list[Any], rng) -> None:
+def _shuffle(x: list[Any], rng: Iterator[int]) -> None:
     # Fisher-Yates shuffle
     for i in range(len(x) - 1, 0, -1):
         j = _sample_uniform(i + 1, rng)
