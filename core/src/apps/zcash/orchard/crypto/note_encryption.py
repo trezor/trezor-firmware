@@ -57,8 +57,8 @@ def chunks(size: int, buffer: bytes) -> Iterable[memoryview]:
 def sym_encrypt(key: bytes, buffer: bytearray) -> None:
     nonce = 12 * b"\x00"
     cipher = chacha20poly1305(key, nonce)
-    for i, j in chunks(BLOCK_SIZE, len(buffer)):
-        buffer[i:j] = cipher.encrypt(buffer[i:j])
+    for chunk in chunks(BLOCK_SIZE, buffer):
+        chunk[:] = cipher.encrypt(chunk)
     buffer.extend(cipher.finish())  # append tag
 
 
