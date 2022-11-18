@@ -195,7 +195,7 @@ class OrchardSigner:
             receivers = unified.decode_address(txo.address, self.coin)
             address = receivers.get(unified.Typecode.ORCHARD)
             if address is None:
-                raise DataError("Address has not an Orchard receiver.")
+                raise DataError("Address does not have an Orchard receiver.")
             address = Address.from_bytes(address)
 
         ovk = fvk.outgoing_viewing_key()
