@@ -16,6 +16,7 @@ import click
 
 import coin_info
 from coin_info import Coin, CoinBuckets, Coins, CoinsInfo, FidoApps, SupportInfo
+from ethereum_definitions import LATEST_DEFINITIONS_TIMESTAMP_FILEPATH
 
 try:
     import termcolor
@@ -124,6 +125,11 @@ MAKO_FILTERS = {
 }
 
 
+def get_ethereum_defs_timestamp() -> int:
+    with open(LATEST_DEFINITIONS_TIMESTAMP_FILEPATH, "r") as f:
+        return int(f.read())
+
+
 def render_file(
     src: str, dst: TextIO, coins: CoinsInfo, support_info: SupportInfo
 ) -> None:
@@ -135,6 +141,7 @@ def render_file(
     result = template.render(
         support_info=support_info,
         supported_on=make_support_filter(support_info),
+        ethereum_defs_timestamp=get_ethereum_defs_timestamp(),
         **coins,
         **MAKO_FILTERS,
     )

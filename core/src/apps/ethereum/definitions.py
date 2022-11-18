@@ -1,5 +1,4 @@
 from typing import TYPE_CHECKING
-from ubinascii import unhexlify
 
 from trezor import protobuf, utils, wire
 from trezor.crypto.curve import ed25519
@@ -8,21 +7,12 @@ from trezor.enums import EthereumDefinitionType
 from trezor.messages import EthereumNetworkInfo, EthereumTokenInfo
 
 from apps.common import readers
-from apps.ethereum import networks, tokens
+from apps.ethereum import definitions_constants, networks, tokens
 
 if TYPE_CHECKING:
     from typing import Any, TypeVar
 
     DefType = TypeVar("DefType", EthereumNetworkInfo, EthereumTokenInfo)
-
-DEFINITIONS_PUBLIC_KEY = b""
-MIN_DATA_VERSION = 1  # TODO: update
-FORMAT_VERSION = b"trzd1"
-
-if __debug__:
-    DEFINITIONS_DEV_PUBLIC_KEY = unhexlify(
-        "db995fe25169d141cab9bbba92baa01f9f2e1ece7df4cb2ac05190f37fcc1f9d"
-    )
 
 
 def decode_definition(definition: bytes, expected_type: type[DefType]) -> DefType:
@@ -34,7 +24,7 @@ def decode_definition(definition: bytes, expected_type: type[DefType]) -> DefTyp
 
     try:
         # first check format version
-        if r.read_memoryview(5) != FORMAT_VERSION:
+        if r.read_memoryview(5) != definitions_constants.FORMAT_VERSION:
             raise wire.DataError("Invalid definition format")
 
         # second check the type of the data
@@ -42,7 +32,7 @@ def decode_definition(definition: bytes, expected_type: type[DefType]) -> DefTyp
             raise wire.DataError("Definition type mismatch")
 
         # third check data version
-        if readers.read_uint32_be(r) < MIN_DATA_VERSION:
+        if readers.read_uint32_be(r) < definitions_constants.MIN_DATA_VERSION:
             raise wire.DataError("Definition is outdated")
 
         # get payload
@@ -67,12 +57,14 @@ def decode_definition(definition: bytes, expected_type: type[DefType]) -> DefTyp
         raise wire.DataError("Invalid Ethereum definition")
 
     # verify signature
-    if not ed25519.verify(DEFINITIONS_PUBLIC_KEY, signed_tree_root, hash):
+    if not ed25519.verify(
+        definitions_constants.DEFINITIONS_PUBLIC_KEY, signed_tree_root, hash
+    ):
         error_msg = wire.DataError("Invalid definition signature")
         if __debug__:
             # check against dev key
             if not ed25519.verify(
-                DEFINITIONS_DEV_PUBLIC_KEY,
+                definitions_constants.DEFINITIONS_DEV_PUBLIC_KEY,
                 signed_tree_root,
                 hash,
             ):

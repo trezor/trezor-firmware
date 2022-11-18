@@ -27,6 +27,8 @@ $HERE/support.py release
 
 $HERE/cointool.py check > $CHECK_OUTPUT/post.txt
 
+$HERE/ethereum_definitions.py update-timestamp
+
 make -C $HERE/../.. gen
 
 diff $CHECK_OUTPUT/pre.txt $CHECK_OUTPUT/post.txt

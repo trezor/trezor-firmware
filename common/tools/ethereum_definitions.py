@@ -23,7 +23,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 from coin_info import Coin, Coins, load_json
-from trezorlib import protobuf
+from trezorlib import ethereum, protobuf
 from trezorlib.merkle_tree import MerkleTree
 from trezorlib.messages import (
     EthereumDefinitionType,
@@ -44,6 +44,9 @@ if os.environ.get("DEFS_DIR"):
 else:
     DEFS_DIR = pathlib.Path(__file__).resolve().parent.parent / "defs"
 
+LATEST_DEFINITIONS_TIMESTAMP_FILEPATH = (
+    DEFS_DIR / "ethereum" / "latest_definitions_timestamp.txt"
+)
 DEFINITIONS_CACHE_FILEPATH = pathlib.Path("definitions-cache.json")
 
 
@@ -866,6 +869,10 @@ def serialize_eth_info(
     return ser
 
 
+def get_timestamp_from_definition(definition: bytes) -> int:
+    return int.from_bytes(definition[6:10], "big")
+
+
 # ====== click command handlers ======
 
 
@@ -1067,7 +1074,7 @@ def prepare_definitions(
         tokens.sort(key=lambda x: (x["chain_id"], x["address"]))
 
         # save results
-        with open(deffile, "w+") as f:
+        with open(deffile, "w") as f:
             json.dump(
                 obj=dict(
                     timestamp=CURRENT_TIMESTAMP_STR, networks=networks, tokens=tokens
@@ -1277,6 +1284,39 @@ def sign_definitions(
             )
             if check:
                 generate_token_def(token, base_path, zip_file)
+
+
+@cli.command()
+@click.option(
+    "-t",
+    "--timestamp",
+    type=int,
+    help="Unix timestamp to use.",
+)
+@click.option("-v", "--verbose", is_flag=True, help="Display more info.")
+def update_timestamp(
+    timestamp: int,
+    verbose: bool,
+) -> None:
+    """Updates the latest definitions timestamp stored in `DEFS_DIR/ethereum/latest_definitions_timestamp.txt`
+    to the entered one or to the one, that can be obtained from parsing an online available definitions.
+    This timestamp is then injected via "mako" files into FW code.
+    """
+    setup_logging(verbose)
+
+    if timestamp is None:
+        zip_bytes = ethereum.download_from_url(
+            ethereum.DEFS_BASE_URL + ethereum.DEFS_ZIP_FILENAME
+        )
+
+        with zipfile.ZipFile(io.BytesIO(zip_bytes)) as zf:
+            timestamp = get_timestamp_from_definition(zf.read(zf.namelist().pop()))
+
+    with open(LATEST_DEFINITIONS_TIMESTAMP_FILEPATH, "w") as f:
+        logging.info(
+            f"Setting the timestamp to '{timestamp}' ('{datetime.datetime.fromtimestamp(timestamp)}')."
+        )
+        f.write(str(timestamp))
 
 
 if __name__ == "__main__":

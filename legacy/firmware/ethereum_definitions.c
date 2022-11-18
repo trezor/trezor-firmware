@@ -23,6 +23,7 @@
 #include "crypto.h"
 #include "ethereum.h"
 #include "ethereum_definitions.h"
+#include "ethereum_definitions_constants.h"
 #include "ethereum_networks.h"
 #include "ethereum_tokens.h"
 #include "fsm.h"
@@ -34,21 +35,6 @@
 #include "trezor.h"  // because of the "VERSTR" macro used in "fsm_sendFailureDebug" function
 #include "util.h"
 
-static const uint8_t DEFINITIONS_PUBLIC_KEY[] =
-    "                                ";
-#if DEBUG_LINK
-static const uint8_t DEFINITIONS_DEV_PUBLIC_KEY[] =
-    "\xdb\x99\x5f\xe2\x51\x69\xd1\x41\xca\xb9\xbb\xba\x92\xba\xa0\x1f\x9f\x2e"
-    "\x1e\xce\x7d\xf4\xcb\x2a\xc0\x51\x90\xf3\x7f\xcc\x1f\x9d";
-#endif
-
-#define MIN_DATA_VERSION 1
-#define FORMAT_VERSION_LENGTH 5
-#define FORMAT_VERSION (const pb_byte_t *)"trzd1"
-#define MERKLE_TREE_SIGNED_ROOT_SIZE 64
-
-#define HASH_DATA_BUFFER_SIZE \
-  (1 + MAX(EthereumDefinitions_size / 2, 2 * SHA256_DIGEST_LENGTH))
 
 typedef struct {
   // prefix

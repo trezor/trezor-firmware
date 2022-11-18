@@ -493,6 +493,8 @@ if not utils.BITCOIN_ONLY:
     import apps.ethereum
     apps.ethereum.definitions
     import apps.ethereum.definitions
+    apps.ethereum.definitions_constants
+    import apps.ethereum.definitions_constants
     apps.ethereum.get_address
     import apps.ethereum.get_address
     apps.ethereum.get_public_key
