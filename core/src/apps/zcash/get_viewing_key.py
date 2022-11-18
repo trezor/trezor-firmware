@@ -39,7 +39,7 @@ async def require_confirm_export_viewing_key(
         ctx,
         "export_viewing_key",
         "Confirm export",
-        description="Do you really want to export %s Viewing Key?" % key_type,
+        description=f"Do you really want to export { key_type } Viewing Key?",
         icon=ui.ICON_SEND,
         icon_color=ui.GREEN,
         br_code=ButtonRequestType.SignTx,
