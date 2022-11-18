@@ -44,12 +44,12 @@ class OrchardSigner:
         coin: CoinInfo,
         tx_req: TxRequest,
     ) -> None:
-        params = tx_info.tx.orchard_params
-        assert params is not None  # checked in sanitize_sign_tx
+        assert tx_info.tx.orchard_params is not None  # checked in sanitize_sign_tx
+        self.params = tx_info.tx.orchard_params
         self.actions_count = max(
             2,  # minimal required amount of actions
-            self.inputs_count,
-            self.outputs_count,
+            self.params.inputs_count,
+            self.params.outputs_count,
         )
 
         self.tx_info = tx_info
@@ -59,8 +59,7 @@ class OrchardSigner:
         self.tx_req = tx_req
         assert isinstance(tx_info.sig_hasher, ZcashHasher)
         self.sig_hasher: ZcashHasher = tx_info.sig_hasher
-        self.anchor = params.anchor
-        self.key_node = self.keychain.derive(params.address_n)
+        self.key_node = self.keychain.derive(self.params.address_n)
 
         self.msg_acc = MessageAccumulator(
             self.keychain.derive_slip21(
@@ -72,17 +71,17 @@ class OrchardSigner:
 
     async def process_inputs(self) -> None:
         await self.check_orchard_inputs_count()
-        for i in range(self.inputs_count):
+        for i in range(self.params.inputs_count):
             txi = await self.get_input(i)
             self.msg_acc.xor_message(txi, i)  # add message to the accumulator
             self.approver.add_orchard_input(txi)
 
     def check_orchard_inputs_count(self) -> Awaitable[None]:  # type: ignore [awaitable-is-generator]
-        if self.inputs_count > MAX_SILENT_ORCHARD_INPUTS:
-            yield ConfirmOrchardInputsCountOverThreshold(self.inputs_count)
+        if self.params.inputs_count > MAX_SILENT_ORCHARD_INPUTS:
+            yield ConfirmOrchardInputsCountOverThreshold(self.params.inputs_count)
 
     async def approve_outputs(self) -> None:
-        for i in range(self.outputs_count):
+        for i in range(self.params.outputs_count):
             txo = await self.get_output(i)
             self.msg_acc.xor_message(txo, i)  # add message to the accumulator
             if output_is_internal(txo):
@@ -101,14 +100,14 @@ class OrchardSigner:
         await self.release_serialized()
 
         # shuffle inputs
-        inputs: list[int | None] = list(range(self.inputs_count))
+        inputs: list[int | None] = list(range(self.params.inputs_count))
         assert inputs is not None  # typing
         pad(inputs, self.actions_count)
         self.rng.shuffle_inputs(inputs)
         self.shuffled_inputs = inputs
 
         # shuffle_outputs
-        outputs: list[int | None] = list(range(self.outputs_count))
+        outputs: list[int | None] = list(range(self.params.outputs_count))
         assert outputs is not None  # typing
         pad(outputs, self.actions_count)
         self.rng.shuffle_outputs(outputs)
@@ -143,7 +142,7 @@ class OrchardSigner:
         self.sig_hasher.orchard.finalize(
             flags=FLAGS,
             value_balance=self.approver.orchard_balance,
-            anchor=self.anchor,
+            anchor=self.params.anchor,
         )
 
     def derive_shielding_seed(self) -> bytes:
@@ -154,7 +153,7 @@ class OrchardSigner:
         ss_hasher.update(self.sig_hasher.header.digest())
         ss_hasher.update(self.sig_hasher.transparent.digest())
         ss_hasher.update(self.msg_acc.state)
-        ss_hasher.update(self.anchor)
+        ss_hasher.update(self.params.anchor)
         ss_hasher.update(ss_slip21)
         return ss_hasher.digest()
 
