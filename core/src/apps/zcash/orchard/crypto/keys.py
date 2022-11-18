@@ -1,6 +1,7 @@
 # https://zips.z.cash/protocol/protocol.pdf#orchardkeycomponents
 
 from typing import Self
+
 from trezor.crypto.pallas import Fp, Scalar, generators as gen, to_base, to_scalar
 from trezor.utils import ensure
 

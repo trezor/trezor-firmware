@@ -52,7 +52,7 @@ def chunks(size: int, buffer: bytes) -> Iterable[memoryview]:
         yield m[offset : offset + size]
         offset += size
     if offset < length:
-        yield m[offset : length]
+        yield m[offset:length]
 
 
 # https://zips.z.cash/protocol/nu5.pdf#concretesym

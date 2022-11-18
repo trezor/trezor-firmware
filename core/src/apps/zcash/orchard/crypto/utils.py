@@ -5,6 +5,7 @@ from trezor.crypto.pallas import Fp, Scalar
 
 if TYPE_CHECKING:
     from typing import TypeVar, Iterable, Iterator
+
     A = TypeVar("A")
 
 
