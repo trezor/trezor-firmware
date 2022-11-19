@@ -280,7 +280,7 @@ fn homescreen_next_text(
 
     if next_text_idx < texts.len() {
         if let Some(txt) = texts.get(next_text_idx) {
-            unsafe { get_text_buffer(0, true) };
+            text_buffer.buffer.fill(0);
             next_text_info = homescreen_position_text(txt, text_buffer, icon_data);
             next_text_idx += 1;
         }
