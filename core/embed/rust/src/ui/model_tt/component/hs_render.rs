@@ -24,9 +24,28 @@ use crate::ui::{
     util::icon_text_center,
 };
 
-pub type HomescreenText<'a> = (&'a str, TextStyle, Offset, Option<&'static [u8]>);
-pub type HomescreenNotification<'a> = (&'a str, &'static [u8], Color);
-type HomescreenTextInfo = (Rect, i16, Color, Option<Rect>);
+#[derive(Clone, Copy)]
+pub struct HomescreenText<'a> {
+    pub text: &'a str,
+    pub style: TextStyle,
+    pub offset: Offset,
+    pub icon: Option<&'static [u8]>,
+}
+
+#[derive(Clone, Copy)]
+pub struct HomescreenNotification<'a> {
+    pub text: &'a str,
+    pub icon: &'static [u8],
+    pub color: Color,
+}
+
+#[derive(Clone, Copy)]
+struct HomescreenTextInfo {
+    pub text_area: Rect,
+    pub text_width: i16,
+    pub text_color: Color,
+    pub icon_area: Option<Rect>,
+}
 
 const HOMESCREEN_MAX_ICON_SIZE: i16 = 20;
 const HOMESCREEN_IMAGE_SCALE: i16 = 2;
@@ -63,18 +82,18 @@ fn homescreen_get_fg_text(
     text_buffer: &BufferText,
     fg_buffer: &mut LineBuffer4Bpp,
 ) -> bool {
-    if y_tmp >= text_info.0.y0 && y_tmp < text_info.0.y1 {
-        let y_pos = y_tmp - text_info.0.y0;
+    if y_tmp >= text_info.text_area.y0 && y_tmp < text_info.text_area.y1 {
+        let y_pos = y_tmp - text_info.text_area.y0;
         position_buffer(
             &mut fg_buffer.buffer,
             &text_buffer.buffer[(y_pos * WIDTH / 2) as usize..((y_pos + 1) * WIDTH / 2) as usize],
             4,
-            text_info.0.x0,
-            text_info.1,
+            text_info.text_area.x0,
+            text_info.text_width,
         );
     }
 
-    y_tmp == (text_info.0.y1 - 1)
+    y_tmp == (text_info.text_area.y1 - 1)
 }
 
 fn homescreen_get_fg_icon(
@@ -83,7 +102,7 @@ fn homescreen_get_fg_icon(
     icon_data: &[u8],
     fg_buffer: &mut LineBuffer4Bpp,
 ) {
-    if let Some(icon_area) = text_info.3 {
+    if let Some(icon_area) = text_info.icon_area {
         let icon_size = icon_area.size();
         if y_tmp >= icon_area.y0 && y_tmp < icon_area.y1 {
             let y_pos = y_tmp - icon_area.y0;
@@ -100,18 +119,16 @@ fn homescreen_get_fg_icon(
 }
 
 fn homescreen_position_text(
-    text: HomescreenText,
+    text: &HomescreenText,
     buffer: &mut BufferText,
     icon_buffer: &mut [u8],
 ) -> HomescreenTextInfo {
-    let (text, text_style, text_offset, icon) = text;
-
-    let text_width = display::text_width(text, text_style.text_font.into());
-    let font_max_height = display::text_max_height(text_style.text_font.into());
-    let font_baseline = display::text_baseline(text_style.text_font.into());
+    let text_width = display::text_width(text.text, text.style.text_font.into());
+    let font_max_height = display::text_max_height(text.style.text_font.into());
+    let font_baseline = display::text_baseline(text.style.text_font.into());
     let text_width_clamped = text_width.clamp(0, screen().width());
 
-    let icon_size = if let Some(icon) = icon {
+    let icon_size = if let Some(icon) = text.icon {
         let (icon_size, icon_data) = toif_info_ensure(icon, ToifFormat::GrayScaleEH);
         assert!(icon_size.x < HOMESCREEN_MAX_ICON_SIZE);
         assert!(icon_size.y < HOMESCREEN_MAX_ICON_SIZE);
@@ -122,8 +139,8 @@ fn homescreen_position_text(
         Offset::zero()
     };
 
-    let text_top = screen().y0 + text_offset.y - font_max_height + font_baseline;
-    let text_bottom = screen().y0 + text_offset.y + font_baseline;
+    let text_top = screen().y0 + text.offset.y - font_max_height + font_baseline;
+    let text_bottom = screen().y0 + text.offset.y + font_baseline;
     let icon_left = screen().center().x - (text_width_clamped + icon_size.x + TEXT_ICON_SPACE) / 2;
     let text_left = icon_left + icon_size.x + TEXT_ICON_SPACE;
     let text_right = screen().center().x + (text_width_clamped + icon_size.x + TEXT_ICON_SPACE) / 2;
@@ -133,7 +150,7 @@ fn homescreen_position_text(
         Point::new(text_right, text_bottom),
     );
 
-    let icon_area = if icon.is_some() {
+    let icon_area = if text.icon.is_some() {
         Some(Rect::from_top_left_and_size(
             Point::new(icon_left, text_bottom - icon_size.y - font_baseline),
             icon_size,
@@ -142,9 +159,14 @@ fn homescreen_position_text(
         None
     };
 
-    display::text_into_buffer(text, text_style.text_font.into(), buffer, 0);
+    display::text_into_buffer(text.text, text.style.text_font.into(), buffer, 0);
 
-    (text_area, text_width, text_style.text_color, icon_area)
+    HomescreenTextInfo {
+        text_area,
+        text_width,
+        text_color: text.style.text_color,
+        icon_area,
+    }
 }
 
 fn homescreen_line_blurred(
@@ -190,7 +212,7 @@ fn homescreen_line_blurred(
     homescreen_get_fg_icon(y, text_info, icon_data, t_buffer);
 
     dma2d_wait_for_transfer();
-    dma2d_setup_4bpp_over_16bpp(text_info.2.into());
+    dma2d_setup_4bpp_over_16bpp(text_info.text_color.into());
     dma2d_start_blend(&t_buffer.buffer, &img_buffer.buffer, WIDTH);
 
     done
@@ -240,14 +262,14 @@ fn homescreen_line(
     homescreen_get_fg_icon(y, text_info, icon_data, t_buffer);
 
     dma2d_wait_for_transfer();
-    dma2d_setup_4bpp_over_16bpp(text_info.2.into());
+    dma2d_setup_4bpp_over_16bpp(text_info.text_color.into());
     dma2d_start_blend(&t_buffer.buffer, &img_buffer.buffer, WIDTH);
 
     done
 }
 
 fn homescreen_next_text(
-    texts: &Vec<Option<HomescreenText>, 4>,
+    texts: &Vec<HomescreenText, 4>,
     text_buffer: &mut BufferText,
     icon_data: &mut [u8],
     text_info: HomescreenTextInfo,
@@ -257,7 +279,7 @@ fn homescreen_next_text(
     let mut next_text_info = text_info;
 
     if next_text_idx < texts.len() {
-        if let Some(txt) = texts[next_text_idx] {
+        if let Some(txt) = texts.get(next_text_idx) {
             unsafe { get_text_buffer(0, true) };
             next_text_info = homescreen_position_text(txt, text_buffer, icon_data);
             next_text_idx += 1;
@@ -356,13 +378,14 @@ fn vertical_avg(
     }
 }
 
-pub fn homescreen_blurred(data: &[u8], texts: Vec<Option<HomescreenText>, 4>) {
+pub fn homescreen_blurred(data: &[u8], texts: Vec<HomescreenText, 4>) {
     let mut icon_data = [0_u8; (HOMESCREEN_MAX_ICON_SIZE * HOMESCREEN_MAX_ICON_SIZE / 2) as usize];
 
     let text_buffer = unsafe { get_text_buffer(0, true) };
 
     let mut next_text_idx = 1;
-    let mut text_info = homescreen_position_text(unwrap!(texts[0]), text_buffer, &mut icon_data);
+    let mut text_info =
+        homescreen_position_text(unwrap!(texts.get(0)), text_buffer, &mut icon_data);
 
     let toif = toif_info(data);
 
@@ -466,7 +489,7 @@ pub fn homescreen_blurred(data: &[u8], texts: Vec<Option<HomescreenText>, 4>) {
 
 pub fn homescreen(
     data: &[u8],
-    texts: Vec<Option<HomescreenText>, 4>,
+    texts: Vec<HomescreenText, 4>,
     notification: Option<HomescreenNotification>,
     notification_only: bool,
 ) {
@@ -488,13 +511,15 @@ pub fn homescreen(
             Point::new(0, NOTIFICATION_BORDER),
             Point::new(WIDTH, NOTIFICATION_HEIGHT + NOTIFICATION_BORDER),
         );
-        let width = WIDTH;
-        let color = notification.2;
-        let icon = None;
-        (area, width, color, icon)
+        HomescreenTextInfo {
+            text_area: area,
+            text_width: WIDTH,
+            text_color: notification.color,
+            icon_area: None,
+        }
     } else {
         next_text_idx += 1;
-        homescreen_position_text(unwrap!(texts[0]), text_buffer, &mut icon_data)
+        homescreen_position_text(unwrap!(texts.get(0)), text_buffer, &mut icon_data)
     };
 
     let toif = toif_info(data);
@@ -537,17 +562,17 @@ pub fn homescreen(
                         let notification = unwrap!(notification);
 
                         let style = TextStyle {
-                            background_color: notification.2,
+                            background_color: notification.color,
                             ..theme::TEXT_BOLD
                         };
 
                         dma2d_wait_for_transfer();
 
                         icon_text_center(
-                            text_info.0.center(),
-                            notification.1,
+                            text_info.text_area.center(),
+                            notification.icon,
                             8,
-                            notification.0,
+                            notification.text,
                             style,
                             Offset::new(1, -2),
                         );
