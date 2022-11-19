@@ -1,3 +1,5 @@
+mod render;
+
 use crate::{
     storage::get_avatar,
     time::{Duration, Instant},
@@ -7,15 +9,12 @@ use crate::{
         display::{self, Color, Font},
         event::{TouchEvent, USBEvent},
         geometry::{Offset, Point, Rect},
-        model_tt::{
-            component::hs_render::{
-                homescreen, homescreen_blurred, HomescreenNotification, HomescreenText,
-            },
-            constant,
-            theme::IMAGE_HOMESCREEN,
-        },
+        model_tt::{constant, theme::IMAGE_HOMESCREEN},
     },
 };
+
+use render::{homescreen, homescreen_blurred, HomescreenNotification, HomescreenText};
+
 use heapless::Vec;
 
 use super::{theme, Loader, LoaderMsg};
