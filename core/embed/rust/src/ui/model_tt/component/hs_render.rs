@@ -173,7 +173,7 @@ fn homescreen_line_blurred(
     icon_data: &mut [u8],
     text_buffer: &mut BufferText,
     text_info: HomescreenTextInfo,
-    totals: [[u16; HOMESCREEN_IMAGE_SIZE as usize]; COLORS],
+    totals: &[[u16; HOMESCREEN_IMAGE_SIZE as usize]; COLORS],
     y: i16,
 ) -> bool {
     let t_buffer = unsafe { get_buffer_4bpp((y & 0x1) as u16, true) };
@@ -443,7 +443,7 @@ pub fn homescreen_blurred(data: &[u8], texts: Vec<HomescreenText, 4>) {
                     &mut icon_data,
                     text_buffer,
                     text_info,
-                    avgs_totals,
+                    &avgs_totals,
                     HOMESCREEN_IMAGE_SCALE * y + i,
                 );
 
