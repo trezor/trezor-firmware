@@ -170,7 +170,7 @@ fn homescreen_position_text(
 }
 
 fn homescreen_line_blurred(
-    icon_data: &mut [u8],
+    icon_data: &[u8],
     text_buffer: &mut BufferText,
     text_info: HomescreenTextInfo,
     totals: &[[u16; HOMESCREEN_IMAGE_SIZE as usize]; COLORS],
@@ -219,10 +219,10 @@ fn homescreen_line_blurred(
 }
 
 fn homescreen_line(
-    icon_data: &mut [u8],
+    icon_data: &[u8],
     text_buffer: &mut BufferText,
     text_info: HomescreenTextInfo,
-    image_data: &mut [u8; (HOMESCREEN_IMAGE_SIZE * 2) as usize],
+    image_data: &[u8; (HOMESCREEN_IMAGE_SIZE * 2) as usize],
     y: i16,
 ) -> bool {
     let t_buffer = unsafe { get_buffer_4bpp((y & 0x1) as u16, true) };
@@ -291,7 +291,7 @@ fn homescreen_next_text(
 
 #[inline(always)]
 fn update_accs_add(
-    data: &mut [u8; (HOMESCREEN_IMAGE_SIZE * 2) as usize],
+    data: &[u8; (HOMESCREEN_IMAGE_SIZE * 2) as usize],
     idx: usize,
     acc_r: &mut u16,
     acc_g: &mut u16,
@@ -309,7 +309,7 @@ fn update_accs_add(
 
 #[inline(always)]
 fn update_accs_sub(
-    data: &mut [u8; (HOMESCREEN_IMAGE_SIZE * 2) as usize],
+    data: &[u8; (HOMESCREEN_IMAGE_SIZE * 2) as usize],
     idx: usize,
     acc_r: &mut u16,
     acc_g: &mut u16,
@@ -327,7 +327,7 @@ fn update_accs_sub(
 
 // computes color averages for one line of image data
 fn compute_line_avgs(
-    data: &mut [u8; (HOMESCREEN_IMAGE_SIZE * 2) as usize],
+    data: &[u8; (HOMESCREEN_IMAGE_SIZE * 2) as usize],
     avg_dest: &mut [[u16; HOMESCREEN_IMAGE_SIZE as usize]; COLORS],
 ) {
     let mut acc_r = 0;
@@ -355,7 +355,7 @@ fn compute_line_avgs(
 // adds one line of averages to sliding total averages
 fn vertical_avg_add(
     totals: &mut [[u16; HOMESCREEN_IMAGE_SIZE as usize]; COLORS],
-    lines: &mut [[u16; HOMESCREEN_IMAGE_SIZE as usize]; COLORS],
+    lines: &[[u16; HOMESCREEN_IMAGE_SIZE as usize]; COLORS],
 ) {
     for i in 0..HOMESCREEN_IMAGE_SIZE as usize {
         totals[RED_IDX][i] += lines[RED_IDX][i];
@@ -367,7 +367,7 @@ fn vertical_avg_add(
 // adds one line and removes one line of averages to/from sliding total averages
 fn vertical_avg(
     totals: &mut [[u16; HOMESCREEN_IMAGE_SIZE as usize]; COLORS],
-    lines: &mut [[[u16; HOMESCREEN_IMAGE_SIZE as usize]; COLORS]; DECOMP_LINES],
+    lines: &[[[u16; HOMESCREEN_IMAGE_SIZE as usize]; COLORS]; DECOMP_LINES],
     add_idx: usize,
     rem_idx: usize,
 ) {
@@ -404,17 +404,17 @@ pub fn homescreen_blurred(data: &[u8], texts: Vec<HomescreenText, 4>) {
         ctx.uncompress(&mut dest).unwrap();
 
         // handling top edge case: preload the edge value N+1 times
-        compute_line_avgs(&mut dest, &mut avgs[dest_idx]);
+        compute_line_avgs(&dest, &mut avgs[dest_idx]);
         for _ in 0..=BLUR_RADIUS {
-            vertical_avg_add(&mut avgs_totals, &mut avgs[dest_idx]);
+            vertical_avg_add(&mut avgs_totals, &avgs[dest_idx]);
         }
         dest_idx += 1;
 
         // load enough values to be able to compute first line averages
         for _ in 0..BLUR_RADIUS {
             ctx.uncompress(&mut dest).unwrap();
-            compute_line_avgs(&mut dest, &mut avgs[dest_idx]);
-            vertical_avg_add(&mut avgs_totals, &mut avgs[dest_idx]);
+            compute_line_avgs(&dest, &mut avgs[dest_idx]);
+            vertical_avg_add(&mut avgs_totals, &avgs[dest_idx]);
             dest_idx += 1;
         }
 
@@ -440,7 +440,7 @@ pub fn homescreen_blurred(data: &[u8], texts: Vec<HomescreenText, 4>) {
 
             for i in 0..HOMESCREEN_IMAGE_SCALE {
                 let done = homescreen_line_blurred(
-                    &mut icon_data,
+                    &icon_data,
                     text_buffer,
                     text_info,
                     &avgs_totals,
@@ -459,10 +459,10 @@ pub fn homescreen_blurred(data: &[u8], texts: Vec<HomescreenText, 4>) {
             }
 
             if y < HOMESCREEN_IMAGE_SIZE - (BLUR_RADIUS + 1) as i16 {
-                compute_line_avgs(&mut dest, &mut avgs[dest_idx]);
+                compute_line_avgs(&dest, &mut avgs[dest_idx]);
             }
 
-            vertical_avg(&mut avgs_totals, &mut avgs, dest_idx, rem_idx);
+            vertical_avg(&mut avgs_totals, &avgs, dest_idx, rem_idx);
 
             // handling bottom edge case: stop incrementing counter, adding the edge value
             // for the rest of image
@@ -545,10 +545,10 @@ pub fn homescreen(
 
             for i in 0..HOMESCREEN_IMAGE_SCALE {
                 let done = homescreen_line(
-                    &mut icon_data,
+                    &icon_data,
                     text_buffer,
                     text_info,
-                    &mut dest,
+                    &dest,
                     HOMESCREEN_IMAGE_SCALE * y + i,
                 );
 
