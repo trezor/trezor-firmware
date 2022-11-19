@@ -435,9 +435,7 @@ pub fn homescreen_blurred(data: &[u8], texts: Vec<HomescreenText, 4>) {
             };
 
             if clear_bg {
-                for i in &mut dest {
-                    *i = 0;
-                }
+                dest.fill(0);
             }
 
             for i in 0..HOMESCREEN_IMAGE_SCALE {
@@ -542,9 +540,7 @@ pub fn homescreen(
             };
 
             if clear_bg {
-                for i in &mut dest {
-                    *i = 0;
-                }
+                dest.fill(0);
             }
 
             for i in 0..HOMESCREEN_IMAGE_SCALE {
