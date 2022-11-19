@@ -71,10 +71,18 @@ where
     fn get_notification(&self) -> Option<HomescreenNotification> {
         if !usb_configured() {
             let (color, icon) = Self::level_to_style(0);
-            Some(("NO USB CONNECTION", icon, color))
+            Some(HomescreenNotification {
+                text: "NO USB CONNECTION",
+                icon,
+                color,
+            })
         } else if let Some((notification, level)) = &self.notification {
             let (color, icon) = Self::level_to_style(*level);
-            Some((notification.as_ref(), icon, color))
+            Some(HomescreenNotification {
+                text: notification.as_ref(),
+                icon,
+                color,
+            })
         } else {
             None
         }
@@ -176,17 +184,12 @@ where
             let mut label_style = theme::TEXT_BOLD;
             label_style.text_color = theme::FG;
 
-            let texts: Vec<Option<HomescreenText>, 4> = unwrap!(Vec::from_slice(&[
-                Some((
-                    self.label.as_ref(),
-                    label_style,
-                    Offset::new(10, LABEL_Y),
-                    None
-                )),
-                None,
-                None,
-                None,
-            ],));
+            let texts: Vec<HomescreenText, 4> = unwrap!(Vec::from_slice(&[HomescreenText {
+                text: self.label.as_ref(),
+                style: label_style,
+                offset: Offset::new(10, LABEL_Y),
+                icon: None
+            }],));
 
             let notification = self.get_notification();
 
@@ -255,21 +258,25 @@ where
         let mut label_style = theme::TEXT_BOLD;
         label_style.text_color = theme::GREY_MEDIUM;
 
-        let texts: Vec<Option<HomescreenText>, 4> = unwrap!(Vec::from_slice(&[
-            Some((
-                locked,
-                theme::TEXT_BOLD,
-                Offset::new(10, LOCKED_Y),
-                Some(theme::ICON_LOCK)
-            )),
-            Some((tap, tap_style, Offset::new(10, TAP_Y), None)),
-            Some((
-                self.label.as_ref(),
-                label_style,
-                Offset::new(10, LABEL_Y),
-                None
-            )),
-            None,
+        let texts: Vec<HomescreenText, 4> = unwrap!(Vec::from_slice(&[
+            HomescreenText {
+                text: locked,
+                style: theme::TEXT_BOLD,
+                offset: Offset::new(10, LOCKED_Y),
+                icon: Some(theme::ICON_LOCK)
+            },
+            HomescreenText {
+                text: tap,
+                style: tap_style,
+                offset: Offset::new(10, TAP_Y),
+                icon: None
+            },
+            HomescreenText {
+                text: self.label.as_ref(),
+                style: label_style,
+                offset: Offset::new(10, LABEL_Y),
+                icon: None
+            },
         ],));
         homescreen_blurred(get_image(), texts);
     }
