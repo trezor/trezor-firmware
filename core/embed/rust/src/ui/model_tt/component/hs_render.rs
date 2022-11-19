@@ -130,8 +130,8 @@ fn homescreen_position_text(
 
     let icon_size = if let Some(icon) = text.icon {
         let (icon_size, icon_data) = toif_info_ensure(icon, ToifFormat::GrayScaleEH);
-        assert!(icon_size.x < HOMESCREEN_MAX_ICON_SIZE);
-        assert!(icon_size.y < HOMESCREEN_MAX_ICON_SIZE);
+        assert!(icon_size.x <= HOMESCREEN_MAX_ICON_SIZE);
+        assert!(icon_size.y <= HOMESCREEN_MAX_ICON_SIZE);
         let mut ctx = UzlibContext::new(icon_data, None);
         unwrap!(ctx.uncompress(icon_buffer), "Decompression failed");
         icon_size
