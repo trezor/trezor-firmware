@@ -140,7 +140,7 @@ def sign_tx(
             inputs_count=len(o_inputs),
             outputs_count=len(o_outputs),
             anchor=anchor,
-            n_address=z_address_n,
+            address_n=z_address_n,
         ) if o_inputs or o_outputs else None,
     )
 
@@ -164,7 +164,7 @@ def sign_tx(
         # If there's some part of signed transaction, let's add it
         if res.serialized:
             if res.serialized.serialized_tx:
-                LOG.info("T -> serialized tx ({} bytes)".format(len(res.serialized.serialized_tx)))
+                LOG.info("T -> serialized tx (%d bytes)", len(res.serialized.serialized_tx))
                 serialized_tx += res.serialized.serialized_tx
 
             if res.serialized.signature_index is not None:
@@ -172,17 +172,17 @@ def sign_tx(
                 sig = res.serialized.signature
                 sig_type = res.serialized.signature_type
                 if sig_type == SigType.TRANSPARENT:
-                    LOG.info(f"T -> t signature {idx}")
+                    LOG.info("T -> t signature %d", idx)
                     if signatures[sig_type][idx] is not None:
-                        raise ValueError(f"Transparent signature for index {idx} already filled")
+                        raise ValueError("Transparent signature for index {0} already filled".format(idx))
                 elif sig_type == SigType.ORCHARD_SPEND_AUTH:
-                    LOG.info(f"T -> o signature {idx}")
+                    LOG.info("T -> o signature %d", idx)
                     if signatures[sig_type].get(idx) is not None:
-                        raise ValueError(f"Orchard signature for index {idx} already filled")
+                        raise ValueError("Orchard signature for index {0} already filled".format(idx))
                     if idx >= actions_count:
-                        raise IndexError(f"Orchard signature index out of range: {idx}")
+                        raise IndexError("Orchard signature index out of range: {0}".format(idx))
                 else:
-                    raise ValueError(f"Unknown signature type: {sig_type}.")
+                    raise ValueError("Unknown signature type: {0}.".format(sig_type))
                 signatures[sig_type][idx] = sig
 
             if res.serialized.zcash_shielding_seed is not None:
@@ -199,32 +199,32 @@ def sign_tx(
             break
 
         elif res.request_type == R.TXINPUT:
-            LOG.info("T <- t input", res.details.request_index)
+            LOG.info("T <- t input %d", res.details.request_index)
             msg = messages.TransactionType()
             msg.inputs = [t_inputs[res.details.request_index]]
             res = client.call(messages.TxAck(tx=msg))
 
         elif res.request_type == R.TXOUTPUT:
-            LOG.info("T <- t output", res.details.request_index)
+            LOG.info("T <- t output %d", res.details.request_index)
             msg = messages.TransactionType()
             msg.outputs = [t_outputs[res.details.request_index]]
             res = client.call(messages.TxAck(tx=msg))
 
         elif res.request_type == R.TXORCHARDINPUT:
             txi = o_inputs[res.details.request_index]
-            LOG.info("T <- o input ", res.details.request_index)
+            LOG.info("T <- o input %d", res.details.request_index)
             res = client.call(txi)
 
         elif res.request_type == R.TXORCHARDOUTPUT:
             txo = o_outputs[res.details.request_index]
-            LOG.info("T <- o output", res.details.request_index)
+            LOG.info("T <- o output %d", res.details.request_index)
             res = client.call(txo)
 
         elif res.request_type == R.NO_OP:
             res = client.call(messages.ZcashAck())
 
         else:
-            raise ValueError("unexpected request type: {}".format(res.request_type))
+            raise ValueError("unexpected request type: {0}".format(res.request_type))
 
     if not isinstance(res, messages.TxRequest):
         raise exceptions.TrezorException("Unexpected message")
