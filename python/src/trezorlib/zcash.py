@@ -79,11 +79,12 @@ def sign_tx(
     version_group_id: int = 0x26A7270A,  # protocol spec §7.1.2
     branch_id: int = 0xC2D6D0B4,  # https://zips.z.cash/zip-0252
     expiry: int = 0,
-    account: int = 0,
-    anchor: bytes = EMPTY_ANCHOR,
+    z_address_n: List[int] | None = None,
+    anchor: bytes = None,
 ) -> "Generator[None, bytes, (dict[int, bytes], bytes)]":
     """
     Sign a Zcash transaction.
+    Spending transparent and Orchard funds simultaneously is not supported.
 
     Parameters:
     -----------
@@ -93,24 +94,23 @@ def sign_tx(
     version_group_id: 0x26A7270A by default
     branch_id: 0xC2D6D0B4 by default
     expiry: 0 by default
-    account: account number, from which is spent
-        third digit of ZIP-32 path. 0 by default
+    z_address_n: Orchard account ZIP-32 path
     anchor: Orchard anchor
 
     Example:
     --------
     protocol = zcash.sign_tx(
         inputs=[
-            TxInput(...)
+            ZcashOrchardInput(...),
         ],
         outputs=[
             TxOutput(...),
             ZcashOrchardOutput(...),
         ]
+        z_address_n=tools.parse_path("m/32h/133h/0h"),
         anchor=bytes.fromhex(...),
-        verbose=True,
     )
-    shielding_seed = next(protocol)
+    zcash_shielding_seed = next(protocol)
     ... # run Orchard prover in parallel here
     sighash = next(protocol)
     signatures, serialized_tx = next(protocol)
@@ -121,6 +121,14 @@ def sign_tx(
     o_inputs = [x for x in inputs if isinstance(x, messages.ZcashOrchardInput)]
     o_outputs = [x for x in outputs if isinstance(x, messages.ZcashOrchardOutput)]
 
+    if o_inputs and t_inputs:
+        raise ValueError("Spending transparent and Orchard funds simultaniously is not supported.")
+    if o_inputs or o_outputs:
+        if z_address_n is None:
+            raise ValueError("z_address_n argument is missing")
+        if anchor is None:
+            raise ValueError("anchor argument is missing")
+
     msg = messages.SignTx(
         inputs_count=len(t_inputs),
         outputs_count=len(t_outputs),
@@ -129,16 +137,18 @@ def sign_tx(
         version_group_id=version_group_id,
         branch_id=branch_id,
         expiry=expiry,
-        orchard_inputs_count=len(o_inputs),
-        orchard_outputs_count=len(o_outputs),
-        orchard_anchor=anchor,
-        account=account,
+        orchard_params=messages.ZcashOrchardParams(
+            inputs_count=len(o_inputs),
+            outputs_count=len(o_outputs),
+            anchor=anchor,
+            n_address=z_address_n,
+        ) if o_inputs or o_outputs else None,
     )
 
-    actions_count = (
-        max(len(o_outputs), len(o_inputs), 2)
-        if len(o_outputs) + len(o_inputs) > 0
-        else 0)
+    if o_outputs or o_inputs:
+        actions_count = max(len(o_outputs), len(o_inputs), 2)
+    else:
+        actions_count = 0
 
     serialized_tx = b""
 
