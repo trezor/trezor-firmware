@@ -81,8 +81,6 @@ trezor.crypto.der
 import trezor.crypto.der
 trezor.crypto.hashlib
 import trezor.crypto.hashlib
-trezor.crypto.mock_bip340
-import trezor.crypto.mock_bip340
 trezor.crypto.pallas
 import trezor.crypto.pallas
 trezor.crypto.rlp
