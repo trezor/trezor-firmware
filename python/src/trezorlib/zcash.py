@@ -14,14 +14,13 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Any
 import logging
 from . import exceptions, messages
 from .messages import ZcashSignatureType as SigType
 from .tools import expect
 
 if TYPE_CHECKING:
-    from typing import Generator, List
     from .client import TrezorClient
 
 
@@ -81,7 +80,7 @@ def sign_tx(
     expiry: int = 0,
     z_address_n: List[int] | None = None,
     anchor: bytes = None,
-) -> "Generator[None, bytes, (dict[int, bytes], bytes)]":
+) -> Any:  # TODO: add the return type
     """
     Sign a Zcash transaction.
     Spending transparent and Orchard funds simultaneously is not supported.
