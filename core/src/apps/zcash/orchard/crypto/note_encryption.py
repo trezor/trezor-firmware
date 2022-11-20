@@ -49,6 +49,7 @@ def prf_ock_orchard(
 def chunks(size: int, buffer: bytes) -> Iterable[memoryview]:
     offset = 0
     m = memoryview(buffer)
+    length = len(buffer)
     while offset + size <= length:
         yield m[offset : offset + size]
         offset += size
