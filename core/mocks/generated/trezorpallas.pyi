@@ -65,7 +65,7 @@ class Point:
 
 
 # rust/src/zcash_primitives/pallas/mod.rs
-class generators:
+class Generators:
     SPENDING_KEY_BASE: Point
     NULLIFIER_K_BASE: Point
     VALUE_COMMITMENT_VALUE_BASE: Point

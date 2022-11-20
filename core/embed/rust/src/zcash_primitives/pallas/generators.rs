@@ -1,8 +1,20 @@
 //! Precomputed Orchard generators.
+//!
+//! There does not exist any static constructor for `pasta_curves::pallas::Point`,
+//! hence generators cannot be direct module attributes.
+//! Instead we allocate a `Generators()` object with overridden `attr_fn`.
+//! This `attr_fn` maps generators qstr-names to the concrete points.
+//!
+//! Usage in python:
+//! ```
+//! gen = pallas.Generators()
+//! ak = sk * gen.SPENDING_KEY_BASE
+//! hasher = Sinsemilla(gen.IVK_COMMITMENT_Q)
+//! ```
 
 use crate::{
     error::Error,
-    micropython::{ffi, obj::Obj, qstr::Qstr, typ::Type, util, wrap::Wrappable},
+    micropython::{ffi, map::Map, obj::Obj, qstr::Qstr, typ::Type, util, wrap::Wrappable},
 };
 use pasta_curves::{
     arithmetic::CurveAffine,
@@ -10,10 +22,34 @@ use pasta_curves::{
     Fp,
 };
 
+struct Generators;
+
 pub static GENERATORS_TYPE: Type = obj_type! {
-    name: Qstr::MP_QSTR_generators,
+    name: Qstr::MP_QSTR_Generators,
     attr_fn: attr_fn,
+    make_new_fn: make_gens,
 };
+
+impl Wrappable for Generators {
+    fn obj_type() -> &'static Type {
+        &GENERATORS_TYPE
+    }
+}
+
+unsafe extern "C" fn make_gens(
+    _type_: *const Type,
+    n_args: usize,
+    n_kw: usize,
+    args: *const Obj,
+) -> Obj {
+    let block = |args: &[Obj], kwargs: &Map| {
+        if args.len() != 0 || kwargs.len() != 0 {
+            return Err(Error::TypeError);
+        }
+        Generators.wrap()
+    };
+    unsafe { util::try_with_args_and_kwargs_inline(n_args, n_kw, args, block) }
+}
 
 unsafe extern "C" fn attr_fn(_self_in: Obj, attr: ffi::qstr, dest: *mut Obj) {
     let block = || {

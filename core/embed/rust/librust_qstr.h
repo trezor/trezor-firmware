@@ -81,7 +81,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_to_scalar;
   MP_QSTR_group_hash;
   MP_QSTR_scalar_from_i64;
-  MP_QSTR_generators;
+  MP_QSTR_Generators;
   MP_QSTR_SPENDING_KEY_BASE;
   MP_QSTR_NULLIFIER_K_BASE;
   MP_QSTR_VALUE_COMMITMENT_VALUE_BASE;
