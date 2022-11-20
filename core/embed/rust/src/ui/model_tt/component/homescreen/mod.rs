@@ -14,8 +14,12 @@ use crate::{
     },
 };
 
-use render::{homescreen, homescreen_blurred, HomescreenNotification, HomescreenText};
+use render::{
+    homescreen, homescreen_blurred, HomescreenNotification, HomescreenText, HOMESCREEN_IMAGE_SIZE,
+    HOMESCREEN_MAX_TEXTS,
+};
 
+use crate::{trezorhal::display::ToifFormat, ui::display::toif_info};
 use heapless::Vec;
 
 use super::{theme, Loader, LoaderMsg};
@@ -184,12 +188,13 @@ where
             let mut label_style = theme::TEXT_BOLD;
             label_style.text_color = theme::FG;
 
-            let texts: Vec<HomescreenText, 4> = unwrap!(Vec::from_slice(&[HomescreenText {
-                text: self.label.as_ref(),
-                style: label_style,
-                offset: Offset::new(10, LABEL_Y),
-                icon: None
-            }],));
+            let texts: Vec<HomescreenText, HOMESCREEN_MAX_TEXTS> =
+                unwrap!(Vec::from_slice(&[HomescreenText {
+                    text: self.label.as_ref(),
+                    style: label_style,
+                    offset: Offset::new(10, LABEL_Y),
+                    icon: None
+                }],));
 
             let notification = self.get_notification();
 
@@ -268,7 +273,7 @@ where
         let mut label_style = theme::TEXT_BOLD;
         label_style.text_color = theme::GREY_MEDIUM;
 
-        let texts: Vec<HomescreenText, 4> = unwrap!(Vec::from_slice(&[
+        let texts: Vec<HomescreenText, HOMESCREEN_MAX_TEXTS> = unwrap!(Vec::from_slice(&[
             HomescreenText {
                 text: locked,
                 style: theme::TEXT_BOLD,
@@ -303,10 +308,18 @@ fn get_image() -> Result<Gc<[u8]>, ()> {
         let result = Gc::<[u8]>::new_slice(len);
         if let Ok(mut buffer) = result {
             if get_avatar(buffer.as_mut()).is_ok() {
-                return Ok(buffer);
+                let toif = toif_info(buffer.as_ref());
+                if let Some((size, format)) = toif {
+                    if size.x == HOMESCREEN_IMAGE_SIZE
+                        && size.y == HOMESCREEN_IMAGE_SIZE
+                        && format == ToifFormat::FullColorLE
+                    {
+                        return Ok(buffer);
+                    }
+                }
             }
         }
-    }
+    };
     Err(())
 }
 
