@@ -7,12 +7,11 @@ specification: https://zips.z.cash/zip-0244
 
 from typing import TYPE_CHECKING
 
-from trezor.crypto.hashlib import blake2b
 from trezor import utils
+from trezor.crypto.hashlib import blake2b
 from trezor.utils import HashWriter, empty_bytearray
 
 from apps.bitcoin.common import SigHashType
-from apps.common.writers import write_uint32_le, write_uint64_le
 from apps.bitcoin.writers import (
     TX_HASH_SIZE,
     write_bytes_fixed,
@@ -21,6 +20,7 @@ from apps.bitcoin.writers import (
     write_tx_output,
     write_uint8,
 )
+from apps.common.writers import write_uint32_le, write_uint64_le
 
 if TYPE_CHECKING:
     from trezor.messages import TxInput, TxOutput, SignTx, PrevTx

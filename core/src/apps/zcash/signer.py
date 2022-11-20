@@ -1,9 +1,9 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
+from trezor import utils
 from trezor.enums import OutputScriptType, ZcashSignatureType
 from trezor.messages import SignTx
-from trezor import utils
 from trezor.wire import DataError, ProcessError
 
 from apps.bitcoin import scripts
