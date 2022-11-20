@@ -1,7 +1,8 @@
 mod render;
 
 use crate::{
-    storage::get_avatar,
+    micropython::gc::Gc,
+    storage::{get_avatar, get_avatar_len},
     time::{Duration, Instant},
     trezorhal::usb::usb_configured,
     ui::{
@@ -192,12 +193,22 @@ where
 
             let notification = self.get_notification();
 
-            homescreen(
-                get_image(),
-                texts,
-                notification,
-                self.paint_notification_only,
-            );
+            let res = get_image();
+            if let Ok(data) = res {
+                homescreen(
+                    data.as_ref(),
+                    texts,
+                    notification,
+                    self.paint_notification_only,
+                );
+            } else {
+                homescreen(
+                    IMAGE_HOMESCREEN,
+                    texts,
+                    notification,
+                    self.paint_notification_only,
+                );
+            }
         }
     }
 
@@ -277,16 +288,26 @@ where
                 icon: None
             },
         ],));
-        homescreen_blurred(get_image(), texts);
+
+        let res = get_image();
+        if let Ok(data) = res {
+            homescreen_blurred(data.as_ref(), texts);
+        } else {
+            homescreen_blurred(IMAGE_HOMESCREEN, texts);
+        }
     }
 }
 
-fn get_image() -> &'static [u8] {
-    if let Ok(data) = get_avatar() {
-        data
-    } else {
-        IMAGE_HOMESCREEN
+fn get_image() -> Result<Gc<[u8]>, ()> {
+    if let Ok(len) = get_avatar_len() {
+        let result = Gc::<[u8]>::new_slice(len);
+        if let Ok(mut buffer) = result {
+            if get_avatar(buffer.as_mut()).is_ok() {
+                return Ok(buffer);
+            }
+        }
     }
+    Err(())
 }
 
 #[cfg(feature = "ui_debug")]

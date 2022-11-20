@@ -1,8 +1,6 @@
-use crate::{
-    micropython::ffi,
-    trezorhal::storage::{get, get_length},
-};
-use core::slice;
+use crate::trezorhal::storage::{get, get_length};
+
+pub const HOMESCREEN_MAX_SIZE: usize = 16384;
 
 const STORAGE_VERSION_01: u8 = 1;
 const STORAGE_VERSION_02: u8 = 2;
@@ -36,20 +34,26 @@ const INITIALIZED: u16 = FLAG_PUBLIC | APP_DEVICE | 0x0013;
 const SAFETY_CHECK_LEVEL: u16 = APP_DEVICE | 0x0014;
 const EXPERIMENTAL_FEATURES: u16 = APP_DEVICE | 0x0015;
 
-pub fn get_avatar() -> Result<&'static mut [u8], ()> {
+pub fn get_avatar_len() -> Result<usize, ()> {
+    let avatar_len_res = get_length(HOMESCREEN);
+    if let Ok(len) = avatar_len_res {
+        Ok(len)
+    } else {
+        Err(())
+    }
+}
+
+pub fn get_avatar(buffer: &mut [u8]) -> Result<usize, ()> {
     let avatar_len_res = get_length(HOMESCREEN);
 
-    return if let Ok(len) = avatar_len_res {
-        let data_ptr_raw = unsafe { ffi::gc_alloc(len, 0) };
-        let buffer = unsafe { slice::from_raw_parts_mut(data_ptr_raw as _, len) };
-
+    if let Ok(len) = avatar_len_res {
         if len <= buffer.len() {
             unwrap!(get(HOMESCREEN, buffer));
-            Ok(&mut buffer[..len])
+            Ok(len)
         } else {
             Err(())
         }
     } else {
         Err(())
-    };
+    }
 }
